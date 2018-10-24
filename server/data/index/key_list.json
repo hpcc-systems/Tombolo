@@ -1,0 +1,11 @@
+[
+    {
+        "index_id": "index_taxi_clean_pickup_datetime",
+        "key": [
+            {
+                "fieldName": "pickup_datetime",
+                "sequence": "1"
+            }
+        ]
+    }
+]

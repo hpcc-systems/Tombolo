@@ -1,0 +1,9 @@
+[
+    {
+        "integration_id": "load_taxi_raw",
+        "url": "10.20.30.40",
+        "dir": "/training/taxi/in",
+        "moveFilesAfterCopy": "true",
+        "moveDir": "/training/taxi/out"
+    }
+]

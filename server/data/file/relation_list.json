@@ -1,0 +1,14 @@
+[
+  {
+    "destinationFileId": "taxi_clean",
+    "sourceFileId": "taxi_raw",
+    "sourceField": "vendor_id",
+    "destinationField": "vendor_id"
+  },
+  {
+    "destinationFileId": "taxi_clean",
+    "sourceFileId": "taxi_raw",
+    "sourceField": "tpep_pickup_datetime",
+    "destinationField": "pickup_datetime"
+  }
+]

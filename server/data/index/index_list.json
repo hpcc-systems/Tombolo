@@ -1,0 +1,15 @@
+[
+    {
+        "_id": "index_taxi_clean_pickup_datetime",
+        "title": "Pickup Date Time",
+        "description": "Index for filtering by pickup date and time, and calculate the # of passengers and distance travelled",
+        "primaryService": "4-Way R&D",
+        "backupService": "4-Way Train",
+        "qualifiedPath": "~training::taxi::idx_taxi_clean_pickup_datetime",
+        "parentFileId": "taxi_clean",
+        "registrationTime": "2018-08-08 09:00 AM",
+        "updatedDateTime": "",
+        "dataLastUpdatedTime": "2018-08-08 09:00 AM",
+        "application_id": "taxi_trip_analysis"
+    }
+]

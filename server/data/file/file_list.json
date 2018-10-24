@@ -1,0 +1,30 @@
+[
+    {
+        "_id": "taxi_raw",
+        "title": "Taxi Raw",
+        "description": "Raw input file for analyzing NY taxi trips between 2015 and 2016",
+        "primaryService": "4-Way R&D",
+        "backupService": "4-Way Train",
+        "qualifiedPath": "~training::taxi::taxi_raw",
+        "fileType": "CSV",
+        "registrationTime": "2018-08-08 09:00 AM",
+        "updatedDateTime": "",
+        "dataLastUpdatedTime": "2018-08-08 09:00 AM",
+        "isSuperFile": "false",
+        "application_id": "taxi_trip_analysis"
+    },
+    {
+        "_id": "taxi_clean",
+        "title": "Taxi Clean",
+        "description": "Cleaned Taxi File",
+        "primaryService": "4-Way R&D",
+        "backupService": "4-Way Train",
+        "qualifiedPath": "~training::taxi::taxi_clean",
+        "fileType": "FLAT",
+        "registrationTime": "2018-08-08 09:00 AM",
+        "updatedDateTime": "",
+        "dataLastUpdatedTime": "2018-08-08 09:00 AM",
+        "isSuperFile": "false",
+        "application_id": "taxi_trip_analysis"
+    }
+]
