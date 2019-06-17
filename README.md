@@ -15,4 +15,4 @@ Installation:
     4.  secret - Same secret used above
 4. Give a valid host name for Kafka PLAINTEXT_HOST://localhost:${KAFKA_EXTERNAL_PORT} in docker-compose.yml. For development servers, localhost should work
 5. docker-compose up -d
-6. Application should be accessible under http://<host name>:3001 once the build is completed.
+6. Application should be accessible under http://<<host name>>:3001 once the build is completed.
