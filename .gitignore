@@ -1,3 +1,6 @@
 **/logs
 **/node_modules
 *.DS_Store
+**/bower_components
+**/build
+**/mysql-data

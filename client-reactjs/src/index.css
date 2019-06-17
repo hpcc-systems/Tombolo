@@ -1,0 +1,277 @@
+@import '~antd/dist/antd.css';
+body {
+  margin: 0;
+}
+
+.logo {
+  color: #ff5722;
+  font-size: 2.17em;
+  margin: 0px 24px 16px 0;
+  float: left;
+}
+
+.login-logo {
+  color: #ff5722;
+}
+
+
+.chart { height: 600px; width: 900px; margin: 5px; margin: 15px auto; border-radius: 3px; }
+
+.node { font-size: 11px; }
+
+.node.big-commpany {
+  cursor: pointer;
+  padding: 0 2px;
+  text-align: center;
+  height: 3em;
+  line-height: 28px;
+  border: 0.1em dotted #d4e06b;
+  border-radius: 0.5em;
+  box-shadow: 1px 1px 1px rgba(0,0,0,.5);
+  background: #fff;
+}
+.node.big-commpany:active {
+  box-shadow: inset 1px 1px 1px rgba(0,0,0,.1);
+  margin: 1px 0 0 1px;
+  border: 2px solid #D3D3CB;
+}
+
+.node.big-commpany .node-name {
+  line-height: 30px;
+  color: #000;
+  display: inline-block;
+  padding-left: 5px;
+  padding-right: 15px;
+}
+
+.node.big-commpany:hover .node-name {
+  color: #8B8B8B;
+}
+
+.node.big-commpany:hover .nodedelete{
+  display: block;
+}
+
+.node.big-commpany .nodedelete {
+  display: none;
+  position:absolute;
+  top:0;
+  right:0;
+}
+
+.Treant { position: relative; overflow: hidden; padding: 0 !important; }
+.Treant > .node,
+.Treant > .pseudo { position: absolute; display: block; visibility: hidden; }
+.Treant.Treant-loaded .node,
+.Treant.Treant-loaded .pseudo { visibility: visible; }
+.Treant > .pseudo { width: 0; height: 0; border: none; padding: 0; }
+.Treant .collapse-switch { width: 3px; height: 3px; display: block; border: 1px solid black; position: absolute; top: 1px; right: 1px; cursor: pointer; }
+.Treant .collapsed .collapse-switch { background-color: #868DEE; }
+.Treant > .node img { border: none;  }
+
+.is-active {
+  color:red;
+}
+
+.loader
+{
+  position: fixed;
+  left: 50%;
+  top: 35%;
+  z-index: 1000;
+  height: 31px;
+  width: 31px;
+}
+
+.login-form {
+  width: 340px;
+  margin: 140px auto;
+}
+.login-form form {
+  margin-bottom: 15px;
+  padding: 20px;
+}
+.login-form h2 {
+  margin: 0 0 15px;
+}
+.form-control, .btn {
+  min-height: 38px;
+  border-radius: 2px;
+}
+.btn {
+  font-size: 15px;
+  font-weight: bold;
+}
+
+.ant-layout-sider-has-trigger {
+  padding-bottom: 0px !important;
+}
+
+.applist {
+  background: #343a40;
+  padding: 5px;
+}
+
+.flex-item {
+  text-align: center;
+}
+
+#profileTable .ant-table-body {
+  height: 515px;
+}
+#profileTable .ant-table {
+  font-size: 12px;
+}
+
+
+.demo {
+  /* for IE10+ touch devices */
+  touch-action:none;
+}
+
+/** ELEMENT POSITIONS **/
+#dragDropWindow1 { top:76px;left:100px; }
+#dragDropWindow2 { top:148px; left:600px; }
+#dragDropWindow3 { top:340px; left:100px; }
+#dragDropWindow4 { top:416px; left:600px; }
+
+/** ELEMENTS **/
+.drag-drop-demo .window {
+  font-family: serif;
+  font-size: 10px;
+  background-color: white;
+  border: 1px solid #346789;
+  text-align: center;
+  z-index: 24;
+  cursor: pointer;
+  box-shadow: 2px 2px 19px #aaa;
+  -o-box-shadow: 2px 2px 19px #aaa;
+  -webkit-box-shadow: 2px 2px 19px #aaa;
+  -moz-box-shadow: 2px 2px 19px #aaa;
+  -moz-border-radius: 0.5em;
+  border-radius: 0.5em;
+  position: absolute;
+  color: black;
+  padding-top: 5px;
+  width: 90px;
+  height: 35px;
+  line-height: 12px;
+  -webkit-transition: -webkit-box-shadow 0.15s ease-in;
+  -moz-transition: -moz-box-shadow 0.15s ease-in;
+  -o-transition: -o-box-shadow 0.15s ease-in;
+  transition: box-shadow 0.15s ease-in;
+  word-wrap: break-word;
+}
+
+.window:hover {
+  border:1px solid #123456;
+  box-shadow: 2px 2px 19px #444;
+  -o-box-shadow: 2px 2px 19px #444;
+  -webkit-box-shadow: 2px 2px 19px #444;
+  -moz-box-shadow: 2px 2px 19px #fff;
+  opacity:0.9;
+}
+
+
+.drag-drop-demo a, .drag-drop-demo a:visited {
+  color:#057D9F;
+}
+
+.drag-drop-demo a:hover {
+  color:orange;
+}
+
+/** LINKS IN WINDOWS **/
+.drag-locked { border:1px solid red; }
+.cmdLink { font-size:0.80em;}
+
+/** DRAG/DROP CLASSES **/
+.dragActive { border:2px dotted orange; }
+.dropHover { border:1px dotted red; }
+
+/** INFO WINDOW **/
+#list {
+  text-align: center;
+  display: none;
+  font-size: 90%;
+  position: absolute;
+  width: 500px;
+  left: 50%;
+  margin-left: -250px;
+  top: 100px;
+  background-color: white;
+  padding: 5px;
+  border: 1px solid #456;
+  opacity: 0.8;
+  border-radius: 8px;
+  color: #444;
+}
+#list table { width:100%;}
+#list table th, #list strong { color:black; font-size:12px; text-align: center; }
+
+path, .jtk-endpoint { cursor:pointer; }
+
+.ant-layout-content {
+  overflow:hidden;
+}
+
+/*.ant-btn-primary:active, .ant-btn-primary.active {
+  color: #fff;
+  background-color: #008000;
+  border-color: #008000;
+}
+
+.ant-radio-group-solid .ant-radio-button-wrapper-checked:not(.ant-radio-button-wrapper-disabled):active {
+    color: #fff;
+    background: #008000;
+    border-color: #008000;
+}
+
+.ant-radio-group-solid .ant-radio-button-wrapper-checked:not(.ant-radio-button-wrapper-disabled) {
+    color: #fff;
+    background: #008000;
+    border-color: #008000;
+}
+
+.ant-btn-primary {
+    color: #fff;
+    background-color: #008000;
+    border-color: #008000;
+    text-shadow: 0 -1px 0 rgba(0, 0, 0, 0.12);
+    box-shadow: 0 2px 0 rgba(0, 0, 0, 0.045);
+}*/
+.navbar .home-logo {
+    color: #ff5722;
+    font-weight: bold;
+}
+
+#applicationSelect {
+    min-width: 155px;
+    border: 1px solid rgba(255, 255, 255, .5);
+    border-radius: 4px;
+}
+
+.sidebar .nav-link {
+  color: white;
+}
+
+.ant-radio-group-solid .ant-radio-button-wrapper-checked:not(.ant-radio-button-wrapper-disabled) {
+    color: #fff;
+    background: #6c757d;
+    border-color: #6c757d;
+}
+
+.ant-radio-button-wrapper-checked:hover {
+  color: #fff;
+    background: #6c757d;
+    border-color: #6c757d;
+}
+
+.ant-radio-group-solid .ant-radio-button-wrapper-checked:not(.ant-radio-button-wrapper-disabled):hover {
+    color: #fff;
+    background: #6c757d;
+    border-color: #6c757d;
+  color: #fff;
+    background: #6c757d;
+    border-color: #6c757d;
+}

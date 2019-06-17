@@ -1,0 +1,87 @@
+version: "3"
+services:
+  zookeeper:
+    image: 'bitnami/zookeeper:latest'
+    ports:
+      - ${ZK_PORT}:${ZK_PORT}
+    environment:
+      - ALLOW_ANONYMOUS_LOGIN=yes
+      - ZOO_HEAP_SIZE=512
+    networks:
+      - tombolo-network
+
+  kafka:
+    image: 'bitnami/kafka:latest'
+    ports:
+      - ${KAFKA_PORT}:${KAFKA_PORT}
+      - ${KAFKA_EXTERNAL_PORT}:${KAFKA_EXTERNAL_PORT}
+    environment:
+      - KAFKA_ZOOKEEPER_CONNECT=zookeeper:${ZK_PORT}
+      - ALLOW_PLAINTEXT_LISTENER=yes
+      - KAFKA_HEAP_OPTS=-Xmx512m -Xms256m
+      - KAFKA_LISTENERS=PLAINTEXT://:${KAFKA_PORT},PLAINTEXT_HOST://:${KAFKA_EXTERNAL_PORT}
+      - KAFKA_LISTENER_SECURITY_PROTOCOL_MAP=PLAINTEXT:PLAINTEXT,PLAINTEXT_HOST:PLAINTEXT
+      - KAFKA_ADVERTISED_LISTENERS=PLAINTEXT://kafka:${KAFKA_PORT},PLAINTEXT_HOST://localhost:${KAFKA_EXTERNAL_PORT}
+    networks:
+      - tombolo-network
+
+  kafka-manager:
+    image: sheepkiller/kafka-manager:latest
+    ports:
+      - ${KAFKA_MGR_PORT}:${KAFKA_MGR_PORT}
+    networks:
+      - tombolo-network
+    environment:
+      - ZK_HOSTS=zookeeper:${ZK_PORT}
+      - APPLICATION_SECRET=letmein
+      - KM_ARGS=-Djava.net.preferIPv4Stack=true
+
+  web:
+    build:
+      context: ./client-reactjs
+      dockerfile: Dockerfile
+    networks:
+      - tombolo-network
+    environment:
+      PORT: ${WEB_PORT}
+      PROXY_URL: http://node:${PORT}
+    ports:
+      - ${WEB_PORT}:${WEB_PORT}
+    depends_on:
+      - mysql_db
+
+  node:
+    #restart: always
+    entrypoint: [sh, ./docker-entry.sh, "mysql_db", "${DB_PORT}"]
+    build:
+      context: ./server
+      dockerfile: Dockerfile
+    volumes:
+      - /tmp/pm2
+    networks:
+      - tombolo-network
+    ports:
+      - ${PORT}:${PORT}
+    depends_on:
+      - mysql_db
+
+  mysql_db:
+    image: mysql:5.7
+    restart: always
+    command: --innodb_use_native_aio=0
+    volumes:
+      - ./mysql-data:/var/lib/mysql
+    ports:
+      - ${DB_PORT}:${DB_PORT}
+    environment:
+      MYSQL_DATABASE: ${DB_NAME}
+      MYSQL_ROOT_PASSWORD: ${DB_PASSWORD}
+      MYSQL_USER: ${DB_USERNAME}
+      MYSQL_PASSWORD: ${DB_PASSWORD}
+      MYSQL_HOST: ${DB_HOSTNAME}
+    networks:
+      - tombolo-network
+
+networks:
+  tombolo-network:
+    driver: bridge

@@ -1,101 +1,99 @@
 const express = require('express');
 const router = express.Router();
 const assert = require('assert');
-
-const dbUtil = require('../../utils/db');
-const mongoClient = require('mongodb').MongoClient;
+var models  = require('../../models');
+let Index = models.indexes;
+let IndexKey = models.index_key;
+let IndexPayload = models.index_payload;
 
 router.get('/index_list', (req, res) => {
     console.log("[index/read.js] - Get file list for app_id = " + req.query.app_id);
-
-    mongoClient.connect(dbUtil.mongoUrl(), function(err, client) {
-        assert.equal(null, err);
-
-        const db = client.db(dbUtil.mongoDbName());
-
-        const collection = db.collection('index');
-
-        collection.find({"application_id":req.query.app_id}).toArray(function (err, docs) {
-            assert.equal(err, null);
- 
-            res.json(docs);
-            client.close();
-        });
+    Index.findAll({"application_id":req.query.app_id}).then(function(indexes) {
+        res.json(indexes);
+    })
+    .catch(function(err) {
+        console.log(err);
     });
-
 });
 
-
-router.get('/index_basic', (req, res) => {
-    
-    console.log("[index basic/read.js] - Get index basic for index_id = " + req.query.index_id);
-
-    mongoClient.connect(dbUtil.mongoUrl(), function(err, client) {
-        assert.equal(null, err);
-        
-        const db = client.db(dbUtil.mongoDbName());
-
-        const collection = db.collection('index');
-
-        collection.find({"_id":req.query.index_id}).toArray(function (err, docs) {
-            assert.equal(err, null);
-            if (docs.length > 0) {
-                res.json(docs[0]);
-            } else {
-                res.json();
+router.post('/saveIndex', (req, res) => {
+    console.log("[saveIndex/read.js] - Get file list for app_id = " + req.body.index.basic._id);
+    var index_id, fieldsToUpdate={}, applicationId=req.body.index.basic.application_id;
+    try {
+        Index.findOrCreate(
+            {where: {application_id:applicationId, title:req.body.index.basic.title},
+            defaults: req.body.index.basic
+        }).then(function(result) {
+            index_id = result[0].id;
+            fieldsToUpdate = {"index_id":index_id, "application_id":applicationId};
+            if(!result[1]) {
+                Index.update(req.body.index.basic, {where:{application_id:applicationId, title:req.body.index.basic.title}}).then(function(result){})
             }
-            client.close();
-        });
-    });
+            var indexKeyToSave = updateCommonData(req.body.index.indexKey, fieldsToUpdate);
+            return IndexKey.bulkCreate(
+                indexKeyToSave, {updateOnDuplicate: ["ColumnLabel", "ColumnType", "ColumnEclType"]}
+            )
+        }).then(function(indexKey) {
+            console.log("saving index payload");
+            var indexPayloadToSave = updateCommonData(req.body.index.indexPayload, fieldsToUpdate);
+            return IndexPayload.bulkCreate(
+                indexPayloadToSave, {updateOnDuplicate: ["ColumnLabel", "ColumnType", "ColumnEclType"]}
+            )
+        }), function(err) {
+            return res.status(500).send(err);
+        }
+        res.json({"result":"success"});
+    } catch (err) {
+        console.log('err', err);
+    }
 
 });
 
-router.get('/key_list', (req, res) => {
-    
-    console.log("[index key list/read.js] - Get index key for index_id = " + req.query.index_id);
-
-    mongoClient.connect(dbUtil.mongoUrl(), function(err, client) {
-        assert.equal(null, err);
-   
-        const db = client.db(dbUtil.mongoDbName());
-
-        const collection = db.collection('index_key');
-
-        collection.find({"index_id":req.query.index_id}).toArray(function (err, docs) {
-            assert.equal(err, null);
- 
-            if (docs.length > 0) {
-                res.json(docs[0].key);
-            } else {
-                res.json();
-            }
-            client.close();
+router.get('/index_details', (req, res) => {
+    console.log("[index_details/read.js] - Get index details for app_id = " + req.query.app_id + " and index_id "+req.query.index_id);
+    var basic = {}, results={};
+    try {
+        Index.findOne({where:{"application_id":req.query.app_id, "id":req.query.index_id}, include: [IndexKey, IndexPayload]}).then(function(indexes) {
+            results.basic = indexes;
+            res.json(results);
+        })
+        .catch(function(err) {
+            console.log(err);
         });
-    });
+    } catch (err) {
+        console.log('err', err);
+    }
+
 });
 
-router.get('/payload_list', (req, res) => {
- 
-    mongoClient.connect(dbUtil.mongoUrl(), function(err, client) {
-        assert.equal(null, err);
+router.post('/delete', (req, res) => {
+    console.log("[delete/read.js] - Get file list for indexId = " + req.body.indexId + " appId: "+req.body.application_id);
+    try {
+        Index.destroy(
+            {where:{id: req.body.indexId, application_id: req.body.application_id}}
+        ).then(function(deleted) {
+            IndexKey.destroy(
+                {where:{ index_id: req.body.indexId }}
+            ).then(function(layoutDeleted) {
+                IndexPayload.destroy(
+                    {where:{index_id: req.body.indexId}}
+                ).then(function(payloadDeleted) {
+                    res.json({"result":"success"});
+                })
+            });
+        });
+    } catch (err) {
+        console.log('err', err);
+    }
+});
 
-        console.log("[index payload list/read.js] - Get index payload for index_id = " + req.query.index_id);
-   
-        const db = client.db(dbUtil.mongoDbName());
-
-        const collection = db.collection('index_payload');
-
-        collection.find({"index_id":req.query.index_id}).toArray(function (err, docs) {
-            assert.equal(err, null);
- 
-            if (docs.length > 0) {
-                res.json(docs[0].payload);
-            } else {
-                res.json();
-            }
-            client.close();
+function updateCommonData(objArray, fields) {
+    Object.keys(fields).forEach(function (key, index) {
+        objArray.forEach(function(obj) {
+            obj[key] = fields[key];
         });
     });
-});
+    return objArray;
+}
 
 module.exports = router;

@@ -1,0 +1,5 @@
+apps:
+  - script   : 'server.js'
+    name     : 'tombolo'
+    error_file : "/tmp/pm2/logs/tombolo_error.log"
+    out_file : "/tmp/pm2/tombolo_out.log"
