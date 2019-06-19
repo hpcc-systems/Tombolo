@@ -20,16 +20,16 @@ async function getECLSchema(appId, res) {
           var schemaFile = path.join(__dirname, '..', '..', 'schemas', app.title+'-schema.ecl');
           var files = await File.findAll({where:{"application_id":appId}});
           for(const file of files) {
-              var fileLayout = await FileLayout.findAll({where:{"application_id":appId, "file_id":file.title}});
+              var fileLayout = await FileLayout.findAll({where:{"application_id":appId, "file_id":file.id}});
               var fileId = file.title.replace('-', '_');
-              schema += '\t\tEXPORT ' + fileId + ' := RECORD\n';
+              schema += '\n\t\tEXPORT ' + fileId + ' := RECORD\n';
               for(const field of fileLayout) {
                 schema += '\t\t\t' + field.type + ' ' + field.name + ';\n';
               }
               schema += '\t\tEND;\n\n'
 
               ds+='\t\tEXPORT ' + fileId + ' := DATASET(\'~'+fileId+'\', layouts.'+fileId+',THOR);\n';
-              schema += '\tEND;'
+              //schema += '\tEND;'
 
           }
 
@@ -67,7 +67,7 @@ async function getJSONSchema(appId, res) {
           var fileObj={};
           var fileId = file.title.replace('-', '_');
           fileObj.file_id=file.title;
-          var fileLayout = await FileLayout.findAll({where:{"application_id":appId, "file_id":file.title}});
+          var fileLayout = await FileLayout.findAll({where:{"application_id":appId, "file_id":file.id}});
           var layouts = [];
           for(const layout of fileLayout) {
             layoutObj = {};
