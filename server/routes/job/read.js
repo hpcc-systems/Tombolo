@@ -5,6 +5,7 @@ var models  = require('../../models');
 let Job = models.job;
 let JobFile = models.jobfile;
 let JobParam = models.jobparam;
+let File = models.file;
 
 router.post('/saveJob', (req, res) => {
     console.log("[saveJob] - Get file list for app_id = " + req.body._id + " isNewJob: "+req.body.isNewJob);
@@ -13,12 +14,13 @@ router.post('/saveJob', (req, res) => {
         Job.findOrCreate({
             where: {name: req.body.basic.name, application_id:req.body.basic.applicationId},
             defaults: req.body.basic
-        }).then(function(result) {
+        }).then(async function(result) {
             jobId = result[0].id;
             fieldsToUpdate = {"job_id"  : jobId, "application_id" : applicationId};
             if(!result[1]) {
                 Job.update(req.body.basic, {where:{application_id:applicationId, name:req.body.basic.name}}).then(function(result){})
             }
+            var deleteFiles = await JobFile.destroy({where:{ job_id: jobId, application_id:applicationId }});
 
             var jobFileToSave = updateCommonData(req.body.files, fieldsToUpdate);
             return JobFile.bulkCreate(
@@ -57,9 +59,24 @@ router.get('/job_list', (req, res) => {
 
 router.get('/job_details', (req, res) => {
     console.log("[job_details] - Get job list for app_id = " + req.query.app_id + " query_id: "+req.query.job_id);
+    let jobFiles = [];
     try {
-        Job.findOne({where:{"application_id":req.query.app_id, "id":req.query.job_id}, include: [JobFile, JobParam]}).then(function(job) {
-            res.json(job);
+        Job.findOne({where:{"application_id":req.query.app_id, "id":req.query.job_id}, include: [JobFile, JobParam]}).then(async function(job) {
+            var jobData = job.get({ plain: true });
+            for(jobFileIdx in jobData.jobfiles) {
+                var jobFile = jobData.jobfiles[jobFileIdx];
+                var file = await File.findOne({where:{"application_id":req.query.app_id, "id":jobFile.file_id}});
+                if(file != undefined) {
+                    jobFile.description = file.description;
+                    jobFile.title = file.title;
+                    jobFile.fileType = file.fileType;
+                    jobFile.qualifiedPath = file.qualifiedPath;
+                    jobData.jobfiles[jobFileIdx] = jobFile;
+                }
+            }
+            return jobData;
+        }).then(function(jobData) {
+            res.json(jobData);
         })
         .catch(function(err) {
             console.log(err);

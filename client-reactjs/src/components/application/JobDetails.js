@@ -23,6 +23,8 @@ class JobDetails extends Component {
     inputFileName:"",
     outputFileName:"",
     outputFileDesc:"",
+    sourceFiles:[],
+    selectedInputFile:"",
     job: {
       id:"",
       name:"",
@@ -40,6 +42,7 @@ class JobDetails extends Component {
   componentDidMount() {
     this.props.onRef(this);
     this.getJobDetails();
+    this.getFiles();
   }
 
   getJobDetails() {
@@ -74,13 +77,32 @@ class JobDetails extends Component {
         return data;
       })
       .then(data => {
-        //this.getQueries();
       })
       .catch(error => {
         console.log(error);
       });
     }
   }
+
+  getFiles() {
+      fetch("/api/file/read/file_list?app_id="+this.props.applicationId, {
+        headers: authHeader()
+      })
+      .then((response) => {
+        if(response.ok) {
+          return response.json();
+        }
+        handleError(response);
+      })
+      .then(files => {
+        this.setState({
+          ...this.state,
+          sourceFiles: files
+        });
+      }).catch(error => {
+        console.log(error);
+      });
+    }
 
   showModal = () => {
     this.setState({
@@ -129,10 +151,19 @@ class JobDetails extends Component {
     var applicationId = this.props.applicationId;
     var inputFiles = this.state.job.inputFiles.map(function (element) {
       element.file_type = "input";
+      //new job creation
+      if(!element.file_id) {
+        element.file_id = element.id;
+      }
+      delete element.id;
       return element;
     });
     var outputFiles = this.state.job.outputFiles.map(function (element) {
       element.file_type = "output";
+      if(!element.file_id) {
+        element.file_id = element.id;
+      }
+      delete element.id;
       return element;
     });
 
@@ -185,12 +216,12 @@ class JobDetails extends Component {
   }
 
   handleAddInputFile = (e) => {
+    let selectedFile = this.state.sourceFiles.filter(sourceFile => sourceFile.id==this.state.selectedInputFile)[0];
+
     var inputFiles = this.state.job.inputFiles;
-    inputFiles.push({"name":document.querySelector("#inputFileName").value, "description":document.querySelector("#inputFileDesc").value})
+    inputFiles.push(selectedFile);
     this.setState({
         ...this.state,
-        inputFileDesc:'',
-        inputFileName:'',
         job: {
             ...this.state.job,
             inputFiles: inputFiles
@@ -198,13 +229,22 @@ class JobDetails extends Component {
     });
   }
 
+  handleInputFileChange = (value) => {
+    this.setState({selectedInputFile:value});
+  }
+
+  handleOutputFileChange = (value) => {
+    this.setState({selectedOutputFile:value});
+  }
+
   handleAddOutputFile = (e) => {
+    let selectedFile = this.state.sourceFiles.filter(sourceFile => sourceFile.id==this.state.selectedOutputFile)[0];
+    console.log('selectedFile: '+JSON.stringify(selectedFile));
     var outputFiles = this.state.job.outputFiles;
-    outputFiles.push({"name":document.querySelector("#outputFileName").value, "description":document.querySelector("#outputFileDesc").value})
+    console.log(outputFiles);
+    outputFiles.push(selectedFile)
     this.setState({
         ...this.state,
-        outputFileName:'',
-        outputFileDesc:'',
         job: {
             ...this.state.job,
             outputFiles: outputFiles
@@ -213,7 +253,7 @@ class JobDetails extends Component {
   }
 
   render() {
-    const { visible, confirmLoading, jobTypes, paramName, paramType, inputFileName, inputFileDesc, outputFileName, outputFileDesc} = this.state;
+    const { visible, confirmLoading, jobTypes, paramName, paramType, inputFileName, inputFileDesc, outputFileName, outputFileDesc, sourceFiles} = this.state;
     const formItemLayout = {
       labelCol: {
         xs: { span: 2 },
@@ -235,12 +275,23 @@ class JobDetails extends Component {
 
     const fileColumns = [{
         title: 'Name',
-        dataIndex: 'name',
+        dataIndex: 'title',
         width: '20%',
       },
       {
         title: 'Description',
-        dataIndex: 'description'
+        dataIndex: 'description',
+        width: '30%'
+      },
+      {
+        title: 'File Type',
+        dataIndex: 'fileType',
+        width: '20%'
+      },
+      {
+        title: 'Qualified Path',
+        dataIndex: 'qualifiedPath',
+        width: '20%'
       }];
 
 
@@ -322,51 +373,51 @@ class JobDetails extends Component {
 
           <TabPane tab="Input Files" key="3">
             <div>
-                <Form layout="inline">
-                    <Form.Item label="Name">
-                        <Input id="inputFileName" name="inputFileName" onChange={this.onParamChange} value={inputFileName} placeholder="" />
-                    </Form.Item>
-                    <Form.Item label="Description">
-                        <Input id="inputFileDesc" name="inputFileDesc"  onChange={this.onParamChange} value={inputFileDesc}  />
-                    </Form.Item>
-                    <Form.Item>
-                        <Button type="primary" onClick={this.handleAddInputFile}>
-                            Add
-                        </Button>
-                    </Form.Item>
-                </Form>
-            </div>
-
-            <Table
-                  columns={fileColumns}
-                  rowKey={record => record.name}
-                  dataSource={inputFiles}
-                  pagination={{ pageSize: 10 }} scroll={{ y: 460 }}
-                />
-            </TabPane>
-          <TabPane tab="Output File" key="4">
-            <div>
-                    <Form layout="inline">
-                        <Form.Item label="Name">
-                            <Input id="outputFileName" name="outputFileName" onChange={this.onParamChange} value={outputFileName} placeholder="" />
-                        </Form.Item>
-                        <Form.Item label="Description">
-                            <Input id="outputFileDesc" name="outputFileDesc"  onChange={this.onParamChange} value={outputFileDesc}  />
-                        </Form.Item>
-                        <Form.Item>
-                            <Button type="primary" onClick={this.handleAddOutputFile}>
-                                Add
-                            </Button>
-                        </Form.Item>
-                    </Form>
-                </div>
+              <Form layout="inline">
+                <Form.Item label="Input Files">
+                  <Select id="inputfiles" placeholder="Select Input Files" defaultValue={this.state.selectedInputdFile} onChange={this.handleInputFileChange} style={{ width: 290 }} >
+                    {sourceFiles.map(d => <Option value={d.id} key={d.id}>{d.title}</Option>)}
+                  </Select>
+                </Form.Item>
+                <Form.Item>
+                    <Button type="primary" onClick={this.handleAddInputFile}>
+                        Add
+                    </Button>
+                </Form.Item>
+              </Form>
 
               <Table
                 columns={fileColumns}
-                rowKey={record => record.name}
+                rowKey={record => record.id}
+                dataSource={inputFiles}
+                pagination={{ pageSize: 10 }} scroll={{ y: 460 }}
+              />
+            </div>
+
+            </TabPane>
+          <TabPane tab="Output Files" key="4">
+            <div>
+
+              <Form layout="inline">
+                <Form.Item label="Output Files">
+                  <Select id="outputfiles" placeholder="Select Output Files" defaultValue={this.state.selectedOutputFile} onChange={this.handleOutputFileChange} style={{ width: 290 }} >
+                    {sourceFiles.map(d => <Option value={d.id} key={d.id}>{d.title}</Option>)}
+                  </Select>
+                </Form.Item>
+                <Form.Item>
+                    <Button type="primary" onClick={this.handleAddOutputFile}>
+                        Add
+                    </Button>
+                </Form.Item>
+              </Form>
+
+              <Table
+                columns={fileColumns}
+                rowKey={record => record.id}
                 dataSource={outputFiles}
                 pagination={{ pageSize: 10 }} scroll={{ y: 460 }}
               />
+             </div>
           </TabPane>
         </Tabs>
         </Modal>

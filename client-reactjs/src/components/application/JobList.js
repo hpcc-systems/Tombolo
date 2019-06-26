@@ -132,7 +132,7 @@ class JobList extends Component {
             <a href="#" onClick={(row) => this.handleEdit(record.id)}><Tooltip placement="right" title={"Edit Job"}><Icon type="edit" /></Tooltip></a>
             <Divider type="vertical" />
             <Popconfirm title="Are you sure you want to delete this job?" onConfirm={() => this.handleDelete(record.id)} icon={<Icon type="question-circle-o" style={{ color: 'red' }} />}>
-              <a href="#"><Tooltip placement="right" title={"Delete JOb"}><Icon type="delete" /></Tooltip></a>
+              <a href="#"><Tooltip placement="right" title={"Delete Job"}><Icon type="delete" /></Tooltip></a>
             </Popconfirm>
           </span>
       }];
