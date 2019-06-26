@@ -2,7 +2,6 @@ import React, { Component } from "react";
 import {
   Layout, Menu, Icon, Breadcrumb
 } from 'antd/lib';
-import ApplicationsList from "../application/ApplicationsList";
 import $ from 'jquery';
 import {
   Link,
@@ -54,14 +53,11 @@ class LeftNav extends Component {
         return false;
     return (
       <React.Fragment>
-      <Sider style={{ background: '#343a40', height:"100vh"}}
+      <Sider style={{ background: '#343a40', height:"100vh", paddingTop:"60px"}}
             collapsible
             collapsed={this.state.collapsed}
             onCollapse={this.onCollapse}
       >
-      <div className="applist">
-        <ApplicationsList style={{ padding: "15px 0" }} onAppicationSelect={this.onAppicationSelect}/>
-      </div>
           <nav className="d-none d-md-block bg-dark sidebar">
           <div className="sidebar-sticky">
             <ul className="nav flex-column">

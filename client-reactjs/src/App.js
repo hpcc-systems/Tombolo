@@ -3,6 +3,7 @@ import { connect } from 'react-redux';
 import {
     Layout
   } from 'antd/lib';
+import 'font-awesome/css/font-awesome.min.css';
 import { Router, Route, Switch } from 'react-router-dom';
 import history from './components/common/History';
 import {LoginPage} from "./components/login/LoginPage";
@@ -40,30 +41,30 @@ class App extends React.Component {
             <Router history={history}>
             <div>
                 <Route exact path="/login" component={LoginPage} />
-                <Layout>
-                    <AppHeader/>
                     <Layout>
-                        <LeftNav isApplicationSet={isApplicationSet} selectedTopNav={selectedTopNav} />
+                        {this.props.user ? <AppHeader/> : null}
                         <Layout>
-                            <Content style={{background: '#fff', padding: '5px'}}>
-                                <Route exact path="/" component={FileList}/>
-                                <Switch>
-                                    <PrivateRoute exact path="/:applicationId/files" component={FileList} />
-                                    <PrivateRoute path="/files" component={FileList} />
-                                    <PrivateRoute exact path="/:applicationId/index" component={IndexList}/>
-                                    <PrivateRoute path="/index" component={IndexList}/>
-                                    <PrivateRoute path="/:applicationId/queries" component={QueriesList}/>
-                                    <PrivateRoute path="/:applicationId/jobs" component={JobList}/>
-                                    <PrivateRoute path="/admin/applications" component={AdminApplications}/>
-                                    <PrivateRoute path="/admin/clusters" component={AdminClusters}/>
-                                    <PrivateRoute path="/admin/users" component={Users}/>
-                                </Switch>
+                            <LeftNav isApplicationSet={isApplicationSet} selectedTopNav={selectedTopNav} />
+                            <Layout>
+                                <Content style={{background: '#fff', padding: '5px'}}>
+                                    <Route exact path="/" component={FileList}/>
+                                    <Switch>
+                                        <PrivateRoute exact path="/:applicationId/files" component={FileList} />
+                                        <PrivateRoute path="/files" component={FileList} />
+                                        <PrivateRoute exact path="/:applicationId/index" component={IndexList}/>
+                                        <PrivateRoute path="/index" component={IndexList}/>
+                                        <PrivateRoute path="/:applicationId/queries" component={QueriesList}/>
+                                        <PrivateRoute path="/:applicationId/jobs" component={JobList}/>
+                                        <PrivateRoute path="/admin/applications" component={AdminApplications}/>
+                                        <PrivateRoute path="/admin/clusters" component={AdminClusters}/>
+                                        <PrivateRoute path="/admin/users" component={Users}/>
+                                    </Switch>
 
-                            </Content>
+                                </Content>
+                            </Layout>
+
                         </Layout>
-
                     </Layout>
-                </Layout>
             </div>
         </Router>
         );

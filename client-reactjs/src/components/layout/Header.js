@@ -18,27 +18,27 @@ class AppHeader extends Component {
 
     state = {
         applications: [],
-        selected:'Select an Application',
-        user: this.props.user
+        selected:'Select an Application'
     }
 
     componentDidUpdate(prevProps, prevState) {
-      if(prevProps.user != this.props.user) {
-        fetch("/api/app/read/app_list", {
-          headers: authHeader()
-        })
-        .then((response) => {
-          if(response.ok) {
-            return response.json();
-          }
-          handleError(response);
-        })
-        .then(data => {
-          let applications = data.map(application => { return {value: application.id, display: application.title} })
-          this.setState({ applications });
-        }).catch(error => {
-          console.log(error);
-        });
+      if(this.state.applications.length == 0) {
+          fetch("/api/app/read/app_list", {
+            headers: authHeader()
+          })
+          .then((response) => {
+            if(response.ok) {
+              return response.json();
+            }
+            handleError(response);
+          })
+          .then(data => {
+            let applications = data.map(application => { return {value: application.id, display: application.title} })
+            console.log("got apps back")
+            this.setState({ applications });
+          }).catch(error => {
+            console.log(error);
+          });
       }
     }
 
@@ -84,6 +84,7 @@ class AppHeader extends Component {
     const applicationId = this.props.application ? this.props.application.applicationId : '';
     const selectedTopNav = (window.location.pathname.indexOf("/admin") != -1) ? "/admin/applications" : (applicationId != '' ? "/" + applicationId + "/files" : "/files")
     const appNav = (applicationId != '' ? "/" + applicationId + "/files" : "/files");
+
     if(!this.props.user || !this.props.user.token)
         return null;
     return (

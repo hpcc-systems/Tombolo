@@ -7,7 +7,6 @@ module.exports = {
 function verifyToken(req, res, next)
 {
   userService.verifyToken(req, res, next).then(function(verified){
-    console.log(verified);
     if(verified != undefined) {
       next()
     }
