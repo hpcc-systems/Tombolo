@@ -38,6 +38,7 @@ class FileDetails extends Component {
     file: {
       id:"",
       title:"",
+      clusterId:"",
       description:"",
       primaryService:"",
       backupService:"",
@@ -101,6 +102,7 @@ class FileDetails extends Component {
             ...this.state.file,
             id: data.basic.id,
             title: data.basic.title,
+            clusterId: data.basic.cluster_id,
             description: data.basic.description,
             primaryService: data.basic.primaryService,
             backupService: data.basic.backupService,
@@ -118,6 +120,10 @@ class FileDetails extends Component {
       })
       .then(data => {
         this.getLicenses();
+        return data;
+      })
+      .then(data => {
+        this.getFileData(data.basic.title, data.basic.cluster_id);
       })
       .catch(error => {
         console.log(error);
@@ -252,6 +258,7 @@ class FileDetails extends Component {
           ...this.state.file,
           id: fileInfo.name,
           title: fileInfo.name,
+          clusterId: this.state.selectedCluster,
           description: fileInfo.description,
           qualifiedPath: fileInfo.pathMask,
           fileType: fileInfo.fileType,
@@ -324,9 +331,10 @@ class FileDetails extends Component {
     });
   }
 
-  getFileData = (fileName) => {
+  getFileData = (fileName, clusterId) => {
     var _self = this;
-    fetch('/api/hpcc/read/getData?fileName='+fileName+'&clusterid='+this.state.selectedCluster, {
+    var cluster = this.state.selectedCluster ? this.state.selectedCluster : clusterId;
+    fetch('/api/hpcc/read/getData?fileName='+fileName+'&clusterid='+cluster, {
       headers: authHeader()
     }).then(function(response) {
         if(response.ok) {
@@ -374,6 +382,7 @@ class FileDetails extends Component {
     var file_basic = {
       //"id" : this.state.file.id,
       "title" : this.state.file.title,
+      "cluster_id": this.state.selectedCluster,
       "description" : this.state.file.description,
       "primaryService" : this.state.file.primaryService,
       "backupService" : this.state.file.backupService,
