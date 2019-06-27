@@ -239,7 +239,13 @@ class FileDetails extends Component {
     });
   }
 
-  onFileSelected(selectedSuggestion) {
+  async onFileSelected(selectedSuggestion) {
+    let fileExists = await this.fileAlreadyExists(selectedSuggestion);
+    if(fileExists) {
+      message.config({top:150})
+      message.error("File "+selectedSuggestion+" already exists in this application. Please select another file.");
+      return;
+    }
     fetch("/api/hpcc/read/getFileInfo?fileName="+selectedSuggestion+"&clusterid="+this.state.selectedCluster, {
       headers: authHeader()
     })
@@ -306,6 +312,26 @@ class FileDetails extends Component {
     }).catch(error => {
       console.log(error);
     });
+  }
+
+  async fileAlreadyExists(selectedSuggestion) {
+    var exists = false;
+    await fetch("/api/file/read/file_ids?app_id="+this.props.applicationId, {
+      headers: authHeader()
+    })
+    .then((response) => {
+      if(response.ok) {
+        return response.json();
+      }
+      handleError(response);
+    })
+    .then(files => {
+      exists=files.filter(file => file.title == selectedSuggestion).length > 0;
+    })
+    .catch(error => {
+      console.log(error);
+    });
+    return exists;
   }
 
   getFieldNames(layout) {
@@ -726,7 +752,7 @@ class FileDetails extends Component {
           onOk={this.handleOk}
           confirmLoading={confirmLoading}
           onCancel={this.handleCancel}
-          bodyStyle={{height:"650px"}}
+          bodyStyle={{height:"550px"}}
           destroyOnClose={true}
           width="1200px"
         >

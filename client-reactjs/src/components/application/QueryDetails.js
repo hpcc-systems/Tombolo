@@ -321,7 +321,7 @@ class QueryDetails extends Component {
           onOk={this.handleOk}
           confirmLoading={confirmLoading}
           onCancel={this.handleCancel}
-          bodyStyle={{height:"620px"}}
+          bodyStyle={{height:"500px"}}
           destroyOnClose={true}
           width="1200px"
         >

@@ -275,3 +275,7 @@ path, .jtk-endpoint { cursor:pointer; }
     background: #6c757d;
     border-color: #6c757d;
 }
+
+.ant-form-item {
+  margin-bottom: 6px !important;
+}
