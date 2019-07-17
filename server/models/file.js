@@ -10,6 +10,7 @@ module.exports = (sequelize, DataTypes) => {
     },
     application_id: DataTypes.STRING,
     title: DataTypes.STRING,
+    name: DataTypes.STRING,
     cluster_id: DataTypes.STRING,
     description: DataTypes.STRING,
     fileType: DataTypes.STRING,

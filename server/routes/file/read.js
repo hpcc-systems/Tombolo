@@ -54,6 +54,7 @@ router.get('/file_ids', (req, res) => {
                 var fileObj = {};
                 fileObj.id = doc.id;
                 fileObj.title = doc.title;
+                fileObj.name = doc.name;
                 results.push(fileObj);
             });
             res.json(results);
@@ -105,14 +106,14 @@ router.post('/saveFile', (req, res) => {
 
     try {
         File.findOrCreate({
-            where:{application_id:applicationId, title:req.body.file.basic.title},
+            where:{application_id:applicationId, name:req.body.file.basic.name},
             defaults:req.body.file.basic
         }).then(function(result) {
             fileId = result[0].id;
             fieldsToUpdate = {"file_id"  : fileId, "application_id" : applicationId};
             //if file record already exists, then update it
             if(!result[1]) {
-                File.update(req.body.file.basic, {where:{application_id:applicationId, title:req.body.file.basic.title}}).then(function(result){})
+                File.update(req.body.file.basic, {where:{application_id:applicationId, name:req.body.file.basic.name}}).then(function(result){})
             }
             var fileLayoutToSave = updateCommonData(req.body.file.layout, fieldsToUpdate);
             return FileLayout.bulkCreate(

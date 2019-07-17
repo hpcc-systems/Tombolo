@@ -57,6 +57,13 @@ class JobDetails extends Component {
         handleError(response);
       })
       .then(data => {
+        var jobfiles = [];
+        data.jobfiles.forEach(function(doc, idx) {
+          var fileObj = {};
+          fileObj=doc;
+          fileObj.fileTitle=(doc.title)?doc.title:doc.name;        
+          jobfiles.push(fileObj);
+      });
         this.setState({
           ...this.state,
           job: {
@@ -70,8 +77,8 @@ class JobDetails extends Component {
             contact: data.contact,
             author: data.author,
             inputParams: data.jobparams,
-            inputFiles: data.jobfiles.filter(field => field.file_type == 'input'),
-            outputFiles: data.jobfiles.filter(field => field.file_type == 'output')
+            inputFiles: jobfiles.filter(field => field.file_type == 'input'),
+            outputFiles: jobfiles.filter(field => field.file_type == 'output')
           }
         });
         return data;
@@ -95,9 +102,16 @@ class JobDetails extends Component {
         handleError(response);
       })
       .then(files => {
+        var fileList = [];
+        files.forEach(function(doc, idx) {
+          var fileObj = {};
+          fileObj=doc;
+          fileObj.fileTitle=(doc.title)?doc.title:doc.name;        
+          fileList.push(fileObj);
+        });
         this.setState({
           ...this.state,
-          sourceFiles: files
+          sourceFiles: fileList
         });
       }).catch(error => {
         console.log(error);
@@ -275,7 +289,7 @@ class JobDetails extends Component {
 
     const fileColumns = [{
         title: 'Name',
-        dataIndex: 'title',
+        dataIndex: 'fileTitle',
         width: '20%',
       },
       {
@@ -376,7 +390,7 @@ class JobDetails extends Component {
               <Form layout="inline">
                 <Form.Item label="Input Files">
                   <Select id="inputfiles" placeholder="Select Input Files" defaultValue={this.state.selectedInputdFile} onChange={this.handleInputFileChange} style={{ width: 290 }} >
-                    {sourceFiles.map(d => <Option value={d.id} key={d.id}>{d.title}</Option>)}
+                    {sourceFiles.map(d => <Option value={d.id} key={d.id}>{(d.title)?d.title:d.name}</Option>)}
                   </Select>
                 </Form.Item>
                 <Form.Item>
@@ -401,7 +415,7 @@ class JobDetails extends Component {
               <Form layout="inline">
                 <Form.Item label="Output Files">
                   <Select id="outputfiles" placeholder="Select Output Files" defaultValue={this.state.selectedOutputFile} onChange={this.handleOutputFileChange} style={{ width: 290 }} >
-                    {sourceFiles.map(d => <Option value={d.id} key={d.id}>{d.title}</Option>)}
+                    {sourceFiles.map(d => <Option value={d.id} key={d.id}>{(d.title)?d.title:d.name}</Option>)}
                   </Select>
                 </Form.Item>
                 <Form.Item>
