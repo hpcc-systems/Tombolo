@@ -42,6 +42,12 @@ class JSPlumbTree extends Component {
       }, 200);
 
     }
+    var urlFileId=(JSON.parse(localStorage.getItem('selectedFile')))?JSON.parse(localStorage.getItem('selectedFile')).fileId : '';
+    if(urlFileId && !this.props.fileError)
+    setTimeout(() => {
+   this.showFileDetails(urlFileId);
+   localStorage.removeItem('selectedFile');
+   }, 1000);  
   }
 
   componentDidMount() {

@@ -20,7 +20,37 @@ class AppHeader extends Component {
         applications: [],
         selected:'Select an Application'
     }
-
+    componentWillReceiveProps(props){
+      var selectedFile=JSON.parse(localStorage.getItem('selectedFile'));
+      if(selectedFile){
+        this.GetAppName(selectedFile.applicationId);
+      }      
+    }
+    GetAppName(appId) {
+      var appTitle='';       
+        fetch("/api/app/read/app?app_id="+appId, {
+          method: 'get',
+          headers: authHeader()
+        })
+        .then((response) => {
+          if(response.ok) {
+            return response.json();
+          }
+          handleError(response);
+        })
+        .then(data => {
+          console.log(JSON.stringify(data))
+          if(data){
+          appTitle=data.title;   
+          this.setState({ selected: appTitle }); 
+          this.props.dispatch(applicationActions.applicationSelected(appId,appTitle)); 
+          $('[data-toggle="popover"]').popover('disable');  
+          }
+        })
+        .catch(error => {
+          console.log(error);
+        });          
+    }
     componentDidUpdate(prevProps, prevState) {
       if(this.state.applications.length == 0) {
           fetch("/api/app/read/app_list", {
@@ -77,6 +107,7 @@ class AppHeader extends Component {
         this.setState({ selected: event.target.getAttribute("data-display") });
         this.props.history.push('/'+event.target.getAttribute("data-value")+'/files');
         $('[data-toggle="popover"]').popover('disable');
+        localStorage.removeItem('selectedFile');
     }
 
   render() {

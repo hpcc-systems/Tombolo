@@ -29,7 +29,16 @@ class App extends React.Component {
     constructor(props) {
         super(props);
     }
-
+    componentWillMount(){
+        var path= window.location.pathname;
+        if(path.includes('/file/')){          
+          var appValues=(path.replace('/file/','')).split('/');            
+          var selectedFile=new Object();
+          selectedFile.applicationId=appValues[0];
+          selectedFile.fileId=appValues[1];
+          localStorage.setItem('selectedFile', JSON.stringify(selectedFile));                
+        }
+    }
     componentDidMount() {
         store.dispatch(userActions.validateToken());
     }
@@ -49,6 +58,7 @@ class App extends React.Component {
                                 <Content style={{background: '#fff', padding: '5px'}}>
                                     <Route exact path="/" component={FileList}/>
                                     <Switch>
+                                    <PrivateRoute exact path="/file/:applicationId/:fileId" component={FileList} />
                                         <PrivateRoute exact path="/:applicationId/files" component={FileList} />
                                         <PrivateRoute path="/files" component={FileList} />
                                         <PrivateRoute exact path="/:applicationId/index" component={IndexList}/>
@@ -72,7 +82,7 @@ class App extends React.Component {
 }
 
 function mapStateToProps(state) {
-    const { application, selectedTopNav } = state.applicationReducer;
+    const { application,selectedTopNav } = state.applicationReducer;
     const { user } = state.authenticationReducer;
     return {
         application,
