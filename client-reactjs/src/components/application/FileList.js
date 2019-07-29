@@ -19,7 +19,8 @@ class FileList extends Component {
     applicationTitle: this.props.application ? this.props.application.applicationTitle : '',
     openFileDetailsDialog: false,
     refreshTree: false,
-    tableView: false
+    tableView: false,
+    fileError:false  
   }
 
   componentWillReceiveProps(props) {
@@ -32,6 +33,33 @@ class FileList extends Component {
         this.handleRefresh();
       }
     }
+    var selectedFile=JSON.parse(localStorage.getItem('selectedFile'));
+    if(selectedFile)
+      this.ValidateAppIdFileId(selectedFile.applicationId,selectedFile.fileId)
+      else
+      this.state.fileError=false;  
+  }
+  ValidateAppIdFileId(appId,fileId){
+    fetch("/api/file/read/CheckFileId?app_id="+appId+"&file_id="+fileId, {
+      headers: authHeader()
+    })
+    .then((response) => {
+      if(response.ok) {
+        return response.json();
+      }
+      handleError(response);
+    })
+    .then((data) => {
+      if(data){}
+      else{ 
+       this.setState({ fileError: true });    
+       }
+    })
+    .catch(error => {
+      console.log(error); 
+     
+    });
+   
   }
 
   openAddFileDlg = () => {
@@ -85,7 +113,26 @@ class FileList extends Component {
         <Menu.Item key="json">JSON</Menu.Item>
       </Menu>
     );
-    if(!this.props.application || !this.props.application.applicationId)
+    if(this.state.fileError)
+    {
+      const styles = {
+        border:'1px solid red',
+        padding:'2px',
+        width:'300px',
+        paddingbottom:'5px'
+      };
+      localStorage.removeItem('selectedFile');
+      return(
+        <div>
+          <div align="center" style={{paddingTop:"80px"}}>
+        <div  style={styles} ><table><tr><td style={{paddingBottom:'5px',color:'red'}}>
+          <Icon type="close-circle" /></td>
+          <td style={{paddingLeft:'2px'}}><b> URL Application Id/File Id is invalid</b></td></tr></table></div>
+        </div>
+        </div>
+      )
+    }
+    else if(!this.props.application || !this.props.application.applicationId)
       return null;
     return (
       <div>
@@ -110,7 +157,7 @@ class FileList extends Component {
           </span>
         </div>
         <div>
-          {this.state.tableView ? <FileTable refresh={this.state.refreshTree} applicationId={this.state.applicationId}/> : <JSPlumbTree refresh={this.state.refreshTree} applicationId={this.state.applicationId} />}
+          {this.state.tableView ? <FileTable refresh={this.state.refreshTree} applicationId={this.state.applicationId}/> : <JSPlumbTree refresh={this.state.refreshTree} applicationId={this.state.applicationId} fileError={this.state.fileError} />}
 
           {this.state.openFileDetailsDialog ?
             <FileDetailsForm

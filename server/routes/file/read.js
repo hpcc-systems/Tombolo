@@ -44,6 +44,24 @@ router.get('/licenses', (req, res) => {
         console.log('err', err);
     }
 });
+router.get('/CheckFileId', (req, res) => {
+    console.log("[CheckFileId/read.js] - check file by app_id = " + req.query.app_id +" and file_id ="+ req.query.file_id);
+    try {
+        File.findOne({
+            where: {"application_id":req.query.app_id,"id":req.query.file_id}
+        }).then(function(file) {
+            if(file)
+            res.json(true);
+            else
+            res.json(false);
+        })
+        .catch(function(err) {
+            console.log(err);
+        });
+    } catch (err) {
+        console.log('err', err);
+    }
+});
 
 router.get('/file_ids', (req, res) => {
     console.log("[ffile_ids/read.js] - Get file list for app_id = " + req.query.app_id);

@@ -23,8 +23,13 @@ class LoginPage extends React.Component {
     }
 
     componentWillReceiveProps(newProps){
-        if(newProps.loggedIn){
-            this.props.history.push('/files')
+        if(newProps.loggedIn || newProps.loggingIn){
+            var selectedFile = JSON.parse(localStorage.getItem('selectedFile'));
+            if(selectedFile){
+                this.props.history.push('/file/'+selectedFile.applicationId+'/'+selectedFile.fileId);
+            }
+            else
+            this.props.history.push('/files');
         }
         else if(newProps.loginFailed) {
             message.error("Login failed. Incorrect user name or password!");
