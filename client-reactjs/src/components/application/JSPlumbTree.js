@@ -8,6 +8,7 @@ import FileDetailsForm from "./FileDetails";
 import '../../../node_modules/bootstrap/dist/css/bootstrap.min.css';
 import { authHeader, handleError } from "../common/AuthHeader.js"
 
+
 class JSPlumbTree extends Component {
   constructor(props) {
     super(props);
