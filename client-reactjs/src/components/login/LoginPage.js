@@ -24,10 +24,9 @@ class LoginPage extends React.Component {
 
     componentWillReceiveProps(newProps){
         if(newProps.loggedIn || newProps.loggingIn){
-            var selectedFile = JSON.parse(localStorage.getItem('selectedFile'));
-            if(selectedFile){
-                this.props.history.push('/file/'+selectedFile.applicationId+'/'+selectedFile.fileId);
-            }
+            var location=this.props.location.state;
+            if(location && location.from.pathname.includes('/file/'))
+              this.props.history.push(location.from.pathname);
             else
             this.props.history.push('/files');
         }

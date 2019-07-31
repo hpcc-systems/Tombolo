@@ -18,13 +18,17 @@ class AppHeader extends Component {
 
     state = {
         applications: [],
-        selected:'Select an Application'
-    }
-    componentWillReceiveProps(props){
-      var selectedFile=JSON.parse(localStorage.getItem('selectedFile'));
-      if(selectedFile){
-        this.GetAppName(selectedFile.applicationId);
-      }      
+        selected:'Select an Application',
+        pathName:'' 
+    }    
+    componentWillReceiveProps() {  
+      var tempPath=window.location.pathname;
+      if(this.state.pathName!=tempPath && tempPath.includes('/file/')){
+      this.setState({ pathName: tempPath });
+        const pathSnippets = tempPath.replace('/file/','').split('/');
+        if(pathSnippets[0])
+          this.GetAppName(pathSnippets[0]);
+      }   
     }
     GetAppName(appId) {
       var appTitle='';       
@@ -107,7 +111,6 @@ class AppHeader extends Component {
         this.setState({ selected: event.target.getAttribute("data-display") });
         this.props.history.push('/'+event.target.getAttribute("data-value")+'/files');
         $('[data-toggle="popover"]').popover('disable');
-        localStorage.removeItem('selectedFile');
     }
 
   render() {

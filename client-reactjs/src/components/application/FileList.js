@@ -20,10 +20,11 @@ class FileList extends Component {
     openFileDetailsDialog: false,
     refreshTree: false,
     tableView: false,
-    fileError:false  
+    fileError:false,
+    fileId:'',
+    pathName:''  
   }
-
-  componentWillReceiveProps(props) {
+  componentWillReceiveProps(props) {    
     if(props.application) {
       if(this.state.applicationId != props.application.applicationId) {
         this.setState({
@@ -33,14 +34,19 @@ class FileList extends Component {
         this.handleRefresh();
       }
     }
-    var selectedFile=JSON.parse(localStorage.getItem('selectedFile'));
-    if(selectedFile)
-      this.ValidateAppIdFileId(selectedFile.applicationId,selectedFile.fileId)
+    var tempPath=props.location.pathname;
+    if(this.state.pathName!=tempPath && tempPath.includes('/file/')){
+      this.setState({ pathName: tempPath });
+      const pathSnippets = tempPath.replace('/file/','').split('/');
+      if(pathSnippets[0] && pathSnippets[1])
+        this.ValidateAppIdFileId(pathSnippets[0],pathSnippets[1])
       else
-      this.state.fileError=false;  
+        this.setState({ fileError: false });
+    }
   }
-  ValidateAppIdFileId(appId,fileId){
-    fetch("/api/file/read/CheckFileId?app_id="+appId+"&file_id="+fileId, {
+  ValidateAppIdFileId(appId,fileIdValue){
+    var _self = this;
+    fetch("/api/file/read/CheckFileId?app_id="+appId+"&file_id="+fileIdValue, {
       headers: authHeader()
     })
     .then((response) => {
@@ -50,9 +56,11 @@ class FileList extends Component {
       handleError(response);
     })
     .then((data) => {
-      if(data){}
+      if(data){
+        _self.setState({ fileId: fileIdValue });
+      }
       else{ 
-       this.setState({ fileError: true });    
+        _self.setState({ fileError: true });    
        }
     })
     .catch(error => {
@@ -121,7 +129,6 @@ class FileList extends Component {
         width:'300px',
         paddingbottom:'5px'
       };
-      localStorage.removeItem('selectedFile');
       return(
         <div>
           <div align="center" style={{paddingTop:"80px"}}>
@@ -157,7 +164,7 @@ class FileList extends Component {
           </span>
         </div>
         <div>
-          {this.state.tableView ? <FileTable refresh={this.state.refreshTree} applicationId={this.state.applicationId}/> : <JSPlumbTree refresh={this.state.refreshTree} applicationId={this.state.applicationId} fileError={this.state.fileError} />}
+          {this.state.tableView ? <FileTable refresh={this.state.refreshTree} applicationId={this.state.applicationId}/> : <JSPlumbTree refresh={this.state.refreshTree} applicationId={this.state.applicationId} fileId={this.state.fileId} />}
 
           {this.state.openFileDetailsDialog ?
             <FileDetailsForm
