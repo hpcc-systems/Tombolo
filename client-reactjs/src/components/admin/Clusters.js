@@ -155,6 +155,11 @@ class Clusters extends Component {
   }
 
   handleAddClusterOk = () => {
+    if(!(this.state.newCluster.host.startsWith("https") || this.state.newCluster.host.startsWith("http"))) {
+      message.config({top:50});
+      message.error("Please use a valid host name");
+      return;
+    }
     this.setState({
       confirmLoading: true,
       submitted: true
@@ -167,31 +172,34 @@ class Clusters extends Component {
         "port" : this.state.newCluster.port,
         "username" : this.state.newCluster.username,
         "password" : this.state.newCluster.password
-      }
-      );
+      });
+
       fetch("/api/hpcc/read/newcluster", {
           method: 'post',
           headers: authHeader(),
           body: data
-        }).then((response) => {
-          console.log(response);
-          if(response.ok) {
-            return response.json();
-          }
-          response.statusText = "There was an error while adding the Cluster. Please check the Cluster URL";
-          handleError(response);
-        })
-        .then(suggestions => {
-          this.setState({
-            confirmLoading: false,
-            showAddClusters: false,
-            submitted: false
-          });
-          this.getClusters();
-        }).catch(error => {
-          console.log(error);
+      })
+      .then((response) => {
+        if(response.ok) {
+          return response.json();
+        }
+        throw new Error("There was an error adding the Cluster. Please check if the cluster is accessible. ");
+      })
+      .then(suggestions => {
+        this.setState({
+          confirmLoading: false,
+          showAddClusters: false,
+          submitted: false
         });
-      }
+        this.getClusters();
+      }).catch(error => {
+        message.config({top:50});
+        message.error(error.message);
+        this.setState({
+          confirmLoading: false
+        });
+      });
+     }
   }
 
 
@@ -276,7 +284,7 @@ class Clusters extends Component {
                 </div>
                 <div className={'form-group' + (submitted && !host ? ' has-error' : '')}>
                   <Form.Item {...formItemLayout} label="Host">
-      						<Input id="host" name="host" onChange={this.onChange} placeholder="Host" value={this.state.newCluster.host}/>
+      						<Input id="host" name="host" onChange={this.onChange} placeholder="http://127.0.0.1" value={this.state.newCluster.host}/>
                   {submitted && !host &&
                       <div className="help-block">Cluster Host is required</div>
                   }
