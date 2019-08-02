@@ -21,39 +21,11 @@ class AppHeader extends Component {
         selected:'Select an Application',
         pathName:'' 
     }    
-    componentWillReceiveProps() {  
-      var tempPath=window.location.pathname;
-      if(this.state.pathName!=tempPath && tempPath.includes('/file/')){
-      this.setState({ pathName: tempPath });
-        const pathSnippets = tempPath.replace('/file/','').split('/');
-        if(pathSnippets[0])
-          this.GetAppName(pathSnippets[0]);
-      }   
-    }
-    GetAppName(appId) {
-      var appTitle='';       
-        fetch("/api/app/read/app?app_id="+appId, {
-          method: 'get',
-          headers: authHeader()
-        })
-        .then((response) => {
-          if(response.ok) {
-            return response.json();
-          }
-          handleError(response);
-        })
-        .then(data => {
-          console.log(JSON.stringify(data))
-          if(data){
-          appTitle=data.title;   
-          this.setState({ selected: appTitle }); 
-          this.props.dispatch(applicationActions.applicationSelected(appId,appTitle)); 
-          $('[data-toggle="popover"]').popover('disable');  
-          }
-        })
-        .catch(error => {
-          console.log(error);
-        });          
+    componentWillReceiveProps(props) {
+      if(props.application && props.application.applicationTitle!=''){
+      this.setState({ selected: props.application.applicationTitle });        
+        $('[data-toggle="popover"]').popover('disable'); 
+      } 
     }
     componentDidUpdate(prevProps, prevState) {
       if(this.state.applications.length == 0) {

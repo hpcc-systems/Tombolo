@@ -13,18 +13,15 @@ class FileList extends Component {
   constructor(props) {
     super(props);
   }
-
   state = {
     applicationId: this.props.application ? this.props.application.applicationId : '',
     applicationTitle: this.props.application ? this.props.application.applicationTitle : '',
     openFileDetailsDialog: false,
     refreshTree: false,
     tableView: false,
-    fileError:false,
-    fileId:'',
-    pathName:''  
+    fileId:(this.props.fileId)?this.props.fileId:''
   }
-  componentWillReceiveProps(props) {    
+  componentWillReceiveProps(props) {   
     if(props.application) {
       if(this.state.applicationId != props.application.applicationId) {
         this.setState({
@@ -34,40 +31,6 @@ class FileList extends Component {
         this.handleRefresh();
       }
     }
-    var tempPath=props.location.pathname;
-    if(this.state.pathName!=tempPath && tempPath.includes('/file/')){
-      this.setState({ pathName: tempPath });
-      const pathSnippets = tempPath.replace('/file/','').split('/');
-      if(pathSnippets[0] && pathSnippets[1])
-        this.ValidateAppIdFileId(pathSnippets[0],pathSnippets[1])
-      else
-        this.setState({ fileError: false });
-    }
-  }
-  ValidateAppIdFileId(appId,fileIdValue){
-    var _self = this;
-    fetch("/api/file/read/CheckFileId?app_id="+appId+"&file_id="+fileIdValue, {
-      headers: authHeader()
-    })
-    .then((response) => {
-      if(response.ok) {
-        return response.json();
-      }
-      handleError(response);
-    })
-    .then((data) => {
-      if(data){
-        _self.setState({ fileId: fileIdValue });
-      }
-      else{ 
-        _self.setState({ fileError: true });    
-       }
-    })
-    .catch(error => {
-      console.log(error); 
-     
-    });
-   
   }
 
   openAddFileDlg = () => {
@@ -88,6 +51,9 @@ class FileList extends Component {
   }
 
   handleToggleView = (evt) => {
+    this.setState({
+      fileId: ''
+    });
     console.log(evt.target.value);
     evt.target.value == 'chart' ? this.setState({tableView: false}) : this.setState({tableView: true})
   }
@@ -112,8 +78,7 @@ class FileList extends Component {
     }).catch(error => {
       console.log(error);
     });
-  }
-
+  }  
   render() {
     const menu = (
       <Menu onClick={this.handleSchemaDownload}>
@@ -121,25 +86,8 @@ class FileList extends Component {
         <Menu.Item key="json">JSON</Menu.Item>
       </Menu>
     );
-    if(this.state.fileError)
-    {
-      const styles = {
-        border:'1px solid red',
-        padding:'2px',
-        width:'300px',
-        paddingbottom:'5px'
-      };
-      return(
-        <div>
-          <div align="center" style={{paddingTop:"80px"}}>
-        <div  style={styles} ><table><tr><td style={{paddingBottom:'5px',color:'red'}}>
-          <Icon type="close-circle" /></td>
-          <td style={{paddingLeft:'2px'}}><b> URL Application Id/File Id is invalid</b></td></tr></table></div>
-        </div>
-        </div>
-      )
-    }
-    else if(!this.props.application || !this.props.application.applicationId)
+    
+    if(!this.props.application || !this.props.application.applicationId)
       return null;
     return (
       <div>
@@ -164,7 +112,7 @@ class FileList extends Component {
           </span>
         </div>
         <div>
-          {this.state.tableView ? <FileTable refresh={this.state.refreshTree} applicationId={this.state.applicationId}/> : <JSPlumbTree refresh={this.state.refreshTree} applicationId={this.state.applicationId} fileId={this.state.fileId} />}
+          {this.state.tableView ? <FileTable refresh={this.state.refreshTree} applicationId={this.state.applicationId}/> : <JSPlumbTree refresh={this.state.refreshTree} applicationId={this.state.applicationId} fileId={this.state.fileId}  />}
 
           {this.state.openFileDetailsDialog ?
             <FileDetailsForm
