@@ -3,8 +3,7 @@ import { Icon } from 'antd/lib';
 import { connect } from 'react-redux';
 import {FileList} from "./FileList";
 import { applicationActions } from '../../redux/actions/Application';
-import { authHeader, handleError } from "../common/AuthHeader.js"
-import $ from 'jquery';
+import { authHeader, handleError } from "../common/AuthHeader.js";
 
 class SelectedFilePopup extends Component {
   constructor(props) {
@@ -18,10 +17,10 @@ class SelectedFilePopup extends Component {
   } 
 
   componentWillMount(){
-    this.ValidateAppIdFileId(this.state.applicationId,this.state.fileId);
-    this.GetAppName(this.state.applicationId)
+    this.validateAppIdFileId(this.state.applicationId,this.state.fileId);
+    this.getAppName(this.state.applicationId)
   }
-  ValidateAppIdFileId(appId,fileIdValue){
+  validateAppIdFileId(appId,fileIdValue){
     var _self = this;
     fetch("/api/file/read/CheckFileId?app_id="+appId+"&file_id="+fileIdValue, {
       headers: authHeader()
@@ -33,11 +32,8 @@ class SelectedFilePopup extends Component {
       handleError(response);
     })
     .then((data) => {
-      if(data){
-      }
-      else{ 
-        _self.setState({ fileError: true });    
-       }
+      if(!data)
+        _self.setState({ fileError: true }); 
     })
     .catch(error => {
       console.log(error); 
@@ -45,10 +41,8 @@ class SelectedFilePopup extends Component {
     });
    
   }
-  GetAppName(appId) {
-    var appTitle='';       
+  getAppName(appId) {    
       fetch("/api/app/read/app?app_id="+appId, {
-        method: 'get',
         headers: authHeader()
       })
       .then((response) => {
@@ -60,10 +54,7 @@ class SelectedFilePopup extends Component {
       .then(data => {
         console.log(JSON.stringify(data))
         if(data){
-        appTitle=data.title;   
-        this.setState({ selected: appTitle }); 
-        this.props.dispatch(applicationActions.applicationSelected(appId,appTitle)); 
-        $('[data-toggle="popover"]').popover('disable');  
+        this.props.dispatch(applicationActions.applicationSelected(appId,data.title)); 
         }
       })
       .catch(error => {
