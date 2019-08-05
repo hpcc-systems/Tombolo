@@ -382,7 +382,7 @@ class IndexDetails extends Component {
           <TabPane tab="Source File" key="2">
             <div>
                <Select placeholder="Select Source Files" defaultValue={this.state.selectedSourceFile} style={{ width: 190 }} onSelect={this.onSourceFileSelection}>
-                {sourceFiles.map(d => <Option key={d.id}>{d.title}</Option>)}
+                {sourceFiles.map(d => <Option key={d.id}>{(d.title)?d.title:d.name}</Option>)}
               </Select>
               </div>
           </TabPane>

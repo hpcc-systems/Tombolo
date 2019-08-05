@@ -69,6 +69,7 @@ router.get('/job_details', (req, res) => {
                 if(file != undefined) {
                     jobFile.description = file.description;
                     jobFile.title = file.title;
+                    jobFile.name = file.name;
                     jobFile.fileType = file.fileType;
                     jobFile.qualifiedPath = file.qualifiedPath;
                     jobData.jobfiles[jobFileIdx] = jobFile;

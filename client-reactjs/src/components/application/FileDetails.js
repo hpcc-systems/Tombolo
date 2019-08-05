@@ -38,6 +38,7 @@ class FileDetails extends Component {
     file: {
       id:"",
       title:"",
+      name:"",
       clusterId:"",
       description:"",
       primaryService:"",
@@ -66,6 +67,7 @@ class FileDetails extends Component {
         ...this.state.file,
         id: '',
         title: '',
+        name:'',
         description: '',
         primaryService: '',
         backupService: '',
@@ -102,6 +104,7 @@ class FileDetails extends Component {
             ...this.state.file,
             id: data.basic.id,
             title: data.basic.title,
+            name: data.basic.name,
             clusterId: data.basic.cluster_id,
             description: data.basic.description,
             primaryService: data.basic.primaryService,
@@ -123,7 +126,7 @@ class FileDetails extends Component {
         return data;
       })
       .then(data => {
-        this.getFileData(data.basic.title, data.basic.cluster_id);
+        this.getFileData(data.basic.name, data.basic.cluster_id);
       })
       .catch(error => {
         console.log(error);
@@ -264,6 +267,7 @@ class FileDetails extends Component {
           ...this.state.file,
           id: fileInfo.name,
           title: fileInfo.name,
+          name: fileInfo.name,
           clusterId: this.state.selectedCluster,
           description: fileInfo.description,
           qualifiedPath: fileInfo.pathMask,
@@ -283,7 +287,7 @@ class FileDetails extends Component {
       return this.getFiles();
     })
     .then(files => {
-      this.getFileData(selectedSuggestion);
+      this.getFileData(selectedSuggestion,this.state.selectedCluster);
     })
     .then(files => {
       //this.getFileProfile(selectedSuggestion);
@@ -326,7 +330,7 @@ class FileDetails extends Component {
       handleError(response);
     })
     .then(files => {
-      exists=files.filter(file => file.title == selectedSuggestion).length > 0;
+      exists=files.filter(file => file.name == selectedSuggestion).length > 0;
     })
     .catch(error => {
       console.log(error);
@@ -408,7 +412,8 @@ class FileDetails extends Component {
     var file_basic = {
       //"id" : this.state.file.id,
       "title" : this.state.file.title,
-      "cluster_id": this.state.selectedCluster,
+      "name" : this.state.file.name,
+      "cluster_id": this.state.file.clusterId,
       "description" : this.state.file.description,
       "primaryService" : this.state.file.primaryService,
       "backupService" : this.state.file.backupService,
@@ -543,7 +548,7 @@ class FileDetails extends Component {
 
   render() {
     const { visible, confirmLoading, sourceFiles, availableLicenses, selectedRowKeys, clusters, fileSearchSuggestions, fileDataContent, fileProfile, showFileProfile } = this.state;
-    const modalTitle = "File Details" + (this.state.file.title ? " - " + this.state.file.title : "");
+    const modalTitle = "File Details" + (this.state.file.title ? " - " + this.state.file.title : " - " +this.state.file.name);
     const formItemLayout = {
       labelCol: {
         xs: { span: 2 },
@@ -708,7 +713,7 @@ class FileDetails extends Component {
     }
 
 
-    const {title, description, primaryService, backupService, qualifiedPath, fileType, isSuperFile, layout, relations, fileFieldRelations, validations} = this.state.file;
+    const {title,name, description, primaryService, backupService, qualifiedPath, fileType, isSuperFile, layout, relations, fileFieldRelations, validations} = this.state.file;
     const rowSelection = {
       selectedRowKeys,
       onChange: this.onSelectedRowKeysChange
@@ -752,7 +757,7 @@ class FileDetails extends Component {
           onOk={this.handleOk}
           confirmLoading={confirmLoading}
           onCancel={this.handleCancel}
-          bodyStyle={{height:"550px"}}
+          bodyStyle={{height:"580px"}}
           destroyOnClose={true}
           width="1200px"
         >
@@ -792,6 +797,9 @@ class FileDetails extends Component {
             }
             <Form.Item {...formItemLayout} label="Title">
                 <Input id="file_title" name="title" onChange={this.onChange} defaultValue={title} value={title} placeholder="Title" />
+            </Form.Item>
+            <Form.Item {...formItemLayout} label="Name">
+                <Input id="file_name" name="name" onChange={this.onChange} defaultValue={name} value={name} placeholder="Name" disabled />
             </Form.Item>
             <Form.Item {...formItemLayout} label="Description">
                 <Input id="file_desc" name="description" onChange={this.onChange} defaultValue={description} value={description} placeholder="Description" />

@@ -1,5 +1,5 @@
 import {Treant} from 'treant-js/Treant.js';
-import { message, Row, Col, Icon } from 'antd/lib';
+import { message, Row, Col, Icon,Popconfirm,Tooltip } from 'antd/lib';
 import $ from 'jquery';
 import { jsPlumb } from 'jsplumb';
 import { _ } from 'underscore';
@@ -73,8 +73,34 @@ class JSPlumbTree extends Component {
         openFileDetailsDialog: true
       });
   }
+  DeleteFilevalue=(fileId,applicationId)=>{
+    var _self=this;
+      var data = JSON.stringify({fileId: fileId, application_id:applicationId});
+      fetch("/api/file/read/delete", {
+       method: 'post',
+       headers: authHeader(),
+       body: data
+     }).then((response) => {
+       if(response.ok) {
+         return response.json();
+       }
+       handleError(response);
+     })
+     .then(result => {
+       _self.fetchFiles();
+       message.success("File deleted sucessfully");       
+     }).catch(error => {
+       console.log(error);
+       message.error("There was an error deleting the file");
+     });
+               
 
-  handleRefreshTree = () => this.fetchFileTreeDetails();
+  }
+  EditFile=(fileId)=>{
+      this.showFileDetails(fileId);
+  }
+
+  handleRefreshTree = () => this.fetchFiles();
 
   fetchFiles() {
     fetch("/api/file/read/file_list?app_id="+this.state.applicationId, {
@@ -184,9 +210,9 @@ class JSPlumbTree extends Component {
                 _self.loadConnections();
             }
 
-            $('.window').dblclick(function() {
-               _self.showFileDetails($( this ).attr("id"));
-            })
+            /*$('.window').dblclick(function() {
+              _self.showFileDetails($( this ).attr("id"));             
+            });*/
             // make .window divs draggable
 
             instance.draggable($('.window').not('.jtk-draggable'));
@@ -322,7 +348,14 @@ addAllEndpointsTonodes = (nodeId) => {
                     left=240;
                     top+=100;
                 }
-                return <div className="window" style={{"top":top,"left":left}}key={item.id} id={item.id}>{item.title}</div>
+                return <div className="window" style={{"top":top,"left":left}}key={item.id} id={item.id}>
+                <Popconfirm title="Are you sure you want to delete this File?" onConfirm={() => this.DeleteFilevalue(item.id,this.props.applicationId)} icon={<Icon type="question-circle-o" style={{ color: 'red' }} />}>
+                <a href="#"><Tooltip placement="right" title={"Delete File"}><Icon type="close-circle" style={{"top":'1px',"right":'1px','position': 'absolute'}}   />
+                </Tooltip></a>
+                </Popconfirm>
+                <div style={{"padding-top":'4px'}} onDoubleClick={() =>this.EditFile(item.id)} >{(item.title)?item.title:item.name}</div>
+                </div>
+               // return <div className="window" style={{"top":top,"left":left}}key={item.id} id={item.id}>{item.title}</div>
             })}
 
         </div>
