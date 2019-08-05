@@ -13,16 +13,15 @@ class FileList extends Component {
   constructor(props) {
     super(props);
   }
-
   state = {
     applicationId: this.props.application ? this.props.application.applicationId : '',
     applicationTitle: this.props.application ? this.props.application.applicationTitle : '',
     openFileDetailsDialog: false,
     refreshTree: false,
-    tableView: false
+    tableView: false,
+    fileId:(this.props.fileId)?this.props.fileId:''
   }
-
-  componentWillReceiveProps(props) {
+  componentWillReceiveProps(props) {   
     if(props.application) {
       if(this.state.applicationId != props.application.applicationId) {
         this.setState({
@@ -52,6 +51,9 @@ class FileList extends Component {
   }
 
   handleToggleView = (evt) => {
+    this.setState({
+      fileId: ''
+    });
     console.log(evt.target.value);
     evt.target.value == 'chart' ? this.setState({tableView: false}) : this.setState({tableView: true})
   }
@@ -76,8 +78,7 @@ class FileList extends Component {
     }).catch(error => {
       console.log(error);
     });
-  }
-
+  }  
   render() {
     const menu = (
       <Menu onClick={this.handleSchemaDownload}>
@@ -85,6 +86,7 @@ class FileList extends Component {
         <Menu.Item key="json">JSON</Menu.Item>
       </Menu>
     );
+    
     if(!this.props.application || !this.props.application.applicationId)
       return null;
     return (
@@ -110,7 +112,7 @@ class FileList extends Component {
           </span>
         </div>
         <div>
-          {this.state.tableView ? <FileTable refresh={this.state.refreshTree} applicationId={this.state.applicationId}/> : <JSPlumbTree refresh={this.state.refreshTree} applicationId={this.state.applicationId} />}
+          {this.state.tableView ? <FileTable refresh={this.state.refreshTree} applicationId={this.state.applicationId}/> : <JSPlumbTree refresh={this.state.refreshTree} applicationId={this.state.applicationId} fileId={this.state.fileId}  />}
 
           {this.state.openFileDetailsDialog ?
             <FileDetailsForm

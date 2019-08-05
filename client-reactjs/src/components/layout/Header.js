@@ -18,9 +18,15 @@ class AppHeader extends Component {
 
     state = {
         applications: [],
-        selected:'Select an Application'
+        selected:'Select an Application',
+        pathName:'' 
+    }    
+    componentWillReceiveProps(props) {
+      if(props.application && props.application.applicationTitle!=''){
+      this.setState({ selected: props.application.applicationTitle });        
+        $('[data-toggle="popover"]').popover('disable'); 
+      } 
     }
-
     componentDidUpdate(prevProps, prevState) {
       if(this.state.applications.length == 0) {
           fetch("/api/app/read/app_list", {

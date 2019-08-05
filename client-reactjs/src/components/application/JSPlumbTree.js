@@ -25,7 +25,6 @@ class JSPlumbTree extends Component {
     //nodes:{"connections":[{"id":"con_5","sourceId":"taxi_data_raw","targetId":"taxi_data_clean","anchors":[{"elementId":"taxi_data_raw","type":"RightMiddle"},{"elementId":"taxi_data_clean","type":"LeftMiddle"}]},{"id":"con_10","sourceId":"weather_new_york_city","targetId":"weather_newyork_clean","anchors":[{"elementId":"weather_new_york_city","type":"RightMiddle"},{"elementId":"weather_newyork_clean","type":"LeftMiddle"}]},{"id":"con_15","sourceId":"taxi_data_clean","targetId":"taxi_weather","anchors":[{"elementId":"taxi_data_clean","type":"RightMiddle"},{"elementId":"taxi_weather","type":"LeftMiddle"}]},{"id":"con_20","sourceId":"weather_newyork_clean","targetId":"taxi_weather","anchors":[{"elementId":"weather_newyork_clean","type":"RightMiddle"},{"elementId":"taxi_weather","type":"LeftMiddle"}]}],"styles":[{"id":"taxi_data_raw","style":"left: 360px; top: 112px;"},{"id":"taxi_data_clean","style":"left: 319px; top: 105px;"},{"id":"weather_new_york_city","style":"left: -227px; top: 319px;"},{"id":"weather_newyork_clean","style":"left: -260px; top: 330px;"},{"id":"taxi_weather","style":"left: 758px; top: 121px;"}]},
     nodes:{},
     chartContainer: this.props.chartContainer ? this.props.chartContainer : "canvas"
-
   }
 
   componentWillUnmount() {
@@ -43,13 +42,18 @@ class JSPlumbTree extends Component {
         _self.fetchFiles();
       }, 200);
 
-    }
+    }   
   }
 
   componentDidMount() {
     document.addEventListener('mousedown', this.handleClickOutside);
-    this.fetchFiles();
-  }
+    this.fetchFiles(); 
+    if(this.props.fileId){
+    setTimeout(() => {
+    this.showFileDetails(this.props.fileId);
+    }, 1000); 
+}  
+}
 
   setWrapperRef(node) {
     this.wrapperRef = node;

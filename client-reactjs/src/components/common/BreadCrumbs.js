@@ -10,7 +10,7 @@ class BreadCrumbs extends Component {
         const pathSnippets = location.pathname.split('/');
         let breadCrumbItems = [];
         let path = '';
-        if(location.pathname == '/')
+        if((location.pathname == '/') || (location.pathname.includes('/file/')))
           path = 'files'
         else
           path = pathSnippets[2];

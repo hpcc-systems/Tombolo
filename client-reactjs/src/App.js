@@ -10,6 +10,7 @@ import {LoginPage} from "./components/login/LoginPage";
 import {PrivateRoute} from "./components/common/PrivateRoute";
 
 import {LeftNav} from "./components/layout/LeftNav";
+import {SelectedFilePopup} from "./components/application/SelectedFilePopup";
 import {FileList} from "./components/application/FileList";
 import {IndexList} from "./components/application/IndexList";
 import Dashboard from "./components/application/Dashboard";
@@ -29,7 +30,6 @@ class App extends React.Component {
     constructor(props) {
         super(props);
     }
-
     componentDidMount() {
         store.dispatch(userActions.validateToken());
     }
@@ -49,6 +49,7 @@ class App extends React.Component {
                                 <Content style={{background: '#fff', padding: '5px'}}>
                                     <Route exact path="/" component={FileList}/>
                                     <Switch>
+                                        <PrivateRoute exact path="/file/:applicationId/:fileId" component={SelectedFilePopup} />                                        
                                         <PrivateRoute exact path="/:applicationId/files" component={FileList} />
                                         <PrivateRoute path="/files" component={FileList} />
                                         <PrivateRoute exact path="/:applicationId/index" component={IndexList}/>
@@ -72,7 +73,7 @@ class App extends React.Component {
 }
 
 function mapStateToProps(state) {
-    const { application, selectedTopNav } = state.applicationReducer;
+    const { application,selectedTopNav } = state.applicationReducer;
     const { user } = state.authenticationReducer;
     return {
         application,
