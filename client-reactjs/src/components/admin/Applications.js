@@ -1,9 +1,13 @@
 import React, { Component } from "react";
 import { Table, Button, Row, Col, Modal, Form, Input, notification, Tooltip, Icon, Popconfirm, Divider } from 'antd/lib';
 import BreadCrumbs from "../common/BreadCrumbs";
-import { authHeader, handleError } from "../common/AuthHeader.js"
+import { authHeader, handleError } from "../common/AuthHeader.js";  
+import { connect } from 'react-redux';
 
 class Applications extends Component {
+  constructor(props) {
+    super(props);
+  }
   state = {
   	applications:[],
   	selectedApplication:'',
@@ -35,8 +39,11 @@ class Applications extends Component {
   }
 
   getApplications() {
-  	fetch("/api/app/read/app_list", {
-      headers: authHeader()
+  	var url="/api/app/read/app_list";
+    if(this.props.user && this.props.user.role=="user")
+    url="/api/app/read/appListByUserId?user_id="+this.props.user.id;
+  	fetch(url, {
+            headers: authHeader()
     })
 	.then((response) => {
 	  if(response.ok) {
@@ -137,10 +144,10 @@ class Applications extends Component {
 
   handleAddAppOk = () => {
     this.setState({
-      confirmLoading: true,
+      confirmLoading: true
     });
-
-  	let data = JSON.stringify({"id": this.state.newApp.id, "title" : this.state.newApp.title, "description" : this.state.newApp.description});
+    var userId=(this.props.user)?this.props.user.id:"";
+    let data = JSON.stringify({"id": this.state.newApp.id, "title" : this.state.newApp.title, "description" : this.state.newApp.description, "user_id":userId});
 	  fetch("/api/app/read/newapp", {
       method: 'post',
       headers: authHeader(),
@@ -163,7 +170,6 @@ class Applications extends Component {
         showAddApp: false,
         confirmLoading: false
       });
-
 	    this.getApplications();
     }).catch(error => {
       console.log(error);
@@ -228,7 +234,7 @@ class Applications extends Component {
 	      <Modal
 	          title="Add Application"
 	          visible={this.state.showAddApp}
-	          onOk={this.handleAddAppOk}
+	          onOk={this.handleAddAppOk.bind(this)}
 	          onCancel={this.handleAddAppCancel}
 	          confirmLoading={confirmLoading}
 	        >
@@ -250,4 +256,12 @@ class Applications extends Component {
   }
 }
 
-export default Applications;
+function mapStateToProps(state) {
+  const { user } = state.authenticationReducer;
+  return {
+      user
+  };
+}
+const connectedApp = connect(mapStateToProps)(Applications);
+export { connectedApp as AdminApplications };
+//export default Applications;

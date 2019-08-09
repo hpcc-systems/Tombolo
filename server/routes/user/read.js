@@ -11,6 +11,7 @@ router.get('/:id', getById);
 router.put('/:id', update);
 router.delete('/:id', _delete);
 router.post('/validateOrRefreshToken', validateOrRefreshToken);
+router.get('/:user_id/:app_id', userListByUserAndAppId);
 
 module.exports = router;
 
@@ -62,3 +63,9 @@ function validateOrRefreshToken(req, res, next) {
         .then(user => user ? res.json(user.userWithoutHash) : res.status(401).json({ message: 'Invalid Token' }))
         .catch(err => next(err));
 }
+function userListByUserAndAppId(req, res, next) {
+    userService.userListByUserAndAppId(req, res, next)
+        .then(user => user ? res.json(user) : res.sendStatus(404))
+        .catch(err => next(err));
+}
+

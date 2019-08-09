@@ -72,7 +72,7 @@ class LeftNav extends Component {
               </li>
               <li className="nav-item" >
                 <NavLink to={"/"+applicationId+"/jobs"} className="nav-link" data-toggle="popover" tabIndex="4"><i className="fa fa-lg fa-clock-o"></i> Jobs</NavLink>
-              </li>
+              </li>              
             </ul>
 
             <h6 className="sidebar-heading d-flex justify-content-between align-items-center px-3 mt-4 mb-1 text-muted">
@@ -84,6 +84,9 @@ class LeftNav extends Component {
             <ul className="nav flex-column mb-2">
               <li className="nav-item">
                 <NavLink to={"/admin/applications"} className="nav-link"><i className="fa fa-lg fa-desktop"></i> Applications</NavLink>
+              </li>
+              <li className="nav-item">
+                <NavLink to={"/"+applicationId+"/shareApp"} className="nav-link"  data-toggle="popover" tabIndex="6"><i className="fa fa-lg fa-share-alt"></i> Share an Application</NavLink>
               </li>
               <li className="nav-item">
                 <NavLink to={"/admin/clusters"} className="nav-link"><i className="fa fa-lg fa-server"></i> Clusters</NavLink>

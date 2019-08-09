@@ -12,6 +12,8 @@ class BreadCrumbs extends Component {
         let path = '';
         if((location.pathname == '/') || (location.pathname.includes('/file/')))
           path = 'files'
+        else if(location.pathname.includes('/shareApp'))
+          path = 'share an application'
         else
           path = pathSnippets[2];
         if(this.props.applicationId) {

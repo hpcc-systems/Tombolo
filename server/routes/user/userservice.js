@@ -4,6 +4,7 @@ let mongoose = require('mongoose');
 const dbUtil = require('../../utils/db');
 let models = require('../../models');
 let User = models.user;
+const Sequelize = require('sequelize');
 
 module.exports = {
     authenticate,
@@ -13,7 +14,8 @@ module.exports = {
     update,
     verifyToken,
     delete: _delete,
-    validateOrRefreshToken
+    validateOrRefreshToken,
+    userListByUserAndAppId
 };
 
 async function authenticate({ username, password }) {
@@ -122,3 +124,18 @@ async function update(id, userParam) {
 async function _delete(id) {
     await User.destroy({where: {"id":id}}, function(err) {});
 }
+async function userListByUserAndAppId(req, res, next) {
+    const Op = Sequelize.Op
+      return models.user.findAll({
+            where: {"id" :{ [Op.ne]:req.params.user_id},
+            "role":"user",
+            "id": {
+                [Op.notIn]: Sequelize.literal( 
+                    '( SELECT user_id ' +
+                        'FROM user_application ' +
+                       'WHERE application_id = "' + req.params.app_id +
+                    '")')
+                }
+            }
+        });
+    }

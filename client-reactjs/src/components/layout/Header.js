@@ -29,7 +29,10 @@ class AppHeader extends Component {
     }
     componentDidUpdate(prevProps, prevState) {
       if(this.state.applications.length == 0) {
-          fetch("/api/app/read/app_list", {
+        var url="/api/app/read/app_list";
+        if(this.props.user && this.props.user.role=='user')
+          url="/api/app/read/appListByUserId?user_id="+this.props.user.id;
+          fetch(url, {
             headers: authHeader()
           })
           .then((response) => {
@@ -79,8 +82,12 @@ class AppHeader extends Component {
 
     handleChange(event) {
         //this.props.onAppicationSelect(value);
+        var selectedList=[];
         this.props.dispatch(applicationActions.applicationSelected(event.target.getAttribute("data-value"), event.target.getAttribute("data-display")));
         this.setState({ selected: event.target.getAttribute("data-display") });
+        if(this.props.history.location.pathname.includes('/shareApp'))
+        this.props.history.push('/'+event.target.getAttribute("data-value")+'/shareApp');
+        else
         this.props.history.push('/'+event.target.getAttribute("data-value")+'/files');
         $('[data-toggle="popover"]').popover('disable');
     }
