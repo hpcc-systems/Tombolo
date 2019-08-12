@@ -82,12 +82,8 @@ class AppHeader extends Component {
 
     handleChange(event) {
         //this.props.onAppicationSelect(value);
-        var selectedList=[];
         this.props.dispatch(applicationActions.applicationSelected(event.target.getAttribute("data-value"), event.target.getAttribute("data-display")));
         this.setState({ selected: event.target.getAttribute("data-display") });
-        if(this.props.history.location.pathname.includes('/shareApp'))
-        this.props.history.push('/'+event.target.getAttribute("data-value")+'/shareApp');
-        else
         this.props.history.push('/'+event.target.getAttribute("data-value")+'/files');
         $('[data-toggle="popover"]').popover('disable');
     }

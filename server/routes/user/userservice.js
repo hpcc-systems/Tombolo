@@ -126,7 +126,7 @@ async function _delete(id) {
 }
 async function userListByUserAndAppId(req, res, next) {
     const Op = Sequelize.Op
-      return models.user.findAll({
+      return await models.user.findAll({
             where: {"id" :{ [Op.ne]:req.params.user_id},
             "role":"user",
             "id": {

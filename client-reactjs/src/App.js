@@ -24,8 +24,6 @@ import {AppHeader} from './components/layout/Header';
 import { userActions } from './redux/actions/User';
 import { store } from './redux/store/Store';
 
-import {ShareApp} from "./components/admin/ShareApp";
-
 const { Content } = Layout;
 
 class App extends React.Component {
@@ -59,7 +57,6 @@ class App extends React.Component {
                                         <PrivateRoute path="/:applicationId/queries" component={QueriesList}/>
                                         <PrivateRoute path="/:applicationId/jobs" component={JobList}/>
                                         <PrivateRoute path="/admin/applications" component={AdminApplications}/>
-                                        <PrivateRoute path="/:applicationId/shareApp" component={ShareApp}/>
                                         <PrivateRoute path="/admin/clusters" component={AdminClusters}/>
                                         <PrivateRoute path="/admin/users" component={Users}/>
                                     </Switch>

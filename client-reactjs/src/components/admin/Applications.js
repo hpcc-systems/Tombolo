@@ -3,6 +3,7 @@ import { Table, Button, Row, Col, Modal, Form, Input, notification, Tooltip, Ico
 import BreadCrumbs from "../common/BreadCrumbs";
 import { authHeader, handleError } from "../common/AuthHeader.js";  
 import { connect } from 'react-redux';
+import ShareApp from "./ShareApp";
 
 class Applications extends Component {
   constructor(props) {
@@ -18,7 +19,10 @@ class Applications extends Component {
 	  	id: '',
 	  	title: '',
       description:''
-	}
+  },
+  openShareAppDialog:false,
+  appId:"",
+  appTitle:""
   }
 
   componentDidMount() {
@@ -91,7 +95,13 @@ class Applications extends Component {
     	console.log(error);
   	});
   }
-
+  handleShareApplication(app_id,app_tittle){
+    this.setState({
+      appId: app_id,
+      appTitle:app_tittle,
+      openShareAppDialog: true
+    });
+  }
   handleRemove = (app_id) => {
   	var data = JSON.stringify({appIdsToDelete:app_id});
   	console.log(data);
@@ -176,6 +186,11 @@ class Applications extends Component {
     });
   }
 
+  handleClose = () => {
+    this.setState({
+      openShareAppDialog: false
+    });
+  }
   render() {
     {console.log("Applications render")}
   	const { confirmLoading} = this.state;
@@ -186,15 +201,17 @@ class Applications extends Component {
       dataIndex: 'title'
     },
     {
-      width: '60%',
+      width: '55%',
       title: 'Description',
       dataIndex: 'description'
     },{
-      width: '30%',
+      width: '15%',
       title: 'Action',
       dataIndex: '',
       render: (text, record) =>
         <span>
+          <a href="#" onClick={(row) => this.handleShareApplication(record.id,record.title)}><Tooltip placement="left" title={"Share Application"}><Icon type="share-alt" /></Tooltip></a>
+          <Divider type="vertical" />
           <a href="#" onClick={(row) => this.handleEditApplication(record.id)}><Tooltip placement="right" title={"Edit Application"}><Icon type="edit" /></Tooltip></a>
           <Divider type="vertical" />
           <Popconfirm title="Are you sure you want to delete this Application?" onConfirm={() => this.handleRemove(record.id)} icon={<Icon type="question-circle-o" style={{ color: 'red' }} />}>
@@ -251,6 +268,14 @@ class Applications extends Component {
 	            </Form>
 	        </Modal>
      </div>
+     <div>
+     {this.state.openShareAppDialog ?
+          <ShareApp
+            appId={this.state.appId}
+            appTitle={this.state.appTitle}
+            user={this.props.user}
+            onClose={this.handleClose}/> : null}
+      </div>
    </React.Fragment>
     );
   }

@@ -1,37 +1,30 @@
 import React, { Component } from "react";
-import { Table, Button,message,Tooltip, Icon, Popconfirm,Spin,Modal } from 'antd/lib';
-import BreadCrumbs from "../common/BreadCrumbs";
+import { Table,message,Spin,Modal } from 'antd/lib';
 import { authHeader, handleError } from "../common/AuthHeader.js";  
-import { connect } from 'react-redux';
 const { confirm } = Modal;
 class ShareApp extends Component {
     constructor(props) {
       super(props);
     }
     state = {
-        applicationId: this.props.application ? this.props.application.applicationId : '',
-        applicationTitle: this.props.application ? this.props.application.applicationTitle : '',
+        applicationId: this.props.appId?this.props.appId : '',
+        applicationTitle: this.props.appTitle ? this.props.appTitle : '',
         availableUsers:[],
         selectedRowKeys:[],
         initialDataLoading: false
-    }
-    componentDidMount() {
-        this.getUserList(this.state.applicationId);
-    }    
-    componentWillReceiveProps(props) {  
-      if(props.application) {
-        if(this.state.applicationId != props.application.applicationId) {
-          this.setState({
-            ...this.state,
-            applicationId: props.application.applicationId,
-            applicationTitle: props.application.applicationTitle
-          });
-          this.setState({
-            selectedRowKeys: []
-          });
-          this.getUserList(props.application.applicationId);
-        }
-      } 
+    }  
+    componentDidMount(){
+      if(this.props.appId) {
+        this.setState({
+          ...this.state,
+          applicationId: this.props.appId,
+         applicationTitle: this.props.appTitle
+        });
+        this.setState({
+          selectedRowKeys: []
+        });
+        this.getUserList(this.props.appId);
+      }  
     }
     getUserList(appId) {
       var val=[];
@@ -44,8 +37,7 @@ class ShareApp extends Component {
           method: 'get',
           headers: authHeader()
         }).then((response) => {
-            if(response.ok) {
-              
+            if(response.ok) {              
               return response.json();
             }
             handleError(response);
@@ -93,22 +85,30 @@ class ShareApp extends Component {
         body: JSON.stringify({users : userAppList})
       }).then(function(response) {
           if(response.ok) {             
-           _self.getUserList(_self.state.applicationId );
-           _self.setState({
-            selectedRowKeys:[]
-          });
+           _self.getUserList(_self.state.applicationId );         
           message.config({top:150})
           message.success("Application shared successfully");
+          _self.setState({
+            visible: false
+          });
+          _self.props.onClose();
           }
       }).then(function(data) {
         console.log('Saved..');
       });
     }
-    
+    handleOk = () => {  
+      this.saveSharedDetails();
+    }
+    handleCancel = () => {
+      this.setState({
+        visible: false
+      });
+      this.props.onClose();
+    }
     render() {
         {console.log("ShareApp render")}
         const{availableUsers,selectedRowKeys}=this.state;
-        const hasSelected = this.state.selectedRowKeys.length > 0;
         const rowSelection = {
           selectedRowKeys,
             onChange:this.onSelectedRowUsersChange.bind(this) 
@@ -118,17 +118,18 @@ class ShareApp extends Component {
             dataIndex: 'name',
             render: (text, row) => <a >{row.lastName+', '+row.firstName}</a>
           }];
-          if(!this.props.application || !this.props.application.applicationId)
-      return null;
         return (
-        <React.Fragment>
-          <div className="d-flex justify-content-end" style={{paddingTop:"60px"}}>          
-            <BreadCrumbs applicationId={this.state.applicationId} applicationTitle={this.state.applicationTitle} />  
-            <span style={{ marginLeft: "auto" }}>
-            </span>          
-          
-          </div>
-          <div style={{padding:"15px"}}>
+        <div>
+          <Modal
+	          title={'Share "'+this.state.applicationTitle+'" Application'}
+	          visible={true}
+            onOk={this.handleOk.bind(this)} 
+            onCancel={this.handleCancel}
+            destroyOnClose={true}
+            bodyStyle={{height:"410px"}}
+            okText="Share"
+	        >         
+          <div >
            <div className="loader">
            <Spin spinning={this.state.initialDataLoading} size="large" />
            </div>
@@ -137,31 +138,12 @@ class ShareApp extends Component {
                   columns={usersColumns}
                   rowKey={record => record.id}
                   dataSource={availableUsers}
+                  pagination={{ pageSize: 5 }}
                 />
               </div>
-              <div align="right">
-              <span>
-            <Tooltip placement="bottom" title={"Click to share an application"}>            
-              <Button type="primary" onClick={this.saveSharedDetails.bind(this)}  disabled={!hasSelected} ><i className="fa fa-share-alt" style={{paddingRight:"4px"}}  disabled={!hasSelected}></i>  Share an Application</Button>
-             
-            </Tooltip>
-          </span>
-              </div>
-          
-       </React.Fragment>
+          </Modal>
+       </div>
         );
       }
 }
-function mapStateToProps(state) {
-  const { user } = state.authenticationReducer;
-  const { application, selectedTopNav } = state.applicationReducer;
-  return {
-      user,
-      application,
-      selectedTopNav
-  };
-}
-
-const connectedShareApp = connect(mapStateToProps)(ShareApp);
-export { connectedShareApp as ShareApp };
-//export default ShareApp;
+export default ShareApp;
