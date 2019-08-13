@@ -1,7 +1,8 @@
 import React, { Component } from "react";
-import { Table,message,Spin,Modal } from 'antd/lib';
+import { Table,message,Spin,Modal,Tabs } from 'antd/lib';
 import { authHeader, handleError } from "../common/AuthHeader.js";  
 const { confirm } = Modal;
+const TabPane = Tabs.TabPane;
 class ShareApp extends Component {
     constructor(props) {
       super(props);
@@ -11,7 +12,8 @@ class ShareApp extends Component {
         applicationTitle: this.props.appTitle ? this.props.appTitle : '',
         availableUsers:[],
         selectedRowKeys:[],
-        initialDataLoading: false
+        initialDataLoading: false,
+        sharedAppUsers:[]
     }  
     componentDidMount(){
       if(this.props.appId) {
@@ -24,10 +26,10 @@ class ShareApp extends Component {
           selectedRowKeys: []
         });
         this.getUserList(this.props.appId);
+        this.getSharedAppUserList(this.props.appId);
       }  
     }
     getUserList(appId) {
-      var val=[];
        if(appId){
         this.setState({
           initialDataLoading: true
@@ -53,6 +55,28 @@ class ShareApp extends Component {
           });
         }
       }
+      getSharedAppUserList(appId) {
+         if(appId){
+          var userId=(this.props.user)?this.props.user.id:"";
+          fetch("/api/user/"+userId+"/"+appId+"/sharedAppUser", {
+            method: 'get',
+            headers: authHeader()
+          }).then((response) => {
+              if(response.ok) {              
+                return response.json();
+              }
+              handleError(response);
+            })
+            .then(data => {
+              this.setState({
+                ...this.state,
+                sharedAppUsers: data
+              });
+            }).catch(error => {
+              console.log(error);
+            });
+          }
+        }
       onSelectedRowUsersChange = (selectedRowKeys) => {
         this.setState({
           selectedRowKeys
@@ -85,7 +109,8 @@ class ShareApp extends Component {
         body: JSON.stringify({users : userAppList})
       }).then(function(response) {
           if(response.ok) {             
-           _self.getUserList(_self.state.applicationId );         
+           _self.getUserList(_self.state.applicationId );   
+           _self.getSharedAppUserList(_self.state.applicationId );         
           message.config({top:150})
           message.success("Application shared successfully");
           _self.setState({
@@ -108,7 +133,7 @@ class ShareApp extends Component {
     }
     render() {
         {console.log("ShareApp render")}
-        const{availableUsers,selectedRowKeys}=this.state;
+        const{availableUsers,selectedRowKeys,sharedAppUsers}=this.state;
         const rowSelection = {
           selectedRowKeys,
             onChange:this.onSelectedRowUsersChange.bind(this) 
@@ -116,7 +141,12 @@ class ShareApp extends Component {
           const usersColumns = [{
             title: 'Available Users',
             dataIndex: 'name',
-            render: (text, row) => <a >{row.lastName+', '+row.firstName}</a>
+            render: (text, row) => <a >{row.firstName+', '+row.lastName}</a>
+          }];
+          const sharedUsersColumns = [{
+            title: 'Shared Users',
+            dataIndex: 'name',
+            render: (text, row) => <a >{row.firstName+', '+row.lastName}</a>
           }];
         return (
         <div>
@@ -126,9 +156,12 @@ class ShareApp extends Component {
             onOk={this.handleOk.bind(this)} 
             onCancel={this.handleCancel}
             destroyOnClose={true}
-            bodyStyle={{height:"410px"}}
+            bodyStyle={{height:"460px"}}
             okText="Share"
-	        >         
+	        >  
+          <Tabs
+          defaultActiveKey="1">
+          <TabPane tab="Available Users" key="1">       
           <div >
            <div className="loader">
            <Spin spinning={this.state.initialDataLoading} size="large" />
@@ -141,6 +174,18 @@ class ShareApp extends Component {
                   pagination={{ pageSize: 5 }}
                 />
               </div>
+              </TabPane>
+              <TabPane tab="Shared Users" key="2">  
+              <div >          
+                <Table
+                  columns={sharedUsersColumns}
+                  rowKey={record => record.id}
+                  dataSource={sharedAppUsers}
+                  pagination={{ pageSize: 5 }}
+                />
+              </div>
+              </TabPane>
+              </Tabs>
           </Modal>
        </div>
         );

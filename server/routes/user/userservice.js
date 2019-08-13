@@ -5,6 +5,7 @@ const dbUtil = require('../../utils/db');
 let models = require('../../models');
 let User = models.user;
 const Sequelize = require('sequelize');
+let UserApplication = models.user_application;
 
 module.exports = {
     authenticate,
@@ -15,7 +16,8 @@ module.exports = {
     verifyToken,
     delete: _delete,
     validateOrRefreshToken,
-    userListByUserAndAppId
+    GetuserListToShareApp,
+    GetSharedAppUserList
 };
 
 async function authenticate({ username, password }) {
@@ -124,7 +126,7 @@ async function update(id, userParam) {
 async function _delete(id) {
     await User.destroy({where: {"id":id}}, function(err) {});
 }
-async function userListByUserAndAppId(req, res, next) {
+async function GetuserListToShareApp(req, res, next) {
     const Op = Sequelize.Op
       return await models.user.findAll({
             where: {"id" :{ [Op.ne]:req.params.user_id},
@@ -139,3 +141,20 @@ async function userListByUserAndAppId(req, res, next) {
             }
         });
     }
+    async function GetSharedAppUserList(req, res, next) {
+        const Op = Sequelize.Op
+       return await models.user.findAll({
+            where:{
+            //"id" :{ [Op.ne]:req.params.user_id}, 
+            "role":"user",
+            "id": {
+            [Op.in]: Sequelize.literal( 
+                '( SELECT user_id ' +
+                    'FROM user_application ' +
+                   'WHERE application_id = "' + req.params.app_id +
+                   '" and user_id != "' + req.params.user_id +
+                '")')
+            }
+        }
+    });
+}
