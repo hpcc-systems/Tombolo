@@ -11,9 +11,10 @@ router.get('/:id', getById);
 router.put('/:id', update);
 router.delete('/:id', _delete);
 router.post('/validateOrRefreshToken', validateOrRefreshToken);
+router.get('/:user_id/:app_id', GetuserListToShareApp);
+router.get('/:user_id/:app_id/sharedAppUser', GetSharedAppUserList);
 
 module.exports = router;
-
 function authenticate(req, res, next) {
     userService.authenticate(req.body)
         .then(user => user ? res.json(user.userWithoutHash) : res.status(400).json({ message: 'Username or password is incorrect' }))
@@ -62,3 +63,14 @@ function validateOrRefreshToken(req, res, next) {
         .then(user => user ? res.json(user.userWithoutHash) : res.status(401).json({ message: 'Invalid Token' }))
         .catch(err => next(err));
 }
+function GetuserListToShareApp(req, res, next) {
+    userService.GetuserListToShareApp(req, res, next)
+        .then(user => user ? res.json(user) : res.sendStatus(404))
+        .catch(err => next(err));
+}
+function GetSharedAppUserList(req, res, next) {
+    userService.GetSharedAppUserList(req, res, next)
+        .then(user => user ? res.json(user) : res.sendStatus(404))
+        .catch(err => next(err));
+}
+

@@ -29,7 +29,10 @@ class AppHeader extends Component {
     }
     componentDidUpdate(prevProps, prevState) {
       if(this.state.applications.length == 0) {
-          fetch("/api/app/read/app_list", {
+        var url="/api/app/read/app_list";
+        if(this.props.user && this.props.user.role=='user')
+          url="/api/app/read/appListByUserId?user_id="+this.props.user.id;
+          fetch(url, {
             headers: authHeader()
           })
           .then((response) => {

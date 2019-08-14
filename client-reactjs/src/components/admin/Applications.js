@@ -1,9 +1,14 @@
 import React, { Component } from "react";
 import { Table, Button, Row, Col, Modal, Form, Input, notification, Tooltip, Icon, Popconfirm, Divider } from 'antd/lib';
 import BreadCrumbs from "../common/BreadCrumbs";
-import { authHeader, handleError } from "../common/AuthHeader.js"
+import { authHeader, handleError } from "../common/AuthHeader.js";  
+import { connect } from 'react-redux';
+import ShareApp from "./ShareApp";
 
 class Applications extends Component {
+  constructor(props) {
+    super(props);
+  }
   state = {
   	applications:[],
   	selectedApplication:'',
@@ -14,7 +19,10 @@ class Applications extends Component {
 	  	id: '',
 	  	title: '',
       description:''
-	}
+  },
+  openShareAppDialog:false,
+  appId:"",
+  appTitle:""
   }
 
   componentDidMount() {
@@ -35,8 +43,11 @@ class Applications extends Component {
   }
 
   getApplications() {
-  	fetch("/api/app/read/app_list", {
-      headers: authHeader()
+  	var url="/api/app/read/app_list";
+    if(this.props.user && this.props.user.role=="user")
+    url="/api/app/read/appListByUserId?user_id="+this.props.user.id;
+  	fetch(url, {
+            headers: authHeader()
     })
 	.then((response) => {
 	  if(response.ok) {
@@ -84,7 +95,13 @@ class Applications extends Component {
     	console.log(error);
   	});
   }
-
+  handleShareApplication(app_id,app_tittle){
+    this.setState({
+      appId: app_id,
+      appTitle:app_tittle,
+      openShareAppDialog: true
+    });
+  }
   handleRemove = (app_id) => {
   	var data = JSON.stringify({appIdsToDelete:app_id});
   	console.log(data);
@@ -137,10 +154,10 @@ class Applications extends Component {
 
   handleAddAppOk = () => {
     this.setState({
-      confirmLoading: true,
+      confirmLoading: true
     });
-
-  	let data = JSON.stringify({"id": this.state.newApp.id, "title" : this.state.newApp.title, "description" : this.state.newApp.description});
+    var userId=(this.props.user)?this.props.user.id:"";
+    let data = JSON.stringify({"id": this.state.newApp.id, "title" : this.state.newApp.title, "description" : this.state.newApp.description, "user_id":userId});
 	  fetch("/api/app/read/newapp", {
       method: 'post',
       headers: authHeader(),
@@ -163,13 +180,17 @@ class Applications extends Component {
         showAddApp: false,
         confirmLoading: false
       });
-
 	    this.getApplications();
     }).catch(error => {
       console.log(error);
     });
   }
 
+  handleClose = () => {
+    this.setState({
+      openShareAppDialog: false
+    });
+  }
   render() {
     {console.log("Applications render")}
   	const { confirmLoading} = this.state;
@@ -180,15 +201,17 @@ class Applications extends Component {
       dataIndex: 'title'
     },
     {
-      width: '60%',
+      width: '55%',
       title: 'Description',
       dataIndex: 'description'
     },{
-      width: '30%',
+      width: '15%',
       title: 'Action',
       dataIndex: '',
       render: (text, record) =>
         <span>
+          <a href="#" onClick={(row) => this.handleShareApplication(record.id,record.title)}><Tooltip placement="left" title={"Share Application"}><Icon type="share-alt" /></Tooltip></a>
+          <Divider type="vertical" />
           <a href="#" onClick={(row) => this.handleEditApplication(record.id)}><Tooltip placement="right" title={"Edit Application"}><Icon type="edit" /></Tooltip></a>
           <Divider type="vertical" />
           <Popconfirm title="Are you sure you want to delete this Application?" onConfirm={() => this.handleRemove(record.id)} icon={<Icon type="question-circle-o" style={{ color: 'red' }} />}>
@@ -228,7 +251,7 @@ class Applications extends Component {
 	      <Modal
 	          title="Add Application"
 	          visible={this.state.showAddApp}
-	          onOk={this.handleAddAppOk}
+	          onOk={this.handleAddAppOk.bind(this)}
 	          onCancel={this.handleAddAppCancel}
 	          confirmLoading={confirmLoading}
 	        >
@@ -245,9 +268,25 @@ class Applications extends Component {
 	            </Form>
 	        </Modal>
      </div>
+     <div>
+     {this.state.openShareAppDialog ?
+          <ShareApp
+            appId={this.state.appId}
+            appTitle={this.state.appTitle}
+            user={this.props.user}
+            onClose={this.handleClose}/> : null}
+      </div>
    </React.Fragment>
     );
   }
 }
 
-export default Applications;
+function mapStateToProps(state) {
+  const { user } = state.authenticationReducer;
+  return {
+      user
+  };
+}
+const connectedApp = connect(mapStateToProps)(Applications);
+export { connectedApp as AdminApplications };
+//export default Applications;

@@ -18,7 +18,7 @@ import {QueriesList} from "./components/application/QueriesList";
 import {JobList} from "./components/application/JobList";
 import Users from "./components/admin/Users";
 
-import AdminApplications from "./components/admin/Applications";
+import {AdminApplications} from "./components/admin/Applications";
 import AdminClusters from "./components/admin/Clusters";
 import {AppHeader} from './components/layout/Header';
 import { userActions } from './redux/actions/User';

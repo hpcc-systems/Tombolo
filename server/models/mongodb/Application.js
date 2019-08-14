@@ -11,7 +11,11 @@ module.exports = (sequelize, DataTypes) => {
     title: DataTypes.STRING
   }, {freezeTableName: true});
   application.associate = function(models) {
-    // associations can be defined here
+    application.hasMany(models.user_application,{
+      foreignKey:'application_id',
+      onDelete: 'CASCADE',
+      hooks: true
+    });
   };
   return application;
 };
