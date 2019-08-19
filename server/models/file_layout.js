@@ -16,7 +16,7 @@ module.exports = (sequelize, DataTypes) => {
     displaySize: DataTypes.STRING,
     textJustification: DataTypes.STRING,
     format: DataTypes.STRING,
-    isSPII: DataTypes.STRING,
+    isPCI: DataTypes.STRING,
     isPII: DataTypes.STRING
   }, {freezeTableName: true});
   file_layout.associate = function(models) {

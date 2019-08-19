@@ -251,7 +251,7 @@ function getFileLayout(cluster, fileName) {
 	      			"displaySize" : '',
 	      			"textJustification" : 'right',
 	      			"format" : '',
-	      			"isSPII" : 'false',
+	      			"isPCI" : 'false',
 	      			"isPII" : 'false'
 	      		}
 	      		if(column.DataColumns != undefined) {
@@ -265,7 +265,7 @@ function getFileLayout(cluster, fileName) {
 			      			"displaySize" : '',
 			      			"textJustification" : 'right',
 			      			"format" : '',
-			      			"isSPII" : 'false',
+			      			"isPCI" : 'false',
 			      			"isPII" : 'false'
 	      				}
 	      				childColumns.push(childColumnObj);
@@ -508,8 +508,8 @@ router.get('/getQueryInfo', function (req, res) {
 			      	resultObj.request = requestObj;
 			      	//get query response
 			      	request.get({
-					  url: cluster.host_url + ':8002' +'/WsEcl/example/response/query/roxie/'+req.query.queryName+'/json?display',
-					  auth : getClusterAuth(cluster)
+						url: cluster.host_url + ':8002' +'/WsEcl/example/response/query/roxie/'+req.query.queryName+'/json?display',
+					    auth : getClusterAuth(cluster)
 					}, function(err, response, body) {
 					  if (err) {
 						console.log('ERROR - ', err);
