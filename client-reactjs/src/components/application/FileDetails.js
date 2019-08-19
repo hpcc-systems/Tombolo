@@ -586,8 +586,8 @@ class FileDetails extends Component {
       dataIndex: 'format'
     },
     {
-      title: 'SPII',
-      dataIndex: 'isSPII'
+      title: 'PCI',
+      dataIndex: 'isPCI'
     },
     {
       title: 'PII',

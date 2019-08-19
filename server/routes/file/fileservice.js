@@ -77,7 +77,7 @@ async function getJSONSchema(appId, res) {
             layoutObj.displaySize = layout.displaySize;
             layoutObj.textJustification = layout.textJustification;
             layoutObj.format = layout.format;
-            layoutObj.isSPII = layout.isSPII;
+            layoutObj.isPCI = layout.isPCI;
             layoutObj.isPII = layout.isPII;
 
             layouts.push(layoutObj);
