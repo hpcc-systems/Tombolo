@@ -261,14 +261,33 @@ class Clusters extends Component {
     const formItemLayout = {
       labelCol: {
         xs: { span: 2 },
-        sm: { span: 5 },
+        sm: { span: 4 },
       },
       wrapperCol: {
         xs: { span: 2 },
         sm: { span: 10 },
       },
     };
-
+    const formHostLayout = {
+      labelCol: {
+        xs: { span: 1 },
+        sm: { span: 8 },
+      },
+      wrapperCol: {
+        xs: { span: 1 },
+        sm: { span: 16 },
+      },
+    };
+    const formPortLayout = {
+      labelCol: {
+        xs: { span: 1 },
+        sm: { span: 5 },
+      },
+      wrapperCol: {
+        xs: { span: 1 },
+        sm: { span: 16 },
+      },
+    };
     return (
     <React.Fragment>
       <div className="d-flex justify-content-end" style={{paddingTop:"60px"}}>
@@ -306,38 +325,55 @@ class Clusters extends Component {
                     }
                   </Form.Item>
                 </div>
+                {/* <Form.Item label="Thor:"></Form.Item> */}
+                <label style={{color:"black"}}>Thor:</label>
+                <Divider style={{marginTop: '0px', marginBottom:'10px'}}></Divider>
+                <Row gutter={23}>
+                <Col span={13}>
                 <div className={'form-group' + (submitted && !thorHost ? ' has-error' : '')}>
-                  <Form.Item {...formItemLayout} label="Thor Host">
+                  <Form.Item {...formHostLayout} label="Host">
       						<Input id="thorHost" name="thorHost" onChange={this.onChange} placeholder="http://127.0.0.1" value={this.state.newCluster.thorHost}/>
                   {submitted && !thorHost &&
                       <div className="help-block">Thor Host is required</div>
                   }
 		            </Form.Item>
                 </div>
+                </Col>
+                <Col span={10}>
                 <div className={'form-group' + (submitted && !thorPort ? ' has-error' : '')}>
-                  <Form.Item {...formItemLayout} label="Thor Port">
+                  <Form.Item {...formPortLayout} label="Port">
                     <Input id="thorPort" name="thorPort" onChange={this.onChange} placeholder="Thor Port" value={this.state.newCluster.thorPort}/>
                     {submitted && !thorPort &&
                         <div className="help-block">Thor Port is required</div>
                     }
                   </Form.Item>
                 </div>
+                </Col>
+                </Row>
+                <label style={{color:"black"}}>Roxie:</label>
+                <Divider style={{marginTop: '0px', marginBottom:'10px'}}></Divider>
+                <Row gutter={23}>
+                <Col span={13}>
                 <div className={'form-group' + (submitted && !roxieHost ? ' has-error' : '')}>
-                  <Form.Item {...formItemLayout} label="Roxie Host">
+                  <Form.Item {...formHostLayout} label="Host">
       						<Input id="roxieHost" name="roxieHost" onChange={this.onChange} placeholder="http://127.0.0.1" value={this.state.newCluster.roxieHost}/>
                   {submitted && !roxieHost &&
                       <div className="help-block">Roxie Host is required</div>
                   }
 		            </Form.Item>
                 </div>
+                </Col>
+                <Col span={10}>
                 <div className={'form-group' + (submitted && !roxiePort ? ' has-error' : '')}>
-                  <Form.Item {...formItemLayout} label="Roxie Port">
+                  <Form.Item {...formPortLayout} label="Port">
                     <Input id="roxiePort" name="roxiePort" onChange={this.onChange} placeholder="Roxie Port" value={this.state.newCluster.roxiePort}/>
                     {submitted && !roxiePort &&
                         <div className="help-block">Roxie Port is required</div>
                     }
                   </Form.Item>
                 </div>
+                </Col>
+                </Row>
  		            <Form.Item {...formItemLayout} label="User Name">
       						<Input id="username" name="username" onChange={this.onChange} placeholder="User Name" value={this.state.newCluster.username}/>
 		            </Form.Item>
