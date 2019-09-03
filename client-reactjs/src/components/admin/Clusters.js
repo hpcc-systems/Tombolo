@@ -15,8 +15,10 @@ class Clusters extends Component {
   	newCluster : {
   	  	id: '',
   	  	name: '',
-  	  	host: '',
-        port: '',
+  	  	thorHost: '',
+        thorPort: '',
+        roxieHost: '',
+        roxiePort: '',
         username: '',
         password: '',
         submitted: false
@@ -100,8 +102,10 @@ class Clusters extends Component {
           ...this.state.newCluster,
           id: '',
           name: '',
-          host: '',
-          port: '',
+          thorHost: '',
+          thorPort: '',
+          roxieHost: '',
+          roxiePort: '',
           username: '',
           submitted: false
         },
@@ -134,8 +138,10 @@ class Clusters extends Component {
           ...this.state.newCluster,
           id: data.id,
           name: data.name,
-          host: data.host_url,
-          port: data.port,
+          thorHost: data.thor_host,
+          thorPort: data.thor_port,
+          roxieHost: data.roxie_host,
+          roxiePort: data.roxie_port,
           username: data.username,
           submitted: false
         }
@@ -155,21 +161,29 @@ class Clusters extends Component {
   }
 
   handleAddClusterOk = () => {
-    if(!(this.state.newCluster.host.startsWith("https") || this.state.newCluster.host.startsWith("http"))) {
+    if(!(this.state.newCluster.thorHost.startsWith("https") || this.state.newCluster.thorHost.startsWith("http"))) {
       message.config({top:50});
-      message.error("Please use a valid host name");
+      message.error("Please use a valid thor host name");
+      return;
+    }
+    if(!(this.state.newCluster.roxieHost.startsWith("https") || this.state.newCluster.roxieHost.startsWith("http"))) {
+      message.config({top:50});
+      message.error("Please use a valid roxie host name");
       return;
     }
     this.setState({
       confirmLoading: true,
       submitted: true
     });
-    if(this.state.newCluster.name && this.state.newCluster.host && this.state.newCluster.port) {
+    if(this.state.newCluster.name && this.state.newCluster.thorHost && this.state.newCluster.thorPort
+      && this.state.newCluster.roxieHost && this.state.newCluster.roxiePort) {
       let data = JSON.stringify({
         "id": this.state.newCluster.id,
         "name": this.state.newCluster.name,
-        "host" : this.state.newCluster.host,
-        "port" : this.state.newCluster.port,
+        "thor_host" : this.state.newCluster.thorHost,
+        "thor_port" : this.state.newCluster.thorPort,
+        "roxie_host" : this.state.newCluster.roxieHost,
+        "roxie_port" : this.state.newCluster.roxiePort,
         "username" : this.state.newCluster.username,
         "password" : this.state.newCluster.password
       });
@@ -183,7 +197,7 @@ class Clusters extends Component {
         if(response.ok) {
           return response.json();
         }
-        throw new Error("There was an error adding the Cluster. Please check if the cluster is accessible. ");
+       throw new Error("There was an error adding the Cluster. Please check if the cluster is accessible. ");
       })
       .then(suggestions => {
         this.setState({
@@ -205,24 +219,34 @@ class Clusters extends Component {
 
   render() {
     const { confirmLoading, submitted} = this.state;
-    const {name, host, port} = this.state.newCluster;
+    const {name, thorHost, thorPort,roxiePort,roxieHost} = this.state.newCluster;
   	const clusterColumns = [{
       title: 'Name',
       dataIndex: 'name',
-      width: '30%',
+      width: '20%',
     },
     {
-      width: '30%',
-      title: 'Host',
-      dataIndex: 'host_url'
+      width: '20%',
+      title: 'Thor Host',
+      dataIndex: 'thor_host'
     },
     {
-      width: '30%',
-      title: 'Port',
-      dataIndex: 'port'
+      width: '15%',
+      title: 'Thor Port',
+      dataIndex: 'thor_port'
     },
     {
-      width: '30%',
+      width: '20%',
+      title: 'Roxie Host',
+      dataIndex: 'roxie_host'
+    },
+    {
+      width: '15%',
+      title: 'Roxie Port',
+      dataIndex: 'roxie_port'
+    },
+    {
+      width: '10%',
       title: 'Action',
       dataIndex: '',
       render: (text, record) =>
@@ -237,14 +261,33 @@ class Clusters extends Component {
     const formItemLayout = {
       labelCol: {
         xs: { span: 2 },
-        sm: { span: 5 },
+        sm: { span: 4 },
       },
       wrapperCol: {
         xs: { span: 2 },
         sm: { span: 10 },
       },
     };
-
+    const formHostLayout = {
+      labelCol: {
+        xs: { span: 1 },
+        sm: { span: 8 },
+      },
+      wrapperCol: {
+        xs: { span: 1 },
+        sm: { span: 16 },
+      },
+    };
+    const formPortLayout = {
+      labelCol: {
+        xs: { span: 1 },
+        sm: { span: 5 },
+      },
+      wrapperCol: {
+        xs: { span: 1 },
+        sm: { span: 16 },
+      },
+    };
     return (
     <React.Fragment>
       <div className="d-flex justify-content-end" style={{paddingTop:"60px"}}>
@@ -282,22 +325,55 @@ class Clusters extends Component {
                     }
                   </Form.Item>
                 </div>
-                <div className={'form-group' + (submitted && !host ? ' has-error' : '')}>
-                  <Form.Item {...formItemLayout} label="Host">
-      						<Input id="host" name="host" onChange={this.onChange} placeholder="http://127.0.0.1" value={this.state.newCluster.host}/>
-                  {submitted && !host &&
-                      <div className="help-block">Cluster Host is required</div>
+                {/* <Form.Item label="Thor:"></Form.Item> */}
+                <label style={{color:"black"}}>Thor:</label>
+                <Divider style={{marginTop: '0px', marginBottom:'10px'}}></Divider>
+                <Row gutter={23}>
+                <Col span={13}>
+                <div className={'form-group' + (submitted && !thorHost ? ' has-error' : '')}>
+                  <Form.Item {...formHostLayout} label="Host">
+      						<Input id="thorHost" name="thorHost" onChange={this.onChange} placeholder="http://127.0.0.1" value={this.state.newCluster.thorHost}/>
+                  {submitted && !thorHost &&
+                      <div className="help-block">Thor Host is required</div>
                   }
 		            </Form.Item>
                 </div>
-                <div className={'form-group' + (submitted && !port ? ' has-error' : '')}>
-                  <Form.Item {...formItemLayout} label="Port">
-                    <Input id="port" name="port" onChange={this.onChange} placeholder="Port" value={this.state.newCluster.port}/>
-                    {submitted && !port &&
-                        <div className="help-block">Cluster Port is required</div>
+                </Col>
+                <Col span={10}>
+                <div className={'form-group' + (submitted && !thorPort ? ' has-error' : '')}>
+                  <Form.Item {...formPortLayout} label="Port">
+                    <Input id="thorPort" name="thorPort" onChange={this.onChange} placeholder="Thor Port" value={this.state.newCluster.thorPort}/>
+                    {submitted && !thorPort &&
+                        <div className="help-block">Thor Port is required</div>
                     }
                   </Form.Item>
                 </div>
+                </Col>
+                </Row>
+                <label style={{color:"black"}}>Roxie:</label>
+                <Divider style={{marginTop: '0px', marginBottom:'10px'}}></Divider>
+                <Row gutter={23}>
+                <Col span={13}>
+                <div className={'form-group' + (submitted && !roxieHost ? ' has-error' : '')}>
+                  <Form.Item {...formHostLayout} label="Host">
+      						<Input id="roxieHost" name="roxieHost" onChange={this.onChange} placeholder="http://127.0.0.1" value={this.state.newCluster.roxieHost}/>
+                  {submitted && !roxieHost &&
+                      <div className="help-block">Roxie Host is required</div>
+                  }
+		            </Form.Item>
+                </div>
+                </Col>
+                <Col span={10}>
+                <div className={'form-group' + (submitted && !roxiePort ? ' has-error' : '')}>
+                  <Form.Item {...formPortLayout} label="Port">
+                    <Input id="roxiePort" name="roxiePort" onChange={this.onChange} placeholder="Roxie Port" value={this.state.newCluster.roxiePort}/>
+                    {submitted && !roxiePort &&
+                        <div className="help-block">Roxie Port is required</div>
+                    }
+                  </Form.Item>
+                </div>
+                </Col>
+                </Row>
  		            <Form.Item {...formItemLayout} label="User Name">
       						<Input id="username" name="username" onChange={this.onChange} placeholder="User Name" value={this.state.newCluster.username}/>
 		            </Form.Item>

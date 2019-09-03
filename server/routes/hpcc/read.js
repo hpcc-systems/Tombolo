@@ -14,7 +14,7 @@ router.post('/filesearch', function (req, res) {
     console.log('clusterid: '+req.body.clusterid);
     try {
     	getCluster(req.body.clusterid).then(function(cluster) {
-			let url = cluster.host_url + ':' + cluster.port +'/WsDfu/DFUQuery.json?LogicalName=*'+req.body.keyword+'*';
+			let url = cluster.thor_host + ':' + cluster.thor_port +'/WsDfu/DFUQuery.json?LogicalName=*'+req.body.keyword+'*';
 			if(req.body.indexSearch)
 	    		url += '&ContentType=key'
 	        request.get({
@@ -57,7 +57,7 @@ router.post('/querysearch', function (req, res) {
     console.log('clusterid: '+req.body.clusterid);
     try {
     	getCluster(req.body.clusterid).then(function(cluster) {
-			let url = cluster.host_url + ':' + cluster.port +'/WsWorkunits/WUListQueries.json?QueryName=*'+req.body.keyword+'*';
+			let url = cluster.thor_host + ':' + cluster.thor_port +'/WsWorkunits/WUListQueries.json?QueryName=*'+req.body.keyword+'*';
 			if(req.body.indexSearch)
 	    		url += '&ContentType=key'
 	        request.get({
@@ -127,10 +127,13 @@ router.get('/getCluster', function (req, res) {
 
 router.post('/newcluster', async function (req, res) {
     try {
-
-    	var clusterReachable = await isClusterReachable(req.body.host, req.body.port, req.body.username, req.body.password);
-		if(clusterReachable) {
-			var newCluster = {"name":req.body.name, "host_url":req.body.host, "port":req.body.port};
+		var ThorReachable=false;
+		var RoxieReachable=false;
+		ThorReachable = await isClusterReachable(req.body.thor_host, req.body.thor_port, req.body.username, req.body.password);
+		RoxieReachable = await isClusterReachable(req.body.roxie_host, req.body.roxie_port, req.body.username, req.body.password);
+		if(ThorReachable && RoxieReachable) {
+			var newCluster = {"name":req.body.name, "thor_host":req.body.thor_host, "thor_port":req.body.thor_port,
+			 "roxie_host":req.body.roxie_host, "roxie_port":req.body.roxie_port};
 			if (req.body.username && req.body.password) {
 				newCluster.username = req.body.username;
 				newCluster.hash = crypto.createCipher(algorithm, dbUtil.secret).update(req.body.password,'utf8','hex');
@@ -150,7 +153,7 @@ router.post('/newcluster', async function (req, res) {
 		            res.json({"result":"success"});
 		        });
 		    }
-		} else {
+		} else {			
 			return res.status(500).json({"message": "Cluster could not be reached"});
 		}
     } catch (err) {
@@ -174,7 +177,7 @@ router.get('/getFileInfo', function (req, res) {
 		console.log('fileName: '+req.query.fileName);
 		getCluster(req.query.clusterid).then(function(cluster) {
 			request.get({
-			  url: cluster.host_url + ':' + cluster.port +'/WsDfu/DFUInfo.json?Name='+req.query.fileName,
+			  url: cluster.thor_host + ':' + cluster.thor_port +'/WsDfu/DFUInfo.json?Name='+req.query.fileName,
 			  auth : getClusterAuth(cluster)
 			}, function(err, response, body) {
 			  if (err) {
@@ -235,7 +238,7 @@ router.get('/getFileInfo', function (req, res) {
 function getFileLayout(cluster, fileName) {
 	var layoutResults = [];
 	return requestPromise.get({
-	  url: cluster.host_url + ':' + cluster.port +'/WsDfu/DFUGetFileMetaData.json?LogicalFileName='+fileName,
+	  url: cluster.thor_host + ':' + cluster.thor_port +'/WsDfu/DFUGetFileMetaData.json?LogicalFileName='+fileName,
 	  auth : getClusterAuth(cluster)
 	}).then(function(response) {
 		  var result = JSON.parse(response);
@@ -289,7 +292,7 @@ router.get('/getIndexInfo', function (req, res) {
     try {
 		getCluster(req.query.clusterid).then(function(cluster) {
 			request.get({
-			  url: cluster.host_url + ':' + cluster.port +'/WsDfu/DFUInfo.json?Name='+req.query.indexName,
+			  url: cluster.thor_host + ':' + cluster.thor_port +'/WsDfu/DFUInfo.json?Name='+req.query.indexName,
 			  auth : getClusterAuth(cluster)
 			}, function(err, response, body) {
 			  if (err) {
@@ -325,7 +328,7 @@ router.get('/getIndexInfo', function (req, res) {
 function getIndexColumns(cluster, indexName) {
 	let columns={};
 	return requestPromise.get({
-	  url: cluster.host_url + ':' + cluster.port +'/WsDfu/DFUGetFileMetaData.json?LogicalFileName='+indexName,
+	  url: cluster.thor_host + ':' + cluster.thor_port +'/WsDfu/DFUGetFileMetaData.json?LogicalFileName='+indexName,
 	  auth : getClusterAuth(cluster)
 	}).then(function(response) {
       	var result = JSON.parse(response);
@@ -377,7 +380,7 @@ router.get('/getData', function (req, res) {
     try {
 		getCluster(req.query.clusterid).then(function(cluster) {
 			request.get({
-			  url: cluster.host_url + ':' + cluster.port +'/WsWorkunits/WUResult.json?LogicalName='+req.query.fileName+'&Count=50',
+			  url: cluster.thor_host + ':' + cluster.thor_port +'/WsWorkunits/WUResult.json?LogicalName='+req.query.fileName+'&Count=50',
 			  auth : getClusterAuth(cluster)
 			}, function(err, response, body) {
 			  if (err) {
@@ -410,7 +413,7 @@ router.get('/getFileProfile', function (req, res) {
     try {
 		getCluster(req.query.clusterid).then(function(cluster) {
 			request.get({
-			  url: cluster.host_url + ':' + cluster.port +'/WsWorkunits/WUResult.json?LogicalName='+req.query.fileName+'.profile',
+			  url: cluster.thor_host + ':' + cluster.thor_port +'/WsWorkunits/WUResult.json?LogicalName='+req.query.fileName+'.profile',
 			  auth : getClusterAuth(cluster)
 			}, function(err, response, body) {
 			  if (err) {
@@ -457,7 +460,7 @@ router.get('/getFileProfileHTML', function (req, res) {
       		var wuid = req.query.dataProfileWuid;
       		//get resource url's from wuinfo
       		request.post({
-			  url: cluster.host_url + ':' + cluster.port +'/WsWorkunits/WUInfo.json',
+			  url: cluster.thor_host + ':' + cluster.thor_port +'/WsWorkunits/WUInfo.json',
 			  auth : getClusterAuth(cluster),
 			  headers: {'content-type' : 'application/x-www-form-urlencoded'},
 			  body: "Wuid="+wuid+"&TruncateEclTo64k=true&IncludeResourceURLs=true&IncludeExceptions=false&IncludeGraphs=false&IncludeSourceFiles=false&IncludeResults=false&IncludeResultsViewNames=false&IncludeVariables=false&IncludeTimers=false&IncludeDebugValues=false&IncludeApplicationValues=false&IncludeWorkflows=false&IncludeXmlSchemas=false&SuppressResultSchemas"
@@ -472,7 +475,7 @@ router.get('/getFileProfileHTML', function (req, res) {
 		      	var filterdUrl = result.WUInfoResponse.Workunit.ResourceURLs.URL.filter(function(url) {
 		      		return !url.startsWith("manifest");
 		      	}).map(function(url) {
-	      			return cluster.host_url + ':' + cluster.port + '/WsWorkunits/' + url.replace("./report", "report");
+	      			return cluster.thor_host + ':' + cluster.thor_port + '/WsWorkunits/' + url.replace("./report", "report");
 		      	});
 		      	console.log("URL's: "+JSON.stringify(filterdUrl));
 		      	res.json(filterdUrl);
@@ -489,7 +492,7 @@ router.get('/getQueryInfo', function (req, res) {
     try {
 		getCluster(req.query.clusterid).then(function(cluster) {
 			request.get({
-			  url: cluster.host_url + ':8002' +'/WsEcl/example/request/query/roxie/'+req.query.queryName+'/json?display',
+			  url: cluster.roxie_host + ':'+ cluster.roxie_port +'/WsEcl/example/request/query/roxie/'+req.query.queryName+'/json?display',
 			  auth : getClusterAuth(cluster)
 			}, function(err, response, body) {
 			  if (err) {
@@ -508,7 +511,7 @@ router.get('/getQueryInfo', function (req, res) {
 			      	resultObj.request = requestObj;
 			      	//get query response
 			      	request.get({
-						url: cluster.host_url + ':8002' +'/WsEcl/example/response/query/roxie/'+req.query.queryName+'/json?display',
+						url: cluster.roxie_host + ':'+ cluster.roxie_port +'/WsEcl/example/response/query/roxie/'+req.query.queryName+'/json?display',
 					    auth : getClusterAuth(cluster)
 					}, function(err, response, body) {
 					  if (err) {

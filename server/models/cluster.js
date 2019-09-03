@@ -9,8 +9,10 @@ module.exports = (sequelize, DataTypes) => {
       autoIncrement: false
     },
     name: DataTypes.STRING,
-    host_url: DataTypes.STRING,
-    port: DataTypes.STRING,
+    thor_host: DataTypes.STRING,
+    thor_port: DataTypes.STRING,
+    roxie_host: DataTypes.STRING,
+    roxie_port: DataTypes.STRING,
     username: DataTypes.STRING,
     hash: DataTypes.STRING
   }, {freezeTableName: true});
