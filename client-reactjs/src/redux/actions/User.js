@@ -1,6 +1,7 @@
 import { Constants } from '../../components/common/Constants';
 import history from '../../components/common/History';
 import { authHeader, handleError } from "../../components/common/AuthHeader.js"
+var jwtDecode = require('jwt-decode');
 
 export const userActions = {
     login,
@@ -22,6 +23,15 @@ function login(username, password) {
             body: JSON.stringify({ username, password })
         }).then(handleResponse)
         .then(user => {
+            var decoded = jwtDecode(user.accessToken);
+            var user = {
+                "token": user.accessToken,
+                "firstName": decoded.firstName,
+                "lastName": decoded.lastName,
+                "email": decoded.email,
+                "organization": decoded.organization,
+                "role":decoded.role
+            }
             localStorage.setItem('user', JSON.stringify(user));
             dispatch(success(user));
         },

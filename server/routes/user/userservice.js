@@ -1,6 +1,7 @@
 const jwt = require('jsonwebtoken');
 const bcrypt = require('bcryptjs');
 let mongoose = require('mongoose');
+var request = require('request');
 const dbUtil = require('../../utils/db');
 let models = require('../../models');
 let User = models.user;
@@ -20,22 +21,50 @@ module.exports = {
     GetSharedAppUserList
 };
 
-async function authenticate({ username, password }) {
-    const user = await User.findOne({ where: {"username":username}, attributes: ['id', 'username', 'hash', 'firstName', 'lastName', 'role']});
-    if (user && bcrypt.compareSync(password, user.hash)) {
-        return generateToken(user);
-    }
+
+async function authenticate(req, res, { username, password }) {
+    var authServiceUrl = process.env.AUTH_SERVICE_URL + '/login';
+    return new Promise(function(resolve, reject) {
+        request.post({
+          url: authServiceUrl,
+          headers: {
+            "content-type": "application/json",
+          },
+          json: {
+            "username":username,
+            "password":password
+          }
+        }, function(err, response, body) {
+            if (response.statusCode != 200) {
+              reject(new Error(err));
+            } else {
+                resolve(body);
+            }
+      });
+    });
 }
 
 async function verifyToken(req, res, next) {
     let token = req.headers['x-access-token'] || req.headers['authorization'];
-    if (token) {
-        if (token.startsWith('Bearer ')) {
-          token = token.slice(7, token.length);
-          return await jwt.verify(token, dbUtil.secret)
-        }
+    if(token) {
+        var authServiceUrl = process.env.AUTH_SERVICE_URL + '/verify';
+        return new Promise(function(resolve, reject) {
+            request.post({
+              url: authServiceUrl,
+              headers: {
+                "content-type": "application/json",
+                'Authorization': token
+              }
+            }, function(err, response, body) {
+                resolve(body);
+                if (err) {
+                  reject(err);
+                }
+          });
+        });
     }
 }
+
 
 async function validateOrRefreshToken(req, res, next) {
     let token = req.headers['x-access-token'] || req.headers['authorization'];
@@ -132,7 +161,7 @@ async function GetuserListToShareApp(req, res, next) {
             where: {"id" :{ [Op.ne]:req.params.user_id},
             "role":"user",
             "id": {
-                [Op.notIn]: Sequelize.literal( 
+                [Op.notIn]: Sequelize.literal(
                     '( SELECT user_id ' +
                         'FROM user_application ' +
                        'WHERE application_id = "' + req.params.app_id +
@@ -145,10 +174,10 @@ async function GetuserListToShareApp(req, res, next) {
         const Op = Sequelize.Op
        return await models.user.findAll({
             where:{
-            //"id" :{ [Op.ne]:req.params.user_id}, 
+            //"id" :{ [Op.ne]:req.params.user_id},
             "role":"user",
             "id": {
-            [Op.in]: Sequelize.literal( 
+            [Op.in]: Sequelize.literal(
                 '( SELECT user_id ' +
                     'FROM user_application ' +
                    'WHERE application_id = "' + req.params.app_id +

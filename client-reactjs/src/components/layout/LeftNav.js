@@ -46,6 +46,7 @@ class LeftNav extends Component {
       this.props.history.push("/login");
       return false;
     }
+    const isAdmin = (this.props.user && this.props.user.role == 'admin') ? true : false;
     //render the LeftNav only if an application is selected
     /*if((!this.props.isApplicationSet && (selectedTopNav == "/files")) || selectedTopNav == '/login')
       return false;*/
@@ -89,7 +90,7 @@ class LeftNav extends Component {
                 <NavLink to={"/admin/clusters"} className="nav-link"><i className="fa fa-lg fa-server"></i> Clusters</NavLink>
               </li>
             </ul>
-            { this.props.user && this.props.user.role == 'admin' ?
+            { isAdmin ?
             <React.Fragment>
             <h6 className="sidebar-heading d-flex justify-content-between align-items-center px-3 mt-4 mb-1 text-muted">
               <span>Admin</span>

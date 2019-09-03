@@ -22,18 +22,20 @@ class LoginPage extends React.Component {
         this.userName.focus();
     }
 
-    componentWillReceiveProps(newProps){
-        if(newProps.loggedIn || newProps.loggingIn){
-            var location=this.props.location.state;
-            if(location && location.from.pathname.includes('/file/'))
-              this.props.history.push(location.from.pathname);
-            else
-            this.props.history.push('/files');
+    componentWillReceiveProps(nextProps){
+        if(nextProps.loggingIn != this.props.loggingIn) {
+            if(nextProps.loggedIn || nextProps.loggingIn){
+                var location=this.props.location.state;
+                if(location && location.from.pathname.includes('/file/'))
+                  this.props.history.push(location.from.pathname);
+                else
+                this.props.history.push('/files');
+            }
+            else if(nextProps.loginFailed) {
+                message.error("Login failed. Incorrect user name or password!");
+            }
         }
-        else if(newProps.loginFailed) {
-            message.error("Login failed. Incorrect user name or password!");
-        }
-    }    
+    }
 
     handleChange(e) {
         const { name, value } = e.target;
@@ -49,7 +51,7 @@ class LoginPage extends React.Component {
         }
     }
 
-    
+
     render() {
         const { username, password, submitted } = this.state;
         return (
@@ -79,7 +81,7 @@ class LoginPage extends React.Component {
                     {/*<div className="clearfix">
                         <label className="pull-left checkbox-inline"><input type="checkbox"/> Remember me</label>
                         <a href="#" className="pull-right">Forgot Password?</a>
-                    </div>        
+                    </div>
                     <p className="text-center"><Link to="/register" className="btn btn-link">Register</Link></p>*/}
                 </form>
             </div>
@@ -97,5 +99,5 @@ function mapStateToProps(state) {
 }
 
 const connectedLoginPage = connect(mapStateToProps)(withRouter(LoginPage));
-export { connectedLoginPage as LoginPage }; 
-//export default withRouter(LoginPage); 
+export { connectedLoginPage as LoginPage };
+//export default withRouter(LoginPage);

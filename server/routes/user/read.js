@@ -16,9 +16,12 @@ router.get('/:user_id/:app_id/sharedAppUser', GetSharedAppUserList);
 
 module.exports = router;
 function authenticate(req, res, next) {
-    userService.authenticate(req.body)
-        .then(user => user ? res.json(user.userWithoutHash) : res.status(400).json({ message: 'Username or password is incorrect' }))
-        .catch(err => next(err));
+    //var user = await userService.authenticate(req, res, req.body);
+    userService.authenticate(req, res, req.body)
+    .then(function (user) {
+        res.json(user);
+    })
+    .catch(err => next(err));
 }
 
 function register(req, res, next) {
