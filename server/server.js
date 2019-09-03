@@ -20,6 +20,7 @@ const userRead = require('./routes/user/read');
 const query = require('./routes/query/read');
 const job = require('./routes/job/read');
 const fileInstance = require('./routes/fileinstance/read');
+const reportRead = require('./routes/report/read');
 
 app.use('/api/app/read', tokenService.verifyToken, appRead);
 app.use('/api/file/read', tokenService.verifyToken, fileRead);
@@ -30,6 +31,7 @@ app.use('/api/user', userRead);
 app.use('/api/query', tokenService.verifyToken, query);
 app.use('/api/job', tokenService.verifyToken, job);
 app.use('/api/fileinstance', fileInstance);
+app.use('/api/report/read', tokenService.verifyToken, reportRead);
 
 process.env["NODE_TLS_REJECT_UNAUTHORIZED"] = 0;
 
