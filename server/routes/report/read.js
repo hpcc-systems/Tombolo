@@ -77,7 +77,11 @@ router.get('/getReport', (req, res) => {
     var searchText=(req.query.searchText).toLowerCase();
     try {
         File.findAll({
-            group: ['file.id'],
+            raw: true,
+            attributes:["file.id","file.title","file.name","file.fileType","file.description",
+            "file.qualifiedPath"],
+            group: ['file.id',"file.title","file.name","file.fileType","file.description",
+            "file.qualifiedPath","application.title"],
             where:Sequelize.or( 
             Sequelize.where(Sequelize.fn('lower', Sequelize.fn("concat", 
             Sequelize.fn('IFNULL',Sequelize.col("file.title"),"")," ", 
@@ -98,12 +102,16 @@ router.get('/getReport', (req, res) => {
             })       
         ),
             include:
-            [{ model: Application },{ model: FileLayout}]        
+            [{ model: Application, attributes:["title"] },{ model: FileLayout,attributes:[]}]        
         }).then(function(file) {
             result.file=file;
 
             Indexes.findAll({
-                group: ['indexes.id'],
+                raw: true,
+                attributes:["indexes.id","indexes.title","indexes.backupService","indexes.primaryService",
+                "indexes.qualifiedPath"],
+                group: ["indexes.id","indexes.title","indexes.backupService","indexes.primaryService",
+                "indexes.qualifiedPath","application.title"],
                 where:Sequelize.or(
                 Sequelize.where(Sequelize.fn('lower',Sequelize.fn("concat", 
                 Sequelize.fn('IFNULL',Sequelize.col("indexes.title"),"")," ", 
@@ -130,12 +138,17 @@ router.get('/getReport', (req, res) => {
                 })  
                 ),
                 include:
-                [{ model: Application },{ model: IndexKey },{ model: IndexPayload }]        
+                [{ model: Application, attributes:["title"] },{ model: IndexKey, attributes:[] },
+                { model: IndexPayload , attributes:[]}]        
             }).then(index => {
                 result.index=index;
 
                 Query.findAll({
-                    group: ['query.id'],
+                    raw: true,
+                    attributes:["query.id","query.title","query.backupService","query.primaryService",
+                    "query.gitRepo"],
+                    group: ["query.id","query.title","query.backupService","query.primaryService",
+                    "query.gitRepo","application.title"],
                     where:Sequelize.or(Sequelize.where(Sequelize.fn('lower',Sequelize.fn("concat", 
                     Sequelize.fn('IFNULL',Sequelize.col("query.title"),'')," ", 
                     Sequelize.fn('IFNULL',Sequelize.col("query.gitRepo"),'')," ", 
@@ -155,12 +168,16 @@ router.get('/getReport', (req, res) => {
                     })      
                 ),
                 include:
-                [{ model: Application },{ model: QueryField }]   
+                [{ model: Application, attributes:["title"] },{ model: QueryField, attributes:[] }]   
                 }).then(query => {
                     result.query=query;  
 
                     Job.findAll({
-                        group: ['job.id'],
+                        raw: true,
+                        attributes:["job.id","job.name","job.author","job.contact",
+                        "job.entryBWR","job.gitRepo","job.JobType"],
+                        group: ["job.id","job.name","job.author","job.contact",
+                        "job.entryBWR","job.gitRepo","job.JobType","application.title"],
                         where:Sequelize.or(Sequelize.where(Sequelize.fn('lower',Sequelize.fn("concat", 
                         Sequelize.fn('IFNULL',Sequelize.col("job.name"),"")," ", 
                         Sequelize.fn('IFNULL',Sequelize.col("job.author"),"")," ", 
@@ -181,7 +198,7 @@ router.get('/getReport', (req, res) => {
                         })    
                     ),
                     include:
-                    [{ model: Application },{ model: Jobparam }]            
+                    [{ model: Application, attributes:["title"] },{ model: Jobparam, attributes:[] }]            
                     }).then(job => {
                         result.job=job;  
                         res.json(result);           
