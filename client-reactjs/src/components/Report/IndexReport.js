@@ -1,4 +1,4 @@
-import { Table,Row, Col} from 'antd/lib';
+import { Table,Row, Col,Spin} from 'antd/lib';
 import React, { Component } from "react";
 import { authHeader, handleError } from "../common/AuthHeader.js"
 
@@ -12,33 +12,42 @@ class IndexReport extends Component {
     openIndexDetails:false,
     indexKey:[],
     indexPayload:[],
-    selectedIndexTitle:""
+    selectedIndexTitle:"",
+    selectedIndexId:"",
+    initialDataLoading: false
   }
 
   componentDidMount() {    
-    
+    if(this.props.indexList && this.props.indexList.length>0)
+        this.getIndexDetails(this.props.indexList[0]); 
+      else{
+      this.setState({
+        openIndexDetails:false
+        });      
+      }
   }
 
   componentWillReceiveProps(props) {
     this.setState({
         indexList: props.indexList
       });
-      if(props.refresh){
-        this.setState({
-          openIndexDetails:false
-          });
+      if(props.indexList && props.indexList.length>0)
+        this.getIndexDetails(props.indexList[0]); 
+      else{
+      this.setState({
+        openIndexDetails:false
+        });      
       }
   }
 
-  indexSelect = (id,title) => {
+  getIndexDetails(record) {
     this.setState({
-      selectedIndexTitle:title,
-      openIndexDetails: true
+      selectedIndexId:record.id,
+      selectedIndexTitle:record.title,
+      openIndexDetails: true,
+      initialDataLoading: true
       });
-      this.getIndexDetails(id);
-  }
-  getIndexDetails(id) {
-      fetch("/api/report/read/indexKeyPayload?index_id="+id, {
+      fetch("/api/report/read/indexKeyPayload?index_id="+record.id, {
         headers: authHeader()
       })
       .then((response) => {
@@ -53,20 +62,27 @@ class IndexReport extends Component {
             indexPayload: data.basic.index_payloads,
             openIndexDetails:true
           });
+          setTimeout(() => {
+            this.setState({
+              initialDataLoading: false
+            });
+          }, 200); 
         })
       .catch(error => {
         console.log(error);
       });
   }
+  onClickRow = (record) => {     
+    this.getIndexDetails(record);
+  }
+  setRowClassName = (record) => {
+    return record.id === this.state.selectedIndexId ? 'clickRowStyl' : '';
+  }
   render() {
     const indexColumns = [{
       title: 'Title',
       dataIndex: 'title',
-      width: '20%',
-      render: (text, record) =>
-        <span>
-          <a href="#" onClick={(row) => this.indexSelect(record.id,record.title)}>{text}</a>
-        </span>
+      width: '20%'
     },    
     {
       width: '20%',
@@ -98,6 +114,8 @@ class IndexReport extends Component {
       pagination={{ pageSize: 10 }}
       scroll={{ x: 1000 }}
       size="middle"
+      onRowClick={this.onClickRow} 
+      rowClassName={this.setRowClassName}
     />
     const indexKeyColumn = [{
       title: 'Name',
@@ -151,7 +169,10 @@ class IndexReport extends Component {
         {table}   
          
         {this.state.openIndexDetails ?
-        <div><h6>{title}</h6> 
+        <div><h6>{title}</h6>
+        <div style={{"textAlign":"center"}}>
+        <Spin spinning={this.state.initialDataLoading} size="large" />  
+        </div>  
         <Row gutter={24}>
           <Col span={12}>
           <h6>Key</h6>

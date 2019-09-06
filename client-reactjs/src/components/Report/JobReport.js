@@ -1,4 +1,4 @@
-import { Table,Row, Col} from 'antd/lib';
+import { Table,Row, Col,Spin} from 'antd/lib';
 import React, { Component } from "react";
 import { authHeader, handleError } from "../common/AuthHeader.js"
 
@@ -11,33 +11,46 @@ class JobReport extends Component {
     jobList:this.props.jobList,
     openJobDetails:false,
     jobFields:[],
-    selectedJobTitle:""
+    selectedJobTitle:"",
+    selectedJobId:"",
+    initialDataLoading: false
   }
 
   componentDidMount() {    
-    
+    if(this.props.jobList && this.props.jobList.length>0)
+        this.getJobDetails(this.props.jobList[0]); 
+      else{   
+      this.setState({
+        openJobDetails:false
+        }); 
+      }
   }
 
   componentWillReceiveProps(props) {
     this.setState({
         jobList: props.jobList
       });
-      if(props.refresh){
-        this.setState({
-          openJobDetails:false
-          });
+      if(props.jobList && props.jobList.length>0)
+        this.getJobDetails(props.jobList[0]); 
+      else{   
+      this.setState({
+        openJobDetails:false
+        }); 
       }
   }
 
   jobSelect = (id,title) => {
-    this.setState({
-      selectedJobTitle:title,
-      openJobDetails: true
-      });
+    
       this.getJobDetails(id);
   }
-  getJobDetails(id) {
-      fetch("/api/report/read/jobParams?job_id="+id, {
+  getJobDetails(record) {
+    this.setState({
+      selectedJobTitle:record.name,
+      selectedJobId:record.id,
+      openJobDetails: true,
+      initialDataLoading: true
+      });
+      fetch("/api/report/read/jobParams?job_id="+record.id, {
         headers: authHeader()
       })
       .then((response) => {
@@ -51,20 +64,27 @@ class JobReport extends Component {
             jobFields: data.jobparams,
             openJobDetails:true
           });
+          setTimeout(() => {
+            this.setState({
+              initialDataLoading: false
+            });
+          }, 200);  
         })
       .catch(error => {
         console.log(error);
       });
   }
+  onClickRow = (record) => {     
+    this.getJobDetails(record);
+  }
+  setRowClassName = (record) => {
+    return record.id === this.state.selectedJobId ? 'clickRowStyl' : '';
+  }
   render() {
     const jobColumns = [{
       title: 'Title',
       dataIndex: 'name',
-      width: '20%',
-      render: (text, record) =>
-        <span>
-          <a href="#" onClick={(row) => this.jobSelect(record.id,record.name)}>{text}</a>
-        </span>
+      width: '20%'
     },    
     {
       width: '20%',
@@ -106,6 +126,8 @@ class JobReport extends Component {
       pagination={{ pageSize: 10 }}
       scroll={{ x: 1000 }}
       size="middle"
+      onRowClick={this.onClickRow} 
+      rowClassName={this.setRowClassName}
     />
     const jobParamColumn = [
     {
@@ -132,8 +154,10 @@ class JobReport extends Component {
         {table}   
          
         {this.state.openJobDetails ?
-        <div><h6>{title}</h6>         
+        <div><h6>{title}</h6>
+         <Spin spinning={this.state.initialDataLoading} size="large" >           
           {jobParamTable}
+          </Spin>
          </div>:null}
       </div>
     )

@@ -1,4 +1,4 @@
-import { Table,Row, Col} from 'antd/lib';
+import { Table,Row, Col,Spin} from 'antd/lib';
 import React, { Component } from "react";
 import { authHeader, handleError } from "../common/AuthHeader.js"
 
@@ -11,21 +11,31 @@ class QueryReport extends Component {
     queryList:this.props.queryList,
     openQueryDetails:false,
     queryFields:[],
-    selectedQueryTitle:""
+    selectedQueryTitle:"",
+    selectedQueryId:"",
+    initialDataLoading: false
   }
 
   componentDidMount() {    
-    
+    if(this.props.queryList && this.props.queryList.length>0)
+        this.getQueryDetails(this.props.queryList[0]); 
+      else{ 
+      this.setState({
+        openQueryDetails:false
+        }); 
+      }
   }
 
   componentWillReceiveProps(props) {
     this.setState({
         queryList: props.queryList
       });
-      if(props.refresh){
-        this.setState({
-          openQueryDetails:false
-          });
+      if(props.queryList && props.queryList.length>0)
+        this.getQueryDetails(props.queryList[0]); 
+      else{ 
+      this.setState({
+        openQueryDetails:false
+        }); 
       }
   }
 
@@ -36,8 +46,14 @@ class QueryReport extends Component {
       });
       this.getQueryDetails(id);
   }
-  getQueryDetails(id) {
-      fetch("/api/report/read/query_Fields?query_id="+id, {
+  getQueryDetails(record) {
+    this.setState({
+      selectedQueryTitle:record.title,
+      selectedQueryId:record.id,
+      openQueryDetails: true,
+      initialDataLoading: true
+      });
+      fetch("/api/report/read/query_Fields?query_id="+record.id, {
         headers: authHeader()
       })
       .then((response) => {
@@ -51,20 +67,27 @@ class QueryReport extends Component {
             queryFields: data.query_fields,
             openQueryDetails:true
           });
+          setTimeout(() => {
+            this.setState({
+              initialDataLoading: false
+            });
+          }, 200); 
         })
       .catch(error => {
         console.log(error);
       });
   }
+  onClickRow = (record) => {     
+    this.getQueryDetails(record);
+  }
+  setRowClassName = (record) => {
+    return record.id === this.state.selectedQueryId ? 'clickRowStyl' : '';
+  }
   render() {
     const queryColumns = [{
       title: 'Title',
       dataIndex: 'title',
-      width: '20%',
-      render: (text, record) =>
-        <span>
-          <a href="#" onClick={(row) => this.querySelect(record.id,record.title)}>{text}</a>
-        </span>
+      width: '20%'
     },    
     {
       width: '20%',
@@ -106,6 +129,8 @@ class QueryReport extends Component {
       pagination={{ pageSize: 10 }}
       scroll={{ x: 1000 }}
       size="middle"
+      onRowClick={this.onClickRow} 
+      rowClassName={this.setRowClassName}
     />
     const queryFieldsColumn = [{
       title: 'Field Type',
@@ -136,8 +161,10 @@ class QueryReport extends Component {
         {table}   
          
         {this.state.openQueryDetails ?
-        <div><h6>{title}</h6>         
+        <div><h6>{title}</h6> 
+        <Spin spinning={this.state.initialDataLoading} size="large" >         
           {queryFieldTable}
+          </Spin>
          </div>:null}
       </div>
     )

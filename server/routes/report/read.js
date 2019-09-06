@@ -82,7 +82,15 @@ router.get('/getReport', (req, res) => {
             "file.qualifiedPath"],
             group: ['file.id',"file.title","file.name","file.fileType","file.description",
             "file.qualifiedPath","application.title"],
-            where:Sequelize.or( 
+            where:Sequelize.and( (req.query.userId!=""?
+                Sequelize.where(Sequelize.col("file.application_id"), {
+                [Op.in]: Sequelize.literal( 
+                    '( SELECT application_id ' +
+                        'FROM user_application ' +
+                       'WHERE user_id = "' + req.query.userId +
+                    '")')
+                }):""),
+            Sequelize.or( 
             Sequelize.where(Sequelize.fn('lower', Sequelize.fn("concat", 
             Sequelize.fn('IFNULL',Sequelize.col("file.title"),"")," ", 
             Sequelize.fn('IFNULL',Sequelize.col("file.name"),"")," ",
@@ -99,8 +107,9 @@ router.get('/getReport', (req, res) => {
             Sequelize.where(Sequelize.fn('lower',
             Sequelize.fn('IFNULL',Sequelize.col("application.title"),"")), {
                     [Op.like]: '%'+searchText+'%'
-            })       
-        ),
+            }),
+                 
+        )),
             include:
             [{ model: Application, attributes:["title"] },{ model: FileLayout,attributes:[]}]        
         }).then(function(file) {
@@ -112,7 +121,15 @@ router.get('/getReport', (req, res) => {
                 "indexes.qualifiedPath"],
                 group: ["indexes.id","indexes.title","indexes.backupService","indexes.primaryService",
                 "indexes.qualifiedPath","application.title"],
-                where:Sequelize.or(
+                where:Sequelize.and( (req.query.userId!=""?
+                Sequelize.where(Sequelize.col("indexes.application_id"), {
+                [Op.in]: Sequelize.literal( 
+                    '( SELECT application_id ' +
+                        'FROM user_application ' +
+                       'WHERE user_id = "' + req.query.userId +
+                    '")')
+                }):""),
+                Sequelize.or(
                 Sequelize.where(Sequelize.fn('lower',Sequelize.fn("concat", 
                 Sequelize.fn('IFNULL',Sequelize.col("indexes.title"),"")," ", 
                 Sequelize.fn('IFNULL',Sequelize.col("indexes.backupService"),"")," ", 
@@ -136,7 +153,7 @@ router.get('/getReport', (req, res) => {
                 Sequelize.fn('IFNULL',Sequelize.col("application.title"),"")), {
                         [Op.like]: '%'+searchText+'%'
                 })  
-                ),
+                )),
                 include:
                 [{ model: Application, attributes:["title"] },{ model: IndexKey, attributes:[] },
                 { model: IndexPayload , attributes:[]}]        
@@ -149,7 +166,15 @@ router.get('/getReport', (req, res) => {
                     "query.gitRepo"],
                     group: ["query.id","query.title","query.backupService","query.primaryService",
                     "query.gitRepo","application.title"],
-                    where:Sequelize.or(Sequelize.where(Sequelize.fn('lower',Sequelize.fn("concat", 
+                    where:Sequelize.and( (req.query.userId!=""?
+                    Sequelize.where(Sequelize.col("query.application_id"), {
+                    [Op.in]: Sequelize.literal( 
+                        '( SELECT application_id ' +
+                            'FROM user_application ' +
+                           'WHERE user_id = "' + req.query.userId +
+                        '")')
+                    }):""),
+                    Sequelize.or(Sequelize.where(Sequelize.fn('lower',Sequelize.fn("concat", 
                     Sequelize.fn('IFNULL',Sequelize.col("query.title"),'')," ", 
                     Sequelize.fn('IFNULL',Sequelize.col("query.gitRepo"),'')," ", 
                     Sequelize.fn('IFNULL',Sequelize.col("query.primaryService"),'')," ",
@@ -166,7 +191,7 @@ router.get('/getReport', (req, res) => {
                     Sequelize.fn('IFNULL',Sequelize.col("application.title"),"")), {
                             [Op.like]: '%'+searchText+'%'
                     })      
-                ),
+                )),
                 include:
                 [{ model: Application, attributes:["title"] },{ model: QueryField, attributes:[] }]   
                 }).then(query => {
@@ -178,7 +203,15 @@ router.get('/getReport', (req, res) => {
                         "job.entryBWR","job.gitRepo","job.JobType"],
                         group: ["job.id","job.name","job.author","job.contact",
                         "job.entryBWR","job.gitRepo","job.JobType","application.title"],
-                        where:Sequelize.or(Sequelize.where(Sequelize.fn('lower',Sequelize.fn("concat", 
+                        where:Sequelize.and( (req.query.userId!=""?
+                        Sequelize.where(Sequelize.col("job.application_id"), {
+                        [Op.in]: Sequelize.literal( 
+                            '( SELECT application_id ' +
+                                'FROM user_application ' +
+                               'WHERE user_id = "' + req.query.userId +
+                            '")')
+                        }):""),
+                        Sequelize.or(Sequelize.where(Sequelize.fn('lower',Sequelize.fn("concat", 
                         Sequelize.fn('IFNULL',Sequelize.col("job.name"),"")," ", 
                         Sequelize.fn('IFNULL',Sequelize.col("job.author"),"")," ", 
                         Sequelize.fn('IFNULL',Sequelize.col("job.contact"),"")," ",
@@ -196,7 +229,7 @@ router.get('/getReport', (req, res) => {
                         Sequelize.fn('IFNULL',Sequelize.col("application.title"),"")), {
                                 [Op.like]: '%'+searchText+'%'
                         })    
-                    ),
+                    )),
                     include:
                     [{ model: Application, attributes:["title"] },{ model: Jobparam, attributes:[] }]            
                     }).then(job => {

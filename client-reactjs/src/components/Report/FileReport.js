@@ -1,6 +1,7 @@
-import { Table, Tooltip, Divider, message, Popconfirm, Icon, Drawer, Button } from 'antd/lib';
+import { Table,Spin, Tooltip, Divider, message, Popconfirm, Icon, Drawer, Button } from 'antd/lib';
 import React, { Component } from "react";
-import { authHeader, handleError } from "../common/AuthHeader.js"
+import { authHeader, handleError } from "../common/AuthHeader.js";
+import ReactDOM from 'react-dom';
 
 class FileReport extends Component {
   constructor(props) {
@@ -12,35 +13,34 @@ class FileReport extends Component {
     openFileLayout:false,
     selectedFileId:"",
     selectedFileTitle:"",
-    fileLayout: []
+    fileLayout: [],
+    initialDataLoading: false
   }
 
-  componentDidMount() {    
-    
+  componentDidMount() {        
   }
 
   componentWillReceiveProps(props) {
     this.setState({
       fileList: props.fileList
       });
-      if(props.refresh){
-        this.setState({
-          openFileLayout:false
-          });
-      }
+      if(props.fileList && props.fileList.length>0)
+        this.fetchDataAndRenderTable(props.fileList[0]); 
+      else{   
+      this.setState({
+        openFileLayout:false
+        });
+      }  
   }
-
-  fileSelect = (id,title,name) => {
+  
+  fetchDataAndRenderTable(record) {
     this.setState({
-      selectedFileId:id,
-      selectedFileTitle:(title)?title:name,
-      openFileLayout: true
-      });
-      this.fetchDataAndRenderTable(id);
-  }
-  fetchDataAndRenderTable(val) {
-    var _self=this;
-    fetch("/api/report/read/fileLayout?file_id="+val, {
+      selectedFileId:record.id,
+      selectedFileTitle:(record.title)?record.title:record.name,
+      openFileLayout: true,
+      initialDataLoading: true
+    });
+    fetch("/api/report/read/fileLayout?file_id="+record.id, {
         headers: authHeader()
     })
     .then((response) => {
@@ -49,24 +49,31 @@ class FileReport extends Component {
       }
       handleError(response);
     })
-    .then(data => {     
+    .then(data => {
+      window.scrollTo({ top: 400, behavior: 'smooth'})       
       this.setState({
         fileLayout: data
       });
-      window.scrollTo({ top: 400, behavior: 'smooth'})
+      setTimeout(() => {
+        this.setState({
+          initialDataLoading: false
+        });
+      }, 200);      
     }).catch(error => {
       console.log(error);
     });
+  }
+  onClickRow = (record) => {     
+    this.fetchDataAndRenderTable(record);
+  }
+  setRowClassName = (record) => {
+    return record.id === this.state.selectedFileId ? 'clickRowStyl' : '';
   }
   render() {
     const indexColumns = [{
       title: 'Title',
       dataIndex: 'title',
-      width: '20%',
-      render: (text, record) =>
-        <span>
-          <a href="#" onClick={(row) => this.fileSelect(record.id,record.title,record.name)}>{text}</a>
-        </span>
+      width: '20%'
     },
     {
       width: '20%',
@@ -103,6 +110,9 @@ class FileReport extends Component {
       pagination={{ pageSize: 10 }}
       scroll={{ x: 1000 }}
       size="middle"
+      onRowClick={this.onClickRow} 
+      rowClassName={this.setRowClassName}
+      // onRow={this.onClickRow}
     />
     const layoutColumns = [{
       title: 'Name',
@@ -146,7 +156,9 @@ class FileReport extends Component {
       <div style={{paddingBottom:"5px"}}>
         <h6>{title}</h6>
       </div>
-      <div >
+      <div id={this.layoutDiv}>
+     
+        <Spin spinning={this.state.initialDataLoading} size="large" >     
           <Table
                 columns={layoutColumns}
                 rowKey={record => record.name}
@@ -155,6 +167,7 @@ class FileReport extends Component {
                 scroll={{ x: 1000 }}
                 size="middle"
               />
+        </Spin>
       </div>
       </div>:null}
       </div>
