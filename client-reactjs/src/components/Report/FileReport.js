@@ -69,6 +69,9 @@ class FileReport extends Component {
   setRowClassName = (record) => {
     return record.id === this.state.selectedFileId ? 'clickRowStyl' : '';
   }
+  setClassName = () => {
+    return "rebortTableHeader"
+  }
   render() {
     const indexColumns = [{
       title: 'Title',
@@ -100,19 +103,16 @@ class FileReport extends Component {
         title: 'Qualified Path',
         dataIndex: 'qualifiedPath'
     }];
-
-   
     let table = null;    
       table = <Table 
+      className="rebortTable"
       columns={indexColumns}
       rowKey={record => record.id}
       dataSource={this.state.fileList}
       pagination={{ pageSize: 10 }}
       scroll={{ x: 1000 }}
-      size="middle"
       onRowClick={this.onClickRow} 
-      rowClassName={this.setRowClassName}
-      // onRow={this.onClickRow}
+      rowClassName={this.setRowClassName}      
     />
     const layoutColumns = [{
       title: 'Name',
@@ -160,6 +160,7 @@ class FileReport extends Component {
      
         <Spin spinning={this.state.initialDataLoading} size="large" >     
           <Table
+                className="rebortTable"
                 columns={layoutColumns}
                 rowKey={record => record.name}
                 dataSource={this.state.fileLayout}

@@ -292,3 +292,9 @@ path, .jtk-endpoint { cursor:pointer; }
 .ant-table-tbody>.clickRowStyl:hover>td{
   background-color: #00b4ed;
 }
+
+
+.rebortTable table >thead > tr > th {
+  background-color:  #6c757d;
+  color: #fff;
+}

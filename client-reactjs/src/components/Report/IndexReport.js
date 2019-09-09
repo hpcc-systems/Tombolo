@@ -108,6 +108,7 @@ class IndexReport extends Component {
    
     let table = null;    
       table = <Table 
+      className="rebortTable"
       columns={indexColumns}
       rowKey={record => record.id}
       dataSource={this.state.indexList}
@@ -134,6 +135,7 @@ class IndexReport extends Component {
       }];
       let keyTable = null;    
       keyTable = <Table 
+      className="rebortTable"
       columns={indexKeyColumn}
       rowKey={record => record.id}
       dataSource={this.state.indexKey}
@@ -157,6 +159,7 @@ class IndexReport extends Component {
       }];
       let payloadTable = null;    
       payloadTable = <Table 
+      className="rebortTable"
       columns={indexPayloadColumn}
       rowKey={record => record.id}
       dataSource={this.state.indexPayload}

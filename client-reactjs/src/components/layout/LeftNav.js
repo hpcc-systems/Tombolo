@@ -53,7 +53,7 @@ class LeftNav extends Component {
         return false;
     return (
       <React.Fragment>
-      <Sider style={{ background: '#343a40', height:"100vh", paddingTop:"60px"}}
+      <Sider style={{ background: '#343a40', minHeight:"100vh", paddingTop:"60px" }}
             collapsible
             collapsed={this.state.collapsed}
             onCollapse={this.onCollapse}

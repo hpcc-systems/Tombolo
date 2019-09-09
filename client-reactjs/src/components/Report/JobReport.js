@@ -120,6 +120,7 @@ class JobReport extends Component {
    
     let table = null;    
       table = <Table 
+      className="rebortTable"
       columns={jobColumns}
       rowKey={record => record.id}
       dataSource={this.state.jobList}
@@ -142,6 +143,7 @@ class JobReport extends Component {
       }];
       let jobParamTable = null;    
       jobParamTable = <Table 
+      className="rebortTable"
       columns={jobParamColumn}
       rowKey={record => record.id}
       dataSource={this.state.jobFields}

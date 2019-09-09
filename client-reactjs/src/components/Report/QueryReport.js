@@ -123,6 +123,7 @@ class QueryReport extends Component {
    
     let table = null;    
       table = <Table 
+      className="rebortTable"
       columns={queryColumns}
       rowKey={record => record.id}
       dataSource={this.state.queryList}
@@ -149,6 +150,7 @@ class QueryReport extends Component {
       }];
       let queryFieldTable = null;    
       queryFieldTable = <Table 
+      className="rebortTable"
       columns={queryFieldsColumn}
       rowKey={record => record.id}
       dataSource={this.state.queryFields}
