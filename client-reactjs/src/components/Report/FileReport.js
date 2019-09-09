@@ -69,9 +69,7 @@ class FileReport extends Component {
   setRowClassName = (record) => {
     return record.id === this.state.selectedFileId ? 'clickRowStyl' : '';
   }
-  setClassName = () => {
-    return "rebortTableHeader"
-  }
+ 
   render() {
     const indexColumns = [{
       title: 'Title',
@@ -111,6 +109,7 @@ class FileReport extends Component {
       dataSource={this.state.fileList}
       pagination={{ pageSize: 10 }}
       scroll={{ x: 1000 }}
+      size="middle"
       onRowClick={this.onClickRow} 
       rowClassName={this.setRowClassName}      
     />
