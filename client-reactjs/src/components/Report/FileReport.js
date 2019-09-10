@@ -1,7 +1,8 @@
-import { Table,Spin, Tooltip, Divider, message, Popconfirm, Icon, Drawer, Button } from 'antd/lib';
+import { Table,Spin,Tabs,Row, Col} from 'antd/lib';
 import React, { Component } from "react";
 import { authHeader, handleError } from "../common/AuthHeader.js";
-import ReactDOM from 'react-dom';
+import Plot from 'react-plotly.js';
+const TabPane = Tabs.TabPane;
 
 class FileReport extends Component {
   constructor(props) {
@@ -14,7 +15,11 @@ class FileReport extends Component {
     selectedFileId:"",
     selectedFileTitle:"",
     fileLayout: [],
-    initialDataLoading: false
+    initialDataLoading: false,
+    nameList:[],
+    isPCIList:[],
+    isPIIList:[],
+    barWidth:[]
   }
 
   componentDidMount() {        
@@ -50,9 +55,23 @@ class FileReport extends Component {
       handleError(response);
     })
     .then(data => {
+      var name = [""];
+      var pci = [""];
+      var pii=[""];
+      var width=[0];
+      for (var obj in data) {
+        name.push(data[obj].name);
+        pci.push(data[obj].isPCI);
+        pii.push(data[obj].isPII);
+        width.push(0.4);
+      }  
       window.scrollTo({ top: 400, behavior: 'smooth'})       
       this.setState({
-        fileLayout: data
+        fileLayout: data,
+        nameList:name,
+        isPCIList:pci,
+        isPIIList:pii,
+        barWidth:width
       });
       setTimeout(() => {
         this.setState({
@@ -63,6 +82,7 @@ class FileReport extends Component {
       console.log(error);
     });
   }
+
   onClickRow = (record) => {     
     this.fetchDataAndRenderTable(record);
   }
@@ -70,7 +90,7 @@ class FileReport extends Component {
     return record.id === this.state.selectedFileId ? 'clickRowStyl' : '';
   }
  
-  render() {
+  render() {  
     const indexColumns = [{
       title: 'Title',
       dataIndex: 'title',
@@ -117,23 +137,7 @@ class FileReport extends Component {
       title: 'Name',
       dataIndex: 'name',
       width: '20%',
-    },
-    {
-      title: 'Type',
-      dataIndex: 'type'
-    },
-    {
-      title: 'Display Size',
-      dataIndex: 'displaySize'
-    },
-    {
-      title: 'Display Type',
-      dataIndex: 'displayType'
-    },
-    {
-      title: 'Text Justification',
-      dataIndex: 'textJustification'
-    },
+    },    
     {
       title: 'Format',
       dataIndex: 'format'
@@ -152,23 +156,61 @@ class FileReport extends Component {
       <div>        
         {table}     
         {this.state.openFileLayout ? <div ref="divFileLayout">    
-      <div style={{paddingBottom:"5px"}}>
-        <h6>{title}</h6>
-      </div>
-      <div id={this.layoutDiv}>
-     
-        <Spin spinning={this.state.initialDataLoading} size="large" >     
+      
+      <Row gutter={24}>
+          <Col span={10}>
+          <div >
+          <h6>{title}</h6>
+          </div>
+          <Spin spinning={this.state.initialDataLoading} size="large" >     
           <Table
                 className="rebortTable"
                 columns={layoutColumns}
                 rowKey={record => record.name}
                 dataSource={this.state.fileLayout}
                 pagination={{ pageSize: 10 }} 
-                scroll={{ x: 1000 }}
                 size="middle"
+                style={{paddingTop:"80px"}}
               />
         </Spin>
-      </div>
+          </Col>
+          <Col span={14}>
+          <Plot
+        data={[
+          {
+            x: this.state.nameList,
+            y: this.state.isPCIList,
+            width:this.state.barWidth,
+            type: 'bar',
+            marker: {color: 'blue'},
+            name:"isPCI"
+            
+          },
+          { x: this.state.nameList,
+            y: this.state.isPIIList,
+            width:this.state.barWidth,
+            type: 'bar',
+            marker: {color: 'red'},
+            name:"isPII"
+          },
+        ]}
+        layout={ {width: 450, height: 500,
+        xaxis1: {
+          "showline": true,
+          side: 'bottom',
+          title:"Fields Name"          
+        },
+        yaxis1: {
+          "showline": true,
+          side: 'left',
+          title:"isPCI & isPII"
+        },
+        plot_bgcolor: 'rgb(182, 215, 168)'
+      } }
+      />
+      </Col>
+      </Row>
+      
       </div>:null}
       </div>
     )
