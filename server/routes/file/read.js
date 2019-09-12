@@ -12,6 +12,7 @@ let FileValidation = models.file_validation;
 let License = models.license;
 TreeConnection = models.tree_connection;
 TreeStyle = models.tree_style;
+let ConsumerObject = models.consumer_object;
 let Sequelize = require('sequelize');
 const Op = Sequelize.Op;
 
@@ -102,12 +103,16 @@ router.get('/file_details', (req, res) => {
                             results.file_validations = fileValidations;
                             FileFieldRelation.findAll({where:{"application_id":req.query.app_id, "file_id":req.query.file_id}}).then(function(fileFieldRelations) {
                                 results.file_field_relations = fileFieldRelations;
-                                res.json(results);
+                            }).then(function(fileFieldRelation) {
+                                ConsumerObject.findAll({where:{"object_id":req.query.file_id, "object_type":"file"}}).then(function(fileConsumers) {
+                                    results.consumers = fileConsumers;
+                                    res.json(results);
+                                });
                             });
                         });
                     });
                 });
-            });
+            })
         })
         .catch(function(err) {
             console.log(err);
@@ -163,6 +168,14 @@ router.post('/saveFile', (req, res) => {
                 fileValidationsToSave,
                 {updateOnDuplicate: ["name", "ruleType", "rule", "action", "fixScript"]}
             )
+        }).then(function(fileFieldValidation) {
+            return ConsumerObject.bulkCreate(
+            {
+                "consumer_id" : req.body.file.consumer.id,
+                "object_id" : fileId,
+                "object_type" : "file"
+            }
+            )
         }).then(function(fieldValidation) {
             res.json({"result":"success"});
         }), function(err) {
@@ -200,7 +213,11 @@ router.post('/delete', (req, res) => {
                                 TreeStyle.destroy(
                                     {where:{node_id: req.body.fileId}}
                                 ).then(function(styleDeleted) {
-                                    res.json({"result":"success"});
+                                    ConsumerObject.destroy(
+                                        {where:{object_id: req.body.fileId, object_type: "file"}}
+                                    ).then(function(consumerDeleted) {
+                                        res.json({"result":"success"});
+                                    });
                                 });
                             })
                         })
