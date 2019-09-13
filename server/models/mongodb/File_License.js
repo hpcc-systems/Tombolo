@@ -14,6 +14,9 @@ module.exports = (sequelize, DataTypes) => {
     url: DataTypes.STRING
   }, {freezeTableName: true});
   file_license.associate = function(models) {
+    file_license.belongsTo(models.file, {
+      foreignKey: 'file_id'
+    });
   };
   return file_license;
 };

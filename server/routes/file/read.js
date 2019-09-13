@@ -14,6 +14,9 @@ TreeConnection = models.tree_connection;
 TreeStyle = models.tree_style;
 let Sequelize = require('sequelize');
 const Op = Sequelize.Op;
+let Indexes=models.indexes;
+let Query=models.query;
+let Job=models.job;
 
 //let FileTree = require('../../models/File_Tree');
 const fileService = require('./fileservice');
@@ -319,6 +322,72 @@ router.get('/filetree', (req, res) => {
     }
 });
 
+router.get('/fileLicenseCount', (req, res) => {
+    console.log("[fileLicenseCount/read.js] - get file license count for app_id = " +req.query.app_id);
+    try {
+        var result = [];
+        FileLicense.findAll({
+            where:{"application_id":req.query.app_id},
+            group: ['name'],
+            attributes: ['name', [Sequelize.fn('COUNT', 'name'), 'fileCount']],
+          }).then(function (tags) {
+            res.json(tags);
+          })
+        .catch(function(err) {
+            console.log(err);
+        });
+    } catch (err) {
+        console.log('err', err);
+    }
+});
+
+router.get('/DependenciesCount', (req, res) => {
+    console.log("[DependenciesCount/read.js] - get dependencies count for app_id = " +req.query.app_id);
+    try {
+        var result = {};
+        File.findAndCountAll({
+            where:{"application_id":req.query.app_id}
+          }).then(function (file) {
+              result.fileCount=file.count;
+        Indexes.findAndCountAll({
+            where:{"application_id":req.query.app_id}
+          }).then(function (index) {
+              result.indexCount=index.count;
+              Query.findAndCountAll({
+                where:{"application_id":req.query.app_id}
+              }).then(function (query) {
+                  result.queryCount=query.count;
+                  Job.findAndCountAll({
+                    where:{"application_id":req.query.app_id}
+                  }).then(function (job) {
+                      result.jobCount=job.count;
+                      res.json(result);
+                  });
+              });
+          });
+        })
+        .catch(function(err) {
+            console.log(err);
+        });
+    } catch (err) {
+        console.log('err', err);
+    }
+});
+
+router.get('/LicenseFileList', (req, res) => {
+    console.log("[LicenseFileList/read.js] - Get file list for app_id = " + req.query.app_id +" and License= "+req.query.name);
+    try {
+        File.findAll({where:{"$file_licenses.name$":req.query.name,"application_id":req.query.app_id},
+         include: [FileLicense]}).then(function(files) {
+            res.json(files);
+        })
+        .catch(function(err) {
+            console.log(err);
+        });
+    } catch (err) {
+        console.log('err', err);
+    }
+});
 function updateCommonData(objArray, fields) {
     Object.keys(fields).forEach(function (key, index) {
         objArray.forEach(function(obj) {

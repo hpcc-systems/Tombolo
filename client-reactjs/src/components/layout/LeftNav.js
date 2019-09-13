@@ -73,6 +73,9 @@ class LeftNav extends Component {
               <li className="nav-item" >
                 <NavLink to={"/"+applicationId+"/jobs"} className="nav-link" data-toggle="popover" tabIndex="4"><i className="fa fa-lg fa-clock-o"></i> Jobs</NavLink>
               </li>
+              <li className="nav-item" >
+                <NavLink to={"/"+applicationId+"/chart"} className="nav-link" data-toggle="popover" tabIndex="5"><i className="fa fa-lg fa-bar-chart"></i> Report</NavLink>
+              </li>
             </ul>
 
             <h6 className="sidebar-heading d-flex justify-content-between align-items-center px-3 mt-4 mb-1 text-muted">

@@ -1,7 +1,9 @@
 import { Table,Spin,Tabs,Row, Col} from 'antd/lib';
 import React, { Component } from "react";
 import { authHeader, handleError } from "../common/AuthHeader.js";
-import Plot from 'react-plotly.js';
+import Plotly from 'plotly.js-basic-dist';
+import createPlotlyComponent from 'react-plotly.js/factory';
+const Plot = createPlotlyComponent(Plotly);
 const TabPane = Tabs.TabPane;
 
 class FileReport extends Component {
