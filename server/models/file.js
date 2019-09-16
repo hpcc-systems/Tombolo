@@ -17,7 +17,8 @@ module.exports = (sequelize, DataTypes) => {
     isSuperFile: DataTypes.STRING,
     primaryService: DataTypes.STRING,
     backupService: DataTypes.STRING,
-    qualifiedPath: DataTypes.STRING
+    qualifiedPath: DataTypes.STRING,
+    consumer: DataTypes.STRING
   }, {freezeTableName: true});
   file.associate = function(models) {
     file.hasMany(models.file_layout,{
@@ -47,6 +48,10 @@ module.exports = (sequelize, DataTypes) => {
     });
     file.belongsTo(models.application, {
       foreignKey: 'application_id'
+    file.hasMany(models.consumer_object,{
+      foreignKey:'consumer_id',
+      onDelete: 'CASCADE',
+      hooks: true
     });
   };
   return file;

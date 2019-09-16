@@ -20,6 +20,7 @@ import Users from "./components/admin/Users";
 
 import {AdminApplications} from "./components/admin/Applications";
 import AdminClusters from "./components/admin/Clusters";
+import {AdminConsumers} from "./components/admin/Consumers";
 import {AppHeader} from './components/layout/Header';
 import { userActions } from './redux/actions/User';
 import { store } from './redux/store/Store';
@@ -51,7 +52,7 @@ class App extends React.Component {
                                 <Content style={{background: '#fff', padding: '5px'}}>
                                     <Route exact path="/" component={FileList}/>
                                     <Switch>
-                                        <PrivateRoute exact path="/file/:applicationId/:fileId" component={SelectedFilePopup} />                                        
+                                        <PrivateRoute exact path="/file/:applicationId/:fileId" component={SelectedFilePopup} />
                                         <PrivateRoute exact path="/:applicationId/files" component={FileList} />
                                         <PrivateRoute path="/files" component={FileList} />
                                         <PrivateRoute exact path="/:applicationId/index" component={IndexList}/>
@@ -63,6 +64,7 @@ class App extends React.Component {
                                         <PrivateRoute path="/admin/users" component={Users}/>
                                         <PrivateRoute path="/report/:searchText" component={Report}/>
                                         <PrivateRoute path="/:applicationId/Chart" component={Chart}/>
+                                        <PrivateRoute path="/admin/consumers" component={AdminConsumers}/>
                                     </Switch>
 
                                 </Content>

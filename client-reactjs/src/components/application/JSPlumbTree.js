@@ -42,17 +42,17 @@ class JSPlumbTree extends Component {
         _self.fetchFiles();
       }, 200);
 
-    }   
+    }
   }
 
   componentDidMount() {
     document.addEventListener('mousedown', this.handleClickOutside);
-    this.fetchFiles(); 
+    this.fetchFiles();
     if(this.props.fileId){
     setTimeout(() => {
     this.showFileDetails(this.props.fileId);
-    }, 1000); 
-}  
+    }, 1000);
+}
 }
 
   setWrapperRef(node) {
@@ -92,12 +92,12 @@ class JSPlumbTree extends Component {
      })
      .then(result => {
        _self.fetchFiles();
-       message.success("File deleted sucessfully");       
+       message.success("File deleted sucessfully");
      }).catch(error => {
        console.log(error);
        message.error("There was an error deleting the file");
      });
-               
+
 
   }
   EditFile=(fileId)=>{
@@ -215,7 +215,7 @@ class JSPlumbTree extends Component {
             }
 
             /*$('.window').dblclick(function() {
-              _self.showFileDetails($( this ).attr("id"));             
+              _self.showFileDetails($( this ).attr("id"));
             });*/
             // make .window divs draggable
 
@@ -357,7 +357,7 @@ addAllEndpointsTonodes = (nodeId) => {
                 <a href="#"><Tooltip placement="right" title={"Delete File"}><Icon type="close-circle" style={{"top":'1px',"right":'1px','position': 'absolute'}}   />
                 </Tooltip></a>
                 </Popconfirm>
-                <div style={{"padding-top":'4px'}} onDoubleClick={() =>this.EditFile(item.id)} >{(item.title)?item.title:item.name}</div>
+                <div style={{"paddingTop":'4px'}} onDoubleClick={() =>this.EditFile(item.id)} >{(item.title)?item.title:item.name}</div>
                 </div>
                // return <div className="window" style={{"top":top,"left":left}}key={item.id} id={item.id}>{item.title}</div>
             })}

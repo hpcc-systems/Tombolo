@@ -10,6 +10,7 @@
   "license": "ISC",
   "dependencies": {
     "@hpcc-js/comms": "^2.6.7",
+    "activedirectory": "^0.7.2",
     "bcryptjs": "^2.4.3",
     "crypto": "^1.0.1",
     "dotenv": "^8.0.0",
