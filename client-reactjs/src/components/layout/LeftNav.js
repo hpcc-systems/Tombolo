@@ -54,7 +54,7 @@ class LeftNav extends Component {
         return false;
     return (
       <React.Fragment>
-      <Sider style={{ background: '#343a40', height:"100vh", paddingTop:"60px"}}
+      <Sider style={{ background: '#343a40', minHeight:"100vh", paddingTop:"60px" }}
             collapsible
             collapsed={this.state.collapsed}
             onCollapse={this.onCollapse}
@@ -73,6 +73,9 @@ class LeftNav extends Component {
               </li>
               <li className="nav-item" >
                 <NavLink to={"/"+applicationId+"/jobs"} className="nav-link" data-toggle="popover" tabIndex="4"><i className="fa fa-lg fa-clock-o"></i> Jobs</NavLink>
+              </li>
+              <li className="nav-item" >
+                <NavLink to={"/"+applicationId+"/chart"} className="nav-link" data-toggle="popover" tabIndex="5"><i className="fa fa-lg fa-bar-chart"></i> Report</NavLink>
               </li>
             </ul>
 

@@ -14,6 +14,8 @@ class BreadCrumbs extends Component {
           path = 'files'
         else if(location.pathname.includes('/shareApp'))
           path = 'share an application'
+        else if(location.pathname.includes('/chart'))
+          path = 'report'
         else
           path = pathSnippets[2];
         if(this.props.applicationId) {

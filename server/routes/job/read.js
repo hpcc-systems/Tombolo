@@ -45,7 +45,7 @@ router.post('/saveJob', (req, res) => {
 router.get('/job_list', (req, res) => {
     console.log("[job list/read.js] - Get job list for app_id = " + req.query.app_id);
     try {
-        Job.findAll({"applicationId":req.query.app_id}).then(function(jobs) {
+        Job.findAll({where:{"application_Id":req.query.app_id}}).then(function(jobs) {
             res.json(jobs);
         })
         .catch(function(err) {

@@ -1,5 +1,5 @@
 import React, { Component } from "react";
-import {Layout, Menu, Icon, message, Tooltip} from 'antd/lib';
+import {Layout, Menu, Icon, message, Tooltip,Input} from 'antd/lib';
 import { NavLink, Switch, Route, withRouter } from 'react-router-dom';
 import { userActions } from '../../redux/actions/User';
 import { connect } from 'react-redux';
@@ -8,12 +8,14 @@ import { applicationActions } from '../../redux/actions/Application';
 import $ from 'jquery';
 
 const { Header, Content } = Layout;
+const { Search } = Input;
 
 class AppHeader extends Component {
     constructor(props) {
         super(props);
         this.handleChange = this.handleChange.bind(this);
         this.handleTopNavClick = this.handleTopNavClick.bind(this);
+        this.search = this.search.bind(this);
     }
 
     state = {
@@ -87,7 +89,9 @@ class AppHeader extends Component {
         this.props.history.push('/'+event.target.getAttribute("data-value")+'/files');
         $('[data-toggle="popover"]').popover('disable');
     }
-
+    search(value){
+      this.props.history.push('/report/searchText='+value);
+    }
   render() {
     const hasAdminRole = (this.props.user && this.props.user.role == 'admin');
     const applicationId = this.props.application ? this.props.application.applicationId : '';
@@ -117,8 +121,14 @@ class AppHeader extends Component {
                 <a className="nav-link" href="#"><i className="fa fa-lg fa-plus-circle"></i></a>
               </li>*/}
 
-            </ul>
+            </ul>           
             <ul className="ml-md-auto navbar-nav">
+            <li className="nav-item">
+              <Search
+                placeholder="Search"
+                onSearch={this.search}
+                style={{ width: 200 }} />
+              </li>
               {/*
               <li className="nav-item">
                 <a className="nav-link" data-nav="/admin/applications" onClick={this.handleTopNavClick} disabled={!hasAdminRole}><i className="fa fa-lg fa-cog"></i> Settings</a>

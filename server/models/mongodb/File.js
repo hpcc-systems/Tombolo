@@ -43,6 +43,9 @@ module.exports = (sequelize, DataTypes) => {
       onDelete: 'CASCADE',
       hooks: true
     });
+    file.belongsTo(models.application, {
+      foreignKey: 'application_id'
+    });
   };
   return file;
 };

@@ -46,6 +46,8 @@ module.exports = (sequelize, DataTypes) => {
       onDelete: 'CASCADE',
       hooks: true
     });
+    file.belongsTo(models.application, {
+      foreignKey: 'application_id'
     file.hasMany(models.consumer_object,{
       foreignKey:'consumer_id',
       onDelete: 'CASCADE',

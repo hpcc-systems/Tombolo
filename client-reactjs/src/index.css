@@ -82,6 +82,11 @@ body {
   height: 31px;
   width: 31px;
 }
+.divloader
+{
+ 
+  left: 50%;
+}
 
 .login-form {
   width: 340px;
@@ -278,4 +283,18 @@ path, .jtk-endpoint { cursor:pointer; }
 
 .ant-form-item {
   margin-bottom: 6px !important;
+}
+
+ /* The style of the selected table row */
+.clickRowStyl{
+  background-color: #00b4ed;
+}
+.ant-table-tbody>.clickRowStyl:hover>td{
+  background-color: #00b4ed;
+}
+
+
+.rebortTable table >thead > tr > th {
+  background-color:  #6c757d;
+  color: #fff;
 }
