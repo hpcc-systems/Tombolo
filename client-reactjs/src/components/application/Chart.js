@@ -4,6 +4,7 @@ import Plotly from 'plotly.js-basic-dist';
 import createPlotlyComponent from 'react-plotly.js/factory';
 import { authHeader, handleError } from "../common/AuthHeader.js";
 import { connect } from 'react-redux';
+import BreadCrumbs from "../common/BreadCrumbs";
 const Plot = createPlotlyComponent(Plotly);
 
 class Chart extends Component {
@@ -23,7 +24,7 @@ class Chart extends Component {
     depMaxCount:0,
     showFileList:false,
     files:[],
-    selectedLicense:""
+    popupTitle:""
   }
   componentDidMount() {
     this.fetchFileLicenseCount();  
@@ -46,11 +47,15 @@ class Chart extends Component {
       var fileCount = [];
       var width=[];
       var maxCount=0;
-      for (var obj in data) {
-        licenseName.push(data[obj].name);
-        fileCount.push(data[obj].fileCount);
+      licenseName.push("No License");
+      fileCount.push(data.nonLicensefileCount);
+      maxCount=data.nonLicensefileCount;
+      width.push(0.4);
+      for (var obj in data.licenseFileCount) {
+        licenseName.push(data.licenseFileCount[obj].name);
+        fileCount.push(data.licenseFileCount[obj].fileCount);
         width.push(0.4);
-        maxCount=(data[obj].fileCount>maxCount)?data[obj].fileCount:maxCount;
+        maxCount=(data.licenseFileCount[obj].fileCount>maxCount)?data.licenseFileCount[obj].fileCount:maxCount;
       }        
       self.setState({
         fileLicense: data,
@@ -101,7 +106,11 @@ class Chart extends Component {
     this.props.history.push('/'+this.props.application.applicationId+'/queries');
   }
   onComplianceClick = (data) => {  
-    var xaxisVal=data.points[0].x; 
+    var popupTitle="";
+    if(data.points[0].x=="No License")
+      popupTitle="Non License Files";
+    else 
+      popupTitle="License - "+data.points[0].x;
     fetch("/api/file/read/LicenseFileList?app_id="+this.state.applicationId+"&name="+data.points[0].x, {
         headers: authHeader()
     })
@@ -121,7 +130,7 @@ class Chart extends Component {
       });
       this.setState({
         files: results,
-        selectedLicense:"License - "+xaxisVal
+        popupTitle:popupTitle
       });
       this.setState({
         showFileList: true
@@ -163,7 +172,11 @@ class Chart extends Component {
     if(!this.props.application || !this.props.application.applicationId)
     return null;
     return (
-      <div style={{paddingTop:"50px"}}>
+      <div>
+        <div className="d-flex justify-content-end" style={{paddingTop:"55px"}}>
+          <BreadCrumbs applicationId={this.state.applicationId} applicationTitle={this.state.applicationTitle}/>  
+          <span style={{ marginLeft: "auto"}}></span>        
+        </div>
       <Plot onClick={this.onComplianceClick} config={config}  data={[{
             x: this.state.licenseName,
             y: this.state.fileCount,
@@ -221,7 +234,7 @@ class Chart extends Component {
       } }
       />
       <Modal
-	          title={this.state.selectedLicense}
+	          title={this.state.popupTitle}
 	          visible={this.state.showFileList}
             onCancel={this.handleFileCancel}
             width="700px"

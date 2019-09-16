@@ -325,14 +325,29 @@ router.get('/filetree', (req, res) => {
 router.get('/fileLicenseCount', (req, res) => {
     console.log("[fileLicenseCount/read.js] - get file license count for app_id = " +req.query.app_id);
     try {
-        var result = [];
+        var result = {};
         FileLicense.findAll({
             where:{"application_id":req.query.app_id},
             group: ['name'],
             attributes: ['name', [Sequelize.fn('COUNT', 'name'), 'fileCount']],
-          }).then(function (tags) {
-            res.json(tags);
-          })
+          }).then(function (licenseCount) {
+              result.licenseFileCount=licenseCount;
+              File.findAndCountAll({
+                where:{
+                    "application_id":req.query.app_id,
+                    "id": {
+                    [Op.notIn]: Sequelize.literal( 
+                        '( SELECT file_id ' +
+                            'FROM file_license ' +
+                           'WHERE application_id = "' + req.query.app_id +
+                        '")')
+                    }
+                }
+            }).then(function (file) {
+                  result.nonLicensefileCount=file.count;             
+                  res.json(result);
+            })
+        })
         .catch(function(err) {
             console.log(err);
         });
@@ -377,13 +392,35 @@ router.get('/DependenciesCount', (req, res) => {
 router.get('/LicenseFileList', (req, res) => {
     console.log("[LicenseFileList/read.js] - Get file list for app_id = " + req.query.app_id +" and License= "+req.query.name);
     try {
-        File.findAll({where:{"$file_licenses.name$":req.query.name,"application_id":req.query.app_id},
-         include: [FileLicense]}).then(function(files) {
-            res.json(files);
-        })
-        .catch(function(err) {
-            console.log(err);
-        });
+        if(req.query.name=="No License")
+        {
+            File.findAll(
+                {where:{
+                    "application_id":req.query.app_id,
+                    "id": {
+                    [Op.notIn]: Sequelize.literal( 
+                        '( SELECT file_id ' +
+                            'FROM file_license ' +
+                           'WHERE application_id = "' + req.query.app_id +
+                        '")')
+                    }
+                }
+            }).then(function(files) {
+                res.json(files);
+            })
+            .catch(function(err) {
+                console.log(err);
+            });
+        }
+        else{
+            File.findAll({where:{"$file_licenses.name$":req.query.name,"application_id":req.query.app_id},
+            include: [FileLicense]}).then(function(files) {
+                res.json(files);
+            })
+            .catch(function(err) {
+                console.log(err);
+            });
+        }
     } catch (err) {
         console.log('err', err);
     }
