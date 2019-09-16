@@ -1,5 +1,5 @@
 import {Treant} from 'treant-js/Treant.js';
-import { message, Row, Col, Icon,Popconfirm,Tooltip } from 'antd/lib';
+import { message, Row, Col, Icon,Popconfirm,Tooltip,Button } from 'antd/lib';
 import $ from 'jquery';
 import { jsPlumb } from 'jsplumb';
 import { _ } from 'underscore';
@@ -22,9 +22,9 @@ class JSPlumbTree extends Component {
     selectedFile: "",
     applicationId: this.props.applicationId,
     files: [],
-    //nodes:{"connections":[{"id":"con_5","sourceId":"taxi_data_raw","targetId":"taxi_data_clean","anchors":[{"elementId":"taxi_data_raw","type":"RightMiddle"},{"elementId":"taxi_data_clean","type":"LeftMiddle"}]},{"id":"con_10","sourceId":"weather_new_york_city","targetId":"weather_newyork_clean","anchors":[{"elementId":"weather_new_york_city","type":"RightMiddle"},{"elementId":"weather_newyork_clean","type":"LeftMiddle"}]},{"id":"con_15","sourceId":"taxi_data_clean","targetId":"taxi_weather","anchors":[{"elementId":"taxi_data_clean","type":"RightMiddle"},{"elementId":"taxi_weather","type":"LeftMiddle"}]},{"id":"con_20","sourceId":"weather_newyork_clean","targetId":"taxi_weather","anchors":[{"elementId":"weather_newyork_clean","type":"RightMiddle"},{"elementId":"taxi_weather","type":"LeftMiddle"}]}],"styles":[{"id":"taxi_data_raw","style":"left: 360px; top: 112px;"},{"id":"taxi_data_clean","style":"left: 319px; top: 105px;"},{"id":"weather_new_york_city","style":"left: -227px; top: 319px;"},{"id":"weather_newyork_clean","style":"left: -260px; top: 330px;"},{"id":"taxi_weather","style":"left: 758px; top: 121px;"}]},
     nodes:{},
-    chartContainer: this.props.chartContainer ? this.props.chartContainer : "canvas"
+    chartContainer: this.props.chartContainer ? this.props.chartContainer : "canvas",
+    chartZoom: 1
   }
 
   componentWillUnmount() {
@@ -49,11 +49,11 @@ class JSPlumbTree extends Component {
     document.addEventListener('mousedown', this.handleClickOutside);
     this.fetchFiles();
     if(this.props.fileId){
-    setTimeout(() => {
-    this.showFileDetails(this.props.fileId);
-    }, 1000);
-}
-}
+      setTimeout(() => {
+        this.showFileDetails(this.props.fileId);
+      }, 1000);
+    }
+  }
 
   setWrapperRef(node) {
     this.wrapperRef = node;
@@ -231,6 +231,43 @@ class JSPlumbTree extends Component {
               });
         });
     });
+
+    jsPlumb.setContainer(chartContainer);
+  }
+
+  handleZoom = (e) => {
+    let zoom;
+    if(e.currentTarget.id == 'zoomout') {
+      zoom = this.state.chartZoom-0.10;
+      this.setZoom(zoom, jsPlumb, null, $("#canvas")[0]);
+    } else if(e.currentTarget.id == 'zoomin') {
+      zoom = this.state.chartZoom+0.10;
+      this.setZoom(zoom, jsPlumb, null, $("#canvas")[0]);
+    }
+
+    this.setState({
+      chartZoom: zoom
+    });
+  }
+
+  //ref: https://github.com/jsplumb/jsplumb/wiki/zooming
+  setZoom(zoom, instance, transformOrigin, el) {
+    transformOrigin = transformOrigin || [ 0.5, 0.5 ];
+    instance = instance || jsPlumb;
+    el = el || instance.getContainer();
+    var p = [ "webkit", "moz", "ms", "o" ],
+        s = "scale(" + zoom + ")",
+        oString = (transformOrigin[0] * 100) + "% " + (transformOrigin[1] * 100) + "%";
+
+    for (var i = 0; i < p.length; i++) {
+      el.style[p[i] + "Transform"] = s;
+      el.style[p[i] + "TransformOrigin"] = oString;
+    }
+
+    el.style["transform"] = s;
+    el.style["transformOrigin"] = oString;
+
+    instance.setZoom(zoom);
   }
 
   addEndPointsToNodes(endpointId, anchor) {
@@ -343,9 +380,13 @@ addAllEndpointsTonodes = (nodeId) => {
     const { files, relations } = this.state;
     let top=120, left=120;
     return (
-      <div ref={this.setWrapperRef}>
+      <div ref={this.setWrapperRef} >
+        <div style={{"float":"right"}}>
+            <span id="zoomin" onClick={(event) => this.handleZoom(event)}><i className="fa fa-2x fa-search-plus" aria-hidden="true"></i></span>
+            <span id="zoomout" onClick={(event) => this.handleZoom(event)}><i className="fa fa-2x fa-search-minus" aria-hidden="true"></i></span>
+        </div>
 
-        <div className="jtk-demo-canvas canvas-wide drag-drop-demo jtk-surface jtk-surface-nopan" id="canvas">
+        <div className="jtk-demo-canvas canvas-wide drag-drop-demo jtk-surface jtk-surface-nopan" id="canvas" >
             {files.map((item, index) => {
                 left+=120;
                 if(index != 0 && (index % 5) == 0) {

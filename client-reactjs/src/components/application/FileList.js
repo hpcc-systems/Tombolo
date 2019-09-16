@@ -21,7 +21,7 @@ class FileList extends Component {
     tableView: false,
     fileId:(this.props.fileId)?this.props.fileId:''
   }
-  componentWillReceiveProps(props) {   
+  componentWillReceiveProps(props) {
     if(props.application) {
       if(this.state.applicationId != props.application.applicationId) {
         this.setState({
@@ -78,7 +78,7 @@ class FileList extends Component {
     }).catch(error => {
       console.log(error);
     });
-  }  
+  }
   render() {
     const menu = (
       <Menu onClick={this.handleSchemaDownload}>
@@ -86,7 +86,7 @@ class FileList extends Component {
         <Menu.Item key="json">JSON</Menu.Item>
       </Menu>
     );
-    
+
     if(!this.props.application || !this.props.application.applicationId)
       return null;
     return (
@@ -112,7 +112,7 @@ class FileList extends Component {
           </span>
         </div>
         <div>
-          {this.state.tableView ? <FileTable refresh={this.state.refreshTree} applicationId={this.state.applicationId}/> : <JSPlumbTree refresh={this.state.refreshTree} applicationId={this.state.applicationId} fileId={this.state.fileId}  />}
+          {this.state.tableView ? <FileTable refresh={this.state.refreshTree} applicationId={this.state.applicationId}/> : <JSPlumbTree refresh={this.state.refreshTree} applicationId={this.state.applicationId} fileId={this.state.fileId}  onScroll={this.handleScroll}/>}
 
           {this.state.openFileDetailsDialog ?
             <FileDetailsForm

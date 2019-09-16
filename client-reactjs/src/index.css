@@ -84,7 +84,7 @@ body {
 }
 .divloader
 {
- 
+
   left: 50%;
 }
 
@@ -216,9 +216,9 @@ body {
 
 path, .jtk-endpoint { cursor:pointer; }
 
-.ant-layout-content {
+/*.ant-layout-content {
   overflow:hidden;
-}
+}*/
 
 /*.ant-btn-primary:active, .ant-btn-primary.active {
   color: #fff;
@@ -297,4 +297,8 @@ path, .jtk-endpoint { cursor:pointer; }
 .rebortTable table >thead > tr > th {
   background-color:  #6c757d;
   color: #fff;
+}
+
+.disabled {
+  opacity: 0.4;
 }
