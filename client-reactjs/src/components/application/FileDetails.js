@@ -7,6 +7,9 @@ import FileRelations from "./FileRelations"
 import DataProfileTable from "./DataProfileTable"
 import DataProfileHTML from "./DataProfileHTML"
 import { authHeader, handleError } from "../common/AuthHeader.js"
+import { AgGridReact } from 'ag-grid-react';
+import 'ag-grid-community/dist/styles/ag-grid.css';
+import 'ag-grid-community/dist/styles/ag-theme-balham.css';
 
 const TabPane = Tabs.TabPane;
 const Option = Select.Option;
@@ -582,6 +585,11 @@ class FileDetails extends Component {
     });
   }
 
+  onLayoutGridReady = (params) => {
+    let gridApi = params.api;
+    gridApi.sizeColumnsToFit();
+  }
+
   render() {
     const { visible, confirmLoading, sourceFiles, availableLicenses, selectedRowKeys, clusters, consumers, fileSearchSuggestions, fileDataContent, fileProfile, showFileProfile } = this.state;
     const modalTitle = "File Details" + (this.state.file.title ? " - " + this.state.file.title : " - " +this.state.file.name);
@@ -609,93 +617,48 @@ class FileDetails extends Component {
 
 
     const layoutColumns = [{
-      title: 'Name',
-      dataIndex: 'name',
-      width: '20%',
+      headerName: 'Name',
+      field: 'name',
+      sort: "asc"
     },
     {
-      title: 'Type',
-      dataIndex: 'type'
+      headerName: 'Type',
+      field: 'type'
     },
     {
-      title: 'Display Size',
-      dataIndex: 'displaySize'
+      headerName: 'Display Size',
+      field: 'displaySize'
     },
     {
-      title: 'Display Type',
-      dataIndex: 'displayType'
+      headerName: 'Display Type',
+      field: 'displayType'
     },
     {
-      title: 'Text Justification',
-      dataIndex: 'textJustification'
+      headerName: 'Text Justification',
+      field: 'textJustification'
     },
     {
-      title: 'Format',
-      dataIndex: 'format'
+      headerName: 'Format',
+      field: 'format'
     },
     {
-      title: 'PCI',
-      dataIndex: 'isPCI'
+      headerName: 'PCI',
+      field: 'isPCI',
+      editable: true,
+      cellEditor: "select",
+      cellEditorParams: {
+        values: ["true", "false"]
+      }
     },
     {
-      title: 'PII',
-      dataIndex: 'isPII'
+      headerName: 'PII',
+      field: 'isPII',
+      editable: true,
+      cellEditor: "select",
+      cellEditorParams: {
+        values: ["true", "false"]
+      }
     }];
-
-    const profileDataColumns = [{
-      title: 'Field',
-      dataIndex: 'attribute',
-      width: '10%'
-    },
-    {
-      title: 'Type',
-      dataIndex: 'given_attribute_type',
-      width: '20%'
-    },
-    {
-      title: 'Best Type',
-      dataIndex: 'best_attribute_type',
-      width: '20%'
-    },
-    {
-      title: 'Rec Count',
-      dataIndex: 'rec_count',
-      width: '20%'
-    },
-    {
-      title: 'Fill Count',
-      dataIndex: 'fill_count',
-      width: '20%'
-    },
-    {
-      title: 'Fill Rate',
-      dataIndex: 'fill_rate',
-      width: '20%'
-    },
-    {
-      title: 'Cardinality',
-      dataIndex: 'cardinality',
-      width: '20%'
-    },
-    {
-      title: 'Cardinality Breakdown',
-      dataIndex: 'cardinality_breakdown',
-      width: '20%'
-    },
-    {
-      title: 'Modes',
-      dataIndex: 'modes',
-      width: '20%'
-    },
-    {
-      title: 'Popular Patterns',
-      dataIndex: 'popular_patterns',
-      width: '20%'
-    },
-    {
-      title: 'Rare Patterns',
-      dataIndex: 'rare_patterns'
-    }]
 
     const licenseColumns = [{
       title: '',
@@ -704,52 +667,41 @@ class FileDetails extends Component {
     }];
 
     const validationTableColumns = [{
-      Header: 'Name',
-      accessor: 'name',
-      width: '20%',
+      headerName: 'Name',
+      field: 'name',
+      sort: "asc"
     },
     {
-      Header: 'Rule Type',
-      accessor: 'ruleType',
-      width: '20%',
-      Cell: cellInfo => (
-        <Select style={{ width: 220 }} defaultValue={cellInfo.row.ruleType} onChange={(value) => this.onValidationEdit(cellInfo, value)} placeholder="Rule Type" >
-          <Option key='field'>field</Option>
-          <Option key='aggregate'>aggregate</Option>
-        </Select>
-      )
+      headerName: 'Rule Type',
+      field: 'ruleType',
+      editable: true,
+      cellEditor: "select",
+      cellEditorParams: {
+        values: ["", "field", "aggregate"]
+      }
     },
     {
-      Header: 'Rule',
-      accessor: 'rule',
-      width: '20%',
-      Cell: cellInfo => (
-        <Select style={{ width: 220 }} defaultValue={cellInfo.row.rule} onChange={(value) => this.onValidationEdit(cellInfo, value)} placeholder="Rule" >
-          <Option key='not null'>not null</Option>
-          <Option key='in'>in</Option>
-          <Option key='!='>!=</Option>
-          <Option key='>'>></Option>
-        </Select>
-      )
+      headerName: 'Rule',
+      field: 'rule',
+      editable: true,
+      cellEditor: "select",
+      cellEditorParams: {
+        values: ["", "not null", "in", "!=", ">"]
+      }
     },
     {
-      Header: 'Action',
-      accessor: 'action',
-      width: '20%',
-      Cell: cellInfo => (
-        <Select style={{ width: 220 }} defaultValue={cellInfo.row.action} onChange={(value) => this.onValidationEdit(cellInfo, value)} placeholder="Action" >
-          <Option key='drop'>drop</Option>
-          <Option key='fix'>fix</Option>
-          <Option key='alert'>alert</Option>
-        </Select>
-      )
-    },{
-      Header: 'Fix Script',
-      accessor: 'fixScript',
-      width: '20%',
-      Cell: cellInfo => (
-        <Input style={{ width: 220 }} defaultValue={cellInfo.row.fixScript} onChange={(e) => this.onValidationEdit(cellInfo, e)} placeholder="fix script" />
-      )
+      headerName: 'Action',
+      field: 'action',
+      editable: true,
+      cellEditor: "select",
+      cellEditorParams: {
+        values: ["", "drop", "fix", "alert"]
+      }
+    },
+    {
+      headerName: 'Fix Script',
+      field: 'fixScript',
+      editable: true
     }];
 
     const fileDataColumns = () => {
@@ -767,31 +719,6 @@ class FileDetails extends Component {
       onChange: this.onSelectedRowKeysChange
     };
 
-    const expandedRowRender = () => {
-      const columns = [
-        { title: 'modes',
-          children: [
-            {title: 'value',  dataIndex: ["modes","Row", "value"]},
-            {title: 'rec_count',  dataIndex: ["modes","Row", "rec_count"]}
-          ]
-        },
-        { title: 'popular_patterns',
-          children: [
-            {title: 'data_pattern',  dataIndex: 'popular_patterns.Row.data_pattern'},
-            {title: 'rec_count',  dataIndex: 'popular_patterns.Row.rec_count'},
-            {title: 'example',  dataIndex: 'popular_patterns.Row.example'}
-          ]
-        }
-      ];
-
-      return (
-        <Table
-          columns={columns}
-          dataSource={fileProfile.popular_patterns.Row}
-          pagination={false}
-        />
-      );
-    };
     //render only after fetching the data from the server
     if(!title && !this.props.selectedFile && !this.props.isNewFile) {
       return null;
@@ -896,12 +823,26 @@ class FileDetails extends Component {
 
           </TabPane>
           <TabPane tab="Layout" key="3">
-              <Table
+              <div
+                className="ag-theme-balham"
+                style={{
+                height: '415px',
+                width: '100%' }}
+              >
+                <AgGridReact
+                  columnDefs={layoutColumns}
+                  rowData={layout}
+                  defaultColDef={{resizable: true, sortable: true}}
+                  onGridReady={this.onLayoutGridReady}
+                  singleClickEdit={true}>
+                </AgGridReact>
+              </div>
+              {/*<Table
                 columns={layoutColumns}
                 rowKey={record => record.name}
                 dataSource={layout}
                 pagination={{ pageSize: 10 }} scroll={{ y: 380 }}
-              />
+              />*/}
           </TabPane>
           <TabPane tab="Permissable Purpose" key="4">
             <div>
@@ -914,7 +855,21 @@ class FileDetails extends Component {
               </div>
           </TabPane>
           <TabPane tab="Scrubs" key="5">
-            <div>
+            <div
+                className="ag-theme-balham"
+                style={{
+                height: '415px',
+                width: '100%' }}
+              >
+                <AgGridReact
+                  columnDefs={validationTableColumns}
+                  rowData={validations}
+                  defaultColDef={{resizable: true}}
+                  onGridReady={this.onLayoutGridReady}
+                  singleClickEdit={true}>
+                </AgGridReact>
+              </div>
+            {/*<div>
                 <ReactTable
                   data={validations}
                   defaultSorted={[
@@ -928,7 +883,7 @@ class FileDetails extends Component {
                   defaultPageSize={10}
                   style={{height:"500px"}}
                 />
-              </div>
+              </div>*/}
           </TabPane>
           <TabPane tab="File Preview" key="6">
             <div>
@@ -953,5 +908,20 @@ class FileDetails extends Component {
     );
   }
 }
+
+export class BooleanCellRenderer extends Component {
+    constructor(props) {
+        super(props)
+    }
+
+    render() {
+        return (
+            <span>
+                {this.props.value}
+            </span>
+        );
+    }
+}
+
 const FileDetailsForm = Form.create()(FileDetails);
 export default FileDetailsForm;
