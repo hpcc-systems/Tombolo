@@ -15,7 +15,7 @@ body {
 }
 
 
-.chart { height: 600px; width: 900px; margin: 5px; margin: 15px auto; border-radius: 3px; }
+.chart { width: 900px; margin: 5px; margin: 15px auto; border-radius: 3px; }
 
 .node { font-size: 11px; }
 

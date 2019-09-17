@@ -394,11 +394,11 @@ addAllEndpointsTonodes = (nodeId) => {
                     top+=100;
                 }
                 return <div className="window" style={{"top":top,"left":left}}key={item.id} id={item.id}>
-                <Popconfirm title="Are you sure you want to delete this File?" onConfirm={() => this.DeleteFilevalue(item.id,this.props.applicationId)} icon={<Icon type="question-circle-o" style={{ color: 'red' }} />}>
-                <a href="#"><Tooltip placement="right" title={"Delete File"}><Icon type="close-circle" style={{"top":'1px',"right":'1px','position': 'absolute'}}   />
-                </Tooltip></a>
-                </Popconfirm>
-                <div style={{"paddingTop":'4px'}} onDoubleClick={() =>this.EditFile(item.id)} >{(item.title)?item.title:item.name}</div>
+                  <Popconfirm title="Are you sure you want to delete this File?" onConfirm={() => this.DeleteFilevalue(item.id,this.props.applicationId)} icon={<Icon type="question-circle-o" style={{ color: 'red' }} />}>
+                  <a href="#"><Tooltip placement="right" title={"Delete File"}><Icon type="close-circle" style={{"top":'1px',"right":'1px','position': 'absolute'}}   />
+                  </Tooltip></a>
+                  </Popconfirm>
+                  <div style={{"paddingTop":'4px'}} onDoubleClick={() =>this.EditFile(item.id)} >{(item.title)?item.title:item.name}</div>
                 </div>
                // return <div className="window" style={{"top":top,"left":left}}key={item.id} id={item.id}>{item.title}</div>
             })}

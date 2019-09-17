@@ -48,7 +48,7 @@ class App extends React.Component {
                         {this.props.user ? <AppHeader/> : null}
                         <Layout>
                             <LeftNav isApplicationSet={isApplicationSet} selectedTopNav={selectedTopNav} />
-                            <Layout>
+                            <Layout style={{height: '100vh'}}>
                                 <Content style={{background: '#fff', padding: '5px'}}>
                                     <Route exact path="/" component={FileList}/>
                                     <Switch>
