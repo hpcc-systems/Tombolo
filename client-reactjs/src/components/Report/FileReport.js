@@ -19,12 +19,13 @@ class FileReport extends Component {
     fileLayout: [],
     initialDataLoading: false,
     nameList:[],
-    isPCIList:[],
-    isPIIList:[],
+    pci:0,
+    pii:0,
+    others:0,
     barWidth:[]
   }
 
-  componentDidMount() {        
+  componentDidMount() {
   }
 
   componentWillReceiveProps(props) {
@@ -32,14 +33,14 @@ class FileReport extends Component {
       fileList: props.fileList
       });
       if(props.fileList && props.fileList.length>0)
-        this.fetchDataAndRenderTable(props.fileList[0]); 
-      else{   
+        this.fetchDataAndRenderTable(props.fileList[0]);
+      else{
       this.setState({
         openFileLayout:false
         });
-      }  
+      }
   }
-  
+
   fetchDataAndRenderTable(record) {
     this.setState({
       selectedFileId:record.id,
@@ -58,41 +59,50 @@ class FileReport extends Component {
     })
     .then(data => {
       var name = [""];
-      var pci = [""];
-      var pii=[""];
+      var pci=0, pii=0, others=0;
       var width=[0];
       for (var obj in data) {
         name.push(data[obj].name);
-        pci.push(data[obj].isPCI);
-        pii.push(data[obj].isPII);
+        console.log('pci: '+data[obj].isPCI);
+        if(data[obj].isPCI == "true") {
+          pci++;
+        }
+        if(data[obj].isPII == "true") {
+          pii++;
+        }
+
+        if(data[obj].isPCI == "false" && data[obj].isPII == "false") {
+          others++;
+        }
         width.push(0.4);
-      }  
-      window.scrollTo({ top: 400, behavior: 'smooth'})       
+      }
+      window.scrollTo({ top: 400, behavior: 'smooth'})
       this.setState({
         fileLayout: data,
         nameList:name,
-        isPCIList:pci,
-        isPIIList:pii,
+        pci:pci,
+        pii:pii,
+        others:others,
         barWidth:width
       });
       setTimeout(() => {
         this.setState({
           initialDataLoading: false
         });
-      }, 200);      
+      }, 200);
     }).catch(error => {
       console.log(error);
     });
   }
 
-  onClickRow = (record) => {     
+  onClickRow = (record) => {
     this.fetchDataAndRenderTable(record);
   }
   setRowClassName = (record) => {
     return record.id === this.state.selectedFileId ? 'clickRowStyl' : '';
   }
- 
-  render() {  
+
+  render() {
     const indexColumns = [{
       title: 'Title',
       dataIndex: 'title',
@@ -123,8 +133,8 @@ class FileReport extends Component {
         title: 'Qualified Path',
         dataIndex: 'qualifiedPath'
     }];
-    let table = null;    
-      table = <Table 
+    let table = null;
+      table = <Table
       className="rebortTable"
       columns={indexColumns}
       rowKey={record => record.id}
@@ -132,14 +142,14 @@ class FileReport extends Component {
       pagination={{ pageSize: 10 }}
       scroll={{ x: 1000 }}
       size="middle"
-      onRowClick={this.onClickRow} 
-      rowClassName={this.setRowClassName}      
+      onRowClick={this.onClickRow}
+      rowClassName={this.setRowClassName}
     />
     const layoutColumns = [{
       title: 'Name',
       dataIndex: 'name',
       width: '20%',
-    },    
+    },
     {
       title: 'Format',
       dataIndex: 'format'
@@ -155,22 +165,22 @@ class FileReport extends Component {
 
   const title="File ("+this.state.selectedFileTitle+") Layout"
     return (
-      <div>        
-        {table}     
-        {this.state.openFileLayout ? <div ref="divFileLayout">    
-      
+      <div style={{"paddingLeft":"5px"}}>
+        {table}
+        {this.state.openFileLayout ? <div ref="divFileLayout">
+
       <Row gutter={24}>
           <Col span={10}>
           <div >
           <h6>{title}</h6>
           </div>
-          <Spin spinning={this.state.initialDataLoading} size="large" >     
+          <Spin spinning={this.state.initialDataLoading} size="large" >
           <Table
                 className="rebortTable"
                 columns={layoutColumns}
                 rowKey={record => record.name}
                 dataSource={this.state.fileLayout}
-                pagination={{ pageSize: 10 }} 
+                pagination={{ pageSize: 10 }}
                 size="middle"
                 style={{paddingTop:"80px"}}
               />
@@ -180,39 +190,18 @@ class FileReport extends Component {
           <Plot
         data={[
           {
-            x: this.state.nameList,
-            y: this.state.isPCIList,
-            width:this.state.barWidth,
-            type: 'bar',
-            marker: {color: 'blue'},
-            name:"isPCI"
-            
-          },
-          { x: this.state.nameList,
-            y: this.state.isPIIList,
-            width:this.state.barWidth,
-            type: 'bar',
-            marker: {color: 'red'},
-            name:"isPII"
-          },
+            values:[this.state.pci, this.state.pii, this.state.others],
+            labels: ['PCI', 'PII', 'Others'],
+            type: 'pie',
+          }
         ]}
-        layout={ {width: 450, height: 500,
-        xaxis1: {
-          "showline": true,
-          side: 'bottom',
-          title:"Fields Name"          
-        },
-        yaxis1: {
-          "showline": true,
-          side: 'left',
-          title:"isPCI & isPII"
-        },
-        plot_bgcolor: 'rgb(182, 215, 168)'
+        layout={ {width: 450, height: 500,title:'Compliance Tracking', plot_bgcolor: 'rgb(182, 215, 168)'
+
       } }
       />
       </Col>
       </Row>
-      
+
       </div>:null}
       </div>
     )

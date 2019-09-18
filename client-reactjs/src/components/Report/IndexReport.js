@@ -17,13 +17,13 @@ class IndexReport extends Component {
     initialDataLoading: false
   }
 
-  componentDidMount() {    
+  componentDidMount() {
     if(this.props.indexList && this.props.indexList.length>0)
-        this.getIndexDetails(this.props.indexList[0]); 
+        this.getIndexDetails(this.props.indexList[0]);
       else{
       this.setState({
         openIndexDetails:false
-        });      
+        });
       }
   }
 
@@ -32,11 +32,11 @@ class IndexReport extends Component {
         indexList: props.indexList
       });
       if(props.indexList && props.indexList.length>0)
-        this.getIndexDetails(props.indexList[0]); 
+        this.getIndexDetails(props.indexList[0]);
       else{
       this.setState({
         openIndexDetails:false
-        });      
+        });
       }
   }
 
@@ -66,13 +66,13 @@ class IndexReport extends Component {
             this.setState({
               initialDataLoading: false
             });
-          }, 200); 
+          }, 200);
         })
       .catch(error => {
         console.log(error);
       });
   }
-  onClickRow = (record) => {     
+  onClickRow = (record) => {
     this.getIndexDetails(record);
   }
   setRowClassName = (record) => {
@@ -83,7 +83,7 @@ class IndexReport extends Component {
       title: 'Title',
       dataIndex: 'title',
       width: '20%'
-    },    
+    },
     {
       width: '20%',
       title: 'Application',
@@ -105,9 +105,9 @@ class IndexReport extends Component {
         dataIndex: 'qualifiedPath'
     }];
 
-   
-    let table = null;    
-      table = <Table 
+
+    let table = null;
+      table = <Table
       className="rebortTable"
       columns={indexColumns}
       rowKey={record => record.id}
@@ -115,14 +115,14 @@ class IndexReport extends Component {
       pagination={{ pageSize: 10 }}
       scroll={{ x: 1000 }}
       size="middle"
-      onRowClick={this.onClickRow} 
+      onRowClick={this.onClickRow}
       rowClassName={this.setRowClassName}
     />
     const indexKeyColumn = [{
       title: 'Name',
       dataIndex: 'ColumnLabel',
       width: '20%'
-    },    
+    },
     {
       width: '20%',
       title: 'Type',
@@ -133,8 +133,8 @@ class IndexReport extends Component {
         title: 'Ecl Type',
         dataIndex: 'ColumnEclType'
       }];
-      let keyTable = null;    
-      keyTable = <Table 
+      let keyTable = null;
+      keyTable = <Table
       className="rebortTable"
       columns={indexKeyColumn}
       rowKey={record => record.id}
@@ -146,7 +146,7 @@ class IndexReport extends Component {
       title: 'Name',
       dataIndex: 'ColumnLabel',
       width: '20%'
-    },    
+    },
     {
       width: '20%',
       title: 'Type',
@@ -157,8 +157,8 @@ class IndexReport extends Component {
         title: 'Ecl Type',
         dataIndex: 'ColumnEclType'
       }];
-      let payloadTable = null;    
-      payloadTable = <Table 
+      let payloadTable = null;
+      payloadTable = <Table
       className="rebortTable"
       columns={indexPayloadColumn}
       rowKey={record => record.id}
@@ -168,14 +168,14 @@ class IndexReport extends Component {
     />
     const title="Index ("+this.state.selectedIndexTitle+")"
     return (
-      <div>        
-        {table}   
-         
+      <div style={{"paddingLeft":"5px"}}>
+        {table}
+
         {this.state.openIndexDetails ?
         <div><h6>{title}</h6>
         <div style={{"textAlign":"center"}}>
-        <Spin spinning={this.state.initialDataLoading} size="large" />  
-        </div>  
+        <Spin spinning={this.state.initialDataLoading} size="large" />
+        </div>
         <Row gutter={24}>
           <Col span={12}>
           <h6>Key</h6>

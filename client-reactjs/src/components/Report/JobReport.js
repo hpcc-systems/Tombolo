@@ -16,13 +16,13 @@ class JobReport extends Component {
     initialDataLoading: false
   }
 
-  componentDidMount() {    
+  componentDidMount() {
     if(this.props.jobList && this.props.jobList.length>0)
-        this.getJobDetails(this.props.jobList[0]); 
-      else{   
+        this.getJobDetails(this.props.jobList[0]);
+      else{
       this.setState({
         openJobDetails:false
-        }); 
+        });
       }
   }
 
@@ -31,16 +31,16 @@ class JobReport extends Component {
         jobList: props.jobList
       });
       if(props.jobList && props.jobList.length>0)
-        this.getJobDetails(props.jobList[0]); 
-      else{   
+        this.getJobDetails(props.jobList[0]);
+      else{
       this.setState({
         openJobDetails:false
-        }); 
+        });
       }
   }
 
   jobSelect = (id,title) => {
-    
+
       this.getJobDetails(id);
   }
   getJobDetails(record) {
@@ -68,13 +68,13 @@ class JobReport extends Component {
             this.setState({
               initialDataLoading: false
             });
-          }, 200);  
+          }, 200);
         })
       .catch(error => {
         console.log(error);
       });
   }
-  onClickRow = (record) => {     
+  onClickRow = (record) => {
     this.getJobDetails(record);
   }
   setRowClassName = (record) => {
@@ -85,7 +85,7 @@ class JobReport extends Component {
       title: 'Title',
       dataIndex: 'name',
       width: '20%'
-    },    
+    },
     {
       width: '20%',
       title: 'Application',
@@ -117,9 +117,9 @@ class JobReport extends Component {
         dataIndex: 'jobType'
     }];
 
-   
-    let table = null;    
-      table = <Table 
+
+    let table = null;
+      table = <Table
       className="rebortTable"
       columns={jobColumns}
       rowKey={record => record.id}
@@ -127,7 +127,7 @@ class JobReport extends Component {
       pagination={{ pageSize: 10 }}
       scroll={{ x: 1000 }}
       size="middle"
-      onRowClick={this.onClickRow} 
+      onRowClick={this.onClickRow}
       rowClassName={this.setRowClassName}
     />
     const jobParamColumn = [
@@ -141,8 +141,8 @@ class JobReport extends Component {
         title: 'Type',
         dataIndex: 'type'
       }];
-      let jobParamTable = null;    
-      jobParamTable = <Table 
+      let jobParamTable = null;
+      jobParamTable = <Table
       className="rebortTable"
       columns={jobParamColumn}
       rowKey={record => record.id}
@@ -152,12 +152,12 @@ class JobReport extends Component {
     />
     const title="Job ("+this.state.selectedJobTitle+") - Fields"
     return (
-      <div>        
-        {table}   
-         
+      <div style={{"paddingLeft":"5px"}}>
+        {table}
+
         {this.state.openJobDetails ?
         <div><h6>{title}</h6>
-         <Spin spinning={this.state.initialDataLoading} size="large" >           
+         <Spin spinning={this.state.initialDataLoading} size="large" >
           {jobParamTable}
           </Spin>
          </div>:null}

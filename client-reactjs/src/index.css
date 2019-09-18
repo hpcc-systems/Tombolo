@@ -287,16 +287,15 @@ path, .jtk-endpoint { cursor:pointer; }
 
  /* The style of the selected table row */
 .clickRowStyl{
-  background-color: #00b4ed;
+  background-color: #f0f0f5;
 }
 .ant-table-tbody>.clickRowStyl:hover>td{
-  background-color: #00b4ed;
+  background-color: #f0f0f5;
 }
 
 
 .rebortTable table >thead > tr > th {
-  background-color:  #6c757d;
-  color: #fff;
+  background-color:  #f0f0f5;
 }
 
 .disabled {
