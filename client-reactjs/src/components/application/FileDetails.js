@@ -661,14 +661,19 @@ class FileDetails extends Component {
     }];
 
     const licenseColumns = [{
-      title: '',
-      dataIndex: 'name',
-      render: (text, row) => <a href={row.url}>{text}</a>
+      field: 'name',
+      cellRenderer: function(params) {
+         return '<a href='+params.data.url+' target="_blank">'+ params.value+'</a>'
+      },
+      headerCheckboxSelection: true,
+      headerCheckboxSelectionFilteredOnly: true,
+      checkboxSelection: true
     },
     {
-      title: '',
-      dataIndex: 'description',
-      render: (text, row) => (text != null) ? text : ''
+      field: 'description',
+      cellRenderer: function(params) {
+         return params.value != null ? params.value : ''
+      }
     }
     ];
 
@@ -851,13 +856,19 @@ class FileDetails extends Component {
               />*/}
           </TabPane>
           <TabPane tab="Permissable Purpose" key="4">
-            <div>
-                <Table
-                  rowSelection={rowSelection}
-                  columns={licenseColumns}
-                  rowKey={record => record.id}
-                  dataSource={availableLicenses}
-                />
+            <div
+                className="ag-theme-balham"
+                style={{
+                height: '415px',
+                width: '100%' }}
+              >
+                <AgGridReact
+                  columnDefs={licenseColumns}
+                  rowData={availableLicenses}
+                  defaultColDef={{resizable: true, sortable: true}}
+                  onGridReady={this.onLayoutGridReady}
+                  rowSelection="multiple">
+                </AgGridReact>
               </div>
           </TabPane>
           <TabPane tab="Scrubs" key="5">

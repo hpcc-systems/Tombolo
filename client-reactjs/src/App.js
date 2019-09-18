@@ -49,7 +49,7 @@ class App extends React.Component {
                         <Layout>
                             <LeftNav isApplicationSet={isApplicationSet} selectedTopNav={selectedTopNav} />
                             <Layout style={{height: '100vh'}}>
-                                <Content style={{background: '#fff', padding: '5px'}}>
+                                <Content style={{background: '#fff', paddingLeft: '200px'}}>
                                     <Route exact path="/" component={FileList}/>
                                     <Switch>
                                         <PrivateRoute exact path="/file/:applicationId/:fileId" component={SelectedFilePopup} />
