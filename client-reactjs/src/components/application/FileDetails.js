@@ -664,7 +664,13 @@ class FileDetails extends Component {
       title: '',
       dataIndex: 'name',
       render: (text, row) => <a href={row.url}>{text}</a>
-    }];
+    },
+    {
+      title: '',
+      dataIndex: 'description',
+      render: (text, row) => (text != null) ? text : ''
+    }
+    ];
 
     const validationTableColumns = [{
       headerName: 'Name',

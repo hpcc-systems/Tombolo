@@ -9,7 +9,8 @@ module.exports = (sequelize, DataTypes) => {
       autoIncrement: false
     },
     name: DataTypes.STRING,
-    url: DataTypes.STRING
+    url: DataTypes.STRING,
+    description: DataTypes.STRING
   }, {freezeTableName: true});
   license.associate = function(models) {
     // associations can be defined here
