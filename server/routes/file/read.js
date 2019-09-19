@@ -143,7 +143,7 @@ router.post('/saveFile', (req, res) => {
             }
             var fileLayoutToSave = updateCommonData(req.body.file.layout, fieldsToUpdate);
             return FileLayout.bulkCreate(
-                fileLayoutToSave, {updateOnDuplicate: ["name", "type", "displayType", "displaySize", "textJustification", "format", "isPCI", "isPII"]}
+                fileLayoutToSave, {updateOnDuplicate: ["name", "type", "displayType", "displaySize", "textJustification", "format", "isPCI", "isPII", "isHIPAA"]}
             )
         }).then(function(fileLayout) {
             var fileLicensToSave = updateCommonData(req.body.file.license, fieldsToUpdate);
@@ -172,13 +172,15 @@ router.post('/saveFile', (req, res) => {
                 {updateOnDuplicate: ["name", "ruleType", "rule", "action", "fixScript"]}
             )
         }).then(function(fileFieldValidation) {
-            return ConsumerObject.bulkCreate(
-            {
-                "consumer_id" : req.body.file.consumer.id,
-                "object_id" : fileId,
-                "object_type" : "file"
+            if(req.body.file.consumer) {
+                return ConsumerObject.bulkCreate(
+                {
+                    "consumer_id" : req.body.file.consumer.id,
+                    "object_id" : fileId,
+                    "object_type" : "file"
+                }
+                )
             }
-            )
         }).then(function(fieldValidation) {
             res.json({"result":"success"});
         }), function(err) {
@@ -353,7 +355,7 @@ router.get('/fileLicenseCount', (req, res) => {
                 where:{
                     "application_id":req.query.app_id,
                     "id": {
-                    [Op.notIn]: Sequelize.literal( 
+                    [Op.notIn]: Sequelize.literal(
                         '( SELECT file_id ' +
                             'FROM file_license ' +
                            'WHERE application_id = "' + req.query.app_id +
@@ -361,7 +363,7 @@ router.get('/fileLicenseCount', (req, res) => {
                     }
                 }
             }).then(function (file) {
-                  result.nonLicensefileCount=file.count;             
+                  result.nonLicensefileCount=file.count;
                   res.json(result);
             })
         })
@@ -415,7 +417,7 @@ router.get('/LicenseFileList', (req, res) => {
                 {where:{
                     "application_id":req.query.app_id,
                     "id": {
-                    [Op.notIn]: Sequelize.literal( 
+                    [Op.notIn]: Sequelize.literal(
                         '( SELECT file_id ' +
                             'FROM file_license ' +
                            'WHERE application_id = "' + req.query.app_id +

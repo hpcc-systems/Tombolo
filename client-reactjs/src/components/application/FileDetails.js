@@ -460,8 +460,11 @@ class FileDetails extends Component {
     fileDetails.basic = file_basic;
 
     fileDetails.layout = this.state.file.layout;
-
-    fileDetails.license = this.state.file.licenses;
+    var selectedLicenses={};
+    if(this.licenseGridApi && this.licenseGridApi.getSelectedNodes() != undefined) {
+      selectedLicenses = this.licenseGridApi.getSelectedNodes().map(function(node) { return {"name" : node.data.name, "url": node.data.url} });
+    }
+    fileDetails.license = selectedLicenses;
 
     var fieldRelation = this.state.file.fileFieldRelations;
     var sourceFiles = fieldRelation.map(function(key,value){
@@ -572,22 +575,22 @@ class FileDetails extends Component {
        fileValidations[0][cellInfo.index][cellInfo.column.id] = value.target.value;
   }
 
-  onSelectedRowKeysChange = (selectedRowKeys) => {
-    var newLicensesSelected = this.state.file.licenses;
-    newLicensesSelected = this.state.availableLicenses.filter(el => selectedRowKeys.includes(el.id));
-    this.setState({
-      ...this.state,
-      selectedRowKeys: selectedRowKeys,
-      file: {
-        ...this.state.file,
-        licenses: newLicensesSelected
-      }
-    });
-  }
 
   onLayoutGridReady = (params) => {
     let gridApi = params.api;
     gridApi.sizeColumnsToFit();
+  }
+
+  onLicenseGridReady = (params) => {
+    this.licenseGridApi = params.api;
+    this.licenseGridApi.sizeColumnsToFit();
+    var _self=this;
+    this.licenseGridApi.forEachNode(function(node, index) {
+      if(_self.state.file.licenses.filter(license => license.name == node.data.name).length > 0) {
+        _self.licenseGridApi.selectNode(node, true);
+      }
+    });
+
   }
 
   render() {
@@ -875,7 +878,7 @@ class FileDetails extends Component {
                   columnDefs={licenseColumns}
                   rowData={availableLicenses}
                   defaultColDef={{resizable: true, sortable: true}}
-                  onGridReady={this.onLayoutGridReady}
+                  onGridReady={this.onLicenseGridReady}
                   rowSelection="multiple">
                 </AgGridReact>
               </div>
