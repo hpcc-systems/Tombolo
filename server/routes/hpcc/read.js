@@ -255,7 +255,8 @@ function getFileLayout(cluster, fileName) {
 	      			"textJustification" : 'right',
 	      			"format" : '',
 	      			"isPCI" : 'false',
-	      			"isPII" : 'false'
+	      			"isPII" : 'false',
+					"isHIPAA":'false'
 	      		}
 	      		if(column.DataColumns != undefined) {
 	      			var childColumns = [];
@@ -269,7 +270,8 @@ function getFileLayout(cluster, fileName) {
 			      			"textJustification" : 'right',
 			      			"format" : '',
 			      			"isPCI" : 'false',
-			      			"isPII" : 'false'
+			      			"isPII" : 'false',
+							"isHIPAA":'false'
 	      				}
 	      				childColumns.push(childColumnObj);
 

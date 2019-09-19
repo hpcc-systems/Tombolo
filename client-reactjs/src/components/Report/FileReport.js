@@ -21,6 +21,7 @@ class FileReport extends Component {
     nameList:[],
     pci:0,
     pii:0,
+    hipaa:0,
     others:0,
     barWidth:[]
   }
@@ -59,7 +60,7 @@ class FileReport extends Component {
     })
     .then(data => {
       var name = [""];
-      var pci=0, pii=0, others=0;
+      var pci=0, pii=0,hipaa=0, others=0;
       var width=[0];
       for (var obj in data) {
         name.push(data[obj].name);
@@ -70,7 +71,9 @@ class FileReport extends Component {
         if(data[obj].isPII == "true") {
           pii++;
         }
-
+        if(data[obj].isHIPAA == "true") {
+          hipaa++;
+        }
         if(data[obj].isPCI == "false" && data[obj].isPII == "false") {
           others++;
         }
@@ -82,6 +85,7 @@ class FileReport extends Component {
         nameList:name,
         pci:pci,
         pii:pii,
+        hipaa:hipaa,
         others:others,
         barWidth:width
       });
@@ -161,6 +165,10 @@ class FileReport extends Component {
     {
       title: 'PII',
       dataIndex: 'isPII'
+    },
+    {
+      title: 'HIPAA',
+      dataIndex: 'isHIPAA'
     }];
 
   const title="File ("+this.state.selectedFileTitle+") Layout"
@@ -190,8 +198,8 @@ class FileReport extends Component {
           <Plot
         data={[
           {
-            values:[this.state.pci, this.state.pii, this.state.others],
-            labels: ['PCI', 'PII', 'Others'],
+            values:[this.state.pci, this.state.pii, this.state.hipaa, this.state.others],
+            labels: ['PCI', 'PII','HIPAA', 'Others'],
             type: 'pie',
           }
         ]}
