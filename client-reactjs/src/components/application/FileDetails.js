@@ -658,6 +658,15 @@ class FileDetails extends Component {
       cellEditorParams: {
         values: ["true", "false"]
       }
+    },
+    {
+      headerName: 'HIPAA',
+      field: 'isHIPAA',
+      editable: true,
+      cellEditor: "select",
+      cellEditorParams: {
+        values: ["true", "false"]
+      }
     }];
 
     const licenseColumns = [{
