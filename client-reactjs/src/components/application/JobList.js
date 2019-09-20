@@ -138,7 +138,7 @@ class JobList extends Component {
       }];
     return (
       <div>
-        <div className="d-flex justify-content-end" style={{paddingTop:"55px"}}>
+        <div className="d-flex justify-content-end" style={{paddingTop:"55px", margin: "5px"}}>
           <BreadCrumbs applicationId={this.state.applicationId} applicationTitle={this.state.applicationTitle}/>
           <span style={{ marginLeft: "auto"}}>
             <Tooltip placement="bottom" title={"Click to add a new job"}>

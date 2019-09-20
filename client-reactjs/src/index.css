@@ -260,6 +260,10 @@ path, .jtk-endpoint { cursor:pointer; }
   color: white;
 }
 
+.active {
+  color: #1890ff !important;
+}
+
 .ant-radio-group-solid .ant-radio-button-wrapper-checked:not(.ant-radio-button-wrapper-disabled) {
     color: #fff;
     background: #6c757d;
@@ -301,3 +305,4 @@ path, .jtk-endpoint { cursor:pointer; }
 .disabled {
   opacity: 0.4;
 }
+

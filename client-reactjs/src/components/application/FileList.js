@@ -91,7 +91,7 @@ class FileList extends Component {
       return null;
     return (
       <div>
-        <div className="d-flex justify-content-end" style={{paddingTop:"50px"}}>
+        <div className="d-flex justify-content-end" style={{paddingTop:"50px", margin:"5px"}}>
           <BreadCrumbs applicationId={this.state.applicationId} applicationTitle={this.state.applicationTitle}/>
           <span style={{ marginLeft: "auto"}}>
             <Radio.Group defaultValue="chart" buttonStyle="solid" style={{padding: "10px"}} onChange={this.handleToggleView}>
