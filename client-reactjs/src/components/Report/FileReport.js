@@ -173,11 +173,10 @@ class FileReport extends Component {
 
   const title="File ("+this.state.selectedFileTitle+") Layout"
     return (
-      <div style={{"paddingLeft":"5px"}}>
-        {table}
+      <div style={{"paddingLeft":"5px","backgroundColor":"#FFFFFF"}}>
+        {table}         
         {this.state.openFileLayout ? <div ref="divFileLayout">
-
-      <Row gutter={24}>
+          <Row gutter={24}>
           <Col span={10}>
           <div >
           <h6>{title}</h6>
@@ -209,9 +208,9 @@ class FileReport extends Component {
       />
       </Col>
       </Row>
-
       </div>:null}
       </div>
+      
     )
   }
 }
