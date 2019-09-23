@@ -173,6 +173,7 @@ class JSPlumbTree extends Component {
                 Endpoint: "Rectangle",
                 Anchors: ["TopCenter", "TopCenter"],
                 ConnectionOverlays: [
+                    [ "Arrow", { width:10, length:15, location:1, id:"arrow" } ],
                     ["Custom", {
                         create: function (component) {
                             return $('<img style="display:block;" src="/icons/delete-16.png"/>');
@@ -224,23 +225,32 @@ class JSPlumbTree extends Component {
              $(window).resize(function(){
                 console.log('resizing...');
                   instance.repaintEverything();
-              });
-             $(window).scroll(function(){
-                console.log('scrolling...');
-                  instance.repaintEverything();
-              });
+             });
+             /*var lastScrollTop = 0;
+             $(window).scroll(function(event){
+                var st = $(this).scrollTop();
+                if (st > lastScrollTop){
+                  console.log('downscroll');
+                  _self.handleZoom('zoomin');
+                } else {
+                  console.log('upscroll');
+                  _self.handleZoom('zoomout');
+                }
+                lastScrollTop = st;
+                //instance.repaintEverything();
+              });*/
         });
     });
 
     jsPlumb.setContainer(chartContainer);
   }
 
-  handleZoom = (e) => {
+  handleZoom = (zoomType) => {
     let zoom;
-    if(e.currentTarget.id == 'zoomout') {
+    if(zoomType == 'zoomout') {
       zoom = this.state.chartZoom-0.10;
       this.setZoom(zoom, jsPlumb, null, $("#canvas")[0]);
-    } else if(e.currentTarget.id == 'zoomin') {
+    } else if(zoomType == 'zoomin') {
       zoom = this.state.chartZoom+0.10;
       this.setZoom(zoom, jsPlumb, null, $("#canvas")[0]);
     }
@@ -285,7 +295,7 @@ class JSPlumbTree extends Component {
             paintStyle: { fill: color2 },
             isSource: true,
             scope: "green",
-            connectorStyle: { stroke: color2, strokeWidth: 6 },
+            connectorStyle: { stroke: color2, strokeWidth: 2 },
             connector: ["Bezier", { curviness: 63 } ],
             maxConnections: 5,
             isTarget: true,
@@ -307,7 +317,7 @@ class JSPlumbTree extends Component {
         var connectionObj = _self.instance.connect({
             source: sourceEndPoint,
             target: targetEndPoint,
-            paintStyle: { stroke: "#316b31", strokeWidth: 6 },
+            paintStyle: { stroke: "#316b31", strokeWidth: 2 },
             deleteEndpointsOnDetach:false
         });
     })
@@ -376,47 +386,47 @@ addAllEndpointsTonodes = (nodeId) => {
     });
 }
 
-  render() {
-    const { files, relations } = this.state;
-    let top=120, left=120;
-    return (
-      <div ref={this.setWrapperRef} >
-        <div style={{"float":"right"}}>
-            <span id="zoomin" onClick={(event) => this.handleZoom(event)}><i className="fa fa-2x fa-search-plus" aria-hidden="true"></i></span>
-            <span id="zoomout" onClick={(event) => this.handleZoom(event)}><i className="fa fa-2x fa-search-minus" aria-hidden="true"></i></span>
-        </div>
-
-        <div className="jtk-demo-canvas canvas-wide drag-drop-demo jtk-surface jtk-surface-nopan" id="canvas" >
-            {files.map((item, index) => {
-                left+=120;
-                if(index != 0 && (index % 5) == 0) {
-                    left=240;
-                    top+=100;
-                }
-                return <div className="window" style={{"top":top,"left":left}}key={item.id} id={item.id}>
-                  <Popconfirm title="Are you sure you want to delete this File?" onConfirm={() => this.DeleteFilevalue(item.id,this.props.applicationId)} icon={<Icon type="question-circle-o" style={{ color: 'red' }} />}>
-                  <a href="#"><Tooltip placement="right" title={"Delete File"}><Icon type="close-circle" style={{"top":'1px',"right":'1px','position': 'absolute'}}   />
-                  </Tooltip></a>
-                  </Popconfirm>
-                  <div style={{"paddingTop":'4px'}} onDoubleClick={() =>this.EditFile(item.id)} >{(item.title)?item.title:item.name}</div>
-                </div>
-               // return <div className="window" style={{"top":top,"left":left}}key={item.id} id={item.id}>{item.title}</div>
-            })}
-
-        </div>
-
-
-        {this.state.openFileDetailsDialog ?
-          <FileDetailsForm
-            onRef={ref => (this.child = ref)}
-            isNewFile={false}
-            selectedFile={this.state.selectedFile}
-            applicationId={this.props.applicationId}
-            onRefresh={this.handleRefreshTree}
-            onClose={this.handleClose}/> : null}
+render() {
+  const { files, relations } = this.state;
+  let top=120, left=120;
+  return (
+    <div ref={this.setWrapperRef} >
+      <div style={{"float":"right"}}>
+          <span id="zoomin" onClick={(event) => this.handleZoom('zoomin')}><i className="fa fa-2x fa-search-plus" aria-hidden="true"></i></span>
+          <span id="zoomout" onClick={(event) => this.handleZoom('zoomout')}><i className="fa fa-2x fa-search-minus" aria-hidden="true"></i></span>
       </div>
-    )
-  }
+
+      <div className="jtk-demo-canvas canvas-wide drag-drop-demo jtk-surface jtk-surface-nopan" id="canvas" >
+          {files.map((item, index) => {
+              left+=120;
+              if(index != 0 && (index % 5) == 0) {
+                  left=240;
+                  top+=100;
+              }
+              return <div className="window" style={{"top":top,"left":left}}key={item.id} id={item.id}>
+                <Popconfirm title="Are you sure you want to delete this File?" onConfirm={() => this.DeleteFilevalue(item.id,this.props.applicationId)} icon={<Icon type="question-circle-o" style={{ color: 'red' }} />}>
+                <a href="#"><Tooltip placement="right" title={"Delete File"}><Icon type="close-circle" style={{"top":'1px',"right":'1px','position': 'absolute'}}   />
+                </Tooltip></a>
+                </Popconfirm>
+                <div style={{"paddingTop":'4px'}} onDoubleClick={() =>this.EditFile(item.id)} >{(item.title)?item.title:item.name}</div>
+              </div>
+             // return <div className="window" style={{"top":top,"left":left}}key={item.id} id={item.id}>{item.title}</div>
+          })}
+
+      </div>
+
+
+      {this.state.openFileDetailsDialog ?
+        <FileDetailsForm
+          onRef={ref => (this.child = ref)}
+          isNewFile={false}
+          selectedFile={this.state.selectedFile}
+          applicationId={this.props.applicationId}
+          onRefresh={this.handleRefreshTree}
+          onClose={this.handleClose}/> : null}
+    </div>
+  )
+}
 }
 
 export default JSPlumbTree;
