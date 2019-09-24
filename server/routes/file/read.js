@@ -10,6 +10,7 @@ let FileRelation = models.file_relation;
 let FileFieldRelation = models.file_field_relation;
 let FileValidation = models.file_validation;
 let License = models.license;
+let IdentityDetails=models.identity_details;
 TreeConnection = models.tree_connection;
 TreeStyle = models.tree_style;
 let ConsumerObject = models.consumer_object;
@@ -143,7 +144,7 @@ router.post('/saveFile', (req, res) => {
             }
             var fileLayoutToSave = updateCommonData(req.body.file.layout, fieldsToUpdate);
             return FileLayout.bulkCreate(
-                fileLayoutToSave, {updateOnDuplicate: ["name", "type", "displayType", "displaySize", "textJustification", "format", "isPCI", "isPII", "isHIPAA"]}
+                fileLayoutToSave, {updateOnDuplicate: ["name", "type", "displayType", "displaySize", "textJustification", "format","identityDetail", "isPCI", "isPII", "isHIPAA"]}
             )
         }).then(function(fileLayout) {
             var fileLicensToSave = updateCommonData(req.body.file.license, fieldsToUpdate);
@@ -444,12 +445,32 @@ router.get('/LicenseFileList', (req, res) => {
         console.log('err', err);
     }
 });
+
+router.get('/identityDetails', (req, res) => {
+    try {
+        var results = [];
+        IdentityDetails.findAll().then(function(identityDetails) {
+            identityDetails.forEach(function(doc, idx) {
+                results.push(doc.name);
+            });
+            res.json(results);
+        })
+        .catch(function(err) {
+            console.log(err);
+        });
+    } catch (err) {
+        console.log('err', err);
+    }
+});
+
 function updateCommonData(objArray, fields) {
+    if(objArray.length>0){
     Object.keys(fields).forEach(function (key, index) {
         objArray.forEach(function(obj) {
             obj[key] = fields[key];
         });
     });
+    }
     return objArray;
 }
 

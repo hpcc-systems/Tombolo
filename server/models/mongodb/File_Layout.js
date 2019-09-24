@@ -16,6 +16,7 @@ module.exports = (sequelize, DataTypes) => {
     displaySize: DataTypes.STRING,
     textJustification: DataTypes.STRING,
     format: DataTypes.STRING,
+    identityDetail: DataTypes.STRING,
     isPCI: DataTypes.STRING,
     isPII: DataTypes.STRING,
     isHIPAA: DataTypes.STRING
