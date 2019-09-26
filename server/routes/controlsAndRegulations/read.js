@@ -57,9 +57,12 @@ router.post('/delete', (req, res) => {
 router.post('/saveRegulations', function (req, res) {
     console.log("[controlsAndRegulations/read.js] - saveRegulations called");
     var regulations=req.body.regulations;
+    var compliance=req.body.compliance;
+    if(req.body.oldCompName!="" && req.body.oldCompName!=req.body.compliance)
+    {compliance=req.body.oldCompName}
     try {
         ControlsAndRegulations.destroy(
-            {where:{compliance: req.body.compliance}}
+            {where:{compliance: compliance}}
         ).then(function(deleted) {
             ControlsAndRegulations.bulkCreate(regulations).then(function(regulation) {
                 res.json({"result":"success"});

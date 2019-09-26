@@ -14,13 +14,7 @@ class Regulations extends Component {
     identitySelectedRowKeys:'',
     identityDetails:[],
     openAddRegulationDialog:false,
-    compliance:"",
-    complianceList:[],
-  	newRegulation : {
-        id: '',
-  	  	compliance: '',
-  	  	identity_details: ''
-  	}
+    compliance:""
   }
 
   componentDidMount() {
@@ -44,18 +38,6 @@ class Regulations extends Component {
 	    this.setState({
 	    	regulations: data
         });
-        var complianceList=["HIPAA","PII","PCI"];
-        data.forEach(function(doc, idx) {      
-            if(doc.compliance === "HIPAA")
-                complianceList = complianceList.filter(e => e !== 'HIPAA');
-            else if(doc.compliance === "PII")
-                complianceList = complianceList.filter(e => e !== 'PII');
-            else if(doc.compliance === "PCI")
-                complianceList = complianceList.filter(e => e !== 'PCI');          
-            });
-            this.setState({
-                complianceList: complianceList
-            });
       this.setState({
          initialDataLoading: false
        });
@@ -159,11 +141,10 @@ class Regulations extends Component {
     <React.Fragment>
       <div className="d-flex justify-content-end" style={{paddingTop:"60px"}}>
         <BreadCrumbs applicationId={this.state.applicationId}/>
-        <span style={{ marginLeft: "auto" }}>
-        {this.state.complianceList.length>0 ?
+        <span style={{ marginLeft: "auto" }}>       
           <Tooltip placement="bottom" title={"Click to add a new User"}>
             <Button className="btn btn-secondary btn-sm" onClick={() => this.handleAdd()}><i className="fa fa-plus"></i> Add Controls and Regulations</Button>
-          </Tooltip>:null}
+          </Tooltip>
         </span>
       </div>
       <div className="loader">
@@ -181,7 +162,7 @@ class Regulations extends Component {
           <AddRegulations
             compliance={this.state.compliance}
             selectedRegulation={this.state.selectedRegulation}
-            complianceList={this.state.complianceList}
+            regulations={this.state.regulations}
             onClose={this.handleClose}/> : null}
       </div>
    </React.Fragment>

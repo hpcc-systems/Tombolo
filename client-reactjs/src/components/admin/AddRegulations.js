@@ -11,7 +11,7 @@ class AddRegulations extends Component {
         identityDetails:[],
         selectedRowKeys:[],
         SelectedRegulation:[],
-        complianceList:[],
+        regulations:[],
         compliance:"",
         title:""
     }  
@@ -19,7 +19,7 @@ class AddRegulations extends Component {
         this.setState({
             compliance:this.props.compliance,
             SelectedRegulation:this.props.selectedRegulation,
-            complianceList:this.props.complianceList
+            regulations:this.props.regulations
         });
         if(this.props.compliance==""){
             this.setState({
@@ -58,7 +58,7 @@ class AddRegulations extends Component {
           });
       }
      SaveDetails() {          
-      var _self=this;
+       var _self=this;
         var regulations=[];
         var compliance=this.state.compliance;
         (this.state.selectedRowKeys).forEach(function (item, idx) {
@@ -67,7 +67,8 @@ class AddRegulations extends Component {
       fetch('/api/controlsAndRegulations/saveRegulations', {
         method: 'post',
         headers: authHeader(),
-        body: JSON.stringify({regulations:regulations,compliance:this.state.compliance})
+        body: JSON.stringify({regulations:regulations,compliance:this.state.compliance,
+        oldCompName:this.props.compliance})
       }).then(function(response) {
           if(response.ok) {          
           message.config({top:150})
@@ -79,7 +80,18 @@ class AddRegulations extends Component {
       });
     }
     handleOk = () => {  
-        if(this.state.selectedRowKeys && this.state.selectedRowKeys.length==0)
+        var exists=this.state.regulations.filter(key => key.compliance.toUpperCase() == this.state.compliance.toUpperCase()).length > 0;
+        if(this.state.compliance=="")
+        {
+          message.config({top:150})
+          message.error("Please enter compliance");
+        }
+        else if((this.props.compliance!="" && this.props.compliance.toUpperCase()!=this.state.compliance.toUpperCase() && exists)
+        ||(this.props.compliance=="" && exists)){
+          message.config({top:150})
+          message.error("Compliance already exist.");
+        }
+        else if(this.state.selectedRowKeys && this.state.selectedRowKeys.length==0)
         {message.config({top:150})
         message.error("Please select the Identity Details");}
         else{   
@@ -101,8 +113,8 @@ class AddRegulations extends Component {
         });
       }
 
-    handleComplianceChange=(value)=>{
-        this.setState({compliance: value });
+    handleComplianceChange=(e)=>{
+        this.setState({compliance: e.target.value });
       }
     render() {
        
@@ -139,12 +151,7 @@ class AddRegulations extends Component {
 	        >  
           <Form layout="vertical">
           <Form.Item {...formItemLayout} label="Compliance :">
-          {this.props.compliance=="" ?
-                <Select name="compliance" id="compliance" style={{ width: 200 }} onSelect={this.handleComplianceChange} value={this.state.compliance}>
-                {this.state.complianceList.map(compliance => (
-                <Option key={compliance}>{compliance}</Option>))}
-                </Select>  
-                :<span>{this.props.compliance}</span>}
+          <Input id="compliance" onChange={this.handleComplianceChange}  name="compliance" placeholder="" value={this.state.compliance}/>
 		            </Form.Item>		            
                     <Table
                         rowSelection={rowSelection}
