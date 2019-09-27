@@ -11,8 +11,8 @@ class Regulations extends Component {
   	regulations:[],
   	selectedRegulation:[],
     initialDataLoading: false,
-    identitySelectedRowKeys:'',
-    identityDetails:[],
+    dataTypeSelectedRowKeys:'',
+    dataTypeDetails:[],
     openAddRegulationDialog:false,
     compliance:""
   }
@@ -119,8 +119,8 @@ class Regulations extends Component {
       width: '20%'
     },
     {
-      title: 'Identity Details',
-      dataIndex: 'identity_details',
+      title: 'Data Types',
+      dataIndex: 'data_types',
       width: '60%'
     },
     {

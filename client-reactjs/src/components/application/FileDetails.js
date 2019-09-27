@@ -39,7 +39,7 @@ class FileDetails extends Component {
     showFileProfile: false,
     fileProfile: [],
     profileHTMLAssets:[],
-    identityDetail:[],
+    dataTypes:[],
     file: {
       id:"",
       title:"",
@@ -63,7 +63,7 @@ class FileDetails extends Component {
   componentDidMount() {
     this.props.onRef(this);
     this.getFileDetails();
-    this.fetchIdentityDetails();
+    this.fetchDataTypeDetails();
   }
 
   clearState() {
@@ -91,9 +91,9 @@ class FileDetails extends Component {
     });
 
   }
-  fetchIdentityDetails() {
+  fetchDataTypeDetails() {
     var self=this;   
-    fetch("/api/file/read/identityDetails", {
+    fetch("/api/file/read/dataTypes", {
         headers: authHeader()
     })
     .then((response) => {
@@ -104,7 +104,7 @@ class FileDetails extends Component {
     })
     .then(data => {           
       self.setState({
-        identityDetail: data
+        dataTypes: data
       });         
     }).catch(error => {
       console.log(error);
@@ -665,12 +665,12 @@ class FileDetails extends Component {
       field: 'format'
     },
     {
-      headerName: 'Identity Details',
-      field: 'identityDetail',
+      headerName: 'Data Type',
+      field: 'data_types',
       editable: true,
       cellEditor: "select",
       cellEditorParams: {
-        values: this.state.identityDetail
+        values: this.state.dataTypes
       }
     },
     {

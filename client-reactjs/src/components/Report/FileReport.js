@@ -203,8 +203,8 @@ class FileReport extends Component {
       dataIndex: 'format'
     },
     {
-      title: 'Identity Details',
-      dataIndex: 'identityDetail'
+      title: 'Data Type',
+      dataIndex: 'data_types'
     }
     // {
     //   title: 'PCI',

@@ -8,7 +8,7 @@ class AddRegulations extends Component {
       super(props);
     }
     state = {
-        identityDetails:[],
+        dataTypes:[],
         selectedRowKeys:[],
         SelectedRegulation:[],
         regulations:[],
@@ -31,11 +31,11 @@ class AddRegulations extends Component {
                 title:"Edit Controls and Regulations"
             });
         }
-        this.getIdentityDetailList();
+        this.getDataTypesList();
     }
-    getIdentityDetailList() {
+    getDataTypesList() {
         var _self=this;       
-        fetch("/api/controlsAndRegulations/identityDetails", {
+        fetch("/api/controlsAndRegulations/dataTypes", {
           headers: authHeader()
         }).then((response) => {
             if(response.ok) {              
@@ -45,12 +45,12 @@ class AddRegulations extends Component {
           })
           .then(data => {
             _self.setState({
-              identityDetails: data,
+              dataTypes: data,
               initialDataLoading: false
             });
             if(_self.state.SelectedRegulation.length>0){
                 _self.setState({
-                selectedRowKeys: _self.state.SelectedRegulation.map(regulation => regulation.identity_details)
+                selectedRowKeys: _self.state.SelectedRegulation.map(regulation => regulation.data_types)
             });
             }
           }).catch(error => {
@@ -62,7 +62,7 @@ class AddRegulations extends Component {
         var regulations=[];
         var compliance=this.state.compliance;
         (this.state.selectedRowKeys).forEach(function (item, idx) {
-            regulations.push({"compliance":compliance, "identity_details":item});
+            regulations.push({"compliance":compliance, "data_types":item});
         });
       fetch('/api/controlsAndRegulations/saveRegulations', {
         method: 'post',
@@ -93,7 +93,7 @@ class AddRegulations extends Component {
         }
         else if(this.state.selectedRowKeys && this.state.selectedRowKeys.length==0)
         {message.config({top:150})
-        message.error("Please select the Identity Details");}
+        message.error("Please select the Data Type");}
         else{   
         var _self=this;
         confirm({
@@ -124,7 +124,7 @@ class AddRegulations extends Component {
             onChange:this.onSelectedRowChange.bind(this) 
             };
           const Columns = [{
-            title: 'Identity Details',
+            title: 'Data Types',
             dataIndex: 'name',
             render: (text, row) => <a >{row.name}</a>
           }];
@@ -147,7 +147,7 @@ class AddRegulations extends Component {
             onCancel={this.handleCancel}
             destroyOnClose={true}
             bodyStyle={{height:"460px"}}
-            okText="OK"
+            okText="Save"
 	        >  
           <Form layout="vertical">
           <Form.Item {...formItemLayout} label="Compliance :">
@@ -157,7 +157,7 @@ class AddRegulations extends Component {
                         rowSelection={rowSelection}
                         columns={Columns}
                         rowKey={record => record.name}
-                        dataSource={this.state.identityDetails}
+                        dataSource={this.state.dataTypes}
                         pagination={{ pageSize: 5 }}
                         size="small"
                     />

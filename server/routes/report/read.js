@@ -39,7 +39,7 @@ router.get('/fileLayoutAndComplianceChart', (req, res) => {
         ControlsAndRegulations.findAll({
             attributes: [
               'compliance',
-              [Sequelize.fn('GROUP_CONCAT', Sequelize.col('identity_details')), 'identity_details']
+              [Sequelize.fn('GROUP_CONCAT', Sequelize.col('data_types')), 'data_types']
             ],
             group: ['compliance']
           }).then(function(regulations) {
@@ -51,9 +51,9 @@ router.get('/fileLayoutAndComplianceChart', (req, res) => {
                     chart.compliance = doc.compliance;
                     FileLayout.findAll({
                         where: {"file_id":req.query.file_id,            
-                         "identityDetail": {
+                         "data_types": {
                                  [Op.in]: Sequelize.literal(
-                                 '( select identity_details from controls_regulations '+
+                                 '( select data_types from controls_regulations '+
                                 'where compliance="'+doc.compliance+'")')}                                  
                              }
                     })
@@ -67,12 +67,17 @@ router.get('/fileLayoutAndComplianceChart', (req, res) => {
                             var chartval={}; 
                             chartval.compliance = "others";
                             FileLayout.findAll({
-                                where: {"file_id":req.query.file_id,            
-                                 "identityDetail": {
-                                         [Op.notIn]: Sequelize.literal(
-                                         '( select identity_details from controls_regulations )')}                                  
-                                     }
-                            })
+                                where: {"file_id":req.query.file_id, 
+                                [Op.or]:[           
+                                   {"data_types": {
+                                   [Op.notIn]: Sequelize.literal(
+                                   '( select data_types from controls_regulations )')
+                                   }},
+                                   {"data_types": {
+                                       [Op.eq]: null
+                                      }
+                                    }]
+                             } })
                             .then(function(fileLayouts) {
                                 chartval.fileLayout=fileLayouts;
                                 chartval.count=fileLayouts.length;

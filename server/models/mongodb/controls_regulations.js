@@ -9,9 +9,9 @@ module.exports = (sequelize, DataTypes) => {
       autoIncrement: false
     },
     compliance: DataTypes.STRING,
-    identity_details:DataTypes.STRING,
+    data_types:DataTypes.STRING,
   }, {freezeTableName: true});
-  identity_details.associate = function(models) {
+  data_types.associate = function(models) {
     // associations can be defined here
   };
   return controls_regulations;

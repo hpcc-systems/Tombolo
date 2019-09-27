@@ -1,6 +1,6 @@
 'use strict';
 module.exports = (sequelize, DataTypes) => {
-  const identity_details = sequelize.define('identity_details', {
+  const data_types = sequelize.define('data_types', {
     id: {
       primaryKey: true,
       type: DataTypes.UUID,
@@ -10,8 +10,8 @@ module.exports = (sequelize, DataTypes) => {
     },
     name: DataTypes.STRING
   }, {freezeTableName: true});
-  identity_details.associate = function(models) {
+  data_types.associate = function(models) {
     // associations can be defined here
   };
-  return identity_details;
+  return data_types;
 };

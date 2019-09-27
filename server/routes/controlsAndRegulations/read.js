@@ -4,14 +4,14 @@ const assert = require('assert');
 var models  = require('../../models');
 let Sequelize = require('sequelize');
 let ControlsAndRegulations = models.controls_regulations;
-let IdentityDetails=models.identity_details;
+let DataTypes=models.data_types;
 
 router.get('/controlsAndRegulations', (req, res) => {
     console.log("[controlsAndRegulations/read.js] - Get Controls and Regulations list");
     ControlsAndRegulations.findAll({
         attributes: [
           'compliance',
-          [Sequelize.fn('GROUP_CONCAT', Sequelize.col('identity_details')), 'identity_details']
+          [Sequelize.fn('GROUP_CONCAT', Sequelize.col('data_types')), 'data_types']
         ],
         group: ['compliance']
       }).then(function(regulations) {
@@ -73,11 +73,11 @@ router.post('/saveRegulations', function (req, res) {
     }
 });
 
-router.get('/identityDetails', (req, res) => {
+router.get('/dataTypes', (req, res) => {
     try {
         
-        IdentityDetails.findAll().then(function(identityDetails) {            
-            res.json(identityDetails);
+        DataTypes.findAll().then(function(data_types) {            
+            res.json(data_types);
         })
         .catch(function(err) {
             console.log(err);
