@@ -16,11 +16,15 @@ module.exports = (sequelize, DataTypes) => {
     displaySize: DataTypes.STRING,
     textJustification: DataTypes.STRING,
     format: DataTypes.STRING,
+    data_types: DataTypes.STRING,
     isPCI: DataTypes.STRING,
     isPII: DataTypes.STRING,
     isHIPAA: DataTypes.STRING
   }, {freezeTableName: true});
   file_layout.associate = function(models) {
+    file_layout.belongsTo(models.file, {
+      foreignKey: 'file_id'
+    });
   };
   return file_layout;
 };

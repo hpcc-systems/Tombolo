@@ -13,6 +13,7 @@ let QueryField=models.query_field;
 let Job=models.job;
 let Jobparam=models.jobparam;
 let Application=models.application;
+let ControlsAndRegulations = models.controls_regulations;
 
 router.get('/fileLayout', (req, res) => {
     console.log("[fileLayout/read.js] - Get file Layout for file_id "+req.query.file_id);
@@ -27,8 +28,83 @@ router.get('/fileLayout', (req, res) => {
     } catch (err) {
         console.log('err', err);
     }
-
 });
+router.get('/fileLayoutAndComplianceChart', (req, res) => {
+    console.log("[fileLayoutAndComplianceChart/read.js] - Get file Layout and chart data for file_id "+req.query.file_id);
+    var basic = {}, results={};
+    try {
+        FileLayout.findAll({where:{"file_id":req.query.file_id}}).then(function(fileLayouts) {
+        results.fileLayout=fileLayouts;
+
+        ControlsAndRegulations.findAll({
+            attributes: [
+              'compliance',
+              [Sequelize.fn('GROUP_CONCAT', Sequelize.col('data_types')), 'data_types']
+            ],
+            group: ['compliance']
+          }).then(function(regulations) {
+            if(regulations){
+                var chartData=[];
+                var count=0;
+                regulations.forEach(function(doc, idx) {
+                    var chart={};                    
+                    chart.compliance = doc.compliance;
+                    FileLayout.findAll({
+                        where: {"file_id":req.query.file_id,            
+                         "data_types": {
+                                 [Op.in]: Sequelize.literal(
+                                 '( select data_types from controls_regulations '+
+                                'where compliance="'+doc.compliance+'")')}                                  
+                             }
+                    })
+                    .then(function(fileLayouts) {
+                        count++;
+                        chart.fileLayout=fileLayouts;
+                        chart.count=fileLayouts.length;
+                        chartData.push(chart);
+                        if(count==regulations.length)
+                        {
+                            var chartval={}; 
+                            chartval.compliance = "others";
+                            FileLayout.findAll({
+                                where: {"file_id":req.query.file_id, 
+                                [Op.or]:[           
+                                   {"data_types": {
+                                   [Op.notIn]: Sequelize.literal(
+                                   '( select data_types from controls_regulations )')
+                                   }},
+                                   {"data_types": {
+                                       [Op.eq]: null
+                                      }
+                                    }]
+                             } })
+                            .then(function(fileLayouts) {
+                                chartval.fileLayout=fileLayouts;
+                                chartval.count=fileLayouts.length;
+                                chartData.push(chartval);
+                                results.chartData=chartData;
+                                res.json(results);
+                            })
+                        }
+                    })
+                    .catch(function(err) {
+                        console.log(err);
+                    });
+                });
+            }
+        })
+        .catch(function(err) {
+            console.log(err);
+        });
+        })
+        .catch(function(err) {
+            console.log(err);
+        });        
+    } catch (err) {
+        console.log('err', err);
+    }
+});
+
 router.get('/indexKeyPayload', (req, res) => {
     console.log("[indexKeyPayload/read.js] - Get index key and payload details for  index_id "+req.query.index_id);
     var basic = {}, results={};

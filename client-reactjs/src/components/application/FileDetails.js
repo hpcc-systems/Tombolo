@@ -39,6 +39,7 @@ class FileDetails extends Component {
     showFileProfile: false,
     fileProfile: [],
     profileHTMLAssets:[],
+    dataTypes:[],
     file: {
       id:"",
       title:"",
@@ -62,6 +63,7 @@ class FileDetails extends Component {
   componentDidMount() {
     this.props.onRef(this);
     this.getFileDetails();
+    this.fetchDataTypeDetails();
   }
 
   clearState() {
@@ -89,7 +91,25 @@ class FileDetails extends Component {
     });
 
   }
-
+  fetchDataTypeDetails() {
+    var self=this;   
+    fetch("/api/file/read/dataTypes", {
+        headers: authHeader()
+    })
+    .then((response) => {
+      if(response.ok) {
+        return response.json();
+      }
+      handleError(response);
+    })
+    .then(data => {           
+      self.setState({
+        dataTypes: data
+      });         
+    }).catch(error => {
+      console.log(error);
+    });
+  }
   getFileDetails() {
     if(this.props.selectedFile && !this.props.isNewFile) {
       fetch("/api/file/read/file_details?file_id="+this.props.selectedFile+"&app_id="+this.props.applicationId, {
@@ -645,8 +665,18 @@ class FileDetails extends Component {
       field: 'format'
     },
     {
+      headerName: 'Data Type',
+      field: 'data_types',
+      editable: true,
+      cellEditor: "select",
+      cellEditorParams: {
+        values: this.state.dataTypes
+      }
+    },
+    {
       headerName: 'PCI',
       field: 'isPCI',
+      hide: true,
       editable: true,
       cellEditor: "select",
       cellEditorParams: {
@@ -656,6 +686,7 @@ class FileDetails extends Component {
     {
       headerName: 'PII',
       field: 'isPII',
+      hide: true,
       editable: true,
       cellEditor: "select",
       cellEditorParams: {
@@ -665,6 +696,7 @@ class FileDetails extends Component {
     {
       headerName: 'HIPAA',
       field: 'isHIPAA',
+      hide: true,
       editable: true,
       cellEditor: "select",
       cellEditorParams: {

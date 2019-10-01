@@ -10,6 +10,7 @@ let FileRelation = models.file_relation;
 let FileFieldRelation = models.file_field_relation;
 let FileValidation = models.file_validation;
 let License = models.license;
+let DataTypes=models.data_types;
 TreeConnection = models.tree_connection;
 TreeStyle = models.tree_style;
 let ConsumerObject = models.consumer_object;
@@ -143,7 +144,7 @@ router.post('/saveFile', (req, res) => {
             }
             var fileLayoutToSave = updateCommonData(req.body.file.layout, fieldsToUpdate);
             return FileLayout.bulkCreate(
-                fileLayoutToSave, {updateOnDuplicate: ["name", "type", "displayType", "displaySize", "textJustification", "format", "isPCI", "isPII", "isHIPAA"]}
+                fileLayoutToSave, {updateOnDuplicate: ["name", "type", "displayType", "displaySize", "textJustification", "format","data_types", "isPCI", "isPII", "isHIPAA"]}
             )
         }).then(function(fileLayout) {
             var fileLicensToSave = updateCommonData(req.body.file.license, fieldsToUpdate);
@@ -408,6 +409,52 @@ router.get('/DependenciesCount', (req, res) => {
     }
 });
 
+router.get('/fileLayoutDataType', (req, res) => {
+    console.log("[fileLayoutDataType/read.js] - get File Layout data types count for app_id = " +req.query.app_id);
+    try {
+        var result = {};
+        FileLayout.findAll({
+            where:{"application_id":req.query.app_id,
+            "data_types": {
+                [Op.ne]: null
+               },
+               "data_types": {
+                [Op.ne]: ""
+               }},
+            attributes: [
+              'data_types',
+              [Sequelize.fn('COUNT', Sequelize.col('id')), 'count']
+            ],
+            group: ['data_types']
+          }).then(function(fileLayout) {
+              res.json(fileLayout)
+          })
+        .catch(function(err) {
+            console.log(err);
+        });
+    } catch (err) {
+        console.log('err', err);
+    }
+});
+
+router.get('/getFileLayoutByDataType', (req, res) => {
+    console.log("[fileLayoutDataType/read.js] - get File Layout for app_id = " +req.query.app_id +" and datatype ="+req.query.data_type);
+    try {
+        var result = {};
+        FileLayout.findAll({
+            where:{"application_id":req.query.app_id,
+            "data_types":req.query.data_types}, include: [File]
+          }).then(function(fileLayout) {
+              res.json(fileLayout)
+          })
+        .catch(function(err) {
+            console.log(err);
+        });
+    } catch (err) {
+        console.log('err', err);
+    }
+});
+
 router.get('/LicenseFileList', (req, res) => {
     console.log("[LicenseFileList/read.js] - Get file list for app_id = " + req.query.app_id +" and License= "+req.query.name);
     try {
@@ -444,12 +491,33 @@ router.get('/LicenseFileList', (req, res) => {
         console.log('err', err);
     }
 });
+
+router.get('/dataTypes', (req, res) => {
+    try {
+        var results = [];
+        DataTypes.findAll().then(function(data_types) {
+            results.push("");
+            data_types.forEach(function(doc, idx) {
+                results.push(doc.name);
+            });
+            res.json(results);
+        })
+        .catch(function(err) {
+            console.log(err);
+        });
+    } catch (err) {
+        console.log('err', err);
+    }
+});
+
 function updateCommonData(objArray, fields) {
+    if(objArray.length>0){
     Object.keys(fields).forEach(function (key, index) {
         objArray.forEach(function(obj) {
             obj[key] = fields[key];
         });
     });
+    }
     return objArray;
 }
 

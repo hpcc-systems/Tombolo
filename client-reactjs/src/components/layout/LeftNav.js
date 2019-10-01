@@ -108,6 +108,9 @@ class LeftNav extends Component {
               <li className="nav-item">
                 <NavLink to={"/admin/consumers"} className="nav-link"><i className='fa fa-lg fa-user-circle'></i> Consumers</NavLink>
               </li>
+              <li className="nav-item">
+                <NavLink to={"/admin/controlsAndRegulations"} className="nav-link"><i className='fa fa-lg fa-address-card-o'></i> Controls and Regulations</NavLink>
+              </li>
             </ul>
             </React.Fragment>
             : null}

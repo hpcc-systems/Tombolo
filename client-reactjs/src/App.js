@@ -27,6 +27,7 @@ import { store } from './redux/store/Store';
 
 import {Report} from "./components/Report/Report";
 import {Chart} from "./components/application/Chart";
+import Regulations from "./components/admin/ControlsAndRegulations";
 const { Content } = Layout;
 
 class App extends React.Component {
@@ -65,6 +66,7 @@ class App extends React.Component {
                                         <PrivateRoute path="/report/:searchText" component={Report}/>
                                         <PrivateRoute path="/:applicationId/Chart" component={Chart}/>
                                         <PrivateRoute path="/admin/consumers" component={AdminConsumers}/>
+                                        <PrivateRoute path="/admin/controlsAndRegulations" component={Regulations}/>
                                     </Switch>
 
                                 </Content>

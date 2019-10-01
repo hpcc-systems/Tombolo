@@ -24,11 +24,18 @@ class Chart extends Component {
     depMaxCount:0,
     showFileList:false,
     files:[],
-    popupTitle:""
+    popupTitle:"",
+    chartLabels:[],
+    chartValues:[],
+    fileLayoutPopupTitle:"",
+    showFileLayoutList:false,
+    fileLayout:[],
+    showDataTypeChart:false
   }
   componentDidMount() {
     this.fetchFileLicenseCount();  
-    this.fetchDependenciesCount();    
+    this.fetchDependenciesCount();   
+    this.fetchFileLayoutDataType();    
   }
 
   fetchFileLicenseCount() {
@@ -93,7 +100,36 @@ class Chart extends Component {
       console.log(error);
     });
   }
- 
+  fetchFileLayoutDataType(){    
+    fetch("/api/file/read/fileLayoutDataType?app_id="+this.state.applicationId, {
+      headers: authHeader()
+    })
+    .then((response) => {
+    if(response.ok) {
+      return response.json();
+    }
+    handleError(response);
+  })
+  .then(data => {
+    var labels=[];
+    var values=[];
+    var showChart=false;
+    if(data.length>0){
+      showChart=true;
+      for(var obj in data){
+        labels.push(data[obj].data_types);
+        values.push(data[obj].count);
+      }
+    }
+    this.setState({
+      chartLabels:labels,
+      chartValues:values,
+      showDataTypeChart:showChart
+    });
+  }).catch(error => {
+    console.log(error);
+  });
+  }
   onDependenciesClick = (data) => {
     var xaxisVal=data.points[0].x;
     if(xaxisVal=="File")
@@ -145,6 +181,36 @@ class Chart extends Component {
       showFileList: false
     });
   }
+  onFileLayoutClick = (data) => {  
+    var popupTitle="";
+    popupTitle="Data Type - "+data.points[0].label;
+    fetch("/api/file/read/getFileLayoutByDataType?app_id="+this.state.applicationId+"&data_types="+data.points[0].label, {
+        headers: authHeader()
+    })
+    .then((response) => {
+      if(response.ok) {
+        return response.json();
+      }
+      handleError(response);
+    })
+    .then(data => {
+      this.setState({
+        fileLayout: data,
+        fileLayoutPopupTitle:popupTitle
+      });
+      this.setState({
+        showFileLayoutList: true
+      });
+          
+    }).catch(error => {
+      console.log(error);
+    });
+  }
+  handleFileLayoutCancel=()=>{
+    this.setState({
+      showFileLayoutList: false
+    });
+  }
   render() {
     const fileColumns = [{
       title: 'Title',
@@ -168,15 +234,43 @@ class Chart extends Component {
       pagination={{ pageSize: 20 }}
       width="1000px"
     />
+    const fileLayoutColumns = [{
+      title: 'Layout Name',
+      dataIndex: 'name',
+      width: '30%',
+    },
+    {
+      title: 'File',
+      dataIndex: 'file.title',
+      width: '30%',
+    },
+    {
+      width: '30%',
+      title: 'Type',
+      dataIndex: 'type'
+  },
+    {
+        width: '30%',
+        title: 'Format',
+        dataIndex: 'format'
+    }];
+   const fileLayoutTable = <Table
+      columns={fileLayoutColumns}
+      rowKey={record => record.id}
+      dataSource={this.state.fileLayout}
+      pagination={{ pageSize: 20 }}
+      width="1000px"
+    />
     const config = { displayModeBar: false }
     if(!this.props.application || !this.props.application.applicationId)
     return null;
     return (
       <div>
-        <div className="d-flex justify-content-end" style={{paddingTop:"55px"}}>
+        <div className="d-flex justify-content-end" style={{paddingTop:"55px","backgroundColor":"#FFFFFF"}}>
           <BreadCrumbs applicationId={this.state.applicationId} applicationTitle={this.state.applicationTitle}/>  
           <span style={{ marginLeft: "auto"}}></span>        
-        </div>
+      </div>
+      <div style={{"backgroundColor":"#FFFFFF"}}>  
       <Plot onClick={this.onComplianceClick} config={config}  data={[{
             x: this.state.licenseName,
             y: this.state.fileCount,
@@ -233,6 +327,19 @@ class Chart extends Component {
         plot_bgcolor: 'rgb(182, 215, 168)'
       } }
       />
+      {this.state.showDataTypeChart ?
+      <Plot onClick={this.onFileLayoutClick} config={config} 
+        data={[
+          {
+            values:this.state.chartValues,
+            labels: this.state.chartLabels,
+            type: 'pie',
+          }
+        ]}
+        layout={ {width: 450, height: 500,title:'File layout data types', plot_bgcolor: 'rgb(182, 215, 168)'
+      } }
+      />:null}
+      </div>
       <Modal
 	          title={this.state.popupTitle}
 	          visible={this.state.showFileList}
@@ -241,6 +348,15 @@ class Chart extends Component {
             footer={null}
 	        >
           {table}
+      </Modal>
+      <Modal
+	          title={this.state.fileLayoutPopupTitle}
+	          visible={this.state.showFileLayoutList}
+            onCancel={this.handleFileLayoutCancel}
+            width="700px"
+            footer={null}
+	        >
+          {fileLayoutTable}
       </Modal>
       </div>
     );

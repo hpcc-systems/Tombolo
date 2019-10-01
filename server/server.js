@@ -23,6 +23,7 @@ const fileInstance = require('./routes/fileinstance/read');
 const reportRead = require('./routes/report/read');
 const consumer = require('./routes/consumers/read');
 const ldap = require('./routes/ldap/read');
+const regulations = require('./routes/controlsAndRegulations/read');
 
 app.use('/api/app/read', tokenService.verifyToken, appRead);
 app.use('/api/file/read', tokenService.verifyToken, fileRead);
@@ -36,6 +37,7 @@ app.use('/api/fileinstance', fileInstance);
 app.use('/api/report/read', tokenService.verifyToken, reportRead);
 app.use('/api/consumer', tokenService.verifyToken, consumer);
 app.use('/api/ldap', ldap);
+app.use('/api/controlsAndRegulations', tokenService.verifyToken, regulations);
 
 process.env["NODE_TLS_REJECT_UNAUTHORIZED"] = 0;
 

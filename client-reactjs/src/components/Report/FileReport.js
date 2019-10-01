@@ -23,7 +23,9 @@ class FileReport extends Component {
     pii:0,
     hipaa:0,
     others:0,
-    barWidth:[]
+    barWidth:[],
+    chartLabels:[],
+    chartValues:[]
   }
 
   componentDidMount() {
@@ -34,73 +36,115 @@ class FileReport extends Component {
       fileList: props.fileList
       });
       if(props.fileList && props.fileList.length>0)
-        this.fetchDataAndRenderTable(props.fileList[0]);
+        {
+          this.fetchFileLayoutAndChartDetails(props.fileList[0])
+          //this.fetchDataAndRenderTable(props.fileList[0]);
+        }
       else{
       this.setState({
         openFileLayout:false
         });
       }
   }
-
-  fetchDataAndRenderTable(record) {
+  fetchFileLayoutAndChartDetails(record){
     this.setState({
       selectedFileId:record.id,
       selectedFileTitle:(record.title)?record.title:record.name,
       openFileLayout: true,
       initialDataLoading: true
     });
-    fetch("/api/report/read/fileLayout?file_id="+record.id, {
-        headers: authHeader()
+    fetch("/api/report/read/fileLayoutAndComplianceChart?file_id="+record.id, {
+      headers: authHeader()
     })
     .then((response) => {
-      if(response.ok) {
-        return response.json();
-      }
-      handleError(response);
-    })
-    .then(data => {
-      var name = [""];
-      var pci=0, pii=0,hipaa=0, others=0;
-      var width=[0];
-      for (var obj in data) {
-        name.push(data[obj].name);
-        console.log('pci: '+data[obj].isPCI);
-        if(data[obj].isPCI == "true") {
-          pci++;
-        }
-        if(data[obj].isPII == "true") {
-          pii++;
-        }
-        if(data[obj].isHIPAA == "true") {
-          hipaa++;
-        }
-        if(data[obj].isPCI == "false" && data[obj].isPII == "false") {
-          others++;
-        }
-        width.push(0.4);
-      }
-      window.scrollTo({ top: 400, behavior: 'smooth'})
-      this.setState({
-        fileLayout: data,
-        nameList:name,
-        pci:pci,
-        pii:pii,
-        hipaa:hipaa,
-        others:others,
-        barWidth:width
-      });
-      setTimeout(() => {
-        this.setState({
-          initialDataLoading: false
-        });
-      }, 200);
-    }).catch(error => {
-      console.log(error);
+    if(response.ok) {
+      return response.json();
+    }
+    handleError(response);
+  })
+  .then(data => {
+    var labels=[];
+    var values=[];
+    for(var obj in data.chartData){
+      labels.push(data.chartData[obj].compliance);
+      values.push(data.chartData[obj].count)
+    }
+    window.scrollTo({ top: 400, behavior: 'smooth'})
+    this.setState({
+      fileLayout: data.fileLayout,
+      chartLabels:labels,
+      chartValues:values
     });
+    setTimeout(() => {
+      this.setState({
+        initialDataLoading: false
+      });
+    }, 200);
+  }).catch(error => {
+    console.log(error);
+  });
+
   }
+  // fetchDataAndRenderTable(record) {
+  //   this.setState({
+  //     selectedFileId:record.id,
+  //     selectedFileTitle:(record.title)?record.title:record.name,
+  //     openFileLayout: true,
+  //     initialDataLoading: true
+  //   });
+  //   fetch("/api/report/read/fileLayout?file_id="+record.id, {
+  //       headers: authHeader()
+  //   })
+  //   .then((response) => {
+  //     if(response.ok) {
+  //       return response.json();
+  //     }
+  //     handleError(response);
+  //   })
+  //   .then(data => {
+  //     var name = [""];
+  //     var pci=0, pii=0,hipaa=0, others=0;
+  //     var width=[0];
+  //     for (var obj in data) {
+  //       name.push(data[obj].name);
+  //       console.log('pci: '+data[obj].isPCI);
+  //       if(data[obj].isPCI == "true") {
+  //         pci++;
+  //       }
+  //       if(data[obj].isPII == "true") {
+  //         pii++;
+  //       }
+  //       if(data[obj].isHIPAA == "true") {
+  //         hipaa++;
+  //       }
+  //       if(data[obj].isPCI == "false" && data[obj].isPII == "false") {
+  //         others++;
+  //       }
+  //       width.push(0.4);
+  //     }
+  //     window.scrollTo({ top: 400, behavior: 'smooth'})
+  //     this.setState({
+  //       fileLayout: data,
+  //       // nameList:name,
+  //       // pci:pci,
+  //       // pii:pii,
+  //       // hipaa:hipaa,
+  //       // others:others,
+  //       // barWidth:width
+  //     });
+  //     setTimeout(() => {
+  //       this.setState({
+  //         initialDataLoading: false
+  //       });
+  //     }, 200);
+  //   }).catch(error => {
+  //     console.log(error);
+  //   });
+  // }
 
   onClickRow = (record) => {
-    this.fetchDataAndRenderTable(record);
+    this.fetchFileLayoutAndChartDetails(record)
+    //this.fetchDataAndRenderTable(record);
   }
   setRowClassName = (record) => {
     return record.id === this.state.selectedFileId ? 'clickRowStyl' : '';
@@ -159,17 +203,22 @@ class FileReport extends Component {
       dataIndex: 'format'
     },
     {
-      title: 'PCI',
-      dataIndex: 'isPCI'
-    },
-    {
-      title: 'PII',
-      dataIndex: 'isPII'
-    },
-    {
-      title: 'HIPAA',
-      dataIndex: 'isHIPAA'
-    }];
+      title: 'Data Type',
+      dataIndex: 'data_types'
+    }
+    // {
+    //   title: 'PCI',
+    //   dataIndex: 'isPCI'
+    // },
+    // {
+    //   title: 'PII',
+    //   dataIndex: 'isPII'
+    // },
+    // {
+    //   title: 'HIPAA',
+    //   dataIndex: 'isHIPAA'
+    // }
+  ];
 
   const title="File ("+this.state.selectedFileTitle+") Layout"
     return (
@@ -197,6 +246,18 @@ class FileReport extends Component {
           <Plot
         data={[
           {
+            values:this.state.chartValues,
+            labels: this.state.chartLabels,
+            type: 'pie',
+          }
+        ]}
+        layout={ {width: 450, height: 500,title:'Compliance Tracking', plot_bgcolor: 'rgb(182, 215, 168)'
+
+      } }
+      />
+      {/* <Plot
+        data={[
+          {
             values:[this.state.pci, this.state.pii, this.state.hipaa, this.state.others],
             labels: ['PCI', 'PII','HIPAA', 'Others'],
             type: 'pie',
@@ -205,7 +266,7 @@ class FileReport extends Component {
         layout={ {width: 450, height: 500,title:'Compliance Tracking', plot_bgcolor: 'rgb(182, 215, 168)'
 
       } }
-      />
+      /> */}
       </Col>
       </Row>
       </div>:null}
