@@ -29,7 +29,8 @@ class Chart extends Component {
     chartValues:[],
     fileLayoutPopupTitle:"",
     showFileLayoutList:false,
-    fileLayout:[]
+    fileLayout:[],
+    showDataTypeChart:false
   }
   componentDidMount() {
     this.fetchFileLicenseCount();  
@@ -112,13 +113,18 @@ class Chart extends Component {
   .then(data => {
     var labels=[];
     var values=[];
-    for(var obj in data){
-      labels.push(data[obj].data_types);
-      values.push(data[obj].count)
+    var showChart=false;
+    if(data.length>0){
+      showChart=true;
+      for(var obj in data){
+        labels.push(data[obj].data_types);
+        values.push(data[obj].count);
+      }
     }
     this.setState({
       chartLabels:labels,
-      chartValues:values
+      chartValues:values,
+      showDataTypeChart:showChart
     });
   }).catch(error => {
     console.log(error);
@@ -321,6 +327,7 @@ class Chart extends Component {
         plot_bgcolor: 'rgb(182, 215, 168)'
       } }
       />
+      {this.state.showDataTypeChart ?
       <Plot onClick={this.onFileLayoutClick} config={config} 
         data={[
           {
@@ -330,9 +337,8 @@ class Chart extends Component {
           }
         ]}
         layout={ {width: 450, height: 500,title:'File layout data types', plot_bgcolor: 'rgb(182, 215, 168)'
-
       } }
-      />
+      />:null}
       </div>
       <Modal
 	          title={this.state.popupTitle}
