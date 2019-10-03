@@ -40,6 +40,7 @@ class FileDetails extends Component {
     fileProfile: [],
     profileHTMLAssets:[],
     dataTypes:[],
+    complianceTags:[],
     file: {
       id:"",
       title:"",
@@ -640,8 +641,31 @@ class FileDetails extends Component {
     });
 
   }
-
-
+  dataTypechange= (prop)=>{
+    var _self=this;
+    if(prop.column.colId=="data_types" && (prop.newValue)){
+    var compliance=[];
+    compliance=this.state.complianceTags;
+    fetch('/api/controlsAndRegulations/getComplianceByDataType?dataType='+prop.newValue, {
+    headers: authHeader()
+    }).then(function(response) {
+        if(response.ok) {
+          return response.json();
+        }
+        handleError(response);
+    }).then(function(data) {  
+      if(data=="")    
+      compliance.push("No Compliance");
+      else
+      compliance.push(data);
+      _self.setState({
+        complianceTags:compliance
+      });
+    }).catch(error => {
+      console.log(error);
+    });
+  }
+  }
   render() {
     const { visible, confirmLoading, sourceFiles, availableLicenses, selectedRowKeys, clusters, consumers, fileSearchSuggestions, fileDataContent, fileProfile, showFileProfile } = this.state;
     const modalTitle = "File Details" + (this.state.file.title ? " - " + this.state.file.title : " - " +this.state.file.name);
@@ -732,7 +756,7 @@ class FileDetails extends Component {
         values: ["true", "false"]
       }
     }];
-
+    const { complianceTags } = this.state;
     const licenseColumns = [{
       field: 'name',
       cellRenderer: function(params) {
@@ -929,7 +953,18 @@ class FileDetails extends Component {
                 height: '415px',
                 width: '100%' }}
               >
+              <div style={{paddingTop:"10px",paddingBottom:"10px"}}>
+              {complianceTags.map((tag, index) => {
+              const tagElem = (
+                <Tag color="red" key={tag} >
+                {tag}
+                </Tag>
+              );
+              return (tagElem );})}
+              </div>
+
                 <AgGridReact
+                 onCellValueChanged={this.dataTypechange}
                   columnDefs={layoutColumns}
                   rowData={layout}
                   defaultColDef={{resizable: true, sortable: true}}
