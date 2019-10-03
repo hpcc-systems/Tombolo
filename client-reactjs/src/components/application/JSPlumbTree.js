@@ -423,6 +423,7 @@ render() {
           selectedFile={this.state.selectedFile}
           applicationId={this.props.applicationId}
           onRefresh={this.handleRefreshTree}
+          relation={this.state.nodes}
           onClose={this.handleClose}/> : null}
     </div>
   )

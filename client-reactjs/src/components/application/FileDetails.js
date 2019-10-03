@@ -56,7 +56,8 @@ class FileDetails extends Component {
       licenses:[],
       relations:[],
       fileFieldRelations:[],
-      validations:[]
+      validations:[],
+      inheritedLicensing:[]
     }
   }
 
@@ -92,7 +93,7 @@ class FileDetails extends Component {
 
   }
   fetchDataTypeDetails() {
-    var self=this;   
+    var self=this;
     fetch("/api/file/read/dataTypes", {
         headers: authHeader()
     })
@@ -102,10 +103,10 @@ class FileDetails extends Component {
       }
       handleError(response);
     })
-    .then(data => {           
+    .then(data => {
       self.setState({
         dataTypes: data
-      });         
+      });
     }).catch(error => {
       console.log(error);
     });
@@ -158,6 +159,11 @@ class FileDetails extends Component {
       })
       .then(data => {
         this.getConsumers();
+        return data;
+      })
+      .then(data => {
+        this.getInheritedLicenses(data.basic.id);
+        return data;
       })
       .catch(error => {
         console.log(error);
@@ -227,6 +233,28 @@ class FileDetails extends Component {
       }).catch(error => {
         console.log(error);
       });
+  }
+
+  getInheritedLicenses(fileId) {
+    fetch("/api/file/read/inheritedLicenses?fileId="+fileId+"&app_id="+this.props.applicationId, {
+      headers: authHeader()
+    }).then((response) => {
+        if(response.ok) {
+          return response.json();
+        }
+        handleError(response);
+    })
+    .then(data => {
+      this.setState({
+        ...this.state,
+        file: {
+          ...this.state.file,
+          inheritedLicensing: data
+        }
+      });
+    }).catch(error => {
+      console.log(error);
+    });
   }
 
   getClusters() {
@@ -613,6 +641,7 @@ class FileDetails extends Component {
 
   }
 
+
   render() {
     const { visible, confirmLoading, sourceFiles, availableLicenses, selectedRowKeys, clusters, consumers, fileSearchSuggestions, fileDataContent, fileProfile, showFileProfile } = this.state;
     const modalTitle = "File Details" + (this.state.file.title ? " - " + this.state.file.title : " - " +this.state.file.name);
@@ -767,8 +796,24 @@ class FileDetails extends Component {
       return columns;
     }
 
+    const InheritedLicenses = (licenses) => {
+      console.log(licenses.relation);
+      let uniqueLicenses=[];
+      licenses.relation.forEach(function(item) {
+        if(item.licenses && item.licenses.length > 0) {
+          uniqueLicenses = uniqueLicenses.concat(item.licenses)
+        }
+      })
+      const licenseItems = uniqueLicenses.map((license) =>
+        <Tag color="red" key={license}>{license}</Tag>
+      );
+      return (
+        <div style={{paddingBottom:"5px"}}>{licenseItems}</div>
+      );
+    }
 
-    const {title,name, description, primaryService, backupService, qualifiedPath, consumer, fileType, isSuperFile, layout, relations, fileFieldRelations, validations} = this.state.file;
+
+    const {title,name, description, primaryService, backupService, qualifiedPath, consumer, fileType, isSuperFile, layout, relations, fileFieldRelations, validations, inheritedLicensing} = this.state.file;
     const rowSelection = {
       selectedRowKeys,
       onChange: this.onSelectedRowKeysChange
@@ -900,6 +945,7 @@ class FileDetails extends Component {
               />*/}
           </TabPane>
           <TabPane tab="Permissable Purpose" key="4">
+            Inherited Licenses: <InheritedLicenses relation={inheritedLicensing}/>
             <div
                 className="ag-theme-balham"
                 style={{

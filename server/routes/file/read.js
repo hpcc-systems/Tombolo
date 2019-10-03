@@ -342,6 +342,46 @@ router.get('/filetree', (req, res) => {
     }
 });
 
+
+router.get('/inheritedLicenses', async function (req, res) {
+    console.log("[fileSources/read.js] - get file tree for app_id = " +req.query.app_id+ " fileId: "+req.query.fileId);
+    let results = [];
+
+    try {
+        var parentIds = await getFileRelationHierarchy(req.query.app_id, req.query.fileId);
+
+        File.findAll(
+        {
+            where:{"id": {[Op.in]:parentIds}},
+            attributes:["id", "title", "name"]
+        }
+        ).then(async function(files) {
+            for(const file of files) {
+                var fileObj={};
+                fileObj.id = file.id;
+                fileObj.title = file.title;
+                fileObj.name = file.name;
+                var fileLicenses = await FileLicense.findAll({where:{"file_id":file.id}});
+
+                let licensesArry = [];
+                fileLicenses.forEach(function (fileLicense) {
+                    licensesArry.push(fileLicense.name);
+                });
+                if(licensesArry.length > 0) {
+                    fileObj.licenses = licensesArry;
+                }
+                results.push(fileObj);
+            }
+            res.json(results);
+        })
+        .catch(function(err) {
+            console.log(err);
+        });
+    } catch (err) {
+        console.log('err', err);
+    }
+});
+
 router.get('/fileLicenseCount', (req, res) => {
     console.log("[fileLicenseCount/read.js] - get file license count for app_id = " +req.query.app_id);
     try {
@@ -519,6 +559,24 @@ function updateCommonData(objArray, fields) {
     });
     }
     return objArray;
+}
+
+async function getFileRelationHierarchy(applicationId, fileId) {
+    var fileIds = [], promises = [];
+    return TreeConnection.findAll({where: {"application_id":applicationId, "targetid":fileId}}).then(async function(fileTree) {
+        var subFiles = [];
+        for(const file of fileTree) {
+            fileIds.push(file.sourceid);
+            let innerFileIds = await getFileRelationHierarchy(applicationId, file.sourceid);
+            if(innerFileIds && innerFileIds.length > 0) {
+                fileIds = fileIds.concat(innerFileIds);
+            }
+        }
+        return fileIds;
+    })
+    .catch(function(err) {
+        console.log(err);
+    });
 }
 
 

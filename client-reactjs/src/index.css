@@ -306,3 +306,22 @@ path, .jtk-endpoint { cursor:pointer; }
   opacity: 0.4;
 }
 
+.ant-layout {
+  display: flex;
+  flex: auto;
+  flex-direction: column;
+  min-height: 0;
+  background: none;
+}
+
+.nav-item {
+  font-size: 13px;
+}
+
+.ant-tabs-bar {
+    margin: 0 0 2px 0 !important;
+    border-bottom: 1px solid #e8e8e8;
+    outline: none;
+    -webkit-transition: padding 0.3s cubic-bezier(0.645, 0.045, 0.355, 1);
+    transition: padding 0.3s cubic-bezier(0.645, 0.045, 0.355, 1);
+}
