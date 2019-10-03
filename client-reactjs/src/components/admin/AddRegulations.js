@@ -1,6 +1,6 @@
 import React, { Component } from "react";
 import { Table,message,Spin,Modal,Tabs,Form,Input,Select } from 'antd/lib';
-import { authHeader, handleError } from "../common/AuthHeader.js";  
+import { authHeader, handleError } from "../common/AuthHeader.js";
 const { confirm } = Modal;
 const Option = Select.Option;
 class AddRegulations extends Component {
@@ -14,8 +14,8 @@ class AddRegulations extends Component {
         regulations:[],
         compliance:"",
         title:""
-    }  
-    componentDidMount(){              
+    }
+    componentDidMount(){
         this.setState({
             compliance:this.props.compliance,
             SelectedRegulation:this.props.selectedRegulation,
@@ -34,11 +34,11 @@ class AddRegulations extends Component {
         this.getDataTypesList();
     }
     getDataTypesList() {
-        var _self=this;       
+        var _self=this;
         fetch("/api/controlsAndRegulations/dataTypes", {
           headers: authHeader()
         }).then((response) => {
-            if(response.ok) {              
+            if(response.ok) {
               return response.json();
             }
             handleError(response);
@@ -57,7 +57,7 @@ class AddRegulations extends Component {
             console.log(error);
           });
       }
-     SaveDetails() {          
+     SaveDetails() {
        var _self=this;
         var regulations=[];
         var compliance=this.state.compliance;
@@ -70,7 +70,7 @@ class AddRegulations extends Component {
         body: JSON.stringify({regulations:regulations,compliance:this.state.compliance,
         oldCompName:this.props.compliance})
       }).then(function(response) {
-          if(response.ok) {          
+          if(response.ok) {
           message.config({top:150})
           message.success("Controls and Regulations saved successfully");
           _self.props.onClose();
@@ -79,7 +79,7 @@ class AddRegulations extends Component {
         console.log('Saved..');
       });
     }
-    handleOk = () => {  
+    handleOk = () => {
         var exists=this.state.regulations.filter(key => key.compliance.toUpperCase() == this.state.compliance.toUpperCase()).length > 0;
         if(this.state.compliance=="")
         {
@@ -94,17 +94,17 @@ class AddRegulations extends Component {
         else if(this.state.selectedRowKeys && this.state.selectedRowKeys.length==0)
         {message.config({top:150})
         message.error("Please select the Data Type");}
-        else{   
+        else{
         var _self=this;
         confirm({
           content: 'Are you sure you want to submit?',
           onOk() {
             _self.SaveDetails();
           }
-        }); 
-      }      
+        });
+      }
     }
-    handleCancel = () => {     
+    handleCancel = () => {
       this.props.onClose();
     }
     onSelectedRowChange = (selectedRowKeys) => {
@@ -117,11 +117,11 @@ class AddRegulations extends Component {
         this.setState({compliance: e.target.value });
       }
     render() {
-       
+
         const selectedRowKeys=this.state.selectedRowKeys;
         const rowSelection = {
             selectedRowKeys,
-            onChange:this.onSelectedRowChange.bind(this) 
+            onChange:this.onSelectedRowChange.bind(this)
             };
           const Columns = [{
             title: 'Data Types',
@@ -143,22 +143,22 @@ class AddRegulations extends Component {
           <Modal
 	        title={this.state.title}
 	        visible={true}
-            onOk={this.handleOk.bind(this)} 
+            onOk={this.handleOk.bind(this)}
             onCancel={this.handleCancel}
             destroyOnClose={true}
-            bodyStyle={{height:"460px"}}
+            bodyStyle={{height:"560px"}}
             okText="Save"
-	        >  
+	        >
           <Form layout="vertical">
           <Form.Item {...formItemLayout} label="Compliance :">
           <Input id="compliance" onChange={this.handleComplianceChange}  name="compliance" placeholder="" value={this.state.compliance}/>
-		            </Form.Item>		            
+		            </Form.Item>
                     <Table
                         rowSelection={rowSelection}
                         columns={Columns}
                         rowKey={record => record.name}
                         dataSource={this.state.dataTypes}
-                        pagination={{ pageSize: 5 }}
+                        pagination={{ pageSize: 10 }}
                         size="small"
                     />
 	        </Form>

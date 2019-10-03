@@ -644,27 +644,30 @@ class FileDetails extends Component {
   dataTypechange= (prop)=>{
     var _self=this;
     if(prop.column.colId=="data_types" && (prop.newValue)){
-    var compliance=[];
-    compliance=this.state.complianceTags;
-    fetch('/api/controlsAndRegulations/getComplianceByDataType?dataType='+prop.newValue, {
-    headers: authHeader()
-    }).then(function(response) {
-        if(response.ok) {
-          return response.json();
+      var compliance=[];
+      compliance=this.state.complianceTags;
+      fetch('/api/controlsAndRegulations/getComplianceByDataType?dataType='+prop.newValue, {
+        headers: authHeader()
+      }).then(function(response) {
+          if(response.ok) {
+            return response.json();
+          }
+          handleError(response);
+      }).then(function(data) {
+        if(data && data.length > 0) {
+          data.forEach((element) => {
+            if(!compliance.includes(element)) {
+              compliance.push(element);
+            }
+          })
+          _self.setState({
+            complianceTags:compliance
+          });
         }
-        handleError(response);
-    }).then(function(data) {  
-      if(data=="")    
-      compliance.push("No Compliance");
-      else
-      compliance.push(data);
-      _self.setState({
-        complianceTags:compliance
+      }).catch(error => {
+        console.log(error);
       });
-    }).catch(error => {
-      console.log(error);
-    });
-  }
+    }
   }
   render() {
     const { visible, confirmLoading, sourceFiles, availableLicenses, selectedRowKeys, clusters, consumers, fileSearchSuggestions, fileDataContent, fileProfile, showFileProfile } = this.state;
@@ -840,6 +843,19 @@ class FileDetails extends Component {
       }
     }
 
+    const ComplianceInfo = (complianceTags) => {
+      if(complianceTags.tags && complianceTags.tags.length > 0) {
+        const tagElem = complianceTags.tags.map((tag, index) =>
+            <Tag color="red" key={tag}>{tag}</Tag>
+        );
+        return (
+          <div style={{paddingBottom:"5px"}}><b>Compliance:</b> {tagElem}</div>
+        );
+      } else {
+        return null;
+      }
+    }
+
 
     const {title,name, description, primaryService, backupService, qualifiedPath, consumer, fileType, isSuperFile, layout, relations, fileFieldRelations, validations, inheritedLicensing} = this.state.file;
     const rowSelection = {
@@ -951,22 +967,13 @@ class FileDetails extends Component {
 
           </TabPane>
           <TabPane tab="Layout" key="3">
+              <ComplianceInfo tags={complianceTags}/>
               <div
                 className="ag-theme-balham"
                 style={{
                 height: '415px',
                 width: '100%' }}
               >
-              <div style={{paddingTop:"10px",paddingBottom:"10px"}}>
-              {complianceTags.map((tag, index) => {
-              const tagElem = (
-                <Tag color="red" key={tag} >
-                {tag}
-                </Tag>
-              );
-              return (tagElem );})}
-              </div>
-
                 <AgGridReact
                  onCellValueChanged={this.dataTypechange}
                   columnDefs={layoutColumns}

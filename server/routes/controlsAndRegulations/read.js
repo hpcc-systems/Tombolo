@@ -67,7 +67,7 @@ router.post('/saveRegulations', function (req, res) {
             ControlsAndRegulations.bulkCreate(regulations).then(function(regulation) {
                 res.json({"result":"success"});
             });
-        });       
+        });
     } catch (err) {
         console.log('err', err);
     }
@@ -75,8 +75,8 @@ router.post('/saveRegulations', function (req, res) {
 
 router.get('/dataTypes', (req, res) => {
     try {
-        
-        DataTypes.findAll().then(function(data_types) {            
+
+        DataTypes.findAll().then(function(data_types) {
             res.json(data_types);
         })
         .catch(function(err) {
@@ -94,16 +94,13 @@ router.get('/getComplianceByDataType', (req, res) => {
         group: ['compliance'],
         where:{"data_types":req.query.dataType}
       }).then(function(regulations) {
-          var compliance="";
+        var compliance=[];
         if(regulations.length>0)
         {
             for(var obj in regulations)
             {
-                if(compliance=="")
-                    compliance=regulations[obj].compliance;
-                else
-                    compliance=compliance+"/"+regulations[obj].compliance;
-                
+                console.log(regulations[obj].compliance);
+                compliance.push(regulations[obj].compliance);
             }
         }
         res.json(compliance);

@@ -47,7 +47,7 @@ class Regulations extends Component {
     	console.log(error);
   	});
   }
-   
+
   handleDelete = (compliance) => {
     var data = JSON.stringify({compliance:compliance});
     console.log(data);
@@ -98,9 +98,9 @@ class Regulations extends Component {
   }
 
   handleAdd = (event) => {
-  	this.setState({ 
+  	this.setState({
       selectedRegulation:[],
-      compliance:"",   
+      compliance:"",
       openAddRegulationDialog: true
     });
   }
@@ -111,8 +111,8 @@ class Regulations extends Component {
             openAddRegulationDialog: false
         });
       }
-  render() { 
-  
+  render() {
+
   	const Columns = [{
       title: 'Compliance',
       dataIndex: 'compliance',
@@ -136,12 +136,12 @@ class Regulations extends Component {
           </Popconfirm>
         </span>
     }];
-    
+
     return (
     <React.Fragment>
       <div className="d-flex justify-content-end" style={{paddingTop:"60px"}}>
         <BreadCrumbs applicationId={this.state.applicationId}/>
-        <span style={{ marginLeft: "auto" }}>       
+        <span style={{ marginLeft: "auto" }}>
           <Tooltip placement="bottom" title={"Click to add a new User"}>
             <Button className="btn btn-secondary btn-sm" onClick={() => this.handleAdd()}><i className="fa fa-plus"></i> Add Controls and Regulations</Button>
           </Tooltip>
@@ -154,6 +154,7 @@ class Regulations extends Component {
       	<Table
           columns={Columns}
           rowKey={record => record.id}
+          pagination={{ pageSize: 20 }}
           dataSource={this.state.regulations}/>
       </div>
 
