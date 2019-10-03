@@ -798,18 +798,22 @@ class FileDetails extends Component {
 
     const InheritedLicenses = (licenses) => {
       console.log(licenses.relation);
-      let uniqueLicenses=[];
-      licenses.relation.forEach(function(item) {
-        if(item.licenses && item.licenses.length > 0) {
-          uniqueLicenses = uniqueLicenses.concat(item.licenses)
-        }
-      })
-      const licenseItems = uniqueLicenses.map((license) =>
-        <Tag color="red" key={license}>{license}</Tag>
-      );
-      return (
-        <div style={{paddingBottom:"5px"}}>{licenseItems}</div>
-      );
+      if(licenses.relation && licenses.relation.length > 0) {
+        let uniqueLicenses=[];
+        licenses.relation.forEach(function(item) {
+          if(item.licenses && item.licenses.length > 0) {
+            uniqueLicenses = uniqueLicenses.concat(item.licenses)
+          }
+        })
+        const licenseItems = uniqueLicenses.map((license) =>
+          <Tag color="red" key={license}>{license}</Tag>
+        );
+        return (
+          <div style={{paddingBottom:"5px"}}><b>Inherited Licenses:</b> {licenseItems}</div>
+        );
+      } else {
+        return null;
+      }
     }
 
 
@@ -945,7 +949,7 @@ class FileDetails extends Component {
               />*/}
           </TabPane>
           <TabPane tab="Permissable Purpose" key="4">
-            Inherited Licenses: <InheritedLicenses relation={inheritedLicensing}/>
+            <InheritedLicenses relation={inheritedLicensing}/>
             <div
                 className="ag-theme-balham"
                 style={{
