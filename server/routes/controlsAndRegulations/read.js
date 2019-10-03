@@ -86,4 +86,30 @@ router.get('/dataTypes', (req, res) => {
         console.log('err', err);
     }
 });
+
+router.get('/getComplianceByDataType', (req, res) => {
+    console.log("[controlsAndRegulations/read.js] - Get Compliance By DataType");
+    ControlsAndRegulations.findAll({
+        attributes: ['compliance'],
+        group: ['compliance'],
+        where:{"data_types":req.query.dataType}
+      }).then(function(regulations) {
+          var compliance="";
+        if(regulations.length>0)
+        {
+            for(var obj in regulations)
+            {
+                if(compliance=="")
+                    compliance=regulations[obj].compliance;
+                else
+                    compliance=compliance+"/"+regulations[obj].compliance;
+                
+            }
+        }
+        res.json(compliance);
+    })
+    .catch(function(err) {
+        console.log(err);
+    });
+});
 module.exports = router;
