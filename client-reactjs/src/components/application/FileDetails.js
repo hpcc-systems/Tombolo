@@ -347,7 +347,7 @@ class FileDetails extends Component {
         file: {
           ...this.state.file,
           id: fileInfo.name,
-          title: fileInfo.name,
+          title: fileInfo.fileName,
           name: fileInfo.name,
           clusterId: this.state.selectedCluster,
           description: fileInfo.description,
