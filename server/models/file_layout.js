@@ -20,6 +20,8 @@ module.exports = (sequelize, DataTypes) => {
     isPCI: DataTypes.STRING,
     isPII: DataTypes.STRING,
     isHIPAA: DataTypes.STRING,
+    description: DataTypes.TEXT,
+    required: DataTypes.BOOLEAN
   }, {freezeTableName: true});
   file_layout.associate = function(models) {
     file_layout.belongsTo(models.file, {

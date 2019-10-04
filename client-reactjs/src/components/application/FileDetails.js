@@ -93,6 +93,7 @@ class FileDetails extends Component {
     });
 
   }
+
   fetchDataTypeDetails() {
     var self=this;
     fetch("/api/file/read/dataTypes", {
@@ -112,6 +113,7 @@ class FileDetails extends Component {
       console.log(error);
     });
   }
+
   getFileDetails() {
     if(this.props.selectedFile && !this.props.isNewFile) {
       fetch("/api/file/read/file_details?file_id="+this.props.selectedFile+"&app_id="+this.props.applicationId, {
@@ -705,20 +707,50 @@ class FileDetails extends Component {
       field: 'type'
     },
     {
+      headerName: 'Description',
+      field: 'description',
+      editable: true
+    },
+    {
+      headerName: 'Required',
+      editable: true,
+      cellEditor: "agSelectCellEditor",
+      cellEditorParams: {
+        values: ["false", "true"]
+      },
+      valueGetter: function(params) {
+        return (params.data.required && params.data.required != undefined) ? params.data.required : "false";
+      },
+      valueSetter: function(params) {
+        var newVal = params.newValue;
+        var data = params.data;
+        if (data.required != newVal) {
+          data.required = newVal
+          return true;
+        } else {
+          return false;
+        }
+      }
+    },
+    {
       headerName: 'Display Size',
-      field: 'displaySize'
+      field: 'displaySize',
+      hide: true
     },
     {
       headerName: 'Display Type',
-      field: 'displayType'
+      field: 'displayType',
+      hide: true
     },
     {
       headerName: 'Text Justification',
-      field: 'textJustification'
+      field: 'textJustification',
+      hide: true
     },
     {
       headerName: 'Format',
-      field: 'format'
+      field: 'format',
+      hide: true
     },
     {
       headerName: 'Data Type',
@@ -975,7 +1007,7 @@ class FileDetails extends Component {
                 width: '100%' }}
               >
                 <AgGridReact
-                 onCellValueChanged={this.dataTypechange}
+                  onCellValueChanged={this.dataTypechange}
                   columnDefs={layoutColumns}
                   rowData={layout}
                   defaultColDef={{resizable: true, sortable: true}}

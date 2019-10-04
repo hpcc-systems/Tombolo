@@ -153,7 +153,7 @@ router.post('/newcluster', async function (req, res) {
 		            res.json({"result":"success"});
 		        });
 		    }
-		} else {			
+		} else {
 			return res.status(500).json({"message": "Cluster could not be reached"});
 		}
     } catch (err) {
@@ -256,7 +256,8 @@ function getFileLayout(cluster, fileName) {
 	      			"format" : '',
 	      			"isPCI" : 'false',
 	      			"isPII" : 'false',
-					"isHIPAA":'false'
+					"isHIPAA":'false',
+					"required": 'false'
 	      		}
 	      		if(column.DataColumns != undefined) {
 	      			var childColumns = [];
@@ -271,7 +272,8 @@ function getFileLayout(cluster, fileName) {
 			      			"format" : '',
 			      			"isPCI" : 'false',
 			      			"isPII" : 'false',
-							"isHIPAA":'false'
+							"isHIPAA":'false',
+							"required": 'false'
 	      				}
 	      				childColumns.push(childColumnObj);
 

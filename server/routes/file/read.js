@@ -144,7 +144,7 @@ router.post('/saveFile', (req, res) => {
             }
             var fileLayoutToSave = updateCommonData(req.body.file.layout, fieldsToUpdate);
             return FileLayout.bulkCreate(
-                fileLayoutToSave, {updateOnDuplicate: ["name", "type", "displayType", "displaySize", "textJustification", "format","data_types", "isPCI", "isPII", "isHIPAA"]}
+                fileLayoutToSave, {updateOnDuplicate: ["name", "type", "displayType", "displaySize", "textJustification", "format","data_types", "isPCI", "isPII", "isHIPAA", "description", "required"]}
             )
         }).then(function(fileLayout) {
             var fileLicensToSave = updateCommonData(req.body.file.license, fieldsToUpdate);
