@@ -60,7 +60,8 @@ class JSPlumbTree extends Component {
   }
 
   handleClickOutside(event) {
-    if (this.wrapperRef && !this.wrapperRef.contains(event.target)) {
+    if (this.wrapperRef && !this.wrapperRef.contains(event.target) && 
+    event.target.pathname==undefined && !this.state.openFileDetailsDialog) {
         this.saveConnections();
     }
   }
