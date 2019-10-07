@@ -147,11 +147,14 @@ router.post('/saveFile', (req, res) => {
                 fileLayoutToSave, {updateOnDuplicate: ["name", "type", "displayType", "displaySize", "textJustification", "format","data_types", "isPCI", "isPII", "isHIPAA", "description", "required"]}
             )
         }).then(function(fileLayout) {
+            FileLicense.destroy(
+                {where:{file_id: fileId}}
+            ).then(function(deleted) {
             var fileLicensToSave = updateCommonData(req.body.file.license, fieldsToUpdate);
             return FileLicense.bulkCreate(
                 fileLicensToSave,
                 {updateOnDuplicate: ["name", "url"]}
-            )
+            )  })
         }).then(function(fileLicense) {
             var fileRelationToSave = updateCommonData(req.body.file.relation, fieldsToUpdate);
             return FileRelation.bulkCreate(
