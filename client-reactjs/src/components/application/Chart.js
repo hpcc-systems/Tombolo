@@ -336,7 +336,7 @@ class Chart extends Component {
             type: 'pie',
           }
         ]}
-        layout={ {width: 450, height: 500,title:'File layout data types', plot_bgcolor: 'rgb(182, 215, 168)'
+        layout={ {width: 500, height: 500,title:'File layout data types', plot_bgcolor: 'rgb(182, 215, 168)'
       } }
       />:null}
       </div>

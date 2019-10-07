@@ -5,10 +5,11 @@ var models  = require('../../models');
 let Index = models.indexes;
 let IndexKey = models.index_key;
 let IndexPayload = models.index_payload;
+let File=models.file;
 
 router.get('/index_list', (req, res) => {
     console.log("[index/read.js] - Get file list for app_id = " + req.query.app_id);
-    Index.findAll({where:{"application_id":req.query.app_id}}).then(function(indexes) {
+    Index.findAll({where:{"application_id":req.query.app_id},include: [File]}).then(function(indexes) {
         res.json(indexes);
     })
     .catch(function(err) {

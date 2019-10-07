@@ -110,7 +110,7 @@ class IndexTree extends Component {
     {
       width: '30%',
       title: 'Source File',
-      dataIndex: 'parentFileId'
+      dataIndex: 'file.title'
     },
     {
       width: '30%',

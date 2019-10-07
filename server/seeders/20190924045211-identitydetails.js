@@ -47,7 +47,7 @@ module.exports = {
     },
     {
       id: uuidv4(),
-      name : 'Medical Record Number'
+      name : 'Medical Record Number',
       createdAt : new Date(),
       updatedAt : new Date()
     },{
@@ -88,6 +88,6 @@ module.exports = {
   },
 
   down: (queryInterface, Sequelize) => {
-    return queryInterface.bulkDelete('identity_details', null, {});
+    return queryInterface.bulkDelete('data_types', null, {});
   }
 };
