@@ -90,21 +90,25 @@ class QueryDetails extends Component {
     }*/
   }
 
-  handleOk = () => {
-    this.setState({
-      confirmLoading: true,
+  handleOk = (e) => {
+    this.props.form.validateFields((err, values) => {
+      if(!err) {
+        this.setState({
+          confirmLoading: true,
+        });
+
+        this.saveQueryDetails();
+
+        setTimeout(() => {
+          this.setState({
+            visible: false,
+            confirmLoading: false,
+          });
+          this.props.onClose();
+          this.props.onRefresh();
+        }, 2000);
+      }
     });
-
-    this.saveQueryDetails();
-
-    setTimeout(() => {
-      this.setState({
-        visible: false,
-        confirmLoading: false,
-      });
-      this.props.onClose();
-      this.props.onRefresh();
-    }, 2000);
   }
 
   getClusters() {
@@ -280,6 +284,7 @@ class QueryDetails extends Component {
   }
 
   render() {
+    const {getFieldDecorator} = this.props.form;
     const { visible, confirmLoading, sourceFiles, availableLicenses, selectedRowKeys, clusters, querySearchSuggestions } = this.state;
     const formItemLayout = {
       labelCol: {
@@ -359,9 +364,14 @@ class QueryDetails extends Component {
             </div>
               : null
             }
-            <Form.Item {...formItemLayout} label="Name">
-                <Input id="query_title" name="query_title" onChange={this.onChange} value={title} defaultValue={title} placeholder="Title" />
-            </Form.Item>
+            <Form.Item {...formItemLayout} label="Title">
+              {getFieldDecorator('query_title', {
+                rules: [{ required: true, message: 'Please enter a title for the query!' }],
+              })(
+              <Input id="query_title" name="query_title" onChange={this.onChange} value={title} defaultValue={title} placeholder="Title" />
+              )}
+             </Form.Item>
+
             <Form.Item {...formItemLayout} label="Description">
                 <Input id="query_desc" name="description" onChange={this.onChange} value={description} defaultValue={description} placeholder="Description" />
             </Form.Item>

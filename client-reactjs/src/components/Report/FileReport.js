@@ -21,11 +21,14 @@ class FileReport extends Component {
     nameList:[],
     pci:0,
     pii:0,
+    nonPii:0,
     hipaa:0,
     others:0,
     barWidth:[],
     chartLabels:[],
-    chartValues:[]
+    chartValues:[],
+    showComplianceDetailsChart: false,
+    layoutComplianceData: []
   }
 
   componentDidMount() {
@@ -33,25 +36,27 @@ class FileReport extends Component {
 
   componentWillReceiveProps(props) {
     this.setState({
-      fileList: props.fileList
-      });
-      if(props.fileList && props.fileList.length>0)
-        {
-          this.fetchFileLayoutAndChartDetails(props.fileList[0])
-          //this.fetchDataAndRenderTable(props.fileList[0]);
-        }
-      else{
+      fileList: props.fileList,
+    });
+    if(props.fileList && props.fileList.length>0)
+    {
+      this.fetchFileLayoutAndChartDetails(props.fileList[0])
+      //this.fetchDataAndRenderTable(props.fileList[0]);
+    }
+    else{
       this.setState({
         openFileLayout:false
-        });
-      }
+      });
+    }
   }
+
   fetchFileLayoutAndChartDetails(record){
     this.setState({
       selectedFileId:record.id,
       selectedFileTitle:(record.title)?record.title:record.name,
       openFileLayout: true,
-      initialDataLoading: true
+      initialDataLoading: true,
+      showComplianceDetailsChart: false
     });
     fetch("/api/report/read/fileLayoutAndComplianceChart?file_id="+record.id, {
       headers: authHeader()
@@ -63,17 +68,26 @@ class FileReport extends Component {
     handleError(response);
   })
   .then(data => {
-    var labels=[];
-    var values=[];
+    var labels=[], values=[], pii=0, nonPii=0;
+
+
     for(var obj in data.chartData){
       labels.push(data.chartData[obj].compliance);
       values.push(data.chartData[obj].count)
+      if(data.chartData[obj].compliance != 'others') {
+        pii+=data.chartData[obj].count;
+      } else {
+        nonPii+=data.chartData[obj].count;
+      }
     }
     window.scrollTo({ top: 400, behavior: 'smooth'})
     this.setState({
       fileLayout: data.fileLayout,
       chartLabels:labels,
-      chartValues:values
+      chartValues:values,
+      pii: pii,
+      nonPii: nonPii,
+      layoutComplianceData: data.chartData
     });
     setTimeout(() => {
       this.setState({
@@ -83,6 +97,23 @@ class FileReport extends Component {
   }).catch(error => {
     console.log(error);
   });
+
+  }
+
+  showComplianceDetailsChart = (data) => {
+    this.setState({
+      showComplianceDetailsChart: true
+    });
+  }
+
+  handleComplianceDetailsClick = (data) => {
+    let filteredLayouts = this.state.layoutComplianceData.filter(function(layout) {
+      return layout.compliance == data.points[0].label
+    })
+
+    this.setState({
+      fileLayout: filteredLayouts[0].fileLayout
+    });
 
   }
   // fetchDataAndRenderTable(record) {
@@ -143,7 +174,7 @@ class FileReport extends Component {
   // }
 
   onClickRow = (record) => {
-    this.fetchFileLayoutAndChartDetails(record)
+    this.fetchFileLayoutAndChartDetails(record);
     //this.fetchDataAndRenderTable(record);
   }
   setRowClassName = (record) => {
@@ -223,7 +254,7 @@ class FileReport extends Component {
   const title="File ("+this.state.selectedFileTitle+") Layout"
     return (
       <div style={{"paddingLeft":"5px","backgroundColor":"#FFFFFF"}}>
-        {table}         
+        {table}
         {this.state.openFileLayout ? <div ref="divFileLayout">
           <Row gutter={24}>
           <Col span={10}>
@@ -242,36 +273,39 @@ class FileReport extends Component {
               />
         </Spin>
           </Col>
-          <Col span={14}>
-          <Plot
-        data={[
-          {
-            values:this.state.chartValues,
-            labels: this.state.chartLabels,
-            type: 'pie',
-          }
-        ]}
-        layout={ {width: 450, height: 500,title:'Compliance Tracking', plot_bgcolor: 'rgb(182, 215, 168)'
+          <Col span={6}>
+          <Plot onClick={this.showComplianceDetailsChart}
+            data={[
+              {
+                values:[this.state.pii, this.state.nonPii],
+                labels: ["PII", "Non-PII"],
+                type: 'pie',
+              }
+            ]}
+            layout={ {width: 450, height: 500,title:'PII/Non-PII', plot_bgcolor: 'rgb(182, 215, 168)'
 
-      } }
-      />
-      {/* <Plot
-        data={[
-          {
-            values:[this.state.pci, this.state.pii, this.state.hipaa, this.state.others],
-            labels: ['PCI', 'PII','HIPAA', 'Others'],
-            type: 'pie',
-          }
-        ]}
-        layout={ {width: 450, height: 500,title:'Compliance Tracking', plot_bgcolor: 'rgb(182, 215, 168)'
+          } }
+          />
+          </Col>
 
-      } }
-      /> */}
-      </Col>
+          <Col span={6}>
+          {this.state.showComplianceDetailsChart ?
+          <Plot onClick={this.handleComplianceDetailsClick}
+            data={[
+              {
+                values:this.state.chartValues,
+                labels: this.state.chartLabels,
+                type: 'pie',
+              }
+            ]}
+            layout={ {width: 450, height: 500,title:'Compliance Details', plot_bgcolor: 'rgb(182, 215, 168)'
+          } }
+          /> : null}
+          </Col>
       </Row>
       </div>:null}
       </div>
-      
+
     )
   }
 }

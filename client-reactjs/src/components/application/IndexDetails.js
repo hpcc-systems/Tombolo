@@ -91,21 +91,25 @@ class IndexDetails extends Component {
     }
   }
 
-  handleOk = () => {
-    this.setState({
-      confirmLoading: true,
+  handleOk = (e) => {
+    this.props.form.validateFields((err, values) => {
+      if(!err) {
+        this.setState({
+          confirmLoading: true,
+        });
+
+        this.saveFileDetails();
+
+        setTimeout(() => {
+          this.setState({
+            visible: false,
+            confirmLoading: false,
+          });
+          this.props.onClose();
+          this.props.onRefresh();
+        }, 2000);
+      }
     });
-
-    this.saveFileDetails();
-
-    setTimeout(() => {
-      this.setState({
-        visible: false,
-        confirmLoading: false,
-      });
-      this.props.onClose();
-      this.props.onRefresh();
-    }, 2000);
   }
 
   getClusters() {
@@ -341,7 +345,7 @@ class IndexDetails extends Component {
               </Select>
             </Form.Item>
 
-            <Form.Item {...formItemLayout} label="File">
+            <Form.Item {...formItemLayout} label="Index">
               <AutoComplete
                 className="certain-category-search"
                 dropdownClassName="certain-category-search-dropdown"
@@ -362,8 +366,13 @@ class IndexDetails extends Component {
               : null
             }
             <Form.Item {...formItemLayout} label="Title">
-                <Input id="file_title" name="title" onChange={this.onChange} value={title} defaultValue={title} placeholder="Title" />
-            </Form.Item>
+              {getFieldDecorator('title', {
+                rules: [{ required: true, message: 'Please enter a title for the index!' }],
+              })(
+              <Input id="file_title" name="title" onChange={this.onChange} defaultValue={title} value={title} placeholder="Title" />
+              )}
+             </Form.Item>
+
             <Form.Item {...formItemLayout} label="Description">
                 <Input id="file_desc" name="description" onChange={this.onChange} value={description} defaultValue={description} placeholder="Description" />
             </Form.Item>

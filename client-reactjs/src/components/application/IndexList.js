@@ -56,6 +56,9 @@ class IndexList extends Component {
   }
 
   render() {
+    if(!this.props.application || !this.props.application.applicationId)
+      return null;
+
     return (
       <React.Fragment>
       <div className="d-flex justify-content-end" style={{paddingTop:"55px", margin: "5px"}}>

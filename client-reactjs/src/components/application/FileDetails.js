@@ -198,20 +198,26 @@ class FileDetails extends Component {
     });
   };
 
-  handleOk = () => {
-    this.setState({
-      confirmLoading: true,
+  handleOk = (e) => {
+    e.preventDefault();
+    this.props.form.validateFields((err, values) => {
+      if(!err) {
+        this.setState({
+          confirmLoading: true,
+        });
+
+        this.saveFileDetails();
+
+        setTimeout(() => {
+          this.setState({
+            visible: false,
+            confirmLoading: false,
+          });
+          this.props.onRefresh();
+        }, 2000);
+      }
     });
 
-    this.saveFileDetails();
-
-    setTimeout(() => {
-      this.setState({
-        visible: false,
-        confirmLoading: false,
-      });
-      this.props.onRefresh();
-    }, 2000);
   }
 
   getLicenses() {
@@ -672,6 +678,7 @@ class FileDetails extends Component {
     }
   }
   render() {
+    const { getFieldDecorator } = this.props.form;
     const { visible, confirmLoading, sourceFiles, availableLicenses, selectedRowKeys, clusters, consumers, fileSearchSuggestions, fileDataContent, fileProfile, showFileProfile } = this.state;
     const modalTitle = "File Details" + (this.state.file.title ? " - " + this.state.file.title : " - " +this.state.file.name);
     const formItemLayout = {
@@ -947,11 +954,17 @@ class FileDetails extends Component {
               : null
             }
             <Form.Item {...formItemLayout} label="Title">
-                <Input id="file_title" name="title" onChange={this.onChange} defaultValue={title} value={title} placeholder="Title" />
+              {getFieldDecorator('title', {
+                rules: [{ required: true, message: 'Please enter a file!' }],
+              })(
+              <Input id="file_title" name="title" onChange={this.onChange} defaultValue={title} value={title} placeholder="Title" />              )}
             </Form.Item>
             <Form.Item {...formItemLayout} label="Name">
-                <Input id="file_name" name="name" onChange={this.onChange} defaultValue={name} value={name} placeholder="Name" disabled />
-            </Form.Item>
+              {getFieldDecorator('name', {
+                rules: [{ required: true, message: 'Please select a file!' }],
+              })(
+              <Input id="file_name" name="name" onChange={this.onChange} defaultValue={name} value={name} placeholder="Name" />              )}
+             </Form.Item>
             <Form.Item {...formItemLayout} label="Description">
                 <Input id="file_desc" name="description" onChange={this.onChange} defaultValue={description} value={description} placeholder="Description" />
             </Form.Item>

@@ -61,7 +61,7 @@ class JobDetails extends Component {
         data.jobfiles.forEach(function(doc, idx) {
           var fileObj = {};
           fileObj=doc;
-          fileObj.fileTitle=(doc.title)?doc.title:doc.name;        
+          fileObj.fileTitle=(doc.title)?doc.title:doc.name;
           jobfiles.push(fileObj);
       });
         this.setState({
@@ -106,7 +106,7 @@ class JobDetails extends Component {
         files.forEach(function(doc, idx) {
           var fileObj = {};
           fileObj=doc;
-          fileObj.fileTitle=(doc.title)?doc.title:doc.name;        
+          fileObj.fileTitle=(doc.title)?doc.title:doc.name;
           fileList.push(fileObj);
         });
         this.setState({
@@ -129,20 +129,24 @@ class JobDetails extends Component {
   }
 
   handleOk = () => {
-    this.setState({
-      confirmLoading: true,
+    this.props.form.validateFields((err, values) => {
+      if(!err) {
+        this.setState({
+          confirmLoading: true,
+        });
+
+        this.saveJobDetails();
+
+        setTimeout(() => {
+          this.setState({
+            visible: false,
+            confirmLoading: false,
+          });
+          this.props.onClose();
+          this.props.onRefresh();
+        }, 2000);
+      }
     });
-
-    this.saveJobDetails();
-
-    setTimeout(() => {
-      this.setState({
-        visible: false,
-        confirmLoading: false,
-      });
-      this.props.onClose();
-      this.props.onRefresh();
-    }, 2000);
   }
 
   saveJobDetails() {
@@ -267,6 +271,7 @@ class JobDetails extends Component {
   }
 
   render() {
+    const {getFieldDecorator} = this.props.form;
     const { visible, confirmLoading, jobTypes, paramName, paramType, inputFileName, inputFileDesc, outputFileName, outputFileDesc, sourceFiles} = this.state;
     const formItemLayout = {
       labelCol: {
@@ -334,8 +339,13 @@ class JobDetails extends Component {
 
            <Form layout="vertical">
             <Form.Item {...formItemLayout} label="Name">
-                <Input id="job_name" name="name" onChange={this.onChange} value={name} defaultValue={name} placeholder="Name" />
-            </Form.Item>
+              {getFieldDecorator('query_title', {
+                rules: [{ required: true, message: 'Please enter a name for the job!' }],
+              })(
+              <Input id="job_name" name="name" onChange={this.onChange} value={name} defaultValue={name} placeholder="Name" />
+              )}
+             </Form.Item>
+
             <Form.Item {...formItemLayout} label="Description">
                 <Input id="job_desc" name="description" onChange={this.onChange} value={description} defaultValue={description} placeholder="Description" />
             </Form.Item>
