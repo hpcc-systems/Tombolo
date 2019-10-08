@@ -3,6 +3,9 @@ import React, { Component } from "react";
 import { authHeader, handleError } from "../common/AuthHeader.js";
 import Plotly from 'plotly.js-basic-dist';
 import createPlotlyComponent from 'react-plotly.js/factory';
+import { AgGridReact } from 'ag-grid-react';
+import 'ag-grid-community/dist/styles/ag-grid.css';
+import 'ag-grid-community/dist/styles/ag-theme-balham.css';
 const Plot = createPlotlyComponent(Plotly);
 const TabPane = Tabs.TabPane;
 
@@ -173,82 +176,71 @@ class FileReport extends Component {
   //   });
   // }
 
-  onClickRow = (record) => {
-    this.fetchFileLayoutAndChartDetails(record);
+  onClickRow() {
+    var selectedRows = this.filesGridApi.getSelectedRows();
+    this.fetchFileLayoutAndChartDetails(selectedRows[0]);
     //this.fetchDataAndRenderTable(record);
   }
+
   setRowClassName = (record) => {
     return record.id === this.state.selectedFileId ? 'clickRowStyl' : '';
   }
 
+  onLicenseGridReady = (params) => {
+    this.licenseGridApi = params.api;
+    this.licenseGridApi.sizeColumnsToFit();
+  }
+
+  onFilesGridReady = (params) => {
+    this.filesGridApi = params.api;
+    this.filesGridApi.sizeColumnsToFit();
+  }
+
   render() {
     const indexColumns = [{
-      title: 'Title',
-      dataIndex: 'title',
-      width: '20%'
+      headerName: 'Title',
+      field: 'title'
     },
     {
-      width: '20%',
-      title: 'Name',
-      dataIndex: 'name'
+      headerName: 'Name',
+      field: 'name'
     },
     {
-      width: '20%',
-      title: 'Application',
-      dataIndex: 'application.title'
+      headerName: 'Application',
+      field: 'application.title'
     },
     {
-      width: '20%',
-      title: 'Description',
-      dataIndex: 'description'
+      headerName: 'Description',
+      field: 'description'
     },
     {
-        width: '10%',
-        title: 'Type',
-        dataIndex: 'fileType'
+      headerName: 'Type',
+      field: 'fileType'
     },
     {
-        width: '15%',
-        title: 'Qualified Path',
-        dataIndex: 'qualifiedPath'
+      headerName: 'Qualified Path',
+      field: 'qualifiedPath'
     }];
     let table = null;
-      table = <Table
-      className="rebortTable"
-      columns={indexColumns}
-      rowKey={record => record.id}
-      dataSource={this.state.fileList}
-      pagination={{ pageSize: 10 }}
-      scroll={{ x: 1000 }}
-      size="middle"
-      onRowClick={this.onClickRow}
-      rowClassName={this.setRowClassName}
-    />
+      table = <div className="ag-theme-balham" style={{height: '415px',width: '100%' }}>
+        <AgGridReact
+          columnDefs={indexColumns}
+          rowData={this.state.fileList}
+          onGridReady={this.onFilesGridReady}
+          rowSelection="single"
+          onSelectionChanged={this.onClickRow.bind(this)}
+          defaultColDef={{resizable: true, sortable: true}}>
+        </AgGridReact>
+      </div>
+
     const layoutColumns = [{
-      title: 'Name',
-      dataIndex: 'name',
-      width: '20%',
+      headerName: 'Name',
+      field: 'name'
     },
     {
-      title: 'Format',
-      dataIndex: 'format'
-    },
-    {
-      title: 'Data Type',
-      dataIndex: 'data_types'
+      headerName: 'Data Type',
+      field: 'data_types'
     }
-    // {
-    //   title: 'PCI',
-    //   dataIndex: 'isPCI'
-    // },
-    // {
-    //   title: 'PII',
-    //   dataIndex: 'isPII'
-    // },
-    // {
-    //   title: 'HIPAA',
-    //   dataIndex: 'isHIPAA'
-    // }
   ];
 
   const title="File ("+this.state.selectedFileTitle+") Layout"
@@ -262,7 +254,21 @@ class FileReport extends Component {
           <h6>{title}</h6>
           </div>
           <Spin spinning={this.state.initialDataLoading} size="large" >
-          <Table
+          <div
+                className="ag-theme-balham"
+                style={{
+                height: '415px',
+                width: '100%' }}
+              >
+            <AgGridReact
+              columnDefs={layoutColumns}
+              rowData={this.state.fileLayout}
+              onGridReady={this.onLicenseGridReady}
+              defaultColDef={{resizable: true, sortable: true}}>
+            </AgGridReact>
+          </div>
+
+          {/*<Table
                 className="rebortTable"
                 columns={layoutColumns}
                 rowKey={record => record.name}
@@ -270,7 +276,7 @@ class FileReport extends Component {
                 pagination={{ pageSize: 10 }}
                 size="middle"
                 style={{paddingTop:"80px"}}
-              />
+              />*/}
         </Spin>
           </Col>
           <Col span={6}>

@@ -68,6 +68,9 @@ class IndexDetails extends Component {
             nonKeyedColumns: data.basic.index_payloads
           }
         });
+        this.props.form.setFieldsValue({
+          title: data.basic.title
+        });
         return data;
       })
       .then(data => {
@@ -180,6 +183,9 @@ class IndexDetails extends Component {
           nonKeyedColumns: indexInfo.columns.nonKeyedColumns
         }
       })
+      this.props.form.setFieldsValue({
+        title: indexInfo.fileName
+      });
       return indexInfo;
     })
     .then(data => {
@@ -369,7 +375,7 @@ class IndexDetails extends Component {
               {getFieldDecorator('title', {
                 rules: [{ required: true, message: 'Please enter a title for the index!' }],
               })(
-              <Input id="file_title" name="title" onChange={this.onChange} defaultValue={title} value={title} placeholder="Title" />
+              <Input id="file_title" name="title" onChange={this.onChange} placeholder="Title" />
               )}
              </Form.Item>
 

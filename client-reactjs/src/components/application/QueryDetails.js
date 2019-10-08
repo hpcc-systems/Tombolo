@@ -67,6 +67,10 @@ class QueryDetails extends Component {
             output: data.query_fields.filter(field => field.field_type == 'output')
           }
         });
+        this.props.form.setFieldsValue({
+          query_title: data.title
+        });
+
         return data;
       })
       .then(data => {
@@ -184,6 +188,10 @@ class QueryDetails extends Component {
           output: queryInfo.response
         }
       })
+      this.props.form.setFieldsValue({
+        query_title: selectedSuggestion
+      });
+
       return queryInfo;
     })
     .then(data => {
@@ -368,7 +376,7 @@ class QueryDetails extends Component {
               {getFieldDecorator('query_title', {
                 rules: [{ required: true, message: 'Please enter a title for the query!' }],
               })(
-              <Input id="query_title" name="query_title" onChange={this.onChange} value={title} defaultValue={title} placeholder="Title" />
+              <Input id="query_title" name="query_title" onChange={this.onChange} placeholder="Title" />
               )}
              </Form.Item>
 

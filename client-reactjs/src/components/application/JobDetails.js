@@ -61,9 +61,9 @@ class JobDetails extends Component {
         data.jobfiles.forEach(function(doc, idx) {
           var fileObj = {};
           fileObj=doc;
-          fileObj.fileTitle=(doc.title)?doc.title:doc.name;
+          fileObj.fileTitle=(doc.title) ? doc.title : doc.name;
           jobfiles.push(fileObj);
-      });
+        });
         this.setState({
           ...this.state,
           job: {
@@ -80,6 +80,10 @@ class JobDetails extends Component {
             inputFiles: jobfiles.filter(field => field.file_type == 'input'),
             outputFiles: jobfiles.filter(field => field.file_type == 'output')
          }
+        });
+        console.log(data.name);
+        this.props.form.setFieldsValue({
+          name: data.name
         });
         return data;
       })
@@ -339,10 +343,10 @@ class JobDetails extends Component {
 
            <Form layout="vertical">
             <Form.Item {...formItemLayout} label="Name">
-              {getFieldDecorator('query_title', {
+              {getFieldDecorator('name', {
                 rules: [{ required: true, message: 'Please enter a name for the job!' }],
               })(
-              <Input id="job_name" name="name" onChange={this.onChange} value={name} defaultValue={name} placeholder="Name" />
+              <Input id="job_name" name="name" onChange={this.onChange} placeholder="Name" />
               )}
              </Form.Item>
 
