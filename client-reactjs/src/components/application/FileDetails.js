@@ -150,6 +150,10 @@ class FileDetails extends Component {
             validations: data.file_validations
           }
         });
+        this.props.form.setFieldsValue({
+          name: data.basic.name,
+          title: data.basic.title
+        });
         return data;
       })
       .then(data => {
@@ -349,13 +353,14 @@ class FileDetails extends Component {
 
     })
     .then(fileInfo => {
+      console.log(fileInfo.fileName);
       this.setState({
         ...this.state,
         sourceFiles: [],
         file: {
           ...this.state.file,
           id: fileInfo.name,
-          title: fileInfo.fileName,
+          title: fileInfo.name,
           name: fileInfo.name,
           clusterId: this.state.selectedCluster,
           description: fileInfo.description,
@@ -368,6 +373,10 @@ class FileDetails extends Component {
           validations: fileInfo.validations
         }
       })
+      this.props.form.setFieldsValue({
+        name: fileInfo.name,
+        title: fileInfo.name
+      });
       return fileInfo;
     })
     .then(data => {
@@ -857,7 +866,7 @@ class FileDetails extends Component {
     const fileDataColumns = () => {
       const columns = [];
       this.state.fileDataColHeaders.forEach(function(column) {
-        columns.push({"title":column, "dataIndex": column});
+        columns.push({"headerName":column, "field": column});
       });
       return columns;
     }
@@ -957,16 +966,16 @@ class FileDetails extends Component {
               {getFieldDecorator('title', {
                 rules: [{ required: true, message: 'Please enter a file!' }],
               })(
-              <Input id="file_title" name="title" onChange={this.onChange} defaultValue={title} value={title} placeholder="Title" />              )}
+              <Input id="file_title" name="title" onChange={this.onChange} placeholder="Title" />              )}
             </Form.Item>
             <Form.Item {...formItemLayout} label="Name">
               {getFieldDecorator('name', {
                 rules: [{ required: true, message: 'Please select a file!' }],
               })(
-              <Input id="file_name" name="name" onChange={this.onChange} defaultValue={name} value={name} placeholder="Name" />              )}
+              <Input id="file_name" name="name" onChange={this.onChange} placeholder="Name" disabled />              )}
              </Form.Item>
             <Form.Item {...formItemLayout} label="Description">
-                <Input id="file_desc" name="description" onChange={this.onChange} defaultValue={description} value={description} placeholder="Description" />
+                <Input id="file_desc" name="description" onChange={this.onChange} placeholder="Description" />
             </Form.Item>
             <Row type="flex">
               <Col span={12} order={1}>
@@ -1067,29 +1076,21 @@ class FileDetails extends Component {
                   singleClickEdit={true}>
                 </AgGridReact>
               </div>
-            {/*<div>
-                <ReactTable
-                  data={validations}
-                  defaultSorted={[
-                    {
-                      id: "name",
-                      desc: false
-                    }
-                  ]}
-                  columns={validationTableColumns}
-                  className="-striped -highlight"
-                  defaultPageSize={10}
-                  style={{height:"500px"}}
-                />
-              </div>*/}
           </TabPane>
           <TabPane tab="File Preview" key="6">
-            <div>
-                <Table
-                  columns={fileDataColumns()}
-                  dataSource={fileDataContent}
-                  pagination={{ pageSize: 10 }} scroll={{ y: 380 }}
-                />
+            <div
+                className="ag-theme-balham"
+                style={{
+                height: '415px',
+                width: '100%' }}>
+                {<AgGridReact
+                  columnDefs={fileDataColumns()}
+                  rowData={fileDataContent}
+                  onGridReady={this.onLayoutGridReady}
+                  defaultColDef={{resizable: true}}
+                  >
+                </AgGridReact>}
+                {}
               </div>
           </TabPane>
           {showFileProfile ?
