@@ -22,7 +22,8 @@ class Users extends Component {
         username: '',
         password: '',
         role:''
-  	}
+  	},
+    submitted: false
   }
 
   componentDidMount() {
@@ -124,6 +125,8 @@ class Users extends Component {
 
   handleAdd = (event) => {
   	this.setState({
+      confirmLoading: false,
+      submitted: false,
       newUser : {
         ...this.state.newUser,
         firstName: '',
@@ -142,7 +145,7 @@ class Users extends Component {
   }
 
   onChange = (e) => {
-    this.setState({...this.state, newUser: {...this.state.newUser, [e.target.name]: e.target.value }});
+    this.setState({...this.state,confirmLoading:false, newUser: {...this.state.newUser, [e.target.name]: e.target.value }});
   }
 
   handleRoleChange = (value) => {
@@ -152,8 +155,9 @@ class Users extends Component {
   handleAddUserOk = () => {
     this.setState({
       confirmLoading: true,
+      submitted: true
     });
-
+    if(this.state.newUser.firstName && this.state.newUser.username && this.state.newUser.password ){
   	let data = JSON.stringify(
       {
         "firstName": this.state.newUser.firstName,
@@ -179,12 +183,14 @@ class Users extends Component {
   	  	this.setState({
   	  		confirmLoading: false,
           showAddUsers: false,
-          isUserUpdated: false
+          isUserUpdated: false,
+          submitted:false
   	    });
   	    this.getUsers();
       }).catch(error => {
         console.log(error);
       });
+    }
     }
 
   render() {
@@ -266,18 +272,33 @@ class Users extends Component {
 	          confirmLoading={confirmLoading}
 	        >
 		        <Form layout="vertical">
+              <div className={'form-group' + (this.state.submitted && !this.state.newUser.firstName ? ' has-error' : '')}>
 		            <Form.Item {...formItemLayout} label="First Name">
-						<Input id="firstName" name="firstName" onChange={this.onChange} placeholder="First Name" value={this.state.newUser.firstName}/>
+						    <Input id="firstName" name="firstName" onChange={this.onChange} placeholder="First Name" value={this.state.newUser.firstName}/>
+                {this.state.submitted && !this.state.newUser.firstName &&
+                        <div className="help-block">First Name is required</div>
+                }
 		            </Form.Item>
+                </div>
 		            <Form.Item {...formItemLayout} label="Last Name">
 						<Input id="lastName" name="lastName" onChange={this.onChange} placeholder="Last Name" value={this.state.newUser.lastName}/>
 		            </Form.Item>
-		            <Form.Item {...formItemLayout} label="User Name">
+                <div className={'form-group' + (this.state.submitted && !this.state.newUser.username ? ' has-error' : '')}>
+		            <Form.Item {...formItemLayout} label="User Name">                
 						<Input id="username" name="username" onChange={this.onChange} placeholder="User Name" value={this.state.newUser.username}/>
+                {this.state.submitted && !this.state.newUser.username &&
+                        <div className="help-block">User Name is required</div>
+                }
 		            </Form.Item>
+                </div>
+                <div className={'form-group' + (this.state.submitted && !this.state.newUser.password ? ' has-error' : '')}>
 		            <Form.Item {...formItemLayout} label="Password">
-						      <Input.Password id="password" name="password" onChange={this.onChange} placeholder="Password"/>
+						      <Input.Password id="password" name="password" onChange={this.onChange} value={this.state.newUser.password} placeholder="Password"/>
+                  {this.state.submitted && !this.state.newUser.password &&
+                        <div className="help-block">Password is required</div>
+                }
 		            </Form.Item>
+                </div>
 		            <Form.Item {...formItemLayout} label="Role">
                 <Select name="role" id="role" style={{ width: 200 }} onSelect={this.handleRoleChange} value={this.state.newUser.role}>
                 <Option value=""></Option>

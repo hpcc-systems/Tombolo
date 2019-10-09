@@ -30,7 +30,8 @@ class Consumers extends Component {
     adGroupSearchResults: [],
     openShareAppDialog:false,
     appId:"",
-    appTitle:""
+    appTitle:"",
+    submitted: false
   }
 
   componentDidMount() {
@@ -156,7 +157,9 @@ class Consumers extends Component {
           ad_group: ''
         },
         showAddConsumer: false,
-        showAdGroupField: false
+        showAdGroupField: false,
+        confirmLoading: false,
+        submitted:false
     });
   }
 
@@ -194,13 +197,15 @@ class Consumers extends Component {
   }
 
   onChange = (e) => {
-    this.setState({...this.state, newConsumer: {...this.state.newConsumer, [e.target.name]: e.target.value }});
+    this.setState({...this.state,confirmLoading:false, newConsumer: {...this.state.newConsumer, [e.target.name]: e.target.value }});
   }
 
   handleAddConsumerOk = () => {
     this.setState({
-      confirmLoading: true
+      confirmLoading: true,
+      submitted: true
     });
+    if(this.state.newConsumer.name){
     var userId=(this.props.user) ? this.props.user.id:"" ;
 
     let data = JSON.stringify({"name" : this.state.newConsumer.name, "type" : this.state.newConsumer.type, "contact_name":this.state.newConsumer.contact_name, "contact_email":this.state.newConsumer.contact_email, "ad_group":this.state.newConsumer.ad_group});
@@ -229,12 +234,14 @@ class Consumers extends Component {
         },
         showAddConsumer: false,
         confirmLoading: false,
-        isEditing: false
+        isEditing: false,
+        submitted:false
       });
 	    this.getConsumers();
     }).catch(error => {
       console.log(error);
     });
+  }
   }
 
   handleClose = () => {
@@ -339,9 +346,14 @@ class Consumers extends Component {
 	          confirmLoading={confirmLoading}
 	        >
 		        <Form layout="vertical">
-		          <Form.Item {...formItemLayout} label="Name">
+            <div className={'form-group' + (this.state.submitted && !this.state.newConsumer.name ? ' has-error' : '')}>
+		          <Form.Item {...formItemLayout} label="Name">              
     						<Input id="consumer_title" name="name" onChange={this.onChange} placeholder="Name" value={this.state.newConsumer.name} disabled={isNameDisabled}/>
+                {this.state.submitted && !this.state.newConsumer.name &&
+                        <div className="help-block">Consumer Name is required</div>
+                }
   	          </Form.Item>
+              </div>
               <Form.Item {...formItemLayout} label="Type">
                 <Select name="type" id="consumer_type" onSelect={this.handleTypeChange} value={this.state.newConsumer.type}>
                   <Option value=""></Option>

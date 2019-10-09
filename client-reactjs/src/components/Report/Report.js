@@ -24,7 +24,7 @@ class Report extends Component {
     initialDataLoading:false
   }
   componentDidMount(){
-    this.fetchData((this.props.match.params.searchText).replace("searchText=",''));
+    this.fetchData((this.props.match.params.searchText));
   }
   componentWillReceiveProps(props) {   
     if(this.state.searchText!=props.match.params.searchText)
@@ -33,7 +33,7 @@ class Report extends Component {
          searchText:props.match.params.searchText,
          refresh:true
        });
-       this.fetchData((props.match.params.searchText).replace("searchText=",''));
+       this.fetchData((props.match.params.searchText));
     }
     else  
     this.setState({

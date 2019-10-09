@@ -22,7 +22,8 @@ class Applications extends Component {
   },
   openShareAppDialog:false,
   appId:"",
-  appTitle:""
+  appTitle:"",
+  submitted: false
   }
 
   componentDidMount() {
@@ -138,6 +139,8 @@ class Applications extends Component {
   handleAddAppCancel= (event) => {
   	this.setState({
       ...this.state,
+        confirmLoading: false,
+        submitted: false,
         newApp: {
           ...this.state.newApp,
           id : '',
@@ -149,13 +152,15 @@ class Applications extends Component {
   }
 
   onChange = (e) => {
-    this.setState({...this.state, newApp: {...this.state.newApp, [e.target.name]: e.target.value }});
+    this.setState({...this.state,confirmLoading:false, newApp: {...this.state.newApp, [e.target.name]: e.target.value }});
   }
 
   handleAddAppOk = () => {
     this.setState({
-      confirmLoading: true
+      confirmLoading: true,
+      submitted: true
     });
+    if(this.state.newApp.title){
     var userId=(this.props.user)?this.props.user.id:"";
     let data = JSON.stringify({"id": this.state.newApp.id, "title" : this.state.newApp.title, "description" : this.state.newApp.description, "user_id":userId});
 	  fetch("/api/app/read/newapp", {
@@ -178,12 +183,14 @@ class Applications extends Component {
           description:''
         },
         showAddApp: false,
-        confirmLoading: false
+        confirmLoading: false,
+        submitted:false
       });
 	    this.getApplications();
     }).catch(error => {
       console.log(error);
     });
+  }
   }
 
   handleClose = () => {
@@ -258,10 +265,15 @@ class Applications extends Component {
 		        <Form layout="vertical">
 		            {/*<Form.Item {...formItemLayout} label="ID">
 						<Input id="app_id" name="id" onChange={this.onChange} placeholder="ID" value={this.state.newApp.id}/>
-		            </Form.Item>*/}
+                </Form.Item>*/}
+                <div className={'form-group' + (this.state.submitted && !this.state.newApp.title ? ' has-error' : '')}>
 		            <Form.Item {...formItemLayout} label="Title">
-						<Input id="app_title" name="title" onChange={this.onChange} placeholder="Title" value={this.state.newApp.title}/>
-		            </Form.Item>
+						    <Input id="app_title" name="title" onChange={this.onChange} placeholder="Title" value={this.state.newApp.title}/>
+		            {this.state.submitted && !this.state.newApp.title &&
+                        <div className="help-block">Application Title is required</div>
+                }
+                </Form.Item>
+                </div>
                 <Form.Item {...formItemLayout} label="Description">
             <Input id="app_description" name="description" onChange={this.onChange} placeholder="Description" value={this.state.newApp.description}/>
                 </Form.Item>
