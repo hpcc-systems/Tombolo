@@ -16,12 +16,14 @@ class AppHeader extends Component {
         this.handleChange = this.handleChange.bind(this);
         this.handleTopNavClick = this.handleTopNavClick.bind(this);
         this.search = this.search.bind(this);
+        this.onChangeSearch = this.onChangeSearch.bind(this);
     }
 
     state = {
         applications: [],
         selected:'Select an Application',
-        pathName:'' 
+        pathName:'',
+        searchText:''
     }    
     componentWillReceiveProps(props) {
       if(props.application && props.application.applicationTitle!=''){
@@ -29,7 +31,15 @@ class AppHeader extends Component {
         $('[data-toggle="popover"]').popover('disable'); 
       } 
     }
-    componentDidUpdate(prevProps, prevState) {
+    componentDidMount(){
+      if(this.props.location.pathname.includes('report/')){
+        const pathSnippets = this.props.location.pathname.split('/');
+        this.setState({
+          searchText: pathSnippets[2]
+      });
+      }
+    }
+    componentDidUpdate(prevProps, prevState) {      
       if(this.state.applications.length == 0) {
         var url="/api/app/read/app_list";
         if(this.props.user && this.props.user.role=='user')
@@ -90,7 +100,11 @@ class AppHeader extends Component {
         $('[data-toggle="popover"]').popover('disable');
     }
     search(value){
-      this.props.history.push('/report/searchText='+value);
+      this.props.history.push('/report/'+value);
+    }
+    
+    onChangeSearch=(e)=> {
+      this.setState({searchText: e.target.value });
     }
   render() {
     const hasAdminRole = (this.props.user && this.props.user.role == 'admin');
@@ -125,8 +139,11 @@ class AppHeader extends Component {
             <ul className="ml-md-auto navbar-nav">
             <li className="nav-item">
               <Search
+                value={this.state.searchText}
+                name="searchText"
                 placeholder="Search"
                 onSearch={this.search}
+                onChange={this.onChangeSearch}
                 style={{ width: 200 }} />
               </li>
               {/*

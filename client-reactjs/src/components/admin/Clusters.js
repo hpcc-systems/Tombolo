@@ -157,7 +157,7 @@ class Clusters extends Component {
   }
 
   onChange = (e) => {
-    this.setState({...this.state, newCluster: {...this.state.newCluster, [e.target.name]: e.target.value }});
+    this.setState({...this.state,confirmLoading:false, newCluster: {...this.state.newCluster, [e.target.name]: e.target.value }});
   }
 
   handleAddClusterOk = () => {

@@ -207,7 +207,7 @@ class FileReport extends Component {
     },
     {
       headerName: 'Application',
-      field: 'application.title'
+      field: 'application.title'      
     },
     {
       headerName: 'Description',
@@ -229,7 +229,9 @@ class FileReport extends Component {
           onGridReady={this.onFilesGridReady}
           rowSelection="single"
           onSelectionChanged={this.onClickRow.bind(this)}
-          defaultColDef={{resizable: true, sortable: true}}>
+          defaultColDef={{resizable: true, sortable: true}}
+          suppressFieldDotNotation={true} >
+
         </AgGridReact>
       </div>
 
