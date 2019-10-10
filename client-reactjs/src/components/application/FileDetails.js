@@ -72,6 +72,9 @@ class FileDetails extends Component {
     this.setState({
       ...this.state,
       sourceFiles: [],
+      complianceTags:[],
+      fileDataContent:[],
+      fileDataColHeaders:[],
       file: {
         ...this.state.file,
         id: '',
@@ -360,7 +363,7 @@ class FileDetails extends Component {
         file: {
           ...this.state.file,
           id: fileInfo.name,
-          title: fileInfo.name,
+          title: fileInfo.name.substring(fileInfo.name.lastIndexOf("::") + 2),
           name: fileInfo.name,
           clusterId: this.state.selectedCluster,
           description: fileInfo.description,
@@ -375,7 +378,7 @@ class FileDetails extends Component {
       })
       this.props.form.setFieldsValue({
         name: fileInfo.name,
-        title: fileInfo.name
+        title: fileInfo.name.substring(fileInfo.name.lastIndexOf("::") + 2)
       });
       return fileInfo;
     })
@@ -392,7 +395,8 @@ class FileDetails extends Component {
       //this.getFileProfile(selectedSuggestion);
     })
     .catch(error => {
-      console.log(JSON.stringify(error));
+      console.log(error);
+      message.config({top:150})
       message.error("There was an error getting file information from the cluster. Please try again")
     });
   }
