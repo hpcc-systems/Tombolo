@@ -1,6 +1,10 @@
 import { Table,Row, Col,Spin} from 'antd/lib';
 import React, { Component } from "react";
 import { authHeader, handleError } from "../common/AuthHeader.js"
+import { AgGridReact } from 'ag-grid-react';
+import 'ag-grid-community/dist/styles/ag-grid.css';
+import 'ag-grid-community/dist/styles/ag-theme-balham.css';
+
 
 class JobReport extends Component {
   constructor(props) {
@@ -74,93 +78,99 @@ class JobReport extends Component {
         console.log(error);
       });
   }
-  onClickRow = (record) => {
-    this.getJobDetails(record);
-  }
+  // onClickRow = (record) => {
+  //   this.getJobDetails(record);
+  // }
   setRowClassName = (record) => {
     return record.id === this.state.selectedJobId ? 'clickRowStyl' : '';
   }
+  onJobsGridReady = (params) => {
+    this.jobGridApi = params.api;
+    this.jobGridApi.sizeColumnsToFit();
+  }
+  onJobParamGridReady = (params) => {
+    this.indexkeyGridApi = params.api;
+    this.indexkeyGridApi.sizeColumnsToFit();
+  }
+  onClickRow() {
+    var selectedRows = this.jobGridApi.getSelectedRows();
+    this.getJobDetails(selectedRows[0]);
+  }
   render() {
     const jobColumns = [{
-      title: 'Title',
-      dataIndex: 'name',
-      width: '20%'
+      headerName: 'Title',
+      field: 'name'
     },
     {
-      width: '20%',
-      title: 'Application',
-      dataIndex: 'application.title'
+      headerName: 'Application',
+      field: 'application.title'
     },
     {
-        width: '20%',
-        title: 'author',
-        dataIndex: 'author'
+      headerName: 'author',
+      field: 'author'
       },
       {
-        width: '20%',
-        title: 'Description',
-        dataIndex: 'description'
+        headerName: 'Description',
+        field: 'description'
       },
     {
-        width: '20%',
-        title: 'EntryBWR',
-        dataIndex: 'entryBWR'
+      headerName: 'EntryBWR',
+      field: 'entryBWR'
       },
     {
-      width: '20%',
-      title: 'gitRepo',
-      dataIndex: 'gitRepo'
+      headerName: 'gitRepo',
+      field: 'gitRepo'
     },
     {
-        width: '10%',
-        title: 'Type',
-        dataIndex: 'jobType'
+      headerName: 'Type',
+      field: 'jobType'
     }];
 
-
     let table = null;
-      table = <Table
-      className="rebortTable"
-      columns={jobColumns}
-      rowKey={record => record.id}
-      dataSource={this.state.jobList}
-      pagination={{ pageSize: 10 }}
-      scroll={{ x: 1000 }}
-      size="middle"
-      onRowClick={this.onClickRow}
-      rowClassName={this.setRowClassName}
-    />
+    table = <div className="ag-theme-balham" style={{height: '415px',width: '100%' }}>
+      <AgGridReact
+        columnDefs={jobColumns}
+        rowData={this.state.jobList}
+        onGridReady={this.onJobsGridReady}
+        rowSelection="single"
+        onSelectionChanged={this.onClickRow.bind(this)}
+        defaultColDef={{resizable: true, sortable: true}}
+        suppressFieldDotNotation={true} >
+
+      </AgGridReact>
+    </div>
+    
     const jobParamColumn = [
     {
-      width: '20%',
-      title: 'Name',
-      dataIndex: 'name'
+      headerName: 'Name',
+      field: 'name'
     },
     {
-        width: '20%',
-        title: 'Type',
-        dataIndex: 'type'
+      headerName: 'Type',
+      field: 'type'
       }];
       let jobParamTable = null;
-      jobParamTable = <Table
-      className="rebortTable"
-      columns={jobParamColumn}
-      rowKey={record => record.id}
-      dataSource={this.state.jobFields}
-      pagination={{ pageSize: 10 }}
-      size="middle"
-    />
+      jobParamTable = <div className="ag-theme-balham" style={{height: '415px',width: '100%' }}>
+      <AgGridReact
+        columnDefs={jobParamColumn}
+        rowData={this.state.jobFields}
+        onGridReady={this.onJobParamGridReady}
+        defaultColDef={{resizable: true, sortable: true}}
+        suppressFieldDotNotation={true} >
+
+      </AgGridReact>
+    </div>
+      
     const title="Job ("+this.state.selectedJobTitle+") - Fields"
     return (
       <div style={{"paddingLeft":"5px"}}>
         {table}
 
         {this.state.openJobDetails ?
-        <div><h6>{title}</h6>
-         <Spin spinning={this.state.initialDataLoading} size="large" >
-          {jobParamTable}
-          </Spin>
-         </div>:null}
+        <Spin spinning={this.state.initialDataLoading} size="large" >
+        <div><h6></h6><h6>{title}</h6>              
+          {jobParamTable}  
+         </div></Spin>:null}
       </div>
     )
   }

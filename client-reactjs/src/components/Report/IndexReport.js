@@ -1,6 +1,9 @@
 import { Table,Row, Col,Spin} from 'antd/lib';
 import React, { Component } from "react";
 import { authHeader, handleError } from "../common/AuthHeader.js"
+import { AgGridReact } from 'ag-grid-react';
+import 'ag-grid-community/dist/styles/ag-grid.css';
+import 'ag-grid-community/dist/styles/ag-theme-balham.css';
 
 class IndexReport extends Component {
   constructor(props) {
@@ -72,100 +75,111 @@ class IndexReport extends Component {
         console.log(error);
       });
   }
-  onClickRow = (record) => {
-    this.getIndexDetails(record);
-  }
+  // onClickRow = (record) => {
+  //   this.getIndexDetails(record);
+  // }
   setRowClassName = (record) => {
     return record.id === this.state.selectedIndexId ? 'clickRowStyl' : '';
   }
+  onFilesGridReady = (params) => {
+    this.indexGridApi = params.api;
+    this.indexGridApi.sizeColumnsToFit();
+  }
+  onIndexKeyGridReady = (params) => {
+    this.indexkeyGridApi = params.api;
+    this.indexkeyGridApi.sizeColumnsToFit();
+  }
+  onIndexPayloadGridReady = (params) => {
+    this.indexPayloadGridApi = params.api;
+    this.indexPayloadGridApi.sizeColumnsToFit();
+  }
+  onClickRow() {
+    var selectedRows = this.indexGridApi.getSelectedRows();
+    this.getIndexDetails(selectedRows[0]);
+  }
   render() {
     const indexColumns = [{
-      title: 'Title',
-      dataIndex: 'title',
-      width: '20%'
+      headerName: 'Title',
+      field: 'title'
     },
     {
-      width: '20%',
-      title: 'Application',
-      dataIndex: 'application.title'
+      headerName: 'Application',
+      field: 'application.title'
     },
     {
-        width: '20%',
-        title: 'Backup Service',
-        dataIndex: 'backupService'
+      headerName: 'Backup Service',
+      field: 'backupService'
       },
     {
-      width: '20%',
-      title: 'Primary Service',
-      dataIndex: 'primaryService'
+      headerName: 'Primary Service',
+      field: 'primaryService'
     },
     {
-        width: '10%',
-        title: 'Qualified Path',
-        dataIndex: 'qualifiedPath'
+      headerName: 'Qualified Path',
+      field: 'qualifiedPath'
     }];
 
-
     let table = null;
-      table = <Table
-      className="rebortTable"
-      columns={indexColumns}
-      rowKey={record => record.id}
-      dataSource={this.state.indexList}
-      pagination={{ pageSize: 10 }}
-      scroll={{ x: 1000 }}
-      size="middle"
-      onRowClick={this.onClickRow}
-      rowClassName={this.setRowClassName}
-    />
+      table = <div className="ag-theme-balham" style={{height: '415px',width: '100%' }}>
+        <AgGridReact
+          columnDefs={indexColumns}
+          rowData={this.state.indexList}
+          onGridReady={this.onFilesGridReady}
+          rowSelection="single"
+          onSelectionChanged={this.onClickRow.bind(this)}
+          defaultColDef={{resizable: true, sortable: true}}
+          suppressFieldDotNotation={true} >
+
+        </AgGridReact>
+      </div>
+    
     const indexKeyColumn = [{
-      title: 'Name',
-      dataIndex: 'ColumnLabel',
-      width: '20%'
+      headerName: 'Name',
+      field: 'ColumnLabel'
     },
     {
-      width: '20%',
-      title: 'Type',
-      dataIndex: 'ColumnType'
+      headerName: 'Type',
+      field: 'ColumnType'
     },
     {
-        width: '20%',
-        title: 'Ecl Type',
-        dataIndex: 'ColumnEclType'
+      headerName: 'Ecl Type',
+      field: 'ColumnEclType'
       }];
       let keyTable = null;
-      keyTable = <Table
-      className="rebortTable"
-      columns={indexKeyColumn}
-      rowKey={record => record.id}
-      dataSource={this.state.indexKey}
-      pagination={{ pageSize: 10 }}
-      size="middle"
-    />
+      keyTable = <div className="ag-theme-balham" style={{height: '300px',width: '100%' }}>
+        <AgGridReact
+          columnDefs={indexKeyColumn}
+          rowData={this.state.indexKey}
+          onGridReady={this.onIndexKeyGridReady}
+          defaultColDef={{resizable: true, sortable: true}}
+          suppressFieldDotNotation={true} >
+
+        </AgGridReact>
+      </div>
     const indexPayloadColumn = [{
-      title: 'Name',
-      dataIndex: 'ColumnLabel',
-      width: '20%'
+      headerName: 'Name',
+      field: 'ColumnLabel'
     },
     {
-      width: '20%',
-      title: 'Type',
-      dataIndex: 'ColumnType'
+      headerName: 'Type',
+      field: 'ColumnType'
     },
     {
-        width: '20%',
-        title: 'Ecl Type',
-        dataIndex: 'ColumnEclType'
-      }];
-      let payloadTable = null;
-      payloadTable = <Table
-      className="rebortTable"
-      columns={indexPayloadColumn}
-      rowKey={record => record.id}
-      dataSource={this.state.indexPayload}
-      pagination={{ pageSize: 10 }}
-      size="middle"
-    />
+      headerName: 'Ecl Type',
+      field: 'ColumnEclType'
+    }];
+    let payloadTable = null;
+    payloadTable = <div className="ag-theme-balham" style={{height: '300px',width: '100%' }}>
+        <AgGridReact
+          columnDefs={indexPayloadColumn}
+          rowData={this.state.indexPayload}
+          onGridReady={this.onIndexPayloadGridReady}
+          defaultColDef={{resizable: true, sortable: true}}
+          suppressFieldDotNotation={true} >
+
+        </AgGridReact>
+      </div>
+
     const title="Index ("+this.state.selectedIndexTitle+")"
     return (
       <div style={{"paddingLeft":"5px"}}>
@@ -181,7 +195,7 @@ class IndexReport extends Component {
           <h6>Key</h6>
           {keyTable}
           </Col>
-          <Col span={12}>
+          <Col span={11}>
           <h6>Payload</h6>
           {payloadTable}
           </Col>

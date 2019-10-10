@@ -1,6 +1,10 @@
 import { Table,Row, Col,Spin} from 'antd/lib';
 import React, { Component } from "react";
 import { authHeader, handleError } from "../common/AuthHeader.js"
+import { AgGridReact } from 'ag-grid-react';
+import 'ag-grid-community/dist/styles/ag-grid.css';
+import 'ag-grid-community/dist/styles/ag-theme-balham.css';
+
 
 class QueryReport extends Component {
   constructor(props) {
@@ -77,94 +81,103 @@ class QueryReport extends Component {
         console.log(error);
       });
   }
-  onClickRow = (record) => {
-    this.getQueryDetails(record);
+  // onClickRow = (record) => {
+  //   this.getQueryDetails(record);
+  // }
+  onQueryGridReady = (params) => {
+    this.queryGridApi = params.api;
+    this.queryGridApi.sizeColumnsToFit();
+  }
+  onQueryFieldGridReady = (params) => {
+    this.queryFieldGridApi = params.api;
+    this.queryFieldGridApi.sizeColumnsToFit();
+  }
+  onClickRow() {
+    var selectedRows = this.queryGridApi.getSelectedRows();
+    this.getQueryDetails(selectedRows[0]);
   }
   setRowClassName = (record) => {
     return record.id === this.state.selectedQueryId ? 'clickRowStyl' : '';
   }
   render() {
     const queryColumns = [{
-      title: 'Title',
-      dataIndex: 'title',
-      width: '20%'
+      headerName: 'Title',
+      field: 'title'      
     },
     {
-      width: '20%',
-      title: 'Application',
-      dataIndex: 'application.title'
+      headerName: 'Application',
+      field: 'application.title'      
     },
     {
-        width: '20%',
-        title: 'description',
-        dataIndex: 'description'
-      },
-      {
-        width: '20%',
-        title: 'gitRepo',
-        dataIndex: 'gitRepo'
-      },
-    {
-        width: '20%',
-        title: 'Backup Service',
-        dataIndex: 'backupService'
-      },
-    {
-      width: '20%',
-      title: 'Primary Service',
-      dataIndex: 'primaryService'
+      headerName: 'Description',
+      field: 'description'
     },
     {
-        width: '10%',
-        title: 'Type',
-        dataIndex: 'type'
+        headerName: 'gitRepo',
+      field: 'gitRepo'
+    },
+    {
+      headerName: 'Backup Service',
+      field: 'backupService'
+    },
+    {
+      headerName: 'Primary Service',
+      field: 'primaryService'
+    },
+    {
+      headerName: 'Type',
+      field: 'type'
+    }];
+    let table = null;
+    table = <div className="ag-theme-balham" style={{height: '415px',width: '100%' }}>
+      <AgGridReact
+        columnDefs={queryColumns}
+        rowData={this.state.queryList}
+        onGridReady={this.onQueryGridReady}
+        rowSelection="single"
+        onSelectionChanged={this.onClickRow.bind(this)}
+        defaultColDef={{resizable: true, sortable: true}}
+        suppressFieldDotNotation={true} >
+
+      </AgGridReact>
+    </div>
+
+    const queryFieldsColumn = [{
+      headerName: 'Field Type',
+      field: 'field_type'
+    },
+    {
+      headerName: 'Name',
+      field: 'field'
+    },
+    {
+      headerName: 'Type',
+      field: 'type'
     }];
 
+    let queryFieldTable = null;
+    queryFieldTable = <div className="ag-theme-balham" style={{height: '415px',width: '100%' }}>
+      <AgGridReact
+        columnDefs={queryFieldsColumn}
+        rowData={this.state.queryFields}
+        onGridReady={this.onQueryFieldGridReady}
+        defaultColDef={{resizable: true, sortable: true}}
+        suppressFieldDotNotation={true} >
 
-    let table = null;
-      table = <Table
-      className="rebortTable"
-      columns={queryColumns}
-      rowKey={record => record.id}
-      dataSource={this.state.queryList}
-      pagination={{ pageSize: 10 }}
-      scroll={{ x: 1000 }}
-      size="middle"
-      onRowClick={this.onClickRow}
-      rowClassName={this.setRowClassName}
-    />
-    const queryFieldsColumn = [{
-      title: 'Field Type',
-      dataIndex: 'field_type',
-      width: '20%'
-    },
-    {
-      width: '20%',
-      title: 'Name',
-      dataIndex: 'field'
-    },
-    {
-        width: '20%',
-        title: 'Type',
-        dataIndex: 'type'
-      }];
-      let queryFieldTable = null;
-      queryFieldTable = <Table
-      className="rebortTable"
-      columns={queryFieldsColumn}
-      rowKey={record => record.id}
-      dataSource={this.state.queryFields}
-      pagination={{ pageSize: 10 }}
-      size="middle"
-    />
+      </AgGridReact>
+    </div>
+
+      
     const title="Query ("+this.state.selectedQueryTitle+") - Fields"
     return (
       <div style={{"paddingLeft":"5px"}}>
         {table}
 
         {this.state.openQueryDetails ?
-        <div><h6>{title}</h6>
+        <div>
         <Spin spinning={this.state.initialDataLoading} size="large" >
+       <h6></h6>
+       <h6>{title}</h6>
           {queryFieldTable}
           </Spin>
          </div>:null}
