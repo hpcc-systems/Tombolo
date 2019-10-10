@@ -253,6 +253,7 @@ class FileReport extends Component {
           <Row gutter={24}>
           <Col span={10}>
           <div >
+          <h6></h6>
           <h6>{title}</h6>
           </div>
           <Spin spinning={this.state.initialDataLoading} size="large" >
