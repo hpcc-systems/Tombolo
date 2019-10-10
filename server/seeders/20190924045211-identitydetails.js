@@ -50,7 +50,8 @@ module.exports = {
       name : 'Medical Record Number',
       createdAt : new Date(),
       updatedAt : new Date()
-    },{
+    },
+    {
       id: uuidv4(),
       name : 'License Number',
       createdAt : new Date(),
@@ -61,12 +62,14 @@ module.exports = {
       name : 'IP Addresses',
       createdAt : new Date(),
       updatedAt : new Date()
-    },{
+    },
+    {
       id: uuidv4(),
       name : 'Phone Number',
       createdAt : new Date(),
       updatedAt : new Date()
-    },{
+    },
+    {
       id: uuidv4(),
       name : 'Address',
       createdAt : new Date(),
@@ -81,6 +84,24 @@ module.exports = {
     {
       id: uuidv4(),
       name : 'Passport Number',
+      createdAt : new Date(),
+      updatedAt : new Date()
+    },
+    {
+      id: uuidv4(),
+      name : 'Login Details',
+      createdAt : new Date(),
+      updatedAt : new Date()
+    },
+    {
+      id: uuidv4(),
+      name : 'Email Address',
+      createdAt : new Date(),
+      updatedAt : new Date()
+    },
+    {
+      id: uuidv4(),
+      name : 'Other Unique Identifiers',
       createdAt : new Date(),
       updatedAt : new Date()
     }], {});

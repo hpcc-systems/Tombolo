@@ -1,7 +1,10 @@
 import React, { Component } from "react";
-import { Modal, Tabs, Form, Input, Icon,  Select, Table, AutoComplete, Spin } from 'antd/lib';
+import { Modal, Tabs, Form, Input, Icon,  Select, AutoComplete, Spin } from 'antd/lib';
 import "react-table/react-table.css";
 import { authHeader, handleError } from "../common/AuthHeader.js"
+import { AgGridReact } from 'ag-grid-react';
+import 'ag-grid-community/dist/styles/ag-grid.css';
+import 'ag-grid-community/dist/styles/ag-theme-balham.css';
 const TabPane = Tabs.TabPane;
 const Option = Select.Option;
 
@@ -291,6 +294,11 @@ class QueryDetails extends Component {
     });
   }
 
+  onQueriesTablesReady = (params) => {
+    let gridApi = params.api;
+    gridApi.sizeColumnsToFit();
+  }
+
   render() {
     const {getFieldDecorator} = this.props.form;
     const { visible, confirmLoading, sourceFiles, availableLicenses, selectedRowKeys, clusters, querySearchSuggestions } = this.state;
@@ -306,13 +314,12 @@ class QueryDetails extends Component {
     };
 
     const columns = [{
-      title: 'Name',
-      dataIndex: 'field',
-      width: '20%',
+      headerName: 'Name',
+      field: 'field'
     },
     {
-      title: 'Type',
-      dataIndex: 'type'
+      headerName: 'Type',
+      field: 'type'
     }];
 
 
@@ -399,20 +406,38 @@ class QueryDetails extends Component {
 
           </TabPane>
           <TabPane tab="Input Fields" key="2">
-            <Table
-                  columns={columns}
-                  rowKey={record => record.field}
-                  dataSource={input}
-                  pagination={{ pageSize: 10 }} scroll={{ y: 460 }}
-                />
+            <div
+                className="ag-theme-balham"
+                style={{
+                height: '415px',
+                width: '100%' }}
+              >
+                <AgGridReact
+                  onCellValueChanged={this.dataTypechange}
+                  columnDefs={columns}
+                  rowData={input}
+                  defaultColDef={{resizable: true, sortable: true}}
+                  onGridReady={this.onQueriesTablesReady}
+                  singleClickEdit={true}>
+                </AgGridReact>
+              </div>
             </TabPane>
           <TabPane tab="Output Fields" key="3">
-              <Table
-                columns={columns}
-                rowKey={record => record.field}
-                dataSource={output}
-                pagination={{ pageSize: 10 }} scroll={{ y: 460 }}
-              />
+            <div
+                className="ag-theme-balham"
+                style={{
+                height: '415px',
+                width: '100%' }}
+              >
+                <AgGridReact
+                  onCellValueChanged={this.dataTypechange}
+                  columnDefs={columns}
+                  rowData={output}
+                  defaultColDef={{resizable: true, sortable: true}}
+                  onGridReady={this.onQueriesTablesReady}
+                  singleClickEdit={true}>
+                </AgGridReact>
+              </div>
           </TabPane>
         </Tabs>
         </Modal>

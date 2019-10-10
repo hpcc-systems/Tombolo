@@ -2,6 +2,9 @@ import React, { Component } from "react";
 import { Modal, Tabs, Form, Input, Icon, Select, Table, AutoComplete } from 'antd/lib';
 import "react-table/react-table.css";
 import { authHeader, handleError } from "../common/AuthHeader.js"
+import { AgGridReact } from 'ag-grid-react';
+import 'ag-grid-community/dist/styles/ag-grid.css';
+import 'ag-grid-community/dist/styles/ag-theme-balham.css';
 
 const TabPane = Tabs.TabPane;
 const Option = Select.Option;
@@ -288,6 +291,12 @@ class IndexDetails extends Component {
     });
   }
 
+  onIndexTablesReady = (params) => {
+    let gridApi = params.api;
+    gridApi.sizeColumnsToFit();
+  }
+
+
   render() {
     const {
       getFieldDecorator, getFieldsError, getFieldError, isFieldTouched,
@@ -305,13 +314,12 @@ class IndexDetails extends Component {
     };
 
     const indexColumns = [{
-      title: 'Name',
-      dataIndex: 'ColumnLabel',
-      width: '20%',
+      headerName: 'Name',
+      field: 'ColumnLabel'
     },
     {
-      title: 'Type',
-      dataIndex: 'ColumnType'
+      headerName: 'Type',
+      field: 'ColumnType'
     }];
 
 
@@ -402,20 +410,39 @@ class IndexDetails extends Component {
               </div>
           </TabPane>
           <TabPane tab="Index" key="3">
-              <Table
-                columns={indexColumns}
-                rowKey={record => record.columnLabel}
-                dataSource={keyedColumns}
-                pagination={{ pageSize: 10 }} scroll={{ y: 460 }}
-              />
+              <div
+                className="ag-theme-balham"
+                style={{
+                height: '415px',
+                width: '100%' }}
+              >
+                <AgGridReact
+                  onCellValueChanged={this.dataTypechange}
+                  columnDefs={indexColumns}
+                  rowData={keyedColumns}
+                  defaultColDef={{resizable: true, sortable: true}}
+                  onGridReady={this.onIndexTablesReady}
+                  singleClickEdit={true}>
+                </AgGridReact>
+              </div>
           </TabPane>
           <TabPane tab="Payload" key="4">
-              <Table
-                columns={indexColumns}
-                rowKey={record => record.columnLabel}
-                dataSource={nonKeyedColumns}
-                pagination={{ pageSize: 10 }} scroll={{ y: 460 }}
-              />
+              <div
+                className="ag-theme-balham"
+                style={{
+                height: '415px',
+                width: '100%' }}
+              >
+                <AgGridReact
+                  onCellValueChanged={this.dataTypechange}
+                  columnDefs={indexColumns}
+                  rowData={nonKeyedColumns}
+                  defaultColDef={{resizable: true, sortable: true}}
+                  onGridReady={this.onIndexTablesReady}
+                  singleClickEdit={true}>
+                </AgGridReact>
+              </div>
+
           </TabPane>
         </Tabs>
         </Modal>

@@ -81,7 +81,6 @@ class JobDetails extends Component {
             outputFiles: jobfiles.filter(field => field.file_type == 'output')
          }
         });
-        console.log(data.name);
         this.props.form.setFieldsValue({
           name: data.name
         });

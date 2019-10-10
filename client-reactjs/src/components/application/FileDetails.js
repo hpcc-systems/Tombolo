@@ -774,7 +774,7 @@ class FileDetails extends Component {
       editable: true,
       cellEditor: "select",
       cellEditorParams: {
-        values: this.state.dataTypes
+        values: this.state.dataTypes.sort()
       }
     },
     {
@@ -865,14 +865,34 @@ class FileDetails extends Component {
 
     const fileDataColumns = () => {
       const columns = [];
+      var _self=this;
       this.state.fileDataColHeaders.forEach(function(column) {
-        columns.push({"headerName":column, "field": column});
+        let colObj;
+        //iterate through each Row[]
+        if(_self.state.fileDataContent[0][column]["Row"] != undefined) {
+          colObj = {"headerName":column};
+          let children=[];
+          Object.keys(_self.state.fileDataContent[0][column]["Row"][0]).forEach(function(key) {
+            children.push({"headerName":key, "valueGetter": "data." + column + ".Row[0]."+ key})
+          })
+          colObj.children = children;
+        } else if(_self.state.fileDataContent[0][column] instanceof Object) {
+          colObj = {"headerName":column};
+          let children=[];
+          Object.keys(_self.state.fileDataContent[0][column]).forEach(function(key) {
+            children.push({"headerName":key, "field": column + "."+ key})
+          })
+          colObj.children = children;
+        } else {
+          colObj = {"headerName":column, "field": column};
+        }
+        columns.push(colObj);
       });
+      console.log(JSON.stringify(columns));
       return columns;
     }
 
     const InheritedLicenses = (licenses) => {
-      console.log(licenses.relation);
       if(licenses.relation && licenses.relation.length > 0) {
         let uniqueLicenses=[];
         licenses.relation.forEach(function(item) {
