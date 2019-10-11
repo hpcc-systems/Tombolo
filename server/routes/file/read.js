@@ -455,7 +455,7 @@ router.get('/DependenciesCount', (req, res) => {
 router.get('/fileLayoutDataType', (req, res) => {
     console.log("[fileLayoutDataType/read.js] - get File Layout data types count for app_id = " +req.query.app_id);
     try {
-        var result = {};
+        var result = [];
         FileLayout.findAll({
             where:{"application_id":req.query.app_id,
             "data_types": {
@@ -470,7 +470,18 @@ router.get('/fileLayoutDataType', (req, res) => {
             ],
             group: ['data_types']
           }).then(function(fileLayout) {
-              res.json(fileLayout)
+            result=fileLayout;
+            FileLayout.findAll({
+                where:{"application_id":req.query.app_id,
+               [Op.or]:[{ "data_types": {[Op.eq]: null}},
+                          {"data_types": {[Op.eq]: ""}}]}                          
+              }).then(function(fileLayout) {
+                  var layout={};
+                  layout.data_types="others";
+                  layout.count=fileLayout.length;
+                  result.push(layout);
+                  res.json(result);
+              })
           })
         .catch(function(err) {
             console.log(err);
@@ -484,6 +495,18 @@ router.get('/getFileLayoutByDataType', (req, res) => {
     console.log("[fileLayoutDataType/read.js] - get File Layout for app_id = " +req.query.app_id +" and datatype ="+req.query.data_type);
     try {
         var result = {};
+        if(req.query.data_types=="others"){
+            FileLayout.findAll({
+                where:{"application_id":req.query.app_id,
+                [Op.or]:[{ "data_types": {[Op.eq]: null}},
+                          {"data_types": {[Op.eq]: ""}}]}, include: [File]
+              }).then(function(fileLayout) {
+                  res.json(fileLayout)
+              })
+            .catch(function(err) {
+                console.log(err);
+            });
+        }else{
         FileLayout.findAll({
             where:{"application_id":req.query.app_id,
             "data_types":req.query.data_types}, include: [File]
@@ -493,6 +516,7 @@ router.get('/getFileLayoutByDataType', (req, res) => {
         .catch(function(err) {
             console.log(err);
         });
+    }
     } catch (err) {
         console.log('err', err);
     }
