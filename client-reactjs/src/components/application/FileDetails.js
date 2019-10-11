@@ -41,6 +41,7 @@ class FileDetails extends Component {
     profileHTMLAssets:[],
     dataTypes:[],
     complianceTags:[],
+    complianceDetails:[],
     file: {
       id:"",
       title:"",
@@ -664,9 +665,29 @@ class FileDetails extends Component {
   }
   dataTypechange= (prop)=>{
     var _self=this;
+    if(prop.column.colId=="data_types" && (prop.oldValue)){
+      var compliance=[];
+      var complianceDetails=[];
+      compliance=_self.state.complianceTags;
+      complianceDetails=_self.state.complianceDetails;
+      var compToRemove = complianceDetails.filter((item) => item.id === prop.node.rowIndex);
+      complianceDetails = complianceDetails.filter((item) => item.id !== prop.node.rowIndex);
+      compToRemove.forEach((element)=>{
+          var obj = complianceDetails.filter((item) => item.compliance === element.compliance);
+          if(obj.length==0)
+            compliance = compliance.filter((item) => item !== element.compliance);
+      });
+      _self.setState({
+        complianceTags:compliance,
+        complianceDetails:complianceDetails
+      });
+    }
+
     if(prop.column.colId=="data_types" && (prop.newValue)){
       var compliance=[];
+      var complianceDetails=[];
       compliance=this.state.complianceTags;
+      complianceDetails=this.state.complianceDetails;
       fetch('/api/controlsAndRegulations/getComplianceByDataType?dataType='+prop.newValue, {
         headers: authHeader()
       }).then(function(response) {
@@ -680,9 +701,15 @@ class FileDetails extends Component {
             if(!compliance.includes(element)) {
               compliance.push(element);
             }
+            var obj={};
+            obj.id=prop.node.rowIndex;
+            obj.dataType=prop.newValue;
+            obj.compliance=element;
+            complianceDetails.push(obj);        
           })
           _self.setState({
-            complianceTags:compliance
+            complianceTags:compliance,
+            complianceDetails:complianceDetails
           });
         }
       }).catch(error => {
