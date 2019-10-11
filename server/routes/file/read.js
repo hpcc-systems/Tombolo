@@ -477,7 +477,7 @@ router.get('/fileLayoutDataType', (req, res) => {
                           {"data_types": {[Op.eq]: ""}}]}                          
               }).then(function(fileLayout) {
                   var layout={};
-                  layout.data_types="others";
+                  layout.data_types="Others";
                   layout.count=fileLayout.length;
                   result.push(layout);
                   res.json(result);
