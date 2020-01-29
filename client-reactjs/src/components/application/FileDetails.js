@@ -1,5 +1,5 @@
 import React, { Component } from "react";
-import { Modal, Tabs, Form, Input, Icon,  Select, Button, Table, AutoComplete, Tag, message, Drawer, Row, Col } from 'antd/lib';
+import { Modal, Tabs, Form, Input, Icon,  Select, Button, Table, AutoComplete, Tag, message, Drawer, Row, Col, Spin } from 'antd/lib';
 import TreantJSTree from "./TreantJSTree";
 import ReactTable from "react-table";
 import "react-table/react-table.css";
@@ -42,6 +42,8 @@ class FileDetails extends Component {
     dataTypes:[],
     complianceTags:[],
     complianceDetails:[],
+    fileSearchErrorShown: false,
+    autoCompleteSuffix: <Icon type="search" className="certain-category-icon" />,
     file: {
       id:"",
       title:"",
@@ -315,6 +317,11 @@ class FileDetails extends Component {
   }
 
   searchFiles(searchString) {
+    this.setState({
+      ...this.state,
+      autoCompleteSuffix : <Spin/>,
+      fileSearchErrorShown: false
+    });
     if(searchString.length <= 3)
       return;
     var data = JSON.stringify({clusterid: this.state.selectedCluster, keyword: searchString});
@@ -323,19 +330,32 @@ class FileDetails extends Component {
       headers: authHeader(),
       body: data
     }).then((response) => {
+      console.log("response.ok: "+response.ok);
       if(response.ok) {
         return response.json();
+      } else {
+        throw response;
       }
-      handleError(response);
     })
     .then(suggestions => {
       this.setState({
         ...this.state,
-        fileSearchSuggestions: suggestions
+        fileSearchSuggestions: suggestions,
+        autoCompleteSuffix: <Icon type="search" className="certain-category-icon" />
       });
     }).catch(error => {
-      console.log(error.text);
-      message.error("There was error while searching files from the cluster");
+      if(!this.state.fileSearchErrorShown) {
+        error.json().then((body) => {
+          message.config({top:130})
+          message.error(body.message);
+        });
+        this.setState({
+          ...this.state,
+          fileSearchErrorShown: true,
+          autoCompleteSuffix: <Icon type="search" className="certain-category-icon" />
+        });
+      }
+
     });
   }
 
@@ -705,7 +725,7 @@ class FileDetails extends Component {
             obj.id=prop.node.rowIndex;
             obj.dataType=prop.newValue;
             obj.compliance=element;
-            complianceDetails.push(obj);        
+            complianceDetails.push(obj);
           })
           _self.setState({
             complianceTags:compliance,
@@ -1007,7 +1027,7 @@ class FileDetails extends Component {
                 placeholder="Search files"
                 optionLabelProp="value"
               >
-                <Input suffix={<Icon type="search" className="certain-category-icon" />} />
+                <Input id="autocomplete_field" suffix={this.state.autoCompleteSuffix} />
               </AutoComplete>
             </Form.Item>
             </div>

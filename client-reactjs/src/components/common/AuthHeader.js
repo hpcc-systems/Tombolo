@@ -24,6 +24,11 @@ export function handleError(response) {
         //console.log('handleError - session expired');
         //message.error("Your session has expired! Please login to continue using Tombolo.");
     } else {
-        message.error("Error Occured: "+response.statusText);
+        let json = JSON.parse(response);
+        if(json.message) {
+            message.error(json.message);
+        } else {
+            message.error("Error Occured: "+response.statusText);
+        }
     }
 }

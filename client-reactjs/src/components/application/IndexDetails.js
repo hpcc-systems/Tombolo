@@ -1,5 +1,5 @@
 import React, { Component } from "react";
-import { Modal, Tabs, Form, Input, Icon, Select, Table, AutoComplete } from 'antd/lib';
+import { Modal, Tabs, Form, Input, Icon, Select, Table, AutoComplete, message, Spin } from 'antd/lib';
 import "react-table/react-table.css";
 import { authHeader, handleError } from "../common/AuthHeader.js"
 import { AgGridReact } from 'ag-grid-react';
@@ -27,6 +27,8 @@ class IndexDetails extends Component {
     clusters:[],
     selectedCluster:"",
     fileSearchSuggestions:[],
+    indexSearchErrorShown:false,
+    autoCompleteSuffix: <Icon type="search" className="certain-category-icon" />,
     file: {
       id:"",
       title:"",
@@ -139,6 +141,12 @@ class IndexDetails extends Component {
   }
 
   searchIndexes(searchString) {
+    this.setState({
+      ...this.state,
+      autoCompleteSuffix : <Spin/>,
+      indexSearchErrorShown: false
+    });
+
     if(searchString.length <= 3)
       return;
     var data = JSON.stringify({clusterid: this.state.selectedCluster, keyword: searchString, indexSearch:true});
@@ -149,16 +157,29 @@ class IndexDetails extends Component {
     }).then((response) => {
       if(response.ok) {
         return response.json();
+      } else {
+        throw response;
       }
       handleError(response);
     })
     .then(suggestions => {
       this.setState({
         ...this.state,
-        fileSearchSuggestions: suggestions
+        fileSearchSuggestions: suggestions,
+        autoCompleteSuffix: <Icon type="search" className="certain-category-icon" />
       });
     }).catch(error => {
-      console.log(error);
+      if(!this.state.indexSearchErrorShown) {
+        error.json().then((body) => {
+          message.config({top:130})
+          message.error(body.message);
+        });
+        this.setState({
+          ...this.state,
+          indexSearchErrorShown: true,
+          autoCompleteSuffix: <Icon type="search" className="certain-category-icon" />
+        });
+      }
     });
   }
 
@@ -373,7 +394,7 @@ class IndexDetails extends Component {
                 placeholder="Search indexes"
                 optionLabelProp="value"
               >
-                <Input suffix={<Icon type="search" className="certain-category-icon" />} />
+                <Input id="autocomplete_field" suffix={this.state.autoCompleteSuffix} />
               </AutoComplete>
             </Form.Item>
             </div>

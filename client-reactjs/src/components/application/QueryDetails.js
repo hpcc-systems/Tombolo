@@ -1,5 +1,5 @@
 import React, { Component } from "react";
-import { Modal, Tabs, Form, Input, Icon,  Select, AutoComplete, Spin } from 'antd/lib';
+import { Modal, Tabs, Form, Input, Icon,  Select, AutoComplete, Spin, message } from 'antd/lib';
 import "react-table/react-table.css";
 import { authHeader, handleError } from "../common/AuthHeader.js"
 import { AgGridReact } from 'ag-grid-react';
@@ -25,6 +25,7 @@ class QueryDetails extends Component {
     clusters:[],
     selectedCluster:"",
     querySearchSuggestions:[],
+    querySearchErrorShown:false,
     autoCompleteSuffix: <Icon type="search" className="certain-category-icon" />,
     query: {
       id:"",
@@ -153,8 +154,10 @@ class QueryDetails extends Component {
     }).then((response) => {
       if(response.ok) {
         return response.json();
+      } else {
+        throw response;
       }
-      handleError(response);
+      //handleError(response);
     })
     .then(suggestions => {
       this.setState({
@@ -163,7 +166,16 @@ class QueryDetails extends Component {
         autoCompleteSuffix: <Icon type="search" className="certain-category-icon" />
       });
     }).catch(error => {
-      console.log(error);
+      if(!this.state.querySearchErrorShown) {
+        error.json().then((body) => {
+          message.config({top:130})
+          message.error(body.message);
+        });
+        this.setState({
+          ...this.state,
+          querySearchErrorShown: true
+        });
+      }
     });
   }
 
@@ -254,7 +266,6 @@ class QueryDetails extends Component {
     var queryDetails = {
       "basic" : {
         "applicationId":applicationId,
-        "id" : this.state.query.id,
         "title" : this.state.query.title,
         "description" : this.state.query.description,
         "gitRepo" : this.state.query.gitrepo,

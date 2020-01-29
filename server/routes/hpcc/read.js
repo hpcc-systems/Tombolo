@@ -12,88 +12,87 @@ var http = require('http');
 
 router.post('/filesearch', function (req, res) {
     console.log('clusterid: '+req.body.clusterid);
-    try {
-    	getCluster(req.body.clusterid).then(function(cluster) {
-			let url = cluster.thor_host + ':' + cluster.thor_port +'/WsDfu/DFUQuery.json?LogicalName=*'+req.body.keyword+'*';
-			if(req.body.indexSearch)
-	    		url += '&ContentType=key'
-	        request.get({
-			  url: url,
-			  auth : getClusterAuth(cluster)
-			}, function(err, response, body) {
-			  if (err) {
-				console.log('ERROR - ', err);
-				return response.status(500).send('Error');
-		      }
-		      else {
-		      	var result = JSON.parse(body);
-		      	if(result.DFUQueryResponse.DFULogicalFiles != undefined) {
-		      		var logicalFilesAutoComplete = [], fileSearchResult = result.DFUQueryResponse.DFULogicalFiles.DFULogicalFile;
+	getCluster(req.body.clusterid).then(function(cluster) {
+		let url = cluster.thor_host + ':' + cluster.thor_port +'/WsDfu/DFUQuery.json?LogicalName=*'+req.body.keyword+'*';
+		if(req.body.indexSearch)
+    		url += '&ContentType=key'
+        request.get({
+		  url: url,
+		  auth : getClusterAuth(cluster)
+		}, function(err, response, body) {
+		  if (err) {
+			console.log('ERROR - ', err);
+			return response.status(500).send('Error');
+	      }
+	      else {
+	      	var result = JSON.parse(body);
+	      	if(result.DFUQueryResponse.DFULogicalFiles != undefined) {
+	      		var logicalFilesAutoComplete = [], fileSearchResult = result.DFUQueryResponse.DFULogicalFiles.DFULogicalFile;
 
-					fileSearchResult.forEach((logicalFile, index) => {
-						//dont add any duplicates
-						var exists = logicalFilesAutoComplete.filter(function(file) {
-							return file.text == logicalFile.Name;
-						});
-						if(exists != undefined && exists.length == 0) {
-							logicalFilesAutoComplete.push({"text" : logicalFile.Name, "value" : logicalFile.Name});
-						}
+				fileSearchResult.forEach((logicalFile, index) => {
+					//dont add any duplicates
+					var exists = logicalFilesAutoComplete.filter(function(file) {
+						return file.text == logicalFile.Name;
 					});
-					console.log('logicalFilesAutoComplete: '+logicalFilesAutoComplete.length)
-		      	 	res.json(logicalFilesAutoComplete);
-		      	} else {
-		      		res.json("");
-		      	}
-		      }
-	      	});
-	    });
+					if(exists != undefined && exists.length == 0) {
+						logicalFilesAutoComplete.push({"text" : logicalFile.Name, "value" : logicalFile.Name});
+					}
+				});
+				console.log('logicalFilesAutoComplete: '+logicalFilesAutoComplete.length)
+	      	 	res.json(logicalFilesAutoComplete);
+	      	} else {
+	      		res.json("");
+	      	}
+	      }
+      	});
+    }).catch(err => {
+    	console.log('Cluster not reachable: '+JSON.stringify(err));
+    	res.status(500).send({"success":"false", "message": "Search failed. Please check if the cluster is running."});
+    });
 
-    } catch (err) {
-        console.log('err', err);
-    }
+
 });
 
 router.post('/querysearch', function (req, res) {
     console.log('clusterid: '+req.body.clusterid);
-    try {
-    	getCluster(req.body.clusterid).then(function(cluster) {
-			let url = cluster.thor_host + ':' + cluster.thor_port +'/WsWorkunits/WUListQueries.json?QueryName=*'+req.body.keyword+'*';
-			if(req.body.indexSearch)
-	    		url += '&ContentType=key'
-	        request.get({
-			  url: url,
-			  auth : getClusterAuth(cluster)
-			}, function(err, response, body) {
-			  if (err) {
-				console.log('ERROR - ', err);
-				return response.status(500).send('Error');
-		      }
-		      else {
-		      	var result = JSON.parse(body);
-		      	if(result.WUListQueriesResponse.QuerysetQueries != undefined) {
-		      		var querySearchAutoComplete = [], querySearchResult = result.WUListQueriesResponse.QuerysetQueries.QuerySetQuery;
+	getCluster(req.body.clusterid).then(function(cluster) {
+		let url = cluster.thor_host + ':' + cluster.thor_port +'/WsWorkunits/WUListQueries.json?QueryName=*'+req.body.keyword+'*';
+		if(req.body.indexSearch)
+    		url += '&ContentType=key'
+        request.get({
+		  url: url,
+		  auth : getClusterAuth(cluster)
+		}, function(err, response, body) {
+		  if (err) {
+			console.log('ERROR - ', err);
+			return response.status(500).send('Error');
+	      }
+	      else {
+	      	var result = JSON.parse(body);
+	      	if(result.WUListQueriesResponse.QuerysetQueries != undefined) {
+	      		var querySearchAutoComplete = [], querySearchResult = result.WUListQueriesResponse.QuerysetQueries.QuerySetQuery;
 
-					querySearchResult.forEach((querySet, index) => {
-						//dont add any duplicates
-						var exists = querySearchAutoComplete.filter(function(query) {
-							return query.text == querySet.Id;
-						});
-						if(exists != undefined && exists.length == 0) {
-							querySearchAutoComplete.push({"text" : querySet.Id, "value" : querySet.Name});
-						}
+				querySearchResult.forEach((querySet, index) => {
+					//dont add any duplicates
+					var exists = querySearchAutoComplete.filter(function(query) {
+						return query.text == querySet.Id;
 					});
-					console.log('querySearchAutoComplete: '+querySearchAutoComplete.length)
-		      	 	res.json(querySearchAutoComplete);
-		      	} else {
-		      		res.json("");
-		      	}
-		      }
-	      	});
-	    });
+					if(exists != undefined && exists.length == 0) {
+						querySearchAutoComplete.push({"text" : querySet.Id, "value" : querySet.Name});
+					}
+				});
+				console.log('querySearchAutoComplete: '+querySearchAutoComplete.length)
+	      	 	res.json(querySearchAutoComplete);
+	      	} else {
+	      		res.json("");
+	      	}
+	      }
+      	});
+    }).catch(err => {
+    	console.log('Cluster not reachable: '+JSON.stringify(err));
+    	res.status(500).send({"success":"false", "message": "Search failed. Please check if the cluster is running."});
+    });
 
-    } catch (err) {
-        console.log('err', err);
-    }
 });
 
 router.get('/getClusters', function (req, res) {
@@ -110,6 +109,7 @@ router.get('/getClusters', function (req, res) {
 });
 
 router.get('/getCluster', function (req, res) {
+    console.log('in /getCluster');
     try {
 		Cluster.findOne(
 			{where: {id:req.query.cluster_id}}
@@ -358,11 +358,18 @@ function getIndexColumns(cluster, indexName) {
 }
 
 let getCluster = function(clusterId) {
-	return Cluster.findOne( {where: {id:clusterId}} ).then(function(cluster) {
+	return Cluster.findOne( {where: {id:clusterId}} ).then(async function(cluster) {
+		console.log('cluster: '+JSON.stringify(cluster));
 		if(cluster.hash) {
 			cluster.hash = crypto.createDecipher(algorithm,dbUtil.secret).update(cluster.hash,'hex','utf8');
 		}
-		return cluster;
+		let isReachable = await isClusterReachable(cluster.thor_host, cluster.thor_port, cluster.username, cluster.password);
+		if(isReachable)	 {
+			return cluster;
+		} else {
+			throw new Error("Cluster not reachable...");
+		}
+
 	})
 	.catch(function(err) {
         console.log(err);
