@@ -113,7 +113,7 @@ router.get('/file_details', (req, res) => {
         File.findOne({where:{"application_id":req.query.app_id, "id":req.query.file_id}}).then(function(files) {
             results.basic = files;
             FileLayout.findAll({where:{"application_id":req.query.app_id, "file_id":req.query.file_id}}).then(function(fileLayouts) {
-                results.file_layouts = fileLayouts;
+                results.file_layouts = fileLayouts.filter(item => item.name != '__fileposition__');
                 FileLicense.findAll({where:{"application_id":req.query.app_id, "file_id":req.query.file_id}}).then(function(fileLicenses) {
                     results.file_licenses = fileLicenses;
                     FileRelation.findAll({where:{"application_id":req.query.app_id, "file_id":req.query.file_id}}).then(function(fileRelations) {
