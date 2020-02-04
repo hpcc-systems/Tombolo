@@ -10,6 +10,7 @@ let FileRelation = models.file_relation;
 let FileFieldRelation = models.file_field_relation;
 let FileValidation = models.file_validation;
 let License = models.license;
+let Rules = models.rules;
 let DataTypes=models.data_types;
 TreeConnection = models.tree_connection;
 TreeStyle = models.tree_style;
@@ -49,6 +50,20 @@ router.get('/licenses', (req, res) => {
         console.log('err', err);
     }
 });
+
+router.get('/rules', (req, res) => {
+    try {
+        Rules.findAll().then(function(rules) {
+            res.json(rules);
+        })
+        .catch(function(err) {
+            console.log(err);
+        });
+    } catch (err) {
+        console.log('err', err);
+    }
+});
+
 router.get('/CheckFileId', (req, res) => {
     console.log("[CheckFileId/read.js] - check file by app_id = " + req.query.app_id +" and file_id ="+ req.query.file_id);
     try {
@@ -474,7 +489,7 @@ router.get('/fileLayoutDataType', (req, res) => {
             FileLayout.findAll({
                 where:{"application_id":req.query.app_id,
                [Op.or]:[{ "data_types": {[Op.eq]: null}},
-                          {"data_types": {[Op.eq]: ""}}]}                          
+                          {"data_types": {[Op.eq]: ""}}]}
               }).then(function(fileLayout) {
                   var layout={};
                   layout.data_types="Others";

@@ -28,6 +28,7 @@ class FileDetails extends Component {
     sourceFiles:[],
     selectedSourceFile:"",
     availableLicenses:[],
+    rules:[],
     selectedRowKeys:[],
     clusters:[],
     consumers:[],
@@ -254,6 +255,27 @@ class FileDetails extends Component {
       });
   }
 
+  getRules() {
+    fetch("/api/file/read/rules", {
+      headers: authHeader()
+    }).then((response) => {
+        if(response.ok) {
+          return response.json();
+        }
+        handleError(response);
+      })
+      .then(data => {
+        let rules = data.map(item => item.name);
+        rules.unshift("")
+        this.setState({
+          ...this.state,
+          rules: rules
+        });
+      }).catch(error => {
+        console.log(error);
+      });
+  }
+
   getInheritedLicenses(fileId) {
     fetch("/api/file/read/inheritedLicenses?fileId="+fileId+"&app_id="+this.props.applicationId, {
       headers: authHeader()
@@ -410,10 +432,11 @@ class FileDetails extends Component {
       return this.getFiles();
     })
     .then(files => {
-      this.getFileData(selectedSuggestion,this.state.selectedCluster);
+      return this.getFileData(selectedSuggestion,this.state.selectedCluster);
     })
     .then(files => {
       //this.getFileProfile(selectedSuggestion);
+      this.getRules();
     })
     .catch(error => {
       console.log(error);
@@ -888,17 +911,13 @@ class FileDetails extends Component {
       editable: true,
       cellEditor: "select",
       cellEditorParams: {
-        values: ["", "field", "aggregate"]
+        values: this.state.rules
       }
     },
     {
       headerName: 'Rule',
       field: 'rule',
-      editable: true,
-      cellEditor: "select",
-      cellEditorParams: {
-        values: ["", "not null", "in", "!=", ">"]
-      }
+      editable: true
     },
     {
       headerName: 'Action',
@@ -940,7 +959,6 @@ class FileDetails extends Component {
         }
         columns.push(colObj);
       });
-      console.log(JSON.stringify(columns));
       return columns;
     }
 
