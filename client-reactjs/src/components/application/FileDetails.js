@@ -741,6 +741,7 @@ class FileDetails extends Component {
     const { getFieldDecorator } = this.props.form;
     const { visible, confirmLoading, sourceFiles, availableLicenses, selectedRowKeys, clusters, consumers, fileSearchSuggestions, fileDataContent, fileProfile, showFileProfile } = this.state;
     const modalTitle = "File Details" + (this.state.file.title ? " - " + this.state.file.title : " - " +this.state.file.name);
+    const VIEW_DATA_PERMISSION='View PII';
     const formItemLayout = {
       labelCol: {
         xs: { span: 2 },
@@ -988,6 +989,7 @@ class FileDetails extends Component {
     }
 
     return (
+
       <div>
         <Modal
           title={modalTitle}
@@ -1148,22 +1150,24 @@ class FileDetails extends Component {
                 </AgGridReact>
               </div>
           </TabPane>
-          <TabPane tab="File Preview" key="6">
-            <div
-                className="ag-theme-balham"
-                style={{
-                height: '415px',
-                width: '100%' }}>
-                {<AgGridReact
-                  columnDefs={fileDataColumns()}
-                  rowData={fileDataContent}
-                  onGridReady={this.onLayoutGridReady}
-                  defaultColDef={{resizable: true}}
-                  >
-                </AgGridReact>}
-                {}
-              </div>
-          </TabPane>
+          {this.props.user.permissions.includes(VIEW_DATA_PERMISSION) ?
+            <TabPane tab="File Preview" key="6">
+              <div
+                  className="ag-theme-balham"
+                  style={{
+                  height: '415px',
+                  width: '100%' }}>
+                  {<AgGridReact
+                    columnDefs={fileDataColumns()}
+                    rowData={fileDataContent}
+                    onGridReady={this.onLayoutGridReady}
+                    defaultColDef={{resizable: true}}
+                    >
+                  </AgGridReact>}
+                  {}
+                </div>
+            </TabPane>
+          : null}
           {showFileProfile ?
             <TabPane tab="Data Profile" key="7" >
               <div>

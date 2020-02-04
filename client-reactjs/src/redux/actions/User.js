@@ -26,11 +26,13 @@ function login(username, password) {
             var decoded = jwtDecode(user.accessToken);
             var user = {
                 "token": user.accessToken,
+                "id": decoded.id,
                 "firstName": decoded.firstName,
                 "lastName": decoded.lastName,
                 "email": decoded.email,
                 "organization": decoded.organization,
-                "role":decoded.role
+                "role":decoded.role,
+                "permissions": decoded.permissions
             }
             localStorage.setItem('user', JSON.stringify(user));
             dispatch(success(user));

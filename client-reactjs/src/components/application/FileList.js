@@ -121,6 +121,7 @@ class FileList extends Component {
               isNewFile={true}
               onRefresh={this.handleRefresh}
               onClose={this.closeFileDlg}
+              user={this.props.user}
               /> : null}
         </div>
       </div>

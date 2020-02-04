@@ -24,12 +24,12 @@ class AppHeader extends Component {
         selected:'Select an Application',
         pathName:'',
         searchText:''
-    }    
+    }
     componentWillReceiveProps(props) {
       if(props.application && props.application.applicationTitle!=''){
-      this.setState({ selected: props.application.applicationTitle });        
-        $('[data-toggle="popover"]').popover('disable'); 
-      } 
+      this.setState({ selected: props.application.applicationTitle });
+        $('[data-toggle="popover"]').popover('disable');
+      }
     }
     componentDidMount(){
       if(this.props.location.pathname.includes('report/')){
@@ -39,7 +39,7 @@ class AppHeader extends Component {
       });
       }
     }
-    componentDidUpdate(prevProps, prevState) {      
+    componentDidUpdate(prevProps, prevState) {
       if(this.state.applications.length == 0) {
         var url="/api/app/read/app_list";
         if(this.props.user && this.props.user.role=='user')
@@ -55,8 +55,9 @@ class AppHeader extends Component {
           })
           .then(data => {
             let applications = data.map(application => { return {value: application.id, display: application.title} })
-            console.log("got apps back")
-            this.setState({ applications });
+            if(applications && applications.length > 0) {
+              this.setState({ applications });
+            }
           }).catch(error => {
             console.log(error);
           });
@@ -102,7 +103,7 @@ class AppHeader extends Component {
     search(value){
       this.props.history.push('/report/'+value);
     }
-    
+
     onChangeSearch=(e)=> {
       this.setState({searchText: e.target.value });
     }
@@ -135,7 +136,7 @@ class AppHeader extends Component {
                 <a className="nav-link" href="#"><i className="fa fa-lg fa-plus-circle"></i></a>
               </li>*/}
 
-            </ul>           
+            </ul>
             <ul className="ml-md-auto navbar-nav">
             <li className="nav-item">
               <Search
