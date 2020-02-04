@@ -60,7 +60,7 @@ class JSPlumbTree extends Component {
   }
 
   handleClickOutside(event) {
-    if (this.wrapperRef && !this.wrapperRef.contains(event.target) && 
+    if (this.wrapperRef && !this.wrapperRef.contains(event.target) &&
     event.target.pathname==undefined && !this.state.openFileDetailsDialog) {
         this.saveConnections();
     }
@@ -425,7 +425,8 @@ render() {
           applicationId={this.props.applicationId}
           onRefresh={this.handleRefreshTree}
           relation={this.state.nodes}
-          onClose={this.handleClose}/> : null}
+          onClose={this.handleClose}
+          user={this.props.user}/> : null}
     </div>
   )
 }
