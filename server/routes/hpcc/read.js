@@ -246,41 +246,43 @@ function getFileLayout(cluster, fileName) {
       	if(result.DFUGetFileMetaDataResponse != undefined) {
 			  var fileInfoResponse = result.DFUGetFileMetaDataResponse.DataColumns.DFUDataColumn, fileInfo = {};
       		fileInfoResponse.forEach(function(column) {
-      			var layout = {
-	      			"name" : column.ColumnLabel,
-	      			"type" : column.ColumnType,
-	      			"eclType" : column.ColumnEclType,
-	      			"displayType" : '',
-	      			"displaySize" : '',
-	      			"textJustification" : 'right',
-	      			"format" : '',
-	      			"isPCI" : 'false',
-	      			"isPII" : 'false',
-					"isHIPAA":'false',
-					"required": 'false'
-	      		}
-	      		if(column.DataColumns != undefined) {
-	      			var childColumns = [];
-	      			column.DataColumns.DFUDataColumn.forEach(function(childColumn) {
-	      				var childColumnObj = {
-	      					"name" : childColumn.ColumnLabel,
-			      			"type" : childColumn.ColumnType,
-			      			"eclType" : childColumn.ColumnEclType,
-			      			"displayType" : '',
-			      			"displaySize" : '',
-			      			"textJustification" : 'right',
-			      			"format" : '',
-			      			"isPCI" : 'false',
-			      			"isPII" : 'false',
-							"isHIPAA":'false',
-							"required": 'false'
-	      				}
-	      				childColumns.push(childColumnObj);
+      			if(column.ColumnLabel !== '__fileposition__') {
+	      			var layout = {
+		      			"name" : column.ColumnLabel,
+		      			"type" : column.ColumnType,
+		      			"eclType" : column.ColumnEclType,
+		      			"displayType" : '',
+		      			"displaySize" : '',
+		      			"textJustification" : 'right',
+		      			"format" : '',
+		      			"isPCI" : 'false',
+		      			"isPII" : 'false',
+						"isHIPAA":'false',
+						"required": 'false'
+		      		}
+		      		if(column.DataColumns != undefined) {
+		      			var childColumns = [];
+		      			column.DataColumns.DFUDataColumn.forEach(function(childColumn) {
+		      				var childColumnObj = {
+		      					"name" : childColumn.ColumnLabel,
+				      			"type" : childColumn.ColumnType,
+				      			"eclType" : childColumn.ColumnEclType,
+				      			"displayType" : '',
+				      			"displaySize" : '',
+				      			"textJustification" : 'right',
+				      			"format" : '',
+				      			"isPCI" : 'false',
+				      			"isPII" : 'false',
+								"isHIPAA":'false',
+								"required": 'false'
+		      				}
+		      				childColumns.push(childColumnObj);
 
-	      			});
-	      			layout.children = childColumns;
-	      		}
-	      		layoutResults.push(layout);
+		      			});
+		      			layout.children = childColumns;
+		      		}
+		      		layoutResults.push(layout);
+		      	}
       		});
 		  }
 		  console.log(layoutResults);
