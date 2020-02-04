@@ -56,7 +56,7 @@ class FileTable extends Component {
       data.forEach(function(doc, idx) {
         var fileObj = {};
         fileObj=doc;
-        fileObj.fileTitle=(doc.title)?doc.title:doc.name;        
+        fileObj.fileTitle=(doc.title)?doc.title:doc.name;
         results.push(fileObj);
       });
       this.setState({
@@ -271,7 +271,8 @@ class FileTable extends Component {
             selectedFile={this.state.selectedFile}
             applicationId={this.props.applicationId}
             onClose={this.handleClose}
-            onRefresh={this.handleRefreshTree}/> : null}
+            onRefresh={this.handleRefreshTree}
+            user={this.props.user}/> : null}
 
         <FileInstanceDetailsForm onRef={ref => this.instanceDetailsForm = ref}/>
       </div>
