@@ -2,7 +2,7 @@
 
 ![](/docs/images/tombolo/Slide1.png)
 
-Installation:
+### Installation:
 
 1. Clone Git repo
 2. Update the following information in .env
@@ -19,6 +19,6 @@ Installation:
 5. docker-compose up -d
 6. Application should be accessible under http://<<host_name>>:3001 once the build is completed.
 
-Documentation:
+### Documentation:
 
 [Link](docs/README.md)
