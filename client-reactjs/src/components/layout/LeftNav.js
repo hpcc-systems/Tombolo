@@ -67,11 +67,11 @@ class LeftNav extends Component {
               <li className="nav-item">
                 <NavLink exact to={"/"+applicationId+"/index"} className="nav-link" data-toggle="popover" tabIndex="2"><i className="fa fa-lg fa-indent"></i> Index</NavLink>
               </li>
-              <li className="nav-item">
-                <NavLink to={"/"+applicationId+"/queries"} className="nav-link" data-toggle="popover" tabIndex="3"><i className="fa fa-lg fa-search"></i> Queries</NavLink>
-              </li>
               <li className="nav-item" >
                 <NavLink to={"/"+applicationId+"/jobs"} className="nav-link" data-toggle="popover" tabIndex="4"><i className="fa fa-lg fa-clock-o"></i> Jobs</NavLink>
+              </li>
+              <li className="nav-item">
+                <NavLink to={"/"+applicationId+"/queries"} className="nav-link" data-toggle="popover" tabIndex="3"><i className="fa fa-lg fa-search"></i> Queries</NavLink>
               </li>
               <li className="nav-item" >
                 <NavLink to={"/"+applicationId+"/chart"} className="nav-link" data-toggle="popover" tabIndex="5"><i className="fa fa-lg fa-bar-chart"></i> Report</NavLink>
