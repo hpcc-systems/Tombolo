@@ -1140,7 +1140,7 @@ class FileDetails extends Component {
             <div
                 className="ag-theme-balham"
                 style={{
-                height: '415px',
+                height: '400px',
                 width: '100%' }}
               >
                 <AgGridReact
