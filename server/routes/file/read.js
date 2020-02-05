@@ -119,7 +119,7 @@ router.get('/file_details', (req, res) => {
                     FileRelation.findAll({where:{"application_id":req.query.app_id, "file_id":req.query.file_id}}).then(function(fileRelations) {
                         results.file_relations = fileRelations;
                         FileValidation.findAll({where:{"application_id":req.query.app_id, "file_id":req.query.file_id}}).then(function(fileValidations) {
-                            results.file_validations = fileValidations;
+                            results.file_validations = fileValidations.filter(item => item.name != '__fileposition__');
                             FileFieldRelation.findAll({where:{"application_id":req.query.app_id, "file_id":req.query.file_id}}).then(function(fileFieldRelations) {
                                 results.file_field_relations = fileFieldRelations;
                             }).then(function(fileFieldRelation) {
