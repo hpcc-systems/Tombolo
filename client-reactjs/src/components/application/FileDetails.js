@@ -1123,7 +1123,7 @@ class FileDetails extends Component {
                   onCellValueChanged={this.dataTypechange}
                   columnDefs={layoutColumns}
                   rowData={layout}
-                  defaultColDef={{resizable: true, sortable: true}}
+                  defaultColDef={{resizable: true, sortable: true, filter: true}}
                   onGridReady={this.onLayoutGridReady}
                   singleClickEdit={true}>
                 </AgGridReact>
@@ -1162,7 +1162,7 @@ class FileDetails extends Component {
                 <AgGridReact
                   columnDefs={validationTableColumns}
                   rowData={validations}
-                  defaultColDef={{resizable: true}}
+                  defaultColDef={{resizable: true, sortable: true, filter: true}}
                   onGridReady={this.onLayoutGridReady}
                   singleClickEdit={true}>
                 </AgGridReact>
