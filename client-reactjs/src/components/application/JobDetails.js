@@ -16,7 +16,7 @@ class JobDetails extends Component {
     confirmLoading: false,
     pagination: {},
     loading: false,
-    jobTypes:["Internal Build", "Cleaning", "Analyzing", "Machine Learning"],
+    jobTypes:["Index Build", "Cleaning", "Analyzing", "Machine Learning"],
     paramName: "",
     paramType:"",
     inputFileDesc:"",

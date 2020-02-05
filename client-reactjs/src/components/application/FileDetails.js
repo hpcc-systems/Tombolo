@@ -51,8 +51,7 @@ class FileDetails extends Component {
       name:"",
       clusterId:"",
       description:"",
-      primaryService:"",
-      backupService:"",
+      serviceUrl:"",
       qualifiedPath:"",
       consumer:"",
       fileType:"",
@@ -85,8 +84,7 @@ class FileDetails extends Component {
         title: '',
         name:'',
         description: '',
-        primaryService: '',
-        backupService: '',
+        serviceUrl: '',
         qualifiedPath: '',
         consumer:'',
         fileType: '',
@@ -144,8 +142,7 @@ class FileDetails extends Component {
             name: data.basic.name,
             clusterId: data.basic.cluster_id,
             description: data.basic.description,
-            primaryService: data.basic.primaryService,
-            backupService: data.basic.backupService,
+            serviceUrl: data.basic.serviceUrl,
             qualifiedPath: data.basic.qualifiedPath,
             consumer: data.basic.consumer,
             fileType: data.basic.fileType,
@@ -563,8 +560,7 @@ class FileDetails extends Component {
       "name" : this.state.file.name,
       "cluster_id": this.state.file.clusterId,
       "description" : this.state.file.description,
-      "primaryService" : this.state.file.primaryService,
-      "backupService" : this.state.file.backupService,
+      "serviceUrl" : this.state.file.serviceUrl,
       "qualifiedPath" : this.state.file.qualifiedPath,
       "consumer": this.state.file.consumer,
       "fileType" : this.state.file.fileType,
@@ -768,7 +764,7 @@ class FileDetails extends Component {
     const formItemLayout = {
       labelCol: {
         xs: { span: 2 },
-        sm: { span: 5 },
+        sm: { span: 3 },
       },
       wrapperCol: {
         xs: { span: 2 },
@@ -779,11 +775,22 @@ class FileDetails extends Component {
     const twoColformItemLayout = {
       labelCol: {
         xs: { span: 4 },
-        sm: { span: 10 },
+        sm: { span: 6 },
       },
       wrapperCol: {
         xs: { span: 2 },
         sm: { span: 10 },
+      },
+    };
+
+    const threeColformItemLayout = {
+      labelCol: {
+        xs: { span: 4 },
+        sm: { span: 9 },
+      },
+      wrapperCol: {
+        xs: { span: 2 },
+        sm: { span: 12 },
       },
     };
 
@@ -995,11 +1002,12 @@ class FileDetails extends Component {
     }
 
 
-    const {title,name, description, primaryService, backupService, qualifiedPath, consumer, fileType, isSuperFile, layout, relations, fileFieldRelations, validations, inheritedLicensing} = this.state.file;
+    const {title,name, description, serviceUrl, qualifiedPath, consumer, fileType, isSuperFile, layout, relations, fileFieldRelations, validations, inheritedLicensing} = this.state.file;
     const rowSelection = {
       selectedRowKeys,
       onChange: this.onSelectedRowKeysChange
     };
+    const modalHeight = !this.props.isNewFile ? "400px" : "500px";
 
     //render only after fetching the data from the server
     if(!title && !this.props.selectedFile && !this.props.isNewFile) {
@@ -1015,7 +1023,7 @@ class FileDetails extends Component {
           onOk={this.handleOk}
           confirmLoading={confirmLoading}
           onCancel={this.handleCancel}
-          bodyStyle={{height:"500px"}}
+          bodyStyle={{height:modalHeight}}
           destroyOnClose={true}
           width="1200px"
         >
@@ -1066,41 +1074,39 @@ class FileDetails extends Component {
               <Input id="file_name" name="name" onChange={this.onChange} placeholder="Name" disabled />              )}
              </Form.Item>
             <Form.Item {...formItemLayout} label="Description">
-                <Input id="file_desc" name="description" onChange={this.onChange} placeholder="Description" />
+                <Input id="file_desc" name="description" onChange={this.onChange} defaultValue={description} value={description} placeholder="Description" />
+            </Form.Item>
+            <Form.Item {...formItemLayout} label="Service URL">
+                <Input id="file_primary_svc" name="serviceUrl" onChange={this.onChange} defaultValue={serviceUrl} value={serviceUrl} placeholder="Service URL" />
             </Form.Item>
             <Row type="flex">
-              <Col span={12} order={1}>
-                <Form.Item {...twoColformItemLayout} label="Primary Service">
-                    <Input id="file_primary_svc" name="primaryService" onChange={this.onChange} defaultValue={primaryService} value={primaryService} placeholder="Primary Service" />
-                </Form.Item>
-              </Col>
-              <Col span={12} order={1}>
-                <Form.Item {...twoColformItemLayout} label="Backup Service">
-                    <Input id="file_bkp_svc" name="backupService" onChange={this.onChange} defaultValue={backupService} value={backupService} placeholder="Backup Service" />
-                </Form.Item>
-              </Col>
-            </Row>
-            <Row type="flex">
-              <Col span={12} order={1}>
-                <Form.Item {...twoColformItemLayout} label="Path">
+              <Col span={8} order={1}>
+                <Form.Item {...threeColformItemLayout} label="Path">
                     <Input id="file_path" name="qualifiedPath" onChange={this.onChange} defaultValue={qualifiedPath} value={qualifiedPath} placeholder="Path" />
                 </Form.Item>
               </Col>
-              <Col span={12} order={2}>
-                <Form.Item {...twoColformItemLayout} label="File Type">
+              <Col span={8} order={2}>
+                <Form.Item {...threeColformItemLayout} label="File Type">
                     <Input id="file_type" name="fileType" onChange={this.onChange} defaultValue={fileType} value={fileType} placeholder="File Type" />
                 </Form.Item>
               </Col>
             </Row>
 
             <Row type="flex">
-              <Col span={12} order={1}>
-                <Form.Item {...twoColformItemLayout} label="Is Super File">
+              <Col span={8} order={1}>
+                <Form.Item {...threeColformItemLayout} label="Is Super File">
                   <Input id="file_issuper_file" name="isSuperFile" onChange={this.onChange} defaultValue={isSuperFile} value={isSuperFile} placeholder="Is Super File" />
                 </Form.Item>
               </Col>
-              <Col span={12} order={2}>
-                <Form.Item {...twoColformItemLayout} label="Consumer">
+              <Col span={8} order={2}>
+                <Form.Item {...threeColformItemLayout} label="Consumer">
+                   <Select value={(this.state.file.consumer != '') ? this.state.file.consumer : "Select a Consumer"} placeholder="Select a Consumer" onChange={this.onConsumerSelection} style={{ width: 190 }}>
+                    {consumers.map(consumer => <Option key={consumer.id}>{consumer.name}</Option>)}
+                  </Select>
+                </Form.Item>
+              </Col>
+              <Col span={8} order={3}>
+                <Form.Item {...threeColformItemLayout} label="Supplier">
                    <Select value={(this.state.file.consumer != '') ? this.state.file.consumer : "Select a Consumer"} placeholder="Select a Consumer" onChange={this.onConsumerSelection} style={{ width: 190 }}>
                     {consumers.map(consumer => <Option key={consumer.id}>{consumer.name}</Option>)}
                   </Select>

@@ -143,8 +143,8 @@ router.get('/file_details', (req, res) => {
 });
 
 router.post('/saveFile', (req, res) => {
-    console.log("[file list/read.js] - Get file list for app_id = " + req.body.file.basic._id + " isNewFile: "+req.body.isNewFile);
-    var fileId='', applicationId=req.body.file.basic.application_id, fieldsToUpdate={};
+    console.log("[file list/read.js] - Get file list for app_id = " + req.body.file.app_id + " isNewFile: "+req.body.isNewFile);
+    var fileId='', applicationId=req.body.file.app_id, fieldsToUpdate={};
 
     try {
         File.findOrCreate({

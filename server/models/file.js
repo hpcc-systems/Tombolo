@@ -15,8 +15,7 @@ module.exports = (sequelize, DataTypes) => {
     description: DataTypes.STRING,
     fileType: DataTypes.STRING,
     isSuperFile: DataTypes.STRING,
-    primaryService: DataTypes.STRING,
-    backupService: DataTypes.STRING,
+    serviceURL: DataTypes.STRING,
     qualifiedPath: DataTypes.STRING,
     consumer: DataTypes.STRING
   }, {freezeTableName: true});
