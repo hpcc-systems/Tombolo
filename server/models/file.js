@@ -17,7 +17,8 @@ module.exports = (sequelize, DataTypes) => {
     isSuperFile: DataTypes.STRING,
     serviceURL: DataTypes.STRING,
     qualifiedPath: DataTypes.STRING,
-    consumer: DataTypes.STRING
+    consumer: DataTypes.STRING,
+    supplier: DataTypes.STRING
   }, {freezeTableName: true});
   file.associate = function(models) {
     file.hasMany(models.file_layout,{

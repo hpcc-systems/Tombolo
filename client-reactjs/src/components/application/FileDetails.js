@@ -44,6 +44,7 @@ class FileDetails extends Component {
     complianceTags:[],
     complianceDetails:[],
     fileSearchErrorShown: false,
+    filesCount: 0,
     autoCompleteSuffix: <Icon type="search" className="certain-category-icon" />,
     file: {
       id:"",
@@ -54,6 +55,7 @@ class FileDetails extends Component {
       serviceUrl:"",
       qualifiedPath:"",
       consumer:"",
+      supplier:"",
       fileType:"",
       isSuperFile:"",
       layout:[],
@@ -67,6 +69,7 @@ class FileDetails extends Component {
 
   componentDidMount() {
     this.props.onRef(this);
+    this.getFileCount();
     this.getFileDetails();
     this.fetchDataTypeDetails();
   }
@@ -87,6 +90,7 @@ class FileDetails extends Component {
         serviceUrl: '',
         qualifiedPath: '',
         consumer:'',
+        supplier:'',
         fileType: '',
         isSuperFile: '',
         layout: [],
@@ -119,6 +123,26 @@ class FileDetails extends Component {
     });
   }
 
+  getFileCount() {
+    fetch("/api/file/read/file_list?app_id="+this.props.applicationId, {
+       headers: authHeader()
+    })
+    .then((response) => {
+        if(response.ok) {
+          return response.json();
+        }
+        handleError(response);
+    })
+    .then(data => {
+      console.log('fileCount: '+data.length);
+      this.setState({
+        filesCount: data ? data.length : 0
+      });
+    }).catch(error => {
+      console.log(error);
+    });
+  }
+
   getFileDetails() {
     if(this.props.selectedFile && !this.props.isNewFile) {
       fetch("/api/file/read/file_details?file_id="+this.props.selectedFile+"&app_id="+this.props.applicationId, {
@@ -145,6 +169,7 @@ class FileDetails extends Component {
             serviceUrl: data.basic.serviceUrl,
             qualifiedPath: data.basic.qualifiedPath,
             consumer: data.basic.consumer,
+            supplier: data.basic.supplier,
             fileType: data.basic.fileType,
             isSuperFile: data.basic.isSuperFile,
             layout: data.file_layouts,
@@ -409,6 +434,7 @@ class FileDetails extends Component {
           description: fileInfo.description,
           qualifiedPath: fileInfo.pathMask,
           consumer: fileInfo.consumer,
+          supplier: fileInfo.supplier,
           fileType: fileInfo.fileType,
           isSuperFile: fileInfo.isSuperfile ? 'true' : 'false',
           layout: fileInfo.layout,
@@ -550,7 +576,6 @@ class FileDetails extends Component {
   }
 
   populateFileDetails() {
-    console.log('Consujer: '+this.state.file.consumer);
     var applicationId = this.props.applicationId;
     var fileDetails = {"app_id":applicationId};
     var fileLayout={}, license = {};
@@ -563,6 +588,7 @@ class FileDetails extends Component {
       "serviceUrl" : this.state.file.serviceUrl,
       "qualifiedPath" : this.state.file.qualifiedPath,
       "consumer": this.state.file.consumer,
+      "supplier": this.state.file.supplier,
       "fileType" : this.state.file.fileType,
       "isSuperFile" : this.state.file.isSuperFile,
       "application_id" : applicationId
@@ -615,6 +641,10 @@ class FileDetails extends Component {
 
   onConsumerSelection = (value) => {
     this.setState({...this.state, file: {...this.state.file, consumer: value }}, () => console.log(this.state.file.consumer));
+  }
+
+  onSupplierSelection = (value) => {
+    this.setState({...this.state, file: {...this.state.file, supplier: value }}, () => console.log(this.state.file.supplier));
   }
 
   onChange = (e) => {
@@ -1100,18 +1130,21 @@ class FileDetails extends Component {
               </Col>
               <Col span={8} order={2}>
                 <Form.Item {...threeColformItemLayout} label="Consumer">
-                   <Select value={(this.state.file.consumer != '') ? this.state.file.consumer : "Select a Consumer"} placeholder="Select a Consumer" onChange={this.onConsumerSelection} style={{ width: 190 }}>
-                    {consumers.map(consumer => <Option key={consumer.id}>{consumer.name}</Option>)}
+                   <Select id="consumer" value={(this.state.file.consumer != '') ? this.state.file.consumer : "Select a consumer"} placeholder="Select a consumer" onChange={this.onConsumerSelection} style={{ width: 190 }}>
+                    {consumers.map(consumer => consumer.assetType == 'Consumer' ? <Option key={consumer.id}>{consumer.name}</Option> : null)}
                   </Select>
                 </Form.Item>
               </Col>
-              <Col span={8} order={3}>
-                <Form.Item {...threeColformItemLayout} label="Supplier">
-                   <Select value={(this.state.file.consumer != '') ? this.state.file.consumer : "Select a Consumer"} placeholder="Select a Consumer" onChange={this.onConsumerSelection} style={{ width: 190 }}>
-                    {consumers.map(consumer => <Option key={consumer.id}>{consumer.name}</Option>)}
-                  </Select>
-                </Form.Item>
-              </Col>
+              {/*show supplier field only for the root file*/}
+              {(this.state.filesCount == 0 || (this.state.filesCount == 1 && !this.props.isNewFile)) ?
+                <Col span={8} order={3}>
+                  <Form.Item {...threeColformItemLayout} label="Supplier">
+                     <Select id="supplier" value={(this.state.file.supplier != '') ? this.state.file.supplier : "Select a supplier"} placeholder="Select a supplier" onChange={this.onSupplierSelection} style={{ width: 190 }}>
+                      {consumers.map(consumer => consumer.assetType=="Supplier" ? <Option key={consumer.id}>{consumer.name}</Option> : null)}
+                    </Select>
+                  </Form.Item>
+                </Col>
+                : null}
             </Row>
 
           </Form>

@@ -1,5 +1,5 @@
 import React, { Component } from "react";
-import { Table, Button, Row, Col, Modal, Form, Input, Icon, Select, notification, Tooltip, Popconfirm, Divider, AutoComplete, message } from 'antd/lib';
+import { Table, Button, Row, Col, Modal, Form, Input, Icon, Select, notification, Tooltip, Popconfirm, Divider, AutoComplete, message, Radio } from 'antd/lib';
 import BreadCrumbs from "../common/BreadCrumbs";
 import { authHeader, handleError } from "../common/AuthHeader.js";
 import { connect } from 'react-redux';
@@ -19,6 +19,7 @@ class Consumers extends Component {
   	showAddConsumer: false,
   	confirmLoading: false,
     isEditing: false,
+    isConsumer: true,
   	newConsumer : {
 	  	name: '',
       type:'',
@@ -200,6 +201,14 @@ class Consumers extends Component {
     this.setState({...this.state,confirmLoading:false, newConsumer: {...this.state.newConsumer, [e.target.name]: e.target.value }});
   }
 
+  onConsumerSupplierChange = (e) => {
+    console.log(e.target.value)
+    let isConsumer = e.target.value == "Consumer" ? true : false;
+    this.setState({
+      isConsumer: isConsumer
+    });
+  }
+
   handleAddConsumerOk = () => {
     this.setState({
       confirmLoading: true,
@@ -208,7 +217,7 @@ class Consumers extends Component {
     if(this.state.newConsumer.name){
     var userId=(this.props.user) ? this.props.user.id:"" ;
 
-    let data = JSON.stringify({"name" : this.state.newConsumer.name, "type" : this.state.newConsumer.type, "contact_name":this.state.newConsumer.contact_name, "contact_email":this.state.newConsumer.contact_email, "ad_group":this.state.newConsumer.ad_group});
+    let data = JSON.stringify({"name" : this.state.newConsumer.name, "type" : this.state.newConsumer.type, "contact_name":this.state.newConsumer.contact_name, "contact_email":this.state.newConsumer.contact_email, "ad_group":this.state.newConsumer.ad_group, "assetType":this.state.isConsumer ? "Consumer" : "Supplier"});
 	  console.log('data: '+data);
     fetch("/api/consumer/consumer", {
       method: 'post',
@@ -223,6 +232,7 @@ class Consumers extends Component {
     .then(suggestions => {
 	  	this.setState({
       ...this.state,
+        isConsumer: true,
         newConsumer: {
           ...this.state.newConsumer,
           id : '',
@@ -272,19 +282,24 @@ class Consumers extends Component {
     }
   	const consumerColumns = [
     {
-      width: '20%',
+      width: '15%',
       title: 'Name',
       dataIndex: 'name'
     },
     {
-      width: '20%',
+      width: '15%',
       title: 'Contact',
       dataIndex: 'contact_name'
     },
     {
-      width: '25%',
+      width: '15%',
       title: 'Contact Email',
       dataIndex: 'contact_email'
+    },
+    {
+      width: '10%',
+      title: 'Consumer/Supplier',
+      dataIndex: 'assetType'
     },
     {
       width: '5%',
@@ -326,7 +341,7 @@ class Consumers extends Component {
         <BreadCrumbs applicationId={this.state.applicationId}/>
         <span style={{ marginLeft: "auto" }}>
             <Tooltip placement="bottom" title={"Click to add a new Consumer"}>
-              <Button className="btn btn-secondary btn-sm" onClick={() => this.handleAdd()}><i className="fa fa-plus"></i> Add Consumer</Button>
+              <Button className="btn btn-secondary btn-sm" onClick={() => this.handleAdd()}><i className="fa fa-plus"></i> Add</Button>
             </Tooltip>
           </span>
       </div>
@@ -339,15 +354,22 @@ class Consumers extends Component {
 
       <div>
 	      <Modal
-	          title="Add Consumer"
+	          title="Add Consumer/Supplier"
 	          visible={this.state.showAddConsumer}
 	          onOk={this.handleAddConsumerOk.bind(this)}
 	          onCancel={this.handleAddConsumerCancel}
 	          confirmLoading={confirmLoading}
 	        >
 		        <Form layout="vertical">
-            <div className={'form-group' + (this.state.submitted && !this.state.newConsumer.name ? ' has-error' : '')}>
-		          <Form.Item {...formItemLayout} label="Name">              
+              <div className={'form-group'+ (this.state.submitted && !this.state.newConsumer.name ? ' has-error' : '')}>
+                <Radio.Group onChange={this.onConsumerSupplierChange} value={this.state.isConsumer ? "Consumer" : "Supplier"}>
+                  <Radio value={"Consumer"}>Consumer</Radio>
+                  <Radio value={"Supplier"}>Supplier</Radio>
+                </Radio.Group>
+              </div>
+
+            <div className={'form-group'}>
+		          <Form.Item {...formItemLayout} label="Name">
     						<Input id="consumer_title" name="name" onChange={this.onChange} placeholder="Name" value={this.state.newConsumer.name} disabled={isNameDisabled}/>
                 {this.state.submitted && !this.state.newConsumer.name &&
                         <div className="help-block">Consumer Name is required</div>

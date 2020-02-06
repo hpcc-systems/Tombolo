@@ -24,7 +24,7 @@ router.post('/consumer', (req, res) => {
             defaults: req.body
         }).then(function(result) {
             consumerId = result[0].id;
-            fieldsToUpdate = {"name":req.body.name, "type":req.body.type, "contact_name":req.body.contact_name, "contact_email":req.body.contact_email, "ad_group":req.body.ad_group};
+            fieldsToUpdate = {"name":req.body.name, "type":req.body.type, "contact_name":req.body.contact_name, "contact_email":req.body.contact_email, "ad_group":req.body.ad_group, "assetType":req.body.assetType};
             if(!result[1]) {
                 return Consumer.update(req.body, {where:{name:req.body.name}}).then(function(result){})
             }

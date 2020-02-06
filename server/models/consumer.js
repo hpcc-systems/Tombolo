@@ -12,7 +12,8 @@ module.exports = (sequelize, DataTypes) => {
     type: DataTypes.STRING,
     contact_name: DataTypes.STRING,
     contact_email: DataTypes.STRING,
-    ad_group: DataTypes.STRING
+    ad_group: DataTypes.STRING,
+    assetType: DataTypes.STRING
   }, {freezeTableName: true});
   consumer.associate = function(models) {
   };
