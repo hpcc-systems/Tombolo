@@ -325,3 +325,48 @@ path, .jtk-endpoint { cursor:pointer; }
     -webkit-transition: padding 0.3s cubic-bezier(0.645, 0.045, 0.355, 1);
     transition: padding 0.3s cubic-bezier(0.645, 0.045, 0.355, 1);
 }
+
+#sidebar {
+  min-width: 140px;
+  max-width: 140px;
+  -webkit-transition: all 0.3s;
+  -o-transition: all 0.3s;
+  transition: all 0.3s;
+  position: relative;
+}
+
+#sidebar.active {
+  margin-left: -300px;
+}
+#sidebar.active .custom-menu {
+  margin-right: -50px;
+}
+#sidebar.active .btn.btn-primary:before {
+  content: "\f054";
+  font-family: "FontAwesome";
+  left: 2px !important;
+}
+#sidebar.active .btn.btn-primary:after {
+    display: none;
+}
+
+@media (max-width: 991.98px) {
+    #sidebar {
+      margin-left: -300px;
+    }
+    #sidebar.active {
+      margin-left: 0;
+    }
+    #sidebar .custom-menu {
+      margin-right: -60px !important;
+      top: 10px !important;
+    }
+}
+
+#graph tspan {
+  font-size: 12px
+}
+
+svg text {
+   font-family: FontAwesome;
+}

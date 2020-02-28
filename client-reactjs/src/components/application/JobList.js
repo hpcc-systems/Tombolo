@@ -1,6 +1,7 @@
 import React, { Component } from "react";
-import { Button, Table, Divider, message, Popconfirm, Icon, Tooltip } from 'antd/lib';
+import { Button, Table, Divider, message, Popconfirm, Icon, Tooltip, Radio } from 'antd/lib';
 import JobDetailsForm from "./JobDetails";
+import {Graph} from "./Graph";
 import BreadCrumbs from "../common/BreadCrumbs";
 import { connect } from 'react-redux';
 import { authHeader, handleError } from "../common/AuthHeader.js"
@@ -16,14 +17,17 @@ class JobList extends Component {
     applicationTitle: this.props.application ? this.props.application.applicationTitle : '',
     openJobDetailsDialog: false,
     jobs:[],
-    selectedJob: ''
+    selectedJob: '',
+    tableView: false
   }
 
   componentWillReceiveProps(props) {
     if(props.application) {
+      console.log(props.application.applicationId + ' -- ' +this.state.applicationId);
       if(this.state.applicationId != props.application.applicationId) {
         this.setState({
-          applicationId: props.application.applicationId
+          applicationId: props.application.applicationId,
+          applicationTitle: props.application.applicationTitle
         });
         //this.handleRefresh();
       }
@@ -31,7 +35,7 @@ class JobList extends Component {
   }
 
   componentDidMount() {
-    this.fetchDataAndRenderTable();
+    //this.fetchDataAndRenderTable();
   }
 
   openAddJobDlg = () => {
@@ -108,11 +112,14 @@ class JobList extends Component {
     this.fetchDataAndRenderTable();
   }
 
+  handleToggleView = (evt) => {
+    evt.target.value == 'chart' ? this.setState({tableView: false}) : this.setState({tableView: true})
+  }
 
   render() {
     if(!this.props.application || !this.props.application.applicationId)
       return null;
-
+      {console.log("rendering....")}
       const jobColumns = [{
         title: 'Name',
         dataIndex: 'name',
@@ -141,18 +148,26 @@ class JobList extends Component {
         <div className="d-flex justify-content-end" style={{paddingTop:"55px", margin: "5px"}}>
           <BreadCrumbs applicationId={this.state.applicationId} applicationTitle={this.state.applicationTitle}/>
           <span style={{ marginLeft: "auto"}}>
+            <Radio.Group defaultValue="chart" buttonStyle="solid" style={{padding: "10px"}} onChange={this.handleToggleView}>
+              <Tooltip placement="bottom" title={"Tree View"}><Radio.Button value="chart"><Icon type="cluster" /></Radio.Button></Tooltip>
+              <Tooltip placement="bottom" title={"Tabular View"}><Radio.Button value="grid"><Icon type="bars" /></Radio.Button></Tooltip>
+            </Radio.Group>
             <Tooltip placement="bottom" title={"Click to add a new job"}>
               <Button className="btn btn-secondary btn-sm" onClick={() => this.openAddJobDlg()}><i className="fa fa-plus"></i>Add Job</Button>
             </Tooltip>
           </span>
         </div>
-        <div style={{padding:"15px"}}>
-          <Table
-            columns={jobColumns}
-            rowKey={record => record.id}
-            dataSource={this.state.jobs}
-            pagination={{ pageSize: 10 }} scroll={{ y: 460 }}
-          />
+        <div id="jobs">
+        {console.log("xxx: "+this.state.applicationId)}
+          {this.state.tableView ?
+            <Table
+              columns={jobColumns}
+              rowKey={record => record.id}
+              dataSource={this.state.jobs}
+              pagination={{ pageSize: 10 }} scroll={{ y: 460 }}
+            />
+          : <Graph applicationId={this.state.applicationId}/>
+          }
 
           {this.state.openJobDetailsDialog ?
             <JobDetailsForm

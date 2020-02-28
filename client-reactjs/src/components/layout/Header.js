@@ -65,18 +65,19 @@ class AppHeader extends Component {
     }
 
     handleTopNavClick(event) {
-        var nav = event.target.getAttribute("data-nav");
-        if(nav == '/logout')
-            return;
-        nav = (nav == '/' ? ('/'+this.props.applicationId.applicationId+'/files') : nav)
-        this.setState({
-            selectedTopNav: nav
-        });
-        this.props.dispatch(applicationActions.topNavChanged(nav));
-        if(this.props.applicationId) {
-            this.props.dispatch(applicationActions.applicationSelected(this.props.applicationId.applicationId));
-        }
-        this.props.history.push(nav);
+      console.log("handleTopNavClick")
+      var nav = event.target.getAttribute("data-nav");
+      if(nav == '/logout')
+          return;
+      nav = (nav == '/' ? ('/'+this.props.applicationId.applicationId+'/files') : nav)
+      this.setState({
+          selectedTopNav: nav
+      });
+      this.props.dispatch(applicationActions.topNavChanged(nav));
+      if(this.props.applicationId) {
+          this.props.dispatch(applicationActions.applicationSelected(this.props.applicationId.applicationId));
+      }
+      this.props.history.push(nav);
     }
 
     handleLogOut = (e) => {
@@ -94,11 +95,12 @@ class AppHeader extends Component {
     }
 
     handleChange(event) {
-        //this.props.onAppicationSelect(value);
-        this.props.dispatch(applicationActions.applicationSelected(event.target.getAttribute("data-value"), event.target.getAttribute("data-display")));
-        this.setState({ selected: event.target.getAttribute("data-display") });
-        this.props.history.push('/'+event.target.getAttribute("data-value")+'/files');
-        $('[data-toggle="popover"]').popover('disable');
+      console.log("handleChange: "+event.target.getAttribute("data-value"))
+      //this.props.onAppicationSelect(value);
+      this.props.dispatch(applicationActions.applicationSelected(event.target.getAttribute("data-value"), event.target.getAttribute("data-display")));
+      this.setState({ selected: event.target.getAttribute("data-display") });
+      this.props.history.push('/'+event.target.getAttribute("data-value")+'/jobs');
+      $('[data-toggle="popover"]').popover('disable');
     }
     search(value){
       this.props.history.push('/report/'+value);

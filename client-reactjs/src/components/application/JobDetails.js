@@ -132,13 +132,13 @@ class JobDetails extends Component {
   }
 
   handleOk = () => {
-    this.props.form.validateFields((err, values) => {
+    this.props.form.validateFields(async (err, values) => {
       if(!err) {
         this.setState({
           confirmLoading: true,
         });
 
-        this.saveJobDetails();
+        let saveResponse = await this.saveJobDetails();
 
         setTimeout(() => {
           this.setState({
@@ -146,26 +146,29 @@ class JobDetails extends Component {
             confirmLoading: false,
           });
           this.props.onClose();
-          this.props.onRefresh();
+          this.props.onRefresh(saveResponse);
         }, 2000);
       }
     });
   }
 
   saveJobDetails() {
-    fetch('/api/job/saveJob', {
-      method: 'post',
-      headers: authHeader(),
-      body: JSON.stringify(this.populateJobDetails())
-    }).then(function(response) {
-      if(response.ok) {
-        return response.json();
-      }
-      handleError(response);
-    }).then(function(data) {
-      console.log('Saved..');
+    return new Promise((resolve) => {
+      fetch('/api/job/saveJob', {
+        method: 'post',
+        headers: authHeader(),
+        body: JSON.stringify(this.populateJobDetails())
+      }).then(function(response) {
+        if(response.ok) {
+          return response.json();
+        }
+        handleError(response);
+      }).then(function(data) {
+        console.log('Saved..');
+        resolve(data);
+      });
+      //this.populateFileDetails()
     });
-    //this.populateFileDetails()
   }
 
   populateJobDetails() {
