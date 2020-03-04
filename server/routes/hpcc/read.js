@@ -11,88 +11,58 @@ let hpccJSComms = require("@hpcc-js/comms")
 var http = require('http');
 
 router.post('/filesearch', function (req, res) {
-    console.log('clusterid: '+req.body.clusterid);
+  console.log('clusterid: '+req.body.clusterid);
+
 	getCluster(req.body.clusterid).then(function(cluster) {
-		let url = cluster.thor_host + ':' + cluster.thor_port +'/WsDfu/DFUQuery.json?LogicalName=*'+req.body.keyword+'*';
-		if(req.body.indexSearch)
-    		url += '&ContentType=key'
-        request.get({
-		  url: url,
-		  auth : getClusterAuth(cluster)
-		}, function(err, response, body) {
-		  if (err) {
-			console.log('ERROR - ', err);
-			return response.status(500).send('Error');
-	      }
-	      else {
-	      	var result = JSON.parse(body);
-	      	if(result.DFUQueryResponse.DFULogicalFiles != undefined) {
-	      		var logicalFilesAutoComplete = [], fileSearchResult = result.DFUQueryResponse.DFULogicalFiles.DFULogicalFile;
-
-				fileSearchResult.forEach((logicalFile, index) => {
-					//dont add any duplicates
-					var exists = logicalFilesAutoComplete.filter(function(file) {
-						return file.text == logicalFile.Name;
+		let results = [];
+		try {
+			let clusterAuth = getClusterAuth(cluster);
+			let contentType = req.body.indexSearch ? "key" : "";
+			console.log("contentType: "+contentType);
+			let dfuService = new hpccJSComms.DFUService({ baseUrl: cluster.thor_host + ':' + cluster.thor_port, userID:(clusterAuth ? clusterAuth.user : ""), password:(clusterAuth ? clusterAuth.password : "")});
+			dfuService.DFUQuery({"LogicalName":req.body.keyword+"*", ContentType:contentType}).then(response => {
+				if(response.DFULogicalFiles && response.DFULogicalFiles.DFULogicalFile && response.DFULogicalFiles.DFULogicalFile.length > 0) {
+					let searchResults = response.DFULogicalFiles.DFULogicalFile;
+					searchResults.forEach((logicalFile) => {
+						results.push({"text": logicalFile.Name, "value":logicalFile.Name});
 					});
-					if(exists != undefined && exists.length == 0) {
-						logicalFilesAutoComplete.push({"text" : logicalFile.Name, "value" : logicalFile.Name});
-					}
-				});
-				console.log('logicalFilesAutoComplete: '+logicalFilesAutoComplete.length)
-	      	 	res.json(logicalFilesAutoComplete);
-	      	} else {
-	      		res.json("");
-	      	}
-	      }
-      	});
-    }).catch(err => {
-    	console.log('Cluster not reachable: '+JSON.stringify(err));
-    	res.status(500).send({"success":"false", "message": "Search failed. Please check if the cluster is running."});
-    });
-
-
+				}
+				res.json(results);
+			});
+		} catch(err) {
+			console.log(err);
+			res.status(500).send({"success":"false", "message": "Error occured during search."});
+		}
+  }).catch(err => {
+  	console.log('Cluster not reachable: '+JSON.stringify(err));
+  	res.status(500).send({"success":"false", "message": "Search failed. Please check if the cluster is running."});
+  });
 });
 
 router.post('/querysearch', function (req, res) {
-    console.log('clusterid: '+req.body.clusterid);
 	getCluster(req.body.clusterid).then(function(cluster) {
-		let url = cluster.thor_host + ':' + cluster.thor_port +'/WsWorkunits/WUListQueries.json?QueryName=*'+req.body.keyword+'*';
-		if(req.body.indexSearch)
-    		url += '&ContentType=key'
-        request.get({
-		  url: url,
-		  auth : getClusterAuth(cluster)
-		}, function(err, response, body) {
-		  if (err) {
-			console.log('ERROR - ', err);
-			return response.status(500).send('Error');
-	      }
-	      else {
-	      	var result = JSON.parse(body);
-	      	if(result.WUListQueriesResponse.QuerysetQueries != undefined) {
-	      		var querySearchAutoComplete = [], querySearchResult = result.WUListQueriesResponse.QuerysetQueries.QuerySetQuery;
+		let clusterAuth = getClusterAuth(cluster);
+		let wsWorkunits = new hpccJSComms.WorkunitsService({ baseUrl: cluster.thor_host + ':' + cluster.thor_port, userID:(clusterAuth ? clusterAuth.user : ""), password:(clusterAuth ? clusterAuth.password : ""), type: "get" }),
+			  querySearchAutoComplete = [];
+
+		wsWorkunits.WUListQueries({"QueryName":"*"+req.body.keyword+"*"}).then(response => {
+			console.log(response)
+	  	if(response.QuerysetQueries) {
+	  		querySearchResult = response.QuerysetQueries.QuerySetQuery;
 
 				querySearchResult.forEach((querySet, index) => {
-					//dont add any duplicates
-					var exists = querySearchAutoComplete.filter(function(query) {
-						return query.text == querySet.Id;
-					});
-					if(exists != undefined && exists.length == 0) {
 						querySearchAutoComplete.push({"text" : querySet.Id, "value" : querySet.Name});
-					}
 				});
-				console.log('querySearchAutoComplete: '+querySearchAutoComplete.length)
-	      	 	res.json(querySearchAutoComplete);
-	      	} else {
-	      		res.json("");
-	      	}
-	      }
-      	});
+			}
+			res.json(querySearchAutoComplete);
     }).catch(err => {
-    	console.log('Cluster not reachable: '+JSON.stringify(err));
-    	res.status(500).send({"success":"false", "message": "Search failed. Please check if the cluster is running."});
+    	console.log('Error occured while querying : '+JSON.stringify(err));
+    	res.status(500).send({"success":"false", "message": "Search failed. Error occured while querying."});
     });
-
+	}).catch(err => {
+  	console.log('Cluster not reachable: '+JSON.stringify(err));
+  	res.status(500).send({"success":"false", "message": "Search failed. Please check if the cluster is running."});
+  });
 });
 
 router.get('/getClusters', function (req, res) {
@@ -173,66 +143,49 @@ router.post('/removecluster', function (req, res) {
 });
 
 router.get('/getFileInfo', function (req, res) {
-    try {
+  try {
 		console.log('fileName: '+req.query.fileName);
 		getCluster(req.query.clusterid).then(function(cluster) {
-			request.get({
-			  url: cluster.thor_host + ':' + cluster.thor_port +'/WsDfu/DFUInfo.json?Name='+req.query.fileName,
-			  auth : getClusterAuth(cluster)
-			}, function(err, response, body) {
-			  if (err) {
-				console.log('ERROR - ', err);
-				return response.status(500).send('Error');
-		      }
-		      else {
-		      	var processFieldValidations = function(fileLayout) {
-		      		var fieldsValidations=[];
-		      		fileLayout.forEach(function(field, idx) {
-		      			//fields[idx] = field.trim().replace(";","");
-		      			var validations = {
-			      			"name" : field.name,
-			      			"ruleType" : '',
-			      			"rule" : '',
-			      			"action" : '',
-			      			"fixScript" : ''
-			      		}
-		      			fieldsValidations.push(validations);
-		      			//console.log(fields[idx]);
-		      		});
-		      		return fieldsValidations;
-		      	}
-		      	var result = JSON.parse(body);
-		      	if(result.Exceptions) {
-		      		res.status(500).send('Error: '+result.Exceptions.Exception);
-		      	}
+			let clusterAuth = getClusterAuth(cluster);
+			let dfuService = new hpccJSComms.DFUService({ baseUrl: cluster.thor_host + ':' + cluster.thor_port, userID:(clusterAuth ? clusterAuth.user : ""), password:(clusterAuth ? clusterAuth.password : "")});
+			dfuService.DFUInfo({"Name":req.query.fileName}).then(response => {
+		  	var processFieldValidations = function(fileLayout) {
+      		var fieldsValidations=[];
+      		fileLayout.forEach(function(field, idx) {
+      			//fields[idx] = field.trim().replace(";","");
+      			var validations = {
+	      			"name" : field.name,
+	      			"ruleType" : '',
+	      			"rule" : '',
+	      			"action" : '',
+	      			"fixScript" : ''
+	      		}
+      			fieldsValidations.push(validations);
+      			//console.log(fields[idx]);
+      		});
+      		return fieldsValidations;
+      	}
+      	var fileInfo = {};
+    		getFileLayout(cluster, req.query.fileName).then(function(fileLayout) {
+      		fileInfo = {
+      			"name" : response.FileDetail.Name,
+      			"fileName" : response.FileDetail.Filename,
+      			"description" : response.FileDetail.Description,
+      			"pathMask" : response.FileDetail.PathMask,
+      			"isSuperfile" : response.FileDetail.isSuperfile,
+      			"fileType": response.FileDetail.ContentType,
+      			"layout" : fileLayout,
+      			"validations" : processFieldValidations(fileLayout)
+      		}
+      	 	res.json(fileInfo);
+    		})
 
-		      	if(result.DFUInfoResponse != undefined) {
-		      		var fileInfoResponse = result.DFUInfoResponse.FileDetail, fileInfo = {};
-		      		getFileLayout(cluster, req.query.fileName).then(function(fileLayout) {
-			      		fileInfo = {
-			      			"name" : fileInfoResponse.Name,
-			      			"fileName" : fileInfoResponse.Filename,
-			      			"description" : fileInfoResponse.Description,
-			      			"pathMask" : fileInfoResponse.PathMask,
-			      			"isSuperfile" : fileInfoResponse.isSuperfile,
-			      			"fileType": fileInfoResponse.ContentType,
-			      			"layout" : fileLayout,
-			      			"validations" : processFieldValidations(fileLayout)
-			      		}
-			      		console.log("final length: "+fileInfo.layout);
-			      	 	res.json(fileInfo);
-		      		})
-		      	} else {
-		      		res.json();
-		      	}
-		      }
-
-	      	});
+		  });
 		});
 
-    } catch (err) {
-        console.log('err', err);
-    }
+  } catch (err) {
+      console.log('err', err);
+  }
 });
 
 function getFileLayout(cluster, fileName) {
@@ -296,36 +249,28 @@ function getFileLayout(cluster, fileName) {
 
 router.get('/getIndexInfo', function (req, res) {
     try {
-		getCluster(req.query.clusterid).then(function(cluster) {
-			request.get({
-			  url: cluster.thor_host + ':' + cluster.thor_port +'/WsDfu/DFUInfo.json?Name='+req.query.indexName,
-			  auth : getClusterAuth(cluster)
-			}, function(err, response, body) {
-			  if (err) {
-				console.log('ERROR - ', err);
-				return response.status(500).send('Error');
-		      }
-		      else {
-		      	var result = JSON.parse(body);
-		      	if(result.DFUInfoResponse != undefined) {
-		      		var fileInfoResponse = result.DFUInfoResponse.FileDetail, indexInfo = {};
-		      		getIndexColumns(cluster, req.query.indexName).then(function(indexColumns) {
-			      		indexInfo = {
-			      			"name" : fileInfoResponse.Name,
-			      			"fileName" : fileInfoResponse.Filename,
-			      			"description" : fileInfoResponse.Description,
-			      			"pathMask" : fileInfoResponse.PathMask,
-			      			"columns" : indexColumns
-			      		}
-			      	 	res.json(indexInfo);
-		      		})
-		      	} else {
-		      		res.json();
-		      	}
-		      }
-
-	      	});
-		});
+    	console.log("getIndexInfo")
+			getCluster(req.query.clusterid).then(function(cluster) {
+				let clusterAuth = getClusterAuth(cluster);
+				let dfuService = new hpccJSComms.DFUService({ baseUrl: cluster.thor_host + ':' + cluster.thor_port, userID:(clusterAuth ? clusterAuth.user : ""), password:(clusterAuth ? clusterAuth.password : "")});
+				dfuService.DFUInfo({"Name":req.query.indexName}).then(response => {
+	    		if(response.FileDetail) {
+		    		let indexInfo = {};
+		    		getIndexColumns(cluster, req.query.indexName).then(function(indexColumns) {
+		      		indexInfo = {
+		      			"name" : response.FileDetail.Name,
+		      			"fileName" : response.FileDetail.Filename,
+		      			"description" : response.FileDetail.Description,
+		      			"pathMask" : response.FileDetail.PathMask,
+		      			"columns" : indexColumns
+		      		}
+		      	 	res.json(indexInfo);
+		    		})
+		    	} else {
+		    		res.json();
+		    	}
+	    	});
+			});
     } catch (err) {
         console.log('err', err);
     }
@@ -361,7 +306,6 @@ function getIndexColumns(cluster, indexName) {
 
 let getCluster = function(clusterId) {
 	return Cluster.findOne( {where: {id:clusterId}} ).then(async function(cluster) {
-		console.log('cluster: '+JSON.stringify(cluster));
 		if(cluster.hash) {
 			cluster.hash = crypto.createDecipher(algorithm,dbUtil.secret).update(cluster.hash,'hex','utf8');
 		}
@@ -390,36 +334,27 @@ function getClusterAuth(cluster) {
 }
 
 router.get('/getData', function (req, res) {
-    try {
+  try {
 		getCluster(req.query.clusterid).then(function(cluster) {
-			request.get({
-			  url: cluster.thor_host + ':' + cluster.thor_port +'/WsWorkunits/WUResult.json?LogicalName='+req.query.fileName+'&Count=50',
-			  auth : getClusterAuth(cluster)
-			}, function(err, response, body) {
-			  if (err) {
-				console.log('ERROR - ', err);
-				return response.status(500).send('Error');
-		      }
-		      else {
-		      	var result = JSON.parse(body);
-		      	if(result.WUResultResponse != undefined && result.WUResultResponse.Result != undefined && result.WUResultResponse.Result.Row != undefined) {
-						var rows = result.WUResultResponse.Result.Row, indexInfo = {};
-						if(rows.length > 0) {
-							res.json(rows);
-						} else {
-							res.json([]);
-						}
-
-				} else {
-		      		res.json([]);
-		      	}
-		      }
-
-	      	});
+			let clusterAuth = getClusterAuth(cluster);
+			let wuService = new hpccJSComms.WorkunitsService({ baseUrl: cluster.thor_host + ':' + cluster.thor_port, userID:(clusterAuth ? clusterAuth.user : ""), password:(clusterAuth ? clusterAuth.password : "")});
+			wuService.WUResult({"LogicalName":req.query.fileName, "Count":50}).then(response => {
+				if(response.Result != undefined && response.Result != undefined && response.Result.Row != undefined) {
+					var rows = response.Result.Row, indexInfo = {};
+					if(rows.length > 0) {
+						res.json(rows);
+					} else {
+						res.json([]);
+					}
+				}
+				else {
+      		res.json([]);
+      	}
+			});
 		});
 	} catch (err) {
-        console.log('err', err);
-    }
+      console.log('err', err);
+  }
 });
 
 router.get('/getFileProfile', function (req, res) {
@@ -503,66 +438,39 @@ router.get('/getFileProfileHTML', function (req, res) {
 router.get('/getQueryInfo', function (req, res) {
     var resultObj = {}, requestObj = [], responseObj = [];
     try {
-		getCluster(req.query.clusterid).then(function(cluster) {
-			request.get({
-			  url: cluster.roxie_host + ':'+ cluster.roxie_port +'/WsEcl/example/request/query/roxie/'+req.query.queryName+'/json?display',
-			  auth : getClusterAuth(cluster)
-			}, function(err, response, body) {
-			  if (err) {
-				console.log('ERROR - ', err);
-				return response.status(500).send('Error');
-		      }
-		      else {
-		      	var result = JSON.parse(body);
-		      	if(result[req.query.queryName] != undefined) {
-			      	Object.keys(result[req.query.queryName]).forEach(function (key) {
-			      		requestObj.push({
-			      			"field" : key,
-			      			"type" : (result[req.query.queryName][key] == true || result[req.query.queryName][key] == false) ? 'boolean' : result[req.query.queryName][key]
-			      		});
-			      	});
-			      	resultObj.request = requestObj;
-			      	//get query response
-			      	request.get({
-						url: cluster.roxie_host + ':'+ cluster.roxie_port +'/WsEcl/example/response/query/roxie/'+req.query.queryName+'/json?display',
-					    auth : getClusterAuth(cluster)
-					}, function(err, response, body) {
-					  if (err) {
-						console.log('ERROR - ', err);
-						return response.status(500).send('Error');
-				      }
-				      else {
-				      	var result = JSON.parse(body);
-				      	if(result[req.query.queryName+"Response"] != undefined) {
-					      	var rows = result[req.query.queryName+"Response"].Results;
-							Object.keys(rows).forEach(function (key) {
-								if(rows[key] instanceof Object) {
-									if(rows[key].Row) {
-										Object.keys(rows[key].Row[0]).forEach(function (responseKey) {
-											responseObj[responseKey] = rows[key].Row[0][responseKey];
-											responseObj.push(
-											{
-												"field" : responseKey,
-			      								"type" : rows[key].Row[0][responseKey]
-											}
-											);
-										});
-									}
-								}
+			getCluster(req.query.clusterid).then(function(cluster) {
+				let clusterAuth = getClusterAuth(cluster);
+				let eclService = new hpccJSComms.EclService({ baseUrl: cluster.roxie_host + ':' + cluster.roxie_port, userID:(clusterAuth ? clusterAuth.user : ""), password:(clusterAuth ? clusterAuth.password : "")});
+				eclService.requestJson("roxie", req.query.queryName).then(response => {
+					if(response) {
+						response.forEach((requestParam) =>  {
+							requestObj.push({"field":requestParam.id, "type":requestParam.type});
+						});
+					}
+					resultObj.request = requestObj;
+
+			  	eclService.responseJson("roxie", req.query.queryName).then(response => {
+						if(response) {
+							let firstKey = Object.keys(response)[0];
+							response[firstKey].forEach((responseParam) => {
+								responseObj.push(
+								{
+									"field" : responseParam.id,
+	    						"type" : responseParam.id
+								});
 							});
-							resultObj.response = responseObj;
-				      	} else {
-				      		resultObj.response = {};
-				      	}
-				      	res.json(resultObj);
-				      }
+						}
+						resultObj.response = responseObj;
+						res.json(resultObj);
 
-			      	});
-		      	}
-		      }
+					}).catch(function (err) {
+			      console.log('error occured: '+err);
+			  	});
 
-	      	});
-		});
+				}).catch(function (err) {
+		      console.log('error occured: '+err);
+		  	});
+			});
     } catch (err) {
         console.log('err', err);
     }
