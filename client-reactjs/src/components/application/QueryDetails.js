@@ -99,13 +99,13 @@ class QueryDetails extends Component {
   }
 
   handleOk = (e) => {
-    this.props.form.validateFields((err, values) => {
+    this.props.form.validateFields(async (err, values) => {
       if(!err) {
         this.setState({
           confirmLoading: true,
         });
 
-        this.saveQueryDetails();
+        let saveResponse = await this.saveQueryDetails();
 
         setTimeout(() => {
           this.setState({
@@ -113,7 +113,7 @@ class QueryDetails extends Component {
             confirmLoading: false,
           });
           this.props.onClose();
-          this.props.onRefresh();
+          this.props.onRefresh(saveResponse);
         }, 2000);
       }
     });
@@ -238,19 +238,22 @@ class QueryDetails extends Component {
   }
 
   saveQueryDetails() {
-    fetch('/api/query/saveQuery', {
-      method: 'post',
-      headers: authHeader(),
-      body: JSON.stringify(this.populateQueryDetails())
-    }).then(function(response) {
-      if(response.ok) {
-        return response.json();
-      }
-      handleError(response);
-    }).then(function(data) {
-      console.log('Saved..');
-    });
+    return new Promise((resolve) => {
+      fetch('/api/query/saveQuery', {
+        method: 'post',
+        headers: authHeader(),
+        body: JSON.stringify(this.populateQueryDetails())
+      }).then(function(response) {
+        if(response.ok) {
+          return response.json();
+        }
+        handleError(response);
+      }).then(function(data) {
+        console.log('Saved..');
+        resolve(data);
+      });
     //this.populateFileDetails()
+    });
   }
 
   populateQueryDetails() {

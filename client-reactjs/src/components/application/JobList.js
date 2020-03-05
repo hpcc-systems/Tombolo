@@ -1,6 +1,9 @@
 import React, { Component } from "react";
 import { Button, Table, Divider, message, Popconfirm, Icon, Tooltip, Radio } from 'antd/lib';
+import FileDetailsForm from "./FileDetails";
 import JobDetailsForm from "./JobDetails";
+import QueryDetailsForm from "./QueryDetails";
+import IndexDetailsForm from "./IndexDetails";
 import {Graph} from "./Graph";
 import BreadCrumbs from "../common/BreadCrumbs";
 import { connect } from 'react-redux';
@@ -15,8 +18,15 @@ class JobList extends Component {
   state = {
     applicationId: this.props.application ? this.props.application.applicationId : '',
     applicationTitle: this.props.application ? this.props.application.applicationTitle : '',
+    openFileDetailsDialog: false,
     openJobDetailsDialog: false,
+    openQueryDetailsDialog: false,
+    openIndexDetailsDialog: false,
+    selectedFile: '',
+    selectedQuery: '',
+    selectedIndex: '',
     jobs:[],
+    assets:[],
     selectedJob: '',
     tableView: false
   }
@@ -28,13 +38,16 @@ class JobList extends Component {
         this.setState({
           applicationId: props.application.applicationId,
           applicationTitle: props.application.applicationTitle
+        }, function() {
+          this.handleRefresh();
         });
-        //this.handleRefresh();
       }
     }
+    console.log("componentWillReceiveProps");
   }
 
   componentDidMount() {
+    console.log("componentDidMount")
     //this.fetchDataAndRenderTable();
   }
 
@@ -56,9 +69,28 @@ class JobList extends Component {
     });
   }
 
+  handleClose = () => {
+    this.setState({
+      openFileDetailsDialog: false
+    });  }
+
+  closeQueryDlg = () => {
+    this.setState({
+      openQueryDetailsDialog: false
+    });
+  }
+
+  closeIndexDlg = () => {
+    this.setState({
+      openIndexDetailsDialog: false
+    });
+  }
+
   fetchDataAndRenderTable() {
+    console.log("appId: "+this.state.applicationId);
     var _self=this;
-    fetch("/api/job/job_list?app_id="+this.state.applicationId, {
+    //fetch("/api/job/job_list?app_id="+this.state.applicationId, {
+    fetch("/api/app/read/assets?app_id="+this.state.applicationId, {
       headers: authHeader()
     })
     .then((response) => {
@@ -69,7 +101,7 @@ class JobList extends Component {
     })
     .then(data => {
       this.setState({
-        jobs: data
+        assets: data
       });
     }).catch(error => {
       console.log(error);
@@ -77,15 +109,61 @@ class JobList extends Component {
     //this._setupListeners();
   }
 
-  handleEdit(fileId) {
+  handleEdit(id, objType) {
+    let openFileDetailsDialog = false,
+        openJobDetailsDialog = false,
+        openQueryDetailsDialog = false,
+        openIndexDetailsDialog = false;
+    let selectedFile='', selectedJob='', selectedQuery='', selectedIndex='';
+    switch (objType) {
+      case 'file':
+        openFileDetailsDialog = true;
+        selectedFile = id;
+        break;
+      case 'job':
+        openJobDetailsDialog = true;
+        selectedJob = id;
+        break;
+      case 'query':
+        openQueryDetailsDialog = true;
+        selectedQuery = id
+        break;
+      case 'index':
+        openIndexDetailsDialog = true;
+        selectedIndex = id;
+        break;
+    }
     this.setState({
-      openJobDetailsDialog: true,
-      selectedJob: fileId
+      openFileDetailsDialog: openFileDetailsDialog,
+      openJobDetailsDialog: openJobDetailsDialog,
+      openQueryDetailsDialog: openQueryDetailsDialog,
+      openIndexDetailsDialog: openIndexDetailsDialog,
+      selectedFile: selectedFile,
+      selectedJob: selectedJob,
+      selectedQuery: selectedQuery,
+      selectedIndex: selectedIndex
     });
     //this.child.showModal();
   }
+  handleDelete(id, objType) {
+    switch (objType) {
+      case 'file':
+        this.handleFileDelete(id);
+        break;
+      case 'index':
+        this.handleIndexDelete(id);
+        break;
+      case 'query':
+        this.handleQueryDelete(id);
+        break;
+      case 'job':
+        this.handleJobDelete(id);
+        break;
+    }
+    this.updateGraph(id);
+  }
 
-  handleDelete(jobId) {
+  handleJobDelete(jobId) {
     console.log(jobId);
     var data = JSON.stringify({jobId: jobId, application_id: this.state.applicationId});
     fetch("/api/job/delete", {
@@ -107,6 +185,92 @@ class JobList extends Component {
     });
   }
 
+  handleIndexDelete(indexId) {
+    console.log(indexId);
+    var data = JSON.stringify({indexId: indexId, application_id: this.state.applicationId});
+    fetch("/api/index/read/delete", {
+      method: 'post',
+      headers: authHeader(),
+      body: data
+    }).then((response) => {
+      if(response.ok) {
+        return response.json();
+      }
+      handleError(response);
+    })
+    .then(result => {
+      this.fetchDataAndRenderTable();
+      message.success("Index deleted sucessfully");
+    }).catch(error => {
+      console.log(error);
+      message.error("There was an error deleting the Index file");
+    });
+  }
+
+  handleQueryDelete(queryId) {
+    console.log(queryId);
+    var data = JSON.stringify({queryId: queryId, application_id: this.state.applicationId});
+    fetch("/api/query/delete", {
+      method: 'post',
+      headers: authHeader(),
+      body: data
+    }).then((response) => {
+      if(response.ok) {
+        return response.json();
+      }
+      handleError(response);
+    })
+    .then(result => {
+      this.fetchDataAndRenderTable();
+      message.success("Query deleted sucessfully");
+    }).catch(error => {
+      console.log(error);
+      message.error("There was an error deleting the Query");
+    });
+  }
+
+  handleFileDelete= (fileId) => {
+    console.log(fileId);
+      var data = JSON.stringify({fileId: fileId, application_id: this.state.applicationId});
+      fetch("/api/file/read/delete", {
+        method: 'post',
+        headers: authHeader(),
+        body: data
+      }).then((response) => {
+        if(response.ok) {
+          return response.json();
+        }
+        handleError(response);
+      })
+      .then(result => {
+        this.fetchDataAndRenderTable();
+        message.success("File deleted sucessfully");
+      }).catch(error => {
+        console.log(error);
+        message.error("There was an error deleting the file");
+      });
+  }
+
+  updateGraph = (assetId) => {
+    console.log(assetId);
+      var data = JSON.stringify({id: assetId, application_id: this.state.applicationId});
+      fetch("/api/workflowgraph/deleteAsset", {
+        method: 'post',
+        headers: authHeader(),
+        body: data
+      }).then((response) => {
+        if(response.ok) {
+          return response.json();
+        }
+        handleError(response);
+      })
+      .then(result => {
+      }).catch(error => {
+        console.log(error);
+        message.error("There was an error updating the graph");
+      });
+  }
+
 
   handleRefresh = () => {
     this.fetchDataAndRenderTable();
@@ -114,6 +278,7 @@ class JobList extends Component {
 
   handleToggleView = (evt) => {
     evt.target.value == 'chart' ? this.setState({tableView: false}) : this.setState({tableView: true})
+    this.handleRefresh();
   }
 
   render() {
@@ -131,14 +296,19 @@ class JobList extends Component {
         width: '30%',
       },
       {
+        title: 'Type',
+        dataIndex: 'objType',
+        width: '30%',
+      },
+      {
         width: '30%',
         title: 'Action',
         dataJob: '',
         render: (text, record) =>
           <span>
-            <a href="#" onClick={(row) => this.handleEdit(record.id)}><Tooltip placement="right" title={"Edit Job"}><Icon type="edit" /></Tooltip></a>
+            <a href="#" onClick={(row) => this.handleEdit(record.id, record.objType)}><Tooltip placement="right" title={"Edit Job"}><Icon type="edit" /></Tooltip></a>
             <Divider type="vertical" />
-            <Popconfirm title="Are you sure you want to delete this job?" onConfirm={() => this.handleDelete(record.id)} icon={<Icon type="question-circle-o" style={{ color: 'red' }} />}>
+            <Popconfirm title="Are you sure you want to delete this job?" onConfirm={() => this.handleDelete(record.id, record.objType)} icon={<Icon type="question-circle-o" style={{ color: 'red' }} />}>
               <a href="#"><Tooltip placement="right" title={"Delete Job"}><Icon type="delete" /></Tooltip></a>
             </Popconfirm>
           </span>
@@ -158,26 +328,56 @@ class JobList extends Component {
           </span>
         </div>
         <div id="jobs">
-        {console.log("xxx: "+this.state.applicationId)}
           {this.state.tableView ?
             <Table
               columns={jobColumns}
               rowKey={record => record.id}
-              dataSource={this.state.jobs}
+              dataSource={this.state.assets}
               pagination={{ pageSize: 10 }} scroll={{ y: 460 }}
             />
           : <Graph applicationId={this.state.applicationId}/>
           }
 
-          {this.state.openJobDetailsDialog ?
-            <JobDetailsForm
-              onRef={ref => (this.child = ref)}
+          {this.state.openFileDetailsDialog ?
+            <FileDetailsForm
+              onRef={ref => (this.fileDlg = ref)}
+              isNewFile={false}
+              selectedFile={this.state.selectedFile}
               applicationId={this.state.applicationId}
-              selectedJob={this.state.selectedJob}
-              isNewJob={this.state.selectedJob != '' ? false : true}
+              onClose={this.handleClose}
               onRefresh={this.handleRefresh}
-              onClose={this.closeJobDlg}
-              /> : null}
+              user={this.props.user}/> : null}
+
+          {this.state.openJobDetailsDialog ?
+                <JobDetailsForm
+                  onRef={ref => (this.jobDlg = ref)}
+                  applicationId={this.state.applicationId}
+                  selectedJob={this.state.selectedJob}
+                  isNewJob={false}
+                  onRefresh={this.handleRefresh}
+                  onClose={this.closeJobDlg}
+                  user={this.props.user}/> : null}
+
+          {this.state.openIndexDetailsDialog ?
+              <IndexDetailsForm
+                onRef={ref => (this.idxDlg = ref)}
+                applicationId={this.state.applicationId}
+                isNewIndex={false}
+                onRefresh={this.handleRefresh}
+                selectedIndex={this.state.selectedIndex}
+                onClose={this.closeIndexDlg}
+                user={this.props.user}/> : null}
+
+          {this.state.openQueryDetailsDialog ?
+                <QueryDetailsForm
+                  onRef={ref => (this.qryDlg = ref)}
+                  applicationId={this.state.applicationId}
+                  isNewFile={false}
+                  selectedQuery={this.state.selectedQuery}
+                  onRefresh={this.handleRefresh}
+                  onClose={this.closeQueryDlg}/> : null}
+
+
         </div>
       </div>
   )

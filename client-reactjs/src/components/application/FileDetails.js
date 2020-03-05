@@ -68,6 +68,7 @@ class FileDetails extends Component {
   }
 
   componentDidMount() {
+
     this.props.onRef(this);
     this.getFileCount();
     this.getFileDetails();
@@ -1043,6 +1044,7 @@ class FileDetails extends Component {
 
     //render only after fetching the data from the server
     if(!title && !this.props.selectedFile && !this.props.isNewFile) {
+      console.log("not rendering");
       return null;
     }
 

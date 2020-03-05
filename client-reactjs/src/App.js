@@ -59,7 +59,7 @@ class App extends React.Component {
                                         <PrivateRoute exact path="/:applicationId/index" component={IndexList}/>
                                         <PrivateRoute path="/index" component={IndexList}/>
                                         <PrivateRoute path="/:applicationId/queries" component={QueriesList}/>
-                                        <PrivateRoute path="/:applicationId/jobs" component={JobList}/>
+                                        <PrivateRoute path="/:applicationId/workflow" component={JobList}/>
                                         <PrivateRoute path="/admin/applications" component={AdminApplications}/>
                                         <PrivateRoute path="/admin/clusters" component={AdminClusters}/>
                                         <PrivateRoute path="/admin/users" component={Users}/>

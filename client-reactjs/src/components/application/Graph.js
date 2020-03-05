@@ -8,6 +8,8 @@ import { Button, Icon} from 'antd/lib';
 import { Typography } from 'antd';
 import FileDetailsForm from "./FileDetails";
 import JobDetailsForm from "./JobDetails";
+import QueryDetailsForm from "./QueryDetails";
+import IndexDetailsForm from "./IndexDetails";
 import { authHeader, handleError } from "../common/AuthHeader.js"
 import { connect } from 'react-redux';
 const { Text } = Typography;
@@ -22,10 +24,16 @@ class Graph extends Component {
   state = {
     openFileDetailsDialog: false,
     openJobDetailsDialog: false,
+    openQueryDetailsDialog: false,
+    openIndexDetailsDialog: false,
     selectedFile: '',
+    selectedQuery: '',
+    selectedIndex: '',
     isNewFile:false,
     selectedJob: '',
     isNewJob:false,
+    isNewQuery:false,
+    isNewIndex:false,
     currentlyEditingId:''
   }
 
@@ -96,7 +104,7 @@ class Graph extends Component {
     //this.saveGraph();
   }
 
-  openFileDetailsDialog(d) {
+  openDetailsDialog(d) {
     let _self=this;
     switch(d.type) {
       case 'File':
@@ -130,14 +138,43 @@ class Graph extends Component {
           _self.jobDlg.showModal();
         }, 200);
         break;
+      case 'Query':
+        let isNewQuery = false;
+        if(d.queryId == undefined || d.queryId == '') {
+          isNewQuery = true
+        }
+        this.setState({
+          isNewQuery: isNewQuery,
+          openQueryDetailsDialog: true,
+          selectedQuery: d.queryId
+        });
+
+        setTimeout(() => {
+          _self.qryDlg.showModal();
+        }, 200);
+        break;
+      case 'Index':
+        let isNewIndex = false;
+        if(d.indexId == undefined || d.indexId == '') {
+          isNewIndex = true
+        }
+        this.setState({
+          isNewIndex: isNewIndex,
+          openIndexDetailsDialog: true,
+          selectedIndex: d.indexId
+        });
+
+        setTimeout(() => {
+          _self.idxDlg.showModal();
+        }, 200);
+        break;
    }
   }
 
   handleClose = () => {
     this.setState({
       openFileDetailsDialog: false
-    });
-  }
+    });  }
 
   closeJobDlg = () => {
     this.setState({
@@ -145,15 +182,25 @@ class Graph extends Component {
     });
   }
 
+  closeQueryDlg = () => {
+    this.setState({
+      openQueryDetailsDialog: false
+    });
+  }
+
+  closeIndexDlg = () => {
+    this.setState({
+      openIndexDetailsDialog: false
+    });
+  }
+
   onFileAdded = (saveResponse) => {
-    console.log(saveResponse);
     var newData = this.thisGraph.nodes.map(el => {
         if(el.id == this.state.currentlyEditingId) {
-           return Object.assign({}, el, {title:saveResponse.title, fileId:saveResponse.fileId, jobId:saveResponse.jobId})
+           return Object.assign({}, el, {title:saveResponse.title, fileId:saveResponse.fileId, jobId:saveResponse.jobId, queryId:saveResponse.queryId, indexId:saveResponse.indexId})
         }
         return el
     });
-    console.log(JSON.stringify(newData));
     this.thisGraph.nodes = newData;
     this.updateGraph();
   }
@@ -225,10 +272,8 @@ class Graph extends Component {
   /* PROTOTYPE FUNCTIONS */
 
   dragmove = (d) => {
-    console.log(d);
     let _self=this;
     if (_self.graphState.shiftNodeDrag) {
-      console.log("dragging path")
         _self.thisGraph.dragLine.attr('d', 'M' + (d.x + 40) + ',' + (d.y + 20) + 'L' + (d3.mouse(_self.thisGraph.svgG.node())[0] + 35)+ ',' + d3.mouse(_self.thisGraph.svgG.node())[1]);
     } else {
         d.x += d3.event.dx;
@@ -380,7 +425,6 @@ class Graph extends Component {
 
   // mousedown on node
   circleMouseDown = (d3node, d) => {
-    console.log('circleModusDown...')
       d3.event.stopPropagation();
       this.graphState.mouseDownNode = d;
       if (d3.event.shiftKey) {
@@ -452,7 +496,6 @@ class Graph extends Component {
     if (mouseDownNode !== d) {
         // we're in a different node: create new edge for mousedown edge and add to graph
         let newEdge = {source: mouseDownNode, target: d};
-        console.log('newEdge: '+JSON.stringify(newEdge))
         let filtRes = _self.thisGraph.paths.filter(function (d) {
             if (d.source === newEdge.target && d.target === newEdge.source) {
                 _self.thisGraph.edges.splice(_self.thisGraph.edges.indexOf(d), 1);
@@ -473,7 +516,6 @@ class Graph extends Component {
 
   // mouseup on nodes
   circleMouseUp = (d3node, d) => {
-      console.log('mouse up');
       // reset the this.graphStates
       this.graphState.shiftNodeDrag = false;
       d3node.classed(this.consts.connectClass, false);
@@ -482,7 +524,6 @@ class Graph extends Component {
           // shift-clicked node: edit text content
           let d3txt = this.changeTextOfNode(d3node, d);
           let txtNode = d3txt.node();
-          console.log(txtNode);
           this.selectElementContents(txtNode);
           txtNode.focus();
       } else {
@@ -511,7 +552,6 @@ class Graph extends Component {
           // dragged not clicked
           this.graphState.justScaleTransGraph = false;
       } else if (this.graphState.graphMouseDown && d3.event.shiftKey) {
-          console.log('idct: '+this.graphState.idct);
           // clicked not dragged from svg
           let xycoords = d3.mouse(this.thisGraph.svgG.node()),
               d = {id: this.graphState.idct++, title: "Title", x: xycoords[0], y: xycoords[1]};
@@ -605,7 +645,6 @@ class Graph extends Component {
         })
         .merge(paths)
         .on("mouseup", function (d) {
-            console.log('mouseup link');
             // graphState.mouseDownLink = null;
         })
         .on("mousedown", function (d) {
@@ -654,20 +693,17 @@ class Graph extends Component {
             _self.circleMouseUp(d3.select(this), d);
             console.log('clicked....')
         })*/.on("dblclick", function (d) {
-            console.log('dblclick....'+JSON.stringify(d))
             _self.setState({
               currentlyEditingId: d.id
             });
 
-            _self.openFileDetailsDialog(d);
+            _self.openDetailsDialog(d);
         });
 
         _self.thisGraph.circles = newGs;
         let childNodes = 0;
         newGs.each(function(d) {
-          console.log("herereee")
           //if (this.childNodes.length === 0) {
-          console.log("adding circle..."+d.type);
           switch(d.type) {
             case 'Job':
               d3.select(this)
@@ -678,12 +714,13 @@ class Graph extends Component {
                 .attr("fill", _self.shapesData[0].color)
                 .attr("stroke-width", "3")
                 .call(_self.nodeDragHandler)
-              console.log(d.title + ' -- ' +d.fileId);
               _self.insertTitle(d3.select(this), d.title, d.x, d.y, d);
 
               break;
 
             case 'File':
+            case 'Index':
+            case 'Query':
               d3.select(this)
                 .append("rect")
                 .attr("rx", _self.shapesData[1].rx)
@@ -691,10 +728,16 @@ class Graph extends Component {
                 .attr("width", _self.shapesData[1].rectwidth)
                 .attr("height", _self.shapesData[1].rectheight)
                 .attr("stroke", "grey")
-                .attr("fill", _self.shapesData[1].color)
+                .attr("fill", function(d) {
+                  if(d.type == 'File')
+                   return _self.shapesData[1].color;
+                  else if(d.type == 'Index')
+                    return _self.shapesData[3].color;
+                  else if(d.type == 'Query')
+                    return _self.shapesData[2].color;
+                })
                 .attr("stroke-width", "3")
                 .call(_self.nodeDragHandler)
-                console.log(d.title + ' -- ' +d.fileId);
               _self.insertTitle(d3.select(this), d.title, d.x, d.y, d);
 
               break;
@@ -708,20 +751,16 @@ class Graph extends Component {
   nodeDragHandler = () => {
      return d3.drag()
         .on("drag", function (d) {
-            console.log("dragging");
         })
         .on("end", function(d){
-            console.log("dragging ended");
         })
   }
 
   collapseNav = () => {
     $('#sidebar').toggleClass('active');
-    console.log($('#sidebar'));
   }
 
   addFile = () => {
-    console.log("addfile");
     let _self = this;
     _self.thisGraph.nodes.push({"title":"new file","id":0,"x":475,"y":100})
     _self.setIdCt(_self.graphState.idct++);
@@ -777,10 +816,8 @@ class Graph extends Component {
     })
     .on("end", function(d){
         var mouseCoordinates = d3.mouse(this);
-        console.log(mouseCoordinates[0] + ', '+mouseCoordinates[1])
         let idct = ++_self.graphState.idct;
-        console.log('idct: '+idct);
-        _self.thisGraph.nodes.push({"title":"New "+d3.select(this).select("text").text(),"id":idct,"x":mouseCoordinates[0]-150,"y":mouseCoordinates[1]-50, "type":d3.select(this).select("text").text()})
+        _self.thisGraph.nodes.push({"title":"New "+d3.select(this).select("text").text(),"id":idct+Math.floor(Date.now()),"x":mouseCoordinates[0]-150,"y":mouseCoordinates[1]-50, "type":d3.select(this).select("text").text()})
         _self.setIdCt(idct);
         _self.updateGraph();
     })
@@ -996,6 +1033,24 @@ class Graph extends Component {
               onRefresh={this.onFileAdded}
               onClose={this.closeJobDlg}
               user={this.props.user}/> : null}
+
+      {this.state.openIndexDetailsDialog ?
+          <IndexDetailsForm
+            onRef={ref => (this.idxDlg = ref)}
+            applicationId={this.props.applicationId}
+            isNewIndex={this.state.isNewIndex}
+            onRefresh={this.onFileAdded}
+            selectedIndex={this.state.selectedIndex}
+            onClose={this.closeIndexDlg}
+            user={this.props.user}/> : null}
+
+      {this.state.openQueryDetailsDialog ?
+            <QueryDetailsForm
+              onRef={ref => (this.qryDlg = ref)}
+              applicationId={this.props.applicationId}
+              isNewFile={this.state.isNewQuery}
+              onRefresh={this.onFileAdded}
+              onClose={this.closeQueryDlg}/> : null}
 
     </div>
 	)

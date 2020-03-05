@@ -58,4 +58,35 @@ router.post('/delete', (req, res) => {
     });
 });
 
+router.post('/deleteAsset', (req, res) => {
+    let assetId=req.body.id, edgeId='';
+    console.log('assetId: '+assetId);
+    WorkflowGraph.findOne({where:{"application_Id":req.body.application_id}}).then(function(graph) {
+        let nodes = JSON.parse(graph.nodes), edges = JSON.parse(graph.edges), workflowGraphId=graph.id;
+        nodes.forEach((node, idx) => {
+            if (node.fileId == assetId || node.indexId == assetId || node.queryId == assetId || node.jobId == assetId) {
+                edgeId=node.id;
+                nodes.splice(idx, 1);
+            }
+        });
+        edges = edges.filter(edge => (edge.source != edgeId && edge.target != edgeId));
+        /*edges.forEach((edge, idx) => {
+            console.log('edgeId: '+edgeId);
+            if(edge.source == edgeId || edge.target == edgeId) {
+                edges.splice(idx, 1);
+            }
+            console.log(JSON.stringify(edges));
+        });*/
+        console.log(JSON.stringify(edges));
+        WorkflowGraph.update(
+            {nodes:JSON.stringify(nodes), edges:JSON.stringify(edges)},
+            {where:{"id": workflowGraphId, "application_id":req.body.application_id}}
+        ).then(function(updated) {
+            res.json({"result":"success"});
+        }).catch(function(err) {
+            console.log(err);
+        });
+    })
+});
+
 module.exports = router;

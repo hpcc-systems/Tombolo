@@ -99,7 +99,7 @@ class AppHeader extends Component {
       //this.props.onAppicationSelect(value);
       this.props.dispatch(applicationActions.applicationSelected(event.target.getAttribute("data-value"), event.target.getAttribute("data-display")));
       this.setState({ selected: event.target.getAttribute("data-display") });
-      this.props.history.push('/'+event.target.getAttribute("data-value")+'/jobs');
+      this.props.history.push('/'+event.target.getAttribute("data-value")+'/workflow');
       $('[data-toggle="popover"]').popover('disable');
     }
     search(value){
