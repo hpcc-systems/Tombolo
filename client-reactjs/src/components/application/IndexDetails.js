@@ -271,7 +271,7 @@ class IndexDetails extends Component {
     var applicationId = this.props.applicationId;
     var indexDetails = {"app_id":applicationId};
     var index_basic = {
-      "id" : this.state.file.id,
+      //"id" : this.state.file.id,
       "title" : this.state.file.title,
       "description" : this.state.file.description,
       "primaryService" : this.state.file.primaryService,

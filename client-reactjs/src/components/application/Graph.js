@@ -10,6 +10,7 @@ import FileDetailsForm from "./FileDetails";
 import JobDetailsForm from "./JobDetails";
 import QueryDetailsForm from "./QueryDetails";
 import IndexDetailsForm from "./IndexDetails";
+import {handleFileDelete, handleJobDelete, handleIndexDelete, handleQueryDelete, updateGraph} from "../common/WorkflowUtil";
 import { authHeader, handleError } from "../common/AuthHeader.js"
 import { connect } from 'react-redux';
 const { Text } = Typography;
@@ -34,7 +35,8 @@ class Graph extends Component {
     isNewJob:false,
     isNewQuery:false,
     isNewIndex:false,
-    currentlyEditingId:''
+    currentlyEditingId:'',
+    applicationId: ''
   }
 
   consts = {
@@ -106,6 +108,7 @@ class Graph extends Component {
 
   openDetailsDialog(d) {
     let _self=this;
+    console.log(JSON.stringify(d));
     switch(d.type) {
       case 'File':
         let isNewFile = false;
@@ -196,8 +199,26 @@ class Graph extends Component {
 
   onFileAdded = (saveResponse) => {
     var newData = this.thisGraph.nodes.map(el => {
+        console.log(JSON.stringify(el));
         if(el.id == this.state.currentlyEditingId) {
-           return Object.assign({}, el, {title:saveResponse.title, fileId:saveResponse.fileId, jobId:saveResponse.jobId, queryId:saveResponse.queryId, indexId:saveResponse.indexId})
+          el.title=saveResponse.title;
+          el.queryId=saveResponse.queryId;
+          switch(el.type) {
+            case 'File':
+              el.fileId=saveResponse.fileId;
+              break;
+            case 'Query':
+              el.queryId=saveResponse.queryId;
+              break;
+            case 'Index':
+              el.indexId=saveResponse.indexId;
+              break;
+            case 'Job':
+              el.jobId=saveResponse.jobId;
+              break;
+          }
+          return el;
+           //return Object.assign({}, el, {title:saveResponse.title, fileId:saveResponse.fileId, jobId:saveResponse.jobId, queryId:saveResponse.queryId, indexId:saveResponse.indexId})
         }
         return el
     });
@@ -226,6 +247,7 @@ class Graph extends Component {
   }
 
   fetchSavedGraph() {
+    console.log("fetchSavedGraph");
     var _self=this;
     fetch("/api/workflowgraph?application_id="+this.props.applicationId, {
        headers: authHeader()
@@ -282,18 +304,6 @@ class Graph extends Component {
     }
   }
 
-  deleteGraph = (skipPrompt) => {
-    let doDelete = true;
-    if (!skipPrompt) {
-        doDelete = window.confirm("Press OK to delete this graph");
-    }
-    if (doDelete) {
-        this.thisGraph.nodes = [];
-        this.thisGraph.edges = [];
-        this.updateGraph();
-    }
-  }
-
   /* select all text in element: taken from http://stackoverflow.com/questions/6139107/programatically-select-text-in-a-contenteditable-html-element */
   selectElementContents = (el) => {
     let range = document.createRange();
@@ -321,25 +331,63 @@ class Graph extends Component {
   }
 
   insertTitle = (gEl, title, x, y, d) => {
-      let words = title.split(/\s+/g),
-          nwords = words.length;
+    let _self=this;
+    let words = title.split(/\s+/g),
+        nwords = words.length;
 
-      let el = gEl.append("text")
-          .attr("text-anchor", "middle")
-          .attr("dy", 25)
-          .attr("dx", 50);
-      let tspan = el.append('tspan').text(title);
+      if(d3.select("#label-"+d.id).empty()) {
+        let el = gEl.append("text")
+            .attr("text-anchor", "middle")
+            .attr("dy", 25)
+            .attr("dx", 50);
+
+        let tspan = el.append('tspan')
+          .attr("id", "label-"+d.id)
+          .text(title);
+          tspan.attr("text-anchor", "middle");
+      } else {
+        d3.select("#label-"+d.id).text(title);
+      }
       //tspan.attr('x', 50).attr('dy', '15');
-      tspan.attr("text-anchor", "middle");
-
-
-/*      for (let i = 0; i < words.length; i++) {
-          let tspan = el.append('tspan').text(words[i]);
-          if (i > 1) {
-              tspan.attr('x', 50).attr('dy', '15');
-              tspan.attr("text-anchor", "middle");
-          }
-      }*/
+      if(d3.select("#t"+d.id).empty()) {
+        let deleteIcon = gEl.append('text')
+          .attr('font-family', 'FontAwesome')
+          .attr('id', 't'+d.id)
+          .attr('dy', 15)
+          .attr('dx', 95)
+          .attr('class','delete-icon hide-delete-icon')
+          .on("click", function(d) {
+            d3.event.stopPropagation();
+            switch(d.type) {
+              case 'File':
+                handleFileDelete(d.fileId, _self.props.applicationId);
+                updateGraph(d.fileId, _self.props.applicationId).then((response) => {
+                  _self.fetchSavedGraph();
+                });
+                break;
+              case 'Index':
+                handleIndexDelete(d.indexId, _self.props.applicationId);
+                updateGraph(d.indexId, _self.props.applicationId).then((response) => {
+                  _self.fetchSavedGraph();
+                });
+                break;
+              case 'Query':
+                handleQueryDelete(d.queryId, _self.props.applicationId);
+                updateGraph(d.queryId, _self.props.applicationId).then((response) => {
+                  _self.fetchSavedGraph();
+                });
+                break;
+              case 'Job':
+                handleJobDelete(d.jobId, _self.props.applicationId);
+                updateGraph(d.jobId, _self.props.applicationId).then((response) => {
+                  _self.fetchSavedGraph();
+                });
+                break;
+            }
+            gEl.remove();
+          })
+          .text(function(node) { return '\uf1f8' })
+        }
   }
 
   wrap =  (text, width)  => {
@@ -617,16 +665,16 @@ class Graph extends Component {
   // call to propagate changes to graph
   updateGraph = () => {
     let _self=this;
-
     _self.thisGraph.paths = _self.thisGraph.paths.data(_self.thisGraph.edges, function (d) {
         return String(d.source.id) + "+" + String(d.target.id);
     });
     let paths = _self.thisGraph.paths;
     // update existing paths
     paths.style('marker-end', 'url(#end-arrow)')
-        .classed(_self.consts.selectedClass, function (d) {
+        /*.classed(_self.consts.selectedClass, function (d) {
+          console.log(d + '---' + _self.graphState.selectedEdge);
             return d === _self.graphState.selectedEdge;
-        })
+        })*/
         // .attr("d", line([d.source.x, d.source.y, d.target.x, d.target.y]));
         .attr("d", function (d) {
             return "M" + (d.source.x + 40) + "," + (d.source.y + 20) + "L" + (d.target.x +35) + "," + (d.target.y + 15);
@@ -651,7 +699,6 @@ class Graph extends Component {
                 _self.pathMouseDown(d3.select(this), d);
             }
         );
-
     _self.thisGraph.paths = paths;
 
     // update existing nodes
@@ -680,10 +727,12 @@ class Graph extends Component {
             if (_self.graphState.shiftNodeDrag) {
                 d3.select(this).classed(_self.consts.connectClass, true);
             }
+            _self.toggleDeleteIcon(d3.select(this), d);
         })
         .on("mouseout", function (d) {
             _self.graphState.mouseEnterNode = null;
             d3.select(this).classed(_self.consts.connectClass, false);
+            _self.toggleDeleteIcon(d3.select(this), d);
         })
         .on("mousedown", function (d) {
             _self.circleMouseDown(d3.select(this), d);
@@ -706,46 +755,58 @@ class Graph extends Component {
           //if (this.childNodes.length === 0) {
           switch(d.type) {
             case 'Job':
-              d3.select(this)
-                .append("rect")
-                .attr("width", _self.shapesData[0].rectwidth)
-                .attr("height", _self.shapesData[0].rectheight)
-                .attr("stroke", "grey")
-                .attr("fill", _self.shapesData[0].color)
-                .attr("stroke-width", "3")
-                .call(_self.nodeDragHandler)
-              _self.insertTitle(d3.select(this), d.title, d.x, d.y, d);
+              if(d3.select("#rec-"+d.id).empty()) {
+                d3.select(this)
+                  .append("rect")
+                  .attr("id", "rec-"+d.id)
+                  .attr("width", _self.shapesData[0].rectwidth)
+                  .attr("height", _self.shapesData[0].rectheight)
+                  .attr("stroke", "grey")
+                  .attr("fill", _self.shapesData[0].color)
+                  .attr("stroke-width", "3")
+                  //.call(_self.nodeDragHandler)
+                }
 
+              _self.insertTitle(d3.select(this), d.title, d.x, d.y, d);
               break;
 
             case 'File':
             case 'Index':
             case 'Query':
-              d3.select(this)
-                .append("rect")
-                .attr("rx", _self.shapesData[1].rx)
-                .attr("ry", _self.shapesData[1].ry)
-                .attr("width", _self.shapesData[1].rectwidth)
-                .attr("height", _self.shapesData[1].rectheight)
-                .attr("stroke", "grey")
-                .attr("fill", function(d) {
-                  if(d.type == 'File')
-                   return _self.shapesData[1].color;
-                  else if(d.type == 'Index')
-                    return _self.shapesData[3].color;
-                  else if(d.type == 'Query')
-                    return _self.shapesData[2].color;
-                })
-                .attr("stroke-width", "3")
-                .call(_self.nodeDragHandler)
+              if(d3.select("#rec-"+d.id).empty()) {
+                d3.select(this)
+                  .append("rect")
+                  .attr("id", "rec-"+d.id)
+                  .attr("rx", _self.shapesData[1].rx)
+                  .attr("ry", _self.shapesData[1].ry)
+                  .attr("width", _self.shapesData[1].rectwidth)
+                  .attr("height", _self.shapesData[1].rectheight)
+                  .attr("stroke", "grey")
+                  .attr("fill", function(d) {
+                    if(d.type == 'File')
+                     return _self.shapesData[1].color;
+                    else if(d.type == 'Index')
+                      return _self.shapesData[3].color;
+                    else if(d.type == 'Query')
+                      return _self.shapesData[2].color;
+                  })
+                  .attr("stroke-width", "3")
+                  //.call(_self.nodeDragHandler)
+              }
               _self.insertTitle(d3.select(this), d.title, d.x, d.y, d);
-
               break;
           }
-          //}
         });
 
         _self.saveGraph()
+  }
+
+  toggleDeleteIcon = (node, d) => {
+    if(d3.select("#t"+d.id).classed("hide-delete-icon")) {
+      d3.select("#t"+d.id).classed("hide-delete-icon", false)
+    } else {
+      d3.select("#t"+d.id).classed("hide-delete-icon", true)
+    }
   }
 
   nodeDragHandler = () => {
@@ -754,6 +815,10 @@ class Graph extends Component {
         })
         .on("end", function(d){
         })
+  }
+
+  deleteNode = (node, d) => {
+    console.log('deleteNode');
   }
 
   collapseNav = () => {
@@ -890,7 +955,6 @@ class Graph extends Component {
           if (_self.graphState.shiftNodeDrag) {
               _self.dragEnd(d3.select(this), _self.graphState.mouseEnterNode)
           }
-
       });
 
     // listen for key events
@@ -938,69 +1002,6 @@ class Graph extends Component {
     window.onresize = function () {
         _self.updateWindow(svg);
     };
-
-    // handle download data
-    d3.select("#download-input").on("click", function () {
-      let saveEdges = [];
-      _self.thisGraph.edges.forEach(function (val, i) {
-          saveEdges.push({source: val.source.id, target: val.target.id});
-      });
-      let blob = new Blob([window.JSON.stringify({
-          "nodes": _self.thisGraph.nodes,
-          "edges": saveEdges
-      })], {type: "text/plain;charset=utf-8"});
-        //saveAs(blob, "mydag.json");
-    });
-
-
-    // handle uploaded data
-    d3.select("#upload-input").on("click", function () {
-        document.getElementById("hidden-file-upload").click();
-    });
-    d3.select("#hidden-file-upload").on("change", function () {
-      if (window.File && window.FileReader && window.FileList && window.Blob) {
-          let uploadFile = _self.thisGraph.files[0];
-          let filereader = new window.FileReader();
-
-          filereader.onload = function () {
-              let txtRes = filereader.result;
-              // TODO better error handling
-              try {
-                  let jsonObj = JSON.parse(txtRes);
-                  _self.thisGraph.deleteGraph(true);
-                  _self.thisGraph.nodes = jsonObj.nodes;
-                  _self.setIdCt(jsonObj.nodes.length + 1);
-                  let newEdges = jsonObj.edges;
-                  newEdges.forEach(function (e, i) {
-                      newEdges[i] = {
-                          source: _self.thisGraph.nodes.filter(function (n) {
-                              return n.id === e.source;
-                          })[0],
-                          target: _self.thisGraph.nodes.filter(function (n) {
-                              return n.id === e.target;
-                          })[0]
-                      };
-                  });
-                  _self.thisGraph.edges = newEdges;
-                  _self.updateGraph();
-              } catch (err) {
-                  window.alert("Error parsing uploaded file\nerror message: " + err.message);
-                  return;
-              }
-          };
-          filereader.readAsText(uploadFile);
-
-      } else {
-          alert("Your browser won't let you save this graph -- try upgrading your browser to IE 10+ or Chrome or Firefox.");
-      }
-
-    });
-
-    // handle delete graph
-    d3.select("#delete-graph").on("click", function () {
-      _self.thisGraph.deleteGraph(false);
-    });
-
   }
 
   render() {
@@ -1050,6 +1051,7 @@ class Graph extends Component {
               applicationId={this.props.applicationId}
               isNewFile={this.state.isNewQuery}
               onRefresh={this.onFileAdded}
+              selectedQuery={this.state.selectedQuery}
               onClose={this.closeQueryDlg}/> : null}
 
     </div>

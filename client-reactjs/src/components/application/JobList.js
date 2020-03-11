@@ -8,6 +8,7 @@ import {Graph} from "./Graph";
 import BreadCrumbs from "../common/BreadCrumbs";
 import { connect } from 'react-redux';
 import { authHeader, handleError } from "../common/AuthHeader.js"
+import {handleFileDelete, handleJobDelete, handleIndexDelete, handleQueryDelete, updateGraph} from "../common/WorkflowUtil";
 
 class JobList extends Component {
 
@@ -160,22 +161,12 @@ class JobList extends Component {
         this.handleJobDelete(id);
         break;
     }
-    this.updateGraph(id);
+    updateGraph(id, this.state.applicationId);
   }
 
   handleJobDelete(jobId) {
     console.log(jobId);
-    var data = JSON.stringify({jobId: jobId, application_id: this.state.applicationId});
-    fetch("/api/job/delete", {
-      method: 'post',
-      headers: authHeader(),
-      body: data
-    }).then((response) => {
-      if(response.ok) {
-        return response.json();
-      }
-      handleError(response);
-    })
+    handleJobDelete(jobId, this.state.applicationId)
     .then(result => {
       this.fetchDataAndRenderTable();
       message.success("Job deleted sucessfully");
@@ -187,17 +178,7 @@ class JobList extends Component {
 
   handleIndexDelete(indexId) {
     console.log(indexId);
-    var data = JSON.stringify({indexId: indexId, application_id: this.state.applicationId});
-    fetch("/api/index/read/delete", {
-      method: 'post',
-      headers: authHeader(),
-      body: data
-    }).then((response) => {
-      if(response.ok) {
-        return response.json();
-      }
-      handleError(response);
-    })
+    handleIndexDelete(indexId, this.state.applicationId)
     .then(result => {
       this.fetchDataAndRenderTable();
       message.success("Index deleted sucessfully");
@@ -209,17 +190,7 @@ class JobList extends Component {
 
   handleQueryDelete(queryId) {
     console.log(queryId);
-    var data = JSON.stringify({queryId: queryId, application_id: this.state.applicationId});
-    fetch("/api/query/delete", {
-      method: 'post',
-      headers: authHeader(),
-      body: data
-    }).then((response) => {
-      if(response.ok) {
-        return response.json();
-      }
-      handleError(response);
-    })
+    handleQueryDelete(queryId, this.state.applicationId)
     .then(result => {
       this.fetchDataAndRenderTable();
       message.success("Query deleted sucessfully");
@@ -231,46 +202,15 @@ class JobList extends Component {
 
   handleFileDelete= (fileId) => {
     console.log(fileId);
-      var data = JSON.stringify({fileId: fileId, application_id: this.state.applicationId});
-      fetch("/api/file/read/delete", {
-        method: 'post',
-        headers: authHeader(),
-        body: data
-      }).then((response) => {
-        if(response.ok) {
-          return response.json();
-        }
-        handleError(response);
-      })
-      .then(result => {
-        this.fetchDataAndRenderTable();
-        message.success("File deleted sucessfully");
-      }).catch(error => {
-        console.log(error);
-        message.error("There was an error deleting the file");
-      });
+    handleFileDelete(fileId, this.state.applicationId)
+    .then(result => {
+      this.fetchDataAndRenderTable();
+      message.success("File deleted sucessfully");
+    }).catch(error => {
+      console.log(error);
+      message.error("There was an error deleting the file");
+    });
   }
-
-  updateGraph = (assetId) => {
-    console.log(assetId);
-      var data = JSON.stringify({id: assetId, application_id: this.state.applicationId});
-      fetch("/api/workflowgraph/deleteAsset", {
-        method: 'post',
-        headers: authHeader(),
-        body: data
-      }).then((response) => {
-        if(response.ok) {
-          return response.json();
-        }
-        handleError(response);
-      })
-      .then(result => {
-      }).catch(error => {
-        console.log(error);
-        message.error("There was an error updating the graph");
-      });
-  }
-
 
   handleRefresh = () => {
     this.fetchDataAndRenderTable();

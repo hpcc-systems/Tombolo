@@ -343,6 +343,7 @@ class QueryDetails extends Component {
       onChange: this.onSelectedRowKeysChange
     };
     //render only after fetching the data from the server
+    {console.log(title + ', ' + this.props.selectedQuery + ', ' + this.props.isNewFile)}
     if(!title && !this.props.selectedQuery && !this.props.isNewFile) {
       return null;
     }
