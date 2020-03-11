@@ -666,7 +666,9 @@ class Graph extends Component {
   updateGraph = () => {
     let _self=this;
     _self.thisGraph.paths = _self.thisGraph.paths.data(_self.thisGraph.edges, function (d) {
+      if(d.source && d.target) {
         return String(d.source.id) + "+" + String(d.target.id);
+      }
     });
     let paths = _self.thisGraph.paths;
     // update existing paths

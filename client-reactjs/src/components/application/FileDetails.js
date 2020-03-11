@@ -1105,7 +1105,7 @@ class FileDetails extends Component {
               {getFieldDecorator('name', {
                 rules: [{ required: true, message: 'Please select a file!' }],
               })(
-              <Input id="file_name" name="name" onChange={this.onChange} placeholder="Name" />              )}
+              <Input id="file_name" name="name" onChange={this.onChange} placeholder="Name" disabled={true} />              )}
              </Form.Item>
             <Form.Item {...formItemLayout} label="Description">
                 <Input id="file_desc" name="description" onChange={this.onChange} defaultValue={description} value={description} placeholder="Description" />

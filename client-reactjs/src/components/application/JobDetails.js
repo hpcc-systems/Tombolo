@@ -348,7 +348,7 @@ class JobDetails extends Component {
               {getFieldDecorator('name', {
                 rules: [{ required: true, message: 'Please enter a name for the job!' }],
               })(
-              <Input id="job_name" name="name" onChange={this.onChange} placeholder="Name" />
+              <Input id="job_name" name="name" onChange={this.onChange} placeholder="Name" disabled={!this.props.isNewJob}/>
               )}
              </Form.Item>
 
