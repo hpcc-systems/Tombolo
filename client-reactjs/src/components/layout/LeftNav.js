@@ -37,6 +37,7 @@ class LeftNav extends Component {
 
   onCollapse = (collapsed) => {
     this.setState({ collapsed });
+
   }
 
   render() {
@@ -54,48 +55,49 @@ class LeftNav extends Component {
         return false;
     return (
       <React.Fragment>
-      <Sider style={{ background: '#343a40', height: '100vh', position: 'fixed', paddingTop:"60px" }}
+      <Sider style={{ background: '#343a40', height: '100vh', paddingTop:"60px" }}
+            collapsible
             collapsed={this.state.collapsed}
             onCollapse={this.onCollapse}
       >
           <nav className="d-md-block bg-dark sidebar">
           <div className="sidebar-sticky">
             <ul className="nav flex-column">
-              <li className="nav-item" >
-                <NavLink exact to={"/"+applicationId+"/files"} className="nav-link" data-toggle="popover" tabIndex="1"><i className="fa fa-lg fa-file"></i> Files</NavLink>
+              {/*<li className="nav-item" >
+                <NavLink exact to={"/"+applicationId+"/files"} className="nav-link" data-toggle="popover" tabIndex="1"><i className="fa fa-lg fa-file"></i> <span className={this.state.collapsed ? "d-none" : ""}>Files</span></NavLink>
               </li>
               <li className="nav-item">
-                <NavLink exact to={"/"+applicationId+"/index"} className="nav-link" data-toggle="popover" tabIndex="2"><i className="fa fa-lg fa-indent"></i> Index</NavLink>
-              </li>
+                <NavLink exact to={"/"+applicationId+"/index"} className="nav-link" data-toggle="popover" tabIndex="2"><i className="fa fa-lg fa-indent"></i> <span className={this.state.collapsed ? "d-none" : ""}>Index</span></NavLink>
+              </li>*/}
               <li className="nav-item" >
-                <NavLink to={"/"+applicationId+"/jobs"} className="nav-link" data-toggle="popover" tabIndex="4"><i className="fa fa-lg fa-clock-o"></i> Jobs</NavLink>
+                <NavLink to={"/"+applicationId+"/workflow"} className="nav-link" data-toggle="popover" tabIndex="4"><i className="fa fa-lg fa-clock-o"></i> <span className={this.state.collapsed ? "d-none" : ""}>Workflow</span></NavLink>
               </li>
-              <li className="nav-item">
-                <NavLink to={"/"+applicationId+"/queries"} className="nav-link" data-toggle="popover" tabIndex="3"><i className="fa fa-lg fa-search"></i> Queries</NavLink>
-              </li>
+              {/*<li className="nav-item">
+                <NavLink to={"/"+applicationId+"/queries"} className="nav-link" data-toggle="popover" tabIndex="3"><i className="fa fa-lg fa-search"></i> <span className={this.state.collapsed ? "d-none" : ""}>Queries</span></NavLink>
+              </li>*/}
               <li className="nav-item" >
-                <NavLink to={"/"+applicationId+"/chart"} className="nav-link" data-toggle="popover" tabIndex="5"><i className="fa fa-lg fa-bar-chart"></i> Report</NavLink>
+                <NavLink to={"/"+applicationId+"/chart"} className="nav-link" data-toggle="popover" tabIndex="5"><i className="fa fa-lg fa-bar-chart"></i> <span className={this.state.collapsed ? "d-none" : ""}>Report</span></NavLink>
               </li>
             </ul>
 
             <h6 className="sidebar-heading d-flex justify-content-between align-items-center px-3 mt-4 mb-1 text-muted">
-              <span>Settings</span>
+              <span className={this.state.collapsed ? "d-none" : ""}>Settings</span>
               <a className="d-flex align-items-center text-muted" href="#">
                 <span data-feather="plus-circle"></span>
               </a>
             </h6>
             <ul className="nav flex-column mb-2">
               <li className="nav-item">
-                <NavLink to={"/admin/applications"} className="nav-link"><i className="fa fa-lg fa-desktop"></i> Applications</NavLink>
+                <NavLink to={"/admin/applications"} className="nav-link"><i className="fa fa-lg fa-desktop"></i><span className={this.state.collapsed ? "d-none" : ""}> Applications</span></NavLink>
               </li>
               <li className="nav-item">
-                <NavLink to={"/admin/clusters"} className="nav-link"><i className="fa fa-lg fa-server"></i> Clusters</NavLink>
+                <NavLink to={"/admin/clusters"} className="nav-link"><i className="fa fa-lg fa-server"></i><span className={this.state.collapsed ? "d-none" : ""}> Clusters</span></NavLink>
               </li>
             </ul>
             { isAdmin ?
             <React.Fragment>
             <h6 className="sidebar-heading d-flex justify-content-between align-items-center px-3 mt-4 mb-1 text-muted">
-              <span>Admin</span>
+              <span className={this.state.collapsed ? "d-none" : ""}>Admin</span>
               <a className="d-flex align-items-center text-muted" href="#">
                 <span data-feather="plus-circle"></span>
               </a>
@@ -103,20 +105,19 @@ class LeftNav extends Component {
 
             <ul className="nav flex-column mb-2">
               <li className="nav-item">
-                <NavLink to={"/admin/users"} className="nav-link"><i className="fa fa-lg fa-desktop"></i> Users</NavLink>
+                <NavLink to={"/admin/users"} className="nav-link"><i className="fa fa-lg fa-desktop"></i><span className={this.state.collapsed ? "d-none" : ""}> Users</span></NavLink>
               </li>
               <li className="nav-item">
-                <NavLink to={"/admin/consumers"} className="nav-link"><i className='fa fa-lg fa-user-circle'></i> Consumers/Suppliers</NavLink>
+                <NavLink to={"/admin/consumers"} className="nav-link"><i className='fa fa-lg fa-user-circle'></i><span className={this.state.collapsed ? "d-none" : ""}> Consumers/Suppliers</span></NavLink>
               </li>
               <li className="nav-item">
-                <NavLink to={"/admin/controlsAndRegulations"} className="nav-link"><i className='fa fa-lg fa-address-card-o'></i> Controls & Regulations</NavLink>
+                <NavLink to={"/admin/controlsAndRegulations"} className="nav-link"><i className='fa fa-lg fa-address-card-o'></i><span className={this.state.collapsed ? "d-none" : ""}> Controls & Regulations</span></NavLink>
               </li>
             </ul>
             </React.Fragment>
             : null}
           </div>
         </nav>
-
       </Sider>
     </React.Fragment>
     );

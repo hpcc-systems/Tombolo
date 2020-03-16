@@ -47,10 +47,10 @@ class App extends React.Component {
                 <Route exact path="/login" component={LoginPage} />
                     <Layout>
                         {this.props.user ? <AppHeader/> : null}
-                        <Layout>
+                        <Layout className="site-layout">
                             <LeftNav isApplicationSet={isApplicationSet} selectedTopNav={selectedTopNav} />
                             <Layout style={{height: '100vh'}}>
-                                <Content style={{background: '#fff', paddingLeft: '200px'}}>
+                                <Content style={{background: '#fff', margin: '0 16px'}}>
                                     <Route exact path="/" component={FileList}/>
                                     <Switch>
                                         <PrivateRoute exact path="/file/:applicationId/:fileId" component={SelectedFilePopup} />
@@ -59,7 +59,7 @@ class App extends React.Component {
                                         <PrivateRoute exact path="/:applicationId/index" component={IndexList}/>
                                         <PrivateRoute path="/index" component={IndexList}/>
                                         <PrivateRoute path="/:applicationId/queries" component={QueriesList}/>
-                                        <PrivateRoute path="/:applicationId/jobs" component={JobList}/>
+                                        <PrivateRoute path="/:applicationId/workflow" component={JobList}/>
                                         <PrivateRoute path="/admin/applications" component={AdminApplications}/>
                                         <PrivateRoute path="/admin/clusters" component={AdminClusters}/>
                                         <PrivateRoute path="/admin/users" component={Users}/>

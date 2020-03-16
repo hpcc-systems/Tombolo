@@ -43,7 +43,7 @@ class IndexDetails extends Component {
   }
 
   componentDidMount() {
-    //this.props.onRef(this);
+    this.props.onRef(this);
     this.getIndexDetails();
   }
 
@@ -94,19 +94,19 @@ class IndexDetails extends Component {
       visible: true,
     });
     this.getIndexDetails();
-    if(this.props.isNewFile) {
+    //if(this.props.isNewIndex) {
       this.getClusters();
-    }
+    //}
   }
 
   handleOk = (e) => {
-    this.props.form.validateFields((err, values) => {
+    this.props.form.validateFields(async (err, values) => {
       if(!err) {
         this.setState({
           confirmLoading: true,
         });
 
-        this.saveFileDetails();
+        let saveResponse = await this.saveFileDetails();
 
         setTimeout(() => {
           this.setState({
@@ -114,7 +114,7 @@ class IndexDetails extends Component {
             confirmLoading: false,
           });
           this.props.onClose();
-          this.props.onRefresh();
+          this.props.onRefresh(saveResponse);
         }, 2000);
       }
     });
@@ -249,26 +249,29 @@ class IndexDetails extends Component {
   }
 
   saveFileDetails() {
-    fetch('/api/index/read/saveIndex', {
-      method: 'post',
-      headers: authHeader(),
-      body: JSON.stringify({index : this.populateFileDetails()})
-    }).then(function(response) {
-      if(response.ok) {
-        return response.json();
-      }
-      handleError(response);
-    }).then(function(data) {
-      console.log('Saved..');
+    return new Promise((resolve) => {
+      fetch('/api/index/read/saveIndex', {
+        method: 'post',
+        headers: authHeader(),
+        body: JSON.stringify({index : this.populateFileDetails()})
+      }).then(function(response) {
+        if(response.ok) {
+          return response.json();
+        }
+        handleError(response);
+      }).then(function(data) {
+        console.log('Saved..');
+        resolve(data);
+      });
+      //this.populateFileDetails()
     });
-    //this.populateFileDetails()
   }
 
   populateFileDetails() {
     var applicationId = this.props.applicationId;
     var indexDetails = {"app_id":applicationId};
     var index_basic = {
-      "id" : this.state.file.id,
+      //"id" : this.state.file.id,
       "title" : this.state.file.title,
       "description" : this.state.file.description,
       "primaryService" : this.state.file.primaryService,
@@ -350,7 +353,8 @@ class IndexDetails extends Component {
       onChange: this.onSelectedRowKeysChange
     };
     //render only after fetching the data from the server
-    if(!title && !this.props.selectedIndex && !this.props.isNewFile) {
+    console.log("index details: "+title+'  '+this.props.selectedIndex+'  '+this.props.isNewIndex)
+    if(!title && !this.props.selectedIndex && !this.props.isNewIndex) {
       return null;
     }
 
@@ -372,7 +376,7 @@ class IndexDetails extends Component {
           <TabPane tab="Basic" key="1">
 
            <Form layout="vertical">
-            {this.props.isNewFile ?
+            {/*{this.props.isNewIndex ?*/}
             <div>
             <Form.Item {...formItemLayout} label="Cluster">
                <Select placeholder="Select a Cluster" onChange={this.onClusterSelection} style={{ width: 190 }}>
@@ -398,8 +402,8 @@ class IndexDetails extends Component {
               </AutoComplete>
             </Form.Item>
             </div>
-              : null
-            }
+              {/*: null
+            }*/}
             <Form.Item {...formItemLayout} label="Title">
               {getFieldDecorator('title', {
                 rules: [{ required: true, message: 'Please enter a title for the index!' }],

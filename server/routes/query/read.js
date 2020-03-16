@@ -25,7 +25,7 @@ router.post('/saveQuery', (req, res) => {
             )
         }).then(function(query) {
             console.log("saving query");
-            res.json({"result":"success"});
+            res.json({"result":"success", "title":req.body.basic.title, "queryId":query_id});
         }), function(err) {
             return res.status(500).send(err);
         }

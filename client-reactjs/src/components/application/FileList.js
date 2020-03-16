@@ -90,7 +90,7 @@ class FileList extends Component {
     if(!this.props.application || !this.props.application.applicationId)
       return null;
     return (
-      <div>
+      <div className="site-layout-background">
         <div className="d-flex justify-content-end" style={{paddingTop:"50px", margin:"5px"}}>
           <BreadCrumbs applicationId={this.state.applicationId} applicationTitle={this.state.applicationTitle}/>
           <span style={{ marginLeft: "auto"}}>

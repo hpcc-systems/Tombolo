@@ -201,7 +201,7 @@ router.post('/saveFile', (req, res) => {
                 )
             }
         }).then(function(fieldValidation) {
-            res.json({"result":"success"});
+            res.json({"result":"success", "fileId":fileId, "title":req.body.file.basic.title});
         }), function(err) {
             return res.status(500).send(err);
         }

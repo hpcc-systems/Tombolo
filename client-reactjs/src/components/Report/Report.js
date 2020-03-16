@@ -13,8 +13,8 @@ class Report extends Component {
     super(props);
   }
 
-  state = {   
-    searchText:this.props.match.params.searchText, 
+  state = {
+    searchText:this.props.match.params.searchText,
     fileList:[],
     indexList:[],
     queryList:[],
@@ -26,20 +26,20 @@ class Report extends Component {
   componentDidMount(){
     this.fetchData((this.props.match.params.searchText));
   }
-  componentWillReceiveProps(props) {   
+  componentWillReceiveProps(props) {
     if(this.state.searchText!=props.match.params.searchText)
-    {   
+    {
        this.setState({
          searchText:props.match.params.searchText,
          refresh:true
        });
        this.fetchData((props.match.params.searchText));
     }
-    else  
+    else
     this.setState({
       refresh:false
     });
-  } 
+  }
 
   fetchData(val) {
     var user=this.props.user;
@@ -61,7 +61,7 @@ class Report extends Component {
     .then(data => {
       var defaultTab="";
       if(data){
-        if(data.file.length>0) 
+        if(data.file.length>0)
           defaultTab="1";
         else if(data.index.length>0)
           defaultTab="2";
@@ -82,7 +82,7 @@ class Report extends Component {
       this.setState({
         initialDataLoading:false
       });
-    }, 200);  
+    }, 200);
     }
     }).catch(error => {
       console.log(error);
@@ -90,35 +90,35 @@ class Report extends Component {
   }
    setKey= (selectedkey) => {
     this.setState({defaultTab:selectedkey}); // <- set key sent by the handler to the state
-    
+
    };
-  render() {   
+  render() {
     const fileTitle="Files ("+this.state.fileList.length+")"
     const indexTitle="Index ("+this.state.indexList.length+")"
     const queryTitle="Queries ("+this.state.queryList.length+")"
-    const jobTitle="Jobs ("+this.state.jobList.length+")" 
-    const defTab=this.state.defaultTab;    
+    const jobTitle="Jobs ("+this.state.jobList.length+")"
+    const defTab=this.state.defaultTab;
     return (
       <div>
         <div className="loader">
-        <Spin spinning={this.state.initialDataLoading} size="large" />  
-        </div>  
+        <Spin spinning={this.state.initialDataLoading} size="large" />
+        </div>
         <div style={{paddingTop:"50px"}}>
         <Tabs activeKey={defTab} onTabClick={this.setKey}>
-          <TabPane tab={fileTitle} key="1"> 
+          <TabPane tab={fileTitle} key="1">
             <FileReport refresh={this.state.refresh}  fileList={this.state.fileList}/>
           </TabPane>
-          <TabPane tab={indexTitle} key="2"> 
+          <TabPane tab={indexTitle} key="2">
           <IndexReport refresh={this.state.refresh}  indexList={this.state.indexList}/>
           </TabPane>
-          <TabPane tab={queryTitle} key="3"> 
+          <TabPane tab={queryTitle} key="3">
           <QueryReport refresh={this.state.refresh}  queryList={this.state.queryList}/>
           </TabPane>
-          <TabPane tab={jobTitle} key="4"> 
+          <TabPane tab={jobTitle} key="4">
           <JobReport refresh={this.state.refresh}  jobList={this.state.jobList}/>
           </TabPane>
-        </Tabs>        
-        </div>       
+        </Tabs>
+        </div>
       </div>)
   }
 }

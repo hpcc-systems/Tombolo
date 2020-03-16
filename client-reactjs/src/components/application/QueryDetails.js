@@ -99,13 +99,13 @@ class QueryDetails extends Component {
   }
 
   handleOk = (e) => {
-    this.props.form.validateFields((err, values) => {
+    this.props.form.validateFields(async (err, values) => {
       if(!err) {
         this.setState({
           confirmLoading: true,
         });
 
-        this.saveQueryDetails();
+        let saveResponse = await this.saveQueryDetails();
 
         setTimeout(() => {
           this.setState({
@@ -113,7 +113,7 @@ class QueryDetails extends Component {
             confirmLoading: false,
           });
           this.props.onClose();
-          this.props.onRefresh();
+          this.props.onRefresh(saveResponse);
         }, 2000);
       }
     });
@@ -238,19 +238,22 @@ class QueryDetails extends Component {
   }
 
   saveQueryDetails() {
-    fetch('/api/query/saveQuery', {
-      method: 'post',
-      headers: authHeader(),
-      body: JSON.stringify(this.populateQueryDetails())
-    }).then(function(response) {
-      if(response.ok) {
-        return response.json();
-      }
-      handleError(response);
-    }).then(function(data) {
-      console.log('Saved..');
-    });
+    return new Promise((resolve) => {
+      fetch('/api/query/saveQuery', {
+        method: 'post',
+        headers: authHeader(),
+        body: JSON.stringify(this.populateQueryDetails())
+      }).then(function(response) {
+        if(response.ok) {
+          return response.json();
+        }
+        handleError(response);
+      }).then(function(data) {
+        console.log('Saved..');
+        resolve(data);
+      });
     //this.populateFileDetails()
+    });
   }
 
   populateQueryDetails() {
@@ -340,6 +343,7 @@ class QueryDetails extends Component {
       onChange: this.onSelectedRowKeysChange
     };
     //render only after fetching the data from the server
+    {console.log(title + ', ' + this.props.selectedQuery + ', ' + this.props.isNewFile)}
     if(!title && !this.props.selectedQuery && !this.props.isNewFile) {
       return null;
     }
@@ -362,7 +366,7 @@ class QueryDetails extends Component {
           <TabPane tab="Basic" key="1">
 
            <Form layout="vertical">
-            {this.props.isNewFile ?
+            {/*this.props.isNewFile ?*/}
             <div>
             <Form.Item {...formItemLayout} label="Cluster">
                <Select placeholder="Select a Cluster" onChange={this.onClusterSelection} style={{ width: 190 }}>
@@ -388,13 +392,13 @@ class QueryDetails extends Component {
               </AutoComplete>
             </Form.Item>
             </div>
-              : null
-            }
+              {/*: null
+            }*/}
             <Form.Item {...formItemLayout} label="Title">
               {getFieldDecorator('query_title', {
                 rules: [{ required: true, message: 'Please enter a title for the query!' }],
               })(
-              <Input id="query_title" name="query_title" onChange={this.onChange} placeholder="Title" />
+              <Input id="query_title" name="title" onChange={this.onChange} placeholder="Title" disabled={!this.props.isNewFile}/>
               )}
              </Form.Item>
 

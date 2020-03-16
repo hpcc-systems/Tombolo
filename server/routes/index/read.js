@@ -40,10 +40,13 @@ router.post('/saveIndex', (req, res) => {
             return IndexPayload.bulkCreate(
                 indexPayloadToSave, {updateOnDuplicate: ["ColumnLabel", "ColumnType", "ColumnEclType"]}
             )
-        }), function(err) {
+        }).then((indexPayLoadUpdated) => {
+            console.log('index_id: '+index_id)
+            res.json({"result":"success", "title":req.body.index.basic.title, "indexId":index_id});
+        }).catch((err) => {
             return res.status(500).send(err);
-        }
-        res.json({"result":"success"});
+        })
+
     } catch (err) {
         console.log('err', err);
     }

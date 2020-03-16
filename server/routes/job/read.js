@@ -33,7 +33,7 @@ router.post('/saveJob', (req, res) => {
                 {updateOnDuplicate: ["name", "type"]}
             )
         }).then(function(jobParam) {
-            res.json({"result":"success"});
+            res.json({"result":"success", "title":req.body.basic.name, "jobId":jobId});
         }), function(err) {
             return res.status(500).send(err);
         }

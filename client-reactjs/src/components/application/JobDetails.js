@@ -1,5 +1,6 @@
 import React, { Component } from "react";
-import { Modal, Tabs, Form, Input, Button,  Select, Table, AutoComplete, Spin } from 'antd/lib';
+import { Modal, Tabs, Form, Input, Button,  Select, Table, AutoComplete, Spin, Icon, message } from 'antd/lib';
+
 import "react-table/react-table.css";
 import { authHeader, handleError } from "../common/AuthHeader.js"
 const TabPane = Tabs.TabPane;
@@ -25,6 +26,11 @@ class JobDetails extends Component {
     outputFileDesc:"",
     sourceFiles:[],
     selectedInputFile:"",
+    clusters:[],
+    selectedCluster:"",
+    jobSearchSuggestions:[],
+    jobSearchErrorShown:false,
+    autoCompleteSuffix: <Icon type="search" className="certain-category-icon" />,
     job: {
       id:"",
       name:"",
@@ -47,6 +53,7 @@ class JobDetails extends Component {
 
   getJobDetails() {
     if(this.props.selectedJob && !this.props.isNewJob) {
+
       fetch("/api/job/job_details?job_id="+this.props.selectedJob+"&app_id="+this.props.applicationId, {
         headers: authHeader()
       })
@@ -94,6 +101,27 @@ class JobDetails extends Component {
     }
   }
 
+  getClusters() {
+    fetch("/api/hpcc/read/getClusters", {
+      headers: authHeader()
+    })
+    .then((response) => {
+      if(response.ok) {
+        return response.json();
+      }
+      handleError(response);
+    })
+    .then(clusters => {
+      this.setState({
+        ...this.state,
+        clusters: clusters
+      });
+    }).catch(error => {
+      console.log(error);
+    });
+  }
+
+
   getFiles() {
       fetch("/api/file/read/file_list?app_id="+this.props.applicationId, {
         headers: authHeader()
@@ -129,16 +157,101 @@ class JobDetails extends Component {
     /*if(this.props.isNewFile) {
       this.getClusters();
     }*/
+    this.getClusters();
   }
 
+  onClusterSelection = (value) => {
+    this.setState({
+      selectedCluster: value,
+    });
+  }
+
+  searchJobs(searchString) {
+    this.setState({
+      ...this.state,
+      autoCompleteSuffix : <Spin/>,
+      jobSearchErrorShown: false
+    });
+
+    if(searchString.length <= 3)
+      return;
+    var data = JSON.stringify({clusterid: this.state.selectedCluster, keyword: searchString, indexSearch:true});
+    fetch("/api/hpcc/read/jobsearch", {
+      method: 'post',
+      headers: authHeader(),
+      body: data
+    }).then((response) => {
+      if(response.ok) {
+        return response.json();
+      } else {
+        throw response;
+      }
+      handleError(response);
+    })
+    .then(suggestions => {
+      this.setState({
+        ...this.state,
+        jobSearchSuggestions: suggestions,
+        autoCompleteSuffix: <Icon type="search" className="certain-category-icon" />
+      });
+    }).catch(error => {
+      if(!this.state.jobSearchErrorShown) {
+        error.json().then((body) => {
+          message.config({top:130})
+          message.error(body.message);
+        });
+        this.setState({
+          ...this.state,
+          jobSearchErrorShown: true,
+          autoCompleteSuffix: <Icon type="search" className="certain-category-icon" />
+        });
+      }
+    });
+  }
+
+  onJobSelected(wuid) {
+    fetch("/api/hpcc/read/getJobInfo?jobWuid="+wuid+"&clusterid="+this.state.selectedCluster, {
+      headers: authHeader()
+    })
+    .then((response) => {
+      if(response.ok) {
+        return response.json();
+      }
+      handleError(response);
+    })
+    .then(jobInfo => {
+      this.setState({
+        ...this.state,
+        job: {
+          ...this.state.job,
+          inputFiles: jobInfo.sourceFiles,
+          outputFiles: jobInfo.outputFiles,
+          name: jobInfo.Jobname,
+          description: jobInfo.description,
+          entryBWR: jobInfo.entryBWR
+        }
+      })
+      this.props.form.setFieldsValue({
+        name: jobInfo.Jobname
+      });
+
+      return jobInfo;
+    })
+    .then(data => {
+      this.getFiles();
+    })
+    .catch(error => {
+      console.log(error);
+    });
+  }
   handleOk = () => {
-    this.props.form.validateFields((err, values) => {
+    this.props.form.validateFields(async (err, values) => {
       if(!err) {
         this.setState({
           confirmLoading: true,
         });
 
-        this.saveJobDetails();
+        let saveResponse = await this.saveJobDetails();
 
         setTimeout(() => {
           this.setState({
@@ -146,26 +259,29 @@ class JobDetails extends Component {
             confirmLoading: false,
           });
           this.props.onClose();
-          this.props.onRefresh();
+          this.props.onRefresh(saveResponse);
         }, 2000);
       }
     });
   }
 
   saveJobDetails() {
-    fetch('/api/job/saveJob', {
-      method: 'post',
-      headers: authHeader(),
-      body: JSON.stringify(this.populateJobDetails())
-    }).then(function(response) {
-      if(response.ok) {
-        return response.json();
-      }
-      handleError(response);
-    }).then(function(data) {
-      console.log('Saved..');
+    return new Promise((resolve) => {
+      fetch('/api/job/saveJob', {
+        method: 'post',
+        headers: authHeader(),
+        body: JSON.stringify(this.populateJobDetails())
+      }).then(function(response) {
+        if(response.ok) {
+          return response.json();
+        }
+        handleError(response);
+      }).then(function(data) {
+        console.log('Saved..');
+        resolve(data);
+      });
+      //this.populateFileDetails()
     });
-    //this.populateFileDetails()
   }
 
   populateJobDetails() {
@@ -275,7 +391,7 @@ class JobDetails extends Component {
 
   render() {
     const {getFieldDecorator} = this.props.form;
-    const { visible, confirmLoading, jobTypes, paramName, paramType, inputFileName, inputFileDesc, outputFileName, outputFileDesc, sourceFiles} = this.state;
+    const { visible, confirmLoading, jobTypes, paramName, paramType, inputFileName, inputFileDesc, outputFileName, outputFileDesc, sourceFiles, jobSearchSuggestions, clusters} = this.state;
     const formItemLayout = {
       labelCol: {
         xs: { span: 2 },
@@ -297,23 +413,13 @@ class JobDetails extends Component {
 
     const fileColumns = [{
         title: 'Name',
-        dataIndex: 'fileTitle',
+        dataIndex: 'name',
         width: '20%',
       },
       {
         title: 'Description',
         dataIndex: 'description',
         width: '30%'
-      },
-      {
-        title: 'File Type',
-        dataIndex: 'fileType',
-        width: '20%'
-      },
-      {
-        title: 'Qualified Path',
-        dataIndex: 'qualifiedPath',
-        width: '20%'
       }];
 
 
@@ -341,11 +447,40 @@ class JobDetails extends Component {
           <TabPane tab="Basic" key="1">
 
            <Form layout="vertical">
+            {/*{this.props.isNewIndex ?*/}
+            <div>
+            <Form.Item {...formItemLayout} label="Cluster">
+               <Select placeholder="Select a Cluster" onChange={this.onClusterSelection} style={{ width: 190 }}>
+                {clusters.map(cluster => <Option key={cluster.id}>{cluster.name}</Option>)}
+              </Select>
+            </Form.Item>
+
+            <Form.Item {...formItemLayout} label="Index">
+              <AutoComplete
+                className="certain-category-search"
+                dropdownClassName="certain-category-search-dropdown"
+                dropdownMatchSelectWidth={false}
+                dropdownStyle={{ width: 300 }}
+                size="large"
+                style={{ width: '100%' }}
+                dataSource={jobSearchSuggestions}
+                onChange={(value) => this.searchJobs(value)}
+                onSelect={(value) => this.onJobSelected(value)}
+                placeholder="Search jobs"
+                optionLabelProp="text"
+              >
+                <Input id="autocomplete_field" suffix={this.state.autoCompleteSuffix} />
+              </AutoComplete>
+            </Form.Item>
+            </div>
+              {/*: null
+            }*/}
+
             <Form.Item {...formItemLayout} label="Name">
               {getFieldDecorator('name', {
                 rules: [{ required: true, message: 'Please enter a name for the job!' }],
               })(
-              <Input id="job_name" name="name" onChange={this.onChange} placeholder="Name" />
+              <Input id="job_name" name="name" onChange={this.onChange} placeholder="Name" disabled={!this.props.isNewJob}/>
               )}
              </Form.Item>
 
