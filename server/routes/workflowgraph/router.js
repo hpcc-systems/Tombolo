@@ -64,7 +64,7 @@ router.post('/deleteAsset', (req, res) => {
     WorkflowGraph.findOne({where:{"application_Id":req.body.application_id}}).then(function(graph) {
         let nodes = JSON.parse(graph.nodes), edges = JSON.parse(graph.edges), workflowGraphId=graph.id;
         nodes.forEach((node, idx) => {
-            if (node.fileId == assetId || node.indexId == assetId || node.queryId == assetId || node.jobId == assetId) {
+            if (node.id == assetId || (node.fileId == assetId || node.indexId == assetId || node.queryId == assetId || node.jobId == assetId)) {
                 edgeId=node.id;
                 nodes.splice(idx, 1);
             }
