@@ -94,9 +94,9 @@ class IndexDetails extends Component {
       visible: true,
     });
     this.getIndexDetails();
-    if(this.props.isNewIndex) {
+    //if(this.props.isNewIndex) {
       this.getClusters();
-    }
+    //}
   }
 
   handleOk = (e) => {
@@ -376,7 +376,7 @@ class IndexDetails extends Component {
           <TabPane tab="Basic" key="1">
 
            <Form layout="vertical">
-            {this.props.isNewIndex ?
+            {/*{this.props.isNewIndex ?*/}
             <div>
             <Form.Item {...formItemLayout} label="Cluster">
                <Select placeholder="Select a Cluster" onChange={this.onClusterSelection} style={{ width: 190 }}>
@@ -402,8 +402,8 @@ class IndexDetails extends Component {
               </AutoComplete>
             </Form.Item>
             </div>
-              : null
-            }
+              {/*: null
+            }*/}
             <Form.Item {...formItemLayout} label="Title">
               {getFieldDecorator('title', {
                 rules: [{ required: true, message: 'Please enter a title for the index!' }],

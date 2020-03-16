@@ -34,7 +34,6 @@ class JobList extends Component {
 
   componentWillReceiveProps(props) {
     if(props.application) {
-      console.log(props.application.applicationId + ' -- ' +this.state.applicationId);
       if(this.state.applicationId != props.application.applicationId) {
         this.setState({
           applicationId: props.application.applicationId,
@@ -44,16 +43,13 @@ class JobList extends Component {
         });
       }
     }
-    console.log("componentWillReceiveProps");
   }
 
   componentDidMount() {
-    console.log("componentDidMount")
     //this.fetchDataAndRenderTable();
   }
 
   openAddJobDlg = () => {
-      console.log("open");
     var _self = this;
     this.setState({
       openJobDetailsDialog: true,
@@ -88,7 +84,6 @@ class JobList extends Component {
   }
 
   fetchDataAndRenderTable() {
-    console.log("appId: "+this.state.applicationId);
     var _self=this;
     //fetch("/api/job/job_list?app_id="+this.state.applicationId, {
     fetch("/api/app/read/assets?app_id="+this.state.applicationId, {
@@ -165,7 +160,6 @@ class JobList extends Component {
   }
 
   handleJobDelete(jobId) {
-    console.log(jobId);
     handleJobDelete(jobId, this.state.applicationId)
     .then(result => {
       this.fetchDataAndRenderTable();
@@ -177,7 +171,6 @@ class JobList extends Component {
   }
 
   handleIndexDelete(indexId) {
-    console.log(indexId);
     handleIndexDelete(indexId, this.state.applicationId)
     .then(result => {
       this.fetchDataAndRenderTable();
@@ -189,7 +182,6 @@ class JobList extends Component {
   }
 
   handleQueryDelete(queryId) {
-    console.log(queryId);
     handleQueryDelete(queryId, this.state.applicationId)
     .then(result => {
       this.fetchDataAndRenderTable();
@@ -201,7 +193,6 @@ class JobList extends Component {
   }
 
   handleFileDelete= (fileId) => {
-    console.log(fileId);
     handleFileDelete(fileId, this.state.applicationId)
     .then(result => {
       this.fetchDataAndRenderTable();
@@ -224,7 +215,6 @@ class JobList extends Component {
   render() {
     if(!this.props.application || !this.props.application.applicationId)
       return null;
-      {console.log("rendering....")}
       const jobColumns = [{
         title: 'Name',
         dataIndex: 'name',
@@ -262,9 +252,9 @@ class JobList extends Component {
               <Tooltip placement="bottom" title={"Tree View"}><Radio.Button value="chart"><Icon type="cluster" /></Radio.Button></Tooltip>
               <Tooltip placement="bottom" title={"Tabular View"}><Radio.Button value="grid"><Icon type="bars" /></Radio.Button></Tooltip>
             </Radio.Group>
-            <Tooltip placement="bottom" title={"Click to add a new job"}>
+            {/*<Tooltip placement="bottom" title={"Click to add a new job"}>
               <Button className="btn btn-secondary btn-sm" onClick={() => this.openAddJobDlg()}><i className="fa fa-plus"></i>Add Job</Button>
-            </Tooltip>
+            </Tooltip>*/}
           </span>
         </div>
         <div id="jobs">

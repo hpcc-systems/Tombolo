@@ -215,9 +215,9 @@ class FileDetails extends Component {
     this.clearState();
     this.getConsumers();
     this.getFileDetails();
-    if(this.props.isNewFile) {
+    //if(this.props.isNewFile) {
       this.getClusters();
-    }
+    //}
   }
 
   onDrawerClose = () => {
@@ -585,7 +585,7 @@ class FileDetails extends Component {
     var file_basic = {
       //"id" : this.state.file.id,
       "title" : this.state.file.title,
-      "name" : this.state.file.name,
+      "name" : (!this.state.file.name || this.state.file.name == '') ? this.state.file.title : this.state.file.name,
       "cluster_id": this.state.file.clusterId,
       "description" : this.state.file.description,
       "serviceUrl" : this.state.file.serviceUrl,
@@ -1040,7 +1040,8 @@ class FileDetails extends Component {
       selectedRowKeys,
       onChange: this.onSelectedRowKeysChange
     };
-    const modalHeight = !this.props.isNewFile ? "400px" : "500px";
+    //const modalHeight = !this.props.isNewFile ? "400px" : "500px";
+    const modalHeight = "500px";
 
     //render only after fetching the data from the server
     if(!title && !this.props.selectedFile && !this.props.isNewFile) {
@@ -1067,7 +1068,6 @@ class FileDetails extends Component {
           <TabPane tab="Basic" key="1">
 
            <Form layout="vertical">
-            {this.props.isNewFile ?
             <div>
             <Form.Item {...formItemLayout} label="Cluster">
                <Select placeholder="Select a Cluster" onChange={this.onClusterSelection} style={{ width: 190 }}>
@@ -1093,8 +1093,6 @@ class FileDetails extends Component {
               </AutoComplete>
             </Form.Item>
             </div>
-              : null
-            }
             <Form.Item {...formItemLayout} label="Title">
               {getFieldDecorator('title', {
                 rules: [{ required: true, message: 'Please enter a file!' }],
@@ -1102,13 +1100,10 @@ class FileDetails extends Component {
               <Input id="file_title" name="title" onChange={this.onChange} placeholder="Title" />              )}
             </Form.Item>
             <Form.Item {...formItemLayout} label="Name">
-              {getFieldDecorator('name', {
-                rules: [{ required: true, message: 'Please select a file!' }],
-              })(
-              <Input id="file_name" name="name" onChange={this.onChange} placeholder="Name" disabled={true} />              )}
+              <Input id="file_name" name="name" onChange={this.onChange} placeholder="Name" disabled={true} />
              </Form.Item>
             <Form.Item {...formItemLayout} label="Description">
-                <Input id="file_desc" name="description" onChange={this.onChange} defaultValue={description} value={description} placeholder="Description" />
+                <Input id="file_desc" name="description" onChange={this.onChange} placeholder="Description" />
             </Form.Item>
             <Form.Item {...formItemLayout} label="Service URL">
                 <Input id="file_primary_svc" name="serviceUrl" onChange={this.onChange} defaultValue={serviceUrl} value={serviceUrl} placeholder="Service URL" />

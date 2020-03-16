@@ -74,7 +74,7 @@ export function handleFileDelete (fileId, applicationId) {
       body: data
     }).then((response) => {
       if(response.ok) {
-        return response.json();
+        resolve(response.json());
       } else {
       	handleError(response);
       }

@@ -88,7 +88,6 @@ class Graph extends Component {
       });
 
     }
-
   }
 
   componentWillUnmount() {
@@ -108,7 +107,6 @@ class Graph extends Component {
 
   openDetailsDialog(d) {
     let _self=this;
-    console.log(JSON.stringify(d));
     switch(d.type) {
       case 'File':
         let isNewFile = false;
@@ -199,7 +197,6 @@ class Graph extends Component {
 
   onFileAdded = (saveResponse) => {
     var newData = this.thisGraph.nodes.map(el => {
-        console.log(JSON.stringify(el));
         if(el.id == this.state.currentlyEditingId) {
           el.title=saveResponse.title;
           el.queryId=saveResponse.queryId;
@@ -224,6 +221,7 @@ class Graph extends Component {
     });
     this.thisGraph.nodes = newData;
     this.updateGraph();
+    this.saveGraph();
   }
 
   saveGraph() {
@@ -247,7 +245,6 @@ class Graph extends Component {
   }
 
   fetchSavedGraph() {
-    console.log("fetchSavedGraph");
     var _self=this;
     fetch("/api/workflowgraph?application_id="+this.props.applicationId, {
        headers: authHeader()
@@ -259,9 +256,10 @@ class Graph extends Component {
         handleError(response);
     })
     .then(data => {
+      let nodes = [], edges = [];
       if(data != undefined && data != null) {
-        let nodes = JSON.parse(data.nodes);
-        let edges = JSON.parse(data.edges);
+        nodes = JSON.parse(data.nodes);
+        edges = JSON.parse(data.edges);
         edges.forEach(function (e, i) {
             edges[i] = {
                 source: nodes.filter(function (n) {
@@ -272,12 +270,12 @@ class Graph extends Component {
                 })[0]
             };
         });
-        _self.thisGraph.nodes = nodes;
-        _self.thisGraph.edges = edges;
-        _self.setIdCt(nodes.length);
-        _self.updateGraph();
-
       }
+      _self.thisGraph.nodes = nodes;
+      _self.thisGraph.edges = edges;
+      _self.setIdCt(nodes.length);
+      _self.updateGraph();
+
     }).catch(error => {
       console.log(error);
     });
@@ -313,42 +311,26 @@ class Graph extends Component {
     sel.addRange(range);
   }
 
-
-  /* insert svg line breaks: taken from http://stackoverflow.com/questions/13241475/how-do-i-include-newlines-in-labels-in-d3-charts */
-  insertTitleLinebreaks = (gEl, title) => {
-      let words = title.split(/\s+/g),
-          nwords = words.length;
-      let el = gEl.append("text")
-          .attr("text-anchor", "middle")
-          .attr("dy", "-" + (nwords - 1) * 7.5);
-
-      for (let i = 0; i < words.length; i++) {
-          let tspan = el.append('tspan').text(words[i]);
-          if (i > 0) {
-              tspan.attr('x', 0).attr('dy', '15');
-          }
-      }
-  }
-
   insertTitle = (gEl, title, x, y, d) => {
     let _self=this;
     let words = title.split(/\s+/g),
         nwords = words.length;
-
-      if(d3.select("#label-"+d.id).empty()) {
+      d3.select("#txt-"+d.id).remove();
+      //if(d3.select("#label-"+d.id).empty()) {
         let el = gEl.append("text")
-            .attr("text-anchor", "middle")
-            .attr("dy", 25)
-            .attr("dx", 50);
-
-        let tspan = el.append('tspan')
-          .attr("id", "label-"+d.id)
-          .text(title);
-          tspan.attr("text-anchor", "middle");
-      } else {
-        d3.select("#label-"+d.id).text(title);
-      }
-      //tspan.attr('x', 50).attr('dy', '15');
+            //.attr("text-anchor", "middle")
+            //.attr("dy", 25)
+            .attr("id", "txt-"+d.id)
+            //.attr("dx", 50);
+          let tspans = Math.floor(title.length / 20);
+          for (let i = 0; i <= tspans; i++) {
+            let tspan = el.append('tspan')
+              .text(title.substring((i * 20), ((i+1) * 20)))
+              .attr("id", "label-"+d.id)
+              //.attr("text-anchor", "middle")
+              .attr('x', 5)
+              .attr('dy', '15');
+          }
       if(d3.select("#t"+d.id).empty()) {
         let deleteIcon = gEl.append('text')
           .attr('font-family', 'FontAwesome')
@@ -360,26 +342,34 @@ class Graph extends Component {
             d3.event.stopPropagation();
             switch(d.type) {
               case 'File':
-                handleFileDelete(d.fileId, _self.props.applicationId);
-                updateGraph(d.fileId, _self.props.applicationId).then((response) => {
+                if(d.fileId) {
+                  handleFileDelete(d.fileId, _self.props.applicationId);
+                }
+                updateGraph((d.fileId ? d.fileId : d.id), _self.props.applicationId).then((response) => {
                   _self.fetchSavedGraph();
                 });
                 break;
               case 'Index':
-                handleIndexDelete(d.indexId, _self.props.applicationId);
-                updateGraph(d.indexId, _self.props.applicationId).then((response) => {
+                if(d.indexId) {
+                  handleIndexDelete(d.indexId, _self.props.applicationId);
+                }
+                updateGraph((d.indexId ? d.indexId : d.id), _self.props.applicationId).then((response) => {
                   _self.fetchSavedGraph();
                 });
                 break;
               case 'Query':
-                handleQueryDelete(d.queryId, _self.props.applicationId);
-                updateGraph(d.queryId, _self.props.applicationId).then((response) => {
+                if(d.queryId) {
+                  handleQueryDelete(d.queryId, _self.props.applicationId);
+                }
+                updateGraph((d.queryId ? d.queryId : d.id), _self.props.applicationId).then((response) => {
                   _self.fetchSavedGraph();
                 });
                 break;
               case 'Job':
-                handleJobDelete(d.jobId, _self.props.applicationId);
-                updateGraph(d.jobId, _self.props.applicationId).then((response) => {
+                if(d.jobId) {
+                  handleJobDelete(d.jobId, _self.props.applicationId);
+                }
+                updateGraph((d.jobId ? d.jobId : d.id), _self.props.applicationId).then((response) => {
                   _self.fetchSavedGraph();
                 });
                 break;
@@ -390,38 +380,33 @@ class Graph extends Component {
         }
   }
 
-  wrap =  (text, width)  => {
-    text.each(function() {
-      var text = d3.select(this),
-          words = text.text().split(/\s+/).reverse(),
-          word,
-          line = [],
-          lineNumber = 0,
-          lineHeight = 1.1, // ems
-          y = text.attr("y"),
-          dy = parseFloat(text.attr("dy")),
-          tspan = text.text(null).append("tspan").attr("x", 0).attr("y", y).attr("dy", dy + "em");
-      while (word = words.pop()) {
-        line.push(word);
-        tspan.text(line.join(" "));
-        if (tspan.node().getComputedTextLength() > width) {
-          line.pop();
-          tspan.text(line.join(" "));
-          line = [word];
-          tspan = text.append("tspan").attr("x", 0).attr("y", y).attr("dy", ++lineNumber * lineHeight + dy + "em").text(word);
-        }
-      }
-    });
-}
-
+  makeTextEditable = (d3node, d) => {
+    let _self=this;
+    //d3.select("#txt-"+d.id).remove();
+    let d3txt = d3node.append("foreignObject")
+      .attr("width", 280)
+      .attr("height", 180)
+      .append("xhtml:form")
+        .append("input")
+          .attr("value", function() {
+                this.focus();
+                return d.title;
+            })
+            .attr("style", "width: 100px;")
+            .on("blur", function (d) {
+              d3node.select("foreignObject").remove()
+              _self.insertTitle(d3node, this.value, d.x, d.y, d);
+            });
+  }
 
   // remove edges associated with a node
   spliceLinksForNode = (node) => {
+      let _self=this;
       let toSplice = this.thisGraph.edges.filter(function (l) {
           return (l.source === node || l.target === node);
       });
       toSplice.map(function (l) {
-          this.thisGraph.edges.splice(this.thisGraph.edges.indexOf(l), 1);
+          _self.thisGraph.edges.splice(_self.thisGraph.edges.indexOf(l), 1);
       });
   }
 
@@ -434,25 +419,27 @@ class Graph extends Component {
   }
 
   replaceSelectNode = (d3Node, nodeData) => {
-      d3Node.classed(this.consts.selectedClass, true);
-      if (this.graphState.selectedNode) {
-          this.thisGraph.removeSelectFromNode();
-      }
-      this.graphState.selectedNode = nodeData;
+    d3Node.classed(this.consts.selectedClass, true);
+    if (this.graphState.selectedNode) {
+        this.thisGraph.removeSelectFromNode();
+    }
+    this.graphState.selectedNode = nodeData;
   }
 
   removeSelectFromNode = () => {
+      let _self=this;
       this.thisGraph.circles.filter(function (cd) {
-          return cd.id === this.graphState.selectedNode.id;
-      }).classed(this.consts.selectedClass, false);
+          return cd.id === _self.graphState.selectedNode.id;
+      }).classed(_self.consts.selectedClass, false);
       this.graphState.selectedNode = null;
   }
 
   removeSelectFromEdge = () => {
-      this.thisGraph.paths.filter(function (cd) {
-          return cd === this.graphState.selectedEdge;
-      }).classed(this.consts.selectedClass, false);
-      this.graphState.selectedEdge = null;
+    let _self=this;
+    this.thisGraph.paths.filter(function (cd) {
+        return cd === _self.graphState.selectedEdge;
+    }).classed(_self.consts.selectedClass, false);
+    this.graphState.selectedEdge = null;
   }
 
   pathMouseDown = (d3path, d) => {
@@ -482,45 +469,6 @@ class Graph extends Component {
               .attr('d', 'M' + (d.x + 40) + ',' + (d.y + 20) + 'L' + (d.x + 35) + ',' + d.y);
           return;
       }
-  }
-
-  /* place editable text on node in place of svg text */
-  changeTextOfNode = (d3node, d) => {
-    let _self=this;
-    let htmlEl = d3node.node();
-    d3node.selectAll("text").remove();
-    let nodeBCR = htmlEl.getBoundingClientRect(),
-        curScale = nodeBCR.width / this.consts.nodeRadius,
-        placePad = 5 * curScale,
-        useHW = curScale > 1 ? nodeBCR.width * 0.71 : this.consts.nodeRadius * 1.42;
-    // replace with editableconent text
-    let d3txt = this.thisGraph.svg.selectAll("foreignObject")
-        .data([d])
-        .enter()
-        .append("foreignObject")
-        .attr("x", nodeBCR.left + placePad)
-        .attr("y", nodeBCR.top + placePad)
-        .attr("height", 2 * useHW)
-        .attr("width", useHW)
-        .append("xhtml:p")
-        .attr("id", this.consts.activeEditId)
-        .attr("contentEditable", "true")
-        .text(d.title)
-        .on("mousedown", function (d) {
-            d3.event.stopPropagation();
-        })
-        .on("keydown", function (d) {
-            d3.event.stopPropagation();
-            if (d3.event.keyCode == this.consts.ENTER_KEY && !d3.event.shiftKey) {
-                _self.thisGraph.blur();
-            }
-        })
-        .on("blur", function (d) {
-            d.title = _self.textContent;
-            _self.insertTitleLinebreaks(d3node, d.title);
-            d3.select(_self.thisGraph.parentElement).remove();
-        });
-      return d3txt;
   }
 
   dragEnd = (d3node, d) => {
@@ -556,7 +504,6 @@ class Graph extends Component {
         }
     }
 
-
     _self.graphState.mouseDownNode = null;
     _self.graphState.mouseEnterNode = null;
     return;
@@ -567,17 +514,8 @@ class Graph extends Component {
       // reset the this.graphStates
       this.graphState.shiftNodeDrag = false;
       d3node.classed(this.consts.connectClass, false);
-
-      if (d3.event.shiftKey) {
-          // shift-clicked node: edit text content
-          let d3txt = this.changeTextOfNode(d3node, d);
-          let txtNode = d3txt.node();
-          this.selectElementContents(txtNode);
-          txtNode.focus();
-      } else {
-          if (this.graphState.selectedEdge) {
-              this.removeSelectFromEdge();
-          }
+      if (this.graphState.selectedEdge) {
+          this.removeSelectFromEdge();
       }
 
       let prevNode = this.graphState.selectedNode;
@@ -605,14 +543,6 @@ class Graph extends Component {
               d = {id: this.graphState.idct++, title: "Title", x: xycoords[0], y: xycoords[1]};
           this.thisGraph.nodes.push(d);
           this.updateGraph();
-          // make title of text immediently editable
-          /*let d3txt = changeTextOfNode(this.thisGraph.circles.filter(function (dval) {
-              return dval.id === d.id;
-          }), d),
-          txtNode = d3txt.node();
-          console.log('txtNode: '+txtNode);
-          selectElementContents(txtNode);
-          txtNode.focus();*/
       } else if (this.graphState.shiftNodeDrag) {
           // dragged from node
           this.graphState.shiftNodeDrag = false;
@@ -623,28 +553,31 @@ class Graph extends Component {
 
   // keydown on main svg
   svgKeyDown = () => {
-    // make sure repeated key presses don't register for each keydown
-    if (this.graphState.lastKeyDown !== -1) return;
+    let _self=this;
+    if(_self.graphState.selectedNode) {
+      // make sure repeated key presses don't register for each keydown
+      if (_self.graphState.lastKeyDown !== -1) return;
 
-    this.graphState.lastKeyDown = d3.event.keyCode;
-    let selectedNode = this.graphState.selectedNode,
-        selectedEdge = this.graphState.selectedEdge;
+      _self.graphState.lastKeyDown = d3.event.keyCode;
+      let selectedNode = _self.graphState.selectedNode,
+          selectedEdge = _self.graphState.selectedEdge;
 
-    switch (d3.event.keyCode) {
-        case this.consts.BACKSPACE_KEY:
-        case this.consts.DELETE_KEY:
-            d3.event.preventDefault();
-            if (selectedNode) {
-                this.thisGraph.nodes.splice(this.thisGraph.nodes.indexOf(selectedNode), 1);
-                this.thisGraph.spliceLinksForNode(selectedNode);
-                this.graphState.selectedNode = null;
-                this.updateGraph();
-            } else if (selectedEdge) {
-                this.thisGraph.edges.splice(this.thisGraph.edges.indexOf(selectedEdge), 1);
-                this.graphState.selectedEdge = null;
-                this.updateGraph();
-            }
-            break;
+      switch (d3.event.keyCode) {
+          case _self.consts.BACKSPACE_KEY:
+          case _self.consts.DELETE_KEY:
+              d3.event.preventDefault();
+              if (selectedNode) {
+                  _self.thisGraph.nodes.splice(_self.thisGraph.nodes.indexOf(selectedNode), 1);
+                  _self.spliceLinksForNode(selectedNode);
+                  _self.graphState.selectedNode = null;
+                  _self.updateGraph();
+              } else if (selectedEdge) {
+                  _self.thisGraph.edges.splice(_self.thisGraph.edges.indexOf(selectedEdge), 1);
+                  _self.graphState.selectedEdge = null;
+                  _self.updateGraph();
+              }
+              break;
+      }
     }
   }
 
@@ -740,10 +673,10 @@ class Graph extends Component {
             _self.circleMouseDown(d3.select(this), d);
         })
         .call(_self.thisGraph.drag)
-        /*.on("click", function (d) {
+        .on("click", function (d) {
             _self.circleMouseUp(d3.select(this), d);
-            console.log('clicked....')
-        })*/.on("dblclick", function (d) {
+            //_self.makeTextEditable(d3.select(this), d)
+        }).on("dblclick", function (d) {
             _self.setState({
               currentlyEditingId: d.id
             });
@@ -800,7 +733,7 @@ class Graph extends Component {
           }
         });
 
-        _self.saveGraph()
+        //_self.saveGraph()
   }
 
   toggleDeleteIcon = (node, d) => {
@@ -957,6 +890,8 @@ class Graph extends Component {
           if (_self.graphState.shiftNodeDrag) {
               _self.dragEnd(d3.select(this), _self.graphState.mouseEnterNode)
           }
+          _self.updateGraph();
+          _self.saveGraph();
       });
 
     // listen for key events

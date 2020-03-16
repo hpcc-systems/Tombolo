@@ -366,7 +366,7 @@ class QueryDetails extends Component {
           <TabPane tab="Basic" key="1">
 
            <Form layout="vertical">
-            {this.props.isNewFile ?
+            {/*this.props.isNewFile ?*/}
             <div>
             <Form.Item {...formItemLayout} label="Cluster">
                <Select placeholder="Select a Cluster" onChange={this.onClusterSelection} style={{ width: 190 }}>
@@ -392,13 +392,13 @@ class QueryDetails extends Component {
               </AutoComplete>
             </Form.Item>
             </div>
-              : null
-            }
+              {/*: null
+            }*/}
             <Form.Item {...formItemLayout} label="Title">
               {getFieldDecorator('query_title', {
                 rules: [{ required: true, message: 'Please enter a title for the query!' }],
               })(
-              <Input id="query_title" name="query_title" onChange={this.onChange} placeholder="Title" disabled={!this.props.isNewFile}/>
+              <Input id="query_title" name="title" onChange={this.onChange} placeholder="Title" disabled={!this.props.isNewFile}/>
               )}
              </Form.Item>
 

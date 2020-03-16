@@ -92,6 +92,46 @@ router.post('/querysearch', function (req, res) {
     	console.log('Cluster not reachable: '+JSON.stringify(err));
     	res.status(500).send({"success":"false", "message": "Search failed. Please check if the cluster is running."});
     });
+});
+
+
+router.post('/jobsearch', function (req, res) {
+    console.log('clusterid: '+req.body.clusterid);
+	getCluster(req.body.clusterid).then(function(cluster) {
+		let url = cluster.thor_host + ':' + cluster.thor_port +'/WsWorkunits/WUQuery.json?Jobname=*'+req.body.keyword+'*&State=completed';
+        request.get({
+		  url: url,
+		  auth : getClusterAuth(cluster)
+		}, function(err, response, body) {
+		  if (err) {
+			console.log('ERROR - ', err);
+			return response.status(500).send('Error');
+	      }
+	      else {
+	      	var result = JSON.parse(body);
+	      	if(result.WUQueryResponse && result.WUQueryResponse.Workunits != undefined) {
+	      		var jobSearchAutoComplete = [], workunits = result.WUQueryResponse.Workunits.ECLWorkunit;
+
+				workunits.forEach((workunit, index) => {
+					//dont add any duplicates
+					var exists = jobSearchAutoComplete.filter(function(job) {
+						return workunit.Jobname == job.text;
+					});
+					if(exists != undefined && exists.length == 0) {
+						jobSearchAutoComplete.push({"text" : workunit.Jobname, "value" : workunit.Wuid});
+					}
+				});
+				console.log('jobSearchAutoComplete: '+jobSearchAutoComplete.length)
+	      	 	res.json(jobSearchAutoComplete);
+	      	} else {
+	      		res.json("");
+	      	}
+	      }
+      	});
+    }).catch(err => {
+    	console.log('Cluster not reachable: '+JSON.stringify(err));
+    	res.status(500).send({"success":"false", "message": "Search failed. Please check if the cluster is running."});
+    });
 
 });
 
@@ -563,6 +603,62 @@ router.get('/getQueryInfo', function (req, res) {
 
 	      	});
 		});
+    } catch (err) {
+        console.log('err', err);
+    }
+});
+
+router.get('/getJobInfo', function (req, res) {
+    try {
+		console.log('jobName: '+req.query.jobWuid);
+		let sourceFiles=[], outputFiles=[];
+		getCluster(req.query.clusterid).then(function(cluster) {
+			request.get({
+			  url: cluster.thor_host + ':' + cluster.thor_port +'/WsWorkunits/WUInfo.json?Wuid='+req.query.jobWuid,
+			  auth : getClusterAuth(cluster)
+			}, function(err, response, body) {
+			  if (err) {
+				console.log('ERROR - ', err);
+				return response.status(500).send('Error');
+		      }
+		      else {
+		      	var result = JSON.parse(body);
+		      	if(result.Exceptions) {
+		      		res.status(500).send('Error: '+result.Exceptions.Exception);
+		      	}
+
+		      	if(result.WUInfoResponse && result.WUInfoResponse.Workunit) {
+		      		var wuInfoResponse = result.WUInfoResponse.Workunit, fileInfo = {};
+		      		if(wuInfoResponse.SourceFiles && wuInfoResponse.SourceFiles.ECLSourceFile) {
+		      			wuInfoResponse.SourceFiles.ECLSourceFile.forEach((sourceFile) => {
+		      				sourceFiles.push({"name":sourceFile.Name});
+		      			});
+
+		      		}
+		      		if(wuInfoResponse.Results && wuInfoResponse.Results.ECLResult) {
+		      			let files = wuInfoResponse.Results.ECLResult.filter((result) => {
+		      				return result.FileName != ""
+		      			})
+		      			files.forEach((file) => {
+		      				outputFiles.push({"name":file.FileName});
+		      			})
+		      		}
+
+		      		res.json({
+		      			"sourceFiles": sourceFiles,
+		      			"outputFiles": outputFiles,
+		      			"Jobname": result.WUInfoResponse.Workunit.Jobname,
+		      			"description": result.WUInfoResponse.Workunit.Description,
+		      			"entryBWR": result.WUInfoResponse.Workunit.Jobname
+		      		});
+		      	} else {
+		      		res.json();
+		      	}
+		      }
+
+	      	});
+		});
+
     } catch (err) {
         console.log('err', err);
     }
