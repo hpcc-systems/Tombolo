@@ -20,12 +20,15 @@ router.post('/filesearch', function (req, res) {
 			let contentType = req.body.indexSearch ? "key" : "";
 			console.log("contentType: "+contentType);
 			let dfuService = new hpccJSComms.DFUService({ baseUrl: cluster.thor_host + ':' + cluster.thor_port, userID:(clusterAuth ? clusterAuth.user : ""), password:(clusterAuth ? clusterAuth.password : "")});
-			dfuService.DFUQuery({"LogicalName":req.body.keyword+"*", ContentType:contentType}).then(response => {
+			dfuService.DFUQuery({"LogicalName":"*"+req.body.keyword+"*", ContentType:contentType}).then(response => {
 				if(response.DFULogicalFiles && response.DFULogicalFiles.DFULogicalFile && response.DFULogicalFiles.DFULogicalFile.length > 0) {
 					let searchResults = response.DFULogicalFiles.DFULogicalFile;
 					searchResults.forEach((logicalFile) => {
 						results.push({"text": logicalFile.Name, "value":logicalFile.Name});
 					});
+					//remove duplicates
+					results = results.filter((elem, index, self) => self.findIndex(
+    						(t) => {return (t.text === elem.text)}) === index)
 				}
 				res.json(results);
 			});
@@ -53,6 +56,10 @@ router.post('/querysearch', function (req, res) {
 				querySearchResult.forEach((querySet, index) => {
 						querySearchAutoComplete.push({"text" : querySet.Id, "value" : querySet.Name});
 				});
+
+				querySearchAutoComplete = querySearchAutoComplete.filter((elem, index, self) => self.findIndex(
+					(t) => {return (t.text === elem.text)}) === index)
+
 			}
 			res.json(querySearchAutoComplete);
     }).catch(err => {

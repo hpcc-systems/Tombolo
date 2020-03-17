@@ -39,7 +39,7 @@
     "tar": "^4.4.8",
     "treant-js": "^1.0.1",
     "underscore": "^1.9.1",
-    "webpack-dev-server": "^3.10.1"
+    "webpack-dev-server": "3.10.2"
   },
   "scripts": {
     "start": "react-scripts start",

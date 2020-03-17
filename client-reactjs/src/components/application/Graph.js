@@ -1,8 +1,6 @@
 import React, { Component } from "react";
 import * as d3 from "d3";
 import '../graph-creator/graph-creator.css';
-import GraphRenderer from '../graph-creator/GraphRenderer';
-import loadScript from "../common/LoadScript";
 import $ from 'jquery';
 import { Button, Icon} from 'antd/lib';
 import { Typography } from 'antd';
