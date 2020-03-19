@@ -25,6 +25,7 @@ const consumer = require('./routes/consumers/read');
 const ldap = require('./routes/ldap/read');
 const regulations = require('./routes/controlsAndRegulations/read');
 const workflowgraph = require('./routes/workflowgraph/router');
+const workflows = require('./routes/workflows/router');
 
 app.use('/api/app/read', tokenService.verifyToken, appRead);
 app.use('/api/file/read', tokenService.verifyToken, fileRead);
@@ -40,6 +41,7 @@ app.use('/api/consumer', tokenService.verifyToken, consumer);
 app.use('/api/ldap', ldap);
 app.use('/api/controlsAndRegulations', tokenService.verifyToken, regulations);
 app.use('/api/workflowgraph', tokenService.verifyToken, workflowgraph);
+app.use('/api/workflows', workflows);
 
 process.env["NODE_TLS_REJECT_UNAUTHORIZED"] = 0;
 

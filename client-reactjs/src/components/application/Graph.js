@@ -2,7 +2,7 @@ import React, { Component } from "react";
 import * as d3 from "d3";
 import '../graph-creator/graph-creator.css';
 import $ from 'jquery';
-import { Button, Icon} from 'antd/lib';
+import { Button, Icon, Drawer, Row, Col, Descriptions} from 'antd/lib';
 import { Typography } from 'antd';
 import FileDetailsForm from "./FileDetails";
 import JobDetailsForm from "./JobDetails";
@@ -34,13 +34,16 @@ class Graph extends Component {
     isNewQuery:false,
     isNewIndex:false,
     currentlyEditingId:'',
-    applicationId: ''
+    applicationId: '',
+    nodeDetailsVisible: false,
+    nodeDetailStatus: '',
+    nodeDetailMessage: ''
   }
 
   consts = {
       selectedClass: "selected",
       connectClass: "connect-node",
-      circleGClass: "conceptG",
+      circleGClass: "node",
       graphClass: "graph",
       activeEditId: "active-editing",
       BACKSPACE_KEY: 8,
@@ -64,10 +67,10 @@ class Graph extends Component {
   };
 
   shapesData = [
-      { "x": "10", "y": "20", "rx":"0", "ry":"0", "rectx":"10", "recty":"10", "rectwidth":"110", "rectheight":"40", "tx":"60", "ty":"30", "title":"Job", "color":"#EE7423", "icon":"\uf040", "iconx":"90", "icony":"25"},
-      { "x": "10", "y": "70", "rx":"10", "ry":"10", "rectx":"10", "recty":"70", "rectwidth":"110", "rectheight":"40", "tx":"60", "ty":"90", "title":"File", "color":"#7AAAD0", "icon":"\uf040", "iconx":"90", "icony":"65"},
-      { "x": "10", "y": "120", "rx":"10", "ry":"10", "rectx":"10", "recty":"130", "rectwidth":"110", "rectheight":"40", "tx":"60", "ty":"150", "title":"Query", "color":"#9B6A97", "icon":"\uf040", "iconx":"90", "icony":"65"},
-      { "x": "10", "y": "170", "rx":"10", "ry":"10", "rectx":"10", "recty":"190", "rectwidth":"110", "rectheight":"40", "tx":"60", "ty":"210", "title":"Index", "color":"#7DC470", "icon":"\uf040", "iconx":"90", "icony":"65"}
+      { "x": "10", "y": "20", "rx":"0", "ry":"0", "rectx":"10", "recty":"10", "rectwidth":"55", "rectheight":"55", "tx":"20", "ty":"50", "title":"Job", "color":"#EE7423", "icon":"\uf085", "iconx":"90", "icony":"25"},
+      { "x": "10", "y": "70", "rx":"10", "ry":"10", "rectx":"10", "recty":"90", "rectwidth":"55", "rectheight":"55", "tx":"20", "ty":"130", "title":"File", "color":"#7AAAD0", "icon":"\uf1c0", "iconx":"90", "icony":"65"},
+      { "x": "10", "y": "120", "rx":"10", "ry":"10", "rectx":"10", "recty":"170", "rectwidth":"55", "rectheight":"55", "tx":"20", "ty":"210", "title":"Query", "color":"#9B6A97", "icon":"\uf00e", "iconx":"90", "icony":"65"},
+      { "x": "10", "y": "170", "rx":"10", "ry":"10", "rectx":"10", "recty":"250", "rectwidth":"55", "rectheight":"55", "tx":"20", "ty":"290", "title":"Index", "color":"#7DC470", "icon":"\uf2b9", "iconx":"90", "icony":"65"}
     ];
 
   thisGraph = {};
@@ -168,6 +171,35 @@ class Graph extends Component {
         }, 200);
         break;
    }
+  }
+
+  updateCompletionStatus = () => {
+    if(this.props.workflowDetails) {
+      let completedTasks = this.getTaskDetails()
+      d3.selectAll('.node')
+      .each(function(d) {
+        let task = completedTasks.filter((task) => {
+          return task.id == d3.select(this).select('rect').attr("id")
+        })
+        if(task && task.length > 0) {
+          let strokeColor = task[0].status == "Completed" ? "green" : "red"
+          d3.select(this).select('rect').attr("stroke", strokeColor);
+          d3.select(this).select('rect').attr("stroke-width", "5");
+          d3.select(this).select('rect').attr("message", task.message);
+        }
+      });
+    }
+  }
+
+  getTaskDetails = () => {
+    let completedTasks = [];
+    this.props.workflowDetails.forEach((workflowDetail) => {
+      let nodeObj = this.thisGraph.nodes.filter((node) => {
+        return (node.fileId == workflowDetail.task || node.jobId == workflowDetail.task || node.queryId == workflowDetail.task || node.indexId == workflowDetail.task)
+      })
+      completedTasks.push({"id": "rec-"+nodeObj[0].id, "status": workflowDetail.status, "message": workflowDetail.message})
+    });
+    return completedTasks;
   }
 
   handleClose = () => {
@@ -274,6 +306,8 @@ class Graph extends Component {
       _self.setIdCt(nodes.length);
       _self.updateGraph();
 
+      this.updateCompletionStatus();
+
     }).catch(error => {
       console.log(error);
     });
@@ -315,26 +349,25 @@ class Graph extends Component {
         nwords = words.length;
       d3.select("#txt-"+d.id).remove();
       //if(d3.select("#label-"+d.id).empty()) {
-        let el = gEl.append("text")
-            //.attr("text-anchor", "middle")
-            //.attr("dy", 25)
-            .attr("id", "txt-"+d.id)
-            //.attr("dx", 50);
-          let tspans = Math.floor(title.length / 20);
-          for (let i = 0; i <= tspans; i++) {
-            let tspan = el.append('tspan')
-              .text(title.substring((i * 20), ((i+1) * 20)))
-              .attr("id", "label-"+d.id)
-              //.attr("text-anchor", "middle")
-              .attr('x', 5)
-              .attr('dy', '15');
-          }
+      let el = gEl.append("text")
+          .attr("id", "txt-"+d.id)
+      let tspans = Math.floor(title.length / 20);
+      for (let i = 0; i <= tspans; i++) {
+        let dy=(i > 0 ? '15' : '70')
+        let tspan = el.append('tspan')
+          .text(title.substring((i * 20), ((i+1) * 20)))
+          .attr("id", "label-"+d.id)
+          .attr("text-anchor", "middle")
+          .attr('x', '30')
+          .attr('dy', dy);
+      }
+
       if(d3.select("#t"+d.id).empty()) {
         let deleteIcon = gEl.append('text')
           .attr('font-family', 'FontAwesome')
           .attr('id', 't'+d.id)
-          .attr('dy', 15)
-          .attr('dx', 95)
+          .attr('dy', 10)
+          .attr('dx', 45)
           .attr('class','delete-icon hide-delete-icon')
           .on("click", function(d) {
             d3.event.stopPropagation();
@@ -378,6 +411,35 @@ class Graph extends Component {
         }
   }
 
+  insertBgImage = (gEl, x, y, d) => {
+    let _self=this, shapesData=[];
+
+    switch (d.type) {
+      case 'Job':
+        shapesData = _self.shapesData[0];
+        break;
+      case 'File':
+        shapesData = _self.shapesData[1];
+        break;
+      case 'Query':
+        shapesData = _self.shapesData[2];
+        break;
+      case 'Index':
+        shapesData = _self.shapesData[3];
+        break;
+    }
+
+    let imageTxt = gEl.append('text')
+      .attr('font-family', 'FontAwesome')
+      //.attr('id', 't'+d.id)
+      .attr('font-size', function(d) { return '3em'} )
+      .attr('y', 40)
+      .attr('x', 12)
+      //.attr('class','delete-icon hide-delete-icon')
+      .text(function(node) { return shapesData.icon })
+
+  }
+
   makeTextEditable = (d3node, d) => {
     let _self=this;
     //d3.select("#txt-"+d.id).remove();
@@ -419,7 +481,7 @@ class Graph extends Component {
   replaceSelectNode = (d3Node, nodeData) => {
     d3Node.classed(this.consts.selectedClass, true);
     if (this.graphState.selectedNode) {
-        this.thisGraph.removeSelectFromNode();
+        this.removeSelectFromNode();
     }
     this.graphState.selectedNode = nodeData;
   }
@@ -445,7 +507,7 @@ class Graph extends Component {
       this.graphState.mouseDownLink = d;
 
       if (this.graphState.selectedNode) {
-          this.thisGraph.removeSelectFromNode();
+          this.removeSelectFromNode();
       }
 
       let prevEdge = this.graphState.selectedEdge;
@@ -604,11 +666,6 @@ class Graph extends Component {
     let paths = _self.thisGraph.paths;
     // update existing paths
     paths.style('marker-end', 'url(#end-arrow)')
-        /*.classed(_self.consts.selectedClass, function (d) {
-          console.log(d + '---' + _self.graphState.selectedEdge);
-            return d === _self.graphState.selectedEdge;
-        })*/
-        // .attr("d", line([d.source.x, d.source.y, d.target.x, d.target.y]));
         .attr("d", function (d) {
             return "M" + (d.source.x + 40) + "," + (d.source.y + 20) + "L" + (d.target.x +35) + "," + (d.target.y + 15);
         });
@@ -673,6 +730,7 @@ class Graph extends Component {
         .call(_self.thisGraph.drag)
         .on("click", function (d) {
             _self.circleMouseUp(d3.select(this), d);
+            _self.showNodeDetails(d);
             //_self.makeTextEditable(d3.select(this), d)
         }).on("dblclick", function (d) {
             _self.setState({
@@ -697,9 +755,11 @@ class Graph extends Component {
                   .attr("stroke", "grey")
                   .attr("fill", _self.shapesData[0].color)
                   .attr("stroke-width", "3")
+                  .attr("filter", "url(#glow)")
                   //.call(_self.nodeDragHandler)
                 }
 
+              _self.insertBgImage(d3.select(this), d.x, d.y, d);
               _self.insertTitle(d3.select(this), d.title, d.x, d.y, d);
               break;
 
@@ -715,6 +775,7 @@ class Graph extends Component {
                   .attr("width", _self.shapesData[1].rectwidth)
                   .attr("height", _self.shapesData[1].rectheight)
                   .attr("stroke", "grey")
+                  .attr("filter", "url(#glow)")
                   .attr("fill", function(d) {
                     if(d.type == 'File')
                      return _self.shapesData[1].color;
@@ -726,6 +787,7 @@ class Graph extends Component {
                   .attr("stroke-width", "3")
                   //.call(_self.nodeDragHandler)
               }
+              _self.insertBgImage(d3.select(this), d.x, d.y, d);
               _self.insertTitle(d3.select(this), d.title, d.x, d.y, d);
               break;
           }
@@ -735,11 +797,37 @@ class Graph extends Component {
   }
 
   toggleDeleteIcon = (node, d) => {
-    if(d3.select("#t"+d.id).classed("hide-delete-icon")) {
-      d3.select("#t"+d.id).classed("hide-delete-icon", false)
-    } else {
-      d3.select("#t"+d.id).classed("hide-delete-icon", true)
+    if(!this.props.viewMode) {
+      if(d3.select("#t"+d.id).classed("hide-delete-icon")) {
+        d3.select("#t"+d.id).classed("hide-delete-icon", false)
+      } else {
+        d3.select("#t"+d.id).classed("hide-delete-icon", true)
+      }
     }
+  }
+
+  showNodeDetails = (d) => {
+    console.log(d);
+    if(this.props.viewMode) {
+      let taskDetails = this.getTaskDetails();
+      console.log(JSON.stringify(taskDetails))
+      let tasks = taskDetails.filter((task) => {
+        return task.id == "rec-"+d.id
+      })
+      console.log(JSON.stringify(tasks))
+
+      this.setState({
+        nodeDetailsVisible: true,
+        nodeDetailStatus: tasks[0].status,
+        nodeDetailMessage: JSON.parse(tasks[0].message).message
+      });
+    }
+  }
+
+  closeNodeDetails = () => {
+    this.setState({
+      nodeDetailsVisible: false
+    });
   }
 
   nodeDragHandler = () => {
@@ -793,18 +881,21 @@ class Graph extends Component {
         .attr("stroke", "grey")
         .attr("fill", function(d) { return d.color; })
         .attr("stroke-width", "3")
+        .attr("filter", "url(#glow)")
 
     group.append("text")
+        .attr('font-family', 'FontAwesome')
+        .attr('font-size', function(d) { return '3em'} )
         .attr("x", function(d) { return d.tx; })
         .attr("y", function(d) { return d.ty; })
+        .text( function (d) { return d.icon; })
+
+    group.append("text")
+        .attr("x", function(d) { return parseInt(d.tx) + 15; })
+        .attr("y", function(d) { return parseInt(d.ty) + 25; })
         .attr("dominant-baseline", "middle")
         .attr("text-anchor", "middle")
         .text( function (d) { return d.title; })
-
-    /*group.append("text")
-        .attr("x", function(d) { return d.iconx; })
-        .attr("y", function(d) { return d.icony; })
-        .text( function (d) { return d.icon; })*/
 
     var dragHandler = d3.drag()
     .on("drag", function (d) {
@@ -857,6 +948,20 @@ class Graph extends Component {
         .attr('orient', 'auto')
         .append('svg:path')
         .attr('d', 'M0,-5L10,0L0,5');
+
+    let feMerge = defs.append('svg:filter')
+        .attr('id', 'glow')
+      .append('svg:feGaussianBlur')
+        .attr('stdDeviation', '1.0')
+        .attr('result', 'coloredBlur')
+      .append('svg:feMerge')
+
+      feMerge.append('svg:feMergeNode')
+        .attr('in', 'coloredBlur')
+
+      feMerge.append('svg:feMergeNode')
+        .attr('in', 'SourceGraphic')
+
 
     _self.thisGraph.svg = svg;
     _self.thisGraph.svgG = svg.append("g")
@@ -940,15 +1045,25 @@ class Graph extends Component {
   }
 
   render() {
+
+    const pStyle = {
+      fontSize: 16,
+      color: 'rgba(0,0,0,0.85)',
+      lineHeight: '24px',
+      display: 'block',
+      marginBottom: 16,
+    };
+
 	return (
     <div className="wrapper d-flex align-items-stretch">
-      <nav id="sidebar" className="navbar-light fixed-left" style={{"backgroundColor": "#e3f2fd"}}>
+      {!this.props.viewMode ?
+        <nav id="sidebar" className="navbar-light fixed-left" style={{"backgroundColor": "#e3f2fd", "fontSize": "12px"}}>
 
-      </nav>
+        </nav>
+        : null }
 
       <div id="content"  ref={this.setWrapperRef} >
-          <div id="graph">
-          </div>
+          <div id="graph"></div>
       </div>
       {this.state.openFileDetailsDialog ?
         <FileDetailsForm
@@ -988,6 +1103,19 @@ class Graph extends Component {
               onRefresh={this.onFileAdded}
               selectedQuery={this.state.selectedQuery}
               onClose={this.closeQueryDlg}/> : null}
+
+        <Drawer
+          width={340}
+          placement="right"
+          closable={false}
+          onClose={this.closeNodeDetails}
+          visible={this.state.nodeDetailsVisible}
+        >
+            <Descriptions title="Details">
+              <Descriptions.Item label="Status">{this.state.nodeDetailStatus}</Descriptions.Item>
+              <Descriptions.Item label="Message">{this.state.nodeDetailMessage}</Descriptions.Item>
+            </Descriptions>
+        </Drawer>
 
     </div>
 	)
