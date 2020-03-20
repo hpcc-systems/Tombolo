@@ -183,6 +183,13 @@ class Graph extends Component {
         })
         if(task && task.length > 0) {
           let strokeColor = task[0].status == "Completed" ? "green" : "red"
+          d3.select(this).append("text")
+            .attr('font-family', 'FontAwesome')
+            .attr('font-size', function(d) { return '3em'} )
+            .attr('fill', strokeColor)
+            .attr("x", '12')
+            .attr("y", '-2')
+            .text( function (d) { return '\uf058'; })
           d3.select(this).select('rect').attr("stroke", strokeColor);
           d3.select(this).select('rect').attr("stroke-width", "5");
           d3.select(this).select('rect').attr("message", task.message);
