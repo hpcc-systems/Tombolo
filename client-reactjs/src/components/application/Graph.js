@@ -435,16 +435,16 @@ class Graph extends Component {
         shapesData = _self.shapesData[3];
         break;
     }
-
-    let imageTxt = gEl.append('text')
-      .attr('font-family', 'FontAwesome')
-      //.attr('id', 't'+d.id)
-      .attr('font-size', function(d) { return '3em'} )
-      .attr('y', 40)
-      .attr('x', 12)
-      //.attr('class','delete-icon hide-delete-icon')
-      .text(function(node) { return shapesData.icon })
-
+    if(gEl.select(".icon").empty()) {
+      let imageTxt = gEl.append('text')
+        .attr('font-family', 'FontAwesome')
+        .attr('class', 'icon')
+        .attr('font-size', function(d) { return '3em'} )
+        .attr('y', 40)
+        .attr('x', 12)
+        //.attr('class','delete-icon hide-delete-icon')
+        .text(function(node) { return shapesData.icon })
+    }
   }
 
   makeTextEditable = (d3node, d) => {
@@ -868,7 +868,7 @@ class Graph extends Component {
     var margin = {top: 10, right: 10, bottom: 30, left: 10};
 
     let graphComponentsSvg = d3.select("#sidebar").append("svg")
-      .attr("width", 150)
+      .attr("width", 100)
       .attr("height", 500);
 
 
@@ -900,6 +900,7 @@ class Graph extends Component {
     group.append("text")
         .attr("x", function(d) { return parseInt(d.tx) + 15; })
         .attr("y", function(d) { return parseInt(d.ty) + 25; })
+        .attr("class", "entity")
         .attr("dominant-baseline", "middle")
         .attr("text-anchor", "middle")
         .text( function (d) { return d.title; })
@@ -907,13 +908,16 @@ class Graph extends Component {
     var dragHandler = d3.drag()
     .on("drag", function (d) {
         let text = d3.select(this).select("text");
-        let rect = d3.select(this).select("rect");
+        let rect = d3.select(this).select("rect");        
         return {"tx": d3.event.x + 50, "ty": d3.event.y + 15, "rx": d3.event.x, "ry": d3.event.y};
     })
-    .on("end", function(d){
+    .on("end", function(d){      
         var mouseCoordinates = d3.mouse(this);
         let idct = ++_self.graphState.idct;
-        _self.thisGraph.nodes.push({"title":"New "+d3.select(this).select("text").text(),"id":idct+Math.floor(Date.now()),"x":mouseCoordinates[0]-150,"y":mouseCoordinates[1]-50, "type":d3.select(this).select("text").text()})
+        //let x = (mouseCoordinates[0] < 60) ? 60 : mouseCoordinates[0] - 150 : mouseCoordinates[0] > 1300 ? 1300 : mouseCoordinates[0];
+        let x = mouseCoordinates[0] > 1200 ? 1200 : mouseCoordinates[0] < 60 ? 60 : mouseCoordinates[0]
+        let y = mouseCoordinates[1] > 600 ? 600 : mouseCoordinates[1] < 0 ? 0 : mouseCoordinates[1]        
+        _self.thisGraph.nodes.push({"title":"New "+d3.select(this).select("text.entity").text(),"id":idct+Math.floor(Date.now()),"x":x,"y":y, "type":d3.select(this).select("text.entity").text()})
         _self.setIdCt(idct);
         _self.updateGraph();
     })
@@ -997,9 +1001,14 @@ class Graph extends Component {
           // todo check if edge-mode is selected
           var mouse = d3.mouse(this);
           var elem = document.elementFromPoint(mouse[0], mouse[1]);
+          let x = d3.event.x > 1200 ? 1200 : d3.event.x < 60 ? 60 : d3.event.x
+          let y = d3.event.y > 600 ? 600 : d3.event.y < 0 ? 0 : d3.event.y      
+          d.x = x;
+          d.y = y;
           if (_self.graphState.shiftNodeDrag) {
               _self.dragEnd(d3.select(this), _self.graphState.mouseEnterNode)
           }
+          console.log("drag ended..")
           _self.updateGraph();
           _self.saveGraph();
       });
