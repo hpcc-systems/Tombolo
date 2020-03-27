@@ -140,6 +140,9 @@ class QueryDetails extends Component {
   }
 
   searchQueries(searchString) {
+    if(searchString.length <= 3)
+      return;
+
     this.setState({
       ...this.state,
       autoCompleteSuffix : <Spin/>

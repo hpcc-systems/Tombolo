@@ -70,7 +70,7 @@ class LeftNav extends Component {
                 <NavLink exact to={"/"+applicationId+"/index"} className="nav-link" data-toggle="popover" tabIndex="2"><i className="fa fa-lg fa-indent"></i> <span className={this.state.collapsed ? "d-none" : ""}>Index</span></NavLink>
               </li>*/}
               <li className="nav-item" >
-                <NavLink to={"/"+applicationId+"/workflow"} className="nav-link" data-toggle="popover" tabIndex="4"><i className="fa fa-lg fa-clock-o"></i> <span className={this.state.collapsed ? "d-none" : ""}>Workflow</span></NavLink>
+                <NavLink to={"/"+applicationId+"/workflow"} className="nav-link" data-toggle="popover" tabIndex="4"><i className="fa fa-lg fa-clock-o"></i> <span className={this.state.collapsed ? "d-none" : ""}>Data Flow</span></NavLink>
               </li>
               <li className="nav-item" >
                 <NavLink to={"/"+applicationId+"/workflows"} className="nav-link" data-toggle="popover" tabIndex="4"><i className="fa fa-lg fa-microchip"></i> <span className={this.state.collapsed ? "d-none" : ""}>Instances</span></NavLink>

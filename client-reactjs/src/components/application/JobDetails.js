@@ -167,14 +167,15 @@ class JobDetails extends Component {
   }
 
   searchJobs(searchString) {
+    if(searchString.length <= 3) {
+      return;
+    }
     this.setState({
       ...this.state,
       autoCompleteSuffix : <Spin/>,
       jobSearchErrorShown: false
     });
 
-    if(searchString.length <= 3)
-      return;
     var data = JSON.stringify({clusterid: this.state.selectedCluster, keyword: searchString, indexSearch:true});
     fetch("/api/hpcc/read/jobsearch", {
       method: 'post',
@@ -437,7 +438,7 @@ class JobDetails extends Component {
           onOk={this.handleOk}
           confirmLoading={confirmLoading}
           onCancel={this.handleCancel}
-          bodyStyle={{height:"500px"}}
+          bodyStyle={{height:"520px"}}
           destroyOnClose={true}
           width="1200px"
         >
@@ -455,7 +456,7 @@ class JobDetails extends Component {
               </Select>
             </Form.Item>
 
-            <Form.Item {...formItemLayout} label="Index">
+            <Form.Item {...formItemLayout} label="Job">
               <AutoComplete
                 className="certain-category-search"
                 dropdownClassName="certain-category-search-dropdown"

@@ -362,13 +362,14 @@ class FileDetails extends Component {
   }
 
   searchFiles(searchString) {
+    if(searchString.length <= 3)
+      return;    
     this.setState({
       ...this.state,
       autoCompleteSuffix : <Spin/>,
       fileSearchErrorShown: false
     });
-    if(searchString.length <= 3)
-      return;
+    
     var data = JSON.stringify({clusterid: this.state.selectedCluster, keyword: searchString});
     fetch("/api/hpcc/read/filesearch", {
       method: 'post',

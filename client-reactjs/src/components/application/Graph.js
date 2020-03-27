@@ -361,12 +361,18 @@ class Graph extends Component {
       let tspans = Math.floor(title.length / 20);
       for (let i = 0; i <= tspans; i++) {
         let dy=(i > 0 ? '15' : '70')
+        let titleToDisplay = title.substring((i * 20), ((i+1) * 20));
+        titleToDisplay = ((title.length - titleToDisplay.length) <=5) ? title : titleToDisplay;        
         let tspan = el.append('tspan')
-          .text(title.substring((i * 20), ((i+1) * 20)))
+          .text(titleToDisplay)
           .attr("id", "label-"+d.id)
           .attr("text-anchor", "middle")
           .attr('x', '30')
           .attr('dy', dy);
+
+          if(titleToDisplay.length == title.length) {
+            break;
+          }
       }
 
       if(d3.select("#t"+d.id).empty()) {
@@ -814,14 +820,11 @@ class Graph extends Component {
   }
 
   showNodeDetails = (d) => {
-    console.log(d);
     if(this.props.viewMode) {
       let taskDetails = this.getTaskDetails();
-      console.log(JSON.stringify(taskDetails))
       let tasks = taskDetails.filter((task) => {
         return task.id == "rec-"+d.id
       })
-      console.log(JSON.stringify(tasks))
 
       this.setState({
         nodeDetailsVisible: true,
@@ -1008,7 +1011,6 @@ class Graph extends Component {
           if (_self.graphState.shiftNodeDrag) {
               _self.dragEnd(d3.select(this), _self.graphState.mouseEnterNode)
           }
-          console.log("drag ended..")
           _self.updateGraph();
           _self.saveGraph();
       });
