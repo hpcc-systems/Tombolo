@@ -11,7 +11,7 @@
     "@typescript-eslint/parser": "^2.10.0",
     "ag-grid-community": "^21.2.1",
     "ag-grid-react": "^21.2.1",
-    "antd": "^3.17.0",
+    "antd": "^3.26.13",
     "babel-eslint": "10.0.3",
     "babel-jest": "^24.9.0",
     "babel-loader": "8.0.6",

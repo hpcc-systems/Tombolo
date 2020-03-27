@@ -141,14 +141,14 @@ class IndexDetails extends Component {
   }
 
   searchIndexes(searchString) {
+    if(searchString.length <= 3)
+      return;
     this.setState({
       ...this.state,
       autoCompleteSuffix : <Spin/>,
       indexSearchErrorShown: false
     });
 
-    if(searchString.length <= 3)
-      return;
     var data = JSON.stringify({clusterid: this.state.selectedCluster, keyword: searchString, indexSearch:true});
     fetch("/api/hpcc/read/filesearch", {
       method: 'post',

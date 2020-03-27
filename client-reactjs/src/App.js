@@ -16,6 +16,7 @@ import {IndexList} from "./components/application/IndexList";
 import Dashboard from "./components/application/Dashboard";
 import {QueriesList} from "./components/application/QueriesList";
 import {JobList} from "./components/application/JobList";
+import {Workflows} from "./components/application/Workflows";
 import Users from "./components/admin/Users";
 
 import {AdminApplications} from "./components/admin/Applications";
@@ -60,6 +61,7 @@ class App extends React.Component {
                                         <PrivateRoute path="/index" component={IndexList}/>
                                         <PrivateRoute path="/:applicationId/queries" component={QueriesList}/>
                                         <PrivateRoute path="/:applicationId/workflow" component={JobList}/>
+                                        <PrivateRoute path="/:applicationId/workflows" component={Workflows}/>
                                         <PrivateRoute path="/admin/applications" component={AdminApplications}/>
                                         <PrivateRoute path="/admin/clusters" component={AdminClusters}/>
                                         <PrivateRoute path="/admin/users" component={Users}/>
