@@ -389,6 +389,7 @@ router.get('/getData', function (req, res) {
 				if(response.Result != undefined && response.Result != undefined && response.Result.Row != undefined) {
 					var rows = response.Result.Row, indexInfo = {};
 					if(rows.length > 0) {
+						rows.shift();
 						res.json(rows);
 					} else {
 						res.json([]);

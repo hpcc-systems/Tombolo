@@ -1004,12 +1004,13 @@ class Graph extends Component {
           // todo check if edge-mode is selected
           var mouse = d3.mouse(this);
           var elem = document.elementFromPoint(mouse[0], mouse[1]);
-          let x = d3.event.x > 1200 ? 1200 : d3.event.x < 60 ? 60 : d3.event.x
-          let y = d3.event.y > 600 ? 600 : d3.event.y < 0 ? 0 : d3.event.y      
-          d.x = x;
-          d.y = y;
           if (_self.graphState.shiftNodeDrag) {
               _self.dragEnd(d3.select(this), _self.graphState.mouseEnterNode)
+          } else {
+            let x = d3.event.x > 1200 ? 1200 : d3.event.x < 60 ? 60 : d3.event.x
+            let y = d3.event.y > 600 ? 600 : d3.event.y < 0 ? 0 : d3.event.y      
+            d.x = x;
+            d.y = y;
           }
           _self.updateGraph();
           _self.saveGraph();

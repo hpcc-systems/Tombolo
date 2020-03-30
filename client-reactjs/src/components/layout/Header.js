@@ -17,6 +17,7 @@ class AppHeader extends Component {
         this.handleTopNavClick = this.handleTopNavClick.bind(this);
         this.search = this.search.bind(this);
         this.onChangeSearch = this.onChangeSearch.bind(this);
+        this.appDropDown = React.createRef();
     }
 
     state = {
@@ -29,7 +30,7 @@ class AppHeader extends Component {
       if(props.application && props.application.applicationTitle!=''){
       this.setState({ selected: props.application.applicationTitle });
         $('[data-toggle="popover"]').popover('disable');
-      }
+      }      
     }
     componentDidMount(){
       if(this.props.location.pathname.includes('report/')){
@@ -37,7 +38,7 @@ class AppHeader extends Component {
         this.setState({
           searchText: pathSnippets[2]
       });
-      }
+      }      
     }
     componentDidUpdate(prevProps, prevState) {
       if(this.state.applications.length == 0) {
@@ -57,11 +58,15 @@ class AppHeader extends Component {
             let applications = data.map(application => { return {value: application.id, display: application.title} })
             if(applications && applications.length > 0) {
               this.setState({ applications });
+              this.handleRef();
             }
           }).catch(error => {
             console.log(error);
           });
       }
+      //console.log($('[data-value="'+localStorage.getItem("activeProjectId")+'"]').data("display"))
+      //$('[data-value="'+localStorage.getItem("activeProjectId")+'"]').click();
+      
     }
 
     handleTopNavClick(event) {
@@ -98,10 +103,17 @@ class AppHeader extends Component {
       console.log("handleChange: "+event.target.getAttribute("data-value"))
       //this.props.onAppicationSelect(value);
       this.props.dispatch(applicationActions.applicationSelected(event.target.getAttribute("data-value"), event.target.getAttribute("data-display")));
+      localStorage.setItem("activeProjectId", event.target.getAttribute("data-value"));
       this.setState({ selected: event.target.getAttribute("data-display") });
       this.props.history.push('/'+event.target.getAttribute("data-value")+'/workflow');
       $('[data-toggle="popover"]').popover('disable');
     }
+
+    handleRef() {
+      const appDropdownItem = this.appDropDown.current.querySelector('[data-value="'+localStorage.getItem("activeProjectId")+'"]');
+      appDropdownItem.click();
+    }
+
     search(value){
       this.props.history.push('/report/'+value);
     }
@@ -128,7 +140,7 @@ class AppHeader extends Component {
             <ul className="navbar-nav mr-auto">
               <li className="nav-item dropdown">
                 <a className="nav-link dropdown-toggle" id="applicationSelect" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">{this.state.selected}</a>
-                <div className="dropdown-menu" aria-labelledby="dropdown01">
+                <div className="dropdown-menu" aria-labelledby="dropdown01" ref={this.appDropDown}>
                     {this.state.applications.map((application, index) => (
                         <a className="dropdown-item" key={application.value} onClick={this.handleChange} data-value={application.value} data-display={application.display}>{application.display}</a>
                     ))}
