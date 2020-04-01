@@ -721,6 +721,38 @@ class FileDetails extends Component {
   onLayoutGridReady = (params) => {
     let gridApi = params.api;
     gridApi.sizeColumnsToFit();
+    var _self=this, selectedDataTypes=[], compliance=[];
+    //populate the compliance info
+    gridApi.forEachNode(function(node, index) {
+      if(node.data.data_types && node.data.data_types != null) {
+        selectedDataTypes.push(node.data.data_types);
+      } 
+    });
+    fetch('/api/controlsAndRegulations/getComplianceByDataType?dataType='+selectedDataTypes.join(","), {
+        headers: authHeader()
+      }).then(function(response) {
+          if(response.ok) {
+            return response.json();
+          }
+          handleError(response);
+      }).then(function(data) {
+        if(data && data.length > 0) {
+          data.forEach((element) => {
+            compliance.push(element);
+          })
+          _self.setState({
+            complianceTags:compliance,
+          });
+
+        }
+      }).catch(error => {
+        console.log(error);
+      });
+  }
+
+  onGridReady = (params) => {
+    let gridApi = params.api;
+    gridApi.sizeColumnsToFit();
   }
 
   onLicenseGridReady = (params) => {
@@ -1195,7 +1227,7 @@ class FileDetails extends Component {
                   columnDefs={validationTableColumns}
                   rowData={validations}
                   defaultColDef={{resizable: true, sortable: true, filter: true}}
-                  onGridReady={this.onLayoutGridReady}
+                  onGridReady={this.onGridReady}
                   singleClickEdit={true}>
                 </AgGridReact>
               </div>
@@ -1210,7 +1242,7 @@ class FileDetails extends Component {
                   {<AgGridReact
                     columnDefs={fileDataColumns()}
                     rowData={fileDataContent}
-                    onGridReady={this.onLayoutGridReady}
+                    onGridReady={this.onGridReady}
                     defaultColDef={{resizable: true}}
                     >
                   </AgGridReact>}

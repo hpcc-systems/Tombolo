@@ -3,6 +3,7 @@ const router = express.Router();
 const assert = require('assert');
 var models  = require('../../models');
 let Sequelize = require('sequelize');
+const Op = Sequelize.Op;
 let ControlsAndRegulations = models.controls_regulations;
 let DataTypes=models.data_types;
 
@@ -89,10 +90,11 @@ router.get('/dataTypes', (req, res) => {
 
 router.get('/getComplianceByDataType', (req, res) => {
     console.log("[controlsAndRegulations/read.js] - Get Compliance By DataType");
+    let dataTypes = req.query.dataType.split(',')
     ControlsAndRegulations.findAll({
         attributes: ['compliance'],
         group: ['compliance'],
-        where:{"data_types":req.query.dataType}
+        where:{"data_types": {[Op.in]:dataTypes}}
       }).then(function(regulations) {
         var compliance=[];
         if(regulations.length>0)
