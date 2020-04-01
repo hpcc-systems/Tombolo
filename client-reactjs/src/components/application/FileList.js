@@ -2,7 +2,6 @@ import React, { Component } from "react";
 import { Button, Tooltip, Radio, Icon, Menu, Dropdown } from 'antd/lib';
 import FileTable from "./FileTable";
 import FileDetailsForm from "./FileDetails";
-import JSPlumbTree from "./JSPlumbTree";
 import BreadCrumbs from "../common/BreadCrumbs";
 import { connect } from 'react-redux';
 import { authHeader, handleError } from "../common/AuthHeader.js"
@@ -18,7 +17,7 @@ class FileList extends Component {
     applicationTitle: this.props.application ? this.props.application.applicationTitle : '',
     openFileDetailsDialog: false,
     refreshTree: false,
-    tableView: false,
+    tableView: true,
     fileId:(this.props.fileId)?this.props.fileId:''
   }
   componentWillReceiveProps(props) {
@@ -93,11 +92,7 @@ class FileList extends Component {
       <div className="site-layout-background">
         <div className="d-flex justify-content-end" style={{paddingTop:"50px", margin:"5px"}}>
           <BreadCrumbs applicationId={this.state.applicationId} applicationTitle={this.state.applicationTitle}/>
-          <span style={{ marginLeft: "auto"}}>
-            <Radio.Group defaultValue="chart" buttonStyle="solid" style={{padding: "10px"}} onChange={this.handleToggleView}>
-              <Tooltip placement="bottom" title={"Tree View"}><Radio.Button value="chart"><Icon type="cluster" /></Radio.Button></Tooltip>
-              <Tooltip placement="bottom" title={"Tabular View"}><Radio.Button value="grid"><Icon type="bars" /></Radio.Button></Tooltip>
-            </Radio.Group>
+          <span style={{ marginLeft: "auto", paddingTop:"5px"}}>
             <Tooltip placement="bottom" title={"Click to add a new file"}>
               <Button className="btn btn-secondary btn-sm" onClick={() => this.openAddFileDlg()}><i className="fa fa-plus"></i>Add File</Button>
             </Tooltip>
@@ -112,7 +107,7 @@ class FileList extends Component {
           </span>
         </div>
         <div>
-          {this.state.tableView ? <FileTable refresh={this.state.refreshTree} applicationId={this.state.applicationId} user={this.props.user}/> : <JSPlumbTree refresh={this.state.refreshTree} applicationId={this.state.applicationId} fileId={this.state.fileId}  onScroll={this.handleScroll} user={this.props.user}/>}
+          <FileTable refresh={this.state.refreshTree} applicationId={this.state.applicationId} user={this.props.user}/> 
 
           {this.state.openFileDetailsDialog ?
             <FileDetailsForm

@@ -6,7 +6,6 @@ import { Button, Icon, Drawer, Row, Col, Descriptions} from 'antd/lib';
 import { Typography } from 'antd';
 import FileDetailsForm from "./FileDetails";
 import JobDetailsForm from "./JobDetails";
-import QueryDetailsForm from "./QueryDetails";
 import IndexDetailsForm from "./IndexDetails";
 import {handleFileDelete, handleJobDelete, handleIndexDelete, handleQueryDelete, updateGraph} from "../common/WorkflowUtil";
 import { authHeader, handleError } from "../common/AuthHeader.js"
@@ -23,16 +22,13 @@ class Graph extends Component {
   state = {
     openFileDetailsDialog: false,
     openJobDetailsDialog: false,
-    openQueryDetailsDialog: false,
     openIndexDetailsDialog: false,
     selectedFile: '',
     selectedNodeId: '',
-    selectedQuery: '',
     selectedIndex: '',
     isNewFile:false,
     selectedJob: '',
     isNewJob:false,
-    isNewQuery:false,
     isNewIndex:false,
     currentlyEditingId:'',
     applicationId: '',
@@ -70,8 +66,8 @@ class Graph extends Component {
   shapesData = [
       { "x": "10", "y": "20", "rx":"0", "ry":"0", "rectx":"10", "recty":"10", "rectwidth":"55", "rectheight":"55", "tx":"20", "ty":"50", "title":"Job", "color":"#EE7423", "icon":"\uf085", "iconx":"90", "icony":"25"},
       { "x": "10", "y": "70", "rx":"10", "ry":"10", "rectx":"10", "recty":"90", "rectwidth":"55", "rectheight":"55", "tx":"20", "ty":"130", "title":"File", "color":"#7AAAD0", "icon":"\uf1c0", "iconx":"90", "icony":"65"},
-      { "x": "10", "y": "120", "rx":"10", "ry":"10", "rectx":"10", "recty":"170", "rectwidth":"55", "rectheight":"55", "tx":"20", "ty":"210", "title":"Query", "color":"#9B6A97", "icon":"\uf00e", "iconx":"90", "icony":"65"},
-      { "x": "10", "y": "170", "rx":"10", "ry":"10", "rectx":"10", "recty":"250", "rectwidth":"55", "rectheight":"55", "tx":"20", "ty":"290", "title":"Index", "color":"#7DC470", "icon":"\uf2b9", "iconx":"90", "icony":"65"}
+      //{ "x": "10", "y": "120", "rx":"10", "ry":"10", "rectx":"10", "recty":"170", "rectwidth":"55", "rectheight":"55", "tx":"20", "ty":"210", "title":"Query", "color":"#9B6A97", "icon":"\uf00e", "iconx":"90", "icony":"65"},
+      { "x": "10", "y": "120", "rx":"10", "ry":"10", "rectx":"10", "recty":"170", "rectwidth":"55", "rectheight":"55", "tx":"20", "ty":"210", "title":"Index", "color":"#7DC470", "icon":"\uf2b9", "iconx":"90", "icony":"65"}
     ];
 
   thisGraph = {};
@@ -142,21 +138,6 @@ class Graph extends Component {
           _self.jobDlg.showModal();
         }, 200);
         break;
-      case 'Query':
-        let isNewQuery = false;
-        if(d.queryId == undefined || d.queryId == '') {
-          isNewQuery = true
-        }
-        this.setState({
-          isNewQuery: isNewQuery,
-          openQueryDetailsDialog: true,
-          selectedQuery: d.queryId
-        });
-
-        setTimeout(() => {
-          _self.qryDlg.showModal();
-        }, 200);
-        break;
       case 'Index':
         let isNewIndex = false;
         if(d.indexId == undefined || d.indexId == '') {
@@ -204,7 +185,7 @@ class Graph extends Component {
     let completedTasks = [];
     this.props.workflowDetails.forEach((workflowDetail) => {
       let nodeObj = this.thisGraph.nodes.filter((node) => {
-        return (node.fileId == workflowDetail.task || node.jobId == workflowDetail.task || node.queryId == workflowDetail.task || node.indexId == workflowDetail.task)
+        return (node.fileId == workflowDetail.task || node.jobId == workflowDetail.task || node.indexId == workflowDetail.task)
       })
       completedTasks.push({"id": "rec-"+nodeObj[0].id, "status": workflowDetail.status, "message": workflowDetail.message})
     });
@@ -222,12 +203,6 @@ class Graph extends Component {
     });
   }
 
-  closeQueryDlg = () => {
-    this.setState({
-      openQueryDetailsDialog: false
-    });
-  }
-
   closeIndexDlg = () => {
     this.setState({
       openIndexDetailsDialog: false
@@ -238,13 +213,9 @@ class Graph extends Component {
     var newData = this.thisGraph.nodes.map(el => {
         if(el.id == this.state.currentlyEditingId) {
           el.title=saveResponse.title;
-          el.queryId=saveResponse.queryId;
           switch(el.type) {
             case 'File':
               el.fileId=saveResponse.fileId;
-              break;
-            case 'Query':
-              el.queryId=saveResponse.queryId;
               break;
             case 'Index':
               el.indexId=saveResponse.indexId;
@@ -403,14 +374,6 @@ class Graph extends Component {
                   _self.fetchSavedGraph();
                 });
                 break;
-              case 'Query':
-                if(d.queryId) {
-                  handleQueryDelete(d.queryId, _self.props.applicationId);
-                }
-                updateGraph((d.queryId ? d.queryId : d.id), _self.props.applicationId).then((response) => {
-                  _self.fetchSavedGraph();
-                });
-                break;
               case 'Job':
                 if(d.jobId) {
                   handleJobDelete(d.jobId, _self.props.applicationId);
@@ -436,11 +399,8 @@ class Graph extends Component {
       case 'File':
         shapesData = _self.shapesData[1];
         break;
-      case 'Query':
-        shapesData = _self.shapesData[2];
-        break;
       case 'Index':
-        shapesData = _self.shapesData[3];
+        shapesData = _self.shapesData[2];
         break;
     }
     if(gEl.select(".icon").empty()) {
@@ -780,7 +740,6 @@ class Graph extends Component {
 
             case 'File':
             case 'Index':
-            case 'Query':
               if(d3.select("#rec-"+d.id).empty()) {
                 d3.select(this)
                   .append("rect")
@@ -795,8 +754,6 @@ class Graph extends Component {
                     if(d.type == 'File')
                      return _self.shapesData[1].color;
                     else if(d.type == 'Index')
-                      return _self.shapesData[3].color;
-                    else if(d.type == 'Query')
                       return _self.shapesData[2].color;
                   })
                   .attr("stroke-width", "3")
@@ -1116,15 +1073,6 @@ class Graph extends Component {
             selectedIndex={this.state.selectedIndex}
             onClose={this.closeIndexDlg}
             user={this.props.user}/> : null}
-
-      {this.state.openQueryDetailsDialog ?
-            <QueryDetailsForm
-              onRef={ref => (this.qryDlg = ref)}
-              applicationId={this.props.applicationId}
-              isNewFile={this.state.isNewQuery}
-              onRefresh={this.onFileAdded}
-              selectedQuery={this.state.selectedQuery}
-              onClose={this.closeQueryDlg}/> : null}
 
         <Drawer
           width={340}

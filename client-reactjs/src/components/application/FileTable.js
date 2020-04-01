@@ -1,10 +1,8 @@
-import {Treant} from 'treant-js/Treant.js';
 //import 'treant-js/vendor/raphael.min.js';
 import { Table, Tooltip, Divider, message, Popconfirm, Icon, Drawer, Button } from 'antd/lib';
 import React, { Component } from "react";
 import FileDetailsForm from "./FileDetails";
 import FileInstanceDetailsForm from "./FileInstanceDetails";
-import TreantJSTree from "./TreantJSTree";
 import { authHeader, handleError } from "../common/AuthHeader.js"
 
 class FileTable extends Component {
@@ -261,7 +259,6 @@ class FileTable extends Component {
             paddingBottom: '108px',
             }}
         >
-            <TreantJSTree chartContainer="detailsViewChartContainer" applicationId={this.props.applicationId} fileId={this.state.fileId}/>
         </Drawer>
         {table}
         {this.state.openFileDetailsDialog ?

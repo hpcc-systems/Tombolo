@@ -1,6 +1,5 @@
 import React, { Component } from "react";
 import { Modal, Tabs, Form, Input, Icon,  Select, Button, Table, AutoComplete, Tag, message, Drawer, Row, Col, Spin } from 'antd/lib';
-import TreantJSTree from "./TreantJSTree";
 import ReactTable from "react-table";
 import "react-table/react-table.css";
 import FileRelations from "./FileRelations"
