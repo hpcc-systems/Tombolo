@@ -15,6 +15,7 @@ let DataTypes=models.data_types;
 TreeConnection = models.tree_connection;
 TreeStyle = models.tree_style;
 let ConsumerObject = models.consumer_object;
+let WorkflowGraph = models.workflowgraph;
 let Sequelize = require('sequelize');
 const Op = Sequelize.Op;
 let Indexes=models.indexes;
@@ -362,11 +363,9 @@ router.get('/filetree', (req, res) => {
 
 
 router.get('/inheritedLicenses', async function (req, res) {
-    console.log("[fileSources/read.js] - get file tree for app_id = " +req.query.app_id+ " fileId: "+req.query.fileId);
     let results = [];
-
     try {
-        var parentIds = await getFileRelationHierarchy(req.query.app_id, req.query.fileId);
+        var parentIds = await getFileRelationHierarchy(req.query.app_id, req.query.fileId, req.query.id);
 
         File.findAll(
         {
@@ -374,23 +373,14 @@ router.get('/inheritedLicenses', async function (req, res) {
             attributes:["id", "title", "name"]
         }
         ).then(async function(files) {
-            for(const file of files) {
-                var fileObj={};
-                fileObj.id = file.id;
-                fileObj.title = file.title;
-                fileObj.name = file.name;
-                var fileLicenses = await FileLicense.findAll({where:{"file_id":file.id}});
-
-                let licensesArry = [];
-                fileLicenses.forEach(function (fileLicense) {
-                    licensesArry.push(fileLicense.name);
-                });
-                if(licensesArry.length > 0) {
-                    fileObj.licenses = licensesArry;
-                }
-                results.push(fileObj);
-            }
-            res.json(results);
+          let licenses = new Set();
+          for(const file of files) {
+            var fileLicenses = await FileLicense.findAll({where:{"file_id":file.id}});
+            fileLicenses.forEach(function (fileLicense) {
+                licenses.add(fileLicense.name)
+            });
+          }
+          res.json(Array.from(licenses));
         })
         .catch(function(err) {
             console.log(err);
@@ -603,18 +593,39 @@ function updateCommonData(objArray, fields) {
     return objArray;
 }
 
-async function getFileRelationHierarchy(applicationId, fileId) {
+async function getFileRelationHierarchy(applicationId, fileId, id) {
     var fileIds = [], promises = [];
-    return TreeConnection.findAll({where: {"application_id":applicationId, "targetid":fileId}}).then(async function(fileTree) {
-        var subFiles = [];
-        for(const file of fileTree) {
-            fileIds.push(file.sourceid);
-            let innerFileIds = await getFileRelationHierarchy(applicationId, file.sourceid);
-            if(innerFileIds && innerFileIds.length > 0) {
-                fileIds = fileIds.concat(innerFileIds);
-            }
-        }
-        return fileIds;
+    //ref: https://stackoverflow.com/questions/49845748/convert-a-flat-json-file-to-tree-structure-in-javascript
+    const MutableNode = (title, fileId, children = []) =>
+      ({ title, fileId, children })
+      
+    MutableNode.push = (node, child) =>
+      (node.children.push (child), node)
+
+    const makeTree = (nodes = [], relations = []) =>
+        relations.reduce
+        ( (t, l) =>
+            t.set ( l.target
+                  , MutableNode.push ( t.get (l.target)
+                                     , t.get (l.source)
+                                     )
+                  )
+        , nodes.reduce
+            ( (t, n) => t.set (n.id, MutableNode (n.title, n.fileId))
+            , new Map
+            )
+        )
+        .get (parseInt(id))
+
+    
+    const getFlat = ({ fileId, children = [] }) => {
+      return [fileId].concat(...children.map(getFlat));
+    }        
+
+    return WorkflowGraph.findOne({where:{"application_Id":applicationId}}).then((graph) => {
+      const tree = makeTree (JSON.parse(graph.nodes), JSON.parse(graph.edges));
+      const parentIds = getFlat(tree);
+      return parentIds;
     })
     .catch(function(err) {
         console.log(err);

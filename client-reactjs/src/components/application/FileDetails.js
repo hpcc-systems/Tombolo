@@ -135,7 +135,6 @@ class FileDetails extends Component {
         handleError(response);
     })
     .then(data => {
-      console.log('fileCount: '+data.length);
       this.setState({
         filesCount: data ? data.length : 0
       });
@@ -199,7 +198,7 @@ class FileDetails extends Component {
         return data;
       })
       .then(data => {
-        this.getInheritedLicenses(data.basic.id);
+        this.getInheritedLicenses(data.basic.id, this.props.selectedNodeId);
         return data;
       })
       .catch(error => {
@@ -299,8 +298,8 @@ class FileDetails extends Component {
       });
   }
 
-  getInheritedLicenses(fileId) {
-    fetch("/api/file/read/inheritedLicenses?fileId="+fileId+"&app_id="+this.props.applicationId, {
+  getInheritedLicenses(fileId, nodeId) {
+    fetch("/api/file/read/inheritedLicenses?fileId="+fileId+"&app_id="+this.props.applicationId+"&id="+nodeId, {
       headers: authHeader()
     }).then((response) => {
         if(response.ok) {
@@ -423,7 +422,6 @@ class FileDetails extends Component {
 
     })
     .then(fileInfo => {
-      console.log(fileInfo.fileName);
       this.setState({
         ...this.state,
         sourceFiles: [],
@@ -737,6 +735,7 @@ class FileDetails extends Component {
 
   }
   dataTypechange= (prop)=>{
+    console.log("dataTypechange")
     var _self=this;
     if(prop.column.colId=="data_types" && (prop.oldValue)){
       var compliance=[];
@@ -1005,13 +1004,7 @@ class FileDetails extends Component {
 
     const InheritedLicenses = (licenses) => {
       if(licenses.relation && licenses.relation.length > 0) {
-        let uniqueLicenses=[];
-        licenses.relation.forEach(function(item) {
-          if(item.licenses && item.licenses.length > 0) {
-            uniqueLicenses = uniqueLicenses.concat(item.licenses)
-          }
-        })
-        const licenseItems = uniqueLicenses.map((license) =>
+        const licenseItems = licenses.relation.map((license) =>
           <Tag color="red" key={license}>{license}</Tag>
         );
         return (

@@ -26,6 +26,7 @@ class Graph extends Component {
     openQueryDetailsDialog: false,
     openIndexDetailsDialog: false,
     selectedFile: '',
+    selectedNodeId: '',
     selectedQuery: '',
     selectedIndex: '',
     isNewFile:false,
@@ -117,7 +118,8 @@ class Graph extends Component {
         this.setState({
           isNewFile: isNewFile,
           openFileDetailsDialog: true,
-          selectedFile: d.fileId
+          selectedFile: d.fileId,
+          selectedNodeId: d.id
         });
 
         setTimeout(() => {
@@ -1089,6 +1091,7 @@ class Graph extends Component {
           onRef={ref => (this.fileDlg = ref)}
           isNewFile={this.state.isNewFile}
           selectedFile={this.state.selectedFile}
+          selectedNodeId={this.state.selectedNodeId}
           applicationId={this.props.applicationId}
           onClose={this.handleClose}
           onRefresh={this.onFileAdded}
