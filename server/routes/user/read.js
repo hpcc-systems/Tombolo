@@ -10,7 +10,7 @@ router.get('/current', getCurrent);
 router.get('/:id', getById);
 router.put('/:id', update);
 router.delete('/:id', _delete);
-router.post('/validateOrRefreshToken', validateOrRefreshToken);
+router.post('/validateToken', validateToken);
 router.get('/:user_id/:app_id', GetuserListToShareApp);
 router.get('/:user_id/:app_id/sharedAppUser', GetSharedAppUserList);
 
@@ -61,8 +61,8 @@ function _delete(req, res, next) {
         .catch(err => next(err));
 }
 
-function validateOrRefreshToken(req, res, next) {
-    userService.validateOrRefreshToken(req, res, next)
+function validateToken(req, res, next) {
+    userService.validateToken(req, res, next)
         .then(user => user ? res.json(user.userWithoutHash) : res.status(401).json({ message: 'Invalid Token' }))
         .catch(err => next(err));
 }

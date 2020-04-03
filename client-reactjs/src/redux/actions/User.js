@@ -15,27 +15,28 @@ function login(username, password) {
         dispatch(request({ username }));
 
         fetch('/api/user/authenticate', {
-            method: 'post',
-            headers: {
-                'Accept': 'application/json',
-                'Content-Type': 'application/json'
-            },
-            body: JSON.stringify({ username, password })
+          method: 'post',
+          headers: {
+              'Accept': 'application/json',
+              'Content-Type': 'application/json'
+          },
+          body: JSON.stringify({ username, password })
         }).then(handleResponse)
         .then(user => {
-            var decoded = jwtDecode(user.accessToken);
-            var user = {
-                "token": user.accessToken,
-                "id": decoded.id,
-                "firstName": decoded.firstName,
-                "lastName": decoded.lastName,
-                "email": decoded.email,
-                "organization": decoded.organization,
-                "role":decoded.role,
-                "permissions": decoded.permissions
-            }
-            localStorage.setItem('user', JSON.stringify(user));
-            dispatch(success(user));
+          var decoded = jwtDecode(user.accessToken);
+          var user = {
+              "token": user.accessToken,
+              "id": decoded.id,
+              "username": decoded.username,
+              "firstName": decoded.firstName,
+              "lastName": decoded.lastName,
+              "email": decoded.email,
+              "organization": decoded.organization,
+              "role":decoded.role,
+              "permissions": decoded.permissions
+          }
+          localStorage.setItem('user', JSON.stringify(user));
+          dispatch(success(user));
         },
         error => {
             dispatch(failure(error.toString()));
@@ -48,8 +49,8 @@ function login(username, password) {
 }
 
 function logout() {
-    localStorage.removeItem('user');
-    return { type: Constants.LOGOUT };
+    localStorage.removeItem('user');        
+    return { type: Constants.LOGOUT }
 }
 
 function handleResponse(response) {
@@ -61,9 +62,8 @@ function handleResponse(response) {
                 logout();
                 //location.reload(true);
             }
-
-            const error = (data && data.message) || response.statusText;
-            return Promise.reject(error);
+            //const error = (data && data.message) || response.statusText;
+            //return Promise.reject(error);
         }
 
         return data;
@@ -72,20 +72,27 @@ function handleResponse(response) {
 
 function validateToken() {
     var user = JSON.parse(localStorage.getItem('user'));
-    if(user) {
-        fetch('/api/user/validateOrRefreshToken', {
+    return dispatch => {
+      if(user) {
+        dispatch(validate(user));
+        fetch('/api/user/validateToken', {
           method: 'post',
           headers: authHeader(),
           body: JSON.stringify({"username": user.username})
         }).then(handleResponse)
         .then(user => {
-            localStorage.setItem('user', JSON.stringify(user));
-            return { type: Constants.VALIDATE_TOKEN, user };
-        },
-        error => {
-            return { type: Constants.LOGIN_FAILURE };
-
+          localStorage.setItem('user', JSON.stringify(user));
+          dispatch(success(user));
+        })
+        .catch(error => {
+          localStorage.removeItem('user');
+          dispatch(failure(error));
         });
-    }
-    return { type: Constants.VALIDATE_TOKEN, user };
+      } 
+   };
+
+  function validate(user) { return { type: Constants.VALIDATING_TOKEN, user } }
+  function success(user) { return { type: Constants.VALIDATE_TOKEN, user } }
+  function failure(error) { return { type: Constants.INVALID_TOKEN, error } }
+    
 }

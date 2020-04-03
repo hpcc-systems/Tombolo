@@ -1,6 +1,6 @@
 import { Constants } from '../../components/common/Constants';
 
-let user = JSON.parse(localStorage.getItem('user'));
+let user = {};
 const initialState = user ? { loggedIn: true, user } : {};
 
 export function authenticationReducer(state = initialState, action) {
@@ -20,12 +20,21 @@ export function authenticationReducer(state = initialState, action) {
         loginFailed: true
       };
     case Constants.LOGOUT:
-      return {};
-    case Constants.VALIDATE_TOKEN:
+      return {
+        loggedIn: false,
+        user: ''
+      };
+    case Constants.VALIDATE_TOKEN:      
       return {
         loggedIn: true,
         user: action.user
       };
+    case Constants.INVALID_TOKEN:
+    console.log(JSON.stringify(action.user))
+      return {
+        loggedIn: false,
+        user: action.user
+      };  
     default:
       return state
   }

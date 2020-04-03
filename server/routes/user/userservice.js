@@ -16,7 +16,7 @@ module.exports = {
     update,
     verifyToken,
     delete: _delete,
-    validateOrRefreshToken,
+    validateToken,
     GetuserListToShareApp,
     GetSharedAppUserList
 };
@@ -38,6 +38,7 @@ async function authenticate(req, res, { username, password }) {
             if (response.statusCode != 200) {
               reject(new Error(err));
             } else {
+                console.log(JSON.stringify(body))
                 resolve(body);
             }
       });
@@ -66,17 +67,34 @@ async function verifyToken(req, res, next) {
 }
 
 
-async function validateOrRefreshToken(req, res, next) {
+async function validateToken(req, res, next) {
     let token = req.headers['x-access-token'] || req.headers['authorization'];
     if (token) {
         if (token.startsWith('Bearer ')) {
           token = token.slice(7, token.length);
           console.log('token: '+token);
-          var verified = await jwt.verify(token, dbUtil.secret);
+          return new Promise((resolve, reject) => {
+              verifyToken(req, res, next).then((verifyTokenRes) => {
+                if(verifyTokenRes) {
+                    let verifyTokenResParsed = JSON.parse(verifyTokenRes);
+                    if(verifyTokenResParsed && verifyTokenResParsed.verified) {
+                        console.log("token verified");
+                        resolve({
+                            'userWithoutHash': {
+                                'token': token
+                            }
+                        })
+                    }
+                } 
+              })
+              .catch(err => reject('Invalid Token')); 
+          });
+              
+          /*var verified = await jwt.verify(token, dbUtil.secret);
           if(verified) {
             const user = await User.findOne({ where: {"username":req.body.username}, attributes: ['id', 'username', 'hash', 'firstName', 'lastName', 'role']});
             return generateToken(user);
-          }
+          }*/
         }
     }
 }
