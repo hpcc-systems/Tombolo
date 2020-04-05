@@ -401,7 +401,7 @@ class QueryDetails extends Component {
               {getFieldDecorator('query_title', {
                 rules: [{ required: true, message: 'Please enter a title for the query!' }],
               })(
-              <Input id="query_title" name="title" onChange={this.onChange} placeholder="Title" disabled={!this.props.isNewFile}/>
+              <Input id="query_title" name="title" onChange={this.onChange} placeholder="Title" />
               )}
              </Form.Item>
 

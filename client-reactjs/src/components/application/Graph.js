@@ -28,6 +28,7 @@ class Graph extends Component {
     selectedIndex: '',
     isNewFile:false,
     selectedJob: '',
+    selectedJobType: '',
     isNewJob:false,
     isNewIndex:false,
     currentlyEditingId:'',
@@ -65,9 +66,11 @@ class Graph extends Component {
 
   shapesData = [
       { "x": "10", "y": "20", "rx":"0", "ry":"0", "rectx":"10", "recty":"10", "rectwidth":"55", "rectheight":"55", "tx":"20", "ty":"50", "title":"Job", "color":"#EE7423", "icon":"\uf085", "iconx":"90", "icony":"25"},
-      { "x": "10", "y": "70", "rx":"10", "ry":"10", "rectx":"10", "recty":"90", "rectwidth":"55", "rectheight":"55", "tx":"20", "ty":"130", "title":"File", "color":"#7AAAD0", "icon":"\uf1c0", "iconx":"90", "icony":"65"},
+      { "x": "10", "y": "70", "rx":"0", "ry":"0", "rectx":"10", "recty":"90", "rectwidth":"55", "rectheight":"55", "tx":"20", "ty":"130", "title":"Modeling", "color":"#EE7423", "icon":"\uf00a", "iconx":"90", "icony":"65"},
+      { "x": "10", "y": "120", "rx":"0", "ry":"0", "rectx":"10", "recty":"170", "rectwidth":"55", "rectheight":"55", "tx":"20", "ty":"210", "title":"Scoring", "color":"#EE7423", "icon":"\uf005 ", "iconx":"90", "icony":"65"},            
+      { "x": "10", "y": "170", "rx":"10", "ry":"10", "rectx":"10", "recty":"250", "rectwidth":"55", "rectheight":"55", "tx":"20", "ty":"290", "title":"File", "color":"#7AAAD0", "icon":"\uf1c0", "iconx":"90", "icony":"65"},
       //{ "x": "10", "y": "120", "rx":"10", "ry":"10", "rectx":"10", "recty":"170", "rectwidth":"55", "rectheight":"55", "tx":"20", "ty":"210", "title":"Query", "color":"#9B6A97", "icon":"\uf00e", "iconx":"90", "icony":"65"},
-      { "x": "10", "y": "120", "rx":"10", "ry":"10", "rectx":"10", "recty":"170", "rectwidth":"55", "rectheight":"55", "tx":"20", "ty":"210", "title":"Index", "color":"#7DC470", "icon":"\uf2b9", "iconx":"90", "icony":"65"}
+      { "x": "10", "y": "220", "rx":"10", "ry":"10", "rectx":"10", "recty":"330", "rectwidth":"55", "rectheight":"55", "tx":"20", "ty":"370", "title":"Index", "color":"#7DC470", "icon":"\uf2b9", "iconx":"90", "icony":"65"},
     ];
 
   thisGraph = {};
@@ -124,6 +127,8 @@ class Graph extends Component {
 
         break;
       case 'Job':
+      case 'Modeling':
+      case 'Scoring':
         let isNewJob = false;
         if(d.jobId == undefined || d.jobId == '') {
           isNewJob = true
@@ -131,7 +136,8 @@ class Graph extends Component {
         this.setState({
           isNewJob: isNewJob,
           openJobDetailsDialog: true,
-          selectedJob: d.jobId
+          selectedJob: d.jobId,
+          selectedJobType: d.type == 'Job' ? 'ETL' : d.type
         });
 
         setTimeout(() => {
@@ -396,11 +402,17 @@ class Graph extends Component {
       case 'Job':
         shapesData = _self.shapesData[0];
         break;
-      case 'File':
+      case 'Modeling':
         shapesData = _self.shapesData[1];
         break;
-      case 'Index':
+      case 'Scoring':
         shapesData = _self.shapesData[2];
+        break;
+      case 'File':
+        shapesData = _self.shapesData[3];
+        break;
+      case 'Index':
+        shapesData = _self.shapesData[4];
         break;
     }
     if(gEl.select(".icon").empty()) {
@@ -721,6 +733,8 @@ class Graph extends Component {
           //if (this.childNodes.length === 0) {
           switch(d.type) {
             case 'Job':
+            case 'Modeling':
+            case 'Scoring':
               if(d3.select("#rec-"+d.id).empty()) {
                 d3.select(this)
                   .append("rect")
@@ -744,17 +758,17 @@ class Graph extends Component {
                 d3.select(this)
                   .append("rect")
                   .attr("id", "rec-"+d.id)
-                  .attr("rx", _self.shapesData[1].rx)
-                  .attr("ry", _self.shapesData[1].ry)
-                  .attr("width", _self.shapesData[1].rectwidth)
-                  .attr("height", _self.shapesData[1].rectheight)
+                  .attr("rx", _self.shapesData[3].rx)
+                  .attr("ry", _self.shapesData[3].ry)
+                  .attr("width", _self.shapesData[3].rectwidth)
+                  .attr("height", _self.shapesData[3].rectheight)
                   .attr("stroke", "grey")
                   .attr("filter", "url(#glow)")
                   .attr("fill", function(d) {
                     if(d.type == 'File')
-                     return _self.shapesData[1].color;
+                     return _self.shapesData[3].color;
                     else if(d.type == 'Index')
-                      return _self.shapesData[2].color;
+                      return _self.shapesData[4].color;
                   })
                   .attr("stroke-width", "3")
                   //.call(_self.nodeDragHandler)
@@ -1059,6 +1073,7 @@ class Graph extends Component {
               onRef={ref => (this.jobDlg = ref)}
               applicationId={this.props.applicationId}
               selectedJob={this.state.selectedJob}
+              selectedJobType={this.state.selectedJobType}
               isNewJob={this.state.isNewJob}
               onRefresh={this.onFileAdded}
               onClose={this.closeJobDlg}

@@ -46,7 +46,7 @@ class ApplicationsList extends Component {
     //this.props.onAppicationSelect(value);
     this.props.dispatch(applicationActions.applicationSelected(event.key, event.item.props.children));
     this.setState({ selected: event.item.props.children });
-    this.props.history.push('/'+event.key+'/files')
+    this.props.history.push('/'+event.key+'/workflow')
   }
 
   render() {

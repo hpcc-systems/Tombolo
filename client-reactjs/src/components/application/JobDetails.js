@@ -17,7 +17,7 @@ class JobDetails extends Component {
     confirmLoading: false,
     pagination: {},
     loading: false,
-    jobTypes:["Index Build", "Cleaning", "Analyzing", "Machine Learning"],
+    jobTypes:["ETL", "Modeling", "Scoring"],
     paramName: "",
     paramType:"",
     inputFileDesc:"",
@@ -36,7 +36,7 @@ class JobDetails extends Component {
       name:"",
       description:"",
       entryBWR:"",
-      jobType:"",
+      jobType: this.props.selectedJobType ? this.props.selectedJobType : '',
       gitrepo:"",
       contact:"",
       inputParams: [],
@@ -52,6 +52,7 @@ class JobDetails extends Component {
   }
 
   getJobDetails() {
+    
     if(this.props.selectedJob && !this.props.isNewJob) {
 
       fetch("/api/job/job_details?job_id="+this.props.selectedJob+"&app_id="+this.props.applicationId, {
@@ -481,7 +482,7 @@ class JobDetails extends Component {
               {getFieldDecorator('name', {
                 rules: [{ required: true, message: 'Please enter a name for the job!' }],
               })(
-              <Input id="job_name" name="name" onChange={this.onChange} placeholder="Name" disabled={!this.props.isNewJob}/>
+              <Input id="job_name" name="name" onChange={this.onChange} placeholder="Name"/>
               )}
              </Form.Item>
 

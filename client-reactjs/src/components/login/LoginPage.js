@@ -26,10 +26,12 @@ class LoginPage extends React.Component {
         if(nextProps.loggingIn != this.props.loggingIn) {
             if(nextProps.loggedIn || nextProps.loggingIn){
                 var location=this.props.location.state;
-                if(location && location.from.pathname.includes('/file/'))
+                if(location && location.from.pathname.includes('/workflow/')) {
                   this.props.history.push(location.from.pathname);
-                else
-                this.props.history.push('/files');
+                }
+                else {
+                    this.props.history.push('/workflow');
+                }
             }
             else if(nextProps.loginFailed) {
                 message.error("Login failed. Incorrect user name or password!");

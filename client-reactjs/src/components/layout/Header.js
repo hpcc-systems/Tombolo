@@ -74,7 +74,7 @@ class AppHeader extends Component {
       var nav = event.target.getAttribute("data-nav");
       if(nav == '/logout')
           return;
-      nav = (nav == '/' ? ('/'+this.props.applicationId.applicationId+'/files') : nav)
+      nav = (nav == '/' ? ('/'+this.props.applicationId.applicationId+'/workflow') : nav)
       this.setState({
           selectedTopNav: nav
       });
@@ -124,8 +124,8 @@ class AppHeader extends Component {
   render() {
     const hasAdminRole = (this.props.user && this.props.user.role == 'admin');
     const applicationId = this.props.application ? this.props.application.applicationId : '';
-    const selectedTopNav = (window.location.pathname.indexOf("/admin") != -1) ? "/admin/applications" : (applicationId != '' ? "/" + applicationId + "/files" : "/files")
-    const appNav = (applicationId != '' ? "/" + applicationId + "/files" : "/files");
+    const selectedTopNav = (window.location.pathname.indexOf("/admin") != -1) ? "/admin/applications" : (applicationId != '' ? "/" + applicationId + "/workflow" : "/workflow")
+    const appNav = (applicationId != '' ? "/" + applicationId + "/workflow" : "/workflow");
 
     if(!this.props.user || !this.props.user.token)
         return null;

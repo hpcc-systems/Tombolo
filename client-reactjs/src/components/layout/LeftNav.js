@@ -45,7 +45,7 @@ class LeftNav extends Component {
     const applicationId = this.props.application ? this.props.application.applicationId : '';
     console.log(this.props.loggedIn + ", "+JSON.stringify(this.props.user));
     if(!this.props.loggedIn || !this.props.user || Object.getOwnPropertyNames(this.props.user).length ==0) {
-      this.props.history.push("/login");
+      //this.props.history.push("/login");
       return false;
     }
     const isAdmin = (this.props.user && this.props.user.role == 'admin') ? true : false;

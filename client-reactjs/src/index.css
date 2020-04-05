@@ -246,7 +246,7 @@ path, .jtk-endpoint { cursor:pointer; }
     box-shadow: 0 2px 0 rgba(0, 0, 0, 0.045);
 }*/
 .navbar .home-logo {
-    color: #ff5722;
+    color: #ff5722 !important;
     font-weight: bold;
 }
 
