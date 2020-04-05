@@ -43,7 +43,8 @@ class LeftNav extends Component {
   render() {
     const selectedTopNav = window.location.pathname;
     const applicationId = this.props.application ? this.props.application.applicationId : '';
-    if(!this.props.loggedIn) {
+    console.log(this.props.loggedIn + ", "+JSON.stringify(this.props.user));
+    if(!this.props.loggedIn || !this.props.user || Object.getOwnPropertyNames(this.props.user).length ==0) {
       this.props.history.push("/login");
       return false;
     }

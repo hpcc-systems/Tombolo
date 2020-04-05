@@ -81,6 +81,18 @@ function validateToken() {
           body: JSON.stringify({"username": user.username})
         }).then(handleResponse)
         .then(user => {
+          var decoded = jwtDecode(user.token);
+          var user = {
+            "token": user.token,
+            "id": decoded.id,
+            "username": decoded.username,
+            "firstName": decoded.firstName,
+            "lastName": decoded.lastName,
+            "email": decoded.email,
+            "organization": decoded.organization,
+            "role":decoded.role,
+            "permissions": decoded.permissions
+          }
           localStorage.setItem('user', JSON.stringify(user));
           dispatch(success(user));
         })
