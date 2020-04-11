@@ -74,7 +74,7 @@ class AppHeader extends Component {
       var nav = event.target.getAttribute("data-nav");
       if(nav == '/logout')
           return;
-      nav = (nav == '/' ? ('/'+this.props.applicationId.applicationId+'/workflow') : nav)
+      nav = (nav == '/' ? ('/'+this.props.applicationId.applicationId+'/dataflow') : nav)
       this.setState({
           selectedTopNav: nav
       });
@@ -105,7 +105,7 @@ class AppHeader extends Component {
       this.props.dispatch(applicationActions.applicationSelected(event.target.getAttribute("data-value"), event.target.getAttribute("data-display")));
       localStorage.setItem("activeProjectId", event.target.getAttribute("data-value"));
       this.setState({ selected: event.target.getAttribute("data-display") });
-      this.props.history.push('/'+event.target.getAttribute("data-value")+'/workflow');
+      this.props.history.push('/'+event.target.getAttribute("data-value")+'/dataflow');
       $('[data-toggle="popover"]').popover('disable');
     }
 
@@ -124,8 +124,8 @@ class AppHeader extends Component {
   render() {
     const hasAdminRole = (this.props.user && this.props.user.role == 'admin');
     const applicationId = this.props.application ? this.props.application.applicationId : '';
-    const selectedTopNav = (window.location.pathname.indexOf("/admin") != -1) ? "/admin/applications" : (applicationId != '' ? "/" + applicationId + "/workflow" : "/workflow")
-    const appNav = (applicationId != '' ? "/" + applicationId + "/workflow" : "/workflow");
+    const selectedTopNav = (window.location.pathname.indexOf("/admin") != -1) ? "/admin/applications" : (applicationId != '' ? "/" + applicationId + "/dataflow" : "/dataflow")
+    const appNav = (applicationId != '' ? "/" + applicationId + "/dataflow" : "/dataflow");
 
     if(!this.props.user || !this.props.user.token)
         return null;

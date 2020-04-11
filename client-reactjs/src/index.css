@@ -372,9 +372,9 @@ svg {
 }
 
 #close {
-    float:right;
-    display:inline-block;
-    padding:2px 5px;
+  float:right;
+  display:inline-block;
+  padding:2px 5px;
 }
 
 .workflow-details {
@@ -401,5 +401,15 @@ div.tooltip {
     border: 0px;
     border-radius: 8px;
     pointer-events: none;
+}
+
+.dataflow-tbl-wrapper {
+
+}
+
+.dataflow-tbl-controls i {
+  padding: 2px;
+  position: relative;
+  z-index: 99;
 }
 

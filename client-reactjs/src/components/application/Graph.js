@@ -35,7 +35,8 @@ class Graph extends Component {
     applicationId: '',
     nodeDetailsVisible: false,
     nodeDetailStatus: '',
-    nodeDetailMessage: ''
+    nodeDetailMessage: '',
+    selectedDataflow:{}
   }
 
   consts = {
@@ -81,11 +82,13 @@ class Graph extends Component {
     document.addEventListener('mousedown', this.handleClickOutside);
   }
   componentWillReceiveProps(props) {
-    if(this.state.applicationId != props.application.applicationId) {
+    
+    if(this.state.applicationId != props.application.applicationId || this.state.selectedDataflow != props.selectedDataflow ) {      
       this.setState({
-        applicationId: props.application.applicationId
+        applicationId: props.application.applicationId,
+        selectedDataflow: props.selectedDataflow
       }, function() {
-        this.fetchSavedGraph();
+        this.fetchSavedGraph(props.selectedDataflow);
       });
 
     }
@@ -241,14 +244,15 @@ class Graph extends Component {
   }
 
   saveGraph() {
+    console.log('save: '+JSON.stringify(this.state.selectedDataflow))
     let edges = [];
     this.thisGraph.edges.forEach(function (val, i) {
         edges.push({source: val.source.id, target: val.target.id});
     });
-    fetch('/api/workflowgraph/save', {
+    fetch('/api/dataflowgraph/save', {
         method: 'post',
         headers: authHeader(),
-        body: JSON.stringify({"application_id": this.props.applicationId, nodes: this.thisGraph.nodes, edges: edges})
+        body: JSON.stringify({"application_id": this.props.applicationId, dataflowId: this.state.selectedDataflow.id, nodes: this.thisGraph.nodes, edges: edges})
     }).then(function(response) {
         if(response.ok) {
           return response.json();
@@ -260,43 +264,54 @@ class Graph extends Component {
     });
   }
 
-  fetchSavedGraph() {
-    var _self=this;
-    fetch("/api/workflowgraph?application_id="+this.props.applicationId, {
-       headers: authHeader()
-    })
-    .then((response) => {
-        if(response.ok) {
-          return response.json();
-        }
-        handleError(response);
-    })
-    .then(data => {
-      let nodes = [], edges = [];
-      if(data != undefined && data != null) {
-        nodes = JSON.parse(data.nodes);
-        edges = JSON.parse(data.edges);
-        edges.forEach(function (e, i) {
-            edges[i] = {
-                source: nodes.filter(function (n) {
-                    return n.id === e.source;
-                })[0],
-                target: nodes.filter(function (n) {
-                    return n.id === e.target;
-                })[0]
+  fetchSavedGraph(selectedDataflow) {
+    console.log(JSON.stringify(selectedDataflow))
+    var _self=this, nodes = [], edges = [];
+    if(selectedDataflow) {
+      fetch("/api/dataflowgraph?application_id="+this.props.applicationId+"&dataflowId="+selectedDataflow.id, {
+         headers: authHeader()
+      })
+      .then((response) => {
+          if(response.ok) {
+            return response.json();
+          }
+          handleError(response);
+      })
+      .then(data => {
+        if(data != undefined && data != null) {
+          nodes = JSON.parse(data.nodes);
+          edges = JSON.parse(data.edges);
+
+          edges.forEach(function (e, i) {
+          edges[i] = {
+              source: nodes.filter(function (n) {
+                return n.id === e.source;
+              })[0],
+              target: nodes.filter(function (n) {
+                return n.id === e.target;
+              })[0]
             };
-        });
-      }
-      _self.thisGraph.nodes = nodes;
-      _self.thisGraph.edges = edges;
-      _self.setIdCt(nodes.length);
-      _self.updateGraph();
+          });
+        }
+        _self.thisGraph.nodes = nodes;
+        _self.thisGraph.edges = edges;
+        _self.setIdCt(nodes.length);
+        _self.updateGraph();
 
-      this.updateCompletionStatus();
+        this.updateCompletionStatus();              
+      }).catch(error => {
+        console.log(error);
+      });
+    } else {
+      this.clearSVG();
+    }     
+  }
 
-    }).catch(error => {
-      console.log(error);
-    });
+  clearSVG = () => {
+    this.thisGraph.nodes = [];
+    this.thisGraph.edges = [];
+    this.setIdCt(0);
+    this.updateGraph();    
   }
 
   updateWindow = (svg) => {
@@ -845,7 +860,7 @@ class Graph extends Component {
 
     let graphComponentsSvg = d3.select("#sidebar").append("svg")
       .attr("width", 100)
-      .attr("height", 500);
+      .attr("height", "100%");
 
 
     var group = graphComponentsSvg.selectAll('g')
@@ -911,7 +926,7 @@ class Graph extends Component {
     /** MAIN SVG **/
     let svg = d3.select("#graph").append("svg")
         .attr("width", width)
-        .attr("height", height);
+        .attr("height", "100%");
 
     // define arrow markers for graph links
     let defs = svg.append('svg:defs');
@@ -1037,7 +1052,6 @@ class Graph extends Component {
   }
 
   render() {
-
     const pStyle = {
       fontSize: 16,
       color: 'rgba(0,0,0,0.85)',
@@ -1047,7 +1061,7 @@ class Graph extends Component {
     };
 
 	return (
-    <div className="wrapper d-flex align-items-stretch">
+    <div className="wrapper d-flex align-items-stretch" style={{"height": "100%"}}>
       {!this.props.viewMode ?
         <nav id="sidebar" className="navbar-light fixed-left" style={{"backgroundColor": "#e3f2fd", "fontSize": "12px"}}>
 
@@ -1055,7 +1069,7 @@ class Graph extends Component {
         : null }
 
       <div id="content"  ref={this.setWrapperRef} >
-          <div id="graph"></div>
+          <div id="graph" style={{"height": "100%"}}></div>
       </div>
       {this.state.openFileDetailsDialog ?
         <FileDetailsForm

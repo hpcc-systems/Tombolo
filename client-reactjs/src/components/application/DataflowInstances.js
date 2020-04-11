@@ -6,7 +6,7 @@ import { connect } from 'react-redux';
 import { authHeader, handleError } from "../common/AuthHeader.js"
 import {handleFileDelete, handleJobDelete, handleIndexDelete, handleQueryDelete, updateGraph} from "../common/WorkflowUtil";
 
-class Workflows extends Component {
+class DataflowInstances extends Component {
 
   constructor(props) {
     super(props);
@@ -157,7 +157,7 @@ function mapStateToProps(state) {
   };
 }
 
-const connectedWorkflows = connect(mapStateToProps)(Workflows);
-export { connectedWorkflows as Workflows };
+const connectedWorkflows = connect(mapStateToProps)(DataflowInstances);
+export { connectedWorkflows as DataflowInstances };
 
 //export default FileList;

@@ -26,11 +26,11 @@ class LoginPage extends React.Component {
         if(nextProps.loggingIn != this.props.loggingIn) {
             if(nextProps.loggedIn || nextProps.loggingIn){
                 var location=this.props.location.state;
-                if(location && location.from.pathname.includes('/workflow/')) {
+                if(location && location.from.pathname.includes('/dataflow/')) {
                   this.props.history.push(location.from.pathname);
                 }
                 else {
-                    this.props.history.push('/workflow');
+                    this.props.history.push('/dataflow');
                 }
             }
             else if(nextProps.loginFailed) {

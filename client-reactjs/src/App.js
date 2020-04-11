@@ -15,8 +15,8 @@ import {FileList} from "./components/application/FileList";
 import {IndexList} from "./components/application/IndexList";
 import Dashboard from "./components/application/Dashboard";
 import {QueriesList} from "./components/application/QueriesList";
-import {JobList} from "./components/application/JobList";
-import {Workflows} from "./components/application/Workflows";
+import Dataflow from "./components/application/Dataflow";
+import {DataflowInstances} from "./components/application/DataflowInstances";
 import Users from "./components/admin/Users";
 
 import {AdminApplications} from "./components/admin/Applications";
@@ -42,6 +42,11 @@ class App extends React.Component {
     render() {
         const isApplicationSet = (this.props.application && this.props.application.applicationId != '') ? true : false;
         const selectedTopNav = (this.props.selectedTopNav && this.props.selectedTopNav.indexOf("/admin") != -1) ? "/admin/applications" : "/files"
+        const dataFlowComp = () => {
+            let applicationId = this.props.application ? this.props.application.applicationId : '';
+            let applicationTitle = this.props.application ? this.props.application.applicationTitle : '';
+            return <Dataflow applicationId={applicationId} applicationTitle={applicationTitle}/>;
+        }
         return (
             <Router history={history}>
             <div>
@@ -51,17 +56,17 @@ class App extends React.Component {
                         <Layout className="site-layout">
                             <LeftNav isApplicationSet={isApplicationSet} selectedTopNav={selectedTopNav} />
                             <Layout style={{height: '100vh'}}>
-                                <Content style={{background: '#fff', margin: '0 16px'}}>
-                                    <Route exact path="/" component={FileList}/>
+                                <Content style={{background: '#fff', margin: '0 16px'}}>                                    
                                     <Switch>
+                                        <PrivateRoute exact path="/" component={dataFlowComp}/>
                                         <PrivateRoute exact path="/file/:applicationId/:fileId" component={SelectedFilePopup} />
                                         <PrivateRoute exact path="/:applicationId/files" component={FileList} />
                                         <PrivateRoute path="/files" component={FileList} />
                                         <PrivateRoute exact path="/:applicationId/index" component={IndexList}/>
                                         <PrivateRoute path="/index" component={IndexList}/>
                                         <PrivateRoute path="/:applicationId/queries" component={QueriesList}/>
-                                        <PrivateRoute path="/:applicationId/workflow" component={JobList}/>
-                                        <PrivateRoute path="/:applicationId/workflows" component={Workflows}/>
+                                        <PrivateRoute path="/:applicationId/dataflow" component={dataFlowComp}/>
+                                        <PrivateRoute path="/:applicationId/dataflowinstances" component={DataflowInstances}/>
                                         <PrivateRoute path="/admin/applications" component={AdminApplications}/>
                                         <PrivateRoute path="/admin/clusters" component={AdminClusters}/>
                                         <PrivateRoute path="/admin/users" component={Users}/>

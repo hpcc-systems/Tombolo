@@ -82,7 +82,7 @@ function validateToken() {
         }).then(handleResponse)
         .then(user => {
           var decoded = jwtDecode(user.token);
-          var user = {
+          user = {
             "token": user.token,
             "id": decoded.id,
             "username": decoded.username,

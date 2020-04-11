@@ -1,6 +1,6 @@
 'use strict';
 module.exports = (sequelize, DataTypes) => {
-  const WorkflowGraph = sequelize.define('workflowgraph', {
+  const dataflowgraph = sequelize.define('dataflowgraph', {
   	id: {
       primaryKey: true,
       type: DataTypes.UUID,
@@ -10,10 +10,11 @@ module.exports = (sequelize, DataTypes) => {
     },
     application_id: DataTypes.STRING,
     nodes: DataTypes.TEXT,
-    edges: DataTypes.TEXT
+    edges: DataTypes.TEXT,
+    dataflowId: DataTypes.UUID
   }, {freezeTableName: true});
-  WorkflowGraph.associate = function(models) {
-    // associations can be defined here
+  dataflowgraph.associate = function(models) {
+    dataflowgraph.belongsTo(models.dataflow)
   };
-  return WorkflowGraph;
+  return dataflowgraph;
 };
