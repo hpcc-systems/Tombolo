@@ -17,7 +17,8 @@ module.exports = (sequelize, DataTypes) => {
     parentFileId: DataTypes.STRING,
     registrationTime: DataTypes.STRING,
     updatedDateTime: DataTypes.STRING,
-    dataLastUpdatedTime: DataTypes.STRING
+    dataLastUpdatedTime: DataTypes.STRING,
+    dataflowId: DataTypes.UUIDV4
   }, {freezeTableName: true});
   indexes.associate = function(models) {
     indexes.hasMany(models.index_key,{

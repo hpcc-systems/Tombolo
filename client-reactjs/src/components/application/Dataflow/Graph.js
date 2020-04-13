@@ -1,14 +1,14 @@
 import React, { Component } from "react";
 import * as d3 from "d3";
-import '../graph-creator/graph-creator.css';
+import '../../graph-creator/graph-creator.css';
 import $ from 'jquery';
 import { Button, Icon, Drawer, Row, Col, Descriptions} from 'antd/lib';
 import { Typography } from 'antd';
-import FileDetailsForm from "./FileDetails";
-import JobDetailsForm from "./JobDetails";
-import IndexDetailsForm from "./IndexDetails";
-import {handleFileDelete, handleJobDelete, handleIndexDelete, handleQueryDelete, updateGraph} from "../common/WorkflowUtil";
-import { authHeader, handleError } from "../common/AuthHeader.js"
+import FileDetailsForm from "../FileDetails";
+import JobDetailsForm from "../JobDetails";
+import IndexDetailsForm from "../IndexDetails";
+import {handleFileDelete, handleJobDelete, handleIndexDelete, handleQueryDelete, updateGraph} from "../../common/WorkflowUtil";
+import { authHeader, handleError } from "../../common/AuthHeader.js"
 import { connect } from 'react-redux';
 const { Text } = Typography;
 
@@ -26,10 +26,10 @@ class Graph extends Component {
     selectedFile: '',
     selectedNodeId: '',
     selectedIndex: '',
-    isNewFile:false,
+    isNew:false,
     selectedJob: '',
     selectedJobType: '',
-    isNewJob:false,
+    isNew:false,
     isNewIndex:false,
     currentlyEditingId:'',
     applicationId: '',
@@ -88,7 +88,7 @@ class Graph extends Component {
         applicationId: props.application.applicationId,
         selectedDataflow: props.selectedDataflow
       }, function() {
-        this.fetchSavedGraph(props.selectedDataflow);
+        this.fetchSavedGraph();
       });
 
     }
@@ -111,14 +111,14 @@ class Graph extends Component {
 
   openDetailsDialog(d) {
     let _self=this;
+    let isNew = false;
     switch(d.type) {
-      case 'File':
-        let isNewFile = false;
+      case 'File':        
         if(d.fileId == undefined || d.fileId == '') {
-          isNewFile = true
+          isNew = true
         }
         this.setState({
-          isNewFile: isNewFile,
+          isNew: isNew,
           openFileDetailsDialog: true,
           selectedFile: d.fileId,
           selectedNodeId: d.id
@@ -132,12 +132,11 @@ class Graph extends Component {
       case 'Job':
       case 'Modeling':
       case 'Scoring':
-        let isNewJob = false;
         if(d.jobId == undefined || d.jobId == '') {
-          isNewJob = true
+          isNew = true
         }
         this.setState({
-          isNewJob: isNewJob,
+          isNew: isNew,
           openJobDetailsDialog: true,
           selectedJob: d.jobId,
           selectedJobType: d.type == 'Job' ? 'ETL' : d.type
@@ -244,7 +243,7 @@ class Graph extends Component {
   }
 
   saveGraph() {
-    console.log('save: '+JSON.stringify(this.state.selectedDataflow))
+    console.log('save: '+JSON.stringify(this.props.selectedDataflow))
     let edges = [];
     this.thisGraph.edges.forEach(function (val, i) {
         edges.push({source: val.source.id, target: val.target.id});
@@ -252,7 +251,7 @@ class Graph extends Component {
     fetch('/api/dataflowgraph/save', {
         method: 'post',
         headers: authHeader(),
-        body: JSON.stringify({"application_id": this.props.applicationId, dataflowId: this.state.selectedDataflow.id, nodes: this.thisGraph.nodes, edges: edges})
+        body: JSON.stringify({"application_id": this.props.applicationId, dataflowId: this.props.selectedDataflow.id, nodes: this.thisGraph.nodes, edges: edges})
     }).then(function(response) {
         if(response.ok) {
           return response.json();
@@ -264,11 +263,10 @@ class Graph extends Component {
     });
   }
 
-  fetchSavedGraph(selectedDataflow) {
-    console.log(JSON.stringify(selectedDataflow))
+  fetchSavedGraph() {
     var _self=this, nodes = [], edges = [];
-    if(selectedDataflow) {
-      fetch("/api/dataflowgraph?application_id="+this.props.applicationId+"&dataflowId="+selectedDataflow.id, {
+    if(this.props.selectedDataflow) {
+      fetch("/api/dataflowgraph?application_id="+this.props.applicationId+"&dataflowId="+this.props.selectedDataflow.id, {
          headers: authHeader()
       })
       .then((response) => {
@@ -383,7 +381,7 @@ class Graph extends Component {
                 if(d.fileId) {
                   handleFileDelete(d.fileId, _self.props.applicationId);
                 }
-                updateGraph((d.fileId ? d.fileId : d.id), _self.props.applicationId).then((response) => {
+                updateGraph((d.fileId ? d.fileId : d.id), _self.props.applicationId, _self.props.selectedDataflow).then((response) => {
                   _self.fetchSavedGraph();
                 });
                 break;
@@ -391,7 +389,7 @@ class Graph extends Component {
                 if(d.indexId) {
                   handleIndexDelete(d.indexId, _self.props.applicationId);
                 }
-                updateGraph((d.indexId ? d.indexId : d.id), _self.props.applicationId).then((response) => {
+                updateGraph((d.indexId ? d.indexId : d.id), _self.props.applicationId, _self.props.selectedDataflow).then((response) => {
                   _self.fetchSavedGraph();
                 });
                 break;
@@ -399,7 +397,7 @@ class Graph extends Component {
                 if(d.jobId) {
                   handleJobDelete(d.jobId, _self.props.applicationId);
                 }
-                updateGraph((d.jobId ? d.jobId : d.id), _self.props.applicationId).then((response) => {
+                updateGraph((d.jobId ? d.jobId : d.id), _self.props.applicationId, _self.props.selectedDataflow).then((response) => {
                   _self.fetchSavedGraph();
                 });
                 break;
@@ -1074,34 +1072,37 @@ class Graph extends Component {
       {this.state.openFileDetailsDialog ?
         <FileDetailsForm
           onRef={ref => (this.fileDlg = ref)}
-          isNewFile={this.state.isNewFile}
-          selectedFile={this.state.selectedFile}
+          isNew={this.state.isNew}
+          selectedAsset={this.state.selectedFile}
           selectedNodeId={this.state.selectedNodeId}
           applicationId={this.props.applicationId}
           onClose={this.handleClose}
           onRefresh={this.onFileAdded}
-          user={this.props.user}/> : null}
+          user={this.props.user}
+          selectedDataflow={this.props.selectedDataflow}/> : null}
 
       {this.state.openJobDetailsDialog ?
             <JobDetailsForm
               onRef={ref => (this.jobDlg = ref)}
               applicationId={this.props.applicationId}
-              selectedJob={this.state.selectedJob}
+              selectedAsset={this.state.selectedJob}
               selectedJobType={this.state.selectedJobType}
-              isNewJob={this.state.isNewJob}
+              isNew={this.state.isNew}
               onRefresh={this.onFileAdded}
               onClose={this.closeJobDlg}
-              user={this.props.user}/> : null}
+              user={this.props.user}
+              selectedDataflow={this.props.selectedDataflow}/> : null}
 
       {this.state.openIndexDetailsDialog ?
           <IndexDetailsForm
             onRef={ref => (this.idxDlg = ref)}
             applicationId={this.props.applicationId}
-            isNewIndex={this.state.isNewIndex}
+            isNew={this.state.isNewIndex}
             onRefresh={this.onFileAdded}
-            selectedIndex={this.state.selectedIndex}
+            selectedAsset={this.state.selectedIndex}
             onClose={this.closeIndexDlg}
-            user={this.props.user}/> : null}
+            user={this.props.user}
+            selectedDataflow={this.props.selectedDataflow}/> : null}
 
         <Drawer
           width={340}

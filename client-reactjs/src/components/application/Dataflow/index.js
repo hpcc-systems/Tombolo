@@ -1,9 +1,10 @@
 import React, { useState, useEffect } from 'react'
 import { Button, Table, Divider, message, Popconfirm, Icon, Tooltip, Radio } from 'antd/lib';
 import BreadCrumbs from "../../common/BreadCrumbs";
-import AddDataflow from "../AddDataflow";
-import DataflowTable from "../DataflowTable";
-import {Graph} from "../Graph";
+import AddDataflow from "./AddDataflow";
+import DataflowTable from "./DataflowTable";
+import DataflowAssetsTable from "./DataflowAssetsTable";
+import {Graph} from "./Graph";
 import useModal from '../../../hooks/useModal';
 import { authHeader, handleError } from "../../common/AuthHeader.js"
 import { connect } from 'react-redux';
@@ -13,7 +14,9 @@ function Dataflow(props) {
 
 	const {isShowing, toggle} = useModal();
 
-  const [graphHeight, setGraphHeight] = useState(60)
+  const [tableDisplay, setTableDisplay] = useState(
+    {graphHeight: 60, display:'block'}
+  );
 	
 	const [form, setForm] = useState({
     selectedDataflow: '',
@@ -53,8 +56,8 @@ function Dataflow(props) {
     });
   }
 
-  const handleToggleView = (evt) => {
-    evt.target.value == 'chart' ? setForm({tableView: false}) : setForm({tableView: true})
+  const handleToggleView = (evt) => {    
+    evt.target.value == 'chart' ? setForm({selectedDataflow: form.selectedDataflow, tableView: false}) : setForm({selectedDataflow: form.selectedDataflow, tableView: true})
   }
 
   const onDataFlowUpdated = () => {
@@ -69,13 +72,11 @@ function Dataflow(props) {
   }
 
   const minimize = () => {
-    console.log('minimize..')
-    setGraphHeight(83);
+    setTableDisplay({graphHeight: 83, display: 'none'});
   }
 
   const maximize = () => {
-    console.log('maximize..')
-    setGraphHeight(60);
+    setTableDisplay({graphHeight: 60, display: 'block'})
   }
 
   if(application.applicationId == '' ) return null;
@@ -86,10 +87,10 @@ function Dataflow(props) {
 	        <BreadCrumbs applicationId={application.applicationId} applicationTitle={application.applicationTitle}/>
 	        
 	        <span style={{ marginLeft: "auto"}}>
-	          {/*<Radio.Group defaultValue="chart" buttonStyle="solid" style={{padding: "10px"}} onChange={handleToggleView}>
+	          {<Radio.Group defaultValue="chart" buttonStyle="solid" style={{padding: "10px"}} onChange={handleToggleView}>
 	            <Tooltip placement="bottom" title={"Tree View"}><Radio.Button value="chart"><Icon type="cluster" /></Radio.Button></Tooltip>
 	            <Tooltip placement="bottom" title={"Tabular View"}><Radio.Button value="grid"><Icon type="bars" /></Radio.Button></Tooltip>
-	          </Radio.Group>*/}
+	          </Radio.Group>}
 	        
 	          <AddDataflow 
 	          	isShowing={isShowing} 
@@ -100,17 +101,21 @@ function Dataflow(props) {
 	          	/>
 	        </span>
 	      </div>
-
-	      <div id="jobs" style={{"height": graphHeight+"%"}}>
-					<Graph applicationId={application.applicationId} selectedDataflow={form.selectedDataflow}/>	        
+	      <div id="data_flow_content" style={{"height": tableDisplay.graphHeight+"%"}}>
+					{form.tableView ? 
+            <DataflowAssetsTable applicationId={application.applicationId} selectedDataflow={form.selectedDataflow} user={application.user}/> 
+            : 
+            <Graph applicationId={application.applicationId} selectedDataflow={form.selectedDataflow}/>
+          }	        
 	      </div>
         <div className="dataflow-tbl-wrapper bg-light">
           <div className="dataflow-tbl-controls float-right">
             <div className="my-1 mx-2 flex-shrink-0"><i className="fa fa-window-minimize js-minimize" title="Minimize Script" onClick={() => minimize()}></i><i className="fa js-restore fa-window-restore" title="Restore Script" onClick={() => maximize()}></i></div>
           </div>
-  	      <div id="dataflow-list" style={{padding: "5px"}}>
-            <DataflowTable 
-            	data={dataFlows}
+          
+  	      <div id="dataflow-list" style={{padding: "5px", "display":tableDisplay.display}}>
+            <DataflowTable             	
+              data={dataFlows}
               applicationId={application.applicationId}  
             	onSelectDataflow={onSelectDataflow} 
             	onDataFlowUpdated={onDataFlowUpdated}

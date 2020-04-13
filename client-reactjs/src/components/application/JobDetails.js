@@ -36,7 +36,7 @@ class JobDetails extends Component {
       name:"",
       description:"",
       entryBWR:"",
-      jobType: this.props.selectedJobType ? this.props.selectedJobType : '',
+      jobType: this.props.selectedAssetType ? this.props.selectedAssetType : '',
       gitrepo:"",
       contact:"",
       inputParams: [],
@@ -53,9 +53,9 @@ class JobDetails extends Component {
 
   getJobDetails() {
     
-    if(this.props.selectedJob && !this.props.isNewJob) {
+    if(this.props.selectedAsset && !this.props.isNew) {
 
-      fetch("/api/job/job_details?job_id="+this.props.selectedJob+"&app_id="+this.props.applicationId, {
+      fetch("/api/job/job_details?job_id="+this.props.selectedAsset+"&app_id="+this.props.applicationId, {
         headers: authHeader()
       })
       .then((response) => {
@@ -260,7 +260,7 @@ class JobDetails extends Component {
             visible: false,
             confirmLoading: false,
           });
-          this.props.onClose();
+          //this.props.onClose();
           this.props.onRefresh(saveResponse);
         }, 2000);
       }
@@ -309,6 +309,7 @@ class JobDetails extends Component {
     var jobDetails = {
       "basic": {
         "applicationId":applicationId,
+        "dataflowId" : this.props.selectedDataflow.id,
         "name" : this.state.job.name,
         "description" : this.state.job.description,
         "gitRepo" : this.state.job.gitrepo,
@@ -330,7 +331,7 @@ class JobDetails extends Component {
     this.setState({
       visible: false,
     });
-    this.props.onClose();
+    //this.props.onClose();
 
   }
   onChange = (e) => {
@@ -427,7 +428,7 @@ class JobDetails extends Component {
 
     const {name, description, entryBWR, gitrepo, jobType, inputParams, outputFiles, inputFiles, contact, author } = this.state.job;
     //render only after fetching the data from the server
-    if(!name && !this.props.selectedJob && !this.props.isNewJob) {
+    if(!name && !this.props.selectedAsset && !this.props.isNew) {
       return null;
     }
 

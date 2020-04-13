@@ -48,8 +48,8 @@ class IndexDetails extends Component {
   }
 
   getIndexDetails() {
-    if(this.props.selectedIndex && !this.props.isNewIndex) {
-      fetch("/api/index/read/index_details?index_id="+this.props.selectedIndex+"&app_id="+this.props.applicationId, {
+    if(this.props.selectedAsset && !this.props.isNewIndex) {
+      fetch("/api/index/read/index_details?index_id="+this.props.selectedAsset+"&app_id="+this.props.applicationId, {
         headers: authHeader()
       })
       .then((response) => {
@@ -113,7 +113,7 @@ class IndexDetails extends Component {
             visible: false,
             confirmLoading: false,
           });
-          this.props.onClose();
+          //this.props.onClose();
           this.props.onRefresh(saveResponse);
         }, 2000);
       }
@@ -278,6 +278,7 @@ class IndexDetails extends Component {
       "backupService" : this.state.file.backupService,
       "qualifiedPath" : this.state.file.path,
       "application_id" : applicationId,
+      "dataflowId" : this.props.selectedDataflow.id,
       "parentFileId" : this.state.selectedSourceFile
     };
     indexDetails.basic = index_basic;
@@ -295,7 +296,7 @@ class IndexDetails extends Component {
     this.setState({
       visible: false,
     });
-    this.props.onClose();
+    //this.props.onClose();
 
   }
 
@@ -353,8 +354,8 @@ class IndexDetails extends Component {
       onChange: this.onSelectedRowKeysChange
     };
     //render only after fetching the data from the server
-    console.log("index details: "+title+'  '+this.props.selectedIndex+'  '+this.props.isNewIndex)
-    if(!title && !this.props.selectedIndex && !this.props.isNewIndex) {
+    console.log("index details: "+title+'  '+this.props.selectedAsset+'  '+this.props.isNewIndex)
+    if(!title && !this.props.selectedAsset && !this.props.isNewIndex) {
       return null;
     }
 

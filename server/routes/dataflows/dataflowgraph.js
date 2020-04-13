@@ -63,8 +63,8 @@ router.post('/delete', (req, res) => {
 
 router.post('/deleteAsset', (req, res) => {
     let assetId=req.body.id, edgeId='';
-    console.log('assetId: '+assetId);
-    DataflowGraph.findOne({where:{"application_Id":req.body.application_id}}).then(function(graph) {
+    console.log('assetId: '+assetId+' dataflowId: '+req.body.dataflowId);
+    DataflowGraph.findOne({where:{"application_Id":req.body.application_id, dataflowId:req.body.dataflowId}}).then(function(graph) {
         let nodes = JSON.parse(graph.nodes), edges = JSON.parse(graph.edges), DataflowGraphId=graph.id;
         nodes.forEach((node, idx) => {
             if (node.id == assetId || (node.fileId == assetId || node.indexId == assetId || node.queryId == assetId || node.jobId == assetId)) {
@@ -73,13 +73,7 @@ router.post('/deleteAsset', (req, res) => {
             }
         });
         edges = edges.filter(edge => (edge.source != edgeId && edge.target != edgeId));
-        /*edges.forEach((edge, idx) => {
-            console.log('edgeId: '+edgeId);
-            if(edge.source == edgeId || edge.target == edgeId) {
-                edges.splice(idx, 1);
-            }
-            console.log(JSON.stringify(edges));
-        });*/
+        
         console.log(JSON.stringify(edges));
         DataflowGraph.update(
             {nodes:JSON.stringify(nodes), edges:JSON.stringify(edges)},

@@ -15,7 +15,8 @@ module.exports = (sequelize, DataTypes) => {
     entryBWR: DataTypes.STRING,
     gitRepo: DataTypes.STRING,
     jobType: DataTypes.STRING,
-    name: DataTypes.STRING
+    name: DataTypes.STRING,
+    dataflowId: DataTypes.UUIDV4
   }, {freezeTableName: true});
   job.associate = function(models) {
     job.hasMany(models.jobfile,{

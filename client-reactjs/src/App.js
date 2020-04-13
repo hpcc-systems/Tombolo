@@ -45,7 +45,7 @@ class App extends React.Component {
         const dataFlowComp = () => {
             let applicationId = this.props.application ? this.props.application.applicationId : '';
             let applicationTitle = this.props.application ? this.props.application.applicationTitle : '';
-            return <Dataflow applicationId={applicationId} applicationTitle={applicationTitle}/>;
+            return <Dataflow applicationId={applicationId} applicationTitle={applicationTitle} user={this.props.user}/>;
         }
         return (
             <Router history={history}>

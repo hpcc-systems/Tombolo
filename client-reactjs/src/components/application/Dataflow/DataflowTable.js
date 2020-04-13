@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react'
 import { Table, message, Popconfirm, Icon, Tooltip, Divider} from 'antd/lib';
-import { authHeader, handleError } from "../common/AuthHeader.js"
+import { authHeader, handleError } from "../../common/AuthHeader.js"
 
 function DataflowTable({data, applicationId, onSelectDataflow, onDataFlowUpdated, onDataFlowEdit}) {
   const [selectedRowKeys, setSelectedRowKeys] = useState([]);

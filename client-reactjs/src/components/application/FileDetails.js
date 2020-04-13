@@ -143,8 +143,9 @@ class FileDetails extends Component {
   }
 
   getFileDetails() {
-    if(this.props.selectedFile && !this.props.isNewFile) {
-      fetch("/api/file/read/file_details?file_id="+this.props.selectedFile+"&app_id="+this.props.applicationId, {
+    console.log('selectedAsset: '+this.props.selectedAsset)
+    if(this.props.selectedAsset && !this.props.isNew) {
+      fetch("/api/file/read/file_details?file_id="+this.props.selectedAsset+"&app_id="+this.props.applicationId, {
         headers: authHeader()
       }
       )
@@ -213,7 +214,7 @@ class FileDetails extends Component {
     this.clearState();
     this.getConsumers();
     this.getFileDetails();
-    //if(this.props.isNewFile) {
+    //if(this.props.isNew) {
       this.getClusters();
     //}
   }
@@ -520,7 +521,7 @@ class FileDetails extends Component {
       fetch('/api/file/read/savefile', {
         method: 'post',
         headers: authHeader(),
-        body: JSON.stringify({isNewFile : this.props.isNewFile, file : this.populateFileDetails()})
+        body: JSON.stringify({isNew : this.props.isNew, file : this.populateFileDetails()})
       }).then(function(response) {
           if(response.ok) {
             return response.json();
@@ -576,7 +577,7 @@ class FileDetails extends Component {
     });
   }
 
-  populateFileDetails() {
+  populateFileDetails() {    
     var applicationId = this.props.applicationId;
     var fileDetails = {"app_id":applicationId};
     var fileLayout={}, license = {};
@@ -592,7 +593,8 @@ class FileDetails extends Component {
       "supplier": this.state.file.supplier,
       "fileType" : this.state.file.fileType,
       "isSuperFile" : this.state.file.isSuperFile,
-      "application_id" : applicationId
+      "application_id" : applicationId,
+      "dataflowId" : this.props.selectedDataflow.id
     };
     fileDetails.basic = file_basic;
 
@@ -631,7 +633,7 @@ class FileDetails extends Component {
     this.setState({
       visible: false,
     });
-    this.props.onClose();
+    //this.props.onClose();
   }
 
   onClusterSelection = (value) => {
@@ -1065,11 +1067,11 @@ class FileDetails extends Component {
       selectedRowKeys,
       onChange: this.onSelectedRowKeysChange
     };
-    //const modalHeight = !this.props.isNewFile ? "400px" : "500px";
+    //const modalHeight = !this.props.isNew ? "400px" : "500px";
     const modalHeight = "500px";
 
     //render only after fetching the data from the server
-    if(!title && !this.props.selectedFile && !this.props.isNewFile) {
+    if(!title && !this.props.selectedAsset && !this.props.isNew) {
       console.log("not rendering");
       return null;
     }
@@ -1128,7 +1130,7 @@ class FileDetails extends Component {
               <Input id="file_name" name="name" onChange={this.onChange} placeholder="Name" disabled={true} />
              </Form.Item>
             <Form.Item {...formItemLayout} label="Description">
-                <Input id="file_desc" name="description" onChange={this.onChange} placeholder="Description" />
+                <Input id="file_desc" name="description" onChange={this.onChange} defaultValue={description} value={description} placeholder="Description" />
             </Form.Item>
             <Form.Item {...formItemLayout} label="Service URL">
                 <Input id="file_primary_svc" name="serviceUrl" onChange={this.onChange} defaultValue={serviceUrl} value={serviceUrl} placeholder="Service URL" />
@@ -1160,7 +1162,7 @@ class FileDetails extends Component {
                 </Form.Item>
               </Col>
               {/*show supplier field only for the root file*/}
-              {(this.state.filesCount == 0 || (this.state.filesCount == 1 && !this.props.isNewFile)) ?
+              {(this.state.filesCount == 0 || (this.state.filesCount == 1 && !this.props.isNew)) ?
                 <Col span={8} order={3}>
                   <Form.Item {...threeColformItemLayout} label="Supplier">
                      <Select id="supplier" value={(this.state.file.supplier != '') ? this.state.file.supplier : "Select a supplier"} placeholder="Select a supplier" onChange={this.onSupplierSelection} style={{ width: 190 }}>

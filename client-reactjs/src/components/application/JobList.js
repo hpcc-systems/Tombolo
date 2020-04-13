@@ -4,7 +4,9 @@ import FileDetailsForm from "./FileDetails";
 import JobDetailsForm from "./JobDetails";
 import QueryDetailsForm from "./QueryDetails";
 import IndexDetailsForm from "./IndexDetails";
-import {Graph} from "./Graph";
+import AddDataflow from "./Dataflow/AddDataflow";
+import DataflowTable from "./Dataflow/DataflowTable";
+import {Graph} from "./Dataflow/Graph";
 import BreadCrumbs from "../common/BreadCrumbs";
 import { connect } from 'react-redux';
 import { authHeader, handleError } from "../common/AuthHeader.js"
@@ -29,7 +31,8 @@ class JobList extends Component {
     jobs:[],
     assets:[],
     selectedJob: '',
-    tableView: false
+    tableView: false,
+    selectedDataflow:{}
   }
 
   componentWillReceiveProps(props) {
@@ -212,6 +215,13 @@ class JobList extends Component {
     this.handleRefresh();
   }
 
+  onSelectDataflow = (selectedDataflow) => {
+    console.log(selectedDataflow);
+    this.setState({
+      selectedDataflow: selectedDataflow
+    });
+  }
+
   render() {
     if(!this.props.application || !this.props.application.applicationId)
       return null;
@@ -243,6 +253,8 @@ class JobList extends Component {
             </Popconfirm>
           </span>
       }];
+
+      
     return (
       <div>
         <div className="d-flex justify-content-end" style={{paddingTop:"55px", margin: "5px"}}>
@@ -252,9 +264,7 @@ class JobList extends Component {
               <Tooltip placement="bottom" title={"Tree View"}><Radio.Button value="chart"><Icon type="cluster" /></Radio.Button></Tooltip>
               <Tooltip placement="bottom" title={"Tabular View"}><Radio.Button value="grid"><Icon type="bars" /></Radio.Button></Tooltip>
             </Radio.Group>
-            {/*<Tooltip placement="bottom" title={"Click to add a new job"}>
-              <Button className="btn btn-secondary btn-sm" onClick={() => this.openAddJobDlg()}><i className="fa fa-plus"></i>Add Job</Button>
-            </Tooltip>*/}
+            {<AddDataflow applicationId={this.state.applicationId} />}
           </span>
         </div>
         <div id="jobs">
@@ -265,7 +275,7 @@ class JobList extends Component {
               dataSource={this.state.assets}
               pagination={{ pageSize: 10 }} scroll={{ y: 460 }}
             />
-          : <Graph applicationId={this.state.applicationId}/>
+          : <Graph applicationId={this.state.applicationId} selectedDataflow={this.state.selectedDataflow}/>
           }
 
           {this.state.openFileDetailsDialog ?
@@ -306,8 +316,10 @@ class JobList extends Component {
                   selectedQuery={this.state.selectedQuery}
                   onRefresh={this.handleRefresh}
                   onClose={this.closeQueryDlg}/> : null}
+        </div>
 
-
+        <div id="dataflow-list">
+          <DataflowTable applicationId={this.state.applicationId} onSelectDataflow={this.onSelectDataflow}/>
         </div>
       </div>
   )

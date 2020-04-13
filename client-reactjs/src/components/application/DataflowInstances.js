@@ -1,6 +1,6 @@
 import React, { Component } from "react";
 import { Button, Table, Divider, message,  Icon, Tooltip, Row, Col } from 'antd/lib';
-import {Graph} from "./Graph";
+import {Graph} from "./Dataflow/Graph";
 import BreadCrumbs from "../common/BreadCrumbs";
 import { connect } from 'react-redux';
 import { authHeader, handleError } from "../common/AuthHeader.js"
