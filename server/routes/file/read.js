@@ -15,7 +15,7 @@ let DataTypes=models.data_types;
 TreeConnection = models.tree_connection;
 TreeStyle = models.tree_style;
 let ConsumerObject = models.consumer_object;
-let WorkflowGraph = models.workflowgraph;
+let DataflowGraph = models.dataflowgraph;
 let Sequelize = require('sequelize');
 const Op = Sequelize.Op;
 let Indexes=models.indexes;
@@ -622,7 +622,7 @@ async function getFileRelationHierarchy(applicationId, fileId, id) {
       return [fileId].concat(...children.map(getFlat));
     }        
 
-    return WorkflowGraph.findOne({where:{"application_Id":applicationId}}).then((graph) => {
+    return DataflowGraph.findOne({where:{"application_Id":applicationId}}).then((graph) => {
       const tree = makeTree (JSON.parse(graph.nodes), JSON.parse(graph.edges));
       const parentIds = getFlat(tree);
       return parentIds;
