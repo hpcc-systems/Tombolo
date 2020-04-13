@@ -376,33 +376,7 @@ class Graph extends Component {
           .attr('class','delete-icon hide-delete-icon')
           .on("click", function(d) {
             d3.event.stopPropagation();
-            switch(d.type) {
-              case 'File':
-                if(d.fileId) {
-                  handleFileDelete(d.fileId, _self.props.applicationId);
-                }
-                updateGraph((d.fileId ? d.fileId : d.id), _self.props.applicationId, _self.props.selectedDataflow).then((response) => {
-                  _self.fetchSavedGraph();
-                });
-                break;
-              case 'Index':
-                if(d.indexId) {
-                  handleIndexDelete(d.indexId, _self.props.applicationId);
-                }
-                updateGraph((d.indexId ? d.indexId : d.id), _self.props.applicationId, _self.props.selectedDataflow).then((response) => {
-                  _self.fetchSavedGraph();
-                });
-                break;
-              case 'Job':
-                if(d.jobId) {
-                  handleJobDelete(d.jobId, _self.props.applicationId);
-                }
-                updateGraph((d.jobId ? d.jobId : d.id), _self.props.applicationId, _self.props.selectedDataflow).then((response) => {
-                  _self.fetchSavedGraph();
-                });
-                break;
-            }
-            gEl.remove();
+            _self.deleteNode(d, gEl);
           })
           .text(function(node) { return '\uf1f8' })
         }
@@ -503,19 +477,18 @@ class Graph extends Component {
   }
 
   pathMouseDown = (d3path, d) => {
-      d3.event.stopPropagation();
-      this.graphState.mouseDownLink = d;
+    d3.event.stopPropagation();
+    this.graphState.mouseDownLink = d;
+    if (this.graphState.selectedNode) {
+        this.removeSelectFromNode();
+    }
 
-      if (this.graphState.selectedNode) {
-          this.removeSelectFromNode();
-      }
-
-      let prevEdge = this.graphState.selectedEdge;
-      if (!prevEdge || prevEdge !== d) {
-          this.replaceSelectEdge(d3path, d);
-      } else {
-          this.removeSelectFromEdge();
-      }
+    let prevEdge = this.graphState.selectedEdge;
+    if (!prevEdge || prevEdge !== d) {
+        this.replaceSelectEdge(d3path, d);
+    } else {
+        this.removeSelectFromEdge();
+    }    
   }
 
   // mousedown on node
@@ -614,30 +587,30 @@ class Graph extends Component {
   // keydown on main svg
   svgKeyDown = () => {
     let _self=this;
-    if(_self.graphState.selectedNode) {
-      // make sure repeated key presses don't register for each keydown
-      if (_self.graphState.lastKeyDown !== -1) return;
+    // make sure repeated key presses don't register for each keydown
+    if (_self.graphState.lastKeyDown !== -1) return;
 
-      _self.graphState.lastKeyDown = d3.event.keyCode;
-      let selectedNode = _self.graphState.selectedNode,
-          selectedEdge = _self.graphState.selectedEdge;
+    _self.graphState.lastKeyDown = d3.event.keyCode;
+    let selectedNode = _self.graphState.selectedNode,
+        selectedEdge = _self.graphState.selectedEdge;
 
-      switch (d3.event.keyCode) {
-          case _self.consts.BACKSPACE_KEY:
-          case _self.consts.DELETE_KEY:
-              d3.event.preventDefault();
-              if (selectedNode) {
-                  _self.thisGraph.nodes.splice(_self.thisGraph.nodes.indexOf(selectedNode), 1);
-                  _self.spliceLinksForNode(selectedNode);
-                  _self.graphState.selectedNode = null;
-                  _self.updateGraph();
-              } else if (selectedEdge) {
-                  _self.thisGraph.edges.splice(_self.thisGraph.edges.indexOf(selectedEdge), 1);
-                  _self.graphState.selectedEdge = null;
-                  _self.updateGraph();
-              }
-              break;
-      }
+    switch (d3.event.keyCode) {
+      case _self.consts.BACKSPACE_KEY:
+      case _self.consts.DELETE_KEY:
+        d3.event.preventDefault();
+        if (selectedNode) {
+          _self.thisGraph.nodes.splice(_self.thisGraph.nodes.indexOf(selectedNode), 1);
+          _self.spliceLinksForNode(selectedNode);
+          _self.graphState.selectedNode = null;
+          _self.deleteNode(selectedNode);
+          _self.updateGraph();
+        } else if (selectedEdge) {
+          _self.thisGraph.edges.splice(_self.thisGraph.edges.indexOf(selectedEdge), 1);
+          _self.graphState.selectedEdge = null;
+          _self.updateGraph();
+          _self.saveGraph()
+        }
+        break;
     }
   }
 
@@ -805,6 +778,39 @@ class Graph extends Component {
     }
   }
 
+  deleteNode = (d, gEl) => {
+    let _self=this;
+    switch(d.type) {
+      case 'File':
+        if(d.fileId) {
+          handleFileDelete(d.fileId, _self.props.applicationId);
+        }
+        updateGraph((d.fileId ? d.fileId : d.id), _self.props.applicationId, _self.props.selectedDataflow).then((response) => {
+          _self.fetchSavedGraph();
+        });
+        break;
+      case 'Index':
+        if(d.indexId) {
+          handleIndexDelete(d.indexId, _self.props.applicationId);
+        }
+        updateGraph((d.indexId ? d.indexId : d.id), _self.props.applicationId, _self.props.selectedDataflow).then((response) => {
+          _self.fetchSavedGraph();
+        });
+        break;
+      case 'Job':
+        if(d.jobId) {
+          handleJobDelete(d.jobId, _self.props.applicationId);
+        }
+        updateGraph((d.jobId ? d.jobId : d.id), _self.props.applicationId, _self.props.selectedDataflow).then((response) => {
+          _self.fetchSavedGraph();
+        });
+        break;
+    }
+    if(gEl) {
+      gEl.remove();
+    }
+  }
+
   showNodeDetails = (d) => {
     if(this.props.viewMode) {
       let taskDetails = this.getTaskDetails();
@@ -832,10 +838,6 @@ class Graph extends Component {
         })
         .on("end", function(d){
         })
-  }
-
-  deleteNode = (node, d) => {
-    console.log('deleteNode');
   }
 
   collapseNav = () => {
