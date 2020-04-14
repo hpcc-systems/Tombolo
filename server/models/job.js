@@ -15,6 +15,7 @@ module.exports = (sequelize, DataTypes) => {
     entryBWR: DataTypes.STRING,
     gitRepo: DataTypes.STRING,
     jobType: DataTypes.STRING,
+    title: DataTypes.STRING,
     name: DataTypes.STRING,
     dataflowId: DataTypes.UUIDV4
   }, {freezeTableName: true});

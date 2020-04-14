@@ -2,6 +2,7 @@ import React, { Component } from "react";
 import { Modal, Tabs, Form, Input, Icon,  Select, AutoComplete, Spin, message } from 'antd/lib';
 import "react-table/react-table.css";
 import { authHeader, handleError } from "../common/AuthHeader.js"
+import AssociatedDataflows from "./AssociatedDataflows"
 import { AgGridReact } from 'ag-grid-react';
 import 'ag-grid-community/dist/styles/ag-grid.css';
 import 'ag-grid-community/dist/styles/ag-theme-balham.css';
@@ -30,6 +31,7 @@ class QueryDetails extends Component {
     query: {
       id:"",
       title:"",
+      name:"",
       description:"",
       primaryService:"",
       backupService:"",
@@ -64,6 +66,7 @@ class QueryDetails extends Component {
             ...this.state.query,
             id: data.id,
             title: data.title,
+            name: (data.name == '' ? data.title : data.name),
             description: data.description,
             primaryService: data.primaryService,
             backupService: data.backupService,
@@ -200,6 +203,7 @@ class QueryDetails extends Component {
           ...this.state.file,
           id: selectedSuggestion,
           title: selectedSuggestion,
+          name: selectedSuggestion,
           description: '',
           path: '',
           input: queryInfo.request,
@@ -273,6 +277,7 @@ class QueryDetails extends Component {
       "basic" : {
         "applicationId":applicationId,
         "title" : this.state.query.title,
+        "name" : this.state.query.name,
         "description" : this.state.query.description,
         "gitRepo" : this.state.query.gitrepo,
         "primaryService" : this.state.query.primaryService,
@@ -340,7 +345,7 @@ class QueryDetails extends Component {
     }];
 
 
-    const {title, description, primaryService, backupService, type, input, output, gitrepo} = this.state.query;
+    const {name, title, description, primaryService, backupService, type, input, output, gitrepo} = this.state.query;
     const rowSelection = {
       selectedRowKeys,
       onChange: this.onSelectedRowKeysChange
@@ -397,14 +402,12 @@ class QueryDetails extends Component {
             </div>
               {/*: null
             }*/}
+             <Form.Item {...formItemLayout} label="Name">
+                <Input id="query_name" name="name" onChange={this.onChange} value={name} defaultValue={name} placeholder="Name" disabled={true}/>
+            </Form.Item>
             <Form.Item {...formItemLayout} label="Title">
-              {getFieldDecorator('query_title', {
-                rules: [{ required: true, message: 'Please enter a title for the query!' }],
-              })(
-              <Input id="query_title" name="title" onChange={this.onChange} placeholder="Title" />
-              )}
-             </Form.Item>
-
+                <Input id="query_title" name="title" onChange={this.onChange} value={title} defaultValue={title} placeholder="Title" />
+            </Form.Item>
             <Form.Item {...formItemLayout} label="Description">
                 <Input id="query_desc" name="description" onChange={this.onChange} value={description} defaultValue={description} placeholder="Description" />
             </Form.Item>
@@ -457,6 +460,11 @@ class QueryDetails extends Component {
                 </AgGridReact>
               </div>
           </TabPane>
+
+          {!this.props.isNew ? 
+            <TabPane tab="Applications" key="7">
+              <AssociatedDataflows assetName={name} assetType={'Query'}/>
+            </TabPane> : null}
         </Tabs>
         </Modal>
       </div>

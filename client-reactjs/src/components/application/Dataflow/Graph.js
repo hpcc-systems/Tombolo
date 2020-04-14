@@ -29,7 +29,7 @@ class Graph extends Component {
     isNew:false,
     selectedJob: '',
     selectedJobType: '',
-    isNew:false,
+    isNewJob:false,
     isNewIndex:false,
     currentlyEditingId:'',
     applicationId: '',
@@ -135,8 +135,9 @@ class Graph extends Component {
         if(d.jobId == undefined || d.jobId == '') {
           isNew = true
         }
+        console.log(isNew + '-' + d.jobId);
         this.setState({
-          isNew: isNew,
+          isNewJob: isNew,
           openJobDetailsDialog: true,
           selectedJob: d.jobId,
           selectedJobType: d.type == 'Job' ? 'ETL' : d.type
@@ -219,23 +220,26 @@ class Graph extends Component {
 
   onFileAdded = (saveResponse) => {
     var newData = this.thisGraph.nodes.map(el => {
-        if(el.id == this.state.currentlyEditingId) {
-          el.title=saveResponse.title;
-          switch(el.type) {
-            case 'File':
-              el.fileId=saveResponse.fileId;
-              break;
-            case 'Index':
-              el.indexId=saveResponse.indexId;
-              break;
-            case 'Job':
-              el.jobId=saveResponse.jobId;
-              break;
-          }
-          return el;
-           //return Object.assign({}, el, {title:saveResponse.title, fileId:saveResponse.fileId, jobId:saveResponse.jobId, queryId:saveResponse.queryId, indexId:saveResponse.indexId})
+      console.log(saveResponse);
+      if(el.id == this.state.currentlyEditingId) {
+        el.title=saveResponse.title;
+        switch(el.type) {
+          case 'File':
+            el.fileId=saveResponse.fileId;
+            break;
+          case 'Index':
+            el.indexId=saveResponse.indexId;
+            break;
+          case 'Job':
+          case 'Modeling':
+          case 'Scoring':
+            el.jobId=saveResponse.jobId;
+            break;
         }
-        return el
+        return el;
+         //return Object.assign({}, el, {title:saveResponse.title, fileId:saveResponse.fileId, jobId:saveResponse.jobId, queryId:saveResponse.queryId, indexId:saveResponse.indexId})
+      }
+      return el
     });
     this.thisGraph.nodes = newData;
     this.updateGraph();
@@ -1089,7 +1093,7 @@ class Graph extends Component {
               applicationId={this.props.applicationId}
               selectedAsset={this.state.selectedJob}
               selectedJobType={this.state.selectedJobType}
-              isNew={this.state.isNew}
+              isNew={this.state.isNewJob}
               onRefresh={this.onFileAdded}
               onClose={this.closeJobDlg}
               user={this.props.user}

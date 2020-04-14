@@ -1,8 +1,8 @@
 import React, { Component } from "react";
 import { Modal, Tabs, Form, Input, Button,  Select, Table, AutoComplete, Spin, Icon, message } from 'antd/lib';
-
 import "react-table/react-table.css";
 import { authHeader, handleError } from "../common/AuthHeader.js"
+import AssociatedDataflows from "./AssociatedDataflows"
 const TabPane = Tabs.TabPane;
 const Option = Select.Option;
 
@@ -34,6 +34,7 @@ class JobDetails extends Component {
     job: {
       id:"",
       name:"",
+      title:"",
       description:"",
       entryBWR:"",
       jobType: this.props.selectedAssetType ? this.props.selectedAssetType : '',
@@ -52,7 +53,7 @@ class JobDetails extends Component {
   }
 
   getJobDetails() {
-    
+    console.log('getJobDetails: '+this.props.selectedAsset + ': '+this.props.isNew)
     if(this.props.selectedAsset && !this.props.isNew) {
 
       fetch("/api/job/job_details?job_id="+this.props.selectedAsset+"&app_id="+this.props.applicationId, {
@@ -78,6 +79,7 @@ class JobDetails extends Component {
             ...this.state.job,
             id: data.id,
             name: data.name,
+            title: (data.title == '' ? data.name : data.title),
             description: data.description,
             gitRepo: data.gitRepo,
             entryBWR: data.entryBWR,
@@ -229,6 +231,7 @@ class JobDetails extends Component {
           inputFiles: jobInfo.sourceFiles,
           outputFiles: jobInfo.outputFiles,
           name: jobInfo.Jobname,
+          title: jobInfo.Jobname,
           description: jobInfo.description,
           entryBWR: jobInfo.entryBWR
         }
@@ -311,6 +314,7 @@ class JobDetails extends Component {
         "applicationId":applicationId,
         "dataflowId" : this.props.selectedDataflow.id,
         "name" : this.state.job.name,
+        "title" : this.state.job.title,
         "description" : this.state.job.description,
         "gitRepo" : this.state.job.gitrepo,
         "entryBWR" : this.state.job.entryBWR,
@@ -426,7 +430,7 @@ class JobDetails extends Component {
       }];
 
 
-    const {name, description, entryBWR, gitrepo, jobType, inputParams, outputFiles, inputFiles, contact, author } = this.state.job;
+    const {name, title, description, entryBWR, gitrepo, jobType, inputParams, outputFiles, inputFiles, contact, author } = this.state.job;
     //render only after fetching the data from the server
     if(!name && !this.props.selectedAsset && !this.props.isNew) {
       return null;
@@ -479,19 +483,14 @@ class JobDetails extends Component {
               {/*: null
             }*/}
 
-            <Form.Item {...formItemLayout} label="Name">
-              {getFieldDecorator('name', {
-                rules: [{ required: true, message: 'Please enter a name for the job!' }],
-              })(
-              <Input id="job_name" name="name" onChange={this.onChange} placeholder="Name"/>
-              )}
-             </Form.Item>
-
+             <Form.Item {...formItemLayout} label="Name">
+                <Input id="job_name" name="name" onChange={this.onChange} value={name} defaultValue={name} placeholder="Name" disabled={true}/>
+            </Form.Item>     
+             <Form.Item {...formItemLayout} label="Title">
+                <Input id="job_title" name="title" onChange={this.onChange} value={title} defaultValue={title} placeholder="Title" />
+            </Form.Item>     
             <Form.Item {...formItemLayout} label="Description">
                 <Input id="job_desc" name="description" onChange={this.onChange} value={description} defaultValue={description} placeholder="Description" />
-            </Form.Item>
-            <Form.Item {...formItemLayout} label="Git Repo">
-                <Input id="job_gitrepo" name="gitrepo" onChange={this.onChange} value={gitrepo} defaultValue={gitrepo} placeholder="Git Repo URL" />
             </Form.Item>
             <Form.Item {...formItemLayout} label="Entry BWR">
                 <Input id="job_entryBWR" name="entryBWR" onChange={this.onChange} value={entryBWR} defaultValue={entryBWR} placeholder="Primary Service" />
@@ -584,6 +583,11 @@ class JobDetails extends Component {
               />
              </div>
           </TabPane>
+
+          {!this.props.isNew ? 
+            <TabPane tab="Dataflows" key="7">
+              <AssociatedDataflows assetName={name} assetType={'Job'}/>
+            </TabPane> : null}
         </Tabs>
         </Modal>
       </div>

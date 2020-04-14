@@ -14,6 +14,7 @@ let Job=models.job;
 let Jobparam=models.jobparam;
 let Application=models.application;
 let ControlsAndRegulations = models.controls_regulations;
+let Dataflow = models.dataflow;
 
 router.get('/fileLayout', (req, res) => {
     console.log("[fileLayout/read.js] - Get file Layout for file_id "+req.query.file_id);
@@ -240,7 +241,7 @@ router.get('/getReport', (req, res) => {
 
                 Query.findAll({
                     raw: true,
-                    attributes:["query.id","query.title","query.backupService","query.primaryService",
+                    attributes:["query.id","query.title","query.name","query.backupService","query.primaryService",
                     "query.gitRepo"],
                     group: ["query.id","query.title","query.backupService","query.primaryService",
                     "query.gitRepo","application.title"],
@@ -254,6 +255,7 @@ router.get('/getReport', (req, res) => {
                     }):""),
                     Sequelize.or(Sequelize.where(Sequelize.fn('lower',Sequelize.fn("concat", 
                     Sequelize.fn('IFNULL',Sequelize.col("query.title"),'')," ", 
+                    Sequelize.fn('IFNULL',Sequelize.col("query.name"),'')," ", 
                     Sequelize.fn('IFNULL',Sequelize.col("query.gitRepo"),'')," ", 
                     Sequelize.fn('IFNULL',Sequelize.col("query.primaryService"),'')," ",
                     Sequelize.fn('IFNULL',Sequelize.col("query.backupService"),''))), {
@@ -322,4 +324,73 @@ router.get('/getReport', (req, res) => {
         console.log('err', err);
     }
 });
+
+router.get('/associatedDataflows', (req, res) => {
+    console.log("[/associatedDataflows] - Get associated dataflows for : "+req.query.name);
+    let assetName = req.query.name, type = req.query.type, results, dataflowDetails;    
+    let promiseResult;
+    try {
+      switch (type) {
+        case 'File':
+          promiseResult = File.findAll({raw: true, where:{"name":assetName}, attributes: ["dataflowId"]}).then(dataflowIds => dataflowIds) 
+          break;
+        case 'Index':
+          promiseResult = Indexes.findAll({raw: true, where:{"name":assetName}, attributes: ["dataflowId"]}).then(dataflowIds => dataflowIds) 
+          break;
+        case 'Job':
+          promiseResult = Job.findAll({raw: true, where:{"name":assetName}, attributes: ["dataflowId"]}).then(dataflowIds => dataflowIds) 
+          break;
+        case 'Query':
+          promiseResult = Query.findAll({raw: true, where:{"name":assetName}, 
+            include:
+              [{ model: Application, attributes:["id", "title"] }]}).then(applicationTitle => applicationTitle) 
+          break;
+      }
+      promiseResult.then(async results =>  {
+        let result=[];
+        if(type == 'Query') {
+          results.forEach((item) => {
+            result.push({"id": item['application.id'], "title": item['application.title']})
+            res.json(result);      
+          })
+        } else {
+          dataflowDetails = await getDataflowDetails(results)   
+          res.json(dataflowDetails);            
+        }           
+      })
+    } catch (err) {
+        console.log('err', err);
+    }
+});
+
+function getDataflowDetails (dataflowIds) {
+  let ids = [];
+  dataflowIds.forEach((item) => {
+    ids.push(item.dataflowId);
+  })
+  return Dataflow.findAll({raw: true, where: {
+    id: {
+      [Sequelize.Op.in]: ids
+    }
+  }})
+  .catch(function(err) {
+      console.log(err);
+  });
+}
+
+function getApplicationDetails (applicationIds) {
+  let ids = [];
+  applicationIds.forEach((item) => {
+    ids.push(item.applicationId);
+  })
+  return Application.findAll({raw: true, where: {
+    id: {
+      [Sequelize.Op.in]: ids
+    }
+  }})
+  .catch(function(err) {
+      console.log(err);
+  });
+}
+
 module.exports = router;
