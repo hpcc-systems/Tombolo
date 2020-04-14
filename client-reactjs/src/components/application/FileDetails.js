@@ -5,6 +5,7 @@ import "react-table/react-table.css";
 import FileRelations from "./FileRelations"
 import DataProfileTable from "./DataProfileTable"
 import DataProfileHTML from "./DataProfileHTML"
+import AssociatedDataflows from "./AssociatedDataflows"
 import { authHeader, handleError } from "../common/AuthHeader.js"
 import { AgGridReact } from 'ag-grid-react';
 import 'ag-grid-community/dist/styles/ag-grid.css';
@@ -1127,7 +1128,7 @@ class FileDetails extends Component {
               <Input id="file_title" name="title" onChange={this.onChange} placeholder="Title" />              )}
             </Form.Item>
             <Form.Item {...formItemLayout} label="Name">
-              <Input id="file_name" name="name" onChange={this.onChange} placeholder="Name" disabled={true} />
+              <Input id="file_name" name="name" onChange={this.onChange} placeholder="Name" defaultValue={name} value={name} disabled={true} />
              </Form.Item>
             <Form.Item {...formItemLayout} label="Description">
                 <Input id="file_desc" name="description" onChange={this.onChange} defaultValue={description} value={description} placeholder="Description" />
@@ -1251,8 +1252,14 @@ class FileDetails extends Component {
                 </div>
             </TabPane>
           : null}
+          
+          {!this.props.isNew ? 
+            <TabPane tab="Dataflows" key="7">
+              <AssociatedDataflows assetName={name} assetType={'File'}/>
+            </TabPane> : null}
+
           {showFileProfile ?
-            <TabPane tab="Data Profile" key="7" >
+            <TabPane tab="Data Profile" key="8" >
               <div>
                   {/*<DataProfileTable data={this.state.fileProfile}/>*/}
                   <DataProfileHTML htmlAssets={this.state.profileHTMLAssets}/>

@@ -2,6 +2,7 @@ import React, { Component } from "react";
 import { Modal, Tabs, Form, Input, Icon, Select, Table, AutoComplete, message, Spin } from 'antd/lib';
 import "react-table/react-table.css";
 import { authHeader, handleError } from "../common/AuthHeader.js"
+import AssociatedDataflows from "./AssociatedDataflows"
 import { AgGridReact } from 'ag-grid-react';
 import 'ag-grid-community/dist/styles/ag-grid.css';
 import 'ag-grid-community/dist/styles/ag-theme-balham.css';
@@ -32,6 +33,7 @@ class IndexDetails extends Component {
     file: {
       id:"",
       title:"",
+      name:"",
       description:"",
       primaryService:"",
       backupService:"",
@@ -48,7 +50,7 @@ class IndexDetails extends Component {
   }
 
   getIndexDetails() {
-    if(this.props.selectedAsset && !this.props.isNewIndex) {
+    if(this.props.selectedAsset && !this.props.isNew) {
       fetch("/api/index/read/index_details?index_id="+this.props.selectedAsset+"&app_id="+this.props.applicationId, {
         headers: authHeader()
       })
@@ -66,6 +68,7 @@ class IndexDetails extends Component {
             ...this.state.file,
             id: data.basic.id,
             title: data.basic.title,
+            name: (data.basic.name == '' ? data.basic.title : data.basic.name),
             description: data.basic.description,
             primaryService: data.basic.primaryService,
             backupService: data.basic.backupService,
@@ -94,7 +97,7 @@ class IndexDetails extends Component {
       visible: true,
     });
     this.getIndexDetails();
-    //if(this.props.isNewIndex) {
+    //if(this.props.isNew) {
       this.getClusters();
     //}
   }
@@ -201,6 +204,7 @@ class IndexDetails extends Component {
           ...this.state.file,
           id: indexInfo.name,
           title: indexInfo.fileName,
+          name: indexInfo.fileName,
           description: indexInfo.description,
           path: indexInfo.pathMask,
           keyedColumns: indexInfo.columns.keyedColumns,
@@ -273,6 +277,7 @@ class IndexDetails extends Component {
     var index_basic = {
       //"id" : this.state.file.id,
       "title" : this.state.file.title,
+      "name" : this.state.file.name,
       "description" : this.state.file.description,
       "primaryService" : this.state.file.primaryService,
       "backupService" : this.state.file.backupService,
@@ -348,14 +353,14 @@ class IndexDetails extends Component {
     }];
 
 
-    const {title, description, primaryService, backupService, path, relations, keyedColumns, nonKeyedColumns} = this.state.file;
+    const {name, title, description, primaryService, backupService, path, relations, keyedColumns, nonKeyedColumns} = this.state.file;
     const rowSelection = {
       selectedRowKeys,
       onChange: this.onSelectedRowKeysChange
     };
     //render only after fetching the data from the server
-    console.log("index details: "+title+'  '+this.props.selectedAsset+'  '+this.props.isNewIndex)
-    if(!title && !this.props.selectedAsset && !this.props.isNewIndex) {
+    console.log("index details: "+title+'  '+this.props.selectedAsset+'  '+this.props.isNew)
+    if(!title && !this.props.selectedAsset && !this.props.isNew) {
       return null;
     }
 
@@ -377,7 +382,7 @@ class IndexDetails extends Component {
           <TabPane tab="Basic" key="1">
 
            <Form layout="vertical">
-            {/*{this.props.isNewIndex ?*/}
+            {/*{this.props.isNew ?*/}
             <div>
             <Form.Item {...formItemLayout} label="Cluster">
                <Select placeholder="Select a Cluster" onChange={this.onClusterSelection} style={{ width: 190 }}>
@@ -405,14 +410,12 @@ class IndexDetails extends Component {
             </div>
               {/*: null
             }*/}
+             <Form.Item {...formItemLayout} label="Name">
+                <Input id="file_name" name="name" onChange={this.onChange} value={name} defaultValue={name} placeholder="Name" disabled={true}/>
+            </Form.Item>
             <Form.Item {...formItemLayout} label="Title">
-              {getFieldDecorator('title', {
-                rules: [{ required: true, message: 'Please enter a title for the index!' }],
-              })(
-              <Input id="file_title" name="title" onChange={this.onChange} placeholder="Title" />
-              )}
-             </Form.Item>
-
+                <Input id="file_title" name="title" onChange={this.onChange} value={title} defaultValue={title} placeholder="Title" />
+            </Form.Item>
             <Form.Item {...formItemLayout} label="Description">
                 <Input id="file_desc" name="description" onChange={this.onChange} value={description} defaultValue={description} placeholder="Description" />
             </Form.Item>
@@ -470,6 +473,11 @@ class IndexDetails extends Component {
               </div>
 
           </TabPane>
+
+          {!this.props.isNew ? 
+            <TabPane tab="Dataflows" key="7">
+              <AssociatedDataflows assetName={name} assetType={'Index'}/>
+            </TabPane> : null}
         </Tabs>
         </Modal>
       </div>
