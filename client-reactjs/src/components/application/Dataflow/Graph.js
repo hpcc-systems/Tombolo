@@ -1009,7 +1009,7 @@ class Graph extends Component {
       });
 
     // listen for key events
-    d3.select(window).on("keydown", function () {
+    d3.select('#graph').on("keydown", function () {
       _self.svgKeyDown(_self.thisGraph);
     })
     .on("keyup", function () {
@@ -1073,7 +1073,7 @@ class Graph extends Component {
         : null }
 
       <div id="content"  ref={this.setWrapperRef} >
-          <div id="graph" style={{"height": "100%"}}></div>
+          <div id="graph" style={{"height": "100%"}} tabindex="-1"></div>
       </div>
       {this.state.openFileDetailsDialog ?
         <FileDetailsForm
