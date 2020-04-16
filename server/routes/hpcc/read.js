@@ -48,7 +48,7 @@ router.post('/querysearch', function (req, res) {
 		let wsWorkunits = new hpccJSComms.WorkunitsService({ baseUrl: cluster.thor_host + ':' + cluster.thor_port, userID:(clusterAuth ? clusterAuth.user : ""), password:(clusterAuth ? clusterAuth.password : ""), type: "get" }),
 			  querySearchAutoComplete = [];
 
-		wsWorkunits.WUListQueries({"QueryName":"*"+req.body.keyword+"*"}).then(response => {
+		wsWorkunits.WUListQueries({"QueryName":"*"+req.body.keyword+"*", "QuerySetName": "roxie", "Activated": true}).then(response => {
 			console.log(response)
 	  	if(response.QuerysetQueries) {
 	  		querySearchResult = response.QuerysetQueries.QuerySetQuery;
