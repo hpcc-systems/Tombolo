@@ -12,6 +12,7 @@ module.exports = (sequelize, DataTypes) => {
     file_id: DataTypes.STRING,
     name: DataTypes.STRING,
     type: DataTypes.STRING,
+    eclType: DataTypes.STRING,
     displayType: DataTypes.STRING,
     displaySize: DataTypes.STRING,
     textJustification: DataTypes.STRING,

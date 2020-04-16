@@ -24,6 +24,11 @@ module.exports = {
         name : 'Integer Validate',
         createdAt : new Date(),
         updatedAt : new Date()
+      },{
+        id: uuidv4(),
+        name : 'Not Empty',
+        createdAt : new Date(),
+        updatedAt : new Date()
       }], {});
 
   },

@@ -202,6 +202,9 @@ class FileDetails extends Component {
         this.getInheritedLicenses(data.basic.id, this.props.selectedNodeId);
         return data;
       })
+      .then(data => {
+        this.getRules();
+      })
       .catch(error => {
         console.log(error);
       });
@@ -870,6 +873,10 @@ class FileDetails extends Component {
     {
       headerName: 'Type',
       field: 'type'
+    },
+    {
+      headerName: 'ECL Type',
+      field: 'eclType'
     },
     {
       headerName: 'Description',

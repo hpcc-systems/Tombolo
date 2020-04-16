@@ -1065,15 +1065,15 @@ class Graph extends Component {
     };
 
 	return (
-    <div className="wrapper d-flex align-items-stretch" style={{"height": "100%"}}>
-      {!this.props.viewMode ?
+    <div className="wrapper d-flex" style={{"height": "100%"}}>
+      {!this.props.viewMode ?        
         <nav id="sidebar" className="navbar-light fixed-left" style={{"backgroundColor": "#e3f2fd", "fontSize": "12px"}}>
 
         </nav>
         : null }
 
-      <div id="content"  ref={this.setWrapperRef} >
-          <div id="graph" style={{"height": "100%"}} tabindex="-1"></div>
+      <div id="content" ref={this.setWrapperRef} tabIndex="-1">
+          <div id="graph" style={{"height": "100%"}}></div>
       </div>
       {this.state.openFileDetailsDialog ?
         <FileDetailsForm

@@ -335,12 +335,6 @@ path, .jtk-endpoint { cursor:pointer; }
   position: relative;
 }
 
-#sidebar.active {
-  margin-left: -300px;
-}
-#sidebar.active .custom-menu {
-  margin-right: -50px;
-}
 #sidebar.active .btn.btn-primary:before {
   content: "\f054";
   font-family: "FontAwesome";
@@ -404,8 +398,7 @@ div.tooltip {
 }
 
 .dataflow-tbl-wrapper {
-
-}
+ }
 
 .dataflow-tbl-controls i {
   padding: 2px;
