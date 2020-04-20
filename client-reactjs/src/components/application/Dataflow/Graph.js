@@ -910,7 +910,7 @@ class Graph extends Component {
         var mouseCoordinates = d3.mouse(this);
         let idct = ++_self.graphState.idct;
         //let x = (mouseCoordinates[0] < 60) ? 60 : mouseCoordinates[0] - 150 : mouseCoordinates[0] > 1300 ? 1300 : mouseCoordinates[0];
-        let x = mouseCoordinates[0] > 1200 ? 1200 : mouseCoordinates[0] < 60 ? 60 : mouseCoordinates[0]
+        let x = mouseCoordinates[0] > 1300 ? 1300 : mouseCoordinates[0] < 60 ? 60 : mouseCoordinates[0]
         let y = mouseCoordinates[1] > 600 ? 600 : mouseCoordinates[1] < 0 ? 0 : mouseCoordinates[1]        
         _self.thisGraph.nodes.push({"title":"New "+d3.select(this).select("text.entity").text(),"id":idct+Math.floor(Date.now()),"x":x,"y":y, "type":d3.select(this).select("text.entity").text()})
         _self.setIdCt(idct);
@@ -999,7 +999,7 @@ class Graph extends Component {
           if (_self.graphState.shiftNodeDrag) {
               _self.dragEnd(d3.select(this), _self.graphState.mouseEnterNode)
           } else {
-            let x = d3.event.x > 1200 ? 1200 : d3.event.x < 60 ? 60 : d3.event.x
+            let x = d3.event.x > 1300 ? 1300 : d3.event.x < 60 ? 60 : d3.event.x
             let y = d3.event.y > 600 ? 600 : d3.event.y < 0 ? 0 : d3.event.y      
             d.x = x;
             d.y = y;
@@ -1065,16 +1065,16 @@ class Graph extends Component {
     };
 
 	return (
-    <div className="wrapper d-flex" style={{"height": "100%"}}>
+    <div class="container-fluid" style={{"height": "100%"}}>
+      <div class="row" style={{"height": "100%"}}>
       {!this.props.viewMode ?        
-        <nav id="sidebar" className="navbar-light fixed-left" style={{"backgroundColor": "#e3f2fd", "fontSize": "12px"}}>
+         <div class="col-sm-1"><nav id="sidebar" className="navbar-light fixed-left" style={{"backgroundColor": "#e3f2fd", "fontSize": "12px"}}>
 
-        </nav>
+        </nav></div>
         : null }
 
-      <div id="content" ref={this.setWrapperRef} tabIndex="-1">
-          <div id="graph" style={{"height": "100%"}}></div>
-      </div>
+          <div id="graph" className="col-md-10" style={{"height": "100%"}} tabIndex="-1"></div>
+      </div>    
       {this.state.openFileDetailsDialog ?
         <FileDetailsForm
           onRef={ref => (this.fileDlg = ref)}
