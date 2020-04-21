@@ -264,8 +264,8 @@ class FileTable extends Component {
         {this.state.openFileDetailsDialog ?
             <FileDetailsForm
             onRef={ref => (this.child = ref)}
-            isNewFile={false}
-            selectedFile={this.state.selectedFile}
+            isNew={false}
+            selectedAsset={this.state.selectedFile}
             applicationId={this.props.applicationId}
             onClose={this.handleClose}
             onRefresh={this.handleRefreshTree}

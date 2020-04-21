@@ -1068,7 +1068,7 @@ class Graph extends Component {
     <div class="container-fluid" style={{"height": "100%"}}>
       <div class="row" style={{"height": "100%"}}>
       {!this.props.viewMode ?        
-         <div class="col-sm-1"><nav id="sidebar" className="navbar-light fixed-left" style={{"backgroundColor": "#e3f2fd", "fontSize": "12px"}}>
+         <div className="col-sm-1"><nav id="sidebar" className="navbar-light fixed-left" style={{"backgroundColor": "#e3f2fd", "fontSize": "12px"}}>
 
         </nav></div>
         : null }
