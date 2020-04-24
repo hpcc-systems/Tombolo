@@ -7,7 +7,8 @@ import { Typography } from 'antd';
 import FileDetailsForm from "../FileDetails";
 import JobDetailsForm from "../JobDetails";
 import IndexDetailsForm from "../IndexDetails";
-import {handleFileDelete, handleJobDelete, handleIndexDelete, handleQueryDelete, updateGraph} from "../../common/WorkflowUtil";
+import FileInstanceDetailsForm from "../FileInstanceDetails";
+import {handleFileDelete, handleFileInstanceDelete, handleJobDelete, handleIndexDelete, handleQueryDelete, updateGraph} from "../../common/WorkflowUtil";
 import { authHeader, handleError } from "../../common/AuthHeader.js"
 import { connect } from 'react-redux';
 const { Text } = Typography;
@@ -23,6 +24,7 @@ class Graph extends Component {
     openFileDetailsDialog: false,
     openJobDetailsDialog: false,
     openIndexDetailsDialog: false,
+    openFileInstanceDialog: false,
     selectedFile: '',
     selectedNodeId: '',
     selectedIndex: '',
@@ -31,6 +33,7 @@ class Graph extends Component {
     selectedJobType: '',
     isNewJob:false,
     isNewIndex:false,
+    isNewInstance:false,
     currentlyEditingId:'',
     applicationId: '',
     nodeDetailsVisible: false,
@@ -70,8 +73,9 @@ class Graph extends Component {
       { "x": "10", "y": "70", "rx":"0", "ry":"0", "rectx":"10", "recty":"90", "rectwidth":"55", "rectheight":"55", "tx":"20", "ty":"130", "title":"Modeling", "color":"#EE7423", "icon":"\uf00a", "iconx":"90", "icony":"65"},
       { "x": "10", "y": "120", "rx":"0", "ry":"0", "rectx":"10", "recty":"170", "rectwidth":"55", "rectheight":"55", "tx":"20", "ty":"210", "title":"Scoring", "color":"#EE7423", "icon":"\uf005 ", "iconx":"90", "icony":"65"},            
       { "x": "10", "y": "170", "rx":"10", "ry":"10", "rectx":"10", "recty":"250", "rectwidth":"55", "rectheight":"55", "tx":"20", "ty":"290", "title":"File", "color":"#7AAAD0", "icon":"\uf1c0", "iconx":"90", "icony":"65"},
+      { "x": "10", "y": "220", "rx":"10", "ry":"10", "rectx":"10", "recty":"330", "rectwidth":"55", "rectheight":"55", "tx":"20", "ty":"370", "title":"File Instance", "color":"#7AAAD0", "icon":"\uf0c5", "iconx":"70", "icony":"65"},
       //{ "x": "10", "y": "120", "rx":"10", "ry":"10", "rectx":"10", "recty":"170", "rectwidth":"55", "rectheight":"55", "tx":"20", "ty":"210", "title":"Query", "color":"#9B6A97", "icon":"\uf00e", "iconx":"90", "icony":"65"},
-      { "x": "10", "y": "220", "rx":"10", "ry":"10", "rectx":"10", "recty":"330", "rectwidth":"55", "rectheight":"55", "tx":"20", "ty":"370", "title":"Index", "color":"#7DC470", "icon":"\uf2b9", "iconx":"90", "icony":"65"},
+      { "x": "10", "y": "270", "rx":"10", "ry":"10", "rectx":"10", "recty":"410", "rectwidth":"55", "rectheight":"55", "tx":"20", "ty":"450", "title":"Index", "color":"#7DC470", "icon":"\uf2b9", "iconx":"90", "icony":"65"},
     ];
 
   thisGraph = {};
@@ -129,6 +133,18 @@ class Graph extends Component {
         }, 200);
 
         break;
+      case 'File Instance':
+        if(d.fileInstanceId == undefined || d.fileInstanceId == '') {
+          isNew = true
+        }        
+        this.setState({
+          isNewInstance: isNew, 
+          openFileInstanceDialog: true,
+          selectedFileInstance: d.fileInstanceId          
+        }, function() {
+          _self.fileInstanceDlg.showModal();
+        });
+        break;  
       case 'Job':
       case 'Modeling':
       case 'Scoring':
@@ -218,15 +234,23 @@ class Graph extends Component {
     });
   }
 
+  closeInstanceDlg = () => {
+    this.setState({
+      openFileInstanceDialog: false
+    });    
+  }
+
   onFileAdded = (saveResponse) => {
     var newData = this.thisGraph.nodes.map(el => {
-      console.log(saveResponse);
       if(el.id == this.state.currentlyEditingId) {
         el.title=saveResponse.title;
         switch(el.type) {
           case 'File':
             el.fileId=saveResponse.fileId;
             break;
+          case 'File Instance':
+            el.fileInstanceId=saveResponse.fileInstanceId;
+            break;  
           case 'Index':
             el.indexId=saveResponse.indexId;
             break;
@@ -402,8 +426,11 @@ class Graph extends Component {
       case 'File':
         shapesData = _self.shapesData[3];
         break;
-      case 'Index':
+      case 'File Instance':
         shapesData = _self.shapesData[4];
+        break;
+      case 'Index':
+        shapesData = _self.shapesData[5];
         break;
     }
     if(gEl.select(".icon").empty()) {
@@ -743,22 +770,23 @@ class Graph extends Component {
               break;
 
             case 'File':
+            case 'File Instance':
             case 'Index':
               if(d3.select("#rec-"+d.id).empty()) {
                 d3.select(this)
                   .append("rect")
                   .attr("id", "rec-"+d.id)
-                  .attr("rx", _self.shapesData[3].rx)
-                  .attr("ry", _self.shapesData[3].ry)
-                  .attr("width", _self.shapesData[3].rectwidth)
-                  .attr("height", _self.shapesData[3].rectheight)
+                  .attr("rx", _self.shapesData[5].rx)
+                  .attr("ry", _self.shapesData[5].ry)
+                  .attr("width", _self.shapesData[5].rectwidth)
+                  .attr("height", _self.shapesData[5].rectheight)
                   .attr("stroke", "grey")
                   .attr("filter", "url(#glow)")
                   .attr("fill", function(d) {
-                    if(d.type == 'File')
+                    if(d.type == 'File' || d.type == 'File Instance')
                      return _self.shapesData[3].color;
                     else if(d.type == 'Index')
-                      return _self.shapesData[4].color;
+                      return _self.shapesData[5].color;
                   })
                   .attr("stroke-width", "3")
                   //.call(_self.nodeDragHandler)
@@ -793,6 +821,14 @@ class Graph extends Component {
           _self.fetchSavedGraph();
         });
         break;
+      case 'File Instance':
+        if(d.fileInstanceId) {
+          handleFileInstanceDelete(d.fileInstanceId);
+        }
+        updateGraph((d.fileInstanceId ? d.fileInstanceId : d.id), _self.props.applicationId, _self.props.selectedDataflow).then((response) => {
+          _self.fetchSavedGraph();
+        });
+        break;  
       case 'Index':
         if(d.indexId) {
           handleIndexDelete(d.indexId, _self.props.applicationId);
@@ -1065,8 +1101,8 @@ class Graph extends Component {
     };
 
 	return (
-    <div class="container-fluid" style={{"height": "100%"}}>
-      <div class="row" style={{"height": "100%"}}>
+    <div className="container-fluid" style={{"height": "100%"}}>
+      <div className="row" style={{"height": "100%"}}>
       {!this.props.viewMode ?        
          <div className="col-sm-1"><nav id="sidebar" className="navbar-light fixed-left" style={{"backgroundColor": "#e3f2fd", "fontSize": "12px"}}>
 
@@ -1082,6 +1118,7 @@ class Graph extends Component {
           selectedAsset={this.state.selectedFile}
           selectedNodeId={this.state.selectedNodeId}
           applicationId={this.props.applicationId}
+          applicationTitle={this.props.applicationTitle}
           onClose={this.handleClose}
           onRefresh={this.onFileAdded}
           user={this.props.user}
@@ -1109,6 +1146,17 @@ class Graph extends Component {
             onClose={this.closeIndexDlg}
             user={this.props.user}
             selectedDataflow={this.props.selectedDataflow}/> : null}
+
+      {this.state.openFileInstanceDialog ?
+          <FileInstanceDetailsForm          
+            onRef={ref => (this.fileInstanceDlg = ref)}
+            applicationId={this.props.applicationId}
+            selectedAsset={this.state.selectedFileInstance}
+            isNew={this.state.isNewInstance}
+            onRefresh={this.onFileAdded}
+            onClose={this.closeInstanceDlg}
+            user={this.props.user}
+            selectedDataflow={this.props.selectedDataflow}/> : null}      
 
         <Drawer
           width={340}

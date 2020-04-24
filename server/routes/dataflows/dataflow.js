@@ -11,7 +11,7 @@ let Job = models.job;
 
 router.post('/save', (req, res) => {
     var id=req.body.id, application_id=req.body.application_id;
-    let whereClause = (id == '' ? {application_id:req.body.application_id, title: req.body.title} : {id:id});
+    let whereClause = (!id || id == '' ? {application_id:req.body.application_id, title: req.body.title} : {id:id});
     try {
         Dataflow.findOrCreate({
           where: whereClause,

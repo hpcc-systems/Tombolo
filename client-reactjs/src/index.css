@@ -333,7 +333,7 @@ path, .jtk-endpoint { cursor:pointer; }
   -o-transition: all 0.3s;
   transition: all 0.3s;
   position: relative;
-  height:450px;
+  height:500px;
 }
 
 #sidebar.active .btn.btn-primary:before {

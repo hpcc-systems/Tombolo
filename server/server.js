@@ -36,7 +36,7 @@ app.use('/api/hpcc/read', tokenService.verifyToken, hpccRead);
 app.use('/api/user', userRead);
 app.use('/api/query', tokenService.verifyToken, query);
 app.use('/api/job', tokenService.verifyToken, job);
-app.use('/api/fileinstance', fileInstance);
+app.use('/api/fileinstance', tokenService.verifyToken, fileInstance);
 app.use('/api/report/read', tokenService.verifyToken, reportRead);
 app.use('/api/consumer', tokenService.verifyToken, consumer);
 app.use('/api/ldap', ldap);

@@ -24,7 +24,8 @@ module.exports = (sequelize, DataTypes) => {
     file_source_id: DataTypes.STRING,
     data_profile_path: DataTypes.STRING,
     cluster_id: DataTypes.STRING,
-    application_id: DataTypes.STRING
+    application_id: DataTypes.STRING,
+    title: DataTypes.STRING
   }, {freezeTableName: true});
   file_instance.associate = function(models) {
     // associations can be defined here

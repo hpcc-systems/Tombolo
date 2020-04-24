@@ -113,6 +113,7 @@ class FileList extends Component {
             <FileDetailsForm
               onRef={ref => (this.child = ref)}
               applicationId={this.state.applicationId}
+              applicationTitle={this.state.applicationTitle}
               isNewFile={true}
               onRefresh={this.handleRefresh}
               onClose={this.closeFileDlg}

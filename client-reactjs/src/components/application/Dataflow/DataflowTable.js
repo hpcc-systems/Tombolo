@@ -34,10 +34,10 @@ function DataflowTable({data, applicationId, onSelectDataflow, onDataFlowUpdated
       method: 'post',
       body: JSON.stringify({'dataflowId': id, 'applicationId':applicationId})
     }).then(function(response) {
-        if(response.ok) {
-          return response.json();
-        }
-        handleError(response);
+      if(response.ok) {
+        return response.json();
+      }
+      handleError(response);
     }).then(function(data) {
       onDataFlowUpdated();
     }).catch(error => {

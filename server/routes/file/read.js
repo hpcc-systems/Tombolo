@@ -3,6 +3,9 @@ const router = express.Router();
 const dbUtil = require('../../utils/db');
 const lodash = require('lodash');
 var models  = require('../../models');
+const { check, validationResult  } = require('express-validator');
+let Application = models.application;
+let UserApplication = models.user_application;
 let File = models.file;
 let FileLayout = models.file_layout;
 let FileLicense = models.file_license;
@@ -39,7 +42,35 @@ router.get('/file_list', (req, res) => {
     }
 });
 
-router.get('/licenses', (req, res) => {
+router.post('/all', (req, res) => {
+    console.log("[file list/read.js] - Get all file defns");
+    try {
+        Application.findAll({ 
+          attributes: ['id'], 
+          raw:true, 
+          include: [UserApplication],
+          where:{"$user_id$":req.query.userId}
+        }).then(function(applications) {
+          let appIds = applications.map(app => app.id); 
+          File.findAll({where: {"application_id":{[Op.in]:appIds}, "title":{[Op.like]: "%" + req.query.keyword + "%"}}, attributes: ['id', 'title', 'name', 'application_id'], raw:true}).then(fileDefns => {
+            console.log(fileDefns);
+            let fileDefSuggestions = fileDefns.map(fileDefn => {
+
+              return {"text": fileDefn.title, "value":fileDefn.title, "id":fileDefn.id, "name":fileDefn.name, "app_id":fileDefn.application_id}
+            })
+            res.json(fileDefSuggestions);
+          })
+        })
+        .catch(function(err) {
+            console.log(err);
+        });
+    } catch (err) {
+        console.log('err', err);
+    }
+});
+
+
+router.get('/licenses', (req, res) => { 
     try {
         License.findAll().then(function(licenses) {
             res.json(licenses);
@@ -143,69 +174,82 @@ router.get('/file_details', (req, res) => {
 
 });
 
-router.post('/saveFile', (req, res) => {
+router.post('/saveFile', [
+  check('scope').custom((value, { req, location, path }) => {
+    return File.findAll({where:{application_id:req.body.file.app_id, dataflowId:req.body.file.basic.dataflowId, scope:req.body.file.basic.scope}}).then(file => {
+      if (file && file.length > 0) {
+        return Promise.reject('Scope already in use');
+      }          
+    });
+
+  })], (req, res) => {
     console.log("[file list/read.js] - Get file list for app_id = " + req.body.file.app_id + " isNewFile: "+req.body.isNewFile);
     var fileId='', applicationId=req.body.file.app_id, fieldsToUpdate={};
 
     try {
-        File.findOrCreate({
-            where:{application_id:applicationId, name:req.body.file.basic.name},
-            defaults:req.body.file.basic
-        }).then(function(result) {
-            fileId = result[0].id;
-            fieldsToUpdate = {"file_id"  : fileId, "application_id" : applicationId};
-            //if file record already exists, then update it
-            if(!result[1]) {
-                File.update(req.body.file.basic, {where:{application_id:applicationId, name:req.body.file.basic.name}}).then(function(result){})
-            }
-            var fileLayoutToSave = updateCommonData(req.body.file.layout, fieldsToUpdate);
-            return FileLayout.bulkCreate(
-                fileLayoutToSave, {updateOnDuplicate: ["name", "type", "displayType", "displaySize", "textJustification", "format","data_types", "isPCI", "isPII", "isHIPAA", "description", "required"]}
-            )
-        }).then(function(fileLayout) {
-            FileLicense.destroy(
-                {where:{file_id: fileId}}
-            ).then(function(deleted) {
-            var fileLicensToSave = updateCommonData(req.body.file.license, fieldsToUpdate);
-            return FileLicense.bulkCreate(
-                fileLicensToSave,
-                {updateOnDuplicate: ["name", "url"]}
-            )  })
-        }).then(function(fileLicense) {
-            var fileRelationToSave = updateCommonData(req.body.file.relation, fieldsToUpdate);
-            return FileRelation.bulkCreate(
-                fileRelationToSave,
-                {updateOnDuplicate: ["source_file_id"]}
-            )
-        }).then(function(fileRelation) {
-            console.log('fieldsToUpdate:' +JSON.stringify(fieldsToUpdate));
-            var fileFieldRelationToSave = updateCommonData(req.body.file.fileFieldRelation, fieldsToUpdate);
-            console.log('fileFieldRelationToSave: '+JSON.stringify(fileFieldRelationToSave));
-            return FileFieldRelation.bulkCreate(
-                fileFieldRelationToSave,
-                {updateOnDuplicate: ["field", "source_field", "requirements"]}
-            )
-        }).then(function(fileFieldRelation) {
-            var fileValidationsToSave = updateCommonData(req.body.file.validation, fieldsToUpdate);
-            return FileValidation.bulkCreate(
-                fileValidationsToSave,
-                {updateOnDuplicate: ["name", "ruleType", "rule", "action", "fixScript"]}
-            )
-        }).then(function(fileFieldValidation) {
-            if(req.body.file.consumer) {
-                return ConsumerObject.bulkCreate(
-                {
-                    "consumer_id" : req.body.file.consumer.id,
-                    "object_id" : fileId,
-                    "object_type" : "file"
-                }
-                )
-            }
-        }).then(function(fieldValidation) {
-            res.json({"result":"success", "fileId":fileId, "title":req.body.file.basic.title});
-        }), function(err) {
-            return res.status(500).send(err);
-        }
+      let errors = validationResult(req);
+      if (!errors.isEmpty()) {
+        return res.status(422).json({ success: false, errors: errors.array() });
+      }
+
+      File.findOrCreate({
+          where:{application_id:applicationId, name:req.body.file.basic.name},
+          defaults:req.body.file.basic
+      }).then(function(result) {
+          fileId = result[0].id;
+          fieldsToUpdate = {"file_id"  : fileId, "application_id" : applicationId};
+          //if file record already exists, then update it
+          if(!result[1]) {
+              File.update(req.body.file.basic, {where:{application_id:applicationId, name:req.body.file.basic.name}}).then(function(result){})
+          }
+          var fileLayoutToSave = updateCommonData(req.body.file.layout, fieldsToUpdate);
+          return FileLayout.bulkCreate(
+              fileLayoutToSave, {updateOnDuplicate: ["name", "type", "displayType", "displaySize", "textJustification", "format","data_types", "isPCI", "isPII", "isHIPAA", "description", "required"]}
+          )
+      }).then(function(fileLayout) {
+          FileLicense.destroy(
+              {where:{file_id: fileId}}
+          ).then(function(deleted) {
+          var fileLicensToSave = updateCommonData(req.body.file.license, fieldsToUpdate);
+          return FileLicense.bulkCreate(
+              fileLicensToSave,
+              {updateOnDuplicate: ["name", "url"]}
+          )  })
+      }).then(function(fileLicense) {
+          var fileRelationToSave = updateCommonData(req.body.file.relation, fieldsToUpdate);
+          return FileRelation.bulkCreate(
+              fileRelationToSave,
+              {updateOnDuplicate: ["source_file_id"]}
+          )
+      }).then(function(fileRelation) {
+          console.log('fieldsToUpdate:' +JSON.stringify(fieldsToUpdate));
+          var fileFieldRelationToSave = updateCommonData(req.body.file.fileFieldRelation, fieldsToUpdate);
+          console.log('fileFieldRelationToSave: '+JSON.stringify(fileFieldRelationToSave));
+          return FileFieldRelation.bulkCreate(
+              fileFieldRelationToSave,
+              {updateOnDuplicate: ["field", "source_field", "requirements"]}
+          )
+      }).then(function(fileFieldRelation) {
+          var fileValidationsToSave = updateCommonData(req.body.file.validation, fieldsToUpdate);
+          return FileValidation.bulkCreate(
+              fileValidationsToSave,
+              {updateOnDuplicate: ["name", "ruleType", "rule", "action", "fixScript"]}
+          )
+      }).then(function(fileFieldValidation) {
+          if(req.body.file.consumer) {
+              return ConsumerObject.bulkCreate(
+              {
+                  "consumer_id" : req.body.file.consumer.id,
+                  "object_id" : fileId,
+                  "object_type" : "file"
+              }
+              )
+          }
+      }).then(function(fieldValidation) {
+          res.json({"result":"success", "fileId":fileId, "title":req.body.file.basic.title});
+      }), function(err) {
+          return res.status(500).send(err);
+      }
     } catch (err) {
         console.log('err', err);
     }
