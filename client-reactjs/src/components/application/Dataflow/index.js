@@ -15,7 +15,7 @@ function Dataflow(props) {
 	const {isShowing, toggle} = useModal();
 
   const [tableDisplay, setTableDisplay] = useState(
-    {graphHeight: 60, display:'block'}
+    {graphHeight: 65, display:'block'}
   );
 	
 	const [form, setForm] = useState({
@@ -44,7 +44,10 @@ function Dataflow(props) {
       }
       handleError(response);
     }).then(function(data) {
-      setDataFlows(data);       
+      setDataFlows(data); 
+      if(data.length == 0) {
+        toggle();
+      }
     }).catch(error => {
       console.log(error);
     });
@@ -76,7 +79,7 @@ function Dataflow(props) {
   }
 
   const maximize = () => {
-    setTableDisplay({graphHeight: 60, display: 'block'})
+    setTableDisplay({graphHeight: 65, display: 'block'})
   }
 
   if(application.applicationId == '' ) return null;
@@ -106,7 +109,7 @@ function Dataflow(props) {
 					{form.tableView ? 
             <DataflowAssetsTable applicationId={application.applicationId} selectedDataflow={form.selectedDataflow} user={application.user}/> 
             : 
-            <Graph applicationId={application.applicationId} selectedDataflow={form.selectedDataflow}/>
+            <Graph applicationId={application.applicationId} applicationTitle={application.applicationTitle} selectedDataflow={form.selectedDataflow}/>
           }
           <div className="dataflow-tbl-wrapper bg-light">
             <div className="dataflow-tbl-controls float-right">

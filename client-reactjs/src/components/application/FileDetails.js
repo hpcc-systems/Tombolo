@@ -46,12 +46,14 @@ class FileDetails extends Component {
     fileSearchErrorShown: false,
     filesCount: 0,
     autoCompleteSuffix: <Icon type="search" className="certain-category-icon" />,
+    scopeDisabled: false,
     file: {
       id:"",
       title:"",
       name:"",
       clusterId:"",
       description:"",
+      scope:"",
       serviceUrl:"",
       qualifiedPath:"",
       consumer:"",
@@ -82,12 +84,14 @@ class FileDetails extends Component {
       complianceTags:[],
       fileDataContent:[],
       fileDataColHeaders:[],
+      scopeDisabled: false,
       file: {
         ...this.state.file,
         id: '',
         title: '',
         name:'',
         description: '',
+        scope:'',
         serviceUrl: '',
         qualifiedPath: '',
         consumer:'',
@@ -144,7 +148,6 @@ class FileDetails extends Component {
   }
 
   getFileDetails() {
-    console.log('selectedAsset: '+this.props.selectedAsset)
     if(this.props.selectedAsset && !this.props.isNew) {
       fetch("/api/file/read/file_details?file_id="+this.props.selectedAsset+"&app_id="+this.props.applicationId, {
         headers: authHeader()
@@ -160,6 +163,7 @@ class FileDetails extends Component {
         this.setState({
           ...this.state,
           sourceFiles: data.sourceFiles,
+          scopeDisabled: true,
           file: {
             ...this.state.file,
             id: data.basic.id,
@@ -167,6 +171,7 @@ class FileDetails extends Component {
             name: data.basic.name,
             clusterId: data.basic.cluster_id,
             description: data.basic.description,
+            scope: data.basic.scope,
             serviceUrl: data.basic.serviceUrl,
             qualifiedPath: data.basic.qualifiedPath,
             consumer: data.basic.consumer,
@@ -182,7 +187,8 @@ class FileDetails extends Component {
         });
         this.props.form.setFieldsValue({
           name: data.basic.name,
-          title: data.basic.title
+          title: data.basic.title,
+          scope: data.basic.scope
         });
         return data;
       })
@@ -218,9 +224,10 @@ class FileDetails extends Component {
     this.clearState();
     this.getConsumers();
     this.getFileDetails();
-    //if(this.props.isNew) {
-      this.getClusters();
-    //}
+    this.getClusters();
+    if(this.props.isNew) {
+      this.getScope();
+    }
   }
 
   onDrawerClose = () => {
@@ -243,15 +250,21 @@ class FileDetails extends Component {
           confirmLoading: true,
         });
 
-        let saveResponse = await this.saveFileDetails();
-
-        setTimeout(() => {
+        try {
+          let saveResponse = await this.saveFileDetails();
+          setTimeout(() => {
+            this.setState({
+              visible: false,
+              confirmLoading: false,
+            });
+            this.props.onRefresh(saveResponse);
+          }, 2000);
+        } catch(e) {
           this.setState({
-            visible: false,
             confirmLoading: false,
           });
-          this.props.onRefresh(saveResponse);
-        }, 2000);
+        }
+
       }
     });
 
@@ -409,12 +422,12 @@ class FileDetails extends Component {
   }
 
   async onFileSelected(selectedSuggestion) {
-    let fileExists = await this.fileAlreadyExists(selectedSuggestion);
+    /*let fileExists = await this.fileAlreadyExists(selectedSuggestion);
     if(fileExists) {
       message.config({top:150})
       message.error("File "+selectedSuggestion+" already exists in this application. Please select another file.");
       return;
-    }
+    }*/
     fetch("/api/hpcc/read/getFileInfo?fileName="+selectedSuggestion+"&clusterid="+this.state.selectedCluster, {
       headers: authHeader()
     })
@@ -429,6 +442,7 @@ class FileDetails extends Component {
       this.setState({
         ...this.state,
         sourceFiles: [],
+        scopeDisabled: true,
         file: {
           ...this.state.file,
           id: fileInfo.name,
@@ -436,6 +450,7 @@ class FileDetails extends Component {
           name: fileInfo.name,
           clusterId: this.state.selectedCluster,
           description: fileInfo.description,
+          scope: fileInfo.scope,
           qualifiedPath: fileInfo.pathMask,
           consumer: fileInfo.consumer,
           supplier: fileInfo.supplier,
@@ -448,7 +463,8 @@ class FileDetails extends Component {
       })
       this.props.form.setFieldsValue({
         name: fileInfo.name,
-        title: fileInfo.name.substring(fileInfo.name.lastIndexOf("::") + 2)
+        title: fileInfo.name.substring(fileInfo.name.lastIndexOf("::") + 2),
+        scope: fileInfo.scope
       });
       return fileInfo;
     })
@@ -521,7 +537,7 @@ class FileDetails extends Component {
   }
 
   saveFileDetails() {
-    return new Promise((resolve) => {
+    return new Promise((resolve, reject) => {
       fetch('/api/file/read/savefile', {
         method: 'post',
         headers: authHeader(),
@@ -531,6 +547,7 @@ class FileDetails extends Component {
             return response.json();
           }
           handleError(response);
+          reject();
       }).then(function(data) {
         resolve(data);
       });
@@ -577,8 +594,7 @@ class FileDetails extends Component {
           profileHTMLAssets: rows
         });
       }
-    }).then(function(data) {
-    });
+    })
   }
 
   populateFileDetails() {    
@@ -591,6 +607,7 @@ class FileDetails extends Component {
       "name" : (!this.state.file.name || this.state.file.name == '') ? this.state.file.title : this.state.file.name,
       "cluster_id": this.state.file.clusterId,
       "description" : this.state.file.description,
+      "scope": this.state.file.scope,
       "serviceUrl" : this.state.file.serviceUrl,
       "qualifiedPath" : this.state.file.qualifiedPath,
       "consumer": this.state.file.consumer,
@@ -655,7 +672,7 @@ class FileDetails extends Component {
   }
 
   onChange = (e) => {
-    this.setState({...this.state, file: {...this.state.file, [e.target.name]: e.target.value }});
+    this.setState({...this.state, file: {...this.state.file, [e.target.name]: e.target.value }});    
   }
 
   onFieldRelationsChange = (newValue) => {
@@ -772,7 +789,6 @@ class FileDetails extends Component {
 
   }
   dataTypechange= (prop)=>{
-    console.log("dataTypechange")
     var _self=this;
     if(prop.column.colId=="data_types" && (prop.oldValue)){
       var compliance=[];
@@ -826,9 +842,35 @@ class FileDetails extends Component {
       });
     }
   }
+
+  getScope = () => {
+    let scope = (this.props.user.organization + "::" + this.props.applicationTitle + (this.state.file.title != '' ? '::' + this.state.file.title : '')).toLowerCase();
+    this.setState({
+      ...this.state,
+      file: {
+        ...this.state.file,
+        scope: scope
+      }
+    });
+    this.props.form.setFieldsValue({
+      scope: scope
+    });
+  }
+
+  scopeValidator = (rule, value, callback) => {
+    try {
+      if(this.state.file.scope == (this.props.user.organization + "::" + this.props.applicationTitle).toLowerCase()) {
+        throw new Error("Please enter a valid scope. The convention is <Organization Name>::<Application Name>::<File Type>");
+      } 
+      callback();
+    } catch (err) {
+      callback(err);
+    }
+  }
+
   render() {
     const { getFieldDecorator } = this.props.form;
-    const { visible, confirmLoading, sourceFiles, availableLicenses, selectedRowKeys, clusters, consumers, fileSearchSuggestions, fileDataContent, fileProfile, showFileProfile } = this.state;
+    const { visible, confirmLoading, sourceFiles, availableLicenses, selectedRowKeys, clusters, consumers, fileSearchSuggestions, fileDataContent, fileProfile, showFileProfile, scopeDisabled } = this.state;
     const modalTitle = "File Details" + (this.state.file.title ? " - " + this.state.file.title : " - " +this.state.file.name);
     const VIEW_DATA_PERMISSION='View PII';
     const formItemLayout = {
@@ -1070,13 +1112,13 @@ class FileDetails extends Component {
     }
 
 
-    const {title,name, description, serviceUrl, qualifiedPath, consumer, fileType, isSuperFile, layout, relations, fileFieldRelations, validations, inheritedLicensing} = this.state.file;
+    const {title,name, description, scope, serviceUrl, qualifiedPath, consumer, fileType, isSuperFile, layout, relations, fileFieldRelations, validations, inheritedLicensing} = this.state.file;
     const rowSelection = {
       selectedRowKeys,
       onChange: this.onSelectedRowKeysChange
     };
     //const modalHeight = !this.props.isNew ? "400px" : "500px";
-    const modalHeight = "500px";
+    const modalHeight = "510px";
 
     //render only after fetching the data from the server
     if(!title && !this.props.selectedAsset && !this.props.isNew) {
@@ -1130,13 +1172,25 @@ class FileDetails extends Component {
             </div>
             <Form.Item {...formItemLayout} label="Title">
               {getFieldDecorator('title', {
-                rules: [{ required: true, message: 'Please enter a file!' }],
+                rules: [{ required: true, message: 'Please enter a title!' }],
               })(
               <Input id="file_title" name="title" onChange={this.onChange} placeholder="Title" />              )}
             </Form.Item>
             <Form.Item {...formItemLayout} label="Name">
               <Input id="file_name" name="name" onChange={this.onChange} placeholder="Name" defaultValue={name} value={name} disabled={true} />
              </Form.Item>
+            <Form.Item {...formItemLayout} label="Scope">
+              {getFieldDecorator('scope', {
+                rules: [{
+                    required: true
+                  },
+                  {
+                    validator: this.scopeValidator
+                  }
+              ]})(
+                  <Input id="file_scope" name="scope" onChange={this.onChange} placeholder="Scope" disabled={scopeDisabled}/>
+              )}
+            </Form.Item>
             <Form.Item {...formItemLayout} label="Description">
                 <Input id="file_desc" name="description" onChange={this.onChange} defaultValue={description} value={description} placeholder="Description" />
             </Form.Item>

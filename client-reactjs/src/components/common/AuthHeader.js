@@ -21,9 +21,13 @@ export function handleError(response) {
         //token expired
         localStorage.removeItem('user');
         store.dispatch(userActions.logout());
-        //console.log('handleError - session expired');
-        //message.error("Your session has expired! Please login to continue using Tombolo.");
-    } else {
+    } else if(response.status == 422) {
+        response.json().then(data => {
+          message.config({top:130})
+          message.error(data.errors[0].msg)
+        });
+    }
+    else {
         let json = JSON.parse(response);
         if(json.message) {
             message.error(json.message);

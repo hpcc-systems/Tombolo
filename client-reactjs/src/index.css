@@ -327,13 +327,13 @@ path, .jtk-endpoint { cursor:pointer; }
 }
 
 #sidebar {
-  min-width: 100px;
-  max-width: 100px;
+  min-width: 85px;
+  max-width: 85px;
   -webkit-transition: all 0.3s;
   -o-transition: all 0.3s;
   transition: all 0.3s;
   position: relative;
-  height:450px;
+  height:570px;
 }
 
 #sidebar.active .btn.btn-primary:before {

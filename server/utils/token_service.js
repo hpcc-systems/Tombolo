@@ -9,8 +9,9 @@ function verifyToken(req, res, next)
   userService.verifyToken(req, res, next).then(function(verified){
     if(verified != undefined) {
       next()
-    } 
-    res.status(401).json({message: "Un-Authorized."})
+    } else {
+      res.status(401).json({message: "Un-Authorized."})    
+    }
   })
   .catch((err) =>
   {

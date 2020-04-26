@@ -1,6 +1,7 @@
 import React, { Component } from "react";
-import { Modal, Tabs, Form, Input, Button,  Select, Table, AutoComplete, Spin } from 'antd/lib';
+import { Modal, Tabs, Form, Input, Icon,  Select, Button, Table, AutoComplete, Tag, message, Drawer, Row, Col, Spin} from 'antd/lib';
 import "react-table/react-table.css";
+import { AgGridReact } from 'ag-grid-react';
 import { authHeader, handleError } from "../common/AuthHeader.js"
 import DataProfileHTML from "./DataProfileHTML"
 const TabPane = Tabs.TabPane;
@@ -12,22 +13,35 @@ class FileInstanceDetails extends Component {
 
   state = {
     visible:false,
-    file_definition:"",
-    receive_date:"",
-    file_count:"",
-    customer_name:"",
-    item_name:"",
-    file_source_id:"",
-    data_profile:"",
-    profileHTMLAssets:[]
+    confirmLoading: false,
+    fileInstanceSearchSuggestions:[],
+    title:'',
+    name: '',
+    fileDefinition:'',
+    autoCompleteSuffix: <Icon type="search" className="certain-category-icon" />,
+    fileInstanceSearchErrorShown: false,
+    fileDefnLayout: []
   }
 
   componentDidMount() {
     this.props.onRef(this);
+    this.getFileInstanceDetails();
   }
 
-  getFileInstanceDetails(id) {
-      fetch("/api/fileinstance/instance_details?id="+id, {
+  clearState = () => {
+    this.setState({
+      title: '',
+      name: '',
+      fileDefinition:'',
+      fileDefinitionId: '',
+      fileDefnLayout: []
+    });
+  }
+
+  getFileInstanceDetails() {
+    console.log(this.props.selectedAsset + ', '+this.props.isNew)
+    if(this.props.selectedAsset && !this.props.isNew) {
+      fetch("/api/fileinstance/instance_details?id="+this.props.selectedAsset, {
         headers: authHeader()
       })
       .then((response) => {
@@ -38,80 +52,179 @@ class FileInstanceDetails extends Component {
       })
       .then(data => {
         this.setState({
-          ...this.state,
-            file_definition:data.file_definition,
-            receive_date:data.receive_date,
-            file_count:data.file_count,
-            customer_name:data.customer_name,
-            item_name:data.item_name,
-            file_source_id:data.file_source_id
+          title: data.title,
+          name: data.item_name,
+          fileDefinitionId:data.file_definition,
+          applicationId:data.application_id
+        });        
+        this.props.form.setFieldsValue({
+          name: data.item_name,
+          title: data.title
         });
         return data;
       })
       .then(data => {
-        if(data.data_profile_path != "") {
-            this.getFileProfile(data.data_profile_path, data.cluster_id);
-        }
-      })
+        this.getFileDefnDetails(data.application_id, data.file_definition).then(fileDefnInfo => {
+          this.setState({
+            fileDefnLayout: fileDefnInfo.file_layouts,
+            fileDefinition: fileDefnInfo.basic.title,
+            fileDefinitionId: fileDefnInfo.basic.id
+          });
+        })    
+        return data;
+      })     
       .catch(error => {
         console.log(error);
       });
+    }
   }
-
-  getFileProfile = (profilePath, clusterId) => {
-    var _self = this;
-      fetch('/api/hpcc/read/getFileProfileHTML?dataProfileWuid='+profilePath+'&clusterid='+clusterId, {
-      headers: authHeader()
-    }).then(function(response) {
-      if(response.ok) {
-        return response.json();
-      }
-      response.statusText("Error occured while getting the file profile..");
-      handleError(response);
-    }).then(function(rows) {
-      if(rows.length > 0) {
-        _self.setState({
-          profileHTMLAssets: rows
-        });
-      }
-    }).catch(error => {
-      console.log(error);
-    });
-  }
-
-  showInstanceDetails = (id) => {
+  
+  showModal = () => {
     this.setState({
       visible: true
     });
-    this.getFileInstanceDetails(id);
+    
   }
 
-  handleOk = () => {
-    this.setState({
-      confirmLoading: true,
+  handleOk = (e) => {    
+    e.preventDefault();
+    this.props.form.validateFields(async (err, values) =>  {
+      if(!err) {
+        this.setState({
+          confirmLoading: true,
+        });
+
+        try {
+          let saveResponse = await this.saveFileInstanceDetails();
+          setTimeout(() => {
+            this.setState({
+              visible: false,
+              confirmLoading: false,
+            });
+            this.clearState();
+            this.props.onRefresh(saveResponse);
+          }, 2000);
+        } catch(e) {
+          this.setState({
+            confirmLoading: false,
+          });
+        }
+      }
     });
+  }
 
-    this.saveJobDetails();
-
-    setTimeout(() => {
-      this.setState({
-        visible: false,
-        confirmLoading: false,
+  saveFileInstanceDetails = () => {
+    return new Promise((resolve, reject) => {
+      fetch('/api/fileinstance/create', {
+        method: 'post',
+        headers: authHeader(),
+        body: JSON.stringify({
+          file_definition : this.state.fileDefinitionId, 
+          item_name : this.state.name, 
+          title: this.state.title,
+          application_id: this.props.applicationId
+        })
+      }).then(function(response) {
+          if(response.ok) {
+            return response.json();
+          }
+          handleError(response);
+          reject();
+      }).then(function(data) {
+        resolve(data);
       });
-      this.props.onClose();
-      this.props.onRefresh();
-    }, 2000);
+    })
   }
 
   handleCancel = () => {
     this.setState({
       visible: false,
     });
+    this.clearState();
   }
 
+  searchFileInstances = (searchString) => {
+    if(searchString.length <= 3)
+      return;    
+    this.setState({
+      autoCompleteSuffix : <Spin/>,
+      fileSearchErrorShown: false
+    });
+    
+    fetch("/api/file/read/all?userId="+this.props.user.id+"&keyword="+searchString, {
+      method: 'post',
+      headers: authHeader()
+    }).then((response) => {
+      console.log("response.ok: "+response.ok);
+      if(response.ok) {
+        return response.json();
+      } else {
+        throw response;
+      }
+    })
+    .then(suggestions => {
+      this.setState({
+        fileInstanceSearchSuggestions: suggestions,
+        autoCompleteSuffix: <Icon type="search" className="certain-category-icon" />
+      });
+    }).catch(error => {
+      if(!this.state.fileSearchErrorShown) {
+        error.json().then((body) => {
+          message.config({top:130})
+          message.error(body.message);
+        });
+        this.setState({
+          fileInstanceSearchErrorShown: true,
+          autoCompleteSuffix: <Icon type="search" className="certain-category-icon" />
+        });
+      }
+
+    });
+  }
+
+  onFileInstanceSelected = (selectedValue) => {
+    let selected = this.state.fileInstanceSearchSuggestions.filter((item) => {
+      return item.text == selectedValue
+    })
+    this.getFileDefnDetails(selected[0].app_id, selected[0].id).then(fileDefnInfo => {
+      this.setState({
+        fileDefnLayout: fileDefnInfo.file_layouts,
+        fileDefinition: fileDefnInfo.basic.title,
+        fileDefinitionId: fileDefnInfo.basic.id
+      });
+    })    
+  }
+
+  getFileDefnDetails = (app_id, file_id) => {
+    return new Promise((resolve, reject) => {
+      fetch("/api/file/read/file_details?app_id="+app_id+"&file_id="+file_id, {
+        headers: authHeader()
+      })
+      .then((response) => {
+        if(response.ok) {
+          return response.json();
+        }
+        handleError(response);
+
+      })
+      .then(fileDefnInfo => {        
+        resolve(fileDefnInfo)
+      })   
+    });
+  }
+
+  onGridReady = (params) => {
+    let gridApi = params.api;
+    gridApi.sizeColumnsToFit();
+  }
+
+  onChange = (e) => {
+    this.setState({[e.target.name]: e.target.value });    
+  }
 
   render() {
-    const { visible, confirmLoading, file_definition, receive_date, file_count, customer_name, item_name, file_source_id} = this.state;
+    const { getFieldDecorator } = this.props.form;
+    const { visible, confirmLoading, name, title, fileInstanceSearchSuggestions, fileDefinition, selectedFileInstanceName, fileDefnLayout} = this.state;
     const formItemLayout = {
       labelCol: {
         xs: { span: 2 },
@@ -122,6 +235,27 @@ class FileInstanceDetails extends Component {
         sm: { span: 10 },
       },
     };
+    const layoutColumns = [{
+      headerName: 'Name',
+      field: 'name',
+      sort: "asc"
+    },
+    {
+      headerName: 'Type',
+      field: 'type'
+    },
+    {
+      headerName: 'ECL Type',
+      field: 'eclType'
+    },
+    {
+      headerName: 'Description',
+      field: 'description'
+    },
+    {
+      headerName: 'Data Type',
+      field: 'data_types'    
+    }];
 
     return (
       <div>
@@ -131,45 +265,68 @@ class FileInstanceDetails extends Component {
           onOk={this.handleOk}
           confirmLoading={confirmLoading}
           onCancel={this.handleCancel}
-          bodyStyle={{height:"620px"}}
+          bodyStyle={{height:"400px"}}
           destroyOnClose={true}
-          width="1200px"
+          width="750px"
         >
         <Tabs
           defaultActiveKey="1"
         >
           <TabPane tab="Basic" key="1">
 
-           <Form layout="vertical">
-           <Form.Item {...formItemLayout} label="Name">
-                <Input id="item_name" name="item_name" value={item_name} defaultValue={item_name} placeholder="Item Name" />
-            </Form.Item>
-            <Form.Item {...formItemLayout} label="File Definition">
-                <Input id="file_defn" name="file_definition" value={file_definition} defaultValue={file_definition} placeholder="File Definition" />
-            </Form.Item>
-            <Form.Item {...formItemLayout} label="Receive Date">
-                <Input id="receive_date" name="receive_date" value={receive_date} defaultValue={receive_date} placeholder="Receive Date" />
-            </Form.Item>
-            <Form.Item {...formItemLayout} label="Customer Name">
-                <Input id="customer_name" name="customer_name" value={customer_name} defaultValue={customer_name} placeholder="Customer Name" />
-            </Form.Item>
-            <Form.Item {...formItemLayout} label="Contact">
-                <Input id="item_name" name="item_name" value={item_name} defaultValue={item_name} placeholder="Item Name" />
-            </Form.Item>
-            <Form.Item {...formItemLayout} label="Source Id">
-                <Input id="file_source_id" name="file_source_id" value={file_source_id} defaultValue={file_source_id} placeholder="Source Id" />
-            </Form.Item>
+           <Form layout="vertical">             
+            <Form.Item {...formItemLayout} label="Title">
+              {getFieldDecorator('title', {
+                rules: [{ required: true, message: 'Please enter a title!' }],
+              })(
+              <Input id="file_title" name="title" onChange={this.onChange} placeholder="Title" />              
+              )}
+            </Form.Item> 
+             <Form.Item {...formItemLayout} label="Name">
+               {getFieldDecorator('name', {
+                  rules: [{ required: true, message: 'Please enter a name!' }],
+                })(
+                  <Input id="fileinstance_name" name="name" onChange={this.onChange} placeholder="Name" />
+                )}  
+              </Form.Item>
+             <Form.Item {...formItemLayout} label="File Defn">
+              <AutoComplete
+                className="certain-category-search"
+                dropdownClassName="certain-category-search-dropdown"
+                dropdownMatchSelectWidth={false}
+                dropdownStyle={{ width: 300 }}
+                size="large"
+                style={{ width: '100%' }}
+                dataSource={fileInstanceSearchSuggestions}
+                onChange={(value) => this.searchFileInstances(value)}
+                onSelect={(value) => this.onFileInstanceSelected(value)}
+                placeholder="Search file instances"
+                optionLabelProp="value"
+              >
+                <Input id="autocomplete_field" suffix={this.state.autoCompleteSuffix} autoComplete="off"/>
+              </AutoComplete>
+              </Form.Item> 
+              <Form.Item {...formItemLayout} label="File Definition">
+                  <Input id="file_defn" name="fileDefinition" value={fileDefinition} defaultValue={fileDefinition} placeholder="File Definition" />
+              </Form.Item>
+            </Form>
+          </TabPane>        
 
-          </Form>
-
+          <TabPane tab="Layout" key="3">
+              <div
+                className="ag-theme-balham"
+                style={{
+                height: '320px',
+                width: '100%' }}
+              >
+                <AgGridReact
+                  columnDefs={layoutColumns}
+                  rowData={fileDefnLayout}
+                  defaultColDef={{resizable: true, sortable: true, filter: true}}
+                  onGridReady={this.onGridReady}>
+                </AgGridReact>
+              </div>              
           </TabPane>
-          <TabPane tab="Data Profile" key="7" >
-            <div>
-                {/*<DataProfileTable data={this.state.fileProfile}/>*/}
-                <DataProfileHTML htmlAssets={this.state.profileHTMLAssets}/>
-            </div>
-          </TabPane>
-
         </Tabs>
         </Modal>
       </div>

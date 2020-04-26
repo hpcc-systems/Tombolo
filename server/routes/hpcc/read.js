@@ -218,6 +218,7 @@ router.get('/getFileInfo', function (req, res) {
       			"name" : response.FileDetail.Name,
       			"fileName" : response.FileDetail.Filename,
       			"description" : response.FileDetail.Description,
+      			"scope": response.FileDetail.Name.substring(0, response.FileDetail.Name.lastIndexOf('::')),
       			"pathMask" : response.FileDetail.PathMask,
       			"isSuperfile" : response.FileDetail.isSuperfile,
       			"fileType": response.FileDetail.ContentType,
@@ -242,8 +243,7 @@ function getFileLayout(cluster, fileName) {
 	  auth : getClusterAuth(cluster)
 	}).then(function(response) {
 		  var result = JSON.parse(response);
-		  console.log('response: '+response);
-      	if(result.DFUGetFileMetaDataResponse != undefined) {
+    	if(result.DFUGetFileMetaDataResponse != undefined) {
 			  var fileInfoResponse = result.DFUGetFileMetaDataResponse.DataColumns.DFUDataColumn, fileInfo = {};
       		fileInfoResponse.forEach(function(column) {
       			if(column.ColumnLabel !== '__fileposition__') {
@@ -285,8 +285,7 @@ function getFileLayout(cluster, fileName) {
 		      	}
       		});
 		  }
-		  console.log(layoutResults);
-      	return layoutResults;
+    	return layoutResults;
     })
 	.catch(function (err) {
       console.log('error occured: '+err);
@@ -296,7 +295,6 @@ function getFileLayout(cluster, fileName) {
 
 router.get('/getIndexInfo', function (req, res) {
     try {
-    	console.log("getIndexInfo")
 			getCluster(req.query.clusterid).then(function(cluster) {
 				let clusterAuth = getClusterAuth(cluster);
 				let dfuService = new hpccJSComms.DFUService({ baseUrl: cluster.thor_host + ':' + cluster.thor_port, userID:(clusterAuth ? clusterAuth.user : ""), password:(clusterAuth ? clusterAuth.password : "")});
@@ -467,7 +465,6 @@ router.get('/getFileProfileHTML', function (req, res) {
 		      }
 		      else {
 		      	var result = JSON.parse(body);
-		      	console.log(result);
 		      	var filterdUrl = result.WUInfoResponse.Workunit.ResourceURLs.URL.filter(function(url) {
 		      		return !url.startsWith("manifest");
 		      	}).map(function(url) {
