@@ -69,13 +69,15 @@ class Graph extends Component {
   };
 
   shapesData = [
-      { "x": "10", "y": "20", "rx":"0", "ry":"0", "rectx":"10", "recty":"10", "rectwidth":"55", "rectheight":"55", "tx":"20", "ty":"50", "title":"Job", "color":"#EE7423", "icon":"\uf085", "iconx":"90", "icony":"25"},
-      { "x": "10", "y": "70", "rx":"0", "ry":"0", "rectx":"10", "recty":"90", "rectwidth":"55", "rectheight":"55", "tx":"20", "ty":"130", "title":"Modeling", "color":"#EE7423", "icon":"\uf00a", "iconx":"90", "icony":"65"},
-      { "x": "10", "y": "120", "rx":"0", "ry":"0", "rectx":"10", "recty":"170", "rectwidth":"55", "rectheight":"55", "tx":"20", "ty":"210", "title":"Scoring", "color":"#EE7423", "icon":"\uf005 ", "iconx":"90", "icony":"65"},            
-      { "x": "10", "y": "170", "rx":"10", "ry":"10", "rectx":"10", "recty":"250", "rectwidth":"55", "rectheight":"55", "tx":"20", "ty":"290", "title":"File", "color":"#7AAAD0", "icon":"\uf1c0", "iconx":"90", "icony":"65"},
-      { "x": "10", "y": "220", "rx":"10", "ry":"10", "rectx":"10", "recty":"330", "rectwidth":"55", "rectheight":"55", "tx":"20", "ty":"370", "title":"File Instance", "color":"#7AAAD0", "icon":"\uf0c5", "iconx":"70", "icony":"65"},
+      { "x": "10", "y": "20", "rx":"0", "ry":"0", "rectx":"10", "recty":"0", "rectwidth":"45", "rectheight":"45", "tx":"20", "ty":"30", "title":"Job", "color":"#EE7423", "icon":"\uf085", "iconx":"90", "icony":"25"},
+      { "x": "10", "y": "70", "rx":"0", "ry":"0", "rectx":"10", "recty":"70", "rectwidth":"45", "rectheight":"45", "tx":"20", "ty":"100", "title":"Modeling", "color":"#EE7423", "icon":"\uf00a", "iconx":"90", "icony":"65"},
+      { "x": "10", "y": "120", "rx":"0", "ry":"0", "rectx":"10", "recty":"140", "rectwidth":"45", "rectheight":"45", "tx":"20", "ty":"170", "title":"Scoring", "color":"#EE7423", "icon":"\uf005 ", "iconx":"90", "icony":"65"},            
+      { "x": "10", "y": "170", "rx":"0", "ry":"0", "rectx":"10", "recty":"210", "rectwidth":"45", "rectheight":"45", "tx":"20", "ty":"240", "title":"ETL", "color":"#EE7423", "icon":"\uf0ae", "iconx":"90", "icony":"65"},            
+      { "x": "10", "y": "220", "rx":"0", "ry":"0", "rectx":"10", "recty":"280", "rectwidth":"45", "rectheight":"45", "tx":"20", "ty":"310", "title":"Query Build", "color":"#EE7423", "icon":"\uf002", "iconx":"90", "icony":"65"},            
+      { "x": "10", "y": "270", "rx":"10", "ry":"10", "rectx":"10", "recty":"350", "rectwidth":"45", "rectheight":"45", "tx":"20", "ty":"380", "title":"File", "color":"#7AAAD0", "icon":"\uf1c0", "iconx":"90", "icony":"65"},
+      { "x": "10", "y": "320", "rx":"10", "ry":"10", "rectx":"10", "recty":"420", "rectwidth":"45", "rectheight":"45", "tx":"20", "ty":"450", "title":"File Instance", "color":"#7AAAD0", "icon":"\uf0c5", "iconx":"70", "icony":"65"},
       //{ "x": "10", "y": "120", "rx":"10", "ry":"10", "rectx":"10", "recty":"170", "rectwidth":"55", "rectheight":"55", "tx":"20", "ty":"210", "title":"Query", "color":"#9B6A97", "icon":"\uf00e", "iconx":"90", "icony":"65"},
-      { "x": "10", "y": "270", "rx":"10", "ry":"10", "rectx":"10", "recty":"410", "rectwidth":"55", "rectheight":"55", "tx":"20", "ty":"450", "title":"Index", "color":"#7DC470", "icon":"\uf2b9", "iconx":"90", "icony":"65"},
+      { "x": "10", "y": "370", "rx":"10", "ry":"10", "rectx":"10", "recty":"490", "rectwidth":"45", "rectheight":"45", "tx":"20", "ty":"520", "title":"Index", "color":"#7DC470", "icon":"\uf2b9", "iconx":"90", "icony":"65"},
     ];
 
   thisGraph = {};
@@ -148,6 +150,8 @@ class Graph extends Component {
       case 'Job':
       case 'Modeling':
       case 'Scoring':
+      case 'ETL':
+      case 'Query Build':
         if(d.jobId == undefined || d.jobId == '') {
           isNew = true
         }
@@ -156,7 +160,7 @@ class Graph extends Component {
           isNewJob: isNew,
           openJobDetailsDialog: true,
           selectedJob: d.jobId,
-          selectedJobType: d.type == 'Job' ? 'ETL' : d.type
+          selectedJobType: d.type == 'Job' ? 'General' : d.type
         });
 
         setTimeout(() => {
@@ -193,7 +197,7 @@ class Graph extends Component {
           let strokeColor = task[0].status == "Completed" ? "green" : "red"
           d3.select(this).append("text")
             .attr('font-family', 'FontAwesome')
-            .attr('font-size', function(d) { return '3em'} )
+            .attr('font-size', function(d) { return '2em'} )
             .attr('fill', strokeColor)
             .attr("x", '12')
             .attr("y", '-2')
@@ -257,6 +261,8 @@ class Graph extends Component {
           case 'Job':
           case 'Modeling':
           case 'Scoring':
+          case 'ETL':
+          case 'Query Build':
             el.jobId=saveResponse.jobId;
             break;
         }
@@ -380,14 +386,14 @@ class Graph extends Component {
           .attr("id", "txt-"+d.id)
       let tspans = Math.floor(title.length / 20);
       for (let i = 0; i <= tspans; i++) {
-        let dy=(i > 0 ? '15' : '70')
+        let dy=(i > 0 ? '15' : '60')
         let titleToDisplay = title.substring((i * 20), ((i+1) * 20));
         titleToDisplay = ((title.length - titleToDisplay.length) <=5) ? title : titleToDisplay;        
         let tspan = el.append('tspan')
           .text(titleToDisplay)
           .attr("id", "label-"+d.id)
           .attr("text-anchor", "middle")
-          .attr('x', '30')
+          .attr('x', '20')
           .attr('dy', dy);
 
           if(titleToDisplay.length == title.length) {
@@ -399,8 +405,8 @@ class Graph extends Component {
         let deleteIcon = gEl.append('text')
           .attr('font-family', 'FontAwesome')
           .attr('id', 't'+d.id)
-          .attr('dy', 10)
-          .attr('dx', 45)
+          .attr('dy', 12)
+          .attr('dx', 30)
           .attr('class','delete-icon hide-delete-icon')
           .on("click", function(d) {
             d3.event.stopPropagation();
@@ -423,22 +429,28 @@ class Graph extends Component {
       case 'Scoring':
         shapesData = _self.shapesData[2];
         break;
-      case 'File':
+      case 'ETL':
         shapesData = _self.shapesData[3];
         break;
-      case 'File Instance':
+      case 'Query Build':
         shapesData = _self.shapesData[4];
         break;
-      case 'Index':
+      case 'File':
         shapesData = _self.shapesData[5];
+        break;
+      case 'File Instance':
+        shapesData = _self.shapesData[6];
+        break;
+      case 'Index':
+        shapesData = _self.shapesData[7];
         break;
     }
     if(gEl.select(".icon").empty()) {
       let imageTxt = gEl.append('text')
         .attr('font-family', 'FontAwesome')
         .attr('class', 'icon')
-        .attr('font-size', function(d) { return '3em'} )
-        .attr('y', 40)
+        .attr('font-size', function(d) { return '2em'} )
+        .attr('y', 30)
         .attr('x', 12)
         //.attr('class','delete-icon hide-delete-icon')
         .text(function(node) { return shapesData.icon })
@@ -752,6 +764,8 @@ class Graph extends Component {
             case 'Job':
             case 'Modeling':
             case 'Scoring':
+            case 'ETL':
+            case 'Query Build':
               if(d3.select("#rec-"+d.id).empty()) {
                 d3.select(this)
                   .append("rect")
@@ -784,9 +798,9 @@ class Graph extends Component {
                   .attr("filter", "url(#glow)")
                   .attr("fill", function(d) {
                     if(d.type == 'File' || d.type == 'File Instance')
-                     return _self.shapesData[3].color;
+                     return _self.shapesData[5].color;
                     else if(d.type == 'Index')
-                      return _self.shapesData[5].color;
+                      return _self.shapesData[7].color;
                   })
                   .attr("stroke-width", "3")
                   //.call(_self.nodeDragHandler)
@@ -838,6 +852,10 @@ class Graph extends Component {
         });
         break;
       case 'Job':
+      case 'Modelling':
+      case 'Scoring':
+      case 'Query Build':
+      case 'ETL':
         if(d.jobId) {
           handleJobDelete(d.jobId, _self.props.applicationId);
         }
@@ -923,7 +941,7 @@ class Graph extends Component {
 
     group.append("text")
         .attr('font-family', 'FontAwesome')
-        .attr('font-size', function(d) { return '3em'} )
+        .attr('font-size', function(d) { return '2em'} )
         .attr("x", function(d) { return d.tx; })
         .attr("y", function(d) { return d.ty; })
         .text( function (d) { return d.icon; })

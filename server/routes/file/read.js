@@ -177,9 +177,9 @@ router.get('/file_details', (req, res) => {
 router.post('/saveFile', [
   check('scope').custom((value, { req, location, path }) => {
     return File.findAll({where:{application_id:req.body.file.app_id, dataflowId:req.body.file.basic.dataflowId, scope:req.body.file.basic.scope}}).then(file => {
-      if (file && file.length > 0) {
+      /*if (file && file.length > 0) {
         return Promise.reject('Scope already in use');
-      }          
+      }*/          
     });
 
   })], (req, res) => {

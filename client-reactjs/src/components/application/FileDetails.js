@@ -422,12 +422,12 @@ class FileDetails extends Component {
   }
 
   async onFileSelected(selectedSuggestion) {
-    let fileExists = await this.fileAlreadyExists(selectedSuggestion);
+    /*let fileExists = await this.fileAlreadyExists(selectedSuggestion);
     if(fileExists) {
       message.config({top:150})
       message.error("File "+selectedSuggestion+" already exists in this application. Please select another file.");
       return;
-    }
+    }*/
     fetch("/api/hpcc/read/getFileInfo?fileName="+selectedSuggestion+"&clusterid="+this.state.selectedCluster, {
       headers: authHeader()
     })
