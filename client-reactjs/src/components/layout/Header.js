@@ -43,26 +43,28 @@ class AppHeader extends Component {
     componentDidUpdate(prevProps, prevState) {
       if(this.state.applications.length == 0) {
         var url="/api/app/read/app_list";
-        if(this.props.user && this.props.user.role=='user')
+        console.log(this.props.user.role);
+        if(this.props.user && this.props.user.role=='user') {
           url="/api/app/read/appListByUserId?user_id="+this.props.user.id;
-          fetch(url, {
-            headers: authHeader()
-          })
-          .then((response) => {
-            if(response.ok) {
-              return response.json();
-            }
-            handleError(response);
-          })
-          .then(data => {
-            let applications = data.map(application => { return {value: application.id, display: application.title} })
-            if(applications && applications.length > 0) {
-              this.setState({ applications });
-              this.handleRef();
-            }
-          }).catch(error => {
-            console.log(error);
-          });
+        }
+        fetch(url, {
+          headers: authHeader()
+        })
+        .then((response) => {
+          if(response.ok) {
+            return response.json();
+          }
+          handleError(response);
+        })
+        .then(data => {
+          let applications = data.map(application => { return {value: application.id, display: application.title} })
+          if(applications && applications.length > 0) {
+            this.setState({ applications });
+            this.handleRef();
+          }
+        }).catch(error => {
+          console.log(error);
+        });
       }
       //console.log($('[data-value="'+localStorage.getItem("activeProjectId")+'"]').data("display"))
       //$('[data-value="'+localStorage.getItem("activeProjectId")+'"]').click();
