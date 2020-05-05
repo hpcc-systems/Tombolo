@@ -680,16 +680,31 @@ router.get('/filelayout', (req, res) => {
     console.log("[file_details/read.js] - Get file details for app_id = " + req.query.app_id + " and file_name "+req.query.name);
     var basic = {}, results={};
     try {
-      File.findAll({where:{"application_id":req.query.app_id, "name":req.query.name}, include:[FileLayout, FileValidation]}).then(function(files) {        
-        files[0].file_layouts.forEach((layout) => {
-          let validationRule = files[0].file_validations.filter((validation => validation.name == layout.name));
-          
-          results[layout.name] = {
-            "type": layout.type,
-            "eclType": layout.eclType,
-            "validation_rules": validationRule[0].ruleType
+      File.findAll({where:
+        {"application_id":req.query.app_id, 
+        [Op.or]: [
+        {
+          "name": {
+            [Op.eq]: req.query.name
           }
-        })
+        },
+        {
+          "scope": {
+            [Op.eq]: req.query.name
+          }
+        }
+      ]}, include:[FileLayout, FileValidation]}).then(function(files) {        
+        if(files[0].file_layouts) {
+          files[0].file_layouts.forEach((layout) => {
+            let validationRule = files[0].file_validations.filter((validation => validation.name == layout.name));
+            
+            results[layout.name] = {
+              "type": layout.type,
+              "eclType": layout.eclType,
+              "validation_rules": validationRule[0].ruleType
+            }
+          })
+        }
         res.json(results);
       })
       .catch(function(err) {

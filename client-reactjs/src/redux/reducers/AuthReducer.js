@@ -30,7 +30,6 @@ export function authenticationReducer(state = initialState, action) {
         user: action.user
       };
     case Constants.INVALID_TOKEN:
-    console.log(JSON.stringify(action.user))
       return {
         loggedIn: false,
         user: action.user
