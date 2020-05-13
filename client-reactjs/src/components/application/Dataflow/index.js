@@ -15,7 +15,7 @@ function Dataflow(props) {
 	const {isShowing, toggle} = useModal();
 
   const [tableDisplay, setTableDisplay] = useState(
-    {graphHeight: 65, display:'block'}
+    {graphHeight: 70, display:'block'}
   );
 	
 	const [form, setForm] = useState({
@@ -79,7 +79,7 @@ function Dataflow(props) {
   }
 
   const maximize = () => {
-    setTableDisplay({graphHeight: 65, display: 'block'})
+    setTableDisplay({graphHeight: 70, display: 'block'})
   }
 
   if(application.applicationId == '' ) return null;

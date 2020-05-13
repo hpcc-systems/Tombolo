@@ -10,6 +10,7 @@ module.exports = (sequelize, DataTypes) => {
     },
     workflow_id: DataTypes.STRING,
     application_id: DataTypes.STRING,
+    instance_id: DataTypes.STRING,
     task: DataTypes.STRING,
     status: DataTypes.STRING,
     message: DataTypes.TEXT,

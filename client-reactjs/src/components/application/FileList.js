@@ -33,6 +33,7 @@ class FileList extends Component {
   }
 
   openAddFileDlg = () => {
+    console.log('openAddFileDlg')
     var _self = this;
     this.setState({
       openFileDetailsDialog: true,
@@ -114,10 +115,11 @@ class FileList extends Component {
               onRef={ref => (this.child = ref)}
               applicationId={this.state.applicationId}
               applicationTitle={this.state.applicationTitle}
-              isNewFile={true}
+              isNew={true}
               onRefresh={this.handleRefresh}
               onClose={this.closeFileDlg}
               user={this.props.user}
+              selectedAsset={''}
               /> : null}
         </div>
       </div>

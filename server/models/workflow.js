@@ -11,6 +11,7 @@ module.exports = (sequelize, DataTypes) => {
     name: DataTypes.STRING,
     description: DataTypes.STRING,
     application_id: DataTypes.STRING,
+    dataflowId: DataTypes.STRING,
     status: DataTypes.STRING
   }, {freezeTableName: true});
   Workflow.associate = function(models) {

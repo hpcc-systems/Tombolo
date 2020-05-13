@@ -152,15 +152,46 @@ class JobDetails extends Component {
       });
     }
 
-  showModal = () => {
+  showModal = () => {    
     this.setState({
       visible: true,
     });
+    this.clearState();
     //this.getQueryDetails();
     /*if(this.props.isNewFile) {
       this.getClusters();
     }*/
     this.getClusters();
+  }
+
+  clearState() {
+
+    this.setState({
+      ...this.state,
+      inputFileDesc:"",
+      inputFileName:"",
+      outputFileName:"",
+      outputFileDesc:"",
+      sourceFiles:[],
+      selectedInputFile:"",
+      clusters:[],
+      selectedCluster:"",
+      jobSearchSuggestions:[],      
+      job: {
+        id:"",
+        name:"",
+        title:"",
+        description:"",
+        entryBWR:"",
+        jobType: this.props.selectedJobType ? this.props.selectedJobType : '',
+        gitrepo:"",
+        contact:"",
+        inputParams: [],
+        inputFiles: [],
+        outputFiles: []
+      }
+    });
+
   }
 
   onClusterSelection = (value) => {

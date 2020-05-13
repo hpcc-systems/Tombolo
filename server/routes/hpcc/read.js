@@ -76,7 +76,7 @@ router.post('/querysearch', function (req, res) {
 router.post('/jobsearch', function (req, res) {
     console.log('clusterid: '+req.body.clusterid);
 	getCluster(req.body.clusterid).then(function(cluster) {
-		let url = cluster.thor_host + ':' + cluster.thor_port +'/WsWorkunits/WUQuery.json?Jobname=*'+req.body.keyword+'*&State=completed';
+		let url = cluster.thor_host + ':' + cluster.thor_port +'/WsWorkunits/WUQuery.json?Jobname=*'+req.body.keyword+'*';
         request.get({
 		  url: url,
 		  auth : getClusterAuth(cluster)
@@ -99,7 +99,6 @@ router.post('/jobsearch', function (req, res) {
 						jobSearchAutoComplete.push({"text" : workunit.Jobname, "value" : workunit.Wuid});
 					}
 				});
-				console.log('jobSearchAutoComplete: '+jobSearchAutoComplete.length)
 	      	 	res.json(jobSearchAutoComplete);
 	      	} else {
 	      		res.json("");

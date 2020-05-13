@@ -1048,7 +1048,7 @@ class FileDetails extends Component {
       editable: true,
       cellEditor: "select",
       cellEditorParams: {
-        values: ["", "drop", "fix", "alert"]
+        values: ["", "drop", "fix", "alert", "warn"]
       }
     },
     {

@@ -34,7 +34,7 @@ function login(username, password) {
               "email": decoded.email,
               "organization": decoded.organization,
               "role":(adminRole.length > 0 ? 'admin' : 'user'),
-              "permissions": decoded.permissions
+              "permissions": decoded.role[0].Permissions.map(permission => permission.name)
           }
           localStorage.setItem('user', JSON.stringify(user));
           dispatch(success(user));
@@ -93,7 +93,7 @@ function validateToken() {
             "email": decoded.email,
             "organization": decoded.organization,
             "role":(adminRole.length > 0 ? 'admin' : 'user'),
-            "permissions": decoded.permissions
+            "permissions": decoded.role[0].Permissions.map(permission => permission.name)
           }
           localStorage.setItem('user', JSON.stringify(user));
           dispatch(success(user));

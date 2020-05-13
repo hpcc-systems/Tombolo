@@ -15,6 +15,7 @@ class DataflowInstances extends Component {
   state = {
     applicationId: this.props.application ? this.props.application.applicationId : '',
     applicationTitle: this.props.application ? this.props.application.applicationTitle : '',
+    dataflowId: {},
     workflows: [],
     workflowDetails: [],
     workflowDetailsVisible: false
@@ -58,15 +59,16 @@ class DataflowInstances extends Component {
     });
   }
 
-  handleViewDetails = (id) => {
+  handleViewDetails = (id, dataflowId, instanceId) => {
     console.log("handleViewDetails: "+id)
-    this.showWorkflowDetails(id);
+    this.showWorkflowDetails(id, dataflowId, instanceId);
   }
 
-  showWorkflowDetails = (id) => {
-    this.getWorkflowDetails(id).then((data) => {
+  showWorkflowDetails = (id, dataflowId, instanceId) => {
+    this.getWorkflowDetails(id, instanceId).then((data) => {
       this.setState({
         workflowDetailsVisible: true,
+        dataflowId: {"id": dataflowId},
         workflowDetails: data
       });
     })
@@ -79,9 +81,9 @@ class DataflowInstances extends Component {
     });
   };
 
-  getWorkflowDetails = (id) => {
+  getWorkflowDetails = (id, instanceId) => {
     return new Promise((resolve, reject) => {
-      fetch("/api/workflows/details?application_id="+this.state.applicationId+"&workflow_id="+id, {
+      fetch("/api/workflows/details?application_id="+this.state.applicationId+"&workflow_id="+id+"&instance_id="+instanceId, {
          headers: authHeader()
       })
       .then((response) => {
@@ -105,13 +107,13 @@ class DataflowInstances extends Component {
         width: '30%',
       },
       {
-        title: 'Description',
-        dataIndex: 'description',
+        title: 'Instance',
+        dataIndex: 'instance_id',
         width: '30%',
       },
       {
-        title: 'Status',
-        dataIndex: 'status',
+        title: 'Created',
+        dataIndex: 'createdAt',
         width: '30%',
       },
       {
@@ -120,7 +122,7 @@ class DataflowInstances extends Component {
         dataJob: '',
         render: (text, record) =>
           <span>
-            <a href="#" onClick={(row) => this.handleViewDetails(record.id)}><Tooltip placement="right" title={"View Details"}><Icon type="eye" theme="filled" /></Tooltip></a>
+            <a href="#" onClick={(row) => this.handleViewDetails(record.id, record.dataflowId, record.instance_id)}><Tooltip placement="right" title={"View Details"}><Icon type="eye" theme="filled" /></Tooltip></a>
           </span>
       }];
     return (
@@ -128,18 +130,14 @@ class DataflowInstances extends Component {
             <BreadCrumbs applicationId={this.state.applicationId} applicationTitle={this.state.applicationTitle}/>
             <Table
               columns={workflowTblColumns}
-              rowKey={record => record.id}
+              rowKey={record => record.instance_id}
               dataSource={this.state.workflows}
               pagination={{ pageSize: 10 }} scroll={{ y: 460 }}
             />
             {this.state.workflowDetailsVisible ?
-            <div className="workflow-details">
+            <div className="workflow-details" style={{height:"560px"}}>
               <p><span id="close" onClick={this.closeWorkflowDetails}><Icon type="close-circle" theme="filled" /></span></p>
-              <Row gutter={24}>
-                <Col span={10}>
-                  <Graph applicationId={this.state.applicationId} viewMode={true} workflowDetails={this.state.workflowDetails}/>
-                </Col>
-              </Row>
+                  <Graph applicationId={this.state.applicationId} viewMode={true} selectedDataflow={this.state.dataflowId} workflowDetails={this.state.workflowDetails}/>
             </div>
             : null }
         </div>

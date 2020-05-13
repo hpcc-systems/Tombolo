@@ -2,7 +2,7 @@ import React, { Component } from "react";
 import * as d3 from "d3";
 import '../../graph-creator/graph-creator.css';
 import $ from 'jquery';
-import { Button, Icon, Drawer, Row, Col, Descriptions} from 'antd/lib';
+import { Button, Icon, Drawer, Row, Col, Descriptions, Badge} from 'antd/lib';
 import { Typography } from 'antd';
 import FileDetailsForm from "../FileDetails";
 import JobDetailsForm from "../JobDetails";
@@ -39,6 +39,7 @@ class Graph extends Component {
     nodeDetailsVisible: false,
     nodeDetailStatus: '',
     nodeDetailMessage: '',
+    wuid:'',
     selectedDataflow:{}
   }
 
@@ -87,8 +88,7 @@ class Graph extends Component {
     this.fetchSavedGraph();
     document.addEventListener('mousedown', this.handleClickOutside);
   }
-  componentWillReceiveProps(props) {
-    
+  componentWillReceiveProps(props) {   
     if(this.state.applicationId != props.application.applicationId || this.state.selectedDataflow != props.selectedDataflow ) {      
       this.setState({
         applicationId: props.application.applicationId,
@@ -155,7 +155,6 @@ class Graph extends Component {
         if(d.jobId == undefined || d.jobId == '') {
           isNew = true
         }
-        console.log(isNew + '-' + d.jobId);
         this.setState({
           isNewJob: isNew,
           openJobDetailsDialog: true,
@@ -185,38 +184,92 @@ class Graph extends Component {
    }
   }
 
+  getTaskColor = (task) => {
+    switch(task.status) {
+      case 'failed':
+        return '#ff0900';
+      case 'running':
+        return '#4837bc';
+      case 'wait': 
+        return '#eeba30'
+      case 'completed': 
+        return '#3bb44a'              
+    }
+  }
+
+  blink = (rect) => {
+    rect.attr('stroke', "red")
+        .transition()
+        .duration(1000)
+        .attr('stroke', "green")
+        .transition()
+        .duration(1000)
+        .on("end", console.log('blink ending'))
+
+    /*rect.transition()
+      .duration(1000)
+      .attr("stroke", "red")
+      .transition()
+      .duration(1000)
+      .attr("stroke", "green")
+      .on("end", console.log('blink ending'))*/
+  }
+
   updateCompletionStatus = () => {
+    let _self=this;
     if(this.props.workflowDetails) {
-      let completedTasks = this.getTaskDetails()
-      d3.selectAll('.node')
-      .each(function(d) {
+      let completedTasks = this.getTaskDetails();
+      d3.select('text.tick').remove();
+      d3.selectAll('.node rect').attr('stroke', 'grey');
+      d3.selectAll('.node rect').classed("warning", false);
+
+      d3.selectAll('.node').each(function(d) {
         let task = completedTasks.filter((task) => {
           return task.id == d3.select(this).select('rect').attr("id")
         })
         if(task && task.length > 0) {
-          let strokeColor = task[0].status == "Completed" ? "green" : "red"
-          d3.select(this).append("text")
-            .attr('font-family', 'FontAwesome')
-            .attr('font-size', function(d) { return '2em'} )
-            .attr('fill', strokeColor)
-            .attr("x", '12')
-            .attr("y", '-2')
-            .text( function (d) { return '\uf058'; })
-          d3.select(this).select('rect').attr("stroke", strokeColor);
+          if(task[0].status == 'completed') {
+            if(task[0].message) {
+              if(JSON.parse(task[0].message)[0].Severity=='Error') {              
+                d3.select(this).select('rect').attr("class", 'warning')
+              }
+            }
+
+            d3.select(this).append("text")
+              .attr('class', 'tick')
+              .attr('font-family', 'FontAwesome')
+              .attr('font-size', function(d) { return '2em'} )
+              .attr('fill', _self.getTaskColor(task[0]))
+              .attr("x", '12')
+              .attr("y", '-2')
+              .text( function (d) { return '\uf058'; })
+          }
+          d3.select(this).select('rect').attr("stroke", _self.getTaskColor(task[0]));
           d3.select(this).select('rect').attr("stroke-width", "5");
-          d3.select(this).select('rect').attr("message", task.message);
+          d3.select(this).select('rect').attr("message", task[0].message);
+          
         }
       });
+      d3.selectAll('rect.warning').attr('stroke', "#ff4040")
+      /*d3.selectAll('rect.warning').each((d) => {
+        console.log(d3.select(this).attr('stroke', 'yellow'));
+        //_self.blink(d3.select(this));
+      })*/
     }
   }
 
   getTaskDetails = () => {
     let completedTasks = [];
+    console.log(this.props.workflowDetails);
     this.props.workflowDetails.forEach((workflowDetail) => {
       let nodeObj = this.thisGraph.nodes.filter((node) => {
         return (node.fileId == workflowDetail.task || node.jobId == workflowDetail.task || node.indexId == workflowDetail.task)
       })
-      completedTasks.push({"id": "rec-"+nodeObj[0].id, "status": workflowDetail.status, "message": workflowDetail.message})
+      completedTasks.push({"id": "rec-"+nodeObj[0].id, 
+        "status": workflowDetail.status, 
+        "message": workflowDetail.message,
+        "wuid": workflowDetail.wuid
+      })
     });
     return completedTasks;
   }
@@ -327,7 +380,7 @@ class Graph extends Component {
         }
         _self.thisGraph.nodes = nodes;
         _self.thisGraph.edges = edges;
-        _self.setIdCt(nodes.length);
+        _self.setIdCt(nodes.length);        
         _self.updateGraph();
 
         this.updateCompletionStatus();              
@@ -672,7 +725,7 @@ class Graph extends Component {
   }
 
   // call to propagate changes to graph
-  updateGraph = () => {
+  updateGraph = () => {    
     let _self=this;
     _self.thisGraph.paths = _self.thisGraph.paths.data(_self.thisGraph.edges, function (d) {
       if(d.source && d.target) {
@@ -875,12 +928,14 @@ class Graph extends Component {
       let tasks = taskDetails.filter((task) => {
         return task.id == "rec-"+d.id
       })
-
-      this.setState({
-        nodeDetailsVisible: true,
-        nodeDetailStatus: tasks[0].status,
-        nodeDetailMessage: JSON.parse(tasks[0].message).message
-      });
+      if(tasks[0]) {
+        this.setState({
+          nodeDetailsVisible: true,
+          nodeDetailStatus: tasks[0].status,
+          nodeDetailMessage: tasks[0].message,
+          wuid: tasks[0].wuid
+        });
+      }
     }
   }
 
@@ -1110,6 +1165,7 @@ class Graph extends Component {
   }
 
   render() {
+    const {nodeDetailStatus} = this.state;  
     const pStyle = {
       fontSize: 16,
       color: 'rgba(0,0,0,0.85)',
@@ -1117,6 +1173,21 @@ class Graph extends Component {
       display: 'block',
       marginBottom: 16,
     };
+
+    const getBadgeForStatus = () => {
+      switch (nodeDetailStatus) {
+        case 'running': 
+          return <Badge status="processing" text="Processing" />;
+        case 'wait': 
+          return <Badge status="default" text='Wait' />;
+        case 'completed':
+          return <Badge status="success" text='Completed' />;          
+        case 'failed':
+          return <Badge status="error" text='Failed' />;                    
+        default:
+          return <Badge status="warning" text='Warning' />;          
+      }
+    }
 
 	return (
     <div className="container-fluid" style={{"height": "100%"}}>
@@ -1177,16 +1248,21 @@ class Graph extends Component {
             selectedDataflow={this.props.selectedDataflow}/> : null}      
 
         <Drawer
-          width={340}
-          placement="right"
+          height={400}
+          placement="top"
           closable={false}
           onClose={this.closeNodeDetails}
           visible={this.state.nodeDetailsVisible}
+          title="Job Info"
         >
-            <Descriptions title="Details">
-              <Descriptions.Item label="Status">{this.state.nodeDetailStatus}</Descriptions.Item>
-              <Descriptions.Item label="Message">{this.state.nodeDetailMessage}</Descriptions.Item>
+            <Descriptions title="Job Info" bordered>              
+              <Descriptions.Item label="Status" span={3}>
+                {getBadgeForStatus()}
+              </Descriptions.Item>
+              <Descriptions.Item label="Workunit Id" span={3}>{this.state.wuid}</Descriptions.Item>
+              <Descriptions.Item label="Message" span={3}>{this.state.nodeDetailMessage ? <i className="fa fa-exclamation-triangle">  {JSON.parse(this.state.nodeDetailMessage)[0].Message}</i>  : ''}</Descriptions.Item>
             </Descriptions>
+            
         </Drawer>
 
     </div>
