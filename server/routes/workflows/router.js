@@ -108,24 +108,30 @@ let workunitInfo = (wuid) => {
 
 let parseWUExceptions = (exceptions) => {
   if(exceptions.ECLException) {
-    let message = exceptions.ECLException.map(({ Severity, Message }) => ({Severity, Message}));
-    console.log('message: '+JSON.stringify(message))
+    let errorsWarnings = exceptions.ECLException.filter(exception => (exception.Severity == 'Warning' || exception.Severity == 'Error'));
+    let message = errorsWarnings.map(({ Severity, Message }) => ({Severity, Message}));
+    console.log('message: '+message.length)
+    if(message.length > 50) {
+     message = message.splice(0, 50);
+    }
+    console.log('length after splicing: '+message.length)
     return JSON.stringify(message);
-  } 
-} 
+  }
+}
 
 let createWorkflowDetails = (message, workflowId, dataflowId) => {
   return new Promise((resolve, reject) => {
     workunitInfo(message.wuid).then((wuInfo) => {
       console.log(wuInfo)      
       Job.findOne({where:{application_id:message.applicationid, dataflowId:dataflowId, name:wuInfo.Workunit.Jobname}}).then((job) => {
+        let messageStr = wuInfo.Workunit.Exceptions ? parseWUExceptions(wuInfo.Workunit.Exceptions) : '';
         WorkflowDetails.create({
           "workflow_id": workflowId, 
           "application_id": message.applicationid,
           "instance_id": message.instanceid,
           "task": job.id,
           "status": wuInfo.Workunit.State,
-          "message": wuInfo.Workunit.Exceptions ? parseWUExceptions(wuInfo.Workunit.Exceptions) : '',
+          "message": messageStr,
           "wuid": message.wuid  
         }).then((result) => {
           console.log("workflow status stored...");

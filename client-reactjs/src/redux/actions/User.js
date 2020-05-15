@@ -12,36 +12,36 @@ export const userActions = {
 function login(username, password) {
     let _self = this;
     return dispatch => {
-        dispatch(request({ username }));
+      dispatch(request({ username }));
 
-        fetch('/api/user/authenticate', {
-          method: 'post',
-          headers: {
-              'Accept': 'application/json',
-              'Content-Type': 'application/json'
-          },
-          body: JSON.stringify({ username, password })
-        }).then(handleResponse)
-        .then(user => {
-          var decoded = jwtDecode(user.accessToken);          
-          let adminRole = decoded.role.filter(role => role.name == 'Tombolo_Admin');
-          var user = {
-              "token": user.accessToken,
-              "id": decoded.id,
-              "username": decoded.username,
-              "firstName": decoded.firstName,
-              "lastName": decoded.lastName,
-              "email": decoded.email,
-              "organization": decoded.organization,
-              "role":(adminRole.length > 0 ? 'admin' : 'user'),
-              "permissions": decoded.role[0].Permissions.map(permission => permission.name)
-          }
-          localStorage.setItem('user', JSON.stringify(user));
-          dispatch(success(user));
+      fetch('/api/user/authenticate', {
+        method: 'post',
+        headers: {
+            'Accept': 'application/json',
+            'Content-Type': 'application/json'
         },
-        error => {
-            dispatch(failure(error.toString()));
-        });
+        body: JSON.stringify({ username, password })
+      }).then(handleResponse)
+      .then(user => {
+        var decoded = jwtDecode(user.accessToken);          
+        let adminRole = decoded.role.filter(role => role.name == 'Tombolo_Admin');
+        var user = {
+            "token": user.accessToken,
+            "id": decoded.id,
+            "username": decoded.username,
+            "firstName": decoded.firstName,
+            "lastName": decoded.lastName,
+            "email": decoded.email,
+            "organization": decoded.organization,
+            "role":(adminRole.length > 0 ? 'admin' : 'user'),
+            "permissions": decoded.role[0].Permissions.map(permission => permission.name)
+        }
+        localStorage.setItem('user', JSON.stringify(user));
+        dispatch(success(user));
+      }).catch(error => {
+        localStorage.removeItem('user');
+        dispatch(failure(error));
+      });
     };
 
     function request(user) { return { type: Constants.LOGIN_REQUEST, user } }
@@ -55,20 +55,14 @@ function logout() {
 }
 
 function handleResponse(response) {
-    return response.text().then(text => {
-        const data = text && JSON.parse(text);
-        if (!response.ok) {
-            if (response.status === 401) {
-                // auto logout if 401 response returned from api
-                logout();
-                //location.reload(true);
-            }
-            //const error = (data && data.message) || response.statusText;
-            //return Promise.reject(error);
-        }
-
-        return data;
-    });
+  return response.text().then(text => {
+    const data = text && JSON.parse(text);
+    if (!response.ok) {
+      const error = (data && data.message) || response.statusText;
+      return Promise.reject(error);
+    }
+    return data;
+  });
 }
 
 function validateToken() {

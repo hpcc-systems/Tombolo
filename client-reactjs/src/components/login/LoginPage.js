@@ -23,8 +23,12 @@ class LoginPage extends React.Component {
     }
 
     componentWillReceiveProps(nextProps){
-        if(nextProps.loggingIn != this.props.loggingIn) {
-            if(nextProps.loggedIn || nextProps.loggingIn){
+        if(nextProps.loginFailed) {
+            message.error("Login failed. Incorrect user name or password!");
+            return;
+        }
+        if(nextProps.loggingIn != this.props.loggingIn) {            
+            if(nextProps.loggedIn){
                 var location=this.props.location.state;
                 if(location && location.from.pathname.includes('/dataflow/')) {
                   this.props.history.push(location.from.pathname);
@@ -33,9 +37,7 @@ class LoginPage extends React.Component {
                     this.props.history.push('/dataflow');
                 }
             }
-            else if(nextProps.loginFailed) {
-                message.error("Login failed. Incorrect user name or password!");
-            }
+            
         }
     }
 

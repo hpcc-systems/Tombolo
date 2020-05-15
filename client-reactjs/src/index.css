@@ -410,3 +410,7 @@ div.tooltip {
 .fa-exclamation-triangle  {
   color:red;
 }
+
+.messages-span li {
+  list-style-type: none;
+}

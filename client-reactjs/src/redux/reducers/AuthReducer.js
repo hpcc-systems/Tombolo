@@ -17,7 +17,8 @@ export function authenticationReducer(state = initialState, action) {
       };
     case Constants.LOGIN_FAILURE:
       return {
-        loginFailed: true
+        loginFailed: true,
+        loggedIn: false
       };
     case Constants.LOGOUT:
       return {

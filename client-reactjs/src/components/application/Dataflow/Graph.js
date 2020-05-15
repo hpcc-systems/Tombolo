@@ -219,7 +219,7 @@ class Graph extends Component {
     let _self=this;
     if(this.props.workflowDetails) {
       let completedTasks = this.getTaskDetails();
-      d3.select('text.tick').remove();
+      d3.selectAll('text.tick').remove();
       d3.selectAll('.node rect').attr('stroke', 'grey');
       d3.selectAll('.node rect').classed("warning", false);
 
@@ -228,13 +228,7 @@ class Graph extends Component {
           return task.id == d3.select(this).select('rect').attr("id")
         })
         if(task && task.length > 0) {
-          if(task[0].status == 'completed') {
-            if(task[0].message) {
-              if(JSON.parse(task[0].message)[0].Severity=='Error') {              
-                d3.select(this).select('rect').attr("class", 'warning')
-              }
-            }
-
+          if(task[0].status == 'completed') {            
             d3.select(this).append("text")
               .attr('class', 'tick')
               .attr('font-family', 'FontAwesome')
@@ -242,15 +236,23 @@ class Graph extends Component {
               .attr('fill', _self.getTaskColor(task[0]))
               .attr("x", '12')
               .attr("y", '-2')
-              .text( function (d) { return '\uf058'; })
+              .text( function (d) { 
+                if(task[0].message && JSON.parse(task[0].message).length > 0) {
+                  if(JSON.parse(task[0].message)[0].Severity=='Error' || JSON.parse(task[0].message)[0].Severity=='Warning') {              
+                    //d3.select(this).select('rect').attr("class", 'warning')
+                    return '\uf071';
+                  }
+                }
+                return '\uf058'; 
+              })
           }
           d3.select(this).select('rect').attr("stroke", _self.getTaskColor(task[0]));
           d3.select(this).select('rect').attr("stroke-width", "5");
-          d3.select(this).select('rect').attr("message", task[0].message);
-          
+          //d3.select(this).select('rect').attr("message", task[0].message);                
         }
       });
-      d3.selectAll('rect.warning').attr('stroke', "#ff4040")
+      //d3.selectAll('rect.warning').attr('stroke', "#ff4040")
+      console.log(d3.selectAll('rect.warning'))
       /*d3.selectAll('rect.warning').each((d) => {
         console.log(d3.select(this).attr('stroke', 'yellow'));
         //_self.blink(d3.select(this));
@@ -1260,7 +1262,7 @@ class Graph extends Component {
                 {getBadgeForStatus()}
               </Descriptions.Item>
               <Descriptions.Item label="Workunit Id" span={3}>{this.state.wuid}</Descriptions.Item>
-              <Descriptions.Item label="Message" span={3}>{this.state.nodeDetailMessage ? <i className="fa fa-exclamation-triangle">  {JSON.parse(this.state.nodeDetailMessage)[0].Message}</i>  : ''}</Descriptions.Item>
+              <Descriptions.Item label="Message" span={3}>{this.state.nodeDetailMessage ? <span className="messages-span">  {JSON.parse(this.state.nodeDetailMessage).map(message => <li>{message.Message}</li>)}</span>  : ''}</Descriptions.Item>
             </Descriptions>
             
         </Drawer>

@@ -66,6 +66,7 @@ class JobDetails extends Component {
         handleError(response);
       })
       .then(data => {
+        console.log('data')
         var jobfiles = [];
         data.jobfiles.forEach(function(doc, idx) {
           var fileObj = {};
@@ -157,7 +158,7 @@ class JobDetails extends Component {
       visible: true,
     });
     this.clearState();
-    //this.getQueryDetails();
+    this.getJobDetails();
     /*if(this.props.isNewFile) {
       this.getClusters();
     }*/

@@ -38,7 +38,6 @@ async function authenticate(req, res, { username, password }) {
             if (response.statusCode != 200) {
               reject(new Error(err));
             } else {
-                console.log(JSON.stringify(body))
                 resolve(body);
             }
       });
