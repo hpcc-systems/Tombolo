@@ -10,6 +10,7 @@ import IndexDetailsForm from "../IndexDetails";
 import FileInstanceDetailsForm from "../FileInstanceDetails";
 import {handleFileDelete, handleFileInstanceDelete, handleJobDelete, handleIndexDelete, handleQueryDelete, updateGraph} from "../../common/WorkflowUtil";
 import { authHeader, handleError } from "../../common/AuthHeader.js"
+import { shapesData, appendDefs } from "./Utils.js"
 import { connect } from 'react-redux';
 const { Text } = Typography;
 
@@ -67,19 +68,7 @@ class Graph extends Component {
       shiftNodeDrag: false,
       selectedText: null,
       idct: 0
-  };
-
-  shapesData = [
-      { "x": "10", "y": "20", "rx":"0", "ry":"0", "rectx":"10", "recty":"0", "rectwidth":"45", "rectheight":"45", "tx":"20", "ty":"30", "title":"Job", "color":"#EE7423", "icon":"\uf085", "iconx":"90", "icony":"25"},
-      { "x": "10", "y": "70", "rx":"0", "ry":"0", "rectx":"10", "recty":"70", "rectwidth":"45", "rectheight":"45", "tx":"20", "ty":"100", "title":"Modeling", "color":"#EE7423", "icon":"\uf00a", "iconx":"90", "icony":"65"},
-      { "x": "10", "y": "120", "rx":"0", "ry":"0", "rectx":"10", "recty":"140", "rectwidth":"45", "rectheight":"45", "tx":"20", "ty":"170", "title":"Scoring", "color":"#EE7423", "icon":"\uf005 ", "iconx":"90", "icony":"65"},            
-      { "x": "10", "y": "170", "rx":"0", "ry":"0", "rectx":"10", "recty":"210", "rectwidth":"45", "rectheight":"45", "tx":"20", "ty":"240", "title":"ETL", "color":"#EE7423", "icon":"\uf0ae", "iconx":"90", "icony":"65"},            
-      { "x": "10", "y": "220", "rx":"0", "ry":"0", "rectx":"10", "recty":"280", "rectwidth":"45", "rectheight":"45", "tx":"20", "ty":"310", "title":"Query Build", "color":"#EE7423", "icon":"\uf002", "iconx":"90", "icony":"65"},            
-      { "x": "10", "y": "270", "rx":"10", "ry":"10", "rectx":"10", "recty":"350", "rectwidth":"45", "rectheight":"45", "tx":"20", "ty":"380", "title":"File", "color":"#7AAAD0", "icon":"\uf1c0", "iconx":"90", "icony":"65"},
-      { "x": "10", "y": "320", "rx":"10", "ry":"10", "rectx":"10", "recty":"420", "rectwidth":"45", "rectheight":"45", "tx":"20", "ty":"450", "title":"File Instance", "color":"#7AAAD0", "icon":"\uf0c5", "iconx":"70", "icony":"65"},
-      //{ "x": "10", "y": "120", "rx":"10", "ry":"10", "rectx":"10", "recty":"170", "rectwidth":"55", "rectheight":"55", "tx":"20", "ty":"210", "title":"Query", "color":"#9B6A97", "icon":"\uf00e", "iconx":"90", "icony":"65"},
-      { "x": "10", "y": "370", "rx":"10", "ry":"10", "rectx":"10", "recty":"490", "rectwidth":"45", "rectheight":"45", "tx":"20", "ty":"520", "title":"Index", "color":"#7DC470", "icon":"\uf2b9", "iconx":"90", "icony":"65"},
-    ];
+  };  
 
   thisGraph = {};
 
@@ -109,8 +98,7 @@ class Graph extends Component {
   }
 
   handleClickOutside(event) {
-    if (this.wrapperRef && !this.wrapperRef.contains(event.target)) {
-      //alert('You clicked insider of me!');
+    if (this.wrapperRef && !this.wrapperRef.contains(event.target)) {      
     }
     //this.saveGraph();
   }
@@ -252,7 +240,6 @@ class Graph extends Component {
         }
       });
       //d3.selectAll('rect.warning').attr('stroke', "#ff4040")
-      console.log(d3.selectAll('rect.warning'))
       /*d3.selectAll('rect.warning').each((d) => {
         console.log(d3.select(this).attr('stroke', 'yellow'));
         //_self.blink(d3.select(this));
@@ -402,11 +389,11 @@ class Graph extends Component {
   }
 
   updateWindow = (svg) => {
-      let docEl = document.documentElement,
-          bodyEl = document.getElementsByTagName('body')[0];
-      let x = window.innerWidth || docEl.clientWidth || bodyEl.clientWidth;
-      let y = window.innerHeight || docEl.clientHeight || bodyEl.clientHeight;
-      svg.attr("width", x).attr("height", y);
+    let docEl = document.documentElement,
+        bodyEl = document.getElementsByTagName('body')[0];
+    let x = window.innerWidth || docEl.clientWidth || bodyEl.clientWidth;
+    let y = window.innerHeight || docEl.clientHeight || bodyEl.clientHeight;
+    svg.attr("width", x).attr("height", y);
   }
 
   /* PROTOTYPE FUNCTIONS */
@@ -472,32 +459,32 @@ class Graph extends Component {
   }
 
   insertBgImage = (gEl, x, y, d) => {
-    let _self=this, shapesData=[];
+    let _self=this, shape=[];
 
     switch (d.type) {
       case 'Job':
-        shapesData = _self.shapesData[0];
+        shape = shapesData[0];
         break;
       case 'Modeling':
-        shapesData = _self.shapesData[1];
+        shape = shapesData[1];
         break;
       case 'Scoring':
-        shapesData = _self.shapesData[2];
+        shape = shapesData[2];
         break;
       case 'ETL':
-        shapesData = _self.shapesData[3];
+        shape = shapesData[3];
         break;
       case 'Query Build':
-        shapesData = _self.shapesData[4];
+        shape = shapesData[4];
         break;
       case 'File':
-        shapesData = _self.shapesData[5];
+        shape = shapesData[5];
         break;
       case 'File Instance':
-        shapesData = _self.shapesData[6];
+        shape = shapesData[6];
         break;
       case 'Index':
-        shapesData = _self.shapesData[7];
+        shape = shapesData[7];
         break;
     }
     if(gEl.select(".icon").empty()) {
@@ -508,7 +495,7 @@ class Graph extends Component {
         .attr('y', 30)
         .attr('x', 12)
         //.attr('class','delete-icon hide-delete-icon')
-        .text(function(node) { return shapesData.icon })
+        .text(function(node) { return shape.icon })
     }
   }
 
@@ -533,13 +520,13 @@ class Graph extends Component {
 
   // remove edges associated with a node
   spliceLinksForNode = (node) => {
-      let _self=this;
-      let toSplice = this.thisGraph.edges.filter(function (l) {
-          return (l.source === node || l.target === node);
-      });
-      toSplice.map(function (l) {
-          _self.thisGraph.edges.splice(_self.thisGraph.edges.indexOf(l), 1);
-      });
+    let _self=this;
+    let toSplice = this.thisGraph.edges.filter(function (l) {
+        return (l.source === node || l.target === node);
+    });
+    toSplice.map(function (l) {
+        _self.thisGraph.edges.splice(_self.thisGraph.edges.indexOf(l), 1);
+    });
   }
 
   replaceSelectEdge = (d3Path, edgeData) => {
@@ -591,15 +578,15 @@ class Graph extends Component {
 
   // mousedown on node
   circleMouseDown = (d3node, d) => {
-      d3.event.stopPropagation();
-      this.graphState.mouseDownNode = d;
-      if (d3.event.shiftKey) {
-          this.graphState.shiftNodeDrag = d3.event.shiftKey;
-          // reposition dragged directed edge
-          this.thisGraph.dragLine.classed('hidden', false)
-              .attr('d', 'M' + (d.x + 40) + ',' + (d.y + 20) + 'L' + (d.x + 35) + ',' + d.y);
-          return;
-      }
+    d3.event.stopPropagation();
+    this.graphState.mouseDownNode = d;
+    if (d3.event.shiftKey) {
+        this.graphState.shiftNodeDrag = d3.event.shiftKey;
+        // reposition dragged directed edge
+        this.thisGraph.dragLine.classed('hidden', false)
+            .attr('d', 'M' + (d.x + 40) + ',' + (d.y + 20) + 'L' + (d.x + 35) + ',' + d.y);
+        return;
+    }
   }
 
   dragEnd = (d3node, d) => {
@@ -642,44 +629,44 @@ class Graph extends Component {
 
   // mouseup on nodes
   circleMouseUp = (d3node, d) => {
-      // reset the this.graphStates
-      this.graphState.shiftNodeDrag = false;
-      d3node.classed(this.consts.connectClass, false);
-      if (this.graphState.selectedEdge) {
-          this.removeSelectFromEdge();
-      }
+    // reset the this.graphStates
+    this.graphState.shiftNodeDrag = false;
+    d3node.classed(this.consts.connectClass, false);
+    if (this.graphState.selectedEdge) {
+        this.removeSelectFromEdge();
+    }
 
-      let prevNode = this.graphState.selectedNode;
-      if (!prevNode || prevNode.id !== d.id) {
-          this.replaceSelectNode(d3node, d);
-      } else {
-          this.removeSelectFromNode();
-      }
+    let prevNode = this.graphState.selectedNode;
+    if (!prevNode || prevNode.id !== d.id) {
+        this.replaceSelectNode(d3node, d);
+    } else {
+        this.removeSelectFromNode();
+    }
 
   } // end of circles mouseup
 
   // mousedown on main svg
   svgMouseDown = () => {
-      this.graphState.graphMouseDown = true;
+    this.graphState.graphMouseDown = true;
   }
 
   // mouseup on main svg
   svgMouseUp = () => {
-      if (this.graphState.justScaleTransGraph) {
-          // dragged not clicked
-          this.graphState.justScaleTransGraph = false;
-      } else if (this.graphState.graphMouseDown && d3.event.shiftKey) {
-          // clicked not dragged from svg
-          let xycoords = d3.mouse(this.thisGraph.svgG.node()),
-              d = {id: this.graphState.idct++, title: "Title", x: xycoords[0], y: xycoords[1]};
-          this.thisGraph.nodes.push(d);
-          this.updateGraph();
-      } else if (this.graphState.shiftNodeDrag) {
-          // dragged from node
-          this.graphState.shiftNodeDrag = false;
-          this.thisGraph.dragLine.classed("hidden", true);
-      }
-      this.graphState.graphMouseDown = false;
+    if (this.graphState.justScaleTransGraph) {
+        // dragged not clicked
+        this.graphState.justScaleTransGraph = false;
+    } else if (this.graphState.graphMouseDown && d3.event.shiftKey) {
+        // clicked not dragged from svg
+        let xycoords = d3.mouse(this.thisGraph.svgG.node()),
+            d = {id: this.graphState.idct++, title: "Title", x: xycoords[0], y: xycoords[1]};
+        this.thisGraph.nodes.push(d);
+        this.updateGraph();
+    } else if (this.graphState.shiftNodeDrag) {
+        // dragged from node
+        this.graphState.shiftNodeDrag = false;
+        this.thisGraph.dragLine.classed("hidden", true);
+    }
+    this.graphState.graphMouseDown = false;
   }
 
   // keydown on main svg
@@ -713,17 +700,17 @@ class Graph extends Component {
   }
 
   svgKeyUp = () => {
-      this.graphState.lastKeyDown = -1;
+    this.graphState.lastKeyDown = -1;
   }
 
   zoomed = () => {
-      this.graphState.justScaleTransGraph = true;
-      d3.select("." + this.consts.graphClass)
-          .attr("transform", d3.event.transform);
+    this.graphState.justScaleTransGraph = true;
+    d3.select("." + this.consts.graphClass)
+        .attr("transform", d3.event.transform);
   }
 
   setIdCt = (idct) => {
-      this.graphState.idct = idct;
+    this.graphState.idct = idct;
   }
 
   // call to propagate changes to graph
@@ -825,10 +812,10 @@ class Graph extends Component {
                 d3.select(this)
                   .append("rect")
                   .attr("id", "rec-"+d.id)
-                  .attr("width", _self.shapesData[0].rectwidth)
-                  .attr("height", _self.shapesData[0].rectheight)
+                  .attr("width", shapesData[0].rectwidth)
+                  .attr("height", shapesData[0].rectheight)
                   .attr("stroke", "grey")
-                  .attr("fill", _self.shapesData[0].color)
+                  .attr("fill", shapesData[0].color)
                   .attr("stroke-width", "3")
                   .attr("filter", "url(#glow)")
                   //.call(_self.nodeDragHandler)
@@ -845,17 +832,17 @@ class Graph extends Component {
                 d3.select(this)
                   .append("rect")
                   .attr("id", "rec-"+d.id)
-                  .attr("rx", _self.shapesData[5].rx)
-                  .attr("ry", _self.shapesData[5].ry)
-                  .attr("width", _self.shapesData[5].rectwidth)
-                  .attr("height", _self.shapesData[5].rectheight)
+                  .attr("rx", shapesData[5].rx)
+                  .attr("ry", shapesData[5].ry)
+                  .attr("width", shapesData[5].rectwidth)
+                  .attr("height", shapesData[5].rectheight)
                   .attr("stroke", "grey")
                   .attr("filter", "url(#glow)")
                   .attr("fill", function(d) {
                     if(d.type == 'File' || d.type == 'File Instance')
-                     return _self.shapesData[5].color;
+                     return shapesData[5].color;
                     else if(d.type == 'Index')
-                      return _self.shapesData[7].color;
+                      return shapesData[7].color;
                   })
                   .attr("stroke-width", "3")
                   //.call(_self.nodeDragHandler)
@@ -948,11 +935,11 @@ class Graph extends Component {
   }
 
   nodeDragHandler = () => {
-     return d3.drag()
-        .on("drag", function (d) {
-        })
-        .on("end", function(d){
-        })
+   return d3.drag()
+      .on("drag", function (d) {
+      })
+      .on("end", function(d){
+      })
   }
 
   collapseNav = () => {
@@ -968,6 +955,19 @@ class Graph extends Component {
 
   loadGraphComponents = () => {
     let _self=this;
+    /** MAIN SVG **/
+    let docEl = document.documentElement,
+        bodyEl = document.getElementById('body');
+
+    let width = window.innerWidth || docEl.clientWidth || bodyEl.clientWidth,
+        height = window.innerHeight || docEl.clientHeight || bodyEl.clientHeight;
+
+    let xLoc = width / 2 - 25,
+        yLoc = 100;    
+    let svg = d3.select("#graph").append("svg")
+        .attr("width", width)
+        .attr("height", "100%");
+
     _self.thisGraph.nodes = [];
     _self.thisGraph.edges = [];
 
@@ -979,7 +979,7 @@ class Graph extends Component {
 
 
     var group = graphComponentsSvg.selectAll('g')
-    .data(this.shapesData)
+    .data(shapesData)
     .enter().append("g")
     .attr("transform",
           "translate(" + margin.left + "," + margin.top + ")")
@@ -1027,58 +1027,10 @@ class Graph extends Component {
         _self.setIdCt(idct);
         _self.updateGraph();
     })
-    dragHandler(graphComponentsSvg.selectAll("g"));
-
-    let docEl = document.documentElement,
-        bodyEl = document.getElementById('body');
-
-    let width = window.innerWidth || docEl.clientWidth || bodyEl.clientWidth,
-        height = window.innerHeight || docEl.clientHeight || bodyEl.clientHeight;
-
-    let xLoc = width / 2 - 25,
-        yLoc = 100;
-
-    /** MAIN SVG **/
-    let svg = d3.select("#graph").append("svg")
-        .attr("width", width)
-        .attr("height", "100%");
+    dragHandler(graphComponentsSvg.selectAll("g"));    
 
     // define arrow markers for graph links
-    let defs = svg.append('svg:defs');
-    defs.append('svg:marker')
-        .attr('id', 'end-arrow')
-        .attr('viewBox', '0 -5 10 10')
-        .attr('refX', "30")
-        .attr('markerWidth', 3.5)
-        .attr('markerHeight', 3.5)
-        .attr('orient', 'auto')
-        .append('svg:path')
-        .attr('d', 'M0,-5L10,0L0,5');
-
-    // define arrow markers for leading arrow
-    defs.append('svg:marker')
-        .attr('id', 'mark-end-arrow')
-        .attr('viewBox', '0 -5 10 10')
-        .attr('refX', 7)
-        .attr('markerWidth', 3.5)
-        .attr('markerHeight', 3.5)
-        .attr('orient', 'auto')
-        .append('svg:path')
-        .attr('d', 'M0,-5L10,0L0,5');
-
-    let feMerge = defs.append('svg:filter')
-        .attr('id', 'glow')
-      .append('svg:feGaussianBlur')
-        .attr('stdDeviation', '1.0')
-        .attr('result', 'coloredBlur')
-      .append('svg:feMerge')
-
-      feMerge.append('svg:feMergeNode')
-        .attr('in', 'coloredBlur')
-
-      feMerge.append('svg:feMergeNode')
-        .attr('in', 'SourceGraphic')
-
+    appendDefs(svg);  
 
     _self.thisGraph.svg = svg;
     _self.thisGraph.svgG = svg.append("g")
@@ -1099,24 +1051,24 @@ class Graph extends Component {
           return {x: d.x, y: d.y};
       })
       .on("drag", function (d) {
-          _self.graphState.justDragged = true;
-          _self.dragmove(d);
-          //d3.select(this).attr("x", d.x = d3.event.x).attr("y", d.y = d3.event.y);
+        _self.graphState.justDragged = true;
+        _self.dragmove(d);
+        //d3.select(this).attr("x", d.x = d3.event.x).attr("y", d.y = d3.event.y);
       })
       .on("end", function (d) {
-          // todo check if edge-mode is selected
-          var mouse = d3.mouse(this);
-          var elem = document.elementFromPoint(mouse[0], mouse[1]);
-          if (_self.graphState.shiftNodeDrag) {
-              _self.dragEnd(d3.select(this), _self.graphState.mouseEnterNode)
-          } else {
-            let x = d3.event.x > 1300 ? 1300 : d3.event.x < 60 ? 60 : d3.event.x
-            let y = d3.event.y > 600 ? 600 : d3.event.y < 0 ? 0 : d3.event.y      
-            d.x = x;
-            d.y = y;
-          }
-          _self.updateGraph();
-          _self.saveGraph();
+        // todo check if edge-mode is selected
+        var mouse = d3.mouse(this);
+        var elem = document.elementFromPoint(mouse[0], mouse[1]);
+        if (_self.graphState.shiftNodeDrag) {
+            _self.dragEnd(d3.select(this), _self.graphState.mouseEnterNode)
+        } else {
+          let x = d3.event.x > 1300 ? 1300 : d3.event.x < 60 ? 60 : d3.event.x
+          let y = d3.event.y > 600 ? 600 : d3.event.y < 0 ? 0 : d3.event.y      
+          d.x = x;
+          d.y = y;
+        }
+        _self.updateGraph();
+        _self.saveGraph();
       });
 
     // listen for key events
@@ -1257,7 +1209,7 @@ class Graph extends Component {
           visible={this.state.nodeDetailsVisible}
           title="Job Info"
         >
-            <Descriptions title="Job Info" bordered>              
+            <Descriptions title="Job Info" bordered size="middle">              
               <Descriptions.Item label="Status" span={3}>
                 {getBadgeForStatus()}
               </Descriptions.Item>
