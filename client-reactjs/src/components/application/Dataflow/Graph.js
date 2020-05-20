@@ -401,7 +401,7 @@ class Graph extends Component {
   dragmove = (d) => {
     let _self=this;
     if (_self.graphState.shiftNodeDrag) {
-        _self.thisGraph.dragLine.attr('d', 'M' + (d.x + 40) + ',' + (d.y + 20) + 'L' + (d3.mouse(_self.thisGraph.svgG.node())[0] + 35)+ ',' + d3.mouse(_self.thisGraph.svgG.node())[1]);
+        _self.thisGraph.dragLine.attr('d', 'M' + (d.x + 35) + ',' + (d.y + 15) + 'L' + (d3.mouse(_self.thisGraph.svgG.node())[0] + 35)+ ',' + d3.mouse(_self.thisGraph.svgG.node())[1]);
     } else {
         d.x += d3.event.dx;
         d.y += d3.event.dy;
@@ -447,8 +447,8 @@ class Graph extends Component {
         let deleteIcon = gEl.append('text')
           .attr('font-family', 'FontAwesome')
           .attr('id', 't'+d.id)
-          .attr('dy', 12)
-          .attr('dx', 30)
+          .attr('dy', 8)
+          .attr('dx', 25)
           .attr('class','delete-icon hide-delete-icon')
           .on("click", function(d) {
             d3.event.stopPropagation();
@@ -492,8 +492,8 @@ class Graph extends Component {
         .attr('font-family', 'FontAwesome')
         .attr('class', 'icon')
         .attr('font-size', function(d) { return '2em'} )
-        .attr('y', 30)
-        .attr('x', 12)
+        .attr('y', 25)
+        .attr('x', 6)
         //.attr('class','delete-icon hide-delete-icon')
         .text(function(node) { return shape.icon })
     }
@@ -530,11 +530,11 @@ class Graph extends Component {
   }
 
   replaceSelectEdge = (d3Path, edgeData) => {
-      d3Path.classed(this.consts.selectedClass, true);
-      if (this.graphState.selectedEdge) {
-          this.removeSelectFromEdge();
-      }
-      this.graphState.selectedEdge = edgeData;
+    d3Path.classed(this.consts.selectedClass, true);
+    if (this.graphState.selectedEdge) {
+        this.removeSelectFromEdge();
+    }
+    this.graphState.selectedEdge = edgeData;
   }
 
   replaceSelectNode = (d3Node, nodeData) => {
@@ -546,11 +546,11 @@ class Graph extends Component {
   }
 
   removeSelectFromNode = () => {
-      let _self=this;
-      this.thisGraph.circles.filter(function (cd) {
-          return cd.id === _self.graphState.selectedNode.id;
-      }).classed(_self.consts.selectedClass, false);
-      this.graphState.selectedNode = null;
+    let _self=this;
+    this.thisGraph.circles.filter(function (cd) {
+        return cd.id === _self.graphState.selectedNode.id;
+    }).classed(_self.consts.selectedClass, false);
+    this.graphState.selectedNode = null;
   }
 
   removeSelectFromEdge = () => {
@@ -599,8 +599,8 @@ class Graph extends Component {
     let mouseEnterNode = _self.graphState.mouseEnterNode;
 
     if (_self.graphState.justDragged) {
-        // dragged, not clicked
-        _self.graphState.justDragged = false;
+      // dragged, not clicked
+      _self.graphState.justDragged = false;
     }
 
     _self.thisGraph.dragLine.classed("hidden", true);
@@ -715,6 +715,8 @@ class Graph extends Component {
 
   // call to propagate changes to graph
   updateGraph = () => {    
+    let color = d3.scaleOrdinal(d3.schemeDark2);
+    console.log('color: '+color(0) + ', '+ color(1) + ', ' + color(2) + ', '+color(3))
     let _self=this;
     _self.thisGraph.paths = _self.thisGraph.paths.data(_self.thisGraph.edges, function (d) {
       if(d.source && d.target) {
@@ -724,8 +726,9 @@ class Graph extends Component {
     let paths = _self.thisGraph.paths;
     // update existing paths
     paths.style('marker-end', 'url(#end-arrow)')
+        .style("stroke", function(d, i) { return color(i) })
         .attr("d", function (d) {
-            return "M" + (d.source.x + 40) + "," + (d.source.y + 20) + "L" + (d.target.x +35) + "," + (d.target.y + 15);
+            return "M" + (d.source.x + 35) + "," + (d.source.y + 20) + "L" + (d.target.x +35) + "," + (d.target.y + 15);
         });
 
     // remove old links
@@ -734,10 +737,11 @@ class Graph extends Component {
     // add new paths
     paths = paths.enter()
         .append("path")
-        .style('marker-end', 'url(#end-arrow)')
+        .style("stroke", function(d, i) { return color(i) })
+        .style('marker-end', 'url(#end-arrow)')        
         .classed("link", true)
-        .attr("d", function (d) {
-            return "M" + (d.source.x + 40) + "," + (d.source.y + 20) + "L" + (d.target.x + 35)  + "," + (d.target.y + 15);
+        .attr("d", function (d, i) {            
+            return "M" + (d.source.x + 35) + "," + (d.source.y + 20) + "L" + (d.target.x + 35)  + "," + (d.target.y + 15);
         })
         .merge(paths)
         .on("mouseup", function (d) {
@@ -812,6 +816,8 @@ class Graph extends Component {
                 d3.select(this)
                   .append("rect")
                   .attr("id", "rec-"+d.id)
+                  .attr("rx", shapesData[5].rx)
+                  .attr("ry", shapesData[5].ry)
                   .attr("width", shapesData[0].rectwidth)
                   .attr("height", shapesData[0].rectheight)
                   .attr("stroke", "grey")

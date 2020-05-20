@@ -126,18 +126,20 @@ class DataflowInstances extends Component {
           </span>
       }];
     return (
-        <div style={{paddingTop:"55px", margin: "5px"}}>
+        <div>
             <BreadCrumbs applicationId={this.state.applicationId} applicationTitle={this.state.applicationTitle}/>
+            <div>
             <Table
               columns={workflowTblColumns}
               rowKey={record => record.instance_id}
               dataSource={this.state.workflows}
               pagination={{ pageSize: 10 }} scroll={{ y: 460 }}
             />
+            </div>
             {this.state.workflowDetailsVisible ?
-            <div className="workflow-details" style={{height:"560px"}}>
+            <div className="workflow-details" style={{height:"750px"}}>
               <p><span id="close" onClick={this.closeWorkflowDetails}><Icon type="close-circle" theme="filled" /></span></p>
-                  <Graph applicationId={this.state.applicationId} viewMode={true} selectedDataflow={this.state.dataflowId} workflowDetails={this.state.workflowDetails}/>
+              <Graph applicationId={this.state.applicationId} viewMode={true} selectedDataflow={this.state.dataflowId} workflowDetails={this.state.workflowDetails}/>
             </div>
             : null }
         </div>
