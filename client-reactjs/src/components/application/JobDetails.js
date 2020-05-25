@@ -1,5 +1,5 @@
 import React, { Component } from "react";
-import { Modal, Tabs, Form, Input, Button,  Select, Table, AutoComplete, Spin, Icon, message } from 'antd/lib';
+import { Modal, Tabs, Form, Input, Checkbox, Button,  Select, Table, AutoComplete, Spin, Icon, message } from 'antd/lib';
 import "react-table/react-table.css";
 import { authHeader, handleError } from "../common/AuthHeader.js"
 import AssociatedDataflows from "./AssociatedDataflows"
@@ -30,6 +30,7 @@ class JobDetails extends Component {
     selectedCluster:"",
     jobSearchSuggestions:[],
     jobSearchErrorShown:false,
+    autoCreateFiles:false,
     autoCompleteSuffix: <Icon type="search" className="certain-category-icon" />,
     job: {
       id:"",
@@ -302,6 +303,10 @@ class JobDetails extends Component {
     });
   }
 
+  onAutoCreateFiles = (e) => {
+    this.state.autoCreateFiles = e.target.checked;
+  }
+
   saveJobDetails() {
     return new Promise((resolve) => {
       fetch('/api/job/saveJob', {
@@ -353,9 +358,13 @@ class JobDetails extends Component {
         "jobType" : this.state.job.jobType,
         "contact": this.state.job.contact,
         "author": this.state.job.author,
+        "clusterId": this.state.selectedCluster
       },
       "params": this.state.job.inputParams,
-      "files" : inputFiles.concat(outputFiles)
+      "files" : inputFiles.concat(outputFiles),
+      "mousePosition": this.props.mousePosition,
+      "currentlyEditingId": this.props.currentlyEditingId,
+      "autoCreateFiles": this.state.autoCreateFiles
     };
 
     console.log(jobDetails);
@@ -473,12 +482,21 @@ class JobDetails extends Component {
         <Modal
           title="Job Details"
           visible={visible}
-          onOk={this.handleOk}
-          confirmLoading={confirmLoading}
           onCancel={this.handleCancel}
           bodyStyle={{height:"520px"}}
           destroyOnClose={true}
           width="1200px"
+          footer={[
+            <Checkbox onChange={this.onAutoCreateFiles} disabled={!this.props.isNew} style={{"float":"left"}}>
+              Automatically create dependant files
+            </Checkbox>,
+            <Button key="cancel" onClick={this.handleCancel}>
+              Cancel
+            </Button>,
+            <Button key="submit" type="primary" loading={confirmLoading} onClick={this.handleOk}>
+              Save
+            </Button>,
+          ]}
         >
         <Tabs
           defaultActiveKey="1"

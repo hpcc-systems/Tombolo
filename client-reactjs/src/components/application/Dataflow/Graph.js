@@ -41,7 +41,8 @@ class Graph extends Component {
     nodeDetailStatus: '',
     nodeDetailMessage: '',
     wuid:'',
-    selectedDataflow:{}
+    selectedDataflow:{},
+    mousePosition:[]
   }
 
   consts = {
@@ -104,6 +105,7 @@ class Graph extends Component {
   }
 
   openDetailsDialog(d) {
+    console.log('openDetailsDialog');
     let _self=this;
     let isNew = false;
     switch(d.type) {
@@ -147,7 +149,8 @@ class Graph extends Component {
           isNewJob: isNew,
           openJobDetailsDialog: true,
           selectedJob: d.jobId,
-          selectedJobType: d.type == 'Job' ? 'General' : d.type
+          selectedJobType: d.type == 'Job' ? 'General' : d.type,
+          mousePosition: [d.x, d.y]
         });
 
         setTimeout(() => {
@@ -165,7 +168,7 @@ class Graph extends Component {
           selectedIndex: d.indexId
         });
 
-        setTimeout(() => {
+        setTimeout(() => {          
           _self.idxDlg.showModal();
         }, 200);
         break;
@@ -181,6 +184,7 @@ class Graph extends Component {
       case 'wait': 
         return '#eeba30'
       case 'completed': 
+      case 'compiled': 
         return '#3bb44a'              
     }
   }
@@ -216,7 +220,7 @@ class Graph extends Component {
           return task.id == d3.select(this).select('rect').attr("id")
         })
         if(task && task.length > 0) {
-          if(task[0].status == 'completed') {            
+          if(task[0].status == 'completed' || task[0].status == 'compiled') {            
             d3.select(this).append("text")
               .attr('class', 'tick')
               .attr('font-family', 'FontAwesome')
@@ -313,9 +317,26 @@ class Graph extends Component {
       }
       return el
     });
-    this.thisGraph.nodes = newData;
+    if(saveResponse.dataflow) {
+      let edges = saveResponse.dataflow.edges;
+      edges.forEach(function (e, i) {
+        edges[i] = {
+          source: saveResponse.dataflow.nodes.filter(function (n) {
+            return n.id === e.source;
+          })[0],
+          target: saveResponse.dataflow.nodes.filter(function (n) {
+            return n.id === e.target;
+          })[0]
+        };
+      });
+      this.thisGraph.nodes = saveResponse.dataflow.nodes;
+      this.thisGraph.edges = edges;   
+      this.setIdCt(saveResponse.dataflow.length);        
+    } else {
+      this.thisGraph.nodes = newData;
+    }
     this.updateGraph();
-    this.saveGraph();
+    //this.saveGraph();
   }
 
   saveGraph() {
@@ -716,7 +737,6 @@ class Graph extends Component {
   // call to propagate changes to graph
   updateGraph = () => {    
     let color = d3.scaleOrdinal(d3.schemeDark2);
-    console.log('color: '+color(0) + ', '+ color(1) + ', ' + color(2) + ', '+color(3))
     let _self=this;
     _self.thisGraph.paths = _self.thisGraph.paths.data(_self.thisGraph.edges, function (d) {
       if(d.source && d.target) {
@@ -736,21 +756,21 @@ class Graph extends Component {
 
     // add new paths
     paths = paths.enter()
-        .append("path")
-        .style("stroke", function(d, i) { return color(i) })
-        .style('marker-end', 'url(#end-arrow)')        
-        .classed("link", true)
-        .attr("d", function (d, i) {            
-            return "M" + (d.source.x + 35) + "," + (d.source.y + 20) + "L" + (d.target.x + 35)  + "," + (d.target.y + 15);
-        })
-        .merge(paths)
-        .on("mouseup", function (d) {
-            // graphState.mouseDownLink = null;
-        })
-        .on("mousedown", function (d) {
-                _self.pathMouseDown(d3.select(this), d);
-            }
-        );
+      .append("path")
+      .style("stroke", function(d, i) { return color(i) })
+      .style('marker-end', 'url(#end-arrow)')        
+      .classed("link", true)
+      .attr("d", function (d, i) {            
+          return "M" + (d.source.x + 35) + "," + (d.source.y + 20) + "L" + (d.target.x + 35)  + "," + (d.target.y + 15);
+      })
+      .merge(paths)
+      .on("mouseup", function (d) {
+          // graphState.mouseDownLink = null;
+      })
+      .on("mousedown", function (d) {
+              _self.pathMouseDown(d3.select(this), d);
+          }
+      );
     _self.thisGraph.paths = paths;
 
     // update existing nodes
@@ -1183,7 +1203,10 @@ class Graph extends Component {
               onRefresh={this.onFileAdded}
               onClose={this.closeJobDlg}
               user={this.props.user}
-              selectedDataflow={this.props.selectedDataflow}/> : null}
+              selectedDataflow={this.props.selectedDataflow}
+              mousePosition={this.state.mousePosition}
+              currentlyEditingId={this.state.currentlyEditingId}/> : null}
+              
 
       {this.state.openIndexDetailsDialog ?
           <IndexDetailsForm

@@ -202,7 +202,7 @@ router.post('/saveFile', [
           if(!result[1]) {
               File.update(req.body.file.basic, {where:{application_id:applicationId, name:req.body.file.basic.name}}).then(function(result){})
           }
-          var fileLayoutToSave = updateCommonData(req.body.file.layout, fieldsToUpdate);
+          var fileLayoutToSave = hpccUtil.updateCommonData(req.body.file.layout, fieldsToUpdate);
           return FileLayout.bulkCreate(
               fileLayoutToSave, {updateOnDuplicate: ["name", "type", "displayType", "displaySize", "textJustification", "format","data_types", "isPCI", "isPII", "isHIPAA", "description", "required"]}
           )
@@ -210,27 +210,27 @@ router.post('/saveFile', [
           FileLicense.destroy(
               {where:{file_id: fileId}}
           ).then(function(deleted) {
-          var fileLicensToSave = updateCommonData(req.body.file.license, fieldsToUpdate);
+          var fileLicensToSave = hpccUtil.updateCommonData(req.body.file.license, fieldsToUpdate);
           return FileLicense.bulkCreate(
               fileLicensToSave,
               {updateOnDuplicate: ["name", "url"]}
           )  })
       }).then(function(fileLicense) {
-          var fileRelationToSave = updateCommonData(req.body.file.relation, fieldsToUpdate);
+          var fileRelationToSave = hpccUtil.updateCommonData(req.body.file.relation, fieldsToUpdate);
           return FileRelation.bulkCreate(
               fileRelationToSave,
               {updateOnDuplicate: ["source_file_id"]}
           )
       }).then(function(fileRelation) {
           console.log('fieldsToUpdate:' +JSON.stringify(fieldsToUpdate));
-          var fileFieldRelationToSave = updateCommonData(req.body.file.fileFieldRelation, fieldsToUpdate);
+          var fileFieldRelationToSave = hpccUtil.updateCommonData(req.body.file.fileFieldRelation, fieldsToUpdate);
           console.log('fileFieldRelationToSave: '+JSON.stringify(fileFieldRelationToSave));
           return FileFieldRelation.bulkCreate(
               fileFieldRelationToSave,
               {updateOnDuplicate: ["field", "source_field", "requirements"]}
           )
       }).then(function(fileFieldRelation) {
-          var fileValidationsToSave = updateCommonData(req.body.file.validation, fieldsToUpdate);
+          var fileValidationsToSave = hpccUtil.updateCommonData(req.body.file.validation, fieldsToUpdate);
           return FileValidation.bulkCreate(
               fileValidationsToSave,
               {updateOnDuplicate: ["name", "ruleType", "rule", "action", "fixScript"]}
@@ -369,7 +369,7 @@ router.post('/saveFileTree', (req, res) => {
             });
         });
 
-        var stylesToSave = updateCommonData(req.body.styles, {"application_id":applicationId});
+        var stylesToSave = hpccUtil.updateCommonData(req.body.styles, {"application_id":applicationId});
         TreeStyle.bulkCreate(
             stylesToSave,
             {updateOnDuplicate: ["style", "node_id"]}
@@ -625,17 +625,6 @@ router.get('/dataTypes', (req, res) => {
         console.log('err', err);
     }
 });
-
-function updateCommonData(objArray, fields) {
-    if(objArray.length>0){
-    Object.keys(fields).forEach(function (key, index) {
-        objArray.forEach(function(obj) {
-            obj[key] = fields[key];
-        });
-    });
-    }
-    return objArray;
-}
 
 async function getFileRelationHierarchy(applicationId, fileId, id) {
     var fileIds = [], promises = [];

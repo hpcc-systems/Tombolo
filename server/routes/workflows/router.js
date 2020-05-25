@@ -94,7 +94,7 @@ let workunitInfo = (wuid) => {
   return new Promise((resolve, reject) => {
     wsWorkunits.WUInfo({"Wuid":wuid, "IncludeExceptions":true, "IncludeSourceFiles":true, "IncludeResults":true}).then(async (wuInfo) => {
       console.log('state: '+wuInfo.Workunit.State);
-      if(wuInfo.Workunit.State == 'completed' || wuInfo.Workunit.State == 'failed' || wuInfo.Workunit.State == 'wait') {
+      if(wuInfo.Workunit.State == 'completed' || wuInfo.Workunit.State == 'failed' || wuInfo.Workunit.State == 'wait' || wuInfo.Workunit.State == 'compiled') {
         resolve(wuInfo);
       } else {
         setTimeout(_ => {

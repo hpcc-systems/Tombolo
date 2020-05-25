@@ -4,6 +4,7 @@ const crypto = require('crypto');
 var request = require('request');
 var requestPromise = require('request-promise');
 const dbUtil = require('../../utils/db');
+const hpccUtil = require('../../utils/hpcc-util');
 var models  = require('../../models');
 var Cluster = models.cluster;
 let algorithm = 'aes-256-ctr';
@@ -13,10 +14,10 @@ var http = require('http');
 router.post('/filesearch', function (req, res) {
   console.log('clusterid: '+req.body.clusterid);
 
-	getCluster(req.body.clusterid).then(function(cluster) {
+	hpccUtil.getCluster(req.body.clusterid).then(function(cluster) {
 		let results = [];
 		try {
-			let clusterAuth = getClusterAuth(cluster);
+			let clusterAuth = hpccUtil.getClusterAuth(cluster);
 			let contentType = req.body.indexSearch ? "key" : "";
 			console.log("contentType: "+contentType);
 			let dfuService = new hpccJSComms.DFUService({ baseUrl: cluster.thor_host + ':' + cluster.thor_port, userID:(clusterAuth ? clusterAuth.user : ""), password:(clusterAuth ? clusterAuth.password : "")});
@@ -43,8 +44,8 @@ router.post('/filesearch', function (req, res) {
 });
 
 router.post('/querysearch', function (req, res) {
-	getCluster(req.body.clusterid).then(function(cluster) {
-		let clusterAuth = getClusterAuth(cluster);
+	hpccUtil.getCluster(req.body.clusterid).then(function(cluster) {
+		let clusterAuth = hpccUtil.getClusterAuth(cluster);
 		let wsWorkunits = new hpccJSComms.WorkunitsService({ baseUrl: cluster.thor_host + ':' + cluster.thor_port, userID:(clusterAuth ? clusterAuth.user : ""), password:(clusterAuth ? clusterAuth.password : ""), type: "get" }),
 			  querySearchAutoComplete = [];
 
@@ -75,11 +76,11 @@ router.post('/querysearch', function (req, res) {
 
 router.post('/jobsearch', function (req, res) {
     console.log('clusterid: '+req.body.clusterid);
-	getCluster(req.body.clusterid).then(function(cluster) {
+	hpccUtil.getCluster(req.body.clusterid).then(function(cluster) {
 		let url = cluster.thor_host + ':' + cluster.thor_port +'/WsWorkunits/WUQuery.json?Jobname=*'+req.body.keyword+'*';
         request.get({
 		  url: url,
-		  auth : getClusterAuth(cluster)
+		  auth : hpccUtil.getClusterAuth(cluster)
 		}, function(err, response, body) {
 		  if (err) {
 			console.log('ERROR - ', err);
@@ -145,8 +146,8 @@ router.post('/newcluster', async function (req, res) {
     try {
 		var ThorReachable=false;
 		var RoxieReachable=false;
-		ThorReachable = await isClusterReachable(req.body.thor_host, req.body.thor_port, req.body.username, req.body.password);
-		RoxieReachable = await isClusterReachable(req.body.roxie_host, req.body.roxie_port, req.body.username, req.body.password);
+		ThorReachable = await hpccUtil.isClusterReachable(req.body.thor_host, req.body.thor_port, req.body.username, req.body.password);
+		RoxieReachable = await hpccUtil.isClusterReachable(req.body.roxie_host, req.body.roxie_port, req.body.username, req.body.password);
 		if(ThorReachable && RoxieReachable) {
 			var newCluster = {"name":req.body.name, "thor_host":req.body.thor_host, "thor_port":req.body.thor_port,
 			 "roxie_host":req.body.roxie_host, "roxie_port":req.body.roxie_port};
@@ -189,113 +190,19 @@ router.post('/removecluster', function (req, res) {
 });
 
 router.get('/getFileInfo', function (req, res) {
-  try {
-		console.log('fileName: '+req.query.fileName);
-		getCluster(req.query.clusterid).then(function(cluster) {
-			let clusterAuth = getClusterAuth(cluster);
-			let dfuService = new hpccJSComms.DFUService({ baseUrl: cluster.thor_host + ':' + cluster.thor_port, userID:(clusterAuth ? clusterAuth.user : ""), password:(clusterAuth ? clusterAuth.password : "")});
-			dfuService.DFUInfo({"Name":req.query.fileName}).then(response => {
-		  	var processFieldValidations = function(fileLayout) {
-      		var fieldsValidations=[];
-      		fileLayout.forEach(function(field, idx) {
-      			//fields[idx] = field.trim().replace(";","");
-      			var validations = {
-	      			"name" : field.name,
-	      			"ruleType" : '',
-	      			"rule" : '',
-	      			"action" : '',
-	      			"fixScript" : ''
-	      		}
-      			fieldsValidations.push(validations);
-      			//console.log(fields[idx]);
-      		});
-      		return fieldsValidations;
-      	}
-      	var fileInfo = {};
-    		getFileLayout(cluster, req.query.fileName).then(function(fileLayout) {
-      		fileInfo = {
-      			"name" : response.FileDetail.Name,
-      			"fileName" : response.FileDetail.Filename,
-      			"description" : response.FileDetail.Description,
-      			"scope": response.FileDetail.Name.substring(0, response.FileDetail.Name.lastIndexOf('::')),
-      			"pathMask" : response.FileDetail.PathMask,
-      			"isSuperfile" : response.FileDetail.isSuperfile,
-      			"fileType": response.FileDetail.ContentType,
-      			"layout" : fileLayout,
-      			"validations" : processFieldValidations(fileLayout)
-      		}
-      	 	res.json(fileInfo);
-    		})
-
-		  });
-		});
-
-  } catch (err) {
-      console.log('err', err);
-  }
+	console.log('fileName: '+req.query.fileName+ " clusterId: "+req.query.clusterid );
+	hpccUtil.fileInfo(req.query.fileName, req.query.clusterid).then((fileInfo) => {
+		res.json(fileInfo);	
+	}).catch((err) => {
+		console.log('err', err);	
+	})		
 });
 
-function getFileLayout(cluster, fileName) {
-	var layoutResults = [];
-	return requestPromise.get({
-	  url: cluster.thor_host + ':' + cluster.thor_port +'/WsDfu/DFUGetFileMetaData.json?LogicalFileName='+fileName,
-	  auth : getClusterAuth(cluster)
-	}).then(function(response) {
-		  var result = JSON.parse(response);
-    	if(result.DFUGetFileMetaDataResponse != undefined) {
-			  var fileInfoResponse = result.DFUGetFileMetaDataResponse.DataColumns.DFUDataColumn, fileInfo = {};
-      		fileInfoResponse.forEach(function(column) {
-      			if(column.ColumnLabel !== '__fileposition__') {
-	      			var layout = {
-		      			"name" : column.ColumnLabel,
-		      			"type" : column.ColumnType,
-		      			"eclType" : column.ColumnEclType,
-		      			"displayType" : '',
-		      			"displaySize" : '',
-		      			"textJustification" : 'right',
-		      			"format" : '',
-		      			"isPCI" : 'false',
-		      			"isPII" : 'false',
-						"isHIPAA":'false',
-						"required": 'false'
-		      		}
-		      		if(column.DataColumns != undefined) {
-		      			var childColumns = [];
-		      			column.DataColumns.DFUDataColumn.forEach(function(childColumn) {
-		      				var childColumnObj = {
-		      					"name" : childColumn.ColumnLabel,
-				      			"type" : childColumn.ColumnType,
-				      			"eclType" : childColumn.ColumnEclType,
-				      			"displayType" : '',
-				      			"displaySize" : '',
-				      			"textJustification" : 'right',
-				      			"format" : '',
-				      			"isPCI" : 'false',
-				      			"isPII" : 'false',
-								"isHIPAA":'false',
-								"required": 'false'
-		      				}
-		      				childColumns.push(childColumnObj);
-
-		      			});
-		      			layout.children = childColumns;
-		      		}
-		      		layoutResults.push(layout);
-		      	}
-      		});
-		  }
-    	return layoutResults;
-    })
-	.catch(function (err) {
-      console.log('error occured: '+err);
-  	});
-
-}
 
 router.get('/getIndexInfo', function (req, res) {
     try {
-			getCluster(req.query.clusterid).then(function(cluster) {
-				let clusterAuth = getClusterAuth(cluster);
+			hpccUtil.getCluster(req.query.clusterid).then(function(cluster) {
+				let clusterAuth = hpccUtil.getClusterAuth(cluster);
 				let dfuService = new hpccJSComms.DFUService({ baseUrl: cluster.thor_host + ':' + cluster.thor_port, userID:(clusterAuth ? clusterAuth.user : ""), password:(clusterAuth ? clusterAuth.password : "")});
 				dfuService.DFUInfo({"Name":req.query.indexName}).then(response => {
 	    		if(response.FileDetail) {
@@ -324,7 +231,7 @@ function getIndexColumns(cluster, indexName) {
 	let columns={};
 	return requestPromise.get({
 	  url: cluster.thor_host + ':' + cluster.thor_port +'/WsDfu/DFUGetFileMetaData.json?LogicalFileName='+indexName,
-	  auth : getClusterAuth(cluster)
+	  auth : hpccUtil.getClusterAuth(cluster)
 	}).then(function(response) {
       	var result = JSON.parse(response);
       	if(result.DFUGetFileMetaDataResponse != undefined) {
@@ -348,39 +255,10 @@ function getIndexColumns(cluster, indexName) {
   	});
 }
 
-let getCluster = function(clusterId) {
-	return Cluster.findOne( {where: {id:clusterId}} ).then(async function(cluster) {
-		if(cluster.hash) {
-			cluster.hash = crypto.createDecipher(algorithm,dbUtil.secret).update(cluster.hash,'hex','utf8');
-		}
-		let isReachable = await isClusterReachable(cluster.thor_host, cluster.thor_port, cluster.username, cluster.password);
-		if(isReachable)	 {
-			return cluster;
-		} else {
-			throw new Error("Cluster not reachable...");
-		}
-
-	})
-	.catch(function(err) {
-        console.log(err);
-    });
-}
-
-function getClusterAuth(cluster) {
-	let auth = {};
-	if(cluster.username && cluster.hash) {
-		auth.user = cluster.username,
-		auth.password = cluster.hash
-		return auth;
-	} else {
-		return null;
-	}
-}
-
 router.get('/getData', function (req, res) {
   try {
-		getCluster(req.query.clusterid).then(function(cluster) {
-			let clusterAuth = getClusterAuth(cluster);
+		hpccUtil.getCluster(req.query.clusterid).then(function(cluster) {
+			let clusterAuth = hpccUtil.getClusterAuth(cluster);
 			let wuService = new hpccJSComms.WorkunitsService({ baseUrl: cluster.thor_host + ':' + cluster.thor_port, userID:(clusterAuth ? clusterAuth.user : ""), password:(clusterAuth ? clusterAuth.password : "")});
 			wuService.WUResult({"LogicalName":req.query.fileName, "Count":50}).then(response => {
 				if(response.Result != undefined && response.Result != undefined && response.Result.Row != undefined) {
@@ -404,10 +282,10 @@ router.get('/getData', function (req, res) {
 
 router.get('/getFileProfile', function (req, res) {
     try {
-		getCluster(req.query.clusterid).then(function(cluster) {
+		hpccUtil.getCluster(req.query.clusterid).then(function(cluster) {
 			request.get({
 			  url: cluster.thor_host + ':' + cluster.thor_port +'/WsWorkunits/WUResult.json?LogicalName='+req.query.fileName+'.profile',
-			  auth : getClusterAuth(cluster)
+			  auth : hpccUtil.getClusterAuth(cluster)
 			}, function(err, response, body) {
 			  if (err) {
 				console.log('ERROR - ', err);
@@ -448,13 +326,13 @@ router.get('/getFileProfile', function (req, res) {
 
 router.get('/getFileProfileHTML', function (req, res) {
     try {
-		getCluster(req.query.clusterid).then(function(cluster) {
+		hpccUtil.getCluster(req.query.clusterid).then(function(cluster) {
 			//call DFUInfo to get workunit id
       		var wuid = req.query.dataProfileWuid;
       		//get resource url's from wuinfo
       		request.post({
 			  url: cluster.thor_host + ':' + cluster.thor_port +'/WsWorkunits/WUInfo.json',
-			  auth : getClusterAuth(cluster),
+			  auth : hpccUtil.getClusterAuth(cluster),
 			  headers: {'content-type' : 'application/x-www-form-urlencoded'},
 			  body: "Wuid="+wuid+"&TruncateEclTo64k=true&IncludeResourceURLs=true&IncludeExceptions=false&IncludeGraphs=false&IncludeSourceFiles=false&IncludeResults=false&IncludeResultsViewNames=false&IncludeVariables=false&IncludeTimers=false&IncludeDebugValues=false&IncludeApplicationValues=false&IncludeWorkflows=false&IncludeXmlSchemas=false&SuppressResultSchemas"
 			}, function(err, response, body) {
@@ -482,8 +360,8 @@ router.get('/getFileProfileHTML', function (req, res) {
 router.get('/getQueryInfo', function (req, res) {
     var resultObj = {}, requestObj = [], responseObj = [];
     try {
-			getCluster(req.query.clusterid).then(function(cluster) {
-				let clusterAuth = getClusterAuth(cluster);
+			hpccUtil.getCluster(req.query.clusterid).then(function(cluster) {
+				let clusterAuth = hpccUtil.getClusterAuth(cluster);
 				let eclService = new hpccJSComms.EclService({ baseUrl: cluster.roxie_host + ':' + cluster.roxie_port, userID:(clusterAuth ? clusterAuth.user : ""), password:(clusterAuth ? clusterAuth.password : "")});
 				eclService.requestJson("roxie", req.query.queryName).then(response => {
 					if(response) {
@@ -524,10 +402,10 @@ router.get('/getJobInfo', function (req, res) {
     try {
 		console.log('jobName: '+req.query.jobWuid);
 		let sourceFiles=[], outputFiles=[];
-		getCluster(req.query.clusterid).then(function(cluster) {
+		hpccUtil.getCluster(req.query.clusterid).then(function(cluster) {
 			request.get({
 			  url: cluster.thor_host + ':' + cluster.thor_port +'/WsWorkunits/WUInfo.json?Wuid='+req.query.jobWuid,
-			  auth : getClusterAuth(cluster)
+			  auth : hpccUtil.getClusterAuth(cluster)
 			}, function(err, response, body) {
 			  if (err) {
 				console.log('ERROR - ', err);
@@ -575,29 +453,5 @@ router.get('/getJobInfo', function (req, res) {
         console.log('err', err);
     }
 });
-
-async function isClusterReachable(clusterHost, port, username, password) {
-	let auth = null;
-	if(username && password) {
-		auth = {};
-		auth.user = username,
-		auth.password = password
-	}
-	return new Promise((resolve, reject) => {
-		request.get({
-		  url:clusterHost+":"+port,
-		  auth : auth,
-		  timeout: 3000
-		},
-		function (error, response, body) {
-		    if (!error && response.statusCode == 200) {
-		      resolve(true);
-		    } else {
-		    	console.log(error);
-		    	resolve(false);
-		    }
-	  })
-	});
- }
 
 module.exports = router;
