@@ -2,7 +2,7 @@ import React, { Component } from "react";
 import * as d3 from "d3";
 import '../../graph-creator/graph-creator.css';
 import $ from 'jquery';
-import { Button, Icon, Drawer, Row, Col, Descriptions, Badge} from 'antd/lib';
+import { Button, Icon, Drawer, Row, Col, Descriptions, Badge, Modal} from 'antd/lib';
 import { Typography } from 'antd';
 import FileDetailsForm from "../FileDetails";
 import JobDetailsForm from "../JobDetails";
@@ -1230,13 +1230,19 @@ class Graph extends Component {
             user={this.props.user}
             selectedDataflow={this.props.selectedDataflow}/> : null}      
 
-        <Drawer
-          height={400}
+        <Modal
+          height={300}
           placement="top"
-          closable={false}
+          closable={true}
           onClose={this.closeNodeDetails}
+          onCancel={this.closeNodeDetails}
           visible={this.state.nodeDetailsVisible}
           title="Job Info"
+          footer={[
+            <Button onClick={this.closeNodeDetails}>
+              Close
+            </Button>
+          ]}
         >
             <Descriptions title="Job Info" bordered size="middle">              
               <Descriptions.Item label="Status" span={3}>
@@ -1246,7 +1252,7 @@ class Graph extends Component {
               <Descriptions.Item label="Message" span={3}>{this.state.nodeDetailMessage ? <span className="messages-span">  {JSON.parse(this.state.nodeDetailMessage).map(message => <li>{message.Message}</li>)}</span>  : ''}</Descriptions.Item>
             </Descriptions>
             
-        </Drawer>
+        </Modal>
 
     </div>
 	)

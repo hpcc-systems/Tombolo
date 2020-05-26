@@ -19,7 +19,6 @@ function DataflowTable({data, applicationId, onSelectDataflow, onDataFlowUpdated
 
   const rowSelection = {
     selectedRowKeys,
-    type: 'radio',
     onChange: (selectedRowKeys, selectedRows) => {
       setSelectedRowKeys([selectedRows[0].id]);
       onSelectDataflow(selectedRows[0]);
@@ -93,7 +92,6 @@ function DataflowTable({data, applicationId, onSelectDataflow, onDataFlowUpdated
             onClick: event => {rowSelected(record, rowIndex)}
           }
         }}
-        rowSelection={rowSelection}   
         columns={dataflowCols}
         rowKey={record => record.id}
         dataSource={data}
