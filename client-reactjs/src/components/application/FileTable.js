@@ -167,6 +167,7 @@ class FileTable extends Component {
       title: 'Title',
       dataIndex: 'fileTitle',
       width: '30%',
+      render: (text, record) => <a href='#' onClick={(row) => this.handleEdit(record.id)}>{text}</a>
     },
     {
         width: '10%',

@@ -1,9 +1,11 @@
 import React, { useState, useEffect } from 'react'
 import { Table, message, Popconfirm, Icon, Tooltip, Divider} from 'antd/lib';
 import { authHeader, handleError } from "../../common/AuthHeader.js"
+import { Constants } from '../../common/Constants';
 
 function DataflowTable({data, applicationId, onSelectDataflow, onDataFlowUpdated, onDataFlowEdit}) {
   const [selectedRowKeys, setSelectedRowKeys] = useState([]);
+  
 
   useEffect(() => {    
     if(data && data.length > 0) {
@@ -54,6 +56,7 @@ function DataflowTable({data, applicationId, onSelectDataflow, onDataFlowUpdated
     title: 'Title',
     dataIndex: 'title',
     width: '30%',
+    render: text => <a>{text}</a>
   },
   {
     title: 'Description',
@@ -64,6 +67,10 @@ function DataflowTable({data, applicationId, onSelectDataflow, onDataFlowUpdated
     title: 'Created',
     dataIndex: 'createdAt',
     width: '30%',
+    render: (text, record) => {
+      let createdAt = new Date(text);
+      return createdAt.toLocaleDateString('en-US', Constants.DATE_FORMAT_OPTIONS) +' @ '+ createdAt.toLocaleTimeString('en-US') 
+    }
   },
   {
     width: '30%',

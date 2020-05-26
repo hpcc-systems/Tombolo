@@ -98,9 +98,10 @@ class QueryTable extends Component {
 
   render() {
     const queryColumns = [{
-      title: 'Name',
+      title: 'Title',
       dataIndex: 'title',
       width: '30%',
+      render: (text, record) => <a href='#' onClick={(row) => this.handleEdit(record.id)}>{text}</a>
     },
     {
       title: 'Description',

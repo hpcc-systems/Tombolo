@@ -20,5 +20,7 @@ export const Constants = {
     DELETE_FAILURE: 'USERS_DELETE_FAILURE',
 
     APPLICATION_SELECTED: 'APPLICATION_SELECTED',
-    TOP_NAV_CHANGED: 'TOP_NAV_CHANGED'
+    TOP_NAV_CHANGED: 'TOP_NAV_CHANGED',
+
+    DATE_FORMAT_OPTIONS: { year: 'numeric', month: 'long', day: 'numeric' }
 };

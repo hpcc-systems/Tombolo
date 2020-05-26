@@ -5,6 +5,7 @@ import BreadCrumbs from "../common/BreadCrumbs";
 import { connect } from 'react-redux';
 import { authHeader, handleError } from "../common/AuthHeader.js"
 import {handleFileDelete, handleJobDelete, handleIndexDelete, handleQueryDelete, updateGraph} from "../common/WorkflowUtil";
+import { Constants } from '../common/Constants';
 
 class DataflowInstances extends Component {
 
@@ -102,20 +103,25 @@ class DataflowInstances extends Component {
     if(!this.props.application || !this.props.application.applicationId)
       return null;
       const workflowTblColumns = [{
+        title: 'Created',
+        dataIndex: 'createdAt',
+        width: '30%',
+        render: (text, record) => {
+          let createdAt = new Date(text);
+          return createdAt.toLocaleDateString('en-US', Constants.DATE_FORMAT_OPTIONS) +' @ '+ createdAt.toLocaleTimeString('en-US') 
+        }
+      },
+      {
         title: 'Name',
         dataIndex: 'name',
         width: '30%',
+        render: (text, record) => <a href='#' onClick={(row) => this.handleViewDetails(record.id, record.dataflowId, record.instance_id)}>{text}</a>
       },
       {
         title: 'Instance',
         dataIndex: 'instance_id',
-        width: '30%',
-      },
-      {
-        title: 'Created',
-        dataIndex: 'createdAt',
-        width: '30%',
-      },
+        width: '30%'
+      },      
       {
         width: '30%',
         title: 'Action',

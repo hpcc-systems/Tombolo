@@ -284,6 +284,9 @@ path, .jtk-endpoint { cursor:pointer; }
     background: #6c757d;
     border-color: #6c757d;
 }
+.ant-table-row-cell-break-word a {
+  color: #1890ff !important;
+}
 
 .ant-form-item {
   margin-bottom: 6px !important;

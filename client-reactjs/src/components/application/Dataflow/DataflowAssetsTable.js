@@ -71,9 +71,10 @@ function DataflowAssetsTable({applicationId, selectedDataflow, user}) {
   }
 
 	const jobColumns = [{
-    title: 'Name',
+    title: 'Title',
     dataIndex: 'name',
     width: '30%',
+    render: (text, record) => <a href='#' onClick={(row) => handleEdit(record.id, record.objType)}>{text}</a>
   },
   {
     title: 'Description',
