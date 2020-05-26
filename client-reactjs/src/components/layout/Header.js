@@ -37,13 +37,10 @@ class AppHeader extends Component {
         const pathSnippets = this.props.location.pathname.split('/');
         this.setState({
           searchText: pathSnippets[2]
-      });
-      }      
-    }
-    componentDidUpdate(prevProps, prevState) {
+        });
+      }
       if(this.state.applications.length == 0) {
         var url="/api/app/read/app_list";
-        console.log(this.props.user.role);
         if(this.props.user && this.props.user.role=='user') {
           url="/api/app/read/appListByUserId?user_id="+this.props.user.id;
         }
@@ -65,7 +62,11 @@ class AppHeader extends Component {
         }).catch(error => {
           console.log(error);
         });
-      }
+      }      
+    }
+    componentDidUpdate(prevProps, prevState) {
+      //console.log('componentDidUpdate: '+this.state.applications.length)
+      
       //console.log($('[data-value="'+localStorage.getItem("activeProjectId")+'"]').data("display"))
       //$('[data-value="'+localStorage.getItem("activeProjectId")+'"]').click();
       
@@ -102,7 +103,6 @@ class AppHeader extends Component {
     }
 
     handleChange(event) {
-      console.log("handleChange: "+event.target.getAttribute("data-value"))
       //this.props.onAppicationSelect(value);
       this.props.dispatch(applicationActions.applicationSelected(event.target.getAttribute("data-value"), event.target.getAttribute("data-display")));
       localStorage.setItem("activeProjectId", event.target.getAttribute("data-value"));
@@ -128,9 +128,9 @@ class AppHeader extends Component {
     const applicationId = this.props.application ? this.props.application.applicationId : '';
     const selectedTopNav = (window.location.pathname.indexOf("/admin") != -1) ? "/admin/applications" : (applicationId != '' ? "/" + applicationId + "/dataflow" : "/dataflow")
     const appNav = (applicationId != '' ? "/" + applicationId + "/dataflow" : "/dataflow");
-
-    if(!this.props.user || !this.props.user.token)
-        return null;
+    if(!this.props.user || !this.props.user.token) {
+      return null;
+    }
     return (
         <nav className="navbar navbar-expand-md navbar-dark bg-dark fixed-top">
           <a className="home-logo navbar-brand" href="/">Tombolo</a>

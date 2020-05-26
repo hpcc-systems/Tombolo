@@ -52,7 +52,7 @@ class App extends React.Component {
             <div>
                 <Route exact path="/login" component={LoginPage} />
                     <Layout>
-                        {this.props.user ? <AppHeader/> : null}
+                        {this.props.user && this.props.user.token ? <AppHeader/> : null}
                         <Layout className="site-layout">
                             <LeftNav isApplicationSet={isApplicationSet} selectedTopNav={selectedTopNav} />
                             <Layout style={{height: '100vh'}}>
