@@ -2,6 +2,7 @@ import React, { Component } from "react";
 import { Tabs,Spin, Button, Tooltip, Radio, Icon, Menu, Dropdown } from 'antd/lib';
 import { connect } from 'react-redux';
 import { authHeader, handleError } from "../common/AuthHeader.js";
+import { hasAdminRole } from "../common/AuthUtil.js";
 import FileReport from "./FileReport.js";
 import IndexReport from "./IndexReport.js";
 import QueryReport from "./QueryReport.js";
@@ -42,10 +43,9 @@ class Report extends Component {
   }
 
   fetchData(val) {
-    var user=this.props.user;
     var userId='';
-    if(user.role=="user")
-      userId=user.id;
+    if(!hasAdminRole(this.props.user))
+      userId=this.props.user.id;
       this.setState({
         initialDataLoading:true
       });

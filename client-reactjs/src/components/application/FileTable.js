@@ -4,6 +4,7 @@ import React, { Component } from "react";
 import FileDetailsForm from "./FileDetails";
 import FileInstanceDetailsForm from "./FileInstanceDetails";
 import { authHeader, handleError } from "../common/AuthHeader.js"
+import { hasEditPermission } from "../common/AuthUtil.js";
 
 class FileTable extends Component {
   constructor(props) {
@@ -162,6 +163,7 @@ class FileTable extends Component {
   }
 
   render() {
+    const editingAllowed = hasEditPermission(this.props.user);
     const {showFileInstancesTable} = this.state;
     const indexColumns = [{
       title: 'Title',
@@ -183,6 +185,7 @@ class FileTable extends Component {
       width: '35%',
       title: 'Action',
       dataIndex: '',
+      className: editingAllowed ? 'show-column' : 'hide-column',
       render: (text, record) =>
         <span>
           <a href="#" onClick={(row) => this.showFileinstances(record.id)}><Tooltip placement="right" title={"File Instances"}><Icon type="gold" /></Tooltip></a>

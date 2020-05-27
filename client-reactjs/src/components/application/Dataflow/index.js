@@ -7,7 +7,9 @@ import DataflowAssetsTable from "./DataflowAssetsTable";
 import {Graph} from "./Graph";
 import useModal from '../../../hooks/useModal';
 import { authHeader, handleError } from "../../common/AuthHeader.js"
+import { hasEditPermission } from "../../common/AuthUtil.js";
 import { connect } from 'react-redux';
+import { useSelector } from "react-redux";
 
 function Dataflow(props) {
 	const [dataFlows, setDataFlows] = useState([]);
@@ -34,6 +36,8 @@ function Dataflow(props) {
 	  	getData();  
 	  }
 	}, []);
+
+  const authReducer = useSelector(state => state.authenticationReducer);
 
 	const getData = async () => {  
     fetch('/api/dataflow?application_id='+application.applicationId, {
@@ -81,6 +85,7 @@ function Dataflow(props) {
   const maximize = () => {
     setTableDisplay({graphHeight: 70, display: 'block'})
   }
+  const editingAllowed = hasEditPermission(authReducer.user);
 
   if(application.applicationId == '' ) return null;
   return (  	
@@ -93,14 +98,15 @@ function Dataflow(props) {
   	            <Tooltip placement="bottom" title={"Tree View"}><Radio.Button value="chart"><Icon type="cluster" /></Radio.Button></Tooltip>
   	            <Tooltip placement="bottom" title={"Tabular View"}><Radio.Button value="grid"><Icon type="bars" /></Radio.Button></Tooltip>
   	          </Radio.Group>}
-  	        
-  	          <AddDataflow 
-  	          	isShowing={isShowing} 
-  	          	toggle={toggle}
-  	          	applicationId={application.applicationId} 
-  	          	onDataFlowUpdated={onDataFlowUpdated}
-  	          	selectedDataflow={form.selectedDataflow} 
-  	          	/>
+  	          {editingAllowed ?  
+    	          <AddDataflow 
+    	          	isShowing={isShowing} 
+    	          	toggle={toggle}
+    	          	applicationId={application.applicationId} 
+    	          	onDataFlowUpdated={onDataFlowUpdated}
+    	          	selectedDataflow={form.selectedDataflow} 
+    	          	/>
+               : null}   
   	        </span>
           </div>
 	      </div>

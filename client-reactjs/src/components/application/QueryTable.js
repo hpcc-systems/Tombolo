@@ -4,6 +4,7 @@ import { Table, Divider, message, Popconfirm, Icon, Tooltip } from 'antd/lib';
 import React, { Component } from "react";
 import QueryDetailsForm from "./QueryDetails";
 import { authHeader, handleError } from "../common/AuthHeader.js"
+import { hasEditPermission } from "../common/AuthUtil.js";
 
 class QueryTable extends Component {
   constructor(props) {
@@ -66,7 +67,6 @@ class QueryTable extends Component {
   }
 
   handleDelete(queryId) {
-    console.log(queryId);
     var data = JSON.stringify({queryId: queryId, application_id: this.state.applicationId});
     fetch("/api/query/delete", {
       method: 'post',
@@ -97,6 +97,7 @@ class QueryTable extends Component {
   handleRefreshTree = () => this.fetchDataAndRenderTable();
 
   render() {
+    const editingAllowed = hasEditPermission(this.props.user);
     const queryColumns = [{
       title: 'Title',
       dataIndex: 'title',
@@ -116,6 +117,7 @@ class QueryTable extends Component {
     {
       width: '30%',
       title: 'Action',
+      className: editingAllowed ? 'show-column' : 'hide-column',
       dataIndex: '',
       render: (text, record) =>
         <span>

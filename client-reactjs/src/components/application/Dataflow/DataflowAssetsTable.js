@@ -1,9 +1,11 @@
 import React, { useState, useEffect } from 'react'
 import { Table, message, Popconfirm, Icon, Tooltip, Divider} from 'antd/lib';
 import { authHeader, handleError } from "../../common/AuthHeader.js"
+import { hasEditPermission } from "../../common/AuthUtil.js";
 import FileDetailsForm from "../FileDetails";
 import useFileDetailsForm from '../../../hooks/useFileDetailsForm';
 import {handleFileDelete, handleJobDelete, handleIndexDelete, handleQueryDelete, updateGraph} from "../../common/WorkflowUtil";
+import { useSelector } from "react-redux";
 
 function DataflowAssetsTable({applicationId, selectedDataflow, user}) {
 	const [dataflowAssets, setDataflowAssets] = useState([]);
@@ -15,6 +17,8 @@ function DataflowAssetsTable({applicationId, selectedDataflow, user}) {
 	  	fetchDataAndRenderTable();  
 	  }
 	}, []);
+
+  const authReducer = useSelector(state => state.authenticationReducer);
 
 	const fetchDataAndRenderTable = () => {
     fetch("/api/dataflow/assets?app_id="+applicationId+"&dataflowId="+selectedDataflow.id, {
@@ -70,6 +74,8 @@ function DataflowAssetsTable({applicationId, selectedDataflow, user}) {
 	  }
   }
 
+  const editingAllowed = hasEditPermission(authReducer.user);
+
 	const jobColumns = [{
     title: 'Title',
     dataIndex: 'name',
@@ -90,7 +96,8 @@ function DataflowAssetsTable({applicationId, selectedDataflow, user}) {
     width: '30%',
     title: 'Action',
     dataJob: '',
-    render: (text, record) =>
+    className: editingAllowed ? "show-column" : "hide-column",
+    render: (text, record) => 
       <span>
         <a href="#" onClick={(row) => handleEdit(record.id, record.objType)}><Tooltip placement="right" title={"Edit"}><Icon type="edit" /></Tooltip></a>
         <Divider type="vertical" />
@@ -102,11 +109,12 @@ function DataflowAssetsTable({applicationId, selectedDataflow, user}) {
 
   return (
 	  <React.Fragment>
+    <div style={{"height": "85%"}}>
 		  <Table
         columns={jobColumns}
         rowKey={record => record.id}
         dataSource={dataflowAssets}
-        pagination={{ pageSize: 10 }} scroll={{ y: 460 }}
+        pagination={{ pageSize: 10 }} scroll={{ y: 460 }}        
 			/>
 			{isShowing ?
 				OpenDetailsForm({
@@ -117,7 +125,8 @@ function DataflowAssetsTable({applicationId, selectedDataflow, user}) {
 	        "applicationId": applicationId,
 	        "selectedDataflow": selectedDataflow,
 	        "user": user}) : null}
-		</React.Fragment>			
+		</div>
+    </React.Fragment>			    
 	)
 }
 export default DataflowAssetsTable

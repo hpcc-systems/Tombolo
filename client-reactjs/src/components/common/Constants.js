@@ -22,5 +22,9 @@ export const Constants = {
     APPLICATION_SELECTED: 'APPLICATION_SELECTED',
     TOP_NAV_CHANGED: 'TOP_NAV_CHANGED',
 
-    DATE_FORMAT_OPTIONS: { year: 'numeric', month: 'long', day: 'numeric' }
+    DATE_FORMAT_OPTIONS: { year: 'numeric', month: 'long', day: 'numeric' },
+
+    TOMBOLO_ADMIN: 'Tombolo_Admin',
+    TOMBOLO_READER: 'Reader',
+    TOMBOLO_CREATOR: 'Creator'
 };

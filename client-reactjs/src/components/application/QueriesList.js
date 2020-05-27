@@ -4,6 +4,7 @@ import QueryDetailsForm from "./QueryDetails";
 import QueryTable from "./QueryTable";
 import BreadCrumbs from "../common/BreadCrumbs";
 import { connect } from 'react-redux';
+import { hasEditPermission } from "../common/AuthUtil.js";
 
 class QueriesList extends Component {
 
@@ -36,9 +37,9 @@ class QueriesList extends Component {
       openQueryDetailsDialog: true,
       selectedFile: ''
     });
-    setTimeout(() => {
+    /*setTimeout(() => {
       _self.child.showModal();
-    }, 200);
+    }, 200);*/
   }
 
   closeFileDlg = () => {
@@ -55,20 +56,24 @@ class QueriesList extends Component {
 
 
   render() {
+    const editingAllowed = hasEditPermission(this.props.user);
     if(!this.props.application || !this.props.application.applicationId)
       return null;
+    
     return (
       <div>
         <div className="d-flex justify-content-end" style={{paddingTop:"55px", margin: "5px"}}>
           <BreadCrumbs applicationId={this.state.applicationId} applicationTitle={this.state.applicationTitle}/>
-          <span style={{ marginLeft: "auto"}}>
-            <Tooltip placement="bottom" title={"Click to add a new query"}>
-              <Button className="btn btn-secondary btn-sm" onClick={() => this.openAddqueryDlg()}><i className="fa fa-plus"></i>Add Query</Button>
-            </Tooltip>
-          </span>
+          {editingAllowed ? 
+            <span style={{ marginLeft: "auto"}}>
+              <Tooltip placement="bottom" title={"Click to add a new query"}>
+                <Button className="btn btn-secondary btn-sm" onClick={() => this.openAddqueryDlg()}><i className="fa fa-plus"></i>Add Query</Button>
+              </Tooltip>
+            </span>
+          : null}
         </div>
         <div style={{padding:"15px"}}>
-          <QueryTable refresh={this.state.refreshTree} applicationId={this.state.applicationId}/>
+          <QueryTable refresh={this.state.refreshTree} applicationId={this.state.applicationId} user={this.props.user}/>
 
           {this.state.openQueryDetailsDialog ?
             <QueryDetailsForm
@@ -77,6 +82,7 @@ class QueriesList extends Component {
               isNewFile={true}
               onRefresh={this.handleRefresh}
               onClose={this.closeFileDlg}
+              user={this.props.user}
               /> : null}
         </div>
       </div>

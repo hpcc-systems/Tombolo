@@ -8,6 +8,7 @@ import DataProfileHTML from "./DataProfileHTML"
 import AssociatedDataflows from "./AssociatedDataflows"
 import { authHeader, handleError } from "../common/AuthHeader.js"
 import { AgGridReact } from 'ag-grid-react';
+import { hasEditPermission } from "../common/AuthUtil.js";
 import 'ag-grid-community/dist/styles/ag-grid.css';
 import 'ag-grid-community/dist/styles/ag-theme-balham.css';
 
@@ -1120,6 +1121,8 @@ class FileDetails extends Component {
     //const modalHeight = !this.props.isNew ? "400px" : "500px";
     const modalHeight = "510px";
 
+    const editingAllowed = hasEditPermission(this.props.user);
+
     //render only after fetching the data from the server
     if(!title && !this.props.selectedAsset && !this.props.isNew) {
       console.log("not rendering");
@@ -1138,105 +1141,112 @@ class FileDetails extends Component {
           bodyStyle={{height:modalHeight}}
           destroyOnClose={true}
           width="1200px"
+          footer={[
+            <Button key="back" onClick={this.handleCancel}>
+              Cancel
+            </Button>,
+            <Button key="submit" disabled={!editingAllowed} type="primary" loading={confirmLoading} onClick={this.handleOk}>
+              Save
+            </Button>,
+          ]}
         >
         <Tabs
           defaultActiveKey="1"
         >
-          <TabPane tab="Basic" key="1">
+          <TabPane tab="Basic" key="1">           
+             <Form layout="vertical">             
+              <div>
+              <Form.Item {...formItemLayout} label="Cluster">
+                 <Select placeholder="Select a Cluster" disabled={!editingAllowed} onChange={this.onClusterSelection} style={{ width: 190 }}>
+                  {clusters.map(cluster => <Option key={cluster.id}>{cluster.name}</Option>)}
+                </Select>
+              </Form.Item>
 
-           <Form layout="vertical">
-            <div>
-            <Form.Item {...formItemLayout} label="Cluster">
-               <Select placeholder="Select a Cluster" onChange={this.onClusterSelection} style={{ width: 190 }}>
-                {clusters.map(cluster => <Option key={cluster.id}>{cluster.name}</Option>)}
-              </Select>
-            </Form.Item>
+              <Form.Item {...formItemLayout} label="File">
+                <AutoComplete
+                  className="certain-category-search"
+                  dropdownClassName="certain-category-search-dropdown"
+                  dropdownMatchSelectWidth={false}
+                  dropdownStyle={{ width: 300 }}
+                  size="large"
+                  style={{ width: '100%' }}
+                  dataSource={fileSearchSuggestions}
+                  onChange={(value) => this.searchFiles(value)}
+                  onSelect={(value) => this.onFileSelected(value)}
+                  placeholder="Search files"
+                  optionLabelProp="value"
+                  disabled={!editingAllowed}
+                >
+                  <Input id="autocomplete_field" suffix={this.state.autoCompleteSuffix} />
+                </AutoComplete>
+              </Form.Item>
+              </div>
+              <Form.Item {...formItemLayout} label="Title">
+                {getFieldDecorator('title', {
+                  rules: [{ required: true, message: 'Please enter a title!' }],
+                })(
+                <Input id="file_title" name="title" onChange={this.onChange} placeholder="Title" disabled={!editingAllowed}/>              )}
+              </Form.Item>
+              <Form.Item {...formItemLayout} label="Name">
+                <Input id="file_name" name="name" onChange={this.onChange} placeholder="Name" defaultValue={name} value={name} disabled={true} />
+               </Form.Item>
+              <Form.Item {...formItemLayout} label="Scope">
+                {getFieldDecorator('scope', {
+                  rules: [{
+                      required: true
+                    },
+                    {
+                      validator: this.scopeValidator
+                    }
+                ]})(
+                    <Input id="file_scope" name="scope" onChange={this.onChange} placeholder="Scope" disabled={scopeDisabled || !editingAllowed}/>
+                )}
+              </Form.Item>
+              <Form.Item {...formItemLayout} label="Description">
+                  <Input id="file_desc" name="description" onChange={this.onChange} defaultValue={description} value={description} placeholder="Description" disabled={!editingAllowed}/>
+              </Form.Item>
+              <Form.Item {...formItemLayout} label="Service URL">
+                  <Input id="file_primary_svc" name="serviceUrl" onChange={this.onChange} defaultValue={serviceUrl} value={serviceUrl} placeholder="Service URL" disabled={!editingAllowed}/>
+              </Form.Item>
+              <Row type="flex">
+                <Col span={8} order={1}>
+                  <Form.Item {...threeColformItemLayout} label="Path">
+                      <Input id="file_path" name="qualifiedPath" onChange={this.onChange} defaultValue={qualifiedPath} value={qualifiedPath} placeholder="Path" disabled={!editingAllowed}/>
+                  </Form.Item>
+                </Col>
+                <Col span={8} order={2}>
+                  <Form.Item {...threeColformItemLayout} label="File Type">
+                      <Input id="file_type" name="fileType" onChange={this.onChange} defaultValue={fileType} value={fileType} placeholder="File Type" disabled={!editingAllowed}/>
+                  </Form.Item>
+                </Col>
+              </Row>
 
-            <Form.Item {...formItemLayout} label="File">
-              <AutoComplete
-                className="certain-category-search"
-                dropdownClassName="certain-category-search-dropdown"
-                dropdownMatchSelectWidth={false}
-                dropdownStyle={{ width: 300 }}
-                size="large"
-                style={{ width: '100%' }}
-                dataSource={fileSearchSuggestions}
-                onChange={(value) => this.searchFiles(value)}
-                onSelect={(value) => this.onFileSelected(value)}
-                placeholder="Search files"
-                optionLabelProp="value"
-              >
-                <Input id="autocomplete_field" suffix={this.state.autoCompleteSuffix} />
-              </AutoComplete>
-            </Form.Item>
-            </div>
-            <Form.Item {...formItemLayout} label="Title">
-              {getFieldDecorator('title', {
-                rules: [{ required: true, message: 'Please enter a title!' }],
-              })(
-              <Input id="file_title" name="title" onChange={this.onChange} placeholder="Title" />              )}
-            </Form.Item>
-            <Form.Item {...formItemLayout} label="Name">
-              <Input id="file_name" name="name" onChange={this.onChange} placeholder="Name" defaultValue={name} value={name} disabled={true} />
-             </Form.Item>
-            <Form.Item {...formItemLayout} label="Scope">
-              {getFieldDecorator('scope', {
-                rules: [{
-                    required: true
-                  },
-                  {
-                    validator: this.scopeValidator
-                  }
-              ]})(
-                  <Input id="file_scope" name="scope" onChange={this.onChange} placeholder="Scope" disabled={scopeDisabled}/>
-              )}
-            </Form.Item>
-            <Form.Item {...formItemLayout} label="Description">
-                <Input id="file_desc" name="description" onChange={this.onChange} defaultValue={description} value={description} placeholder="Description" />
-            </Form.Item>
-            <Form.Item {...formItemLayout} label="Service URL">
-                <Input id="file_primary_svc" name="serviceUrl" onChange={this.onChange} defaultValue={serviceUrl} value={serviceUrl} placeholder="Service URL" />
-            </Form.Item>
-            <Row type="flex">
-              <Col span={8} order={1}>
-                <Form.Item {...threeColformItemLayout} label="Path">
-                    <Input id="file_path" name="qualifiedPath" onChange={this.onChange} defaultValue={qualifiedPath} value={qualifiedPath} placeholder="Path" />
-                </Form.Item>
-              </Col>
-              <Col span={8} order={2}>
-                <Form.Item {...threeColformItemLayout} label="File Type">
-                    <Input id="file_type" name="fileType" onChange={this.onChange} defaultValue={fileType} value={fileType} placeholder="File Type" />
-                </Form.Item>
-              </Col>
-            </Row>
-
-            <Row type="flex">
-              <Col span={8} order={1}>
-                <Form.Item {...threeColformItemLayout} label="Is Super File">
-                  <Input id="file_issuper_file" name="isSuperFile" onChange={this.onChange} defaultValue={isSuperFile} value={isSuperFile} placeholder="Is Super File" />
-                </Form.Item>
-              </Col>
-              <Col span={8} order={2}>
-                <Form.Item {...threeColformItemLayout} label="Consumer">
-                   <Select id="consumer" value={(this.state.file.consumer != '') ? this.state.file.consumer : "Select a consumer"} placeholder="Select a consumer" onChange={this.onConsumerSelection} style={{ width: 190 }}>
-                    {consumers.map(consumer => consumer.assetType == 'Consumer' ? <Option key={consumer.id}>{consumer.name}</Option> : null)}
-                  </Select>
-                </Form.Item>
-              </Col>
-              {/*show supplier field only for the root file*/}
-              {(this.state.filesCount == 0 || (this.state.filesCount == 1 && !this.props.isNew)) ?
-                <Col span={8} order={3}>
-                  <Form.Item {...threeColformItemLayout} label="Supplier">
-                     <Select id="supplier" value={(this.state.file.supplier != '') ? this.state.file.supplier : "Select a supplier"} placeholder="Select a supplier" onChange={this.onSupplierSelection} style={{ width: 190 }}>
-                      {consumers.map(consumer => consumer.assetType=="Supplier" ? <Option key={consumer.id}>{consumer.name}</Option> : null)}
+              <Row type="flex">
+                <Col span={8} order={1}>
+                  <Form.Item {...threeColformItemLayout} label="Is Super File">
+                    <Input id="file_issuper_file" name="isSuperFile" onChange={this.onChange} defaultValue={isSuperFile} value={isSuperFile} placeholder="Is Super File" disabled={!editingAllowed}/>
+                  </Form.Item>
+                </Col>
+                <Col span={8} order={2}>
+                  <Form.Item {...threeColformItemLayout} label="Consumer">
+                     <Select id="consumer" value={(this.state.file.consumer != '') ? this.state.file.consumer : "Select a consumer"} placeholder="Select a consumer" onChange={this.onConsumerSelection} style={{ width: 190 }} disabled={!editingAllowed}>
+                      {consumers.map(consumer => consumer.assetType == 'Consumer' ? <Option key={consumer.id}>{consumer.name}</Option> : null)}
                     </Select>
                   </Form.Item>
                 </Col>
-                : null}
-            </Row>
-
-          </Form>
-
+                {/*show supplier field only for the root file*/}
+                {(this.state.filesCount == 0 || (this.state.filesCount == 1 && !this.props.isNew)) ?
+                  <Col span={8} order={3}>
+                    <Form.Item {...threeColformItemLayout} label="Supplier">
+                       <Select id="supplier" value={(this.state.file.supplier != '') ? this.state.file.supplier : "Select a supplier"} placeholder="Select a supplier" onChange={this.onSupplierSelection} style={{ width: 190 }} disabled={!editingAllowed}>
+                        {consumers.map(consumer => consumer.assetType=="Supplier" ? <Option key={consumer.id}>{consumer.name}</Option> : null)}
+                      </Select>
+                    </Form.Item>
+                  </Col>
+                  : null}
+              </Row>              
+            </Form>
+           
           </TabPane>
           <TabPane tab="Layout" key="3">
               <ComplianceInfo tags={complianceTags}/>
@@ -1252,7 +1262,7 @@ class FileDetails extends Component {
                   rowData={layout}
                   defaultColDef={{resizable: true, sortable: true, filter: true}}
                   onGridReady={this.onLayoutGridReady}
-                  singleClickEdit={true}>
+                  singleClickEdit={editingAllowed}>
                 </AgGridReact>
               </div>
               {/*<Table
@@ -1275,7 +1285,8 @@ class FileDetails extends Component {
                   rowData={availableLicenses}
                   defaultColDef={{resizable: true, sortable: true}}
                   onGridReady={this.onLicenseGridReady}
-                  rowSelection="multiple">
+                  rowSelection="multiple"
+                  suppressRowClickSelection={editingAllowed}>
                 </AgGridReact>
               </div>
           </TabPane>
@@ -1291,7 +1302,8 @@ class FileDetails extends Component {
                   rowData={validations}
                   defaultColDef={{resizable: true, sortable: true, filter: true}}
                   onGridReady={this.onGridReady}
-                  singleClickEdit={true}>
+                  singleClickEdit={true}
+                  singleClickEdit={editingAllowed}>
                 </AgGridReact>
               </div>
           </TabPane>

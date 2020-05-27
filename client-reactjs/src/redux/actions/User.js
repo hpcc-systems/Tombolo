@@ -24,7 +24,6 @@ function login(username, password) {
       }).then(handleResponse)
       .then(user => {
         var decoded = jwtDecode(user.accessToken);          
-        let adminRole = decoded.role.filter(role => role.name == 'Tombolo_Admin');
         var user = {
             "token": user.accessToken,
             "id": decoded.id,
@@ -33,7 +32,7 @@ function login(username, password) {
             "lastName": decoded.lastName,
             "email": decoded.email,
             "organization": decoded.organization,
-            "role":(adminRole.length > 0 ? 'admin' : 'user'),
+            "role":decoded.role,
             "permissions": decoded.role[0].Permissions.map(permission => permission.name)
         }
         localStorage.setItem('user', JSON.stringify(user));
@@ -77,7 +76,6 @@ function validateToken() {
         }).then(handleResponse)
         .then(user => {
           var decoded = jwtDecode(user.token);
-          let adminRole = decoded.role.filter(role => role.name == 'Tombolo_Admin');
           user = {
             "token": user.token,
             "id": decoded.id,
@@ -86,7 +84,7 @@ function validateToken() {
             "lastName": decoded.lastName,
             "email": decoded.email,
             "organization": decoded.organization,
-            "role":(adminRole.length > 0 ? 'admin' : 'user'),
+            "role": decoded.role,
             "permissions": decoded.role[0].Permissions.map(permission => permission.name)
           }
           localStorage.setItem('user', JSON.stringify(user));

@@ -3,6 +3,7 @@ import { Modal, Tabs, Form, Input, Checkbox, Button,  Select, Table, AutoComplet
 import "react-table/react-table.css";
 import { authHeader, handleError } from "../common/AuthHeader.js"
 import AssociatedDataflows from "./AssociatedDataflows"
+import { hasEditPermission } from "../common/AuthUtil.js";
 const TabPane = Tabs.TabPane;
 const Option = Select.Option;
 
@@ -472,6 +473,9 @@ class JobDetails extends Component {
 
 
     const {name, title, description, entryBWR, gitrepo, jobType, inputParams, outputFiles, inputFiles, contact, author } = this.state.job;
+
+    const editingAllowed = hasEditPermission(this.props.user);
+
     //render only after fetching the data from the server
     if(!name && !this.props.selectedAsset && !this.props.isNew) {
       return null;
@@ -493,7 +497,7 @@ class JobDetails extends Component {
             <Button key="cancel" onClick={this.handleCancel}>
               Cancel
             </Button>,
-            <Button key="submit" type="primary" loading={confirmLoading} onClick={this.handleOk}>
+            <Button key="submit" disabled={!editingAllowed} type="primary" loading={confirmLoading} onClick={this.handleOk}>
               Save
             </Button>,
           ]}
@@ -507,7 +511,7 @@ class JobDetails extends Component {
             {/*{this.props.isNewIndex ?*/}
             <div>
             <Form.Item {...formItemLayout} label="Cluster">
-               <Select placeholder="Select a Cluster" onChange={this.onClusterSelection} style={{ width: 190 }}>
+               <Select placeholder="Select a Cluster" onChange={this.onClusterSelection} style={{ width: 190 }} disabled={!editingAllowed}>
                 {clusters.map(cluster => <Option key={cluster.id}>{cluster.name}</Option>)}
               </Select>
             </Form.Item>
@@ -525,6 +529,7 @@ class JobDetails extends Component {
                 onSelect={(value) => this.onJobSelected(value)}
                 placeholder="Search jobs"
                 optionLabelProp="text"
+                disabled={!editingAllowed}
               >
                 <Input id="autocomplete_field" suffix={this.state.autoCompleteSuffix} />
               </AutoComplete>
@@ -534,25 +539,25 @@ class JobDetails extends Component {
             }*/}
 
              <Form.Item {...formItemLayout} label="Name">
-                <Input id="job_name" name="name" onChange={this.onChange} value={name} defaultValue={name} placeholder="Name" disabled={true}/>
+                <Input id="job_name" name="name" onChange={this.onChange} value={name} defaultValue={name} placeholder="Name" disabled={true} disabled={!editingAllowed}/>
             </Form.Item>     
              <Form.Item {...formItemLayout} label="Title">
-                <Input id="job_title" name="title" onChange={this.onChange} value={title} defaultValue={title} placeholder="Title" />
+                <Input id="job_title" name="title" onChange={this.onChange} value={title} defaultValue={title} placeholder="Title" disabled={!editingAllowed}/>
             </Form.Item>     
             <Form.Item {...formItemLayout} label="Description">
-                <Input id="job_desc" name="description" onChange={this.onChange} value={description} defaultValue={description} placeholder="Description" />
+                <Input id="job_desc" name="description" onChange={this.onChange} value={description} defaultValue={description} placeholder="Description" disabled={!editingAllowed}/>
             </Form.Item>
             <Form.Item {...formItemLayout} label="Entry BWR">
-                <Input id="job_entryBWR" name="entryBWR" onChange={this.onChange} value={entryBWR} defaultValue={entryBWR} placeholder="Primary Service" />
+                <Input id="job_entryBWR" name="entryBWR" onChange={this.onChange} value={entryBWR} defaultValue={entryBWR} placeholder="Primary Service" disabled={!editingAllowed}/>
             </Form.Item>
             <Form.Item {...formItemLayout} label="Contact">
-                <Input id="job_bkp_svc" name="contact" onChange={this.onChange} value={contact} defaultValue={contact} placeholder="Contact" />
+                <Input id="job_bkp_svc" name="contact" onChange={this.onChange} value={contact} defaultValue={contact} placeholder="Contact" disabled={!editingAllowed}/>
             </Form.Item>
             <Form.Item {...formItemLayout} label="Author">
-                <Input id="job_author" name="author" onChange={this.onChange} value={author} defaultValue={author} placeholder="Author" />
+                <Input id="job_author" name="author" onChange={this.onChange} value={author} defaultValue={author} placeholder="Author" disabled={!editingAllowed}/>
             </Form.Item>
             <Form.Item {...formItemLayout} label="Job Type">
-                <Select placeholder="Job Type" defaultValue={jobType} style={{ width: 190 }} onSelect={this.onSourceFileSelection}>
+                <Select placeholder="Job Type" defaultValue={jobType} style={{ width: 190 }} onSelect={this.onSourceFileSelection} disabled={!editingAllowed}>
                     {jobTypes.map(d => <Option key={d}>{d}</Option>)}
               </Select>
             </Form.Item>
@@ -564,13 +569,13 @@ class JobDetails extends Component {
             <div>
             <Form layout="inline">
                 <Form.Item label="Name">
-                    <Input id="paramName" name="paramName" onChange={this.onParamChange} value={paramName} placeholder="" />
+                    <Input id="paramName" name="paramName" onChange={this.onParamChange} value={paramName} placeholder="" disabled={!editingAllowed}/>
                 </Form.Item>
                 <Form.Item label="Type">
-                    <Input id="paramType" name="paramType"  onChange={this.onParamChange} value={paramType}  />
+                    <Input id="paramType" name="paramType"  onChange={this.onParamChange} value={paramType}  disabled={!editingAllowed}/>
                 </Form.Item>
                 <Form.Item>
-                    <Button type="primary" onClick={this.handleAddInputParams}>
+                    <Button type="primary" onClick={this.handleAddInputParams} disabled={!editingAllowed}>
                         Add
                     </Button>
                 </Form.Item>
@@ -589,12 +594,12 @@ class JobDetails extends Component {
             <div>
               <Form layout="inline">
                 <Form.Item label="Input Files">
-                  <Select id="inputfiles" placeholder="Select Input Files" defaultValue={this.state.selectedInputdFile} onChange={this.handleInputFileChange} style={{ width: 290 }} >
+                  <Select id="inputfiles" placeholder="Select Input Files" defaultValue={this.state.selectedInputdFile} onChange={this.handleInputFileChange} style={{ width: 290 }} disabled={!editingAllowed}>
                     {sourceFiles.map(d => <Option value={d.id} key={d.id}>{(d.title)?d.title:d.name}</Option>)}
                   </Select>
                 </Form.Item>
                 <Form.Item>
-                    <Button type="primary" onClick={this.handleAddInputFile}>
+                    <Button type="primary" onClick={this.handleAddInputFile} disabled={!editingAllowed}>
                         Add
                     </Button>
                 </Form.Item>
@@ -614,12 +619,12 @@ class JobDetails extends Component {
 
               <Form layout="inline">
                 <Form.Item label="Output Files">
-                  <Select id="outputfiles" placeholder="Select Output Files" defaultValue={this.state.selectedOutputFile} onChange={this.handleOutputFileChange} style={{ width: 290 }} >
+                  <Select id="outputfiles" placeholder="Select Output Files" defaultValue={this.state.selectedOutputFile} onChange={this.handleOutputFileChange} style={{ width: 290 }} disabled={!editingAllowed}>
                     {sourceFiles.map(d => <Option value={d.id} key={d.id}>{(d.title)?d.title:d.name}</Option>)}
                   </Select>
                 </Form.Item>
                 <Form.Item>
-                    <Button type="primary" onClick={this.handleAddOutputFile}>
+                    <Button type="primary" disabled={!editingAllowed} onClick={this.handleAddOutputFile}>
                         Add
                     </Button>
                 </Form.Item>

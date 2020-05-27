@@ -2,6 +2,7 @@ import React, { Component } from "react";
 import { Table, Button, Row, Col, Modal, Form, Input, notification, Tooltip, Icon, Popconfirm, Divider } from 'antd/lib';
 import BreadCrumbs from "../common/BreadCrumbs";
 import { authHeader, handleError } from "../common/AuthHeader.js";  
+import { hasAdminRole } from "../common/AuthUtil.js";  
 import { connect } from 'react-redux';
 import ShareApp from "./ShareApp";
 
@@ -44,26 +45,27 @@ class Applications extends Component {
   }
 
   getApplications() {
-  	var url="/api/app/read/app_list";
-    if(this.props.user && this.props.user.role=="user")
-    url="/api/app/read/appListByUserId?user_id="+this.props.user.id;
+  	var url="/api/app/read/appListByUserId?user_id="+this.props.user.id;
+    if(hasAdminRole(this.props.user))
+      url="/api/app/read/app_list";
+
   	fetch(url, {
-            headers: authHeader()
+      headers: authHeader()
     })
-	.then((response) => {
-	  if(response.ok) {
-      return response.json();
-    }
-    handleError(response);
-	})
-	.then(data => {
-	    this.setState({
-	    	applications: data
-	    });
+  	.then((response) => {
+  	  if(response.ok) {
+        return response.json();
+      }
+      handleError(response);
   	})
-  	.catch(error => {
-    	console.log(error);
-  	});
+  	.then(data => {
+  	    this.setState({
+  	    	applications: data
+  	    });
+    	})
+    	.catch(error => {
+      	console.log(error);
+    	});
   }
 
   handleEditApplication(app_id) {

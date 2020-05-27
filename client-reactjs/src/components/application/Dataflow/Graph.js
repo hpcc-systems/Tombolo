@@ -10,6 +10,7 @@ import IndexDetailsForm from "../IndexDetails";
 import FileInstanceDetailsForm from "../FileInstanceDetails";
 import {handleFileDelete, handleFileInstanceDelete, handleJobDelete, handleIndexDelete, handleQueryDelete, updateGraph} from "../../common/WorkflowUtil";
 import { authHeader, handleError } from "../../common/AuthHeader.js"
+import { hasEditPermission } from "../../common/AuthUtil.js";
 import { shapesData, appendDefs } from "./Utils.js"
 import { connect } from 'react-redux';
 const { Text } = Typography;
@@ -191,12 +192,12 @@ class Graph extends Component {
 
   blink = (rect) => {
     rect.attr('stroke', "red")
-        .transition()
-        .duration(1000)
-        .attr('stroke', "green")
-        .transition()
-        .duration(1000)
-        .on("end", console.log('blink ending'))
+      .transition()
+      .duration(1000)
+      .attr('stroke', "green")
+      .transition()
+      .duration(1000)
+      .on("end", console.log('blink ending'))
 
     /*rect.transition()
       .duration(1000)
@@ -243,11 +244,7 @@ class Graph extends Component {
           //d3.select(this).select('rect').attr("message", task[0].message);                
         }
       });
-      //d3.selectAll('rect.warning').attr('stroke', "#ff4040")
-      /*d3.selectAll('rect.warning').each((d) => {
-        console.log(d3.select(this).attr('stroke', 'yellow'));
-        //_self.blink(d3.select(this));
-      })*/
+      
     }
   }
 
@@ -465,17 +462,19 @@ class Graph extends Component {
       }
 
       if(d3.select("#t"+d.id).empty()) {
-        let deleteIcon = gEl.append('text')
-          .attr('font-family', 'FontAwesome')
-          .attr('id', 't'+d.id)
-          .attr('dy', 8)
-          .attr('dx', 25)
-          .attr('class','delete-icon hide-delete-icon')
-          .on("click", function(d) {
-            d3.event.stopPropagation();
-            _self.deleteNode(d, gEl);
-          })
-          .text(function(node) { return '\uf1f8' })
+        if(hasEditPermission(_self.props.user)) {
+          let deleteIcon = gEl.append('text')
+            .attr('font-family', 'FontAwesome')
+            .attr('id', 't'+d.id)
+            .attr('dy', 8)
+            .attr('dx', 25)
+            .attr('class','delete-icon hide-delete-icon')
+            .on("click", function(d) {
+              d3.event.stopPropagation();
+              _self.deleteNode(d, gEl);
+            })
+            .text(function(node) { return '\uf1f8' })
+          }
         }
   }
 
@@ -692,6 +691,7 @@ class Graph extends Component {
 
   // keydown on main svg
   svgKeyDown = () => {
+    if(!hasEditPermission(this.props.user)) return;
     let _self=this;
     // make sure repeated key presses don't register for each keydown
     if (_self.graphState.lastKeyDown !== -1) return;
@@ -883,7 +883,7 @@ class Graph extends Component {
   }
 
   toggleDeleteIcon = (node, d) => {
-    if(!this.props.viewMode) {
+    if(!this.props.viewMode && hasEditPermission(this.props.user)) {
       if(d3.select("#t"+d.id).classed("hide-delete-icon")) {
         d3.select("#t"+d.id).classed("hide-delete-icon", false)
       } else {
@@ -1053,7 +1053,10 @@ class Graph extends Component {
         _self.setIdCt(idct);
         _self.updateGraph();
     })
-    dragHandler(graphComponentsSvg.selectAll("g"));    
+    //disable dragging on left nav
+    if(hasEditPermission(_self.props.user)) {
+      dragHandler(graphComponentsSvg.selectAll("g"));    
+    }
 
     // define arrow markers for graph links
     appendDefs(svg);  
@@ -1071,32 +1074,32 @@ class Graph extends Component {
     // svg nodes and edges
     _self.thisGraph.paths = svgG.append("g").selectAll("g");
     _self.thisGraph.circles = svgG.append("g").selectAll("g");
-
+    
     _self.thisGraph.drag = d3.drag()
-      .subject(function (d) {
-          return {x: d.x, y: d.y};
-      })
-      .on("drag", function (d) {
-        _self.graphState.justDragged = true;
-        _self.dragmove(d);
-        //d3.select(this).attr("x", d.x = d3.event.x).attr("y", d.y = d3.event.y);
-      })
-      .on("end", function (d) {
-        // todo check if edge-mode is selected
-        var mouse = d3.mouse(this);
-        var elem = document.elementFromPoint(mouse[0], mouse[1]);
-        if (_self.graphState.shiftNodeDrag) {
-            _self.dragEnd(d3.select(this), _self.graphState.mouseEnterNode)
-        } else {
-          let x = d3.event.x > 1300 ? 1300 : d3.event.x < 60 ? 60 : d3.event.x
-          let y = d3.event.y > 600 ? 600 : d3.event.y < 0 ? 0 : d3.event.y      
-          d.x = x;
-          d.y = y;
-        }
-        _self.updateGraph();
-        _self.saveGraph();
-      });
-
+    .subject(function (d) {
+        return {x: d.x, y: d.y};
+    })
+    .on("drag", hasEditPermission(_self.props.user) ? function (d) {
+      _self.graphState.justDragged = true;
+      _self.dragmove(d);
+      //d3.select(this).attr("x", d.x = d3.event.x).attr("y", d.y = d3.event.y);
+    } : null)
+    .on("end", hasEditPermission(_self.props.user) ? function (d) {
+      // todo check if edge-mode is selected
+      var mouse = d3.mouse(this);
+      var elem = document.elementFromPoint(mouse[0], mouse[1]);
+      if (_self.graphState.shiftNodeDrag) {
+          _self.dragEnd(d3.select(this), _self.graphState.mouseEnterNode)
+      } else {
+        let x = d3.event.x > 1300 ? 1300 : d3.event.x < 60 ? 60 : d3.event.x
+        let y = d3.event.y > 600 ? 600 : d3.event.y < 0 ? 0 : d3.event.y      
+        d.x = x;
+        d.y = y;
+      }      
+      _self.updateGraph();
+      _self.saveGraph();      
+    } : null);
+  
     // listen for key events
     d3.select('#graph').on("keydown", function () {
       _self.svgKeyDown(_self.thisGraph);
@@ -1116,7 +1119,7 @@ class Graph extends Component {
 
     // listen for dragging
     let dragSvg = d3.zoom()
-      .on("zoom", function () {
+      .on("zoom", hasEditPermission(_self.props.user) ? function () {
         if (d3.event.sourceEvent.shiftKey) {
             // TODO  the internal d3 this.graphState is still changing
             return false;
@@ -1124,25 +1127,29 @@ class Graph extends Component {
             _self.zoomed(_self.thisGraph);
         }
         return true;
-      })
-      .on("start", function () {
+      } : null)
+      .on("start", hasEditPermission(_self.props.user) ? function () {
         var ael = d3.select("#" + _self.consts.activeEditId).node();
         if (ael) {
             ael.blur();
         }
         if (!d3.event.sourceEvent.shiftKey) d3.select('body').style("cursor", "move");
-      })
-      .on("end", function () {
+      } : null)
+      .on("end", hasEditPermission(_self.props.user) ? function () {
         d3.select('body').style("cursor", "auto");
-      });
+      } : null);
 
       svg.call(dragSvg).on("dblclick.zoom", null);
 
-    // listen for resize
-    window.onresize = function () {
-        _self.updateWindow(svg);
-    };
+      // listen for resize
+      window.onresize = function () {
+          _self.updateWindow(svg);
+      };
+    
   }
+
+  
+  
 
   render() {
     const {nodeDetailStatus} = this.state;  
@@ -1169,7 +1176,8 @@ class Graph extends Component {
       }
     }
 
-	return (
+    const editingAllowed = hasEditPermission(this.props.user);
+	return (    
     <div className="container-fluid" style={{"height": "100%"}}>
       <div className="row" style={{"height": "100%"}}>
       {!this.props.viewMode ?        
@@ -1178,7 +1186,7 @@ class Graph extends Component {
         </nav></div>
         : null }
 
-          <div id="graph" className="col-md-10" style={{"height": "100%"}} tabIndex="-1"></div>
+          <div id="graph" className={!editingAllowed ? "col-md-10 readonly" : "col-md-10"} style={{"height": "100%"}} tabIndex="-1"></div>
       </div>    
       {this.state.openFileDetailsDialog ?
         <FileDetailsForm

@@ -5,6 +5,7 @@ import FileDetailsForm from "./FileDetails";
 import BreadCrumbs from "../common/BreadCrumbs";
 import { connect } from 'react-redux';
 import { authHeader, handleError } from "../common/AuthHeader.js"
+import { hasEditPermission } from "../common/AuthUtil.js";
 import download from "downloadjs"
 
 class FileList extends Component {
@@ -87,25 +88,29 @@ class FileList extends Component {
       </Menu>
     );
 
+    const editingAllowed = hasEditPermission(this.props.user);
+
     if(!this.props.application || !this.props.application.applicationId)
       return null;
     return (
       <div className="site-layout-background">
         <div className="d-flex justify-content-end" style={{paddingTop:"50px", margin:"5px"}}>
           <BreadCrumbs applicationId={this.state.applicationId} applicationTitle={this.state.applicationTitle}/>
-          <span style={{ marginLeft: "auto", paddingTop:"5px"}}>
-            <Tooltip placement="bottom" title={"Click to add a new file"}>
-              <Button className="btn btn-secondary btn-sm" onClick={() => this.openAddFileDlg()}><i className="fa fa-plus"></i>Add File</Button>
-            </Tooltip>
-            <Tooltip placement="left" title={"Click to export the ECL schema for this application"}>
-              {/*<Button type="primary" style={{marginLeft: "10px"}} icon="download" onClick={() => this.handleSchemaExport()}>Export Schema</Button>*/}
-              <Dropdown overlay={menu}>
-                <Button className="btn btn-secondary btn-sm" style={{ marginLeft: 8 }} >
-                  <i className="fa fa-download"></i> Export Schema
-                </Button>
-              </Dropdown>
-            </Tooltip>
-          </span>
+          {editingAllowed ? 
+            <span style={{ marginLeft: "auto", paddingTop:"5px"}}>
+              <Tooltip placement="bottom" title={"Click to add a new file"}>
+                <Button className="btn btn-secondary btn-sm" onClick={() => this.openAddFileDlg()}><i className="fa fa-plus"></i>Add File</Button>
+              </Tooltip>
+              <Tooltip placement="left" title={"Click to export the ECL schema for this application"}>
+                {/*<Button type="primary" style={{marginLeft: "10px"}} icon="download" onClick={() => this.handleSchemaExport()}>Export Schema</Button>*/}
+                <Dropdown overlay={menu}>
+                  <Button className="btn btn-secondary btn-sm" style={{ marginLeft: 8 }} >
+                    <i className="fa fa-download"></i> Export Schema
+                  </Button>
+                </Dropdown>
+              </Tooltip>
+            </span>
+          : null}  
         </div>
         <div>
           <FileTable refresh={this.state.refreshTree} applicationId={this.state.applicationId} user={this.props.user}/> 

@@ -1,7 +1,9 @@
 import React, { useState, useEffect } from 'react'
 import { Table, message, Popconfirm, Icon, Tooltip, Divider} from 'antd/lib';
 import { authHeader, handleError } from "../../common/AuthHeader.js"
+import { hasEditPermission } from "../../common/AuthUtil.js";
 import { Constants } from '../../common/Constants';
+import { useSelector } from "react-redux";
 
 function DataflowTable({data, applicationId, onSelectDataflow, onDataFlowUpdated, onDataFlowEdit}) {
   const [selectedRowKeys, setSelectedRowKeys] = useState([]);
@@ -16,6 +18,8 @@ function DataflowTable({data, applicationId, onSelectDataflow, onDataFlowUpdated
       onSelectDataflow('');
     }
    }, [data])
+
+  const authReducer = useSelector(state => state.authenticationReducer);
 
   const rowSelection = {
     selectedRowKeys,
@@ -51,6 +55,8 @@ function DataflowTable({data, applicationId, onSelectDataflow, onDataFlowUpdated
     onSelectDataflow(record);
   }
 
+  const editingAllowed = hasEditPermission(authReducer.user);
+
   const dataflowCols = [{
     title: 'Title',
     dataIndex: 'title',
@@ -74,7 +80,8 @@ function DataflowTable({data, applicationId, onSelectDataflow, onDataFlowUpdated
   {
     width: '30%',
     title: 'Action',
-    dataJob: '',
+    dataIndex: '',
+    className: editingAllowed ? "show-column" : "hide-column",    
     render: (text, record) =>
       <span>
         <a href="#" onClick={(row) => handleEditDataflow(record)}><Tooltip placement="right" title={"Edit Dataflow"}><Icon type="edit" /></Tooltip></a>
@@ -94,8 +101,7 @@ function DataflowTable({data, applicationId, onSelectDataflow, onDataFlowUpdated
         }}
         columns={dataflowCols}
         rowKey={record => record.id}
-        dataSource={data}
-        bordered
+        dataSource={data}        
         pagination={{ pageSize: 5 }} scroll={{ y: 380 }}
       />
 

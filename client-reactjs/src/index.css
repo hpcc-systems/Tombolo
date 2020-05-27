@@ -417,3 +417,11 @@ div.tooltip {
 .messages-span li {
   list-style-type: none;
 }
+
+.hide-column {
+  display:none;
+}
+
+.show-column {
+  display:block;
+}

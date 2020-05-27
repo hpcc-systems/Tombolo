@@ -1,7 +1,8 @@
 import React, { Component } from "react";
-import { Modal, Tabs, Form, Input, Icon,  Select, AutoComplete, Spin, message } from 'antd/lib';
+import { Modal, Tabs, Form, Input, Icon,  Select, AutoComplete, Spin, message, Button } from 'antd/lib';
 import "react-table/react-table.css";
 import { authHeader, handleError } from "../common/AuthHeader.js"
+import { hasEditPermission } from "../common/AuthUtil.js";
 import AssociatedDataflows from "./AssociatedDataflows"
 import { AgGridReact } from 'ag-grid-react';
 import 'ag-grid-community/dist/styles/ag-grid.css';
@@ -287,7 +288,7 @@ class QueryDetails extends Component {
       fields: inputFields.concat(outputFields)
     };
 
-    console.log(queryDetails);
+    //console.log(queryDetails);
 
     return queryDetails;
   }
@@ -350,8 +351,9 @@ class QueryDetails extends Component {
       selectedRowKeys,
       onChange: this.onSelectedRowKeysChange
     };
+    const editingAllowed = hasEditPermission(this.props.user);
     //render only after fetching the data from the server
-    {console.log(title + ', ' + this.props.selectedQuery + ', ' + this.props.isNewFile)}
+    //{console.log(title + ', ' + this.props.selectedQuery + ', ' + this.props.isNewFile)}
     if(!title && !this.props.selectedQuery && !this.props.isNewFile) {
       return null;
     }
@@ -367,6 +369,14 @@ class QueryDetails extends Component {
           bodyStyle={{height:"500px"}}
           destroyOnClose={true}
           width="1200px"
+          footer={[
+            <Button key="back" onClick={this.handleCancel}>
+              Cancel
+            </Button>,
+            <Button key="submit" disabled={!editingAllowed} type="primary" loading={confirmLoading} onClick={this.handleOk}>
+              Save
+            </Button>,
+          ]}
         >
         <Tabs
           defaultActiveKey="1"
@@ -377,7 +387,7 @@ class QueryDetails extends Component {
             {/*this.props.isNewFile ?*/}
             <div>
             <Form.Item {...formItemLayout} label="Cluster">
-               <Select placeholder="Select a Cluster" onChange={this.onClusterSelection} style={{ width: 190 }}>
+               <Select placeholder="Select a Cluster" onChange={this.onClusterSelection} style={{ width: 190 }} disabled={!editingAllowed}>
                 {clusters.map(cluster => <Option key={cluster.id}>{cluster.name}</Option>)}
               </Select>
             </Form.Item>
@@ -395,6 +405,7 @@ class QueryDetails extends Component {
                 onSelect={(value) => this.onQuerySelected(value)}
                 placeholder="Search queries"
                 optionLabelProp="value"
+                disabled={!editingAllowed}
               >
                 <Input id="autocomplete_field" suffix={this.state.autoCompleteSuffix} />
               </AutoComplete>
@@ -403,25 +414,25 @@ class QueryDetails extends Component {
               {/*: null
             }*/}
              <Form.Item {...formItemLayout} label="Name">
-                <Input id="query_name" name="name" onChange={this.onChange} value={name} defaultValue={name} placeholder="Name" disabled={true}/>
+                <Input id="query_name" name="name" onChange={this.onChange} value={name} defaultValue={name} placeholder="Name" disabled={true} disabled={!editingAllowed}/>
             </Form.Item>
             <Form.Item {...formItemLayout} label="Title">
-                <Input id="query_title" name="title" onChange={this.onChange} value={title} defaultValue={title} placeholder="Title" />
+                <Input id="query_title" name="title" onChange={this.onChange} value={title} defaultValue={title} placeholder="Title" disabled={!editingAllowed}/>
             </Form.Item>
             <Form.Item {...formItemLayout} label="Description">
-                <Input id="query_desc" name="description" onChange={this.onChange} value={description} defaultValue={description} placeholder="Description" />
+                <Input id="query_desc" name="description" onChange={this.onChange} value={description} defaultValue={description} placeholder="Description" disabled={!editingAllowed}/>
             </Form.Item>
             <Form.Item {...formItemLayout} label="Git Repo">
-                <Input id="query_gitrepo" name="gitrepo" onChange={this.onChange} value={gitrepo} defaultValue={gitrepo} placeholder="Git Repo URL" />
+                <Input id="query_gitrepo" name="gitrepo" onChange={this.onChange} value={gitrepo} defaultValue={gitrepo} placeholder="Git Repo URL" disabled={!editingAllowed}/>
             </Form.Item>
             <Form.Item {...formItemLayout} label="Primary Service">
-                <Input id="query_primary_svc" name="primaryService" onChange={this.onChange} value={primaryService} defaultValue={primaryService} placeholder="Primary Service" />
+                <Input id="query_primary_svc" name="primaryService" onChange={this.onChange} value={primaryService} defaultValue={primaryService} placeholder="Primary Service" disabled={!editingAllowed}/>
             </Form.Item>
             <Form.Item {...formItemLayout} label="Backup Service">
-                <Input id="query_bkp_svc" name="backupService" onChange={this.onChange} value={backupService} defaultValue={backupService} placeholder="Backup Service" />
+                <Input id="query_bkp_svc" name="backupService" onChange={this.onChange} value={backupService} defaultValue={backupService} placeholder="Backup Service" disabled={!editingAllowed}/>
             </Form.Item>
             <Form.Item {...formItemLayout} label="Type">
-                <Input id="type" name="type" onChange={this.onChange} value={type} defaultValue={type} placeholder="Query Type" />
+                <Input id="type" name="type" onChange={this.onChange} value={type} defaultValue={type} placeholder="Query Type" disabled={!editingAllowed}/>
             </Form.Item>
           </Form>
 
@@ -439,7 +450,7 @@ class QueryDetails extends Component {
                   rowData={input}
                   defaultColDef={{resizable: true, sortable: true}}
                   onGridReady={this.onQueriesTablesReady}
-                  singleClickEdit={true}>
+                  singleClickEdit={editingAllowed}>
                 </AgGridReact>
               </div>
             </TabPane>
@@ -456,7 +467,7 @@ class QueryDetails extends Component {
                   rowData={output}
                   defaultColDef={{resizable: true, sortable: true}}
                   onGridReady={this.onQueriesTablesReady}
-                  singleClickEdit={true}>
+                  singleClickEdit={editingAllowed}>
                 </AgGridReact>
               </div>
           </TabPane>

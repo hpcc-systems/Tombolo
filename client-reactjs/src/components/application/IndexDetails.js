@@ -1,7 +1,8 @@
 import React, { Component } from "react";
-import { Modal, Tabs, Form, Input, Icon, Select, Table, AutoComplete, message, Spin } from 'antd/lib';
+import { Modal, Tabs, Form, Input, Icon, Select, Table, AutoComplete, message, Spin, Button } from 'antd/lib';
 import "react-table/react-table.css";
 import { authHeader, handleError } from "../common/AuthHeader.js"
+import { hasEditPermission } from "../common/AuthUtil.js";
 import AssociatedDataflows from "./AssociatedDataflows"
 import { AgGridReact } from 'ag-grid-react';
 import 'ag-grid-community/dist/styles/ag-grid.css';
@@ -358,8 +359,8 @@ class IndexDetails extends Component {
       selectedRowKeys,
       onChange: this.onSelectedRowKeysChange
     };
-    //render only after fetching the data from the server
-    console.log("index details: "+title+'  '+this.props.selectedAsset+'  '+this.props.isNew)
+    const editingAllowed = hasEditPermission(this.props.user);
+    //render only after fetching the data from the server    
     if(!title && !this.props.selectedAsset && !this.props.isNew) {
       return null;
     }
@@ -375,6 +376,14 @@ class IndexDetails extends Component {
           bodyStyle={{height:"500px"}}
           destroyOnClose={true}
           width="1200px"
+          footer={[
+            <Button key="back" onClick={this.handleCancel}>
+              Cancel
+            </Button>,
+            <Button key="submit" disabled={!editingAllowed} type="primary" loading={confirmLoading} onClick={this.handleOk}>
+              Save
+            </Button>,
+          ]}
         >
         <Tabs
           defaultActiveKey="1"
@@ -385,7 +394,7 @@ class IndexDetails extends Component {
             {/*{this.props.isNew ?*/}
             <div>
             <Form.Item {...formItemLayout} label="Cluster">
-               <Select placeholder="Select a Cluster" onChange={this.onClusterSelection} style={{ width: 190 }}>
+               <Select placeholder="Select a Cluster" onChange={this.onClusterSelection} style={{ width: 190 }} disabled={!editingAllowed}>
                 {clusters.map(cluster => <Option key={cluster.id}>{cluster.name}</Option>)}
               </Select>
             </Form.Item>
@@ -403,6 +412,7 @@ class IndexDetails extends Component {
                 onSelect={(value) => this.onFileSelected(value)}
                 placeholder="Search indexes"
                 optionLabelProp="value"
+                disabled={!editingAllowed}
               >
                 <Input id="autocomplete_field" suffix={this.state.autoCompleteSuffix} />
               </AutoComplete>
@@ -411,29 +421,29 @@ class IndexDetails extends Component {
               {/*: null
             }*/}
              <Form.Item {...formItemLayout} label="Name">
-                <Input id="file_name" name="name" onChange={this.onChange} value={name} defaultValue={name} placeholder="Name" disabled={true}/>
+                <Input id="file_name" name="name" onChange={this.onChange} value={name} defaultValue={name} placeholder="Name" disabled={true} disabled={!editingAllowed}/>
             </Form.Item>
             <Form.Item {...formItemLayout} label="Title">
-                <Input id="file_title" name="title" onChange={this.onChange} value={title} defaultValue={title} placeholder="Title" />
+                <Input id="file_title" name="title" onChange={this.onChange} value={title} defaultValue={title} placeholder="Title" disabled={!editingAllowed}/>
             </Form.Item>
             <Form.Item {...formItemLayout} label="Description">
-                <Input id="file_desc" name="description" onChange={this.onChange} value={description} defaultValue={description} placeholder="Description" />
+                <Input id="file_desc" name="description" onChange={this.onChange} value={description} defaultValue={description} placeholder="Description" disabled={!editingAllowed}/>
             </Form.Item>
             <Form.Item {...formItemLayout} label="Primary Service">
-                <Input id="file_primary_svc" name="primaryService" onChange={this.onChange} value={primaryService} defaultValue={primaryService} placeholder="Primary Service" />
+                <Input id="file_primary_svc" name="primaryService" onChange={this.onChange} value={primaryService} defaultValue={primaryService} placeholder="Primary Service" disabled={!editingAllowed}/>
             </Form.Item>
             <Form.Item {...formItemLayout} label="Backup Service">
-                <Input id="file_bkp_svc" name="backupService" onChange={this.onChange} value={backupService} defaultValue={backupService} placeholder="Backup Service" />
+                <Input id="file_bkp_svc" name="backupService" onChange={this.onChange} value={backupService} defaultValue={backupService} placeholder="Backup Service" disabled={!editingAllowed}/>
             </Form.Item>
             <Form.Item {...formItemLayout} label="Path">
-                <Input id="path" name="path" onChange={this.onChange} value={path} defaultValue={path} placeholder="Path" />
+                <Input id="path" name="path" onChange={this.onChange} value={path} defaultValue={path} placeholder="Path" disabled={!editingAllowed}/>
             </Form.Item>
           </Form>
 
           </TabPane>
           <TabPane tab="Source File" key="2">
             <div>
-               <Select placeholder="Select Source Files" defaultValue={this.state.selectedSourceFile} style={{ width: 190 }} onSelect={this.onSourceFileSelection}>
+               <Select placeholder="Select Source Files" defaultValue={this.state.selectedSourceFile} style={{ width: 190 }} onSelect={this.onSourceFileSelection} disabled={!editingAllowed}>
                 {sourceFiles.map(d => <Option key={d.id}>{(d.title)?d.title:d.name}</Option>)}
               </Select>
               </div>
@@ -451,7 +461,7 @@ class IndexDetails extends Component {
                   rowData={keyedColumns}
                   defaultColDef={{resizable: true, sortable: true}}
                   onGridReady={this.onIndexTablesReady}
-                  singleClickEdit={true}>
+                  singleClickEdit={editingAllowed}>
                 </AgGridReact>
               </div>
           </TabPane>
@@ -468,7 +478,7 @@ class IndexDetails extends Component {
                   rowData={nonKeyedColumns}
                   defaultColDef={{resizable: true, sortable: true}}
                   onGridReady={this.onIndexTablesReady}
-                  singleClickEdit={true}>
+                  singleClickEdit={editingAllowed}>
                 </AgGridReact>
               </div>
 

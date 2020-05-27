@@ -9,6 +9,7 @@ import {
   withRouter,
 } from "react-router-dom";
 import { connect } from 'react-redux';
+import { hasAdminRole, hasEditPermission } from "../common/AuthUtil.js";
 
 const { Sider, Content } = Layout;
 
@@ -47,7 +48,8 @@ class LeftNav extends Component {
       //this.props.history.push("/login");
       return false;
     }
-    const isAdmin = (this.props.user && this.props.user.role == 'admin') ? true : false;
+    const isAdmin = hasAdminRole(this.props.user);
+    const canEdit = hasEditPermission(this.props.user);
     //render the LeftNav only if an application is selected
     /*if((!this.props.isApplicationSet && (selectedTopNav == "/files")) || selectedTopNav == '/login')
       return false;*/
@@ -82,7 +84,8 @@ class LeftNav extends Component {
                 <NavLink to={"/"+applicationId+"/chart"} className="nav-link" data-toggle="popover" tabIndex="5"><i className="fa fa-lg fa-bar-chart"></i> <span className={this.state.collapsed ? "d-none" : ""}>Report</span></NavLink>
               </li>*/}
             </ul>
-
+            { canEdit ?
+            <React.Fragment>
             <h6 className="sidebar-heading d-flex justify-content-between align-items-center px-3 mt-4 mb-1 text-muted">
               <span className={this.state.collapsed ? "d-none" : ""}>Settings</span>
               <a className="d-flex align-items-center text-muted" href="#">
@@ -95,10 +98,13 @@ class LeftNav extends Component {
               </li>
               <li className="nav-item">
                 <NavLink to={"/admin/clusters"} className="nav-link"><i className="fa fa-lg fa-server"></i><span className={this.state.collapsed ? "d-none" : ""}> Clusters</span></NavLink>
-              </li>
-            </ul>
+              </li>            
+            </ul> 
+            </React.Fragment>
+            : null}
+            
             { isAdmin ?
-            <React.Fragment>
+              <React.Fragment>
             <h6 className="sidebar-heading d-flex justify-content-between align-items-center px-3 mt-4 mb-1 text-muted">
               <span className={this.state.collapsed ? "d-none" : ""}>Admin</span>
               <a className="d-flex align-items-center text-muted" href="#">

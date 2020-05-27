@@ -173,34 +173,42 @@ async function _delete(id) {
     await User.destroy({where: {"id":id}}, function(err) {});
 }
 async function GetuserListToShareApp(req, res, next) {
-    const Op = Sequelize.Op
-      return await models.user.findAll({
-            where: {"id" :{ [Op.ne]:req.params.user_id},
-            "role":"user",
-            "id": {
-                [Op.notIn]: Sequelize.literal(
-                    '( SELECT user_id ' +
-                        'FROM user_application ' +
-                       'WHERE application_id = "' + req.params.app_id +
-                    '")')
-                }
-            }
-        });
+  return new Promise(function(resolve, reject) {
+    let token = req.headers['x-access-token'] || req.headers['authorization'];
+    if (token.startsWith('Bearer ')) {
+      token = token.slice(7, token.length);
     }
-    async function GetSharedAppUserList(req, res, next) {
-        const Op = Sequelize.Op
-       return await models.user.findAll({
-            where:{
-            //"id" :{ [Op.ne]:req.params.user_id},
-            "role":"user",
-            "id": {
-            [Op.in]: Sequelize.literal(
-                '( SELECT user_id ' +
-                    'FROM user_application ' +
-                   'WHERE application_id = "' + req.params.app_id +
-                   '" and user_id != "' + req.params.user_id +
-                '")')
-            }
+    var authServiceUrl = process.env.AUTH_SERVICE_URL.replace('auth', 'users') + '/all';
+    let cookie = 'auth='+token;
+    request.get({
+      url: authServiceUrl,
+      headers: {
+        "content-type": "application/json",
+        'Cookie': cookie
+      }
+    }, function(err, response, body) {
+        resolve(JSON.parse(body));
+        if (err) {
+          reject(err);
         }
     });
+  });  
+}
+    
+async function GetSharedAppUserList(req, res, next) {
+    const Op = Sequelize.Op
+   return await models.user.findAll({
+        where:{
+        //"id" :{ [Op.ne]:req.params.user_id},
+        "role":"user",
+        "id": {
+        [Op.in]: Sequelize.literal(
+            '( SELECT user_id ' +
+                'FROM user_application ' +
+               'WHERE application_id = "' + req.params.app_id +
+               '" and user_id != "' + req.params.user_id +
+            '")')
+        }
+    }
+});
 }

@@ -4,6 +4,7 @@ import { NavLink, Switch, Route, withRouter } from 'react-router-dom';
 import { userActions } from '../../redux/actions/User';
 import { connect } from 'react-redux';
 import { authHeader, handleError } from "../common/AuthHeader.js"
+import { hasAdminRole } from "../common/AuthUtil.js";  
 import { applicationActions } from '../../redux/actions/Application';
 import $ from 'jquery';
 
@@ -40,9 +41,9 @@ class AppHeader extends Component {
         });
       }
       if(this.state.applications.length == 0) {
-        var url="/api/app/read/app_list";
-        if(this.props.user && this.props.user.role=='user') {
-          url="/api/app/read/appListByUserId?user_id="+this.props.user.id;
+        var url="/api/app/read/appListByUserId?user_id="+this.props.user.id;
+        if(hasAdminRole(this.props.user)) {
+          url="/api/app/read/app_list";
         }
         fetch(url, {
           headers: authHeader()
@@ -124,7 +125,6 @@ class AppHeader extends Component {
       this.setState({searchText: e.target.value });
     }
   render() {
-    const hasAdminRole = (this.props.user && this.props.user.role == 'admin');
     const applicationId = this.props.application ? this.props.application.applicationId : '';
     const selectedTopNav = (window.location.pathname.indexOf("/admin") != -1) ? "/admin/applications" : (applicationId != '' ? "/" + applicationId + "/dataflow" : "/dataflow")
     const appNav = (applicationId != '' ? "/" + applicationId + "/dataflow" : "/dataflow");
@@ -165,7 +165,7 @@ class AppHeader extends Component {
               </li>
               {/*
               <li className="nav-item">
-                <a className="nav-link" data-nav="/admin/applications" onClick={this.handleTopNavClick} disabled={!hasAdminRole}><i className="fa fa-lg fa-cog"></i> Settings</a>
+                <a className="nav-link" data-nav="/admin/applications" onClick={this.handleTopNavClick} disabled={!hasAdminRole(this.props.user)}><i className="fa fa-lg fa-cog"></i> Settings</a>
               </li>*/}
               <li className="nav-item">
                 <a className="nav-link" onClick={this.handleLogOut}><i className="fa fa-sign-out"></i> Logout</a>
