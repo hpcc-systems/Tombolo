@@ -12,6 +12,7 @@ let algorithm = 'aes-256-ctr';
 let hpccJSComms = require("@hpcc-js/comms")
 var http = require('http');
 const { body, query, oneOf, validationResult } = require('express-validator/check');
+const ClusterWhitelist = require('../../cluster-whitelist');
 
 router.post('/filesearch', [
   body('keyword')
@@ -143,6 +144,14 @@ router.get('/getClusters', function (req, res) {
 		.catch(function(err) {
         console.log(err);
     });
+  } catch (err) {
+      console.log('err', err);
+  }
+});
+
+router.get('/getClusterWhitelist', function (req, res) {
+  try {
+		res.json(ClusterWhitelist.clusters);
   } catch (err) {
       console.log('err', err);
   }

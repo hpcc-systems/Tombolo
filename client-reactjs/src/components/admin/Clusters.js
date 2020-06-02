@@ -1,17 +1,19 @@
 import React, { Component } from "react";
-import { Table, Button, Row, Col, Modal, Form, Input, notification, Spin, Tooltip, Icon, Popconfirm, Divider, message } from 'antd/lib';
+import { Table, Button, Row, Col, Modal, Form, Input, notification, Spin, Tooltip, Icon, Popconfirm, Divider, message, Select } from 'antd/lib';
 import BreadCrumbs from "../common/BreadCrumbs";
 import { authHeader, handleError } from "../common/AuthHeader.js"
+const Option = Select.Option;
 
 class Clusters extends Component {
   state = {
   	clusters:[],
-  	selectedClusters:[],
+  	selectedCluster:'',
   	removeDisabled: true,
 	  showAddClusters: false,
   	confirmLoading: false,
   	showAddClusters: false,
     initialDataLoading: false,
+    clusterWhitelist: [],
   	newCluster : {
   	  	id: '',
   	  	name: '',
@@ -27,19 +29,7 @@ class Clusters extends Component {
 
   componentDidMount() {
   	this.getClusters();
-  }
-
-  onSelectedRowKeysChange = (selectedRowKeys, selectedRows) => {
-    var clustersSelected = this.state.selectedClusters, removeDisabled = true;
-    clustersSelected = selectedRows;
-    this.setState({
-      selectedClusters: clustersSelected,
-    });
-    removeDisabled = (selectedRows.length > 0) ? false : true;
-	this.setState({
-	  removeDisabled: removeDisabled
-	});
-  }
+  }  
 
   getClusters() {
    this.setState({
@@ -56,59 +46,79 @@ class Clusters extends Component {
   	})
   	.then(data => {
   	    this.setState({
-  	    	clusters: data
+  	    	clusters: data,
+          initialDataLoading: false
   	    });
-        this.setState({
-           initialDataLoading: false
-         });
+    }).
+    then((data) => {
+      this.getClusterWhitelist();
+    })
+  	.catch(error => {
+    	console.log(error);
+  	});
+  }
 
-    	})
-    	.catch(error => {
-      	console.log(error);
-    	});
+  getClusterWhitelist() {
+    fetch("/api/hpcc/read/getClusterWhitelist", {
+      headers: authHeader()
+    })
+    .then((response) => {
+      if(response.ok) {
+        return response.json();
+      }
+      handleError(response);
+    })
+    .then(data => {
+        this.setState({
+          clusterWhitelist: data
+        });
+    })
+    .catch(error => {
+      console.log(error);
+    });
   }
 
   handleRemove = (clusterId) => {
-     	var data = JSON.stringify({clusterIdsToDelete:clusterId});
-     	console.log(data);
-       fetch("/api/hpcc/read/removecluster", {
-         method: 'post',
-         headers: authHeader(),
-         body: data
-       }).then((response) => {
-        if(response.ok) {
-          return response.json();
-        }
-        handleError(response);
-       })
-       .then(suggestions => {
-     		notification.open({
-     		    message: 'Cluster Removed',
-     		    description: 'The cluster has been removed.',
-     		    onClick: () => {
-     		      console.log('Closed!');
-     		    },
-     		  });
-           this.getClusters();
-         }).catch(error => {
-           console.log(error);
-         });
+   	var data = JSON.stringify({clusterIdsToDelete:clusterId});
+   	console.log(data);
+     fetch("/api/hpcc/read/removecluster", {
+       method: 'post',
+       headers: authHeader(),
+       body: data
+     }).then((response) => {
+      if(response.ok) {
+        return response.json();
+      }
+      handleError(response);
+     })
+     .then(suggestions => {
+   		notification.open({
+   		    message: 'Cluster Removed',
+   		    description: 'The cluster has been removed.',
+   		    onClick: () => {
+   		      console.log('Closed!');
+   		    },
+   		  });
+         this.getClusters();
+       }).catch(error => {
+         console.log(error);
+       });
   }
 
   handleAdd = (event) => {
   	this.setState({
       ...this.state,
       newCluster: {
-          ...this.state.newCluster,
-          id: '',
-          name: '',
-          thorHost: '',
-          thorPort: '',
-          roxieHost: '',
-          roxiePort: '',
-          username: '',
-          submitted: false
-        },
+        ...this.state.newCluster,
+        id: '',
+        name: '',
+        thorHost: '',
+        thorPort: '',
+        roxieHost: '',
+        roxiePort: '',
+        username: '',
+        submitted: false
+      },
       showAddClusters: true
     });
   }
@@ -132,9 +142,10 @@ class Clusters extends Component {
     })
 	  .then(data => {
       console.log(JSON.stringify(data))
-      this.setState({
+      this.setState({        
         ...this.state,
-      newCluster: {
+        selectedCluster: data.name,        
+        newCluster: {
           ...this.state.newCluster,
           id: data.id,
           name: data.name,
@@ -145,9 +156,10 @@ class Clusters extends Component {
           username: data.username,
           submitted: false
         }
-      });
-      this.setState({
-        showAddClusters: true
+      }, function() {
+        this.setState({
+          showAddClusters: true          
+        });
       });
 
     })
@@ -160,66 +172,63 @@ class Clusters extends Component {
     this.setState({...this.state,confirmLoading:false, newCluster: {...this.state.newCluster, [e.target.name]: e.target.value }});
   }
 
+  onClusterSelection = (value) => {
+    this.setState({
+      selectedCluster: value
+    });
+  }
+
   handleAddClusterOk = () => {
-    if(!(this.state.newCluster.thorHost.startsWith("https") || this.state.newCluster.thorHost.startsWith("http"))) {
-      message.config({top:50});
-      message.error("Please use a valid thor host name");
-      return;
-    }
-    if(!(this.state.newCluster.roxieHost.startsWith("https") || this.state.newCluster.roxieHost.startsWith("http"))) {
-      message.config({top:50});
-      message.error("Please use a valid roxie host name");
-      return;
-    }
+   
     this.setState({
       confirmLoading: true,
       submitted: true
     });
-    if(this.state.newCluster.name && this.state.newCluster.thorHost && this.state.newCluster.thorPort
-      && this.state.newCluster.roxieHost && this.state.newCluster.roxiePort) {
-      let data = JSON.stringify({
-        "id": this.state.newCluster.id,
-        "name": this.state.newCluster.name,
-        "thor_host" : this.state.newCluster.thorHost,
-        "thor_port" : this.state.newCluster.thorPort,
-        "roxie_host" : this.state.newCluster.roxieHost,
-        "roxie_port" : this.state.newCluster.roxiePort,
-        "username" : this.state.newCluster.username,
-        "password" : this.state.newCluster.password
-      });
+    console.log(this.state.selectedCluster);
+    let selectedCluster = this.state.clusterWhitelist.filter((cluster) => cluster.name == this.state.selectedCluster)[0];
 
-      fetch("/api/hpcc/read/newcluster", {
-          method: 'post',
-          headers: authHeader(),
-          body: data
-      })
-      .then((response) => {
-        if(response.ok) {
-          return response.json();
-        }
-       throw new Error("There was an error adding the Cluster. Please check if the cluster is accessible. ");
-      })
-      .then(suggestions => {
-        this.setState({
-          confirmLoading: false,
-          showAddClusters: false,
-          submitted: false
-        });
-        this.getClusters();
-      }).catch(error => {
-        message.config({top:50});
-        message.error(error.message);
-        this.setState({
-          confirmLoading: false
-        });
+    let data = JSON.stringify({
+      "id":this.state.newCluster.id,
+      "name": selectedCluster.name,
+      "thor_host" : selectedCluster.thor,
+      "thor_port" : selectedCluster.thor_port,
+      "roxie_host" : selectedCluster.roxie,
+      "roxie_port" : selectedCluster.roxie_port,
+      "username" : this.state.newCluster.username,
+      "password" : this.state.newCluster.password
+    });
+
+    fetch("/api/hpcc/read/newcluster", {
+        method: 'post',
+        headers: authHeader(),
+        body: data
+    })
+    .then((response) => {
+      if(response.ok) {
+        return response.json();
+      }
+     throw new Error("There was an error adding the Cluster. Please check if the cluster is accessible. ");
+    })
+    .then(suggestions => {
+      this.setState({
+        confirmLoading: false,
+        showAddClusters: false,
+        submitted: false
       });
-     }
+      this.getClusters();
+    }).catch(error => {
+      message.config({top:50});
+      message.error(error.message);
+      this.setState({
+        confirmLoading: false
+      });
+    });
+   
   }
 
 
   render() {
-    const { confirmLoading, submitted} = this.state;
-    const {name, thorHost, thorPort,roxiePort,roxieHost} = this.state.newCluster;
+    const { confirmLoading, submitted, clusterWhitelist} = this.state;
   	const clusterColumns = [{
       title: 'Name',
       dataIndex: 'name',
@@ -317,62 +326,17 @@ class Clusters extends Component {
 	          confirmLoading={confirmLoading}
 	        >
 		        <Form layout="vertical">
-                <div className={'form-group' + (submitted && !name ? ' has-error' : '')}>
-                  <Form.Item {...formItemLayout} label="Name">
-                    <Input id="name" name="name" onChange={this.onChange} placeholder="Name" value={this.state.newCluster.name}/>
-                    {submitted && !name &&
-                        <div className="help-block">Cluster Name is required</div>
-                    }
-                  </Form.Item>
-                </div>
                 {/* <Form.Item label="Thor:"></Form.Item> */}
-                <label style={{color:"black"}}>Thor:</label>
-                <Divider style={{marginTop: '0px', marginBottom:'10px'}}></Divider>
                 <Row gutter={23}>
-                <Col span={13}>
-                <div className={'form-group' + (submitted && !thorHost ? ' has-error' : '')}>
-                  <Form.Item {...formHostLayout} label="Host">
-      						<Input id="thorHost" name="thorHost" onChange={this.onChange} placeholder="http://127.0.0.1" value={this.state.newCluster.thorHost}/>
-                  {submitted && !thorHost &&
-                      <div className="help-block">Thor Host is required</div>
-                  }
-		            </Form.Item>
-                </div>
-                </Col>
-                <Col span={10}>
-                <div className={'form-group' + (submitted && !thorPort ? ' has-error' : '')}>
-                  <Form.Item {...formPortLayout} label="Port">
-                    <Input id="thorPort" name="thorPort" onChange={this.onChange} placeholder="Thor Port" value={this.state.newCluster.thorPort}/>
-                    {submitted && !thorPort &&
-                        <div className="help-block">Thor Port is required</div>
-                    }
-                  </Form.Item>
-                </div>
-                </Col>
-                </Row>
-                <label style={{color:"black"}}>Roxie:</label>
-                <Divider style={{marginTop: '0px', marginBottom:'10px'}}></Divider>
-                <Row gutter={23}>
-                <Col span={13}>
-                <div className={'form-group' + (submitted && !roxieHost ? ' has-error' : '')}>
-                  <Form.Item {...formHostLayout} label="Host">
-      						<Input id="roxieHost" name="roxieHost" onChange={this.onChange} placeholder="http://127.0.0.1" value={this.state.newCluster.roxieHost}/>
-                  {submitted && !roxieHost &&
-                      <div className="help-block">Roxie Host is required</div>
-                  }
-		            </Form.Item>
-                </div>
-                </Col>
-                <Col span={10}>
-                <div className={'form-group' + (submitted && !roxiePort ? ' has-error' : '')}>
-                  <Form.Item {...formPortLayout} label="Port">
-                    <Input id="roxiePort" name="roxiePort" onChange={this.onChange} placeholder="Roxie Port" value={this.state.newCluster.roxiePort}/>
-                    {submitted && !roxiePort &&
-                        <div className="help-block">Roxie Port is required</div>
-                    }
-                  </Form.Item>
-                </div>
-                </Col>
+                  <Col span={13}>
+                  <div className={'form-group'}>
+                    <Form.Item {...formHostLayout} label="Host">
+        						<Select placeholder="Select a Cluster" onChange={this.onClusterSelection} style={{ width: 290 }} value={this.state.newCluster.name ? this.state.newCluster.name + ' - ' + this.state.newCluster.thorHost + ':' + this.state.newCluster.thorPort : 'xx'}>
+                      {clusterWhitelist.map(cluster => <Option key={cluster.name}>{cluster.name + " - " + cluster.thor + ":" + cluster.thor_port}</Option>)}
+                    </Select>
+  		            </Form.Item>
+                  </div>
+                  </Col>                
                 </Row>
  		            <Form.Item {...formItemLayout} label="User Name">
       						<Input id="username" name="username" onChange={this.onChange} placeholder="User Name" value={this.state.newCluster.username}/>
