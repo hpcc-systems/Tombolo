@@ -15,6 +15,8 @@ let Jobparam=models.jobparam;
 let Application=models.application;
 let ControlsAndRegulations = models.controls_regulations;
 let Dataflow = models.dataflow;
+const { body, query, validationResult } = require('express-validator/check');
+const validatorUtil = require('../../utils/validator');
 
 router.get('/fileLayout', (req, res) => {
     console.log("[fileLayout/read.js] - Get file Layout for file_id "+req.query.file_id);
@@ -325,7 +327,17 @@ router.get('/getReport', (req, res) => {
     }
 });
 
-router.get('/associatedDataflows', (req, res) => {
+router.get('/associatedDataflows', [  
+  query('name')
+    .matches(/^[a-zA-Z]{1}[a-zA-Z0-9_:\-]*$/).withMessage('Invalid name'),
+  query('type')
+    .matches(/^[a-zA-Z]{1}[a-zA-Z0-9_:\-]*$/).withMessage('Invalid type')
+], (req, res) => {
+    const errors = validationResult(req).formatWith(validatorUtil.errorFormatter);
+    if (!errors.isEmpty()) {
+      return res.status(422).json({ success: false, errors: errors.array() });
+    }
+
     console.log("[/associatedDataflows] - Get associated dataflows for : "+req.query.name);
     let assetName = req.query.name, type = req.query.type, results, dataflowDetails;    
     let promiseResult;

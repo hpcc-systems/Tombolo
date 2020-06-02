@@ -3,7 +3,7 @@ const router = express.Router();
 const dbUtil = require('../../utils/db');
 const lodash = require('lodash');
 var models  = require('../../models');
-const { check, validationResult  } = require('express-validator');
+const hpccUtil = require('../../utils/hpcc-util');
 let Application = models.application;
 let UserApplication = models.user_application;
 let File = models.file;
@@ -24,11 +24,20 @@ const Op = Sequelize.Op;
 let Indexes=models.indexes;
 let Query=models.query;
 let Job=models.job;
+const validatorUtil = require('../../utils/validator');
+const { body, query, check, validationResult } = require('express-validator/check');
 
 //let FileTree = require('../../models/File_Tree');
 const fileService = require('./fileservice');
 
-router.get('/file_list', (req, res) => {
+router.get('/file_list', [
+  query('app_id')
+    .isUUID(4).withMessage('Invalid application id'),
+],(req, res) => {
+  const errors = validationResult(req).formatWith(validatorUtil.errorFormatter);
+    if (!errors.isEmpty()) {
+      return res.status(422).json({ success: false, errors: errors.array() });
+    }
     console.log("[file list/read.js] - Get file list for app_id = " + req.query.app_id);
     try {
         File.findAll({where:{"application_id":req.query.app_id}}).then(function(files) {
@@ -42,7 +51,16 @@ router.get('/file_list', (req, res) => {
     }
 });
 
-router.post('/all', (req, res) => {
+router.post('/all', [
+  query('keyword')
+    .matches(/^[a-zA-Z]{1}[a-zA-Z0-9_:\-]*$/).withMessage('Invalid keyword'),
+  query('userId')
+    .isInt().withMessage('Invalid userid'),
+],(req, res) => {
+  const errors = validationResult(req).formatWith(validatorUtil.errorFormatter);
+    if (!errors.isEmpty()) {
+      return res.status(422).json({ success: false, errors: errors.array() });
+    }
     console.log("[file list/read.js] - Get all file defns");
     try {
         Application.findAll({ 
@@ -84,61 +102,86 @@ router.get('/licenses', (req, res) => {
 });
 
 router.get('/rules', (req, res) => {
-    try {
-        Rules.findAll().then(function(rules) {
-            res.json(rules);
-        })
-        .catch(function(err) {
-            console.log(err);
-        });
-    } catch (err) {
-        console.log('err', err);
-    }
+  try {
+      Rules.findAll().then(function(rules) {
+          res.json(rules);
+      })
+      .catch(function(err) {
+          console.log(err);
+      });
+  } catch (err) {
+      console.log('err', err);
+  }
 });
 
-router.get('/CheckFileId', (req, res) => {
-    console.log("[CheckFileId/read.js] - check file by app_id = " + req.query.app_id +" and file_id ="+ req.query.file_id);
-    try {
-        File.findOne({
-            where: {"application_id":req.query.app_id,"id":req.query.file_id}
-        }).then(function(file) {
-            if(file)
-            res.json(true);
-            else
-            res.json(false);
-        })
-        .catch(function(err) {
-            console.log(err);
-        });
-    } catch (err) {
-        console.log('err', err);
-    }
+router.get('/CheckFileId', [
+  query('app_id')
+    .isUUID(4).withMessage('Invalid application id'),
+  query('file_id')
+    .isUUID(4).withMessage('Invalid file id'),
+], (req, res) => {
+  const errors = validationResult(req).formatWith(validatorUtil.errorFormatter);
+  if (!errors.isEmpty()) {
+    return res.status(422).json({ success: false, errors: errors.array() });
+  }
+  console.log("[CheckFileId/read.js] - check file by app_id = " + req.query.app_id +" and file_id ="+ req.query.file_id);
+  try {
+    File.findOne({
+        where: {"application_id":req.query.app_id,"id":req.query.file_id}
+    }).then(function(file) {
+        if(file)
+        res.json(true);
+        else
+        res.json(false);
+    })
+    .catch(function(err) {
+        console.log(err);
+    });
+  } catch (err) {
+      console.log('err', err);
+  }
 });
 
-router.get('/file_ids', (req, res) => {
-    console.log("[ffile_ids/read.js] - Get file list for app_id = " + req.query.app_id);
-    var results = [];
-    try {
-        File.findAll({where:{"application_id":req.query.app_id}}).then(function(fileIds) {
-            fileIds.forEach(function(doc, idx) {
-                var fileObj = {};
-                fileObj.id = doc.id;
-                fileObj.title = doc.title;
-                fileObj.name = doc.name;
-                results.push(fileObj);
-            });
-            res.json(results);
-        })
-        .catch(function(err) {
-            console.log(err);
+router.get('/file_ids', [
+  query('app_id')
+    .isUUID(4).withMessage('Invalid application id'),  
+], (req, res) => {
+  const errors = validationResult(req).formatWith(validatorUtil.errorFormatter);
+  if (!errors.isEmpty()) {
+    return res.status(422).json({ success: false, errors: errors.array() });
+  }
+  console.log("[ffile_ids/read.js] - Get file list for app_id = " + req.query.app_id);
+  var results = [];
+  try {
+    File.findAll({where:{"application_id":req.query.app_id}}).then(function(fileIds) {
+        fileIds.forEach(function(doc, idx) {
+            var fileObj = {};
+            fileObj.id = doc.id;
+            fileObj.title = doc.title;
+            fileObj.name = doc.name;
+            results.push(fileObj);
         });
-    } catch (err) {
-        console.log('err', err);
-    }
+        res.json(results);
+    })
+    .catch(function(err) {
+        console.log(err);
+    });
+  } catch (err) {
+      console.log('err', err);
+  }
 
 });
 
-router.get('/file_details', (req, res) => {
+router.get('/file_details', [
+  query('app_id')
+    .isUUID(4).withMessage('Invalid application id'),
+  query('file_id')
+    .isUUID(4).withMessage('Invalid fileId'),
+],(req, res) => {
+  const errors = validationResult(req).formatWith(validatorUtil.errorFormatter);
+  if (!errors.isEmpty()) {
+    return res.status(422).json({ success: false, errors: errors.array() });
+  }
     console.log("[file_details/read.js] - Get file details for app_id = " + req.query.app_id + " and file_id "+req.query.file_id);
     var basic = {}, results={};
     try {
@@ -255,220 +298,213 @@ router.post('/saveFile', [
     }
 });
 
-router.post('/delete', (req, res) => {
-    let updatedSources = [];
-    console.log("[file delete] - Get file list for fileId = " + req.body.fileId + " appId: "+req.body.application_id);
-    File.destroy(
-        {where:{id: req.body.fileId, application_id: req.body.application_id}}
-    ).then(function(deleted) {
-        FileLayout.destroy(
-            {where:{ file_id: req.body.fileId }}
-        ).then(function(layoutDeleted) {
-            FileLicense.destroy(
-                {where:{file_id: req.body.fileId}}
-            ).then(function(licenseDeleted) {
-                FileRelation.destroy(
-                    {where:{file_id: req.body.fileId}}
-                ).then(function(relationDeleted) {
-                    FileFieldRelation.destroy(
-                        {where:{file_id: req.body.fileId}}
-                    ).then(function(fieldRelationDeleted) {
-                        FileValidation.destroy(
-                            {where:{file_id: req.body.fileId}}
-                        ).then(function(validationDeleted) {
-                            TreeConnection.destroy(
-                                {where:{ [Op.or]: [{sourceid: req.body.fileId}, {targetid: req.body.fileId}]}}
-                            ).then(function(connectionDeleted) {
-                                TreeStyle.destroy(
-                                    {where:{node_id: req.body.fileId}}
-                                ).then(function(styleDeleted) {
-                                    ConsumerObject.destroy(
-                                        {where:{object_id: req.body.fileId, object_type: "file"}}
-                                    ).then(function(consumerDeleted) {
-                                        res.json({"result":"success"});
-                                    });
-                                });
-                            })
-                        })
-                    })
-                })
-            })
-        })
+router.post('/delete', [
+  body('fileId')
+    .isUUID(4).withMessage('Invalid file id'),
+  body('application_id')
+    .isUUID(4).withMessage('Invalid application id'),
+],(req, res) => {
+  const errors = validationResult(req).formatWith(validatorUtil.errorFormatter);
+  if (!errors.isEmpty()) {
+    return res.status(422).json({ success: false, errors: errors.array() });
+  }
+  let updatedSources = [];
+  console.log("[file delete] - Get file list for fileId = " + req.body.fileId + " appId: "+req.body.application_id);
+  File.destroy(
+      {where:{id: req.body.fileId, application_id: req.body.application_id}}
+  ).then(function(deleted) {
+      FileLayout.destroy(
+          {where:{ file_id: req.body.fileId }}
+      ).then(function(layoutDeleted) {
+          FileLicense.destroy(
+              {where:{file_id: req.body.fileId}}
+          ).then(function(licenseDeleted) {
+              FileRelation.destroy(
+                  {where:{file_id: req.body.fileId}}
+              ).then(function(relationDeleted) {
+                  FileFieldRelation.destroy(
+                      {where:{file_id: req.body.fileId}}
+                  ).then(function(fieldRelationDeleted) {
+                      FileValidation.destroy(
+                          {where:{file_id: req.body.fileId}}
+                      ).then(function(validationDeleted) {
+                          TreeConnection.destroy(
+                              {where:{ [Op.or]: [{sourceid: req.body.fileId}, {targetid: req.body.fileId}]}}
+                          ).then(function(connectionDeleted) {
+                              TreeStyle.destroy(
+                                  {where:{node_id: req.body.fileId}}
+                              ).then(function(styleDeleted) {
+                                  ConsumerObject.destroy(
+                                      {where:{object_id: req.body.fileId, object_type: "file"}}
+                                  ).then(function(consumerDeleted) {
+                                      res.json({"result":"success"});
+                                  });
+                              });
+                          })
+                      })
+                  })
+              })
+          })
+      })
 
-    })
+  })
 });
 
 router.get('/file_fields', (req, res) => {
-    console.log("[file list/read.js] - Get fields in files app_id = " + req.query.file_ids);
-    var results = [];
+  console.log("[file list/read.js] - Get fields in files app_id = " + req.query.file_ids);
+  var results = [];
 
-    try {
-        FileLayout.findAll({where: {"file_id":{[Op.in]:req.query.file_ids.split(",")}}}).then(function(fileLayout) {
-            fileLayout.forEach(function(doc, idx) {
-                results.push(doc.file_id+"."+doc.name);
-            });
-
-            res.json(results);
-        })
-        .catch(function(err) {
-            console.log(err);
-        });
-    } catch (err) {
-        console.log('err', err);
-    }
-});
-
-router.get('/isSourceFile', (req, res) => {
-    console.log("[isSourceFile/read.js] - check if file is already a source app_id = " +req.query.app_id + "file_id: "+ req.query.file_id);
-    var results = false;
-
-    try {
-        FileRelation.findAll({where:{"application_id":req.query.app_id, "source_file_id":req.query.file_id}}).then(function(file) {
-            if(file != undefined && file.length > 0) {
-                results = true;
-            }
-            res.json(results);
-        })
-        .catch(function(err) {
-            console.log(err);
-        });
-    } catch (err) {
-        console.log('err', err);
-    }
-});
-
-router.get('/downloadSchema', (req, res) => {
-    console.log("[downloadSchema/read.js] - downloadSchema app_id = " + req.query.app_id + " - type: "+req.query.type);
-    if(req.query.type == 'ecl') {
-        fileService.getECLSchema(req.query.app_id, res)
-    } else if (req.query.type == 'json') {
-        fileService.getJSONSchema(req.query.app_id, res)
-    }
-
-});
-
-router.post('/saveFileTree', (req, res) => {
-    let updatedSources = [], connectionId='';
-    console.log("[file saveFileTree] - Save File Tree appId: "+req.body.application_id);
-    try {
-        var connections = req.body.connections, applicationId=req.body.application_id;
-        TreeConnection.destroy({where:{"application_id": req.body.application_id}}).then(function(destroyed) {
-            connections.forEach(function(connection, index) {
-                TreeConnection.findOrCreate({
-                    where:{application_id:applicationId, sourceid:connection.sourceid, targetid:connection.targetid},
-                    defaults:{
-                        "application_id": req.body.application_id,
-                        "sourceid": connection.sourceid,
-                        "targetid": connection.targetid,
-                        "sourceEndPointType": connection.sourceEndPointType,
-                        "targetEndPointType": connection.targetEndPointType
-                    }
-                }), function(err) {
-                    return res.status(500).send(err);
-                }
-            });
+  try {
+    FileLayout.findAll({where: {"file_id":{[Op.in]:req.query.file_ids.split(",")}}}).then(function(fileLayout) {
+        fileLayout.forEach(function(doc, idx) {
+            results.push(doc.file_id+"."+doc.name);
         });
 
-        var stylesToSave = hpccUtil.updateCommonData(req.body.styles, {"application_id":applicationId});
-        TreeStyle.bulkCreate(
-            stylesToSave,
-            {updateOnDuplicate: ["style", "node_id"]}
-        ).then(function(query) {
-            console.log("saving styles");
-            res.json({"result":"success"});
-        }), function(err) {
-            return res.status(500).send(err);
-        }
-    } catch (err) {
-        console.log('err', err);
-    }
+        res.json(results);
+    })
+    .catch(function(err) {
+        console.log(err);
+    });
+  } catch (err) {
+      console.log('err', err);
+  }
 });
 
-router.get('/filetree', (req, res) => {
-    console.log("[filetree/read.js] - get file tree for app_id = " +req.query.app_id);
-    var results = false;
+router.get('/isSourceFile', [
+  query('app_id')
+    .isUUID(4).withMessage('Invalid application id'),
+  query('file_id')
+    .isUUID(4).withMessage('Invalid file id'),
+],(req, res) => {
+  const errors = validationResult(req).formatWith(validatorUtil.errorFormatter);
+  if (!errors.isEmpty()) {
+    return res.status(422).json({ success: false, errors: errors.array() });
+  }
+  console.log("[isSourceFile/read.js] - check if file is already a source app_id = " +req.query.app_id + "file_id: "+ req.query.file_id);
+  var results = false;
 
-    try {
-        var result = {}
-        TreeConnection.findAll({where: {"application_id":req.query.app_id}}, {attributes: ['sourceid', 'targetid', 'sourceEndPointType', 'targetEndPointType']}).then(function(fileTree) {
-            TreeStyle.findAll({where: {"application_id":req.query.app_id}}, {attributes: ['node_id', 'style']}).then(function(style) {
-                result.connections = fileTree;
-                result.tree_styles = style;
-                res.json(result);
-            });
-        })
-        .catch(function(err) {
-            console.log(err);
-        });
-    } catch (err) {
-        console.log('err', err);
-    }
-});
-
-
-router.get('/inheritedLicenses', async function (req, res) {
-    let results = [];
-    try {
-        var parentIds = await getFileRelationHierarchy(req.query.app_id, req.query.fileId, req.query.id);
-
-        File.findAll(
-        {
-            where:{"id": {[Op.in]:parentIds}},
-            attributes:["id", "title", "name"]
-        }
-        ).then(async function(files) {
-          let licenses = new Set();
-          for(const file of files) {
-            var fileLicenses = await FileLicense.findAll({where:{"file_id":file.id}});
-            fileLicenses.forEach(function (fileLicense) {
-                licenses.add(fileLicense.name)
-            });
+  try {
+      FileRelation.findAll({where:{"application_id":req.query.app_id, "source_file_id":req.query.file_id}}).then(function(file) {
+          if(file != undefined && file.length > 0) {
+              results = true;
           }
-          res.json(Array.from(licenses));
-        })
-        .catch(function(err) {
-            console.log(err);
-        });
-    } catch (err) {
-        console.log('err', err);
-    }
+          res.json(results);
+      })
+      .catch(function(err) {
+          console.log(err);
+      });
+  } catch (err) {
+      console.log('err', err);
+  }
 });
 
-router.get('/fileLicenseCount', (req, res) => {
-    console.log("[fileLicenseCount/read.js] - get file license count for app_id = " +req.query.app_id);
-    try {
-        var result = {};
-        FileLicense.findAll({
-            where:{"application_id":req.query.app_id},
-            group: ['name'],
-            attributes: ['name', [Sequelize.fn('COUNT', 'name'), 'fileCount']],
-          }).then(function (licenseCount) {
-              result.licenseFileCount=licenseCount;
-              File.findAndCountAll({
-                where:{
-                    "application_id":req.query.app_id,
-                    "id": {
-                    [Op.notIn]: Sequelize.literal(
-                        '( SELECT file_id ' +
-                            'FROM file_license ' +
-                           'WHERE application_id = "' + req.query.app_id +
-                        '")')
-                    }
-                }
-            }).then(function (file) {
-                  result.nonLicensefileCount=file.count;
-                  res.json(result);
-            })
-        })
-        .catch(function(err) {
-            console.log(err);
-        });
-    } catch (err) {
-        console.log('err', err);
-    }
+router.get('/downloadSchema', [
+  query('app_id')
+    .isUUID(4).withMessage('Invalid application id'),
+  query('type')
+    .isUUID(4).withMessage('Invalid type'),
+],(req, res) => {
+  const errors = validationResult(req).formatWith(validatorUtil.errorFormatter);
+  if (!errors.isEmpty()) {
+    return res.status(422).json({ success: false, errors: errors.array() });
+  }
+  console.log("[downloadSchema/read.js] - downloadSchema app_id = " + req.query.app_id + " - type: "+req.query.type);
+  if(req.query.type == 'ecl') {
+      fileService.getECLSchema(req.query.app_id, res)
+  } else if (req.query.type == 'json') {
+      fileService.getJSONSchema(req.query.app_id, res)
+  }
+
 });
 
-router.get('/DependenciesCount', (req, res) => {
+router.get('/inheritedLicenses', [
+  query('app_id')
+    .isUUID(4).withMessage('Invalid application id'),
+  query('fileId')
+    .isUUID(4).withMessage('Invalid file id'),
+  query('id')
+    .isInt().withMessage('Invalid id'),
+], async function (req, res) {
+  const errors = validationResult(req).formatWith(validatorUtil.errorFormatter);
+  if (!errors.isEmpty()) {
+    return res.status(422).json({ success: false, errors: errors.array() });
+  }
+  let results = [];
+  try {
+    var parentIds = await getFileRelationHierarchy(req.query.app_id, req.query.fileId, req.query.id);
+
+    File.findAll(
+    {
+        where:{"id": {[Op.in]:parentIds}},
+        attributes:["id", "title", "name"]
+    }
+    ).then(async function(files) {
+      let licenses = new Set();
+      for(const file of files) {
+        var fileLicenses = await FileLicense.findAll({where:{"file_id":file.id}});
+        fileLicenses.forEach(function (fileLicense) {
+            licenses.add(fileLicense.name)
+        });
+      }
+      res.json(Array.from(licenses));
+    })
+    .catch(function(err) {
+        console.log(err);
+    });
+  } catch (err) {
+      console.log('err', err);
+  }
+});
+
+router.get('/fileLicenseCount', [
+  query('app_id')
+    .isUUID(4).withMessage('Invalid application id'),  
+  ], (req, res) => {
+  const errors = validationResult(req).formatWith(validatorUtil.errorFormatter);
+  if (!errors.isEmpty()) {
+    return res.status(422).json({ success: false, errors: errors.array() });
+  }
+  console.log("[fileLicenseCount/read.js] - get file license count for app_id = " +req.query.app_id);
+  try {
+      var result = {};
+      FileLicense.findAll({
+          where:{"application_id":req.query.app_id},
+          group: ['name'],
+          attributes: ['name', [Sequelize.fn('COUNT', 'name'), 'fileCount']],
+        }).then(function (licenseCount) {
+            result.licenseFileCount=licenseCount;
+            File.findAndCountAll({
+              where:{
+                  "application_id":req.query.app_id,
+                  "id": {
+                  [Op.notIn]: Sequelize.literal(
+                      '( SELECT file_id ' +
+                          'FROM file_license ' +
+                         'WHERE application_id = "' + req.query.app_id +
+                      '")')
+                  }
+              }
+          }).then(function (file) {
+                result.nonLicensefileCount=file.count;
+                res.json(result);
+          })
+      })
+      .catch(function(err) {
+          console.log(err);
+      });
+  } catch (err) {
+      console.log('err', err);
+  }
+});
+
+router.get('/DependenciesCount', [
+  query('app_id')
+    .isUUID(4).withMessage('Invalid application id'),  
+  ], (req, res) => {
+    const errors = validationResult(req).formatWith(validatorUtil.errorFormatter);
+    if (!errors.isEmpty()) {
+      return res.status(422).json({ success: false, errors: errors.array() });
+    }
     console.log("[DependenciesCount/read.js] - get dependencies count for app_id = " +req.query.app_id);
     try {
         var result = {};
@@ -501,46 +537,62 @@ router.get('/DependenciesCount', (req, res) => {
     }
 });
 
-router.get('/fileLayoutDataType', (req, res) => {
+router.get('/fileLayoutDataType', [
+  query('app_id')
+    .isUUID(4).withMessage('Invalid application id'),  
+  ], (req, res) => {
+    const errors = validationResult(req).formatWith(validatorUtil.errorFormatter);
+    if (!errors.isEmpty()) {
+      return res.status(422).json({ success: false, errors: errors.array() });
+    }
     console.log("[fileLayoutDataType/read.js] - get File Layout data types count for app_id = " +req.query.app_id);
     try {
-        var result = [];
+      var result = [];
+      FileLayout.findAll({
+        where:{"application_id":req.query.app_id,
+        "data_types": {
+            [Op.ne]: null
+           },
+           "data_types": {
+            [Op.ne]: ""
+           }},
+        attributes: [
+          'data_types',
+          [Sequelize.fn('COUNT', Sequelize.col('id')), 'count']
+        ],
+        group: ['data_types']
+      }).then(function(fileLayout) {
+        result=fileLayout;
         FileLayout.findAll({
             where:{"application_id":req.query.app_id,
-            "data_types": {
-                [Op.ne]: null
-               },
-               "data_types": {
-                [Op.ne]: ""
-               }},
-            attributes: [
-              'data_types',
-              [Sequelize.fn('COUNT', Sequelize.col('id')), 'count']
-            ],
-            group: ['data_types']
+           [Op.or]:[{ "data_types": {[Op.eq]: null}},
+                      {"data_types": {[Op.eq]: ""}}]}
           }).then(function(fileLayout) {
-            result=fileLayout;
-            FileLayout.findAll({
-                where:{"application_id":req.query.app_id,
-               [Op.or]:[{ "data_types": {[Op.eq]: null}},
-                          {"data_types": {[Op.eq]: ""}}]}
-              }).then(function(fileLayout) {
-                  var layout={};
-                  layout.data_types="Others";
-                  layout.count=fileLayout.length;
-                  result.push(layout);
-                  res.json(result);
-              })
+              var layout={};
+              layout.data_types="Others";
+              layout.count=fileLayout.length;
+              result.push(layout);
+              res.json(result);
           })
-        .catch(function(err) {
-            console.log(err);
-        });
-    } catch (err) {
-        console.log('err', err);
-    }
+      })
+    .catch(function(err) {
+        console.log(err);
+    });
+  } catch (err) {
+      console.log('err', err);
+  }
 });
 
-router.get('/getFileLayoutByDataType', (req, res) => {
+router.get('/getFileLayoutByDataType', [
+  query('app_id')
+    .isUUID(4).withMessage('Invalid application id'),  
+  query('data_type')
+    .isUUID(4).withMessage('Invalid data type'),   
+  ], (req, res) => {
+    const errors = validationResult(req).formatWith(validatorUtil.errorFormatter);
+    if (!errors.isEmpty()) {
+      return res.status(422).json({ success: false, errors: errors.array() });
+    }
     console.log("[fileLayoutDataType/read.js] - get File Layout for app_id = " +req.query.app_id +" and datatype ="+req.query.data_type);
     try {
         var result = {};
@@ -566,64 +618,73 @@ router.get('/getFileLayoutByDataType', (req, res) => {
             console.log(err);
         });
     }
-    } catch (err) {
-        console.log('err', err);
-    }
+  } catch (err) {
+      console.log('err', err);
+  }
 });
 
-router.get('/LicenseFileList', (req, res) => {
+router.get('/LicenseFileList', [
+  query('app_id')
+    .isUUID(4).withMessage('Invalid application id'),  
+  query('name')
+    .isUUID(4).withMessage('Invalid name'),   
+  ], (req, res) => {
+    const errors = validationResult(req).formatWith(validatorUtil.errorFormatter);
+    if (!errors.isEmpty()) {
+      return res.status(422).json({ success: false, errors: errors.array() });
+    }
     console.log("[LicenseFileList/read.js] - Get file list for app_id = " + req.query.app_id +" and License= "+req.query.name);
     try {
-        if(req.query.name=="No License")
-        {
-            File.findAll(
-                {where:{
-                    "application_id":req.query.app_id,
-                    "id": {
-                    [Op.notIn]: Sequelize.literal(
-                        '( SELECT file_id ' +
-                            'FROM file_license ' +
-                           'WHERE application_id = "' + req.query.app_id +
-                        '")')
-                    }
-                }
-            }).then(function(files) {
-                res.json(files);
-            })
-            .catch(function(err) {
-                console.log(err);
-            });
-        }
-        else{
-            File.findAll({where:{"$file_licenses.name$":req.query.name,"application_id":req.query.app_id},
-            include: [FileLicense]}).then(function(files) {
-                res.json(files);
-            })
-            .catch(function(err) {
-                console.log(err);
-            });
-        }
-    } catch (err) {
-        console.log('err', err);
-    }
+      if(req.query.name=="No License")
+      {
+          File.findAll(
+              {where:{
+                  "application_id":req.query.app_id,
+                  "id": {
+                  [Op.notIn]: Sequelize.literal(
+                      '( SELECT file_id ' +
+                          'FROM file_license ' +
+                         'WHERE application_id = "' + req.query.app_id +
+                      '")')
+                  }
+              }
+          }).then(function(files) {
+              res.json(files);
+          })
+          .catch(function(err) {
+              console.log(err);
+          });
+      }
+      else{
+          File.findAll({where:{"$file_licenses.name$":req.query.name,"application_id":req.query.app_id},
+          include: [FileLicense]}).then(function(files) {
+              res.json(files);
+          })
+          .catch(function(err) {
+              console.log(err);
+          });
+      }
+  } catch (err) {
+      console.log('err', err);
+  }
 });
 
 router.get('/dataTypes', (req, res) => {
-    try {
-        var results = [];
-        DataTypes.findAll().then(function(data_types) {
-            results.push("");
-            data_types.forEach(function(doc, idx) {
-                results.push(doc.name);
-            });
-            res.json(results);
-        })
-        .catch(function(err) {
-            console.log(err);
-        });
-    } catch (err) {
-        console.log('err', err);
-    }
+  try {
+      var results = [];
+      DataTypes.findAll().then(function(data_types) {
+          results.push("");
+          data_types.forEach(function(doc, idx) {
+              results.push(doc.name);
+          });
+          res.json(results);
+      })
+      .catch(function(err) {
+          console.log(err);
+      });
+  } catch (err) {
+      console.log('err', err);
+  }
 });
 
 async function getFileRelationHierarchy(applicationId, fileId, id) {
@@ -665,7 +726,16 @@ async function getFileRelationHierarchy(applicationId, fileId, id) {
     });
 }
 
-router.get('/filelayout', (req, res) => {
+router.get('/filelayout', [
+  query('app_id')
+    .isUUID(4).withMessage('Invalid application id'),  
+  query('name')
+    .isUUID(4).withMessage('Invalid name'),   
+  ], (req, res) => {
+    const errors = validationResult(req).formatWith(validatorUtil.errorFormatter);
+    if (!errors.isEmpty()) {
+      return res.status(422).json({ success: false, errors: errors.array() });
+    }
     console.log("[file_details/read.js] - Get file details for app_id = " + req.query.app_id + " and file_name "+req.query.name);
     var basic = {}, results={};
     try {

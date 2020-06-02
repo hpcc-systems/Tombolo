@@ -5,13 +5,22 @@ var request = require('request');
 var requestPromise = require('request-promise');
 const dbUtil = require('../../utils/db');
 const hpccUtil = require('../../utils/hpcc-util');
+const validatorUtil = require('../../utils/validator');
 var models  = require('../../models');
 var Cluster = models.cluster;
 let algorithm = 'aes-256-ctr';
 let hpccJSComms = require("@hpcc-js/comms")
 var http = require('http');
+const { body, query, oneOf, validationResult } = require('express-validator/check');
 
-router.post('/filesearch', function (req, res) {
+router.post('/filesearch', [
+  body('keyword')
+    .matches(/^[a-zA-Z]{1}[a-zA-Z0-9_:\-]*$/).withMessage('Invalid keyword')
+], function (req, res) {
+	const errors = validationResult(req).formatWith(validatorUtil.errorFormatter);
+  if (!errors.isEmpty()) {
+    return res.status(422).json({ success: false, errors: errors.array() });
+  }
   console.log('clusterid: '+req.body.clusterid);
 
 	hpccUtil.getCluster(req.body.clusterid).then(function(cluster) {
@@ -43,7 +52,14 @@ router.post('/filesearch', function (req, res) {
   });
 });
 
-router.post('/querysearch', function (req, res) {
+router.post('/querysearch', [
+  body('keyword')
+    .matches(/^[a-zA-Z]{1}[a-zA-Z0-9_:\-]*$/).withMessage('Invalid keyworkd')
+], function (req, res) {
+	const errors = validationResult(req).formatWith(validatorUtil.errorFormatter);
+  if (!errors.isEmpty()) {
+    return res.status(422).json({ success: false, errors: errors.array() });
+  }
 	hpccUtil.getCluster(req.body.clusterid).then(function(cluster) {
 		let clusterAuth = hpccUtil.getClusterAuth(cluster);
 		let wsWorkunits = new hpccJSComms.WorkunitsService({ baseUrl: cluster.thor_host + ':' + cluster.thor_port, userID:(clusterAuth ? clusterAuth.user : ""), password:(clusterAuth ? clusterAuth.password : ""), type: "get" }),
@@ -74,8 +90,15 @@ router.post('/querysearch', function (req, res) {
 });
 
 
-router.post('/jobsearch', function (req, res) {
-    console.log('clusterid: '+req.body.clusterid);
+router.post('/jobsearch', [
+  body('keyword')
+    .matches(/^[a-zA-Z]{1}[a-zA-Z0-9_:\-]*$/).withMessage('Invalid keyword')
+], function (req, res) {
+	const errors = validationResult(req).formatWith(validatorUtil.errorFormatter);
+  if (!errors.isEmpty()) {
+    return res.status(422).json({ success: false, errors: errors.array() });
+  }
+  console.log('clusterid: '+req.body.clusterid);
 	hpccUtil.getCluster(req.body.clusterid).then(function(cluster) {
 		let url = cluster.thor_host + ':' + cluster.thor_port +'/WsWorkunits/WUQuery.json?Jobname=*'+req.body.keyword+'*';
         request.get({
@@ -113,36 +136,48 @@ router.post('/jobsearch', function (req, res) {
 });
 
 router.get('/getClusters', function (req, res) {
-    try {
+  try {
 		Cluster.findAll().then(function(clusters) {
 			res.json(clusters);
 		})
 		.catch(function(err) {
-	        console.log(err);
-	    });
-    } catch (err) {
-        console.log('err', err);
-    }
+        console.log(err);
+    });
+  } catch (err) {
+      console.log('err', err);
+  }
 });
 
 router.get('/getCluster', function (req, res) {
-    console.log('in /getCluster');
-    try {
+  console.log('in /getCluster');
+  try {
 		Cluster.findOne(
 			{where: {id:req.query.cluster_id}}
 		).then(function(clusters) {
 			res.json(clusters);
 		})
-		.catch(function(err) {
-	        console.log(err);
-	    });
-    } catch (err) {
-        console.log('err', err);
-    }
+	.catch(function(err) {
+        console.log(err);
+    });
+  } catch (err) {
+      console.log('err', err);
+  }
 });
 
 
-router.post('/newcluster', async function (req, res) {
+router.post('/newcluster', [
+
+  body('thor_host').isURL({'require_protocol':true, 'require_host':true }).withMessage("Invalid thor host"),
+  body('roxie_host').isURL({'require_protocol':true, 'require_host':true }).withMessage("Invalid roxie host"),	
+  body('thor_port')
+    .isInt().withMessage('Invalid thor port'),  
+  body('roxie_port')
+    .isInt().withMessage('Invalid roxie port')      
+	], async function (req, res) {
+		const errors = validationResult(req).formatWith(validatorUtil.errorFormatter);
+    if (!errors.isEmpty()) {
+      return res.status(422).json({ success: false, errors: errors.array() });
+    }
     try {
 		var ThorReachable=false;
 		var RoxieReachable=false;
@@ -189,7 +224,16 @@ router.post('/removecluster', function (req, res) {
     }
 });
 
-router.get('/getFileInfo', function (req, res) {
+router.get('/getFileInfo', [
+  query('fileName')
+    .matches(/^[a-zA-Z]{1}[a-zA-Z0-9_:\-]*$/).withMessage('Invalid file name'),
+  query('clusterid')
+    .isUUID(4).withMessage('Invalid cluster id'),
+], function (req, res) {
+	const errors = validationResult(req).formatWith(validatorUtil.errorFormatter);
+  if (!errors.isEmpty()) {
+    return res.status(422).json({ success: false, errors: errors.array() });
+  }
 	console.log('fileName: '+req.query.fileName+ " clusterId: "+req.query.clusterid );
 	hpccUtil.fileInfo(req.query.fileName, req.query.clusterid).then((fileInfo) => {
 		res.json(fileInfo);	
@@ -199,32 +243,41 @@ router.get('/getFileInfo', function (req, res) {
 });
 
 
-router.get('/getIndexInfo', function (req, res) {
-    try {
-			hpccUtil.getCluster(req.query.clusterid).then(function(cluster) {
-				let clusterAuth = hpccUtil.getClusterAuth(cluster);
-				let dfuService = new hpccJSComms.DFUService({ baseUrl: cluster.thor_host + ':' + cluster.thor_port, userID:(clusterAuth ? clusterAuth.user : ""), password:(clusterAuth ? clusterAuth.password : "")});
-				dfuService.DFUInfo({"Name":req.query.indexName}).then(response => {
-	    		if(response.FileDetail) {
-		    		let indexInfo = {};
-		    		getIndexColumns(cluster, req.query.indexName).then(function(indexColumns) {
-		      		indexInfo = {
-		      			"name" : response.FileDetail.Name,
-		      			"fileName" : response.FileDetail.Filename,
-		      			"description" : response.FileDetail.Description,
-		      			"pathMask" : response.FileDetail.PathMask,
-		      			"columns" : indexColumns
-		      		}
-		      	 	res.json(indexInfo);
-		    		})
-		    	} else {
-		    		res.json();
-		    	}
-	    	});
-			});
-    } catch (err) {
-        console.log('err', err);
-    }
+router.get('/getIndexInfo', [
+  query('indexName')
+    .matches(/^[a-zA-Z]{1}[a-zA-Z0-9_:\-]*$/).withMessage('Invalid index name'),
+  query('clusterid')
+    .isUUID(4).withMessage('Invalid cluster id'),
+],function (req, res) {
+	const errors = validationResult(req).formatWith(validatorUtil.errorFormatter);
+  if (!errors.isEmpty()) {
+    return res.status(422).json({ success: false, errors: errors.array() });
+  }
+  try {
+		hpccUtil.getCluster(req.query.clusterid).then(function(cluster) {
+			let clusterAuth = hpccUtil.getClusterAuth(cluster);
+			let dfuService = new hpccJSComms.DFUService({ baseUrl: cluster.thor_host + ':' + cluster.thor_port, userID:(clusterAuth ? clusterAuth.user : ""), password:(clusterAuth ? clusterAuth.password : "")});
+			dfuService.DFUInfo({"Name":req.query.indexName}).then(response => {
+    		if(response.FileDetail) {
+	    		let indexInfo = {};
+	    		getIndexColumns(cluster, req.query.indexName).then(function(indexColumns) {
+	      		indexInfo = {
+	      			"name" : response.FileDetail.Name,
+	      			"fileName" : response.FileDetail.Filename,
+	      			"description" : response.FileDetail.Description,
+	      			"pathMask" : response.FileDetail.PathMask,
+	      			"columns" : indexColumns
+	      		}
+	      	 	res.json(indexInfo);
+	    		})
+	    	} else {
+	    		res.json();
+	    	}
+    	});
+		});
+  } catch (err) {
+      console.log('err', err);
+  }
 });
 
 function getIndexColumns(cluster, indexName) {
@@ -255,8 +308,18 @@ function getIndexColumns(cluster, indexName) {
   	});
 }
 
-router.get('/getData', function (req, res) {
+router.get('/getData', [  
+  query('clusterid')
+    .isUUID(4).withMessage('Invalid cluster id'),
+  query('fileName')
+    .matches(/^[a-zA-Z]{1}[a-zA-Z0-9_:\-]*$/).withMessage('Invalid file name')
+], function (req, res) {
+	const errors = validationResult(req).formatWith(validatorUtil.errorFormatter);
+  if (!errors.isEmpty()) {
+    return res.status(422).json({ success: false, errors: errors.array() });
+  }
   try {
+
 		hpccUtil.getCluster(req.query.clusterid).then(function(cluster) {
 			let clusterAuth = hpccUtil.getClusterAuth(cluster);
 			let wuService = new hpccJSComms.WorkunitsService({ baseUrl: cluster.thor_host + ':' + cluster.thor_port, userID:(clusterAuth ? clusterAuth.user : ""), password:(clusterAuth ? clusterAuth.password : "")});
@@ -357,96 +420,114 @@ router.get('/getFileProfileHTML', function (req, res) {
     }
 });
 
-router.get('/getQueryInfo', function (req, res) {
-    var resultObj = {}, requestObj = [], responseObj = [];
-    try {
-			hpccUtil.getCluster(req.query.clusterid).then(function(cluster) {
-				let clusterAuth = hpccUtil.getClusterAuth(cluster);
-				let eclService = new hpccJSComms.EclService({ baseUrl: cluster.roxie_host + ':' + cluster.roxie_port, userID:(clusterAuth ? clusterAuth.user : ""), password:(clusterAuth ? clusterAuth.password : "")});
-				eclService.requestJson("roxie", req.query.queryName).then(response => {
+router.get('/getQueryInfo', [  
+  query('clusterid')
+    .isUUID(4).withMessage('Invalid cluster id'),
+  query('queryName')
+    .matches(/^[a-zA-Z]{1}[a-zA-Z0-9_:\-]*$/).withMessage('Invalid query name')
+],function (req, res) {
+	const errors = validationResult(req).formatWith(validatorUtil.errorFormatter);
+  if (!errors.isEmpty()) {
+    return res.status(422).json({ success: false, errors: errors.array() });
+  }
+  var resultObj = {}, requestObj = [], responseObj = [];
+  try {
+		hpccUtil.getCluster(req.query.clusterid).then(function(cluster) {
+			let clusterAuth = hpccUtil.getClusterAuth(cluster);
+			let eclService = new hpccJSComms.EclService({ baseUrl: cluster.roxie_host + ':' + cluster.roxie_port, userID:(clusterAuth ? clusterAuth.user : ""), password:(clusterAuth ? clusterAuth.password : "")});
+			eclService.requestJson("roxie", req.query.queryName).then(response => {
+				if(response) {
+					response.forEach((requestParam) =>  {
+						requestObj.push({"field":requestParam.id, "type":requestParam.type});
+					});
+				}
+				resultObj.request = requestObj;
+
+		  	eclService.responseJson("roxie", req.query.queryName).then(response => {
 					if(response) {
-						response.forEach((requestParam) =>  {
-							requestObj.push({"field":requestParam.id, "type":requestParam.type});
+						let firstKey = Object.keys(response)[0];
+						response[firstKey].forEach((responseParam) => {
+							responseObj.push(
+							{
+								"field" : responseParam.id,
+    						"type" : responseParam.id
+							});
 						});
 					}
-					resultObj.request = requestObj;
-
-			  	eclService.responseJson("roxie", req.query.queryName).then(response => {
-						if(response) {
-							let firstKey = Object.keys(response)[0];
-							response[firstKey].forEach((responseParam) => {
-								responseObj.push(
-								{
-									"field" : responseParam.id,
-	    						"type" : responseParam.id
-								});
-							});
-						}
-						resultObj.response = responseObj;
-						res.json(resultObj);
-
-					}).catch(function (err) {
-			      console.log('error occured: '+err);
-			  	});
+					resultObj.response = responseObj;
+					res.json(resultObj);
 
 				}).catch(function (err) {
 		      console.log('error occured: '+err);
 		  	});
-			});
-    } catch (err) {
-        console.log('err', err);
-    }
+
+			}).catch(function (err) {
+	      console.log('error occured: '+err);
+	  	});
+		});
+  } catch (err) {
+      console.log('err', err);
+  }
 });
 
-router.get('/getJobInfo', function (req, res) {
-    try {
-		console.log('jobName: '+req.query.jobWuid);
-		let sourceFiles=[], outputFiles=[];
-		hpccUtil.getCluster(req.query.clusterid).then(function(cluster) {
-			request.get({
-			  url: cluster.thor_host + ':' + cluster.thor_port +'/WsWorkunits/WUInfo.json?Wuid='+req.query.jobWuid,
-			  auth : hpccUtil.getClusterAuth(cluster)
-			}, function(err, response, body) {
-			  if (err) {
-				console.log('ERROR - ', err);
-				return response.status(500).send('Error');
-		      }
-		      else {
-		      	var result = JSON.parse(body);
-		      	if(result.Exceptions) {
-		      		res.status(500).send('Error: '+result.Exceptions.Exception);
-		      	}
+router.get('/getJobInfo', [  
+  query('clusterid')
+    .isUUID(4).withMessage('Invalid cluster id'),
+  query('jobWuid')
+    .matches(/^[a-zA-Z]{1}[a-zA-Z0-9_:\-]*$/).withMessage('Invalid workunit id')
+], function (req, res) {
+	const errors = validationResult(req).formatWith(validatorUtil.errorFormatter);
+  if (!errors.isEmpty()) {
+    return res.status(422).json({ success: false, errors: errors.array() });
+  }
+  try {
+	console.log('jobName: '+req.query.jobWuid);
+	let sourceFiles=[], outputFiles=[];
+	hpccUtil.getCluster(req.query.clusterid).then(function(cluster) {
+		request.get({
+		  url: cluster.thor_host + ':' + cluster.thor_port +'/WsWorkunits/WUInfo.json?Wuid='+req.query.jobWuid,
+		  auth : hpccUtil.getClusterAuth(cluster)
+		}, function(err, response, body) {
+		  if (err) {
+			console.log('ERROR - ', err);
+			return response.status(500).send('Error');
+	      }
+	      else {
+	      	var result = JSON.parse(body);
+	      	if(result.Exceptions) {
+	      		res.status(500).send('Error: '+result.Exceptions.Exception);
+	      	}
 
-		      	if(result.WUInfoResponse && result.WUInfoResponse.Workunit) {
-		      		var wuInfoResponse = result.WUInfoResponse.Workunit, fileInfo = {};
-		      		if(wuInfoResponse.SourceFiles && wuInfoResponse.SourceFiles.ECLSourceFile) {
-		      			wuInfoResponse.SourceFiles.ECLSourceFile.forEach((sourceFile) => {
-		      				sourceFiles.push({"name":sourceFile.Name});
-		      			});
+	      	if(result.WUInfoResponse && result.WUInfoResponse.Workunit) {
+	      		var wuInfoResponse = result.WUInfoResponse.Workunit, fileInfo = {};
+	      		if(wuInfoResponse.SourceFiles && wuInfoResponse.SourceFiles.ECLSourceFile) {
+	      			wuInfoResponse.SourceFiles.ECLSourceFile.forEach((sourceFile) => {
+	      				sourceFiles.push({"name":sourceFile.Name});
+	      			});
 
-		      		}
-		      		if(wuInfoResponse.Results && wuInfoResponse.Results.ECLResult) {
-		      			let files = wuInfoResponse.Results.ECLResult.filter((result) => {
-		      				return result.FileName != ""
-		      			})
-		      			files.forEach((file) => {
-		      				outputFiles.push({"name":file.FileName});
-		      			})
-		      		}
+	      		}
+	      		if(wuInfoResponse.Results && wuInfoResponse.Results.ECLResult) {
+	      			let files = wuInfoResponse.Results.ECLResult.filter((result) => {
+	      				return result.FileName != ""
+	      			})
+	      			files.forEach((file) => {
+	      				outputFiles.push({"name":file.FileName});
+	      			})
+	      		}
 
-		      		res.json({
-		      			"sourceFiles": sourceFiles,
-		      			"outputFiles": outputFiles,
-		      			"Jobname": result.WUInfoResponse.Workunit.Jobname,
-		      			"description": result.WUInfoResponse.Workunit.Description,
-		      			"entryBWR": result.WUInfoResponse.Workunit.Jobname
-		      		});
-		      	} else {
-		      		res.json();
-		      	}
-		      }
+	      		res.json({
+	      			"sourceFiles": sourceFiles,
+	      			"outputFiles": outputFiles,
+	      			"Jobname": result.WUInfoResponse.Workunit.Jobname,
+	      			"description": result.WUInfoResponse.Workunit.Description,
+	      			"entryBWR": result.WUInfoResponse.Workunit.Jobname
+	      		});
+	      	} else {
+	      		res.json();
+	      	}
+	      }
 
-	      	});
+      	});
 		});
 
     } catch (err) {

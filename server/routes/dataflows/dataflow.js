@@ -8,8 +8,22 @@ let Index = models.indexes;
 let File = models.file;
 let Query = models.query;
 let Job = models.job;
+const validatorUtil = require('../../utils/validator');
+const { body, query, validationResult } = require('express-validator/check');
 
-router.post('/save', (req, res) => {
+router.post('/save', [
+  body('id')
+    .optional({checkFalsy:true})
+    .isUUID(4).withMessage('Invalid dataflow id'),
+  body('application_id')
+    .isUUID(4).withMessage('Invalid application id'),
+], (req, res) => {
+    const errors = validationResult(req).formatWith(validatorUtil.errorFormatter);
+    if (!errors.isEmpty()) {
+      return res.status(422).json({ success: false, errors: errors.array() });
+    }
+
+    console.log('dataflow save');
     var id=req.body.id, application_id=req.body.application_id;
     let whereClause = (!id || id == '' ? {application_id:req.body.application_id, title: req.body.title} : {id:id});
     try {
@@ -38,13 +52,20 @@ router.post('/save', (req, res) => {
     }
 });
 
-router.get('/', (req, res) => {
+router.get('/', [  
+  query('application_id')
+    .isUUID(4).withMessage('Invalid cluster id')
+],(req, res) => {
+  const errors = validationResult(req).formatWith(validatorUtil.errorFormatter);
+  if (!errors.isEmpty()) {
+    return res.status(422).json({ success: false, errors: errors.array() });
+  }
     console.log("[dataflow] - Get dataflow list for app_id = " + req.query.application_id);
     try {
         Dataflow.findAll(
           {
             where:{"application_Id":req.query.application_id}, 
-            include: [DataflowGraph],
+            //include: [DataflowGraph],
             order: [
               ['createdAt', 'DESC']
             ],
@@ -59,7 +80,14 @@ router.get('/', (req, res) => {
     }
 });
 
-router.post('/delete', (req, res) => {
+router.post('/delete', [  
+  body('applicationId')
+    .isUUID(4).withMessage('Invalid application_id')
+], (req, res) => {
+  const errors = validationResult(req).formatWith(validatorUtil.errorFormatter);
+  if (!errors.isEmpty()) {
+    return res.status(422).json({ success: false, errors: errors.array() });
+  }
     Dataflow.destroy(
         {where:{"id": req.body.dataflowId, "application_id":req.body.applicationId}}
     ).then(function(deleted) {
@@ -73,7 +101,16 @@ router.post('/delete', (req, res) => {
     });
 });
 
-router.get('/assets', (req, res) => {
+router.get('/assets', [  
+  query('app_id')
+    .isUUID(4).withMessage('Invalid application_id'),
+  query('dataflowId')
+    .isUUID(4).withMessage('Invalid dataflow id')
+], (req, res) => {
+  const errors = validationResult(req).formatWith(validatorUtil.errorFormatter);
+  if (!errors.isEmpty()) {
+    return res.status(422).json({ success: false, errors: errors.array() });
+  }
     console.log("[app/read.js] - App route called: "+req.query.app_id + " dataflowId: "+req.query.dataflowId);
     let results = [];
     File.findAll({

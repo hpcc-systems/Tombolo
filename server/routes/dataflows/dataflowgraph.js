@@ -3,8 +3,20 @@ const router = express.Router();
 let mongoose = require('mongoose');
 var models  = require('../../models');
 let DataflowGraph = models.dataflowgraph;
+const validatorUtil = require('../../utils/validator');
+const { body, query, validationResult } = require('express-validator/check');
 
-router.post('/save', (req, res) => {
+router.post('/save', [
+  body('dataflowId')
+    .optional({checkFalsy:true})
+    .isUUID(4).withMessage('Invalid dataflow id'),
+  body('application_id')
+    .isUUID(4).withMessage('Invalid application id'),
+], (req, res) => {
+    const errors = validationResult(req).formatWith(validatorUtil.errorFormatter);
+    if (!errors.isEmpty()) {
+      return res.status(422).json({ success: false, errors: errors.array() });
+    }
     var graphId='', application_id=req.body.application_id, dataflowId=req.body.dataflowId;
     console.log('/save - dataflowgraph: '+application_id)
     try {
@@ -36,7 +48,18 @@ router.post('/save', (req, res) => {
     }
 });
 
-router.get('/', (req, res) => {
+router.get('/', [
+  query('application_id')
+    .optional({checkFalsy:true})
+    .isUUID(4).withMessage('Invalid application id'),
+  query('dataflowId')
+    .isUUID(4).withMessage('Invalid dataflow id'),
+], (req, res) => {
+    const errors = validationResult(req).formatWith(validatorUtil.errorFormatter);
+    if (!errors.isEmpty()) {
+      return res.status(422).json({ success: false, errors: errors.array() });
+    }
+
     console.log("[graph] - Get graph list for app_id = " + req.query.application_id);
     try {
         DataflowGraph.findOne({where:{"application_Id":req.query.application_id, "dataflowId":req.query.dataflowId}}).then(function(graph) {
@@ -51,7 +74,16 @@ router.get('/', (req, res) => {
 });
 
 
-router.post('/delete', (req, res) => {
+router.post('/delete', [
+  body('jobId')
+    .isUUID(4).withMessage('Invalid job id'),
+  body('application_id')
+    .isUUID(4).withMessage('Invalid application id'),
+], (req, res) => {
+    const errors = validationResult(req).formatWith(validatorUtil.errorFormatter);
+    if (!errors.isEmpty()) {
+      return res.status(422).json({ success: false, errors: errors.array() });
+    }
     DataflowGraph.destroy(
         {where:{"id": req.body.jobId, "application_id":req.body.application_id}}
     ).then(function(deleted) {
@@ -61,7 +93,16 @@ router.post('/delete', (req, res) => {
     });
 });
 
-router.post('/deleteAsset', (req, res) => {
+router.post('/deleteAsset', [
+  body('dataflowId')
+    .isUUID(4).withMessage('Invalid dataflow id'),
+  body('application_id')
+    .isUUID(4).withMessage('Invalid application id'),
+],(req, res) => {
+    const errors = validationResult(req).formatWith(validatorUtil.errorFormatter);
+    if (!errors.isEmpty()) {
+      return res.status(422).json({ success: false, errors: errors.array() });
+    }
     let assetId=req.body.id, edgeId='';
     console.log('assetId: '+assetId+' dataflowId: '+req.body.dataflowId);
     DataflowGraph.findOne({where:{"application_Id":req.body.application_id, dataflowId:req.body.dataflowId}}).then(function(graph) {

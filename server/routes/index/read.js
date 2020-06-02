@@ -6,8 +6,17 @@ let Index = models.indexes;
 let IndexKey = models.index_key;
 let IndexPayload = models.index_payload;
 let File=models.file;
+const validatorUtil = require('../../utils/validator');
+const { body, query, validationResult } = require('express-validator/check');
 
-router.get('/index_list', (req, res) => {
+router.get('/index_list', [  
+  query('app_id')
+    .isUUID(4).withMessage('Invalid app id')
+], (req, res) => {
+    const errors = validationResult(req).formatWith(validatorUtil.errorFormatter);
+    if (!errors.isEmpty()) {
+        return res.status(422).json({ success: false, errors: errors.array() });
+    }
     console.log("[index/read.js] - Get file list for app_id = " + req.query.app_id);
     Index.findAll({where:{"application_id":req.query.app_id},include: [File]}).then(function(indexes) {
         res.json(indexes);
@@ -17,7 +26,19 @@ router.get('/index_list', (req, res) => {
     });
 });
 
-router.post('/saveIndex', (req, res) => {
+router.post('/saveIndex', [  
+  body('index.basic._id')
+  .optional({checkFalsy:true})
+    .isUUID(4).withMessage('Invalid id'),
+  body('index.basic.application_id')
+    .isUUID(4).withMessage('Invalid application id'),
+  body('index.basic.title')
+  .matches(/^[a-zA-Z]{1}[a-zA-Z0-9_:\-]*$/).withMessage('Invalid title')
+], (req, res) => {
+    const errors = validationResult(req).formatWith(validatorUtil.errorFormatter);
+    if (!errors.isEmpty()) {
+        return res.status(422).json({ success: false, errors: errors.array() });
+    }
     console.log("[saveIndex/read.js] - Get file list for app_id = " + req.body.index.basic._id);
     var index_id, fieldsToUpdate={}, applicationId=req.body.index.basic.application_id;
     try {
@@ -53,7 +74,16 @@ router.post('/saveIndex', (req, res) => {
 
 });
 
-router.get('/index_details', (req, res) => {
+router.get('/index_details', [  
+  query('app_id')
+    .isUUID(4).withMessage('Invalid application id'),
+  query('index_id`')
+    .isUUID(4).withMessage('Invalid id'),
+], (req, res) => {
+    const errors = validationResult(req).formatWith(validatorUtil.errorFormatter);
+    if (!errors.isEmpty()) {
+        return res.status(422).json({ success: false, errors: errors.array() });
+    }
     console.log("[index_details/read.js] - Get index details for app_id = " + req.query.app_id + " and index_id "+req.query.index_id);
     var basic = {}, results={};
     try {
@@ -70,7 +100,16 @@ router.get('/index_details', (req, res) => {
 
 });
 
-router.post('/delete', (req, res) => {
+router.post('/delete', [  
+  body('indexId')
+    .isUUID(4).withMessage('Invalid index id'),
+  body('application_id')
+    .isUUID(4).withMessage('Invalid application id'),
+],(req, res) => {
+    const errors = validationResult(req).formatWith(validatorUtil.errorFormatter);
+    if (!errors.isEmpty()) {
+        return res.status(422).json({ success: false, errors: errors.array() });
+    }
     console.log("[delete/read.js] - Get file list for indexId = " + req.body.indexId + " appId: "+req.body.application_id);
     try {
         Index.destroy(

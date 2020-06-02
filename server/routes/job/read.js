@@ -10,6 +10,8 @@ let FileLayout = models.file_layout;
 let FileValidation = models.file_validation;
 let DataflowGraph = models.dataflowgraph;
 const hpccUtil = require('../../utils/hpcc-util');
+const validatorUtil = require('../../utils/validator');
+const { body, query, validationResult } = require('express-validator/check');
 
 let updateDataFlowGraph = (applicationId, dataflowId, nodes, edges) => {
   return new Promise((resolve, reject) => {
@@ -54,7 +56,19 @@ let updateDataFlowGraph = (applicationId, dataflowId, nodes, edges) => {
   });
 }
 
-router.post('/saveJob', (req, res) => {
+router.post('/saveJob', [  
+  body('_id')
+  .optional({checkFalsy:true})
+    .isUUID(4).withMessage('Invalid id'),
+  body('basic.applicationId')
+    .isUUID(4).withMessage('Invalid application id'),
+  body('basic.name')
+  .matches(/^[a-zA-Z]{1}[a-zA-Z0-9_:]*$/).withMessage('Invalid title')
+], (req, res) => {
+  const errors = validationResult(req).formatWith(validatorUtil.errorFormatter);
+  if (!errors.isEmpty()) {
+      return res.status(422).json({ success: false, errors: errors.array() });
+  }
   console.log("[saveJob] - Get file list for app_id = " + req.body._id + " isNewJob: "+req.body.isNewJob);
   var jobId='', applicationId=req.body.basic.applicationId, fieldsToUpdate={}, nodes=[], edges=[];
   try {
@@ -168,68 +182,93 @@ router.post('/saveJob', (req, res) => {
   }
 });
 
-router.get('/job_list', (req, res) => {
-    console.log("[job list/read.js] - Get job list for app_id = " + req.query.app_id);
-    try {
-        Job.findAll({where:{"application_Id":req.query.app_id}}).then(function(jobs) {
-            res.json(jobs);
-        })
-        .catch(function(err) {
-            console.log(err);
-        });
-    } catch (err) {
-        console.log('err', err);
-    }
-});
-
-
-router.get('/job_details', (req, res) => {
-    console.log("[job_details] - Get job list for app_id = " + req.query.app_id + " query_id: "+req.query.job_id);
-    let jobFiles = [];
-    try {
-        Job.findOne({where:{"application_id":req.query.app_id, "id":req.query.job_id}, include: [JobFile, JobParam]}).then(async function(job) {
-            var jobData = job.get({ plain: true });
-            for(jobFileIdx in jobData.jobfiles) {
-                var jobFile = jobData.jobfiles[jobFileIdx];
-                var file = await File.findOne({where:{"application_id":req.query.app_id, "id":jobFile.file_id}});
-                if(file != undefined) {
-                    jobFile.description = file.description;
-                    jobFile.title = file.title;
-                    jobFile.name = file.name;
-                    jobFile.fileType = file.fileType;
-                    jobFile.qualifiedPath = file.qualifiedPath;
-                    jobData.jobfiles[jobFileIdx] = jobFile;
-                }
-            }
-            return jobData;
-        }).then(function(jobData) {
-            res.json(jobData);
-        })
-        .catch(function(err) {
-            console.log(err);
-        });
-    } catch (err) {
-        console.log('err', err);
-    }
-});
-
-router.post('/delete', (req, res) => {
-    console.log("[delete/read.js] - delete job = " + req.body.jobId + " appId: "+req.body.application_id);
-    Job.destroy(
-        {where:{"id": req.body.jobId, "application_id":req.body.application_id}}
-    ).then(function(deleted) {
-        JobFile.destroy(
-            {where:{ job_id: req.body.jobId }}
-        ).then(function(jobFileDeleted) {
-            JobParam.destroy(
-                {where:{ job_id: req.body.jobId }}
-            ).then(function(jobParamDeleted) {
-                res.json({"result":"success"});
-            });
-        });
-    }).catch(function(err) {
+router.get('/job_list', [    
+  query('app_id')
+    .isUUID(4).withMessage('Invalid application id'),
+], (req, res) => {
+  const errors = validationResult(req).formatWith(validatorUtil.errorFormatter);
+  if (!errors.isEmpty()) {
+      return res.status(422).json({ success: false, errors: errors.array() });
+  }
+  console.log("[job list/read.js] - Get job list for app_id = " + req.query.app_id);
+  try {
+    Job.findAll({where:{"application_Id":req.query.app_id}}).then(function(jobs) {
+        res.json(jobs);
+    })
+    .catch(function(err) {
         console.log(err);
     });
+  } catch (err) {
+      console.log('err', err);
+  }
+});
+
+
+router.get('/job_details', [    
+  query('app_id')
+    .isUUID(4).withMessage('Invalid application id'),
+  query('job_id')
+    .isUUID(4).withMessage('Invalid job id'),  
+], (req, res) => {
+  const errors = validationResult(req).formatWith(validatorUtil.errorFormatter);
+  if (!errors.isEmpty()) {
+      return res.status(422).json({ success: false, errors: errors.array() });
+  }
+  console.log("[job_details] - Get job list for app_id = " + req.query.app_id + " query_id: "+req.query.job_id);
+  let jobFiles = [];
+  try {
+    Job.findOne({where:{"application_id":req.query.app_id, "id":req.query.job_id}, include: [JobFile, JobParam]}).then(async function(job) {
+        var jobData = job.get({ plain: true });
+        for(jobFileIdx in jobData.jobfiles) {
+            var jobFile = jobData.jobfiles[jobFileIdx];
+            var file = await File.findOne({where:{"application_id":req.query.app_id, "id":jobFile.file_id}});
+            if(file != undefined) {
+                jobFile.description = file.description;
+                jobFile.title = file.title;
+                jobFile.name = file.name;
+                jobFile.fileType = file.fileType;
+                jobFile.qualifiedPath = file.qualifiedPath;
+                jobData.jobfiles[jobFileIdx] = jobFile;
+            }
+        }
+        return jobData;
+    }).then(function(jobData) {
+        res.json(jobData);
+    })
+    .catch(function(err) {
+        console.log(err);
+    });
+  } catch (err) {
+      console.log('err', err);
+  }
+});
+
+router.post('/delete', [    
+  query('application_id')
+    .isUUID(4).withMessage('Invalid application id'),
+  query('jobId')
+    .isUUID(4).withMessage('Invalid job id'),  
+], (req, res) => {
+  const errors = validationResult(req).formatWith(validatorUtil.errorFormatter);
+  if (!errors.isEmpty()) {
+      return res.status(422).json({ success: false, errors: errors.array() });
+  }
+  console.log("[delete/read.js] - delete job = " + req.body.jobId + " appId: "+req.body.application_id);
+  Job.destroy(
+      {where:{"id": req.body.jobId, "application_id":req.body.application_id}}
+  ).then(function(deleted) {
+      JobFile.destroy(
+          {where:{ job_id: req.body.jobId }}
+      ).then(function(jobFileDeleted) {
+          JobParam.destroy(
+              {where:{ job_id: req.body.jobId }}
+          ).then(function(jobParamDeleted) {
+              res.json({"result":"success"});
+          });
+      });
+  }).catch(function(err) {
+      console.log(err);
+  });
 });
 
 function updateCommonData(objArray, fields) {

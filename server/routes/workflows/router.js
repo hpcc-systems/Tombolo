@@ -6,6 +6,8 @@ let Workflow = models.workflows;
 let WorkflowDetails = models.workflowdetails;
 let Dataflow = models.dataflow;
 let Job = models.job;
+const validatorUtil = require('../../utils/validator');
+const { body, query, validationResult } = require('express-validator/check');
 var eventsInstance = require('events');
 var fileInstanceEventEmitter = new eventsInstance.EventEmitter();
 var kafka = require('kafka-node'),
@@ -38,55 +40,73 @@ var kafkaConsumerOptions = {
   outOfRangeOffset: 'earliest'
 };    
 
-router.get('/', (req, res) => {
-    console.log("[graph] - Get workflows for app_id = " + req.query.application_id);
-    let results = [];
-    try {
+router.get('/', [    
+  query('application_id')
+    .isUUID(4).withMessage('Invalid application id'),
+], (req, res) => {
+  const errors = validationResult(req).formatWith(validatorUtil.errorFormatter);
+  if (!errors.isEmpty()) {
+      return res.status(422).json({ success: false, errors: errors.array() });
+  }
+  console.log("[graph] - Get workflows for app_id = " + req.query.application_id);
+  let results = [];
+  try {
 
-        Workflow.findAll({
-          where:{"application_Id":req.query.application_id},
-          include:[{model: WorkflowDetails, attributes:['instance_id', 'createdAt', 'updatedAt']}],
-          group:['workflowdetails.instance_id'],
-          order:[[WorkflowDetails, 'createdAt', 'DESC']]
-        }).then(function(workflows) {
-          if(workflows && workflows[0] != undefined) {
-            results = workflows[0].workflowdetails.map((workflowdetail) => {
-              let obj = Object.assign({
-                "id":workflows[0].id,              
-                "name": workflows[0].name,
-                "dataflowId": workflows[0].dataflowId,
-                "instance_id":workflowdetail.instance_id,
-                "createdAt": workflowdetail.createdAt,
-                "updatedAt": workflowdetail.updatedAt
-              })
-              return obj;
-            });
-          }
-          res.json(results);
-        })
-        .catch(function(err) {
-            console.log(err);
-        });
-    } catch (err) {
-        console.log('err', err);
-    }
+      Workflow.findAll({
+        where:{"application_Id":req.query.application_id},
+        include:[{model: WorkflowDetails, attributes:['instance_id', 'createdAt', 'updatedAt']}],
+        group:['workflowdetails.instance_id'],
+        order:[[WorkflowDetails, 'createdAt', 'DESC']]
+      }).then(function(workflows) {
+        if(workflows && workflows[0] != undefined) {
+          results = workflows[0].workflowdetails.map((workflowdetail) => {
+            let obj = Object.assign({
+              "id":workflows[0].id,              
+              "name": workflows[0].name,
+              "dataflowId": workflows[0].dataflowId,
+              "instance_id":workflowdetail.instance_id,
+              "createdAt": workflowdetail.createdAt,
+              "updatedAt": workflowdetail.updatedAt
+            })
+            return obj;
+          });
+        }
+        res.json(results);
+      })
+      .catch(function(err) {
+          console.log(err);
+      });
+  } catch (err) {
+      console.log('err', err);
+  }
 });
 
-router.get('/details', (req, res) => {
-    console.log("[graph] - Get workflow details for app_id = " + req.query.application_id + " workflow_id: "+req.query.workflow_id);
-    try {
-        WorkflowDetails.findAll({
-          where:{"application_Id":req.query.application_id, "workflow_id":req.query.workflow_id, "instance_id":req.query.instance_id}, 
-          order: [['updatedAt', 'DESC']],
-        }).then(function(workflowDetails) {
-            res.json(workflowDetails);
-        })
-        .catch(function(err) {
-            console.log(err);
-        });
-    } catch (err) {
-        console.log('err', err);
-    }
+router.get('/details', [    
+  query('application_id')
+    .isUUID(4).withMessage('Invalid application id'),
+  query('workflow_id')
+    .isUUID(4).withMessage('Invalid workflow id'),
+  query('instance_id')
+    .isUUID(4).withMessage('Invalid instance id'),    
+], (req, res) => {
+  const errors = validationResult(req).formatWith(validatorUtil.errorFormatter);
+  if (!errors.isEmpty()) {
+      return res.status(422).json({ success: false, errors: errors.array() });
+  }
+  console.log("[graph] - Get workflow details for app_id = " + req.query.application_id + " workflow_id: "+req.query.workflow_id);
+  try {
+      WorkflowDetails.findAll({
+        where:{"application_Id":req.query.application_id, "workflow_id":req.query.workflow_id, "instance_id":req.query.instance_id}, 
+        order: [['updatedAt', 'DESC']],
+      }).then(function(workflowDetails) {
+          res.json(workflowDetails);
+      })
+      .catch(function(err) {
+          console.log(err);
+      });
+  } catch (err) {
+      console.log('err', err);
+  }
 });
 
 let workunitInfo = (wuid) => {

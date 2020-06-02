@@ -142,7 +142,8 @@ class QueryTable extends Component {
             selectedQuery={this.state.selectedQuery}
             applicationId={this.props.applicationId}
             onRefresh={this.handleRefreshTree}
-            onClose={this.handleClose}/> : null}
+            onClose={this.handleClose} 
+            user={this.props.user}/>: null}
       </div>
     )
   }
