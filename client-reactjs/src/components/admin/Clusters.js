@@ -331,7 +331,7 @@ class Clusters extends Component {
                   <Col span={13}>
                   <div className={'form-group'}>
                     <Form.Item {...formHostLayout} label="Host">
-        						<Select placeholder="Select a Cluster" onChange={this.onClusterSelection} style={{ width: 290 }} value={this.state.newCluster.name ? this.state.newCluster.name + ' - ' + this.state.newCluster.thorHost + ':' + this.state.newCluster.thorPort : 'xx'}>
+        						<Select placeholder="Select a Cluster" onChange={this.onClusterSelection} style={{ width: 290 }} value={this.state.newCluster.name ? this.state.newCluster.name + ' - ' + this.state.newCluster.thorHost + ':' + this.state.newCluster.thorPort : ''}>
                       {clusterWhitelist.map(cluster => <Option key={cluster.name}>{cluster.name + " - " + cluster.thor + ":" + cluster.thor_port}</Option>)}
                     </Select>
   		            </Form.Item>

@@ -321,7 +321,7 @@ router.get('/getData', [
   query('clusterid')
     .isUUID(4).withMessage('Invalid cluster id'),
   query('fileName')
-    .matches(/^[a-zA-Z]{1}[a-zA-Z0-9_:\-]*$/).withMessage('Invalid file name')
+    .matches(/^[a-zA-Z]{1}[a-zA-Z0-9_:.\-]*$/).withMessage('Invalid file name')
 ], function (req, res) {
 	const errors = validationResult(req).formatWith(validatorUtil.errorFormatter);
   if (!errors.isEmpty()) {

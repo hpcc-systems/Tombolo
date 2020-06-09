@@ -87,7 +87,7 @@ router.get('/details', [
   query('workflow_id')
     .isUUID(4).withMessage('Invalid workflow id'),
   query('instance_id')
-    .isUUID(4).withMessage('Invalid instance id'),    
+    .isInt().withMessage('Invalid instance id'),    
 ], (req, res) => {
   const errors = validationResult(req).formatWith(validatorUtil.errorFormatter);
   if (!errors.isEmpty()) {
