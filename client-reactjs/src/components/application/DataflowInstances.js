@@ -103,32 +103,60 @@ class DataflowInstances extends Component {
     if(!this.props.application || !this.props.application.applicationId)
       return null;
       const workflowTblColumns = [{
-        title: 'Created',
+        title: 'Date',
         dataIndex: 'createdAt',
-        width: '30%',
+        width: '20%',
         render: (text, record) => {
           let createdAt = new Date(text);
           return createdAt.toLocaleDateString('en-US', Constants.DATE_FORMAT_OPTIONS) +' @ '+ createdAt.toLocaleTimeString('en-US') 
         }
       },
       {
-        title: 'Name',
+        title: 'Instance',
+        dataIndex: 'instance_id',
+        width: '15%'
+      },  
+      {
+        title: 'Dataflow Name',
         dataIndex: 'name',
         width: '30%',
         render: (text, record) => <a href='#' onClick={(row) => this.handleViewDetails(record.id, record.dataflowId, record.instance_id)}>{text}</a>
-      },
+      },  
       {
-        title: 'Instance',
-        dataIndex: 'instance_id',
-        width: '30%'
-      },      
+        title: 'Status',
+        dataIndex: 'status',
+        width: '15%'
+      },    
       {
-        width: '30%',
+        title: 'Start Time',
+        dataIndex: 'start',
+        width: '20%',
+        render: (text, record) => {
+          let start = new Date(text);
+          return start.toLocaleDateString('en-US', Constants.DATE_FORMAT_OPTIONS) +' @ '+ start.toLocaleTimeString('en-US') 
+        }
+      },  
+      {
+        title: 'End Time',
+        dataIndex: 'end',
+        width: '20%',
+        render: (text, record) => {
+          let end = new Date(text);
+          return end.toLocaleDateString('en-US', Constants.DATE_FORMAT_OPTIONS) +' @ '+ end.toLocaleTimeString('en-US') 
+        }
+      },       
+      {
+        title: 'Duration (Secs)',
+        dataIndex: 'duration',
+        width: '10%'
+      },       
+      {
+        width: '10%',
         title: 'Action',
         dataJob: '',
         render: (text, record) =>
           <span>
-            <a href="#" onClick={(row) => this.handleViewDetails(record.id, record.dataflowId, record.instance_id)}><Tooltip placement="right" title={"View Details"}><Icon type="eye" theme="filled" /></Tooltip></a>
+            <a href="#" onClick={(row) => this.handleViewDetails(record.id, record.dataflowId, record.instance_id)}><Tooltip placement="right" title={"View Details"}>Details</Tooltip></a>
           </span>
       }];
     return (

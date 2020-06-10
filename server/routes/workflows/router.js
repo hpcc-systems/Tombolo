@@ -6,9 +6,11 @@ let Workflow = models.workflows;
 let WorkflowDetails = models.workflowdetails;
 let Dataflow = models.dataflow;
 let Job = models.job;
+let Sequelize = require('sequelize');
 const validatorUtil = require('../../utils/validator');
 const { body, query, validationResult } = require('express-validator/check');
 var eventsInstance = require('events');
+var moment = require('moment');
 var fileInstanceEventEmitter = new eventsInstance.EventEmitter();
 var kafka = require('kafka-node'),
     Producer = kafka.Producer,
@@ -51,25 +53,37 @@ router.get('/', [
   console.log("[graph] - Get workflows for app_id = " + req.query.application_id);
   let results = [];
   try {
-
       Workflow.findAll({
         where:{"application_Id":req.query.application_id},
-        include:[{model: WorkflowDetails, attributes:['instance_id', 'createdAt', 'updatedAt']}],
+        include:[{model: WorkflowDetails, attributes:['instance_id', 'createdAt', 'updatedAt', [Sequelize.fn('min', Sequelize.col('workflowdetails.createdAt')), 'start'], [Sequelize.fn('max', Sequelize.col('workflowdetails.createdAt')), 'end']]}],
         group:['workflowdetails.instance_id'],
-        order:[[WorkflowDetails, 'createdAt', 'DESC']]
+        order:[[WorkflowDetails, 'createdAt', 'DESC']],
+        raw: true
       }).then(function(workflows) {
-        if(workflows && workflows[0] != undefined) {
-          results = workflows[0].workflowdetails.map((workflowdetail) => {
-            let obj = Object.assign({
-              "id":workflows[0].id,              
-              "name": workflows[0].name,
-              "dataflowId": workflows[0].dataflowId,
-              "instance_id":workflowdetail.instance_id,
-              "createdAt": workflowdetail.createdAt,
-              "updatedAt": workflowdetail.updatedAt
-            })
-            return obj;
-          });
+        try {
+          if(workflows) {          
+            results = workflows.map((workflow) => {
+              let startDate = moment(workflow["workflowdetails.start"]);
+              let endDate = moment(workflow["workflowdetails.end"]);
+              let durationSecs = endDate.diff(startDate, 'seconds');
+              let obj = Object.assign({
+                "id":workflow.id,              
+                "name": workflow.name,
+                "dataflowId": workflow.dataflowId,
+                "instance_id":workflow["workflowdetails.instance_id"],
+                "createdAt": workflow["workflowdetails.createdAt"],
+                "updatedAt": workflow["workflowdetails.updatedAt"],
+                "status": "Completed",
+                "start": workflow["workflowdetails.start"],
+                "end": workflow["workflowdetails.end"],
+                "duration": durationSecs
+              })
+              //console.log(workflowdetail.createdAt)
+              return obj;
+            });
+          }
+        } catch(err) {
+          console.log(err)
         }
         res.json(results);
       })
