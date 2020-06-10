@@ -55,7 +55,12 @@ router.get('/', [
   try {
       Workflow.findAll({
         where:{"application_Id":req.query.application_id},
-        include:[{model: WorkflowDetails, attributes:['instance_id', 'createdAt', 'updatedAt', [Sequelize.fn('min', Sequelize.col('workflowdetails.createdAt')), 'start'], [Sequelize.fn('max', Sequelize.col('workflowdetails.createdAt')), 'end']]}],
+        include:[{model: WorkflowDetails, 
+          attributes:['instance_id', 'createdAt', 'updatedAt', 
+            [Sequelize.fn('min', Sequelize.col('workflowdetails.createdAt')), 'start'], 
+            [Sequelize.fn('max', Sequelize.col('workflowdetails.createdAt')), 'end'],
+            [models.sequelize.literal('CASE WHEN workflowdetails.status = "failed" THEN 1 ELSE 0 END'), 'failed_tasks']
+        ]}],
         group:['workflowdetails.instance_id'],
         order:[[WorkflowDetails, 'createdAt', 'DESC']],
         raw: true
@@ -73,7 +78,7 @@ router.get('/', [
                 "instance_id":workflow["workflowdetails.instance_id"],
                 "createdAt": workflow["workflowdetails.createdAt"],
                 "updatedAt": workflow["workflowdetails.updatedAt"],
-                "status": "Completed",
+                "status": workflow["workflowdetails.failed_tasks"] == 0 ? "Completed" : "Completed with errors",
                 "start": workflow["workflowdetails.start"],
                 "end": workflow["workflowdetails.end"],
                 "duration": durationSecs
