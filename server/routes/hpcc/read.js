@@ -16,7 +16,7 @@ const ClusterWhitelist = require('../../cluster-whitelist');
 
 router.post('/filesearch', [
   body('keyword')
-    .matches(/^[a-zA-Z]{1}[a-zA-Z0-9_:\-]*$/).withMessage('Invalid keyword')
+    .matches(/^[a-zA-Z]{1}[a-zA-Z0-9_:.\-]*$/).withMessage('Invalid keyword')
 ], function (req, res) {
 	const errors = validationResult(req).formatWith(validatorUtil.errorFormatter);
   if (!errors.isEmpty()) {
@@ -55,7 +55,7 @@ router.post('/filesearch', [
 
 router.post('/querysearch', [
   body('keyword')
-    .matches(/^[a-zA-Z]{1}[a-zA-Z0-9_:\-]*$/).withMessage('Invalid keyworkd')
+    .matches(/^[a-zA-Z]{1}[a-zA-Z0-9_:.\-]*$/).withMessage('Invalid keyworkd')
 ], function (req, res) {
 	const errors = validationResult(req).formatWith(validatorUtil.errorFormatter);
   if (!errors.isEmpty()) {
@@ -93,7 +93,7 @@ router.post('/querysearch', [
 
 router.post('/jobsearch', [
   body('keyword')
-    .matches(/^[a-zA-Z]{1}[a-zA-Z0-9_:\-]*$/).withMessage('Invalid keyword')
+    .matches(/^[a-zA-Z]{1}[a-zA-Z0-9_:.\-]*$/).withMessage('Invalid keyword')
 ], function (req, res) {
 	const errors = validationResult(req).formatWith(validatorUtil.errorFormatter);
   if (!errors.isEmpty()) {
@@ -235,7 +235,7 @@ router.post('/removecluster', function (req, res) {
 
 router.get('/getFileInfo', [
   query('fileName')
-    .matches(/^[a-zA-Z]{1}[a-zA-Z0-9_:\-]*$/).withMessage('Invalid file name'),
+    .matches(/^[a-zA-Z]{1}[a-zA-Z0-9_:.\-]*$/).withMessage('Invalid file name'),
   query('clusterid')
     .isUUID(4).withMessage('Invalid cluster id'),
 ], function (req, res) {
@@ -254,7 +254,7 @@ router.get('/getFileInfo', [
 
 router.get('/getIndexInfo', [
   query('indexName')
-    .matches(/^[a-zA-Z]{1}[a-zA-Z0-9_:\-]*$/).withMessage('Invalid index name'),
+    .matches(/^[a-zA-Z]{1}[a-zA-Z0-9_:.\-]*$/).withMessage('Invalid index name'),
   query('clusterid')
     .isUUID(4).withMessage('Invalid cluster id'),
 ],function (req, res) {
@@ -433,7 +433,7 @@ router.get('/getQueryInfo', [
   query('clusterid')
     .isUUID(4).withMessage('Invalid cluster id'),
   query('queryName')
-    .matches(/^[a-zA-Z]{1}[a-zA-Z0-9_:\-]*$/).withMessage('Invalid query name')
+    .matches(/^[a-zA-Z]{1}[a-zA-Z0-9_:.\-]*$/).withMessage('Invalid query name')
 ],function (req, res) {
 	const errors = validationResult(req).formatWith(validatorUtil.errorFormatter);
   if (!errors.isEmpty()) {
@@ -483,7 +483,7 @@ router.get('/getJobInfo', [
   query('clusterid')
     .isUUID(4).withMessage('Invalid cluster id'),
   query('jobWuid')
-    .matches(/^[a-zA-Z]{1}[a-zA-Z0-9_:\-]*$/).withMessage('Invalid workunit id')
+    .matches(/^[a-zA-Z]{1}[a-zA-Z0-9_:.\-]*$/).withMessage('Invalid workunit id')
 ], function (req, res) {
 	const errors = validationResult(req).formatWith(validatorUtil.errorFormatter);
   if (!errors.isEmpty()) {

@@ -173,9 +173,20 @@ class Clusters extends Component {
   }
 
   onClusterSelection = (value) => {
-    this.setState({
-      selectedCluster: value
-    });
+    let selectedCluster = this.state.clusterWhitelist.filter((cluster) => cluster.name == value)[0];
+
+    this.setState({        
+      ...this.state,
+      selectedCluster: value,        
+      newCluster: {
+        ...this.state.newCluster,
+        name: selectedCluster.name,
+        thorHost: selectedCluster.thor,
+        thorPort: selectedCluster.thor_port,
+        roxieHost: selectedCluster.roxie,
+        roxiePort: selectedCluster.roxie_port,
+      }
+    })  
   }
 
   handleAddClusterOk = () => {
@@ -184,16 +195,14 @@ class Clusters extends Component {
       confirmLoading: true,
       submitted: true
     });
-    console.log(this.state.selectedCluster);
-    let selectedCluster = this.state.clusterWhitelist.filter((cluster) => cluster.name == this.state.selectedCluster)[0];
 
     let data = JSON.stringify({
       "id":this.state.newCluster.id,
-      "name": selectedCluster.name,
-      "thor_host" : selectedCluster.thor,
-      "thor_port" : selectedCluster.thor_port,
-      "roxie_host" : selectedCluster.roxie,
-      "roxie_port" : selectedCluster.roxie_port,
+      "name": this.state.newCluster.name,
+      "thor_host" : this.state.newCluster.thorHost,
+      "thor_port" : this.state.newCluster.thorPort,
+      "roxie_host" : this.state.newCluster.roxieHost,
+      "roxie_port" : this.state.newCluster.roxiePort,
       "username" : this.state.newCluster.username,
       "password" : this.state.newCluster.password
     });

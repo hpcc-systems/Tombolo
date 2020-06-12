@@ -66,6 +66,7 @@ router.post('/newapp', [
   body('title')  
     .matches(/^[a-zA-Z]{1}[a-zA-Z0-9_\-]*$/).withMessage('Invalid title'),    
   body('description')  
+    .optional({checkFalsy:true})
     .matches(/^[a-zA-Z]{1}[a-zA-Z0-9_\-.]*$/).withMessage('Invalid description'),    
 ],function (req, res) {
   const errors = validationResult(req).formatWith(validatorUtil.errorFormatter);

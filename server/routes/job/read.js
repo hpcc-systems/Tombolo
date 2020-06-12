@@ -244,9 +244,9 @@ router.get('/job_details', [
 });
 
 router.post('/delete', [    
-  query('application_id')
+  body('application_id')
     .isUUID(4).withMessage('Invalid application id'),
-  query('jobId')
+  body('jobId')
     .isUUID(4).withMessage('Invalid job id'),  
 ], (req, res) => {
   const errors = validationResult(req).formatWith(validatorUtil.errorFormatter);
