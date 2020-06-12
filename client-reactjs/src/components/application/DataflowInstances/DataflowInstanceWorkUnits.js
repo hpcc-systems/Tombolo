@@ -1,5 +1,5 @@
 import React, { Component } from "react";
-import { Button, Table, Divider, message, Icon, Tooltip, Row, Col, Tabs } from 'antd/lib';
+import { Table, Icon, Tooltip, Tabs, Spin } from 'antd/lib';
 import {Graph} from "../Dataflow/Graph";
 import BreadCrumbs from "../../common/BreadCrumbs";
 import { connect } from 'react-redux';
@@ -17,11 +17,11 @@ class DataflowInstanceWorkUnits extends Component {
     applicationId: this.props.applicationId,
     workflow_id: this.props.selectedWorkflow,
     instance_id: this.props.instanceId,
-    workunits: []
+    workunits: [],
+    loading: true
   }
   
   componentDidMount() {
-    console.log('componentDidMount - DataflowInstanceWorkUnits')
     this.fetchDataflowWorkUnits();
   }  
 
@@ -36,10 +36,7 @@ class DataflowInstanceWorkUnits extends Component {
    
   }
 
-  fetchDataflowWorkUnits() {
-    this.setState({
-      workunits : []
-    })
+  fetchDataflowWorkUnits() {    
     if(this.props.applicationId) {
       fetch("/api/workflows/workunits?application_id="+this.state.applicationId+"&workflow_id="+this.state.workflow_id+"&instance_id="+this.state.instance_id, {
          headers: authHeader()
@@ -54,6 +51,7 @@ class DataflowInstanceWorkUnits extends Component {
         console.log(data);
         this.setState({
           workunits : data,
+          loading: false
         })
 
       }).catch(error => {
@@ -87,16 +85,16 @@ class DataflowInstanceWorkUnits extends Component {
             <a href="#"><Tooltip placement="right" title={"View Details"}>Details</Tooltip></a>
           </span>
       }];
-    if(!this.state.workunits || !this.state.workunits.length > 0) {
-      return null;
-    }  
+    console.log(this.state.loading);  
     return (
+      <Spin spinning={this.state.loading}>
       <Table
         columns={workflowTblColumns}
         rowKey={record => record.wuid}
         dataSource={this.state.workunits}
         pagination={{ pageSize: 20 }} scroll={{ y: 460 }}
-      />
+      />      
+      </Spin>
     )
   }
 }

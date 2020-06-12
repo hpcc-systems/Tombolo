@@ -34,7 +34,7 @@ class DataflowInstanceDetails extends Component {
             workflowDetails={this.props.workflowDetails}
             />
         </div>
-        <div>
+        <div style={{"paddingTop": "75px"}}>
           <Tabs type="card">
             <TabPane tab="Work Units" key="1">
               <DataflowInstanceWorkUnits
