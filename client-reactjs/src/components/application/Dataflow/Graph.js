@@ -227,7 +227,7 @@ class Graph extends Component {
               .attr('font-family', 'FontAwesome')
               .attr('font-size', function(d) { return '2em'} )
               .attr('fill', _self.getTaskColor(task[0]))
-              .attr("x", '12')
+              .attr("x", '7')
               .attr("y", '-2')
               .text( function (d) { 
                 if(task[0].message && JSON.parse(task[0].message).length > 0) {
@@ -1178,7 +1178,7 @@ class Graph extends Component {
 
     const editingAllowed = hasEditPermission(this.props.user);
 	return (    
-    <div className="container-fluid" style={{"height": "100%"}}>
+    <div className="container-fluid" style={{"height": "650px"}}>
       <div className="row" style={{"height": "100%"}}>
       {!this.props.viewMode ?        
          <div className="col-sm-1"><nav id="sidebar" className="navbar-light fixed-left" style={{"backgroundColor": "#e3f2fd", "fontSize": "12px"}}>

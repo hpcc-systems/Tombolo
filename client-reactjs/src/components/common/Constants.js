@@ -26,5 +26,7 @@ export const Constants = {
 
     TOMBOLO_ADMIN: 'Tombolo_Admin',
     TOMBOLO_READER: 'Reader',
-    TOMBOLO_CREATOR: 'Creator'
+    TOMBOLO_CREATOR: 'Creator',
+
+    DATAFLOW_INSTANCE_SELECTED: 'DATAFLOW_INSTANCE_SELECTED'
 };

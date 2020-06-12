@@ -153,7 +153,7 @@ class FileDetails extends Component {
       fetch("/api/file/read/file_details?file_id="+this.props.selectedAsset+"&app_id="+this.props.applicationId, {
         headers: authHeader()
       }
-      )
+      ) 
       .then((response) => {
         if(response.ok) {
           return response.json();
@@ -655,7 +655,7 @@ class FileDetails extends Component {
     this.setState({
       visible: false,
     });
-    //this.props.onClose();
+    this.props.onClose();
   }
 
   onClusterSelection = (value) => {

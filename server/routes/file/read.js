@@ -422,8 +422,6 @@ router.get('/inheritedLicenses', [
     .isUUID(4).withMessage('Invalid application id'),
   query('fileId')
     .isUUID(4).withMessage('Invalid file id'),
-  query('id')
-    .isInt().withMessage('Invalid id'),
 ], async function (req, res) {
   const errors = validationResult(req).formatWith(validatorUtil.errorFormatter);
   if (!errors.isEmpty()) {
@@ -717,6 +715,10 @@ async function getFileRelationHierarchy(applicationId, fileId, id) {
     }        
 
     return DataflowGraph.findOne({where:{"application_Id":applicationId}}).then((graph) => {
+      let fileNodes = JSON.parse(graph.nodes).filter(node => node.fileId==fileId);
+      if(id == 'undefined') {
+        id = fileNodes[0].id;
+      }
       const tree = makeTree (JSON.parse(graph.nodes), JSON.parse(graph.edges));
       const parentIds = getFlat(tree);
       return parentIds;

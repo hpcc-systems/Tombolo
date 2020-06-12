@@ -16,7 +16,8 @@ import {IndexList} from "./components/application/IndexList";
 import Dashboard from "./components/application/Dashboard";
 import {QueriesList} from "./components/application/QueriesList";
 import Dataflow from "./components/application/Dataflow";
-import {DataflowInstances} from "./components/application/DataflowInstances";
+import {DataflowInstances} from "./components/application/DataflowInstances/DataflowInstances";
+import {DataflowInstanceDetails} from "./components/application/DataflowInstances/DataflowInstanceDetails";
 import Users from "./components/admin/Users";
 
 import {AdminApplications} from "./components/admin/Applications";
@@ -74,6 +75,7 @@ class App extends React.Component {
                                         <PrivateRoute path="/:applicationId/Chart" component={Chart}/>
                                         <PrivateRoute path="/admin/consumers" component={AdminConsumers}/>
                                         <PrivateRoute path="/admin/controlsAndRegulations" component={Regulations}/>
+                                        <PrivateRoute path="/:applicationId/dataflowInstanceDetails" component={DataflowInstanceDetails}/>
                                     </Switch>
 
                                 </Content>

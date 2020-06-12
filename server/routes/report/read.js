@@ -329,7 +329,7 @@ router.get('/getReport', (req, res) => {
 
 router.get('/associatedDataflows', [  
   query('name')
-    .matches(/^[a-zA-Z]{1}[a-zA-Z0-9_:\-]*$/).withMessage('Invalid name'),
+    .matches(/^[a-zA-Z]{1}[a-zA-Z0-9_:.\-]*$/).withMessage('Invalid name'),
   query('type')
     .matches(/^[a-zA-Z]{1}[a-zA-Z0-9_:\-]*$/).withMessage('Invalid type')
 ], (req, res) => {

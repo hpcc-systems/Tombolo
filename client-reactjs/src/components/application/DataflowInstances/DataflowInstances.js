@@ -1,11 +1,12 @@
 import React, { Component } from "react";
 import { Button, Table, Divider, message,  Icon, Tooltip, Row, Col } from 'antd/lib';
-import {Graph} from "./Dataflow/Graph";
-import BreadCrumbs from "../common/BreadCrumbs";
+import { withRouter } from 'react-router-dom';
+import BreadCrumbs from "../../common/BreadCrumbs";
 import { connect } from 'react-redux';
-import { authHeader, handleError } from "../common/AuthHeader.js"
-import {handleFileDelete, handleJobDelete, handleIndexDelete, handleQueryDelete, updateGraph} from "../common/WorkflowUtil";
-import { Constants } from '../common/Constants';
+import { authHeader, handleError } from "../../common/AuthHeader.js"
+import {DataflowInstanceDetails} from "./DataflowInstanceDetails"
+import { dataflowInstancesAction } from '../../../redux/actions/DataflowInstances';
+import { Constants } from '../../common/Constants';
 
 class DataflowInstances extends Component {
 
@@ -17,9 +18,11 @@ class DataflowInstances extends Component {
     applicationId: this.props.application ? this.props.application.applicationId : '',
     applicationTitle: this.props.application ? this.props.application.applicationTitle : '',
     dataflowId: {},
+    workflowId:'',
     workflows: [],
     workflowDetails: [],
-    workflowDetailsVisible: false
+    workflowDetailsVisible: false,
+    instanceId:''
   }
 
   componentWillReceiveProps(props) {
@@ -29,7 +32,7 @@ class DataflowInstances extends Component {
           applicationId: props.application.applicationId,
           applicationTitle: props.application.applicationTitle
         }, function() {
-          this.handleRefresh();
+          this.fetchWorkflows();
         });
       }
     }
@@ -40,37 +43,52 @@ class DataflowInstances extends Component {
   }
 
   fetchWorkflows = () => {
-    fetch("/api/workflows?application_id="+this.state.applicationId, {
-       headers: authHeader()
-    })
-    .then((response) => {
-        if(response.ok) {
-          return response.json();
-        }
-        handleError(response);
-    })
-    .then(data => {
-      console.log(data);
-      this.setState({
-        workflows : data
+    if(this.state.applicationId) {
+      fetch("/api/workflows?application_id="+this.state.applicationId, {
+         headers: authHeader()
       })
+      .then((response) => {
+          if(response.ok) {
+            return response.json();
+          }
+          handleError(response);
+      })
+      .then(data => {
+        console.log(data);
+        this.setState({
+          workflows : data
+        })
 
-    }).catch(error => {
-      console.log(error);
-    });
+      }).catch(error => {
+        console.log(error);
+      });
+    }
   }
 
   handleViewDetails = (id, dataflowId, instanceId) => {
-    console.log("handleViewDetails: "+id)
-    this.showWorkflowDetails(id, dataflowId, instanceId);
+    this.showWorkflowDetails(id, dataflowId, instanceId);  
   }
 
   showWorkflowDetails = (id, dataflowId, instanceId) => {
     this.getWorkflowDetails(id, instanceId).then((data) => {
-      this.setState({
-        workflowDetailsVisible: true,
+      this.setState({      
+        workflowDetails: data,
+        workflowId: id,
         dataflowId: {"id": dataflowId},
-        workflowDetails: data
+        instanceId: instanceId
+      }, () => {
+        /*this.setState({      
+          workflowDetailsVisible: true
+        });*/
+        
+        this.props.dispatch(dataflowInstancesAction.dataflowInstanceSelected(
+          this.state.applicationId,
+          this.state.workflowId,
+          this.state.dataflowId,
+          this.state.instanceId, 
+          this.state.workflowDetails         
+        ));
+        this.props.history.push('/'+this.state.applicationId+'/dataflowInstanceDetails');
       });
     })
   };
@@ -167,14 +185,17 @@ class DataflowInstances extends Component {
               columns={workflowTblColumns}
               rowKey={record => record.instance_id}
               dataSource={this.state.workflows}
-              pagination={{ pageSize: 10 }} scroll={{ y: 460 }}
+              pagination={{ pageSize: 20 }} scroll={{ y: 460 }}
             />
             </div>
             {this.state.workflowDetailsVisible ?
-            <div className="workflow-details" style={{height:"750px"}}>
-              <p><span id="close" onClick={this.closeWorkflowDetails}><Icon type="close-circle" theme="filled" /></span></p>
-              <Graph applicationId={this.state.applicationId} viewMode={true} selectedDataflow={this.state.dataflowId} workflowDetails={this.state.workflowDetails}/>
-            </div>
+                <DataflowInstanceDetails 
+                  applicationId={this.state.applicationId} 
+                  selectedDataflow={this.state.dataflowId}
+                  selectedWorkflow={this.state.workflowId} 
+                  workflowDetails={this.state.workflowDetails}            
+                  instanceId={this.state.instanceId}
+                />            
             : null }
         </div>
   )
@@ -191,7 +212,7 @@ function mapStateToProps(state) {
   };
 }
 
-const connectedWorkflows = connect(mapStateToProps)(DataflowInstances);
+const connectedWorkflows = connect(mapStateToProps)(withRouter(DataflowInstances));
 export { connectedWorkflows as DataflowInstances };
 
 //export default FileList;

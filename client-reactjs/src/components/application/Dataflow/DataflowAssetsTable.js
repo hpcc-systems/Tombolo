@@ -42,6 +42,10 @@ function DataflowAssetsTable({applicationId, selectedDataflow, user}) {
   	toggle();
   }
 
+  const handleClose = () => {
+    toggle();
+  }
+
   const handleDelete = (id, type) => {
   	switch(type) {
 	    case 'file':
@@ -124,6 +128,7 @@ function DataflowAssetsTable({applicationId, selectedDataflow, user}) {
 	        "selectedAsset": selectedAsset.id,
 	        "applicationId": applicationId,
 	        "selectedDataflow": selectedDataflow,
+          "onClose": handleClose,
 	        "user": user}) : null}
 		</div>
     </React.Fragment>			    
