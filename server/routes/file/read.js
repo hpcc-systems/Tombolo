@@ -53,7 +53,7 @@ router.get('/file_list', [
 
 router.post('/all', [
   query('keyword')
-    .matches(/^[a-zA-Z]{1}[a-zA-Z0-9_:\-]*$/).withMessage('Invalid keyword'),
+    .matches(/^[a-zA-Z]{1}[a-zA-Z0-9_:.\-]*$/).withMessage('Invalid keyword'),
   query('userId')
     .isInt().withMessage('Invalid userid'),
 ],(req, res) => {

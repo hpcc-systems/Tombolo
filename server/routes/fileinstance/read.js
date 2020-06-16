@@ -53,7 +53,7 @@ router.post('/create', (req, res) => {
 
 router.get('/instances', [
   body('file_def')
-    .matches(/^[a-zA-Z]{1}[a-zA-Z0-9_\-:]*$/).withMessage('Invalid data defn'),  
+    .matches(/^[a-zA-Z]{1}[a-zA-Z0-9_:.\-]*$/).withMessage('Invalid data defn'),  
 ], (req, res) => {
   const errors = validationResult(req).formatWith(validatorUtil.errorFormatter);
   if (!errors.isEmpty()) {
