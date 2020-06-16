@@ -1,5 +1,5 @@
 import React, { Component } from "react";
-import {Layout, Menu, Icon, message, Tooltip,Input} from 'antd/lib';
+import {Layout, Menu, Icon, message, Tooltip, Input, Button} from 'antd/lib';
 import { NavLink, Switch, Route, withRouter } from 'react-router-dom';
 import { userActions } from '../../redux/actions/User';
 import { connect } from 'react-redux';
@@ -163,6 +163,7 @@ class AppHeader extends Component {
 
             </ul>
             <ul className="ml-md-auto navbar-nav">
+            <li className="nav-item"><Button style={{float: "right"}} type="link" target={"_blank"} href={process.env.PUBLIC_URL + "/open_database_license.pdf"} >Open Database License</Button></li>
             <li className="nav-item">
               <Search
                 value={this.state.searchText}
