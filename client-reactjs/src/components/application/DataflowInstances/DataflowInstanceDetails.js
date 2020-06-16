@@ -26,32 +26,35 @@ class DataflowInstanceDetails extends Component {
       return null;
     return (
       <React.Fragment>
-        <div>
-          <Graph 
-            applicationId={this.props.applicationId} 
-            viewMode={true} 
-            selectedDataflow={this.props.workflowId} 
-            workflowDetails={this.props.workflowDetails}
-            />
-        </div>
-        <div style={{"paddingTop": "75px"}}>
-          <Tabs type="card">
-            <TabPane tab="Work Units" key="1">
-              <DataflowInstanceWorkUnits
-                applicationId={this.props.applicationId} 
-                viewMode={true} 
-                selectedWorkflow={this.props.dataflowId} 
-                instanceId={this.props.instanceId} 
+        <div class="row">
+          <div className="col-12" style={{"height": "625px", "paddingTop": "75px"}}>
+            <Graph 
+              applicationId={this.props.applicationId} 
+              viewMode={true} 
+              selectedDataflow={this.props.workflowId} 
+              workflowDetails={this.props.workflowDetails}
               />
-            </TabPane>
-            <TabPane tab="Files" key="2">
-              <FileTable applicationId={this.props.applicationId} user={this.props.user}/> 
-            </TabPane>
-            <TabPane tab="Queries" key="3">
-              <QueryTable applicationId={this.props.applicationId} user={this.props.user}/>
-            </TabPane>
-          </Tabs>
-        </div>   
+          </div>
+
+          <div className="col-12" style={{"paddingTop": "75px"}}>
+            <Tabs type="card">
+              <TabPane tab="Work Units" key="1">
+                <DataflowInstanceWorkUnits
+                  applicationId={this.props.applicationId} 
+                  viewMode={true} 
+                  selectedWorkflow={this.props.dataflowId} 
+                  instanceId={this.props.instanceId} 
+                />
+              </TabPane>
+              <TabPane tab="Files" key="2">
+                <FileTable applicationId={this.props.applicationId} user={this.props.user}/> 
+              </TabPane>
+              <TabPane tab="Queries" key="3">
+                <QueryTable applicationId={this.props.applicationId} user={this.props.user}/>
+              </TabPane>
+            </Tabs>
+          </div>   
+        </div>  
       </React.Fragment>  
     )
   }

@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react'
-import { Button, Table, Divider, message, Popconfirm, Icon, Tooltip, Radio } from 'antd/lib';
+import { Button, Table, Divider, message, Popconfirm, Icon, Tooltip, Radio, Collapse } from 'antd/lib';
 import BreadCrumbs from "../../common/BreadCrumbs";
 import AddDataflow from "./AddDataflow";
 import DataflowTable from "./DataflowTable";
@@ -10,6 +10,7 @@ import { authHeader, handleError } from "../../common/AuthHeader.js"
 import { hasEditPermission } from "../../common/AuthUtil.js";
 import { connect } from 'react-redux';
 import { useSelector } from "react-redux";
+const { Panel } = Collapse;
 
 function Dataflow(props) {
 	const [dataFlows, setDataFlows] = useState([]);
@@ -17,7 +18,7 @@ function Dataflow(props) {
 	const {isShowing, toggle} = useModal();
 
   const [tableDisplay, setTableDisplay] = useState(
-    {graphHeight: 70, display:'block'}
+    {graphHeight: 625, display:'block'}
   );
 	
 	const [form, setForm] = useState({
@@ -78,18 +79,21 @@ function Dataflow(props) {
     toggle() 	
   }
 
-  const minimize = () => {
-    setTableDisplay({graphHeight: 83, display: 'none'});
+  const onChange = (key) => {
+    console.log(key)
+    if(key.length > 0 && key[0] == 1) {
+      setTableDisplay({graphHeight: 625});
+    } else {
+      setTableDisplay({graphHeight: 800});
+    }
   }
 
-  const maximize = () => {
-    setTableDisplay({graphHeight: 70, display: 'block'})
-  }
+  
   const editingAllowed = hasEditPermission(authReducer.user);
 
   if(application.applicationId == '' ) return null;
   return (  	
-  	  <div style={{"height": "100%"}}>
+  	  <div>
 	      <div className="d-flex justify-content-end" style={{paddingTop:"55px", margin: "5px"}}>
           <BreadCrumbs applicationId={application.applicationId} applicationTitle={application.applicationTitle}/>
 	        <div className="ml-auto">
@@ -110,29 +114,34 @@ function Dataflow(props) {
   	        </span>
           </div>
 	      </div>
+        <div class="row">
+  	      <div id="data_flow_content" className="col-12" style={{"height": tableDisplay.graphHeight+"px"}}>
+  					{form.tableView ? 
+              <DataflowAssetsTable applicationId={application.applicationId} selectedDataflow={form.selectedDataflow} user={application.user}/> 
+              : 
+              <Graph applicationId={application.applicationId} applicationTitle={application.applicationTitle} selectedDataflow={form.selectedDataflow}/>
+            }            	        
+  	      </div>
 
-	      <div id="data_flow_content" style={{"height": tableDisplay.graphHeight+"%"}}>
-					{form.tableView ? 
-            <DataflowAssetsTable applicationId={application.applicationId} selectedDataflow={form.selectedDataflow} user={application.user}/> 
-            : 
-            <Graph applicationId={application.applicationId} applicationTitle={application.applicationTitle} selectedDataflow={form.selectedDataflow}/>
-          }
-          <div className="dataflow-tbl-wrapper bg-light">
-            <div className="dataflow-tbl-controls float-right">
-              <div className="my-1 mx-2 flex-shrink-0"><i className="fa fa-window-minimize js-minimize" title="Minimize Script" onClick={() => minimize()}></i><i className="fa js-restore fa-window-restore" title="Restore Script" onClick={() => maximize()}></i></div>
-            </div>
-            
-            <div id="dataflow-list" style={{padding: "5px", "display":tableDisplay.display}}>
-              <DataflowTable              
-                data={dataFlows}
-                applicationId={application.applicationId}  
-                onSelectDataflow={onSelectDataflow} 
-                onDataFlowUpdated={onDataFlowUpdated}
-                onDataFlowEdit={onDataFlowEdit} />        
-            </div>
-          </div>    	        
-	      </div>
-          
+          <div className="col-12">
+            <Collapse
+              defaultActiveKey={['1']}
+              expandIconPosition={"right"}
+              onChange={onChange}
+            >
+              <Panel header="Dataflows" key="1">
+                <DataflowTable              
+                    data={dataFlows}
+                    applicationId={application.applicationId}  
+                    onSelectDataflow={onSelectDataflow} 
+                    onDataFlowUpdated={onDataFlowUpdated}
+                    onDataFlowEdit={onDataFlowEdit} />     
+              </Panel>
+              
+            </Collapse>
+          </div>
+        </div>
+
 	    </div>  
 	  )  
 

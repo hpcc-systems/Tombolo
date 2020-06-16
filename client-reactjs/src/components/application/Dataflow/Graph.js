@@ -1047,7 +1047,7 @@ class Graph extends Component {
         var mouseCoordinates = d3.mouse(this);
         let idct = ++_self.graphState.idct;
         //let x = (mouseCoordinates[0] < 60) ? 60 : mouseCoordinates[0] - 150 : mouseCoordinates[0] > 1300 ? 1300 : mouseCoordinates[0];
-        let x = mouseCoordinates[0] > 1300 ? 1300 : mouseCoordinates[0] < 60 ? 60 : mouseCoordinates[0]
+        let x = mouseCoordinates[0] > 1550 ? 1550 : mouseCoordinates[0] < 60 ? 60 : mouseCoordinates[0]
         let y = mouseCoordinates[1] > 600 ? 600 : mouseCoordinates[1] < 0 ? 0 : mouseCoordinates[1]        
         _self.thisGraph.nodes.push({"title":"New "+d3.select(this).select("text.entity").text(),"id":idct+Math.floor(Date.now()),"x":x,"y":y, "type":d3.select(this).select("text.entity").text()})
         _self.setIdCt(idct);
@@ -1091,7 +1091,7 @@ class Graph extends Component {
       if (_self.graphState.shiftNodeDrag) {
           _self.dragEnd(d3.select(this), _self.graphState.mouseEnterNode)
       } else {
-        let x = d3.event.x > 1300 ? 1300 : d3.event.x < 60 ? 60 : d3.event.x
+        let x = d3.event.x > 1550 ? 1550 : d3.event.x < 60 ? 60 : d3.event.x
         let y = d3.event.y > 600 ? 600 : d3.event.y < 0 ? 0 : d3.event.y      
         d.x = x;
         d.y = y;
@@ -1178,16 +1178,13 @@ class Graph extends Component {
 
     const editingAllowed = hasEditPermission(this.props.user);
 	return (    
-    <div className="container-fluid" style={{"height": "650px"}}>
-      <div className="row" style={{"height": "100%"}}>
+      <React.Fragment>
       {!this.props.viewMode ?        
-         <div className="col-sm-1"><nav id="sidebar" className="navbar-light fixed-left" style={{"backgroundColor": "#e3f2fd", "fontSize": "12px"}}>
+         <div className="col-sm-1 float-left" style={{width:"85px"}}><nav id="sidebar" className="navbar-light fixed-left" style={{"backgroundColor": "#e3f2fd", "fontSize": "12px"}}></nav></div>
+      : null }
 
-        </nav></div>
-        : null }
+        <div id="graph" style={{"marginLeft": "70px", "height":"100%"}} className={!editingAllowed ? "col-md-10 readonly" : "col-md-10"} tabIndex="-1"></div>
 
-          <div id="graph" className={!editingAllowed ? "col-md-10 readonly" : "col-md-10"} style={{"height": "100%"}} tabIndex="-1"></div>
-      </div>    
       {this.state.openFileDetailsDialog ?
         <FileDetailsForm
           onRef={ref => (this.fileDlg = ref)}
@@ -1261,8 +1258,7 @@ class Graph extends Component {
             </Descriptions>
             
         </Modal>
-
-    </div>
+    </React.Fragment> 
 	)
   }
 
