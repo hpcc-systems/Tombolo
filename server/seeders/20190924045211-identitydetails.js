@@ -71,7 +71,7 @@ module.exports = {
     },
     {
       id: uuidv4(),
-      name : 'Address',
+      name : 'Street Address',
       createdAt : new Date(),
       updatedAt : new Date()
     },
@@ -102,6 +102,22 @@ module.exports = {
     {
       id: uuidv4(),
       name : 'Other Unique Identifiers',
+      createdAt : new Date(),
+      updatedAt : new Date()
+    },
+    {
+      id: uuidv4(),
+      name : 'Geo Coordinate',
+      createdAt : new Date(),
+      updatedAt : new Date()
+    },{
+      id: uuidv4(),
+      name : 'State/Province',
+      createdAt : new Date(),
+      updatedAt : new Date()
+    },{
+      id: uuidv4(),
+      name : 'City',
       createdAt : new Date(),
       updatedAt : new Date()
     }], {});

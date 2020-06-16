@@ -968,7 +968,7 @@ class FileDetails extends Component {
       hide: true
     },
     {
-      headerName: 'Data Type',
+      headerName: 'Information Type',
       field: 'data_types',
       editable: true,
       cellEditor: "select",
