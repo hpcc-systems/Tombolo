@@ -13,26 +13,28 @@ const { Search } = Input;
 
 class AppHeader extends Component {
     constructor(props) {
-        super(props);
-        this.handleChange = this.handleChange.bind(this);
-        this.handleTopNavClick = this.handleTopNavClick.bind(this);
-        this.search = this.search.bind(this);
-        this.onChangeSearch = this.onChangeSearch.bind(this);
-        this.appDropDown = React.createRef();
+      super(props);
+      this.handleChange = this.handleChange.bind(this);
+      this.handleTopNavClick = this.handleTopNavClick.bind(this);
+      this.search = this.search.bind(this);
+      this.onChangeSearch = this.onChangeSearch.bind(this);
+      this.appDropDown = React.createRef();
     }
 
     state = {
-        applications: [],
-        selected:'Select an Application',
-        pathName:'',
-        searchText:''
+      applications: [],
+      selected:'Select an Application',
+      pathName:'',
+      searchText:''
     }
+
     componentWillReceiveProps(props) {
       if(props.application && props.application.applicationTitle!=''){
       this.setState({ selected: props.application.applicationTitle });
         $('[data-toggle="popover"]').popover('disable');
       }      
     }
+    
     componentDidMount(){
       if(this.props.location.pathname.includes('report/')){
         const pathSnippets = this.props.location.pathname.split('/');
@@ -104,7 +106,6 @@ class AppHeader extends Component {
     }
 
     handleChange(event) {
-      //this.props.onAppicationSelect(value);
       this.props.dispatch(applicationActions.applicationSelected(event.target.getAttribute("data-value"), event.target.getAttribute("data-display")));
       localStorage.setItem("activeProjectId", event.target.getAttribute("data-value"));
       this.setState({ selected: event.target.getAttribute("data-display") });
@@ -114,7 +115,15 @@ class AppHeader extends Component {
 
     handleRef() {
       const appDropdownItem = this.appDropDown.current.querySelector('[data-value="'+localStorage.getItem("activeProjectId")+'"]');
-      appDropdownItem.click();
+      //if no activeProjectId select the first application by default.
+      if(appDropdownItem == null && this.state.applications.length > 0) {
+        this.setState({ selected: this.state.applications[0].display });
+        this.props.dispatch(applicationActions.applicationSelected(this.state.applications[0].value, this.state.applications[0].display));
+        localStorage.setItem("activeProjectId", this.state.applications[0].value);
+        this.props.history.push('/'+this.state.applications[0].value+'/dataflow');
+      } else {
+        appDropdownItem.click();  
+      }      
     }
 
     search(value){
