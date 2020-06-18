@@ -183,6 +183,50 @@ let createWorkflowDetails = (message, workflowId, dataflowId) => {
   });          
 }
 
+router.get('/workunits', [    
+  query('application_id')
+    .isUUID(4).withMessage('Invalid application id'),
+  query('workflow_id')
+    .isUUID(4).withMessage('Invalid workflow id'),
+  query('instance_id')
+    .isInt().withMessage('Invalid instance id'),    
+], (req, res) => {
+  const errors = validationResult(req).formatWith(validatorUtil.errorFormatter);
+  if (!errors.isEmpty()) {
+      return res.status(422).json({ success: false, errors: errors.array() });
+  }
+  console.log("[workunits] - Get workunits for app_id = " + req.query.application_id + " workflow_id: "+req.query.workflow_id);
+  try {
+    let workunits = [], promises = [];
+      WorkflowDetails.findAll({
+        where:{"application_Id":req.query.application_id, "workflow_id":req.query.workflow_id, "instance_id":req.query.instance_id}, 
+        order: [['updatedAt', 'DESC']],
+      }).then(function(workflowDetails) {
+        workflowDetails.forEach((workflowDetail) => {
+          promises.push(
+            workunitInfo(workflowDetail.wuid).then((wuInfo) => {
+              workunits.push({
+                "wuid": workflowDetail.wuid,
+                "status": wuInfo.Workunit.State,
+                "totalClusterTime": wuInfo.Workunit.TotalClusterTime
+              })
+            })
+          );
+        })                                                         
+
+        Promise.all(promises).then(() => {
+          res.json(workunits);     
+        });
+        
+      })
+      .catch(function(err) {
+          console.log(err);
+      });
+  } catch (err) {
+      console.log('err', err);
+  }
+});
+
 var consumerGroup = new ConsumerGroup(kafkaConsumerOptions, 'Dataflow');
 consumerGroup.on('message', (response) => {
   console.log(response.value);

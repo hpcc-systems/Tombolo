@@ -18,7 +18,7 @@ function Dataflow(props) {
 	const {isShowing, toggle} = useModal();
 
   const [tableDisplay, setTableDisplay] = useState(
-    {graphHeight: 625, display:'block'}
+    {graphHeight: 700, display:'block'}
   );
 	
 	const [form, setForm] = useState({
@@ -82,9 +82,9 @@ function Dataflow(props) {
   const onChange = (key) => {
     console.log(key)
     if(key.length > 0 && key[0] == 1) {
-      setTableDisplay({graphHeight: 625});
+      setTableDisplay({graphHeight: 700});
     } else {
-      setTableDisplay({graphHeight: 800});
+      setTableDisplay({graphHeight: 900});
     }
   }
 
