@@ -248,7 +248,7 @@ class JobDetails extends Component {
   }
 
   onJobSelected(wuid) {
-    fetch("/api/hpcc/read/getJobInfo?jobWuid="+wuid+"&clusterid="+this.state.selectedCluster, {
+    fetch("/api/hpcc/read/getJobInfo?jobWuid="+wuid+"&clusterid="+this.state.selectedCluster+"&jobType="+this.state.job.jobType, {
       headers: authHeader()
     })
     .then((response) => {

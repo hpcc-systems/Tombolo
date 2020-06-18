@@ -162,8 +162,7 @@ class AppHeader extends Component {
               </li>*/}
 
             </ul>
-            <ul className="ml-md-auto navbar-nav">
-            <li className="nav-item"><Button style={{float: "right"}} type="link" target={"_blank"} href={process.env.PUBLIC_URL + "/open_database_license.pdf"} >Open Database License</Button></li>
+            <ul className="ml-md-auto navbar-nav">            
             <li className="nav-item">
               <Search
                 value={this.state.searchText}
@@ -177,6 +176,7 @@ class AppHeader extends Component {
               <li className="nav-item">
                 <a className="nav-link" data-nav="/admin/applications" onClick={this.handleTopNavClick} disabled={!hasAdminRole(this.props.user)}><i className="fa fa-lg fa-cog"></i> Settings</a>
               </li>*/}
+              <li className="nav-item"><Button style={{float: "right"}} type="link" target={"_blank"} href={process.env.PUBLIC_URL + "/open_database_license.pdf"} >Open Database License</Button></li>
               <li className="nav-item">
                 <a className="nav-link" onClick={this.handleLogOut}><i className="fa fa-sign-out"></i> Logout</a>
               </li>
