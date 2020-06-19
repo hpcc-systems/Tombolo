@@ -17,6 +17,8 @@ router.post('/save', [
     .isUUID(4).withMessage('Invalid dataflow id'),
   body('application_id')
     .isUUID(4).withMessage('Invalid application id'),
+  body('clusterId')
+    .isUUID(4).withMessage('Invalid cluster id'),
 ], (req, res) => {
     const errors = validationResult(req).formatWith(validatorUtil.errorFormatter);
     if (!errors.isEmpty()) {
@@ -32,14 +34,16 @@ router.post('/save', [
           defaults: {
             application_id: req.body.application_id,
             title: req.body.title,
-            description: req.body.description
+            description: req.body.description,
+            clusterId: req.body.clusterId
           }
         }).then(async function(result) {
             id = result[0].id;
             if(!result[1]) {
               return Dataflow.update({
 		            title: req.body.title,
-		            description: req.body.description
+		            description: req.body.description,
+                    clusterId: req.body.clusterId
               }, {where:{id:id, application_id:application_id}})
             }
         }).then(function(graph) {

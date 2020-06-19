@@ -12,7 +12,8 @@ module.exports = (sequelize, DataTypes) => {
     title: DataTypes.STRING,
     description: DataTypes.STRING,
     input: DataTypes.STRING,
-    output: DataTypes.STRING
+    output: DataTypes.STRING,
+    clusterId: DataTypes.UUIDV4,
   }, {freezeTableName: true});
   dataflow.associate = function(models) {
     dataflow.hasOne(models.dataflowgraph, {

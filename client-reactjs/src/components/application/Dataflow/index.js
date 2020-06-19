@@ -114,7 +114,7 @@ function Dataflow(props) {
   	        </span>
           </div>
 	      </div>
-        <div class="row">
+        <div className="row">
   	      <div id="data_flow_content" className="col-12" style={{"height": tableDisplay.graphHeight+"px"}}>
   					{form.tableView ? 
               <DataflowAssetsTable applicationId={application.applicationId} selectedDataflow={form.selectedDataflow} user={application.user}/> 

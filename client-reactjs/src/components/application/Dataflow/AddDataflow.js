@@ -1,13 +1,15 @@
 import React, { useState, useEffect } from 'react'
 import ReactDOM from 'react-dom';
-import { Button, Form, Input, message, Popconfirm, Icon, Tooltip, Modal } from 'antd/lib';
+import { Button, Form, Input, message, Popconfirm, Icon, Tooltip, Modal, Select } from 'antd/lib';
 import { authHeader, handleError } from "../../common/AuthHeader.js"
+const Option = Select.Option;
 
 function AddDataflow({isShowing, toggle, applicationId, onDataFlowUpdated, selectedDataflow}) {
 	const [dataFlow, setDataFlow] = useState({
 		id: '',
 		title: '',
-		description: ''
+		description: '',
+    clusterId: ''
 	});
 
   const [form, setForm] = useState({
@@ -15,9 +17,18 @@ function AddDataflow({isShowing, toggle, applicationId, onDataFlowUpdated, selec
     confirmLoading: false
   }); 
 
+  const [whitelistedClusters, setWhitelistedClusters] = useState([]);
+
+  const [clusterSelected, setClusterSelected] = useState('');
+  
   useEffect(() => {
     setDataFlow({...selectedDataflow});
-   }, [selectedDataflow])
+    setClusterSelected(selectedDataflow ? selectedDataflow.clusterId : '')
+  }, [selectedDataflow])
+
+  useEffect(() => {
+    getClusters();
+  }, [selectedDataflow])
 
   const formItemLayout = {
     labelCol: {
@@ -29,6 +40,28 @@ function AddDataflow({isShowing, toggle, applicationId, onDataFlowUpdated, selec
       sm: { span: 10 },
     },
   };
+
+  const getClusters = () => {
+    fetch("/api/hpcc/read/getClusters", {
+      headers: authHeader()
+    })
+    .then((response) => {
+      if(response.ok) {
+        return response.json();
+      }
+      handleError(response);
+    })
+    .then(data => {
+      setWhitelistedClusters(data);
+    })
+    .catch(error => {
+      console.log(error);
+    });
+  }
+
+  const onClusterSelection= (value) => {  
+    setClusterSelected(value);
+  }
 
   const handleAddAppOk = () => {
     setForm({
@@ -42,7 +75,8 @@ function AddDataflow({isShowing, toggle, applicationId, onDataFlowUpdated, selec
       	{	"id": dataFlow.id,
       		"application_id": applicationId, 
       		"title": dataFlow.title,
-      		"description": dataFlow.description
+      		"description": dataFlow.description,
+          "clusterId": clusterSelected
       	})
     }).then(function(response) {
       if(response.ok) {
@@ -109,6 +143,11 @@ function AddDataflow({isShowing, toggle, applicationId, onDataFlowUpdated, selec
 	            <Form.Item {...formItemLayout} label="Description">
 				    		<Input id="description" name="description" onChange={e => setDataFlow({...dataFlow, [e.target.name]: e.target.value})} placeholder="Description" value={dataFlow.description}/>
 	            </Form.Item>
+              <Form.Item {...formItemLayout} label="Cluster">
+                <Select placeholder="Select a Cluster" onChange={onClusterSelection} style={{ width: 290 }} value={clusterSelected}>
+                  {whitelistedClusters.map(cluster => <Option key={cluster.id}>{cluster.name}</Option>)}
+                </Select>
+              </Form.Item>
             </Form>
         </Modal>
      </div>

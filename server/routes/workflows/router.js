@@ -128,8 +128,8 @@ router.get('/details', [
   }
 });
 
-let workunitInfo = (wuid) => {
-  let wsWorkunits = new hpccJSComms.WorkunitsService({ baseUrl: process.env.DATAFLOW_CLUSTER_URL, userID: "", password: "", type: "get" });
+let workunitInfo = (wuid, cluster) => {
+  let wsWorkunits = new hpccJSComms.WorkunitsService({ baseUrl: cluster.thor_host + ':' + cluster.thor_port, userID:(clusterAuth ? clusterAuth.user : ""), password:(clusterAuth ? clusterAuth.password : ""), type: "get" });
   return new Promise((resolve, reject) => {
     wsWorkunits.WUInfo({"Wuid":wuid, "IncludeExceptions":true, "IncludeSourceFiles":true, "IncludeResults":true}).then(async (wuInfo) => {
       console.log('state: '+wuInfo.Workunit.State);
@@ -137,7 +137,7 @@ let workunitInfo = (wuid) => {
         resolve(wuInfo);
       } else {
         setTimeout(_ => {
-          resolve(workunitInfo(wuid));
+          resolve(workunitInfo(wuid, cluster));
         }, 500);
 
       }
@@ -158,28 +158,30 @@ let parseWUExceptions = (exceptions) => {
   }
 }
 
-let createWorkflowDetails = (message, workflowId, dataflowId) => {
+let createWorkflowDetails = (message, workflowId, dataflowId, clusterId) => {
   return new Promise((resolve, reject) => {
-    workunitInfo(message.wuid).then((wuInfo) => {
-      console.log(wuInfo)      
-      Job.findOne({where:{application_id:message.applicationid, dataflowId:dataflowId, name:wuInfo.Workunit.Jobname}}).then((job) => {
-        let messageStr = wuInfo.Workunit.Exceptions ? parseWUExceptions(wuInfo.Workunit.Exceptions) : '';
-        WorkflowDetails.create({
-          "workflow_id": workflowId, 
-          "application_id": message.applicationid,
-          "instance_id": message.instanceid,
-          "task": job.id,
-          "status": wuInfo.Workunit.State,
-          "message": messageStr,
-          "wuid": message.wuid  
-        }).then((result) => {
-          console.log("workflow status stored...");
-          resolve(result);
-        }).catch((err) => {
-          reject();
-        })
-      });
-    })
+    hpccUtil.getCluster(clusterId).then((cluster) => {
+      workunitInfo(message.wuid, cluster).then((wuInfo) => {
+        console.log(wuInfo)      
+        Job.findOne({where:{application_id:message.applicationid, dataflowId:dataflowId, name:wuInfo.Workunit.Jobname}}).then((job) => {
+          let messageStr = wuInfo.Workunit.Exceptions ? parseWUExceptions(wuInfo.Workunit.Exceptions) : '';
+          WorkflowDetails.create({
+            "workflow_id": workflowId, 
+            "application_id": message.applicationid,
+            "instance_id": message.instanceid,
+            "task": job.id,
+            "status": wuInfo.Workunit.State,
+            "message": messageStr,
+            "wuid": message.wuid  
+          }).then((result) => {
+            console.log("workflow status stored...");
+            resolve(result);
+          }).catch((err) => {
+            reject();
+          })
+        });
+      })
+    });
   });          
 }
 
@@ -257,7 +259,7 @@ consumerGroup.on('message', (response) => {
           "dataflowId": dataflow.id
         }
       }).then((results) => {
-        createWorkflowDetails(message, results[0].id, dataflow.id).then((result) => {
+        createWorkflowDetails(message, results[0].id, dataflow.id, dataflow.clusterId).then((result) => {
           console.log('workflow details added');
         })            
       }).catch((err) => {
