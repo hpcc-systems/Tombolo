@@ -8,6 +8,7 @@ let Dataflow = models.dataflow;
 let Job = models.job;
 let Sequelize = require('sequelize');
 const validatorUtil = require('../../utils/validator');
+const hpccUtil = require('../../utils/hpcc-util');
 const { body, query, validationResult } = require('express-validator/check');
 var eventsInstance = require('events');
 var moment = require('moment');
@@ -129,6 +130,7 @@ router.get('/details', [
 });
 
 let workunitInfo = (wuid, cluster) => {
+  let clusterAuth = hpccUtil.getClusterAuth(cluster);
   let wsWorkunits = new hpccJSComms.WorkunitsService({ baseUrl: cluster.thor_host + ':' + cluster.thor_port, userID:(clusterAuth ? clusterAuth.user : ""), password:(clusterAuth ? clusterAuth.password : ""), type: "get" });
   return new Promise((resolve, reject) => {
     wsWorkunits.WUInfo({"Wuid":wuid, "IncludeExceptions":true, "IncludeSourceFiles":true, "IncludeResults":true}).then(async (wuInfo) => {
@@ -200,30 +202,34 @@ router.get('/workunits', [
   console.log("[workunits] - Get workunits for app_id = " + req.query.application_id + " workflow_id: "+req.query.workflow_id);
   try {
     let workunits = [], promises = [];
-      WorkflowDetails.findAll({
-        where:{"application_Id":req.query.application_id, "workflow_id":req.query.workflow_id, "instance_id":req.query.instance_id}, 
-        order: [['updatedAt', 'DESC']],
-      }).then(function(workflowDetails) {
-        workflowDetails.forEach((workflowDetail) => {
-          promises.push(
-            workunitInfo(workflowDetail.wuid).then((wuInfo) => {
-              workunits.push({
-                "wuid": workflowDetail.wuid,
-                "status": wuInfo.Workunit.State,
-                "totalClusterTime": wuInfo.Workunit.TotalClusterTime
+    Dataflow.findOne({where: {'application_id':req.query.application_id}}).then((dataflow) => {
+      hpccUtil.getCluster(dataflow.clusterId).then((cluster) => {
+        WorkflowDetails.findAll({
+          where:{"application_Id":req.query.application_id, "workflow_id":req.query.workflow_id, "instance_id":req.query.instance_id}, 
+          order: [['updatedAt', 'DESC']],
+        }).then(function(workflowDetails) {
+          workflowDetails.forEach((workflowDetail) => {
+            promises.push(
+              workunitInfo(workflowDetail.wuid, cluster).then((wuInfo) => {
+                workunits.push({
+                  "wuid": workflowDetail.wuid,
+                  "status": wuInfo.Workunit.State,
+                  "totalClusterTime": wuInfo.Workunit.TotalClusterTime
+                })
               })
-            })
-          );
-        })                                                         
-
-        Promise.all(promises).then(() => {
-          res.json(workunits);     
-        });
-        
-      })
-      .catch(function(err) {
-          console.log(err);
+            );
+          })       
+          Promise.all(promises).then(() => {
+            res.json(workunits);     
+          });                                                  
       });
+      
+    })        
+    .catch(function(err) {
+        console.log(err);
+    });
+
+  })
   } catch (err) {
       console.log('err', err);
   }
