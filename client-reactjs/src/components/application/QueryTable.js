@@ -139,7 +139,7 @@ class QueryTable extends Component {
         {this.state.openQueryDetailsDialog ?
           <QueryDetailsForm
             onRef={ref => (this.child = ref)}
-            selectedQuery={this.state.selectedQuery}
+            selectedAsset={this.state.selectedQuery}
             applicationId={this.props.applicationId}
             onRefresh={this.handleRefreshTree}
             onClose={this.handleClose} 

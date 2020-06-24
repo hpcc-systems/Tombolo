@@ -77,7 +77,7 @@ router.post('/saveIndex', [
 router.get('/index_details', [  
   query('app_id')
     .isUUID(4).withMessage('Invalid application id'),
-  query('index_id`')
+  query('index_id')
     .isUUID(4).withMessage('Invalid id'),
 ], (req, res) => {
     const errors = validationResult(req).formatWith(validatorUtil.errorFormatter);

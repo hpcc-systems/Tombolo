@@ -109,7 +109,10 @@ class AppHeader extends Component {
       this.props.dispatch(applicationActions.applicationSelected(event.target.getAttribute("data-value"), event.target.getAttribute("data-display")));
       localStorage.setItem("activeProjectId", event.target.getAttribute("data-value"));
       this.setState({ selected: event.target.getAttribute("data-display") });
-      this.props.history.push('/'+event.target.getAttribute("data-value")+'/dataflow');
+      //if it is asset details url, dont redirect to default /dataflow page
+      if(!this.props.history.location.pathname.startsWith('/details')) {
+        this.props.history.push('/'+event.target.getAttribute("data-value")+'/dataflow');
+      }
       $('[data-toggle="popover"]').popover('disable');
     }
 
@@ -120,7 +123,10 @@ class AppHeader extends Component {
         this.setState({ selected: this.state.applications[0].display });
         this.props.dispatch(applicationActions.applicationSelected(this.state.applications[0].value, this.state.applications[0].display));
         localStorage.setItem("activeProjectId", this.state.applications[0].value);
-        this.props.history.push('/'+this.state.applications[0].value+'/dataflow');
+        //if it is asset details url, dont redirect to default /dataflow page
+        if(!this.props.history.location.pathname.startsWith('/details')) {
+          this.props.history.push('/'+this.state.applications[0].value+'/dataflow');
+        }
       } else {
         appDropdownItem.click();  
       }      

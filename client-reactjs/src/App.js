@@ -10,7 +10,7 @@ import {LoginPage} from "./components/login/LoginPage";
 import {PrivateRoute} from "./components/common/PrivateRoute";
 
 import {LeftNav} from "./components/layout/LeftNav";
-import {SelectedFilePopup} from "./components/application/SelectedFilePopup";
+import AssetDetails from "./components/application/AssetDetails";
 import {FileList} from "./components/application/FileList";
 import {IndexList} from "./components/application/IndexList";
 import Dashboard from "./components/application/Dashboard";
@@ -37,56 +37,57 @@ class App extends React.Component {
         super(props);
     }
     componentDidMount() {
-        store.dispatch(userActions.validateToken());
-    }
+      store.dispatch(userActions.validateToken());
+    }  
 
     render() {
-        const isApplicationSet = (this.props.application && this.props.application.applicationId != '') ? true : false;
-        const selectedTopNav = (this.props.selectedTopNav && this.props.selectedTopNav.indexOf("/admin") != -1) ? "/admin/applications" : "/files"
-        const dataFlowComp = () => {
-            let applicationId = this.props.application ? this.props.application.applicationId : '';
-            let applicationTitle = this.props.application ? this.props.application.applicationTitle : '';
-            return <Dataflow applicationId={applicationId} applicationTitle={applicationTitle} user={this.props.user}/>;
-        }
-        return (
-            <Router history={history}>
-            <div>
-                <Route exact path="/login" component={LoginPage} />
-                    <Layout>
-                        {this.props.user && this.props.user.token ? <AppHeader/> : null}
-                        <Layout className="site-layout">
-                            <LeftNav isApplicationSet={isApplicationSet} selectedTopNav={selectedTopNav} />
-                            <Layout style={{height: '100vh'}}>
-                                <Content style={{background: '#fff', margin: '0 16px'}}>                                    
-                                    <Switch>
-                                        <PrivateRoute exact path="/" component={dataFlowComp}/>
-                                        <PrivateRoute exact path="/file/:applicationId/:fileId" component={SelectedFilePopup} />
-                                        <PrivateRoute exact path="/:applicationId/files" component={FileList} />
-                                        <PrivateRoute path="/files" component={FileList} />
-                                        <PrivateRoute exact path="/:applicationId/index" component={IndexList}/>
-                                        <PrivateRoute path="/index" component={IndexList}/>
-                                        <PrivateRoute path="/:applicationId/queries" component={QueriesList}/>
-                                        <PrivateRoute path="/:applicationId/dataflow" component={dataFlowComp}/>
-                                        <PrivateRoute path="/:applicationId/dataflowinstances" component={DataflowInstances}/>
-                                        <PrivateRoute path="/admin/applications" component={AdminApplications}/>
-                                        <PrivateRoute path="/admin/clusters" component={AdminClusters}/>
-                                        <PrivateRoute path="/admin/users" component={Users}/>
-                                        <PrivateRoute path="/report/:searchText" component={Report}/>
-                                        <PrivateRoute path="/:applicationId/Chart" component={Chart}/>
-                                        <PrivateRoute path="/admin/consumers" component={AdminConsumers}/>
-                                        <PrivateRoute path="/admin/controlsAndRegulations" component={Regulations}/>
-                                        <PrivateRoute path="/:applicationId/dataflowInstanceDetails" component={DataflowInstanceDetails}/>
-                                    </Switch>
+      const isApplicationSet = (this.props.application && this.props.application.applicationId != '') ? true : false;
+      const selectedTopNav = (this.props.selectedTopNav && this.props.selectedTopNav.indexOf("/admin") != -1) ? "/admin/applications" : "/files"
+      const dataFlowComp = () => {
+        let applicationId = this.props.application ? this.props.application.applicationId : '';
+        let applicationTitle = this.props.application ? this.props.application.applicationTitle : '';
+        return <Dataflow applicationId={applicationId} applicationTitle={applicationTitle} user={this.props.user}/>;
+      }      
 
-                                </Content>
-                            </Layout>
+      return (
+          <Router history={history}>
+          <div>
+              <Route exact path="/login" component={LoginPage} />
+                <Layout>
+                    {this.props.user && this.props.user.token ? <AppHeader/> : null}
+                    <Layout className="site-layout">
+                        <LeftNav isApplicationSet={isApplicationSet} selectedTopNav={selectedTopNav} />
+                        <Layout style={{height: '100vh'}}>
+                            <Content style={{background: '#fff', margin: '0 16px'}}>                                    
+                                <Switch>
+                                  <PrivateRoute exact path="/" component={dataFlowComp}/>
+                                  <PrivateRoute path="/details/:assetType/:applicationId/:fileId" component={AssetDetails} />
+                                  <PrivateRoute exact path="/:applicationId/files" component={FileList} />
+                                  <PrivateRoute path="/files" component={FileList} />
+                                  <PrivateRoute exact path="/:applicationId/index" component={IndexList}/>
+                                  <PrivateRoute path="/index" component={IndexList}/>
+                                  <PrivateRoute path="/:applicationId/queries" component={QueriesList}/>
+                                  <PrivateRoute path="/:applicationId/dataflow" component={dataFlowComp}/>
+                                  <PrivateRoute path="/:applicationId/dataflowinstances" component={DataflowInstances}/>
+                                  <PrivateRoute path="/admin/applications" component={AdminApplications}/>
+                                  <PrivateRoute path="/admin/clusters" component={AdminClusters}/>
+                                  <PrivateRoute path="/admin/users" component={Users}/>
+                                  <PrivateRoute path="/report/:searchText" component={Report}/>
+                                  <PrivateRoute path="/:applicationId/Chart" component={Chart}/>
+                                  <PrivateRoute path="/admin/consumers" component={AdminConsumers}/>
+                                  <PrivateRoute path="/admin/controlsAndRegulations" component={Regulations}/>
+                                  <PrivateRoute path="/:applicationId/dataflowInstanceDetails" component={DataflowInstanceDetails}/>
+                                </Switch>
 
+                            </Content>
                         </Layout>
+
                     </Layout>
-            </div>
-        </Router>
-        );
-    }
+                </Layout>
+          </div>
+      </Router>
+      );
+  }
 }
 
 function mapStateToProps(state) {

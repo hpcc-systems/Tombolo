@@ -49,8 +49,8 @@ class QueryDetails extends Component {
   }
 
   getQueryDetails() {
-    if(this.props.selectedQuery && !this.props.isNewIndex) {
-      fetch("/api/query/query_details?query_id="+this.props.selectedQuery+"&app_id="+this.props.applicationId, {
+    if(this.props.selectedAsset && !this.props.isNew) {
+      fetch("/api/query/query_details?query_id="+this.props.selectedAsset+"&app_id="+this.props.applicationId, {
         headers: authHeader()
       })
       .then((response) => {

@@ -19,9 +19,10 @@ class FileList extends Component {
     openFileDetailsDialog: false,
     refreshTree: false,
     tableView: true,
-    fileId:(this.props.fileId)?this.props.fileId:''
+    fileId:(this.props.fileId) ? this.props.fileId: ''
   }
   componentWillReceiveProps(props) {
+    console.log("file list")
     if(props.application) {
       if(this.state.applicationId != props.application.applicationId) {
         this.setState({

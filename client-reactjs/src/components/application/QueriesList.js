@@ -79,7 +79,7 @@ class QueriesList extends Component {
             <QueryDetailsForm
               onRef={ref => (this.child = ref)}
               applicationId={this.state.applicationId}
-              isNewFile={true}
+              isNew={true}
               onRefresh={this.handleRefresh}
               onClose={this.closeFileDlg}
               user={this.props.user}

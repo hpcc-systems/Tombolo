@@ -17,6 +17,7 @@ class SelectedFilePopup extends Component {
   } 
 
   componentWillMount(){
+    console.log("SelectedFilePopup")
     this.validateAppIdFileId(this.state.applicationId,this.state.fileId);
     this.getAppName(this.state.applicationId)
   }
