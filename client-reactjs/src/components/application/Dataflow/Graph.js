@@ -2,7 +2,7 @@ import React, { Component } from "react";
 import * as d3 from "d3";
 import '../../graph-creator/graph-creator.css';
 import $ from 'jquery';
-import { Button, Icon, Drawer, Row, Col, Descriptions, Badge, Modal} from 'antd/lib';
+import { Button, Icon, Drawer, Row, Col, Descriptions, Badge, Modal, message} from 'antd/lib';
 import { Typography } from 'antd';
 import FileDetailsForm from "../FileDetails";
 import JobDetailsForm from "../JobDetails";
@@ -1039,19 +1039,28 @@ class Graph extends Component {
 
     var dragHandler = d3.drag()
     .on("drag", function (d) {
-        let text = d3.select(this).select("text");
-        let rect = d3.select(this).select("rect");        
-        return {"tx": d3.event.x + 50, "ty": d3.event.y + 15, "rx": d3.event.x, "ry": d3.event.y};
+      let text = d3.select(this).select("text");
+      let rect = d3.select(this).select("rect");
+      
+      return {"tx": d3.event.x + 50, "ty": d3.event.y + 15, "rx": d3.event.x, "ry": d3.event.y};
     })
     .on("end", function(d){      
-        var mouseCoordinates = d3.mouse(this);
-        let idct = ++_self.graphState.idct;
-        //let x = (mouseCoordinates[0] < 60) ? 60 : mouseCoordinates[0] - 150 : mouseCoordinates[0] > 1300 ? 1300 : mouseCoordinates[0];
-        let x = mouseCoordinates[0] > 1550 ? 1550 : mouseCoordinates[0] < 60 ? 60 : mouseCoordinates[0]
-        let y = mouseCoordinates[1] > 600 ? 600 : mouseCoordinates[1] < 0 ? 0 : mouseCoordinates[1]        
-        _self.thisGraph.nodes.push({"title":"New "+d3.select(this).select("text.entity").text(),"id":idct+Math.floor(Date.now()),"x":x,"y":y, "type":d3.select(this).select("text.entity").text()})
-        _self.setIdCt(idct);
-        _self.updateGraph();
+      if(_self.props.selectedDataflow == undefined || _self.props.selectedDataflow == '') {
+        message.config({top:130})
+        message.warning({
+          content: 'Please create a Dataflow by clicking on \'Add Dataflow\' button, before you can start using the Dataflow designer',          
+        });
+        return;  
+      }
+
+      var mouseCoordinates = d3.mouse(this);
+      let idct = ++_self.graphState.idct;
+      //let x = (mouseCoordinates[0] < 60) ? 60 : mouseCoordinates[0] - 150 : mouseCoordinates[0] > 1300 ? 1300 : mouseCoordinates[0];
+      let x = mouseCoordinates[0] > 1550 ? 1550 : mouseCoordinates[0] < 60 ? 60 : mouseCoordinates[0]
+      let y = mouseCoordinates[1] > 600 ? 600 : mouseCoordinates[1] < 0 ? 0 : mouseCoordinates[1]        
+      _self.thisGraph.nodes.push({"title":"New "+d3.select(this).select("text.entity").text(),"id":idct+Math.floor(Date.now()),"x":x,"y":y, "type":d3.select(this).select("text.entity").text()})
+      _self.setIdCt(idct);
+      _self.updateGraph();
     })
     //disable dragging on left nav
     if(hasEditPermission(_self.props.user)) {
