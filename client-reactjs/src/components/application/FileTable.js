@@ -5,6 +5,7 @@ import FileDetailsForm from "./FileDetails";
 import FileInstanceDetailsForm from "./FileInstanceDetails";
 import { authHeader, handleError } from "../common/AuthHeader.js"
 import { hasEditPermission } from "../common/AuthUtil.js";
+import { Constants } from '../common/Constants';
 
 class FileTable extends Component {
   constructor(props) {
@@ -166,10 +167,15 @@ class FileTable extends Component {
     const editingAllowed = hasEditPermission(this.props.user);
     const {showFileInstancesTable} = this.state;
     const indexColumns = [{
-      title: 'Title',
+      title: 'Name',
       dataIndex: 'fileTitle',
       width: '30%',
       render: (text, record) => <a href='#' onClick={(row) => this.handleEdit(record.id)}>{text}</a>
+    },
+    {
+        width: '20%',
+        title: 'Description',
+        dataIndex: 'description'
     },
     {
         width: '10%',
@@ -177,9 +183,18 @@ class FileTable extends Component {
         dataIndex: 'fileType'
     },
     {
-        width: '40%',
-        title: 'Qualified Path',
-        dataIndex: 'qualifiedPath'
+        width: '10%',
+        title: 'Source',
+        dataIndex: 'supplier'
+    },
+    {
+        width: '20%',
+        title: 'Created',
+        dataIndex: 'createdAt',
+        render: (text, record) => {
+          let createdAt = new Date(text);
+          return createdAt.toLocaleDateString('en-US', Constants.DATE_FORMAT_OPTIONS) +' @ '+ createdAt.toLocaleTimeString('en-US') 
+        }
     },
     {
       width: '35%',
