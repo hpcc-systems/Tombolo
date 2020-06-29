@@ -120,20 +120,7 @@ class DataflowInstances extends Component {
   render() {
     if(!this.props.application || !this.props.application.applicationId)
       return null;
-      const workflowTblColumns = [{
-        title: 'Date',
-        dataIndex: 'createdAt',
-        width: '20%',
-        render: (text, record) => {
-          let createdAt = new Date(text);
-          return createdAt.toLocaleDateString('en-US', Constants.DATE_FORMAT_OPTIONS) +' @ '+ createdAt.toLocaleTimeString('en-US') 
-        }
-      },
-      {
-        title: 'Instance',
-        dataIndex: 'instance_id',
-        width: '15%'
-      },  
+      const workflowTblColumns = [
       {
         title: 'Dataflow Name',
         dataIndex: 'name',
@@ -141,10 +128,10 @@ class DataflowInstances extends Component {
         render: (text, record) => <a href='#' onClick={(row) => this.handleViewDetails(record.id, record.dataflowId, record.instance_id)}>{text}</a>
       },  
       {
-        title: 'Status',
-        dataIndex: 'status',
+        title: 'Instance',
+        dataIndex: 'instance_id',
         width: '15%'
-      },    
+      },  
       {
         title: 'Start Time',
         dataIndex: 'start',
@@ -164,10 +151,10 @@ class DataflowInstances extends Component {
         }
       },       
       {
-        title: 'Duration (Secs)',
-        dataIndex: 'duration',
-        width: '10%'
-      },       
+        title: 'Status',
+        dataIndex: 'status',
+        width: '15%'
+      },    
       {
         width: '10%',
         title: 'Action',
