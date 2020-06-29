@@ -14,16 +14,15 @@ var eventsInstance = require('events');
 var moment = require('moment');
 var fileInstanceEventEmitter = new eventsInstance.EventEmitter();
 var kafka = require('kafka-node'),
-    Producer = kafka.Producer,
-    Consumer = kafka.Consumer,
-    client = new kafka.KafkaClient({kafkaHost: process.env.KAFKA_ADVERTISED_LISTENER + ':' + process.env.KAFKA_PORT}),
+    //Producer = kafka.Producer,
+    //Consumer = kafka.Consumer,
+    //client = new kafka.KafkaClient({kafkaHost: process.env.KAFKA_ADVERTISED_LISTENER + ':' + process.env.KAFKA_PORT}),
     /*consumer = new Consumer(client, [{ topic: "Dataflow", partition: 0 }], {
         autoCommit: false
     });*/
     ConsumerGroup = kafka.ConsumerGroup;
 
 let hpccJSComms = require("@hpcc-js/comms")    
-
 var kafkaConsumerOptions = {
   kafkaHost: process.env.KAFKA_ADVERTISED_LISTENER + ':' + process.env.KAFKA_PORT, // connect directly to kafka broker (instantiates a KafkaClient)
   batch: undefined, // put client batch settings if you need them
@@ -237,6 +236,7 @@ router.get('/workunits', [
 
 var consumerGroup = new ConsumerGroup(kafkaConsumerOptions, 'Dataflow');
 consumerGroup.on('message', (response) => {
+
   console.log(response.value);
   let dataflowWhereClause, message;
   try {
@@ -278,6 +278,8 @@ consumerGroup.on('message', (response) => {
 
 consumerGroup.on('error', (error) => {
   console.log('Consumer error occured: '+error);
+  //Producer.close();
+  //Consumer.close();
 });  
 
 module.exports = router;
