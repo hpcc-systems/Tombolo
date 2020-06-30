@@ -200,9 +200,10 @@ router.get('/workunits', [
   }
   console.log("[workunits] - Get workunits for app_id = " + req.query.application_id + " workflow_id: "+req.query.workflow_id);
   try {
-    let workunits = [], promises = [];
+    let workunits = [], promises = [], results={};
     Dataflow.findOne({where: {'application_id':req.query.application_id}}).then((dataflow) => {
       hpccUtil.getCluster(dataflow.clusterId).then((cluster) => {
+        results.cluster = cluster.thor_host + ':' + cluster.thor_port;
         WorkflowDetails.findAll({
           where:{"application_Id":req.query.application_id, "workflow_id":req.query.workflow_id, "instance_id":req.query.instance_id}, 
           order: [['updatedAt', 'DESC']],
@@ -219,7 +220,8 @@ router.get('/workunits', [
             );
           })       
           Promise.all(promises).then(() => {
-            res.json(workunits);     
+            results.workunits = workunits;
+            res.json(results);     
           });                                                  
       });
       

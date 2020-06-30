@@ -18,7 +18,8 @@ class DataflowInstanceWorkUnits extends Component {
     workflow_id: this.props.selectedWorkflow,
     instance_id: this.props.instanceId,
     workunits: [],
-    loading: true
+    loading: true,
+    dataflowCluster: ''
   }
   
   componentDidMount() {
@@ -48,9 +49,9 @@ class DataflowInstanceWorkUnits extends Component {
         handleError(response);
       })
       .then(data => {
-        console.log(data);
         this.setState({
-          workunits : data,
+          workunits : data.workunits,
+          dataflowCluster: data.cluster,
           loading: false
         })
 
@@ -82,7 +83,7 @@ class DataflowInstanceWorkUnits extends Component {
         dataJob: '',
         render: (text, record) =>
           <span>
-            <a href="#"><Tooltip placement="right" title={"View Details"}>Details</Tooltip></a>
+            <a href={this.state.dataflowCluster + "/?Wuid="+record.wuid+"&Widget=WUDetailsWidget"} target="_blank"><Tooltip placement="right" title={"View Details"}>Details</Tooltip></a>
           </span>
       }];
     console.log(this.state.loading);  
