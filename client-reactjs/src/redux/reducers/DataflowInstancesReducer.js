@@ -8,7 +8,6 @@ const initialState = {
 };
 
 export function dataflowInstancesReducer(state = initialState, action) {
-  console.log(JSON.stringify(action.selectedDataflowDetails))
   switch (action.type) {
     case Constants.DATAFLOW_INSTANCE_SELECTED:
       return {

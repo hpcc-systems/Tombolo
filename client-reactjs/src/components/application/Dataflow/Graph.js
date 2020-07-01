@@ -43,7 +43,10 @@ class Graph extends Component {
     nodeDetailMessage: '',
     wuid:'',
     selectedDataflow:{},
-    mousePosition:[]
+    mousePosition:[],
+    wu_end: '',
+    wu_start: '',
+    wu_duration: ''
   }
 
   consts = {
@@ -80,6 +83,7 @@ class Graph extends Component {
     document.addEventListener('mousedown', this.handleClickOutside);
   }
   componentWillReceiveProps(props) {   
+    console.log(props.selectedDataflow)
     if(this.state.applicationId != props.application.applicationId || this.state.selectedDataflow != props.selectedDataflow ) {      
       this.setState({
         applicationId: props.application.applicationId,
@@ -251,14 +255,18 @@ class Graph extends Component {
   getTaskDetails = () => {
     let completedTasks = [];
     console.log(this.props.workflowDetails);
-    this.props.workflowDetails.forEach((workflowDetail) => {
+    this.props.workflowDetails.workflowDetails.forEach((workflowDetail) => {
       let nodeObj = this.thisGraph.nodes.filter((node) => {
         return (node.fileId == workflowDetail.task || node.jobId == workflowDetail.task || node.indexId == workflowDetail.task)
       })
       completedTasks.push({"id": "rec-"+nodeObj[0].id, 
         "status": workflowDetail.status, 
         "message": workflowDetail.message,
-        "wuid": workflowDetail.wuid
+        "wuid": workflowDetail.wuid,
+        "wu_start": workflowDetail.wu_start,
+        "wu_end": workflowDetail.wu_end,
+        "wu_duration": workflowDetail.wu_duration,
+        "cluster": this.props.workflowDetails.cluster
       })
     });
     return completedTasks;
@@ -948,7 +956,10 @@ class Graph extends Component {
           nodeDetailsVisible: true,
           nodeDetailStatus: tasks[0].status,
           nodeDetailMessage: tasks[0].message,
-          wuid: tasks[0].wuid
+          wuid: tasks[0].wuid,
+          wu_start: tasks[0].wu_start,
+          wu_end: tasks[0].wu_end,
+          wu_duration: tasks[0].wu_duration
         });
       }
     }
@@ -1021,6 +1032,8 @@ class Graph extends Component {
         .attr("fill", function(d) { return d.color; })
         .attr("stroke-width", "3")
         .attr("filter", "url(#glow)")
+        .append("svg:title")
+          .text(function(d, i) { return d.description });
 
     group.append("text")
         .attr('font-family', 'FontAwesome')
@@ -1062,6 +1075,23 @@ class Graph extends Component {
       _self.setIdCt(idct);
       _self.updateGraph();
     })
+
+    var div = d3.select("body").append("div") .attr("class", "tooltip").style("opacity", 0);
+    
+    graphComponentsSvg.selectAll('g').on("mouseover", function(d) {    
+      div.transition()    
+          .duration(200)    
+          .style("opacity", .9);    
+      div .html(d.description)  
+          .style("left", (d3.event.pageX + 25) + "px")   
+          .style("top", (d3.event.pageY - 20) + "px");  
+    })          
+    
+    graphComponentsSvg.selectAll('g').on("mouseout", function(d) {   
+      div.transition()    
+          .duration(500)    
+          .style("opacity", 0); 
+    });
     //disable dragging on left nav
     if(hasEditPermission(_self.props.user)) {
       dragHandler(graphComponentsSvg.selectAll("g"));    
@@ -1262,7 +1292,10 @@ class Graph extends Component {
               <Descriptions.Item label="Status" span={3}>
                 {getBadgeForStatus()}
               </Descriptions.Item>
-              <Descriptions.Item label="Workunit Id" span={3}>{this.state.wuid}</Descriptions.Item>
+              <Descriptions.Item label="Workunit Id" span={3}><a href={this.state.cluster + "/?Wuid="+this.state.wuid+"&Widget=WUDetailsWidget"}>{this.state.wuid}</a></Descriptions.Item>
+              <Descriptions.Item label="Start Time" span={3}>{this.state.wu_start}</Descriptions.Item>
+              <Descriptions.Item label="End Time" span={3}>{this.state.wu_end}</Descriptions.Item>
+              <Descriptions.Item label="Duration" span={3}>{this.state.wu_duration}</Descriptions.Item>+ "/?Wuid="+record.wuid+"&Widget=WUDetailsWidget"
               <Descriptions.Item label="Message" span={3}>{this.state.nodeDetailMessage ? <span className="messages-span">  {JSON.parse(this.state.nodeDetailMessage).map(message => <li>{message.Message}</li>)}</span>  : ''}</Descriptions.Item>
             </Descriptions>
             

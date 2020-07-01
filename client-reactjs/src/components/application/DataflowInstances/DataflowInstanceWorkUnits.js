@@ -73,6 +73,16 @@ class DataflowInstanceWorkUnits extends Component {
         width: '15%'
       },  
       {
+        title: 'Start Time',
+        dataIndex: 'start',
+        width: '15%'
+      },  
+      {
+        title: 'End Time',
+        dataIndex: 'end',
+        width: '15%'
+      },  
+      {
         title: 'Duration',
         dataIndex: 'totalClusterTime',
         width: '30%'

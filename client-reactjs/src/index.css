@@ -425,3 +425,21 @@ div.tooltip {
 .show-column {
   display:block;
 }
+
+div.tooltip { 
+  position: absolute;     
+  text-align: left;  
+  text-decoration: none;   
+  width: auto;
+  height: 28px;
+  min-width: 30px;
+  min-height: 32px;
+  padding: 6px 8px;
+  background: rgba(0, 0, 0, 0.75); 
+  border-radius: 4px;
+  pointer-events: none; 
+  color: #fff;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+  webkit-box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+  word-wrap: break-word;
+}

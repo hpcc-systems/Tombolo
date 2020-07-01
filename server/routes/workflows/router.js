@@ -114,15 +114,25 @@ router.get('/details', [
   }
   console.log("[graph] - Get workflow details for app_id = " + req.query.application_id + " workflow_id: "+req.query.workflow_id);
   try {
-      WorkflowDetails.findAll({
-        where:{"application_Id":req.query.application_id, "workflow_id":req.query.workflow_id, "instance_id":req.query.instance_id}, 
-        order: [['updatedAt', 'DESC']],
-      }).then(function(workflowDetails) {
-          res.json(workflowDetails);
+    Workflow.findOne({where:{id:req.query.workflow_id}}).then((workflow) => {
+      Dataflow.findOne({where:{id:workflow.dataflowId}}).then((dataFlow) => {
+        hpccUtil.getCluster(dataFlow.clusterId).then((cluster) => {
+          WorkflowDetails.findAll({
+            where:{"application_Id":req.query.application_id, "workflow_id":req.query.workflow_id, "instance_id":req.query.instance_id}, 
+            order: [['updatedAt', 'DESC']],
+            raw: true
+          }).then(function(workflowDetails) {
+            let results = {};
+            results.cluster = cluster.thor_host + ':' + cluster.thor_port;
+            results.workflowDetails = workflowDetails;
+            res.json(results);
+          })
+        })
       })
-      .catch(function(err) {
-          console.log(err);
-      });
+    }).catch(function(err) {
+      console.log(err);
+    });
+
   } catch (err) {
       console.log('err', err);
   }
@@ -163,9 +173,11 @@ let createWorkflowDetails = (message, workflowId, dataflowId, clusterId) => {
   return new Promise((resolve, reject) => {
     hpccUtil.getCluster(clusterId).then((cluster) => {
       workunitInfo(message.wuid, cluster).then((wuInfo) => {
-        console.log(wuInfo)      
         Job.findOne({where:{application_id:message.applicationid, dataflowId:dataflowId, name:wuInfo.Workunit.Jobname}}).then((job) => {
           let messageStr = wuInfo.Workunit.Exceptions ? parseWUExceptions(wuInfo.Workunit.Exceptions) : '';
+          let start = moment(message.wuid.substr(message.wuid.indexOf('-')+1, message.wuid.length), "HHmmss");
+          let end = moment(moment(start).add(wuInfo.Workunit.TotalClusterTime, 's'));
+
           WorkflowDetails.create({
             "workflow_id": workflowId, 
             "application_id": message.applicationid,
@@ -173,7 +185,10 @@ let createWorkflowDetails = (message, workflowId, dataflowId, clusterId) => {
             "task": job.id,
             "status": wuInfo.Workunit.State,
             "message": messageStr,
-            "wuid": message.wuid  
+            "wuid": message.wuid,
+            "wu_start": moment(start).format('HH:mm:ss'),
+            "wu_end": moment(end).format('HH:mm:ss'),
+            "wu_duration": wuInfo.Workunit.TotalClusterTime
           }).then((result) => {
             console.log("workflow status stored...");
             resolve(result);
@@ -210,12 +225,12 @@ router.get('/workunits', [
         }).then(function(workflowDetails) {
           workflowDetails.forEach((workflowDetail) => {
             promises.push(
-              workunitInfo(workflowDetail.wuid, cluster).then((wuInfo) => {
-                workunits.push({
-                  "wuid": workflowDetail.wuid,
-                  "status": wuInfo.Workunit.State,
-                  "totalClusterTime": wuInfo.Workunit.TotalClusterTime
-                })
+              workunits.push({
+                "wuid": workflowDetail.wuid,
+                "status": workflowDetail.status,
+                "start": workflowDetail.wu_start,
+                "end": workflowDetail.wu_end,
+                "totalClusterTime": workflowDetail.wu_duration
               })
             );
           })       

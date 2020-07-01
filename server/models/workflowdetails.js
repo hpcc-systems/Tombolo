@@ -14,7 +14,10 @@ module.exports = (sequelize, DataTypes) => {
     task: DataTypes.STRING,
     status: DataTypes.STRING,
     message: DataTypes.TEXT,
-    wuid: DataTypes.TEXT
+    wuid: DataTypes.TEXT,
+    wu_start: DataTypes.TEXT,
+    wu_end: DataTypes.TEXT,
+    wu_duration: DataTypes.TEXT
   }, {});
   WorkflowDetails.associate = function(models) {
     // associations can be defined here

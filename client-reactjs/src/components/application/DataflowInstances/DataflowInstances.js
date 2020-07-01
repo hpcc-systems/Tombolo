@@ -76,17 +76,13 @@ class DataflowInstances extends Component {
         workflowId: id,
         dataflowId: {"id": dataflowId},
         instanceId: instanceId
-      }, () => {
-        /*this.setState({      
-          workflowDetailsVisible: true
-        });*/
-        
+      }, () => {    
         this.props.dispatch(dataflowInstancesAction.dataflowInstanceSelected(
           this.state.applicationId,
           this.state.workflowId,
           this.state.dataflowId,
           this.state.instanceId, 
-          this.state.workflowDetails         
+          this.state.workflowDetails 
         ));
         this.props.history.push('/'+this.state.applicationId+'/dataflowInstanceDetails');
       });
