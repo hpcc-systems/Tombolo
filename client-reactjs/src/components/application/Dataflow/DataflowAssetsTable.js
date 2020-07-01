@@ -81,7 +81,12 @@ function DataflowAssetsTable({applicationId, selectedDataflow, user}) {
   const editingAllowed = hasEditPermission(authReducer.user);
 
 	const jobColumns = [{
-    title: 'Title',
+    title: 'Type',
+    dataIndex: 'objType',
+    width: '30%',
+  },
+  {
+    title: 'Name',
     dataIndex: 'name',
     width: '30%',
     render: (text, record) => <a href='#' onClick={(row) => handleEdit(record.id, record.objType)}>{text}</a>
@@ -89,11 +94,6 @@ function DataflowAssetsTable({applicationId, selectedDataflow, user}) {
   {
     title: 'Description',
     dataIndex: 'description',
-    width: '30%',
-  },
-  {
-    title: 'Type',
-    dataIndex: 'objType',
     width: '30%',
   },
   {
