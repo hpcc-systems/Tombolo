@@ -28,7 +28,7 @@ class BreadCrumbs extends Component {
         return breadCrumbItems;
     });
     return (
-     <Layout style={{ padding: '0 24px 24px' }}>
+     <Layout style={{ padding: '0 5px 5px' }}>
         <Breadcrumb>
           <BreadCrumbs/>
         </Breadcrumb>

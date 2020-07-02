@@ -162,14 +162,16 @@ class DataflowInstances extends Component {
       }];
     return (
         <div>
-            <BreadCrumbs applicationId={this.state.applicationId} applicationTitle={this.state.applicationTitle}/>
+            <div className="d-flex justify-content-end" style={{paddingTop: "60px"}}>
+              <BreadCrumbs applicationId={this.state.applicationId} applicationTitle={this.state.applicationTitle}/>
+            </div>  
             <div>
-            <Table
-              columns={workflowTblColumns}
-              rowKey={record => record.instance_id}
-              dataSource={this.state.workflows}
-              pagination={{ pageSize: 20 }} scroll={{ y: 460 }}
-            />
+              <Table
+                columns={workflowTblColumns}
+                rowKey={record => record.instance_id}
+                dataSource={this.state.workflows}
+                pagination={{ pageSize: 50 }} scroll={{ y: 460 }}
+              />
             </div>
             {this.state.workflowDetailsVisible ?
                 <DataflowInstanceDetails 

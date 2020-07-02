@@ -80,24 +80,35 @@ function DataflowAssetsTable({applicationId, selectedDataflow, user}) {
 
   const editingAllowed = hasEditPermission(authReducer.user);
 
-	const jobColumns = [{
-    title: 'Type',
-    dataIndex: 'objType',
-    width: '30%',
-  },
+	const jobColumns = [
   {
     title: 'Name',
     dataIndex: 'name',
-    width: '30%',
+    width: '60%',
     render: (text, record) => <a href='#' onClick={(row) => handleEdit(record.id, record.objType)}>{text}</a>
   },
   {
     title: 'Description',
     dataIndex: 'description',
+    width: '60%',
+  },
+  {
+    title: 'Created Date',
+    dataIndex: 'createdAt',
+    width: '20%',
+  },
+  {
+    title: 'Owner',
+    dataIndex: 'contact',
     width: '30%',
   },
   {
-    width: '30%',
+    title: 'Type',
+    dataIndex: 'objType',
+    width: '15%',
+  },
+  {
+    width: '20%',
     title: 'Action',
     dataJob: '',
     className: editingAllowed ? "show-column" : "hide-column",

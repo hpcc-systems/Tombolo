@@ -12,10 +12,10 @@ function DataflowTable({data, applicationId, onSelectDataflow, onDataFlowUpdated
   useEffect(() => {    
     if(data && data.length > 0) {
       setSelectedRowKeys([data[0].id]);
-      onSelectDataflow(data[0]);
+      //onSelectDataflow(data[0]);
     } else {
       //clear svg if no data
-      onSelectDataflow('');
+      //onSelectDataflow('');
     }
    }, [data])
 
@@ -58,7 +58,7 @@ function DataflowTable({data, applicationId, onSelectDataflow, onDataFlowUpdated
   const editingAllowed = hasEditPermission(authReducer.user);
 
   const dataflowCols = [{
-    title: 'Title',
+    title: 'Name',
     dataIndex: 'title',
     width: '30%',
     render: text => <a>{text}</a>
@@ -66,6 +66,11 @@ function DataflowTable({data, applicationId, onSelectDataflow, onDataFlowUpdated
   {
     title: 'Description',
     dataIndex: 'description',
+    width: '30%',
+  },
+  {
+    title: 'Process Type',
+    dataIndex: 'processType',
     width: '30%',
   },
   {

@@ -129,7 +129,9 @@ router.get('/assets', [
                 "title":file.title,
                 "name":file.name,
                 "description":file.description,
-                "objType": "file"
+                "objType": "file",
+                "createdAt": file.createdAt,
+                "contact": file.consumer
             })
         });
         return Job.findAll({
@@ -145,7 +147,9 @@ router.get('/assets', [
                 "title":job.name,
                 "name":job.name,
                 "description":job.description,
-                "objType": "job"
+                "objType": "job",
+                "createdAt": job.createdAt,
+                "contact": job.contact
             })
         });
         return Index.findAll({
@@ -161,7 +165,9 @@ router.get('/assets', [
                 "title":index.title,
                 "name":index.title,
                 "description":index.description,
-                "objType": "index"
+                "objType": "index",
+                "createdAt": index.createdAt,
+                "contact":""
             })
         })
         return Query.findAll({
@@ -176,7 +182,9 @@ router.get('/assets', [
                 "title":query.title,
                 "name":query.title,
                 "description":query.description,
-                "objType": "query"
+                "objType": "query",
+                "createdAt": query.createdAt,
+                "contact":""
             })
         });
         res.json(results);

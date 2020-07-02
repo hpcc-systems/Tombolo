@@ -3,13 +3,13 @@ import { Button, Table, Divider, message, Popconfirm, Icon, Tooltip, Radio, Coll
 import BreadCrumbs from "../../common/BreadCrumbs";
 import AddDataflow from "./AddDataflow";
 import DataflowTable from "./DataflowTable";
-import DataflowAssetsTable from "./DataflowAssetsTable";
-import {Graph} from "./Graph";
 import useModal from '../../../hooks/useModal';
 import { authHeader, handleError } from "../../common/AuthHeader.js"
 import { hasEditPermission } from "../../common/AuthUtil.js";
 import { connect } from 'react-redux';
-import { useSelector } from "react-redux";
+import { useSelector, useDispatch } from "react-redux";
+import { dataflowAction } from '../../../redux/actions/Dataflow';
+import { withRouter } from 'react-router-dom';
 const { Panel } = Collapse;
 
 function Dataflow(props) {
@@ -40,6 +40,8 @@ function Dataflow(props) {
 
   const authReducer = useSelector(state => state.authenticationReducer);
 
+  const dispatch = useDispatch();
+
 	const getData = async () => {  
     fetch('/api/dataflow?application_id='+application.applicationId, {
       headers: authHeader()
@@ -62,6 +64,14 @@ function Dataflow(props) {
     setForm({
       selectedDataflow: selectedDataflow
     });
+
+    dispatch(dataflowAction.dataflowSelected(
+      application.applicationId,
+      application.applicationTitle,
+      selectedDataflow, 
+      application.user
+    ));
+    props.history.push('/'+application.applicationId+'/dataflow/details');
   }
 
   const handleToggleView = (evt) => {    
@@ -98,10 +108,10 @@ function Dataflow(props) {
           <BreadCrumbs applicationId={application.applicationId} applicationTitle={application.applicationTitle}/>
 	        <div className="ml-auto">
   	        <span>
-  	          {<Radio.Group defaultValue="chart" buttonStyle="solid" style={{padding: "10px"}} onChange={handleToggleView}>
+  	          {/*<Radio.Group defaultValue="chart" buttonStyle="solid" style={{padding: "10px"}} onChange={handleToggleView}>
   	            <Tooltip placement="bottom" title={"Tree View"}><Radio.Button value="chart"><Icon type="cluster" /></Radio.Button></Tooltip>
   	            <Tooltip placement="bottom" title={"Tabular View"}><Radio.Button value="grid"><Icon type="bars" /></Radio.Button></Tooltip>
-  	          </Radio.Group>}
+  	          </Radio.Group>*/}
   	          {editingAllowed ?  
     	          <AddDataflow 
     	          	isShowing={isShowing} 
@@ -115,30 +125,14 @@ function Dataflow(props) {
           </div>
 	      </div>
         <div className="row">
-  	      <div id="data_flow_content" className="col-12" style={{"height": tableDisplay.graphHeight+"px"}}>
-  					{form.tableView ? 
-              <DataflowAssetsTable applicationId={application.applicationId} selectedDataflow={form.selectedDataflow} user={application.user}/> 
-              : 
-              <Graph applicationId={application.applicationId} applicationTitle={application.applicationTitle} selectedDataflow={form.selectedDataflow}/>
-            }            	        
-  	      </div>
 
           <div className="col-12">
-            <Collapse
-              defaultActiveKey={['1']}
-              expandIconPosition={"right"}
-              onChange={onChange}
-            >
-              <Panel header="Dataflows" key="1">
-                <DataflowTable              
-                    data={dataFlows}
-                    applicationId={application.applicationId}  
-                    onSelectDataflow={onSelectDataflow} 
-                    onDataFlowUpdated={onDataFlowUpdated}
-                    onDataFlowEdit={onDataFlowEdit} />     
-              </Panel>
-              
-            </Collapse>
+              <DataflowTable              
+                data={dataFlows}
+                applicationId={application.applicationId}  
+                onSelectDataflow={onSelectDataflow} 
+                onDataFlowUpdated={onDataFlowUpdated}
+                onDataFlowEdit={onDataFlowEdit} />     
           </div>
         </div>
 
@@ -147,4 +141,4 @@ function Dataflow(props) {
 
 }
 
-export default Dataflow
+export default withRouter(Dataflow)
