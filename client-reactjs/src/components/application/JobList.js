@@ -275,7 +275,7 @@ class JobList extends Component {
               dataSource={this.state.assets}
               pagination={{ pageSize: 10 }} scroll={{ y: 460 }}
             />
-          : <Graph applicationId={this.state.applicationId} selectedDataflow={this.state.selectedDataflow}/>
+          : <Graph applicationId={this.state.applicationId} selectedDataflow={this.state.selectedDataflow} graphContainer="graph" sidebarContainer="sidebar"/>
           }
 
           {this.state.openFileDetailsDialog ?

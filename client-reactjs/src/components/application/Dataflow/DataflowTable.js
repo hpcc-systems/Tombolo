@@ -70,7 +70,7 @@ function DataflowTable({data, applicationId, onSelectDataflow, onDataFlowUpdated
   },
   {
     title: 'Process Type',
-    dataIndex: 'processType',
+    dataIndex: 'type',
     width: '30%',
   },
   {
@@ -83,7 +83,7 @@ function DataflowTable({data, applicationId, onSelectDataflow, onDataFlowUpdated
     }
   },
   {
-    width: '30%',
+    width: '20%',
     title: 'Action',
     dataIndex: '',
     className: editingAllowed ? "show-column" : "hide-column",    

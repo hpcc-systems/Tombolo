@@ -16,17 +16,17 @@ module.exports = {
         updatedAt : new Date()
       },{
         id: uuidv4(),
-        name : 'First Name Validate',
-        createdAt : new Date(),
-        updatedAt : new Date()
-      },{
-        id: uuidv4(),
         name : 'Integer Validate',
         createdAt : new Date(),
         updatedAt : new Date()
       },{
         id: uuidv4(),
         name : 'Not Empty',
+        createdAt : new Date(),
+        updatedAt : new Date()
+      },{
+        id: uuidv4(),
+        name : 'Assert',
         createdAt : new Date(),
         updatedAt : new Date()
       }], {});

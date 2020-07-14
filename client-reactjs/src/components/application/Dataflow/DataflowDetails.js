@@ -23,7 +23,7 @@ function DataflowDetails({props}) {
               <DataflowAssetsTable applicationId={dataflowReducer.applicationId} selectedDataflow={dataflowReducer.dataflowId} user={dataflowReducer.user}/>
             </TabPane>
             <TabPane tab="Designer" key="2">    
-              <Graph applicationId={dataflowReducer.applicationId} applicationTitle={dataflowReducer.applicationTitle} selectedDataflow={dataflowReducer.dataflowId}/>
+              <Graph applicationId={dataflowReducer.applicationId} applicationTitle={dataflowReducer.applicationTitle} selectedDataflow={dataflowReducer.dataflowId} graphContainer="graph" sidebarContainer="sidebar"/>
             </TabPane>
           </Tabs>
         </div>

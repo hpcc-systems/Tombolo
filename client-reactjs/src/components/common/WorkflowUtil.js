@@ -102,6 +102,26 @@ export function handleFileInstanceDelete (fileInstanceId) {
   });
 }
 
+export function handleSubProcessDelete (subProcessId, applicationId) {
+  return new Promise((resolve) => {
+    var data = JSON.stringify({dataflowId: subProcessId, applicationId: applicationId});
+    fetch("/api/dataflow/delete", {
+      method: 'post',
+      headers: authHeader(),
+      body: data
+    }).then((response) => {
+      if(response.ok) {
+        resolve(response.json());
+      } else {
+      	handleError(response);
+      }
+    }).catch(error => {
+      console.log(error);
+      message.error("There was an error deleting the file");
+    });
+  });
+}
+
 export function updateGraph(assetId, applicationId, selectedDataflow) {
   return new Promise((resolve) => {
 	  var data = JSON.stringify({id: assetId, application_id: applicationId, dataflowId: selectedDataflow.id});

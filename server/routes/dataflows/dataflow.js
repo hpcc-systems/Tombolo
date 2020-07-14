@@ -34,6 +34,7 @@ router.post('/save', [
           defaults: {
             application_id: req.body.application_id,
             title: req.body.title,
+            type: 'main',
             description: req.body.description,
             clusterId: req.body.clusterId
           }

@@ -32,7 +32,9 @@ class DataflowInstanceDetails extends Component {
               applicationId={this.props.applicationId} 
               viewMode={true} 
               selectedDataflow={this.props.workflowId} 
-              workflowDetails={this.props.workflowDetails}
+              workflowDetails={this.props.workflowDetails} 
+              graphContainer="graph" 
+              sidebarContainer="sidebar"
               />
           </div>
 

@@ -329,36 +329,36 @@ path, .jtk-endpoint { cursor:pointer; }
     transition: padding 0.3s cubic-bezier(0.645, 0.045, 0.355, 1);
 }
 
-#sidebar {
-  min-width: 85px;
-  max-width: 85px;
+.graph-sidebar {
+  min-width: 95px;
+  max-width: 95px;
   -webkit-transition: all 0.3s;
   -o-transition: all 0.3s;
   transition: all 0.3s;
   position: relative;
-  height:570px;
+  height:640px;
 }
 
-#sidebar.active .btn.btn-primary:before {
+.sidebar.active .btn.btn-primary:before {
   content: "\f054";
   font-family: "FontAwesome";
   left: 2px !important;
 }
-#sidebar.active .btn.btn-primary:after {
+.sidebar.active .btn.btn-primary:after {
     display: none;
 }
 
 @media (max-width: 991.98px) {
-    #sidebar {
-      margin-left: -300px;
-    }
-    #sidebar.active {
-      margin-left: 0;
-    }
-    #sidebar .custom-menu {
-      margin-right: -60px !important;
-      top: 10px !important;
-    }
+  .sidebar {
+    margin-left: -300px;
+  }
+  .sidebar.active {
+    margin-left: 0;
+  }
+  .sidebar .custom-menu {
+    margin-right: -60px !important;
+    top: 10px !important;
+  }
 }
 
 #graph tspan {
@@ -390,15 +390,15 @@ svg {
 }
 
 div.tooltip {
-    position: absolute;
-    text-align: center;
-    width: 60px;
-    height: 28px;
-    padding: 2px;
-    font: 12px sans-serif;
-    border: 0px;
-    border-radius: 8px;
-    pointer-events: none;
+  position: absolute;
+  text-align: center;
+  width: 60px;
+  height: 28px;
+  padding: 2px;
+  font: 12px sans-serif;
+  border: 0px;
+  border-radius: 8px;
+  pointer-events: none;
 }
 
 .dataflow-tbl-wrapper {

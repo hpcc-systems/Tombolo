@@ -8,10 +8,11 @@ import FileDetailsForm from "../FileDetails";
 import JobDetailsForm from "../JobDetails";
 import IndexDetailsForm from "../IndexDetails";
 import FileInstanceDetailsForm from "../FileInstanceDetails";
-import {handleFileDelete, handleFileInstanceDelete, handleJobDelete, handleIndexDelete, handleQueryDelete, updateGraph} from "../../common/WorkflowUtil";
+import {handleFileDelete, handleFileInstanceDelete, handleJobDelete, handleIndexDelete, handleQueryDelete, handleSubProcessDelete, updateGraph} from "../../common/WorkflowUtil";
 import { authHeader, handleError } from "../../common/AuthHeader.js"
 import { hasEditPermission } from "../../common/AuthUtil.js";
 import { shapesData, appendDefs } from "./Utils.js"
+import SubProcessDialog from "./SubProcessDialog";
 import { connect } from 'react-redux';
 const { Text } = Typography;
 
@@ -46,7 +47,9 @@ class Graph extends Component {
     mousePosition:[],
     wu_end: '',
     wu_start: '',
-    wu_duration: ''
+    wu_duration: '',
+    showSubProcessDetails: false,
+    selectedSubProcess: {"id":''}
   }
 
   consts = {
@@ -83,7 +86,6 @@ class Graph extends Component {
     document.addEventListener('mousedown', this.handleClickOutside);
   }
   componentWillReceiveProps(props) {   
-    console.log(props.selectedDataflow)
     if(this.state.applicationId != props.application.applicationId || this.state.selectedDataflow != props.selectedDataflow ) {      
       this.setState({
         applicationId: props.application.applicationId,
@@ -110,7 +112,6 @@ class Graph extends Component {
   }
 
   openDetailsDialog(d) {
-    console.log('openDetailsDialog');
     let _self=this;
     let isNew = false;
     switch(d.type) {
@@ -177,6 +178,13 @@ class Graph extends Component {
           _self.idxDlg.showModal();
         }, 200);
         break;
+      case 'Sub-Process':
+      console.log('currentlyEditingId: '+this.state.currentlyEditingId);
+        this.setState({          
+          selectedSubProcess: {"id": d.subProcessId, "title":d.title},
+          showSubProcessDetails: true
+        });
+        break;  
    }
   }
 
@@ -254,7 +262,6 @@ class Graph extends Component {
 
   getTaskDetails = () => {
     let completedTasks = [];
-    console.log(this.props.workflowDetails);
     this.props.workflowDetails.workflowDetails.forEach((workflowDetail) => {
       let nodeObj = this.thisGraph.nodes.filter((node) => {
         return (node.fileId == workflowDetail.task || node.jobId == workflowDetail.task || node.indexId == workflowDetail.task)
@@ -295,8 +302,8 @@ class Graph extends Component {
     });    
   }
 
-  onFileAdded = (saveResponse) => {
-    var newData = this.thisGraph.nodes.map(el => {
+  onFileAdded = (saveResponse) => {    
+    var newData = this.thisGraph.nodes.map(el => {      
       if(el.id == this.state.currentlyEditingId) {
         el.title=saveResponse.title;
         switch(el.type) {
@@ -316,6 +323,14 @@ class Graph extends Component {
           case 'Query Build':
             el.jobId=saveResponse.jobId;
             break;
+          case 'Sub-Process':            
+            el.subProcessId=saveResponse.id;
+            this.setState({          
+              showSubProcessDetails: false
+            });
+            this.saveGraph();
+
+            break;  
         }
         return el;
          //return Object.assign({}, el, {title:saveResponse.title, fileId:saveResponse.fileId, jobId:saveResponse.jobId, queryId:saveResponse.queryId, indexId:saveResponse.indexId})
@@ -346,7 +361,7 @@ class Graph extends Component {
 
   saveGraph() {
     console.log('save: '+JSON.stringify(this.props.selectedDataflow))
-    let edges = [];
+    let _self = this, edges = [];
     this.thisGraph.edges.forEach(function (val, i) {
         edges.push({source: val.source.id, target: val.target.id});
     });
@@ -360,22 +375,26 @@ class Graph extends Component {
         }
         handleError(response);
     }).then(function(data) {
-        console.log('Saved graph..');
+      _self.props.selectedDataflow.id = data.dataflowId;
+      if(_self.props.updateProcessId) {
+        _self.props.updateProcessId(data.dataflowId);
+      }
+      console.log('Saved graph..');
         //_self.fetchFiles();
     });
   }
 
   fetchSavedGraph() {
     var _self=this, nodes = [], edges = [];
-    if(this.props.selectedDataflow) {
+    if(this.props.selectedDataflow && this.props.selectedDataflow.id != '' && this.props.selectedDataflow.id != undefined) {
       fetch("/api/dataflowgraph?application_id="+this.props.applicationId+"&dataflowId="+this.props.selectedDataflow.id, {
          headers: authHeader()
       })
       .then((response) => {
-          if(response.ok) {
-            return response.json();
-          }
-          handleError(response);
+        if(response.ok) {
+          return response.json();
+        }
+        handleError(response);
       })
       .then(data => {
         if(data != undefined && data != null) {
@@ -514,6 +533,9 @@ class Graph extends Component {
       case 'Index':
         shape = shapesData[7];
         break;
+      case 'Sub-Process':
+        shape = shapesData[8];
+        break;  
     }
     if(gEl.select(".icon").empty()) {
       let imageTxt = gEl.append('text')
@@ -822,7 +844,7 @@ class Graph extends Component {
             _self.circleMouseUp(d3.select(this), d);
             _self.showNodeDetails(d);
             //_self.makeTextEditable(d3.select(this), d)
-        }).on("dblclick", function (d) {
+        }).on("dblclick", function (d) {            
             _self.setState({
               currentlyEditingId: d.id
             });
@@ -884,6 +906,25 @@ class Graph extends Component {
               _self.insertBgImage(d3.select(this), d.x, d.y, d);
               _self.insertTitle(d3.select(this), d.title, d.x, d.y, d);
               break;
+            case 'Sub-Process':  
+              if(d3.select("#rec-"+d.id).empty()) {
+                d3.select(this)
+                  .append("rect")
+                  .attr("id", "rec-"+d.id)
+                  .attr("rx", shapesData[8].rx)
+                  .attr("ry", shapesData[8].ry)
+                  .attr("width", shapesData[8].rectwidth)
+                  .attr("height", shapesData[8].rectheight)
+                  .attr("stroke", "grey")
+                  .attr("fill", shapesData[8].color)
+                  .attr("stroke-width", "3")
+                  .attr("filter", "url(#glow)")
+                  //.call(_self.nodeDragHandler)
+                }
+
+              _self.insertBgImage(d3.select(this), d.x, d.y, d);
+              _self.insertTitle(d3.select(this), d.title, d.x, d.y, d);
+              break;
           }
         });
 
@@ -939,6 +980,14 @@ class Graph extends Component {
           _self.fetchSavedGraph();
         });
         break;
+      case 'Sub-Process':
+        if(d.subProcessId) {
+          handleSubProcessDelete(d.subProcessId, _self.props.applicationId);
+        }
+        updateGraph((d.subProcessId ? d.subProcessId : d.id), _self.props.applicationId, _self.props.selectedDataflow).then((response) => {
+          _self.fetchSavedGraph();
+        });
+        break;  
     }
     if(gEl) {
       gEl.remove();
@@ -980,7 +1029,7 @@ class Graph extends Component {
   }
 
   collapseNav = () => {
-    $('#sidebar').toggleClass('active');
+    $('#'+this.props.sidebarContainer).toggleClass('active');
   }
 
   addFile = () => {
@@ -1001,7 +1050,7 @@ class Graph extends Component {
 
     let xLoc = width / 2 - 25,
         yLoc = 100;    
-    let svg = d3.select("#graph").append("svg")
+    let svg = d3.select('#'+this.props.graphContainer).append("svg")
         .attr("width", width)
         .attr("height", "100%");
 
@@ -1010,7 +1059,7 @@ class Graph extends Component {
 
     var margin = {top: 10, right: 10, bottom: 30, left: 10};
 
-    let graphComponentsSvg = d3.select("#sidebar").append("svg")
+    let graphComponentsSvg = d3.select('#'+this.props.sidebarContainer).append("svg")
       .attr("width", 100)
       .attr("height", "100%");
 
@@ -1057,8 +1106,8 @@ class Graph extends Component {
       
       return {"tx": d3.event.x + 50, "ty": d3.event.y + 15, "rx": d3.event.x, "ry": d3.event.y};
     })
-    .on("end", function(d){      
-      if(_self.props.selectedDataflow == undefined || _self.props.selectedDataflow == '') {
+    .on("end", function(d){
+      if((_self.props.selectedDataflow == undefined || _self.props.selectedDataflow == '')) {
         message.config({top:130})
         message.warning({
           content: 'Please create a Dataflow by clicking on \'Add Dataflow\' button, before you can start using the Dataflow designer',          
@@ -1068,10 +1117,11 @@ class Graph extends Component {
 
       var mouseCoordinates = d3.mouse(this);
       let idct = ++_self.graphState.idct;
+      let newNodeId = idct+Math.floor(Date.now());
       //let x = (mouseCoordinates[0] < 60) ? 60 : mouseCoordinates[0] - 150 : mouseCoordinates[0] > 1300 ? 1300 : mouseCoordinates[0];
       let x = mouseCoordinates[0] > 1550 ? 1550 : mouseCoordinates[0] < 60 ? 60 : mouseCoordinates[0]
       let y = mouseCoordinates[1] > 600 ? 600 : mouseCoordinates[1] < 0 ? 0 : mouseCoordinates[1]        
-      _self.thisGraph.nodes.push({"title":"New "+d3.select(this).select("text.entity").text(),"id":idct+Math.floor(Date.now()),"x":x,"y":y, "type":d3.select(this).select("text.entity").text()})
+      _self.thisGraph.nodes.push({"title":"New "+d3.select(this).select("text.entity").text(),"id":newNodeId,"x":x,"y":y, "type":d3.select(this).select("text.entity").text()})
       _self.setIdCt(idct);
       _self.updateGraph();
     })
@@ -1130,6 +1180,7 @@ class Graph extends Component {
       if (_self.graphState.shiftNodeDrag) {
           _self.dragEnd(d3.select(this), _self.graphState.mouseEnterNode)
       } else {
+        //checking if the nodes have been dropped at an x,y which is out of browser's viewport
         let x = d3.event.x > 1550 ? 1550 : d3.event.x < 60 ? 60 : d3.event.x
         let y = d3.event.y > 600 ? 600 : d3.event.y < 0 ? 0 : d3.event.y      
         d.x = x;
@@ -1219,10 +1270,10 @@ class Graph extends Component {
 	return (    
       <React.Fragment>
       {!this.props.viewMode ?        
-         <div className="col-sm-1 float-left" style={{width:"85px"}}><nav id="sidebar" className="navbar-light fixed-left" style={{"backgroundColor": "#e3f2fd", "fontSize": "12px"}}></nav></div>
+         <div className="col-sm-1 float-left" style={{width:"85px"}}><nav id={this.props.sidebarContainer} className="navbar-light fixed-left graph-sidebar" style={{"backgroundColor": "#e3f2fd", "fontSize": "12px"}}></nav></div>
       : null }
 
-        <div id="graph" style={{"marginLeft": "70px", "height":"100%"}} className={!editingAllowed ? "col-md-10 readonly" : "col-md-10"} tabIndex="-1"></div>
+        <div id={this.props.graphContainer} style={{"marginLeft": "70px", "height":"100%"}} className={!editingAllowed ? "col-md-10 readonly" : "col-md-10"} tabIndex="-1"></div>
 
       {this.state.openFileDetailsDialog ?
         <FileDetailsForm
@@ -1300,6 +1351,14 @@ class Graph extends Component {
             </Descriptions>
             
         </Modal>
+
+        <SubProcessDialog 
+          show={this.state.showSubProcessDetails} 
+          applicationId={this.props.applicationId} 
+          selectedParentDataflow={this.props.selectedDataflow}
+          onRefresh={this.onFileAdded}
+          selectedSubProcess={this.state.selectedSubProcess}
+          nodeId={this.state.currentlyEditingId}/>
     </React.Fragment> 
 	)
   }

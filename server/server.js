@@ -1,6 +1,7 @@
 const express = require('express');
 const app = express();
 const tokenService = require('./utils/token_service');
+const {NotificationModule} = require('./routes/notifications/email-notification');
 
 app.use(express.json());
 app.use(function(req, res, next) {
@@ -41,10 +42,10 @@ app.use('/api/report/read', tokenService.verifyToken, reportRead);
 app.use('/api/consumer', tokenService.verifyToken, consumer);
 app.use('/api/ldap', ldap);
 app.use('/api/controlsAndRegulations', tokenService.verifyToken, regulations);
-app.use('/api/dataflowgraph', tokenService.verifyToken, dataflowGraph);
+app.use('/api/dataflowgraph', dataflowGraph);
 app.use('/api/dataflow', tokenService.verifyToken, dataflow);
 app.use('/api/workflows', tokenService.verifyToken, workflows);
 
-process.env["NODE_TLS_REJECT_UNAUTHORIZED"] = 0;
+//process.env["NODE_TLS_REJECT_UNAUTHORIZED"] = 0;
 
 app.listen(3000, '0.0.0.0', () => console.log('Server listening on port 3000!'));

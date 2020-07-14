@@ -9,7 +9,9 @@ export const shapesData = [
   { "x": "10", "y": "270", "rx":"10", "ry":"10", "rectx":"10", "recty":"350", "rectwidth":"35", "rectheight":"35", "tx":"15", "ty":"375", "title":"File", "color":"#7AAAD0", "icon":"\uf1c0", "iconx":"90", "icony":"65", "description":"File definition"},
   { "x": "10", "y": "320", "rx":"10", "ry":"10", "rectx":"10", "recty":"420", "rectwidth":"35", "rectheight":"35", "tx":"15", "ty":"445", "title":"File Instance", "color":"#7AAAD0", "icon":"\uf0c5", "iconx":"70", "icony":"65", "description":"An Instance of a File Definition"},
   //{ "x": "10", "y": "120", "rx":"10", "ry":"10", "rectx":"10", "recty":"170", "rectwidth":"55", "rectheight":"55", "tx":"20", "ty":"210", "title":"Query", "color":"#9B6A97", "icon":"\uf00e", "iconx":"90", "icony":"65"},
-  { "x": "10", "y": "370", "rx":"10", "ry":"10", "rectx":"10", "recty":"490", "rectwidth":"35", "rectheight":"35", "tx":"15", "ty":"515", "title":"Index", "color":"#7DC470", "icon":"\uf2b9", "iconx":"90", "icony":"65", "description":"Index"},
+  { "x": "10", "y": "370", "rx":"10", "ry":"10", "rectx":"10", "recty":"490", "rectwidth":"35", "rectheight":"35", "tx":"15", "ty":"515", "title":"Index", "color":"#7DC470", "icon":"\uf2b9", "iconx":"90", "icony":"75", "description":"Index"},
+  { "x": "10", "y": "420", "rx":"10", "ry":"10", "rectx":"10", "recty":"560", "rectwidth":"35", "rectheight":"35", "tx":"15", "ty":"585", "title":"Sub-Process", "color":"#F5A9A9", "icon":"\uf074", "iconx":"90", "icony":"65", "description":"Sub-Process"}
+  
 ];
 
 export function appendDefs(svg)  {
