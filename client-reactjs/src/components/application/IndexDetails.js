@@ -414,7 +414,7 @@ class IndexDetails extends Component {
                 optionLabelProp="value"
                 disabled={!editingAllowed}
               >
-                <Input id="autocomplete_field" suffix={this.state.autoCompleteSuffix} />
+                <Input id="autocomplete_field" suffix={this.state.autoCompleteSuffix} autocomplete="off"/>
               </AutoComplete>
             </Form.Item>
             </div>

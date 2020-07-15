@@ -531,7 +531,7 @@ class JobDetails extends Component {
                 optionLabelProp="text"
                 disabled={!editingAllowed}
               >
-                <Input id="autocomplete_field" suffix={this.state.autoCompleteSuffix} />
+                <Input id="autocomplete_field" suffix={this.state.autoCompleteSuffix} autocomplete="off"/>
               </AutoComplete>
             </Form.Item>
             </div>

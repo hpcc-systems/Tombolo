@@ -31,7 +31,7 @@ exports.fileInfo = (fileName, clusterId) => {
 	      		return fieldsValidations;
 	      	}
 	      	var fileInfo = {};
-	    		getFileLayout(cluster, fileName).then(function(fileLayout) {
+	    		getFileLayout(cluster, fileName, response.FileDetail.Format).then(function(fileLayout) {
 	      		fileInfo = {
 	      			"name" : response.FileDetail.Name,
 	      			"fileName" : response.FileDetail.Filename,
@@ -54,60 +54,82 @@ exports.fileInfo = (fileName, clusterId) => {
 	})
 }
 
-let getFileLayout = (cluster, fileName) =>  {
+let getFileLayout = (cluster, fileName, format) =>  {
 	var layoutResults = [];
-	return requestPromise.get({
-	  url: cluster.thor_host + ':' + cluster.thor_port +'/WsDfu/DFUGetFileMetaData.json?LogicalFileName='+fileName,
-	  auth : module.exports.getClusterAuth(cluster)
-	}).then(function(response) {
-		  var result = JSON.parse(response);
-    	if(result.DFUGetFileMetaDataResponse != undefined) {
-			  var fileInfoResponse = result.DFUGetFileMetaDataResponse.DataColumns.DFUDataColumn, fileInfo = {};
-      		fileInfoResponse.forEach(function(column) {
-      			if(column.ColumnLabel !== '__fileposition__') {
-	      			var layout = {
-		      			"name" : column.ColumnLabel,
-		      			"type" : column.ColumnType,
-		      			"eclType" : column.ColumnEclType,
-		      			"displayType" : '',
-		      			"displaySize" : '',
-		      			"textJustification" : 'right',
-		      			"format" : '',
-		      			"isPCI" : 'false',
-		      			"isPII" : 'false',
-						"isHIPAA":'false',
-						"required": 'false'
-		      		}
-		      		if(column.DataColumns != undefined) {
-		      			var childColumns = [];
-		      			column.DataColumns.DFUDataColumn.forEach(function(childColumn) {
-		      				var childColumnObj = {
-		      					"name" : childColumn.ColumnLabel,
-				      			"type" : childColumn.ColumnType,
-				      			"eclType" : childColumn.ColumnEclType,
-				      			"displayType" : '',
-				      			"displaySize" : '',
-				      			"textJustification" : 'right',
-				      			"format" : '',
-				      			"isPCI" : 'false',
-				      			"isPII" : 'false',
-								"isHIPAA":'false',
-								"required": 'false'
-		      				}
-		      				childColumns.push(childColumnObj);
+	if(format == 'csv') {
+		return requestPromise.get({
+		  url: cluster.thor_host + ':' + cluster.thor_port +'/WsDfu/DFURecordTypeInfo.json?Name='+fileName,
+		  auth : module.exports.getClusterAuth(cluster)
+		}).then(function(response) {
+			var result = JSON.parse(response);
+			if (result.DFURecordTypeInfoResponse != undefined) {
+				if(result.DFURecordTypeInfoResponse.jsonInfo.fields != undefined) {
+					result.DFURecordTypeInfoResponse.jsonInfo.fields.forEach((field) => {
+						layoutResults.push({
+							"name" : field.name
+						})
+					})
 
-		      			});
-		      			layout.children = childColumns;
-		      		}
-		      		layoutResults.push(layout);
-		      	}
-      		});
-		  }
-    	return layoutResults;
-    })
-	.catch(function (err) {
+					return layoutResults;
+				}
+
+			}
+		})
+	} else {
+		return requestPromise.get({
+		  url: cluster.thor_host + ':' + cluster.thor_port +'/WsDfu/DFUGetFileMetaData.json?LogicalFileName='+fileName,
+		  auth : module.exports.getClusterAuth(cluster)
+		}).then(function(response) {
+			  var result = JSON.parse(response);
+	    	if(result.DFUGetFileMetaDataResponse != undefined) {
+				  var fileInfoResponse = result.DFUGetFileMetaDataResponse.DataColumns.DFUDataColumn, fileInfo = {};
+	      		fileInfoResponse.forEach(function(column) {
+	      			if(column.ColumnLabel !== '__fileposition__') {
+		      			var layout = {
+			      			"name" : column.ColumnLabel,
+			      			"type" : column.ColumnType,
+			      			"eclType" : column.ColumnEclType,
+			      			"displayType" : '',
+			      			"displaySize" : '',
+			      			"textJustification" : 'right',
+			      			"format" : '',
+			      			"isPCI" : 'false',
+			      			"isPII" : 'false',
+							"isHIPAA":'false',
+							"required": 'false'
+			      		}
+			      		if(column.DataColumns != undefined) {
+			      			var childColumns = [];
+			      			column.DataColumns.DFUDataColumn.forEach(function(childColumn) {
+			      				var childColumnObj = {
+			      					"name" : childColumn.ColumnLabel,
+					      			"type" : childColumn.ColumnType,
+					      			"eclType" : childColumn.ColumnEclType,
+					      			"displayType" : '',
+					      			"displaySize" : '',
+					      			"textJustification" : 'right',
+					      			"format" : '',
+					      			"isPCI" : 'false',
+					      			"isPII" : 'false',
+									"isHIPAA":'false',
+									"required": 'false'
+			      				}
+			      				childColumns.push(childColumnObj);
+
+			      			});
+			      			layout.children = childColumns;
+			      		}
+			      		layoutResults.push(layout);
+			      	}
+	      		});
+			  }
+	    	return layoutResults;
+	  })
+		.catch(function (err) {
       console.log('error occured: '+err);
   	});
+	}
+	
 }
 
 exports.getClusterAuth = (cluster) => {

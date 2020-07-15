@@ -15,6 +15,19 @@ import 'ag-grid-community/dist/styles/ag-theme-balham.css';
 const TabPane = Tabs.TabPane;
 const Option = Select.Option;
 
+const types = [
+    "",
+    "Boolean",
+    "Integer",
+    "Unsigned",
+    "Real",
+    "Decimal",
+    "String",
+    "Varstring",
+    "RrcordOf",
+    "Enum"
+  ]
+
 class FileDetails extends Component {
 
   constructor(props) {
@@ -915,7 +928,12 @@ class FileDetails extends Component {
     },
     {
       headerName: 'Type',
-      field: 'type'
+      field: 'type',
+      editable: true,
+      cellEditor: "select",
+      cellEditorParams: {
+        values: types.sort()
+      }
     },
     {
       headerName: 'ECL Type',
@@ -1177,7 +1195,7 @@ class FileDetails extends Component {
                   optionLabelProp="value"
                   disabled={!editingAllowed}
                 >
-                  <Input id="autocomplete_field" suffix={this.state.autoCompleteSuffix} />
+                  <Input id="autocomplete_field" suffix={this.state.autoCompleteSuffix} autocomplete="off"/>
                 </AutoComplete>
               </Form.Item>
               </div>
