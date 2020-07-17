@@ -1137,7 +1137,7 @@ class FileDetails extends Component {
       onChange: this.onSelectedRowKeysChange
     };
     //const modalHeight = !this.props.isNew ? "400px" : "500px";
-    const modalHeight = "510px";
+    const modalHeight = "520px";
 
     const editingAllowed = hasEditPermission(this.props.user);
 
@@ -1262,6 +1262,14 @@ class FileDetails extends Component {
                     </Form.Item>
                   </Col>
                   : null}
+                <Col span={8} order={2}>
+                  <Form.Item {...threeColformItemLayout} label="Owner">
+                     <Select id="owner" value={(this.state.file.owner != '') ? this.state.file.owner : "Select an Owner"} placeholder="Select an Owner" onChange={this.onConsumerSelection} style={{ width: 190 }} disabled={!editingAllowed}>
+                      {consumers.map(consumer => consumer.assetType == 'Owner' ? <Option key={consumer.id}>{consumer.name}</Option> : null)}
+                    </Select>
+                  </Form.Item>
+                </Col>
+
               </Row>              
             </Form>
            

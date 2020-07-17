@@ -117,7 +117,7 @@ class LeftNav extends Component {
                 <NavLink to={"/admin/users"} className="nav-link"><i className="fa fa-lg fa-desktop"></i><span className={this.state.collapsed ? "d-none" : ""}> Users</span></NavLink>
               </li>
               <li className="nav-item">
-                <NavLink to={"/admin/consumers"} className="nav-link"><i className='fa fa-lg fa-user-circle'></i><span className={this.state.collapsed ? "d-none" : ""}> Consumers/Suppliers</span></NavLink>
+                <NavLink to={"/admin/consumers"} className="nav-link"><i className='fa fa-lg fa-user-circle'></i><span className={this.state.collapsed ? "d-none" : ""}> Asset Contacts</span></NavLink>
               </li>
               <li className="nav-item">
                 <NavLink to={"/admin/controlsAndRegulations"} className="nav-link"><i className='fa fa-lg fa-address-card-o'></i><span className={this.state.collapsed ? "d-none" : ""}> Controls & Regulations</span></NavLink>

@@ -1,10 +1,11 @@
 import React, { Component } from "react";
-import { Table, Button, Row, Col, Modal, Form, Input, Icon, Select, notification, Tooltip, Popconfirm, Divider, AutoComplete, message, Radio } from 'antd/lib';
+import { Table, Button, Row, Col, Modal, Form, Input, Icon, Select, notification, Tooltip, Popconfirm, Divider, AutoComplete, message, Radio, Typography } from 'antd/lib';
 import BreadCrumbs from "../common/BreadCrumbs";
 import { authHeader, handleError } from "../common/AuthHeader.js";
 import { connect } from 'react-redux';
 import ShareApp from "./ShareApp";
 const Option = Select.Option;
+const { Paragraph } = Typography;
 
 class Consumers extends Component {
   constructor(props) {
@@ -19,7 +20,7 @@ class Consumers extends Component {
   	showAddConsumer: false,
   	confirmLoading: false,
     isEditing: false,
-    isConsumer: true,
+    type: '',
   	newConsumer : {
 	  	name: '',
       type:'',
@@ -46,9 +47,9 @@ class Consumers extends Component {
       selectedApplications: appsSelected,
     });
     removeDisabled = (selectedRows.length > 0) ? false : true;
-	this.setState({
-	  removeDisabled: removeDisabled
-	});
+  	this.setState({
+  	  removeDisabled: removeDisabled
+  	});
 
   }
 
@@ -202,10 +203,8 @@ class Consumers extends Component {
   }
 
   onConsumerSupplierChange = (e) => {
-    console.log(e.target.value)
-    let isConsumer = e.target.value == "Consumer" ? true : false;
     this.setState({
-      isConsumer: isConsumer
+      type: e.target.value
     });
   }
 
@@ -217,7 +216,7 @@ class Consumers extends Component {
     if(this.state.newConsumer.name){
     var userId=(this.props.user) ? this.props.user.id:"" ;
 
-    let data = JSON.stringify({"name" : this.state.newConsumer.name, "type" : this.state.newConsumer.type, "contact_name":this.state.newConsumer.contact_name, "contact_email":this.state.newConsumer.contact_email, "ad_group":this.state.newConsumer.ad_group, "assetType":this.state.isConsumer ? "Consumer" : "Supplier"});
+    let data = JSON.stringify({"name" : this.state.newConsumer.name, "type" : this.state.newConsumer.type, "contact_name":this.state.newConsumer.contact_name, "contact_email":this.state.newConsumer.contact_email, "ad_group":this.state.newConsumer.ad_group, "assetType":this.state.type});
 	  console.log('data: '+data);
     fetch("/api/consumer/consumer", {
       method: 'post',
@@ -232,7 +231,7 @@ class Consumers extends Component {
     .then(suggestions => {
 	  	this.setState({
       ...this.state,
-        isConsumer: true,
+        type: 'Consumer',
         newConsumer: {
           ...this.state.newConsumer,
           id : '',
@@ -355,16 +354,26 @@ class Consumers extends Component {
       <div>
 	      <Modal
 	          title="Add Consumer/Supplier"
-	          visible={this.state.showAddConsumer}
+            visible={this.state.showAddConsumer}
 	          onOk={this.handleAddConsumerOk.bind(this)}
 	          onCancel={this.handleAddConsumerCancel}
 	          confirmLoading={confirmLoading}
 	        >
 		        <Form layout="vertical">
+              <Paragraph>
+                Consumer - Product/Application/Group consuming the asset
+              </Paragraph>
+              <Paragraph>  
+                Supplied - Supplier of the asset data (DMV, Insurance company etc;)
+              </Paragraph> 
+              <Paragraph>   
+                Owner - Contact Person/Group for an asset
+              </Paragraph>              
               <div className={'form-group'+ (this.state.submitted && !this.state.newConsumer.name ? ' has-error' : '')}>
-                <Radio.Group onChange={this.onConsumerSupplierChange} value={this.state.isConsumer ? "Consumer" : "Supplier"}>
+                <Radio.Group onChange={this.onConsumerSupplierChange} value={this.state.type}>
                   <Radio value={"Consumer"}>Consumer</Radio>
                   <Radio value={"Supplier"}>Supplier</Radio>
+                  <Radio value={"Owner"}>Owner</Radio>
                 </Radio.Group>
               </div>
 
