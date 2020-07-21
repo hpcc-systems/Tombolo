@@ -921,10 +921,11 @@ class FileDetails extends Component {
     };
 
 
-    const layoutColumns = [{
+    const layoutColumns = [
+    {
       headerName: 'Name',
       field: 'name',
-      sort: "asc"
+      sort: "asc",
     },
     {
       headerName: 'Type',
@@ -933,11 +934,12 @@ class FileDetails extends Component {
       cellEditor: "select",
       cellEditorParams: {
         values: types.sort()
-      }
+      },
+      cellRenderer: 'agGroupCellRenderer'
     },
     {
       headerName: 'ECL Type',
-      field: 'eclType'
+      field: 'eclType'      
     },
     {
       headerName: 'Description',
@@ -1141,11 +1143,27 @@ class FileDetails extends Component {
 
     const editingAllowed = hasEditPermission(this.props.user);
 
-    //render only after fetching the data from the server
-    if(!title && !this.props.selectedAsset && !this.props.isNew) {
-      console.log("not rendering");
-      return null;
+    const getNodeChildDetails = (rowItem) => {
+      if (rowItem.children) {
+        return {
+          group: true,
+          // open C be default
+          expanded: false,
+          // provide ag-Grid with the children of this group
+          children: rowItem.children,
+          // the key is used by the default group cellRenderer
+          key: rowItem.type
+        };
+      } else {
+        return null;
+      }
     }
+
+  //render only after fetching the data from the server
+  if(!title && !this.props.selectedAsset && !this.props.isNew) {
+    console.log("not rendering");
+    return null;
+  }
 
     return (
 
@@ -1195,7 +1213,7 @@ class FileDetails extends Component {
                   optionLabelProp="value"
                   disabled={!editingAllowed}
                 >
-                  <Input id="autocomplete_field" suffix={this.state.autoCompleteSuffix} autocomplete="off"/>
+                  <Input id="autocomplete_field" suffix={this.state.autoCompleteSuffix} autoComplete="off"/>
                 </AutoComplete>
               </Form.Item>
               </div>
@@ -1286,9 +1304,16 @@ class FileDetails extends Component {
                   onCellValueChanged={this.dataTypechange}
                   columnDefs={layoutColumns}
                   rowData={layout}
-                  defaultColDef={{resizable: true, sortable: true, filter: true}}
+                  defaultColDef={{resizable: true, sortable: true, filter: true, flex: 1}}
                   onGridReady={this.onLayoutGridReady}
-                  singleClickEdit={editingAllowed}>
+                  singleClickEdit={editingAllowed}
+                  groupSelectsChildren={true}
+                  groupSelectsFiltered={true}
+                  suppressAggFuncInHeader={true}
+                  suppressRowClickSelection={true}
+                  rowSelection= {'multiple'}
+                  getNodeChildDetails={getNodeChildDetails}
+                  >
                 </AgGridReact>
               </div>
               {/*<Table

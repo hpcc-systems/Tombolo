@@ -247,7 +247,7 @@ router.post('/saveFile', [
           }
           var fileLayoutToSave = hpccUtil.updateCommonData(req.body.file.layout, fieldsToUpdate);
           return FileLayout.bulkCreate(
-              fileLayoutToSave, {updateOnDuplicate: ["name", "type", "displayType", "displaySize", "textJustification", "format","data_types", "isPCI", "isPII", "isHIPAA", "description", "required"]}
+              fileLayoutToSave, {updateOnDuplicate: ["name", "type", "displayType", "displaySize", "textJustification", "format","data_types", "isPCI", "isPII", "isHIPAA", "description", "required", "children"]}
           )
       }).then(function(fileLayout) {
           FileLicense.destroy(

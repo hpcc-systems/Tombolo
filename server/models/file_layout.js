@@ -22,7 +22,16 @@ module.exports = (sequelize, DataTypes) => {
     isPII: DataTypes.STRING,
     isHIPAA: DataTypes.STRING,
     description: DataTypes.TEXT,
-    required: DataTypes.BOOLEAN
+    required: DataTypes.BOOLEAN,
+    children: {
+      type: DataTypes.TEXT,
+      get: function() {
+          return JSON.parse(this.getDataValue('children'));
+      }, 
+      set: function(val) {
+          return this.setDataValue('children', JSON.stringify(val));
+      }
+    }
   }, {freezeTableName: true});
   file_layout.associate = function(models) {
     file_layout.belongsTo(models.file, {
