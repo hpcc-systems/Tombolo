@@ -13,7 +13,9 @@ const { body, query, validationResult } = require('express-validator/check');
 var eventsInstance = require('events');
 var moment = require('moment');
 var fileInstanceEventEmitter = new eventsInstance.EventEmitter();
+const NotificationModule = require('../notifications/email-notification');
 var kafka = require('kafka-node'),
+
     //Producer = kafka.Producer,
     //Consumer = kafka.Consumer,
     //client = new kafka.KafkaClient({kafkaHost: process.env.KAFKA_ADVERTISED_LISTENER + ':' + process.env.KAFKA_PORT}),
@@ -145,6 +147,9 @@ let workunitInfo = (wuid, cluster) => {
     wsWorkunits.WUInfo({"Wuid":wuid, "IncludeExceptions":true, "IncludeSourceFiles":true, "IncludeResults":true}).then(async (wuInfo) => {
       console.log('state: '+wuInfo.Workunit.State);
       if(wuInfo.Workunit.State == 'completed' || wuInfo.Workunit.State == 'failed' || wuInfo.Workunit.State == 'wait' || wuInfo.Workunit.State == 'compiled') {
+        if(wuInfo.Workunit.State == 'failed') {
+          NotificationModule.notify({"type": "Covid19", "message": "Workunit "+wuid+ " failed."});
+        }
         resolve(wuInfo);
       } else {
         setTimeout(_ => {
