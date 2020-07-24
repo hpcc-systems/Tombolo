@@ -178,7 +178,7 @@ class AppHeader extends Component {
       }
     }
 
-    handleChange = (e) => {
+    handleChangePasswordFieldChange = (e) => {
       this.setState({...this.state, [e.target.name]: e.target.value });
     }
 
@@ -259,13 +259,13 @@ class AppHeader extends Component {
           ]}
         >          
           <div className="form-group">
-            <Input type="password" name="oldpassword" placeholder="Old Password" onChange={this.handleChange}/> 
+            <Input type="password" name="oldpassword" placeholder="Old Password" onChange={this.handleChangePasswordFieldChange}/> 
           </div>
           <div className="form-group">  
-            <Input type="password" name="newpassword" placeholder="New Password" onChange={this.handleChange}/> 
+            <Input type="password" name="newpassword" placeholder="New Password" onChange={this.handleChangePasswordFieldChange}/> 
           </div>
           <div className="form-group">  
-            <Input type="password" name="confirmnewpassword" placeholder="Confirm Password" onChange={this.handleChange}/> 
+            <Input type="password" name="confirmnewpassword" placeholder="Confirm Password" onChange={this.handleChangePasswordFieldChange}/> 
           </div>            
 
         </Modal>
