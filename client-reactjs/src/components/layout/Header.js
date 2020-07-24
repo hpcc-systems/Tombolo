@@ -1,5 +1,5 @@
 import React, { Component } from "react";
-import {Layout, Menu, Icon, message, Tooltip, Input, Button} from 'antd/lib';
+import {Layout, Menu, Icon, message, Tooltip, Input, Button, Dropdown, Modal, Alert} from 'antd/lib';
 import { NavLink, Switch, Route, withRouter } from 'react-router-dom';
 import { userActions } from '../../redux/actions/User';
 import { connect } from 'react-redux';
@@ -25,7 +25,12 @@ class AppHeader extends Component {
       applications: [],
       selected:'Select an Application',
       pathName:'',
-      searchText:''
+      searchText:'',
+      visible: false,
+      loading: false,
+      oldpassword: '',
+      newpassword: '',
+      confirmnewpassword: ''
     }
 
     componentWillReceiveProps(props) {
@@ -139,14 +144,61 @@ class AppHeader extends Component {
     onChangeSearch=(e)=> {
       this.setState({searchText: e.target.value });
     }
+
+    handleChangePassword = () => {
+      this.setState({visible: true }); 
+    }
+
+    handleOk = () => {
+      this.setState({loading: true }); 
+      fetch("/api/user/changePassword", {
+        method: 'post',
+        headers: authHeader(),
+        body: JSON.stringify({"username": this.props.user.username, "oldpassword":this.state.oldpassword, "newpassword": this.state.newpassword, "confirmnewpassword": this.state.confirmnewpassword})
+      }).then((response) => {
+        this.setState({loading: true }); 
+        //console.log("response.ok: "+response.ok);
+        message.config({top:130})
+        message.success('Password changed successfully.');
+        this.setState({loading: false, visible: false }); 
+      }).catch(function(err) {
+        message.error('There was an error while changing the password.');
+      });
+    }
+
+    handleCancel = () => {
+      this.setState({visible: false }); 
+    }
+
+    handleUserActionMenuClick = (e) => {
+      if(e.key == 1) {
+        this.handleChangePassword();
+      } else if(e.key == 2) {
+        this.handleLogOut();
+      }
+    }
+
+    handleChange = (e) => {
+      this.setState({...this.state, [e.target.name]: e.target.value });
+    }
+
   render() {
+
     const applicationId = this.props.application ? this.props.application.applicationId : '';
     const selectedTopNav = (window.location.pathname.indexOf("/admin") != -1) ? "/admin/applications" : (applicationId != '' ? "/" + applicationId + "/dataflow" : "/dataflow")
     const appNav = (applicationId != '' ? "/" + applicationId + "/dataflow" : "/dataflow");
+    const userActionMenu = (
+      <Menu onClick={this.handleUserActionMenuClick}>
+        <Menu.Item key="1">Change Password</Menu.Item>
+        <Menu.Item key="2">Logout</Menu.Item>
+      </Menu>
+    );
+
     if(!this.props.user || !this.props.user.token) {
       return null;
     }
     return (
+        <React.Fragment>
         <nav className="navbar navbar-expand-md navbar-dark bg-dark fixed-top">
           <a className="home-logo navbar-brand" href="/">Tombolo</a>
           <button className="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarsExampleDefault" aria-controls="navbarsExampleDefault" aria-expanded="false" aria-label="Toggle navigation">
@@ -183,12 +235,41 @@ class AppHeader extends Component {
                 <a className="nav-link" data-nav="/admin/applications" onClick={this.handleTopNavClick} disabled={!hasAdminRole(this.props.user)}><i className="fa fa-lg fa-cog"></i> Settings</a>
               </li>*/}
               <li className="nav-item"><Button style={{float: "right"}} type="link" target={"_blank"} href={process.env.PUBLIC_URL + "/open_database_license.pdf"} >Open Database License</Button></li>
-              <li className="nav-item">
-                <a className="nav-link" onClick={this.handleLogOut}><i className="fa fa-sign-out"></i> Logout</a>
-              </li>
+              <Dropdown overlay={userActionMenu}>
+                <Button shape="round">
+                  <i className="fa fa-lg fa-user-circle"></i><span style={{paddingLeft:"5px"}}>{this.props.user.firstName + " " + this.props.user.lastName} <Icon type="down" /></span>
+                </Button>
+              </Dropdown>
+
             </ul>
           </div>
         </nav>
+
+        <Modal
+          title="Change Password"
+          visible={this.state.visible}
+          width="420px"
+          footer={[
+            <Button key="cancel" onClick={this.handleCancel}>
+              Cancel
+            </Button>,
+            <Button key="submit" onClick={this.handleOk} type="primary" loading={this.state.loading}>
+              Change Password
+            </Button>            
+          ]}
+        >          
+          <div className="form-group">
+            <Input type="password" name="oldpassword" placeholder="Old Password" onChange={this.handleChange}/> 
+          </div>
+          <div className="form-group">  
+            <Input type="password" name="newpassword" placeholder="New Password" onChange={this.handleChange}/> 
+          </div>
+          <div className="form-group">  
+            <Input type="password" name="confirmnewpassword" placeholder="Confirm Password" onChange={this.handleChange}/> 
+          </div>            
+
+        </Modal>
+       </React.Fragment> 
     )
   }
 }

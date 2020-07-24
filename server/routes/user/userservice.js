@@ -18,7 +18,8 @@ module.exports = {
     delete: _delete,
     validateToken,
     GetuserListToShareApp,
-    GetSharedAppUserList
+    GetSharedAppUserList,
+    changePassword
 };
 
 
@@ -211,4 +212,34 @@ async function GetSharedAppUserList(req, res, next) {
         }
     }
 });
+}
+
+async function changePassword(req, res, { username, password }) {
+  var authServiceUrl = process.env.AUTH_SERVICE_URL.replace('auth', 'users') + '/changepwd';
+  let token = req.headers['x-access-token'] || req.headers['authorization'];
+  if (token.startsWith('Bearer ')) {
+    token = token.slice(7, token.length);
+  }
+  let cookie = 'auth='+token;
+  return new Promise(function(resolve, reject) {
+    request.post({
+      url: authServiceUrl,
+      headers: {
+        "content-type": "application/json",
+        'Cookie': cookie
+      },
+      json: {
+        "username":req.body.username,
+        "oldpassword": req.body.oldpassword,
+        "newpassword": req.body.newpassword,
+        "confirmpassword": req.body.confirmnewpassword
+      }
+    }, function(err, response, body) {
+      if (response.statusCode != 200) {
+        reject(new Error(err));
+      } else {
+        resolve(body);
+      }
+    });
+  });
 }
