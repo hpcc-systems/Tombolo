@@ -1,5 +1,5 @@
 import React, { Component } from "react";
-import { Modal, Tabs, Form, Input, Icon,  Select, Button, Table, AutoComplete, Tag, message, Drawer, Row, Col, Spin } from 'antd/lib';
+import { Modal, Tabs, Form, Input, Icon,  Select, Button, Table, AutoComplete, Tag, message, Drawer, Row, Col, Spin, Radio } from 'antd/lib';
 import ReactTable from "react-table";
 import "react-table/react-table.css";
 import FileRelations from "./FileRelations"
@@ -7,6 +7,7 @@ import DataProfileTable from "./DataProfileTable"
 import DataProfileHTML from "./DataProfileHTML"
 import AssociatedDataflows from "./AssociatedDataflows"
 import { authHeader, handleError } from "../common/AuthHeader.js"
+import EditableTable from "../common/EditableTable.js"
 import { AgGridReact } from 'ag-grid-react';
 import { hasEditPermission } from "../common/AuthUtil.js";
 import 'ag-grid-community/dist/styles/ag-grid.css';
@@ -16,7 +17,6 @@ const TabPane = Tabs.TabPane;
 const Option = Select.Option;
 
 const types = [
-    "",
     "Boolean",
     "Integer",
     "Unsigned",
@@ -26,7 +26,10 @@ const types = [
     "Varstring",
     "RrcordOf",
     "Enum"
-  ]
+];
+
+const layoutGrid=undefined;
+
 
 class FileDetails extends Component {
 
@@ -72,7 +75,7 @@ class FileDetails extends Component {
       qualifiedPath:"",
       consumer:"",
       supplier:"",
-      fileType:"",
+      fileType:"thor_file",
       isSuperFile:"",
       layout:[],
       licenses:[],
@@ -110,7 +113,7 @@ class FileDetails extends Component {
         qualifiedPath: '',
         consumer:'',
         supplier:'',
-        fileType: '',
+        fileType: 'thor_file',
         isSuperFile: '',
         layout: [],
         licenses: [],
@@ -190,7 +193,7 @@ class FileDetails extends Component {
             qualifiedPath: data.basic.qualifiedPath,
             consumer: data.basic.consumer,
             supplier: data.basic.supplier,
-            fileType: data.basic.fileType,
+            fileType: (data.basic.fileType == '' ? 'thor_file' : data.basic.fileType),
             isSuperFile: data.basic.isSuperFile,
             layout: data.file_layouts,
             licenses: data.file_licenses,
@@ -468,7 +471,7 @@ class FileDetails extends Component {
           qualifiedPath: fileInfo.pathMask,
           consumer: fileInfo.consumer,
           supplier: fileInfo.supplier,
-          fileType: fileInfo.fileType,
+          //fileType: fileInfo.fileType,
           isSuperFile: fileInfo.isSuperfile ? 'true' : 'false',
           layout: fileInfo.layout,
           fileFieldRelations: this.getFieldNames(fileInfo.layout),
@@ -571,23 +574,25 @@ class FileDetails extends Component {
   getFileData = (fileName, clusterId) => {
     var _self = this;
     var cluster = this.state.selectedCluster ? this.state.selectedCluster : clusterId;
-    fetch('/api/hpcc/read/getData?fileName='+fileName+'&clusterid='+cluster, {
-      headers: authHeader()
-    }).then(function(response) {
-        if(response.ok) {
-          return response.json();
+    if(cluster) {
+      fetch('/api/hpcc/read/getData?fileName='+fileName+'&clusterid='+cluster, {
+        headers: authHeader()
+      }).then(function(response) {
+          if(response.ok) {
+            return response.json();
+          }
+          handleError(response);
+      }).then(function(rows) {
+        if(rows.length > 0) {
+          _self.setState({
+            fileDataColHeaders: Object.keys(rows[0]),
+            fileDataContent: rows
+          });
         }
-        handleError(response);
-    }).then(function(rows) {
-      if(rows.length > 0) {
-        _self.setState({
-          fileDataColHeaders: Object.keys(rows[0]),
-          fileDataContent: rows
-        });
-      }
-    }).catch(error => {
-      console.log(error);
-    })
+      }).catch(error => {
+        console.log(error);
+      })
+    }
   }
 
   getFileProfile = (fileName) => {
@@ -632,8 +637,7 @@ class FileDetails extends Component {
       "dataflowId" : this.props.selectedDataflow.id
     };
     fileDetails.basic = file_basic;
-
-    fileDetails.layout = this.state.file.layout;
+    fileDetails.layout = this.layoutTable.getData();
     var selectedLicenses={};
     if(this.licenseGridApi && this.licenseGridApi.getSelectedNodes() != undefined) {
       selectedLicenses = this.licenseGridApi.getSelectedNodes().map(function(node) { return {"name" : node.data.name, "url": node.data.url} });
@@ -755,11 +759,12 @@ class FileDetails extends Component {
 
 
   onLayoutGridReady = (params) => {
-    let gridApi = params.api;
-    gridApi.sizeColumnsToFit();
     var _self=this, selectedDataTypes=[], compliance=[];
+    _self.layoutGrid = params.api;
+    _self.layoutGrid.sizeColumnsToFit();
+
     //populate the compliance info
-    gridApi.forEachNode(function(node, index) {
+    _self.layoutGrid.forEachNode(function(node, index) {
       if(node.data.data_types && node.data.data_types != null) {
         selectedDataTypes.push(node.data.data_types);
       } 
@@ -882,6 +887,22 @@ class FileDetails extends Component {
     }
   }
 
+  addLayoutRow = (e) => {
+    this.state.file.layout = [{'name':""}];
+    //this.layoutGrid.applyTransaction({add: [{'name':""}]})
+    this.layoutGrid.refreshCells();
+  }
+
+  fileTypeChange = (e) => {
+    this.setState({
+      ...this.state,
+      file: {
+        ...this.state.file,
+        fileType: e.target.value
+      }
+    });
+  }
+ 
   render() {
     const { getFieldDecorator } = this.props.form;
     const { visible, confirmLoading, sourceFiles, availableLicenses, selectedRowKeys, clusters, consumers, fileSearchSuggestions, fileDataContent, fileProfile, showFileProfile, scopeDisabled } = this.state;
@@ -923,109 +944,49 @@ class FileDetails extends Component {
 
     const layoutColumns = [
     {
-      headerName: 'Name',
-      field: 'name',
+      title: 'Name',
+      dataIndex: 'name',
       sort: "asc",
-    },
-    {
-      headerName: 'Type',
-      field: 'type',
-      editable: true,
-      cellEditor: "select",
-      cellEditorParams: {
-        values: types.sort()
-      },
-      cellRenderer: 'agGroupCellRenderer'
-    },
-    {
-      headerName: 'ECL Type',
-      field: 'eclType'      
-    },
-    {
-      headerName: 'Description',
-      field: 'description',
       editable: true
     },
     {
-      headerName: 'Required',
+      title: 'Type',
+      dataIndex: 'type',
       editable: true,
-      cellEditor: "agSelectCellEditor",
-      cellEditorParams: {
-        values: ["false", "true"]
-      },
-      valueGetter: function(params) {
-        return (params.data.required && params.data.required != undefined) ? params.data.required : "false";
-      },
-      valueSetter: function(params) {
-        var newVal = params.newValue;
-        var data = params.data;
-        if (data.required != newVal) {
-          data.required = newVal
-          return true;
-        } else {
-          return false;
-        }
+      celleditor: "select",
+      celleditorparams: {
+        values: types.sort()
       }
     },
     {
-      headerName: 'Display Size',
-      field: 'displaySize',
-      hide: true
+      title: 'ECL Type',
+      dataIndex: 'eclType',
+      editable: true      
     },
     {
-      headerName: 'Display Type',
-      field: 'displayType',
-      hide: true
+      title: 'Description',
+      dataIndex: 'description',
+      editable: true
     },
     {
-      headerName: 'Text Justification',
-      field: 'textJustification',
-      hide: true
-    },
-    {
-      headerName: 'Format',
-      field: 'format',
-      hide: true
-    },
-    {
-      headerName: 'Information Type',
-      field: 'data_types',
+      title: 'Required',
       editable: true,
-      cellEditor: "select",
-      cellEditorParams: {
+      dataIndex: 'required',
+      celleditor: "select",
+      celleditorparams: {
+        values: ["false", "true"]
+      }
+    },    
+    {
+      title: 'Information Type',
+      dataIndex: 'data_types',
+      editable: true,
+      celleditor: "select",
+      celleditorparams: {
         values: this.state.dataTypes.sort()
       }
     },
-    {
-      headerName: 'PCI',
-      field: 'isPCI',
-      hide: true,
-      editable: true,
-      cellEditor: "select",
-      cellEditorParams: {
-        values: ["true", "false"]
-      }
-    },
-    {
-      headerName: 'PII',
-      field: 'isPII',
-      hide: true,
-      editable: true,
-      cellEditor: "select",
-      cellEditorParams: {
-        values: ["true", "false"]
-      }
-    },
-    {
-      headerName: 'HIPAA',
-      field: 'isHIPAA',
-      hide: true,
-      editable: true,
-      cellEditor: "select",
-      cellEditorParams: {
-        values: ["true", "false"]
-      }
-    }];
+    ];
     const { complianceTags } = this.state;
     const licenseColumns = [{
       field: 'name',
@@ -1138,8 +1099,8 @@ class FileDetails extends Component {
       selectedRowKeys,
       onChange: this.onSelectedRowKeysChange
     };
-    //const modalHeight = !this.props.isNew ? "400px" : "500px";
-    const modalHeight = "520px";
+    //const modalHeight = !this.props.isNew ? "420px" : "550px";
+    const modalHeight = "565px";
 
     const editingAllowed = hasEditPermission(this.props.user);
 
@@ -1158,6 +1119,7 @@ class FileDetails extends Component {
         return null;
       }
     }
+
 
   //render only after fetching the data from the server
   if(!title && !this.props.selectedAsset && !this.props.isNew) {
@@ -1192,30 +1154,43 @@ class FileDetails extends Component {
           <TabPane tab="Basic" key="1">           
              <Form layout="vertical">             
               <div>
-              <Form.Item {...formItemLayout} label="Cluster">
-                 <Select placeholder="Select a Cluster" disabled={!editingAllowed} onChange={this.onClusterSelection} style={{ width: 190 }}>
-                  {clusters.map(cluster => <Option key={cluster.id}>{cluster.name}</Option>)}
-                </Select>
+              <Form.Item {...formItemLayout} label="Type">
+                <Radio.Group onChange={this.fileTypeChange} value={this.state.file.fileType}>
+                  <Radio value={'thor_file'}>Thor File</Radio>
+                  <Radio value={'csv'}>CSV</Radio>
+                  <Radio value={'json'}>JSON</Radio>
+                </Radio.Group>
               </Form.Item>
+              {this.state.file.fileType == 'thor_file' ? 
+                <React.Fragment>
+                  <Form.Item {...formItemLayout} label="Cluster">
+                     <Select placeholder="Select a Cluster" disabled={!editingAllowed} onChange={this.onClusterSelection} style={{ width: 190 }}>
+                      {clusters.map(cluster => <Option key={cluster.id}>{cluster.name}</Option>)}
+                    </Select>
+                  </Form.Item>
 
-              <Form.Item {...formItemLayout} label="File">
-                <AutoComplete
-                  className="certain-category-search"
-                  dropdownClassName="certain-category-search-dropdown"
-                  dropdownMatchSelectWidth={false}
-                  dropdownStyle={{ width: 300 }}
-                  size="large"
-                  style={{ width: '100%' }}
-                  dataSource={fileSearchSuggestions}
-                  onChange={(value) => this.searchFiles(value)}
-                  onSelect={(value) => this.onFileSelected(value)}
-                  placeholder="Search files"
-                  optionLabelProp="value"
-                  disabled={!editingAllowed}
-                >
-                  <Input id="autocomplete_field" suffix={this.state.autoCompleteSuffix} autoComplete="off"/>
-                </AutoComplete>
-              </Form.Item>
+                  <Form.Item {...formItemLayout} label="File">
+                    <AutoComplete
+                      className="certain-category-search"
+                      dropdownClassName="certain-category-search-dropdown"
+                      dropdownMatchSelectWidth={false}
+                      dropdownStyle={{ width: 300 }}
+                      size="large"
+                      style={{ width: '100%' }}
+                      dataSource={fileSearchSuggestions}
+                      onChange={(value) => this.searchFiles(value)}
+                      onSelect={(value) => this.onFileSelected(value)}
+                      placeholder="Search files"
+                      optionLabelProp="value"
+                      disabled={!editingAllowed}
+                    >
+                      <Input id="autocomplete_field" suffix={this.state.autoCompleteSuffix} autoComplete="off"/>
+                    </AutoComplete>
+                  </Form.Item> 
+                </React.Fragment>
+                : 
+                null}
+
               </div>
               <Form.Item {...formItemLayout} label="Title">
                 {getFieldDecorator('title', {
@@ -1250,11 +1225,11 @@ class FileDetails extends Component {
                       <Input id="file_path" name="qualifiedPath" onChange={this.onChange} defaultValue={qualifiedPath} value={qualifiedPath} placeholder="Path" disabled={!editingAllowed}/>
                   </Form.Item>
                 </Col>
-                <Col span={8} order={2}>
+                {/*<Col span={8} order={2}>
                   <Form.Item {...threeColformItemLayout} label="File Type">
                       <Input id="file_type" name="fileType" onChange={this.onChange} defaultValue={fileType} value={fileType} placeholder="File Type" disabled={!editingAllowed}/>
                   </Form.Item>
-                </Col>
+                </Col>*/}
               </Row>
 
               <Row type="flex">
@@ -1293,35 +1268,14 @@ class FileDetails extends Component {
            
           </TabPane>
           <TabPane tab="Layout" key="3">
-              <ComplianceInfo tags={complianceTags}/>
+              <ComplianceInfo tags={complianceTags}/>              
               <div
-                className="ag-theme-balham"
+                className="layout_tbl"
                 style={{
-                height: '415px',
                 width: '100%' }}
               >
-                <AgGridReact
-                  onCellValueChanged={this.dataTypechange}
-                  columnDefs={layoutColumns}
-                  rowData={layout}
-                  defaultColDef={{resizable: true, sortable: true, filter: true, flex: 1}}
-                  onGridReady={this.onLayoutGridReady}
-                  singleClickEdit={editingAllowed}
-                  groupSelectsChildren={true}
-                  groupSelectsFiltered={true}
-                  suppressAggFuncInHeader={true}
-                  suppressRowClickSelection={true}
-                  rowSelection= {'multiple'}
-                  getNodeChildDetails={getNodeChildDetails}
-                  >
-                </AgGridReact>
-              </div>
-              {/*<Table
-                columns={layoutColumns}
-                rowKey={record => record.name}
-                dataSource={layout}
-                pagination={{ pageSize: 10 }} scroll={{ y: 380 }}
-              />*/}
+                <EditableTable columns={layoutColumns} dataSource={layout} ref={node => (this.layoutTable = node)} fileType={this.state.file.fileType}/>                
+              </div>               
           </TabPane>
           <TabPane tab="Permissable Purpose" key="4">
             <InheritedLicenses relation={inheritedLicensing}/>

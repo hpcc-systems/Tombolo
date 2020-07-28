@@ -443,3 +443,26 @@ div.tooltip {
   webkit-box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
   word-wrap: break-word;
 }
+
+.editable-cell {
+  position: relative;
+}
+
+.editable-cell-value-wrap {
+  padding: 5px 12px;
+  cursor: pointer;
+}
+
+.editable-row:hover .editable-cell-value-wrap {
+  border: 1px solid #d9d9d9;
+  border-radius: 4px;
+  padding: 4px 11px;
+}
+
+.layout_tbl .ant-table-tbody > tr > td {
+  padding: 2px 2px;
+}
+
+.layout_tbl .ant-upload {
+  padding: 5px;
+}

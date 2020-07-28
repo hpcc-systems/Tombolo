@@ -189,6 +189,7 @@ router.get('/file_details', [
             results.basic = files;
             FileLayout.findAll({where:{"application_id":req.query.app_id, "file_id":req.query.file_id}}).then(function(fileLayouts) {
                 results.file_layouts = fileLayouts.filter(item => item.name != '__fileposition__');
+                console.log('layouts**********'+JSON.stringify(results.file_layouts))
                 FileLicense.findAll({where:{"application_id":req.query.app_id, "file_id":req.query.file_id}}).then(function(fileLicenses) {
                     results.file_licenses = fileLicenses;
                     FileRelation.findAll({where:{"application_id":req.query.app_id, "file_id":req.query.file_id}}).then(function(fileRelations) {
@@ -247,7 +248,7 @@ router.post('/saveFile', [
           }
           var fileLayoutToSave = hpccUtil.updateCommonData(req.body.file.layout, fieldsToUpdate);
           return FileLayout.bulkCreate(
-              fileLayoutToSave, {updateOnDuplicate: ["name", "type", "displayType", "displaySize", "textJustification", "format","data_types", "isPCI", "isPII", "isHIPAA", "description", "required", "children"]}
+              fileLayoutToSave, {updateOnDuplicate: ["name", "type", "eclType", "data_types", "description", "required", "children"]}
           )
       }).then(function(fileLayout) {
           FileLicense.destroy(
@@ -671,7 +672,7 @@ router.get('/dataTypes', (req, res) => {
   try {
       var results = [];
       DataTypes.findAll().then(function(data_types) {
-          results.push("");
+          //results.push("");
           data_types.forEach(function(doc, idx) {
               results.push(doc.name);
           });
