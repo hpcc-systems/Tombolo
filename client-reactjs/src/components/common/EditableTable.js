@@ -1,6 +1,7 @@
 import React, { useContext, useState, useEffect, useRef } from 'react';
 import { Table, Input, Button, Popconfirm, Form, Select, Upload, message, Icon } from 'antd';
 import Papa from 'papaparse';
+import {omitDeep} from './CommonUtil';
 
 const EditableContext = React.createContext();
 const Option = Select.Option;
@@ -64,7 +65,6 @@ class EditableCell extends React.Component {
     ) : (
       <div
         className="editable-cell-value-wrap"
-        style={{ paddingRight: 24 }}
         onClick={this.toggleEdit}
       >
         {children}
@@ -153,11 +153,11 @@ class EditableTable extends React.Component {
       })
     }
     this.setState({ dataSource: newData });
-  };
+  };  
 
-  getData = () => {
-    console.log('getData: '+this.state.dataSource)    
-    return this.state.dataSource
+  getData = () => {    
+    let omitResults = omitDeep(this.state.dataSource, 'id')
+    return omitResults;
   }
 
   render() {
