@@ -12,6 +12,7 @@ import { connect } from 'react-redux';
 import { hasAdminRole, hasEditPermission } from "../common/AuthUtil.js";
 
 const { Sider, Content } = Layout;
+const { SubMenu } = Menu;
 
 class LeftNav extends Component {
   state = {
@@ -65,21 +66,37 @@ class LeftNav extends Component {
           <nav className="d-md-block bg-dark sidebar">
           <div className="sidebar-sticky">
             <ul className="nav flex-column">              
-              <li className="nav-item" >
-                <NavLink to={"/"+applicationId+"/dataflow"} className="nav-link" data-toggle="popover" tabIndex="4"><i className="fa fa-lg fa-clock-o"></i> <span className={this.state.collapsed ? "d-none" : ""}>Data Flow</span></NavLink>
+              <li className="nav-item">
+                <NavLink to={"/"+applicationId+"/data-dictionary"} className="nav-link" data-toggle="popover" tabIndex="1"><i className="fa fa-lg fa-table"></i> <span className={this.state.collapsed ? "d-none" : ""}>Data Dictionary</span></NavLink>
               </li>
-              <li className="nav-item" >
-                <NavLink exact to={"/"+applicationId+"/files"} className="nav-link" data-toggle="popover" tabIndex="1"><i className="fa fa-lg fa-file"></i> <span className={this.state.collapsed ? "d-none" : ""}>Files</span></NavLink>
+              <li class="nav-item dropdown">
+                <a class="nav-link dropdown-toggle" href="#"><i className="fa fa-lg fa-cubes"></i> <span className={this.state.collapsed ? "d-none" : ""}>Assets</span></a>
+                <ul class="list-unstyled bg-dark text-light submenu level-1">
+                  <li className="nav-item"><NavLink exact to={"/"+applicationId+"/files"} className="nav-link" data-toggle="popover" tabIndex="2"><i className="fa fa-lg fa-file"></i> <span className={this.state.collapsed ? "d-none" : ""}>Files</span></NavLink></li>
+                  <li className="nav-item"><NavLink exact to={"/"+applicationId+"/index"} className="nav-link" data-toggle="popover" tabIndex="3"><i className="fa fa-lg fa-indent"></i> <span className={this.state.collapsed ? "d-none" : ""}>Index</span></NavLink></li>
+                  <li className="nav-item"><NavLink exact to={"/"+applicationId+"/queries"} className="nav-link" data-toggle="popover" tabIndex="4"><i className="fa fa-lg fa-search"></i> <span className={this.state.collapsed ? "d-none" : ""}>API/Gateway/Queries</span></NavLink></li>
+                  <li className="nav-item"><NavLink to={"/"+applicationId+"/jobs"} className="nav-link" data-toggle="popover" tabIndex="5"><i className="fa fa-lg fa-clock-o"></i> <span className={this.state.collapsed ? "d-none" : ""}>Function/Job</span></NavLink></li>
+              </ul>
               </li>
               {/*<li className="nav-item">
-                <NavLink exact to={"/"+applicationId+"/index"} className="nav-link" data-toggle="popover" tabIndex="2"><i className="fa fa-lg fa-indent"></i> <span className={this.state.collapsed ? "d-none" : ""}>Index</span></NavLink>
-              </li>*/}              
-              <li className="nav-item">
-                <NavLink to={"/"+applicationId+"/queries"} className="nav-link" data-toggle="popover" tabIndex="3"><i className="fa fa-lg fa-search"></i> <span className={this.state.collapsed ? "d-none" : ""}>Queries</span></NavLink>
+                <NavLink to={"/"+applicationId+"/api"} className="nav-link" data-toggle="popover" tabIndex="4"><i className="fa fa-lg fa-rocket"></i> <span className={this.state.collapsed ? "d-none" : ""}>API</span></NavLink>
               </li>
-              <li className="nav-item" >
-                <NavLink to={"/"+applicationId+"/dataflowinstances"} className="nav-link" data-toggle="popover" tabIndex="4"><i className="fa fa-lg fa-microchip"></i> <span className={this.state.collapsed ? "d-none" : ""}>Instances</span></NavLink>
-              </li>              
+              <li className="nav-item">
+                <NavLink to={"/"+applicationId+"/queries"} className="nav-link" data-toggle="popover" tabIndex="5"><i className="fa fa-lg fa-search"></i> <span className={this.state.collapsed ? "d-none" : ""}>Queries</span></NavLink>
+              </li>*/}
+              <li class="nav-item dropdown">
+                <a class="nav-link dropdown-toggle" href="#"><i className="fa fa-lg fa-random"></i> <span className={this.state.collapsed ? "d-none" : ""}>Workflow</span></a>
+                <ul class="list-unstyled bg-dark text-light submenu level-1">
+                <li className="nav-item" >
+                  <NavLink to={"/"+applicationId+"/dataflow"} className="nav-link" data-toggle="popover" tabIndex="6"><i className="fa fa-lg fa-clock-o"></i> <span className={this.state.collapsed ? "d-none" : ""}>Definitions</span></NavLink>
+                </li>
+                <li className="nav-item" >
+                  <NavLink to={"/"+applicationId+"/dataflowinstances"} className="nav-link" data-toggle="popover" tabIndex="7"><i className="fa fa-lg fa-microchip"></i> <span className={this.state.collapsed ? "d-none" : ""}>Instances</span></NavLink>
+                </li>              
+              </ul>
+              </li>
+
+                                      
               {/*<li className="nav-item" >
                 <NavLink to={"/"+applicationId+"/chart"} className="nav-link" data-toggle="popover" tabIndex="5"><i className="fa fa-lg fa-bar-chart"></i> <span className={this.state.collapsed ? "d-none" : ""}>Report</span></NavLink>
               </li>*/}
@@ -117,10 +134,10 @@ class LeftNav extends Component {
                 <NavLink to={"/admin/users"} className="nav-link"><i className="fa fa-lg fa-desktop"></i><span className={this.state.collapsed ? "d-none" : ""}> Users</span></NavLink>
               </li>
               <li className="nav-item">
-                <NavLink to={"/admin/consumers"} className="nav-link"><i className='fa fa-lg fa-user-circle'></i><span className={this.state.collapsed ? "d-none" : ""}> Asset Contacts</span></NavLink>
+                <NavLink to={"/admin/consumers"} className="nav-link"><i className='fa fa-lg fa-user-circle'></i><span className={this.state.collapsed ? "d-none" : ""}> Collaborator</span></NavLink>
               </li>
               <li className="nav-item">
-                <NavLink to={"/admin/controlsAndRegulations"} className="nav-link"><i className='fa fa-lg fa-address-card-o'></i><span className={this.state.collapsed ? "d-none" : ""}> Controls & Regulations</span></NavLink>
+                <NavLink to={"/admin/controlsAndRegulations"} className="nav-link"><i className='fa fa-lg fa-address-card-o'></i><span className={this.state.collapsed ? "d-none" : ""}> Compliance</span></NavLink>
               </li>
             </ul>
             </React.Fragment>

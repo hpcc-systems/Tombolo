@@ -470,3 +470,14 @@ div.tooltip {
 .layout_tbl .editable-cell-value-wrap {
   padding: 0px;
 }
+
+
+.dropdown .submenu li {
+  display: block;
+  padding-left: 15px;
+}
+.dropdown .submenu li a {
+  display: block;
+  white-space: nowrap;
+  text-decoration: none;
+}

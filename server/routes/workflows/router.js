@@ -260,13 +260,14 @@ var consumerGroup = new ConsumerGroup(kafkaConsumerOptions, 'Dataflow');
 consumerGroup.on('message', (response) => {
 
   console.log(response.value);
-  let dataflowWhereClause, message;
+  let dataflowWhereClause={}, message;
   try {
     message = JSON.parse(response.value);
     if(message.dataflowId) {
-      dataflowWhereClause = '{"id":"'+message.dataflowId+'"}';
+      dataflowWhereClause.application_id= message.applicationid;
+      dataflowWhereClause.id = message.dataflowid;
     } else {
-      dataflowWhereClause = '{"applicaton_id":"'+message.applicationid+'"}';
+      dataflowWhereClause.application_id= message.applicationid;
     }
   }catch(err) {
     console.log('invalid json: '+err)
@@ -276,7 +277,7 @@ consumerGroup.on('message', (response) => {
   if(dataflowWhereClause) {
     console.log('dataflowWhereClause: '+dataflowWhereClause);
     console.log('{where:'+ dataflowWhereClause+'}');
-    Dataflow.findOne({where: {'application_id':message.applicationid}}).then((dataflow) => {
+    Dataflow.findOne({where: dataflowWhereClause}).then((dataflow) => {
       Workflow.findOrCreate({
         where:{application_id:message.applicationid, dataflowId:dataflow.id},      
         defaults:{

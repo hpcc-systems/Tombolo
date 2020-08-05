@@ -120,7 +120,7 @@ function AddDataflow({isShowing, toggle, applicationId, onDataFlowUpdated, selec
 	  <React.Fragment>
 	  <span style={{ marginLeft: "auto", paddingTop:"5px"}}>
 	    <Tooltip placement="bottom" title={"Click to add a new file"}>
-	      <Button className="btn btn-secondary btn-sm" onClick={() => openAddDataflowDlg()}><i className="fa fa-plus"></i>Add Dataflow</Button>
+	      <Button className="btn btn-secondary btn-sm" onClick={() => openAddDataflowDlg()}><i className="fa fa-plus"></i>Add</Button>
 	    </Tooltip>
 	  </span>
 	  <div>

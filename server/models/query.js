@@ -12,6 +12,7 @@ module.exports = (sequelize, DataTypes) => {
     title: DataTypes.STRING,
     name: DataTypes.STRING,
     description: DataTypes.STRING,
+    url: DataTypes.STRING,
     gitRepo: DataTypes.STRING,
     primaryService: DataTypes.STRING,
     backupService: DataTypes.STRING,

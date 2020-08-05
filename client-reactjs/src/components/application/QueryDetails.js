@@ -1,5 +1,5 @@
 import React, { Component } from "react";
-import { Modal, Tabs, Form, Input, Icon,  Select, AutoComplete, Spin, message, Button } from 'antd/lib';
+import { Modal, Tabs, Form, Input, Icon,  Select, AutoComplete, Spin, message, Button, Radio } from 'antd/lib';
 import "react-table/react-table.css";
 import { authHeader, handleError } from "../common/AuthHeader.js"
 import { hasEditPermission } from "../common/AuthUtil.js";
@@ -34,10 +34,11 @@ class QueryDetails extends Component {
       title:"",
       name:"",
       description:"",
+      url: "",
       primaryService:"",
       backupService:"",
       gitrepo:"",
-      type:"",
+      type:"roxie_query",
       input: [],
       output: []
     }
@@ -69,6 +70,8 @@ class QueryDetails extends Component {
             title: data.title,
             name: (data.name == '' ? data.title : data.name),
             description: data.description,
+            type: data.type,
+            url: data.url,
             primaryService: data.primaryService,
             backupService: data.backupService,
             input: data.query_fields.filter(field => field.field_type == 'input'),
@@ -206,6 +209,7 @@ class QueryDetails extends Component {
           title: selectedSuggestion,
           name: selectedSuggestion,
           description: '',
+          url: '',
           path: '',
           input: queryInfo.request,
           output: queryInfo.response
@@ -280,6 +284,7 @@ class QueryDetails extends Component {
         "title" : this.state.query.title,
         "name" : this.state.query.name,
         "description" : this.state.query.description,
+        "url" : this.state.query.url,
         "gitRepo" : this.state.query.gitrepo,
         "primaryService" : this.state.query.primaryService,
         "backupService" : this.state.query.backupService,
@@ -322,6 +327,17 @@ class QueryDetails extends Component {
     gridApi.sizeColumnsToFit();
   }
 
+  queryTypeChange = (e) => {
+    this.setState({
+      ...this.state,
+      query: {
+        ...this.state.query,
+        type: e.target.value
+      }
+    });
+  }
+
+
   render() {
     const {getFieldDecorator} = this.props.form;
     const { visible, confirmLoading, sourceFiles, availableLicenses, selectedRowKeys, clusters, querySearchSuggestions } = this.state;
@@ -346,7 +362,7 @@ class QueryDetails extends Component {
     }];
 
 
-    const {name, title, description, primaryService, backupService, type, input, output, gitrepo} = this.state.query;
+    const {name, title, description, primaryService, backupService, type, input, output, gitrepo, url} = this.state.query;
     const rowSelection = {
       selectedRowKeys,
       onChange: this.onSelectedRowKeysChange
@@ -361,7 +377,7 @@ class QueryDetails extends Component {
     return (
       <div>
         <Modal
-          title="Query Details"
+          title="API/Gateway/Query Details"
           visible={visible}
           onOk={this.handleOk}
           confirmLoading={confirmLoading}
@@ -386,33 +402,41 @@ class QueryDetails extends Component {
            <Form layout="vertical">
             {/*this.props.isNewFile ?*/}
             <div>
-            <Form.Item {...formItemLayout} label="Cluster">
-               <Select placeholder="Select a Cluster" onChange={this.onClusterSelection} style={{ width: 190 }} disabled={!editingAllowed}>
-                {clusters.map(cluster => <Option key={cluster.id}>{cluster.name}</Option>)}
-              </Select>
-            </Form.Item>
+              <Form.Item {...formItemLayout} label="Type">
+                <Radio.Group onChange={this.queryTypeChange} value={type}>
+                  <Radio value={'roxie_query'}>Roxie Query</Radio>
+                  <Radio value={'api'}>API/Gateway</Radio>
+                </Radio.Group>
+              </Form.Item>
+              {type == 'roxie_query' ?   
+                <React.Fragment>
+                <Form.Item {...formItemLayout} label="Cluster">
+                   <Select placeholder="Select a Cluster" onChange={this.onClusterSelection} style={{ width: 190 }} disabled={!editingAllowed}>
+                    {clusters.map(cluster => <Option key={cluster.id}>{cluster.name}</Option>)}
+                  </Select>
+                </Form.Item>
 
-            <Form.Item {...formItemLayout} label="Query">
-              <AutoComplete
-                className="certain-category-search"
-                dropdownClassName="certain-category-search-dropdown"
-                dropdownMatchSelectWidth={false}
-                dropdownStyle={{ width: 300 }}
-                size="large"
-                style={{ width: '100%' }}
-                dataSource={querySearchSuggestions}
-                onChange={(value) => this.searchQueries(value)}
-                onSelect={(value) => this.onQuerySelected(value)}
-                placeholder="Search queries"
-                optionLabelProp="value"
-                disabled={!editingAllowed}
-              >
-                <Input id="autocomplete_field" suffix={this.state.autoCompleteSuffix} autocomplete="off"/>
-              </AutoComplete>
-            </Form.Item>
-            </div>
-              {/*: null
-            }*/}
+                <Form.Item {...formItemLayout} label="Query">
+                  <AutoComplete
+                    className="certain-category-search"
+                    dropdownClassName="certain-category-search-dropdown"
+                    dropdownMatchSelectWidth={false}
+                    dropdownStyle={{ width: 300 }}
+                    size="large"
+                    style={{ width: '100%' }}
+                    dataSource={querySearchSuggestions}
+                    onChange={(value) => this.searchQueries(value)}
+                    onSelect={(value) => this.onQuerySelected(value)}
+                    placeholder="Search queries"
+                    optionLabelProp="value"
+                    disabled={!editingAllowed}
+                  >
+                    <Input id="autocomplete_field" suffix={this.state.autoCompleteSuffix} autoComplete="off"/>
+                  </AutoComplete>
+                </Form.Item>
+                </React.Fragment>
+              : null}
+            </div>              
              <Form.Item {...formItemLayout} label="Name">
                 <Input id="query_name" name="name" onChange={this.onChange} value={name} defaultValue={name} placeholder="Name" disabled={true} disabled={!editingAllowed}/>
             </Form.Item>
@@ -422,18 +446,21 @@ class QueryDetails extends Component {
             <Form.Item {...formItemLayout} label="Description">
                 <Input id="query_desc" name="description" onChange={this.onChange} value={description} defaultValue={description} placeholder="Description" disabled={!editingAllowed}/>
             </Form.Item>
+            <Form.Item {...formItemLayout} label="URL">
+                <Input id="query_url" name="url" onChange={this.onChange} value={url} defaultValue={url} placeholder="URL" disabled={!editingAllowed}/>
+            </Form.Item>
             <Form.Item {...formItemLayout} label="Git Repo">
                 <Input id="query_gitrepo" name="gitrepo" onChange={this.onChange} value={gitrepo} defaultValue={gitrepo} placeholder="Git Repo URL" disabled={!editingAllowed}/>
             </Form.Item>
-            <Form.Item {...formItemLayout} label="Primary Service">
+            {/*<Form.Item {...formItemLayout} label="Primary Service">
                 <Input id="query_primary_svc" name="primaryService" onChange={this.onChange} value={primaryService} defaultValue={primaryService} placeholder="Primary Service" disabled={!editingAllowed}/>
             </Form.Item>
             <Form.Item {...formItemLayout} label="Backup Service">
                 <Input id="query_bkp_svc" name="backupService" onChange={this.onChange} value={backupService} defaultValue={backupService} placeholder="Backup Service" disabled={!editingAllowed}/>
-            </Form.Item>
-            <Form.Item {...formItemLayout} label="Type">
+            </Form.Item>*/}
+            {/*<Form.Item {...formItemLayout} label="Type">
                 <Input id="type" name="type" onChange={this.onChange} value={type} defaultValue={type} placeholder="Query Type" disabled={!editingAllowed}/>
-            </Form.Item>
+            </Form.Item>*/}
           </Form>
 
           </TabPane>

@@ -100,7 +100,7 @@ class FileList extends Component {
           {editingAllowed ? 
             <span style={{ marginLeft: "auto", paddingTop:"5px"}}>
               <Tooltip placement="bottom" title={"Click to add a new file"}>
-                <Button className="btn btn-secondary btn-sm" onClick={() => this.openAddFileDlg()}><i className="fa fa-plus"></i>Add File</Button>
+                <Button className="btn btn-secondary btn-sm" onClick={() => this.openAddFileDlg()}><i className="fa fa-plus"></i>Add</Button>
               </Tooltip>
               <Tooltip placement="left" title={"Click to export the ECL schema for this application"}>
                 {/*<Button type="primary" style={{marginLeft: "10px"}} icon="download" onClick={() => this.handleSchemaExport()}>Export Schema</Button>*/}

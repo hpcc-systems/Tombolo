@@ -12,6 +12,7 @@ import {PrivateRoute} from "./components/common/PrivateRoute";
 import {LeftNav} from "./components/layout/LeftNav";
 import AssetDetails from "./components/application/AssetDetails";
 import {FileList} from "./components/application/FileList";
+import {JobList} from "./components/application/JobList";
 import {IndexList} from "./components/application/IndexList";
 import Dashboard from "./components/application/Dashboard";
 import {QueriesList} from "./components/application/QueriesList";
@@ -65,6 +66,7 @@ class App extends React.Component {
                                   <PrivateRoute path="/details/:assetType/:applicationId/:fileId" component={AssetDetails} />
                                   <PrivateRoute exact path="/:applicationId/files" component={FileList} />
                                   <PrivateRoute path="/files" component={FileList} />
+                                  <PrivateRoute path="/:applicationId/jobs" component={JobList} />
                                   <PrivateRoute exact path="/:applicationId/index" component={IndexList}/>
                                   <PrivateRoute path="/index" component={IndexList}/>
                                   <PrivateRoute path="/:applicationId/queries" component={QueriesList}/>

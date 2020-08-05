@@ -49,7 +49,8 @@ class JobList extends Component {
   }
 
   componentDidMount() {
-    //this.fetchDataAndRenderTable();
+    console.log('componentDidMount...Jobs')
+    this.fetchDataAndRenderTable();
   }
 
   openAddJobDlg = () => {
@@ -88,8 +89,8 @@ class JobList extends Component {
 
   fetchDataAndRenderTable() {
     var _self=this;
-    //fetch("/api/job/job_list?app_id="+this.state.applicationId, {
-    fetch("/api/app/read/assets?app_id="+this.state.applicationId, {
+    fetch("/api/job/job_list?app_id="+this.state.applicationId, {
+    //fetch("/api/app/read/assets?app_id="+this.state.applicationId, {
       headers: authHeader()
     })
     .then((response) => {
@@ -259,24 +260,14 @@ class JobList extends Component {
       <div>
         <div className="d-flex justify-content-end" style={{paddingTop:"55px", margin: "5px"}}>
           <BreadCrumbs applicationId={this.state.applicationId} applicationTitle={this.state.applicationTitle}/>
-          <span style={{ marginLeft: "auto"}}>
-            <Radio.Group defaultValue="chart" buttonStyle="solid" style={{padding: "10px"}} onChange={this.handleToggleView}>
-              <Tooltip placement="bottom" title={"Tree View"}><Radio.Button value="chart"><Icon type="cluster" /></Radio.Button></Tooltip>
-              <Tooltip placement="bottom" title={"Tabular View"}><Radio.Button value="grid"><Icon type="bars" /></Radio.Button></Tooltip>
-            </Radio.Group>
-            {<AddDataflow applicationId={this.state.applicationId} />}
-          </span>
         </div>
         <div id="jobs">
-          {this.state.tableView ?
             <Table
               columns={jobColumns}
               rowKey={record => record.id}
               dataSource={this.state.assets}
               pagination={{ pageSize: 10 }} scroll={{ y: 460 }}
             />
-          : <Graph applicationId={this.state.applicationId} selectedDataflow={this.state.selectedDataflow} graphContainer="graph" sidebarContainer="sidebar"/>
-          }
 
           {this.state.openFileDetailsDialog ?
             <FileDetailsForm
@@ -316,11 +307,7 @@ class JobList extends Component {
                   selectedQuery={this.state.selectedQuery}
                   onRefresh={this.handleRefresh}
                   onClose={this.closeQueryDlg}/> : null}
-        </div>
-
-        <div id="dataflow-list">
-          <DataflowTable applicationId={this.state.applicationId} onSelectDataflow={this.onSelectDataflow}/>
-        </div>
+        </div>        
       </div>
   )
   }

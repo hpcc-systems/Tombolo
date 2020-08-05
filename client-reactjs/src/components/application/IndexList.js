@@ -65,7 +65,7 @@ class IndexList extends Component {
         <BreadCrumbs applicationId={this.state.applicationId} applicationTitle={this.state.applicationTitle}/>
         <span style={{ marginLeft: "auto" }}>
         <Tooltip placement="bottom" title={"Click to add a new index"}>
-          <Button className="btn btn-secondary btn-sm" onClick={() => this.openAddIndexDlg()}><i className="fa fa-plus"></i>Add Index</Button>
+          <Button className="btn btn-secondary btn-sm" onClick={() => this.openAddIndexDlg()}><i className="fa fa-plus"></i>Add</Button>
         </Tooltip>
         </span>
 

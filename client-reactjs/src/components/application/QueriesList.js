@@ -67,7 +67,7 @@ class QueriesList extends Component {
           {editingAllowed ? 
             <span style={{ marginLeft: "auto"}}>
               <Tooltip placement="bottom" title={"Click to add a new query"}>
-                <Button className="btn btn-secondary btn-sm" onClick={() => this.openAddqueryDlg()}><i className="fa fa-plus"></i>Add Query</Button>
+                <Button className="btn btn-secondary btn-sm" onClick={() => this.openAddqueryDlg()}><i className="fa fa-plus"></i>Add</Button>
               </Tooltip>
             </span>
           : null}
