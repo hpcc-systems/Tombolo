@@ -69,9 +69,9 @@ class LeftNav extends Component {
               <li className="nav-item">
                 <NavLink to={"/"+applicationId+"/data-dictionary"} className="nav-link" data-toggle="popover" tabIndex="1"><i className="fa fa-lg fa-table"></i> <span className={this.state.collapsed ? "d-none" : ""}>Data Dictionary</span></NavLink>
               </li>
-              <li class="nav-item dropdown">
-                <a class="nav-link dropdown-toggle" href="#"><i className="fa fa-lg fa-cubes"></i> <span className={this.state.collapsed ? "d-none" : ""}>Assets</span></a>
-                <ul class="list-unstyled bg-dark text-light submenu level-1">
+              <li className="nav-item dropdown">
+                <a className="nav-link dropdown-toggle" href="#"><i className="fa fa-lg fa-cubes"></i> <span className={this.state.collapsed ? "d-none" : ""}>Assets</span></a>
+                <ul className="list-unstyled bg-dark text-light submenu level-1">
                   <li className="nav-item"><NavLink exact to={"/"+applicationId+"/files"} className="nav-link" data-toggle="popover" tabIndex="2"><i className="fa fa-lg fa-file"></i> <span className={this.state.collapsed ? "d-none" : ""}>Files</span></NavLink></li>
                   <li className="nav-item"><NavLink exact to={"/"+applicationId+"/index"} className="nav-link" data-toggle="popover" tabIndex="3"><i className="fa fa-lg fa-indent"></i> <span className={this.state.collapsed ? "d-none" : ""}>Index</span></NavLink></li>
                   <li className="nav-item"><NavLink exact to={"/"+applicationId+"/queries"} className="nav-link" data-toggle="popover" tabIndex="4"><i className="fa fa-lg fa-search"></i> <span className={this.state.collapsed ? "d-none" : ""}>API/Gateway/Queries</span></NavLink></li>
@@ -84,9 +84,9 @@ class LeftNav extends Component {
               <li className="nav-item">
                 <NavLink to={"/"+applicationId+"/queries"} className="nav-link" data-toggle="popover" tabIndex="5"><i className="fa fa-lg fa-search"></i> <span className={this.state.collapsed ? "d-none" : ""}>Queries</span></NavLink>
               </li>*/}
-              <li class="nav-item dropdown">
-                <a class="nav-link dropdown-toggle" href="#"><i className="fa fa-lg fa-random"></i> <span className={this.state.collapsed ? "d-none" : ""}>Workflow</span></a>
-                <ul class="list-unstyled bg-dark text-light submenu level-1">
+              <li className="nav-item dropdown">
+                <a className="nav-link dropdown-toggle" href="#"><i className="fa fa-lg fa-random"></i> <span className={this.state.collapsed ? "d-none" : ""}>Workflow</span></a>
+                <ul className="list-unstyled bg-dark text-light submenu level-1">
                 <li className="nav-item" >
                   <NavLink to={"/"+applicationId+"/dataflow"} className="nav-link" data-toggle="popover" tabIndex="6"><i className="fa fa-lg fa-clock-o"></i> <span className={this.state.collapsed ? "d-none" : ""}>Definitions</span></NavLink>
                 </li>

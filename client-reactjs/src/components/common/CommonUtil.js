@@ -18,4 +18,16 @@ let omitDeep = (value, key) => {
   return value
 }
 
-export {omitDeep};
+const eclTypes = [
+    "Boolean",
+    "Integer",
+    "Unsigned",
+    "Real",
+    "Decimal",
+    "String",
+    "Varstring",
+    "RrcordOf",
+    "Enum"
+];
+
+export {omitDeep, eclTypes};

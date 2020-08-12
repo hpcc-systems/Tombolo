@@ -10,23 +10,12 @@ import { authHeader, handleError } from "../common/AuthHeader.js"
 import EditableTable from "../common/EditableTable.js"
 import { AgGridReact } from 'ag-grid-react';
 import { hasEditPermission } from "../common/AuthUtil.js";
+import {eclTypes} from '../common/CommonUtil';
 import 'ag-grid-community/dist/styles/ag-grid.css';
 import 'ag-grid-community/dist/styles/ag-theme-balham.css';
 
 const TabPane = Tabs.TabPane;
 const Option = Select.Option;
-
-const types = [
-    "Boolean",
-    "Integer",
-    "Unsigned",
-    "Real",
-    "Decimal",
-    "String",
-    "Varstring",
-    "RrcordOf",
-    "Enum"
-];
 
 const layoutGrid=undefined;
 
@@ -955,7 +944,7 @@ class FileDetails extends Component {
       editable: true,
       celleditor: "select",
       celleditorparams: {
-        values: types.sort()
+        values: eclTypes.sort()
       }
     },
     {

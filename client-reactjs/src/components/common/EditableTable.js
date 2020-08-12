@@ -28,12 +28,27 @@ class EditableCell extends React.Component {
     });
   };
 
-  save = e => {
+  saveSelect = e => {
     const { record, handleSave, dataIndex } = this.props;
     let dataValueObj = {};
     dataValueObj[dataIndex] = e;
-    this.form.setFieldsValue(dataValueObj);
+    this.form.setFieldsValue(dataValueObj);    
     this.form.validateFields({force: true}, (error, values) => {
+      console.log(values)
+      if (error && error[e.currentTarget.id]) {
+        return;
+      }
+      this.toggleEdit();
+      handleSave({ ...record, ...values });
+    });
+  };
+
+  saveText = e => {
+    const { record, handleSave, dataIndex } = this.props;
+    let dataValueObj = {};
+    dataValueObj[dataIndex] = e;
+    this.form.validateFields({force: true}, (error, values) => {
+      console.log(values)
       if (error && error[e.currentTarget.id]) {
         return;
       }
@@ -57,9 +72,9 @@ class EditableCell extends React.Component {
             },
           ],
           initialValue: record[dataIndex],
-        }) (celleditor == 'select' ? <Select ref={node => (this.input = node)} placeholder="Select" onChange={this.save} style={{ width: 170 }} >
+        }) (celleditor == 'select' ? <Select ref={node => (this.input = node)} placeholder="Select" onChange={this.saveSelect} style={{ width: 170 }} >
           {celleditorparams.values.map(cellEditorParam => <Option key={cellEditorParam} value={cellEditorParam}>{cellEditorParam}</Option>)}
-          </Select> : <Input ref={node => (this.input = node)} onPressEnter={this.save} onBlur={this.save} />)}
+          </Select> : <Input ref={node => (this.input = node)} onPressEnter={this.saveText} onBlur={this.saveText} />)}
       </Form.Item>
       </Form>
     ) : (
@@ -99,7 +114,7 @@ class EditableTable extends React.Component {
   constructor(props) {
     super(props);
     this.columns = this.props.columns;
-
+    console.log(this.props.dataSource)
     this.state = {
       dataSource: this.props.dataSource,
       count: this.props.dataSource.length,
@@ -115,7 +130,7 @@ class EditableTable extends React.Component {
     const { count, dataSource } = this.state;
     const newData = {
       id: count,
-      name: ``
+      name: ''
     };
     this.setState({
       dataSource: [...dataSource, newData],
@@ -152,6 +167,7 @@ class EditableTable extends React.Component {
         ...row,
       })
     }
+    console.log(JSON.stringify(newData));
     this.setState({ dataSource: newData });
   };  
 
@@ -257,20 +273,24 @@ class EditableTable extends React.Component {
           bordered
           dataSource={dataSource}
           columns={columns}
-          pagination={false} scroll={{ y: 360 }}
+          pagination={false} scroll={{ y: 210 }}
           size="small"
         />
-        <div style={{ paddingTop: "5px" }}>
+        <div style={{ padding: "5px" }}>
+          <span style={{paddingRight: "5px"}}>
           <Button onClick={this.handleAdd} type="default" >
             Add a row
           </Button>
-          {(this.props.fileType == 'csv' || this.props.fileType == 'json') ? 
-            <Upload {...fileUploadProps}>
-            <Button >
-              <Icon type="upload" /> Upload a sample file
-            </Button>
-            </Upload>
-          : null }
+          </span>
+          <span>
+            {(this.props.fileType == 'csv' || this.props.fileType == 'json') ? 
+              <Upload {...fileUploadProps}>
+              <Button >
+                <Icon type="upload" /> Upload a sample file
+              </Button>
+              </Upload>
+            : null }
+          </span>  
         </div>  
       </div>
     );
