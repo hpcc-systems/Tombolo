@@ -89,10 +89,11 @@ router.post('/saveJob', [
       )
     }).then(function(jobFile) {
       var jobParamsToSave = updateCommonData(req.body.params, fieldsToUpdate);
-      return JobParam.bulkCreate(
-          jobParamsToSave,
-          {updateOnDuplicate: ["name", "type"]}
-      )
+      JobParam.destroy({where:{application_id:applicationId, job_id: jobId}}).then((deleted) => {
+        return JobParam.bulkCreate(
+          jobParamsToSave
+        )        
+      })
     }).then(function(jobParam) {
         if(req.body.autoCreateFiles) {
           let fieldsToUpdate={}, promises=[];
@@ -192,7 +193,7 @@ router.get('/job_list', [
   }
   console.log("[job list/read.js] - Get job list for app_id = " + req.query.app_id);
   try {
-    Job.findAll({where:{"application_Id":req.query.app_id}}).then(function(jobs) {
+    Job.findAll({where:{"application_Id":req.query.app_id}, order: [['createdAt', 'DESC']]}).then(function(jobs) {
         res.json(jobs);
     })
     .catch(function(err) {

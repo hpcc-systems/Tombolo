@@ -301,9 +301,9 @@ function getIndexColumns(cluster, indexName) {
 	      	if(indexColumns != undefined) {
 	      		indexColumns.forEach(function(column) {
 				    if(column.IsKeyedColumn) {
-				    	keyedColumns.push(column);
+				    	keyedColumns.push({'id':column.ColumnID, 'name':column.ColumnLabel, 'type': column.ColumnType, 'eclType':column.ColumnEclType});
 					} else if(!column.IsKeyedColumn) {
-				    	nonkeyedColumns.push(column);
+				    	nonkeyedColumns.push({'id':column.ColumnID, 'name':column.ColumnLabel, 'type': column.ColumnType, 'eclType':column.ColumnEclType});
 					}
 				});
 	      		columns.nonKeyedColumns = nonkeyedColumns;
@@ -447,7 +447,7 @@ router.get('/getQueryInfo', [
 			eclService.requestJson("roxie", req.query.queryName).then(response => {
 				if(response) {
 					response.forEach((requestParam) =>  {
-						requestObj.push({"field":requestParam.id, "type":requestParam.type});
+						requestObj.push({"name":requestParam.id, "type":requestParam.type});
 					});
 				}
 				resultObj.request = requestObj;
@@ -458,7 +458,7 @@ router.get('/getQueryInfo', [
 						response[firstKey].forEach((responseParam) => {
 							responseObj.push(
 							{
-								"field" : responseParam.id,
+								"name" : responseParam.id,
     						"type" : responseParam.id
 							});
 						});

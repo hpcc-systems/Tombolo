@@ -36,7 +36,7 @@ router.post('/saveQuery', [
 
           var queryFieldToSave = updateCommonData(req.body.fields, fieldsToUpdate);
           return QueryField.bulkCreate(
-              queryFieldToSave, {updateOnDuplicate: ["field_type", "field", "type"]}
+              queryFieldToSave, {updateOnDuplicate: ["field_type", "name", "type"]}
           )
       }).then(function(query) {
           console.log("saving query");
@@ -59,7 +59,7 @@ router.get('/query_list', [
   }
   console.log("[query list/read.js] - Get query list for app_id = " + req.query.app_id);
   try {
-      Query.findAll({where:{"application_id":req.query.app_id}}).then(function(queries) {
+      Query.findAll({where:{"application_id":req.query.app_id}, order: [['createdAt', 'DESC']]}).then(function(queries) {
           res.json(queries);
       })
       .catch(function(err) {

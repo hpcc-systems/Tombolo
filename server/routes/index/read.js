@@ -18,7 +18,7 @@ router.get('/index_list', [
         return res.status(422).json({ success: false, errors: errors.array() });
     }
     console.log("[index/read.js] - Get file list for app_id = " + req.query.app_id);
-    Index.findAll({where:{"application_id":req.query.app_id},include: [File]}).then(function(indexes) {
+    Index.findAll({where:{"application_id":req.query.app_id},include: [File], order: [['createdAt', 'DESC']]}).then(function(indexes) {
         res.json(indexes);
     })
     .catch(function(err) {
@@ -52,20 +52,25 @@ router.post('/saveIndex', [
                 Index.update(req.body.index.basic, {where:{application_id:applicationId, title:req.body.index.basic.title}}).then(function(result){})
             }
             var indexKeyToSave = updateCommonData(req.body.index.indexKey, fieldsToUpdate);
-            return IndexKey.bulkCreate(
-                indexKeyToSave, {updateOnDuplicate: ["ColumnLabel", "ColumnType", "ColumnEclType"]}
-            )
+            IndexKey.destroy({where:{application_id:applicationId, "index_id":index_id}}).then((deleted) => {
+                return IndexKey.bulkCreate(
+                    indexKeyToSave
+                )
+            })
         }).then(function(indexKey) {
             console.log("saving index payload");
             var indexPayloadToSave = updateCommonData(req.body.index.indexPayload, fieldsToUpdate);
-            return IndexPayload.bulkCreate(
-                indexPayloadToSave, {updateOnDuplicate: ["ColumnLabel", "ColumnType", "ColumnEclType"]}
-            )
+            IndexPayload.destroy({where:{application_id:applicationId, "index_id":index_id}}).then((deleted) => {
+                return IndexPayload.bulkCreate(
+                    indexPayloadToSave
+                )
+            })
         }).then((indexPayLoadUpdated) => {
             console.log('index_id: '+index_id)
             res.json({"result":"success", "title":req.body.index.basic.title, "indexId":index_id});
         }).catch((err) => {
-            return res.status(500).send(err);
+          console.log('Index Save Error:' +err)
+            return res.status(500).send("Error occured while saving index");
         })
 
     } catch (err) {

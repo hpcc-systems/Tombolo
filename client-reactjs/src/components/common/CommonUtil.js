@@ -1,3 +1,4 @@
+import { authHeader, handleError } from "./AuthHeader.js"
 let omitDeep = (value, key) => {
   if (Array.isArray(value)) {
     return value.map(i => omitDeep(i, key))
@@ -30,4 +31,24 @@ const eclTypes = [
     "Enum"
 ];
 
-export {omitDeep, eclTypes};
+const fetchDataDictionary = (applicationId) => {
+  return new Promise((resolve, reject) => {
+    fetch("/api/data-dictionary?application_id="+applicationId, {
+      headers: authHeader()
+    })
+    .then((response) => {
+      if(response.ok) {
+        return response.json();
+      }
+      handleError(response);
+    })
+    .then(data => {      
+      resolve(data);
+    }).catch(error => {
+      console.log(error);
+      reject(error);
+    });
+  })
+}  
+
+export {omitDeep, eclTypes, fetchDataDictionary};

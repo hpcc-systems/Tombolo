@@ -4,6 +4,10 @@ import "react-table/react-table.css";
 import { authHeader, handleError } from "../common/AuthHeader.js"
 import AssociatedDataflows from "./AssociatedDataflows"
 import { hasEditPermission } from "../common/AuthUtil.js";
+import { fetchDataDictionary, eclTypes } from "../common/CommonUtil.js"
+import {omitDeep} from '../common/CommonUtil.js';
+import EditableTable from "../common/EditableTable.js"
+
 const TabPane = Tabs.TabPane;
 const Option = Select.Option;
 
@@ -33,6 +37,7 @@ class JobDetails extends Component {
     jobSearchErrorShown:false,
     autoCreateFiles:false,
     autoCompleteSuffix: <Icon type="search" className="certain-category-icon" />,
+    dataDefinitions: [],
     job: {
       id:"",
       name:"",
@@ -52,12 +57,11 @@ class JobDetails extends Component {
     this.props.onRef(this);
     this.getJobDetails();
     this.getFiles();
+    this.fetchDataDefinitions();
   }
 
   getJobDetails() {
-    console.log('getJobDetails: '+this.props.selectedAsset + ': '+this.props.isNew)
-    if(this.props.selectedAsset && !this.props.isNew) {
-
+    if(this.props.selectedAsset != '' && !this.props.isNew) {
       fetch("/api/job/job_details?job_id="+this.props.selectedAsset+"&app_id="+this.props.applicationId, {
         headers: authHeader()
       })
@@ -68,7 +72,6 @@ class JobDetails extends Component {
         handleError(response);
       })
       .then(data => {
-        console.log('data')
         var jobfiles = [];
         data.jobfiles.forEach(function(doc, idx) {
           var fileObj = {};
@@ -104,7 +107,7 @@ class JobDetails extends Component {
       .catch(error => {
         console.log(error);
       });
-    }
+    } 
   }
 
   getClusters() {
@@ -166,6 +169,30 @@ class JobDetails extends Component {
     }*/
     this.getClusters();
   }
+
+  async fetchDataDefinitions() {
+    try {
+      let dataDefn = await fetchDataDictionary(this.props.applicationId);  
+      this.setState({
+        dataDefinitions: dataDefn
+      });
+    } catch (err) {
+      console.log(err)
+    }    
+  }
+
+  setInputParamsData = (data) => {    
+    console.log('setInputParamsData..'+JSON.stringify(data))
+    let omitResults = omitDeep(data, 'id')
+    this.setState({
+      ...this.state,
+      job: {
+        ...this.state.job,
+        inputParams: omitResults
+      }
+    })
+  }
+
 
   clearState() {
 
@@ -350,7 +377,7 @@ class JobDetails extends Component {
     var jobDetails = {
       "basic": {
         "applicationId":applicationId,
-        "dataflowId" : this.props.selectedDataflow.id,
+        "dataflowId" : this.props.selectedDataflow ? this.props.selectedDataflow.id : '',
         "name" : this.state.job.name,
         "title" : this.state.job.title,
         "description" : this.state.job.description,
@@ -377,7 +404,7 @@ class JobDetails extends Component {
     this.setState({
       visible: false,
     });
-    //this.props.onClose();
+    this.props.onClose();
 
   }
   onChange = (e) => {
@@ -439,6 +466,7 @@ class JobDetails extends Component {
   }
 
   render() {
+    const editingAllowed = hasEditPermission(this.props.user);
     const {getFieldDecorator} = this.props.form;
     const { visible, confirmLoading, jobTypes, paramName, paramType, inputFileName, inputFileDesc, outputFileName, outputFileDesc, sourceFiles, jobSearchSuggestions, clusters} = this.state;
     const formItemLayout = {
@@ -453,11 +481,17 @@ class JobDetails extends Component {
     };
     const columns = [{
       title: 'Name',
-      dataIndex: 'name'
+      dataIndex: 'name',
+      editable: editingAllowed
     },
     {
       title: 'Type',
-      dataIndex: 'type'
+      dataIndex: 'type',
+      editable: editingAllowed,
+      celleditor: "select",
+      celleditorparams: {
+        values: eclTypes.sort()
+      }
     }];
 
     const fileColumns = [{
@@ -471,11 +505,8 @@ class JobDetails extends Component {
         width: '30%'
       }];
 
-
     const {name, title, description, entryBWR, gitrepo, jobType, inputParams, outputFiles, inputFiles, contact, author } = this.state.job;
-
-    const editingAllowed = hasEditPermission(this.props.user);
-
+   
     //render only after fetching the data from the server
     if(!name && !this.props.selectedAsset && !this.props.isNew) {
       return null;
@@ -566,29 +597,14 @@ class JobDetails extends Component {
 
           </TabPane>
           <TabPane tab="Input Params" key="2">
-            <div>
-            <Form layout="inline">
-                <Form.Item label="Name">
-                    <Input id="paramName" name="paramName" onChange={this.onParamChange} value={paramName} placeholder="" disabled={!editingAllowed}/>
-                </Form.Item>
-                <Form.Item label="Type">
-                    <Input id="paramType" name="paramType"  onChange={this.onParamChange} value={paramType}  disabled={!editingAllowed}/>
-                </Form.Item>
-                <Form.Item>
-                    <Button type="primary" onClick={this.handleAddInputParams} disabled={!editingAllowed}>
-                        Add
-                    </Button>
-                </Form.Item>
-            </Form>
-
-            </div>
-            <Table
-                  columns={columns}
-                  rowKey={record => record.name}
-                  dataSource={inputParams}
-                  pagination={{ pageSize: 10 }} scroll={{ y: 460 }}
-                />
-            </TabPane>
+            <EditableTable 
+              columns={columns} 
+              dataSource={inputParams}                 
+              editingAllowed={editingAllowed}
+              dataDefinitions={this.state.dataDefinitions}
+              showDataDefinition={true}
+              setData={this.setInputParamsData}/>        
+          </TabPane>
 
           <TabPane tab="Input Files" key="3">
             <div>

@@ -3,10 +3,10 @@ import { Modal, Tabs, Form, Input, Icon, Select, Table, AutoComplete, message, S
 import "react-table/react-table.css";
 import { authHeader, handleError } from "../common/AuthHeader.js"
 import { hasEditPermission } from "../common/AuthUtil.js";
+import { fetchDataDictionary, eclTypes } from "../common/CommonUtil.js"
+import {omitDeep} from '../common/CommonUtil.js';
 import AssociatedDataflows from "./AssociatedDataflows"
-import { AgGridReact } from 'ag-grid-react';
-import 'ag-grid-community/dist/styles/ag-grid.css';
-import 'ag-grid-community/dist/styles/ag-theme-balham.css';
+import EditableTable from "../common/EditableTable.js"
 
 const TabPane = Tabs.TabPane;
 const Option = Select.Option;
@@ -31,6 +31,7 @@ class IndexDetails extends Component {
     fileSearchSuggestions:[],
     indexSearchErrorShown:false,
     autoCompleteSuffix: <Icon type="search" className="certain-category-icon" />,
+    dataDefinitions:[],
     file: {
       id:"",
       title:"",
@@ -48,10 +49,11 @@ class IndexDetails extends Component {
   componentDidMount() {
     this.props.onRef(this);
     this.getIndexDetails();
+    this.fetchDataDefinitions();
   }
 
   getIndexDetails() {
-    if(this.props.selectedAsset && !this.props.isNew) {
+    if(this.props.selectedAsset && !this.props.isNewFile) {
       fetch("/api/index/read/index_details?index_id="+this.props.selectedAsset+"&app_id="+this.props.applicationId, {
         headers: authHeader()
       })
@@ -117,11 +119,22 @@ class IndexDetails extends Component {
             visible: false,
             confirmLoading: false,
           });
-          //this.props.onClose();
+          this.props.onClose();
           this.props.onRefresh(saveResponse);
-        }, 2000);
+        }, 200);
       }
     });
+  }
+
+  async fetchDataDefinitions() {
+    try {
+      let dataDefn = await fetchDataDictionary(this.props.applicationId);  
+      this.setState({
+        dataDefinitions: dataDefn
+      });
+    } catch (err) {
+      console.log(err)
+    }    
   }
 
   getClusters() {
@@ -272,6 +285,30 @@ class IndexDetails extends Component {
     });
   }
 
+  setIndexFieldData = (data) => {    
+    console.log('setIndexFieldData..'+JSON.stringify(data))
+    let omitResults = omitDeep(data, 'id')
+    this.setState({
+      ...this.state,
+      file: {
+        ...this.state.file,
+        keyedColumns: omitResults
+      }
+    })
+  }
+
+  setNonKeyedColumnData = (data) => {    
+    console.log('setNonKeyedColumnData..'+JSON.stringify(data))
+    let omitResults = omitDeep(data, 'id')    
+    this.setState({
+      ...this.state,
+      file: {
+        ...this.state.file,
+        nonKeyedColumns: omitResults
+      }
+    })
+  }
+
   populateFileDetails() {
     var applicationId = this.props.applicationId;
     var indexDetails = {"app_id":applicationId};
@@ -284,16 +321,15 @@ class IndexDetails extends Component {
       "backupService" : this.state.file.backupService,
       "qualifiedPath" : this.state.file.path,
       "application_id" : applicationId,
-      "dataflowId" : this.props.selectedDataflow.id,
+      "dataflowId" : this.props.selectedDataflow ? this.props.selectedDataflow.id : '',
       "parentFileId" : this.state.selectedSourceFile
     };
     indexDetails.basic = index_basic;
 
     indexDetails.indexKey = this.state.file.keyedColumns;
+    //indexDetails.indexKey = this.indexFieldsTable.getData();
 
     indexDetails.indexPayload = this.state.file.nonKeyedColumns;
-
-    console.log(indexDetails);
 
     return indexDetails;
   }
@@ -302,7 +338,7 @@ class IndexDetails extends Component {
     this.setState({
       visible: false,
     });
-    //this.props.onClose();
+    this.props.onClose();
 
   }
 
@@ -322,13 +358,8 @@ class IndexDetails extends Component {
     });
   }
 
-  onIndexTablesReady = (params) => {
-    let gridApi = params.api;
-    gridApi.sizeColumnsToFit();
-  }
-
-
   render() {
+    const editingAllowed = hasEditPermission(this.props.user);    
     const {
       getFieldDecorator, getFieldsError, getFieldError, isFieldTouched,
     } = this.props.form;
@@ -345,12 +376,18 @@ class IndexDetails extends Component {
     };
 
     const indexColumns = [{
-      headerName: 'Name',
-      field: 'ColumnLabel'
+      title: 'Name',
+      dataIndex: 'name',
+      editable: editingAllowed,
     },
     {
-      headerName: 'Type',
-      field: 'ColumnType'
+      title: 'Type',
+      dataIndex: 'type',
+      editable: editingAllowed,
+      celleditor: "select",
+      celleditorparams: {
+        values: eclTypes.sort()
+      }
     }];
 
 
@@ -359,9 +396,9 @@ class IndexDetails extends Component {
       selectedRowKeys,
       onChange: this.onSelectedRowKeysChange
     };
-    const editingAllowed = hasEditPermission(this.props.user);
+
     //render only after fetching the data from the server    
-    if(!title && !this.props.selectedAsset && !this.props.isNew) {
+    if(!title && !this.props.selectedAsset && !this.props.isNewFile) {
       return null;
     }
 
@@ -449,42 +486,29 @@ class IndexDetails extends Component {
               </div>
           </TabPane>
           <TabPane tab="Index" key="3">
-              <div
-                className="ag-theme-balham"
-                style={{
-                height: '415px',
-                width: '100%' }}
-              >
-                <AgGridReact
-                  onCellValueChanged={this.dataTypechange}
-                  columnDefs={indexColumns}
-                  rowData={keyedColumns}
-                  defaultColDef={{resizable: true, sortable: true}}
-                  onGridReady={this.onIndexTablesReady}
-                  singleClickEdit={editingAllowed}>
-                </AgGridReact>
-              </div>
+              
+
+              <EditableTable 
+                columns={indexColumns} 
+                dataSource={keyedColumns}                 
+                editingAllowed={editingAllowed}
+                dataDefinitions={this.state.dataDefinitions}
+                showDataDefinition={true}
+                setData={this.setIndexFieldData}/>                
+
+              
           </TabPane>
           <TabPane tab="Payload" key="4">
-              <div
-                className="ag-theme-balham"
-                style={{
-                height: '415px',
-                width: '100%' }}
-              >
-                <AgGridReact
-                  onCellValueChanged={this.dataTypechange}
-                  columnDefs={indexColumns}
-                  rowData={nonKeyedColumns}
-                  defaultColDef={{resizable: true, sortable: true}}
-                  onGridReady={this.onIndexTablesReady}
-                  singleClickEdit={editingAllowed}>
-                </AgGridReact>
-              </div>
-
+              <EditableTable 
+                columns={indexColumns} 
+                dataSource={nonKeyedColumns} 
+                editingAllowed={editingAllowed}
+                dataDefinitions={this.state.dataDefinitions}
+                showDataDefinition={true}
+                setData={this.setNonKeyedColumnData}/> 
           </TabPane>
 
-          {!this.props.isNew ? 
+          {!this.props.isNewFile ? 
             <TabPane tab="Dataflows" key="7">
               <AssociatedDataflows assetName={name} assetType={'Index'}/>
             </TabPane> : null}

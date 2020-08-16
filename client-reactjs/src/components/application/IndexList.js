@@ -39,9 +39,9 @@ class IndexList extends Component {
   }
   openAddIndexDlg() {
     console.log('openAddIndexDlg');
-      this.setState({
-        showAddDialog: true
-      });
+    this.setState({
+      showAddDialog: true
+    });
   }
 
   handleRefresh = () => {
@@ -75,11 +75,13 @@ class IndexList extends Component {
             isNewFile={true}
             onRefresh={this.handleRefresh}
             onClose={this.handleClose}
+            user={this.props.user}
+            onRef={ref => (this.child = ref)}
             /> : null}
       </div>
 
       <div style={{padding:"25px"}}>
-          <IndexTree refresh={this.state.refreshTree} applicationId={this.state.applicationId} />
+          <IndexTree refresh={this.state.refreshTree} applicationId={this.state.applicationId} user={this.props.user} />
       </div>
       </React.Fragment>
     );

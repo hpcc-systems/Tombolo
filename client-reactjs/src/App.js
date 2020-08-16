@@ -57,6 +57,12 @@ class App extends React.Component {
       return <DataDictionary applicationId={applicationId} applicationTitle={applicationTitle} user={this.props.user}/>;
     }      
 
+    const indexListComp = () => {
+      let applicationId = this.props.application ? this.props.application.applicationId : '';
+      let applicationTitle = this.props.application ? this.props.application.applicationTitle : '';
+      return <IndexList applicationId={applicationId} applicationTitle={applicationTitle} user={this.props.user}/>;
+    }    
+
     return (
         <Router history={history}>
         <div>
@@ -73,7 +79,7 @@ class App extends React.Component {
                                 <PrivateRoute exact path="/:applicationId/files" component={FileList} />
                                 <PrivateRoute path="/files" component={FileList} />
                                 <PrivateRoute path="/:applicationId/jobs" component={JobList} />
-                                <PrivateRoute exact path="/:applicationId/index" component={IndexList}/>
+                                <PrivateRoute exact path="/:applicationId/index" component={indexListComp}/>
                                 <PrivateRoute path="/index" component={IndexList}/>
                                 <PrivateRoute path="/:applicationId/data-dictionary" component={dataDictionaryComp}/>
                                 <PrivateRoute path="/:applicationId/queries" component={QueriesList}/>

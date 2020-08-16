@@ -10,8 +10,9 @@ const TabPane = Tabs.TabPane;
 const Option = Select.Option;
 const { Paragraph } = Typography;
 
-function DataDefinitionDetailsDialog({selectedDataDefinition, applicationId, onDataUpdated}) {
+function DataDefinitionDetailsDialog({selectedDataDefinition, applicationId, onDataUpdated, setShowDetailsDialog}) {
   const [visible, setVisible] = useState(false);
+  const [formErrors, setFormErrors] = useState({name:''});
   const [dataDefinition, setDataDefinition] = useState({
     id: '',
     applicationId:'',
@@ -30,31 +31,35 @@ function DataDefinitionDetailsDialog({selectedDataDefinition, applicationId, onD
 
   const onClose = () => {
   	setVisible(false);
+    setShowDetailsDialog(false);
   }
 
   const onSave = () => {
-    message.config({top:130})
-    let dataToSave = dataDefinition;
-    dataToSave.application_id = applicationId;
-    dataToSave.data_defn = JSON.stringify(editableTable.current.getData());
-    fetch("/api/data-dictionary/save", {
-      method: 'post',
-      headers: authHeader(),
-      body: JSON.stringify(dataToSave)
-    }).then((response) => {
-      if(response.ok) {
-        return response.json();
-      } else {
-        throw response;
-      }
-    })
-    .then(saveResponse => {
-      setVisible(false);
-      onDataUpdated();
-      message.success("Data Defintion saved successfully.")
-    }).catch(error => {
-      message.error(error);
-    });
+    console.log(validateForm());
+    if(validateForm()) {
+      message.config({top:130})
+      let dataToSave = dataDefinition;
+      dataToSave.application_id = applicationId;      
+      dataToSave.data_defn = (editableTable && editableTable.current) ? JSON.stringify(editableTable.current.getData()) : '';
+      fetch("/api/data-dictionary/save", {
+        method: 'post',
+        headers: authHeader(),
+        body: JSON.stringify(dataToSave)
+      }).then((response) => {
+        if(response.ok) {
+          return response.json();
+        } else {
+          throw response;
+        }
+      })
+      .then(saveResponse => {
+        setVisible(false);
+        onDataUpdated();
+        message.success("Data Defintion saved successfully.")
+      }).catch(error => {
+        message.error(error);
+      });
+    }
   }
 
   const getDataDefintionDetails = async () => {  
@@ -76,8 +81,17 @@ function DataDefinitionDetailsDialog({selectedDataDefinition, applicationId, onD
   };    
 
   const onChange = (e) => {	
-  	const {name, value} = e.target
-    setDataDefinition({...dataDefinition, [name]: value})
+    setFormErrors({'name':''});
+  	const {name, value} = e.target;
+    setDataDefinition({...dataDefinition, [name]: value});    
+  }
+
+  const validateForm = () => {
+    if(dataDefinition.name == '') {
+      setFormErrors({'name':'Please enter a name for the Data Definition'});
+      return false;
+    }
+    return true;
   }
 
   const formItemLayout = {
@@ -103,7 +117,7 @@ function DataDefinitionDetailsDialog({selectedDataDefinition, applicationId, onD
     },
     {
       title: 'Type',
-      dataIndex: 'data_type',
+      dataIndex: 'type',
       editable: true,
       celleditor: "select",
       celleditorparams: {
@@ -129,6 +143,8 @@ function DataDefinitionDetailsDialog({selectedDataDefinition, applicationId, onD
         <TabPane tab="Basic" key="1">
           <Form.Item {...formItemLayout} label="Name">
               <Input id="name" name="name" onChange={onChange} defaultValue={dataDefinition.name} value={dataDefinition.name} placeholder="Name" disabled={!editingAllowed}/>
+              {formErrors.name.length > 0 && 
+              <span className='error'>{formErrors.name}</span>}
           </Form.Item>
 
           <Form.Item {...formItemLayout} label="Description">
@@ -138,7 +154,12 @@ function DataDefinitionDetailsDialog({selectedDataDefinition, applicationId, onD
 
         </TabPane>
         <TabPane tab="Layout" key="2">
-          <EditableTable columns={layoutColumns} dataSource={dataSource} ref={editableTable} fileType={"csv"}/>                
+          <EditableTable 
+            columns={layoutColumns} 
+            dataSource={dataSource} 
+            ref={editableTable} 
+            fileType={"csv"} 
+            editingAllowed={editingAllowed}/>                
         </TabPane>
 			</Tabs>		        
 	  </Modal>   	  	

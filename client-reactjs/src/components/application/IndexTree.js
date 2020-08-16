@@ -20,7 +20,7 @@ class IndexTree extends Component {
   }
 
  componentDidMount() {
-    this.fetchDataAndRenderTable();
+   this.fetchDataAndRenderTable();
   }
 
   componentWillReceiveProps(props) {
@@ -136,10 +136,12 @@ class IndexTree extends Component {
         {this.state.openFileDetailsDialog ?
           <IndexDetailsForm
             onRef={ref => (this.child = ref)}
-            selectedIndex={this.state.selectedFile}
+            selectedAsset={this.state.selectedFile}
+            isNewFile={false}
             applicationId={this.props.applicationId}
             onRefresh={this.handleRefreshTree}
-            onClose={this.handleClose}/> : null}
+            onClose={this.handleClose}
+            user={this.props.user}/> : null}
       </div>
     )
   }

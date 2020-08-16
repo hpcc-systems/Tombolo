@@ -7,6 +7,8 @@ import DataProfileTable from "./DataProfileTable"
 import DataProfileHTML from "./DataProfileHTML"
 import AssociatedDataflows from "./AssociatedDataflows"
 import { authHeader, handleError } from "../common/AuthHeader.js"
+import { fetchDataDictionary } from "../common/CommonUtil.js"
+import {omitDeep} from '../common/CommonUtil.js';
 import EditableTable from "../common/EditableTable.js"
 import { AgGridReact } from 'ag-grid-react';
 import { hasEditPermission } from "../common/AuthUtil.js";
@@ -53,6 +55,7 @@ class FileDetails extends Component {
     filesCount: 0,
     autoCompleteSuffix: <Icon type="search" className="certain-category-icon" />,
     scopeDisabled: false,
+    dataDefinitions: [],
     file: {
       id:"",
       title:"",
@@ -76,11 +79,11 @@ class FileDetails extends Component {
   }
 
   componentDidMount() {
-
     this.props.onRef(this);
     this.getFileCount();
     this.getFileDetails();
-    this.fetchDataTypeDetails();
+    this.fetchDataTypeDetails();   
+    this.fetchDataDefinitions();
   }
 
   clearState() {
@@ -134,6 +137,18 @@ class FileDetails extends Component {
     });
   }
 
+  async fetchDataDefinitions() {
+    try {
+      let dataDefn = await fetchDataDictionary(this.props.applicationId);  
+      console.log(dataDefn)
+      this.setState({
+        dataDefinitions: dataDefn
+      });
+    } catch (err) {
+      console.log(err)
+    }    
+  }
+
   getFileCount() {
     fetch("/api/file/read/file_list?app_id="+this.props.applicationId, {
        headers: authHeader()
@@ -182,7 +197,7 @@ class FileDetails extends Component {
             qualifiedPath: data.basic.qualifiedPath,
             consumer: data.basic.consumer,
             supplier: data.basic.supplier,
-            fileType: (data.basic.fileType == '' ? 'thor_file' : data.basic.fileType),
+            fileType: (data.basic.fileType == '' || data.basic.fileType == 'flat' ? 'thor_file' : data.basic.fileType),
             isSuperFile: data.basic.isSuperFile,
             layout: data.file_layouts,
             licenses: data.file_licenses,
@@ -221,7 +236,7 @@ class FileDetails extends Component {
         console.log(error);
       });
     }
-  }
+  }  
 
   showModal = () => {
     this.setState({
@@ -230,7 +245,7 @@ class FileDetails extends Component {
     this.clearState();
     this.getConsumers();
     this.getFileDetails();
-    this.getClusters();
+    this.getClusters();    
     if(this.props.isNew) {
       this.getScope();
     }
@@ -249,24 +264,28 @@ class FileDetails extends Component {
   };
 
   handleOk = (e) => {
+    let _self = this;
     e.preventDefault();
     this.props.form.validateFields(async (err, values) =>  {
       if(!err) {
-        this.setState({
+        _self.setState({
           confirmLoading: true,
         });
-
-        try {
-          let saveResponse = await this.saveFileDetails();
+        console.log("xxx")
+        try {          
+          console.log('xxx-2')
+          let saveResponse = await _self.saveFileDetails();
+          console.log(saveResponse)
           setTimeout(() => {
-            this.setState({
+            _self.setState({
               visible: false,
               confirmLoading: false,
             });
-            this.props.onRefresh(saveResponse);
+            _self.props.onRefresh(saveResponse);
           }, 2000);
         } catch(e) {
-          this.setState({
+          console.log(e)
+          _self.setState({
             confirmLoading: false,
           });
         }
@@ -605,6 +624,18 @@ class FileDetails extends Component {
     })
   }
 
+  setLayoutData = (data) => {
+    console.log('setLayout: '+data)
+    let omitResults = omitDeep(data, 'id')    
+    this.setState({
+      ...this.state,
+      file: {
+        ...this.state.file,
+        layout: omitResults,
+      }
+    })
+  }
+
   populateFileDetails() {    
     var applicationId = this.props.applicationId;
     var fileDetails = {"app_id":applicationId};
@@ -623,10 +654,10 @@ class FileDetails extends Component {
       "fileType" : this.state.file.fileType,
       "isSuperFile" : this.state.file.isSuperFile,
       "application_id" : applicationId,
-      "dataflowId" : this.props.selectedDataflow.id
+      "dataflowId" : this.props.selectedDataflow ? this.props.selectedDataflow.id : ''
     };
     fileDetails.basic = file_basic;
-    fileDetails.layout = this.layoutTable.getData();
+    fileDetails.layout = this.state.file.layout;
     var selectedLicenses={};
     if(this.licenseGridApi && this.licenseGridApi.getSelectedNodes() != undefined) {
       selectedLicenses = this.licenseGridApi.getSelectedNodes().map(function(node) { return {"name" : node.data.name, "url": node.data.url} });
@@ -897,6 +928,7 @@ class FileDetails extends Component {
     const { visible, confirmLoading, sourceFiles, availableLicenses, selectedRowKeys, clusters, consumers, fileSearchSuggestions, fileDataContent, fileProfile, showFileProfile, scopeDisabled } = this.state;
     const modalTitle = "File Details" + (this.state.file.title ? " - " + this.state.file.title : " - " +this.state.file.name);
     const VIEW_DATA_PERMISSION='View PII';
+    const editingAllowed = hasEditPermission(this.props.user);
     const formItemLayout = {
       labelCol: {
         xs: { span: 2 },
@@ -936,30 +968,33 @@ class FileDetails extends Component {
       title: 'Name',
       dataIndex: 'name',
       sort: "asc",
-      editable: true
+      editable: editingAllowed,
+      width: '25%'
     },
     {
       title: 'Type',
       dataIndex: 'type',
-      editable: true,
+      editable: editingAllowed,
       celleditor: "select",
       celleditorparams: {
         values: eclTypes.sort()
-      }
+      },
+      width: '15%'
     },
     {
       title: 'ECL Type',
       dataIndex: 'eclType',
-      editable: true      
+      editable: editingAllowed      
     },
     {
       title: 'Description',
       dataIndex: 'description',
-      editable: true
+      editable: editingAllowed,
+      width: '15%'
     },
     {
       title: 'Required',
-      editable: true,
+      editable: editingAllowed,
       dataIndex: 'required',
       celleditor: "select",
       celleditorparams: {
@@ -969,12 +1004,14 @@ class FileDetails extends Component {
     {
       title: 'Information Type',
       dataIndex: 'data_types',
-      editable: true,
+      editable: editingAllowed,
       celleditor: "select",
+      width: '15%',
       celleditorparams: {
         values: this.state.dataTypes.sort()
       }
-    },
+    }
+    
     ];
     const { complianceTags } = this.state;
     const licenseColumns = [{
@@ -1089,9 +1126,7 @@ class FileDetails extends Component {
       onChange: this.onSelectedRowKeysChange
     };
     //const modalHeight = !this.props.isNew ? "420px" : "550px";
-    const modalHeight = "565px";
-
-    const editingAllowed = hasEditPermission(this.props.user);
+    const modalHeight = "565px";    
 
     const getNodeChildDetails = (rowItem) => {
       if (rowItem.children) {
@@ -1263,8 +1298,16 @@ class FileDetails extends Component {
                 style={{
                 width: '100%' }}
               >
-                <EditableTable columns={layoutColumns} dataSource={layout} ref={node => (this.layoutTable = node)} fileType={this.state.file.fileType}/>                
-              </div>               
+                <EditableTable 
+                  columns={layoutColumns} 
+                  dataSource={layout} 
+                  ref={node => (this.layoutTable = node)} 
+                  fileType={this.state.file.fileType} 
+                  editingAllowed={editingAllowed}
+                  dataDefinitions={this.state.dataDefinitions}
+                  showDataDefinition={true}   
+                  setData={this.setLayoutData}/>            
+              </div>                             
           </TabPane>
           <TabPane tab="Permissable Purpose" key="4">
             <InheritedLicenses relation={inheritedLicensing}/>

@@ -61,7 +61,7 @@ function DataflowTable({data, applicationId, onSelectDataflow, onDataFlowUpdated
     title: 'Name',
     dataIndex: 'title',
     width: '30%',
-    render: text => <a>{text}</a>
+    render: (text, record) => <a onClick={(row) => rowSelected(record)}>{text}</a>
   },
   {
     title: 'Description',
@@ -98,12 +98,7 @@ function DataflowTable({data, applicationId, onSelectDataflow, onDataFlowUpdated
   }];
 	return (
 	  <React.Fragment>
-	   <Table
-        onRow={(record, rowIndex) => {
-          return {
-            onClick: event => {rowSelected(record, rowIndex)}
-          }
-        }}
+	   <Table        
         columns={dataflowCols}
         rowKey={record => record.id}
         dataSource={data}        

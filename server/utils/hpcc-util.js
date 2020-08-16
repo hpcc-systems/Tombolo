@@ -64,8 +64,9 @@ let getFileLayout = (cluster, fileName, format) =>  {
 			var result = JSON.parse(response);
 			if (result.DFURecordTypeInfoResponse != undefined) {
 				if(result.DFURecordTypeInfoResponse.jsonInfo.fields != undefined) {
-					result.DFURecordTypeInfoResponse.jsonInfo.fields.forEach((field) => {
+					result.DFURecordTypeInfoResponse.jsonInfo.fields.forEach((field, idx) => {
 						layoutResults.push({
+							"id": idx,
 							"name" : field.name
 						})
 					})
@@ -83,9 +84,10 @@ let getFileLayout = (cluster, fileName, format) =>  {
 			  var result = JSON.parse(response);
 	    	if(result.DFUGetFileMetaDataResponse != undefined) {
 				  var fileInfoResponse = result.DFUGetFileMetaDataResponse.DataColumns.DFUDataColumn, fileInfo = {};
-	      		fileInfoResponse.forEach(function(column) {
+	      		fileInfoResponse.forEach(function(column, idx) {
 	      			if(column.ColumnLabel !== '__fileposition__') {
 		      			var layout = {
+		      				"id": idx,
 			      			"name" : column.ColumnLabel,
 			      			"type" : column.ColumnType,
 			      			"eclType" : column.ColumnEclType,
@@ -100,8 +102,9 @@ let getFileLayout = (cluster, fileName, format) =>  {
 			      		}
 			      		if(column.DataColumns != undefined) {
 			      			var childColumns = [];
-			      			column.DataColumns.DFUDataColumn.forEach(function(childColumn) {
+			      			column.DataColumns.DFUDataColumn.forEach(function(childColumn, idx) {
 			      				var childColumnObj = {
+			      					"id": idx,
 			      					"name" : childColumn.ColumnLabel,
 					      			"type" : childColumn.ColumnType,
 					      			"eclType" : childColumn.ColumnEclType,

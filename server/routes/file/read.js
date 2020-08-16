@@ -40,7 +40,7 @@ router.get('/file_list', [
     }
     console.log("[file list/read.js] - Get file list for app_id = " + req.query.app_id);
     try {
-        File.findAll({where:{"application_id":req.query.app_id}}).then(function(files) {
+        File.findAll({where:{"application_id":req.query.app_id}, order: [['createdAt', 'DESC']]}).then(function(files) {
             res.json(files);
         })
         .catch(function(err) {
@@ -247,9 +247,11 @@ router.post('/saveFile', [
               File.update(req.body.file.basic, {where:{application_id:applicationId, name:req.body.file.basic.name}}).then(function(result){})
           }
           var fileLayoutToSave = hpccUtil.updateCommonData(req.body.file.layout, fieldsToUpdate);
-          return FileLayout.bulkCreate(
-              fileLayoutToSave, {updateOnDuplicate: ["name", "type", "eclType", "data_types", "description", "required", "children"]}
-          )
+          FileLayout.destroy({where:{application_id:applicationId, file_id: fileId}}).then((destroyed) => {
+            return FileLayout.bulkCreate(
+                fileLayoutToSave
+            )            
+          })
       }).then(function(fileLayout) {
           FileLicense.destroy(
               {where:{file_id: fileId}}

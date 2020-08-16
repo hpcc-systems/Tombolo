@@ -11,7 +11,7 @@ module.exports = (sequelize, DataTypes) => {
     query_id: DataTypes.STRING,
     application_id: DataTypes.STRING,
     field_type: DataTypes.STRING,
-    field: DataTypes.STRING,
+    name: DataTypes.STRING,
     type: DataTypes.STRING
   }, {freezeTableName: true});
   query_field.associate = function(models) {

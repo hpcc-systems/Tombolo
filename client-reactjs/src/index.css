@@ -444,20 +444,6 @@ div.tooltip {
   word-wrap: break-word;
 }
 
-.editable-cell {
-  position: relative;
-}
-
-.editable-cell-value-wrap {
-  padding: 5px 12px;
-  cursor: pointer;
-}
-
-.editable-row:hover .editable-cell-value-wrap {
-  border: 1px solid #d9d9d9;
-  border-radius: 4px;
-  padding: 4px 11px;
-}
 
 .layout_tbl .ant-table-tbody > tr > td {
   padding: 2px 2px;
@@ -476,8 +462,28 @@ div.tooltip {
   display: block;
   padding-left: 15px;
 }
+
 .dropdown .submenu li a {
   display: block;
   white-space: nowrap;
   text-decoration: none;
+}
+
+.editable-cell {
+  position: relative;
+}
+
+.editable-cell-value-wrap {
+  padding: 5px 12px;
+  cursor: pointer;
+}
+
+.editable-row:hover .editable-cell-value-wrap {
+  border: 1px solid #d9d9d9;
+  border-radius: 4px;
+  padding: 4px 11px;
+}
+
+.error { 
+  color: #f5222d;
 }

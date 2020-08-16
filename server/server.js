@@ -43,10 +43,10 @@ app.use('/api/report/read', tokenService.verifyToken, reportRead);
 app.use('/api/consumer', tokenService.verifyToken, consumer);
 app.use('/api/ldap', ldap);
 app.use('/api/controlsAndRegulations', tokenService.verifyToken, regulations);
-app.use('/api/dataflowgraph', dataflowGraph);
+app.use('/api/dataflowgraph', tokenService.verifyToken, dataflowGraph);
 app.use('/api/dataflow', tokenService.verifyToken, dataflow);
 app.use('/api/workflows', tokenService.verifyToken, workflows);
-app.use('/api/data-dictionary', dataDictionary);
+app.use('/api/data-dictionary', tokenService.verifyToken, dataDictionary);
 
 //process.env["NODE_TLS_REJECT_UNAUTHORIZED"] = 0;
 

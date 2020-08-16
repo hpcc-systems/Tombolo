@@ -10,7 +10,7 @@ import {Graph} from "./Dataflow/Graph";
 import BreadCrumbs from "../common/BreadCrumbs";
 import { connect } from 'react-redux';
 import { authHeader, handleError } from "../common/AuthHeader.js"
-import {handleFileDelete, handleJobDelete, handleIndexDelete, handleQueryDelete, updateGraph} from "../common/WorkflowUtil";
+import {handleJobDelete} from "../common/WorkflowUtil";
 
 class JobList extends Component {
 
@@ -25,12 +25,10 @@ class JobList extends Component {
     openJobDetailsDialog: false,
     openQueryDetailsDialog: false,
     openIndexDetailsDialog: false,
-    selectedFile: '',
-    selectedQuery: '',
-    selectedIndex: '',
+    selectedJob: "",
+    isNew: true,
     jobs:[],
     assets:[],
-    selectedJob: '',
     tableView: false,
     selectedDataflow:{}
   }
@@ -50,14 +48,17 @@ class JobList extends Component {
 
   componentDidMount() {
     console.log('componentDidMount...Jobs')
-    this.fetchDataAndRenderTable();
+    if(this.state.applicationId != '') {
+      this.fetchDataAndRenderTable();      
+    }
   }
 
   openAddJobDlg = () => {
     var _self = this;
     this.setState({
       openJobDetailsDialog: true,
-      selectedJob: ''
+      selectedJob: '',
+      isNew: true
     });
     setTimeout(() => {
       _self.child.showModal();
@@ -67,23 +68,6 @@ class JobList extends Component {
   closeJobDlg = () => {
     this.setState({
       openJobDetailsDialog: false
-    });
-  }
-
-  handleClose = () => {
-    this.setState({
-      openFileDetailsDialog: false
-    });  }
-
-  closeQueryDlg = () => {
-    this.setState({
-      openQueryDetailsDialog: false
-    });
-  }
-
-  closeIndexDlg = () => {
-    this.setState({
-      openIndexDetailsDialog: false
     });
   }
 
@@ -110,58 +94,23 @@ class JobList extends Component {
   }
 
   handleEdit(id, objType) {
-    let openFileDetailsDialog = false,
-        openJobDetailsDialog = false,
-        openQueryDetailsDialog = false,
-        openIndexDetailsDialog = false;
-    let selectedFile='', selectedJob='', selectedQuery='', selectedIndex='';
-    switch (objType) {
-      case 'file':
-        openFileDetailsDialog = true;
-        selectedFile = id;
-        break;
-      case 'job':
-        openJobDetailsDialog = true;
-        selectedJob = id;
-        break;
-      case 'query':
-        openQueryDetailsDialog = true;
-        selectedQuery = id
-        break;
-      case 'index':
-        openIndexDetailsDialog = true;
-        selectedIndex = id;
-        break;
-    }
+    let _self=this;
+    let openJobDetailsDialog = true, selectedJob = id;
     this.setState({
-      openFileDetailsDialog: openFileDetailsDialog,
       openJobDetailsDialog: openJobDetailsDialog,
-      openQueryDetailsDialog: openQueryDetailsDialog,
-      openIndexDetailsDialog: openIndexDetailsDialog,
-      selectedFile: selectedFile,
       selectedJob: selectedJob,
-      selectedQuery: selectedQuery,
-      selectedIndex: selectedIndex
+      isNew: false
     });
-    //this.child.showModal();
+    setTimeout(() => {
+      _self.child.showModal();
+    }, 200);
   }
-  handleDelete(id, objType) {
-    switch (objType) {
-      case 'file':
-        this.handleFileDelete(id);
-        break;
-      case 'index':
-        this.handleIndexDelete(id);
-        break;
-      case 'query':
-        this.handleQueryDelete(id);
-        break;
-      case 'job':
-        this.handleJobDelete(id);
-        break;
-    }
-    updateGraph(id, this.state.applicationId);
+
+  handleDelete(id, objType) {    
+    console.log(id)
+    this.handleJobDelete(id);
   }
+    
 
   handleJobDelete(jobId) {
     handleJobDelete(jobId, this.state.applicationId)
@@ -171,39 +120,6 @@ class JobList extends Component {
     }).catch(error => {
       console.log(error);
       message.error("There was an error deleting the Job file");
-    });
-  }
-
-  handleIndexDelete(indexId) {
-    handleIndexDelete(indexId, this.state.applicationId)
-    .then(result => {
-      this.fetchDataAndRenderTable();
-      message.success("Index deleted sucessfully");
-    }).catch(error => {
-      console.log(error);
-      message.error("There was an error deleting the Index file");
-    });
-  }
-
-  handleQueryDelete(queryId) {
-    handleQueryDelete(queryId, this.state.applicationId)
-    .then(result => {
-      this.fetchDataAndRenderTable();
-      message.success("Query deleted sucessfully");
-    }).catch(error => {
-      console.log(error);
-      message.error("There was an error deleting the Query");
-    });
-  }
-
-  handleFileDelete= (fileId) => {
-    handleFileDelete(fileId, this.state.applicationId)
-    .then(result => {
-      this.fetchDataAndRenderTable();
-      message.success("File deleted sucessfully");
-    }).catch(error => {
-      console.log(error);
-      message.error("There was an error deleting the file");
     });
   }
 
@@ -224,8 +140,9 @@ class JobList extends Component {
   }
 
   render() {
-    if(!this.props.application || !this.props.application.applicationId)
+    if(this.state.applicationId == undefined || this.state.applicationId == '') {
       return null;
+    }
       const jobColumns = [{
         title: 'Name',
         dataIndex: 'name',
@@ -260,6 +177,11 @@ class JobList extends Component {
       <div>
         <div className="d-flex justify-content-end" style={{paddingTop:"55px", margin: "5px"}}>
           <BreadCrumbs applicationId={this.state.applicationId} applicationTitle={this.state.applicationTitle}/>
+          <span style={{ marginLeft: "auto"}}>
+            <Tooltip placement="bottom" title={"Click to add a new job"}>
+              <Button className="btn btn-secondary btn-sm" onClick={() => this.openAddJobDlg()}><i className="fa fa-plus"></i>Add Job</Button>
+            </Tooltip>
+          </span>
         </div>
         <div id="jobs">
             <Table
@@ -269,44 +191,17 @@ class JobList extends Component {
               pagination={{ pageSize: 10 }} scroll={{ y: 460 }}
             />
 
-          {this.state.openFileDetailsDialog ?
-            <FileDetailsForm
-              onRef={ref => (this.fileDlg = ref)}
-              isNewFile={false}
-              selectedFile={this.state.selectedFile}
-              applicationId={this.state.applicationId}
-              onClose={this.handleClose}
-              onRefresh={this.handleRefresh}
-              user={this.props.user}/> : null}
-
+          
           {this.state.openJobDetailsDialog ?
-                <JobDetailsForm
-                  onRef={ref => (this.jobDlg = ref)}
-                  applicationId={this.state.applicationId}
-                  selectedJob={this.state.selectedJob}
-                  isNewJob={false}
-                  onRefresh={this.handleRefresh}
-                  onClose={this.closeJobDlg}
-                  user={this.props.user}/> : null}
-
-          {this.state.openIndexDetailsDialog ?
-              <IndexDetailsForm
-                onRef={ref => (this.idxDlg = ref)}
-                applicationId={this.state.applicationId}
-                isNewIndex={false}
-                onRefresh={this.handleRefresh}
-                selectedIndex={this.state.selectedIndex}
-                onClose={this.closeIndexDlg}
-                user={this.props.user}/> : null}
-
-          {this.state.openQueryDetailsDialog ?
-                <QueryDetailsForm
-                  onRef={ref => (this.qryDlg = ref)}
-                  applicationId={this.state.applicationId}
-                  isNewFile={false}
-                  selectedQuery={this.state.selectedQuery}
-                  onRefresh={this.handleRefresh}
-                  onClose={this.closeQueryDlg}/> : null}
+            <JobDetailsForm
+              onRef={ref => (this.child = ref)}
+              applicationId={this.state.applicationId}
+              selectedAsset={this.state.selectedJob}
+              isNew={this.state.isNew}
+              onRefresh={this.handleRefresh}
+              onClose={this.closeJobDlg}
+              user={this.props.user}/> : null}
+          
         </div>        
       </div>
   )

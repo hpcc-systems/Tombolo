@@ -4,6 +4,8 @@ import "react-table/react-table.css";
 import { authHeader, handleError } from "../common/AuthHeader.js"
 import { hasEditPermission } from "../common/AuthUtil.js";
 import AssociatedDataflows from "./AssociatedDataflows"
+import EditableTable from "../common/EditableTable.js"
+import { fetchDataDictionary, eclTypes } from "../common/CommonUtil.js"
 import { AgGridReact } from 'ag-grid-react';
 import 'ag-grid-community/dist/styles/ag-grid.css';
 import 'ag-grid-community/dist/styles/ag-theme-balham.css';
@@ -29,6 +31,7 @@ class QueryDetails extends Component {
     querySearchSuggestions:[],
     querySearchErrorShown:false,
     autoCompleteSuffix: <Icon type="search" className="certain-category-icon" />,
+    dataDefinitions:[],
     query: {
       id:"",
       title:"",
@@ -47,6 +50,7 @@ class QueryDetails extends Component {
   componentDidMount() {
     this.props.onRef(this);
     this.getQueryDetails();
+    this.fetchDataDefinitions();
   }
 
   getQueryDetails() {
@@ -103,6 +107,17 @@ class QueryDetails extends Component {
     /*if(this.props.isNewFile) {
       this.getClusters();
     }*/
+  }
+
+  async fetchDataDefinitions() {
+    try {
+      let dataDefn = await fetchDataDictionary(this.props.applicationId);  
+      this.setState({
+        dataDefinitions: dataDefn
+      });
+    } catch (err) {
+      console.log(err)
+    }    
   }
 
   handleOk = (e) => {
@@ -211,6 +226,7 @@ class QueryDetails extends Component {
           description: '',
           url: '',
           path: '',
+          type:"roxie_query",
           input: queryInfo.request,
           output: queryInfo.response
         }
@@ -270,14 +286,16 @@ class QueryDetails extends Component {
 
   populateQueryDetails() {
     var applicationId = this.props.applicationId;
-    var inputFields = this.state.query.input.map(function(element) {
+
+    var inputFields = this.inputFieldsTable.getData().map(function(element) {
       element.field_type='input';
       return element;
     });
-    var outputFields = this.state.query.output.map(function(element) {
+    var outputFields = this.outputFieldsTable.getData().map(function(element) {
       element.field_type='output';
       return element;
     });
+
     var queryDetails = {
       "basic" : {
         "applicationId":applicationId,
@@ -339,6 +357,7 @@ class QueryDetails extends Component {
 
 
   render() {
+    const editingAllowed = hasEditPermission(this.props.user);
     const {getFieldDecorator} = this.props.form;
     const { visible, confirmLoading, sourceFiles, availableLicenses, selectedRowKeys, clusters, querySearchSuggestions } = this.state;
     const formItemLayout = {
@@ -353,12 +372,18 @@ class QueryDetails extends Component {
     };
 
     const columns = [{
-      headerName: 'Name',
-      field: 'field'
+      title: 'Name',
+      dataIndex: 'name',
+      editable: editingAllowed
     },
     {
-      headerName: 'Type',
-      field: 'type'
+      title: 'Type',
+      dataIndex: 'type',
+      editable: editingAllowed,
+      celleditor: "select",
+      celleditorparams: {
+        values: eclTypes.sort()
+      },      
     }];
 
 
@@ -367,7 +392,7 @@ class QueryDetails extends Component {
       selectedRowKeys,
       onChange: this.onSelectedRowKeysChange
     };
-    const editingAllowed = hasEditPermission(this.props.user);
+    
     //render only after fetching the data from the server
     //{console.log(title + ', ' + this.props.selectedQuery + ', ' + this.props.isNewFile)}
     if(!title && !this.props.selectedQuery && !this.props.isNew) {
@@ -471,14 +496,13 @@ class QueryDetails extends Component {
                 height: '415px',
                 width: '100%' }}
               >
-                <AgGridReact
-                  onCellValueChanged={this.dataTypechange}
-                  columnDefs={columns}
-                  rowData={input}
-                  defaultColDef={{resizable: true, sortable: true}}
-                  onGridReady={this.onQueriesTablesReady}
-                  singleClickEdit={editingAllowed}>
-                </AgGridReact>
+                <EditableTable 
+                  columns={columns} 
+                  dataSource={input} 
+                  ref={node => (this.inputFieldsTable = node)} 
+                  editingAllowed={editingAllowed}
+                  dataDefinitions={this.state.dataDefinitions}
+                  showDataDefinition={true}/>  
               </div>
             </TabPane>
           <TabPane tab="Output Fields" key="3">
@@ -488,14 +512,15 @@ class QueryDetails extends Component {
                 height: '415px',
                 width: '100%' }}
               >
-                <AgGridReact
-                  onCellValueChanged={this.dataTypechange}
-                  columnDefs={columns}
-                  rowData={output}
-                  defaultColDef={{resizable: true, sortable: true}}
-                  onGridReady={this.onQueriesTablesReady}
-                  singleClickEdit={editingAllowed}>
-                </AgGridReact>
+
+                <EditableTable 
+                  columns={columns} 
+                  dataSource={output} 
+                  ref={outputTable => (this.outputFieldsTable = outputTable)} 
+                  editingAllowed={editingAllowed}
+                  dataDefinitions={this.state.dataDefinitions}
+                  showDataDefinition={true}/>  
+
               </div>
           </TabPane>
 

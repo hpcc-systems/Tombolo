@@ -203,10 +203,6 @@ class FileTable extends Component {
       className: editingAllowed ? 'show-column' : 'hide-column',
       render: (text, record) =>
         <span>
-          <a href="#" onClick={(row) => this.showFileinstances(record.id)}><Tooltip placement="right" title={"File Instances"}><Icon type="gold" /></Tooltip></a>
-          <Divider style={{display:"none"}} type="vertical" />
-          <a href="#" style={{display:"none"}} onClick={(row) => this.onDrawerOpen(record.id)}><Tooltip placement="right" title={"File Relations"}><Icon type="cluster" /></Tooltip></a>
-         <Divider type="vertical" />
           <a href="#" onClick={(row) => this.handleEdit(record.id)}><Tooltip placement="right" title={"Edit File"}><Icon type="edit" /></Tooltip></a>
           <Divider type="vertical" />
           <Popconfirm title="Are you sure you want to delete this File?" onConfirm={() => this.handleDelete(record.id)} icon={<Icon type="question-circle-o" style={{ color: 'red' }} />}>

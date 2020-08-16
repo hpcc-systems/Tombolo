@@ -66,14 +66,15 @@ function DataDictionary(props) {
         </div>
         <div className="row">
           <div className="col-12">
-              <DataDictionaryTable              
+              <DataDictionaryTable       
+                props={props}       
                 dataDefinitions={dataDefinitions}
                 applicationId={application.applicationId} 
                 onDataUpdated={onDataUpdated} 
               />     
           </div>
         </div>
-        {showDetailsDialog ? <DataDefinitionDetailsDialog selectedDataDefinition={''} applicationId={application.applicationId} onDataUpdated={onDataUpdated}/> : null}
+        {showDetailsDialog ? <DataDefinitionDetailsDialog selectedDataDefinition={''} applicationId={application.applicationId} onDataUpdated={onDataUpdated} setShowDetailsDialog={setShowDetailsDialog}/> : null}
       </div>  
     )  
 };

@@ -10,9 +10,9 @@ module.exports = (sequelize, DataTypes) => {
     },
     application_id: DataTypes.STRING,
     index_id: DataTypes.STRING,
-    ColumnLabel: DataTypes.STRING,
-    ColumnType: DataTypes.STRING,
-    ColumnEclType: DataTypes.STRING
+    name: DataTypes.STRING,
+    type: DataTypes.STRING,
+    eclType: DataTypes.STRING
   }, {freezeTableName: true});
   index_key.associate = function(models) {
     // associations can be defined here

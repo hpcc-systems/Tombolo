@@ -113,33 +113,58 @@ class EditableCell extends React.Component {
 class EditableTable extends React.Component {
   constructor(props) {
     super(props);
-    this.columns = this.props.columns;
-    console.log(this.props.dataSource)
     this.state = {
       dataSource: this.props.dataSource,
       count: this.props.dataSource.length,
+      columns: this.props.columns
     };
-  }
+    this.setupDeleteAction();
+  } 
+
+  setupDeleteAction = () => {    
+    const deleteColumn = {
+      title: 'Action',
+      dataIndex: '',
+      width: '8%',
+      render: (text, record) =>
+        <span>
+            <a href="#" onClick={() => this.handleDelete(record.id)}><Icon type="delete" /></a>
+        </span>
+    }
+    if(this.props.editingAllowed) {
+      let columns = this.state.columns;
+      console.log(JSON.stringify(columns))
+      columns = columns.push(deleteColumn);
+      this.setState({ columns: columns});  
+    }    
+  }  
 
   handleDelete = id => {
-    const dataSource = [...this.state.dataSource];
-    this.setState({ dataSource: dataSource.filter(item => item.id !== id) });
+    console.log('id: '+id)
+    let dataSource = [...this.state.dataSource];
+    dataSource = dataSource.filter(item => item.id !== id);
+    this.setState({ dataSource: dataSource});    
+    this.props.setData(dataSource)
   };
 
   handleAdd = () => {
-    const { count, dataSource } = this.state;
+    let { count, dataSource } = this.state;
     const newData = {
       id: count,
-      name: ''
+      name: '',
+      type: ''
     };
+    dataSource = [...dataSource, newData];
     this.setState({
-      dataSource: [...dataSource, newData],
+      dataSource: dataSource,
       count: count + 1,
     });
+
+    this.props.setData(dataSource)
   };
 
   handleSave = row => {
-    const newData = [...this.state.dataSource];
+    let newData = [...this.state.dataSource];
     let updatedItemIdx=[], editingItem={};
     newData.forEach((item, index) => {
       if(row.id == item.id) {
@@ -169,11 +194,22 @@ class EditableTable extends React.Component {
     }
     console.log(JSON.stringify(newData));
     this.setState({ dataSource: newData });
+    this.props.setData(newData)
   };  
 
   getData = () => {    
     let omitResults = omitDeep(this.state.dataSource, 'id')
     return omitResults;
+  }
+
+  onDataDefintionSelect = (id) => {
+    let selectedDataDefinition = this.props.dataDefinitions.filter(dataDefn => dataDefn.id == id)
+    let dataDefn = JSON.parse(selectedDataDefinition[0].data_defn);
+    this.setState({
+      dataSource: dataDefn,
+      count: dataDefn.length,
+    });
+    this.props.setData(dataDefn)
   }
 
   render() {
@@ -183,8 +219,9 @@ class EditableTable extends React.Component {
         row: EditableFormRow,
         cell: EditableCell,
       },
-    };
-    const columns = this.columns.map(col => {
+    };    
+
+    const columns = this.state.columns.map(col => {
       if (!col.editable) {
         return col;
       }
@@ -233,6 +270,7 @@ class EditableTable extends React.Component {
         layout.push({'id': idx, 'name': label, 'type':'', 'eclType':'', description:'', required:false, data_types:''});
       })
       this.setState({ dataSource: layout }); 
+      this.props.setData(layout)
     }
 
     const parseJson = (json) => {
@@ -262,6 +300,7 @@ class EditableTable extends React.Component {
       
       console.log(JSON.stringify(layout))
       this.setState({ dataSource: layout });  
+      this.props.setData(layout)
     }
 
     return (
@@ -273,7 +312,7 @@ class EditableTable extends React.Component {
           bordered
           dataSource={dataSource}
           columns={columns}
-          pagination={false} scroll={{ y: 210 }}
+          pagination={false} scroll={{ y: '50vh' }}
           size="small"
         />
         <div style={{ padding: "5px" }}>
@@ -282,6 +321,13 @@ class EditableTable extends React.Component {
             Add a row
           </Button>
           </span>
+          {this.props.showDataDefinition && this.props.dataDefinitions ? 
+            <span style={{paddingRight: "5px"}}>
+              <Select placeholder="Select from a Data Definition" disabled={!this.props.editingAllowed} onChange={this.onDataDefintionSelect} style={{ width: 230 }}>
+                {this.props.dataDefinitions.map(dataDefn => <Option key={dataDefn.id}>{dataDefn.name}</Option>)}
+              </Select>
+            </span>
+            : null}
           <span>
             {(this.props.fileType == 'csv' || this.props.fileType == 'json') ? 
               <Upload {...fileUploadProps}>
