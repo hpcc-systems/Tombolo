@@ -235,6 +235,10 @@ async function changePassword(req, res, { username, password }) {
         "confirmpassword": req.body.confirmnewpassword
       }
     }, function(err, response, body) {
+      if (response.statusCode == 422) {
+        reject(new Error(body.errors.concat(',')));
+      }
+
       if (response.statusCode != 200) {
         reject(new Error(err));
       } else {

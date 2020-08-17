@@ -150,18 +150,26 @@ class AppHeader extends Component {
     }
 
     handleOk = () => {
+      let _self=this;
       this.setState({loading: true }); 
       fetch("/api/user/changePassword", {
         method: 'post',
         headers: authHeader(),
         body: JSON.stringify({"username": this.props.user.username, "oldpassword":this.state.oldpassword, "newpassword": this.state.newpassword, "confirmnewpassword": this.state.confirmnewpassword})
       }).then((response) => {
-        this.setState({loading: true }); 
-        //console.log("response.ok: "+response.ok);
+        if(response.ok) {
+            return response.json();
+        }
+        handleError(response);
+      }).then((response) => {
+        _self.clearChangePasswordDlg()
         message.config({top:130})
         message.success('Password changed successfully.');
-        this.setState({loading: false, visible: false }); 
+        _self.setState({loading: false, visible: false }); 
       }).catch(function(err) {
+        _self.clearChangePasswordDlg()
+        _self.setState({loading: false, visible: false }); 
+        message.config({top:130})
         message.error('There was an error while changing the password.');
       });
     }
@@ -180,6 +188,14 @@ class AppHeader extends Component {
 
     handleChangePasswordFieldChange = (e) => {
       this.setState({...this.state, [e.target.name]: e.target.value });
+    }
+
+    clearChangePasswordDlg = () => {
+      this.setState({
+        oldpassword: '',
+        newpassword: '',
+        confirmnewpassword: '' 
+      }); 
     }
 
   render() {
@@ -259,13 +275,13 @@ class AppHeader extends Component {
           ]}
         >          
           <div className="form-group">
-            <Input type="password" name="oldpassword" placeholder="Old Password" onChange={this.handleChangePasswordFieldChange}/> 
+            <Input type="password" name="oldpassword" placeholder="Old Password" defaultValue={this.state.oldpassword} value={this.state.oldpassword} onChange={this.handleChangePasswordFieldChange}/> 
           </div>
           <div className="form-group">  
-            <Input type="password" name="newpassword" placeholder="New Password" onChange={this.handleChangePasswordFieldChange}/> 
+            <Input type="password" name="newpassword" placeholder="New Password" defaultValue={this.state.newpassword} value={this.state.newpassword} onChange={this.handleChangePasswordFieldChange}/> 
           </div>
           <div className="form-group">  
-            <Input type="password" name="confirmnewpassword" placeholder="Confirm Password" onChange={this.handleChangePasswordFieldChange}/> 
+            <Input type="password" name="confirmnewpassword" placeholder="Confirm Password" defaultValue={this.state.confirmnewpassword} value={this.state.confirmnewpassword} onChange={this.handleChangePasswordFieldChange}/> 
           </div>            
 
         </Modal>
