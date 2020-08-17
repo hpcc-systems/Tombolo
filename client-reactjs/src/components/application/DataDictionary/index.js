@@ -44,11 +44,14 @@ function DataDictionary(props) {
     setShowDetailsDialog(true);
   }
 
+  const closeAddDlg = () => {
+   setShowDetailsDialog(false); 
+  }
+
   const authReducer = useSelector(state => state.authenticationReducer);
 
   const editingAllowed = hasEditPermission(authReducer.user);
 
-  console.log(application.applicationId, application.applicationTitle)
   if(application.applicationId == '' ||  application.applicationTitle == '') return null;
   return (    
       <div>
@@ -71,10 +74,11 @@ function DataDictionary(props) {
                 dataDefinitions={dataDefinitions}
                 applicationId={application.applicationId} 
                 onDataUpdated={onDataUpdated} 
+                setShowDetailsDialog={setShowDetailsDialog}
               />     
           </div>
         </div>
-        {showDetailsDialog ? <DataDefinitionDetailsDialog selectedDataDefinition={''} applicationId={application.applicationId} onDataUpdated={onDataUpdated} setShowDetailsDialog={setShowDetailsDialog}/> : null}
+        {showDetailsDialog ? <DataDefinitionDetailsDialog selectedDataDefinition={''} applicationId={application.applicationId} onDataUpdated={onDataUpdated} closeDialog={closeAddDlg}/> : null}
       </div>  
     )  
 };

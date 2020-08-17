@@ -140,7 +140,6 @@ class FileDetails extends Component {
   async fetchDataDefinitions() {
     try {
       let dataDefn = await fetchDataDictionary(this.props.applicationId);  
-      console.log(dataDefn)
       this.setState({
         dataDefinitions: dataDefn
       });
@@ -961,8 +960,7 @@ class FileDetails extends Component {
         sm: { span: 12 },
       },
     };
-
-
+    
     const layoutColumns = [
     {
       title: 'Name',
@@ -979,7 +977,7 @@ class FileDetails extends Component {
       celleditorparams: {
         values: eclTypes.sort()
       },
-      width: '15%'
+      width: '18%'
     },
     {
       title: 'ECL Type',
@@ -1125,7 +1123,7 @@ class FileDetails extends Component {
       selectedRowKeys,
       onChange: this.onSelectedRowKeysChange
     };
-    //const modalHeight = !this.props.isNew ? "420px" : "550px";
+    //const modalHeight = !this.props.isNew ? "425px" : "550px";
     const modalHeight = "565px";    
 
     const getNodeChildDetails = (rowItem) => {
@@ -1162,7 +1160,7 @@ class FileDetails extends Component {
           onCancel={this.handleCancel}
           bodyStyle={{height:modalHeight}}
           destroyOnClose={true}
-          width="1200px"
+          width="1200px"          
           footer={[
             <Button key="back" onClick={this.handleCancel}>
               Cancel

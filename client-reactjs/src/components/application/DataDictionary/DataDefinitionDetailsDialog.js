@@ -5,14 +5,17 @@ import { authHeader, handleError } from "../../common/AuthHeader.js"
 import { useSelector } from "react-redux";
 import { hasEditPermission } from "../../common/AuthUtil.js";
 import {eclTypes} from '../../common/CommonUtil';
-import EditableTable from "../../common/EditableTable.js"
+import EditableTable from "../../common/EditableTable.js";
+import { fetchDataDictionary } from "../../common/CommonUtil.js";
+import {omitDeep} from '../../common/CommonUtil.js';
 const TabPane = Tabs.TabPane;
 const Option = Select.Option;
 const { Paragraph } = Typography;
 
-function DataDefinitionDetailsDialog({selectedDataDefinition, applicationId, onDataUpdated, setShowDetailsDialog}) {
+function DataDefinitionDetailsDialog({selectedDataDefinition, applicationId, onDataUpdated, closeDialog}) {
   const [visible, setVisible] = useState(false);
   const [formErrors, setFormErrors] = useState({name:''});
+  const [availableDataDefinitions, setAvailableDataDefinitions] = useState([]);
   const [dataDefinition, setDataDefinition] = useState({
     id: '',
     applicationId:'',
@@ -20,22 +23,37 @@ function DataDefinitionDetailsDialog({selectedDataDefinition, applicationId, onD
     description: '',
     data_defn: []
   });
+  
   const editableTable = useRef();
 
   useEffect(() => {
-    if(applicationId && selectedDataDefinition != '') {	  
-    	getDataDefintionDetails();  	  	
+    const fetchData = async () => {
+     const data = await fetchDataDefinitions();
+     setAvailableDataDefinitions(data);
     }
-    setVisible(true);
-	}, [applicationId, selectedDataDefinition]);
+    if(applicationId) {    
+      fetchData();      
+      setVisible(true);
+    }
+  }, [applicationId])
+
+  useEffect(() => {
+    if(selectedDataDefinition != '') {
+      getDataDefintionDetails();      
+    }
+   }, [selectedDataDefinition])
 
   const onClose = () => {
   	setVisible(false);
-    setShowDetailsDialog(false);
+    closeDialog();
+  }
+
+  const setLayoutData = (data) => {
+    let omitResults = omitDeep(data, 'id')    
+    dataDefinition.data_defn = omitResults;
   }
 
   const onSave = () => {
-    console.log(validateForm());
     if(validateForm()) {
       message.config({top:130})
       let dataToSave = dataDefinition;
@@ -62,8 +80,20 @@ function DataDefinitionDetailsDialog({selectedDataDefinition, applicationId, onD
     }
   }
 
+  const fetchDataDefinitions =  () => {    
+    return new Promise(async (resolve, reject) => {
+      try {
+        let dataDefn = await fetchDataDictionary(applicationId);      
+        resolve(dataDefn)  
+      } catch (err) {
+        console.log(err)
+        reject(err)
+      }              
+    })    
+  }
+
   const getDataDefintionDetails = async () => {  
-    fetch('/api/data-dictionary?application_id='+applicationId+'&id='+selectedDataDefinition, {
+    fetch('/api/data-dictionary?application_id='+applicationId+'&id='+selectedDataDefinition.id, {
       headers: authHeader()
     }).then(function(response) {
       if(response.ok) {
@@ -71,10 +101,7 @@ function DataDefinitionDetailsDialog({selectedDataDefinition, applicationId, onD
       }
       handleError(response);
     }).then(function(data) {
-      console.log(data)
       setDataDefinition(...data); 
-      console.log(dataDefinition)
-      
     }).catch(error => {
       console.log(error);
     });
@@ -159,7 +186,10 @@ function DataDefinitionDetailsDialog({selectedDataDefinition, applicationId, onD
             dataSource={dataSource} 
             ref={editableTable} 
             fileType={"csv"} 
-            editingAllowed={editingAllowed}/>                
+            editingAllowed={editingAllowed}
+            dataDefinitions={availableDataDefinitions.filter(dataDefn => dataDefn.name != selectedDataDefinition.name)}
+            showDataDefinition={true}   
+            setData={setLayoutData}/>            
         </TabPane>
 			</Tabs>		        
 	  </Modal>   	  	

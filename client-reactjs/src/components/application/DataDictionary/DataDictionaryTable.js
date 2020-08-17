@@ -22,6 +22,10 @@ function DataDictionaryTable({dataDefinitions, applicationId, onDataUpdated}) {
     setShowDetailsDialog(true);
   }
 
+  const closeDialog = () => {
+    setShowDetailsDialog(false);  
+  }
+
   const handleDataDictionaryDelete = (id) => {
     fetch('/api/data-dictionary/delete', {
       headers: authHeader(),
@@ -83,7 +87,7 @@ function DataDictionaryTable({dataDefinitions, applicationId, onDataUpdated}) {
         dataSource={data}        
         pagination={{ pageSize: 5 }} scroll={{ y: 380 }}
       />
-      {showDetailsDialog ? <DataDefinitionDetailsDialog selectedDataDefinition={selectedDataDefinition} applicationId={applicationId} onDataUpdated={onDataUpdated}/> : null}
+      {showDetailsDialog ? <DataDefinitionDetailsDialog selectedDataDefinition={selectedDataDefinition} applicationId={applicationId} onDataUpdated={onDataUpdated} closeDialog={closeDialog}/> : null}
      </React.Fragment>
 	  )  
 

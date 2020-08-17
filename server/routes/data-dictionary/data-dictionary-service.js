@@ -58,9 +58,14 @@ router.get('/', [
     return res.status(422).json({ success: false, errors: errors.array() });
   }
   console.log("[datadictionary] - Get datadictionary list for app_id = " + req.query.application_id);
+  let whereClause = {applicationId:req.query.application_id};
+  if(req.query.id && req.query.id != undefined) {
+    whereClause.id = req.query.id
+  }
+
   try {
     DataDictionary.findAll({
-      where:{"applicationId":req.query.application_id}, 
+      where: whereClause, 
       //include: [DataflowGraph],
       order: [
         ['createdAt', 'DESC']
