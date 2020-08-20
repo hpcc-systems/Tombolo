@@ -70,7 +70,7 @@ class IndexDetails extends Component {
           file: {
             ...this.state.file,
             id: data.basic.id,
-            title: data.basic.title,
+            title: data.basic.title == '' ? data.basic.name : data.basic.title,
             name: (data.basic.name == '' ? data.basic.title : data.basic.name),
             description: data.basic.description,
             primaryService: data.basic.primaryService,
@@ -388,7 +388,8 @@ class IndexDetails extends Component {
       celleditorparams: {
         values: eclTypes.sort()
       }
-    }];
+    }
+    ];
 
 
     const {name, title, description, primaryService, backupService, path, relations, keyedColumns, nonKeyedColumns} = this.state.file;

@@ -148,7 +148,7 @@ let workunitInfo = (wuid, cluster) => {
       console.log('state: '+wuInfo.Workunit.State);
       if(wuInfo.Workunit.State == 'completed' || wuInfo.Workunit.State == 'failed' || wuInfo.Workunit.State == 'wait' || wuInfo.Workunit.State == 'compiled') {
         if(wuInfo.Workunit.State == 'failed') {
-          NotificationModule.notify({"type": "Covid19", "message": "Workunit "+wuid+ " failed."});
+          NotificationModule.notify({"type": "Covid19", "message": "Workunit "+wuid+ " failed on cluster "+cluster.thor_host});
         }
         resolve(wuInfo);
       } else {
@@ -263,7 +263,7 @@ consumerGroup.on('message', (response) => {
   let dataflowWhereClause={}, message;
   try {
     message = JSON.parse(response.value);
-    if(message.dataflowId) {
+    if(message.dataflowid) {
       dataflowWhereClause.application_id= message.applicationid;
       dataflowWhereClause.id = message.dataflowid;
     } else {

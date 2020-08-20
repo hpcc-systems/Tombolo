@@ -6,7 +6,7 @@ import { Constants } from '../../common/Constants';
 import { useSelector } from "react-redux";
 import DataDefinitionDetailsDialog from './DataDefinitionDetailsDialog';
 
-function DataDictionaryTable({dataDefinitions, applicationId, onDataUpdated}) {
+function DataDictionaryTable({dataDefinitions, applicationId, onDataUpdated, closeAddDlg}) {
   const [data, setData] = useState([]);
   const [showDetailsDialog, setShowDetailsDialog] = useState(false);
   const [selectedDataDefinition, setSelectedDataDefinition] = useState(false);
@@ -21,11 +21,7 @@ function DataDictionaryTable({dataDefinitions, applicationId, onDataUpdated}) {
     setSelectedDataDefinition(selectedDataDefinition);
     setShowDetailsDialog(true);
   }
-
-  const closeDialog = () => {
-    setShowDetailsDialog(false);  
-  }
-
+  
   const handleDataDictionaryDelete = (id) => {
     fetch('/api/data-dictionary/delete', {
       headers: authHeader(),
@@ -42,6 +38,11 @@ function DataDictionaryTable({dataDefinitions, applicationId, onDataUpdated}) {
       console.log(error);
     });
   }  
+
+  const closeDialog = () => {
+    setShowDetailsDialog(false);
+    closeAddDlg();
+  }
 
   const editingAllowed = hasEditPermission(authReducer.user);
 

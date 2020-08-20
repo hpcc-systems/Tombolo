@@ -75,6 +75,7 @@ function DataDictionary(props) {
                 applicationId={application.applicationId} 
                 onDataUpdated={onDataUpdated} 
                 setShowDetailsDialog={setShowDetailsDialog}
+                closeAddDlg={closeAddDlg}
               />     
           </div>
         </div>

@@ -5,6 +5,7 @@ import {omitDeep} from './CommonUtil';
 
 const EditableContext = React.createContext();
 const Option = Select.Option;
+const OptGroup = Select.OptGroup;
 
 const EditableRow = ({ form, index, ...props }) => (
   <EditableContext.Provider value={form}>
@@ -28,13 +29,18 @@ class EditableCell extends React.Component {
     });
   };
 
-  saveSelect = e => {
+  saveSelect = e => {    
+    //check if a data defn is selected as type in the table
+    let selectedDataDefn = this.dataDefinitions.filter(dataDefn => dataDefn.id == e);
+    if(selectedDataDefn.length > 0) {
+      e = selectedDataDefn[0].name;
+    }
     const { record, handleSave, dataIndex } = this.props;
     let dataValueObj = {};
+    record.dataDefinition = selectedDataDefn;
     dataValueObj[dataIndex] = e;
     this.form.setFieldsValue(dataValueObj);    
     this.form.validateFields({force: true}, (error, values) => {
-      console.log(values)
       if (error && error[e.currentTarget.id]) {
         return;
       }
@@ -57,10 +63,14 @@ class EditableCell extends React.Component {
     });
   };
 
+
+
+
   renderCell = form => {
     this.form = form;
-    const { children, dataIndex, record, title, celleditor, celleditorparams, required } = this.props;
+    const { children, dataIndex, record, title, celleditor, celleditorparams, required, showDataDefinition, dataDefinitions } = this.props;
     const { editing } = this.state;
+    this.dataDefinitions = dataDefinitions
     return editing ? (
     <Form>
       <Form.Item style={{ margin: 0 }}>
@@ -73,7 +83,14 @@ class EditableCell extends React.Component {
           ],
           initialValue: record[dataIndex],
         }) (celleditor == 'select' ? <Select ref={node => (this.input = node)} placeholder="Select" onChange={this.saveSelect} style={{ width: 170 }} >
-          {celleditorparams.values.map(cellEditorParam => <Option key={cellEditorParam} value={cellEditorParam}>{cellEditorParam}</Option>)}
+          <OptGroup label="ECL">
+            {celleditorparams.values.map(cellEditorParam =>  <Option key={cellEditorParam} value={cellEditorParam}>{cellEditorParam}</Option>)}
+          </OptGroup>          
+          
+          { showDataDefinition && dataDefinitions ? 
+            <OptGroup label="Data Dictionary">
+              {dataDefinitions.map(dataDefn => <Option key={dataDefn.id} value={dataDefn.id}>{dataDefn.name}</Option>)}
+            </OptGroup> : null}
           </Select> : <Input ref={node => (this.input = node)} onPressEnter={this.saveText} onBlur={this.saveText} />)}
       </Form.Item>
       </Form>
@@ -192,7 +209,6 @@ class EditableTable extends React.Component {
         ...row,
       })
     }
-    console.log(JSON.stringify(newData));
     this.setState({ dataSource: newData });
     this.props.setData(newData)
   };  
@@ -236,6 +252,8 @@ class EditableTable extends React.Component {
           required: col.required ? col.required : false,
           title: col.title,
           handleSave: this.handleSave,
+          showDataDefinition: this.props.showDataDefinition,
+          dataDefinitions: this.props.dataDefinitions
         }),
       };
     });
@@ -298,7 +316,6 @@ class EditableTable extends React.Component {
         layout.push(obj);        
       })
       
-      console.log(JSON.stringify(layout))
       this.setState({ dataSource: layout });  
       this.props.setData(layout)
     }
@@ -312,7 +329,7 @@ class EditableTable extends React.Component {
           bordered
           dataSource={dataSource}
           columns={columns}
-          pagination={false} scroll={{ y: '50vh' }}
+          pagination={false} scroll={{ y: '40vh' }}
           size="small"
         />
         <div style={{ padding: "5px" }}>

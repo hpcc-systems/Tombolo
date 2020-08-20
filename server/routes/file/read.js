@@ -187,26 +187,28 @@ router.get('/file_details', [
     try {
         File.findOne({where:{"application_id":req.query.app_id, "id":req.query.file_id}}).then(function(files) {
             results.basic = files;
-            FileLayout.findAll({where:{"application_id":req.query.app_id, "file_id":req.query.file_id}}).then(function(fileLayouts) {
-                results.file_layouts = fileLayouts.filter(item => item.name != '__fileposition__');
-                console.log('layouts**********'+JSON.stringify(results.file_layouts))
-                FileLicense.findAll({where:{"application_id":req.query.app_id, "file_id":req.query.file_id}}).then(function(fileLicenses) {
-                    results.file_licenses = fileLicenses;
-                    FileRelation.findAll({where:{"application_id":req.query.app_id, "file_id":req.query.file_id}}).then(function(fileRelations) {
-                        results.file_relations = fileRelations;
-                        FileValidation.findAll({where:{"application_id":req.query.app_id, "file_id":req.query.file_id}}).then(function(fileValidations) {
-                            results.file_validations = fileValidations.filter(item => item.name != '__fileposition__');
-                            FileFieldRelation.findAll({where:{"application_id":req.query.app_id, "file_id":req.query.file_id}}).then(function(fileFieldRelations) {
-                                results.file_field_relations = fileFieldRelations;
-                            }).then(function(fileFieldRelation) {
-                                ConsumerObject.findAll({where:{"object_id":req.query.file_id, "object_type":"file"}}).then(function(fileConsumers) {
-                                    results.consumers = fileConsumers;
-                                    res.json(results);
-                                });
-                            });
-                        });
-                    });
-                });
+            FileLayout.findAll({where:{"application_id":req.query.app_id, "file_id":req.query.file_id}}).then(function(fileLayout) {
+              let fileLayoutObj = (fileLayout.length == 1 && fileLayout[0].fields) ? JSON.parse(fileLayout[0].fields) : fileLayout;
+              console.log(fileLayoutObj)
+              results.file_layouts = fileLayoutObj.filter(item => item.name != '__fileposition__');
+              console.log('layouts**********'+JSON.stringify(results.file_layouts))
+              FileLicense.findAll({where:{"application_id":req.query.app_id, "file_id":req.query.file_id}}).then(function(fileLicenses) {
+                  results.file_licenses = fileLicenses;
+                  FileRelation.findAll({where:{"application_id":req.query.app_id, "file_id":req.query.file_id}}).then(function(fileRelations) {
+                      results.file_relations = fileRelations;
+                      FileValidation.findAll({where:{"application_id":req.query.app_id, "file_id":req.query.file_id}}).then(function(fileValidations) {
+                          results.file_validations = fileValidations.filter(item => item.name != '__fileposition__');
+                          FileFieldRelation.findAll({where:{"application_id":req.query.app_id, "file_id":req.query.file_id}}).then(function(fileFieldRelations) {
+                              results.file_field_relations = fileFieldRelations;
+                          }).then(function(fileFieldRelation) {
+                              ConsumerObject.findAll({where:{"object_id":req.query.file_id, "object_type":"file"}}).then(function(fileConsumers) {
+                                  results.consumers = fileConsumers;
+                                  res.json(results);
+                              });
+                          });
+                      });
+                  });
+              });
             })
         })
         .catch(function(err) {
@@ -246,11 +248,20 @@ router.post('/saveFile', [
           if(!result[1]) {
               File.update(req.body.file.basic, {where:{application_id:applicationId, name:req.body.file.basic.name}}).then(function(result){})
           }
-          var fileLayoutToSave = hpccUtil.updateCommonData(req.body.file.layout, fieldsToUpdate);
-          FileLayout.destroy({where:{application_id:applicationId, file_id: fileId}}).then((destroyed) => {
-            return FileLayout.bulkCreate(
-                fileLayoutToSave
-            )            
+          //var fileLayoutToSave = hpccUtil.updateCommonData(req.body.file.fields, fieldsToUpdate);
+
+          FileLayout.findOrCreate({
+            where:{application_id:applicationId, file_id: fileId},
+            defaults:{
+              application_id: applicationId,
+              file_id: fileId,
+              fields: JSON.stringify(req.body.file.fields)
+            }
+          }).then(function(result) {
+            let fileLayoutId = result[0].id;
+            if(!result[1]) {
+              return FileLayout.update({fields:JSON.stringify(req.body.file.fields)}, {where: {application_id:applicationId, file_id: fileId}});
+            }
           })
       }).then(function(fileLayout) {
           FileLicense.destroy(

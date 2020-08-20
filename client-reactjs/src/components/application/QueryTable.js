@@ -21,7 +21,8 @@ class QueryTable extends Component {
   }
 
  componentDidMount() {
-    this.fetchDataAndRenderTable();
+   //this.props.onRef(this);
+   this.fetchDataAndRenderTable();
   }
 
   componentWillReceiveProps(props) {
@@ -102,7 +103,7 @@ class QueryTable extends Component {
       title: 'Title',
       dataIndex: 'title',
       width: '30%',
-      render: (text, record) => <a href='#' onClick={(row) => this.handleEdit(record.id)}>{text}</a>
+      render: (text, record) => <a href='#' onClick={(row) => this.handleEdit(record.id)}>{record.title != '' ? record.title : record.name}</a>
     },
     {
       title: 'Description',
@@ -143,6 +144,7 @@ class QueryTable extends Component {
             applicationId={this.props.applicationId}
             onRefresh={this.handleRefreshTree}
             onClose={this.handleClose} 
+            isNew={false}
             user={this.props.user}/>: null}
       </div>
     )

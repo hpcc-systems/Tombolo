@@ -150,6 +150,16 @@ function DataDefinitionDetailsDialog({selectedDataDefinition, applicationId, onD
       celleditorparams: {
         values: eclTypes.sort()
       }
+    },
+    {
+      title: 'Possible Value',
+      dataIndex: 'possibleValue',
+      editable: true
+    },
+    {
+      title: 'Value Description',
+      dataIndex: 'valueDescription',
+      editable: true
     }
   ]
 

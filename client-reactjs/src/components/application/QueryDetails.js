@@ -5,7 +5,7 @@ import { authHeader, handleError } from "../common/AuthHeader.js"
 import { hasEditPermission } from "../common/AuthUtil.js";
 import AssociatedDataflows from "./AssociatedDataflows"
 import EditableTable from "../common/EditableTable.js"
-import { fetchDataDictionary, eclTypes } from "../common/CommonUtil.js"
+import { fetchDataDictionary, eclTypes, omitDeep } from "../common/CommonUtil.js"
 import { AgGridReact } from 'ag-grid-react';
 import 'ag-grid-community/dist/styles/ag-grid.css';
 import 'ag-grid-community/dist/styles/ag-theme-balham.css';
@@ -118,6 +118,28 @@ class QueryDetails extends Component {
     } catch (err) {
       console.log(err)
     }    
+  }
+
+  setInputFieldData = (data) => {
+    let omitResults = omitDeep(data, 'id')    
+    this.setState({
+      ...this.state,
+      query: {
+        ...this.state.query,
+        input: omitResults,
+      }
+    })
+  }
+
+  setOutputFieldData = (data) => {
+    let omitResults = omitDeep(data, 'id')    
+    this.setState({
+      ...this.state,
+      query: {
+        ...this.state.query,
+        output: omitResults,
+      }
+    })
   }
 
   handleOk = (e) => {
@@ -287,11 +309,11 @@ class QueryDetails extends Component {
   populateQueryDetails() {
     var applicationId = this.props.applicationId;
 
-    var inputFields = this.inputFieldsTable.getData().map(function(element) {
+    var inputFields = this.state.query.input.map(function(element) {
       element.field_type='input';
       return element;
     });
-    var outputFields = this.outputFieldsTable.getData().map(function(element) {
+    var outputFields = this.state.query.output.map(function(element) {
       element.field_type='output';
       return element;
     });
@@ -383,7 +405,17 @@ class QueryDetails extends Component {
       celleditor: "select",
       celleditorparams: {
         values: eclTypes.sort()
-      },      
+      }      
+    }, 
+    {
+      title: 'Possible Value',
+      dataIndex: 'possibleValue',
+      editable: true
+    },
+    {
+      title: 'Value Description',
+      dataIndex: 'valueDescription',
+      editable: true
     }];
 
 
@@ -502,7 +534,8 @@ class QueryDetails extends Component {
                   ref={node => (this.inputFieldsTable = node)} 
                   editingAllowed={editingAllowed}
                   dataDefinitions={this.state.dataDefinitions}
-                  showDataDefinition={true}/>  
+                  showDataDefinition={true}
+                  setData={this.setInputFieldData}/>  
               </div>
             </TabPane>
           <TabPane tab="Output Fields" key="3">

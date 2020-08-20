@@ -270,11 +270,8 @@ class FileDetails extends Component {
         _self.setState({
           confirmLoading: true,
         });
-        console.log("xxx")
         try {          
-          console.log('xxx-2')
           let saveResponse = await _self.saveFileDetails();
-          console.log(saveResponse)
           setTimeout(() => {
             _self.setState({
               visible: false,
@@ -624,13 +621,11 @@ class FileDetails extends Component {
   }
 
   setLayoutData = (data) => {
-    console.log('setLayout: '+data)
-    let omitResults = omitDeep(data, 'id')    
     this.setState({
       ...this.state,
       file: {
         ...this.state.file,
-        layout: omitResults,
+        layout: data,
       }
     })
   }
@@ -656,7 +651,7 @@ class FileDetails extends Component {
       "dataflowId" : this.props.selectedDataflow ? this.props.selectedDataflow.id : ''
     };
     fileDetails.basic = file_basic;
-    fileDetails.layout = this.state.file.layout;
+    fileDetails.fields = this.state.file.layout;
     var selectedLicenses={};
     if(this.licenseGridApi && this.licenseGridApi.getSelectedNodes() != undefined) {
       selectedLicenses = this.licenseGridApi.getSelectedNodes().map(function(node) { return {"name" : node.data.name, "url": node.data.url} });
