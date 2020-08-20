@@ -427,7 +427,7 @@ class QueryDetails extends Component {
     
     //render only after fetching the data from the server
     //{console.log(title + ', ' + this.props.selectedQuery + ', ' + this.props.isNewFile)}
-    if(!title && !this.props.selectedQuery && !this.props.isNew) {
+    if(!title && !this.props.selectedAsset && !this.props.isNew) {
       return null;
     }
 
