@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react'
 import ReactDOM from 'react-dom';
-import { Modal, Button, Tabs, Select, Form, Typography, Divider, Input, Icon, Table, message } from 'antd/lib';
+import { Modal, Button, Tabs, Select, Form, Typography, Divider, Input, Icon, Table, message, Tag, Tooltip } from 'antd/lib';
 import { authHeader, handleError } from "../../common/AuthHeader.js"
 import { useSelector } from "react-redux";
 import { hasEditPermission } from "../../common/AuthUtil.js";
@@ -24,7 +24,15 @@ function DataDefinitionDetailsDialog({selectedDataDefinition, applicationId, onD
     data_defn: []
   });
   
+  const [tags, setTags] = useState({
+    products: [],
+    inputVisible: false,
+    invputValue: ''
+  });
+  
   const editableTable = useRef();
+
+  const saveInputRef = useRef(null);
 
   useEffect(() => {
     const fetchData = async () => {
@@ -43,6 +51,12 @@ function DataDefinitionDetailsDialog({selectedDataDefinition, applicationId, onD
     }
    }, [selectedDataDefinition])
 
+  useEffect(() => {
+    if (tags.inputVisible) {
+      saveInputRef.current.focus();
+    }
+  }, [tags]);
+
   const onClose = () => {
   	setVisible(false);
     closeDialog();
@@ -58,7 +72,9 @@ function DataDefinitionDetailsDialog({selectedDataDefinition, applicationId, onD
       message.config({top:130})
       let dataToSave = dataDefinition;
       dataToSave.application_id = applicationId;      
-      dataToSave.data_defn = (editableTable && editableTable.current) ? JSON.stringify(editableTable.current.getData()) : '';
+      dataToSave.data_defn = JSON.stringify(dataDefinition.data_defn);
+      dataToSave.products = tags.products.join(',');
+
       fetch("/api/data-dictionary/save", {
         method: 'post',
         headers: authHeader(),
@@ -71,7 +87,7 @@ function DataDefinitionDetailsDialog({selectedDataDefinition, applicationId, onD
         }
       })
       .then(saveResponse => {
-        setVisible(false);
+        onClose()
         onDataUpdated();
         message.success("Data Defintion saved successfully.")
       }).catch(error => {
@@ -102,6 +118,9 @@ function DataDefinitionDetailsDialog({selectedDataDefinition, applicationId, onD
       handleError(response);
     }).then(function(data) {
       setDataDefinition(...data); 
+      setTags(prevState => {
+        return { ...prevState, products: data[0].products.length > 0 ? data[0].products.split(',') : [] }
+      });
     }).catch(error => {
       console.log(error);
     });
@@ -163,7 +182,39 @@ function DataDefinitionDetailsDialog({selectedDataDefinition, applicationId, onD
     }
   ]
 
-  const dataSource = (dataDefinition.data_defn && dataDefinition.data_defn.length) > 0 ? JSON.parse(dataDefinition.data_defn) : [];
+  const handleNewProduct = () => {
+    const { inputValue } = tags;
+    let { products } = tags;
+    if (inputValue && products.indexOf(inputValue) === -1) {
+      products = [...products, inputValue];
+    }
+    console.log(tags);
+    setTags({
+      products,
+      inputVisible: false,
+      inputValue: '',
+    });
+  };
+
+  const handleProductChange = (e) => {
+    e.persist();
+    setTags(prevState => {
+      return { ...prevState, inputValue: e.target.value }
+    });
+  };
+
+  const handleProductTagClose = removedTag => {
+    const products = tags.products.filter(tag => tag !== removedTag);
+    setTags({ products });
+  };
+
+  const showNewProductTag = () => {
+    setTags(prevState => {
+      return { ...prevState, inputVisible: true }
+    });
+  }
+
+  const dataSource = (dataDefinition.data_defn && dataDefinition.data_defn.length) > 0 ? dataDefinition.data_defn : [];  
 
  	return (
 	  <React.Fragment>
@@ -188,6 +239,42 @@ function DataDefinitionDetailsDialog({selectedDataDefinition, applicationId, onD
               <Input id="description" name="description" onChange={onChange} defaultValue={dataDefinition.description} value={dataDefinition.description} placeholder="Description" disabled={!editingAllowed}/>
           </Form.Item>
 
+          <Form.Item {...formItemLayout} label="Products">
+            <div>
+              {tags.products.map((tag, index) => {
+                const isLongTag = tag.length > 20;
+                const tagElem = (
+                  <Tag color="geekblue" key={tag} closable={index !== 0} onClose={() => handleProductTagClose(tag)}>
+                    {isLongTag ? `${tag.slice(0, 20)}...` : tag}
+                  </Tag>
+                );
+                return isLongTag ? (
+                  <Tooltip title={tag} key={tag}>
+                    {tagElem}
+                  </Tooltip>
+                ) : (
+                  tagElem
+                );
+              })}
+              {tags.inputVisible && (
+                <Input
+                  ref={saveInputRef}
+                  type="text"
+                  size="small"
+                  style={{ width: 78 }}
+                  value={tags.inputValue}
+                  onChange={handleProductChange}
+                  onBlur={handleNewProduct}
+                  onPressEnter={handleNewProduct}
+                />
+              )}
+              {!tags.inputVisible && (
+                <Tag color="geekblue" onClick={showNewProductTag} style={{ background: '#fff', borderStyle: 'dashed' }}>
+                  <Icon type="plus" /> New Product
+                </Tag>
+              )}
+          </div>
+        </Form.Item>  
 
         </TabPane>
         <TabPane tab="Layout" key="2">

@@ -11,7 +11,13 @@ module.exports = (sequelize, DataTypes) => {
     applicationId: DataTypes.STRING,
     name: DataTypes.STRING,
     description: DataTypes.STRING,
-    data_defn: DataTypes.TEXT
+    data_defn: {
+      type: DataTypes.TEXT,
+      get() {
+        return JSON.parse(this.getDataValue('data_defn'));
+      }
+    },
+    products: DataTypes.STRING
   }, {freezeTableName: true});
   datadictionary.associate = function(models) {
     // associations can be defined here

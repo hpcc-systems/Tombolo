@@ -28,7 +28,8 @@ router.post('/save', [
             applicationId: req.body.application_id,
             name: req.body.name,
             description: req.body.description,
-            data_defn: req.body.data_defn
+            data_defn: req.body.data_defn,
+            products: req.body.products
           }
         }).then(async function(result) {
             id = result[0].id;
@@ -36,7 +37,8 @@ router.post('/save', [
               return DataDictionary.update({              
   	            name: req.body.name,
   	            description: req.body.description,
-                data_defn: req.body.data_defn
+                data_defn: req.body.data_defn,
+                products: req.body.products
               }, {where:{id:id, applicationId:applicationId}})
           }
         }).then(function(graph) {
