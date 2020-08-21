@@ -1,5 +1,5 @@
 import React, { Component } from "react";
-import { Modal, Tabs, Form, Input, Checkbox, Button,  Select, Table, AutoComplete, Spin, Icon, message } from 'antd/lib';
+import { Modal, Tabs, Form, Input, Checkbox, Button,  Select, Table, AutoComplete, Spin, Icon, message, Row, Col } from 'antd/lib';
 import "react-table/react-table.css";
 import { authHeader, handleError } from "../common/AuthHeader.js"
 import AssociatedDataflows from "./AssociatedDataflows"
@@ -87,7 +87,7 @@ class JobDetails extends Component {
             name: data.name,
             title: (data.title == '' ? data.name : data.title),
             description: data.description,
-            gitRepo: data.gitRepo,
+            gitrepo: data.gitRepo,
             entryBWR: data.entryBWR,
             jobType: data.jobType,
             contact: data.contact,
@@ -479,6 +479,18 @@ class JobDetails extends Component {
         sm: { span: 10 },
       },
     };
+
+    const threeColformItemLayout = {
+      labelCol: {
+        xs: { span: 4 },
+        sm: { span: 10 },
+      },
+      wrapperCol: {
+        xs: { span: 2 },
+        sm: { span: 12 },
+      },
+    };
+
     const columns = [{
       title: 'Name',
       dataIndex: 'name',
@@ -578,15 +590,25 @@ class JobDetails extends Component {
             <Form.Item {...formItemLayout} label="Description">
                 <Input id="job_desc" name="description" onChange={this.onChange} value={description} defaultValue={description} placeholder="Description" disabled={!editingAllowed}/>
             </Form.Item>
+            <Form.Item {...formItemLayout} label="Git Repo">
+                <Input id="job_gitRepo" name="gitrepo" onChange={this.onChange} value={gitrepo} defaultValue={gitrepo} placeholder="Git Repo" disabled={!editingAllowed}/>
+            </Form.Item>
             <Form.Item {...formItemLayout} label="Entry BWR">
                 <Input id="job_entryBWR" name="entryBWR" onChange={this.onChange} value={entryBWR} defaultValue={entryBWR} placeholder="Primary Service" disabled={!editingAllowed}/>
             </Form.Item>
-            <Form.Item {...formItemLayout} label="Contact">
-                <Input id="job_bkp_svc" name="contact" onChange={this.onChange} value={contact} defaultValue={contact} placeholder="Contact" disabled={!editingAllowed}/>
-            </Form.Item>
-            <Form.Item {...formItemLayout} label="Author">
-                <Input id="job_author" name="author" onChange={this.onChange} value={author} defaultValue={author} placeholder="Author" disabled={!editingAllowed}/>
-            </Form.Item>
+            <Row type="flex">
+              <Col span={12} order={1}>
+                <Form.Item {...threeColformItemLayout} label="Contact">
+                    <Input id="job_bkp_svc" name="contact" onChange={this.onChange} value={contact} defaultValue={contact} placeholder="Contact" disabled={!editingAllowed}/>
+                </Form.Item>
+              </Col>
+              <Col span={12} order={2}>  
+                <Form.Item {...threeColformItemLayout} label="Author">
+                    <Input id="job_author" name="author" onChange={this.onChange} value={author} defaultValue={author} placeholder="Author" disabled={!editingAllowed}/>
+                </Form.Item>
+              </Col>  
+            </Row>
+              
             <Form.Item {...formItemLayout} label="Job Type">
                 <Select placeholder="Job Type" defaultValue={jobType} style={{ width: 190 }} onSelect={this.onSourceFileSelection} disabled={!editingAllowed}>
                     {jobTypes.map(d => <Option key={d}>{d}</Option>)}

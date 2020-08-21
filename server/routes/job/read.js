@@ -85,7 +85,7 @@ router.post('/saveJob', [
 
       var jobFileToSave = updateCommonData(req.body.files, fieldsToUpdate);
       return JobFile.bulkCreate(
-          jobFileToSave, {updateOnDuplicate: ["file_type", "name", "description"]}
+          jobFileToSave, {updateOnDuplicate: ["file_type", "name", "description", "gitRepo"]}
       )
     }).then(function(jobFile) {
       var jobParamsToSave = updateCommonData(req.body.params, fieldsToUpdate);
