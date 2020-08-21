@@ -131,23 +131,12 @@ class Graph extends Component {
         }, 200);
 
         break;
-      case 'File Instance':
-        if(d.fileInstanceId == undefined || d.fileInstanceId == '') {
-          isNew = true
-        }        
-        this.setState({
-          isNewInstance: isNew, 
-          openFileInstanceDialog: true,
-          selectedFileInstance: d.fileInstanceId          
-        }, function() {
-          _self.fileInstanceDlg.showModal();
-        });
-        break;  
       case 'Job':
       case 'Modeling':
       case 'Scoring':
       case 'ETL':
       case 'Query Build':
+      case 'Data Profile':
         if(d.jobId == undefined || d.jobId == '') {
           isNew = true
         }
@@ -310,9 +299,6 @@ class Graph extends Component {
           case 'File':
             el.fileId=saveResponse.fileId;
             break;
-          case 'File Instance':
-            el.fileInstanceId=saveResponse.fileInstanceId;
-            break;  
           case 'Index':
             el.indexId=saveResponse.indexId;
             break;
@@ -321,6 +307,7 @@ class Graph extends Component {
           case 'Scoring':
           case 'ETL':
           case 'Query Build':
+          case 'Data Profile':
             el.jobId=saveResponse.jobId;
             break;
           case 'Sub-Process':            
@@ -524,10 +511,10 @@ class Graph extends Component {
       case 'Query Build':
         shape = shapesData[4];
         break;
-      case 'File':
+      case 'Data Profile':
         shape = shapesData[5];
         break;
-      case 'File Instance':
+      case 'File':
         shape = shapesData[6];
         break;
       case 'Index':
@@ -862,16 +849,17 @@ class Graph extends Component {
             case 'Scoring':
             case 'ETL':
             case 'Query Build':
+            case 'Data Profile':
               if(d3.select("#rec-"+d.id).empty()) {
                 d3.select(this)
                   .append("rect")
                   .attr("id", "rec-"+d.id)
                   .attr("rx", shapesData[5].rx)
                   .attr("ry", shapesData[5].ry)
-                  .attr("width", shapesData[0].rectwidth)
-                  .attr("height", shapesData[0].rectheight)
+                  .attr("width", shapesData[5].rectwidth)
+                  .attr("height", shapesData[5].rectheight)
                   .attr("stroke", "grey")
-                  .attr("fill", shapesData[0].color)
+                  .attr("fill", shapesData[5].color)
                   .attr("stroke-width", "3")
                   .attr("filter", "url(#glow)")
                   //.call(_self.nodeDragHandler)
@@ -882,21 +870,20 @@ class Graph extends Component {
               break;
 
             case 'File':
-            case 'File Instance':
             case 'Index':
               if(d3.select("#rec-"+d.id).empty()) {
                 d3.select(this)
                   .append("rect")
                   .attr("id", "rec-"+d.id)
-                  .attr("rx", shapesData[5].rx)
-                  .attr("ry", shapesData[5].ry)
-                  .attr("width", shapesData[5].rectwidth)
-                  .attr("height", shapesData[5].rectheight)
+                  .attr("rx", shapesData[7].rx)
+                  .attr("ry", shapesData[7].ry)
+                  .attr("width", shapesData[7].rectwidth)
+                  .attr("height", shapesData[7].rectheight)
                   .attr("stroke", "grey")
                   .attr("filter", "url(#glow)")
                   .attr("fill", function(d) {
-                    if(d.type == 'File' || d.type == 'File Instance')
-                     return shapesData[5].color;
+                    if(d.type == 'File')
+                     return shapesData[6].color;
                     else if(d.type == 'Index')
                       return shapesData[7].color;
                   })
@@ -952,14 +939,6 @@ class Graph extends Component {
           _self.fetchSavedGraph();
         });
         break;
-      case 'File Instance':
-        if(d.fileInstanceId) {
-          handleFileInstanceDelete(d.fileInstanceId);
-        }
-        updateGraph((d.fileInstanceId ? d.fileInstanceId : d.id), _self.props.applicationId, _self.props.selectedDataflow).then((response) => {
-          _self.fetchSavedGraph();
-        });
-        break;  
       case 'Index':
         if(d.indexId) {
           handleIndexDelete(d.indexId, _self.props.applicationId);
@@ -973,6 +952,7 @@ class Graph extends Component {
       case 'Scoring':
       case 'Query Build':
       case 'ETL':
+      case 'Data Profile':
         if(d.jobId) {
           handleJobDelete(d.jobId, _self.props.applicationId);
         }

@@ -22,7 +22,7 @@ class JobDetails extends Component {
     confirmLoading: false,
     pagination: {},
     loading: false,
-    jobTypes:["General", "Modeling", "Scoring", "ETL", "Query Build"],
+    jobTypes:["Data Profile", "ETL", "General", "Modeling", "Query Build", "Scoring"],
     paramName: "",
     paramType:"",
     inputFileDesc:"",
@@ -590,9 +590,11 @@ class JobDetails extends Component {
             <Form.Item {...formItemLayout} label="Description">
                 <Input id="job_desc" name="description" onChange={this.onChange} value={description} defaultValue={description} placeholder="Description" disabled={!editingAllowed}/>
             </Form.Item>
-            <Form.Item {...formItemLayout} label="Git Repo">
-                <Input id="job_gitRepo" name="gitrepo" onChange={this.onChange} value={gitrepo} defaultValue={gitrepo} placeholder="Git Repo" disabled={!editingAllowed}/>
-            </Form.Item>
+            {this.props.selectedJobType != 'Data Profile' ? 
+              <Form.Item {...formItemLayout} label="Git Repo">
+                  <Input id="job_gitRepo" name="gitrepo" onChange={this.onChange} value={gitrepo} defaultValue={gitrepo} placeholder="Git Repo" disabled={!editingAllowed}/>
+              </Form.Item>
+              : null }
             <Form.Item {...formItemLayout} label="Entry BWR">
                 <Input id="job_entryBWR" name="entryBWR" onChange={this.onChange} value={entryBWR} defaultValue={entryBWR} placeholder="Primary Service" disabled={!editingAllowed}/>
             </Form.Item>

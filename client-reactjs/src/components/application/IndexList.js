@@ -64,9 +64,9 @@ class IndexList extends Component {
       <div className="d-flex justify-content-end" style={{paddingTop:"55px", margin: "5px"}}>
         <BreadCrumbs applicationId={this.state.applicationId} applicationTitle={this.state.applicationTitle}/>
         <span style={{ marginLeft: "auto" }}>
-        <Tooltip placement="bottom" title={"Click to add a new index"}>
-          <Button className="btn btn-secondary btn-sm" onClick={() => this.openAddIndexDlg()}><i className="fa fa-plus"></i>Add</Button>
-        </Tooltip>
+          <Tooltip placement="bottom" title={"Click to add a new index"}>
+            <Button className="btn btn-secondary btn-sm" onClick={() => this.openAddIndexDlg()}><i className="fa fa-plus"></i>Add</Button>
+          </Tooltip>
         </span>
 
         {this.state.showAddDialog ?
