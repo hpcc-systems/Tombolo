@@ -137,7 +137,7 @@ class IndexTree extends Component {
           <IndexDetailsForm
             onRef={ref => (this.child = ref)}
             selectedAsset={this.state.selectedFile}
-            isNewFile={false}
+            isNew={false}
             applicationId={this.props.applicationId}
             onRefresh={this.handleRefreshTree}
             onClose={this.handleClose}

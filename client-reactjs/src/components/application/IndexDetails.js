@@ -10,6 +10,7 @@ import EditableTable from "../common/EditableTable.js"
 
 const TabPane = Tabs.TabPane;
 const Option = Select.Option;
+const { confirm } = Modal;
 
 class IndexDetails extends Component {
 
@@ -124,6 +125,40 @@ class IndexDetails extends Component {
         }, 200);
       }
     });
+  }
+
+  handleDelete = () => {
+    let _self=this;
+    confirm({
+      title: 'Delete file?',
+      content: 'Are you sure you want to delete this Index?',
+      onOk() {
+        var data = JSON.stringify({indexId: _self.props.selectedAsset, application_id: _self.props.applicationId});
+        fetch("/api/index/read/delete", {
+          method: 'post',
+          headers: authHeader(),
+          body: data
+        }).then((response) => {
+          if(response.ok) {
+            return response.json();
+          }
+          handleError(response);
+        })
+        .then(result => {
+          if(_self.props.onDelete) {
+            _self.props.onDelete(_self.props.currentlyEditingNode);
+          } else {
+            _self.props.onRefresh();  
+          }
+          _self.props.onClose();          
+          message.success("Index deleted sucessfully");
+        }).catch(error => {
+          console.log(error);
+          message.error("There was an error deleting the Index file");
+        });
+      },
+      onCancel() {},
+    })
   }
 
   async fetchDataDefinitions() {
@@ -288,6 +323,7 @@ class IndexDetails extends Component {
   setIndexFieldData = (data) => {    
     console.log('setIndexFieldData..'+JSON.stringify(data))
     let omitResults = omitDeep(data, 'id')
+    console.log('setIndexFieldData..'+JSON.stringify(omitResults))
     this.setState({
       ...this.state,
       file: {
@@ -399,7 +435,7 @@ class IndexDetails extends Component {
     };
 
     //render only after fetching the data from the server    
-    if(!title && !this.props.selectedAsset && !this.props.isNewFile) {
+    if(!title && !this.props.selectedAsset && !this.props.isNew) {
       return null;
     }
 
@@ -415,6 +451,7 @@ class IndexDetails extends Component {
           destroyOnClose={true}
           width="1200px"
           footer={[
+            <Button type="danger" onClick={this.handleDelete}>Delete</Button>,
             <Button key="back" onClick={this.handleCancel}>
               Cancel
             </Button>,

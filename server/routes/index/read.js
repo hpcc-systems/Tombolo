@@ -52,6 +52,7 @@ router.post('/saveIndex', [
                 Index.update(req.body.index.basic, {where:{application_id:applicationId, title:req.body.index.basic.title}}).then(function(result){})
             }
             var indexKeyToSave = updateCommonData(req.body.index.indexKey, fieldsToUpdate);
+            indexKeyToSave = indexKeyToSave.map((key => {delete key.id; return key}));
             IndexKey.destroy({where:{application_id:applicationId, "index_id":index_id}}).then((deleted) => {
                 return IndexKey.bulkCreate(
                     indexKeyToSave
@@ -60,6 +61,8 @@ router.post('/saveIndex', [
         }).then(function(indexKey) {
             console.log("saving index payload");
             var indexPayloadToSave = updateCommonData(req.body.index.indexPayload, fieldsToUpdate);
+            indexPayloadToSave = indexPayloadToSave.map((payload => {delete payload.id; return payload}));
+            console.log('indexPayloadToSave: '+JSON.stringify(indexPayloadToSave))
             IndexPayload.destroy({where:{application_id:applicationId, "index_id":index_id}}).then((deleted) => {
                 return IndexPayload.bulkCreate(
                     indexPayloadToSave

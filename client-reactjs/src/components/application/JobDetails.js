@@ -7,10 +7,11 @@ import { hasEditPermission } from "../common/AuthUtil.js";
 import { fetchDataDictionary, eclTypes } from "../common/CommonUtil.js"
 import {omitDeep} from '../common/CommonUtil.js';
 import EditableTable from "../common/EditableTable.js"
+import {handleJobDelete} from "../common/WorkflowUtil";
 
 const TabPane = Tabs.TabPane;
 const Option = Select.Option;
-
+const { confirm } = Modal;
 
 class JobDetails extends Component {
   constructor(props) {
@@ -310,6 +311,7 @@ class JobDetails extends Component {
       console.log(error);
     });
   }
+
   handleOk = () => {
     this.props.form.validateFields(async (err, values) => {
       if(!err) {
@@ -333,6 +335,30 @@ class JobDetails extends Component {
 
   onAutoCreateFiles = (e) => {
     this.state.autoCreateFiles = e.target.checked;
+  }
+
+  handleDelete = () => {
+    let _self=this;
+    confirm({
+      title: 'Delete file?',
+      content: 'Are you sure you want to delete this file?',
+      onOk() {
+        handleJobDelete(_self.props.selectedAsset, _self.props.applicationId)
+        .then(result => {
+          if(_self.props.onDelete) {
+            _self.props.onDelete(_self.props.currentlyEditingNode)
+          } else {
+            _self.props.onRefresh()  
+          }
+          _self.props.onClose();
+          message.success("Job deleted sucessfully");
+        }).catch(error => {
+          console.log(error);
+          message.error("There was an error deleting the Job file");
+        });
+      },
+      onCancel() {},
+    });    
   }
 
   saveJobDetails() {
@@ -537,6 +563,7 @@ class JobDetails extends Component {
             <Checkbox onChange={this.onAutoCreateFiles} disabled={!this.props.isNew} style={{"float":"left"}}>
               Automatically create dependant files
             </Checkbox>,
+            <Button type="danger" onClick={this.handleDelete}>Delete</Button>,
             <Button key="cancel" onClick={this.handleCancel}>
               Cancel
             </Button>,

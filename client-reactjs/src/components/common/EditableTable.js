@@ -136,6 +136,7 @@ class EditableTable extends React.Component {
       columns: this.props.columns
     };
     this.setupDeleteAction();
+    this.props.setData(this.props.dataSource)
   } 
 
   setupDeleteAction = () => {    
@@ -235,7 +236,8 @@ class EditableTable extends React.Component {
         row: EditableFormRow,
         cell: EditableCell,
       },
-    };    
+    };           
+
 
     const columns = this.state.columns.map(col => {
       if (!col.editable) {

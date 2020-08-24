@@ -11,7 +11,7 @@ import 'ag-grid-community/dist/styles/ag-grid.css';
 import 'ag-grid-community/dist/styles/ag-theme-balham.css';
 const TabPane = Tabs.TabPane;
 const Option = Select.Option;
-
+const { confirm } = Modal;
 
 class QueryDetails extends Component {
   constructor(props) {
@@ -139,6 +139,36 @@ class QueryDetails extends Component {
         ...this.state.query,
         output: omitResults,
       }
+    })
+  }
+
+  handleDelete = () => {
+    let _self=this;
+    confirm({
+      title: 'Delete file?',
+      content: 'Are you sure you want to delete this Query?',
+      onOk() {    
+        var data = JSON.stringify({queryId: _self.props.selectedAsset, application_id: _self.props.applicationId});
+        fetch("/api/query/delete", {
+          method: 'post',
+          headers: authHeader(),
+          body: data
+        }).then((response) => {
+          if(response.ok) {
+            return response.json();
+          }
+          handleError(response);
+        })
+        .then(result => {
+          _self.props.onRefresh();
+          _self.props.onClose();
+          message.success("Query deleted sucessfully");
+        }).catch(error => {
+          console.log(error);
+          message.error("There was an error deleting the Query");
+        });
+      },
+      onCancel() {}
     })
   }
 
@@ -443,6 +473,7 @@ class QueryDetails extends Component {
           destroyOnClose={true}
           width="1200px"
           footer={[
+            <Button type="danger" onClick={this.handleDelete}>Delete</Button>,
             <Button key="back" onClick={this.handleCancel}>
               Cancel
             </Button>,

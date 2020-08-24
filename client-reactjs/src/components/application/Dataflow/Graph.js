@@ -49,7 +49,8 @@ class Graph extends Component {
     wu_start: '',
     wu_duration: '',
     showSubProcessDetails: false,
-    selectedSubProcess: {"id":''}
+    selectedSubProcess: {"id":''},
+    currentlyEditingNode: {}
   }
 
   consts = {
@@ -291,59 +292,63 @@ class Graph extends Component {
     });    
   }
 
-  onFileAdded = (saveResponse) => {    
-    var newData = this.thisGraph.nodes.map(el => {      
-      if(el.id == this.state.currentlyEditingId) {
-        el.title=saveResponse.title;
-        switch(el.type) {
-          case 'File':
-            el.fileId=saveResponse.fileId;
-            break;
-          case 'Index':
-            el.indexId=saveResponse.indexId;
-            break;
-          case 'Job':
-          case 'Modeling':
-          case 'Scoring':
-          case 'ETL':
-          case 'Query Build':
-          case 'Data Profile':
-            el.jobId=saveResponse.jobId;
-            break;
-          case 'Sub-Process':            
-            el.subProcessId=saveResponse.id;
-            this.setState({          
-              showSubProcessDetails: false
-            });
-            this.saveGraph();
+  onFileAdded = (saveResponse) => {  
+    if(saveResponse) {  
+      var newData = this.thisGraph.nodes.map(el => {      
+        if(el.id == this.state.currentlyEditingId) {
+          el.title=saveResponse.title;
+          switch(el.type) {
+            case 'File':
+              el.fileId=saveResponse.fileId;
+              break;
+            case 'Index':
+              el.indexId=saveResponse.indexId;
+              break;
+            case 'Job':
+            case 'Modeling':
+            case 'Scoring':
+            case 'ETL':
+            case 'Query Build':
+            case 'Data Profile':
+              el.jobId=saveResponse.jobId;
+              break;
+            case 'Sub-Process':            
+              el.subProcessId=saveResponse.id;
+              this.setState({          
+                showSubProcessDetails: false
+              });
+              this.saveGraph();
 
-            break;  
+              break;  
+          }
+          return el;
+           //return Object.assign({}, el, {title:saveResponse.title, fileId:saveResponse.fileId, jobId:saveResponse.jobId, queryId:saveResponse.queryId, indexId:saveResponse.indexId})
         }
-        return el;
-         //return Object.assign({}, el, {title:saveResponse.title, fileId:saveResponse.fileId, jobId:saveResponse.jobId, queryId:saveResponse.queryId, indexId:saveResponse.indexId})
-      }
-      return el
-    });
-    if(saveResponse.dataflow) {
-      let edges = saveResponse.dataflow.edges;
-      edges.forEach(function (e, i) {
-        edges[i] = {
-          source: saveResponse.dataflow.nodes.filter(function (n) {
-            return n.id === e.source;
-          })[0],
-          target: saveResponse.dataflow.nodes.filter(function (n) {
-            return n.id === e.target;
-          })[0]
-        };
+        return el
       });
-      this.thisGraph.nodes = saveResponse.dataflow.nodes;
-      this.thisGraph.edges = edges;   
-      this.setIdCt(saveResponse.dataflow.length);        
+      if(saveResponse.dataflow) {
+        let edges = saveResponse.dataflow.edges;
+        edges.forEach(function (e, i) {
+          edges[i] = {
+            source: saveResponse.dataflow.nodes.filter(function (n) {
+              return n.id === e.source;
+            })[0],
+            target: saveResponse.dataflow.nodes.filter(function (n) {
+              return n.id === e.target;
+            })[0]
+          };
+        });
+        this.thisGraph.nodes = saveResponse.dataflow.nodes;
+        this.thisGraph.edges = edges;   
+        this.setIdCt(saveResponse.dataflow.length);        
+      } else {
+        this.thisGraph.nodes = newData;
+      }
+      this.updateGraph();
+      //this.saveGraph();
     } else {
-      this.thisGraph.nodes = newData;
+      this.fetchSavedGraph();
     }
-    this.updateGraph();
-    //this.saveGraph();
   }
 
   saveGraph() {
@@ -833,7 +838,8 @@ class Graph extends Component {
             //_self.makeTextEditable(d3.select(this), d)
         }).on("dblclick", function (d) {            
             _self.setState({
-              currentlyEditingId: d.id
+              currentlyEditingId: d.id,
+              currentlyEditingNode: d
             });
 
             _self.openDetailsDialog(d);
@@ -929,6 +935,7 @@ class Graph extends Component {
   }
 
   deleteNode = (d, gEl) => {
+    console.log("deleteNode")
     let _self=this;
     switch(d.type) {
       case 'File':
@@ -1266,7 +1273,10 @@ class Graph extends Component {
           onClose={this.handleClose}
           onRefresh={this.onFileAdded}
           user={this.props.user}
-          selectedDataflow={this.props.selectedDataflow}/> : null}
+          selectedDataflow={this.props.selectedDataflow}
+          onDelete={this.deleteNode}
+          currentlyEditingNode={this.state.currentlyEditingNode}
+          /> : null}
 
       {this.state.openJobDetailsDialog ?
             <JobDetailsForm
@@ -1280,7 +1290,10 @@ class Graph extends Component {
               user={this.props.user}
               selectedDataflow={this.props.selectedDataflow}
               mousePosition={this.state.mousePosition}
-              currentlyEditingId={this.state.currentlyEditingId}/> : null}
+              currentlyEditingId={this.state.currentlyEditingId}
+              onDelete={this.deleteNode}
+              currentlyEditingNode={this.state.currentlyEditingNode}
+              /> : null}
               
 
       {this.state.openIndexDetailsDialog ?
@@ -1292,7 +1305,10 @@ class Graph extends Component {
             selectedAsset={this.state.selectedIndex}
             onClose={this.closeIndexDlg}
             user={this.props.user}
-            selectedDataflow={this.props.selectedDataflow}/> : null}
+            selectedDataflow={this.props.selectedDataflow}
+            onDelete={this.deleteNode}
+            currentlyEditingNode={this.state.currentlyEditingNode}            
+            /> : null}
 
       {this.state.openFileInstanceDialog ?
           <FileInstanceDetailsForm          

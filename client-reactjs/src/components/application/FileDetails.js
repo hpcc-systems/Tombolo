@@ -18,7 +18,7 @@ import 'ag-grid-community/dist/styles/ag-theme-balham.css';
 
 const TabPane = Tabs.TabPane;
 const Option = Select.Option;
-
+const { confirm } = Modal;
 const layoutGrid=undefined;
 
 
@@ -289,6 +289,44 @@ class FileDetails extends Component {
       }
     });
 
+  }
+
+  handleDelete = () => {
+    let _self=this;
+    confirm({
+      title: 'Delete file?',
+      content: 'Are you sure you want to delete this file?',
+      onOk() {
+        var data = JSON.stringify({fileId: _self.props.selectedAsset, application_id: _self.props.applicationId});
+        fetch("/api/file/read/delete", {
+          method: 'post',
+          headers: authHeader(),
+          body: data
+        }).then((response) => {
+          if(response.ok) {
+            return response.json();
+          }
+          handleError(response);
+        })
+        .then(result => {
+          //if called from Graph.js
+          if(_self.props.onDelete) {
+            _self.props.onDelete(_self.props.currentlyEditingNode)
+          } else {
+            _self.props.onRefresh();  
+          }
+          message.success("File deleted sucessfully");
+          _self.setState({
+            visible: false,
+            confirmLoading: false,
+          });
+        }).catch(error => {
+          console.log(error);
+          message.error("There was an error deleting the file");
+        });
+      },
+      onCancel() {},
+    });    
   }
 
   getLicenses() {
@@ -1157,6 +1195,7 @@ class FileDetails extends Component {
           destroyOnClose={true}
           width="1200px"          
           footer={[
+            <Button type="danger" onClick={this.handleDelete}>Delete</Button>,
             <Button key="back" onClick={this.handleCancel}>
               Cancel
             </Button>,
