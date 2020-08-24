@@ -21,13 +21,12 @@ class FileList extends Component {
     tableView: true,
     fileId:(this.props.fileId) ? this.props.fileId: ''
   }
-  componentWillReceiveProps(props) {
-    console.log("file list")
-    if(props.application) {
-      if(this.state.applicationId != props.application.applicationId) {
+  componentDidUpdate() {
+    if(this.props.application) {
+      if(this.state.applicationId != this.props.application.applicationId) {
         this.setState({
-          applicationId: props.application.applicationId,
-          applicationTitle: props.application.applicationTitle
+          applicationId: this.props.application.applicationId,
+          applicationTitle: this.props.application.applicationTitle
         });
         this.handleRefresh();
       }
@@ -56,7 +55,6 @@ class FileList extends Component {
     this.setState({
       fileId: ''
     });
-    console.log(evt.target.value);
     evt.target.value == 'chart' ? this.setState({tableView: false}) : this.setState({tableView: true})
   }
 

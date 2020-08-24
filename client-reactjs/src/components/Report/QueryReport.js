@@ -1,4 +1,4 @@
-import { Table,Row, Col,Spin} from 'antd/lib';
+import { Spin} from 'antd/lib';
 import React, { Component } from "react";
 import { authHeader, handleError } from "../common/AuthHeader.js"
 import { AgGridReact } from 'ag-grid-react';
@@ -7,9 +7,7 @@ import 'ag-grid-community/dist/styles/ag-theme-balham.css';
 
 
 class QueryReport extends Component {
-  constructor(props) {
-    super(props);
-  }
+
 
   state = {
     queryList:this.props.queryList,

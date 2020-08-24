@@ -13,10 +13,7 @@ const TabPane = Tabs.TabPane;
 const Option = Select.Option;
 const { confirm } = Modal;
 
-class JobDetails extends Component {
-  constructor(props) {
-    super(props);
-  }
+class JobDetails extends Component { 
 
   state = {
     visible: true,
@@ -62,7 +59,7 @@ class JobDetails extends Component {
   }
 
   getJobDetails() {
-    if(this.props.selectedAsset != '' && !this.props.isNew) {
+    if(this.props.selectedAsset !== '' && !this.props.isNew) {
       fetch("/api/job/job_details?job_id="+this.props.selectedAsset+"&app_id="+this.props.applicationId, {
         headers: authHeader()
       })
@@ -601,7 +598,7 @@ class JobDetails extends Component {
                 optionLabelProp="text"
                 disabled={!editingAllowed}
               >
-                <Input id="autocomplete_field" suffix={this.state.autoCompleteSuffix} autocomplete="off"/>
+                <Input id="autocomplete_field" suffix={this.state.autoCompleteSuffix} autoComplete="off"/>
               </AutoComplete>
             </Form.Item>
             </div>

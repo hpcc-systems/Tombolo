@@ -1,14 +1,11 @@
-import { Table,Row, Col,Spin} from 'antd/lib';
+import { Row, Col,Spin} from 'antd/lib';
 import React, { Component } from "react";
 import { authHeader, handleError } from "../common/AuthHeader.js"
 import { AgGridReact } from 'ag-grid-react';
 import 'ag-grid-community/dist/styles/ag-grid.css';
 import 'ag-grid-community/dist/styles/ag-theme-balham.css';
 
-class IndexReport extends Component {
-  constructor(props) {
-    super(props);
-  }
+class IndexReport extends Component { 
 
   state = {
     indexList:this.props.indexList,

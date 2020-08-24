@@ -51,12 +51,11 @@ function DataDictionary(props) {
   const authReducer = useSelector(state => state.authenticationReducer);
 
   const editingAllowed = hasEditPermission(authReducer.user);
-
   if(application.applicationId == '' ||  application.applicationTitle == '') return null;
   return (    
       <div>
         <div className="d-flex justify-content-end" style={{paddingTop:"55px", margin: "5px"}}>
-            <BreadCrumbs applicationId={application.applicationId} applicationTitle={application.applicationTitle}/> 
+          <BreadCrumbs applicationId={application.applicationId} applicationTitle={application.applicationTitle}/>
           <div className="ml-auto">
             {editingAllowed ? 
               <span style={{ marginLeft: "auto" }}>

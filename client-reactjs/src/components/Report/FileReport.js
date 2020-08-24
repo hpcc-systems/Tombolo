@@ -1,4 +1,4 @@
-import { Table,Spin,Tabs,Row, Col} from 'antd/lib';
+import { Spin,Tabs,Row, Col} from 'antd/lib';
 import React, { Component } from "react";
 import { authHeader, handleError } from "../common/AuthHeader.js";
 import Plotly from 'plotly.js-basic-dist';
@@ -7,7 +7,6 @@ import { AgGridReact } from 'ag-grid-react';
 import 'ag-grid-community/dist/styles/ag-grid.css';
 import 'ag-grid-community/dist/styles/ag-theme-balham.css';
 const Plot = createPlotlyComponent(Plotly);
-const TabPane = Tabs.TabPane;
 
 class FileReport extends Component {
   constructor(props) {

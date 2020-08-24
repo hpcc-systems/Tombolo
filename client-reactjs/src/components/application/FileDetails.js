@@ -1,6 +1,5 @@
 import React, { Component } from "react";
 import { Modal, Tabs, Form, Input, Icon,  Select, Button, Table, AutoComplete, Tag, message, Drawer, Row, Col, Spin, Radio } from 'antd/lib';
-import ReactTable from "react-table";
 import "react-table/react-table.css";
 import FileRelations from "./FileRelations"
 import DataProfileTable from "./DataProfileTable"

@@ -8,10 +8,6 @@ import { hasEditPermission } from "../common/AuthUtil.js";
 import { Constants } from '../common/Constants';
 
 class FileTable extends Component {
-  constructor(props) {
-    super(props);
-  }
-
   state = {
     openFileDetailsDialog: false,
     selectedFile: "",
@@ -81,24 +77,24 @@ class FileTable extends Component {
 
   handleDelete= (fileId) => {
     console.log(fileId);
-      var data = JSON.stringify({fileId: fileId, application_id: this.state.applicationId});
-      fetch("/api/file/read/delete", {
-        method: 'post',
-        headers: authHeader(),
-        body: data
-      }).then((response) => {
-        if(response.ok) {
-          return response.json();
-        }
-        handleError(response);
-      })
-      .then(result => {
-        this.fetchDataAndRenderTable();
-        message.success("File deleted sucessfully");
-      }).catch(error => {
-        console.log(error);
-        message.error("There was an error deleting the file");
-      });
+    var data = JSON.stringify({fileId: fileId, application_id: this.state.applicationId});
+    fetch("/api/file/read/delete", {
+      method: 'post',
+      headers: authHeader(),
+      body: data
+    }).then((response) => {
+      if(response.ok) {
+        return response.json();
+      }
+      handleError(response);
+    })
+    .then(result => {
+      this.fetchDataAndRenderTable();
+      message.success("File deleted sucessfully");
+    }).catch(error => {
+      console.log(error);
+      message.error("There was an error deleting the file");
+    });
   }
 
   handleClose = () => {

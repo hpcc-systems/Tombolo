@@ -12,16 +12,15 @@ const useFileDetailsForm = () => {
     setIsShowing(!isShowing);
   }
 
-  let dialogRef;
-
   function OpenDetailsForm ({...props}) {
-  	if(props.type == 'file')
+    let dialogRef;
+  	if(props.type === 'file')
   		return	<FileDetailsForm	onRef={ref => (dialogRef = ref)} {...props} />
-  	else if(props.type == 'job')
+  	else if(props.type === 'job')
   		return	<JobDetailsForm	onRef={ref => (dialogRef = ref)} {...props}/>
-  	else if(props.type == 'index')
+  	else if(props.type === 'index')
   		return	<IndexDetailsForm	onRef={ref => (dialogRef = ref)} {...props}/>
-    else if(props.type == 'query')
+    else if(props.type === 'query')
       return  <QueryDetailsForm onRef={ref => (dialogRef = ref)} {...props}/>
   }
 

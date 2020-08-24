@@ -11,7 +11,6 @@ class Clusters extends Component {
   	removeDisabled: true,
 	  showAddClusters: false,
   	confirmLoading: false,
-  	showAddClusters: false,
     initialDataLoading: false,
     clusterWhitelist: [],
   	newCluster : {

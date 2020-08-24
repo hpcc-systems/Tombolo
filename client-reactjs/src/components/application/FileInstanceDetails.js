@@ -39,7 +39,6 @@ class FileInstanceDetails extends Component {
   }
 
   getFileInstanceDetails() {
-    console.log(this.props.selectedAsset + ', '+this.props.isNew)
     if(this.props.selectedAsset && !this.props.isNew) {
       fetch("/api/fileinstance/instance_details?id="+this.props.selectedAsset, {
         headers: authHeader()

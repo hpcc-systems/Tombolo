@@ -14,7 +14,6 @@ import AssetDetails from "./components/application/AssetDetails";
 import {FileList} from "./components/application/FileList";
 import {JobList} from "./components/application/JobList";
 import {IndexList} from "./components/application/IndexList";
-import Dashboard from "./components/application/Dashboard";
 import {QueriesList} from "./components/application/QueriesList";
 import DataDictionary from "./components/application/DataDictionary"
 import Dataflow from "./components/application/Dataflow";
@@ -31,14 +30,10 @@ import { userActions } from './redux/actions/User';
 import { store } from './redux/store/Store';
 
 import {Report} from "./components/Report/Report";
-import {Chart} from "./components/application/Chart";
 import Regulations from "./components/admin/ControlsAndRegulations";
 const { Content } = Layout;
 
 class App extends React.Component {
-  constructor(props) {
-      super(props);
-  }
   componentDidMount() {
     store.dispatch(userActions.validateToken());
   }  
@@ -90,7 +85,6 @@ class App extends React.Component {
                                 <PrivateRoute path="/admin/clusters" component={AdminClusters}/>
                                 <PrivateRoute path="/admin/users" component={Users}/>
                                 <PrivateRoute path="/report/:searchText" component={Report}/>
-                                <PrivateRoute path="/:applicationId/Chart" component={Chart}/>
                                 <PrivateRoute path="/admin/consumers" component={AdminConsumers}/>
                                 <PrivateRoute path="/admin/controlsAndRegulations" component={Regulations}/>
                                 <PrivateRoute path="/:applicationId/dataflowInstanceDetails" component={DataflowInstanceDetails}/>

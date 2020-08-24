@@ -7,7 +7,7 @@ let omitDeep = (value, key) => {
     return Object.keys(value)
       .reduce(
         (newObject, k) => {
-          if (k == key) return newObject
+          if (k === key) return newObject
           return Object.assign(
             { [k]: omitDeep(value[k], key) },
             newObject
