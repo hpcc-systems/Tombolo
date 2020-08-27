@@ -119,76 +119,59 @@ router.get('/assets', [
     console.log("[app/read.js] - App route called: "+req.query.app_id + " dataflowId: "+req.query.dataflowId);
     let results = [];
     File.findAll({
-        raw: true,
-        attributes:["id","title","name","description"],
-        where:{"application_id":req.query.app_id, "dataflowId":req.query.dataflowId}
+      raw: true,
+      attributes:["id","title","name","description"],
+      where:{"application_id":req.query.app_id, "dataflowId":req.query.dataflowId}
     })
     .then((files) => {
-        files.forEach((file) => {
-            results.push({
-                "id":file.id,
-                "title":file.title,
-                "name":file.name,
-                "description":file.description,
-                "objType": "file",
-                "createdAt": file.createdAt,
-                "contact": file.consumer
-            })
-        });
-        return Job.findAll({
-            raw: true,
-            attributes:["id","name","description"],
-            where:{"application_Id":req.query.app_id, "dataflowId":req.query.dataflowId}
-        });
+      files.forEach((file) => {
+        results.push({
+            "id":file.id,
+            "title":file.title,
+            "name":file.name,
+            "description":file.description,
+            "objType": "file",
+            "createdAt": file.createdAt,
+            "contact": file.consumer
+        })
+      });
+      return Job.findAll({
+        raw: true,
+        attributes:["id","name","description"],
+        where:{"application_Id":req.query.app_id, "dataflowId":req.query.dataflowId}
+      });
     })
     .then((jobs) => {
-        jobs.forEach((job) => {
-            results.push({
-                "id":job.id,
-                "title":job.name,
-                "name":job.name,
-                "description":job.description,
-                "objType": "job",
-                "createdAt": job.createdAt,
-                "contact": job.contact
-            })
-        });
-        return Index.findAll({
-            raw: true,
-            attributes:["id","title","description"],
-            where:{"application_id":req.query.app_id, "dataflowId":req.query.dataflowId}}
-        );
+      jobs.forEach((job) => {
+        results.push({
+            "id":job.id,
+            "title":job.name,
+            "name":job.name,
+            "description":job.description,
+            "objType": "job",
+            "createdAt": job.createdAt,
+            "contact": job.contact
+        })
+      });
+      return Index.findAll({
+        raw: true,
+        attributes:["id","title","description"],
+        where:{"application_id":req.query.app_id, "dataflowId":req.query.dataflowId}}
+      );
     })
     .then((indexes) => {
-        indexes.forEach((index) => {
-            results.push({
-                "id":index.id,
-                "title":index.title,
-                "name":index.title,
-                "description":index.description,
-                "objType": "index",
-                "createdAt": index.createdAt,
-                "contact":""
-            })
+      indexes.forEach((index) => {
+        results.push({
+            "id":index.id,
+            "title":index.title,
+            "name":index.title,
+            "description":index.description,
+            "objType": "index",
+            "createdAt": index.createdAt,
+            "contact":""
         })
-        return Query.findAll({
-            raw: true,
-            attributes:["id","title","description"],
-            where:{"application_id":req.query.app_id}
-        })
-    }).then((queries) => {
-        queries.forEach((query) => {
-            results.push({
-                "id":query.id,
-                "title":query.title,
-                "name":query.title,
-                "description":query.description,
-                "objType": "query",
-                "createdAt": query.createdAt,
-                "contact":""
-            })
-        });
-        res.json(results);
+      })
+      res.json(results);
     }).catch(function(err) {
         console.log(err);
     });
