@@ -1,6 +1,7 @@
 import React, { useContext, useState, useEffect, useRef } from 'react';
 import { Table, Input, Button, Popconfirm, Form, Select, Upload, message, Icon } from 'antd';
 import Papa from 'papaparse';
+import {parseString} from 'xml2js';
 import {omitDeep} from './CommonUtil';
 
 const EditableContext = React.createContext();
@@ -31,13 +32,13 @@ class EditableCell extends React.Component {
 
   saveSelect = e => {    
     //check if a data defn is selected as type in the table
-    let selectedDataDefn = this.dataDefinitions.filter(dataDefn => dataDefn.id == e);
+    let selectedDataDefn = this.datadefinitions.filter(dataDefn => dataDefn.id == e);
     if(selectedDataDefn.length > 0) {
       e = selectedDataDefn[0].name;
     }
     const { record, handleSave, dataIndex } = this.props;
     let dataValueObj = {};
-    record.dataDefinition = selectedDataDefn;
+    record.dataDefinition = selectedDataDefn;    
     dataValueObj[dataIndex] = e;
     this.form.setFieldsValue(dataValueObj);    
     this.form.validateFields({force: true}, (error, values) => {
@@ -68,9 +69,9 @@ class EditableCell extends React.Component {
 
   renderCell = form => {
     this.form = form;
-    const { children, dataIndex, record, title, celleditor, celleditorparams, required, showDataDefinition, dataDefinitions } = this.props;
+    const { children, dataIndex, record, title, celleditor, celleditorparams, required, showdatadefinition, datadefinitions } = this.props;
     const { editing } = this.state;
-    this.dataDefinitions = dataDefinitions
+    this.datadefinitions = datadefinitions
     return editing ? (
     <Form>
       <Form.Item style={{ margin: 0 }}>
@@ -87,9 +88,9 @@ class EditableCell extends React.Component {
             {celleditorparams.values.map(cellEditorParam =>  <Option key={cellEditorParam} value={cellEditorParam}>{cellEditorParam}</Option>)}
           </OptGroup>          
           
-          { showDataDefinition && dataDefinitions ? 
+          { showdatadefinition && datadefinitions ? 
             <OptGroup label="Data Dictionary">
-              {dataDefinitions.map(dataDefn => <Option key={dataDefn.id} value={dataDefn.id}>{dataDefn.name}</Option>)}
+              {datadefinitions.map(dataDefn => <Option key={dataDefn.id} value={dataDefn.id}>{dataDefn.name}</Option>)}
             </OptGroup> : null}
           </Select> : <Input ref={node => (this.input = node)} onPressEnter={this.saveText} onBlur={this.saveText} />)}
       </Form.Item>
@@ -158,7 +159,6 @@ class EditableTable extends React.Component {
   }  
 
   handleDelete = id => {
-    console.log('id: '+id)
     let dataSource = [...this.state.dataSource];
     dataSource = dataSource.filter(item => item.id !== id);
     this.setState({ dataSource: dataSource});    
@@ -184,32 +184,37 @@ class EditableTable extends React.Component {
   handleSave = row => {
     let newData = [...this.state.dataSource];
     let updatedItemIdx=[], editingItem={};
-    newData.forEach((item, index) => {
-      if(row.id == item.id) {
-        updatedItemIdx = [index];
-        return;
-      } else if(item.children) {
-        item.children.forEach((childItem, childItemindex) => {
-          if(row.id == childItem.id) { 
-            updatedItemIdx = [index, childItemindex];
-            return;
-          }
-        })
-      } 
-    });
-    if(updatedItemIdx.length == 1) {
-      editingItem = newData[updatedItemIdx];
-      newData.splice(updatedItemIdx, 1, {
-        ...editingItem,
-        ...row,
-      });
-    } else {
-      editingItem = newData[updatedItemIdx[0]].children[updatedItemIdx[1]];
-      newData[updatedItemIdx[0]].children.splice(updatedItemIdx[1], 1, {
-        ...editingItem,
-        ...row,
+    let iterateChildren = (editingRowId, index, item) => {
+      item.children.forEach((childItem, childItemindex) => {        
+        if(editingRowId == childItem.id) { 
+          item.children[childItemindex].name = row.name;
+          item.children[childItemindex].type = row.type;
+          item.children[childItemindex].eclType = row.eclType;
+          item.children[childItemindex].description = row.description;
+          item.children[childItemindex].required = row.required;
+          item.children[childItemindex].data_types = row.data_types;
+          return;
+        }
+        if(childItem.children) {
+          iterateChildren(editingRowId, index, childItem);
+        }
       })
     }
+
+    newData.forEach((item, index) => {
+      if(row.id == item.id) {        
+        newData[index].name = row.name;
+        newData[index].type = row.type;
+        newData[index].eclType = row.eclType;
+        newData[index].description = row.description;
+        newData[index].required = row.required;
+        newData[index].data_types = row.data_types;
+        return;
+      } else if(item.children) {
+        iterateChildren(row.id, index, item);
+      } 
+    });
+    
     this.setState({ dataSource: newData });
     this.props.setData(newData)
   };  
@@ -220,7 +225,7 @@ class EditableTable extends React.Component {
   }
 
   onDataDefintionSelect = (id) => {
-    let selectedDataDefinition = this.props.dataDefinitions.filter(dataDefn => dataDefn.id == id)
+    let selectedDataDefinition = this.props.datadefinitions.filter(dataDefn => dataDefn.id == id)
     let dataDefn = JSON.parse(selectedDataDefinition[0].data_defn);
     this.setState({
       dataSource: dataDefn,
@@ -254,15 +259,15 @@ class EditableTable extends React.Component {
           required: col.required ? col.required : false,
           title: col.title,
           handleSave: this.handleSave,
-          showDataDefinition: this.props.showDataDefinition,
-          dataDefinitions: this.props.dataDefinitions
+          showdatadefinition: this.props.showDataDefinition.toString(),
+          datadefinitions: this.props.dataDefinitions
         }),
       };
     });
 
     const fileUploadProps = {
       name: 'file',  
-      accept: '.csv,.json',   
+      accept: '.csv,.json,.xml',   
       beforeUpload(file) {
         const reader = new FileReader();        
         reader.onload = (e) => {
@@ -273,6 +278,9 @@ class EditableTable extends React.Component {
               break;
             case 'application/json':
               parseJson(e.target.result)
+              break;  
+            case 'text/xml':
+              parseXml(e.target.result)
               break;  
           }
           
@@ -296,32 +304,65 @@ class EditableTable extends React.Component {
     const parseJson = (json) => {
       let layout = [];
       let parsedJson = JSON.parse(json);
-      let keys = Object.keys(parsedJson);
 
-      let iterateJson = (key, idx) => {
-        let children = [];          
-        Object.keys(parsedJson[key]).forEach((childKey, childIdx) => {
-          let obj = {'id': idx + '-' +childIdx, 'name': childKey, 'type':'', 'eclType':'', description:'', required:false, data_types:''};
-          if(parsedJson[childKey] instanceof Object) {
-            obj.children = iterateJson(childKey, childIdx);            
-          } 
-          children.push(obj);
-        })
-        return children;
+      parseJsonResult(parsedJson);
+    }
+
+    const parseJsonResult = (result) => {
+      let layout = [];
+      let iterateJsonObj = (jsonObj, idx) => {
+        let obj = {}, children = [];    
+        //check if it is an object and not array. if object, iterate over the keys and extract the keys
+        if(typeof (jsonObj) === 'object' && !Array.isArray(jsonObj)) {
+          Object.keys(jsonObj).forEach((jsonKey, childIdx) => {
+            console.log(jsonKey)
+            obj = {'id': Math.random() + '-' +childIdx, 'name': jsonKey, 'type':'', 'eclType':'', description:'', required:false, data_types:''};
+            if(jsonObj[jsonKey] != null && typeof (jsonObj[jsonKey]) === 'object' && !Array.isArray(jsonObj[jsonKey])) {
+              obj.children = iterateJsonObj(jsonObj[jsonKey]);              
+            } else if(Array.isArray(jsonObj[jsonKey])) {
+              obj.children = iterateJsonObj(jsonObj[jsonKey][0]);
+            }
+            children.push(obj);  
+          })                     
+        } else if(Array.isArray(jsonObj)) {
+          //check if it is an object and not array. if object, iterate over the keys and extract the keys
+          let arrayElements = [];
+          Object.keys(jsonObj[0]).forEach((arrayElem, childIdx) => {
+            let arryObj = {'id': Math.random() + '-' +childIdx, 'name': arrayElem, 'type':'', 'eclType':'', description:'', required:false, data_types:''};
+            if(jsonObj[0][arrayElem] != null && typeof (jsonObj[0][arrayElem]) === 'object') {
+              arryObj.children = iterateJsonObj(jsonObj[0][arrayElem]);
+            }
+            arrayElements.push(arryObj);
+          })
+          obj.children = arrayElements;
+          children.push(obj);  
+        }
+        return children;     
       }
 
-      keys.forEach((key, idx) => {        
+      Object.keys(result).forEach((key, idx) => {
         let obj = {'id': idx, 'name': key, 'type':'', 'eclType':'', description:'', required:false, data_types:''};
-        if(parsedJson[key] instanceof Object) {
-          obj.children = iterateJson(key, idx);
-        } 
-        layout.push(obj);        
+        if(result[key] != null && typeof (result[key]) === 'object') {
+          if(Array.isArray(result[key])) {
+            if(typeof (result[key][0] === 'object')) {
+            }
+          } else {
+            obj.children = iterateJsonObj(result[key], idx);  
+          }
+          
+        }
+        layout.push(obj);
       })
-      
       this.setState({ dataSource: layout });  
       this.props.setData(layout)
     }
 
+    const parseXml = (xmlText) => {
+      parseString(xmlText, (err, result) => {
+        parseJsonResult(result)
+      })
+    }
+   
     return (
       <div>        
         <Table
@@ -340,15 +381,15 @@ class EditableTable extends React.Component {
             Add a row
           </Button>
           </span>
-          {this.props.showDataDefinition && this.props.dataDefinitions ? 
+          {this.props.showdatadefinition && this.props.datadefinitions ? 
             <span style={{paddingRight: "5px"}}>
               <Select placeholder="Select from a Data Definition" disabled={!this.props.editingAllowed} onChange={this.onDataDefintionSelect} style={{ width: 230 }}>
-                {this.props.dataDefinitions.map(dataDefn => <Option key={dataDefn.id}>{dataDefn.name}</Option>)}
+                {this.props.datadefinitions.map(dataDefn => <Option key={dataDefn.id}>{dataDefn.name}</Option>)}
               </Select>
             </span>
             : null}
           <span>
-            {(this.props.fileType == 'csv' || this.props.fileType == 'json') ? 
+            {(this.props.fileType == 'csv' || this.props.fileType == 'json' || this.props.fileType == 'xml') ? 
               <Upload {...fileUploadProps}>
               <Button >
                 <Icon type="upload" /> Upload a sample file

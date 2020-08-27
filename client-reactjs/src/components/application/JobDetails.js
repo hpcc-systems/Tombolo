@@ -1,6 +1,5 @@
 import React, { Component } from "react";
 import { Modal, Tabs, Form, Input, Checkbox, Button,  Select, Table, AutoComplete, Spin, Icon, message, Row, Col } from 'antd/lib';
-import "react-table/react-table.css";
 import { authHeader, handleError } from "../common/AuthHeader.js"
 import AssociatedDataflows from "./AssociatedDataflows"
 import { hasEditPermission } from "../common/AuthUtil.js";

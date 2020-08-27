@@ -1,6 +1,5 @@
 import React, { Component } from "react";
 import { Modal, Tabs, Form, Input, Icon,  Select, Button, Table, AutoComplete, Tag, message, Drawer, Row, Col, Spin} from 'antd/lib';
-import "react-table/react-table.css";
 import { AgGridReact } from 'ag-grid-react';
 import { authHeader, handleError } from "../common/AuthHeader.js"
 import DataProfileHTML from "./DataProfileHTML"

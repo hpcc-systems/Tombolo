@@ -1,6 +1,5 @@
 import React, { Component } from "react";
 import { Modal, Tabs, Form, Input, Icon,  Select, Button, Table, AutoComplete, Tag, message, Drawer, Row, Col, Spin, Radio } from 'antd/lib';
-import "react-table/react-table.css";
 import FileRelations from "./FileRelations"
 import DataProfileTable from "./DataProfileTable"
 import DataProfileHTML from "./DataProfileHTML"
@@ -1214,6 +1213,7 @@ class FileDetails extends Component {
                   <Radio value={'thor_file'}>Thor File</Radio>
                   <Radio value={'csv'}>CSV</Radio>
                   <Radio value={'json'}>JSON</Radio>
+                  <Radio value={'xml'}>XML</Radio>
                 </Radio.Group>
               </Form.Item>
               {this.state.file.fileType == 'thor_file' ? 
