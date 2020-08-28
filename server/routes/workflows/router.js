@@ -193,7 +193,9 @@ let createWorkflowDetails = (message, workflowId, dataflowId, clusterId) => {
             "wuid": message.wuid,
             "wu_start": moment(start).format('HH:mm:ss'),
             "wu_end": moment(end).format('HH:mm:ss'),
-            "wu_duration": wuInfo.Workunit.TotalClusterTime
+            "wu_duration": wuInfo.Workunit.TotalClusterTime,
+            "owner": wuInfo.Workunit.Owner,
+            "jobName": wuInfo.Workunit.Jobname
           }).then((result) => {
             console.log("workflow status stored...");
             resolve(result);
