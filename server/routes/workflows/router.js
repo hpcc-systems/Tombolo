@@ -237,7 +237,9 @@ router.get('/workunits', [
                 "status": workflowDetail.status,
                 "start": workflowDetail.wu_start,
                 "end": workflowDetail.wu_end,
-                "totalClusterTime": workflowDetail.wu_duration
+                "totalClusterTime": workflowDetail.wu_duration,
+                "owner": workflowDetail.owner,
+                "jobName": workflowDetail.jobName
               })
             );
           })       

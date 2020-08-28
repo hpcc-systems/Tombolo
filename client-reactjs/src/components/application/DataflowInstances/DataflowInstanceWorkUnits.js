@@ -159,12 +159,12 @@ class DataflowInstanceWorkUnits extends Component {
       {
         title: 'Job Name',
         dataIndex: 'jobName',
-        width: '30%'
+        width: '15%'
       },        
       {
         title: 'Owner',
         dataIndex: 'owner',
-        width: '30%'
+        width: '15%'
       },        
       {
         width: '10%',

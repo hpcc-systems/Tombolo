@@ -342,17 +342,14 @@ class EditableTable extends React.Component {
 
       Object.keys(result).forEach((key, idx) => {
         let obj = {'id': idx, 'name': key, 'type':'', 'eclType':'', description:'', required:false, data_types:''};
-        if(result[key] != null && typeof (result[key]) === 'object') {
-          if(Array.isArray(result[key])) {
-            if(typeof (result[key][0] === 'object')) {
-            }
-          } else {
-            obj.children = iterateJsonObj(result[key], idx);  
-          }
-          
+        if(result[key] != null && typeof (result[key]) === 'object' && !Array.isArray(result[key])) {
+          obj.children = iterateJsonObj(result[key], idx);  
+        } else if(Array.isArray(result[key])) {
+          obj.children = iterateJsonObj(result[key][0], idx);                    
         }
         layout.push(obj);
       })
+      console.log(JSON.stringify(layout));
       this.setState({ dataSource: layout });  
       this.props.setData(layout)
     }
