@@ -1,18 +1,22 @@
 import React, { Component } from "react";
-import { Table, Button, Row, Col, Modal, Form, Input, Icon, Select, notification, Tooltip, Popconfirm, Divider, AutoComplete, message, Radio, Typography } from 'antd/lib';
+import { Table, Button, Row, Col, Modal, Form, Input, Icon, Select, notification, Tooltip, Popconfirm, Divider, AutoComplete, message, Radio, Typography, Checkbox } from 'antd/lib';
 import BreadCrumbs from "../common/BreadCrumbs";
 import { authHeader, handleError } from "../common/AuthHeader.js";
 import { connect } from 'react-redux';
 import ShareApp from "./ShareApp";
 const Option = Select.Option;
 const { Paragraph } = Typography;
+const options = [
+    { label: 'Supplier', value: 'Supplier' },
+    { label: 'Consumer', value: 'Consumer' },    
+    { label: 'Owner', value: 'Owner' }
+  ];
 
 class Consumers extends Component {
   constructor(props) {
     super(props);
-
-
   }
+  
   state = {
   	consumers:[],
   	selectedConsumer:'',
@@ -26,7 +30,9 @@ class Consumers extends Component {
       type:'',
       contact_name:'',
       contact_email:'',
-      ad_group:''
+      ad_group:'',
+      assetType: [],
+      transferType:''
     },
     showAdGroupField: false,
     adGroupSearchResults: [],
@@ -34,7 +40,7 @@ class Consumers extends Component {
     appId:"",
     appTitle:"",
     submitted: false
-  }
+  }  
 
   componentDidMount() {
   	this.getConsumers();
@@ -96,9 +102,11 @@ class Consumers extends Component {
           id : data.consumer.id,
           name: data.consumer.name,
           type: data.consumer.type,
+          assetType: data.consumer.assetType.split(','),
           contact_name: data.consumer.contact_name,
           contact_email: data.consumer.contact_email,
-          ad_group: data.consumer.ad_group
+          ad_group: data.consumer.ad_group,
+          transferType: data.consumer.transferType
         }
       });
       this.setState({
@@ -156,7 +164,8 @@ class Consumers extends Component {
           type: '',
           contact_name: '',
           contact_email: '',
-          ad_group: ''
+          ad_group: '',
+          assetType: []
         },
         showAddConsumer: false,
         showAdGroupField: false,
@@ -203,8 +212,24 @@ class Consumers extends Component {
   }
 
   onConsumerSupplierChange = (e) => {
+    let newAssetType = this.state.newConsumer.assetType;
+    newAssetType = e;
     this.setState({
-      type: e.target.value
+      ...this.state,
+      newConsumer: {
+        ...this.state.newConsumer,
+        assetType: newAssetType
+      }
+    });
+  }
+
+  handleDataTransferChange = (e) => {    
+    this.setState({
+      ...this.state,
+      newConsumer: {
+        ...this.state.newConsumer,
+        transferType: e
+      }
     });
   }
 
@@ -216,7 +241,16 @@ class Consumers extends Component {
     if(this.state.newConsumer.name){
     var userId=(this.props.user) ? this.props.user.id:"" ;
 
-    let data = JSON.stringify({"name" : this.state.newConsumer.name, "type" : this.state.newConsumer.type, "contact_name":this.state.newConsumer.contact_name, "contact_email":this.state.newConsumer.contact_email, "ad_group":this.state.newConsumer.ad_group, "assetType":this.state.type});
+    let data = JSON.stringify({
+      "name" : this.state.newConsumer.name, 
+      "type" : this.state.newConsumer.type, 
+      "contact_name":this.state.newConsumer.contact_name, 
+      "contact_email":this.state.newConsumer.contact_email, 
+      "ad_group":this.state.newConsumer.ad_group, 
+      "assetType":this.state.newConsumer.assetType.join(','),
+      "transferType": this.state.newConsumer.transferType
+    });
+
 	  console.log('data: '+data);
     fetch("/api/consumer/consumer", {
       method: 'post',
@@ -370,11 +404,7 @@ class Consumers extends Component {
                 Owner - Contact Person/Group for an asset
               </Paragraph>              
               <div className={'form-group'+ (this.state.submitted && !this.state.newConsumer.name ? ' has-error' : '')}>
-                <Radio.Group onChange={this.onConsumerSupplierChange} value={this.state.type}>
-                  <Radio value={"Consumer"}>Consumer</Radio>
-                  <Radio value={"Supplier"}>Supplier</Radio>
-                  <Radio value={"Owner"}>Owner</Radio>
-                </Radio.Group>
+                <Checkbox.Group options={options} defaultValue={this.state.newConsumer.assetType} onChange={this.onConsumerSupplierChange} />
               </div>
 
             <div className={'form-group'}>
@@ -392,6 +422,14 @@ class Consumers extends Component {
                     <Option value="Internal">Internal</Option>
                 </Select>
               </Form.Item>
+              { this.state.newConsumer.assetType.includes('Supplier') ? 
+                <Form.Item {...formItemLayout} label="Data Transfer">
+                  <Select name="type" id="data_transfer" onSelect={this.handleDataTransferChange} value={this.state.newConsumer.transferType}>
+                    <Option value=""></Option>
+                      <Option value="SFTP">SFTP</Option>
+                      <Option value="Batch">Batch</Option>
+                  </Select>
+                </Form.Item> : null}
               <Form.Item {...formItemLayout} label="Contact Name">
                 <Input id="consumer_contact" name="contact_name" onChange={this.onChange} placeholder="Contact Name" value={this.state.newConsumer.contact_name}/>
               </Form.Item>

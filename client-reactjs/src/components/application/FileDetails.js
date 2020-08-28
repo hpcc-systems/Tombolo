@@ -1155,7 +1155,7 @@ class FileDetails extends Component {
       onChange: this.onSelectedRowKeysChange
     };
     //const modalHeight = !this.props.isNew ? "425px" : "550px";
-    const modalHeight = "565px";    
+    const modalHeight = "570px";    
 
     const getNodeChildDetails = (rowItem) => {
       if (rowItem.children) {
@@ -1285,14 +1285,21 @@ class FileDetails extends Component {
                       <Input id="file_type" name="fileType" onChange={this.onChange} defaultValue={fileType} value={fileType} placeholder="File Type" disabled={!editingAllowed}/>
                   </Form.Item>
                 </Col>*/}
-              </Row>
-
-              <Row type="flex">
                 <Col span={8} order={1}>
                   <Form.Item {...threeColformItemLayout} label="Is Super File">
                     <Input id="file_issuper_file" name="isSuperFile" onChange={this.onChange} defaultValue={isSuperFile} value={isSuperFile} placeholder="Is Super File" disabled={!editingAllowed}/>
                   </Form.Item>
                 </Col>
+              </Row>
+
+              <Row type="flex">     
+                <Col span={8} order={1}>
+                  <Form.Item {...threeColformItemLayout} label="Supplier">
+                     <Select id="supplier" value={(this.state.file.supplier != '') ? this.state.file.supplier : "Select a supplier"} placeholder="Select a supplier" onChange={this.onSupplierSelection} style={{ width: 190 }} disabled={!editingAllowed}>
+                      {consumers.map(consumer => consumer.assetType=="Supplier" ? <Option key={consumer.id}>{consumer.name}</Option> : null)}
+                    </Select>
+                  </Form.Item>
+                </Col>           
                 <Col span={8} order={2}>
                   <Form.Item {...threeColformItemLayout} label="Consumer">
                      <Select id="consumer" value={(this.state.file.consumer != '') ? this.state.file.consumer : "Select a consumer"} placeholder="Select a consumer" onChange={this.onConsumerSelection} style={{ width: 190 }} disabled={!editingAllowed}>
@@ -1300,17 +1307,8 @@ class FileDetails extends Component {
                     </Select>
                   </Form.Item>
                 </Col>
-                {/*show supplier field only for the root file*/}
-                {(this.state.filesCount == 0 || (this.state.filesCount == 1 && !this.props.isNew)) ?
-                  <Col span={8} order={3}>
-                    <Form.Item {...threeColformItemLayout} label="Supplier">
-                       <Select id="supplier" value={(this.state.file.supplier != '') ? this.state.file.supplier : "Select a supplier"} placeholder="Select a supplier" onChange={this.onSupplierSelection} style={{ width: 190 }} disabled={!editingAllowed}>
-                        {consumers.map(consumer => consumer.assetType=="Supplier" ? <Option key={consumer.id}>{consumer.name}</Option> : null)}
-                      </Select>
-                    </Form.Item>
-                  </Col>
-                  : null}
-                <Col span={8} order={2}>
+                
+                <Col span={8} order={3}>
                   <Form.Item {...threeColformItemLayout} label="Owner">
                      <Select id="owner" value={(this.state.file.owner != '') ? this.state.file.owner : "Select an Owner"} placeholder="Select an Owner" onChange={this.onConsumerSelection} style={{ width: 190 }} disabled={!editingAllowed}>
                       {consumers.map(consumer => consumer.assetType == 'Owner' ? <Option key={consumer.id}>{consumer.name}</Option> : null)}
