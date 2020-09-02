@@ -36,6 +36,24 @@ exports.notify = (notification) => {
   });
 } 
 
+exports.notifyApplicationShare = (sharedWithUserEmail, applicationName, req) => {
+  const msg={};  
+  msg.to = sharedWithUserEmail;
+  msg.from = 'hpcc-solutions-lab@lexisnexisrisk.com'; // Use the email address or domain you verified above
+  msg.subject = 'Tombolo application has been shared with you';
+  msg.html = 'A Tombolo application has been shared with you. Please <a href='+req.protocol+'://'+req.get('host') +'>login</a> to Tombolo to access the application';
+
+  sgMail
+  .send(msg)
+  .then(() => {}, error => {
+    console.error(error);
+
+    if (error.response) {
+      console.error(error.response.body)
+    }
+  });
+} 
+
 var consumerGroup = new ConsumerGroup(kafkaConsumerOptions, 'Notifications');
 consumerGroup.on('message', (response) => {
   console.log(response.value);  

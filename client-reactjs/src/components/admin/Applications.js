@@ -4,6 +4,7 @@ import BreadCrumbs from "../common/BreadCrumbs";
 import { authHeader, handleError } from "../common/AuthHeader.js";  
 import { hasAdminRole } from "../common/AuthUtil.js";  
 import { connect } from 'react-redux';
+import { Constants } from '../common/Constants';
 import ShareApp from "./ShareApp";
 
 class Applications extends Component {
@@ -210,9 +211,17 @@ class Applications extends Component {
       dataIndex: 'title'
     },
     {
-      width: '55%',
+      width: '30%',
       title: 'Description',
       dataIndex: 'description'
+    },{
+      width: '25%',
+      title: 'Created',
+      dataIndex: 'createdAt',
+      render: (text, record) => {
+        let createdAt = new Date(text);
+        return createdAt.toLocaleDateString('en-US', Constants.DATE_FORMAT_OPTIONS) +' @ '+ createdAt.toLocaleTimeString('en-US') 
+      }
     },{
       width: '15%',
       title: 'Action',

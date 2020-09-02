@@ -48,7 +48,7 @@ class AppHeader extends Component {
         });
       }
       if(this.state.applications.length == 0) {
-        var url="/api/app/read/appListByUserId?user_id="+this.props.user.id;
+        var url="/api/app/read/appListByUserId?user_id="+this.props.user.id+'&user_name='+this.props.user.username;
         if(hasAdminRole(this.props.user)) {
           url="/api/app/read/app_list";
         }
@@ -244,13 +244,13 @@ class AppHeader extends Component {
                 placeholder="Search"
                 onSearch={this.search}
                 onChange={this.onChangeSearch}
-                style={{ width: 200 }} />
+                style={{ width: 200, paddingRight:"5px" }} />
               </li>
               {/*
               <li className="nav-item">
                 <a className="nav-link" data-nav="/admin/applications" onClick={this.handleTopNavClick} disabled={!hasAdminRole(this.props.user)}><i className="fa fa-lg fa-cog"></i> Settings</a>
               </li>*/}
-              <li className="nav-item"><Button style={{float: "right"}} type="link" target={"_blank"} href={process.env.PUBLIC_URL + "/open_database_license.pdf"} >Open Database License</Button></li>
+              {/*<li className="nav-item"><Button style={{float: "right"}} type="link" target={"_blank"} href={process.env.PUBLIC_URL + "/open_database_license.pdf"} >Open Database License</Button></li>*/}
               <Dropdown overlay={userActionMenu}>
                 <Button shape="round">
                   <i className="fa fa-lg fa-user-circle"></i><span style={{paddingLeft:"5px"}}>{this.props.user.firstName + " " + this.props.user.lastName} <Icon type="down" /></span>

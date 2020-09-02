@@ -3,16 +3,17 @@ const router = express.Router();
 const userService = require('./userservice');
 
 // routes
+router.get('/searchuser', searchUser);
 router.post('/authenticate', authenticate);
 router.post('/register', register);
 router.get('/', getAll);
 router.get('/current', getCurrent);
+router.get('/:app_id/sharedAppUser', GetSharedAppUserList);
 router.get('/:id', getById);
 router.put('/:id', update);
 router.delete('/:id', _delete);
 router.post('/validateToken', validateToken);
 router.get('/:user_id/:app_id', GetuserListToShareApp);
-router.get('/:user_id/:app_id/sharedAppUser', GetSharedAppUserList);
 router.post('/changePassword', changePassword);
 
 module.exports = router;
@@ -73,9 +74,10 @@ function GetuserListToShareApp(req, res, next) {
       .catch(err => next(err));
 }
 function GetSharedAppUserList(req, res, next) {
+  console.log('GetSharedAppUserList')
   userService.GetSharedAppUserList(req, res, next)
-      .then(user => user ? res.json(user) : res.sendStatus(404))
-      .catch(err => next(err));
+    .then(user => user ? res.json(user) : [])
+    .catch(err => next(err));
 }
 
 function changePassword(req, res, next) {
@@ -84,6 +86,12 @@ function changePassword(req, res, next) {
     res.json(response)
   })
   .catch(err => next(err));
+}
+
+function searchUser(req, res, next) {
+  userService.searchUser(req, res, next)
+    .then(users => users ? res.json(users) : res.sendStatus([]))
+    .catch(err => next(err));
 }
 
 

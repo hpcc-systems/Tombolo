@@ -3,8 +3,13 @@ const router = express.Router();
 const assert = require('assert');[]
 var models  = require('../../models');
 let UserApplication = models.user_application;
+let Application = models.application;
 const validatorUtil = require('../../utils/validator');
 const { body, query, validationResult } = require('express-validator/check');
+const NotificationModule = require('../notifications/email-notification');
+const authServiceUtil = require('../../utils/auth-service-utils');
+let Sequelize = require('sequelize');
+const Op = Sequelize.Op;
 
 router.get('/app_list', (req, res) => {
   console.log("[app/read.js] - App route called");
@@ -24,7 +29,12 @@ router.get('/appListByUserId', (req, res) => {
   console.log("[app/read.js] -  Get app list for user id ="+ req.query.user_id);
 
   try {
-    models.application.findAll({where:{"$user_id$":req.query.user_id}, include: [UserApplication]}).then(function(applications) {
+    models.application.findAll({where:{      
+      [Op.or]: [
+        {"$user_id$":req.query.user_id},
+        {"$user_id$": req.query.user_name}
+      ]
+    }, include: [UserApplication]}).then(function(applications) {
         res.json(applications);
     })
     .catch(function(err) {
@@ -105,15 +115,17 @@ router.post('/removeapp', function (req, res) {
     }
 });
 
-
-
 router.post('/saveUserApp', function (req, res) {
     console.log("[app/read.js] - saveUserApp called");
     var userAppList=req.body.users;
     try {
-        UserApplication.bulkCreate(userAppList).then(function(application) {
-            res.json({"result":"success"});
-        });
+      UserApplication.bulkCreate(userAppList).then(async function(application) {
+        let userDetail = await authServiceUtil.getUserDetails(req, userAppList[0].user_id);
+        Application.findOne({where: {id:userAppList[0].application_id}}).then((application) => {
+          NotificationModule.notifyApplicationShare(userDetail[0].email, application.title, req);
+        })          
+        res.json({"result":"success"});
+      });
     } catch (err) {
         console.log('err', err);
     }

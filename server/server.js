@@ -33,9 +33,7 @@ const dataDictionary = require('./routes/data-dictionary/data-dictionary-service
 app.use('/api/app/read', tokenService.verifyToken, appRead);
 app.use('/api/file/read', tokenService.verifyToken, fileRead);
 app.use('/api/index/read', tokenService.verifyToken, indexRead);
-
 app.use('/api/hpcc/read', tokenService.verifyToken, hpccRead);
-app.use('/api/user', userRead);
 app.use('/api/query', tokenService.verifyToken, query);
 app.use('/api/job', tokenService.verifyToken, job);
 app.use('/api/fileinstance', tokenService.verifyToken, fileInstance);
@@ -47,6 +45,7 @@ app.use('/api/dataflowgraph', tokenService.verifyToken, dataflowGraph);
 app.use('/api/dataflow', tokenService.verifyToken, dataflow);
 app.use('/api/workflows', tokenService.verifyToken, workflows);
 app.use('/api/data-dictionary', tokenService.verifyToken, dataDictionary);
+app.use('/api/user', userRead);
 
 //process.env["NODE_TLS_REJECT_UNAUTHORIZED"] = 0;
 

@@ -1339,7 +1339,9 @@ class Graph extends Component {
               <Descriptions.Item label="Status" span={3}>
                 {getBadgeForStatus()}
               </Descriptions.Item>
-              <Descriptions.Item label="Workunit Id" span={3}><a href={this.props.workflowDetails.cluster + "/?Wuid="+this.state.wuid+"&Widget=WUDetailsWidget"}>{this.state.wuid}</a></Descriptions.Item>
+              {this.props.workflowDetails ? 
+                <Descriptions.Item label="Workunit Id" span={3}><a href={this.props.workflowDetails.cluster + "/?Wuid="+this.state.wuid+"&Widget=WUDetailsWidget"}>{this.state.wuid}</a></Descriptions.Item>
+                : null}
               <Descriptions.Item label="Start Time" span={3}>{this.state.wu_start}</Descriptions.Item>
               <Descriptions.Item label="End Time" span={3}>{this.state.wu_end}</Descriptions.Item>
               <Descriptions.Item label="Duration" span={3}>{this.state.wu_duration}</Descriptions.Item>+ "/?Wuid="+record.wuid+"&Widget=WUDetailsWidget"

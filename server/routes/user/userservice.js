@@ -7,21 +7,7 @@ let models = require('../../models');
 let User = models.user;
 const Sequelize = require('sequelize');
 let UserApplication = models.user_application;
-
-module.exports = {
-    authenticate,
-    getAll,
-    getById,
-    create,
-    update,
-    verifyToken,
-    delete: _delete,
-    validateToken,
-    GetuserListToShareApp,
-    GetSharedAppUserList,
-    changePassword
-};
-
+const authServiceUtil = require('../../utils/auth-service-utils');
 
 async function authenticate(req, res, { username, password }) {
     var authServiceUrl = process.env.AUTH_SERVICE_URL + '/login';
@@ -68,35 +54,35 @@ async function verifyToken(req, res, next) {
 
 
 async function validateToken(req, res, next) {
-    let token = req.headers['x-access-token'] || req.headers['authorization'];
-    if (token) {
-        if (token.startsWith('Bearer ')) {
-          token = token.slice(7, token.length);
-          console.log('token: '+token);
-          return new Promise((resolve, reject) => {
-              verifyToken(req, res, next).then((verifyTokenRes) => {
-                if(verifyTokenRes) {
-                    let verifyTokenResParsed = JSON.parse(verifyTokenRes);
-                    if(verifyTokenResParsed && verifyTokenResParsed.verified) {
-                        console.log("token verified");
-                        resolve({
-                            'userWithoutHash': {
-                                'token': token
-                            }
-                        })
-                    }
-                } 
-              })
-              .catch(err => reject('Invalid Token')); 
-          });
-              
-          /*var verified = await jwt.verify(token, dbUtil.secret);
-          if(verified) {
-            const user = await User.findOne({ where: {"username":req.body.username}, attributes: ['id', 'username', 'hash', 'firstName', 'lastName', 'role']});
-            return generateToken(user);
-          }*/
-        }
-    }
+  let token = req.headers['x-access-token'] || req.headers['authorization'];
+  if (token) {
+      if (token.startsWith('Bearer ')) {
+        token = token.slice(7, token.length);
+        console.log('token: '+token);
+        return new Promise((resolve, reject) => {
+            verifyToken(req, res, next).then((verifyTokenRes) => {
+              if(verifyTokenRes) {
+                  let verifyTokenResParsed = JSON.parse(verifyTokenRes);
+                  if(verifyTokenResParsed && verifyTokenResParsed.verified) {
+                      console.log("token verified");
+                      resolve({
+                          'userWithoutHash': {
+                              'token': token
+                          }
+                      })
+                  }
+              } 
+            })
+            .catch(err => reject('Invalid Token')); 
+        });
+            
+        /*var verified = await jwt.verify(token, dbUtil.secret);
+        if(verified) {
+          const user = await User.findOne({ where: {"username":req.body.username}, attributes: ['id', 'username', 'hash', 'firstName', 'lastName', 'role']});
+          return generateToken(user);
+        }*/
+      }
+  }
 }
 
 async function generateToken(user) {
@@ -115,6 +101,45 @@ async function generateToken(user) {
 
 async function getAll() {
     return await User.findAll({attributes: { exclude: ["hash"] }, required: false });
+}
+
+const searchUser = (req, res, next) => {
+  let searchTerm = req.query.searchTerm;
+  let token = req.headers['x-access-token'] || req.headers['authorization'];
+  if (token.startsWith('Bearer ')) {
+    token = token.slice(7, token.length);
+  }
+  var authServiceUrl = process.env.AUTH_SERVICE_URL.replace('auth', 'users') + '/all';
+  let cookie = 'auth='+token;
+  return new Promise(function(resolve, reject) {
+    request.get({
+      url: authServiceUrl,
+      headers: {
+        "content-type": "application/json",
+        'Cookie': cookie
+      }
+    }, function(err, response, body) {
+      if(err) {
+        console.log(err);
+      }
+      if (response.statusCode != 200) {
+        reject(new Error(err));
+      } else {
+        let results = JSON.parse(body), searchResults = [];
+        results.forEach((user) => {
+          if(user.username.toLowerCase().indexOf(searchTerm.toLowerCase()) >= 0 || 
+            user.firstName.toLowerCase().indexOf(searchTerm.toLowerCase()) >= 0 || 
+            user.lastName.toLowerCase().indexOf(searchTerm.toLowerCase()) >= 0 ||
+            user.email.toLowerCase().indexOf(searchTerm.toLowerCase()) >= 0) 
+          {
+
+            searchResults.push({"text": user.username, "value": user.username});
+          }
+        });
+        resolve(searchResults);
+      }
+    });
+  });
 }
 
 async function getById(id) {
@@ -195,23 +220,22 @@ async function GetuserListToShareApp(req, res, next) {
     });
   });  
 }
-    
+
 async function GetSharedAppUserList(req, res, next) {
-    const Op = Sequelize.Op
-   return await models.user.findAll({
-        where:{
-        //"id" :{ [Op.ne]:req.params.user_id},
-        "role":"user",
-        "id": {
-        [Op.in]: Sequelize.literal(
-            '( SELECT user_id ' +
-                'FROM user_application ' +
-               'WHERE application_id = "' + req.params.app_id +
-               '" and user_id != "' + req.params.user_id +
-            '")')
-        }
-    }
-});
+  return new Promise((resolve, reject) => {
+    UserApplication.findAll({where:{application_id: req.params.app_id}}).then(async (users) => {
+      console.log(JSON.stringify(users));
+      let usernames=[], userids=[];
+      users.forEach((user) => {
+        usernames.push(user.user_id);
+      })
+
+      let userdetails = await authServiceUtil.getUserDetails(req, usernames.join(','));
+      resolve(userdetails)
+    }).catch((err) => {
+      reject(err);
+    })
+  });
 }
 
 async function changePassword(req, res, { username, password }) {
@@ -247,3 +271,18 @@ async function changePassword(req, res, { username, password }) {
     });
   });
 }
+
+module.exports = {
+  authenticate,
+  getAll,
+  getById,
+  create,
+  update,
+  verifyToken,
+  delete: _delete,
+  validateToken,
+  GetuserListToShareApp,
+  GetSharedAppUserList,
+  changePassword,
+  searchUser
+};
