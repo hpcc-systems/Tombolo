@@ -119,7 +119,7 @@ function DataDefinitionDetailsDialog({selectedDataDefinition, applicationId, onD
     }).then(function(data) {
       setDataDefinition(...data); 
       setTags(prevState => {
-        return { ...prevState, products: data[0].products.length > 0 ? data[0].products.split(',') : [] }
+        return { ...prevState, products: (data[0].products && data[0].products.length) > 0 ? data[0].products.split(',') : [] }
       });
     }).catch(error => {
       console.log(error);
