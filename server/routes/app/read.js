@@ -70,14 +70,16 @@ router.get('/app', [
 });
 
 router.post('/newapp', [
-  body('id')
+  body('user_id')
     .optional({checkFalsy:true})
-    .isUUID(4).withMessage('Invalid dataflow id'),
+    .matches(/^[a-zA-Z]{1}[a-zA-Z0-9_:.\-]*$/).withMessage('Invalid user_id'),
   body('title')  
     .matches(/^[a-zA-Z]{1}[a-zA-Z0-9_:.\-]*$/).withMessage('Invalid title'),    
   body('description')  
     .optional({checkFalsy:true})
-    .matches(/^[a-zA-Z]{1}[a-zA-Z0-9_\-.]*$/).withMessage('Invalid description'),    
+    .matches(/^[a-zA-Z]{1}[a-zA-Z0-9_\-.]*$/).withMessage('Invalid description'),  
+  body('creator')  
+    .matches(/^[a-zA-Z]{1}[a-zA-Z0-9_:.\-]*$/).withMessage('Invalid creator'),          
 ],function (req, res) {
   const errors = validationResult(req).formatWith(validatorUtil.errorFormatter);
   if (!errors.isEmpty()) {
@@ -85,10 +87,10 @@ router.post('/newapp', [
   }
   try {
     if(req.body.id == '') {
-      models.application.create({"title":req.body.title, "description":req.body.description}).then(function(applciation) {
+      models.application.create({"title":req.body.title, "description":req.body.description, "creator": req.body.creator}).then(function(applciation) {
         if(req.body.user_id)
-        models.user_application.create({"user_id":req.body.user_id, "application_id":applciation.id}).then(function(userapp) {
-        res.json({"result":"success"});
+          models.user_application.create({"user_id":req.body.user_id, "application_id":applciation.id}).then(function(userapp) {
+          res.json({"result":"success"});
         });
       else
           res.json({"result":"success"});

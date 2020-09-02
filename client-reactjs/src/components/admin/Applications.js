@@ -46,7 +46,7 @@ class Applications extends Component {
   }
 
   getApplications() {
-  	var url="/api/app/read/appListByUserId?user_id="+this.props.user.id;
+  	var url="/api/app/read/appListByUserId?user_id="+this.props.user.id+"&user_name="+this.props.user.username;
     if(hasAdminRole(this.props.user))
       url="/api/app/read/app_list";
 
@@ -164,8 +164,14 @@ class Applications extends Component {
       submitted: true
     });
     if(this.state.newApp.title){
-    var userId=(this.props.user)?this.props.user.id:"";
-    let data = JSON.stringify({"id": this.state.newApp.id, "title" : this.state.newApp.title, "description" : this.state.newApp.description, "user_id":userId});
+    var userId = (this.props.user) ? this.props.user.username : "";
+    let data = JSON.stringify({
+      "id": this.state.newApp.id, 
+      "title" : this.state.newApp.title, 
+      "description" : this.state.newApp.description, 
+      "user_id":userId, 
+      "creator":this.props.user.username});
+
 	  fetch("/api/app/read/newapp", {
       method: 'post',
       headers: authHeader(),
@@ -229,12 +235,16 @@ class Applications extends Component {
       render: (text, record) =>
         <span>
           <a href="#" onClick={(row) => this.handleShareApplication(record.id,record.title)}><Tooltip placement="left" title={"Share Application"}><Icon type="share-alt" /></Tooltip></a>
-          <Divider type="vertical" />
-          <a href="#" onClick={(row) => this.handleEditApplication(record.id)}><Tooltip placement="right" title={"Edit Application"}><Icon type="edit" /></Tooltip></a>
-          <Divider type="vertical" />
-          <Popconfirm title="Are you sure you want to delete this Application?" onConfirm={() => this.handleRemove(record.id)} icon={<Icon type="question-circle-o" style={{ color: 'red' }} />}>
-            <a href="#"><Tooltip placement="right" title={"Delete Application"}><Icon type="delete" /></Tooltip></a>
-          </Popconfirm>
+          { (record.creator && record.creator == this.props.user.username) ? 
+            <React.Fragment>
+              <Divider type="vertical" />
+              <a href="#" onClick={(row) => this.handleEditApplication(record.id)}><Tooltip placement="right" title={"Edit Application"}><Icon type="edit" /></Tooltip></a>
+              <Divider type="vertical" />
+              <Popconfirm title="Are you sure you want to delete this Application?" onConfirm={() => this.handleRemove(record.id)} icon={<Icon type="question-circle-o" style={{ color: 'red' }} />}>
+                <a href="#"><Tooltip placement="right" title={"Delete Application"}><Icon type="delete" /></Tooltip></a>
+              </Popconfirm>
+            </React.Fragment>
+          : null }  
         </span>
     }];
     const formItemLayout = {
