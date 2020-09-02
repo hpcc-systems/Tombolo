@@ -208,20 +208,23 @@ class Applications extends Component {
     });
   }
   render() {
-    {console.log("Applications render")}
   	const { confirmLoading} = this.state;
   	const applicationColumns = [
     {
-      width: '30%',
+      width: '20%',
       title: 'Title',
       dataIndex: 'title'
     },
     {
-      width: '30%',
+      width: '20%',
       title: 'Description',
       dataIndex: 'description'
     },{
-      width: '25%',
+      width: '10%',
+      title: 'Created By',
+      dataIndex: 'creator'
+    },{
+      width: '20%',
       title: 'Created',
       dataIndex: 'createdAt',
       render: (text, record) => {
