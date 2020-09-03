@@ -72,7 +72,7 @@ class IndexList extends Component {
         {this.state.showAddDialog ?
           <IndexDetailsForm
             applicationId={this.state.applicationId}
-            isNewFile={true}
+            isNew={true}
             onRefresh={this.handleRefresh}
             onClose={this.handleClose}
             user={this.props.user}
