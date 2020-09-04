@@ -1,5 +1,5 @@
 import React, { Component } from "react";
-import { Table, Button, Row, Col, Modal, Form, Input, notification, Tooltip, Icon, Popconfirm, Divider } from 'antd/lib';
+import { Table, Button, Row, Col, Modal, Form, Input, notification, Tooltip, Icon, Popconfirm, Divider, message } from 'antd/lib';
 import BreadCrumbs from "../common/BreadCrumbs";
 import { authHeader, handleError } from "../common/AuthHeader.js";  
 import { hasAdminRole } from "../common/AuthUtil.js";  
@@ -159,6 +159,11 @@ class Applications extends Component {
   }
 
   handleAddAppOk = () => {
+    if(this.state.applications.filter(application => application.title == this.state.newApp.title).length >0 ) {
+      message.config({top:150})
+      message.error("There is already an application with the same name. Please select a different name.")
+      return;
+    }
     this.setState({
       confirmLoading: true,
       submitted: true
