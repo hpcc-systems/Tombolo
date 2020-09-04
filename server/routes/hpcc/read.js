@@ -446,8 +446,8 @@ router.get('/getQueryInfo', [
 			let eclService = new hpccJSComms.EclService({ baseUrl: cluster.roxie_host + ':' + cluster.roxie_port, userID:(clusterAuth ? clusterAuth.user : ""), password:(clusterAuth ? clusterAuth.password : "")});
 			eclService.requestJson("roxie", req.query.queryName).then(response => {
 				if(response) {
-					response.forEach((requestParam) =>  {
-						requestObj.push({"name":requestParam.id, "type":requestParam.type});
+					response.forEach((requestParam, idx) =>  {
+						requestObj.push({"id": idx, "name":requestParam.id, "type":requestParam.type});
 					});
 				}
 				resultObj.request = requestObj;
@@ -455,11 +455,12 @@ router.get('/getQueryInfo', [
 		  	eclService.responseJson("roxie", req.query.queryName).then(response => {
 					if(response) {
 						let firstKey = Object.keys(response)[0];
-						response[firstKey].forEach((responseParam) => {
+						response[firstKey].forEach((responseParam, idx) => {
 							responseObj.push(
 							{
+								"id": idx, 
 								"name" : responseParam.id,
-    						"type" : responseParam.id
+    						"type" : responseParam.type
 							});
 						});
 					}

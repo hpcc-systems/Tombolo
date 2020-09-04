@@ -582,7 +582,8 @@ class QueryDetails extends Component {
                   ref={outputTable => (this.outputFieldsTable = outputTable)} 
                   editingAllowed={editingAllowed}
                   dataDefinitions={this.state.dataDefinitions}
-                  showDataDefinition={true}/>  
+                  showDataDefinition={true}
+                  setData={this.setOutputFieldData}/>  
 
               </div>
           </TabPane>

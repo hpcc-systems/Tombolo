@@ -35,9 +35,11 @@ router.post('/saveQuery', [
           }
 
           var queryFieldToSave = updateCommonData(req.body.fields, fieldsToUpdate);
-          return QueryField.bulkCreate(
-              queryFieldToSave, {updateOnDuplicate: ["field_type", "name", "type"]}
-          )
+          QueryField.destroy({where: {"query_id":query_id, "application_id":applicationId}}).then((deletedResult) => {
+            return QueryField.bulkCreate(
+                queryFieldToSave, {updateOnDuplicate: ["field_type", "name", "type"]}
+            )
+          })
       }).then(function(query) {
           console.log("saving query");
           res.json({"result":"success", "title":req.body.basic.title, "queryId":query_id});
