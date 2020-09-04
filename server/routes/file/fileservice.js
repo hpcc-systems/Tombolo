@@ -24,8 +24,12 @@ async function getECLSchema(appId, res) {
       var app = await App.findOne({where:{"id":appId}});
       var schemaFile = path.join(__dirname, '..', '..', 'schemas', app.title+'-schema.ecl');
       var files = await File.findAll({where:{"application_id":appId}});
-      for(const file of files) {
-          var fileLayout = await FileLayout.findAll({where:{"application_id":appId, "file_id":file.id}});
+      for(const file of files) {          
+          var fileLayout = await FileLayout.findAll({where:{"application_id":appId, "file_id":file.id}});          
+          if(fileLayout.length == 1 && fileLayout[0].fields) {
+            fileLayout = JSON.parse(fileLayout[0].fields);
+          }
+          //console.log(fileLayout)
           var fileId = file.name.replace('-', '_');
           schema += '\n\t\tEXPORT ' + fileId + ' := RECORD\n';
           for(const field of fileLayout) {
