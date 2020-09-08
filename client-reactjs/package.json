@@ -73,7 +73,6 @@
     "react-plotly.js": "^2.3.0",
     "react-redux": "^7.1.0",
     "react-router-dom": "^5.1.2",
-    "react-table": "^6.11.5",
     "react-tag-input": "^6.4.3",
     "redux": "^4.0.5",
     "redux-thunk": "^2.3.0",
@@ -90,9 +89,10 @@
     "underscore": "^1.10.2",
     "url-loader": "2.3.0",
     "webpack": "4.41.5",
-    "webpack-dev-server": "3.10.2",
+    "webpack-dev-server": "^3.11.0",
     "webpack-manifest-plugin": "2.2.0",
-    "workbox-webpack-plugin": "4.3.1"
+    "workbox-webpack-plugin": "4.3.1",
+    "xml2js": "^0.4.23"
   },
   "scripts": {
     "start": "node scripts/start.js",
