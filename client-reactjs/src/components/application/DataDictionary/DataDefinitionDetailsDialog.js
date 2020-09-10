@@ -192,7 +192,6 @@ function DataDefinitionDetailsDialog({selectedDataDefinition, applicationId, onD
     if (inputValue && products.indexOf(inputValue) === -1) {
       products = [...products, inputValue];
     }
-    console.log(tags);
     setTags({
       products,
       inputVisible: false,

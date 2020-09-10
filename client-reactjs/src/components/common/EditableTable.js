@@ -187,12 +187,7 @@ class EditableTable extends React.Component {
     let iterateChildren = (editingRowId, index, item) => {
       item.children.forEach((childItem, childItemindex) => {        
         if(editingRowId == childItem.id) { 
-          item.children[childItemindex].name = row.name;
-          item.children[childItemindex].type = row.type;
-          item.children[childItemindex].eclType = row.eclType;
-          item.children[childItemindex].description = row.description;
-          item.children[childItemindex].required = row.required;
-          item.children[childItemindex].data_types = row.data_types;
+          item.children[childItemindex] = row;
           return;
         }
         if(childItem.children) {
@@ -203,18 +198,12 @@ class EditableTable extends React.Component {
 
     newData.forEach((item, index) => {
       if(row.id == item.id) {        
-        newData[index].name = row.name;
-        newData[index].type = row.type;
-        newData[index].eclType = row.eclType;
-        newData[index].description = row.description;
-        newData[index].required = row.required;
-        newData[index].data_types = row.data_types;
+        newData[index] = row;
         return;
       } else if(item.children) {
         iterateChildren(row.id, index, item);
       } 
     });
-    
     this.setState({ dataSource: newData });
     this.props.setData(newData)
   };  
