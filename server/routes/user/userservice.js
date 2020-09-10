@@ -272,6 +272,38 @@ async function changePassword(req, res, { username, password }) {
   });
 }
 
+async function registerUser(req, res) {
+  var authServiceUrl = process.env.AUTH_SERVICE_URL + '/registerUser';
+  return new Promise(function(resolve, reject) {
+    request.post({
+      url: authServiceUrl,
+      headers: {
+        "content-type": "application/json"
+      },
+      json: {
+        "firstName":req.body.firstName,
+        "lastName":req.body.lastName,
+        "email": req.body.email,
+        "username": req.body.username,
+        "password": req.body.password,
+        "confirmpassword": req.body.confirmnewpassword,
+        "role": req.body.role
+      }
+    }, function(err, response, body) {
+      if (response.statusCode == 422) {
+        reject(new Error(body.errors.concat(',')));
+      }
+
+      if (response.statusCode != 200) {
+        console.log('here...'+JSON.stringify(body))
+        reject(body);
+      } else {
+        resolve(body);
+      }
+    });
+  });
+}
+
 module.exports = {
   authenticate,
   getAll,
@@ -284,5 +316,6 @@ module.exports = {
   GetuserListToShareApp,
   GetSharedAppUserList,
   changePassword,
-  searchUser
+  searchUser,
+  registerUser
 };

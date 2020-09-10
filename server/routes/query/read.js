@@ -23,29 +23,29 @@ router.post('/saveQuery', [
   console.log("[saveQuery] - Get file list for app_id = " + req.body._id + " isNewQuery: "+req.body.isNewQuery);
   var query_id, fieldsToUpdate={}, applicationId=req.body.basic.applicationId;
   try {
-      Query.findOrCreate(
-          {where: {title: req.body.basic.title, application_id:applicationId},
-          defaults: req.body.basic
+    Query.findOrCreate(
+      {where: {title: req.body.basic.title, application_id:applicationId},
+      defaults: req.body.basic
 
-      }).then(function(result) {
-          query_id = result[0].id;
-          fieldsToUpdate = {"query_id":query_id, "application_id":applicationId};
-          if(!result[1]) {
-              Query.update(req.body.basic, {where:{application_id:applicationId, title:req.body.basic.title}}).then(function(result){})
-          }
-
-          var queryFieldToSave = updateCommonData(req.body.fields, fieldsToUpdate);
-          QueryField.destroy({where: {"query_id":query_id, "application_id":applicationId}}).then((deletedResult) => {
-            return QueryField.bulkCreate(
-                queryFieldToSave, {updateOnDuplicate: ["field_type", "name", "type"]}
-            )
-          })
-      }).then(function(query) {
-          console.log("saving query");
-          res.json({"result":"success", "title":req.body.basic.title, "queryId":query_id});
-      }), function(err) {
-          return res.status(500).send(err);
+    }).then(function(result) {
+      query_id = result[0].id;
+      fieldsToUpdate = {"query_id":query_id, "application_id":applicationId};
+      if(!result[1]) {
+          Query.update(req.body.basic, {where:{application_id:applicationId, title:req.body.basic.title}}).then(function(result){})
       }
+
+      var queryFieldToSave = updateCommonData(req.body.fields, fieldsToUpdate);
+      QueryField.destroy({where: {"query_id":query_id, "application_id":applicationId}}).then((deletedResult) => {
+        return QueryField.bulkCreate(
+            queryFieldToSave, {updateOnDuplicate: ["field_type", "name", "type"]}
+        )
+      })
+    }).then(function(query) {
+      console.log("saving query");
+      res.json({"result":"success", "title":req.body.basic.title, "queryId":query_id});
+    }), function(err) {
+        return res.status(500).send(err);
+    }
   } catch (err) {
       console.log('err', err);
   }

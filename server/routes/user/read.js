@@ -1,7 +1,10 @@
 const express = require('express');
 const router = express.Router();
 const userService = require('./userservice');
-
+const { body, query, check, validationResult } = require('express-validator');
+const errorFormatter = ({ location, msg, param, value, nestedErrors }) => {    
+  return `${location}[${param}]: ${msg}`;
+};
 // routes
 router.get('/searchuser', searchUser);
 router.post('/authenticate', authenticate);
@@ -93,5 +96,37 @@ function searchUser(req, res, next) {
     .then(users => users ? res.json(users) : res.sendStatus([]))
     .catch(err => next(err));
 }
+
+router.post('/registerUser', [
+  body('firstName')
+    .matches(/^[a-zA-Z]{1}[a-zA-Z0-9_-]*$/).withMessage('Invalid First Name'),
+  body('lastName').optional({checkFalsy:true})
+    .matches(/^[a-zA-Z]{1}[a-zA-Z0-9_-]*$/).withMessage('Invalid Last Name'),
+  body('username')
+    .matches(/^[a-zA-Z]{1}[a-zA-Z0-9_-]*$/).withMessage('Invalid User Name'),
+  body('email').optional({checkFalsy:true})
+    .isEmail().withMessage('Invalid Email Address'),
+  body('organization').optional({checkFalsy:true})
+    .matches(/^[a-zA-Z]{1}[a-zA-Z0-9_-]*$/).withMessage('Invalid Organization Name'),        
+  body('password').optional({checkFalsy:true}).isLength({ min: 4 })  
+], (req, res, next) => {
+  const errors = validationResult(req).formatWith(errorFormatter);
+  if (!errors.isEmpty()) {
+    return res.status(422).json({ success: false, errors: errors.array() });
+  }
+  userService.registerUser(req, res)
+    .then((response) => {
+      console.log('response: '+JSON.stringify(response));
+      res.json(response)
+    })
+    .catch((err) => {
+      console.log('here-2: '+JSON.stringify(err))
+      res.status(500).json({ errors: [err.error] });      
+    })
+})
+
+
+
+
 
 

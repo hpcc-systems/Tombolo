@@ -6,7 +6,8 @@ var jwtDecode = require('jwt-decode');
 export const userActions = {
     login,
     logout,
-    validateToken
+    validateToken,
+    registerNewUser
 };
 
 function login(username, password) {
@@ -48,16 +49,50 @@ function login(username, password) {
     function failure(error) { return { type: Constants.LOGIN_FAILURE, error } }
 }
 
+function registerNewUser(newUserObj) {
+  let _self = this;
+  return dispatch => {
+    dispatch(request());
+
+    fetch('/api/user/registerUser', {
+      method: 'post',
+      headers: {
+          'Accept': 'application/json',
+          'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({ 
+        firstName: newUserObj.firstName, 
+        lastName: newUserObj.lastName,
+        email: newUserObj.email,
+        username: newUserObj.username, 
+        password: newUserObj.password,
+        confirmPassword: newUserObj.confirmPassword,
+        role: 'Creator' 
+      })
+    }).then(handleResponse)
+    .then(user => {
+      console.log(user);
+      dispatch(success(user));
+    }).catch(error => {
+      dispatch(failure(error));
+    });
+  };
+
+  function request() { return { type: Constants.REGISTER_USER_REQUEST } }
+  function success() { return { type: Constants.REGISTER_USER_SUCCESS } }
+  function failure(error) { return { type: Constants.REGISTER_USER_FAILED, error: error } }
+}
+
 function logout() {
-    localStorage.removeItem('user');        
-    return { type: Constants.LOGOUT }
+  localStorage.removeItem('user');        
+  return { type: Constants.LOGOUT }
 }
 
 function handleResponse(response) {
   return response.text().then(text => {
     const data = text && JSON.parse(text);
     if (!response.ok) {
-      const error = (data && data.message) || response.statusText;
+      const error = (data && data.message) || (data && data.errors) || response.statusText;
       return Promise.reject(error);
     }
     return data;

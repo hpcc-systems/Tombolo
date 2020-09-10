@@ -487,3 +487,12 @@ div.tooltip {
 .error { 
   color: #f5222d;
 }
+
+.login-form-registration {
+  width: 540px;
+  margin: 140px auto;
+}
+
+.help-block {
+  color: red;
+}
