@@ -137,17 +137,21 @@ function DataDefinitionDetailsDialog({selectedDataDefinition, applicationId, onD
       setFormErrors({'name':'Please enter a name for the Data Definition'});
       return false;
     }
+    if(availableDataDefinitions.filter(availableDataDefn => availableDataDefn.name == dataDefinition.name).length > 0) {
+      setFormErrors({'name':'Duplicate data defintion name. Please select a different name.'});
+      return false;
+    }
     return true;
   }
 
   const formItemLayout = {
     labelCol: {
-      xs: { span: 4 },
+      xs: { span: 8 },
       sm: { span: 3 },
     },
     wrapperCol: {
       xs: { span: 2 },
-      sm: { span: 10 },
+      sm: { span: 12 },
     },
   };
 
@@ -225,7 +229,7 @@ function DataDefinitionDetailsDialog({selectedDataDefinition, applicationId, onD
         onCancel={onClose}
         destroyOnClose={true}
         width="900px"
-        bodyStyle={{height:"300px", left:"100px", padding:"5px"}}
+        
       >
       <Tabs defaultActiveKey={"1"}>
         <TabPane tab="Basic" key="1">

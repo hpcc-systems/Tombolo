@@ -1189,7 +1189,6 @@ class FileDetails extends Component {
           onOk={this.handleOk}
           confirmLoading={confirmLoading}
           onCancel={this.handleCancel}
-          bodyStyle={{height:modalHeight}}
           destroyOnClose={true}
           width="1200px"          
           footer={[
