@@ -78,12 +78,12 @@ class EditableCell extends React.Component {
         {form.getFieldDecorator(dataIndex, {
           rules: [
             {
-              required: true,
+              required: required,
               message: `${title} is required.`,
             },
           ],
           initialValue: record[dataIndex],
-        }) (celleditor == 'select' ? <Select ref={node => (this.input = node)} placeholder="Select" onChange={this.saveSelect} style={{ width: 170 }} >
+        }) (celleditor == 'select' ? <Select ref={node => (this.input = node)} placeholder="Select" onChange={this.saveSelect} >
           <OptGroup label="ECL">
             {celleditorparams.values.map(cellEditorParam =>  <Option key={cellEditorParam} value={cellEditorParam}>{cellEditorParam}</Option>)}
           </OptGroup>          

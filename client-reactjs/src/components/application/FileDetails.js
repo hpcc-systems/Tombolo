@@ -1028,7 +1028,8 @@ class FileDetails extends Component {
       celleditor: "select",
       celleditorparams: {
         values: ["false", "true"]
-      }
+      },
+      width: '10%'
     },    
     {
       title: 'Information Type',
