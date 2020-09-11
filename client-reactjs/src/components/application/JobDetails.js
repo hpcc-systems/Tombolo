@@ -552,7 +552,6 @@ class JobDetails extends Component {
           title="Job Details"
           visible={visible}
           onCancel={this.handleCancel}
-          bodyStyle={{height:"520px"}}
           destroyOnClose={true}
           width="1200px"
           footer={[

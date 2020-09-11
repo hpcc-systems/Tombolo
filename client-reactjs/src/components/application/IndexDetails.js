@@ -447,7 +447,6 @@ class IndexDetails extends Component {
           onOk={this.handleOk}
           confirmLoading={confirmLoading}
           onCancel={this.handleCancel}
-          bodyStyle={{height:"500px"}}
           destroyOnClose={true}
           width="1200px"
           footer={[

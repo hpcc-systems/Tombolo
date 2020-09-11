@@ -227,8 +227,7 @@ function DataDefinitionDetailsDialog({selectedDataDefinition, applicationId, onD
         onOk={onSave}
         onCancel={onClose}
         destroyOnClose={true}
-        width="900px"
-        
+        width="900px"        
       >
       <Tabs defaultActiveKey={"1"}>
         <TabPane tab="Basic" key="1">
