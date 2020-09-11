@@ -260,6 +260,7 @@ class IndexDetails extends Component {
         }
       })
       this.props.form.setFieldsValue({
+        name: indexInfo.fileName,
         title: indexInfo.fileName
       });
       return indexInfo;
@@ -492,11 +493,14 @@ class IndexDetails extends Component {
               </AutoComplete>
             </Form.Item>
             </div>
-              {/*: null
-            }*/}
-             <Form.Item {...formItemLayout} label="Name">
-                <Input id="file_name" name="name" onChange={this.onChange} value={name} defaultValue={name} placeholder="Name" disabled={true} disabled={!editingAllowed}/>
+              
+            <Form.Item {...formItemLayout} label="Name">
+                {getFieldDecorator('name', {
+                  rules: [{ required: true, message: 'Please enter a name!' }],
+                })(
+                <Input id="name" name="name" onChange={this.onChange} value={name} defaultValue={name} placeholder="Name" disabled={true} disabled={!editingAllowed}/>)}
             </Form.Item>
+
             <Form.Item {...formItemLayout} label="Title">
                 <Input id="file_title" name="title" onChange={this.onChange} value={title} defaultValue={title} placeholder="Title" disabled={!editingAllowed}/>
             </Form.Item>

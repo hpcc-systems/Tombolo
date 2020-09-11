@@ -283,7 +283,8 @@ class QueryDetails extends Component {
         }
       })
       this.props.form.setFieldsValue({
-        query_title: selectedSuggestion
+        query_title: selectedSuggestion,
+        name: selectedSuggestion
       });
 
       return queryInfo;
@@ -524,9 +525,14 @@ class QueryDetails extends Component {
                 </React.Fragment>
               : null}
             </div>              
-             <Form.Item {...formItemLayout} label="Name">
-                <Input id="query_name" name="name" onChange={this.onChange} value={name} defaultValue={name} placeholder="Name" disabled={true} disabled={!editingAllowed}/>
+
+            <Form.Item {...formItemLayout} label="Name">
+                {getFieldDecorator('name', {
+                  rules: [{ required: true, message: 'Please enter a name!' }],
+                })(
+                <Input id="query_name" name="name" onChange={this.onChange} value={name} defaultValue={name} placeholder="Name" disabled={true} disabled={!editingAllowed}/>)}
             </Form.Item>
+
             <Form.Item {...formItemLayout} label="Title">
                 <Input id="query_title" name="title" onChange={this.onChange} value={title} defaultValue={title} placeholder="Title" disabled={!editingAllowed}/>
             </Form.Item>

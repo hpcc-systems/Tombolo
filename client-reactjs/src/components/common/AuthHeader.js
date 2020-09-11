@@ -21,10 +21,10 @@ export function handleError(response) {
         //token expired
         localStorage.removeItem('user');
         store.dispatch(userActions.logout());
-    } else if(response.status == 422) {
+    } else if(response.status == 422) {        
         response.json().then(data => {
-          message.config({top:130})
-          message.error(data.errors[0].msg)
+          //message.config({top:130})
+          //message.error("Error occured")
         });
     }
     else {

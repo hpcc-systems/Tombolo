@@ -1,5 +1,5 @@
 import React, { Component } from "react";
-import {Layout, Menu, Icon, message, Tooltip, Input, Button, Dropdown, Modal, Alert} from 'antd/lib';
+import {Layout, Menu, Icon, message, Tooltip, Input, Button, Dropdown, Modal, Alert, Form} from 'antd/lib';
 import { NavLink, Switch, Route, withRouter } from 'react-router-dom';
 import { userActions } from '../../redux/actions/User';
 import { connect } from 'react-redux';
@@ -151,26 +151,30 @@ class AppHeader extends Component {
 
     handleOk = () => {
       let _self=this;
-      this.setState({loading: true }); 
-      fetch("/api/user/changePassword", {
-        method: 'post',
-        headers: authHeader(),
-        body: JSON.stringify({"username": this.props.user.username, "oldpassword":this.state.oldpassword, "newpassword": this.state.newpassword, "confirmnewpassword": this.state.confirmnewpassword})
-      }).then((response) => {
-        if(response.ok) {
-            return response.json();
+      this.props.form.validateFields(async (err, values) => {
+        if(!err) {
+          this.setState({loading: true }); 
+          fetch("/api/user/changePassword", {
+            method: 'post',
+            headers: authHeader(),
+            body: JSON.stringify({"username": this.props.user.username, "oldpassword":this.state.oldpassword, "newpassword": this.state.newpassword, "confirmnewpassword": this.state.confirmnewpassword})
+          }).then((response) => {
+            if(response.ok) {
+                return response.json();
+            }
+            handleError(response);
+          }).then((response) => {
+            _self.clearChangePasswordDlg()
+            message.config({top:130})
+            message.success('Password changed successfully.');
+            _self.setState({loading: false, visible: false }); 
+          }).catch(function(err) {
+            _self.clearChangePasswordDlg()
+            _self.setState({loading: false, visible: false }); 
+            message.config({top:130})
+            message.error('There was an error while changing the password.');
+          });
         }
-        handleError(response);
-      }).then((response) => {
-        _self.clearChangePasswordDlg()
-        message.config({top:130})
-        message.success('Password changed successfully.');
-        _self.setState({loading: false, visible: false }); 
-      }).catch(function(err) {
-        _self.clearChangePasswordDlg()
-        _self.setState({loading: false, visible: false }); 
-        message.config({top:130})
-        message.error('There was an error while changing the password.');
       });
     }
 
@@ -199,7 +203,7 @@ class AppHeader extends Component {
     }
 
   render() {
-
+    const {getFieldDecorator} = this.props.form;
     const applicationId = this.props.application ? this.props.application.applicationId : '';
     const selectedTopNav = (window.location.pathname.indexOf("/admin") != -1) ? "/admin/applications" : (applicationId != '' ? "/" + applicationId + "/dataflow" : "/dataflow")
     const appNav = (applicationId != '' ? "/" + applicationId + "/dataflow" : "/dataflow");
@@ -209,6 +213,17 @@ class AppHeader extends Component {
         <Menu.Item key="2">Logout</Menu.Item>
       </Menu>
     );
+
+    const formItemLayout = {
+      labelCol: {
+        xs: { span: 2 },
+        sm: { span: 9 },
+      },
+      wrapperCol: {
+        xs: { span: 2 },
+        sm: { span: 12 },
+      },
+    };
 
     if(!this.props.user || !this.props.user.token) {
       return null;
@@ -264,7 +279,7 @@ class AppHeader extends Component {
         <Modal
           title="Change Password"
           visible={this.state.visible}
-          width="420px"
+          width="520px"
           footer={[
             <Button key="cancel" onClick={this.handleCancel}>
               Cancel
@@ -274,15 +289,26 @@ class AppHeader extends Component {
             </Button>            
           ]}
         >          
-          <div className="form-group">
-            <Input type="password" name="oldpassword" placeholder="Old Password" defaultValue={this.state.oldpassword} value={this.state.oldpassword} onChange={this.handleChangePasswordFieldChange}/> 
-          </div>
-          <div className="form-group">  
-            <Input type="password" name="newpassword" placeholder="New Password" defaultValue={this.state.newpassword} value={this.state.newpassword} onChange={this.handleChangePasswordFieldChange}/> 
-          </div>
-          <div className="form-group">  
-            <Input type="password" name="confirmnewpassword" placeholder="Confirm Password" defaultValue={this.state.confirmnewpassword} value={this.state.confirmnewpassword} onChange={this.handleChangePasswordFieldChange}/> 
-          </div>            
+          <Form.Item {...formItemLayout} label="Password">
+            {getFieldDecorator('name', {
+              rules: [{ required: true, message: 'Please enter the current password!' }],
+            })(
+            <Input type="password" name="oldpassword" placeholder="Password" defaultValue={this.state.oldpassword} value={this.state.oldpassword} onChange={this.handleChangePasswordFieldChange}/> )}
+          </Form.Item>
+
+          <Form.Item {...formItemLayout} label="New Password">
+            {getFieldDecorator('newpassword', {
+              rules: [{ required: true, message: 'Please enter the new password!' }],
+            })(
+            <Input type="password" name="newpassword" placeholder="New Password" defaultValue={this.state.newpassword} value={this.state.newpassword} onChange={this.handleChangePasswordFieldChange}/>  )}
+          </Form.Item>
+
+          <Form.Item {...formItemLayout} label="Confirm Password">
+            {getFieldDecorator('confirmnewpassword', {
+              rules: [{ required: true, message: 'Please confirm the new password!' }],
+            })(
+            <Input type="password" name="confirmnewpassword" placeholder="Confirm Password" defaultValue={this.state.confirmnewpassword} value={this.state.confirmnewpassword} onChange={this.handleChangePasswordFieldChange}/>   )}
+          </Form.Item>
 
         </Modal>
        </React.Fragment> 
@@ -302,7 +328,7 @@ function mapStateToProps(state) {
 }
 
 //export default withRouter(AppHeader);
-const connectedAppHeader = connect(mapStateToProps)(withRouter(AppHeader));
+const connectedAppHeader = connect(mapStateToProps)(withRouter(Form.create()(AppHeader)));
 export { connectedAppHeader as AppHeader };
 
 

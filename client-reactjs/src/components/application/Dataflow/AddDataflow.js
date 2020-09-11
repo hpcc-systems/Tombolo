@@ -63,11 +63,19 @@ function AddDataflow({isShowing, toggle, applicationId, onDataFlowUpdated, selec
     setClusterSelected(value);
   }
 
-  const handleAddAppOk = () => {
+  const handleAddAppOk = () => {    
     setForm({
-      confirmLoading: true,
       submitted: true
     });
+    
+    if(dataFlow.title == '' || clusterSelected == '') {
+      return false;
+    }
+    setForm({
+      confirmLoading: true,  
+      submitted: true
+    });    
+
     fetch('/api/dataflow/save', {
       method: 'post',
       headers: authHeader(),
@@ -116,6 +124,8 @@ function AddDataflow({isShowing, toggle, applicationId, onDataFlowUpdated, selec
   	})
   }
 
+  const splCharacters = /[ `!@#$%^&*()+\=\[\]{};':"\\|,.<>\/?~]/;
+
 	return (
 	  <React.Fragment>
 	  <span style={{ marginLeft: "auto", paddingTop:"5px"}}>
@@ -135,8 +145,8 @@ function AddDataflow({isShowing, toggle, applicationId, onDataFlowUpdated, selec
 	            <div className={'form-group' + (form.submitted && !dataFlow.title ? ' has-error' : '')}>
 		            <Form.Item {...formItemLayout} label="Title">
 							    <Input id="title" name="title" onChange={e => setDataFlow({...dataFlow, [e.target.name]: e.target.value})} placeholder="Title" value={dataFlow.title}/>
-			            {form.submitted && !dataFlow.title &&
-		                    <div className="help-block">Title is required</div>
+			            {(form.submitted && !dataFlow.title || splCharacters.test(dataFlow.title)) && 
+		                    <div className="error">Please enter a valid Title</div>
 			            }
 		            </Form.Item>
 	            </div>
@@ -147,6 +157,9 @@ function AddDataflow({isShowing, toggle, applicationId, onDataFlowUpdated, selec
                 <Select placeholder="Select a Cluster" onChange={onClusterSelection} style={{ width: 290 }} value={clusterSelected}>
                   {whitelistedClusters.map(cluster => <Option key={cluster.id}>{cluster.name}</Option>)}
                 </Select>
+                {form.submitted && clusterSelected == '' &&
+                  <div className="error">Cluster is required</div>
+                }
               </Form.Item>
             </Form>
         </Modal>

@@ -133,8 +133,8 @@ function DataDefinitionDetailsDialog({selectedDataDefinition, applicationId, onD
   }
 
   const validateForm = () => {
-    if(dataDefinition.name == '') {
-      setFormErrors({'name':'Please enter a name for the Data Definition'});
+    if(dataDefinition.name == '' || /[ `!@#$%^&*()+\=\[\]{};':"\\|,.<>\/?~]/.test(dataDefinition.name)) {
+      setFormErrors({'name':'Please enter a valid name for the Data Definition'});
       return false;
     }
     if(availableDataDefinitions.filter(availableDataDefn => availableDataDefn.name == dataDefinition.name).length > 0) {
