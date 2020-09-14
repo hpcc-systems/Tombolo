@@ -170,6 +170,7 @@ function DataDefinitionDetailsDialog({selectedDataDefinition, applicationId, onD
       dataIndex: 'type',
       editable: true,
       celleditor: "select",
+      showdatadefinitioninfield: true,
       celleditorparams: {
         values: eclTypes.sort()
       }

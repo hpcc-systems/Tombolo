@@ -69,7 +69,7 @@ class EditableCell extends React.Component {
 
   renderCell = form => {
     this.form = form;
-    const { children, dataIndex, record, title, celleditor, celleditorparams, required, showdatadefinition, datadefinitions } = this.props;
+    const { children, dataIndex, record, title, celleditor, celleditorparams, required, showdatadefinitioninfield, datadefinitions } = this.props;
     const { editing } = this.state;
     this.datadefinitions = datadefinitions
     return editing ? (
@@ -84,11 +84,14 @@ class EditableCell extends React.Component {
           ],
           initialValue: record[dataIndex],
         }) (celleditor == 'select' ? <Select ref={node => (this.input = node)} placeholder="Select" onChange={this.saveSelect} >
-          <OptGroup label="ECL">
-            {celleditorparams.values.map(cellEditorParam =>  <Option key={cellEditorParam} value={cellEditorParam}>{cellEditorParam}</Option>)}
-          </OptGroup>          
+          {showdatadefinitioninfield ? 
+            <OptGroup label="ECL">
+              {celleditorparams.values.map(cellEditorParam =>  <Option key={cellEditorParam} value={cellEditorParam}>{cellEditorParam}</Option>)}
+            </OptGroup> : 
+            celleditorparams.values.map(cellEditorParam =>  <Option key={cellEditorParam} value={cellEditorParam}>{cellEditorParam}</Option>)
+          }
           
-          { showdatadefinition && datadefinitions ? 
+          { showdatadefinitioninfield && datadefinitions ? 
             <OptGroup label="Data Dictionary">
               {datadefinitions.map(dataDefn => <Option key={dataDefn.id} value={dataDefn.id}>{dataDefn.name}</Option>)}
             </OptGroup> : null}
@@ -248,7 +251,7 @@ class EditableTable extends React.Component {
           required: col.required ? col.required : false,
           title: col.title,
           handleSave: this.handleSave,
-          showdatadefinition: this.props.showDataDefinition.toString(),
+          showdatadefinitioninfield: col.showdatadefinitioninfield ? col.showdatadefinitioninfield : false,
           datadefinitions: this.props.dataDefinitions
         }),
       };

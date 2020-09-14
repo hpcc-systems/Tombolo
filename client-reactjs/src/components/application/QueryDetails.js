@@ -433,6 +433,7 @@ class QueryDetails extends Component {
       dataIndex: 'type',
       editable: editingAllowed,
       celleditor: "select",
+      showdatadefinitioninfield: true,
       celleditorparams: {
         values: eclTypes.sort()
       }      

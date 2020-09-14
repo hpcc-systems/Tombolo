@@ -1008,12 +1008,14 @@ class FileDetails extends Component {
       celleditorparams: {
         values: eclTypes.sort()
       },
+      showdatadefinitioninfield: true,
       width: '18%'
     },
     {
       title: 'ECL Type',
       dataIndex: 'eclType',
-      editable: editingAllowed      
+      editable: editingAllowed,
+      showdatadefinitioninfield: true      
     },
     {
       title: 'Description',
