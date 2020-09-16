@@ -64,6 +64,7 @@ class FileDetails extends Component {
       serviceUrl:"",
       qualifiedPath:"",
       consumer:"",
+      owner:"",
       supplier:"",
       fileType:"thor_file",
       isSuperFile:"",
@@ -102,6 +103,7 @@ class FileDetails extends Component {
         serviceUrl: '',
         qualifiedPath: '',
         consumer:'',
+        owner:'',
         supplier:'',
         fileType: 'thor_file',
         isSuperFile: '',
@@ -192,6 +194,7 @@ class FileDetails extends Component {
             scope: data.basic.scope,
             serviceUrl: data.basic.serviceUrl,
             qualifiedPath: data.basic.qualifiedPath,
+            owner: data.basic.owner,
             consumer: data.basic.consumer,
             supplier: data.basic.supplier,
             fileType: (data.basic.fileType == '' || data.basic.fileType == 'flat' ? 'thor_file' : data.basic.fileType),
@@ -509,6 +512,7 @@ class FileDetails extends Component {
           description: fileInfo.description,
           scope: fileInfo.scope,
           qualifiedPath: fileInfo.pathMask,
+          owner: fileInfo.owner,
           consumer: fileInfo.consumer,
           supplier: fileInfo.supplier,
           //fileType: fileInfo.fileType,
@@ -679,6 +683,7 @@ class FileDetails extends Component {
       "scope": this.state.file.scope,
       "serviceUrl" : this.state.file.serviceUrl,
       "qualifiedPath" : this.state.file.qualifiedPath,
+      "owner": this.state.file.owner,
       "consumer": this.state.file.consumer,
       "supplier": this.state.file.supplier,
       "fileType" : this.state.file.fileType,
@@ -733,6 +738,10 @@ class FileDetails extends Component {
 
   onConsumerSelection = (value) => {
     this.setState({...this.state, file: {...this.state.file, consumer: value }}, () => console.log(this.state.file.consumer));
+  }
+
+  onOwnerSelection = (value) => {
+    this.setState({...this.state, file: {...this.state.file, owner: value }}, () => console.log(this.state.file.owner));
   }
 
   onSupplierSelection = (value) => {
@@ -1152,7 +1161,7 @@ class FileDetails extends Component {
     }
 
 
-    const {title,name, description, scope, serviceUrl, qualifiedPath, consumer, fileType, isSuperFile, layout, relations, fileFieldRelations, validations, inheritedLicensing} = this.state.file;
+    const {title,name, description, scope, serviceUrl, qualifiedPath, consumer, owner, fileType, isSuperFile, layout, relations, fileFieldRelations, validations, inheritedLicensing} = this.state.file;
     const rowSelection = {
       selectedRowKeys,
       onChange: this.onSelectedRowKeysChange
@@ -1312,7 +1321,7 @@ class FileDetails extends Component {
                 
                 <Col span={8} order={3}>
                   <Form.Item {...threeColformItemLayout} label="Owner">
-                     <Select id="owner" value={(this.state.file.owner != '') ? this.state.file.owner : "Select an Owner"} placeholder="Select an Owner" onChange={this.onConsumerSelection} style={{ width: 190 }} disabled={!editingAllowed}>
+                     <Select id="owner" value={(this.state.file.owner != '') ? this.state.file.owner : "Select an Owner"} placeholder="Select an Owner" onChange={this.onOwnerSelection} style={{ width: 190 }} disabled={!editingAllowed}>
                       {consumers.map(consumer => consumer.assetType == 'Owner' ? <Option key={consumer.id}>{consumer.name}</Option> : null)}
                     </Select>
                   </Form.Item>

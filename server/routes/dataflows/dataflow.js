@@ -46,7 +46,7 @@ router.post('/save', [
 	            description: req.body.description,
                   clusterId: req.body.clusterId
             }, {where:{id:id, application_id:application_id}}).then((dataflowUpdate) => {
-              let promises=[];
+              /*let promises=[];
               DataflowGraph.findAll({
                 where: {application_id:application_id}
               }).then((dataflowGraphs) => {
@@ -63,7 +63,8 @@ router.post('/save', [
                 Promise.all(promises).then(() => {
                   res.json({"result":"success"});  
                 })          
-              })
+              })*/
+              res.json({"result":"success"});  
             })
          } else {
           res.json({"result":"success"});

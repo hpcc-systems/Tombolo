@@ -2,7 +2,9 @@ import React, { useState, useEffect } from 'react'
 import ReactDOM from 'react-dom';
 import { Modal, Button, Tabs, Select, Form, Typography, Divider, Input, Icon, Table } from 'antd/lib';
 import {Graph} from "./Graph";
+import { useSelector } from "react-redux";
 import { authHeader, handleError } from "../../common/AuthHeader.js"
+import { hasEditPermission } from "../../common/AuthUtil.js";
 const TabPane = Tabs.TabPane;
 const Option = Select.Option;
 const { Paragraph } = Typography;
@@ -14,6 +16,9 @@ function SubProcessDialog({show, applicationId, selectedParentDataflow, onRefres
   const [activeTab, setActiveTab] = useState();
   const [subProcessInput, setSubProcessInput] = useState([]);
   const [subProcessOutput, setSubProcessOutput] = useState([]);
+  
+  const authReducer = useSelector(state => state.authenticationReducer);
+  const editingAllowed = hasEditPermission(authReducer.user);
 
   useEffect(() => {
   	console.log('selectedSubProcess: '+JSON.stringify(selectedSubProcess))
@@ -40,7 +45,11 @@ function SubProcessDialog({show, applicationId, selectedParentDataflow, onRefres
 
   const onClose = () => {
   	setVisible(false);
-  	onRefresh(subProcess);
+  }
+
+  const onSave = () => {
+    setVisible(false);
+    onRefresh(subProcess);
   }
 
   const getData = async () => {  
@@ -99,11 +108,16 @@ function SubProcessDialog({show, applicationId, selectedParentDataflow, onRefres
 
   const onChange = (value) => {	
     if(value != '-') {
-    	setSubProcess({"id": value.key, "title": value.label});
+      let selectedDataflow = dataFlows.filter(dataflow => dataflow.id == value)[0];
+    	setSubProcess({"id": selectedDataflow.id, "title": subProcess.title});
     	setActiveTab("2");
     } else {
       setSubProcess({"id": '', "title": ''});
     }
+  }
+
+  const handleChange = (e) => {
+    setSubProcess({'id': subProcess.id, 'title': e.target.value});    
   }
 
   const formItemLayout = {
@@ -137,6 +151,9 @@ function SubProcessDialog({show, applicationId, selectedParentDataflow, onRefres
         footer={[
           <Button key="back" onClick={onClose}>
             Close
+          </Button>,
+          <Button key="save" type="primary" onClick={onSave}>
+            Save
           </Button>
         ]}
       >
@@ -147,22 +164,18 @@ function SubProcessDialog({show, applicationId, selectedParentDataflow, onRefres
           : null}  
 
           <Form.Item {...formItemLayout} label="Dataflow">               
-	        	<Select
-					    showSearch
-					    labelInValue
+	        	<Select					    
 					    style={{ width: 300 }}
-					    placeholder="Select a dataflow to be associated with this Sub-Process"
-					    optionFilterProp="children"
 					    onChange={onChange}
-					    filterOption={(input, option) =>
-					      option.children.toLowerCase().indexOf(input.toLowerCase()) >= 0
-					    }
-					    value={(subProcess.id != '' && subProcess.id != undefined) ? {"id":subProcess.id, "label":subProcess.title} : {"id":'-', "label":'Select a Dataflow'}}
+					    value={(subProcess.id != '' && subProcess.id != undefined) ? subProcess.id : '-'}
 					  >
             <Option key={'-'}>Select a Dataflow</Option>
 					  	{dataFlows.map(dataflow => <Option key={dataflow.id}>{dataflow.title}</Option>)}
 	        	</Select>
         	</Form.Item>
+          <Form.Item {...formItemLayout} label="Title">    
+            <Input id="title" name="title" onChange={handleChange} defaultValue={subProcess.title} value={subProcess.title} placeholder="Title" disabled={!editingAllowed}/>
+          </Form.Item>
 
         	<Tabs defaultActiveKey={"1"}>
         		<TabPane tab="Input" key="1">
