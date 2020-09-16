@@ -220,15 +220,7 @@ router.get('/file_details', [
 
 });
 
-router.post('/saveFile', [
-  check('scope').custom((value, { req, location, path }) => {
-    return File.findAll({where:{application_id:req.body.file.app_id, dataflowId:req.body.file.basic.dataflowId, scope:req.body.file.basic.scope}}).then(file => {
-      /*if (file && file.length > 0) {
-        return Promise.reject('Scope already in use');
-      }*/          
-    });
-
-  })], (req, res) => {
+router.post('/saveFile', (req, res) => {
     console.log("[file list/read.js] - Get file list for app_id = " + req.body.file.app_id + " isNewFile: "+req.body.isNewFile);
     var fileId='', applicationId=req.body.file.app_id, fieldsToUpdate={};
 

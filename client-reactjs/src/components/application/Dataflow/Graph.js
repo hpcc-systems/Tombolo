@@ -368,9 +368,9 @@ class Graph extends Component {
         handleError(response);
     }).then(function(data) {
       _self.props.selectedDataflow.id = data.dataflowId;
-      if(_self.props.updateProcessId) {
+      /*if(_self.props.updateProcessId) {
         _self.props.updateProcessId(data.dataflowId);
-      }
+      }*/
       console.log('Saved graph..');
         //_self.fetchFiles();
     });
@@ -935,7 +935,6 @@ class Graph extends Component {
   }
 
   deleteNode = (d, gEl) => {
-    console.log("deleteNode")
     let _self=this;
     switch(d.type) {
       case 'File':
@@ -968,9 +967,9 @@ class Graph extends Component {
         });
         break;
       case 'Sub-Process':
-        if(d.subProcessId) {
+        /*if(d.subProcessId) {
           handleSubProcessDelete(d.subProcessId, _self.props.applicationId);
-        }
+        }*/
         updateGraph((d.subProcessId ? d.subProcessId : d.id), _self.props.applicationId, _self.props.selectedDataflow).then((response) => {
           _self.fetchSavedGraph();
         });

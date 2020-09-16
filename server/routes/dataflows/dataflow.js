@@ -29,29 +29,48 @@ router.post('/save', [
     var id=req.body.id, application_id=req.body.application_id;
     let whereClause = (!id || id == '' ? {application_id:req.body.application_id, title: req.body.title} : {id:id});
     try {
-        Dataflow.findOrCreate({
-          where: whereClause,
-          defaults: {
-            application_id: req.body.application_id,
-            title: req.body.title,
-            type: 'main',
-            description: req.body.description,
-            clusterId: req.body.clusterId
-          }
-        }).then(async function(result) {
-            id = result[0].id;
-            if(!result[1]) {
-              return Dataflow.update({
-		            title: req.body.title,
-		            description: req.body.description,
-                    clusterId: req.body.clusterId
-              }, {where:{id:id, application_id:application_id}})
-            }
-        }).then(function(graph) {
-            res.json({"result":"success"});
-        }), function(err) {
-            return res.status(500).send(err);
+      Dataflow.findOrCreate({
+        where: whereClause,
+        defaults: {
+          application_id: req.body.application_id,
+          title: req.body.title,
+          type: 'main',
+          description: req.body.description,
+          clusterId: req.body.clusterId
         }
+      }).then(async function(result) {
+          id = result[0].id;
+          if(!result[1]) {
+            Dataflow.update({
+	            title: req.body.title,
+	            description: req.body.description,
+                  clusterId: req.body.clusterId
+            }, {where:{id:id, application_id:application_id}}).then((dataflowUpdate) => {
+              let promises=[];
+              DataflowGraph.findAll({
+                where: {application_id:application_id}
+              }).then((dataflowGraphs) => {
+                dataflowGraphs.forEach((dataflowGraph) => {
+                  let updatedNodes = JSON.parse(dataflowGraph.nodes).map((node) => {
+                    if(node.subProcessId == id) {
+                      node.title = req.body.title;                
+                    }
+                    return node;
+                  })
+                  promises.push(DataflowGraph.update({nodes:JSON.stringify(updatedNodes)}, {where:{application_id: application_id, id: dataflowGraph.id}}));
+                })
+
+                Promise.all(promises).then(() => {
+                  res.json({"result":"success"});  
+                })          
+              })
+            })
+         } else {
+          res.json({"result":"success"});
+         }
+      }), function(err) {
+          return res.status(500).send(err);
+      }
     } catch (err) {
         console.log('err', err);
     }

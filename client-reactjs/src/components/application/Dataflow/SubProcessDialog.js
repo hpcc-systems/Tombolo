@@ -9,7 +9,7 @@ const { Paragraph } = Typography;
 
 function SubProcessDialog({show, applicationId, selectedParentDataflow, onRefresh, selectedSubProcess, nodeId}) {
   const [visible, setVisible] = useState(false);	
-  const [subProcess, setSubProcess] = useState({"id":'', "title": ''});	
+  const [subProcess, setSubProcess] = useState({"id":'-', "title": 'Select a Dataflow'});	
   const [dataFlows, setDataFlows] = useState([]);
   const [activeTab, setActiveTab] = useState();
   const [subProcessInput, setSubProcessInput] = useState([]);
@@ -18,11 +18,14 @@ function SubProcessDialog({show, applicationId, selectedParentDataflow, onRefres
   useEffect(() => {
   	console.log('selectedSubProcess: '+JSON.stringify(selectedSubProcess))
     setVisible(show);
-    if(selectedSubProcess && selectedSubProcess.id != '') {
+    if(selectedSubProcess && selectedSubProcess.id != "") {
     	setSubProcess(selectedSubProcess);
-    	setActiveTab("2")	
+    	setActiveTab(2);
+
     } else {
-    	setActiveTab("1")
+    	setSubProcess(selectedSubProcess);
+      setActiveTab(1)
+      console.log("tab 1")  
     }
 
     fetchSavedGraph();
@@ -36,7 +39,6 @@ function SubProcessDialog({show, applicationId, selectedParentDataflow, onRefres
 	}, []);
 
   const onClose = () => {
-  	console.log('onClose: selectedSubProcess: '+JSON.stringify(subProcess))
   	setVisible(false);
   	onRefresh(subProcess);
   }
@@ -57,7 +59,6 @@ function SubProcessDialog({show, applicationId, selectedParentDataflow, onRefres
   };    
 
   const fetchSavedGraph = async () => {
-  	console.log('editingNodeId: '+nodeId)
     if(selectedParentDataflow && selectedParentDataflow.id != '' && selectedParentDataflow.id != undefined) {
       fetch("/api/dataflowgraph?application_id="+applicationId+"&dataflowId="+selectedParentDataflow.id, {
          headers: authHeader()
@@ -97,12 +98,12 @@ function SubProcessDialog({show, applicationId, selectedParentDataflow, onRefres
 
 
   const onChange = (value) => {	
-  	setSubProcess({"id": value.key, "title": value.label});
-  	setActiveTab("2");
-  }
-
-  const addItem = () => {
-
+    if(value != '-') {
+    	setSubProcess({"id": value.key, "title": value.label});
+    	setActiveTab("2");
+    } else {
+      setSubProcess({"id": '', "title": ''});
+    }
   }
 
   const formItemLayout = {
@@ -141,7 +142,11 @@ function SubProcessDialog({show, applicationId, selectedParentDataflow, onRefres
       >
       <Tabs defaultActiveKey={activeTab}>
         <TabPane tab="Dataflow" key="1">
-        	<Form.Item {...formItemLayout} label="Dataflow">               
+        	{subProcess.id == "" || subProcess.id == undefined ? 
+            <span className="error">Please select a dataflow for this Sub-Process.</span>
+          : null}  
+
+          <Form.Item {...formItemLayout} label="Dataflow">               
 	        	<Select
 					    showSearch
 					    labelInValue
@@ -152,8 +157,9 @@ function SubProcessDialog({show, applicationId, selectedParentDataflow, onRefres
 					    filterOption={(input, option) =>
 					      option.children.toLowerCase().indexOf(input.toLowerCase()) >= 0
 					    }
-					    value={(subProcess.id != '' && subProcess.id != undefined) ? {"id":subProcess.id, "label":subProcess.title} : "Select a dataflow to be associated with this Sub-Process"}
+					    value={(subProcess.id != '' && subProcess.id != undefined) ? {"id":subProcess.id, "label":subProcess.title} : {"id":'-', "label":'Select a Dataflow'}}
 					  >
+            <Option key={'-'}>Select a Dataflow</Option>
 					  	{dataFlows.map(dataflow => <Option key={dataflow.id}>{dataflow.title}</Option>)}
 	        	</Select>
         	</Form.Item>
@@ -173,11 +179,12 @@ function SubProcessDialog({show, applicationId, selectedParentDataflow, onRefres
 				        rowKey={record => record.id}
 				        dataSource={subProcessOutput}        
 				        pagination={{ pageSize: 5 }} scroll={{ y: 380 }}
+
 				      />
         		</TabPane>
         	</Tabs>
         </TabPane>
-        <TabPane tab="Designer" key="2">
+        <TabPane tab="Designer" key="2"  disabled={subProcess.id == '' || subProcess.id == undefined}>
 	        <Graph 
 	          applicationId={applicationId} 
 	          viewMode={false} 
