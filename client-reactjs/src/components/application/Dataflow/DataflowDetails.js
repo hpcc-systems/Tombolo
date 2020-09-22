@@ -19,11 +19,11 @@ function DataflowDetails({props}) {
         </div>
         <div>
           <Tabs defaultActiveKey="1">
-            <TabPane tab="Assets" key="1">    
-              <DataflowAssetsTable applicationId={dataflowReducer.applicationId} selectedDataflow={dataflowReducer.dataflowId} user={dataflowReducer.user}/>
-            </TabPane>
-            <TabPane tab="Designer" key="2">    
+            <TabPane tab="Designer" key="1">                  
               <Graph applicationId={dataflowReducer.applicationId} applicationTitle={dataflowReducer.applicationTitle} selectedDataflow={dataflowReducer.dataflowId} graphContainer="graph" sidebarContainer="sidebar"/>
+            </TabPane>
+            <TabPane tab="Assets" key="2">  
+              <DataflowAssetsTable applicationId={dataflowReducer.applicationId} selectedDataflow={dataflowReducer.dataflowId} user={dataflowReducer.user}/>                
             </TabPane>
           </Tabs>
         </div>

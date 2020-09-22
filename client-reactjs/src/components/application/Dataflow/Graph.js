@@ -87,9 +87,9 @@ class Graph extends Component {
     document.addEventListener('mousedown', this.handleClickOutside);
   }
   componentWillReceiveProps(props) {   
-    if(this.state.applicationId != props.application.applicationId || this.state.selectedDataflow != props.selectedDataflow ) {      
+    if(this.state.applicationId && this.state.applicationId != props.applicationId || this.state.selectedDataflow != props.selectedDataflow ) {      
       this.setState({
-        applicationId: props.application.applicationId,
+        applicationId: props.applicationId,
         selectedDataflow: props.selectedDataflow
       }, function() {
         this.fetchSavedGraph();

@@ -11,6 +11,7 @@ import {omitDeep} from '../../common/CommonUtil.js';
 const TabPane = Tabs.TabPane;
 const Option = Select.Option;
 const { Paragraph } = Typography;
+const { TextArea } = Input;
 
 function DataDefinitionDetailsDialog({selectedDataDefinition, applicationId, onDataUpdated, closeDialog}) {
   const [visible, setVisible] = useState(false);
@@ -176,15 +177,16 @@ function DataDefinitionDetailsDialog({selectedDataDefinition, applicationId, onD
       }
     },
     {
+      title: 'Value Description',
+      dataIndex: 'valueDescription',
+      editable: true
+    },
+    {
       title: 'Possible Value',
       dataIndex: 'possibleValue',
       editable: true
     },
-    {
-      title: 'Value Description',
-      dataIndex: 'valueDescription',
-      editable: true
-    }
+    
   ]
 
   const handleNewProduct = () => {
@@ -239,7 +241,7 @@ function DataDefinitionDetailsDialog({selectedDataDefinition, applicationId, onD
           </Form.Item>
 
           <Form.Item {...formItemLayout} label="Description">
-              <Input id="description" name="description" onChange={onChange} defaultValue={dataDefinition.description} value={dataDefinition.description} placeholder="Description" disabled={!editingAllowed}/>
+              <TextArea id="description" name="description" onChange={onChange} defaultValue={dataDefinition.description} value={dataDefinition.description} placeholder="Description" disabled={!editingAllowed}/>
           </Form.Item>
 
           <Form.Item {...formItemLayout} label="Products">

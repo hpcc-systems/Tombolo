@@ -147,6 +147,7 @@ class JobList extends Component {
         title: 'Name',
         dataIndex: 'name',
         width: '30%',
+        render: (text, record) => <a href='#' onClick={(row) => this.handleEdit(record.id)}>{text}</a>
       },
       {
         title: 'Description',
