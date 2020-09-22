@@ -9,7 +9,7 @@
   "author": "",
   "license": "ISC",
   "dependencies": {
-    "@hpcc-js/comms": "^2.18.0",
+    "@hpcc-js/comms": "^2.27.0",
     "@sendgrid/mail": "^7.2.1",
     "activedirectory": "^0.7.2",
     "bcryptjs": "^2.4.3",
