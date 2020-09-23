@@ -15,7 +15,7 @@ router.get('/app_list', (req, res) => {
   console.log("[app/read.js] - App route called");
 
   try {
-    models.application.findAll().then(function(applications) {
+    models.application.findAll({order: [['updatedAt', 'DESC']]}).then(function(applications) {
         res.json(applications);
     })
     .catch(function(err) {
@@ -34,7 +34,9 @@ router.get('/appListByUserId', (req, res) => {
         {"$user_id$":req.query.user_id},
         {"$user_id$": req.query.user_name}
       ]
-    }, include: [UserApplication]}).then(function(applications) {
+    }, order: [['updatedAt', 'DESC']],
+    include: [UserApplication]
+        }).then(function(applications) {
         res.json(applications);
     })
     .catch(function(err) {
@@ -87,17 +89,17 @@ router.post('/newapp', [
   }
   try {
     if(req.body.id == '') {
-      models.application.create({"title":req.body.title, "description":req.body.description, "creator": req.body.creator}).then(function(applciation) {
+      models.application.create({"title":req.body.title, "description":req.body.description, "creator": req.body.creator}).then(function(application) {
         if(req.body.user_id)
-          models.user_application.create({"user_id":req.body.user_id, "application_id":applciation.id}).then(function(userapp) {
-          res.json({"result":"success"});
+          models.user_application.create({"user_id":req.body.user_id, "application_id":application.id}).then(function(userapp) {
+          res.json({"result":"success", "id": application.id});
         });
       else
-          res.json({"result":"success"});
+          res.json({"result":"success", "id": application.id});
       });
     } else {
       models.application.update(req.body, {where:{id:req.body.id}}).then(function(result){
-          res.json({"result":"success"});
+          res.json({"result":"success", "id": result.id});
       })
     }
   } catch (err) {

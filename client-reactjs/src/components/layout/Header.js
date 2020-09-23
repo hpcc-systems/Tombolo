@@ -33,9 +33,9 @@ class AppHeader extends Component {
       confirmnewpassword: ''
     }
 
-    componentWillReceiveProps(props) {
+    componentWillReceiveProps(props) {      
       if(props.application && props.application.applicationTitle!=''){
-      this.setState({ selected: props.application.applicationTitle });
+        this.setState({ selected: props.application.applicationTitle });
         $('[data-toggle="popover"]').popover('disable');
       }      
     }
@@ -73,7 +73,44 @@ class AppHeader extends Component {
       }      
     }
     componentDidUpdate(prevProps, prevState) {
-      //console.log('componentDidUpdate: '+this.state.applications.length)
+      if(this.props.newApplication) {        
+        let applications = this.state.applications;
+        let isNewApplicationInList = (applications.filter(application => application.value == this.props.newApplication.applicationId).length > 0);
+        if(!isNewApplicationInList) {
+          applications.push({
+            value: this.props.newApplication.applicationId,
+            display: this.props.newApplication.applicationTitle
+          })
+          this.setState({ applications });
+        }
+      }
+      console.log('updated: '+JSON.stringify(this.props.updatedApplication));
+      if(this.props.updatedApplication) {
+        let applications = this.state.applications;
+        let application = applications.filter(application => application.value == this.props.updatedApplication.applicationId && application.display != this.props.updatedApplication.applicationTitle);
+        console.log(JSON.stringify(application))
+        if(application.length > 0) {
+          applications = applications.map((application) => {
+            if(application.value == this.props.updatedApplication.applicationId) {
+              application.display = this.props.updatedApplication.applicationTitle;
+            }
+            return application;
+          })
+          console.log(JSON.stringify(applications))
+          this.setState({ applications });
+        }
+      }
+
+      if(this.props.deletedApplicationId) {
+        let applications = this.state.applications;
+        let application = applications.filter(application => application.value == this.props.deletedApplicationId);
+        if(application.length > 0) {
+          applications = applications.filter(application => application.value != this.props.deletedApplicationId);
+          console.log(JSON.stringify(applications))
+          this.setState({ applications });          
+        }
+
+      }
       
       //console.log($('[data-value="'+localStorage.getItem("activeProjectId")+'"]').data("display"))
       //$('[data-value="'+localStorage.getItem("activeProjectId")+'"]').click();
@@ -293,21 +330,21 @@ class AppHeader extends Component {
             {getFieldDecorator('name', {
               rules: [{ required: true, message: 'Please enter the current password!' }],
             })(
-            <Input type="password" name="oldpassword" placeholder="Password" defaultValue={this.state.oldpassword} value={this.state.oldpassword} onChange={this.handleChangePasswordFieldChange}/> )}
+            <Input type="password" name="oldpassword" placeholder="Password" defaultValue={this.state.oldpassword} onChange={this.handleChangePasswordFieldChange}/> )}
           </Form.Item>
 
           <Form.Item {...formItemLayout} label="New Password">
             {getFieldDecorator('newpassword', {
               rules: [{ required: true, message: 'Please enter the new password!' }],
             })(
-            <Input type="password" name="newpassword" placeholder="New Password" defaultValue={this.state.newpassword} value={this.state.newpassword} onChange={this.handleChangePasswordFieldChange}/>  )}
+            <Input type="password" name="newpassword" placeholder="New Password" defaultValue={this.state.newpassword} onChange={this.handleChangePasswordFieldChange}/>  )}
           </Form.Item>
 
           <Form.Item {...formItemLayout} label="Confirm Password">
             {getFieldDecorator('confirmnewpassword', {
               rules: [{ required: true, message: 'Please confirm the new password!' }],
             })(
-            <Input type="password" name="confirmnewpassword" placeholder="Confirm Password" defaultValue={this.state.confirmnewpassword} value={this.state.confirmnewpassword} onChange={this.handleChangePasswordFieldChange}/>   )}
+            <Input type="password" name="confirmnewpassword" placeholder="Confirm Password" defaultValue={this.state.confirmnewpassword} onChange={this.handleChangePasswordFieldChange}/>   )}
           </Form.Item>
 
         </Modal>
@@ -318,12 +355,16 @@ class AppHeader extends Component {
 
 function mapStateToProps(state) {
     const { loggingIn, user } = state.authenticationReducer;
-    const { application, selectedTopNav } = state.applicationReducer;
+    const { application, selectedTopNav, newApplication, updatedApplication, deletedApplicationId } = state.applicationReducer;
+    console.log('mapStateToProps: '+JSON.stringify(updatedApplication))
     return {
         loggingIn,
         user,
         application,
-        selectedTopNav
+        selectedTopNav,
+        newApplication,
+        updatedApplication,
+        deletedApplicationId
     };
 }
 

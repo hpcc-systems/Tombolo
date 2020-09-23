@@ -6,6 +6,7 @@ import { hasAdminRole } from "../common/AuthUtil.js";
 import { connect } from 'react-redux';
 import { Constants } from '../common/Constants';
 import ShareApp from "./ShareApp";
+import { applicationActions } from '../../redux/actions/Application';
 
 class Applications extends Component {
   constructor(props) {
@@ -79,8 +80,7 @@ class Applications extends Component {
       }
       handleError(response);
     })
-	  .then(data => {
-      console.log(JSON.stringify(data))
+	  .then(data => {      
       this.setState({
         ...this.state,
         newApp: {
@@ -90,15 +90,19 @@ class Applications extends Component {
           description: data.description
         }
       });
+      this.props.form.setFieldsValue({
+        title: data.title,
+        scope: data.description
+      });
       this.setState({
         showAddApp: true
-      });
-
+      });      
     })
   	.catch(error => {
     	console.log(error);
   	});
   }
+
   handleShareApplication(app_id,app_tittle){
     this.setState({
       appId: app_id,
@@ -106,6 +110,7 @@ class Applications extends Component {
       openShareAppDialog: true
     });
   }
+
   handleRemove = (app_id) => {
   	var data = JSON.stringify({appIdsToDelete:app_id});
     fetch("/api/app/read/removeapp", {
@@ -120,37 +125,48 @@ class Applications extends Component {
     })
     .then(suggestions => {
       notification.open({
-          message: 'Application Removed',
-          description: 'The application has been removed.',
-          onClick: () => {
-            console.log('Closed!');
-          },
-        });
-        this.getApplications();
-      }).catch(error => {
-        console.log(error);
+        message: 'Application Removed',
+        description: 'The application has been removed.',
+        onClick: () => {
+          console.log('Closed!');
+        },
       });
+      this.getApplications();
+      this.props.dispatch(applicationActions.applicationDeleted(app_id));
+    }).catch(error => {
+      console.log(error);
+    });
   }
 
-  handleAdd = (event) => {
-  	this.setState({
-    	showAddApp: true
+  handleAdd = (event) => {  	
+    this.resetFields();
+    this.setState({
+      showAddApp: true
+    });
+  }
+
+  resetFields = () => {
+    this.setState({
+      ...this.state,
+      confirmLoading: false,
+      submitted: false,
+      newApp: {
+        ...this.state.newApp,
+        id : '',
+        title: '',
+        description:''
+      },
+      showAddApp: false
+    });
+
+    this.props.form.setFieldsValue({
+      title: '',
+      scope: ''
     });
   }
 
   handleAddAppCancel= (event) => {
-  	this.setState({
-      ...this.state,
-        confirmLoading: false,
-        submitted: false,
-        newApp: {
-          ...this.state.newApp,
-          id : '',
-          title: '',
-          description:''
-        },
-        showAddApp: false
-    });
+  	this.resetFields();
   }
 
   onChange = (e) => {
@@ -159,7 +175,7 @@ class Applications extends Component {
 
   handleAddAppOk = () => {
     this.props.form.validateFields(async (err, values) =>  {
-      if(this.state.applications.filter(application => application.title == this.state.newApp.title).length >0 ) {
+      if(this.state.applications.filter(application => application.title == this.state.newApp.title).length > 0) {
         message.config({top:150})
         message.error("There is already an application with the same name. Please select a different name.")
         return;
@@ -188,7 +204,17 @@ class Applications extends Component {
           }
           handleError(response);
         })
-        .then(suggestions => {
+        .then(response => {
+          if(this.state.newApp.id == '') {
+            console.log('new app')
+            //new application
+            this.props.dispatch(applicationActions.newApplicationAdded(response.id, this.state.newApp.title));
+          } else {
+            console.log('update app')
+            //updating an application
+            this.props.dispatch(applicationActions.applicationUpdated(this.state.newApp.id, this.state.newApp.title));
+          }
+
     	  	this.setState({
           ...this.state,
             newApp: {
@@ -200,7 +226,8 @@ class Applications extends Component {
             showAddApp: false,
             confirmLoading: false,
             submitted:false
-          });
+          });       
+
     	    this.getApplications();
         }).catch(error => {
           console.log(error);

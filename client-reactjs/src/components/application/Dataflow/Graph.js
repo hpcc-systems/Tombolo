@@ -218,13 +218,13 @@ class Graph extends Component {
       d3.selectAll('.node rect').attr('stroke', 'grey');
       d3.selectAll('.node rect').classed("warning", false);
 
-      d3.selectAll('.node').each(function(d) {
+      d3.selectAll('.node rect').each(function(d) {
         let task = completedTasks.filter((task) => {
           return task.id == d3.select(this).select('rect').attr("id")
         })
         if(task && task.length > 0) {
           if(task[0].status == 'completed' || task[0].status == 'compiled') {            
-            d3.select(this).append("text")
+            d3.select(this.parentNode).append("text")
               .attr('class', 'tick')
               .attr('font-family', 'FontAwesome')
               .attr('font-size', function(d) { return '2em'} )
@@ -241,8 +241,8 @@ class Graph extends Component {
                 return '\uf058'; 
               })
           }
-          d3.select(this).select('rect').attr("stroke", _self.getTaskColor(task[0]));
-          d3.select(this).select('rect').attr("stroke-width", "5");
+          d3.select(this.parentNode).select('rect').attr("stroke", _self.getTaskColor(task[0]));
+          d3.select(this.parentNode).select('rect').attr("stroke-width", "5");
           //d3.select(this).select('rect').attr("message", task[0].message);                
         }
       });
@@ -345,7 +345,7 @@ class Graph extends Component {
         this.thisGraph.nodes = newData;
       }
       this.updateGraph();
-      //this.saveGraph();
+      this.saveGraph();
     } else {
       this.fetchSavedGraph();
     }
