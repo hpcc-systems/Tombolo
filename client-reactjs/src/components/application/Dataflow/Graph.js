@@ -220,7 +220,7 @@ class Graph extends Component {
 
       d3.selectAll('.node rect').each(function(d) {
         let task = completedTasks.filter((task) => {
-          return task.id == d3.select(this).select('rect').attr("id")
+          return task.id == d3.select(this).attr("id")
         })
         if(task && task.length > 0) {
           if(task[0].status == 'completed' || task[0].status == 'compiled') {            
@@ -954,7 +954,7 @@ class Graph extends Component {
         });
         break;
       case 'Job':
-      case 'Modelling':
+      case 'Modeling':
       case 'Scoring':
       case 'Query Build':
       case 'ETL':
