@@ -336,7 +336,7 @@ path, .jtk-endpoint { cursor:pointer; }
   -o-transition: all 0.3s;
   transition: all 0.3s;
   position: relative;
-  height:640px;
+  height:85vh;
 }
 
 .sidebar.active .btn.btn-primary:before {
@@ -496,3 +496,4 @@ div.tooltip {
 .help-block {
   color: red;
 }
+

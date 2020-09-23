@@ -18,7 +18,7 @@ function DataflowDetails({props}) {
           <BreadCrumbs applicationId={dataflowReducer.applicationId} applicationTitle={dataflowReducer.applicationTitle}/>         
         </div>
         <div>
-          <Tabs defaultActiveKey="1">
+          <Tabs defaultActiveKey="1" style={{"height":"100vh"}}>
             <TabPane tab="Designer" key="1">                  
               <Graph applicationId={dataflowReducer.applicationId} applicationTitle={dataflowReducer.applicationTitle} selectedDataflow={dataflowReducer.dataflowId} graphContainer="graph" sidebarContainer="sidebar"/>
             </TabPane>

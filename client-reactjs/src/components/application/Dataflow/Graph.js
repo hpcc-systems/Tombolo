@@ -635,10 +635,17 @@ class Graph extends Component {
     let _self=this;
     // reset the this.graphStates
     _self.graphState.shiftNodeDrag = false;
+    //revert stroke-width after drag-drop
+    d3.selectAll('.node rect').each(function(d) {
+      d3.select(this).attr('stroke-width', "3")
+    })
+
     d3node.classed(_self.consts.connectClass, false);
 
     let mouseDownNode = _self.graphState.mouseDownNode;
     let mouseEnterNode = _self.graphState.mouseEnterNode;
+    console.log(mouseDownNode);
+    console.log(mouseEnterNode);
 
     if (_self.graphState.justDragged) {
       // dragged, not clicked
@@ -758,7 +765,6 @@ class Graph extends Component {
 
   // call to propagate changes to graph
   updateGraph = () => {    
-    let color = d3.scaleOrdinal(d3.schemeDark2);
     let _self=this;
     _self.thisGraph.paths = _self.thisGraph.paths.data(_self.thisGraph.edges, function (d) {
       if(d.source && d.target) {
@@ -768,7 +774,7 @@ class Graph extends Component {
     let paths = _self.thisGraph.paths;
     // update existing paths
     paths.style('marker-end', 'url(#end-arrow)')
-        .style("stroke", function(d, i) { return color(i) })
+        .style("stroke", function(d, i) { return '#d3d3d3' })
         .attr("d", function (d) {
             return "M" + (d.source.x + 35) + "," + (d.source.y + 20) + "L" + (d.target.x +35) + "," + (d.target.y + 15);
         });
@@ -779,20 +785,25 @@ class Graph extends Component {
     // add new paths
     paths = paths.enter()
       .append("path")
-      .style("stroke", function(d, i) { return color(i) })
+      .style("stroke", function(d, i) { return '#d3d3d3' })
       .style('marker-end', 'url(#end-arrow)')        
       .classed("link", true)
       .attr("d", function (d, i) {            
           return "M" + (d.source.x + 35) + "," + (d.source.y + 20) + "L" + (d.target.x + 35)  + "," + (d.target.y + 15);
       })
       .merge(paths)
+      .on("mouseover", function (d) {
+        d3.select(this).style('stroke', 'black');
+      })
+      .on("mouseout", function (d) {
+        d3.select(this).style('stroke', '#d3d3d3');
+      })
       .on("mouseup", function (d) {
           // graphState.mouseDownLink = null;
       })
       .on("mousedown", function (d) {
-              _self.pathMouseDown(d3.select(this), d);
-          }
-      );
+        _self.pathMouseDown(d3.select(this), d);
+      });
     _self.thisGraph.paths = paths;
 
     // update existing nodes
@@ -1036,6 +1047,7 @@ class Graph extends Component {
 
     let xLoc = width / 2 - 25,
         yLoc = 100;    
+    console.log(width);    
     let svg = d3.select('#'+this.props.graphContainer).append("svg")
         .attr("width", width)
         .attr("height", "100%");
@@ -1105,8 +1117,8 @@ class Graph extends Component {
       let idct = ++_self.graphState.idct;
       let newNodeId = idct+Math.floor(Date.now());
       //let x = (mouseCoordinates[0] < 60) ? 60 : mouseCoordinates[0] - 150 : mouseCoordinates[0] > 1300 ? 1300 : mouseCoordinates[0];
-      let x = mouseCoordinates[0] > 1550 ? 1550 : mouseCoordinates[0] < 60 ? 60 : mouseCoordinates[0]
-      let y = mouseCoordinates[1] > 600 ? 600 : mouseCoordinates[1] < 0 ? 0 : mouseCoordinates[1]        
+      let x = mouseCoordinates[0] > 1500 ? 1500 : mouseCoordinates[0] < 40 ? 40 : mouseCoordinates[0]
+      let y = mouseCoordinates[1] > 720 ? 720 : mouseCoordinates[1] < 0 ? 0 : mouseCoordinates[1]        
       _self.thisGraph.nodes.push({"title":"New "+d3.select(this).select("text.entity").text(),"id":newNodeId,"x":x,"y":y, "type":d3.select(this).select("text.entity").text()})
       _self.setIdCt(idct);
       _self.updateGraph();
@@ -1157,6 +1169,9 @@ class Graph extends Component {
     .on("drag", hasEditPermission(_self.props.user) ? function (d) {
       _self.graphState.justDragged = true;
       _self.dragmove(d);
+      if(_self.graphState.mouseDownNode) {
+        d3.select('.node.connect-node rect').attr('stroke-width', "8")
+      }
       //d3.select(this).attr("x", d.x = d3.event.x).attr("y", d.y = d3.event.y);
     } : null)
     .on("end", hasEditPermission(_self.props.user) ? function (d) {
@@ -1166,9 +1181,9 @@ class Graph extends Component {
       if (_self.graphState.shiftNodeDrag) {
           _self.dragEnd(d3.select(this), _self.graphState.mouseEnterNode)
       } else {
-        //checking if the nodes have been dropped at an x,y which is out of browser's viewport
-        let x = d3.event.x > 1550 ? 1550 : d3.event.x < 60 ? 60 : d3.event.x
-        let y = d3.event.y > 600 ? 600 : d3.event.y < 0 ? 0 : d3.event.y      
+        //checking if the nodes have .select('rect').attr("stroke-width", "5") dropped at an x,y which is out of browser's viewport
+        let x = d3.event.x > 1500 ? 1500 : d3.event.x < 40 ? 40 : d3.event.x
+        let y = d3.event.y > 720 ? 720 : d3.event.y < 0 ? 0 : d3.event.y      
         d.x = x;
         d.y = y;
       }      
@@ -1259,7 +1274,7 @@ class Graph extends Component {
          <div className="col-sm-1 float-left" style={{width:"85px"}}><nav id={this.props.sidebarContainer} className="navbar-light fixed-left graph-sidebar" style={{"backgroundColor": "#e3f2fd", "fontSize": "12px"}}></nav></div>
       : null }
 
-        <div id={this.props.graphContainer} style={{"marginLeft": "70px", "height":"100%"}} className={!editingAllowed ? "col-md-10 readonly" : "col-md-10"} tabIndex="-1"></div>
+        <div id={this.props.graphContainer} style={{"marginLeft": "115px", "height":"85vh", "width": "", "border": "1px solid #17a2b8"}} className={!editingAllowed ? " readonly" : ""} tabIndex="-1"></div>
 
       {this.state.openFileDetailsDialog ?
         <FileDetailsForm
