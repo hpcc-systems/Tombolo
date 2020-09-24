@@ -47,6 +47,7 @@ services:
       PROXY_URL: http://node:${PORT}
     ports:
       - ${WEB_PORT}:${WEB_PORT}
+      - ${WEB_EXPOSED_PORT}:${WEB_EXPOSED_PORT}
     depends_on:
       - mysql_db
 
