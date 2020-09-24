@@ -232,6 +232,9 @@ class FileDetails extends Component {
       .then(data => {
         this.getRules();
       })
+      .then(data => {
+        this.getClusters();
+      })
       .catch(error => {
         console.log(error);
       });

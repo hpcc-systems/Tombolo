@@ -30,11 +30,45 @@ function DataDictionary(props) {
       handleError(response);
     })
     .then(data => {
-      setDataDefinitions(data)
+      fetchFiles().then((files) => {        
+        files.forEach((file) => {
+          data.push({
+            "id": file.id,
+            "data_defn": [],
+            "name": file.title,
+            "title": file.title,
+            "description": file.description,
+            "createdAt": file.createdAt,
+            "type": "file"
+          })
+        })
+        setDataDefinitions(data)  
+      })
+      
     }).catch(error => {
       console.log(error);
     });
   }  
+
+  const fetchFiles = () => {
+    return new Promise((resolve, reject) => {
+      fetch("/api/file/read/file_list?app_id="+application.applicationId, {
+          headers: authHeader()
+      })
+      .then((response) => {
+        if(response.ok) {
+          return response.json();
+        }
+        handleError(response);
+      })
+      .then(data => {
+        resolve(data);
+      }).catch(error => {
+        console.log(error);
+        reject(error)
+      });
+    })
+  }
 
   const onDataUpdated = () => {
     fetchDataDictionary();

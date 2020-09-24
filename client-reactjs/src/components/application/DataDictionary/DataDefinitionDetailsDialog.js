@@ -48,7 +48,12 @@ function DataDefinitionDetailsDialog({selectedDataDefinition, applicationId, onD
 
   useEffect(() => {
     if(selectedDataDefinition != '') {
-      getDataDefintionDetails();      
+      if(selectedDataDefinition.type == 'file') {
+        getFileDetails();
+      } else {
+        getDataDefintionDetails();  
+      }
+      
     }
    }, [selectedDataDefinition])
 
@@ -127,6 +132,36 @@ function DataDefinitionDetailsDialog({selectedDataDefinition, applicationId, onD
     });
   };    
 
+  const getFileDetails = async () => {
+    fetch("/api/file/read/file_details?file_id="+selectedDataDefinition.id+"&app_id="+applicationId, {
+        headers: authHeader()
+    }) 
+    .then((response) => {
+      if(response.ok) {
+        return response.json();
+      }
+      handleError(response);
+    }).then((data) => {
+      let layout = data.file_layouts.map((layout) => {
+        return {
+          "name": layout.name,
+          "valueDescription": layout.description,
+          "type": layout.type,
+          "possibleValue": ''
+        }
+      })
+
+      let dataDefn = {
+        "data_defn": layout,
+        "id": data.basic.id,
+        "applicationId": applicationId,
+        "name": data.basic.title,
+        "description": data.basic.description
+      }
+      setDataDefinition(dataDefn);         
+    })
+  }
+
   const onChange = (e) => {	
     setFormErrors({'name':''});
   	const {name, value} = e.target;
@@ -134,7 +169,7 @@ function DataDefinitionDetailsDialog({selectedDataDefinition, applicationId, onD
   }
 
   const validateForm = () => {
-    if(dataDefinition.name == '' || /[ `!@#$%^&*()+\=\[\]{};':"\\|,.<>\/?~]/.test(dataDefinition.name)) {
+    if(dataDefinition.name == '' || /[ `!@#$%^&*()+\=\[\]{};'"\\|,.<>\/?~]/.test(dataDefinition.name)) {
       setFormErrors({'name':'Please enter a valid name for the Data Definition'});
       return false;
     }
@@ -230,7 +265,7 @@ function DataDefinitionDetailsDialog({selectedDataDefinition, applicationId, onD
         onOk={onSave}
         onCancel={onClose}
         destroyOnClose={true}
-        width="900px"        
+        width="1200px"        
       >
       <Tabs defaultActiveKey={"1"}>
         <TabPane tab="Basic" key="1">
@@ -241,7 +276,7 @@ function DataDefinitionDetailsDialog({selectedDataDefinition, applicationId, onD
           </Form.Item>
 
           <Form.Item {...formItemLayout} label="Description">
-              <TextArea id="description" name="description" onChange={onChange} defaultValue={dataDefinition.description} value={dataDefinition.description} placeholder="Description" disabled={!editingAllowed}/>
+              <TextArea id="description" name="description" onChange={onChange} defaultValue={dataDefinition.description} value={dataDefinition.description} rows="10" cols="50" placeholder="Description" disabled={!editingAllowed}/>
           </Form.Item>
 
           <Form.Item {...formItemLayout} label="Products">

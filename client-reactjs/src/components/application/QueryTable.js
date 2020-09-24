@@ -135,7 +135,8 @@ class QueryTable extends Component {
             columns={queryColumns}
             rowKey={record => record.id}
             dataSource={this.state.queries}
-            pagination={{ pageSize: 10 }} scroll={{ y: 460 }}
+            pagination={{ pageSize: 10 }} 
+            scroll={{ y: '70vh' }}
           />
         {this.state.openQueryDetailsDialog ?
           <QueryDetailsForm

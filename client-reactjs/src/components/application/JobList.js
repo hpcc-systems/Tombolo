@@ -189,7 +189,8 @@ class JobList extends Component {
               columns={jobColumns}
               rowKey={record => record.id}
               dataSource={this.state.assets}
-              pagination={{ pageSize: 10 }} scroll={{ y: 460 }}
+              pagination={{ pageSize: 10 }} 
+              scroll={{ y: '70vh' }}
             />
 
           

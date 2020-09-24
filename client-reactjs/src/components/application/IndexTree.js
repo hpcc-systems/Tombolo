@@ -131,7 +131,8 @@ class IndexTree extends Component {
             columns={indexColumns}
             rowKey={record => record.id}
             dataSource={this.state.indexes}
-            pagination={{ pageSize: 10 }} scroll={{ y: 460 }}
+            pagination={{ pageSize: 10 }} 
+            scroll={{ y: '70vh' }}
           />
         {this.state.openFileDetailsDialog ?
           <IndexDetailsForm
