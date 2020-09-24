@@ -44,7 +44,8 @@ export function authenticationReducer(state = initialState, action) {
       return {
         newUserRegistering: false,
         userRegistrationSuccess: true,
-        userRegistrationError: []
+        userRegistrationError: [],
+        status: action.status
       };    
 
     case Constants.REGISTER_USER_FAILED:      

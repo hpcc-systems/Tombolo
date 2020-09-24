@@ -116,11 +116,9 @@ router.post('/registerUser', [
   }
   userService.registerUser(req, res)
     .then((response) => {
-      console.log('response: '+JSON.stringify(response));
-      res.json(response)
+      res.status(response.statusCode).json({"success":"true"});
     })
     .catch((err) => {
-      console.log('here-2: '+JSON.stringify(err))
       res.status(500).json({ errors: [err.error] });      
     })
 })

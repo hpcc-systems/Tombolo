@@ -287,18 +287,17 @@ async function registerUser(req, res) {
         "username": req.body.username,
         "password": req.body.password,
         "confirmpassword": req.body.confirmnewpassword,
-        "role": req.body.role
+        "role": req.body.role,
+        "applicationId": process.env.AUTHSERVICE_TOMBOLO_APP_ID
       }
     }, function(err, response, body) {
       if (response.statusCode == 422) {
         reject(new Error(body.errors.concat(',')));
       }
-
-      if (response.statusCode != 200) {
-        console.log('here...'+JSON.stringify(body))
+      if (response.statusCode != 200 && response.statusCode != 201 && response.statusCode && 202) {
         reject(body);
       } else {
-        resolve(body);
+        resolve({'statusCode': response.statusCode, 'message': body});
       }
     });
   });

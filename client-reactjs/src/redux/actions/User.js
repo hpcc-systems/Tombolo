@@ -70,16 +70,15 @@ function registerNewUser(newUserObj) {
         role: 'Creator' 
       })
     }).then(handleResponse)
-    .then(user => {
-      console.log(user);
-      dispatch(success(user));
+    .then(response => {
+      dispatch(success(response));
     }).catch(error => {
       dispatch(failure(error));
     });
   };
 
   function request() { return { type: Constants.REGISTER_USER_REQUEST } }
-  function success() { return { type: Constants.REGISTER_USER_SUCCESS } }
+  function success(response) { return { type: Constants.REGISTER_USER_SUCCESS, status: response.status } }
   function failure(error) { return { type: Constants.REGISTER_USER_FAILED, error: error } }
 }
 
@@ -91,6 +90,7 @@ function logout() {
 function handleResponse(response) {
   return response.text().then(text => {
     const data = text && JSON.parse(text);
+    data.status = response.status;
     if (!response.ok) {
       const error = (data && data.message) || (data && data.errors) || response.statusText;
       return Promise.reject(error);

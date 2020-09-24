@@ -53,9 +53,16 @@ class LoginPage extends React.Component {
       return;
     }
 
-    if(!nextProps.newUserRegistering && nextProps.userRegistrationSuccess != undefined && nextProps.userRegistrationSuccess) {      
-      window.location = '/login';
-      message.info("Registration Succesful")
+    if(!nextProps.newUserRegistering && nextProps.userRegistrationSuccess != undefined && nextProps.userRegistrationSuccess) {            
+      if(nextProps.status == 201) {
+        message.info("Registration Succesful. Please login using the account you just created")
+      } else if(nextProps.status == 202) {
+        message.info("It looks like an account already exists for you. If you already registered for RealBI application, please login to Tombolo using your RealBI account.")
+      }
+      setTimeout(() => {
+        window.location = '/login';
+      }, 2000);
+      
     }
   }
 
@@ -239,14 +246,15 @@ class LoginPage extends React.Component {
 }
 
 function mapStateToProps(state) {
-  const { loggingIn, loggedIn, loginFailed, userRegistrationSuccess, newUserRegistering, userRegistrationError } = state.authenticationReducer;
+  const { loggingIn, loggedIn, loginFailed, userRegistrationSuccess, newUserRegistering, userRegistrationError, status } = state.authenticationReducer;
   return {
       loggingIn,
       loggedIn,
       loginFailed,
       userRegistrationSuccess,
       newUserRegistering,
-      userRegistrationError
+      userRegistrationError,
+      status
   };
 }
 
