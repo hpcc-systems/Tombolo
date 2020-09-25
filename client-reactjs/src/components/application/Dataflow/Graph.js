@@ -355,7 +355,9 @@ class Graph extends Component {
     console.log('save: '+JSON.stringify(this.props.selectedDataflow))
     let _self = this, edges = [];
     this.thisGraph.edges.forEach(function (val, i) {
+      if(val.source && val.target) {
         edges.push({source: val.source.id, target: val.target.id});
+      }
     });
     fetch('/api/dataflowgraph/save', {
         method: 'post',
