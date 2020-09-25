@@ -18,6 +18,7 @@ const TabPane = Tabs.TabPane;
 const Option = Select.Option;
 const { confirm } = Modal;
 const layoutGrid=undefined;
+const { TextArea } = Input;
 
 
 class FileDetails extends Component {
@@ -1283,7 +1284,7 @@ class FileDetails extends Component {
                 )}
               </Form.Item>
               <Form.Item {...formItemLayout} label="Description">
-                  <Input id="file_desc" name="description" onChange={this.onChange} defaultValue={description} value={description} placeholder="Description" disabled={!editingAllowed}/>
+                  <TextArea id="file_desc" name="description" onChange={this.onChange} defaultValue={description} value={description} placeholder="Description" rows="7" cols="50" disabled={!editingAllowed}/>
               </Form.Item>
               <Form.Item {...formItemLayout} label="Service URL">
                   <Input id="file_primary_svc" name="serviceUrl" onChange={this.onChange} defaultValue={serviceUrl} value={serviceUrl} placeholder="Service URL" disabled={!editingAllowed}/>

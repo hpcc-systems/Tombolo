@@ -776,7 +776,9 @@ class Graph extends Component {
     paths.style('marker-end', 'url(#end-arrow)')
         .style("stroke", function(d, i) { return '#d3d3d3' })
         .attr("d", function (d) {
-            return "M" + (d.source.x + 35) + "," + (d.source.y + 20) + "L" + (d.target.x +35) + "," + (d.target.y + 15);
+            if(d.source && d.target) {
+              return "M" + (d.source.x + 35) + "," + (d.source.y + 20) + "L" + (d.target.x +35) + "," + (d.target.y + 15);
+            }
         });
 
     // remove old links
@@ -789,7 +791,9 @@ class Graph extends Component {
       .style('marker-end', 'url(#end-arrow)')        
       .classed("link", true)
       .attr("d", function (d, i) {            
-          return "M" + (d.source.x + 35) + "," + (d.source.y + 20) + "L" + (d.target.x + 35)  + "," + (d.target.y + 15);
+          if(d.source && d.target) {
+            return "M" + (d.source.x + 35) + "," + (d.source.y + 20) + "L" + (d.target.x + 35)  + "," + (d.target.y + 15);
+          }
       })
       .merge(paths)
       .on("mouseover", function (d) {

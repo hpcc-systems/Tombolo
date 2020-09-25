@@ -7,6 +7,7 @@ import {omitDeep} from './CommonUtil';
 const EditableContext = React.createContext();
 const Option = Select.Option;
 const OptGroup = Select.OptGroup;
+const { TextArea } = Input;
 
 const EditableRow = ({ form, index, ...props }) => (
   <EditableContext.Provider value={form}>
@@ -95,7 +96,7 @@ class EditableCell extends React.Component {
             <OptGroup label="Data Dictionary">
               {datadefinitions.map(dataDefn => <Option key={dataDefn.id} value={dataDefn.id}>{dataDefn.name}</Option>)}
             </OptGroup> : null}
-          </Select> : <Input ref={node => (this.input = node)} onPressEnter={this.saveText} onBlur={this.saveText} />)}
+          </Select> : <TextArea ref={node => (this.input = node)} onPressEnter={this.saveText} rows="5" cols="25" onBlur={this.saveText} />)}
       </Form.Item>
       </Form>
     ) : (
