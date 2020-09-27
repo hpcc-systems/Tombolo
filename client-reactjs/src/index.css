@@ -503,3 +503,13 @@ div.tooltip {
   cursor: not-allowed;
   opacity: 1;
 }
+
+.graph-edit-mode {
+  margin-left: 115px;
+  height:85vh; 
+  border: 1px solid #17a2b8;
+}
+
+.graph-view-mode {
+  height:60vh;
+}

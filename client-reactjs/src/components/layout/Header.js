@@ -1,5 +1,5 @@
 import React, { Component } from "react";
-import {Layout, Menu, Icon, message, Tooltip, Input, Button, Dropdown, Modal, Alert, Form} from 'antd/lib';
+import {Layout, Menu, Icon, message, Tooltip, Input, Button, Dropdown, Modal, Alert, Form, notification} from 'antd/lib';
 import { NavLink, Switch, Route, withRouter } from 'react-router-dom';
 import { userActions } from '../../redux/actions/User';
 import { connect } from 'react-redux';
@@ -47,7 +47,7 @@ class AppHeader extends Component {
           searchText: pathSnippets[2]
         });
       }
-      if(this.state.applications.length == 0) {
+      if(this.state.applications.length == 0) {        
         var url="/api/app/read/appListByUserId?user_id="+this.props.user.id+'&user_name='+this.props.user.username;
         if(hasAdminRole(this.props.user)) {
           url="/api/app/read/app_list";
@@ -66,6 +66,8 @@ class AppHeader extends Component {
           if(applications && applications.length > 0) {
             this.setState({ applications });
             this.handleRef();
+          } else {
+            this.openHelpNotification();
           }
         }).catch(error => {
           console.log(error);
@@ -110,11 +112,7 @@ class AppHeader extends Component {
           this.setState({ applications });          
         }
 
-      }
-      
-      //console.log($('[data-value="'+localStorage.getItem("activeProjectId")+'"]').data("display"))
-      //$('[data-value="'+localStorage.getItem("activeProjectId")+'"]').click();
-      
+      }           
     }
 
     handleTopNavClick(event) {
@@ -173,6 +171,25 @@ class AppHeader extends Component {
         appDropdownItem.click();  
       }      
     }
+
+    openHelpNotification = () => {
+      const key = `open${Date.now()}`;
+      notification.open({
+        message: 'Hello',
+        description:
+          'Welcome '+this.props.user.firstName+' '+this.props.user.lastName+'. Please make sure you check out the User Guide under Help option.',
+        key,
+        onClose: this.close(),
+        icon: <Icon type="question-circle" />,
+        top: 70
+      });
+    };
+
+    close = () => {
+      console.log(
+        'Notification was closed. Either the close button was clicked or duration time elapsed.',
+      );
+    };
 
     search(value){
       this.props.history.push('/report/'+value);
@@ -250,6 +267,11 @@ class AppHeader extends Component {
         <Menu.Item key="2">Logout</Menu.Item>
       </Menu>
     );
+    const helpMenu = (
+      <Menu>
+        <Menu.Item key="1"><a href="" type="link" target={"_blank"} href={process.env.PUBLIC_URL + "/Tombolo-User-Guide.pdf"}>User Guide</a></Menu.Item>
+      </Menu>
+    );
 
     const formItemLayout = {
       labelCol: {
@@ -297,18 +319,21 @@ class AppHeader extends Component {
                 onSearch={this.search}
                 onChange={this.onChangeSearch}
                 style={{ width: 200, paddingRight:"5px" }} />
-              </li>
-              {/*
-              <li className="nav-item">
-                <a className="nav-link" data-nav="/admin/applications" onClick={this.handleTopNavClick} disabled={!hasAdminRole(this.props.user)}><i className="fa fa-lg fa-cog"></i> Settings</a>
-              </li>*/}
-              {/*<li className="nav-item"><Button style={{float: "right"}} type="link" target={"_blank"} href={process.env.PUBLIC_URL + "/open_database_license.pdf"} >Open Database License</Button></li>*/}
-              <Dropdown overlay={userActionMenu}>
+            </li>
+            <li style={{ paddingRight:"5px" }}>
+              <Dropdown overlay={helpMenu} trigger={['click']}>
+                <Button shape="round">
+                  <i className="fa fa-lg fa-question-circle"></i><span style={{paddingLeft:"5px"}}>Help <Icon type="down" /></span>
+                </Button>
+              </Dropdown>
+            </li>
+            <li>  
+              <Dropdown overlay={userActionMenu} style={{paddingLeft:"5px"}} trigger={['click']}>
                 <Button shape="round">
                   <i className="fa fa-lg fa-user-circle"></i><span style={{paddingLeft:"5px"}}>{this.props.user.firstName + " " + this.props.user.lastName} <Icon type="down" /></span>
                 </Button>
               </Dropdown>
-
+            </li>  
             </ul>
           </div>
         </nav>

@@ -220,8 +220,71 @@ router.get('/file_details', [
 
 });
 
+let updateFileDetails = ((fileId, applicationId, req) => {
+  let fieldsToUpdate = {"file_id"  : fileId, "application_id" : applicationId}; 
+  return new Promise((resolve, reject) => {
+    FileLayout.findOrCreate({
+      where:{application_id:applicationId, file_id: fileId},
+      defaults:{
+        application_id: applicationId,
+        file_id: fileId,
+        fields: JSON.stringify(req.body.file.fields)
+      }
+    }).then(function(result) {
+      let fileLayoutId = result[0].id;
+      if(!result[1]) {
+        return FileLayout.update({fields:JSON.stringify(req.body.file.fields)}, {where: {application_id:applicationId, file_id: fileId}});
+      }
+    }).then(function(fileLayout) {
+      FileLicense.destroy(
+          {where:{file_id: fileId}}
+      ).then(function(deleted) {
+      var fileLicensToSave = hpccUtil.updateCommonData(req.body.file.license, fieldsToUpdate);
+      return FileLicense.bulkCreate(
+          fileLicensToSave,
+          {updateOnDuplicate: ["name", "url"]}
+      )  })
+    }).then(function(fileLicense) {
+      var fileRelationToSave = hpccUtil.updateCommonData(req.body.file.relation, fieldsToUpdate);
+      return FileRelation.bulkCreate(
+          fileRelationToSave,
+          {updateOnDuplicate: ["source_file_id"]}
+      )
+    }).then(function(fileRelation) {
+      console.log('fieldsToUpdate:' +JSON.stringify(fieldsToUpdate));
+      var fileFieldRelationToSave = hpccUtil.updateCommonData(req.body.file.fileFieldRelation, fieldsToUpdate);
+      console.log('fileFieldRelationToSave: '+JSON.stringify(fileFieldRelationToSave));
+      return FileFieldRelation.bulkCreate(
+          fileFieldRelationToSave,
+          {updateOnDuplicate: ["field", "source_field", "requirements"]}
+      )
+    }).then(function(fileFieldRelation) {
+      var fileValidationsToSave = hpccUtil.updateCommonData(req.body.file.validation, fieldsToUpdate);
+      return FileValidation.bulkCreate(
+          fileValidationsToSave,
+          {updateOnDuplicate: ["name", "ruleType", "rule", "action", "fixScript"]}
+      )
+    }).then(function(fileFieldValidation) {
+      if(req.body.file.consumer) {
+        return ConsumerObject.bulkCreate(
+        {
+          "consumer_id" : req.body.file.consumer.id,
+          "object_id" : fileId,
+          "object_type" : "file"
+        }
+        )
+      }
+    }).then(function(fieldValidation) {
+      resolve({"result":"success", "fileId":fileId, "title":req.body.file.basic.title})              
+    }), function(err) {
+      reject(err)
+      //return res.status(500).send(err);
+    }
+  })
+})
+
 router.post('/saveFile', (req, res) => {
-    console.log("[file list/read.js] - Get file list for app_id = " + req.body.file.app_id + " isNewFile: "+req.body.isNewFile);
+    console.log("[file list/read.js] - Get file list for app_id = " + req.body.file.app_id + " isNewFile: "+req.body.isNew);
     var fileId='', applicationId=req.body.file.app_id, fieldsToUpdate={};
 
     try {
@@ -229,78 +292,26 @@ router.post('/saveFile', (req, res) => {
       if (!errors.isEmpty()) {
         return res.status(422).json({ success: false, errors: errors.array() });
       }
-
-      File.findOrCreate({
-          where:{application_id:applicationId, name:req.body.file.basic.name},
-          defaults:req.body.file.basic
-      }).then(function(result) {
-          fileId = result[0].id;
-          fieldsToUpdate = {"file_id"  : fileId, "application_id" : applicationId};
-          //if file record already exists, then update it
-          if(!result[1]) {
-              File.update(req.body.file.basic, {where:{application_id:applicationId, name:req.body.file.basic.name}}).then(function(result){})
-          }
-          //var fileLayoutToSave = hpccUtil.updateCommonData(req.body.file.fields, fieldsToUpdate);
-
-          FileLayout.findOrCreate({
-            where:{application_id:applicationId, file_id: fileId},
-            defaults:{
-              application_id: applicationId,
-              file_id: fileId,
-              fields: JSON.stringify(req.body.file.fields)
-            }
-          }).then(function(result) {
-            let fileLayoutId = result[0].id;
-            if(!result[1]) {
-              return FileLayout.update({fields:JSON.stringify(req.body.file.fields)}, {where: {application_id:applicationId, file_id: fileId}});
-            }
+      
+      if(req.body.isNew) {
+        File.create(
+          req.body.file.basic
+        ).then((result) => {
+          updateFileDetails(result.id, applicationId, req).then((response) => {
+            res.json(response);
           })
-      }).then(function(fileLayout) {
-          FileLicense.destroy(
-              {where:{file_id: fileId}}
-          ).then(function(deleted) {
-          var fileLicensToSave = hpccUtil.updateCommonData(req.body.file.license, fieldsToUpdate);
-          return FileLicense.bulkCreate(
-              fileLicensToSave,
-              {updateOnDuplicate: ["name", "url"]}
-          )  })
-      }).then(function(fileLicense) {
-          var fileRelationToSave = hpccUtil.updateCommonData(req.body.file.relation, fieldsToUpdate);
-          return FileRelation.bulkCreate(
-              fileRelationToSave,
-              {updateOnDuplicate: ["source_file_id"]}
-          )
-      }).then(function(fileRelation) {
-          console.log('fieldsToUpdate:' +JSON.stringify(fieldsToUpdate));
-          var fileFieldRelationToSave = hpccUtil.updateCommonData(req.body.file.fileFieldRelation, fieldsToUpdate);
-          console.log('fileFieldRelationToSave: '+JSON.stringify(fileFieldRelationToSave));
-          return FileFieldRelation.bulkCreate(
-              fileFieldRelationToSave,
-              {updateOnDuplicate: ["field", "source_field", "requirements"]}
-          )
-      }).then(function(fileFieldRelation) {
-          var fileValidationsToSave = hpccUtil.updateCommonData(req.body.file.validation, fieldsToUpdate);
-          return FileValidation.bulkCreate(
-              fileValidationsToSave,
-              {updateOnDuplicate: ["name", "ruleType", "rule", "action", "fixScript"]}
-          )
-      }).then(function(fileFieldValidation) {
-          if(req.body.file.consumer) {
-              return ConsumerObject.bulkCreate(
-              {
-                  "consumer_id" : req.body.file.consumer.id,
-                  "object_id" : fileId,
-                  "object_type" : "file"
-              }
-              )
-          }
-      }).then(function(fieldValidation) {
-          res.json({"result":"success", "fileId":fileId, "title":req.body.file.basic.title});
-      }), function(err) {
-          return res.status(500).send(err);
-      }
+        })
+      } else {
+        File.update(
+          req.body.file.basic, {where:{application_id: applicationId, id:req.body.id}}
+        ).then((result) => {
+          updateFileDetails(req.body.id, applicationId, req).then((response) => {
+            res.json(response);
+          })
+        })
+      }      
     } catch (err) {
-        console.log('err', err);
+      console.log('err', err);
     }
 });
 
@@ -428,6 +439,8 @@ router.get('/inheritedLicenses', [
     .isUUID(4).withMessage('Invalid application id'),
   query('fileId')
     .isUUID(4).withMessage('Invalid file id'),
+  query('dataflowId')
+    .isUUID(4).withMessage('Invalid dataflow id'),  
 ], async function (req, res) {
   const errors = validationResult(req).formatWith(validatorUtil.errorFormatter);
   if (!errors.isEmpty()) {
@@ -435,7 +448,7 @@ router.get('/inheritedLicenses', [
   }
   let results = [];
   try {
-    var parentIds = await getFileRelationHierarchy(req.query.app_id, req.query.fileId, req.query.id);
+    var parentIds = await getFileRelationHierarchy(req.query.app_id, req.query.fileId, req.query.id, req.query.dataflowId);
 
     File.findAll(
     {
@@ -691,7 +704,7 @@ router.get('/dataTypes', (req, res) => {
   }
 });
 
-async function getFileRelationHierarchy(applicationId, fileId, id) {
+async function getFileRelationHierarchy(applicationId, fileId, id, dataflowId) {
     var fileIds = [], promises = [];
     //ref: https://stackoverflow.com/questions/49845748/convert-a-flat-json-file-to-tree-structure-in-javascript
     const MutableNode = (title, fileId, children = []) =>
@@ -720,7 +733,7 @@ async function getFileRelationHierarchy(applicationId, fileId, id) {
       return [fileId].concat(...children.map(getFlat));
     }        
 
-    return DataflowGraph.findOne({where:{"application_Id":applicationId}}).then((graph) => {
+    return DataflowGraph.findOne({where:{"application_Id":applicationId, "dataflowId":dataflowId}}).then((graph) => {
       let fileNodes = JSON.parse(graph.nodes).filter(node => node.fileId==fileId);
       if(id == 'undefined') {
         id = fileNodes[0].id;

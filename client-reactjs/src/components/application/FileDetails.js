@@ -227,7 +227,7 @@ class FileDetails extends Component {
         return data;
       })
       .then(data => {
-        this.getInheritedLicenses(data.basic.id, this.props.selectedNodeId);
+        this.getInheritedLicenses(data.basic.id, this.props.selectedNodeId, this.props.selectedDataflow.id);
         return data;
       })
       .then(data => {
@@ -379,8 +379,8 @@ class FileDetails extends Component {
       });
   }
 
-  getInheritedLicenses(fileId, nodeId) {
-    fetch("/api/file/read/inheritedLicenses?fileId="+fileId+"&app_id="+this.props.applicationId+"&id="+nodeId, {
+  getInheritedLicenses(fileId, nodeId, dataflowId) {
+    fetch("/api/file/read/inheritedLicenses?fileId="+fileId+"&app_id="+this.props.applicationId+"&id="+nodeId+'&dataflowId='+dataflowId, {
       headers: authHeader()
     }).then((response) => {
         if(response.ok) {
@@ -509,7 +509,7 @@ class FileDetails extends Component {
         scopeDisabled: true,
         file: {
           ...this.state.file,
-          id: fileInfo.name,
+          //id: fileInfo.name,
           title: fileInfo.name.substring(fileInfo.name.lastIndexOf("::") + 2),
           name: fileInfo.name,
           clusterId: this.state.selectedCluster,
@@ -606,7 +606,7 @@ class FileDetails extends Component {
       fetch('/api/file/read/savefile', {
         method: 'post',
         headers: authHeader(),
-        body: JSON.stringify({isNew : this.props.isNew, file : this.populateFileDetails()})
+        body: JSON.stringify({isNew : this.props.isNew, id: this.state.file.id, file : this.populateFileDetails()})
       }).then(function(response) {
           if(response.ok) {
             return response.json();

@@ -256,15 +256,17 @@ class Graph extends Component {
       let nodeObj = this.thisGraph.nodes.filter((node) => {
         return (node.fileId == workflowDetail.task || node.jobId == workflowDetail.task || node.indexId == workflowDetail.task)
       })
-      completedTasks.push({"id": "rec-"+nodeObj[0].id, 
-        "status": workflowDetail.status, 
-        "message": workflowDetail.message,
-        "wuid": workflowDetail.wuid,
-        "wu_start": workflowDetail.wu_start,
-        "wu_end": workflowDetail.wu_end,
-        "wu_duration": workflowDetail.wu_duration,
-        "cluster": this.props.workflowDetails.cluster
-      })
+      if(nodeObj[0].id) {
+        completedTasks.push({"id": "rec-"+nodeObj[0].id, 
+          "status": workflowDetail.status, 
+          "message": workflowDetail.message,
+          "wuid": workflowDetail.wuid,
+          "wu_start": workflowDetail.wu_start,
+          "wu_end": workflowDetail.wu_end,
+          "wu_duration": workflowDetail.wu_duration,
+          "cluster": this.props.workflowDetails.cluster
+        })
+      }
     });
     return completedTasks;
   }
@@ -295,6 +297,7 @@ class Graph extends Component {
   onFileAdded = (saveResponse) => {  
     if(saveResponse) {  
       var newData = this.thisGraph.nodes.map(el => {      
+        console.log('currentlyEditingId: '+this.state.currentlyEditingId)
         if(el.id == this.state.currentlyEditingId) {
           el.title=saveResponse.title;
           switch(el.type) {
@@ -1280,7 +1283,7 @@ class Graph extends Component {
          <div className="col-sm-1 float-left" style={{width:"85px"}}><nav id={this.props.sidebarContainer} className="navbar-light fixed-left graph-sidebar" style={{"backgroundColor": "#e3f2fd", "fontSize": "12px"}}></nav></div>
       : null }
 
-        <div id={this.props.graphContainer} style={{"marginLeft": "115px", "height":"85vh", "width": "", "border": "1px solid #17a2b8"}} className={!editingAllowed ? " readonly" : ""} tabIndex="-1"></div>
+        <div id={this.props.graphContainer} className={(!editingAllowed || this.props.viewMode) ? " readonly graph-view-mode" : "graph-edit-mode"} tabIndex="-1"></div>
 
       {this.state.openFileDetailsDialog ?
         <FileDetailsForm
