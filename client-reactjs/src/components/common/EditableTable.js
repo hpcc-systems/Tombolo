@@ -218,8 +218,8 @@ class EditableTable extends React.Component {
   }
 
   onDataDefintionSelect = (id) => {
-    let selectedDataDefinition = this.props.datadefinitions.filter(dataDefn => dataDefn.id == id)
-    let dataDefn = JSON.parse(selectedDataDefinition[0].data_defn);
+    let selectedDataDefinition = this.props.dataDefinitions.filter(dataDefn => dataDefn.id == id)
+    let dataDefn = selectedDataDefinition[0].data_defn;
     this.setState({
       dataSource: dataDefn,
       count: dataDefn.length,
@@ -371,10 +371,10 @@ class EditableTable extends React.Component {
             Add a row
           </Button>
           </span>
-          {this.props.showdatadefinition && this.props.datadefinitions ? 
+          {this.props.showDataDefinition && this.props.dataDefinitions ? 
             <span style={{paddingRight: "5px"}}>
               <Select placeholder="Select from a Data Definition" disabled={!this.props.editingAllowed} onChange={this.onDataDefintionSelect} style={{ width: 230 }}>
-                {this.props.datadefinitions.map(dataDefn => <Option key={dataDefn.id}>{dataDefn.name}</Option>)}
+                {this.props.dataDefinitions.map(dataDefn => <Option key={dataDefn.id}>{dataDefn.name}</Option>)}
               </Select>
             </span>
             : null}

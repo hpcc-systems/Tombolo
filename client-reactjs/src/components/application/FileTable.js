@@ -165,11 +165,11 @@ class FileTable extends Component {
     const indexColumns = [{
       title: 'Name',
       dataIndex: 'fileTitle',
-      width: '30%',
+      width: '40%',
       render: (text, record) => <a href='#' onClick={(row) => this.handleEdit(record.id)}>{text}</a>
     },
     {
-        width: '20%',
+        width: '40%',
         title: 'Description',
         dataIndex: 'description'
     },
@@ -184,7 +184,14 @@ class FileTable extends Component {
         dataIndex: 'supplier'
     },
     {
-        width: '20%',
+        width: '15%',
+        title: 'Dataflow',
+        render: (text, record) => {
+          return (record.dataflow && record.dataflow.title != '') ? record.dataflow.title : '';
+        }
+    },
+    {
+        width: '30%',
         title: 'Created',
         dataIndex: 'createdAt',
         render: (text, record) => {
@@ -251,7 +258,8 @@ class FileTable extends Component {
       columns={indexColumns}
       rowKey={record => record.id}
       dataSource={this.state.files}
-      pagination={{ pageSize: 20 }}
+      pagination={{ pageSize: 20 }} 
+      scroll={{ y: '70vh' }}
     />
 
     }

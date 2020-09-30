@@ -15,6 +15,7 @@ const { TextArea } = Input;
 
 function DataDefinitionDetailsDialog({selectedDataDefinition, applicationId, onDataUpdated, closeDialog}) {
   const [visible, setVisible] = useState(false);
+  const [editing, setEditing] = useState(false);
   const [formErrors, setFormErrors] = useState({name:''});
   const [availableDataDefinitions, setAvailableDataDefinitions] = useState([]);
   const [dataDefinition, setDataDefinition] = useState({
@@ -35,6 +36,8 @@ function DataDefinitionDetailsDialog({selectedDataDefinition, applicationId, onD
 
   const saveInputRef = useRef(null);
 
+  let isEditing = false;
+
   useEffect(() => {
     const fetchData = async () => {
      const data = await fetchDataDefinitions();
@@ -48,6 +51,7 @@ function DataDefinitionDetailsDialog({selectedDataDefinition, applicationId, onD
 
   useEffect(() => {
     if(selectedDataDefinition != '') {
+      setEditing(true);
       if(selectedDataDefinition.type == 'file') {
         getFileDetails();
       } else {
@@ -65,6 +69,7 @@ function DataDefinitionDetailsDialog({selectedDataDefinition, applicationId, onD
 
   const onClose = () => {
   	setVisible(false);
+    setEditing(false);
     closeDialog();
   }
 
@@ -74,6 +79,7 @@ function DataDefinitionDetailsDialog({selectedDataDefinition, applicationId, onD
   }
 
   const onSave = () => {
+
     if(validateForm()) {
       message.config({top:130})
       let dataToSave = dataDefinition;
@@ -169,11 +175,11 @@ function DataDefinitionDetailsDialog({selectedDataDefinition, applicationId, onD
   }
 
   const validateForm = () => {
-    if(dataDefinition.name == '' || /[ `!@#$%^&*()+\=\[\]{};'"\\|,.<>\/?~]/.test(dataDefinition.name)) {
+    if(dataDefinition.name == '' || /^[!@#\$%\^\&*\)\(+=._-]+$/g.test(dataDefinition.name)) {
       setFormErrors({'name':'Please enter a valid name for the Data Definition'});
       return false;
     }
-    if(availableDataDefinitions.filter(availableDataDefn => availableDataDefn.name == dataDefinition.name).length > 0) {
+    if(!editing && availableDataDefinitions.filter(availableDataDefn => availableDataDefn.name == dataDefinition.name).length > 0) {
       setFormErrors({'name':'Duplicate data defintion name. Please select a different name.'});
       return false;
     }

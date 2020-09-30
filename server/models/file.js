@@ -51,6 +51,7 @@ module.exports = (sequelize, DataTypes) => {
     file.belongsTo(models.application, {
       foreignKey: 'application_id'
     });
+    file.belongsTo(models.dataflow);
     file.hasMany(models.consumer_object,{
       foreignKey:'consumer_id',
       onDelete: 'CASCADE',

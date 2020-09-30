@@ -182,7 +182,7 @@ class DataflowInstanceWorkUnits extends Component {
         columns={workflowTblColumns}
         rowKey={record => record.wuid}
         dataSource={this.state.workunits}
-        pagination={{ pageSize: 20 }} scroll={{ y: 460 }}
+        pagination={{ pageSize: 10 }} scroll={{ y: 190 }}
       />      
       </Spin>
     )
