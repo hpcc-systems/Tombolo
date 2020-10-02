@@ -13,14 +13,15 @@ const useFileDetailsForm = () => {
   }
 
   function OpenDetailsForm ({...props}) {
+    console.log('OpenDetailsForm: '+JSON.stringify(props))
     let dialogRef;
-  	if(props.type === 'file')
+  	if(props.type.toLowerCase() === 'file'.toLowerCase())
   		return	<FileDetailsForm	onRef={ref => (dialogRef = ref)} {...props} />
-  	else if(props.type === 'job')
+  	else if(props.type.toLowerCase() === 'job'.toLowerCase())
   		return	<JobDetailsForm	onRef={ref => (dialogRef = ref)} {...props}/>
-  	else if(props.type === 'index')
+  	else if(props.type.toLowerCase() === 'index'.toLowerCase())
   		return	<IndexDetailsForm	onRef={ref => (dialogRef = ref)} {...props}/>
-    else if(props.type === 'query')
+    else if(props.type.toLowerCase() === 'query'.toLowerCase())
       return  <QueryDetailsForm onRef={ref => (dialogRef = ref)} {...props}/>
   }
 

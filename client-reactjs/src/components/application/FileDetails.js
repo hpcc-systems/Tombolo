@@ -82,6 +82,7 @@ class FileDetails extends Component {
     this.props.onRef(this);
     this.getFileCount();
     this.getFileDetails();
+    this.getClusters();
     this.fetchDataTypeDetails();   
     this.fetchDataDefinitions();
   }

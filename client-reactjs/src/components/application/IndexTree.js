@@ -4,6 +4,7 @@ import { Table, Divider, message, Popconfirm, Icon, Tooltip } from 'antd/lib';
 import React, { Component } from "react";
 import IndexDetailsForm from "./IndexDetails";
 import { authHeader, handleError } from "../common/AuthHeader.js"
+import { Constants } from '../common/Constants';
 
 class IndexTree extends Component {
   constructor(props) {
@@ -100,20 +101,36 @@ class IndexTree extends Component {
     const indexColumns = [{
       title: 'Name',
       dataIndex: 'title',
-      width: '30%',
+      width: '20%',
     },
     {
       title: 'Description',
       dataIndex: 'description',
-      width: '30%',
+      width: '20%',
     },
     {
-      width: '30%',
+      width: '10%',
       title: 'Source File',
       dataIndex: 'file.title'
     },
     {
-      width: '30%',
+      width: '10%',
+      title: 'Dataflow',
+      render: (text, record) => {
+        return (record.dataflow && record.dataflow.title != '') ? record.dataflow.title : '';
+      }
+    },        
+    {
+      width: '25%',
+      title: 'Created',
+      dataIndex: 'createdAt',
+      render: (text, record) => {
+        let createdAt = new Date(text);
+        return createdAt.toLocaleDateString('en-US', Constants.DATE_FORMAT_OPTIONS) +' @ '+ createdAt.toLocaleTimeString('en-US') 
+      }
+    },
+    {
+      width: '15%',
       title: 'Action',
       dataIndex: '',
       render: (text, record) =>

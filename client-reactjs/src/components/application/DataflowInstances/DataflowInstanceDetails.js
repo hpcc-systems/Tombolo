@@ -27,7 +27,7 @@ class DataflowInstanceDetails extends Component {
     return (
       <React.Fragment>
         <div class="row">
-          <div className="col-12" style={{"height": "625px", "paddingTop": "75px"}}>
+          <div className="col-12" style={{"height": "625px", "paddingTop": "5px"}}>
             <Graph 
               applicationId={this.props.applicationId} 
               viewMode={true} 
@@ -38,7 +38,7 @@ class DataflowInstanceDetails extends Component {
               />
           </div>
 
-          <div className="col-12" style={{"paddingTop": "75px"}}>
+          <div className="col-12">
             <Tabs type="card">
               <TabPane tab="Work Units" key="1">
                 <DataflowInstanceWorkUnits

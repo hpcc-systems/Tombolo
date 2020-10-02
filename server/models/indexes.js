@@ -35,6 +35,7 @@ module.exports = (sequelize, DataTypes) => {
     indexes.belongsTo(models.application, {
       foreignKey: 'application_id'
     });
+    indexes.belongsTo(models.dataflow);
     indexes.belongsTo(models.file, {
       foreignKey: 'parentFileId'
     });

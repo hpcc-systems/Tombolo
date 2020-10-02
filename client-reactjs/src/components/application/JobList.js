@@ -11,6 +11,7 @@ import BreadCrumbs from "../common/BreadCrumbs";
 import { connect } from 'react-redux';
 import { authHeader, handleError } from "../common/AuthHeader.js"
 import {handleJobDelete} from "../common/WorkflowUtil";
+import { Constants } from '../common/Constants';
 
 class JobList extends Component {
 
@@ -146,21 +147,37 @@ class JobList extends Component {
       const jobColumns = [{
         title: 'Name',
         dataIndex: 'name',
-        width: '30%',
+        width: '20%',
         render: (text, record) => <a href='#' onClick={(row) => this.handleEdit(record.id)}>{text}</a>
       },
       {
         title: 'Description',
         dataIndex: 'description',
-        width: '30%',
+        width: '20%',
       },
       {
         title: 'Type',
-        dataIndex: 'objType',
-        width: '30%',
+        dataIndex: 'jobType',
+        width: '10%',
       },
       {
-        width: '30%',
+        width: '10%',
+        title: 'Dataflow',
+        render: (text, record) => {
+          return (record.dataflow && record.dataflow.title != '') ? record.dataflow.title : '';
+        }
+      },          
+      {
+        width: '25%',
+        title: 'Created',
+        dataIndex: 'createdAt',
+        render: (text, record) => {
+          let createdAt = new Date(text);
+          return createdAt.toLocaleDateString('en-US', Constants.DATE_FORMAT_OPTIONS) +' @ '+ createdAt.toLocaleTimeString('en-US') 
+        }
+      },
+      {
+        width: '15%',
         title: 'Action',
         dataJob: '',
         render: (text, record) =>

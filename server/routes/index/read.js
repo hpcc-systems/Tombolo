@@ -5,6 +5,7 @@ var models  = require('../../models');
 let Index = models.indexes;
 let IndexKey = models.index_key;
 let IndexPayload = models.index_payload;
+let Dataflow = models.dataflow;
 let File=models.file;
 const validatorUtil = require('../../utils/validator');
 const { body, query, validationResult } = require('express-validator/check');
@@ -18,7 +19,7 @@ router.get('/index_list', [
         return res.status(422).json({ success: false, errors: errors.array() });
     }
     console.log("[index/read.js] - Get file list for app_id = " + req.query.app_id);
-    Index.findAll({where:{"application_id":req.query.app_id},include: [File], order: [['createdAt', 'DESC']]}).then(function(indexes) {
+    Index.findAll({where:{"application_id":req.query.app_id},include: [File, Dataflow], order: [['createdAt', 'DESC']]}).then(function(indexes) {
         res.json(indexes);
     })
     .catch(function(err) {

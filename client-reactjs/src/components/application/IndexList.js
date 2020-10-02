@@ -80,7 +80,7 @@ class IndexList extends Component {
             /> : null}
       </div>
 
-      <div style={{padding:"25px"}}>
+      <div>
           <IndexTree refresh={this.state.refreshTree} applicationId={this.state.applicationId} user={this.props.user} />
       </div>
       </React.Fragment>

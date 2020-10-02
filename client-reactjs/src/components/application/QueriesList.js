@@ -72,7 +72,7 @@ class QueriesList extends Component {
             </span>
           : null}
         </div>
-        <div style={{padding:"15px"}}>
+        <div>
           <QueryTable refresh={this.state.refreshTree} applicationId={this.state.applicationId} user={this.props.user}/>
 
           {this.state.openQueryDetailsDialog ?

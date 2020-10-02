@@ -8,6 +8,7 @@ import FileDetailsForm from "../FileDetails";
 import JobDetailsForm from "../JobDetails";
 import IndexDetailsForm from "../IndexDetails";
 import FileInstanceDetailsForm from "../FileInstanceDetails";
+import ExistingAssetListDialog from "./ExistingAssetListDialog";
 import {handleFileDelete, handleFileInstanceDelete, handleJobDelete, handleIndexDelete, handleQueryDelete, handleSubProcessDelete, updateGraph} from "../../common/WorkflowUtil";
 import { authHeader, handleError } from "../../common/AuthHeader.js"
 import { hasEditPermission } from "../../common/AuthUtil.js";
@@ -50,7 +51,9 @@ class Graph extends Component {
     wu_duration: '',
     showSubProcessDetails: false,
     selectedSubProcess: {"id":''},
-    currentlyEditingNode: {}
+    currentlyEditingNode: {},
+    showAssetListDlg: false,
+    assetDetailsFormRef: null
   }
 
   consts = {
@@ -115,21 +118,26 @@ class Graph extends Component {
   openDetailsDialog(d) {
     let _self=this;
     let isNew = false;
+    console.log(JSON.stringify(this.state.currentlyEditingNode));
     switch(d.type) {
       case 'File':        
         if(d.fileId == undefined || d.fileId == '') {
-          isNew = true
-        }
-        this.setState({
-          isNew: isNew,
-          openFileDetailsDialog: true,
-          selectedFile: d.fileId,
-          selectedNodeId: d.id
-        });
+          isNew = true;
+          this.setState({
+            showAssetListDlg: true
+          })
+        } else {
+          this.setState({
+            isNew: isNew,
+            openFileDetailsDialog: true,
+            selectedFile: d.fileId,
+            selectedNodeId: d.id
+          });
 
-        setTimeout(() => {
-          _self.fileDlg.showModal();
-        }, 200);
+          setTimeout(() => {
+            _self.fileDlg.showModal();
+          }, 200);
+        }
 
         break;
       case 'Job':
@@ -138,35 +146,44 @@ class Graph extends Component {
       case 'ETL':
       case 'Query Build':
       case 'Data Profile':
+        //for opening details
         if(d.jobId == undefined || d.jobId == '') {
-          isNew = true
-        }
-        this.setState({
-          isNewJob: isNew,
-          openJobDetailsDialog: true,
-          selectedJob: d.jobId,
-          selectedJobType: d.type == 'Job' ? 'General' : d.type,
-          mousePosition: [d.x, d.y]
-        });
+          isNew = true;
+          this.setState({
+            showAssetListDlg: true
+          })
+        } else {
+          this.setState({
+            isNewJob: isNew,
+            openJobDetailsDialog: true,
+            selectedJob: d.jobId,
+            selectedJobType: d.type == 'Job' ? 'General' : d.type,
+            mousePosition: [d.x, d.y]
+          });
 
-        setTimeout(() => {
-          _self.jobDlg.showModal();
-        }, 200);
+          setTimeout(() => {
+            _self.jobDlg.showModal();
+          }, 200);
+        }
         break;
       case 'Index':
         let isNewIndex = false;
         if(d.indexId == undefined || d.indexId == '') {
-          isNewIndex = true
-        }
-        this.setState({
-          isNewIndex: isNewIndex,
-          openIndexDetailsDialog: true,
-          selectedIndex: d.indexId
-        });
+          isNew = true;          
+          this.setState({
+            showAssetListDlg: true
+          })
+        } else {
+          this.setState({
+            isNewIndex: isNew,
+            openIndexDetailsDialog: true,
+            selectedIndex: d.indexId
+          });
 
-        setTimeout(() => {          
-          _self.idxDlg.showModal();
-        }, 200);
+          setTimeout(() => {          
+            _self.idxDlg.showModal();
+          }, 200);
+        }
         break;
       case 'Sub-Process':
       console.log('currentlyEditingId: '+this.state.currentlyEditingId);
@@ -176,6 +193,57 @@ class Graph extends Component {
         });
         break;  
    }
+  }
+
+  openNewAssetDialog(d) {
+    let _self=this;
+    let isNew = false;
+    console.log(JSON.stringify(_self.state.currentlyEditingNode));
+    switch(d.type) {
+      case 'File':        
+        isNew = true;
+        _self.setState({
+          isNew: isNew,
+          openFileDetailsDialog: true,
+          selectedFile: ''
+        });
+
+        setTimeout(() => {
+          _self.fileDlg.showModal();
+        }, 200);
+        break;
+      case 'Job':
+      case 'Modeling':
+      case 'Scoring':
+      case 'ETL':
+      case 'Query Build':
+      case 'Data Profile':
+        //for opening details
+        isNew = true;
+        _self.setState({
+          isNewJob: isNew,
+          openJobDetailsDialog: true,
+          selectedJob: '',
+          selectedJobType: d.type == 'Job' ? 'General' : d.type
+        });
+
+        setTimeout(() => {
+          _self.jobDlg.showModal();
+        }, 200);
+        break;
+      case 'Index':
+        isNew = true;          
+        _self.setState({
+          isNewIndex: isNew,
+          openIndexDetailsDialog: true,
+          selectedIndex: ''
+        });
+
+        setTimeout(() => {          
+          _self.idxDlg.showModal();
+        }, 200);
+        break;
+     }
   }
 
   getTaskColor = (task) => {
@@ -291,6 +359,12 @@ class Graph extends Component {
   closeInstanceDlg = () => {
     this.setState({
       openFileInstanceDialog: false
+    });    
+  }
+
+  closeAssetListDlg = () => {
+    this.setState({
+      showAssetListDlg: false
     });    
   }
 
@@ -1380,6 +1454,15 @@ class Graph extends Component {
           onRefresh={this.onFileAdded}
           selectedSubProcess={this.state.selectedSubProcess}
           nodeId={this.state.currentlyEditingId}/>
+        {this.state.showAssetListDlg ? 
+          <ExistingAssetListDialog             
+            show={this.state.showAssetListDlg}
+            applicationId={this.props.applicationId}
+            selectedDataflow={this.props.selectedDataflow}
+            assetType={this.state.currentlyEditingNode.type}
+            onClose={this.closeAssetListDlg}
+            onFileAdded={this.onFileAdded}
+            user={this.props.user} />  : null}
     </React.Fragment> 
 	)
   }

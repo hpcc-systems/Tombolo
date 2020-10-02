@@ -9,6 +9,7 @@ let File = models.file;
 let FileLayout = models.file_layout;
 let FileValidation = models.file_validation;
 let DataflowGraph = models.dataflowgraph;
+let Dataflow = models.dataflow;
 const hpccUtil = require('../../utils/hpcc-util');
 const validatorUtil = require('../../utils/validator');
 const { body, query, validationResult } = require('express-validator/check');
@@ -79,7 +80,16 @@ router.post('/saveJob', [
       jobId = result[0].id;
       fieldsToUpdate = {"job_id"  : jobId, "application_id" : applicationId};
       if(!result[1]) {
-          Job.update(req.body.basic, {where:{application_id:applicationId, name:req.body.basic.name}}).then(function(result){})
+        Job.update({
+          author: req.body.basic.author,
+          contact: req.body.basic.contact,
+          description: req.body.basic.description,
+          entryBWR: req.body.basic.entryBWR,
+          gitRepo: req.body.basic.gitRepo,
+          jobType: req.body.basic.jobType,
+          title: req.body.basic.title,
+          name: req.body.basic.name
+        }, {where:{application_id:applicationId, name:req.body.basic.name}}).then(function(result){})
       }
       var deleteFiles = await JobFile.destroy({where:{ job_id: jobId, application_id:applicationId }});
 
@@ -193,7 +203,7 @@ router.get('/job_list', [
   }
   console.log("[job list/read.js] - Get job list for app_id = " + req.query.app_id);
   try {
-    Job.findAll({where:{"application_Id":req.query.app_id}, order: [['createdAt', 'DESC']]}).then(function(jobs) {
+    Job.findAll({where:{"application_Id":req.query.app_id}, include:[Dataflow], order: [['createdAt', 'DESC']]}).then(function(jobs) {
         res.json(jobs);
     })
     .catch(function(err) {

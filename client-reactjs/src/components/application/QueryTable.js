@@ -5,6 +5,7 @@ import React, { Component } from "react";
 import QueryDetailsForm from "./QueryDetails";
 import { authHeader, handleError } from "../common/AuthHeader.js"
 import { hasEditPermission } from "../common/AuthUtil.js";
+import { Constants } from '../common/Constants';
 
 class QueryTable extends Component {
   constructor(props) {
@@ -102,21 +103,30 @@ class QueryTable extends Component {
     const queryColumns = [{
       title: 'Title',
       dataIndex: 'title',
-      width: '30%',
+      width: '35%',
       render: (text, record) => <a href='#' onClick={(row) => this.handleEdit(record.id)}>{record.title != '' ? record.title : record.name}</a>
     },
     {
       title: 'Description',
       dataIndex: 'description',
-      width: '30%',
+      width: '15%',
     },
     {
-      width: '30%',
+      width: '10%',
       title: 'Type',
       dataIndex: 'type'
     },
     {
-      width: '30%',
+      width: '25%',
+      title: 'Created',
+      dataIndex: 'createdAt',
+      render: (text, record) => {
+        let createdAt = new Date(text);
+        return createdAt.toLocaleDateString('en-US', Constants.DATE_FORMAT_OPTIONS) +' @ '+ createdAt.toLocaleTimeString('en-US') 
+      }
+    },
+    {
+      width: '15%',
       title: 'Action',
       className: editingAllowed ? 'show-column' : 'hide-column',
       dataIndex: '',

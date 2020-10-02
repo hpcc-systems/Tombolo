@@ -4,6 +4,7 @@ let mongoose = require('mongoose');
 var models  = require('../../models');
 let Query = models.query;
 let QueryField = models.query_field;
+let Dataflow = models.dataflow;
 const validatorUtil = require('../../utils/validator');
 const { body, query, validationResult } = require('express-validator/check');
 
@@ -61,7 +62,7 @@ router.get('/query_list', [
   }
   console.log("[query list/read.js] - Get query list for app_id = " + req.query.app_id);
   try {
-      Query.findAll({where:{"application_id":req.query.app_id}, order: [['createdAt', 'DESC']]}).then(function(queries) {
+      Query.findAll({where:{"application_id":req.query.app_id}, include:[Dataflow], order: [['createdAt', 'DESC']]}).then(function(queries) {
           res.json(queries);
       })
       .catch(function(err) {

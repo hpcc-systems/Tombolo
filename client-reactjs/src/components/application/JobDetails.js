@@ -53,6 +53,7 @@ class JobDetails extends Component {
   componentDidMount() {
     this.props.onRef(this);
     this.getJobDetails();
+    this.getClusters();
     this.getFiles();
     this.fetchDataDefinitions();
   }
@@ -472,6 +473,11 @@ class JobDetails extends Component {
     this.setState({selectedOutputFile:value});
   }
 
+  onJobTypeChange = (value) => {
+    this.setState({...this.state, job: {...this.state.job, jobType: value }}, () => console.log(this.state.job.jobType));
+  }
+
+
   handleAddOutputFile = (e) => {
     let selectedFile = this.state.sourceFiles.filter(sourceFile => sourceFile.id==this.state.selectedOutputFile)[0];
     console.log('selectedFile: '+JSON.stringify(selectedFile));
@@ -635,7 +641,7 @@ class JobDetails extends Component {
             </Row>
               
             <Form.Item {...formItemLayout} label="Job Type">
-                <Select placeholder="Job Type" defaultValue={jobType} style={{ width: 190 }} onSelect={this.onSourceFileSelection} disabled={!editingAllowed}>
+                <Select placeholder="Job Type" value={(jobType != '') ? jobType : ""} style={{ width: 190 }} onChange={this.onJobTypeChange} disabled={!editingAllowed}>
                     {jobTypes.map(d => <Option key={d}>{d}</Option>)}
               </Select>
             </Form.Item>

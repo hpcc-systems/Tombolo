@@ -219,15 +219,15 @@ router.get('/getReport', (req, res) => {
                         [Op.like]: '%'+searchText+'%'
                 }),
                 Sequelize.where(Sequelize.fn('lower',Sequelize.fn("concat", 
-                Sequelize.fn('IFNULL',Sequelize.col("index_keys.ColumnLabel"),"")," ",
-                Sequelize.fn('IFNULL',Sequelize.col("index_keys.ColumnType"),"")," ", 
-                Sequelize.fn('IFNULL',Sequelize.col("index_keys.ColumnEclType"),""))), {
+                Sequelize.fn('IFNULL',Sequelize.col("index_keys.name"),"")," ",
+                Sequelize.fn('IFNULL',Sequelize.col("index_keys.type"),"")," ", 
+                Sequelize.fn('IFNULL',Sequelize.col("index_keys.eclType"),""))), {
                         [Op.like]: '%'+searchText+'%'
                 }),
                 Sequelize.where(Sequelize.fn('lower',Sequelize.fn("concat", 
-                Sequelize.fn('IFNULL',Sequelize.col("index_payloads.ColumnLabel"),"")," ", 
-                Sequelize.fn('IFNULL',Sequelize.col("index_payloads.ColumnType"),"")," ", 
-                Sequelize.fn('IFNULL',Sequelize.col("index_payloads.ColumnEclType"),""))), {
+                Sequelize.fn('IFNULL',Sequelize.col("index_payloads.name"),"")," ", 
+                Sequelize.fn('IFNULL',Sequelize.col("index_payloads.type"),"")," ", 
+                Sequelize.fn('IFNULL',Sequelize.col("index_payloads.eclType"),""))), {
                         [Op.like]: '%'+searchText+'%'
                 }),
                 Sequelize.where(Sequelize.fn('lower',
@@ -265,7 +265,7 @@ router.get('/getReport', (req, res) => {
                     }),
                     Sequelize.where(Sequelize.fn('lower',Sequelize.fn("concat", 
                     Sequelize.fn('IFNULL',Sequelize.col("query_fields.field_type"),"")," ", 
-                    Sequelize.fn('IFNULL',Sequelize.col("query_fields.field"),"")," ", 
+                    Sequelize.fn('IFNULL',Sequelize.col("query_fields.name"),"")," ", 
                     Sequelize.fn('IFNULL',Sequelize.col("query_fields.type"),""))), {
                             [Op.like]: '%'+searchText+'%'
                     }),
