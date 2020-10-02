@@ -303,6 +303,57 @@ async function registerUser(req, res) {
   });
 }
 
+async function forgotPassword(req, res) {
+  var authServiceUrl = process.env.AUTH_SERVICE_URL + '/forgotPassword';
+  return new Promise(function(resolve, reject) {
+    request.post({
+      url: authServiceUrl,
+      headers: {
+        "content-type": "application/json"
+      },
+      json: {
+        "username": req.body.username,
+        "applicationId": process.env.AUTHSERVICE_TOMBOLO_APP_ID,
+        "resetUrl": process.env.TOMBOLO_PASSWORD_RESET_URL
+      }
+    }, function(err, response, body) {
+      if (response.statusCode == 422) {
+        reject(new Error(body.errors.concat(',')));
+      }
+      if (response.statusCode != 200) {
+        reject(body);
+      } else {
+        resolve({'statusCode': response.statusCode, 'message': body});
+      }
+    });
+  });
+}
+
+async function resetPassword(req, res) {
+  var authServiceUrl = process.env.AUTH_SERVICE_URL + '/resetPassword';
+  return new Promise(function(resolve, reject) {
+    request.post({
+      url: authServiceUrl,
+      headers: {
+        "content-type": "application/json"
+      },
+      json: {
+        "id": req.body.id,
+        "password": req.body.password
+      }
+    }, function(err, response, body) {
+      if (response.statusCode == 422) {
+        reject(new Error(body.errors.concat(',')));
+      }
+      if (response.statusCode != 200) {
+        reject(body);
+      } else {        
+        resolve({'statusCode': response.statusCode, 'message': body});
+      }
+    });
+  });
+}
+
 module.exports = {
   authenticate,
   getAll,
@@ -316,5 +367,7 @@ module.exports = {
   GetSharedAppUserList,
   changePassword,
   searchUser,
-  registerUser
+  registerUser,
+  forgotPassword,
+  resetPassword
 };

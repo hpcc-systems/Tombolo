@@ -28,7 +28,7 @@ class LoginPage extends React.Component {
   }
 
   componentDidMount() {
-     this.userName.focus();
+     this.userName.focus();     
   }
 
   componentWillReceiveProps(nextProps){
@@ -89,6 +89,10 @@ class LoginPage extends React.Component {
     });    
   }
 
+  handleForgotPassword = () => {    
+    window.location = '/forgot-password';
+  }
+
   handleBack = (e) => {
     this.setState({ 
       loginView: true,
@@ -130,6 +134,7 @@ class LoginPage extends React.Component {
 
   render() {
       const { username, password, submitted, firstName, lastName, email, newUsername, newPassword, confirmNewPassword, loginView } = this.state;
+      const { id } = this.props.match.params;
       return (
         <React.Fragment>
           {loginView ?   
@@ -155,7 +160,7 @@ class LoginPage extends React.Component {
                     <button className="btn btn-primary btn-block">Login</button>
                 </div>
                 <div className="clearfix">
-                  <p className="text-center"><a href="#">Forgot Password?</a></p>                    
+                  <p className="text-center"><a href="#" onClick={this.handleForgotPassword}>Forgot Password?</a></p>                    
                 </div>
 
                 <div className="form-group">

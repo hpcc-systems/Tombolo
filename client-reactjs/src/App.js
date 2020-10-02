@@ -7,6 +7,8 @@ import 'font-awesome/css/font-awesome.min.css';
 import { Router, Route, Switch } from 'react-router-dom';
 import history from './components/common/History';
 import {LoginPage} from "./components/login/LoginPage";
+import ForgotPassword from "./components/login/ForgotPassword";
+import ResetPassword from "./components/login/ResetPassword";
 import {PrivateRoute} from "./components/common/PrivateRoute";
 
 import {LeftNav} from "./components/layout/LeftNav";
@@ -62,6 +64,8 @@ class App extends React.Component {
         <Router history={history}>
         <div>
             <Route exact path="/login" component={LoginPage} />
+            <Route exact path="/forgot-password" component={ForgotPassword} />
+            <Route exact path="/reset-password/:id" component={ResetPassword} />
               <Layout>
                   {this.props.user && this.props.user.token ? <AppHeader/> : null}
                   <Layout className="site-layout">

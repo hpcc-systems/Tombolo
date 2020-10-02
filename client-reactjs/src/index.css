@@ -1,6 +1,7 @@
 @import '~antd/dist/antd.css';
 body {
   margin: 0;
+  overflow: hidden;
 }
 
 .logo {
@@ -512,4 +513,9 @@ div.tooltip {
 
 .graph-view-mode {
   height:60vh;
+}
+
+.forgot-form {
+  width: 340px;
+  margin: 140px auto;
 }

@@ -44,7 +44,7 @@ class QueryReport extends Component {
   querySelect = (id,title) => {
     this.setState({
       selectedQueryTitle:title,
-      openQueryDetails: true
+      openQueryDetails: false
       });
       this.getQueryDetails(id);
   }
@@ -52,7 +52,7 @@ class QueryReport extends Component {
     this.setState({
       selectedQueryTitle:record.title,
       selectedQueryId:record.id,
-      openQueryDetails: true,
+      openQueryDetails: false,
       initialDataLoading: true
       });
       fetch("/api/report/read/query_Fields?query_id="+record.id, {
@@ -67,7 +67,7 @@ class QueryReport extends Component {
       .then(data => {
         this.setState({
             queryFields: data.query_fields,
-            openQueryDetails:true
+            openQueryDetails:false
           });
           setTimeout(() => {
             this.setState({

@@ -27,7 +27,7 @@ class DataflowInstanceDetails extends Component {
     return (
       <React.Fragment>
         <div class="row">
-          <div className="col-12" style={{"height": "625px", "paddingTop": "5px"}}>
+          <div className="col-12" style={{"paddingTop": "5px"}}>
             <Graph 
               applicationId={this.props.applicationId} 
               viewMode={true} 

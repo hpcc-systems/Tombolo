@@ -44,7 +44,7 @@ class IndexReport extends Component {
     this.setState({
       selectedIndexId:record.id,
       selectedIndexTitle:record.title,
-      openIndexDetails: true,
+      openIndexDetails: false,
       initialDataLoading: true
       });
       fetch("/api/report/read/indexKeyPayload?index_id="+record.id, {
@@ -60,7 +60,7 @@ class IndexReport extends Component {
         this.setState({
             indexKey: data.basic.index_keys,
             indexPayload: data.basic.index_payloads,
-            openIndexDetails:true
+            openIndexDetails:false
           });
           setTimeout(() => {
             this.setState({

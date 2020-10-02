@@ -123,6 +123,42 @@ router.post('/registerUser', [
     })
 })
 
+router.post('/forgot-password', [
+  body('username')
+    .matches(/^[a-zA-Z]{1}[a-zA-Z0-9_-]*$/).withMessage('Invalid User Name'),
+], (req, res, next) => {
+  const errors = validationResult(req).formatWith(errorFormatter);
+  if (!errors.isEmpty()) {
+    return res.status(422).json({ success: false, errors: errors.array() });
+  }
+  userService.forgotPassword(req, res)
+  .then((response) => {
+    res.status(response.statusCode).json({"success":"true"});
+  })
+  .catch((err) => {
+    res.status(500).json({ errors: [err.error] });      
+  })
+})
+
+router.post('/resetPassword', [
+  body('id')
+    .isUUID(4).withMessage('Invalid id'),
+  body('password').optional({checkFalsy:true}).isLength({ min: 4 })  
+], (req, res, next) => {
+  const errors = validationResult(req).formatWith(errorFormatter);
+  if (!errors.isEmpty()) {
+    return res.status(422).json({ success: false, errors: errors.array() });
+  }
+  userService.resetPassword(req, res)
+  .then((response) => {
+    res.status(response.statusCode).json({"success":"true"});
+  })
+  .catch((err) => {
+    console.log(err);
+    res.status(500).json({ errors: [err.message] });      
+  })
+})
+
 
 
 

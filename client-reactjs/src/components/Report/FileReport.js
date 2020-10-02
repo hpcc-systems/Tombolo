@@ -56,7 +56,7 @@ class FileReport extends Component {
     this.setState({
       selectedFileId:record.id,
       selectedFileTitle:(record.title)?record.title:record.name,
-      openFileLayout: true,
+      openFileLayout: false,
       initialDataLoading: true,
       showComplianceDetailsChart: false
     });
@@ -221,7 +221,7 @@ class FileReport extends Component {
       field: 'qualifiedPath'
     }];
     let table = null;
-      table = <div className="ag-theme-balham" style={{height: '415px',width: '100%' }}>
+      table = <div className="ag-theme-balham" style={{height: '85vh',width: '100%' }}>
         <AgGridReact
           columnDefs={indexColumns}
           rowData={this.state.fileList}

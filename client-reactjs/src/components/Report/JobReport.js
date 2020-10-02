@@ -49,7 +49,7 @@ class JobReport extends Component {
     this.setState({
       selectedJobTitle:record.name,
       selectedJobId:record.id,
-      openJobDetails: true,
+      openJobDetails: false,
       initialDataLoading: true
       });
       fetch("/api/report/read/jobParams?job_id="+record.id, {
@@ -64,7 +64,7 @@ class JobReport extends Component {
       .then(data => {
         this.setState({
             jobFields: data.jobparams,
-            openJobDetails:true
+            openJobDetails:false
           });
           setTimeout(() => {
             this.setState({
