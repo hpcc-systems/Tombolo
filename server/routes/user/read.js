@@ -133,7 +133,7 @@ router.post('/forgot-password', [
   }
   userService.forgotPassword(req, res)
   .then((response) => {
-    res.status(response.statusCode).json({"success":"true"});
+    res.status(response.statusCode).json(response.message);
   })
   .catch((err) => {
     res.status(500).json({ errors: [err.error] });      
@@ -150,7 +150,7 @@ router.post('/resetPassword', [
     return res.status(422).json({ success: false, errors: errors.array() });
   }
   userService.resetPassword(req, res)
-  .then((response) => {
+  .then((response) => {    
     res.status(response.statusCode).json({"success":"true"});
   })
   .catch((err) => {

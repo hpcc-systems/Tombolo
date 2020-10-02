@@ -38,10 +38,14 @@ class ForgotPassword extends React.Component {
 	    	console.log(response)
 				message.config({top:110})
 				if(response.ok) {
-		    	message.success("If an account for the specified user name exists, a password reset email has been sent to the email addresses associated with the account.");
-		    	setTimeout(() => {
-		        window.location = '/login';
-		      }, 4000);
+					response.text().then(text => {
+            console.log("message: "+text);
+            //message.error(JSON.parse(text).errors[0]);    
+            setTimeout(() => {
+			        window.location = JSON.parse(text).resetUrl;
+			      }, 1000);
+          })
+		    	
 		    } else {
 		    	message.error("There was a problem sending the password reset instructions")
 		    }
@@ -66,7 +70,7 @@ class ForgotPassword extends React.Component {
               </div>
 
               <div className="form-group">
-                <button className="btn btn-primary btn-block">Send Password Reset Instructions</button>
+                <button className="btn btn-primary btn-block">Next</button>
               </div>
             </form>
           </div>
