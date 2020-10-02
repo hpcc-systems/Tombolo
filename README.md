@@ -1,4 +1,4 @@
-# Tombolo - A Data Catalog Tool for HPCC Systems
+# Tombolo - A Data Curation Tool for HPCC Systems
 
 ![](/docs/images/tombolo/Slide1.png)
 
