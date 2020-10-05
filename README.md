@@ -5,6 +5,7 @@
 ### Installation:
 
 1. Clone Git repo
+2. Rename .env.sample to .env
 2. Update the following information in .env
     1.  DB_USERNAME
     2.  DB_PASSWORD
