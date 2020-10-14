@@ -14,6 +14,7 @@
     5. WEB_PORT & WEB_EXPOSED_PORT - WEB_EXPOSED_PORT(for e.g: 443 is SSL is enabled) on which the application will be listening 
     6. CERT_PATH - SSL certificate location if SSL is enabled 
     7. Give a valid host name for Kafka PLAINTEXT_HOST://localhost:${KAFKA_EXTERNAL_PORT} in docker-compose.yml. For development servers, localhost should work
+    8. AUTHSERVICE_TOMBOLO_APP_ID - Unique id of Tombolo app in Auth Service. This will be used in the communication between Tombolo and AuthService
 4. Rename server/.env.sample to .env
 5. Update the following information in server/.env file    
     1.  DB_USERNAME
