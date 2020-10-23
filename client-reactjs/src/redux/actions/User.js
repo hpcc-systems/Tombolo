@@ -34,11 +34,12 @@ function login(username, password) {
             "email": decoded.email,
             "organization": decoded.organization,
             "role":decoded.role,
-            "permissions": decoded.role[0].Permissions.map(permission => permission.name)
+            "permissions": decoded.role[0].name
         }
         localStorage.setItem('user', JSON.stringify(user));
         dispatch(success(user));
       }).catch(error => {
+        console.log(error);
         localStorage.removeItem('user');
         dispatch(failure(error));
       });
@@ -120,7 +121,7 @@ function validateToken() {
             "email": decoded.email,
             "organization": decoded.organization,
             "role": decoded.role,
-            "permissions": decoded.role[0].Permissions.map(permission => permission.name)
+            "permissions": decoded.role[0].name
           }
           localStorage.setItem('user', JSON.stringify(user));
           dispatch(success(user));
