@@ -133,9 +133,11 @@ function ExistingAssetListDialog({show, applicationId, selectedDataflow, assetTy
           title={"Select from existing "+assetType}
           visible={visible}
           destroyOnClose={true}
+          onCancel={handleClose}
+          maskClosable={false}
           width="1200px"
           footer={[
-            <Button type="primary" onClick={handleNewAsset} className={"float-left"}>{"Create a new " + assetType} </Button>,
+            <Button key="submit" type="primary" onClick={handleNewAsset} className={"float-left"}>{"Create a new " + assetType} </Button>,
             <Button key="cancel" onClick={handleClose}>
               Cancel
             </Button>,
