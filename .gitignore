@@ -1,5 +1,6 @@
 **/logs
 **/node_modules
+.env
 *.DS_Store
 **/bower_components
 **/build
