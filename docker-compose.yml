@@ -49,8 +49,7 @@ services:
       - ${WEB_PORT}:${WEB_PORT}
       - ${WEB_EXPOSED_PORT}:${WEB_EXPOSED_PORT}
     volumes:
-      - ${CERT_PATH}.pem:${CERT_PATH}
-      - ${CERT_PATH}.key:${CERT_PATH}
+      - ${CERT_PATH}:/etc/ssl
     depends_on:
       - mysql_db
 
