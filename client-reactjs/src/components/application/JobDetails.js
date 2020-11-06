@@ -3,16 +3,16 @@ import { Modal, Tabs, Form, Input, Checkbox, Button,  Select, Table, AutoComplet
 import { authHeader, handleError } from "../common/AuthHeader.js"
 import AssociatedDataflows from "./AssociatedDataflows"
 import { hasEditPermission } from "../common/AuthUtil.js";
-import { fetchDataDictionary, eclTypes } from "../common/CommonUtil.js"
-import {omitDeep} from '../common/CommonUtil.js';
+import { fetchDataDictionary, eclTypes, omitDeep } from "../common/CommonUtil.js"
 import EditableTable from "../common/EditableTable.js"
+import { MarkdownEditor } from "../common/MarkdownEditor.js"
 import {handleJobDelete} from "../common/WorkflowUtil";
 
 const TabPane = Tabs.TabPane;
 const Option = Select.Option;
 const { confirm } = Modal;
 
-class JobDetails extends Component { 
+class JobDetails extends Component {
 
   state = {
     visible: true,
@@ -105,7 +105,7 @@ class JobDetails extends Component {
       .catch(error => {
         console.log(error);
       });
-    } 
+    }
   }
 
   getClusters() {
@@ -156,7 +156,7 @@ class JobDetails extends Component {
       });
     }
 
-  showModal = () => {    
+  showModal = () => {
     this.setState({
       visible: true,
     });
@@ -170,16 +170,16 @@ class JobDetails extends Component {
 
   async fetchDataDefinitions() {
     try {
-      let dataDefn = await fetchDataDictionary(this.props.applicationId);  
+      let dataDefn = await fetchDataDictionary(this.props.applicationId);
       this.setState({
         dataDefinitions: dataDefn
       });
     } catch (err) {
       console.log(err)
-    }    
+    }
   }
 
-  setInputParamsData = (data) => {    
+  setInputParamsData = (data) => {
     console.log('setInputParamsData..'+JSON.stringify(data))
     let omitResults = omitDeep(data, 'id')
     this.setState({
@@ -204,7 +204,7 @@ class JobDetails extends Component {
       selectedInputFile:"",
       clusters:[],
       selectedCluster:"",
-      jobSearchSuggestions:[],      
+      jobSearchSuggestions:[],
       job: {
         id:"",
         name:"",
@@ -345,7 +345,7 @@ class JobDetails extends Component {
           if(_self.props.onDelete) {
             _self.props.onDelete(_self.props.currentlyEditingNode)
           } else {
-            _self.props.onRefresh()  
+            _self.props.onRefresh()
           }
           _self.props.onClose();
           message.success("Job deleted sucessfully");
@@ -355,7 +355,7 @@ class JobDetails extends Component {
         });
       },
       onCancel() {},
-    });    
+    });
   }
 
   saveJobDetails() {
@@ -547,7 +547,7 @@ class JobDetails extends Component {
       }];
 
     const {name, title, description, entryBWR, gitrepo, jobType, inputParams, outputFiles, inputFiles, contact, author } = this.state.job;
-   
+
     //render only after fetching the data from the server
     if(!name && !this.props.selectedAsset && !this.props.isNew) {
       return null;
@@ -612,14 +612,14 @@ class JobDetails extends Component {
 
              <Form.Item {...formItemLayout} label="Name">
                 <Input id="job_name" name="name" onChange={this.onChange} value={name} defaultValue={name} placeholder="Name" disabled={true} disabled={!editingAllowed}/>
-            </Form.Item>     
+            </Form.Item>
              <Form.Item {...formItemLayout} label="Title">
                 <Input id="job_title" name="title" onChange={this.onChange} value={title} defaultValue={title} placeholder="Title" disabled={!editingAllowed}/>
-            </Form.Item>     
-            <Form.Item {...formItemLayout} label="Description">
-                <Input id="job_desc" name="description" onChange={this.onChange} value={description} defaultValue={description} placeholder="Description" disabled={!editingAllowed}/>
             </Form.Item>
-            {this.props.selectedJobType != 'Data Profile' ? 
+            <Form.Item {...formItemLayout} label="Description">
+              <MarkdownEditor id="job_desc" name="description" onChange={this.onChange} targetDomId="jobDescr" value={description} disabled={!editingAllowed}/>
+            </Form.Item>
+            {this.props.selectedJobType != 'Data Profile' ?
               <Form.Item {...formItemLayout} label="Git Repo">
                   <Input id="job_gitRepo" name="gitrepo" onChange={this.onChange} value={gitrepo} defaultValue={gitrepo} placeholder="Git Repo" disabled={!editingAllowed}/>
               </Form.Item>
@@ -633,13 +633,13 @@ class JobDetails extends Component {
                     <Input id="job_bkp_svc" name="contact" onChange={this.onChange} value={contact} defaultValue={contact} placeholder="Contact" disabled={!editingAllowed}/>
                 </Form.Item>
               </Col>
-              <Col span={12} order={2}>  
+              <Col span={12} order={2}>
                 <Form.Item {...threeColformItemLayout} label="Author">
                     <Input id="job_author" name="author" onChange={this.onChange} value={author} defaultValue={author} placeholder="Author" disabled={!editingAllowed}/>
                 </Form.Item>
-              </Col>  
+              </Col>
             </Row>
-              
+
             <Form.Item {...formItemLayout} label="Job Type">
                 <Select placeholder="Job Type" value={(jobType != '') ? jobType : ""} style={{ width: 190 }} onChange={this.onJobTypeChange} disabled={!editingAllowed}>
                     {jobTypes.map(d => <Option key={d}>{d}</Option>)}
@@ -650,13 +650,13 @@ class JobDetails extends Component {
 
           </TabPane>
           <TabPane tab="Input Params" key="2">
-            <EditableTable 
-              columns={columns} 
-              dataSource={inputParams}                 
+            <EditableTable
+              columns={columns}
+              dataSource={inputParams}
               editingAllowed={editingAllowed}
               dataDefinitions={this.state.dataDefinitions}
               showDataDefinition={true}
-              setData={this.setInputParamsData}/>        
+              setData={this.setInputParamsData}/>
           </TabPane>
 
           <TabPane tab="Input Files" key="3">
@@ -708,7 +708,7 @@ class JobDetails extends Component {
              </div>
           </TabPane>
 
-          {!this.props.isNew ? 
+          {!this.props.isNew ?
             <TabPane tab="Dataflows" key="7">
               <AssociatedDataflows assetName={name} assetType={'Job'}/>
             </TabPane> : null}
@@ -720,4 +720,3 @@ class JobDetails extends Component {
 }
 const JobDetailsForm = Form.create()(JobDetails);
 export default JobDetailsForm;
-
