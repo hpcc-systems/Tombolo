@@ -50,14 +50,14 @@ let updateDataFlowGraph = (applicationId, dataflowId, nodes, edges) => {
         dataflowId: dataflowId
       }, {where:{application_id:applicationId, dataflowId:dataflowId}}).then((dataflowGraphUpdate) => {
         resolve({'nodes':currentNodes, 'edges':currentEdges});
-      })          
+      })
     }).catch((err) => {
       reject(err);
     })
   });
 }
 
-router.post('/saveJob', [  
+router.post('/saveJob', [
   body('_id')
   .optional({checkFalsy:true})
     .isUUID(4).withMessage('Invalid id'),
@@ -84,6 +84,7 @@ router.post('/saveJob', [
           author: req.body.basic.author,
           contact: req.body.basic.contact,
           description: req.body.basic.description,
+          ecl: req.body.basic.ecl,
           entryBWR: req.body.basic.entryBWR,
           gitRepo: req.body.basic.gitRepo,
           jobType: req.body.basic.jobType,
@@ -102,7 +103,7 @@ router.post('/saveJob', [
       JobParam.destroy({where:{application_id:applicationId, job_id: jobId}}).then((deleted) => {
         return JobParam.bulkCreate(
           jobParamsToSave
-        )        
+        )
       })
     }).then(function(jobParam) {
         if(req.body.autoCreateFiles) {
@@ -152,9 +153,9 @@ router.post('/saveJob', [
                     edges.push(edge);
 
                     fieldsToUpdate = {"file_id": newFile.id, "application_id" : applicationId};
-                    let fileLayoutToSave = hpccUtil.updateCommonData(fileInfo.layout, fieldsToUpdate);                            
+                    let fileLayoutToSave = hpccUtil.updateCommonData(fileInfo.layout, fieldsToUpdate);
                     return FileLayout.bulkCreate(fileLayoutToSave, {updateOnDuplicate: ["name", "type", "displayType", "displaySize", "textJustification", "format","data_types", "isPCI", "isPII", "isHIPAA", "description", "required"]});
-                 }).then((fileLayout) => {   
+                 }).then((fileLayout) => {
                     let fileValidationsToSave = hpccUtil.updateCommonData(fileInfo.validations, fieldsToUpdate);
                     return FileValidation.bulkCreate(
                       fileValidationsToSave,
@@ -172,11 +173,11 @@ router.post('/saveJob', [
             })
             console.log('resolving....');
             Promise.all(promises).then(() => {
-              console.log("job and files created....")   
-              
+              console.log("job and files created....")
+
               updateDataFlowGraph(req.body.basic.applicationId, req.body.basic.dataflowId, nodes, edges).then((dataflowGraph) => {
-                resolve(dataflowGraph)           
-              });          
+                resolve(dataflowGraph)
+              });
             });
           }).then((results) => {
             console.log('results: '+JSON.stringify(results));
@@ -193,7 +194,7 @@ router.post('/saveJob', [
   }
 });
 
-router.get('/job_list', [    
+router.get('/job_list', [
   query('app_id')
     .isUUID(4).withMessage('Invalid application id'),
 ], (req, res) => {
@@ -215,11 +216,11 @@ router.get('/job_list', [
 });
 
 
-router.get('/job_details', [    
+router.get('/job_details', [
   query('app_id')
     .isUUID(4).withMessage('Invalid application id'),
   query('job_id')
-    .isUUID(4).withMessage('Invalid job id'),  
+    .isUUID(4).withMessage('Invalid job id'),
 ], (req, res) => {
   const errors = validationResult(req).formatWith(validatorUtil.errorFormatter);
   if (!errors.isEmpty()) {
@@ -254,11 +255,11 @@ router.get('/job_details', [
   }
 });
 
-router.post('/delete', [    
+router.post('/delete', [
   body('application_id')
     .isUUID(4).withMessage('Invalid application id'),
   body('jobId')
-    .isUUID(4).withMessage('Invalid job id'),  
+    .isUUID(4).withMessage('Invalid job id'),
 ], (req, res) => {
   const errors = validationResult(req).formatWith(validatorUtil.errorFormatter);
   if (!errors.isEmpty()) {
