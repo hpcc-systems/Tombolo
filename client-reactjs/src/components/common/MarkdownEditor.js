@@ -11,12 +11,13 @@ class MarkdownEditor extends Component {
   }
 
   componentDidUpdate(prevProps, prevState, snapshot) {
-    if (this.value == prevProps.value) {
-      return;
+    if (!this.value) {
+      this.name = this.props.name;
+      this.value = this.props.value;
+      let t = window.setTimeout(() => {
+        this.mdEditor.markdown(this.props.value);
+      }, 400);
     }
-    this.name = this.props.name;
-    this.value = this.props.value;
-    this.mdEditor.markdown(this.props.value);
   }
 
   componentDidMount() {
