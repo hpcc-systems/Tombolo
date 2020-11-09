@@ -21,12 +21,13 @@ async function authenticate(req, res, { username, password }) {
             "username":username,
             "password":password
           }
-        }, function(err, response, body) {
-            if (response.statusCode != 200) {
-              reject(new Error(err));
-            } else {
-                resolve(body);
-            }
+        }, function(err, response, body) {          
+          console.log(body);
+          if (!response || response.statusCode != 200) {            
+            reject(new Error(err));
+          } else {
+            resolve(body);
+          }
       });
     });
 }
@@ -259,6 +260,7 @@ async function changePassword(req, res, { username, password }) {
         "confirmpassword": req.body.confirmnewpassword
       }
     }, function(err, response, body) {
+      console.log(body)
       if (response.statusCode == 422) {
         reject(new Error(body.errors.concat(',')));
       }
