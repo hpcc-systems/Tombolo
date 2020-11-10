@@ -29,7 +29,7 @@ router.get('/appListByUserId', (req, res) => {
   console.log("[app/read.js] -  Get app list for user id ="+ req.query.user_id);
 
   try {
-    models.application.findAll({where:{      
+    models.application.findAll({where:{
       [Op.or]: [
         {"$user_id$":req.query.user_id},
         {"$user_id$": req.query.user_name}
@@ -75,13 +75,13 @@ router.post('/newapp', [
   body('user_id')
     .optional({checkFalsy:true})
     .matches(/^[a-zA-Z]{1}[a-zA-Z0-9_:.\-]*$/).withMessage('Invalid user_id'),
-  body('title')  
-    .matches(/^[a-zA-Z]{1}[a-zA-Z0-9_:.\-]*$/).withMessage('Invalid title'),    
-  body('description')  
+  body('title')
+    .matches(/^[a-zA-Z]{1}[a-zA-Z0-9_:.\-]*$/).withMessage('Invalid title'),
+  body('description')
     .optional({checkFalsy:true})
-    .matches(/^[a-zA-Z]{1}[a-zA-Z0-9_\-.]*$/).withMessage('Invalid description'),  
-  body('creator')  
-    .matches(/^[a-zA-Z]{1}[a-zA-Z0-9_:.\-]*$/).withMessage('Invalid creator'),          
+    .matches(/^[a-zA-Z]{1}[a-zA-Z0-9_.\-]*$/).withMessage('Invalid description'),
+  body('creator')
+    .matches(/^[a-zA-Z]{1}[a-zA-Z0-9_:.\-]*$/).withMessage('Invalid creator'),
 ],function (req, res) {
   const errors = validationResult(req).formatWith(validatorUtil.errorFormatter);
   if (!errors.isEmpty()) {
@@ -127,7 +127,7 @@ router.post('/saveUserApp', function (req, res) {
         let userDetail = await authServiceUtil.getUserDetails(req, userAppList[0].user_id);
         Application.findOne({where: {id:userAppList[0].application_id}}).then((application) => {
           NotificationModule.notifyApplicationShare(userDetail[0].email, application.title, req);
-        })          
+        })
         res.json({"result":"success"});
       });
     } catch (err) {
