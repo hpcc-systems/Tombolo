@@ -34,7 +34,7 @@ class JobList extends Component {
     selectedDataflow:{}
   }
 
-  componentWillReceiveProps(props) {
+  /*componentWillReceiveProps(props) {
     if(props.application) {
       if(this.state.applicationId != props.application.applicationId) {
         this.setState({
@@ -45,10 +45,9 @@ class JobList extends Component {
         });
       }
     }
-  }
+  }*/
 
   componentDidMount() {
-    console.log('componentDidMount...Jobs')
     if(this.state.applicationId != '') {
       this.fetchDataAndRenderTable();      
     }

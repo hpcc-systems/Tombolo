@@ -47,12 +47,21 @@ class QueryDetails extends Component {
   }
 
   componentDidMount() {
-    this.props.onRef(this);
+    this.props.onRef(this);    
     this.getQueryDetails();
     this.fetchDataDefinitions();
-  }
+  }  
 
-  getQueryDetails() {
+  /*shouldComponentUpdate(nextProps, nextState) {
+    console.log("shouldComponentUpdate")
+    if(this.state.clusters.length == nextState.clusters.length) {
+      return false;
+    } else {
+      return true;
+    }
+  }*/
+
+  getQueryDetails() {    
     if(this.props.selectedAsset && !this.props.isNew) {
       fetch("/api/query/query_details?query_id="+this.props.selectedAsset+"&app_id="+this.props.applicationId, {
         headers: authHeader()
@@ -82,9 +91,11 @@ class QueryDetails extends Component {
           }
         });
         this.props.form.setFieldsValue({
-          query_title: data.title
+          name: (data.name == '' ? data.title : data.name),
+          title: data.title,
+          description: data.description,
+          url: data.url
         });
-
         return data;
       })
       .then(data => {
@@ -93,9 +104,8 @@ class QueryDetails extends Component {
       .catch(error => {
         console.log(error);
       });
-    } else {
-      this.getClusters();
-    }
+    } 
+    this.getClusters();
   }
 
   showModal = () => {
@@ -193,6 +203,7 @@ class QueryDetails extends Component {
   }
 
   getClusters() {
+    console.log('get custers');
     fetch("/api/hpcc/read/getClusters", {
       headers: authHeader()
     })
@@ -409,6 +420,7 @@ class QueryDetails extends Component {
 
 
   render() {
+    console.log("rendering")
     const editingAllowed = hasEditPermission(this.props.user);
     const {getFieldDecorator} = this.props.form;
     const { visible, confirmLoading, sourceFiles, availableLicenses, selectedRowKeys, clusters, querySearchSuggestions } = this.state;
@@ -458,9 +470,7 @@ class QueryDetails extends Component {
     
     //render only after fetching the data from the server
     //{console.log(title + ', ' + this.props.selectedQuery + ', ' + this.props.isNewFile)}
-    if(!title && !this.props.selectedAsset && !this.props.isNew) {
-      return null;
-    }
+    {console.log('name: '+name)}
 
     return (
       <div>
@@ -473,7 +483,7 @@ class QueryDetails extends Component {
           destroyOnClose={true}
           width="1200px"
           footer={[
-            <Button type="danger" onClick={this.handleDelete}>Delete</Button>,
+            <Button key="danger" type="danger" onClick={this.handleDelete}>Delete</Button>,
             <Button key="back" onClick={this.handleCancel}>
               Cancel
             </Button>,
@@ -488,7 +498,6 @@ class QueryDetails extends Component {
           <TabPane tab="Basic" key="1">
 
            <Form layout="vertical">
-            {/*this.props.isNewFile ?*/}
             <div>
               <Form.Item {...formItemLayout} label="Type">
                 <Radio.Group onChange={this.queryTypeChange} value={type}>
@@ -527,29 +536,44 @@ class QueryDetails extends Component {
             </div>              
 
             <Form.Item {...formItemLayout} label="Name">
-                {getFieldDecorator('name', {
-                  rules: [{ required: true, message: 'Please enter a name!' }],
-                })(
-                <Input id="query_name" name="name" onChange={this.onChange} value={name} defaultValue={name} placeholder="Name" disabled={true} disabled={!editingAllowed}/>)}
+              {getFieldDecorator('name')(<Input disabled={true} disabled={!editingAllowed}/>)}
             </Form.Item>
 
             <Form.Item {...formItemLayout} label="Title">
-                <Input id="query_title" name="title" onChange={this.onChange} value={title} defaultValue={title} placeholder="Title" disabled={!editingAllowed}/>
+                {getFieldDecorator('title', {
+                trigger: 'onChange',
+                valuePropName: 'value',
+                initialValue: this.state.query.title
+              })
+              (<Input id="query_title" name="title" onChange={this.onChange} placeholder="Title" disabled={!editingAllowed}/>)}
             </Form.Item>
             <Form.Item {...formItemLayout} label="Description">
-                <Input id="query_desc" name="description" onChange={this.onChange} value={description} defaultValue={description} placeholder="Description" disabled={!editingAllowed}/>
+                {getFieldDecorator('description', {
+                trigger: 'onChange',
+                valuePropName: 'value',
+                initialValue: this.state.query.description
+              })(<Input id="query_desc" name="description" onChange={this.onChange} placeholder="Description" disabled={!editingAllowed}/>)}
             </Form.Item>
             <Form.Item {...formItemLayout} label="URL">
-                <Input id="query_url" name="url" onChange={this.onChange} value={url} defaultValue={url} placeholder="URL" disabled={!editingAllowed}/>
+                {getFieldDecorator('url', {
+                trigger: 'onChange',
+                valuePropName: 'value',
+                initialValue: this.state.query.url
+              })(<Input id="query_url" name="url" onChange={this.onChange} placeholder="URL" disabled={!editingAllowed}/>)}
             </Form.Item>
             <Form.Item {...formItemLayout} label="Git Repo">
-                <Input id="query_gitrepo" name="gitrepo" onChange={this.onChange} value={gitrepo} defaultValue={gitrepo} placeholder="Git Repo URL" disabled={!editingAllowed}/>
+                {getFieldDecorator('gitrepo', {
+                trigger: 'onChange',
+                valuePropName: 'value',
+                initialValue: this.state.query.gitrepo
+              })
+              (<Input id="query_gitrepo" name="gitrepo" onChange={this.onChange} placeholder="Git Repo URL" disabled={!editingAllowed}/>)}
             </Form.Item>
             {/*<Form.Item {...formItemLayout} label="Primary Service">
-                <Input id="query_primary_svc" name="primaryService" onChange={this.onChange} value={primaryService} defaultValue={primaryService} placeholder="Primary Service" disabled={!editingAllowed}/>
+                <Input id="query_primary_svc" name="primaryService" onChange={this.onChange}  placeholder="Primary Service" disabled={!editingAllowed}/>
             </Form.Item>
             <Form.Item {...formItemLayout} label="Backup Service">
-                <Input id="query_bkp_svc" name="backupService" onChange={this.onChange} value={backupService} defaultValue={backupService} placeholder="Backup Service" disabled={!editingAllowed}/>
+                <Input id="query_bkp_svc" name="backupService" onChange={this.onChange} placeholder="Backup Service" disabled={!editingAllowed}/>
             </Form.Item>*/}
             {/*<Form.Item {...formItemLayout} label="Type">
                 <Input id="type" name="type" onChange={this.onChange} value={type} defaultValue={type} placeholder="Query Type" disabled={!editingAllowed}/>

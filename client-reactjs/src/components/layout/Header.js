@@ -86,11 +86,9 @@ class AppHeader extends Component {
           this.setState({ applications });
         }
       }
-      console.log('updated: '+JSON.stringify(this.props.updatedApplication));
       if(this.props.updatedApplication) {
         let applications = this.state.applications;
         let application = applications.filter(application => application.value == this.props.updatedApplication.applicationId && application.display != this.props.updatedApplication.applicationTitle);
-        console.log(JSON.stringify(application))
         if(application.length > 0) {
           applications = applications.map((application) => {
             if(application.value == this.props.updatedApplication.applicationId) {
@@ -98,7 +96,6 @@ class AppHeader extends Component {
             }
             return application;
           })
-          console.log(JSON.stringify(applications))
           this.setState({ applications });
         }
       }
@@ -108,7 +105,6 @@ class AppHeader extends Component {
         let application = applications.filter(application => application.value == this.props.deletedApplicationId);
         if(application.length > 0) {
           applications = applications.filter(application => application.value != this.props.deletedApplicationId);
-          console.log(JSON.stringify(applications))
           this.setState({ applications });          
         }
 
@@ -116,7 +112,6 @@ class AppHeader extends Component {
     }
 
     handleTopNavClick(event) {
-      console.log("handleTopNavClick")
       var nav = event.target.getAttribute("data-nav");
       if(nav == '/logout')
           return;
@@ -355,21 +350,21 @@ class AppHeader extends Component {
             {getFieldDecorator('name', {
               rules: [{ required: true, message: 'Please enter the current password!' }],
             })(
-            <Input type="password" name="oldpassword" placeholder="Password" defaultValue={this.state.oldpassword} onChange={this.handleChangePasswordFieldChange}/> )}
+            <Input type="password" name="oldpassword" placeholder="Password" onChange={this.handleChangePasswordFieldChange}/> )}
           </Form.Item>
 
           <Form.Item {...formItemLayout} label="New Password">
             {getFieldDecorator('newpassword', {
               rules: [{ required: true, message: 'Please enter the new password!' }],
             })(
-            <Input type="password" name="newpassword" placeholder="New Password" defaultValue={this.state.newpassword} onChange={this.handleChangePasswordFieldChange}/>  )}
+            <Input type="password" name="newpassword" placeholder="New Password" onChange={this.handleChangePasswordFieldChange}/>  )}
           </Form.Item>
 
           <Form.Item {...formItemLayout} label="Confirm Password">
             {getFieldDecorator('confirmnewpassword', {
               rules: [{ required: true, message: 'Please confirm the new password!' }],
             })(
-            <Input type="password" name="confirmnewpassword" placeholder="Confirm Password" defaultValue={this.state.confirmnewpassword} onChange={this.handleChangePasswordFieldChange}/>   )}
+            <Input type="password" name="confirmnewpassword" placeholder="Confirm Password" onChange={this.handleChangePasswordFieldChange}/>   )}
           </Form.Item>
 
         </Modal>
@@ -381,7 +376,6 @@ class AppHeader extends Component {
 function mapStateToProps(state) {
     const { loggingIn, user } = state.authenticationReducer;
     const { application, selectedTopNav, newApplication, updatedApplication, deletedApplicationId } = state.applicationReducer;
-    console.log('mapStateToProps: '+JSON.stringify(updatedApplication))
     return {
         loggingIn,
         user,

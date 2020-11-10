@@ -96,7 +96,17 @@ class JobDetails extends Component {
          }
         });
         this.props.form.setFieldsValue({
-          name: data.name
+          name: data.name,
+          title: (data.title == '' ? data.name : data.title),
+          description: data.description,
+          gitrepo: data.gitRepo,
+          entryBWR: data.entryBWR,
+          jobType: data.jobType,
+          contact: data.contact,
+          author: data.author,
+          inputParams: data.jobparams,
+          inputFiles: jobfiles.filter(field => field.file_type == 'input'),
+          outputFiles: jobfiles.filter(field => field.file_type == 'output')
         });
         return data;
       })
@@ -562,10 +572,10 @@ class JobDetails extends Component {
           destroyOnClose={true}
           width="1200px"
           footer={[
-            <Checkbox onChange={this.onAutoCreateFiles} disabled={!this.props.isNew} style={{"float":"left"}}>
+            <Checkbox key="createFiles" onChange={this.onAutoCreateFiles} disabled={!this.props.isNew} style={{"float":"left"}}>
               Automatically create dependant files
             </Checkbox>,
-            <Button type="danger" onClick={this.handleDelete}>Delete</Button>,
+            <Button key="danger" type="danger" onClick={this.handleDelete}>Delete</Button>,
             <Button key="cancel" onClick={this.handleCancel}>
               Cancel
             </Button>,
@@ -611,31 +621,38 @@ class JobDetails extends Component {
             }*/}
 
              <Form.Item {...formItemLayout} label="Name">
-                <Input id="job_name" name="name" onChange={this.onChange} value={name} defaultValue={name} placeholder="Name" disabled={true} disabled={!editingAllowed}/>
+               {getFieldDecorator('name')
+                (<Input id="job_name" name="name" onChange={this.onChange} placeholder="Name" disabled={true} disabled={!editingAllowed}/>)}
             </Form.Item>     
              <Form.Item {...formItemLayout} label="Title">
-                <Input id="job_title" name="title" onChange={this.onChange} value={title} defaultValue={title} placeholder="Title" disabled={!editingAllowed}/>
+               {getFieldDecorator('title') 
+                (<Input id="job_title" name="title" onChange={this.onChange} placeholder="Title" disabled={!editingAllowed}/>)}
             </Form.Item>     
             <Form.Item {...formItemLayout} label="Description">
-                <Input id="job_desc" name="description" onChange={this.onChange} value={description} defaultValue={description} placeholder="Description" disabled={!editingAllowed}/>
+               {getFieldDecorator('description') 
+                (<Input id="job_desc" name="description" onChange={this.onChange} placeholder="Description" disabled={!editingAllowed}/>)}
             </Form.Item>
             {this.props.selectedJobType != 'Data Profile' ? 
               <Form.Item {...formItemLayout} label="Git Repo">
-                  <Input id="job_gitRepo" name="gitrepo" onChange={this.onChange} value={gitrepo} defaultValue={gitrepo} placeholder="Git Repo" disabled={!editingAllowed}/>
+                {getFieldDecorator('gitrepo') 
+                  (<Input id="job_gitRepo" name="gitrepo" onChange={this.onChange}  placeholder="Git Repo" disabled={!editingAllowed}/>)}
               </Form.Item>
               : null }
             <Form.Item {...formItemLayout} label="Entry BWR">
-                <Input id="job_entryBWR" name="entryBWR" onChange={this.onChange} value={entryBWR} defaultValue={entryBWR} placeholder="Primary Service" disabled={!editingAllowed}/>
+              {getFieldDecorator('entryBWR') 
+                (<Input id="job_entryBWR" name="entryBWR" onChange={this.onChange}  placeholder="Primary Service" disabled={!editingAllowed}/>)}
             </Form.Item>
             <Row type="flex">
               <Col span={12} order={1}>
                 <Form.Item {...threeColformItemLayout} label="Contact">
-                    <Input id="job_bkp_svc" name="contact" onChange={this.onChange} value={contact} defaultValue={contact} placeholder="Contact" disabled={!editingAllowed}/>
+                    {getFieldDecorator('contact') 
+                    (<Input id="job_bkp_svc" name="contact" onChange={this.onChange} placeholder="Contact" disabled={!editingAllowed}/>)}
                 </Form.Item>
               </Col>
               <Col span={12} order={2}>  
                 <Form.Item {...threeColformItemLayout} label="Author">
-                    <Input id="job_author" name="author" onChange={this.onChange} value={author} defaultValue={author} placeholder="Author" disabled={!editingAllowed}/>
+                  {getFieldDecorator('author') 
+                   (<Input id="job_author" name="author" onChange={this.onChange} placeholder="Author" disabled={!editingAllowed}/>)}
                 </Form.Item>
               </Col>  
             </Row>

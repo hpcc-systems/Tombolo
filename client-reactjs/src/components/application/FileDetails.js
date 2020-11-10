@@ -228,7 +228,9 @@ class FileDetails extends Component {
         return data;
       })
       .then(data => {
-        this.getInheritedLicenses(data.basic.id, this.props.selectedNodeId, this.props.selectedDataflow.id);
+        if(data.basic.id && this.props.selectedDataflow) {
+          this.getInheritedLicenses(data.basic.id, this.props.selectedNodeId, this.props.selectedDataflow.id);
+        }
         return data;
       })
       .then(data => {
@@ -1209,7 +1211,7 @@ class FileDetails extends Component {
           destroyOnClose={true}
           width="1200px"          
           footer={[
-            <Button type="danger" onClick={this.handleDelete}>Delete</Button>,
+            <Button key="danger" type="danger" onClick={this.handleDelete}>Delete</Button>,
             <Button key="back" onClick={this.handleCancel}>
               Cancel
             </Button>,

@@ -80,7 +80,14 @@ class IndexDetails extends Component {
           }
         });
         this.props.form.setFieldsValue({
-          title: data.basic.title
+          title: data.basic.title,
+          name: (data.basic.name == '' ? data.basic.title : data.basic.name),
+          description: data.basic.description,
+          primaryService: data.basic.primaryService,
+          backupService: data.basic.backupService,
+          keyedColumns: data.basic.index_keys,
+          nonKeyedColumns: data.basic.index_payloads,
+          path: data.basic.qualifiedPath
         });
         return data;
       })
@@ -451,7 +458,7 @@ class IndexDetails extends Component {
           destroyOnClose={true}
           width="1200px"
           footer={[
-            <Button type="danger" onClick={this.handleDelete}>Delete</Button>,
+            <Button key="danger" type="danger" onClick={this.handleDelete}>Delete</Button>,
             <Button key="back" onClick={this.handleCancel}>
               Cancel
             </Button>,
@@ -489,7 +496,7 @@ class IndexDetails extends Component {
                 optionLabelProp="value"
                 disabled={!editingAllowed}
               >
-                <Input id="autocomplete_field" suffix={this.state.autoCompleteSuffix} autocomplete="off"/>
+                <Input id="autocomplete_field" suffix={this.state.autoCompleteSuffix} autoComplete="off"/>
               </AutoComplete>
             </Form.Item>
             </div>
@@ -498,23 +505,28 @@ class IndexDetails extends Component {
                 {getFieldDecorator('name', {
                   rules: [{ required: true, message: 'Please enter a name!' }],
                 })(
-                <Input id="name" name="name" onChange={this.onChange} value={name} defaultValue={name} placeholder="Name" disabled={true} disabled={!editingAllowed}/>)}
+                <Input id="name" name="name" onChange={this.onChange} placeholder="Name" disabled={true} disabled={!editingAllowed}/>)}
             </Form.Item>
 
             <Form.Item {...formItemLayout} label="Title">
-                <Input id="file_title" name="title" onChange={this.onChange} value={title} defaultValue={title} placeholder="Title" disabled={!editingAllowed}/>
+              {getFieldDecorator('title') 
+              (<Input id="file_title" name="title" onChange={this.onChange} placeholder="Title" disabled={!editingAllowed}/>)}
             </Form.Item>
             <Form.Item {...formItemLayout} label="Description">
-                <Input id="file_desc" name="description" onChange={this.onChange} value={description} defaultValue={description} placeholder="Description" disabled={!editingAllowed}/>
+              {getFieldDecorator('description') 
+              (<Input id="file_desc" name="description" onChange={this.onChange} placeholder="Description" disabled={!editingAllowed}/>)}
             </Form.Item>
             <Form.Item {...formItemLayout} label="Primary Service">
-                <Input id="file_primary_svc" name="primaryService" onChange={this.onChange} value={primaryService} defaultValue={primaryService} placeholder="Primary Service" disabled={!editingAllowed}/>
+              {getFieldDecorator('primaryService') 
+               (<Input id="file_primary_svc" name="primaryService" onChange={this.onChange} placeholder="Primary Service" disabled={!editingAllowed}/>)}
             </Form.Item>
             <Form.Item {...formItemLayout} label="Backup Service">
-                <Input id="file_bkp_svc" name="backupService" onChange={this.onChange} value={backupService} defaultValue={backupService} placeholder="Backup Service" disabled={!editingAllowed}/>
+              {getFieldDecorator('backupService') 
+              (<Input id="file_bkp_svc" name="backupService" onChange={this.onChange} placeholder="Backup Service" disabled={!editingAllowed}/>)}
             </Form.Item>
             <Form.Item {...formItemLayout} label="Path">
-                <Input id="path" name="path" onChange={this.onChange} value={path} defaultValue={path} placeholder="Path" disabled={!editingAllowed}/>
+              {getFieldDecorator('path') 
+              (<Input id="path" name="path" onChange={this.onChange} placeholder="Path" disabled={!editingAllowed}/>)}
             </Form.Item>
           </Form>
 

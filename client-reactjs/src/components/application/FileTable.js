@@ -23,7 +23,7 @@ class FileTable extends Component {
     this.fetchDataAndRenderTable();
   }
 
-  componentWillReceiveProps(props) {
+ componentWillReceiveProps(props) {
     this.setState({
         applicationId: props.applicationId
       });

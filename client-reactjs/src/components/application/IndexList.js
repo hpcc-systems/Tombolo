@@ -27,7 +27,7 @@ class IndexList extends Component {
     refreshTree: false
   };
 
-  componentWillReceiveProps(props) {
+  /*componentWillReceiveProps(props) {
     if(props.application) {
       if(this.state.applicationId != props.application.applicationId) {
         this.setState({
@@ -36,7 +36,7 @@ class IndexList extends Component {
         this.handleRefresh();
       }
     }
-  }
+  }*/
   openAddIndexDlg() {
     console.log('openAddIndexDlg');
     this.setState({
