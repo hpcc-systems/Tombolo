@@ -27,8 +27,36 @@ router.get('/index_list', [
     });
 });
 
+let updateIndexDetails = (indexId, applicationId, req) => {
+  return new Promise((resolve, reject) => {
+    fieldsToUpdate = {"index_id":indexId, "application_id":applicationId};
+    var indexKeyToSave = updateCommonData(req.body.index.indexKey, fieldsToUpdate);
+    indexKeyToSave = indexKeyToSave.map((key => {delete key.id; return key}));
+    IndexKey.destroy({where:{application_id:applicationId, "index_id":indexId}}).then((deleted) => {
+      IndexKey.bulkCreate(indexKeyToSave).then((indexCreateResult) => {
+        var indexPayloadToSave = updateCommonData(req.body.index.indexPayload, fieldsToUpdate);
+        indexPayloadToSave = indexPayloadToSave.map((payload => {delete payload.id; return payload}));
+        console.log('indexPayloadToSave: '+JSON.stringify(indexPayloadToSave))
+        IndexPayload.destroy({where:{application_id:applicationId, "index_id":indexId}}).then((deleted) => {
+          IndexPayload.bulkCreate(indexPayloadToSave).then((indexPayloadCreateResults) => {
+            resolve({"result":"success", "title":req.body.index.basic.title, "indexId":indexId})
+          }).catch((err) => {
+            reject(err);
+          })          
+        }).catch((err) => {
+          reject(err);
+        })
+      }).catch((err) => {
+        reject(err);
+      })
+    }).catch((err) => {
+      reject(err);
+    })
+  })
+}
+
 router.post('/saveIndex', [  
-  body('index.basic._id')
+  body('index.basic.id')
   .optional({checkFalsy:true})
     .isUUID(4).withMessage('Invalid id'),
   body('index.basic.application_id')
@@ -42,44 +70,27 @@ router.post('/saveIndex', [
     }
     console.log("[saveIndex/read.js] - Get file list for app_id = " + req.body.index.basic._id);
     var index_id, fieldsToUpdate={}, applicationId=req.body.index.basic.application_id;
-    try {
-        Index.findOrCreate(
-            {where: {application_id:applicationId, title:req.body.index.basic.title},
-            defaults: req.body.index.basic
-        }).then(function(result) {
-            index_id = result[0].id;
-            fieldsToUpdate = {"index_id":index_id, "application_id":applicationId};
-            if(!result[1]) {
-                Index.update(req.body.index.basic, {where:{application_id:applicationId, title:req.body.index.basic.title}}).then(function(result){})
-            }
-            var indexKeyToSave = updateCommonData(req.body.index.indexKey, fieldsToUpdate);
-            indexKeyToSave = indexKeyToSave.map((key => {delete key.id; return key}));
-            IndexKey.destroy({where:{application_id:applicationId, "index_id":index_id}}).then((deleted) => {
-                return IndexKey.bulkCreate(
-                    indexKeyToSave
-                )
-            })
-        }).then(function(indexKey) {
-            console.log("saving index payload");
-            var indexPayloadToSave = updateCommonData(req.body.index.indexPayload, fieldsToUpdate);
-            indexPayloadToSave = indexPayloadToSave.map((payload => {delete payload.id; return payload}));
-            console.log('indexPayloadToSave: '+JSON.stringify(indexPayloadToSave))
-            IndexPayload.destroy({where:{application_id:applicationId, "index_id":index_id}}).then((deleted) => {
-                return IndexPayload.bulkCreate(
-                    indexPayloadToSave
-                )
-            })
-        }).then((indexPayLoadUpdated) => {
-            console.log('index_id: '+index_id)
-            res.json({"result":"success", "title":req.body.index.basic.title, "indexId":index_id});
+    if(req.body.isNew) {
+      Index.create(
+        req.body.index.basic
+      ).then((result) => {
+        updateIndexDetails(result.id, applicationId, req).then((response) => {
+          res.json(response);
         }).catch((err) => {
-          console.log('Index Save Error:' +err)
-            return res.status(500).send("Error occured while saving index");
+          return res.status(500).send("Error occured while saving index");
         })
-
-    } catch (err) {
-        console.log('err', err);
-    }
+      })
+    } else {
+      Index.update(
+        req.body.index.basic, {where:{application_id: applicationId, id:req.body.id}}
+      ).then((result) => {
+        updateIndexDetails(req.body.id, applicationId, req).then((response) => {
+          res.json(response);
+        }).catch((err) => {
+          return res.status(500).send("Error occured while saving index");
+        })
+      })
+    }   
 
 });
 

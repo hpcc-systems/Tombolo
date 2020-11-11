@@ -32,7 +32,7 @@ class IndexDetails extends Component {
     indexSearchErrorShown:false,
     autoCompleteSuffix: <Icon type="search" className="certain-category-icon" />,
     dataDefinitions:[],
-    file: {
+    index: {
       id:"",
       title:"",
       name:"",
@@ -53,7 +53,7 @@ class IndexDetails extends Component {
   }
 
   getIndexDetails() {
-    if(this.props.selectedAsset && !this.props.isNewFile) {
+    if(this.props.selectedAsset && !this.props.isNew) {
       fetch("/api/index/read/index_details?index_id="+this.props.selectedAsset+"&app_id="+this.props.applicationId, {
         headers: authHeader()
       })
@@ -67,8 +67,8 @@ class IndexDetails extends Component {
         this.setState({
           ...this.state,
           selectedSourceFile: data.basic.parentFileId,
-          file: {
-            ...this.state.file,
+          index: {
+            ...this.state.index,
             id: data.basic.id,
             title: data.basic.title == '' ? data.basic.name : data.basic.title,
             name: (data.basic.name == '' ? data.basic.title : data.basic.name),
@@ -119,7 +119,7 @@ class IndexDetails extends Component {
           confirmLoading: true,
         });
 
-        let saveResponse = await this.saveFileDetails();
+        let saveResponse = await this.saveIndexDetails();
 
         setTimeout(() => {
           this.setState({
@@ -136,7 +136,7 @@ class IndexDetails extends Component {
   handleDelete = () => {
     let _self=this;
     confirm({
-      title: 'Delete file?',
+      title: 'Delete Index?',
       content: 'Are you sure you want to delete this Index?',
       onOk() {
         var data = JSON.stringify({indexId: _self.props.selectedAsset, application_id: _self.props.applicationId});
@@ -255,8 +255,8 @@ class IndexDetails extends Component {
       this.setState({
         ...this.state,
         sourceFiles: [],
-        file: {
-          ...this.state.file,
+        index: {
+          ...this.state.index,
           id: indexInfo.name,
           title: indexInfo.fileName,
           name: indexInfo.fileName,
@@ -308,12 +308,12 @@ class IndexDetails extends Component {
     return fields;
   }
 
-  saveFileDetails() {
+  saveIndexDetails() {
     return new Promise((resolve) => {
       fetch('/api/index/read/saveIndex', {
         method: 'post',
         headers: authHeader(),
-        body: JSON.stringify({index : this.populateFileDetails()})
+        body: JSON.stringify({isNew : this.props.isNew, id: this.state.index.id, index : this.populateIndexDetails()})    
       }).then(function(response) {
         if(response.ok) {
           return response.json();
@@ -323,18 +323,16 @@ class IndexDetails extends Component {
         console.log('Saved..');
         resolve(data);
       });
-      //this.populateFileDetails()
+      //this.populateIndexDetails()
     });
   }
 
   setIndexFieldData = (data) => {    
-    console.log('setIndexFieldData..'+JSON.stringify(data))
     let omitResults = omitDeep(data, 'id')
-    console.log('setIndexFieldData..'+JSON.stringify(omitResults))
     this.setState({
       ...this.state,
-      file: {
-        ...this.state.file,
+      index: {
+        ...this.state.index,
         keyedColumns: omitResults
       }
     })
@@ -345,34 +343,34 @@ class IndexDetails extends Component {
     let omitResults = omitDeep(data, 'id')    
     this.setState({
       ...this.state,
-      file: {
-        ...this.state.file,
+      index: {
+        ...this.state.index,
         nonKeyedColumns: omitResults
       }
     })
   }
 
-  populateFileDetails() {
+  populateIndexDetails() {
     var applicationId = this.props.applicationId;
     var indexDetails = {"app_id":applicationId};
     var index_basic = {
       //"id" : this.state.file.id,
-      "title" : this.state.file.title,
-      "name" : this.state.file.name,
-      "description" : this.state.file.description,
-      "primaryService" : this.state.file.primaryService,
-      "backupService" : this.state.file.backupService,
-      "qualifiedPath" : this.state.file.path,
+      "title" : this.state.index.title,
+      "name" : this.state.index.name,
+      "description" : this.state.index.description,
+      "primaryService" : this.state.index.primaryService,
+      "backupService" : this.state.index.backupService,
+      "qualifiedPath" : this.state.index.path,
       "application_id" : applicationId,
       "dataflowId" : this.props.selectedDataflow ? this.props.selectedDataflow.id : '',
       "parentFileId" : this.state.selectedSourceFile
     };
     indexDetails.basic = index_basic;
 
-    indexDetails.indexKey = this.state.file.keyedColumns;
+    indexDetails.indexKey = this.state.index.keyedColumns;
     //indexDetails.indexKey = this.indexFieldsTable.getData();
 
-    indexDetails.indexPayload = this.state.file.nonKeyedColumns;
+    indexDetails.indexPayload = this.state.index.nonKeyedColumns;
 
     return indexDetails;
   }
@@ -392,7 +390,7 @@ class IndexDetails extends Component {
   }
 
   onChange = (e) => {
-    this.setState({...this.state, file: {...this.state.file, [e.target.name]: e.target.value }});
+    this.setState({...this.state, index: {...this.state.index, [e.target.name]: e.target.value }});
   }
 
   onSourceFileSelection = (value) => {
@@ -436,7 +434,7 @@ class IndexDetails extends Component {
     ];
 
 
-    const {name, title, description, primaryService, backupService, path, relations, keyedColumns, nonKeyedColumns} = this.state.file;
+    const {name, title, description, primaryService, backupService, path, relations, keyedColumns, nonKeyedColumns} = this.state.index;
     const rowSelection = {
       selectedRowKeys,
       onChange: this.onSelectedRowKeysChange
@@ -561,7 +559,7 @@ class IndexDetails extends Component {
                 setData={this.setNonKeyedColumnData}/> 
           </TabPane>
 
-          {!this.props.isNewFile ? 
+          {!this.props.isNew ? 
             <TabPane tab="Dataflows" key="7">
               <AssociatedDataflows assetName={name} assetType={'Index'}/>
             </TabPane> : null}

@@ -221,7 +221,7 @@ router.get('/file_details', [
 
 });
 
-let updateFileDetails = ((fileId, applicationId, req) => {
+let updateFileDetails = (fileId, applicationId, req) => {
   let fieldsToUpdate = {"file_id"  : fileId, "application_id" : applicationId}; 
   return new Promise((resolve, reject) => {
     FileLayout.findOrCreate({
@@ -282,7 +282,7 @@ let updateFileDetails = ((fileId, applicationId, req) => {
       //return res.status(500).send(err);
     }
   })
-})
+}
 
 router.post('/saveFile', (req, res) => {
     console.log("[file list/read.js] - Get file list for app_id = " + req.body.file.app_id + " isNewFile: "+req.body.isNew);

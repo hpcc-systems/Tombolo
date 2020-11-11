@@ -101,10 +101,10 @@ class QueryTable extends Component {
   render() {
     const editingAllowed = hasEditPermission(this.props.user);
     const queryColumns = [{
-      title: 'Title',
-      dataIndex: 'title',
+      title: 'Name',
+      dataIndex: 'name',
       width: '35%',
-      render: (text, record) => <a href='#' onClick={(row) => this.handleEdit(record.id)}>{record.title != '' ? record.title : record.name}</a>
+      render: (text, record) => <a href='#' onClick={(row) => this.handleEdit(record.id)}>{record.name != '' ? record.name : record.title}</a>
     },
     {
       title: 'Description',

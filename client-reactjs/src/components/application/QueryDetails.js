@@ -282,7 +282,6 @@ class QueryDetails extends Component {
         sourceFiles: [],
         query: {
           ...this.state.file,
-          id: selectedSuggestion,
           title: selectedSuggestion,
           name: selectedSuggestion,
           description: '',
@@ -333,7 +332,7 @@ class QueryDetails extends Component {
       fetch('/api/query/saveQuery', {
         method: 'post',
         headers: authHeader(),
-        body: JSON.stringify(this.populateQueryDetails())
+        body: JSON.stringify({isNew : this.props.isNew, id: this.state.query.id, query : this.populateQueryDetails()})    
       }).then(function(response) {
         if(response.ok) {
           return response.json();
@@ -361,7 +360,7 @@ class QueryDetails extends Component {
 
     var queryDetails = {
       "basic" : {
-        "applicationId":applicationId,
+        "application_id":applicationId,
         "title" : this.state.query.title,
         "name" : this.state.query.name,
         "description" : this.state.query.description,

@@ -306,7 +306,10 @@ class JobDetails extends Component {
         }
       })
       this.props.form.setFieldsValue({
-        name: jobInfo.Jobname
+        name: jobInfo.Jobname,
+        title: jobInfo.Jobname,
+        description: jobInfo.description,
+        entryBWR: jobInfo.entryBWR
       });
 
       return jobInfo;
@@ -373,7 +376,7 @@ class JobDetails extends Component {
       fetch('/api/job/saveJob', {
         method: 'post',
         headers: authHeader(),
-        body: JSON.stringify(this.populateJobDetails())
+        body: JSON.stringify({isNew : this.props.isNew, id: this.state.job.id, job : this.populateJobDetails()})        
       }).then(function(response) {
         if(response.ok) {
           return response.json();
@@ -409,7 +412,7 @@ class JobDetails extends Component {
 
     var jobDetails = {
       "basic": {
-        "applicationId":applicationId,
+        "application_id":applicationId,
         "dataflowId" : this.props.selectedDataflow ? this.props.selectedDataflow.id : '',
         "name" : this.state.job.name,
         "title" : this.state.job.title,
