@@ -8,6 +8,7 @@ import {eclTypes} from '../../common/CommonUtil';
 import EditableTable from "../../common/EditableTable.js";
 import { fetchDataDictionary } from "../../common/CommonUtil.js";
 import {omitDeep} from '../../common/CommonUtil.js';
+import { MarkdownEditor } from "../../common/MarkdownEditor.js"
 const TabPane = Tabs.TabPane;
 const Option = Select.Option;
 const { Paragraph } = Typography;
@@ -21,17 +22,17 @@ function DataDefinitionDetailsDialog({selectedDataDefinition, applicationId, onD
   const [dataDefinition, setDataDefinition] = useState({
     id: '',
     applicationId:'',
-    name: '',    
+    name: '',
     description: '',
     data_defn: []
   });
-  
+
   const [tags, setTags] = useState({
     products: [],
     inputVisible: false,
     invputValue: ''
   });
-  
+
   const editableTable = useRef();
 
   const saveInputRef = useRef(null);
@@ -43,8 +44,8 @@ function DataDefinitionDetailsDialog({selectedDataDefinition, applicationId, onD
      const data = await fetchDataDefinitions();
      setAvailableDataDefinitions(data);
     }
-    if(applicationId) {    
-      fetchData();      
+    if(applicationId) {
+      fetchData();
       setVisible(true);
     }
   }, [applicationId])
@@ -55,9 +56,9 @@ function DataDefinitionDetailsDialog({selectedDataDefinition, applicationId, onD
       if(selectedDataDefinition.type == 'file') {
         getFileDetails();
       } else {
-        getDataDefintionDetails();  
+        getDataDefintionDetails();
       }
-      
+
     }
    }, [selectedDataDefinition])
 
@@ -74,7 +75,7 @@ function DataDefinitionDetailsDialog({selectedDataDefinition, applicationId, onD
   }
 
   const setLayoutData = (data) => {
-    let omitResults = omitDeep(data, 'id')    
+    let omitResults = omitDeep(data, 'id')
     dataDefinition.data_defn = omitResults;
   }
 
@@ -83,7 +84,7 @@ function DataDefinitionDetailsDialog({selectedDataDefinition, applicationId, onD
     if(validateForm()) {
       message.config({top:130})
       let dataToSave = dataDefinition;
-      dataToSave.application_id = applicationId;      
+      dataToSave.application_id = applicationId;
       dataToSave.data_defn = JSON.stringify(dataDefinition.data_defn);
       dataToSave.products = tags.products.join(',');
 
@@ -108,19 +109,19 @@ function DataDefinitionDetailsDialog({selectedDataDefinition, applicationId, onD
     }
   }
 
-  const fetchDataDefinitions =  () => {    
+  const fetchDataDefinitions =  () => {
     return new Promise(async (resolve, reject) => {
       try {
-        let dataDefn = await fetchDataDictionary(applicationId);      
-        resolve(dataDefn)  
+        let dataDefn = await fetchDataDictionary(applicationId);
+        resolve(dataDefn)
       } catch (err) {
         console.log(err)
         reject(err)
-      }              
-    })    
+      }
+    })
   }
 
-  const getDataDefintionDetails = async () => {  
+  const getDataDefintionDetails = async () => {
     fetch('/api/data-dictionary?application_id='+applicationId+'&id='+selectedDataDefinition.id, {
       headers: authHeader()
     }).then(function(response) {
@@ -129,19 +130,19 @@ function DataDefinitionDetailsDialog({selectedDataDefinition, applicationId, onD
       }
       handleError(response);
     }).then(function(data) {
-      setDataDefinition(...data); 
+      setDataDefinition(...data);
       setTags(prevState => {
         return { ...prevState, products: (data[0].products && data[0].products.length) > 0 ? data[0].products.split(',') : [] }
       });
     }).catch(error => {
       console.log(error);
     });
-  };    
+  };
 
   const getFileDetails = async () => {
     fetch("/api/file/read/file_details?file_id="+selectedDataDefinition.id+"&app_id="+applicationId, {
         headers: authHeader()
-    }) 
+    })
     .then((response) => {
       if(response.ok) {
         return response.json();
@@ -164,14 +165,14 @@ function DataDefinitionDetailsDialog({selectedDataDefinition, applicationId, onD
         "name": data.basic.title,
         "description": data.basic.description
       }
-      setDataDefinition(dataDefn);         
+      setDataDefinition(dataDefn);
     })
   }
 
-  const onChange = (e) => {	
+  const onChange = (e) => {
     setFormErrors({'name':''});
   	const {name, value} = e.target;
-    setDataDefinition({...dataDefinition, [name]: value});    
+    setDataDefinition({...dataDefinition, [name]: value});
   }
 
   const validateForm = () => {
@@ -200,7 +201,7 @@ function DataDefinitionDetailsDialog({selectedDataDefinition, applicationId, onD
   const authReducer = useSelector(state => state.authenticationReducer);
   const editingAllowed = hasEditPermission(authReducer.user);
 
-  const layoutColumns = [    
+  const layoutColumns = [
     {
       title: 'Name',
       dataIndex: 'name',
@@ -227,7 +228,7 @@ function DataDefinitionDetailsDialog({selectedDataDefinition, applicationId, onD
       dataIndex: 'possibleValue',
       editable: true
     },
-    
+
   ]
 
   const handleNewProduct = () => {
@@ -261,7 +262,7 @@ function DataDefinitionDetailsDialog({selectedDataDefinition, applicationId, onD
     });
   }
 
-  const dataSource = (dataDefinition.data_defn && dataDefinition.data_defn.length) > 0 ? dataDefinition.data_defn : [];  
+  const dataSource = (dataDefinition.data_defn && dataDefinition.data_defn.length) > 0 ? dataDefinition.data_defn : [];
 
  	return (
 	  <React.Fragment>
@@ -271,18 +272,18 @@ function DataDefinitionDetailsDialog({selectedDataDefinition, applicationId, onD
         onOk={onSave}
         onCancel={onClose}
         destroyOnClose={true}
-        width="1200px"        
+        width="1200px"
       >
       <Tabs defaultActiveKey={"1"}>
         <TabPane tab="Basic" key="1">
           <Form.Item {...formItemLayout} label="Name">
               <Input id="name" name="name" onChange={onChange} defaultValue={dataDefinition.name} value={dataDefinition.name} placeholder="Name" disabled={!editingAllowed}/>
-              {formErrors.name.length > 0 && 
+              {formErrors.name.length > 0 &&
               <span className='error'>{formErrors.name}</span>}
           </Form.Item>
 
           <Form.Item {...formItemLayout} label="Description">
-              <TextArea id="description" name="description" onChange={onChange} defaultValue={dataDefinition.description} value={dataDefinition.description} rows="10" cols="50" placeholder="Description" disabled={!editingAllowed}/>
+            <MarkdownEditor id="defn_desc" name="description" onChange={onChange} targetDomId="defnDescr" value={dataDefinition.description} disabled={!editingAllowed}/>
           </Form.Item>
 
           <Form.Item {...formItemLayout} label="Products">
@@ -320,22 +321,22 @@ function DataDefinitionDetailsDialog({selectedDataDefinition, applicationId, onD
                 </Tag>
               )}
           </div>
-        </Form.Item>  
+        </Form.Item>
 
         </TabPane>
         <TabPane tab="Layout" key="2">
-          <EditableTable 
-            columns={layoutColumns} 
-            dataSource={dataSource} 
-            ref={editableTable} 
-            fileType={"csv"} 
+          <EditableTable
+            columns={layoutColumns}
+            dataSource={dataSource}
+            ref={editableTable}
+            fileType={"csv"}
             editingAllowed={editingAllowed}
             dataDefinitions={availableDataDefinitions.filter(dataDefn => dataDefn.name != selectedDataDefinition.name)}
-            showDataDefinition={true}   
-            setData={setLayoutData}/>            
+            showDataDefinition={true}
+            setData={setLayoutData}/>
         </TabPane>
-			</Tabs>		        
-	  </Modal>   	  	
+			</Tabs>
+	  </Modal>
 	</React.Fragment>
   )
 }

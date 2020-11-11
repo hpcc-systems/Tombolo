@@ -8,6 +8,7 @@ import { fetchDataDictionary, eclTypes, omitDeep } from "../common/CommonUtil.js
 import { AgGridReact } from 'ag-grid-react';
 import 'ag-grid-community/dist/styles/ag-grid.css';
 import 'ag-grid-community/dist/styles/ag-theme-balham.css';
+import { MarkdownEditor } from "../common/MarkdownEditor.js"
 const TabPane = Tabs.TabPane;
 const Option = Select.Option;
 const { confirm } = Modal;
@@ -47,10 +48,10 @@ class QueryDetails extends Component {
   }
 
   componentDidMount() {
-    this.props.onRef(this);    
+    this.props.onRef(this);
     this.getQueryDetails();
     this.fetchDataDefinitions();
-  }  
+  }
 
   /*shouldComponentUpdate(nextProps, nextState) {
     console.log("shouldComponentUpdate")
@@ -61,7 +62,7 @@ class QueryDetails extends Component {
     }
   }*/
 
-  getQueryDetails() {    
+  getQueryDetails() {
     if(this.props.selectedAsset && !this.props.isNew) {
       fetch("/api/query/query_details?query_id="+this.props.selectedAsset+"&app_id="+this.props.applicationId, {
         headers: authHeader()
@@ -104,7 +105,7 @@ class QueryDetails extends Component {
       .catch(error => {
         console.log(error);
       });
-    } 
+    }
     this.getClusters();
   }
 
@@ -120,17 +121,17 @@ class QueryDetails extends Component {
 
   async fetchDataDefinitions() {
     try {
-      let dataDefn = await fetchDataDictionary(this.props.applicationId);  
+      let dataDefn = await fetchDataDictionary(this.props.applicationId);
       this.setState({
         dataDefinitions: dataDefn
       });
     } catch (err) {
       console.log(err)
-    }    
+    }
   }
 
   setInputFieldData = (data) => {
-    let omitResults = omitDeep(data, 'id')    
+    let omitResults = omitDeep(data, 'id')
     this.setState({
       ...this.state,
       query: {
@@ -141,7 +142,7 @@ class QueryDetails extends Component {
   }
 
   setOutputFieldData = (data) => {
-    let omitResults = omitDeep(data, 'id')    
+    let omitResults = omitDeep(data, 'id')
     this.setState({
       ...this.state,
       query: {
@@ -156,7 +157,7 @@ class QueryDetails extends Component {
     confirm({
       title: 'Delete file?',
       content: 'Are you sure you want to delete this Query?',
-      onOk() {    
+      onOk() {
         var data = JSON.stringify({queryId: _self.props.selectedAsset, application_id: _self.props.applicationId});
         fetch("/api/query/delete", {
           method: 'post',
@@ -332,7 +333,7 @@ class QueryDetails extends Component {
       fetch('/api/query/saveQuery', {
         method: 'post',
         headers: authHeader(),
-        body: JSON.stringify({isNew : this.props.isNew, id: this.state.query.id, query : this.populateQueryDetails()})    
+        body: JSON.stringify({isNew : this.props.isNew, id: this.state.query.id, query : this.populateQueryDetails()})
       }).then(function(response) {
         if(response.ok) {
           return response.json();
@@ -447,8 +448,8 @@ class QueryDetails extends Component {
       showdatadefinitioninfield: true,
       celleditorparams: {
         values: eclTypes.sort()
-      }      
-    }, 
+      }
+    },
     {
       title: 'Possible Value',
       dataIndex: 'possibleValue',
@@ -466,7 +467,7 @@ class QueryDetails extends Component {
       selectedRowKeys,
       onChange: this.onSelectedRowKeysChange
     };
-    
+
     //render only after fetching the data from the server
     //{console.log(title + ', ' + this.props.selectedQuery + ', ' + this.props.isNewFile)}
     {console.log('name: '+name)}
@@ -504,7 +505,7 @@ class QueryDetails extends Component {
                   <Radio value={'api'}>API/Gateway</Radio>
                 </Radio.Group>
               </Form.Item>
-              {type == 'roxie_query' ?   
+              {type == 'roxie_query' ?
                 <React.Fragment>
                 <Form.Item {...formItemLayout} label="Cluster">
                    <Select placeholder="Select a Cluster" onChange={this.onClusterSelection} style={{ width: 190 }} disabled={!editingAllowed}>
@@ -532,7 +533,7 @@ class QueryDetails extends Component {
                 </Form.Item>
                 </React.Fragment>
               : null}
-            </div>              
+            </div>
 
             <Form.Item {...formItemLayout} label="Name">
               {getFieldDecorator('name')(<Input disabled={true} disabled={!editingAllowed}/>)}
@@ -551,7 +552,7 @@ class QueryDetails extends Component {
                 trigger: 'onChange',
                 valuePropName: 'value',
                 initialValue: this.state.query.description
-              })(<Input id="query_desc" name="description" onChange={this.onChange} placeholder="Description" disabled={!editingAllowed}/>)}
+              })(<MarkdownEditor id="query_desc" name="description" onChange={this.onChange} targetDomId="queryDescr" value={description} disabled={!editingAllowed}/>)}
             </Form.Item>
             <Form.Item {...formItemLayout} label="URL">
                 {getFieldDecorator('url', {
@@ -587,14 +588,14 @@ class QueryDetails extends Component {
                 height: '415px',
                 width: '100%' }}
               >
-                <EditableTable 
-                  columns={columns} 
-                  dataSource={input} 
-                  ref={node => (this.inputFieldsTable = node)} 
+                <EditableTable
+                  columns={columns}
+                  dataSource={input}
+                  ref={node => (this.inputFieldsTable = node)}
                   editingAllowed={editingAllowed}
                   dataDefinitions={this.state.dataDefinitions}
                   showDataDefinition={true}
-                  setData={this.setInputFieldData}/>  
+                  setData={this.setInputFieldData}/>
               </div>
             </TabPane>
           <TabPane tab="Output Fields" key="3">
@@ -605,19 +606,19 @@ class QueryDetails extends Component {
                 width: '100%' }}
               >
 
-                <EditableTable 
-                  columns={columns} 
-                  dataSource={output} 
-                  ref={outputTable => (this.outputFieldsTable = outputTable)} 
+                <EditableTable
+                  columns={columns}
+                  dataSource={output}
+                  ref={outputTable => (this.outputFieldsTable = outputTable)}
                   editingAllowed={editingAllowed}
                   dataDefinitions={this.state.dataDefinitions}
                   showDataDefinition={true}
-                  setData={this.setOutputFieldData}/>  
+                  setData={this.setOutputFieldData}/>
 
               </div>
           </TabPane>
 
-          {!this.props.isNew ? 
+          {!this.props.isNew ?
             <TabPane tab="Applications" key="7">
               <AssociatedDataflows assetName={name} assetType={'Query'}/>
             </TabPane> : null}
@@ -629,4 +630,3 @@ class QueryDetails extends Component {
 }
 const QueryDetailsForm = Form.create()(QueryDetails);
 export default QueryDetailsForm;
-

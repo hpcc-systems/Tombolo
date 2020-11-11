@@ -8,6 +8,7 @@ import { authHeader, handleError } from "../common/AuthHeader.js"
 import { fetchDataDictionary } from "../common/CommonUtil.js"
 import {omitDeep} from '../common/CommonUtil.js';
 import EditableTable from "../common/EditableTable.js"
+import { MarkdownEditor } from "../common/MarkdownEditor.js"
 import { AgGridReact } from 'ag-grid-react';
 import { hasEditPermission } from "../common/AuthUtil.js";
 import {eclTypes} from '../common/CommonUtil';
@@ -83,7 +84,7 @@ class FileDetails extends Component {
     this.getFileCount();
     this.getFileDetails();
     this.getClusters();
-    this.fetchDataTypeDetails();   
+    this.fetchDataTypeDetails();
     this.fetchDataDefinitions();
   }
 
@@ -141,13 +142,13 @@ class FileDetails extends Component {
 
   async fetchDataDefinitions() {
     try {
-      let dataDefn = await fetchDataDictionary(this.props.applicationId);  
+      let dataDefn = await fetchDataDictionary(this.props.applicationId);
       this.setState({
         dataDefinitions: dataDefn
       });
     } catch (err) {
       console.log(err)
-    }    
+    }
   }
 
   getFileCount() {
@@ -174,7 +175,7 @@ class FileDetails extends Component {
       fetch("/api/file/read/file_details?file_id="+this.props.selectedAsset+"&app_id="+this.props.applicationId, {
         headers: authHeader()
       }
-      ) 
+      )
       .then((response) => {
         if(response.ok) {
           return response.json();
@@ -243,7 +244,7 @@ class FileDetails extends Component {
         console.log(error);
       });
     }
-  }  
+  }
 
   showModal = () => {
     this.setState({
@@ -252,7 +253,7 @@ class FileDetails extends Component {
     this.clearState();
     this.getConsumers();
     this.getFileDetails();
-    this.getClusters();    
+    this.getClusters();
     if(this.props.isNew) {
       this.getScope();
     }
@@ -278,7 +279,7 @@ class FileDetails extends Component {
         _self.setState({
           confirmLoading: true,
         });
-        try {          
+        try {
           let saveResponse = await _self.saveFileDetails();
           setTimeout(() => {
             _self.setState({
@@ -321,7 +322,7 @@ class FileDetails extends Component {
           if(_self.props.onDelete) {
             _self.props.onDelete(_self.props.currentlyEditingNode)
           } else {
-            _self.props.onRefresh();  
+            _self.props.onRefresh();
           }
           message.success("File deleted sucessfully");
           _self.setState({
@@ -334,7 +335,7 @@ class FileDetails extends Component {
         });
       },
       onCancel() {},
-    });    
+    });
   }
 
   getLicenses() {
@@ -446,13 +447,13 @@ class FileDetails extends Component {
 
   searchFiles(searchString) {
     if(searchString.length <= 3)
-      return;    
+      return;
     this.setState({
       ...this.state,
       autoCompleteSuffix : <Spin/>,
       fileSearchErrorShown: false
     });
-    
+
     var data = JSON.stringify({clusterid: this.state.selectedCluster, keyword: searchString});
     fetch("/api/hpcc/read/filesearch", {
       method: 'post',
@@ -677,7 +678,7 @@ class FileDetails extends Component {
     })
   }
 
-  populateFileDetails() {    
+  populateFileDetails() {
     var applicationId = this.props.applicationId;
     var fileDetails = {"app_id":applicationId};
     var fileLayout={}, license = {};
@@ -756,7 +757,7 @@ class FileDetails extends Component {
   }
 
   onChange = (e) => {
-    this.setState({...this.state, file: {...this.state.file, [e.target.name]: e.target.value }});    
+    this.setState({...this.state, file: {...this.state.file, [e.target.name]: e.target.value }});
   }
 
   onFieldRelationsChange = (newValue) => {
@@ -833,7 +834,7 @@ class FileDetails extends Component {
     _self.layoutGrid.forEachNode(function(node, index) {
       if(node.data.data_types && node.data.data_types != null) {
         selectedDataTypes.push(node.data.data_types);
-      } 
+      }
     });
     fetch('/api/controlsAndRegulations/getComplianceByDataType?dataType='+selectedDataTypes.join(","), {
         headers: authHeader()
@@ -946,7 +947,7 @@ class FileDetails extends Component {
     try {
       if(this.state.file.scope == (this.props.user.organization + "::" + this.props.applicationTitle).toLowerCase()) {
         throw new Error("Please enter a valid scope. The convention is <Organization Name>::<Application Name>::<File Type>");
-      } 
+      }
       callback();
     } catch (err) {
       callback(err);
@@ -968,7 +969,7 @@ class FileDetails extends Component {
       }
     });
   }
- 
+
   render() {
     const { getFieldDecorator } = this.props.form;
     const { visible, confirmLoading, sourceFiles, availableLicenses, selectedRowKeys, clusters, consumers, fileSearchSuggestions, fileDataContent, fileProfile, showFileProfile, scopeDisabled } = this.state;
@@ -1007,7 +1008,7 @@ class FileDetails extends Component {
         sm: { span: 12 },
       },
     };
-    
+
     const layoutColumns = [
     {
       title: 'Name',
@@ -1031,7 +1032,7 @@ class FileDetails extends Component {
       title: 'ECL Type',
       dataIndex: 'eclType',
       editable: editingAllowed,
-      showdatadefinitioninfield: true      
+      showdatadefinitioninfield: true
     },
     {
       title: 'Description',
@@ -1048,7 +1049,7 @@ class FileDetails extends Component {
         values: ["false", "true"]
       },
       width: '10%'
-    },    
+    },
     {
       title: 'Information Type',
       dataIndex: 'data_types',
@@ -1059,7 +1060,7 @@ class FileDetails extends Component {
         values: this.state.dataTypes.sort()
       }
     }
-    
+
     ];
     const { complianceTags } = this.state;
     const licenseColumns = [{
@@ -1174,7 +1175,7 @@ class FileDetails extends Component {
       onChange: this.onSelectedRowKeysChange
     };
     //const modalHeight = !this.props.isNew ? "425px" : "550px";
-    const modalHeight = "570px";    
+    const modalHeight = "570px";
 
     const getNodeChildDetails = (rowItem) => {
       if (rowItem.children) {
@@ -1209,7 +1210,7 @@ class FileDetails extends Component {
           confirmLoading={confirmLoading}
           onCancel={this.handleCancel}
           destroyOnClose={true}
-          width="1200px"          
+          width="1200px"
           footer={[
             <Button key="danger" type="danger" onClick={this.handleDelete}>Delete</Button>,
             <Button key="back" onClick={this.handleCancel}>
@@ -1223,8 +1224,8 @@ class FileDetails extends Component {
         <Tabs
           defaultActiveKey="1"
         >
-          <TabPane tab="Basic" key="1">           
-             <Form layout="vertical">             
+          <TabPane tab="Basic" key="1">
+             <Form layout="vertical">
               <div>
               <Form.Item {...formItemLayout} label="Type">
                 <Radio.Group onChange={this.fileTypeChange} value={this.state.file.fileType}>
@@ -1234,7 +1235,7 @@ class FileDetails extends Component {
                   <Radio value={'xml'}>XML</Radio>
                 </Radio.Group>
               </Form.Item>
-              {this.state.file.fileType == 'thor_file' ? 
+              {this.state.file.fileType == 'thor_file' ?
                 <React.Fragment>
                   <Form.Item {...formItemLayout} label="Cluster">
                      <Select placeholder="Select a Cluster" disabled={!editingAllowed} onChange={this.onClusterSelection} style={{ width: 190 }}>
@@ -1259,9 +1260,9 @@ class FileDetails extends Component {
                     >
                       <Input id="autocomplete_field" suffix={this.state.autoCompleteSuffix} autoComplete="off"/>
                     </AutoComplete>
-                  </Form.Item> 
+                  </Form.Item>
                 </React.Fragment>
-                : 
+                :
                 null}
 
               </div>
@@ -1287,7 +1288,7 @@ class FileDetails extends Component {
                 )}
               </Form.Item>
               <Form.Item {...formItemLayout} label="Description">
-                  <TextArea id="file_desc" name="description" onChange={this.onChange} defaultValue={description} value={description} placeholder="Description" rows="7" cols="50" disabled={!editingAllowed}/>
+                <MarkdownEditor id="file_desc" name="description" onChange={this.onChange} targetDomId="fileDescr" value={description} disabled={!editingAllowed}/>
               </Form.Item>
               <Form.Item {...formItemLayout} label="Service URL">
                   <Input id="file_primary_svc" name="serviceUrl" onChange={this.onChange} defaultValue={serviceUrl} value={serviceUrl} placeholder="Service URL" disabled={!editingAllowed}/>
@@ -1310,14 +1311,14 @@ class FileDetails extends Component {
                 </Col>
               </Row>
 
-              <Row type="flex">     
+              <Row type="flex">
                 <Col span={8} order={1}>
                   <Form.Item {...threeColformItemLayout} label="Supplier">
                      <Select id="supplier" value={(this.state.file.supplier != '') ? this.state.file.supplier : "Select a supplier"} placeholder="Select a supplier" onChange={this.onSupplierSelection} style={{ width: 190 }} disabled={!editingAllowed}>
                       {consumers.map(consumer => consumer.assetType=="Supplier" ? <Option key={consumer.id}>{consumer.name}</Option> : null)}
                     </Select>
                   </Form.Item>
-                </Col>           
+                </Col>
                 <Col span={8} order={2}>
                   <Form.Item {...threeColformItemLayout} label="Consumer">
                      <Select id="consumer" value={(this.state.file.consumer != '') ? this.state.file.consumer : "Select a consumer"} placeholder="Select a consumer" onChange={this.onConsumerSelection} style={{ width: 190 }} disabled={!editingAllowed}>
@@ -1325,7 +1326,7 @@ class FileDetails extends Component {
                     </Select>
                   </Form.Item>
                 </Col>
-                
+
                 <Col span={8} order={3}>
                   <Form.Item {...threeColformItemLayout} label="Owner">
                      <Select id="owner" value={(this.state.file.owner != '') ? this.state.file.owner : "Select an Owner"} placeholder="Select an Owner" onChange={this.onOwnerSelection} style={{ width: 190 }} disabled={!editingAllowed}>
@@ -1334,27 +1335,27 @@ class FileDetails extends Component {
                   </Form.Item>
                 </Col>
 
-              </Row>              
+              </Row>
             </Form>
-           
+
           </TabPane>
           <TabPane tab="Layout" key="3">
-              <ComplianceInfo tags={complianceTags}/>              
+              <ComplianceInfo tags={complianceTags}/>
               <div
                 className="layout_tbl"
                 style={{
                 width: '100%' }}
               >
-                <EditableTable 
-                  columns={layoutColumns} 
-                  dataSource={layout} 
-                  ref={node => (this.layoutTable = node)} 
-                  fileType={this.state.file.fileType} 
+                <EditableTable
+                  columns={layoutColumns}
+                  dataSource={layout}
+                  ref={node => (this.layoutTable = node)}
+                  fileType={this.state.file.fileType}
                   editingAllowed={editingAllowed}
                   dataDefinitions={this.state.dataDefinitions}
-                  showDataDefinition={true}   
-                  setData={this.setLayoutData}/>            
-              </div>                             
+                  showDataDefinition={true}
+                  setData={this.setLayoutData}/>
+              </div>
           </TabPane>
           <TabPane tab="Permissable Purpose" key="4">
             <InheritedLicenses relation={inheritedLicensing}/>
@@ -1409,8 +1410,8 @@ class FileDetails extends Component {
                 </div>
             </TabPane>
           : null}
-          
-          {!this.props.isNew ? 
+
+          {!this.props.isNew ?
             <TabPane tab="Dataflows" key="7">
               <AssociatedDataflows assetName={name} assetType={'File'}/>
             </TabPane> : null}

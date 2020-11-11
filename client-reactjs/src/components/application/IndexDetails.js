@@ -6,6 +6,7 @@ import { fetchDataDictionary, eclTypes } from "../common/CommonUtil.js"
 import {omitDeep} from '../common/CommonUtil.js';
 import AssociatedDataflows from "./AssociatedDataflows"
 import EditableTable from "../common/EditableTable.js"
+import { MarkdownEditor } from "../common/MarkdownEditor.js"
 
 const TabPane = Tabs.TabPane;
 const Option = Select.Option;
@@ -154,9 +155,9 @@ class IndexDetails extends Component {
           if(_self.props.onDelete) {
             _self.props.onDelete(_self.props.currentlyEditingNode);
           } else {
-            _self.props.onRefresh();  
+            _self.props.onRefresh();
           }
-          _self.props.onClose();          
+          _self.props.onClose();
           message.success("Index deleted sucessfully");
         }).catch(error => {
           console.log(error);
@@ -169,13 +170,13 @@ class IndexDetails extends Component {
 
   async fetchDataDefinitions() {
     try {
-      let dataDefn = await fetchDataDictionary(this.props.applicationId);  
+      let dataDefn = await fetchDataDictionary(this.props.applicationId);
       this.setState({
         dataDefinitions: dataDefn
       });
     } catch (err) {
       console.log(err)
-    }    
+    }
   }
 
   getClusters() {
@@ -313,7 +314,7 @@ class IndexDetails extends Component {
       fetch('/api/index/read/saveIndex', {
         method: 'post',
         headers: authHeader(),
-        body: JSON.stringify({isNew : this.props.isNew, id: this.state.index.id, index : this.populateIndexDetails()})    
+        body: JSON.stringify({isNew : this.props.isNew, id: this.state.index.id, index : this.populateIndexDetails()})
       }).then(function(response) {
         if(response.ok) {
           return response.json();
@@ -327,7 +328,7 @@ class IndexDetails extends Component {
     });
   }
 
-  setIndexFieldData = (data) => {    
+  setIndexFieldData = (data) => {
     let omitResults = omitDeep(data, 'id')
     this.setState({
       ...this.state,
@@ -338,9 +339,9 @@ class IndexDetails extends Component {
     })
   }
 
-  setNonKeyedColumnData = (data) => {    
+  setNonKeyedColumnData = (data) => {
     console.log('setNonKeyedColumnData..'+JSON.stringify(data))
-    let omitResults = omitDeep(data, 'id')    
+    let omitResults = omitDeep(data, 'id')
     this.setState({
       ...this.state,
       index: {
@@ -400,7 +401,7 @@ class IndexDetails extends Component {
   }
 
   render() {
-    const editingAllowed = hasEditPermission(this.props.user);    
+    const editingAllowed = hasEditPermission(this.props.user);
     const {
       getFieldDecorator, getFieldsError, getFieldError, isFieldTouched,
     } = this.props.form;
@@ -440,7 +441,7 @@ class IndexDetails extends Component {
       onChange: this.onSelectedRowKeysChange
     };
 
-    //render only after fetching the data from the server    
+    //render only after fetching the data from the server
     if(!title && !this.props.selectedAsset && !this.props.isNew) {
       return null;
     }
@@ -498,7 +499,7 @@ class IndexDetails extends Component {
               </AutoComplete>
             </Form.Item>
             </div>
-              
+
             <Form.Item {...formItemLayout} label="Name">
                 {getFieldDecorator('name', {
                   rules: [{ required: true, message: 'Please enter a name!' }],
@@ -507,23 +508,23 @@ class IndexDetails extends Component {
             </Form.Item>
 
             <Form.Item {...formItemLayout} label="Title">
-              {getFieldDecorator('title') 
+              {getFieldDecorator('title')
               (<Input id="file_title" name="title" onChange={this.onChange} placeholder="Title" disabled={!editingAllowed}/>)}
             </Form.Item>
             <Form.Item {...formItemLayout} label="Description">
-              {getFieldDecorator('description') 
-              (<Input id="file_desc" name="description" onChange={this.onChange} placeholder="Description" disabled={!editingAllowed}/>)}
+              {getFieldDecorator('description')
+              (<MarkdownEditor id="index_desc" name="description" onChange={this.onChange} targetDomId="indexDescr" value={description} disabled={!editingAllowed}/>)}
             </Form.Item>
             <Form.Item {...formItemLayout} label="Primary Service">
-              {getFieldDecorator('primaryService') 
+              {getFieldDecorator('primaryService')
                (<Input id="file_primary_svc" name="primaryService" onChange={this.onChange} placeholder="Primary Service" disabled={!editingAllowed}/>)}
             </Form.Item>
             <Form.Item {...formItemLayout} label="Backup Service">
-              {getFieldDecorator('backupService') 
+              {getFieldDecorator('backupService')
               (<Input id="file_bkp_svc" name="backupService" onChange={this.onChange} placeholder="Backup Service" disabled={!editingAllowed}/>)}
             </Form.Item>
             <Form.Item {...formItemLayout} label="Path">
-              {getFieldDecorator('path') 
+              {getFieldDecorator('path')
               (<Input id="path" name="path" onChange={this.onChange} placeholder="Path" disabled={!editingAllowed}/>)}
             </Form.Item>
           </Form>
@@ -537,29 +538,29 @@ class IndexDetails extends Component {
               </div>
           </TabPane>
           <TabPane tab="Index" key="3">
-              
 
-              <EditableTable 
-                columns={indexColumns} 
-                dataSource={keyedColumns}                 
+
+              <EditableTable
+                columns={indexColumns}
+                dataSource={keyedColumns}
                 editingAllowed={editingAllowed}
                 dataDefinitions={this.state.dataDefinitions}
                 showDataDefinition={true}
-                setData={this.setIndexFieldData}/>                
+                setData={this.setIndexFieldData}/>
 
-              
+
           </TabPane>
           <TabPane tab="Payload" key="4">
-              <EditableTable 
-                columns={indexColumns} 
-                dataSource={nonKeyedColumns} 
+              <EditableTable
+                columns={indexColumns}
+                dataSource={nonKeyedColumns}
                 editingAllowed={editingAllowed}
                 dataDefinitions={this.state.dataDefinitions}
                 showDataDefinition={true}
-                setData={this.setNonKeyedColumnData}/> 
+                setData={this.setNonKeyedColumnData}/>
           </TabPane>
 
-          {!this.props.isNew ? 
+          {!this.props.isNew ?
             <TabPane tab="Dataflows" key="7">
               <AssociatedDataflows assetName={name} assetType={'Index'}/>
             </TabPane> : null}
