@@ -6,13 +6,14 @@ import { hasEditPermission } from "../common/AuthUtil.js";
 import { fetchDataDictionary, eclTypes } from "../common/CommonUtil.js"
 import {omitDeep} from '../common/CommonUtil.js';
 import EditableTable from "../common/EditableTable.js"
+import { EclEditor } from "../common/EclEditor.js"
 import {handleJobDelete} from "../common/WorkflowUtil";
 
 const TabPane = Tabs.TabPane;
 const Option = Select.Option;
 const { confirm } = Modal;
 
-class JobDetails extends Component { 
+class JobDetails extends Component {
 
   state = {
     visible: true,
@@ -40,6 +41,7 @@ class JobDetails extends Component {
       name:"",
       title:"",
       description:"",
+      ecl: "",
       entryBWR:"",
       jobType: this.props.selectedJobType ? this.props.selectedJobType : '',
       gitrepo:"",
@@ -85,6 +87,7 @@ class JobDetails extends Component {
             name: data.name,
             title: (data.title == '' ? data.name : data.title),
             description: data.description,
+            ecl: data.ecl,
             gitrepo: data.gitRepo,
             entryBWR: data.entryBWR,
             jobType: data.jobType,
@@ -115,7 +118,7 @@ class JobDetails extends Component {
       .catch(error => {
         console.log(error);
       });
-    } 
+    }
   }
 
   getClusters() {
@@ -166,7 +169,7 @@ class JobDetails extends Component {
       });
     }
 
-  showModal = () => {    
+  showModal = () => {
     this.setState({
       visible: true,
     });
@@ -180,16 +183,16 @@ class JobDetails extends Component {
 
   async fetchDataDefinitions() {
     try {
-      let dataDefn = await fetchDataDictionary(this.props.applicationId);  
+      let dataDefn = await fetchDataDictionary(this.props.applicationId);
       this.setState({
         dataDefinitions: dataDefn
       });
     } catch (err) {
       console.log(err)
-    }    
+    }
   }
 
-  setInputParamsData = (data) => {    
+  setInputParamsData = (data) => {
     console.log('setInputParamsData..'+JSON.stringify(data))
     let omitResults = omitDeep(data, 'id')
     this.setState({
@@ -214,12 +217,13 @@ class JobDetails extends Component {
       selectedInputFile:"",
       clusters:[],
       selectedCluster:"",
-      jobSearchSuggestions:[],      
+      jobSearchSuggestions:[],
       job: {
         id:"",
         name:"",
         title:"",
         description:"",
+        ecl: "",
         entryBWR:"",
         jobType: this.props.selectedJobType ? this.props.selectedJobType : '',
         gitrepo:"",
@@ -302,12 +306,13 @@ class JobDetails extends Component {
           name: jobInfo.Jobname,
           title: jobInfo.Jobname,
           description: jobInfo.description,
+          ecl: jobInfo.ecl,
           entryBWR: jobInfo.entryBWR
         }
       })
       this.props.form.setFieldsValue({
         name: jobInfo.Jobname,
-        title: jobInfo.Jobname,
+        jobEcl: jobInfo.ecl,
         description: jobInfo.description,
         entryBWR: jobInfo.entryBWR
       });
@@ -358,7 +363,7 @@ class JobDetails extends Component {
           if(_self.props.onDelete) {
             _self.props.onDelete(_self.props.currentlyEditingNode)
           } else {
-            _self.props.onRefresh()  
+            _self.props.onRefresh()
           }
           _self.props.onClose();
           message.success("Job deleted sucessfully");
@@ -368,7 +373,7 @@ class JobDetails extends Component {
         });
       },
       onCancel() {},
-    });    
+    });
   }
 
   saveJobDetails() {
@@ -376,7 +381,7 @@ class JobDetails extends Component {
       fetch('/api/job/saveJob', {
         method: 'post',
         headers: authHeader(),
-        body: JSON.stringify({isNew : this.props.isNew, id: this.state.job.id, job : this.populateJobDetails()})        
+        body: JSON.stringify({isNew : this.props.isNew, id: this.state.job.id, job : this.populateJobDetails()})
       }).then(function(response) {
         if(response.ok) {
           return response.json();
@@ -417,6 +422,7 @@ class JobDetails extends Component {
         "name" : this.state.job.name,
         "title" : this.state.job.title,
         "description" : this.state.job.description,
+        "ecl" : this.state.job.ecl,
         "gitRepo" : this.state.job.gitrepo,
         "entryBWR" : this.state.job.entryBWR,
         "jobType" : this.state.job.jobType,
@@ -521,6 +527,11 @@ class JobDetails extends Component {
       },
     };
 
+    const eclItemLayout = {
+      labelCol: { xs: { span: 2 }, sm: { span: 2 }, md: { span: 2 }, lg: { span: 2 } },
+      wrapperCol: { xs: { span: 4 }, sm: { span: 19 }, md: { span: 19 }, lg: { span: 19 }, xl: { span: 19 } }
+    };
+
     const threeColformItemLayout = {
       labelCol: {
         xs: { span: 4 },
@@ -559,8 +570,8 @@ class JobDetails extends Component {
         width: '30%'
       }];
 
-    const {name, title, description, entryBWR, gitrepo, jobType, inputParams, outputFiles, inputFiles, contact, author } = this.state.job;
-   
+    const {name, title, description, ecl, entryBWR, gitrepo, jobType, inputParams, outputFiles, inputFiles, contact, author } = this.state.job;
+
     //render only after fetching the data from the server
     if(!name && !this.props.selectedAsset && !this.props.isNew) {
       return null;
@@ -587,152 +598,153 @@ class JobDetails extends Component {
             </Button>,
           ]}
         >
-        <Tabs
-          defaultActiveKey="1"
-        >
-          <TabPane tab="Basic" key="1">
-
-           <Form layout="vertical">
-            {/*{this.props.isNewIndex ?*/}
-            <div>
-            <Form.Item {...formItemLayout} label="Cluster">
-               <Select placeholder="Select a Cluster" onChange={this.onClusterSelection} style={{ width: 190 }} disabled={!editingAllowed}>
-                {clusters.map(cluster => <Option key={cluster.id}>{cluster.name}</Option>)}
-              </Select>
-            </Form.Item>
-
-            <Form.Item {...formItemLayout} label="Job">
-              <AutoComplete
-                className="certain-category-search"
-                dropdownClassName="certain-category-search-dropdown"
-                dropdownMatchSelectWidth={false}
-                dropdownStyle={{ width: 300 }}
-                size="large"
-                style={{ width: '100%' }}
-                dataSource={jobSearchSuggestions}
-                onChange={(value) => this.searchJobs(value)}
-                onSelect={(value) => this.onJobSelected(value)}
-                placeholder="Search jobs"
-                optionLabelProp="text"
-                disabled={!editingAllowed}
-              >
-                <Input id="autocomplete_field" suffix={this.state.autoCompleteSuffix} autoComplete="off"/>
-              </AutoComplete>
-            </Form.Item>
-            </div>
-              {/*: null
-            }*/}
-
-             <Form.Item {...formItemLayout} label="Name">
+          <Tabs
+            defaultActiveKey="1"
+          >
+            <TabPane tab="Basic" key="1">
+              <Form layout="vertical">
+                {/*{this.props.isNewIndex ?*/}
+                <div>
+                <Form.Item {...formItemLayout} label="Cluster">
+                   <Select placeholder="Select a Cluster" onChange={this.onClusterSelection} style={{ width: 190 }} disabled={!editingAllowed}>
+                    {clusters.map(cluster => <Option key={cluster.id}>{cluster.name}</Option>)}
+                  </Select>
+                </Form.Item>
+                <Form.Item {...formItemLayout} label="Job">
+                  <AutoComplete
+                    className="certain-category-search"
+                    dropdownClassName="certain-category-search-dropdown"
+                    dropdownMatchSelectWidth={false}
+                    dropdownStyle={{ width: 300 }}
+                    size="large"
+                    style={{ width: '100%' }}
+                    dataSource={jobSearchSuggestions}
+                    onChange={(value) => this.searchJobs(value)}
+                    onSelect={(value) => this.onJobSelected(value)}
+                    placeholder="Search jobs"
+                    optionLabelProp="text"
+                    disabled={!editingAllowed}
+                  >
+                    <Input id="autocomplete_field" suffix={this.state.autoCompleteSuffix} autoComplete="off"/>
+                  </AutoComplete>
+                </Form.Item>
+                </div>
+                  {/*: null
+                }*/}
+                <Form.Item {...formItemLayout} label="Name">
                {getFieldDecorator('name')
                 (<Input id="job_name" name="name" onChange={this.onChange} placeholder="Name" disabled={true} disabled={!editingAllowed}/>)}
-            </Form.Item>     
-             <Form.Item {...formItemLayout} label="Title">
-               {getFieldDecorator('title') 
+                </Form.Item>
+                <Form.Item {...formItemLayout} label="Title">
+               {getFieldDecorator('title')
                 (<Input id="job_title" name="title" onChange={this.onChange} placeholder="Title" disabled={!editingAllowed}/>)}
-            </Form.Item>     
-            <Form.Item {...formItemLayout} label="Description">
-               {getFieldDecorator('description') 
+                </Form.Item>
+                <Form.Item {...formItemLayout} label="Description">
+               {getFieldDecorator('description')
                 (<Input id="job_desc" name="description" onChange={this.onChange} placeholder="Description" disabled={!editingAllowed}/>)}
-            </Form.Item>
-            {this.props.selectedJobType != 'Data Profile' ? 
-              <Form.Item {...formItemLayout} label="Git Repo">
-                {getFieldDecorator('gitrepo') 
+                </Form.Item>
+                {this.props.selectedJobType != 'Data Profile' ?
+                  <Form.Item {...formItemLayout} label="Git Repo">
+                {getFieldDecorator('gitrepo')
                   (<Input id="job_gitRepo" name="gitrepo" onChange={this.onChange}  placeholder="Git Repo" disabled={!editingAllowed}/>)}
-              </Form.Item>
-              : null }
-            <Form.Item {...formItemLayout} label="Entry BWR">
-              {getFieldDecorator('entryBWR') 
+                  </Form.Item>
+                : null }
+                <Form.Item {...formItemLayout} label="Entry BWR">
+              {getFieldDecorator('entryBWR')
                 (<Input id="job_entryBWR" name="entryBWR" onChange={this.onChange}  placeholder="Primary Service" disabled={!editingAllowed}/>)}
-            </Form.Item>
-            <Row type="flex">
-              <Col span={12} order={1}>
-                <Form.Item {...threeColformItemLayout} label="Contact">
-                    {getFieldDecorator('contact') 
+                </Form.Item>
+                <Row type="flex">
+                  <Col span={12} order={1}>
+                    <Form.Item {...threeColformItemLayout} label="Contact">
+                    {getFieldDecorator('contact')
                     (<Input id="job_bkp_svc" name="contact" onChange={this.onChange} placeholder="Contact" disabled={!editingAllowed}/>)}
-                </Form.Item>
-              </Col>
-              <Col span={12} order={2}>  
-                <Form.Item {...threeColformItemLayout} label="Author">
-                  {getFieldDecorator('author') 
+                    </Form.Item>
+                  </Col>
+                  <Col span={12} order={2}>
+                    <Form.Item {...threeColformItemLayout} label="Author">
+                  {getFieldDecorator('author')
                    (<Input id="job_author" name="author" onChange={this.onChange} placeholder="Author" disabled={!editingAllowed}/>)}
-                </Form.Item>
-              </Col>  
-            </Row>
-              
-            <Form.Item {...formItemLayout} label="Job Type">
-                <Select placeholder="Job Type" value={(jobType != '') ? jobType : ""} style={{ width: 190 }} onChange={this.onJobTypeChange} disabled={!editingAllowed}>
-                    {jobTypes.map(d => <Option key={d}>{d}</Option>)}
-              </Select>
-            </Form.Item>
-
-          </Form>
-
-          </TabPane>
-          <TabPane tab="Input Params" key="2">
-            <EditableTable 
-              columns={columns} 
-              dataSource={inputParams}                 
-              editingAllowed={editingAllowed}
-              dataDefinitions={this.state.dataDefinitions}
-              showDataDefinition={true}
-              setData={this.setInputParamsData}/>        
-          </TabPane>
-
-          <TabPane tab="Input Files" key="3">
-            <div>
-              <Form layout="inline">
-                <Form.Item label="Input Files">
-                  <Select id="inputfiles" placeholder="Select Input Files" defaultValue={this.state.selectedInputdFile} onChange={this.handleInputFileChange} style={{ width: 290 }} disabled={!editingAllowed}>
-                    {sourceFiles.map(d => <Option value={d.id} key={d.id}>{(d.title)?d.title:d.name}</Option>)}
+                    </Form.Item>
+                  </Col>
+                </Row>
+                <Form.Item {...formItemLayout} label="Job Type">
+                  <Select placeholder="Job Type" value={(jobType != '') ? jobType : ""} style={{ width: 190 }} onChange={this.onJobTypeChange} disabled={!editingAllowed}>
+                      {jobTypes.map(d => <Option key={d}>{d}</Option>)}
                   </Select>
                 </Form.Item>
-                <Form.Item>
-                    <Button type="primary" onClick={this.handleAddInputFile} disabled={!editingAllowed}>
-                        Add
-                    </Button>
-                </Form.Item>
               </Form>
-
-              <Table
-                columns={fileColumns}
-                rowKey={record => record.id}
-                dataSource={inputFiles}
-                pagination={{ pageSize: 10 }} scroll={{ y: 460 }}
-              />
-            </div>
-
             </TabPane>
-          <TabPane tab="Output Files" key="4">
-            <div>
 
-              <Form layout="inline">
-                <Form.Item label="Output Files">
-                  <Select id="outputfiles" placeholder="Select Output Files" defaultValue={this.state.selectedOutputFile} onChange={this.handleOutputFileChange} style={{ width: 290 }} disabled={!editingAllowed}>
-                    {sourceFiles.map(d => <Option value={d.id} key={d.id}>{(d.title)?d.title:d.name}</Option>)}
-                  </Select>
-                </Form.Item>
-                <Form.Item>
-                    <Button type="primary" disabled={!editingAllowed} onClick={this.handleAddOutputFile}>
-                        Add
-                    </Button>
+            <TabPane tab="ECL" key="2">
+              <Form layout="vertical">
+                <Form.Item {...eclItemLayout} label="ECL">
+                  <EclEditor id="job_ecl" name="ecl" onChange={this.onChange} targetDomId="jobEcl" value={ecl} disabled={true} />
                 </Form.Item>
               </Form>
+            </TabPane>
 
-              <Table
-                columns={fileColumns}
-                rowKey={record => record.id}
-                dataSource={outputFiles}
-                pagination={{ pageSize: 10 }} scroll={{ y: 460 }}
-              />
-             </div>
-          </TabPane>
+            <TabPane tab="Input Params" key="3">
+              <EditableTable
+                columns={columns}
+                dataSource={inputParams}
+                editingAllowed={editingAllowed}
+                dataDefinitions={this.state.dataDefinitions}
+                showDataDefinition={true}
+                setData={this.setInputParamsData}/>
+            </TabPane>
 
-          {!this.props.isNew ? 
+            <TabPane tab="Input Files" key="4">
+              <div>
+                <Form layout="inline">
+                  <Form.Item label="Input Files">
+                    <Select id="inputfiles" placeholder="Select Input Files" defaultValue={this.state.selectedInputdFile} onChange={this.handleInputFileChange} style={{ width: 290 }} disabled={!editingAllowed}>
+                      {sourceFiles.map(d => <Option value={d.id} key={d.id}>{(d.title)?d.title:d.name}</Option>)}
+                    </Select>
+                  </Form.Item>
+                  <Form.Item>
+                    <Button type="primary" onClick={this.handleAddInputFile} disabled={!editingAllowed}>
+                      Add
+                    </Button>
+                  </Form.Item>
+                </Form>
+
+                <Table
+                  columns={fileColumns}
+                  rowKey={record => record.id}
+                  dataSource={inputFiles}
+                  pagination={{ pageSize: 10 }} scroll={{ y: 460 }}
+                />
+              </div>
+            </TabPane>
+
+            <TabPane tab="Output Files" key="5">
+              <div>
+                <Form layout="inline">
+                  <Form.Item label="Output Files">
+                    <Select id="outputfiles" placeholder="Select Output Files" defaultValue={this.state.selectedOutputFile} onChange={this.handleOutputFileChange} style={{ width: 290 }} disabled={!editingAllowed}>
+                      {sourceFiles.map(d => <Option value={d.id} key={d.id}>{(d.title)?d.title:d.name}</Option>)}
+                    </Select>
+                  </Form.Item>
+                  <Form.Item>
+                    <Button type="primary" disabled={!editingAllowed} onClick={this.handleAddOutputFile}>
+                      Add
+                    </Button>
+                  </Form.Item>
+                </Form>
+                <Table
+                  columns={fileColumns}
+                  rowKey={record => record.id}
+                  dataSource={outputFiles}
+                  pagination={{ pageSize: 10 }} scroll={{ y: 460 }}
+                />
+              </div>
+            </TabPane>
+
+            {!this.props.isNew ?
             <TabPane tab="Dataflows" key="7">
               <AssociatedDataflows assetName={name} assetType={'Job'}/>
             </TabPane> : null}
-        </Tabs>
+          </Tabs>
         </Modal>
       </div>
     );
@@ -740,4 +752,3 @@ class JobDetails extends Component {
 }
 const JobDetailsForm = Form.create()(JobDetails);
 export default JobDetailsForm;
-

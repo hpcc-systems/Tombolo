@@ -12,6 +12,7 @@ module.exports = (sequelize, DataTypes) => {
     author: DataTypes.STRING,
     contact: DataTypes.STRING,
     description: DataTypes.STRING,
+    ecl: DataTypes.TEXT,
     entryBWR: DataTypes.STRING,
     gitRepo: DataTypes.STRING,
     jobType: DataTypes.STRING,

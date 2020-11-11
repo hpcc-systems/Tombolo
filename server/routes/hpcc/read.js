@@ -177,11 +177,11 @@ router.get('/getCluster', function (req, res) {
 router.post('/newcluster', [
 
   body('thor_host').isURL({'require_protocol':true, 'require_host':true }).withMessage("Invalid thor host"),
-  body('roxie_host').isURL({'require_protocol':true, 'require_host':true }).withMessage("Invalid roxie host"),	
+  body('roxie_host').isURL({'require_protocol':true, 'require_host':true }).withMessage("Invalid roxie host"),
   body('thor_port')
-    .isInt().withMessage('Invalid thor port'),  
+    .isInt().withMessage('Invalid thor port'),
   body('roxie_port')
-    .isInt().withMessage('Invalid roxie port')      
+    .isInt().withMessage('Invalid roxie port')
 	], async function (req, res) {
 		const errors = validationResult(req).formatWith(validatorUtil.errorFormatter);
     if (!errors.isEmpty()) {
@@ -245,10 +245,10 @@ router.get('/getFileInfo', [
   }
 	console.log('fileName: '+req.query.fileName+ " clusterId: "+req.query.clusterid );
 	hpccUtil.fileInfo(req.query.fileName, req.query.clusterid).then((fileInfo) => {
-		res.json(fileInfo);	
+		res.json(fileInfo);
 	}).catch((err) => {
-		console.log('err', err);	
-	})		
+		console.log('err', err);
+	})
 });
 
 
@@ -317,7 +317,7 @@ function getIndexColumns(cluster, indexName) {
   	});
 }
 
-router.get('/getData', [  
+router.get('/getData', [
   query('clusterid')
     .isUUID(4).withMessage('Invalid cluster id'),
   query('fileName')
@@ -429,7 +429,7 @@ router.get('/getFileProfileHTML', function (req, res) {
     }
 });
 
-router.get('/getQueryInfo', [  
+router.get('/getQueryInfo', [
   query('clusterid')
     .isUUID(4).withMessage('Invalid cluster id'),
   query('queryName')
@@ -458,7 +458,7 @@ router.get('/getQueryInfo', [
 						response[firstKey].forEach((responseParam, idx) => {
 							responseObj.push(
 							{
-								"id": idx, 
+								"id": idx,
 								"name" : responseParam.id,
     						"type" : responseParam.type
 							});
@@ -480,7 +480,7 @@ router.get('/getQueryInfo', [
   }
 });
 
-router.get('/getJobInfo', [  
+router.get('/getJobInfo', [
   query('clusterid')
     .isUUID(4).withMessage('Invalid cluster id'),
   query('jobWuid')
@@ -511,25 +511,26 @@ router.get('/getJobInfo', [
 						let clusterAuth = hpccUtil.getClusterAuth(cluster);
       			let wuService = new hpccJSComms.WorkunitsService({ baseUrl: cluster.thor_host + ':' + cluster.thor_port, userID:(clusterAuth ? clusterAuth.user : ""), password:(clusterAuth ? clusterAuth.password : "")});
 						wuService.WUListQueries({"WUID":req.query.jobWuid}).then(response => {
-							if(response.QuerysetQueries && response.QuerysetQueries.QuerySetQuery && response.QuerysetQueries.QuerySetQuery.length > 0) { 
+							if(response.QuerysetQueries && response.QuerysetQueries.QuerySetQuery && response.QuerysetQueries.QuerySetQuery.length > 0) {
 								wuService.WUQueryDetails({"QueryId":response.QuerysetQueries.QuerySetQuery[0].Id, "QuerySet":"roxie"}).then(queryDetails => {
 									queryDetails.LogicalFiles.Item.forEach((logicalFile)	=> {
 										sourceFiles.push({"name":logicalFile})
 									})
 									res.json({
-				      			"sourceFiles": sourceFiles,
-				      			"outputFiles": [],
-				      			"Jobname": result.WUInfoResponse.Workunit.Jobname,
-				      			"description": result.WUInfoResponse.Workunit.Description,
-				      			"entryBWR": result.WUInfoResponse.Workunit.Jobname
-				      		});	
+                    "sourceFiles": sourceFiles,
+                    "outputFiles": [],
+                    "Jobname": result.WUInfoResponse.Workunit.Jobname,
+                    "description": result.WUInfoResponse.Workunit.Description,
+                    "ecl": result.WUInfoResponse.Workunit.Query.Text,
+                    "entryBWR": result.WUInfoResponse.Workunit.Jobname
+				      		});
 								})
 							} else {
 								res.json([]);
 							}
 						});
 	      	} else {
-		      	if(result.WUInfoResponse && result.WUInfoResponse.Workunit) {		      			
+		      	if(result.WUInfoResponse && result.WUInfoResponse.Workunit) {
 		      		var wuInfoResponse = result.WUInfoResponse.Workunit, fileInfo = {};
 		      		if(wuInfoResponse.SourceFiles && wuInfoResponse.SourceFiles.ECLSourceFile) {
 		      			wuInfoResponse.SourceFiles.ECLSourceFile.forEach((sourceFile) => {
@@ -547,15 +548,16 @@ router.get('/getJobInfo', [
 		      		}
 
 		      		res.json({
-		      			"sourceFiles": sourceFiles,
-		      			"outputFiles": outputFiles,
-		      			"Jobname": result.WUInfoResponse.Workunit.Jobname,
-		      			"description": result.WUInfoResponse.Workunit.Description,
-		      			"entryBWR": result.WUInfoResponse.Workunit.Jobname
+                "sourceFiles": sourceFiles,
+                "outputFiles": outputFiles,
+                "Jobname": result.WUInfoResponse.Workunit.Jobname,
+                "description": result.WUInfoResponse.Workunit.Description,
+                "ecl": result.WUInfoResponse.Workunit.Query.Text,
+                "entryBWR": result.WUInfoResponse.Workunit.Jobname
 		      		});
 						}
-	      		
-	      	}	
+
+	      	}
 	      }
 
       	});

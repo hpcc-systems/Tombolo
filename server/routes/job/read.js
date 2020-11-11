@@ -50,7 +50,7 @@ let updateDataFlowGraph = (applicationId, dataflowId, nodes, edges) => {
         dataflowId: dataflowId
       }, {where:{application_id:applicationId, dataflowId:dataflowId}}).then((dataflowGraphUpdate) => {
         resolve({'nodes':currentNodes, 'edges':currentEdges});
-      })          
+      })
     }).catch((err) => {
       reject(err);
     })
@@ -69,7 +69,7 @@ let updateJobDetails = (jobId, applicationId, req) => {
     ).then(function(jobFile) {
       var jobParamsToSave = updateCommonData(req.body.job.params, fieldsToUpdate);
       JobParam.destroy({where:{application_id:applicationId, job_id: jobId}}).then((deleted) => {
-      return JobParam.bulkCreate(jobParamsToSave)        
+      return JobParam.bulkCreate(jobParamsToSave)
     }).then(function(jobParam) {
       if(req.body.job.autoCreateFiles) {
         let fieldsToUpdate={}, promises=[];
@@ -118,9 +118,9 @@ let updateJobDetails = (jobId, applicationId, req) => {
                   edges.push(edge);
 
                   fieldsToUpdate = {"file_id": newFile.id, "application_id" : applicationId};
-                  let fileLayoutToSave = hpccUtil.updateCommonData(fileInfo.layout, fieldsToUpdate);                            
+                    let fileLayoutToSave = hpccUtil.updateCommonData(fileInfo.layout, fieldsToUpdate);
                   return FileLayout.bulkCreate(fileLayoutToSave, {updateOnDuplicate: ["name", "type", "displayType", "displaySize", "textJustification", "format","data_types", "isPCI", "isPII", "isHIPAA", "description", "required"]});
-               }).then((fileLayout) => {   
+                 }).then((fileLayout) => {
                   let fileValidationsToSave = hpccUtil.updateCommonData(fileInfo.validations, fieldsToUpdate);
                   return FileValidation.bulkCreate(
                     fileValidationsToSave,
@@ -138,11 +138,11 @@ let updateJobDetails = (jobId, applicationId, req) => {
           })
           console.log('resolving....');
           Promise.all(promises).then(() => {
-            console.log("job and files created....")   
-            
+              console.log("job and files created....")
+
             updateDataFlowGraph(req.body.job.basic.application_id, req.body.job.basic.dataflowId, nodes, edges).then((dataflowGraph) => {
-              resolve(dataflowGraph)           
-            });          
+              resolve(dataflowGraph)
+            });
           });
           }).then((results) => {
             console.log('results: '+JSON.stringify(results));
@@ -158,7 +158,7 @@ let updateJobDetails = (jobId, applicationId, req) => {
   })
 }
 
-router.post('/saveJob', [  
+router.post('/saveJob', [
   body('id')
   .optional({checkFalsy:true})
     .isUUID(4).withMessage('Invalid id'),
@@ -190,13 +190,13 @@ router.post('/saveJob', [
           res.json(response);
         })
       })
-    } 
+    }
   } catch (err) {
     console.log('err', err);
   }
 });
 
-router.get('/job_list', [    
+router.get('/job_list', [
   query('app_id')
     .isUUID(4).withMessage('Invalid application id'),
 ], (req, res) => {
@@ -218,11 +218,11 @@ router.get('/job_list', [
 });
 
 
-router.get('/job_details', [    
+router.get('/job_details', [
   query('app_id')
     .isUUID(4).withMessage('Invalid application id'),
   query('job_id')
-    .isUUID(4).withMessage('Invalid job id'),  
+    .isUUID(4).withMessage('Invalid job id'),
 ], (req, res) => {
   const errors = validationResult(req).formatWith(validatorUtil.errorFormatter);
   if (!errors.isEmpty()) {
@@ -232,20 +232,20 @@ router.get('/job_details', [
   let jobFiles = [];
   try {
     Job.findOne({where:{"application_id":req.query.app_id, "id":req.query.job_id}, include: [JobFile, JobParam]}).then(async function(job) {
-        var jobData = job.get({ plain: true });
-        for(jobFileIdx in jobData.jobfiles) {
-            var jobFile = jobData.jobfiles[jobFileIdx];
-            var file = await File.findOne({where:{"application_id":req.query.app_id, "id":jobFile.file_id}});
-            if(file != undefined) {
-                jobFile.description = file.description;
-                jobFile.title = file.title;
-                jobFile.name = file.name;
-                jobFile.fileType = file.fileType;
-                jobFile.qualifiedPath = file.qualifiedPath;
-                jobData.jobfiles[jobFileIdx] = jobFile;
-            }
-        }
-        return jobData;
+      var jobData = job.get({ plain: true });
+      for(jobFileIdx in jobData.jobfiles) {
+          var jobFile = jobData.jobfiles[jobFileIdx];
+          var file = await File.findOne({where:{"application_id":req.query.app_id, "id":jobFile.file_id}});
+          if(file != undefined) {
+              jobFile.description = file.description;
+              jobFile.title = file.title;
+              jobFile.name = file.name;
+              jobFile.fileType = file.fileType;
+              jobFile.qualifiedPath = file.qualifiedPath;
+              jobData.jobfiles[jobFileIdx] = jobFile;
+          }
+      }
+      return jobData;
     }).then(function(jobData) {
         res.json(jobData);
     })
@@ -257,11 +257,11 @@ router.get('/job_details', [
   }
 });
 
-router.post('/delete', [    
+router.post('/delete', [
   body('application_id')
     .isUUID(4).withMessage('Invalid application id'),
   body('jobId')
-    .isUUID(4).withMessage('Invalid job id'),  
+    .isUUID(4).withMessage('Invalid job id'),
 ], (req, res) => {
   const errors = validationResult(req).formatWith(validatorUtil.errorFormatter);
   if (!errors.isEmpty()) {
