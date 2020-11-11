@@ -3,9 +3,9 @@ import { Modal, Tabs, Form, Input, Checkbox, Button,  Select, Table, AutoComplet
 import { authHeader, handleError } from "../common/AuthHeader.js"
 import AssociatedDataflows from "./AssociatedDataflows"
 import { hasEditPermission } from "../common/AuthUtil.js";
-import { fetchDataDictionary, eclTypes } from "../common/CommonUtil.js"
-import {omitDeep} from '../common/CommonUtil.js';
+import { fetchDataDictionary, eclTypes, omitDeep } from "../common/CommonUtil.js"
 import EditableTable from "../common/EditableTable.js"
+import { MarkdownEditor } from "../common/MarkdownEditor.js"
 import { EclEditor } from "../common/EclEditor.js"
 import {handleJobDelete} from "../common/WorkflowUtil";
 
@@ -641,7 +641,7 @@ class JobDetails extends Component {
                 </Form.Item>
                 <Form.Item {...formItemLayout} label="Description">
                {getFieldDecorator('description')
-                (<Input id="job_desc" name="description" onChange={this.onChange} placeholder="Description" disabled={!editingAllowed}/>)}
+                (<MarkdownEditor id="job_desc" name="description" onChange={this.onChange} targetDomId="jobDescr" value={description} disabled={!editingAllowed}/>)}
                 </Form.Item>
                 {this.props.selectedJobType != 'Data Profile' ?
                   <Form.Item {...formItemLayout} label="Git Repo">
