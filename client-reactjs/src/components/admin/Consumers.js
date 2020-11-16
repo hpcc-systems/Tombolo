@@ -8,7 +8,7 @@ const Option = Select.Option;
 const { Paragraph } = Typography;
 const options = [
     { label: 'Supplier', value: 'Supplier' },
-    { label: 'Consumer', value: 'Consumer' },    
+    { label: 'Consumer', value: 'Consumer' },
     { label: 'Owner', value: 'Owner' }
   ];
 
@@ -16,7 +16,7 @@ class Consumers extends Component {
   constructor(props) {
     super(props);
   }
-  
+
   state = {
   	consumers:[],
   	selectedConsumer:'',
@@ -40,7 +40,7 @@ class Consumers extends Component {
     appId:"",
     appTitle:"",
     submitted: false
-  }  
+  }
 
   componentDidMount() {
   	this.getConsumers();
@@ -223,7 +223,7 @@ class Consumers extends Component {
     });
   }
 
-  handleDataTransferChange = (e) => {    
+  handleDataTransferChange = (e) => {
     this.setState({
       ...this.state,
       newConsumer: {
@@ -242,11 +242,11 @@ class Consumers extends Component {
     var userId=(this.props.user) ? this.props.user.id:"" ;
 
     let data = JSON.stringify({
-      "name" : this.state.newConsumer.name, 
-      "type" : this.state.newConsumer.type, 
-      "contact_name":this.state.newConsumer.contact_name, 
-      "contact_email":this.state.newConsumer.contact_email, 
-      "ad_group":this.state.newConsumer.ad_group, 
+      "name" : this.state.newConsumer.name,
+      "type" : this.state.newConsumer.type,
+      "contact_name":this.state.newConsumer.contact_name,
+      "contact_email":this.state.newConsumer.contact_email,
+      "ad_group":this.state.newConsumer.ad_group,
       "assetType":this.state.newConsumer.assetType.join(','),
       "transferType": this.state.newConsumer.transferType
     });
@@ -295,7 +295,8 @@ class Consumers extends Component {
 
   handleTypeChange = (value) => {
     var showADGroupField = false;
-    if(value == 'Internal') {
+    console.log(process.env.REACT_APP_LDAP_SEARCH_ENABLED)
+    if(value == 'Internal' && process.env.REACT_APP_LDAP_SEARCH_ENABLED == "true") {
         showADGroupField = true;
     }
 
@@ -397,12 +398,12 @@ class Consumers extends Component {
               <Paragraph>
                 Consumer - Product/Application/Group consuming the asset
               </Paragraph>
-              <Paragraph>  
+              <Paragraph>
                 Supplied - Supplier of the asset data (DMV, Insurance company etc;)
-              </Paragraph> 
-              <Paragraph>   
+              </Paragraph>
+              <Paragraph>
                 Owner - Contact Person/Group for an asset
-              </Paragraph>              
+              </Paragraph>
               <div className={'form-group'+ (this.state.submitted && !this.state.newConsumer.name ? ' has-error' : '')}>
                 <Checkbox.Group options={options} defaultValue={this.state.newConsumer.assetType} onChange={this.onConsumerSupplierChange} />
               </div>
@@ -422,7 +423,7 @@ class Consumers extends Component {
                     <Option value="Internal">Internal</Option>
                 </Select>
               </Form.Item>
-              { this.state.newConsumer.assetType.includes('Supplier') ? 
+              { this.state.newConsumer.assetType.includes('Supplier') ?
                 <Form.Item {...formItemLayout} label="Data Transfer">
                   <Select name="type" id="data_transfer" onSelect={this.handleDataTransferChange} value={this.state.newConsumer.transferType}>
                     <Option value=""></Option>

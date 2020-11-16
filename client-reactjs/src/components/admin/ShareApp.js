@@ -1,5 +1,5 @@
 import React, { Component } from "react";
-import { Table,message,Spin,Modal,Tabs, AutoComplete, Form, Input, Icon, Button } from 'antd/lib';
+import { Table,message,Spin,Modal,Tabs, AutoComplete, Form, Input, Icon, Button, Popconfirm, Tooltip } from 'antd/lib';
 import { authHeader, handleError } from "../common/AuthHeader.js";  
 const { confirm } = Modal;
 const TabPane = Tabs.TabPane;
@@ -183,6 +183,10 @@ class ShareApp extends Component {
       });
       this.props.onClose();
     }
+
+    handleDeleteShare = () => {
+      console.log('handleDeleteShare....')
+    }
     
     render() {
       const{availableUsers, selectedRowKeys, sharedAppUsers, userSuggestions, shareButtonEnabled} = this.state;
@@ -210,10 +214,20 @@ class ShareApp extends Component {
         dataIndex: 'username'
       }];
       const sharedUsersColumns = [{
-        title: 'Shared Users',
+        title: 'Shared User',
+        width: '80%',
         dataIndex: 'name',
         render: (text, row) => <a >{row.firstName+' '+row.lastName}</a>
-      }];
+      },{
+      title: 'Action',
+      dataIndex: '',
+      render: (text, record) =>
+        <span>
+          <Popconfirm title="Are you sure you want to stop sharing this application with {{record.firstName+' '+record.lastName}}?" onConfirm={() => this.handleDeleteShare(record.id)} icon={<Icon type="question-circle-o" style={{ color: 'red' }} />}>
+            <a href="#"><Tooltip placement="right" title={"Stop Sharing"}><Icon type="delete" /></Tooltip></a>
+          </Popconfirm>
+        </span>
+    }];
       return (
         <div>
           <Modal
