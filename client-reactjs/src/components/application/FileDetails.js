@@ -80,7 +80,7 @@ class FileDetails extends Component {
   }
 
   componentDidMount() {
-    this.props.onRef(this);
+    //this.props.onRef(this);
     this.getFileCount();
     this.getFileDetails();
     this.getClusters();
