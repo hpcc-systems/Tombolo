@@ -6,7 +6,6 @@ import FileInstanceDetailsForm from "./FileInstanceDetails";
 import { authHeader, handleError } from "../common/AuthHeader.js"
 import { hasEditPermission } from "../common/AuthUtil.js";
 import { Constants } from '../common/Constants';
-import { withRouter } from 'react-router-dom';
 
 class FileTable extends Component {
   state = {
@@ -69,11 +68,10 @@ class FileTable extends Component {
   }
 
   handleEdit = (fileId) => {
-    /*this.setState({
+    this.setState({
       openFileDetailsDialog: true,
       selectedFile: fileId
-    });*/
-    this.props.history.push('/'+this.state.applicationId+'/files/'+fileId);
+    });
     //this.child.showModal();
   }
 
@@ -198,7 +196,7 @@ class FileTable extends Component {
         dataIndex: 'createdAt',
         render: (text, record) => {
           let createdAt = new Date(text);
-          return createdAt.toLocaleDateString('en-US', Constants.DATE_FORMAT_OPTIONS) +' @ '+ createdAt.toLocaleTimeString('en-US')
+          return createdAt.toLocaleDateString('en-US', Constants.DATE_FORMAT_OPTIONS) +' @ '+ createdAt.toLocaleTimeString('en-US') 
         }
     },
     {
@@ -260,7 +258,7 @@ class FileTable extends Component {
       columns={indexColumns}
       rowKey={record => record.id}
       dataSource={this.state.files}
-      pagination={{ pageSize: 20 }}
+      pagination={{ pageSize: 20 }} 
       scroll={{ y: '70vh' }}
     />
 
@@ -298,4 +296,4 @@ class FileTable extends Component {
   }
 }
 
-export default withRouter(FileTable);
+export default FileTable;
