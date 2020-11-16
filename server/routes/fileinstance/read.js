@@ -8,7 +8,7 @@ let FileLayout = models.file_layout;
 let FileValidation = models.file_validation;
 var eventsInstance = require('events');
 const validatorUtil = require('../../utils/validator');
-const { body, query, validationResult } = require('express-validator/check');
+const { body, query, validationResult } = require('express-validator');
 var fileInstanceEventEmitter = new eventsInstance.EventEmitter();
 console.log('fileinstance - kafka list: '+process.env.KAFKA_ADVERTISED_LISTENER + ':' + process.env.KAFKA_PORT);
 var kafka = require('kafka-node'),
@@ -44,7 +44,7 @@ router.post('/create', (req, res) => {
         res.json({"result":"success", "fileInstanceId":id, "title":req.body.title});
       }), function(err) {
           return res.status(500).send(err);
-      }            
+      }
     } catch (err) {
         console.log('err', err);
         return res.status(500).send(err);
@@ -53,7 +53,7 @@ router.post('/create', (req, res) => {
 
 router.get('/instances', [
   body('file_def')
-    .matches(/^[a-zA-Z]{1}[a-zA-Z0-9_:.\-]*$/).withMessage('Invalid data defn'),  
+    .matches(/^[a-zA-Z]{1}[a-zA-Z0-9_:.\-]*$/).withMessage('Invalid data defn'),
 ], (req, res) => {
   const errors = validationResult(req).formatWith(validatorUtil.errorFormatter);
   if (!errors.isEmpty()) {
@@ -73,13 +73,13 @@ router.get('/instances', [
 
 router.post('/delete', [
   body('id')
-    .isUUID(4).withMessage('Invalid id'),  
+    .isUUID(4).withMessage('Invalid id'),
 ], (req, res) => {
   const errors = validationResult(req).formatWith(validatorUtil.errorFormatter);
   if (!errors.isEmpty()) {
     return res.status(422).json({ success: false, errors: errors.array() });
   }
-  try {        
+  try {
     FileInstance.destroy({where:{"id":req.body.id}}).then(function(fileInstances) {
         res.json({"result":"success"});
     })
@@ -94,7 +94,7 @@ router.post('/delete', [
 
 router.get('/instance_details', [
   query('id')
-    .isUUID(4).withMessage('Invalid id'),  
+    .isUUID(4).withMessage('Invalid id'),
 ], (req, res) => {
   const errors = validationResult(req).formatWith(validatorUtil.errorFormatter);
   if (!errors.isEmpty()) {

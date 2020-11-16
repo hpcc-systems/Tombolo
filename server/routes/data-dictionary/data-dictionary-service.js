@@ -4,7 +4,7 @@ let mongoose = require('mongoose');
 var models  = require('../../models');
 let DataDictionary = models.datadictionary;
 const validatorUtil = require('../../utils/validator');
-const { body, query, validationResult } = require('express-validator/check');
+const { body, query, validationResult } = require('express-validator');
 
 router.post('/save', [
   body('id')
@@ -34,7 +34,7 @@ router.post('/save', [
         }).then(async function(result) {
             id = result[0].id;
             if(!result[1]) {
-              return DataDictionary.update({              
+              return DataDictionary.update({
   	            name: req.body.name,
   	            description: req.body.description,
                 data_defn: req.body.data_defn,
@@ -51,7 +51,7 @@ router.post('/save', [
     }
 });
 
-router.get('/', [  
+router.get('/', [
   query('application_id')
     .isUUID(4).withMessage('Invalid application id')
 ],(req, res) => {
@@ -67,12 +67,12 @@ router.get('/', [
 
   try {
     DataDictionary.findAll({
-      where: whereClause, 
+      where: whereClause,
       //include: [DataflowGraph],
       order: [
         ['createdAt', 'DESC']
       ],
-    }).then(function(dataDictionary) {      
+    }).then(function(dataDictionary) {
       res.json(dataDictionary);
     }).catch(function(err) {
       console.log(err);
@@ -82,7 +82,7 @@ router.get('/', [
   }
 });
 
-router.post('/delete', [  
+router.post('/delete', [
   body('application_id')
     .isUUID(4).withMessage('Invalid application_id'),
   body('id')

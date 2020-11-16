@@ -9,7 +9,7 @@ let File = models.file;
 let Query = models.query;
 let Job = models.job;
 const validatorUtil = require('../../utils/validator');
-const { body, query, validationResult } = require('express-validator/check');
+const { body, query, validationResult } = require('express-validator');
 
 router.post('/save', [
   body('id')
@@ -53,7 +53,7 @@ router.post('/save', [
                 dataflowGraphs.forEach((dataflowGraph) => {
                   let updatedNodes = JSON.parse(dataflowGraph.nodes).map((node) => {
                     if(node.subProcessId == id) {
-                      node.title = req.body.title;                
+                      node.title = req.body.title;
                     }
                     return node;
                   })
@@ -61,10 +61,10 @@ router.post('/save', [
                 })
 
                 Promise.all(promises).then(() => {
-                  res.json({"result":"success"});  
-                })          
+                  res.json({"result":"success"});
+                })
               })*/
-              res.json({"result":"success"});  
+              res.json({"result":"success"});
             })
          } else {
           res.json({"result":"success"});
@@ -77,7 +77,7 @@ router.post('/save', [
     }
 });
 
-router.get('/', [  
+router.get('/', [
   query('application_id')
     .isUUID(4).withMessage('Invalid cluster id')
 ],(req, res) => {
@@ -89,7 +89,7 @@ router.get('/', [
     try {
         Dataflow.findAll(
           {
-            where:{"application_Id":req.query.application_id}, 
+            where:{"application_Id":req.query.application_id},
             //include: [DataflowGraph],
             order: [
               ['createdAt', 'DESC']
@@ -105,7 +105,7 @@ router.get('/', [
     }
 });
 
-router.post('/delete', [  
+router.post('/delete', [
   body('applicationId')
     .isUUID(4).withMessage('Invalid application_id')
 ], (req, res) => {
@@ -120,13 +120,13 @@ router.post('/delete', [
         {where:{"dataflowId": req.body.dataflowId, "application_id":req.body.applicationId}}
       ).then(function(deleted) {
           res.json({"result":"success"});
-      })       
+      })
     }).catch(function(err) {
         console.log(err);
     });
 });
 
-router.get('/assets', [  
+router.get('/assets', [
   query('app_id')
     .isUUID(4).withMessage('Invalid application_id'),
   query('dataflowId')

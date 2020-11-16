@@ -8,9 +8,9 @@ let IndexPayload = models.index_payload;
 let Dataflow = models.dataflow;
 let File=models.file;
 const validatorUtil = require('../../utils/validator');
-const { body, query, validationResult } = require('express-validator/check');
+const { body, query, validationResult } = require('express-validator');
 
-router.get('/index_list', [  
+router.get('/index_list', [
   query('app_id')
     .isUUID(4).withMessage('Invalid app id')
 ], (req, res) => {
@@ -42,7 +42,7 @@ let updateIndexDetails = (indexId, applicationId, req) => {
             resolve({"result":"success", "title":req.body.index.basic.title, "indexId":indexId})
           }).catch((err) => {
             reject(err);
-          })          
+          })
         }).catch((err) => {
           reject(err);
         })
@@ -55,7 +55,7 @@ let updateIndexDetails = (indexId, applicationId, req) => {
   })
 }
 
-router.post('/saveIndex', [  
+router.post('/saveIndex', [
   body('index.basic.id')
   .optional({checkFalsy:true})
     .isUUID(4).withMessage('Invalid id'),
@@ -90,11 +90,11 @@ router.post('/saveIndex', [
           return res.status(500).send("Error occured while saving index");
         })
       })
-    }   
+    }
 
 });
 
-router.get('/index_details', [  
+router.get('/index_details', [
   query('app_id')
     .isUUID(4).withMessage('Invalid application id'),
   query('index_id')
@@ -120,7 +120,7 @@ router.get('/index_details', [
 
 });
 
-router.post('/delete', [  
+router.post('/delete', [
   body('indexId')
     .isUUID(4).withMessage('Invalid index id'),
   body('application_id')

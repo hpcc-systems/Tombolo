@@ -5,7 +5,7 @@ var models  = require('../../models');
 let DataflowGraph = models.dataflowgraph;
 let Dataflow = models.dataflow;
 const validatorUtil = require('../../utils/validator');
-const { body, query, validationResult } = require('express-validator/check');
+const { body, query, validationResult } = require('express-validator');
 
 let createDataflow = (applicationId, dataflowType, parentDataflow) => {
   console.log(applicationId +', '+dataflowType +', '+parentDataflow)
@@ -67,7 +67,7 @@ router.post('/save', [
               dataflowId: dataflowId
             }, {where:{application_id:application_id, dataflowId:dataflowId}})
         }
-      }).then(function(graph) {        
+      }).then(function(graph) {
         res.json({"result":"success", "dataflowId":dataflowId});
       }), function(err) {
         return res.status(500).send(err);
@@ -143,7 +143,7 @@ router.post('/deleteAsset', [
             }
         });
         edges = edges.filter(edge => (edge.source != edgeId && edge.target != edgeId));
-        
+
         console.log(JSON.stringify(edges));
         DataflowGraph.update(
             {nodes:JSON.stringify(nodes), edges:JSON.stringify(edges)},

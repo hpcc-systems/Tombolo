@@ -9,7 +9,7 @@ let Job = models.job;
 let Sequelize = require('sequelize');
 const validatorUtil = require('../../utils/validator');
 const hpccUtil = require('../../utils/hpcc-util');
-const { body, query, validationResult } = require('express-validator/check');
+const { body, query, validationResult } = require('express-validator');
 var eventsInstance = require('events');
 var moment = require('moment');
 var fileInstanceEventEmitter = new eventsInstance.EventEmitter();
@@ -24,7 +24,7 @@ var kafka = require('kafka-node'),
     });*/
     ConsumerGroup = kafka.ConsumerGroup;
 
-let hpccJSComms = require("@hpcc-js/comms")    
+let hpccJSComms = require("@hpcc-js/comms")
 var kafkaConsumerOptions = {
   kafkaHost: process.env.KAFKA_ADVERTISED_LISTENER + ':' + process.env.KAFKA_PORT, // connect directly to kafka broker (instantiates a KafkaClient)
   batch: undefined, // put client batch settings if you need them
@@ -42,9 +42,9 @@ var kafkaConsumerOptions = {
   commitOffsetsOnFirstJoin: true, // on the very first time this consumer group subscribes to a topic, record the offset returned in fromOffset (latest/earliest)
   // how to recover from OutOfRangeOffset error (where save offset is past server retention) accepts same value as fromOffset
   outOfRangeOffset: 'earliest'
-};    
+};
 
-router.get('/', [    
+router.get('/', [
   query('application_id')
     .isUUID(4).withMessage('Invalid application id'),
 ], (req, res) => {
@@ -57,9 +57,9 @@ router.get('/', [
   try {
       Workflow.findAll({
         where:{"application_Id":req.query.application_id},
-        include:[{model: WorkflowDetails, 
-          attributes:['instance_id', 'createdAt', 'updatedAt', 
-            [Sequelize.fn('min', Sequelize.col('workflowdetails.createdAt')), 'start'], 
+        include:[{model: WorkflowDetails,
+          attributes:['instance_id', 'createdAt', 'updatedAt',
+            [Sequelize.fn('min', Sequelize.col('workflowdetails.createdAt')), 'start'],
             [Sequelize.fn('max', Sequelize.col('workflowdetails.createdAt')), 'end'],
             [models.sequelize.literal('CASE WHEN workflowdetails.status = "failed" THEN 1 ELSE 0 END'), 'failed_tasks']
         ]}],
@@ -68,13 +68,13 @@ router.get('/', [
         raw: true
       }).then(function(workflows) {
         try {
-          if(workflows) {          
+          if(workflows) {
             results = workflows.map((workflow) => {
               let startDate = moment(workflow["workflowdetails.start"]);
               let endDate = moment(workflow["workflowdetails.end"]);
               let durationSecs = endDate.diff(startDate, 'seconds');
               let obj = Object.assign({
-                "id":workflow.id,              
+                "id":workflow.id,
                 "name": workflow.name,
                 "dataflowId": workflow.dataflowId,
                 "instance_id":workflow["workflowdetails.instance_id"],
@@ -102,13 +102,13 @@ router.get('/', [
   }
 });
 
-router.get('/details', [    
+router.get('/details', [
   query('application_id')
     .isUUID(4).withMessage('Invalid application id'),
   query('workflow_id')
     .isUUID(4).withMessage('Invalid workflow id'),
   query('instance_id')
-    .isInt().withMessage('Invalid instance id'),    
+    .isInt().withMessage('Invalid instance id'),
 ], (req, res) => {
   const errors = validationResult(req).formatWith(validatorUtil.errorFormatter);
   if (!errors.isEmpty()) {
@@ -120,7 +120,7 @@ router.get('/details', [
       Dataflow.findOne({where:{id:workflow.dataflowId}}).then((dataFlow) => {
         hpccUtil.getCluster(dataFlow.clusterId).then((cluster) => {
           WorkflowDetails.findAll({
-            where:{"application_Id":req.query.application_id, "workflow_id":req.query.workflow_id, "instance_id":req.query.instance_id}, 
+            where:{"application_Id":req.query.application_id, "workflow_id":req.query.workflow_id, "instance_id":req.query.instance_id},
             order: [['updatedAt', 'DESC']],
             raw: true
           }).then(function(workflowDetails) {
@@ -157,7 +157,7 @@ let workunitInfo = (wuid, cluster) => {
         }, 500);
 
       }
-    })      
+    })
   });
 }
 
@@ -184,7 +184,7 @@ let createWorkflowDetails = (message, workflowId, dataflowId, clusterId) => {
           let end = moment(moment(start).add(wuInfo.Workunit.TotalClusterTime, 's'));
 
           WorkflowDetails.create({
-            "workflow_id": workflowId, 
+            "workflow_id": workflowId,
             "application_id": message.applicationid,
             "instance_id": message.instanceid,
             "task": job.id,
@@ -205,16 +205,16 @@ let createWorkflowDetails = (message, workflowId, dataflowId, clusterId) => {
         });
       })
     });
-  });          
+  });
 }
 
-router.get('/workunits', [    
+router.get('/workunits', [
   query('application_id')
     .isUUID(4).withMessage('Invalid application id'),
   query('workflow_id')
     .isUUID(4).withMessage('Invalid workflow id'),
   query('instance_id')
-    .isInt().withMessage('Invalid instance id'),    
+    .isInt().withMessage('Invalid instance id'),
 ], (req, res) => {
   const errors = validationResult(req).formatWith(validatorUtil.errorFormatter);
   if (!errors.isEmpty()) {
@@ -227,7 +227,7 @@ router.get('/workunits', [
       hpccUtil.getCluster(dataflow.clusterId).then((cluster) => {
         results.cluster = cluster.thor_host + ':' + cluster.thor_port;
         WorkflowDetails.findAll({
-          where:{"application_Id":req.query.application_id, "workflow_id":req.query.workflow_id, "instance_id":req.query.instance_id}, 
+          where:{"application_Id":req.query.application_id, "workflow_id":req.query.workflow_id, "instance_id":req.query.instance_id},
           order: [['updatedAt', 'DESC']],
         }).then(function(workflowDetails) {
           workflowDetails.forEach((workflowDetail) => {
@@ -242,14 +242,14 @@ router.get('/workunits', [
                 "jobName": workflowDetail.jobName
               })
             );
-          })       
+          })
           Promise.all(promises).then(() => {
             results.workunits = workunits;
-            res.json(results);     
-          });                                                  
+            res.json(results);
+          });
       });
-      
-    })        
+
+    })
     .catch(function(err) {
         console.log(err);
     });
@@ -283,7 +283,7 @@ consumerGroup.on('message', (response) => {
     console.log('{where:'+ dataflowWhereClause+'}');
     Dataflow.findOne({where: dataflowWhereClause}).then((dataflow) => {
       Workflow.findOrCreate({
-        where:{application_id:message.applicationid, dataflowId:dataflow.id},      
+        where:{application_id:message.applicationid, dataflowId:dataflow.id},
         defaults:{
           "name": dataflow.title,
           "description": "",
@@ -294,19 +294,19 @@ consumerGroup.on('message', (response) => {
       }).then((results) => {
         createWorkflowDetails(message, results[0].id, dataflow.id, dataflow.clusterId).then((result) => {
           console.log('workflow details added');
-        })            
+        })
       }).catch((err) => {
         console.log(err);
       })
     })
   }
-  
+
 });
 
 consumerGroup.on('error', (error) => {
   console.log('Consumer error occured: '+error);
   //Producer.close();
   //Consumer.close();
-});  
+});
 
 module.exports = router;

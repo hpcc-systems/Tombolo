@@ -15,7 +15,7 @@ let Jobparam=models.jobparam;
 let Application=models.application;
 let ControlsAndRegulations = models.controls_regulations;
 let Dataflow = models.dataflow;
-const { body, query, validationResult } = require('express-validator/check');
+const { body, query, validationResult } = require('express-validator');
 const validatorUtil = require('../../utils/validator');
 
 router.get('/fileLayout', (req, res) => {
@@ -50,14 +50,14 @@ router.get('/fileLayoutAndComplianceChart', (req, res) => {
                 var chartData=[];
                 var count=0;
                 regulations.forEach(function(doc, idx) {
-                    var chart={};                    
+                    var chart={};
                     chart.compliance = doc.compliance;
                     FileLayout.findAll({
-                        where: {"file_id":req.query.file_id,            
+                        where: {"file_id":req.query.file_id,
                          "data_types": {
                                  [Op.in]: Sequelize.literal(
                                  '( select data_types from controls_regulations '+
-                                'where compliance="'+doc.compliance+'")')}                                  
+                                'where compliance="'+doc.compliance+'")')}
                              }
                     })
                     .then(function(fileLayouts) {
@@ -67,11 +67,11 @@ router.get('/fileLayoutAndComplianceChart', (req, res) => {
                         chartData.push(chart);
                         if(count==regulations.length)
                         {
-                            var chartval={}; 
+                            var chartval={};
                             chartval.compliance = "others";
                             FileLayout.findAll({
-                                where: {"file_id":req.query.file_id, 
-                                [Op.or]:[           
+                                where: {"file_id":req.query.file_id,
+                                [Op.or]:[
                                    {"data_types": {
                                    [Op.notIn]: Sequelize.literal(
                                    '( select data_types from controls_regulations )')
@@ -104,7 +104,7 @@ router.get('/fileLayoutAndComplianceChart', (req, res) => {
         })
         .catch(function(err) {
             console.log(err);
-        });        
+        });
     } catch (err) {
         console.log('err', err);
     }
@@ -154,7 +154,7 @@ router.get('/jobParams', (req, res) => {
     }
 });
 router.get('/getReport', (req, res) => {
-    var result={};   
+    var result={};
     var searchText=(req.query.searchText).toLowerCase();
     try {
         File.findAll({
@@ -165,15 +165,15 @@ router.get('/getReport', (req, res) => {
             "file.qualifiedPath","application.title"],
             where:Sequelize.and( (req.query.userId!=""?
                 Sequelize.where(Sequelize.col("file.application_id"), {
-                [Op.in]: Sequelize.literal( 
+                [Op.in]: Sequelize.literal(
                     '( SELECT application_id ' +
                         'FROM user_application ' +
                        'WHERE user_id = "' + req.query.userId +
                     '")')
                 }):""),
-            Sequelize.or( 
-            Sequelize.where(Sequelize.fn('lower', Sequelize.fn("concat", 
-            Sequelize.fn('IFNULL',Sequelize.col("file.title"),"")," ", 
+            Sequelize.or(
+            Sequelize.where(Sequelize.fn('lower', Sequelize.fn("concat",
+            Sequelize.fn('IFNULL',Sequelize.col("file.title"),"")," ",
             Sequelize.fn('IFNULL',Sequelize.col("file.name"),"")," ",
             Sequelize.fn('IFNULL',Sequelize.col("file.fileType"),"")," ",
             Sequelize.fn('IFNULL',Sequelize.col("file.description"),"")," ",
@@ -189,10 +189,10 @@ router.get('/getReport', (req, res) => {
             Sequelize.fn('IFNULL',Sequelize.col("application.title"),"")), {
                     [Op.like]: '%'+searchText+'%'
             }),
-                 
+
         )),
             include:
-            [{ model: Application, attributes:["title"] },{ model: FileLayout,attributes:[]}]        
+            [{ model: Application, attributes:["title"] },{ model: FileLayout,attributes:[]}]
         }).then(function(file) {
             result.file=file;
 
@@ -204,40 +204,40 @@ router.get('/getReport', (req, res) => {
                 "indexes.qualifiedPath","application.title"],
                 where:Sequelize.and( (req.query.userId!=""?
                 Sequelize.where(Sequelize.col("indexes.application_id"), {
-                [Op.in]: Sequelize.literal( 
+                [Op.in]: Sequelize.literal(
                     '( SELECT application_id ' +
                         'FROM user_application ' +
                        'WHERE user_id = "' + req.query.userId +
                     '")')
                 }):""),
                 Sequelize.or(
-                Sequelize.where(Sequelize.fn('lower',Sequelize.fn("concat", 
-                Sequelize.fn('IFNULL',Sequelize.col("indexes.title"),"")," ", 
-                Sequelize.fn('IFNULL',Sequelize.col("indexes.backupService"),"")," ", 
-                Sequelize.fn('IFNULL',Sequelize.col("indexes.primaryService"),"")," ", 
+                Sequelize.where(Sequelize.fn('lower',Sequelize.fn("concat",
+                Sequelize.fn('IFNULL',Sequelize.col("indexes.title"),"")," ",
+                Sequelize.fn('IFNULL',Sequelize.col("indexes.backupService"),"")," ",
+                Sequelize.fn('IFNULL',Sequelize.col("indexes.primaryService"),"")," ",
                 Sequelize.fn('IFNULL',Sequelize.col("indexes.qualifiedPath"),""))), {
                         [Op.like]: '%'+searchText+'%'
                 }),
-                Sequelize.where(Sequelize.fn('lower',Sequelize.fn("concat", 
+                Sequelize.where(Sequelize.fn('lower',Sequelize.fn("concat",
                 Sequelize.fn('IFNULL',Sequelize.col("index_keys.name"),"")," ",
-                Sequelize.fn('IFNULL',Sequelize.col("index_keys.type"),"")," ", 
+                Sequelize.fn('IFNULL',Sequelize.col("index_keys.type"),"")," ",
                 Sequelize.fn('IFNULL',Sequelize.col("index_keys.eclType"),""))), {
                         [Op.like]: '%'+searchText+'%'
                 }),
-                Sequelize.where(Sequelize.fn('lower',Sequelize.fn("concat", 
-                Sequelize.fn('IFNULL',Sequelize.col("index_payloads.name"),"")," ", 
-                Sequelize.fn('IFNULL',Sequelize.col("index_payloads.type"),"")," ", 
+                Sequelize.where(Sequelize.fn('lower',Sequelize.fn("concat",
+                Sequelize.fn('IFNULL',Sequelize.col("index_payloads.name"),"")," ",
+                Sequelize.fn('IFNULL',Sequelize.col("index_payloads.type"),"")," ",
                 Sequelize.fn('IFNULL',Sequelize.col("index_payloads.eclType"),""))), {
                         [Op.like]: '%'+searchText+'%'
                 }),
                 Sequelize.where(Sequelize.fn('lower',
                 Sequelize.fn('IFNULL',Sequelize.col("application.title"),"")), {
                         [Op.like]: '%'+searchText+'%'
-                })  
+                })
                 )),
                 include:
                 [{ model: Application, attributes:["title"] },{ model: IndexKey, attributes:[] },
-                { model: IndexPayload , attributes:[]}]        
+                { model: IndexPayload , attributes:[]}]
             }).then(index => {
                 result.index=index;
 
@@ -249,35 +249,35 @@ router.get('/getReport', (req, res) => {
                     "query.gitRepo","application.title"],
                     where:Sequelize.and( (req.query.userId!=""?
                     Sequelize.where(Sequelize.col("query.application_id"), {
-                    [Op.in]: Sequelize.literal( 
+                    [Op.in]: Sequelize.literal(
                         '( SELECT application_id ' +
                             'FROM user_application ' +
                            'WHERE user_id = "' + req.query.userId +
                         '")')
                     }):""),
-                    Sequelize.or(Sequelize.where(Sequelize.fn('lower',Sequelize.fn("concat", 
-                    Sequelize.fn('IFNULL',Sequelize.col("query.title"),'')," ", 
-                    Sequelize.fn('IFNULL',Sequelize.col("query.name"),'')," ", 
-                    Sequelize.fn('IFNULL',Sequelize.col("query.gitRepo"),'')," ", 
+                    Sequelize.or(Sequelize.where(Sequelize.fn('lower',Sequelize.fn("concat",
+                    Sequelize.fn('IFNULL',Sequelize.col("query.title"),'')," ",
+                    Sequelize.fn('IFNULL',Sequelize.col("query.name"),'')," ",
+                    Sequelize.fn('IFNULL',Sequelize.col("query.gitRepo"),'')," ",
                     Sequelize.fn('IFNULL',Sequelize.col("query.primaryService"),'')," ",
                     Sequelize.fn('IFNULL',Sequelize.col("query.backupService"),''))), {
                             [Op.like]: '%'+searchText+'%'
                     }),
-                    Sequelize.where(Sequelize.fn('lower',Sequelize.fn("concat", 
-                    Sequelize.fn('IFNULL',Sequelize.col("query_fields.field_type"),"")," ", 
-                    Sequelize.fn('IFNULL',Sequelize.col("query_fields.name"),"")," ", 
+                    Sequelize.where(Sequelize.fn('lower',Sequelize.fn("concat",
+                    Sequelize.fn('IFNULL',Sequelize.col("query_fields.field_type"),"")," ",
+                    Sequelize.fn('IFNULL',Sequelize.col("query_fields.name"),"")," ",
                     Sequelize.fn('IFNULL',Sequelize.col("query_fields.type"),""))), {
                             [Op.like]: '%'+searchText+'%'
                     }),
                     Sequelize.where(Sequelize.fn('lower',
                     Sequelize.fn('IFNULL',Sequelize.col("application.title"),"")), {
                             [Op.like]: '%'+searchText+'%'
-                    })      
+                    })
                 )),
                 include:
-                [{ model: Application, attributes:["title"] },{ model: QueryField, attributes:[] }]   
+                [{ model: Application, attributes:["title"] },{ model: QueryField, attributes:[] }]
                 }).then(query => {
-                    result.query=query;  
+                    result.query=query;
 
                     Job.findAll({
                         raw: true,
@@ -287,47 +287,47 @@ router.get('/getReport', (req, res) => {
                         "job.entryBWR","job.gitRepo","job.JobType","application.title"],
                         where:Sequelize.and( (req.query.userId!=""?
                         Sequelize.where(Sequelize.col("job.application_id"), {
-                        [Op.in]: Sequelize.literal( 
+                        [Op.in]: Sequelize.literal(
                             '( SELECT application_id ' +
                                 'FROM user_application ' +
                                'WHERE user_id = "' + req.query.userId +
                             '")')
                         }):""),
-                        Sequelize.or(Sequelize.where(Sequelize.fn('lower',Sequelize.fn("concat", 
-                        Sequelize.fn('IFNULL',Sequelize.col("job.name"),"")," ", 
-                        Sequelize.fn('IFNULL',Sequelize.col("job.author"),"")," ", 
+                        Sequelize.or(Sequelize.where(Sequelize.fn('lower',Sequelize.fn("concat",
+                        Sequelize.fn('IFNULL',Sequelize.col("job.name"),"")," ",
+                        Sequelize.fn('IFNULL',Sequelize.col("job.author"),"")," ",
                         Sequelize.fn('IFNULL',Sequelize.col("job.contact"),"")," ",
                         Sequelize.fn('IFNULL',Sequelize.col("job.entryBWR"),"")," ",
                         Sequelize.fn('IFNULL',Sequelize.col("job.gitRepo"),"")," ",
                         Sequelize.fn('IFNULL',Sequelize.col("job.JobType"),""))), {
                                 [Op.like]: '%'+searchText+'%'
                         }),
-                        Sequelize.where(Sequelize.fn('lower',Sequelize.fn("concat", 
-                        Sequelize.fn('IFNULL',Sequelize.col("jobparams.name"),"")," ", 
+                        Sequelize.where(Sequelize.fn('lower',Sequelize.fn("concat",
+                        Sequelize.fn('IFNULL',Sequelize.col("jobparams.name"),"")," ",
                         Sequelize.fn('IFNULL',Sequelize.col("jobparams.type"),""))), {
                                 [Op.like]: '%'+searchText+'%'
                         }),
                         Sequelize.where(Sequelize.fn('lower',
                         Sequelize.fn('IFNULL',Sequelize.col("application.title"),"")), {
                                 [Op.like]: '%'+searchText+'%'
-                        })    
+                        })
                     )),
                     include:
-                    [{ model: Application, attributes:["title"] },{ model: Jobparam, attributes:[] }]            
+                    [{ model: Application, attributes:["title"] },{ model: Jobparam, attributes:[] }]
                     }).then(job => {
-                        result.job=job;  
-                        res.json(result);           
-                    });         
-                });           
+                        result.job=job;
+                        res.json(result);
+                    });
+                });
             });
-        });        
-               
+        });
+
     } catch (err) {
         console.log('err', err);
     }
 });
 
-router.get('/associatedDataflows', [  
+router.get('/associatedDataflows', [
   query('name')
     .matches(/^[a-zA-Z]{1}[a-zA-Z0-9_:.\-]*$/).withMessage('Invalid name'),
   query('type')
@@ -339,23 +339,23 @@ router.get('/associatedDataflows', [
     }
 
     console.log("[/associatedDataflows] - Get associated dataflows for : "+req.query.name);
-    let assetName = req.query.name, type = req.query.type, results, dataflowDetails;    
+    let assetName = req.query.name, type = req.query.type, results, dataflowDetails;
     let promiseResult;
     try {
       switch (type) {
         case 'File':
-          promiseResult = File.findAll({raw: true, where:{"name":assetName}, attributes: ["dataflowId"]}).then(dataflowIds => dataflowIds) 
+          promiseResult = File.findAll({raw: true, where:{"name":assetName}, attributes: ["dataflowId"]}).then(dataflowIds => dataflowIds)
           break;
         case 'Index':
-          promiseResult = Indexes.findAll({raw: true, where:{"name":assetName}, attributes: ["dataflowId"]}).then(dataflowIds => dataflowIds) 
+          promiseResult = Indexes.findAll({raw: true, where:{"name":assetName}, attributes: ["dataflowId"]}).then(dataflowIds => dataflowIds)
           break;
         case 'Job':
-          promiseResult = Job.findAll({raw: true, where:{"name":assetName}, attributes: ["dataflowId"]}).then(dataflowIds => dataflowIds) 
+          promiseResult = Job.findAll({raw: true, where:{"name":assetName}, attributes: ["dataflowId"]}).then(dataflowIds => dataflowIds)
           break;
         case 'Query':
-          promiseResult = Query.findAll({raw: true, where:{"name":assetName}, 
+          promiseResult = Query.findAll({raw: true, where:{"name":assetName},
             include:
-              [{ model: Application, attributes:["id", "title"] }]}).then(applicationTitle => applicationTitle) 
+              [{ model: Application, attributes:["id", "title"] }]}).then(applicationTitle => applicationTitle)
           break;
       }
       promiseResult.then(async results =>  {
@@ -363,12 +363,12 @@ router.get('/associatedDataflows', [
         if(type == 'Query') {
           results.forEach((item) => {
             result.push({"id": item['application.id'], "title": item['application.title']})
-            res.json(result);      
+            res.json(result);
           })
         } else {
-          dataflowDetails = await getDataflowDetails(results)   
-          res.json(dataflowDetails);            
-        }           
+          dataflowDetails = await getDataflowDetails(results)
+          res.json(dataflowDetails);
+        }
       })
     } catch (err) {
         console.log('err', err);

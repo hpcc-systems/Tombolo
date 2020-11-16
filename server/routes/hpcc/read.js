@@ -11,7 +11,7 @@ var Cluster = models.cluster;
 let algorithm = 'aes-256-ctr';
 let hpccJSComms = require("@hpcc-js/comms")
 var http = require('http');
-const { body, query, oneOf, validationResult } = require('express-validator/check');
+const { body, query, oneOf, validationResult } = require('express-validator');
 const ClusterWhitelist = require('../../cluster-whitelist');
 
 router.post('/filesearch', [
