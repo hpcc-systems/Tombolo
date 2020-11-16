@@ -21,9 +21,9 @@ async function authenticate(req, res, { username, password }) {
             "username":username,
             "password":password
           }
-        }, function(err, response, body) {          
+        }, function(err, response, body) {
           console.log(body);
-          if (!response || response.statusCode != 200) {            
+          if (!response || response.statusCode != 200) {
             reject(new Error(err));
           } else {
             resolve(body);
@@ -72,11 +72,11 @@ async function validateToken(req, res, next) {
                           }
                       })
                   }
-              } 
+              }
             })
-            .catch(err => reject('Invalid Token')); 
+            .catch(err => reject('Invalid Token'));
         });
-            
+
         /*var verified = await jwt.verify(token, dbUtil.secret);
         if(verified) {
           const user = await User.findOne({ where: {"username":req.body.username}, attributes: ['id', 'username', 'hash', 'firstName', 'lastName', 'role']});
@@ -128,10 +128,10 @@ const searchUser = (req, res, next) => {
       } else {
         let results = JSON.parse(body), searchResults = [];
         results.forEach((user) => {
-          if(user.username.toLowerCase().indexOf(searchTerm.toLowerCase()) >= 0 || 
-            user.firstName.toLowerCase().indexOf(searchTerm.toLowerCase()) >= 0 || 
+          if(user.username.toLowerCase().indexOf(searchTerm.toLowerCase()) >= 0 ||
+            user.firstName.toLowerCase().indexOf(searchTerm.toLowerCase()) >= 0 ||
             user.lastName.toLowerCase().indexOf(searchTerm.toLowerCase()) >= 0 ||
-            user.email.toLowerCase().indexOf(searchTerm.toLowerCase()) >= 0) 
+            user.email.toLowerCase().indexOf(searchTerm.toLowerCase()) >= 0)
           {
 
             searchResults.push({"text": user.username, "value": user.username});
@@ -219,7 +219,7 @@ async function GetuserListToShareApp(req, res, next) {
           reject(err);
         }
     });
-  });  
+  });
 }
 
 async function GetSharedAppUserList(req, res, next) {
@@ -290,7 +290,7 @@ async function registerUser(req, res) {
         "password": req.body.password,
         "confirmpassword": req.body.confirmnewpassword,
         "role": req.body.role,
-        "applicationId": process.env.AUTHSERVICE_TOMBOLO_APP_ID
+        "clientId": process.env.AUTHSERVICE_TOMBOLO_CLIENT_ID
       }
     }, function(err, response, body) {
       if (response.statusCode == 422) {
@@ -315,7 +315,7 @@ async function forgotPassword(req, res) {
       },
       json: {
         "username": req.body.username,
-        "applicationId": process.env.AUTHSERVICE_TOMBOLO_APP_ID,
+        "clientId": process.env.AUTHSERVICE_TOMBOLO_CLIENT_ID,
         "resetUrl": process.env.TOMBOLO_PASSWORD_RESET_URL
       }
     }, function(err, response, body) {
@@ -349,7 +349,7 @@ async function resetPassword(req, res) {
       }
       if (response.statusCode != 200) {
         reject(body);
-      } else {        
+      } else {
         resolve({'statusCode': response.statusCode, 'message': body});
       }
     });
