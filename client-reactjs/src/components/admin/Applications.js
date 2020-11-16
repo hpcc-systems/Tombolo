@@ -1,8 +1,8 @@
 import React, { Component } from "react";
 import { Table, Button, Row, Col, Modal, Form, Input, notification, Tooltip, Icon, Popconfirm, Divider, message } from 'antd/lib';
 import BreadCrumbs from "../common/BreadCrumbs";
-import { authHeader, handleError } from "../common/AuthHeader.js";  
-import { hasAdminRole } from "../common/AuthUtil.js";  
+import { authHeader, handleError } from "../common/AuthHeader.js";
+import { hasAdminRole } from "../common/AuthUtil.js";
 import { connect } from 'react-redux';
 import { Constants } from '../common/Constants';
 import ShareApp from "./ShareApp";
@@ -80,7 +80,7 @@ class Applications extends Component {
       }
       handleError(response);
     })
-	  .then(data => {      
+	  .then(data => {
       this.setState({
         ...this.state,
         newApp: {
@@ -96,7 +96,7 @@ class Applications extends Component {
       });
       this.setState({
         showAddApp: true
-      });      
+      });
     })
   	.catch(error => {
     	console.log(error);
@@ -138,7 +138,7 @@ class Applications extends Component {
     });
   }
 
-  handleAdd = (event) => {  	
+  handleAdd = (event) => {
     this.resetFields();
     this.setState({
       showAddApp: true
@@ -175,6 +175,9 @@ class Applications extends Component {
 
   handleAddAppOk = () => {
     this.props.form.validateFields(async (err, values) =>  {
+      if (err !== null) {
+        return;
+      }
       if(this.state.applications.filter(application => application.title == this.state.newApp.title).length > 0) {
         message.config({top:150})
         message.error("There is already an application with the same name. Please select a different name.")
@@ -184,14 +187,14 @@ class Applications extends Component {
         confirmLoading: true,
         submitted: true
       });
-      
+
       if(this.state.newApp.title) {
         var userId = (this.props.user) ? this.props.user.username : "";
         let data = JSON.stringify({
-          "id": this.state.newApp.id, 
-          "title" : this.state.newApp.title, 
-          "description" : this.state.newApp.description, 
-          "user_id":userId, 
+          "id": this.state.newApp.id,
+          "title" : this.state.newApp.title,
+          "description" : this.state.newApp.description,
+          "user_id":userId,
           "creator":this.props.user.username});
 
       	  fetch("/api/app/read/newapp", {
@@ -226,7 +229,7 @@ class Applications extends Component {
             showAddApp: false,
             confirmLoading: false,
             submitted:false
-          });       
+          });
 
     	    this.getApplications();
         }).catch(error => {
@@ -249,31 +252,30 @@ class Applications extends Component {
       width: '20%',
       title: 'Title',
       dataIndex: 'title'
-    },
-    {
+    }, {
       width: '20%',
       title: 'Description',
       dataIndex: 'description'
-    },{
+    }, {
       width: '10%',
       title: 'Created By',
       dataIndex: 'creator'
-    },{
+    }, {
       width: '20%',
       title: 'Created',
       dataIndex: 'createdAt',
       render: (text, record) => {
         let createdAt = new Date(text);
-        return createdAt.toLocaleDateString('en-US', Constants.DATE_FORMAT_OPTIONS) +' @ '+ createdAt.toLocaleTimeString('en-US') 
+        return createdAt.toLocaleDateString('en-US', Constants.DATE_FORMAT_OPTIONS) +' @ '+ createdAt.toLocaleTimeString('en-US')
       }
-    },{
+    }, {
       width: '15%',
       title: 'Action',
       dataIndex: '',
       render: (text, record) =>
         <span>
           <a href="#" onClick={(row) => this.handleShareApplication(record.id,record.title)}><Tooltip placement="left" title={"Share Application"}><Icon type="share-alt" /></Tooltip></a>
-          { (record.creator && record.creator == this.props.user.username) ? 
+          { (record.creator && record.creator == this.props.user.username) ?
             <React.Fragment>
               <Divider type="vertical" />
               <a href="#" onClick={(row) => this.handleEditApplication(record.id)}><Tooltip placement="right" title={"Edit Application"}><Icon type="edit" /></Tooltip></a>
@@ -282,7 +284,7 @@ class Applications extends Component {
                 <a href="#"><Tooltip placement="right" title={"Delete Application"}><Icon type="delete" /></Tooltip></a>
               </Popconfirm>
             </React.Fragment>
-          : null }  
+          : null }
         </span>
     }];
     const formItemLayout = {
@@ -315,39 +317,47 @@ class Applications extends Component {
 
       <div>
 	      <Modal
-	          title="Add Application"
-	          visible={this.state.showAddApp}
-	          onOk={this.handleAddAppOk.bind(this)}
-	          onCancel={this.handleAddAppCancel}
-	          confirmLoading={confirmLoading}
-	        >
-		        <Form layout="vertical">		            
-              <Form.Item {...formItemLayout} label="Title">
-                {getFieldDecorator('title', {
-                  rules: [{
-                   required: true, 
-                   pattern: new RegExp(/^[a-zA-Z]{1}[a-zA-Z0-9_:.\-]*$/),
-                   message: 'Invalid title!' 
-                 }],
-                })(
-                <Input id="app_title" name="title" onChange={this.onChange} placeholder="Title" value={this.state.newApp.title}/>             )}
-              </Form.Item>
+          title="Add Application"
+          visible={this.state.showAddApp}
+          onOk={this.handleAddAppOk.bind(this)}
+          onCancel={this.handleAddAppCancel}
+          confirmLoading={confirmLoading}
+        >
+	        <Form layout="vertical">
+            <Form.Item {...formItemLayout} label="Title">
+              {getFieldDecorator('title', {
+                rules: [{
+                  required: true,
+                  pattern: new RegExp(/^[a-zA-Z]{1}[a-zA-Z0-9_:.\-]*$/),
+                  message: 'Invalid title!'
+                }],
+              })(
+                <Input id="app_title" name="title" onChange={this.onChange} placeholder="Title" value={this.state.newApp.title}/>
+              )}
+            </Form.Item>
 
-                <Form.Item {...formItemLayout} label="Description">
-            <Input id="app_description" name="description" onChange={this.onChange} placeholder="Description" value={this.state.newApp.description}/>
-                </Form.Item>
-	            </Form>
-	        </Modal>
-     </div>
-     <div>
-     {this.state.openShareAppDialog ?
-          <ShareApp
-            appId={this.state.appId}
-            appTitle={this.state.appTitle}
-            user={this.props.user}
-            onClose={this.handleClose}/> : null}
+            <Form.Item {...formItemLayout} label="Description">
+              {getFieldDecorator('description', {
+                rules: [{
+                  pattern: new RegExp(/^[a-zA-Z]{1}[a-zA-Z0-9_.\-]*$/),
+                  message: 'Invalid description!'
+                }],
+              })(
+                <Input id="app_description" name="description" onChange={this.onChange} placeholder="Description" value={this.state.newApp.description}/>
+              )}
+            </Form.Item>
+          </Form>
+        </Modal>
       </div>
-   </React.Fragment>
+      <div>
+      {this.state.openShareAppDialog ?
+        <ShareApp
+          appId={this.state.appId}
+          appTitle={this.state.appTitle}
+          user={this.props.user}
+          onClose={this.handleClose}/> : null}
+      </div>
+    </React.Fragment>
     );
   }
 }
