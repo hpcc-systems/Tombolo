@@ -64,13 +64,13 @@ router.post('/all', [
     }
     console.log("[file list/read.js] - Get all file defns");
     try {
-        Application.findAll({ 
-          attributes: ['id'], 
-          raw:true, 
+        Application.findAll({
+          attributes: ['id'],
+          raw:true,
           include: [UserApplication],
           where:{"$user_id$":req.query.userId}
         }).then(function(applications) {
-          let appIds = applications.map(app => app.id); 
+          let appIds = applications.map(app => app.id);
           File.findAll({where: {"application_id":{[Op.in]:appIds}, "title":{[Op.like]: "%" + req.query.keyword + "%"}}, attributes: ['id', 'title', 'name', 'application_id'], raw:true}).then(fileDefns => {
             console.log(fileDefns);
             let fileDefSuggestions = fileDefns.map(fileDefn => {
@@ -89,7 +89,7 @@ router.post('/all', [
 });
 
 
-router.get('/licenses', (req, res) => { 
+router.get('/licenses', (req, res) => {
     try {
         License.findAll().then(function(licenses) {
             res.json(licenses);
@@ -145,7 +145,7 @@ router.get('/CheckFileId', [
 
 router.get('/file_ids', [
   query('app_id')
-    .isUUID(4).withMessage('Invalid application id'),  
+    .isUUID(4).withMessage('Invalid application id'),
 ], (req, res) => {
   const errors = validationResult(req).formatWith(validatorUtil.errorFormatter);
   if (!errors.isEmpty()) {
@@ -222,7 +222,7 @@ router.get('/file_details', [
 });
 
 let updateFileDetails = (fileId, applicationId, req) => {
-  let fieldsToUpdate = {"file_id"  : fileId, "application_id" : applicationId}; 
+  let fieldsToUpdate = {"file_id"  : fileId, "application_id" : applicationId};
   return new Promise((resolve, reject) => {
     FileLayout.findOrCreate({
       where:{application_id:applicationId, file_id: fileId},
@@ -263,7 +263,7 @@ let updateFileDetails = (fileId, applicationId, req) => {
       var fileValidationsToSave = hpccUtil.updateCommonData(req.body.file.validation, fieldsToUpdate);
       return FileValidation.bulkCreate(
           fileValidationsToSave,
-          {updateOnDuplicate: ["name", "ruleType", "rule", "action", "fixScript"]}
+          {updateOnDuplicate: ["rule_name", "rule_field", "rule_test", "rule_fix"]}
       )
     }).then(function(fileFieldValidation) {
       if(req.body.file.consumer) {
@@ -276,7 +276,7 @@ let updateFileDetails = (fileId, applicationId, req) => {
         )
       }
     }).then(function(fieldValidation) {
-      resolve({"result":"success", "fileId":fileId, "title":req.body.file.basic.title})              
+      resolve({"result":"success", "fileId":fileId, "title":req.body.file.basic.title})
     }), function(err) {
       reject(err)
       //return res.status(500).send(err);
@@ -293,7 +293,7 @@ router.post('/saveFile', (req, res) => {
       if (!errors.isEmpty()) {
         return res.status(422).json({ success: false, errors: errors.array() });
       }
-      
+
       if(req.body.isNew) {
         File.create(
           req.body.file.basic
@@ -310,7 +310,7 @@ router.post('/saveFile', (req, res) => {
             res.json(response);
           })
         })
-      }      
+      }
     } catch (err) {
       console.log('err', err);
     }
@@ -420,7 +420,7 @@ router.get('/downloadSchema', [
   query('app_id')
     .isUUID(4).withMessage('Invalid application id'),
   query('type')
-    .matches(/^[a-zA-Z]{1}[a-zA-Z0-9_:.\-]*$/).withMessage('Invalid script type')    
+    .matches(/^[a-zA-Z]{1}[a-zA-Z0-9_:.\-]*$/).withMessage('Invalid script type')
 ],(req, res) => {
   const errors = validationResult(req).formatWith(validatorUtil.errorFormatter);
   if (!errors.isEmpty()) {
@@ -441,7 +441,7 @@ router.get('/inheritedLicenses', [
   query('fileId')
     .isUUID(4).withMessage('Invalid file id'),
   query('dataflowId')
-    .isUUID(4).withMessage('Invalid dataflow id'),  
+    .isUUID(4).withMessage('Invalid dataflow id'),
 ], async function (req, res) {
   const errors = validationResult(req).formatWith(validatorUtil.errorFormatter);
   if (!errors.isEmpty()) {
@@ -476,7 +476,7 @@ router.get('/inheritedLicenses', [
 
 router.get('/fileLicenseCount', [
   query('app_id')
-    .isUUID(4).withMessage('Invalid application id'),  
+    .isUUID(4).withMessage('Invalid application id'),
   ], (req, res) => {
   const errors = validationResult(req).formatWith(validatorUtil.errorFormatter);
   if (!errors.isEmpty()) {
@@ -517,7 +517,7 @@ router.get('/fileLicenseCount', [
 
 router.get('/DependenciesCount', [
   query('app_id')
-    .isUUID(4).withMessage('Invalid application id'),  
+    .isUUID(4).withMessage('Invalid application id'),
   ], (req, res) => {
     const errors = validationResult(req).formatWith(validatorUtil.errorFormatter);
     if (!errors.isEmpty()) {
@@ -557,7 +557,7 @@ router.get('/DependenciesCount', [
 
 router.get('/fileLayoutDataType', [
   query('app_id')
-    .isUUID(4).withMessage('Invalid application id'),  
+    .isUUID(4).withMessage('Invalid application id'),
   ], (req, res) => {
     const errors = validationResult(req).formatWith(validatorUtil.errorFormatter);
     if (!errors.isEmpty()) {
@@ -603,9 +603,9 @@ router.get('/fileLayoutDataType', [
 
 router.get('/getFileLayoutByDataType', [
   query('app_id')
-    .isUUID(4).withMessage('Invalid application id'),  
+    .isUUID(4).withMessage('Invalid application id'),
   query('data_type')
-    .isUUID(4).withMessage('Invalid data type'),   
+    .isUUID(4).withMessage('Invalid data type'),
   ], (req, res) => {
     const errors = validationResult(req).formatWith(validatorUtil.errorFormatter);
     if (!errors.isEmpty()) {
@@ -643,9 +643,9 @@ router.get('/getFileLayoutByDataType', [
 
 router.get('/LicenseFileList', [
   query('app_id')
-    .isUUID(4).withMessage('Invalid application id'),  
+    .isUUID(4).withMessage('Invalid application id'),
   query('name')
-    .isUUID(4).withMessage('Invalid name'),   
+    .isUUID(4).withMessage('Invalid name'),
   ], (req, res) => {
     const errors = validationResult(req).formatWith(validatorUtil.errorFormatter);
     if (!errors.isEmpty()) {
@@ -710,7 +710,7 @@ async function getFileRelationHierarchy(applicationId, fileId, id, dataflowId) {
     //ref: https://stackoverflow.com/questions/49845748/convert-a-flat-json-file-to-tree-structure-in-javascript
     const MutableNode = (title, fileId, children = []) =>
       ({ title, fileId, children })
-      
+
     MutableNode.push = (node, child) =>
       (node.children.push (child), node)
 
@@ -729,10 +729,10 @@ async function getFileRelationHierarchy(applicationId, fileId, id, dataflowId) {
         )
         .get (parseInt(id))
 
-    
+
     const getFlat = ({ fileId, children = [] }) => {
       return [fileId].concat(...children.map(getFlat));
-    }        
+    }
 
     return DataflowGraph.findOne({where:{"application_Id":applicationId, "dataflowId":dataflowId}}).then((graph) => {
       let fileNodes = JSON.parse(graph.nodes).filter(node => node.fileId==fileId);
@@ -750,9 +750,9 @@ async function getFileRelationHierarchy(applicationId, fileId, id, dataflowId) {
 
 router.get('/filelayout', [
   query('app_id')
-    .isUUID(4).withMessage('Invalid application id'),  
+    .isUUID(4).withMessage('Invalid application id'),
   query('name')
-    .isUUID(4).withMessage('Invalid name'),   
+    .isUUID(4).withMessage('Invalid name'),
   ], (req, res) => {
     const errors = validationResult(req).formatWith(validatorUtil.errorFormatter);
     if (!errors.isEmpty()) {
@@ -762,7 +762,7 @@ router.get('/filelayout', [
     var basic = {}, results={};
     try {
       File.findAll({where:
-        {"application_id":req.query.app_id, 
+        {"application_id":req.query.app_id,
         [Op.or]: [
         {
           "name": {
@@ -774,11 +774,11 @@ router.get('/filelayout', [
             [Op.eq]: req.query.name
           }
         }
-      ]}, include:[FileLayout, FileValidation]}).then(function(files) {        
+      ]}, include:[FileLayout, FileValidation]}).then(function(files) {
         if(files[0].file_layouts) {
           files[0].file_layouts.forEach((layout) => {
             let validationRule = files[0].file_validations.filter((validation => validation.name == layout.name));
-            
+
             results[layout.name] = {
               "type": layout.type,
               "eclType": layout.eclType,

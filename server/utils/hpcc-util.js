@@ -41,7 +41,7 @@ exports.fileInfo = (fileName, clusterId) => {
 	      			"isSuperfile" : response.FileDetail.isSuperfile,
 	      			"fileType": response.FileDetail.ContentType,
 	      			"layout" : fileLayout,
-	      			"validations" : processFieldValidations(fileLayout)
+	      			"validations" : []
 	      		}
 	      	 	resolve(fileInfo);
 	    		})
@@ -132,7 +132,7 @@ let getFileLayout = (cluster, fileName, format) =>  {
       console.log('error occured: '+err);
   	});
 	}
-	
+
 }
 
 exports.getClusterAuth = (cluster) => {

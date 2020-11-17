@@ -10,12 +10,10 @@ module.exports = (sequelize, DataTypes) => {
     },
     application_id: DataTypes.STRING,
     file_id: DataTypes.STRING,
-    name: DataTypes.STRING,
-    sequence: DataTypes.STRING,
-    ruleType: DataTypes.STRING,
-    rule: DataTypes.STRING,
-    action: DataTypes.STRING,
-    fixScript: DataTypes.STRING
+    rule_field: DataTypes.STRING,
+    rule_name: DataTypes.STRING,
+    rule_test: DataTypes.STRING,
+    rule_fix: DataTypes.STRING
   }, {freezeTableName: true});
   file_validation.associate = function(models) {
   };

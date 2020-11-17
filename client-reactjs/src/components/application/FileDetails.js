@@ -1,5 +1,8 @@
 import React, { Component } from "react";
-import { Modal, Tabs, Form, Input, Icon,  Select, Button, Table, AutoComplete, Tag, message, Drawer, Row, Col, Spin, Radio } from 'antd/lib';
+import {
+  Modal, Tabs, Form, Input, Icon,  Select, Button, Table, AutoComplete,
+  Tag, message, Drawer, Row, Col, Spin, Radio
+} from 'antd/lib';
 import FileRelations from "./FileRelations"
 import DataProfileTable from "./DataProfileTable"
 import DataProfileHTML from "./DataProfileHTML"
@@ -384,7 +387,9 @@ class FileDetails extends Component {
   }
 
   getInheritedLicenses(fileId, nodeId, dataflowId) {
-    fetch("/api/file/read/inheritedLicenses?fileId="+fileId+"&app_id="+this.props.applicationId+"&id="+nodeId+'&dataflowId='+dataflowId, {
+    let licensesUrl = "/api/file/read/inheritedLicenses?fileId=" + fileId + "&app_id=" +
+      this.props.applicationId + "&id=" + nodeId + '&dataflowId=' + dataflowId;
+    fetch(licensesUrl, {
       headers: authHeader()
     }).then((response) => {
         if(response.ok) {
@@ -610,7 +615,11 @@ class FileDetails extends Component {
       fetch('/api/file/read/savefile', {
         method: 'post',
         headers: authHeader(),
-        body: JSON.stringify({isNew : this.props.isNew, id: this.state.file.id, file : this.populateFileDetails()})
+        body: JSON.stringify({
+          isNew : this.props.isNew,
+          id: this.state.file.id,
+          file : this.populateFileDetails()
+        })
       }).then(function(response) {
           if(response.ok) {
             return response.json();
@@ -645,7 +654,7 @@ class FileDetails extends Component {
         console.log(error);
       })
     }
-  }
+  };
 
   getFileProfile = (fileName) => {
     var _self = this;
@@ -666,7 +675,7 @@ class FileDetails extends Component {
         });
       }
     })
-  }
+  };
 
   setLayoutData = (data) => {
     this.setState({
@@ -676,7 +685,17 @@ class FileDetails extends Component {
         layout: data,
       }
     })
-  }
+  };
+
+  setValidationData = (data) => {
+    this.setState({
+      ...this.state,
+      file: {
+        ...this.state.file,
+        validations: data,
+      }
+    })
+  };
 
   populateFileDetails() {
     var applicationId = this.props.applicationId;
@@ -703,7 +722,9 @@ class FileDetails extends Component {
     fileDetails.fields = this.state.file.layout;
     var selectedLicenses={};
     if(this.licenseGridApi && this.licenseGridApi.getSelectedNodes() != undefined) {
-      selectedLicenses = this.licenseGridApi.getSelectedNodes().map(function(node) { return {"name" : node.data.name, "url": node.data.url} });
+      selectedLicenses = this.licenseGridApi.getSelectedNodes().map(function(node) {
+        return {"name" : node.data.name, "url": node.data.url}
+      });
     }
     fileDetails.license = selectedLicenses;
 
@@ -736,33 +757,33 @@ class FileDetails extends Component {
       visible: false,
     });
     this.props.onClose();
-  }
+  };
 
   onClusterSelection = (value) => {
     this.setState({
       selectedCluster: value,
     });
-  }
+  };
 
   onConsumerSelection = (value) => {
     this.setState({...this.state, file: {...this.state.file, consumer: value }}, () => console.log(this.state.file.consumer));
-  }
+  };
 
   onOwnerSelection = (value) => {
     this.setState({...this.state, file: {...this.state.file, owner: value }}, () => console.log(this.state.file.owner));
-  }
+  };
 
   onSupplierSelection = (value) => {
     this.setState({...this.state, file: {...this.state.file, supplier: value }}, () => console.log(this.state.file.supplier));
-  }
+  };
 
   onChange = (e) => {
     this.setState({...this.state, file: {...this.state.file, [e.target.name]: e.target.value }});
-  }
+  };
 
   onFieldRelationsChange = (newValue) => {
     this.setState({...this.state, file: {...this.state.file, fileFieldRelations: JSON.parse(newValue) }});
-  }
+  };
 
   handleFieldRelationsChange = (data) => {
     this.setState({
@@ -772,17 +793,17 @@ class FileDetails extends Component {
         fileFieldRelations: data
       }
     });
-  }
+  };
 
   onLayoutChange = (newValue) => {
     this.setState({...this.state, file: {...this.state.file, layout: JSON.parse(newValue) }});
-  }
+  };
 
   onSourceFileSelection = (value) => {
     this.setState({
       selectedSourceFile: value,
     });
-  }
+  };
 
   onAddSourceFile = (event) => {
     var relationsUpdated = this.state.file.relations;
@@ -800,21 +821,20 @@ class FileDetails extends Component {
 
     setTimeout(() => {
     }, 200);
-  }
-
+  };
 
   deleteSourceFile(index) {
     var relationsUpdated = this.state.file.relations.filter((x,i) => x.id != index)
     this.setState({
-        ...this.state,
-        file: {
-          ...this.state.file,
-          relations: relationsUpdated
-        }
-      }, function() {
+      ...this.state,
+      file: {
+        ...this.state.file,
+        relations: relationsUpdated
+      }
+    }, function() {
 
-      });
-  }
+    });
+  };
 
   onValidationEdit = (cellInfo, value) => {
     const fileValidations = [this.state.file.validations];
@@ -822,8 +842,7 @@ class FileDetails extends Component {
       fileValidations[0][cellInfo.index][cellInfo.column.id] = value;
     else if(typeof value == 'object')
        fileValidations[0][cellInfo.index][cellInfo.column.id] = value.target.value;
-  }
-
+  };
 
   onLayoutGridReady = (params) => {
     var _self=this, selectedDataTypes=[], compliance=[];
@@ -837,31 +856,31 @@ class FileDetails extends Component {
       }
     });
     fetch('/api/controlsAndRegulations/getComplianceByDataType?dataType='+selectedDataTypes.join(","), {
-        headers: authHeader()
-      }).then(function(response) {
-          if(response.ok) {
-            return response.json();
-          }
-          handleError(response);
-      }).then(function(data) {
-        if(data && data.length > 0) {
-          data.forEach((element) => {
-            compliance.push(element);
-          })
-          _self.setState({
-            complianceTags:compliance,
-          });
-
+      headers: authHeader()
+    }).then(function(response) {
+        if(response.ok) {
+          return response.json();
         }
-      }).catch(error => {
-        console.log(error);
-      });
-  }
+        handleError(response);
+    }).then(function(data) {
+      if(data && data.length > 0) {
+        data.forEach((element) => {
+          compliance.push(element);
+        })
+        _self.setState({
+          complianceTags:compliance,
+        });
+
+      }
+    }).catch(error => {
+      console.log(error);
+    });
+  };
 
   onGridReady = (params) => {
     let gridApi = params.api;
     gridApi.sizeColumnsToFit();
-  }
+  };
 
   onLicenseGridReady = (params) => {
     this.licenseGridApi = params.api;
@@ -872,11 +891,11 @@ class FileDetails extends Component {
         _self.licenseGridApi.selectNode(node, true);
       }
     });
+  };
 
-  }
-  dataTypechange= (prop)=>{
-    var _self=this;
-    if(prop.column.colId=="data_types" && (prop.oldValue)){
+  dataTypechange = (prop) => {
+    var _self = this;
+    if (prop.column.colId == "data_types" && (prop.oldValue)) {
       var compliance=[];
       var complianceDetails=[];
       compliance=_self.state.complianceTags;
@@ -927,10 +946,14 @@ class FileDetails extends Component {
         console.log(error);
       });
     }
-  }
+  };
 
   getScope = () => {
-    let scope = (this.props.user.organization + "::" + this.props.applicationTitle + (this.state.file.title != '' ? '::' + this.state.file.title : '')).toLowerCase();
+    let scope = (
+      this.props.user.organization + "::" + this.props.applicationTitle +
+      (this.state.file.title != '' ? '::' + this.state.file.title : '')
+    ).toLowerCase();
+
     this.setState({
       ...this.state,
       file: {
@@ -941,24 +964,25 @@ class FileDetails extends Component {
     this.props.form.setFieldsValue({
       scope: scope
     });
-  }
+  };
 
   scopeValidator = (rule, value, callback) => {
     try {
       if(this.state.file.scope == (this.props.user.organization + "::" + this.props.applicationTitle).toLowerCase()) {
-        throw new Error("Please enter a valid scope. The convention is <Organization Name>::<Application Name>::<File Type>");
+        let errMsg = "Please enter a valid scope. The convention is <Organization Name>::<Application Name>::<File Type>";
+        throw new Error(errMsg);
       }
       callback();
     } catch (err) {
       callback(err);
     }
-  }
+  };
 
   addLayoutRow = (e) => {
     this.state.file.layout = [{'name':""}];
     //this.layoutGrid.applyTransaction({add: [{'name':""}]})
     this.layoutGrid.refreshCells();
-  }
+  };
 
   fileTypeChange = (e) => {
     this.setState({
@@ -968,11 +992,15 @@ class FileDetails extends Component {
         fileType: e.target.value
       }
     });
-  }
+  };
 
   render() {
     const { getFieldDecorator } = this.props.form;
-    const { visible, confirmLoading, sourceFiles, availableLicenses, selectedRowKeys, clusters, consumers, fileSearchSuggestions, fileDataContent, fileProfile, showFileProfile, scopeDisabled } = this.state;
+    const {
+      visible, confirmLoading, sourceFiles, availableLicenses,
+      selectedRowKeys, clusters, consumers, fileSearchSuggestions,
+      fileDataContent, fileProfile, showFileProfile, scopeDisabled
+    } = this.state;
     const modalTitle = "File Details" + (this.state.file.title ? " - " + this.state.file.title : " - " +this.state.file.name);
     const VIEW_DATA_PERMISSION='View PII';
     const editingAllowed = hasEditPermission(this.props.user);
@@ -1009,15 +1037,13 @@ class FileDetails extends Component {
       },
     };
 
-    const layoutColumns = [
-    {
-      title: 'Name',
+    const layoutColumns = [{
+      title: 'Field',
       dataIndex: 'name',
       sort: "asc",
       editable: editingAllowed,
       width: '25%'
-    },
-    {
+    }, {
       title: 'Type',
       dataIndex: 'type',
       editable: editingAllowed,
@@ -1027,20 +1053,17 @@ class FileDetails extends Component {
       },
       showdatadefinitioninfield: true,
       width: '18%'
-    },
-    {
+    }, {
       title: 'ECL Type',
       dataIndex: 'eclType',
       editable: editingAllowed,
       showdatadefinitioninfield: true
-    },
-    {
+    }, {
       title: 'Description',
       dataIndex: 'description',
       editable: editingAllowed,
       width: '15%'
-    },
-    {
+    }, {
       title: 'Required',
       editable: editingAllowed,
       dataIndex: 'required',
@@ -1049,8 +1072,7 @@ class FileDetails extends Component {
         values: ["false", "true"]
       },
       width: '10%'
-    },
-    {
+    }, {
       title: 'Information Type',
       dataIndex: 'data_types',
       editable: editingAllowed,
@@ -1059,9 +1081,34 @@ class FileDetails extends Component {
       celleditorparams: {
         values: this.state.dataTypes.sort()
       }
-    }
+    }];
 
-    ];
+    const validationRuleColumns = [{
+      title: 'Field',
+      dataIndex: 'rule_field',
+      celleditor: 'select',
+      editable: editingAllowed,
+      width: '15%',
+      celleditorparams: {
+        values: this.state.fileDataColHeaders
+      }
+    }, {
+      title: 'Rule Name',
+      dataIndex: 'rule_name',
+      editable: editingAllowed,
+      width: '15%'
+    }, {
+      title: 'Rule',
+      dataIndex: 'rule_test',
+      editable: editingAllowed,
+      width: '15%'
+    }, {
+      title: 'Fix',
+      dataIndex: 'rule_fix',
+      editable: editingAllowed,
+      width: '15%'
+    }];
+
     const { complianceTags } = this.state;
     const licenseColumns = [{
       field: 'name',
@@ -1071,47 +1118,11 @@ class FileDetails extends Component {
       headerCheckboxSelection: true,
       headerCheckboxSelectionFilteredOnly: true,
       checkboxSelection: true
-    },
-    {
+    }, {
       field: 'description',
       cellRenderer: function(params) {
          return params.value != null ? params.value : ''
       }
-    }
-    ];
-
-    const validationTableColumns = [{
-      headerName: 'Name',
-      field: 'name',
-      sort: "asc"
-    },
-    {
-      headerName: 'Rule Type',
-      field: 'ruleType',
-      editable: true,
-      cellEditor: "select",
-      cellEditorParams: {
-        values: this.state.rules
-      }
-    },
-    {
-      headerName: 'Rule',
-      field: 'rule',
-      editable: true
-    },
-    {
-      headerName: 'Action',
-      field: 'action',
-      editable: true,
-      cellEditor: "select",
-      cellEditorParams: {
-        values: ["", "drop", "fix", "alert", "warn"]
-      }
-    },
-    {
-      headerName: 'Fix Script',
-      field: 'fixScript',
-      editable: true
     }];
 
     const fileDataColumns = () => {
@@ -1140,7 +1151,7 @@ class FileDetails extends Component {
         columns.push(colObj);
       });
       return columns;
-    }
+    };
 
     const InheritedLicenses = (licenses) => {
       if(licenses.relation && licenses.relation.length > 0) {
@@ -1153,7 +1164,7 @@ class FileDetails extends Component {
       } else {
         return null;
       }
-    }
+    };
 
     const ComplianceInfo = (complianceTags) => {
       if(complianceTags.tags && complianceTags.tags.length > 0) {
@@ -1166,10 +1177,12 @@ class FileDetails extends Component {
       } else {
         return null;
       }
-    }
+    };
 
-
-    const {title,name, description, scope, serviceUrl, qualifiedPath, consumer, owner, fileType, isSuperFile, layout, relations, fileFieldRelations, validations, inheritedLicensing} = this.state.file;
+    const {
+      title, name, description, scope, serviceUrl, qualifiedPath, consumer, owner, fileType,
+      isSuperFile, layout, relations, fileFieldRelations, validations, inheritedLicensing
+    } = this.state.file;
     const rowSelection = {
       selectedRowKeys,
       onChange: this.onSelectedRowKeysChange
@@ -1193,12 +1206,11 @@ class FileDetails extends Component {
       }
     }
 
-
-  //render only after fetching the data from the server
-  if(!title && !this.props.selectedAsset && !this.props.isNew) {
-    console.log("not rendering");
-    return null;
-  }
+    //render only after fetching the data from the server
+    if(!title && !this.props.selectedAsset && !this.props.isNew) {
+      console.log("not rendering");
+      return null;
+    }
 
     return (
 
@@ -1238,7 +1250,9 @@ class FileDetails extends Component {
               {this.state.file.fileType == 'thor_file' ?
                 <React.Fragment>
                   <Form.Item {...formItemLayout} label="Cluster">
-                     <Select placeholder="Select a Cluster" disabled={!editingAllowed} onChange={this.onClusterSelection} style={{ width: 190 }}>
+                     <Select placeholder="Select a Cluster"
+                             disabled={!editingAllowed} onChange={this.onClusterSelection}
+                             style={{ width: 190 }}>
                       {clusters.map(cluster => <Option key={cluster.id}>{cluster.name}</Option>)}
                     </Select>
                   </Form.Item>
@@ -1270,7 +1284,7 @@ class FileDetails extends Component {
                 {getFieldDecorator('title', {
                   rules: [{ required: true, message: 'Please enter a title!' }],
                 })(
-                <Input id="file_title" name="title" onChange={this.onChange} placeholder="Title" disabled={!editingAllowed}/>              )}
+                <Input id="file_title" name="title" onChange={this.onChange} placeholder="Title" disabled={!editingAllowed}/>)}
               </Form.Item>
               <Form.Item {...formItemLayout} label="Name">
                 <Input id="file_name" name="name" onChange={this.onChange} placeholder="Name" defaultValue={name} value={name} disabled={true} />
@@ -1288,25 +1302,33 @@ class FileDetails extends Component {
                 )}
               </Form.Item>
               <Form.Item {...formItemLayout} label="Description">
-                <MarkdownEditor id="file_desc" name="description" onChange={this.onChange} targetDomId="fileDescr" value={description} disabled={!editingAllowed}/>
+                <MarkdownEditor id="file_desc" name="description" onChange={this.onChange}
+                                targetDomId="fileDescr" value={description} disabled={!editingAllowed}/>
               </Form.Item>
               <Form.Item {...formItemLayout} label="Service URL">
-                  <Input id="file_primary_svc" name="serviceUrl" onChange={this.onChange} defaultValue={serviceUrl} value={serviceUrl} placeholder="Service URL" disabled={!editingAllowed}/>
+                <Input id="file_primary_svc" name="serviceUrl" onChange={this.onChange}
+                       defaultValue={serviceUrl} value={serviceUrl} placeholder="Service URL"
+                       disabled={!editingAllowed}/>
               </Form.Item>
               <Row type="flex">
                 <Col span={8} order={1}>
                   <Form.Item {...threeColformItemLayout} label="Path">
-                      <Input id="file_path" name="qualifiedPath" onChange={this.onChange} defaultValue={qualifiedPath} value={qualifiedPath} placeholder="Path" disabled={!editingAllowed}/>
+                      <Input id="file_path" name="qualifiedPath" onChange={this.onChange}
+                             defaultValue={qualifiedPath} value={qualifiedPath} placeholder="Path"
+                             disabled={!editingAllowed}/>
                   </Form.Item>
                 </Col>
                 {/*<Col span={8} order={2}>
                   <Form.Item {...threeColformItemLayout} label="File Type">
-                      <Input id="file_type" name="fileType" onChange={this.onChange} defaultValue={fileType} value={fileType} placeholder="File Type" disabled={!editingAllowed}/>
+                      <Input id="file_type" name="fileType" onChange={this.onChange} defaultValue={fileType}
+                             value={fileType} placeholder="File Type" disabled={!editingAllowed}/>
                   </Form.Item>
                 </Col>*/}
                 <Col span={8} order={1}>
                   <Form.Item {...threeColformItemLayout} label="Is Super File">
-                    <Input id="file_issuper_file" name="isSuperFile" onChange={this.onChange} defaultValue={isSuperFile} value={isSuperFile} placeholder="Is Super File" disabled={!editingAllowed}/>
+                    <Input id="file_issuper_file" name="isSuperFile" onChange={this.onChange}
+                           defaultValue={isSuperFile} value={isSuperFile} placeholder="Is Super File"
+                           disabled={!editingAllowed}/>
                   </Form.Item>
                 </Col>
               </Row>
@@ -1314,14 +1336,19 @@ class FileDetails extends Component {
               <Row type="flex">
                 <Col span={8} order={1}>
                   <Form.Item {...threeColformItemLayout} label="Supplier">
-                     <Select id="supplier" value={(this.state.file.supplier != '') ? this.state.file.supplier : "Select a supplier"} placeholder="Select a supplier" onChange={this.onSupplierSelection} style={{ width: 190 }} disabled={!editingAllowed}>
+                     <Select id="supplier"
+                             value={(this.state.file.supplier != '') ? this.state.file.supplier : "Select a supplier"}
+                             placeholder="Select a supplier" onChange={this.onSupplierSelection}
+                             style={{ width: 190 }} disabled={!editingAllowed}>
                       {consumers.map(consumer => consumer.assetType=="Supplier" ? <Option key={consumer.id}>{consumer.name}</Option> : null)}
                     </Select>
                   </Form.Item>
                 </Col>
                 <Col span={8} order={2}>
                   <Form.Item {...threeColformItemLayout} label="Consumer">
-                     <Select id="consumer" value={(this.state.file.consumer != '') ? this.state.file.consumer : "Select a consumer"} placeholder="Select a consumer" onChange={this.onConsumerSelection} style={{ width: 190 }} disabled={!editingAllowed}>
+                     <Select id="consumer" value={(this.state.file.consumer != '') ? this.state.file.consumer : "Select a consumer"}
+                             placeholder="Select a consumer" onChange={this.onConsumerSelection}
+                             style={{ width: 190 }} disabled={!editingAllowed}>
                       {consumers.map(consumer => consumer.assetType == 'Consumer' ? <Option key={consumer.id}>{consumer.name}</Option> : null)}
                     </Select>
                   </Form.Item>
@@ -1329,7 +1356,9 @@ class FileDetails extends Component {
 
                 <Col span={8} order={3}>
                   <Form.Item {...threeColformItemLayout} label="Owner">
-                     <Select id="owner" value={(this.state.file.owner != '') ? this.state.file.owner : "Select an Owner"} placeholder="Select an Owner" onChange={this.onOwnerSelection} style={{ width: 190 }} disabled={!editingAllowed}>
+                     <Select id="owner" value={(this.state.file.owner != '') ? this.state.file.owner : "Select an Owner"}
+                             placeholder="Select an Owner" onChange={this.onOwnerSelection}
+                             style={{ width: 190 }} disabled={!editingAllowed}>
                       {consumers.map(consumer => consumer.assetType == 'Owner' ? <Option key={consumer.id}>{consumer.name}</Option> : null)}
                     </Select>
                   </Form.Item>
@@ -1360,37 +1389,45 @@ class FileDetails extends Component {
           <TabPane tab="Permissable Purpose" key="4">
             <InheritedLicenses relation={inheritedLicensing}/>
             <div
-                className="ag-theme-balham"
-                style={{
-                height: '400px',
-                width: '100%' }}
-              >
-                <AgGridReact
-                  columnDefs={licenseColumns}
-                  rowData={availableLicenses}
-                  defaultColDef={{resizable: true, sortable: true}}
-                  onGridReady={this.onLicenseGridReady}
-                  rowSelection="multiple"
-                  suppressRowClickSelection={editingAllowed}>
-                </AgGridReact>
-              </div>
+              className="ag-theme-balham"
+              style={{
+              height: '400px',
+              width: '100%' }}
+            >
+              <AgGridReact
+                columnDefs={licenseColumns}
+                rowData={availableLicenses}
+                defaultColDef={{resizable: true, sortable: true}}
+                onGridReady={this.onLicenseGridReady}
+                rowSelection="multiple"
+                suppressRowClickSelection={editingAllowed}>
+              </AgGridReact>
+            </div>
           </TabPane>
-          <TabPane tab="Scrubs" key="5">
+          <TabPane tab="Validation Rules" key="5">
             <div
-                className="ag-theme-balham"
-                style={{
-                height: '415px',
-                width: '100%' }}
-              >
-                <AgGridReact
-                  columnDefs={validationTableColumns}
-                  rowData={validations}
-                  defaultColDef={{resizable: true, sortable: true, filter: true}}
-                  onGridReady={this.onGridReady}
-                  singleClickEdit={true}
-                  singleClickEdit={editingAllowed}>
-                </AgGridReact>
-              </div>
+              className="ag-theme-balham"
+              style={{
+              height: '415px',
+              width: '100%' }}
+            >
+            {/*<AgGridReact
+                columnDefs={validationTableColumns}
+                rowData={validations}
+                defaultColDef={{resizable: true, sortable: true, filter: true}}
+                onGridReady={this.onGridReady}
+                singleClickEdit={true}
+                singleClickEdit={editingAllowed}>
+              </AgGridReact>*/}
+              <EditableTable
+                columns={validationRuleColumns}
+                dataSource={validations}
+                ref={node => (this.validationTable = node)}
+                editingAllowed={editingAllowed}
+                dataDefinitions={this.state.dataDefinitions}
+                showDataDefinition={true}
+                setData={this.setValidationData}/>
+            </div>
           </TabPane>
           {this.props.user.permissions.includes(VIEW_DATA_PERMISSION) ?
             <TabPane tab="File Preview" key="6">
