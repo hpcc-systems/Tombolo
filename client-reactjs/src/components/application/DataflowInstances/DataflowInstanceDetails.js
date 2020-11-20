@@ -2,7 +2,7 @@ import React, { Component } from "react";
 import { Button, Table, Divider, message, Icon, Tooltip, Row, Col, Tabs } from 'antd/lib';
 import { NavLink, Switch, Route, withRouter } from 'react-router-dom';
 import {Graph} from "../Dataflow/Graph";
-import FileTable from "../FileTable";
+import {FileTable} from "../FileTable";
 import QueryTable from "../QueryTable";
 import DataflowInstanceWorkUnits from "./DataflowInstanceWorkUnits";
 import { connect } from 'react-redux';
@@ -14,26 +14,26 @@ class DataflowInstanceDetails extends Component {
 
   constructor(props) {
     super(props);
-  }  
+  }
 
   componentDidMount() {
     console.log('componentDidMount - DataflowInstanceDetails: '+this.props.dataflowId+', '+this.props.applicationId)
-  } 
+  }
 
-  render() {    
-    //if(this.props.dataflowId == undefined || this.props.applicationId == undefined) 
+  render() {
+    //if(this.props.dataflowId == undefined || this.props.applicationId == undefined)
     if(!this.props.application || !this.props.application.applicationId)
       return null;
     return (
       <React.Fragment>
         <div class="row">
           <div className="col-12" style={{"paddingTop": "5px"}}>
-            <Graph 
-              applicationId={this.props.applicationId} 
-              viewMode={true} 
-              selectedDataflow={this.props.workflowId} 
-              workflowDetails={this.props.workflowDetails} 
-              graphContainer="graph" 
+            <Graph
+              applicationId={this.props.applicationId}
+              viewMode={true}
+              selectedDataflow={this.props.workflowId}
+              workflowDetails={this.props.workflowDetails}
+              graphContainer="graph"
               sidebarContainer="sidebar"
               />
           </div>
@@ -42,22 +42,22 @@ class DataflowInstanceDetails extends Component {
             <Tabs type="card">
               <TabPane tab="Work Units" key="1">
                 <DataflowInstanceWorkUnits
-                  applicationId={this.props.applicationId} 
-                  viewMode={true} 
-                  selectedWorkflow={this.props.dataflowId} 
-                  instanceId={this.props.instanceId} 
+                  applicationId={this.props.applicationId}
+                  viewMode={true}
+                  selectedWorkflow={this.props.dataflowId}
+                  instanceId={this.props.instanceId}
                 />
               </TabPane>
               <TabPane tab="Files" key="2">
-                <FileTable applicationId={this.props.applicationId} user={this.props.user}/> 
+                <FileTable applicationId={this.props.applicationId} user={this.props.user}/>
               </TabPane>
               <TabPane tab="Queries" key="3">
                 <QueryTable applicationId={this.props.applicationId} user={this.props.user}/>
               </TabPane>
             </Tabs>
-          </div>   
-        </div>  
-      </React.Fragment>  
+          </div>
+        </div>
+      </React.Fragment>
     )
   }
 }

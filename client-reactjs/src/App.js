@@ -23,6 +23,7 @@ import DataflowDetails from "./components/application/Dataflow/DataflowDetails";
 import {DataflowInstances} from "./components/application/DataflowInstances/DataflowInstances";
 import {DataflowInstanceDetails} from "./components/application/DataflowInstances/DataflowInstanceDetails";
 import Users from "./components/admin/Users";
+import FileDetailsForm from "./components/application/FileDetails";
 
 import {AdminApplications} from "./components/admin/Applications";
 import AdminClusters from "./components/admin/Clusters";
@@ -38,7 +39,7 @@ const { Content } = Layout;
 class App extends React.Component {
   componentDidMount() {
     store.dispatch(userActions.validateToken());
-  }  
+  }
 
   render() {
     const isApplicationSet = (this.props.application && this.props.application.applicationId != '') ? true : false;
@@ -47,18 +48,18 @@ class App extends React.Component {
       let applicationId = this.props.application ? this.props.application.applicationId : '';
       let applicationTitle = this.props.application ? this.props.application.applicationTitle : '';
       return <Dataflow applicationId={applicationId} applicationTitle={applicationTitle} user={this.props.user}/>;
-    }      
+    }
     const dataDictionaryComp = () => {
       let applicationId = this.props.application ? this.props.application.applicationId : '';
       let applicationTitle = this.props.application ? this.props.application.applicationTitle : '';
       return <DataDictionary applicationId={applicationId} applicationTitle={applicationTitle} user={this.props.user}/>;
-    }      
+    }
 
     const indexListComp = () => {
       let applicationId = this.props.application ? this.props.application.applicationId : '';
       let applicationTitle = this.props.application ? this.props.application.applicationTitle : '';
       return <IndexList applicationId={applicationId} applicationTitle={applicationTitle} user={this.props.user}/>;
-    }    
+    }
 
     return (
         <Router history={history}>
@@ -71,11 +72,11 @@ class App extends React.Component {
                   <Layout className="site-layout">
                       <LeftNav isApplicationSet={isApplicationSet} selectedTopNav={selectedTopNav} />
                       <Layout style={{height: '100vh', overflow: 'hidden'}}>
-                          <Content style={{background: '#fff', margin: '0 16px'}}>                                    
+                          <Content style={{background: '#fff', margin: '0 16px'}}>
                               <Switch>
                                 <PrivateRoute exact path="/" component={dataFlowComp}/>
-                                <PrivateRoute path="/details/:assetType/:applicationId/:fileId" component={AssetDetails} />
                                 <PrivateRoute exact path="/:applicationId/files" component={FileList} />
+                                <PrivateRoute path="/:applicationId/file/:fileId?" component={FileDetailsForm}/>
                                 <PrivateRoute path="/files" component={FileList} />
                                 <PrivateRoute path="/:applicationId/jobs" component={JobList} />
                                 <PrivateRoute exact path="/:applicationId/index" component={indexListComp}/>

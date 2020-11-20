@@ -1,12 +1,13 @@
 import React, { Component } from "react";
 import { Button, Tooltip, Radio, Icon, Menu, Dropdown } from 'antd/lib';
-import FileTable from "./FileTable";
+import {FileTable} from "./FileTable";
 import FileDetailsForm from "./FileDetails";
 import BreadCrumbs from "../common/BreadCrumbs";
 import { connect } from 'react-redux';
 import { authHeader, handleError } from "../common/AuthHeader.js"
 import { hasEditPermission } from "../common/AuthUtil.js";
 import download from "downloadjs"
+import { assetsActions } from '../../redux/actions/Assets';
 
 class FileList extends Component {
 
@@ -34,15 +35,22 @@ class FileList extends Component {
   }
 
   openAddFileDlg = () => {
-    console.log('openAddFileDlg')
     var _self = this;
-    this.setState({
+/*    this.setState({
       openFileDetailsDialog: true,
       selectedFile: ''
     });
     setTimeout(() => {
       _self.child.showModal();
     }, 200);
+*/
+    this.props.dispatch(assetsActions.assetSelected(
+      '',
+      this.state.applicationId,
+      ''
+    ));
+    this.props.history.push('/' + this.state.applicationId + '/file');
+
   }
 
   closeFileDlg = () => {
@@ -95,7 +103,7 @@ class FileList extends Component {
       <div className="site-layout-background">
         <div className="d-flex justify-content-end" style={{paddingTop:"50px", margin:"5px"}}>
           <BreadCrumbs applicationId={this.state.applicationId} applicationTitle={this.state.applicationTitle}/>
-          {editingAllowed ? 
+          {editingAllowed ?
             <span style={{ marginLeft: "auto", paddingTop:"5px"}}>
               <Tooltip placement="bottom" title={"Click to add a new file"}>
                 <Button className="btn btn-secondary btn-sm" onClick={() => this.openAddFileDlg()}><i className="fa fa-plus pr-1"></i>Add</Button>
@@ -109,10 +117,10 @@ class FileList extends Component {
                 </Dropdown>
               </Tooltip>
             </span>
-          : null}  
+          : null}
         </div>
         <div>
-          <FileTable refresh={this.state.refreshTree} applicationId={this.state.applicationId} user={this.props.user}/> 
+          <FileTable refresh={this.state.refreshTree} applicationId={this.state.applicationId} user={this.props.user}/>
 
           {this.state.openFileDetailsDialog ?
             <FileDetailsForm

@@ -14,6 +14,7 @@ import { hasEditPermission } from "../common/AuthUtil.js";
 import {eclTypes} from '../common/CommonUtil';
 import 'ag-grid-community/dist/styles/ag-grid.css';
 import 'ag-grid-community/dist/styles/ag-theme-balham.css';
+import { connect } from 'react-redux';
 
 const TabPane = Tabs.TabPane;
 const Option = Select.Option;
@@ -56,6 +57,7 @@ class FileDetails extends Component {
     autoCompleteSuffix: <Icon type="search" className="certain-category-icon" />,
     scopeDisabled: false,
     dataDefinitions: [],
+    initialDataLoading: false,
     file: {
       id:"",
       title:"",
@@ -80,12 +82,14 @@ class FileDetails extends Component {
   }
 
   componentDidMount() {
-    this.props.onRef(this);
-    this.getFileCount();
-    this.getFileDetails();
-    this.getClusters();
-    this.fetchDataTypeDetails();
-    this.fetchDataDefinitions();
+    if(this.props.application && this.props.application.applicationId) {
+      //this.props.onRef(this);
+      this.getFileCount();
+      this.getFileDetails();
+      this.getClusters();
+      this.fetchDataTypeDetails();
+      this.fetchDataDefinitions();
+    }
   }
 
   clearState() {
@@ -142,7 +146,7 @@ class FileDetails extends Component {
 
   async fetchDataDefinitions() {
     try {
-      let dataDefn = await fetchDataDictionary(this.props.applicationId);
+      let dataDefn = await fetchDataDictionary(this.props.application.applicationId);
       this.setState({
         dataDefinitions: dataDefn
       });
@@ -152,7 +156,7 @@ class FileDetails extends Component {
   }
 
   getFileCount() {
-    fetch("/api/file/read/file_list?app_id="+this.props.applicationId, {
+    fetch("/api/file/read/file_list?app_id="+this.props.application.applicationId, {
        headers: authHeader()
     })
     .then((response) => {
@@ -171,8 +175,11 @@ class FileDetails extends Component {
   }
 
   getFileDetails() {
-    if(this.props.selectedAsset && !this.props.isNew) {
-      fetch("/api/file/read/file_details?file_id="+this.props.selectedAsset+"&app_id="+this.props.applicationId, {
+    if(this.props.selectedAsset && this.props.selectedAsset.id != '' && !this.props.isNew) {
+      this.setState({
+        initialDataLoading: true
+      });
+      fetch("/api/file/read/file_details?file_id="+this.props.selectedAsset.id+"&app_id="+this.props.application.applicationId, {
         headers: authHeader()
       }
       )
@@ -239,6 +246,10 @@ class FileDetails extends Component {
       })
       .then(data => {
         this.getClusters();
+        this.setState({
+          initialDataLoading: false
+        });
+
       })
       .catch(error => {
         console.log(error);
@@ -286,7 +297,8 @@ class FileDetails extends Component {
               visible: false,
               confirmLoading: false,
             });
-            _self.props.onRefresh(saveResponse);
+            //_self.props.onRefresh(saveResponse);
+            _self.props.history.push('/' + this.props.application.applicationId + '/files')
           }, 2000);
         } catch(e) {
           console.log(e)
@@ -306,7 +318,7 @@ class FileDetails extends Component {
       title: 'Delete file?',
       content: 'Are you sure you want to delete this file?',
       onOk() {
-        var data = JSON.stringify({fileId: _self.props.selectedAsset, application_id: _self.props.applicationId});
+        var data = JSON.stringify({fileId: _self.props.selectedAsset, application_id: _self.props.application.applicationId});
         fetch("/api/file/read/delete", {
           method: 'post',
           headers: authHeader(),
@@ -384,7 +396,7 @@ class FileDetails extends Component {
   }
 
   getInheritedLicenses(fileId, nodeId, dataflowId) {
-    fetch("/api/file/read/inheritedLicenses?fileId="+fileId+"&app_id="+this.props.applicationId+"&id="+nodeId+'&dataflowId='+dataflowId, {
+    fetch("/api/file/read/inheritedLicenses?fileId="+fileId+"&app_id="+this.props.application.applicationId+"&id="+nodeId+'&dataflowId='+dataflowId, {
       headers: authHeader()
     }).then((response) => {
         if(response.ok) {
@@ -558,7 +570,7 @@ class FileDetails extends Component {
   }
 
   getFiles() {
-    fetch("/api/file/read/file_ids?app_id="+this.props.applicationId, {
+    fetch("/api/file/read/file_ids?app_id="+this.props.application.applicationId, {
       headers: authHeader()
     })
     .then((response) => {
@@ -579,7 +591,7 @@ class FileDetails extends Component {
 
   async fileAlreadyExists(selectedSuggestion) {
     var exists = false;
-    await fetch("/api/file/read/file_ids?app_id="+this.props.applicationId, {
+    await fetch("/api/file/read/file_ids?app_id="+this.props.application.applicationId, {
       headers: authHeader()
     })
     .then((response) => {
@@ -679,7 +691,7 @@ class FileDetails extends Component {
   }
 
   populateFileDetails() {
-    var applicationId = this.props.applicationId;
+    var applicationId = this.props.application.applicationId;
     var fileDetails = {"app_id":applicationId};
     var fileLayout={}, license = {};
     var file_basic = {
@@ -735,7 +747,7 @@ class FileDetails extends Component {
     this.setState({
       visible: false,
     });
-    this.props.onClose();
+    //this.props.onClose();
   }
 
   onClusterSelection = (value) => {
@@ -930,7 +942,7 @@ class FileDetails extends Component {
   }
 
   getScope = () => {
-    let scope = (this.props.user.organization + "::" + this.props.applicationTitle + (this.state.file.title != '' ? '::' + this.state.file.title : '')).toLowerCase();
+    let scope = (this.props.user.organization + "::" + this.props.application.applicationTitle + (this.state.file.title != '' ? '::' + this.state.file.title : '')).toLowerCase();
     this.setState({
       ...this.state,
       file: {
@@ -945,7 +957,7 @@ class FileDetails extends Component {
 
   scopeValidator = (rule, value, callback) => {
     try {
-      if(this.state.file.scope == (this.props.user.organization + "::" + this.props.applicationTitle).toLowerCase()) {
+      if(this.state.file.scope == (this.props.user.organization + "::" + this.props.application.applicationTitle).toLowerCase()) {
         throw new Error("Please enter a valid scope. The convention is <Organization Name>::<Application Name>::<File Type>");
       }
       callback();
@@ -975,7 +987,7 @@ class FileDetails extends Component {
     const { visible, confirmLoading, sourceFiles, availableLicenses, selectedRowKeys, clusters, consumers, fileSearchSuggestions, fileDataContent, fileProfile, showFileProfile, scopeDisabled } = this.state;
     const modalTitle = "File Details" + (this.state.file.title ? " - " + this.state.file.title : " - " +this.state.file.name);
     const VIEW_DATA_PERMISSION='View PII';
-    const editingAllowed = hasEditPermission(this.props.user);
+    const editingAllowed = hasEditPermission(this.props.user) || !this.props.viewMode;
     const formItemLayout = {
       labelCol: {
         xs: { span: 2 },
@@ -1195,238 +1207,238 @@ class FileDetails extends Component {
 
 
   //render only after fetching the data from the server
-  if(!title && !this.props.selectedAsset && !this.props.isNew) {
+  /*if(!title && !this.props.selectedFile && !this.props.isNew) {
+    console.log("not rendering");
+    return null;
+  }*/
+  if(!this.props.selectedAsset && !this.props.isNew) {
     console.log("not rendering");
     return null;
   }
 
     return (
+      <React.Fragment>
+        <div>
+          <div className="loader">
+            <Spin spinning={this.state.initialDataLoading} size="large" />
+          </div>
+          <Tabs
+            defaultActiveKey="1"
+          >
+            <TabPane tab="Basic" key="1">
+               <Form layout="vertical">
+                <div>
+                <Form.Item {...formItemLayout} label="Type">
+                  <Radio.Group onChange={this.fileTypeChange} value={this.state.file.fileType}>
+                    <Radio value={'thor_file'}>Thor File</Radio>
+                    <Radio value={'csv'}>CSV</Radio>
+                    <Radio value={'json'}>JSON</Radio>
+                    <Radio value={'xml'}>XML</Radio>
+                  </Radio.Group>
+                </Form.Item>
+                {this.state.file.fileType == 'thor_file' ?
+                  <React.Fragment>
+                    <Form.Item {...formItemLayout} label="Cluster">
+                       <Select placeholder="Select a Cluster" disabled={!editingAllowed} onChange={this.onClusterSelection} style={{ width: 190 }}>
+                        {clusters.map(cluster => <Option key={cluster.id}>{cluster.name}</Option>)}
+                      </Select>
+                    </Form.Item>
 
-      <div>
-        <Modal
-          title={modalTitle}
-          visible={visible}
-          onOk={this.handleOk}
-          confirmLoading={confirmLoading}
-          onCancel={this.handleCancel}
-          destroyOnClose={true}
-          width="1200px"
-          footer={[
-            <Button key="danger" type="danger" onClick={this.handleDelete}>Delete</Button>,
-            <Button key="back" onClick={this.handleCancel}>
-              Cancel
-            </Button>,
-            <Button key="submit" disabled={!editingAllowed} type="primary" loading={confirmLoading} onClick={this.handleOk}>
-              Save
-            </Button>,
-          ]}
-        >
-        <Tabs
-          defaultActiveKey="1"
-        >
-          <TabPane tab="Basic" key="1">
-             <Form layout="vertical">
-              <div>
-              <Form.Item {...formItemLayout} label="Type">
-                <Radio.Group onChange={this.fileTypeChange} value={this.state.file.fileType}>
-                  <Radio value={'thor_file'}>Thor File</Radio>
-                  <Radio value={'csv'}>CSV</Radio>
-                  <Radio value={'json'}>JSON</Radio>
-                  <Radio value={'xml'}>XML</Radio>
-                </Radio.Group>
-              </Form.Item>
-              {this.state.file.fileType == 'thor_file' ?
-                <React.Fragment>
-                  <Form.Item {...formItemLayout} label="Cluster">
-                     <Select placeholder="Select a Cluster" disabled={!editingAllowed} onChange={this.onClusterSelection} style={{ width: 190 }}>
-                      {clusters.map(cluster => <Option key={cluster.id}>{cluster.name}</Option>)}
-                    </Select>
-                  </Form.Item>
+                    <Form.Item {...formItemLayout} label="File">
+                      <AutoComplete
+                        className="certain-category-search"
+                        dropdownClassName="certain-category-search-dropdown"
+                        dropdownMatchSelectWidth={false}
+                        dropdownStyle={{ width: 300 }}
+                        size="large"
+                        style={{ width: '100%' }}
+                        dataSource={fileSearchSuggestions}
+                        onChange={(value) => this.searchFiles(value)}
+                        onSelect={(value) => this.onFileSelected(value)}
+                        placeholder="Search files"
+                        optionLabelProp="value"
+                        disabled={!editingAllowed}
+                      >
+                        <Input id="autocomplete_field" suffix={this.state.autoCompleteSuffix} autoComplete="off"/>
+                      </AutoComplete>
+                    </Form.Item>
+                  </React.Fragment>
+                  :
+                  null}
 
-                  <Form.Item {...formItemLayout} label="File">
-                    <AutoComplete
-                      className="certain-category-search"
-                      dropdownClassName="certain-category-search-dropdown"
-                      dropdownMatchSelectWidth={false}
-                      dropdownStyle={{ width: 300 }}
-                      size="large"
-                      style={{ width: '100%' }}
-                      dataSource={fileSearchSuggestions}
-                      onChange={(value) => this.searchFiles(value)}
-                      onSelect={(value) => this.onFileSelected(value)}
-                      placeholder="Search files"
-                      optionLabelProp="value"
-                      disabled={!editingAllowed}
-                    >
-                      <Input id="autocomplete_field" suffix={this.state.autoCompleteSuffix} autoComplete="off"/>
-                    </AutoComplete>
-                  </Form.Item>
-                </React.Fragment>
-                :
-                null}
+                </div>
+                <Form.Item {...formItemLayout} label="Title">
+                  {getFieldDecorator('title', {
+                    rules: [{ required: true, message: 'Please enter a title!' }],
+                  })(
+                  <Input id="file_title" name="title" onChange={this.onChange} placeholder="Title" disabled={!editingAllowed}/>              )}
+                </Form.Item>
+                <Form.Item {...formItemLayout} label="Name">
+                  <Input id="file_name" name="name" onChange={this.onChange} placeholder="Name" defaultValue={name} value={name} disabled={true} />
+                 </Form.Item>
+                <Form.Item {...formItemLayout} label="Scope">
+                  {getFieldDecorator('scope', {
+                    rules: [{
+                        required: true
+                      },
+                      {
+                        validator: this.scopeValidator
+                      }
+                  ]})(
+                      <Input id="file_scope" name="scope" onChange={this.onChange} placeholder="Scope" disabled={scopeDisabled || !editingAllowed}/>
+                  )}
+                </Form.Item>
+                <Form.Item {...formItemLayout} label="Description">
+                  <MarkdownEditor id="file_desc" name="description" onChange={this.onChange} targetDomId="fileDescr" value={description} disabled={!editingAllowed}/>
+                </Form.Item>
+                <Form.Item {...formItemLayout} label="Service URL">
+                    <Input id="file_primary_svc" name="serviceUrl" onChange={this.onChange} defaultValue={serviceUrl} value={serviceUrl} placeholder="Service URL" disabled={!editingAllowed}/>
+                </Form.Item>
+                <Row type="flex">
+                  <Col span={8} order={1}>
+                    <Form.Item {...threeColformItemLayout} label="Path">
+                        <Input id="file_path" name="qualifiedPath" onChange={this.onChange} defaultValue={qualifiedPath} value={qualifiedPath} placeholder="Path" disabled={!editingAllowed}/>
+                    </Form.Item>
+                  </Col>
+                  {/*<Col span={8} order={2}>
+                    <Form.Item {...threeColformItemLayout} label="File Type">
+                        <Input id="file_type" name="fileType" onChange={this.onChange} defaultValue={fileType} value={fileType} placeholder="File Type" disabled={!editingAllowed}/>
+                    </Form.Item>
+                  </Col>*/}
+                  <Col span={8} order={1}>
+                    <Form.Item {...threeColformItemLayout} label="Is Super File">
+                      <Input id="file_issuper_file" name="isSuperFile" onChange={this.onChange} defaultValue={isSuperFile} value={isSuperFile} placeholder="Is Super File" disabled={!editingAllowed}/>
+                    </Form.Item>
+                  </Col>
+                </Row>
 
-              </div>
-              <Form.Item {...formItemLayout} label="Title">
-                {getFieldDecorator('title', {
-                  rules: [{ required: true, message: 'Please enter a title!' }],
-                })(
-                <Input id="file_title" name="title" onChange={this.onChange} placeholder="Title" disabled={!editingAllowed}/>              )}
-              </Form.Item>
-              <Form.Item {...formItemLayout} label="Name">
-                <Input id="file_name" name="name" onChange={this.onChange} placeholder="Name" defaultValue={name} value={name} disabled={true} />
-               </Form.Item>
-              <Form.Item {...formItemLayout} label="Scope">
-                {getFieldDecorator('scope', {
-                  rules: [{
-                      required: true
-                    },
-                    {
-                      validator: this.scopeValidator
-                    }
-                ]})(
-                    <Input id="file_scope" name="scope" onChange={this.onChange} placeholder="Scope" disabled={scopeDisabled || !editingAllowed}/>
-                )}
-              </Form.Item>
-              <Form.Item {...formItemLayout} label="Description">
-                <MarkdownEditor id="file_desc" name="description" onChange={this.onChange} targetDomId="fileDescr" value={description} disabled={!editingAllowed}/>
-              </Form.Item>
-              <Form.Item {...formItemLayout} label="Service URL">
-                  <Input id="file_primary_svc" name="serviceUrl" onChange={this.onChange} defaultValue={serviceUrl} value={serviceUrl} placeholder="Service URL" disabled={!editingAllowed}/>
-              </Form.Item>
-              <Row type="flex">
-                <Col span={8} order={1}>
-                  <Form.Item {...threeColformItemLayout} label="Path">
-                      <Input id="file_path" name="qualifiedPath" onChange={this.onChange} defaultValue={qualifiedPath} value={qualifiedPath} placeholder="Path" disabled={!editingAllowed}/>
-                  </Form.Item>
-                </Col>
-                {/*<Col span={8} order={2}>
-                  <Form.Item {...threeColformItemLayout} label="File Type">
-                      <Input id="file_type" name="fileType" onChange={this.onChange} defaultValue={fileType} value={fileType} placeholder="File Type" disabled={!editingAllowed}/>
-                  </Form.Item>
-                </Col>*/}
-                <Col span={8} order={1}>
-                  <Form.Item {...threeColformItemLayout} label="Is Super File">
-                    <Input id="file_issuper_file" name="isSuperFile" onChange={this.onChange} defaultValue={isSuperFile} value={isSuperFile} placeholder="Is Super File" disabled={!editingAllowed}/>
-                  </Form.Item>
-                </Col>
-              </Row>
+                <Row type="flex">
+                  <Col span={8} order={1}>
+                    <Form.Item {...threeColformItemLayout} label="Supplier">
+                       <Select id="supplier" value={(this.state.file.supplier != '') ? this.state.file.supplier : "Select a supplier"} placeholder="Select a supplier" onChange={this.onSupplierSelection} style={{ width: 190 }} disabled={!editingAllowed}>
+                        {consumers.map(consumer => consumer.assetType=="Supplier" ? <Option key={consumer.id}>{consumer.name}</Option> : null)}
+                      </Select>
+                    </Form.Item>
+                  </Col>
+                  <Col span={8} order={2}>
+                    <Form.Item {...threeColformItemLayout} label="Consumer">
+                       <Select id="consumer" value={(this.state.file.consumer != '') ? this.state.file.consumer : "Select a consumer"} placeholder="Select a consumer" onChange={this.onConsumerSelection} style={{ width: 190 }} disabled={!editingAllowed}>
+                        {consumers.map(consumer => consumer.assetType == 'Consumer' ? <Option key={consumer.id}>{consumer.name}</Option> : null)}
+                      </Select>
+                    </Form.Item>
+                  </Col>
 
-              <Row type="flex">
-                <Col span={8} order={1}>
-                  <Form.Item {...threeColformItemLayout} label="Supplier">
-                     <Select id="supplier" value={(this.state.file.supplier != '') ? this.state.file.supplier : "Select a supplier"} placeholder="Select a supplier" onChange={this.onSupplierSelection} style={{ width: 190 }} disabled={!editingAllowed}>
-                      {consumers.map(consumer => consumer.assetType=="Supplier" ? <Option key={consumer.id}>{consumer.name}</Option> : null)}
-                    </Select>
-                  </Form.Item>
-                </Col>
-                <Col span={8} order={2}>
-                  <Form.Item {...threeColformItemLayout} label="Consumer">
-                     <Select id="consumer" value={(this.state.file.consumer != '') ? this.state.file.consumer : "Select a consumer"} placeholder="Select a consumer" onChange={this.onConsumerSelection} style={{ width: 190 }} disabled={!editingAllowed}>
-                      {consumers.map(consumer => consumer.assetType == 'Consumer' ? <Option key={consumer.id}>{consumer.name}</Option> : null)}
-                    </Select>
-                  </Form.Item>
-                </Col>
+                  <Col span={8} order={3}>
+                    <Form.Item {...threeColformItemLayout} label="Owner">
+                       <Select id="owner" value={(this.state.file.owner != '') ? this.state.file.owner : "Select an Owner"} placeholder="Select an Owner" onChange={this.onOwnerSelection} style={{ width: 190 }} disabled={!editingAllowed}>
+                        {consumers.map(consumer => consumer.assetType == 'Owner' ? <Option key={consumer.id}>{consumer.name}</Option> : null)}
+                      </Select>
+                    </Form.Item>
+                  </Col>
 
-                <Col span={8} order={3}>
-                  <Form.Item {...threeColformItemLayout} label="Owner">
-                     <Select id="owner" value={(this.state.file.owner != '') ? this.state.file.owner : "Select an Owner"} placeholder="Select an Owner" onChange={this.onOwnerSelection} style={{ width: 190 }} disabled={!editingAllowed}>
-                      {consumers.map(consumer => consumer.assetType == 'Owner' ? <Option key={consumer.id}>{consumer.name}</Option> : null)}
-                    </Select>
-                  </Form.Item>
-                </Col>
+                </Row>
+              </Form>
 
-              </Row>
-            </Form>
-
-          </TabPane>
-          <TabPane tab="Layout" key="3">
-              <ComplianceInfo tags={complianceTags}/>
+            </TabPane>
+            <TabPane tab="Layout" key="3">
+                <ComplianceInfo tags={complianceTags}/>
+                <div
+                  className="layout_tbl"
+                  style={{
+                  width: '100%' }}
+                >
+                  <EditableTable
+                    columns={layoutColumns}
+                    dataSource={layout}
+                    ref={node => (this.layoutTable = node)}
+                    fileType={this.state.file.fileType}
+                    editingAllowed={editingAllowed}
+                    dataDefinitions={this.state.dataDefinitions}
+                    showDataDefinition={true}
+                    setData={this.setLayoutData}/>
+                </div>
+            </TabPane>
+            <TabPane tab="Permissable Purpose" key="4">
+              <InheritedLicenses relation={inheritedLicensing}/>
               <div
-                className="layout_tbl"
-                style={{
-                width: '100%' }}
-              >
-                <EditableTable
-                  columns={layoutColumns}
-                  dataSource={layout}
-                  ref={node => (this.layoutTable = node)}
-                  fileType={this.state.file.fileType}
-                  editingAllowed={editingAllowed}
-                  dataDefinitions={this.state.dataDefinitions}
-                  showDataDefinition={true}
-                  setData={this.setLayoutData}/>
-              </div>
-          </TabPane>
-          <TabPane tab="Permissable Purpose" key="4">
-            <InheritedLicenses relation={inheritedLicensing}/>
-            <div
-                className="ag-theme-balham"
-                style={{
-                height: '400px',
-                width: '100%' }}
-              >
-                <AgGridReact
-                  columnDefs={licenseColumns}
-                  rowData={availableLicenses}
-                  defaultColDef={{resizable: true, sortable: true}}
-                  onGridReady={this.onLicenseGridReady}
-                  rowSelection="multiple"
-                  suppressRowClickSelection={editingAllowed}>
-                </AgGridReact>
-              </div>
-          </TabPane>
-          <TabPane tab="Scrubs" key="5">
-            <div
-                className="ag-theme-balham"
-                style={{
-                height: '415px',
-                width: '100%' }}
-              >
-                <AgGridReact
-                  columnDefs={validationTableColumns}
-                  rowData={validations}
-                  defaultColDef={{resizable: true, sortable: true, filter: true}}
-                  onGridReady={this.onGridReady}
-                  singleClickEdit={true}
-                  singleClickEdit={editingAllowed}>
-                </AgGridReact>
-              </div>
-          </TabPane>
-          {this.props.user.permissions.includes(VIEW_DATA_PERMISSION) ?
-            <TabPane tab="File Preview" key="6">
+                  className="ag-theme-balham"
+                  style={{
+                  height: '400px',
+                  width: '100%' }}
+                >
+                  <AgGridReact
+                    columnDefs={licenseColumns}
+                    rowData={availableLicenses}
+                    defaultColDef={{resizable: true, sortable: true}}
+                    onGridReady={this.onLicenseGridReady}
+                    rowSelection="multiple"
+                    suppressRowClickSelection={editingAllowed}>
+                  </AgGridReact>
+                </div>
+            </TabPane>
+            <TabPane tab="Scrubs" key="5">
               <div
                   className="ag-theme-balham"
                   style={{
                   height: '415px',
-                  width: '100%' }}>
-                  {<AgGridReact
-                    columnDefs={fileDataColumns()}
-                    rowData={fileDataContent}
+                  width: '100%' }}
+                >
+                  <AgGridReact
+                    columnDefs={validationTableColumns}
+                    rowData={validations}
+                    defaultColDef={{resizable: true, sortable: true, filter: true}}
                     onGridReady={this.onGridReady}
-                    defaultColDef={{resizable: true}}
-                    >
-                  </AgGridReact>}
-                  {}
+                    singleClickEdit={true}
+                    singleClickEdit={editingAllowed}>
+                  </AgGridReact>
                 </div>
             </TabPane>
-          : null}
+            {this.props.user.permissions.includes(VIEW_DATA_PERMISSION) ?
+              <TabPane tab="File Preview" key="6">
+                <div
+                    className="ag-theme-balham"
+                    style={{
+                    height: '415px',
+                    width: '100%' }}>
+                    {<AgGridReact
+                      columnDefs={fileDataColumns()}
+                      rowData={fileDataContent}
+                      onGridReady={this.onGridReady}
+                      defaultColDef={{resizable: true}}
+                      >
+                    </AgGridReact>}
+                    {}
+                  </div>
+              </TabPane>
+            : null}
 
-          {!this.props.isNew ?
-            <TabPane tab="Dataflows" key="7">
-              <AssociatedDataflows assetName={name} assetType={'File'}/>
-            </TabPane> : null}
+            {!this.props.isNew ?
+              <TabPane tab="Dataflows" key="7">
+                <AssociatedDataflows assetName={name} assetType={'File'}/>
+              </TabPane> : null}
 
-          {showFileProfile ?
-            <TabPane tab="Data Profile" key="8" >
-              <div>
-                  {/*<DataProfileTable data={this.state.fileProfile}/>*/}
-                  <DataProfileHTML htmlAssets={this.state.profileHTMLAssets}/>
-                </div>
-            </TabPane>
-            : "" }
-        </Tabs>
-        </Modal>
-      </div>
+            {showFileProfile ?
+              <TabPane tab="Data Profile" key="8" >
+                <div>
+                    {/*<DataProfileTable data={this.state.fileProfile}/>*/}
+                    <DataProfileHTML htmlAssets={this.state.profileHTMLAssets}/>
+                  </div>
+              </TabPane>
+              : "" }
+          </Tabs>
+        </div>
+        {!this.props.viewMode ?
+          <div className="button-container">
+            <Button key="danger" type="danger" onClick={this.handleDelete}>Delete</Button>
+            <Button key="back" onClick={this.handleCancel}>
+              Cancel
+            </Button>
+            <Button key="submit" disabled={!editingAllowed} type="primary" loading={confirmLoading} onClick={this.handleOk}>
+              Save
+            </Button>
+          </div>
+        : null}
+      </React.Fragment>
     );
   }
 }
@@ -1445,5 +1457,16 @@ export class BooleanCellRenderer extends Component {
     }
 }
 
-const FileDetailsForm = Form.create()(FileDetails);
+function mapStateToProps(state) {
+    const { selectedAsset } = state.assetReducer;
+    const { user } = state.authenticationReducer;
+    const { application } = state.applicationReducer;
+    return {
+      user,
+      selectedAsset,
+      application
+    };
+}
+
+const FileDetailsForm = connect(mapStateToProps)(Form.create()(FileDetails));
 export default FileDetailsForm;

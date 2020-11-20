@@ -427,18 +427,18 @@ div.tooltip {
   display:block;
 }
 
-div.tooltip { 
-  position: absolute;     
-  text-align: left;  
-  text-decoration: none;   
+div.tooltip {
+  position: absolute;
+  text-align: left;
+  text-decoration: none;
   width: auto;
   height: 28px;
   min-width: 30px;
   min-height: 32px;
   padding: 6px 8px;
-  background: rgba(0, 0, 0, 0.75); 
+  background: rgba(0, 0, 0, 0.75);
   border-radius: 4px;
-  pointer-events: none; 
+  pointer-events: none;
   color: #fff;
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
   webkit-box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
@@ -485,7 +485,7 @@ div.tooltip {
   padding: 4px 11px;
 }
 
-.error { 
+.error {
   color: #f5222d;
 }
 
@@ -507,7 +507,7 @@ div.tooltip {
 
 .graph-edit-mode {
   margin-left: 115px;
-  height:85vh; 
+  height:85vh;
   border: 1px solid #17a2b8;
 }
 
@@ -518,4 +518,13 @@ div.tooltip {
 .forgot-form {
   width: 340px;
   margin: 140px auto;
+}
+
+.button-container {
+  float:right;
+  padding:5px;
+}
+
+.button-container .ant-btn {
+  margin-right: 8px;
 }

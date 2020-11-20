@@ -6,6 +6,9 @@ import FileInstanceDetailsForm from "./FileInstanceDetails";
 import { authHeader, handleError } from "../common/AuthHeader.js"
 import { hasEditPermission } from "../common/AuthUtil.js";
 import { Constants } from '../common/Constants';
+import { withRouter } from 'react-router-dom';
+import { connect } from 'react-redux';
+import { assetsActions } from '../../redux/actions/Assets';
 
 class FileTable extends Component {
   state = {
@@ -20,8 +23,8 @@ class FileTable extends Component {
   }
 
  componentDidMount() {
-    this.fetchDataAndRenderTable();
-  }
+  this.fetchDataAndRenderTable();
+ }
 
  componentWillReceiveProps(props) {
     this.setState({
@@ -68,10 +71,16 @@ class FileTable extends Component {
   }
 
   handleEdit = (fileId) => {
-    this.setState({
+    /*this.setState({
       openFileDetailsDialog: true,
       selectedFile: fileId
-    });
+    });*/
+    this.props.dispatch(assetsActions.assetSelected(
+      fileId,
+      this.state.applicationId,
+      ''
+    ));
+    this.props.history.push('/' + this.state.applicationId + '/file/' + fileId);
     //this.child.showModal();
   }
 
@@ -196,7 +205,7 @@ class FileTable extends Component {
         dataIndex: 'createdAt',
         render: (text, record) => {
           let createdAt = new Date(text);
-          return createdAt.toLocaleDateString('en-US', Constants.DATE_FORMAT_OPTIONS) +' @ '+ createdAt.toLocaleTimeString('en-US') 
+          return createdAt.toLocaleDateString('en-US', Constants.DATE_FORMAT_OPTIONS) +' @ '+ createdAt.toLocaleTimeString('en-US')
         }
     },
     {
@@ -258,7 +267,7 @@ class FileTable extends Component {
       columns={indexColumns}
       rowKey={record => record.id}
       dataSource={this.state.files}
-      pagination={{ pageSize: 20 }} 
+      pagination={{ pageSize: 20 }}
       scroll={{ y: '70vh' }}
     />
 
@@ -296,4 +305,12 @@ class FileTable extends Component {
   }
 }
 
-export default FileTable;
+function mapStateToProps(state) {
+    const { application } = state.applicationReducer;
+    return {
+        application
+    };
+}
+
+const connectedFileTable = connect(mapStateToProps)(withRouter(FileTable));
+export { connectedFileTable as FileTable };
