@@ -115,6 +115,67 @@ router.get('/rules', (req, res) => {
   }
 });
 
+router.get('/files/:fileId/validation-rules', (req, res, next) => {
+  FileValidation.findAll({
+    where: {
+      file_id: req.params.fileId
+    }
+  }).then(rules => {
+    return res.json(rules);
+  }).catch(err => {
+    console.log('err', err);
+    return res.status(500).json({
+      'message': 'An error occurred'
+    });
+  });
+});
+
+router.get('/files/:fileId/validation-rules/validations', (req, res, next) => {
+  FileValidation.findAll({
+    where: {
+      file_id: req.params.fileId
+    }
+  }).then(rules => {
+    let validations = '';
+    rules.forEach(rule => {
+      if (rule.rule_test) {
+        validations += rule.rule_name + ':' + rule.rule_test + ';';
+      }
+    });
+    return res.json({
+      ecl: validations
+    });
+  }).catch(err => {
+    console.log('err', err);
+    return res.status(500).json({
+      'message': 'An error occurred'
+    });
+  });
+});
+
+router.get('/files/:fileId/validation-rules/fixes', (req, res, next) => {
+  FileValidation.findAll({
+    where: {
+      file_id: req.params.fileId
+    }
+  }).then(rules => {
+    let fixes = '';
+    rules.forEach(rule => {
+      if (rule.rule_fix) {
+        fixes += rule.rule_name + ':' + rule.rule_fix + ';';
+      }
+    });
+    return res.json({
+      ecl: fixes
+    });
+  }).catch(err => {
+    console.log('err', err);
+    return res.status(500).json({
+      'message': 'An error occurred'
+    });
+  });
+});
+
 router.get('/CheckFileId', [
   query('app_id')
     .isUUID(4).withMessage('Invalid application id'),
