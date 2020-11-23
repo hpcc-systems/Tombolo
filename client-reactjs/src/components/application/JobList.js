@@ -12,6 +12,7 @@ import { connect } from 'react-redux';
 import { authHeader, handleError } from "../common/AuthHeader.js"
 import {handleJobDelete} from "../common/WorkflowUtil";
 import { Constants } from '../common/Constants';
+import ReactMarkdown from 'react-markdown';
 
 class JobList extends Component {
 
@@ -49,7 +50,7 @@ class JobList extends Component {
 
   componentDidMount() {
     if(this.state.applicationId != '') {
-      this.fetchDataAndRenderTable();      
+      this.fetchDataAndRenderTable();
     }
   }
 
@@ -106,11 +107,11 @@ class JobList extends Component {
     }, 200);
   }
 
-  handleDelete(id, objType) {    
+  handleDelete(id, objType) {
     console.log(id)
     this.handleJobDelete(id);
   }
-    
+
 
   handleJobDelete(jobId) {
     handleJobDelete(jobId, this.state.applicationId)
@@ -152,7 +153,10 @@ class JobList extends Component {
       {
         title: 'Description',
         dataIndex: 'description',
+        className: 'overflow-hidden',
+        ellipsis: true,
         width: '20%',
+        render: (text, record) => <ReactMarkdown children={text} />
       },
       {
         title: 'Type',
@@ -165,14 +169,14 @@ class JobList extends Component {
         render: (text, record) => {
           return (record.dataflow && record.dataflow.title != '') ? record.dataflow.title : '';
         }
-      },          
+      },
       {
         width: '25%',
         title: 'Created',
         dataIndex: 'createdAt',
         render: (text, record) => {
           let createdAt = new Date(text);
-          return createdAt.toLocaleDateString('en-US', Constants.DATE_FORMAT_OPTIONS) +' @ '+ createdAt.toLocaleTimeString('en-US') 
+          return createdAt.toLocaleDateString('en-US', Constants.DATE_FORMAT_OPTIONS) +' @ '+ createdAt.toLocaleTimeString('en-US')
         }
       },
       {
@@ -189,7 +193,7 @@ class JobList extends Component {
           </span>
       }];
 
-      
+
     return (
       <div>
         <div className="d-flex justify-content-end" style={{paddingTop:"55px", margin: "5px"}}>
@@ -205,11 +209,11 @@ class JobList extends Component {
               columns={jobColumns}
               rowKey={record => record.id}
               dataSource={this.state.assets}
-              pagination={{ pageSize: 10 }} 
+              pagination={{ pageSize: 10 }}
               scroll={{ y: '70vh' }}
             />
 
-          
+
           {this.state.openJobDetailsDialog ?
             <JobDetailsForm
               onRef={ref => (this.child = ref)}
@@ -219,8 +223,8 @@ class JobList extends Component {
               onRefresh={this.handleRefresh}
               onClose={this.closeJobDlg}
               user={this.props.user}/> : null}
-          
-        </div>        
+
+        </div>
       </div>
   )
   }

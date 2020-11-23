@@ -10,7 +10,7 @@ module.exports = (sequelize, DataTypes) => {
     },
     applicationId: DataTypes.STRING,
     name: DataTypes.STRING,
-    description: DataTypes.STRING,
+    description: DataTypes.TEXT,
     data_defn: {
       type: DataTypes.TEXT,
       get() {

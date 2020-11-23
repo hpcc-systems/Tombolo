@@ -1,7 +1,8 @@
 import React, { useState, useEffect } from 'react'
 import ReactDOM from 'react-dom';
 import { Button, Form, Input, message, Popconfirm, Icon, Tooltip, Modal, Select } from 'antd/lib';
-import { authHeader, handleError } from "../../common/AuthHeader.js"
+import { authHeader, handleError } from "../../common/AuthHeader.js";
+import { MarkdownEditor } from "../../common/MarkdownEditor.js";
 const Option = Select.Option;
 
 function AddDataflow({isShowing, toggle, applicationId, onDataFlowUpdated, selectedDataflow}) {
@@ -15,12 +16,12 @@ function AddDataflow({isShowing, toggle, applicationId, onDataFlowUpdated, selec
   const [form, setForm] = useState({
     submitted: false,
     confirmLoading: false
-  }); 
+  });
 
   const [whitelistedClusters, setWhitelistedClusters] = useState([]);
 
   const [clusterSelected, setClusterSelected] = useState('');
-  
+
   useEffect(() => {
     setDataFlow({...selectedDataflow});
     setClusterSelected(selectedDataflow ? selectedDataflow.clusterId : '')
@@ -37,7 +38,7 @@ function AddDataflow({isShowing, toggle, applicationId, onDataFlowUpdated, selec
     },
     wrapperCol: {
       xs: { span: 2 },
-      sm: { span: 10 },
+      sm: { span: 18 },
     },
   };
 
@@ -59,29 +60,29 @@ function AddDataflow({isShowing, toggle, applicationId, onDataFlowUpdated, selec
     });
   }
 
-  const onClusterSelection= (value) => {  
+  const onClusterSelection= (value) => {
     setClusterSelected(value);
   }
 
-  const handleAddAppOk = () => {    
+  const handleAddAppOk = () => {
     setForm({
       submitted: true
     });
-    
+
     if(dataFlow.title == '' || clusterSelected == '') {
       return false;
     }
     setForm({
-      confirmLoading: true,  
+      confirmLoading: true,
       submitted: true
-    });    
+    });
 
     fetch('/api/dataflow/save', {
       method: 'post',
       headers: authHeader(),
       body: JSON.stringify(
       	{	"id": dataFlow.id,
-      		"application_id": applicationId, 
+      		"application_id": applicationId,
       		"title": dataFlow.title,
       		"description": dataFlow.description,
           "clusterId": clusterSelected
@@ -91,7 +92,7 @@ function AddDataflow({isShowing, toggle, applicationId, onDataFlowUpdated, selec
         return response.json();
       }
       handleError(response);
-    }).then(function(data) {           
+    }).then(function(data) {
       setForm({
 	      confirmLoading: false,
 	      submitted: false
@@ -141,17 +142,17 @@ function AddDataflow({isShowing, toggle, applicationId, onDataFlowUpdated, selec
           visible={isShowing}
           confirmLoading={form.confirmLoading}
         >
-	        <Form layout="vertical">	            
+	        <Form layout="vertical">
 	            <div className={'form-group' + (form.submitted && !dataFlow.title ? ' has-error' : '')}>
 		            <Form.Item {...formItemLayout} label="Title">
 							    <Input id="title" name="title" onChange={e => setDataFlow({...dataFlow, [e.target.name]: e.target.value})} placeholder="Title" value={dataFlow.title}/>
-			            {(form.submitted && !dataFlow.title || splCharacters.test(dataFlow.title)) && 
+			            {(form.submitted && !dataFlow.title || splCharacters.test(dataFlow.title)) &&
 		                    <div className="error">Please enter a valid Title</div>
 			            }
 		            </Form.Item>
 	            </div>
 	            <Form.Item {...formItemLayout} label="Description">
-				    		<Input id="description" name="description" onChange={e => setDataFlow({...dataFlow, [e.target.name]: e.target.value})} placeholder="Description" value={dataFlow.description}/>
+				    		<MarkdownEditor id="description" name="description" targetDomId="dataflowDescr" onChange={e => setDataFlow({...dataFlow, [e.target.name]: e.target.value})} value={dataFlow.description}/>
 	            </Form.Item>
               <Form.Item {...formItemLayout} label="Cluster">
                 <Select placeholder="Select a Cluster" onChange={onClusterSelection} style={{ width: 290 }} value={clusterSelected}>
@@ -165,7 +166,7 @@ function AddDataflow({isShowing, toggle, applicationId, onDataFlowUpdated, selec
         </Modal>
      </div>
      </React.Fragment>
-	  )  
+	  )
 
 }
 

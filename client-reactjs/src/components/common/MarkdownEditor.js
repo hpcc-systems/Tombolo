@@ -11,12 +11,16 @@ class MarkdownEditor extends Component {
   }
 
   componentDidUpdate(prevProps, prevState, snapshot) {
+    if (!this.props.value) {
+      this.mdEditor.markdown("");
+      return;
+    }
     if (!this.value) {
       this.name = this.props.name;
       this.value = this.props.value;
       let t = window.setTimeout(() => {
         this.mdEditor.markdown(this.props.value);
-      }, 400);
+      }, 300);
     }
   }
 
@@ -29,6 +33,17 @@ class MarkdownEditor extends Component {
       this.value = this.mdEditor.markdown();
       this.props.onChange({ target: this });
     }, 500));
+
+    if (!this.value) {
+      this.name = this.props.name;
+      this.value = this.props.value;
+      let t = window.setTimeout(() => {
+        if (!this.props.value) {
+          return;
+        }
+        this.mdEditor.markdown(this.props.value);
+      }, 300);
+    }
   }
 
   render() {

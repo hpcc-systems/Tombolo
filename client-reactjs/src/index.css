@@ -427,6 +427,16 @@ div.tooltip {
   display:block;
 }
 
+.overflow-hidden > * {
+  overflow: hidden;
+}
+
+td.ant-table-row-cell-ellipsis::after {
+  content: "...";
+  position: absolute;
+  bottom: 16px;
+}
+
 div.tooltip {
   position: absolute;
   text-align: left;

@@ -11,7 +11,7 @@ module.exports = (sequelize, DataTypes) => {
     application_id: DataTypes.STRING,
     title: DataTypes.STRING,
     name: DataTypes.STRING,
-    description: DataTypes.STRING,
+    description: DataTypes.TEXT,
     url: DataTypes.STRING,
     gitRepo: DataTypes.STRING,
     primaryService: DataTypes.STRING,
@@ -23,7 +23,7 @@ module.exports = (sequelize, DataTypes) => {
       foreignKey:'query_id',
       onDelete: 'CASCADE',
       hooks: true
-    });    
+    });
     query.belongsTo(models.application, {
       foreignKey: 'application_id'
     });
