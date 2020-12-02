@@ -7,6 +7,7 @@ import { Constants } from '../../common/Constants';
 import { useSelector, useDispatch } from "react-redux";
 import { withRouter, NavLink } from 'react-router-dom';
 import { assetsActions } from '../../../redux/actions/Assets';
+import { groupsActions } from '../../../redux/actions/Groups';
 import AssetsTable from "./AssetsTable";
 import { MarkdownEditor } from "../../common/MarkdownEditor.js"
 
@@ -17,6 +18,7 @@ const { confirm } = Modal;
 function Assets(props) {
   const [application, setApplication] = useState({...props});
   const [selectedGroup, setSelectedGroup] = useState({id:'', key:''});
+  const [expandedGroups, setExpandedGroups] = useState([]);
   const [newGroup, setNewGroup] = useState({name:'', description:'', id: ''});
   const [newGroupForm, setNewGroupForm] = useState({submitted:false});
   const [treeData, setTreeData] = useState([]);
@@ -41,7 +43,7 @@ function Assets(props) {
   const splCharacters = /[ `!@#$%^&*()+\=\[\]{};':"\\|,.<>\/?~]/;
   const form = props.form;
 
-
+  const groupsReducer = useSelector(state => state.groupsReducer);
 
   useEffect(() => {
     if(application.applicationId) {
@@ -64,6 +66,8 @@ function Assets(props) {
     .then(data => {
       setTreeData(data)
       setSelectedGroup({'id':data[0].id, 'key':data[0].key})
+      const {keys={selectedKeys:{}, expandedKeys:[]}} = {...groupsReducer};
+      setExpandedGroups(keys.expandedKeys)
     }).catch(error => {
       console.log(error);
     });
@@ -75,8 +79,13 @@ function Assets(props) {
     setSelectedGroup({id:event.node.props.id, key:event.node.props.eventKey})
   };
 
-  const onExpand = () => {
-    console.log('Trigger Expand');
+  const onExpand = (expandedKeys) => {
+    setExpandedGroups(expandedKeys);
+    dispatch(groupsActions.groupExpanded(
+      selectedGroup,
+      expandedKeys
+    ));
+
   };
 
   const onRightClick = e => {
@@ -115,9 +124,8 @@ function Assets(props) {
   }
 
   const closeCreateGroupDialog = () => {
-   setOpenCreateGroupDialog(false);
-   setNewGroup({name:'', description:''})
-
+    setOpenCreateGroupDialog(false);
+    setNewGroup({name:'', description:''})
   }
 
   const handleMenuClick = (e) => {
@@ -229,7 +237,6 @@ function Assets(props) {
       okType: 'danger',
       cancelText: 'No',
       onOk() {
-        console.log('OK');
         fetch('/api/groups', {
           method: 'delete',
           headers: authHeader(),
@@ -324,6 +331,7 @@ function Assets(props) {
                     treeData={treeData}
                     onRightClick={onRightClick}
                     selectedKeys={[selectedGroup.key]}
+                    expandedKeys={expandedGroups}
                     draggable
                     onDragEnter={handleDragEnter}
                     onDrop={handleDragDrop}

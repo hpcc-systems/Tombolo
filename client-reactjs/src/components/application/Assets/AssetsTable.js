@@ -13,7 +13,7 @@ import { useHistory } from 'react-router';
 import useModal from '../../../hooks/useModal';
 
 function AssetsTable(props) {
-  const {selectedGroup} = props;
+  let {selectedGroup} = props;
   const [assets, setAssets] = useState([]);
   const { isShowing, toggle, OpenDetailsForm } = useFileDetailsForm();
   const authReducer = useSelector(state => state.authenticationReducer);
@@ -59,12 +59,18 @@ function AssetsTable(props) {
   }
 
   const handleEdit = (id, type) => {
-    dispatch(assetsActions.assetSelected(
-      id,
-      applicationId,
-      ''
-    ));
-    history.push('/' + applicationId + '/file/' + id);
+    console.log(type);
+    if(type != 'Group') {
+      dispatch(assetsActions.assetSelected(
+        id,
+        applicationId,
+        ''
+      ));
+      history.push('/' + applicationId + '/file/' + id);
+    } else {
+      selectedGroup = {id:id};
+      fetchDataAndRenderTable();
+    }
   }
 
   const handleClose = () => {
@@ -116,7 +122,7 @@ function AssetsTable(props) {
     dataIndex: 'name',
     width: '20%',
     ellipsis: true,
-    render: (text, record) => <a href='#' onClick={(row) => handleEdit(record.id, record.objType)}>{text}</a>
+    render: (text, record) => <a href='#' onClick={(row) => handleEdit(record.id, record.type)}>{text}</a>
   },
   {
     title: 'Description',

@@ -4,8 +4,9 @@ import { NavLink, Switch, Route, withRouter } from 'react-router-dom';
 import { userActions } from '../../redux/actions/User';
 import { connect } from 'react-redux';
 import { authHeader, handleError } from "../common/AuthHeader.js"
-import { hasAdminRole } from "../common/AuthUtil.js";  
+import { hasAdminRole } from "../common/AuthUtil.js";
 import { applicationActions } from '../../redux/actions/Application';
+import { groupsActions } from '../../redux/actions/Groups';
 import $ from 'jquery';
 
 const { Header, Content } = Layout;
@@ -33,13 +34,13 @@ class AppHeader extends Component {
       confirmnewpassword: ''
     }
 
-    componentWillReceiveProps(props) {      
+    componentWillReceiveProps(props) {
       if(props.application && props.application.applicationTitle!=''){
         this.setState({ selected: props.application.applicationTitle });
         $('[data-toggle="popover"]').popover('disable');
-      }      
+      }
     }
-    
+
     componentDidMount(){
       if(this.props.location.pathname.includes('report/')){
         const pathSnippets = this.props.location.pathname.split('/');
@@ -47,7 +48,7 @@ class AppHeader extends Component {
           searchText: pathSnippets[2]
         });
       }
-      if(this.state.applications.length == 0) {        
+      if(this.state.applications.length == 0) {
         var url="/api/app/read/appListByUserId?user_id="+this.props.user.id+'&user_name='+this.props.user.username;
         if(hasAdminRole(this.props.user)) {
           url="/api/app/read/app_list";
@@ -72,10 +73,10 @@ class AppHeader extends Component {
         }).catch(error => {
           console.log(error);
         });
-      }      
+      }
     }
     componentDidUpdate(prevProps, prevState) {
-      if(this.props.newApplication) {        
+      if(this.props.newApplication) {
         let applications = this.state.applications;
         let isNewApplicationInList = (applications.filter(application => application.value == this.props.newApplication.applicationId).length > 0);
         if(!isNewApplicationInList) {
@@ -105,10 +106,10 @@ class AppHeader extends Component {
         let application = applications.filter(application => application.value == this.props.deletedApplicationId);
         if(application.length > 0) {
           applications = applications.filter(application => application.value != this.props.deletedApplicationId);
-          this.setState({ applications });          
+          this.setState({ applications });
         }
 
-      }           
+      }
     }
 
     handleTopNavClick(event) {
@@ -127,17 +128,18 @@ class AppHeader extends Component {
     }
 
     handleLogOut = (e) => {
-        localStorage.removeItem('user');
-        this.setState({
-            applicationId: '',
-            selected: 'Select an Application'
-        });
-        this.props.dispatch(applicationActions.applicationSelected('', ''));
+      localStorage.removeItem('user');
+      this.setState({
+          applicationId: '',
+          selected: 'Select an Application'
+      });
+      this.props.dispatch(applicationActions.applicationSelected('', ''));
+      //reset the group heiracrhy selection
+      this.props.dispatch(groupsActions.groupExpanded('', []));
+      this.props.dispatch(userActions.logout());
 
-        this.props.dispatch(userActions.logout());
-
-        this.props.history.push('/login');
-        message.success('You have been successfully logged out. ');
+      this.props.history.push('/login');
+      message.success('You have been successfully logged out. ');
     }
 
     handleChange(event) {
@@ -163,8 +165,8 @@ class AppHeader extends Component {
           this.props.history.push('/'+this.state.applications[0].value+'/data-dictionary');
         }
       } else {
-        appDropdownItem.click();  
-      }      
+        appDropdownItem.click();
+      }
     }
 
     openHelpNotification = () => {
@@ -195,14 +197,14 @@ class AppHeader extends Component {
     }
 
     handleChangePassword = () => {
-      this.setState({visible: true }); 
+      this.setState({visible: true });
     }
 
     handleOk = () => {
       let _self=this;
       this.props.form.validateFields(async (err, values) => {
         if(!err) {
-          this.setState({loading: true }); 
+          this.setState({loading: true });
           fetch("/api/user/changePassword", {
             method: 'post',
             headers: authHeader(),
@@ -216,10 +218,10 @@ class AppHeader extends Component {
             _self.clearChangePasswordDlg()
             message.config({top:130})
             message.success('Password changed successfully.');
-            _self.setState({loading: false, visible: false }); 
+            _self.setState({loading: false, visible: false });
           }).catch(function(err) {
             _self.clearChangePasswordDlg()
-            _self.setState({loading: false, visible: false }); 
+            _self.setState({loading: false, visible: false });
             message.config({top:130})
             message.error('There was an error while changing the password.');
           });
@@ -228,7 +230,7 @@ class AppHeader extends Component {
     }
 
     handleCancel = () => {
-      this.setState({visible: false }); 
+      this.setState({visible: false });
     }
 
     handleUserActionMenuClick = (e) => {
@@ -247,8 +249,8 @@ class AppHeader extends Component {
       this.setState({
         oldpassword: '',
         newpassword: '',
-        confirmnewpassword: '' 
-      }); 
+        confirmnewpassword: ''
+      });
     }
 
   render() {
@@ -305,7 +307,7 @@ class AppHeader extends Component {
               </li>*/}
 
             </ul>
-            <ul className="ml-md-auto navbar-nav">            
+            <ul className="ml-md-auto navbar-nav">
             <li className="nav-item">
               <Search
                 value={this.state.searchText}
@@ -322,13 +324,13 @@ class AppHeader extends Component {
                 </Button>
               </Dropdown>
             </li>
-            <li>  
+            <li>
               <Dropdown overlay={userActionMenu} style={{paddingLeft:"5px"}} trigger={['click']}>
                 <Button shape="round">
                   <i className="fa fa-lg fa-user-circle"></i><span style={{paddingLeft:"5px"}}>{this.props.user.firstName + " " + this.props.user.lastName} <Icon type="down" /></span>
                 </Button>
               </Dropdown>
-            </li>  
+            </li>
             </ul>
           </div>
         </nav>
@@ -343,9 +345,9 @@ class AppHeader extends Component {
             </Button>,
             <Button key="submit" onClick={this.handleOk} type="primary" loading={this.state.loading}>
               Change Password
-            </Button>            
+            </Button>
           ]}
-        >          
+        >
           <Form.Item {...formItemLayout} label="Password">
             {getFieldDecorator('name', {
               rules: [{ required: true, message: 'Please enter the current password!' }],
@@ -368,7 +370,7 @@ class AppHeader extends Component {
           </Form.Item>
 
         </Modal>
-       </React.Fragment> 
+       </React.Fragment>
     )
   }
 }
@@ -390,6 +392,3 @@ function mapStateToProps(state) {
 //export default withRouter(AppHeader);
 const connectedAppHeader = connect(mapStateToProps)(withRouter(Form.create()(AppHeader)));
 export { connectedAppHeader as AppHeader };
-
-
-

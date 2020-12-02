@@ -2,6 +2,8 @@ const express = require('express');
 const router = express.Router();
 const validatorUtil = require('../../utils/validator');
 const { body, query, oneOf, validationResult } = require('express-validator');
+let Sequelize = require('sequelize');
+const Op = Sequelize.Op;
 var models  = require('../../models');
 let Groups = models.groups;
 let Index = models.indexes;
@@ -73,10 +75,30 @@ router.get('/', [
       })
 
     })
-    .catch(function(err) {
+    .catch((err) => {
         console.log(err);
     });
 });
+
+let getChildGroups = (appId, groupId) => {
+  return new Promise((resolve, reject) => {
+    let childGroups = [];
+    Groups.findAll({where:{application_id: appId, parent_group: groupId}}).then((groups) => {
+      groups.forEach((group) => {
+        childGroups.push({
+          type: 'Group',
+          id: group.id,
+          name: group.name,
+          description: group.description,
+          createdAt: group.createdAt
+        })
+      })
+      resolve(childGroups);
+    }).catch((err) => {
+      reject(err);
+    })
+  })
+}
 
 router.get('/assets', [
   query('app_id').isUUID(4).withMessage('Invalid app id'),
@@ -86,12 +108,21 @@ router.get('/assets', [
     if (!errors.isEmpty()) {
         return res.status(422).json({ success: false, errors: errors.array() });
     }
-    console.log("[groups/group.js] - Get groups for app_id = " + req.query.app_id);
-    Groups.findAll({where:{"application_id":req.query.app_id, "id":req.query.group_id},
-      include: [{model:File, attributes:['id', 'name', 'title', 'description', 'createdAt']}, {model:Job, attributes:['id', 'name', 'title', 'description', 'createdAt']}, {model:Query, attributes:['id', 'name', 'title', 'description', 'createdAt']}, {model:Index, attributes:['id', 'name', 'title', 'description', 'createdAt']}],
-      order: [['name', 'ASC']]
-    }).then(function(assets) {
+    Groups.findAll({where:{
+      "application_id":req.query.app_id,
+      "id": req.query.group_id
+      /*[Op.or]:[
+        {"parent_group": req.query.group_id},
+        {"id": req.query.group_id}
+      ]*/
+    },
+    include: [{model:File, attributes:['id', 'name', 'title', 'description', 'createdAt']}, {model:Job, attributes:['id', 'name', 'title', 'description', 'createdAt']}, {model:Query, attributes:['id', 'name', 'title', 'description', 'createdAt']}, {model:Index, attributes:['id', 'name', 'title', 'description', 'createdAt']}],
+    order: [['name', 'ASC']]
+    }).then(async (assets) => {
+      console.log(assets.gr)
       let finalAssets = [];
+      let childGroups = await getChildGroups(req.query.app_id, req.query.group_id)
+      finalAssets = finalAssets.concat(childGroups);
       assets[0].files.forEach((file) => {
         finalAssets.push({
           type: 'File',
