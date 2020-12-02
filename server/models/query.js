@@ -23,10 +23,11 @@ module.exports = (sequelize, DataTypes) => {
       foreignKey:'query_id',
       onDelete: 'CASCADE',
       hooks: true
-    });    
+    });
     query.belongsTo(models.application, {
       foreignKey: 'application_id'
     });
+    query.belongsTo(models.groups);
   };
   return query;
 };

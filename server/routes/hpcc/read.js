@@ -176,8 +176,8 @@ router.get('/getCluster', function (req, res) {
 
 router.post('/newcluster', [
 
-  body('thor_host').isURL({'require_protocol':true, 'require_host':true }).withMessage("Invalid thor host"),
-  body('roxie_host').isURL({'require_protocol':true, 'require_host':true }).withMessage("Invalid roxie host"),
+  body('thor_host').isURL({'require_protocol':true, 'require_host':true, 'allow_underscores':true }).withMessage("Invalid thor host"),
+  body('roxie_host').isURL({'require_protocol':true, 'require_host':true, 'allow_underscores':true }).withMessage("Invalid roxie host"),
   body('thor_port')
     .isInt().withMessage('Invalid thor port'),
   body('roxie_port')

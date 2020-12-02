@@ -35,6 +35,7 @@ module.exports = (sequelize, DataTypes) => {
     job.belongsTo(models.application, {
       foreignKey: 'application_id'
     });
+    job.belongsTo(models.groups);
   };
   return job;
 };

@@ -8,6 +8,7 @@ import EditableTable from "../common/EditableTable.js"
 import { MarkdownEditor } from "../common/MarkdownEditor.js"
 import { EclEditor } from "../common/EclEditor.js"
 import {handleJobDelete} from "../common/WorkflowUtil";
+import { connect } from 'react-redux';
 
 const TabPane = Tabs.TabPane;
 const Option = Select.Option;
@@ -53,16 +54,23 @@ class JobDetails extends Component {
   }
 
   componentDidMount() {
-    this.props.onRef(this);
-    this.getJobDetails();
-    this.getClusters();
-    this.getFiles();
-    this.fetchDataDefinitions();
+    //this.props.onRef(this);
+    console.log(this.props.application);
+    if(this.props.application && this.props.application.applicationId) {
+      this.getJobDetails();
+      this.getClusters();
+      this.getFiles();
+      this.fetchDataDefinitions();
+    }
   }
 
   getJobDetails() {
     if(this.props.selectedAsset !== '' && !this.props.isNew) {
-      fetch("/api/job/job_details?job_id="+this.props.selectedAsset+"&app_id="+this.props.applicationId, {
+      this.setState({
+        initialDataLoading: true
+      });
+
+      fetch("/api/job/job_details?job_id="+this.props.selectedAsset.id+"&app_id="+this.props.application.applicationId, {
         headers: authHeader()
       })
       .then((response) => {
@@ -114,6 +122,9 @@ class JobDetails extends Component {
         return data;
       })
       .then(data => {
+        this.setState({
+          initialDataLoading: false
+        });
       })
       .catch(error => {
         console.log(error);
@@ -143,7 +154,7 @@ class JobDetails extends Component {
 
 
   getFiles() {
-      fetch("/api/file/read/file_list?app_id="+this.props.applicationId, {
+      fetch("/api/file/read/file_list?app_id="+this.props.application.applicationId, {
         headers: authHeader()
       })
       .then((response) => {
@@ -183,7 +194,7 @@ class JobDetails extends Component {
 
   async fetchDataDefinitions() {
     try {
-      let dataDefn = await fetchDataDictionary(this.props.applicationId);
+      let dataDefn = await fetchDataDictionary(this.props.application.applicationId);
       this.setState({
         dataDefinitions: dataDefn
       });
@@ -342,7 +353,8 @@ class JobDetails extends Component {
             confirmLoading: false,
           });
           //this.props.onClose();
-          this.props.onRefresh(saveResponse);
+          //this.props.onRefresh(saveResponse);
+          this.props.history.push('/' + this.props.application.applicationId + '/assets')
         }, 2000);
       }
     });
@@ -356,16 +368,17 @@ class JobDetails extends Component {
     let _self=this;
     confirm({
       title: 'Delete file?',
-      content: 'Are you sure you want to delete this file?',
+      content: 'Are you sure you want to delete this Job?',
       onOk() {
-        handleJobDelete(_self.props.selectedAsset, _self.props.applicationId)
+        handleJobDelete(_self.props.selectedAsset.id, _self.props.application.applicationId)
         .then(result => {
           if(_self.props.onDelete) {
             _self.props.onDelete(_self.props.currentlyEditingNode)
           } else {
-            _self.props.onRefresh()
+            //_self.props.onRefresh()
+            _self.props.history.push('/' + _self.props.application.applicationId + '/assets');
           }
-          _self.props.onClose();
+          //_self.props.onClose();
           message.success("Job deleted sucessfully");
         }).catch(error => {
           console.log(error);
@@ -396,7 +409,7 @@ class JobDetails extends Component {
   }
 
   populateJobDetails() {
-    var applicationId = this.props.applicationId;
+    var applicationId = this.props.application.applicationId;
     var inputFiles = this.state.job.inputFiles.map(function (element) {
       element.file_type = "input";
       //new job creation
@@ -428,7 +441,8 @@ class JobDetails extends Component {
         "jobType" : this.state.job.jobType,
         "contact": this.state.job.contact,
         "author": this.state.job.author,
-        "clusterId": this.state.selectedCluster
+        "clusterId": this.state.selectedCluster,
+        "groupId": this.props.groupId
       },
       "params": this.state.job.inputParams,
       "files" : inputFiles.concat(outputFiles),
@@ -578,26 +592,13 @@ class JobDetails extends Component {
     }
 
     return (
-      <div>
-        <Modal
-          title="Job Details"
-          visible={visible}
-          onCancel={this.handleCancel}
-          destroyOnClose={true}
-          width="1200px"
-          footer={[
-            <Checkbox key="createFiles" onChange={this.onAutoCreateFiles} disabled={!this.props.isNew} style={{"float":"left"}}>
-              Automatically create dependant files
-            </Checkbox>,
-            <Button key="danger" type="danger" onClick={this.handleDelete}>Delete</Button>,
-            <Button key="cancel" onClick={this.handleCancel}>
-              Cancel
-            </Button>,
-            <Button key="submit" disabled={!editingAllowed} type="primary" loading={confirmLoading} onClick={this.handleOk}>
-              Save
-            </Button>,
-          ]}
-        >
+      <React.Fragment>
+      <div style={{"paddingTop": "55px"}}>
+          {!this.props.isNew ?
+            <div className="loader">
+              <Spin spinning={this.state.initialDataLoading} size="large" />
+            </div> : null}
+
           <Tabs
             defaultActiveKey="1"
           >
@@ -640,8 +641,7 @@ class JobDetails extends Component {
                 (<Input id="job_title" name="title" onChange={this.onChange} placeholder="Title" disabled={!editingAllowed}/>)}
                 </Form.Item>
                 <Form.Item {...formItemLayout} label="Description">
-               {getFieldDecorator('description')
-                (<MarkdownEditor id="job_desc" name="description" onChange={this.onChange} targetDomId="jobDescr" value={description} disabled={!editingAllowed}/>)}
+                  <MarkdownEditor id="job_desc" name="description" onChange={this.onChange} targetDomId="jobDescr" value={description} disabled={!editingAllowed}/>
                 </Form.Item>
                 {this.props.selectedJobType != 'Data Profile' ?
                   <Form.Item {...formItemLayout} label="Git Repo">
@@ -745,10 +745,37 @@ class JobDetails extends Component {
               <AssociatedDataflows assetName={name} assetType={'Job'}/>
             </TabPane> : null}
           </Tabs>
-        </Modal>
       </div>
+      {!this.props.viewMode ?
+        <div className="button-container">
+          {!this.props.isNew ? <Button key="danger" type="danger" onClick={this.handleDelete}>Delete</Button> : null }
+          <Button key="back" onClick={this.handleCancel}>
+            Cancel
+          </Button>
+          <Button key="submit" disabled={!editingAllowed} type="primary" loading={confirmLoading} onClick={this.handleOk}>
+            Save
+          </Button>
+        </div>
+      : null}
+      </React.Fragment>
     );
   }
 }
-const JobDetailsForm = Form.create()(JobDetails);
+
+function mapStateToProps(state) {
+    const { selectedAsset, newAsset={} } = state.assetReducer;
+    const { user } = state.authenticationReducer;
+    const { application } = state.applicationReducer;
+    const {isNew=false, groupId='' } = newAsset;
+    console.log(selectedAsset)
+    return {
+      user,
+      selectedAsset,
+      application,
+      isNew,
+      groupId
+    };
+}
+
+const JobDetailsForm = connect(mapStateToProps)(Form.create()(JobDetails));
 export default JobDetailsForm;

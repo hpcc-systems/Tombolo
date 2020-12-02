@@ -8,6 +8,10 @@ export function assetReducer(state = initialState, action) {
       return {
         selectedAsset: action.selectedAsset
       };
+    case Constants.NEW_ASSET:
+      return {
+        newAsset: action.newAsset
+      };
     default:
       return state
   }

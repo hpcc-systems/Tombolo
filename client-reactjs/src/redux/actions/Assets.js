@@ -1,7 +1,8 @@
 import { Constants } from '../../components/common/Constants';
 
 export const assetsActions = {
-  assetSelected
+  assetSelected,
+  newAsset
 };
 
 function assetSelected(id, applicationId, title) {
@@ -12,6 +13,19 @@ function assetSelected(id, applicationId, title) {
     return {
       type: Constants.ASSET_SELECTED,
       selectedAsset
+    }
+  }
+}
+
+function newAsset(applicationId, groupId) {
+  const isNew = true;
+  return dispatch => {
+    dispatch(request({ applicationId, groupId, isNew }));
+  };
+  function request(newAsset) {
+    return {
+      type: Constants.NEW_ASSET,
+      newAsset
     }
   }
 }

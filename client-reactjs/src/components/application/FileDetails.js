@@ -15,6 +15,7 @@ import {eclTypes} from '../common/CommonUtil';
 import 'ag-grid-community/dist/styles/ag-grid.css';
 import 'ag-grid-community/dist/styles/ag-theme-balham.css';
 import { connect } from 'react-redux';
+import BreadCrumbs from "../common/BreadCrumbs";
 
 const TabPane = Tabs.TabPane;
 const Option = Select.Option;
@@ -249,7 +250,6 @@ class FileDetails extends Component {
         this.setState({
           initialDataLoading: false
         });
-
       })
       .catch(error => {
         console.log(error);
@@ -298,7 +298,7 @@ class FileDetails extends Component {
               confirmLoading: false,
             });
             //_self.props.onRefresh(saveResponse);
-            _self.props.history.push('/' + this.props.application.applicationId + '/files')
+            _self.props.history.push('/' + this.props.application.applicationId + '/assets')
           }, 2000);
         } catch(e) {
           console.log(e)
@@ -624,11 +624,11 @@ class FileDetails extends Component {
         headers: authHeader(),
         body: JSON.stringify({isNew : this.props.isNew, id: this.state.file.id, file : this.populateFileDetails()})
       }).then(function(response) {
-          if(response.ok) {
-            return response.json();
-          }
-          handleError(response);
-          reject();
+        if(response.ok) {
+          return response.json();
+        }
+        handleError(response);
+        reject();
       }).then(function(data) {
         resolve(data);
       });
@@ -709,7 +709,8 @@ class FileDetails extends Component {
       "fileType" : this.state.file.fileType,
       "isSuperFile" : this.state.file.isSuperFile,
       "application_id" : applicationId,
-      "dataflowId" : this.props.selectedDataflow ? this.props.selectedDataflow.id : ''
+      "dataflowId" : this.props.selectedDataflow ? this.props.selectedDataflow.id : '',
+      "groupId": this.props.groupId
     };
     fileDetails.basic = file_basic;
     fileDetails.fields = this.state.file.layout;
@@ -748,6 +749,7 @@ class FileDetails extends Component {
       visible: false,
     });
     //this.props.onClose();
+    this.props.history.push('/' + this.props.application.applicationId + '/assets')
   }
 
   onClusterSelection = (value) => {
@@ -1218,10 +1220,12 @@ class FileDetails extends Component {
 
     return (
       <React.Fragment>
-        <div>
-          <div className="loader">
-            <Spin spinning={this.state.initialDataLoading} size="large" />
-          </div>
+        <div style={{"padding-top": "55px"}}>
+          <BreadCrumbs applicationId={this.props.application.applicationId} applicationTitle={this.props.application.applicationTitle}/>
+          {!this.props.isNew?
+            <div className="loader">
+              <Spin spinning={this.state.initialDataLoading} size="large" />
+            </div> : null}
           <Tabs
             defaultActiveKey="1"
           >
@@ -1458,13 +1462,16 @@ export class BooleanCellRenderer extends Component {
 }
 
 function mapStateToProps(state) {
-    const { selectedAsset } = state.assetReducer;
+    const { selectedAsset, newAsset={} } = state.assetReducer;
     const { user } = state.authenticationReducer;
     const { application } = state.applicationReducer;
+    const {isNew=false, groupId='' } = newAsset;
     return {
       user,
       selectedAsset,
-      application
+      application,
+      isNew,
+      groupId
     };
 }
 

@@ -7,10 +7,12 @@ import {omitDeep} from '../common/CommonUtil.js';
 import AssociatedDataflows from "./AssociatedDataflows"
 import EditableTable from "../common/EditableTable.js"
 import { MarkdownEditor } from "../common/MarkdownEditor.js"
+import { connect } from 'react-redux';
 
 const TabPane = Tabs.TabPane;
 const Option = Select.Option;
 const { confirm } = Modal;
+message.config({top:130})
 
 class IndexDetails extends Component {
 
@@ -48,14 +50,14 @@ class IndexDetails extends Component {
   }
 
   componentDidMount() {
-    this.props.onRef(this);
+    //this.props.onRef(this);
     this.getIndexDetails();
     this.fetchDataDefinitions();
   }
 
   getIndexDetails() {
     if(this.props.selectedAsset && !this.props.isNew) {
-      fetch("/api/index/read/index_details?index_id="+this.props.selectedAsset+"&app_id="+this.props.applicationId, {
+      fetch("/api/index/read/index_details?index_id="+this.props.selectedAsset.id+"&app_id="+this.props.application.applicationId, {
         headers: authHeader()
       })
       .then((response) => {
@@ -101,6 +103,10 @@ class IndexDetails extends Component {
     } else {
       this.getClusters();
     }
+    this.setState({
+      initialDataLoading: false
+    });
+
   }
 
   showModal = () => {
@@ -127,8 +133,9 @@ class IndexDetails extends Component {
             visible: false,
             confirmLoading: false,
           });
-          this.props.onClose();
-          this.props.onRefresh(saveResponse);
+          //this.props.onClose();
+          //this.props.onRefresh(saveResponse);
+          this.props.history.push('/' + this.props.application.applicationId + '/assets')
         }, 200);
       }
     });
@@ -140,7 +147,7 @@ class IndexDetails extends Component {
       title: 'Delete Index?',
       content: 'Are you sure you want to delete this Index?',
       onOk() {
-        var data = JSON.stringify({indexId: _self.props.selectedAsset, application_id: _self.props.applicationId});
+        var data = JSON.stringify({indexId: _self.props.selectedAsset.id, application_id: _self.props.application.applicationId});
         fetch("/api/index/read/delete", {
           method: 'post',
           headers: authHeader(),
@@ -155,9 +162,10 @@ class IndexDetails extends Component {
           if(_self.props.onDelete) {
             _self.props.onDelete(_self.props.currentlyEditingNode);
           } else {
-            _self.props.onRefresh();
+            //_self.props.onRefresh();
+            _self.props.history.push('/' + _self.props.application.applicationId + '/assets');
           }
-          _self.props.onClose();
+          //_self.props.onClose();
           message.success("Index deleted sucessfully");
         }).catch(error => {
           console.log(error);
@@ -170,7 +178,7 @@ class IndexDetails extends Component {
 
   async fetchDataDefinitions() {
     try {
-      let dataDefn = await fetchDataDictionary(this.props.applicationId);
+      let dataDefn = await fetchDataDictionary(this.props.application.applicationId);
       this.setState({
         dataDefinitions: dataDefn
       });
@@ -282,7 +290,7 @@ class IndexDetails extends Component {
   }
 
   getFiles() {
-    fetch("/api/file/read/file_ids?app_id="+this.props.applicationId, {
+    fetch("/api/file/read/file_ids?app_id="+this.props.application.applicationId, {
       headers: authHeader()
     })
     .then((response) => {
@@ -352,7 +360,7 @@ class IndexDetails extends Component {
   }
 
   populateIndexDetails() {
-    var applicationId = this.props.applicationId;
+    var applicationId = this.props.application.applicationId;
     var indexDetails = {"app_id":applicationId};
     var index_basic = {
       //"id" : this.state.file.id,
@@ -364,7 +372,8 @@ class IndexDetails extends Component {
       "qualifiedPath" : this.state.index.path,
       "application_id" : applicationId,
       "dataflowId" : this.props.selectedDataflow ? this.props.selectedDataflow.id : '',
-      "parentFileId" : this.state.selectedSourceFile
+      "parentFileId" : this.state.selectedSourceFile,
+      "groupId": this.props.groupId
     };
     indexDetails.basic = index_basic;
 
@@ -380,8 +389,8 @@ class IndexDetails extends Component {
     this.setState({
       visible: false,
     });
-    this.props.onClose();
-
+    //this.props.onClose();
+    this.props.history.push('/' + this.props.application.applicationId + '/assets')
   }
 
   onClusterSelection = (value) => {
@@ -447,128 +456,147 @@ class IndexDetails extends Component {
     }
 
     return (
-      <div>
-        <Modal
-          title="Index Details"
-          visible={visible}
-          onOk={this.handleOk}
-          confirmLoading={confirmLoading}
-          onCancel={this.handleCancel}
-          destroyOnClose={true}
-          width="1200px"
-          footer={[
-            <Button key="danger" type="danger" onClick={this.handleDelete}>Delete</Button>,
+      <React.Fragment>
+        <div style={{"paddingTop": "55px"}}>
+          {!this.props.isNew ?
+            <div className="loader">
+              <Spin spinning={this.state.initialDataLoading} size="large" />
+            </div> : null}
+
+          <Tabs
+            defaultActiveKey="1"
+          >
+            <TabPane tab="Basic" key="1">
+
+             <Form layout="vertical">
+              {/*{this.props.isNew ?*/}
+              <div>
+              <Form.Item {...formItemLayout} label="Cluster">
+                 <Select placeholder="Select a Cluster" onChange={this.onClusterSelection} style={{ width: 190 }} disabled={!editingAllowed}>
+                  {clusters.map(cluster => <Option key={cluster.id}>{cluster.name}</Option>)}
+                </Select>
+              </Form.Item>
+
+              <Form.Item {...formItemLayout} label="Index">
+                <AutoComplete
+                  className="certain-category-search"
+                  dropdownClassName="certain-category-search-dropdown"
+                  dropdownMatchSelectWidth={false}
+                  dropdownStyle={{ width: 300 }}
+                  size="large"
+                  style={{ width: '100%' }}
+                  dataSource={fileSearchSuggestions}
+                  onChange={(value) => this.searchIndexes(value)}
+                  onSelect={(value) => this.onFileSelected(value)}
+                  placeholder="Search indexes"
+                  optionLabelProp="value"
+                  disabled={!editingAllowed}
+                >
+                  <Input id="autocomplete_field" suffix={this.state.autoCompleteSuffix} autoComplete="off"/>
+                </AutoComplete>
+              </Form.Item>
+              </div>
+
+              <Form.Item {...formItemLayout} label="Name">
+                  {getFieldDecorator('name', {
+                    rules: [{ required: true, message: 'Please enter a name!' }],
+                  })(
+                  <Input id="name" name="name" onChange={this.onChange} placeholder="Name" disabled={true} disabled={!editingAllowed}/>)}
+              </Form.Item>
+
+              <Form.Item {...formItemLayout} label="Title">
+                {getFieldDecorator('title')
+                (<Input id="file_title" name="title" onChange={this.onChange} placeholder="Title" disabled={!editingAllowed}/>)}
+              </Form.Item>
+              <Form.Item {...formItemLayout} label="Description">
+                {getFieldDecorator('description', {
+                trigger: 'onChange',
+                valuePropName: 'value',
+                initialValue: this.state.index.description
+              })(<MarkdownEditor id="query_desc" name="description" onChange={this.onChange} targetDomId="indexDescr" value={description} disabled={!editingAllowed}/>)}
+              </Form.Item>
+
+              <Form.Item {...formItemLayout} label="Primary Service">
+                {getFieldDecorator('primaryService')
+                 (<Input id="file_primary_svc" name="primaryService" onChange={this.onChange} placeholder="Primary Service" disabled={!editingAllowed}/>)}
+              </Form.Item>
+              <Form.Item {...formItemLayout} label="Backup Service">
+                {getFieldDecorator('backupService')
+                (<Input id="file_bkp_svc" name="backupService" onChange={this.onChange} placeholder="Backup Service" disabled={!editingAllowed}/>)}
+              </Form.Item>
+              <Form.Item {...formItemLayout} label="Path">
+                {getFieldDecorator('path')
+                (<Input id="path" name="path" onChange={this.onChange} placeholder="Path" disabled={!editingAllowed}/>)}
+              </Form.Item>
+            </Form>
+
+            </TabPane>
+            <TabPane tab="Source File" key="2">
+              <div>
+                 <Select placeholder="Select Source Files" defaultValue={this.state.selectedSourceFile} style={{ width: 190 }} onSelect={this.onSourceFileSelection} disabled={!editingAllowed}>
+                  {sourceFiles.map(d => <Option key={d.id}>{(d.title)?d.title:d.name}</Option>)}
+                </Select>
+                </div>
+            </TabPane>
+            <TabPane tab="Index" key="3">
+
+
+                <EditableTable
+                  columns={indexColumns}
+                  dataSource={keyedColumns}
+                  editingAllowed={editingAllowed}
+                  dataDefinitions={this.state.dataDefinitions}
+                  showDataDefinition={true}
+                  setData={this.setIndexFieldData}/>
+
+
+            </TabPane>
+            <TabPane tab="Payload" key="4">
+                <EditableTable
+                  columns={indexColumns}
+                  dataSource={nonKeyedColumns}
+                  editingAllowed={editingAllowed}
+                  dataDefinitions={this.state.dataDefinitions}
+                  showDataDefinition={true}
+                  setData={this.setNonKeyedColumnData}/>
+            </TabPane>
+
+            {!this.props.isNew ?
+              <TabPane tab="Dataflows" key="7">
+                <AssociatedDataflows assetName={name} assetType={'Index'}/>
+              </TabPane> : null}
+          </Tabs>
+        </div>
+        {!this.props.viewMode ?
+          <div className="button-container">
+            <Button key="danger" type="danger" onClick={this.handleDelete}>Delete</Button>
             <Button key="back" onClick={this.handleCancel}>
               Cancel
-            </Button>,
+            </Button>
             <Button key="submit" disabled={!editingAllowed} type="primary" loading={confirmLoading} onClick={this.handleOk}>
               Save
-            </Button>,
-          ]}
-        >
-        <Tabs
-          defaultActiveKey="1"
-        >
-          <TabPane tab="Basic" key="1">
-
-           <Form layout="vertical">
-            {/*{this.props.isNew ?*/}
-            <div>
-            <Form.Item {...formItemLayout} label="Cluster">
-               <Select placeholder="Select a Cluster" onChange={this.onClusterSelection} style={{ width: 190 }} disabled={!editingAllowed}>
-                {clusters.map(cluster => <Option key={cluster.id}>{cluster.name}</Option>)}
-              </Select>
-            </Form.Item>
-
-            <Form.Item {...formItemLayout} label="Index">
-              <AutoComplete
-                className="certain-category-search"
-                dropdownClassName="certain-category-search-dropdown"
-                dropdownMatchSelectWidth={false}
-                dropdownStyle={{ width: 300 }}
-                size="large"
-                style={{ width: '100%' }}
-                dataSource={fileSearchSuggestions}
-                onChange={(value) => this.searchIndexes(value)}
-                onSelect={(value) => this.onFileSelected(value)}
-                placeholder="Search indexes"
-                optionLabelProp="value"
-                disabled={!editingAllowed}
-              >
-                <Input id="autocomplete_field" suffix={this.state.autoCompleteSuffix} autoComplete="off"/>
-              </AutoComplete>
-            </Form.Item>
-            </div>
-
-            <Form.Item {...formItemLayout} label="Name">
-                {getFieldDecorator('name', {
-                  rules: [{ required: true, message: 'Please enter a name!' }],
-                })(
-                <Input id="name" name="name" onChange={this.onChange} placeholder="Name" disabled={true} disabled={!editingAllowed}/>)}
-            </Form.Item>
-
-            <Form.Item {...formItemLayout} label="Title">
-              {getFieldDecorator('title')
-              (<Input id="file_title" name="title" onChange={this.onChange} placeholder="Title" disabled={!editingAllowed}/>)}
-            </Form.Item>
-            <Form.Item {...formItemLayout} label="Description">
-              {getFieldDecorator('description')
-              (<MarkdownEditor id="index_desc" name="description" onChange={this.onChange} targetDomId="indexDescr" value={description} disabled={!editingAllowed}/>)}
-            </Form.Item>
-            <Form.Item {...formItemLayout} label="Primary Service">
-              {getFieldDecorator('primaryService')
-               (<Input id="file_primary_svc" name="primaryService" onChange={this.onChange} placeholder="Primary Service" disabled={!editingAllowed}/>)}
-            </Form.Item>
-            <Form.Item {...formItemLayout} label="Backup Service">
-              {getFieldDecorator('backupService')
-              (<Input id="file_bkp_svc" name="backupService" onChange={this.onChange} placeholder="Backup Service" disabled={!editingAllowed}/>)}
-            </Form.Item>
-            <Form.Item {...formItemLayout} label="Path">
-              {getFieldDecorator('path')
-              (<Input id="path" name="path" onChange={this.onChange} placeholder="Path" disabled={!editingAllowed}/>)}
-            </Form.Item>
-          </Form>
-
-          </TabPane>
-          <TabPane tab="Source File" key="2">
-            <div>
-               <Select placeholder="Select Source Files" defaultValue={this.state.selectedSourceFile} style={{ width: 190 }} onSelect={this.onSourceFileSelection} disabled={!editingAllowed}>
-                {sourceFiles.map(d => <Option key={d.id}>{(d.title)?d.title:d.name}</Option>)}
-              </Select>
-              </div>
-          </TabPane>
-          <TabPane tab="Index" key="3">
-
-
-              <EditableTable
-                columns={indexColumns}
-                dataSource={keyedColumns}
-                editingAllowed={editingAllowed}
-                dataDefinitions={this.state.dataDefinitions}
-                showDataDefinition={true}
-                setData={this.setIndexFieldData}/>
-
-
-          </TabPane>
-          <TabPane tab="Payload" key="4">
-              <EditableTable
-                columns={indexColumns}
-                dataSource={nonKeyedColumns}
-                editingAllowed={editingAllowed}
-                dataDefinitions={this.state.dataDefinitions}
-                showDataDefinition={true}
-                setData={this.setNonKeyedColumnData}/>
-          </TabPane>
-
-          {!this.props.isNew ?
-            <TabPane tab="Dataflows" key="7">
-              <AssociatedDataflows assetName={name} assetType={'Index'}/>
-            </TabPane> : null}
-        </Tabs>
-        </Modal>
-      </div>
+            </Button>
+          </div>
+        : null}
+      </React.Fragment>
     );
   }
 }
-const IndexDetailsForm = Form.create()(IndexDetails);
+
+function mapStateToProps(state) {
+    const { selectedAsset, newAsset={} } = state.assetReducer;
+    const { user } = state.authenticationReducer;
+    const { application } = state.applicationReducer;
+    const {isNew=false, groupId='' } = newAsset;
+    console.log(selectedAsset)
+    return {
+      user,
+      selectedAsset,
+      application,
+      isNew,
+      groupId
+    };
+}
+
+const IndexDetailsForm = connect(mapStateToProps)(Form.create()(IndexDetails));
 export default IndexDetailsForm;

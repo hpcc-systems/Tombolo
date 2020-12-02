@@ -6,7 +6,7 @@ import { Button, Icon, Drawer, Row, Col, Descriptions, Badge, Modal, message} fr
 import { Typography } from 'antd';
 import FileDetailsForm from "../FileDetails";
 import JobDetailsForm from "../JobDetails";
-import AssetDetails from "../AssetDetails"
+import AssetDetailsDialog from "../AssetDetailsDialog"
 import IndexDetailsForm from "../IndexDetails";
 import FileInstanceDetailsForm from "../FileInstanceDetails";
 import ExistingAssetListDialog from "./ExistingAssetListDialog";
@@ -1364,7 +1364,7 @@ class Graph extends Component {
         <div id={this.props.graphContainer} className={(!editingAllowed || this.props.viewMode) ? " readonly graph-view-mode" : "graph-edit-mode"} tabIndex="-1"></div>
 
       {this.state.openFileDetailsDialog ?
-        <AssetDetails assetType="file" fileId={this.props.selectedFile} selectedAsset={this.props.selectedFile} application={this.props.application} user={this.props.user}/>
+        <AssetDetailsDialog assetType="file" fileId={this.props.selectedFile} selectedAsset={this.props.selectedFile} application={this.props.application} user={this.props.user}/>
       : null }
 
 
