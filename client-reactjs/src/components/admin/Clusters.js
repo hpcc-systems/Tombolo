@@ -28,7 +28,7 @@ class Clusters extends Component {
 
   componentDidMount() {
   	this.getClusters();
-  }  
+  }
 
   getClusters() {
    this.setState({
@@ -116,6 +116,7 @@ class Clusters extends Component {
         roxieHost: '',
         roxiePort: '',
         username: '',
+        password: '',
         submitted: false
       },
       showAddClusters: true
@@ -141,9 +142,9 @@ class Clusters extends Component {
     })
 	  .then(data => {
       console.log(JSON.stringify(data))
-      this.setState({        
+      this.setState({
         ...this.state,
-        selectedCluster: data.name,        
+        selectedCluster: data.name,
         newCluster: {
           ...this.state.newCluster,
           id: data.id,
@@ -157,7 +158,7 @@ class Clusters extends Component {
         }
       }, function() {
         this.setState({
-          showAddClusters: true          
+          showAddClusters: true
         });
       });
 
@@ -174,9 +175,9 @@ class Clusters extends Component {
   onClusterSelection = (value) => {
     let selectedCluster = this.state.clusterWhitelist.filter((cluster) => cluster.name == value)[0];
 
-    this.setState({        
+    this.setState({
       ...this.state,
-      selectedCluster: value,        
+      selectedCluster: value,
       newCluster: {
         ...this.state.newCluster,
         name: selectedCluster.name,
@@ -185,11 +186,11 @@ class Clusters extends Component {
         roxieHost: selectedCluster.roxie,
         roxiePort: selectedCluster.roxie_port,
       }
-    })  
+    })
   }
 
   handleAddClusterOk = () => {
-   
+
     this.setState({
       confirmLoading: true,
       submitted: true
@@ -231,7 +232,7 @@ class Clusters extends Component {
         confirmLoading: false
       });
     });
-   
+
   }
 
 
@@ -344,7 +345,7 @@ class Clusters extends Component {
                     </Select>
   		            </Form.Item>
                   </div>
-                  </Col>                
+                  </Col>
                 </Row>
  		            <Form.Item {...formItemLayout} label="User Name">
       						<Input id="username" name="username" onChange={this.onChange} placeholder="User Name" value={this.state.newCluster.username}/>

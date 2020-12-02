@@ -10,9 +10,9 @@ import {LoginPage} from "./components/login/LoginPage";
 import ForgotPassword from "./components/login/ForgotPassword";
 import ResetPassword from "./components/login/ResetPassword";
 import {PrivateRoute} from "./components/common/PrivateRoute";
-
+import Assets from "./components/application/Assets";
 import {LeftNav} from "./components/layout/LeftNav";
-import AssetDetails from "./components/application/AssetDetails";
+import AssetDetailsDialog from "./components/application/AssetDetailsDialog";
 import {FileList} from "./components/application/FileList";
 import {JobList} from "./components/application/JobList";
 import {IndexList} from "./components/application/IndexList";
@@ -61,6 +61,12 @@ class App extends React.Component {
       return <IndexList applicationId={applicationId} applicationTitle={applicationTitle} user={this.props.user}/>;
     }
 
+    const assetsComp = () => {
+      let applicationId = this.props.application ? this.props.application.applicationId : '';
+      let applicationTitle = this.props.application ? this.props.application.applicationTitle : '';
+      return <Assets applicationId={applicationId} applicationTitle={applicationTitle} user={this.props.user}/>;
+    }
+
     return (
         <Router history={history}>
         <div>
@@ -75,6 +81,7 @@ class App extends React.Component {
                           <Content style={{background: '#fff', margin: '0 16px'}}>
                               <Switch>
                                 <PrivateRoute exact path="/" component={dataFlowComp}/>
+                                <PrivateRoute path="/:applicationId/assets" component={assetsComp} />
                                 <PrivateRoute exact path="/:applicationId/files" component={FileList} />
                                 <PrivateRoute path="/:applicationId/file/:fileId?" component={FileDetailsForm}/>
                                 <PrivateRoute path="/files" component={FileList} />

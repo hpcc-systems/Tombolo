@@ -57,6 +57,7 @@ module.exports = (sequelize, DataTypes) => {
       onDelete: 'CASCADE',
       hooks: true
     });
+    file.belongsTo(models.groups);
   };
   return file;
 };

@@ -528,3 +528,48 @@ div.tooltip {
 .button-container .ant-btn {
   margin-right: 8px;
 }
+
+.right-menu a {
+  color: black !important;
+}
+
+.self-right-menu {
+  position: absolute;
+  z-index: 1;
+}
+
+.groups-div {
+  height:100vh;
+}
+
+.ant-tree li .ant-tree-node-content-wrapper {
+  display: inline-block;
+  height: 24px;
+  margin: 0;
+   padding: 0 0px !important;
+  color: rgba(0, 0, 0, 0.65);
+  line-height: 24px !important;
+  text-decoration: none;
+  vertical-align: top;
+  border-radius: 2px;
+  cursor: pointer;
+  -webkit-transition: all 0.3s;
+  transition: all 0.3s;
+}
+
+.ant-tree li span.ant-tree-switcher, .ant-tree li span.ant-tree-iconEle {
+  display: inline-block;
+  width: 17px;
+  height: 24px;
+  margin: 0;
+  line-height: 18px !important;
+  text-align: center;
+  vertical-align: top;
+  border: 0 none;
+  outline: none;
+  cursor: pointer;
+}
+
+.drag-handle {
+  cursor: move!important;
+}

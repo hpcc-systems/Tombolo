@@ -39,6 +39,7 @@ module.exports = (sequelize, DataTypes) => {
     indexes.belongsTo(models.file, {
       foreignKey: 'parentFileId'
     });
+    indexes.belongsTo(models.groups);
   };
   return indexes;
 };

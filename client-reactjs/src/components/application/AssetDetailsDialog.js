@@ -5,7 +5,7 @@ import { useSelector } from "react-redux";
 import { useParams } from "react-router-dom";
 import { Modal, Button } from 'antd/lib';
 
-function AssetDetails(props) {
+function AssetDetailsDialog(props) {
   const [application, setApplication] = useState({...props})
 
 	const { isShowing, toggle, OpenDetailsForm } = useFileDetailsForm();
@@ -62,4 +62,4 @@ function AssetDetails(props) {
 
 	)
 }
-export default AssetDetails
+export default AssetDetailsDialog
