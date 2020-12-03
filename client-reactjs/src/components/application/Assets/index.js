@@ -66,7 +66,7 @@ function Assets(props) {
     .then(data => {
       setTreeData(data)
       setSelectedGroup({'id':data[0].id, 'key':data[0].key})
-      const {keys={selectedKeys:{}, expandedKeys:[]}} = {...groupsReducer};
+      const {keys={selectedKeys:{}, expandedKeys:['0-0']}} = {...groupsReducer};
       setExpandedGroups(keys.expandedKeys)
     }).catch(error => {
       console.log(error);
@@ -332,13 +332,14 @@ function Assets(props) {
                     onRightClick={onRightClick}
                     selectedKeys={[selectedGroup.key]}
                     expandedKeys={expandedGroups}
+                    autoExpandParent={true}
                     draggable
                     onDragEnter={handleDragEnter}
                     onDrop={handleDragDrop}
                   />
               </div>
             </Col>
-            <Col className="gutter-row" span={21}>
+            <Col className="gutter-row groups-div" span={21}>
               <div className="gutter-box">
                 <AssetsTable selectedGroup={selectedGroup}/>
               </div>

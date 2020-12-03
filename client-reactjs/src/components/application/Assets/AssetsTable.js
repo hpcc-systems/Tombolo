@@ -39,7 +39,7 @@ function AssetsTable(props) {
 
   const fetchDataAndRenderTable = () => {
     let url = "/api/groups/assets?app_id="+applicationId;
-    if(selectedGroup != '') {
+    if(selectedGroup && selectedGroup.id) {
       url += '&group_id='+selectedGroup.id;
     }
     fetch(url, {
@@ -127,13 +127,22 @@ function AssetsTable(props) {
   {
     title: 'Description',
     dataIndex: 'description',
-    width: '25%',
+    width: '15%',
     ellipsis: true
   },
   {
     title: 'Type',
     dataIndex: 'type',
-    width: '10%',
+    width: '5%',
+  },
+  {
+    title: 'Created',
+    dataIndex: 'createdAt',
+    width: '20%',
+    render: (text, record) => {
+      let createdAt = new Date(text);
+      return createdAt.toLocaleDateString('en-US', Constants.DATE_FORMAT_OPTIONS) +' @ '+ createdAt.toLocaleTimeString('en-US')
+    }
   },
   {
     width: '15%',
@@ -154,12 +163,13 @@ function AssetsTable(props) {
 
   return (
     <React.Fragment>
-    <div style={{"height": "85%"}}>
+    <div>
       <Table
         columns={columns}
         rowKey={record => record.id}
         dataSource={assets}
-        pagination={{ pageSize: 10 }} scroll={{ y: 460 }}
+        pagination={{ pageSize: 10 }}
+        scroll={{ y: '100vh' }}
       />
     </div>
     {showMoveDialog ?

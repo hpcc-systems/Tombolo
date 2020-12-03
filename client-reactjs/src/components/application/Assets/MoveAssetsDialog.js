@@ -6,6 +6,7 @@ const { confirm } = Modal;
 
 function MoveAssetsDialog({isShowing, toggle, application, assetToMove, reloadTable}) {
   const [moveDestinationGroup, setMoveDestinationGroup] = useState({id:'', key:''});
+  const [expandedGroups, setExpandedGroups] = useState([]);
   const [treeData, setTreeData] = useState([]);
 
   useEffect(() => {
@@ -28,6 +29,7 @@ function MoveAssetsDialog({isShowing, toggle, application, assetToMove, reloadTa
     .then(data => {
       setTreeData(data)
       setMoveDestinationGroup({'id':data[0].id, 'key':data[0].key})
+      setExpandedGroups(['0-0'])
     }).catch(error => {
       console.log(error);
     });
@@ -36,6 +38,10 @@ function MoveAssetsDialog({isShowing, toggle, application, assetToMove, reloadTa
   const onSelect = (keys, event) => {
     setMoveDestinationGroup({id:event.node.props.id, key:event.node.props.eventKey, title: event.node.props.title})
   };
+
+  const onExpand = (expandedKeys) => {
+    setExpandedGroups(expandedKeys);
+  }
 
   const handleClose = () => {
     toggle();
@@ -83,9 +89,6 @@ function MoveAssetsDialog({isShowing, toggle, application, assetToMove, reloadTa
 
   }
 
-  const onExpand = () => {
-    console.log('MoveAssetsDialogTrigger Expand');
-  }
   return (
     <React.Fragment>
       <div>
@@ -107,6 +110,7 @@ function MoveAssetsDialog({isShowing, toggle, application, assetToMove, reloadTa
               onExpand={onExpand}
               treeData={treeData}
               selectedKeys={[moveDestinationGroup.key]}
+              expandedKeys={expandedGroups}
               defaultExpandAll={true}/>
          </Modal>
       </div>
