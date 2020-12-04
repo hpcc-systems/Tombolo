@@ -79,8 +79,8 @@ function AssetsTable(props) {
       case 'Query':
         history.push('/' + applicationId + '/query/' + id);
         break;
-      case 'Groups':
-        history.push('/' + applicationId + '/file/' + id);
+      case 'Group':
+        props.handleEditGroup(id);
         break;
       default:
         break
@@ -98,7 +98,7 @@ function AssetsTable(props) {
   }
 
   const handleDelete = (id, type) => {
-    let deleteUrl='', data={};
+    let deleteUrl='', data={}, method='post';
     message.config({top:130})
     switch(type) {
       case 'File':
@@ -117,9 +117,14 @@ function AssetsTable(props) {
         data = JSON.stringify({queryId: id, application_id: applicationId});
         deleteUrl = '/api/query/delete';
         break;
+      case 'Group':
+        data = JSON.stringify({group_id: id, app_id: applicationId});
+        deleteUrl = '/api/groups';
+        method='delete'
+        break;
     }
     fetch(deleteUrl, {
-      method: 'post',
+      method: method,
       headers: authHeader(),
       body: data
     }).then((response) => {
@@ -135,7 +140,6 @@ function AssetsTable(props) {
       console.log(error);
       message.error("There was an error deleting the "+type);
     });
-
   }
 
   const editingAllowed = hasEditPermission(authReducer.user);

@@ -159,7 +159,8 @@ function Assets(props) {
 
   const closeCreateGroupDialog = () => {
     setOpenCreateGroupDialog(false);
-    setNewGroup({name:'', description:''})
+    setNewGroup({name:'', description:'', id:''})
+    setNewGroupForm({submitted: false})
   }
 
   const handleMenuClick = (e) => {
@@ -295,8 +296,9 @@ function Assets(props) {
     });
   }
 
-  const handleEditGroup = () => {
-    fetch('/api/groups/details?app_id='+application.applicationId+'&group_id='+selectedGroup.id, {
+  const handleEditGroup = (groupIdFromAssetsView) => {
+    let groupId = (groupIdFromAssetsView && groupIdFromAssetsView != '') ? groupIdFromAssetsView : selectedGroup.id;
+    fetch('/api/groups/details?app_id='+application.applicationId+'&group_id='+groupId, {
       headers: authHeader(),
     }).then(function(response) {
       if(response.ok) {
@@ -304,6 +306,7 @@ function Assets(props) {
       }
       handleError(response);
     }).then(function(data) {
+      console.log(JSON.stringify(data))
       setNewGroup({
         'name': data.name,
         'description': data.description,
@@ -319,7 +322,6 @@ function Assets(props) {
   }
 
   const handleDragDrop = (info) => {
-    console.log("handleDragDrop: "+info)
     if(info.node != undefined && info.dragNode != undefined) {
       const dropKey = info.node.props.eventKey;
       const dragKey = info.dragNode.props.eventKey;
@@ -371,7 +373,7 @@ function Assets(props) {
             </Col>
             <Col className="gutter-row groups-div" span={21}>
               <div className="gutter-box">
-                <AssetsTable selectedGroup={selectedGroup}/>
+                <AssetsTable selectedGroup={selectedGroup} handleEditGroup={handleEditGroup}/>
               </div>
             </Col>
           </Row>
