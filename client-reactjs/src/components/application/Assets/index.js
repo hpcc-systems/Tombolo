@@ -49,7 +49,7 @@ function Assets(props) {
     if(application.applicationId) {
       fetchGroups();
     }
-    document.querySelector('.groups-div').addEventListener('contextmenu', onRightClickGroupsDiv)
+    //document.querySelector('.groups-div').addEventListener('contextmenu', onRightClickGroupsDiv)
   }, [application]);
 
   const fetchGroups = () => {
@@ -65,9 +65,12 @@ function Assets(props) {
     })
     .then(data => {
       setTreeData(data)
-      setSelectedGroup({'id':data[0].id, 'key':data[0].key})
-      const {keys={selectedKeys:{}, expandedKeys:['0-0']}} = {...groupsReducer};
-      setExpandedGroups(keys.expandedKeys)
+      //select & expand groups
+      const {keys={selectedKeys:{id:'', key:'0-0'}, expandedKeys:['0-0']}} = {...groupsReducer};
+      setSelectedGroup({'id':keys.selectedKeys.id, 'key':keys.selectedKeys.key})
+      setExpandedGroups(keys.expandedKeys);
+      //add options icon
+      addGroupOptionIcon();
     }).catch(error => {
       console.log(error);
     });
@@ -77,6 +80,10 @@ function Assets(props) {
 
   const onSelect = (keys, event) => {
     setSelectedGroup({id:event.node.props.id, key:event.node.props.eventKey})
+    dispatch(groupsActions.groupExpanded(
+      {id:event.node.props.id, key:event.node.props.eventKey},
+      expandedGroups
+    ));
   };
 
   const onExpand = (expandedKeys) => {
@@ -85,8 +92,31 @@ function Assets(props) {
       selectedGroup,
       expandedKeys
     ));
-
+    window.setTimeout(() => {
+      addGroupOptionIcon();
+    }, 200);
   };
+
+  const addGroupOptionIcon = () => {
+    //remove existing group-options
+    document.querySelectorAll('.ant-tree-node-content-wrapper .group-options').forEach((element) => {
+      element.remove();
+    })
+    document.querySelectorAll('.ant-tree-node-content-wrapper').forEach((element) => {
+      const newElement = document.createElement('span');
+      const newElementHref = document.createElement('a');
+      newElementHref.innerText='\uf0c9';
+      newElement.append(newElementHref);
+      newElement.className = 'group-options float-right'
+      element.append(newElement)
+    })
+
+    window.setTimeout(() => {
+      document.querySelectorAll('.group-options > a').forEach((option) => {
+        option.addEventListener('click', onRightClickGroupsDiv);
+      })
+    }, 200);
+  }
 
   const onRightClick = e => {
     if(e.node) {
@@ -99,10 +129,12 @@ function Assets(props) {
         categoryName: e.node.props["data-title"]
       });
     }
-    document.addEventListener('click', function onClickOutside() {
-      setRightClickNodeTreeItem({visible: false});
-      document.removeEventListener('click', onClickOutside)
-    })
+    window.setTimeout(() => {
+      document.addEventListener('click', function onClickOutside() {
+        setRightClickNodeTreeItem({visible: false});
+        document.removeEventListener('click', onClickOutside)
+      })
+    }, 200);
   }
 
   const onRightClickGroupsDiv = e => {
@@ -113,10 +145,12 @@ function Assets(props) {
       pageX: e.clientX,
       pageY: e.clientY,
     });
-    document.addEventListener('click', function onClickOutside() {
-      setRightClickNodeTreeItem({visible: false});
-      document.removeEventListener('click', onClickOutside)
-    })
+    window.setTimeout(() => {
+      document.addEventListener('click', function onClickOutside() {
+        setRightClickNodeTreeItem({visible: false});
+        document.removeEventListener('click', onClickOutside)
+      })
+    }, 200);
   }
 
   const openNewGroupDialog = () => {
@@ -130,27 +164,27 @@ function Assets(props) {
 
   const handleMenuClick = (e) => {
     setRightClickNodeTreeItem({visible: false});
-    dispatch(assetsActions.assetSelected(
-      '',
+
+    dispatch(assetsActions.newAsset(
       application.applicationId,
-      ''
+      selectedGroup.id
     ));
+
     switch (e.key) {
       case 'File':
-        dispatch(assetsActions.newAsset(
-          application.applicationId,
-          selectedGroup.id
-        ));
         props.history.push('/' + application.applicationId + '/file');
         break;
 
       case 'Index':
+        props.history.push('/' + application.applicationId + '/index');
         break;
 
       case 'Query':
+        props.history.push('/' + application.applicationId + '/query');
         break;
 
       case 'Job':
+        props.history.push('/' + application.applicationId + '/job');
         break;
 
       case 'Group':
@@ -177,7 +211,7 @@ function Assets(props) {
             title={
               <span>
                 <Icon type="mail" />
-                <span style={{"padding-right": "5px"}}>New</span>
+                <span style={{"paddingRight": "5px"}}>New</span>
               </span>
             }
           >
@@ -251,7 +285,6 @@ function Assets(props) {
 
           handleError(response);
         }).then(function(data) {
-          console.log(data);
           fetchGroups();
         }).catch(error => {
           console.log(error);
@@ -271,7 +304,6 @@ function Assets(props) {
       }
       handleError(response);
     }).then(function(data) {
-      console.log(data)
       setNewGroup({
         'name': data.name,
         'description': data.description,
@@ -284,7 +316,6 @@ function Assets(props) {
   }
 
   const handleDragEnter = (info) => {
-    console.log("handleDragEnter")
   }
 
   const handleDragDrop = (info) => {
@@ -329,7 +360,6 @@ function Assets(props) {
                     onSelect={onSelect}
                     onExpand={onExpand}
                     treeData={treeData}
-                    onRightClick={onRightClick}
                     selectedKeys={[selectedGroup.key]}
                     expandedKeys={expandedGroups}
                     autoExpandParent={true}

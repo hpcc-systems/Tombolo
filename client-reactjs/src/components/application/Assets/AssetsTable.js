@@ -60,16 +60,31 @@ function AssetsTable(props) {
 
   const handleEdit = (id, type) => {
     console.log(type);
-    if(type != 'Group') {
-      dispatch(assetsActions.assetSelected(
-        id,
-        applicationId,
-        ''
-      ));
-      history.push('/' + applicationId + '/file/' + id);
-    } else {
-      selectedGroup = {id:id};
-      fetchDataAndRenderTable();
+    dispatch(assetsActions.assetSelected(
+      id,
+      applicationId,
+      ''
+    ));
+
+    switch (type) {
+      case 'File':
+        history.push('/' + applicationId + '/file/' + id);
+        break;
+      case 'Job':
+        history.push('/' + applicationId + '/job/' + id);
+        break;
+      case 'Index':
+        history.push('/' + applicationId + '/index/' + id);
+        break;
+      case 'Query':
+        history.push('/' + applicationId + '/query/' + id);
+        break;
+      case 'Groups':
+        history.push('/' + applicationId + '/file/' + id);
+        break;
+      default:
+        break
+
     }
   }
 
@@ -83,35 +98,44 @@ function AssetsTable(props) {
   }
 
   const handleDelete = (id, type) => {
-    /*switch(type) {
-      case 'file':
-        if(id) {
-          handleFileDelete(id, applicationId).then(() => {
-            updateGraph(id, applicationId, selectedDataflow).then((response) => {
-              fetchDataAndRenderTable();
-            });
-          })
-        }
+    let deleteUrl='', data={};
+    message.config({top:130})
+    switch(type) {
+      case 'File':
+        data = JSON.stringify({fileId: id, application_id: applicationId});
+        deleteUrl = '/api/file/read/delete';
         break;
-      case 'index':
-        if(id) {
-          handleIndexDelete(id, applicationId).then(() => {
-            updateGraph(id, applicationId, selectedDataflow).then((response) => {
-              fetchDataAndRenderTable();
-            });
-          })
-        }
+      case 'Index':
+        data = JSON.stringify({indexId: id, application_id: applicationId});
+        deleteUrl = '/api/index/read/delete';
         break;
-      case 'job':
-        if(id) {
-          handleJobDelete(id, applicationId).then(() => {
-            updateGraph(id, applicationId, selectedDataflow).then((response) => {
-              fetchDataAndRenderTable();
-            });
-          })
-        }
+      case 'Job':
+        data = JSON.stringify({jobId: id, application_id: applicationId});
+        deleteUrl = '/api/job/delete';
         break;
-    }*/
+      case 'Query':
+        data = JSON.stringify({queryId: id, application_id: applicationId});
+        deleteUrl = '/api/query/delete';
+        break;
+    }
+    fetch(deleteUrl, {
+      method: 'post',
+      headers: authHeader(),
+      body: data
+    }).then((response) => {
+      if(response.ok) {
+        return response.json();
+      }
+      handleError(response);
+    })
+    .then(result => {
+      fetchDataAndRenderTable();
+      message.success(type + " deleted sucessfully");
+    }).catch(error => {
+      console.log(error);
+      message.error("There was an error deleting the "+type);
+    });
+
   }
 
   const editingAllowed = hasEditPermission(authReducer.user);
@@ -153,7 +177,7 @@ function AssetsTable(props) {
       <span>
         <a href="#" onClick={(row) => handleEdit(record.id, record.type)}><Tooltip placement="right" title={"Edit"}><Icon type="edit" /></Tooltip></a>
         <Divider type="vertical" />
-        <Popconfirm title="Are you sure you want to delete this?" onConfirm={() => handleDelete(record.id, record.objType)} icon={<Icon type="question-circle-o" style={{ color: 'red' }} />}>
+        <Popconfirm title="Are you sure you want to delete this?" onConfirm={() => handleDelete(record.id, record.type)} icon={<Icon type="question-circle-o" style={{ color: 'red' }} />}>
           <a href="#"><Tooltip placement="right" title={"Delete"}><Icon type="delete" /></Tooltip></a>
         </Popconfirm>
         <Divider type="vertical" />

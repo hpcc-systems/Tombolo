@@ -9,10 +9,11 @@ import { AgGridReact } from 'ag-grid-react';
 import 'ag-grid-community/dist/styles/ag-grid.css';
 import 'ag-grid-community/dist/styles/ag-theme-balham.css';
 import { MarkdownEditor } from "../common/MarkdownEditor.js"
+import { connect } from 'react-redux';
 const TabPane = Tabs.TabPane;
 const Option = Select.Option;
 const { confirm } = Modal;
-
+message.config({top:130})
 class QueryDetails extends Component {
   constructor(props) {
     super(props);
@@ -48,7 +49,7 @@ class QueryDetails extends Component {
   }
 
   componentDidMount() {
-    this.props.onRef(this);
+    //this.props.onRef(this);
     this.getQueryDetails();
     this.fetchDataDefinitions();
   }
@@ -64,7 +65,7 @@ class QueryDetails extends Component {
 
   getQueryDetails() {
     if(this.props.selectedAsset && !this.props.isNew) {
-      fetch("/api/query/query_details?query_id="+this.props.selectedAsset+"&app_id="+this.props.applicationId, {
+      fetch("/api/query/query_details?query_id="+this.props.selectedAsset.id+"&app_id="+this.props.application.applicationId, {
         headers: authHeader()
       })
       .then((response) => {
@@ -100,7 +101,9 @@ class QueryDetails extends Component {
         return data;
       })
       .then(data => {
-        //this.getQueries();
+        this.setState({
+          initialDataLoading: false
+        });
       })
       .catch(error => {
         console.log(error);
@@ -121,7 +124,7 @@ class QueryDetails extends Component {
 
   async fetchDataDefinitions() {
     try {
-      let dataDefn = await fetchDataDictionary(this.props.applicationId);
+      let dataDefn = await fetchDataDictionary(this.props.application.applicationId);
       this.setState({
         dataDefinitions: dataDefn
       });
@@ -158,7 +161,7 @@ class QueryDetails extends Component {
       title: 'Delete file?',
       content: 'Are you sure you want to delete this Query?',
       onOk() {
-        var data = JSON.stringify({queryId: _self.props.selectedAsset, application_id: _self.props.applicationId});
+        var data = JSON.stringify({queryId: _self.props.selectedAsset.id, application_id: _self.props.application.applicationId});
         fetch("/api/query/delete", {
           method: 'post',
           headers: authHeader(),
@@ -170,8 +173,9 @@ class QueryDetails extends Component {
           handleError(response);
         })
         .then(result => {
-          _self.props.onRefresh();
-          _self.props.onClose();
+          //_self.props.onRefresh();
+          //_self.props.onClose();
+          _self.props.history.push('/' + _self.props.application.applicationId + '/assets');
           message.success("Query deleted sucessfully");
         }).catch(error => {
           console.log(error);
@@ -196,8 +200,9 @@ class QueryDetails extends Component {
             visible: false,
             confirmLoading: false,
           });
-          this.props.onClose();
-          this.props.onRefresh(saveResponse);
+          //this.props.onClose();
+          //this.props.onRefresh(saveResponse);
+          this.props.history.push('/' + this.props.application.applicationId + '/assets')
         }, 2000);
       }
     });
@@ -309,7 +314,7 @@ class QueryDetails extends Component {
   }
 
   getQueries() {
-    fetch("/api/queries/read/file_ids?app_id="+this.props.applicationId, {
+    fetch("/api/queries/read/file_ids?app_id="+this.props.application.applicationId, {
       headers: authHeader()
     })
     .then((response) => {
@@ -348,7 +353,7 @@ class QueryDetails extends Component {
   }
 
   populateQueryDetails() {
-    var applicationId = this.props.applicationId;
+    var applicationId = this.props.application.applicationId;
 
     var inputFields = this.state.query.input.map(function(element) {
       element.field_type='input';
@@ -369,7 +374,8 @@ class QueryDetails extends Component {
         "gitRepo" : this.state.query.gitrepo,
         "primaryService" : this.state.query.primaryService,
         "backupService" : this.state.query.backupService,
-        "type": this.state.query.type
+        "type": this.state.query.type,
+        "groupId": this.props.groupId
       },
       fields: inputFields.concat(outputFields)
     };
@@ -383,8 +389,8 @@ class QueryDetails extends Component {
     this.setState({
       visible: false,
     });
-    this.props.onClose();
-
+    //this.props.onClose();
+    this.props.history.push('/' + this.props.application.applicationId + '/assets')
   }
 
   onClusterSelection = (value) => {
@@ -473,25 +479,12 @@ class QueryDetails extends Component {
     {console.log('name: '+name)}
 
     return (
-      <div>
-        <Modal
-          title="API/Gateway/Query Details"
-          visible={visible}
-          onOk={this.handleOk}
-          confirmLoading={confirmLoading}
-          onCancel={this.handleCancel}
-          destroyOnClose={true}
-          width="1200px"
-          footer={[
-            <Button key="danger" type="danger" onClick={this.handleDelete}>Delete</Button>,
-            <Button key="back" onClick={this.handleCancel}>
-              Cancel
-            </Button>,
-            <Button key="submit" disabled={!editingAllowed} type="primary" loading={confirmLoading} onClick={this.handleOk}>
-              Save
-            </Button>,
-          ]}
-        >
+      <React.Fragment>
+        <div style={{"paddingTop": "55px"}}>
+        {!this.props.isNew ?
+            <div className="loader">
+              <Spin spinning={this.state.initialDataLoading} size="large" />
+            </div> : null}
         <Tabs
           defaultActiveKey="1"
         >
@@ -623,10 +616,37 @@ class QueryDetails extends Component {
               <AssociatedDataflows assetName={name} assetType={'Query'}/>
             </TabPane> : null}
         </Tabs>
-        </Modal>
       </div>
+      {!this.props.viewMode ?
+          <div className="button-container">
+            <Button key="danger" type="danger" onClick={this.handleDelete}>Delete</Button>
+            <Button key="back" onClick={this.handleCancel}>
+              Cancel
+            </Button>
+            <Button key="submit" disabled={!editingAllowed} type="primary" loading={confirmLoading} onClick={this.handleOk}>
+              Save
+            </Button>
+          </div>
+        : null}
+      </React.Fragment>
     );
   }
 }
-const QueryDetailsForm = Form.create()(QueryDetails);
+
+function mapStateToProps(state) {
+    const { selectedAsset, newAsset={} } = state.assetReducer;
+    const { user } = state.authenticationReducer;
+    const { application } = state.applicationReducer;
+    const {isNew=false, groupId='' } = newAsset;
+    console.log(selectedAsset)
+    return {
+      user,
+      selectedAsset,
+      application,
+      isNew,
+      groupId
+    };
+}
+
+const QueryDetailsForm = connect(mapStateToProps)(Form.create()(QueryDetails));
 export default QueryDetailsForm;

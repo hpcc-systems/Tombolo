@@ -573,3 +573,16 @@ div.tooltip {
 .drag-handle {
   cursor: move!important;
 }
+
+.group-options {
+  padding-left: 20px;
+  font-family: FontAwesome;
+}
+
+.ant-tree-node-content-wrapper .group-options a {
+   visibility: hidden;
+}
+
+.ant-tree-node-content-wrapper .group-options:hover a {
+  visibility: visible;
+}

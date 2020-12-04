@@ -250,7 +250,6 @@ class FileDetails extends Component {
         this.setState({
           initialDataLoading: false
         });
-
       })
       .catch(error => {
         console.log(error);
@@ -625,11 +624,11 @@ class FileDetails extends Component {
         headers: authHeader(),
         body: JSON.stringify({isNew : this.props.isNew, id: this.state.file.id, file : this.populateFileDetails()})
       }).then(function(response) {
-          if(response.ok) {
-            return response.json();
-          }
-          handleError(response);
-          reject();
+        if(response.ok) {
+          return response.json();
+        }
+        handleError(response);
+        reject();
       }).then(function(data) {
         resolve(data);
       });
@@ -750,6 +749,7 @@ class FileDetails extends Component {
       visible: false,
     });
     //this.props.onClose();
+    this.props.history.push('/' + this.props.application.applicationId + '/assets')
   }
 
   onClusterSelection = (value) => {
@@ -1222,9 +1222,10 @@ class FileDetails extends Component {
       <React.Fragment>
         <div style={{"padding-top": "55px"}}>
           <BreadCrumbs applicationId={this.props.application.applicationId} applicationTitle={this.props.application.applicationTitle}/>
-          <div className="loader">
-            <Spin spinning={this.state.initialDataLoading} size="large" />
-          </div>
+          {!this.props.isNew?
+            <div className="loader">
+              <Spin spinning={this.state.initialDataLoading} size="large" />
+            </div> : null}
           <Tabs
             defaultActiveKey="1"
           >

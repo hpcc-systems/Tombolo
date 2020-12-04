@@ -24,6 +24,9 @@ import {DataflowInstances} from "./components/application/DataflowInstances/Data
 import {DataflowInstanceDetails} from "./components/application/DataflowInstances/DataflowInstanceDetails";
 import Users from "./components/admin/Users";
 import FileDetailsForm from "./components/application/FileDetails";
+import JobDetailsForm from "./components/application/JobDetails";
+import IndexDetailsForm from "./components/application/IndexDetails";
+import QueryDetailsForm from "./components/application/QueryDetails";
 
 import {AdminApplications} from "./components/admin/Applications";
 import AdminClusters from "./components/admin/Clusters";
@@ -82,14 +85,17 @@ class App extends React.Component {
                               <Switch>
                                 <PrivateRoute exact path="/" component={dataFlowComp}/>
                                 <PrivateRoute path="/:applicationId/assets" component={assetsComp} />
-                                <PrivateRoute exact path="/:applicationId/files" component={FileList} />
+                                //<PrivateRoute exact path="/:applicationId/files" component={FileList} /> - not in use anymore
                                 <PrivateRoute path="/:applicationId/file/:fileId?" component={FileDetailsForm}/>
-                                <PrivateRoute path="/files" component={FileList} />
-                                <PrivateRoute path="/:applicationId/jobs" component={JobList} />
-                                <PrivateRoute exact path="/:applicationId/index" component={indexListComp}/>
-                                <PrivateRoute path="/index" component={IndexList}/>
+                                <PrivateRoute path="/:applicationId/job/:jobId?" component={JobDetailsForm}/>
+                                <PrivateRoute path="/:applicationId/index/:indexId?" component={IndexDetailsForm}/>
+                                <PrivateRoute path="/:applicationId/query/:queryId?" component={QueryDetailsForm}/>
+                                //<PrivateRoute path="/files" component={FileList} /> - not in use anymore
+                                //<PrivateRoute path="/:applicationId/jobs" component={JobList} />  - not in use anymore
+                                //<PrivateRoute exact path="/:applicationId/index" component={indexListComp}/> - not in use anymore
+                                //<PrivateRoute path="/index" component={IndexList}/> - not in use anymore
                                 <PrivateRoute path="/:applicationId/data-dictionary" component={dataDictionaryComp}/>
-                                <PrivateRoute path="/:applicationId/queries" component={QueriesList}/>
+                                //<PrivateRoute path="/:applicationId/queries" component={QueriesList}/> - not in use anymore
                                 <PrivateRoute path="/:applicationId/dataflow/details" component={DataflowDetails}/>
                                 <PrivateRoute path="/:applicationId/dataflow" component={dataFlowComp}/>
                                 <PrivateRoute path="/:applicationId/dataflowinstances" component={DataflowInstances}/>
