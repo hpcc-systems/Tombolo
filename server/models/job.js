@@ -11,7 +11,7 @@ module.exports = (sequelize, DataTypes) => {
     application_id: DataTypes.STRING,
     author: DataTypes.STRING,
     contact: DataTypes.STRING,
-    description: DataTypes.STRING,
+    description: DataTypes.TEXT,
     ecl: DataTypes.TEXT,
     entryBWR: DataTypes.STRING,
     gitRepo: DataTypes.STRING,

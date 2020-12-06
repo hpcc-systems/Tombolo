@@ -8,9 +8,9 @@ module.exports = (sequelize, DataTypes) => {
       allowNull: false,
       autoIncrement: false
     },
-    application_id: DataTypes.STRING,    
+    application_id: DataTypes.STRING,
     title: DataTypes.STRING,
-    description: DataTypes.STRING,
+    description: DataTypes.TEXT,
     input: DataTypes.STRING,
     output: DataTypes.STRING,
     clusterId: DataTypes.UUIDV4,

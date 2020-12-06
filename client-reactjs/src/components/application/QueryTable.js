@@ -6,6 +6,7 @@ import QueryDetailsForm from "./QueryDetails";
 import { authHeader, handleError } from "../common/AuthHeader.js"
 import { hasEditPermission } from "../common/AuthUtil.js";
 import { Constants } from '../common/Constants';
+import ReactMarkdown from 'react-markdown';
 
 class QueryTable extends Component {
   constructor(props) {
@@ -109,7 +110,10 @@ class QueryTable extends Component {
     {
       title: 'Description',
       dataIndex: 'description',
+      className: 'overflow-hidden',
+      ellipsis: true,
       width: '15%',
+      render: (text, record) => <ReactMarkdown children={text} />
     },
     {
       width: '10%',
@@ -122,7 +126,7 @@ class QueryTable extends Component {
       dataIndex: 'createdAt',
       render: (text, record) => {
         let createdAt = new Date(text);
-        return createdAt.toLocaleDateString('en-US', Constants.DATE_FORMAT_OPTIONS) +' @ '+ createdAt.toLocaleTimeString('en-US') 
+        return createdAt.toLocaleDateString('en-US', Constants.DATE_FORMAT_OPTIONS) +' @ '+ createdAt.toLocaleTimeString('en-US')
       }
     },
     {
@@ -145,7 +149,7 @@ class QueryTable extends Component {
             columns={queryColumns}
             rowKey={record => record.id}
             dataSource={this.state.queries}
-            pagination={{ pageSize: 10 }} 
+            pagination={{ pageSize: 10 }}
             scroll={{ y: '70vh' }}
           />
         {this.state.openQueryDetailsDialog ?
@@ -154,7 +158,7 @@ class QueryTable extends Component {
             selectedAsset={this.state.selectedQuery}
             applicationId={this.props.applicationId}
             onRefresh={this.handleRefreshTree}
-            onClose={this.handleClose} 
+            onClose={this.handleClose}
             isNew={false}
             user={this.props.user}/>: null}
       </div>

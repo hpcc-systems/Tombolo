@@ -5,7 +5,9 @@ import { authHeader, handleError } from "../common/AuthHeader.js";
 import { hasAdminRole } from "../common/AuthUtil.js";
 import { connect } from 'react-redux';
 import { Constants } from '../common/Constants';
+import { MarkdownEditor } from "../common/MarkdownEditor.js";
 import ShareApp from "./ShareApp";
+import ReactMarkdown from 'react-markdown';
 import { applicationActions } from '../../redux/actions/Application';
 
 class Applications extends Component {
@@ -178,7 +180,11 @@ class Applications extends Component {
       if (err !== null) {
         return;
       }
-      if(this.state.applications.filter(application => application.title == this.state.newApp.title).length > 0) {
+      if(this.state.applications.filter(application => {
+        if (application.id != this.state.newApp.id && application.title == this.state.newApp.title) {
+          return application;
+        }
+      }).length > 0) {
         message.config({top:150})
         message.error("There is already an application with the same name. Please select a different name.")
         return;
@@ -255,7 +261,10 @@ class Applications extends Component {
     }, {
       width: '20%',
       title: 'Description',
-      dataIndex: 'description'
+      dataIndex: 'description',
+      className: 'overflow-hidden',
+      ellipsis: true,
+      render: (text, record) => <ReactMarkdown children={text} />
     }, {
       width: '10%',
       title: 'Created By',
@@ -294,7 +303,7 @@ class Applications extends Component {
       },
       wrapperCol: {
         xs: { span: 2 },
-        sm: { span: 10 },
+        sm: { span: 18 },
       },
     };
 
@@ -337,14 +346,7 @@ class Applications extends Component {
             </Form.Item>
 
             <Form.Item {...formItemLayout} label="Description">
-              {getFieldDecorator('description', {
-                rules: [{
-                  pattern: new RegExp(/^[a-zA-Z]{1}[a-zA-Z0-9_.\-]*$/),
-                  message: 'Invalid description!'
-                }],
-              })(
-                <Input id="app_description" name="description" onChange={this.onChange} placeholder="Description" value={this.state.newApp.description}/>
-              )}
+              <MarkdownEditor id="app_description" name="description" onChange={this.onChange} targetDomId="AppDescr" value={this.state.newApp.description}/>
             </Form.Item>
           </Form>
         </Modal>

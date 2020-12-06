@@ -78,8 +78,7 @@ router.post('/newapp', [
   body('title')
     .matches(/^[a-zA-Z]{1}[a-zA-Z0-9_:.\-]*$/).withMessage('Invalid title'),
   body('description')
-    .optional({checkFalsy:true})
-    .matches(/^[a-zA-Z]{1}[a-zA-Z0-9_.\-]*$/).withMessage('Invalid description'),
+    .optional({checkFalsy:true}),
   body('creator')
     .matches(/^[a-zA-Z]{1}[a-zA-Z0-9_:.\-]*$/).withMessage('Invalid creator'),
 ],function (req, res) {

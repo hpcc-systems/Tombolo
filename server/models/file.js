@@ -12,7 +12,7 @@ module.exports = (sequelize, DataTypes) => {
     title: DataTypes.STRING,
     name: DataTypes.STRING,
     cluster_id: DataTypes.STRING,
-    description: DataTypes.STRING,
+    description: DataTypes.TEXT,
     fileType: DataTypes.STRING,
     isSuperFile: DataTypes.STRING,
     serviceURL: DataTypes.STRING,

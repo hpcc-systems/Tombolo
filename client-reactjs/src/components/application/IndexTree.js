@@ -5,6 +5,7 @@ import React, { Component } from "react";
 import IndexDetailsForm from "./IndexDetails";
 import { authHeader, handleError } from "../common/AuthHeader.js"
 import { Constants } from '../common/Constants';
+import ReactMarkdown from 'react-markdown';
 
 class IndexTree extends Component {
   constructor(props) {
@@ -106,7 +107,10 @@ class IndexTree extends Component {
     {
       title: 'Description',
       dataIndex: 'description',
+      className: 'overflow-hidden',
+      ellipsis: true,
       width: '20%',
+      render: (text, record) => <ReactMarkdown children={text} />
     },
     {
       width: '10%',
@@ -119,14 +123,14 @@ class IndexTree extends Component {
       render: (text, record) => {
         return (record.dataflow && record.dataflow.title != '') ? record.dataflow.title : '';
       }
-    },        
+    },
     {
       width: '25%',
       title: 'Created',
       dataIndex: 'createdAt',
       render: (text, record) => {
         let createdAt = new Date(text);
-        return createdAt.toLocaleDateString('en-US', Constants.DATE_FORMAT_OPTIONS) +' @ '+ createdAt.toLocaleTimeString('en-US') 
+        return createdAt.toLocaleDateString('en-US', Constants.DATE_FORMAT_OPTIONS) +' @ '+ createdAt.toLocaleTimeString('en-US')
       }
     },
     {
@@ -148,7 +152,7 @@ class IndexTree extends Component {
             columns={indexColumns}
             rowKey={record => record.id}
             dataSource={this.state.indexes}
-            pagination={{ pageSize: 10 }} 
+            pagination={{ pageSize: 10 }}
             scroll={{ y: '70vh' }}
           />
         {this.state.openFileDetailsDialog ?

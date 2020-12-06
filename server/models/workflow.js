@@ -9,7 +9,7 @@ module.exports = (sequelize, DataTypes) => {
       autoIncrement: false
     },
     name: DataTypes.STRING,
-    description: DataTypes.STRING,
+    description: DataTypes.TEXT,
     application_id: DataTypes.STRING,
     dataflowId: DataTypes.STRING,
     status: DataTypes.STRING

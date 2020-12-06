@@ -9,6 +9,7 @@ import { Constants } from '../common/Constants';
 import { withRouter } from 'react-router-dom';
 import { connect } from 'react-redux';
 import { assetsActions } from '../../redux/actions/Assets';
+import ReactMarkdown from 'react-markdown';
 
 class FileTable extends Component {
   state = {
@@ -178,9 +179,12 @@ class FileTable extends Component {
       render: (text, record) => <a href='#' onClick={(row) => this.handleEdit(record.id)}>{text}</a>
     },
     {
-        width: '20%',
-        title: 'Description',
-        dataIndex: 'description'
+      width: '20%',
+      title: 'Description',
+      dataIndex: 'description',
+      className: 'overflow-hidden',
+      ellipsis: true,
+      render: (text, record) => <ReactMarkdown children={text} />
     },
     {
         width: '10%',

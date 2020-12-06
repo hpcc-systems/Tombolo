@@ -4,12 +4,13 @@ import { authHeader, handleError } from "../../common/AuthHeader.js"
 import { hasEditPermission } from "../../common/AuthUtil.js";
 import { Constants } from '../../common/Constants';
 import { useSelector } from "react-redux";
+import ReactMarkdown from 'react-markdown';
 
 function DataflowTable({data, applicationId, onSelectDataflow, onDataFlowUpdated, onDataFlowEdit}) {
   const [selectedRowKeys, setSelectedRowKeys] = useState([]);
-  
 
-  useEffect(() => {    
+
+  useEffect(() => {
     if(data && data.length > 0) {
       setSelectedRowKeys([data[0].id]);
       //onSelectDataflow(data[0]);
@@ -66,7 +67,10 @@ function DataflowTable({data, applicationId, onSelectDataflow, onDataFlowUpdated
   {
     title: 'Description',
     dataIndex: 'description',
+    className: 'overflow-hidden',
+    ellipsis: true,
     width: '30%',
+    render: (text, record) => <ReactMarkdown children={text} />
   },
   {
     title: 'Process Type',
@@ -79,14 +83,14 @@ function DataflowTable({data, applicationId, onSelectDataflow, onDataFlowUpdated
     width: '30%',
     render: (text, record) => {
       let createdAt = new Date(text);
-      return createdAt.toLocaleDateString('en-US', Constants.DATE_FORMAT_OPTIONS) +' @ '+ createdAt.toLocaleTimeString('en-US') 
+      return createdAt.toLocaleDateString('en-US', Constants.DATE_FORMAT_OPTIONS) +' @ '+ createdAt.toLocaleTimeString('en-US')
     }
   },
   {
     width: '20%',
     title: 'Action',
     dataIndex: '',
-    className: editingAllowed ? "show-column" : "hide-column",    
+    className: editingAllowed ? "show-column" : "hide-column",
     render: (text, record) =>
       <span>
         <a href="#" onClick={(row) => handleEditDataflow(record)}><Tooltip placement="right" title={"Edit Dataflow"}><Icon type="edit" /></Tooltip></a>
@@ -98,15 +102,15 @@ function DataflowTable({data, applicationId, onSelectDataflow, onDataFlowUpdated
   }];
 	return (
 	  <React.Fragment>
-	   <Table        
+	   <Table
         columns={dataflowCols}
         rowKey={record => record.id}
-        dataSource={data}        
+        dataSource={data}
         pagination={{ pageSize: 5 }} scroll={{ y: 380 }}
       />
 
      </React.Fragment>
-	  )  
+	  )
 
 }
 

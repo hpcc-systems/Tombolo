@@ -6,6 +6,7 @@ import useFileDetailsForm from '../../../hooks/useFileDetailsForm';
 import { Constants } from '../../common/Constants';
 import { useSelector } from "react-redux";
 import DataDefinitionDetailsDialog from './DataDefinitionDetailsDialog';
+import ReactMarkdown from 'react-markdown';
 
 function DataDictionaryTable({dataDefinitions, applicationId, onDataUpdated, closeAddDlg}) {
   const [data, setData] = useState([]);
@@ -16,22 +17,22 @@ function DataDictionaryTable({dataDefinitions, applicationId, onDataUpdated, clo
 
   const authReducer = useSelector(state => state.authenticationReducer);
 
-  useEffect(() => {    
+  useEffect(() => {
     setData(dataDefinitions);
   }, [dataDefinitions])
 
   const handleEditDataDictionary = (selectedDataDefinition) => {
     setSelectedDataDefinition(selectedDataDefinition);
-    if(selectedDataDefinition.type != 'file') {      
+    if(selectedDataDefinition.type != 'file') {
       setShowDetailsDialog(true);
     } else {
       console.log('setShowFileDetailsDialog: '+setShowFileDetailsDialog)
       toggle();
       setShowFileDetailsDialog(true);
     }
-    
+
   }
-  
+
   const handleDataDictionaryDelete = (record) => {
     if(record.type != 'file') {
       fetch('/api/data-dictionary/delete', {
@@ -55,7 +56,7 @@ function DataDictionaryTable({dataDefinitions, applicationId, onDataUpdated, clo
     } else {
       handleFileDelete(record.id);
     }
-  }  
+  }
 
   const handleFileDelete = (fileId) => {
     var data = JSON.stringify({fileId: fileId, application_id: applicationId});
@@ -108,7 +109,10 @@ function DataDictionaryTable({dataDefinitions, applicationId, onDataUpdated, clo
   {
     title: 'Description',
     dataIndex: 'description',
+    className: 'overflow-hidden',
+    ellipsis: true,
     width: '30%',
+    render: (text, record) => <ReactMarkdown children={text} />
   },
   {
     title: 'Created',
@@ -116,14 +120,14 @@ function DataDictionaryTable({dataDefinitions, applicationId, onDataUpdated, clo
     width: '30%',
     render: (text, record) => {
       let createdAt = new Date(text);
-      return createdAt.toLocaleDateString('en-US', Constants.DATE_FORMAT_OPTIONS) +' @ '+ createdAt.toLocaleTimeString('en-US') 
+      return createdAt.toLocaleDateString('en-US', Constants.DATE_FORMAT_OPTIONS) +' @ '+ createdAt.toLocaleTimeString('en-US')
     }
   },
   {
     width: '20%',
     title: 'Action',
     dataIndex: '',
-    className: editingAllowed ? "show-column" : "hide-column",    
+    className: editingAllowed ? "show-column" : "hide-column",
     render: (text, record) =>
       <span>
         <a href="#" onClick={(row) => handleEditDataDictionary(record)}><Tooltip placement="right" title={"Edit Dataflow"}><Icon type="edit" /></Tooltip></a>
@@ -135,11 +139,11 @@ function DataDictionaryTable({dataDefinitions, applicationId, onDataUpdated, clo
   }];
 	return (
 	  <React.Fragment>
-	   <Table        
+	   <Table
         columns={dataDefnCols}
         rowKey={record => record.id}
-        dataSource={data}        
-        pagination={{ pageSize: 20 }} 
+        dataSource={data}
+        pagination={{ pageSize: 20 }}
         scroll={{ y: '70vh' }}
       />
       {showDetailsDialog ? <DataDefinitionDetailsDialog selectedDataDefinition={selectedDataDefinition} applicationId={applicationId} onDataUpdated={onDataUpdated} closeDialog={closeDialog}/> : null}
@@ -155,7 +159,7 @@ function DataDictionaryTable({dataDefinitions, applicationId, onDataUpdated, clo
           "onClose": closeFileDialog,
           "user": authReducer.user}) : null}
      </React.Fragment>
-	  )  
+	  )
 
 }
 
