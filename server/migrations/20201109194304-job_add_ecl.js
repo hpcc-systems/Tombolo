@@ -2,7 +2,7 @@
 
 module.exports = {
   up: (queryInterface, Sequelize) => {
-    return queryInterface.addColumn('Job', 'ecl', {
+    return queryInterface.addColumn('job', 'ecl', {
         type: Sequelize.TEXT,
         allowNull: true,
         after: 'description'
@@ -11,6 +11,6 @@ module.exports = {
   },
 
   down: (queryInterface, Sequelize) => {
-    return queryInterface.removeColumn('Job', 'ecl');
+    return queryInterface.removeColumn('job', 'ecl');
   }
 };
