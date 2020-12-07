@@ -196,8 +196,8 @@ function AssetsTable(props) {
         columns={columns}
         rowKey={record => record.id}
         dataSource={assets}
-        pagination={{ pageSize: 10 }}
-        scroll={{ y: '100vh' }}
+        pagination={{ pageSize: 20 }}
+        scroll={{ y: '70vh' }}
       />
     </div>
     {showMoveDialog ?

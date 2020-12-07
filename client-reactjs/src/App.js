@@ -80,7 +80,7 @@ class App extends React.Component {
                   {this.props.user && this.props.user.token ? <AppHeader/> : null}
                   <Layout className="site-layout">
                       <LeftNav isApplicationSet={isApplicationSet} selectedTopNav={selectedTopNav} />
-                      <Layout style={{height: '100vh', overflow: 'hidden'}}>
+                      <Layout style={{height: '100vh', overflow: 'auto'}}>
                           <Content style={{background: '#fff', margin: '0 16px'}}>
                               <Switch>
                                 <PrivateRoute exact path="/" component={dataFlowComp}/>

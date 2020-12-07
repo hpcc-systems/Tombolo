@@ -290,7 +290,7 @@ path, .jtk-endpoint { cursor:pointer; }
 }
 
 .ant-form-item {
-  margin-bottom: 6px !important;
+  margin-bottom: 2px !important;
 }
 
  /* The style of the selected table row */
@@ -549,7 +549,7 @@ div.tooltip {
 }
 
 .groups-div {
-  height:100vh;
+  height:70vh;
 }
 
 .ant-tree li .ant-tree-node-content-wrapper {
