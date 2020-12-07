@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react'
+import React, { useState, useEffect, useRef } from 'react'
 import { Tree, Row, Col, Menu, Icon, Button, Modal, Form, Input } from 'antd/lib';
 import BreadCrumbs from "../../common/BreadCrumbs";
 import { authHeader, handleError } from "../../common/AuthHeader.js"
@@ -10,6 +10,7 @@ import { assetsActions } from '../../../redux/actions/Assets';
 import { groupsActions } from '../../../redux/actions/Groups';
 import AssetsTable from "./AssetsTable";
 import { MarkdownEditor } from "../../common/MarkdownEditor.js"
+import useOnClickOutside from '../../../hooks/useOnClickOutside';
 
 const { TreeNode, DirectoryTree } = Tree;
 const { SubMenu } = Menu;
@@ -42,8 +43,11 @@ function Assets(props) {
   };
   const splCharacters = /[ `!@#$%^&*()+\=\[\]{};':"\\|,.<>\/?~]/;
   const form = props.form;
-
   const groupsReducer = useSelector(state => state.groupsReducer);
+  //ref for More Options context menu
+  const ref = useRef();
+  //hook for outside click to close the more options context menu
+  useOnClickOutside(ref, () => setRightClickNodeTreeItem({visible: false}));
 
   useEffect(() => {
     if(application.applicationId) {
@@ -105,6 +109,7 @@ function Assets(props) {
     document.querySelectorAll('.ant-tree-node-content-wrapper').forEach((element) => {
       const newElement = document.createElement('span');
       const newElementHref = document.createElement('a');
+      newElementHref.className="more-options"
       newElementHref.innerText='\uf0c9';
       newElement.append(newElementHref);
       newElement.className = 'group-options float-right'
@@ -112,49 +117,34 @@ function Assets(props) {
     })
 
     window.setTimeout(() => {
-      document.querySelectorAll('.group-options > a').forEach((option) => {
-        option.addEventListener('click', onRightClickGroupsDiv);
+      document.querySelectorAll('.more-options').forEach((option) => {
+        option.addEventListener('click', showMoreOptions);
       })
     }, 200);
   }
 
-  const onRightClick = e => {
-    if(e.node) {
-      setSelectedGroup({id: e.node.props.id, key:e.node.props.eventKey})
-      setRightClickNodeTreeItem({
-        visible: true,
-        pageX: e.event.pageX,
-        pageY: e.event.pageY,
-        id: e.node.props["data-key"],
-        categoryName: e.node.props["data-title"]
-      });
-    }
-    window.setTimeout(() => {
-      document.addEventListener('click', function onClickOutside() {
-        setRightClickNodeTreeItem({visible: false});
-        document.removeEventListener('click', onClickOutside)
-      })
-    }, 200);
-  }
-
-  const onRightClickGroupsDiv = e => {
+  const showMoreOptions = e => {
     e.preventDefault();
-    setSelectedGroup({id: '', key:''});
+
+    //setSelectedGroup({id: '', key:''});
     setRightClickNodeTreeItem({
       visible: true,
       pageX: e.clientX,
       pageY: e.clientY,
     });
-    window.setTimeout(() => {
-      document.addEventListener('click', function onClickOutside() {
-        setRightClickNodeTreeItem({visible: false});
-        document.removeEventListener('click', onClickOutside)
-      })
-    }, 200);
+
+    /*window.setTimeout(() => {
+      document.addEventListener('click', onClickOutside)
+    }, 100);*/
   }
 
   const openNewGroupDialog = () => {
     setOpenCreateGroupDialog(true);
+  }
+
+  const onClickOutside = () => {
+    setRightClickNodeTreeItem({visible: false});
+    document.removeEventListener('click', onClickOutside)
   }
 
   const closeCreateGroupDialog = () => {
@@ -205,29 +195,9 @@ function Assets(props) {
   const RightClickMenu = props => {
     return (rightClickNodeTreeItem.visible ?
       <React.Fragment>
-      <div style={{left: `${rightClickNodeTreeItem.pageX + 40}px`, top: `${rightClickNodeTreeItem.pageY}px`}} className="self-right-menu">
-        <Menu style={{ width: 150 }} mode="vertical" theme="dark" onClick={handleMenuClick}>
-          <SubMenu
-            key="create-new"
-            title={
-              <span>
-                <Icon type="mail" />
-                <span style={{"paddingRight": "5px"}}>New</span>
-              </span>
-            }
-          >
-          {selectedGroup && selectedGroup.id != '' ?
-            <Menu.ItemGroup title="Assets">
-              <Menu.Item key="File"><i className="fa fa-lg fa-file"></i> File</Menu.Item>
-              <Menu.Item key="Index"><i className="fa fa-lg fa-indent"></i> Index</Menu.Item>
-              <Menu.Item key="Query"><i className="fa fa-lg fa-search"></i> Query</Menu.Item>
-              <Menu.Item key="Job"><i className="fa fa-lg fa-clock-o"></i> Job</Menu.Item>
-            </Menu.ItemGroup>
-           : null}
-          <Menu.ItemGroup title="Groups">
-            <Menu.Item key="Group">Group</Menu.Item>
-          </Menu.ItemGroup>
-         </SubMenu>
+      <div ref={ref} style={{left: `${rightClickNodeTreeItem.pageX + 40}px`, top: `${rightClickNodeTreeItem.pageY}px`}} className="self-right-menu">
+        <Menu style={{ width: 150 }} mode="vertical" theme="dark" onClick={handleMenuClick} ref={ref}>
+         <Menu.Item key="Group"><Icon type="folder" /> New Group</Menu.Item>
          {selectedGroup && selectedGroup.id != '' ?
            <Menu.Item key="Edit-Group"><Icon type="edit" />Edit</Menu.Item> : null}
          {selectedGroup && selectedGroup.id != '' ?
