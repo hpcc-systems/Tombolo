@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react'
-import { Tree, Row, Col, Menu, Icon, Button, Modal, Form, Input } from 'antd/lib';
+import { Tree, Row, Col, Menu, Icon, Button, Modal, Form, Input, Dropdown } from 'antd/lib';
 import BreadCrumbs from "../../common/BreadCrumbs";
 import { authHeader, handleError } from "../../common/AuthHeader.js"
 import { hasEditPermission } from "../../common/AuthUtil.js";
@@ -321,10 +321,31 @@ function Assets(props) {
 
   const authReducer = useSelector(state => state.authenticationReducer);
   const editingAllowed = hasEditPermission(authReducer.user);
+
+  const menu = (
+    <Menu onClick={handleMenuClick}>
+      <Menu.Item key="File"><i className="fa fa-lg fa-file"></i> File</Menu.Item>
+      <Menu.Item key="Index"><i className="fa fa-lg fa-indent"></i> Index</Menu.Item>
+      <Menu.Item key="Query"><i className="fa fa-lg fa-search"></i> Query</Menu.Item>
+      <Menu.Item key="Job"><i className="fa fa-lg fa-clock-o"></i> Job</Menu.Item>
+    </Menu>
+  );
+
   return (
       <React.Fragment>
-        <div style={{paddingTop:"55px", margin: "5px"}}>
-          <BreadCrumbs applicationId={application.applicationId} applicationTitle={application.applicationTitle}/>
+        <div>
+          <div className="d-flex justify-content-end" style={{paddingTop:"55px", margin: "5px"}}>
+            <BreadCrumbs applicationId={application.applicationId} applicationTitle={application.applicationTitle}/>
+            <div className="ml-auto">
+              {editingAllowed ?
+                <Dropdown overlay={menu}>
+                  <Button className="btn btn-secondary btn-sm" >
+                    Add Asset <Icon type="down" />
+                  </Button>
+                </Dropdown>
+                : null }
+            </div>
+          </div>
           <Row gutter={24}>
             <Col className="gutter-row groups-div" span={3}>
               <div className="gutter-box">
