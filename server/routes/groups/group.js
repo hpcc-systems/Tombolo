@@ -78,7 +78,7 @@ router.get('/', [
     if (!errors.isEmpty()) {
         return res.status(422).json({ success: false, errors: errors.array() });
     }
-    Groups.findAll({where:{"application_id":req.query.app_id}, order: [['name', 'ASC']]}).then(function(groups) {
+    Groups.findAll({where:{"application_id":req.query.app_id}, order: [['createdAt', 'ASC']]}).then(function(groups) {
       createGroupHierarchy(groups).then((groupHierarchy) => {
         console.log(JSON.stringify(groupHierarchy));
         res.json(groupHierarchy);
@@ -93,7 +93,7 @@ router.get('/', [
 let getChildGroups = (appId, groupId) => {
   return new Promise((resolve, reject) => {
     let childGroups = [];
-    Groups.findAll({where:{application_id: appId, parent_group: groupId}}).then((groups) => {
+    Groups.findAll({where:{application_id: appId, parent_group: groupId}, order: [['createdAt', 'DESC']]}).then((groups) => {
       groups.forEach((group) => {
         childGroups.push({
           type: 'Group',
@@ -125,10 +125,9 @@ router.get('/assets', [
         "id": req.query.group_id
       },
       include: [{model:File, attributes:['id', 'name', 'title', 'description', 'createdAt']}, {model:Job, attributes:['id', 'name', 'title', 'description', 'createdAt']}, {model:Query, attributes:['id', 'name', 'title', 'description', 'createdAt']}, {model:Index, attributes:['id', 'name', 'title', 'description', 'createdAt']}],
-      order: [['name', 'ASC']]
+      order: [['createdAt', 'DESC']]
       }).then(async (assets) => {
         let childGroups = await getChildGroups(req.query.app_id, req.query.group_id)
-        finalAssets = finalAssets.concat(childGroups);
         assets[0].files.forEach((file) => {
           finalAssets.push({
             type: 'File',
@@ -169,16 +168,15 @@ router.get('/assets', [
             createdAt: query.createdAt
           })
         })
-        finalAssets.sort(function(a,b){
-          return new Date(b.createdAt) - new Date(a.createdAt);
-        });
 
+        finalAssets.sort(comparator);
+        finalAssets = childGroups.concat(finalAssets);
         res.json(finalAssets);
       }).catch(function(err) {
         console.log(err);
       });
     } else {
-      let promises=[];
+      let promises=[], finalGroups=[];
       //if group_id is not passed, this could be a root dir. pull all assets for that app_id
 
       promises.push(File.findAll({where:{application_id:req.query.app_id, groupId:{[Op.or]:[null, '']}}}).then((files) => {
@@ -233,11 +231,25 @@ router.get('/assets', [
         })
       }))
 
+      promises.push(Groups.findAll({where:{application_id:req.query.app_id, parent_group:{[Op.or]:[null, '']}}}).then((groups) => {
+        groups.forEach((group) => {
+          finalGroups.push({
+            type: 'Group',
+            id: group.id,
+            name: group.name,
+            description: group.description,
+            createdAt: group.createdAt
+          })
+        })
+      }))
+
       Promise.all(promises).then(() => {
-        console.log("all assets retrieved....")
-        finalAssets.sort(function(a,b){
-          return new Date(b.createdAt) - new Date(a.createdAt);
-        });
+        console.log("1-all assets retrieved....")
+        finalGroups.sort(comparator);
+
+        finalAssets.sort(comparator)
+
+        finalAssets = finalGroups.concat(finalAssets);
         res.json(finalAssets);
       })
     }
@@ -383,6 +395,10 @@ router.put('/move/asset', [
     console.log(err);
     return res.status(500).send("Error occured while moving asset");
   }
+});
+
+let comparator = ((a,b) => {
+  return new Date(b.createdAt) - new Date(a.createdAt);
 });
 
 module.exports = router;

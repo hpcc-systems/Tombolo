@@ -81,8 +81,8 @@ function Assets(props) {
   const onSelect = (keys, event) => {
     setSelectedGroup({id:event.node.props.id, key:event.node.props.eventKey})
     dispatch(groupsActions.groupExpanded(
-      {id:event.node.props.id, key:event.node.props.eventKey},
-      expandedGroups
+      {id:event.node.props.id, key:keys[0]},
+      keys
     ));
   };
 
@@ -368,6 +368,7 @@ function Assets(props) {
                     draggable
                     onDragEnter={handleDragEnter}
                     onDrop={handleDragDrop}
+                    expandAction={false}
                   />
               </div>
             </Col>

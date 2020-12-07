@@ -460,7 +460,8 @@ class JobDetails extends Component {
     this.setState({
       visible: false,
     });
-    this.props.onClose();
+    //this.props.onClose();
+    this.props.history.push('/' + this.props.application.applicationId + '/assets')
 
   }
   onChange = (e) => {

@@ -553,7 +553,7 @@ div.tooltip {
 }
 
 .ant-tree li .ant-tree-node-content-wrapper {
-  display: inline-block;
+  display: inline !important;
   height: 24px;
   margin: 0;
    padding: 0 0px !important;
@@ -585,14 +585,18 @@ div.tooltip {
 }
 
 .group-options {
-  padding-left: 20px;
   font-family: FontAwesome;
+  padding-right: 10px;
 }
 
-.ant-tree-node-content-wrapper .group-options a {
+.ant-tree-node-content-wrapper .group-options {
    visibility: hidden;
 }
 
-.ant-tree-node-content-wrapper .group-options:hover a {
+.ant-tree-node-content-wrapper:hover a {
   visibility: visible;
+}
+
+.ant-tree-title {
+  flex-grow: 1;
 }

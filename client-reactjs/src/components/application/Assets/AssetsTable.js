@@ -149,7 +149,6 @@ function AssetsTable(props) {
     title: 'Name',
     dataIndex: 'name',
     width: '20%',
-    ellipsis: true,
     render: (text, record) => <a href='#' onClick={(row) => handleEdit(record.id, record.type)}>{text}</a>
   },
   {
