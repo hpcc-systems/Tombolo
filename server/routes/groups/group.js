@@ -78,7 +78,7 @@ router.get('/', [
     if (!errors.isEmpty()) {
         return res.status(422).json({ success: false, errors: errors.array() });
     }
-    Groups.findAll({where:{"application_id":req.query.app_id}, order: [['createdAt', 'ASC']]}).then(function(groups) {
+    Groups.findAll({where:{"application_id":req.query.app_id}, order: [['name', 'ASC']]}).then(function(groups) {
       createGroupHierarchy(groups).then((groupHierarchy) => {
         console.log(JSON.stringify(groupHierarchy));
         res.json(groupHierarchy);
@@ -93,7 +93,7 @@ router.get('/', [
 let getChildGroups = (appId, groupId) => {
   return new Promise((resolve, reject) => {
     let childGroups = [];
-    Groups.findAll({where:{application_id: appId, parent_group: groupId}, order: [['createdAt', 'DESC']]}).then((groups) => {
+    Groups.findAll({where:{application_id: appId, parent_group: groupId}, order: [['name', 'ASC']]}).then((groups) => {
       groups.forEach((group) => {
         childGroups.push({
           type: 'Group',
@@ -125,7 +125,7 @@ router.get('/assets', [
         "id": req.query.group_id
       },
       include: [{model:File, attributes:['id', 'name', 'title', 'description', 'createdAt']}, {model:Job, attributes:['id', 'name', 'title', 'description', 'createdAt']}, {model:Query, attributes:['id', 'name', 'title', 'description', 'createdAt']}, {model:Index, attributes:['id', 'name', 'title', 'description', 'createdAt']}],
-      order: [['createdAt', 'DESC']]
+      order: [['name', 'ASC']]
       }).then(async (assets) => {
         let childGroups = await getChildGroups(req.query.app_id, req.query.group_id)
         assets[0].files.forEach((file) => {
@@ -255,34 +255,52 @@ router.get('/assets', [
     }
 });
 
+let groupExistsWithSameName = (parentGroupId, name, appId) => {
+  return new Promise((resolve, reject) => {
+    Groups.findAll({where:{parent_group: parentGroupId, name: name, application_id: appId}}).then((results)  => {
+      if(results.length > 0) {
+        resolve(true);
+      } else {
+        resolve(false);
+      }
+    })
+  })
+
+}
+
 router.post('/', [
   body('parentGroupId').optional({checkFalsy:true}).isUUID(4).withMessage('Invalid parent group id'),
   body('id').optional({checkFalsy:true}).isUUID(4).withMessage('Invalid id'),
   body('applicationId').isUUID(4).withMessage('Invalid application id'),
   body('name').matches(/^[a-zA-Z]{1}[a-zA-Z0-9_.\-:]*$/).withMessage('Invalid Name')
-], (req, res) => {
+], async (req, res) => {
   const errors = validationResult(req).formatWith(validatorUtil.errorFormatter);
   if (!errors.isEmpty()) {
     return res.status(422).json({ success: false, errors: errors.array() });
   }
   try {
-    if(req.body.isNew) {
-      let parentGroupId = (req.body.parentGroupId && req.body.parentGroupId != '') ? req.body.parentGroupId : '';
-      Groups.create({
-        name: req.body.name,
-        description: req.body.description,
-        application_id: req.body.applicationId,
-        parent_group: parentGroupId
-      }).then((groupCreated) => {
-        res.json({"success":true})
-      })
+    let parentGroupId = (req.body.parentGroupId && req.body.parentGroupId != '') ? req.body.parentGroupId : '';
+    let duplicateGroupName = await groupExistsWithSameName(parentGroupId, req.body.name, req.body.applicationId);
+    if(duplicateGroupName) {
+      res.status(400).send({"message":"There is already a group with the same name under the parent group. Please select a different name"});
     } else {
-      Groups.update({
-        name: req.body.name,
-        description: req.body.description
-      }, {where:{id:req.body.id}}).then((groupUpdated) => {
-        res.json({"success":true})
-      })
+      if(req.body.isNew) {
+        Groups.create({
+          name: req.body.name,
+          description: req.body.description,
+          application_id: req.body.applicationId,
+          parent_group: parentGroupId
+        }).then((groupCreated) => {
+          res.json({"success":true})
+        })
+      } else {
+        Groups.update({
+          name: req.body.name,
+          description: req.body.description
+        }, {where:{id:req.body.id}}).then((groupUpdated) => {
+          res.json({"success":true})
+        })
+      }
     }
   } catch (err) {
     console.log(err)

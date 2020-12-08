@@ -135,6 +135,9 @@ function AssetsTable(props) {
     })
     .then(result => {
       fetchDataAndRenderTable();
+      if(type == 'Group') {
+        props.refreshGroups();
+      }
       message.success(type + " deleted sucessfully");
     }).catch(error => {
       console.log(error);

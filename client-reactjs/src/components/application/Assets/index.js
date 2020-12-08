@@ -15,6 +15,7 @@ import useOnClickOutside from '../../../hooks/useOnClickOutside';
 const { TreeNode, DirectoryTree } = Tree;
 const { SubMenu } = Menu;
 const { confirm } = Modal;
+const { Search } = Input;
 
 function Assets(props) {
   const [application, setApplication] = useState({...props});
@@ -41,8 +42,8 @@ function Assets(props) {
       sm: { span: 24 },
     },
   };
-  const splCharacters = /[ `!@#$%^&*()+\=\[\]{};':"\\|,.<>\/?~]/;
   const form = props.form;
+  const { getFieldDecorator } = form;
   const groupsReducer = useSelector(state => state.groupsReducer);
   //ref for More Options context menu
   const ref = useRef();
@@ -198,9 +199,9 @@ function Assets(props) {
       <div ref={ref} style={{left: `${rightClickNodeTreeItem.pageX + 40}px`, top: `${rightClickNodeTreeItem.pageY}px`}} className="self-right-menu">
         <Menu style={{ width: 150 }} mode="vertical" theme="dark" onClick={handleMenuClick} ref={ref}>
          <Menu.Item key="Group"><Icon type="folder" /> New Group</Menu.Item>
-         {selectedGroup && selectedGroup.id != '' ?
+         {(selectedGroup && selectedGroup.id != null && selectedGroup.id != '') ?
            <Menu.Item key="Edit-Group"><Icon type="edit" />Edit</Menu.Item> : null}
-         {selectedGroup && selectedGroup.id != '' ?
+         {selectedGroup && selectedGroup.id != null && selectedGroup.id != '' ?
            <Menu.Item key="Delete-Group"><Icon type="delete" />Delete</Menu.Item> : null}
        </Menu>
       </div>
@@ -208,31 +209,38 @@ function Assets(props) {
      : null)
   }
 
-  const handleCreateGroup = () => {
-    setNewGroupForm({'submitted': true});
+  const handleCreateGroup = (e) => {
+    e.preventDefault();
+    form.validateFields(async (err, values) =>  {
+      if(!err) {
+        setNewGroupForm({'submitted': true});
 
-    fetch('/api/groups', {
-      method: 'post',
-      headers: authHeader(),
-      body: JSON.stringify({
-        "isNew": (newGroup.id && newGroup.id != '') ? false : true,
-        "parentGroupId": selectedGroup.id,
-        "name": newGroup.name,
-        "applicationId": application.applicationId,
-        "description": newGroup.description,
-        "id": newGroup.id
-      })
-    }).then(function(response) {
-      if(response.ok) {
-        return response.json();
+        fetch('/api/groups', {
+          method: 'post',
+          headers: authHeader(),
+          body: JSON.stringify({
+            "isNew": (newGroup.id && newGroup.id != '') ? false : true,
+            "parentGroupId": selectedGroup.id,
+            "name": newGroup.name,
+            "applicationId": application.applicationId,
+            "description": newGroup.description,
+            "id": newGroup.id
+          })
+        }).then(function(response) {
+          if(response.ok && response.status == 200) {
+            return response.json();
+          }
+          handleError(response);
+        }).then(function(data) {
+          if(data && data.success) {
+            closeCreateGroupDialog();
+            fetchGroups();
+          }
+        }).catch(error => {
+          console.log(error);
+        });
       }
-      handleError(response);
-    }).then(function(data) {
-      closeCreateGroupDialog();
-      fetchGroups();
-    }).catch(error => {
-      console.log(error);
-    });
+    })
   }
 
   const handleDeleteGroup = () => {
@@ -319,6 +327,10 @@ function Assets(props) {
     }
   }
 
+  const handleSearch = () => {
+
+  }
+
   const authReducer = useSelector(state => state.authenticationReducer);
   const editingAllowed = hasEditPermission(authReducer.user);
 
@@ -349,6 +361,7 @@ function Assets(props) {
           <Row gutter={24}>
             <Col className="gutter-row groups-div" span={3}>
               <div className="gutter-box">
+                  <Search style={{ marginBottom: 8 }} placeholder="Search" onChange={handleSearch} />
                   <DirectoryTree
                     onSelect={onSelect}
                     onExpand={onExpand}
@@ -365,7 +378,7 @@ function Assets(props) {
             </Col>
             <Col className="gutter-row groups-div" span={21}>
               <div className="gutter-box">
-                <AssetsTable selectedGroup={selectedGroup} handleEditGroup={handleEditGroup}/>
+                <AssetsTable selectedGroup={selectedGroup} handleEditGroup={handleEditGroup} refreshGroups={fetchGroups}/>
               </div>
             </Col>
           </Row>
@@ -380,13 +393,23 @@ function Assets(props) {
               visible={openCreateGroupDialog}
               width={520}
             >
-              <Form layout="vertical" form={form}>
+              <Form layout="vertical" form={form} onSubmit={handleCreateGroup}>
                 <div className={'form-group' + (newGroupForm.submitted && !newGroup.name ? ' has-error' : '')}>
-                  <Form.Item {...formItemLayout} label="Name" name="name">
-                    <Input id="name" name="name" onChange={e => setNewGroup({...newGroup, [e.target.name]: e.target.value})} placeholder="Name" value={newGroup.name}/>
-                    {(newGroupForm.submitted && (!newGroup.name || splCharacters.test(newGroup.name))) &&
-                      <div className="error">Please enter a valid Name</div>
-                    }
+                  <Form.Item {...formItemLayout}
+                    label="Name"
+                    name="name">
+                    {getFieldDecorator('name', {
+                      rules:[
+                        {
+                          required: true,
+                          pattern: new RegExp(
+                            /^[a-zA-Z0-9_-]*$/
+                          ),
+                          message: "Please enter a valid Name"
+                        }
+                      ]
+                    })(
+                    <Input id="name" name="name" onChange={e => setNewGroup({...newGroup, [e.target.name]: e.target.value})} placeholder="Name"/>)}
                   </Form.Item>
                 </div>
                 <Form.Item {...formItemLayout} label="Description" name="description">
@@ -400,4 +423,4 @@ function Assets(props) {
     )
 };
 
-export default withRouter(Assets)
+export default withRouter(Form.create()(Assets))
