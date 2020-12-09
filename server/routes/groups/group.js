@@ -280,11 +280,11 @@ router.post('/', [
   }
   try {
     let parentGroupId = (req.body.parentGroupId && req.body.parentGroupId != '') ? req.body.parentGroupId : '';
-    let duplicateGroupName = await groupExistsWithSameName(parentGroupId, req.body.name, req.body.applicationId);
-    if(duplicateGroupName) {
-      res.status(400).send({"message":"There is already a group with the same name under the parent group. Please select a different name"});
-    } else {
-      if(req.body.isNew) {
+    if(req.body.isNew) {
+      let duplicateGroupName = await groupExistsWithSameName(parentGroupId, req.body.name, req.body.applicationId);
+      if(duplicateGroupName) {
+        res.status(400).send({"message":"There is already a group with the same name under the parent group. Please select a different name"});
+      } else {
         Groups.create({
           name: req.body.name,
           description: req.body.description,
@@ -293,14 +293,21 @@ router.post('/', [
         }).then((groupCreated) => {
           res.json({"success":true})
         })
-      } else {
-        Groups.update({
-          name: req.body.name,
-          description: req.body.description
-        }, {where:{id:req.body.id}}).then((groupUpdated) => {
-          res.json({"success":true})
-        })
       }
+    } else {
+      Groups.findOne({where: {id:req.body.id, application_id:req.body.applicationId}}).then(async (group) => {
+        let duplicateGroupName = await groupExistsWithSameName(group.parent_group, req.body.name, req.body.applicationId);
+        if(duplicateGroupName) {
+          res.status(400).send({"message":"There is already a group with the same name under the parent group. Please select a different name"});
+        } else {
+          Groups.update({
+            name: req.body.name,
+            description: req.body.description
+          }, {where:{id:req.body.id}}).then((groupUpdated) => {
+            res.json({"success":true})
+          })
+        }
+      })
     }
   } catch (err) {
     console.log(err)

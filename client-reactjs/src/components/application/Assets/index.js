@@ -150,7 +150,8 @@ function Assets(props) {
 
   const closeCreateGroupDialog = () => {
     setOpenCreateGroupDialog(false);
-    setNewGroup({name:'', description:'', id:''})
+    form.setFieldsValue({name:'', description:'', id:''})
+    setNewGroup({name:'', description:'', id:''});
     setNewGroupForm({submitted: false})
   }
 
@@ -213,14 +214,14 @@ function Assets(props) {
     e.preventDefault();
     form.validateFields(async (err, values) =>  {
       if(!err) {
+        let isNew = (newGroup.id && newGroup.id != '') ? false : true;
         setNewGroupForm({'submitted': true});
-
         fetch('/api/groups', {
           method: 'post',
           headers: authHeader(),
           body: JSON.stringify({
-            "isNew": (newGroup.id && newGroup.id != '') ? false : true,
-            "parentGroupId": selectedGroup.id,
+            "isNew": isNew,
+            "parentGroupId": isNew ? selectedGroup.id : '',
             "name": newGroup.name,
             "applicationId": application.applicationId,
             "description": newGroup.description,
@@ -285,6 +286,11 @@ function Assets(props) {
       handleError(response);
     }).then(function(data) {
       console.log(JSON.stringify(data))
+      form.setFieldsValue({
+        'name': data.name,
+        'description': data.description
+      })
+
       setNewGroup({
         'name': data.name,
         'description': data.description,
