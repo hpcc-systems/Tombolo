@@ -600,3 +600,12 @@ div.tooltip {
 .ant-tree-title {
   flex-grow: 1;
 }
+
+.noGutters .codemirror_MarkdownEditor .CodeMirror-sizer {
+  margin-left: 0 !important;
+}
+
+.noGutters .codemirror_MarkdownEditor .CodeMirror-gutters,
+.noGutters .codemirror_MarkdownEditor .CodeMirror-linenumber {
+  display: none;
+}
