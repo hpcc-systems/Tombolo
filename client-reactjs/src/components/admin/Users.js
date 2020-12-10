@@ -1,7 +1,8 @@
 import React, { Component } from "react";
-import { Table, Button, Row, Col, Modal, Form, Input, notification, Spin, Select, Popconfirm, Icon, Tooltip, Divider } from 'antd/lib';
+import { Table, Button, Row, Col, Modal, Form, Input, notification, Spin, Select, Popconfirm, Tooltip, Divider } from 'antd/lib';
 import BreadCrumbs from "../common/BreadCrumbs";
 import { authHeader, handleError } from "../common/AuthHeader.js"
+import { DeleteOutlined, EditOutlined, QuestionCircleOutlined, ShareAltOutlined  } from '@ant-design/icons';
 
 const Option = Select.Option;
 
@@ -225,10 +226,10 @@ class Users extends Component {
       dataIndex: '',
       render: (text, record) =>
         <span>
-          <a href="#" onClick={(row) => this.handleEditUser(record.id)}><Tooltip placement="right" title={"Edit User"}><Icon type="edit" /></Tooltip></a>
+          <a href="#" onClick={(row) => this.handleEditUser(record.id)}><Tooltip placement="right" title={"Edit User"}><EditOutlined /></Tooltip></a>
           <Divider type="vertical" />
-          <Popconfirm title="Are you sure you want to delete this User?" onConfirm={() => this.handleDelete(record.id)} icon={<Icon type="question-circle-o" style={{ color: 'red' }} />}>
-            <a href="#"><Tooltip placement="right" title={"Delete User"}><Icon type="delete" /></Tooltip></a>
+          <Popconfirm title="Are you sure you want to delete this User?" onConfirm={() => this.handleDelete(record.id)} icon={<QuestionCircleOutlined />}>
+            <a href="#"><Tooltip placement="right" title={"Delete User"}><DeleteOutlined /></Tooltip></a>
           </Popconfirm>
         </span>
     }];
@@ -284,7 +285,7 @@ class Users extends Component {
 						<Input id="lastName" name="lastName" onChange={this.onChange} placeholder="Last Name" value={this.state.newUser.lastName}/>
 		            </Form.Item>
                 <div className={'form-group' + (this.state.submitted && !this.state.newUser.username ? ' has-error' : '')}>
-		            <Form.Item {...formItemLayout} label="User Name">                
+		            <Form.Item {...formItemLayout} label="User Name">
 						<Input id="username" name="username" onChange={this.onChange} placeholder="User Name" value={this.state.newUser.username}/>
                 {this.state.submitted && !this.state.newUser.username &&
                         <div className="help-block">User Name is required</div>

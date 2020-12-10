@@ -1,10 +1,11 @@
 import React, { useState, useEffect } from 'react'
-import { Table, message, Popconfirm, Icon, Tooltip, Divider} from 'antd/lib';
+import { Table, message, Popconfirm, Tooltip, Divider} from 'antd/lib';
 import { authHeader, handleError } from "../../common/AuthHeader.js"
 import { hasEditPermission } from "../../common/AuthUtil.js";
 import { Constants } from '../../common/Constants';
 import { useSelector } from "react-redux";
 import ReactMarkdown from 'react-markdown';
+import { DeleteOutlined, EditOutlined, QuestionCircleOutlined } from '@ant-design/icons';
 
 function DataflowTable({data, applicationId, onSelectDataflow, onDataFlowUpdated, onDataFlowEdit}) {
   const [selectedRowKeys, setSelectedRowKeys] = useState([]);
@@ -93,10 +94,10 @@ function DataflowTable({data, applicationId, onSelectDataflow, onDataFlowUpdated
     className: editingAllowed ? "show-column" : "hide-column",
     render: (text, record) =>
       <span>
-        <a href="#" onClick={(row) => handleEditDataflow(record)}><Tooltip placement="right" title={"Edit Dataflow"}><Icon type="edit" /></Tooltip></a>
+        <a href="#" onClick={(row) => handleEditDataflow(record)}><Tooltip placement="right" title={"Edit Dataflow"}><EditOutlined /></Tooltip></a>
         <Divider type="vertical" />
-        <Popconfirm title="Are you sure you want to delete this Dataflow and it's associated graph?" onConfirm={() => handleDataflowDelete(record.id)} icon={<Icon type="question-circle-o" style={{ color: 'red' }} />}>
-          <a href="#"><Tooltip placement="right" title={"Delete Dataflow"}><Icon type="delete" /></Tooltip></a>
+        <Popconfirm title="Are you sure you want to delete this Dataflow and it's associated graph?" onConfirm={() => handleDataflowDelete(record.id)} icon={<QuestionCircleOutlined/>}>
+          <a href="#"><Tooltip placement="right" title={"Delete Dataflow"}><DeleteOutlined /></Tooltip></a>
         </Popconfirm>
       </span>
   }];

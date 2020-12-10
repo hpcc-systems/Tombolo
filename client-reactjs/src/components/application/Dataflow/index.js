@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react'
-import { Button, Table, Divider, message, Popconfirm, Icon, Tooltip, Radio, Collapse } from 'antd/lib';
+import { Button, Table, Divider, message, Popconfirm, Tooltip, Radio, Collapse } from 'antd/lib';
 import BreadCrumbs from "../../common/BreadCrumbs";
 import AddDataflow from "./AddDataflow";
 import DataflowTable from "./DataflowTable";
@@ -20,11 +20,11 @@ function Dataflow(props) {
   const [tableDisplay, setTableDisplay] = useState(
     {graphHeight: 700, display:'block'}
   );
-	
+
 	const [form, setForm] = useState({
     selectedDataflow: '',
     tableView: false
-  }); 
+  });
 
   const [application, setApplication] = useState({...props})
 
@@ -32,9 +32,9 @@ function Dataflow(props) {
     setApplication({...props});
    }, [props])
 
-  useEffect(() => {	  
+  useEffect(() => {
 	  if(application.applicationId) {
-	  	getData();  
+	  	getData();
 	  }
 	}, []);
 
@@ -42,7 +42,7 @@ function Dataflow(props) {
 
   const dispatch = useDispatch();
 
-	const getData = async () => {  
+	const getData = async () => {
     fetch('/api/dataflow?application_id='+application.applicationId, {
       headers: authHeader()
     }).then(function(response) {
@@ -51,14 +51,14 @@ function Dataflow(props) {
       }
       handleError(response);
     }).then(function(data) {
-      setDataFlows(data); 
+      setDataFlows(data);
       if(data.length == 0) {
         toggle();
       }
     }).catch(error => {
       console.log(error);
     });
-  };  
+  };
 
   const onSelectDataflow = (selectedDataflow) => {
     setForm({
@@ -68,25 +68,25 @@ function Dataflow(props) {
     dispatch(dataflowAction.dataflowSelected(
       application.applicationId,
       application.applicationTitle,
-      selectedDataflow, 
+      selectedDataflow,
       application.user
     ));
     props.history.push('/'+application.applicationId+'/dataflow/details');
   }
 
-  const handleToggleView = (evt) => {    
+  const handleToggleView = (evt) => {
     evt.target.value == 'chart' ? setForm({selectedDataflow: form.selectedDataflow, tableView: false}) : setForm({selectedDataflow: form.selectedDataflow, tableView: true})
   }
 
   const onDataFlowUpdated = () => {
-		getData();  		
+		getData();
   }
 
   const onDataFlowEdit = (selectedDataflow) => {
   	setForm({
       selectedDataflow: selectedDataflow
     });
-    toggle() 	
+    toggle()
   }
 
   const onChange = (key) => {
@@ -98,11 +98,11 @@ function Dataflow(props) {
     }
   }
 
-  
+
   const editingAllowed = hasEditPermission(authReducer.user);
 
   if(application.applicationId == '' ) return null;
-  return (  	
+  return (
   	  <div>
 	      <div className="d-flex justify-content-end" style={{paddingTop:"55px", margin: "5px"}}>
           <BreadCrumbs applicationId={application.applicationId} applicationTitle={application.applicationTitle}/>
@@ -112,32 +112,32 @@ function Dataflow(props) {
   	            <Tooltip placement="bottom" title={"Tree View"}><Radio.Button value="chart"><Icon type="cluster" /></Radio.Button></Tooltip>
   	            <Tooltip placement="bottom" title={"Tabular View"}><Radio.Button value="grid"><Icon type="bars" /></Radio.Button></Tooltip>
   	          </Radio.Group>*/}
-  	          {editingAllowed ?  
-    	          <AddDataflow 
-    	          	isShowing={isShowing} 
+  	          {editingAllowed ?
+    	          <AddDataflow
+    	          	isShowing={isShowing}
     	          	toggle={toggle}
-    	          	applicationId={application.applicationId} 
+    	          	applicationId={application.applicationId}
     	          	onDataFlowUpdated={onDataFlowUpdated}
-    	          	selectedDataflow={form.selectedDataflow} 
+    	          	selectedDataflow={form.selectedDataflow}
     	          	/>
-               : null}   
+               : null}
   	        </span>
           </div>
 	      </div>
         <div className="row">
 
           <div className="col-12">
-              <DataflowTable              
+              <DataflowTable
                 data={dataFlows}
-                applicationId={application.applicationId}  
-                onSelectDataflow={onSelectDataflow} 
+                applicationId={application.applicationId}
+                onSelectDataflow={onSelectDataflow}
                 onDataFlowUpdated={onDataFlowUpdated}
-                onDataFlowEdit={onDataFlowEdit} />     
+                onDataFlowEdit={onDataFlowEdit} />
           </div>
         </div>
 
-	    </div>  
-	  )  
+	    </div>
+	  )
 
 }
 

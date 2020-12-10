@@ -552,53 +552,27 @@ div.tooltip {
   height:70vh;
 }
 
-.ant-tree li .ant-tree-node-content-wrapper {
-  display: inline !important;
-  height: 24px;
-  margin: 0;
-   padding: 0 0px !important;
-  color: rgba(0, 0, 0, 0.65);
-  line-height: 24px !important;
-  text-decoration: none;
-  vertical-align: top;
-  border-radius: 2px;
-  cursor: pointer;
-  -webkit-transition: all 0.3s;
-  transition: all 0.3s;
-}
-
-.ant-tree li span.ant-tree-switcher, .ant-tree li span.ant-tree-iconEle {
-  display: inline-block;
-  width: 17px;
-  height: 24px;
-  margin: 0;
-  line-height: 18px !important;
-  text-align: center;
-  vertical-align: top;
-  border: 0 none;
-  outline: none;
-  cursor: pointer;
-}
-
 .drag-handle {
   cursor: move!important;
 }
 
 .group-options {
-  font-family: FontAwesome;
+  overflow-wrap: anywhere;
+}
+
+.group-options i {
+  float: right;
   padding-right: 10px;
+  line-height: 27px;
 }
 
 .ant-tree-node-content-wrapper .group-options {
-   visibility: hidden;
+   /*visibility: hidden;*/
 }
 
-.ant-tree-node-content-wrapper:hover a {
-  visibility: visible;
-}
-
-.ant-tree-title {
-  flex-grow: 1;
+.ant-tree-title li {
+  display: inline;
+  line-height: 28px
 }
 
 .noGutters .codemirror_MarkdownEditor .CodeMirror-sizer {
@@ -608,4 +582,21 @@ div.tooltip {
 .noGutters .codemirror_MarkdownEditor .CodeMirror-gutters,
 .noGutters .codemirror_MarkdownEditor .CodeMirror-linenumber {
   display: none;
+}
+
+.ant-tree-switcher {
+  position: relative;
+  -ms-flex: none;
+  flex: none;
+  -ms-flex-item-align: stretch;
+  align-self: stretch;
+  width: 5px;
+  margin: 0;
+  line-height: 24px;
+  text-align: center;
+  cursor: pointer;
+  -webkit-user-select: none;
+  -moz-user-select: none;
+  -ms-user-select: none;
+  user-select: none
 }

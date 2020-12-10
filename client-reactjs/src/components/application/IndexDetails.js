@@ -8,6 +8,7 @@ import AssociatedDataflows from "./AssociatedDataflows"
 import EditableTable from "../common/EditableTable.js"
 import { MarkdownEditor } from "../common/MarkdownEditor.js"
 import { connect } from 'react-redux';
+import { SearchOutlined  } from '@ant-design/icons';
 
 const TabPane = Tabs.TabPane;
 const Option = Select.Option;
@@ -33,7 +34,7 @@ class IndexDetails extends Component {
     selectedCluster:"",
     fileSearchSuggestions:[],
     indexSearchErrorShown:false,
-    autoCompleteSuffix: <Icon type="search" className="certain-category-icon" />,
+    autoCompleteSuffix: <SearchOutlined/>,
     dataDefinitions:[],
     index: {
       id:"",
@@ -233,7 +234,7 @@ class IndexDetails extends Component {
       this.setState({
         ...this.state,
         fileSearchSuggestions: suggestions,
-        autoCompleteSuffix: <Icon type="search" className="certain-category-icon" />
+        autoCompleteSuffix: <SearchOutlined/>
       });
     }).catch(error => {
       if(!this.state.indexSearchErrorShown) {
@@ -244,7 +245,7 @@ class IndexDetails extends Component {
         this.setState({
           ...this.state,
           indexSearchErrorShown: true,
-          autoCompleteSuffix: <Icon type="search" className="certain-category-icon" />
+          autoCompleteSuffix: <SearchOutlined/>
         });
       }
     });
@@ -598,5 +599,5 @@ function mapStateToProps(state) {
     };
 }
 
-const IndexDetailsForm = connect(mapStateToProps)(Form.create()(IndexDetails));
+const IndexDetailsForm = connect(mapStateToProps)(IndexDetails);
 export default IndexDetailsForm;

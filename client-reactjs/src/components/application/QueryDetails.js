@@ -1,5 +1,5 @@
 import React, { Component } from "react";
-import { Modal, Tabs, Form, Input, Icon,  Select, AutoComplete, Spin, message, Button, Radio } from 'antd/lib';
+import { Modal, Tabs, Form, Input, Select, AutoComplete, Spin, message, Button, Radio } from 'antd/lib';
 import { authHeader, handleError } from "../common/AuthHeader.js"
 import { hasEditPermission } from "../common/AuthUtil.js";
 import AssociatedDataflows from "./AssociatedDataflows"
@@ -10,6 +10,7 @@ import 'ag-grid-community/dist/styles/ag-grid.css';
 import 'ag-grid-community/dist/styles/ag-theme-balham.css';
 import { MarkdownEditor } from "../common/MarkdownEditor.js"
 import { connect } from 'react-redux';
+import { SearchOutlined  } from '@ant-design/icons';
 const TabPane = Tabs.TabPane;
 const Option = Select.Option;
 const { confirm } = Modal;
@@ -31,7 +32,7 @@ class QueryDetails extends Component {
     selectedCluster:"",
     querySearchSuggestions:[],
     querySearchErrorShown:false,
-    autoCompleteSuffix: <Icon type="search" className="certain-category-icon" />,
+    autoCompleteSuffix: <SearchOutlined />,
     dataDefinitions:[],
     query: {
       id:"",
@@ -256,7 +257,7 @@ class QueryDetails extends Component {
       this.setState({
         ...this.state,
         querySearchSuggestions: suggestions,
-        autoCompleteSuffix: <Icon type="search" className="certain-category-icon" />
+        autoCompleteSuffix: <SearchOutlined />
       });
     }).catch(error => {
       if(!this.state.querySearchErrorShown) {
@@ -648,5 +649,5 @@ function mapStateToProps(state) {
     };
 }
 
-const QueryDetailsForm = connect(mapStateToProps)(Form.create()(QueryDetails));
+const QueryDetailsForm = connect(mapStateToProps)(QueryDetails);
 export default QueryDetailsForm;

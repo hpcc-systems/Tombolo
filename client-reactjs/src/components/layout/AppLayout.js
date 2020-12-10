@@ -1,6 +1,6 @@
 import React, { Component } from "react";
 import {
-  Layout, Menu, Breadcrumb, Icon,
+  Layout, Menu, Breadcrumb,
 } from 'antd/lib';
 import {
   Route,
@@ -9,6 +9,7 @@ import {
   withRouter,
   Switch
 } from "react-router-dom";
+import { SettingOutlined, AppstoreOutlined } from '@ant-design/icons';
 
 import ApplicationsList from "../application/ApplicationsList";
 import LeftNav from "./LeftNav";
@@ -62,8 +63,8 @@ class AppLayout extends Component {
                   style={{ lineHeight: '64px', width: '200px', float:"right" }}
                   onClick={(key, event) => {this.handleTopNavClick(key, event)}}
                 >
-                  <Menu.Item key="/"><NavLink exact to="/"><span><Icon type="appstore" theme="filled" /></span></NavLink></Menu.Item>
-                  <Menu.Item key="/admin/applications"><NavLink to="/admin/applications"><span><Icon type="setting" theme="filled" /></span></NavLink></Menu.Item>
+                  <Menu.Item key="/"><NavLink exact to="/"><span><AppstoreOutlined /></span></NavLink></Menu.Item>
+                  <Menu.Item key="/admin/applications"><NavLink to="/admin/applications"><span><SettingOutlined /></span></NavLink></Menu.Item>
                 </Menu>
             </Header>
             {isApplicationSet ?

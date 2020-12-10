@@ -1,5 +1,5 @@
 import React, { Component } from "react";
-import { Table, Button, Row, Col, Modal, Form, Input, notification, Tooltip, Icon, Popconfirm, Divider, message } from 'antd/lib';
+import { Table, Button, Row, Col, Modal, Form, Input, notification, Tooltip, Popconfirm, Divider, message } from 'antd/lib';
 import BreadCrumbs from "../common/BreadCrumbs";
 import { authHeader, handleError } from "../common/AuthHeader.js";
 import { hasAdminRole } from "../common/AuthUtil.js";
@@ -9,6 +9,7 @@ import { MarkdownEditor } from "../common/MarkdownEditor.js";
 import ShareApp from "./ShareApp";
 import ReactMarkdown from 'react-markdown';
 import { applicationActions } from '../../redux/actions/Application';
+import { DeleteOutlined, EditOutlined, QuestionCircleOutlined, ShareAltOutlined  } from '@ant-design/icons';
 
 class Applications extends Component {
   constructor(props) {
@@ -283,14 +284,14 @@ class Applications extends Component {
       dataIndex: '',
       render: (text, record) =>
         <span>
-          <a href="#" onClick={(row) => this.handleShareApplication(record.id,record.title)}><Tooltip placement="left" title={"Share Application"}><Icon type="share-alt" /></Tooltip></a>
+          <a href="#" onClick={(row) => this.handleShareApplication(record.id,record.title)}><Tooltip placement="left" title={"Share Application"}><ShareAltOutlined /></Tooltip></a>
           { (record.creator && record.creator == this.props.user.username) ?
             <React.Fragment>
               <Divider type="vertical" />
-              <a href="#" onClick={(row) => this.handleEditApplication(record.id)}><Tooltip placement="right" title={"Edit Application"}><Icon type="edit" /></Tooltip></a>
+              <a href="#" onClick={(row) => this.handleEditApplication(record.id)}><Tooltip placement="right" title={"Edit Application"}><EditOutlined /></Tooltip></a>
               <Divider type="vertical" />
-              <Popconfirm title="Are you sure you want to delete this Application?" onConfirm={() => this.handleRemove(record.id)} icon={<Icon type="question-circle-o" style={{ color: 'red' }} />}>
-                <a href="#"><Tooltip placement="right" title={"Delete Application"}><Icon type="delete" /></Tooltip></a>
+              <Popconfirm title="Are you sure you want to delete this Application?" onConfirm={() => this.handleRemove(record.id)} icon={<QuestionCircleOutlined />}>
+                <a href="#"><Tooltip placement="right" title={"Delete Application"}><DeleteOutlined /></Tooltip></a>
               </Popconfirm>
             </React.Fragment>
           : null }
@@ -371,6 +372,6 @@ function mapStateToProps(state) {
   };
 }
 const connectedApp = connect(mapStateToProps)(Applications);
-const AppForm = Form.create()(connectedApp);
+const AppForm = connectedApp;
 export { AppForm as AdminApplications };
 //export default Applications;

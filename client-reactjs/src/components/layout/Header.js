@@ -1,5 +1,5 @@
 import React, { Component } from "react";
-import {Layout, Menu, Icon, message, Tooltip, Input, Button, Dropdown, Modal, Alert, Form, notification} from 'antd/lib';
+import {Layout, Menu, message, Tooltip, Input, Button, Dropdown, Modal, Alert, Form, notification} from 'antd/lib';
 import { NavLink, Switch, Route, withRouter } from 'react-router-dom';
 import { userActions } from '../../redux/actions/User';
 import { connect } from 'react-redux';
@@ -7,6 +7,7 @@ import { authHeader, handleError } from "../common/AuthHeader.js"
 import { hasAdminRole } from "../common/AuthUtil.js";
 import { applicationActions } from '../../redux/actions/Application';
 import { groupsActions } from '../../redux/actions/Groups';
+import { QuestionCircleOutlined, DownOutlined  } from '@ant-design/icons';
 import $ from 'jquery';
 
 const { Header, Content } = Layout;
@@ -177,7 +178,7 @@ class AppHeader extends Component {
           'Welcome '+this.props.user.firstName+' '+this.props.user.lastName+'. Please make sure you check out the User Guide under Help option.',
         key,
         onClose: this.close(),
-        icon: <Icon type="question-circle" />,
+        icon: <QuestionCircleOutlined />,
         top: 70
       });
     };
@@ -254,7 +255,6 @@ class AppHeader extends Component {
     }
 
   render() {
-    const {getFieldDecorator} = this.props.form;
     const applicationId = this.props.application ? this.props.application.applicationId : '';
     const selectedTopNav = (window.location.pathname.indexOf("/admin") != -1) ? "/admin/applications" : (applicationId != '' ? "/" + applicationId + "/dataflow" : "/dataflow")
     const appNav = (applicationId != '' ? "/" + applicationId + "/dataflow" : "/dataflow");
@@ -286,56 +286,51 @@ class AppHeader extends Component {
     }
     return (
         <React.Fragment>
-        <nav className="navbar navbar-expand-md navbar-dark bg-dark fixed-top">
-          <a className="home-logo navbar-brand" href="/">Tombolo</a>
-          <button className="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarsExampleDefault" aria-controls="navbarsExampleDefault" aria-expanded="false" aria-label="Toggle navigation">
-            <span className="navbar-toggler-icon"></span>
-          </button>
+          <nav className="navbar navbar-expand-md navbar-dark bg-dark fixed-top">
+            <a className="home-logo navbar-brand" href="/">Tombolo</a>
+            <button className="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarsExampleDefault" aria-controls="navbarsExampleDefault" aria-expanded="false" aria-label="Toggle navigation">
+              <span className="navbar-toggler-icon"></span>
+            </button>
 
-          <div className="collapse navbar-collapse" id="navbarsExampleDefault">
-            <ul className="navbar-nav mr-auto">
-              <li className="nav-item dropdown">
-                <a className="nav-link dropdown-toggle" id="applicationSelect" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">{this.state.selected}</a>
-                <div className="dropdown-menu" aria-labelledby="dropdown01" ref={this.appDropDown}>
+            <div className="collapse navbar-collapse" id="navbarsExampleDefault">
+              <ul className="navbar-nav mr-auto">
+                <li className="nav-item dropdown">
+                  <a className="nav-link dropdown-toggle" id="applicationSelect" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">{this.state.selected}</a>
+                  <div className="dropdown-menu" aria-labelledby="dropdown01" ref={this.appDropDown}>
                     {this.state.applications.map((application, index) => (
-                        <a className="dropdown-item" key={application.value} onClick={this.handleChange} data-value={application.value} data-display={application.display}>{application.display}</a>
+                      <a className="dropdown-item" key={application.value} onClick={this.handleChange} data-value={application.value} data-display={application.display}>{application.display}</a>
                     ))}
-                </div>
-              </li>
-              {/*<li className="nav-item">
-                <a className="nav-link" href="#"><i className="fa fa-lg fa-plus-circle"></i></a>
-              </li>*/}
-
-            </ul>
-            <ul className="ml-md-auto navbar-nav">
-            <li className="nav-item">
-              <Search
-                value={this.state.searchText}
-                name="searchText"
-                placeholder="Search"
-                onSearch={this.search}
-                onChange={this.onChangeSearch}
-                style={{ width: 200, paddingRight:"5px" }} />
-            </li>
-            <li style={{ paddingRight:"5px" }}>
-              <Dropdown overlay={helpMenu} trigger={['click']}>
-                <Button shape="round">
-                  <i className="fa fa-lg fa-question-circle"></i><span style={{paddingLeft:"5px"}}>Help <Icon type="down" /></span>
-                </Button>
-              </Dropdown>
-            </li>
-            <li>
-              <Dropdown overlay={userActionMenu} style={{paddingLeft:"5px"}} trigger={['click']}>
-                <Button shape="round">
-                  <i className="fa fa-lg fa-user-circle"></i><span style={{paddingLeft:"5px"}}>{this.props.user.firstName + " " + this.props.user.lastName} <Icon type="down" /></span>
-                </Button>
-              </Dropdown>
-            </li>
-            </ul>
-          </div>
-        </nav>
-
-        <Modal
+                  </div>
+                </li>
+              </ul>
+              <ul className="ml-md-auto navbar-nav">
+                <li className="nav-item">
+                  <Search
+                    value={this.state.searchText}
+                    name="searchText"
+                    placeholder="Search"
+                    onSearch={this.search}
+                    onChange={this.onChangeSearch}
+                    style={{ width: 200, paddingRight:"5px" }} />
+                </li>
+                <li style={{ paddingRight:"5px" }}>
+                  <Dropdown overlay={helpMenu} trigger={['click']}>
+                    <Button shape="round">
+                      <i className="fa fa-lg fa-question-circle"></i><span style={{paddingLeft:"5px"}}>Help <DownOutlined /></span>
+                    </Button>
+                  </Dropdown>
+                </li>
+                <li>
+                  <Dropdown overlay={userActionMenu} style={{paddingLeft:"5px"}} trigger={['click']}>
+                    <Button shape="round">
+                      <i className="fa fa-lg fa-user-circle"></i><span style={{paddingLeft:"5px"}}>{this.props.user.firstName + " " + this.props.user.lastName} <DownOutlined /></span>
+                    </Button>
+                  </Dropdown>
+                </li>
+              </ul>
+            </div>
+          </nav>
+          <Modal
           title="Change Password"
           visible={this.state.visible}
           width="520px"
@@ -348,28 +343,20 @@ class AppHeader extends Component {
             </Button>
           ]}
         >
-          <Form.Item {...formItemLayout} label="Password">
-            {getFieldDecorator('name', {
-              rules: [{ required: true, message: 'Please enter the current password!' }],
-            })(
-            <Input type="password" name="oldpassword" placeholder="Password" onChange={this.handleChangePasswordFieldChange}/> )}
+          <Form.Item {...formItemLayout} label="Password" rules={[{ required: true, message: 'Please enter the current password!' }]}>
+            <Input type="password" name="oldpassword" placeholder="Password" onChange={this.handleChangePasswordFieldChange}/>
           </Form.Item>
 
-          <Form.Item {...formItemLayout} label="New Password">
-            {getFieldDecorator('newpassword', {
-              rules: [{ required: true, message: 'Please enter the new password!' }],
-            })(
-            <Input type="password" name="newpassword" placeholder="New Password" onChange={this.handleChangePasswordFieldChange}/>  )}
+          <Form.Item {...formItemLayout} label="New Password" rules={[{ required: true, message: 'Please enter the new password!' }]}>
+            <Input type="password" name="newpassword" placeholder="New Password" onChange={this.handleChangePasswordFieldChange}/>
           </Form.Item>
 
-          <Form.Item {...formItemLayout} label="Confirm Password">
-            {getFieldDecorator('confirmnewpassword', {
-              rules: [{ required: true, message: 'Please confirm the new password!' }],
-            })(
-            <Input type="password" name="confirmnewpassword" placeholder="Confirm Password" onChange={this.handleChangePasswordFieldChange}/>   )}
+          <Form.Item {...formItemLayout} label="Confirm Password" rules={[{ required: true, message: 'Please confirm the new password!' }]}>
+            <Input type="password" name="confirmnewpassword" placeholder="Confirm Password" onChange={this.handleChangePasswordFieldChange}/>
           </Form.Item>
 
         </Modal>
+
        </React.Fragment>
     )
   }
@@ -390,5 +377,5 @@ function mapStateToProps(state) {
 }
 
 //export default withRouter(AppHeader);
-const connectedAppHeader = connect(mapStateToProps)(withRouter(Form.create()(AppHeader)));
+const connectedAppHeader = connect(mapStateToProps)(withRouter(AppHeader));
 export { connectedAppHeader as AppHeader };

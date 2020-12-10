@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react'
-import { Tree, Row, Col, Menu, Icon, Button, Modal, Form, Input, Dropdown } from 'antd/lib';
+import { Tree, Row, Col, Menu, Button, Modal, Form, Input, Dropdown } from 'antd/lib';
 import BreadCrumbs from "../../common/BreadCrumbs";
 import { authHeader, handleError } from "../../common/AuthHeader.js"
 import { hasEditPermission } from "../../common/AuthUtil.js";
@@ -11,6 +11,8 @@ import { groupsActions } from '../../../redux/actions/Groups';
 import AssetsTable from "./AssetsTable";
 import { MarkdownEditor } from "../../common/MarkdownEditor.js"
 import useOnClickOutside from '../../../hooks/useOnClickOutside';
+import { DeleteOutlined, EditOutlined, QuestionCircleOutlined, FolderOutlined, DownOutlined, BarsOutlined  } from '@ant-design/icons';
+import TitleRenderer from "./TitleRenderer.js"
 
 const { TreeNode, DirectoryTree } = Tree;
 const { SubMenu } = Menu;
@@ -43,7 +45,6 @@ function Assets(props) {
     },
   };
   const form = props.form;
-  const { getFieldDecorator } = form;
   const groupsReducer = useSelector(state => state.groupsReducer);
   //ref for More Options context menu
   const ref = useRef();
@@ -75,7 +76,7 @@ function Assets(props) {
       setSelectedGroup({'id':keys.selectedKeys.id, 'key':keys.selectedKeys.key})
       setExpandedGroups(keys.expandedKeys);
       //add options icon
-      addGroupOptionIcon();
+      //addGroupOptionIcon();
     }).catch(error => {
       console.log(error);
     });
@@ -98,31 +99,9 @@ function Assets(props) {
       expandedKeys
     ));
     window.setTimeout(() => {
-      addGroupOptionIcon();
+      //addGroupOptionIcon();
     }, 200);
   };
-
-  const addGroupOptionIcon = () => {
-    //remove existing group-options
-    document.querySelectorAll('.ant-tree-node-content-wrapper .group-options').forEach((element) => {
-      element.remove();
-    })
-    document.querySelectorAll('.ant-tree-node-content-wrapper').forEach((element) => {
-      const newElement = document.createElement('span');
-      const newElementHref = document.createElement('a');
-      newElementHref.className="more-options"
-      newElementHref.innerText='\uf0c9';
-      newElement.append(newElementHref);
-      newElement.className = 'group-options float-right'
-      element.append(newElement)
-    })
-
-    window.setTimeout(() => {
-      document.querySelectorAll('.more-options').forEach((option) => {
-        option.addEventListener('click', showMoreOptions);
-      })
-    }, 200);
-  }
 
   const showMoreOptions = e => {
     e.preventDefault();
@@ -198,11 +177,11 @@ function Assets(props) {
       <React.Fragment>
       <div ref={ref} style={{left: `${rightClickNodeTreeItem.pageX + 40}px`, top: `${rightClickNodeTreeItem.pageY}px`}} className="self-right-menu">
         <Menu style={{ width: 150 }} mode="vertical" theme="dark" onClick={handleMenuClick} ref={ref}>
-         <Menu.Item key="Group"><Icon type="folder" /> New Group</Menu.Item>
+         <Menu.Item key="Group"><FolderOutlined /> New Group</Menu.Item>
          {(selectedGroup && selectedGroup.id != null && selectedGroup.id != '') ?
-           <Menu.Item key="Edit-Group"><Icon type="edit" />Edit</Menu.Item> : null}
+           <Menu.Item key="Edit-Group"><EditOutlined />Edit</Menu.Item> : null}
          {selectedGroup && selectedGroup.id != null && selectedGroup.id != '' ?
-           <Menu.Item key="Delete-Group"><Icon type="delete" />Delete</Menu.Item> : null}
+           <Menu.Item key="Delete-Group"><DeleteOutlined />Delete</Menu.Item> : null}
        </Menu>
       </div>
       </React.Fragment>
@@ -331,6 +310,11 @@ function Assets(props) {
 
   }
 
+  const titleRenderer = (nodeData) => {
+    console.log('titleRenderer')
+    return <TitleRenderer title={nodeData.title} showMoreOptions={showMoreOptions}/>
+  }
+
   const authReducer = useSelector(state => state.authenticationReducer);
   const editingAllowed = hasEditPermission(authReducer.user);
 
@@ -352,7 +336,7 @@ function Assets(props) {
               {editingAllowed ?
                 <Dropdown overlay={menu}>
                   <Button className="btn btn-secondary btn-sm" >
-                    Add Asset <Icon type="down" />
+                    Add Asset <DownOutlined />
                   </Button>
                 </Dropdown>
                 : null }
@@ -373,6 +357,7 @@ function Assets(props) {
                     onDragEnter={handleDragEnter}
                     onDrop={handleDragDrop}
                     expandAction={false}
+                    titleRenderer={titleRenderer}
                   />
               </div>
             </Col>
@@ -397,9 +382,8 @@ function Assets(props) {
                 <div className={'form-group' + (newGroupForm.submitted && !newGroup.name ? ' has-error' : '')}>
                   <Form.Item {...formItemLayout}
                     label="Name"
-                    name="name">
-                    {getFieldDecorator('name', {
-                      rules:[
+                    name="name"
+                    rules={[
                         {
                           required: true,
                           pattern: new RegExp(
@@ -407,9 +391,8 @@ function Assets(props) {
                           ),
                           message: "Please enter a valid Name"
                         }
-                      ]
-                    })(
-                    <Input id="name" name="name" onChange={e => setNewGroup({...newGroup, [e.target.name]: e.target.value})} placeholder="Name"/>)}
+                      ]}>
+                    <Input id="name" name="name" onChange={e => setNewGroup({...newGroup, [e.target.name]: e.target.value})} placeholder="Name"/>
                   </Form.Item>
                 </div>
                 <Form.Item {...formItemLayout} label="Description" name="description">
@@ -423,4 +406,4 @@ function Assets(props) {
     )
 };
 
-export default withRouter(Form.create()(Assets))
+export default withRouter(Assets)

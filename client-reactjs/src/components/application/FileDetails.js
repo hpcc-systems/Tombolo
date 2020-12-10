@@ -1,11 +1,11 @@
 import React, { Component } from "react";
 import {
-  Modal, Tabs, Form, Input, Icon,  Select, Button, Table, AutoComplete,
+  Modal, Tabs, Form, Input, Select, Button, Table, AutoComplete,
   Tag, message, Drawer, Row, Col, Spin, Radio
 } from 'antd/lib';
-import FileRelations from "./FileRelations"
-import DataProfileTable from "./DataProfileTable"
-import DataProfileHTML from "./DataProfileHTML"
+//import FileRelations from "./FileRelations"
+//import DataProfileTable from "./DataProfileTable"
+//import DataProfileHTML from "./DataProfileHTML"
 import AssociatedDataflows from "./AssociatedDataflows"
 import { authHeader, handleError } from "../common/AuthHeader.js"
 import { fetchDataDictionary } from "../common/CommonUtil.js"
@@ -19,6 +19,7 @@ import 'ag-grid-community/dist/styles/ag-grid.css';
 import 'ag-grid-community/dist/styles/ag-theme-balham.css';
 import { connect } from 'react-redux';
 import BreadCrumbs from "../common/BreadCrumbs";
+import { SearchOutlined  } from '@ant-design/icons';
 
 const TabPane = Tabs.TabPane;
 const Option = Select.Option;
@@ -58,7 +59,7 @@ class FileDetails extends Component {
     complianceDetails:[],
     fileSearchErrorShown: false,
     filesCount: 0,
-    autoCompleteSuffix: <Icon type="search" className="certain-category-icon" />,
+    autoCompleteSuffix: <SearchOutlined />,
     scopeDisabled: false,
     dataDefinitions: [],
     initialDataLoading: false,
@@ -488,7 +489,7 @@ class FileDetails extends Component {
       this.setState({
         ...this.state,
         fileSearchSuggestions: suggestions,
-        autoCompleteSuffix: <Icon type="search" className="certain-category-icon" />
+        autoCompleteSuffix: <SearchOutlined />
       });
     }).catch(error => {
       if(!this.state.fileSearchErrorShown) {
@@ -499,7 +500,7 @@ class FileDetails extends Component {
         this.setState({
           ...this.state,
           fileSearchErrorShown: true,
-          autoCompleteSuffix: <Icon type="search" className="certain-category-icon" />
+          autoCompleteSuffix: <SearchOutlined />
         });
       }
 
@@ -1441,7 +1442,7 @@ class FileDetails extends Component {
               <TabPane tab="Data Profile" key="8" >
                 <div>
                     {/*<DataProfileTable data={this.state.fileProfile}/>*/}
-                    <DataProfileHTML htmlAssets={this.state.profileHTMLAssets}/>
+                    {/*<DataProfileHTML htmlAssets={this.state.profileHTMLAssets}/>*/}
                   </div>
               </TabPane>
               : "" }
@@ -1491,5 +1492,5 @@ function mapStateToProps(state) {
     };
 }
 
-const FileDetailsForm = connect(mapStateToProps)(Form.create()(FileDetails));
+const FileDetailsForm = connect(mapStateToProps)(FileDetails);
 export default FileDetailsForm;

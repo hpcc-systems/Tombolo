@@ -3,6 +3,7 @@ import { Modal, Tabs, Form, Input, Icon,  Select, Button, Table, AutoComplete, T
 import { AgGridReact } from 'ag-grid-react';
 import { authHeader, handleError } from "../common/AuthHeader.js"
 import DataProfileHTML from "./DataProfileHTML"
+import { SearchOutlined  } from '@ant-design/icons';
 const TabPane = Tabs.TabPane;
 
 class FileInstanceDetails extends Component {
@@ -17,7 +18,7 @@ class FileInstanceDetails extends Component {
     title:'',
     name: '',
     fileDefinition:'',
-    autoCompleteSuffix: <Icon type="search" className="certain-category-icon" />,
+    autoCompleteSuffix: <SearchOutlined />,
     fileInstanceSearchErrorShown: false,
     fileDefnLayout: []
   }
@@ -54,7 +55,7 @@ class FileInstanceDetails extends Component {
           name: data.item_name,
           fileDefinitionId:data.file_definition,
           applicationId:data.application_id
-        });        
+        });
         this.props.form.setFieldsValue({
           name: data.item_name,
           title: data.title
@@ -68,23 +69,23 @@ class FileInstanceDetails extends Component {
             fileDefinition: fileDefnInfo.basic.title,
             fileDefinitionId: fileDefnInfo.basic.id
           });
-        })    
+        })
         return data;
-      })     
+      })
       .catch(error => {
         console.log(error);
       });
     }
   }
-  
+
   showModal = () => {
     this.setState({
       visible: true
     });
-    
+
   }
 
-  handleOk = (e) => {    
+  handleOk = (e) => {
     e.preventDefault();
     this.props.form.validateFields(async (err, values) =>  {
       if(!err) {
@@ -117,8 +118,8 @@ class FileInstanceDetails extends Component {
         method: 'post',
         headers: authHeader(),
         body: JSON.stringify({
-          file_definition : this.state.fileDefinitionId, 
-          item_name : this.state.name, 
+          file_definition : this.state.fileDefinitionId,
+          item_name : this.state.name,
           title: this.state.title,
           application_id: this.props.applicationId
         })
@@ -143,12 +144,12 @@ class FileInstanceDetails extends Component {
 
   searchFileInstances = (searchString) => {
     if(searchString.length <= 3)
-      return;    
+      return;
     this.setState({
       autoCompleteSuffix : <Spin/>,
       fileSearchErrorShown: false
     });
-    
+
     fetch("/api/file/read/all?userId="+this.props.user.id+"&keyword="+searchString, {
       method: 'post',
       headers: authHeader()
@@ -163,7 +164,7 @@ class FileInstanceDetails extends Component {
     .then(suggestions => {
       this.setState({
         fileInstanceSearchSuggestions: suggestions,
-        autoCompleteSuffix: <Icon type="search" className="certain-category-icon" />
+        autoCompleteSuffix: <SearchOutlined />
       });
     }).catch(error => {
       if(!this.state.fileSearchErrorShown) {
@@ -173,7 +174,7 @@ class FileInstanceDetails extends Component {
         });
         this.setState({
           fileInstanceSearchErrorShown: true,
-          autoCompleteSuffix: <Icon type="search" className="certain-category-icon" />
+          autoCompleteSuffix: <SearchOutlined />
         });
       }
 
@@ -190,7 +191,7 @@ class FileInstanceDetails extends Component {
         fileDefinition: fileDefnInfo.basic.title,
         fileDefinitionId: fileDefnInfo.basic.id
       });
-    })    
+    })
   }
 
   getFileDefnDetails = (app_id, file_id) => {
@@ -205,9 +206,9 @@ class FileInstanceDetails extends Component {
         handleError(response);
 
       })
-      .then(fileDefnInfo => {        
+      .then(fileDefnInfo => {
         resolve(fileDefnInfo)
-      })   
+      })
     });
   }
 
@@ -217,7 +218,7 @@ class FileInstanceDetails extends Component {
   }
 
   onChange = (e) => {
-    this.setState({[e.target.name]: e.target.value });    
+    this.setState({[e.target.name]: e.target.value });
   }
 
   render() {
@@ -252,7 +253,7 @@ class FileInstanceDetails extends Component {
     },
     {
       headerName: 'Data Type',
-      field: 'data_types'    
+      field: 'data_types'
     }];
 
     return (
@@ -272,20 +273,20 @@ class FileInstanceDetails extends Component {
         >
           <TabPane tab="Basic" key="1">
 
-           <Form layout="vertical">             
+           <Form layout="vertical">
             <Form.Item {...formItemLayout} label="Title">
               {getFieldDecorator('title', {
                 rules: [{ required: true, message: 'Please enter a title!' }],
               })(
-              <Input id="file_title" name="title" onChange={this.onChange} placeholder="Title" />              
+              <Input id="file_title" name="title" onChange={this.onChange} placeholder="Title" />
               )}
-            </Form.Item> 
+            </Form.Item>
              <Form.Item {...formItemLayout} label="Name">
                {getFieldDecorator('name', {
                   rules: [{ required: true, message: 'Please enter a name!' }],
                 })(
                   <Input id="fileinstance_name" name="name" onChange={this.onChange} placeholder="Name" />
-                )}  
+                )}
               </Form.Item>
              <Form.Item {...formItemLayout} label="File Defn">
               <AutoComplete
@@ -303,12 +304,12 @@ class FileInstanceDetails extends Component {
               >
                 <Input id="autocomplete_field" suffix={this.state.autoCompleteSuffix} autoComplete="off"/>
               </AutoComplete>
-              </Form.Item> 
+              </Form.Item>
               <Form.Item {...formItemLayout} label="File Definition">
                   <Input id="file_defn" name="fileDefinition" value={fileDefinition} defaultValue={fileDefinition} placeholder="File Definition" />
               </Form.Item>
             </Form>
-          </TabPane>        
+          </TabPane>
 
           <TabPane tab="Layout" key="3">
               <div
@@ -323,7 +324,7 @@ class FileInstanceDetails extends Component {
                   defaultColDef={{resizable: true, sortable: true, filter: true}}
                   onGridReady={this.onGridReady}>
                 </AgGridReact>
-              </div>              
+              </div>
           </TabPane>
         </Tabs>
         </Modal>
@@ -331,6 +332,5 @@ class FileInstanceDetails extends Component {
     );
   }
 }
-const FileInstanceDetailsForm = Form.create()(FileInstanceDetails);
+const FileInstanceDetailsForm = FileInstanceDetails;
 export default FileInstanceDetailsForm;
-

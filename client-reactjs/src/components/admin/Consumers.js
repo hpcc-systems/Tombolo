@@ -1,9 +1,10 @@
 import React, { Component } from "react";
-import { Table, Button, Row, Col, Modal, Form, Input, Icon, Select, notification, Tooltip, Popconfirm, Divider, AutoComplete, message, Radio, Typography, Checkbox } from 'antd/lib';
+import { Table, Button, Row, Col, Modal, Form, Input, Select, notification, Tooltip, Popconfirm, Divider, AutoComplete, message, Radio, Typography, Checkbox } from 'antd/lib';
 import BreadCrumbs from "../common/BreadCrumbs";
 import { authHeader, handleError } from "../common/AuthHeader.js";
 import { connect } from 'react-redux';
 import ShareApp from "./ShareApp";
+import { DeleteOutlined, EditOutlined, QuestionCircleOutlined, SearchOutlined  } from '@ant-design/icons';
 const Option = Select.Option;
 const { Paragraph } = Typography;
 const options = [
@@ -351,10 +352,10 @@ class Consumers extends Component {
       dataIndex: '',
       render: (text, record) =>
         <span>
-          <a href="#" onClick={(row) => this.handleEditConsumer(record.id)}><Tooltip placement="right" title={"Edit Consumer"}><Icon type="edit" /></Tooltip></a>
+          <a href="#" onClick={(row) => this.handleEditConsumer(record.id)}><Tooltip placement="right" title={"Edit Consumer"}><EditOutlined /></Tooltip></a>
           <Divider type="vertical" />
-          <Popconfirm title="Are you sure you want to delete this Consumer?" onConfirm={() => this.handleRemove(record.id)} icon={<Icon type="question-circle-o" style={{ color: 'red' }} />}>
-            <a href="#"><Tooltip placement="right" title={"Delete Consumer"}><Icon type="delete" /></Tooltip></a>
+          <Popconfirm title="Are you sure you want to delete this Consumer?" onConfirm={() => this.handleRemove(record.id)} icon={<QuestionCircleOutlined/>}>
+            <a href="#"><Tooltip placement="right" title={"Delete Consumer"}><DeleteOutlined /></Tooltip></a>
           </Popconfirm>
         </span>
     }];
@@ -453,7 +454,7 @@ class Consumers extends Component {
                   optionLabelProp="value"
                   defaultValue={this.state.newConsumer.ad_group}
                 >
-                  <Input suffix={<Icon type="search" className="certain-category-icon" />} />
+                  <Input suffix={<SearchOutlined />} />
                 </AutoComplete>
               </Form.Item>
               : ""}

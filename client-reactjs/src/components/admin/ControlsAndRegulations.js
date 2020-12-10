@@ -1,8 +1,9 @@
 import React, { Component } from "react";
-import { Table, Button, Row, Col, Modal, Form, Input, notification, Spin, Select, Popconfirm, Icon, Tooltip, Divider } from 'antd/lib';
+import { Table, Button, Row, Col, Modal, Form, Input, notification, Spin, Select, Popconfirm, Tooltip, Divider } from 'antd/lib';
 import BreadCrumbs from "../common/BreadCrumbs";
 import { authHeader, handleError } from "../common/AuthHeader.js"
 import AddRegulations from "./AddRegulations";
+import { DeleteOutlined, EditOutlined, QuestionCircleOutlined, ShareAltOutlined  } from '@ant-design/icons';
 
 const Option = Select.Option;
 
@@ -129,10 +130,10 @@ class Regulations extends Component {
       dataIndex: '',
       render: (text, record) =>
         <span>
-          <a href="#" onClick={(row) => this.handleEdit(record.compliance)}><Tooltip placement="right" title={"Edit"}><Icon type="edit" /></Tooltip></a>
+          <a href="#" onClick={(row) => this.handleEdit(record.compliance)}><Tooltip placement="right" title={"Edit"}><EditOutlined /></Tooltip></a>
           <Divider type="vertical" />
-          <Popconfirm title="Are you sure you want to delete?" onConfirm={() => this.handleDelete(record.compliance)} icon={<Icon type="question-circle-o" style={{ color: 'red' }} />}>
-            <a href="#"><Tooltip placement="right" title={"Delete"}><Icon type="delete" /></Tooltip></a>
+          <Popconfirm title="Are you sure you want to delete?" onConfirm={() => this.handleDelete(record.compliance)} icon={<QuestionCircleOutlined />}>
+            <a href="#"><Tooltip placement="right" title={"Delete"}><DeleteOutlined /></Tooltip></a>
           </Popconfirm>
         </span>
     }];

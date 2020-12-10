@@ -1,20 +1,21 @@
 import React, { useState, useEffect } from 'react'
-import { Table, message, Popconfirm, Icon, Tooltip, Divider} from 'antd/lib';
+import { Table, message, Popconfirm, Tooltip, Divider} from 'antd/lib';
 import { authHeader, handleError } from "../../common/AuthHeader.js"
 import { hasEditPermission } from "../../common/AuthUtil.js";
 import FileDetailsForm from "../FileDetails";
 import useFileDetailsForm from '../../../hooks/useFileDetailsForm';
 import {handleFileDelete, handleJobDelete, handleIndexDelete, handleQueryDelete, updateGraph} from "../../common/WorkflowUtil";
 import { useSelector } from "react-redux";
+import { DeleteOutlined, EditOutlined, QuestionCircleOutlined, ShareAltOutlined  } from '@ant-design/icons';
 
 function DataflowAssetsTable({applicationId, selectedDataflow, user}) {
 	const [dataflowAssets, setDataflowAssets] = useState([]);
 	const [selectedAsset, setSelectedAsset] = useState({id:'', type:''});
 	const { isShowing, toggle, OpenDetailsForm } = useFileDetailsForm();
 
-	useEffect(() => {	  
+	useEffect(() => {
 	  if(applicationId) {
-	  	fetchDataAndRenderTable();  
+	  	fetchDataAndRenderTable();
 	  }
 	}, []);
 
@@ -53,7 +54,7 @@ function DataflowAssetsTable({applicationId, selectedDataflow, user}) {
 	        handleFileDelete(id, applicationId).then(() => {
             updateGraph(id, applicationId, selectedDataflow).then((response) => {
               fetchDataAndRenderTable();
-            });	        	
+            });
 	        })
 	      }
 	      break;
@@ -62,7 +63,7 @@ function DataflowAssetsTable({applicationId, selectedDataflow, user}) {
 	        handleIndexDelete(id, applicationId).then(() => {
             updateGraph(id, applicationId, selectedDataflow).then((response) => {
               fetchDataAndRenderTable();
-            });	        	
+            });
 	        })
 	      }
 	      break;
@@ -71,7 +72,7 @@ function DataflowAssetsTable({applicationId, selectedDataflow, user}) {
 	        handleJobDelete(id, applicationId).then(() => {
             updateGraph(id, applicationId, selectedDataflow).then((response) => {
               fetchDataAndRenderTable();
-            });	        	
+            });
 	        })
 	      }
 	      break;
@@ -112,12 +113,12 @@ function DataflowAssetsTable({applicationId, selectedDataflow, user}) {
     title: 'Action',
     dataJob: '',
     className: editingAllowed ? "show-column" : "hide-column",
-    render: (text, record) => 
+    render: (text, record) =>
       <span>
-        <a href="#" onClick={(row) => handleEdit(record.id, record.objType)}><Tooltip placement="right" title={"Edit"}><Icon type="edit" /></Tooltip></a>
+        <a href="#" onClick={(row) => handleEdit(record.id, record.objType)}><Tooltip placement="right" title={"Edit"}><EditOutlined /></Tooltip></a>
         <Divider type="vertical" />
-        <Popconfirm title="Are you sure you want to delete this?" onConfirm={() => handleDelete(record.id, record.objType)} icon={<Icon type="question-circle-o" style={{ color: 'red' }} />}>
-          <a href="#"><Tooltip placement="right" title={"Delete"}><Icon type="delete" /></Tooltip></a>
+        <Popconfirm title="Are you sure you want to delete this?" onConfirm={() => handleDelete(record.id, record.objType)} icon={<QuestionCircleOutlined/>}>
+          <a href="#"><Tooltip placement="right" title={"Delete"}><DeleteOutlined /></Tooltip></a>
         </Popconfirm>
       </span>
   }];
@@ -129,7 +130,7 @@ function DataflowAssetsTable({applicationId, selectedDataflow, user}) {
         columns={jobColumns}
         rowKey={record => record.id}
         dataSource={dataflowAssets}
-        pagination={{ pageSize: 10 }} scroll={{ y: 460 }}        
+        pagination={{ pageSize: 10 }} scroll={{ y: 460 }}
 			/>
 			{isShowing ?
 				OpenDetailsForm({
@@ -142,7 +143,7 @@ function DataflowAssetsTable({applicationId, selectedDataflow, user}) {
           "onClose": handleClose,
 	        "user": user}) : null}
 		</div>
-    </React.Fragment>			    
+    </React.Fragment>
 	)
 }
 export default DataflowAssetsTable

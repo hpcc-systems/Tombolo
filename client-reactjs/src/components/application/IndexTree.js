@@ -1,11 +1,12 @@
 import {Treant} from 'treant-js/Treant.js';
 //import 'treant-js/vendor/raphael.min.js';
-import { Table, Divider, message, Popconfirm, Icon, Tooltip } from 'antd/lib';
+import { Table, Divider, message, Popconfirm, Tooltip } from 'antd/lib';
 import React, { Component } from "react";
 import IndexDetailsForm from "./IndexDetails";
 import { authHeader, handleError } from "../common/AuthHeader.js"
 import { Constants } from '../common/Constants';
 import ReactMarkdown from 'react-markdown';
+import { DeleteOutlined, EditOutlined, QuestionCircleOutlined, ShareAltOutlined  } from '@ant-design/icons';
 
 class IndexTree extends Component {
   constructor(props) {
@@ -139,10 +140,10 @@ class IndexTree extends Component {
       dataIndex: '',
       render: (text, record) =>
         <span>
-          <a href="#" onClick={(row) => this.handleEdit(record.id)}><Tooltip placement="right" title={"Edit Index"}><Icon type="edit" /></Tooltip></a>
+          <a href="#" onClick={(row) => this.handleEdit(record.id)}><Tooltip placement="right" title={"Edit Index"}><EditOutlined/></Tooltip></a>
           <Divider type="vertical" />
-          <Popconfirm title="Are you sure you want to delete this Index?" onConfirm={() => this.handleDelete(record.id)} icon={<Icon type="question-circle-o" style={{ color: 'red' }} />}>
-            <a href="#"><Tooltip placement="right" title={"Delete Index"}><Icon type="delete" /></Tooltip></a>
+          <Popconfirm title="Are you sure you want to delete this Index?" onConfirm={() => this.handleDelete(record.id)} icon={<QuestionCircleOutlined/>}>
+            <a href="#"><Tooltip placement="right" title={"Delete Index"}><DeleteOutlined/></Tooltip></a>
           </Popconfirm>
         </span>
     }];
