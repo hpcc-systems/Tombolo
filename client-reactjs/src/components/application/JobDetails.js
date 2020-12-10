@@ -42,6 +42,7 @@ class JobDetails extends Component {
       name:"",
       title:"",
       description:"",
+      groupId: "",
       ecl: "",
       entryBWR:"",
       jobType: this.props.selectedJobType ? this.props.selectedJobType : '',
@@ -95,6 +96,7 @@ class JobDetails extends Component {
             name: data.name,
             title: (data.title == '' ? data.name : data.title),
             description: data.description,
+            groupId: data.groupId,
             ecl: data.ecl,
             gitrepo: data.gitRepo,
             entryBWR: data.entryBWR,
@@ -234,6 +236,7 @@ class JobDetails extends Component {
         name:"",
         title:"",
         description:"",
+        groupId: "",
         ecl: "",
         entryBWR:"",
         jobType: this.props.selectedJobType ? this.props.selectedJobType : '',
@@ -317,6 +320,7 @@ class JobDetails extends Component {
           name: jobInfo.Jobname,
           title: jobInfo.Jobname,
           description: jobInfo.description,
+          groupId: jobInfo.groupId,
           ecl: jobInfo.ecl,
           entryBWR: jobInfo.entryBWR
         }
@@ -435,6 +439,7 @@ class JobDetails extends Component {
         "name" : this.state.job.name,
         "title" : this.state.job.title,
         "description" : this.state.job.description,
+        "groupId": this.state.job.groupId,
         "ecl" : this.state.job.ecl,
         "gitRepo" : this.state.job.gitrepo,
         "entryBWR" : this.state.job.entryBWR,
@@ -442,7 +447,6 @@ class JobDetails extends Component {
         "contact": this.state.job.contact,
         "author": this.state.job.author,
         "clusterId": this.state.selectedCluster,
-        "groupId": this.props.groupId
       },
       "params": this.state.job.inputParams,
       "files" : inputFiles.concat(outputFiles),

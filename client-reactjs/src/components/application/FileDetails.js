@@ -1,7 +1,7 @@
 import React, { Component } from "react";
 import {
   Modal, Tabs, Form, Input, Icon,  Select, Button, Table, AutoComplete,
-  Tag, message, Drawer, Row, Col, Spin, Radio
+  Tag, message, Drawer, Row, Col, Spin, Radio, Checkbox
 } from 'antd/lib';
 import FileRelations from "./FileRelations"
 import DataProfileTable from "./DataProfileTable"
@@ -205,6 +205,7 @@ class FileDetails extends Component {
             name: data.basic.name,
             clusterId: data.basic.cluster_id,
             description: data.basic.description,
+            groupId: data.basic.groupId,
             scope: data.basic.scope,
             serviceUrl: data.basic.serviceUrl,
             qualifiedPath: data.basic.qualifiedPath,
@@ -719,6 +720,7 @@ class FileDetails extends Component {
       "name" : (!this.state.file.name || this.state.file.name == '') ? this.state.file.title : this.state.file.name,
       "cluster_id": this.state.file.clusterId,
       "description" : this.state.file.description,
+      "groupId" : this.state.file.groupId,
       "scope": this.state.file.scope,
       "serviceUrl" : this.state.file.serviceUrl,
       "qualifiedPath" : this.state.file.qualifiedPath,
@@ -729,7 +731,6 @@ class FileDetails extends Component {
       "isSuperFile" : this.state.file.isSuperFile,
       "application_id" : applicationId,
       "dataflowId" : this.props.selectedDataflow ? this.props.selectedDataflow.id : '',
-      "groupId": this.props.groupId
     };
     fileDetails.basic = file_basic;
     fileDetails.fields = this.state.file.layout;
@@ -793,6 +794,10 @@ class FileDetails extends Component {
 
   onChange = (e) => {
     this.setState({...this.state, file: {...this.state.file, [e.target.name]: e.target.value }});
+  };
+
+  onCheckbox = (e) => {
+    this.setState({...this.state, file: {...this.state.file, [e.target.name]: e.target.checked }});
   };
 
   onFieldRelationsChange = (newValue) => {
@@ -1251,7 +1256,7 @@ class FileDetails extends Component {
                 {this.state.file.fileType == 'thor_file' ?
                   <React.Fragment>
                     <Form.Item {...formItemLayout} label="Cluster">
-                       <Select placeholder="Select a Cluster" disabled={!editingAllowed} onChange={this.onClusterSelection} style={{ width: 190 }}>
+                      <Select placeholder="Select a Cluster" disabled={!editingAllowed} onChange={this.onClusterSelection} style={{ width: 190 }}>
                         {clusters.map(cluster => <Option key={cluster.id}>{cluster.name}</Option>)}
                       </Select>
                     </Form.Item>
@@ -1319,7 +1324,7 @@ class FileDetails extends Component {
                   </Col>*/}
                   <Col span={8} order={1}>
                     <Form.Item {...threeColformItemLayout} label="Is Super File">
-                      <Input id="file_issuper_file" name="isSuperFile" onChange={this.onChange} defaultValue={isSuperFile} value={isSuperFile} placeholder="Is Super File" disabled={!editingAllowed}/>
+                      <Checkbox id="file_issuper_file" name="isSuperFile" onChange={this.onCheckbox} checked={isSuperFile===true} disabled={!editingAllowed}/>
                     </Form.Item>
                   </Col>
                 </Row>

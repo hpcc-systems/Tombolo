@@ -72,7 +72,7 @@ router.post('/querysearch', [
 	  		querySearchResult = response.QuerysetQueries.QuerySetQuery;
 
 				querySearchResult.forEach((querySet, index) => {
-						querySearchAutoComplete.push({"text" : querySet.Id, "value" : querySet.Name});
+						querySearchAutoComplete.push({"text" : querySet.Name, "value" : querySet.Name});
 				});
 
 				querySearchAutoComplete = querySearchAutoComplete.filter((elem, index, self) => self.findIndex(

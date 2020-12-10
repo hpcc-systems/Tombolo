@@ -14,7 +14,7 @@ module.exports = (sequelize, DataTypes) => {
     cluster_id: DataTypes.STRING,
     description: DataTypes.TEXT,
     fileType: DataTypes.STRING,
-    isSuperFile: DataTypes.STRING,
+    isSuperFile: DataTypes.BOOLEAN,
     serviceURL: DataTypes.STRING,
     qualifiedPath: DataTypes.STRING,
     consumer: DataTypes.STRING,
