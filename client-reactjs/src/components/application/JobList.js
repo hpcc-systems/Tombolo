@@ -1,5 +1,5 @@
 import React, { Component } from "react";
-import { Button, Table, Divider, message, Popconfirm, Icon, Tooltip, Radio } from 'antd/lib';
+import { Button, Table, Divider, message, Popconfirm, Tooltip, Radio } from 'antd/lib';
 import FileDetailsForm from "./FileDetails";
 import JobDetailsForm from "./JobDetails";
 import QueryDetailsForm from "./QueryDetails";
@@ -13,6 +13,7 @@ import { authHeader, handleError } from "../common/AuthHeader.js"
 import {handleJobDelete} from "../common/WorkflowUtil";
 import { Constants } from '../common/Constants';
 import ReactMarkdown from 'react-markdown';
+import { DeleteOutlined, EditOutlined, QuestionCircleOutlined, ShareAltOutlined  } from '@ant-design/icons';
 
 class JobList extends Component {
 
@@ -185,10 +186,10 @@ class JobList extends Component {
         dataJob: '',
         render: (text, record) =>
           <span>
-            <a href="#" onClick={(row) => this.handleEdit(record.id, record.objType)}><Tooltip placement="right" title={"Edit Job"}><Icon type="edit" /></Tooltip></a>
+            <a href="#" onClick={(row) => this.handleEdit(record.id, record.objType)}><Tooltip placement="right" title={"Edit Job"}><EditOutlined /></Tooltip></a>
             <Divider type="vertical" />
-            <Popconfirm title="Are you sure you want to delete this job?" onConfirm={() => this.handleDelete(record.id, record.objType)} icon={<Icon type="question-circle-o" style={{ color: 'red' }} />}>
-              <a href="#"><Tooltip placement="right" title={"Delete Job"}><Icon type="delete" /></Tooltip></a>
+            <Popconfirm title="Are you sure you want to delete this job?" onConfirm={() => this.handleDelete(record.id, record.objType)} icon={<QuestionCircleOutlined />}>
+              <a href="#"><Tooltip placement="right" title={"Delete Job"}><DeleteOutlined /></Tooltip></a>
             </Popconfirm>
           </span>
       }];

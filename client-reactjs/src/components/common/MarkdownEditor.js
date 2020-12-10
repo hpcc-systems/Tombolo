@@ -5,9 +5,13 @@ import { MarkdownEditor as mdCodemirror } from '@hpcc-js/codemirror';
 class MarkdownEditor extends Component {
 
   mdEditor = null;
+  classList = ['noGutters'];
 
   constructor(props) {
     super(props);
+    if (props.gutters === true) {
+      this.classList = this.classList.filter(e => e !== 'noGutters');
+    }
   }
 
   componentDidUpdate(prevProps, prevState, snapshot) {
@@ -49,7 +53,7 @@ class MarkdownEditor extends Component {
   render() {
     return (
       <Fragment>
-        <div id={this.props.targetDomId}></div>
+        <div id={this.props.targetDomId} className={this.classList.join(' ')}></div>
       </Fragment>
     );
   }

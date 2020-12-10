@@ -1,7 +1,8 @@
 import React, { Component } from "react";
-import { Table, Button, Row, Col, Modal, Form, Input, notification, Spin, Tooltip, Icon, Popconfirm, Divider, message, Select } from 'antd/lib';
+import { Table, Button, Row, Col, Modal, Form, Input, notification, Spin, Tooltip, Popconfirm, Divider, message, Select } from 'antd/lib';
 import BreadCrumbs from "../common/BreadCrumbs";
-import { authHeader, handleError } from "../common/AuthHeader.js"
+import { authHeader, handleError } from "../common/AuthHeader.js";
+import { DeleteOutlined, EditOutlined, QuestionCircleOutlined, ShareAltOutlined  } from '@ant-design/icons';
 const Option = Select.Option;
 
 class Clusters extends Component {
@@ -269,10 +270,10 @@ class Clusters extends Component {
       dataIndex: '',
       render: (text, record) =>
         <span>
-          <a href="#" onClick={(row) => this.handleEditCluster(record.id)}><Tooltip placement="right" title={"Edit Cluster"}><Icon type="edit" /></Tooltip></a>
+          <a href="#" onClick={(row) => this.handleEditCluster(record.id)}><Tooltip placement="right" title={"Edit Cluster"}><EditOutlined/></Tooltip></a>
           <Divider type="vertical" />
-          <Popconfirm title="Are you sure you want to delete this Cluster?" onConfirm={() => this.handleRemove(record.id)} icon={<Icon type="question-circle-o" style={{ color: 'red' }} />}>
-            <a href="#"><Tooltip placement="right" title={"Delete Cluster"}><Icon type="delete" /></Tooltip></a>
+          <Popconfirm title="Are you sure you want to delete this Cluster?" onConfirm={() => this.handleRemove(record.id)} icon={QuestionCircleOutlined}>
+            <a href="#"><Tooltip placement="right" title={"Delete Cluster"}><DeleteOutlined /></Tooltip></a>
           </Popconfirm>
         </span>
     }];

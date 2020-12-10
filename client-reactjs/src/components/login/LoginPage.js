@@ -2,8 +2,9 @@ import React from 'react';
 import {withRouter} from 'react-router';
 import { userActions } from '../../redux/actions/User';
 import { connect } from 'react-redux';
-import {message, Row, Col, Icon, Tooltip} from 'antd/lib';
+import {message, Row, Col, Tooltip} from 'antd/lib';
 import { Constants } from '../../components/common/Constants';
+import { ArrowLeftOutlined } from '@ant-design/icons';
 
 class LoginPage extends React.Component {
   constructor(props) {
@@ -28,7 +29,7 @@ class LoginPage extends React.Component {
   }
 
   componentDidMount() {
-     this.userName.focus();     
+     this.userName.focus();
   }
 
   componentWillReceiveProps(nextProps){
@@ -36,7 +37,7 @@ class LoginPage extends React.Component {
       message.error("Login failed. Incorrect user name or password!");
       return;
     }
-    if(nextProps.loggingIn != this.props.loggingIn) {            
+    if(nextProps.loggingIn != this.props.loggingIn) {
       if(nextProps.loggedIn){
         var state=this.props.location.state;
         if(state && state.from.pathname) {
@@ -45,7 +46,7 @@ class LoginPage extends React.Component {
         else {
           this.props.history.push('/dataflow');
         }
-      }        
+      }
     }
 
     if(nextProps.newUserRegistering && nextProps.userRegistrationSuccess != undefined && !nextProps.userRegistrationSuccess) {
@@ -53,7 +54,7 @@ class LoginPage extends React.Component {
       return;
     }
 
-    if(!nextProps.newUserRegistering && nextProps.userRegistrationSuccess != undefined && nextProps.userRegistrationSuccess) {            
+    if(!nextProps.newUserRegistering && nextProps.userRegistrationSuccess != undefined && nextProps.userRegistrationSuccess) {
       if(nextProps.status == 201) {
         message.info("Registration Succesful. Please login using the account you just created")
       } else if(nextProps.status == 202) {
@@ -62,7 +63,7 @@ class LoginPage extends React.Component {
       setTimeout(() => {
         window.location = '/login';
       }, 2000);
-      
+
     }
   }
 
@@ -82,19 +83,19 @@ class LoginPage extends React.Component {
 
   handleRegister = (e) => {
     this.props.dispatch({type: Constants.REGISTER_USER_REQUEST});
-    this.setState({ 
+    this.setState({
       loginView: false,
       registrationView: true,
       submitted: false
-    });    
+    });
   }
 
-  handleForgotPassword = () => {    
+  handleForgotPassword = () => {
     window.location = '/forgot-password';
   }
 
   handleBack = (e) => {
-    this.setState({ 
+    this.setState({
       loginView: true,
       registrationView: false,
       submitted: false
@@ -105,14 +106,14 @@ class LoginPage extends React.Component {
     this.setState({ submitted: true });
     if(this.state.newPassword != this.state.confirmNewPassword) {
       message.error("Passwords does not match.");
-      return;  
+      return;
     }
     if(this.isRegistrationFormFieldsValid()) {
       this.props.dispatch(userActions.registerNewUser({
         firstName: this.state.firstName,
         lastName: this.state.lastName,
         email: this.state.email,
-        username: this.state.newUsername, 
+        username: this.state.newUsername,
         password: this.state.newPassword,
         confirmPassword: this.state.confirmNewPassword
       }));
@@ -120,11 +121,11 @@ class LoginPage extends React.Component {
   }
 
   isRegistrationFormFieldsValid = () => {
-    if(this.state.firstName != '' && 
-        this.state.lastName != '' && 
-        this.state.email != '' && 
-        this.state.newUsername != '' && 
-        this.state.newPassword != '' && 
+    if(this.state.firstName != '' &&
+        this.state.lastName != '' &&
+        this.state.email != '' &&
+        this.state.newUsername != '' &&
+        this.state.newPassword != '' &&
         this.state.confirmNewPassword != '') {
       return true;
     } else {
@@ -137,11 +138,11 @@ class LoginPage extends React.Component {
       const { id } = this.props.match.params;
       return (
         <React.Fragment>
-          {loginView ?   
-          <React.Fragment>        
+          {loginView ?
+          <React.Fragment>
             <div className="login-form shadow-lg p-3 mb-5 bg-white rounded">
               <form name="form" onSubmit={this.handleSubmit}>
-                <h2 className="text-center login-logo">Tombolo</h2>                    
+                <h2 className="text-center login-logo">Tombolo</h2>
                 <div className={'form-group' + (submitted && !username ? ' has-error' : '')}>
                   <label htmlFor="username">Username</label>
                   <input type="text" className="form-control" name="username" value={username} onChange={this.handleChange} ref={(input) => { this.userName = input; }}/>
@@ -160,20 +161,20 @@ class LoginPage extends React.Component {
                     <button className="btn btn-primary btn-block">Login</button>
                 </div>
                 <div className="clearfix">
-                  <p className="text-center"><a href="#" onClick={this.handleForgotPassword}>Forgot Password?</a></p>                    
+                  <p className="text-center"><a href="#" onClick={this.handleForgotPassword}>Forgot Password?</a></p>
                 </div>
 
                 <div className="form-group">
                   <p className="text-center"><a href="#" onClick={this.handleRegister}>Register</a></p>
                 </div>
               </form>
-            </div>   
-          </React.Fragment>         
+            </div>
+          </React.Fragment>
         : <React.Fragment>
-            <div className="login-form-registration shadow-lg p-3 mb-5 bg-white rounded">              
-              <a href="#" onClick={this.handleBack}><Tooltip placement="right" title={"Back to Login"}><Icon type="arrow-left" /></Tooltip></a>
+            <div className="login-form-registration shadow-lg p-3 mb-5 bg-white rounded">
+              <a href="#" onClick={this.handleBack}><Tooltip placement="right" title={"Back to Login"}><ArrowLeftOutlined /></Tooltip></a>
               <h2 className="text-center login-logo">Tombolo</h2>
-              <Row type="flex" justify="space-between">  
+              <Row type="flex" justify="space-between">
                 <Col span={12} style={{"paddingRight":"5px"}}>
                   <div className={'form-group' + (submitted && !username ? ' has-error' : '')}>
                     <label htmlFor="username">First Name</label>
@@ -183,7 +184,7 @@ class LoginPage extends React.Component {
                     }
                   </div>
                 </Col>
-                <Col span={12}>  
+                <Col span={12}>
                   <div className={'form-group' + (submitted && !password ? ' has-error' : '')}>
                     <label htmlFor="lastName">Last Name</label>
                     <input type="text" className="form-control" name="lastName" value={lastName} onChange={this.handleChange} />
@@ -191,10 +192,10 @@ class LoginPage extends React.Component {
                         <div className="help-block">Last Name is required</div>
                     }
                   </div>
-                </Col>  
-              </Row> 
+                </Col>
+              </Row>
 
-              <Row type="flex" justify="space-between">  
+              <Row type="flex" justify="space-between">
                 <Col span={24} style={{"paddingRight":"5px"}}>
                   <div className={'form-group' + (submitted && !email ? ' has-error' : '')}>
                     <label htmlFor="email">Email</label>
@@ -205,8 +206,8 @@ class LoginPage extends React.Component {
                   </div>
                 </Col>
               </Row>
-              <Row type="flex" justify="space-between">    
-                <Col span={24}>  
+              <Row type="flex" justify="space-between">
+                <Col span={24}>
                   <div className={'form-group' + (submitted && !newUsername ? ' has-error' : '')}>
                     <label htmlFor="newUsername">User Name</label>
                     <input type="text" className="form-control" name="newUsername" value={newUsername} onChange={this.handleChange} />
@@ -214,10 +215,10 @@ class LoginPage extends React.Component {
                         <div className="help-block">User Name is required</div>
                     }
                   </div>
-                </Col>  
-              </Row>        
+                </Col>
+              </Row>
 
-              <Row type="flex" justify="space-between">  
+              <Row type="flex" justify="space-between">
                 <Col span={12} style={{"paddingRight":"5px"}}>
                   <div className={'form-group' + (submitted && !newPassword ? ' has-error' : '')}>
                     <label htmlFor="newPassword">Password</label>
@@ -227,7 +228,7 @@ class LoginPage extends React.Component {
                     }
                   </div>
                 </Col>
-                <Col span={12}>  
+                <Col span={12}>
                   <div className={'form-group' + (submitted && !confirmNewPassword ? ' has-error' : '')}>
                     <label htmlFor="confirmNewPassword">Confirm Password</label>
                     <input type="password" className="form-control" name="confirmNewPassword" value={confirmNewPassword} onChange={this.handleChange} />
@@ -235,15 +236,15 @@ class LoginPage extends React.Component {
                         <div className="help-block">Confirm Password</div>
                     }
                   </div>
-                </Col>  
-              </Row>     
-              <Row type="flex" justify="center">    
-                <Col span={12}>  
+                </Col>
+              </Row>
+              <Row type="flex" justify="center">
+                <Col span={12}>
                   <button className="btn btn-primary btn-block" onClick={this.handleSubmitRegistration}>Register</button>
-                </Col>  
-              </Row>      
+                </Col>
+              </Row>
 
-            </div>              
+            </div>
           </React.Fragment>}
           </React.Fragment>
       );

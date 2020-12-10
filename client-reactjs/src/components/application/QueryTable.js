@@ -1,12 +1,13 @@
 import {Treant} from 'treant-js/Treant.js';
 //import 'treant-js/vendor/raphael.min.js';
-import { Table, Divider, message, Popconfirm, Icon, Tooltip } from 'antd/lib';
+import { Table, Divider, message, Popconfirm, Tooltip } from 'antd/lib';
 import React, { Component } from "react";
 import QueryDetailsForm from "./QueryDetails";
 import { authHeader, handleError } from "../common/AuthHeader.js"
 import { hasEditPermission } from "../common/AuthUtil.js";
 import { Constants } from '../common/Constants';
 import ReactMarkdown from 'react-markdown';
+import { DeleteOutlined, EditOutlined, QuestionCircleOutlined, ShareAltOutlined  } from '@ant-design/icons';
 
 class QueryTable extends Component {
   constructor(props) {
@@ -136,10 +137,10 @@ class QueryTable extends Component {
       dataIndex: '',
       render: (text, record) =>
         <span>
-          <a href="#" onClick={(row) => this.handleEdit(record.id)}><Tooltip placement="right" title={"Edit Query"}><Icon type="edit" /></Tooltip></a>
+          <a href="#" onClick={(row) => this.handleEdit(record.id)}><Tooltip placement="right" title={"Edit Query"}><EditOutlined /></Tooltip></a>
           <Divider type="vertical" />
-          <Popconfirm title="Are you sure you want to delete this Query?" onConfirm={() => this.handleDelete(record.id)} icon={<Icon type="question-circle-o" style={{ color: 'red' }} />}>
-            <a href="#"><Tooltip placement="right" title={"Delete Query"}><Icon type="delete" /></Tooltip></a>
+          <Popconfirm title="Are you sure you want to delete this Query?" onConfirm={() => this.handleDelete(record.id)} icon={<QuestionCircleOutlined />}>
+            <a href="#"><Tooltip placement="right" title={"Delete Query"}><DeleteOutlined /></Tooltip></a>
           </Popconfirm>
         </span>
     }];

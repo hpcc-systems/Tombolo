@@ -9,7 +9,7 @@
     "@testing-library/user-event": "^7.1.2",
     "ag-grid-community": "^23.2.1",
     "ag-grid-react": "^23.2.1",
-    "antd": "^3.26.18",
+    "antd": "^4.9.2",
     "bootstrap": "^4.5.0",
     "d3": "^5.16.0",
     "downloadjs": "^1.4.7",

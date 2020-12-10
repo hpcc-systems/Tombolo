@@ -1,6 +1,7 @@
 import React, { Component } from "react";
-import { Table,message,Spin,Modal,Tabs, AutoComplete, Form, Input, Icon, Button, Popconfirm, Tooltip } from 'antd/lib';
-import { authHeader, handleError } from "../common/AuthHeader.js";  
+import { Table,message,Spin,Modal,Tabs, AutoComplete, Form, Input, Button, Popconfirm, Tooltip } from 'antd/lib';
+import { authHeader, handleError } from "../common/AuthHeader.js";
+import { DeleteOutlined, EditOutlined, QuestionCircleOutlined, SearchOutlined  } from '@ant-design/icons';
 const { confirm } = Modal;
 const TabPane = Tabs.TabPane;
 class ShareApp extends Component {
@@ -14,11 +15,11 @@ class ShareApp extends Component {
       selectedRowKeys:[],
       initialDataLoading: false,
       sharedAppUsers:[],
-      autoCompleteSuffix: <Icon type="search" className="certain-category-icon" />,
+      autoCompleteSuffix: <SearchOutlined />,
       userSuggestions: [],
       shareButtonEnabled: false,
       selectedUser: ''
-    }  
+    }
 
     componentDidMount(){
       if(this.props.appId) {
@@ -32,7 +33,7 @@ class ShareApp extends Component {
         });
         this.getUserList(this.props.appId);
         this.getSharedAppUserList(this.props.appId);
-      }  
+      }
     }
 
     getUserList(appId) {
@@ -45,7 +46,7 @@ class ShareApp extends Component {
         method: 'get',
         headers: authHeader()
       }).then((response) => {
-          if(response.ok) {              
+          if(response.ok) {
             return response.json();
           }
           handleError(response);
@@ -69,7 +70,7 @@ class ShareApp extends Component {
         method: 'get',
         headers: authHeader()
       }).then((response) => {
-          if(response.ok) {              
+          if(response.ok) {
             return response.json();
           }
           handleError(response);
@@ -92,7 +93,7 @@ class ShareApp extends Component {
     }
 
     saveSharedDetails= () => {
-      var _self=this;      
+      var _self=this;
       if(_self.state.sharedAppUsers.filter(user => user.username == _self.state.selectedUser).length > 0) {
         message.config({top:150})
         message.error("This application has already been shared with user '"+_self.state.selectedUser+"'. Please select a different user.");
@@ -103,7 +104,7 @@ class ShareApp extends Component {
         onOk() {
           _self.saveDetails();
         }
-      }); 
+      });
     }
 
     searchUsers(searchString) {
@@ -112,18 +113,18 @@ class ShareApp extends Component {
         this.setState({
           ...this.state,
           shareButtonEnabled: false
-        });        
-        return;    
+        });
+        return;
       }
       _self.setState({
         ...this.state,
         autoCompleteSuffix : <Spin/>
       });
-      
+
       fetch("/api/user/searchuser?searchTerm="+searchString, {
         method: 'get',
         headers: authHeader()
-      }).then((response) => {        
+      }).then((response) => {
         if(response.ok) {
           return response.json();
         } else {
@@ -133,7 +134,7 @@ class ShareApp extends Component {
         _self.setState({
           ..._self.state,
           userSuggestions: suggestions,
-          autoCompleteSuffix: <Icon type="search" className="certain-category-icon" />
+          autoCompleteSuffix: <SearchOutlined />
         });
       }).catch(error => {
         console.log(error)
@@ -151,16 +152,16 @@ class ShareApp extends Component {
       });
     }
 
-    saveDetails() {          
+    saveDetails() {
       var _self=this;
       fetch('/api/app/read/saveUserApp', {
         method: 'post',
         headers: authHeader(),
         body: JSON.stringify({users : [{'user_id': _self.state.selectedUser, 'application_id':_self.state.applicationId}]})
       }).then(function(response) {
-        if(response.ok) {             
-          _self.getUserList(_self.state.applicationId );   
-          _self.getSharedAppUserList(_self.state.applicationId );         
+        if(response.ok) {
+          _self.getUserList(_self.state.applicationId );
+          _self.getSharedAppUserList(_self.state.applicationId );
           message.config({top:150})
           message.success("Application shared successfully");
           _self.setState({
@@ -173,10 +174,10 @@ class ShareApp extends Component {
       });
     }
 
-    handleOk = () => {  
+    handleOk = () => {
       this.saveSharedDetails();
     }
-    
+
     handleCancel = () => {
       this.setState({
         visible: false
@@ -187,7 +188,7 @@ class ShareApp extends Component {
     handleDeleteShare = () => {
       console.log('handleDeleteShare....')
     }
-    
+
     render() {
       const{availableUsers, selectedRowKeys, sharedAppUsers, userSuggestions, shareButtonEnabled} = this.state;
       const formItemLayout = {
@@ -203,7 +204,7 @@ class ShareApp extends Component {
 
     const rowSelection = {
       selectedRowKeys,
-        onChange:this.onSelectedRowUsersChange.bind(this) 
+        onChange:this.onSelectedRowUsersChange.bind(this)
       };
       const usersColumns = [{
         title: 'Name',
@@ -223,8 +224,8 @@ class ShareApp extends Component {
       dataIndex: '',
       render: (text, record) =>
         <span>
-          <Popconfirm title="Are you sure you want to stop sharing this application with {{record.firstName+' '+record.lastName}}?" onConfirm={() => this.handleDeleteShare(record.id)} icon={<Icon type="question-circle-o" style={{ color: 'red' }} />}>
-            <a href="#"><Tooltip placement="right" title={"Stop Sharing"}><Icon type="delete" /></Tooltip></a>
+          <Popconfirm title="Are you sure you want to stop sharing this application with {{record.firstName+' '+record.lastName}}?" onConfirm={() => this.handleDeleteShare(record.id)} icon={<QuestionCircleOutlined />}>
+            <a href="#"><Tooltip placement="right" title={"Stop Sharing"}><DeleteOutlined /></Tooltip></a>
           </Popconfirm>
         </span>
     }];
@@ -242,7 +243,7 @@ class ShareApp extends Component {
               Close
             </Button>
           ]}
-          >  
+          >
           <div style={{ paddingBottom:"5px" }}>
             <AutoComplete
               className="certain-category-search"
@@ -260,8 +261,8 @@ class ShareApp extends Component {
               <Input id="autocomplete_field" suffix={this.state.autoCompleteSuffix} autoComplete="off"/>
             </AutoComplete>
             <Button type="primary" disabled={!shareButtonEnabled} onClick={this.saveSharedDetails}>Share Application</Button>
-          </div>  
-          <div >          
+          </div>
+          <div >
             <Table
               columns={sharedUsersColumns}
               rowKey={record => record.id}

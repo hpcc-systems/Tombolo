@@ -1,5 +1,5 @@
 import React, { Component } from "react";
-import { Select, Tooltip, Menu, Button, Icon, Dropdown } from 'antd/lib';
+import { Select, Tooltip, Menu, Button, Dropdown } from 'antd/lib';
 import { withRouter } from 'react-router-dom';
 import '@trendmicro/react-dropdown/dist/react-dropdown.css';
 import '@trendmicro/react-buttons/dist/react-buttons.css';
@@ -7,7 +7,7 @@ import 'font-awesome/css/font-awesome.min.css';
 import { authHeader, handleError } from "../common/AuthHeader.js"
 import { connect } from 'react-redux';
 import { applicationActions } from '../../redux/actions/Application';
-
+import { DownOutlined  } from '@ant-design/icons';
 const Option = Select.Option;
 
 class ApplicationsList extends Component {
@@ -63,7 +63,7 @@ class ApplicationsList extends Component {
       <div style={{display:'inline-block'}}>
           <Tooltip placement="right" title={"Select an application"} mouseLeaveDelay={0}>
             <Dropdown overlay={Menus}>
-              <Button style={{ marginLeft: 8 }}>{this.state.selected}<Icon type="down" />
+              <Button style={{ marginLeft: 8 }}>{this.state.selected}<DownOutlined />
               </Button>
             </Dropdown>
           </Tooltip>

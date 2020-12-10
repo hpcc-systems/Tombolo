@@ -1,8 +1,9 @@
 import React, { Component } from "react";
-import { Table, Input, InputNumber, Popconfirm, Form, AutoComplete, Icon } from 'antd/lib';
+import { Table, Input, InputNumber, Popconfirm, Form, AutoComplete } from 'antd/lib';
 import { authHeader, handleError } from "../common/AuthHeader.js"
+import { SearchOutlined  } from '@ant-design/icons';
 
-const FormItem = Form.Item;
+/*const FormItem = Form.Item;
 const EditableContext = React.createContext();
 
 const EditableRow = ({ form, index, ...props }) => (
@@ -234,6 +235,6 @@ class FileRelations extends Component {
       />
     );
   }
-}
+}*/
 
 export default FileRelations;

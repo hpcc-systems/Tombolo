@@ -1,5 +1,5 @@
 //import 'treant-js/vendor/raphael.min.js';
-import { Table, Tooltip, Divider, message, Popconfirm, Icon, Drawer, Button } from 'antd/lib';
+import { Table, Tooltip, Divider, message, Popconfirm, Drawer, Button } from 'antd/lib';
 import React, { Component } from "react";
 import FileDetailsForm from "./FileDetails";
 import FileInstanceDetailsForm from "./FileInstanceDetails";
@@ -10,6 +10,7 @@ import { withRouter } from 'react-router-dom';
 import { connect } from 'react-redux';
 import { assetsActions } from '../../redux/actions/Assets';
 import ReactMarkdown from 'react-markdown';
+import { DeleteOutlined, EditOutlined, QuestionCircleOutlined, ShareAltOutlined, EyeOutlined, RollbackOutlined  } from '@ant-design/icons';
 
 class FileTable extends Component {
   state = {
@@ -219,10 +220,10 @@ class FileTable extends Component {
       className: editingAllowed ? 'show-column' : 'hide-column',
       render: (text, record) =>
         <span>
-          <a href="#" onClick={(row) => this.handleEdit(record.id)}><Tooltip placement="right" title={"Edit File"}><Icon type="edit" /></Tooltip></a>
+          <a href="#" onClick={(row) => this.handleEdit(record.id)}><Tooltip placement="right" title={"Edit File"}><EditOutlined/></Tooltip></a>
           <Divider type="vertical" />
-          <Popconfirm title="Are you sure you want to delete this File?" onConfirm={() => this.handleDelete(record.id)} icon={<Icon type="question-circle-o" style={{ color: 'red' }} />}>
-            <a href="#"><Tooltip placement="right" title={"Delete File"}><Icon type="delete" /></Tooltip></a>
+          <Popconfirm title="Are you sure you want to delete this File?" onConfirm={() => this.handleDelete(record.id)} icon={<QuestionCircleOutlined/>}>
+            <a href="#"><Tooltip placement="right" title={"Delete File"}><DeleteOutlined /></Tooltip></a>
           </Popconfirm>
         </span>
     }];
@@ -254,7 +255,7 @@ class FileTable extends Component {
       dataIndex: '',
       render: (text, record) =>
         <span>
-          <a href="#" onClick={(row) => this.onViewFileInstanceDetails(record.id)}><Tooltip placement="right" title={"View Details"}><Icon type="eye"/></Tooltip></a>
+          <a href="#" onClick={(row) => this.onViewFileInstanceDetails(record.id)}><Tooltip placement="right" title={"View Details"}><EyeOutlined /></Tooltip></a>
         </span>
     }]
     let table = null;
@@ -264,7 +265,7 @@ class FileTable extends Component {
       rowKey={record => record.id}
       dataSource={this.state.fileInstances}
       pagination={{ pageSize: 20 }}
-      title={() => <Button type="primary" onClick={this.handleBackClick}><Icon type="rollback" />File Defintions</Button>}
+      title={() => <Button type="primary" onClick={this.handleBackClick}><RollbackOutlined />File Defintions</Button>}
     />
     } else {
       table = <Table

@@ -1,10 +1,11 @@
 import React, { Component } from "react";
-import { Table, Icon, Tooltip, Tabs, Spin, Input, Button } from 'antd/lib';
+import { Table, Tooltip, Tabs, Spin, Input, Button } from 'antd/lib';
 import {Graph} from "../Dataflow/Graph";
 import BreadCrumbs from "../../common/BreadCrumbs";
 import { connect } from 'react-redux';
 import { authHeader, handleError } from "../../common/AuthHeader.js"
 import { Constants } from '../../common/Constants';
+import { SearchOutlined  } from '@ant-design/icons';
 const { TabPane } = Tabs;
 
 class DataflowInstanceWorkUnits extends Component {
@@ -23,10 +24,10 @@ class DataflowInstanceWorkUnits extends Component {
     searchText: '',
     searchedColumn: ''
   }
-  
+
   componentDidMount() {
     this.fetchDataflowWorkUnits();
-  }  
+  }
 
   componentWillReceiveProps(props) {
     this.setState({
@@ -36,10 +37,10 @@ class DataflowInstanceWorkUnits extends Component {
     }, () => {
       this.fetchDataflowWorkUnits();
     });
-   
+
   }
 
-  fetchDataflowWorkUnits() {    
+  fetchDataflowWorkUnits() {
     if(this.props.applicationId) {
       fetch("/api/workflows/workunits?application_id="+this.state.applicationId+"&workflow_id="+this.state.workflow_id+"&instance_id="+this.state.instance_id, {
          headers: authHeader()
@@ -92,27 +93,27 @@ class DataflowInstanceWorkUnits extends Component {
     ),
 
     filterIcon: filtered => (
-      <Icon type="search" style={{ color: filtered ? '#1890ff' : undefined }} />
+      <SearchOutlined />
     ),
-    
+
     onFilter: (value, record) =>
       record[dataIndex]
         .toString()
         .toLowerCase()
         .includes(value.toLowerCase()),
-    
+
     onFilterDropdownVisibleChange: visible => {
       if (visible) {
         setTimeout(() => this.searchInput.select());
       }
-    },    
+    },
 
     render: text =>
      (
         text
       ),
 
-  })  
+  })
 
   handleSearch = (selectedKeys, confirm, dataIndex) => {
     confirm();
@@ -128,7 +129,7 @@ class DataflowInstanceWorkUnits extends Component {
   };
 
   render() {
-    
+
     const workflowTblColumns = [{
         title: 'WorkUnit Id',
         dataIndex: 'wuid',
@@ -140,32 +141,32 @@ class DataflowInstanceWorkUnits extends Component {
         dataIndex: 'status',
         width: '15%',
         ...this.getColumnSearchProps('status')
-      },  
+      },
       {
         title: 'Start Time',
         dataIndex: 'start',
         width: '15%'
-      },  
+      },
       {
         title: 'End Time',
         dataIndex: 'end',
         width: '15%'
-      },  
+      },
       {
         title: 'Duration',
         dataIndex: 'totalClusterTime',
         width: '30%'
-      },  
+      },
       {
         title: 'Job Name',
         dataIndex: 'jobName',
         width: '15%'
-      },        
+      },
       {
         title: 'Owner',
         dataIndex: 'owner',
         width: '15%'
-      },        
+      },
       {
         width: '10%',
         title: 'Action',
@@ -175,7 +176,7 @@ class DataflowInstanceWorkUnits extends Component {
             <a href={this.state.dataflowCluster + "/?Wuid="+record.wuid+"&Widget=WUDetailsWidget"} target="_blank"><Tooltip placement="right" title={"View Details"}>Details</Tooltip></a>
           </span>
       }];
-    console.log(this.state.loading);  
+    console.log(this.state.loading);
     return (
       <Spin spinning={this.state.loading}>
       <Table
@@ -183,7 +184,7 @@ class DataflowInstanceWorkUnits extends Component {
         rowKey={record => record.wuid}
         dataSource={this.state.workunits}
         pagination={{ pageSize: 10 }} scroll={{ y: 190 }}
-      />      
+      />
       </Spin>
     )
   }

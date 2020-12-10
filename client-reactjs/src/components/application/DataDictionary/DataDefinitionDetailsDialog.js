@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react'
 import ReactDOM from 'react-dom';
-import { Modal, Button, Tabs, Select, Form, Typography, Divider, Input, Icon, Table, message, Tag, Tooltip } from 'antd/lib';
+import { Modal, Button, Tabs, Select, Form, Typography, Divider, Input, Table, message, Tag, Tooltip } from 'antd/lib';
 import { authHeader, handleError } from "../../common/AuthHeader.js"
 import { useSelector } from "react-redux";
 import { hasEditPermission } from "../../common/AuthUtil.js";
@@ -9,6 +9,7 @@ import EditableTable from "../../common/EditableTable.js";
 import { fetchDataDictionary } from "../../common/CommonUtil.js";
 import {omitDeep} from '../../common/CommonUtil.js';
 import { MarkdownEditor } from "../../common/MarkdownEditor.js"
+import { PlusOutlined } from '@ant-design/icons';
 const TabPane = Tabs.TabPane;
 const Option = Select.Option;
 const { Paragraph } = Typography;
@@ -317,7 +318,7 @@ function DataDefinitionDetailsDialog({selectedDataDefinition, applicationId, onD
               )}
               {!tags.inputVisible && (
                 <Tag color="geekblue" onClick={showNewProductTag} style={{ background: '#fff', borderStyle: 'dashed' }}>
-                  <Icon type="plus" /> New Product
+                  <PlusOutlined /> New Product
                 </Tag>
               )}
           </div>

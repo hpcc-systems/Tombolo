@@ -1,10 +1,9 @@
 import React, { Component } from "react";
-import { Icon } from 'antd/lib';
 import { connect } from 'react-redux';
 import {FileList} from "./FileList";
 import { applicationActions } from '../../redux/actions/Application';
 import { authHeader, handleError } from "../common/AuthHeader.js";
-
+import { CloseCircleOutlined } from '@ant-design/icons';
 class SelectedFilePopup extends Component {
   constructor(props) {
     super(props);
@@ -14,7 +13,7 @@ class SelectedFilePopup extends Component {
     applicationId:this.props.match.params.applicationId,
     fileId:this.props.match.params.fileId,
     fileError:false
-  } 
+  }
 
   componentWillMount(){
     console.log("SelectedFilePopup")
@@ -34,15 +33,15 @@ class SelectedFilePopup extends Component {
     })
     .then((data) => {
       if(!data)
-        _self.setState({ fileError: true }); 
+        _self.setState({ fileError: true });
     })
     .catch(error => {
-      console.log(error); 
-     
+      console.log(error);
+
     });
-   
+
   }
-  getAppName(appId) {    
+  getAppName(appId) {
       fetch("/api/app/read/app?app_id="+appId, {
         headers: authHeader()
       })
@@ -55,14 +54,14 @@ class SelectedFilePopup extends Component {
       .then(data => {
         console.log(JSON.stringify(data))
         if(data){
-        this.props.dispatch(applicationActions.applicationSelected(appId,data.title)); 
+        this.props.dispatch(applicationActions.applicationSelected(appId,data.title));
         }
       })
       .catch(error => {
         console.log(error);
-      });          
+      });
   }
-  render() {    
+  render() {
     if(this.state.fileError)
     {
       const styles = {
@@ -75,13 +74,13 @@ class SelectedFilePopup extends Component {
         <div>
           <div align="center" style={{paddingTop:"80px"}}>
         <div  style={styles} ><table><tr><td style={{paddingBottom:'5px',color:'red'}}>
-          <Icon type="close-circle" /></td>
+          <CloseCircleOutlined /></td>
           <td style={{paddingLeft:'2px'}}><b> URL Application Id/File Id is invalid</b></td></tr></table></div>
         </div>
         </div>
       )
     }
-    else 
+    else
     return (
       <div>
          <FileList fileId={this.state.fileId}/>

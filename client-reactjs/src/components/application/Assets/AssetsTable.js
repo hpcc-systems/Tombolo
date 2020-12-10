@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react'
-import { Table, message, Popconfirm, Icon, Tooltip, Divider} from 'antd/lib';
+import { Table, message, Popconfirm, Tooltip, Divider} from 'antd/lib';
 import { authHeader, handleError } from "../../common/AuthHeader.js"
 import FileDetailsForm from "../FileDetails";
 import MoveAssetsDialog from "./MoveAssetsDialog";
@@ -11,6 +11,7 @@ import { Constants } from '../../common/Constants';
 import { assetsActions } from '../../../redux/actions/Assets';
 import { useHistory } from 'react-router';
 import useModal from '../../../hooks/useModal';
+import { DeleteOutlined, EditOutlined, QuestionCircleOutlined, FolderOpenOutlined  } from '@ant-design/icons';
 
 function AssetsTable(props) {
   let {selectedGroup} = props;
@@ -181,13 +182,13 @@ function AssetsTable(props) {
     className: editingAllowed ? "show-column" : "hide-column",
     render: (text, record) =>
       <span>
-        <a href="#" onClick={(row) => handleEdit(record.id, record.type)}><Tooltip placement="right" title={"Edit"}><Icon type="edit" /></Tooltip></a>
+        <a href="#" onClick={(row) => handleEdit(record.id, record.type)}><Tooltip placement="right" title={"Edit"}><EditOutlined /></Tooltip></a>
         <Divider type="vertical" />
-        <Popconfirm title="Are you sure you want to delete this?" onConfirm={() => handleDelete(record.id, record.type)} icon={<Icon type="question-circle-o" style={{ color: 'red' }} />}>
-          <a href="#"><Tooltip placement="right" title={"Delete"}><Icon type="delete" /></Tooltip></a>
+        <Popconfirm title="Are you sure you want to delete this?" onConfirm={() => handleDelete(record.id, record.type)} icon={<QuestionCircleOutlined/>}>
+          <a href="#"><Tooltip placement="right" title={"Delete"}><DeleteOutlined /></Tooltip></a>
         </Popconfirm>
         <Divider type="vertical" />
-        <a href="#" onClick={(row) => handleMoveAsset(record.id, record.type, record.name, selectedGroup)}><Tooltip placement="right" title={"Move"}><Icon type="folder-open" /></Tooltip></a>
+        <a href="#" onClick={(row) => handleMoveAsset(record.id, record.type, record.name, selectedGroup)}><Tooltip placement="right" title={"Move"}><FolderOpenOutlined /></Tooltip></a>
       </span>
   }];
 

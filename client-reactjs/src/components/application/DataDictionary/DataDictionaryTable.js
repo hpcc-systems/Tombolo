@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react'
-import { Table, message, Popconfirm, Icon, Tooltip, Divider} from 'antd/lib';
+import { Table, message, Popconfirm, Tooltip, Divider} from 'antd/lib';
 import { authHeader, handleError } from "../../common/AuthHeader.js"
 import { hasEditPermission } from "../../common/AuthUtil.js";
 import useFileDetailsForm from '../../../hooks/useFileDetailsForm';
@@ -7,6 +7,7 @@ import { Constants } from '../../common/Constants';
 import { useSelector } from "react-redux";
 import DataDefinitionDetailsDialog from './DataDefinitionDetailsDialog';
 import ReactMarkdown from 'react-markdown';
+import { DeleteOutlined, EditOutlined, QuestionCircleOutlined  } from '@ant-design/icons';
 
 function DataDictionaryTable({dataDefinitions, applicationId, onDataUpdated, closeAddDlg}) {
   const [data, setData] = useState([]);
@@ -103,7 +104,8 @@ function DataDictionaryTable({dataDefinitions, applicationId, onDataUpdated, clo
   const dataDefnCols = [{
     title: 'Name',
     dataIndex: 'name',
-    width: '30%',
+    width: '20%',
+    ellipsis: true,
     render: (text, record) => <a onClick={() => handleEditDataDictionary(record)} >{text}</a>
   },
   {
@@ -111,29 +113,29 @@ function DataDictionaryTable({dataDefinitions, applicationId, onDataUpdated, clo
     dataIndex: 'description',
     className: 'overflow-hidden',
     ellipsis: true,
-    width: '30%',
+    width: '20%',
     render: (text, record) => <ReactMarkdown children={text} />
   },
   {
     title: 'Created',
     dataIndex: 'createdAt',
-    width: '30%',
+    width: '20%',
     render: (text, record) => {
       let createdAt = new Date(text);
       return createdAt.toLocaleDateString('en-US', Constants.DATE_FORMAT_OPTIONS) +' @ '+ createdAt.toLocaleTimeString('en-US')
     }
   },
   {
-    width: '20%',
+    width: '10%',
     title: 'Action',
     dataIndex: '',
     className: editingAllowed ? "show-column" : "hide-column",
     render: (text, record) =>
       <span>
-        <a href="#" onClick={(row) => handleEditDataDictionary(record)}><Tooltip placement="right" title={"Edit Dataflow"}><Icon type="edit" /></Tooltip></a>
+        <a href="#" onClick={(row) => handleEditDataDictionary(record)}><Tooltip placement="right" title={"Edit Dataflow"}><EditOutlined /></Tooltip></a>
         <Divider type="vertical" />
-          <Popconfirm title={record.type != 'file' ? "Are you sure you want to delete this Data Definition?" : "Are you sure you want to delete this File?"} onConfirm={() => handleDataDictionaryDelete(record)} icon={<Icon type="question-circle-o" style={{ color: 'red' }} />}>
-            <a href="#"><Tooltip placement="right" title={"Delete Data Definition"}><Icon type="delete" /></Tooltip></a>
+          <Popconfirm title={record.type != 'file' ? "Are you sure you want to delete this Data Definition?" : "Are you sure you want to delete this File?"} onConfirm={() => handleDataDictionaryDelete(record)} icon={<QuestionCircleOutlined />}>
+            <a href="#"><Tooltip placement="right" title={"Delete Data Definition"}><DeleteOutlined /></Tooltip></a>
           </Popconfirm>
       </span>
   }];

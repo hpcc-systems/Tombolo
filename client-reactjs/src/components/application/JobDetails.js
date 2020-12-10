@@ -1,5 +1,5 @@
 import React, { Component } from "react";
-import { Modal, Tabs, Form, Input, Checkbox, Button,  Select, Table, AutoComplete, Spin, Icon, message, Row, Col } from 'antd/lib';
+import { Modal, Tabs, Form, Input, Checkbox, Button,  Select, Table, AutoComplete, Spin, message, Row, Col } from 'antd/lib';
 import { authHeader, handleError } from "../common/AuthHeader.js"
 import AssociatedDataflows from "./AssociatedDataflows"
 import { hasEditPermission } from "../common/AuthUtil.js";
@@ -9,6 +9,7 @@ import { MarkdownEditor } from "../common/MarkdownEditor.js"
 import { EclEditor } from "../common/EclEditor.js"
 import {handleJobDelete} from "../common/WorkflowUtil";
 import { connect } from 'react-redux';
+import { SearchOutlined } from '@ant-design/icons';
 
 const TabPane = Tabs.TabPane;
 const Option = Select.Option;
@@ -35,7 +36,7 @@ class JobDetails extends Component {
     jobSearchSuggestions:[],
     jobSearchErrorShown:false,
     autoCreateFiles:false,
-    autoCompleteSuffix: <Icon type="search" className="certain-category-icon" />,
+    autoCompleteSuffix: <SearchOutlined/>,
     dataDefinitions: [],
     job: {
       id:"",
@@ -280,7 +281,7 @@ class JobDetails extends Component {
       this.setState({
         ...this.state,
         jobSearchSuggestions: suggestions,
-        autoCompleteSuffix: <Icon type="search" className="certain-category-icon" />
+        autoCompleteSuffix: <SearchOutlined/>
       });
     }).catch(error => {
       if(!this.state.jobSearchErrorShown) {
@@ -291,7 +292,7 @@ class JobDetails extends Component {
         this.setState({
           ...this.state,
           jobSearchErrorShown: true,
-          autoCompleteSuffix: <Icon type="search" className="certain-category-icon" />
+          autoCompleteSuffix: <SearchOutlined/>
         });
       }
     });
@@ -778,5 +779,5 @@ function mapStateToProps(state) {
     };
 }
 
-const JobDetailsForm = connect(mapStateToProps)(Form.create()(JobDetails));
+const JobDetailsForm = connect(mapStateToProps)(JobDetails);
 export default JobDetailsForm;
