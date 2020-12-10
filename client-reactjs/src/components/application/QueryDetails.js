@@ -39,6 +39,7 @@ class QueryDetails extends Component {
       title:"",
       name:"",
       description:"",
+      groupId: "",
       url: "",
       primaryService:"",
       backupService:"",
@@ -85,6 +86,7 @@ class QueryDetails extends Component {
             title: data.title,
             name: (data.name == '' ? data.title : data.name),
             description: data.description,
+            groupId: data.groupId,
             type: data.type,
             url: data.url,
             primaryService: data.primaryService,
@@ -371,12 +373,12 @@ class QueryDetails extends Component {
         "title" : this.state.query.title,
         "name" : this.state.query.name,
         "description" : this.state.query.description,
+        "groupId" : this.state.query.groupId,
         "url" : this.state.query.url,
         "gitRepo" : this.state.query.gitrepo,
         "primaryService" : this.state.query.primaryService,
         "backupService" : this.state.query.backupService,
         "type": this.state.query.type,
-        "groupId": this.props.groupId
       },
       fields: inputFields.concat(outputFields)
     };
@@ -542,11 +544,7 @@ class QueryDetails extends Component {
               (<Input id="query_title" name="title" onChange={this.onChange} placeholder="Title" disabled={!editingAllowed}/>)}
             </Form.Item>
             <Form.Item {...formItemLayout} label="Description">
-                {getFieldDecorator('description', {
-                trigger: 'onChange',
-                valuePropName: 'value',
-                initialValue: this.state.query.description
-              })(<MarkdownEditor id="query_desc" name="description" onChange={this.onChange} targetDomId="queryDescr" value={description} disabled={!editingAllowed}/>)}
+              <MarkdownEditor id="query_desc" name="description" onChange={this.onChange} targetDomId="queryDescr" value={description} disabled={!editingAllowed}/>
             </Form.Item>
             <Form.Item {...formItemLayout} label="URL">
                 {getFieldDecorator('url', {

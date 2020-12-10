@@ -41,6 +41,7 @@ class IndexDetails extends Component {
       title:"",
       name:"",
       description:"",
+      groupId: "",
       primaryService:"",
       backupService:"",
       path:"",
@@ -77,6 +78,7 @@ class IndexDetails extends Component {
             title: data.basic.title == '' ? data.basic.name : data.basic.title,
             name: (data.basic.name == '' ? data.basic.title : data.basic.name),
             description: data.basic.description,
+            groupId: data.basic.groupId,
             primaryService: data.basic.primaryService,
             backupService: data.basic.backupService,
             keyedColumns: data.basic.index_keys,
@@ -368,13 +370,13 @@ class IndexDetails extends Component {
       "title" : this.state.index.title,
       "name" : this.state.index.name,
       "description" : this.state.index.description,
+      "groupId": this.state.index.groupId,
       "primaryService" : this.state.index.primaryService,
       "backupService" : this.state.index.backupService,
       "qualifiedPath" : this.state.index.path,
       "application_id" : applicationId,
       "dataflowId" : this.props.selectedDataflow ? this.props.selectedDataflow.id : '',
       "parentFileId" : this.state.selectedSourceFile,
-      "groupId": this.props.groupId
     };
     indexDetails.basic = index_basic;
 
@@ -510,11 +512,7 @@ class IndexDetails extends Component {
                 (<Input id="file_title" name="title" onChange={this.onChange} placeholder="Title" disabled={!editingAllowed}/>)}
               </Form.Item>
               <Form.Item {...formItemLayout} label="Description">
-                {getFieldDecorator('description', {
-                trigger: 'onChange',
-                valuePropName: 'value',
-                initialValue: this.state.index.description
-              })(<MarkdownEditor id="query_desc" name="description" onChange={this.onChange} targetDomId="indexDescr" value={description} disabled={!editingAllowed}/>)}
+                <MarkdownEditor id="query_desc" name="description" onChange={this.onChange} targetDomId="indexDescr" value={description} disabled={!editingAllowed}/>
               </Form.Item>
 
               <Form.Item {...formItemLayout} label="Primary Service">

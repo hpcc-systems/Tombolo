@@ -238,6 +238,7 @@ router.get('/job_details', [
           var file = await File.findOne({where:{"application_id":req.query.app_id, "id":jobFile.file_id}});
           if(file != undefined) {
               jobFile.description = file.description;
+              jobFile.groupId = file.groupId;
               jobFile.title = file.title;
               jobFile.name = file.name;
               jobFile.fileType = file.fileType;
