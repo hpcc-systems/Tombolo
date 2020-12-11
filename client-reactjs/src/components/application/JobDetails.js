@@ -47,7 +47,7 @@ class JobDetails extends Component {
       ecl: "",
       entryBWR:"",
       jobType: this.props.selectedJobType ? this.props.selectedJobType : '',
-      gitrepo:"",
+      gitRepo:"",
       contact:"",
       inputParams: [],
       inputFiles: [],
@@ -99,7 +99,7 @@ class JobDetails extends Component {
             description: data.description,
             groupId: data.groupId,
             ecl: data.ecl,
-            gitrepo: data.gitRepo,
+            gitRepo: data.gitRepo,
             entryBWR: data.entryBWR,
             jobType: data.jobType,
             contact: data.contact,
@@ -108,19 +108,6 @@ class JobDetails extends Component {
             inputFiles: jobfiles.filter(field => field.file_type == 'input'),
             outputFiles: jobfiles.filter(field => field.file_type == 'output')
          }
-        });
-        this.props.form.setFieldsValue({
-          name: data.name,
-          title: (data.title == '' ? data.name : data.title),
-          description: data.description,
-          gitrepo: data.gitRepo,
-          entryBWR: data.entryBWR,
-          jobType: data.jobType,
-          contact: data.contact,
-          author: data.author,
-          inputParams: data.jobparams,
-          inputFiles: jobfiles.filter(field => field.file_type == 'input'),
-          outputFiles: jobfiles.filter(field => field.file_type == 'output')
         });
         return data;
       })
@@ -241,7 +228,7 @@ class JobDetails extends Component {
         ecl: "",
         entryBWR:"",
         jobType: this.props.selectedJobType ? this.props.selectedJobType : '',
-        gitrepo:"",
+        gitRepo:"",
         contact:"",
         inputParams: [],
         inputFiles: [],
@@ -322,17 +309,11 @@ class JobDetails extends Component {
           title: jobInfo.Jobname,
           description: jobInfo.description,
           groupId: jobInfo.groupId,
+          gitRepo: jobInfo.gitRepo,
           ecl: jobInfo.ecl,
           entryBWR: jobInfo.entryBWR
         }
       })
-      this.props.form.setFieldsValue({
-        name: jobInfo.Jobname,
-        jobEcl: jobInfo.ecl,
-        description: jobInfo.description,
-        entryBWR: jobInfo.entryBWR
-      });
-
       return jobInfo;
     })
     .then(data => {
@@ -343,26 +324,22 @@ class JobDetails extends Component {
     });
   }
 
-  handleOk = () => {
-    this.props.form.validateFields(async (err, values) => {
-      if(!err) {
-        this.setState({
-          confirmLoading: true,
-        });
-
-        let saveResponse = await this.saveJobDetails();
-
-        setTimeout(() => {
-          this.setState({
-            visible: false,
-            confirmLoading: false,
-          });
-          //this.props.onClose();
-          //this.props.onRefresh(saveResponse);
-          this.props.history.push('/' + this.props.application.applicationId + '/assets')
-        }, 2000);
-      }
+  handleOk = async () => {
+    this.setState({
+      confirmLoading: true,
     });
+
+    let saveResponse = await this.saveJobDetails();
+
+    setTimeout(() => {
+      this.setState({
+        visible: false,
+        confirmLoading: false,
+      });
+      //this.props.onClose();
+      //this.props.onRefresh(saveResponse);
+      this.props.history.push('/' + this.props.application.applicationId + '/assets')
+    }, 2000);
   }
 
   onAutoCreateFiles = (e) => {
@@ -442,7 +419,7 @@ class JobDetails extends Component {
         "description" : this.state.job.description,
         "groupId": this.state.job.groupId,
         "ecl" : this.state.job.ecl,
-        "gitRepo" : this.state.job.gitrepo,
+        "gitRepo" : this.state.job.gitRepo,
         "entryBWR" : this.state.job.entryBWR,
         "jobType" : this.state.job.jobType,
         "contact": this.state.job.contact,
@@ -534,8 +511,11 @@ class JobDetails extends Component {
 
   render() {
     const editingAllowed = hasEditPermission(this.props.user);
-    const {getFieldDecorator} = this.props.form;
-    const { visible, confirmLoading, jobTypes, paramName, paramType, inputFileName, inputFileDesc, outputFileName, outputFileDesc, sourceFiles, jobSearchSuggestions, clusters} = this.state;
+    const {
+      visible, confirmLoading, jobTypes, paramName,
+      paramType, inputFileName, inputFileDesc, outputFileName,
+      outputFileDesc, sourceFiles, jobSearchSuggestions, clusters
+    } = this.state;
     const formItemLayout = {
       labelCol: {
         xs: { span: 2 },
@@ -590,7 +570,10 @@ class JobDetails extends Component {
         width: '30%'
       }];
 
-    const {name, title, description, ecl, entryBWR, gitrepo, jobType, inputParams, outputFiles, inputFiles, contact, author } = this.state.job;
+    const {
+      name, title, description, ecl, entryBWR, gitRepo,
+      jobType, inputParams, outputFiles, inputFiles, contact, author
+    } = this.state.job;
 
     //render only after fetching the data from the server
     if(!name && !this.props.selectedAsset && !this.props.isNew) {
@@ -639,37 +622,31 @@ class JobDetails extends Component {
                   {/*: null
                 }*/}
                 <Form.Item {...formItemLayout} label="Name">
-               {getFieldDecorator('name')
-                (<Input id="job_name" name="name" onChange={this.onChange} placeholder="Name" disabled={true} disabled={!editingAllowed}/>)}
+                  <Input id="job_name" name="name" onChange={this.onChange} placeholder="Name" disabled={true} disabled={!editingAllowed} value={name}/>
                 </Form.Item>
                 <Form.Item {...formItemLayout} label="Title">
-               {getFieldDecorator('title')
-                (<Input id="job_title" name="title" onChange={this.onChange} placeholder="Title" disabled={!editingAllowed}/>)}
+                  <Input id="job_title" name="title" onChange={this.onChange} placeholder="Title" disabled={!editingAllowed} value={title}/>
                 </Form.Item>
                 <Form.Item {...formItemLayout} label="Description">
                   <MarkdownEditor id="job_desc" name="description" onChange={this.onChange} targetDomId="jobDescr" value={description} disabled={!editingAllowed}/>
                 </Form.Item>
                 {this.props.selectedJobType != 'Data Profile' ?
                   <Form.Item {...formItemLayout} label="Git Repo">
-                {getFieldDecorator('gitrepo')
-                  (<Input id="job_gitRepo" name="gitrepo" onChange={this.onChange}  placeholder="Git Repo" disabled={!editingAllowed}/>)}
+                    <Input id="job_gitRepo" name="gitRepo" onChange={this.onChange}  placeholder="Git Repo" value={gitRepo} disabled={!editingAllowed}/>
                   </Form.Item>
                 : null }
                 <Form.Item {...formItemLayout} label="Entry BWR">
-              {getFieldDecorator('entryBWR')
-                (<Input id="job_entryBWR" name="entryBWR" onChange={this.onChange}  placeholder="Primary Service" disabled={!editingAllowed}/>)}
+                  <Input id="job_entryBWR" name="entryBWR" onChange={this.onChange}  placeholder="Primary Service" value={entryBWR} disabled={!editingAllowed}/>
                 </Form.Item>
                 <Row type="flex">
                   <Col span={12} order={1}>
                     <Form.Item {...threeColformItemLayout} label="Contact">
-                    {getFieldDecorator('contact')
-                    (<Input id="job_bkp_svc" name="contact" onChange={this.onChange} placeholder="Contact" disabled={!editingAllowed}/>)}
+                      <Input id="job_bkp_svc" name="contact" onChange={this.onChange} placeholder="Contact" value={contact} disabled={!editingAllowed}/>
                     </Form.Item>
                   </Col>
                   <Col span={12} order={2}>
                     <Form.Item {...threeColformItemLayout} label="Author">
-                  {getFieldDecorator('author')
-                   (<Input id="job_author" name="author" onChange={this.onChange} placeholder="Author" disabled={!editingAllowed}/>)}
+                      <Input id="job_author" name="author" onChange={this.onChange} placeholder="Author" value={author} disabled={!editingAllowed}/>
                     </Form.Item>
                   </Col>
                 </Row>

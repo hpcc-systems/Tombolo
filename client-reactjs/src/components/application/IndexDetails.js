@@ -79,21 +79,12 @@ class IndexDetails extends Component {
             name: (data.basic.name == '' ? data.basic.title : data.basic.name),
             description: data.basic.description,
             groupId: data.basic.groupId,
+            path: data.basic.qualifiedPath,
             primaryService: data.basic.primaryService,
             backupService: data.basic.backupService,
             keyedColumns: data.basic.index_keys,
             nonKeyedColumns: data.basic.index_payloads
           }
-        });
-        this.props.form.setFieldsValue({
-          title: data.basic.title,
-          name: (data.basic.name == '' ? data.basic.title : data.basic.name),
-          description: data.basic.description,
-          primaryService: data.basic.primaryService,
-          backupService: data.basic.backupService,
-          keyedColumns: data.basic.index_keys,
-          nonKeyedColumns: data.basic.index_payloads,
-          path: data.basic.qualifiedPath
         });
         return data;
       })
@@ -122,27 +113,19 @@ class IndexDetails extends Component {
     //}
   }
 
-  handleOk = (e) => {
-    this.props.form.validateFields(async (err, values) => {
-      if(!err) {
-        this.setState({
-          confirmLoading: true,
-        });
+  handleOk = async (e) => {
+    let saveResponse = await this.saveIndexDetails();
 
-        let saveResponse = await this.saveIndexDetails();
-
-        setTimeout(() => {
-          this.setState({
-            visible: false,
-            confirmLoading: false,
-          });
-          //this.props.onClose();
-          //this.props.onRefresh(saveResponse);
-          this.props.history.push('/' + this.props.application.applicationId + '/assets')
-        }, 200);
-      }
-    });
-  }
+    setTimeout(() => {
+      this.setState({
+        visible: false,
+        confirmLoading: false,
+      });
+      //this.props.onClose();
+      //this.props.onRefresh(saveResponse);
+      this.props.history.push('/' + this.props.application.applicationId + '/assets')
+    }, 200);
+  };
 
   handleDelete = () => {
     let _self=this;
@@ -414,9 +397,6 @@ class IndexDetails extends Component {
 
   render() {
     const editingAllowed = hasEditPermission(this.props.user);
-    const {
-      getFieldDecorator, getFieldsError, getFieldError, isFieldTouched,
-    } = this.props.form;
     const { visible, confirmLoading, sourceFiles, availableLicenses, selectedRowKeys, clusters, fileSearchSuggestions } = this.state;
     const formItemLayout = {
       labelCol: {
@@ -447,7 +427,10 @@ class IndexDetails extends Component {
     ];
 
 
-    const {name, title, description, primaryService, backupService, path, relations, keyedColumns, nonKeyedColumns} = this.state.index;
+    const {
+      name, title, description, primaryService, backupService, path,
+      relations, keyedColumns, nonKeyedColumns
+    } = this.state.index;
     const rowSelection = {
       selectedRowKeys,
       onChange: this.onSelectedRowKeysChange
@@ -500,32 +483,25 @@ class IndexDetails extends Component {
               </Form.Item>
               </div>
 
-              <Form.Item {...formItemLayout} label="Name">
-                  {getFieldDecorator('name', {
-                    rules: [{ required: true, message: 'Please enter a name!' }],
-                  })(
-                  <Input id="name" name="name" onChange={this.onChange} placeholder="Name" disabled={true} disabled={!editingAllowed}/>)}
+              <Form.Item {...formItemLayout} label="Name" rules={[{ required: true, message: 'Please enter a name!' }]}>
+                <Input id="name" name="name" onChange={this.onChange} placeholder="Name" disabled={true} value={name} disabled={!editingAllowed}/>
               </Form.Item>
 
               <Form.Item {...formItemLayout} label="Title">
-                {getFieldDecorator('title')
-                (<Input id="file_title" name="title" onChange={this.onChange} placeholder="Title" disabled={!editingAllowed}/>)}
+                <Input id="file_title" name="title" onChange={this.onChange} placeholder="Title" value={title} disabled={!editingAllowed}/>
               </Form.Item>
               <Form.Item {...formItemLayout} label="Description">
                 <MarkdownEditor id="query_desc" name="description" onChange={this.onChange} targetDomId="indexDescr" value={description} disabled={!editingAllowed}/>
               </Form.Item>
 
               <Form.Item {...formItemLayout} label="Primary Service">
-                {getFieldDecorator('primaryService')
-                 (<Input id="file_primary_svc" name="primaryService" onChange={this.onChange} placeholder="Primary Service" disabled={!editingAllowed}/>)}
+                 <Input id="file_primary_svc" name="primaryService" onChange={this.onChange} value={primaryService} placeholder="Primary Service" disabled={!editingAllowed}/>
               </Form.Item>
               <Form.Item {...formItemLayout} label="Backup Service">
-                {getFieldDecorator('backupService')
-                (<Input id="file_bkp_svc" name="backupService" onChange={this.onChange} placeholder="Backup Service" disabled={!editingAllowed}/>)}
+                <Input id="file_bkp_svc" name="backupService" onChange={this.onChange} value={backupService} placeholder="Backup Service" disabled={!editingAllowed}/>
               </Form.Item>
               <Form.Item {...formItemLayout} label="Path">
-                {getFieldDecorator('path')
-                (<Input id="path" name="path" onChange={this.onChange} placeholder="Path" disabled={!editingAllowed}/>)}
+                <Input id="path" name="path" onChange={this.onChange} placeholder="Path" value={path} disabled={!editingAllowed}/>
               </Form.Item>
             </Form>
 
