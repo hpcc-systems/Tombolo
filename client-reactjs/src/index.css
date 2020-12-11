@@ -566,8 +566,13 @@ div.tooltip {
   line-height: 27px;
 }
 
+.ant-tree-node-content-wrapper {
+
+}
+
 .ant-tree-node-content-wrapper .group-options {
    /*visibility: hidden;*/
+
 }
 
 .ant-tree-title li {

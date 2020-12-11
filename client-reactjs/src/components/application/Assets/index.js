@@ -363,7 +363,7 @@ function Assets(props) {
                     onDragEnter={handleDragEnter}
                     onDrop={handleDragDrop}
                     expandAction={false}
-                    titleRenderer={titleRenderer}
+                    titleRender={titleRenderer}
                   />
               </div>
             </Col>
