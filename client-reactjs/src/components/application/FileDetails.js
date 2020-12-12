@@ -1,7 +1,7 @@
 import React, { Component } from "react";
 import {
   Modal, Tabs, Form, Input, Select, Button, Table, AutoComplete,
-  Tag, message, Drawer, Row, Col, Spin, Radio
+  Tag, message, Drawer, Row, Col, Spin, Radio, Checkbox
 } from 'antd/lib';
 //import FileRelations from "./FileRelations"
 //import DataProfileTable from "./DataProfileTable"
