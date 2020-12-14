@@ -3,7 +3,7 @@ import { BarsOutlined  } from '@ant-design/icons';
 
 function TitleRenderer({title, showMoreOptions}) {
   return (
-    <li><span className="group-options">{title}<i className="fa fa-bars" onClick={showMoreOptions}></i></span></li>
+    <li className="group-title"><span className="group-options">{title}</span><i className="fa fa-bars" onClick={showMoreOptions}></i></li>
   )
 }
 

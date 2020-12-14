@@ -558,16 +558,31 @@ div.tooltip {
 
 .group-options {
   overflow-wrap: anywhere;
+  width: 65%;
+  display: inline-flex;
 }
 
-.group-options i {
+.group-title {
+  width: 100%;
+}
+
+.group-title .fa-bars {
+  display: none;
+}
+
+.ant-tree-node-content-wrapper:hover i.fa-bars {
+  display: block;
+}
+
+
+.group-title i {
+  display: inline-block;
   float: right;
-  padding-right: 10px;
-  line-height: 27px;
+  line-height: 28px;
 }
 
-.ant-tree-node-content-wrapper .group-options {
-   /*visibility: hidden;*/
+.ant-tree-node-content-wrapper {
+
 }
 
 .ant-tree-title li {
