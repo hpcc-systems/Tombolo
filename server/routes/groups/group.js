@@ -296,9 +296,12 @@ router.post('/', [
       }
     } else {
       Groups.findOne({where: {id:req.body.id, application_id:req.body.applicationId}}).then(async (group) => {
-        let duplicateGroupName = await groupExistsWithSameName(group.parent_group, req.body.name, req.body.applicationId);
+        let duplicateGroupName = false;
+        if(group.name != req.body.name) {
+          duplicateGroupName = await groupExistsWithSameName(group.parent_group, req.body.name, req.body.applicationId);
+        }
         if(duplicateGroupName) {
-          res.status(400).send({"message":"There is already a group with the same name under the parent group. Please select a different name"});
+            res.status(400).send({"message":"There is already a group with the same name under the parent group. Please select a different name"});
         } else {
           Groups.update({
             name: req.body.name,

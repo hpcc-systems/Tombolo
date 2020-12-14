@@ -44,7 +44,7 @@ function Assets(props) {
       sm: { span: 24 },
     },
   };
-  const form = props.form;
+  const [form] = Form.useForm();
   const groupsReducer = useSelector(state => state.groupsReducer);
   //ref for More Options context menu
   const ref = useRef();
@@ -191,36 +191,33 @@ function Assets(props) {
 
   const handleCreateGroup = (e) => {
     e.preventDefault();
-    form.validateFields(async (err, values) =>  {
-      if(!err) {
-        let isNew = (newGroup.id && newGroup.id != '') ? false : true;
-        setNewGroupForm({'submitted': true});
-        fetch('/api/groups', {
-          method: 'post',
-          headers: authHeader(),
-          body: JSON.stringify({
-            "isNew": isNew,
-            "parentGroupId": isNew ? selectedGroup.id : '',
-            "name": newGroup.name,
-            "applicationId": application.applicationId,
-            "description": newGroup.description,
-            "id": newGroup.id
-          })
-        }).then(function(response) {
-          if(response.ok && response.status == 200) {
-            return response.json();
-          }
-          handleError(response);
-        }).then(function(data) {
-          if(data && data.success) {
-            closeCreateGroupDialog();
-            fetchGroups();
-          }
-        }).catch(error => {
-          console.log(error);
-        });
+    let isNew = (newGroup.id && newGroup.id != '') ? false : true;
+    setNewGroupForm({'submitted': true});
+    fetch('/api/groups', {
+      method: 'post',
+      headers: authHeader(),
+      body: JSON.stringify({
+        "isNew": isNew,
+        "parentGroupId": isNew ? selectedGroup.id : '',
+        "name": newGroup.name,
+        "applicationId": application.applicationId,
+        "description": newGroup.description,
+        "id": newGroup.id
+      })
+    }).then(function(response) {
+      if(response.ok && response.status == 200) {
+        return response.json();
       }
-    })
+      handleError(response);
+    }).then(function(data) {
+      if(data && data.success) {
+        closeCreateGroupDialog();
+        fetchGroups();
+      }
+    }).catch(error => {
+      console.log(error);
+    });
+
   }
 
   const handleDeleteGroup = () => {
@@ -317,7 +314,6 @@ function Assets(props) {
   }
 
   const titleRenderer = (nodeData) => {
-    console.log('titleRenderer')
     return <TitleRenderer title={nodeData.title} showMoreOptions={showMoreOptions}/>
   }
 
@@ -349,7 +345,7 @@ function Assets(props) {
             </div>
           </div>
           <Row gutter={24}>
-            <Col className="gutter-row groups-div" span={3}>
+            <Col className="gutter-row groups-div" span={4}>
               <div className="gutter-box">
                   <Search style={{ marginBottom: 8 }} placeholder="Search" onChange={handleSearch} />
                   <DirectoryTree
@@ -367,7 +363,7 @@ function Assets(props) {
                   />
               </div>
             </Col>
-            <Col className="gutter-row groups-div" span={21}>
+            <Col className="gutter-row groups-div" span={20}>
               <div className="gutter-box">
                 <AssetsTable selectedGroup={selectedGroup} handleEditGroup={handleEditGroup} refreshGroups={fetchGroups}/>
               </div>
@@ -384,7 +380,7 @@ function Assets(props) {
               visible={openCreateGroupDialog}
               width={520}
             >
-              <Form layout="vertical" form={form} onSubmit={handleCreateGroup}>
+              <Form layout="vertical" form={form} onFinish={handleCreateGroup}>
                 <div className={'form-group' + (newGroupForm.submitted && !newGroup.name ? ' has-error' : '')}>
                   <Form.Item {...formItemLayout}
                     label="Name"
