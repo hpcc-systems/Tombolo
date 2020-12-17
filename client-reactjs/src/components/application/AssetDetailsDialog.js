@@ -10,14 +10,14 @@ function AssetDetailsDialog(props) {
 
 	const { isShowing, toggle, OpenDetailsForm } = useFileDetailsForm();
 
-  let {assetType, applicationId, fileId} = useParams();
+  let {assetType, applicationId, assetId} = useParams();
 
   useEffect(() => {
   	setApplication({...props});
-    if(props.fileId != '') {
+    if(props.assetId != '') {
       handleOpen();
     }
-  }, [props.fileId])
+  }, [props.assetId])
 
   const authReducer = useSelector(state => state.authenticationReducer);
 
@@ -27,13 +27,15 @@ function AssetDetailsDialog(props) {
 
   const handleClose = () => {
     toggle();
+    //flip the state in the parent component
+    props.handleClose();
   }
 
   const DetailsForm = props => {
     return OpenDetailsForm({
       "type": props.assetType,
       "isNew":false,
-      "selectedAsset": props.fileId,
+      "selectedAsset": props.assetId,
       "application": props.application,
       "user": props.user,
       "onClose": handleClose,
@@ -55,7 +57,7 @@ function AssetDetailsDialog(props) {
             </Button>
           ]}
         >
-				return <DetailsForm assetType={props.assetType} fileId={props.fileId} application={props.application} user={props.user}/>
+				<DetailsForm assetType={props.assetType} fileId={props.fileId} application={props.application} user={props.user}/>
       </Modal>
 	  </React.Fragment>
 	  : null

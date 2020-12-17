@@ -196,32 +196,40 @@ class FileDetails extends Component {
       })
       .then(data => {
         this.setState({
-          ...this.state,
-          sourceFiles: data.sourceFiles,
-          scopeDisabled: true,
-          file: {
-            ...this.state.file,
-            id: data.basic.id,
-            title: data.basic.title,
-            name: data.basic.name,
-            clusterId: data.basic.cluster_id,
-            description: data.basic.description,
-            groupId: data.basic.groupId,
-            scope: data.basic.scope,
-            serviceUrl: data.basic.serviceUrl,
-            qualifiedPath: data.basic.qualifiedPath,
-            owner: data.basic.owner,
-            consumer: data.basic.consumer,
-            supplier: data.basic.supplier,
-            fileType: (data.basic.fileType == '' || data.basic.fileType == 'flat' ? 'thor_file' : data.basic.fileType),
-            isSuperFile: data.basic.isSuperFile,
-            layout: data.file_layouts,
-            licenses: data.file_licenses,
-            relations: data.file_relations,
-            fileFieldRelations: data.file_field_relations,
-            validations: data.file_validations
-          }
+          initialDataLoading: false,
         });
+        if(data && data.basic) {
+          this.setState({
+            ...this.state,
+            sourceFiles: data.sourceFiles,
+            scopeDisabled: true,
+            file: {
+              ...this.state.file,
+              id: data.basic.id,
+              title: data.basic.title,
+              name: data.basic.name,
+              clusterId: data.basic.cluster_id,
+              description: data.basic.description,
+              groupId: data.basic.groupId,
+              scope: data.basic.scope,
+              serviceUrl: data.basic.serviceUrl,
+              qualifiedPath: data.basic.qualifiedPath,
+              owner: data.basic.owner,
+              consumer: data.basic.consumer,
+              supplier: data.basic.supplier,
+              fileType: (data.basic.fileType == '' || data.basic.fileType == 'flat' ? 'thor_file' : data.basic.fileType),
+              isSuperFile: data.basic.isSuperFile,
+              layout: data.file_layouts,
+              licenses: data.file_licenses,
+              relations: data.file_relations,
+              fileFieldRelations: data.file_field_relations,
+              validations: data.file_validations
+            }
+          });
+        } else {
+          message.config({top:130})
+          message.error("Could not retrieve data for this file. Please check if the file is valid")
+        }
         return data;
       })
       .then(data => {
@@ -229,7 +237,9 @@ class FileDetails extends Component {
         return data;
       })
       .then(data => {
-        this.getFileData(data.basic.name, data.basic.cluster_id);
+        if(data.basic) {
+          this.getFileData(data.basic.name, data.basic.cluster_id);
+        }
         return data;
       })
       .then(data => {
@@ -237,7 +247,7 @@ class FileDetails extends Component {
         return data;
       })
       .then(data => {
-        if(data.basic.id && this.props.selectedDataflow) {
+        if(data.basic && data.basic.id && this.props.selectedDataflow) {
           this.getInheritedLicenses(data.basic.id, this.props.selectedNodeId, this.props.selectedDataflow.id);
         }
         return data;
@@ -247,9 +257,7 @@ class FileDetails extends Component {
       })
       .then(data => {
         this.getClusters();
-        this.setState({
-          initialDataLoading: false
-        });
+
       })
       .catch(error => {
         console.log(error);
@@ -1003,36 +1011,18 @@ class FileDetails extends Component {
     const VIEW_DATA_PERMISSION='View PII';
     const editingAllowed = hasEditPermission(this.props.user) || !this.props.viewMode;
     const formItemLayout = {
-      labelCol: {
-        xs: { span: 2 },
-        sm: { span: 3 },
-      },
-      wrapperCol: {
-        xs: { span: 2 },
-        sm: { span: 10 },
-      },
+      labelCol: { span: 2 },
+      wrapperCol: { span: 8 }
     };
 
     const twoColformItemLayout = {
-      labelCol: {
-        xs: { span: 4 },
-        sm: { span: 6 },
-      },
-      wrapperCol: {
-        xs: { span: 2 },
-        sm: { span: 10 },
-      },
+      labelCol: { span: 6 },
+      wrapperCol: { span: 12 }
     };
 
     const threeColformItemLayout = {
-      labelCol: {
-        xs: { span: 4 },
-        sm: { span: 9 },
-      },
-      wrapperCol: {
-        xs: { span: 2 },
-        sm: { span: 12 },
-      },
+      labelCol: { span: 6 },
+      wrapperCol: { span: 12 }
     };
 
     const layoutColumns = [{
@@ -1222,9 +1212,9 @@ class FileDetails extends Component {
             defaultActiveKey="1"
           >
             <TabPane tab="Basic" key="1">
-               <Form layout="vertical">
+               <Form {...formItemLayout} labelAlign="left">
                 <div>
-                <Form.Item {...formItemLayout} label="Type">
+                <Form.Item label="Type">
                   <Radio.Group onChange={this.fileTypeChange} value={this.state.file.fileType}>
                     <Radio value={'thor_file'}>Thor File</Radio>
                     <Radio value={'csv'}>CSV</Radio>
@@ -1234,13 +1224,13 @@ class FileDetails extends Component {
                 </Form.Item>
                 {this.state.file.fileType == 'thor_file' ?
                   <React.Fragment>
-                    <Form.Item {...formItemLayout} label="Cluster">
+                    <Form.Item label="Cluster">
                       <Select placeholder="Select a Cluster" disabled={!editingAllowed} onChange={this.onClusterSelection} style={{ width: 190 }}>
                         {clusters.map(cluster => <Option key={cluster.id}>{cluster.name}</Option>)}
                       </Select>
                     </Form.Item>
 
-                    <Form.Item {...formItemLayout} label="File">
+                    <Form.Item label="File">
                       <AutoComplete
                         className="certain-category-search"
                         dropdownClassName="certain-category-search-dropdown"
@@ -1263,13 +1253,13 @@ class FileDetails extends Component {
                   null}
 
                 </div>
-                <Form.Item {...formItemLayout} label="Title" rules={[{ required: true, message: 'Please enter a title!' }]}>
+                <Form.Item label="Title" rules={[{ required: true, message: 'Please enter a title!' }]}>
                   <Input id="file_title" name="title" onChange={this.onChange} placeholder="Title" disabled={!editingAllowed}/>
                 </Form.Item>
-                <Form.Item {...formItemLayout} label="Name">
+                <Form.Item label="Name">
                   <Input id="file_name" name="name" onChange={this.onChange} placeholder="Name" defaultValue={name} value={name} disabled={true} />
                 </Form.Item>
-                <Form.Item {...formItemLayout} label="Scope" rules={[
+                <Form.Item label="Scope" rules={[
                   {
                     required: true
                   }, {
@@ -1278,15 +1268,15 @@ class FileDetails extends Component {
                 ]}>
                   <Input id="file_scope" name="scope" onChange={this.onChange} placeholder="Scope" disabled={scopeDisabled || !editingAllowed}/>
                 </Form.Item>
-                <Form.Item {...formItemLayout} label="Description">
+                <Form.Item label="Description">
                   <MarkdownEditor id="file_desc" name="description" onChange={this.onChange} targetDomId="fileDescr" value={description} disabled={!editingAllowed}/>
                 </Form.Item>
-                <Form.Item {...formItemLayout} label="Service URL">
+                <Form.Item label="Service URL">
                     <Input id="file_primary_svc" name="serviceUrl" onChange={this.onChange} defaultValue={serviceUrl} value={serviceUrl} placeholder="Service URL" disabled={!editingAllowed}/>
                 </Form.Item>
                 <Row type="flex">
                   <Col span={8} order={1}>
-                    <Form.Item {...threeColformItemLayout} label="Path">
+                    <Form.Item label="Path" {...threeColformItemLayout}>
                         <Input id="file_path" name="qualifiedPath" onChange={this.onChange} defaultValue={qualifiedPath} value={qualifiedPath} placeholder="Path" disabled={!editingAllowed}/>
                     </Form.Item>
                   </Col>

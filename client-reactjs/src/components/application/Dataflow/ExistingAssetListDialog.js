@@ -6,12 +6,12 @@ import useFileDetailsForm from '../../../hooks/useFileDetailsForm';
 import { useSelector } from "react-redux";
 import { hasEditPermission } from "../../common/AuthUtil.js";
 import { Constants } from '../../common/Constants';
+import AssetDetailsDialog from "../AssetDetailsDialog"
 const Option = Select.Option;
 
 function ExistingAssetListDialog({show, applicationId, selectedDataflow, assetType, onClose, onFileAdded, user}) {
   const [assets, setAssets] = useState([]);
   const [visible, setVisible] = useState(show);
-  const { OpenDetailsForm } = useFileDetailsForm();
   const [showDetailsForm, setShowDetailsForm] = useState(false);
 
   useEffect(() => {
@@ -137,7 +137,6 @@ function ExistingAssetListDialog({show, applicationId, selectedDataflow, assetTy
           maskClosable={false}
           width="1200px"
           footer={[
-            <Button key="submit" type="primary" onClick={handleNewAsset} className={"float-left"}>{"Create a new " + assetType} </Button>,
             <Button key="cancel" onClick={handleClose}>
               Cancel
             </Button>,
@@ -150,17 +149,6 @@ function ExistingAssetListDialog({show, applicationId, selectedDataflow, assetTy
             pagination={{ pageSize: 10 }} scroll={{ y: 460 }}
           />
       </Modal>
-
-      {showDetailsForm ?
-        OpenDetailsForm({
-          "type": assetType,
-          "onRefresh":onFileAdded,
-          "isNew":true,
-          "selectedAsset": '',
-          "applicationId": applicationId,
-          "selectedDataflow": selectedDataflow,
-          "onClose": handleClose,
-          "user": user}) : null}
     </React.Fragment>
   )
 }

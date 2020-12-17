@@ -30,7 +30,6 @@ class Graph extends Component {
     openFileDetailsDialog: false,
     openJobDetailsDialog: false,
     openIndexDetailsDialog: false,
-    openFileInstanceDialog: false,
     selectedFile: '',
     selectedNodeId: '',
     selectedIndex: '',
@@ -165,10 +164,11 @@ class Graph extends Component {
             mousePosition: [d.x, d.y]
           });
 
-          setTimeout(() => {
-            _self.jobDlg.showModal();
-          }, 200);
-        }
+          this.props.dispatch(assetsActions.assetSelected(
+            d.jobId,
+            this.props.applicationId,
+            ''
+          ));        }
         break;
       case 'Index':
         let isNewIndex = false;
@@ -184,9 +184,11 @@ class Graph extends Component {
             selectedIndex: d.indexId
           });
 
-          setTimeout(() => {
-            _self.idxDlg.showModal();
-          }, 200);
+          this.props.dispatch(assetsActions.assetSelected(
+            d.indexId,
+            this.props.applicationId,
+            ''
+          ));
         }
         break;
       case 'Sub-Process':
@@ -357,12 +359,6 @@ class Graph extends Component {
   closeIndexDlg = () => {
     this.setState({
       openIndexDetailsDialog: false
-    });
-  }
-
-  closeInstanceDlg = () => {
-    this.setState({
-      openFileInstanceDialog: false
     });
   }
 
@@ -1364,52 +1360,18 @@ class Graph extends Component {
         <div id={this.props.graphContainer} className={(!editingAllowed || this.props.viewMode) ? " readonly graph-view-mode" : "graph-edit-mode"} tabIndex="-1"></div>
 
       {this.state.openFileDetailsDialog ?
-        <AssetDetailsDialog assetType="file" fileId={this.props.selectedFile} selectedAsset={this.props.selectedFile} application={this.props.application} user={this.props.user}/>
+        <AssetDetailsDialog assetType="file" fileId={this.props.selectedFile} selectedAsset={this.props.selectedFile} application={this.props.application} user={this.props.user} handleClose={this.handleClose}/>
       : null }
 
 
       {this.state.openJobDetailsDialog ?
-            <JobDetailsForm
-              onRef={ref => (this.jobDlg = ref)}
-              applicationId={this.props.applicationId}
-              selectedAsset={this.state.selectedJob}
-              selectedJobType={this.state.selectedJobType}
-              isNew={this.state.isNewJob}
-              onRefresh={this.onFileAdded}
-              onClose={this.closeJobDlg}
-              user={this.props.user}
-              selectedDataflow={this.props.selectedDataflow}
-              mousePosition={this.state.mousePosition}
-              currentlyEditingId={this.state.currentlyEditingId}
-              onDelete={this.deleteNode}
-              currentlyEditingNode={this.state.currentlyEditingNode}
-              /> : null}
+        <AssetDetailsDialog assetType="job" assetId={this.state.selectedJob} selectedAsset={this.state.selectedJob} application={this.props.application} user={this.props.user} handleClose={this.closeJobDlg}/>
+      : null}
 
 
       {this.state.openIndexDetailsDialog ?
-          <IndexDetailsForm
-            onRef={ref => (this.idxDlg = ref)}
-            applicationId={this.props.applicationId}
-            isNew={this.state.isNewIndex}
-            onRefresh={this.onFileAdded}
-            selectedAsset={this.state.selectedIndex}
-            onClose={this.closeIndexDlg}
-            user={this.props.user}
-            selectedDataflow={this.props.selectedDataflow}
-            onDelete={this.deleteNode}
-            currentlyEditingNode={this.state.currentlyEditingNode}
-            /> : null}
-
-      {this.state.openFileInstanceDialog ?
-          <FileInstanceDetailsForm
-            onRef={ref => (this.fileInstanceDlg = ref)}
-            applicationId={this.props.applicationId}
-            selectedAsset={this.state.selectedFileInstance}
-            isNew={this.state.isNewInstance}
-            onRefresh={this.onFileAdded}
-            onClose={this.closeInstanceDlg}
-            user={this.props.user}
-            selectedDataflow={this.props.selectedDataflow}/> : null}
+        <AssetDetailsDialog assetType="index" assetId={this.state.selectedIndex} selectedAsset={this.state.selectedIndex} application={this.props.application} user={this.props.user} handleClose={this.closeIndexDlg}/>
+        : null}
 
         <Modal
           height={300}

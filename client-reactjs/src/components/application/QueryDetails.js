@@ -423,14 +423,8 @@ class QueryDetails extends Component {
       selectedRowKeys, clusters, querySearchSuggestions
     } = this.state;
     const formItemLayout = {
-      labelCol: {
-        xs: { span: 2 },
-        sm: { span: 5 },
-      },
-      wrapperCol: {
-        xs: { span: 2 },
-        sm: { span: 10 },
-      },
+      labelCol: { span: 2 },
+      wrapperCol: { span: 8 }
     };
 
     const columns = [{
@@ -485,7 +479,7 @@ class QueryDetails extends Component {
         >
           <TabPane tab="Basic" key="1">
 
-           <Form layout="vertical">
+           <Form {...formItemLayout} labelAlign="left">
             <div>
               <Form.Item {...formItemLayout} label="Type">
                 <Radio.Group onChange={this.queryTypeChange} value={type}>
@@ -495,13 +489,13 @@ class QueryDetails extends Component {
               </Form.Item>
               {type == 'roxie_query' ?
                 <React.Fragment>
-                <Form.Item {...formItemLayout} label="Cluster">
+                <Form.Item label="Cluster">
                    <Select placeholder="Select a Cluster" onChange={this.onClusterSelection} style={{ width: 190 }} disabled={!editingAllowed}>
                     {clusters.map(cluster => <Option key={cluster.id}>{cluster.name}</Option>)}
                   </Select>
                 </Form.Item>
 
-                <Form.Item {...formItemLayout} label="Query">
+                <Form.Item label="Query">
                   <AutoComplete
                     className="certain-category-search"
                     dropdownClassName="certain-category-search-dropdown"
@@ -523,26 +517,26 @@ class QueryDetails extends Component {
               : null}
             </div>
 
-            <Form.Item {...formItemLayout} label="Name">
+            <Form.Item label="Name">
               <Input disabled={true} value={name} disabled={!editingAllowed}/>
             </Form.Item>
 
-            <Form.Item {...formItemLayout} label="Title">
+            <Form.Item label="Title">
               <Input id="query_title" name="title" onChange={this.onChange} value={title} placeholder="Title" disabled={!editingAllowed}/>
             </Form.Item>
-            <Form.Item {...formItemLayout} label="Description">
+            <Form.Item label="Description">
               <MarkdownEditor id="query_desc" name="description" onChange={this.onChange} targetDomId="queryDescr" value={description} disabled={!editingAllowed}/>
             </Form.Item>
-            <Form.Item {...formItemLayout} label="URL">
+            <Form.Item label="URL">
               <Input id="query_url" name="url" onChange={this.onChange} value={url} placeholder="URL" disabled={!editingAllowed}/>
             </Form.Item>
-            <Form.Item {...formItemLayout} label="Git Repo">
+            <Form.Item label="Git Repo">
               <Input id="query_gitRepo" name="gitRepo" onChange={this.onChange} value={gitRepo} placeholder="Git Repo URL" disabled={!editingAllowed}/>
             </Form.Item>
-            {/*<Form.Item {...formItemLayout} label="Primary Service">
+            {/*<Form.Item label="Primary Service">
                 <Input id="query_primary_svc" name="primaryService" onChange={this.onChange}  placeholder="Primary Service" disabled={!editingAllowed}/>
             </Form.Item>
-            <Form.Item {...formItemLayout} label="Backup Service">
+            <Form.Item label="Backup Service">
                 <Input id="query_bkp_svc" name="backupService" onChange={this.onChange} placeholder="Backup Service" disabled={!editingAllowed}/>
             </Form.Item>*/}
             {/*<Form.Item {...formItemLayout} label="Type">

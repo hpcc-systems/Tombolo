@@ -399,14 +399,8 @@ class IndexDetails extends Component {
     const editingAllowed = hasEditPermission(this.props.user);
     const { visible, confirmLoading, sourceFiles, availableLicenses, selectedRowKeys, clusters, fileSearchSuggestions } = this.state;
     const formItemLayout = {
-      labelCol: {
-        xs: { span: 2 },
-        sm: { span: 5 },
-      },
-      wrapperCol: {
-        xs: { span: 2 },
-        sm: { span: 10 },
-      },
+      labelCol: { span: 2 },
+      wrapperCol: { span: 8 }
     };
 
     const indexColumns = [{
@@ -454,7 +448,7 @@ class IndexDetails extends Component {
           >
             <TabPane tab="Basic" key="1">
 
-             <Form layout="vertical">
+             <Form {...formItemLayout} labelAlign="left">
               {/*{this.props.isNew ?*/}
               <div>
               <Form.Item {...formItemLayout} label="Cluster">
@@ -463,7 +457,7 @@ class IndexDetails extends Component {
                 </Select>
               </Form.Item>
 
-              <Form.Item {...formItemLayout} label="Index">
+              <Form.Item label="Index">
                 <AutoComplete
                   className="certain-category-search"
                   dropdownClassName="certain-category-search-dropdown"
@@ -483,24 +477,24 @@ class IndexDetails extends Component {
               </Form.Item>
               </div>
 
-              <Form.Item {...formItemLayout} label="Name" rules={[{ required: true, message: 'Please enter a name!' }]}>
+              <Form.Item label="Name" rules={[{ required: true, message: 'Please enter a name!' }]}>
                 <Input id="name" name="name" onChange={this.onChange} placeholder="Name" disabled={true} value={name} disabled={!editingAllowed}/>
               </Form.Item>
 
-              <Form.Item {...formItemLayout} label="Title">
+              <Form.Item label="Title">
                 <Input id="file_title" name="title" onChange={this.onChange} placeholder="Title" value={title} disabled={!editingAllowed}/>
               </Form.Item>
-              <Form.Item {...formItemLayout} label="Description">
+              <Form.Item label="Description">
                 <MarkdownEditor id="query_desc" name="description" onChange={this.onChange} targetDomId="indexDescr" value={description} disabled={!editingAllowed}/>
               </Form.Item>
 
-              <Form.Item {...formItemLayout} label="Primary Service">
+              <Form.Item label="Primary Service">
                  <Input id="file_primary_svc" name="primaryService" onChange={this.onChange} value={primaryService} placeholder="Primary Service" disabled={!editingAllowed}/>
               </Form.Item>
-              <Form.Item {...formItemLayout} label="Backup Service">
+              <Form.Item label="Backup Service">
                 <Input id="file_bkp_svc" name="backupService" onChange={this.onChange} value={backupService} placeholder="Backup Service" disabled={!editingAllowed}/>
               </Form.Item>
-              <Form.Item {...formItemLayout} label="Path">
+              <Form.Item label="Path">
                 <Input id="path" name="path" onChange={this.onChange} placeholder="Path" value={path} disabled={!editingAllowed}/>
               </Form.Item>
             </Form>

@@ -517,30 +517,18 @@ class JobDetails extends Component {
       outputFileDesc, sourceFiles, jobSearchSuggestions, clusters
     } = this.state;
     const formItemLayout = {
-      labelCol: {
-        xs: { span: 2 },
-        sm: { span: 5 },
-      },
-      wrapperCol: {
-        xs: { span: 2 },
-        sm: { span: 10 },
-      },
+      labelCol: { span: 2 },
+      wrapperCol: { span: 8 }
     };
 
     const eclItemLayout = {
       labelCol: { xs: { span: 2 }, sm: { span: 2 }, md: { span: 2 }, lg: { span: 2 } },
-      wrapperCol: { xs: { span: 4 }, sm: { span: 19 }, md: { span: 19 }, lg: { span: 19 }, xl: { span: 19 } }
+      wrapperCol: { xs: { span: 4 }, sm: { span: 24 }, md: { span: 24 }, lg: { span: 24 }, xl: { span: 24 } }
     };
 
     const threeColformItemLayout = {
-      labelCol: {
-        xs: { span: 4 },
-        sm: { span: 10 },
-      },
-      wrapperCol: {
-        xs: { span: 2 },
-        sm: { span: 12 },
-      },
+      labelCol: { span: 4 },
+      wrapperCol: { span: 12 }
     };
 
     const columns = [{
@@ -592,7 +580,7 @@ class JobDetails extends Component {
             defaultActiveKey="1"
           >
             <TabPane tab="Basic" key="1">
-              <Form layout="vertical">
+              <Form {...formItemLayout} labelAlign="left">
                 {/*{this.props.isNewIndex ?*/}
                 <div>
                 <Form.Item {...formItemLayout} label="Cluster">
@@ -600,7 +588,7 @@ class JobDetails extends Component {
                     {clusters.map(cluster => <Option key={cluster.id}>{cluster.name}</Option>)}
                   </Select>
                 </Form.Item>
-                <Form.Item {...formItemLayout} label="Job">
+                <Form.Item label="Job">
                   <AutoComplete
                     className="certain-category-search"
                     dropdownClassName="certain-category-search-dropdown"
@@ -621,21 +609,21 @@ class JobDetails extends Component {
                 </div>
                   {/*: null
                 }*/}
-                <Form.Item {...formItemLayout} label="Name">
+                <Form.Item label="Name">
                   <Input id="job_name" name="name" onChange={this.onChange} placeholder="Name" disabled={true} disabled={!editingAllowed} value={name}/>
                 </Form.Item>
-                <Form.Item {...formItemLayout} label="Title">
+                <Form.Item label="Title">
                   <Input id="job_title" name="title" onChange={this.onChange} placeholder="Title" disabled={!editingAllowed} value={title}/>
                 </Form.Item>
-                <Form.Item {...formItemLayout} label="Description">
+                <Form.Item label="Description">
                   <MarkdownEditor id="job_desc" name="description" onChange={this.onChange} targetDomId="jobDescr" value={description} disabled={!editingAllowed}/>
                 </Form.Item>
                 {this.props.selectedJobType != 'Data Profile' ?
-                  <Form.Item {...formItemLayout} label="Git Repo">
+                  <Form.Item label="Git Repo">
                     <Input id="job_gitRepo" name="gitRepo" onChange={this.onChange}  placeholder="Git Repo" value={gitRepo} disabled={!editingAllowed}/>
                   </Form.Item>
                 : null }
-                <Form.Item {...formItemLayout} label="Entry BWR">
+                <Form.Item label="Entry BWR">
                   <Input id="job_entryBWR" name="entryBWR" onChange={this.onChange}  placeholder="Primary Service" value={entryBWR} disabled={!editingAllowed}/>
                 </Form.Item>
                 <Row type="flex">
@@ -645,12 +633,12 @@ class JobDetails extends Component {
                     </Form.Item>
                   </Col>
                   <Col span={12} order={2}>
-                    <Form.Item {...threeColformItemLayout} label="Author">
+                    <Form.Item label="Author">
                       <Input id="job_author" name="author" onChange={this.onChange} placeholder="Author" value={author} disabled={!editingAllowed}/>
                     </Form.Item>
                   </Col>
                 </Row>
-                <Form.Item {...formItemLayout} label="Job Type">
+                <Form.Item label="Job Type">
                   <Select placeholder="Job Type" value={(jobType != '') ? jobType : ""} style={{ width: 190 }} onChange={this.onJobTypeChange} disabled={!editingAllowed}>
                       {jobTypes.map(d => <Option key={d}>{d}</Option>)}
                   </Select>
