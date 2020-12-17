@@ -43,7 +43,7 @@ class QueryDetails extends Component {
       url: "",
       primaryService:"",
       backupService:"",
-      gitrepo:"",
+      gitRepo:"",
       type:"roxie_query",
       input: [],
       output: []
@@ -89,17 +89,12 @@ class QueryDetails extends Component {
             groupId: data.groupId,
             type: data.type,
             url: data.url,
+            gitRepo: data.gitRepo,
             primaryService: data.primaryService,
             backupService: data.backupService,
             input: data.query_fields.filter(field => field.field_type == 'input'),
             output: data.query_fields.filter(field => field.field_type == 'output')
           }
-        });
-        this.props.form.setFieldsValue({
-          name: (data.name == '' ? data.title : data.name),
-          title: data.title,
-          description: data.description,
-          url: data.url
         });
         return data;
       })
@@ -189,27 +184,19 @@ class QueryDetails extends Component {
     })
   }
 
-  handleOk = (e) => {
-    this.props.form.validateFields(async (err, values) => {
-      if(!err) {
-        this.setState({
-          confirmLoading: true,
-        });
+  handleOk = async (e) => {
+    let saveResponse = await this.saveQueryDetails();
 
-        let saveResponse = await this.saveQueryDetails();
-
-        setTimeout(() => {
-          this.setState({
-            visible: false,
-            confirmLoading: false,
-          });
-          //this.props.onClose();
-          //this.props.onRefresh(saveResponse);
-          this.props.history.push('/' + this.props.application.applicationId + '/assets')
-        }, 2000);
-      }
-    });
-  }
+    setTimeout(() => {
+      this.setState({
+        visible: false,
+        confirmLoading: false,
+      });
+      //this.props.onClose();
+      //this.props.onRefresh(saveResponse);
+      this.props.history.push('/' + this.props.application.applicationId + '/assets')
+    }, 2000);
+  };
 
   getClusters() {
     console.log('get custers');
@@ -375,7 +362,7 @@ class QueryDetails extends Component {
         "description" : this.state.query.description,
         "groupId" : this.state.query.groupId,
         "url" : this.state.query.url,
-        "gitRepo" : this.state.query.gitrepo,
+        "gitRepo" : this.state.query.gitRepo,
         "primaryService" : this.state.query.primaryService,
         "backupService" : this.state.query.backupService,
         "type": this.state.query.type,
@@ -431,8 +418,10 @@ class QueryDetails extends Component {
   render() {
     console.log("rendering")
     const editingAllowed = hasEditPermission(this.props.user);
-    const {getFieldDecorator} = this.props.form;
-    const { visible, confirmLoading, sourceFiles, availableLicenses, selectedRowKeys, clusters, querySearchSuggestions } = this.state;
+    const {
+      visible, confirmLoading, sourceFiles, availableLicenses,
+      selectedRowKeys, clusters, querySearchSuggestions
+    } = this.state;
     const formItemLayout = {
       labelCol: {
         xs: { span: 2 },
@@ -471,7 +460,10 @@ class QueryDetails extends Component {
     }];
 
 
-    const {name, title, description, primaryService, backupService, type, input, output, gitrepo, url} = this.state.query;
+    const {
+      name, title, description, primaryService, backupService,
+      type, input, output, gitRepo, url
+    } = this.state.query;
     const rowSelection = {
       selectedRowKeys,
       onChange: this.onSelectedRowKeysChange
@@ -532,34 +524,20 @@ class QueryDetails extends Component {
             </div>
 
             <Form.Item {...formItemLayout} label="Name">
-              {getFieldDecorator('name')(<Input disabled={true} disabled={!editingAllowed}/>)}
+              <Input disabled={true} value={name} disabled={!editingAllowed}/>
             </Form.Item>
 
             <Form.Item {...formItemLayout} label="Title">
-                {getFieldDecorator('title', {
-                trigger: 'onChange',
-                valuePropName: 'value',
-                initialValue: this.state.query.title
-              })
-              (<Input id="query_title" name="title" onChange={this.onChange} placeholder="Title" disabled={!editingAllowed}/>)}
+              <Input id="query_title" name="title" onChange={this.onChange} value={title} placeholder="Title" disabled={!editingAllowed}/>
             </Form.Item>
             <Form.Item {...formItemLayout} label="Description">
               <MarkdownEditor id="query_desc" name="description" onChange={this.onChange} targetDomId="queryDescr" value={description} disabled={!editingAllowed}/>
             </Form.Item>
             <Form.Item {...formItemLayout} label="URL">
-                {getFieldDecorator('url', {
-                trigger: 'onChange',
-                valuePropName: 'value',
-                initialValue: this.state.query.url
-              })(<Input id="query_url" name="url" onChange={this.onChange} placeholder="URL" disabled={!editingAllowed}/>)}
+              <Input id="query_url" name="url" onChange={this.onChange} value={url} placeholder="URL" disabled={!editingAllowed}/>
             </Form.Item>
             <Form.Item {...formItemLayout} label="Git Repo">
-                {getFieldDecorator('gitrepo', {
-                trigger: 'onChange',
-                valuePropName: 'value',
-                initialValue: this.state.query.gitrepo
-              })
-              (<Input id="query_gitrepo" name="gitrepo" onChange={this.onChange} placeholder="Git Repo URL" disabled={!editingAllowed}/>)}
+              <Input id="query_gitRepo" name="gitRepo" onChange={this.onChange} value={gitRepo} placeholder="Git Repo URL" disabled={!editingAllowed}/>
             </Form.Item>
             {/*<Form.Item {...formItemLayout} label="Primary Service">
                 <Input id="query_primary_svc" name="primaryService" onChange={this.onChange}  placeholder="Primary Service" disabled={!editingAllowed}/>

@@ -27,7 +27,7 @@ let updateQueryDetails = (queryId, applicationId, req) => {
 }
 
 router.post('/saveQuery', [
-  body('query.basic.id')
+  body('id')
   .optional({checkFalsy:true})
     .isUUID(4).withMessage('Invalid id'),
   body('query.basic.application_id')
@@ -40,7 +40,7 @@ router.post('/saveQuery', [
       return res.status(422).json({ success: false, errors: errors.array() });
   }
   var query_id, fieldsToUpdate={}, applicationId=req.body.query.basic.application_id;
-  console.log("[saveQuery] - Get file list for app_id = " + req.body.id + " isNew: "+req.body.isNew);
+  console.log("[saveQuery] - Get file list for app_id = " + applicationId + " isNew: "+req.body.isNew);
   try {
     if(req.body.isNew) {
       Query.create(
@@ -52,7 +52,7 @@ router.post('/saveQuery', [
       })
     } else {
       Query.update(
-        req.body.query.basic, {where:{application_id: applicationId, id:req.body.id}}
+        req.body.query.basic, {where:{application_id: applicationId, id: req.body.id}}
       ).then((result) => {
         updateQueryDetails(req.body.id, applicationId, req).then((response) => {
           res.json(response);

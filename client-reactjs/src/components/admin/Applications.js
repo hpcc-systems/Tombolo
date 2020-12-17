@@ -93,10 +93,6 @@ class Applications extends Component {
           description: data.description
         }
       });
-      this.props.form.setFieldsValue({
-        title: data.title,
-        scope: data.description
-      });
       this.setState({
         showAddApp: true
       });
@@ -161,11 +157,6 @@ class Applications extends Component {
       },
       showAddApp: false
     });
-
-    this.props.form.setFieldsValue({
-      title: '',
-      scope: ''
-    });
   }
 
   handleAddAppCancel= (event) => {
@@ -177,73 +168,68 @@ class Applications extends Component {
   }
 
   handleAddAppOk = () => {
-    this.props.form.validateFields(async (err, values) =>  {
-      if (err !== null) {
-        return;
+    if(this.state.applications.filter(application => {
+      if (application.id != this.state.newApp.id && application.title == this.state.newApp.title) {
+        return application;
       }
-      if(this.state.applications.filter(application => {
-        if (application.id != this.state.newApp.id && application.title == this.state.newApp.title) {
-          return application;
-        }
-      }).length > 0) {
-        message.config({top:150})
-        message.error("There is already an application with the same name. Please select a different name.")
-        return;
-      }
-      this.setState({
-        confirmLoading: true,
-        submitted: true
-      });
-
-      if(this.state.newApp.title) {
-        var userId = (this.props.user) ? this.props.user.username : "";
-        let data = JSON.stringify({
-          "id": this.state.newApp.id,
-          "title" : this.state.newApp.title,
-          "description" : this.state.newApp.description,
-          "user_id":userId,
-          "creator":this.props.user.username});
-
-      	  fetch("/api/app/read/newapp", {
-            method: 'post',
-            headers: authHeader(),
-            body: data
-          }).then((response) => {
-          if(response.ok) {
-            return response.json();
-          }
-          handleError(response);
-        })
-        .then(response => {
-          if(this.state.newApp.id == '') {
-            console.log('new app')
-            //new application
-            this.props.dispatch(applicationActions.newApplicationAdded(response.id, this.state.newApp.title));
-          } else {
-            console.log('update app')
-            //updating an application
-            this.props.dispatch(applicationActions.applicationUpdated(this.state.newApp.id, this.state.newApp.title));
-          }
-
-    	  	this.setState({
-          ...this.state,
-            newApp: {
-              ...this.state.newApp,
-              id : '',
-              title: '',
-              description:''
-            },
-            showAddApp: false,
-            confirmLoading: false,
-            submitted:false
-          });
-
-    	    this.getApplications();
-        }).catch(error => {
-          console.log(error);
-        });
-      }
+    }).length > 0) {
+      message.config({top:150})
+      message.error("There is already an application with the same name. Please select a different name.")
+      return;
+    }
+    this.setState({
+      confirmLoading: true,
+      submitted: true
     });
+
+    if(this.state.newApp.title) {
+      var userId = (this.props.user) ? this.props.user.username : "";
+      let data = JSON.stringify({
+        "id": this.state.newApp.id,
+        "title" : this.state.newApp.title,
+        "description" : this.state.newApp.description,
+        "user_id":userId,
+        "creator":this.props.user.username});
+
+    	  fetch("/api/app/read/newapp", {
+          method: 'post',
+          headers: authHeader(),
+          body: data
+        }).then((response) => {
+        if(response.ok) {
+          return response.json();
+        }
+        handleError(response);
+      })
+      .then(response => {
+        if(this.state.newApp.id == '') {
+          console.log('new app')
+          //new application
+          this.props.dispatch(applicationActions.newApplicationAdded(response.id, this.state.newApp.title));
+        } else {
+          console.log('update app')
+          //updating an application
+          this.props.dispatch(applicationActions.applicationUpdated(this.state.newApp.id, this.state.newApp.title));
+        }
+
+  	  	this.setState({
+        ...this.state,
+          newApp: {
+            ...this.state.newApp,
+            id : '',
+            title: '',
+            description:''
+          },
+          showAddApp: false,
+          confirmLoading: false,
+          submitted:false
+        });
+
+  	    this.getApplications();
+      }).catch(error => {
+        console.log(error);
+      });
+    }
   }
 
   handleClose = () => {
@@ -253,7 +239,6 @@ class Applications extends Component {
   }
   render() {
   	const { confirmLoading} = this.state;
-    const { getFieldDecorator } = this.props.form;
   	const applicationColumns = [
     {
       width: '20%',
@@ -334,16 +319,14 @@ class Applications extends Component {
           confirmLoading={confirmLoading}
         >
 	        <Form layout="vertical">
-            <Form.Item {...formItemLayout} label="Title">
-              {getFieldDecorator('title', {
-                rules: [{
-                  required: true,
-                  pattern: new RegExp(/^[a-zA-Z]{1}[a-zA-Z0-9_:.\-]*$/),
-                  message: 'Invalid title!'
-                }],
-              })(
-                <Input id="app_title" name="title" onChange={this.onChange} placeholder="Title" value={this.state.newApp.title}/>
-              )}
+            <Form.Item {...formItemLayout} label="Title" rules={[
+              {
+                required: true,
+                pattern: new RegExp(/^[a-zA-Z]{1}[a-zA-Z0-9_:.\-]*$/),
+                message: 'Invalid title!'
+              }
+            ]}>
+              <Input id="app_title" name="title" onChange={this.onChange} placeholder="Title" value={this.state.newApp.title}/>
             </Form.Item>
 
             <Form.Item {...formItemLayout} label="Description">

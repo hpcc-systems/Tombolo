@@ -222,11 +222,6 @@ class FileDetails extends Component {
             validations: data.file_validations
           }
         });
-        this.props.form.setFieldsValue({
-          name: data.basic.name,
-          title: data.basic.title,
-          scope: data.basic.scope
-        });
         return data;
       })
       .then(data => {
@@ -287,35 +282,27 @@ class FileDetails extends Component {
     });
   };
 
-  handleOk = (e) => {
+  handleOk = async (e) => {
     let _self = this;
     e.preventDefault();
-    this.props.form.validateFields(async (err, values) =>  {
-      if(!err) {
+
+    try {
+      let saveResponse = await _self.saveFileDetails();
+      setTimeout(() => {
         _self.setState({
-          confirmLoading: true,
+          visible: false,
+          confirmLoading: false,
         });
-        try {
-          let saveResponse = await _self.saveFileDetails();
-          setTimeout(() => {
-            _self.setState({
-              visible: false,
-              confirmLoading: false,
-            });
-            //_self.props.onRefresh(saveResponse);
-            _self.props.history.push('/' + this.props.application.applicationId + '/assets')
-          }, 2000);
-        } catch(e) {
-          console.log(e)
-          _self.setState({
-            confirmLoading: false,
-          });
-        }
-
-      }
-    });
-
-  }
+        //_self.props.onRefresh(saveResponse);
+        _self.props.history.push('/' + this.props.application.applicationId + '/assets')
+      }, 2000);
+    } catch(e) {
+      console.log(e)
+      _self.setState({
+        confirmLoading: false,
+      });
+    }
+  };
 
   handleDelete = () => {
     let _self=this;
@@ -549,11 +536,6 @@ class FileDetails extends Component {
           validations: fileInfo.validations
         }
       })
-      this.props.form.setFieldsValue({
-        name: fileInfo.name,
-        title: fileInfo.name.substring(fileInfo.name.lastIndexOf("::") + 2),
-        scope: fileInfo.scope
-      });
       return fileInfo;
     })
     .then(data => {
@@ -981,9 +963,6 @@ class FileDetails extends Component {
         scope: scope
       }
     });
-    this.props.form.setFieldsValue({
-      scope: scope
-    });
   };
 
   scopeValidator = (rule, value, callback) => {
@@ -1015,7 +994,6 @@ class FileDetails extends Component {
   };
 
   render() {
-    const { getFieldDecorator } = this.props.form;
     const {
       visible, confirmLoading, sourceFiles, availableLicenses,
       selectedRowKeys, clusters, consumers, fileSearchSuggestions,
@@ -1285,26 +1263,20 @@ class FileDetails extends Component {
                   null}
 
                 </div>
-                <Form.Item {...formItemLayout} label="Title">
-                  {getFieldDecorator('title', {
-                    rules: [{ required: true, message: 'Please enter a title!' }],
-                  })(
-                  <Input id="file_title" name="title" onChange={this.onChange} placeholder="Title" disabled={!editingAllowed}/>              )}
+                <Form.Item {...formItemLayout} label="Title" rules={[{ required: true, message: 'Please enter a title!' }]}>
+                  <Input id="file_title" name="title" onChange={this.onChange} placeholder="Title" disabled={!editingAllowed}/>
                 </Form.Item>
                 <Form.Item {...formItemLayout} label="Name">
                   <Input id="file_name" name="name" onChange={this.onChange} placeholder="Name" defaultValue={name} value={name} disabled={true} />
-                 </Form.Item>
-                <Form.Item {...formItemLayout} label="Scope">
-                  {getFieldDecorator('scope', {
-                    rules: [{
-                        required: true
-                      },
-                      {
-                        validator: this.scopeValidator
-                      }
-                  ]})(
-                      <Input id="file_scope" name="scope" onChange={this.onChange} placeholder="Scope" disabled={scopeDisabled || !editingAllowed}/>
-                  )}
+                </Form.Item>
+                <Form.Item {...formItemLayout} label="Scope" rules={[
+                  {
+                    required: true
+                  }, {
+                    validator: this.scopeValidator
+                  }
+                ]}>
+                  <Input id="file_scope" name="scope" onChange={this.onChange} placeholder="Scope" disabled={scopeDisabled || !editingAllowed}/>
                 </Form.Item>
                 <Form.Item {...formItemLayout} label="Description">
                   <MarkdownEditor id="file_desc" name="description" onChange={this.onChange} targetDomId="fileDescr" value={description} disabled={!editingAllowed}/>

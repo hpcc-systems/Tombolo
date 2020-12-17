@@ -222,7 +222,6 @@ class FileInstanceDetails extends Component {
   }
 
   render() {
-    const { getFieldDecorator } = this.props.form;
     const { visible, confirmLoading, name, title, fileInstanceSearchSuggestions, fileDefinition, selectedFileInstanceName, fileDefnLayout} = this.state;
     const formItemLayout = {
       labelCol: {
@@ -274,21 +273,13 @@ class FileInstanceDetails extends Component {
           <TabPane tab="Basic" key="1">
 
            <Form layout="vertical">
-            <Form.Item {...formItemLayout} label="Title">
-              {getFieldDecorator('title', {
-                rules: [{ required: true, message: 'Please enter a title!' }],
-              })(
+            <Form.Item {...formItemLayout} label="Title" rules={[{ required: true, message: 'Please enter a title!' }]}>
               <Input id="file_title" name="title" onChange={this.onChange} placeholder="Title" />
-              )}
             </Form.Item>
-             <Form.Item {...formItemLayout} label="Name">
-               {getFieldDecorator('name', {
-                  rules: [{ required: true, message: 'Please enter a name!' }],
-                })(
-                  <Input id="fileinstance_name" name="name" onChange={this.onChange} placeholder="Name" />
-                )}
-              </Form.Item>
-             <Form.Item {...formItemLayout} label="File Defn">
+            <Form.Item {...formItemLayout} label="Name" rules={[{ required: true, message: 'Please enter a name!' }]}>
+              <Input id="fileinstance_name" name="name" onChange={this.onChange} placeholder="Name" />
+            </Form.Item>
+            <Form.Item {...formItemLayout} label="File Defn">
               <AutoComplete
                 className="certain-category-search"
                 dropdownClassName="certain-category-search-dropdown"
