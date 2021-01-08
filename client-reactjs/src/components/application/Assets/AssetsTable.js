@@ -19,9 +19,11 @@ function AssetsTable(props) {
   const { isShowing, toggle, OpenDetailsForm } = useFileDetailsForm();
   const authReducer = useSelector(state => state.authenticationReducer);
   const applicationReducer = useSelector(state => state.applicationReducer);
+  const assetReducer = useSelector(state => state.assetReducer);
   const history = useHistory();
   const applicationId = applicationReducer.application ? applicationReducer.application.applicationId : '';
   const {showMoveDialog=isShowing, toggleMoveDialog=toggle} = useModal();
+  const {assetTypeFilter, keywords} = assetReducer.searchParams;
   let assetId = '', assetType = '';
   const [assetToMove, setAssetToMove] = useState({
     id: '',
@@ -31,10 +33,10 @@ function AssetsTable(props) {
   });
 
   useEffect(() => {
-    if(applicationId && selectedGroup && selectedGroup.groupId != '') {
+    if(applicationId && selectedGroup && selectedGroup.groupId != '' || (assetTypeFilter != '' || keywords != '')) {
       fetchDataAndRenderTable();
     }
-  }, [applicationId, selectedGroup]);
+  }, [applicationId, selectedGroup, assetTypeFilter, keywords]);
 
   const dispatch = useDispatch();
 
@@ -42,6 +44,12 @@ function AssetsTable(props) {
     let url = "/api/groups/assets?app_id="+applicationId;
     if(selectedGroup && selectedGroup.id) {
       url += '&group_id='+selectedGroup.id;
+    }
+    if(assetTypeFilter != '') {
+      url += '&assetTypeFilter='+assetTypeFilter;
+    }
+    if(keywords != '') {
+      url += '&keywords='+keywords;
     }
     fetch(url, {
       headers: authHeader()
@@ -60,7 +68,6 @@ function AssetsTable(props) {
   }
 
   const handleEdit = (id, type) => {
-    console.log(type);
     dispatch(assetsActions.assetSelected(
       id,
       applicationId,

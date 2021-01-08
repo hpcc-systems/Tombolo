@@ -57,7 +57,6 @@ class JobDetails extends Component {
 
   componentDidMount() {
     //this.props.onRef(this);
-    console.log(this.props.application);
     if(this.props.application && this.props.application.applicationId) {
       this.getJobDetails();
       this.getClusters();
@@ -417,7 +416,7 @@ class JobDetails extends Component {
         "name" : this.state.job.name,
         "title" : this.state.job.title,
         "description" : this.state.job.description,
-        "groupId": this.state.job.groupId,
+        "groupId": this.props.groupId ? this.props.groupId : this.state.job.groupId,
         "ecl" : this.state.job.ecl,
         "gitRepo" : this.state.job.gitRepo,
         "entryBWR" : this.state.job.entryBWR,
@@ -594,17 +593,19 @@ class JobDetails extends Component {
                     dropdownClassName="certain-category-search-dropdown"
                     dropdownMatchSelectWidth={false}
                     dropdownStyle={{ width: 300 }}
-                    size="large"
                     style={{ width: '100%' }}
-                    dataSource={jobSearchSuggestions}
                     onChange={(value) => this.searchJobs(value)}
                     onSelect={(value) => this.onJobSelected(value)}
                     placeholder="Search jobs"
-                    optionLabelProp="text"
                     disabled={!editingAllowed}
                   >
-                    <Input id="autocomplete_field" suffix={this.state.autoCompleteSuffix} autoComplete="off"/>
+                    {jobSearchSuggestions.map((suggestion) => (
+                      <Option key={suggestion.text} value={suggestion.value}>
+                        {suggestion.text}
+                      </Option>
+                    ))}
                   </AutoComplete>
+
                 </Form.Item>
                 </div>
                   {/*: null
@@ -738,7 +739,6 @@ function mapStateToProps(state) {
     const { user } = state.authenticationReducer;
     const { application } = state.applicationReducer;
     const {isNew=false, groupId='' } = newAsset;
-    console.log(selectedAsset)
     return {
       user,
       selectedAsset,

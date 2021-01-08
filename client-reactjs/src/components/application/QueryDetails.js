@@ -52,8 +52,10 @@ class QueryDetails extends Component {
 
   componentDidMount() {
     //this.props.onRef(this);
-    this.getQueryDetails();
-    this.fetchDataDefinitions();
+    if(this.props.application && this.props.application.applicationId) {
+      this.getQueryDetails();
+      this.fetchDataDefinitions();
+    }
   }
 
   /*shouldComponentUpdate(nextProps, nextState) {
@@ -199,7 +201,6 @@ class QueryDetails extends Component {
   };
 
   getClusters() {
-    console.log('get custers');
     fetch("/api/hpcc/read/getClusters", {
       headers: authHeader()
     })
@@ -288,11 +289,6 @@ class QueryDetails extends Component {
           output: queryInfo.response
         }
       })
-      this.props.form.setFieldsValue({
-        query_title: selectedSuggestion,
-        name: selectedSuggestion
-      });
-
       return queryInfo;
     })
     .then(data => {
@@ -360,7 +356,7 @@ class QueryDetails extends Component {
         "title" : this.state.query.title,
         "name" : this.state.query.name,
         "description" : this.state.query.description,
-        "groupId" : this.state.query.groupId,
+        "groupId" : this.props.groupId ? this.props.groupId : this.state.query.groupId,
         "url" : this.state.query.url,
         "gitRepo" : this.state.query.gitRepo,
         "primaryService" : this.state.query.primaryService,
@@ -416,7 +412,6 @@ class QueryDetails extends Component {
 
 
   render() {
-    console.log("rendering")
     const editingAllowed = hasEditPermission(this.props.user);
     const {
       visible, confirmLoading, sourceFiles, availableLicenses,
@@ -465,8 +460,6 @@ class QueryDetails extends Component {
 
     //render only after fetching the data from the server
     //{console.log(title + ', ' + this.props.selectedQuery + ', ' + this.props.isNewFile)}
-    {console.log('name: '+name)}
-
     return (
       <React.Fragment>
         <div style={{"paddingTop": "55px"}}>
@@ -501,16 +494,17 @@ class QueryDetails extends Component {
                     dropdownClassName="certain-category-search-dropdown"
                     dropdownMatchSelectWidth={false}
                     dropdownStyle={{ width: 300 }}
-                    size="large"
                     style={{ width: '100%' }}
-                    dataSource={querySearchSuggestions}
                     onChange={(value) => this.searchQueries(value)}
                     onSelect={(value) => this.onQuerySelected(value)}
                     placeholder="Search queries"
-                    optionLabelProp="value"
                     disabled={!editingAllowed}
                   >
-                    <Input id="autocomplete_field" suffix={this.state.autoCompleteSuffix} autoComplete="off"/>
+                    {querySearchSuggestions.map((suggestion) => (
+                      <Option key={suggestion.text} value={suggestion.value}>
+                        {suggestion.text}
+                      </Option>
+                    ))}
                   </AutoComplete>
                 </Form.Item>
                 </React.Fragment>
@@ -609,7 +603,6 @@ function mapStateToProps(state) {
     const { user } = state.authenticationReducer;
     const { application } = state.applicationReducer;
     const {isNew=false, groupId='' } = newAsset;
-    console.log(selectedAsset)
     return {
       user,
       selectedAsset,

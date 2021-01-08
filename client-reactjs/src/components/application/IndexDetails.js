@@ -53,8 +53,10 @@ class IndexDetails extends Component {
 
   componentDidMount() {
     //this.props.onRef(this);
-    this.getIndexDetails();
-    this.fetchDataDefinitions();
+    if(this.props.application && this.props.application.applicationId) {
+      this.getIndexDetails();
+      this.fetchDataDefinitions();
+    }
   }
 
   getIndexDetails() {
@@ -261,10 +263,6 @@ class IndexDetails extends Component {
           nonKeyedColumns: indexInfo.columns.nonKeyedColumns
         }
       })
-      this.props.form.setFieldsValue({
-        name: indexInfo.fileName,
-        title: indexInfo.fileName
-      });
       return indexInfo;
     })
     .then(data => {
@@ -353,7 +351,7 @@ class IndexDetails extends Component {
       "title" : this.state.index.title,
       "name" : this.state.index.name,
       "description" : this.state.index.description,
-      "groupId": this.state.index.groupId,
+      "groupId": this.props.groupId ? this.props.groupId : this.state.index.groupId,
       "primaryService" : this.state.index.primaryService,
       "backupService" : this.state.index.backupService,
       "qualifiedPath" : this.state.index.path,
@@ -459,21 +457,22 @@ class IndexDetails extends Component {
 
               <Form.Item label="Index">
                 <AutoComplete
-                  className="certain-category-search"
-                  dropdownClassName="certain-category-search-dropdown"
-                  dropdownMatchSelectWidth={false}
-                  dropdownStyle={{ width: 300 }}
-                  size="large"
-                  style={{ width: '100%' }}
-                  dataSource={fileSearchSuggestions}
-                  onChange={(value) => this.searchIndexes(value)}
-                  onSelect={(value) => this.onFileSelected(value)}
-                  placeholder="Search indexes"
-                  optionLabelProp="value"
-                  disabled={!editingAllowed}
-                >
-                  <Input id="autocomplete_field" suffix={this.state.autoCompleteSuffix} autoComplete="off"/>
-                </AutoComplete>
+                    className="certain-category-search"
+                    dropdownClassName="certain-category-search-dropdown"
+                    dropdownMatchSelectWidth={false}
+                    dropdownStyle={{ width: 300 }}
+                    style={{ width: '100%' }}
+                    onChange={(value) => this.searchIndexes(value)}
+                    onSelect={(value) => this.onFileSelected(value)}
+                    placeholder="Search indexes"
+                    disabled={!editingAllowed}
+                  >
+                    {fileSearchSuggestions.map((suggestion) => (
+                      <Option key={suggestion.text} value={suggestion.value}>
+                        {suggestion.text}
+                      </Option>
+                    ))}
+                  </AutoComplete>
               </Form.Item>
               </div>
 
@@ -557,7 +556,6 @@ function mapStateToProps(state) {
     const { user } = state.authenticationReducer;
     const { application } = state.applicationReducer;
     const {isNew=false, groupId='' } = newAsset;
-    console.log(selectedAsset)
     return {
       user,
       selectedAsset,

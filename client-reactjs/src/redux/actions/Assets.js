@@ -2,7 +2,8 @@ import { Constants } from '../../components/common/Constants';
 
 export const assetsActions = {
   assetSelected,
-  newAsset
+  newAsset,
+  searchAsset
 };
 
 function assetSelected(id, applicationId, title) {
@@ -26,6 +27,18 @@ function newAsset(applicationId, groupId) {
     return {
       type: Constants.NEW_ASSET,
       newAsset
+    }
+  }
+}
+
+function searchAsset(assetTypeFilter, keywords) {
+  return dispatch => {
+    dispatch(request({ assetTypeFilter, keywords }));
+  };
+  function request(searchParams) {
+    return {
+      type: Constants.SEARCH_ASSET,
+      searchParams
     }
   }
 }

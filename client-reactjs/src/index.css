@@ -615,3 +615,19 @@ div.tooltip {
   -ms-user-select: none;
   user-select: none
 }
+
+.groups-tree-search-value {
+  color: #f50;
+}
+
+.select-before {
+  width: 65px;
+}
+
+.search-filter {
+  width: 120px !important;
+}
+
+.search-options-icon {
+  padding-left: 7px;
+}

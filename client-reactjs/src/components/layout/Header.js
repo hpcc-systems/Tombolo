@@ -43,6 +43,7 @@ class AppHeader extends Component {
     }
 
     componentDidMount(){
+      console.log("application: "+this.props.application)
       if(this.props.location.pathname.includes('report/')){
         const pathSnippets = this.props.location.pathname.split('/');
         this.setState({

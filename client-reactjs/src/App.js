@@ -85,17 +85,11 @@ class App extends React.Component {
                               <Switch>
                                 <PrivateRoute exact path="/" component={dataFlowComp}/>
                                 <PrivateRoute path="/:applicationId/assets" component={assetsComp} />
-                                //<PrivateRoute exact path="/:applicationId/files" component={FileList} /> - not in use anymore
                                 <PrivateRoute path="/:applicationId/file/:fileId?" component={FileDetailsForm}/>
                                 <PrivateRoute path="/:applicationId/job/:jobId?" component={JobDetailsForm}/>
                                 <PrivateRoute path="/:applicationId/index/:indexId?" component={IndexDetailsForm}/>
                                 <PrivateRoute path="/:applicationId/query/:queryId?" component={QueryDetailsForm}/>
-                                //<PrivateRoute path="/files" component={FileList} /> - not in use anymore
-                                //<PrivateRoute path="/:applicationId/jobs" component={JobList} />  - not in use anymore
-                                //<PrivateRoute exact path="/:applicationId/index" component={indexListComp}/> - not in use anymore
-                                //<PrivateRoute path="/index" component={IndexList}/> - not in use anymore
                                 <PrivateRoute path="/:applicationId/data-dictionary" component={dataDictionaryComp}/>
-                                //<PrivateRoute path="/:applicationId/queries" component={QueriesList}/> - not in use anymore
                                 <PrivateRoute path="/:applicationId/dataflow/details" component={DataflowDetails}/>
                                 <PrivateRoute path="/:applicationId/dataflow" component={dataFlowComp}/>
                                 <PrivateRoute path="/:applicationId/dataflowinstances" component={DataflowInstances}/>

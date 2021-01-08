@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react'
-import { Tree, Row, Col, Menu, Button, Modal, Form, Input, Dropdown } from 'antd/lib';
+import { Tree, Row, Col, Menu, Button, Modal, Form, Input, Dropdown, Checkbox, Select, message } from 'antd/lib';
+import { debounce } from 'lodash';
 import BreadCrumbs from "../../common/BreadCrumbs";
 import { authHeader, handleError } from "../../common/AuthHeader.js"
 import { hasEditPermission } from "../../common/AuthUtil.js";
@@ -11,13 +12,15 @@ import { groupsActions } from '../../../redux/actions/Groups';
 import AssetsTable from "./AssetsTable";
 import { MarkdownEditor } from "../../common/MarkdownEditor.js"
 import useOnClickOutside from '../../../hooks/useOnClickOutside';
-import { DeleteOutlined, EditOutlined, QuestionCircleOutlined, FolderOutlined, DownOutlined, BarsOutlined  } from '@ant-design/icons';
+import { DeleteOutlined, EditOutlined, QuestionCircleOutlined, FolderOutlined, DownOutlined, BarsOutlined, SearchOutlined, SettingOutlined } from '@ant-design/icons';
 import TitleRenderer from "./TitleRenderer.js"
 
 const { TreeNode, DirectoryTree } = Tree;
 const { SubMenu } = Menu;
 const { confirm } = Modal;
 const { Search } = Input;
+const CheckboxGroup = Checkbox.Group;
+message.config({top: 100});
 
 function Assets(props) {
   const [application, setApplication] = useState({...props});
@@ -34,6 +37,8 @@ function Assets(props) {
     id: '',
     categoryName: ''
   });
+  const [assetTypeFilter, setAssetTypeFilter] = useState(['File', 'Job', 'Query', 'Indexes']);
+  const [searchKeyWord, setSearchKeyWord] = useState('');
   const formItemLayout = {
     labelCol: {
       xs: { span: 2 },
@@ -44,6 +49,9 @@ function Assets(props) {
       sm: { span: 24 },
     },
   };
+
+  const searchOptions = ['File', 'Job', 'Query', 'Indexes'];
+
   const [form] = Form.useForm();
   const groupsReducer = useSelector(state => state.groupsReducer);
   //ref for More Options context menu
@@ -55,8 +63,14 @@ function Assets(props) {
     if(application.applicationId) {
       fetchGroups();
     }
-    //document.querySelector('.groups-div').addEventListener('contextmenu', onRightClickGroupsDiv)
   }, [application]);
+
+  useEffect(() => {
+    //if there is a search term and filter is changed, then trigger search
+    if(searchKeyWord && searchKeyWord.length > 0) {
+      handleAssetSearch(searchKeyWord);
+    }
+  }, [assetTypeFilter]);
 
   const fetchGroups = () => {
     let url = "/api/groups?app_id="+application.applicationId;
@@ -75,8 +89,13 @@ function Assets(props) {
       const {keys={selectedKeys:{id:'', key:'0-0'}, expandedKeys:['0-0']}} = {...groupsReducer};
       setSelectedGroup({'id':keys.selectedKeys.id, 'key':keys.selectedKeys.key})
       setExpandedGroups(keys.expandedKeys);
-      //add options icon
-      //addGroupOptionIcon();
+
+      setSearchKeyWord('');
+      dispatch(assetsActions.searchAsset(
+        '',
+        ''
+      ))
+
     }).catch(error => {
       console.log(error);
     });
@@ -105,17 +124,12 @@ function Assets(props) {
 
   const showMoreOptions = e => {
     e.preventDefault();
-
-    //setSelectedGroup({id: '', key:''});
     setRightClickNodeTreeItem({
       visible: true,
       pageX: e.clientX,
       pageY: e.clientY,
     });
 
-    /*window.setTimeout(() => {
-      document.addEventListener('click', onClickOutside)
-    }, 100);*/
   }
 
   const openNewGroupDialog = () => {
@@ -136,7 +150,6 @@ function Assets(props) {
 
   const handleMenuClick = (e) => {
     setRightClickNodeTreeItem({visible: false});
-
     dispatch(assetsActions.newAsset(
       application.applicationId,
       selectedGroup.id
@@ -261,7 +274,6 @@ function Assets(props) {
       }
       handleError(response);
     }).then(function(data) {
-      console.log(JSON.stringify(data))
       form.setFieldsValue({
         'name': data.name,
         'description': data.description
@@ -286,7 +298,6 @@ function Assets(props) {
       const dropKey = info.node.props.eventKey;
       const dragKey = info.dragNode.props.eventKey;
       const dropPos = info.node.props.pos.split('-');
-      console.log(info.dragNode.props.id, info.dragNode.props.title, info.node.props.id, info.node.props.title);
       fetch('/api/groups/move', {
         method: 'put',
         headers: authHeader(),
@@ -309,12 +320,33 @@ function Assets(props) {
     }
   }
 
-  const handleSearch = () => {
+  const handleAssetSearch = debounce ((value, enterPress) => {
+    let expandedKeys = [];
+    //validate only if enter pressed otherwise clearing search term will also trigger this validation
+    if(enterPress && !value) {
+      message.error("Please enter a valid search term")
+      return;
+    }
 
-  }
+    if(assetTypeFilter.length == 0) {
+      message.error("Please select atleast one asset type")
+      return;
+    }
+
+    setSearchKeyWord(value);
+    let assetFilter = assetTypeFilter.length != searchOptions.length ? assetTypeFilter.join(',') : ''
+    dispatch(assetsActions.searchAsset(
+      assetFilter,
+      value
+    ))
+  }, 350)
 
   const titleRenderer = (nodeData) => {
-    return <TitleRenderer title={nodeData.title} showMoreOptions={showMoreOptions}/>
+    return <TitleRenderer title={nodeData.title} showMoreOptions={showMoreOptions} textToHighlight={searchKeyWord}/>
+  }
+
+  const onAssetTypeFilterChange = (selectedValues) => {
+    setAssetTypeFilter(selectedValues);
   }
 
   const authReducer = useSelector(state => state.authenticationReducer);
@@ -327,6 +359,20 @@ function Assets(props) {
       <Menu.Item key="Query"><i className="fa fa-lg fa-search"></i> Query</Menu.Item>
       <Menu.Item key="Job"><i className="fa fa-lg fa-clock-o"></i> Job</Menu.Item>
     </Menu>
+  );
+
+  const selectBefore = (
+    <Select
+        style={{ width: 20 }}
+        suffixIcon={<SettingOutlined className="search-options-icon"/>}
+        dropdownClassName="search-filter"
+        dropdownRender={menu => (
+          <div style={{ display: 'flex', flexWrap: 'nowrap', padding: 8 }}>
+            <CheckboxGroup options={searchOptions} defaultValue={assetTypeFilter} onChange={onAssetTypeFilterChange} />
+          </div>
+        )}
+      >
+      </Select>
   );
 
   return (
@@ -347,7 +393,14 @@ function Assets(props) {
           <Row gutter={24}>
             <Col className="gutter-row groups-div" span={4}>
               <div className="gutter-box">
-                  <Search style={{ marginBottom: 8 }} placeholder="Search" onChange={handleSearch} />
+                  <div style={{ marginBottom: 8 }}>
+                    <Input
+                      addonBefore={selectBefore}
+                      placeholder="Search assets"
+                      allowClear
+                      onPressEnter={e => handleAssetSearch(e.target.value, true)}
+                      onChange={e => handleAssetSearch(e.target.value)}/>
+                  </div>
                   <DirectoryTree
                     onSelect={onSelect}
                     onExpand={onExpand}
