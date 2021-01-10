@@ -47,7 +47,7 @@ app.use('/api/dataflow', tokenService.verifyToken, dataflow);
 app.use('/api/workflows', tokenService.verifyToken, workflows);
 app.use('/api/data-dictionary', tokenService.verifyToken, dataDictionary);
 app.use('/api/user', userRead);
-app.use('/api/groups', groups);
+app.use('/api/groups', tokenService.verifyToken, groups);
 
 //process.env["NODE_TLS_REJECT_UNAUTHORIZED"] = 0;
 

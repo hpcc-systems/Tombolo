@@ -19,7 +19,8 @@ async function authenticate(req, res, { username, password }) {
           },
           json: {
             "username":username,
-            "password":password
+            "password":password,
+            "clientId": process.env.AUTHSERVICE_TOMBOLO_CLIENT_ID
           }
         }, function(err, response, body) {
           console.log(body);

@@ -27,7 +27,6 @@ const { confirm } = Modal;
 const layoutGrid=undefined;
 const { TextArea } = Input;
 
-
 class FileDetails extends Component {
 
   constructor(props) {
@@ -82,7 +81,8 @@ class FileDetails extends Component {
       relations:[],
       fileFieldRelations:[],
       validations:[],
-      inheritedLicensing:[]
+      inheritedLicensing:[],
+      groupId: ''
     }
   }
 
@@ -474,7 +474,6 @@ class FileDetails extends Component {
       headers: authHeader(),
       body: data
     }).then((response) => {
-      console.log("response.ok: "+response.ok);
       if(response.ok) {
         return response.json();
       } else {
@@ -711,7 +710,7 @@ class FileDetails extends Component {
       "name" : (!this.state.file.name || this.state.file.name == '') ? this.state.file.title : this.state.file.name,
       "cluster_id": this.state.file.clusterId,
       "description" : this.state.file.description,
-      "groupId" : this.state.file.groupId,
+      "groupId" : this.props.groupId ? this.props.groupId : this.state.file.groupId,
       "scope": this.state.file.scope,
       "serviceUrl" : this.state.file.serviceUrl,
       "qualifiedPath" : this.state.file.qualifiedPath,
@@ -1193,7 +1192,6 @@ class FileDetails extends Component {
         return null;
       }
     }
-
     //render only after fetching the data from the server
     if(!title && !this.props.selectedAsset && !this.props.isNew) {
       console.log("not rendering");
@@ -1202,8 +1200,8 @@ class FileDetails extends Component {
 
     return (
       <React.Fragment>
-        <div style={{"padding-top": "55px"}}>
-          <BreadCrumbs applicationId={this.props.application.applicationId} applicationTitle={this.props.application.applicationTitle}/>
+        <div style={{"paddingTop": "55px"}}>
+          {/*<BreadCrumbs applicationId={this.props.application.applicationId} applicationTitle={this.props.application.applicationTitle}/>*/}
           {!this.props.isNew?
             <div className="loader">
               <Spin spinning={this.state.initialDataLoading} size="large" />
@@ -1236,16 +1234,17 @@ class FileDetails extends Component {
                         dropdownClassName="certain-category-search-dropdown"
                         dropdownMatchSelectWidth={false}
                         dropdownStyle={{ width: 300 }}
-                        size="large"
                         style={{ width: '100%' }}
-                        dataSource={fileSearchSuggestions}
                         onChange={(value) => this.searchFiles(value)}
                         onSelect={(value) => this.onFileSelected(value)}
                         placeholder="Search files"
-                        optionLabelProp="value"
                         disabled={!editingAllowed}
                       >
-                        <Input id="autocomplete_field" suffix={this.state.autoCompleteSuffix} autoComplete="off"/>
+                        {fileSearchSuggestions.map((suggestion) => (
+                          <Option key={suggestion.text} value={suggestion.value}>
+                            {suggestion.text}
+                          </Option>
+                        ))}
                       </AutoComplete>
                     </Form.Item>
                   </React.Fragment>
@@ -1254,7 +1253,7 @@ class FileDetails extends Component {
 
                 </div>
                 <Form.Item label="Title" rules={[{ required: true, message: 'Please enter a title!' }]}>
-                  <Input id="file_title" name="title" onChange={this.onChange} placeholder="Title" disabled={!editingAllowed}/>
+                  <Input id="file_title" name="title" onChange={this.onChange} placeholder="Title" value={title} disabled={!editingAllowed}/>
                 </Form.Item>
                 <Form.Item label="Name">
                   <Input id="file_name" name="name" onChange={this.onChange} placeholder="Name" defaultValue={name} value={name} disabled={true} />
@@ -1266,7 +1265,7 @@ class FileDetails extends Component {
                     validator: this.scopeValidator
                   }
                 ]}>
-                  <Input id="file_scope" name="scope" onChange={this.onChange} placeholder="Scope" disabled={scopeDisabled || !editingAllowed}/>
+                  <Input id="file_scope" name="scope" onChange={this.onChange} placeholder="Scope" value={scope} disabled={scopeDisabled || !editingAllowed}/>
                 </Form.Item>
                 <Form.Item label="Description">
                   <MarkdownEditor id="file_desc" name="description" onChange={this.onChange} targetDomId="fileDescr" value={description} disabled={!editingAllowed}/>
@@ -1280,11 +1279,6 @@ class FileDetails extends Component {
                         <Input id="file_path" name="qualifiedPath" onChange={this.onChange} defaultValue={qualifiedPath} value={qualifiedPath} placeholder="Path" disabled={!editingAllowed}/>
                     </Form.Item>
                   </Col>
-                  {/*<Col span={8} order={2}>
-                    <Form.Item {...threeColformItemLayout} label="File Type">
-                        <Input id="file_type" name="fileType" onChange={this.onChange} defaultValue={fileType} value={fileType} placeholder="File Type" disabled={!editingAllowed}/>
-                    </Form.Item>
-                  </Col>*/}
                   <Col span={8} order={1}>
                     <Form.Item {...threeColformItemLayout} label="Is Super File">
                       <Checkbox id="file_issuper_file" name="isSuperFile" onChange={this.onCheckbox} checked={isSuperFile===true} disabled={!editingAllowed}/>
@@ -1363,14 +1357,6 @@ class FileDetails extends Component {
                   height: '415px',
                   width: '100%' }}
                 >
-                  {/*<AgGridReact
-                    columnDefs={validationTableColumns}
-                    rowData={validations}
-                    defaultColDef={{resizable: true, sortable: true, filter: true}}
-                    onGridReady={this.onGridReady}
-                    singleClickEdit={true}
-                    singleClickEdit={editingAllowed}>
-                  </AgGridReact>*/}
                   <EditableTable
                     columns={validationRuleColumns}
                     dataSource={validations}
@@ -1381,7 +1367,7 @@ class FileDetails extends Component {
                     setData={this.setValidationData}/>
                 </div>
             </TabPane>
-            {this.props.user.permissions.includes(VIEW_DATA_PERMISSION) ?
+            {this.props.user && this.props.user.permissions && this.props.user.permissions.includes(VIEW_DATA_PERMISSION) ?
               <TabPane tab="File Preview" key="6">
                 <div
                     className="ag-theme-balham"
