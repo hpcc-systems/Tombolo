@@ -495,7 +495,7 @@ class QueryDetails extends Component {
                     dropdownMatchSelectWidth={false}
                     dropdownStyle={{ width: 300 }}
                     style={{ width: '100%' }}
-                    onChange={(value) => this.searchQueries(value)}
+                    onSearch={(value) => this.searchQueries(value)}
                     onSelect={(value) => this.onQuerySelected(value)}
                     placeholder="Search queries"
                     disabled={!editingAllowed}

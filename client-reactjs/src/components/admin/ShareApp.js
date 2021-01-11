@@ -253,7 +253,7 @@ class ShareApp extends Component {
               size="large"
               style={{ width: '60%', paddingRight:"5px" }}
               dataSource={userSuggestions}
-              onChange={(value) => this.searchUsers(value)}
+              onSearch={(value) => this.searchUsers(value)}
               onSelect={(value) => this.onUserSelected(value)}
               placeholder="Search users"
               optionLabelProp="value"

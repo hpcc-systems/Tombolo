@@ -462,7 +462,7 @@ class IndexDetails extends Component {
                     dropdownMatchSelectWidth={false}
                     dropdownStyle={{ width: 300 }}
                     style={{ width: '100%' }}
-                    onChange={(value) => this.searchIndexes(value)}
+                    onSearch={(value) => this.searchIndexes(value)}
                     onSelect={(value) => this.onFileSelected(value)}
                     placeholder="Search indexes"
                     disabled={!editingAllowed}
