@@ -594,7 +594,7 @@ class JobDetails extends Component {
                     dropdownMatchSelectWidth={false}
                     dropdownStyle={{ width: 300 }}
                     style={{ width: '100%' }}
-                    onChange={(value) => this.searchJobs(value)}
+                    onSearch={(value) => this.searchJobs(value)}
                     onSelect={(value) => this.onJobSelected(value)}
                     placeholder="Search jobs"
                     disabled={!editingAllowed}

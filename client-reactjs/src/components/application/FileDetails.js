@@ -1235,7 +1235,7 @@ class FileDetails extends Component {
                         dropdownMatchSelectWidth={false}
                         dropdownStyle={{ width: 300 }}
                         style={{ width: '100%' }}
-                        onChange={(value) => this.searchFiles(value)}
+                        onSearch={(value) => this.searchFiles(value)}
                         onSelect={(value) => this.onFileSelected(value)}
                         placeholder="Search files"
                         disabled={!editingAllowed}

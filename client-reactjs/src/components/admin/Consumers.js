@@ -448,7 +448,7 @@ class Consumers extends Component {
                   size="large"
                   style={{ width: '100%' }}
                   dataSource={adGroupSearchResults}
-                  onChange={(value) => this.searchADGroups(value)}
+                  onSearch={(value) => this.searchADGroups(value)}
                   onSelect={(value) => this.onGroupSelected(value)}
                   placeholder="Search AD groups"
                   optionLabelProp="value"

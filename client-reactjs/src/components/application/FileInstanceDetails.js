@@ -288,7 +288,7 @@ class FileInstanceDetails extends Component {
                 size="large"
                 style={{ width: '100%' }}
                 dataSource={fileInstanceSearchSuggestions}
-                onChange={(value) => this.searchFileInstances(value)}
+                onSearch={(value) => this.searchFileInstances(value)}
                 onSelect={(value) => this.onFileInstanceSelected(value)}
                 placeholder="Search file instances"
                 optionLabelProp="value"
