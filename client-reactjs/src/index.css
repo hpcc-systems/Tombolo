@@ -636,4 +636,5 @@ div.tooltip {
 
 .asset-name i {
   padding-right: 5px;
+  display: inline;
 }
