@@ -350,9 +350,6 @@ path, .jtk-endpoint { cursor:pointer; }
 }
 
 @media (max-width: 991.98px) {
-  .sidebar {
-    margin-left: -300px;
-  }
   .sidebar.active {
     margin-left: 0;
   }
