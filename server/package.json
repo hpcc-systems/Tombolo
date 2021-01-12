@@ -10,7 +10,7 @@
   "license": "ISC",
   "dependencies": {
     "@hpcc-js/comms": "^2.34.0",
-    "@sendgrid/mail": "^7.4.0",
+    "@sendgrid/mail": "^7.4.1",
     "activedirectory": "^0.7.2",
     "bcryptjs": "^2.4.3",
     "crypto": "^1.0.1",
@@ -23,7 +23,7 @@
     "lodash": "^4.17.20",
     "moment": "^2.29.1",
     "mongodb": "^3.6.3",
-    "mongoose": "^5.11.10",
+    "mongoose": "^5.11.11",
     "mysql2": "^1.7.0",
     "path": "^0.12.7",
     "request": "^2.88.2",
