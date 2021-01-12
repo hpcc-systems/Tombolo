@@ -1435,6 +1435,7 @@ function mapStateToProps(state) {
     const { selectedAsset, newAsset={} } = state.assetReducer;
     const { user } = state.authenticationReducer;
     const { application } = state.applicationReducer;
+
     const {isNew=false, groupId='' } = newAsset;
     return {
       user,

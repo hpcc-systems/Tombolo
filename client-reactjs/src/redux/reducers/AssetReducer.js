@@ -26,15 +26,15 @@ export function assetReducer(state = initialState, action) {
       return {
         ...state,
         selectedAsset: {
-          id: action.newAsset.id,
-          applicationId: action.newAsset.applicationId,
-          title: action.newAsset.title,
+          id: '',
+          applicationId: '',
+          title: '',
           isNew: true
         },
         newAsset: {
-          groupId: '',
-          applicationId: '',
-          isNew: true
+          groupId: action.newAsset.groupId,
+          applicationId: action.newAsset.applicationId,
+          isNew: action.newAsset.isNew
         }
       };
     case Constants.SEARCH_ASSET:

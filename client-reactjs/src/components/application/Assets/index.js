@@ -14,6 +14,7 @@ import { MarkdownEditor } from "../../common/MarkdownEditor.js"
 import useOnClickOutside from '../../../hooks/useOnClickOutside';
 import { DeleteOutlined, EditOutlined, QuestionCircleOutlined, FolderOutlined, DownOutlined, BarsOutlined, SearchOutlined, SettingOutlined } from '@ant-design/icons';
 import TitleRenderer from "./TitleRenderer.js"
+import { flatten } from "../../common/CommonUtil.js";
 
 const { TreeNode, DirectoryTree } = Tree;
 const { SubMenu } = Menu;
@@ -39,6 +40,7 @@ function Assets(props) {
   });
   const [assetTypeFilter, setAssetTypeFilter] = useState(['File', 'Job', 'Query', 'Indexes']);
   const [searchKeyWord, setSearchKeyWord] = useState('');
+  const [dataList, setDataList] = useState([]);
   const formItemLayout = {
     labelCol: {
       xs: { span: 2 },
@@ -58,6 +60,8 @@ function Assets(props) {
   const ref = useRef();
   //hook for outside click to close the more options context menu
   useOnClickOutside(ref, () => setRightClickNodeTreeItem({visible: false}));
+
+  let list = [];
 
   useEffect(() => {
     if(application.applicationId) {
@@ -85,6 +89,8 @@ function Assets(props) {
     })
     .then(data => {
       setTreeData(data)
+      let list = generateList(data);
+      setDataList(list);
       //select & expand groups
       const {keys={selectedKeys:{id:'', key:'0-0'}, expandedKeys:['0-0']}} = {...groupsReducer};
       setSelectedGroup({'id':keys.selectedKeys.id, 'key':keys.selectedKeys.key})
@@ -117,10 +123,42 @@ function Assets(props) {
       selectedGroup,
       expandedKeys
     ));
-    window.setTimeout(() => {
-      //addGroupOptionIcon();
-    }, 200);
   };
+
+  const getParentKey = (key, treeData) => {
+    let parentKey;
+    for (let i = 0; i < treeData.length; i++) {
+      const node = treeData[i];
+      if (node.children) {
+        if (node.children.some(item => item.key === key)) {
+          parentKey = node.key;
+        } else if (getParentKey(key, node.children)) {
+          parentKey = getParentKey(key, node.children);
+        }
+      }
+    }
+    return parentKey;
+  };
+
+  const generateList = data => {
+    for (let i = 0; i < data.length; i++) {
+      const node = data[i];
+      const { key, title, id } = node;
+      list.push({ key, title, id });
+      if (node.children) {
+        generateList(node.children);
+      }
+    }
+    return list;
+  };
+
+  const openGroup = (groupId) => {
+    //setSearchKeyWord('');
+    let match = dataList.filter(group => group.id == groupId);
+    let parentKey = getParentKey(match[0].key, treeData);
+    setSelectedGroup({id:match[0].id, key:match[0].key})
+    onExpand([parentKey])
+  }
 
   const showMoreOptions = e => {
     e.preventDefault();
@@ -418,7 +456,7 @@ function Assets(props) {
             </Col>
             <Col className="gutter-row groups-div" span={20}>
               <div className="gutter-box">
-                <AssetsTable selectedGroup={selectedGroup} handleEditGroup={handleEditGroup} refreshGroups={fetchGroups}/>
+                <AssetsTable selectedGroup={selectedGroup} handleEditGroup={handleEditGroup} refreshGroups={fetchGroups} openGroup={openGroup}/>
               </div>
             </Col>
           </Row>

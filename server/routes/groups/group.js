@@ -157,117 +157,75 @@ let prepareWhereClause = (keywords) => {
 
 router.get('/assets', [
   query('app_id').isUUID(4).withMessage('Invalid app id'),
-  query('group_id').optional({checkFalsy:true}).isUUID(4).withMessage('Invalid group id'),
-  query('assetTypeFilter').optional({checkFalsy:true}).matches(/^[a-zA-Z]{1}[a-zA-Z,]*$/).withMessage('Invalid assetTypeFilter'),
-  query('keywords').optional({checkFalsy:true}).matches(/^[*"a-zA-Z]{1}[a-zA-Z0-9_ :.\-*"\"]*$/).withMessage('Invalid keywords')
-], async (req, res) => {
-  const errors = validationResult(req).formatWith(validatorUtil.errorFormatter);
-  if (!errors.isEmpty()) {
-      return res.status(422).json({ success: false, errors: errors.array() });
-  }
-  let assetTypeFilter = req.query.assetTypeFilter;
-  let attributes = ['id', 'name', 'title', 'description', 'createdAt'];
-  //if no asset types filter in request, include all
-  let defaultIncludes = [{model:File, attributes:attributes, required: false}, {model:Job, attributes, required:false}, {model:Query, attributes:attributes, required:false}, {model:Index, attributes:attributes, required:false}];
-  //filter by asset types
-  if(assetTypeFilter) {
-    let filteredIncludes = [];
-    assetTypeFilter.split(',').forEach((modelFilter) => {
-      filteredIncludes.push({model: models[modelFilter.toLowerCase()], attributes:attributes})
-    })
-    defaultIncludes =  filteredIncludes;
-  }
-  //keyword search
-  if(req.query.keywords) {
-    let keywords = getKeywordsForQuery(req.query.keywords);
-    defaultIncludes = defaultIncludes.map((includes) => {
-      includes.where = prepareWhereClause(keywords);
-      return includes;
-    })
-  }
-
-  let finalAssets = [], childGroups = [], whereClause = {};
-  //include groups if it is not a search
-  if(!assetTypeFilter && !req.query.keywords) {
-    childGroups = await getChildGroups(req.query.app_id, req.query.group_id);
-  }
-  //get assets
-  if(req.query.group_id && req.query.group_id != undefined) {
-    whereClause.application_id = req.query.app_id;
-    whereClause.id = req.query.group_id;
-    Groups.findAll({where:whereClause,
-      include: defaultIncludes,
-      order: [['name', 'ASC']]
-    }).then((assets) => {
-      if(assets && assets.length > 0) {
-        if(assets[0].files) {
-          assets[0].files.forEach((file) => {
-            finalAssets.push({
-              type: 'File',
-              id: file.id,
-              name: file.name,
-              title: file.title,
-              description: file.description,
-              createdAt: file.createdAt
-            })
-          })
-        }
-        if(assets[0].jobs) {
-          assets[0].jobs.forEach((job) => {
-            finalAssets.push({
-              type: 'Job',
-              id: job.id,
-              name: job.name,
-              title: job.title,
-              description: job.description,
-              createdAt: job.createdAt
-            })
-          })
-        }
-        if(assets[0].indexes) {
-          assets[0].indexes.forEach((index) => {
-            finalAssets.push({
-              type: 'Index',
-              id: index.id,
-              name: index.name,
-              title: index.title,
-              description: index.description,
-              createdAt: index.createdAt
-            })
-          })
-        }
-        if(assets[0].queries) {
-          assets[0].queries.forEach((query) => {
-            finalAssets.push({
-              type: 'Query',
-              id: query.id,
-              name: query.name,
-              title: query.title,
-              description: query.description,
-              createdAt: query.createdAt
-            })
-          })
-        }
-      }
-      finalAssets.sort(comparator);
-      finalAssets = childGroups.concat(finalAssets);
-      res.json(finalAssets);
-    }).catch(function(err) {
-      console.log(err);
-      return res.status(500).send("Error occured while retrieving assets");
-    });
-  } else {
-    //TO:DO - Look for options to combine this into one query
-    let promises=[];
-    //if group_id is not passed, this must be a root dir. pull all assets for that app_id
-    let whereClause = {application_id:req.query.app_id, groupId:{[Op.or]:[null, '']}};
-    if(req.query.keywords) {
-      let keywords = getKeywordsForQuery(req.query.keywords);
-      whereClause[Op.or] = prepareWhereClause(keywords)[Op.or];
+  query('group_id').optional({checkFalsy:true}).isUUID(4).withMessage('Invalid group id')
+], (req, res) => {
+    const errors = validationResult(req).formatWith(validatorUtil.errorFormatter);
+    if (!errors.isEmpty()) {
+        return res.status(422).json({ success: false, errors: errors.array() });
     }
+    let finalAssets = [];
+    if(req.query.group_id && req.query.group_id != undefined) {
+      Groups.findAll({where:{
+        "application_id":req.query.app_id,
+        "id": req.query.group_id
+      },
+      include: [{model:File, attributes:['id', 'name', 'title', 'description', 'createdAt']}, {model:Job, attributes:['id', 'name', 'title', 'description', 'createdAt']}, {model:Query, attributes:['id', 'name', 'title', 'description', 'createdAt']}, {model:Index, attributes:['id', 'name', 'title', 'description', 'createdAt']}],
+      order: [['name', 'ASC']]
+      }).then(async (assets) => {
+        console.log(assets);
+        let childGroups = await getChildGroups(req.query.app_id, req.query.group_id)
+        assets[0].files.forEach((file) => {
+          finalAssets.push({
+            type: 'File',
+            id: file.id,
+            name: file.name,
+            title: file.title,
+            description: file.description,
+            createdAt: file.createdAt
+          })
+        })
+        assets[0].jobs.forEach((job) => {
+          finalAssets.push({
+            type: 'Job',
+            id: job.id,
+            name: job.name,
+            title: job.title,
+            description: job.description,
+            createdAt: job.createdAt
+          })
+        })
+        assets[0].indexes.forEach((index) => {
+          finalAssets.push({
+            type: 'Index',
+            id: index.id,
+            name: index.name,
+            title: index.title,
+            description: index.description,
+            createdAt: index.createdAt
+          })
+        })
+        assets[0].queries.forEach((query) => {
+          finalAssets.push({
+            type: 'Query',
+            id: query.id,
+            name: query.name,
+            title: query.title,
+            description: query.description,
+            createdAt: query.createdAt
+          })
+        })
 
-    if(!assetTypeFilter || assetTypeFilter.split(',').includes('File')) {
-      promises.push(File.findAll({where:whereClause}).then((files) => {
+        finalAssets.sort(comparator);
+        finalAssets = childGroups.concat(finalAssets);
+        res.json(finalAssets);
+      }).catch(function(err) {
+        console.log(err);
+      });
+    } else {
+      let promises=[], finalGroups=[];
+      //if group_id is not passed, this could be a root dir. pull all assets for that app_id
+
+      promises.push(File.findAll({where:{application_id:req.query.app_id, groupId:{[Op.or]:[null, '']}}}).then((files) => {
         files.forEach((file) => {
           finalAssets.push({
             type: 'File',
@@ -279,9 +237,8 @@ router.get('/assets', [
           })
         })
       }))
-    }
-    if(!assetTypeFilter || assetTypeFilter.split(',').includes('Indexes')) {
-      promises.push(Index.findAll({where:whereClause}).then((indexes) => {
+
+      promises.push(Index.findAll({where:{application_id:req.query.app_id, groupId:{[Op.or]:[null, '']}}}).then((indexes) => {
         indexes.forEach((index) => {
           finalAssets.push({
             type: 'Index',
@@ -293,9 +250,8 @@ router.get('/assets', [
           })
         })
       }))
-    }
-    if(!assetTypeFilter || assetTypeFilter.split(',').includes('Job')) {
-      promises.push(Job.findAll({where:whereClause}).then((jobs) => {
+
+      promises.push(Job.findAll({where:{application_id:req.query.app_id, groupId:{[Op.or]:[null, '']}}}).then((jobs) => {
         jobs.forEach((job) => {
           finalAssets.push({
             type: 'Job',
@@ -307,9 +263,8 @@ router.get('/assets', [
           })
         })
       }))
-    }
-    if(!assetTypeFilter || assetTypeFilter.split(',').includes('Query')) {
-      promises.push(Query.findAll({where:whereClause}).then((queries) => {
+
+      promises.push(Query.findAll({where:{application_id:req.query.app_id, groupId:{[Op.or]:[null, '']}}}).then((queries) => {
         queries.forEach((query) => {
           finalAssets.push({
             type: 'Query',
@@ -321,19 +276,98 @@ router.get('/assets', [
           })
         })
       }))
-    }
-    Promise.all(promises).then(() => {
-      finalAssets.sort(function(a,b){
-        return new Date(b.createdAt) - new Date(a.createdAt);
-      });
-      if(childGroups) {
-        finalAssets = childGroups.concat(finalAssets);
-      }
-      res.json(finalAssets);
-    })
-  }
 
+      promises.push(Groups.findAll({where:{application_id:req.query.app_id, parent_group:{[Op.or]:[null, '']}}}).then((groups) => {
+        groups.forEach((group) => {
+          finalGroups.push({
+            type: 'Group',
+            id: group.id,
+            name: group.name,
+            description: group.description,
+            createdAt: group.createdAt
+          })
+        })
+      }))
+
+      Promise.all(promises).then(() => {
+        console.log("1-all assets retrieved....")
+        finalGroups.sort(comparator);
+
+        finalAssets.sort(comparator)
+
+        finalAssets = finalGroups.concat(finalAssets);
+        res.json(finalAssets);
+      })
+    }
 });
+
+router.get('/assetsSearch', [
+  query('app_id').isUUID(4).withMessage('Invalid app id'),
+  query('group_id').optional({checkFalsy:true}).isUUID(4).withMessage('Invalid group id'),
+  query('assetTypeFilter').optional({checkFalsy:true}).matches(/^[a-zA-Z]{1}[a-zA-Z,]*$/).withMessage('Invalid assetTypeFilter'),
+  query('keywords').optional({checkFalsy:true}).matches(/^[*"a-zA-Z]{1}[a-zA-Z0-9_ :.\-*"\"]*$/).withMessage('Invalid keywords')
+], async (req, res) => {
+  let replacements={}, query;
+  let keywords = getKeywordsForQuery(req.query.keywords);
+  let assetFilters = req.query.assetTypeFilter ? req.query.assetTypeFilter.split(',') : [];
+  if(req.query.group_id) {
+    query = "select assets.id, assets.name, assets.title, assets.description, assets.createdAt, assets.type, hie.name as group_name, hie.id as groupId from "+
+      "(select  id, name, parent_group "+
+      "from    (select * from groups "+
+           "order by parent_group, id) groups_sorted, "+
+          "(select @pv := (:groupId)) initialisation "+
+
+      "where find_in_set(parent_group, @pv) or id=(:groupId)) as hie " +
+      "join (";
+      if(assetFilters.length == 0 || assetFilters.includes("File")) {
+        query += "select f.id, f.name, f.groupId, f.title, f.description, f.createdAt, 'File' as type from file f where f.application_id = (:applicationId) and  (f.name like (:keyword) or f.title like (:keyword)) ";
+        query += (assetFilters.length == 0 || assetFilters.length > 1) ? "union all " : "";
+      }
+      if(assetFilters.length == 0 || assetFilters.includes("Query")) {
+        query += "select q.id, q.name, q.groupId, q.title, q.description, q.createdAt, 'Query' as type from query q where q.application_id = (:applicationId) and (q.name like (:keyword) or q.title like (:keyword)) ";
+        query += (assetFilters.length == 0 || assetFilters.length > 1) ? "union all " : "";
+      }
+      if(assetFilters.length == 0 || assetFilters.includes("Indexes")) {
+        query += "select idx.id, idx.name, idx.groupId, idx.title, idx.description, idx.createdAt, 'Index' as type  from indexes idx where idx.application_id = (:applicationId) and (idx.name like (:keyword) or idx.title like (:keyword)) ";
+        query += (assetFilters.length == 0 || assetFilters.length > 1) ? "union all " : "";
+      }
+      if(assetFilters.length == 0 || assetFilters.includes("Job")) {
+        query += "select j.id, j.name, j.groupId, j.title, j.description, j.createdAt, 'Job' as type  from job j where j.application_id = (:applicationId) and (j.name like (:keyword) or j.title like (:keyword) ) ";
+      }
+      query = query.endsWith(" union all ") ? query.substring(0, query.lastIndexOf(" union all ")) : query;
+      console.log(query);
+      query += " ) as assets on (assets.groupId = hie.id) "
+      replacements = { applicationId: req.query.app_id, groupId: req.query.group_id, keyword: keywords }
+  } else {
+    query = "";
+    if(assetFilters.length == 0 || assetFilters.includes("File")) {
+      query += "select f.id, f.name, f.groupId, g.name as group_name, f.title, f.description, f.createdAt, 'File' as type from file f, groups g where f.application_id = (:applicationId) and  (f.name like (:keyword) or f.title like (:keyword)) and f.groupId = g.id ";
+      query += (assetFilters.length == 0 || assetFilters.length > 1) ? "union all " : "";
+    }
+    if(assetFilters.length == 0 || assetFilters.includes("Query")) {
+      query += "select q.id, q.name, q.groupId, g.name as group_name, q.title, q.description, q.createdAt, 'Query' as type from query q, groups g where q.application_id = (:applicationId) and (q.name like (:keyword) or q.title like (:keyword)) and q.groupId = g.id ";
+      query += (assetFilters.length == 0 || assetFilters.length > 1) ? "union all " : "";
+    }
+    if(assetFilters.length == 0 || assetFilters.includes("Indexes")) {
+      query += "select idx.id, idx.name, idx.groupId, g.name as group_name, idx.title, idx.description, idx.createdAt, 'Index' as type  from indexes idx, groups g where idx.application_id = (:applicationId) and (idx.name like (:keyword) or idx.title like (:keyword)) and idx.groupId = g.id ";
+      query += (assetFilters.length == 0 || assetFilters.length > 1) ? "union all " : "";
+    }
+    if(assetFilters.length == 0 || assetFilters.includes("Job")) {
+      query += "select j.id, j.name, j.groupId, g.name as group_name, j.title, j.description, j.createdAt, 'Job' as type  from job j, groups g where j.application_id = (:applicationId) and (j.name like (:keyword) or j.title like (:keyword)) and j.groupId = g.id";
+      //query += (assetFilters.length == 0 || assetFilters.length > 1) ? "union all " : "";
+    }
+    replacements = { applicationId: req.query.app_id, keyword: keywords }
+  }
+  models.sequelize.query(query, {
+    type: models.sequelize.QueryTypes.SELECT,
+    replacements: replacements
+  }).then(assets => {
+    res.json(assets);
+  }).catch(function(err) {
+    console.log(err);
+    return res.status(500).send("Error occured while retrieving assets");
+  });
+})
 
 let groupExistsWithSameName = (parentGroupId, name, appId) => {
   return new Promise((resolve, reject) => {

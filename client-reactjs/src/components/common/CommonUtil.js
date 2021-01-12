@@ -42,13 +42,26 @@ const fetchDataDictionary = (applicationId) => {
       }
       handleError(response);
     })
-    .then(data => {      
+    .then(data => {
       resolve(data);
     }).catch(error => {
       console.log(error);
       reject(error);
     });
   })
-}  
+}
 
-export {omitDeep, eclTypes, fetchDataDictionary};
+const flatten = (obj) => {
+  const array = Array.isArray(obj) ? obj : [obj];
+  return array.reduce((acc, value) => {
+    acc.push(value);
+    if (value.children) {
+      acc = acc.concat(flatten(value.children));
+      delete value.children;
+    }
+    return acc;
+  }, []);
+}
+
+
+export {omitDeep, eclTypes, fetchDataDictionary, flatten};

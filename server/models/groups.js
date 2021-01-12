@@ -18,6 +18,13 @@ module.exports = (sequelize, DataTypes) => {
     groups.hasMany(models.job);
     groups.hasMany(models.indexes);
     groups.hasMany(models.query);
+    groups.hasMany(models.groups, {
+      as: 'child',
+      foreignKey: {
+        name: 'parent_group',
+        allowNull: true
+      }
+    });
   };
   return groups;
 };

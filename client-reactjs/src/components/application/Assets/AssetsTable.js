@@ -41,7 +41,7 @@ function AssetsTable(props) {
   const dispatch = useDispatch();
 
   const fetchDataAndRenderTable = () => {
-    let url = "/api/groups/assets?app_id="+applicationId;
+    let url = keywords != '' ? "/api/groups/assetsSearch?app_id="+applicationId+"" : "/api/groups/assets?app_id="+applicationId;
     if(selectedGroup && selectedGroup.id) {
       url += '&group_id='+selectedGroup.id;
     }
@@ -153,14 +153,45 @@ function AssetsTable(props) {
     });
   }
 
+  const handleGroupClick = (groupId) => {
+    props.openGroup(groupId)
+  }
+
   const editingAllowed = hasEditPermission(authReducer.user);
+
+  const generateAssetIcon = (type) => {
+    let icon = '';
+    switch(type) {
+      case 'File':
+        icon = <i className="fa fa-file"></i>;
+        break;
+      case 'Index':
+        icon = <i className="fa fa-indent"></i>;
+        break;
+      case 'Query':
+        icon = <i className="fa fa-search"></i>;
+        break;
+      case 'Job':
+        icon = <i className="fa fa-clock-o"></i>;
+        break;
+      case 'Group':
+        icon = <i className="fa fa-folder-o"></i>;
+        break;
+    }
+    return <React.Fragment>{icon}</React.Fragment>;
+  }
 
   const columns = [
   {
     title: 'Name',
     dataIndex: 'name',
     width: '20%',
-    render: (text, record) => <a href='#' onClick={(row) => handleEdit(record.id, record.type)}>{text}</a>
+    render: (text, record) => (
+      <React.Fragment>
+        <span className="asset-name">{generateAssetIcon(record.type)}<a href='#' onClick={(row) => handleEdit(record.id, record.type)}>{text}</a></span>
+        {keywords && keywords.length > 0 ? <span className={"group-name"}>In Group: <a href='#' onClick={(row) => handleGroupClick(record.groupId)}>{record.group_name}</a></span> : null}
+        </React.Fragment>
+        )
   },
   {
     title: 'Description',
@@ -174,7 +205,8 @@ function AssetsTable(props) {
     width: '5%',
   },
   {
-    title: 'Created',
+    title: 'Created'
+    ,
     dataIndex: 'createdAt',
     width: '20%',
     render: (text, record) => {
