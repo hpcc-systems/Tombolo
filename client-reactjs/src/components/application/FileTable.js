@@ -2,7 +2,6 @@
 import { Table, Tooltip, Divider, message, Popconfirm, Drawer, Button } from 'antd/lib';
 import React, { Component } from "react";
 import FileDetailsForm from "./FileDetails";
-import FileInstanceDetailsForm from "./FileInstanceDetails";
 import { authHeader, handleError } from "../common/AuthHeader.js"
 import { hasEditPermission } from "../common/AuthUtil.js";
 import { Constants } from '../common/Constants';
@@ -304,7 +303,6 @@ class FileTable extends Component {
             onRefresh={this.handleRefreshTree}
             user={this.props.user}/> : null}
 
-        <FileInstanceDetailsForm onRef={ref => this.instanceDetailsForm = ref}/>
       </div>
     )
   }

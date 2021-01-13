@@ -8,7 +8,6 @@ import FileDetailsForm from "../FileDetails";
 import JobDetailsForm from "../JobDetails";
 import AssetDetailsDialog from "../AssetDetailsDialog"
 import IndexDetailsForm from "../IndexDetails";
-import FileInstanceDetailsForm from "../FileInstanceDetails";
 import ExistingAssetListDialog from "./ExistingAssetListDialog";
 import {handleFileDelete, handleFileInstanceDelete, handleJobDelete, handleIndexDelete, handleQueryDelete, handleSubProcessDelete, updateGraph} from "../../common/WorkflowUtil";
 import { authHeader, handleError } from "../../common/AuthHeader.js"

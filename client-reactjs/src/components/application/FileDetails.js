@@ -3,9 +3,6 @@ import {
   Modal, Tabs, Form, Input, Select, Button, Table, AutoComplete,
   Tag, message, Drawer, Row, Col, Spin, Radio, Checkbox
 } from 'antd/lib';
-//import FileRelations from "./FileRelations"
-//import DataProfileTable from "./DataProfileTable"
-//import DataProfileHTML from "./DataProfileHTML"
 import AssociatedDataflows from "./AssociatedDataflows"
 import { authHeader, handleError } from "../common/AuthHeader.js"
 import { fetchDataDictionary } from "../common/CommonUtil.js"
@@ -1390,15 +1387,6 @@ class FileDetails extends Component {
               <TabPane tab="Dataflows" key="7">
                 <AssociatedDataflows assetName={name} assetType={'File'}/>
               </TabPane> : null}
-
-            {showFileProfile ?
-              <TabPane tab="Data Profile" key="8" >
-                <div>
-                    {/*<DataProfileTable data={this.state.fileProfile}/>*/}
-                    {/*<DataProfileHTML htmlAssets={this.state.profileHTMLAssets}/>*/}
-                  </div>
-              </TabPane>
-              : "" }
           </Tabs>
         </div>
         {!this.props.viewMode ?

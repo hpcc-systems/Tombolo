@@ -13,10 +13,6 @@ import {PrivateRoute} from "./components/common/PrivateRoute";
 import Assets from "./components/application/Assets";
 import {LeftNav} from "./components/layout/LeftNav";
 import AssetDetailsDialog from "./components/application/AssetDetailsDialog";
-import {FileList} from "./components/application/FileList";
-import {JobList} from "./components/application/JobList";
-import {IndexList} from "./components/application/IndexList";
-import {QueriesList} from "./components/application/QueriesList";
 import DataDictionary from "./components/application/DataDictionary"
 import Dataflow from "./components/application/Dataflow";
 import DataflowDetails from "./components/application/Dataflow/DataflowDetails";
@@ -56,12 +52,6 @@ class App extends React.Component {
       let applicationId = this.props.application ? this.props.application.applicationId : '';
       let applicationTitle = this.props.application ? this.props.application.applicationTitle : '';
       return <DataDictionary applicationId={applicationId} applicationTitle={applicationTitle} user={this.props.user}/>;
-    }
-
-    const indexListComp = () => {
-      let applicationId = this.props.application ? this.props.application.applicationId : '';
-      let applicationTitle = this.props.application ? this.props.application.applicationTitle : '';
-      return <IndexList applicationId={applicationId} applicationTitle={applicationTitle} user={this.props.user}/>;
     }
 
     const assetsComp = () => {
