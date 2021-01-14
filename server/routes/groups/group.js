@@ -531,6 +531,11 @@ router.put('/move/asset', [
             res.json({"success":true});
           })
           break;
+        case 'Group':
+          Groups.update({parent_group:destGroupId}, {where:{application_id:appId, id:assetId}}).then((updated) => {
+            res.json({"success":true});
+          })
+          break;
       }
   } catch(err) {
     console.log(err);

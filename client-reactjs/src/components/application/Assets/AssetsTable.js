@@ -248,7 +248,8 @@ function AssetsTable(props) {
         toggle={toggleMoveDialog}
         application={applicationReducer.application}
         assetToMove={assetToMove}
-        reloadTable={fetchDataAndRenderTable}/>
+        reloadTable={fetchDataAndRenderTable}
+        refreshGroups={props.refreshGroups}/>
     : null }
     </React.Fragment>
   )

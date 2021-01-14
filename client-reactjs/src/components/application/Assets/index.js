@@ -333,28 +333,36 @@ function Assets(props) {
 
   const handleDragDrop = (info) => {
     if(info.node != undefined && info.dragNode != undefined) {
-      const dropKey = info.node.props.eventKey;
-      const dragKey = info.dragNode.props.eventKey;
-      const dropPos = info.node.props.pos.split('-');
-      fetch('/api/groups/move', {
-        method: 'put',
-        headers: authHeader(),
-        body: JSON.stringify({
-          "groupId": info.dragNode.props.id,
-          "destGroupId": info.node.props.id,
-          "app_id": application.applicationId
-        })
-      }).then(function(response) {
-        if(response.ok) {
-          return response.json();
-        }
+      confirm({
+        title: 'Are you sure you want to move "'+info.dragNode.title+ '" to "'+info.node.title+ '" group?',
+        okText: 'Yes',
+        okType: 'danger',
+        cancelText: 'No',
+        onOk() {
+          const dropKey = info.node.props.eventKey;
+          const dragKey = info.dragNode.props.eventKey;
+          const dropPos = info.node.props.pos.split('-');
+          fetch('/api/groups/move', {
+            method: 'put',
+            headers: authHeader(),
+            body: JSON.stringify({
+              "groupId": info.dragNode.id,
+              "destGroupId": info.node.id,
+              "app_id": application.applicationId
+            })
+          }).then(function(response) {
+            if(response.ok) {
+              return response.json();
+            }
 
-        handleError(response);
-      }).then(function(data) {
-        fetchGroups();
-      }).catch(error => {
-        console.log(error);
-      });
+            handleError(response);
+          }).then(function(data) {
+            fetchGroups();
+          }).catch(error => {
+            console.log(error);
+          });
+        }
+      })
     }
   }
 

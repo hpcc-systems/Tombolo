@@ -4,7 +4,7 @@ import { Modal, Button, Tree, message } from 'antd/lib';
 const { TreeNode, DirectoryTree } = Tree;
 const { confirm } = Modal;
 
-function MoveAssetsDialog({isShowing, toggle, application, assetToMove, reloadTable}) {
+function MoveAssetsDialog({isShowing, toggle, application, assetToMove, reloadTable, refreshGroups}) {
   const [moveDestinationGroup, setMoveDestinationGroup] = useState({id:'', key:''});
   const [expandedGroups, setExpandedGroups] = useState([]);
   const [treeData, setTreeData] = useState([]);
@@ -48,6 +48,7 @@ function MoveAssetsDialog({isShowing, toggle, application, assetToMove, reloadTa
   }
 
   const handleMove = () => {
+    console.log('moveDestinationGroup: '+moveDestinationGroup)
     message.config({top:130})
     if(assetToMove.selectedGroup.id == moveDestinationGroup.id) {
       message.error('"'+assetToMove.title + '" is already in "'+moveDestinationGroup.title+'" group. Please select a different group to move it.')
@@ -77,6 +78,7 @@ function MoveAssetsDialog({isShowing, toggle, application, assetToMove, reloadTa
         }).then(function(data) {
           message.success('"'+assetToMove.title+'" has been moved to "'+moveDestinationGroup.title+'" group.')
           reloadTable();
+          refreshGroups();
           handleClose();
         }).catch(error => {
           console.log(error);
