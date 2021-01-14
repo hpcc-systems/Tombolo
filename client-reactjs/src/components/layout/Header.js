@@ -118,7 +118,7 @@ class AppHeader extends Component {
       var nav = event.target.getAttribute("data-nav");
       if(nav == '/logout')
           return;
-      nav = (nav == '/' ? ('/'+this.props.applicationId.applicationId+'/data-dictionary') : nav)
+      nav = (nav == '/' ? ('/'+this.props.applicationId.applicationId+'/assets') : nav)
       this.setState({
           selectedTopNav: nav
       });
@@ -150,7 +150,7 @@ class AppHeader extends Component {
       this.setState({ selected: event.target.getAttribute("data-display") });
       //if it is asset details url, dont redirect to default /dataflow page
       if(!this.props.history.location.pathname.startsWith('/details')) {
-        this.props.history.push('/'+event.target.getAttribute("data-value")+'/data-dictionary');
+        this.props.history.push('/'+event.target.getAttribute("data-value")+'/assets');
       }
       $('[data-toggle="popover"]').popover('disable');
     }
@@ -164,7 +164,7 @@ class AppHeader extends Component {
         localStorage.setItem("activeProjectId", this.state.applications[0].value);
         //if it is asset details url, dont redirect to default /dataflow page
         if(!this.props.history.location.pathname.startsWith('/details')) {
-          this.props.history.push('/'+this.state.applications[0].value+'/data-dictionary');
+          this.props.history.push('/'+this.state.applications[0].value+'/assets');
         }
       } else {
         appDropdownItem.click();

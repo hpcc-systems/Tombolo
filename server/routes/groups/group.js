@@ -277,7 +277,7 @@ router.get('/assets', [
         })
       }))
 
-      promises.push(Groups.findAll({where:{application_id:req.query.app_id, parent_group:{[Op.or]:[null, '']}}}).then((groups) => {
+      promises.push(Groups.findAll({where:{application_id:req.query.app_id, parent_group:{[Op.or]:[null, '']}}, order: [['name', 'ASC']]}).then((groups) => {
         groups.forEach((group) => {
           finalGroups.push({
             type: 'Group',
@@ -291,8 +291,6 @@ router.get('/assets', [
 
       Promise.all(promises).then(() => {
         console.log("1-all assets retrieved....")
-        finalGroups.sort(comparator);
-
         finalAssets.sort(comparator)
 
         finalAssets = finalGroups.concat(finalAssets);
@@ -481,14 +479,15 @@ router.delete('/', [
 router.put('/move', [
   body('app_id').isUUID(4).withMessage('Invalid app id'),
   body('groupId').isUUID(4).withMessage('Invalid group id'),
-  body('destGroupId').isUUID(4).withMessage('Invalid target group id')
+  body('destGroupId').optional({checkFalsy:true}).isUUID(4).withMessage('Invalid target group id')
 ], (req, res) => {
     const errors = validationResult(req).formatWith(validatorUtil.errorFormatter);
     if (!errors.isEmpty()) {
         return res.status(422).json({ success: false, errors: errors.array() });
     }
+    let parentGroup = req.body.destGroupId ? req.body.destGroupId : "";
     Groups.update({
-      parent_group: req.body.destGroupId
+      parent_group: parentGroup
     }, {where:{id:req.body.groupId, application_id:req.body.app_id}}).then((groupUpdated) => {
       res.json({"success":true})
     })
@@ -501,14 +500,14 @@ router.put('/move', [
 router.put('/move/asset', [
   body('app_id').isUUID(4).withMessage('Invalid app id'),
   body('assetId').isUUID(4).withMessage('Invalid asset id'),
-  body('destGroupId').isUUID(4).withMessage('Invalid target group id'),
+  body('destGroupId').optional({checkFalsy:true}).isUUID(4).withMessage('Invalid target group id'),
   body('assetType').matches(/^[a-zA-Z]/).withMessage('Invalid asset type')
 ], (req, res) => {
     const errors = validationResult(req).formatWith(validatorUtil.errorFormatter);
     if (!errors.isEmpty()) {
         return res.status(422).json({ success: false, errors: errors.array() });
     }
-    let appId = req.body.app_id, assetId = req.body.assetId, destGroupId = req.body.destGroupId;
+    let appId = req.body.app_id, assetId = req.body.assetId, destGroupId = req.body.destGroupId ? req.body.destGroupId : "";
     try {
       switch (req.body.assetType) {
         case 'File':
@@ -544,7 +543,13 @@ router.put('/move/asset', [
 });
 
 let comparator = ((a,b) => {
-  return new Date(b.createdAt) - new Date(a.createdAt);
+  if (a.name < b.name) {
+    return -1;
+  }
+  if (a.name > b.name) {
+    return 1;
+  }
+  return 0;
 });
 
 module.exports = router;

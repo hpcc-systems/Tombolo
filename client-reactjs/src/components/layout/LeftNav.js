@@ -66,9 +66,9 @@ class LeftNav extends Component {
           <nav className="d-md-block bg-dark sidebar">
           <div className="sidebar-sticky">
             <ul className="nav flex-column">
-              <li className="nav-item">
+              {/*<li className="nav-item">
                 <NavLink to={"/"+applicationId+"/data-dictionary"} className="nav-link" data-toggle="popover" tabIndex="1"><i className="fa fa-lg fa-table"></i> <span className={this.state.collapsed ? "d-none" : ""}>Data Dictionary</span></NavLink>
-              </li>
+              </li>*/}
               <li className="nav-item">
                 <NavLink to={"/"+applicationId+"/assets"} className="nav-link" data-toggle="popover" tabIndex="2"><i className="fa fa-lg fa-cubes"></i> <span className={this.state.collapsed ? "d-none" : ""}>Assets</span></NavLink>
               </li>
