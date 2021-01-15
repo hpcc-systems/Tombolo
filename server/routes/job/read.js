@@ -206,7 +206,7 @@ router.get('/job_list', [
   }
   console.log("[job list/read.js] - Get job list for app_id = " + req.query.app_id);
   try {
-    Job.findAll({where:{"application_Id":req.query.app_id}, include:[Dataflow], order: [['createdAt', 'DESC']]}).then(function(jobs) {
+    Job.findAll({where:{"application_Id":req.query.app_id}, include:['dataflows'], order: [['createdAt', 'DESC']]}).then(function(jobs) {
         res.json(jobs);
     })
     .catch(function(err) {

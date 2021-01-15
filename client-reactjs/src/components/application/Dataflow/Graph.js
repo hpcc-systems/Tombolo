@@ -376,9 +376,11 @@ class Graph extends Component {
           switch(el.type) {
             case 'File':
               el.fileId=saveResponse.fileId;
+              this.saveAssetToDataflow(el.fileId, this.props.selectedDataflow.id);
               break;
             case 'Index':
               el.indexId=saveResponse.indexId;
+              this.saveAssetToDataflow(el.indexId, this.props.selectedDataflow.id);
               break;
             case 'Job':
             case 'Modeling':
@@ -387,6 +389,7 @@ class Graph extends Component {
             case 'Query Build':
             case 'Data Profile':
               el.jobId=saveResponse.jobId;
+              this.saveAssetToDataflow(el.jobId, this.props.selectedDataflow.id);
               break;
             case 'Sub-Process':
               el.subProcessId=saveResponse.id;
@@ -425,6 +428,22 @@ class Graph extends Component {
     } else {
       this.fetchSavedGraph();
     }
+  }
+
+  saveAssetToDataflow(assetId, dataflowId) {
+    console.log(`save asset -- assetId: ${assetId}, dataflowId: ${dataflowId}`);
+    fetch('/api/dataflow/saveAsset', {
+      method: 'post',
+      headers: authHeader(),
+      body: JSON.stringify({ assetId: assetId, dataflowId: dataflowId })
+    }).then(response => {
+      if (response.ok) {
+        return response.json();
+      }
+      handleError(response);
+    }).then(data => {
+      console.log(`Saved asset ${assetId} to dataflow ${dataflowId}...`);
+    });
   }
 
   saveGraph() {
@@ -1031,17 +1050,11 @@ class Graph extends Component {
     let _self=this;
     switch(d.type) {
       case 'File':
-        if(d.fileId) {
-          handleFileDelete(d.fileId, _self.props.applicationId);
-        }
         updateGraph((d.fileId ? d.fileId : d.id), _self.props.applicationId, _self.props.selectedDataflow).then((response) => {
           _self.fetchSavedGraph();
         });
         break;
       case 'Index':
-        if(d.indexId) {
-          handleIndexDelete(d.indexId, _self.props.applicationId);
-        }
         updateGraph((d.indexId ? d.indexId : d.id), _self.props.applicationId, _self.props.selectedDataflow).then((response) => {
           _self.fetchSavedGraph();
         });
@@ -1052,9 +1065,6 @@ class Graph extends Component {
       case 'Query Build':
       case 'ETL':
       case 'Data Profile':
-        if(d.jobId) {
-          handleJobDelete(d.jobId, _self.props.applicationId);
-        }
         updateGraph((d.jobId ? d.jobId : d.id), _self.props.applicationId, _self.props.selectedDataflow).then((response) => {
           _self.fetchSavedGraph();
         });
@@ -1261,16 +1271,25 @@ class Graph extends Component {
       var mouse = d3.mouse(this);
       var elem = document.elementFromPoint(mouse[0], mouse[1]);
       if (_self.graphState.shiftNodeDrag) {
-          _self.dragEnd(d3.select(this), _self.graphState.mouseEnterNode)
+          _self.dragEnd(d3.select(this), _self.graphState.mouseEnterNode);
       } else {
         //checking if the nodes have .select('rect').attr("stroke-width", "5") dropped at an x,y which is out of browser's viewport
-        let x = d3.event.x > 1500 ? 1500 : d3.event.x < 40 ? 40 : d3.event.x
-        let y = d3.event.y > 720 ? 720 : d3.event.y < 0 ? 0 : d3.event.y
+        let x = d3.event.x > 1500 ? 1500 : d3.event.x < 40 ? 40 : d3.event.x;
+        let y = d3.event.y > 720 ? 720 : d3.event.y < 0 ? 0 : d3.event.y;
         d.x = x;
         d.y = y;
       }
-      _self.updateGraph();
-      _self.saveGraph();
+      if (_self.graphState.justDragged === true) {
+        (function() {
+          return new Promise((resolve) => {
+            _self.updateGraph();
+            resolve();
+          })
+        })().then(() => {;
+          _self.saveGraph();
+        });
+      }
+      _self.graphState.justDragged = false;
     } : null);
 
     // listen for key events
@@ -1350,7 +1369,7 @@ class Graph extends Component {
     }
 
     const editingAllowed = hasEditPermission(this.props.user);
-	return (
+  return (
       <React.Fragment>
       {!this.props.viewMode ?
          <div className="col-sm-1 float-left" style={{width:"85px"}}><nav id={this.props.sidebarContainer} className="navbar-light fixed-left graph-sidebar" style={{"backgroundColor": "#e3f2fd", "fontSize": "12px"}}></nav></div>
@@ -1418,7 +1437,7 @@ class Graph extends Component {
             onFileAdded={this.onFileAdded}
             user={this.props.user} />  : null}
     </React.Fragment>
-	)
+  )
   }
 
 }

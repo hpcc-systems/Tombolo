@@ -17,8 +17,7 @@ module.exports = (sequelize, DataTypes) => {
     gitRepo: DataTypes.STRING,
     jobType: DataTypes.STRING,
     title: DataTypes.STRING,
-    name: DataTypes.STRING,
-    dataflowId: DataTypes.UUIDV4
+    name: DataTypes.STRING
   }, {freezeTableName: true});
   job.associate = function(models) {
     job.hasMany(models.jobfile,{
@@ -31,7 +30,12 @@ module.exports = (sequelize, DataTypes) => {
       onDelete: 'CASCADE',
       hooks: true
     });
-    job.belongsTo(models.dataflow);
+    job.belongsToMany(models.dataflow, {
+      through: 'assets_dataflows',
+      as: 'dataflows',
+      foreignKey: 'assetId',
+      otherKey: 'dataflowId'
+    });
     job.belongsTo(models.application, {
       foreignKey: 'application_id'
     });

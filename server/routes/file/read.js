@@ -41,7 +41,7 @@ router.get('/file_list', [
     }
     console.log("[file list/read.js] - Get file list for app_id = " + req.query.app_id);
     try {
-        File.findAll({where:{"application_id":req.query.app_id}, include: [Dataflow], order: [['createdAt', 'DESC']]}).then(function(files) {
+        File.findAll({where:{"application_id":req.query.app_id}, include: ['dataflows'], order: [['createdAt', 'DESC']]}).then(function(files) {
             res.json(files);
         })
         .catch(function(err) {
