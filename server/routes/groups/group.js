@@ -56,7 +56,7 @@ let createGroupHierarchy = (groups) => {
 
 router.get('/details', [
   query('app_id').isUUID(4).withMessage('Invalid app id'),
-  query('group_id').isUUID(4).withMessage('Invalid group id')
+  query('group_id').isInt().withMessage('Invalid group id')
 ], (req, res) => {
     const errors = validationResult(req).formatWith(validatorUtil.errorFormatter);
     if (!errors.isEmpty()) {
@@ -157,7 +157,7 @@ let prepareWhereClause = (keywords) => {
 
 router.get('/assets', [
   query('app_id').isUUID(4).withMessage('Invalid app id'),
-  query('group_id').optional({checkFalsy:true}).isUUID(4).withMessage('Invalid group id')
+  query('group_id').optional({checkFalsy:true}).isInt().withMessage('Invalid group id')
 ], (req, res) => {
     const errors = validationResult(req).formatWith(validatorUtil.errorFormatter);
     if (!errors.isEmpty()) {
@@ -301,7 +301,7 @@ router.get('/assets', [
 
 router.get('/assetsSearch', [
   query('app_id').isUUID(4).withMessage('Invalid app id'),
-  query('group_id').optional({checkFalsy:true}).isUUID(4).withMessage('Invalid group id'),
+  query('group_id').optional({checkFalsy:true}).isInt().withMessage('Invalid group id'),
   query('assetTypeFilter').optional({checkFalsy:true}).matches(/^[a-zA-Z]{1}[a-zA-Z,]*$/).withMessage('Invalid assetTypeFilter'),
   query('keywords').optional({checkFalsy:true}).matches(/^[*"a-zA-Z]{1}[a-zA-Z0-9_ :.\-*"\"]*$/).withMessage('Invalid keywords')
 ], async (req, res) => {
@@ -315,7 +315,7 @@ router.get('/assetsSearch', [
            "order by parent_group, id) groups_sorted, "+
           "(select @pv := (:groupId)) initialisation "+
 
-      "where find_in_set(parent_group, @pv) or id=(:groupId)) as hie " +
+      "where find_in_set(parent_group, @pv) and length(@pv := concat(@pv, ',', id)) > 0 or id=(:groupId)) as hie " +
       "join (";
       if(assetFilters.length == 0 || assetFilters.includes("File")) {
         query += "select f.id, f.name, f.groupId, f.title, f.description, f.createdAt, 'File' as type from file f where f.application_id = (:applicationId) and  (f.name like (:keyword) or f.title like (:keyword)) ";
@@ -331,7 +331,13 @@ router.get('/assetsSearch', [
       }
       if(assetFilters.length == 0 || assetFilters.includes("Job")) {
         query += "select j.id, j.name, j.groupId, j.title, j.description, j.createdAt, 'Job' as type  from job j where j.application_id = (:applicationId) and (j.name like (:keyword) or j.title like (:keyword) ) ";
+        query += (assetFilters.length == 0 || assetFilters.length > 1) ? "union all " : "";
       }
+      if(assetFilters.length == 0 || assetFilters.includes("Groups")) {
+        query += "select g.id, g.name, g.parent_group, g.name as title, g.description, g.createdAt, 'Group' as type  from groups g where g.application_id = (:applicationId) and (g.name like (:keyword) ) ";
+        query += (assetFilters.length == 0 || assetFilters.length > 1) ? "union all " : "";
+      }
+
       query = query.endsWith(" union all ") ? query.substring(0, query.lastIndexOf(" union all ")) : query;
       console.log(query);
       query += " ) as assets on (assets.groupId = hie.id) "
@@ -339,19 +345,23 @@ router.get('/assetsSearch', [
   } else {
     query = "";
     if(assetFilters.length == 0 || assetFilters.includes("File")) {
-      query += "select f.id, f.name, f.groupId, g.name as group_name, f.title, f.description, f.createdAt, 'File' as type from file f, groups g where f.application_id = (:applicationId) and  (f.name like (:keyword) or f.title like (:keyword)) and f.groupId = g.id ";
+      query += "select f.id, f.name, f.groupId, g.name as group_name, f.title, f.description, f.createdAt, 'File' as type from file f left outer join groups g on f.groupId = g.id where f.application_id = (:applicationId) and  (f.name like (:keyword) or f.title like (:keyword) and f.groupId = null) ";
       query += (assetFilters.length == 0 || assetFilters.length > 1) ? "union all " : "";
     }
     if(assetFilters.length == 0 || assetFilters.includes("Query")) {
-      query += "select q.id, q.name, q.groupId, g.name as group_name, q.title, q.description, q.createdAt, 'Query' as type from query q, groups g where q.application_id = (:applicationId) and (q.name like (:keyword) or q.title like (:keyword)) and q.groupId = g.id ";
+      query += "select q.id, q.name, q.groupId, g.name as group_name, q.title, q.description, q.createdAt, 'Query' as type from query q left outer join groups g on q.groupId = g.id where q.application_id = (:applicationId) and (q.name like (:keyword) or q.title like (:keyword) and q.groupId = null) ";
       query += (assetFilters.length == 0 || assetFilters.length > 1) ? "union all " : "";
     }
     if(assetFilters.length == 0 || assetFilters.includes("Indexes")) {
-      query += "select idx.id, idx.name, idx.groupId, g.name as group_name, idx.title, idx.description, idx.createdAt, 'Index' as type  from indexes idx, groups g where idx.application_id = (:applicationId) and (idx.name like (:keyword) or idx.title like (:keyword)) and idx.groupId = g.id ";
+      query += "select idx.id, idx.name, idx.groupId, g.name as group_name, idx.title, idx.description, idx.createdAt, 'Index' as type from indexes idx left outer join groups g on idx.groupId = g.id where idx.application_id = (:applicationId) and (idx.name like (:keyword) or idx.title like (:keyword) and idx.groupId = null) ";
       query += (assetFilters.length == 0 || assetFilters.length > 1) ? "union all " : "";
     }
     if(assetFilters.length == 0 || assetFilters.includes("Job")) {
-      query += "select j.id, j.name, j.groupId, g.name as group_name, j.title, j.description, j.createdAt, 'Job' as type  from job j, groups g where j.application_id = (:applicationId) and (j.name like (:keyword) or j.title like (:keyword)) and j.groupId = g.id";
+      query += "select j.id, j.name, j.groupId, g.name as group_name, j.title, j.description, j.createdAt, 'Job' as type  from job j left outer join groups g on j.groupId = g.id where j.application_id = (:applicationId) and (j.name like (:keyword) or j.title like (:keyword) and j.groupId = null)";
+      query += (assetFilters.length == 0 || assetFilters.length > 1) ? "union all " : "";
+    }
+    if(assetFilters.length == 0 || assetFilters.includes("Groups")) {
+      query += "select g.id, g.name, g.parent_group as groupId, gp.name as group_name, '' as title, g.description, g.createdAt, 'Group' as type  from groups g inner join groups gp on g.parent_group = gp.id where g.application_id = (:applicationId) and g.name like (:keyword) ";
       //query += (assetFilters.length == 0 || assetFilters.length > 1) ? "union all " : "";
     }
     replacements = { applicationId: req.query.app_id, keyword: keywords }
@@ -380,10 +390,10 @@ let groupExistsWithSameName = (parentGroupId, name, appId) => {
 }
 
 router.post('/', [
-  body('parentGroupId').optional({checkFalsy:true}).isUUID(4).withMessage('Invalid parent group id'),
+  body('parentGroupId').optional({checkFalsy:true}).isInt().withMessage('Invalid parent group id'),
   body('id').optional({checkFalsy:true}).isUUID(4).withMessage('Invalid id'),
   body('applicationId').isUUID(4).withMessage('Invalid application id'),
-  body('name').matches(/^[a-zA-Z]{1}[a-zA-Z0-9_.\-:]*$/).withMessage('Invalid Name')
+  body('name').matches(/^[a-zA-Z0-9_.\-:]*$/).withMessage('Invalid Name')
 ], async (req, res) => {
   const errors = validationResult(req).formatWith(validatorUtil.errorFormatter);
   if (!errors.isEmpty()) {
@@ -402,7 +412,7 @@ router.post('/', [
           application_id: req.body.applicationId,
           parent_group: parentGroupId
         }).then((groupCreated) => {
-          res.json({"success":true})
+          res.json({"success":true, "id":groupCreated.id})
         })
       }
     } else {
@@ -418,7 +428,7 @@ router.post('/', [
             name: req.body.name,
             description: req.body.description
           }, {where:{id:req.body.id}}).then((groupUpdated) => {
-            res.json({"success":true})
+            res.json({"success":true, "id": groupUpdated.id})
           })
         }
       })
@@ -452,7 +462,7 @@ let canDeleteGroup = (group_id, appId) => {
 
 router.delete('/', [
   body('app_id').isUUID(4).withMessage('Invalid app id'),
-  body('group_id').isUUID(4).withMessage('Invalid group id')
+  body('group_id').isInt().withMessage('Invalid group id')
 ], async (req, res) => {
     const errors = validationResult(req).formatWith(validatorUtil.errorFormatter);
     if (!errors.isEmpty()) {
@@ -478,8 +488,8 @@ router.delete('/', [
 
 router.put('/move', [
   body('app_id').isUUID(4).withMessage('Invalid app id'),
-  body('groupId').isUUID(4).withMessage('Invalid group id'),
-  body('destGroupId').optional({checkFalsy:true}).isUUID(4).withMessage('Invalid target group id')
+  body('groupId').isInt().withMessage('Invalid group id'),
+  body('destGroupId').optional({checkFalsy:true}).isInt().withMessage('Invalid target group id')
 ], (req, res) => {
     const errors = validationResult(req).formatWith(validatorUtil.errorFormatter);
     if (!errors.isEmpty()) {
@@ -500,7 +510,7 @@ router.put('/move', [
 router.put('/move/asset', [
   body('app_id').isUUID(4).withMessage('Invalid app id'),
   body('assetId').isUUID(4).withMessage('Invalid asset id'),
-  body('destGroupId').optional({checkFalsy:true}).isUUID(4).withMessage('Invalid target group id'),
+  body('destGroupId').optional({checkFalsy:true}).isInt().withMessage('Invalid target group id'),
   body('assetType').matches(/^[a-zA-Z]/).withMessage('Invalid asset type')
 ], (req, res) => {
     const errors = validationResult(req).formatWith(validatorUtil.errorFormatter);

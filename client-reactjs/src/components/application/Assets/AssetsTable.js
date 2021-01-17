@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react'
+import React, { useState, useEffect} from 'react'
 import { Table, message, Popconfirm, Tooltip, Divider} from 'antd/lib';
 import { authHeader, handleError } from "../../common/AuthHeader.js"
 import FileDetailsForm from "../FileDetails";
@@ -13,8 +13,7 @@ import { useHistory } from 'react-router';
 import useModal from '../../../hooks/useModal';
 import { DeleteOutlined, EditOutlined, QuestionCircleOutlined, FolderOpenOutlined  } from '@ant-design/icons';
 
-function AssetsTable(props) {
-  let {selectedGroup} = props;
+function AssetsTable({selectedGroup, handleEditGroup, refreshGroups}) {
   const [assets, setAssets] = useState([]);
   const { isShowing, toggle, OpenDetailsForm } = useFileDetailsForm();
   const authReducer = useSelector(state => state.authenticationReducer);
@@ -33,7 +32,9 @@ function AssetsTable(props) {
   });
 
   useEffect(() => {
-    if(applicationId && selectedGroup && selectedGroup.groupId != '' || (assetTypeFilter != '' || keywords != '')) {
+    if(applicationId && selectedGroup && selectedGroup.groupId != '' //a group has been selected
+      || (assetTypeFilter != '' || keywords != '') //a search triggered
+      ) {
       fetchDataAndRenderTable();
     }
   }, [applicationId, selectedGroup, assetTypeFilter, keywords]);
@@ -88,7 +89,7 @@ function AssetsTable(props) {
         history.push('/' + applicationId + '/query/' + id);
         break;
       case 'Group':
-        props.handleEditGroup(id);
+        handleEditGroup(id);
         break;
       default:
         break
@@ -144,7 +145,7 @@ function AssetsTable(props) {
     .then(result => {
       fetchDataAndRenderTable();
       if(type == 'Group') {
-        props.refreshGroups();
+        refreshGroups();
       }
       message.success(type + " deleted sucessfully");
     }).catch(error => {
@@ -154,7 +155,9 @@ function AssetsTable(props) {
   }
 
   const handleGroupClick = (groupId) => {
-    props.openGroup(groupId)
+    dispatch(assetsActions.assetInGroupSelected(
+      groupId
+    ));
   }
 
   const editingAllowed = hasEditPermission(authReducer.user);
@@ -189,7 +192,7 @@ function AssetsTable(props) {
     render: (text, record) => (
       <React.Fragment>
         <span className="asset-name">{generateAssetIcon(record.type)}<a href='#' onClick={(row) => handleEdit(record.id, record.type)}>{text}</a></span>
-        {keywords && keywords.length > 0 ? <span className={"group-name"}>In Group: <a href='#' onClick={(row) => handleGroupClick(record.groupId)}>{record.group_name}</a></span> : null}
+        {keywords && keywords.length > 0 ? <span className={"group-name"}>In Group: <a href='#' onClick={(row) => handleGroupClick(record.groupId)}>{record.group_name ? record.group_name : 'Groups'}</a></span> : null}
         </React.Fragment>
         )
   },
@@ -249,7 +252,7 @@ function AssetsTable(props) {
         application={applicationReducer.application}
         assetToMove={assetToMove}
         reloadTable={fetchDataAndRenderTable}
-        refreshGroups={props.refreshGroups}/>
+        refreshGroups={refreshGroups}/>
     : null }
     </React.Fragment>
   )

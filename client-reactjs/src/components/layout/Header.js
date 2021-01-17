@@ -137,7 +137,7 @@ class AppHeader extends Component {
       });
       this.props.dispatch(applicationActions.applicationSelected('', ''));
       //reset the group heiracrhy selection
-      this.props.dispatch(groupsActions.groupExpanded('', []));
+      this.props.dispatch(groupsActions.groupExpanded({'id':'', 'key':'0-0'}, ['0-0']));
       this.props.dispatch(userActions.logout());
 
       this.props.history.push('/login');

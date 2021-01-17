@@ -3,7 +3,8 @@ import { Constants } from '../../components/common/Constants';
 const initialState = {
   selectedAsset:{id:'', applicationId:'', title:''},
   newAsset:{groupId:'', applicationId:'', isNew:false},
-  searchParams:{assetTypeFilter:'', keywords:''}
+  searchParams:{assetTypeFilter:'', keywords:''},
+  assetInGroupId: ''
 };
 
 export function assetReducer(state = initialState, action) {
@@ -41,6 +42,11 @@ export function assetReducer(state = initialState, action) {
       return {
         ...state,
         searchParams: action.searchParams
+      };
+    case Constants.ASSET_IN_GROUP_SELECTED:
+      return {
+        ...state,
+        assetInGroupId: action.groupId
       };
     default:
       return state

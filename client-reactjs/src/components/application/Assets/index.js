@@ -24,9 +24,12 @@ const CheckboxGroup = Checkbox.Group;
 message.config({top: 100});
 
 function Assets(props) {
+  const groupsReducer = useSelector(state => state.groupsReducer);
+  const assetReducer = useSelector(state => state.assetReducer);
+  console.log(groupsReducer);
   const [application, setApplication] = useState({...props});
-  const [selectedGroup, setSelectedGroup] = useState({id:'', key:''});
-  const [expandedGroups, setExpandedGroups] = useState([]);
+  const [selectedGroup, setSelectedGroup] = useState({'id':groupsReducer.selectedKeys.id, 'key':groupsReducer.selectedKeys.key});
+  const [expandedGroups, setExpandedGroups] = useState(groupsReducer.expandedKeys);
   const [newGroup, setNewGroup] = useState({name:'', description:'', id: ''});
   const [newGroupForm, setNewGroupForm] = useState({submitted:false});
   const [treeData, setTreeData] = useState([]);
@@ -38,9 +41,12 @@ function Assets(props) {
     id: '',
     categoryName: ''
   });
-  const [assetTypeFilter, setAssetTypeFilter] = useState(['File', 'Job', 'Query', 'Indexes']);
+  const [assetTypeFilter, setAssetTypeFilter] = useState(['File', 'Job', 'Query', 'Indexes', 'Groups']);
   const [searchKeyWord, setSearchKeyWord] = useState('');
   const [dataList, setDataList] = useState([]);
+  //id of the group clicked from Asset table after a search
+  const {assetInGroupId} = assetReducer;
+
   const formItemLayout = {
     labelCol: {
       xs: { span: 2 },
@@ -52,17 +58,16 @@ function Assets(props) {
     },
   };
 
-  const searchOptions = ['File', 'Job', 'Query', 'Indexes'];
+  const searchOptions = ['File', 'Job', 'Query', 'Indexes', 'Groups'];
 
   const [form] = Form.useForm();
-  const groupsReducer = useSelector(state => state.groupsReducer);
+
   //ref for More Options context menu
   const ref = useRef();
   //hook for outside click to close the more options context menu
   useOnClickOutside(ref, () => setRightClickNodeTreeItem({visible: false}));
 
   let list = [];
-
   useEffect(() => {
     if(application.applicationId) {
       fetchGroups();
@@ -76,6 +81,12 @@ function Assets(props) {
     }
   }, [assetTypeFilter]);
 
+  useEffect(() => {
+    if(assetInGroupId) {
+      openGroup(assetInGroupId);
+    }
+  }, [assetInGroupId]);
+
   const fetchGroups = () => {
     let url = "/api/groups?app_id="+application.applicationId;
     fetch(url, {
@@ -88,20 +99,12 @@ function Assets(props) {
       handleError(response);
     })
     .then(data => {
-      setTreeData(data)
+      setTreeData(data);
+      //flatten the tree
       let list = generateList(data);
       setDataList(list);
-      //select & expand groups
-      const {keys={selectedKeys:{id:'', key:'0-0'}, expandedKeys:['0-0']}} = {...groupsReducer};
-      setSelectedGroup({'id':keys.selectedKeys.id, 'key':keys.selectedKeys.key})
-      setExpandedGroups(keys.expandedKeys);
 
-      setSearchKeyWord('');
-      dispatch(assetsActions.searchAsset(
-        '',
-        ''
-      ))
-
+      clearSearch();
     }).catch(error => {
       console.log(error);
     });
@@ -109,12 +112,23 @@ function Assets(props) {
 
   const dispatch = useDispatch();
 
+  const clearSearch = () => {
+    setSearchKeyWord('');
+    document.querySelector('.ant-input-clear-icon').click();
+    dispatch(assetsActions.searchAsset(
+      '',
+      ''
+    ))
+  }
+
   const onSelect = (keys, event) => {
+    event.nativeEvent.stopPropagation();
     setSelectedGroup({id:event.node.props.id, key:event.node.props.eventKey})
     dispatch(groupsActions.groupExpanded(
       {id:event.node.props.id, key:keys[0]},
-      keys
+      expandedGroups
     ));
+    clearSearch();
   };
 
   const onExpand = (expandedKeys) => {
@@ -125,19 +139,19 @@ function Assets(props) {
     ));
   };
 
-  const getParentKey = (key, treeData) => {
-    let parentKey;
-    for (let i = 0; i < treeData.length; i++) {
-      const node = treeData[i];
+  const getParent = (key, data) => {
+    let parent;
+    for (let i = 0; i < data.length; i++) {
+      const node = data[i];
       if (node.children) {
         if (node.children.some(item => item.key === key)) {
-          parentKey = node.key;
-        } else if (getParentKey(key, node.children)) {
-          parentKey = getParentKey(key, node.children);
+          parent = node;
+        } else if (getParent(key, node.children)) {
+          parent = getParent(key, node.children);
         }
       }
     }
-    return parentKey;
+    return parent;
   };
 
   const generateList = data => {
@@ -153,21 +167,43 @@ function Assets(props) {
   };
 
   const openGroup = (groupId) => {
-    //setSearchKeyWord('');
-    let match = dataList.filter(group => group.id == groupId);
-    let parentKey = getParentKey(match[0].key, treeData);
-    setSelectedGroup({id:match[0].id, key:match[0].key})
-    onExpand([parentKey])
+    if(groupId && groupId.length > 0) {
+      let match = dataList.filter(group => group.id == groupId);
+      if(match) {
+        let parent = getParent(match[0].key, treeData);
+        if(parent) {
+          let expandedKeys = !groupsReducer.expandedKeys.includes(parent.key) ? groupsReducer.expandedKeys.concat([parent.key]) : groupsReducer.expandedKeys;
+          setSelectedGroup({id:match[0].id, key:match[0].key});
+          setExpandedGroups(expandedKeys);
+          dispatch(groupsActions.groupExpanded(
+            {id:match[0].id, key:match[0].key},
+            expandedKeys
+          ));
+        }
+      }
+    } else if(groupId == '') {
+      setSelectedGroup({id:"", key:"0-0"});
+      onExpand(["0-0"]);
+    }
+    dispatch(assetsActions.assetInGroupSelected(
+      ''
+    ));
   }
 
   const showMoreOptions = e => {
     e.preventDefault();
+    e.stopPropagation();
+    setSelectedGroup({id: e.target.getAttribute('data-id'), key: e.target.getAttribute('data-key')})
+    dispatch(groupsActions.groupExpanded(
+      {id:e.target.getAttribute('data-id'), key:e.target.getAttribute('data-key')},
+      expandedGroups
+    ));
+
     setRightClickNodeTreeItem({
       visible: true,
       pageX: e.clientX,
-      pageY: e.clientY,
+      pageY: (window.innerHeight - e.clientY > 150 ? e.clientY : (e.clientY - 150))
     });
-
   }
 
   const openNewGroupDialog = () => {
@@ -262,6 +298,12 @@ function Assets(props) {
       handleError(response);
     }).then(function(data) {
       if(data && data.success) {
+        let expandedKeys = !groupsReducer.expandedKeys.includes(selectedGroup.key) ? groupsReducer.expandedKeys.concat([selectedGroup.key]) : groupsReducer.expandedKeys;
+        setExpandedGroups(expandedKeys);
+        dispatch(groupsActions.groupExpanded(
+          {id:selectedGroup.id, key:selectedGroup.key},
+          expandedKeys
+        ));
         closeCreateGroupDialog();
         fetchGroups();
       }
@@ -272,12 +314,15 @@ function Assets(props) {
   }
 
   const handleDeleteGroup = () => {
+    let parent={};
     confirm({
       title: 'Are you sure you want to delete this Group?',
       okText: 'Yes',
       okType: 'danger',
       cancelText: 'No',
       onOk() {
+        parent = getParent(selectedGroup.key, treeData);
+        console.log(parent);
         fetch('/api/groups', {
           method: 'delete',
           headers: authHeader(),
@@ -292,6 +337,11 @@ function Assets(props) {
 
           handleError(response);
         }).then(function(data) {
+          dispatch(groupsActions.groupExpanded(
+            {id:parent.id, key:parent.key},
+            groupsReducer.expandedKeys
+          ));
+
           fetchGroups();
         }).catch(error => {
           console.log(error);
@@ -339,6 +389,7 @@ function Assets(props) {
         okType: 'danger',
         cancelText: 'No',
         onOk() {
+
           const dropKey = info.node.props.eventKey;
           const dragKey = info.dragNode.props.eventKey;
           const dropPos = info.node.props.pos.split('-');
@@ -366,7 +417,10 @@ function Assets(props) {
     }
   }
 
+
   const handleAssetSearch = debounce ((value, enterPress) => {
+
+    console.log(value);
     let expandedKeys = [];
     //validate only if enter pressed otherwise clearing search term will also trigger this validation
     if(enterPress && !value) {
@@ -378,17 +432,16 @@ function Assets(props) {
       message.error("Please select atleast one asset type")
       return;
     }
-
     setSearchKeyWord(value);
     let assetFilter = assetTypeFilter.length != searchOptions.length ? assetTypeFilter.join(',') : ''
     dispatch(assetsActions.searchAsset(
       assetFilter,
       value
     ))
-  }, 350)
+  }, 350);
 
   const titleRenderer = (nodeData) => {
-    return <TitleRenderer title={nodeData.title} showMoreOptions={showMoreOptions} textToHighlight={searchKeyWord}/>
+    return <TitleRenderer title={nodeData.title} id={nodeData.id} nodeKey={nodeData.key} showMoreOptions={showMoreOptions}/>
   }
 
   const onAssetTypeFilterChange = (selectedValues) => {
@@ -423,7 +476,7 @@ function Assets(props) {
 
   return (
       <React.Fragment>
-        <div>
+        <div style={{overflow:"hidden"}}>
           <div className="d-flex justify-content-end" style={{paddingTop:"55px", margin: "5px"}}>
             <BreadCrumbs applicationId={application.applicationId} applicationTitle={application.applicationTitle}/>
             <div className="ml-auto">
@@ -437,10 +490,11 @@ function Assets(props) {
             </div>
           </div>
           <Row gutter={24}>
-            <Col className="gutter-row groups-div" span={4}>
+            <Col className="gutter-row groups-div" span={4} style={{height: window.innerHeight + 100, overflow: "auto"}}>
               <div className="gutter-box">
                   <div style={{ marginBottom: 8 }}>
-                    <Input
+                    <Search
+                      id="search-field"
                       addonBefore={selectBefore}
                       placeholder="Search assets"
                       allowClear
@@ -451,20 +505,21 @@ function Assets(props) {
                     onSelect={onSelect}
                     onExpand={onExpand}
                     treeData={treeData}
-                    selectedKeys={[selectedGroup.key]}
-                    expandedKeys={expandedGroups}
+                    selectedKeys={[groupsReducer.selectedKeys.key]}
+                    expandedKeys={[...groupsReducer.expandedKeys]}
                     autoExpandParent={true}
                     draggable
                     onDragEnter={handleDragEnter}
                     onDrop={handleDragDrop}
                     expandAction={false}
                     titleRender={titleRenderer}
+                    virtual={false}
                   />
               </div>
             </Col>
             <Col className="gutter-row groups-div" span={20}>
               <div className="gutter-box">
-                <AssetsTable selectedGroup={selectedGroup} handleEditGroup={handleEditGroup} refreshGroups={fetchGroups} openGroup={openGroup}/>
+                <AssetsTable selectedGroup={selectedGroup} handleEditGroup={handleEditGroup} refreshGroups={fetchGroups}/>
               </div>
             </Col>
           </Row>
