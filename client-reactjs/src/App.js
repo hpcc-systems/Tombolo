@@ -62,7 +62,6 @@ class App extends React.Component {
 
     return (
         <Router history={history}>
-        <div>
             <Route exact path="/login" component={LoginPage} />
             <Route exact path="/forgot-password" component={ForgotPassword} />
             <Route exact path="/reset-password/:id" component={ResetPassword} />
@@ -97,7 +96,6 @@ class App extends React.Component {
 
                   </Layout>
               </Layout>
-        </div>
     </Router>
     );
   }

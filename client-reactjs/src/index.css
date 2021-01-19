@@ -546,7 +546,14 @@ div.tooltip {
 }
 
 .groups-div {
-  height:70vh;
+  flex: 1 1 auto;
+  height: calc(100% - 150px);
+  width: 15%;
+  overflow-y: auto;
+}
+
+.asset-table {
+  width: 85%;
 }
 
 .drag-handle {

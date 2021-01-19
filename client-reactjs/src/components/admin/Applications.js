@@ -282,16 +282,16 @@ class Applications extends Component {
           : null }
         </span>
     }];
-    const formItemLayout = {
-      labelCol: {
-        xs: { span: 2 },
-        sm: { span: 5 },
-      },
-      wrapperCol: {
-        xs: { span: 2 },
-        sm: { span: 18 },
-      },
-    };
+  const formItemLayout = {
+    labelCol: {
+      xs: { span: 2 },
+      sm: { span: 8 },
+    },
+    wrapperCol: {
+      xs: { span: 4 },
+      sm: { span: 24 },
+    },
+  };
 
     return (
     <React.Fragment>
@@ -319,14 +319,14 @@ class Applications extends Component {
           confirmLoading={confirmLoading}
         >
 	        <Form layout="vertical">
-            <Form.Item {...formItemLayout} label="Title" rules={[
+            <Form.Item {...formItemLayout} onFinish={this.handleAddAppOk.bind(this)} label="Title" rules={[
               {
                 required: true,
                 pattern: new RegExp(/^[a-zA-Z]{1}[a-zA-Z0-9_:.\-]*$/),
                 message: 'Invalid title!'
               }
             ]}>
-              <Input id="app_title" name="title" onChange={this.onChange} placeholder="Title" value={this.state.newApp.title}/>
+              <Input id="app_title" name="title" onChange={this.onChange} placeholder="Title" value={this.state.newApp.title} onPressEnter={this.handleAddAppOk.bind(this)}/>
             </Form.Item>
 
             <Form.Item {...formItemLayout} label="Description">

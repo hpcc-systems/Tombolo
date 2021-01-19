@@ -6,6 +6,7 @@ import { authHeader, handleError } from "../../common/AuthHeader.js"
 import { hasEditPermission } from "../../common/AuthUtil.js";
 import { Constants } from '../../common/Constants';
 import { useSelector, useDispatch } from "react-redux";
+import ReactDOM from 'react-dom';
 import { withRouter, NavLink } from 'react-router-dom';
 import { assetsActions } from '../../../redux/actions/Assets';
 import { groupsActions } from '../../../redux/actions/Groups';
@@ -26,7 +27,6 @@ message.config({top: 100});
 function Assets(props) {
   const groupsReducer = useSelector(state => state.groupsReducer);
   const assetReducer = useSelector(state => state.assetReducer);
-  console.log(groupsReducer);
   const [application, setApplication] = useState({...props});
   const [selectedGroup, setSelectedGroup] = useState({'id':groupsReducer.selectedKeys.id, 'key':groupsReducer.selectedKeys.key});
   const [expandedGroups, setExpandedGroups] = useState(groupsReducer.expandedKeys);
@@ -277,7 +277,7 @@ function Assets(props) {
   }
 
   const handleCreateGroup = (e) => {
-    e.preventDefault();
+    //e.preventDefault();
     let isNew = (newGroup.id && newGroup.id != '') ? false : true;
     setNewGroupForm({'submitted': true});
     fetch('/api/groups', {
@@ -476,7 +476,7 @@ function Assets(props) {
 
   return (
       <React.Fragment>
-        <div style={{overflow:"hidden"}}>
+        <div style={{"height":"100%", overflow: "hidden"}}>
           <div className="d-flex justify-content-end" style={{paddingTop:"55px", margin: "5px"}}>
             <BreadCrumbs applicationId={application.applicationId} applicationTitle={application.applicationTitle}/>
             <div className="ml-auto">
@@ -489,18 +489,18 @@ function Assets(props) {
                 : null }
             </div>
           </div>
-          <Row gutter={24}>
-            <Col className="gutter-row groups-div" span={4} style={{height: window.innerHeight + 100, overflow: "auto"}}>
-              <div className="gutter-box">
-                  <div style={{ marginBottom: 8 }}>
-                    <Search
-                      id="search-field"
-                      addonBefore={selectBefore}
-                      placeholder="Search assets"
-                      allowClear
-                      onPressEnter={e => handleAssetSearch(e.target.value, true)}
-                      onChange={e => handleAssetSearch(e.target.value)}/>
-                  </div>
+          <div style={{display: "flex", "height": "100%"}}>
+            <div className="md-3 groups-div">
+                <div style={{ marginBottom: 8 }}>
+                  <Search
+                    id="search-field"
+                    addonBefore={selectBefore}
+                    placeholder="Search assets"
+                    allowClear
+                    onPressEnter={e => handleAssetSearch(e.target.value, true)}
+                    onChange={e => handleAssetSearch(e.target.value)}/>
+                </div>
+                <div>
                   <DirectoryTree
                     onSelect={onSelect}
                     onExpand={onExpand}
@@ -514,15 +514,16 @@ function Assets(props) {
                     expandAction={false}
                     titleRender={titleRenderer}
                     virtual={false}
+                    onScroll={e => console.log(e)}
                   />
-              </div>
-            </Col>
-            <Col className="gutter-row groups-div" span={20}>
+                </div>
+            </div>
+            <div className="asset-table gutter-row">
               <div className="gutter-box">
                 <AssetsTable selectedGroup={selectedGroup} handleEditGroup={handleEditGroup} refreshGroups={fetchGroups}/>
               </div>
-            </Col>
-          </Row>
+            </div>
+          </div>
           <RightClickMenu/>
         </div>
 

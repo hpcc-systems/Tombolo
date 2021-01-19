@@ -34,13 +34,15 @@ function AddDataflow({isShowing, toggle, applicationId, onDataFlowUpdated, selec
   const formItemLayout = {
     labelCol: {
       xs: { span: 2 },
-      sm: { span: 5 },
+      sm: { span: 8 },
     },
     wrapperCol: {
-      xs: { span: 2 },
-      sm: { span: 18 },
+      xs: { span: 4 },
+      sm: { span: 24 },
     },
   };
+
+  const [formObj] = Form.useForm();
 
   const getClusters = () => {
     fetch("/api/hpcc/read/getClusters", {
@@ -65,6 +67,7 @@ function AddDataflow({isShowing, toggle, applicationId, onDataFlowUpdated, selec
   }
 
   const handleAddAppOk = () => {
+    console.log('handleAddAppOk')
     setForm({
       submitted: true
     });
@@ -137,18 +140,24 @@ function AddDataflow({isShowing, toggle, applicationId, onDataFlowUpdated, selec
 	  <div>
       <Modal
           title="Add Dataflow"
-          onOk={handleAddAppOk.bind(this)}
+          onOk={handleAddAppOk}
           onCancel={handleAddAppCancel}
           visible={isShowing}
           confirmLoading={form.confirmLoading}
         >
-	        <Form layout="vertical">
+	        <Form layout="vertical" form={formObj} onFinish={handleAddAppOk}>
 	            <div className={'form-group' + (form.submitted && !dataFlow.title ? ' has-error' : '')}>
-		            <Form.Item {...formItemLayout} label="Title">
-							    <Input id="title" name="title" onChange={e => setDataFlow({...dataFlow, [e.target.name]: e.target.value})} placeholder="Title" value={dataFlow.title}/>
-			            {(form.submitted && !dataFlow.title || splCharacters.test(dataFlow.title)) &&
-		                    <div className="error">Please enter a valid Title</div>
-			            }
+		            <Form.Item {...formItemLayout} label="Title"
+                  rules={[{
+                      required: true,
+                      pattern: new RegExp(
+                        /^[a-zA-Z0-9_-]*$/
+                      ),
+                      message: "Please enter a valid Name"
+                    }
+                  ]}
+                >
+							    <Input id="title" name="title" onChange={e => setDataFlow({...dataFlow, [e.target.name]: e.target.value})} placeholder="Title" value={dataFlow.title} onPressEnter={handleAddAppOk}/>
 		            </Form.Item>
 	            </div>
 	            <Form.Item {...formItemLayout} label="Description">

@@ -192,6 +192,12 @@ class Clusters extends Component {
 
   handleAddClusterOk = () => {
 
+    if(this.state.newCluster.username && this.state.newCluster.username != '') {
+      if(!this.state.newCluster.password || this.state.newCluster.password == '') {
+        message.error("Please enter password for the cluster");
+        return false;
+      }
+    }
     this.setState({
       confirmLoading: true,
       submitted: true
@@ -283,20 +289,20 @@ class Clusters extends Component {
         sm: { span: 4 },
       },
       wrapperCol: {
-        xs: { span: 2 },
-        sm: { span: 10 },
+        xs: { span: 4 },
+        sm: { span: 24 },
       },
     };
-    const formHostLayout = {
-      labelCol: {
-        xs: { span: 1 },
-        sm: { span: 8 },
-      },
-      wrapperCol: {
-        xs: { span: 1 },
-        sm: { span: 16 },
-      },
-    };
+  const formHostLayout = {
+    labelCol: {
+      xs: { span: 2 },
+      sm: { span: 8 },
+    },
+    wrapperCol: {
+      xs: { span: 4 },
+      sm: { span: 24 },
+    },
+  };
     const formPortLayout = {
       labelCol: {
         xs: { span: 1 },
@@ -304,7 +310,7 @@ class Clusters extends Component {
       },
       wrapperCol: {
         xs: { span: 1 },
-        sm: { span: 16 },
+        sm: { span: 24 },
       },
     };
     return (
@@ -340,8 +346,8 @@ class Clusters extends Component {
                 <Row gutter={23}>
                   <Col span={13}>
                   <div className={'form-group'}>
-                    <Form.Item {...formHostLayout} label="Host">
-        						<Select placeholder="Select a Cluster" onChange={this.onClusterSelection} style={{ width: 290 }} value={this.state.newCluster.name ? this.state.newCluster.name + ' - ' + this.state.newCluster.thorHost + ':' + this.state.newCluster.thorPort : ''}>
+                    <Form.Item {...formItemLayout} label="Host">
+        						<Select placeholder="Select a Cluster" onChange={this.onClusterSelection} style={{ width: 470 }} value={this.state.newCluster.name ? this.state.newCluster.name + ' - ' + this.state.newCluster.thorHost + ':' + this.state.newCluster.thorPort : ''}>
                       {clusterWhitelist.map(cluster => <Option key={cluster.name}>{cluster.name + " - " + cluster.thor + ":" + cluster.thor_port}</Option>)}
                     </Select>
   		            </Form.Item>
@@ -349,10 +355,10 @@ class Clusters extends Component {
                   </Col>
                 </Row>
  		            <Form.Item {...formItemLayout} label="User Name">
-      						<Input id="username" name="username" onChange={this.onChange} placeholder="User Name" value={this.state.newCluster.username}/>
+      						<Input id="username" name="username" onChange={this.onChange} placeholder="User Name" value={this.state.newCluster.username} onPressEnter={this.handleAddClusterOk}/>
 		            </Form.Item>
 		            <Form.Item {...formItemLayout} label="Password">
-                  <input type="password" className="form-control" name="password" onChange={this.onChange} placeholder="Password"/>
+                  <input type="password" className="form-control" name="password" onChange={this.onChange} placeholder="Password" onPressEnter={this.handleAddClusterOk}/>
 		            </Form.Item>
 	            </Form>
 	        </Modal>

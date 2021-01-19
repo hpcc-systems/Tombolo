@@ -190,12 +190,12 @@ function DataDefinitionDetailsDialog({selectedDataDefinition, applicationId, onD
 
   const formItemLayout = {
     labelCol: {
-      xs: { span: 8 },
-      sm: { span: 3 },
+      xs: { span: 2 },
+      sm: { span: 8 },
     },
     wrapperCol: {
-      xs: { span: 2 },
-      sm: { span: 12 },
+      xs: { span: 4 },
+      sm: { span: 24 },
     },
   };
 
