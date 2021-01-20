@@ -546,14 +546,15 @@ div.tooltip {
 }
 
 .groups-div {
-  flex: 1 1 auto;
   height: calc(100% - 150px);
-  width: 15%;
-  overflow-y: auto;
+  min-width: 200px;
+  resize: horizontal;
+  overflow: auto;
 }
 
 .asset-table {
-  width: 85%;
+  min-width: 200px;
+  flex: 6;
 }
 
 .drag-handle {
@@ -561,13 +562,9 @@ div.tooltip {
 }
 
 .group-options {
+  width: 70%;
   overflow-wrap: anywhere;
-  width: 65%;
   display: inline-flex;
-}
-
-.group-title {
-  width: 100%;
 }
 
 .group-title .fa-bars {
@@ -582,16 +579,17 @@ div.tooltip {
 .group-title i {
   display: inline-block;
   float: right;
-  line-height: 28px;
+  line-height: 18px;
 }
 
 .ant-tree-node-content-wrapper {
+  width: 200px;
   margin-right: 20px !important;
 }
 
 .ant-tree-title li {
   display: inline;
-  line-height: 28px
+  line-height: 18px
 }
 
 .noGutters .codemirror_MarkdownEditor .CodeMirror-sizer {
@@ -644,4 +642,8 @@ div.tooltip {
 .asset-name i {
   padding-right: 5px;
   display: inline;
+}
+
+.ant-tree-list {
+  padding-top: 5px;
 }

@@ -490,38 +490,33 @@ function Assets(props) {
             </div>
           </div>
           <div style={{display: "flex", "height": "100%"}}>
-            <div className="md-3 groups-div">
-                <div style={{ marginBottom: 8 }}>
-                  <Search
-                    id="search-field"
-                    addonBefore={selectBefore}
-                    placeholder="Search assets"
-                    allowClear
-                    onPressEnter={e => handleAssetSearch(e.target.value, true)}
-                    onChange={e => handleAssetSearch(e.target.value)}/>
-                </div>
-                <div>
-                  <DirectoryTree
-                    onSelect={onSelect}
-                    onExpand={onExpand}
-                    treeData={treeData}
-                    selectedKeys={[groupsReducer.selectedKeys.key]}
-                    expandedKeys={[...groupsReducer.expandedKeys]}
-                    autoExpandParent={true}
-                    draggable
-                    onDragEnter={handleDragEnter}
-                    onDrop={handleDragDrop}
-                    expandAction={false}
-                    titleRender={titleRenderer}
-                    virtual={false}
-                    onScroll={e => console.log(e)}
-                  />
-                </div>
+            <div className="groups-div">
+              <Search
+                id="search-field"
+                addonBefore={selectBefore}
+                placeholder="Search assets"
+                allowClear
+                onPressEnter={e => handleAssetSearch(e.target.value, true)}
+                onChange={e => handleAssetSearch(e.target.value)}/>
+
+              <DirectoryTree
+                onSelect={onSelect}
+                onExpand={onExpand}
+                treeData={treeData}
+                selectedKeys={[groupsReducer.selectedKeys.key]}
+                expandedKeys={[...groupsReducer.expandedKeys]}
+                autoExpandParent={true}
+                draggable
+                onDragEnter={handleDragEnter}
+                onDrop={handleDragDrop}
+                expandAction={false}
+                titleRender={titleRenderer}
+                virtual={false}
+                onScroll={e => console.log(e)}
+              />
             </div>
-            <div className="asset-table gutter-row">
-              <div className="gutter-box">
-                <AssetsTable selectedGroup={selectedGroup} handleEditGroup={handleEditGroup} refreshGroups={fetchGroups}/>
-              </div>
+            <div className="asset-table">
+              <AssetsTable selectedGroup={selectedGroup} handleEditGroup={handleEditGroup} refreshGroups={fetchGroups}/>
             </div>
           </div>
           <RightClickMenu/>

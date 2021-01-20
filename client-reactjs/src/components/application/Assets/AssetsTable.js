@@ -188,7 +188,7 @@ function AssetsTable({selectedGroup, handleEditGroup, refreshGroups}) {
   {
     title: 'Name',
     dataIndex: 'name',
-    width: '20%',
+    width: '35%',
     render: (text, record) => (
       <React.Fragment>
         <span className="asset-name">{generateAssetIcon(record.type)}<a href='#' onClick={(row) => handleEdit(record.id, record.type)}>{text}</a></span>
@@ -199,7 +199,7 @@ function AssetsTable({selectedGroup, handleEditGroup, refreshGroups}) {
   {
     title: 'Description',
     dataIndex: 'description',
-    width: '15%',
+    width: '25%',
     ellipsis: true
   },
   {
@@ -208,8 +208,7 @@ function AssetsTable({selectedGroup, handleEditGroup, refreshGroups}) {
     width: '5%',
   },
   {
-    title: 'Created'
-    ,
+    title: 'Created',
     dataIndex: 'createdAt',
     width: '20%',
     render: (text, record) => {
@@ -218,7 +217,7 @@ function AssetsTable({selectedGroup, handleEditGroup, refreshGroups}) {
     }
   },
   {
-    width: '15%',
+    width: '10%',
     title: 'Action',
     dataJob: '',
     className: editingAllowed ? "show-column" : "hide-column",
@@ -236,7 +235,6 @@ function AssetsTable({selectedGroup, handleEditGroup, refreshGroups}) {
 
   return (
     <React.Fragment>
-    <div>
       <Table
         columns={columns}
         rowKey={record => record.id}
@@ -244,7 +242,6 @@ function AssetsTable({selectedGroup, handleEditGroup, refreshGroups}) {
         pagination={{ pageSize: 20 }}
         scroll={{ y: '70vh' }}
       />
-    </div>
     {showMoveDialog ?
       <MoveAssetsDialog
         isShowing={showMoveDialog}
