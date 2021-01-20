@@ -18,8 +18,7 @@ module.exports = (sequelize, DataTypes) => {
     parentFileId: DataTypes.STRING,
     registrationTime: DataTypes.STRING,
     updatedDateTime: DataTypes.STRING,
-    dataLastUpdatedTime: DataTypes.STRING,
-    dataflowId: DataTypes.UUIDV4
+    dataLastUpdatedTime: DataTypes.STRING
   }, {freezeTableName: true});
   indexes.associate = function(models) {
     indexes.hasMany(models.index_key,{
@@ -35,7 +34,12 @@ module.exports = (sequelize, DataTypes) => {
     indexes.belongsTo(models.application, {
       foreignKey: 'application_id'
     });
-    indexes.belongsTo(models.dataflow);
+    indexes.belongsToMany(models.dataflow, {
+      through: 'assets_dataflows',
+      as: 'dataflows',
+      foreignKey: 'assetId',
+      otherKey: 'dataflowId'
+    });
     indexes.belongsTo(models.file, {
       foreignKey: 'parentFileId'
     });

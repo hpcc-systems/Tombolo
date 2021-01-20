@@ -19,7 +19,6 @@ module.exports = (sequelize, DataTypes) => {
     qualifiedPath: DataTypes.STRING,
     consumer: DataTypes.STRING,
     supplier: DataTypes.STRING,
-    dataflowId: DataTypes.UUIDV4,
     scope: DataTypes.STRING
   }, {freezeTableName: true});
   file.associate = function(models) {
@@ -51,7 +50,12 @@ module.exports = (sequelize, DataTypes) => {
     file.belongsTo(models.application, {
       foreignKey: 'application_id'
     });
-    file.belongsTo(models.dataflow);
+    file.belongsToMany(models.dataflow, {
+      through: 'assets_dataflows',
+      as: 'dataflows',
+      foreignKey: 'assetId',
+      otherKey: 'dataflowId'
+    });
     file.hasMany(models.consumer_object,{
       foreignKey:'consumer_id',
       onDelete: 'CASCADE',

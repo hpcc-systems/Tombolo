@@ -19,7 +19,7 @@ router.get('/index_list', [
         return res.status(422).json({ success: false, errors: errors.array() });
     }
     console.log("[index/read.js] - Get file list for app_id = " + req.query.app_id);
-    Index.findAll({where:{"application_id":req.query.app_id},include: [File, Dataflow], order: [['createdAt', 'DESC']]}).then(function(indexes) {
+    Index.findAll({where:{"application_id":req.query.app_id},include: [File, 'dataflows'], order: [['createdAt', 'DESC']]}).then(function(indexes) {
         res.json(indexes);
     })
     .catch(function(err) {

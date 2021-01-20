@@ -2,6 +2,7 @@ const express = require('express');
 const router = express.Router();
 let mongoose = require('mongoose');
 var models  = require('../../models');
+let AssetDataflow = models.assets_dataflows;
 let DataflowGraph = models.dataflowgraph;
 let Dataflow = models.dataflow;
 const validatorUtil = require('../../utils/validator');
@@ -148,8 +149,11 @@ router.post('/deleteAsset', [
         DataflowGraph.update(
             {nodes:JSON.stringify(nodes), edges:JSON.stringify(edges)},
             {where:{"id": DataflowGraphId, "application_id":req.body.application_id}}
-        ).then(function(updated) {
-            res.json({"result":"success"});
+        ).then(async function(updated) {
+          if (body('id').isUUID(4)) {
+            await AssetDataflow.destroy({ where: { dataflowId: req.body.dataflowId, assetId: assetId } }).catch(err => console.log(err));
+          }
+          res.json({"result":"success"});
         }).catch(function(err) {
             console.log(err);
         });

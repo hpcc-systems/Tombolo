@@ -2,6 +2,7 @@ const express = require('express');
 const router = express.Router();
 let mongoose = require('mongoose');
 var models  = require('../../models');
+let AssetDataflow = models.assets_dataflows;
 let Dataflow = models.dataflow;
 let DataflowGraph = models.dataflowgraph;
 let Index = models.indexes;
@@ -75,6 +76,26 @@ router.post('/save', [
     } catch (err) {
         console.log('err', err);
     }
+});
+
+router.post('/saveAsset', (req, res) => {
+  AssetDataflow.findOne({
+    where: {
+      assetId: req.body.assetId,
+      dataflowId: req.body.dataflowId
+    }
+  }).then(async assetDataflow => {
+    if (assetDataflow === null) {
+      assetDataflow = await AssetDataflow.create({
+        assetId: req.body.assetId,
+        dataflowId: req.body.dataflowId
+      });
+      console.log(`assetDataflow created: ${JSON.stringify(assetDataflow.dataValues)}`);
+      return res.json({ success: true, message: `asset ${assetDataflow.assetId} added to dataflow ${assetDataflow.dataflowId}` });
+    }
+    console.log(`assetDataflow found: ${JSON.stringify(assetDataflow.dataValues)}`);
+    return res.json({ success: true, message: `asset ${assetDataflow.assetId} already associated to dataflow ${assetDataflow.dataflowId}` });
+  });
 });
 
 router.get('/', [
