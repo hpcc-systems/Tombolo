@@ -7,6 +7,7 @@ import { authHeader, handleError } from "../common/AuthHeader.js"
 import { hasAdminRole } from "../common/AuthUtil.js";
 import { applicationActions } from '../../redux/actions/Application';
 import { groupsActions } from '../../redux/actions/Groups';
+import { assetsActions } from '../../redux/actions/Assets';
 import { QuestionCircleOutlined, DownOutlined  } from '@ant-design/icons';
 import $ from 'jquery';
 
@@ -138,6 +139,8 @@ class AppHeader extends Component {
       this.props.dispatch(applicationActions.applicationSelected('', ''));
       //reset the group heiracrhy selection
       this.props.dispatch(groupsActions.groupExpanded({'id':'', 'key':'0-0'}, ['0-0']));
+      //reset cluster selectiong
+      this.props.dispatch(assetsActions.clusterSelected(''));
       this.props.dispatch(userActions.logout());
 
       this.props.history.push('/login');

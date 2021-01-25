@@ -10,6 +10,7 @@ import { EclEditor } from "../common/EclEditor.js"
 import {handleJobDelete} from "../common/WorkflowUtil";
 import { connect } from 'react-redux';
 import { SearchOutlined } from '@ant-design/icons';
+import { assetsActions } from '../../redux/actions/Assets';
 
 const TabPane = Tabs.TabPane;
 const Option = Select.Option;
@@ -32,7 +33,7 @@ class JobDetails extends Component {
     sourceFiles:[],
     selectedInputFile:"",
     clusters:[],
-    selectedCluster:"",
+    selectedCluster: this.props.clusterId ? this.props.clusterId : "",
     jobSearchSuggestions:[],
     jobSearchErrorShown:false,
     autoCreateFiles:false,
@@ -238,6 +239,7 @@ class JobDetails extends Component {
   }
 
   onClusterSelection = (value) => {
+    this.props.dispatch(assetsActions.clusterSelected(value));
     this.setState({
       selectedCluster: value,
     });
@@ -561,6 +563,7 @@ class JobDetails extends Component {
       name, title, description, ecl, entryBWR, gitRepo,
       jobType, inputParams, outputFiles, inputFiles, contact, author
     } = this.state.job;
+    const selectedCluster = clusters.filter(cluster => cluster.id == this.props.clusterId);
 
     //render only after fetching the data from the server
     if(!name && !this.props.selectedAsset && !this.props.isNew) {
@@ -583,7 +586,7 @@ class JobDetails extends Component {
                 {/*{this.props.isNewIndex ?*/}
                 <div>
                 <Form.Item {...formItemLayout} label="Cluster">
-                   <Select placeholder="Select a Cluster" onChange={this.onClusterSelection} style={{ width: 190 }} disabled={!editingAllowed}>
+                   <Select placeholder="Select a Cluster" value={(selectedCluster.length > 0 ? selectedCluster[0].id : null)} onChange={this.onClusterSelection} style={{ width: 190 }} disabled={!editingAllowed}>
                     {clusters.map(cluster => <Option key={cluster.id}>{cluster.name}</Option>)}
                   </Select>
                 </Form.Item>
@@ -735,7 +738,7 @@ class JobDetails extends Component {
 }
 
 function mapStateToProps(state) {
-    const { selectedAsset, newAsset={} } = state.assetReducer;
+    const { selectedAsset, newAsset={}, clusterId } = state.assetReducer;
     const { user } = state.authenticationReducer;
     const { application } = state.applicationReducer;
     const {isNew=false, groupId='' } = newAsset;
@@ -744,7 +747,8 @@ function mapStateToProps(state) {
       selectedAsset,
       application,
       isNew,
-      groupId
+      groupId,
+      clusterId
     };
 }
 

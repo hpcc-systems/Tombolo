@@ -4,7 +4,8 @@ const initialState = {
   selectedAsset:{id:'', applicationId:'', title:''},
   newAsset:{groupId:'', applicationId:'', isNew:false},
   searchParams:{assetTypeFilter:'', keywords:''},
-  assetInGroupId: ''
+  assetInGroupId: '',
+  clusterId: ''
 };
 
 export function assetReducer(state = initialState, action) {
@@ -47,6 +48,11 @@ export function assetReducer(state = initialState, action) {
       return {
         ...state,
         assetInGroupId: action.groupId
+      };
+    case Constants.CLUSTER_SELECTED:
+      return {
+        ...state,
+        clusterId: action.clusterId
       };
     default:
       return state

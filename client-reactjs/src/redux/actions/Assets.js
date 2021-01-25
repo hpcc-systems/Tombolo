@@ -4,7 +4,8 @@ export const assetsActions = {
   assetSelected,
   newAsset,
   searchAsset,
-  assetInGroupSelected
+  assetInGroupSelected,
+  clusterSelected
 };
 
 function assetSelected(id, applicationId, title) {
@@ -52,6 +53,18 @@ function assetInGroupSelected(groupId) {
     return {
       type: Constants.ASSET_IN_GROUP_SELECTED,
       groupId
+    }
+  }
+}
+
+function clusterSelected(clusterId) {
+  return dispatch => {
+    dispatch(request(clusterId));
+  };
+  function request(clusterId) {
+    return {
+      type: Constants.CLUSTER_SELECTED,
+      clusterId
     }
   }
 }

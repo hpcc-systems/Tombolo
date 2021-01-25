@@ -17,6 +17,7 @@ import 'ag-grid-community/dist/styles/ag-theme-balham.css';
 import { connect } from 'react-redux';
 import BreadCrumbs from "../common/BreadCrumbs";
 import { SearchOutlined  } from '@ant-design/icons';
+import { assetsActions } from '../../redux/actions/Assets';
 
 const TabPane = Tabs.TabPane;
 const Option = Select.Option;
@@ -42,7 +43,7 @@ class FileDetails extends Component {
     selectedRowKeys:[],
     clusters:[],
     consumers:[],
-    selectedCluster:"",
+    selectedCluster: this.props.clusterId ? this.props.clusterId : "",
     fileSearchSuggestions:[],
     drawerVisible: false,
     fileDataColHeaders:[],
@@ -762,6 +763,7 @@ class FileDetails extends Component {
   }
 
   onClusterSelection = (value) => {
+    this.props.dispatch(assetsActions.clusterSelected(value));
     this.setState({
       selectedCluster: value,
     });
@@ -1167,6 +1169,8 @@ class FileDetails extends Component {
       title, name, description, scope, serviceUrl, qualifiedPath, consumer, owner, fileType,
       isSuperFile, layout, relations, fileFieldRelations, validations, inheritedLicensing
     } = this.state.file;
+    const selectedCluster = clusters.filter(cluster => cluster.id == this.props.clusterId);
+
     const rowSelection = {
       selectedRowKeys,
       onChange: this.onSelectedRowKeysChange
@@ -1220,7 +1224,7 @@ class FileDetails extends Component {
                 {this.state.file.fileType == 'thor_file' ?
                   <React.Fragment>
                     <Form.Item label="Cluster">
-                      <Select placeholder="Select a Cluster" disabled={!editingAllowed} onChange={this.onClusterSelection} style={{ width: 190 }}>
+                      <Select placeholder="Select a Cluster" value={(selectedCluster.length > 0 ? selectedCluster[0].id : null)} disabled={!editingAllowed} onChange={this.onClusterSelection} style={{ width: 190 }}>
                         {clusters.map(cluster => <Option key={cluster.id}>{cluster.name}</Option>)}
                       </Select>
                     </Form.Item>
@@ -1420,7 +1424,7 @@ export class BooleanCellRenderer extends Component {
 }
 
 function mapStateToProps(state) {
-    const { selectedAsset, newAsset={} } = state.assetReducer;
+    const { selectedAsset, newAsset={}, clusterId } = state.assetReducer;
     const { user } = state.authenticationReducer;
     const { application } = state.applicationReducer;
 
@@ -1430,7 +1434,8 @@ function mapStateToProps(state) {
       selectedAsset,
       application,
       isNew,
-      groupId
+      groupId,
+      clusterId
     };
 }
 

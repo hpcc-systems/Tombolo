@@ -9,6 +9,7 @@ import EditableTable from "../common/EditableTable.js"
 import { MarkdownEditor } from "../common/MarkdownEditor.js"
 import { connect } from 'react-redux';
 import { SearchOutlined  } from '@ant-design/icons';
+import { assetsActions } from '../../redux/actions/Assets';
 
 const TabPane = Tabs.TabPane;
 const Option = Select.Option;
@@ -31,7 +32,7 @@ class IndexDetails extends Component {
     availableLicenses:[],
     selectedRowKeys:[],
     clusters:[],
-    selectedCluster:"",
+    selectedCluster: this.props.clusterId ? this.props.clusterId : "",
     fileSearchSuggestions:[],
     indexSearchErrorShown:false,
     autoCompleteSuffix: <SearchOutlined/>,
@@ -378,6 +379,7 @@ class IndexDetails extends Component {
   }
 
   onClusterSelection = (value) => {
+    this.props.dispatch(assetsActions.clusterSelected(value));
     this.setState({
       selectedCluster: value,
     });
@@ -427,6 +429,7 @@ class IndexDetails extends Component {
       selectedRowKeys,
       onChange: this.onSelectedRowKeysChange
     };
+    const selectedCluster = clusters.filter(cluster => cluster.id == this.props.clusterId);
 
     //render only after fetching the data from the server
     if(!title && !this.props.selectedAsset && !this.props.isNew) {
@@ -450,7 +453,7 @@ class IndexDetails extends Component {
               {/*{this.props.isNew ?*/}
               <div>
               <Form.Item {...formItemLayout} label="Cluster">
-                 <Select placeholder="Select a Cluster" onChange={this.onClusterSelection} style={{ width: 190 }} disabled={!editingAllowed}>
+                 <Select placeholder="Select a Cluster" value={(selectedCluster.length > 0 ? selectedCluster[0].id : null)} onChange={this.onClusterSelection} style={{ width: 190 }} disabled={!editingAllowed}>
                   {clusters.map(cluster => <Option key={cluster.id}>{cluster.name}</Option>)}
                 </Select>
               </Form.Item>
@@ -552,7 +555,7 @@ class IndexDetails extends Component {
 }
 
 function mapStateToProps(state) {
-    const { selectedAsset, newAsset={} } = state.assetReducer;
+    const { selectedAsset, newAsset={}, clusterId } = state.assetReducer;
     const { user } = state.authenticationReducer;
     const { application } = state.applicationReducer;
     const {isNew=false, groupId='' } = newAsset;
@@ -561,7 +564,8 @@ function mapStateToProps(state) {
       selectedAsset,
       application,
       isNew,
-      groupId
+      groupId,
+      clusterId
     };
 }
 
