@@ -118,6 +118,9 @@ let getChildGroups = (appId, groupId) => {
 }
 
 let getKeywordsForQuery = (keywords) => {
+  if(typeof keywords !== 'string')
+    return;
+
   if (keywords.startsWith("*") && keywords.endsWith("*")) {
     keywords = '%'+keywords.substring(1, keywords.length -1)+'%';
   } else if(keywords.startsWith("*")) {
