@@ -289,8 +289,8 @@ class JobDetails extends Component {
     });
   }
 
-  onJobSelected(wuid) {
-    fetch("/api/hpcc/read/getJobInfo?jobWuid="+wuid+"&clusterid="+this.state.selectedCluster+"&jobType="+this.state.job.jobType, {
+  onJobSelected(option) {
+    fetch("/api/hpcc/read/getJobInfo?jobWuid="+option.key+"&clusterid="+this.state.selectedCluster+"&jobType="+this.state.job.jobType, {
       headers: authHeader()
     })
     .then((response) => {
@@ -601,13 +601,13 @@ class JobDetails extends Component {
                     dropdownStyle={{ width: 300 }}
                     style={{ width: '100%' }}
                     onSearch={(value) => this.searchJobs(value)}
-                    onSelect={(value) => this.onJobSelected(value)}
+                    onSelect={(value, option) => this.onJobSelected(option)}
                     placeholder="Search jobs"
                     disabled={!editingAllowed}
                   >
                     {jobSearchSuggestions.map((suggestion) => (
-                      <Option key={suggestion.text} value={suggestion.value}>
-                        {suggestion.text}
+                      <Option key={suggestion.value} value={suggestion.text}>
+                        {suggestion.wuid}
                       </Option>
                     ))}
                   </AutoComplete>
