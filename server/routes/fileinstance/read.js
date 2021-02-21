@@ -43,11 +43,11 @@ router.post('/create', (req, res) => {
       }).then(function(instance) {
         res.json({"result":"success", "fileInstanceId":id, "title":req.body.title});
       }), function(err) {
-          return res.status(500).send(err);
+          return res.status(500).send("Error occured while create a file instance");
       }
     } catch (err) {
         console.log('err', err);
-        return res.status(500).send(err);
+        return res.status(500).send("Error occured while create a file instance");
     }
 });
 

@@ -1,7 +1,13 @@
 const express = require('express');
+const rateLimit = require("express-rate-limit");
 const app = express();
 const tokenService = require('./utils/token_service');
 const {NotificationModule} = require('./routes/notifications/email-notification');
+
+const limiter = rateLimit({
+  windowMs: 15 * 60 * 1000, // 15 minutes
+  max: 100 // limit each IP to 100 requests per windowMs
+});
 
 app.use(express.json());
 app.use(function(req, res, next) {
@@ -9,6 +15,8 @@ app.use(function(req, res, next) {
   res.header("Access-Control-Allow-Headers", "Origin, X-Requested-With, Content-Type, Accept");
   next();
 });
+//apply to all requests
+app.use(limiter);
 
 const assert = require('assert');
 

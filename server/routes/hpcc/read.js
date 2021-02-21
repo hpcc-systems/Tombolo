@@ -3,7 +3,6 @@ const router = express.Router();
 const crypto = require('crypto');
 var request = require('request');
 var requestPromise = require('request-promise');
-const dbUtil = require('../../utils/db');
 const hpccUtil = require('../../utils/hpcc-util');
 const validatorUtil = require('../../utils/validator');
 var models  = require('../../models');
@@ -196,7 +195,7 @@ router.post('/newcluster', [
 			 "roxie_host":req.body.roxie_host, "roxie_port":req.body.roxie_port};
 			if (req.body.username && req.body.password) {
 				newCluster.username = req.body.username;
-				newCluster.hash = crypto.createCipher(algorithm, dbUtil.secret).update(req.body.password,'utf8','hex');
+				newCluster.hash = crypto.createCipher(algorithm, process.env['cluster_cred_secret']).update(req.body.password,'utf8','hex');
 			}
 			console.log(req.body.id);
 			if(req.body.id == undefined || req.body.id == "") {
