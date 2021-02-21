@@ -71,7 +71,7 @@ router.post('/save', [
       }).then(function(graph) {
         res.json({"result":"success", "dataflowId":dataflowId});
       }), function(err) {
-        return res.status(500).send(err);
+        return res.status(500).send("Error occured while saving Dataflow Graph");
       }
     } catch (err) {
       console.log('err', err);

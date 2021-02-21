@@ -257,7 +257,7 @@ exports.getClusterAuth = (cluster) => {
 exports.getCluster = (clusterId) => {
 	return Cluster.findOne( {where: {id:clusterId}} ).then(async function(cluster) {
 		if(cluster.hash) {
-			cluster.hash = crypto.createDecipher(algorithm,dbUtil.secret).update(cluster.hash,'hex','utf8');
+			cluster.hash = crypto.createDecipher(algorithm,process.env['secret']).update(cluster.hash,'hex','utf8');
 		}
 		let isReachable = await module.exports.isClusterReachable(cluster.thor_host, cluster.thor_port, cluster.username, cluster.password);
 		if(isReachable)	 {

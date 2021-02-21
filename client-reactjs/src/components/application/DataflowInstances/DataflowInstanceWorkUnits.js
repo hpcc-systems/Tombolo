@@ -173,7 +173,7 @@ class DataflowInstanceWorkUnits extends Component {
         dataJob: '',
         render: (text, record) =>
           <span>
-            <a href={this.state.dataflowCluster + "/?Wuid="+record.wuid+"&Widget=WUDetailsWidget"} target="_blank"><Tooltip placement="right" title={"View Details"}>Details</Tooltip></a>
+            <a href={this.state.dataflowCluster + "/?Wuid="+record.wuid+"&Widget=WUDetailsWidget"} target="_blank" rel="noopener noreferrer"><Tooltip placement="right" title={"View Details"}>Details</Tooltip></a>
           </span>
       }];
     console.log(this.state.loading);

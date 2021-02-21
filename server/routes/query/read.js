@@ -61,7 +61,7 @@ router.post('/saveQuery', [
     }
   } catch(err) {
     console.log(err);
-    return res.status(500).send(err);
+    return res.status(500).send("Error occured while saving Query");
   }
 });
 

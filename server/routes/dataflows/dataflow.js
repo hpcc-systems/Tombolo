@@ -71,7 +71,7 @@ router.post('/save', [
           res.json({"result":"success"});
          }
       }), function(err) {
-          return res.status(500).send(err);
+          return res.status(500).send("Error occured while saving Dataflow");
       }
     } catch (err) {
         console.log('err', err);

@@ -2,7 +2,6 @@ const jwt = require('jsonwebtoken');
 const bcrypt = require('bcryptjs');
 let mongoose = require('mongoose');
 var request = require('request');
-const dbUtil = require('../../utils/db');
 let models = require('../../models');
 let User = models.user;
 const Sequelize = require('sequelize');
@@ -86,20 +85,6 @@ async function validateToken(req, res, next) {
       }
   }
 }
-
-async function generateToken(user) {
-    const { hash, ...userWithoutHash } = user.toJSON();
-    const token = jwt.sign({ sub: user.id }, dbUtil.secret, {
-         expiresIn: 604800 //1 week
-      }
-    );
-    userWithoutHash.token = token;
-    console.log('newsly generated token: '+token);
-    return {
-        userWithoutHash
-    };
-}
-
 
 async function getAll() {
     return await User.findAll({attributes: { exclude: ["hash"] }, required: false });

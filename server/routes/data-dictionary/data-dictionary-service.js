@@ -44,7 +44,7 @@ router.post('/save', [
         }).then(function(graph) {
             res.json({"result":"success"});
         }), function(err) {
-            return res.status(500).send(err);
+            return res.status(500).send("Error occured while saving Data Dictionary");
         }
     } catch (err) {
         console.log('err', err);

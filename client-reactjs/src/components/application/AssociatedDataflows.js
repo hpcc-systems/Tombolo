@@ -17,7 +17,7 @@ function AssociatedDataflows({assetName, assetType}) {
         return response.json();
       }
       handleError(response);
-    }).then(function(data) {           
+    }).then(function(data) {
       setData(data);
     }).catch(error => {
       console.log(error);
@@ -28,11 +28,11 @@ function AssociatedDataflows({assetName, assetType}) {
     title: 'Title',
     dataIndex: 'title',
     width: '30%',
-    render: (text, record) => 
+    render: (text, record) =>
       <span>
-        <a href={"/"+record.application_id+"/dataflow"} target="_blank">{record.title}</a>
+        <a href={"/"+record.application_id+"/dataflow"} target="_blank" rel="noopener noreferrer">{record.title}</a>
       </span>
-    
+
   },
   {
     title: 'Description',
@@ -42,13 +42,13 @@ function AssociatedDataflows({assetName, assetType}) {
 
   return (
 	  <React.Fragment>
-		  <Table		  	
+		  <Table
         columns={associatedDataflowCols}
         rowKey={record => record.id}
         dataSource={data}
         pagination={{ pageSize: 10 }} scroll={{ y: 460 }}
-			/>			
-		</React.Fragment>			
+			/>
+		</React.Fragment>
 	)
 
 

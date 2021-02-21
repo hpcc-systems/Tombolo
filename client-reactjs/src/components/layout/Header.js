@@ -270,7 +270,7 @@ class AppHeader extends Component {
     );
     const helpMenu = (
       <Menu>
-        <Menu.Item key="1"><a href="" type="link" target={"_blank"} href={process.env.PUBLIC_URL + "/Tombolo-User-Guide.pdf"}>User Guide</a></Menu.Item>
+        <Menu.Item key="1"><a href="" type="link" target={"_blank"} rel="noopener noreferrer" href={process.env.PUBLIC_URL + "/Tombolo-User-Guide.pdf"}>User Guide</a></Menu.Item>
       </Menu>
     );
 

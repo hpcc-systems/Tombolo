@@ -15,7 +15,6 @@ const assert = require('assert');
 const appRead = require('./routes/app/read');
 const fileRead = require('./routes/file/read');
 const indexRead = require('./routes/index/read');
-/*const integrationRead = require('./routes/integration/read');*/
 const hpccRead = require('./routes/hpcc/read');
 const userRead = require('./routes/user/read');
 const query = require('./routes/query/read');

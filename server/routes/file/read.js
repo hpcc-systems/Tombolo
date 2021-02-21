@@ -1,6 +1,5 @@
 const express = require('express');
 const router = express.Router();
-const dbUtil = require('../../utils/db');
 const lodash = require('lodash');
 var models  = require('../../models');
 const hpccUtil = require('../../utils/hpcc-util');
@@ -340,7 +339,6 @@ let updateFileDetails = (fileId, applicationId, req) => {
       resolve({"result":"success", "fileId":fileId, "title":req.body.file.basic.title})
     }), function(err) {
       reject(err)
-      //return res.status(500).send(err);
     }
   })
 }

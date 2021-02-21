@@ -29,7 +29,7 @@ router.post('/consumer', (req, res) => {
                 return Consumer.update(req.body, {where:{name:req.body.name}}).then(function(result){})
             }
         }), function(err) {
-            return res.status(500).send(err);
+            return res.status(500).send("Error occured while saving Consumer information");
         }
         res.json({"result":"success"});
     } catch (err) {
