@@ -122,18 +122,23 @@ let getKeywordsForQuery = (keywords) => {
     return;
 
   if (keywords.startsWith("*") && keywords.endsWith("*")) {
-    keywords = '%'+keywords.substring(1, keywords.length -1)+'%';
+    //keywords = '%'+keywords.substring(1, keywords.length -1)+'%';
+    keywords = keywords.substring(1, keywords.length -1);
   } else if(keywords.startsWith("*")) {
-    keywords = '%'+keywords.substring(1, keywords.length)+'%';
+    //keywords = '%'+keywords.substring(1, keywords.length)+'%';
+    keywords = keywords.substring(1, keywords.length)+'$';
   } else if(keywords.endsWith("*")) {
-    keywords = keywords.substring(0, keywords.length-1)+'%';
+    //keywords = keywords.substring(0, keywords.length-1)+'%';
+    keywords = '^'+keywords.substring(0, keywords.length-1);
   } else if(keywords.startsWith("\"") && keywords.endsWith("\"")) {
-    keywords = '%'+keywords.substring(1, keywords.length -1)+'%';
+    //keywords = '%'+keywords.substring(1, keywords.length -1)+'%';
+    keywords = '/^'+keywords.substring(1, keywords.length -1)+'$/';
   } else if(keywords.indexOf(" ") > 0) {
-    keywords = keywords.split(" ");
+    keywords = keywords.split(" ").join("|");
     console.log('space: '+keywords);
   } else {
-    keywords = '%'+keywords+'%';
+    //keywords = '%'+keywords+'%';
+    keywords = keywords;
   }
   console.log(keywords)
   return keywords;
@@ -321,23 +326,23 @@ router.get('/assetsSearch', [
       "where find_in_set(parent_group, @pv) and length(@pv := concat(@pv, ',', id)) > 0 or id=(:groupId)) as hie " +
       "join (";
       if(assetFilters.length == 0 || assetFilters.includes("File")) {
-        query += "select f.id, f.name, f.groupId, f.title, f.description, f.createdAt, 'File' as type from file f where f.application_id = (:applicationId) and  (f.name like (:keyword) or f.title like (:keyword)) ";
+        query += "select f.id, f.name, f.groupId, f.title, f.description, f.createdAt, 'File' as type from file f where f.application_id = (:applicationId) and  (f.name REGEXP (:keyword) or f.title REGEXP (:keyword)) ";
         query += (assetFilters.length == 0 || assetFilters.length > 1) ? "union all " : "";
       }
       if(assetFilters.length == 0 || assetFilters.includes("Query")) {
-        query += "select q.id, q.name, q.groupId, q.title, q.description, q.createdAt, 'Query' as type from query q where q.application_id = (:applicationId) and (q.name like (:keyword) or q.title like (:keyword)) ";
+        query += "select q.id, q.name, q.groupId, q.title, q.description, q.createdAt, 'Query' as type from query q where q.application_id = (:applicationId) and (q.name REGEXP (:keyword) or q.title REGEXP (:keyword)) ";
         query += (assetFilters.length == 0 || assetFilters.length > 1) ? "union all " : "";
       }
       if(assetFilters.length == 0 || assetFilters.includes("Indexes")) {
-        query += "select idx.id, idx.name, idx.groupId, idx.title, idx.description, idx.createdAt, 'Index' as type  from indexes idx where idx.application_id = (:applicationId) and (idx.name like (:keyword) or idx.title like (:keyword)) ";
+        query += "select idx.id, idx.name, idx.groupId, idx.title, idx.description, idx.createdAt, 'Index' as type  from indexes idx where idx.application_id = (:applicationId) and (idx.name REGEXP (:keyword) or idx.title REGEXP (:keyword)) ";
         query += (assetFilters.length == 0 || assetFilters.length > 1) ? "union all " : "";
       }
       if(assetFilters.length == 0 || assetFilters.includes("Job")) {
-        query += "select j.id, j.name, j.groupId, j.title, j.description, j.createdAt, 'Job' as type  from job j where j.application_id = (:applicationId) and (j.name like (:keyword) or j.title like (:keyword) ) ";
+        query += "select j.id, j.name, j.groupId, j.title, j.description, j.createdAt, 'Job' as type  from job j where j.application_id = (:applicationId) and (j.name REGEXP (:keyword) or j.title REGEXP (:keyword) ) ";
         query += (assetFilters.length == 0 || assetFilters.length > 1) ? "union all " : "";
       }
       if(assetFilters.length == 0 || assetFilters.includes("Groups")) {
-        query += "select g.id, g.name, g.parent_group, g.name as title, g.description, g.createdAt, 'Group' as type  from groups g where g.application_id = (:applicationId) and (g.name like (:keyword) ) ";
+        query += "select g.id, g.name, g.parent_group, g.name as title, g.description, g.createdAt, 'Group' as type  from groups g where g.application_id = (:applicationId) and (g.name REGEXP (:keyword) ) ";
         query += (assetFilters.length == 0 || assetFilters.length > 1) ? "union all " : "";
       }
 
@@ -348,23 +353,23 @@ router.get('/assetsSearch', [
   } else {
     query = "";
     if(assetFilters.length == 0 || assetFilters.includes("File")) {
-      query += "select f.id, f.name, f.groupId, g.name as group_name, f.title, f.description, f.createdAt, 'File' as type from file f left outer join groups g on f.groupId = g.id where f.application_id = (:applicationId) and  (f.name like (:keyword) or f.title like (:keyword) and f.groupId = null) ";
+      query += "select f.id, f.name, f.groupId, g.name as group_name, f.title, f.description, f.createdAt, 'File' as type from file f left outer join groups g on f.groupId = g.id where f.application_id = (:applicationId) and  (f.name REGEXP (:keyword) or f.title REGEXP (:keyword) and f.groupId = null) ";
       query += (assetFilters.length == 0 || assetFilters.length > 1) ? "union all " : "";
     }
     if(assetFilters.length == 0 || assetFilters.includes("Query")) {
-      query += "select q.id, q.name, q.groupId, g.name as group_name, q.title, q.description, q.createdAt, 'Query' as type from query q left outer join groups g on q.groupId = g.id where q.application_id = (:applicationId) and (q.name like (:keyword) or q.title like (:keyword) and q.groupId = null) ";
+      query += "select q.id, q.name, q.groupId, g.name as group_name, q.title, q.description, q.createdAt, 'Query' as type from query q left outer join groups g on q.groupId = g.id where q.application_id = (:applicationId) and (q.name REGEXP (:keyword) or q.title REGEXP (:keyword) and q.groupId = null) ";
       query += (assetFilters.length == 0 || assetFilters.length > 1) ? "union all " : "";
     }
     if(assetFilters.length == 0 || assetFilters.includes("Indexes")) {
-      query += "select idx.id, idx.name, idx.groupId, g.name as group_name, idx.title, idx.description, idx.createdAt, 'Index' as type from indexes idx left outer join groups g on idx.groupId = g.id where idx.application_id = (:applicationId) and (idx.name like (:keyword) or idx.title like (:keyword) and idx.groupId = null) ";
+      query += "select idx.id, idx.name, idx.groupId, g.name as group_name, idx.title, idx.description, idx.createdAt, 'Index' as type from indexes idx left outer join groups g on idx.groupId = g.id where idx.application_id = (:applicationId) and (idx.name REGEXP (:keyword) or idx.title REGEXP (:keyword) and idx.groupId = null) ";
       query += (assetFilters.length == 0 || assetFilters.length > 1) ? "union all " : "";
     }
     if(assetFilters.length == 0 || assetFilters.includes("Job")) {
-      query += "select j.id, j.name, j.groupId, g.name as group_name, j.title, j.description, j.createdAt, 'Job' as type  from job j left outer join groups g on j.groupId = g.id where j.application_id = (:applicationId) and (j.name like (:keyword) or j.title like (:keyword) and j.groupId = null)";
+      query += "select j.id, j.name, j.groupId, g.name as group_name, j.title, j.description, j.createdAt, 'Job' as type  from job j left outer join groups g on j.groupId = g.id where j.application_id = (:applicationId) and (j.name REGEXP (:keyword) or j.title REGEXP (:keyword) and j.groupId = null)";
       query += (assetFilters.length == 0 || assetFilters.length > 1) ? "union all " : "";
     }
     if(assetFilters.length == 0 || assetFilters.includes("Groups")) {
-      query += "select g.id, g.name, g.parent_group as groupId, gp.name as group_name, '' as title, g.description, g.createdAt, 'Group' as type  from groups g inner join groups gp on g.parent_group = gp.id where g.application_id = (:applicationId) and g.name like (:keyword) ";
+      query += "select g.id, g.name, g.parent_group as groupId, gp.name as group_name, '' as title, g.description, g.createdAt, 'Group' as type  from groups g inner join groups gp on g.parent_group = gp.id where g.application_id = (:applicationId) and g.name REGEXP (:keyword) ";
       //query += (assetFilters.length == 0 || assetFilters.length > 1) ? "union all " : "";
     }
     replacements = { applicationId: req.query.app_id, keyword: keywords }
