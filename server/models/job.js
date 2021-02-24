@@ -40,7 +40,12 @@ module.exports = (sequelize, DataTypes) => {
     job.belongsTo(models.application, {
       foreignKey: 'application_id'
     });
-    job.belongsTo(models.groups);
+    job.belongsTo(models.groups, {
+      through: 'assets_groups',
+      as: 'groups',
+      foreignKey: 'assetId',
+      otherKey: 'groupId'
+    })
   };
   return job;
 };

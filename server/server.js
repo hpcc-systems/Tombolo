@@ -4,9 +4,10 @@ const app = express();
 const tokenService = require('./utils/token_service');
 const {NotificationModule} = require('./routes/notifications/email-notification');
 
+app.set('trust proxy', 1);
 const limiter = rateLimit({
   windowMs: 15 * 60 * 1000, // 15 minutes
-  max: 100 // limit each IP to 100 requests per windowMs
+  max: 400 // limit each IP to 400 requests per windowMs
 });
 
 app.use(express.json());

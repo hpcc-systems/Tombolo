@@ -290,7 +290,8 @@ class JobDetails extends Component {
   }
 
   onJobSelected(option) {
-    fetch("/api/hpcc/read/getJobInfo?jobWuid="+option.key+"&clusterid="+this.state.selectedCluster+"&jobType="+this.state.job.jobType, {
+    console.log(option)
+    fetch("/api/hpcc/read/getJobInfo?jobWuid="+option.key+"&jobName="+option.value+"&clusterid="+this.state.selectedCluster+"&jobType="+this.state.job.jobType+"&applicationId="+this.props.application.applicationId, {
       headers: authHeader()
     })
     .then((response) => {
@@ -304,10 +305,11 @@ class JobDetails extends Component {
         ...this.state,
         job: {
           ...this.state.job,
-          inputFiles: jobInfo.sourceFiles,
-          outputFiles: jobInfo.outputFiles,
-          name: jobInfo.Jobname,
-          title: jobInfo.Jobname,
+          id: jobInfo.id,
+          inputFiles: jobInfo.jobfiles.filter(jobFile => jobFile.file_type == 'input'),
+          outputFiles: jobInfo.jobfiles.filter(jobFile => jobFile.file_type == 'output'),
+          name: jobInfo.name,
+          title: jobInfo.title,
           description: jobInfo.description,
           groupId: jobInfo.groupId,
           gitRepo: jobInfo.gitRepo,

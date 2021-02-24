@@ -64,6 +64,7 @@ function MoveAssetsDialog({isShowing, toggle, application, assetToMove, reloadTa
           method: 'put',
           headers: authHeader(),
           body: JSON.stringify({
+            "groupId": assetToMove.selectedGroup.id,
             "destGroupId": moveDestinationGroup.id,
             "app_id": application.applicationId,
             "assetType": assetToMove.type,

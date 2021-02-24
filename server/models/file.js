@@ -61,7 +61,12 @@ module.exports = (sequelize, DataTypes) => {
       onDelete: 'CASCADE',
       hooks: true
     });
-    file.belongsTo(models.groups);
+    file.belongsToMany(models.groups, {
+      through: 'assets_groups',
+      as: 'groups',
+      foreignKey: 'assetId',
+      otherKey: 'groupId'
+    });
     file.belongsToMany(models.job, {
       through: 'jobfile',
       as: 'jobfiles',

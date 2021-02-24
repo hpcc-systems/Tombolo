@@ -10,6 +10,7 @@ let Index = models.indexes;
 let File = models.file;
 let Query = models.query;
 let Job = models.job;
+let AssetsGroups = models.assets_groups;
 
 let createGroupHierarchy = (groups) => {
 
@@ -177,7 +178,7 @@ router.get('/assets', [
         "application_id":req.query.app_id,
         "id": req.query.group_id
       },
-      include: [{model:File, attributes:['id', 'name', 'title', 'description', 'createdAt']}, {model:Job, attributes:['id', 'name', 'title', 'description', 'createdAt']}, {model:Query, attributes:['id', 'name', 'title', 'description', 'createdAt']}, {model:Index, attributes:['id', 'name', 'title', 'description', 'createdAt']}],
+      include: [{model:File, as:'files', attributes:['id', 'name', 'title', 'description', 'createdAt']}, {model:Job, as: 'jobs', attributes:['id', 'name', 'title', 'description', 'createdAt']}, {model:Query, as: 'queries', attributes:['id', 'name', 'title', 'description', 'createdAt']}, {model:Index, as: 'indexes', attributes:['id', 'name', 'title', 'description', 'createdAt']}],
       order: [['name', 'ASC']]
       }).then(async (assets) => {
         console.log(assets);
@@ -233,7 +234,11 @@ router.get('/assets', [
       let promises=[], finalGroups=[];
       //if group_id is not passed, this could be a root dir. pull all assets for that app_id
 
-      promises.push(File.findAll({where:{application_id:req.query.app_id, groupId:{[Op.or]:[null, '']}}}).then((files) => {
+      promises.push(File.findAll({
+        where:{
+          application_id:req.query.app_id,
+          [Op.and]:Sequelize.literal('not exists (select * from assets_groups where assets_groups.assetId = file.id)')
+      }}).then((files) => {
         files.forEach((file) => {
           finalAssets.push({
             type: 'File',
@@ -246,7 +251,12 @@ router.get('/assets', [
         })
       }))
 
-      promises.push(Index.findAll({where:{application_id:req.query.app_id, groupId:{[Op.or]:[null, '']}}}).then((indexes) => {
+      promises.push(Index.findAll({
+        where:{
+          application_id:req.query.app_id,
+          [Op.and]:Sequelize.literal('not exists (select * from assets_groups where assets_groups.assetId = indexes.id)')
+        }
+      }).then((indexes) => {
         indexes.forEach((index) => {
           finalAssets.push({
             type: 'Index',
@@ -259,7 +269,13 @@ router.get('/assets', [
         })
       }))
 
-      promises.push(Job.findAll({where:{application_id:req.query.app_id, groupId:{[Op.or]:[null, '']}}}).then((jobs) => {
+      promises.push(Job.findAll({
+        where:{
+          application_id:req.query.app_id,
+          [Op.and]:Sequelize.literal('not exists (select * from assets_groups where assets_groups.assetId = job.id)')
+        },
+        attributes:['id', 'name', 'title', 'description', 'createdAt']
+      }).then((jobs) => {
         jobs.forEach((job) => {
           finalAssets.push({
             type: 'Job',
@@ -272,7 +288,12 @@ router.get('/assets', [
         })
       }))
 
-      promises.push(Query.findAll({where:{application_id:req.query.app_id, groupId:{[Op.or]:[null, '']}}}).then((queries) => {
+      promises.push(Query.findAll({
+        where:{
+          application_id:req.query.app_id,
+          [Op.and]:Sequelize.literal('not exists (select * from assets_groups where assets_groups.assetId = query.id)')
+        }
+      }).then((queries) => {
         queries.forEach((query) => {
           finalAssets.push({
             type: 'Query',
@@ -326,19 +347,19 @@ router.get('/assetsSearch', [
       "where find_in_set(parent_group, @pv) and length(@pv := concat(@pv, ',', id)) > 0 or id=(:groupId)) as hie " +
       "join (";
       if(assetFilters.length == 0 || assetFilters.includes("File")) {
-        query += "select f.id, f.name, f.groupId, f.title, f.description, f.createdAt, 'File' as type from file f where f.application_id = (:applicationId) and  (f.name REGEXP (:keyword) or f.title REGEXP (:keyword)) ";
+        query += "select f.id, f.name, ag.groupId, f.title, f.description, f.createdAt, 'File' as type from file f, assets_groups ag where f.application_id = (:applicationId) and ag.assetId=f.id and (f.name REGEXP (:keyword) or f.title REGEXP (:keyword)) ";
         query += (assetFilters.length == 0 || assetFilters.length > 1) ? "union all " : "";
       }
       if(assetFilters.length == 0 || assetFilters.includes("Query")) {
-        query += "select q.id, q.name, q.groupId, q.title, q.description, q.createdAt, 'Query' as type from query q where q.application_id = (:applicationId) and (q.name REGEXP (:keyword) or q.title REGEXP (:keyword)) ";
+        query += "select q.id, q.name, ag.groupId, q.title, q.description, q.createdAt, 'Query' as type from query q, assets_groups ag where q.application_id = (:applicationId) and ag.assetId=q.id and (q.name REGEXP (:keyword) or q.title REGEXP (:keyword)) ";
         query += (assetFilters.length == 0 || assetFilters.length > 1) ? "union all " : "";
       }
       if(assetFilters.length == 0 || assetFilters.includes("Indexes")) {
-        query += "select idx.id, idx.name, idx.groupId, idx.title, idx.description, idx.createdAt, 'Index' as type  from indexes idx where idx.application_id = (:applicationId) and (idx.name REGEXP (:keyword) or idx.title REGEXP (:keyword)) ";
+        query += "select idx.id, idx.name, ag.groupId, idx.title, idx.description, idx.createdAt, 'Index' as type  from indexes idx, assets_groups ag where idx.application_id = (:applicationId) and ag.assetId=idx.id and (idx.name REGEXP (:keyword) or idx.title REGEXP (:keyword)) ";
         query += (assetFilters.length == 0 || assetFilters.length > 1) ? "union all " : "";
       }
       if(assetFilters.length == 0 || assetFilters.includes("Job")) {
-        query += "select j.id, j.name, j.groupId, j.title, j.description, j.createdAt, 'Job' as type  from job j where j.application_id = (:applicationId) and (j.name REGEXP (:keyword) or j.title REGEXP (:keyword) ) ";
+        query += "select j.id, j.name, ag.groupId, j.title, j.description, j.createdAt, 'Job' as type  from job j, assets_groups ag where j.application_id = (:applicationId) and j.id = ag.assetId and (j.name REGEXP (:keyword) or j.title REGEXP (:keyword) ) ";
         query += (assetFilters.length == 0 || assetFilters.length > 1) ? "union all " : "";
       }
       if(assetFilters.length == 0 || assetFilters.includes("Groups")) {
@@ -353,19 +374,19 @@ router.get('/assetsSearch', [
   } else {
     query = "";
     if(assetFilters.length == 0 || assetFilters.includes("File")) {
-      query += "select f.id, f.name, f.groupId, g.name as group_name, f.title, f.description, f.createdAt, 'File' as type from file f left outer join groups g on f.groupId = g.id where f.application_id = (:applicationId) and  (f.name REGEXP (:keyword) or f.title REGEXP (:keyword) and f.groupId = null) ";
+      query += "select files_res.*, g.name as group_name from (select f.id, f.name, ag.groupId, f.title, f.description, f.createdAt, 'File' as type from file f left join assets_groups ag on f.id = ag.assetId where f.application_id = (:applicationId) and  (f.name REGEXP (:keyword) or f.title REGEXP (:keyword))) as files_res left join groups g on files_res.groupId = g.id ";
       query += (assetFilters.length == 0 || assetFilters.length > 1) ? "union all " : "";
     }
     if(assetFilters.length == 0 || assetFilters.includes("Query")) {
-      query += "select q.id, q.name, q.groupId, g.name as group_name, q.title, q.description, q.createdAt, 'Query' as type from query q left outer join groups g on q.groupId = g.id where q.application_id = (:applicationId) and (q.name REGEXP (:keyword) or q.title REGEXP (:keyword) and q.groupId = null) ";
+      query += "select queries_res.*, g.name as group_name from (select q.id, q.name, ag.groupId, q.title, q.description, q.createdAt, 'Query' as type from query q left join assets_groups ag on q.id = ag.assetId where q.application_id = (:applicationId) and  (q.name REGEXP (:keyword) or q.title REGEXP (:keyword))) as queries_res left join groups g on queries_res.groupId = g.id ";
       query += (assetFilters.length == 0 || assetFilters.length > 1) ? "union all " : "";
     }
     if(assetFilters.length == 0 || assetFilters.includes("Indexes")) {
-      query += "select idx.id, idx.name, idx.groupId, g.name as group_name, idx.title, idx.description, idx.createdAt, 'Index' as type from indexes idx left outer join groups g on idx.groupId = g.id where idx.application_id = (:applicationId) and (idx.name REGEXP (:keyword) or idx.title REGEXP (:keyword) and idx.groupId = null) ";
+      query += "select idx_res.*, g.name as group_name from (select idx.id, idx.name, ag.groupId, idx.title, idx.description, idx.createdAt, 'Index' as type from indexes idx left join assets_groups ag on idx.id = ag.assetId where idx.application_id = (:applicationId) and  (idx.name REGEXP (:keyword) or idx.title REGEXP (:keyword))) as idx_res left join groups g on idx_res.groupId = g.id ";
       query += (assetFilters.length == 0 || assetFilters.length > 1) ? "union all " : "";
     }
     if(assetFilters.length == 0 || assetFilters.includes("Job")) {
-      query += "select j.id, j.name, j.groupId, g.name as group_name, j.title, j.description, j.createdAt, 'Job' as type  from job j left outer join groups g on j.groupId = g.id where j.application_id = (:applicationId) and (j.name REGEXP (:keyword) or j.title REGEXP (:keyword) and j.groupId = null)";
+      query += "select j_res.*, g.name as group_name from (select j.id, j.name, ag.groupId, j.title, j.description, j.createdAt, 'Job' as type from job j left join assets_groups ag on j.id = ag.assetId where j.application_id = (:applicationId) and  (j.name REGEXP (:keyword) or j.title REGEXP (:keyword))) as j_res left join groups g on j_res.groupId = g.id ";
       query += (assetFilters.length == 0 || assetFilters.length > 1) ? "union all " : "";
     }
     if(assetFilters.length == 0 || assetFilters.includes("Groups")) {
@@ -450,7 +471,7 @@ router.post('/', [
 let canDeleteGroup = (group_id, appId) => {
   return new Promise((resolve, reject) => {
     Groups.findAll({where:{"application_id":appId, "id":group_id},
-      include: [{model:File, attributes:['id', 'name', 'title', 'description', 'createdAt']}, {model:Job, attributes:['id', 'name', 'title', 'description', 'createdAt']}, {model:Query, attributes:['id', 'name', 'title', 'description', 'createdAt']}, {model:Index, attributes:['id', 'name', 'title', 'description', 'createdAt']}],
+      include: [{model:File, as: 'files', attributes:['id', 'name', 'title', 'description', 'createdAt']}, {model:Job, as: 'jobs', attributes:['id', 'name', 'title', 'description', 'createdAt']}, {model:Query, as: 'queries', attributes:['id', 'name', 'title', 'description', 'createdAt']}, {model:Index, as: 'indexes', attributes:['id', 'name', 'title', 'description', 'createdAt']}],
       order: [['name', 'ASC']]
     }).then((groups) => {
       if(groups[0].files.length > 0 || groups[0].jobs.length > 0 || groups[0].indexes.length || groups[0].queries.length) {
@@ -519,45 +540,36 @@ router.put('/move/asset', [
   body('app_id').isUUID(4).withMessage('Invalid app id'),
   body('assetId').isUUID(4).withMessage('Invalid asset id'),
   body('destGroupId').optional({checkFalsy:true}).isInt().withMessage('Invalid target group id'),
+  body('groupId').optional({checkFalsy:true}).isInt().withMessage('Invalid group id'),
   body('assetType').matches(/^[a-zA-Z]/).withMessage('Invalid asset type')
 ], (req, res) => {
     const errors = validationResult(req).formatWith(validatorUtil.errorFormatter);
     if (!errors.isEmpty()) {
         return res.status(422).json({ success: false, errors: errors.array() });
     }
-    let appId = req.body.app_id, assetId = req.body.assetId, destGroupId = req.body.destGroupId ? req.body.destGroupId : "";
+    let appId = req.body.app_id, assetId = req.body.assetId, groupId = req.body.groupId, destGroupId = req.body.destGroupId ? req.body.destGroupId : "";
     try {
-      switch (req.body.assetType) {
-        case 'File':
-          File.update({groupId:destGroupId}, {where:{application_id:appId, id:assetId}}).then((updated) => {
-            res.json({"success":true});
-          })
-          break;
-        case 'Index':
-          Index.update({groupId:destGroupId}, {where:{application_id:appId, id:assetId}}).then((updated) => {
-            res.json({"success":true});
-          })
-          break;
-        case 'Job':
-          Job.update({groupId:destGroupId}, {where:{application_id:appId, id:assetId}}).then((updated) => {
-            res.json({"success":true});
-          })
-          break;
-        case 'Query':
-          Query.update({groupId:destGroupId}, {where:{application_id:appId, id:assetId}}).then((updated) => {
-            res.json({"success":true});
-          })
-          break;
-        case 'Group':
-          Groups.update({parent_group:destGroupId}, {where:{application_id:appId, id:assetId}}).then((updated) => {
-            res.json({"success":true});
-          })
-          break;
+      if(req.body.assetType != 'Group') {
+        AssetsGroups.findOrCreate({
+          where: {assetId: assetId, groupId: destGroupId},
+          defaults:{assetId: assetId, groupId: destGroupId}}).then((assetsGroupsCreated) => {
+            if(req.body.groupId && req.body.groupId != '') {
+              AssetsGroups.destroy({where:{assetId: assetId, groupId: groupId}}).then((existingGroupAssociationRemoved) => {
+                res.json({"success":true});
+              })
+            } else {
+              res.json({"success":true});
+            }
+        })
+      } else {
+        Groups.update({parent_group:destGroupId}, {where:{application_id:appId, id:assetId}}).then((updated) => {
+          res.json({"success":true});
+        })
       }
-  } catch(err) {
-    console.log(err);
-    return res.status(500).send("Error occured while moving asset");
-  }
+    } catch(err) {
+      console.log(err);
+      return res.status(500).send("Error occured while moving asset");
+    }
 });
 
 let comparator = ((a,b) => {

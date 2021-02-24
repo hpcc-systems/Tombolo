@@ -3,6 +3,7 @@ const router = express.Router();
 const lodash = require('lodash');
 var models  = require('../../models');
 const hpccUtil = require('../../utils/hpcc-util');
+const assetUtil = require('../../utils/assets');
 let Application = models.application;
 let UserApplication = models.user_application;
 let File = models.file;
@@ -15,6 +16,7 @@ let License = models.license;
 let Dataflow = models.dataflow;
 let Rules = models.rules;
 let DataTypes=models.data_types;
+let AssetsGroups=models.assets_groups;
 TreeConnection = models.tree_connection;
 TreeStyle = models.tree_style;
 let ConsumerObject = models.consumer_object;
@@ -246,34 +248,11 @@ router.get('/file_details', [
     console.log("[file_details/read.js] - Get file details for app_id = " + req.query.app_id + " and file_id "+req.query.file_id);
     var basic = {}, results={};
     try {
-        File.findOne({where:{"application_id":req.query.app_id, "id":req.query.file_id}}).then(function(files) {
-            results.basic = files;
-            FileLayout.findAll({where:{"application_id":req.query.app_id, "file_id":req.query.file_id}}).then(function(fileLayout) {
-              let fileLayoutObj = (fileLayout.length == 1 && fileLayout[0].fields) ? JSON.parse(fileLayout[0].fields) : fileLayout;
-              console.log(fileLayoutObj)
-              results.file_layouts = fileLayoutObj.filter(item => item.name != '__fileposition__');
-              console.log('layouts**********'+JSON.stringify(results.file_layouts))
-              FileLicense.findAll({where:{"application_id":req.query.app_id, "file_id":req.query.file_id}}).then(function(fileLicenses) {
-                  results.file_licenses = fileLicenses;
-                  FileRelation.findAll({where:{"application_id":req.query.app_id, "file_id":req.query.file_id}}).then(function(fileRelations) {
-                      results.file_relations = fileRelations;
-                      FileValidation.findAll({where:{"application_id":req.query.app_id, "file_id":req.query.file_id}}).then(function(fileValidations) {
-                          results.file_validations = fileValidations.filter(item => item.name != '__fileposition__');
-                          FileFieldRelation.findAll({where:{"application_id":req.query.app_id, "file_id":req.query.file_id}}).then(function(fileFieldRelations) {
-                              results.file_field_relations = fileFieldRelations;
-                          }).then(function(fileFieldRelation) {
-                              ConsumerObject.findAll({where:{"object_id":req.query.file_id, "object_type":"file"}}).then(function(fileConsumers) {
-                                  results.consumers = fileConsumers;
-                                  res.json(results);
-                              });
-                          });
-                      });
-                  });
-              });
-            })
+        assetUtil.fileInfo(req.query.app_id, req.query.file_id).then((fileInfo) => {
+          res.json(fileInfo);
         })
         .catch(function(err) {
-            console.log(err);
+          console.log(err);
         });
     } catch (err) {
         console.log('err', err);
@@ -353,23 +332,30 @@ router.post('/saveFile', (req, res) => {
         return res.status(422).json({ success: false, errors: errors.array() });
       }
 
-      if(req.body.isNew) {
-        File.create(
-          req.body.file.basic
-        ).then((result) => {
-          updateFileDetails(result.id, applicationId, req).then((response) => {
-            res.json(response);
+      File.findOne({where: {name: req.body.file.basic.name, application_id: applicationId}}).then(async (existingFile) => {
+        let file = null;
+        if(!existingFile) {
+          file = await File.create(req.body.file.basic);
+        } else {
+          file = await File.update(req.body.file.basic, {where:{application_id: applicationId, id:req.body.id}}).then((updatedFile) => {
+            console.log(updatedFile);
+            return updatedFile;
           })
-        })
-      } else {
-        File.update(
-          req.body.file.basic, {where:{application_id: applicationId, id:req.body.id}}
-        ).then((result) => {
-          updateFileDetails(req.body.id, applicationId, req).then((response) => {
-            res.json(response);
+        }
+        let fileId = file.id ? file.id : req.body.id;
+        if(req.body.file.basic && req.body.file.basic.groupId) {
+          let assetsGroupsCreated = await AssetsGroups.findOrCreate({
+            where: {assetId: fileId, groupId: req.body.file.basic.groupId},
+            defaults:{
+              assetId: fileId,
+              groupId: req.body.file.basic.groupId
+            }
           })
+        }
+        updateFileDetails(fileId, applicationId, req).then((response) => {
+          res.json(response);
         })
-      }
+      })
     } catch (err) {
       console.log('err', err);
     }

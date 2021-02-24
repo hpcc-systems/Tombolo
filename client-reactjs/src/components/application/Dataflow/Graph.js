@@ -1229,6 +1229,7 @@ class Graph extends Component {
         .attr("width", width)
         .attr("height", "100%");
 
+
     _self.thisGraph.nodes = [];
     _self.thisGraph.edges = [];
 
@@ -1238,6 +1239,8 @@ class Graph extends Component {
       .attr("width", 100)
       .attr("height", "100%");
 
+    d3.select("svg").attr("transform",
+          "translate(" + margin.left + "," + margin.top + ")")
 
     var group = graphComponentsSvg.selectAll('g')
     .data(shapesData)
@@ -1359,10 +1362,10 @@ class Graph extends Component {
           _self.dragEnd(d3.select(this), _self.graphState.mouseEnterNode);
       } else {
         //checking if the nodes have .select('rect').attr("stroke-width", "5") dropped at an x,y which is out of browser's viewport
-        let x = d3.event.x > 1500 ? 1500 : d3.event.x < 40 ? 40 : d3.event.x;
+        /*let x = d3.event.x > 1500 ? 1500 : d3.event.x < 40 ? 40 : d3.event.x;
         let y = d3.event.y > 720 ? 720 : d3.event.y < 0 ? 0 : d3.event.y;
         d.x = x;
-        d.y = y;
+        d.y = y;*/
       }
       if (_self.graphState.justDragged === true) {
         (function() {
@@ -1420,7 +1423,7 @@ class Graph extends Component {
 
       // listen for resize
       window.onresize = function () {
-          _self.updateWindow(svg);
+        _self.updateWindow(svg);
       };
 
   }
