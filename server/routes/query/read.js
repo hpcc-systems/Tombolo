@@ -4,9 +4,11 @@ let mongoose = require('mongoose');
 var models  = require('../../models');
 let Query = models.query;
 let QueryField = models.query_field;
+let AssetsGroups = models.assets_groups;
 let Dataflow = models.dataflow;
 const validatorUtil = require('../../utils/validator');
 const { body, query, validationResult } = require('express-validator');
+const assetUtil = require('../../utils/assets');
 
 let updateQueryDetails = (queryId, applicationId, req) => {
   let fieldsToUpdate = {"query_id":queryId, "application_id":applicationId};
@@ -42,23 +44,29 @@ router.post('/saveQuery', [
   var query_id, fieldsToUpdate={}, applicationId=req.body.query.basic.application_id;
   console.log("[saveQuery] - Get file list for app_id = " + applicationId + " isNew: "+req.body.isNew);
   try {
-    if(req.body.isNew) {
-      Query.create(
-        req.body.query.basic
-      ).then((result) => {
-        updateQueryDetails(result.id, applicationId, req).then((response) => {
-          res.json(response);
+    Query.findOne({where: {name: req.body.query.basic.name, application_id: applicationId}}).then(async (existingQuery) => {
+      let query = null;
+      if(!existingQuery) {
+        query = await Query.create(req.body.query.basic);
+      } else {
+        query = await Query.update(req.body.query.basic, {where:{application_id: applicationId, id:req.body.id}}).then((updatedQuery) => {
+          return updatedQuery;
         })
-      })
-    } else {
-      Query.update(
-        req.body.query.basic, {where:{application_id: applicationId, id: req.body.id}}
-      ).then((result) => {
-        updateQueryDetails(req.body.id, applicationId, req).then((response) => {
-          res.json(response);
+      }
+      let queryId = query.id ? query.id : req.body.id;
+      if(req.body.query.basic && req.body.query.basic.groupId) {
+        let assetsGroupsCreated = AssetsGroups.findOrCreate({
+          where: {assetId: queryId, groupId: req.body.query.basic.groupId},
+          defaults:{
+            assetId: queryId,
+            groupId: req.body.query.basic.groupId
+          }
         })
+      }
+      updateQueryDetails(queryId, applicationId, req).then((response) => {
+        res.json(response);
       })
-    }
+    })
   } catch(err) {
     console.log(err);
     return res.status(500).send("Error occured while saving Query");

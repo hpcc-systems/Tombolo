@@ -1,5 +1,5 @@
-import React, { Component } from "react";
-import { Modal, Tabs, Form, Input, Icon, Select, Table, AutoComplete, message, Spin, Button } from 'antd/lib';
+import React, { PureComponent } from "react";
+import { Modal, Tabs, Form, Input, Icon, Select, Table, AutoComplete, message, Spin, Button, Row, Col } from 'antd/lib';
 import { authHeader, handleError } from "../common/AuthHeader.js"
 import { hasEditPermission } from "../common/AuthUtil.js";
 import { fetchDataDictionary, eclTypes } from "../common/CommonUtil.js"
@@ -10,45 +10,35 @@ import { MarkdownEditor } from "../common/MarkdownEditor.js"
 import { connect } from 'react-redux';
 import { SearchOutlined  } from '@ant-design/icons';
 import { assetsActions } from '../../redux/actions/Assets';
+import { debounce } from 'lodash';
 
 const TabPane = Tabs.TabPane;
 const Option = Select.Option;
 const { confirm } = Modal;
 message.config({top:130})
 
-class IndexDetails extends Component {
-
+class IndexDetails extends PureComponent {
+  formRef = React.createRef();
   constructor(props) {
     super(props);
   }
 
   state = {
+    initialDataLoading: false,
     visible: true,
-    confirmLoading: false,
-    pagination: {},
-    loading: false,
     sourceFiles:[],
     selectedSourceFile:"",
-    availableLicenses:[],
-    selectedRowKeys:[],
     clusters:[],
     selectedCluster: this.props.clusterId ? this.props.clusterId : "",
-    fileSearchSuggestions:[],
+    indexSearchSuggestions:[],
     indexSearchErrorShown:false,
-    autoCompleteSuffix: <SearchOutlined/>,
-    dataDefinitions:[],
+    indexSearchValue:'',
+    searchResultsLoaded: false,
     index: {
       id:"",
-      title:"",
-      name:"",
-      description:"",
       groupId: "",
-      primaryService:"",
-      backupService:"",
-      path:"",
       keyedColumns:[],
-      nonKeyedColumns:[],
-      relations:[]
+      nonKeyedColumns:[]
     }
   }
 
@@ -56,12 +46,16 @@ class IndexDetails extends Component {
     //this.props.onRef(this);
     if(this.props.application && this.props.application.applicationId) {
       this.getIndexDetails();
-      this.fetchDataDefinitions();
     }
+    this.getFiles();
   }
 
   getIndexDetails() {
     if(this.props.selectedAsset && !this.props.isNew) {
+      this.setState({
+        initialDataLoading: true
+      });
+
       fetch("/api/index/read/index_details?index_id="+this.props.selectedAsset.id+"&app_id="+this.props.application.applicationId, {
         headers: authHeader()
       })
@@ -74,31 +68,31 @@ class IndexDetails extends Component {
       .then(data => {
         this.setState({
           ...this.state,
-          selectedSourceFile: data.basic.parentFileId,
+          //selectedSourceFile: data.basic.parentFileId,
+          initialDataLoading: false,
           index: {
             ...this.state.index,
             id: data.basic.id,
-            title: data.basic.title == '' ? data.basic.name : data.basic.title,
-            name: (data.basic.name == '' ? data.basic.title : data.basic.name),
-            description: data.basic.description,
             groupId: data.basic.groupId,
-            path: data.basic.qualifiedPath,
-            primaryService: data.basic.primaryService,
-            backupService: data.basic.backupService,
             keyedColumns: data.basic.index_keys,
             nonKeyedColumns: data.basic.index_payloads
           }
         });
+        this.formRef.current.setFieldsValue({
+          title: data.basic.title == '' ? data.basic.name : data.basic.title,
+          name: (data.basic.name == '' ? data.basic.title : data.basic.name),
+          description: data.basic.description,
+          qualifiedPath: data.basic.qualifiedPath,
+          primaryService: data.basic.primaryService,
+          backupService: data.basic.backupService,
+        })
         return data;
-      })
-      .then(data => {
-        this.getFiles();
       })
       .catch(error => {
         console.log(error);
       });
     } else {
-      this.getClusters();
+      this.setClusters();
     }
     this.setState({
       initialDataLoading: false
@@ -112,7 +106,7 @@ class IndexDetails extends Component {
     });
     this.getIndexDetails();
     //if(this.props.isNew) {
-      this.getClusters();
+      this.setClusters();
     //}
   }
 
@@ -122,7 +116,7 @@ class IndexDetails extends Component {
     setTimeout(() => {
       this.setState({
         visible: false,
-        confirmLoading: false,
+        initialDataLoading: false,
       });
       //this.props.onClose();
       //this.props.onRefresh(saveResponse);
@@ -165,44 +159,22 @@ class IndexDetails extends Component {
     })
   }
 
-  async fetchDataDefinitions() {
-    try {
-      let dataDefn = await fetchDataDictionary(this.props.application.applicationId);
-      this.setState({
-        dataDefinitions: dataDefn
-      });
-    } catch (err) {
-      console.log(err)
+  setClusters() {
+    let selectedCluster = this.props.clusters.filter(cluster => cluster.id == this.props.clusterId);
+    if(selectedCluster.length > 0) {
+      this.formRef.current.setFieldsValue({
+        "clusters": selectedCluster[0].id
+      })
     }
   }
 
-  getClusters() {
-    fetch("/api/hpcc/read/getClusters", {
-      headers: authHeader()
-    })
-    .then((response) => {
-      if(response.ok) {
-        return response.json();
-      }
-      handleError(response);
-    })
-    .then(clusters => {
-      this.setState({
-        ...this.state,
-        clusters: clusters
-      });
-    }).catch(error => {
-      console.log(error);
-    });
-  }
-
-  searchIndexes(searchString) {
+  searchIndexes = debounce ((searchString) => {
     if(searchString.length <= 3)
       return;
     this.setState({
       ...this.state,
-      autoCompleteSuffix : <Spin/>,
-      indexSearchErrorShown: false
+      indexSearchErrorShown: false,
+      searchResultsLoaded: false
     });
 
     var data = JSON.stringify({clusterid: this.state.selectedCluster, keyword: searchString, indexSearch:true});
@@ -221,8 +193,8 @@ class IndexDetails extends Component {
     .then(suggestions => {
       this.setState({
         ...this.state,
-        fileSearchSuggestions: suggestions,
-        autoCompleteSuffix: <SearchOutlined/>
+        indexSearchSuggestions: suggestions,
+        searchResultsLoaded: true
       });
     }).catch(error => {
       if(!this.state.indexSearchErrorShown) {
@@ -232,15 +204,15 @@ class IndexDetails extends Component {
         });
         this.setState({
           ...this.state,
-          indexSearchErrorShown: true,
-          autoCompleteSuffix: <SearchOutlined/>
+          indexSearchErrorShown: true
         });
       }
     });
-  }
+  }, 100)
 
   onFileSelected(selectedSuggestion) {
-    fetch("/api/hpcc/read/getIndexInfo?indexName="+selectedSuggestion+"&clusterid="+this.state.selectedCluster, {
+    message.config({top:150});
+    fetch("/api/hpcc/read/getIndexInfo?indexName="+selectedSuggestion+"&clusterid="+this.state.selectedCluster+"&applicationId="+this.props.application.applicationId, {
       headers: authHeader()
     })
     .then((response) => {
@@ -250,19 +222,30 @@ class IndexDetails extends Component {
       handleError(response);
     })
     .then(indexInfo => {
+      if(indexInfo && indexInfo.basic.groups) {
+        if(indexInfo.basic.groups.filter(group => group.id == this.props.groupId).length > 0) {
+          message.error("There is already an index with the same name in this Group. Please select another index")
+          return;
+        }
+      }
+
       this.setState({
         ...this.state,
         sourceFiles: [],
         index: {
           ...this.state.index,
-          id: indexInfo.name,
-          title: indexInfo.fileName,
-          name: indexInfo.fileName,
-          description: indexInfo.description,
-          path: indexInfo.pathMask,
-          keyedColumns: indexInfo.columns.keyedColumns,
-          nonKeyedColumns: indexInfo.columns.nonKeyedColumns
+          id: indexInfo.basic.id,
+          keyedColumns: indexInfo.basic.index_keys,
+          nonKeyedColumns: indexInfo.basic.index_payloads
         }
+      })
+      this.formRef.current.setFieldsValue({
+        title: indexInfo.basic.title == '' ? indexInfo.basic.name : indexInfo.basic.title,
+        name: (indexInfo.basic.name == '' ? indexInfo.basic.title : indexInfo.basic.name),
+        description: indexInfo.basic.description,
+        qualifiedPath: indexInfo.basic.qualifiedPath,
+        primaryService: indexInfo.basic.primaryService,
+        backupService: indexInfo.basic.backupService,
       })
       return indexInfo;
     })
@@ -304,6 +287,10 @@ class IndexDetails extends Component {
 
   saveIndexDetails() {
     return new Promise((resolve) => {
+      this.setState({
+        initialDataLoading: true
+      });
+
       fetch('/api/index/read/saveIndex', {
         method: 'post',
         headers: authHeader(),
@@ -316,8 +303,9 @@ class IndexDetails extends Component {
       }).then(function(data) {
         console.log('Saved..');
         resolve(data);
+      }).catch(error => {
+        message.error("Error occured while saving the data. Please check the form data")
       });
-      //this.populateIndexDetails()
     });
   }
 
@@ -349,12 +337,7 @@ class IndexDetails extends Component {
     var indexDetails = {"app_id":applicationId};
     var index_basic = {
       //"id" : this.state.file.id,
-      "title" : this.state.index.title,
-      "name" : this.state.index.name,
-      "description" : this.state.index.description,
-      "primaryService" : this.state.index.primaryService,
-      "backupService" : this.state.index.backupService,
-      "qualifiedPath" : this.state.index.path,
+      ...this.formRef.current.getFieldsValue(),
       "application_id" : applicationId,
       "dataflowId" : this.props.selectedDataflow ? this.props.selectedDataflow.id : '',
       "parentFileId" : this.state.selectedSourceFile,
@@ -399,9 +382,24 @@ class IndexDetails extends Component {
     });
   }
 
+  onReset = () => {
+    this.setState({
+      ...this.state,
+      indexSearchValue: '',
+      searchResultsLoaded: false,
+      index: {
+        ...this.state.index,
+        id: '',
+        keyedColumns: [],
+        nonKeyedColumns: []
+      }
+    })
+    this.formRef.current.resetFields();
+  }
+
   render() {
     const editingAllowed = hasEditPermission(this.props.user);
-    const { visible, confirmLoading, sourceFiles, availableLicenses, selectedRowKeys, clusters, fileSearchSuggestions } = this.state;
+    const { visible, sourceFiles, selectedRowKeys, clusters, indexSearchSuggestions, indexSearchValue, searchResultsLoaded } = this.state;
     const formItemLayout = {
       labelCol: { span: 2 },
       wrapperCol: { span: 8 }
@@ -427,12 +425,8 @@ class IndexDetails extends Component {
 
     const {
       name, title, description, primaryService, backupService, path,
-      relations, keyedColumns, nonKeyedColumns
+      keyedColumns, nonKeyedColumns
     } = this.state.index;
-    const rowSelection = {
-      selectedRowKeys,
-      onChange: this.onSelectedRowKeysChange
-    };
     const selectedCluster = clusters.filter(cluster => cluster.id == this.props.clusterId);
 
     //render only after fetching the data from the server
@@ -453,55 +447,79 @@ class IndexDetails extends Component {
           >
             <TabPane tab="Basic" key="1">
 
-             <Form {...formItemLayout} labelAlign="left">
-              {/*{this.props.isNew ?*/}
+             <Form {...formItemLayout} labelAlign="left" ref={this.formRef} onFinish={this.handleOk}>
               <div>
-              <Form.Item {...formItemLayout} label="Cluster">
-                 <Select placeholder="Select a Cluster" value={(selectedCluster.length > 0 ? selectedCluster[0].id : null)} onChange={this.onClusterSelection} style={{ width: 190 }} disabled={!editingAllowed}>
-                  {clusters.map(cluster => <Option key={cluster.id}>{cluster.name}</Option>)}
+              <Form.Item {...formItemLayout} label="Cluster" name="clusters">
+                <Select placeholder="Select a Cluster" disabled={!editingAllowed} onChange={this.onClusterSelection} style={{ width: 190 }}>
+                  {this.props.clusters.map(cluster => <Option key={cluster.id}>{cluster.name}</Option>)}
                 </Select>
               </Form.Item>
 
-              <Form.Item label="Index">
-                <AutoComplete
-                    className="certain-category-search"
-                    dropdownClassName="certain-category-search-dropdown"
-                    dropdownMatchSelectWidth={false}
-                    dropdownStyle={{ width: 300 }}
-                    style={{ width: '100%' }}
-                    onSearch={(value) => this.searchIndexes(value)}
-                    onSelect={(value) => this.onFileSelected(value)}
-                    placeholder="Search indexes"
-                    disabled={!editingAllowed}
-                  >
-                    {fileSearchSuggestions.map((suggestion) => (
-                      <Option key={suggestion.text} value={suggestion.value}>
-                        {suggestion.text}
-                      </Option>
-                    ))}
-                  </AutoComplete>
+              <Form.Item label="Index" name="indexSearchValue">
+                <Row type="flex">
+                  <Col span={21} order={1}>
+                    <AutoComplete
+                      className="certain-category-search"
+                      dropdownClassName="certain-category-search-dropdown"
+                      dropdownMatchSelectWidth={false}
+                      dropdownStyle={{ width: 300 }}
+                      style={{ width: '100%' }}
+                      onSearch={(value) => this.searchIndexes(value)}
+                      onSelect={(value) => this.onFileSelected(value)}
+                      placeholder="Search indexes"
+                      disabled={!editingAllowed}
+                      notFoundContent={searchResultsLoaded ? 'Not Found' : <Spin />}
+                    >
+                      {indexSearchSuggestions.map((suggestion) => (
+                        <Option key={suggestion.text} value={suggestion.value}>
+                          {suggestion.text}
+                        </Option>
+                      ))}
+                    </AutoComplete>
+                  </Col>
+                  <Col span={3} order={2} style={{"paddingLeft": "3px"}}>
+                   <Button htmlType="button" onClick={this.onReset}>
+                      Clear
+                   </Button>
+                  </Col>
+                </Row>
               </Form.Item>
               </div>
-
-              <Form.Item label="Name" rules={[{ required: true, message: 'Please enter a name!' }]}>
-                <Input id="name" name="name" onChange={this.onChange} placeholder="Name" disabled={true} value={name} disabled={!editingAllowed}/>
+              <Form.Item label="Title" name="title" rules={[{ required: true, message: 'Please enter a title!' }, {
+                  pattern: new RegExp(/^[a-zA-Z0-9:._-]*$/),
+                  message: 'Please enter a valid Title',
+                }]}>
+                <Input id="file_title" onChange={this.onChange} placeholder="Title" disabled={!editingAllowed}/>
               </Form.Item>
 
-              <Form.Item label="Title">
-                <Input id="file_title" name="title" onChange={this.onChange} placeholder="Title" value={title} disabled={!editingAllowed}/>
-              </Form.Item>
-              <Form.Item label="Description">
-                <MarkdownEditor id="query_desc" name="description" onChange={this.onChange} targetDomId="indexDescr" value={description} disabled={!editingAllowed}/>
+              <Form.Item label="Name" name="name" rules={[{ required: true, message: 'Please enter a Name!' }, {
+                  pattern: new RegExp(/^[a-zA-Z0-9:._-]*$/),
+                  message: 'Please enter a valid name',
+                }]}>
+                <Input id="name" onChange={this.onChange} placeholder="Name" disabled={searchResultsLoaded || !editingAllowed} />
               </Form.Item>
 
-              <Form.Item label="Primary Service">
-                 <Input id="file_primary_svc" name="primaryService" onChange={this.onChange} value={primaryService} placeholder="Primary Service" disabled={!editingAllowed}/>
+              <Form.Item label="Description" name="description">
+                <MarkdownEditor id="query_desc" onChange={this.onChange} targetDomId="indexDescr" disabled={!editingAllowed}/>
               </Form.Item>
-              <Form.Item label="Backup Service">
-                <Input id="file_bkp_svc" name="backupService" onChange={this.onChange} value={backupService} placeholder="Backup Service" disabled={!editingAllowed}/>
+
+              <Form.Item label="Primary Service" name="primaryService" rules={[{
+                pattern: new RegExp(/^[a-zA-Z0-9:$._-]*$/),
+                message: 'Please enter a valid Path',
+              }]}>
+                 <Input id="file_primary_svc" onChange={this.onChange} placeholder="Primary Service" disabled={!editingAllowed}/>
               </Form.Item>
-              <Form.Item label="Path">
-                <Input id="path" name="path" onChange={this.onChange} placeholder="Path" value={path} disabled={!editingAllowed}/>
+              <Form.Item label="Backup Service" name="backupService" rules={[{
+                pattern: new RegExp(/^[a-zA-Z0-9:$._-]*$/),
+                message: 'Please enter a valid backup service',
+              }]}>
+                <Input id="file_bkp_svc" onChange={this.onChange} placeholder="Backup Service" disabled={!editingAllowed}/>
+              </Form.Item>
+              <Form.Item label="Path" name="qualifiedPath" rules={[{
+                pattern: new RegExp(/^[a-zA-Z0-9:$._-]*$/),
+                message: 'Please enter a valid path',
+              }]}>
+                <Input id="path" onChange={this.onChange} placeholder="Path" disabled={!editingAllowed}/>
               </Form.Item>
             </Form>
 
@@ -514,25 +532,21 @@ class IndexDetails extends Component {
                 </div>
             </TabPane>
             <TabPane tab="Index" key="3">
-
-
-                <EditableTable
-                  columns={indexColumns}
-                  dataSource={keyedColumns}
-                  editingAllowed={editingAllowed}
-                  dataDefinitions={this.state.dataDefinitions}
-                  showDataDefinition={true}
-                  setData={this.setIndexFieldData}/>
-
-
+              <EditableTable
+                columns={indexColumns}
+                dataSource={keyedColumns}
+                editingAllowed={editingAllowed}
+                dataDefinitions={[]}
+                showDataDefinition={false}
+                setData={this.setIndexFieldData}/>
             </TabPane>
             <TabPane tab="Payload" key="4">
                 <EditableTable
                   columns={indexColumns}
                   dataSource={nonKeyedColumns}
                   editingAllowed={editingAllowed}
-                  dataDefinitions={this.state.dataDefinitions}
-                  showDataDefinition={true}
+                  dataDefinitions={[]}
+                  showDataDefinition={false}
                   setData={this.setNonKeyedColumnData}/>
             </TabPane>
 
@@ -544,11 +558,11 @@ class IndexDetails extends Component {
         </div>
         {!this.props.viewMode ?
           <div className="button-container">
-            <Button key="danger" type="danger" onClick={this.handleDelete}>Delete</Button>
+            <Button key="danger" type="danger" disabled={!this.state.index.id || !editingAllowed} onClick={this.handleDelete}>Delete</Button>
             <Button key="back" onClick={this.handleCancel}>
               Cancel
             </Button>
-            <Button key="submit" disabled={!editingAllowed} type="primary" loading={confirmLoading} onClick={this.handleOk}>
+            <Button key="submit" disabled={!editingAllowed} type="primary" onClick={this.handleOk}>
               Save
             </Button>
           </div>
@@ -561,7 +575,7 @@ class IndexDetails extends Component {
 function mapStateToProps(state) {
     const { selectedAsset, newAsset={}, clusterId } = state.assetReducer;
     const { user } = state.authenticationReducer;
-    const { application } = state.applicationReducer;
+    const { application, clusters} = state.applicationReducer;
     const {isNew=false, groupId='' } = newAsset;
     return {
       user,
@@ -569,7 +583,8 @@ function mapStateToProps(state) {
       application,
       isNew,
       groupId,
-      clusterId
+      clusterId,
+      clusters
     };
 }
 

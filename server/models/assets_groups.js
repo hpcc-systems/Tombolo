@@ -1,6 +1,6 @@
 'use strict';
 module.exports = (sequelize, DataTypes) => {
-  const file_relation = sequelize.define('file_relation', {
+  const assets_groups = sequelize.define('assets_groups', {
     id: {
       primaryKey: true,
       type: DataTypes.UUID,
@@ -8,11 +8,8 @@ module.exports = (sequelize, DataTypes) => {
       allowNull: false,
       autoIncrement: false
     },
-    application_id: DataTypes.STRING,
-    file_id: DataTypes.STRING,
-    source_file_id: DataTypes.STRING
+    assetId: DataTypes.UUID,
+    groupId: DataTypes.INTEGER
   }, {freezeTableName: true});
-  file_relation.associate = function(models) {
-  };
-  return file_relation;
+  return assets_groups;
 };

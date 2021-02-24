@@ -5,6 +5,7 @@ import { authHeader, handleError } from "../common/AuthHeader.js";
 import { connect } from 'react-redux';
 import ShareApp from "./ShareApp";
 import { DeleteOutlined, EditOutlined, QuestionCircleOutlined, SearchOutlined  } from '@ant-design/icons';
+import { applicationActions } from '../../redux/actions/Application';
 const Option = Select.Option;
 const { Paragraph } = Typography;
 const options = [
@@ -44,7 +45,7 @@ class Consumers extends Component {
   }
 
   componentDidMount() {
-  	this.getConsumers();
+  	//this.getConsumers();
   }
 
   onSelectedRowKeysChange = (selectedRowKeys, selectedRows) => {
@@ -142,7 +143,7 @@ class Consumers extends Component {
             console.log('Closed!');
           },
       });
-      this.getConsumers();
+      this.props.dispatch(applicationActions.getConsumers());
       }).catch(error => {
         console.log(error);
       });
@@ -281,7 +282,8 @@ class Consumers extends Component {
         isEditing: false,
         submitted:false
       });
-	    this.getConsumers();
+	    //this.getConsumers();
+      this.props.dispatch(applicationActions.getConsumers());
     }).catch(error => {
       console.log(error);
     });
@@ -384,7 +386,7 @@ class Consumers extends Component {
       	<Table
           columns={consumerColumns}
           rowKey={record => record.id}
-          dataSource={this.state.consumers}/>
+          dataSource={this.props.consumers}/>
       </div>
 
       <div>
@@ -468,8 +470,10 @@ class Consumers extends Component {
 
 function mapStateToProps(state) {
   const { user } = state.authenticationReducer;
+  const { application, consumers } = state.applicationReducer;
   return {
-      user
+      user,
+      consumers
   };
 }
 const connectedApp = connect(mapStateToProps)(Consumers);

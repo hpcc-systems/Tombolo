@@ -1,6 +1,6 @@
 import { Constants } from '../../components/common/Constants';
 
-const initialState = {};
+const initialState = {application:{}, selectedTopNav:'', newApplication:'', updatedApplication:'', deletedApplicationId:'', clusters:[], consumers:[]};
 
 export function applicationReducer(state = initialState, action) {
   switch (action.type) {
@@ -15,15 +15,25 @@ export function applicationReducer(state = initialState, action) {
     case Constants.NEW_APPLICATION_ADDED:
       return {
         newApplication: action.newApplication
-      };  
+      };
     case Constants.APPLICATION_UPDATED:
       return {
         updatedApplication: action.updatedApplication
-      };  
+      };
     case Constants.APPLICATION_DELETED:
       return {
         deletedApplicationId: action.applicationId
-      };        
+      };
+    case Constants.CLUSTERS_RETRIEVED:
+      return {
+        ...state,
+        clusters: action.clusters
+      };
+    case Constants.CONSUMERS_RETRIEVED:
+      return {
+        ...state,
+        consumers: action.consumers
+      };
     default:
       return state
   }

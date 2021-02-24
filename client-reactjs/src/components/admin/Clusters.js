@@ -1,8 +1,10 @@
 import React, { Component } from "react";
 import { Table, Button, Row, Col, Modal, Form, Input, notification, Spin, Tooltip, Popconfirm, Divider, message, Select } from 'antd/lib';
 import BreadCrumbs from "../common/BreadCrumbs";
+import { connect } from 'react-redux';
 import { authHeader, handleError } from "../common/AuthHeader.js";
 import { DeleteOutlined, EditOutlined, QuestionCircleOutlined, ShareAltOutlined  } from '@ant-design/icons';
+import { applicationActions } from '../../redux/actions/Application';
 const Option = Select.Option;
 
 class Clusters extends Component {
@@ -15,47 +17,20 @@ class Clusters extends Component {
     initialDataLoading: false,
     clusterWhitelist: [],
   	newCluster : {
-  	  	id: '',
-  	  	name: '',
-  	  	thorHost: '',
-        thorPort: '',
-        roxieHost: '',
-        roxiePort: '',
-        username: '',
-        password: '',
-        submitted: false
+	  	id: '',
+	  	name: '',
+	  	thorHost: '',
+      thorPort: '',
+      roxieHost: '',
+      roxiePort: '',
+      username: '',
+      password: '',
+      submitted: false
   	}
   }
 
   componentDidMount() {
-  	this.getClusters();
-  }
-
-  getClusters() {
-   this.setState({
-      initialDataLoading: true
-    });
-    fetch("/api/hpcc/read/getClusters", {
-      headers: authHeader()
-    })
-  	.then((response) => {
-      if(response.ok) {
-        return response.json();
-      }
-      handleError(response);
-  	})
-  	.then(data => {
-  	    this.setState({
-  	    	clusters: data,
-          initialDataLoading: false
-  	    });
-    }).
-    then((data) => {
-      this.getClusterWhitelist();
-    })
-  	.catch(error => {
-    	console.log(error);
-  	});
+    this.getClusterWhitelist();
   }
 
   getClusterWhitelist() {
@@ -80,8 +55,7 @@ class Clusters extends Component {
 
   handleRemove = (clusterId) => {
    	var data = JSON.stringify({clusterIdsToDelete:clusterId});
-   	console.log(data);
-     fetch("/api/hpcc/read/removecluster", {
+    fetch("/api/hpcc/read/removecluster", {
        method: 'post',
        headers: authHeader(),
        body: data
@@ -93,16 +67,17 @@ class Clusters extends Component {
      })
      .then(suggestions => {
    		notification.open({
-   		    message: 'Cluster Removed',
-   		    description: 'The cluster has been removed.',
-   		    onClick: () => {
-   		      console.log('Closed!');
-   		    },
-   		  });
-         this.getClusters();
-       }).catch(error => {
-         console.log(error);
-       });
+ 		    message: 'Cluster Removed',
+ 		    description: 'The cluster has been removed.',
+ 		    onClick: () => {
+ 		      console.log('Closed!');
+ 		    },
+ 		  });
+       //this.getClusters();
+       this.props.dispatch(applicationActions.getClusters());
+     }).catch(error => {
+       console.log(error);
+     });
   }
 
   handleAdd = (event) => {
@@ -142,7 +117,6 @@ class Clusters extends Component {
       handleError(response);
     })
 	  .then(data => {
-      console.log(JSON.stringify(data))
       this.setState({
         ...this.state,
         selectedCluster: data.name,
@@ -215,9 +189,9 @@ class Clusters extends Component {
     });
 
     fetch("/api/hpcc/read/newcluster", {
-        method: 'post',
-        headers: authHeader(),
-        body: data
+      method: 'post',
+      headers: authHeader(),
+      body: data
     })
     .then((response) => {
       if(response.ok) {
@@ -231,9 +205,10 @@ class Clusters extends Component {
         showAddClusters: false,
         submitted: false
       });
-      this.getClusters();
+      //this.getClusters();
+      this.props.dispatch(applicationActions.getClusters());
     }).catch(error => {
-      message.config({top:50});
+      message.config({top:150});
       message.error(error.message);
       this.setState({
         confirmLoading: false
@@ -278,9 +253,10 @@ class Clusters extends Component {
         <span>
           <a href="#" onClick={(row) => this.handleEditCluster(record.id)}><Tooltip placement="right" title={"Edit Cluster"}><EditOutlined/></Tooltip></a>
           <Divider type="vertical" />
-          <Popconfirm title="Are you sure you want to delete this Cluster?" onConfirm={() => this.handleRemove(record.id)} icon={QuestionCircleOutlined}>
+          <Popconfirm title="Are you sure you want to delete this Cluster?" onConfirm={() => this.handleRemove(record.id)} icon={<QuestionCircleOutlined/>}>
             <a href="#"><Tooltip placement="right" title={"Delete Cluster"}><DeleteOutlined /></Tooltip></a>
           </Popconfirm>
+
         </span>
     }];
     const formItemLayout = {
@@ -331,7 +307,7 @@ class Clusters extends Component {
       	<Table
           columns={clusterColumns}
           rowKey={record => record.id}
-          dataSource={this.state.clusters}/>
+          dataSource={this.props.clusters}/>
       </div>
       <div>
 	      <Modal
@@ -369,4 +345,14 @@ class Clusters extends Component {
 
 }
 
-export default Clusters;
+function mapStateToProps(state) {
+  const { application, clusters } = state.applicationReducer;
+
+  return {
+    application,
+    clusters
+  };
+}
+
+const ClustersComp = connect(mapStateToProps)(Clusters);
+export default ClustersComp;

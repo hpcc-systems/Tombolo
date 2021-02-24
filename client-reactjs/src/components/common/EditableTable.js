@@ -23,6 +23,8 @@ class EditableCell extends React.Component {
     editing: false,
   };
 
+  formRef = React.createRef();
+
   toggleEdit = () => {
     const editing = !this.state.editing;
     this.setState({ editing }, () => {
@@ -42,13 +44,11 @@ class EditableCell extends React.Component {
     let dataValueObj = {};
     record.dataDefinition = selectedDataDefn;
     dataValueObj[dataIndex] = e;
-    this.form.setFieldsValue(dataValueObj);
-    this.form.validateFields({force: true}, (error, values) => {
-      if (error && error[e.currentTarget.id]) {
-        return;
-      }
+    //this.formRef.current.setFieldsValue(dataValueObj);
+    record[Object.keys(dataValueObj)[0]] = dataValueObj[Object.keys(dataValueObj)[0]];
+    this.formRef.current.validateFields().then(async (error, values) => {
       this.toggleEdit();
-      handleSave({ ...record, ...values });
+      handleSave({ ...record });
     });
   };
 
@@ -56,13 +56,12 @@ class EditableCell extends React.Component {
     const { record, handleSave, dataIndex } = this.props;
     let dataValueObj = {};
     dataValueObj[dataIndex] = e;
-    this.form.validateFields({force: true}, (error, values) => {
-      console.log(values)
-      if (error && error[e.currentTarget.id]) {
+    this.formRef.current.validateFields().then(async (error, values) => {
+      if (error ) {
         return;
       }
       this.toggleEdit();
-      handleSave({ ...record, ...values });
+      handleSave({ ...record });
     });
   };
 
@@ -70,33 +69,25 @@ class EditableCell extends React.Component {
 
 
   renderCell = form => {
-    this.form = form;
     const { children, dataIndex, record, title, celleditor, celleditorparams, required, showdatadefinitioninfield, datadefinitions } = this.props;
     const { editing } = this.state;
     this.datadefinitions = datadefinitions
+    console.log(record)
     return editing ? (
-    <Form>
-      <Form.Item style={{ margin: 0 }}>
-        {form.getFieldDecorator(dataIndex, {
-          rules: [
-            {
-              required: required,
-              message: `${title} is required.`,
-            },
-          ],
-          initialValue: record[dataIndex],
-        }) (celleditor == 'select' ? <Select ref={node => (this.input = node)} placeholder="Select" onChange={this.saveSelect} >
-          {showdatadefinitioninfield ?
-            <OptGroup label="ECL">
-              {celleditorparams.values.map(cellEditorParam =>  <Option key={cellEditorParam} value={cellEditorParam}>{cellEditorParam}</Option>)}
-            </OptGroup> :
-            celleditorparams.values.map(cellEditorParam =>  <Option key={cellEditorParam} value={cellEditorParam}>{cellEditorParam}</Option>)
-          }
-
-          { showdatadefinitioninfield && datadefinitions ?
-            <OptGroup label="Data Dictionary">
-              {datadefinitions.map(dataDefn => <Option key={dataDefn.id} value={dataDefn.id}>{dataDefn.name}</Option>)}
-            </OptGroup> : null}
+    <Form ref={this.formRef}>
+      <Form.Item style={{ margin: 0 }} name={dataIndex} initialValue={record[dataIndex]} rules={[
+        {
+          required: required,
+          message: `${title} is required.`,
+        },
+        {
+          pattern: new RegExp(/^[a-zA-Z0-9]*$/),
+          message: 'Please enter a valid '+dataIndex,
+        }
+      ]}>
+         {(celleditor == 'select' ? <Select ref={node => (this.input = node)} placeholder="Select" onChange={this.saveSelect} >
+           {celleditorparams && celleditorparams.values ? celleditorparams.values.map(cellEditorParam =>  <Option key={cellEditorParam} value={cellEditorParam}>{cellEditorParam}</Option>) : null}
+          (celleditorparams != undefined) ?
           </Select> : <TextArea ref={node => (this.input = node)} onPressEnter={this.saveText} rows="5" cols="25" onBlur={this.saveText} />)}
       </Form.Item>
       </Form>
@@ -157,7 +148,6 @@ class EditableTable extends React.Component {
     }
     if(this.props.editingAllowed) {
       let columns = this.state.columns;
-      console.log(JSON.stringify(columns))
       columns = columns.push(deleteColumn);
       this.setState({ columns: columns});
     }
@@ -229,7 +219,7 @@ class EditableTable extends React.Component {
   }
 
   render() {
-    const { dataSource } = this.state;
+    const { dataSource } = this.props;
     const components = {
       body: {
         cell: EditableCell
@@ -264,7 +254,6 @@ class EditableTable extends React.Component {
       beforeUpload(file) {
         const reader = new FileReader();
         reader.onload = (e) => {
-          console.log(file)
           switch(file.type) {
             case 'application/vnd.ms-excel':
               parseCsv(e.target.result);
@@ -308,7 +297,6 @@ class EditableTable extends React.Component {
         //check if it is an object and not array. if object, iterate over the keys and extract the keys
         if(typeof (jsonObj) === 'object' && !Array.isArray(jsonObj)) {
           Object.keys(jsonObj).forEach((jsonKey, childIdx) => {
-            console.log(jsonKey)
             obj = {'id': Math.random() + '-' +childIdx, 'name': jsonKey, 'type':'', 'eclType':'', description:'', required:false, data_types:''};
             if(jsonObj[jsonKey] != null && typeof (jsonObj[jsonKey]) === 'object' && !Array.isArray(jsonObj[jsonKey])) {
               obj.children = iterateJsonObj(jsonObj[jsonKey]);
@@ -342,7 +330,6 @@ class EditableTable extends React.Component {
         }
         layout.push(obj);
       })
-      console.log(JSON.stringify(layout));
       this.setState({ dataSource: layout });
       this.props.setData(layout)
     }

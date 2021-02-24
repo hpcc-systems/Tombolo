@@ -4,9 +4,14 @@ const crypto = require('crypto');
 var request = require('request');
 var requestPromise = require('request-promise');
 const hpccUtil = require('../../utils/hpcc-util');
+const assetUtil = require('../../utils/assets');
 const validatorUtil = require('../../utils/validator');
 var models  = require('../../models');
 var Cluster = models.cluster;
+var File = models.file;
+var Query = models.query;
+var Index = models.indexes;
+var Job = models.job;
 let algorithm = 'aes-256-ctr';
 let hpccJSComms = require("@hpcc-js/comms")
 var http = require('http');
@@ -136,7 +141,7 @@ router.post('/jobsearch', [
 
 router.get('/getClusters', function (req, res) {
   try {
-		Cluster.findAll().then(function(clusters) {
+		Cluster.findAll({order: [['createdAt', 'DESC']]}).then(function(clusters) {
 			res.json(clusters);
 		})
 		.catch(function(err) {
@@ -236,17 +241,28 @@ router.get('/getFileInfo', [
     .matches(/^[a-zA-Z]{1}[a-zA-Z0-9_:.\-]*$/).withMessage('Invalid file name'),
   query('clusterid')
     .isUUID(4).withMessage('Invalid cluster id'),
+  query('applicationId')
+    .isUUID(4).withMessage('Invalid application id')
 ], function (req, res) {
 	const errors = validationResult(req).formatWith(validatorUtil.errorFormatter);
   if (!errors.isEmpty()) {
     return res.status(422).json({ success: false, errors: errors.array() });
   }
 	console.log('fileName: '+req.query.fileName+ " clusterId: "+req.query.clusterid );
-	hpccUtil.fileInfo(req.query.fileName, req.query.clusterid).then((fileInfo) => {
-		res.json(fileInfo);
-	}).catch((err) => {
-		console.log('err', err);
-	})
+  File.findOne({where: {name: req.query.fileName, application_id: req.query.applicationId}}).then((existingFile) => {
+    if(existingFile) {
+      assetUtil.fileInfo(req.query.applicationId, existingFile.id).then((existingFileInfo) => {
+        res.json(existingFileInfo);
+      })
+    } else {
+      hpccUtil.fileInfo(req.query.fileName, req.query.clusterid).then((fileInfo) => {
+        res.json(fileInfo);
+      }).catch((err) => {
+        console.log('err', err);
+        return res.status(500).send("Error occured while getting file details");
+      })
+    }
+  })
 });
 
 
@@ -255,35 +271,31 @@ router.get('/getIndexInfo', [
     .matches(/^[a-zA-Z]{1}[a-zA-Z0-9_:.\-]*$/).withMessage('Invalid index name'),
   query('clusterid')
     .isUUID(4).withMessage('Invalid cluster id'),
+  query('applicationId')
+    .isUUID(4).withMessage('Invalid application id')
 ],function (req, res) {
 	const errors = validationResult(req).formatWith(validatorUtil.errorFormatter);
   if (!errors.isEmpty()) {
     return res.status(422).json({ success: false, errors: errors.array() });
   }
   try {
-		hpccUtil.getCluster(req.query.clusterid).then(function(cluster) {
-			let clusterAuth = hpccUtil.getClusterAuth(cluster);
-			let dfuService = new hpccJSComms.DFUService({ baseUrl: cluster.thor_host + ':' + cluster.thor_port, userID:(clusterAuth ? clusterAuth.user : ""), password:(clusterAuth ? clusterAuth.password : "")});
-			dfuService.DFUInfo({"Name":req.query.indexName}).then(response => {
-    		if(response.FileDetail) {
-	    		let indexInfo = {};
-	    		getIndexColumns(cluster, req.query.indexName).then(function(indexColumns) {
-	      		indexInfo = {
-	      			"name" : response.FileDetail.Name,
-	      			"fileName" : response.FileDetail.Filename,
-	      			"description" : response.FileDetail.Description,
-	      			"pathMask" : response.FileDetail.PathMask,
-	      			"columns" : indexColumns
-	      		}
-	      	 	res.json(indexInfo);
-	    		})
-	    	} else {
-	    		res.json();
-	    	}
-    	});
-		});
+	  Index.findOne({where: {name: req.query.indexName, application_id: req.query.applicationId}}).then((existingIndex) => {
+      if(existingIndex) {
+        assetUtil.indexInfo(req.query.applicationId, existingIndex.id).then((existingIndexInfo) => {
+          res.json(existingIndexInfo);
+        })
+      } else {
+        hpccUtil.indexInfo(req.query.clusterid, req.query.indexName).then((indexInfo) => {
+          res.json(indexInfo);
+        }).catch((err) => {
+          console.log('err', err);
+          return res.status(500).send("Error occured while getting file details");
+        })
+      }
+    })
   } catch (err) {
-      console.log('err', err);
+    console.log('err', err);
+    return res.status(500).send("Error occured while getting file details");
   }
 });
 
@@ -437,45 +449,20 @@ router.get('/getQueryInfo', [
   if (!errors.isEmpty()) {
     return res.status(422).json({ success: false, errors: errors.array() });
   }
-  var resultObj = {}, requestObj = [], responseObj = [];
-  try {
-		hpccUtil.getCluster(req.query.clusterid).then(function(cluster) {
-			let clusterAuth = hpccUtil.getClusterAuth(cluster);
-			let eclService = new hpccJSComms.EclService({ baseUrl: cluster.roxie_host + ':' + cluster.roxie_port, userID:(clusterAuth ? clusterAuth.user : ""), password:(clusterAuth ? clusterAuth.password : "")});
-			eclService.requestJson("roxie", req.query.queryName).then(response => {
-				if(response) {
-					response.forEach((requestParam, idx) =>  {
-						requestObj.push({"id": idx, "name":requestParam.id, "type":requestParam.type});
-					});
-				}
-				resultObj.request = requestObj;
-
-		  	eclService.responseJson("roxie", req.query.queryName).then(response => {
-					if(response) {
-						let firstKey = Object.keys(response)[0];
-						response[firstKey].forEach((responseParam, idx) => {
-							responseObj.push(
-							{
-								"id": idx,
-								"name" : responseParam.id,
-    						"type" : responseParam.type
-							});
-						});
-					}
-					resultObj.response = responseObj;
-					res.json(resultObj);
-
-				}).catch(function (err) {
-		      console.log('error occured: '+err);
-		  	});
-
-			}).catch(function (err) {
-	      console.log('error occured: '+err);
-	  	});
-		});
-  } catch (err) {
-      console.log('err', err);
-  }
+  Query.findOne({where: {name: req.query.queryName, application_id: req.query.applicationId}}).then((existingQuery) => {
+    if(existingQuery) {
+      assetUtil.queryInfo(req.query.applicationId, existingQuery.id).then((existingQueryInfo) => {
+        res.json(existingQueryInfo);
+      })
+    } else {
+      hpccUtil.queryInfo(req.query.clusterid, req.query.queryName).then((queryInfo) => {
+        res.json(queryInfo);
+      }).catch((err) => {
+        console.log('err', err);
+        return res.status(500).send("Error occured while getting file details");
+      })
+    }
+  })
 });
 
 router.get('/getJobInfo', [
@@ -490,8 +477,19 @@ router.get('/getJobInfo', [
   }
   try {
   	console.log('jobName: '+req.query.jobWuid);
-    hpccUtil.getJobInfo(req.query.clusterid, req.query.jobWuid, req.query.jobType).then((jobInfo) => {
-      res.json(jobInfo);
+    Job.findOne({where: {name: req.query.jobName, application_id: req.query.applicationId}, attributes:['id']}).then((existingJob) => {
+      if(existingJob) {
+        assetUtil.jobInfo(req.query.applicationId, existingJob.id).then((existingJobInfo) => {
+          res.json(existingJobInfo);
+        })
+      } else {
+        hpccUtil.getJobInfo(req.query.clusterid, req.query.jobWuid, req.query.jobType).then((jobInfo) => {
+          res.json(jobInfo);
+        }).catch((err) => {
+          console.log('err', err);
+          return res.status(500).send("Error occured while getting file details");
+        })
+      }
     })
   } catch (err) {
       console.log('err', err);

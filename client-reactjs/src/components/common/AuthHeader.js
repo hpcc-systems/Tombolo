@@ -17,25 +17,22 @@ export function authHeader() {
 }
 
 export function handleError(response) {
-    if(response.status == 401) {
-      //token expired
-      localStorage.removeItem('user');
-      store.dispatch(userActions.logout());
-    } else if(response.status == 422) {
-      response.json().then(data => {
-        //message.config({top:130})
-        //message.error("Error occured")
-      });
-    }
-    else {
-      response.json().then((responseData) => {
-        message.config({top:130})
-        if(responseData.message) {
-          message.error(responseData.message);
-        } else {
-          message.error("Error Occured: "+response.statusText);
-        }
-      })
+  message.config({top:130})
+  if(response.status == 401) {
+    //token expired
+    localStorage.removeItem('user');
+    store.dispatch(userActions.logout());
+  } else if(response.status == 422) {
+    throw Error("Error occured while saving the data. Please check the form data");
+  } else {
+    let errorMessage = '';
+    response.json()
+    .then((responseData) => {
+      errorMessage = responseData.message;
+    })
 
-    }
+    throw Error(errorMessage);
+  }
+
+  return;
 }

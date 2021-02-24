@@ -44,7 +44,6 @@ class AppHeader extends Component {
     }
 
     componentDidMount(){
-      console.log("application: "+this.props.application)
       if(this.props.location.pathname.includes('report/')){
         const pathSnippets = this.props.location.pathname.split('/');
         this.setState({
@@ -70,6 +69,8 @@ class AppHeader extends Component {
           if(applications && applications.length > 0) {
             this.setState({ applications });
             this.handleRef();
+            this.props.dispatch(applicationActions.getClusters());
+            this.props.dispatch(applicationActions.getConsumers());
           } else {
             this.openHelpNotification();
           }

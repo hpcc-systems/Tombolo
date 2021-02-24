@@ -1,5 +1,5 @@
-import React, { Component } from "react";
-import { Modal, Tabs, Form, Input, Select, AutoComplete, Spin, message, Button, Radio } from 'antd/lib';
+import React, { PureComponent } from "react";
+import { Modal, Tabs, Form, Input, Select, AutoComplete, Spin, message, Button, Radio, Row, Col } from 'antd/lib';
 import { authHeader, handleError } from "../common/AuthHeader.js"
 import { hasEditPermission } from "../common/AuthUtil.js";
 import AssociatedDataflows from "./AssociatedDataflows"
@@ -12,12 +12,14 @@ import { MarkdownEditor } from "../common/MarkdownEditor.js"
 import { connect } from 'react-redux';
 import { SearchOutlined  } from '@ant-design/icons';
 import { assetsActions } from '../../redux/actions/Assets';
+import { debounce } from 'lodash';
 
 const TabPane = Tabs.TabPane;
 const Option = Select.Option;
 const { confirm } = Modal;
 message.config({top:130})
-class QueryDetails extends Component {
+class QueryDetails extends PureComponent {
+  formRef = React.createRef();
   constructor(props) {
     super(props);
   }
@@ -25,49 +27,30 @@ class QueryDetails extends Component {
   state = {
     visible: true,
     confirmLoading: false,
-    pagination: {},
     loading: false,
     sourceFiles:[],
-    availableLicenses:[],
     selectedRowKeys:[],
     clusters:[],
     selectedCluster: this.props.clusterId ? this.props.clusterId : "",
-    querySearchSuggestions:[],
     querySearchErrorShown:false,
-    autoCompleteSuffix: <SearchOutlined />,
-    dataDefinitions:[],
+    querySearchSuggestions: [],
     query: {
       id:"",
-      title:"",
-      name:"",
-      description:"",
       groupId: "",
-      url: "",
-      primaryService:"",
-      backupService:"",
-      gitRepo:"",
-      type:"roxie_query",
+      type: "roxie_query",
       input: [],
       output: []
     }
   }
 
+  //querySearchSuggestions = [];
+
   componentDidMount() {
-    //this.props.onRef(this);
     if(this.props.application && this.props.application.applicationId) {
       this.getQueryDetails();
-      this.fetchDataDefinitions();
+      this.setClusters();
     }
   }
-
-  /*shouldComponentUpdate(nextProps, nextState) {
-    console.log("shouldComponentUpdate")
-    if(this.state.clusters.length == nextState.clusters.length) {
-      return false;
-    } else {
-      return true;
-    }
-  }*/
 
   getQueryDetails() {
     if(this.props.selectedAsset && !this.props.isNew) {
@@ -79,7 +62,6 @@ class QueryDetails extends Component {
           return response.json();
         }
         handleError(response);
-
       })
       .then(data => {
         this.setState({
@@ -87,19 +69,21 @@ class QueryDetails extends Component {
           query: {
             ...this.state.query,
             id: data.id,
-            title: data.title,
-            name: (data.name == '' ? data.title : data.name),
-            description: data.description,
             groupId: data.groupId,
-            type: data.type,
-            url: data.url,
-            gitRepo: data.gitRepo,
-            primaryService: data.primaryService,
-            backupService: data.backupService,
             input: data.query_fields.filter(field => field.field_type == 'input'),
             output: data.query_fields.filter(field => field.field_type == 'output')
           }
         });
+
+        this.formRef.current.setFieldsValue({
+          title: data.title,
+          name: data.name,
+          description: data.description,
+          type: data.type,
+          url: data.url,
+          gitRepo: data.gitRepo
+        })
+
         return data;
       })
       .then(data => {
@@ -118,21 +102,6 @@ class QueryDetails extends Component {
     this.setState({
       visible: true,
     });
-    //this.getQueryDetails();
-    /*if(this.props.isNewFile) {
-      this.getClusters();
-    }*/
-  }
-
-  async fetchDataDefinitions() {
-    try {
-      let dataDefn = await fetchDataDictionary(this.props.application.applicationId);
-      this.setState({
-        dataDefinitions: dataDefn
-      });
-    } catch (err) {
-      console.log(err)
-    }
   }
 
   setInputFieldData = (data) => {
@@ -155,6 +124,30 @@ class QueryDetails extends Component {
         output: omitResults,
       }
     })
+  }
+
+  setClusters() {
+    let selectedCluster = this.props.clusters.filter(cluster => cluster.id == this.props.clusterId);
+    if(selectedCluster.length > 0) {
+      this.formRef.current.setFieldsValue({
+        "clusters": selectedCluster[0].id
+      })
+    }
+  }
+
+  clearState = () => {
+    this.setState({
+      ...this.state,
+      canSubmit: false,
+      file: {
+        ...this.state.file,
+        id:"",
+        groupId: "",
+        input: [],
+        output: []
+      }
+    });
+    this.formRef.current.resetFields();
   }
 
   handleDelete = () => {
@@ -196,8 +189,6 @@ class QueryDetails extends Component {
         visible: false,
         confirmLoading: false,
       });
-      //this.props.onClose();
-      //this.props.onRefresh(saveResponse);
       this.props.history.push('/' + this.props.application.applicationId + '/assets')
     }, 2000);
   };
@@ -222,13 +213,13 @@ class QueryDetails extends Component {
     });
   }
 
-  searchQueries(searchString) {
+  searchQueries = debounce ((searchString) => {
     if(searchString.length <= 3)
       return;
 
     this.setState({
       ...this.state,
-      autoCompleteSuffix : <Spin/>
+      querySearchErrorShown: false
     });
     if(searchString.length <= 3)
       return;
@@ -246,27 +237,28 @@ class QueryDetails extends Component {
       //handleError(response);
     })
     .then(suggestions => {
+      //this.querySearchSuggestions = suggestions;
+      //console.log(this.formRef.getFieldInstance(['title', querySearchValue]));
       this.setState({
         ...this.state,
-        querySearchSuggestions: suggestions,
-        autoCompleteSuffix: <SearchOutlined />
+        querySearchSuggestions: suggestions
       });
     }).catch(error => {
       if(!this.state.querySearchErrorShown) {
         error.json().then((body) => {
-          message.config({top:130})
-          message.error(body.message);
+          message.error("There was an error searching the query from cluster.");
         });
         this.setState({
           ...this.state,
           querySearchErrorShown: true
         });
       }
+
     });
-  }
+  }, 100);
 
   onQuerySelected(selectedSuggestion) {
-    fetch("/api/hpcc/read/getQueryInfo?queryName="+selectedSuggestion+"&clusterid="+this.state.selectedCluster, {
+    fetch("/api/hpcc/read/getQueryInfo?queryName="+selectedSuggestion+"&clusterid="+this.state.selectedCluster+"&applicationId="+this.props.application.applicationId, {
       headers: authHeader()
     })
     .then((response) => {
@@ -276,21 +268,33 @@ class QueryDetails extends Component {
       handleError(response);
     })
     .then(queryInfo => {
+      if(queryInfo && queryInfo.basic.groups) {
+        if(queryInfo.basic.groups.filter(group => group.id == this.props.groupId).length > 0) {
+          message.error("There is already a query with the same name in this Group. Please select another query")
+          return;
+        }
+      }
+
       this.setState({
         ...this.state,
         sourceFiles: [],
         query: {
           ...this.state.file,
-          title: selectedSuggestion,
-          name: selectedSuggestion,
-          description: '',
-          url: '',
-          path: '',
+          id: queryInfo.basic.id,
           type:"roxie_query",
-          input: queryInfo.request,
-          output: queryInfo.response
+          input: queryInfo.basic.query_fields.filter(field => field.field_type == 'input'),
+          output: queryInfo.basic.query_fields.filter(field => field.field_type == 'output')
         }
       })
+
+      this.formRef.current.setFieldsValue({
+        title: queryInfo.basic.title,
+        name: queryInfo.basic.name,
+        description: queryInfo.basic.description,
+        url: queryInfo.basic.url,
+        gitRepo: queryInfo.basic.gitRepo
+      })
+
       return queryInfo;
     })
     .then(data => {
@@ -335,6 +339,8 @@ class QueryDetails extends Component {
       }).then(function(data) {
         console.log('Saved..');
         resolve(data);
+      }).catch(error => {
+        message.error("Error occured while saving the data. Please check the form data")
       });
     //this.populateFileDetails()
     });
@@ -354,15 +360,9 @@ class QueryDetails extends Component {
 
     var queryDetails = {
       "basic" : {
+        ...this.formRef.current.getFieldsValue(),
         "application_id":applicationId,
-        "title" : this.state.query.title,
-        "name" : this.state.query.name,
-        "description" : this.state.query.description,
-        "url" : this.state.query.url,
-        "gitRepo" : this.state.query.gitRepo,
-        "primaryService" : this.state.query.primaryService,
-        "backupService" : this.state.query.backupService,
-        "type": this.state.query.type,
+        "type": this.state.query.type
       },
       fields: inputFields.concat(outputFields)
     };
@@ -401,11 +401,6 @@ class QueryDetails extends Component {
     });
   }
 
-  onQueriesTablesReady = (params) => {
-    let gridApi = params.api;
-    gridApi.sizeColumnsToFit();
-  }
-
   queryTypeChange = (e) => {
     this.setState({
       ...this.state,
@@ -420,8 +415,7 @@ class QueryDetails extends Component {
   render() {
     const editingAllowed = hasEditPermission(this.props.user);
     const {
-      visible, confirmLoading, sourceFiles, availableLicenses,
-      selectedRowKeys, clusters, querySearchSuggestions
+      visible, confirmLoading, sourceFiles, selectedRowKeys, clusters, querySearchSuggestions
     } = this.state;
     const formItemLayout = {
       labelCol: { span: 2 },
@@ -479,70 +473,83 @@ class QueryDetails extends Component {
         >
           <TabPane tab="Basic" key="1">
 
-           <Form {...formItemLayout} labelAlign="left">
+           <Form {...formItemLayout} labelAlign="left" ref={this.formRef} onFinish={this.handleOk} initialValues={{type: "roxie_query"}}>
             <div>
-              <Form.Item {...formItemLayout} label="Type">
-                <Radio.Group onChange={this.queryTypeChange} value={type}>
+              <Form.Item {...formItemLayout} label="Type" name="type">
+                <Radio.Group value={type} onChange={this.queryTypeChange}>
                   <Radio value={'roxie_query'}>Roxie Query</Radio>
                   <Radio value={'api'}>API/Gateway</Radio>
                 </Radio.Group>
               </Form.Item>
               {type == 'roxie_query' ?
                 <React.Fragment>
-                <Form.Item label="Cluster">
-                   <Select placeholder="Select a Cluster" value={(selectedCluster.length > 0 ? selectedCluster[0].id : null)} onChange={this.onClusterSelection} style={{ width: 190 }} disabled={!editingAllowed}>
-                    {clusters.map(cluster => <Option key={cluster.id}>{cluster.name}</Option>)}
+                <Form.Item label="Cluster" name="clusters">
+                  <Select placeholder="Select a Cluster" disabled={!editingAllowed} onChange={this.onClusterSelection} style={{ width: 190 }}>
+                    {this.props.clusters.map(cluster => <Option key={cluster.id}>{cluster.name}</Option>)}
                   </Select>
                 </Form.Item>
 
-                <Form.Item label="Query">
-                  <AutoComplete
-                    className="certain-category-search"
-                    dropdownClassName="certain-category-search-dropdown"
-                    dropdownMatchSelectWidth={false}
-                    dropdownStyle={{ width: 300 }}
-                    style={{ width: '100%' }}
-                    onSearch={(value) => this.searchQueries(value)}
-                    onSelect={(value) => this.onQuerySelected(value)}
-                    placeholder="Search queries"
-                    disabled={!editingAllowed}
-                  >
-                    {querySearchSuggestions.map((suggestion) => (
-                      <Option key={suggestion.text} value={suggestion.value}>
-                        {suggestion.text}
-                      </Option>
-                    ))}
-                  </AutoComplete>
+                <Form.Item label="Query" name="querySearchValue">
+                  <Row type="flex">
+                    <Col span={21} order={1}>
+                      <AutoComplete
+                        className="certain-category-search"
+                        dropdownClassName="certain-category-search-dropdown"
+                        dropdownMatchSelectWidth={false}
+                        dropdownStyle={{ width: 300 }}
+                        style={{ width: '100%' }}
+                        onSearch={(value) => this.searchQueries(value)}
+                        onSelect={(value) => this.onQuerySelected(value)}
+                        placeholder="Search queries"
+                        disabled={!editingAllowed}
+                        notFoundContent={this.state.querySearchSuggestions.length > 0 ? 'Not Found' : <Spin />}
+                      >
+                        {this.state.querySearchSuggestions.map((suggestion) => (
+                          <Option key={suggestion.text} value={suggestion.value}>
+                            {suggestion.text}
+                          </Option>
+                        ))}
+                      </AutoComplete>
+                    </Col>
+                    <Col span={3} order={2} style={{"paddingLeft": "3px"}}>
+                     <Button htmlType="button" onClick={this.clearState}>
+                        Clear
+                     </Button>
+                    </Col>
+                  </Row>
                 </Form.Item>
                 </React.Fragment>
               : null}
             </div>
-
-            <Form.Item label="Name">
-              <Input disabled={true} value={name} disabled={!editingAllowed}/>
+            <Form.Item label="Title" name="title" rules={[{ required: true, message: 'Please enter a title!' }, {
+                pattern: new RegExp(/^[a-zA-Z0-9:._-]*$/),
+                message: 'Please enter a valid title',
+              }]}>
+              <Input id="query_title" onChange={this.onChange} placeholder="Title" disabled={!editingAllowed}/>
             </Form.Item>
 
-            <Form.Item label="Title">
-              <Input id="query_title" name="title" onChange={this.onChange} value={title} placeholder="Title" disabled={!editingAllowed}/>
+            <Form.Item label="Name" name="name" rules={[{ required: true, message: 'Please enter a name!' }, {
+                  pattern: new RegExp(/^[a-zA-Z0-9:._-]*$/),
+                  message: 'Please enter a valid name',
+                }]}>
+              <Input disabled={true} placeholder="Name" disabled={!editingAllowed}/>
             </Form.Item>
-            <Form.Item label="Description">
-              <MarkdownEditor id="query_desc" name="description" onChange={this.onChange} targetDomId="queryDescr" value={description} disabled={!editingAllowed}/>
+
+            <Form.Item label="Description" name="description">
+              <MarkdownEditor id="query_desc" onChange={this.onChange} targetDomId="queryDescr" disabled={!editingAllowed}/>
             </Form.Item>
-            <Form.Item label="URL">
-              <Input id="query_url" name="url" onChange={this.onChange} value={url} placeholder="URL" disabled={!editingAllowed}/>
+            <Form.Item label="URL" name="url" rules={[{
+                type: 'url',
+                message: 'Please enter a valid URL'
+              }]}>
+              <Input id="query_url" onChange={this.onChange} placeholder="URL" disabled={!editingAllowed}/>
             </Form.Item>
-            <Form.Item label="Git Repo">
-              <Input id="query_gitRepo" name="gitRepo" onChange={this.onChange} value={gitRepo} placeholder="Git Repo URL" disabled={!editingAllowed}/>
+            <Form.Item label="Git Repo" name="gitRepo" rules={[{
+                type: 'url',
+                message: 'Please enter a valid URL'
+              }]}>
+              <Input id="query_gitRepo" onChange={this.onChange} placeholder="Git Repo URL" disabled={!editingAllowed}/>
             </Form.Item>
-            {/*<Form.Item label="Primary Service">
-                <Input id="query_primary_svc" name="primaryService" onChange={this.onChange}  placeholder="Primary Service" disabled={!editingAllowed}/>
-            </Form.Item>
-            <Form.Item label="Backup Service">
-                <Input id="query_bkp_svc" name="backupService" onChange={this.onChange} placeholder="Backup Service" disabled={!editingAllowed}/>
-            </Form.Item>*/}
-            {/*<Form.Item {...formItemLayout} label="Type">
-                <Input id="type" name="type" onChange={this.onChange} value={type} defaultValue={type} placeholder="Query Type" disabled={!editingAllowed}/>
-            </Form.Item>*/}
           </Form>
 
           </TabPane>
@@ -558,8 +565,8 @@ class QueryDetails extends Component {
                   dataSource={input}
                   ref={node => (this.inputFieldsTable = node)}
                   editingAllowed={editingAllowed}
-                  dataDefinitions={this.state.dataDefinitions}
-                  showDataDefinition={true}
+                  dataDefinitions={[]}
+                  showDataDefinition={false}
                   setData={this.setInputFieldData}/>
               </div>
             </TabPane>
@@ -576,8 +583,8 @@ class QueryDetails extends Component {
                   dataSource={output}
                   ref={outputTable => (this.outputFieldsTable = outputTable)}
                   editingAllowed={editingAllowed}
-                  dataDefinitions={this.state.dataDefinitions}
-                  showDataDefinition={true}
+                  dataDefinitions={[]}
+                  showDataDefinition={false}
                   setData={this.setOutputFieldData}/>
 
               </div>
@@ -608,7 +615,7 @@ class QueryDetails extends Component {
 function mapStateToProps(state) {
     const { selectedAsset, newAsset={}, clusterId } = state.assetReducer;
     const { user } = state.authenticationReducer;
-    const { application } = state.applicationReducer;
+    const { application, clusters } = state.applicationReducer;
     const {isNew=false, groupId='' } = newAsset;
     return {
       user,
@@ -616,7 +623,8 @@ function mapStateToProps(state) {
       application,
       isNew,
       groupId,
-      clusterId
+      clusterId,
+      clusters
     };
 }
 

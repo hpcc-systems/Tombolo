@@ -19,6 +19,7 @@ module.exports = (sequelize, DataTypes) => {
     qualifiedPath: DataTypes.STRING,
     consumer: DataTypes.STRING,
     supplier: DataTypes.STRING,
+    owner: DataTypes.STRING,
     scope: DataTypes.STRING
   }, {freezeTableName: true});
   file.associate = function(models) {
@@ -28,16 +29,6 @@ module.exports = (sequelize, DataTypes) => {
       hooks: true
     });
     file.hasMany(models.file_license,{
-      foreignKey:'file_id',
-      onDelete: 'CASCADE',
-      hooks: true
-    });
-    file.hasMany(models.file_relation,{
-      foreignKey:'file_id',
-      onDelete: 'CASCADE',
-      hooks: true
-    });
-    file.hasMany(models.file_field_relation,{
       foreignKey:'file_id',
       onDelete: 'CASCADE',
       hooks: true
@@ -61,7 +52,12 @@ module.exports = (sequelize, DataTypes) => {
       onDelete: 'CASCADE',
       hooks: true
     });
-    file.belongsTo(models.groups);
+    file.belongsToMany(models.groups, {
+      through: 'assets_groups',
+      as: 'groups',
+      foreignKey: 'assetId',
+      otherKey: 'groupId'
+    });
     file.belongsToMany(models.job, {
       through: 'jobfile',
       as: 'jobfiles',
