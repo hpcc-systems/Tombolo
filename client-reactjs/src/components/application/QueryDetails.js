@@ -266,7 +266,7 @@ class QueryDetails extends Component {
   }
 
   onQuerySelected(selectedSuggestion) {
-    fetch("/api/hpcc/read/getQueryInfo?queryName="+selectedSuggestion+"&clusterid="+this.state.selectedCluster, {
+    fetch("/api/hpcc/read/getQueryInfo?queryName="+selectedSuggestion+"&clusterid="+this.state.selectedCluster+"&applicationId="+this.props.application.applicationId, {
       headers: authHeader()
     })
     .then((response) => {
@@ -276,19 +276,27 @@ class QueryDetails extends Component {
       handleError(response);
     })
     .then(queryInfo => {
+      if(queryInfo && queryInfo.basic.groups) {
+        if(queryInfo.basic.groups.filter(group => group.id == this.props.groupId).length > 0) {
+          message.error("There is already a query with the same name in this Group. Please select another query")
+          return;
+        }
+      }
+
       this.setState({
         ...this.state,
         sourceFiles: [],
         query: {
           ...this.state.file,
-          title: selectedSuggestion,
-          name: selectedSuggestion,
+          id: queryInfo.basic.id,
+          title: queryInfo.basic.title,
+          name: queryInfo.basic.name,
           description: '',
           url: '',
           path: '',
           type:"roxie_query",
-          input: queryInfo.request,
-          output: queryInfo.response
+          input: queryInfo.basic.query_fields.filter(field => field.field_type == 'input'),
+          output: queryInfo.basic.query_fields.filter(field => field.field_type == 'output')
         }
       })
       return queryInfo;

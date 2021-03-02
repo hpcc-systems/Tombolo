@@ -2,10 +2,12 @@ const express = require('express');
 const router = express.Router();
 const assert = require('assert');
 var models  = require('../../models');
+const assetUtil = require('../../utils/assets');
 let Index = models.indexes;
 let IndexKey = models.index_key;
 let IndexPayload = models.index_payload;
 let Dataflow = models.dataflow;
+let AssetsGroups = models.assets_groups;
 let File=models.file;
 const validatorUtil = require('../../utils/validator');
 const { body, query, validationResult } = require('express-validator');
@@ -64,34 +66,37 @@ router.post('/saveIndex', [
   body('index.basic.title')
   .matches(/^[a-zA-Z]{1}[a-zA-Z0-9_:.\-]*$/).withMessage('Invalid title')
 ], (req, res) => {
-    const errors = validationResult(req).formatWith(validatorUtil.errorFormatter);
-    if (!errors.isEmpty()) {
-        return res.status(422).json({ success: false, errors: errors.array() });
-    }
-    console.log("[saveIndex/read.js] - Get file list for app_id = " + req.body.index.basic._id);
-    var index_id, fieldsToUpdate={}, applicationId=req.body.index.basic.application_id;
-    if(req.body.isNew) {
-      Index.create(
-        req.body.index.basic
-      ).then((result) => {
-        updateIndexDetails(result.id, applicationId, req).then((response) => {
-          res.json(response);
-        }).catch((err) => {
-          return res.status(500).send("Error occured while saving index");
-        })
-      })
-    } else {
-      Index.update(
-        req.body.index.basic, {where:{application_id: applicationId, id:req.body.id}}
-      ).then((result) => {
-        updateIndexDetails(req.body.id, applicationId, req).then((response) => {
-          res.json(response);
-        }).catch((err) => {
-          return res.status(500).send("Error occured while saving index");
-        })
-      })
-    }
+  const errors = validationResult(req).formatWith(validatorUtil.errorFormatter);
+  if (!errors.isEmpty()) {
+      return res.status(422).json({ success: false, errors: errors.array() });
+  }
+  console.log("[saveIndex/read.js] - Get index list for app_id = " + req.body.index.basic._id);
+  var index_id, fieldsToUpdate={}, applicationId=req.body.index.basic.application_id;
 
+  Index.findOne({where: {name: req.body.index.basic.name, application_id: applicationId}}).then(async (existingFile) => {
+    let index = null;
+    if(!existingFile) {
+      index = await Index.create(req.body.index.basic);
+    } else {
+      index = await Index.update(req.body.index.basic, {where:{application_id: applicationId, id:req.body.id}}).then((updatedIndex) => {
+        return updatedIndex;
+      })
+    }
+    let indexId = index.id ? index.id : req.body.id;
+    console.log("indexId: "+indexId);
+    if(req.body.index.basic && req.body.index.basic.groupId) {
+      let assetsGroups = await AssetsGroups.findOrCreate({
+        where: {assetId: indexId, groupId: req.body.index.basic.groupId},
+        defaults:{
+          assetId: indexId,
+          groupId: req.body.index.basic.groupId
+        }
+      })
+    }
+    updateIndexDetails(indexId, applicationId, req).then((response) => {
+      res.json(response);
+    })
+  })
 });
 
 router.get('/index_details', [
@@ -100,24 +105,22 @@ router.get('/index_details', [
   query('index_id')
     .isUUID(4).withMessage('Invalid id'),
 ], (req, res) => {
-    const errors = validationResult(req).formatWith(validatorUtil.errorFormatter);
-    if (!errors.isEmpty()) {
-        return res.status(422).json({ success: false, errors: errors.array() });
-    }
-    console.log("[index_details/read.js] - Get index details for app_id = " + req.query.app_id + " and index_id "+req.query.index_id);
-    var basic = {}, results={};
-    try {
-        Index.findOne({where:{"application_id":req.query.app_id, "id":req.query.index_id}, include: [IndexKey, IndexPayload]}).then(function(indexes) {
-            results.basic = indexes;
-            res.json(results);
-        })
-        .catch(function(err) {
-            console.log(err);
-        });
-    } catch (err) {
-        console.log('err', err);
-    }
-
+  const errors = validationResult(req).formatWith(validatorUtil.errorFormatter);
+  if (!errors.isEmpty()) {
+      return res.status(422).json({ success: false, errors: errors.array() });
+  }
+  console.log("[index_details/read.js] - Get index details for app_id = " + req.query.app_id + " and index_id "+req.query.index_id);
+  var basic = {}, results={};
+  try {
+    assetUtil.indexInfo(req.query.app_id, req.query.index_id).then((fileInfo) => {
+      res.json(fileInfo);
+    })
+    .catch(function(err) {
+      console.log(err);
+    });
+  } catch (err) {
+    console.log('err', err);
+  }
 });
 
 router.post('/delete', [

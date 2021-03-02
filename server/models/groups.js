@@ -13,10 +13,30 @@ module.exports = (sequelize, DataTypes) => {
     application_id: DataTypes.UUIDV4
   }, {freezeTableName: true});
   groups.associate = function(models) {
-    groups.hasMany(models.file);
-    groups.hasMany(models.job);
-    groups.hasMany(models.indexes);
-    groups.hasMany(models.query);
+    groups.belongsToMany(models.file, {
+      through: 'assets_groups',
+      as: 'files',
+      foreignKey: 'groupId',
+      otherKey: 'assetId'
+    });
+    groups.belongsToMany(models.job, {
+      through: 'assets_groups',
+      as: 'jobs',
+      foreignKey: 'groupId',
+      otherKey: 'assetId'
+    });
+    groups.belongsToMany(models.indexes, {
+      through: 'assets_groups',
+      as: 'indexes',
+      foreignKey: 'groupId',
+      otherKey: 'assetId'
+    });
+    groups.belongsToMany(models.query, {
+      through: 'assets_groups',
+      as: 'queries',
+      foreignKey: 'groupId',
+      otherKey: 'assetId'
+    });
     groups.hasMany(models.groups, {
       as: 'child',
       foreignKey: {

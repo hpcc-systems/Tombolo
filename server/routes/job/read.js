@@ -12,10 +12,11 @@ let FileValidation = models.file_validation;
 let DataflowGraph = models.dataflowgraph;
 let Dataflow = models.dataflow;
 let AssetDataflow = models.assets_dataflows;
+let AssetsGroups = models.assets_groups;
 const hpccUtil = require('../../utils/hpcc-util');
 const validatorUtil = require('../../utils/validator');
 const { body, query, validationResult } = require('express-validator');
-
+const assetUtil = require('../../utils/assets');
 
 /**
   Updates Dataflow graph by
@@ -395,23 +396,31 @@ router.post('/saveJob', [
   var jobId='', applicationId=req.body.job.basic.application_id, fieldsToUpdate={}, nodes=[], edges=[];
   try {
 
-    if(req.body.isNew) {
-      Job.create(
-        req.body.job.basic
-      ).then((result) => {
-        updateJobDetails(applicationId, result.id, req.body.job, req.body.job.autoCreateFiles).then((response) => {
-          res.json(response);
+    Job.findOne({where: {name: req.body.job.basic.name, application_id: applicationId}, attributes:['id']}).then(async (existingJob) => {
+      let job = null;
+      if(!existingJob) {
+        job = await Job.create(req.body.job.basic);
+      } else {
+        job = await Job.update(req.body.job.basic, {where:{application_id: applicationId, id:req.body.id}}).then((updatedIndex) => {
+          return updatedIndex;
         })
-      })
-    } else {
-      Job.update(
-        req.body.job.basic, {where:{application_id: applicationId, id:req.body.id}}
-      ).then((result) => {
-        updateJobDetails(applicationId, result.id, req.body.job, req.body.job.autoCreateFiles).then((response) => {
-          res.json(response);
+      }
+      let jobId = job.id ? job.id : req.body.id;
+      console.log("jobId: "+jobId);
+      if(req.body.job.basic && req.body.job.basic.groupId) {
+        let assetsGroupsCreated = await AssetsGroups.findOrCreate({
+          where: {assetId: jobId, groupId: req.body.job.basic.groupId},
+          defaults:{
+            assetId: jobId,
+            groupId: req.body.job.basic.groupId
+          }
         })
+      }
+      updateJobDetails(applicationId, jobId, req.body.job, req.body.job.autoCreateFiles).then((response) => {
+        res.json(response);
       })
-    }
+    })
+
   } catch (err) {
     console.log('err', err);
   }
@@ -450,33 +459,12 @@ router.get('/job_details', [
       return res.status(422).json({ success: false, errors: errors.array() });
   }
   console.log("[job_details] - Get job list for app_id = " + req.query.app_id + " query_id: "+req.query.job_id);
-  let jobFiles = [];
-  try {
-    Job.findOne({where:{"application_id":req.query.app_id, "id":req.query.job_id}, include: [JobFile, JobParam]}).then(async function(job) {
-      var jobData = job.get({ plain: true });
-      for(jobFileIdx in jobData.jobfiles) {
-          var jobFile = jobData.jobfiles[jobFileIdx];
-          var file = await File.findOne({where:{"application_id":req.query.app_id, "id":jobFile.file_id}});
-          if(file != undefined) {
-              jobFile.description = file.description;
-              jobFile.groupId = file.groupId;
-              jobFile.title = file.title;
-              jobFile.name = file.name;
-              jobFile.fileType = file.fileType;
-              jobFile.qualifiedPath = file.qualifiedPath;
-              jobData.jobfiles[jobFileIdx] = jobFile;
-          }
-      }
-      return jobData;
-    }).then(function(jobData) {
-        res.json(jobData);
-    })
-    .catch(function(err) {
-        console.log(err);
-    });
-  } catch (err) {
-      console.log('err', err);
-  }
+  assetUtil.jobInfo(req.query.app_id, req.query.job_id).then((jobInfo) => {
+    res.json(jobInfo);
+  })
+  .catch(function(err) {
+    console.log(err);
+  });
 });
 
 router.post('/delete', [

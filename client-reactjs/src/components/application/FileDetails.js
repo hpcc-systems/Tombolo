@@ -507,7 +507,8 @@ class FileDetails extends Component {
       message.error("File "+selectedSuggestion+" already exists in this application. Please select another file.");
       return;
     }*/
-    fetch("/api/hpcc/read/getFileInfo?fileName="+selectedSuggestion+"&clusterid="+this.state.selectedCluster, {
+    message.config({top:150})
+    fetch("/api/hpcc/read/getFileInfo?fileName="+selectedSuggestion+"&clusterid="+this.state.selectedCluster+"&applicationId="+this.props.application.applicationId, {
       headers: authHeader()
     })
     .then((response) => {
@@ -518,27 +519,34 @@ class FileDetails extends Component {
 
     })
     .then(fileInfo => {
+      if(fileInfo && fileInfo.basic.groups) {
+        if(fileInfo.basic.groups.filter(group => group.id == this.props.groupId).length > 0) {
+          message.error("There is already a file with the same name in this Group. Please select another file")
+          return;
+        }
+      }
+
       this.setState({
         ...this.state,
         sourceFiles: [],
         scopeDisabled: true,
         file: {
           ...this.state.file,
-          //id: fileInfo.name,
-          title: fileInfo.name.substring(fileInfo.name.lastIndexOf("::") + 2),
-          name: fileInfo.name,
+          id: fileInfo.basic.id,
+          title: fileInfo.basic.name.substring(fileInfo.basic.name.lastIndexOf("::") + 2),
+          name: fileInfo.basic.name,
           clusterId: this.state.selectedCluster,
-          description: fileInfo.description,
-          scope: fileInfo.scope,
-          qualifiedPath: fileInfo.pathMask,
-          owner: fileInfo.owner,
-          consumer: fileInfo.consumer,
-          supplier: fileInfo.supplier,
+          description: fileInfo.basic.description,
+          scope: fileInfo.basic.scope,
+          qualifiedPath: fileInfo.basic.pathMask,
+          owner: fileInfo.basic.owner,
+          consumer: fileInfo.basic.consumer,
+          supplier: fileInfo.basic.supplier,
           //fileType: fileInfo.fileType,
-          isSuperFile: fileInfo.isSuperfile ? 'true' : 'false',
-          layout: fileInfo.layout,
-          fileFieldRelations: this.getFieldNames(fileInfo.layout),
-          validations: fileInfo.validations
+          isSuperFile: fileInfo.basic.isSuperfile ? 'true' : 'false',
+          layout: fileInfo.file_layouts,
+          fileFieldRelations: this.getFieldNames(fileInfo.file_layouts),
+          validations: fileInfo.file_validations
         }
       })
       return fileInfo;
@@ -558,7 +566,6 @@ class FileDetails extends Component {
     })
     .catch(error => {
       console.log(error);
-      message.config({top:150})
       message.error("There was an error getting file information from the cluster. Please try again")
     });
   }
@@ -773,15 +780,15 @@ class FileDetails extends Component {
   };
 
   onConsumerSelection = (value) => {
-    this.setState({...this.state, file: {...this.state.file, consumer: value }}, () => console.log(this.state.file.consumer));
+    this.setState({...this.state, file: {...this.state.file, consumer: value }});
   };
 
   onOwnerSelection = (value) => {
-    this.setState({...this.state, file: {...this.state.file, owner: value }}, () => console.log(this.state.file.owner));
+    this.setState({...this.state, file: {...this.state.file, owner: value }});
   };
 
   onSupplierSelection = (value) => {
-    this.setState({...this.state, file: {...this.state.file, supplier: value }}, () => console.log(this.state.file.supplier));
+    this.setState({...this.state, file: {...this.state.file, supplier: value }});
   };
 
   onChange = (e) => {

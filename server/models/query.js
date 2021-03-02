@@ -33,7 +33,12 @@ module.exports = (sequelize, DataTypes) => {
     query.belongsTo(models.application, {
       foreignKey: 'application_id'
     });
-    query.belongsTo(models.groups);
+    query.belongsToMany(models.groups, {
+      through: 'assets_groups',
+      as: 'groups',
+      foreignKey: 'assetId',
+      otherKey: 'groupId'
+    })
   };
   return query;
 };

@@ -74,7 +74,7 @@ class IndexDetails extends Component {
       .then(data => {
         this.setState({
           ...this.state,
-          selectedSourceFile: data.basic.parentFileId,
+          //selectedSourceFile: data.basic.parentFileId,
           index: {
             ...this.state.index,
             id: data.basic.id,
@@ -240,7 +240,8 @@ class IndexDetails extends Component {
   }
 
   onFileSelected(selectedSuggestion) {
-    fetch("/api/hpcc/read/getIndexInfo?indexName="+selectedSuggestion+"&clusterid="+this.state.selectedCluster, {
+    message.config({top:150});
+    fetch("/api/hpcc/read/getIndexInfo?indexName="+selectedSuggestion+"&clusterid="+this.state.selectedCluster+"&applicationId="+this.props.application.applicationId, {
       headers: authHeader()
     })
     .then((response) => {
@@ -250,18 +251,25 @@ class IndexDetails extends Component {
       handleError(response);
     })
     .then(indexInfo => {
+      if(indexInfo && indexInfo.basic.groups) {
+        if(indexInfo.basic.groups.filter(group => group.id == this.props.groupId).length > 0) {
+          message.error("There is already an index with the same name in this Group. Please select another index")
+          return;
+        }
+      }
+
       this.setState({
         ...this.state,
         sourceFiles: [],
         index: {
           ...this.state.index,
-          id: indexInfo.name,
-          title: indexInfo.fileName,
-          name: indexInfo.fileName,
-          description: indexInfo.description,
-          path: indexInfo.pathMask,
-          keyedColumns: indexInfo.columns.keyedColumns,
-          nonKeyedColumns: indexInfo.columns.nonKeyedColumns
+          id: indexInfo.basic.id,
+          name: indexInfo.basic.name,
+          title: indexInfo.basic.title,
+          description: indexInfo.basic.description,
+          path: indexInfo.basic.qualifiedPath,
+          keyedColumns: indexInfo.basic.index_keys,
+          nonKeyedColumns: indexInfo.basic.index_payloads
         }
       })
       return indexInfo;
@@ -484,7 +492,7 @@ class IndexDetails extends Component {
               </div>
 
               <Form.Item label="Name" rules={[{ required: true, message: 'Please enter a name!' }]}>
-                <Input id="name" name="name" onChange={this.onChange} placeholder="Name" disabled={true} value={name} disabled={!editingAllowed}/>
+                <Input id="name" name="name" onChange={this.onChange} placeholder="Name" disabled={true} value={name}/>
               </Form.Item>
 
               <Form.Item label="Title">
