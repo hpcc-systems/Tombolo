@@ -136,7 +136,7 @@ let updateFileRelationship = (jobId, job, files, filesToBeRemoved) => {
     files.forEach((file, idx) => {
       promises.push(
         hpccUtil.fileInfo(file.name, job.basic.clusterId).then((fileInfo) => {
-          let replacements = { applicationId: job.basic.application_id, fileName: fileInfo.name, dataflowId:job.basic.dataflowId, job_id: jobId, file_type: file.file_type};
+          let replacements = { applicationId: job.basic.application_id, fileName: fileInfo.basic.name, dataflowId:job.basic.dataflowId, job_id: jobId, file_type: file.file_type};
           return models.sequelize.query(query, {
             type: models.sequelize.QueryTypes.SELECT,
             replacements: replacements
@@ -145,32 +145,32 @@ let updateFileRelationship = (jobId, job, files, filesToBeRemoved) => {
             if(existingFile.length == 0) {
              return File.create({
                 "application_id": job.basic.application_id,
-                "title": fileInfo.fileName,
-                "name": fileInfo.name,
+                "title": fileInfo.basic.fileName,
+                "name": fileInfo.basic.name,
                 "cluster_id": job.basic.clusterId,
-                "description": fileInfo.description,
-                "fileType": fileInfo.fileType,
-                "isSuperFile": fileInfo.isSuperFile,
-                "qualifiedPath": fileInfo.pathMask,
+                "description": fileInfo.basic.description,
+                "fileType": fileInfo.basic.fileType,
+                "isSuperFile": fileInfo.basic.isSuperFile,
+                "qualifiedPath": fileInfo.basic.pathMask,
                 "dataflowId": job.basic.dataflowId,
-                "scope": fileInfo.scope
+                "scope": fileInfo.basic.scope
               }).then(async (fileCreated) => {
                 let assetsDataflowCreated = await AssetDataflow.create({
                   assetId: fileCreated.id,
                   dataflowId: job.basic.dataflowId
                 });
                 //update file_id in JobFile
-                console.log(fileCreated.id, job.basic.id, file.file_type, fileInfo.name);
+                console.log(fileCreated.id, job.basic.id, file.file_type, fileInfo.basic.name);
                 let jobFileUpdated = await JobFile.update({
                   file_id: fileCreated.id
-                }, {where: {application_id: job.basic.application_id, job_id: job.basic.jobId, file_type: file.file_type, name: fileInfo.name}})
+                }, {where: {application_id: job.basic.application_id, job_id: job.basic.jobId, file_type: file.file_type, name: fileInfo.basic.name}})
 
                 let id=fileCreated.id, edge={};
                 console.log('jobFile: '+JSON.stringify(file));
                 let posX = file.file_type == 'input' ? job.mousePosition[0] - 75  : parseInt(job.mousePosition[0]) + 75;
                 let posY = file.file_type == 'input' ? job.mousePosition[1] - (45 * idx) : job.mousePosition[1] - (45 * idx);
                 nodes.push({
-                  "title": fileInfo.fileName,
+                  "title": fileInfo.basic.fileName,
                   "id": fileCreated.id,
                   "x": posX,
                   "y": posY,
@@ -187,7 +187,7 @@ let updateFileRelationship = (jobId, job, files, filesToBeRemoved) => {
                 fieldsToUpdate = {"file_id": fileCreated.id, "application_id" : job.basic.application_id};
                 let fileLayoutToSave = hpccUtil.updateCommonData(fileInfo.layout, fieldsToUpdate);
                 return FileLayout.bulkCreate(fileLayoutToSave, {updateOnDuplicate: ["name", "type", "displayType", "displaySize", "textJustification", "format","data_types", "isPCI", "isPII", "isHIPAA", "description", "required"]}).then((fileLayout) => {
-                  let fileValidationsToSave = hpccUtil.updateCommonData(fileInfo.validations, fieldsToUpdate);
+                  let fileValidationsToSave = hpccUtil.updateCommonData(fileInfo.file_validations, fieldsToUpdate);
                   return FileValidation.bulkCreate(
                     fileValidationsToSave,
                     {updateOnDuplicate: ["name", "ruleType", "rule", "action", "fixScript"]}
@@ -201,7 +201,7 @@ let updateFileRelationship = (jobId, job, files, filesToBeRemoved) => {
               //check if same node already exists in the workflow
 
               nodes.push({
-                "title": fileInfo.fileName,
+                "title": fileInfo.basic.fileName,
                 "id": existingFile[0].id,
                 "x": posX,
                 "y": posY,
@@ -304,7 +304,7 @@ router.post('/createFileRelation', [
     return res.status(422).json({ success: false, errors: errors.array() });
   }
 
-  Job.findOne({where: {id: req.body.jobId}, include:[JobFile]}).then(async (savedJob) => {
+  Job.findOne({where: {id: req.body.jobId}, attributes: {exclude: ['assetId']}, include:[JobFile]}).then(async (savedJob) => {
     let jobUpdated = await Job.update({
       dataflowId: req.body.dataflowId
     }, {where: {id: req.body.jobId}});
@@ -342,7 +342,7 @@ router.post('/refreshDataflow', [
   let dataflowGraph = await DataflowGraph.findOne({where: {dataflowId: req.body.dataflowId}});
   let nodes = JSON.parse(dataflowGraph.nodes);
 
-  Job.findAll({where: {dataflowId: req.body.dataflowId, application_id: req.body.application_id}}).then((jobs) => {
+  Job.findAll({where: {dataflowId: req.body.dataflowId, application_id: req.body.application_id}, attributes: {exclude: ['assetId']}}).then((jobs) => {
     jobs.forEach((job) => {
       promises.push(hpccUtil.getJobWuidByName(job.cluster_id, job.name).then((wuid) => {
         return hpccUtil.getJobInfo(job.cluster_id, wuid, job.jobType).then((jobInfo) => {
@@ -436,7 +436,7 @@ router.get('/job_list', [
   }
   console.log("[job list/read.js] - Get job list for app_id = " + req.query.app_id);
   try {
-    Job.findAll({where:{"application_Id":req.query.app_id}, include:['dataflows'], order: [['createdAt', 'DESC']]}).then(function(jobs) {
+    Job.findAll({where:{"application_Id":req.query.app_id}, attributes: {exclude: ['assetId']}, include:['dataflows'], order: [['createdAt', 'DESC']]}).then(function(jobs) {
         res.json(jobs);
     })
     .catch(function(err) {
