@@ -33,10 +33,12 @@ class MarkdownEditor extends Component {
       .target(this.props.targetDomId)
       .render();
 
-    this.mdEditor._codemirror.doc.on('change', debounce(() => {
-      this.value = this.mdEditor.markdown();
-      this.props.onChange({ target: this });
-    }, 500));
+    if (this.mdEditor && this.mdEditor._codemirror) {
+      this.mdEditor._codemirror.doc.on('change', debounce(() => {
+        this.value = this.mdEditor.markdown();
+        this.props.onChange({ target: this });
+      }, 500));
+    }
 
     if (!this.value) {
       this.name = this.props.name;
