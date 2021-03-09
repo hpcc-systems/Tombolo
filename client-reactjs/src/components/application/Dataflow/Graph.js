@@ -1570,11 +1570,20 @@ class Graph extends Component {
         <AssetDetailsDialog assetType="file" fileId={this.props.selectedFile} selectedAsset={this.props.selectedFile} application={this.props.application} user={this.props.user} handleClose={this.handleClose}/>
       : null }
 
-
       {this.state.openJobDetailsDialog ?
-        <AssetDetailsDialog assetType="job" assetId={this.state.selectedJob} selectedAsset={this.state.selectedJob} application={this.props.application} user={this.props.user} handleClose={this.closeJobDlg}/>
+        <AssetDetailsDialog
+          assetType="job"
+          assetId={this.state.selectedJob}
+          nodes={this.thisGraph.nodes}
+          edges={this.thisGraph.edges}
+          nodeIndex={this.state.currentlyEditingNode ? this.state.currentlyEditingNode.id : ''}
+          selectedAsset={this.state.selectedJob}
+          selectedDataflow={this.state.selectedDataflow}
+          application={this.props.application}
+          user={this.props.user}
+          handleClose={this.closeJobDlg}
+        />
       : null}
-
 
       {this.state.openIndexDetailsDialog ?
         <AssetDetailsDialog assetType="index" assetId={this.state.selectedIndex} selectedAsset={this.state.selectedIndex} application={this.props.application} user={this.props.user} handleClose={this.closeIndexDlg}/>

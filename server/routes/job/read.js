@@ -13,10 +13,12 @@ let FileValidation = models.file_validation;
 let DataflowGraph = models.dataflowgraph;
 let Dataflow = models.dataflow;
 let AssetDataflow = models.assets_dataflows;
+let DependentJobs = models.dependent_jobs;
 let AssetsGroups = models.assets_groups;
+const JobScheduler = require('../../job-scheduler');
 const hpccUtil = require('../../utils/hpcc-util');
 const validatorUtil = require('../../utils/validator');
-const { body, query, validationResult } = require('express-validator');
+const { body, query, param, validationResult } = require('express-validator');
 const assetUtil = require('../../utils/assets');
 
 /**
@@ -436,12 +438,12 @@ router.post('/saveJob', [
       return res.status(422).json({ success: false, errors: errors.array() });
   }
   console.log("[saveJob] - Get file list for app_id = " + req.body.job.basic.application_id + " isNewJob: "+req.body.isNew);
-  var jobId='', applicationId=req.body.job.basic.application_id, fieldsToUpdate={}, nodes=[], edges=[];
+  var jobId=req.body.id, applicationId=req.body.job.basic.application_id, fieldsToUpdate={}, nodes=[], edges=[];
   try {
 
     Job.findOne({where: {name: req.body.job.basic.name, application_id: applicationId}, attributes:['id']}).then(async (existingJob) => {
       let job = null;
-      if(!existingJob) {
+      if (!existingJob) {
         job = await Job.create(req.body.job.basic);
       } else {
         job = await Job.update(req.body.job.basic, {where:{application_id: applicationId, id:req.body.id}}).then((updatedIndex) => {
@@ -449,7 +451,7 @@ router.post('/saveJob', [
         })
       }
       let jobId = job.id ? job.id : req.body.id;
-      if(req.body.job.basic && req.body.job.basic.groupId) {
+      if (req.body.job.basic && req.body.job.basic.groupId) {
         let assetsGroupsCreated = await AssetsGroups.findOrCreate({
           where: {assetId: jobId, groupId: req.body.job.basic.groupId},
           defaults:{
@@ -458,13 +460,88 @@ router.post('/saveJob', [
           }
         })
       }
-      updateJobDetails(applicationId, jobId, req.body.job, req.body.job.autoCreateFiles).then((response) => {
-        res.json(response);
-      }).catch((err) => {
+      let response = await updateJobDetails(applicationId, jobId, req.body.job, req.body.job.autoCreateFiles).catch((err) => {
         console.log("Error occured in updateJobDetails....")
         return res.status(500).json({ success: false, message: "Error occured while saving the job" });
-      })
-    })
+      });
+
+      if (req.body.job.schedule.type) {
+      switch (req.body.job.schedule.type) {
+        case 'Predecessor':
+          await AssetDataflow.update({
+            cron: null,
+          }, {
+            where: { assetId: req.body.id, dataflowId: req.body.job.basic.dataflowId }
+          });
+          await DependentJobs.destroy({
+            where: {
+              jobId: req.body.id,
+              dataflowId: req.body.job.basic.dataflowId
+            }
+          });
+          const promises = req.body.job.schedule.jobs.map(async jobId => {
+            await DependentJobs.create({
+              jobId: req.body.id,
+              dataflowId: req.body.job.basic.dataflowId,
+              dependsOnJobId: jobId
+            });
+          });
+          await Promise.all(promises);
+          return res.json({
+            success: true,
+            type: req.body.job.schedule.type,
+            jobs: req.body.job.schedule.jobs
+          });
+          break;
+        case 'Time':
+          try {
+            let cronExpression = req.body.job.schedule.cron['minute'] + ' ' +
+              req.body.job.schedule.cron['hour'] + ' ' +
+              req.body.job.schedule.cron['dayMonth'] + ' ' +
+              req.body.job.schedule.cron['month'] + ' ' +
+              req.body.job.schedule.cron['dayWeek'];
+
+            let success = await AssetDataflow.update({
+                cron: cronExpression,
+              }, {
+                where: { assetId: req.body.id, dataflowId: req.body.job.basic.dataflowId }
+              });
+            if (!success || !success[0]) {
+              return res.json({
+                success: false,
+                message: 'Unable to save job schedule'
+              });
+            }
+            return res.json({
+              success: true,
+              type: req.body.job.schedule.type,
+              cron: req.body.job.schedule.cron
+            });
+          } catch (err) {
+            console.log(err);
+            return res.json({
+              success: false,
+              message: 'Unable to save job schedule'
+            });
+          }
+          break;
+      }
+    } else {
+      await AssetDataflow.update({
+        cron: null,
+      }, {
+        where: { assetId: req.body.id, dataflowId: req.body.job.basic.dataflowId }
+      });
+      await DependentJobs.destroy({
+        where: {
+          jobId: req.body.id,
+          dataflowId: req.body.job.basic.dataflowId
+        }
+      });
+    }
+
+    return res.json(response);
+  });
 
   } catch (err) {
 
@@ -485,7 +562,15 @@ router.get('/job_list', [
   console.log("[job list/read.js] - Get job list for app_id = " + req.query.app_id);
   try {
     let dataflowId = req.query.dataflowId;
-    Job.findAll({where:{"application_Id":req.query.app_id, dataflowId: { [Op.ne]: dataflowId }}, attributes: {exclude: ['assetId']}, include:['dataflows'], order: [['createdAt', 'DESC']]}).then(function(jobs) {
+    Job.findAll({
+      where: {
+        "application_Id":req.query.app_id,
+        dataflowId: { [Op.ne]: dataflowId }
+      },
+      attributes: { exclude: ['assetId'] },
+      include: ['dataflows'],
+      order: [['createdAt', 'DESC']]
+    }).then(function(jobs) {
         res.json(jobs);
     })
     .catch(function(err) {
@@ -504,19 +589,70 @@ router.get('/job_details', [
     .isUUID(4).withMessage('Invalid application id'),
   query('job_id')
     .isUUID(4).withMessage('Invalid job id'),
-], (req, res) => {
+  query('dataflow_id')
+    .optional({ checkFalsy: true })
+    .isUUID(4).withMessage('Invalid dataflow id'),
+], async (req, res) => {
   const errors = validationResult(req).formatWith(validatorUtil.errorFormatter);
   if (!errors.isEmpty()) {
       return res.status(422).json({ success: false, errors: errors.array() });
   }
-  console.log("[job_details] - Get job list for app_id = " + req.query.app_id + " query_id: "+req.query.job_id);
-  assetUtil.jobInfo(req.query.app_id, req.query.job_id).then((jobInfo) => {
-    res.json(jobInfo);
-  })
-  .catch(function(err) {
-    console.log(err);
-    return res.status(500).json({ success: false, message: "Error occured while getting job details" });
-  });
+  console.log(`[job_details] - Get job list for:
+    app_id = ${req.query.app_id}
+    query_id = ${req.query.job_id}
+    dataflow_id = ${req.query.dataflow_id}
+  `);
+  let jobFiles = [];
+  try {
+    Job.findOne({
+      where: { "application_id": req.query.app_id, "id":req.query.job_id },
+      include: [JobFile, JobParam],
+      attributes: { exclude: ['assetId'] },
+    }).then(async function(job) {
+      var jobData = job.get({ plain: true });
+      for (jobFileIdx in jobData.jobfiles) {
+        var jobFile = jobData.jobfiles[jobFileIdx];
+        var file = await File.findOne({where:{"application_id":req.query.app_id, "id":jobFile.file_id}});
+        if (file != undefined) {
+          jobFile.description = file.description;
+          jobFile.groupId = file.groupId;
+          jobFile.title = file.title;
+          jobFile.name = file.name;
+          jobFile.fileType = file.fileType;
+          jobFile.qualifiedPath = file.qualifiedPath;
+          jobData.jobfiles[jobFileIdx] = jobFile;
+        }
+      }
+      if (req.query.dataflow_id) {
+        let assetDataflow = await AssetDataflow.findOne({
+          where: { assetId: req.query.job_id, dataflowId: req.query.dataflow_id }
+        });
+        let dependentJobs = await DependentJobs.findAll({
+          where: { jobId: req.query.job_id, dataflowId: req.query.dataflow_id }
+        });
+        if (assetDataflow.cron !== null) {
+          jobData.schedule = {
+            type: 'Time',
+            cron: assetDataflow.cron
+          };
+        } else if (dependentJobs.length > 0) {
+          jobData.schedule = {
+            type: 'Predecessor',
+            jobs: []
+          };
+          dependentJobs.map(job => jobData.schedule.jobs.push(job.dependsOnJobId));
+        }
+      }
+      return jobData;
+    }).then(function(jobData) {
+        res.json(jobData);
+    })
+    .catch(function(err) {
+        console.log(err);
+    });
+  } catch (err) {
+      console.log('err', err);
+  }
 });
 
 router.post('/delete', [
@@ -546,6 +682,15 @@ router.post('/delete', [
     console.log(err);
     return res.status(500).json({ success: false, message: "Error occured while deleting the job" });
   });
+});
+
+const QueueDaemon = require('../../queue-daemon');
+
+router.get('/msg', (req, res) => {
+  if (req.query.topic && req.query.message) {
+    QueueDaemon.submitMessage(req.query.topic, req.query.message);
+    return res.json({ topic: req.query.topic, message: req.query.message });
+  }
 });
 
 function updateCommonData(objArray, fields) {

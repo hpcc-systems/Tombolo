@@ -1,5 +1,5 @@
-import React, { Component } from "react";
-import { Modal, Tabs, Form, Input, Checkbox, Button,  Select, Table, AutoComplete, Spin, message, Row, Col } from 'antd/lib';
+import React, { Component, Fragment } from "react";
+import { Modal, Tabs, Form, Input, Checkbox, Button, Space, Select, Table, AutoComplete, Spin, message, Row, Col } from 'antd/lib';
 import { authHeader, handleError } from "../common/AuthHeader.js"
 import AssociatedDataflows from "./AssociatedDataflows"
 import { hasEditPermission } from "../common/AuthUtil.js";
@@ -15,6 +15,49 @@ import { assetsActions } from '../../redux/actions/Assets';
 const TabPane = Tabs.TabPane;
 const Option = Select.Option;
 const { confirm } = Modal;
+
+const monthMap = {
+  1: 'January', 2: 'February', 3: 'March', 4: 'April', 5: 'May', 6: 'June',
+  7: 'July', 8: 'August', 9: 'September', 10: 'October', 11: 'November', 12: 'December'
+};
+const monthAbbrMap = {
+  'JAN': 'January', 'FEB': 'February', 'MAR': 'March', 'APR': 'April', 'MAY': 'May', 'JUN': 'June',
+  'JUL': 'July', 'AUG': 'August', 'SEP': 'September', 'OCT': 'October', 'NOV': 'November', 'DEC': 'December'
+};
+const dayMap = {
+  0: 'Sunday', 1: 'Monday', 2: 'Tuesday', 3: 'Wednesday', 4: 'Thursday',
+  5: 'Friday', 6: 'Saturday', 7: 'Sunday'
+};
+const dayAbbrMap = {
+  'SUN': 'Sunday', 'MON': 'Monday', 'TUE': 'Tuesday', 'WED': 'Wednesday',
+  'THU': 'Thursday', 'FRI': 'Friday', 'SAT': 'Saturday'
+};
+const _minutes = [
+  0,   1,  2,  3,  4,  5,  6,  7,  8,  9,
+  10, 11, 12, 13, 14, 15, 16, 17, 18, 19,
+  20, 21, 22, 23, 24, 25, 26, 27, 28, 29,
+  30, 31, 32, 33, 34, 35, 36, 37, 38, 39,
+  40, 41, 42, 43, 44, 45, 46, 47, 48, 49,
+  50, 51, 52, 53, 54, 55, 56, 57, 58, 59
+];
+const _hours = [
+  0,  1,  2,  3,  4,  5,  6,  7,  8,  9,  10,
+  11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21,
+  22, 23
+ ];
+const _dayOfMonth = [
+  1,   2,  3,  4,  5,  6,  7,  8,  9, 10,
+  11, 12, 13, 14, 15, 16, 17, 18, 19, 20,
+  21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31
+];
+let scheduleCronParts = {
+  'minute': [],
+  'hour': [],
+  'day-of-month': [],
+  'month': [],
+  'day-of-week': []
+};
+let cronExamples = [];
 
 class JobDetails extends Component {
   formRef = React.createRef();
@@ -32,6 +75,14 @@ class JobDetails extends Component {
     paramType:"",
     sourceFiles:[],
     selectedInputFile:"",
+    selectedScheduleType:"",
+    scheduleMinute:"*",
+    scheduleHour:"*",
+    scheduleDayMonth: "*",
+    scheduleMonth:"*",
+    scheduleDayWeek:"*",
+    schedulePredecessor:[],
+    predecessorJobs:[],
     clusters:[],
     selectedCluster: this.props.clusterId ? this.props.clusterId : "",
     jobSearchSuggestions:[],
@@ -41,6 +92,12 @@ class JobDetails extends Component {
     job: {
       id:"",
       groupId: "",
+      dataflowId: this.props.selectedDataflow ? this.props.selectedDataflow.id : '',
+      ecl: "",
+      entryBWR:"",
+      jobType: this.props.selectedJobType ? this.props.selectedJobType : '',
+      gitRepo:"",
+      contact:"",
       inputParams: [],
       inputFiles: [],
       outputFiles: []
@@ -51,8 +108,13 @@ class JobDetails extends Component {
     //this.props.onRef(this);
     if(this.props.application && this.props.application.applicationId) {
       this.getJobDetails();
-      this.getFiles();
       this.setClusters(this.props.clusterId);
+      if (this.props.selectedDataflow) {
+        this.getFiles();
+      }
+    }
+    if (this.props.scheduleType === 'Predecessor') {
+      this.handleScheduleTypeSelect('Predecessor');
     }
   }
 
@@ -62,7 +124,28 @@ class JobDetails extends Component {
         initialDataLoading: true
       });
 
-      fetch("/api/job/job_details?job_id="+this.props.selectedAsset.id+"&app_id="+this.props.application.applicationId, {
+      let jobDetailsUrl = "/api/job/job_details",
+          queryStringParams = {};
+
+      if (this.props.selectedAsset && this.props.selectedAsset.id) {
+        queryStringParams["job_id"] = this.props.selectedAsset.id;
+      }
+      if (this.props.application && this.props.application.applicationId) {
+        queryStringParams["app_id"] = this.props.application.applicationId;
+      }
+      if (this.props.selectedDataflow && this.props.selectedDataflow.id) {
+        queryStringParams["dataflow_id"] = this.props.selectedDataflow.id;
+      }
+
+      if (Object.keys(queryStringParams).length > 0) {
+        jobDetailsUrl += "?";
+        for (let [key, value] of Object.entries(queryStringParams)) {
+          jobDetailsUrl += `${key}=${value}&`;
+        }
+        jobDetailsUrl = jobDetailsUrl.replace(/&$/, '');
+      }
+
+      fetch(jobDetailsUrl, {
         headers: authHeader()
       })
       .then((response) => {
@@ -72,22 +155,35 @@ class JobDetails extends Component {
         handleError(response);
       })
       .then(data => {
-        var jobfiles = [];
+        var jobfiles = [], cronParts = [];
         data.jobfiles.forEach(function(doc, idx) {
           var fileObj = {};
           fileObj=doc;
           fileObj.fileTitle=(doc.title) ? doc.title : doc.name;
           jobfiles.push(fileObj);
         });
+        if (data.schedule && data.schedule.cron) {
+          cronParts = data.schedule.cron.split(' ');
+        }
+        if (data.schedule && data.schedule.type) {
+          this.handleScheduleTypeSelect(data.schedule.type);
+        }
         this.setState({
           ...this.state,
+          selectedScheduleType: (data.schedule && data.schedule.type) ? data.schedule.type : this.state.selectedScheduleType,
+          scheduleMinute: (cronParts.length > 0) ? cronParts[0] : this.state.scheduleMinute,
+          scheduleHour: (cronParts.length > 0) ? cronParts[1] : this.state.scheduleHour,
+          scheduleDayMonth: (cronParts.length > 0) ? cronParts[2] : this.state.scheduleDayMonth,
+          scheduleMonth: (cronParts.length > 0) ? cronParts[3] : this.state.scheduleMonth,
+          scheduleDayWeek: (cronParts.length > 0) ? cronParts[4] : this.state.scheduleDayWeek,
+          schedulePredecessor: (data.schedule && data.schedule.jobs) ? data.schedule.jobs : [],
           job: {
             ...this.state.job,
             id: data.id,
             groupId: data.groupId,
             inputParams: data.jobparams,
             inputFiles: jobfiles.filter(field => field.file_type == 'input'),
-            outputFiles: jobfiles.filter(field => field.file_type == 'output')
+            outputFiles: jobfiles.filter(field => field.file_type == 'output'),
          }
         });
 
@@ -121,7 +217,24 @@ class JobDetails extends Component {
   }
 
   getFiles() {
-    fetch("/api/file/read/file_list?app_id="+this.props.application.applicationId, {
+    let fileUrl = "/api/file/read/file_list",
+        queryStringParams = {};
+
+    if (this.props.application && this.props.application.applicationId) {
+      queryStringParams["app_id"] = this.props.application.applicationId;
+    }
+    if (this.props.selectedDataflow && this.props.selectedDataflow.id) {
+      queryStringParams["dataflowId"] = this.props.selectedDataflow.id;
+    }
+    if (Object.keys(queryStringParams).length > 0) {
+      fileUrl += "?";
+      for (let [key, value] of Object.entries(queryStringParams)) {
+        fileUrl += `${key}=${value}&`;
+      }
+      fileUrl = fileUrl.replace(/&$/, '');
+    }
+
+    fetch(fileUrl, {
       headers: authHeader()
     })
     .then((response) => {
@@ -175,11 +288,21 @@ class JobDetails extends Component {
     })
   }
 
-  clearState = () => {
+
+  clearState() {
     this.setState({
       ...this.state,
       sourceFiles:[],
       selectedInputFile:"",
+      selectedScheduleType:"",
+      scheduleMinute:"*",
+      scheduleHour:"*",
+      scheduleDayMonth:"*",
+      scheduleMonth:"*",
+      scheduleDayWeek:"*",
+      schedulePredecessor:[],
+      predecessorJobs:[],
+      selectedTab:0,
       clusters:[],
       selectedCluster:"",
       jobSearchSuggestions:[],
@@ -187,6 +310,12 @@ class JobDetails extends Component {
       job: {
         id:"",
         groupId: "",
+        dataflowId: this.props.selectedDataflow ? this.props.selectedDataflow.id : '',
+        ecl: "",
+        entryBWR:"",
+        jobType: this.props.selectedJobType ? this.props.selectedJobType : '',
+        gitRepo:"",
+        contact:"",
         inputParams: [],
         inputFiles: [],
         outputFiles: []
@@ -277,7 +406,9 @@ class JobDetails extends Component {
       return jobInfo;
     })
     .then(data => {
-      this.getFiles();
+      if (this.props.selectedDataflow) {
+        this.getFiles();
+      }
     })
     .catch(error => {
       console.log(error);
@@ -288,17 +419,26 @@ class JobDetails extends Component {
     this.setState({
       confirmLoading: true,
     });
-      let saveResponse = await this.saveJobDetails();
 
-      setTimeout(() => {
-        this.setState({
-          visible: false,
-          confirmLoading: false,
-        });
-        //this.props.onClose();
-        //this.props.onRefresh(saveResponse);
+    let saveResponse = await this.saveJobDetails();
+
+    setTimeout(() => {
+      this.setState({
+        visible: false,
+        confirmLoading: false,
+      });
+      //this.props.onClose();
+      //this.props.onRefresh(saveResponse);
+      if (this.props.history) {
         this.props.history.push('/' + this.props.application.applicationId + '/assets')
-      }, 2000);
+      } else {
+        document.querySelector('button.ant-modal-close').click();
+      }
+    }, 2000);
+  }
+
+  onAutoCreateFiles = (e) => {
+    this.state.autoCreateFiles = e.target.checked;
   }
 
   handleDelete = () => {
@@ -376,6 +516,11 @@ class JobDetails extends Component {
         "dataflowId" : this.props.selectedDataflow ? this.props.selectedDataflow.id : '',
         "cluster_id": this.state.selectedCluster
       },
+      "schedule": {
+        "type": this.state.selectedScheduleType,
+        "jobs": this.state.schedulePredecessor,
+        "cron": this.joinCronTerms()
+      },
       "params": this.state.job.inputParams,
       "files" : inputFiles.concat(outputFiles),
       "mousePosition": this.props.mousePosition,
@@ -397,12 +542,17 @@ class JobDetails extends Component {
       visible: false,
     });
     //this.props.onClose();
-    this.props.history.push('/' + this.props.application.applicationId + '/assets')
-
+    if (this.props.history) {
+      this.props.history.push('/' + this.props.application.applicationId + '/assets');
+    } else {
+      this.props.onClose();//document.querySelector('button.ant-modal-close').click();
+    }
   }
+
   onChange = (e) => {
     this.setState({...this.state, job: {...this.state.job, [e.target.name]: e.target.value }});
   }
+
   onParamChange = (e) => {
     this.setState({...this.state, [e.target.name]: e.target.value });
   }
@@ -447,7 +597,6 @@ class JobDetails extends Component {
     this.setState({...this.state, job: {...this.state.job, jobType: value }}, () => console.log(this.state.job.jobType));
   }
 
-
   handleAddOutputFile = (e) => {
     let selectedFile = this.state.sourceFiles.filter(sourceFile => sourceFile.id==this.state.selectedOutputFile)[0];
     console.log('selectedFile: '+JSON.stringify(selectedFile));
@@ -462,6 +611,367 @@ class JobDetails extends Component {
         }
     });
   }
+
+  handleScheduleTypeSelect = (value) => {
+    let dataflowId = this.props.selectedDataflow ? this.props.selectedDataflow.id : '',
+        applicationId = this.props.application ? this.props.application.applicationId : '',
+        upstreamIds = [],
+        predecessors = [];
+
+    if (value === 'Predecessor') {
+      upstreamIds = this.props.edges.filter(edge => edge.target.id == this.props.nodeIndex).map(edge => edge.source.id);
+
+      predecessors = this.ancestorJobs(
+          this.graphFromNodesAndEdges(),
+          [this.props.nodeIndex]
+         )
+        .map(node => node[0])
+        .map(node => { return { 'id': node.id, jobId: node.jobId, 'name': node.title } });
+    }
+
+    this.setState({ predecessorJobs: predecessors });
+  };
+
+  generateDate = (year, month, day, hour, minute) => {
+    return new Date(year, month, day, hour, minute);
+  };
+
+  nextMinute = (date) => {
+    var t, n, r = 0 !== (n = (t = date).getMilliseconds()) ? new Date(t.getTime() + (1e3 - n)) : t, o = r.getSeconds();
+    return 0 !== o ? new Date(r.getTime() + 1e3 * (60 - o)) : r;
+  }
+
+  nextDate = (schedule, date) => {
+    let self = this;
+    return Object.keys(schedule).length && schedule.month.length && schedule['day-of-month'].length && schedule['day-of-week'].length && schedule.hour.length && schedule.minute.length ? function e(schedule, _date, counter) {
+      if (127 < counter) {
+        return null;
+      }
+      let utcMonth = _date.getMonth() + 1,
+          utcFullYear = _date.getFullYear();
+      if (!schedule.month.includes(utcMonth)) {
+        return e(schedule, self.generateDate(utcFullYear, utcMonth + 1 - 1, 1, 0, 0), ++counter);
+      }
+      let utcDate = _date.getDate(),
+          utcDay = _date.getDay(),
+          s = schedule['day-of-month'].includes(utcDate),
+          c = schedule['day-of-week'].includes(utcDay);
+      if (!s || !c) {
+        return e(schedule, self.generateDate(utcFullYear, utcMonth - 1, utcDate + 1, 0, 0), ++counter);
+      }
+      let utcHour = _date.getHours();
+      if (!schedule.hour.includes(utcHour)) {
+        return e(schedule, self.generateDate(utcFullYear, utcMonth - 1, utcDate, utcHour + 1, 0), ++counter);
+      }
+      let utcMinute = _date.getMinutes();
+      if (schedule.minute.includes(utcMinute)) {
+        return _date;
+      } else {
+        return e(schedule, self.generateDate(utcFullYear, utcMonth - 1, utcDate, utcHour, utcMinute + 1), ++counter);
+      }
+    }(schedule, this.nextMinute(date), 1) : null;
+  }
+
+  generateCronExplainer = () => {
+    let msg = '', minMatches = [], hrMatches = [], date = new Date();
+
+    msg += this.generateCronTerm(this.state.scheduleMinute, 'minute');
+    msg += this.generateCronTerm(this.state.scheduleHour, 'hour');
+    msg += this.generateCronTerm(this.state.scheduleDayMonth, 'day-of-month');
+    msg += this.generateCronTerm(this.state.scheduleDayWeek, 'day-of-week');
+    msg += this.generateCronTerm(this.state.scheduleMonth, 'month');
+
+    cronExamples = [];
+
+    let lastDate = date;
+
+    for (let i = 0; i < 3; i++) {
+      if (date) {
+        date = this.nextDate(scheduleCronParts, new Date(date.getTime() + 1));
+        cronExamples.push(date);
+      }
+    }
+
+    return msg + ((msg != '') ? '.' : '');
+  };
+
+  generateCronTerm = (term, type) => {
+    let msg = '', matches = [];
+
+    if (term.match(new RegExp(/^\*$/gm))) {
+      msg += this.matchAsteriskCronTerm(type);
+    } else if (matches = term.match(new RegExp(/^JAN|FEB|MAR|APR|MAY|JU[NL]|AUG|SEP|OCT|NOV|DEC|MON|TUE|WED|THU|FRI|SAT|SUN$/gm))) {
+      if (matches.length > 0) {
+        msg += this.matchAbbrCronTerm(matches, type);
+      }
+    } else if (matches = term.match(new RegExp(/^\d+$/gm))) {
+      if (matches.length > 0) {
+       msg += this.matchDigitsCronTerm(matches, type);
+      }
+    } else if (matches = term.match(new RegExp(/^(\d+,)+\d+$/gm))) {
+      if (matches.length > 0) {
+       msg += this.matchCommaCronTerm(matches, type);
+      }
+    } else if (matches = term.match(new RegExp(/^\d+\-\d+/gm))) {
+      if (matches.length > 0) {
+        msg += this.matchRangeCronTerm(matches, type);
+      }
+    } else if (matches = [...term.matchAll(new RegExp(/^\*\s*\/\s*(\d+)/gm))]) {
+      if (matches.length > 0) {
+        msg += this.matchStepCronTerm(matches, type);
+      }
+    }
+
+    return msg;
+  };
+
+  matchAsteriskCronTerm = (type) => {
+    switch (type) {
+      case 'minute':
+        scheduleCronParts['minute'] = _minutes;
+        return 'Every minute';
+      case 'hour':
+        scheduleCronParts['hour'] = _hours;
+        return '';
+      case 'day-of-month':
+        scheduleCronParts['day-of-month'] = _dayOfMonth;
+        return '';
+      case 'month':
+        scheduleCronParts['month'] = Object.keys(monthMap).map(n => Number(n));
+        return '';
+      case 'day-of-week':
+        scheduleCronParts['day-of-week'] = Object.keys(dayMap).filter(n => n < 7).map(n => Number(n));
+        return '';
+    }
+  };
+
+  matchDigitsCronTerm = (matches, type) => {
+    switch (type) {
+      case 'minute':
+        scheduleCronParts['minute'] = [Number(matches[0])];
+        return `At ${type} ${matches[0]}`;
+      case 'hour':
+        scheduleCronParts['hour'] = [Number(matches[0])];
+        return ` past ${type} ${matches[0]}`;
+      case 'day-of-month':
+        scheduleCronParts['day-of-month'] = [Number(matches[0])];
+        return ` on ${type} ${matches[0]}`;
+      case 'month':
+        scheduleCronParts['month'] = [Number(matches[0])];
+        return ` in ${monthMap[matches[0]]}`;
+      case 'day-of-week':
+        scheduleCronParts['day-of-week'] = [Number(matches[0])];
+        return ` on ${dayMap[matches[0]]}`;
+    }
+  };
+
+  matchCommaCronTerm = (matches, type) => {
+    let values = matches[0].split(','),
+        lastVal = values.pop();
+
+    switch (type) {
+      case 'minute':
+        scheduleCronParts['minute'] = [...values, lastVal].map(n => Number(n));
+        return `At ${type} ${values.join(', ')}, and ${lastVal}`;
+      case 'hour':
+        scheduleCronParts['hour'] = [...values, lastVal].map(n => Number(n));
+        return ` past ${type} ${values.join(', ')}, and ${lastVal}`;
+      case 'day-of-month':
+        scheduleCronParts['day-of-month'] = [...values, lastVal].map(n => Number(n));
+        return ` on ${type} ${values.join(', ')}, and ${lastVal}`;
+      case 'month':
+        scheduleCronParts['month'] = [...values, lastVal].map(n => Number(n));
+        return ` in ${values.map(v => monthMap[v]).join(', ')}, and ${monthMap[lastVal]}`;
+      case 'day-of-week':
+        scheduleCronParts['day-of-week'] = [...values, lastVal].map(n => Number(n));
+        return ` on ${values.map(v => dayMap[v]).join(', ')}, and ${dayMap[lastVal]}`;
+    }
+  };
+
+  matchRangeCronTerm = (matches, type) => {
+    let msg = '',
+        values = matches[0].split('-');
+
+    switch (type) {
+      case 'minute':
+        scheduleCronParts['minute'] = (() => {
+          let arr = [];
+          for (let i = values[0]; i <= values[1]; i++) {
+            arr.push(Number(i));
+          }
+          return arr;
+        })();
+        msg += 'At every ';
+        break;
+      case 'hour':
+        scheduleCronParts['hour'] = (() => {
+          let arr = [];
+          for (let i = values[0]; i <= values[1]; i++) {
+            arr.push(Number(i));
+          }
+          return arr;
+        })();
+        msg += ' past every ';
+        break;
+      case 'day-of-month':
+        scheduleCronParts['day-of-month'] = (() => {
+          let arr = [];
+          for (let i = values[0]; i <= values[1]; i++) {
+            arr.push(Number(i));
+          }
+          return arr;
+        })();
+        msg += ' on every ';
+        break;
+      case 'month':
+        scheduleCronParts['month'] = (() => {
+          let arr = [];
+          for (let i = values[0]; i <= values[1]; i++) {
+            arr.push(Number(i));
+          }
+          return arr;
+        })();
+        msg += ' in every ';
+        values = values.map(v => monthMap[v]);
+        break;
+      case 'day-of-week':
+        scheduleCronParts['day-of-week'] = (() => {
+          let arr = [];
+          for (let i = values[0]; i <= values[1]; i++) {
+            arr.push(Number(i));
+          }
+          return arr;
+        })();
+        msg += ' on every ';
+        values = values.map(v => dayMap[v]);
+        break;
+    }
+
+    msg += type + ' from ' + values.join(' through ');
+    return msg;
+  };
+
+  matchStepCronTerm = (matches, type) => {
+    let msg = '',
+        lastVal = matches[0][matches.length],
+        lastValNum = parseInt(lastVal),
+        steps = [],
+        stepMax = 0;
+
+    switch (type) {
+      case 'minute':
+        scheduleCronParts['minute'] = steps;
+        stepMax = 59;
+        msg += 'Every ';
+        break;
+      case 'hour':
+        scheduleCronParts['hour'] = steps;
+        stepMax = 23;
+        msg += ' past every ';
+        break;
+      case 'day-of-month':
+        scheduleCronParts['day-of-month'] = steps;
+        stepMax = 31;
+        let currentMonth = new Date().getMonth() + 1,
+            currentYear = new Date().getFullYear();
+        if (currentMonth % 2 == 0) {
+          stepMax = 30;
+        } else if (currentMonth == 2) {
+          if (currentYear % 4 == 0) {
+            stepMax = 29;
+          } else {
+            stepMax = 28;
+          }
+        }
+        msg += ' on every ';
+        break;
+      case 'month':
+        scheduleCronParts['month'] = steps;
+        stepMax = 11;
+        msg += ' in every ';
+        break;
+      case 'day-of-week':
+        scheduleCronParts['day-of-week'] = steps;
+        stepMax = 6;
+        msg += ' on every ';
+        break;
+    }
+
+    for (let i = 0, j = lastValNum, k = stepMax; i <= k; i += j) {
+      steps.push(i);
+    }
+
+    switch (20 < lastValNum ? lastValNum % 10 : lastValNum) {
+      case 1:
+        msg += lastVal + 'st ';
+        break;
+      case 2:
+        msg += lastVal + 'nd ';
+        break;
+      case 3:
+        msg += lastVal + 'rd ';
+        break;
+      default:
+        msg += lastVal + 'th '
+    }
+    msg += type;
+    return msg;
+  };
+
+  matchAbbrCronTerm = (matches, type) => {
+    switch (type) {
+      case 'month':
+        return ` in ${monthAbbrMap[matches[0]]}`;
+      case 'day-of-week':
+        return `${((this.state.scheduleDayMonth !== '*') ? ' and ' : '')} on ${dayAbbrMap[matches[0]]}`;
+    }
+  };
+
+  joinCronTerms = () => {
+    return {
+      'minute': this.state.scheduleMinute,
+      'hour': this.state.scheduleHour,
+      'dayMonth': this.state.scheduleDayMonth,
+      'month': this.state.scheduleMonth,
+      'dayWeek': this.state.scheduleDayWeek
+    };
+  };
+
+  graphFromNodesAndEdges = () => {
+    let graph = {};
+
+    this.props.nodes.map(n => { graph[n.id] = [] });
+
+    this.props.nodes.map(n => n.id)
+      .map(id => this.props.edges.filter(e => e.source.id == id))
+      .forEach(arr => {
+        if (arr[0] && arr[0].source && arr[0].source.id) {
+          graph[arr[0].source.id] = arr.map(n => n.target.id)
+        }
+      });
+
+    return graph;
+  };
+
+  ancestorJobs = (graph, jobIds) => {
+    let path = [],
+        keys = Object.keys(graph),
+        values = Object.values(graph);
+
+    while (jobIds.length > 0) {
+      let jobId = jobIds.shift();
+      for (let i = 0; i < keys.length; i++) {
+        if (values[i].indexOf(jobId) > -1) {
+          jobIds.push(parseInt(keys[i], 10));
+          path.push(parseInt(keys[i], 10));
+        }
+      }
+    }
+
+    return path.reverse()
+               .map(id => this.props.nodes.filter(n => n.id == id && n.type == 'Job'))
+               .filter(n => n.length > 0);
+  };
 
   render() {
     const editingAllowed = hasEditPermission(this.props.user);
@@ -501,15 +1011,14 @@ class JobDetails extends Component {
     }];
 
     const fileColumns = [{
-        title: 'Name',
-        dataIndex: 'name',
-        width: '20%',
-      },
-      {
-        title: 'Description',
-        dataIndex: 'description',
-        width: '30%'
-      }];
+      title: 'Name',
+      dataIndex: 'name',
+      width: '20%',
+    }, {
+      title: 'Description',
+      dataIndex: 'description',
+      width: '30%'
+    }];
 
     const {
       name, title, description, ecl, entryBWR, gitRepo,
@@ -530,9 +1039,7 @@ class JobDetails extends Component {
               <Spin spinning={this.state.initialDataLoading} size="large" />
             </div> : null}
           <Form {...formItemLayout} labelAlign="left" ref={this.formRef} onFinish={this.handleOk} >
-          <Tabs
-            defaultActiveKey="1"
-          >
+          <Tabs defaultActiveKey="1">
 
             <TabPane tab="Basic" key="1">
               {/*{this.props.isNewIndex ?*/}
@@ -686,6 +1193,118 @@ class JobDetails extends Component {
               </div>
             </TabPane>
 
+            { this.props.selectedDataflow ?
+            <TabPane tab="Schedule" key="6">
+              <div>
+                <Form {...threeColformItemLayout}>
+                  <Form.Item label="Type">
+                    <Select id="scheduleType"
+                      placeholder="Select a schedule type"
+                      allowClear
+                      onClear={() => { this.setState({...this.state, selectedScheduleType: "" }); }}
+                      onSelect={(value) => {
+                        console.log(value);
+                        this.handleScheduleTypeSelect(value);
+                        this.setState({ selectedScheduleType: value });
+                      }}
+                      value={this.state.selectedScheduleType ? this.state.selectedScheduleType : null}
+                    >
+                      <Option value="Time">Timer based (run at specific interval)</Option>
+                      <Option value="Predecessor">Job based (run after another job completes)</Option>
+                    </Select>
+                  </Form.Item>
+                  { this.state.selectedScheduleType === "Time" ?
+                    <Fragment>
+                    <Form.Item label="Run Every">
+                      <Space>
+                        <Input
+                          style={{width: "40px", padding: "2px 6px"}}
+                          onChange={ evt =>  this.setState({ scheduleMinute: evt.target.value }) }
+                          value={this.state.scheduleMinute}
+                        />
+                        Minute,
+                        <Input
+                          style={{width: "40px", padding: "2px 6px"}}
+                          onChange={ evt => this.setState({ scheduleHour: evt.target.value }) }
+                          value={this.state.scheduleHour}
+                        />
+                        Hour,
+                        <Input
+                          style={{width: "40px", padding: "2px 6px"}}
+                          onChange={ evt => this.setState({ scheduleDayMonth: evt.target.value }) }
+                          value={this.state.scheduleDayMonth}
+                        />
+                        Day of Month,
+                        <Input
+                          style={{width: "40px", padding: "2px 6px"}}
+                          onChange={ evt => this.setState({ scheduleMonth: evt.target.value }) }
+                          value={this.state.scheduleMonth}
+                        />
+                        Month,
+                        <Input
+                          style={{width: "40px", padding: "2px 6px"}}
+                          onChange={ evt => this.setState({ scheduleDayWeek: evt.target.value }) }
+                          value={this.state.scheduleDayWeek}
+                        />
+                        Day of Week
+                      </Space>
+                    </Form.Item>
+                    <Form.Item label="Explained">
+                      { this.generateCronExplainer() }
+                    </Form.Item>
+                    <Form.Item label="Would run at">
+                      {(cronExamples.length > 0) ?
+                        <Fragment>
+                        { cronExamples.map(d => {
+                          return (
+                          <Fragment>
+                          <span>
+                            { d ? d.toLocaleString('en-US') : '' }
+                          </span><br />
+                          </Fragment>
+                          );
+                        }) }
+                        <span>and so on...</span>
+                        </Fragment>
+                      : null}
+                    </Form.Item>
+                    </Fragment>
+                  : null }
+                  { this.state.selectedScheduleType === "Predecessor" ?
+                    <Form.Item label="Run After">
+                    {console.log(this.state.schedulePredecessor)}
+                      <Select id="schedulePredecessor"
+                        mode="multiple"
+                        placeholder="Select Job(s) that will trigger execution"
+                        allowClear
+                        onClear={() => { this.setState({...this.state, schedulePredecessor: [] }); }}
+                        onSelect={value => {
+                          let predecessors = this.state.schedulePredecessor;
+                          predecessors.push(value);
+                          this.setState({ ...this.state, schedulePredecessor: predecessors });
+                        }}
+                        onDeselect={value => {
+                          let predecessors = this.state.schedulePredecessor;
+                          predecessors.splice(predecessors.indexOf(value), 1);
+                          this.setState({ ...this.state, schedulePredecessor: predecessors });
+                        }}
+                        value={this.state.schedulePredecessor}
+                      >
+                        { this.state.predecessorJobs.map(job => {
+                          return (
+                            <Option key={job.name} value={job.jobId}>
+                              {job.name}
+                            </Option>
+                          );
+                        }) }
+                      </Select>
+                    </Form.Item>
+                  : null }
+                </Form>
+              </div>
+            </TabPane>
+            : null }
+
             {!this.props.isNew ?
             <TabPane tab="Dataflows" key="7">
               <AssociatedDataflows assetName={name} assetType={'Job'}/>
@@ -693,8 +1312,7 @@ class JobDetails extends Component {
           </Tabs>
           </Form>
       </div>
-      {!this.props.viewMode ?
-        <div className="button-container">
+        <div className="button-container" style={{alignSelf: 'flex-end', float: 'none'}}>
           {!this.props.isNew ? <Button key="danger" type="danger" onClick={this.handleDelete}>Delete</Button> : null }
           <Button key="back" onClick={this.handleCancel}>
             Cancel
@@ -703,7 +1321,6 @@ class JobDetails extends Component {
             Save
           </Button>
         </div>
-      : null}
       </React.Fragment>
     );
   }
@@ -713,7 +1330,7 @@ function mapStateToProps(state) {
     const { selectedAsset, newAsset={}, clusterId } = state.assetReducer;
     const { user } = state.authenticationReducer;
     const { application, clusters } = state.applicationReducer;
-    const {isNew=false, groupId='' } = newAsset;
+    const { isNew=false, groupId='' } = newAsset;
     return {
       user,
       selectedAsset,
