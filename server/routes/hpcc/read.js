@@ -141,7 +141,7 @@ router.post('/jobsearch', [
 
 router.get('/getClusters', function (req, res) {
   try {
-		Cluster.findAll().then(function(clusters) {
+		Cluster.findAll({order: [['createdAt', 'DESC']]}).then(function(clusters) {
 			res.json(clusters);
 		})
 		.catch(function(err) {

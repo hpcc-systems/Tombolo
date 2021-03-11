@@ -7,7 +7,7 @@ let ConsumerObject = models.consumer_object;
 
 router.get('/consumers', (req, res) => {
     console.log("[consumer/read.js] - Get consumer list");
-    Consumer.findAll().then(function(consumers) {
+    Consumer.findAll({order: [['createdAt', 'DESC']]}).then(function(consumers) {
         res.json(consumers);
     })
     .catch(function(err) {

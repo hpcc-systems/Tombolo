@@ -10,46 +10,48 @@ exports.fileInfo = (fileName, clusterId) => {
 	console.log('fileName: '+fileName+', '+clusterId);
 	return new Promise((resolve, reject) => {
 		module.exports.getCluster(clusterId).then(function(cluster) {
-				let clusterAuth = module.exports.getClusterAuth(cluster);
-				let dfuService = new hpccJSComms.DFUService({ baseUrl: cluster.thor_host + ':' + cluster.thor_port, userID:(clusterAuth ? clusterAuth.user : ""), password:(clusterAuth ? clusterAuth.password : "")});
-				dfuService.DFUInfo({"Name":fileName}).then(response => {
-			  	var processFieldValidations = function(fileLayout) {
-	      		var fieldsValidations=[];
-	      		fileLayout.forEach(function(field, idx) {
-	      			//fields[idx] = field.trim().replace(";","");
-	      			var validations = {
-		      			"name" : field.name,
-		      			"ruleType" : '',
-		      			"rule" : '',
-		      			"action" : '',
-		      			"fixScript" : ''
-		      		}
-	      			fieldsValidations.push(validations);
-	      			//console.log(fields[idx]);
-	      		});
-	      		return fieldsValidations;
-	      	}
-	      	var fileInfo = {};
-	    		getFileLayout(cluster, fileName, response.FileDetail.Format).then(function(fileLayout) {
-	      		fileInfo.basic = {
-	      			"name" : response.FileDetail.Name,
-	      			"fileName" : response.FileDetail.Filename,
-	      			"description" : response.FileDetail.Description,
-	      			"scope": response.FileDetail.Name.substring(0, response.FileDetail.Name.lastIndexOf('::')),
-	      			"pathMask" : response.FileDetail.PathMask,
-	      			"isSuperfile" : response.FileDetail.isSuperfile,
-	      			"fileType": response.FileDetail.ContentType,
+			let clusterAuth = module.exports.getClusterAuth(cluster);
+			let dfuService = new hpccJSComms.DFUService({ baseUrl: cluster.thor_host + ':' + cluster.thor_port, userID:(clusterAuth ? clusterAuth.user : ""), password:(clusterAuth ? clusterAuth.password : "")});
+			dfuService.DFUInfo({"Name":fileName}).then(response => {
+		  	var processFieldValidations = function(fileLayout) {
+      		var fieldsValidations=[];
+      		fileLayout.forEach(function(field, idx) {
+      			//fields[idx] = field.trim().replace(";","");
+      			var validations = {
+	      			"name" : field.name,
+	      			"ruleType" : '',
+	      			"rule" : '',
+	      			"action" : '',
+	      			"fixScript" : ''
 	      		}
-            fileInfo.file_layouts = fileLayout;
-            fileInfo.file_validations = [];
-	      	 	resolve(fileInfo);
-	    		})
+      			fieldsValidations.push(validations);
+      			//console.log(fields[idx]);
+      		});
+      		return fieldsValidations;
+      	}
+      	var fileInfo = {};
+    		getFileLayout(cluster, fileName, response.FileDetail.Format).then(function(fileLayout) {
+      		fileInfo.basic = {
+      			"name" : response.FileDetail.Name,
+      			"fileName" : response.FileDetail.Filename,
+      			"description" : response.FileDetail.Description,
+      			"scope": response.FileDetail.Name.substring(0, response.FileDetail.Name.lastIndexOf('::')),
+      			"pathMask" : response.FileDetail.PathMask,
+      			"isSuperfile" : response.FileDetail.isSuperfile,
+      			"fileType": response.FileDetail.ContentType,
+      		}
+          fileInfo.file_layouts = fileLayout;
+          fileInfo.file_validations = [];
+      	 	resolve(fileInfo);
+    		})
 
-			  });
-			});
-	}).catch((err) => {
-    console.log('err', err);
-    reject(err);
+		  }).catch((err) => {
+        reject(err);
+      })
+		}).catch((err) => {
+      console.log('err-1', err);
+      reject(err);
+    })
 	})
 }
 
@@ -363,7 +365,11 @@ exports.getClusterAuth = (cluster) => {
 
 exports.getCluster = (clusterId) => {
 	return Cluster.findOne( {where: {id:clusterId}} ).then(async function(cluster) {
-		if(cluster.hash) {
+		if(cluster == null) {
+      throw new Error("Cluster not reachable...");
+    }
+
+    if(cluster.hash) {
 			cluster.hash = crypto.createDecipher(algorithm,process.env['cluster_cred_secret']).update(cluster.hash,'hex','utf8');
 		}
 		let isReachable = await module.exports.isClusterReachable(cluster.thor_host, cluster.thor_port, cluster.username, cluster.password);
@@ -372,11 +378,7 @@ exports.getCluster = (clusterId) => {
 		} else {
 			throw new Error("Cluster not reachable...");
 		}
-
 	})
-	.catch(function(err) {
-        console.log(err);
-    });
 }
 
 exports.isClusterReachable = async (clusterHost, port, username, password) => {

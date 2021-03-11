@@ -130,19 +130,19 @@ let updateFileRelationship = (jobId, job, files, filesToBeRemoved) => {
     let query = 'select f.id, f.name, jf.file_type from file f, jobfile jf where '+
       'f.application_id = (:applicationId) AND '+
       'f.name =(:fileName) AND '+
-      'f.dataflowId = (:dataflowId) AND '+
       'jf.job_id = (:job_id) and jf.file_type = (:file_type) group by f.id';
 
     files.forEach((file, idx) => {
+      //promises.push(Promise.reject("error rejecting...."));
       promises.push(
         hpccUtil.fileInfo(file.name, job.basic.clusterId).then((fileInfo) => {
-          let replacements = { applicationId: job.basic.application_id, fileName: fileInfo.basic.name, dataflowId:job.basic.dataflowId, job_id: jobId, file_type: file.file_type};
+          let replacements = { applicationId: job.basic.application_id, fileName: fileInfo.basic.name, job_id: jobId, file_type: file.file_type};
           return models.sequelize.query(query, {
             type: models.sequelize.QueryTypes.SELECT,
             replacements: replacements
           }).then((existingFile) => {
             //file does not exists or exists with a different type
-            if(existingFile.length == 0) {
+            if(!existingFile || existingFile.length == 0) {
              return File.create({
                 "application_id": job.basic.application_id,
                 "title": fileInfo.basic.fileName,
@@ -216,17 +216,26 @@ let updateFileRelationship = (jobId, job, files, filesToBeRemoved) => {
               edges.push(edge);
             }
          }).catch(err => {
-          console.log('error occured: '+err)
+          console.log('error occured-1: '+err)
           reject(err);
          })
+      }).catch(err => {
+        console.log('error occured-2: '+err)
+        return reject(err)
       })
      )
     })
-    Promise.all(promises).then(() => {
+
+    Promise.all(promises)
+    .then((res) => {
       console.log("job and files created....")
       updateDataFlowGraph(job.basic.application_id, job.basic.dataflowId, nodes, edges, filesToBeRemoved).then((dataflowGraph) => {
         resolve(dataflowGraph)
       });
+    }).catch((err) => {
+      console.log("job and files creation failed....")
+      //Promise.reject(err);
+      reject(err);
     })
   })
 }
@@ -282,13 +291,20 @@ let updateJobDetails = (applicationId, jobId, jobReqObj, autoCreateFiles) => {
         if(autoCreateFiles) {
           updateFileRelationship(jobId, jobReqObj, jobReqObj.files, filesToBeRemoved).then((results) => {
             resolve({"result":"success", "title":jobReqObj.basic.title, "jobId":jobId, "dataflow":results})
-          });
+          }).catch((err) => {
+            console.log("updateJobDetails failed...")
+            reject(err);
+          })
         } else {
           resolve({"result":"success", "title":jobReqObj.basic.title, "jobId":jobId})
         }
       }).catch((err) => {
-          reject(err)
+        console.log("updatejobdetails failed reject-1")
+        reject(err)
       })
+  }).catch((err) => {
+    console.log("updatejobdetails failed reject-2")
+    return Promise.reject(err)
   })
 }
 
@@ -327,7 +343,7 @@ router.post('/createFileRelation', [
     })
   }).catch((err) => {
     console.log(err);
-    return res.status(500).send("Error occured while file relation");
+    return res.status(500).send("Error occured while creating file relation");
   })
 });
 
@@ -374,6 +390,8 @@ router.post('/refreshDataflow', [
       let newNodes = JSON.parse(dataflowGraph.nodes);
       console.log(nodes.length, newNodes.length);
       res.json({"result": "success"});
+    }).catch((err) => {
+      return res.status(500).json({ success: false, message: "Error occured while refreshing the job" });
     })
   })
 
@@ -406,7 +424,6 @@ router.post('/saveJob', [
         })
       }
       let jobId = job.id ? job.id : req.body.id;
-      console.log("jobId: "+jobId);
       if(req.body.job.basic && req.body.job.basic.groupId) {
         let assetsGroupsCreated = await AssetsGroups.findOrCreate({
           where: {assetId: jobId, groupId: req.body.job.basic.groupId},
@@ -418,10 +435,14 @@ router.post('/saveJob', [
       }
       updateJobDetails(applicationId, jobId, req.body.job, req.body.job.autoCreateFiles).then((response) => {
         res.json(response);
+      }).catch((err) => {
+        console.log("Error occured in updateJobDetails....")
+        return res.status(500).json({ success: false, message: "Error occured while saving the job" });
       })
     })
 
   } catch (err) {
+
     console.log('err', err);
   }
 });
@@ -440,10 +461,12 @@ router.get('/job_list', [
         res.json(jobs);
     })
     .catch(function(err) {
-        console.log(err);
+      console.log(err);
+      return res.status(500).json({ success: false, message: "Error occured while retrieving jobs" });
     });
   } catch (err) {
-      console.log('err', err);
+    console.log('err', err);
+    return res.status(500).json({ success: false, message: "Error occured while retrieving jobs" });
   }
 });
 
@@ -464,6 +487,7 @@ router.get('/job_details', [
   })
   .catch(function(err) {
     console.log(err);
+    return res.status(500).json({ success: false, message: "Error occured while getting job details" });
   });
 });
 
@@ -491,7 +515,8 @@ router.post('/delete', [
           });
       });
   }).catch(function(err) {
-      console.log(err);
+    console.log(err);
+    return res.status(500).json({ success: false, message: "Error occured while deleting the job" });
   });
 });
 

@@ -26,20 +26,14 @@ exports.fileInfo = (applicationId, file_id) => {
         let fileLayoutObj = (fileLayout.length == 1 && fileLayout[0].fields) ? JSON.parse(fileLayout[0].fields) : fileLayout;
         results.file_layouts = fileLayoutObj.filter(item => item.name != '__fileposition__');
         FileLicense.findAll({where:{"application_id":applicationId, "file_id":file_id}}).then(function(fileLicenses) {
-            results.file_licenses = fileLicenses;
-            FileRelation.findAll({where:{"application_id":applicationId, "file_id":file_id}}).then(function(fileRelations) {
-                results.file_relations = fileRelations;
-                FileValidation.findAll({where:{"application_id":applicationId, "file_id":file_id}}).then(function(fileValidations) {
-                    results.file_validations = fileValidations.filter(item => item.name != '__fileposition__');
-                    FileFieldRelation.findAll({where:{"application_id":applicationId, "file_id":file_id}}).then(function(fileFieldRelations) {
-                        results.file_field_relations = fileFieldRelations;
-                    }).then(function(fileFieldRelation) {
-                        ConsumerObject.findAll({where:{"object_id":file_id, "object_type":"file"}}).then(function(fileConsumers) {
-                            results.consumers = fileConsumers;
-                            resolve(results);
-                        });
-                    });
-                });
+          results.file_licenses = fileLicenses;
+            FileValidation.findAll({where:{"application_id":applicationId, "file_id":file_id}}).then(function(fileValidations) {
+                results.file_validations = fileValidations.filter(item => item.name != '__fileposition__');
+            }).then(function(fileFieldRelation) {
+              ConsumerObject.findAll({where:{"object_id":file_id, "object_type":"file"}}).then(function(fileConsumers) {
+                results.consumers = fileConsumers;
+                resolve(results);
+              });
             });
         });
       })

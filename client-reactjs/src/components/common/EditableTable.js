@@ -72,12 +72,17 @@ class EditableCell extends React.Component {
     const { children, dataIndex, record, title, celleditor, celleditorparams, required, showdatadefinitioninfield, datadefinitions } = this.props;
     const { editing } = this.state;
     this.datadefinitions = datadefinitions
+    console.log(record)
     return editing ? (
     <Form ref={this.formRef}>
-      <Form.Item style={{ margin: 0 }} initialValue={record[dataIndex]} rules={[
+      <Form.Item style={{ margin: 0 }} name={dataIndex} initialValue={record[dataIndex]} rules={[
         {
           required: required,
           message: `${title} is required.`,
+        },
+        {
+          pattern: new RegExp(/^[a-zA-Z0-9]*$/),
+          message: 'Please enter a valid '+dataIndex,
         }
       ]}>
          {(celleditor == 'select' ? <Select ref={node => (this.input = node)} placeholder="Select" onChange={this.saveSelect} >

@@ -17,39 +17,30 @@ const Option = Select.Option;
 const { confirm } = Modal;
 
 class JobDetails extends Component {
+  formRef = React.createRef();
+
+  constructor(props) {
+    super(props);
+  }
 
   state = {
     visible: true,
     confirmLoading: false,
-    pagination: {},
     loading: false,
     jobTypes:["Data Profile", "ETL", "General", "Modeling", "Query Build", "Scoring"],
     paramName: "",
     paramType:"",
-    inputFileDesc:"",
-    inputFileName:"",
-    outputFileName:"",
-    outputFileDesc:"",
     sourceFiles:[],
     selectedInputFile:"",
     clusters:[],
     selectedCluster: this.props.clusterId ? this.props.clusterId : "",
     jobSearchSuggestions:[],
     jobSearchErrorShown:false,
-    autoCreateFiles:false,
     autoCompleteSuffix: <SearchOutlined/>,
-    dataDefinitions: [],
+    searchResultsLoaded: false,
     job: {
       id:"",
-      name:"",
-      title:"",
-      description:"",
       groupId: "",
-      ecl: "",
-      entryBWR:"",
-      jobType: this.props.selectedJobType ? this.props.selectedJobType : '',
-      gitRepo:"",
-      contact:"",
       inputParams: [],
       inputFiles: [],
       outputFiles: []
@@ -60,9 +51,8 @@ class JobDetails extends Component {
     //this.props.onRef(this);
     if(this.props.application && this.props.application.applicationId) {
       this.getJobDetails();
-      this.getClusters();
       this.getFiles();
-      this.fetchDataDefinitions();
+      this.setClusters(this.props.clusterId);
     }
   }
 
@@ -94,21 +84,29 @@ class JobDetails extends Component {
           job: {
             ...this.state.job,
             id: data.id,
-            name: data.name,
-            title: (data.title == '' ? data.name : data.title),
-            description: data.description,
             groupId: data.groupId,
-            ecl: data.ecl,
-            gitRepo: data.gitRepo,
-            entryBWR: data.entryBWR,
-            jobType: data.jobType,
-            contact: data.contact,
-            author: data.author,
             inputParams: data.jobparams,
             inputFiles: jobfiles.filter(field => field.file_type == 'input'),
             outputFiles: jobfiles.filter(field => field.file_type == 'output')
          }
         });
+
+        this.formRef.current.setFieldsValue({
+          name: data.name,
+          title: (data.title == '' ? data.name : data.title),
+          description: data.description,
+          type: data.type,
+          url: data.url,
+          gitRepo: data.gitRepo,
+          ecl: data.ecl,
+          gitRepo: data.gitRepo,
+          entryBWR: data.entryBWR,
+          jobType: data.jobType,
+          contact: data.contact,
+          author: data.author,
+        })
+
+        this.setClusters(this.props.clusterId);
         return data;
       })
       .then(data => {
@@ -122,8 +120,8 @@ class JobDetails extends Component {
     }
   }
 
-  getClusters() {
-    fetch("/api/hpcc/read/getClusters", {
+  getFiles() {
+    fetch("/api/file/read/file_list?app_id="+this.props.application.applicationId, {
       headers: authHeader()
     })
     .then((response) => {
@@ -132,43 +130,31 @@ class JobDetails extends Component {
       }
       handleError(response);
     })
-    .then(clusters => {
+    .then(files => {
+      var fileList = [];
+      files.forEach(function(doc, idx) {
+        var fileObj = {};
+        fileObj=doc;
+        fileObj.fileTitle=(doc.title)?doc.title:doc.name;
+        fileList.push(fileObj);
+      });
       this.setState({
         ...this.state,
-        clusters: clusters
+        sourceFiles: fileList
       });
     }).catch(error => {
       console.log(error);
     });
   }
 
-
-  getFiles() {
-      fetch("/api/file/read/file_list?app_id="+this.props.application.applicationId, {
-        headers: authHeader()
+  setClusters(clusterId) {
+    let selectedCluster = this.props.clusters.filter(cluster => cluster.id == clusterId);
+    if(selectedCluster.length > 0) {
+      this.formRef.current.setFieldsValue({
+        "clusters": selectedCluster[0].id
       })
-      .then((response) => {
-        if(response.ok) {
-          return response.json();
-        }
-        handleError(response);
-      })
-      .then(files => {
-        var fileList = [];
-        files.forEach(function(doc, idx) {
-          var fileObj = {};
-          fileObj=doc;
-          fileObj.fileTitle=(doc.title)?doc.title:doc.name;
-          fileList.push(fileObj);
-        });
-        this.setState({
-          ...this.state,
-          sourceFiles: fileList
-        });
-      }).catch(error => {
-        console.log(error);
-      });
     }
+  }
 
   showModal = () => {
     this.setState({
@@ -176,25 +162,9 @@ class JobDetails extends Component {
     });
     this.clearState();
     this.getJobDetails();
-    /*if(this.props.isNewFile) {
-      this.getClusters();
-    }*/
-    this.getClusters();
-  }
-
-  async fetchDataDefinitions() {
-    try {
-      let dataDefn = await fetchDataDictionary(this.props.application.applicationId);
-      this.setState({
-        dataDefinitions: dataDefn
-      });
-    } catch (err) {
-      console.log(err)
-    }
   }
 
   setInputParamsData = (data) => {
-    console.log('setInputParamsData..'+JSON.stringify(data))
     let omitResults = omitDeep(data, 'id')
     this.setState({
       ...this.state,
@@ -205,37 +175,24 @@ class JobDetails extends Component {
     })
   }
 
-
   clearState() {
-
     this.setState({
       ...this.state,
-      inputFileDesc:"",
-      inputFileName:"",
-      outputFileName:"",
-      outputFileDesc:"",
       sourceFiles:[],
       selectedInputFile:"",
       clusters:[],
       selectedCluster:"",
       jobSearchSuggestions:[],
+      searchResultsLoaded: false,
       job: {
         id:"",
-        name:"",
-        title:"",
-        description:"",
         groupId: "",
-        ecl: "",
-        entryBWR:"",
-        jobType: this.props.selectedJobType ? this.props.selectedJobType : '',
-        gitRepo:"",
-        contact:"",
         inputParams: [],
         inputFiles: [],
         outputFiles: []
       }
     });
-
+    this.formRef.current.resetFields();
   }
 
   onClusterSelection = (value) => {
@@ -251,8 +208,8 @@ class JobDetails extends Component {
     }
     this.setState({
       ...this.state,
-      autoCompleteSuffix : <Spin/>,
-      jobSearchErrorShown: false
+      jobSearchErrorShown: false,
+      searchResultsLoaded: false
     });
 
     var data = JSON.stringify({clusterid: this.state.selectedCluster, keyword: searchString, indexSearch:true});
@@ -272,7 +229,7 @@ class JobDetails extends Component {
       this.setState({
         ...this.state,
         jobSearchSuggestions: suggestions,
-        autoCompleteSuffix: <SearchOutlined/>
+        searchResultsLoaded: true
       });
     }).catch(error => {
       if(!this.state.jobSearchErrorShown) {
@@ -282,15 +239,13 @@ class JobDetails extends Component {
         });
         this.setState({
           ...this.state,
-          jobSearchErrorShown: true,
-          autoCompleteSuffix: <SearchOutlined/>
+          jobSearchErrorShown: true
         });
       }
     });
   }
 
   onJobSelected(option) {
-    console.log(option)
     fetch("/api/hpcc/read/getJobInfo?jobWuid="+option.key+"&jobName="+option.value+"&clusterid="+this.state.selectedCluster+"&jobType="+this.state.job.jobType+"&applicationId="+this.props.application.applicationId, {
       headers: authHeader()
     })
@@ -308,14 +263,16 @@ class JobDetails extends Component {
           id: jobInfo.id,
           inputFiles: jobInfo.jobfiles.filter(jobFile => jobFile.file_type == 'input'),
           outputFiles: jobInfo.jobfiles.filter(jobFile => jobFile.file_type == 'output'),
-          name: jobInfo.name,
-          title: jobInfo.title,
-          description: jobInfo.description,
           groupId: jobInfo.groupId,
-          gitRepo: jobInfo.gitRepo,
-          ecl: jobInfo.ecl,
-          entryBWR: jobInfo.entryBWR
         }
+      })
+      this.formRef.current.setFieldsValue({
+        name: jobInfo.name,
+        title: jobInfo.title,
+        description: jobInfo.description,
+        gitRepo: jobInfo.gitRepo,
+        ecl: jobInfo.ecl,
+        entryBWR: jobInfo.entryBWR
       })
       return jobInfo;
     })
@@ -331,22 +288,17 @@ class JobDetails extends Component {
     this.setState({
       confirmLoading: true,
     });
+      let saveResponse = await this.saveJobDetails();
 
-    let saveResponse = await this.saveJobDetails();
-
-    setTimeout(() => {
-      this.setState({
-        visible: false,
-        confirmLoading: false,
-      });
-      //this.props.onClose();
-      //this.props.onRefresh(saveResponse);
-      this.props.history.push('/' + this.props.application.applicationId + '/assets')
-    }, 2000);
-  }
-
-  onAutoCreateFiles = (e) => {
-    this.state.autoCreateFiles = e.target.checked;
+      setTimeout(() => {
+        this.setState({
+          visible: false,
+          confirmLoading: false,
+        });
+        //this.props.onClose();
+        //this.props.onRefresh(saveResponse);
+        this.props.history.push('/' + this.props.application.applicationId + '/assets')
+      }, 2000);
   }
 
   handleDelete = () => {
@@ -388,8 +340,12 @@ class JobDetails extends Component {
       }).then(function(data) {
         console.log('Saved..');
         resolve(data);
+      }).catch(error => {
+        message.error("Error occured while saving the data. Please check the form data")
+        this.setState({
+          confirmLoading: false,
+        });
       });
-      //this.populateFileDetails()
     });
   }
 
@@ -415,24 +371,16 @@ class JobDetails extends Component {
 
     var jobDetails = {
       "basic": {
+        ...this.formRef.current.getFieldsValue(),
         "application_id":applicationId,
         "dataflowId" : this.props.selectedDataflow ? this.props.selectedDataflow.id : '',
-        "name" : this.state.job.name,
-        "title" : this.state.job.title,
-        "description" : this.state.job.description,
-        "ecl" : this.state.job.ecl,
-        "gitRepo" : this.state.job.gitRepo,
-        "entryBWR" : this.state.job.entryBWR,
-        "jobType" : this.state.job.jobType,
-        "contact": this.state.job.contact,
-        "author": this.state.job.author,
         "cluster_id": this.state.selectedCluster
       },
       "params": this.state.job.inputParams,
       "files" : inputFiles.concat(outputFiles),
       "mousePosition": this.props.mousePosition,
       "currentlyEditingId": this.props.currentlyEditingId,
-      "autoCreateFiles": this.state.autoCreateFiles
+      "autoCreateFiles": false
     };
     let groupId = this.props.groupId ? this.props.groupId : this.state.job.groupId;
     if(groupId) {
@@ -519,8 +467,7 @@ class JobDetails extends Component {
     const editingAllowed = hasEditPermission(this.props.user);
     const {
       visible, confirmLoading, jobTypes, paramName,
-      paramType, inputFileName, inputFileDesc, outputFileName,
-      outputFileDesc, sourceFiles, jobSearchSuggestions, clusters
+      paramType, sourceFiles, jobSearchSuggestions, clusters, searchResultsLoaded
     } = this.state;
     const formItemLayout = {
       labelCol: { span: 2 },
@@ -582,111 +529,132 @@ class JobDetails extends Component {
             <div className="loader">
               <Spin spinning={this.state.initialDataLoading} size="large" />
             </div> : null}
-
+          <Form {...formItemLayout} labelAlign="left" ref={this.formRef} onFinish={this.handleOk} >
           <Tabs
             defaultActiveKey="1"
           >
-            <TabPane tab="Basic" key="1">
-              <Form {...formItemLayout} labelAlign="left">
-                {/*{this.props.isNewIndex ?*/}
-                <div>
-                <Form.Item {...formItemLayout} label="Cluster">
-                   <Select placeholder="Select a Cluster" value={(selectedCluster.length > 0 ? selectedCluster[0].id : null)} onChange={this.onClusterSelection} style={{ width: 190 }} disabled={!editingAllowed}>
-                    {clusters.map(cluster => <Option key={cluster.id}>{cluster.name}</Option>)}
-                  </Select>
-                </Form.Item>
-                <Form.Item label="Job">
-                  <AutoComplete
-                    className="certain-category-search"
-                    dropdownClassName="certain-category-search-dropdown"
-                    dropdownMatchSelectWidth={false}
-                    dropdownStyle={{ width: 300 }}
-                    style={{ width: '100%' }}
-                    onSearch={(value) => this.searchJobs(value)}
-                    onSelect={(value, option) => this.onJobSelected(option)}
-                    placeholder="Search jobs"
-                    disabled={!editingAllowed}
-                  >
-                    {jobSearchSuggestions.map((suggestion) => (
-                      <Option key={suggestion.value} value={suggestion.text}>
-                        {suggestion.wuid}
-                      </Option>
-                    ))}
-                  </AutoComplete>
 
-                </Form.Item>
-                </div>
-                  {/*: null
-                }*/}
-                <Form.Item label="Name">
-                  <Input id="job_name" name="name" onChange={this.onChange} placeholder="Name" disabled={true} disabled={!editingAllowed} value={name}/>
-                </Form.Item>
-                <Form.Item label="Title">
-                  <Input id="job_title" name="title" onChange={this.onChange} placeholder="Title" disabled={!editingAllowed} value={title}/>
-                </Form.Item>
-                <Form.Item label="Description">
-                  <MarkdownEditor id="job_desc" name="description" onChange={this.onChange} targetDomId="jobDescr" value={description} disabled={!editingAllowed}/>
-                </Form.Item>
-                {this.props.selectedJobType != 'Data Profile' ?
-                  <Form.Item label="Git Repo">
-                    <Input id="job_gitRepo" name="gitRepo" onChange={this.onChange}  placeholder="Git Repo" value={gitRepo} disabled={!editingAllowed}/>
-                  </Form.Item>
-                : null }
-                <Form.Item label="Entry BWR">
-                  <Input id="job_entryBWR" name="entryBWR" onChange={this.onChange}  placeholder="Primary Service" value={entryBWR} disabled={!editingAllowed}/>
-                </Form.Item>
+            <TabPane tab="Basic" key="1">
+              {/*{this.props.isNewIndex ?*/}
+              <div>
+              <Form.Item {...formItemLayout} label="Cluster" name="clusters">
+                <Select placeholder="Select a Cluster" disabled={!editingAllowed} onChange={this.onClusterSelection} style={{ width: 190 }}>
+                  {this.props.clusters.map(cluster => <Option key={cluster.id}>{cluster.name}</Option>)}
+                </Select>
+              </Form.Item>
+              <Form.Item label="Job" name="querySearchValue">
                 <Row type="flex">
-                  <Col span={12} order={1}>
-                    <Form.Item {...threeColformItemLayout} label="Contact">
-                      <Input id="job_bkp_svc" name="contact" onChange={this.onChange} placeholder="Contact" value={contact} disabled={!editingAllowed}/>
-                    </Form.Item>
+                  <Col span={21} order={1}>
+                    <AutoComplete
+                      className="certain-category-search"
+                      dropdownClassName="certain-category-search-dropdown"
+                      dropdownMatchSelectWidth={false}
+                      dropdownStyle={{ width: 300 }}
+                      style={{ width: '100%' }}
+                      onSearch={(value) => this.searchJobs(value)}
+                      onSelect={(value, option) => this.onJobSelected(option)}
+                      placeholder="Search jobs"
+                      disabled={!editingAllowed}
+                      notFoundContent={searchResultsLoaded ? 'Not Found' : <Spin />}
+                    >
+                      {jobSearchSuggestions.map((suggestion) => (
+                        <Option key={suggestion.value} value={suggestion.text}>
+                          {suggestion.wuid}
+                        </Option>
+                      ))}
+                    </AutoComplete>
                   </Col>
-                  <Col span={12} order={2}>
-                    <Form.Item label="Author">
-                      <Input id="job_author" name="author" onChange={this.onChange} placeholder="Author" value={author} disabled={!editingAllowed}/>
-                    </Form.Item>
+                  <Col span={3} order={2} style={{"paddingLeft": "3px"}}>
+                   <Button htmlType="button" onClick={this.clearState}>
+                      Clear
+                   </Button>
                   </Col>
                 </Row>
-                <Form.Item label="Job Type">
-                  <Select placeholder="Job Type" value={(jobType != '') ? jobType : ""} style={{ width: 190 }} onChange={this.onJobTypeChange} disabled={!editingAllowed}>
-                      {jobTypes.map(d => <Option key={d}>{d}</Option>)}
-                  </Select>
+              </Form.Item>
+              </div>
+                {/*: null
+              }*/}
+              <Form.Item label="Name" name="name" rules={[{ required: true, message: 'Please enter a Name!' }, {
+                pattern: new RegExp(/^[a-zA-Z0-9:._-]*$/),
+                message: 'Please enter a valid name',
+              }]}>
+                <Input id="job_name" onChange={this.onChange} placeholder="Name" disabled={true} disabled={!editingAllowed}/>
+              </Form.Item>
+              <Form.Item label="Title" name="title" rules={[{ required: true, message: 'Please enter a title!' }, {
+                pattern: new RegExp(/^[a-zA-Z0-9:._-]*$/),
+                message: 'Please enter a valid Title',
+              }]}>
+                <Input id="job_title" onChange={this.onChange} placeholder="Title" disabled={!editingAllowed} />
+              </Form.Item>
+              <Form.Item label="Description" name="description">
+                <MarkdownEditor id="job_desc" onChange={this.onChange} targetDomId="jobDescr" value={description} disabled={!editingAllowed}/>
+              </Form.Item>
+              {this.props.selectedJobType != 'Data Profile' ?
+                <Form.Item label="Git Repo" name="gitRepo" rules={[{
+                  type: 'url',
+                  message: 'Please enter a valid url',
+                }]}>
+                  <Input id="job_gitRepo" onChange={this.onChange}  placeholder="Git Repo" value={gitRepo} disabled={!editingAllowed}/>
                 </Form.Item>
-              </Form>
+              : null }
+              <Form.Item label="Entry BWR" name="entryBWR" rules={[{
+                pattern: new RegExp(/^[a-zA-Z0-9:$._]*$/),
+                message: 'Please enter a valid BWR',
+              }]}>
+                <Input id="job_entryBWR" onChange={this.onChange}  placeholder="Primary Service" value={entryBWR} disabled={!editingAllowed}/>
+              </Form.Item>
+              <Row type="flex">
+                <Col span={12} order={1}>
+                  <Form.Item {...threeColformItemLayout} label="Contact" name="contact" rules={[{
+                    pattern: new RegExp(/^[a-zA-Z0-9:$._-]*$/),
+                    message: 'Please enter a valid contact',
+                  }]}>
+                    <Input id="job_bkp_svc" onChange={this.onChange} placeholder="Contact" value={contact} disabled={!editingAllowed}/>
+                  </Form.Item>
+                </Col>
+                <Col span={12} order={2}>
+                  <Form.Item label="Author" name="author" rules={[{
+                    pattern: new RegExp(/^[a-zA-Z0-9:$._-]*$/),
+                    message: 'Please enter a valid author',
+                  }]}>
+                    <Input id="job_author" onChange={this.onChange} placeholder="Author" value={author} disabled={!editingAllowed}/>
+                  </Form.Item>
+                </Col>
+              </Row>
+              <Form.Item label="Job Type" name="jobType">
+                <Select placeholder="Job Type" value={(jobType != '') ? jobType : ""} style={{ width: 190 }} onChange={this.onJobTypeChange} disabled={!editingAllowed}>
+                    {jobTypes.map(d => <Option key={d}>{d}</Option>)}
+                </Select>
+              </Form.Item>
             </TabPane>
 
             <TabPane tab="ECL" key="2">
-              <Form layout="vertical">
-                <Form.Item {...eclItemLayout} label="ECL">
-                  <EclEditor id="job_ecl" name="ecl" onChange={this.onChange} targetDomId="jobEcl" value={ecl} disabled={true} />
-                </Form.Item>
-              </Form>
+              <Form.Item {...eclItemLayout} label="ECL" name="ecl">
+                <EclEditor id="job_ecl" targetDomId="jobEcl" disabled={true} />
+              </Form.Item>
             </TabPane>
-
             <TabPane tab="Input Params" key="3">
               <EditableTable
                 columns={columns}
                 dataSource={inputParams}
                 editingAllowed={editingAllowed}
-                dataDefinitions={this.state.dataDefinitions}
-                showDataDefinition={true}
+                dataDefinitions={[]}
+                showDataDefinition={false}
                 setData={this.setInputParamsData}/>
             </TabPane>
 
             <TabPane tab="Input Files" key="4">
               <div>
-                <Form layout="inline">
-                  <Form.Item label="Input Files">
-                    <Select id="inputfiles" placeholder="Select Input Files" defaultValue={this.state.selectedInputdFile} onChange={this.handleInputFileChange} style={{ width: 290 }} disabled={!editingAllowed}>
-                      {sourceFiles.map(d => <Option value={d.id} key={d.id}>{(d.title)?d.title:d.name}</Option>)}
-                    </Select>
-                  </Form.Item>
-                  <Form.Item>
-                    <Button type="primary" onClick={this.handleAddInputFile} disabled={!editingAllowed}>
-                      Add
-                    </Button>
-                  </Form.Item>
-                </Form>
+                <Form.Item label="Input Files">
+                  <Select id="inputfiles" placeholder="Select Input Files" defaultValue={this.state.selectedInputdFile} onChange={this.handleInputFileChange} style={{ width: 290 }} disabled={!editingAllowed}>
+                    {sourceFiles.map(d => <Option value={d.id} key={d.id}>{(d.title)?d.title:d.name}</Option>)}
+                  </Select>
+                </Form.Item>
+                <Form.Item>
+                  <Button type="primary" onClick={this.handleAddInputFile} disabled={!editingAllowed}>
+                    Add
+                  </Button>
+                </Form.Item>
 
                 <Table
                   columns={fileColumns}
@@ -699,18 +667,16 @@ class JobDetails extends Component {
 
             <TabPane tab="Output Files" key="5">
               <div>
-                <Form layout="inline">
-                  <Form.Item label="Output Files">
-                    <Select id="outputfiles" placeholder="Select Output Files" defaultValue={this.state.selectedOutputFile} onChange={this.handleOutputFileChange} style={{ width: 290 }} disabled={!editingAllowed}>
-                      {sourceFiles.map(d => <Option value={d.id} key={d.id}>{(d.title)?d.title:d.name}</Option>)}
-                    </Select>
-                  </Form.Item>
-                  <Form.Item>
-                    <Button type="primary" disabled={!editingAllowed} onClick={this.handleAddOutputFile}>
-                      Add
-                    </Button>
-                  </Form.Item>
-                </Form>
+                <Form.Item label="Output Files">
+                  <Select id="outputfiles" placeholder="Select Output Files" defaultValue={this.state.selectedOutputFile} onChange={this.handleOutputFileChange} style={{ width: 290 }} disabled={!editingAllowed}>
+                    {sourceFiles.map(d => <Option value={d.id} key={d.id}>{(d.title)?d.title:d.name}</Option>)}
+                  </Select>
+                </Form.Item>
+                <Form.Item>
+                  <Button type="primary" disabled={!editingAllowed} onClick={this.handleAddOutputFile}>
+                    Add
+                  </Button>
+                </Form.Item>
                 <Table
                   columns={fileColumns}
                   rowKey={record => record.id}
@@ -725,6 +691,7 @@ class JobDetails extends Component {
               <AssociatedDataflows assetName={name} assetType={'Job'}/>
             </TabPane> : null}
           </Tabs>
+          </Form>
       </div>
       {!this.props.viewMode ?
         <div className="button-container">
@@ -745,7 +712,7 @@ class JobDetails extends Component {
 function mapStateToProps(state) {
     const { selectedAsset, newAsset={}, clusterId } = state.assetReducer;
     const { user } = state.authenticationReducer;
-    const { application } = state.applicationReducer;
+    const { application, clusters } = state.applicationReducer;
     const {isNew=false, groupId='' } = newAsset;
     return {
       user,
@@ -753,7 +720,8 @@ function mapStateToProps(state) {
       application,
       isNew,
       groupId,
-      clusterId
+      clusterId,
+      clusters
     };
 }
 

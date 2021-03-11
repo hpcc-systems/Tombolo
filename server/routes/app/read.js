@@ -19,10 +19,12 @@ router.get('/app_list', (req, res) => {
         res.json(applications);
     })
     .catch(function(err) {
-        console.log(err);
+      console.log(err);
+      return res.status(500).json({ success: false, message: "Error occured while getting application list" });
     });
   } catch (err) {
-      console.log('err', err);
+    console.log('err', err);
+    return res.status(500).json({ success: false, message: "Error occured while getting application list" });
   }
 });
 router.get('/appListByUserId', (req, res) => {
@@ -40,10 +42,12 @@ router.get('/appListByUserId', (req, res) => {
         res.json(applications);
     })
     .catch(function(err) {
-        console.log(err);
+      console.log(err);
+      return res.status(500).json({ success: false, message: "Error occured while getting application list" });
     });
   } catch (err) {
-      console.log('err', err);
+    console.log('err', err);
+    return res.status(500).json({ success: false, message: "Error occured while getting application list" });
   }
 });
 
@@ -64,10 +68,12 @@ router.get('/app', [
         res.json(application);
     })
     .catch(function(err) {
-        console.log(err);
+      console.log(err);
+      return res.status(500).json({ success: false, message: "Error occured while getting application details" });
     });
   } catch (err) {
-      console.log('err', err);
+    console.log('err', err);
+    return res.status(500).json({ success: false, message: "Error occured while getting application details" });
   }
 });
 
@@ -103,34 +109,37 @@ router.post('/newapp', [
     }
   } catch (err) {
     console.log('err', err);
+    return res.status(500).json({ success: false, message: "Error occured while creating application" });
   }
 });
 
 router.post('/removeapp', function (req, res) {
-    try {
-        models.application.destroy({
-            where:{id: req.body.appIdsToDelete}
-        }).then(function(deleted) {
-            return res.status(200).send({"result":"success"});
-        });
-    } catch (err) {
-        console.log('err', err);
-    }
+  try {
+      models.application.destroy({
+          where:{id: req.body.appIdsToDelete}
+      }).then(function(deleted) {
+          return res.status(200).send({"result":"success"});
+      });
+  } catch (err) {
+    console.log('err', err);
+    return res.status(500).json({ success: false, message: "Error occured while removing application" });
+  }
 });
 
 router.post('/saveUserApp', function (req, res) {
-    console.log("[app/read.js] - saveUserApp called");
-    var userAppList=req.body.users;
-    try {
-      UserApplication.bulkCreate(userAppList).then(async function(application) {
-        let userDetail = await authServiceUtil.getUserDetails(req, userAppList[0].user_id);
-        Application.findOne({where: {id:userAppList[0].application_id}}).then((application) => {
-          NotificationModule.notifyApplicationShare(userDetail[0].email, application.title, req);
-        })
-        res.json({"result":"success"});
-      });
-    } catch (err) {
-        console.log('err', err);
-    }
+  console.log("[app/read.js] - saveUserApp called");
+  var userAppList=req.body.users;
+  try {
+    UserApplication.bulkCreate(userAppList).then(async function(application) {
+      let userDetail = await authServiceUtil.getUserDetails(req, userAppList[0].user_id);
+      Application.findOne({where: {id:userAppList[0].application_id}}).then((application) => {
+        NotificationModule.notifyApplicationShare(userDetail[0].email, application.title, req);
+      })
+      res.json({"result":"success"});
+    });
+  } catch (err) {
+    console.log('err', err);
+    return res.status(500).json({ success: false, message: "Error occured while saving user application mapping" });
+  }
 });
 module.exports = router;

@@ -9,8 +9,6 @@ let UserApplication = models.user_application;
 let File = models.file;
 let FileLayout = models.file_layout;
 let FileLicense = models.file_license;
-let FileRelation = models.file_relation;
-let FileFieldRelation = models.file_field_relation;
 let FileValidation = models.file_validation;
 let License = models.license;
 let Dataflow = models.dataflow;
@@ -46,10 +44,12 @@ router.get('/file_list', [
             res.json(files);
         })
         .catch(function(err) {
-            console.log(err);
+          console.log(err);
+          return res.status(500).json({ success: false, message: "Error occured while getting file list" });
         });
     } catch (err) {
-        console.log('err', err);
+      console.log('err', err);
+      return res.status(500).json({ success: false, message: "Error occured while getting file list" });
     }
 });
 
@@ -82,37 +82,42 @@ router.post('/all', [
           })
         })
         .catch(function(err) {
-            console.log(err);
+          console.log(err);
+          return res.status(500).json({ success: false, message: "Error occured while getting files" });
         });
     } catch (err) {
-        console.log('err', err);
+      console.log('err', err);
+      return res.status(500).json({ success: false, message: "Error occured while getting files" });
     }
 });
 
 
 router.get('/licenses', (req, res) => {
-    try {
-        License.findAll().then(function(licenses) {
-            res.json(licenses);
-        })
-        .catch(function(err) {
-            console.log(err);
-        });
-    } catch (err) {
-        console.log('err', err);
-    }
+  try {
+    License.findAll().then(function(licenses) {
+        res.json(licenses);
+    })
+    .catch(function(err) {
+      console.log(err);
+      return res.status(500).json({ success: false, message: "Error occured while getting licenses" });
+    });
+  } catch (err) {
+      console.log('err', err);
+  }
 });
 
 router.get('/rules', (req, res) => {
   try {
-      Rules.findAll().then(function(rules) {
-          res.json(rules);
-      })
-      .catch(function(err) {
-          console.log(err);
-      });
+    Rules.findAll().then(function(rules) {
+        res.json(rules);
+    })
+    .catch(function(err) {
+      console.log(err);
+      return res.status(500).json({ success: false, message: "Error occured while getting rules" });
+    });
   } catch (err) {
-      console.log('err', err);
+    console.log('err', err);
+    return res.status(500).json({ success: false, message: "Error occured while getting rules" });
   }
 });
 
@@ -253,9 +258,11 @@ router.get('/file_details', [
         })
         .catch(function(err) {
           console.log(err);
+          return res.status(500).json({ success: false, message: "Error occured while file details" });
         });
     } catch (err) {
         console.log('err', err);
+        return res.status(500).json({ success: false, message: "Error occured while file details" });
     }
 
 });
@@ -284,20 +291,6 @@ let updateFileDetails = (fileId, applicationId, req) => {
           fileLicensToSave,
           {updateOnDuplicate: ["name", "url"]}
       )  })
-    }).then(function(fileLicense) {
-      var fileRelationToSave = hpccUtil.updateCommonData(req.body.file.relation, fieldsToUpdate);
-      return FileRelation.bulkCreate(
-          fileRelationToSave,
-          {updateOnDuplicate: ["source_file_id"]}
-      )
-    }).then(function(fileRelation) {
-      console.log('fieldsToUpdate:' +JSON.stringify(fieldsToUpdate));
-      var fileFieldRelationToSave = hpccUtil.updateCommonData(req.body.file.fileFieldRelation, fieldsToUpdate);
-      console.log('fileFieldRelationToSave: '+JSON.stringify(fileFieldRelationToSave));
-      return FileFieldRelation.bulkCreate(
-          fileFieldRelationToSave,
-          {updateOnDuplicate: ["field", "source_field", "requirements"]}
-      )
     }).then(function(fileFieldRelation) {
       var fileValidationsToSave = hpccUtil.updateCommonData(req.body.file.validation, fieldsToUpdate);
       return FileValidation.bulkCreate(
@@ -322,7 +315,15 @@ let updateFileDetails = (fileId, applicationId, req) => {
   })
 }
 
-router.post('/saveFile', (req, res) => {
+router.post('/saveFile', [
+    body('file.basic.id')
+    .optional({checkFalsy:true})
+      .isUUID(4).withMessage('Invalid id'),
+    body('file.basic.application_id')
+      .isUUID(4).withMessage('Invalid application id'),
+    body('file.basic.title')
+    .matches(/^[a-zA-Z]{1}[a-zA-Z0-9_:.\-]*$/).withMessage('Invalid title')
+  ], (req, res) => {
     console.log("[file list/read.js] - Get file list for app_id = " + req.body.file.app_id + " isNewFile: "+req.body.isNew);
     var fileId='', applicationId=req.body.file.app_id, fieldsToUpdate={};
 
@@ -338,7 +339,6 @@ router.post('/saveFile', (req, res) => {
           file = await File.create(req.body.file.basic);
         } else {
           file = await File.update(req.body.file.basic, {where:{application_id: applicationId, id:req.body.id}}).then((updatedFile) => {
-            console.log(updatedFile);
             return updatedFile;
           })
         }
@@ -358,6 +358,7 @@ router.post('/saveFile', (req, res) => {
       })
     } catch (err) {
       console.log('err', err);
+      return res.status(500).json({ success: false, message: "Error occured while saving file details" });
     }
 });
 
@@ -373,44 +374,40 @@ router.post('/delete', [
   }
   let updatedSources = [];
   console.log("[file delete] - Get file list for fileId = " + req.body.fileId + " appId: "+req.body.application_id);
-  File.destroy(
-      {where:{id: req.body.fileId, application_id: req.body.application_id}}
-  ).then(function(deleted) {
-      FileLayout.destroy(
-          {where:{ file_id: req.body.fileId }}
-      ).then(function(layoutDeleted) {
-          FileLicense.destroy(
-              {where:{file_id: req.body.fileId}}
-          ).then(function(licenseDeleted) {
-              FileRelation.destroy(
-                  {where:{file_id: req.body.fileId}}
-              ).then(function(relationDeleted) {
-                  FileFieldRelation.destroy(
-                      {where:{file_id: req.body.fileId}}
-                  ).then(function(fieldRelationDeleted) {
-                      FileValidation.destroy(
-                          {where:{file_id: req.body.fileId}}
-                      ).then(function(validationDeleted) {
-                          TreeConnection.destroy(
-                              {where:{ [Op.or]: [{sourceid: req.body.fileId}, {targetid: req.body.fileId}]}}
-                          ).then(function(connectionDeleted) {
-                              TreeStyle.destroy(
-                                  {where:{node_id: req.body.fileId}}
-                              ).then(function(styleDeleted) {
-                                  ConsumerObject.destroy(
-                                      {where:{object_id: req.body.fileId, object_type: "file"}}
-                                  ).then(function(consumerDeleted) {
-                                      res.json({"result":"success"});
-                                  });
-                              });
-                          })
-                      })
-                  })
-              })
-          })
-      })
+  try {
+    File.destroy(
+        {where:{id: req.body.fileId, application_id: req.body.application_id}}
+    ).then(function(deleted) {
+        FileLayout.destroy(
+            {where:{ file_id: req.body.fileId }}
+        ).then(function(layoutDeleted) {
+            FileLicense.destroy(
+                {where:{file_id: req.body.fileId}}
+            ).then(function(licenseDeleted) {
+                FileValidation.destroy(
+                    {where:{file_id: req.body.fileId}}
+                ).then(function(validationDeleted) {
+                    TreeConnection.destroy(
+                        {where:{ [Op.or]: [{sourceid: req.body.fileId}, {targetid: req.body.fileId}]}}
+                    ).then(function(connectionDeleted) {
+                        TreeStyle.destroy(
+                            {where:{node_id: req.body.fileId}}
+                        ).then(function(styleDeleted) {
+                            ConsumerObject.destroy(
+                                {where:{object_id: req.body.fileId, object_type: "file"}}
+                            ).then(function(consumerDeleted) {
+                                res.json({"result":"success"});
+                            });
+                        });
+                    })
+                })
+            })
+        })
 
-  })
+    })
+  } catch (err) {
+    return res.status(500).json({ success: false, message: "Error occured while deleting file details" });
+  }
 });
 
 router.get('/file_fields', (req, res) => {
@@ -433,33 +430,6 @@ router.get('/file_fields', (req, res) => {
   }
 });
 
-router.get('/isSourceFile', [
-  query('app_id')
-    .isUUID(4).withMessage('Invalid application id'),
-  query('file_id')
-    .isUUID(4).withMessage('Invalid file id'),
-],(req, res) => {
-  const errors = validationResult(req).formatWith(validatorUtil.errorFormatter);
-  if (!errors.isEmpty()) {
-    return res.status(422).json({ success: false, errors: errors.array() });
-  }
-  console.log("[isSourceFile/read.js] - check if file is already a source app_id = " +req.query.app_id + "file_id: "+ req.query.file_id);
-  var results = false;
-
-  try {
-      FileRelation.findAll({where:{"application_id":req.query.app_id, "source_file_id":req.query.file_id}}).then(function(file) {
-          if(file != undefined && file.length > 0) {
-              results = true;
-          }
-          res.json(results);
-      })
-      .catch(function(err) {
-          console.log(err);
-      });
-  } catch (err) {
-      console.log('err', err);
-  }
-});
 
 router.get('/downloadSchema', [
   query('app_id')
@@ -472,10 +442,14 @@ router.get('/downloadSchema', [
     return res.status(422).json({ success: false, errors: errors.array() });
   }
   console.log("[downloadSchema/read.js] - downloadSchema app_id = " + req.query.app_id + " - type: "+req.query.type);
-  if(req.query.type == 'ecl') {
+  try {
+    if(req.query.type == 'ecl') {
       fileService.getECLSchema(req.query.app_id, res)
-  } else if (req.query.type == 'json') {
+    } else if (req.query.type == 'json') {
       fileService.getJSONSchema(req.query.app_id, res)
+    }
+  }catch (err) {
+    return res.status(500).json({ success: false, message: "Error occured while downloading schema" });
   }
 
 });
@@ -512,10 +486,12 @@ router.get('/inheritedLicenses', [
       res.json(Array.from(licenses));
     })
     .catch(function(err) {
-        console.log(err);
+      console.log(err);
+      return res.status(500).json({ success: false, message: "Error occured while retrieving licenses" });
     });
   } catch (err) {
-      console.log('err', err);
+    console.log('err', err);
+    return res.status(500).json({ success: false, message: "Error occured while retrieving licenses" });
   }
 });
 
