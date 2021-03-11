@@ -10,7 +10,7 @@ import {omitDeep} from '../common/CommonUtil.js';
 import EditableTable from "../common/EditableTable.js"
 import { MarkdownEditor } from "../common/MarkdownEditor.js"
 import { AgGridReact } from 'ag-grid-react';
-import { hasEditPermission } from "../common/AuthUtil.js";
+import { hasEditPermission, canViewPII } from "../common/AuthUtil.js";
 import {eclTypes} from '../common/CommonUtil';
 import 'ag-grid-community/dist/styles/ag-grid.css';
 import 'ag-grid-community/dist/styles/ag-theme-balham.css';
@@ -641,6 +641,7 @@ class FileDetails extends Component {
   }
 
   getFileData = (fileName, clusterId) => {
+    console.log(clusterId)
     var _self = this;
     var cluster = this.state.selectedCluster ? this.state.selectedCluster : clusterId;
     if(cluster) {
@@ -713,7 +714,7 @@ class FileDetails extends Component {
       //"id" : this.state.file.id,
       "title" : this.state.file.title,
       "name" : (!this.state.file.name || this.state.file.name == '') ? this.state.file.title : this.state.file.name,
-      "cluster_id": this.state.file.clusterId,
+      "cluster_id": this.props.clusterId,
       "description" : this.state.file.description,
       "scope": this.state.file.scope,
       "serviceUrl" : this.state.file.serviceUrl,
@@ -1016,7 +1017,7 @@ class FileDetails extends Component {
       fileDataContent, fileProfile, showFileProfile, scopeDisabled
     } = this.state;
     const modalTitle = "File Details" + (this.state.file.title ? " - " + this.state.file.title : " - " +this.state.file.name);
-    const VIEW_DATA_PERMISSION='View PII';
+    const VIEW_DATA_PERMISSION=canViewPII(this.props.user);
     const editingAllowed = hasEditPermission(this.props.user) || !this.props.viewMode;
     const formItemLayout = {
       labelCol: { span: 2 },
@@ -1378,7 +1379,7 @@ class FileDetails extends Component {
                     setData={this.setValidationData}/>
                 </div>
             </TabPane>
-            {this.props.user && this.props.user.permissions && this.props.user.permissions.includes(VIEW_DATA_PERMISSION) ?
+            {VIEW_DATA_PERMISSION ?
               <TabPane tab="File Preview" key="6">
                 <div
                     className="ag-theme-balham"
