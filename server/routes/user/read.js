@@ -2,7 +2,7 @@ const express = require('express');
 const router = express.Router();
 const userService = require('./userservice');
 const { body, query, check, validationResult } = require('express-validator');
-const errorFormatter = ({ location, msg, param, value, nestedErrors }) => {    
+const errorFormatter = ({ location, msg, param, value, nestedErrors }) => {
   return `${location}[${param}]: ${msg}`;
 };
 // routes
@@ -26,61 +26,61 @@ function authenticate(req, res, next) {
   .then(function (user) {
       res.json(user);
   })
-  .catch(err => next(err));
+  .catch(err => res.status(401).json({ "message": "Login Failed" }));
 }
 
 function register(req, res, next) {
   userService.create(req.body)
       .then(() => res.json({}))
-      .catch(err => next(err));
+      .catch(err => res.status(500).json({ "message": "Error Occured while registering user" }));
 }
 
 function getAll(req, res, next) {
   userService.getAll()
       .then(users => res.json(users))
-      .catch(err => next(err));
+      .catch(err => res.status(500).json({ "message": "Error occured while retrieving users" }));
 }
 
 function getCurrent(req, res, next) {
   userService.getById(req.user.sub)
       .then(user => user ? res.json(user) : res.sendStatus(404))
-      .catch(err => next(err));
+      .catch(err => res.status(500).json({ "message": "Error occured while retrieving users" }));
 }
 
 function getById(req, res, next) {
   console.log('getById: '+req.params.id);
   userService.getById(req.params.id)
       .then(user => user ? res.json(user) : res.sendStatus(404))
-      .catch(err => next(err));
+      .catch(err => res.status(500).json({ "message": "Error occured while retrieving users" }));
 }
 
 function update(req, res, next) {
   userService.update(req.params.id, req.body)
       .then(() => res.json({}))
-      .catch(err => next(err));
+      .catch(err => res.status(500).json({ "message": "Error occured while updating users" }));
 }
 
 function _delete(req, res, next) {
   userService.delete(req.params.id)
       .then(() => res.json({}))
-      .catch(err => next(err));
+      .catch(err => res.status(500).json({ "message": "Error occured while deleting users" }));
 }
 
 function validateToken(req, res, next) {
   userService.validateToken(req, res, next)
       .then(user => user ? res.json(user.userWithoutHash) : res.status(401).json({ message: 'Invalid Token' }))
-      .catch(err => next(err));
+      .catch(err => res.status(401).json({ "message": "Invalid Token" }));
 }
 function GetuserListToShareApp(req, res, next) {
   userService.GetuserListToShareApp(req, res, next)
       .then(user => user ? res.json(user) : res.sendStatus(404))
-      .catch(err => next(err));
+      .catch(err => res.status(500).json({ "message": "Error occured while retrieving users" }));
 }
 function GetSharedAppUserList(req, res, next) {
   console.log('GetSharedAppUserList')
   userService.GetSharedAppUserList(req, res, next)
     .then(user => user ? res.json(user) : [])
-    .catch(err => next(err));
+    .catch(err => res.status(500).json({ "message": "Error occured while retrieving users" }));
 }
 
 function changePassword(req, res, next) {
@@ -88,13 +88,13 @@ function changePassword(req, res, next) {
   .then(function (response) {
     res.json(response)
   })
-  .catch(err => next(err));
+  .catch(err => res.status(500).json({ "message": "Error occured while changing password" }));
 }
 
 function searchUser(req, res, next) {
   userService.searchUser(req, res, next)
     .then(users => users ? res.json(users) : res.sendStatus([]))
-    .catch(err => next(err));
+    .catch(err => res.status(500).json({ "message": "Error occured while searching users" }));
 }
 
 router.post('/registerUser', [
@@ -107,8 +107,8 @@ router.post('/registerUser', [
   body('email').optional({checkFalsy:true})
     .isEmail().withMessage('Invalid Email Address'),
   body('organization').optional({checkFalsy:true})
-    .matches(/^[a-zA-Z]{1}[a-zA-Z0-9_-]*$/).withMessage('Invalid Organization Name'),        
-  body('password').optional({checkFalsy:true}).isLength({ min: 4 })  
+    .matches(/^[a-zA-Z]{1}[a-zA-Z0-9_-]*$/).withMessage('Invalid Organization Name'),
+  body('password').optional({checkFalsy:true}).isLength({ min: 4 })
 ], (req, res, next) => {
   const errors = validationResult(req).formatWith(errorFormatter);
   if (!errors.isEmpty()) {
@@ -119,7 +119,7 @@ router.post('/registerUser', [
       res.status(response.statusCode).json({"success":"true"});
     })
     .catch((err) => {
-      res.status(500).json({ errors: [err.error] });      
+      res.status(500).json({ errors: [err.error] });
     })
 })
 
@@ -136,31 +136,25 @@ router.post('/forgot-password', [
     res.status(response.statusCode).json(response.message);
   })
   .catch((err) => {
-    res.status(500).json({ errors: [err.error] });      
+    res.status(500).json({ errors: [err.error] });
   })
 })
 
 router.post('/resetPassword', [
   body('id')
     .isUUID(4).withMessage('Invalid id'),
-  body('password').optional({checkFalsy:true}).isLength({ min: 4 })  
+  body('password').optional({checkFalsy:true}).isLength({ min: 4 })
 ], (req, res, next) => {
   const errors = validationResult(req).formatWith(errorFormatter);
   if (!errors.isEmpty()) {
     return res.status(422).json({ success: false, errors: errors.array() });
   }
   userService.resetPassword(req, res)
-  .then((response) => {    
+  .then((response) => {
     res.status(response.statusCode).json({"success":"true"});
   })
   .catch((err) => {
     console.log(err);
-    res.status(500).json({ errors: [err.message] });      
+    res.status(500).json({ errors: [err.message] });
   })
 })
-
-
-
-
-
-

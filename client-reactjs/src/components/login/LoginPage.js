@@ -141,7 +141,7 @@ class LoginPage extends React.Component {
           {loginView ?
           <React.Fragment>
             <div className="login-form shadow-lg p-3 mb-5 bg-white rounded">
-              <form name="form" onSubmit={this.handleSubmit}>
+              <form name="form" onSubmit={this.handleSubmit} method="post">
                 <h2 className="text-center login-logo">Tombolo</h2>
                 <div className={'form-group' + (submitted && !username ? ' has-error' : '')}>
                   <label htmlFor="username">Username</label>

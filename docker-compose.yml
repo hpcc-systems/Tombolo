@@ -61,6 +61,8 @@ services:
     environment:
       PORT: ${WEB_PORT}
       PROXY_URL: http://node:${PORT}
+      WEB_EXPOSED_PORT: ${WEB_EXPOSED_PORT}
+      HOSTNAME: $HOSTNAME
     ports:
       - ${WEB_PORT}:${WEB_PORT}
       - ${WEB_EXPOSED_PORT}:${WEB_EXPOSED_PORT}
