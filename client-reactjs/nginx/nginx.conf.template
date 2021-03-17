@@ -1,14 +1,14 @@
 server {
-  listen $WEB_EXPOSED_PORT;
+  listen $WEB_EXPOSED_HTTP_PORT;
   server_name $HOSTNAME;
-  return 301 https://$server_name$request_uri;
+  return 301 https://${DOLLAR}server_name${DOLLAR}request_uri;
 }
 
 server {
-  listen 443;
+  listen $WEB_EXPOSED_PORT;
   ssl on;
   ssl_certificate /etc/ssl/<ssl cert name>;
-  ssl_certificate_key /etc/ssl/<ssl key name>;
+  ssl_certificate_key /etc/ssl/<ssl cert name>;
   ssl_ciphers EECDH+AESGCM:EDH+AESGCM;
   ssl_ecdh_curve secp384r1;
   ssl_session_timeout  10m;
@@ -19,21 +19,21 @@ server {
   add_header X-Permitted-Cross-Domain-Policies "none";
   add_header X-Frame-Options "deny";
   add_header X-Content-Type-Options "nosniff";
-  add_header Content-Security-Policy "script-src 'self'; object-src 'self';";
+  add_header Content-Security-Policy "script-src 'self' 'unsafe-eval'; object-src 'self';";
 
   error_log /var/log/nginx/tombolo-error.log;
   access_log /var/log/nginx/tombolo-access.log;
   location / {
-    proxy_set_header X-Real-IP $remote_addr;
-    proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
-    proxy_set_header Host $http_host;
+    proxy_set_header X-Real-IP ${DOLLAR}remote_addr;
+    proxy_set_header X-Forwarded-For ${DOLLAR}proxy_add_x_forwarded_for;
+    proxy_set_header Host ${DOLLAR}http_host;
     proxy_hide_header X-Powered-By;
     proxy_hide_header Server;
     expires -1;
 
     root   /usr/share/nginx/html;
     index  index.html index.htm;
-    try_files $uri $uri/ /index.html;
+    try_files ${DOLLAR}uri ${DOLLAR}uri/ /index.html;
   }
 
   location /api {
