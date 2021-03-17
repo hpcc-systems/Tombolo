@@ -62,15 +62,17 @@ services:
       PORT: ${WEB_PORT}
       PROXY_URL: http://node:${PORT}
       WEB_EXPOSED_PORT: ${WEB_EXPOSED_PORT}
-      HOSTNAME: $HOSTNAME
+      WEB_EXPOSED_HTTP_PORT: ${WEB_EXPOSED_HTTP_PORT}
+      HOSTNAME: ${HOST_HOSTNAME}
     ports:
       - ${WEB_PORT}:${WEB_PORT}
       - ${WEB_EXPOSED_PORT}:${WEB_EXPOSED_PORT}
+      - ${WEB_EXPOSED_HTTP_PORT}:${WEB_EXPOSED_HTTP_PORT}
     volumes:
       - ${CERT_PATH}:/etc/ssl
     depends_on:
       - mysql_db
-
+    entrypoint: [sh, /etc/nginx/run_nginx.sh, "${HOST_HOSTNAME}"]
   node:
     #restart: always
     entrypoint: [sh, ./docker-entry.sh, "mysql_db", "${DB_PORT}"]
