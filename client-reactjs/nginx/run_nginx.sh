@@ -4,5 +4,5 @@ echo "######## Run nginx"
 hostname="$1"
 export HOSTNAME=$hostname
 export DOLLAR='$'
-envsubst < /etc/nginx/conf.d/nginx.conf.template > /etc/nginx/conf.d/nginx.conf
+envsubst < /etc/nginx/conf.d/nginx.conf.template > /etc/nginx/conf.d/tombolo-nginx.conf
 nginx -g "daemon off;"

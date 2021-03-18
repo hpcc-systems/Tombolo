@@ -16,7 +16,9 @@ COPY --from=build /app/build /usr/share/nginx/html
 
 RUN rm /etc/nginx/conf.d/default.conf
 
-COPY nginx/nginx.conf.template /etc/nginx/conf.d/nginx.conf.template
+COPY nginx/nginx.conf /etc/nginx/nginx.conf
+
+COPY nginx/conf.d/nginx.conf.template /etc/nginx/conf.d/nginx.conf.template
 
 COPY nginx/run_nginx.sh /etc/nginx/run_nginx.sh
 
