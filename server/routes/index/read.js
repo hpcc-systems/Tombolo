@@ -1,6 +1,8 @@
 const express = require('express');
 const router = express.Router();
 const assert = require('assert');
+let Sequelize = require('sequelize');
+const Op = Sequelize.Op;
 var models  = require('../../models');
 const assetUtil = require('../../utils/assets');
 let Index = models.indexes;
@@ -14,14 +16,17 @@ const { body, query, validationResult } = require('express-validator');
 
 router.get('/index_list', [
   query('app_id')
-    .isUUID(4).withMessage('Invalid app id')
+    .isUUID(4).withMessage('Invalid app id'),
+  query('dataflowId')
+    .isUUID(4).withMessage('Invalid dataflow id')
 ], (req, res) => {
     const errors = validationResult(req).formatWith(validatorUtil.errorFormatter);
     if (!errors.isEmpty()) {
         return res.status(422).json({ success: false, errors: errors.array() });
     }
     console.log("[index/read.js] - Get file list for app_id = " + req.query.app_id);
-    Index.findAll({where:{"application_id":req.query.app_id},include: [File, 'dataflows'], order: [['createdAt', 'DESC']]}).then(function(indexes) {
+    let dataflowId = req.query.dataflowId;
+    Index.findAll({where:{"application_id":req.query.app_id, dataflowId: { [Op.ne]: dataflowId }},include: [File, 'dataflows'], order: [['createdAt', 'DESC']]}).then(function(indexes) {
         res.json(indexes);
     })
     .catch(function(err) {

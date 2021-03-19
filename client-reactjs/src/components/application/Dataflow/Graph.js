@@ -581,11 +581,14 @@ class Graph extends Component {
   dragmove = (d) => {
     let _self=this;
     if (_self.graphState.shiftNodeDrag) {
-        _self.thisGraph.dragLine.attr('d', 'M' + (d.x + 35) + ',' + (d.y + 15) + 'L' + (d3.mouse(_self.thisGraph.svgG.node())[0] + 35)+ ',' + d3.mouse(_self.thisGraph.svgG.node())[1]);
+      //path dragging
+      _self.thisGraph.dragLine.attr('d', 'M' + (d.x + 5) + ',' + (d.y + 5) + 'L' + (d3.mouse(_self.thisGraph.svgG.node())[0] + 5)+ ',' + d3.mouse(_self.thisGraph.svgG.node())[1]);
+      _self.updateGraph();
     } else {
-        d.x += d3.event.dx;
-        d.y += d3.event.dy;
-        _self.updateGraph();
+      d.x += d3.event.dx;
+      d.y += d3.event.dy;
+      //_self.thisGraph.dragLine.attr('d', 'M' + (d.x + 5) + ',' + (d.y + 5) + 'L' + (d3.mouse(_self.thisGraph.svgG.node())[0] + 5)+ ',' + d3.mouse(_self.thisGraph.svgG.node())[1]);
+      _self.updateGraph();
     }
   }
 
@@ -779,12 +782,15 @@ class Graph extends Component {
     d3.event.stopPropagation();
     this.graphState.mouseDownNode = d;
     if (d3.event.shiftKey) {
-        this.graphState.shiftNodeDrag = d3.event.shiftKey;
-        // reposition dragged directed edge
-        this.thisGraph.dragLine.classed('hidden', false)
-            .attr('d', 'M' + (d.x + 40) + ',' + (d.y + 20) + 'L' + (d.x + 35) + ',' + d.y);
-        return;
+      this.graphState.shiftNodeDrag = true;
+      // reposition dragged directed edge
+      this.thisGraph.dragLine.classed('hidden', false)
+          .attr('d', 'M' + (d.x + 40) + ',' + (d.y + 20) + 'L' + (d.x + 35) + ',' + d.y);
+      return;
+    } else {
+      this.graphState.shiftNodeDrag = false;
     }
+    console.log("circleMousDown: "+this.graphState.shiftNodeDrag)
   }
 
   dragEnd = (d3node, d) => {
@@ -800,11 +806,6 @@ class Graph extends Component {
 
     let mouseDownNode = _self.graphState.mouseDownNode;
     let mouseEnterNode = _self.graphState.mouseEnterNode;
-
-    if (_self.graphState.justDragged) {
-      // dragged, not clicked
-      _self.graphState.justDragged = false;
-    }
 
     _self.thisGraph.dragLine.classed("hidden", true);
 
@@ -833,7 +834,7 @@ class Graph extends Component {
   // mouseup on nodes
   circleMouseUp = (d3node, d) => {
     // reset the this.graphStates
-    this.graphState.shiftNodeDrag = false;
+    //this.graphState.shiftNodeDrag = false;
     d3node.classed(this.consts.connectClass, false);
     if (this.graphState.selectedEdge) {
         this.removeSelectFromEdge();
@@ -945,9 +946,9 @@ class Graph extends Component {
       .style('marker-end', 'url(#end-arrow)')
       .classed("link", true)
       .attr("d", function (d, i) {
-          if(d.source && d.target) {
-            return "M" + (d.source.x + 35) + "," + (d.source.y + 20) + "L" + (d.target.x + 35)  + "," + (d.target.y + 15);
-          }
+        if(d.source && d.target) {
+          return "M" + (d.source.x + 35) + "," + (d.source.y + 20) + "L" + (d.target.x + 35)  + "," + (d.target.y + 15);
+        }
       })
       .merge(paths)
       .on("mouseover", function (d) {
@@ -978,133 +979,133 @@ class Graph extends Component {
 
     // add new nodes
     let newGs = _self.thisGraph.circles.enter()
-        .append("g").merge(_self.thisGraph.circles);
+      .append("g").merge(_self.thisGraph.circles);
 
     newGs.classed(_self.consts.circleGClass, true)
-        .attr("transform", function (d) {
-            return "translate(" + d.x + "," + d.y + ")";
-        })
-        .on("mouseover", function (d) {
-            _self.graphState.mouseEnterNode = d;
-            if (_self.graphState.shiftNodeDrag) {
-                d3.select(this).classed(_self.consts.connectClass, true);
-            }
-            _self.toggleDeleteIcon(d3.select(this), d);
-        })
-        .on("mouseout", function (d) {
-            _self.graphState.mouseEnterNode = null;
-            d3.select(this).classed(_self.consts.connectClass, false);
-            _self.toggleDeleteIcon(d3.select(this), d);
-        })
-        .on("mousedown", function (d) {
-            _self.circleMouseDown(d3.select(this), d);
-        })
-        .call(_self.thisGraph.drag)
-        .on("click", function (d) {
-            _self.circleMouseUp(d3.select(this), d);
-            _self.showNodeDetails(d);
-            //_self.makeTextEditable(d3.select(this), d)
-        }).on("dblclick", function (d) {
-            _self.setState({
-              currentlyEditingId: d.id,
-              currentlyEditingNode: d
-            });
+      .attr("transform", function (d) {
+          return "translate(" + (d.x) + "," + (d.y) + ")";
+      })
+      .on("mouseover", function (d) {
+          _self.graphState.mouseEnterNode = d;
+          if (_self.graphState.shiftNodeDrag) {
+              d3.select(this).classed(_self.consts.connectClass, true);
+          }
+          _self.toggleDeleteIcon(d3.select(this), d);
+      })
+      .on("mouseout", function (d) {
+          _self.graphState.mouseEnterNode = null;
+          d3.select(this).classed(_self.consts.connectClass, false);
+          _self.toggleDeleteIcon(d3.select(this), d);
+      })
+      .on("mousedown", function (d) {
+          _self.circleMouseDown(d3.select(this), d);
+      })
+      .call(_self.thisGraph.drag)
+      .on("click", function (d) {
+          _self.circleMouseUp(d3.select(this), d);
+          _self.showNodeDetails(d);
+          //_self.makeTextEditable(d3.select(this), d)
+      }).on("dblclick", function (d) {
+          _self.setState({
+            currentlyEditingId: d.id,
+            currentlyEditingNode: d
+          });
 
-            _self.openDetailsDialog(d);
-        });
+          _self.openDetailsDialog(d);
+      });
 
-        _self.thisGraph.circles = newGs;
-        let childNodes = 0;
-        newGs.each(function(d) {
-          //if (this.childNodes.length === 0) {
-            switch(d.type) {
-              case 'Job':
-              case 'Modeling':
-              case 'Scoring':
-              case 'ETL':
-              case 'Query Build':
-              case 'Data Profile':
-                if(d3.select("#rec-"+d.id).empty()) {
-                  d3.select(this)
-                    .append("rect")
-                    .attr("id", "rec-"+d.id)
-                    .attr("rx", shapesData[5].rx)
-                    .attr("ry", shapesData[5].ry)
-                    .attr("width", shapesData[5].rectwidth)
-                    .attr("height", shapesData[5].rectheight)
-                    .attr("stroke", "grey")
-                    .attr("fill", shapesData[5].color)
-                    .attr("stroke-width", "3")
-                    .attr("filter", "url(#glow)")
-                    //.call(_self.nodeDragHandler)
-                  _self.insertBgImage(d3.select(this), d.x, d.y, d);
-                  _self.insertTitle(d3.select(this), d.title, d.x, d.y, d);
-                  if(d.hasOwnProperty('isHidden') && d.isHidden) {
-                    d3.select(d3.select("#rec-"+d.id).node().parentNode).attr("class", "d-none")
-                  }
-                }
-
-                break;
-
-              case 'File':
-              case 'Index':
-                //d3.select(this).append("rect").attr("id", "xxxxx"+d.id)
-                if(d3.select("#rec-"+d.id).empty()) {
-                  let el = d3.select(this)
-                    .append("rect")
-                    .attr("id", "rec-"+d.id)
-                    .attr("rx", shapesData[7].rx)
-                    .attr("ry", shapesData[7].ry)
-                    .attr("width", shapesData[7].rectwidth)
-                    .attr("height", shapesData[7].rectheight)
-                    .attr("stroke", "grey")
-                    .attr("filter", "url(#glow)")
-                    .attr("fill", function(d) {
-                      if(d.type == 'File')
-                       return shapesData[6].color;
-                      else if(d.type == 'Index')
-                        return shapesData[7].color;
-                    })
-                    .attr("stroke-width", "3")
-                    //.call(_self.nodeDragHandler)
-                    _self.insertBgImage(d3.select(this), d.x, d.y, d);
-                    _self.insertTitle(d3.select(this), d.title, d.x, d.y, d);
-                    if(d.hasOwnProperty('isHidden') && d.isHidden) {
-                      d3.select(d3.select("#rec-"+d.id).node().parentNode).attr("class", "d-none")
-                    }
-                }
-
-                break;
-              case 'Sub-Process':
-                if(d3.select("#rec-"+d.id).empty()) {
-                  d3.select(this)
-                    .append("rect")
-                    .text(function(d, i) {
-                      return "Helloooooo";
-                    })
-                    .attr("id", "rec-"+d.id)
-                    .attr("rx", shapesData[8].rx)
-                    .attr("ry", shapesData[8].ry)
-                    .attr("width", shapesData[8].rectwidth)
-                    .attr("height", shapesData[8].rectheight)
-                    .attr("stroke", "grey")
-                    .attr("fill", shapesData[8].color)
-                    .attr("stroke-width", "3")
-                    .attr("filter", "url(#glow)")
-                    //.call(_self.nodeDragHandler)
-                  }
-
+      _self.thisGraph.circles = newGs;
+      let childNodes = 0;
+      newGs.each(function(d) {
+        //if (this.childNodes.length === 0) {
+          switch(d.type) {
+            case 'Job':
+            case 'Modeling':
+            case 'Scoring':
+            case 'ETL':
+            case 'Query Build':
+            case 'Data Profile':
+              if(d3.select("#rec-"+d.id).empty()) {
+                d3.select(this)
+                  .append("rect")
+                  .attr("id", "rec-"+d.id)
+                  .attr("rx", shapesData[5].rx)
+                  .attr("ry", shapesData[5].ry)
+                  .attr("width", shapesData[5].rectwidth)
+                  .attr("height", shapesData[5].rectheight)
+                  .attr("stroke", "grey")
+                  .attr("fill", shapesData[5].color)
+                  .attr("stroke-width", "3")
+                  .attr("filter", "url(#glow)")
+                  //.call(_self.nodeDragHandler)
                 _self.insertBgImage(d3.select(this), d.x, d.y, d);
                 _self.insertTitle(d3.select(this), d.title, d.x, d.y, d);
                 if(d.hasOwnProperty('isHidden') && d.isHidden) {
                   d3.select(d3.select("#rec-"+d.id).node().parentNode).attr("class", "d-none")
                 }
+              }
 
-                break;
-            }
+              break;
 
-        });
-        //_self.saveGraph()
+            case 'File':
+            case 'Index':
+              //d3.select(this).append("rect").attr("id", "xxxxx"+d.id)
+              if(d3.select("#rec-"+d.id).empty()) {
+                let el = d3.select(this)
+                  .append("rect")
+                  .attr("id", "rec-"+d.id)
+                  .attr("rx", shapesData[7].rx)
+                  .attr("ry", shapesData[7].ry)
+                  .attr("width", shapesData[7].rectwidth)
+                  .attr("height", shapesData[7].rectheight)
+                  .attr("stroke", "grey")
+                  .attr("filter", "url(#glow)")
+                  .attr("fill", function(d) {
+                    if(d.type == 'File')
+                     return shapesData[6].color;
+                    else if(d.type == 'Index')
+                      return shapesData[7].color;
+                  })
+                  .attr("stroke-width", "3")
+                  //.call(_self.nodeDragHandler)
+                  _self.insertBgImage(d3.select(this), d.x, d.y, d);
+                  _self.insertTitle(d3.select(this), d.title, d.x, d.y, d);
+                  if(d.hasOwnProperty('isHidden') && d.isHidden) {
+                    d3.select(d3.select("#rec-"+d.id).node().parentNode).attr("class", "d-none")
+                  }
+              }
+
+              break;
+            case 'Sub-Process':
+              if(d3.select("#rec-"+d.id).empty()) {
+                d3.select(this)
+                  .append("rect")
+                  .text(function(d, i) {
+                    return "Helloooooo";
+                  })
+                  .attr("id", "rec-"+d.id)
+                  .attr("rx", shapesData[8].rx)
+                  .attr("ry", shapesData[8].ry)
+                  .attr("width", shapesData[8].rectwidth)
+                  .attr("height", shapesData[8].rectheight)
+                  .attr("stroke", "grey")
+                  .attr("fill", shapesData[8].color)
+                  .attr("stroke-width", "3")
+                  .attr("filter", "url(#glow)")
+                  //.call(_self.nodeDragHandler)
+                }
+
+              _self.insertBgImage(d3.select(this), d.x, d.y, d);
+              _self.insertTitle(d3.select(this), d.title, d.x, d.y, d);
+              if(d.hasOwnProperty('isHidden') && d.isHidden) {
+                d3.select(d3.select("#rec-"+d.id).node().parentNode).attr("class", "d-none")
+              }
+
+              break;
+          }
+
+      });
+      //_self.saveGraph()
   }
 
   toggleDeleteIcon = (node, d) => {
@@ -1249,33 +1250,33 @@ class Graph extends Component {
           "translate(" + margin.left + "," + margin.top + ")")
 
     group.append("rect")
-        .attr("x", function(d) { return d.rectx; })
-        .attr("y", function(d) { return d.recty; })
-        .attr("rx", function(d) { return d.rx; })
-        .attr("ry", function(d) { return d.ry; })
-        .attr("width", function(d) { return d.rectwidth; })
-        .attr("height", function(d) { return d.rectheight; })
-        .attr("stroke", "grey")
-        .attr("fill", function(d) { return d.color; })
-        .attr("stroke-width", "3")
-        .attr("filter", "url(#glow)")
-        .append("svg:title")
-          .text(function(d, i) { return d.description });
+      .attr("x", function(d) { return d.rectx; })
+      .attr("y", function(d) { return d.recty; })
+      .attr("rx", function(d) { return d.rx; })
+      .attr("ry", function(d) { return d.ry; })
+      .attr("width", function(d) { return d.rectwidth; })
+      .attr("height", function(d) { return d.rectheight; })
+      .attr("stroke", "grey")
+      .attr("fill", function(d) { return d.color; })
+      .attr("stroke-width", "3")
+      .attr("filter", "url(#glow)")
+      .append("svg:title")
+        .text(function(d, i) { return d.description });
 
     group.append("text")
-        .attr('font-family', 'FontAwesome')
-        .attr('font-size', function(d) { return '2em'} )
-        .attr("x", function(d) { return d.tx; })
-        .attr("y", function(d) { return d.ty; })
-        .text( function (d) { return d.icon; })
+      .attr('font-family', 'FontAwesome')
+      .attr('font-size', function(d) { return '2em'} )
+      .attr("x", function(d) { return d.tx; })
+      .attr("y", function(d) { return d.ty; })
+      .text( function (d) { return d.icon; })
 
     group.append("text")
-        .attr("x", function(d) { return parseInt(d.tx) + 15; })
-        .attr("y", function(d) { return parseInt(d.ty) + 25; })
-        .attr("class", "entity")
-        .attr("dominant-baseline", "middle")
-        .attr("text-anchor", "middle")
-        .text( function (d) { return d.title; })
+      .attr("x", function(d) { return parseInt(d.tx) + 15; })
+      .attr("y", function(d) { return parseInt(d.ty) + 25; })
+      .attr("class", "entity")
+      .attr("dominant-baseline", "middle")
+      .attr("text-anchor", "middle")
+      .text( function (d) { return d.title; })
 
     var dragHandler = d3.drag()
     .on("drag", function (d) {
@@ -1299,7 +1300,8 @@ class Graph extends Component {
       //let x = (mouseCoordinates[0] < 60) ? 60 : mouseCoordinates[0] - 150 : mouseCoordinates[0] > 1300 ? 1300 : mouseCoordinates[0];
       let x = mouseCoordinates[0] > 1500 ? 1500 : mouseCoordinates[0] < 40 ? 40 : mouseCoordinates[0]
       let y = mouseCoordinates[1] > 720 ? 720 : mouseCoordinates[1] < 0 ? 0 : mouseCoordinates[1]
-      _self.thisGraph.nodes.push({"title":"New "+d3.select(this).select("text.entity").text(),"id":newNodeId,"x":x,"y":y, "type":d3.select(this).select("text.entity").text()})
+      //95 = width of sidebar, 50 = height of tabs+breadcrumb etc
+      _self.thisGraph.nodes.push({"title":"New "+d3.select(this).select("text.entity").text(),"id":newNodeId,"x":x-95,"y":y-50, "type":d3.select(this).select("text.entity").text()})
       _self.setIdCt(idct);
       _self.updateGraph();
     })
@@ -1358,6 +1360,17 @@ class Graph extends Component {
       // todo check if edge-mode is selected
       var mouse = d3.mouse(this);
       var elem = document.elementFromPoint(mouse[0], mouse[1]);
+      if (_self.graphState.justDragged === true) {
+        (function() {
+          return new Promise((resolve) => {
+            _self.updateGraph();
+            resolve();
+          })
+        })().then(() => {
+          _self.saveGraph();
+        });
+      }
+      _self.graphState.justDragged = false;
       if (_self.graphState.shiftNodeDrag) {
           _self.dragEnd(d3.select(this), _self.graphState.mouseEnterNode);
       } else {
@@ -1367,17 +1380,7 @@ class Graph extends Component {
         d.x = x;
         d.y = y;*/
       }
-      if (_self.graphState.justDragged === true) {
-        (function() {
-          return new Promise((resolve) => {
-            _self.updateGraph();
-            resolve();
-          })
-        })().then(() => {;
-          _self.saveGraph();
-        });
-      }
-      _self.graphState.justDragged = false;
+
     } : null);
 
     // listen for key events
@@ -1521,43 +1524,46 @@ class Graph extends Component {
     const editingAllowed = hasEditPermission(this.props.user);
   return (
       <React.Fragment>
-      {!this.props.viewMode ?
-         <div className="col-sm-1 float-left" style={{width:"85px"}}><nav id={this.props.sidebarContainer} className="navbar-light fixed-left graph-sidebar" style={{"backgroundColor": "#e3f2fd", "fontSize": "12px"}}></nav></div>
-      : null }
+        <div>
+          <div className={this.state.loading ? "graph-overlay" : "graph-overlay d-none"}></div>
+          {!this.props.viewMode ?
+             <div className="col-sm-1 float-left" style={{width:"85px"}}><nav id={this.props.sidebarContainer} className="navbar-light fixed-left graph-sidebar"></nav></div>
+          : null }
 
-        <div id={this.props.graphContainer} className={(!editingAllowed || this.props.viewMode) ? " readonly graph-view-mode" : "graph-edit-mode"} tabIndex="-1">
-          <Spin spinning={this.state.loading} className="graph-loading" size="large" />
-          <div className="graph-btns-container">
-            <span>
-              <Tooltip placement="topRight" title={"Refresh will validate the file/job relationship and update graph accordingly"}>
-                <Button style={{ float: 'right' }} className="refresh-btn"
-                  onClick={this.refreshGraph}
-                  icon={
-                  <ReloadOutlined
-                    style={{
-                      fontSize: '28px',
-                      backgroundColor: '#f0f0f0',
-                    }}
+            <div id={this.props.graphContainer} className={(!editingAllowed || this.props.viewMode) ? " readonly graph-view-mode" : "graph-edit-mode"} tabIndex="-1">
+              <Spin spinning={this.state.loading} className="graph-loading" size="large" />
+              <div className="graph-btns-container">
+                <span>
+                  <Tooltip placement="topRight" title={"Refresh will validate the file/job relationship and update graph accordingly"}>
+                    <Button style={{ float: 'right' }} className="refresh-btn"
+                      onClick={this.refreshGraph}
+                      icon={
+                      <ReloadOutlined
+                        style={{
+                          fontSize: '28px',
+                          backgroundColor: '#f0f0f0',
+                        }}
+                      />
+                    }/>
+                  </Tooltip>
+                </span>
+                {nodes.filter(node => node.isHidden).length > 0 ?
+                <span>
+                  <Tooltip placement="topRight" title={"Show hidden assets in the Workflow"}>
+                  <Dropdown.Button className="dropdown-btn" overlay={this.hiddenAssetsMenu}
+                    icon={
+                      <EyeInvisibleOutlined
+                        style={{
+                          fontSize: '28px',
+                          backgroundColor: '#f0f0f0',
+                        }}
+                      />
+                    }
                   />
-                }/>
-              </Tooltip>
-            </span>
-            {nodes.filter(node => node.isHidden).length > 0 ?
-            <span>
-              <Tooltip placement="topRight" title={"Show hidden assets in the Workflow"}>
-              <Dropdown.Button className="dropdown-btn" overlay={this.hiddenAssetsMenu}
-                icon={
-                  <EyeInvisibleOutlined
-                    style={{
-                      fontSize: '28px',
-                      backgroundColor: '#f0f0f0',
-                    }}
-                  />
-                }
-              />
-              </Tooltip>
-            </span> : null}
-          </div>
+                  </Tooltip>
+                </span> : null}
+              </div>
+            </div>
         </div>
 
       {this.state.openFileDetailsDialog ?

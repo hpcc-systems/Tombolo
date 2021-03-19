@@ -175,7 +175,7 @@ class JobDetails extends Component {
     })
   }
 
-  clearState() {
+  clearState = () => {
     this.setState({
       ...this.state,
       sourceFiles:[],

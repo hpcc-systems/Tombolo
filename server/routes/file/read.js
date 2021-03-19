@@ -33,6 +33,8 @@ const fileService = require('./fileservice');
 router.get('/file_list', [
   query('app_id')
     .isUUID(4).withMessage('Invalid application id'),
+  query('dataflowId')
+    .isUUID(4).withMessage('Invalid dataflow id'),
 ],(req, res) => {
   const errors = validationResult(req).formatWith(validatorUtil.errorFormatter);
     if (!errors.isEmpty()) {
@@ -40,7 +42,8 @@ router.get('/file_list', [
     }
     console.log("[file list/read.js] - Get file list for app_id = " + req.query.app_id);
     try {
-        File.findAll({where:{"application_id":req.query.app_id}, include: ['dataflows'], order: [['createdAt', 'DESC']]}).then(function(files) {
+      let dataflowId = req.query.dataflowId;
+        File.findAll({where:{"application_id":req.query.app_id, dataflowId: { [Op.ne]: dataflowId }}, include: ['dataflows'], order: [['createdAt', 'DESC']]}).then(function(files) {
             res.json(files);
         })
         .catch(function(err) {
