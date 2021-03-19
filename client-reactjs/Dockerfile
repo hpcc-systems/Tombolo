@@ -13,7 +13,7 @@ RUN npm run build
 #temperory fix for hpcc-js lib causing CSP to fail
 RUN sed -i 's/new Function("return this;")()/function(){return this;}/g' build/static/js/*.chunk.js
 
-FROM nginx:alpine
+FROM nginx:1.19.8-alpine
 
 COPY --from=build /app/build /usr/share/nginx/html
 
