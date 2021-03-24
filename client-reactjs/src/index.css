@@ -323,11 +323,11 @@ path, .jtk-endpoint { cursor:pointer; }
 }
 
 .ant-tabs-bar {
-    margin: 0 0 2px 0 !important;
-    border-bottom: 1px solid #e8e8e8;
-    outline: none;
-    -webkit-transition: padding 0.3s cubic-bezier(0.645, 0.045, 0.355, 1);
-    transition: padding 0.3s cubic-bezier(0.645, 0.045, 0.355, 1);
+  margin: 0 0 2px 0 !important;
+  border-bottom: 1px solid #e8e8e8;
+  outline: none;
+  -webkit-transition: padding 0.3s cubic-bezier(0.645, 0.045, 0.355, 1);
+  transition: padding 0.3s cubic-bezier(0.645, 0.045, 0.355, 1);
 }
 
 .graph-sidebar {
@@ -336,8 +336,8 @@ path, .jtk-endpoint { cursor:pointer; }
   -webkit-transition: all 0.3s;
   -o-transition: all 0.3s;
   transition: all 0.3s;
-  position: relative;
   height:85vh;
+  font-size: 12px
 }
 
 .sidebar.active .btn.btn-primary:before {
@@ -677,4 +677,19 @@ div.tooltip {
 
 .refresh-btn > span {
  background-color: white !important;
+}
+
+.graph-overlay {
+  width: 100%;
+  height: 100%;
+  position: fixed;
+  left: 0px;
+  top: 0px;
+  background-color:#000;
+  opacity: .25;
+  z-index: 10;
+}
+
+.graph-icon {
+  cursor: pointer;
 }

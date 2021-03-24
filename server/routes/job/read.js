@@ -3,6 +3,7 @@ const router = express.Router();
 let mongoose = require('mongoose');
 var models  = require('../../models');
 let Sequelize = require('sequelize');
+const Op = Sequelize.Op;
 let Job = models.job;
 let JobFile = models.jobfile;
 let JobParam = models.jobparam;
@@ -65,7 +66,6 @@ let updateDataFlowGraph = (applicationId, dataflowId, nodes, edges, filesToBeRem
         for (var i=0; i<currentNodes.length; i++) {
           //duplicate node found
           //console.log(currentNode.id, currentNode.title, currentNode.type, node.id, node.title, node.type);
-          console.log(nodes[nodeIdx].title, currentNodes[i].title, i)
           if(currentNodes[i].id == nodes[nodeIdx].id && currentNodes[i].type == nodes[nodeIdx].type) {
             console.log("found duplicate")
             duplicate = true;
@@ -125,119 +125,143 @@ let updateDataFlowGraph = (applicationId, dataflowId, nodes, edges, filesToBeRem
   the new job
 **/
 let updateFileRelationship = (jobId, job, files, filesToBeRemoved) => {
-  let fieldsToUpdate={}, promises=[], nodes = [], edges = [];
-  return new Promise((resolve, reject) => {
-    let query = 'select f.id, f.name, jf.file_type from file f, jobfile jf where '+
-      'f.application_id = (:applicationId) AND '+
-      'f.name =(:fileName) AND '+
-      'jf.job_id = (:job_id) and jf.file_type = (:file_type) group by f.id';
+  let fieldsToUpdate={}, promises=[], nodes = [], edges = [], inputY=0, outputY=0;
+  return new Promise(async (resolve, reject) => {
+    try {
+      let query = 'select f.id, f.name, jf.file_type from file f, jobfile jf where '+
+        'f.application_id = (:applicationId) AND '+
+        'f.name =(:fileName) AND '+
+        'jf.job_id = (:job_id) and jf.file_type = (:file_type) group by f.id';
+      files = sortFiles(files);
+      //files.forEach(async (file, idx) => {
+      for(let idx = 0; idx < files.length; idx++) {
+        const file = files[idx];
+        //promises.push(Promise.reject("error rejecting...."));
+        let fileInfo = await hpccUtil.fileInfo(file.name, job.basic.clusterId);
+        let replacements = { applicationId: job.basic.application_id, fileName: fileInfo.basic.name, job_id: jobId, file_type: file.file_type};
+        let existingFile = await models.sequelize.query(query, {
+          type: models.sequelize.QueryTypes.SELECT,
+          replacements: replacements
+        })
+        console.log("***********************"+existingFile.length+"***********************")
+        console.log(file.name);
+        //file does not exists or exists with a different type
+        if(!existingFile || existingFile.length == 0) {
+         let fileCreated = await File.create({
+            "application_id": job.basic.application_id,
+            "title": fileInfo.basic.fileName,
+            "name": fileInfo.basic.name,
+            "cluster_id": job.basic.clusterId,
+            "description": fileInfo.basic.description,
+            "fileType": fileInfo.basic.fileType,
+            "isSuperFile": fileInfo.basic.isSuperFile,
+            "qualifiedPath": fileInfo.basic.pathMask,
+            "dataflowId": job.basic.dataflowId,
+            "scope": fileInfo.basic.scope
+          })
+          let assetsDataflowCreated = await AssetDataflow.create({
+            assetId: fileCreated.id,
+            dataflowId: job.basic.dataflowId
+          });
+          //update file_id in JobFile
+          console.log(fileCreated.id, job.basic.id, file.file_type, fileInfo.basic.name);
+          let jobFileUpdated = await JobFile.update({
+            file_id: fileCreated.id
+          }, {where: {application_id: job.basic.application_id, job_id: job.basic.jobId, file_type: file.file_type, name: fileInfo.basic.name}})
 
-    files.forEach((file, idx) => {
-      //promises.push(Promise.reject("error rejecting...."));
-      promises.push(
-        hpccUtil.fileInfo(file.name, job.basic.clusterId).then((fileInfo) => {
-          let replacements = { applicationId: job.basic.application_id, fileName: fileInfo.basic.name, job_id: jobId, file_type: file.file_type};
-          return models.sequelize.query(query, {
-            type: models.sequelize.QueryTypes.SELECT,
-            replacements: replacements
-          }).then((existingFile) => {
-            //file does not exists or exists with a different type
-            if(!existingFile || existingFile.length == 0) {
-             return File.create({
-                "application_id": job.basic.application_id,
-                "title": fileInfo.basic.fileName,
-                "name": fileInfo.basic.name,
-                "cluster_id": job.basic.clusterId,
-                "description": fileInfo.basic.description,
-                "fileType": fileInfo.basic.fileType,
-                "isSuperFile": fileInfo.basic.isSuperFile,
-                "qualifiedPath": fileInfo.basic.pathMask,
-                "dataflowId": job.basic.dataflowId,
-                "scope": fileInfo.basic.scope
-              }).then(async (fileCreated) => {
-                let assetsDataflowCreated = await AssetDataflow.create({
-                  assetId: fileCreated.id,
-                  dataflowId: job.basic.dataflowId
-                });
-                //update file_id in JobFile
-                console.log(fileCreated.id, job.basic.id, file.file_type, fileInfo.basic.name);
-                let jobFileUpdated = await JobFile.update({
-                  file_id: fileCreated.id
-                }, {where: {application_id: job.basic.application_id, job_id: job.basic.jobId, file_type: file.file_type, name: fileInfo.basic.name}})
+          let id=fileCreated.id, edge={};
+          console.log('jobFile: '+JSON.stringify(file));
+          //starting from top
 
-                let id=fileCreated.id, edge={};
-                console.log('jobFile: '+JSON.stringify(file));
-                let posX = file.file_type == 'input' ? job.mousePosition[0] - 75  : parseInt(job.mousePosition[0]) + 75;
-                let posY = file.file_type == 'input' ? job.mousePosition[1] - (45 * idx) : job.mousePosition[1] - (45 * idx);
-                nodes.push({
-                  "title": fileInfo.basic.fileName,
-                  "id": fileCreated.id,
-                  "x": posX,
-                  "y": posY,
-                  "type": "File",
-                  "fileId": fileCreated.id
-                })
-                if(file.file_type == 'input') {
-                  edge = {"source":fileCreated.id,"target":job.basic.id};
-                } else if(file.file_type == 'output') {
-                  edge = {"source":job.basic.id,"target":fileCreated.id};
-                }
-                edges.push(edge);
+          if(file.file_type == 'input') {
+            inputY = getYPosition(inputY, file.file_type, job.mousePosition[1], files);
+          } else if(file.file_type == 'output') {
+            outputY = getYPosition(outputY, file.file_type, job.mousePosition[1], files);
+          }
+          console.log(idx)
+          let posX = file.file_type == 'input' ? job.mousePosition[0] - 114  : parseInt(job.mousePosition[0]) + 114;
+          let posY = file.file_type == 'input' ? inputY  : outputY;
+          nodes.push({
+            "title": fileInfo.basic.fileName,
+            "id": fileCreated.id,
+            "x": posX,
+            "y": posY,
+            "type": "File",
+            "fileId": fileCreated.id
+          })
+          if(file.file_type == 'input') {
+            edge = {"source":fileCreated.id,"target":job.basic.id};
+          } else if(file.file_type == 'output') {
+            edge = {"source":job.basic.id,"target":fileCreated.id};
+          }
+          edges.push(edge);
 
-                fieldsToUpdate = {"file_id": fileCreated.id, "application_id" : job.basic.application_id};
-                let fileLayoutToSave = hpccUtil.updateCommonData(fileInfo.layout, fieldsToUpdate);
-                return FileLayout.bulkCreate(fileLayoutToSave, {updateOnDuplicate: ["name", "type", "displayType", "displaySize", "textJustification", "format","data_types", "isPCI", "isPII", "isHIPAA", "description", "required"]}).then((fileLayout) => {
-                  let fileValidationsToSave = hpccUtil.updateCommonData(fileInfo.file_validations, fieldsToUpdate);
-                  return FileValidation.bulkCreate(
-                    fileValidationsToSave,
-                    {updateOnDuplicate: ["name", "ruleType", "rule", "action", "fixScript"]}
-                  )
-                })
-              })
-            } else {
-              let id=existingFile[0].id;
-              let posX = file.file_type == 'input' ? job.mousePosition[0] - 75  : parseInt(job.mousePosition[0]) + 75;
-              let posY = file.file_type == 'input' ? job.mousePosition[1] - (45 * idx) : job.mousePosition[1] - (45 * idx);
-              //check if same node already exists in the workflow
+          fieldsToUpdate = {"file_id": fileCreated.id, "application_id" : job.basic.application_id};
+          let fileLayoutToSave = hpccUtil.updateCommonData(fileInfo.layout, fieldsToUpdate);
+          let fileLayout = await FileLayout.bulkCreate(fileLayoutToSave, {updateOnDuplicate: ["name", "type", "displayType", "displaySize", "textJustification", "format","data_types", "isPCI", "isPII", "isHIPAA", "description", "required"]});
+          let fileValidationsToSave = hpccUtil.updateCommonData(fileInfo.file_validations, fieldsToUpdate);
+          let fileValidations = await FileValidation.bulkCreate(
+            fileValidationsToSave,
+            {updateOnDuplicate: ["name", "ruleType", "rule", "action", "fixScript"]}
+          )
+        } else {
+          let id=existingFile[0].id;
+          //update file_id in JobFile - this is the case when a job was added via assets and later the job is added to a workflow
+          //when job is created from assets, there is no association with actual file at that time
+          console.log(id, job.basic.id, file.file_type, fileInfo.basic.name);
+          let jobFileUpdated = await JobFile.update({
+            file_id: id
+          }, {where: {application_id: job.basic.application_id, job_id: job.basic.jobId, file_type: file.file_type, name: fileInfo.basic.name}})
 
-              nodes.push({
-                "title": fileInfo.basic.fileName,
-                "id": existingFile[0].id,
-                "x": posX,
-                "y": posY,
-                "type": "File",
-                "fileId": existingFile[0].id
-              })
-              if(file.file_type == 'input') {
-                edge = {"source":existingFile[0].id,"target":job.basic.id};
-              } else if(file.file_type == 'output') {
-                edge = {"source":job.basic.id,"target":existingFile[0].id};
-              }
-              edges.push(edge);
-            }
-         }).catch(err => {
-          console.log('error occured-1: '+err)
-          reject(err);
-         })
-      }).catch(err => {
-        console.log('error occured-2: '+err)
-        return reject(err)
-      })
-     )
-    })
+          //starting from top
+          if(file.file_type == 'input') {
+            inputY = getYPosition(inputY, file.file_type, job.mousePosition[1], files);
+          } else if(file.file_type == 'output') {
+            outputY = getYPosition(outputY, file.file_type, job.mousePosition[1], files);
+          }
 
-    Promise.all(promises)
-    .then((res) => {
+          let posX = file.file_type == 'input' ? job.mousePosition[0] - 114  : parseInt(job.mousePosition[0]) + 114;
+          let posY = file.file_type == 'input' ? inputY  : outputY;
+          //check if same node already exists in the workflow
+          nodes.push({
+            "title": fileInfo.basic.fileName,
+            "id": existingFile[0].id,
+            "x": posX,
+            "y": posY,
+            "type": "File",
+            "fileId": existingFile[0].id
+          })
+          if(file.file_type == 'input') {
+            edge = {"source":existingFile[0].id,"target":job.basic.id};
+          } else if(file.file_type == 'output') {
+            edge = {"source":job.basic.id,"target":existingFile[0].id};
+          }
+          edges.push(edge);
+        }
+
+      }
       console.log("job and files created....")
       updateDataFlowGraph(job.basic.application_id, job.basic.dataflowId, nodes, edges, filesToBeRemoved).then((dataflowGraph) => {
         resolve(dataflowGraph)
       });
-    }).catch((err) => {
+    } catch (err) {
       console.log("job and files creation failed....")
-      //Promise.reject(err);
       reject(err);
-    })
+    }
   })
+}
+
+let getYPosition = (yPos, type, jobYPos, files) => {
+  //find the y of the first node assmuming nodes are placed from top to bottom.
+  //TopY = No:Of input files / 2 * (2 * size of a node)
+  //if derived yPos = jobYPos, then move the yPos 2 node space down
+  if(yPos == 0) {
+   yPos = parseInt(jobYPos) - ((Math.round(files.filter(file => file.file_type == type).length / 2) * 96));
+  } else {
+    yPos = yPos + 96;
+    yPos = (yPos == parseInt(jobYPos)) ? yPos + 96 : yPos;
+  }
+  return yPos;
 }
 
 let findFilesRemovedFromJob = (currentFiles, filesFromCluster) => {
@@ -257,9 +281,10 @@ let findFilesRemovedFromJob = (currentFiles, filesFromCluster) => {
 **/
 let updateJobDetails = (applicationId, jobId, jobReqObj, autoCreateFiles) => {
   let fieldsToUpdate = {"job_id"  : jobId, "application_id" : applicationId};
+
   return new Promise(async (resolve, reject) => {
     let filesToBeRemoved = [];
-    let jobFiles = await JobFile.findAll({where:{ job_id: jobId, application_id:applicationId }, raw:true})
+    let jobFiles = await JobFile.findAll({where:{ job_id: jobId, application_id:applicationId }, order: [["name", "asc"]], raw:true})
     //find files that are removed from the Job and remove them from JobFile table
     if(jobFiles && jobFiles.length > 0) {
       filesToBeRemoved = findFilesRemovedFromJob(jobFiles, jobReqObj.files);
@@ -272,7 +297,10 @@ let updateJobDetails = (applicationId, jobId, jobReqObj, autoCreateFiles) => {
 
     //create new JobFile entries, if new files are added to the job
     var jobFileToSave = updateCommonData(jobReqObj.files, fieldsToUpdate);
-    jobReqObj.files.forEach(async (file) => {
+    //jobReqObj.files.forEach(async (file) => {
+    for(var i=0; i<jobReqObj.files.length; i++) {
+      let file = jobReqObj.files[i];
+      console.log(jobId, applicationId, file.file_type, file.name)
       let jobFileCreated = await JobFile.findOrCreate({
         where: {job_id: jobId, application_id: applicationId, file_type: file.file_type, name: file.name},
         defaults: {
@@ -282,7 +310,7 @@ let updateJobDetails = (applicationId, jobId, jobReqObj, autoCreateFiles) => {
           name: file.name
         }
       });
-    })
+    }
 
      var jobParamsToSave = updateCommonData(jobReqObj.params, fieldsToUpdate);
      JobParam.destroy({where:{application_id:applicationId, job_id: jobId}}).then((deleted) => {
@@ -364,11 +392,7 @@ router.post('/refreshDataflow', [
         return hpccUtil.getJobInfo(job.cluster_id, wuid, job.jobType).then((jobInfo) => {
           let jobObj = {}, jobFiles=[];
           let dataflowJobNode = nodes.filter(node => node.jobId == job.id);
-          let sourceFiles = jobInfo.sourceFiles.map((sourceFile) => ({name: sourceFile.name, file_type: "input"}));
-          jobFiles = jobFiles.concat(sourceFiles);
-          let outputFiles = jobInfo.outputFiles.map(outputFile => ({name: outputFile.name, file_type: "output"}));
-          jobFiles = jobFiles.concat(outputFiles);
-          jobObj.files = jobFiles;
+          jobObj.files = jobInfo.jobfiles;
           jobObj.params = [];
           jobObj.basic = {
             "title": job.name,
@@ -391,6 +415,7 @@ router.post('/refreshDataflow', [
       console.log(nodes.length, newNodes.length);
       res.json({"result": "success"});
     }).catch((err) => {
+      console.log(err);
       return res.status(500).json({ success: false, message: "Error occured while refreshing the job" });
     })
   })
@@ -450,6 +475,8 @@ router.post('/saveJob', [
 router.get('/job_list', [
   query('app_id')
     .isUUID(4).withMessage('Invalid application id'),
+  query('dataflowId')
+    .isUUID(4).withMessage('Invalid dataflow id'),
 ], (req, res) => {
   const errors = validationResult(req).formatWith(validatorUtil.errorFormatter);
   if (!errors.isEmpty()) {
@@ -457,7 +484,8 @@ router.get('/job_list', [
   }
   console.log("[job list/read.js] - Get job list for app_id = " + req.query.app_id);
   try {
-    Job.findAll({where:{"application_Id":req.query.app_id}, attributes: {exclude: ['assetId']}, include:['dataflows'], order: [['createdAt', 'DESC']]}).then(function(jobs) {
+    let dataflowId = req.query.dataflowId;
+    Job.findAll({where:{"application_Id":req.query.app_id, dataflowId: { [Op.ne]: dataflowId }}, attributes: {exclude: ['assetId']}, include:['dataflows'], order: [['createdAt', 'DESC']]}).then(function(jobs) {
         res.json(jobs);
     })
     .catch(function(err) {
@@ -527,6 +555,10 @@ function updateCommonData(objArray, fields) {
         });
     });
     return objArray;
+}
+
+let sortFiles = (files) => {
+  return files.sort((a, b) => (a.name > b.name) ? 1 : -1);
 }
 
 module.exports = router;

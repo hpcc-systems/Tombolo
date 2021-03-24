@@ -195,7 +195,7 @@ exports.getJobInfo = (clusterId, jobWuid, jobType) => {
                     "ecl": result.WUInfoResponse.Workunit.Query.Text,
                     "entryBWR": result.WUInfoResponse.Workunit.Jobname,
                     "wuid": result.WUInfoResponse.Workunit.Wuid,
-                    "jobfiles": sourceFiles
+                    "jobfiles": sortFiles(sourceFiles)
                   }
                   resolve(jobInfo);
                 })
@@ -228,7 +228,7 @@ exports.getJobInfo = (clusterId, jobWuid, jobType) => {
                 "ecl": result.WUInfoResponse.Workunit.Query.Text,
                 "entryBWR": result.WUInfoResponse.Workunit.Jobname,
                 "wuid": result.WUInfoResponse.Workunit.Wuid,
-                "jobfiles": sourceFiles.concat(outputFiles)
+                "jobfiles": sortFiles(sourceFiles.concat(outputFiles))
               };
               resolve(jobInfo);
             }
@@ -414,4 +414,8 @@ exports.isClusterReachable = async (clusterHost, port, username, password) => {
     });
     }
     return objArray;
+}
+
+let sortFiles = (files) => {
+  return files.sort((a, b) => (a.name > b.name) ? 1 : -1);
 }
