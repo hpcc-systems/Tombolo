@@ -406,7 +406,7 @@ exports.isClusterReachable = async (clusterHost, port, username, password) => {
  }
 
  exports.updateCommonData = (objArray, fields) => {
-    if(objArray.length>0){
+    if(objArray && objArray.length>0){
     Object.keys(fields).forEach(function (key, index) {
         objArray.forEach(function(obj) {
             obj[key] = fields[key];

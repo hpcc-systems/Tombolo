@@ -197,7 +197,7 @@ let updateFileRelationship = (jobId, job, files, filesToBeRemoved, existingNodes
           edges.push(edge);
 
           fieldsToUpdate = {"file_id": fileCreated.id, "application_id" : job.basic.application_id};
-          let fileLayoutToSave = hpccUtil.updateCommonData(fileInfo.layout, fieldsToUpdate);
+          let fileLayoutToSave = hpccUtil.updateCommonData(fileInfo.file_layouts, fieldsToUpdate);
           let fileLayout = await FileLayout.bulkCreate(fileLayoutToSave, {updateOnDuplicate: ["name", "type", "displayType", "displaySize", "textJustification", "format","data_types", "isPCI", "isPII", "isHIPAA", "description", "required"]});
           let fileValidationsToSave = hpccUtil.updateCommonData(fileInfo.file_validations, fieldsToUpdate);
           let fileValidations = await FileValidation.bulkCreate(
