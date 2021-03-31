@@ -19,6 +19,13 @@ import { connect } from 'react-redux';
 import { assetsActions } from '../../../redux/actions/Assets';
 import { DownOutlined, EyeOutlined, ReloadOutlined, EyeInvisibleOutlined  } from '@ant-design/icons';
 const { Text } = Typography;
+const svgPalleteBarWidth = 90,
+  svgUsableWidth = window.innerWidth - 100,
+  svgUsableHeight = window.innerHeight - 50,
+  svgViewBox = '0 0 '+window.innerWidth+' '+window.innerHeight,
+  svgNodeWidth = 38,
+  svgNodeHeight = 38,
+  svgNodeStrokeWidth = 3;
 
 class Graph extends Component {
   constructor(props) {
@@ -83,10 +90,13 @@ class Graph extends Component {
       lastKeyDown: -1,
       shiftNodeDrag: false,
       selectedText: null,
-      idct: 0
+      idct: 0,
+      zoomTransform: null
   };
 
   thisGraph = {};
+
+
 
   componentDidMount() {
     this.loadGraphComponents();
@@ -582,11 +592,25 @@ class Graph extends Component {
     let _self=this;
     if (_self.graphState.shiftNodeDrag) {
       //path dragging
-      _self.thisGraph.dragLine.attr('d', 'M' + (d.x + 5) + ',' + (d.y + 5) + 'L' + (d3.mouse(_self.thisGraph.svgG.node())[0] + 5)+ ',' + d3.mouse(_self.thisGraph.svgG.node())[1]);
+      _self.thisGraph.dragLine.attr('d', 'M' + (d.x + 5) + ',' + (d.y + 5) + 'L' + (d3.mouse(_self.thisGraph.svgG.node())[0] + 15)+ ',' + d3.mouse(_self.thisGraph.svgG.node())[1]);
       _self.updateGraph();
     } else {
-      d.x += d3.event.dx;
-      d.y += d3.event.dy;
+      //limit the dragging within svg boundary
+      let left = d3.event.x, top = d3.event.y;
+      if (left + svgNodeWidth + svgNodeStrokeWidth > (svgUsableWidth + svgPalleteBarWidth)) {
+        left = (svgUsableWidth + svgPalleteBarWidth) - svgNodeWidth - svgNodeStrokeWidth
+      } else if (d3.event.x < svgPalleteBarWidth) {
+        console.log("stooop")
+        left = svgPalleteBarWidth;
+      }
+      if (top + svgNodeHeight + svgNodeStrokeWidth > svgUsableHeight) {
+        top = svgUsableHeight - svgNodeHeight - svgNodeStrokeWidth
+      } else if (d3.event.y < 0) {
+        top = 0
+      }
+
+      d.x = left;
+      d.y = top;
       //_self.thisGraph.dragLine.attr('d', 'M' + (d.x + 5) + ',' + (d.y + 5) + 'L' + (d3.mouse(_self.thisGraph.svgG.node())[0] + 5)+ ',' + d3.mouse(_self.thisGraph.svgG.node())[1]);
       _self.updateGraph();
     }
@@ -790,7 +814,6 @@ class Graph extends Component {
     } else {
       this.graphState.shiftNodeDrag = false;
     }
-    console.log("circleMousDown: "+this.graphState.shiftNodeDrag)
   }
 
   dragEnd = (d3node, d) => {
@@ -910,8 +933,8 @@ class Graph extends Component {
 
   zoomed = () => {
     this.graphState.justScaleTransGraph = true;
-    d3.select("." + this.consts.graphClass)
-        .attr("transform", d3.event.transform);
+    d3.select("." + this.consts.graphClass).attr("transform", d3.event.transform);
+    this.graphState.zoomTransform = d3.event.transform;
   }
 
   setIdCt = (idct) => {
@@ -932,7 +955,7 @@ class Graph extends Component {
         .style("stroke", function(d, i) { return '#d3d3d3' })
         .attr("d", function (d) {
             if(d.source && d.target) {
-              return "M" + (d.source.x + 35) + "," + (d.source.y + 20) + "L" + (d.target.x +35) + "," + (d.target.y + 15);
+              return "M" + (d.source.x + 19) + "," + (d.source.y + 19) + "L" + (d.target.x +19) + "," + (d.target.y + 19);
             }
         });
 
@@ -947,7 +970,9 @@ class Graph extends Component {
       .classed("link", true)
       .attr("d", function (d, i) {
         if(d.source && d.target) {
-          return "M" + (d.source.x + 35) + "," + (d.source.y + 20) + "L" + (d.target.x + 35)  + "," + (d.target.y + 15);
+          //19 = half of rectwidth/rectheight
+          //return "M" + (d.source.x + 35) + "," + (d.source.y + 20) + "L" + (d.target.x + 35)  + "," + (d.target.y + 15);
+          return "M" + (d.source.x + 19) + "," + (d.source.y + 19) + "L" + (d.target.x + (19))  + "," + (d.target.y + (19));
         }
       })
       .merge(paths)
@@ -1004,6 +1029,7 @@ class Graph extends Component {
       .on("click", function (d) {
           _self.circleMouseUp(d3.select(this), d);
           _self.showNodeDetails(d);
+          console.log(d3.event.x, d3.event.y)
           //_self.makeTextEditable(d3.select(this), d)
       }).on("dblclick", function (d) {
           _self.setState({
@@ -1217,37 +1243,42 @@ class Graph extends Component {
 
   loadGraphComponents = () => {
     let _self=this;
+    var margin = {top: 10, right: 10, bottom: 30, left: 10};
     /** MAIN SVG **/
     let docEl = document.documentElement,
         bodyEl = document.getElementById('body');
 
-    let width = window.innerWidth || docEl.clientWidth || bodyEl.clientWidth,
-        height = window.innerHeight || docEl.clientHeight || bodyEl.clientHeight;
-
-    let xLoc = width / 2 - 25,
-        yLoc = 100;
     let svg = d3.select('#'+this.props.graphContainer).append("svg")
-        .attr("width", width)
-        .attr("height", "100%");
-
+        .attr("preserveAspectRatio", "xMinYMin meet")
+        .attr("viewBox", svgViewBox);
 
     _self.thisGraph.nodes = [];
     _self.thisGraph.edges = [];
 
-    var margin = {top: 10, right: 10, bottom: 30, left: 10};
 
-    let graphComponentsSvg = d3.select('#'+this.props.sidebarContainer).append("svg")
+    /*let graphComponentsSvg = d3.select('#'+this.props.sidebarContainer).append("svg")
       .attr("width", 100)
-      .attr("height", "100%");
+      .attr("height", "100%");*/
 
     d3.select("svg").attr("transform",
           "translate(" + margin.left + "," + margin.top + ")")
 
-    var group = graphComponentsSvg.selectAll('g')
+    //border (rect) for main workflow area
+    svg.append('rect')
+      .attr('x', 90)
+      .attr('y', 0)
+      .attr('width', svgUsableWidth)
+      .attr('height', svgUsableHeight)
+      .attr('stroke', '#17a2b8')
+      .attr('fill', '#ffff');
+
+    //add icons to sidebar
+    var group = svg.selectAll('g')
     .data(shapesData)
     .enter().append("g")
     .attr("transform",
           "translate(" + margin.left + "," + margin.top + ")")
+    .attr("class","pallette-nodes");
 
     group.append("rect")
       .attr("x", function(d) { return d.rectx; })
@@ -1278,12 +1309,9 @@ class Graph extends Component {
       .attr("text-anchor", "middle")
       .text( function (d) { return d.title; })
 
-    var dragHandler = d3.drag()
+    var palletteDragHandler = d3.drag()
     .on("drag", function (d) {
-      let text = d3.select(this).select("text");
-      let rect = d3.select(this).select("rect");
-
-      return {"tx": d3.event.x + 50, "ty": d3.event.y + 15, "rx": d3.event.x, "ry": d3.event.y};
+      return {"tx": d3.mouse(this)[0], "ty": d3.mouse(this)[1] , "rx": d3.mouse(this)[0], "ry": d3.mouse(this)[1]};
     })
     .on("end", function(d){
       if((_self.props.selectedDataflow == undefined || _self.props.selectedDataflow == '')) {
@@ -1294,45 +1322,56 @@ class Graph extends Component {
         return;
       }
 
-      var mouseCoordinates = d3.mouse(this);
       let idct = ++_self.graphState.idct;
       let newNodeId = idct+Math.floor(Date.now());
+
       //let x = (mouseCoordinates[0] < 60) ? 60 : mouseCoordinates[0] - 150 : mouseCoordinates[0] > 1300 ? 1300 : mouseCoordinates[0];
+      var mouseCoordinates = d3.mouse(this);         // relative to specified container
       let x = mouseCoordinates[0] > 1500 ? 1500 : mouseCoordinates[0] < 40 ? 40 : mouseCoordinates[0]
       let y = mouseCoordinates[1] > 720 ? 720 : mouseCoordinates[1] < 0 ? 0 : mouseCoordinates[1]
+
+      if(_self.graphState.zoomTransform) {
+        let inverted = _self.graphState.zoomTransform.invert(mouseCoordinates);
+        x = inverted[0] - 10;
+        y = inverted[1];
+      } else {
+        x = x - 10;
+        y = y;
+      }
+
       //95 = width of sidebar, 50 = height of tabs+breadcrumb etc
-      _self.thisGraph.nodes.push({"title":"New "+d3.select(this).select("text.entity").text(),"id":newNodeId,"x":x-95,"y":y-50, "type":d3.select(this).select("text.entity").text()})
+      _self.thisGraph.nodes.push({"title":"New "+d3.select(this).select("text.entity").text(),"id":newNodeId,"x":x,"y":y, "type":d3.select(this).select("text.entity").text()})
       _self.setIdCt(idct);
       _self.updateGraph();
     })
 
+    //tooltips
     var div = d3.select("body").append("div") .attr("class", "tooltip").style("opacity", 0);
-
-    graphComponentsSvg.selectAll('g').on("mouseover", function(d) {
+    svg.selectAll('g.pallette-nodes').on("mouseover", function(d) {
       div.transition()
-          .duration(200)
-          .style("opacity", .9);
+        .duration(200)
+        .style("opacity", .9);
       div .html(d.description)
-          .style("left", (d3.event.pageX + 25) + "px")
-          .style("top", (d3.event.pageY - 20) + "px");
+        .style("left", (d3.event.pageX + 25) + "px")
+        .style("top", (d3.event.pageY - 20) + "px");
     })
 
-    graphComponentsSvg.selectAll('g').on("mouseout", function(d) {
+    svg.selectAll('g').on("mouseout", function(d) {
       div.transition()
-          .duration(500)
-          .style("opacity", 0);
+        .duration(500)
+        .style("opacity", 0);
     });
+
     //disable dragging on left nav
     if(hasEditPermission(_self.props.user)) {
-      dragHandler(graphComponentsSvg.selectAll("g"));
+      palletteDragHandler(svg.selectAll("g.pallette-nodes"));
     }
 
     // define arrow markers for graph links
     appendDefs(svg);
 
     _self.thisGraph.svg = svg;
-    _self.thisGraph.svgG = svg.append("g")
-        .classed(_self.consts.graphClass, true);
+    _self.thisGraph.svgG = svg.append("g").classed(_self.consts.graphClass, true);
     let svgG = _self.thisGraph.svgG;
 
     // displayed when dragging between nodes
@@ -1344,9 +1383,10 @@ class Graph extends Component {
     _self.thisGraph.paths = svgG.append("g").selectAll("g");
     _self.thisGraph.circles = svgG.append("g").selectAll("g");
 
+    //draging behaviour within the main svg area
     _self.thisGraph.drag = d3.drag()
     .subject(function (d) {
-        return {x: d.x, y: d.y};
+      return {x: d.x, y: d.y};
     })
     .on("drag", hasEditPermission(_self.props.user) ? function (d) {
       _self.graphState.justDragged = true;
@@ -1373,12 +1413,6 @@ class Graph extends Component {
       _self.graphState.justDragged = false;
       if (_self.graphState.shiftNodeDrag) {
           _self.dragEnd(d3.select(this), _self.graphState.mouseEnterNode);
-      } else {
-        //checking if the nodes have .select('rect').attr("stroke-width", "5") dropped at an x,y which is out of browser's viewport
-        /*let x = d3.event.x > 1500 ? 1500 : d3.event.x < 40 ? 40 : d3.event.x;
-        let y = d3.event.y > 720 ? 720 : d3.event.y < 0 ? 0 : d3.event.y;
-        d.x = x;
-        d.y = y;*/
       }
 
     } : null);
@@ -1398,10 +1432,14 @@ class Graph extends Component {
     });
     svg.on("mouseup", function (d) {
       _self.svgMouseUp(_self.thisGraph, d);
+    })
+    svg.on("click", function() {
+      console.log(d3.mouse(this));
     });
 
     // listen for dragging
     let dragSvg = d3.zoom()
+      .scaleExtent([0.25, 2])
       .on("zoom", hasEditPermission(_self.props.user) ? function () {
         if (d3.event.sourceEvent.shiftKey) {
             // TODO  the internal d3 this.graphState is still changing
@@ -1524,46 +1562,43 @@ class Graph extends Component {
     const editingAllowed = hasEditPermission(this.props.user);
   return (
       <React.Fragment>
-        <div>
-          <div className={this.state.loading ? "graph-overlay" : "graph-overlay d-none"}></div>
-          {!this.props.viewMode ?
-             <div className="col-sm-1 float-left" style={{width:"85px"}}><nav id={this.props.sidebarContainer} className="navbar-light fixed-left graph-sidebar"></nav></div>
-          : null }
-
-            <div id={this.props.graphContainer} className={(!editingAllowed || this.props.viewMode) ? " readonly graph-view-mode" : "graph-edit-mode"} tabIndex="-1">
-              <Spin spinning={this.state.loading} className="graph-loading" size="large" />
-              <div className="graph-btns-container">
-                <span>
-                  <Tooltip placement="topRight" title={"Refresh will validate the file/job relationship and update graph accordingly"}>
-                    <Button style={{ float: 'right' }} className="refresh-btn"
-                      onClick={this.refreshGraph}
-                      icon={
-                      <ReloadOutlined
-                        style={{
-                          fontSize: '28px',
-                          backgroundColor: '#f0f0f0',
-                        }}
-                      />
-                    }/>
-                  </Tooltip>
-                </span>
-                {nodes.filter(node => node.isHidden).length > 0 ?
-                <span>
-                  <Tooltip placement="topRight" title={"Show hidden assets in the Workflow"}>
-                  <Dropdown.Button className="dropdown-btn" overlay={this.hiddenAssetsMenu}
-                    icon={
-                      <EyeInvisibleOutlined
-                        style={{
-                          fontSize: '28px',
-                          backgroundColor: '#f0f0f0',
-                        }}
-                      />
-                    }
+        <div className="graph-div">
+          <div className="graph-btns-container" style={{"left":svgUsableWidth - 300}}>
+            <span>
+              <Tooltip placement="topRight" title={"Refresh will validate the file/job relationship and update graph accordingly"}>
+                <Button style={{ float: 'right' }} className="refresh-btn"
+                  onClick={this.refreshGraph}
+                  icon={
+                  <ReloadOutlined
+                    style={{
+                      fontSize: '28px',
+                      backgroundColor: '#f0f0f0',
+                    }}
                   />
-                  </Tooltip>
-                </span> : null}
-              </div>
-            </div>
+                }/>
+              </Tooltip>
+            </span>
+            {nodes.filter(node => node.isHidden).length > 0 ?
+            <span>
+              <Tooltip placement="topRight" title={"Show hidden assets in the Workflow"}>
+              <Dropdown.Button className="dropdown-btn" overlay={this.hiddenAssetsMenu}
+                icon={
+                  <EyeInvisibleOutlined
+                    style={{
+                      fontSize: '28px',
+                      backgroundColor: '#f0f0f0',
+                    }}
+                  />
+                }
+              />
+              </Tooltip>
+            </span> : null}
+          </div>
+
+          <div id={this.props.graphContainer} className={(!editingAllowed || this.props.viewMode) ? " readonly graph-view-mode" : "graph-edit-mode"} tabIndex="-1">
+            <div className={this.state.loading ? "graph-overlay" : "graph-overlay d-none"}></div>
+            <Spin spinning={this.state.loading} className="graph-loading" size="large" />
+          </div>
         </div>
 
       {this.state.openFileDetailsDialog ?

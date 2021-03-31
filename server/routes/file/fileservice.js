@@ -46,22 +46,24 @@ async function getECLSchema(appId, res) {
       console.log('schem-23: '+schema);
 
       fs.appendFile(schemaFile, schema, function (err) {
-          if (err) throw err;
+          if (err) return res.status(500).send("Error occured while generating schema file");
           console.log('Saved! ');
           res.download(schemaFile, function(err){
             if (err) {
               console.log("Error occured during download...")
+              res.status(500).send("Error occured while generating schema file");;
             } else {
               console.log("Download completed...")
               fs.unlink(schemaFile, (err) => {
-                if (err) throw err;
+                if (err) res.status(500).send("Error occured while generating schema file");;
                 console.log(schemaFile + ' was deleted after download');
               });
             }
           });
       });
   } catch (err) {
-      console.log('err', err);
+    console.log('err', err);
+    res.status(500).send("Error occured while generating schema file");;
   }
 }
 
@@ -103,21 +105,23 @@ async function getJSONSchema(appId, res) {
         schema = JSON.stringify(result, null, 4);
 
         fs.appendFile(schemaFile, schema, function (err) {
-          if (err) throw err;
+          if (err) res.status(500).send("Error occured while generating schema file");;
           console.log('Saved! ');
           res.download(schemaFile, function(err){
               if (err) {
                 console.log("Error occured during download...")
+                res.status(500).send("Error occured while generating schema file");;
               } else {
                 console.log("Download completed...")
                 fs.unlink(schemaFile, (err) => {
-                  if (err) throw err;
+                  if (err) res.status(500).send("Error occured while generating schema file");
                   console.log(schemaFile + ' was deleted after download');
                 });
               }
               });
         })
     } catch (err) {
-        console.log('err', err);
-      }
+      console.log('err', err);
+      res.status(500).send("Error occured while generating schema file");;
+    }
 }
