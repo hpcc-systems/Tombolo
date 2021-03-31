@@ -121,7 +121,8 @@ class JobDetails extends Component {
   }
 
   getFiles() {
-    fetch("/api/file/read/file_list?app_id="+this.props.application.applicationId, {
+    let dataflowId = this.props.selectedDataflow ? this.props.selectedDataflow.id : '';
+    fetch("/api/file/read/file_list?app_id="+this.props.application.applicationId+"&dataflowId="+dataflowId, {
       headers: authHeader()
     })
     .then((response) => {

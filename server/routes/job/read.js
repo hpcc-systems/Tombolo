@@ -124,8 +124,8 @@ let updateDataFlowGraph = (applicationId, dataflowId, nodes, edges, filesToBeRem
   from previous job, instead of creating a new set of files, the dataflow will be updated showing a path from the input files from previous jobs to
   the new job
 **/
-let updateFileRelationship = (jobId, job, files, filesToBeRemoved) => {
-  let fieldsToUpdate={}, promises=[], nodes = [], edges = [], inputY=0, outputY=0;
+let updateFileRelationship = (jobId, job, files, filesToBeRemoved, existingNodes) => {
+  let fieldsToUpdate={}, promises=[], nodes = [], edges = [], inputY=0, outputY=0, existingNode={};
   return new Promise(async (resolve, reject) => {
     try {
       let query = 'select f.id, f.name, jf.file_type from file f, jobfile jf where '+
@@ -206,6 +206,11 @@ let updateFileRelationship = (jobId, job, files, filesToBeRemoved) => {
           )
         } else {
           let id=existingFile[0].id;
+          if(existingNodes) {
+            existingNode = existingNodes.filter(node => node.id == id)[0];
+            console.log("***********************node**********************");
+            console.log(existingNode);
+          }
           //update file_id in JobFile - this is the case when a job was added via assets and later the job is added to a workflow
           //when job is created from assets, there is no association with actual file at that time
           console.log(id, job.basic.id, file.file_type, fileInfo.basic.name);
@@ -229,11 +234,12 @@ let updateFileRelationship = (jobId, job, files, filesToBeRemoved) => {
             "x": posX,
             "y": posY,
             "type": "File",
-            "fileId": existingFile[0].id
+            "fileId": existingFile[0].id,
+            "isHidden": existingNode ? existingNode.isHidden : false
           })
-          if(file.file_type == 'input') {
+          if(file.file_type == 'input' && !existingNode.isHidden) {
             edge = {"source":existingFile[0].id,"target":job.basic.id};
-          } else if(file.file_type == 'output') {
+          } else if(file.file_type == 'output' && !existingNode.isHidden) {
             edge = {"source":job.basic.id,"target":existingFile[0].id};
           }
           edges.push(edge);
@@ -253,13 +259,13 @@ let updateFileRelationship = (jobId, job, files, filesToBeRemoved) => {
 
 let getYPosition = (yPos, type, jobYPos, files) => {
   //find the y of the first node assmuming nodes are placed from top to bottom.
-  //TopY = No:Of input files / 2 * (2 * size of a node)
+  //TopY = No:Of input files / 2 * (2 * 65)
   //if derived yPos = jobYPos, then move the yPos 2 node space down
   if(yPos == 0) {
-   yPos = parseInt(jobYPos) - ((Math.round(files.filter(file => file.file_type == type).length / 2) * 96));
+   yPos = parseInt(jobYPos) - ((Math.round(files.filter(file => file.file_type == type).length / 2) * 65));
   } else {
-    yPos = yPos + 96;
-    yPos = (yPos == parseInt(jobYPos)) ? yPos + 96 : yPos;
+    yPos = yPos + 65;
+    yPos = (yPos == parseInt(jobYPos)) ? yPos + 65 : yPos;
   }
   return yPos;
 }
@@ -279,7 +285,7 @@ let findFilesRemovedFromJob = (currentFiles, filesFromCluster) => {
   This method updates the JobFile table based on the changes happend to the Job
   It also identifies the files that are removed from the Job, so the nodes & edges can be removed
 **/
-let updateJobDetails = (applicationId, jobId, jobReqObj, autoCreateFiles) => {
+let updateJobDetails = (applicationId, jobId, jobReqObj, autoCreateFiles, nodes) => {
   let fieldsToUpdate = {"job_id"  : jobId, "application_id" : applicationId};
 
   return new Promise(async (resolve, reject) => {
@@ -300,7 +306,7 @@ let updateJobDetails = (applicationId, jobId, jobReqObj, autoCreateFiles) => {
     //jobReqObj.files.forEach(async (file) => {
     for(var i=0; i<jobReqObj.files.length; i++) {
       let file = jobReqObj.files[i];
-      console.log(jobId, applicationId, file.file_type, file.name)
+      //console.log(jobId, applicationId, file.file_type, file.name)
       let jobFileCreated = await JobFile.findOrCreate({
         where: {job_id: jobId, application_id: applicationId, file_type: file.file_type, name: file.name},
         defaults: {
@@ -317,7 +323,7 @@ let updateJobDetails = (applicationId, jobId, jobReqObj, autoCreateFiles) => {
         return JobParam.bulkCreate(jobParamsToSave)
       }).then(function(jobParam) {
         if(autoCreateFiles) {
-          updateFileRelationship(jobId, jobReqObj, jobReqObj.files, filesToBeRemoved).then((results) => {
+          updateFileRelationship(jobId, jobReqObj, jobReqObj.files, filesToBeRemoved, nodes).then((results) => {
             resolve({"result":"success", "title":jobReqObj.basic.title, "jobId":jobId, "dataflow":results})
           }).catch((err) => {
             console.log("updateJobDetails failed...")
@@ -403,7 +409,7 @@ router.post('/refreshDataflow', [
             "jobId": job.id
           }
           jobObj.mousePosition = [dataflowJobNode[0].x, dataflowJobNode[0].y];
-          return updateJobDetails(req.body.application_id, job.id, jobObj, true);
+          return updateJobDetails(req.body.application_id, job.id, jobObj, true, nodes);
         })
       }))
     })
@@ -485,8 +491,20 @@ router.get('/job_list', [
   console.log("[job list/read.js] - Get job list for app_id = " + req.query.app_id);
   try {
     let dataflowId = req.query.dataflowId;
-    Job.findAll({where:{"application_Id":req.query.app_id, dataflowId: { [Op.ne]: dataflowId }}, attributes: {exclude: ['assetId']}, include:['dataflows'], order: [['createdAt', 'DESC']]}).then(function(jobs) {
-        res.json(jobs);
+
+    let query = 'select j.id, j.name, j.title, j.createdAt, asd.dataflowId from job j '+
+    'left join assets_dataflows asd '+
+    'on j.id = asd.assetId '+
+    'where j.application_id=(:applicationId) '+
+    'and j.id not in (select assetId from assets_dataflows where dataflowId = (:dataflowId)) group by j.id order by j.name asc';
+    /*let query = 'select j.id, j.name, j.title, j.createdAt, asd.dataflowId from job j, assets_dataflows asd where j.application_id=(:applicationId) '+
+        'and j.id = asd.assetId and j.id not in (select assetId from assets_dataflows where dataflowId = (:dataflowId))';*/
+    let replacements = { applicationId: req.query.app_id, dataflowId: dataflowId};
+    let existingFile = models.sequelize.query(query, {
+      type: models.sequelize.QueryTypes.SELECT,
+      replacements: replacements
+    }).then((jobs) => {
+      res.json(jobs);
     })
     .catch(function(err) {
       console.log(err);

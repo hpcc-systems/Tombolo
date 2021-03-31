@@ -7,8 +7,8 @@ server {
 server {
   listen $WEB_EXPOSED_PORT;
   ssl on;
-  ssl_certificate /etc/ssl/ide.hsl.noam.lnrm.net.pem;
-  ssl_certificate_key /etc/ssl/ide.hsl.noam.lnrm.net.key;
+  ssl_certificate <certificate location>;
+  ssl_certificate_key <certificate location
   ssl_ciphers EECDH+AESGCM:EDH+AESGCM;
   ssl_ecdh_curve secp384r1;
   ssl_session_timeout  10m;
