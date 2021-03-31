@@ -398,18 +398,20 @@ router.post('/refreshDataflow', [
         return hpccUtil.getJobInfo(job.cluster_id, wuid, job.jobType).then((jobInfo) => {
           let jobObj = {}, jobFiles=[];
           let dataflowJobNode = nodes.filter(node => node.jobId == job.id);
-          jobObj.files = jobInfo.jobfiles;
-          jobObj.params = [];
-          jobObj.basic = {
-            "title": job.name,
-            "id": dataflowJobNode[0].id,
-            "clusterId": job.cluster_id,
-            "application_id": req.body.application_id,
-            "dataflowId": req.body.dataflowId,
-            "jobId": job.id
+          if(dataflowJobNode && dataflowJobNode.length > 0) {
+            jobObj.files = jobInfo.jobfiles;
+            jobObj.params = [];
+            jobObj.basic = {
+              "title": job.name,
+              "id": dataflowJobNode[0].id,
+              "clusterId": job.cluster_id,
+              "application_id": req.body.application_id,
+              "dataflowId": req.body.dataflowId,
+              "jobId": job.id
+            }
+            jobObj.mousePosition = [dataflowJobNode[0].x, dataflowJobNode[0].y];
+            return updateJobDetails(req.body.application_id, job.id, jobObj, true, nodes);
           }
-          jobObj.mousePosition = [dataflowJobNode[0].x, dataflowJobNode[0].y];
-          return updateJobDetails(req.body.application_id, job.id, jobObj, true, nodes);
         })
       }))
     })
