@@ -43,13 +43,24 @@ router.get('/file_list', [
     console.log("[file list/read.js] - Get file list for app_id = " + req.query.app_id);
     try {
       let dataflowId = req.query.dataflowId;
-        File.findAll({where:{"application_id":req.query.app_id, dataflowId: { [Op.ne]: dataflowId }}, include: ['dataflows'], order: [['createdAt', 'DESC']]}).then(function(files) {
-            res.json(files);
-        })
-        .catch(function(err) {
-          console.log(err);
-          return res.status(500).json({ success: false, message: "Error occured while getting file list" });
-        });
+      let query = 'select f.id, f.name, f.title, f.createdAt, asd.dataflowId from file f '+
+      'left join assets_dataflows asd '+
+      'on f.id = asd.assetId '+
+      'where f.application_id=(:applicationId) '+
+      'and f.id not in (select assetId from assets_dataflows where dataflowId = (:dataflowId)) group by f.id order by f.name asc';
+      /*let query = 'select j.id, j.name, j.title, j.createdAt, asd.dataflowId from job j, assets_dataflows asd where j.application_id=(:applicationId) '+
+          'and j.id = asd.assetId and j.id not in (select assetId from assets_dataflows where dataflowId = (:dataflowId))';*/
+      let replacements = { applicationId: req.query.app_id, dataflowId: dataflowId};
+      let existingFile = models.sequelize.query(query, {
+        type: models.sequelize.QueryTypes.SELECT,
+        replacements: replacements
+      }).then((files) => {
+        res.json(files);
+      })
+      .catch(function(err) {
+        console.log(err);
+        return res.status(500).json({ success: false, message: "Error occured while getting file list" });
+      });
     } catch (err) {
       console.log('err', err);
       return res.status(500).json({ success: false, message: "Error occured while getting file list" });
@@ -319,7 +330,7 @@ let updateFileDetails = (fileId, applicationId, req) => {
 }
 
 router.post('/saveFile', [
-    body('file.basic.id')
+    body('id')
     .optional({checkFalsy:true})
       .isUUID(4).withMessage('Invalid id'),
     body('file.basic.application_id')

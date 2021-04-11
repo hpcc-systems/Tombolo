@@ -1,7 +1,8 @@
 const { Kafka } = require('kafkajs');
-
+const { fs } = require('fs');
 const models = require('./models');
 const DependentJobs = models.dependent_jobs;
+const JobScheduler = require('./job-scheduler');
 
 require('dotenv').config();
 
@@ -59,8 +60,10 @@ class QueueDaemon {
 
   async processJob(message) {
     try {
+      console.log(message)
       let msgJson = JSON.parse(message);
       console.log(`Topic "${JOB_COMPLETE_TOPIC}" - JSON msg received: ${message}`);
+      JobScheduler.scheduleCheckForJobsWithSingleDependency(msgJson.name)
     } catch(err) {
       console.error(`JSON parse error ${err}`);
     }

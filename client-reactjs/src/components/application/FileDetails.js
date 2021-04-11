@@ -216,6 +216,9 @@ class FileDetails extends PureComponent {
   handleOk = async (e) => {
     let _self = this;
     e.preventDefault();
+    this.setState({
+      confirmLoading: true,
+    });
 
     try {
       const values = await this.formRef.current.validateFields();
@@ -225,8 +228,11 @@ class FileDetails extends PureComponent {
           visible: false,
           confirmLoading: false,
         });
-        //_self.props.onRefresh(saveResponse);
-        _self.props.history.push('/' + this.props.application.applicationId + '/assets')
+        if (this.props.history) {
+          _self.props.history.push('/' + this.props.application.applicationId + '/assets')
+        } else {
+          document.querySelector('button.ant-modal-close').click();
+        }
       }, 2000);
     } catch(e) {
       console.log(e)
@@ -720,7 +726,6 @@ class FileDetails extends PureComponent {
     } = this.state;
     const modalTitle = "File Details" + (this.state.file.title ? " - " + this.state.file.title : " - " +this.state.file.name);
     const VIEW_DATA_PERMISSION=canViewPII(this.props.user);
-    console.log(VIEW_DATA_PERMISSION)
     const editingAllowed = hasEditPermission(this.props.user) || !this.props.viewMode;
     const formItemLayout = {
       labelCol: { span: 2 },
@@ -914,7 +919,7 @@ class FileDetails extends PureComponent {
 
     return (
       <React.Fragment>
-        <div style={{"paddingTop": "55px"}}>
+        <div>
           {/*<BreadCrumbs applicationId={this.props.application.applicationId} applicationTitle={this.props.application.applicationTitle}/>*/}
           {!this.props.isNew?
             <div className="loader">
@@ -1128,17 +1133,15 @@ class FileDetails extends PureComponent {
               </TabPane> : null}
           </Tabs>
         </div>
-        {!this.props.viewMode ?
-          <div className="button-container">
-            <Button key="danger" disabled={!this.state.file.id || !editingAllowed} type="danger" onClick={this.handleDelete}>Delete</Button>
-            <Button key="back" onClick={this.handleCancel}>
-              Cancel
-            </Button>
-            <Button key="submit" disabled={!editingAllowed} type="primary" loading={confirmLoading} onClick={this.handleOk}>
-              Save
-            </Button>
-          </div>
-        : null}
+        <div className="button-container">
+          <Button key="danger" disabled={!this.state.file.id || !editingAllowed} type="danger" onClick={this.handleDelete}>Delete</Button>
+          <Button key="back" onClick={this.handleCancel}>
+            Cancel
+          </Button>
+          <Button key="submit" disabled={!editingAllowed} type="primary" loading={confirmLoading} onClick={this.handleOk}>
+            Save
+          </Button>
+        </div>
       </React.Fragment>
     );
   }

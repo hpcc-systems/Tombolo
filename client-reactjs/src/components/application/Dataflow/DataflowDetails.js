@@ -14,7 +14,7 @@ function DataflowDetails({props}) {
 	return (
 	  <React.Fragment>
 	  <div>
-        <div className="d-flex justify-content-end" style={{paddingTop: "60px"}}>
+        <div className="d-flex justify-content-end">
           <BreadCrumbs
             applicationId={dataflowReducer.applicationId}
             applicationTitle={dataflowReducer.applicationTitle}

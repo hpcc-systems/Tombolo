@@ -1,6 +1,6 @@
 import { Constants } from '../../components/common/Constants';
 
-const initialState = {        
+const initialState = {
 	applicationId: '',
   dataflowId: '',
   workflowId: '',

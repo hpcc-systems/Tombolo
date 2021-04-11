@@ -104,7 +104,7 @@ function Dataflow(props) {
   if(application.applicationId == '' ) return null;
   return (
   	  <div>
-	      <div className="d-flex justify-content-end" style={{paddingTop:"55px", margin: "5px"}}>
+	      <div className="d-flex justify-content-end" style={{margin: "5px"}}>
           <BreadCrumbs applicationId={application.applicationId} applicationTitle={application.applicationTitle}/>
 	        <div className="ml-auto">
   	        <span>

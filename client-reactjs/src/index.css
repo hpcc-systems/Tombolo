@@ -513,9 +513,9 @@ div.tooltip {
 }
 
 .graph-edit-mode {
-  margin-left: 115px;
-  height:85vh;
-  border: 1px solid #17a2b8;
+  /*margin-left: 115px;*/
+  z-index: 1;
+  /*border: 1px solid #17a2b8*/;
 }
 
 .graph-view-mode {
@@ -528,7 +528,8 @@ div.tooltip {
 }
 
 .button-container {
-  float:right;
+  align-self: flex-end;
+  float: right;
   padding:5px;
 }
 
@@ -656,6 +657,8 @@ div.tooltip {
 
 .graph-btns-container {
   float: right;
+  position: absolute;
+  padding-top: 3px;
 }
 
 .graph-btns-container button {
@@ -692,4 +695,8 @@ div.tooltip {
 
 .graph-icon {
   cursor: pointer;
+}
+
+.graph-div {
+  position: relative;
 }

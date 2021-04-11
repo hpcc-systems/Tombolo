@@ -1,8 +1,10 @@
 const { parentPort, workerData } = require("worker_threads");
 const request = require('request-promise');
+const hpccUtil = require('../utils/hpcc-util');
+const models = require('../models');
+let JobExecution = models.job_execution;
 
 let isCancelled = false;
-
 if (parentPort) {
   parentPort.once('message', (message) => {
     if (message === 'cancel') isCancelled = true;
@@ -15,36 +17,22 @@ if (parentPort) {
     `(WU: ${workerData.workunitId}) to url ${workerData.cluster}/WsWorkunits/WUResubmit.json?ver_=1.78`
   );
   try {
-    let response = await request({
-      method: 'POST',
-      uri: workerData.cluster + '/WsWorkunits/WUResubmit.json?ver_=1.78',
-      body: {
-        "WUResubmitRequest": {
-          "Wuids": {
-            "Item": [workerData.workunitId]
-          },
-          "BlockTillFinishTimer": 0,
-          "ResetWorkflow": false,
-          "CloneWorkunit": false
-        }
-      },
-      json: true,
-      // uri: workerData.cluster + '/WsWorkunits/WUResult.json',
-      // form: {
-      //   Wuid: workerData.workunitId
-      // },
-      headers: {
-        'Content-Type': 'application/json'
-      },
-      resolveWithFullResponse: true
-    });
-    if (response.body) {
-      console.log(JSON.stringify(response.body));
-    }
+    let wuInfo = await hpccUtil.resubmitWU(workerData.clusterId, workerData.workunitId);
+    console.log(wuInfo)
+    //record workflow execution
+    await JobExecution.create({
+      jobId: workerData.jobId,
+      dataflowId: workerData.dataflowId,
+      applicationId: workerData.applicationId,
+      status: '',
+      wuid: workerData.workunitId
+    })
+
   } catch (err) {
     console.log(err);
   } finally {
     if (parentPort) {
+      console.log(`signaling done for ${workerData.jobName}`)
       parentPort.postMessage('done');
     } else {
       process.exit(0);

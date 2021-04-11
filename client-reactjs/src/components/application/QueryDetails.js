@@ -463,7 +463,7 @@ class QueryDetails extends PureComponent {
     //{console.log(title + ', ' + this.props.selectedQuery + ', ' + this.props.isNewFile)}
     return (
       <React.Fragment>
-        <div style={{"paddingTop": "55px"}}>
+        <div>
         {!this.props.isNew ?
             <div className="loader">
               <Spin spinning={this.state.initialDataLoading} size="large" />

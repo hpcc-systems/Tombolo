@@ -89,6 +89,7 @@ class JobDetails extends Component {
     jobSearchErrorShown:false,
     autoCompleteSuffix: <SearchOutlined/>,
     searchResultsLoaded: false,
+    initialDataLoading: false,
     job: {
       id:"",
       groupId: "",
@@ -170,6 +171,7 @@ class JobDetails extends Component {
         }
         this.setState({
           ...this.state,
+          initialDataLoading: false,
           selectedScheduleType: (data.schedule && data.schedule.type) ? data.schedule.type : this.state.selectedScheduleType,
           scheduleMinute: (cronParts.length > 0) ? cronParts[0] : this.state.scheduleMinute,
           scheduleHour: (cronParts.length > 0) ? cronParts[1] : this.state.scheduleHour,
@@ -204,11 +206,6 @@ class JobDetails extends Component {
 
         this.setClusters(this.props.clusterId);
         return data;
-      })
-      .then(data => {
-        this.setState({
-          initialDataLoading: false
-        });
       })
       .catch(error => {
         console.log(error);
@@ -1033,7 +1030,7 @@ class JobDetails extends Component {
 
     return (
       <React.Fragment>
-      <div style={{"paddingTop": "55px"}}>
+      <div>
           {!this.props.isNew ?
             <div className="loader">
               <Spin spinning={this.state.initialDataLoading} size="large" />
@@ -1312,7 +1309,7 @@ class JobDetails extends Component {
           </Tabs>
           </Form>
       </div>
-        <div className="button-container" style={{alignSelf: 'flex-end', float: 'none'}}>
+        <div className="button-container">
           {!this.props.isNew ? <Button key="danger" type="danger" onClick={this.handleDelete}>Delete</Button> : null }
           <Button key="back" onClick={this.handleCancel}>
             Cancel

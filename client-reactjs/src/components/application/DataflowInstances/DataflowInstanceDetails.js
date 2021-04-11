@@ -5,6 +5,7 @@ import {Graph} from "../Dataflow/Graph";
 import {FileTable} from "../FileTable";
 import QueryTable from "../QueryTable";
 import DataflowInstanceWorkUnits from "./DataflowInstanceWorkUnits";
+import JobExecutionDetails from "./JobExecutionDetails";
 import { connect } from 'react-redux';
 import { authHeader, handleError } from "../../common/AuthHeader.js"
 import { Constants } from '../../common/Constants';
@@ -17,7 +18,6 @@ class DataflowInstanceDetails extends Component {
   }
 
   componentDidMount() {
-    console.log('componentDidMount - DataflowInstanceDetails: '+this.props.dataflowId+', '+this.props.applicationId)
   }
 
   render() {
@@ -31,7 +31,7 @@ class DataflowInstanceDetails extends Component {
             <Graph
               applicationId={this.props.applicationId}
               viewMode={true}
-              selectedDataflow={this.props.workflowId}
+              selectedDataflow={this.props.dataflowId}
               workflowDetails={this.props.workflowDetails}
               graphContainer="graph"
               sidebarContainer="sidebar"
@@ -40,7 +40,11 @@ class DataflowInstanceDetails extends Component {
 
           <div className="col-12">
             <Tabs type="card">
-              <TabPane tab="Work Units" key="1">
+             <TabPane tab="Jobs" key="1">
+                <JobExecutionDetails />
+              </TabPane>
+
+              {/*<TabPane tab="Work Units" key="1">
                 <DataflowInstanceWorkUnits
                   applicationId={this.props.applicationId}
                   viewMode={true}
@@ -53,7 +57,7 @@ class DataflowInstanceDetails extends Component {
               </TabPane>
               <TabPane tab="Queries" key="3">
                 <QueryTable applicationId={this.props.applicationId} user={this.props.user}/>
-              </TabPane>
+              </TabPane>*/}
             </Tabs>
           </div>
         </div>
@@ -65,8 +69,8 @@ class DataflowInstanceDetails extends Component {
 function mapStateToProps(state) {
   const { user } = state.authenticationReducer;
   const { application, selectedTopNav } = state.applicationReducer;
-  const { applicationId, dataflowId, workflowId, instanceId, workflowDetails } = state.dataflowInstancesReducer;
-  console.log('dataflowId redux: '+dataflowId+', '+JSON.stringify(workflowId)+', '+instanceId)
+  //const { applicationId, dataflowId, workflowId, instanceId, workflowDetails } = state.dataflowInstancesReducer;
+  const { applicationId, dataflowId, workflowId, instanceId, workflowDetails } = state.dataflowReducer;
   return {
       user,
       application,
