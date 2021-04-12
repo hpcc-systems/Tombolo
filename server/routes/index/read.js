@@ -63,7 +63,7 @@ let updateIndexDetails = (indexId, applicationId, req) => {
 }
 
 router.post('/saveIndex', [
-  body('index.basic.id')
+  body('id')
   .optional({checkFalsy:true})
     .isUUID(4).withMessage('Invalid id'),
   body('index.basic.application_id')

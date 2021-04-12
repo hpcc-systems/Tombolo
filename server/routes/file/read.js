@@ -319,7 +319,7 @@ let updateFileDetails = (fileId, applicationId, req) => {
 }
 
 router.post('/saveFile', [
-    body('file.basic.id')
+    body('id')
     .optional({checkFalsy:true})
       .isUUID(4).withMessage('Invalid id'),
     body('file.basic.application_id')

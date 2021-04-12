@@ -180,10 +180,10 @@ class Clusters extends Component {
     let data = JSON.stringify({
       "id":this.state.newCluster.id,
       "name": this.state.newCluster.name,
-      "thor_host" : this.state.newCluster.thorHost,
-      "thor_port" : this.state.newCluster.thorPort,
-      "roxie_host" : this.state.newCluster.roxieHost,
-      "roxie_port" : this.state.newCluster.roxiePort,
+      // "thor_host" : this.state.newCluster.thorHost,
+      // "thor_port" : this.state.newCluster.thorPort,
+      // "roxie_host" : this.state.newCluster.roxieHost,
+      // "roxie_port" : this.state.newCluster.roxiePort,
       "username" : this.state.newCluster.username,
       "password" : this.state.newCluster.password
     });

@@ -178,36 +178,33 @@ router.get('/getCluster', function (req, res) {
 
 
 router.post('/newcluster', [
-
-  body('thor_host').isURL({'require_protocol':true, 'require_host':true, 'allow_underscores':true }).withMessage("Invalid thor host"),
-  body('roxie_host').isURL({'require_protocol':true, 'require_host':true, 'allow_underscores':true }).withMessage("Invalid roxie host"),
-  body('thor_port')
-    .isInt().withMessage('Invalid thor port'),
-  body('roxie_port')
-    .isInt().withMessage('Invalid roxie port')
+  body('name').matches(/^[a-zA-Z0-9]{1}[a-zA-Z0-9_:.\-]*$/).withMessage('Invalid name'),
+  body('id').optional({checkFalsy:true}).isUUID(4).withMessage('Invalid id')
 	], async function (req, res) {
 		const errors = validationResult(req).formatWith(validatorUtil.errorFormatter);
     if (!errors.isEmpty()) {
       return res.status(422).json({ success: false, errors: errors.array() });
     }
     try {
-		var ThorReachable=false;
-		var RoxieReachable=false;
-		ThorReachable = await hpccUtil.isClusterReachable(req.body.thor_host, req.body.thor_port, req.body.username, req.body.password);
-		RoxieReachable = await hpccUtil.isClusterReachable(req.body.roxie_host, req.body.roxie_port, req.body.username, req.body.password);
-		if(ThorReachable && RoxieReachable) {
-			var newCluster = {"name":req.body.name, "thor_host":req.body.thor_host, "thor_port":req.body.thor_port,
-			 "roxie_host":req.body.roxie_host, "roxie_port":req.body.roxie_port};
-			if (req.body.username && req.body.password) {
-				newCluster.username = req.body.username;
-				newCluster.hash = crypto.createCipher(algorithm, process.env['cluster_cred_secret']).update(req.body.password,'utf8','hex');
-			}
-			console.log(req.body.id);
-			if(req.body.id == undefined || req.body.id == "") {
-				Cluster.create(newCluster).then(function(cluster) {
-					res.json({"result":"success"});
-				});
-			} else {
+      let cluster = ClusterWhitelist.clusters.filter(cluster => cluster.name == req.body.name);
+      if(cluster && cluster.length > 0) {
+    		var ThorReachable=false;
+    		var RoxieReachable=false;
+    		ThorReachable = await hpccUtil.isClusterReachable(cluster[0].thor, cluster[0].thor_port, req.body.username, req.body.password);
+    		RoxieReachable = await hpccUtil.isClusterReachable(cluster[0].roxie, cluster[0].roxie_port, req.body.username, req.body.password);
+    		if(ThorReachable && RoxieReachable) {
+    			var newCluster = {"name":req.body.name, "thor_host":cluster[0].thor, "thor_port":cluster[0].thor_port,
+    			 "roxie_host":cluster[0].roxie, "roxie_port":cluster[0].roxie_port};
+    			if (req.body.username && req.body.password) {
+    				newCluster.username = req.body.username;
+    				newCluster.hash = crypto.createCipher(algorithm, process.env['cluster_cred_secret']).update(req.body.password,'utf8','hex');
+    			}
+    			console.log(req.body.id);
+    			if(req.body.id == undefined || req.body.id == "") {
+    				Cluster.create(newCluster).then(function(cluster) {
+    					res.json({"result":"success"});
+    				});
+    			} else {
 		        Cluster.update(
 		        	newCluster,
 		            {
@@ -216,13 +213,14 @@ router.post('/newcluster', [
 		        ).then(function(application) {
 		            res.json({"result":"success"});
 		        });
-		    }
-		} else {
-			return res.status(500).json({"message": "Cluster could not be reached"});
-		}
+    		  }
+    		} else {
+    			return res.status(500).json({"message": "Cluster could not be reached"});
+        }
+      }
     } catch (err) {
-        console.log('err', err);
-        return res.status(500).send({"success":"false", "message": "Error occured while adding new Cluster"});
+      console.log('err', err);
+      return res.status(500).send({"success":"false", "message": "Error occured while adding new Cluster"});
     }
 });
 
