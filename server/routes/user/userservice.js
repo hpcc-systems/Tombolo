@@ -44,10 +44,10 @@ async function verifyToken(req, res, next) {
                 'Authorization': token
               }
             }, function(err, response, body) {
-                resolve(body);
-                if (err) {
-                  reject(err);
-                }
+              if (err || response.statusCode != 200) {
+                reject(err);
+              }
+              resolve(body);
           });
         });
     }
