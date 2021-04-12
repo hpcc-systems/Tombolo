@@ -310,6 +310,7 @@ class Graph extends Component {
           return task.id == d3.select(this).attr("id")
         })
         if(task && task.length > 0) {
+          console.log(task[0].status);
           if(task[0].status == 'completed' || task[0].status == 'compiled') {
             d3.select(this.parentNode).append("text")
               .attr('class', 'tick')
@@ -339,22 +340,24 @@ class Graph extends Component {
 
   getTaskDetails = () => {
     let completedTasks = [];
-    this.props.workflowDetails.workflowDetails.forEach((workflowDetail) => {
-      let nodeObj = this.thisGraph.nodes.filter((node) => {
-        return (node.fileId == workflowDetail.task || node.jobId == workflowDetail.task || node.indexId == workflowDetail.task)
-      })
-      if(nodeObj[0].id) {
-        completedTasks.push({"id": "rec-"+nodeObj[0].id,
-          "status": workflowDetail.status,
-          "message": workflowDetail.message,
-          "wuid": workflowDetail.wuid,
-          "wu_start": workflowDetail.wu_start,
-          "wu_end": workflowDetail.wu_end,
-          "wu_duration": workflowDetail.wu_duration,
-          "cluster": this.props.workflowDetails.cluster
+    if(this.props.workflowDetails.wuDetails) {
+      this.props.workflowDetails.wuDetails.forEach((workflowDetail) => {
+        let nodeObj = this.thisGraph.nodes.filter((node) => {
+          return (node.fileId == workflowDetail.task || node.jobId == workflowDetail.task || node.indexId == workflowDetail.task)
         })
-      }
-    });
+        if(nodeObj[0].id) {
+          completedTasks.push({"id": "rec-"+nodeObj[0].id,
+            "status": workflowDetail.status,
+            "message": workflowDetail.message,
+            "wuid": workflowDetail.wuid,
+            "wu_start": workflowDetail.wu_start,
+            "wu_end": workflowDetail.wu_end,
+            "wu_duration": workflowDetail.wu_duration,
+            "cluster": this.props.workflowDetails.cluster
+          })
+        }
+      });
+    }
     return completedTasks;
   }
 

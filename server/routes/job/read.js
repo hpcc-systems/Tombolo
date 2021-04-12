@@ -710,8 +710,8 @@ router.post('/delete', [
 });
 
 router.get('/jobExecutionDetails', [
-  query('id')
-    .isUUID(4).withMessage('Invalid job id'),
+  query('dataflowId')
+    .isUUID(4).withMessage('Invalid datafow id'),
   query('applicationId')
     .isUUID(4).withMessage('Invalid application id'),
 ], (req, res) => {
@@ -721,7 +721,9 @@ router.get('/jobExecutionDetails', [
   }
   console.log("[jobExecutionDetails] - Get jobExecutionDetails for app_id = " + req.query.app_id);
   try {
-    JobExecution.findAll({where: {jobId: req.query.id, applicationId: req.query.applicationId}}).then((jobExecution) => {
+    JobExecution.findAll({where: {dataflowId: req.query.dataflowId, applicationId: req.query.applicationId},
+      attributes: ['id', ['jobId', 'task'], 'dataflowId', 'applicationId', 'status', 'wuid', 'wu_start', 'wu_end', 'wu_duration']
+  }).then((jobExecution) => {
       res.json(jobExecution);
     })
     .catch(function(err) {

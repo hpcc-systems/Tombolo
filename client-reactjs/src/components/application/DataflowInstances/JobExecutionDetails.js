@@ -4,42 +4,7 @@ import { Table, Spin } from 'antd/lib';
 import { authHeader, handleError } from "../../common/AuthHeader.js";
 import { useSelector } from "react-redux";
 
-function JobExecutionDetails() {
-  const assetReducer = useSelector(state => state.assetReducer);
-  const [jobExecutionDetails, setJobExecutionDetails] = useState([]);
-  const [loading, setLoading] = useState(false);
-  const {id, applicationId} = assetReducer.selectedAsset;
-  console.log(assetReducer)
-  console.log(id)
-  useEffect(() => {
-    if(id) {
-      getJobExecutionDetails();
-    }
-  }, [id])
-
-  const getJobExecutionDetails = () => {
-    setLoading(true);
-    fetch("/api/job/jobExecutionDetails?id="+id+"&applicationId="+applicationId, {
-      headers: authHeader()
-    })
-    .then((response) => {
-      if(response.ok) {
-        return response.json();
-      }
-      handleError(response);
-    })
-    .then(data => {
-      setJobExecutionDetails(data);
-      setLoading(false);
-    })
-    .catch(error => {
-      console.log(error);
-    });
-  }
-
-  const rowSelected = (record) => {
-
-  }
+function JobExecutionDetails({workflowDetails}) {
 
   const jobColumns = [
     {
@@ -71,14 +36,12 @@ function JobExecutionDetails() {
   ]
   return (
     <React.Fragment>
-      <Spin spinning={loading}>
-        <Table
-          columns={jobColumns}
-          rowKey={record => record.id}
-          dataSource={jobExecutionDetails}
-          pagination={{ pageSize: 10 }} scroll={{ y: 190 }}
-        />
-      </Spin>
+      <Table
+        columns={jobColumns}
+        rowKey={record => record.id}
+        dataSource={workflowDetails.wuDetails}
+        pagination={{ pageSize: 10 }} scroll={{ y: 190 }}
+      />
     </React.Fragment>
     )
 }

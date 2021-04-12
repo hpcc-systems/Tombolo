@@ -10,12 +10,12 @@ function verifyToken(req, res, next)
     if(verified != undefined) {
       next()
     } else {
-      res.status(401).json({message: "Un-Authorized."})    
+      res.status(401).json({message: "Un-Authorized."})
     }
   })
   .catch((err) =>
   {
-    console.log('err: '+err);
+    console.log('verify err: '+err);
     res.status(401).json({message: "Invalid auth token provided."})
   })
 }

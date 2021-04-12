@@ -15,7 +15,7 @@ class JobScheduler {
   }
 
   async bootstrap() {
-    //await this.scheduleActiveCronJobs();
+    await this.scheduleActiveCronJobs();
   }
 
   async scheduleCheckForJobsWithSingleDependency(jobName) {

@@ -1,5 +1,5 @@
 import React, { Component } from "react";
-import { Button, Table, Divider, message, Icon, Tooltip, Row, Col, Tabs } from 'antd/lib';
+import { Button, Table, Divider, message, Icon, Tooltip, Row, Col, Tabs, Spin } from 'antd/lib';
 import { NavLink, Switch, Route, withRouter } from 'react-router-dom';
 import {Graph} from "../Dataflow/Graph";
 import {FileTable} from "../FileTable";
@@ -17,7 +17,39 @@ class DataflowInstanceDetails extends Component {
     super(props);
   }
 
+  state = {
+    jobExecutionDetails: {},
+    loading: false
+  }
+
   componentDidMount() {
+    this.getJobExecutionDetails();
+  }
+
+  getJobExecutionDetails = () => {
+    this.setState({
+      loading: true
+    })
+
+    fetch("/api/job/jobExecutionDetails?dataflowId="+this.props.dataflowId.id+"&applicationId="+this.props.application.applicationId, {
+      headers: authHeader()
+    })
+    .then((response) => {
+      if(response.ok) {
+        return response.json();
+      }
+      handleError(response);
+    })
+    .then(data => {
+      let jobExecutionDetails = {wuDetails: data} ;
+      this.setState({
+        jobExecutionDetails: jobExecutionDetails,
+        loading: false
+      });
+    })
+    .catch(error => {
+      console.log(error);
+    });
   }
 
   render() {
@@ -32,7 +64,7 @@ class DataflowInstanceDetails extends Component {
               applicationId={this.props.applicationId}
               viewMode={true}
               selectedDataflow={this.props.dataflowId}
-              workflowDetails={this.props.workflowDetails}
+              workflowDetails={this.state.jobExecutionDetails}
               graphContainer="graph"
               sidebarContainer="sidebar"
               />
@@ -41,23 +73,10 @@ class DataflowInstanceDetails extends Component {
           <div className="col-12">
             <Tabs type="card">
              <TabPane tab="Jobs" key="1">
-                <JobExecutionDetails />
+               <Spin spinning={this.state.loading}>
+                  <JobExecutionDetails workflowDetails={this.state.jobExecutionDetails}/>
+               </Spin>
               </TabPane>
-
-              {/*<TabPane tab="Work Units" key="1">
-                <DataflowInstanceWorkUnits
-                  applicationId={this.props.applicationId}
-                  viewMode={true}
-                  selectedWorkflow={this.props.dataflowId}
-                  instanceId={this.props.instanceId}
-                />
-              </TabPane>
-              <TabPane tab="Files" key="2">
-                <FileTable applicationId={this.props.applicationId} user={this.props.user}/>
-              </TabPane>
-              <TabPane tab="Queries" key="3">
-                <QueryTable applicationId={this.props.applicationId} user={this.props.user}/>
-              </TabPane>*/}
             </Tabs>
           </div>
         </div>
@@ -70,12 +89,12 @@ function mapStateToProps(state) {
   const { user } = state.authenticationReducer;
   const { application, selectedTopNav } = state.applicationReducer;
   //const { applicationId, dataflowId, workflowId, instanceId, workflowDetails } = state.dataflowInstancesReducer;
-  const { applicationId, dataflowId, workflowId, instanceId, workflowDetails } = state.dataflowReducer;
+  const { applicationId, dataflowId } = state.dataflowReducer;
   return {
       user,
       application,
       selectedTopNav,
-      applicationId, dataflowId, workflowId, instanceId, workflowDetails
+      applicationId, dataflowId
   };
 }
 

@@ -33,24 +33,25 @@ async function authenticate(req, res, { username, password }) {
 }
 
 async function verifyToken(req, res, next) {
-    let token = req.headers['x-access-token'] || req.headers['authorization'];
-    if(token) {
-        var authServiceUrl = process.env.AUTH_SERVICE_URL + '/verify';
-        return new Promise(function(resolve, reject) {
-            request.post({
-              url: authServiceUrl,
-              headers: {
-                "content-type": "application/json",
-                'Authorization': token
-              }
-            }, function(err, response, body) {
-                resolve(body);
-                if (err) {
-                  reject(err);
-                }
-          });
+  console.log("***********verifyToken********************")
+  let token = req.headers['x-access-token'] || req.headers['authorization'];
+  if(token) {
+      var authServiceUrl = process.env.AUTH_SERVICE_URL + '/verify';
+      return new Promise(function(resolve, reject) {
+          request.post({
+            url: authServiceUrl,
+            headers: {
+              "content-type": "application/json",
+              'Authorization': token
+            }
+          }, function(err, response, body) {
+            if (err || response.statusCode != 200) {
+              reject(err);
+            }
+            resolve(body)
         });
-    }
+      });
+  }
 }
 
 
