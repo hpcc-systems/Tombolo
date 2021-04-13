@@ -8,13 +8,13 @@ module.exports = {
         type: Sequelize.UUID
       },
       jobId: {
-        type: Sequelize.STRING
+        type: Sequelize.UUID
       },
       dataflowId: {
-        type: Sequelize.STRING
+        type: Sequelize.UUID
       },
       applicationId: {
-        type: Sequelize.STRING
+        type: Sequelize.UUID
       },
       status: {
         type: Sequelize.STRING
@@ -30,6 +30,9 @@ module.exports = {
       },
       wu_duration: {
         type: Sequelize.STRING
+      },
+      clusterId: {
+        type: Sequelize.UUID
       },
       createdAt: {
         allowNull: false,

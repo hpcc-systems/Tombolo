@@ -1,7 +1,8 @@
 const { Kafka } = require('kafkajs');
 const { fs } = require('fs');
 const models = require('./models');
-const DependentJobs = models.dependent_jobs;
+const hpccUtil = require('./utils/hpcc-util');
+let JobExecution = models.job_execution;
 const JobScheduler = require('./job-scheduler');
 
 require('dotenv').config();
@@ -18,7 +19,6 @@ class QueueDaemon {
     this.producer = this.kafka.producer();
 
     (async () => {
-      console.log('running QueueDaemon bootstrap...');
       await this.bootstrap();
     })();
   }
@@ -60,10 +60,20 @@ class QueueDaemon {
 
   async processJob(message) {
     try {
-      console.log(message)
       let msgJson = JSON.parse(message);
-      console.log(`Topic "${JOB_COMPLETE_TOPIC}" - JSON msg received: ${message}`);
-      JobScheduler.scheduleCheckForJobsWithSingleDependency(msgJson.name)
+      await JobScheduler.scheduleCheckForJobsWithSingleDependency(msgJson.jobname);
+      if(msgJson.wuid) {
+        let jobExecution = await JobExecution.findOne({where: {wuid: msgJson.wuid}});
+        if(jobExecution) {
+          let cluster = await hpccUtil.getCluster(jobExecution.clusterId)
+          let wuInfo = await hpccUtil.workunitInfo(msgJson.wuid, cluster);
+          await JobExecution.update({
+            status: wuInfo.Workunit.State,
+            wu_duration: wuInfo.Workunit.TotalClusterTime
+          },
+          {where: {wuid: msgJson.wuid}})
+        }
+      }
     } catch(err) {
       console.error(`JSON parse error ${err}`);
     }

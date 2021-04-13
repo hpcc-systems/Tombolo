@@ -308,16 +308,16 @@ exports.resubmitWU = (clusterId, wuid) => {
   })
 }
 
-let workunitInfo = (wuid, cluster) => {
+exports.workunitInfo = (wuid, cluster) => {
   let clusterAuth = module.exports.getClusterAuth(cluster);
   let wsWorkunits = new hpccJSComms.WorkunitsService({ baseUrl: cluster.thor_host + ':' + cluster.thor_port, userID:(clusterAuth ? clusterAuth.user : ""), password:(clusterAuth ? clusterAuth.password : ""), type: "get" });
   return new Promise((resolve, reject) => {
-    wsWorkunits.WUInfo({"Wuid":wuid, "IncludeExceptions":true, "IncludeSourceFiles":true, "IncludeResults":true}).then(async (wuInfo) => {
+    wsWorkunits.WUInfo({"Wuid":wuid, "IncludeExceptions":true, "IncludeSourceFiles":true, "IncludeResults":true, "IncludeTotalClusterTime": true}).then(async (wuInfo) => {
       if(wuInfo.Workunit.State == 'completed' || wuInfo.Workunit.State == 'failed' || wuInfo.Workunit.State == 'wait' || wuInfo.Workunit.State == 'compiled') {
         resolve(wuInfo);
       } else {
         setTimeout(_ => {
-          resolve(workunitInfo(wuid, cluster));
+          resolve(module.exports.workunitInfo(wuid, cluster));
         }, 500);
 
       }

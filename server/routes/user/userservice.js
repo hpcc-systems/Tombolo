@@ -33,7 +33,6 @@ async function authenticate(req, res, { username, password }) {
 }
 
 async function verifyToken(req, res, next) {
-  console.log("***********verifyToken********************")
   let token = req.headers['x-access-token'] || req.headers['authorization'];
   if(token) {
       var authServiceUrl = process.env.AUTH_SERVICE_URL + '/verify';

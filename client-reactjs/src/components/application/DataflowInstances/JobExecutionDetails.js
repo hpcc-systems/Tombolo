@@ -2,36 +2,40 @@ import React, { useState, useEffect } from 'react'
 import ReactDOM from 'react-dom';
 import { Table, Spin } from 'antd/lib';
 import { authHeader, handleError } from "../../common/AuthHeader.js";
+import { Constants } from '../../common/Constants';
 import { useSelector } from "react-redux";
 
 function JobExecutionDetails({workflowDetails}) {
 
   const jobColumns = [
     {
+      title: 'Job',
+      dataIndex: 'name',
+      width: '30%'
+    },
+    {
       title: 'Wuid',
       dataIndex: 'wuid',
-      render: (text, record) => <a onClick={(row) => this.rowSelected(record)}>{text}</a>,
       width: '20%'
     },
     {
       title: 'Date',
-      dataIndex: 'createdAt',
+      dataIndex: 'updatedAt',
+      render: (text, record) => {
+        let updatedAt = new Date(text);
+        return updatedAt.toLocaleDateString('en-US', Constants.DATE_FORMAT_OPTIONS) +' @ '+ updatedAt.toLocaleTimeString('en-US')
+      },
       width: '20%',
     },
     {
-      title: 'Start',
-      dataIndex: 'wu_start',
-      width: '30%',
-    },
-    {
-      title: 'End',
-      dataIndex: 'wu_end',
-      width: '30%',
+      title: 'Duration',
+      dataIndex: 'wu_duration',
+      width: '20%',
     },
     {
       title: 'Status',
       dataIndex: 'status',
-      width: '30%',
+      width: '20%',
     }
   ]
   return (

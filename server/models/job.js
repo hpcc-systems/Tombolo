@@ -51,7 +51,7 @@ module.exports = (sequelize, DataTypes) => {
       as: 'groups',
       foreignKey: 'assetId',
       otherKey: 'groupId'
-    })
+    });
   };
   return job;
 };

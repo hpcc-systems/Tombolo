@@ -694,15 +694,19 @@ router.post('/delete', [
   Job.destroy(
       {where:{"id": req.body.jobId, "application_id":req.body.application_id}}
   ).then(function(deleted) {
-      JobFile.destroy(
-          {where:{ job_id: req.body.jobId }}
-      ).then(function(jobFileDeleted) {
-          JobParam.destroy(
-              {where:{ job_id: req.body.jobId }}
-          ).then(function(jobParamDeleted) {
-              res.json({"result":"success"});
-          });
+    JobFile.destroy(
+      {where:{ job_id: req.body.jobId }}
+    ).then(function(jobFileDeleted) {
+      JobParam.destroy(
+        {where:{ job_id: req.body.jobId }}
+      ).then(function(jobParamDeleted) {
+        JobExecution.destroy({
+          where:{ jobId: req.body.jobId }
+        }).then((jobExecutionDeleted) => {
+          res.json({"result":"success"});
+        })
       });
+    });
   }).catch(function(err) {
     console.log(err);
     return res.status(500).json({ success: false, message: "Error occured while deleting the job" });
@@ -719,19 +723,24 @@ router.get('/jobExecutionDetails', [
   if (!errors.isEmpty()) {
       return res.status(422).json({ success: false, errors: errors.array() });
   }
-  console.log("[jobExecutionDetails] - Get jobExecutionDetails for app_id = " + req.query.app_id);
+  console.log("[jobExecutionDetails] - Get jobExecutionDetails for app_id = " + req.query.applicationId);
   try {
-    JobExecution.findAll({where: {dataflowId: req.query.dataflowId, applicationId: req.query.applicationId},
-      attributes: ['id', ['jobId', 'task'], 'dataflowId', 'applicationId', 'status', 'wuid', 'wu_start', 'wu_end', 'wu_duration']
-  }).then((jobExecution) => {
+    let query = 'select je.id, je.jobId as task, je.dataflowId, je.applicationId, je.status, je.wuid, je.wu_duration, je.clusterId, je.updatedAt, j.name from '+
+            'job_execution je, job j '+
+            'where je.dataflowId = (:dataflowId) and je.applicationId = (:applicationId) and j.id = je.jobId';
+    let replacements = { applicationId: req.query.applicationId, dataflowId: req.query.dataflowId};
+    let jobExecution = models.sequelize.query(query, {
+      type: models.sequelize.QueryTypes.SELECT,
+      replacements: replacements
+    }).then((jobExecution) => {
       res.json(jobExecution);
     })
     .catch(function(err) {
-      console.log(err);
+      console.error(err);
       return res.status(500).json({ success: false, message: "Error occured while retrieving Job Execution Details" });
     });
   } catch (err) {
-    console.log('err', err);
+    console.error('err', err);
     return res.status(500).json({ success: false, message: "Error occured while retrieving Job Execution Details" });
   }
 });

@@ -79,14 +79,12 @@ class JobScheduler {
   }
 
   async addJobToScheduler(name, cron, clusterId, dataflowId, applicationId, jobId, jobfileName) {
-    let wuid = await hpccUtil.getJobWuidByName(clusterId, name);
     this.bree.add({
       name: name,
       cron: cron,
       path: path.join(__dirname, 'jobs', jobfileName),
       worker: {
         workerData: {
-          workunitId: wuid,
           jobName: name,
           clusterId: clusterId,
           jobId: jobId,

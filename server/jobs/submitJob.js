@@ -17,8 +17,8 @@ if (parentPort) {
     `(WU: ${workerData.workunitId}) to url ${workerData.cluster}/WsWorkunits/WUResubmit.json?ver_=1.78`
   );
   try {
-    let wuInfo = await hpccUtil.resubmitWU(workerData.clusterId, workerData.workunitId);
-    console.log(wuInfo)
+    let wuid = await hpccUtil.getJobWuidByName(workerData.clusterId, workerData.jobName);
+    let wuInfo = await hpccUtil.resubmitWU(workerData.clusterId, wuid);
     //record workflow execution
     await JobExecution.findOrCreate({
       where: {
@@ -29,8 +29,8 @@ if (parentPort) {
         jobId: workerData.jobId,
         dataflowId: workerData.dataflowId,
         applicationId: workerData.applicationId,
-        status: 'completed',
-        wuid: workerData.workunitId
+        wuid: wuid,
+        clusterId: workerData.clusterId
       }
     }).then((results, created) => {
       let jobExecutionId = results[0].id;
@@ -39,8 +39,7 @@ if (parentPort) {
           jobId: workerData.jobId,
           dataflowId: workerData.dataflowId,
           applicationId: workerData.applicationId,
-          status: 'completed',
-          wuid: workerData.workunitId
+          wuid: wuid
         },
         {where: {id: jobExecutionId}})
       }

@@ -72,7 +72,7 @@ class DataflowInstanceDetails extends Component {
 
           <div className="col-12">
             <Tabs type="card">
-             <TabPane tab="Jobs" key="1">
+             <TabPane tab="Workunits" key="1">
                <Spin spinning={this.state.loading}>
                   <JobExecutionDetails workflowDetails={this.state.jobExecutionDetails}/>
                </Spin>

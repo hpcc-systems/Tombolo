@@ -345,7 +345,7 @@ class Graph extends Component {
         let nodeObj = this.thisGraph.nodes.filter((node) => {
           return (node.fileId == workflowDetail.task || node.jobId == workflowDetail.task || node.indexId == workflowDetail.task)
         })
-        if(nodeObj[0].id) {
+        if(nodeObj[0] && nodeObj[0].id) {
           completedTasks.push({"id": "rec-"+nodeObj[0].id,
             "status": workflowDetail.status,
             "message": workflowDetail.message,
