@@ -157,8 +157,52 @@ router.get('/assets', [
   if (!errors.isEmpty()) {
     return res.status(422).json({ success: false, errors: errors.array() });
   }
-    console.log("[app/read.js] - App route called: "+req.query.app_id + " dataflowId: "+req.query.dataflowId);
-    let results = [];
+  console.log("[app/read.js] - App route called: "+req.query.app_id + " dataflowId: "+req.query.dataflowId);
+  let results = [];
+
+  Dataflow.findOne({
+    where: {
+      id: req.query.dataflowId
+    },
+    include: ['files', 'indexes', 'jobs']
+  }).then(data => {
+    data.files.forEach(file => {
+      results.push({
+        'id': file.id,
+        'title': file.title,
+        'name': file.name,
+        'description': file.description,
+        'objType': 'file',
+        'createdAt': file.createdAt,
+        'contact': file.consumer
+      });
+    });
+    data.indexes.forEach((index) => {
+      results.push({
+        'id': index.id,
+        'title': index.title,
+        'name': index.title,
+        'description': index.description,
+        'objType': 'index',
+        'createdAt': index.createdAt,
+        'contact':''
+      });
+    });
+    data.jobs.forEach(job => {
+      results.push({
+        'id': job.id,
+        'title': job.name,
+        'name': job.name,
+        'description': job.description,
+        'objType': 'job',
+        'createdAt': job.createdAt,
+        'contact': job.contact
+      });
+    });
+    res.json(results);
+  });
+
+  /*
     File.findAll({
       raw: true,
       attributes:["id","title","name","description"],
@@ -216,6 +260,7 @@ router.get('/assets', [
     }).catch(function(err) {
         console.log(err);
     });
+  */
 });
 
 module.exports = router;

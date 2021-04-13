@@ -1,6 +1,6 @@
 'use strict';
 module.exports = (sequelize, DataTypes) => {
-  const assets_dataflows = sequelize.define('assets_dataflows', {
+  const dependent_jobs = sequelize.define('dependent_jobs', {
     id: {
       primaryKey: true,
       type: DataTypes.UUID,
@@ -8,10 +8,10 @@ module.exports = (sequelize, DataTypes) => {
       allowNull: false,
       autoIncrement: false
     },
-    assetId: DataTypes.UUID,
+    jobId: DataTypes.UUID,
     dataflowId: DataTypes.UUID,
-    cron: DataTypes.STRING,
+    dependsOnJobId: DataTypes.UUID,
   }, {freezeTableName: true});
 
-  return assets_dataflows;
+  return dependent_jobs;
 };

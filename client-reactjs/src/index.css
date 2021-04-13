@@ -528,7 +528,8 @@ div.tooltip {
 }
 
 .button-container {
-  float:right;
+  align-self: flex-end;
+  float: right;
   padding:5px;
 }
 

@@ -279,8 +279,6 @@ consumerGroup.on('message', (response) => {
   }
 
   if(dataflowWhereClause) {
-    console.log('dataflowWhereClause: '+dataflowWhereClause);
-    console.log('{where:'+ dataflowWhereClause+'}');
     Dataflow.findOne({where: dataflowWhereClause}).then((dataflow) => {
       Workflow.findOrCreate({
         where:{application_id:message.applicationid, dataflowId:dataflow.id},

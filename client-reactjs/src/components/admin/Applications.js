@@ -295,7 +295,7 @@ class Applications extends Component {
 
     return (
     <React.Fragment>
-      <div className="d-flex justify-content-end" style={{paddingTop:"60px"}}>
+      <div className="d-flex justify-content-end">
         <BreadCrumbs applicationId={this.state.applicationId}/>
         <span style={{ marginLeft: "auto" }}>
             <Tooltip placement="bottom" title={"Click to add a new Application"}>

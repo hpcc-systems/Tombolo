@@ -23,22 +23,25 @@ module.exports = (sequelize, DataTypes) => {
       }
     });
 
-    dataflow.hasMany(models.file, {
-      foreignKey: {
-        type: DataTypes.UUID
-      }
+    dataflow.belongsToMany(models.file, {
+      through: 'assets_dataflows',
+      as: 'files',
+      foreignKey: 'dataflowId',
+      otherKey: 'assetId'
     });
 
-    dataflow.hasMany(models.indexes, {
-      foreignKey: {
-        type: DataTypes.UUID
-      }
+    dataflow.belongsToMany(models.indexes, {
+      through: 'assets_dataflows',
+      as: 'indexes',
+      foreignKey: 'dataflowId',
+      otherKey: 'assetId'
     });
 
-    dataflow.hasMany(models.job, {
-      foreignKey: {
-        type: DataTypes.UUID
-      }
+    dataflow.belongsToMany(models.job, {
+      through: 'assets_dataflows',
+      as: 'jobs',
+      foreignKey: 'dataflowId',
+      otherKey: 'assetId'
     });
 
   };

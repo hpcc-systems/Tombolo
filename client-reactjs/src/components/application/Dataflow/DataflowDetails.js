@@ -14,22 +14,35 @@ function DataflowDetails({props}) {
 	return (
 	  <React.Fragment>
 	  <div>
-        <div className="d-flex justify-content-end" style={{paddingTop: "60px"}}>
-          <BreadCrumbs applicationId={dataflowReducer.applicationId} applicationTitle={dataflowReducer.applicationTitle}/>         
+        <div className="d-flex justify-content-end">
+          <BreadCrumbs
+            applicationId={dataflowReducer.applicationId}
+            applicationTitle={dataflowReducer.applicationTitle}
+          />
         </div>
         <div>
           <Tabs defaultActiveKey="1" style={{"height":"100vh"}}>
-            <TabPane tab="Designer" key="1">                  
-              <Graph applicationId={dataflowReducer.applicationId} applicationTitle={dataflowReducer.applicationTitle} selectedDataflow={dataflowReducer.dataflowId} graphContainer="graph" sidebarContainer="sidebar"/>
+            <TabPane tab="Designer" key="1">
+              <Graph
+                applicationId={dataflowReducer.applicationId}
+                applicationTitle={dataflowReducer.applicationTitle}
+                selectedDataflow={dataflowReducer.dataflowId}
+                graphContainer="graph"
+                sidebarContainer="sidebar"
+              />
             </TabPane>
-            <TabPane tab="Assets" key="2">  
-              <DataflowAssetsTable applicationId={dataflowReducer.applicationId} selectedDataflow={dataflowReducer.dataflowId} user={dataflowReducer.user}/>                
+            <TabPane tab="Assets" key="2">
+              <DataflowAssetsTable
+                applicationId={dataflowReducer.applicationId}
+                selectedDataflow={dataflowReducer.dataflowId}
+                user={dataflowReducer.user}
+              />
             </TabPane>
           </Tabs>
         </div>
       </div>
      </React.Fragment>
-	  )  
+	  )
 
 }
 

@@ -26,6 +26,7 @@ class IndexDetails extends PureComponent {
   state = {
     initialDataLoading: false,
     visible: true,
+    confirmLoading: false,
     sourceFiles:[],
     selectedSourceFile:"",
     clusters:[],
@@ -111,6 +112,10 @@ class IndexDetails extends PureComponent {
   }
 
   handleOk = async (e) => {
+    this.setState({
+      confirmLoading: true,
+    });
+
     let saveResponse = await this.saveIndexDetails();
 
     setTimeout(() => {
@@ -120,7 +125,11 @@ class IndexDetails extends PureComponent {
       });
       //this.props.onClose();
       //this.props.onRefresh(saveResponse);
-      this.props.history.push('/' + this.props.application.applicationId + '/assets')
+      if(this.props.history) {
+        this.props.history.push('/' + this.props.application.applicationId + '/assets')
+      } else {
+        document.querySelector('button.ant-modal-close').click();
+      }
     }, 200);
   };
 
@@ -399,7 +408,7 @@ class IndexDetails extends PureComponent {
 
   render() {
     const editingAllowed = hasEditPermission(this.props.user);
-    const { visible, sourceFiles, selectedRowKeys, clusters, indexSearchSuggestions, indexSearchValue, searchResultsLoaded } = this.state;
+    const { visible, sourceFiles, selectedRowKeys, clusters, indexSearchSuggestions, indexSearchValue, searchResultsLoaded, confirmLoading } = this.state;
     const formItemLayout = {
       labelCol: { span: 2 },
       wrapperCol: { span: 8 }
@@ -436,7 +445,7 @@ class IndexDetails extends PureComponent {
 
     return (
       <React.Fragment>
-        <div style={{"paddingTop": "55px"}}>
+        <div>
           {!this.props.isNew ?
             <div className="loader">
               <Spin spinning={this.state.initialDataLoading} size="large" />
@@ -556,17 +565,15 @@ class IndexDetails extends PureComponent {
               </TabPane> : null}
           </Tabs>
         </div>
-        {!this.props.viewMode ?
-          <div className="button-container">
-            <Button key="danger" type="danger" disabled={!this.state.index.id || !editingAllowed} onClick={this.handleDelete}>Delete</Button>
-            <Button key="back" onClick={this.handleCancel}>
-              Cancel
-            </Button>
-            <Button key="submit" disabled={!editingAllowed} type="primary" onClick={this.handleOk}>
-              Save
-            </Button>
-          </div>
-        : null}
+        <div className="button-container">
+          <Button key="danger" type="danger" disabled={!this.state.index.id || !editingAllowed} onClick={this.handleDelete}>Delete</Button>
+          <Button key="back" onClick={this.handleCancel}>
+            Cancel
+          </Button>
+          <Button key="submit" disabled={!editingAllowed} type="primary" loading={confirmLoading} onClick={this.handleOk}>
+            Save
+          </Button>
+        </div>
       </React.Fragment>
     );
   }

@@ -26,11 +26,22 @@ router.get('/index_list', [
     }
     console.log("[index/read.js] - Get file list for app_id = " + req.query.app_id);
     let dataflowId = req.query.dataflowId;
-    Index.findAll({where:{"application_id":req.query.app_id, dataflowId: { [Op.ne]: dataflowId }},include: [File, 'dataflows'], order: [['createdAt', 'DESC']]}).then(function(indexes) {
-        res.json(indexes);
+    let query = 'select i.id, i.name, i.title, i.createdAt, asd.dataflowId from indexes i '+
+    'left join assets_dataflows asd '+
+    'on i.id = asd.assetId '+
+    'where i.application_id=(:applicationId) '+
+    'and i.id not in (select assetId from assets_dataflows where dataflowId = (:dataflowId)) group by i.id order by i.name asc';
+    /*let query = 'select j.id, j.name, j.title, j.createdAt, asd.dataflowId from job j, assets_dataflows asd where j.application_id=(:applicationId) '+
+        'and j.id = asd.assetId and j.id not in (select assetId from assets_dataflows where dataflowId = (:dataflowId))';*/
+    let replacements = { applicationId: req.query.app_id, dataflowId: dataflowId};
+    let existingFile = models.sequelize.query(query, {
+      type: models.sequelize.QueryTypes.SELECT,
+      replacements: replacements
+    }).then((indexes) => {
+      res.json(indexes);
     })
     .catch(function(err) {
-        console.log(err);
+      return res.status(500).json({ success: false, message: "Error occured while retrieving indexes" });
     });
 });
 

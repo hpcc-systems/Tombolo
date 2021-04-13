@@ -5,8 +5,11 @@ var models  = require('../../models');
 let AssetDataflow = models.assets_dataflows;
 let DataflowGraph = models.dataflowgraph;
 let Dataflow = models.dataflow;
+let Job = models.job;
 const validatorUtil = require('../../utils/validator');
 const { body, query, validationResult } = require('express-validator');
+const JobScheduler = require('../../job-scheduler');
+var uuidv4  = require('uuid/v4');
 
 let createDataflow = (applicationId, dataflowType, parentDataflow) => {
   console.log(applicationId +', '+dataflowType +', '+parentDataflow)
@@ -44,7 +47,7 @@ router.post('/save', [
     var graphId='', application_id=req.body.application_id, dataflowId=req.body.dataflowId, dataflowType=req.body.dataflowType, parentDataflow=req.body.selectedParentDataflow;
     console.log('/save - dataflowgraph: '+application_id)
     try {
-
+      let nodes = req.body.nodes, edges = req.body.edges;
       if(dataflowId == undefined && dataflowType == 'sub-process') {
         let dataflowCreated = await createDataflow(application_id, dataflowType, parentDataflow);
         dataflowId = dataflowCreated.id;
@@ -54,19 +57,19 @@ router.post('/save', [
         where: {application_id:application_id, dataflowId:dataflowId},
         defaults: {
           application_id: req.body.application_id,
-          nodes: JSON.stringify(req.body.nodes),
-          edges: JSON.stringify(req.body.edges),
+          nodes: JSON.stringify(nodes),
+          edges: JSON.stringify(edges),
           dataflowId: dataflowId
         }
       }).then(async function(result) {
         graphId = result[0].id;
         if(!result[1]) {
-            return DataflowGraph.update({
-              application_id: req.body.application_id,
-              nodes: JSON.stringify(req.body.nodes),
-              edges: JSON.stringify(req.body.edges),
-              dataflowId: dataflowId
-            }, {where:{application_id:application_id, dataflowId:dataflowId}})
+          return DataflowGraph.update({
+            application_id: req.body.application_id,
+            nodes: JSON.stringify(nodes),
+            edges: JSON.stringify(edges),
+            dataflowId: dataflowId
+          }, {where:{application_id:application_id, dataflowId:dataflowId}})
         }
       }).then(function(graph) {
         res.json({"result":"success", "dataflowId":dataflowId});
@@ -134,29 +137,30 @@ router.post('/deleteAsset', [
       return res.status(422).json({ success: false, errors: errors.array() });
     }
     let assetId=req.body.id, edgeId='';
-    console.log('assetId: '+assetId+' dataflowId: '+req.body.dataflowId);
     DataflowGraph.findOne({where:{"application_Id":req.body.application_id, dataflowId:req.body.dataflowId}}).then(function(graph) {
-        let nodes = JSON.parse(graph.nodes), edges = JSON.parse(graph.edges), DataflowGraphId=graph.id;
-        nodes.forEach((node, idx) => {
-            if (node.id == assetId || (node.fileId == assetId || node.indexId == assetId || node.queryId == assetId || node.jobId == assetId || node.subProcessId == assetId)) {
-                edgeId=node.id;
-                nodes.splice(idx, 1);
-            }
-        });
-        edges = edges.filter(edge => (edge.source != edgeId && edge.target != edgeId));
+      let nodes = JSON.parse(graph.nodes), edges = JSON.parse(graph.edges), DataflowGraphId=graph.id;
+      nodes.forEach((node, idx) => {
+        if (node.id == assetId || (node.fileId == assetId || node.indexId == assetId || node.queryId == assetId || node.jobId == assetId || node.subProcessId == assetId)) {
+          edgeId=node.id;
+          nodes.splice(idx, 1);
+        }
+      });
+      edges = edges.filter(edge => (edge.source != edgeId && edge.target != edgeId));
 
-        console.log(JSON.stringify(edges));
-        DataflowGraph.update(
-            {nodes:JSON.stringify(nodes), edges:JSON.stringify(edges)},
-            {where:{"id": DataflowGraphId, "application_id":req.body.application_id}}
-        ).then(async function(updated) {
-          if (body('id').isUUID(4)) {
-            await AssetDataflow.destroy({ where: { dataflowId: req.body.dataflowId, assetId: assetId } }).catch(err => console.log(err));
-          }
-          res.json({"result":"success"});
-        }).catch(function(err) {
-            console.log(err);
-        });
+      DataflowGraph.update(
+        {nodes:JSON.stringify(nodes), edges:JSON.stringify(edges)},
+        {where:{"id": DataflowGraphId, "application_id":req.body.application_id}}
+      ).then(async function(updated) {
+        if (body('id').isUUID(4)) {
+          await AssetDataflow.destroy({ where: { dataflowId: req.body.dataflowId, assetId: assetId } }).catch(err => console.log(err));
+          Job.findOne({where:{id: assetId}, attributes: {exclude: ['assetId']}}).then((job) => {
+            JobScheduler.removeJobFromScheduler(job.name);
+          })
+        }
+        res.json({"result":"success"});
+      }).catch(function(err) {
+          console.log(err);
+      });
     })
 });
 

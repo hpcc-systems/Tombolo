@@ -135,12 +135,11 @@ class Graph extends Component {
     switch(d.type) {
       case 'File':
         if(d.fileId == undefined || d.fileId == '') {
-          _self.props.dispatch(assetsActions.newAsset(
-            _self.props.applicationId,
-            ''
-          ));
-          _self.props.history.push('/' + _self.props.applicationId + '/file');
-
+          isNew = true;
+          this.setState({
+            showAssetListDlg: true,
+            mousePosition: [d.x, d.y]
+          })
         } else {
           this.setState({
             isNew: isNew,
@@ -311,6 +310,7 @@ class Graph extends Component {
           return task.id == d3.select(this).attr("id")
         })
         if(task && task.length > 0) {
+          console.log(task[0].status);
           if(task[0].status == 'completed' || task[0].status == 'compiled') {
             d3.select(this.parentNode).append("text")
               .attr('class', 'tick')
@@ -340,22 +340,24 @@ class Graph extends Component {
 
   getTaskDetails = () => {
     let completedTasks = [];
-    this.props.workflowDetails.workflowDetails.forEach((workflowDetail) => {
-      let nodeObj = this.thisGraph.nodes.filter((node) => {
-        return (node.fileId == workflowDetail.task || node.jobId == workflowDetail.task || node.indexId == workflowDetail.task)
-      })
-      if(nodeObj[0].id) {
-        completedTasks.push({"id": "rec-"+nodeObj[0].id,
-          "status": workflowDetail.status,
-          "message": workflowDetail.message,
-          "wuid": workflowDetail.wuid,
-          "wu_start": workflowDetail.wu_start,
-          "wu_end": workflowDetail.wu_end,
-          "wu_duration": workflowDetail.wu_duration,
-          "cluster": this.props.workflowDetails.cluster
+    if(this.props.workflowDetails.wuDetails) {
+      this.props.workflowDetails.wuDetails.forEach((workflowDetail) => {
+        let nodeObj = this.thisGraph.nodes.filter((node) => {
+          return (node.fileId == workflowDetail.task || node.jobId == workflowDetail.task || node.indexId == workflowDetail.task)
         })
-      }
-    });
+        if(nodeObj[0] && nodeObj[0].id) {
+          completedTasks.push({"id": "rec-"+nodeObj[0].id,
+            "status": workflowDetail.status,
+            "message": workflowDetail.message,
+            "wuid": workflowDetail.wuid,
+            "wu_start": workflowDetail.wu_start,
+            "wu_end": workflowDetail.wu_end,
+            "wu_duration": workflowDetail.wu_duration,
+            "cluster": this.props.workflowDetails.cluster
+          })
+        }
+      });
+    }
     return completedTasks;
   }
 
@@ -391,20 +393,19 @@ class Graph extends Component {
           switch(el.type) {
             case 'File':
               el.fileId=saveResponse.fileId;
-              this.saveAssetToDataflow(el.fileId, this.props.selectedDataflow.id);
+              this.saveAssetToDataflow(el.fileId, this.props.selectedDataflow.id, el.type);
               break;
             case 'Index':
               el.indexId=saveResponse.indexId;
-              this.saveAssetToDataflow(el.indexId, this.props.selectedDataflow.id);
+              this.saveAssetToDataflow(el.indexId, this.props.selectedDataflow.id, el.type);
               break;
             case 'Job':
-            case 'Modeling':
             case 'Scoring':
             case 'ETL':
             case 'Query Build':
             case 'Data Profile':
               el.jobId=saveResponse.jobId;
-              this.saveAssetToDataflow(el.jobId, this.props.selectedDataflow.id);
+              this.saveAssetToDataflow(el.jobId, this.props.selectedDataflow.id, el.type);
               break;
             case 'Sub-Process':
               el.subProcessId=saveResponse.id;
@@ -475,7 +476,7 @@ class Graph extends Component {
 
   }
 
-  saveAssetToDataflow(assetId, dataflowId) {
+  saveAssetToDataflow(assetId, dataflowId, assetType) {
     console.log(`save asset -- assetId: ${assetId}, dataflowId: ${dataflowId}`);
 
     fetch('/api/dataflow/saveAsset', {
@@ -489,7 +490,9 @@ class Graph extends Component {
       handleError(response);
     }).then(data => {
       console.log(`Saved asset ${assetId} to dataflow ${dataflowId}...`);
-      this.createJobFileRelationship(assetId, dataflowId);
+      if(assetType == 'Job') {
+        this.createJobFileRelationship(assetId, dataflowId);
+      }
     });
   }
 
@@ -1029,7 +1032,6 @@ class Graph extends Component {
       .on("click", function (d) {
           _self.circleMouseUp(d3.select(this), d);
           _self.showNodeDetails(d);
-          console.log(d3.event.x, d3.event.y)
           //_self.makeTextEditable(d3.select(this), d)
       }).on("dblclick", function (d) {
           _self.setState({
@@ -1198,7 +1200,14 @@ class Graph extends Component {
 
   showNodeDetails = (d) => {
     if(this.props.viewMode) {
-      let taskDetails = this.getTaskDetails();
+      this.props.dispatch(assetsActions.assetSelected(
+        d.jobId,
+        this.props.applicationId,
+        ''
+      ));
+
+
+      /*let taskDetails = this.getTaskDetails();
       let tasks = taskDetails.filter((task) => {
         return task.id == "rec-"+d.id
       })
@@ -1212,7 +1221,7 @@ class Graph extends Component {
           wu_end: tasks[0].wu_end,
           wu_duration: tasks[0].wu_duration
         });
-      }
+      }*/
     }
   }
 
@@ -1263,87 +1272,91 @@ class Graph extends Component {
     d3.select("svg").attr("transform",
           "translate(" + margin.left + "," + margin.top + ")")
 
-    //border (rect) for main workflow area
-    svg.append('rect')
-      .attr('x', 90)
-      .attr('y', 0)
-      .attr('width', svgUsableWidth)
-      .attr('height', svgUsableHeight)
-      .attr('stroke', '#17a2b8')
-      .attr('fill', '#ffff');
+
 
     //add icons to sidebar
-    var group = svg.selectAll('g')
-    .data(shapesData)
-    .enter().append("g")
-    .attr("transform",
-          "translate(" + margin.left + "," + margin.top + ")")
-    .attr("class","pallette-nodes");
+    if(!this.props.viewMode) {
+      //border (rect) for main workflow area
+      svg.append('rect')
+        .attr('x', 90)
+        .attr('y', 0)
+        .attr('width', svgUsableWidth)
+        .attr('height', svgUsableHeight)
+        .attr('stroke', '#17a2b8')
+        .attr('fill', '#ffff');
 
-    group.append("rect")
-      .attr("x", function(d) { return d.rectx; })
-      .attr("y", function(d) { return d.recty; })
-      .attr("rx", function(d) { return d.rx; })
-      .attr("ry", function(d) { return d.ry; })
-      .attr("width", function(d) { return d.rectwidth; })
-      .attr("height", function(d) { return d.rectheight; })
-      .attr("stroke", "grey")
-      .attr("fill", function(d) { return d.color; })
-      .attr("stroke-width", "3")
-      .attr("filter", "url(#glow)")
-      .append("svg:title")
-        .text(function(d, i) { return d.description });
+      var group = svg.selectAll('g')
+      .data(shapesData)
+      .enter().append("g")
+      .attr("transform",
+            "translate(" + margin.left + "," + margin.top + ")")
+      .attr("class","pallette-nodes");
 
-    group.append("text")
-      .attr('font-family', 'FontAwesome')
-      .attr('font-size', function(d) { return '2em'} )
-      .attr("x", function(d) { return d.tx; })
-      .attr("y", function(d) { return d.ty; })
-      .text( function (d) { return d.icon; })
+      group.append("rect")
+        .attr("x", function(d) { return d.rectx; })
+        .attr("y", function(d) { return d.recty; })
+        .attr("rx", function(d) { return d.rx; })
+        .attr("ry", function(d) { return d.ry; })
+        .attr("width", function(d) { return d.rectwidth; })
+        .attr("height", function(d) { return d.rectheight; })
+        .attr("stroke", "grey")
+        .attr("fill", function(d) { return d.color; })
+        .attr("stroke-width", "3")
+        .attr("filter", "url(#glow)")
+        .append("svg:title")
+          .text(function(d, i) { return d.description });
 
-    group.append("text")
-      .attr("x", function(d) { return parseInt(d.tx) + 15; })
-      .attr("y", function(d) { return parseInt(d.ty) + 25; })
-      .attr("class", "entity")
-      .attr("dominant-baseline", "middle")
-      .attr("text-anchor", "middle")
-      .text( function (d) { return d.title; })
+      group.append("text")
+        .attr('font-family', 'FontAwesome')
+        .attr('font-size', function(d) { return '2em'} )
+        .attr("x", function(d) { return d.tx; })
+        .attr("y", function(d) { return d.ty; })
+        .text( function (d) { return d.icon; })
 
-    var palletteDragHandler = d3.drag()
-    .on("drag", function (d) {
-      return {"tx": d3.mouse(this)[0], "ty": d3.mouse(this)[1] , "rx": d3.mouse(this)[0], "ry": d3.mouse(this)[1]};
-    })
-    .on("end", function(d){
-      if((_self.props.selectedDataflow == undefined || _self.props.selectedDataflow == '')) {
-        message.config({top:130})
-        message.warning({
-          content: 'Please create a Dataflow by clicking on \'Add Dataflow\' button, before you can start using the Dataflow designer',
-        });
-        return;
-      }
+      group.append("text")
+        .attr("x", function(d) { return parseInt(d.tx) + 15; })
+        .attr("y", function(d) { return parseInt(d.ty) + 25; })
+        .attr("class", "entity")
+        .attr("dominant-baseline", "middle")
+        .attr("text-anchor", "middle")
+        .text( function (d) { return d.title; })
 
-      let idct = ++_self.graphState.idct;
-      let newNodeId = idct+Math.floor(Date.now());
+      var palletteDragHandler = d3.drag()
+      .on("drag", function (d) {
+        return {"tx": d3.mouse(this)[0], "ty": d3.mouse(this)[1] , "rx": d3.mouse(this)[0], "ry": d3.mouse(this)[1]};
+      })
+      .on("end", function(d){
+        if((_self.props.selectedDataflow == undefined || _self.props.selectedDataflow == '')) {
+          message.config({top:130})
+          message.warning({
+            content: 'Please create a Dataflow by clicking on \'Add Dataflow\' button, before you can start using the Dataflow designer',
+          });
+          return;
+        }
 
-      //let x = (mouseCoordinates[0] < 60) ? 60 : mouseCoordinates[0] - 150 : mouseCoordinates[0] > 1300 ? 1300 : mouseCoordinates[0];
-      var mouseCoordinates = d3.mouse(this);         // relative to specified container
-      let x = mouseCoordinates[0] > 1500 ? 1500 : mouseCoordinates[0] < 40 ? 40 : mouseCoordinates[0]
-      let y = mouseCoordinates[1] > 720 ? 720 : mouseCoordinates[1] < 0 ? 0 : mouseCoordinates[1]
+        let idct = ++_self.graphState.idct;
+        let newNodeId = idct+Math.floor(Date.now());
 
-      if(_self.graphState.zoomTransform) {
-        let inverted = _self.graphState.zoomTransform.invert(mouseCoordinates);
-        x = inverted[0] - 10;
-        y = inverted[1];
-      } else {
-        x = x - 10;
-        y = y;
-      }
+        //let x = (mouseCoordinates[0] < 60) ? 60 : mouseCoordinates[0] - 150 : mouseCoordinates[0] > 1300 ? 1300 : mouseCoordinates[0];
+        var mouseCoordinates = d3.mouse(this);         // relative to specified container
+        let x = mouseCoordinates[0] > 1500 ? 1500 : mouseCoordinates[0] < 40 ? 40 : mouseCoordinates[0]
+        let y = mouseCoordinates[1] > 720 ? 720 : mouseCoordinates[1] < 0 ? 0 : mouseCoordinates[1]
 
-      //95 = width of sidebar, 50 = height of tabs+breadcrumb etc
-      _self.thisGraph.nodes.push({"title":"New "+d3.select(this).select("text.entity").text(),"id":newNodeId,"x":x,"y":y, "type":d3.select(this).select("text.entity").text()})
-      _self.setIdCt(idct);
-      _self.updateGraph();
-    })
+        if(_self.graphState.zoomTransform) {
+          let inverted = _self.graphState.zoomTransform.invert(mouseCoordinates);
+          x = inverted[0] - 10;
+          y = inverted[1];
+        } else {
+          x = x - 10;
+          y = y;
+        }
+
+        //95 = width of sidebar, 50 = height of tabs+breadcrumb etc
+        _self.thisGraph.nodes.push({"title":"New "+d3.select(this).select("text.entity").text(),"id":newNodeId,"x":x,"y":y, "type":d3.select(this).select("text.entity").text()})
+        _self.setIdCt(idct);
+        _self.updateGraph();
+      })
+    }
 
     //tooltips
     var div = d3.select("body").append("div") .attr("class", "tooltip").style("opacity", 0);
@@ -1363,7 +1376,7 @@ class Graph extends Component {
     });
 
     //disable dragging on left nav
-    if(hasEditPermission(_self.props.user)) {
+    if(hasEditPermission(_self.props.user) && !this.props.viewMode) {
       palletteDragHandler(svg.selectAll("g.pallette-nodes"));
     }
 
@@ -1434,7 +1447,6 @@ class Graph extends Component {
       _self.svgMouseUp(_self.thisGraph, d);
     })
     svg.on("click", function() {
-      console.log(d3.mouse(this));
     });
 
     // listen for dragging
@@ -1605,11 +1617,20 @@ class Graph extends Component {
         <AssetDetailsDialog assetType="file" fileId={this.props.selectedFile} selectedAsset={this.props.selectedFile} application={this.props.application} user={this.props.user} handleClose={this.handleClose}/>
       : null }
 
-
       {this.state.openJobDetailsDialog ?
-        <AssetDetailsDialog assetType="job" assetId={this.state.selectedJob} selectedAsset={this.state.selectedJob} application={this.props.application} user={this.props.user} handleClose={this.closeJobDlg}/>
+        <AssetDetailsDialog
+          assetType="job"
+          assetId={this.state.selectedJob}
+          nodes={this.thisGraph.nodes}
+          edges={this.thisGraph.edges}
+          nodeIndex={this.state.currentlyEditingNode ? this.state.currentlyEditingNode.id : ''}
+          selectedAsset={this.state.selectedJob}
+          selectedDataflow={this.state.selectedDataflow}
+          application={this.props.application}
+          user={this.props.user}
+          handleClose={this.closeJobDlg}
+        />
       : null}
-
 
       {this.state.openIndexDetailsDialog ?
         <AssetDetailsDialog assetType="index" assetId={this.state.selectedIndex} selectedAsset={this.state.selectedIndex} application={this.props.application} user={this.props.user} handleClose={this.closeIndexDlg}/>

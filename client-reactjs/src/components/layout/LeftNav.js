@@ -85,7 +85,7 @@ class LeftNav extends Component {
                   <NavLink to={"/"+applicationId+"/dataflow"} className="nav-link" data-toggle="popover" tabIndex="3"><i className="fa fa-lg fa-clock-o"></i> <span className={this.state.collapsed ? "d-none" : ""}>Definitions</span></NavLink>
                 </li>
                 <li className="nav-item" >
-                  <NavLink to={"/"+applicationId+"/dataflowinstances"} className="nav-link" data-toggle="popover" tabIndex="4"><i className="fa fa-lg fa-microchip"></i> <span className={this.state.collapsed ? "d-none" : ""}>Instances</span></NavLink>
+                  <NavLink to={"/"+applicationId+"/dataflowinstances"} className="nav-link" data-toggle="popover" tabIndex="4"><i className="fa fa-lg fa-microchip"></i> <span className={this.state.collapsed ? "d-none" : ""}>Job Execution</span></NavLink>
                 </li>
               </ul>
               </li>

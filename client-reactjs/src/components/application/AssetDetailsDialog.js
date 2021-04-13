@@ -6,15 +6,15 @@ import { useParams } from "react-router-dom";
 import { Modal, Button } from 'antd/lib';
 
 function AssetDetailsDialog(props) {
-  const [application, setApplication] = useState({...props})
+  const [application, setApplication] = useState({...props});
 
 	const { isShowing, toggle, OpenDetailsForm } = useFileDetailsForm();
 
-  let {assetType, applicationId, assetId} = useParams();
+  let { assetType, applicationId, assetId, selectedDataflow } = useParams();
 
   useEffect(() => {
   	setApplication({...props});
-    if(props.assetId != '') {
+    if (props.assetId != '') {
       handleOpen();
     }
   }, [props.assetId])
@@ -33,9 +33,14 @@ function AssetDetailsDialog(props) {
 
   const DetailsForm = props => {
     return OpenDetailsForm({
+      ...props,
       "type": props.assetType,
       "isNew":false,
       "selectedAsset": props.assetId,
+      "selectedDataflow": props.selectedDataflow,
+      "nodes": props.nodes,
+      "edges": props.edges,
+      "nodeIndex": props.nodeIndex,
       "application": props.application,
       "user": props.user,
       "onClose": handleClose,
@@ -51,17 +56,24 @@ function AssetDetailsDialog(props) {
           visible={isShowing}
           width="1200px"
           onCancel={handleClose}
-          footer={[
-            <Button type="primary" key="close" onClick={handleClose}>
-              Close
-            </Button>
-          ]}
+          footer={null}
+          bodyStyle={{display: "flex", flexDirection: "column"}}
         >
-				<DetailsForm assetType={props.assetType} fileId={props.fileId} application={props.application} user={props.user}/>
+        <DetailsForm
+          assetType={props.assetType}
+          fileId={props.fileId}
+          application={props.application}
+          user={props.user}
+          selectedDataflow={props.selectedDataflow}
+          nodes={props.nodes}
+          edges={props.edges}
+          nodeIndex={props.nodeIndex}
+        />
       </Modal>
 	  </React.Fragment>
 	  : null
 
 	)
 }
+
 export default AssetDetailsDialog

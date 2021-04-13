@@ -477,7 +477,7 @@ function Assets(props) {
   return (
       <React.Fragment>
         <div style={{"height":"100%", overflow: "hidden"}}>
-          <div className="d-flex justify-content-end" style={{paddingTop:"55px", margin: "5px"}}>
+          <div className="d-flex justify-content-end" style={{margin: "5px"}}>
             <BreadCrumbs applicationId={application.applicationId} applicationTitle={application.applicationTitle}/>
             <div className="ml-auto">
               {editingAllowed ?

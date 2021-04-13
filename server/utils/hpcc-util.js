@@ -268,8 +268,63 @@ exports.getJobWuidByName = (clusterId, jobName) => {
       });
     });
   });
-
 }
+
+exports.resubmitWU = (clusterId, wuid) => {
+  return new Promise(async (resolve, reject) => {
+    try {
+      let body = {
+        "WUResubmitRequest": {
+           "Wuids": {
+             "Item": [
+               wuid
+             ]
+           },
+           "BlockTillFinishTimer": 0,
+           "ResetWorkflow": true,
+           "CloneWorkunit": false
+         }
+      }
+      let cluster = await module.exports.getCluster(clusterId);
+      console.log(JSON.stringify(body));
+      request.post({
+        url: cluster.thor_host + ':' + cluster.thor_port +'/WsWorkunits/WUResubmit.json?ver_=1.77',
+        auth : module.exports.getClusterAuth(cluster),
+        body: JSON.stringify(body),
+        headers: {'content-type' : 'application/json'},
+      }, function(err, response, body) {
+        if (err) {
+          console.log('ERROR - ', err);
+          reject(err);
+        } else {
+          var result = JSON.parse(body);
+          console.log(result);
+          resolve(result)
+        }
+      });
+    } catch(err) {
+      reject(err);
+    }
+  })
+}
+
+exports.workunitInfo = (wuid, cluster) => {
+  let clusterAuth = module.exports.getClusterAuth(cluster);
+  let wsWorkunits = new hpccJSComms.WorkunitsService({ baseUrl: cluster.thor_host + ':' + cluster.thor_port, userID:(clusterAuth ? clusterAuth.user : ""), password:(clusterAuth ? clusterAuth.password : ""), type: "get" });
+  return new Promise((resolve, reject) => {
+    wsWorkunits.WUInfo({"Wuid":wuid, "IncludeExceptions":true, "IncludeSourceFiles":true, "IncludeResults":true, "IncludeTotalClusterTime": true}).then(async (wuInfo) => {
+      if(wuInfo.Workunit.State == 'completed' || wuInfo.Workunit.State == 'failed' || wuInfo.Workunit.State == 'wait' || wuInfo.Workunit.State == 'compiled') {
+        resolve(wuInfo);
+      } else {
+        setTimeout(_ => {
+          resolve(module.exports.workunitInfo(wuid, cluster));
+        }, 500);
+
+      }
+    })
+  });
+}
+
 
 let getFileLayout = (cluster, fileName, format) =>  {
 	var layoutResults = [];

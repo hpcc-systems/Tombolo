@@ -31,6 +31,12 @@ module.exports = (sequelize, DataTypes) => {
       onDelete: 'CASCADE',
       hooks: true
     });
+    job.belongsToMany(models.job, {
+      through: 'dependent_jobs',
+      as: 'dependsOnJobs',
+      foreignKey: 'dependsOnJobId',
+      otherKey: 'jobId'
+    });
     job.belongsToMany(models.dataflow, {
       through: 'assets_dataflows',
       as: 'dataflows',
@@ -45,7 +51,7 @@ module.exports = (sequelize, DataTypes) => {
       as: 'groups',
       foreignKey: 'assetId',
       otherKey: 'groupId'
-    })
+    });
   };
   return job;
 };

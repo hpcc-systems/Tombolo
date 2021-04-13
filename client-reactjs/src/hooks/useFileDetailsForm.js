@@ -13,7 +13,6 @@ const useFileDetailsForm = () => {
   }
 
   function OpenDetailsForm ({...props}) {
-    console.log('OpenDetailsForm: '+JSON.stringify(props))
     let dialogRef;
   	if(props.type.toLowerCase() === 'file'.toLowerCase())
   		return	<FileDetailsForm	onRef={ref => (dialogRef = ref)} {...props} />

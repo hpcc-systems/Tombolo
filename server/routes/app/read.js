@@ -53,7 +53,7 @@ router.get('/appListByUserId', (req, res) => {
 
 router.get('/app', [
   query('app_id')
-    .isUUID(4).withMessage('Invalid dataflow id')
+    .isUUID(4).withMessage('Invalid application id')
 ], (req, res) => {
   const errors = validationResult(req).formatWith(validatorUtil.errorFormatter);
   if (!errors.isEmpty()) {
