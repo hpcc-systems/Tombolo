@@ -140,9 +140,7 @@ let updateFileRelationship = (jobId, job, files, filesToBeRemoved, existingNodes
       for(let idx = 0; idx < files.length; idx++) {
         const file = files[idx];
         //promises.push(Promise.reject("error rejecting...."));
-        console.log("*****************fileinfo")
         let fileInfo = await hpccUtil.fileInfo(file.name, job.basic.clusterId);
-        console.log(fileInfo)
         if(fileInfo) {
           let replacements = { applicationId: job.basic.application_id, fileName: fileInfo.basic.name, job_id: jobId, file_type: file.file_type};
           let existingFile = await models.sequelize.query(query, {
@@ -475,6 +473,20 @@ router.post('/saveJob', [
 
       if (req.body.job.schedule.type) {
       switch (req.body.job.schedule.type) {
+        case '':
+          await AssetDataflow.update({
+            cron: null,
+          }, {
+            where: { assetId: jobId, dataflowId: req.body.job.basic.dataflowId }
+          }).then(async (assetDataflowupdated) => {
+            await JobScheduler.removeJobFromScheduler(req.body.job.basic.name);
+          })
+          await DependentJobs.destroy({
+            where: {
+              jobId: req.body.id,
+              dataflowId: req.body.job.basic.dataflowId
+            }
+          });
         case 'Predecessor':
           await AssetDataflow.update({
             cron: null,

@@ -61,12 +61,14 @@ class QueueDaemon {
   async processJob(message) {
     try {
       let msgJson = JSON.parse(message);
-      await JobScheduler.scheduleCheckForJobsWithSingleDependency(msgJson.jobname);
       if(msgJson.wuid) {
         let jobExecution = await JobExecution.findOne({where: {wuid: msgJson.wuid}});
         if(jobExecution) {
           let cluster = await hpccUtil.getCluster(jobExecution.clusterId)
           let wuInfo = await hpccUtil.workunitInfo(msgJson.wuid, cluster);
+          if(wuInfo.Workunit.State == 'completed') {
+            await JobScheduler.scheduleCheckForJobsWithSingleDependency(msgJson.jobname);
+          }
           await JobExecution.update({
             status: wuInfo.Workunit.State,
             wu_duration: wuInfo.Workunit.TotalClusterTime
