@@ -26,13 +26,10 @@ export function handleError(response) {
     throw Error("Error occured while saving the data. Please check the form data");
   } else {
     let errorMessage = '';
-    response.json()
-    .then((responseData) => {
+    response.json().then((responseData) => {
       errorMessage = responseData.message;
+      //throw new Error(errorMessage);
+      message.error(errorMessage);
     })
-
-    throw Error(errorMessage);
   }
-
-  return;
 }

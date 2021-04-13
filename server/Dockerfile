@@ -1,4 +1,4 @@
-FROM node:10-alpine
+FROM node:12-alpine
 
 COPY . app
 COPY [".env",  "/app/.env"]
@@ -16,12 +16,3 @@ RUN npm install -g node-gyp && npm install
 RUN npm install sequelize-cli pm2 -g
 
 #CMD ["node", "server.js"]
-
-
-
-
-
-
-
-
-

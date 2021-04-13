@@ -258,11 +258,13 @@ class JobDetails extends Component {
   }
 
   setClusters(clusterId) {
-    let selectedCluster = this.props.clusters.filter(cluster => cluster.id == clusterId);
-    if(selectedCluster.length > 0) {
-      this.formRef.current.setFieldsValue({
-        "clusters": selectedCluster[0].id
-      })
+    if(this.props.clusters) {
+      let selectedCluster = this.props.clusters.filter(cluster => cluster.id == clusterId);
+      if(selectedCluster.length > 0) {
+        this.formRef.current.setFieldsValue({
+          "clusters": selectedCluster[0].id
+        })
+      }
     }
   }
 
@@ -529,8 +531,6 @@ class JobDetails extends Component {
       jobDetails.basic.groupId = groupId;
     }
 
-    console.log(jobDetails);
-
     return jobDetails;
   }
 
@@ -596,9 +596,7 @@ class JobDetails extends Component {
 
   handleAddOutputFile = (e) => {
     let selectedFile = this.state.sourceFiles.filter(sourceFile => sourceFile.id==this.state.selectedOutputFile)[0];
-    console.log('selectedFile: '+JSON.stringify(selectedFile));
     var outputFiles = this.state.job.outputFiles;
-    console.log(outputFiles);
     outputFiles.push(selectedFile)
     this.setState({
         ...this.state,
@@ -1269,7 +1267,6 @@ class JobDetails extends Component {
                   : null }
                   { this.state.selectedScheduleType === "Predecessor" ?
                     <Form.Item label="Run After">
-                    {console.log(this.state.schedulePredecessor)}
                       <Select id="schedulePredecessor"
                         mode="multiple"
                         placeholder="Select Job(s) that will trigger execution"

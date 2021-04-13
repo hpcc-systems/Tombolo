@@ -103,6 +103,11 @@ function ExistingAssetListDialog({show, applicationId, selectedDataflow, assetTy
     width: '35%'
   },
   {
+    title: 'Title',
+    dataIndex: 'title',
+    width: '30%'
+  },
+  {
     title: 'Description',
     dataIndex: 'description',
     width: '35%',

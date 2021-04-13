@@ -322,7 +322,6 @@ function Assets(props) {
       cancelText: 'No',
       onOk() {
         parent = getParent(selectedGroup.key, treeData);
-        console.log(parent);
         fetch('/api/groups', {
           method: 'delete',
           headers: authHeader(),
@@ -344,7 +343,7 @@ function Assets(props) {
 
           fetchGroups();
         }).catch(error => {
-          console.log(error);
+          message.error(error)
         });
       },
       onCancel() {

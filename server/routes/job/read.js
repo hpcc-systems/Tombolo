@@ -140,112 +140,113 @@ let updateFileRelationship = (jobId, job, files, filesToBeRemoved, existingNodes
       for(let idx = 0; idx < files.length; idx++) {
         const file = files[idx];
         //promises.push(Promise.reject("error rejecting...."));
+        console.log("*****************fileinfo")
         let fileInfo = await hpccUtil.fileInfo(file.name, job.basic.clusterId);
-        let replacements = { applicationId: job.basic.application_id, fileName: fileInfo.basic.name, job_id: jobId, file_type: file.file_type};
-        let existingFile = await models.sequelize.query(query, {
-          type: models.sequelize.QueryTypes.SELECT,
-          replacements: replacements
-        })
-        console.log("***********************"+existingFile.length+"***********************")
-        console.log(file.name);
-        //file does not exists or exists with a different type
-        if(!existingFile || existingFile.length == 0) {
-         let fileCreated = await File.create({
-            "application_id": job.basic.application_id,
-            "title": fileInfo.basic.fileName,
-            "name": fileInfo.basic.name,
-            "cluster_id": job.basic.clusterId,
-            "description": fileInfo.basic.description,
-            "fileType": fileInfo.basic.fileType,
-            "isSuperFile": fileInfo.basic.isSuperFile,
-            "qualifiedPath": fileInfo.basic.pathMask,
-            "dataflowId": job.basic.dataflowId,
-            "scope": fileInfo.basic.scope
+        console.log(fileInfo)
+        if(fileInfo) {
+          let replacements = { applicationId: job.basic.application_id, fileName: fileInfo.basic.name, job_id: jobId, file_type: file.file_type};
+          let existingFile = await models.sequelize.query(query, {
+            type: models.sequelize.QueryTypes.SELECT,
+            replacements: replacements
           })
-          let assetsDataflowCreated = await AssetDataflow.create({
-            assetId: fileCreated.id,
-            dataflowId: job.basic.dataflowId
-          });
-          //update file_id in JobFile
-          console.log(fileCreated.id, job.basic.id, file.file_type, fileInfo.basic.name);
-          let jobFileUpdated = await JobFile.update({
-            file_id: fileCreated.id
-          }, {where: {application_id: job.basic.application_id, job_id: job.basic.jobId, file_type: file.file_type, name: fileInfo.basic.name}})
+          //file does not exists or exists with a different type
+          if(!existingFile || existingFile.length == 0) {
+           let fileCreated = await File.create({
+              "application_id": job.basic.application_id,
+              "title": fileInfo.basic.fileName,
+              "name": fileInfo.basic.name,
+              "cluster_id": job.basic.clusterId,
+              "description": fileInfo.basic.description,
+              "fileType": fileInfo.basic.fileType,
+              "isSuperFile": fileInfo.basic.isSuperFile,
+              "qualifiedPath": fileInfo.basic.pathMask,
+              "dataflowId": job.basic.dataflowId,
+              "scope": fileInfo.basic.scope
+            })
+            let assetsDataflowCreated = await AssetDataflow.create({
+              assetId: fileCreated.id,
+              dataflowId: job.basic.dataflowId
+            });
+            //update file_id in JobFile
+            console.log(fileCreated.id, job.basic.id, file.file_type, fileInfo.basic.name);
+            let jobFileUpdated = await JobFile.update({
+              file_id: fileCreated.id
+            }, {where: {application_id: job.basic.application_id, job_id: job.basic.jobId, file_type: file.file_type, name: fileInfo.basic.name}})
 
-          let id=fileCreated.id, edge={};
-          console.log('jobFile: '+JSON.stringify(file));
-          //starting from top
+            let id=fileCreated.id, edge={};
+            console.log('jobFile: '+JSON.stringify(file));
+            //starting from top
 
-          if(file.file_type == 'input') {
-            inputY = getYPosition(inputY, file.file_type, job.mousePosition[1], files);
-          } else if(file.file_type == 'output') {
-            outputY = getYPosition(outputY, file.file_type, job.mousePosition[1], files);
-          }
-          console.log(idx)
-          let posX = file.file_type == 'input' ? job.mousePosition[0] - 114  : parseInt(job.mousePosition[0]) + 114;
-          let posY = file.file_type == 'input' ? inputY  : outputY;
-          nodes.push({
-            "title": fileInfo.basic.fileName,
-            "id": fileCreated.id,
-            "x": posX,
-            "y": posY,
-            "type": "File",
-            "fileId": fileCreated.id
-          })
-          if(file.file_type == 'input') {
-            edge = {"source":fileCreated.id,"target":job.basic.id};
-          } else if(file.file_type == 'output') {
-            edge = {"source":job.basic.id,"target":fileCreated.id};
-          }
-          edges.push(edge);
+            if(file.file_type == 'input') {
+              inputY = getYPosition(inputY, file.file_type, job.mousePosition[1], files);
+            } else if(file.file_type == 'output') {
+              outputY = getYPosition(outputY, file.file_type, job.mousePosition[1], files);
+            }
+            console.log(idx)
+            let posX = file.file_type == 'input' ? job.mousePosition[0] - 114  : parseInt(job.mousePosition[0]) + 114;
+            let posY = file.file_type == 'input' ? inputY  : outputY;
+            nodes.push({
+              "title": fileInfo.basic.fileName,
+              "id": fileCreated.id,
+              "x": posX,
+              "y": posY,
+              "type": "File",
+              "fileId": fileCreated.id
+            })
+            if(file.file_type == 'input') {
+              edge = {"source":fileCreated.id,"target":job.basic.id};
+            } else if(file.file_type == 'output') {
+              edge = {"source":job.basic.id,"target":fileCreated.id};
+            }
+            edges.push(edge);
 
-          fieldsToUpdate = {"file_id": fileCreated.id, "application_id" : job.basic.application_id};
-          let fileLayoutToSave = hpccUtil.updateCommonData(fileInfo.file_layouts, fieldsToUpdate);
-          let fileLayout = await FileLayout.bulkCreate(fileLayoutToSave, {updateOnDuplicate: ["name", "type", "displayType", "displaySize", "textJustification", "format","data_types", "isPCI", "isPII", "isHIPAA", "description", "required"]});
-          let fileValidationsToSave = hpccUtil.updateCommonData(fileInfo.file_validations, fieldsToUpdate);
-          let fileValidations = await FileValidation.bulkCreate(
-            fileValidationsToSave,
-            {updateOnDuplicate: ["name", "ruleType", "rule", "action", "fixScript"]}
-          )
-        } else {
-          let id=existingFile[0].id;
-          if(existingNodes) {
-            existingNode = existingNodes.filter(node => node.id == id)[0];
-          }
-          //update file_id in JobFile - this is the case when a job was added via assets and later the job is added to a workflow
-          //when job is created from assets, there is no association with actual file at that time
-          console.log(id, job.basic.id, file.file_type, fileInfo.basic.name);
-          let jobFileUpdated = await JobFile.update({
-            file_id: id
-          }, {where: {application_id: job.basic.application_id, job_id: job.basic.jobId, file_type: file.file_type, name: fileInfo.basic.name}})
+            fieldsToUpdate = {"file_id": fileCreated.id, "application_id" : job.basic.application_id};
+            let fileLayoutToSave = hpccUtil.updateCommonData(fileInfo.file_layouts, fieldsToUpdate);
+            let fileLayout = await FileLayout.bulkCreate(fileLayoutToSave, {updateOnDuplicate: ["name", "type", "displayType", "displaySize", "textJustification", "format","data_types", "isPCI", "isPII", "isHIPAA", "description", "required"]});
+            let fileValidationsToSave = hpccUtil.updateCommonData(fileInfo.file_validations, fieldsToUpdate);
+            let fileValidations = await FileValidation.bulkCreate(
+              fileValidationsToSave,
+              {updateOnDuplicate: ["name", "ruleType", "rule", "action", "fixScript"]}
+            )
+          } else {
+            let id=existingFile[0].id;
+            if(existingNodes) {
+              existingNode = existingNodes.filter(node => node.id == id)[0];
+            }
+            //update file_id in JobFile - this is the case when a job was added via assets and later the job is added to a workflow
+            //when job is created from assets, there is no association with actual file at that time
+            console.log(id, job.basic.id, file.file_type, fileInfo.basic.name);
+            let jobFileUpdated = await JobFile.update({
+              file_id: id
+            }, {where: {application_id: job.basic.application_id, job_id: job.basic.jobId, file_type: file.file_type, name: fileInfo.basic.name}})
 
-          //starting from top
-          if(file.file_type == 'input') {
-            inputY = getYPosition(inputY, file.file_type, job.mousePosition[1], files);
-          } else if(file.file_type == 'output') {
-            outputY = getYPosition(outputY, file.file_type, job.mousePosition[1], files);
-          }
+            //starting from top
+            if(file.file_type == 'input') {
+              inputY = getYPosition(inputY, file.file_type, job.mousePosition[1], files);
+            } else if(file.file_type == 'output') {
+              outputY = getYPosition(outputY, file.file_type, job.mousePosition[1], files);
+            }
 
-          let posX = file.file_type == 'input' ? job.mousePosition[0] - 114  : parseInt(job.mousePosition[0]) + 114;
-          let posY = file.file_type == 'input' ? inputY  : outputY;
-          //check if same node already exists in the workflow
-          nodes.push({
-            "title": fileInfo.basic.fileName,
-            "id": existingFile[0].id,
-            "x": posX,
-            "y": posY,
-            "type": "File",
-            "fileId": existingFile[0].id,
-            "isHidden": existingNode ? existingNode.isHidden : false
-          })
-          if(file.file_type == 'input' && !existingNode.isHidden) {
-            edge = {"source":existingFile[0].id,"target":job.basic.id};
-          } else if(file.file_type == 'output' && !existingNode.isHidden) {
-            edge = {"source":job.basic.id,"target":existingFile[0].id};
+            let posX = file.file_type == 'input' ? job.mousePosition[0] - 114  : parseInt(job.mousePosition[0]) + 114;
+            let posY = file.file_type == 'input' ? inputY  : outputY;
+            //check if same node already exists in the workflow
+            nodes.push({
+              "title": fileInfo.basic.fileName,
+              "id": existingFile[0].id,
+              "x": posX,
+              "y": posY,
+              "type": "File",
+              "fileId": existingFile[0].id,
+              "isHidden": existingNode ? existingNode.isHidden : false
+            })
+            if(file.file_type == 'input' && !existingNode.isHidden) {
+              edge = {"source":existingFile[0].id,"target":job.basic.id};
+            } else if(file.file_type == 'output' && !existingNode.isHidden) {
+              edge = {"source":job.basic.id,"target":existingFile[0].id};
+            }
+            edges.push(edge);
           }
-          edges.push(edge);
         }
-
       }
       console.log("job and files created....")
       updateDataFlowGraph(job.basic.application_id, job.basic.dataflowId, nodes, edges, filesToBeRemoved).then((dataflowGraph) => {

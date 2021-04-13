@@ -7,12 +7,17 @@ const crypto = require('crypto');
 let algorithm = 'aes-256-ctr';
 
 exports.fileInfo = (fileName, clusterId) => {
-	console.log('fileName: '+fileName+', '+clusterId);
 	return new Promise((resolve, reject) => {
 		module.exports.getCluster(clusterId).then(function(cluster) {
+      var fileInfo = {};
 			let clusterAuth = module.exports.getClusterAuth(cluster);
 			let dfuService = new hpccJSComms.DFUService({ baseUrl: cluster.thor_host + ':' + cluster.thor_port, userID:(clusterAuth ? clusterAuth.user : ""), password:(clusterAuth ? clusterAuth.password : "")});
 			dfuService.DFUInfo({"Name":fileName}).then(response => {
+        if(response.DFUInfoResponse && response.DFUInfoResponse.Exceptions) {
+          console.error(response.DFUInfoResponse.Exception[0]);
+          resolve(null);
+        }
+        console.log(response)
 		  	var processFieldValidations = function(fileLayout) {
       		var fieldsValidations=[];
       		fileLayout.forEach(function(field, idx) {
@@ -29,7 +34,7 @@ exports.fileInfo = (fileName, clusterId) => {
       		});
       		return fieldsValidations;
       	}
-      	var fileInfo = {};
+
     		getFileLayout(cluster, fileName, response.FileDetail.Format).then(function(fileLayout) {
       		fileInfo.basic = {
       			"name" : response.FileDetail.Name,
@@ -46,7 +51,7 @@ exports.fileInfo = (fileName, clusterId) => {
     		})
 
 		  }).catch((err) => {
-        reject(err);
+        resolve(null);
       })
 		}).catch((err) => {
       console.log('err-1', err);

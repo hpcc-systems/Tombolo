@@ -505,7 +505,7 @@ router.delete('/', [
           res.json({"success":true})
         })
       } else {
-        res.status(400).send({"message":"The selected Group is not empty. Please empty the content of the group before it can be deleted"});
+        res.status(500).send({"message":"The selected Group is not empty. Please empty the content of the group before it can be deleted"});
       }
 
     } catch (err) {
