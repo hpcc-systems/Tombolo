@@ -23,6 +23,7 @@
     "jsonwebtoken": "^8.5.1",
     "kafka-node": "^5.0.0",
     "kafkajs": "^1.15.0",
+    "kafkajs-snappy": "^1.1.0",
     "lodash": "^4.17.20",
     "moment": "^2.29.1",
     "mongodb": "^3.6.5",

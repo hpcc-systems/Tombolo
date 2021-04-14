@@ -529,6 +529,8 @@ router.post('/saveJob', [
                 where: { assetId: jobId, dataflowId: req.body.job.basic.dataflowId }
               });
             if(success || success[0]) {
+              //remove existing job with same name
+              await JobScheduler.removeJobFromScheduler(req.body.job.basic.name);
               await JobScheduler.addJobToScheduler(
                 req.body.job.basic.name,
                 cronExpression,

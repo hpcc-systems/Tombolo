@@ -1,12 +1,13 @@
-const { Kafka } = require('kafkajs');
+const { Kafka, CompressionTypes, CompressionCodecs } = require('kafkajs');
+const SnappyCodec = require('kafkajs-snappy')
 const { fs } = require('fs');
 const models = require('./models');
 const hpccUtil = require('./utils/hpcc-util');
 let JobExecution = models.job_execution;
 const JobScheduler = require('./job-scheduler');
-
 require('dotenv').config();
 
+CompressionCodecs[CompressionTypes.Snappy] = SnappyCodec;
 const JOB_COMPLETE_TOPIC = 'JobComplete';
 
 class QueueDaemon {
@@ -61,12 +62,13 @@ class QueueDaemon {
   async processJob(message) {
     try {
       let msgJson = JSON.parse(message);
+      console.log(msgJson);
       if(msgJson.wuid) {
         let jobExecution = await JobExecution.findOne({where: {wuid: msgJson.wuid}});
         if(jobExecution) {
           let cluster = await hpccUtil.getCluster(jobExecution.clusterId)
           let wuInfo = await hpccUtil.workunitInfo(msgJson.wuid, cluster);
-          if(wuInfo.Workunit.State == 'completed') {
+          if(wuInfo.Workunit.State == 'completed' || wuInfo.Workunit.State == 'wait') {
             await JobScheduler.scheduleCheckForJobsWithSingleDependency(msgJson.jobname);
           }
           await JobExecution.update({

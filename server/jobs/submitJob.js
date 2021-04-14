@@ -12,12 +12,12 @@ if (parentPort) {
 }
 
 (async () => {
-  console.log(
-    `submitting job ${workerData.jobName} ` +
-    `(WU: ${workerData.workunitId}) to url ${workerData.cluster}/WsWorkunits/WUResubmit.json?ver_=1.78`
-  );
   try {
     let wuid = await hpccUtil.getJobWuidByName(workerData.clusterId, workerData.jobName);
+    console.log(
+    `submitting job ${workerData.jobName} ` +
+    `(WU: ${wuid}) to url ${workerData.clusterId}/WsWorkunits/WUResubmit.json?ver_=1.78`
+    );
     let wuInfo = await hpccUtil.resubmitWU(workerData.clusterId, wuid);
     //record workflow execution
     await JobExecution.findOrCreate({
