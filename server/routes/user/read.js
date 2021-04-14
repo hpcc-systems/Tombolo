@@ -3,7 +3,7 @@ const router = express.Router();
 const userService = require('./userservice');
 const { body, query, check, validationResult } = require('express-validator');
 const errorFormatter = ({ location, msg, param, value, nestedErrors }) => {
-  return `${location}[${param}]: ${msg}`;
+  return `${msg}`;
 };
 // routes
 router.get('/searchuser', searchUser);

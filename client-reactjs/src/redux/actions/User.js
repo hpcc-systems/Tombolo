@@ -24,7 +24,7 @@ function login(username, password) {
         body: JSON.stringify({ username, password })
       }).then(handleResponse)
       .then(user => {
-        var decoded = jwtDecode(user.accessToken);          
+        var decoded = jwtDecode(user.accessToken);
         var user = {
             "token": user.accessToken,
             "id": decoded.id,
@@ -61,14 +61,14 @@ function registerNewUser(newUserObj) {
           'Accept': 'application/json',
           'Content-Type': 'application/json'
       },
-      body: JSON.stringify({ 
-        firstName: newUserObj.firstName, 
+      body: JSON.stringify({
+        firstName: newUserObj.firstName,
         lastName: newUserObj.lastName,
         email: newUserObj.email,
-        username: newUserObj.username, 
+        username: newUserObj.username,
         password: newUserObj.password,
         confirmPassword: newUserObj.confirmPassword,
-        role: 'Creator' 
+        role: 'Creator'
       })
     }).then(handleResponse)
     .then(response => {
@@ -84,7 +84,7 @@ function registerNewUser(newUserObj) {
 }
 
 function logout() {
-  localStorage.removeItem('user');        
+  localStorage.removeItem('user');
   return { type: Constants.LOGOUT }
 }
 
@@ -130,11 +130,11 @@ function validateToken() {
           localStorage.removeItem('user');
           dispatch(failure(error));
         });
-      } 
+      }
    };
 
   function validate(user) { return { type: Constants.VALIDATING_TOKEN, user } }
   function success(user) { return { type: Constants.VALIDATE_TOKEN, user } }
   function failure(error) { return { type: Constants.INVALID_TOKEN, error } }
-    
+
 }
