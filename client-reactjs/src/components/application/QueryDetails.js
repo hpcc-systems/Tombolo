@@ -472,9 +472,11 @@ class QueryDetails extends PureComponent {
           defaultActiveKey="1"
         >
           <TabPane tab="Basic" key="1">
+           
 
            <Form {...formItemLayout} labelAlign="left" ref={this.formRef} onFinish={this.handleOk} initialValues={{type: "roxie_query"}}>
             <div>
+           
               <Form.Item {...formItemLayout} label="Type" name="type">
                 <Radio.Group value={type} onChange={this.queryTypeChange}>
                   <Radio value={'roxie_query'}>Roxie Query</Radio>

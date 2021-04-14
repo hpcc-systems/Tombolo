@@ -1131,6 +1131,10 @@ class FileDetails extends PureComponent {
               <TabPane tab="Dataflows" key="7">
                 <AssociatedDataflows assetName={name} assetType={'File'}/>
               </TabPane> : null}
+              <TabPane>
+Edit
+              </TabPane>
+           
           </Tabs>
         </div>
         <div className="button-container">
