@@ -928,6 +928,8 @@ class FileDetails extends PureComponent {
           <Tabs
             defaultActiveKey="1"
           >
+                     
+
             <TabPane tab="Basic" key="1">
                <Form {...formItemLayout} labelAlign="left" ref={this.formRef} onFinish={this.handleOk}>
                 <div>
@@ -1131,11 +1133,9 @@ class FileDetails extends PureComponent {
               <TabPane tab="Dataflows" key="7">
                 <AssociatedDataflows assetName={name} assetType={'File'}/>
               </TabPane> : null}
-              <TabPane>
-Edit
-              </TabPane>
-           
-          </Tabs>
+             
+
+          </Tabs>     
         </div>
         <div className="button-container">
           <Button key="danger" disabled={!this.state.file.id || !editingAllowed} type="danger" onClick={this.handleDelete}>Delete</Button>
