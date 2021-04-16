@@ -9,6 +9,7 @@ require('dotenv').config();
 
 CompressionCodecs[CompressionTypes.Snappy] = SnappyCodec;
 const JOB_COMPLETE_TOPIC = process.env.JOB_COMPLETE_TOPIC;
+const JOB_COMPLETE_GROUP_ID = process.env.JOB_COMPLETE_GROUP_ID;
 
 class QueueDaemon {
   constructor() {
@@ -16,7 +17,7 @@ class QueueDaemon {
       clientId: 'tombolo',
       brokers: [`${process.env.KAFKA_HOST_NAME}:${process.env.KAFKA_PORT}`]
     });
-    this.consumer = this.kafka.consumer({ groupId: 'tombolo' });
+    this.consumer = this.kafka.consumer({ groupId: JOB_COMPLETE_GROUP_ID });
     this.producer = this.kafka.producer();
 
     (async () => {

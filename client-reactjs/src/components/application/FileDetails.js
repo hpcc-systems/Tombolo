@@ -338,7 +338,7 @@ class FileDetails extends PureComponent {
   }
 
   searchFiles = debounce((searchString) => {
-    if(searchString.length <= 3)
+    if(searchString.length <= 3 || this.state.fileSearchErrorShown)
       return;
     if(!searchString.match(/^[a-zA-Z0-9_-]*$/)) {
       message.error("Invalid search keyword. Please remove any special characters from the keyword.")

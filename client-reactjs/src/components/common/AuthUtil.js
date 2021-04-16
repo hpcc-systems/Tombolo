@@ -10,11 +10,13 @@ export function hasEditPermission(user) {
 
 export function canViewPII(user) {
   let canViewPII = false;
-  user.role.forEach((role) => {
-    if(role.permissions && 'View PII' in role.permissions && role.permissions['View PII'] == 'allow') {
-      canViewPII = true;
-      return;
-    }
-  })
+  if(user.role) {
+    user.role.forEach((role) => {
+      if(role.permissions && 'View PII' in role.permissions && role.permissions['View PII'] == 'allow') {
+        canViewPII = true;
+        return;
+      }
+    })
+  }
   return canViewPII;
 }

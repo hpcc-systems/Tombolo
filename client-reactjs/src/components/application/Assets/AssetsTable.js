@@ -77,16 +77,16 @@ function AssetsTable({selectedGroup, handleEditGroup, refreshGroups}) {
 
     switch (type) {
       case 'File':
-        history.push('/' + applicationId + '/file/' + id);
+        history.push('/' + applicationId + '/assets/file/' + id);
         break;
       case 'Job':
-        history.push('/' + applicationId + '/job/' + id);
+        history.push('/' + applicationId + '/assets/job/' + id);
         break;
       case 'Index':
-        history.push('/' + applicationId + '/index/' + id);
+        history.push('/' + applicationId + '/assets/index/' + id);
         break;
       case 'Query':
-        history.push('/' + applicationId + '/query/' + id);
+        history.push('/' + applicationId + '/assets/query/' + id);
         break;
       case 'Group':
         handleEditGroup(id);

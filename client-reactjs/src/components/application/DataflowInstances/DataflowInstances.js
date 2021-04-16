@@ -97,7 +97,7 @@ class DataflowInstances extends Component {
       {"id": record.id},
       this.props.user
     ));
-    this.props.history.push('/'+this.state.applicationId+'/dataflowInstanceDetails');
+    this.props.history.push('/'+this.state.applicationId+'/dataflowinstances/dataflowInstanceDetails');
 
   }
 
@@ -116,7 +116,7 @@ class DataflowInstances extends Component {
           this.state.instanceId,
           this.state.workflowDetails
         ));
-        this.props.history.push('/'+this.state.applicationId+'/dataflowInstanceDetails');
+        this.props.history.push('/'+this.state.applicationId+'/dataflowinstances/dataflowInstanceDetails');
       });
     })
   };

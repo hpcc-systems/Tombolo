@@ -214,7 +214,7 @@ class QueryDetails extends PureComponent {
   }
 
   searchQueries = debounce ((searchString) => {
-    if(searchString.length <= 3)
+    if(searchString.length <= 3 || this.state.querySearchErrorShown)
       return;
 
     this.setState({

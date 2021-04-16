@@ -231,19 +231,19 @@ function Assets(props) {
 
     switch (e.key) {
       case 'File':
-        props.history.push('/' + application.applicationId + '/file');
+        props.history.push('/' + application.applicationId + '/assets/file');
         break;
 
       case 'Index':
-        props.history.push('/' + application.applicationId + '/index');
+        props.history.push('/' + application.applicationId + '/assets/index');
         break;
 
       case 'Query':
-        props.history.push('/' + application.applicationId + '/query');
+        props.history.push('/' + application.applicationId + '/assets/query');
         break;
 
       case 'Job':
-        props.history.push('/' + application.applicationId + '/job');
+        props.history.push('/' + application.applicationId + '/assets/job');
         break;
 
       case 'Group':

@@ -73,22 +73,22 @@ class App extends React.Component {
                           <Content style={{background: '#fff', margin: '0 16px'}}>
                               <Switch>
                                 <PrivateRoute exact path="/" component={dataFlowComp}/>
+                                <PrivateRoute path="/:applicationId/assets/file/:fileId?" component={FileDetailsForm}/>
+                                <PrivateRoute path="/:applicationId/assets/job/:jobId?" component={JobDetailsForm}/>
+                                <PrivateRoute path="/:applicationId/assets/index/:indexId?" component={IndexDetailsForm}/>
+                                <PrivateRoute path="/:applicationId/assets/query/:queryId?" component={QueryDetailsForm}/>
                                 <PrivateRoute path="/:applicationId/assets" component={assetsComp} />
-                                <PrivateRoute path="/:applicationId/file/:fileId?" component={FileDetailsForm}/>
-                                <PrivateRoute path="/:applicationId/job/:jobId?" component={JobDetailsForm}/>
-                                <PrivateRoute path="/:applicationId/index/:indexId?" component={IndexDetailsForm}/>
-                                <PrivateRoute path="/:applicationId/query/:queryId?" component={QueryDetailsForm}/>
                                 <PrivateRoute path="/:applicationId/data-dictionary" component={dataDictionaryComp}/>
                                 <PrivateRoute path="/:applicationId/dataflow/details" component={DataflowDetails}/>
                                 <PrivateRoute path="/:applicationId/dataflow" component={dataFlowComp}/>
-                                <PrivateRoute path="/:applicationId/dataflowinstances" component={DataflowInstances}/>
                                 <PrivateRoute path="/admin/applications" component={AdminApplications}/>
                                 <PrivateRoute path="/admin/clusters" component={AdminClusters}/>
                                 <PrivateRoute path="/admin/users" component={Users}/>
                                 <PrivateRoute path="/report/:searchText" component={Report}/>
                                 <PrivateRoute path="/admin/consumers" component={AdminConsumers}/>
                                 <PrivateRoute path="/admin/controlsAndRegulations" component={Regulations}/>
-                                <PrivateRoute path="/:applicationId/dataflowInstanceDetails" component={DataflowInstanceDetails}/>
+                                <PrivateRoute path="/:applicationId/dataflowinstances/dataflowInstanceDetails" component={DataflowInstanceDetails}/>
+                                <PrivateRoute path="/:applicationId/dataflowinstances" component={DataflowInstances}/>
                               </Switch>
 
                           </Content>

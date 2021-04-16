@@ -178,7 +178,7 @@ class IndexDetails extends PureComponent {
   }
 
   searchIndexes = debounce ((searchString) => {
-    if(searchString.length <= 3)
+    if(searchString.length <= 3 || this.state.indexSearchErrorShown)
       return;
     this.setState({
       ...this.state,
@@ -209,7 +209,7 @@ class IndexDetails extends PureComponent {
       if(!this.state.indexSearchErrorShown) {
         error.json().then((body) => {
           message.config({top:130})
-          message.error(body.message);
+          message.error("There was an error searching the indexes from cluster.");
         });
         this.setState({
           ...this.state,

@@ -187,6 +187,7 @@ class JobDetails extends Component {
             inputParams: data.jobparams,
             inputFiles: jobfiles.filter(field => field.file_type == 'input'),
             outputFiles: jobfiles.filter(field => field.file_type == 'output'),
+            ecl: data.ecl
          }
         });
 
@@ -332,7 +333,7 @@ class JobDetails extends Component {
   }
 
   searchJobs(searchString) {
-    if(searchString.length <= 3) {
+    if(searchString.length <= 3 || this.state.jobSearchErrorShown) {
       return;
     }
     this.setState({
@@ -364,7 +365,7 @@ class JobDetails extends Component {
       if(!this.state.jobSearchErrorShown) {
         error.json().then((body) => {
           message.config({top:130})
-          message.error(body.message);
+          message.error("There was an error searching the job from cluster");
         });
         this.setState({
           ...this.state,
@@ -515,7 +516,8 @@ class JobDetails extends Component {
         ...this.formRef.current.getFieldsValue(),
         "application_id":applicationId,
         "dataflowId" : this.props.selectedDataflow ? this.props.selectedDataflow.id : '',
-        "cluster_id": this.state.selectedCluster
+        "cluster_id": this.state.selectedCluster,
+        "ecl": this.state.job.ecl
       },
       "schedule": {
         "type": this.state.selectedScheduleType,
@@ -970,6 +972,10 @@ class JobDetails extends Component {
                .filter(n => n.length > 0);
   };
 
+  eclChange = (e) => {
+    console.log(e);
+  }
+
   render() {
     const editingAllowed = hasEditPermission(this.props.user);
     const {
@@ -1134,7 +1140,7 @@ class JobDetails extends Component {
 
             <TabPane tab="ECL" key="2">
                 <Form.Item {...eclItemLayout} label="ECL" name="ecl">
-                  <EclEditor id="job_ecl" targetDomId="jobEcl" disabled={true} />
+                  <EclEditor id="job_ecl" targetDomId="jobEcl"/>
                 </Form.Item>
             </TabPane>
             <TabPane tab="Input Params" key="3">
