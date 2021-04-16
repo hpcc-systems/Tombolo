@@ -248,31 +248,24 @@ exports.getJobInfo = (clusterId, jobWuid, jobType) => {
 exports.getJobWuidByName = (clusterId, jobName) => {
   return new Promise((resolve, reject) => {
     module.exports.getCluster(clusterId).then(function(cluster) {
-      request.get({
-        url: cluster.thor_host + ':' + cluster.thor_port +'/WsWorkunits/WUQuery.json?Jobname='+jobName,
-        auth : module.exports.getClusterAuth(cluster)
-      }, function(err, response, body) {
-        if (err) {
-          console.log('ERROR - ', err);
-          reject(err);
+      let clusterAuth = module.exports.getClusterAuth(cluster);
+      let wuService = new hpccJSComms.WorkunitsService({ baseUrl: cluster.thor_host + ':' + cluster.thor_port, userID:(clusterAuth ? clusterAuth.user : ""), password:(clusterAuth ? clusterAuth.password : "")});
+      wuService.WUQuery({"Jobname":jobName}).then((response) => {
+        console.log(response);
+        if(response.Workunits
+          && response.Workunits.ECLWorkunit
+          && response.Workunits.ECLWorkunit.length > 0) {
+          //return the first wuid assuming that is the latest one
+          resolve(response.Workunits.ECLWorkunit[0].Wuid);
         } else {
-          var result = JSON.parse(body);
-          if(result.Exceptions) {
-            reject(err);
-          }
-          if(result.WUQueryResponse
-            && result.WUQueryResponse.Workunits
-            && result.WUQueryResponse.Workunits.ECLWorkunit
-            && result.WUQueryResponse.Workunits.ECLWorkunit.length > 0) {
-            //return the first wuid assuming that is the latest one
-            resolve(result.WUQueryResponse.Workunits.ECLWorkunit[0].Wuid);
-          } else {
-            resolve(null);
-          }
+          resolve(null);
         }
-      });
-    });
-  });
+      }).catch(err => {
+        console.log(err);
+        reject(err)
+      })
+    })
+  })
 }
 
 exports.resubmitWU = (clusterId, wuid) => {

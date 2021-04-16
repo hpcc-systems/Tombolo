@@ -179,6 +179,7 @@ class JobDetails extends Component {
           scheduleMonth: (cronParts.length > 0) ? cronParts[3] : this.state.scheduleMonth,
           scheduleDayWeek: (cronParts.length > 0) ? cronParts[4] : this.state.scheduleDayWeek,
           schedulePredecessor: (data.schedule && data.schedule.jobs) ? data.schedule.jobs : [],
+          selectedCluster: data.cluster_id,
           job: {
             ...this.state.job,
             id: data.id,
@@ -392,6 +393,7 @@ class JobDetails extends Component {
           inputFiles: jobInfo.jobfiles.filter(jobFile => jobFile.file_type == 'input'),
           outputFiles: jobInfo.jobfiles.filter(jobFile => jobFile.file_type == 'output'),
           groupId: jobInfo.groupId,
+          ecl: jobInfo.ecl
         }
       })
       this.formRef.current.setFieldsValue({
@@ -507,7 +509,7 @@ class JobDetails extends Component {
       delete element.id;
       return element;
     });
-
+    console.log(this.formRef.current.getFieldsValue());
     var jobDetails = {
       "basic": {
         ...this.formRef.current.getFieldsValue(),
@@ -1131,9 +1133,9 @@ class JobDetails extends Component {
             </TabPane>
 
             <TabPane tab="ECL" key="2">
-              <Form.Item {...eclItemLayout} label="ECL" name="ecl">
-                <EclEditor id="job_ecl" targetDomId="jobEcl" disabled={true} />
-              </Form.Item>
+                <Form.Item {...eclItemLayout} label="ECL" name="ecl">
+                  <EclEditor id="job_ecl" targetDomId="jobEcl" disabled={true} />
+                </Form.Item>
             </TabPane>
             <TabPane tab="Input Params" key="3">
               <EditableTable

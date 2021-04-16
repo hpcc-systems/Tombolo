@@ -8,7 +8,7 @@ const JobScheduler = require('./job-scheduler');
 require('dotenv').config();
 
 CompressionCodecs[CompressionTypes.Snappy] = SnappyCodec;
-const JOB_COMPLETE_TOPIC = 'JobComplete';
+const JOB_COMPLETE_TOPIC = process.env.JOB_COMPLETE_TOPIC;
 
 class QueueDaemon {
   constructor() {
@@ -68,8 +68,9 @@ class QueueDaemon {
         if(jobExecution) {
           let cluster = await hpccUtil.getCluster(jobExecution.clusterId)
           let wuInfo = await hpccUtil.workunitInfo(msgJson.wuid, cluster);
-          if(wuInfo.Workunit.State == 'completed' || wuInfo.Workunit.State == 'wait') {
-            await JobScheduler.scheduleCheckForJobsWithSingleDependency(msgJson.jobname);
+          console.log('status: '+wuInfo.Workunit.State);
+          if(wuInfo.Workunit.State == 'completed' || wuInfo.Workunit.State == 'wait' || wuInfo.Workunit.State == 'blocked') {
+            await JobScheduler.scheduleCheckForJobsWithSingleDependency(wuInfo.Workunit.Jobname);
           }
           await JobExecution.update({
             status: wuInfo.Workunit.State,

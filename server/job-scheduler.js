@@ -7,7 +7,19 @@ const SUBMIT_JOB_FILE_NAME = 'submitJob.js';
 
 class JobScheduler {
   constructor() {
-    this.bree = new Bree({ root: false });
+    this.bree = new Bree({
+     root: false,
+     errorHandler: (error, workerMetadata) => {
+      if (workerMetadata.threadId) {
+        console.log(`There was an error while running a worker ${workerMetadata.name} with thread ID: ${workerMetadata.threadId}`)
+      } else {
+        console.log(`There was an error while running a worker ${workerMetadata.name}`)
+      }
+
+      console.error(error);
+      //errorService.captureException(error);
+    }
+    });
     (async () => {
       await this.bootstrap();
       //this.bree.start();
@@ -98,16 +110,13 @@ class JobScheduler {
   }
 
   async executeJob(name, clusterId, dataflowId, applicationId, jobId, jobfileName) {
-    let wuid = await hpccUtil.getJobWuidByName(clusterId, name);
     let uniqueJobName = name + Date.now();
     this.bree.add({
       name: uniqueJobName,
-      closeWorkerAfterMs: 2000,
       timeout: 0,
       path: path.join(__dirname, 'jobs', jobfileName),
       worker: {
         workerData: {
-          workunitId: wuid,
           jobName: name,
           clusterId: clusterId,
           jobId: jobId,
