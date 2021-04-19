@@ -55,11 +55,9 @@ class EditableCell extends React.Component {
   saveText = e => {
     const { record, handleSave, dataIndex } = this.props;
     let dataValueObj = {};
-    dataValueObj[dataIndex] = e;
+    dataValueObj[dataIndex] = e.target.value;
+    record[Object.keys(dataValueObj)[0]] = dataValueObj[Object.keys(dataValueObj)[0]];
     this.formRef.current.validateFields().then(async (error, values) => {
-      if (error ) {
-        return;
-      }
       this.toggleEdit();
       handleSave({ ...record });
     });
@@ -72,7 +70,6 @@ class EditableCell extends React.Component {
     const { children, dataIndex, record, title, celleditor, celleditorparams, required, showdatadefinitioninfield, datadefinitions } = this.props;
     const { editing } = this.state;
     this.datadefinitions = datadefinitions
-    console.log(record)
     return editing ? (
     <Form ref={this.formRef}>
       <Form.Item style={{ margin: 0 }} name={dataIndex} initialValue={record[dataIndex]} rules={[
@@ -81,7 +78,7 @@ class EditableCell extends React.Component {
           message: `${title} is required.`,
         },
         {
-          pattern: new RegExp(/^[a-zA-Z0-9]*$/),
+          pattern: new RegExp(/^[a-zA-Z0-9 ]*$/),
           message: 'Please enter a valid '+dataIndex,
         }
       ]}>
@@ -200,6 +197,7 @@ class EditableTable extends React.Component {
       }
     });
     this.setState({ dataSource: newData });
+    console.log(newData);
     this.props.setData(newData)
   };
 

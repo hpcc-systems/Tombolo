@@ -367,8 +367,9 @@ let getFileLayout = (cluster, fileName, format) =>  {
 			      			"format" : '',
 			      			"isPCI" : 'false',
 			      			"isPII" : 'false',
-							"isHIPAA":'false',
-							"required": 'false'
+    							"isHIPAA":'false',
+    							"required": 'false',
+                  "description": ''
 			      		}
 			      		if(column.DataColumns != undefined) {
 			      			var childColumns = [];
@@ -384,8 +385,9 @@ let getFileLayout = (cluster, fileName, format) =>  {
 					      			"format" : '',
 					      			"isPCI" : 'false',
 					      			"isPII" : 'false',
-									"isHIPAA":'false',
-									"required": 'false'
+    									"isHIPAA":'false',
+    									"required": 'false',
+                      "description": ''
 			      				}
 			      				childColumns.push(childColumnObj);
 

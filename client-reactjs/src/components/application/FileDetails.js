@@ -140,7 +140,7 @@ class FileDetails extends PureComponent {
               id: data.basic.id,
               clusterId: data.basic.cluster_id,
               groupId: data.basic.groupId,
-              fileType: (data.basic.fileType == '' || data.basic.fileType == 'flat' ? 'thor_file' : data.basic.fileType),
+              fileType: (data.basic.fileType == null || data.basic.fileType == '' || data.basic.fileType == 'flat' ? 'thor_file' : data.basic.fileType),
               layout: data.file_layouts,
               licenses: data.file_licenses,
               relations: data.file_relations,
@@ -399,7 +399,6 @@ class FileDetails extends PureComponent {
           return;
         }
       }
-
       this.setState({
         ...this.state,
         disableReadOnlyFields: true,
@@ -1068,7 +1067,7 @@ class FileDetails extends PureComponent {
                     ref={node => (this.layoutTable = node)}
                     fileType={this.state.file.fileType}
                     editingAllowed={editingAllowed}
-                    showDataDefinition={true}
+                    showDataDefinition={false}
                     dataDefinitions={[]}
                     setData={this.setLayoutData}/>
                 </div>
@@ -1103,7 +1102,7 @@ class FileDetails extends PureComponent {
                     dataSource={validations}
                     ref={node => (this.validationTable = node)}
                     editingAllowed={editingAllowed}
-                    showDataDefinition={true}
+                    showDataDefinition={false}
                     dataDefinitions={[]}
                     setData={this.setValidationData}/>
                 </div>

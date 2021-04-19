@@ -10,25 +10,11 @@ module.exports = (sequelize, DataTypes) => {
     },
     application_id: DataTypes.STRING,
     file_id: DataTypes.STRING,
-    name: DataTypes.STRING,
-    type: DataTypes.STRING,
-    eclType: DataTypes.STRING,
-    displayType: DataTypes.STRING,
-    displaySize: DataTypes.STRING,
-    textJustification: DataTypes.STRING,
-    format: DataTypes.STRING,
-    data_types: DataTypes.STRING,
-    isPCI: DataTypes.STRING,
-    isPII: DataTypes.STRING,
-    isHIPAA: DataTypes.STRING,
-    description: DataTypes.TEXT,
-    required: DataTypes.BOOLEAN,
-    children: DataTypes.TEXT,
     /*{
       type: DataTypes.TEXT,
       get: function() {
           return JSON.parse(this.getDataValue('children'));
-      }, 
+      },
       set: function(val) {
           return this.setDataValue('children', JSON.stringify(val));
       }
