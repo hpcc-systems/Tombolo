@@ -4,6 +4,8 @@ import { DeleteOutlined, UploadOutlined  } from '@ant-design/icons';
 import Papa from 'papaparse';
 import {parseString} from 'xml2js';
 import {omitDeep} from './CommonUtil';
+import {store} from "../../redux/store/Store"
+
 
 const EditableContext = React.createContext();
 const Option = Select.Option;
@@ -72,7 +74,7 @@ class EditableCell extends React.Component {
     const { children, dataIndex, record, title, celleditor, celleditorparams, required, showdatadefinitioninfield, datadefinitions } = this.props;
     const { editing } = this.state;
     this.datadefinitions = datadefinitions
-    console.log(record)
+    // console.log(record)
     return editing ? (
     <Form ref={this.formRef}>
       <Form.Item style={{ margin: 0 }} name={dataIndex} initialValue={record[dataIndex]} rules={[
@@ -124,17 +126,32 @@ class EditableCell extends React.Component {
   }
 }
 
+
 class EditableTable extends React.Component {
   constructor(props) {
     super(props);
     this.state = {
       dataSource: this.props.dataSource,
       count: this.props.dataSource.length,
-      columns: this.props.columns
+      columns: this.props.columns,
+      enableEdit: false
     };
     this.setupDeleteAction();
+    // this.removeActionColumn();
     this.props.setData(this.props.dataSource)
   }
+
+
+
+//components will receive props
+componentWillReceiveProps = (nextProps) => {
+   //Getting global state
+   const {viewOnlyModeReducer} = store.getState()
+   this.setState({
+    enableEdit: viewOnlyModeReducer.editMode
+   })
+}
+
 
   setupDeleteAction = () => {
     const deleteColumn = {
@@ -146,11 +163,13 @@ class EditableTable extends React.Component {
             <a href="#" onClick={() => this.handleDelete(record.id)}><DeleteOutlined /></a>
         </span>
     }
+ 
     if(this.props.editingAllowed) {
       let columns = this.state.columns;
       columns = columns.push(deleteColumn);
       this.setState({ columns: columns});
     }
+    
   }
 
   handleDelete = id => {
@@ -226,8 +245,18 @@ class EditableTable extends React.Component {
       },
     };
 
-
-    const columns = this.state.columns.map(col => {
+    //Weather to show action column or not
+    const defineColumns = () => {
+      if(!this.state.enableEdit){
+        return this.state.columns.filter(column => column.title != "Action")
+      }else{
+        return this.state.columns
+      }
+    }
+    console.log("Sorted >> ", defineColumns())
+    const sortedColumns = defineColumns();
+    
+    const columns = sortedColumns.map(col => {
       if (!col.editable) {
         return col;
       }
@@ -247,6 +276,7 @@ class EditableTable extends React.Component {
         }),
       };
     });
+
 
     const fileUploadProps = {
       name: 'file',
@@ -342,16 +372,22 @@ class EditableTable extends React.Component {
 
     return (
       <div>
+              
         <Table
           components={components}
           rowKey={record => record.id}
           rowClassName={() => 'editable-row'}
-          bordered
+         
+          bordered={this.state.enableEdit}
+          className={!this.state.enableEdit? "read-only-input" : null}
           dataSource={dataSource}
           columns={columns}
           pagination={false} scroll={{ y: '40vh' }}
           size="small"
         />
+
+
+        {this.state.enableEdit ? 
         <div style={{ padding: "5px" }}>
           <span style={{paddingRight: "5px"}}>
           <Button onClick={this.handleAdd} type="default" >
@@ -375,6 +411,7 @@ class EditableTable extends React.Component {
             : null }
           </span>
         </div>
+        : null}
       </div>
     );
   }

@@ -30,8 +30,10 @@
     "react-router": "^5.2.0",
     "react-router-dom": "^5.2.0",
     "react-scripts": "^4.0.1",
+    "react-showdown": "^2.3.0",
     "redux": "^4.0.5",
     "redux-thunk": "^2.3.0",
+    "showdown": "^1.9.1",
     "swr": "^0.4.2",
     "treant-js": "^1.0.1",
     "xml2js": "^0.4.23"

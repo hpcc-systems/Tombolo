@@ -11,6 +11,9 @@ import {handleJobDelete} from "../common/WorkflowUtil";
 import { connect } from 'react-redux';
 import { SearchOutlined } from '@ant-design/icons';
 import { assetsActions } from '../../redux/actions/Assets';
+import { store } from '../../redux/store/Store';
+import {Constants} from "../common/Constants";
+import ReactMarkdown from 'react-markdown'
 
 const TabPane = Tabs.TabPane;
 const Option = Select.Option;
@@ -102,7 +105,9 @@ class JobDetails extends Component {
       inputParams: [],
       inputFiles: [],
       outputFiles: []
-    }
+    },
+    enableEdit: false,
+    editing: false
   }
 
   componentDidMount() {
@@ -117,8 +122,31 @@ class JobDetails extends Component {
     if (this.props.scheduleType === 'Predecessor') {
       this.handleScheduleTypeSelect('Predecessor');
     }
+
+    //Getting global state
+    const {viewOnlyModeReducer} = store.getState()
+    if(viewOnlyModeReducer.editMode){
+      this.setState({
+        enableEdit : viewOnlyModeReducer.editMode,
+        editing: true
+      })
+    }else{
+      this.setState({
+        enableEdit : viewOnlyModeReducer.editMode,
+     
+      })
+    } 
   }
 
+
+    //Unmounting phase
+    componentWillUnmount(){
+ 
+      store.dispatch({
+        type: Constants.ENABLE_EDIT,
+        payload: false
+      })
+  }
   getJobDetails() {
     if(this.props.selectedAsset !== '' && !this.props.isNew) {
       this.setState({
@@ -186,6 +214,20 @@ class JobDetails extends Component {
             inputParams: data.jobparams,
             inputFiles: jobfiles.filter(field => field.file_type == 'input'),
             outputFiles: jobfiles.filter(field => field.file_type == 'output'),
+
+            //For read only input
+            name: data.name,
+          title: (data.title == '' ? data.name : data.title),
+          description: data.description,
+          type: data.type,
+          url: data.url,
+          gitRepo: data.gitRepo,
+          ecl: data.ecl,
+          gitRepo: data.gitRepo,
+          entryBWR: data.entryBWR,
+          jobType: data.jobType,
+          contact: data.contact,
+          author: data.author
          }
         });
 
@@ -1028,8 +1070,48 @@ class JobDetails extends Component {
       return null;
     }
 
+    
+    //Function to make fields editable
+    const makeFieldsEditable = () => {
+      store.dispatch({
+        type: Constants.ENABLE_EDIT,
+        payload: true
+      })
+      this.setState({
+        enableEdit: !this.state.enableEdit,
+        editing: true
+      });
+    };
+
+       //Switch to view only mode
+       const switchToViewOnly = () => {
+        store.dispatch({
+          type: Constants.ENABLE_EDIT,
+          payload: false
+        })
+        this.setState({
+          enableEdit: !this.state.enableEdit,
+          editing: false
+        });
+      }
+      
+
+
     return (
+     
       <React.Fragment>
+        { console.log("Editing Allowed >>>", editingAllowed)}
+          {!this.state.enableEdit && editingAllowed?  <div className="button-container edit-toggle-btn">
+          <Button type="primary" onClick={makeFieldsEditable}>
+            Edit
+          </Button>
+        </div> : null }
+        {this.state.editing ?  <div className="button-container view-change-toggle-btn" >
+          <Button  onClick={switchToViewOnly} type="primary" ghost>
+            View Changes
+          </Button>
+         
+        </div> : null }
       <div>
           {!this.props.isNew ?
             <div className="loader">
@@ -1040,6 +1122,7 @@ class JobDetails extends Component {
 
             <TabPane tab="Basic" key="1">
               {/*{this.props.isNewIndex ?*/}
+              {this.state.enableEdit ?
               <div>
               <Form.Item {...formItemLayout} label="Cluster" name="clusters">
                 <Select placeholder="Select a Cluster" disabled={!editingAllowed} onChange={this.onClusterSelection} style={{ width: 190 }}>
@@ -1075,37 +1158,68 @@ class JobDetails extends Component {
                   </Col>
                 </Row>
               </Form.Item>
-              </div>
-                {/*: null
-              }*/}
+              </div> : null }
+              
               <Form.Item label="Name" name="name" rules={[{ required: true, message: 'Please enter a Name!' }, {
                 pattern: new RegExp(/^[a-zA-Z0-9:._-]*$/),
                 message: 'Please enter a valid name',
               }]}>
-                <Input id="job_name" onChange={this.onChange} placeholder="Name" disabled={true} disabled={!editingAllowed}/>
+                <Input 
+                id="job_name"
+                onChange={this.onChange}
+                placeholder="Name"
+                disabled={true}
+                disabled={!editingAllowed}
+                className={this.state.enableEdit ? null : "read-only-input"} />
               </Form.Item>
               <Form.Item label="Title" name="title" rules={[{ required: true, message: 'Please enter a title!' }, {
                 pattern: new RegExp(/^[a-zA-Z0-9:._-]*$/),
                 message: 'Please enter a valid Title',
               }]}>
-                <Input id="job_title" onChange={this.onChange} placeholder="Title" disabled={!editingAllowed} />
+                <Input id="job_title" 
+                onChange={this.onChange} 
+                placeholder="Title" 
+                disabled={!editingAllowed}
+                className={this.state.enableEdit? null : "read-only-input"}
+                 />
               </Form.Item>
               <Form.Item label="Description" name="description">
-                <MarkdownEditor id="job_desc" onChange={this.onChange} targetDomId="jobDescr" value={description} disabled={!editingAllowed}/>
+                {this.state.enableEdit ?
+                <MarkdownEditor 
+                name="description"
+                id="job_desc" 
+                onChange={this.onChange} 
+                targetDomId="jobDescr" 
+                value={description} 
+                disabled={!editingAllowed}/>
+                :
+                <ReactMarkdown source={this.state.job.description} />}
               </Form.Item>
               {this.props.selectedJobType != 'Data Profile' ?
                 <Form.Item label="Git Repo" name="gitRepo" rules={[{
                   type: 'url',
                   message: 'Please enter a valid url',
                 }]}>
-                  <Input id="job_gitRepo" onChange={this.onChange}  placeholder="Git Repo" value={gitRepo} disabled={!editingAllowed}/>
+                  <Input id="job_gitRepo"
+                   onChange={this.onChange}
+                     placeholder="Git Repo" 
+                     value={gitRepo} 
+                     disabled={!editingAllowed}
+                     className={this.state.enableEdit ? null : "read-only-input"}
+                     />
                 </Form.Item>
               : null }
               <Form.Item label="Entry BWR" name="entryBWR" rules={[{
                 pattern: new RegExp(/^[a-zA-Z0-9:$._]*$/),
                 message: 'Please enter a valid BWR',
               }]}>
-                <Input id="job_entryBWR" onChange={this.onChange}  placeholder="Primary Service" value={entryBWR} disabled={!editingAllowed}/>
+                <Input id="job_entryBWR" 
+                onChange={this.onChange}  
+                placeholder="Primary Service"
+                 value={entryBWR}
+                  disabled={!editingAllowed}
+                  className={this.state.enableEdit ? null : "read-only-input"}
+                  />
               </Form.Item>
               <Row type="flex">
                 <Col span={12} order={1}>
@@ -1113,29 +1227,57 @@ class JobDetails extends Component {
                     pattern: new RegExp(/^[a-zA-Z0-9:$._-]*$/),
                     message: 'Please enter a valid contact',
                   }]}>
-                    <Input id="job_bkp_svc" onChange={this.onChange} placeholder="Contact" value={contact} disabled={!editingAllowed}/>
+                    <Input id="job_bkp_svc" 
+                    onChange={this.onChange} 
+                    placeholder="Contact" 
+                    value={contact} 
+                    disabled={!editingAllowed}
+                    className={this.state.enableEdit ? null : "read-only-input"}
+
+                    />
                   </Form.Item>
                 </Col>
                 <Col span={12} order={2}>
-                  <Form.Item label="Author" name="author" rules={[{
+                  <Form.Item label="Author:" name="author" rules={[{
                     pattern: new RegExp(/^[a-zA-Z0-9:$._-]*$/),
                     message: 'Please enter a valid author',
-                  }]}>
-                    <Input id="job_author" onChange={this.onChange} placeholder="Author" value={author} disabled={!editingAllowed}/>
+                  }]}> 
+                    <Input 
+                    id="job_author" 
+                    onChange={this.onChange}
+                     placeholder="Author"
+                      value={author}
+                       disabled={!editingAllowed}
+                       className={this.state.enableEdit ? null : "read-only-input"}
+                       />
                   </Form.Item>
                 </Col>
               </Row>
               <Form.Item label="Job Type" name="jobType">
+                {!this.state.enableEdit ?
+                <Input 
+                value={this.state.job.type}
+                className="read-only-input"
+                />
+        :
                 <Select placeholder="Job Type" value={(jobType != '') ? jobType : ""} style={{ width: 190 }} onChange={this.onJobTypeChange} disabled={!editingAllowed}>
                     {jobTypes.map(d => <Option key={d}>{d}</Option>)}
                 </Select>
+  }
               </Form.Item>
             </TabPane>
 
             <TabPane tab="ECL" key="2">
+              {!this.state.enableEdit ?  null :
               <Form.Item {...eclItemLayout} label="ECL" name="ecl">
-                <EclEditor id="job_ecl" targetDomId="jobEcl" disabled={true} />
+                <EclEditor 
+                id="job_ecl"
+                 targetDomId="jobEcl" 
+                //  disabled={true} 
+                //  className={this.state.enableEdit ? null : "read-only-input"}
+                 />
               </Form.Item>
+  }
             </TabPane>
             <TabPane tab="Input Params" key="3">
               <EditableTable
@@ -1148,6 +1290,7 @@ class JobDetails extends Component {
             </TabPane>
 
             <TabPane tab="Input Files" key="4">
+              {!this.state.enableEdit? null :
               <div>
                 <Form.Item label="Input Files">
                   <Select id="inputfiles" placeholder="Select Input Files" defaultValue={this.state.selectedInputdFile} onChange={this.handleInputFileChange} style={{ width: 290 }} disabled={!editingAllowed}>
@@ -1166,10 +1309,11 @@ class JobDetails extends Component {
                   dataSource={inputFiles}
                   pagination={{ pageSize: 10 }} scroll={{ y: 460 }}
                 />
-              </div>
+              </div> }
             </TabPane>
 
             <TabPane tab="Output Files" key="5">
+              {!this.state.enableEdit ?  null : 
               <div>
                 <Form.Item label="Output Files">
                   <Select id="outputfiles" placeholder="Select Output Files" defaultValue={this.state.selectedOutputFile} onChange={this.handleOutputFileChange} style={{ width: 290 }} disabled={!editingAllowed}>
@@ -1187,7 +1331,7 @@ class JobDetails extends Component {
                   dataSource={outputFiles}
                   pagination={{ pageSize: 10 }} scroll={{ y: 460 }}
                 />
-              </div>
+              </div> }
             </TabPane>
 
             { this.props.selectedDataflow ?
@@ -1309,6 +1453,7 @@ class JobDetails extends Component {
           </Tabs>
           </Form>
       </div>
+      {this.state.enableEdit ?
         <div className="button-container">
           {!this.props.isNew ? <Button key="danger" type="danger" onClick={this.handleDelete}>Delete</Button> : null }
           <Button key="back" onClick={this.handleCancel}>
@@ -1317,7 +1462,7 @@ class JobDetails extends Component {
           <Button key="submit" disabled={!editingAllowed} type="primary" loading={confirmLoading} onClick={this.handleOk}>
             Save
           </Button>
-        </div>
+        </div>: null }
       </React.Fragment>
     );
   }

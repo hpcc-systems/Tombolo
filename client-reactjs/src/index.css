@@ -700,3 +700,25 @@ div.tooltip {
 .graph-div {
   position: relative;
 }
+
+/* Read only view for asset details  */
+.read-only-input{
+  background: white  !important;
+  border: none;
+  pointer-events: none;
+  
+}
+
+.read-only-input::placeholder{
+  display: none;
+  color: transparent;
+}
+.view-change-toggle-btn {
+  border-bottom :  2px solid whitesmoke;
+   padding-bottom: 6.2px;
+}
+
+.edit-toggle-btn {
+  border-bottom :  2px solid whitesmoke;
+   padding-bottom: 6.5px;
+}
