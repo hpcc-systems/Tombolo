@@ -69,8 +69,6 @@ function AssetsTable({selectedGroup, handleEditGroup, refreshGroups}) {
       handleError(response);
     })
     .then(data => {
-      console.log(data)
-      
     //Converting Markdown to plain text
     const converter = new showdown.Converter()
     data.map(item =>  item.description = converter.makeHtml(item.description).replace(/<[^>]*>/g, ''))

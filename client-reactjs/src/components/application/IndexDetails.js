@@ -113,12 +113,8 @@ class IndexDetails extends PureComponent {
             nonKeyedColumns: data.basic.index_payloads,
 
             // For read only view
-            title: data.basic.title == '' ? data.basic.name : data.basic.title,
-            name: (data.basic.name == '' ? data.basic.title : data.basic.name),
             description: data.basic.description,
-            qualifiedPath: data.basic.qualifiedPath,
-            primaryService: data.basic.primaryService,
-            backupService: data.basic.backupService
+           
           }
         });
         this.formRef.current.setFieldsValue({
@@ -577,7 +573,6 @@ class IndexDetails extends PureComponent {
                   </Col>
                 </Row> 
               
-                {  console.log(" >>>>> " , title, name, description, primaryService, backupService)}
               </Form.Item>
               </div>
               : null}
@@ -645,11 +640,13 @@ class IndexDetails extends PureComponent {
                 pattern: new RegExp(/^[a-zA-Z0-9:$._-]*$/),
                 message: 'Please enter a valid path',
               }]}>
+                {this.state.enableEdit ?
                 <Input id="path" 
                 onChange={this.onChange}
                  placeholder="Path" 
                  disabled={!editingAllowed}
-                 className={this.state.enableEdit? null: "read-only-input"}/>
+               /> :
+               <textarea className="read-only-textarea" /> }
               </Form.Item>
             </Form>
 

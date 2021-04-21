@@ -706,7 +706,21 @@ div.tooltip {
   background: white  !important;
   border: none;
   pointer-events: none;
+  resize: none;
+  height: auto;
+  width: 100%;
   
+}
+
+.read-only-textarea{
+ width: 100%;
+
+  height: auto;
+  resize: none;
+border: none;
+pointer-events: none;
+padding-top:5px;
+overflow: hidden;
 }
 
 .read-only-input::placeholder{

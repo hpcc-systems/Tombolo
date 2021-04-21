@@ -253,7 +253,6 @@ componentWillReceiveProps = (nextProps) => {
         return this.state.columns
       }
     }
-    console.log("Sorted >> ", defineColumns())
     const sortedColumns = defineColumns();
     
     const columns = sortedColumns.map(col => {

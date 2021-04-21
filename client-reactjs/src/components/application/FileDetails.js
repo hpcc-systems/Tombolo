@@ -3,7 +3,6 @@ import { store } from '../../redux/store/Store';
 import {Constants} from "../common/Constants";
 import ReactMarkdown from 'react-markdown'
 
-
 import {
   Modal,
   Tabs,
@@ -86,7 +85,8 @@ class FileDetails extends PureComponent {
       groupId: "",
     },
     enableEdit: false,
-    editing : false
+    editing : false,
+  
   };
 
   dataTypes = [];
@@ -202,18 +202,8 @@ class FileDetails extends PureComponent {
                 clusterId: data.basic.cluster_id,
                 groupId: data.basic.groupId,
 
-                //For read only options
-                title: data.basic.title,
-                name: data.basic.name,
+                //For read only option
                 description: data.basic.description,
-                scope: data.basic.scope,
-                // serviceURL: data.basic.serviceUrl,
-                serviceURL: data.basic.serviceURL,
-
-                qualifiedPath: data.basic.qualifiedPath,
-                owner: data.basic.owner,
-                consumer: data.basic.consumer,
-                supplier: data.basic.supplier,
                 isSuperFile: data.basic.isSuperFile,
 
                 fileType:
@@ -333,8 +323,6 @@ class FileDetails extends PureComponent {
   };
 
   // Tests
-
-
   handleDelete = () => {
     let _self = this;
     confirm({
@@ -1066,9 +1054,6 @@ class FileDetails extends PureComponent {
             "</a>"
           );
         },
-        // headerCheckboxSelection: true,
-        // headerCheckboxSelectionFilteredOnly:true,
-        // checkboxSelection: true,
 
         headerCheckboxSelection: this.state.enableEdit,
         headerCheckboxSelectionFilteredOnly:this.state.enableEdit,
@@ -1406,8 +1391,9 @@ class FileDetails extends PureComponent {
                   
                 </Form.Item>
                      
-              {this.state.enableEdit ? 
+             
                 <Form.Item label="Description" name="description">
+                  {this.state.enableEdit ?
                   <MarkdownEditor
                   id="file_desc"
                   name="description"
@@ -1416,15 +1402,11 @@ class FileDetails extends PureComponent {
                   value={description}
                   disabled={!editingAllowed}
                   />
+                  :   <ReactMarkdown source={this.state.file.description} />
+                  }
                 </Form.Item>
-                :
-                <span>
-                  <Form.Item label="Description" name="description"></Form.Item>
-                  <ReactMarkdown source={this.state.file.description} />
-              
-                </span>
-               
-              }
+     
+         
                 <Form.Item
                   label="Service URL"
                   name="serviceURL"
@@ -1505,7 +1487,9 @@ class FileDetails extends PureComponent {
                       name="supplier"
                     >
                       {!this.state.enableEdit ?
-                       <Input className="read-only-input"/> :
+                       <textarea className="read-only-textarea" />
+                      
+                        :
                       <Select
                         id="supplier"
                         value={
@@ -1555,7 +1539,7 @@ class FileDetails extends PureComponent {
                         )}
                       </Select>
                       :
-                      <Input className="read-only-input" /> }
+                      <textarea className="read-only-textarea" /> }
                     </Form.Item>
                   </Col>
 
@@ -1566,7 +1550,7 @@ class FileDetails extends PureComponent {
                       name="owner"
                     >
                       {!this.state.enableEdit ?
-                      <Input className="read-only-input" /> : 
+                      <textarea className="read-only-textarea" /> : 
                       <Select
                         id="owner"
                         value={

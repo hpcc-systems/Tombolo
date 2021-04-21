@@ -104,12 +104,8 @@ class QueryDetails extends PureComponent {
             input: data.query_fields.filter(field => field.field_type == 'input'),
             output: data.query_fields.filter(field => field.field_type == 'output'),
             //For read only 
-            title: data.title,
-          name: data.name,
-          description: data.description,
-          type: data.type,
-          url: data.url,
-          gitRepo: data.gitRepo
+            description: data.description,
+         
           }
         });
 
@@ -637,22 +633,27 @@ class QueryDetails extends PureComponent {
                 type: 'url',
                 message: 'Please enter a valid URL'
               }]}>
+                {this.state.enableEdit ?
               <Input id="query_url" 
               onChange={this.onChange}
                placeholder="URL" 
                disabled={!editingAllowed}
-               className={this.state.enableEdit ? null : "read-only-input"}/>
+               className={this.state.enableEdit ? null : "read-only-input"}/> : 
+               <textarea className="read-only-textarea" />
+                }
             </Form.Item>
             <Form.Item label="Git Repo" name="gitRepo" rules={[{
                 type: 'url',
                 message: 'Please enter a valid URL'
               }]}>
+                {this.state.enableEdit ?
               <Input 
               id="query_gitRepo" 
               onChange={this.onChange} 
               placeholder="Git Repo URL" 
               disabled={!editingAllowed}
-              className={this.state.enableEdit ? null : "read-only-input"}/>
+              className={this.state.enableEdit ? null : "read-only-input"}/> :
+              <textarea className="read-only-textarea" />}
             </Form.Item>
           </Form>
 

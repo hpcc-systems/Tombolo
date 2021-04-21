@@ -216,18 +216,8 @@ class JobDetails extends Component {
             outputFiles: jobfiles.filter(field => field.file_type == 'output'),
 
             //For read only input
-            name: data.name,
-          title: (data.title == '' ? data.name : data.title),
-          description: data.description,
-          type: data.type,
-          url: data.url,
-          gitRepo: data.gitRepo,
-          ecl: data.ecl,
-          gitRepo: data.gitRepo,
-          entryBWR: data.entryBWR,
-          jobType: data.jobType,
-          contact: data.contact,
-          author: data.author
+
+          description: data.description
          }
         });
 
@@ -1100,7 +1090,6 @@ class JobDetails extends Component {
     return (
      
       <React.Fragment>
-        { console.log("Editing Allowed >>>", editingAllowed)}
           {!this.state.enableEdit && editingAllowed?  <div className="button-container edit-toggle-btn">
           <Button type="primary" onClick={makeFieldsEditable}>
             Edit
@@ -1200,26 +1189,31 @@ class JobDetails extends Component {
                   type: 'url',
                   message: 'Please enter a valid url',
                 }]}>
+                  {this.state.enableEdit ?
                   <Input id="job_gitRepo"
                    onChange={this.onChange}
                      placeholder="Git Repo" 
                      value={gitRepo} 
                      disabled={!editingAllowed}
-                     className={this.state.enableEdit ? null : "read-only-input"}
-                     />
+                     
+                     /> :
+                     <textarea className="read-only-textarea" />
+                  }
                 </Form.Item>
               : null }
               <Form.Item label="Entry BWR" name="entryBWR" rules={[{
                 pattern: new RegExp(/^[a-zA-Z0-9:$._]*$/),
                 message: 'Please enter a valid BWR',
               }]}>
+                {this.state.enableEdit ?
                 <Input id="job_entryBWR" 
                 onChange={this.onChange}  
                 placeholder="Primary Service"
                  value={entryBWR}
                   disabled={!editingAllowed}
-                  className={this.state.enableEdit ? null : "read-only-input"}
-                  />
+                  /> :
+                  <textarea className="read-only-textarea" />
+                }
               </Form.Item>
               <Row type="flex">
                 <Col span={12} order={1}>
@@ -1227,14 +1221,16 @@ class JobDetails extends Component {
                     pattern: new RegExp(/^[a-zA-Z0-9:$._-]*$/),
                     message: 'Please enter a valid contact',
                   }]}>
+                    {this.state.enableEdit ?
                     <Input id="job_bkp_svc" 
                     onChange={this.onChange} 
                     placeholder="Contact" 
                     value={contact} 
                     disabled={!editingAllowed}
-                    className={this.state.enableEdit ? null : "read-only-input"}
-
                     />
+                    :
+                    <textarea className="read-only-textarea" />
+                }
                   </Form.Item>
                 </Col>
                 <Col span={12} order={2}>
@@ -1242,22 +1238,23 @@ class JobDetails extends Component {
                     pattern: new RegExp(/^[a-zA-Z0-9:$._-]*$/),
                     message: 'Please enter a valid author',
                   }]}> 
+                  {this.state.enableEdit ?
                     <Input 
                     id="job_author" 
                     onChange={this.onChange}
                      placeholder="Author"
                       value={author}
                        disabled={!editingAllowed}
-                       className={this.state.enableEdit ? null : "read-only-input"}
-                       />
+                       /> :
+                       <textarea className="read-only-textarea" />
+                  }
                   </Form.Item>
                 </Col>
               </Row>
               <Form.Item label="Job Type" name="jobType">
                 {!this.state.enableEdit ?
-                <Input 
-                value={this.state.job.type}
-                className="read-only-input"
+                <textarea 
+                className="read-only-textarea"
                 />
         :
                 <Select placeholder="Job Type" value={(jobType != '') ? jobType : ""} style={{ width: 190 }} onChange={this.onJobTypeChange} disabled={!editingAllowed}>
