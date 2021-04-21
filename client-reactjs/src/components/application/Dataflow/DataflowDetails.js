@@ -10,7 +10,6 @@ const TabPane = Tabs.TabPane;
 
 function DataflowDetails({props}) {
   const dataflowReducer = useSelector(state => state.dataflowReducer);
-  console.log(dataflowReducer)
 	return (
 	  <React.Fragment>
 	  <div>

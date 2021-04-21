@@ -95,8 +95,9 @@ router.get('/', [
 
     console.log("[graph] - Get graph list for app_id = " + req.query.application_id);
     try {
-        DataflowGraph.findOne({where:{"application_Id":req.query.application_id, "dataflowId":req.query.dataflowId}}).then(function(graph) {
-            res.json(graph);
+        let nodes = [];
+        DataflowGraph.findOne({where:{"application_Id":req.query.application_id, "dataflowId":req.query.dataflowId}}).then(async function(graph) {
+          res.json(graph);
         })
         .catch(function(err) {
             console.log(err);
@@ -154,10 +155,10 @@ router.post('/deleteAsset', [
         if (body('id').isUUID(4)) {
           await AssetDataflow.destroy({ where: { dataflowId: req.body.dataflowId, assetId: assetId } }).catch(err => console.log(err));
           Job.findOne({where:{id: assetId}, attributes: {exclude: ['assetId']}}).then((job) => {
-            JobScheduler.removeJobFromScheduler(job.name);
+            JobScheduler.removeJobFromScheduler(job.name + '-' + req.body.dataflowId + '-' + assetId);
+            res.json({"result":"success"});
           })
         }
-        res.json({"result":"success"});
       }).catch(function(err) {
           console.log(err);
       });

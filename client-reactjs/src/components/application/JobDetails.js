@@ -435,6 +435,7 @@ class JobDetails extends Component {
         this.props.history.push('/' + this.props.application.applicationId + '/assets')
       } else {
         document.querySelector('button.ant-modal-close').click();
+        this.props.dispatch(assetsActions.assetSaved(saveResponse));
       }
     }, 2000);
   }
@@ -972,8 +973,26 @@ class JobDetails extends Component {
                .filter(n => n.length > 0);
   };
 
-  eclChange = (e) => {
-    console.log(e);
+  executeJob = () => {
+    let _self=this;
+    _self.setState({
+      initialDataLoading: true,
+    });
+    fetch('/api/job/executeJob', {
+      method: 'post',
+      headers: authHeader(),
+      body: JSON.stringify({clusterId : _self.state.selectedCluster, jobName: _self.formRef.current.getFieldValue('name')})
+    }).then(function(response) {
+      if(response.ok) {
+        return response.json();
+      }
+      handleError(response);
+    }).then(function(data) {
+      _self.setState({
+        initialDataLoading: false,
+      });
+      message.success("Job executed succesfully")
+    })
   }
 
   render() {
@@ -1314,14 +1333,21 @@ class JobDetails extends Component {
           </Tabs>
           </Form>
       </div>
-        <div className="button-container">
-          {!this.props.isNew ? <Button key="danger" type="danger" onClick={this.handleDelete}>Delete</Button> : null }
-          <Button key="back" onClick={this.handleCancel}>
-            Cancel
-          </Button>
-          <Button key="submit" disabled={!editingAllowed} type="primary" loading={confirmLoading} onClick={this.handleOk}>
-            Save
-          </Button>
+        <div>
+          <span style={{"float": "left"}}>
+            <Button disabled={!editingAllowed} type="primary" key="execute" onClick={this.executeJob}>
+              Execute Job
+            </Button>
+          </span>
+          <div className="button-container">
+            {!this.props.isNew ? <Button key="danger" type="danger" onClick={this.handleDelete}>Delete</Button> : null }
+            <Button key="back" onClick={this.handleCancel}>
+              Cancel
+            </Button>
+            <Button key="submit" disabled={!editingAllowed} type="primary" loading={confirmLoading} onClick={this.handleOk}>
+              Save
+            </Button>
+          </div>
         </div>
       </React.Fragment>
     );

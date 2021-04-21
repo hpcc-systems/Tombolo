@@ -5,7 +5,8 @@ export const assetsActions = {
   newAsset,
   searchAsset,
   assetInGroupSelected,
-  clusterSelected
+  clusterSelected,
+  assetSaved
 };
 
 function assetSelected(id, applicationId, title) {
@@ -65,6 +66,18 @@ function clusterSelected(clusterId) {
     return {
       type: Constants.CLUSTER_SELECTED,
       clusterId
+    }
+  }
+}
+
+function assetSaved(saveResponse) {
+  return dispatch => {
+    dispatch(request(saveResponse));
+  };
+  function request(saveResponse) {
+    return {
+      type: Constants.ASSET_SAVED,
+      saveResponse
     }
   }
 }

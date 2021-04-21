@@ -91,8 +91,9 @@ class JobScheduler {
   }
 
   async addJobToScheduler(name, cron, clusterId, dataflowId, applicationId, jobId, jobfileName) {
+    let uniqueJobName = name + '-' + dataflowId + '-' + jobId;
     this.bree.add({
-      name: name,
+      name: uniqueJobName,
       cron: cron,
       path: path.join(__dirname, 'jobs', jobfileName),
       worker: {
@@ -106,11 +107,11 @@ class JobScheduler {
       }
     })
 
-    this.bree.start(name);
+    this.bree.start(uniqueJobName);
   }
 
   async executeJob(name, clusterId, dataflowId, applicationId, jobId, jobfileName) {
-    let uniqueJobName = name + Date.now();
+    let uniqueJobName = name + '-' + dataflowId + '-' + jobId;
     this.bree.add({
       name: uniqueJobName,
       timeout: 0,

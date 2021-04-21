@@ -481,7 +481,7 @@ router.post('/saveJob', [
           }, {
             where: { assetId: jobId, dataflowId: req.body.job.basic.dataflowId }
           }).then(async (assetDataflowupdated) => {
-            await JobScheduler.removeJobFromScheduler(req.body.job.basic.name);
+            await JobScheduler.removeJobFromScheduler(req.body.job.basic.name + '-' + req.body.job.basic.dataflowId + '-' + req.body.id);
           })
           await DependentJobs.destroy({
             where: {
@@ -495,7 +495,7 @@ router.post('/saveJob', [
           }, {
             where: { assetId: jobId, dataflowId: req.body.job.basic.dataflowId }
           }).then((assetDataflowupdated) => {
-            JobScheduler.removeJobFromScheduler(req.body.job.basic.name);
+            JobScheduler.removeJobFromScheduler(req.body.job.basic.name + '-' + req.body.job.basic.dataflowId + '-' + jobId);
           })
           await DependentJobs.destroy({
             where: {
@@ -532,7 +532,7 @@ router.post('/saveJob', [
               });
             if(success || success[0]) {
               //remove existing job with same name
-              await JobScheduler.removeJobFromScheduler(req.body.job.basic.name);
+              JobScheduler.removeJobFromScheduler(req.body.job.basic.name + '-' + req.body.job.basic.dataflowId + '-' + jobId);
               await JobScheduler.addJobToScheduler(
                 req.body.job.basic.name,
                 cronExpression,
@@ -719,7 +719,8 @@ router.post('/delete', [
       ).then(function(jobParamDeleted) {
         JobExecution.destroy({
           where:{ jobId: req.body.jobId }
-        }).then((jobExecutionDeleted) => {
+        }).then(async (jobExecutionDeleted) => {
+          await AssetDataflow.destroy({ where: { assetId: req.body.jobId } });
           res.json({"result":"success"});
         })
       });
@@ -728,6 +729,26 @@ router.post('/delete', [
     console.log(err);
     return res.status(500).json({ success: false, message: "Error occured while deleting the job" });
   });
+});
+
+router.post('/executeJob', [
+  body('clusterId')
+      .isUUID(4).withMessage('Invalid cluster id'),
+    body('jobName')
+      .matches(/^[a-zA-Z]{1}[a-zA-Z0-9_.\-:]*$/).withMessage('Invalid job name'),
+], async (req, res) => {
+  const errors = validationResult(req).formatWith(validatorUtil.errorFormatter);
+  if (!errors.isEmpty()) {
+      return res.status(422).json({ success: false, errors: errors.array() });
+  }
+  try {
+    let wuid = await hpccUtil.getJobWuidByName(req.body.clusterId, req.body.jobName);
+    let wuResubmitResult = await hpccUtil.resubmitWU(req.body.clusterId, wuid);
+    res.json({"result":"success"});
+  } catch (err) {
+    console.error('err', err);
+    return res.status(500).json({ success: false, message: "Error occured while re-submiting the job" });
+  }
 });
 
 router.get('/jobExecutionDetails', [

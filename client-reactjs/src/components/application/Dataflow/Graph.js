@@ -103,6 +103,7 @@ class Graph extends Component {
     this.fetchSavedGraph();
     document.addEventListener('mousedown', this.handleClickOutside);
   }
+
   componentWillReceiveProps(props) {
     if(this.state.applicationId && this.state.applicationId != props.applicationId || this.state.selectedDataflow != props.selectedDataflow ) {
       this.setState({
@@ -111,7 +112,10 @@ class Graph extends Component {
       }, function() {
         this.fetchSavedGraph();
       });
+    }
 
+    if(props.saveResponse && props.saveResponse.success) {
+      this.showScheduleIcons(props.saveResponse);
     }
   }
 
@@ -310,7 +314,6 @@ class Graph extends Component {
           return task.id == d3.select(this).attr("id")
         })
         if(task && task.length > 0) {
-          console.log(task[0].status);
           if(task[0].status == 'completed' || task[0].status == 'compiled') {
             d3.select(this.parentNode).append("text")
               .attr('class', 'tick')
@@ -382,6 +385,21 @@ class Graph extends Component {
     this.setState({
       showAssetListDlg: false
     });
+  }
+
+  showScheduleIcons = (saveResponse) => {
+    var newData = this.thisGraph.nodes.map(el => {
+      if(el.id == this.state.currentlyEditingId) {
+        el.scheduleType = saveResponse.type;
+        this.props.dispatch(assetsActions.assetSaved({}));
+      }
+      return el;
+    })
+    this.thisGraph.nodes = newData;
+
+    this.updateGraph();
+
+    this.saveGraph();
   }
 
   onFileAdded = (saveResponse) => {
@@ -477,8 +495,6 @@ class Graph extends Component {
   }
 
   saveAssetToDataflow(assetId, dataflowId, assetType) {
-    console.log(`save asset -- assetId: ${assetId}, dataflowId: ${dataflowId}`);
-
     fetch('/api/dataflow/saveAsset', {
       method: 'post',
       headers: authHeader(),
@@ -652,7 +668,6 @@ class Graph extends Component {
         break;
       }
     }
-
     if(d3.select("#t"+d.id).empty()) {
       if(hasEditPermission(_self.props.user)) {
         let hideIcon = gEl.append('text')
@@ -681,6 +696,24 @@ class Graph extends Component {
       }
     }
 
+  }
+
+  addScheduleIcon = (gEl, d) => {
+    if(d.type == 'Job' ) {
+      let scheduleIcon = gEl.append('text')
+        .attr('font-family', 'FontAwesome')
+        .attr('id', 'schedulerType'+d.id)
+        .attr('font-size', function(d) { return '1.5em'})
+        .attr('dy', 7)
+        .attr('dx', -2)
+        .attr('class','graph-icon');
+
+      if(d.scheduleType == 'Time') {
+        d3.select('#schedulerType'+d.id).text(function(node) { return '\uf017' });
+      } else if(d.scheduleType == 'Predecessor') {
+        d3.select('#schedulerType'+d.id).text(function(node) { return '\uf0c1' });
+      }
+    }
   }
 
   insertBgImage = (gEl, x, y, d) => {
@@ -1072,7 +1105,7 @@ class Graph extends Component {
                   d3.select(d3.select("#rec-"+d.id).node().parentNode).attr("class", "d-none")
                 }
               }
-
+              _self.addScheduleIcon(d3.select(this), d);
               break;
 
             case 'File':
@@ -1690,12 +1723,13 @@ class Graph extends Component {
 function mapStateToProps(state) {
   const { user } = state.authenticationReducer;
   const { application, selectedTopNav } = state.applicationReducer;
-  const { selectedAsset } = state.assetReducer;
+  const { selectedAsset, saveResponse } = state.assetReducer;
   return {
       user,
       application,
       selectedTopNav,
-      selectedAsset
+      selectedAsset,
+      saveResponse
   };
 }
 

@@ -5,7 +5,8 @@ const initialState = {
   newAsset:{groupId:'', applicationId:'', isNew:false},
   searchParams:{assetTypeFilter:'', keywords:''},
   assetInGroupId: '',
-  clusterId: ''
+  clusterId: '',
+  saveResponse: {}
 };
 
 export function assetReducer(state = initialState, action) {
@@ -53,6 +54,11 @@ export function assetReducer(state = initialState, action) {
       return {
         ...state,
         clusterId: action.clusterId
+      };
+    case Constants.ASSET_SAVED:
+      return {
+        ...state,
+        saveResponse: action.saveResponse
       };
     default:
       return state
