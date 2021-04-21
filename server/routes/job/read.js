@@ -326,13 +326,13 @@ let updateJobDetails = (applicationId, jobId, jobReqObj, autoCreateFiles, nodes)
       }).then(function(jobParam) {
         if(autoCreateFiles) {
           updateFileRelationship(jobId, jobReqObj, jobReqObj.files, filesToBeRemoved, nodes).then((results) => {
-            resolve({"result":"success", "title":jobReqObj.basic.title, "jobId":jobId, "dataflow":results})
+            resolve({"success": true, "title":jobReqObj.basic.title, "jobId":jobId, "dataflow":results})
           }).catch((err) => {
             console.log("updateJobDetails failed...")
             reject(err);
           })
         } else {
-          resolve({"result":"success", "title":jobReqObj.basic.title, "jobId":jobId})
+          resolve({"success": true, "title":jobReqObj.basic.title, "jobId":jobId})
         }
       }).catch((err) => {
         console.log("updatejobdetails failed reject-1")
@@ -532,16 +532,21 @@ router.post('/saveJob', [
               });
             if(success || success[0]) {
               //remove existing job with same name
-              JobScheduler.removeJobFromScheduler(req.body.job.basic.name + '-' + req.body.job.basic.dataflowId + '-' + jobId);
-              await JobScheduler.addJobToScheduler(
-                req.body.job.basic.name,
-                cronExpression,
-                req.body.job.basic.cluster_id,
-                req.body.job.basic.dataflowId,
-                applicationId,
-                jobId,
-                SUBMIT_JOB_FILE_NAME
-              )
+              try {
+                JobScheduler.removeJobFromScheduler(req.body.job.basic.name + '-' + req.body.job.basic.dataflowId + '-' + jobId);
+                await JobScheduler.addJobToScheduler(
+                  req.body.job.basic.name,
+                  cronExpression,
+                  req.body.job.basic.cluster_id,
+                  req.body.job.basic.dataflowId,
+                  applicationId,
+                  jobId,
+                  SUBMIT_JOB_FILE_NAME
+                )
+              } catch (err) {
+                console.log("could not remove job from scheduler"+ err)
+              }
+
             }
 
             if (!success || !success[0]) {

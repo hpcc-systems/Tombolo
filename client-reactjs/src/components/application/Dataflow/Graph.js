@@ -396,7 +396,6 @@ class Graph extends Component {
       return el;
     })
     this.thisGraph.nodes = newData;
-
     this.updateGraph();
 
     this.saveGraph();
@@ -712,6 +711,8 @@ class Graph extends Component {
         d3.select('#schedulerType'+d.id).text(function(node) { return '\uf017' });
       } else if(d.scheduleType == 'Predecessor') {
         d3.select('#schedulerType'+d.id).text(function(node) { return '\uf0c1' });
+      } else {
+        d3.select('#schedulerType'+d.id).remove();
       }
     }
   }
