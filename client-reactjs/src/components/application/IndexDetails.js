@@ -11,6 +11,10 @@ import { connect } from 'react-redux';
 import { SearchOutlined  } from '@ant-design/icons';
 import { assetsActions } from '../../redux/actions/Assets';
 import { debounce } from 'lodash';
+import { store } from '../../redux/store/Store';
+import {Constants} from "../common/Constants"
+import ReactMarkdown from 'react-markdown'
+
 
 const TabPane = Tabs.TabPane;
 const Option = Select.Option;
@@ -40,16 +44,46 @@ class IndexDetails extends PureComponent {
       groupId: "",
       keyedColumns:[],
       nonKeyedColumns:[]
-    }
+    },
+    enableEdit: false,
+    editing: false
+
   }
 
+  //Mounting Phase
   componentDidMount() {
     //this.props.onRef(this);
     if(this.props.application && this.props.application.applicationId) {
       this.getIndexDetails();
     }
     this.getFiles();
+
+    //Getting global state
+    const {viewOnlyModeReducer} = store.getState()
+    if(viewOnlyModeReducer.editMode){
+      this.setState({
+        enableEdit : viewOnlyModeReducer.editMode,
+        editing: true
+      })
+    }else{
+      this.setState({
+        enableEdit : viewOnlyModeReducer.editMode,
+     
+      })
+    } 
   }
+
+//Unmounting phase
+
+  //Component will unmount
+  componentWillUnmount(){
+ 
+    store.dispatch({
+      type: Constants.ENABLE_EDIT,
+      payload: false
+    })
+  
+}
 
   getIndexDetails() {
     if(this.props.selectedAsset && !this.props.isNew) {
@@ -76,7 +110,11 @@ class IndexDetails extends PureComponent {
             id: data.basic.id,
             groupId: data.basic.groupId,
             keyedColumns: data.basic.index_keys,
-            nonKeyedColumns: data.basic.index_payloads
+            nonKeyedColumns: data.basic.index_payloads,
+
+            // For read only view
+            description: data.basic.description,
+           
           }
         });
         this.formRef.current.setFieldsValue({
@@ -266,6 +304,7 @@ class IndexDetails extends PureComponent {
     });
   }
 
+  
   getFiles() {
     fetch("/api/file/read/file_ids?app_id="+this.props.application.applicationId, {
       headers: authHeader()
@@ -443,8 +482,46 @@ class IndexDetails extends PureComponent {
       return null;
     }
 
+     //Function to make fields editable
+     const makeFieldsEditable = () => {
+      store.dispatch({
+        type: Constants.ENABLE_EDIT,
+        payload: true
+      })
+      this.setState({
+        enableEdit: !this.state.enableEdit,
+        editing: true
+      });
+    };
+
+      //Switch to view only mode
+      const switchToViewOnly = () => {
+        store.dispatch({
+          type: Constants.ENABLE_EDIT,
+          payload: false
+        })
+        this.setState({
+          enableEdit: !this.state.enableEdit,
+          editing: false
+        });
+      }
+
+
     return (
       <React.Fragment>
+        {/* Display edit or view changes btns */}
+          {!this.state.enableEdit && editingAllowed?  <div className="button-container edit-toggle-btn ">
+          <Button type="primary" onClick={makeFieldsEditable}>
+            Edit
+          </Button>
+        </div> : null }
+
+        {this.state.editing ?  <div className="button-container view-change-toggle-btn" >
+          <Button  onClick={switchToViewOnly} type="primary" ghost>
+            View Changes
+          </Button>
+         
+        </div> : null }
         <div>
           {!this.props.isNew ?
             <div className="loader">
@@ -457,6 +534,8 @@ class IndexDetails extends PureComponent {
             <TabPane tab="Basic" key="1">
 
              <Form {...formItemLayout} labelAlign="left" ref={this.formRef} onFinish={this.handleOk}>
+
+                 {this.state.enableEdit?
               <div>
               <Form.Item {...formItemLayout} label="Cluster" name="clusters">
                 <Select placeholder="Select a Cluster" disabled={!editingAllowed} onChange={this.onClusterSelection} style={{ width: 190 }}>
@@ -465,6 +544,7 @@ class IndexDetails extends PureComponent {
               </Form.Item>
 
               <Form.Item label="Index" name="indexSearchValue">
+              
                 <Row type="flex">
                   <Col span={21} order={1}>
                     <AutoComplete
@@ -491,54 +571,94 @@ class IndexDetails extends PureComponent {
                       Clear
                    </Button>
                   </Col>
-                </Row>
+                </Row> 
+              
               </Form.Item>
               </div>
+              : null}
               <Form.Item label="Title" name="title" rules={[{ required: true, message: 'Please enter a title!' }, {
                   pattern: new RegExp(/^[a-zA-Z0-9:._-]*$/),
                   message: 'Please enter a valid Title',
                 }]}>
-                <Input id="file_title" onChange={this.onChange} placeholder="Title" disabled={!editingAllowed}/>
+                <Input id="file_title" 
+                onChange={this.onChange} 
+                placeholder="Title" 
+                disabled={!editingAllowed}
+                className={this.state.enableEdit ? null : "read-only-input"}
+                />
+                
               </Form.Item>
 
               <Form.Item label="Name" name="name" rules={[{ required: true, message: 'Please enter a Name!' }, {
                   pattern: new RegExp(/^[a-zA-Z0-9:._-]*$/),
                   message: 'Please enter a valid name',
                 }]}>
-                <Input id="name" onChange={this.onChange} placeholder="Name" disabled={searchResultsLoaded || !editingAllowed} />
+                <Input id="name"
+                 onChange={this.onChange} 
+                 placeholder="Name" disabled={searchResultsLoaded || !editingAllowed} 
+                 className={this.state.enableEdit ? null : "read-only-input"}
+
+                 />
               </Form.Item>
 
               <Form.Item label="Description" name="description">
-                <MarkdownEditor id="query_desc" onChange={this.onChange} targetDomId="indexDescr" disabled={!editingAllowed}/>
+                {this.state.enableEdit ?
+                <MarkdownEditor
+                 id="query_desc"
+                 name="description"
+                  onChange={this.onChange}
+                   targetDomId="indexDescr"
+                    disabled={!editingAllowed}/>
+                :
+                <ReactMarkdown source={this.state.index.description} />
+                }
               </Form.Item>
 
               <Form.Item label="Primary Service" name="primaryService" rules={[{
                 pattern: new RegExp(/^[a-zA-Z0-9:$._-]*$/),
                 message: 'Please enter a valid Path',
               }]}>
-                 <Input id="file_primary_svc" onChange={this.onChange} placeholder="Primary Service" disabled={!editingAllowed}/>
+                 <Input id="file_primary_svc"
+                 onChange={this.onChange} 
+                 placeholder="Primary Service"
+                  disabled={!editingAllowed}
+                  className={this.state.enableEdit ? null : "read-only-input"}
+                  />
               </Form.Item>
               <Form.Item label="Backup Service" name="backupService" rules={[{
                 pattern: new RegExp(/^[a-zA-Z0-9:$._-]*$/),
                 message: 'Please enter a valid backup service',
               }]}>
-                <Input id="file_bkp_svc" onChange={this.onChange} placeholder="Backup Service" disabled={!editingAllowed}/>
+                <Input id="file_bkp_svc"
+                 onChange={this.onChange}
+                  placeholder="Backup Service"
+                   disabled={!editingAllowed}
+                   className={this.state.enableEdit ? null : "read-only-input"}
+                   />
               </Form.Item>
               <Form.Item label="Path" name="qualifiedPath" rules={[{
                 pattern: new RegExp(/^[a-zA-Z0-9:$._-]*$/),
                 message: 'Please enter a valid path',
               }]}>
-                <Input id="path" onChange={this.onChange} placeholder="Path" disabled={!editingAllowed}/>
+                {this.state.enableEdit ?
+                <Input id="path" 
+                onChange={this.onChange}
+                 placeholder="Path" 
+                 disabled={!editingAllowed}
+               /> :
+               <textarea className="read-only-textarea" /> }
               </Form.Item>
             </Form>
 
             </TabPane>
             <TabPane tab="Source File" key="2">
+              {!this.state.enableEdit ? null:
               <div>
                  <Select placeholder="Select Source Files" defaultValue={this.state.selectedSourceFile} style={{ width: 190 }} onSelect={this.onSourceFileSelection} disabled={!editingAllowed}>
                   {sourceFiles.map(d => <Option key={d.id}>{(d.title)?d.title:d.name}</Option>)}
                 </Select>
                 </div>
+  }
             </TabPane>
             <TabPane tab="Index" key="3">
               <EditableTable
@@ -565,6 +685,7 @@ class IndexDetails extends PureComponent {
               </TabPane> : null}
           </Tabs>
         </div>
+        {this.state.enableEdit ?
         <div className="button-container">
           <Button key="danger" type="danger" disabled={!this.state.index.id || !editingAllowed} onClick={this.handleDelete}>Delete</Button>
           <Button key="back" onClick={this.handleCancel}>
@@ -573,7 +694,7 @@ class IndexDetails extends PureComponent {
           <Button key="submit" disabled={!editingAllowed} type="primary" loading={confirmLoading} onClick={this.handleOk}>
             Save
           </Button>
-        </div>
+        </div> : null }
       </React.Fragment>
     );
   }

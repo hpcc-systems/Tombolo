@@ -12,6 +12,13 @@ import { assetsActions } from '../../../redux/actions/Assets';
 import { useHistory } from 'react-router';
 import useModal from '../../../hooks/useModal';
 import { DeleteOutlined, EditOutlined, QuestionCircleOutlined, FolderOpenOutlined  } from '@ant-design/icons';
+import {store} from "../../../redux/store/Store";
+import {viewOnly} from "../../../redux/actions/ViewOnly"
+import MarkdownView from 'react-showdown';
+import showdown from 'showdown'
+
+console.log(showdown , " << show down")
+
 
 function AssetsTable({selectedGroup, handleEditGroup, refreshGroups}) {
   const [assets, setAssets] = useState([]);
@@ -62,18 +69,33 @@ function AssetsTable({selectedGroup, handleEditGroup, refreshGroups}) {
       handleError(response);
     })
     .then(data => {
-      setAssets(data)
+    //Converting Markdown to plain text
+    const converter = new showdown.Converter()
+    data.map(item =>  item.description = converter.makeHtml(item.description).replace(/<[^>]*>/g, ''))
+    setAssets(data);
+
+
     }).catch(error => {
       console.log(error);
     });
   }
 
-  const handleEdit = (id, type) => {
+
+  //When edit icon is clicked
+  const handleEdit = (id, type, action) => {
+    if(action === "edit"){
+      store.dispatch({
+        type: Constants.ENABLE_EDIT,
+        payload: true
+      })
+    }
+   
     dispatch(assetsActions.assetSelected(
       id,
       applicationId,
       ''
     ));
+
 
     switch (type) {
       case 'File':
@@ -155,6 +177,7 @@ function AssetsTable({selectedGroup, handleEditGroup, refreshGroups}) {
   }
 
   const handleGroupClick = (groupId) => {
+   
     dispatch(assetsActions.assetInGroupSelected(
       groupId
     ));
@@ -188,10 +211,10 @@ function AssetsTable({selectedGroup, handleEditGroup, refreshGroups}) {
   {
     title: 'Name',
     dataIndex: 'name',
-    width: '35%',
+    width: '30%',
     render: (text, record) => (
       <React.Fragment>
-        <span className="asset-name">{generateAssetIcon(record.type)}<a href='#' onClick={(row) => handleEdit(record.id, record.type)}>{text}</a></span>
+        <span className="asset-name">{generateAssetIcon(record.type)}<a href='#' onClick={(row) => handleEdit(record.id, record.type, "view")}>{text}</a></span>
         {keywords && keywords.length > 0 ? <span className={"group-name"}>In Group: <a href='#' onClick={(row) => handleGroupClick(record.groupId)}>{record.group_name ? record.group_name : 'Groups'}</a></span> : null}
         </React.Fragment>
         )
@@ -205,7 +228,7 @@ function AssetsTable({selectedGroup, handleEditGroup, refreshGroups}) {
   {
     title: 'Type',
     dataIndex: 'type',
-    width: '5%',
+    width: '10%',
   },
   {
     title: 'Created',
@@ -223,7 +246,8 @@ function AssetsTable({selectedGroup, handleEditGroup, refreshGroups}) {
     className: editingAllowed ? "show-column" : "hide-column",
     render: (text, record) =>
       <span>
-        <a href="#" onClick={(row) => handleEdit(record.id, record.type)}><Tooltip placement="right" title={"Edit"}><EditOutlined /></Tooltip></a>
+        
+        <a href="#" onClick={(row) => handleEdit(record.id, record.type, "edit")}><Tooltip placement="right" title={"Edit"}><EditOutlined /></Tooltip></a>
         <Divider type="vertical" />
         <Popconfirm title="Are you sure you want to delete this?" onConfirm={() => handleDelete(record.id, record.type)} icon={<QuestionCircleOutlined/>}>
           <a href="#"><Tooltip placement="right" title={"Delete"}><DeleteOutlined /></Tooltip></a>
@@ -232,6 +256,7 @@ function AssetsTable({selectedGroup, handleEditGroup, refreshGroups}) {
         <a href="#" onClick={(row) => handleMoveAsset(record.id, record.type, record.name, selectedGroup)}><Tooltip placement="right" title={"Move"}><FolderOpenOutlined /></Tooltip></a>
       </span>
   }];
+
 
   return (
     <React.Fragment>

@@ -5,4 +5,6 @@
 **/bower_components
 **/build
 **/mysql-data
+**/vscode
+sequelize-data.json
 docs/~$tombolo.pptx

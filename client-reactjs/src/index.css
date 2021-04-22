@@ -700,3 +700,39 @@ div.tooltip {
 .graph-div {
   position: relative;
 }
+
+/* Read only view for asset details  */
+.read-only-input{
+  background: white  !important;
+  border: none;
+  pointer-events: none;
+  resize: none;
+  height: auto;
+  width: 100%;
+  
+}
+
+.read-only-textarea{
+ width: 100%;
+
+  height: auto;
+  resize: none;
+border: none;
+pointer-events: none;
+padding-top:5px;
+overflow: hidden;
+}
+
+.read-only-input::placeholder{
+  display: none;
+  color: transparent;
+}
+.view-change-toggle-btn {
+  border-bottom :  2px solid whitesmoke;
+   padding-bottom: 6.2px;
+}
+
+.edit-toggle-btn {
+  border-bottom :  2px solid whitesmoke;
+   padding-bottom: 6.5px;
+}

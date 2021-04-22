@@ -13,6 +13,10 @@ import { connect } from 'react-redux';
 import { SearchOutlined  } from '@ant-design/icons';
 import { assetsActions } from '../../redux/actions/Assets';
 import { debounce } from 'lodash';
+import { store } from '../../redux/store/Store';
+import {Constants} from "../common/Constants";
+import ReactMarkdown from "react-markdown";
+
 
 const TabPane = Tabs.TabPane;
 const Option = Select.Option;
@@ -40,17 +44,44 @@ class QueryDetails extends PureComponent {
       type: "roxie_query",
       input: [],
       output: []
-    }
+    },
+    enableEdit: false,
+    editing: false
   }
 
   //querySearchSuggestions = [];
 
+  //Mounting phase
   componentDidMount() {
     if(this.props.application && this.props.application.applicationId) {
       this.getQueryDetails();
       this.setClusters();
     }
+
+       //Getting global state
+    const {viewOnlyModeReducer} = store.getState()
+    if(viewOnlyModeReducer.editMode){
+      this.setState({
+        enableEdit : viewOnlyModeReducer.editMode,
+        editing: true
+      })
+    }else{
+      this.setState({
+        enableEdit : viewOnlyModeReducer.editMode,
+     
+      })
+    } 
   }
+
+  //Unmount phase
+    //Component will unmount
+    componentWillUnmount(){
+      store.dispatch({
+        type: Constants.ENABLE_EDIT,
+        payload: false
+      })
+  }
+
 
   getQueryDetails() {
     if(this.props.selectedAsset && !this.props.isNew) {
@@ -71,7 +102,10 @@ class QueryDetails extends PureComponent {
             id: data.id,
             groupId: data.groupId,
             input: data.query_fields.filter(field => field.field_type == 'input'),
-            output: data.query_fields.filter(field => field.field_type == 'output')
+            output: data.query_fields.filter(field => field.field_type == 'output'),
+            //For read only 
+            description: data.description,
+         
           }
         });
 
@@ -459,10 +493,46 @@ class QueryDetails extends PureComponent {
     };
     const selectedCluster = clusters.filter(cluster => cluster.id == this.props.clusterId);
 
+      //Function to make fields editable
+      const makeFieldsEditable = () => {
+        store.dispatch({
+          type: Constants.ENABLE_EDIT,
+          payload: true
+        })
+        this.setState({
+          enableEdit: !this.state.enableEdit,
+          editing: true
+        });
+      };
+  
+       //Switch to view only mode
+    const switchToViewOnly = () => {
+      store.dispatch({
+        type: Constants.ENABLE_EDIT,
+        payload: false
+      })
+      this.setState({
+        enableEdit: !this.state.enableEdit,
+        editing: false
+      });
+    }
+
     //render only after fetching the data from the server
     //{console.log(title + ', ' + this.props.selectedQuery + ', ' + this.props.isNewFile)}
     return (
       <React.Fragment>
+          {!this.state.enableEdit && editingAllowed?  <div className="button-container edit-toggle-btn">
+          <Button type="primary" onClick={makeFieldsEditable}>
+            Edit
+          </Button>
+        </div> : null }
+        {this.state.editing ?  <div className="button-container view-change-toggle-btn" >
+          <Button  onClick={switchToViewOnly} type="primary" ghost>
+            View Changes
+          </Button>
+         
+        </div> : null }
+       
         <div>
         {!this.props.isNew ?
             <div className="loader">
@@ -472,9 +542,12 @@ class QueryDetails extends PureComponent {
           defaultActiveKey="1"
         >
           <TabPane tab="Basic" key="1">
+           
 
            <Form {...formItemLayout} labelAlign="left" ref={this.formRef} onFinish={this.handleOk} initialValues={{type: "roxie_query"}}>
+            {this.state.enableEdit ?
             <div>
+           
               <Form.Item {...formItemLayout} label="Type" name="type">
                 <Radio.Group value={type} onChange={this.queryTypeChange}>
                   <Radio value={'roxie_query'}>Roxie Query</Radio>
@@ -520,35 +593,67 @@ class QueryDetails extends PureComponent {
                 </Form.Item>
                 </React.Fragment>
               : null}
-            </div>
+            </div> : null }
             <Form.Item label="Title" name="title" rules={[{ required: true, message: 'Please enter a title!' }, {
                 pattern: new RegExp(/^[a-zA-Z0-9:._-]*$/),
                 message: 'Please enter a valid title',
               }]}>
-              <Input id="query_title" onChange={this.onChange} placeholder="Title" disabled={!editingAllowed}/>
+              <Input id="query_title" 
+              onChange={this.onChange} 
+              placeholder="Title" 
+              disabled={!editingAllowed}
+              className={this.state.enableEdit ? null : "read-only-input"}
+              />
             </Form.Item>
 
             <Form.Item label="Name" name="name" rules={[{ required: true, message: 'Please enter a name!' }, {
                   pattern: new RegExp(/^[a-zA-Z0-9:._-]*$/),
                   message: 'Please enter a valid name',
                 }]}>
-              <Input disabled={true} placeholder="Name" disabled={!editingAllowed}/>
+              <Input disabled={true} 
+              placeholder="Name" 
+              disabled={!editingAllowed}
+              className={this.state.enableEdit ? null : "read-only-input"}
+              />
             </Form.Item>
 
             <Form.Item label="Description" name="description">
-              <MarkdownEditor id="query_desc" onChange={this.onChange} targetDomId="queryDescr" disabled={!editingAllowed}/>
+              {this.state.enableEdit?
+              <MarkdownEditor 
+              id="query_desc" 
+              name="description"
+              onChange={this.onChange}
+               targetDomId="queryDescr" 
+               disabled={!editingAllowed}/>
+               :
+               <ReactMarkdown source={this.state.query.description} />
+              }
             </Form.Item>
             <Form.Item label="URL" name="url" rules={[{
                 type: 'url',
                 message: 'Please enter a valid URL'
               }]}>
-              <Input id="query_url" onChange={this.onChange} placeholder="URL" disabled={!editingAllowed}/>
+                {this.state.enableEdit ?
+              <Input id="query_url" 
+              onChange={this.onChange}
+               placeholder="URL" 
+               disabled={!editingAllowed}
+               className={this.state.enableEdit ? null : "read-only-input"}/> : 
+               <textarea className="read-only-textarea" />
+                }
             </Form.Item>
             <Form.Item label="Git Repo" name="gitRepo" rules={[{
                 type: 'url',
                 message: 'Please enter a valid URL'
               }]}>
-              <Input id="query_gitRepo" onChange={this.onChange} placeholder="Git Repo URL" disabled={!editingAllowed}/>
+                {this.state.enableEdit ?
+              <Input 
+              id="query_gitRepo" 
+              onChange={this.onChange} 
+              placeholder="Git Repo URL" 
+              disabled={!editingAllowed}
+              className={this.state.enableEdit ? null : "read-only-input"}/> :
+              <textarea className="read-only-textarea" />}
             </Form.Item>
           </Form>
 
@@ -596,7 +701,7 @@ class QueryDetails extends PureComponent {
             </TabPane> : null}
         </Tabs>
       </div>
-      {!this.props.viewMode ?
+      {this.state.enableEdit ?
           <div className="button-container">
             <Button key="danger" type="danger" onClick={this.handleDelete}>Delete</Button>
             <Button key="back" onClick={this.handleCancel}>
