@@ -81,7 +81,6 @@ router.get('/', [
     }
     Groups.findAll({where:{"application_id":req.query.app_id}, order: [['name', 'ASC']]}).then(function(groups) {
       createGroupHierarchy(groups).then((groupHierarchy) => {
-        console.log(JSON.stringify(groupHierarchy));
         res.json(groupHierarchy);
       })
 
@@ -181,7 +180,6 @@ router.get('/assets', [
       include: [{model:File, as:'files', attributes:['id', 'name', 'title', 'description', 'createdAt']}, {model:Job, as: 'jobs', attributes:['id', 'name', 'title', 'description', 'createdAt']}, {model:Query, as: 'queries', attributes:['id', 'name', 'title', 'description', 'createdAt']}, {model:Index, as: 'indexes', attributes:['id', 'name', 'title', 'description', 'createdAt']}],
       order: [['name', 'ASC']]
       }).then(async (assets) => {
-        console.log(assets);
         let childGroups = await getChildGroups(req.query.app_id, req.query.group_id)
         assets[0].files.forEach((file) => {
           finalAssets.push({

@@ -1335,7 +1335,7 @@ class JobDetails extends Component {
       </div>
         <div>
           <span style={{"float": "left"}}>
-            <Button disabled={!editingAllowed} type="primary" key="execute" onClick={this.executeJob}>
+            <Button disabled={!editingAllowed || this.props.isNew} type="primary" key="execute" onClick={this.executeJob}>
               Execute Job
             </Button>
           </span>

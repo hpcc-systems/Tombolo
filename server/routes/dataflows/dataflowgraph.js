@@ -155,7 +155,9 @@ router.post('/deleteAsset', [
         if (body('id').isUUID(4)) {
           await AssetDataflow.destroy({ where: { dataflowId: req.body.dataflowId, assetId: assetId } }).catch(err => console.log(err));
           Job.findOne({where:{id: assetId}, attributes: {exclude: ['assetId']}}).then((job) => {
-            JobScheduler.removeJobFromScheduler(job.name + '-' + req.body.dataflowId + '-' + assetId);
+            if(job) {
+              JobScheduler.removeJobFromScheduler(job.name + '-' + req.body.dataflowId + '-' + assetId);
+            }
             res.json({"result":"success"});
           })
         }

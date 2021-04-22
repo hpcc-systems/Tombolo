@@ -210,9 +210,10 @@ let updateFileRelationship = (jobId, job, files, filesToBeRemoved, existingNodes
               {updateOnDuplicate: ["name", "ruleType", "rule", "action", "fixScript"]}
             )
           } else {
-            let id=existingFile[0].id;
+            let id=existingFile[0].id, edge={};
+            console.log(id);
             if(existingNodes) {
-              existingNode = existingNodes.filter(node => node.id == id)[0];
+              existingNode = existingNodes.filter(node => node.id == id || node.fileId == id)[0];
             }
             //update file_id in JobFile - this is the case when a job was added via assets and later the job is added to a workflow
             //when job is created from assets, there is no association with actual file at that time
@@ -229,8 +230,7 @@ let updateFileRelationship = (jobId, job, files, filesToBeRemoved, existingNodes
 
             let posX = file.file_type == 'input' ? job.mousePosition[0] - 114  : parseInt(job.mousePosition[0]) + 114;
             let posY = file.file_type == 'input' ? inputY  : outputY;
-            //check if same node already exists in the workflow
-            nodes.push({
+            let node = {
               "title": fileInfo.basic.fileName,
               "id": existingFile[0].id,
               "x": posX,
@@ -238,10 +238,16 @@ let updateFileRelationship = (jobId, job, files, filesToBeRemoved, existingNodes
               "type": "File",
               "fileId": existingFile[0].id,
               "isHidden": existingNode ? existingNode.isHidden : false
-            })
-            if(file.file_type == 'input' && !existingNode.isHidden) {
+            }
+            //node deleted from workflow but exists in cluster and tombolo
+            if(!existingNode) {
+              existingNode = node;
+            }
+            nodes.push(node)
+
+            if(file.file_type == 'input' && existingNode && !existingNode.isHidden) {
               edge = {"source":existingFile[0].id,"target":job.basic.id};
-            } else if(file.file_type == 'output' && !existingNode.isHidden) {
+            } else if(file.file_type == 'output' && existingNode && !existingNode.isHidden) {
               edge = {"source":job.basic.id,"target":existingFile[0].id};
             }
             edges.push(edge);
@@ -326,8 +332,10 @@ let updateJobDetails = (applicationId, jobId, jobReqObj, autoCreateFiles, nodes)
       }).then(function(jobParam) {
         if(autoCreateFiles) {
           updateFileRelationship(jobId, jobReqObj, jobReqObj.files, filesToBeRemoved, nodes).then((results) => {
+            console.log("****************")
             resolve({"success": true, "title":jobReqObj.basic.title, "jobId":jobId, "dataflow":results})
           }).catch((err) => {
+            console.error("****************-2")
             console.log("updateJobDetails failed...")
             reject(err);
           })
@@ -350,11 +358,14 @@ router.post('/createFileRelation', [
   body('dataflowId').optional({checkFalsy:true}).isUUID(4).withMessage('Invalid dataflowId'),
   body('currentlyEditingId').optional({checkFalsy:true}).isInt().withMessage('Invalid currentlyEditingId'),
   body('mousePosition').optional({checkFalsy:true}).isString().withMessage('Invalid mousePostion')
-], (req, res) => {
+], async (req, res) => {
   const errors = validationResult(req).formatWith(validatorUtil.errorFormatter);
   if (!errors.isEmpty()) {
     return res.status(422).json({ success: false, errors: errors.array() });
   }
+
+  let dataflowGraph = await DataflowGraph.findOne({where: {dataflowId: req.body.dataflowId}});
+  let nodes = JSON.parse(dataflowGraph.nodes);
 
   Job.findOne({where: {id: req.body.jobId}, attributes: {exclude: ['assetId']}, include:[JobFile]}).then(async (savedJob) => {
     let jobUpdated = await Job.update({
@@ -374,7 +385,7 @@ router.post('/createFileRelation', [
       "jobId": req.body.jobId
     }
     job.mousePosition = mousePos;
-    updateFileRelationship(req.body.jobId, job, savedJob.jobfiles).then((results) => {
+    updateFileRelationship(req.body.jobId, job, savedJob.jobfiles, [], nodes).then((results) => {
       res.json(results);
     })
   }).catch((err) => {
@@ -394,8 +405,15 @@ router.post('/refreshDataflow', [
   let dataflowGraph = await DataflowGraph.findOne({where: {dataflowId: req.body.dataflowId}});
   let nodes = JSON.parse(dataflowGraph.nodes);
 
-  Job.findAll({where: {dataflowId: req.body.dataflowId, application_id: req.body.application_id}, attributes: {exclude: ['assetId']}}).then((jobs) => {
-    jobs.forEach((job) => {
+  let query = 'select j.id, j.name, j.cluster_id, j.jobType from job j, assets_dataflows ad where ad.dataflowId=(:dataflowId) and ad.assetId = j.id';
+  let replacements = { dataflowId: req.body.dataflowId};
+  let jobs = await models.sequelize.query(query, {
+    type: models.sequelize.QueryTypes.SELECT,
+    replacements: replacements
+  })
+  //jobs.forEach((job) => {
+  try {
+    for(var job of jobs) {
       promises.push(hpccUtil.getJobWuidByName(job.cluster_id, job.name).then((wuid) => {
         return hpccUtil.getJobInfo(job.cluster_id, wuid, job.jobType).then((jobInfo) => {
           let jobObj = {}, jobFiles=[];
@@ -412,11 +430,11 @@ router.post('/refreshDataflow', [
               "jobId": job.id
             }
             jobObj.mousePosition = [dataflowJobNode[0].x, dataflowJobNode[0].y];
-            return updateJobDetails(req.body.application_id, job.id, jobObj, true, nodes);
+            updateJobDetails(req.body.application_id, job.id, jobObj, true, nodes);
           }
         })
       }))
-    })
+    }
 
     Promise.all(promises).then(async () => {
       console.log("refresh completed....")
@@ -428,8 +446,10 @@ router.post('/refreshDataflow', [
       console.log(err);
       return res.status(500).json({ success: false, message: "Error occured while refreshing the job" });
     })
-  })
-
+  } catch (err) {
+    console.log(err);
+    return res.status(500).json({ success: false, message: "Error occured while refreshing the job" });
+  }
 })
 
 router.post('/saveJob', [

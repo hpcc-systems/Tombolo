@@ -17,7 +17,6 @@ exports.fileInfo = (fileName, clusterId) => {
           console.error(response.DFUInfoResponse.Exception[0]);
           resolve(null);
         }
-        console.log(response)
 		  	var processFieldValidations = function(fileLayout) {
       		var fieldsValidations=[];
       		fileLayout.forEach(function(field, idx) {
@@ -251,7 +250,6 @@ exports.getJobWuidByName = (clusterId, jobName) => {
       let clusterAuth = module.exports.getClusterAuth(cluster);
       let wuService = new hpccJSComms.WorkunitsService({ baseUrl: cluster.thor_host + ':' + cluster.thor_port, userID:(clusterAuth ? clusterAuth.user : ""), password:(clusterAuth ? clusterAuth.password : "")});
       wuService.WUQuery({"Jobname":jobName}).then((response) => {
-        console.log(response);
         if(response.Workunits
           && response.Workunits.ECLWorkunit
           && response.Workunits.ECLWorkunit.length > 0) {
@@ -284,7 +282,6 @@ exports.resubmitWU = (clusterId, wuid) => {
          }
       }
       let cluster = await module.exports.getCluster(clusterId);
-      console.log(JSON.stringify(body));
       request.post({
         url: cluster.thor_host + ':' + cluster.thor_port +'/WsWorkunits/WUResubmit.json?ver_=1.77',
         auth : module.exports.getClusterAuth(cluster),
