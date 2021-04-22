@@ -16,6 +16,8 @@ import { debounce } from 'lodash';
 import { store } from '../../redux/store/Store';
 import {Constants} from "../common/Constants";
 import ReactMarkdown from "react-markdown";
+import {readOnlyMode, editableMode} from "../common/readOnlyUtil"
+
 
 
 const TabPane = Tabs.TabPane;
@@ -493,24 +495,20 @@ class QueryDetails extends PureComponent {
     };
     const selectedCluster = clusters.filter(cluster => cluster.id == this.props.clusterId);
 
-      //Function to make fields editable
-      const makeFieldsEditable = () => {
-        store.dispatch({
-          type: Constants.ENABLE_EDIT,
-          payload: true
-        })
-        this.setState({
-          enableEdit: !this.state.enableEdit,
-          editing: true
-        });
-      };
-  
-       //Switch to view only mode
+        //Function to make fields editable
+    const makeFieldsEditable = () => {
+      editableMode();
+
+      this.setState({
+        enableEdit: !this.state.enableEdit,
+        editing: true
+      });
+    };
+
+    //Switch to view only mode
     const switchToViewOnly = () => {
-      store.dispatch({
-        type: Constants.ENABLE_EDIT,
-        payload: false
-      })
+      readOnlyMode()
+
       this.setState({
         enableEdit: !this.state.enableEdit,
         editing: false

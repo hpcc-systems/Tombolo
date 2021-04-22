@@ -39,6 +39,7 @@ import { SearchOutlined } from "@ant-design/icons";
 import { assetsActions } from "../../redux/actions/Assets";
 import Paragraph from "antd/lib/skeleton/Paragraph";
 import { viewOnlyModeReducer } from "../../redux/reducers/ViewOnlyModeReducer";
+import {readOnlyMode, editableMode} from "../common/readOnlyUtil"
 
 const TabPane = Tabs.TabPane;
 const Option = Select.Option;
@@ -1176,10 +1177,8 @@ class FileDetails extends PureComponent {
 
     //Function to make fields editable
     const makeFieldsEditable = () => {
-      store.dispatch({
-        type: Constants.ENABLE_EDIT,
-        payload: true
-      })
+      editableMode();
+
       this.setState({
         enableEdit: !this.state.enableEdit,
         editing: true
@@ -1188,10 +1187,8 @@ class FileDetails extends PureComponent {
 
     //Switch to view only mode
     const switchToViewOnly = () => {
-      store.dispatch({
-        type: Constants.ENABLE_EDIT,
-        payload: false
-      })
+      readOnlyMode()
+
       this.setState({
         enableEdit: !this.state.enableEdit,
         editing: false

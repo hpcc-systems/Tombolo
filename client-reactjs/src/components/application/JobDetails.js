@@ -13,7 +13,9 @@ import { SearchOutlined } from '@ant-design/icons';
 import { assetsActions } from '../../redux/actions/Assets';
 import { store } from '../../redux/store/Store';
 import {Constants} from "../common/Constants";
-import ReactMarkdown from 'react-markdown'
+import ReactMarkdown from 'react-markdown';
+import {readOnlyMode, editableMode} from "../common/readOnlyUtil"
+
 
 const TabPane = Tabs.TabPane;
 const Option = Select.Option;
@@ -1085,30 +1087,25 @@ class JobDetails extends Component {
     }
 
     
-    //Function to make fields editable
-    const makeFieldsEditable = () => {
-      store.dispatch({
-        type: Constants.ENABLE_EDIT,
-        payload: true
-      })
+     //Function to make fields editable
+     const makeFieldsEditable = () => {
+      editableMode();
+
       this.setState({
         enableEdit: !this.state.enableEdit,
         editing: true
       });
     };
 
-       //Switch to view only mode
-       const switchToViewOnly = () => {
-        store.dispatch({
-          type: Constants.ENABLE_EDIT,
-          payload: false
-        })
-        this.setState({
-          enableEdit: !this.state.enableEdit,
-          editing: false
-        });
-      }
-      
+    //Switch to view only mode
+    const switchToViewOnly = () => {
+      readOnlyMode()
+
+      this.setState({
+        enableEdit: !this.state.enableEdit,
+        editing: false
+      });
+    }
 
 
     return (
