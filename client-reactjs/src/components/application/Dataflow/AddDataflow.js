@@ -6,7 +6,7 @@ import { MarkdownEditor } from "../../common/MarkdownEditor.js";
 import { useSelector } from "react-redux";
 const Option = Select.Option;
 
-function AddDataflow({isShowing, toggle, applicationId, onDataFlowUpdated, selectedDataflow}) {
+function AddDataflow({isShowing, toggle, applicationId, onDataFlowUpdated, selectedDataflow, dataflows}) {
   const assetReducer = useSelector(state => state.assetReducer);
   const [dataFlow, setDataFlow] = useState({
 		id: '',
@@ -77,9 +77,16 @@ function AddDataflow({isShowing, toggle, applicationId, onDataFlowUpdated, selec
       submitted: true
     });
 
+    let dataflowExistsWithSameName = (dataflows.filter(existingDataflow => existingDataflow.title == dataFlow.title).length > 0);
+    if(dataflowExistsWithSameName) {
+      message.error("A dataflow exists with the same name. Please select a different name")
+      return true;
+    }
+
     if(dataFlow.title == '' || clusterSelected == '') {
       return false;
     }
+
     setForm({
       confirmLoading: true,
       submitted: true

@@ -119,6 +119,7 @@ function Dataflow(props) {
     	          	applicationId={application.applicationId}
     	          	onDataFlowUpdated={onDataFlowUpdated}
     	          	selectedDataflow={form.selectedDataflow}
+                  dataflows={dataFlows}
     	          	/>
                : null}
   	        </span>
