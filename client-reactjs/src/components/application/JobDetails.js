@@ -1286,16 +1286,15 @@ class JobDetails extends Component {
             </TabPane>
 
             <TabPane tab="ECL" key="2">
-              {!this.state.enableEdit ?  null :
+              
               <Form.Item {...eclItemLayout} label="ECL" name="ecl">
                 <EclEditor 
                 id="job_ecl"
                  targetDomId="jobEcl" 
-                //  disabled={true} 
-                //  className={this.state.enableEdit ? null : "read-only-input"}
+                 disabled={true} 
                  />
               </Form.Item>
-  }
+  
             </TabPane>
             <TabPane tab="Input Params" key="3">
               <EditableTable
@@ -1304,22 +1303,30 @@ class JobDetails extends Component {
                 editingAllowed={editingAllowed}
                 dataDefinitions={[]}
                 showDataDefinition={false}
-                setData={this.setInputParamsData}/>
+                setData={this.setInputParamsData}
+                enableEdit={this.state.enableEdit}
+                />
             </TabPane>
 
             <TabPane tab="Input Files" key="4">
-              {!this.state.enableEdit? null :
+            
               <div>
+                {this.state.enableEdit ?
+                <>
                 <Form.Item label="Input Files">
                   <Select id="inputfiles" placeholder="Select Input Files" defaultValue={this.state.selectedInputdFile} onChange={this.handleInputFileChange} style={{ width: 290 }} disabled={!editingAllowed}>
                     {sourceFiles.map(d => <Option value={d.id} key={d.id}>{(d.title)?d.title:d.name}</Option>)}
                   </Select>
                 </Form.Item>
+                
                 <Form.Item>
                   <Button type="primary" onClick={this.handleAddInputFile} disabled={!editingAllowed}>
                     Add
                   </Button>
                 </Form.Item>
+                </>
+                : null}
+               
 
                 <Table
                   columns={fileColumns}
@@ -1327,12 +1334,14 @@ class JobDetails extends Component {
                   dataSource={inputFiles}
                   pagination={{ pageSize: 10 }} scroll={{ y: 460 }}
                 />
-              </div> }
+              </div> 
             </TabPane>
 
             <TabPane tab="Output Files" key="5">
-              {!this.state.enableEdit ?  null : 
+            
               <div>
+              {!this.state.enableEdit ?  null : 
+              <>
                 <Form.Item label="Output Files">
                   <Select id="outputfiles" placeholder="Select Output Files" defaultValue={this.state.selectedOutputFile} onChange={this.handleOutputFileChange} style={{ width: 290 }} disabled={!editingAllowed}>
                     {sourceFiles.map(d => <Option value={d.id} key={d.id}>{(d.title)?d.title:d.name}</Option>)}
@@ -1343,13 +1352,15 @@ class JobDetails extends Component {
                     Add
                   </Button>
                 </Form.Item>
+                </> }
+
                 <Table
                   columns={fileColumns}
                   rowKey={record => record.id}
                   dataSource={outputFiles}
                   pagination={{ pageSize: 10 }} scroll={{ y: 460 }}
                 />
-              </div> }
+              </div> 
             </TabPane>
 
             { this.props.selectedDataflow ?

@@ -1577,7 +1577,9 @@ class FileDetails extends PureComponent {
                     editingAllowed={editingAllowed}
                     showDataDefinition={false}
                     dataDefinitions={[]}
-                    setData={this.setLayoutData}/>
+                    setData={this.setLayoutData}
+                    enableEdit={this.state.enableEdit}
+                    />
                 </div>
             </TabPane>
             <TabPane tab="Permissable Purpose" key="4">

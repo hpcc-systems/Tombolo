@@ -670,7 +670,9 @@ class QueryDetails extends PureComponent {
                   editingAllowed={editingAllowed}
                   dataDefinitions={[]}
                   showDataDefinition={false}
-                  setData={this.setInputFieldData}/>
+                  setData={this.setInputFieldData}
+                  enableEdit={this.state.enableEdit}
+                  />
               </div>
             </TabPane>
           <TabPane tab="Output Fields" key="3">

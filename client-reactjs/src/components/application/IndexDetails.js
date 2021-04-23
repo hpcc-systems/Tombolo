@@ -664,7 +664,9 @@ class IndexDetails extends PureComponent {
                 editingAllowed={editingAllowed}
                 dataDefinitions={[]}
                 showDataDefinition={false}
-                setData={this.setIndexFieldData}/>
+                setData={this.setIndexFieldData}
+                enableEdit={this.state.enableEdit}
+                />
             </TabPane>
             <TabPane tab="Payload" key="4">
                 <EditableTable

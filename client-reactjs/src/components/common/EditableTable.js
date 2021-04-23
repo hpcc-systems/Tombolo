@@ -4,6 +4,8 @@ import { DeleteOutlined, UploadOutlined  } from '@ant-design/icons';
 import Papa from 'papaparse';
 import {parseString} from 'xml2js';
 import {omitDeep} from './CommonUtil';
+import { store } from '../../redux/store/Store';
+import {Constants} from "../common/Constants";
 
 const EditableContext = React.createContext();
 const Option = Select.Option;
@@ -98,7 +100,12 @@ class EditableCell extends React.Component {
     );
   };
 
+
+
+  
   render() {
+
+
     const {
       editable,
       dataIndex,
@@ -125,13 +132,26 @@ class EditableTable extends React.Component {
   constructor(props) {
     super(props);
     this.state = {
-      dataSource: this.props.dataSource,
+    
+    dataSource: this.props.dataSource,
       count: this.props.dataSource.length,
       columns: this.props.columns
     };
     this.setupDeleteAction();
     this.props.setData(this.props.dataSource)
   }
+
+  componentDidMount() {
+     //Getting global state
+     const {viewOnlyModeReducer} = store.getState()
+     if(viewOnlyModeReducer.editMode){
+       this.setState({
+         enableEdit : viewOnlyModeReducer.editMode,
+       })
+  }
+}
+
+
 
   setupDeleteAction = () => {
     const deleteColumn = {
@@ -143,12 +163,14 @@ class EditableTable extends React.Component {
             <a href="#" onClick={() => this.handleDelete(record.id)}><DeleteOutlined /></a>
         </span>
     }
-    if(this.props.editingAllowed) {
+    if(this.props.editingAllowed ) {
       let columns = this.state.columns;
       columns = columns.push(deleteColumn);
       this.setState({ columns: columns});
-    }
+    } 
+   
   }
+
 
   handleDelete = id => {
     let dataSource = [...this.state.dataSource];
@@ -346,15 +368,17 @@ class EditableTable extends React.Component {
           rowClassName={() => 'editable-row'}
           bordered
           dataSource={dataSource}
-          columns={columns}
+          columns={this.props.enableEdit ? columns : columns.filter(column => column.title !== 'Action')}
           pagination={false} scroll={{ y: '40vh' }}
           size="small"
         />
         <div style={{ padding: "5px" }}>
           <span style={{paddingRight: "5px"}}>
+            {this.props.enableEdit ?
           <Button onClick={this.handleAdd} type="default" >
             Add a row
           </Button>
+          : null }
           </span>
           {this.props.showDataDefinition && this.props.dataDefinitions ?
             <span style={{paddingRight: "5px"}}>
