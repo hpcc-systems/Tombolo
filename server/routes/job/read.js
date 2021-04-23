@@ -46,11 +46,13 @@ let updateDataFlowGraph = (applicationId, dataflowId, nodes, edges, filesToBeRem
     }).then((dataflowGraph) => {
       let currentNodes = JSON.parse(dataflowGraph.nodes);
       let currentEdges = JSON.parse(dataflowGraph.edges);
-
+      //console.log("***************filesToBeRemoved**********")
+      //console.log(currentNodes);
+      //console.log(filesToBeRemoved);
       //remove any file nodes (source/output) that are no longer available in the job
       if(filesToBeRemoved && filesToBeRemoved.length > 0) {
         for(var currentNodeIdx = currentNodes.length - 1; currentNodeIdx > -1; currentNodeIdx--) {
-          if(filesToBeRemoved.filter(fileToBeRemoved => fileToBeRemoved.file_id == currentNodes[currentNodeIdx].fileId).length > 0) {
+          if(filesToBeRemoved.filter(fileToBeRemoved => fileToBeRemoved.file_id != null && fileToBeRemoved.file_id == currentNodes[currentNodeIdx].fileId).length > 0) {
             //remove edge;
             for(var currentEdgeIdx=currentEdges.length - 1; currentEdgeIdx > -1; currentEdgeIdx--) {
               if(currentEdges[currentEdgeIdx].source == currentNodes[currentNodeIdx].id || currentEdges[currentEdgeIdx].target == currentNodes[currentNodeIdx].id) {
@@ -62,6 +64,8 @@ let updateDataFlowGraph = (applicationId, dataflowId, nodes, edges, filesToBeRem
           }
         }
       }
+      //console.log("***************filesToBeRemoved - after**********")
+      //console.log(currentNodes);
 
       //remove any duplicate nodes
       nodes = nodes.filter((node, nodeIdx) => {
@@ -70,7 +74,6 @@ let updateDataFlowGraph = (applicationId, dataflowId, nodes, edges, filesToBeRem
           //duplicate node found
           //console.log(currentNode.id, currentNode.title, currentNode.type, node.id, node.title, node.type);
           if(currentNodes[i].id == nodes[nodeIdx].id && currentNodes[i].type == nodes[nodeIdx].type) {
-            console.log("found duplicate")
             duplicate = true;
             edges = edges.map((edge) => {
               if(edge.source == nodes[nodeIdx].id) {
@@ -101,6 +104,8 @@ let updateDataFlowGraph = (applicationId, dataflowId, nodes, edges, filesToBeRem
       })
 
       currentNodes = currentNodes.concat(nodes);
+      //console.log("*******************updateDataFlowGraph************")
+      //console.log(currentNodes);
       //currentEdges = currentEdges.concat(edges);
       DataflowGraph.update({
         application_id: applicationId,
@@ -213,8 +218,9 @@ let updateFileRelationship = (jobId, job, files, filesToBeRemoved, existingNodes
             let id=existingFile[0].id, edge={};
             console.log(id);
             if(existingNodes) {
-              existingNode = existingNodes.filter(node => node.id == id || node.fileId == id)[0];
+              existingNode = existingNodes.filter(node => node.id == id)[0];
             }
+            //console.log(existingNode)
             //update file_id in JobFile - this is the case when a job was added via assets and later the job is added to a workflow
             //when job is created from assets, there is no association with actual file at that time
             let jobFileUpdated = await JobFile.update({
@@ -251,6 +257,9 @@ let updateFileRelationship = (jobId, job, files, filesToBeRemoved, existingNodes
               edge = {"source":job.basic.id,"target":existingFile[0].id};
             }
             edges.push(edge);
+
+            //console.log(nodes);
+            //console.log(edges)
           }
         }
       }
@@ -281,7 +290,7 @@ let getYPosition = (yPos, type, jobYPos, files) => {
 let findFilesRemovedFromJob = (currentFiles, filesFromCluster) => {
   let filesTobeRemoved = [];
   currentFiles.forEach((currentFile) => {
-    let existingFile = filesFromCluster.filter(fileFromCluster => (fileFromCluster.type == currentFile.type && fileFromCluster.name == currentFile.name));
+    let existingFile = filesFromCluster.filter(fileFromCluster => (fileFromCluster.file_type == currentFile.file_type && fileFromCluster.name == currentFile.name));
     if(existingFile.length == 0) {
       filesTobeRemoved.push(currentFile);
     }
@@ -298,7 +307,12 @@ let updateJobDetails = (applicationId, jobId, jobReqObj, autoCreateFiles, nodes)
 
   return new Promise(async (resolve, reject) => {
     let filesToBeRemoved = [];
-    let jobFiles = await JobFile.findAll({where:{ job_id: jobId, application_id:applicationId }, order: [["name", "asc"]], raw:true})
+    let jobFiles = await JobFile.findAll({where:{ job_id: jobId, application_id:applicationId, file_id: {[Op.not]: null}  }, order: [["name", "asc"]], raw:true})
+    //console.log("******************updatejobdetails***************")
+    //console.log(jobFiles)
+    //console.log(jobFiles.length)
+
+    //console.log(jobReqObj.files)
     //find files that are removed from the Job and remove them from JobFile table
     if(jobFiles && jobFiles.length > 0) {
       filesToBeRemoved = findFilesRemovedFromJob(jobFiles, jobReqObj.files);
@@ -307,8 +321,9 @@ let updateJobDetails = (applicationId, jobId, jobReqObj, autoCreateFiles, nodes)
 
       var deleteFiles = await JobFile.destroy({
         where:{ id: {[Sequelize.Op.in]:idsOfFilesToBeRemoved}, application_id:applicationId }});
-    }
 
+      console.log(idsOfFilesToBeRemoved);
+    }
     //create new JobFile entries, if new files are added to the job
     var jobFileToSave = updateCommonData(jobReqObj.files, fieldsToUpdate);
     //jobReqObj.files.forEach(async (file) => {
@@ -367,7 +382,7 @@ router.post('/createFileRelation', [
   let dataflowGraph = await DataflowGraph.findOne({where: {dataflowId: req.body.dataflowId}});
   let nodes = JSON.parse(dataflowGraph.nodes);
 
-  Job.findOne({where: {id: req.body.jobId}, attributes: {exclude: ['assetId']}, include:[JobFile]}).then(async (savedJob) => {
+  Job.findOne({where: {id: req.body.jobId}, attributes: {exclude: ['assetId']}}).then(async (savedJob) => {
     let jobUpdated = await Job.update({
       dataflowId: req.body.dataflowId
     }, {where: {id: req.body.jobId}});
@@ -385,7 +400,12 @@ router.post('/createFileRelation', [
       "jobId": req.body.jobId
     }
     job.mousePosition = mousePos;
-    updateFileRelationship(req.body.jobId, job, savedJob.jobfiles, [], nodes).then((results) => {
+
+    let wuid = await hpccUtil.getJobWuidByName(savedJob.cluster_id, savedJob.name);
+
+    let jobInfo = await hpccUtil.getJobInfo(savedJob.cluster_id, wuid, savedJob.jobType);
+
+    updateFileRelationship(req.body.jobId, job, jobInfo.jobfiles, [], nodes).then((results) => {
       res.json(results);
     })
   }).catch((err) => {
@@ -411,14 +431,15 @@ router.post('/refreshDataflow', [
     type: models.sequelize.QueryTypes.SELECT,
     replacements: replacements
   })
-  //jobs.forEach((job) => {
+
   try {
-    for(var job of jobs) {
+    jobs.forEach((job) => {
       promises.push(hpccUtil.getJobWuidByName(job.cluster_id, job.name).then((wuid) => {
-        return hpccUtil.getJobInfo(job.cluster_id, wuid, job.jobType).then((jobInfo) => {
+        return hpccUtil.getJobInfo(job.cluster_id, wuid, job.jobType).then(async (jobInfo) => {
           let jobObj = {}, jobFiles=[];
           let dataflowJobNode = nodes.filter(node => node.jobId == job.id);
           if(dataflowJobNode && dataflowJobNode.length > 0) {
+            console.log(jobInfo)
             jobObj.files = jobInfo.jobfiles;
             jobObj.params = [];
             jobObj.basic = {
@@ -429,12 +450,13 @@ router.post('/refreshDataflow', [
               "dataflowId": req.body.dataflowId,
               "jobId": job.id
             }
+            console.log("**************************"+job.name+"*******************"+job.id)
             jobObj.mousePosition = [dataflowJobNode[0].x, dataflowJobNode[0].y];
-            updateJobDetails(req.body.application_id, job.id, jobObj, true, nodes);
+            return updateJobDetails(req.body.application_id, job.id, jobObj, true, nodes);
           }
         })
       }))
-    }
+    })
 
     Promise.all(promises).then(async () => {
       console.log("refresh completed....")
