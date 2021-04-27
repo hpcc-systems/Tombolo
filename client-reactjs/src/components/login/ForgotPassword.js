@@ -9,7 +9,7 @@ class ForgotPassword extends React.Component {
   constructor(props) {
     super(props);
 	  this.state = {
-	    email: '',
+	    username: '',
 	    submitted: false
 	  }
   }
@@ -26,17 +26,14 @@ class ForgotPassword extends React.Component {
   handleSubmit = (e) => {
   	e.preventDefault();
 		this.setState({ submitted: true });
-		if(this.state.email) {
-   
-      console.log("<<<< email : ", this.state.email)
-
+		if(this.state.username) {
 	  	fetch('/api/user/forgot-password', {
 	      method: 'post',
 	      headers: {
 	        'Accept': 'application/json',
 	        'Content-Type': 'application/json'
 	      },
-	      body: JSON.stringify({ email: this.state.email })
+	      body: JSON.stringify({ username: this.state.username })
 	    }).then(response => {
 	    	console.log(response)
 				message.config({top:110})
@@ -59,16 +56,16 @@ class ForgotPassword extends React.Component {
   }
 
   render() {
-    const { email, submitted } = this.state;
+    const { username, submitted } = this.state;
     return (
         <React.Fragment>        
           <div className="forgot-form shadow-lg p-3 mb-5 bg-white rounded">
             <form name="form" onSubmit={this.handleSubmit}>
             	<h2 className="text-center login-logo">Tombolo</h2>                    
-              <div className={'form-group' + (submitted && !email ? ' has-error' : '')}>
-                <input type="text" className="form-control" name="email" value={email} placeholder={"Enter E-mail to reset password"} onChange={this.handleChange} ref={(input) => { this.userName = input; }}/>
-                {submitted && !email &&
-                    <div className="help-block">E-mail  is required</div>
+              <div className={'form-group' + (submitted && !username ? ' has-error' : '')}>
+                <input type="text" className="form-control" name="username" value={username} placeholder={"Enter User Name to reset password"} onChange={this.handleChange} ref={(input) => { this.userName = input; }}/>
+                {submitted && !username &&
+                    <div className="help-block">Username is required</div>
                 }
               </div>
 

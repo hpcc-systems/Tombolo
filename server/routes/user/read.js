@@ -5,7 +5,6 @@ const { body, query, check, validationResult } = require('express-validator');
 const errorFormatter = ({ location, msg, param, value, nestedErrors }) => {
   return `${msg}`;
 };
-const chalk = require("chalk")
 // routes
 router.get('/searchuser', searchUser);
 router.post('/authenticate', authenticate);
@@ -125,27 +124,18 @@ router.post('/registerUser', [
 })
 
 router.post('/forgot-password', [
-  body('email').isEmail().withMessage('Invalid E-mail address'),
+  body('username')
+    .matches(/^[a-zA-Z]{1}[a-zA-Z0-9_-]*$/).withMessage('Invalid User Name'),
 ], (req, res, next) => {
-  console.log(chalk.magenta("<<<< forgot password route hit", req.body.email));
-  // console.log(chalk.magenta("<<<< Req", JSON.stringify(req)));
   const errors = validationResult(req).formatWith(errorFormatter);
-
   if (!errors.isEmpty()) {
-    console.log(chalk.magenta.bold("<<<< error object is not empty", JSON.stringify(errors)));
     return res.status(422).json({ success: false, errors: errors.array() });
   }
-  console.log(chalk.magenta.bold("<<<< error object EMPTY"));
-
   userService.forgotPassword(req, res)
-
   .then((response) => {
-
     res.status(response.statusCode).json(response.message);
   })
   .catch((err) => {
-    console.log(chalk.magenta.bold("<<<< Request", err))
-
     res.status(500).json({ errors: [err.error] });
   })
 })
