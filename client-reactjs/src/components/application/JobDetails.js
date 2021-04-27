@@ -1363,7 +1363,7 @@ class JobDetails extends Component {
               </div> 
             </TabPane>
 
-            { this.props.selectedDataflow ?
+            {/* { this.props.selectedDataflow ? */}
             <TabPane tab="Schedule" key="6">
               <div>
                 <Form {...threeColformItemLayout}>
@@ -1381,7 +1381,8 @@ class JobDetails extends Component {
                     >
                       <Option value="Time">Timer based (run at specific interval)</Option>
                       <Option value="Predecessor">Job based (run after another job completes)</Option>
-                    </Select>
+                    </Select> 
+
                   </Form.Item>
                   { this.state.selectedScheduleType === "Time" ?
                     <Fragment>
@@ -1391,30 +1392,39 @@ class JobDetails extends Component {
                           style={{width: "40px", padding: "2px 6px"}}
                           onChange={ evt =>  this.setState({ scheduleMinute: evt.target.value }) }
                           value={this.state.scheduleMinute}
+                          className={this.state.enableEdit? null : "read-only-input"}
                         />
                         Minute,
                         <Input
                           style={{width: "40px", padding: "2px 6px"}}
                           onChange={ evt => this.setState({ scheduleHour: evt.target.value }) }
                           value={this.state.scheduleHour}
+                          className={this.state.enableEdit? null : "read-only-input"}
+
                         />
                         Hour,
                         <Input
                           style={{width: "40px", padding: "2px 6px"}}
                           onChange={ evt => this.setState({ scheduleDayMonth: evt.target.value }) }
                           value={this.state.scheduleDayMonth}
+                          className={this.state.enableEdit? null : "read-only-input"}
+
                         />
                         Day of Month,
                         <Input
                           style={{width: "40px", padding: "2px 6px"}}
                           onChange={ evt => this.setState({ scheduleMonth: evt.target.value }) }
                           value={this.state.scheduleMonth}
+                          className={this.state.enableEdit? null : "read-only-input"}
+
                         />
                         Month,
                         <Input
                           style={{width: "40px", padding: "2px 6px"}}
                           onChange={ evt => this.setState({ scheduleDayWeek: evt.target.value }) }
                           value={this.state.scheduleDayWeek}
+                          className={this.state.enableEdit? null : "read-only-input"}
+
                         />
                         Day of Week
                       </Space>
@@ -1472,7 +1482,7 @@ class JobDetails extends Component {
                 </Form>
               </div>
             </TabPane>
-            : null }
+            // : null }
 
             {!this.props.isNew ?
             <TabPane tab="Dataflows" key="7">

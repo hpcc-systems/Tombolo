@@ -293,6 +293,10 @@ async function registerUser(req, res) {
 
 async function forgotPassword(req, res) {
   var authServiceUrl = process.env.AUTH_SERVICE_URL + '/forgotPassword';
+  console.log("<<<< Forgor PW function executed", req.body.email)
+
+  console.log("<<<< Email userservice forgot password", req.body.email)
+
   return new Promise(function(resolve, reject) {
     request.post({
       url: authServiceUrl,
@@ -300,7 +304,7 @@ async function forgotPassword(req, res) {
         "content-type": "application/json"
       },
       json: {
-        "username": req.body.username,
+        "email": req.body.email,
         "clientId": process.env.AUTHSERVICE_TOMBOLO_CLIENT_ID,
         "resetUrl": process.env.TOMBOLO_PASSWORD_RESET_URL
       }
