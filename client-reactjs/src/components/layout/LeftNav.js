@@ -105,9 +105,6 @@ class LeftNav extends Component {
             </h6>
             <ul className="nav flex-column mb-2">
               <li className="nav-item">
-                <NavLink to={"/admin/applications"} className="nav-link"><i className="fa fa-lg fa-desktop"></i><span className={this.state.collapsed ? "d-none" : ""}> Applications</span></NavLink>
-              </li>
-              <li className="nav-item">
                 <NavLink to={"/admin/clusters"} className="nav-link"><i className="fa fa-lg fa-server"></i><span className={this.state.collapsed ? "d-none" : ""}> Clusters</span></NavLink>
               </li>
               <li className="nav-item">
@@ -133,8 +130,12 @@ class LeftNav extends Component {
                 <NavLink to={"/admin/users"} className="nav-link"><i className="fa fa-lg fa-desktop"></i><span className={this.state.collapsed ? "d-none" : ""}> Users</span></NavLink>
               </li>*/}
               <li className="nav-item">
-                <NavLink to={"/admin/controlsAndRegulations"} className="nav-link"><i className='fa fa-lg fa-address-card-o'></i><span className={this.state.collapsed ? "d-none" : ""}> Compliance</span></NavLink>
+                <NavLink to={"/admin/applications"} className="nav-link"><i className="fa fa-lg fa-desktop"></i><span className={this.state.collapsed ? "d-none" : ""}> Applications</span></NavLink>
               </li>
+              {/*}
+              <li className="nav-item">
+                <NavLink to={"/admin/controlsAndRegulations"} className="nav-link"><i className='fa fa-lg fa-address-card-o'></i><span className={this.state.collapsed ? "d-none" : ""}> Compliance</span></NavLink>
+              </li>*/}
             </ul>
             </React.Fragment>
             : null}
