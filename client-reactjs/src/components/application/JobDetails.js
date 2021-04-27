@@ -1457,7 +1457,6 @@ class JobDetails extends Component {
                     </Form.Item>
                     </Fragment>
                   : null }
-                  {console.log(">>>" ,typeof this.state.schedulePredecessor, [...this.state.schedulePredecessor])}
                   { this.state.selectedScheduleType === "Predecessor" ?
                     <Form.Item label="Run After">
                       {!this.state.enableEdit ? 
