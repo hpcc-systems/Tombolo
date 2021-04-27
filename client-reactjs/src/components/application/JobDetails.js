@@ -1363,11 +1363,16 @@ class JobDetails extends Component {
               </div>
             </TabPane>
 
-            {/* { this.props.selectedDataflow ? */}
+            { this.props.selectedDataflow ?
             <TabPane tab="Schedule" key="6">
               <div>
                 <Form {...threeColformItemLayout}>
+                  {this.state.selectedScheduleType .length > 0 || this.state.enableEdit ?
                   <Form.Item label="Type">
+                    {!this.state.enableEdit   ?
+                    <Input className="read-only-input"  value={this.state.selectedScheduleType ? this.state.selectedScheduleType : null} />
+                    :
+
                     <Select id="scheduleType"
                       placeholder="Select a schedule type"
                       allowClear
@@ -1382,8 +1387,10 @@ class JobDetails extends Component {
                       <Option value="Time">Timer based (run at specific interval)</Option>
                       <Option value="Predecessor">Job based (run after another job completes)</Option>
                     </Select> 
+  }
 
-                  </Form.Item>
+                  </Form.Item> : null
+  }
                   { this.state.selectedScheduleType === "Time" ?
                     <Fragment>
                     <Form.Item label="Run Every">
@@ -1450,8 +1457,14 @@ class JobDetails extends Component {
                     </Form.Item>
                     </Fragment>
                   : null }
+                  {console.log(">>>" ,typeof this.state.schedulePredecessor, [...this.state.schedulePredecessor])}
                   { this.state.selectedScheduleType === "Predecessor" ?
                     <Form.Item label="Run After">
+                      {!this.state.enableEdit ? 
+                       this.state.schedulePredecessor.map((predecessor, index) =>(index > 0 ? " , " + predecessor : predecessor) )
+                       :
+                  
+                 
                       <Select id="schedulePredecessor"
                         mode="multiple"
                         placeholder="Select Job(s) that will trigger execution"
@@ -1477,12 +1490,13 @@ class JobDetails extends Component {
                           );
                         }) }
                       </Select>
+  }
                     </Form.Item>
                   : null }
                 </Form>
               </div>
             </TabPane>
-            // : null }
+             : null }
 
             {!this.props.isNew ?
             <TabPane tab="Dataflows" key="7">

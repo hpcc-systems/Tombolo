@@ -7,6 +7,8 @@ let User = models.user;
 const Sequelize = require('sequelize');
 let UserApplication = models.user_application;
 const authServiceUtil = require('../../utils/auth-service-utils');
+const chalk = require("chalk")
+
 
 async function authenticate(req, res, { username, password }) {
     var authServiceUrl = process.env.AUTH_SERVICE_URL + '/login';
@@ -293,9 +295,8 @@ async function registerUser(req, res) {
 
 async function forgotPassword(req, res) {
   var authServiceUrl = process.env.AUTH_SERVICE_URL + '/forgotPassword';
-  console.log("<<<< Forgor PW function executed", req.body.email)
+  console.log(chalk.magenta.bold("<<<< Forgot PW function executed - ", req.body.email));
 
-  console.log("<<<< Email userservice forgot password", req.body.email)
 
   return new Promise(function(resolve, reject) {
     request.post({
@@ -310,6 +311,8 @@ async function forgotPassword(req, res) {
       }
     }, function(err, response, body) {
       if (response.statusCode == 422) {
+        console.log(chalk.magenta.bold("<<<< ERROR from server - ", err));
+
         reject(new Error(body.errors.concat(',')));
       }
       if (response.statusCode != 200) {

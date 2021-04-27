@@ -125,17 +125,17 @@ router.post('/registerUser', [
 })
 
 router.post('/forgot-password', [
-  body('username')
-    .matches(/^[a-zA-Z]{1}[a-zA-Z0-9_-]*$/).withMessage('Invalid User Name'),
+  body('email').isEmail().withMessage('Invalid E-mail address'),
 ], (req, res, next) => {
-  console.log("<<<< forgot password route hit", req.body.email)
-  // const errors = validationResult(req).formatWith(errorFormatter);
+  console.log(chalk.magenta("<<<< forgot password route hit", req.body.email));
+  // console.log(chalk.magenta("<<<< Req", JSON.stringify(req)));
+  const errors = validationResult(req).formatWith(errorFormatter);
 
   if (!errors.isEmpty()) {
-    console.log(chalk.magenta.bold("<<<< error object is not empty"));
+    console.log(chalk.magenta.bold("<<<< error object is not empty", JSON.stringify(errors)));
     return res.status(422).json({ success: false, errors: errors.array() });
   }
-  console.log(chalk.magenta.bold("<<<< error object EMPTy"));
+  console.log(chalk.magenta.bold("<<<< error object EMPTY"));
 
   userService.forgotPassword(req, res)
 
