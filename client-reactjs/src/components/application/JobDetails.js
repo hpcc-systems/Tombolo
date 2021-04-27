@@ -135,15 +135,15 @@ class JobDetails extends Component {
     }else{
       this.setState({
         enableEdit : viewOnlyModeReducer.editMode,
-     
+
       })
-    } 
+    }
   }
 
 
     //Unmounting phase
     componentWillUnmount(){
- 
+
       store.dispatch({
         type: Constants.ENABLE_EDIT,
         payload: false
@@ -650,8 +650,7 @@ class JobDetails extends Component {
         applicationId = this.props.application ? this.props.application.applicationId : '',
         upstreamIds = [],
         predecessors = [];
-
-    if (value === 'Predecessor') {
+    /*if (value === 'Predecessor') {
       upstreamIds = this.props.edges.filter(edge => edge.target.id == this.props.nodeIndex).map(edge => edge.source.id);
 
       predecessors = this.ancestorJobs(
@@ -660,7 +659,8 @@ class JobDetails extends Component {
          )
         .map(node => node[0])
         .map(node => { return { 'id': node.id, jobId: node.jobId, 'name': node.title } });
-    }
+    }*/
+    predecessors = this.props.nodes.filter(node => (node.type == 'Job' && node.title != this.formRef.current.getFieldValue('title'))).map(node => { return { 'id': node.id, jobId: node.jobId, 'name': node.title } });
 
     this.setState({ predecessorJobs: predecessors });
   };
@@ -1024,7 +1024,7 @@ class JobDetails extends Component {
       _self.setState({
         initialDataLoading: false,
       });
-      message.success("Job executed succesfully")
+      message.success("Job has been submitted")
     })
   }
 
@@ -1086,7 +1086,7 @@ class JobDetails extends Component {
       return null;
     }
 
-    
+
      //Function to make fields editable
      const makeFieldsEditable = () => {
       editableMode();
@@ -1109,7 +1109,7 @@ class JobDetails extends Component {
 
 
     return (
-     
+
       <React.Fragment>
           {!this.state.enableEdit && editingAllowed?  <div className="button-container edit-toggle-btn">
           <Button type="primary" onClick={makeFieldsEditable}>
@@ -1120,7 +1120,7 @@ class JobDetails extends Component {
           <Button  onClick={switchToViewOnly} type="primary" ghost>
             View Changes
           </Button>
-         
+
         </div> : null }
       <div>
           {!this.props.isNew ?
@@ -1169,12 +1169,12 @@ class JobDetails extends Component {
                 </Row>
               </Form.Item>
               </div> : null }
-              
+
               <Form.Item label="Name" name="name" rules={[{ required: true, message: 'Please enter a Name!' }, {
                 pattern: new RegExp(/^[a-zA-Z0-9:._-]*$/),
                 message: 'Please enter a valid name',
               }]}>
-                <Input 
+                <Input
                 id="job_name"
                 onChange={this.onChange}
                 placeholder="Name"
@@ -1186,21 +1186,21 @@ class JobDetails extends Component {
                 pattern: new RegExp(/^[a-zA-Z0-9:._-]*$/),
                 message: 'Please enter a valid Title',
               }]}>
-                <Input id="job_title" 
-                onChange={this.onChange} 
-                placeholder="Title" 
+                <Input id="job_title"
+                onChange={this.onChange}
+                placeholder="Title"
                 disabled={!editingAllowed}
                 className={this.state.enableEdit? null : "read-only-input"}
                  />
               </Form.Item>
               <Form.Item label="Description" name="description">
                 {this.state.enableEdit ?
-                <MarkdownEditor 
+                <MarkdownEditor
                 name="description"
-                id="job_desc" 
-                onChange={this.onChange} 
-                targetDomId="jobDescr" 
-                value={description} 
+                id="job_desc"
+                onChange={this.onChange}
+                targetDomId="jobDescr"
+                value={description}
                 disabled={!editingAllowed}/>
                 :
                 <ReactMarkdown source={this.state.job.description} />}
@@ -1213,10 +1213,10 @@ class JobDetails extends Component {
                   {this.state.enableEdit ?
                   <Input id="job_gitRepo"
                    onChange={this.onChange}
-                     placeholder="Git Repo" 
-                     value={gitRepo} 
+                     placeholder="Git Repo"
+                     value={gitRepo}
                      disabled={!editingAllowed}
-                     
+
                      /> :
                      <textarea className="read-only-textarea" />
                   }
@@ -1227,8 +1227,8 @@ class JobDetails extends Component {
                 message: 'Please enter a valid BWR',
               }]}>
                 {this.state.enableEdit ?
-                <Input id="job_entryBWR" 
-                onChange={this.onChange}  
+                <Input id="job_entryBWR"
+                onChange={this.onChange}
                 placeholder="Primary Service"
                  value={entryBWR}
                   disabled={!editingAllowed}
@@ -1243,10 +1243,10 @@ class JobDetails extends Component {
                     message: 'Please enter a valid contact',
                   }]}>
                     {this.state.enableEdit ?
-                    <Input id="job_bkp_svc" 
-                    onChange={this.onChange} 
-                    placeholder="Contact" 
-                    value={contact} 
+                    <Input id="job_bkp_svc"
+                    onChange={this.onChange}
+                    placeholder="Contact"
+                    value={contact}
                     disabled={!editingAllowed}
                     />
                     :
@@ -1258,10 +1258,10 @@ class JobDetails extends Component {
                   <Form.Item label="Author:" name="author" rules={[{
                     pattern: new RegExp(/^[a-zA-Z0-9:$._-]*$/),
                     message: 'Please enter a valid author',
-                  }]}> 
+                  }]}>
                   {this.state.enableEdit ?
-                    <Input 
-                    id="job_author" 
+                    <Input
+                    id="job_author"
                     onChange={this.onChange}
                      placeholder="Author"
                       value={author}
@@ -1274,7 +1274,7 @@ class JobDetails extends Component {
               </Row>
               <Form.Item label="Job Type" name="jobType">
                 {!this.state.enableEdit ?
-                <textarea 
+                <textarea
                 className="read-only-textarea"
                 />
         :
@@ -1286,15 +1286,15 @@ class JobDetails extends Component {
             </TabPane>
 
             <TabPane tab="ECL" key="2">
-              
+
               <Form.Item {...eclItemLayout} label="ECL" name="ecl">
-                <EclEditor 
+                <EclEditor
                 id="job_ecl"
-                 targetDomId="jobEcl" 
-                 disabled={true} 
+                 targetDomId="jobEcl"
+                 disabled={true}
                  />
               </Form.Item>
-  
+
             </TabPane>
             <TabPane tab="Input Params" key="3">
               <EditableTable
@@ -1309,7 +1309,7 @@ class JobDetails extends Component {
             </TabPane>
 
             <TabPane tab="Input Files" key="4">
-            
+
               <div>
                 {this.state.enableEdit ?
                 <>
@@ -1318,7 +1318,7 @@ class JobDetails extends Component {
                     {sourceFiles.map(d => <Option value={d.id} key={d.id}>{(d.title)?d.title:d.name}</Option>)}
                   </Select>
                 </Form.Item>
-                
+
                 <Form.Item>
                   <Button type="primary" onClick={this.handleAddInputFile} disabled={!editingAllowed}>
                     Add
@@ -1326,7 +1326,7 @@ class JobDetails extends Component {
                 </Form.Item>
                 </>
                 : null}
-               
+
 
                 <Table
                   columns={fileColumns}
@@ -1334,13 +1334,13 @@ class JobDetails extends Component {
                   dataSource={inputFiles}
                   pagination={{ pageSize: 10 }} scroll={{ y: 460 }}
                 />
-              </div> 
+              </div>
             </TabPane>
 
             <TabPane tab="Output Files" key="5">
-            
+
               <div>
-              {!this.state.enableEdit ?  null : 
+              {!this.state.enableEdit ?  null :
               <>
                 <Form.Item label="Output Files">
                   <Select id="outputfiles" placeholder="Select Output Files" defaultValue={this.state.selectedOutputFile} onChange={this.handleOutputFileChange} style={{ width: 290 }} disabled={!editingAllowed}>
@@ -1360,7 +1360,7 @@ class JobDetails extends Component {
                   dataSource={outputFiles}
                   pagination={{ pageSize: 10 }} scroll={{ y: 460 }}
                 />
-              </div> 
+              </div>
             </TabPane>
 
             {/* { this.props.selectedDataflow ? */}

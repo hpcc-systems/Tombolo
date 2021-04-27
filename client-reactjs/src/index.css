@@ -709,7 +709,7 @@ div.tooltip {
   resize: none;
   height: auto;
   width: 100%;
-  
+
 }
 
 .read-only-textarea{
@@ -735,4 +735,13 @@ overflow: hidden;
 .edit-toggle-btn {
   border-bottom :  2px solid whitesmoke;
    padding-bottom: 6.5px;
+}
+
+.ant-tree .ant-tree-node-content-wrapper .ant-tree-iconEle {
+  display: inline-block;
+  width: 24px;
+  height: 24px;
+  line-height: 18px !important;
+  text-align: center;
+  vertical-align: top;
 }
