@@ -70,21 +70,21 @@ class IndexDetails extends PureComponent {
     }else{
       this.setState({
         enableEdit : viewOnlyModeReducer.editMode,
-     
+
       })
-    } 
+    }
   }
 
 //Unmounting phase
 
   //Component will unmount
   componentWillUnmount(){
- 
+
     store.dispatch({
       type: Constants.ENABLE_EDIT,
       payload: false
     })
-  
+
 }
 
   getIndexDetails() {
@@ -116,7 +116,7 @@ class IndexDetails extends PureComponent {
 
             // For read only view
             description: data.basic.description,
-           
+
           }
         });
         this.formRef.current.setFieldsValue({
@@ -306,7 +306,7 @@ class IndexDetails extends PureComponent {
     });
   }
 
-  
+
   getFiles() {
     fetch("/api/file/read/file_ids?app_id="+this.props.application.applicationId, {
       headers: authHeader()
@@ -487,17 +487,17 @@ class IndexDetails extends PureComponent {
       //Function to make fields editable
       const makeFieldsEditable = () => {
         editableMode();
-  
+
         this.setState({
           enableEdit: !this.state.enableEdit,
           editing: true
         });
       };
-  
+
       //Switch to view only mode
       const switchToViewOnly = () => {
         readOnlyMode()
-  
+
         this.setState({
           enableEdit: !this.state.enableEdit,
           editing: false
@@ -517,7 +517,7 @@ class IndexDetails extends PureComponent {
           <Button  onClick={switchToViewOnly} type="primary" ghost>
             View Changes
           </Button>
-         
+
         </div> : null }
         <div>
           {!this.props.isNew ?
@@ -541,7 +541,7 @@ class IndexDetails extends PureComponent {
               </Form.Item>
 
               <Form.Item label="Index" name="indexSearchValue">
-              
+
                 <Row type="flex">
                   <Col span={21} order={1}>
                     <AutoComplete
@@ -568,8 +568,8 @@ class IndexDetails extends PureComponent {
                       Clear
                    </Button>
                   </Col>
-                </Row> 
-              
+                </Row>
+
               </Form.Item>
               </div>
               : null}
@@ -577,13 +577,13 @@ class IndexDetails extends PureComponent {
                   pattern: new RegExp(/^[a-zA-Z0-9:._-]*$/),
                   message: 'Please enter a valid Title',
                 }]}>
-                <Input id="file_title" 
-                onChange={this.onChange} 
-                placeholder="Title" 
+                <Input id="file_title"
+                onChange={this.onChange}
+                placeholder="Title"
                 disabled={!editingAllowed}
                 className={this.state.enableEdit ? null : "read-only-input"}
                 />
-                
+
               </Form.Item>
 
               <Form.Item label="Name" name="name" rules={[{ required: true, message: 'Please enter a Name!' }, {
@@ -591,8 +591,8 @@ class IndexDetails extends PureComponent {
                   message: 'Please enter a valid name',
                 }]}>
                 <Input id="name"
-                 onChange={this.onChange} 
-                 placeholder="Name" disabled={searchResultsLoaded || !editingAllowed} 
+                 onChange={this.onChange}
+                 placeholder="Name" disabled={searchResultsLoaded || !editingAllowed}
                  className={this.state.enableEdit ? null : "read-only-input"}
 
                  />
@@ -616,7 +616,7 @@ class IndexDetails extends PureComponent {
                 message: 'Please enter a valid Path',
               }]}>
                  <Input id="file_primary_svc"
-                 onChange={this.onChange} 
+                 onChange={this.onChange}
                  placeholder="Primary Service"
                   disabled={!editingAllowed}
                   className={this.state.enableEdit ? null : "read-only-input"}
@@ -638,9 +638,9 @@ class IndexDetails extends PureComponent {
                 message: 'Please enter a valid path',
               }]}>
                 {this.state.enableEdit ?
-                <Input id="path" 
+                <Input id="path"
                 onChange={this.onChange}
-                 placeholder="Path" 
+                 placeholder="Path"
                  disabled={!editingAllowed}
                /> :
                <textarea className="read-only-textarea" /> }
@@ -680,7 +680,7 @@ class IndexDetails extends PureComponent {
 
             {!this.props.isNew ?
               <TabPane tab="Dataflows" key="7">
-                <AssociatedDataflows assetName={name} assetType={'Index'}/>
+                <AssociatedDataflows assetId={this.state.index.id} assetType={'Index'}/>
               </TabPane> : null}
           </Tabs>
         </div>

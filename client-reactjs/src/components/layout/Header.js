@@ -311,7 +311,6 @@ class AppHeader extends Component {
               <ul className="ml-md-auto navbar-nav">
                 <li className="nav-item">
                   <Search
-                    value={this.state.searchText}
                     name="searchText"
                     placeholder="Search"
                     onSearch={this.search}

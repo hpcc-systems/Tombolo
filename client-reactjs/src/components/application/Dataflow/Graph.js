@@ -669,17 +669,19 @@ class Graph extends Component {
     }
     if(d3.select("#t"+d.id).empty()) {
       if(hasEditPermission(_self.props.user)) {
-        let hideIcon = gEl.append('text')
-          .attr('font-family', 'FontAwesome')
-          .attr('id', 'hide'+d.id)
-          .attr('dy', 8)
-          .attr('dx', 10)
-          .attr('class','graph-icon hide-graph-icon')
-          .on("click", function(d) {
-            d3.event.stopPropagation();
-            _self.hideNode(d, gEl);
-          })
-          .text(function(node) { return '\uf070' })
+        if(d.type != 'Job') {
+          let hideIcon = gEl.append('text')
+            .attr('font-family', 'FontAwesome')
+            .attr('id', 'hide'+d.id)
+            .attr('dy', 8)
+            .attr('dx', 10)
+            .attr('class','graph-icon hide-graph-icon')
+            .on("click", function(d) {
+              d3.event.stopPropagation();
+              _self.hideNode(d, gEl);
+            })
+            .text(function(node) { return '\uf070' })
+        }
 
         let deleteIcon = gEl.append('text')
           .attr('font-family', 'FontAwesome')
@@ -1177,7 +1179,7 @@ class Graph extends Component {
       } else {
         d3.select("#t"+d.id).classed("hide-graph-icon", true)
       }
-      if(d3.select("#hide"+d.id).classed("hide-graph-icon")) {
+      if(!d3.select("#hide"+d.id).empty() && d3.select("#hide"+d.id).classed("hide-graph-icon")) {
         d3.select("#hide"+d.id).classed("hide-graph-icon", false)
       } else {
         d3.select("#hide"+d.id).classed("hide-graph-icon", true)

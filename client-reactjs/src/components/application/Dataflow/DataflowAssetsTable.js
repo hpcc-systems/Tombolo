@@ -130,7 +130,7 @@ function DataflowAssetsTable({applicationId, selectedDataflow, user}) {
         columns={jobColumns}
         rowKey={record => record.id}
         dataSource={dataflowAssets}
-        pagination={{ pageSize: 10 }} scroll={{ y: 460 }}
+        pagination={{ pageSize: 50 }} scroll={{ y: 660 }}
 			/>
 			{isShowing ?
 				OpenDetailsForm({

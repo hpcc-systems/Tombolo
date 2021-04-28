@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react'
 import { Table, message, Divider} from 'antd/lib';
 import { authHeader, handleError } from "../common/AuthHeader.js"
 
-function AssociatedDataflows({assetName, assetType}) {
+function AssociatedDataflows({assetId, assetType}) {
 	const [data, setData] = useState([]);
 
 	useEffect(() => {
@@ -10,7 +10,7 @@ function AssociatedDataflows({assetName, assetType}) {
 	}, [])
 
 	const fetchData = () => {
-		fetch('/api/report/read/associatedDataflows?name='+assetName+'&type='+assetType, {
+		fetch('/api/report/read/associatedDataflows?assetId='+assetId+'&type='+assetType, {
       headers: authHeader(),
     }).then(function(response) {
       if(response.ok) {

@@ -213,6 +213,7 @@ class JobDetails extends Component {
           job: {
             ...this.state.job,
             id: data.id,
+            name: data.name,
             groupId: data.groupId,
             inputParams: data.jobparams,
             inputFiles: jobfiles.filter(field => field.file_type == 'input'),
@@ -238,7 +239,6 @@ class JobDetails extends Component {
           contact: data.contact,
           author: data.author,
         })
-
         this.setClusters(this.props.clusterId);
         return data;
       })
@@ -1476,7 +1476,7 @@ class JobDetails extends Component {
 
             {!this.props.isNew ?
             <TabPane tab="Dataflows" key="7">
-              <AssociatedDataflows assetName={name} assetType={'Job'}/>
+              <AssociatedDataflows assetId={this.state.job.id} assetType={'Job'}/>
             </TabPane> : null}
           </Tabs>
           </Form>

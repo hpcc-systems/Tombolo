@@ -17,9 +17,6 @@ import {viewOnly} from "../../../redux/actions/ViewOnly"
 import MarkdownView from 'react-showdown';
 import showdown from 'showdown'
 
-console.log(showdown , " << show down")
-
-
 function AssetsTable({selectedGroup, handleEditGroup, refreshGroups}) {
   const [assets, setAssets] = useState([]);
   const { isShowing, toggle, OpenDetailsForm } = useFileDetailsForm();
@@ -89,7 +86,7 @@ function AssetsTable({selectedGroup, handleEditGroup, refreshGroups}) {
         payload: true
       })
     }
-   
+
     dispatch(assetsActions.assetSelected(
       id,
       applicationId,
@@ -177,7 +174,7 @@ function AssetsTable({selectedGroup, handleEditGroup, refreshGroups}) {
   }
 
   const handleGroupClick = (groupId) => {
-   
+
     dispatch(assetsActions.assetInGroupSelected(
       groupId
     ));
@@ -212,11 +209,16 @@ function AssetsTable({selectedGroup, handleEditGroup, refreshGroups}) {
     title: 'Name',
     dataIndex: 'name',
     width: '30%',
+    ellipsis: {
+      showTitle: false,
+    },
     render: (text, record) => (
       <React.Fragment>
-        <span className="asset-name">{generateAssetIcon(record.type)}<a href='#' onClick={(row) => handleEdit(record.id, record.type, "view")}>{text}</a></span>
-        {keywords && keywords.length > 0 ? <span className={"group-name"}>In Group: <a href='#' onClick={(row) => handleGroupClick(record.groupId)}>{record.group_name ? record.group_name : 'Groups'}</a></span> : null}
-        </React.Fragment>
+        <Tooltip placement="topLeft" title={record.name}>
+          <span className="asset-name">{generateAssetIcon(record.type)}<a href='#' onClick={(row) => handleEdit(record.id, record.type, "view")}>{text}</a></span>
+          {keywords && keywords.length > 0 ? <span className={"group-name"}>In Group: <a href='#' onClick={(row) => handleGroupClick(record.groupId)}>{record.group_name ? record.group_name : 'Groups'}</a></span> : null}
+        </Tooltip>
+      </React.Fragment>
         )
   },
   {
@@ -246,7 +248,7 @@ function AssetsTable({selectedGroup, handleEditGroup, refreshGroups}) {
     className: editingAllowed ? "show-column" : "hide-column",
     render: (text, record) =>
       <span>
-        
+
         <a href="#" onClick={(row) => handleEdit(record.id, record.type, "edit")}><Tooltip placement="right" title={"Edit"}><EditOutlined /></Tooltip></a>
         <Divider type="vertical" />
         <Popconfirm title="Are you sure you want to delete this?" onConfirm={() => handleDelete(record.id, record.type)} icon={<QuestionCircleOutlined/>}>

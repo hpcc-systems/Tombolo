@@ -5,6 +5,7 @@ let File = models.file;
 let FileLayout = models.file_layout;
 let Sequelize = require('sequelize');
 const Op = Sequelize.Op;
+let AssetDataflow = models.assets_dataflows;
 let Indexes=models.indexes;
 let IndexKey=models.index_key;
 let IndexPayload=models.index_payload;
@@ -157,170 +158,155 @@ router.get('/getReport', (req, res) => {
     var result={};
     var searchText=(req.query.searchText).toLowerCase();
     try {
-        File.findAll({
-            raw: true,
-            attributes:["file.id","file.title","file.name","file.fileType","file.description",
-            "file.qualifiedPath"],
-            group: ['file.id',"file.title","file.name","file.fileType","file.description",
-            "file.qualifiedPath","application.title"],
-            where:Sequelize.and( (req.query.userId!=""?
-                Sequelize.where(Sequelize.col("file.application_id"), {
-                [Op.in]: Sequelize.literal(
-                    '( SELECT application_id ' +
-                        'FROM user_application ' +
-                       'WHERE user_id = "' + req.query.userId +
-                    '")')
-                }):""),
-            Sequelize.or(
-            Sequelize.where(Sequelize.fn('lower', Sequelize.fn("concat",
-            Sequelize.fn('IFNULL',Sequelize.col("file.title"),"")," ",
-            Sequelize.fn('IFNULL',Sequelize.col("file.name"),"")," ",
-            Sequelize.fn('IFNULL',Sequelize.col("file.fileType"),"")," ",
-            Sequelize.fn('IFNULL',Sequelize.col("file.description"),"")," ",
-            Sequelize.fn('IFNULL',Sequelize.col("file.qualifiedPath"),""))), {
-                    [Op.like]: '%'+searchText+'%'
-            }),
-            Sequelize.where(Sequelize.fn('lower',Sequelize.fn("concat",
-            Sequelize.fn('IFNULL',Sequelize.col("file_layouts.name"),"")," ",
-            Sequelize.fn('IFNULL',Sequelize.col("file_layouts.type"),""))), {
-                    [Op.like]: '%'+searchText+'%'
-            }),
-            Sequelize.where(Sequelize.fn('lower',
-            Sequelize.fn('IFNULL',Sequelize.col("application.title"),"")), {
-                    [Op.like]: '%'+searchText+'%'
-            }),
+      File.findAll({
+          raw: true,
+          attributes:["file.id","file.title","file.name","file.fileType","file.description",
+          "file.qualifiedPath"],
+          group: ['file.id',"file.title","file.name","file.fileType","file.description",
+          "file.qualifiedPath","application.title"],
+          where:Sequelize.and(
+              Sequelize.where(Sequelize.col("file.application_id"), {
+              [Op.in]: [req.query.applicationId]
+              }),
+          Sequelize.or(
+          Sequelize.where(Sequelize.fn('lower', Sequelize.fn("concat",
+          Sequelize.fn('IFNULL',Sequelize.col("file.title"),"")," ",
+          Sequelize.fn('IFNULL',Sequelize.col("file.name"),"")," ",
+          Sequelize.fn('IFNULL',Sequelize.col("file.fileType"),"")," ",
+          Sequelize.fn('IFNULL',Sequelize.col("file.description"),"")," ",
+          Sequelize.fn('IFNULL',Sequelize.col("file.qualifiedPath"),""))), {
+                  [Op.like]: '%'+searchText+'%'
+          }),
+          Sequelize.where(Sequelize.fn('lower',Sequelize.fn("concat",
+          Sequelize.fn('IFNULL',Sequelize.col("file_layouts.name"),"")," ",
+          Sequelize.fn('IFNULL',Sequelize.col("file_layouts.type"),""))), {
+                  [Op.like]: '%'+searchText+'%'
+          }),
+          Sequelize.where(Sequelize.fn('lower',
+          Sequelize.fn('IFNULL',Sequelize.col("application.title"),"")), {
+                  [Op.like]: '%'+searchText+'%'
+          }),
 
-        )),
-            include:
-            [{ model: Application, attributes:["title"] },{ model: FileLayout,attributes:[]}]
-        }).then(function(file) {
-            result.file=file;
+      )),
+          include:
+          [{ model: Application, attributes:["title"] },{ model: FileLayout,attributes:[]}]
+      }).then(function(file) {
+          result.file=file;
 
-            Indexes.findAll({
-                raw: true,
-                attributes:["indexes.id","indexes.title","indexes.backupService","indexes.primaryService",
-                "indexes.qualifiedPath"],
-                group: ["indexes.id","indexes.title","indexes.backupService","indexes.primaryService",
-                "indexes.qualifiedPath","application.title"],
-                where:Sequelize.and( (req.query.userId!=""?
-                Sequelize.where(Sequelize.col("indexes.application_id"), {
-                [Op.in]: Sequelize.literal(
-                    '( SELECT application_id ' +
-                        'FROM user_application ' +
-                       'WHERE user_id = "' + req.query.userId +
-                    '")')
-                }):""),
-                Sequelize.or(
-                Sequelize.where(Sequelize.fn('lower',Sequelize.fn("concat",
-                Sequelize.fn('IFNULL',Sequelize.col("indexes.title"),"")," ",
-                Sequelize.fn('IFNULL',Sequelize.col("indexes.backupService"),"")," ",
-                Sequelize.fn('IFNULL',Sequelize.col("indexes.primaryService"),"")," ",
-                Sequelize.fn('IFNULL',Sequelize.col("indexes.qualifiedPath"),""))), {
-                        [Op.like]: '%'+searchText+'%'
-                }),
-                Sequelize.where(Sequelize.fn('lower',Sequelize.fn("concat",
-                Sequelize.fn('IFNULL',Sequelize.col("index_keys.name"),"")," ",
-                Sequelize.fn('IFNULL',Sequelize.col("index_keys.type"),"")," ",
-                Sequelize.fn('IFNULL',Sequelize.col("index_keys.eclType"),""))), {
-                        [Op.like]: '%'+searchText+'%'
-                }),
-                Sequelize.where(Sequelize.fn('lower',Sequelize.fn("concat",
-                Sequelize.fn('IFNULL',Sequelize.col("index_payloads.name"),"")," ",
-                Sequelize.fn('IFNULL',Sequelize.col("index_payloads.type"),"")," ",
-                Sequelize.fn('IFNULL',Sequelize.col("index_payloads.eclType"),""))), {
-                        [Op.like]: '%'+searchText+'%'
-                }),
-                Sequelize.where(Sequelize.fn('lower',
-                Sequelize.fn('IFNULL',Sequelize.col("application.title"),"")), {
-                        [Op.like]: '%'+searchText+'%'
-                })
-                )),
-                include:
-                [{ model: Application, attributes:["title"] },{ model: IndexKey, attributes:[] },
-                { model: IndexPayload , attributes:[]}]
-            }).then(index => {
-                result.index=index;
+          Indexes.findAll({
+              raw: true,
+              attributes:["indexes.id","indexes.title","indexes.name","indexes.description",
+              "indexes.qualifiedPath"],
+              group: ["indexes.id","indexes.title","indexes.name","indexes.description",
+              "indexes.qualifiedPath","application.title"],
+              where:Sequelize.and(
+              Sequelize.where(Sequelize.col("indexes.application_id"), {
+              [Op.in]: [req.query.applicationId]
+              }),
+              Sequelize.or(
+              Sequelize.where(Sequelize.fn('lower',Sequelize.fn("concat",
+              Sequelize.fn('IFNULL',Sequelize.col("indexes.title"),"")," ",
+              Sequelize.fn('IFNULL',Sequelize.col("indexes.name"),"")," ",
+              Sequelize.fn('IFNULL',Sequelize.col("indexes.description"),"")," ",
+              Sequelize.fn('IFNULL',Sequelize.col("indexes.primaryService"),"")," ",
+              Sequelize.fn('IFNULL',Sequelize.col("indexes.qualifiedPath"),""))), {
+                      [Op.like]: '%'+searchText+'%'
+              }),
+              Sequelize.where(Sequelize.fn('lower',Sequelize.fn("concat",
+              Sequelize.fn('IFNULL',Sequelize.col("index_keys.name"),"")," ",
+              Sequelize.fn('IFNULL',Sequelize.col("index_keys.type"),"")," ",
+              Sequelize.fn('IFNULL',Sequelize.col("index_keys.eclType"),""))), {
+                      [Op.like]: '%'+searchText+'%'
+              }),
+              Sequelize.where(Sequelize.fn('lower',Sequelize.fn("concat",
+              Sequelize.fn('IFNULL',Sequelize.col("index_payloads.name"),"")," ",
+              Sequelize.fn('IFNULL',Sequelize.col("index_payloads.type"),"")," ",
+              Sequelize.fn('IFNULL',Sequelize.col("index_payloads.eclType"),""))), {
+                      [Op.like]: '%'+searchText+'%'
+              }),
+              Sequelize.where(Sequelize.fn('lower',
+              Sequelize.fn('IFNULL',Sequelize.col("application.title"),"")), {
+                      [Op.like]: '%'+searchText+'%'
+              })
+              )),
+              include:
+              [{ model: Application, attributes:["title"] },{ model: IndexKey, attributes:[] },
+              { model: IndexPayload , attributes:[]}]
+          }).then(index => {
+              result.index=index;
 
-                Query.findAll({
-                    raw: true,
-                    attributes:["query.id","query.title","query.name","query.backupService","query.primaryService",
-                    "query.gitRepo"],
-                    group: ["query.id","query.title","query.backupService","query.primaryService",
-                    "query.gitRepo","application.title"],
-                    where:Sequelize.and( (req.query.userId!=""?
-                    Sequelize.where(Sequelize.col("query.application_id"), {
-                    [Op.in]: Sequelize.literal(
-                        '( SELECT application_id ' +
-                            'FROM user_application ' +
-                           'WHERE user_id = "' + req.query.userId +
-                        '")')
-                    }):""),
-                    Sequelize.or(Sequelize.where(Sequelize.fn('lower',Sequelize.fn("concat",
-                    Sequelize.fn('IFNULL',Sequelize.col("query.title"),'')," ",
-                    Sequelize.fn('IFNULL',Sequelize.col("query.name"),'')," ",
-                    Sequelize.fn('IFNULL',Sequelize.col("query.gitRepo"),'')," ",
-                    Sequelize.fn('IFNULL',Sequelize.col("query.primaryService"),'')," ",
-                    Sequelize.fn('IFNULL',Sequelize.col("query.backupService"),''))), {
-                            [Op.like]: '%'+searchText+'%'
-                    }),
-                    Sequelize.where(Sequelize.fn('lower',Sequelize.fn("concat",
-                    Sequelize.fn('IFNULL',Sequelize.col("query_fields.field_type"),"")," ",
-                    Sequelize.fn('IFNULL',Sequelize.col("query_fields.name"),"")," ",
-                    Sequelize.fn('IFNULL',Sequelize.col("query_fields.type"),""))), {
-                            [Op.like]: '%'+searchText+'%'
-                    }),
-                    Sequelize.where(Sequelize.fn('lower',
-                    Sequelize.fn('IFNULL',Sequelize.col("application.title"),"")), {
-                            [Op.like]: '%'+searchText+'%'
-                    })
-                )),
-                include:
-                [{ model: Application, attributes:["title"] },{ model: QueryField, attributes:[] }]
-                }).then(query => {
-                    result.query=query;
+              Query.findAll({
+                  raw: true,
+                  attributes:["query.id","query.title","query.name","query.backupService","query.primaryService",
+                  "query.gitRepo"],
+                  group: ["query.id","query.title","query.backupService","query.primaryService",
+                  "query.gitRepo","application.title"],
+                  where:Sequelize.and(
+                  Sequelize.where(Sequelize.col("query.application_id"), {
+                  [Op.in]: [req.query.applicationId]
+                  }),
+                  Sequelize.or(Sequelize.where(Sequelize.fn('lower',Sequelize.fn("concat",
+                  Sequelize.fn('IFNULL',Sequelize.col("query.title"),'')," ",
+                  Sequelize.fn('IFNULL',Sequelize.col("query.name"),'')," ",
+                  Sequelize.fn('IFNULL',Sequelize.col("query.gitRepo"),'')," ",
+                  Sequelize.fn('IFNULL',Sequelize.col("query.primaryService"),'')," ",
+                  Sequelize.fn('IFNULL',Sequelize.col("query.backupService"),''))), {
+                          [Op.like]: '%'+searchText+'%'
+                  }),
+                  Sequelize.where(Sequelize.fn('lower',Sequelize.fn("concat",
+                  Sequelize.fn('IFNULL',Sequelize.col("query_fields.field_type"),"")," ",
+                  Sequelize.fn('IFNULL',Sequelize.col("query_fields.name"),"")," ",
+                  Sequelize.fn('IFNULL',Sequelize.col("query_fields.type"),""))), {
+                          [Op.like]: '%'+searchText+'%'
+                  }),
+                  Sequelize.where(Sequelize.fn('lower',
+                  Sequelize.fn('IFNULL',Sequelize.col("application.title"),"")), {
+                          [Op.like]: '%'+searchText+'%'
+                  })
+              )),
+              include:
+              [{ model: Application, attributes:["title"] },{ model: QueryField, attributes:[] }]
+              }).then(query => {
+                  result.query=query;
 
-                    Job.findAll({
-                        raw: true,
-                        attributes:["job.id","job.name","job.author","job.contact",
-                        "job.entryBWR","job.gitRepo","job.JobType"],
-                        group: ["job.id","job.name","job.author","job.contact",
-                        "job.entryBWR","job.gitRepo","job.JobType","application.title"],
-                        where:Sequelize.and( (req.query.userId!=""?
-                        Sequelize.where(Sequelize.col("job.application_id"), {
-                        [Op.in]: Sequelize.literal(
-                            '( SELECT application_id ' +
-                                'FROM user_application ' +
-                               'WHERE user_id = "' + req.query.userId +
-                            '")')
-                        }):""),
-                        Sequelize.or(Sequelize.where(Sequelize.fn('lower',Sequelize.fn("concat",
-                        Sequelize.fn('IFNULL',Sequelize.col("job.name"),"")," ",
-                        Sequelize.fn('IFNULL',Sequelize.col("job.author"),"")," ",
-                        Sequelize.fn('IFNULL',Sequelize.col("job.contact"),"")," ",
-                        Sequelize.fn('IFNULL',Sequelize.col("job.entryBWR"),"")," ",
-                        Sequelize.fn('IFNULL',Sequelize.col("job.gitRepo"),"")," ",
-                        Sequelize.fn('IFNULL',Sequelize.col("job.JobType"),""))), {
-                                [Op.like]: '%'+searchText+'%'
-                        }),
-                        Sequelize.where(Sequelize.fn('lower',Sequelize.fn("concat",
-                        Sequelize.fn('IFNULL',Sequelize.col("jobparams.name"),"")," ",
-                        Sequelize.fn('IFNULL',Sequelize.col("jobparams.type"),""))), {
-                                [Op.like]: '%'+searchText+'%'
-                        }),
-                        Sequelize.where(Sequelize.fn('lower',
-                        Sequelize.fn('IFNULL',Sequelize.col("application.title"),"")), {
-                                [Op.like]: '%'+searchText+'%'
-                        })
-                    )),
-                    include:
-                    [{ model: Application, attributes:["title"] },{ model: Jobparam, attributes:[] }]
-                    }).then(job => {
-                        result.job=job;
-                        res.json(result);
-                    });
-                });
-            });
-        });
+                  Job.findAll({
+                      raw: true,
+                      attributes:["job.id","job.name","job.author","job.contact",
+                      "job.entryBWR","job.gitRepo","job.JobType"],
+                      group: ["job.id","job.name","job.author","job.contact",
+                      "job.entryBWR","job.gitRepo","job.JobType","application.title"],
+                      where:Sequelize.and(
+                      Sequelize.where(Sequelize.col("job.application_id"), {
+                      [Op.in]: [req.query.applicationId]
+                      }),
+                      Sequelize.or(Sequelize.where(Sequelize.fn('lower',Sequelize.fn("concat",
+                      Sequelize.fn('IFNULL',Sequelize.col("job.name"),"")," ",
+                      Sequelize.fn('IFNULL',Sequelize.col("job.author"),"")," ",
+                      Sequelize.fn('IFNULL',Sequelize.col("job.contact"),"")," ",
+                      Sequelize.fn('IFNULL',Sequelize.col("job.entryBWR"),"")," ",
+                      Sequelize.fn('IFNULL',Sequelize.col("job.gitRepo"),"")," ",
+                      Sequelize.fn('IFNULL',Sequelize.col("job.JobType"),""))), {
+                              [Op.like]: '%'+searchText+'%'
+                      }),
+                      Sequelize.where(Sequelize.fn('lower',Sequelize.fn("concat",
+                      Sequelize.fn('IFNULL',Sequelize.col("jobparams.name"),"")," ",
+                      Sequelize.fn('IFNULL',Sequelize.col("jobparams.type"),""))), {
+                              [Op.like]: '%'+searchText+'%'
+                      }),
+                      Sequelize.where(Sequelize.fn('lower',
+                      Sequelize.fn('IFNULL',Sequelize.col("application.title"),"")), {
+                              [Op.like]: '%'+searchText+'%'
+                      })
+                  )),
+                  include:
+                  [{ model: Application, attributes:["title"] },{ model: Jobparam, attributes:[] }]
+                  }).then(job => {
+                      result.job=job;
+                      res.json(result);
+                  });
+              });
+          });
+      });
 
     } catch (err) {
         console.log('err', err);
@@ -328,48 +314,25 @@ router.get('/getReport', (req, res) => {
 });
 
 router.get('/associatedDataflows', [
-  query('name')
-    .matches(/^[a-zA-Z]{1}[a-zA-Z0-9_:.\-]*$/).withMessage('Invalid name'),
+  query('assetId').optional({checkFalsy:true}).isUUID(4).withMessage('Invalid asset id'),
   query('type')
     .matches(/^[a-zA-Z]{1}[a-zA-Z0-9_:\-]*$/).withMessage('Invalid type')
-], (req, res) => {
+], async (req, res) => {
     const errors = validationResult(req).formatWith(validatorUtil.errorFormatter);
     if (!errors.isEmpty()) {
       return res.status(422).json({ success: false, errors: errors.array() });
     }
 
-    console.log("[/associatedDataflows] - Get associated dataflows for : "+req.query.name);
-    let assetName = req.query.name, type = req.query.type, results, dataflowDetails;
+    console.log("[/associatedDataflows] - Get associated dataflows for : "+req.query.assetId);
+    let assetId = req.query.assetId, type = req.query.type, results, dataflowDetails;
     let promiseResult;
     try {
-      switch (type) {
-        case 'File':
-          promiseResult = File.findAll({raw: true, where:{"name":assetName}, attributes: ["dataflowId"]}).then(dataflowIds => dataflowIds)
-          break;
-        case 'Index':
-          promiseResult = Indexes.findAll({raw: true, where:{"name":assetName}, attributes: ["dataflowId"]}).then(dataflowIds => dataflowIds)
-          break;
-        case 'Job':
-          promiseResult = Job.findAll({raw: true, where:{"name":assetName}, attributes: ["dataflowId"]}).then(dataflowIds => dataflowIds)
-          break;
-        case 'Query':
-          promiseResult = Query.findAll({raw: true, where:{"name":assetName},
-            include:
-              [{ model: Application, attributes:["id", "title"] }]}).then(applicationTitle => applicationTitle)
-          break;
-      }
-      promiseResult.then(async results =>  {
-        let result=[];
-        if(type == 'Query') {
-          results.forEach((item) => {
-            result.push({"id": item['application.id'], "title": item['application.title']})
-            res.json(result);
-          })
-        } else {
-          dataflowDetails = await getDataflowDetails(results)
-          res.json(dataflowDetails);
-        }
-      })
+      let dataflowIds = await AssetDataflow.findAll({
+        where: {assetId: assetId},
+        attributes:['dataflowId']
+      });
+      dataflowDetails = await getDataflowDetails(dataflowIds);
+      res.json(dataflowDetails);
     } catch (err) {
         console.log('err', err);
     }

@@ -5,7 +5,6 @@ export const dataflowAction = {
 };
 
 function dataflowSelected(applicationId, applicationTitle, dataflowId, user) {
-  console.log('dataflowId: '+applicationId)
   return dispatch => {
     dispatch(request({ applicationId, applicationTitle, dataflowId, user }));
   };

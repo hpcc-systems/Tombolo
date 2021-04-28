@@ -164,7 +164,7 @@ router.get('/assets', [
     where: {
       id: req.query.dataflowId
     },
-    include: ['files', 'indexes', 'jobs']
+    include: [{model: File, as: 'files'}, {model:Index, as: 'indexes'}, {model: Job, as: 'jobs', attributes: { exclude: ['assetId'] }}],
   }).then(data => {
     data.files.forEach(file => {
       results.push({

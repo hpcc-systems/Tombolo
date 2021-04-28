@@ -1640,11 +1640,11 @@ class FileDetails extends PureComponent {
               </TabPane>
             ) : null}
 
-            {/* {!this.props.isNew ? (
+            {!this.props.isNew ? (
               <TabPane tab="Dataflows" key="7">
-                <AssociatedDataflows assetName={name} assetType={"File"} />
+                <AssociatedDataflows assetId={this.state.file.id} assetType={"File"} />
               </TabPane>
-            ) : null} */}
+            ) : null}
           </Tabs>
         </div>
 

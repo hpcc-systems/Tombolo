@@ -3,10 +3,10 @@ import { Tabs,Spin, Button, Tooltip, Radio, Icon, Menu, Dropdown } from 'antd/li
 import { connect } from 'react-redux';
 import { authHeader, handleError } from "../common/AuthHeader.js";
 import { hasAdminRole } from "../common/AuthUtil.js";
-import FileReport from "./FileReport.js";
-import IndexReport from "./IndexReport.js";
-import QueryReport from "./QueryReport.js";
-import JobReport from "./JobReport.js";
+import {FileReport} from "./FileReport.js";
+import {IndexReport} from "./IndexReport.js";
+import {QueryReport} from "./QueryReport.js";
+import {JobReport} from "./JobReport.js";
 const TabPane = Tabs.TabPane;
 class Report extends Component {
 
@@ -49,7 +49,7 @@ class Report extends Component {
       this.setState({
         initialDataLoading:true
       });
-    fetch("/api/report/read/getReport?searchText="+val+"&userId="+userId, {
+    fetch("/api/report/read/getReport?searchText="+val+"&userId="+userId+"&applicationId="+this.props.application.applicationId, {
         headers: authHeader()
     })
     .then((response) => {
@@ -88,11 +88,12 @@ class Report extends Component {
       console.log(error);
     });
   }
-   setKey= (selectedkey) => {
-    this.setState({defaultTab:selectedkey}); // <- set key sent by the handler to the state
+ setKey= (selectedkey) => {
+  this.setState({defaultTab:selectedkey}); // <- set key sent by the handler to the state
 
-   };
-  render() {
+ };
+
+ render() {
     const fileTitle="Files ("+this.state.fileList.length+")"
     const indexTitle="Index ("+this.state.indexList.length+")"
     const queryTitle="Queries ("+this.state.queryList.length+")"
@@ -103,7 +104,7 @@ class Report extends Component {
         <div className="loader">
         <Spin spinning={this.state.initialDataLoading} size="large" />
         </div>
-        <div style={{paddingTop:"50px"}}>
+        <div>
         <Tabs activeKey={defTab} onTabClick={this.setKey}>
           <TabPane tab={fileTitle} key="1">
             <FileReport refresh={this.state.refresh}  fileList={this.state.fileList}/>
