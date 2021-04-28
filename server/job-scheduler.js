@@ -111,7 +111,7 @@ class JobScheduler {
   }
 
   async executeJob(name, clusterId, dataflowId, applicationId, jobId, jobfileName) {
-    let uniqueJobName = name + '-' + dataflowId + '-' + jobId;
+    let uniqueJobName = name + '-' + dataflowId + '-' + jobId + '-' + Date.now();
     this.bree.add({
       name: uniqueJobName,
       timeout: 0,
