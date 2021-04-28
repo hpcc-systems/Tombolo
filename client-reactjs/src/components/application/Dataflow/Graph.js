@@ -1305,7 +1305,7 @@ class Graph extends Component {
       .attr("width", 100)
       .attr("height", "100%");*/
 
-    d3.select("svg").attr("transform",
+    d3.select('#'+this.props.graphContainer).select("svg").attr("transform",
           "translate(" + margin.left + "," + margin.top + ")")
 
 
