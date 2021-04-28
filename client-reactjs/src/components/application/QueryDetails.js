@@ -711,7 +711,14 @@ class QueryDetails extends PureComponent {
               Save
             </Button>
           </div>
-        : null}
+        : 
+        <div className="button-container">
+       
+        <Button key="back" onClick={this.handleCancel}>
+          Cancel
+        </Button>
+       
+      </div>}
       </React.Fragment>
     );
   }

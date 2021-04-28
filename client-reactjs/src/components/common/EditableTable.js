@@ -80,7 +80,7 @@ class EditableCell extends React.Component {
           message: `${title} is required.`,
         },
         {
-          pattern: new RegExp(/^[a-zA-Z0-9 ]*$/),
+          pattern: new RegExp(/^[a-zA-Z0-9. ]*$/),
           message: 'Please enter a valid '+dataIndex,
         }
       ]}>
@@ -255,7 +255,7 @@ class EditableTable extends React.Component {
         ...col,
         onCell: record => ({
           record,
-          editable: col.editable,
+          editable: this.props.enableEdit,
           dataIndex: col.dataIndex,
           celleditor: col.celleditor,
           celleditorparams: col.celleditorparams,

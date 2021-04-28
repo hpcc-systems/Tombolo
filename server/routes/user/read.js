@@ -5,6 +5,9 @@ const { body, query, check, validationResult } = require('express-validator');
 const errorFormatter = ({ location, msg, param, value, nestedErrors }) => {
   return `${msg}`;
 };
+const chalk = require("chalk");
+const { sequelize } = require('../../models');
+// const sequelize = require("sequelize")
 // routes
 router.get('/searchuser', searchUser);
 router.post('/authenticate', authenticate);
@@ -53,6 +56,7 @@ function getById(req, res, next) {
       .then(user => user ? res.json(user) : res.sendStatus(404))
       .catch(err => res.status(500).json({ "message": "Error occured while retrieving users" }));
 }
+
 
 function update(req, res, next) {
   userService.update(req.params.id, req.body)
@@ -124,20 +128,34 @@ router.post('/registerUser', [
 })
 
 router.post('/forgot-password', [
-  body('username')
-    .matches(/^[a-zA-Z]{1}[a-zA-Z0-9_-]*$/).withMessage('Invalid User Name'),
+  body('email')
+    .isEmail().withMessage('Invalid E-mail'),
 ], (req, res, next) => {
+  console.log(chalk.magenta(">>>> forgot password route hit ", req.body.email))
   const errors = validationResult(req).formatWith(errorFormatter);
+  console.log(chalk.magenta(">>>> Error : ", JSON.stringify(errors)))
+
   if (!errors.isEmpty()) {
     return res.status(422).json({ success: false, errors: errors.array() });
   }
-  userService.forgotPassword(req, res)
-  .then((response) => {
-    res.status(response.statusCode).json(response.message);
-  })
-  .catch((err) => {
-    res.status(500).json({ errors: [err.error] });
-  })
+
+  // sequelize
+  // .authenticate()
+  // .then(() => {
+  //   console.log(chalk.red(('Connection has been established successfully.'));
+  // })
+  // .catch(err => {
+  //   console.error('Unable to connect to the database:', err);
+  // });
+
+
+  // userService.forgotPassword(req, res)
+  // .then((response) => {
+  //   res.status(response.statusCode).json(response.message);
+  // })
+  // .catch((err) => {
+  //   res.status(500).json({ errors: [err.error] });
+  // })
 })
 
 router.post('/resetPassword', [

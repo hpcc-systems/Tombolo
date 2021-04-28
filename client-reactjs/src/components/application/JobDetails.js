@@ -1107,9 +1107,12 @@ class JobDetails extends Component {
       });
     }
 
+    //scheduled predecessors
+    const scheduledPredecessors = (allPredecessors, selectedPredecessor) =>{
+     return allPredecessors.filter(predecessor => selectedPredecessor.includes(predecessor.jobId))
+    }
 
     return (
-
       <React.Fragment>
           {!this.state.enableEdit && editingAllowed?  <div className="button-container edit-toggle-btn">
           <Button type="primary" onClick={makeFieldsEditable}>
@@ -1460,25 +1463,25 @@ class JobDetails extends Component {
                   { this.state.selectedScheduleType === "Predecessor" ?
                     <Form.Item label="Run After">
                       {!this.state.enableEdit ? 
-                       this.state.schedulePredecessor.map((predecessor, index) =>(index > 0 ? " , " + predecessor : predecessor) )
-                       :
-                  
-                 
+                   
+                    scheduledPredecessors(this.state.predecessorJobs, this.state.schedulePredecessor).map((item, index)  => index > 0 ? ', ' +  item.name : item.name)
+                    // this.state.schedulePredecessor
+                       :      
                       <Select id="schedulePredecessor"
-                        mode="multiple"
+                        mode="single"
                         placeholder="Select Job(s) that will trigger execution"
-                        allowClear
-                        onClear={() => { this.setState({...this.state, schedulePredecessor: [] }); }}
+                        // allowClear
+                        // onClear={() => { this.setState({...this.state, schedulePredecessor: [] }); }}
                         onSelect={value => {
-                          let predecessors = this.state.schedulePredecessor;
+                          let predecessors = [];
                           predecessors.push(value);
-                          this.setState({ ...this.state, schedulePredecessor: predecessors });
+                          this.setState({schedulePredecessor: predecessors });
                         }}
-                        onDeselect={value => {
-                          let predecessors = this.state.schedulePredecessor;
-                          predecessors.splice(predecessors.indexOf(value), 1);
-                          this.setState({ ...this.state, schedulePredecessor: predecessors });
-                        }}
+                        // onDeselect={value => {
+                        //   let predecessors = [];
+                        //   predecessors.splice(predecessors.indexOf(value), 1);
+                        //   this.setState({schedulePredecessor: predecessors });
+                        // }}
                         value={this.state.schedulePredecessor}
                       >
                         { this.state.predecessorJobs.map(job => {
@@ -1506,19 +1509,29 @@ class JobDetails extends Component {
       </div>
         <div>
           <span style={{"float": "left"}}>
-            <Button disabled={!editingAllowed || this.props.isNew} type="primary" key="execute" onClick={this.executeJob}>
+            <Button disabled={!editingAllowed ||  !this.state.enableEdit || this.props.isNew} type="primary" key="execute" onClick={this.executeJob}>
               Execute Job
             </Button>
           </span>
+          {this.state.enableEdit ? 
           <div className="button-container">
-            {!this.props.isNew ? <Button key="danger" type="danger" onClick={this.handleDelete}>Delete</Button> : null }
-            <Button key="back" onClick={this.handleCancel}>
+            {!this.props.isNew ?
+             <Button key="danger" type="danger" onClick={this.handleDelete}>Delete</Button> : null }
+             <Button key="back" onClick={this.handleCancel}>
               Cancel
             </Button>
             <Button key="submit" disabled={!editingAllowed} type="primary" loading={confirmLoading} onClick={this.handleOk}>
               Save
             </Button>
+          </div> : 
+
+          <div className="button-container">
+          <Button key="back" onClick={this.handleCancel}>
+            Cancel
+          </Button>
           </div>
+
+           } 
         </div>
       </React.Fragment>
     );

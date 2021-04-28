@@ -693,7 +693,15 @@ class IndexDetails extends PureComponent {
           <Button key="submit" disabled={!editingAllowed} type="primary" loading={confirmLoading} onClick={this.handleOk}>
             Save
           </Button>
-        </div> : null }
+        </div> :
+         <div className="button-container">
+       
+         <Button key="back" onClick={this.handleCancel}>
+           Cancel
+         </Button>
+        
+       </div> 
+         }
       </React.Fragment>
     );
   }
