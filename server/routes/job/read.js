@@ -552,6 +552,7 @@ router.post('/saveJob', [
               dependsOnJobId: jobId
             });
           });
+          
           await Promise.all(promises);
           return res.json({
             success: true,

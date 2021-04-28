@@ -1107,9 +1107,12 @@ class JobDetails extends Component {
       });
     }
 
+    //scheduled predecessors
+    const scheduledPredecessors = (allPredecessors, selectedPredecessor) =>{
+     return allPredecessors.filter(predecessor => selectedPredecessor.includes(predecessor.jobId))
+    }
 
     return (
-
       <React.Fragment>
           {!this.state.enableEdit && editingAllowed?  <div className="button-container edit-toggle-btn">
           <Button type="primary" onClick={makeFieldsEditable}>
@@ -1367,7 +1370,12 @@ class JobDetails extends Component {
             <TabPane tab="Schedule" key="6">
               <div>
                 <Form {...threeColformItemLayout}>
+                  {this.state.selectedScheduleType .length > 0 || this.state.enableEdit ?
                   <Form.Item label="Type">
+                    {!this.state.enableEdit   ?
+                    <Input className="read-only-input"  value={this.state.selectedScheduleType ? this.state.selectedScheduleType : null} />
+                    :
+
                     <Select id="scheduleType"
                       placeholder="Select a schedule type"
                       allowClear
@@ -1381,8 +1389,11 @@ class JobDetails extends Component {
                     >
                       <Option value="Time">Timer based (run at specific interval)</Option>
                       <Option value="Predecessor">Job based (run after another job completes)</Option>
-                    </Select>
-                  </Form.Item>
+                    </Select> 
+  }
+
+                  </Form.Item> : null
+  }
                   { this.state.selectedScheduleType === "Time" ?
                     <Fragment>
                     <Form.Item label="Run Every">
@@ -1391,30 +1402,39 @@ class JobDetails extends Component {
                           style={{width: "40px", padding: "2px 6px"}}
                           onChange={ evt =>  this.setState({ scheduleMinute: evt.target.value }) }
                           value={this.state.scheduleMinute}
+                          className={this.state.enableEdit? null : "read-only-input"}
                         />
                         Minute,
                         <Input
                           style={{width: "40px", padding: "2px 6px"}}
                           onChange={ evt => this.setState({ scheduleHour: evt.target.value }) }
                           value={this.state.scheduleHour}
+                          className={this.state.enableEdit? null : "read-only-input"}
+
                         />
                         Hour,
                         <Input
                           style={{width: "40px", padding: "2px 6px"}}
                           onChange={ evt => this.setState({ scheduleDayMonth: evt.target.value }) }
                           value={this.state.scheduleDayMonth}
+                          className={this.state.enableEdit? null : "read-only-input"}
+
                         />
                         Day of Month,
                         <Input
                           style={{width: "40px", padding: "2px 6px"}}
                           onChange={ evt => this.setState({ scheduleMonth: evt.target.value }) }
                           value={this.state.scheduleMonth}
+                          className={this.state.enableEdit? null : "read-only-input"}
+
                         />
                         Month,
                         <Input
                           style={{width: "40px", padding: "2px 6px"}}
                           onChange={ evt => this.setState({ scheduleDayWeek: evt.target.value }) }
                           value={this.state.scheduleDayWeek}
+                          className={this.state.enableEdit? null : "read-only-input"}
+
                         />
                         Day of Week
                       </Space>
@@ -1442,21 +1462,26 @@ class JobDetails extends Component {
                   : null }
                   { this.state.selectedScheduleType === "Predecessor" ?
                     <Form.Item label="Run After">
+                      {!this.state.enableEdit ? 
+                   
+                    scheduledPredecessors(this.state.predecessorJobs, this.state.schedulePredecessor).map((item, index)  => index > 0 ? ', ' +  item.name : item.name)
+                    // this.state.schedulePredecessor
+                       :      
                       <Select id="schedulePredecessor"
-                        mode="multiple"
+                        mode="single"
                         placeholder="Select Job(s) that will trigger execution"
-                        allowClear
-                        onClear={() => { this.setState({...this.state, schedulePredecessor: [] }); }}
+                        // allowClear
+                        // onClear={() => { this.setState({...this.state, schedulePredecessor: [] }); }}
                         onSelect={value => {
-                          let predecessors = this.state.schedulePredecessor;
+                          let predecessors = [];
                           predecessors.push(value);
-                          this.setState({ ...this.state, schedulePredecessor: predecessors });
+                          this.setState({schedulePredecessor: predecessors });
                         }}
-                        onDeselect={value => {
-                          let predecessors = this.state.schedulePredecessor;
-                          predecessors.splice(predecessors.indexOf(value), 1);
-                          this.setState({ ...this.state, schedulePredecessor: predecessors });
-                        }}
+                        // onDeselect={value => {
+                        //   let predecessors = [];
+                        //   predecessors.splice(predecessors.indexOf(value), 1);
+                        //   this.setState({schedulePredecessor: predecessors });
+                        // }}
                         value={this.state.schedulePredecessor}
                       >
                         { this.state.predecessorJobs.map(job => {
@@ -1467,12 +1492,13 @@ class JobDetails extends Component {
                           );
                         }) }
                       </Select>
+  }
                     </Form.Item>
                   : null }
                 </Form>
               </div>
             </TabPane>
-            : null }
+             : null }
 
             {!this.props.isNew ?
             <TabPane tab="Dataflows" key="7">
@@ -1483,19 +1509,29 @@ class JobDetails extends Component {
       </div>
         <div>
           <span style={{"float": "left"}}>
-            <Button disabled={!editingAllowed || this.props.isNew} type="primary" key="execute" onClick={this.executeJob}>
+            <Button disabled={!editingAllowed ||  !this.state.enableEdit || this.props.isNew} type="primary" key="execute" onClick={this.executeJob}>
               Execute Job
             </Button>
           </span>
+          {this.state.enableEdit ? 
           <div className="button-container">
-            {!this.props.isNew ? <Button key="danger" type="danger" onClick={this.handleDelete}>Delete</Button> : null }
-            <Button key="back" onClick={this.handleCancel}>
+            {!this.props.isNew ?
+             <Button key="danger" type="danger" onClick={this.handleDelete}>Delete</Button> : null }
+             <Button key="back" onClick={this.handleCancel}>
               Cancel
             </Button>
             <Button key="submit" disabled={!editingAllowed} type="primary" loading={confirmLoading} onClick={this.handleOk}>
               Save
             </Button>
+          </div> : 
+
+          <div className="button-container">
+          <Button key="back" onClick={this.handleCancel}>
+            Cancel
+          </Button>
           </div>
+
+           } 
         </div>
       </React.Fragment>
     );

@@ -3,24 +3,7 @@ import { store } from '../../redux/store/Store';
 import {Constants} from "../common/Constants";
 import ReactMarkdown from 'react-markdown'
 
-import {
-  Modal,
-  Tabs,
-  Form,
-  Input,
-  Select,
-  Button,
-  Table,
-  AutoComplete,
-  Tag,
-  message,
-  Drawer,
-  Row,
-  Col,
-  Spin,
-  Radio,
-  Checkbox,
-} from "antd/lib";
+import { Modal, Tabs, Form, Input, Select, Button, Table, AutoComplete, Tag, message, Drawer, Row, Col, Spin, Radio, Checkbox, } from "antd/lib";
 import { debounce } from "lodash";
 import AssociatedDataflows from "./AssociatedDataflows";
 import { authHeader, handleError } from "../common/AuthHeader.js";
@@ -52,9 +35,6 @@ class FileDetails extends PureComponent {
   constructor(props) {
     super(props);
   }
-
-
-
 
   state = {
     visible: true,
@@ -119,7 +99,6 @@ class FileDetails extends PureComponent {
 
   //Component will unmount
   componentWillUnmount(){
-
       store.dispatch({
         type: Constants.ENABLE_EDIT,
         payload: false
@@ -206,6 +185,9 @@ class FileDetails extends PureComponent {
                 //For read only option
                 description: data.basic.description,
                 isSuperFile: data.basic.isSuperFile,
+                supplier: data.basic.supplier,
+                consumer : data.basic.consumer,
+                owner: data.basic.owner,
 
                 fileType:
                   data.basic.fileType == "" || data.basic.fileType == "flat"
@@ -223,15 +205,15 @@ class FileDetails extends PureComponent {
               name: data.basic.name,
               description: data.basic.description,
               scope: data.basic.scope,
-              // serviceURL: data.basic.serviceUrl,
+              serviceURL: data.basic.serviceUrl,
               serviceURL: data.basic.serviceURL,
-
               qualifiedPath: data.basic.qualifiedPath,
               owner: data.basic.owner,
               consumer: data.basic.consumer,
               supplier: data.basic.supplier,
               isSuperFile: data.basic.isSuperFile,
             });
+
           } else {
             message.config({ top: 130 });
             message.error(
@@ -953,13 +935,13 @@ class FileDetails extends PureComponent {
         title: "Field",
         dataIndex: "name",
         sort: "asc",
-        editable: editingAllowed,
+        editable: false,
         width: "25%",
       },
       {
         title: "Type",
         dataIndex: "type",
-        editable: editingAllowed,
+        editable: false,
         celleditor: "select",
         celleditorparams: {
           values: eclTypes.sort(),
@@ -967,38 +949,38 @@ class FileDetails extends PureComponent {
         showdatadefinitioninfield: true,
         width: "18%",
       },
-      {
-        title: "ECL Type",
-        dataIndex: "eclType",
-        editable: editingAllowed,
-        showdatadefinitioninfield: true,
-      },
+      // {
+      //   title: "ECL Type",
+      //   dataIndex: "eclType",
+      //   editable: editingAllowed,
+      //   showdatadefinitioninfield: true,
+      // },
       {
         title: "Description",
         dataIndex: "description",
         editable: editingAllowed,
         width: "15%",
       },
-      {
-        title: "Required",
-        editable: editingAllowed,
-        dataIndex: "required",
-        celleditor: "select",
-        celleditorparams: {
-          values: ["false", "true"],
-        },
-        width: "10%",
-      },
-      {
-        title: "Information Type",
-        dataIndex: "data_types",
-        editable: editingAllowed,
-        celleditor: "select",
-        width: "15%",
-        celleditorparams: {
-          values: this.dataTypes.sort(),
-        },
-      },
+      // {
+      //   title: "Required",
+      //   editable: editingAllowed,
+      //   dataIndex: "required",
+      //   celleditor: "select",
+      //   celleditorparams: {
+      //     values: ["false", "true"],
+      //   },
+      //   width: "10%",
+      // },
+      // {
+      //   title: "Information Type",
+      //   dataIndex: "data_types",
+      //   editable: editingAllowed,
+      //   celleditor: "select",
+      //   width: "15%",
+      //   celleditorparams: {
+      //     values: this.dataTypes.sort(),
+      //   },
+      // },
     ];
 
     const validationRuleColumns = [
@@ -1473,9 +1455,13 @@ class FileDetails extends PureComponent {
                       label="Supplier"
                       name="supplier"
                     >
-                      {!this.state.enableEdit ?
-                       <textarea className="read-only-textarea" />
-
+                      {!this.state.enableEdit ? 
+                      
+                      (this.props.consumers.map(consumer => {
+                        if( consumer.assetType === "Supplier" && consumer.id === this.state.file.supplier){
+                          return consumer.name
+                        }
+                      }))
                         :
                       <Select
                         id="supplier"
@@ -1498,6 +1484,8 @@ class FileDetails extends PureComponent {
                       </Select>
 
                           }
+                    
+
                     </Form.Item>
                   </Col>
                   <Col span={8} order={2}>
@@ -1526,7 +1514,13 @@ class FileDetails extends PureComponent {
                         )}
                       </Select>
                       :
-                      <textarea className="read-only-textarea" /> }
+                     
+                      (this.props.consumers.map(consumer => {
+                        if( consumer.assetType === "Consumer" && consumer.id === this.state.file.consumer){
+                          return consumer.name
+                        }
+                      }))
+                     }
                     </Form.Item>
                   </Col>
 
@@ -1537,7 +1531,12 @@ class FileDetails extends PureComponent {
                       name="owner"
                     >
                       {!this.state.enableEdit ?
-                      <textarea className="read-only-textarea" /> :
+                       (this.props.consumers.map(consumer => {
+                        if( consumer.assetType === "Owner" && consumer.id === this.state.file.owner){
+                          return consumer.name
+                        }
+                      }))
+                      :
                       <Select
                         id="owner"
                         value={
@@ -1615,7 +1614,9 @@ class FileDetails extends PureComponent {
                     editingAllowed={editingAllowed}
                     showDataDefinition={false}
                     dataDefinitions={[]}
-                    setData={this.setValidationData}/>
+                    setData={this.setValidationData}
+                    enableEdit={this.state.enableEdit}
+                    />
                 </div>
             </TabPane>
             {VIEW_DATA_PERMISSION ? (
@@ -1672,7 +1673,15 @@ class FileDetails extends PureComponent {
           >
             Save
           </Button>
-        </div> : null }
+        </div> : 
+          <div className="button-container">
+      
+          <Button key="back" onClick={this.handleCancel}>
+            Cancel
+          </Button>
+         
+        </div> 
+         }
       </React.Fragment>
     );
   }
