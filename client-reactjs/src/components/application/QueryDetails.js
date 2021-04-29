@@ -624,7 +624,7 @@ class QueryDetails extends PureComponent {
                targetDomId="queryDescr" 
                disabled={!editingAllowed}/>
                :
-               <ReactMarkdown source={this.state.query.description} />
+               <div className="read-only-markdown"><ReactMarkdown source={this.state.query.description} /> </div>
               }
             </Form.Item>
             <Form.Item label="URL" name="url" rules={[{

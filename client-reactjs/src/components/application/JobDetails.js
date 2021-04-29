@@ -1205,7 +1205,10 @@ class JobDetails extends Component {
                 value={description}
                 disabled={!editingAllowed}/>
                 :
-                <ReactMarkdown source={this.state.job.description} />}
+                <div className="read-only-markdown"> <ReactMarkdown source={this.state.job.description} />
+                </div>
+  }
+
               </Form.Item>
               {this.props.selectedJobType != 'Data Profile' ?
                 <Form.Item label="Git Repo" name="gitRepo" rules={[{

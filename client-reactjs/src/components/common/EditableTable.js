@@ -80,7 +80,7 @@ class EditableCell extends React.Component {
           message: `${title} is required.`,
         },
         {
-          pattern: new RegExp(/^[a-zA-Z0-9. ]*$/),
+          pattern: new RegExp(/^[a-zA-Z0-9.,:;()?!""@&#*/'$_ -]*$/),
           message: 'Please enter a valid '+dataIndex,
         }
       ]}>

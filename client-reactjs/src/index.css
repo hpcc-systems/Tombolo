@@ -713,10 +713,9 @@ div.tooltip {
 }
 
 .read-only-textarea{
- width: 100%;
-
-  height: auto;
-  resize: none;
+width: 100%;
+height: auto;
+resize: none;
 border: none;
 pointer-events: none;
 padding-top:5px;
@@ -736,6 +735,14 @@ overflow: hidden;
   border-bottom :  2px solid whitesmoke;
    padding-bottom: 6.5px;
 }
+
+.read-only-markdown{
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  padding: 7px;
+}
+
 
 .ant-tree .ant-tree-node-content-wrapper .ant-tree-iconEle {
   display: inline-block;

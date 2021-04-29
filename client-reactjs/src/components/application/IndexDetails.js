@@ -607,7 +607,7 @@ class IndexDetails extends PureComponent {
                    targetDomId="indexDescr"
                     disabled={!editingAllowed}/>
                 :
-                <ReactMarkdown source={this.state.index.description} />
+                <div className="read-only-markdown">   <ReactMarkdown source={this.state.index.description} /></div>         
                 }
               </Form.Item>
 

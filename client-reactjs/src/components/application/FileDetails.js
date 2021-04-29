@@ -1373,7 +1373,9 @@ class FileDetails extends PureComponent {
                   value={description}
                   disabled={!editingAllowed}
                   />
-                  :   <ReactMarkdown source={this.state.file.description} />
+                  : 
+                  <div className="read-only-markdown">  <ReactMarkdown source={this.state.file.description} /> </div>
+                  
                   }
                 </Form.Item>
 
@@ -1599,6 +1601,7 @@ class FileDetails extends PureComponent {
                   onGridReady={this.onLicenseGridReady}
                   rowSelection="multiple"
                   suppressRowClickSelection={editingAllowed}
+                  onGridColumnsChanged={this.onLicenseGridReady}
                 ></AgGridReact>
               </div>
             </TabPane>
