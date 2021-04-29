@@ -218,10 +218,9 @@ class JobDetails extends Component {
             inputParams: data.jobparams,
             inputFiles: jobfiles.filter(field => field.file_type == 'input'),
             outputFiles: jobfiles.filter(field => field.file_type == 'output'),
-
+            ecl: data.ecl,
             //For read only input
-
-          description: data.description
+            description: data.description
          }
         });
 
@@ -1389,7 +1388,7 @@ class JobDetails extends Component {
                     >
                       <Option value="Time">Timer based (run at specific interval)</Option>
                       <Option value="Predecessor">Job based (run after another job completes)</Option>
-                    </Select> 
+                    </Select>
   }
 
                   </Form.Item> : null
@@ -1462,11 +1461,11 @@ class JobDetails extends Component {
                   : null }
                   { this.state.selectedScheduleType === "Predecessor" ?
                     <Form.Item label="Run After">
-                      {!this.state.enableEdit ? 
-                   
+                      {!this.state.enableEdit ?
+
                     scheduledPredecessors(this.state.predecessorJobs, this.state.schedulePredecessor).map((item, index)  => index > 0 ? ', ' +  item.name : item.name)
                     // this.state.schedulePredecessor
-                       :      
+                       :
                       <Select id="schedulePredecessor"
                         mode="single"
                         placeholder="Select Job(s) that will trigger execution"
@@ -1513,7 +1512,7 @@ class JobDetails extends Component {
               Execute Job
             </Button>
           </span>
-          {this.state.enableEdit ? 
+          {this.state.enableEdit ?
           <div className="button-container">
             {!this.props.isNew ?
              <Button key="danger" type="danger" onClick={this.handleDelete}>Delete</Button> : null }
@@ -1523,7 +1522,7 @@ class JobDetails extends Component {
             <Button key="submit" disabled={!editingAllowed} type="primary" loading={confirmLoading} onClick={this.handleOk}>
               Save
             </Button>
-          </div> : 
+          </div> :
 
           <div className="button-container">
           <Button key="back" onClick={this.handleCancel}>
@@ -1531,7 +1530,7 @@ class JobDetails extends Component {
           </Button>
           </div>
 
-           } 
+           }
         </div>
       </React.Fragment>
     );

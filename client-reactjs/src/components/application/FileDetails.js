@@ -197,6 +197,7 @@ class FileDetails extends PureComponent {
                 licenses: data.file_licenses,
                 relations: data.file_relations,
                 validations: data.file_validations,
+                fileDataColHeaders: data.file_layouts.map(layout => layout.name)
               },
             });
 
@@ -502,6 +503,7 @@ class FileDetails extends PureComponent {
           id: fileInfo.basic.id,
           layout: fileInfo.file_layouts,
           validations: fileInfo.file_validations,
+          fileDataColHeaders: fileInfo.file_layouts.map(layout => layout.name)
         },
       });
 
@@ -583,12 +585,12 @@ class FileDetails extends PureComponent {
           handleError(response);
         })
         .then(function (rows) {
-          if (rows.length > 0) {
+          /*if (rows.length > 0) {
             _self.setState({
               fileDataColHeaders: Object.keys(rows[0]),
               fileDataContent: rows,
             });
-          }
+          }*/
         })
         .catch((error) => {
           console.log(error);
@@ -991,7 +993,7 @@ class FileDetails extends PureComponent {
         editable: editingAllowed,
         width: "15%",
         celleditorparams: {
-          values: this.state.fileDataColHeaders,
+          values: this.state.file.fileDataColHeaders,
         },
       },
       {
@@ -1455,8 +1457,8 @@ class FileDetails extends PureComponent {
                       label="Supplier"
                       name="supplier"
                     >
-                      {!this.state.enableEdit ? 
-                      
+                      {!this.state.enableEdit ?
+
                       (this.props.consumers.map(consumer => {
                         if( consumer.assetType === "Supplier" && consumer.id === this.state.file.supplier){
                           return consumer.name
@@ -1484,7 +1486,7 @@ class FileDetails extends PureComponent {
                       </Select>
 
                           }
-                    
+
 
                     </Form.Item>
                   </Col>
@@ -1514,7 +1516,7 @@ class FileDetails extends PureComponent {
                         )}
                       </Select>
                       :
-                     
+
                       (this.props.consumers.map(consumer => {
                         if( consumer.assetType === "Consumer" && consumer.id === this.state.file.consumer){
                           return consumer.name
@@ -1673,14 +1675,14 @@ class FileDetails extends PureComponent {
           >
             Save
           </Button>
-        </div> : 
+        </div> :
           <div className="button-container">
-      
+
           <Button key="back" onClick={this.handleCancel}>
             Cancel
           </Button>
-         
-        </div> 
+
+        </div>
          }
       </React.Fragment>
     );

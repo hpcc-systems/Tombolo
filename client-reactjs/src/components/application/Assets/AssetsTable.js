@@ -225,7 +225,10 @@ function AssetsTable({selectedGroup, handleEditGroup, refreshGroups}) {
     title: 'Description',
     dataIndex: 'description',
     width: '25%',
-    ellipsis: true
+    ellipsis: true,
+    render: (text, record) => {
+      return text.split('\n')[0]
+    }
   },
   {
     title: 'Type',
