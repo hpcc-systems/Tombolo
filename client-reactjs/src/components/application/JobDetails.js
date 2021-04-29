@@ -243,6 +243,10 @@ class JobDetails extends Component {
       })
       .catch(error => {
         console.log(error);
+        this.setState({
+          ...this.state,
+          initialDataLoading: false
+        })
       });
     }
   }
@@ -307,7 +311,7 @@ class JobDetails extends Component {
       visible: true,
     });
     this.clearState();
-    this.getJobDetails();
+    //this.getJobDetails();
   }
 
   setInputParamsData = (data) => {

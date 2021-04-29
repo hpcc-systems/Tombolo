@@ -218,7 +218,7 @@ class FileDetails extends PureComponent {
           } else {
             message.config({ top: 130 });
             message.error(
-              "Could not retrieve data for this file. Please check if the file is valid"
+              "File details could not be found. Please check if the file exists in Assets"
             );
           }
           return data;
@@ -671,10 +671,11 @@ class FileDetails extends PureComponent {
     this.setState({
       visible: false,
     });
-    //this.props.onClose();
-    this.props.history.push(
-      "/" + this.props.application.applicationId + "/assets"
-    );
+    if (this.props.history) {
+      this.props.history.push('/' + this.props.application.applicationId + '/assets')
+    } else {
+      document.querySelector('button.ant-modal-close').click();
+    }
   };
 
   onClusterSelection = (value) => {
@@ -1373,9 +1374,9 @@ class FileDetails extends PureComponent {
                   value={description}
                   disabled={!editingAllowed}
                   />
-                  : 
+                  :
                   <div className="read-only-markdown">  <ReactMarkdown source={this.state.file.description} /> </div>
-                  
+
                   }
                 </Form.Item>
 

@@ -110,7 +110,7 @@ class Graph extends Component {
         applicationId: props.applicationId,
         selectedDataflow: props.selectedDataflow
       }, function() {
-        this.fetchSavedGraph();
+        //this.fetchSavedGraph();
       });
     }
 
@@ -219,55 +219,6 @@ class Graph extends Component {
    }
   }
 
-  openNewAssetDialog(d) {
-    let _self=this;
-    let isNew = false;
-    switch(d.type) {
-      case 'File':
-        isNew = true;
-        _self.setState({
-          isNew: isNew,
-          openFileDetailsDialog: true,
-          selectedFile: ''
-        });
-
-        setTimeout(() => {
-          _self.fileDlg.showModal();
-        }, 200);
-        break;
-      case 'Job':
-      case 'Modeling':
-      case 'Scoring':
-      case 'ETL':
-      case 'Query Build':
-      case 'Data Profile':
-        //for opening details
-        isNew = true;
-        _self.setState({
-          isNewJob: isNew,
-          openJobDetailsDialog: true,
-          selectedJob: '',
-          selectedJobType: d.type == 'Job' ? 'General' : d.type
-        });
-
-        setTimeout(() => {
-          _self.jobDlg.showModal();
-        }, 200);
-        break;
-      case 'Index':
-        isNew = true;
-        _self.setState({
-          isNewIndex: isNew,
-          openIndexDetailsDialog: true,
-          selectedIndex: ''
-        });
-
-        setTimeout(() => {
-          _self.idxDlg.showModal();
-        }, 200);
-        break;
-     }
-  }
 
   getTaskColor = (task) => {
     switch(task.status) {
@@ -1305,10 +1256,8 @@ class Graph extends Component {
       .attr("width", 100)
       .attr("height", "100%");*/
 
-    d3.select('#'+this.props.graphContainer).select("svg").attr("transform",
+    d3.select('.graph-div').select("svg").attr("transform",
           "translate(" + margin.left + "," + margin.top + ")")
-
-
 
     //add icons to sidebar
     if(!this.props.viewMode) {
