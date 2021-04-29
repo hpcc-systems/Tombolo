@@ -309,14 +309,14 @@ class AppHeader extends Component {
                 </li>
               </ul>
               <ul className="ml-md-auto navbar-nav">
-                <li className="nav-item">
+                {/*<li className="nav-item">
                   <Search
                     name="searchText"
                     placeholder="Search"
                     onSearch={this.search}
                     onChange={this.onChangeSearch}
                     style={{ width: 200, paddingRight:"5px" }} />
-                </li>
+                </li>*/}
                 <li style={{ paddingRight:"5px" }}>
                   <Dropdown overlay={helpMenu} trigger={['click']}>
                     <Button shape="round">
