@@ -7,6 +7,7 @@ let User = models.user;
 const Sequelize = require('sequelize');
 let UserApplication = models.user_application;
 const authServiceUtil = require('../../utils/auth-service-utils');
+const chalk = require("chalk")
 
 async function authenticate(req, res, { username, password }) {
     var authServiceUrl = process.env.AUTH_SERVICE_URL + '/login';
@@ -292,6 +293,8 @@ async function registerUser(req, res) {
 }
 
 async function forgotPassword(req, res) {
+  console.log(chalk.magenta("<<<< Forget UserService.password function executing .. 2  ", JSON.stringify(req.body)))
+  
   var authServiceUrl = process.env.AUTH_SERVICE_URL + '/forgotPassword';
   return new Promise(function(resolve, reject) {
     request.post({
@@ -300,12 +303,13 @@ async function forgotPassword(req, res) {
         "content-type": "application/json"
       },
       json: {
-        "username": req.body.username,
+        "email": req.body.email,
         "clientId": process.env.AUTHSERVICE_TOMBOLO_CLIENT_ID,
         "resetUrl": process.env.TOMBOLO_PASSWORD_RESET_URL
       }
     }, function(err, response, body) {
       if (response.statusCode == 422) {
+        console.log(chalk.magenta("<<<< Error occured while resetting Password ", new Error(body.errors.concat(','))));
         reject(new Error(body.errors.concat(',')));
       }
       if (response.statusCode != 200) {

@@ -2,9 +2,8 @@ const express = require('express');
 const router = express.Router();
 const userService = require('./userservice');
 const { body, query, check, validationResult } = require('express-validator');
-const errorFormatter = ({ location, msg, param, value, nestedErrors }) => {
-  return `${msg}`;
-};
+const errorFormatter = ({ location, msg, param, value, nestedErrors }) => { return `${msg}`; };
+const chalk = require("chalk")
 // routes
 router.get('/searchuser', searchUser);
 router.post('/authenticate', authenticate);
@@ -17,9 +16,11 @@ router.put('/:id', update);
 router.delete('/:id', _delete);
 router.post('/validateToken', validateToken);
 router.get('/:user_id/:app_id', GetuserListToShareApp);
+// router.post('/forgotpassword', forgotPassword)
 router.post('/changePassword', changePassword);
 
 module.exports = router;
+
 function authenticate(req, res, next) {
   //var user = await userService.authenticate(req, res, req.body);
   userService.authenticate(req, res, req.body)
@@ -124,15 +125,18 @@ router.post('/registerUser', [
 })
 
 router.post('/forgot-password', [
-  body('username')
-    .matches(/^[a-zA-Z]{1}[a-zA-Z0-9_-]*$/).withMessage('Invalid User Name'),
+  body('email').isEmail().withMessage('Invalid E-mail address'),
 ], (req, res, next) => {
   const errors = validationResult(req).formatWith(errorFormatter);
   if (!errors.isEmpty()) {
+    console.trace(chalk.magenta("<<<< E-mail validation error - 1", JSON.stringify(errors)));
     return res.status(422).json({ success: false, errors: errors.array() });
   }
+  console.log(chalk.magenta("<<<< Email validation passed - 1 ", JSON.stringify(req.body)))
+
   userService.forgotPassword(req, res)
   .then((response) => {
+    
     res.status(response.statusCode).json(response.message);
   })
   .catch((err) => {

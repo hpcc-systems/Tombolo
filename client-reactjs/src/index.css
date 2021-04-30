@@ -743,6 +743,11 @@ overflow: hidden;
   padding: 7px;
 }
 
+.read-only-markdown > * {
+  text-align: left ;
+
+}
+
 
 .ant-tree .ant-tree-node-content-wrapper .ant-tree-iconEle {
   display: inline-block;
