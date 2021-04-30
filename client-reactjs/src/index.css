@@ -727,7 +727,7 @@ overflow: hidden;
   color: transparent;
 }
 .view-change-toggle-btn {
-  border-bottom :  2px solid whitesmoke;
+  border-bottom :  2px slid whitesmoke;
    padding-bottom: 6.2px;
 }
 
@@ -746,7 +746,6 @@ overflow: hidden;
 .read-only-markdown > * {
   text-align: left ;
 }
-
 
 .ant-tree .ant-tree-node-content-wrapper .ant-tree-iconEle {
   display: inline-block;
