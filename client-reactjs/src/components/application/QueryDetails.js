@@ -70,9 +70,9 @@ class QueryDetails extends PureComponent {
     }else{
       this.setState({
         enableEdit : viewOnlyModeReducer.editMode,
-     
+
       })
-    } 
+    }
   }
 
   //Unmount phase
@@ -105,9 +105,9 @@ class QueryDetails extends PureComponent {
             groupId: data.groupId,
             input: data.query_fields.filter(field => field.field_type == 'input'),
             output: data.query_fields.filter(field => field.field_type == 'output'),
-            //For read only 
+            //For read only
             description: data.description,
-         
+
           }
         });
 
@@ -417,7 +417,12 @@ class QueryDetails extends PureComponent {
       visible: false,
     });
     //this.props.onClose();
-    this.props.history.push('/' + this.props.application.applicationId + '/assets')
+    if (this.props.history) {
+      this.props.history.push('/' + this.props.application.applicationId + '/assets')
+    } else {
+      document.querySelector('button.ant-modal-close').click();
+    }
+
   }
 
   onClusterSelection = (value) => {
@@ -528,9 +533,9 @@ class QueryDetails extends PureComponent {
           <Button  onClick={switchToViewOnly} type="primary" ghost>
             View Changes
           </Button>
-         
+
         </div> : null }
-       
+
         <div>
         {!this.props.isNew ?
             <div className="loader">
@@ -540,12 +545,12 @@ class QueryDetails extends PureComponent {
           defaultActiveKey="1"
         >
           <TabPane tab="Basic" key="1">
-           
+
 
            <Form {...formItemLayout} labelAlign="left" ref={this.formRef} onFinish={this.handleOk} initialValues={{type: "roxie_query"}}>
             {this.state.enableEdit ?
             <div>
-           
+
               <Form.Item {...formItemLayout} label="Type" name="type">
                 <Radio.Group value={type} onChange={this.queryTypeChange}>
                   <Radio value={'roxie_query'}>Roxie Query</Radio>
@@ -596,9 +601,9 @@ class QueryDetails extends PureComponent {
                 pattern: new RegExp(/^[a-zA-Z0-9:._-]*$/),
                 message: 'Please enter a valid title',
               }]}>
-              <Input id="query_title" 
-              onChange={this.onChange} 
-              placeholder="Title" 
+              <Input id="query_title"
+              onChange={this.onChange}
+              placeholder="Title"
               disabled={!editingAllowed}
               className={this.state.enableEdit ? null : "read-only-input"}
               />
@@ -608,8 +613,8 @@ class QueryDetails extends PureComponent {
                   pattern: new RegExp(/^[a-zA-Z0-9:._-]*$/),
                   message: 'Please enter a valid name',
                 }]}>
-              <Input disabled={true} 
-              placeholder="Name" 
+              <Input disabled={true}
+              placeholder="Name"
               disabled={!editingAllowed}
               className={this.state.enableEdit ? null : "read-only-input"}
               />
@@ -617,11 +622,11 @@ class QueryDetails extends PureComponent {
 
             <Form.Item label="Description" name="description">
               {this.state.enableEdit?
-              <MarkdownEditor 
-              id="query_desc" 
+              <MarkdownEditor
+              id="query_desc"
               name="description"
               onChange={this.onChange}
-               targetDomId="queryDescr" 
+               targetDomId="queryDescr"
                disabled={!editingAllowed}/>
                :
                <div className="read-only-markdown"><ReactMarkdown source={this.state.query.description} /> </div>
@@ -632,11 +637,11 @@ class QueryDetails extends PureComponent {
                 message: 'Please enter a valid URL'
               }]}>
                 {this.state.enableEdit ?
-              <Input id="query_url" 
+              <Input id="query_url"
               onChange={this.onChange}
-               placeholder="URL" 
+               placeholder="URL"
                disabled={!editingAllowed}
-               className={this.state.enableEdit ? null : "read-only-input"}/> : 
+               className={this.state.enableEdit ? null : "read-only-input"}/> :
                <textarea className="read-only-textarea" />
                 }
             </Form.Item>
@@ -645,10 +650,10 @@ class QueryDetails extends PureComponent {
                 message: 'Please enter a valid URL'
               }]}>
                 {this.state.enableEdit ?
-              <Input 
-              id="query_gitRepo" 
-              onChange={this.onChange} 
-              placeholder="Git Repo URL" 
+              <Input
+              id="query_gitRepo"
+              onChange={this.onChange}
+              placeholder="Git Repo URL"
               disabled={!editingAllowed}
               className={this.state.enableEdit ? null : "read-only-input"}/> :
               <textarea className="read-only-textarea" />}
@@ -711,13 +716,13 @@ class QueryDetails extends PureComponent {
               Save
             </Button>
           </div>
-        : 
+        :
         <div className="button-container">
-       
+
         <Button key="back" onClick={this.handleCancel}>
           Cancel
         </Button>
-       
+
       </div>}
       </React.Fragment>
     );

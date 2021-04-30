@@ -412,7 +412,11 @@ class IndexDetails extends PureComponent {
       visible: false,
     });
     //this.props.onClose();
-    this.props.history.push('/' + this.props.application.applicationId + '/assets')
+    if(this.props.history) {
+      this.props.history.push('/' + this.props.application.applicationId + '/assets')
+    } else {
+      document.querySelector('button.ant-modal-close').click();
+    }
   }
 
   onClusterSelection = (value) => {
@@ -607,7 +611,7 @@ class IndexDetails extends PureComponent {
                    targetDomId="indexDescr"
                     disabled={!editingAllowed}/>
                 :
-                <div className="read-only-markdown">   <ReactMarkdown source={this.state.index.description} /></div>         
+                <div className="read-only-markdown">   <ReactMarkdown source={this.state.index.description} /></div>
                 }
               </Form.Item>
 
@@ -695,12 +699,12 @@ class IndexDetails extends PureComponent {
           </Button>
         </div> :
          <div className="button-container">
-       
+
          <Button key="back" onClick={this.handleCancel}>
            Cancel
          </Button>
-        
-       </div> 
+
+       </div>
          }
       </React.Fragment>
     );

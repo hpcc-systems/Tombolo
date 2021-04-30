@@ -128,8 +128,13 @@ router.get('/index_details', [
   console.log("[index_details/read.js] - Get index details for app_id = " + req.query.app_id + " and index_id "+req.query.index_id);
   var basic = {}, results={};
   try {
-    assetUtil.indexInfo(req.query.app_id, req.query.index_id).then((fileInfo) => {
-      res.json(fileInfo);
+    assetUtil.indexInfo(req.query.app_id, req.query.index_id).then((indexInfo) => {
+      if(indexInfo && indexInfo.basic) {
+        res.json(indexInfo);
+      } else {
+        return res.status(500).json({ success: false, message: "Index details not found. Please check if the index exists in Assets." });
+      }
+
     })
     .catch(function(err) {
       console.log(err);

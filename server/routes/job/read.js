@@ -552,7 +552,7 @@ router.post('/saveJob', [
               dependsOnJobId: jobId
             });
           });
-          
+
           await Promise.all(promises);
           return res.json({
             success: true,
@@ -699,41 +699,45 @@ router.get('/job_details', [
       include: [JobFile, JobParam],
       attributes: { exclude: ['assetId'] },
     }).then(async function(job) {
-      var jobData = job.get({ plain: true });
-      for (jobFileIdx in jobData.jobfiles) {
-        var jobFile = jobData.jobfiles[jobFileIdx];
-        var file = await File.findOne({where:{"application_id":req.query.app_id, "id":jobFile.file_id}});
-        if (file != undefined) {
-          jobFile.description = file.description;
-          jobFile.groupId = file.groupId;
-          jobFile.title = file.title;
-          jobFile.name = file.name;
-          jobFile.fileType = file.fileType;
-          jobFile.qualifiedPath = file.qualifiedPath;
-          jobData.jobfiles[jobFileIdx] = jobFile;
+      if(job) {
+        var jobData = job.get({ plain: true });
+        for (jobFileIdx in jobData.jobfiles) {
+          var jobFile = jobData.jobfiles[jobFileIdx];
+          var file = await File.findOne({where:{"application_id":req.query.app_id, "id":jobFile.file_id}});
+          if (file != undefined) {
+            jobFile.description = file.description;
+            jobFile.groupId = file.groupId;
+            jobFile.title = file.title;
+            jobFile.name = file.name;
+            jobFile.fileType = file.fileType;
+            jobFile.qualifiedPath = file.qualifiedPath;
+            jobData.jobfiles[jobFileIdx] = jobFile;
+          }
         }
-      }
-      if (req.query.dataflow_id) {
-        let assetDataflow = await AssetDataflow.findOne({
-          where: { assetId: req.query.job_id, dataflowId: req.query.dataflow_id }
-        });
-        let dependentJobs = await DependentJobs.findAll({
-          where: { jobId: req.query.job_id, dataflowId: req.query.dataflow_id }
-        });
-        if (assetDataflow && assetDataflow.cron !== null) {
-          jobData.schedule = {
-            type: 'Time',
-            cron: assetDataflow.cron
-          };
-        } else if (dependentJobs.length > 0) {
-          jobData.schedule = {
-            type: 'Predecessor',
-            jobs: []
-          };
-          dependentJobs.map(job => jobData.schedule.jobs.push(job.dependsOnJobId));
+        if (req.query.dataflow_id) {
+          let assetDataflow = await AssetDataflow.findOne({
+            where: { assetId: req.query.job_id, dataflowId: req.query.dataflow_id }
+          });
+          let dependentJobs = await DependentJobs.findAll({
+            where: { jobId: req.query.job_id, dataflowId: req.query.dataflow_id }
+          });
+          if (assetDataflow && assetDataflow.cron !== null) {
+            jobData.schedule = {
+              type: 'Time',
+              cron: assetDataflow.cron
+            };
+          } else if (dependentJobs.length > 0) {
+            jobData.schedule = {
+              type: 'Predecessor',
+              jobs: []
+            };
+            dependentJobs.map(job => jobData.schedule.jobs.push(job.dependsOnJobId));
+          }
         }
+        return jobData;
+      } else {
+        return res.status(500).json({ success: false, message: "Job details could not be found. Please check if the job exists in Assets. " });
       }
-      return jobData;
     }).then(function(jobData) {
         res.json(jobData);
     })

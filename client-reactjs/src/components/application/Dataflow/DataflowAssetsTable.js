@@ -85,13 +85,14 @@ function DataflowAssetsTable({applicationId, selectedDataflow, user}) {
   {
     title: 'Name',
     dataIndex: 'name',
-    width: '60%',
+    width: '30%',
+    ellipsis: true,
     render: (text, record) => <a href='#' onClick={(row) => handleEdit(record.id, record.objType)}>{text}</a>
   },
   {
     title: 'Description',
     dataIndex: 'description',
-    width: '60%',
+    width: '30%',
   },
   {
     title: 'Created Date',
@@ -101,7 +102,7 @@ function DataflowAssetsTable({applicationId, selectedDataflow, user}) {
   {
     title: 'Owner',
     dataIndex: 'contact',
-    width: '30%',
+    width: '20%',
   },
   {
     title: 'Type',
