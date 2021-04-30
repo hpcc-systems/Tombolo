@@ -63,5 +63,3 @@ app.use('/api/groups', tokenService.verifyToken, groups);
 //process.env["NODE_TLS_REJECT_UNAUTHORIZED"] = 0;
 
 app.listen(3000, '0.0.0.0', () => console.log('Server listening on port 3000!'));
-
-
