@@ -1017,7 +1017,13 @@ class JobDetails extends Component {
     fetch('/api/job/executeJob', {
       method: 'post',
       headers: authHeader(),
-      body: JSON.stringify({clusterId : _self.state.selectedCluster, jobName: _self.formRef.current.getFieldValue('name')})
+      body: JSON.stringify({
+        clusterId : _self.state.selectedCluster,
+        jobName: _self.formRef.current.getFieldValue('name'),
+        jobId: _self.state.job.id,
+        dataflowId: _self.props.selectedDataflow.id,
+        applicationId: _self.props.application.applicationId
+      })
     }).then(function(response) {
       if(response.ok) {
         return response.json();

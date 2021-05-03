@@ -30,7 +30,8 @@ if (parentPort) {
         dataflowId: workerData.dataflowId,
         applicationId: workerData.applicationId,
         wuid: wuid,
-        clusterId: workerData.clusterId
+        clusterId: workerData.clusterId,
+        status: 'submitted'
       }
     }).then((results, created) => {
       let jobExecutionId = results[0].id;
@@ -39,7 +40,8 @@ if (parentPort) {
           jobId: workerData.jobId,
           dataflowId: workerData.dataflowId,
           applicationId: workerData.applicationId,
-          wuid: wuid
+          wuid: wuid,
+          status: 'submitted'
         },
         {where: {id: jobExecutionId}})
       }

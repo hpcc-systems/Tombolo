@@ -105,13 +105,17 @@ class Graph extends Component {
   }
 
   componentWillReceiveProps(props) {
-    if(this.state.applicationId && this.state.applicationId != props.applicationId || this.state.selectedDataflow != props.selectedDataflow ) {
+    if(this.state.applicationId && this.state.applicationId != props.applicationId ||
+      this.state.selectedDataflow != props.selectedDataflow) {
       this.setState({
         applicationId: props.applicationId,
         selectedDataflow: props.selectedDataflow
       }, function() {
         //this.fetchSavedGraph();
       });
+    }
+    if(props.workflowDetails && props.workflowDetails.wuDetails.length > 0) {
+      this.updateCompletionStatus(props.workflowDetails);
     }
 
     if(props.saveResponse && props.saveResponse.success) {
@@ -252,10 +256,10 @@ class Graph extends Component {
       .on("end", console.log('blink ending'))*/
   }
 
-  updateCompletionStatus = () => {
+  updateCompletionStatus = (workflowDetails) => {
     let _self=this;
-    if(this.props.workflowDetails) {
-      let completedTasks = this.getTaskDetails();
+    if(workflowDetails) {
+      let completedTasks = _self.getTaskDetails(workflowDetails);
       d3.selectAll('text.tick').remove();
       d3.selectAll('.node rect').attr('stroke', 'grey');
       d3.selectAll('.node rect').classed("warning", false);
@@ -292,11 +296,12 @@ class Graph extends Component {
     }
   }
 
-  getTaskDetails = () => {
+  getTaskDetails = (workflowDetails) => {
+    let _self = this;
     let completedTasks = [];
-    if(this.props.workflowDetails.wuDetails) {
-      this.props.workflowDetails.wuDetails.forEach((workflowDetail) => {
-        let nodeObj = this.thisGraph.nodes.filter((node) => {
+    if(workflowDetails.wuDetails) {
+      workflowDetails.wuDetails.forEach((workflowDetail) => {
+        let nodeObj = _self.thisGraph.nodes.filter((node) => {
           return (node.fileId == workflowDetail.task || node.jobId == workflowDetail.task || node.indexId == workflowDetail.task)
         })
         if(nodeObj[0] && nodeObj[0].id) {
@@ -307,7 +312,7 @@ class Graph extends Component {
             "wu_start": workflowDetail.wu_start,
             "wu_end": workflowDetail.wu_end,
             "wu_duration": workflowDetail.wu_duration,
-            "cluster": this.props.workflowDetails.cluster
+            "cluster": workflowDetails.cluster
           })
         }
       });
@@ -531,7 +536,7 @@ class Graph extends Component {
         _self.setIdCt(nodes.length);
         _self.updateGraph();
 
-        this.updateCompletionStatus();
+        //this.updateCompletionStatus();
       }).catch(error => {
         console.log(error);
       });

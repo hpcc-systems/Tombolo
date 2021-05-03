@@ -786,8 +786,14 @@ router.post('/delete', [
 router.post('/executeJob', [
   body('clusterId')
       .isUUID(4).withMessage('Invalid cluster id'),
-    body('jobName')
-      .matches(/^[a-zA-Z]{1}[a-zA-Z0-9_.\-:]*$/).withMessage('Invalid job name'),
+  body('jobId')
+      .isUUID(4).withMessage('Invalid job id'),
+  body('applicationId')
+      .isUUID(4).withMessage('Invalid dataflow id'),
+  body('dataflowId')
+      .isUUID(4).withMessage('Invalid application id'),
+  body('jobName')
+    .matches(/^[a-zA-Z]{1}[a-zA-Z0-9_.\-:]*$/).withMessage('Invalid job name'),
 ], async (req, res) => {
   const errors = validationResult(req).formatWith(validatorUtil.errorFormatter);
   if (!errors.isEmpty()) {
@@ -796,6 +802,33 @@ router.post('/executeJob', [
   try {
     let wuid = await hpccUtil.getJobWuidByName(req.body.clusterId, req.body.jobName);
     let wuResubmitResult = await hpccUtil.resubmitWU(req.body.clusterId, wuid);
+    //record workflow execution
+    await JobExecution.findOrCreate({
+      where: {
+        jobId: req.body.jobId,
+        applicationId: req.body.applicationId
+      },
+      defaults: {
+        jobId: req.body.jobId,
+        dataflowId: req.body.dataflowId,
+        applicationId: req.body.applicationId,
+        wuid: wuid,
+        clusterId: req.body.clusterId,
+        status: 'submitted'
+      }
+    }).then((results, created) => {
+      let jobExecutionId = results[0].id;
+      if(!created) {
+        return JobExecution.update({
+          jobId: req.body.jobId,
+          dataflowId: req.body.dataflowId,
+          applicationId: req.body.applicationId,
+          wuid: wuid,
+          status: 'submitted'
+        },
+        {where: {id: jobExecutionId}})
+      }
+    })
     res.json({"result":"success"});
   } catch (err) {
     console.error('err', err);

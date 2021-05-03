@@ -68,7 +68,7 @@ function AssetsTable({selectedGroup, handleEditGroup, refreshGroups}) {
     .then(data => {
     //Converting Markdown to plain text
     const converter = new showdown.Converter()
-    data.map(item =>  item.description = converter.makeHtml(item.description).replace(/<[^>]*>/g, ''))
+    data.map(item =>  item.description ? item.description = converter.makeHtml(item.description).replace(/<[^>]*>/g, '') : '')
     setAssets(data);
 
 
@@ -227,7 +227,7 @@ function AssetsTable({selectedGroup, handleEditGroup, refreshGroups}) {
     width: '25%',
     ellipsis: true,
     render: (text, record) => {
-      return text.split('\n')[0]
+      return text ? text.split('\n')[0] : ''
     }
   },
   {
