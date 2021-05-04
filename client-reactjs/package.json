@@ -1,6 +1,6 @@
 {
-  "name": "client",
-  "version": "0.1.0",
+  "name": "Tombolo",
+  "version": "1.0.0",
   "private": true,
   "dependencies": {
     "@hpcc-js/codemirror": "^2.38.0",

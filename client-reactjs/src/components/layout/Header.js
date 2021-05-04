@@ -33,7 +33,8 @@ class AppHeader extends Component {
       loading: false,
       oldpassword: '',
       newpassword: '',
-      confirmnewpassword: ''
+      confirmnewpassword: '',
+      isAboutModalVisible: false
     }
 
     componentWillReceiveProps(props) {
@@ -259,6 +260,18 @@ class AppHeader extends Component {
       });
     }
 
+    handleAboutClose = () => {
+      this.setState({
+        isAboutModalVisible: false
+      });
+    }
+
+    openAboutModal = () => {
+      this.setState({
+        isAboutModalVisible: true
+      });
+    }
+
   render() {
     const applicationId = this.props.application ? this.props.application.applicationId : '';
     const selectedTopNav = (window.location.pathname.indexOf("/admin") != -1) ? "/admin/applications" : (applicationId != '' ? "/" + applicationId + "/dataflow" : "/dataflow")
@@ -272,6 +285,7 @@ class AppHeader extends Component {
     const helpMenu = (
       <Menu>
         <Menu.Item key="1"><a href="" type="link" target={"_blank"} rel="noopener noreferrer" href={process.env.PUBLIC_URL + "/Tombolo-User-Guide.pdf"}>User Guide</a></Menu.Item>
+        <Menu.Item key="2"><a href="#" onClick={this.openAboutModal}>About</a></Menu.Item>
       </Menu>
     );
 
@@ -360,7 +374,14 @@ class AppHeader extends Component {
           </Form.Item>
 
         </Modal>
-
+        <Modal title="Tombolo" visible={this.state.isAboutModalVisible}
+          footer={[
+            <Button key="close" onClick={this.handleAboutClose}>
+              Close
+            </Button>
+            ]}>
+          <p className="float-left font-weight-bold">Tombolo v{process.env.REACT_APP_VERSION}</p>
+        </Modal>
        </React.Fragment>
     )
   }
