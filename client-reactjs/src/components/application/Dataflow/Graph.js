@@ -461,7 +461,12 @@ class Graph extends Component {
       handleError(response);
     }).then(data => {
       console.log(`Saved asset ${assetId} to dataflow ${dataflowId}...`);
-      if(assetType == 'Job') {
+      if(assetType == 'Job'
+        || assetType == 'Modeling'
+        || assetType == 'Scoring'
+        || assetType == 'ETL'
+        || assetType == 'Query Build'
+        || assetType == 'Data Profile') {
         this.createJobFileRelationship(assetId, dataflowId);
       }
     });
