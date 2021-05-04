@@ -24,7 +24,7 @@ exports.notify = (notification) => {
   const mailOptions = {
     to: notification.to,
     from: notification.from,
-    subject: notification,
+    subject: notification.subject,
     text: notification.message,
     html: notification.html
   };

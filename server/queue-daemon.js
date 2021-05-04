@@ -74,7 +74,7 @@ class QueueDaemon {
           let wuInfo = await hpccUtil.workunitInfo(msgJson.wuid, cluster);
           if(wuInfo.Workunit.State == 'completed' || wuInfo.Workunit.State == 'wait' || wuInfo.Workunit.State == 'blocked') {
             await JobScheduler.scheduleCheckForJobsWithSingleDependency(wuInfo.Workunit.Jobname);
-            Job.findOne({where: {name: wuInfo.Workunit.Jobname}, attributes: {exclude: ['assetId']}}).then(async (job) => {
+            /*Job.findOne({where: {name: wuInfo.Workunit.Jobname}, attributes: {exclude: ['assetId']}}).then(async (job) => {
               console.log(job.contact)
               if(job.contact) {
                 let cluster = await Cluster.findOne({where: {id: job.cluster_id}});
@@ -82,11 +82,11 @@ class QueueDaemon {
                   from: process.env.EMAIL_SENDER,
                   to: job.contact,
                   subject: job.name + ' Failed',
-                  html: '<p>Job '+job.name+' failed on '+cluster.name+' cluster</p>' +
+                  html: '<p>Job "'+job.name+'" failed on "'+cluster.name+'" cluster</p>' +
                     '<p>Workunit Id: '+msgJson.wuid+'</p>'
                 })
               }
-            })
+            })*/
           } else if(wuInfo.Workunit.State == 'failed') {
             Job.findOne({where: {name: wuInfo.Workunit.Jobname}, attributes: {exclude: ['assetId']}}).then(async (job) => {
               if(job.contact) {
@@ -95,8 +95,8 @@ class QueueDaemon {
                   from: process.env.EMAIL_SENDER,
                   to: job.contact,
                   subject: job.name + ' Failed',
-                  html: '<p>Job '+job.name+' failed on '+cluster.name+' cluster</p>' +
-                    '<p>Workunit Id: '+msgJson.wuid+'</p>'
+                  html: '<p>Job "'+job.name+'" failed on "'+cluster.name+'" cluster</p>' +
+                    '<p>Workunit Id: <a href="'+cluster.thor_host + ':' + cluster.thor_port + '/?Wuid='+msgJson.wuid+'&Widget=WUDetailsWidget">'+msgJson.wuid+'</a></p>'
                 })
               }
             })
