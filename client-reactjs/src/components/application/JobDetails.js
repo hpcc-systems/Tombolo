@@ -1253,9 +1253,9 @@ class JobDetails extends Component {
               </Form.Item>
               <Row type="flex">
                 <Col span={12} order={1}>
-                  <Form.Item {...threeColformItemLayout} label="Contact" name="contact" rules={[{
-                    pattern: new RegExp(/^[a-zA-Z0-9:$._-]*$/),
-                    message: 'Please enter a valid contact',
+                  <Form.Item {...threeColformItemLayout} label="Contact Email" name="contact" rules={[{
+                    type: 'email',
+                    message: 'Please enter a valid email address',
                   }]}>
                     {this.state.enableEdit ?
                     <Input id="job_bkp_svc"

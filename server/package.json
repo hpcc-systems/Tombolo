@@ -10,7 +10,6 @@
   "license": "ISC",
   "dependencies": {
     "@hpcc-js/comms": "^2.40.0",
-    "@sendgrid/mail": "^7.4.2",
     "activedirectory": "^0.7.2",
     "bcryptjs": "^2.4.3",
     "bree": "^6.2.0",
@@ -29,6 +28,7 @@
     "mongodb": "^3.6.5",
     "mongoose": "^5.12.1",
     "mysql2": "^1.7.0",
+    "nodemailer": "^6.6.0",
     "path": "^0.12.7",
     "request": "^2.88.2",
     "request-promise": "^4.2.6",

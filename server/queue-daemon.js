@@ -4,8 +4,11 @@ const { fs } = require('fs');
 const models = require('./models');
 const hpccUtil = require('./utils/hpcc-util');
 let JobExecution = models.job_execution;
+let Job = models.job;
+let Cluster = models.cluster;
 const JobScheduler = require('./job-scheduler');
 require('dotenv').config();
+const NotificationModule = require('./routes/notifications/email-notification');
 
 CompressionCodecs[CompressionTypes.Snappy] = SnappyCodec;
 const JOB_COMPLETE_TOPIC = process.env.JOB_COMPLETE_TOPIC;
@@ -69,9 +72,34 @@ class QueueDaemon {
         if(jobExecution) {
           let cluster = await hpccUtil.getCluster(jobExecution.clusterId)
           let wuInfo = await hpccUtil.workunitInfo(msgJson.wuid, cluster);
-          console.log('status: '+wuInfo.Workunit.State);
           if(wuInfo.Workunit.State == 'completed' || wuInfo.Workunit.State == 'wait' || wuInfo.Workunit.State == 'blocked') {
             await JobScheduler.scheduleCheckForJobsWithSingleDependency(wuInfo.Workunit.Jobname);
+            Job.findOne({where: {name: wuInfo.Workunit.Jobname}, attributes: {exclude: ['assetId']}}).then(async (job) => {
+              console.log(job.contact)
+              if(job.contact) {
+                let cluster = await Cluster.findOne({where: {id: job.cluster_id}});
+                NotificationModule.notify({
+                  from: process.env.EMAIL_SENDER,
+                  to: job.contact,
+                  subject: job.name + ' Failed',
+                  html: '<p>Job '+job.name+' failed on '+cluster.name+' cluster</p>' +
+                    '<p>Workunit Id: '+msgJson.wuid+'</p>'
+                })
+              }
+            })
+          } else if(wuInfo.Workunit.State == 'failed') {
+            Job.findOne({where: {name: wuInfo.Workunit.Jobname}, attributes: {exclude: ['assetId']}}).then(async (job) => {
+              if(job.contact) {
+                let cluster = await Cluster.findOne({where: {id: job.cluster_id}});
+                NotificationModule.notify({
+                  from: process.env.EMAIL_SENDER,
+                  to: job.contact,
+                  subject: job.name + ' Failed',
+                  html: '<p>Job '+job.name+' failed on '+cluster.name+' cluster</p>' +
+                    '<p>Workunit Id: '+msgJson.wuid+'</p>'
+                })
+              }
+            })
           }
           await JobExecution.update({
             status: wuInfo.Workunit.State,
@@ -81,7 +109,7 @@ class QueueDaemon {
         }
       }
     } catch(err) {
-      console.error(`JSON parse error ${err}`);
+      console.error(err);
     }
   }
 }
