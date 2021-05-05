@@ -62,6 +62,11 @@ class QueryDetails extends PureComponent {
 
        //Getting global state
     const {viewOnlyModeReducer} = store.getState()
+    if(viewOnlyModeReducer.addingNewAsset){
+      this.setState({
+        addingNewAsset : true
+      })
+    }
     if(viewOnlyModeReducer.editMode){
       this.setState({
         enableEdit : viewOnlyModeReducer.editMode,
@@ -80,6 +85,10 @@ class QueryDetails extends PureComponent {
     componentWillUnmount(){
       store.dispatch({
         type: Constants.ENABLE_EDIT,
+        payload: false
+      })
+      store.dispatch({
+        type:  Constants.ADD_ASSET,
         payload: false
       })
   }
@@ -551,6 +560,8 @@ class QueryDetails extends PureComponent {
             {this.state.enableEdit ?
             <div>
 
+          {this.state.addingNewAsset ?
+          <>
               <Form.Item {...formItemLayout} label="Type" name="type">
                 <Radio.Group value={type} onChange={this.queryTypeChange}>
                   <Radio value={'roxie_query'}>Roxie Query</Radio>
@@ -595,6 +606,8 @@ class QueryDetails extends PureComponent {
                   </Row>
                 </Form.Item>
                 </React.Fragment>
+              : null}
+            </>
               : null}
             </div> : null }
             <Form.Item label="Title" name="title" rules={[{ required: true, message: 'Please enter a title!' }, {
