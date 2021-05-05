@@ -22,6 +22,7 @@ app.use(limiter);
 const QueueDaemon = require('./queue-daemon');
 const JobScheduler = require('./job-scheduler');
 const assert = require('assert');
+
 const appRead = require('./routes/app/read');
 const fileRead = require('./routes/file/read');
 const indexRead = require('./routes/index/read');
@@ -59,4 +60,5 @@ app.use('/api/user', userRead);
 app.use('/api/groups', tokenService.verifyToken, groups);
 
 //process.env["NODE_TLS_REJECT_UNAUTHORIZED"] = 0;
+
 app.listen(3000, '0.0.0.0', () => console.log('Server listening on port 3000!'));
