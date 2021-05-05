@@ -48,7 +48,8 @@ class QueryDetails extends PureComponent {
       output: []
     },
     enableEdit: false,
-    editing: false
+    editing: false,
+    dataAltered: false
   }
 
   //querySearchSuggestions = [];
@@ -516,7 +517,8 @@ class QueryDetails extends PureComponent {
 
       this.setState({
         enableEdit: !this.state.enableEdit,
-        editing: false
+        editing: false,
+        dataAltered: true
       });
     }
 
@@ -717,13 +719,25 @@ class QueryDetails extends PureComponent {
             </Button>
           </div>
         :
-        <div className="button-container">
-
-        <Button key="back" onClick={this.handleCancel}>
-          Cancel
-        </Button>
-
-      </div>}
+        <div>
+          {this.state.dataAltered ?
+            <div className="button-container">
+            <Button key="back" onClick={this.handleCancel}>
+             Cancel
+            </Button>
+            <Button key="submit" disabled={!editingAllowed} type="primary" loading={confirmLoading} onClick={this.handleOk}>
+              Save
+            </Button>
+          </div>:
+            <div className="button-container">
+            <Button key="back" onClick={this.handleCancel}>
+             Cancel
+            </Button>
+          </div>
+  }
+        </div>
+      
+      }
       </React.Fragment>
     );
   }

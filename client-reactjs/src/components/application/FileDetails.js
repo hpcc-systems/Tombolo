@@ -67,7 +67,7 @@ class FileDetails extends PureComponent {
     },
     enableEdit: false,
     editing : false,
-
+    dataAltered : false
   };
 
   dataTypes = [];
@@ -707,10 +707,21 @@ class FileDetails extends PureComponent {
   };
 
   onChange = (e) => {
-    this.setState({
-      ...this.state,
-      file: { ...this.state.file, [e.target.name]: e.target.value },
-    });
+    if (this.setState.formValueChanged){
+      this.setState({
+        ...this.state,
+        file: { ...this.state.file, [e.target.name]: e.target.value },
+      })
+    }else{
+      this.setState({
+        ...this.state,
+        file: { ...this.state.file, [e.target.name]: e.target.value },
+        formValueChanged : true
+      })
+    }
+
+
+    
   };
 
   onCheckbox = (e) => {
@@ -1176,25 +1187,27 @@ class FileDetails extends PureComponent {
 
       this.setState({
         enableEdit: !this.state.enableEdit,
-        editing: false
+        editing: false,
+        dataAltered: true
       });
     }
 
 
     return (
       <React.Fragment>
-        {!this.state.enableEdit  && editingAllowed ?  <div className="button-container edit-toggle-btn">
+        {!this.state.enableEdit  && editingAllowed ?  
+        <div className="button-container edit-toggle-btn">
           <Button type="primary" onClick={makeFieldsEditable}>
             Edit
           </Button>
+        </div> :  
 
-        </div> : null }
-        {this.state.editing ?  <div className="button-container view-change-toggle-btn" >
+   <div className="button-container view-change-toggle-btn" >
           <Button  onClick={switchToViewOnly} type="primary" ghost>
             View Changes
           </Button>
 
-        </div> : null }
+        </div>  }
 
 
 
@@ -1680,12 +1693,31 @@ class FileDetails extends PureComponent {
             Save
           </Button>
         </div> :
+        <div>
+          {this.state.dataAltered ? 
+        
           <div className="button-container">
-
           <Button key="back" onClick={this.handleCancel}>
             Cancel
           </Button>
-
+          <Button
+            key="submit"
+            disabled={!editingAllowed}
+            type="primary"
+            loading={confirmLoading}
+            onClick={this.handleOk}
+          >
+            Save
+          </Button>
+        </div>
+          :
+          <div className="button-container">
+          <Button key="back" onClick={this.handleCancel}>
+            Cancel
+          </Button>
+         
+        </div>
+  }
         </div>
          }
       </React.Fragment>

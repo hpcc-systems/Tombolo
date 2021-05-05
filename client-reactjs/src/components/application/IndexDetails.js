@@ -48,8 +48,8 @@ class IndexDetails extends PureComponent {
       nonKeyedColumns:[]
     },
     enableEdit: false,
-    editing: false
-
+    editing: false,
+    dataAltered : false
   }
 
   //Mounting Phase
@@ -504,7 +504,8 @@ class IndexDetails extends PureComponent {
 
         this.setState({
           enableEdit: !this.state.enableEdit,
-          editing: false
+          editing: false,
+          dataAltered: true
         });
       }
 
@@ -698,13 +699,27 @@ class IndexDetails extends PureComponent {
             Save
           </Button>
         </div> :
-         <div className="button-container">
+        <div>
+          {this.state.dataAltered ? 
+           <div className="button-container">
+           <Button key="back" onClick={this.handleCancel}>
+             Cancel
+           </Button>
+           <Button key="submit" disabled={!editingAllowed} type="primary" loading={confirmLoading} onClick={this.handleOk}>
+            Save
+          </Button>
+           </div>
+           :
+           <div className="button-container">
+           <Button key="back" onClick={this.handleCancel}>
+             Cancel
+           </Button>
+           </div>
+          }
+        </div>
+        
 
-         <Button key="back" onClick={this.handleCancel}>
-           Cancel
-         </Button>
-
-       </div>
+    
          }
       </React.Fragment>
     );

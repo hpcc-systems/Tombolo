@@ -109,7 +109,8 @@ class JobDetails extends Component {
       outputFiles: []
     },
     enableEdit: false,
-    editing: false
+    editing: false,
+    dataAltered: false
   }
 
   componentDidMount() {
@@ -1112,7 +1113,8 @@ class JobDetails extends Component {
 
       this.setState({
         enableEdit: !this.state.enableEdit,
-        editing: false
+        editing: false,
+        dataAltered: true
       });
     }
 
@@ -1536,12 +1538,25 @@ class JobDetails extends Component {
               Save
             </Button>
           </div> :
-
-          <div className="button-container">
-          <Button key="back" onClick={this.handleCancel}>
-            Cancel
-          </Button>
+          <div>
+            {this.state.dataAltered ?
+             <div className="button-container">
+              <Button key="back" onClick={this.handleCancel}>
+                Cancel
+              </Button>
+              <Button key="submit" disabled={!editingAllowed} type="primary" loading={confirmLoading} onClick={this.handleOk}>
+              Save
+            </Button>
+            </div> : 
+              <div className="button-container">
+              <Button key="back" onClick={this.handleCancel}>
+                Cancel
+              </Button>  
+            </div>
+  }
           </div>
+
+         
 
            }
         </div>
