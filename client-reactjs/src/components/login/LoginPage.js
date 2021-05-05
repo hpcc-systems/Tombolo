@@ -108,7 +108,7 @@ class LoginPage extends React.Component {
       message.error("Passwords does not match.");
       return;
     }
-    const strongRegex = new RegExp("^(?=.*[a-z])(?=.*[A-Z])(?=.*[0-9])(?=.*[!@#\$%\^&\*])(?=.{8,})");
+    const strongRegex = new RegExp("^(?=.*[a-z])(?=.*[A-Z])(?=.*[0-9])(?=.*[!@#\$%^&\*])(?=.{8,})");
     if(!strongRegex.test(this.state.newPassword)) {
       message.error("Weak Password. To make passwords stronger, it must be minimum 8 characters long, contain upper and lower case letters, numbers, and special characters.")
       return;
