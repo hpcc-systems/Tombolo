@@ -11,8 +11,6 @@ const limiter = rateLimit({
 });
 
 app.use(express.json());
-
-
 app.use(function(req, res, next) {
   //res.header("Access-Control-Allow-Origin", "*");
   //res.header("Access-Control-Allow-Headers", "Origin, X-Requested-With, Content-Type, Accept");
@@ -24,8 +22,6 @@ app.use(limiter);
 const QueueDaemon = require('./queue-daemon');
 const JobScheduler = require('./job-scheduler');
 const assert = require('assert');
-
-
 const appRead = require('./routes/app/read');
 const fileRead = require('./routes/file/read');
 const indexRead = require('./routes/index/read');
