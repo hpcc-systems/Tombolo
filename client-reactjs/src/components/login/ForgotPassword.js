@@ -26,49 +26,6 @@ class ForgotPassword extends React.Component {
     this.setState({ [name]: value });
   }
 
-  // handleSubmit = (e) => {
-  // 	e.preventDefault();
-	// 	this.setState({ submitted: true });
-	// 	if(this.state.email) {
-  //     this.setState({sendingEmail: true})
-	//   	fetch('/api/user/forgot-password', {
-	//       method: 'post',
-	//       headers: {
-	//         'Accept': 'application/json',
-	//         'Content-Type': 'application/json'
-	//       },
-	//       body: JSON.stringify({ email: this.state.email })
-	//     }).then(response => {
-  //       console.log(response , "<<<< response")
-
-	// 			message.config({top:110})
-	// 			if(response.ok) {
-  //         this.setState({sendingEmail: false})
-	// 				response.text().then(text => {
-  //           console.log("message: "+text);
-  //           this.setState({success : true, submitted: false})
-  //           //message.error(JSON.parse(text).errors[0]);    
-  //           // setTimeout(() => {
-	// 		      //   window.location = JSON.parse(text).resetUrl;
-	// 		      // }, 1000);
-  //         }
-  //         )
-		    	
-	// 	    } 
-  //       // else {
-
-  //       //   response.text().then(text => console.log("Error >>>>" , text, text.errors))
-  //       //   // this.setState({sendingEmail: false, submitted: false})
-	// 	    // 	// message.error("There was a problem sending the password reset instructions")
-	// 	    // }
-	//     }
-  //     ).catch(error => {
-
-	//     });
-	//   }
-  // }
-
-
   handleSubmit = (e) => {
   	e.preventDefault();
    if(!this.state.email){
