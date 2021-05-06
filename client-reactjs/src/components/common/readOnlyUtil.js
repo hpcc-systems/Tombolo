@@ -11,3 +11,7 @@ export const editableMode = () =>  store.dispatch({
     payload: true
   })
 
+export const addingAssetMode = () => store.dispatch({
+  type: Constants.ADD_ASSET,
+  payload: true
+})

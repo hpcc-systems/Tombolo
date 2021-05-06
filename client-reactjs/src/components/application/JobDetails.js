@@ -128,6 +128,11 @@ class JobDetails extends Component {
 
     //Getting global state
     const {viewOnlyModeReducer} = store.getState()
+    if(viewOnlyModeReducer.addingNewAsset){
+      this.setState({
+        addingNewAsset : true
+      })
+    }
     if(viewOnlyModeReducer.editMode){
       this.setState({
         enableEdit : viewOnlyModeReducer.editMode,
@@ -144,9 +149,13 @@ class JobDetails extends Component {
 
     //Unmounting phase
     componentWillUnmount(){
-
       store.dispatch({
         type: Constants.ENABLE_EDIT,
+        payload: false
+      })
+
+      store.dispatch({
+        type:  Constants.ADD_ASSET,
         payload: false
       })
   }
@@ -1145,9 +1154,10 @@ class JobDetails extends Component {
           <Tabs defaultActiveKey="1">
 
             <TabPane tab="Basic" key="1">
-              {/*{this.props.isNewIndex ?*/}
               {this.state.enableEdit ?
               <div>
+                {this.state.addingNewAsset ?
+                <>
               <Form.Item {...formItemLayout} label="Cluster" name="clusters">
                 <Select placeholder="Select a Cluster" disabled={!editingAllowed} onChange={this.onClusterSelection} style={{ width: 190 }}>
                   {this.props.clusters.map(cluster => <Option key={cluster.id}>{cluster.name}</Option>)}
@@ -1182,6 +1192,8 @@ class JobDetails extends Component {
                   </Col>
                 </Row>
               </Form.Item>
+              </>
+              : null}
               </div> : null }
 
               <Form.Item label="Name" name="name" rules={[{ required: true, message: 'Please enter a Name!' }, {

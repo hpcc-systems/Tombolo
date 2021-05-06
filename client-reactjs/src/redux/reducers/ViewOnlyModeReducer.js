@@ -1,7 +1,8 @@
 import { Constants } from '../../components/common/Constants';
 
 const initialState = {
-  editMode: false
+  editMode: false,
+  addingNewAsset: false
 };
 
 export function viewOnlyModeReducer(state = initialState, action) {
@@ -11,6 +12,12 @@ export function viewOnlyModeReducer(state = initialState, action) {
         ...state,
       editMode : action.payload
       };
+      case Constants.ADD_ASSET:
+        return {
+          ...state,
+        addingNewAsset : action.payload,
+        editMode: action.payload
+        };
     default:
       return state
   }

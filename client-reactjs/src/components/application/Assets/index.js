@@ -16,7 +16,7 @@ import useOnClickOutside from '../../../hooks/useOnClickOutside';
 import { DeleteOutlined, EditOutlined, QuestionCircleOutlined, FolderOutlined, DownOutlined, BarsOutlined, SearchOutlined, SettingOutlined } from '@ant-design/icons';
 import TitleRenderer from "./TitleRenderer.js"
 import { flatten } from "../../common/CommonUtil.js";
-import {editableMode} from "../../common/readOnlyUtil"
+import {editableMode, addingAssetMode } from "../../common/readOnlyUtil"
 
 const { TreeNode, DirectoryTree } = Tree;
 const { SubMenu } = Menu;
@@ -453,10 +453,10 @@ function Assets(props) {
 
   const menu = (
     <Menu onClick={handleMenuClick}>
-      <Menu.Item key="File" onClick={editableMode}><i className="fa fa-lg fa-file"></i> File</Menu.Item>
-      <Menu.Item key="Index" onClick={editableMode}><i className="fa fa-lg fa-indent"></i> Index</Menu.Item>
-      <Menu.Item key="Query" onClick={editableMode}><i className="fa fa-lg fa-search"></i> Query</Menu.Item>
-      <Menu.Item key="Job" onClick={editableMode}><i className="fa fa-lg fa-clock-o"></i> Job</Menu.Item>
+      <Menu.Item key="File" onClick={addingAssetMode}><i className="fa fa-lg fa-file"></i> File</Menu.Item>
+      <Menu.Item key="Index" onClick={addingAssetMode}><i className="fa fa-lg fa-indent"></i> Index</Menu.Item>
+      <Menu.Item key="Query" onClick={addingAssetMode}><i className="fa fa-lg fa-search"></i> Query</Menu.Item>
+      <Menu.Item key="Job" onClick={addingAssetMode}><i className="fa fa-lg fa-clock-o"></i> Job</Menu.Item>
     </Menu>
   );
 

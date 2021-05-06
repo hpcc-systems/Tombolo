@@ -81,7 +81,12 @@ class FileDetails extends PureComponent {
       this.setClusters();
     }
     //Getting global state
-    const {viewOnlyModeReducer} = store.getState()
+    const {viewOnlyModeReducer} = store.getState();
+    if(viewOnlyModeReducer.addingNewAsset){
+      this.setState({
+        addingNewAsset : true
+      })
+    }
     if(viewOnlyModeReducer.editMode){
       this.setState({
         enableEdit : viewOnlyModeReducer.editMode,
@@ -101,6 +106,11 @@ class FileDetails extends PureComponent {
   componentWillUnmount(){
       store.dispatch({
         type: Constants.ENABLE_EDIT,
+        payload: false
+      })
+
+      store.dispatch({
+        type:  Constants.ADD_ASSET,
         payload: false
       })
   }
@@ -1228,6 +1238,8 @@ class FileDetails extends PureComponent {
               >
                 {this.state.enableEdit ?
                 <div>
+                  {this.state.addingNewAsset ? 
+                  <>
                   <Form.Item label="Type">
                     <Radio.Group
                       onChange={this.fileTypeChange}
@@ -1300,6 +1312,8 @@ class FileDetails extends PureComponent {
                       </Form.Item>
                     </React.Fragment>
                   ) : null}
+                  </>
+                  :null}
                 </div>
                 :
                 null}

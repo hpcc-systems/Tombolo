@@ -5,6 +5,9 @@ const { body, query, check, validationResult } = require('express-validator');
 const errorFormatter = ({ location, msg, param, value, nestedErrors }) => {
   return `${msg}`;
 };
+const chalk = require("chalk");
+const jwt = require('jsonwebtoken');
+const { JsonWebTokenError } = require('jsonwebtoken');
 // routes
 router.get('/searchuser', searchUser);
 router.post('/authenticate', authenticate);
@@ -124,13 +127,14 @@ router.post('/registerUser', [
 })
 
 router.post('/forgot-password', [
-  body('username')
-    .matches(/^[a-zA-Z]{1}[a-zA-Z0-9_-]*$/).withMessage('Invalid User Name'),
+  body('email')
+    .isEmail().withMessage('Invalid E-mail'),
 ], (req, res, next) => {
   const errors = validationResult(req).formatWith(errorFormatter);
   if (!errors.isEmpty()) {
     return res.status(422).json({ success: false, errors: errors.array() });
   }
+
   userService.forgotPassword(req, res)
   .then((response) => {
     res.status(response.statusCode).json(response.message);
@@ -140,16 +144,21 @@ router.post('/forgot-password', [
   })
 })
 
-router.post('/resetPassword', [
+
+
+router.post('/resetPassword'
+, [
   body('id')
-    .isUUID(4).withMessage('Invalid id'),
+  .isLength({ min: 36 }).withMessage('Invalid id'),
   body('password').optional({checkFalsy:true}).isLength({ min: 4 })
-], (req, res, next) => {
-  const errors = validationResult(req).formatWith(errorFormatter);
-  if (!errors.isEmpty()) {
-    return res.status(422).json({ success: false, errors: errors.array() });
-  }
-  userService.resetPassword(req, res)
+]
+, (req, res, next) => {
+      const errors = validationResult(req).formatWith(errorFormatter);
+    if (!errors.isEmpty()) {
+      return res.status(422).json({ success: false, errors: errors.array() });
+    }
+
+   userService.resetPassword(req, res)
   .then((response) => {
     res.status(response.statusCode).json({"success":"true"});
   })
@@ -157,4 +166,5 @@ router.post('/resetPassword', [
     console.log(err);
     res.status(500).json({ errors: [err.message] });
   })
+
 })

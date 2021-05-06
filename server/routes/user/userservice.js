@@ -7,6 +7,7 @@ let User = models.user;
 const Sequelize = require('sequelize');
 let UserApplication = models.user_application;
 const authServiceUtil = require('../../utils/auth-service-utils');
+const chalk = require("chalk")
 
 async function authenticate(req, res, { username, password }) {
     var authServiceUrl = process.env.AUTH_SERVICE_URL + '/login';
@@ -300,7 +301,7 @@ async function forgotPassword(req, res) {
         "content-type": "application/json"
       },
       json: {
-        "username": req.body.username,
+        "email": req.body.email,
         "clientId": process.env.AUTHSERVICE_TOMBOLO_CLIENT_ID,
         "resetUrl": process.env.TOMBOLO_PASSWORD_RESET_URL
       }
@@ -316,6 +317,7 @@ async function forgotPassword(req, res) {
     });
   });
 }
+
 
 async function resetPassword(req, res) {
   var authServiceUrl = process.env.AUTH_SERVICE_URL + '/resetPassword';
