@@ -306,13 +306,15 @@ async function forgotPassword(req, res) {
         "resetUrl": process.env.TOMBOLO_PASSWORD_RESET_URL
       }
     }, function(err, response, body) {
-      if (response.statusCode == 422) {
-        reject(new Error(body.errors.concat(',')));
-      }
-      if (response.statusCode != 200) {
-        reject(body);
-      } else {
+      console.log(response.body,  "<<< response from auth service")
+      if(response.body.success){
         resolve({'statusCode': response.statusCode, 'message': body});
+        res.status(200).json({ "success": true})
+
+      }else{
+        // res.status(500).json({"success" : false, "message" : response.body.message})
+        // reject(new Error(body.errors.concat(',')));
+        res.status(500).json({ "success": false, errors: [response.body.message]  })
       }
     });
   });
