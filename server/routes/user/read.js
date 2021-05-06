@@ -5,7 +5,6 @@ const { body, query, check, validationResult } = require('express-validator');
 const errorFormatter = ({ location, msg, param, value, nestedErrors }) => {
   return `${msg}`;
 };
-const chalk = require("chalk");
 const jwt = require('jsonwebtoken');
 const { JsonWebTokenError } = require('jsonwebtoken');
 // routes
@@ -132,7 +131,7 @@ router.post('/forgot-password', [
 ], (req, res, next) => {
   const errors = validationResult(req).formatWith(errorFormatter);
   if (!errors.isEmpty()) {
-    return res.status(422).json({ success: false, errors: errors.array() });
+    return res.status(422).json({ "success": false, errors: errors.array() });
   }
 
   userService.forgotPassword(req, res)
