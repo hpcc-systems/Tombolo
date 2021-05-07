@@ -139,7 +139,8 @@ router.post('/forgot-password', [
     res.status(response.statusCode).json(response.message);
   })
   .catch((err) => {
-    res.status(500).json({ errors: [err.error] });
+    // res.status(500).json({ errors: [err.error] });
+    console.log(err);
   })
 })
 
