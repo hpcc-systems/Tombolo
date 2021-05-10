@@ -1568,13 +1568,17 @@ class Graph extends Component {
           <div className="graph-btns-container" style={{"left":svgUsableWidth - 300}}>
             <span >
               <Tooltip placement="topRight" title={"Refresh will validate the file/job relationship and update graph accordingly"}   >
-                <Button  style={{ float: 'right' }} className="refresh-btn"
+                <Button 
+                style={{ float: 'right', }} 
+                className="refresh-btn"
                   onClick={this.refreshGraph}
                   icon={
                   <ReloadOutlined
                     style={{
                       fontSize: '28px',
-                      backgroundColor: '#f0f0f0'                    }}
+                      backgroundColor: '#f0f0f0',
+                      marginRight: "30px" 
+                    }}
                   />
                 }/>
               </Tooltip>

@@ -12,6 +12,10 @@ import {Constants} from "../../common/Constants"
 import {store} from "../../../redux/store/Store"
 const TabPane = Tabs.TabPane;
 
+
+
+
+
 function DataflowDetails({props}) {
   const history = useHistory();
   const dispatch = useDispatch();
