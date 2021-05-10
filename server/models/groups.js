@@ -8,7 +8,7 @@ module.exports = (sequelize, DataTypes) => {
       allowNull: false
     },
     name: DataTypes.STRING,
-    description: DataTypes.STRING,
+    description: DataTypes.TEXT,
     parent_group: DataTypes.UUIDV4,
     application_id: DataTypes.UUIDV4
   }, {freezeTableName: true});
