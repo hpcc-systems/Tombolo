@@ -10,19 +10,13 @@ import {Graph} from "./Graph";
 import BreadCrumbs from "../../common/BreadCrumbs";
 import {Constants} from "../../common/Constants"
 import {store} from "../../../redux/store/Store"
-
 const TabPane = Tabs.TabPane;
-
-
-
-
 
 function DataflowDetails({props}) {
   const history = useHistory();
   const dispatch = useDispatch();
   const dataflowReducer = useSelector(state => state.dataflowReducer);
   const applicationId = useSelector(state => state.applicationReducer.application.applicationId);
-
 
   const handleBackToAllJobs = () => {
     history.push("/"+applicationId+"/dataflow")

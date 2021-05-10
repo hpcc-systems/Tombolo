@@ -19,7 +19,7 @@ class LeftNav extends Component {
   state = {
     current: '/files',
     collapsed: false,
-    selectedTopNav: this.props.selectedTopNav,
+    selectedTopNav: this.props.selectedTopNav
   };
 
   
