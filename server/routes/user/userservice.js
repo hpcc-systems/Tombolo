@@ -7,7 +7,6 @@ let User = models.user;
 const Sequelize = require('sequelize');
 let UserApplication = models.user_application;
 const authServiceUtil = require('../../utils/auth-service-utils');
-const chalk = require("chalk")
 
 async function authenticate(req, res, { username, password }) {
     var authServiceUrl = process.env.AUTH_SERVICE_URL + '/login';
