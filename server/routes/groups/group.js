@@ -536,7 +536,7 @@ router.put('/move', [
 
 router.put('/move/asset', [
   body('app_id').isUUID(4).withMessage('Invalid app id'),
-  body('assetId').isInt().withMessage('Invalid asset id'),
+  body('assetId').isUUID(4).withMessage('Invalid asset id'),
   body('destGroupId').optional({checkFalsy:true}).isInt().withMessage('Invalid target group id'),
   body('groupId').optional({checkFalsy:true}).isInt().withMessage('Invalid group id'),
   body('assetType').matches(/^[a-zA-Z]/).withMessage('Invalid asset type')

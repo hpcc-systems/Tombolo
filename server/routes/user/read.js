@@ -131,7 +131,7 @@ router.post('/forgot-password', [
 ], (req, res, next) => {
   const errors = validationResult(req).formatWith(errorFormatter);
   if (!errors.isEmpty()) {
-    return res.status(422).json({ success: false, errors: errors.array() });
+    return res.status(422).json({ "success": false, errors: errors.array() });
   }
 
   userService.forgotPassword(req, res)
@@ -139,7 +139,8 @@ router.post('/forgot-password', [
     res.status(response.statusCode).json(response.message);
   })
   .catch((err) => {
-    res.status(500).json({ errors: [err.error] });
+    // res.status(500).json({ errors: [err.error] });
+    console.log(err);
   })
 })
 

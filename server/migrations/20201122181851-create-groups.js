@@ -14,7 +14,7 @@ module.exports = {
         type: Sequelize.STRING
       },
       description: {
-        type: Sequelize.STRING
+        type: Sequelize.TEXT
       },
       parent_group: {
         type: Sequelize.STRING
