@@ -227,6 +227,11 @@ let updateFileRelationship = (jobId, job, files, filesToBeRemoved, existingNodes
               file_id: id
             }, {where: {application_id: job.basic.application_id, job_id: job.basic.jobId, file_type: file.file_type, name: fileInfo.basic.name}})
 
+            let assetsDataflowCreated = await AssetDataflow.create({
+              assetId: id,
+              dataflowId: job.basic.dataflowId
+            });
+
             //starting from top
             if(file.file_type == 'input') {
               inputY = getYPosition(inputY, file.file_type, job.mousePosition[1], files);
