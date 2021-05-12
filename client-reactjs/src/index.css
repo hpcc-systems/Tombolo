@@ -755,3 +755,18 @@ overflow: hidden;
   text-align: center;
   vertical-align: top;
 }
+
+.drop-target{
+  /* display: none !important; */
+  border: 2px dotted gray !important;
+  padding-left:  5px !important;
+}
+
+.ant-tree-drop-indicator{
+  display: none !important;
+}
+
+.ant-tree .ant-tree-treenode.drop-container > [draggable] {
+  -webkit-box-shadow: 0 0 0 0px;
+          box-shadow: 0 0 0 0px;
+}
