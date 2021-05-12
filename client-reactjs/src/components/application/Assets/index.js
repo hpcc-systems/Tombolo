@@ -149,6 +149,7 @@ function Assets(props) {
   }
 
   const onSelect = (keys, event) => {
+    console.log("<<<< item selected :", keys, event)
     event.nativeEvent.stopPropagation();
     setSelectedGroup({id:event.node.props.id, title: event.node.props.title, key:event.node.props.eventKey});
 

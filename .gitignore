@@ -4,7 +4,7 @@
 *.DS_Store
 **/bower_components
 **/build
-# **/mysql-data
+**/mysql-data
 **/vscode
 **/server/scripts
 sequelize-data.json
