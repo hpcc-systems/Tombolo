@@ -123,6 +123,7 @@ function Assets(props) {
   }
 
   const onSelect = (keys, event) => {
+    console.log("<<<< item selected :", keys, event)
     event.nativeEvent.stopPropagation();
     setSelectedGroup({id:event.node.props.id, key:event.node.props.eventKey})
     dispatch(groupsActions.groupExpanded(
@@ -379,6 +380,7 @@ function Assets(props) {
   }
 
   const handleDragEnter = (info) => {
+    console.log("<<<< item is being dragged: ", info)
   }
 
   const handleDragDrop = (info) => {
@@ -503,6 +505,7 @@ function Assets(props) {
                 onChange={e => handleAssetSearch(e.target.value)}/>
 
               <DirectoryTree
+                className="draggable-tree"
                 onSelect={onSelect}
                 onExpand={onExpand}
                 treeData={treeData}
@@ -510,12 +513,17 @@ function Assets(props) {
                 expandedKeys={[...groupsReducer.expandedKeys]}
                 autoExpandParent={true}
                 draggable
+                blockNode={true}
+                autoExpandParent={true}
+                // showLine={true}
+
                 onDragEnter={handleDragEnter}
                 onDrop={handleDragDrop}
                 expandAction={false}
                 titleRender={titleRenderer}
                 virtual={false}
-                onScroll={e => console.log(e)}
+                onScroll={e => console.log(e)
+                }
               />
             </div>
             <div className="asset-table">

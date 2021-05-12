@@ -114,7 +114,8 @@ function MoveAssetsDialog({isShowing, toggle, application, assetToMove, reloadTa
               treeData={treeData}
               selectedKeys={[moveDestinationGroup.key]}
               expandedKeys={expandedGroups}
-              defaultExpandAll={true}/>
+              defaultExpandAll={true}
+              />
          </Modal>
       </div>
      </React.Fragment>
