@@ -88,7 +88,7 @@ class IndexDetails extends PureComponent {
       type: Constants.ENABLE_EDIT,
       payload: false
     })
-    
+
     store.dispatch({
       type:  Constants.ADD_ASSET,
       payload: false
@@ -696,7 +696,7 @@ class IndexDetails extends PureComponent {
             </TabPane>
 
             {!this.props.isNew ?
-              <TabPane tab="Dataflows" key="7">
+              <TabPane tab="Workflows" key="7">
                 <AssociatedDataflows assetId={this.state.index.id} assetType={'Index'}/>
               </TabPane> : null}
           </Tabs>
@@ -712,7 +712,7 @@ class IndexDetails extends PureComponent {
           </Button>
         </div> :
         <div>
-          {this.state.dataAltered ? 
+          {this.state.dataAltered ?
            <div className="button-container">
            <Button key="back" onClick={this.handleCancel}>
              Cancel
@@ -729,9 +729,9 @@ class IndexDetails extends PureComponent {
            </div>
           }
         </div>
-        
 
-    
+
+
          }
       </React.Fragment>
     );
