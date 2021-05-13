@@ -149,7 +149,6 @@ function Assets(props) {
   }
 
   const onSelect = (keys, event) => {
-    console.log("<<<< item selected :", keys, event)
     event.nativeEvent.stopPropagation();
     setSelectedGroup({id:event.node.props.id, title: event.node.props.title, key:event.node.props.eventKey});
 
@@ -532,7 +531,6 @@ function Assets(props) {
               {editingAllowed ?
                 <Dropdown
                 overlay={menu}
-
                 >
                   <Button className="btn btn-secondary btn-sm" >
                     Add Asset <DownOutlined />

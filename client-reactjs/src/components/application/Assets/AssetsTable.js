@@ -264,8 +264,8 @@ function AssetsTable({selectedGroup, handleEditGroup, refreshGroups}) {
         <Popconfirm title="Deleting an asset will delete their metadata and make them unusable in workflows. Are you sure you want to delete this?" onConfirm={() => handleDelete(record.id, record.type)} icon={<QuestionCircleOutlined/>}>
           <a href="#"><Tooltip placement="right" title={"Delete"}><DeleteOutlined /></Tooltip></a>
         </Popconfirm>
-        <Divider type="vertical" />
-        <a href="#" onClick={(row) => handleMoveAsset(record.id, record.type, record.name, selectedGroup)}><Tooltip placement="right" title={"Move"}><FolderOpenOutlined /></Tooltip></a>
+        {/* <Divider type="vertical" />
+        <a href="#" onClick={(row) => handleMoveAsset(record.id, record.type, record.name, selectedGroup)}><Tooltip placement="right" title={"Move"}><FolderOpenOutlined /></Tooltip></a> */}
       </span>
   }];
 
