@@ -17,19 +17,35 @@ import { DeleteOutlined, EditOutlined, QuestionCircleOutlined, FolderOutlined, D
 import TitleRenderer from "./TitleRenderer.js"
 import { flatten } from "../../common/CommonUtil.js";
 import {editableMode, addingAssetMode } from "../../common/readOnlyUtil"
+import MoveAssetsDialog from "./MoveAssetsDialog";
+import useFileDetailsForm from '../../../hooks/useFileDetailsForm';
+import useModal from '../../../hooks/useModal';
+
 
 const { TreeNode, DirectoryTree } = Tree;
 const { SubMenu } = Menu;
 const { confirm } = Modal;
 const { Search } = Input;
 const CheckboxGroup = Checkbox.Group;
+
+
 message.config({top: 100});
 
 function Assets(props) {
+  const { isShowing, toggle, OpenDetailsForm } = useFileDetailsForm();
+  const {showMoveDialog=isShowing, toggleMoveDialog=toggle} = useModal();
+  const applicationReducer = useSelector(state => state.applicationReducer);
+  const [assetToMove, setAssetToMove] = useState({
+    id: '',
+    type: '',
+    title: '',
+    selectedGroup: {}
+  });
   const groupsReducer = useSelector(state => state.groupsReducer);
   const assetReducer = useSelector(state => state.assetReducer);
   const [application, setApplication] = useState({...props});
-  const [selectedGroup, setSelectedGroup] = useState({'id':groupsReducer.selectedKeys.id, 'key':groupsReducer.selectedKeys.key});
+  const [selectedGroup, setSelectedGroup] = useState({'id':groupsReducer.selectedKeys.id, 'title' : '','key':groupsReducer.selectedKeys.key});
+  const [itemToMove, setItemToMove] = useState({})
   const [expandedGroups, setExpandedGroups] = useState(groupsReducer.expandedKeys);
   const [newGroup, setNewGroup] = useState({name:'', description:'', id: ''});
   const [newGroupForm, setNewGroupForm] = useState({submitted:false});
@@ -47,6 +63,7 @@ function Assets(props) {
   const [dataList, setDataList] = useState([]);
   //id of the group clicked from Asset table after a search
   const {assetInGroupId} = assetReducer;
+  const groupsMoveReducer = useSelector(state => state.groupsMoveReducer)
 
   const formItemLayout = {
     labelCol: {
@@ -72,8 +89,13 @@ function Assets(props) {
   useEffect(() => {
     if(application.applicationId) {
       fetchGroups();
+      
     }
   }, [application]);
+
+  useEffect(() =>{
+   fetchGroups();
+  }, [groupsMoveReducer])
 
   useEffect(() => {
     //if there is a search term and filter is changed, then trigger search
@@ -83,6 +105,7 @@ function Assets(props) {
   }, [assetTypeFilter]);
 
   useEffect(() => {
+    fetchGroups();
     if(assetInGroupId) {
       openGroup(assetInGroupId);
     }
@@ -123,13 +146,15 @@ function Assets(props) {
   }
 
   const onSelect = (keys, event) => {
-    console.log("<<<< item selected :", keys, event)
     event.nativeEvent.stopPropagation();
-    setSelectedGroup({id:event.node.props.id, key:event.node.props.eventKey})
+    setSelectedGroup({id:event.node.props.id, title: event.node.props.title, key:event.node.props.eventKey});
+
     dispatch(groupsActions.groupExpanded(
       {id:event.node.props.id, key:keys[0]},
+
       expandedGroups
     ));
+
     clearSearch();
   };
 
@@ -193,9 +218,10 @@ function Assets(props) {
   }
 
   const showMoreOptions = e => {
+    setItemToMove({id: e.target.getAttribute('data-id'), key: e.target.getAttribute('data-key'), title: e.target.getAttribute('data-title'), type: "Group" });
     e.preventDefault();
     e.stopPropagation();
-    setSelectedGroup({id: e.target.getAttribute('data-id'), key: e.target.getAttribute('data-key')})
+    setSelectedGroup({id: e.target.getAttribute('data-id'), key: e.target.getAttribute('data-key'), title:e.target.getAttribute('title')});
     dispatch(groupsActions.groupExpanded(
       {id:e.target.getAttribute('data-id'), key:e.target.getAttribute('data-key')},
       expandedGroups
@@ -259,6 +285,9 @@ function Assets(props) {
       case 'Delete-Group':
         handleDeleteGroup();
         break;
+      
+      case 'Move-Group':
+        break;
     }
   }
 
@@ -272,6 +301,11 @@ function Assets(props) {
            <Menu.Item key="Edit-Group"><EditOutlined />Edit</Menu.Item> : null}
          {selectedGroup && selectedGroup.id != null && selectedGroup.id != '' ?
            <Menu.Item key="Delete-Group"><DeleteOutlined />Delete</Menu.Item> : null}
+          {selectedGroup && selectedGroup.id != null && selectedGroup.id != '' ?
+          <> 
+           <Menu.Item key="Move-Group" onClick={(e) => {  handleMoveAsset(); }} ><FolderOutlined />Move</Menu.Item> 
+          </>
+         : null}
        </Menu>
       </div>
       </React.Fragment>
@@ -380,8 +414,18 @@ function Assets(props) {
   }
 
   const handleDragEnter = (info) => {
-    console.log("<<<< item is being dragged: ", info)
+
   }
+
+ const handleMoveAsset = (assetId, assetType, assetTitle) => {
+    setAssetToMove({id: assetId, type: assetType, title: assetTitle, selectedGroup: selectedGroup})
+    toggleMoveDialog();
+  }
+
+  const toggleModal = () =>{
+  }
+
+
 
   const handleDragDrop = (info) => {
     if(info.node != undefined && info.dragNode != undefined) {
@@ -421,7 +465,6 @@ function Assets(props) {
 
 
   const handleAssetSearch = debounce ((value, enterPress) => {
-
     console.log(value);
     let expandedKeys = [];
     //validate only if enter pressed otherwise clearing search term will also trigger this validation
@@ -485,7 +528,6 @@ function Assets(props) {
               {editingAllowed ?
                 <Dropdown 
                 overlay={menu}
-               
                 >
                   <Button className="btn btn-secondary btn-sm" >
                     Add Asset <DownOutlined />
@@ -515,13 +557,10 @@ function Assets(props) {
                 draggable
                 blockNode={true}
                 autoExpandParent={true}
-                // showLine={true}
-
                 onDragEnter={handleDragEnter}
                 onDrop={handleDragDrop}
                 expandAction={false}
                 titleRender={titleRenderer}
-                virtual={false}
                 onScroll={e => console.log(e)
                 }
               />
@@ -564,6 +603,15 @@ function Assets(props) {
                 </Form>
             </Modal>
        </div>
+      {showMoveDialog ? 
+       <MoveAssetsDialog
+        isShowing={showMoveDialog}
+        toggleModal={toggleModal}
+        application={applicationReducer.application}
+        assetToMove={itemToMove}
+        toggle={toggleMoveDialog}
+        />
+        : null}
      </React.Fragment>
 
     )

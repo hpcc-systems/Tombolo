@@ -6,6 +6,7 @@ import { dataflowReducer } from './DataflowReducer';
 import { assetReducer } from './AssetReducer';
 import { groupsReducer } from './GroupsReducer';
 import { viewOnlyModeReducer} from './ViewOnlyModeReducer'
+import {groupsMoveReducer} from './GroupsMoveReducer'
 const rootReducer = combineReducers({
     authenticationReducer,
     applicationReducer,
@@ -13,7 +14,8 @@ const rootReducer = combineReducers({
     dataflowReducer,
     assetReducer,
     groupsReducer,
-    viewOnlyModeReducer
+    viewOnlyModeReducer,
+    groupsMoveReducer
 });
 
 export default rootReducer;
