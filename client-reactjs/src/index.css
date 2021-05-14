@@ -757,7 +757,6 @@ overflow: hidden;
 }
 
 .drop-target{
-  /* display: none !important; */
   border: 2px dotted gray !important;
   padding-left:  5px !important;
 }
