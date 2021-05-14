@@ -770,3 +770,12 @@ overflow: hidden;
   -webkit-box-shadow: 0 0 0 0px;
           box-shadow: 0 0 0 0px;
 }
+
+.backLink{
+  color: var(--dark);
+}
+.backLink:hover{
+  color: var(--primary);
+  text-decoration: none;
+  font-weight: 500;
+}

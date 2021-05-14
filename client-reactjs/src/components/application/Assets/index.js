@@ -94,6 +94,7 @@ function Assets(props) {
     }
   }, [application]);
 
+  //Re-render Directory Tree when the tree structure us chaged on modal
   useEffect(() =>{
    fetchGroups();
    setSelectedGroup({'id':"", 'title' : '','key':"0-0"});
