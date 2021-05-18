@@ -506,7 +506,7 @@ function Assets(props) {
                 onExpand={onExpand}
                 treeData={treeData}
                 selectedKeys={[groupsReducer.selectedKeys.key]}
-                expandedKeys={expandedGroups}
+                expandedKeys={[...groupsReducer.expandedKeys]}
                 autoExpandParent={false}
                 draggable
                 onDragEnter={handleDragEnter}

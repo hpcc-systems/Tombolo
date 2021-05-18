@@ -13,7 +13,7 @@ import ExistingAssetListDialog from "./ExistingAssetListDialog";
 import {handleFileDelete, handleFileInstanceDelete, handleJobDelete, handleIndexDelete, handleQueryDelete, handleSubProcessDelete, updateGraph, changeVisibility} from "../../common/WorkflowUtil";
 import { authHeader, handleError } from "../../common/AuthHeader.js"
 import { hasEditPermission } from "../../common/AuthUtil.js";
-import { shapesData, appendDefs } from "./Utils.js"
+import { shapesData, appendDefs, jobIcons } from "./Utils.js"
 import SubProcessDialog from "./SubProcessDialog";
 import { connect } from 'react-redux';
 import { assetsActions } from '../../../redux/actions/Assets';
@@ -182,7 +182,7 @@ class Graph extends Component {
             isNewJob: isNew,
             openJobDetailsDialog: true,
             selectedJob: d.jobId,
-            selectedJobType: d.type == 'Job' ? 'General' : d.type,
+            selectedJobType: d.type == 'Job' ? 'Job' : d.type,
             mousePosition: [d.x, d.y]
           });
 
@@ -343,10 +343,11 @@ class Graph extends Component {
     });
   }
 
-  showScheduleIcons = (saveResponse) => {
+  showScheduleIcons = (saveResponse) => {    
     var newData = this.thisGraph.nodes.map(el => {
       if(el.id == this.state.currentlyEditingId) {
         el.scheduleType = saveResponse.type;
+        el.jobType = saveResponse.jobType;
         this.props.dispatch(assetsActions.assetSaved({}));
       }
       return el;
@@ -373,11 +374,8 @@ class Graph extends Component {
               this.saveAssetToDataflow(el.indexId, this.props.selectedDataflow.id, el.type);
               break;
             case 'Job':
-            case 'Scoring':
-            case 'ETL':
-            case 'Query Build':
-            case 'Data Profile':
               el.jobId=saveResponse.jobId;
+              el.jobType = saveResponse.jobType;
               this.saveAssetToDataflow(el.jobId, this.props.selectedDataflow.id, el.type);
               break;
             case 'Sub-Process':
@@ -579,7 +577,6 @@ class Graph extends Component {
       if (left + svgNodeWidth + svgNodeStrokeWidth > (svgUsableWidth + svgPalleteBarWidth)) {
         left = (svgUsableWidth + svgPalleteBarWidth) - svgNodeWidth - svgNodeStrokeWidth
       } else if (d3.event.x < svgPalleteBarWidth) {
-        console.log("stooop")
         left = svgPalleteBarWidth;
       }
       if (top + svgNodeHeight + svgNodeStrokeWidth > svgUsableHeight) {
@@ -674,6 +671,8 @@ class Graph extends Component {
         d3.select('#schedulerType'+d.id).text(function(node) { return '\uf017' });
       } else if(d.scheduleType == 'Predecessor') {
         d3.select('#schedulerType'+d.id).text(function(node) { return '\uf0c1' });
+      } else if(d.scheduleType == 'Message') {
+        d3.select('#schedulerType'+d.id).text(function(node) { return '\uf086' });
       } else {
         d3.select('#schedulerType'+d.id).remove();
       }
@@ -682,37 +681,26 @@ class Graph extends Component {
 
   insertBgImage = (gEl, x, y, d) => {
     let _self=this, shape=[];
-
-    switch (d.type) {
+    switch (d.type) {      
       case 'Job':
+        gEl.select(".icon").remove();
         shape = shapesData[0];
-        break;
-      case 'Modeling':
-        shape = shapesData[1];
-        break;
-      case 'Scoring':
-        shape = shapesData[2];
-        break;
-      case 'ETL':
-        shape = shapesData[3];
-        break;
-      case 'Query Build':
-        shape = shapesData[4];
-        break;
-      case 'Data Profile':
-        shape = shapesData[5];
+        //remove the icon for jobs as it needs to updated based on jobType        
         break;
       case 'File':
-        shape = shapesData[6];
+        shape = shapesData[1];
         break;
       case 'Index':
-        shape = shapesData[7];
+        shape = shapesData[2];
         break;
       case 'Sub-Process':
-        shape = shapesData[8];
+        shape = shapesData[3];
+        break;
+      case '':  
+        shape = shapesData[0];
         break;
     }
-    if(gEl.select(".icon").empty()) {
+    if(gEl.select(".icon").empty()) {      
       let imageTxt = gEl.append('text')
         .attr('font-family', 'FontAwesome')
         .attr('class', 'icon')
@@ -720,7 +708,13 @@ class Graph extends Component {
         .attr('y', 28)
         .attr('x', 8)
         //.attr('class','delete-icon hide-delete-icon')
-        .text(function(node) { return shape.icon })
+        .text(function(node) { 
+          if(node.type == 'Job') {
+            return node.jobType ? jobIcons[node.jobType] : jobIcons['Job']
+          } else {
+            return shape.icon 
+          }          
+        })
     }
   }
 
@@ -1045,21 +1039,16 @@ class Graph extends Component {
         //if (this.childNodes.length === 0) {
           switch(d.type) {
             case 'Job':
-            case 'Modeling':
-            case 'Scoring':
-            case 'ETL':
-            case 'Query Build':
-            case 'Data Profile':
               if(d3.select("#rec-"+d.id).empty()) {
                 d3.select(this)
                   .append("rect")
                   .attr("id", "rec-"+d.id)
-                  .attr("rx", shapesData[5].rx)
-                  .attr("ry", shapesData[5].ry)
-                  .attr("width", shapesData[5].rectwidth)
-                  .attr("height", shapesData[5].rectheight)
+                  .attr("rx", shapesData[0].rx)
+                  .attr("ry", shapesData[0].ry)
+                  .attr("width", shapesData[0].rectwidth)
+                  .attr("height", shapesData[0].rectheight)
                   .attr("stroke", "grey")
-                  .attr("fill", shapesData[5].color)
+                  .attr("fill", shapesData[0].color)
                   .attr("stroke-width", "3")
                   .attr("filter", "url(#glow)")
                   //.call(_self.nodeDragHandler)
@@ -1068,6 +1057,8 @@ class Graph extends Component {
                 if(d.hasOwnProperty('isHidden') && d.isHidden) {
                   d3.select(d3.select("#rec-"+d.id).node().parentNode).attr("class", "d-none")
                 }
+              } else {
+                _self.insertBgImage(d3.select(this), d.x, d.y, d);
               }
               _self.addScheduleIcon(d3.select(this), d);
               break;
@@ -1079,17 +1070,17 @@ class Graph extends Component {
                 let el = d3.select(this)
                   .append("rect")
                   .attr("id", "rec-"+d.id)
-                  .attr("rx", shapesData[7].rx)
-                  .attr("ry", shapesData[7].ry)
-                  .attr("width", shapesData[7].rectwidth)
-                  .attr("height", shapesData[7].rectheight)
+                  .attr("rx", shapesData[2].rx)
+                  .attr("ry", shapesData[2].ry)
+                  .attr("width", shapesData[2].rectwidth)
+                  .attr("height", shapesData[2].rectheight)
                   .attr("stroke", "grey")
                   .attr("filter", "url(#glow)")
                   .attr("fill", function(d) {
                     if(d.type == 'File')
-                     return shapesData[6].color;
+                     return shapesData[1].color;
                     else if(d.type == 'Index')
-                      return shapesData[7].color;
+                      return shapesData[2].color;
                   })
                   .attr("stroke-width", "3")
                   //.call(_self.nodeDragHandler)
@@ -1109,12 +1100,12 @@ class Graph extends Component {
                     return "Helloooooo";
                   })
                   .attr("id", "rec-"+d.id)
-                  .attr("rx", shapesData[8].rx)
-                  .attr("ry", shapesData[8].ry)
-                  .attr("width", shapesData[8].rectwidth)
-                  .attr("height", shapesData[8].rectheight)
+                  .attr("rx", shapesData[3].rx)
+                  .attr("ry", shapesData[3].ry)
+                  .attr("width", shapesData[3].rectwidth)
+                  .attr("height", shapesData[3].rectheight)
                   .attr("stroke", "grey")
-                  .attr("fill", shapesData[8].color)
+                  .attr("fill", shapesData[3].color)
                   .attr("stroke-width", "3")
                   .attr("filter", "url(#glow)")
                   //.call(_self.nodeDragHandler)
@@ -1347,7 +1338,7 @@ class Graph extends Component {
         }
 
         //95 = width of sidebar, 50 = height of tabs+breadcrumb etc
-        _self.thisGraph.nodes.push({"title":"New "+d3.select(this).select("text.entity").text(),"id":newNodeId,"x":x,"y":y, "type":d3.select(this).select("text.entity").text()})
+        _self.thisGraph.nodes.push({"title":"New "+d3.select(this).select("text.entity").text(),"id":newNodeId,"x":x,"y":y, "type":d3.select(this).select("text.entity").text(), "jobType": "Job"})
         _self.setIdCt(idct);
         _self.updateGraph();
       })
@@ -1675,7 +1666,8 @@ class Graph extends Component {
             assetType={this.state.currentlyEditingNode.type}
             onClose={this.closeAssetListDlg}
             onFileAdded={this.onFileAdded}
-            user={this.props.user} />  : null}
+            user={this.props.user} 
+            currentlyEditingNodeId={this.state.currentlyEditingId}/>  : null}
     </React.Fragment>
   )
   }

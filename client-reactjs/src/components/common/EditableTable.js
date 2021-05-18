@@ -57,7 +57,7 @@ class EditableCell extends React.Component {
   saveText = e => {
     const { record, handleSave, dataIndex } = this.props;
     let dataValueObj = {};
-    dataValueObj[dataIndex] = e.target.value;
+    dataValueObj[dataIndex] = (e.target.value && e.target.value != "") ? e.target.value : e.target.name;    
     record[Object.keys(dataValueObj)[0]] = dataValueObj[Object.keys(dataValueObj)[0]];
     this.formRef.current.validateFields().then(async (error, values) => {
       this.toggleEdit();
@@ -191,7 +191,6 @@ class EditableTable extends React.Component {
       dataSource: dataSource,
       count: count + 1,
     });
-
     this.props.setData(dataSource)
   };
 
@@ -219,7 +218,7 @@ class EditableTable extends React.Component {
       }
     });
     this.setState({ dataSource: newData });
-    console.log(newData);
+    //console.log(newData);
     this.props.setData(newData)
   };
 
@@ -367,7 +366,7 @@ class EditableTable extends React.Component {
           rowKey={record => record.id}
           rowClassName={() => 'editable-row'}
           bordered
-          dataSource={dataSource}
+          dataSource={this.state.dataSource}
           columns={this.props.enableEdit ? columns : columns.filter(column => column.title !== 'Action')}
           pagination={false} scroll={{ y: '40vh' }}
           size="small"

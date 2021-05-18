@@ -16,6 +16,8 @@ let JobFile = models.jobfile;
 let JobParam = models.jobparam;
 let ConsumerObject = models.consumer_object;
 let Index = models.indexes;
+const path = require('path');
+const { exec } = require('child_process');
 
 exports.fileInfo = (applicationId, file_id) => {
   var results={};
@@ -114,5 +116,26 @@ exports.jobInfo = (applicationId, jobId) => {
     })
   } catch (err) {
     reject(err)
+  }
+}
+
+exports.executeScriptJob = (jobId) => {
+  try {
+    return new Promise(async (resolve, reject) => {
+      let scriptJob = await Job.findOne({where: {id: jobId}, attributes: {exclude: ['assetId']}});
+      let scriptPath = path.join(__dirname, '..', scriptJob.scriptPath), scriptRootFolder = path.dirname(scriptPath);
+      console.log(scriptPath, scriptRootFolder);
+      exec(scriptPath, {cwd: scriptRootFolder}, (err, stdout, stderr) => {
+        if (err) {
+          reject(err)
+        }
+        if(stderr) {
+          reject(stderr);
+        }
+        resolve(stdout);
+      });                  
+    })
+  }catch (err) {
+    Promise.reject(err)
   }
 }

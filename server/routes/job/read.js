@@ -16,12 +16,14 @@ let AssetDataflow = models.assets_dataflows;
 let DependentJobs = models.dependent_jobs;
 let AssetsGroups = models.assets_groups;
 let JobExecution = models.job_execution;
+let MessageBasedJobs = models.message_based_jobs;
 const JobScheduler = require('../../job-scheduler');
 const hpccUtil = require('../../utils/hpcc-util');
 const validatorUtil = require('../../utils/validator');
 const { body, query, param, validationResult } = require('express-validator');
 const assetUtil = require('../../utils/assets');
 const SUBMIT_JOB_FILE_NAME = 'submitJob.js';
+
 /**
   Updates Dataflow graph by
     - removing any nodes that are removed from the Job
@@ -519,10 +521,9 @@ router.post('/saveJob', [
         console.log("Error occured in updateJobDetails....")
         return res.status(500).json({ success: false, message: "Error occured while saving the job" });
       });
-
       if (req.body.job.schedule.type) {
       switch (req.body.job.schedule.type) {
-        case '':
+        case "":
           await AssetDataflow.update({
             cron: null,
           }, {
@@ -536,6 +537,13 @@ router.post('/saveJob', [
               dataflowId: req.body.job.basic.dataflowId
             }
           });
+          await MessageBasedJobs.destroy({
+            where: {
+              jobId: req.body.id,
+              dataflowId: req.body.job.basic.dataflowId,
+              applicationId: req.body.job.basic.application_id
+            }
+          });
         case 'Predecessor':
           await AssetDataflow.update({
             cron: null,
@@ -544,6 +552,13 @@ router.post('/saveJob', [
           }).then((assetDataflowupdated) => {
             JobScheduler.removeJobFromScheduler(req.body.job.basic.name + '-' + req.body.job.basic.dataflowId + '-' + jobId);
           })
+          await MessageBasedJobs.destroy({
+            where: {
+              jobId: req.body.id,
+              dataflowId: req.body.job.basic.dataflowId,
+              applicationId: req.body.job.basic.application_id
+            }
+          });
           await DependentJobs.destroy({
             where: {
               jobId: req.body.id,
@@ -579,6 +594,13 @@ router.post('/saveJob', [
                 where: { assetId: jobId, dataflowId: req.body.job.basic.dataflowId }
               });
             if(success || success[0]) {
+              await DependentJobs.destroy({
+                where: {
+                  jobId: req.body.id,
+                  dataflowId: req.body.job.basic.dataflowId
+                }
+              });
+
               //remove existing job with same name
               try {
                 JobScheduler.removeJobFromScheduler(req.body.job.basic.name + '-' + req.body.job.basic.dataflowId + '-' + jobId);
@@ -616,6 +638,48 @@ router.post('/saveJob', [
             });
           }
           break;
+        case 'Message':
+          try {
+            await AssetDataflow.update({
+              cron: null,
+            }, {
+              where: { assetId: jobId, dataflowId: req.body.job.basic.dataflowId }
+            }).then((assetDataflowupdated) => {
+              JobScheduler.removeJobFromScheduler(req.body.job.basic.name + '-' + req.body.job.basic.dataflowId + '-' + jobId);
+            })
+
+            await DependentJobs.destroy({
+              where: {
+                jobId: req.body.id,
+                dataflowId: req.body.job.basic.dataflowId
+              }
+            });
+
+            MessageBasedJobs.findOrCreate({
+              where: {
+                jobId: jobId,
+                applicationId: req.body.job.basic.application_id,
+                dataflowId: req.body.job.basic.dataflowId
+              },
+              defaults: {
+                jobId: jobId,
+                dataflowId: req.body.job.basic.dataflowId,
+                applicationId: req.body.job.basic.application_id,
+              }
+            })
+            return res.json({
+              success: true,
+              type: req.body.job.schedule.type,
+              jobs: req.body.job.schedule.jobs
+            });
+            break;
+          } catch (err) {
+            console.log(err);
+            return res.json({
+              success: false,
+              message: 'Unable to save job schedule'
+            });
+          }
       }
 
     } else {
@@ -654,7 +718,7 @@ router.get('/job_list', [
   console.log("[job list/read.js] - Get job list for app_id = " + req.query.app_id);
   try {
     let dataflowId = req.query.dataflowId;
-    let query = 'select j.id, j.name, j.title, j.createdAt, asd.dataflowId from job j '+
+    let query = 'select j.id, j.name, j.title, j.jobType, j.createdAt, asd.dataflowId from job j '+
     'left join assets_dataflows asd '+
     'on j.id = asd.assetId '+
     'where j.application_id=(:applicationId) '+
@@ -726,6 +790,9 @@ router.get('/job_details', [
           let dependentJobs = await DependentJobs.findAll({
             where: { jobId: req.query.job_id, dataflowId: req.query.dataflow_id }
           });
+          let messageBasedJobs = await MessageBasedJobs.findAll({
+            where: { jobId: req.query.job_id, dataflowId: req.query.dataflow_id, applicationId: req.query.app_id}
+          });
           if (assetDataflow && assetDataflow.cron !== null) {
             jobData.schedule = {
               type: 'Time',
@@ -737,6 +804,10 @@ router.get('/job_details', [
               jobs: []
             };
             dependentJobs.map(job => jobData.schedule.jobs.push(job.dependsOnJobId));
+          } else if (messageBasedJobs.length > 0) {
+            jobData.schedule = {
+              type: 'Message'
+            };
           }
         }
         return jobData;
@@ -805,8 +876,14 @@ router.post('/executeJob', [
       return res.status(422).json({ success: false, errors: errors.array() });
   }
   try {
-    let wuid = await hpccUtil.getJobWuidByName(req.body.clusterId, req.body.jobName);
-    let wuResubmitResult = await hpccUtil.resubmitWU(req.body.clusterId, wuid);
+    let wuid = '';
+    let job = await Job.findOne({where: {id:req.body.jobId}, attributes: {exclude: ['assetId']}, include: [JobParam]});
+    if(job.jobType != 'Script') {
+      wuid = await hpccUtil.getJobWuidByName(req.body.clusterId, req.body.jobName);
+      let wuResubmitResult = await hpccUtil.resubmitWU(req.body.clusterId, wuid);
+    } else {
+      let executionResult = await assetUtil.executeScriptJob(req.body.jobId);
+    }
     //record workflow execution
     await JobExecution.findOrCreate({
       where: {

@@ -14,6 +14,8 @@ CompressionCodecs[CompressionTypes.Snappy] = SnappyCodec;
 const JOB_COMPLETE_TOPIC = process.env.JOB_COMPLETE_TOPIC;
 const JOB_COMPLETE_GROUP_ID = process.env.JOB_COMPLETE_GROUP_ID;
 
+const START_JOB_TOPIC = process.env.START_JOB_TOPIC;
+
 class QueueDaemon {
   constructor() {
     this.kafka = new Kafka({
@@ -33,11 +35,17 @@ class QueueDaemon {
 
     await this.consumer.subscribe({ topic: JOB_COMPLETE_TOPIC, fromBeginning: true });
 
+    await this.consumer.subscribe({ topic: START_JOB_TOPIC, fromBeginning: true });
+
     await this.consumer.run({
       eachMessage: async ({ topic, partition, message }) => {
+        console.log('topic: '+topic);
         switch (topic) {
           case JOB_COMPLETE_TOPIC:
             this.processJob(message.value.toString());
+            break;
+          case START_JOB_TOPIC:
+            this.startJob(message.value.toString());
             break;
         }
       },
@@ -74,19 +82,6 @@ class QueueDaemon {
           let wuInfo = await hpccUtil.workunitInfo(msgJson.wuid, cluster);
           if(wuInfo.Workunit.State == 'completed' || wuInfo.Workunit.State == 'wait' || wuInfo.Workunit.State == 'blocked') {
             await JobScheduler.scheduleCheckForJobsWithSingleDependency(wuInfo.Workunit.Jobname);
-            /*Job.findOne({where: {name: wuInfo.Workunit.Jobname}, attributes: {exclude: ['assetId']}}).then(async (job) => {
-              console.log(job.contact)
-              if(job.contact) {
-                let cluster = await Cluster.findOne({where: {id: job.cluster_id}});
-                NotificationModule.notify({
-                  from: process.env.EMAIL_SENDER,
-                  to: job.contact,
-                  subject: job.name + ' Failed',
-                  html: '<p>Job "'+job.name+'" failed on "'+cluster.name+'" cluster</p>' +
-                    '<p>Workunit Id: '+msgJson.wuid+'</p>'
-                })
-              }
-            })*/
           } else if(wuInfo.Workunit.State == 'failed') {
             Job.findOne({where: {name: wuInfo.Workunit.Jobname}, attributes: {exclude: ['assetId']}}).then(async (job) => {
               if(job.contact) {
@@ -108,6 +103,17 @@ class QueueDaemon {
           {where: {wuid: msgJson.wuid}})
         }
       }
+    } catch(err) {
+      console.error(err);
+    }
+  }
+
+  async startJob(message) {
+    console.log("startJob");
+    try {
+      let msgJson = JSON.parse(message);
+      console.log(msgJson);
+      JobScheduler.scheduleMessageBasedJobs(msgJson);
     } catch(err) {
       console.error(err);
     }

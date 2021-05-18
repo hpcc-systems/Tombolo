@@ -3,7 +3,10 @@ const models = require('./models');
 const request = require('request-promise');
 const hpccUtil = require('./utils/hpcc-util');
 var path = require('path');
+let Job = models.job;
+let MessageBasedJobs = models.message_based_jobs;
 const SUBMIT_JOB_FILE_NAME = 'submitJob.js';
+const SUBMIT_SCRIPT_JOB_FILE_NAME = 'submitScriptJob.js';
 
 class JobScheduler {
   constructor() {
@@ -31,7 +34,7 @@ class JobScheduler {
   }
 
   async scheduleCheckForJobsWithSingleDependency(jobName) {
-    const query = `SELECT j1.id, j1.name, dj.dependsOnJobId as dependsOnJobId, dj.jobId, c.id as clusterId, d.id as dataflowId, d.application_id, count(*) as count
+    const query = `SELECT j1.id, j1.name, j1.jobType, dj.dependsOnJobId as dependsOnJobId, dj.jobId, c.id as clusterId, d.id as dataflowId, d.application_id, count(*) as count
       FROM tombolo.dependent_jobs dj
       left join job j1 on j1.id = dj.jobId
       left join job j2 on j2.id = dj.dependsOnJobId
@@ -53,7 +56,13 @@ class JobScheduler {
     for(const job of jobs) {
       //this.bree.add({ });
       try {
-        await this.executeJob(job.name, job.clusterId, job.dataflowId, job.application_id, job.jobId, SUBMIT_JOB_FILE_NAME);
+        await this.executeJob(
+          job.name, 
+          job.clusterId, 
+          job.dataflowId, 
+          job.application_id, 
+          job.jobId, 
+          job.jobType == 'Script' ? SUBMIT_SCRIPT_JOB_FILE_NAME : SUBMIT_JOB_FILE_NAME);
       } catch (err) {
         console.log(err);
       }
@@ -62,7 +71,7 @@ class JobScheduler {
 
   async scheduleActiveCronJobs() {
     let promises=[];
-    const query = `SELECT ad.id, ad.cron, j.name as name, ad.dataflowId, ad.assetId, d.application_id, c.id as clusterId, c.thor_host, c.thor_port,
+    const query = `SELECT ad.id, ad.cron, j.name as name, j.jobType, ad.dataflowId, ad.assetId, d.application_id, c.id as clusterId, c.thor_host, c.thor_port,
       d.title as dataflowName
       FROM tombolo.assets_dataflows ad
       left join dataflow d on d.id = ad.dataflowId
@@ -83,11 +92,37 @@ class JobScheduler {
       `);
       try {
         //finally add the job to the scheduler
-        await this.addJobToScheduler(job.name, job.cron, job.clusterId, job.dataflowId, job.application_id, job.assetId, SUBMIT_JOB_FILE_NAME);
+        await this.addJobToScheduler(
+          job.name, 
+          job.cron, 
+          job.clusterId, 
+          job.dataflowId, 
+          job.application_id, 
+          job.assetId, 
+          job.jobType == 'Script' ? SUBMIT_SCRIPT_JOB_FILE_NAME : SUBMIT_JOB_FILE_NAME);
       } catch (err) {
         console.log(err);
       }
      }
+  }
+
+  async scheduleMessageBasedJobs(message) {
+    console.log('scheduleMessageBasedJobs')
+    try {
+      let job = await Job.findOne({where: {name: message.jobName}, attributes: {exclude: ['assetId']}});
+      let messageBasedJobs = await MessageBasedJobs.findAll({where: {jobId: job.id}});
+      for(const messageBasedjob of messageBasedJobs) {
+        await this.executeJob(
+          job.name,
+          job.cluster_id,
+          messageBasedjob.dataflowId,
+          messageBasedjob.applicationId,
+          job.id,
+          job.jobType == 'Script' ? SUBMIT_SCRIPT_JOB_FILE_NAME : SUBMIT_JOB_FILE_NAME);
+      }
+    } catch (err) {
+      console.log(err);
+    }
   }
 
   async addJobToScheduler(name, cron, clusterId, dataflowId, applicationId, jobId, jobfileName) {

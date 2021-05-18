@@ -9,7 +9,7 @@ import { Constants } from '../../common/Constants';
 import AssetDetailsDialog from "../AssetDetailsDialog"
 const Option = Select.Option;
 
-function ExistingAssetListDialog({show, applicationId, selectedDataflow, assetType, onClose, onFileAdded, user}) {
+function ExistingAssetListDialog({show, applicationId, selectedDataflow, assetType, onClose, onFileAdded, user, currentlyEditingNodeId}) {
   const [assets, setAssets] = useState([]);
   const [visible, setVisible] = useState(show);
   const [showDetailsForm, setShowDetailsForm] = useState(false);
@@ -83,7 +83,15 @@ function ExistingAssetListDialog({show, applicationId, selectedDataflow, assetTy
       case 'ETL':
       case 'Query Build':
       case 'Data Profile':
+        fileAddedResponse.id = currentlyEditingNodeId;
         fileAddedResponse.jobId = record.id;
+        fileAddedResponse.type = 'Job';
+        fileAddedResponse.success = true;
+        if(record.jobType) {
+          fileAddedResponse.jobType = record.jobType;
+        } else {
+          fileAddedResponse.jobType = 'Job';
+        }
         break;
     }
     onFileAdded(fileAddedResponse);

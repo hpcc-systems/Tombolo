@@ -6,5 +6,6 @@
 **/build
 **/mysql-data
 **/vscode
+**/server/scripts
 sequelize-data.json
 docs/~$tombolo.pptx

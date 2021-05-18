@@ -18,7 +18,8 @@ module.exports = (sequelize, DataTypes) => {
     jobType: DataTypes.STRING,
     title: DataTypes.STRING,
     name: DataTypes.STRING,
-    cluster_id: DataTypes.STRING
+    cluster_id: DataTypes.STRING,
+    scriptPath: DataTypes.STRING
   }, {freezeTableName: true});
   job.associate = function(models) {
     job.hasMany(models.jobfile,{

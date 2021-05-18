@@ -75,7 +75,7 @@ class JobDetails extends Component {
     visible: true,
     confirmLoading: false,
     loading: false,
-    jobTypes:["Data Profile", "ETL", "General", "Modeling", "Query Build", "Scoring"],
+    jobTypes:["Data Profile", "ETL", "Job", "Modeling", "Query Build", "Scoring", "Script"],
     paramName: "",
     paramType:"",
     sourceFiles:[],
@@ -229,6 +229,7 @@ class JobDetails extends Component {
             inputFiles: jobfiles.filter(field => field.file_type == 'input'),
             outputFiles: jobfiles.filter(field => field.file_type == 'output'),
             ecl: data.ecl,
+            jobType: data.jobType,
             //For read only input
             description: data.description
          }
@@ -247,6 +248,7 @@ class JobDetails extends Component {
           jobType: data.jobType,
           contact: data.contact,
           author: data.author,
+          scriptPath: data.scriptPath ? data.scriptPath : '' 
         })
         this.setClusters(this.props.clusterId);
         return data;
@@ -469,6 +471,7 @@ class JobDetails extends Component {
     });
 
     let saveResponse = await this.saveJobDetails();
+    saveResponse.jobType = this.formRef.current.getFieldValue("jobType");
 
     setTimeout(() => {
       this.setState({
@@ -1063,6 +1066,11 @@ class JobDetails extends Component {
       wrapperCol: { xs: { span: 4 }, sm: { span: 24 }, md: { span: 24 }, lg: { span: 24 }, xl: { span: 24 } }
     };
 
+    const longFieldLayout = {
+      labelCol: { span: 2 },
+      wrapperCol: { span: 12 }
+    };
+
     const threeColformItemLayout = {
       labelCol: { span: 4 },
       wrapperCol: { span: 12 }
@@ -1084,6 +1092,17 @@ class JobDetails extends Component {
       }
     }];
 
+    const scriptInputParamscolumns = [{
+      title: 'Name',
+      dataIndex: 'name',
+      editable: editingAllowed
+    },
+    {
+      title: 'Value',
+      dataIndex: 'type',
+      editable: editingAllowed
+    }];
+
     const fileColumns = [{
       title: 'Name',
       dataIndex: 'name',
@@ -1096,7 +1115,7 @@ class JobDetails extends Component {
 
     const {
       name, title, description, ecl, entryBWR, gitRepo,
-      jobType, inputParams, outputFiles, inputFiles, contact, author
+      jobType, inputParams, outputFiles, inputFiles, contact, author, scriptPath
     } = this.state.job;
     const selectedCluster = clusters.filter(cluster => cluster.id == this.props.clusterId);
 
@@ -1307,91 +1326,114 @@ class JobDetails extends Component {
                 className="read-only-textarea"
                 />
         :
-                <Select placeholder="Job Type" value={(jobType != '') ? jobType : ""} style={{ width: 190 }} onChange={this.onJobTypeChange} disabled={!editingAllowed}>
+                <Select placeholder="Job Type" value={(jobType != '') ? jobType : "Job"} style={{ width: 190 }} onChange={this.onJobTypeChange} disabled={!editingAllowed}>
                     {jobTypes.map(d => <Option key={d}>{d}</Option>)}
                 </Select>
   }
               </Form.Item>
             </TabPane>
+            {this.state.job.jobType != 'Script' ?
+              <TabPane tab="ECL" key="2">
 
-            <TabPane tab="ECL" key="2">
+                <Form.Item {...eclItemLayout} label="ECL" name="ecl">
+                  <EclEditor
+                  id="job_ecl"
+                  targetDomId="jobEcl"
+                  disabled={true}
+                  />
+                </Form.Item>
+              </TabPane> 
+              :
+              <TabPane tab="Script" key="2">
+                <Form.Item {...longFieldLayout} label="Script Path" name="scriptPath" rules={[{
+                  required: true,
+                  pattern: new RegExp(/^[a-zA-Z0-9:$._/ '~]*$/),
+                  message: 'Please enter a valid path',
+                }]}>
+                  {this.state.enableEdit ?
+                  <Input id="job_scriptPath"
+                   onChange={this.onChange}
+                     placeholder="Main script path"
+                     value={scriptPath}
+                     disabled={!editingAllowed}
 
-              <Form.Item {...eclItemLayout} label="ECL" name="ecl">
-                <EclEditor
-                id="job_ecl"
-                 targetDomId="jobEcl"
-                 disabled={true}
-                 />
-              </Form.Item>
+                     /> :
+                     <textarea className="read-only-textarea" />
+                  }
+                </Form.Item>
+              </TabPane>    
+            }
+            
+                      
+            {this.state.job.jobType != 'Script' ?   
+              <React.Fragment>
+              <TabPane tab="Input Params" key="3">
+                <EditableTable
+                  columns={this.state.job.jobType != 'Script' ? columns : scriptInputParamscolumns}
+                  dataSource={inputParams}
+                  editingAllowed={editingAllowed}
+                  dataDefinitions={[]}
+                  showDataDefinition={false}
+                  setData={this.setInputParamsData}
+                  enableEdit={this.state.enableEdit}
+                  />
+              </TabPane>
+              
+              <TabPane tab="Input Files" key="4">
 
-            </TabPane>
-            <TabPane tab="Input Params" key="3">
-              <EditableTable
-                columns={columns}
-                dataSource={inputParams}
-                editingAllowed={editingAllowed}
-                dataDefinitions={[]}
-                showDataDefinition={false}
-                setData={this.setInputParamsData}
-                enableEdit={this.state.enableEdit}
-                />
-            </TabPane>
+                <div>
+                  {this.state.enableEdit ?
+                  <>
+                  <Form.Item label="Input Files">
+                    <Select id="inputfiles" placeholder="Select Input Files" defaultValue={this.state.selectedInputdFile} onChange={this.handleInputFileChange} style={{ width: 290 }} disabled={!editingAllowed}>
+                      {sourceFiles.map(d => <Option value={d.id} key={d.id}>{(d.title)?d.title:d.name}</Option>)}
+                    </Select>
+                  </Form.Item>
 
-            <TabPane tab="Input Files" key="4">
+                  <Form.Item>
+                    <Button type="primary" onClick={this.handleAddInputFile} disabled={!editingAllowed}>
+                      Add
+                    </Button>
+                  </Form.Item>
+                  </>
+                  : null}
 
-              <div>
-                {this.state.enableEdit ?
+
+                  <Table
+                    columns={fileColumns}
+                    rowKey={record => record.id}
+                    dataSource={inputFiles}
+                    pagination={{ pageSize: 10 }} scroll={{ y: 460 }}
+                  />
+                </div>
+              </TabPane></React.Fragment> : null}
+            {this.state.job.jobType != 'Script' ?       
+              <TabPane tab="Output Files" key="5">
+
+                <div>
+                {!this.state.enableEdit ?  null :
                 <>
-                <Form.Item label="Input Files">
-                  <Select id="inputfiles" placeholder="Select Input Files" defaultValue={this.state.selectedInputdFile} onChange={this.handleInputFileChange} style={{ width: 290 }} disabled={!editingAllowed}>
-                    {sourceFiles.map(d => <Option value={d.id} key={d.id}>{(d.title)?d.title:d.name}</Option>)}
-                  </Select>
-                </Form.Item>
+                  <Form.Item label="Output Files">
+                    <Select id="outputfiles" placeholder="Select Output Files" defaultValue={this.state.selectedOutputFile} onChange={this.handleOutputFileChange} style={{ width: 290 }} disabled={!editingAllowed}>
+                      {sourceFiles.map(d => <Option value={d.id} key={d.id}>{(d.title)?d.title:d.name}</Option>)}
+                    </Select>
+                  </Form.Item>
+                  <Form.Item>
+                    <Button type="primary" disabled={!editingAllowed} onClick={this.handleAddOutputFile}>
+                      Add
+                    </Button>
+                  </Form.Item>
+                  </> }
 
-                <Form.Item>
-                  <Button type="primary" onClick={this.handleAddInputFile} disabled={!editingAllowed}>
-                    Add
-                  </Button>
-                </Form.Item>
-                </>
-                : null}
-
-
-                <Table
-                  columns={fileColumns}
-                  rowKey={record => record.id}
-                  dataSource={inputFiles}
-                  pagination={{ pageSize: 10 }} scroll={{ y: 460 }}
-                />
-              </div>
-            </TabPane>
-
-            <TabPane tab="Output Files" key="5">
-
-              <div>
-              {!this.state.enableEdit ?  null :
-              <>
-                <Form.Item label="Output Files">
-                  <Select id="outputfiles" placeholder="Select Output Files" defaultValue={this.state.selectedOutputFile} onChange={this.handleOutputFileChange} style={{ width: 290 }} disabled={!editingAllowed}>
-                    {sourceFiles.map(d => <Option value={d.id} key={d.id}>{(d.title)?d.title:d.name}</Option>)}
-                  </Select>
-                </Form.Item>
-                <Form.Item>
-                  <Button type="primary" disabled={!editingAllowed} onClick={this.handleAddOutputFile}>
-                    Add
-                  </Button>
-                </Form.Item>
-                </> }
-
-                <Table
-                  columns={fileColumns}
-                  rowKey={record => record.id}
-                  dataSource={outputFiles}
-                  pagination={{ pageSize: 10 }} scroll={{ y: 460 }}
-                />
-              </div>
-            </TabPane>
-
+                  <Table
+                    columns={fileColumns}
+                    rowKey={record => record.id}
+                    dataSource={outputFiles}
+                    pagination={{ pageSize: 10 }} scroll={{ y: 460 }}
+                  />
+                </div>
+              </TabPane>
+            : null}
             { this.props.selectedDataflow ?
             <TabPane tab="Schedule" key="6">
               <div>
@@ -1415,6 +1457,7 @@ class JobDetails extends Component {
                     >
                       <Option value="Time">Timer based (run at specific interval)</Option>
                       <Option value="Predecessor">Job based (run after another job completes)</Option>
+                      <Option value="Message">Run on External Message (run when a message is received in a Kafka topic)</Option>
                     </Select>
   }
 
