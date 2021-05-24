@@ -1527,7 +1527,7 @@ class JobDetails extends Component {
              : null }
 
             {!this.props.isNew ?
-            <TabPane tab="Dataflows" key="7">
+            <TabPane tab="Workflows" key="7">
               <AssociatedDataflows assetId={this.state.job.id} assetType={'Job'}/>
             </TabPane> : null}
           </Tabs>
@@ -1559,16 +1559,16 @@ class JobDetails extends Component {
               <Button key="submit" disabled={!editingAllowed} type="primary" loading={confirmLoading} onClick={this.handleOk}>
               Save
             </Button>
-            </div> : 
+            </div> :
               <div className="button-container">
               <Button key="back" onClick={this.handleCancel}>
                 Cancel
-              </Button>  
+              </Button>
             </div>
   }
           </div>
 
-         
+
 
            }
         </div>

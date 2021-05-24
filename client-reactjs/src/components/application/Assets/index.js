@@ -469,7 +469,6 @@ function Assets(props) {
 
 
   const handleAssetSearch = debounce ((value, enterPress) => {
-    console.log(value);
     let expandedKeys = [];
     //validate only if enter pressed otherwise clearing search term will also trigger this validation
     if(enterPress && !value) {
@@ -524,14 +523,16 @@ function Assets(props) {
   );
 
   return (
+
       <React.Fragment>
         <div style={{"height":"100%", overflow: "hidden"}}>
           <div className="d-flex justify-content-end" style={{margin: "5px"}}>
             <BreadCrumbs applicationId={application.applicationId} applicationTitle={application.applicationTitle}/>
             <div className="ml-auto">
               {editingAllowed ?
-                <Dropdown 
+                <Dropdown
                 overlay={menu}
+
                 >
                   <Button className="btn btn-secondary btn-sm" >
                     Add Asset <DownOutlined />
@@ -556,8 +557,8 @@ function Assets(props) {
                 onExpand={onExpand}
                 treeData={treeData}
                 selectedKeys={[groupsReducer.selectedKeys.key]}
-                expandedKeys={[...groupsReducer.expandedKeys]}
-                autoExpandParent={true}
+                expandedKeys={expandedGroups}
+                autoExpandParent={false}
                 draggable
                 blockNode={true}
                 autoExpandParent={true}

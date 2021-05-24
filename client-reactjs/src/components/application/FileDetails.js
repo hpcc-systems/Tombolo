@@ -731,7 +731,7 @@ class FileDetails extends PureComponent {
     }
 
 
-    
+
   };
 
   onCheckbox = (e) => {
@@ -1205,12 +1205,12 @@ class FileDetails extends PureComponent {
 
     return (
       <React.Fragment>
-        {!this.state.enableEdit  && editingAllowed ?  
+        {!this.state.enableEdit  && editingAllowed ?
         <div className="button-container edit-toggle-btn">
           <Button type="primary" onClick={makeFieldsEditable}>
             Edit
           </Button>
-        </div> :  
+        </div> :
 
    <div className="button-container view-change-toggle-btn" >
           <Button  onClick={switchToViewOnly} type="primary" ghost>
@@ -1238,7 +1238,7 @@ class FileDetails extends PureComponent {
               >
                 {this.state.enableEdit ?
                 <div>
-                  {this.state.addingNewAsset ? 
+                  {this.state.addingNewAsset ?
                   <>
                   <Form.Item label="Type">
                     <Radio.Group
@@ -1675,7 +1675,7 @@ class FileDetails extends PureComponent {
             ) : null}
 
             {!this.props.isNew ? (
-              <TabPane tab="Dataflows" key="7">
+              <TabPane tab="Workflows" key="7">
                 <AssociatedDataflows assetId={this.state.file.id} assetType={"File"} />
               </TabPane>
             ) : null}
@@ -1708,8 +1708,8 @@ class FileDetails extends PureComponent {
           </Button>
         </div> :
         <div>
-          {this.state.dataAltered ? 
-        
+          {this.state.dataAltered ?
+
           <div className="button-container">
           <Button key="back" onClick={this.handleCancel}>
             Cancel
@@ -1729,7 +1729,7 @@ class FileDetails extends PureComponent {
           <Button key="back" onClick={this.handleCancel}>
             Cancel
           </Button>
-         
+
         </div>
   }
         </div>

@@ -576,7 +576,7 @@ class Graph extends Component {
     } else {
       //limit the dragging within svg boundary
       let left = d3.event.x, top = d3.event.y;
-      if (left + svgNodeWidth + svgNodeStrokeWidth > (svgUsableWidth + svgPalleteBarWidth)) {
+      /*if (left + svgNodeWidth + svgNodeStrokeWidth > (svgUsableWidth + svgPalleteBarWidth)) {
         left = (svgUsableWidth + svgPalleteBarWidth) - svgNodeWidth - svgNodeStrokeWidth
       } else if (d3.event.x < svgPalleteBarWidth) {
         console.log("stooop")
@@ -586,7 +586,7 @@ class Graph extends Component {
         top = svgUsableHeight - svgNodeHeight - svgNodeStrokeWidth
       } else if (d3.event.y < 0) {
         top = 0
-      }
+      }*/
 
       d.x = left;
       d.y = top;
