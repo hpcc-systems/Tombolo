@@ -226,7 +226,7 @@ class IndexDetails extends PureComponent {
   }
 
   searchIndexes = debounce ((searchString) => {
-    if(searchString.length <= 3 || this.state.indexSearchErrorShown)
+    if(searchString.length <= 0 || this.state.indexSearchErrorShown)
       return;
     this.setState({
       ...this.state,

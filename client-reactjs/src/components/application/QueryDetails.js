@@ -260,14 +260,14 @@ class QueryDetails extends PureComponent {
   }
 
   searchQueries = debounce ((searchString) => {
-    if(searchString.length <= 3 || this.state.querySearchErrorShown)
+    if(searchString.length <= 0 || this.state.querySearchErrorShown)
       return;
 
     this.setState({
       ...this.state,
       querySearchErrorShown: false
     });
-    if(searchString.length <= 3)
+    if(searchString.length <= 0)
       return;
     var data = JSON.stringify({clusterid: this.state.selectedCluster, keyword: searchString, indexSearch:true});
     fetch("/api/hpcc/read/querysearch", {
