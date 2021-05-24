@@ -110,7 +110,7 @@ class JobDetails extends Component {
     },
     enableEdit: false,
     editing: false,
-    dataAltered: false
+    dataAltered: false,
   }
 
   componentDidMount() {
@@ -379,7 +379,7 @@ class JobDetails extends Component {
   }
 
   searchJobs(searchString) {
-    if(searchString.length <= 3 || this.state.jobSearchErrorShown) {
+    if(searchString.length <= 0 || this.state.jobSearchErrorShown) {
       return;
     }
     this.setState({

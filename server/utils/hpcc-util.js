@@ -470,3 +470,4 @@ exports.isClusterReachable = async (clusterHost, port, username, password) => {
 let sortFiles = (files) => {
   return files.sort((a, b) => (a.name > b.name) ? 1 : -1);
 }
+

@@ -778,3 +778,8 @@ overflow: hidden;
   text-decoration: none;
   font-weight: 500;
 }
+
+.directorytree-rightclick-menuitem{
+  display: flex;
+  place-items: center;
+}
