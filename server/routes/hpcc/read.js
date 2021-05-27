@@ -17,6 +17,7 @@ let hpccJSComms = require("@hpcc-js/comms")
 var http = require('http');
 const { body, query, oneOf, validationResult } = require('express-validator');
 const ClusterWhitelist = require('../../cluster-whitelist');
+let lodash = require('lodash');
 
 router.post('/filesearch', [
   body('keyword')
@@ -493,5 +494,136 @@ router.get('/getJobInfo', [
       console.log('err', err);
   }
 });
+
+router.get('/getDropZones', [
+	query('clusterId')
+    .isUUID(4).withMessage('Invalid cluster id'),
+  ], function (req, res) {
+	  const errors = validationResult(req).formatWith(validatorUtil.errorFormatter);
+	if (!errors.isEmpty()) {
+	  return res.status(422).json({ success: false, errors: errors.array() });
+	}
+	try {
+		hpccUtil.getCluster(req.query.clusterId).then(function(cluster) {
+			let url = cluster.thor_host + ':' + cluster.thor_port +'/WsTopology/TpDropZoneQuery.json';
+			request.get({
+				url: url,
+				auth : hpccUtil.getClusterAuth(cluster)
+			}, function(err, response, body) {
+			if (err) {
+				console.log('ERROR - ', err);
+				return response.status(500).send('Error');
+			}
+			else {
+				let result = JSON.parse(body);
+				let dropZones = result.TpDropZoneQueryResponse.TpDropZones.TpDropZone;
+				let _dropZones = {};
+				dropZones.map(dropzone => {
+					_dropZones[dropzone.Name] = [];
+					lodash.flatMap(dropzone.TpMachines.TpMachine, (tpMachine) => {
+						_dropZones[dropzone.Name] = _dropZones[dropzone.Name].concat([tpMachine.Netaddress]);
+					})
+				});
+				res.json(_dropZones);
+			}
+			})
+		})
+	} catch (err) {
+		console.log('err', err);
+		return res.status(500).send("Error occured while getting dropzones");
+	}
+})
+
+router.post('/dropZoneFileSearch', [
+	body('clusterId').isUUID(4).withMessage('Invalid cluster id'),
+	body('dropZoneName').matches(/^[a-zA-Z0-9]{1}[a-zA-Z0-9_:\-.]*$/).withMessage('Invalid dropzone name'),
+	body('server').matches(/^[a-zA-Z0-9]{1}[a-zA-Z0-9_:\-.]/).withMessage('Invalid server'),
+	body('nameFilter').matches(/^[a-zA-Z0-9]{1}[a-zA-Z0-9_:\-.]*$/).withMessage('Invalid file filter'),
+  ], function (req, res) {
+	  const errors = validationResult(req).formatWith(validatorUtil.errorFormatter);
+	if (!errors.isEmpty()) {
+	  return res.status(422).json({ success: false, errors: errors.array() });
+	}
+	
+	try {
+		hpccUtil.getCluster(req.body.clusterId).then(function(cluster) {
+			request.post({
+				url: cluster.thor_host + ':' + cluster.thor_port +'/FileSpray/DropZoneFileSearch.json',
+				auth : hpccUtil.getClusterAuth(cluster),
+				headers: {'content-type' : 'application/x-www-form-urlencoded'},
+				body: 'DropZoneName='+req.body.dropZoneName+'&Server='+req.body.server+'&NameFilter=*'+req.body.nameFilter+'*&__dropZoneMachine.label='+req.body.server+'&__dropZoneMachine.value='+req.body.server+'&__dropZoneMachine.selected=true&rawxml_=true'				
+			}, function(err, response, body) {
+			  if (err) {
+					console.log('ERROR - ', err);
+					return response.status(500).send('Error occured during dropzone file search');
+				}
+				else {
+					var result = JSON.parse(body);
+					let files = [];
+					if(result && result.DropZoneFileSearchResponse && 
+						result.DropZoneFileSearchResponse['Files'] && 
+							result.DropZoneFileSearchResponse['Files']['PhysicalFileStruct']) {
+						files = result.DropZoneFileSearchResponse['Files']['PhysicalFileStruct'];						
+					}	
+					return res.status(200).send(files);							
+				}
+			})
+		})
+	} catch (err) {
+		console.log('err', err);
+		return response.status(500).send('Error occured during dropzone file search');
+	}
+});
+
+router.post('/executeSprayJob', [
+	body('jobId').isUUID(4).withMessage('Invalid cluster id')
+  ], async function (req, res) {
+	  const errors = validationResult(req).formatWith(validatorUtil.errorFormatter);
+	if (!errors.isEmpty()) {
+	  return res.status(422).json({ success: false, errors: errors.array() });
+	}
+	
+	try {
+		let job = await Job.findOne({where: {id: req.body.jobId}, attributes: { exclude: ['assetId'] }});
+		let cluster = hpccUtil.getCluster(job.cluster_id).then(async function(cluster) {			
+			let sprayPayload = {
+				destGroup: 'mythor',
+				DFUServerQueue: 'dfuserver_queue',
+				namePrefix: job.sprayedFileScope,
+				targetName: job.sprayFileName,
+				overwrite: 'on',
+				sourceIP: job.sprayDropZone,
+				sourcePath: '/var/lib/HPCCSystems/mydropzone/' + job.sprayFileName,
+				destLogicalName: job.sprayedFileScope + '::' + job.sprayFileName,
+				rawxml_: 1,
+				sourceFormat: 1,
+				sourceCsvSeparate: '\,',
+				sourceCsvTerminate: '\n,\r\n',
+				sourceCsvQuote: '"'
+			};
+			console.log(sprayPayload);
+			request.post({
+				url: cluster.thor_host + ':' + cluster.thor_port +'/FileSpray/SprayVariable.json',
+				auth : hpccUtil.getClusterAuth(cluster),
+				headers: {'content-type' : 'application/x-www-form-urlencoded'},
+				formData: sprayPayload,
+		    resolveWithFullResponse: true
+			}, function(err, response, body) {
+			  if (err) {
+					console.log('ERROR - ', err);
+					return response.status(500).send('Error occured during dropzone file search');
+				}
+				else {
+					var result = JSON.parse(body);					
+					return res.status(200).send(result);							
+				}
+			})
+		})
+	} catch (err) {
+		console.log('err', err);
+		return response.status(500).send('Error occured during dropzone file search');
+	}
+});
+
 
 module.exports = router;

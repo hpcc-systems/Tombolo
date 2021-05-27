@@ -30,7 +30,7 @@ router.get('/index_list', [
     'left join assets_dataflows asd '+
     'on i.id = asd.assetId '+
     'where i.application_id=(:applicationId) '+
-    'and i.id not in (select assetId from assets_dataflows where dataflowId = (:dataflowId)) group by i.id, asd.dataflowId order by i.name asc';
+    'and i.id not in (select assetId from assets_dataflows where dataflowId = (:dataflowId)) order by i.name asc';
     /*let query = 'select j.id, j.name, j.title, j.createdAt, asd.dataflowId from job j, assets_dataflows asd where j.application_id=(:applicationId) '+
         'and j.id = asd.assetId and j.id not in (select assetId from assets_dataflows where dataflowId = (:dataflowId))';*/
     let replacements = { applicationId: req.query.app_id, dataflowId: dataflowId};

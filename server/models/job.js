@@ -19,7 +19,10 @@ module.exports = (sequelize, DataTypes) => {
     title: DataTypes.STRING,
     name: DataTypes.STRING,
     cluster_id: DataTypes.STRING,
-    scriptPath: DataTypes.STRING
+    scriptPath: DataTypes.STRING,
+    sprayFileName: DataTypes.STRING,
+    sprayDropZone: DataTypes.STRING,
+    sprayedFileScope: DataTypes.STRING
   }, {freezeTableName: true});
   job.associate = function(models) {
     job.hasMany(models.jobfile,{

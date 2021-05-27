@@ -878,12 +878,15 @@ router.post('/executeJob', [
   try {
     let wuid = '';
     let job = await Job.findOne({where: {id:req.body.jobId}, attributes: {exclude: ['assetId']}, include: [JobParam]});
-    if(job.jobType != 'Script') {
+    if(job.jobType == 'Spray') {
+      let sprayJobExecution = await hpccUtil.executeSprayJob(job);
+      wuid = sprayJobExecution.SprayResponse && sprayJobExecution.SprayResponse.Wuid ? sprayJobExecution.SprayResponse.Wuid : ''
+    } else if(job.jobType == 'Script') {
+      let executionResult = await assetUtil.executeScriptJob(req.body.jobId);
+    } else if(job.jobType != 'Script') {
       wuid = await hpccUtil.getJobWuidByName(req.body.clusterId, req.body.jobName);
       let wuResubmitResult = await hpccUtil.resubmitWU(req.body.clusterId, wuid);
-    } else {
-      let executionResult = await assetUtil.executeScriptJob(req.body.jobId);
-    }
+    } 
     //record workflow execution
     await JobExecution.findOrCreate({
       where: {

@@ -20,7 +20,7 @@ import {DataflowInstances} from "./components/application/DataflowInstances/Data
 import {DataflowInstanceDetails} from "./components/application/DataflowInstances/DataflowInstanceDetails";
 import Users from "./components/admin/Users";
 import FileDetailsForm from "./components/application/FileDetails";
-import JobDetailsForm from "./components/application/JobDetails";
+import JobDetailsForm from "./components/application/Jobs/JobDetails";
 import IndexDetailsForm from "./components/application/IndexDetails";
 import QueryDetailsForm from "./components/application/QueryDetails";
 

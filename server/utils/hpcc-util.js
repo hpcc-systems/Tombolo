@@ -117,6 +117,50 @@ exports.indexInfo = (clusterId, indexName) => {
   });
 }
 
+exports.executeSprayJob = (job) => {
+  try {
+    return new Promise((resolve, reject) => {
+      let cluster = module.exports.getCluster(job.cluster_id).then(async function(cluster) {			
+        let sprayPayload = {
+          destGroup: 'mythor',
+          DFUServerQueue: 'dfuserver_queue',
+          namePrefix: job.sprayedFileScope,
+          targetName: job.sprayFileName,
+          overwrite: 'on',
+          sourceIP: job.sprayDropZone,
+          sourcePath: '/var/lib/HPCCSystems/mydropzone/' + job.sprayFileName,
+          destLogicalName: job.sprayedFileScope + '::' + job.sprayFileName,
+          rawxml_: 1,
+          sourceFormat: 1,
+          sourceCsvSeparate: '\,',
+          sourceCsvTerminate: '\n,\r\n',
+          sourceCsvQuote: '"'
+        };
+        console.log(sprayPayload);
+        request.post({
+          url: cluster.thor_host + ':' + cluster.thor_port +'/FileSpray/SprayVariable.json',
+          auth : module.exports.getClusterAuth(cluster),
+          headers: {'content-type' : 'application/x-www-form-urlencoded'},
+          formData: sprayPayload,
+          resolveWithFullResponse: true
+        }, function(err, response, body) {
+          if (err) {
+            console.log('ERROR - ', err);
+            reject('Error occured during dropzone file search');
+          }
+          else {
+            var result = JSON.parse(body);					
+            resolve(result);							
+          }
+        })
+      })
+    })
+	} catch (err) {
+		console.log('err', err);
+		reject('Error occured during dropzone file search');
+	}
+}
+
 exports.queryInfo = (clusterId, queryName) => {
   let resultObj = {basic:{}}, requestObj = [], responseObj = [];
   try {

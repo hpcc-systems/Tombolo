@@ -1,24 +1,25 @@
 import React, { Component, Fragment } from "react";
 import { Modal, Tabs, Form, Input, Checkbox, Button, Space, Select, Table, AutoComplete, Spin, message, Row, Col } from 'antd/lib';
-import { authHeader, handleError } from "../common/AuthHeader.js"
-import AssociatedDataflows from "./AssociatedDataflows"
-import { hasEditPermission } from "../common/AuthUtil.js";
-import { fetchDataDictionary, eclTypes, omitDeep } from "../common/CommonUtil.js"
-import EditableTable from "../common/EditableTable.js"
-import { MarkdownEditor } from "../common/MarkdownEditor.js"
-import { EclEditor } from "../common/EclEditor.js"
-import {handleJobDelete} from "../common/WorkflowUtil";
+import { authHeader, handleError } from "../../common/AuthHeader.js"
+import AssociatedDataflows from "../AssociatedDataflows"
+import { hasEditPermission } from "../../common/AuthUtil.js";
+import { fetchDataDictionary, eclTypes, omitDeep } from "../../common/CommonUtil.js"
+import EditableTable from "../../common/EditableTable.js"
+import { EclEditor } from "../../common/EclEditor.js"
+import {handleJobDelete} from "../../common/WorkflowUtil";
 import { connect } from 'react-redux';
 import { SearchOutlined } from '@ant-design/icons';
-import { assetsActions } from '../../redux/actions/Assets';
-import { store } from '../../redux/store/Store';
-import {Constants} from "../common/Constants";
+import { assetsActions } from '../../../redux/actions/Assets';
+import { store } from '../../../redux/store/Store';
+import {Constants} from "../../common/Constants";
 import ReactMarkdown from 'react-markdown';
-import {readOnlyMode, editableMode} from "../common/readOnlyUtil"
+import {readOnlyMode, editableMode} from "../../common/readOnlyUtil"
+import BasicsTabGeneral from "./BasicsTabGeneral";
+import BasicsTabSpray from "./BasicsTabSpray";
 
 
 const TabPane = Tabs.TabPane;
-const Option = Select.Option;
+const { Option, OptGroup } = Select;
 const { confirm } = Modal;
 
 const monthMap = {
@@ -75,7 +76,7 @@ class JobDetails extends Component {
     visible: true,
     confirmLoading: false,
     loading: false,
-    jobTypes:["Data Profile", "ETL", "Job", "Modeling", "Query Build", "Scoring", "Script"],
+    jobTypes:["Data Profile", "ETL", "Job", "Modeling", "Query Build", "Scoring", "Script", "Spray"],
     paramName: "",
     paramType:"",
     sourceFiles:[],
@@ -95,6 +96,8 @@ class JobDetails extends Component {
     autoCompleteSuffix: <SearchOutlined/>,
     searchResultsLoaded: false,
     initialDataLoading: false,
+    dropZones: {},
+    dropZoneFileSearchSuggestions: [],    
     job: {
       id:"",
       groupId: "",
@@ -106,7 +109,10 @@ class JobDetails extends Component {
       contact:"",
       inputParams: [],
       inputFiles: [],
-      outputFiles: []
+      outputFiles: [],
+      sprayFileName: '',
+      sprayedFileScope: '',
+      selectedDropZoneName:{}
     },
     enableEdit: false,
     editing: false,
@@ -144,20 +150,23 @@ class JobDetails extends Component {
 
       })
     }
+    if(this.props.clusterId != '') {
+      this.getDropZones(this.props.clusterId);
+    }
   }
 
 
-    //Unmounting phase
-    componentWillUnmount(){
-      store.dispatch({
-        type: Constants.ENABLE_EDIT,
-        payload: false
-      })
+  //Unmounting phase
+  componentWillUnmount(){
+    store.dispatch({
+      type: Constants.ENABLE_EDIT,
+      payload: false
+    })
 
-      store.dispatch({
-        type:  Constants.ADD_ASSET,
-        payload: false
-      })
+    store.dispatch({
+      type:  Constants.ADD_ASSET,
+      payload: false
+    })
   }
   getJobDetails() {
     if(this.props.selectedAsset !== '' && !this.props.isNew) {
@@ -196,6 +205,9 @@ class JobDetails extends Component {
         handleError(response);
       })
       .then(data => {
+        if(data.jobType == 'Spray') {
+          this.getDropZones(data.cluster_id);
+        }        
         var jobfiles = [], cronParts = [];
         data.jobfiles.forEach(function(doc, idx) {
           var fileObj = {};
@@ -208,7 +220,8 @@ class JobDetails extends Component {
         }
         if (data.schedule && data.schedule.type) {
           this.handleScheduleTypeSelect(data.schedule.type);
-        }
+        }        
+
         this.setState({
           ...this.state,
           initialDataLoading: false,
@@ -231,7 +244,9 @@ class JobDetails extends Component {
             ecl: data.ecl,
             jobType: data.jobType,
             //For read only input
-            description: data.description
+            description: data.description,
+            sprayFileName: data.sprayFileName,
+            sprayedFileScope: data.sprayedFileScope
          }
         });
 
@@ -248,9 +263,13 @@ class JobDetails extends Component {
           jobType: data.jobType,
           contact: data.contact,
           author: data.author,
-          scriptPath: data.scriptPath ? data.scriptPath : '' 
+          scriptPath: data.scriptPath ? data.scriptPath : '',
+          sprayFileName: data.sprayFileName,
+          sprayDropZone: data.sprayDropZone,
+          sprayedFileScope: data.sprayedFileScope 
         })
-        this.setClusters(this.props.clusterId);
+        console.log(this.state.dropZones)        
+        this.setClusters(this.props.clusterId);        
         return data;
       })
       .catch(error => {
@@ -378,6 +397,29 @@ class JobDetails extends Component {
     this.setState({
       selectedCluster: value,
     });
+    if(this.state.job.jobType == 'Spray') {
+      this.getDropZones(this.state.selectedCluster);
+    }
+  }
+
+  getDropZones(clusterId) {
+    console.log("getDropZones....")
+    if(clusterId) {
+      fetch("/api/hpcc/read/getDropZones?clusterId="+clusterId, {
+        headers: authHeader()
+      })
+      .then((response) => {
+        if(response.ok) {
+          return response.json();
+        }
+        handleError(response);
+      }).then(dropZones => {
+        console.log(dropZones)
+        this.setState({
+          dropZones: dropZones
+        });
+      })
+    }
   }
 
   searchJobs(searchString) {
@@ -414,6 +456,54 @@ class JobDetails extends Component {
         error.json().then((body) => {
           message.config({top:130})
           message.error("There was an error searching the job from cluster");
+        });
+        this.setState({
+          ...this.state,
+          jobSearchErrorShown: true
+        });
+      }
+    });
+  }
+
+  searchDropZoneFiles = (searchString) => {
+    if(searchString.length <= 3 || this.state.jobSearchErrorShown) {
+      return;
+    }
+    this.setState({
+      ...this.state,
+      jobSearchErrorShown: false,
+      searchResultsLoaded: false
+    });
+    console.log(this.formRef.current.getFieldValue('sprayDropZone'));
+    var data = JSON.stringify({
+      clusterId: this.state.selectedCluster, 
+      dropZoneName: this.state.selectedDropZoneName,
+      nameFilter: searchString, 
+      server:this.formRef.current.getFieldValue('sprayDropZone').label[0]
+    });
+    fetch("/api/hpcc/read/dropZoneFileSearch", {
+      method: 'post',
+      headers: authHeader(),
+      body: data
+    }).then((response) => {
+      if(response.ok) {
+        return response.json();
+      } else {
+        throw response;
+      }
+      handleError(response);
+    })
+    .then(suggestions => {
+      this.setState({
+        ...this.state,
+        dropZoneFileSearchSuggestions: suggestions,
+        searchResultsLoaded: true
+      });
+    }).catch(error => {
+      if(!this.state.jobSearchErrorShown) {
+        error.json().then((body) => {
+          message.config({top:130})
+          message.error("There was an error searching the files from cluster");
         });
         this.setState({
           ...this.state,
@@ -465,11 +555,15 @@ class JobDetails extends Component {
     });
   }
 
+  onDropZoneFileSelected(option) {
+    this.setState({sprayFileName: option.value});
+  }
+
   handleOk = async () => {
     this.setState({
       confirmLoading: true,
     });
-
+    const values = await this.formRef.current.validateFields();
     let saveResponse = await this.saveJobDetails();
     saveResponse.jobType = this.formRef.current.getFieldValue("jobType");
 
@@ -561,13 +655,18 @@ class JobDetails extends Component {
       return element;
     });
     console.log(this.formRef.current.getFieldsValue());
+    let formFieldsValue = this.formRef.current.getFieldsValue();
+    if(formFieldsValue['sprayDropZone']) {
+      formFieldsValue['sprayDropZone'] = formFieldsValue['sprayDropZone'].label[0];
+    }
     var jobDetails = {
       "basic": {
-        ...this.formRef.current.getFieldsValue(),
+        ...formFieldsValue,
         "application_id":applicationId,
         "dataflowId" : this.props.selectedDataflow ? this.props.selectedDataflow.id : '',
         "cluster_id": this.state.selectedCluster,
-        "ecl": this.state.job.ecl
+        "ecl": this.state.job.ecl,
+        "sprayFileName": this.state.job.sprayFileName
       },
       "schedule": {
         "type": this.state.selectedScheduleType,
@@ -608,6 +707,13 @@ class JobDetails extends Component {
     this.setState({...this.state, [e.target.name]: e.target.value });
   }
 
+  onDropZoneChange = (e) => {
+    console.log(e);
+    this.setState({
+      selectedDropZoneName:e.value
+    });
+  }
+
   handleAddInputParams = (e) => {
     var inputParams = this.state.job.inputParams;
     inputParams.push({"name":document.querySelector("#paramName").value, "type":document.querySelector("#paramType").value})
@@ -646,6 +752,13 @@ class JobDetails extends Component {
 
   onJobTypeChange = (value) => {
     this.setState({...this.state, job: {...this.state.job, jobType: value }}, () => console.log(this.state.job.jobType));
+    if(value == 'Spray') {
+      this.getDropZones(this.state.selectedCluster);
+    }
+  }
+
+  onDropZoneFileChange = (value) => {
+    this.setState({...this.state, job: {...this.state.job, sprayFileName: value }}, () => console.log(this.state.job.sprayFileName));
   }
 
   handleAddOutputFile = (e) => {
@@ -1054,7 +1167,8 @@ class JobDetails extends Component {
     const editingAllowed = hasEditPermission(this.props.user);
     const {
       visible, confirmLoading, jobTypes, paramName,
-      paramType, sourceFiles, jobSearchSuggestions, clusters, searchResultsLoaded
+      paramType, sourceFiles, jobSearchSuggestions, clusters, searchResultsLoaded, dropZones,
+      dropZoneFileSearchSuggestions
     } = this.state;
     const formItemLayout = {
       labelCol: { span: 2 },
@@ -1115,10 +1229,9 @@ class JobDetails extends Component {
 
     const {
       name, title, description, ecl, entryBWR, gitRepo,
-      jobType, inputParams, outputFiles, inputFiles, contact, author, scriptPath
+      jobType, inputParams, outputFiles, inputFiles, contact, author, scriptPath, sprayedFileScope, selectedDropZoneName
     } = this.state.job;
     const selectedCluster = clusters.filter(cluster => cluster.id == this.props.clusterId);
-
     //render only after fetching the data from the server
     if(!name && !this.props.selectedAsset && !this.props.isNew) {
       return null;
@@ -1154,9 +1267,9 @@ class JobDetails extends Component {
     return (
       <React.Fragment>
           {!this.state.enableEdit && editingAllowed?  <div className="button-container edit-toggle-btn">
-          <Button type="primary" onClick={makeFieldsEditable}>
-            Edit
-          </Button>
+            <Button type="primary" onClick={makeFieldsEditable}>
+              Edit
+            </Button>
         </div> : null }
         {this.state.editing ?  <div className="button-container view-change-toggle-btn" >
           <Button  onClick={switchToViewOnly} type="primary" ghost>
@@ -1171,168 +1284,35 @@ class JobDetails extends Component {
             </div> : null}
           <Form {...formItemLayout} labelAlign="left" ref={this.formRef} onFinish={this.handleOk} >
           <Tabs defaultActiveKey="1">
-
             <TabPane tab="Basic" key="1">
-              {this.state.enableEdit ?
-              <div>
-                {this.state.addingNewAsset ?
-                <>
-              <Form.Item {...formItemLayout} label="Cluster" name="clusters">
-                <Select placeholder="Select a Cluster" disabled={!editingAllowed} onChange={this.onClusterSelection} style={{ width: 190 }}>
-                  {this.props.clusters.map(cluster => <Option key={cluster.id}>{cluster.name}</Option>)}
-                </Select>
-              </Form.Item>
-              <Form.Item label="Job" name="querySearchValue">
-                <Row type="flex">
-                  <Col span={21} order={1}>
-                    <AutoComplete
-                      className="certain-category-search"
-                      dropdownClassName="certain-category-search-dropdown"
-                      dropdownMatchSelectWidth={false}
-                      dropdownStyle={{ width: 300 }}
-                      style={{ width: '100%' }}
-                      onSearch={(value) => this.searchJobs(value)}
-                      onSelect={(value, option) => this.onJobSelected(option)}
-                      placeholder="Search jobs"
-                      disabled={!editingAllowed}
-                      notFoundContent={searchResultsLoaded ? 'Not Found' : <Spin />}
-                    >
-                      {jobSearchSuggestions.map((suggestion) => (
-                        <Option key={suggestion.value} value={suggestion.text}>
-                          {suggestion.wuid}
-                        </Option>
-                      ))}
-                    </AutoComplete>
-                  </Col>
-                  <Col span={3} order={2} style={{"paddingLeft": "3px"}}>
-                   <Button htmlType="button" onClick={this.clearState}>
-                      Clear
-                   </Button>
-                  </Col>
-                </Row>
-              </Form.Item>
-              </>
-              : null}
-              </div> : null }
-
-              <Form.Item label="Name" name="name" rules={[{ required: true, message: 'Please enter a Name!' }, {
-                pattern: new RegExp(/^[a-zA-Z0-9:._-]*$/),
-                message: 'Please enter a valid name',
-              }]}>
-                <Input
-                id="job_name"
-                onChange={this.onChange}
-                placeholder="Name"
-                disabled={true}
-                disabled={!editingAllowed}
-                className={this.state.enableEdit ? null : "read-only-input"} />
-              </Form.Item>
-              <Form.Item label="Title" name="title" rules={[{ required: true, message: 'Please enter a title!' }, {
-                pattern: new RegExp(/^[a-zA-Z0-9:._-]*$/),
-                message: 'Please enter a valid Title',
-              }]}>
-                <Input id="job_title"
-                onChange={this.onChange}
-                placeholder="Title"
-                disabled={!editingAllowed}
-                className={this.state.enableEdit? null : "read-only-input"}
-                 />
-              </Form.Item>
-              <Form.Item label="Description" name="description">
-                {this.state.enableEdit ?
-                <MarkdownEditor
-                name="description"
-                id="job_desc"
-                onChange={this.onChange}
-                targetDomId="jobDescr"
-                value={description}
-                disabled={!editingAllowed}/>
+              <Form.Item label="Job Type" name="jobType"> 
+                {!this.state.enableEdit ? 
+                <textarea className="read-only-textarea"/>
                 :
-                <div className="read-only-markdown"> <ReactMarkdown source={this.state.job.description} />
-                </div>
-  }
-
-              </Form.Item>
-              {this.props.selectedJobType != 'Data Profile' ?
-                <Form.Item label="Git Repo" name="gitRepo" rules={[{
-                  type: 'url',
-                  message: 'Please enter a valid url',
-                }]}>
-                  {this.state.enableEdit ?
-                  <Input id="job_gitRepo"
-                   onChange={this.onChange}
-                     placeholder="Git Repo"
-                     value={gitRepo}
-                     disabled={!editingAllowed}
-
-                     /> :
-                     <textarea className="read-only-textarea" />
-                  }
-                </Form.Item>
-              : null }
-              <Form.Item label="Entry BWR" name="entryBWR" rules={[{
-                pattern: new RegExp(/^[a-zA-Z0-9:$._]*$/),
-                message: 'Please enter a valid BWR',
-              }]}>
-                {this.state.enableEdit ?
-                <Input id="job_entryBWR"
-                onChange={this.onChange}
-                placeholder="Primary Service"
-                 value={entryBWR}
-                  disabled={!editingAllowed}
-                  /> :
-                  <textarea className="read-only-textarea" />
-                }
-              </Form.Item>
-              <Row type="flex">
-                <Col span={12} order={1}>
-                  <Form.Item {...threeColformItemLayout} label="Contact Email" name="contact" rules={[{
-                    type: 'email',
-                    message: 'Please enter a valid email address',
-                  }]}>
-                    {this.state.enableEdit ?
-                    <Input id="job_bkp_svc"
-                    onChange={this.onChange}
-                    placeholder="Contact"
-                    value={contact}
-                    disabled={!editingAllowed}
-                    />
-                    :
-                    <textarea className="read-only-textarea" />
-                }
-                  </Form.Item>
-                </Col>
-                <Col span={12} order={2}>
-                  <Form.Item label="Author:" name="author" rules={[{
-                    pattern: new RegExp(/^[a-zA-Z0-9:$._-]*$/),
-                    message: 'Please enter a valid author',
-                  }]}>
-                  {this.state.enableEdit ?
-                    <Input
-                    id="job_author"
-                    onChange={this.onChange}
-                     placeholder="Author"
-                      value={author}
-                       disabled={!editingAllowed}
-                       /> :
-                       <textarea className="read-only-textarea" />
-                  }
-                  </Form.Item>
-                </Col>
-              </Row>
-              <Form.Item label="Job Type" name="jobType">
-                {!this.state.enableEdit ?
-                <textarea
-                className="read-only-textarea"
-                />
-        :
                 <Select placeholder="Job Type" value={(jobType != '') ? jobType : "Job"} style={{ width: 190 }} onChange={this.onJobTypeChange} disabled={!editingAllowed}>
-                    {jobTypes.map(d => <Option key={d}>{d}</Option>)}
+                  {jobTypes.map(d => <Option key={d}>{d}</Option>)}
                 </Select>
-  }
-              </Form.Item>
+                }
+              </Form.Item>                            
+              {(() =>  {
+                switch (jobType) {
+                  case 'Data Profile':
+                  case 'ETL':
+                  case 'Job':
+                  case 'Modelling':  
+                  case 'Query Build':
+                  case 'Scoring':                    
+                  case '':
+                    return <BasicsTabGeneral enableEdit={this.state.enableEdit} editingAllowed={editingAllowed} onClusterSelection={this.state.onClusterSelection} addingNewAsset={this.state.addingNewAsset} jobType={this.state.job.jobType} clearState={this.clearState} onChange={this.onChange} clusters={clusters} localState={this.state}/>;
+                  case 'Script':
+                    return <BasicsTabGeneral enableEdit={this.state.enableEdit} editingAllowed={editingAllowed} onClusterSelection={this.state.onClusterSelection} addingNewAsset={this.state.addingNewAsset} jobType={this.state.job.jobType} clearState={this.clearState} onChange={this.onChange} clusters={clusters} />;
+                  case 'Spray':
+                    return <BasicsTabSpray />;
+                }
+
+              })()}
             </TabPane>
-            {this.state.job.jobType != 'Script' ?
+            {this.state.job.jobType != 'Script' && this.state.job.jobType != 'Spray' ?
               <TabPane tab="ECL" key="2">
 
                 <Form.Item {...eclItemLayout} label="ECL" name="ecl">
@@ -1343,29 +1323,29 @@ class JobDetails extends Component {
                   />
                 </Form.Item>
               </TabPane> 
-              :
-              <TabPane tab="Script" key="2">
-                <Form.Item {...longFieldLayout} label="Script Path" name="scriptPath" rules={[{
-                  required: true,
-                  pattern: new RegExp(/^[a-zA-Z0-9:$._/ '~]*$/),
-                  message: 'Please enter a valid path',
-                }]}>
-                  {this.state.enableEdit ?
-                  <Input id="job_scriptPath"
-                   onChange={this.onChange}
-                     placeholder="Main script path"
-                     value={scriptPath}
-                     disabled={!editingAllowed}
+              : (this.state.job.jobType == 'Script' ? 
+                <TabPane tab="Script" key="2">
+                  <Form.Item {...longFieldLayout} label="Script Path" name="scriptPath" rules={[{
+                    required: true,
+                    pattern: new RegExp(/^[a-zA-Z0-9:$._/ '~]*$/),
+                    message: 'Please enter a valid path',
+                  }]}>
+                    {this.state.enableEdit ?
+                    <Input id="job_scriptPath"
+                    onChange={this.onChange}
+                      placeholder="Main script path"
+                      value={scriptPath}
+                      disabled={!editingAllowed}
 
-                     /> :
-                     <textarea className="read-only-textarea" />
-                  }
-                </Form.Item>
-              </TabPane>    
+                      /> :
+                      <textarea className="read-only-textarea" />
+                    }
+                  </Form.Item>
+                </TabPane> : null)   
             }
             
                       
-            {this.state.job.jobType != 'Script' ?   
+            {this.state.job.jobType != 'Script' && this.state.job.jobType != 'Spray' ?   
               <React.Fragment>
               <TabPane tab="Input Params" key="3">
                 <EditableTable
@@ -1407,7 +1387,7 @@ class JobDetails extends Component {
                   />
                 </div>
               </TabPane></React.Fragment> : null}
-            {this.state.job.jobType != 'Script' ?       
+            {this.state.job.jobType != 'Script' && this.state.job.jobType != 'Spray'?       
               <TabPane tab="Output Files" key="5">
 
                 <div>
@@ -1589,7 +1569,7 @@ class JobDetails extends Component {
              <Button key="back" onClick={this.handleCancel}>
               Cancel
             </Button>
-            <Button key="submit" disabled={!editingAllowed} type="primary" loading={confirmLoading} onClick={this.handleOk}>
+            <Button key="submit" htmlType="submit" disabled={!editingAllowed} type="primary" loading={confirmLoading} onClick={this.handleOk}>
               Save
             </Button>
           </div> :

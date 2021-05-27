@@ -26,7 +26,7 @@ var kafka = require('kafka-node'),
 
 let hpccJSComms = require("@hpcc-js/comms")
 var kafkaConsumerOptions = {
-  kafkaHost: process.env.KAFKA_ADVERTISED_LISTENER + ':' + process.env.KAFKA_PORT, // connect directly to kafka broker (instantiates a KafkaClient)
+  kafkaHost: process.env.KAFKA_HOST_NAME + ':' + process.env.KAFKA_PORT, // connect directly to kafka broker (instantiates a KafkaClient)
   batch: undefined, // put client batch settings if you need them
   ssl: false, // optional (defaults to false) or tls options hash
   groupId: 'ExampleTestGroup',

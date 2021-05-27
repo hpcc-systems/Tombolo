@@ -4,7 +4,7 @@ import { Button, Form, Input, message, Popconfirm, Icon, Tooltip, Modal, Select 
 import { authHeader, handleError } from "../../common/AuthHeader.js";
 import { MarkdownEditor } from "../../common/MarkdownEditor.js";
 import { useSelector } from "react-redux";
-const Option = Select.Option;
+const { Option, OptGroup } = Select;  
 
 function AddDataflow({isShowing, toggle, applicationId, onDataFlowUpdated, selectedDataflow, dataflows}) {
   const assetReducer = useSelector(state => state.assetReducer);

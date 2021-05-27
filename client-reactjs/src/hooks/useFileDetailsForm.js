@@ -1,6 +1,6 @@
 import React, { useState } from 'react'
 import FileDetailsForm from '../components/application/FileDetails';
-import JobDetailsForm from '../components/application/JobDetails';
+import JobDetailsForm from '../components/application/Jobs/JobDetails';
 import IndexDetailsForm from '../components/application/IndexDetails';
 import QueryDetailsForm from '../components/application/QueryDetails';
 

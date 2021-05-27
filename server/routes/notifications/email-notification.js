@@ -8,7 +8,7 @@ var smtpConfig = {
 var transporter = nodemailer.createTransport(smtpConfig);
 
 var kafkaConsumerOptions = {
-  kafkaHost: process.env.KAFKA_ADVERTISED_LISTENER + ':' + process.env.KAFKA_PORT, // connect directly to kafka broker (instantiates a KafkaClient)
+  kafkaHost: process.env.KAFKA_HOST_NAME + ':' + process.env.KAFKA_PORT, // connect directly to kafka broker (instantiates a KafkaClient)
   batch: undefined,
   ssl: false,
   groupId: 'ExampleTestGroup',

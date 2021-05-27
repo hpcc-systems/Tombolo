@@ -6,7 +6,7 @@ import { Button, Icon, Drawer, Row, Col, Descriptions, Badge, Modal, message, Sp
 import { Typography } from 'antd';
 import { withRouter } from 'react-router-dom';
 import FileDetailsForm from "../FileDetails";
-import JobDetailsForm from "../JobDetails";
+import JobDetailsForm from "../Jobs/JobDetails";
 import AssetDetailsDialog from "../AssetDetailsDialog"
 import IndexDetailsForm from "../IndexDetails";
 import ExistingAssetListDialog from "./ExistingAssetListDialog";
