@@ -49,6 +49,9 @@ function AssetDetailsDialog(props) {
     })
   }
 
+  //Mapping through all nodes and getting title of selected node
+  const assetName = props.nodes.filter((node) => props.selectedAsset ===  node[`${props.assetType}Id`] );
+  
   return (
 	  (authReducer.user && authReducer.user.token != undefined) ?
 	  <React.Fragment>
