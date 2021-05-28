@@ -115,6 +115,7 @@ class QueryDetails extends PureComponent {
             groupId: data.groupId,
             input: data.query_fields.filter(field => field.field_type == 'input'),
             output: data.query_fields.filter(field => field.field_type == 'output'),
+            name: data.name,
             //For read only
             description: data.description,
 
@@ -531,22 +532,20 @@ class QueryDetails extends PureComponent {
       });
     }
 
+    // view edit buttons on tabpane
+    const editButton  = !this.state.enableEdit && editingAllowed ?  <Button type="primary" onClick={makeFieldsEditable}> Edit  </Button> :  null ;
+    const viewChangesBtn = this.state.editing ?  <Button  onClick={switchToViewOnly} type="primary" ghost> View Changes </Button> : null;
+    const editandViewBtns = <div> {editButton} {viewChangesBtn}</div>
+
     //render only after fetching the data from the server
     //{console.log(title + ', ' + this.props.selectedQuery + ', ' + this.props.isNewFile)}
     return (
       <React.Fragment>
-          {!this.state.enableEdit && editingAllowed?  <div className="button-container edit-toggle-btn">
-          <Button type="primary" onClick={makeFieldsEditable}>
-            Edit
-          </Button>
-        </div> : null }
-        {this.state.editing ?  <div className="button-container view-change-toggle-btn" >
-          <Button  onClick={switchToViewOnly} type="primary" ghost>
-            View Changes
-          </Button>
-
-        </div> : null }
-
+          {this.props.displayingInModal || this.state.addingNewAsset ? null : 
+          <div style={{padding: "5px 16px", background: "var(--light)", fontWeight: "600", margin: "0px -16px"}} > 
+              Query :  {this.state.query.name}
+          </div>
+        }
         <div>
         {!this.props.isNew ?
             <div className="loader">
@@ -554,10 +553,9 @@ class QueryDetails extends PureComponent {
             </div> : null}
         <Tabs
           defaultActiveKey="1"
+          tabBarExtraContent = {editandViewBtns}
         >
           <TabPane tab="Basic" key="1">
-
-
            <Form {...formItemLayout} labelAlign="left" ref={this.formRef} onFinish={this.handleOk} initialValues={{type: "roxie_query"}}>
             {this.state.enableEdit ?
             <div>

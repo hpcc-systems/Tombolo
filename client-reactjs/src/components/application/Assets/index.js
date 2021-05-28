@@ -45,7 +45,6 @@ function Assets(props) {
   const assetReducer = useSelector(state => state.assetReducer);
   const [application, setApplication] = useState({...props});
   const [selectedGroup, setSelectedGroup] = useState({'id':groupsReducer.selectedKeys.id, 'title' : '','key':groupsReducer.selectedKeys.key});
-  console.log(selectedGroup, "<<<< Selected group")
   const [itemToMove, setItemToMove] = useState({})
   const [expandedGroups, setExpandedGroups] = useState(groupsReducer.expandedKeys);
   const [newGroup, setNewGroup] = useState({name:'', description:'', id: ''});

@@ -726,15 +726,6 @@ overflow: hidden;
   display: none;
   color: transparent;
 }
-.view-change-toggle-btn {
-  border-bottom :  2px slid whitesmoke;
-   padding-bottom: 6.2px;
-}
-
-.edit-toggle-btn {
-  border-bottom :  2px solid whitesmoke;
-   padding-bottom: 6.5px;
-}
 
 .read-only-markdown{
   display: flex;
@@ -782,4 +773,14 @@ overflow: hidden;
 .directorytree-rightclick-menuitem{
   display: flex;
   place-items: center;
+}
+
+.ant-modal-header{
+  background: var(--dark)
+}
+.ant-modal-title{
+  color: var(--light);
+}
+.ant-modal-close-x{
+  color: var(--light);
 }

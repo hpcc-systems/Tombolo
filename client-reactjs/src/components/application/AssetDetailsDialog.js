@@ -4,6 +4,8 @@ import useFileDetailsForm from '../../hooks/useFileDetailsForm';
 import { useSelector } from "react-redux";
 import { useParams } from "react-router-dom";
 import { Modal, Button } from 'antd/lib';
+import { color } from 'd3-color';
+import _ from "lodash";
 
 function AssetDetailsDialog(props) {
   const [application, setApplication] = useState({...props});
@@ -48,8 +50,10 @@ function AssetDetailsDialog(props) {
     })
   }
 
+  //Mapping through all nodes and getting title of selected node
+  const assetName = props.nodes.filter((node) => props.selectedAsset ===  node[`${props.assetType}Id`] );
+  
   return (
-
 	  (authReducer.user && authReducer.user.token != undefined) ?
 	  <React.Fragment>
 	    <Modal
@@ -58,6 +62,7 @@ function AssetDetailsDialog(props) {
           onCancel={handleClose}
           footer={null}
           bodyStyle={{display: "flex", flexDirection: "column"}}
+          title={_.startCase(_.toLower(props.assetType)) + " : " +    assetName[0].title}
         >
         <DetailsForm
           assetType={props.assetType}
@@ -68,6 +73,7 @@ function AssetDetailsDialog(props) {
           nodes={props.nodes}
           edges={props.edges}
           nodeIndex={props.nodeIndex}
+          displayingInModal={true}
         />
       </Modal>
 	  </React.Fragment>

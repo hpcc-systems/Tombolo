@@ -1608,7 +1608,16 @@ class Graph extends Component {
         </div>
 
       {this.state.openFileDetailsDialog ?
-        <AssetDetailsDialog assetType="file" fileId={this.props.selectedFile} selectedAsset={this.props.selectedFile} application={this.props.application} user={this.props.user} handleClose={this.handleClose}/>
+        <AssetDetailsDialog 
+          assetType="file"
+          assetId={this.state.selectedFile} 
+          fileId={this.props.selectedFile} 
+          nodes={this.thisGraph.nodes}
+          selectedAsset={this.state.selectedFile} 
+          application={this.props.application} 
+          user={this.props.user} 
+          handleClose={this.handleClose}
+        />
       : null }
 
       {this.state.openJobDetailsDialog ?
@@ -1627,7 +1636,14 @@ class Graph extends Component {
       : null}
 
       {this.state.openIndexDetailsDialog ?
-        <AssetDetailsDialog assetType="index" assetId={this.state.selectedIndex} selectedAsset={this.state.selectedIndex} application={this.props.application} user={this.props.user} handleClose={this.closeIndexDlg}/>
+        <AssetDetailsDialog 
+          assetType="index" 
+          assetId={this.state.selectedIndex} 
+          nodes={this.thisGraph.nodes}
+          selectedAsset={this.state.selectedIndex} 
+          application={this.props.application} 
+          user={this.props.user} 
+          handleClose={this.closeIndexDlg}/>
         : null}
 
         <Modal

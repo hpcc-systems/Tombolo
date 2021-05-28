@@ -121,7 +121,7 @@ class IndexDetails extends PureComponent {
             groupId: data.basic.groupId,
             keyedColumns: data.basic.index_keys,
             nonKeyedColumns: data.basic.index_payloads,
-
+            name: (data.basic.name == '' ? data.basic.title : data.basic.name),
             // For read only view
             description: data.basic.description,
 
@@ -235,6 +235,7 @@ class IndexDetails extends PureComponent {
     });
 
     var data = JSON.stringify({clusterid: this.state.selectedCluster, keyword: searchString, indexSearch:true});
+
     fetch("/api/hpcc/read/filesearch", {
       method: 'post',
       headers: authHeader(),
@@ -517,21 +518,18 @@ class IndexDetails extends PureComponent {
         });
       }
 
+     // view edit buttons on tabpane
+     const editButton  = !this.state.enableEdit && editingAllowed ?  <Button type="primary" onClick={makeFieldsEditable}> Edit  </Button> :  null ;
+     const viewChangesBtn = this.state.editing ?  <Button  onClick={switchToViewOnly} type="primary" ghost> View Changes </Button> : null;
+     const editandViewBtns = <div> {editButton} {viewChangesBtn}</div>
+
     return (
       <React.Fragment>
-        {/* Display edit or view changes btns */}
-          {!this.state.enableEdit && editingAllowed?  <div className="button-container edit-toggle-btn ">
-          <Button type="primary" onClick={makeFieldsEditable}>
-            Edit
-          </Button>
-        </div> : null }
-
-        {this.state.editing ?  <div className="button-container view-change-toggle-btn" >
-          <Button  onClick={switchToViewOnly} type="primary" ghost>
-            View Changes
-          </Button>
-
-        </div> : null }
+         {this.props.displayingInModal || this.state.addingNewAsset ? null : 
+          <div style={{padding: "5px 16px", background: "var(--light)", fontWeight: "600", margin: "0px -16px"}} > 
+              Index :  {this.state.index.name}
+          </div>
+        }
         <div>
           {!this.props.isNew ?
             <div className="loader">
@@ -540,6 +538,7 @@ class IndexDetails extends PureComponent {
 
           <Tabs
             defaultActiveKey="1"
+            tabBarExtraContent = {editandViewBtns}
           >
             <TabPane tab="Basic" key="1">
 
