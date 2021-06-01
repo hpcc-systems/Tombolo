@@ -776,11 +776,11 @@ overflow: hidden;
 }
 
 .ant-modal-header{
-  background: var(--dark)
+  background: var(--light)
 }
 .ant-modal-title{
-  color: var(--light);
+  color: var(--dark);
 }
 .ant-modal-close-x{
-  color: var(--light);
+  color: var(--dark);
 }
