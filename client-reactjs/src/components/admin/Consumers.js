@@ -177,7 +177,7 @@ class Consumers extends Component {
   }
 
   searchADGroups(searchString) {
-    if(searchString.length <= 0)
+    if(searchString.length <= 2)
       return;
     fetch("/api/ldap/groupSearch?groupName="+searchString, {
       method: 'get',

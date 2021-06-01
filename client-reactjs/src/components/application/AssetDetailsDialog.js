@@ -4,7 +4,6 @@ import useFileDetailsForm from '../../hooks/useFileDetailsForm';
 import { useSelector } from "react-redux";
 import { useParams } from "react-router-dom";
 import { Modal, Button } from 'antd/lib';
-import { color } from 'd3-color';
 import _ from "lodash";
 
 function AssetDetailsDialog(props) {

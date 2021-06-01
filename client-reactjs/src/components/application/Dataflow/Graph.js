@@ -500,6 +500,9 @@ class Graph extends Component {
         _self.props.updateProcessId(data.dataflowId);
       }*/
       console.log('Saved graph..');
+      console.log("<<<< selected dataflow ", _self.props.selectedDataflow);
+      // console.log("<<<< Selected node -- ", this.state.selectedFile );
+
         //_self.fetchFiles();
     });
   }
