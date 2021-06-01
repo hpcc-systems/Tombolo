@@ -23,6 +23,7 @@ const validatorUtil = require('../../utils/validator');
 const { body, query, param, validationResult } = require('express-validator');
 const assetUtil = require('../../utils/assets');
 const SUBMIT_JOB_FILE_NAME = 'submitJob.js';
+const SUBMIT_SCRIPT_JOB_FILE_NAME = 'submitScriptJob.js';
 
 /**
   Updates Dataflow graph by
@@ -611,7 +612,8 @@ router.post('/saveJob', [
                   req.body.job.basic.dataflowId,
                   applicationId,
                   jobId,
-                  SUBMIT_JOB_FILE_NAME
+                  req.body.job.basic.jobType == 'Script' ? SUBMIT_SCRIPT_JOB_FILE_NAME : SUBMIT_JOB_FILE_NAME,
+                  req.body.job.basic.jobType
                 )
               } catch (err) {
                 console.log("could not remove job from scheduler"+ err)
@@ -883,7 +885,7 @@ router.post('/executeJob', [
       wuid = sprayJobExecution.SprayResponse && sprayJobExecution.SprayResponse.Wuid ? sprayJobExecution.SprayResponse.Wuid : ''
     } else if(job.jobType == 'Script') {
       let executionResult = await assetUtil.executeScriptJob(req.body.jobId);
-    } else if(job.jobType != 'Script') {
+    } else if(job.jobType != 'Script' && job.jobType != 'Spray') {
       wuid = await hpccUtil.getJobWuidByName(req.body.clusterId, req.body.jobName);
       let wuResubmitResult = await hpccUtil.resubmitWU(req.body.clusterId, wuid);
     } 

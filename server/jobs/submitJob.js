@@ -1,8 +1,7 @@
 const { parentPort, workerData } = require("worker_threads");
 const request = require('request-promise');
 const hpccUtil = require('../utils/hpcc-util');
-const models = require('../models');
-let JobExecution = models.job_execution;
+const assetUtil = require('../utils/assets.js');
 
 let isCancelled = false;
 if (parentPort) {
@@ -13,40 +12,25 @@ if (parentPort) {
 
 (async () => {
   try {
-    let wuid = await hpccUtil.getJobWuidByName(workerData.clusterId, workerData.jobName);
+    let wuid='';
+    if(workerData.jobType == 'Spray') {
+      let sprayJobExecution = await hpccUtil.executeSprayJob({
+        cluster_id: workerData.clusterId, 
+        sprayedFileScope: workerData.sprayedFileScope,
+        sprayFileName: workerData.sprayFileName,
+        sprayDropZone: workerData.sprayDropZone
+      });
+      wuid = sprayJobExecution.SprayResponse && sprayJobExecution.SprayResponse.Wuid ? sprayJobExecution.SprayResponse.Wuid : ''      
+    } else {
+      wuid = await hpccUtil.getJobWuidByName(workerData.clusterId, workerData.jobName);
+    }
     console.log(
     `submitting job ${workerData.jobName} ` +
     `(WU: ${wuid}) to url ${workerData.clusterId}/WsWorkunits/WUResubmit.json?ver_=1.78`
     );
     let wuInfo = await hpccUtil.resubmitWU(workerData.clusterId, wuid);
     //record workflow execution
-    await JobExecution.findOrCreate({
-      where: {
-        jobId: workerData.jobId,
-        applicationId: workerData.applicationId
-      },
-      defaults: {
-        jobId: workerData.jobId,
-        dataflowId: workerData.dataflowId,
-        applicationId: workerData.applicationId,
-        wuid: wuid,
-        clusterId: workerData.clusterId,
-        status: 'submitted'
-      }
-    }).then((results, created) => {
-      let jobExecutionId = results[0].id;
-      if(!created) {
-        return JobExecution.update({
-          jobId: workerData.jobId,
-          dataflowId: workerData.dataflowId,
-          applicationId: workerData.applicationId,
-          wuid: wuid,
-          status: 'submitted'
-        },
-        {where: {id: jobExecutionId}})
-      }
-    })
-
+    let jobExecutionRecorded = await assetUtil.recordJobExecution(workerData, wuid);
   } catch (err) {
     console.log(err);
   } finally {

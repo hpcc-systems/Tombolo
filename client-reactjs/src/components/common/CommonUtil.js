@@ -63,5 +63,16 @@ const flatten = (obj) => {
   }, []);
 }
 
+const formItemLayout = {
+  labelCol: { span: 2 },
+  wrapperCol: { span: 8 }
+}
 
-export {omitDeep, eclTypes, fetchDataDictionary, flatten};
+const threeColformItemLayout = {
+  labelCol: { span: 4 },
+  wrapperCol: { span: 12 }
+};
+
+
+
+export {omitDeep, eclTypes, fetchDataDictionary, flatten, formItemLayout, threeColformItemLayout};

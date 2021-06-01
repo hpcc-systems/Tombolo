@@ -3,7 +3,7 @@ import { Modal, Tabs, Form, Input, Checkbox, Button, Space, Select, Table, AutoC
 import { authHeader, handleError } from "../../common/AuthHeader.js"
 import AssociatedDataflows from "../AssociatedDataflows"
 import { hasEditPermission } from "../../common/AuthUtil.js";
-import { fetchDataDictionary, eclTypes, omitDeep } from "../../common/CommonUtil.js"
+import { fetchDataDictionary, eclTypes, omitDeep, formItemLayout, threeColformItemLayout } from "../../common/CommonUtil.js"
 import EditableTable from "../../common/EditableTable.js"
 import { EclEditor } from "../../common/EclEditor.js"
 import {handleJobDelete} from "../../common/WorkflowUtil";
@@ -16,6 +16,7 @@ import ReactMarkdown from 'react-markdown';
 import {readOnlyMode, editableMode} from "../../common/readOnlyUtil"
 import BasicsTabGeneral from "./BasicsTabGeneral";
 import BasicsTabSpray from "./BasicsTabSpray";
+import BasicsTabScript from "./BasicsTabScript";
 
 
 const TabPane = Tabs.TabPane;
@@ -150,9 +151,6 @@ class JobDetails extends Component {
 
       })
     }
-    if(this.props.clusterId != '') {
-      this.getDropZones(this.props.clusterId);
-    }
   }
 
 
@@ -205,9 +203,6 @@ class JobDetails extends Component {
         handleError(response);
       })
       .then(data => {
-        if(data.jobType == 'Spray') {
-          this.getDropZones(data.cluster_id);
-        }        
         var jobfiles = [], cronParts = [];
         data.jobfiles.forEach(function(doc, idx) {
           var fileObj = {};
@@ -268,7 +263,6 @@ class JobDetails extends Component {
           sprayDropZone: data.sprayDropZone,
           sprayedFileScope: data.sprayedFileScope 
         })
-        console.log(this.state.dropZones)        
         this.setClusters(this.props.clusterId);        
         return data;
       })
@@ -397,32 +391,9 @@ class JobDetails extends Component {
     this.setState({
       selectedCluster: value,
     });
-    if(this.state.job.jobType == 'Spray') {
-      this.getDropZones(this.state.selectedCluster);
-    }
   }
 
-  getDropZones(clusterId) {
-    console.log("getDropZones....")
-    if(clusterId) {
-      fetch("/api/hpcc/read/getDropZones?clusterId="+clusterId, {
-        headers: authHeader()
-      })
-      .then((response) => {
-        if(response.ok) {
-          return response.json();
-        }
-        handleError(response);
-      }).then(dropZones => {
-        console.log(dropZones)
-        this.setState({
-          dropZones: dropZones
-        });
-      })
-    }
-  }
-
-  searchJobs(searchString) {
+    searchJobs(searchString) {
     if(searchString.length <= 3 || this.state.jobSearchErrorShown) {
       return;
     }
@@ -474,7 +445,6 @@ class JobDetails extends Component {
       jobSearchErrorShown: false,
       searchResultsLoaded: false
     });
-    console.log(this.formRef.current.getFieldValue('sprayDropZone'));
     var data = JSON.stringify({
       clusterId: this.state.selectedCluster, 
       dropZoneName: this.state.selectedDropZoneName,
@@ -657,7 +627,7 @@ class JobDetails extends Component {
     console.log(this.formRef.current.getFieldsValue());
     let formFieldsValue = this.formRef.current.getFieldsValue();
     if(formFieldsValue['sprayDropZone']) {
-      formFieldsValue['sprayDropZone'] = formFieldsValue['sprayDropZone'].label[0];
+      formFieldsValue['sprayDropZone'] = formFieldsValue['sprayDropZone'].value;
     }
     var jobDetails = {
       "basic": {
@@ -707,13 +677,6 @@ class JobDetails extends Component {
     this.setState({...this.state, [e.target.name]: e.target.value });
   }
 
-  onDropZoneChange = (e) => {
-    console.log(e);
-    this.setState({
-      selectedDropZoneName:e.value
-    });
-  }
-
   handleAddInputParams = (e) => {
     var inputParams = this.state.job.inputParams;
     inputParams.push({"name":document.querySelector("#paramName").value, "type":document.querySelector("#paramType").value})
@@ -752,9 +715,6 @@ class JobDetails extends Component {
 
   onJobTypeChange = (value) => {
     this.setState({...this.state, job: {...this.state.job, jobType: value }}, () => console.log(this.state.job.jobType));
-    if(value == 'Spray') {
-      this.getDropZones(this.state.selectedCluster);
-    }
   }
 
   onDropZoneFileChange = (value) => {
@@ -1170,10 +1130,6 @@ class JobDetails extends Component {
       paramType, sourceFiles, jobSearchSuggestions, clusters, searchResultsLoaded, dropZones,
       dropZoneFileSearchSuggestions
     } = this.state;
-    const formItemLayout = {
-      labelCol: { span: 2 },
-      wrapperCol: { span: 8 }
-    };
 
     const eclItemLayout = {
       labelCol: { xs: { span: 2 }, sm: { span: 2 }, md: { span: 2 }, lg: { span: 2 } },
@@ -1182,11 +1138,6 @@ class JobDetails extends Component {
 
     const longFieldLayout = {
       labelCol: { span: 2 },
-      wrapperCol: { span: 12 }
-    };
-
-    const threeColformItemLayout = {
-      labelCol: { span: 4 },
       wrapperCol: { span: 12 }
     };
 
@@ -1229,7 +1180,7 @@ class JobDetails extends Component {
 
     const {
       name, title, description, ecl, entryBWR, gitRepo,
-      jobType, inputParams, outputFiles, inputFiles, contact, author, scriptPath, sprayedFileScope, selectedDropZoneName
+      jobType, inputParams, outputFiles, inputFiles, contact, author, scriptPath, sprayedFileScope
     } = this.state.job;
     const selectedCluster = clusters.filter(cluster => cluster.id == this.props.clusterId);
     //render only after fetching the data from the server
@@ -1299,15 +1250,15 @@ class JobDetails extends Component {
                   case 'Data Profile':
                   case 'ETL':
                   case 'Job':
-                  case 'Modelling':  
+                  case 'Modeling':  
                   case 'Query Build':
                   case 'Scoring':                    
                   case '':
-                    return <BasicsTabGeneral enableEdit={this.state.enableEdit} editingAllowed={editingAllowed} onClusterSelection={this.state.onClusterSelection} addingNewAsset={this.state.addingNewAsset} jobType={this.state.job.jobType} clearState={this.clearState} onChange={this.onChange} clusters={clusters} localState={this.state}/>;
+                    return <BasicsTabGeneral enableEdit={this.state.enableEdit} editingAllowed={editingAllowed} addingNewAsset={this.state.addingNewAsset} jobType={this.state.job.jobType} clearState={this.clearState} onChange={this.onChange} clusters={this.props.clusters} localState={this.state} formRef={this.formRef} applicationId={this.props.application.applicationId}/>;
                   case 'Script':
-                    return <BasicsTabGeneral enableEdit={this.state.enableEdit} editingAllowed={editingAllowed} onClusterSelection={this.state.onClusterSelection} addingNewAsset={this.state.addingNewAsset} jobType={this.state.job.jobType} clearState={this.clearState} onChange={this.onChange} clusters={clusters} />;
+                    return <BasicsTabScript enableEdit={this.state.enableEdit} editingAllowed={editingAllowed} onChange={this.onChange} localState={this.state} />;
                   case 'Spray':
-                    return <BasicsTabSpray />;
+                    return <BasicsTabSpray enableEdit={this.state.enableEdit} editingAllowed={editingAllowed} addingNewAsset={this.state.addingNewAsset} clearState={this.clearState} onChange={this.onChange} clusters={this.props.clusters} localState={this.state} formRef={this.formRef}/>;
                 }
 
               })()}

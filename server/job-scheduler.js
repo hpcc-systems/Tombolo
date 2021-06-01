@@ -34,7 +34,7 @@ class JobScheduler {
   }
 
   async scheduleCheckForJobsWithSingleDependency(jobName) {
-    const query = `SELECT j1.id, j1.name, j1.jobType, dj.dependsOnJobId as dependsOnJobId, dj.jobId, c.id as clusterId, d.id as dataflowId, d.application_id, count(*) as count
+    const query = `SELECT j1.id, j1.name, j1.jobType, j1.sprayedFileScope, j1.sprayFileName, j1.sprayDropZone, dj.dependsOnJobId as dependsOnJobId, dj.jobId, c.id as clusterId, d.id as dataflowId, d.application_id, count(*) as count
       FROM tombolo.dependent_jobs dj
       left join job j1 on j1.id = dj.jobId
       left join job j2 on j2.id = dj.dependsOnJobId
@@ -62,7 +62,11 @@ class JobScheduler {
           job.dataflowId, 
           job.application_id, 
           job.jobId, 
-          job.jobType == 'Script' ? SUBMIT_SCRIPT_JOB_FILE_NAME : SUBMIT_JOB_FILE_NAME);
+          job.jobType == 'Script' ? SUBMIT_SCRIPT_JOB_FILE_NAME : SUBMIT_JOB_FILE_NAME,
+          job.jobType,
+          job.sprayedFileScope,
+          job.sprayFileName,
+          job.sprayDropZone);
       } catch (err) {
         console.log(err);
       }
@@ -71,7 +75,7 @@ class JobScheduler {
 
   async scheduleActiveCronJobs() {
     let promises=[];
-    const query = `SELECT ad.id, ad.cron, j.name as name, j.jobType, ad.dataflowId, ad.assetId, d.application_id, c.id as clusterId, c.thor_host, c.thor_port,
+    const query = `SELECT ad.id, ad.cron, j.name as name, j.jobType, j.sprayedFileScope, j.sprayFileName, j.sprayDropZone, ad.dataflowId, ad.assetId, d.application_id, c.id as clusterId, c.thor_host, c.thor_port,
       d.title as dataflowName
       FROM tombolo.assets_dataflows ad
       left join dataflow d on d.id = ad.dataflowId
@@ -99,7 +103,12 @@ class JobScheduler {
           job.dataflowId, 
           job.application_id, 
           job.assetId, 
-          job.jobType == 'Script' ? SUBMIT_SCRIPT_JOB_FILE_NAME : SUBMIT_JOB_FILE_NAME);
+          job.jobType == 'Script' ? SUBMIT_SCRIPT_JOB_FILE_NAME : SUBMIT_JOB_FILE_NAME,
+          job.jobType,
+          job.sprayedFileScope,
+          job.sprayFileName,
+          job.sprayDropZone
+        );
       } catch (err) {
         console.log(err);
       }
@@ -118,14 +127,19 @@ class JobScheduler {
           messageBasedjob.dataflowId,
           messageBasedjob.applicationId,
           job.id,
-          job.jobType == 'Script' ? SUBMIT_SCRIPT_JOB_FILE_NAME : SUBMIT_JOB_FILE_NAME);
+          job.jobType == 'Script' ? SUBMIT_SCRIPT_JOB_FILE_NAME : SUBMIT_JOB_FILE_NAME,
+          job.jobType,
+          job.sprayedFileScope,
+          job.sprayFileName,
+          job.sprayDropZone
+          );
       }
     } catch (err) {
       console.log(err);
     }
   }
 
-  async addJobToScheduler(name, cron, clusterId, dataflowId, applicationId, jobId, jobfileName) {
+  async addJobToScheduler(name, cron, clusterId, dataflowId, applicationId, jobId, jobfileName, jobType, sprayedFileScope, sprayFileName, sprayDropZone) {
     let uniqueJobName = name + '-' + dataflowId + '-' + jobId;
     this.bree.add({
       name: uniqueJobName,
@@ -137,7 +151,11 @@ class JobScheduler {
           clusterId: clusterId,
           jobId: jobId,
           applicationId: applicationId,
-          dataflowId: dataflowId
+          dataflowId: dataflowId,
+          jobType: jobType,
+          sprayedFileScope: sprayedFileScope,
+          sprayFileName: sprayFileName,
+          sprayDropZone: sprayDropZone
         }
       }
     })
@@ -145,7 +163,7 @@ class JobScheduler {
     this.bree.start(uniqueJobName);
   }
 
-  async executeJob(name, clusterId, dataflowId, applicationId, jobId, jobfileName) {
+  async executeJob(name, clusterId, dataflowId, applicationId, jobId, jobfileName, jobType, sprayedFileScope, sprayFileName, sprayDropZone) {
     let uniqueJobName = name + '-' + dataflowId + '-' + jobId + '-' + Date.now();
     this.bree.add({
       name: uniqueJobName,
@@ -157,7 +175,11 @@ class JobScheduler {
           clusterId: clusterId,
           jobId: jobId,
           applicationId: applicationId,
-          dataflowId: dataflowId
+          dataflowId: dataflowId,
+          jobType: jobType,
+          sprayedFileScope: sprayedFileScope,
+          sprayFileName: sprayFileName,
+          sprayDropZone: sprayDropZone
         }
       }
     })

@@ -1,28 +1,37 @@
 import React, { useState, useEffect } from 'react'
-import { Modal, Tabs, Form, Input, Checkbox, Button, Space, Select, Table, AutoComplete, Spin, message, Row, Col } from 'antd/lib';
-import { authHeader, handleError } from "../../common/AuthHeader.js"
-import { SearchOutlined } from '@ant-design/icons';
+import { Form, Input, Button, Select, Spin, message, Row, Col } from 'antd/lib';
+import { authHeader, handleError } from "../../common/AuthHeader.js";
+import { useDispatch } from "react-redux";
+import { assetsActions } from '../../../redux/actions/Assets';
+import { formItemLayout } from "../../common/CommonUtil.js"
 const { Option, OptGroup } = Select;  
 
-function BasicsTabSpray({enableEdit, editingAllowed, jobType, sprayFileName, style, clearState, clusterId, onChange, clusters}) {
+function BasicsTabSpray({enableEdit, editingAllowed, addingNewAsset, clearState, onChange, clusters, localState, formRef}) {
   const [jobSearchErrorShown, setJobSearchErrorShown] = useState(false);
   const [searchResultsLoaded, setSearchResultsLoaded] = useState(false);
   const [dropZoneFileSearchSuggestions, setDropZoneFileSearchSuggestions] = useState([]);
-  const [dropZones, setDropZones] = useState([]);
+  const [dropZones, setDropZones] = useState({});
   const [selectedDropZoneName, setSelectedDropZoneName] = useState('');
   const [sprayedFileScope, setSprayedFileScope] = useState('');
-  
-  
+  const [sprayFileName, setSprayFileName] = useState('');
+  const [selectedCluster, setSelectedCluster] = useState();
+  const dispatch = useDispatch();
+
   useEffect(() => {
-    getDropZones(clusterId)
-  }, [clusterId])
+    getDropZones(selectedCluster || localState.selectedCluster);
+  }, [selectedCluster, localState.selectedCluster])
 
   const onDropZoneFileChange = (value) => {
-    //this.setState({...this.state, job: {...this.state.job, sprayFileName: value }}, () => console.log(this.state.job.sprayFileName));
+    setSprayFileName(value);
+    localState.job.sprayFileName = value;
+  }
+
+  const onClusterSelection = (value) => {
+    dispatch(assetsActions.clusterSelected(value));
+    setSelectedCluster(value);
   }
 
   const getDropZones = (clusterId) => {
-    console.log("getDropZones....")
     if(clusterId) {
       fetch("/api/hpcc/read/getDropZones?clusterId="+clusterId, {
         headers: authHeader()
@@ -33,26 +42,31 @@ function BasicsTabSpray({enableEdit, editingAllowed, jobType, sprayFileName, sty
         }
         handleError(response);
       }).then(dropZones => {
-        console.log(dropZones)
-        this.setState({
-          dropZones: dropZones
-        });
+        setDropZones(dropZones);
+        if(formRef && formRef.current && formRef.current.getFieldValue('sprayDropZone')) {
+          Object.keys(dropZones).forEach((dropZone) => {
+            if(dropZones[dropZone].includes(formRef.current.getFieldValue('sprayDropZone'))) {
+              setSelectedDropZoneName(formRef.current.getFieldValue('sprayDropZone'));
+              console.log(dropZone)
+            }
+          })
+        }
       })
     }
   }
 
   const searchDropZoneFiles = (searchString) => {
-    if(searchString.length <= 3 || this.state.jobSearchErrorShown) {
+    if(searchString.length <= 3 || jobSearchErrorShown) {
       return;
     }
     setJobSearchErrorShown(false);
     setSearchResultsLoaded(false);
 
     var data = JSON.stringify({
-      clusterId: this.state.selectedCluster, 
-      dropZoneName: this.state.selectedDropZoneName,
+      clusterId: selectedCluster, 
+      dropZoneName: selectedDropZoneName,
       nameFilter: searchString, 
-      server:this.formRef.current.getFieldValue('sprayDropZone').label[0]
+      server: formRef.current.getFieldValue('sprayDropZone').label[0]
     });
     fetch("/api/hpcc/read/dropZoneFileSearch", {
       method: 'post',
@@ -81,65 +95,83 @@ function BasicsTabSpray({enableEdit, editingAllowed, jobType, sprayFileName, sty
   }
 
   const onDropZoneChange = (e) => {
-    console.log(e);
-    this.setState({
-      selectedDropZoneName:e.value
-    });
+    setSelectedDropZoneName(e.value)
   }
 
-
-  return (
+  return (    
     <React.Fragment>
-      {jobType == 'Spray' ? 
-      <Form.Item label="Dropzone" name="sprayDropZone" >
-          {enableEdit ? 
-          <Select placeholder="Drop Zone" labelInValue style={{ width: 190 }} defaultValue={selectedDropZoneName} onChange={onDropZoneChange} disabled={!editingAllowed}>
-              {Object.keys(dropZones).map(d => <OptGroup label={d}><Option value={d} key={dropZones[d]}>{dropZones[d]}</Option></OptGroup>) }
+      {addingNewAsset ?
+        <Form.Item {...formItemLayout} label="Cluster" name="clusters">
+          <Select placeholder="Select a Cluster" disabled={!editingAllowed} onChange={onClusterSelection} style={{ width: 190 }}>
+              {clusters.map(cluster => <Option key={cluster.id}>{cluster.name}</Option>)}
           </Select>
-          :
-          <textarea className="read-only-textarea" />
-          }
-      </Form.Item> : null 
+        </Form.Item> : null
       }
-      {jobType == 'Spray' ? 
+      <Form.Item label="Dropzone" name="sprayDropZone" >
+        {enableEdit ? 
+        <Select placeholder="Drop Zone" style={{ width: 190 }} defaultValue={selectedDropZoneName} onChange={onDropZoneChange} disabled={!editingAllowed}>
+          {Object.keys(dropZones).map(d => <OptGroup label={d}>{dropZones[d].map(dropZone => <Option value={dropZone} key={dropZone}>{dropZone}</Option>)}</OptGroup>) }
+        </Select>
+        :
+        <textarea className="read-only-textarea" />
+        }
+      </Form.Item>
+      <Form.Item label="Name" name="name" 
+      rules={[{ required: true, message: 'Please enter a Name!', pattern: new RegExp(/^[a-zA-Z0-9:._-]*$/) }]}>
+        <Input
+          id="job_name"
+          onChange={onChange}
+          placeholder="Name"
+          disabled={true}
+          disabled={!editingAllowed}
+          className={enableEdit ? null : "read-only-input"} />
+      </Form.Item>
+      <Form.Item label="Title" name="title" rules={[{ required: true, message: 'Please enter a title!' }, {
+        pattern: new RegExp(/^[a-zA-Z0-9:._-]*$/),
+        message: 'Please enter a valid Title',
+      }]}>
+        <Input id="job_title"
+          onChange={onChange}
+          placeholder="Title"
+          disabled={!editingAllowed}
+          className={enableEdit? null : "read-only-input"}
+        />
+      </Form.Item>      
       <Form.Item label="File" name="sprayFileName">
-          {enableEdit ? 
-          <Row type="flex">
-            <Col span={21} order={1}>
-            <Select
-            showSearch
-            value={sprayFileName}
-            placeholder="Search dropzone files..."
-            style={style}
-            defaultActiveFirstOption={false}
-            showArrow={false}
-            filterOption={false}
-            onSearch={this.searchDropZoneFiles}
-            onChange={this.onDropZoneFileChange}
-            notFoundContent={searchResultsLoaded ? 'Not Found' : <Spin />}
-            >
-            {dropZoneFileSearchSuggestions.map((suggestion) => (
-                <Option key={suggestion.name} value={suggestion.name}>
-                  {suggestion.name}
-                </Option>
-                ))}
-            </Select>                        
-            </Col>
-            <Col span={3} order={2} style={{"paddingLeft": "3px"}}>
-            <Button htmlType="button" onClick={clearState}>
-                Clear
-            </Button>
-            </Col>
-          </Row>
-          : <textarea className="read-only-textarea" />}
+        {addingNewAsset ? 
+        <Row type="flex">
+          <Col span={21} order={1}>
+          <Select
+          showSearch
+          value={sprayFileName}
+          placeholder="Search dropzone files..."
+          defaultActiveFirstOption={false}
+          showArrow={false}
+          filterOption={false}
+          onSearch={searchDropZoneFiles}
+          onChange={onDropZoneFileChange}
+          notFoundContent={searchResultsLoaded ? 'Not Found' : <Spin />}
+          >
+          {dropZoneFileSearchSuggestions.map((suggestion) => (
+              <Option key={suggestion.name} value={suggestion.name}>
+                {suggestion.name}
+              </Option>
+              ))}
+          </Select>                        
+          </Col>
+          <Col span={3} order={2} style={{"paddingLeft": "3px"}}>
+          <Button htmlType="button" onClick={clearState}>
+              Clear
+          </Button>
+          </Col>
+        </Row>
+        : <textarea className="read-only-textarea" />}
       </Form.Item> 
-      : null}
 
-      {jobType == 'Spray' ? 
       <Form.Item label="Scope" name="sprayedFileScope" >
         {enableEdit ? 
           <Input id="sprayedFileScope"
-          onChange={this.onChange}
+          onChange={onChange}
           placeholder="Scope"
           value={sprayedFileScope}
           disabled={!editingAllowed}
@@ -147,8 +179,8 @@ function BasicsTabSpray({enableEdit, editingAllowed, jobType, sprayFileName, sty
         :
         <textarea className="read-only-textarea" />
         }
-      </Form.Item> : null 
-      }
+      </Form.Item>
+      
   </React.Fragment>
   )
 }

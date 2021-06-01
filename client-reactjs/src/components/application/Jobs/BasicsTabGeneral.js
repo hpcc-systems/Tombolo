@@ -2,36 +2,27 @@ import React, { useState, useEffect } from 'react'
 import { Modal, Tabs, Form, Input, Checkbox, Button, Space, Select, Table, AutoComplete, Spin, message, Row, Col } from 'antd/lib';
 import { authHeader, handleError } from "../../common/AuthHeader.js"
 import ReactMarkdown from 'react-markdown';
-import { MarkdownEditor } from "../../common/MarkdownEditor.js"
+import { useSelector, useDispatch } from "react-redux";
+import { assetsActions } from '../../../redux/actions/Assets';
+import { MarkdownEditor } from "../../common/MarkdownEditor.js";
+import { formItemLayout, threeColformItemLayout } from "../../common/CommonUtil.js";
 const { Option, OptGroup } = Select;  
 
-function BasicsTabGeneral({enableEdit, editingAllowed, onClusterSelection, addingNewAsset, jobType, clearState, onChange, clusters, localState}) {
+function BasicsTabGeneral({enableEdit, editingAllowed, addingNewAsset, jobType, clearState, onChange, clusters, localState, formRef, applicationId}) {
   const [jobSearchErrorShown, setJobSearchErrorShown] = useState(false);
   const [searchResultsLoaded, setSearchResultsLoaded] = useState(false);
-  const [jobSearchSuggestions, setJobSearchSuggestions] = useState([]);
-  
-
-  const formItemLayout = {
-    labelCol: { span: 2 },
-    wrapperCol: { span: 8 }
-  };
-  const threeColformItemLayout = {
-    labelCol: { span: 4 },
-    wrapperCol: { span: 12 }
-  };
-  
+  const [jobSearchSuggestions, setJobSearchSuggestions] = useState([]);  
+  const [selectedCluster, setSelectedCluster] = useState();
+  const dispatch = useDispatch();
 
   const searchJobs = (searchString) => {
-    if(searchString.length <= 3 || this.state.jobSearchErrorShown) {
+    if(searchString.length <= 3 || jobSearchErrorShown) {
       return;
     }
-    this.setState({
-      ...this.state,
-      jobSearchErrorShown: false,
-      searchResultsLoaded: false
-    });
+    setJobSearchErrorShown(false);
+    setSearchResultsLoaded(false);
 
-    var data = JSON.stringify({clusterid: this.state.selectedCluster, keyword: searchString, indexSearch:true});
+    var data = JSON.stringify({clusterid: selectedCluster, keyword: searchString, indexSearch:true});
     fetch("/api/hpcc/read/jobsearch", {
       method: 'post',
       headers: authHeader(),
@@ -45,27 +36,20 @@ function BasicsTabGeneral({enableEdit, editingAllowed, onClusterSelection, addin
       handleError(response);
     })
     .then(suggestions => {
-      this.setState({
-        ...this.state,
-        jobSearchSuggestions: suggestions,
-        searchResultsLoaded: true
-      });
+      setSearchResultsLoaded(true);
+      setJobSearchSuggestions(suggestions);
     }).catch(error => {
-      if(!this.state.jobSearchErrorShown) {
+      if(!jobSearchErrorShown) {
         error.json().then((body) => {
           message.config({top:130})
           message.error("There was an error searching the job from cluster");
         });
-        this.setState({
-          ...this.state,
-          jobSearchErrorShown: true
-        });
-      }
+        setJobSearchErrorShown(true);      }
     });
   }
 
   const onJobSelected = (option) => {
-    fetch("/api/hpcc/read/getJobInfo?jobWuid="+option.key+"&jobName="+option.value+"&clusterid="+this.state.selectedCluster+"&jobType="+this.state.job.jobType+"&applicationId="+this.props.application.applicationId, {
+    fetch("/api/hpcc/read/getJobInfo?jobWuid="+option.key+"&jobName="+option.value+"&clusterid="+selectedCluster+"&jobType="+jobType+"&applicationId="+applicationId, {
       headers: authHeader()
     })
     .then((response) => {
@@ -75,18 +59,16 @@ function BasicsTabGeneral({enableEdit, editingAllowed, onClusterSelection, addin
       handleError(response);
     })
     .then(jobInfo => {
-      this.setState({
-        ...this.state,
-        job: {
-          ...this.state.job,
-          id: jobInfo.id,
-          inputFiles: jobInfo.jobfiles.filter(jobFile => jobFile.file_type == 'input'),
-          outputFiles: jobInfo.jobfiles.filter(jobFile => jobFile.file_type == 'output'),
-          groupId: jobInfo.groupId,
-          ecl: jobInfo.ecl
-        }
-      })
-      this.formRef.current.setFieldsValue({
+      localState.job = {
+        ...localState.job,
+        id: jobInfo.id,
+        inputFiles: jobInfo.jobfiles.filter(jobFile => jobFile.file_type == 'input'),
+        outputFiles: jobInfo.jobfiles.filter(jobFile => jobFile.file_type == 'output'),
+        groupId: jobInfo.groupId,
+        ecl: jobInfo.ecl
+
+      }
+      formRef.current.setFieldsValue({
         name: jobInfo.name,
         title: jobInfo.title,
         description: jobInfo.description,
@@ -106,11 +88,16 @@ function BasicsTabGeneral({enableEdit, editingAllowed, onClusterSelection, addin
     });
   }
 
+  const onClusterSelection = (value) => {
+    dispatch(assetsActions.clusterSelected(value));
+    setSelectedCluster(value);
+    localState.selectedCluster = value;
+  }
+
+
   return (
     
     <React.Fragment>
-      {console.log(addingNewAsset)}
-      {console.log(editingAllowed)}
       {enableEdit ?
         <div>
           {addingNewAsset ?

@@ -15,6 +15,7 @@ let Job = models.job;
 let JobFile = models.jobfile;
 let JobParam = models.jobparam;
 let ConsumerObject = models.consumer_object;
+let JobExecution = models.job_execution;
 let Index = models.indexes;
 const path = require('path');
 const { exec } = require('child_process');
@@ -124,7 +125,6 @@ exports.executeScriptJob = (jobId) => {
     return new Promise(async (resolve, reject) => {
       let scriptJob = await Job.findOne({where: {id: jobId}, attributes: {exclude: ['assetId']}});
       let scriptPath = path.join(__dirname, '..', scriptJob.scriptPath), scriptRootFolder = path.dirname(scriptPath);
-      console.log(scriptPath, scriptRootFolder);
       exec(scriptPath, {cwd: scriptRootFolder}, (err, stdout, stderr) => {
         if (err) {
           reject(err)
@@ -134,6 +134,41 @@ exports.executeScriptJob = (jobId) => {
         }
         resolve(stdout);
       });                  
+    })
+  }catch (err) {
+    Promise.reject(err)
+  }
+}
+
+exports.recordJobExecution = (workerData, wuid) => {
+  try {
+    return new Promise(async (resolve, reject) => {
+      await JobExecution.findOrCreate({
+        where: {
+          jobId: workerData.jobId,
+          applicationId: workerData.applicationId
+        },
+        defaults: {
+          jobId: workerData.jobId,
+          dataflowId: workerData.dataflowId,
+          applicationId: workerData.applicationId,
+          wuid: wuid,
+          clusterId: workerData.clusterId,
+          status: 'submitted'
+        }
+      }).then((results, created) => {
+        let jobExecutionId = results[0].id;
+        if(!created) {
+          return JobExecution.update({
+            jobId: workerData.jobId,
+            dataflowId: workerData.dataflowId,
+            applicationId: workerData.applicationId,
+            wuid: wuid,
+            status: 'submitted'
+          },
+          {where: {id: jobExecutionId}})
+        }
+      })   
     })
   }catch (err) {
     Promise.reject(err)

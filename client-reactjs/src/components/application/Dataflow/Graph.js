@@ -376,7 +376,7 @@ class Graph extends Component {
             case 'Job':
               el.jobId=saveResponse.jobId;
               el.jobType = saveResponse.jobType;
-              this.saveAssetToDataflow(el.jobId, this.props.selectedDataflow.id, el.type);
+              this.saveAssetToDataflow(el.jobId, this.props.selectedDataflow.id, el.type, el.jobType);
               break;
             case 'Sub-Process':
               el.subProcessId=saveResponse.id;
@@ -447,7 +447,8 @@ class Graph extends Component {
 
   }
 
-  saveAssetToDataflow(assetId, dataflowId, assetType) {
+  saveAssetToDataflow(assetId, dataflowId, assetType, jobType) {
+    console.log(assetId, dataflowId, assetType, jobType);
     fetch('/api/dataflow/saveAsset', {
       method: 'post',
       headers: authHeader(),
@@ -459,12 +460,13 @@ class Graph extends Component {
       handleError(response);
     }).then(data => {
       console.log(`Saved asset ${assetId} to dataflow ${dataflowId}...`);
-      if(assetType == 'Job'
-        || assetType == 'Modeling'
-        || assetType == 'Scoring'
-        || assetType == 'ETL'
-        || assetType == 'Query Build'
-        || assetType == 'Data Profile') {
+      if(assetType == 'Job' && 
+        (jobType && jobType == 'Job' 
+        || jobType == 'Modeling'
+        || jobType == 'Scoring'
+        || jobType == 'ETL'
+        || jobType == 'Query Build'
+        || jobType == 'Data Profile')) {
         this.createJobFileRelationship(assetId, dataflowId);
       }
     });
