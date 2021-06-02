@@ -39,6 +39,7 @@ class Graph extends Component {
     openJobDetailsDialog: false,
     openIndexDetailsDialog: false,
     selectedFile: '',
+    selectedAssetTitle : '',
     selectedNodeId: '',
     selectedIndex: '',
     isNew:false,
@@ -153,9 +154,9 @@ class Graph extends Component {
             isNew: isNew,
             openFileDetailsDialog: true,
             selectedFile: d.fileId,
-            selectedNodeId: d.id
+            selectedNodeId: d.id,
+            selectedAssetTitle: d.title
           });
-
           this.props.dispatch(assetsActions.assetSelected(
             d.fileId,
             this.props.applicationId,
@@ -182,10 +183,10 @@ class Graph extends Component {
             isNewJob: isNew,
             openJobDetailsDialog: true,
             selectedJob: d.jobId,
+            selectedAssetTitle: d.title,
             selectedJobType: d.type == 'Job' ? 'General' : d.type,
-            mousePosition: [d.x, d.y]
+            mousePosition: [d.x, d.y],
           });
-
           this.props.dispatch(assetsActions.assetSelected(
             d.jobId,
             this.props.applicationId,
@@ -204,7 +205,8 @@ class Graph extends Component {
           this.setState({
             isNewIndex: isNew,
             openIndexDetailsDialog: true,
-            selectedIndex: d.indexId
+            selectedIndex: d.indexId,
+            selectedAssetTitle: d.title,
           });
 
           this.props.dispatch(assetsActions.assetSelected(
@@ -500,9 +502,6 @@ class Graph extends Component {
         _self.props.updateProcessId(data.dataflowId);
       }*/
       console.log('Saved graph..');
-      console.log("<<<< selected dataflow ", _self.props.selectedDataflow);
-      // console.log("<<<< Selected node -- ", this.state.selectedFile );
-
         //_self.fetchFiles();
     });
   }
@@ -1617,6 +1616,7 @@ class Graph extends Component {
           fileId={this.props.selectedFile} 
           nodes={this.thisGraph.nodes}
           selectedAsset={this.state.selectedFile} 
+          title=  {this.state.selectedAssetTitle}
           application={this.props.application} 
           user={this.props.user} 
           handleClose={this.handleClose}
@@ -1631,6 +1631,7 @@ class Graph extends Component {
           edges={this.thisGraph.edges}
           nodeIndex={this.state.currentlyEditingNode ? this.state.currentlyEditingNode.id : ''}
           selectedAsset={this.state.selectedJob}
+          title=  {this.state.selectedAssetTitle}
           selectedDataflow={this.state.selectedDataflow}
           application={this.props.application}
           user={this.props.user}
@@ -1644,6 +1645,7 @@ class Graph extends Component {
           assetId={this.state.selectedIndex} 
           nodes={this.thisGraph.nodes}
           selectedAsset={this.state.selectedIndex} 
+          title=  {this.state.selectedAssetTitle}
           application={this.props.application} 
           user={this.props.user} 
           handleClose={this.closeIndexDlg}/>

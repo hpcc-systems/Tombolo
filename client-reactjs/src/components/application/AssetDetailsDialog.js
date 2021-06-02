@@ -49,9 +49,6 @@ function AssetDetailsDialog(props) {
     })
   }
 
-  //Mapping through all nodes and getting title of selected node
-  const assetName = props.nodes.filter((node) => props.selectedAsset ===  node[`${props.assetType}Id`] );
-  
   return (
 	  (authReducer.user && authReducer.user.token != undefined) ?
 	  <React.Fragment>
@@ -61,7 +58,7 @@ function AssetDetailsDialog(props) {
           onCancel={handleClose}
           footer={null}
           bodyStyle={{display: "flex", flexDirection: "column"}}
-          title={_.startCase(_.toLower(props.assetType)) + " : " +    assetName[0].title}
+          title={_.startCase(_.toLower(props.assetType)) + " : " +   props.title}
         >
         <DetailsForm
           assetType={props.assetType}
