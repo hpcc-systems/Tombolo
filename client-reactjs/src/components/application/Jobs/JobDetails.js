@@ -393,7 +393,7 @@ class JobDetails extends Component {
     });
   }
 
-    searchJobs(searchString) {
+  searchJobs(searchString) {
     if(searchString.length <= 3 || this.state.jobSearchErrorShown) {
       return;
     }
