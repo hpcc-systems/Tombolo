@@ -1,57 +1,28 @@
-#FROM node:12-alpine
-FROM ubuntu:bionic
+FROM node:14.9.0-alpine as build
 
-COPY . app
-COPY [".env",  "/app/.env"]
+WORKDIR /app
 
-WORKDIR app
+COPY package*.json /app/
 
-RUN apt-get update -y && apt-get install -y build-essential curl
+RUN npm install
 
-RUN curl -sL https://deb.nodesource.com/setup_12.x | bash -
+COPY . /app/
 
-RUN apt-get install -y nodejs
+RUN npm run build
 
-RUN apt-get update && apt-get install -y bash dos2unix
+#temperory fix for hpcc-js lib causing CSP to fail
+RUN sed -i 's/new Function("return this;")()/function(){return this;}/g' build/static/js/*.chunk.js
 
-RUN dos2unix /app/docker-entry.sh
+FROM nginx:1.19.8-alpine
 
-ENV DEBIAN_FRONTEND noninteractive
-ENV DEBCONF_NONINTERACTIVE_SEEN true
+COPY --from=build /app/build /usr/share/nginx/html
 
-RUN echo "tzdata tzdata/Areas select America" > /tmp/preseed.txt; \
-    echo "tzdata tzdata/Zones/America select New_York" >> /tmp/preseed.txt; \
-    debconf-set-selections /tmp/preseed.txt
+RUN rm /etc/nginx/conf.d/default.conf
 
-RUN apt-get install -y openssh-client openssh-server \
-    expect rsync libapr1 psmisc libaprutil1 libarchive13 libatlas3-base \
-    libboost-regex1.65.1 libmemcached11 libmemcachedutil2 libnuma1 \
-    libpython2.7 libpython3.6 libxslt1.1 libcurl3-gnutls netcat git
+COPY nginx/nginx.conf /etc/nginx/nginx.conf
 
-ARG cdnUrl=https://cdn.hpccsystems.com
-ARG hpccVersion=7.12.50
+COPY nginx/conf.d/nginx.conf.template /etc/nginx/conf.d/nginx.conf.template
 
-ARG clientToolsUrl=$cdnUrl/releases/CE-Candidate-$hpccVersion/bin/clienttools/hpccsystems-clienttools-community_$hpccVersion-1bionic_amd64.deb
+COPY nginx/run_nginx.sh /etc/nginx/run_nginx.sh
 
-RUN echo "get ${clientToolsUrl} with wget"
-RUN wget -O clienttools.deb $clientToolsUrl && dpkg -i clienttools.deb && rm clienttools.deb
-
-RUN echo "install ecl bundles"
-RUN ecl bundle install https://github.com/hpcc-systems/ML_Core.git \
-    && ecl bundle install https://github.com/hpcc-systems/PBblas.git \
-    && ecl bundle install https://github.com/hpcc-systems/GLM.git \
-    && ecl bundle install https://github.com/hpcc-systems/LearningTrees.git \
-    && ecl bundle install https://github.com/hpcc-systems/LinearRegression.git \
-    && ecl bundle install https://github.com/hpcc-systems/LogisticRegression.git \
-    && ecl bundle install https://github.com/hpcc-systems/dbscan.git \
-    && ecl bundle install https://github.com/hpcc-systems/SupportVectorMachines.git \
-    && ecl bundle install https://github.com/hpcc-systems/DataPatterns.git \
-    && ecl bundle install https://github.com/hpcc-systems/PerformanceTesting.git \
-    && ecl bundle install https://github.com/hpcc-systems/Visualizer.git \
-    && ecl bundle install https://github.com/OdinProAgrica/dapper.git
-
-RUN npm install -g node-gyp && npm install
-
-RUN npm install sequelize-cli pm2 -g
-
-#CMD ["node", "server.js"]
+RUN ["chmod", "+x", "/etc/nginx/run_nginx.sh"]

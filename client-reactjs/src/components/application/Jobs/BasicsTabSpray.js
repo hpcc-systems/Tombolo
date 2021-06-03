@@ -30,6 +30,13 @@ function BasicsTabSpray({enableEdit, editingAllowed, addingNewAsset, clearState,
   const onClusterSelection = (value) => {
     dispatch(assetsActions.clusterSelected(value));
     setSelectedCluster(value);
+    getDropZones(value);
+    setSelectedDropZoneIP('');      
+    setSelectedDropZoneName(''); 
+    formRef.current.setFieldsValue({
+      ...formRef.current.getFieldsValue(),
+      sprayDropZone: ''
+    });
   }
 
   const getDropZones = (clusterId) => {
@@ -48,10 +55,9 @@ function BasicsTabSpray({enableEdit, editingAllowed, addingNewAsset, clearState,
           Object.keys(dropZones).forEach((dropZone) => {
             if(dropZones[dropZone].includes(formRef.current.getFieldValue('sprayDropZone'))) {
               setSelectedDropZoneIP(formRef.current.getFieldValue('sprayDropZone'));
-              console.log(dropZone)
             }
           })
-        }
+        } 
       })
     }
   }
@@ -96,13 +102,11 @@ function BasicsTabSpray({enableEdit, editingAllowed, addingNewAsset, clearState,
   }
 
   const onDropZoneChange = (e) => {
-    console.log(e);
     setSelectedDropZoneIP(e);
     Object.keys(dropZones).filter((dropZone) => {
       if(dropZones[dropZone].includes(e)) {
         setSelectedDropZoneName(dropZone);
       }
-      console.log(dropZones[dropZone]);
     })
   }
 
