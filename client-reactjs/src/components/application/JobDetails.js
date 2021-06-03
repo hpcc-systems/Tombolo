@@ -110,7 +110,7 @@ class JobDetails extends Component {
     },
     enableEdit: false,
     editing: false,
-    dataAltered: false
+    dataAltered: false,
   }
 
   componentDidMount() {
@@ -1132,26 +1132,21 @@ class JobDetails extends Component {
      return allPredecessors.filter(predecessor => selectedPredecessor.includes(predecessor.jobId))
     }
 
+    // view edit buttons on tabpane
+    const editButton  = !this.state.enableEdit && editingAllowed ?  <Button type="primary" onClick={makeFieldsEditable}> Edit  </Button> :  null ;
+    const viewChangesBtn = this.state.editing ?  <Button  onClick={switchToViewOnly} type="primary" ghost> View Changes </Button> : null;
+    const editandViewBtns = <div> {editButton} {viewChangesBtn}</div>
+
     return (
       <React.Fragment>
-          {!this.state.enableEdit && editingAllowed?  <div className="button-container edit-toggle-btn">
-          <Button type="primary" onClick={makeFieldsEditable}>
-            Edit
-          </Button>
-        </div> : null }
-        {this.state.editing ?  <div className="button-container view-change-toggle-btn" >
-          <Button  onClick={switchToViewOnly} type="primary" ghost>
-            View Changes
-          </Button>
-
-        </div> : null }
+        {this.props.displayingInModal || this.state.addingNewAsset ? null : <div style={{padding: "5px 16px", background: "var(--light)", fontWeight: "600", margin: "0px -16px"}} > Job :  {this.state.job.name}</div>}
       <div>
           {!this.props.isNew ?
             <div className="loader">
               <Spin spinning={this.state.initialDataLoading} size="large" />
             </div> : null}
           <Form {...formItemLayout} labelAlign="left" ref={this.formRef} onFinish={this.handleOk} >
-          <Tabs defaultActiveKey="1">
+          <Tabs defaultActiveKey="1" tabBarExtraContent = {editandViewBtns }>
 
             <TabPane tab="Basic" key="1">
               {this.state.enableEdit ?

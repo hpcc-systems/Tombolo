@@ -35,11 +35,9 @@ function DataflowDetails({props}) {
             applicationTitle={dataflowReducer.applicationTitle}
           />
         </div>
-        <div className="button-container">
-          <Button type="primary"  onClick={handleBackToAllJobs} icon={<ArrowLeftOutlined />} style={{display: "flex", placeItems:"center"}}>
-           Definations
-          </Button>
-        </div>
+          <a type="primary" className="backLink" onClick={handleBackToAllJobs} style={{display: "flex", placeItems:"center", paddingRight: "15px"}}>
+ Definations
+          </a>
         </div>
         <div>
 

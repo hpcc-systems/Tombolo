@@ -2,7 +2,6 @@ import React, { PureComponent, Component } from "react";
 import { store } from '../../redux/store/Store';
 import {Constants} from "../common/Constants";
 import ReactMarkdown from 'react-markdown'
-
 import { Modal, Tabs, Form, Input, Select, Button, Table, AutoComplete, Tag, message, Drawer, Row, Col, Spin, Radio, Checkbox, } from "antd/lib";
 import { debounce } from "lodash";
 import AssociatedDataflows from "./AssociatedDataflows";
@@ -98,8 +97,6 @@ class FileDetails extends PureComponent {
 
       })
     }
-
-
 }
 
   //Component will unmount
@@ -191,6 +188,7 @@ class FileDetails extends PureComponent {
                 id: data.basic.id,
                 clusterId: data.basic.cluster_id,
                 groupId: data.basic.groupId,
+                name: data.basic.name,
 
                 //For read only option
                 description: data.basic.description,
@@ -1201,26 +1199,18 @@ class FileDetails extends PureComponent {
         dataAltered: true
       });
     }
-
+    // view edit buttons on tabpane
+    const editButton  = !this.state.enableEdit && editingAllowed ?  <Button type="primary" onClick={makeFieldsEditable}> Edit  </Button> :  null ;
+    const viewChangesBtn = this.state.editing ?  <Button  onClick={switchToViewOnly} type="primary" ghost> View Changes </Button> : null;
+    const editandViewBtns = <div> {editButton} {viewChangesBtn}</div>
 
     return (
       <React.Fragment>
-        {!this.state.enableEdit  && editingAllowed ?
-        <div className="button-container edit-toggle-btn">
-          <Button type="primary" onClick={makeFieldsEditable}>
-            Edit
-          </Button>
-        </div> :
-
-   <div className="button-container view-change-toggle-btn" >
-          <Button  onClick={switchToViewOnly} type="primary" ghost>
-            View Changes
-          </Button>
-
-        </div>  }
-
-
-
+        {this.props.displayingInModal || this.state.addingNewAsset ? null : 
+          <div style={{padding: "5px 16px", background: "var(--light)", fontWeight: "600", margin: "0px -16px"}} > 
+              File :  {this.state.file.name}
+          </div>
+        }
         <div>
           {/*<BreadCrumbs applicationId={this.props.application.applicationId} applicationTitle={this.props.application.applicationTitle}/>*/}
           {!this.props.isNew ? (
@@ -1228,7 +1218,7 @@ class FileDetails extends PureComponent {
               <Spin spinning={this.state.initialDataLoading} size="large" />
             </div>
           ) : null}
-          <Tabs defaultActiveKey="1">
+          <Tabs defaultActiveKey="1" tabBarExtraContent = {editandViewBtns}>
             <TabPane tab="Basic" key="1">
               <Form
                 {...formItemLayout}

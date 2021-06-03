@@ -34,6 +34,8 @@ function AssetsTable({selectedGroup, handleEditGroup, refreshGroups}) {
     title: '',
     selectedGroup: {}
   });
+  const groupsMoveReducer = useSelector(state => state.groupsMoveReducer)
+
 
   useEffect(() => {
     if(applicationId && selectedGroup && selectedGroup.groupId != '' //a group has been selected
@@ -44,6 +46,11 @@ function AssetsTable({selectedGroup, handleEditGroup, refreshGroups}) {
   }, [applicationId, selectedGroup, assetTypeFilter, keywords]);
 
   const dispatch = useDispatch();
+
+  // Rerender table when Directory tree structure is changed
+  useEffect(() =>{
+    fetchDataAndRenderTable();
+   }, [groupsMoveReducer])
 
   const fetchDataAndRenderTable = () => {
     let url = keywords != '' ? "/api/groups/assetsSearch?app_id="+applicationId+"" : "/api/groups/assets?app_id="+applicationId;

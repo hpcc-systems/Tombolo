@@ -45,7 +45,6 @@ function Assets(props) {
   const assetReducer = useSelector(state => state.assetReducer);
   const [application, setApplication] = useState({...props});
   const [selectedGroup, setSelectedGroup] = useState({'id':groupsReducer.selectedKeys.id, 'title' : '','key':groupsReducer.selectedKeys.key});
-  console.log(selectedGroup, "<<<< Selected group")
   const [itemToMove, setItemToMove] = useState({})
   const [expandedGroups, setExpandedGroups] = useState(groupsReducer.expandedKeys);
   const [newGroup, setNewGroup] = useState({name:'', description:'', id: ''});
@@ -94,6 +93,7 @@ function Assets(props) {
     }
   }, [application]);
 
+  //Re-render Directory Tree when the tree structure us chaged on modal
   useEffect(() =>{
    fetchGroups();
    setSelectedGroup({'id':"", 'title' : '','key':"0-0"});
@@ -299,14 +299,14 @@ function Assets(props) {
       <React.Fragment>
       <div ref={ref} style={{left: `${rightClickNodeTreeItem.pageX + 40}px`, top: `${rightClickNodeTreeItem.pageY}px`}} className="self-right-menu">
         <Menu style={{ width: 150 }} mode="vertical" theme="dark" onClick={handleMenuClick} ref={ref}>
-         <Menu.Item key="Group"><FolderOutlined /> New Group</Menu.Item>
+         <Menu.Item key="Group" className="directorytree-rightclick-menuitem"><FolderOutlined /> New Group</Menu.Item>
          {(selectedGroup && selectedGroup.id != null && selectedGroup.id != '') ?
-           <Menu.Item key="Edit-Group"><EditOutlined />Edit</Menu.Item> : null}
+           <Menu.Item key="Edit-Group"  className="directorytree-rightclick-menuitem"><EditOutlined />Edit</Menu.Item> : null}
          {selectedGroup && selectedGroup.id != null && selectedGroup.id != '' ?
-           <Menu.Item key="Delete-Group"><DeleteOutlined />Delete</Menu.Item> : null}
+           <Menu.Item key="Delete-Group"  className="directorytree-rightclick-menuitem"><DeleteOutlined />Delete</Menu.Item> : null}
           {selectedGroup && selectedGroup.id != null && selectedGroup.id != '' ?
           <> 
-           <Menu.Item key="Move-Group" onClick={(e) => {  handleMoveAsset(); }} ><FolderOutlined />Move</Menu.Item> 
+           <Menu.Item key="Move-Group"   className="directorytree-rightclick-menuitem" onClick={(e) => {  handleMoveAsset(); }} ><FolderOutlined />Move</Menu.Item> 
           </>
          : null}
        </Menu>
