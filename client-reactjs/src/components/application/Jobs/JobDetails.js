@@ -627,7 +627,7 @@ class JobDetails extends Component {
     console.log(this.formRef.current.getFieldsValue());
     let formFieldsValue = this.formRef.current.getFieldsValue();
     if(formFieldsValue['sprayDropZone']) {
-      formFieldsValue['sprayDropZone'] = formFieldsValue['sprayDropZone'].value;
+      formFieldsValue['sprayDropZone'] = formFieldsValue['sprayDropZone'];
     }
     var jobDetails = {
       "basic": {
@@ -1107,7 +1107,7 @@ class JobDetails extends Component {
         clusterId : _self.state.selectedCluster,
         jobName: _self.formRef.current.getFieldValue('name'),
         jobId: _self.state.job.id,
-        dataflowId: _self.props.selectedDataflow.id,
+        dataflowId: _self.props.selectedDataflow ? _self.props.selectedDataflow.id : '',
         applicationId: _self.props.application.applicationId
       })
     }).then(function(response) {
@@ -1119,7 +1119,9 @@ class JobDetails extends Component {
       _self.setState({
         initialDataLoading: false,
       });
-      message.success("Job has been submitted")
+      if(data && data.success) {
+        message.success("Job has been submitted")
+      }
     })
   }
 

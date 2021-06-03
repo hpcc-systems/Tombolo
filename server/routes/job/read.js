@@ -863,7 +863,7 @@ router.post('/delete', [
 
 router.post('/executeJob', [
   body('clusterId')
-      .isUUID(4).withMessage('Invalid cluster id'),
+  .optional({ checkFalsy: true }).isUUID(4).withMessage('Invalid cluster id'),
   body('jobId')
       .isUUID(4).withMessage('Invalid job id'),
   body('applicationId')
@@ -916,7 +916,7 @@ router.post('/executeJob', [
         {where: {id: jobExecutionId}})
       }
     })
-    res.json({"result":"success"});
+    res.json({"success":true});
   } catch (err) {
     console.error('err', err);
     return res.status(500).json({ success: false, message: "Error occured while re-submiting the job" });

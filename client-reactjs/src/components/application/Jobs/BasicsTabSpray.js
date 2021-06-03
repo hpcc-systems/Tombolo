@@ -12,6 +12,7 @@ function BasicsTabSpray({enableEdit, editingAllowed, addingNewAsset, clearState,
   const [dropZoneFileSearchSuggestions, setDropZoneFileSearchSuggestions] = useState([]);
   const [dropZones, setDropZones] = useState({});
   const [selectedDropZoneName, setSelectedDropZoneName] = useState('');
+  const [selectedDropZoneIP, setSelectedDropZoneIP] = useState('');
   const [sprayedFileScope, setSprayedFileScope] = useState('');
   const [sprayFileName, setSprayFileName] = useState('');
   const [selectedCluster, setSelectedCluster] = useState();
@@ -46,7 +47,7 @@ function BasicsTabSpray({enableEdit, editingAllowed, addingNewAsset, clearState,
         if(formRef && formRef.current && formRef.current.getFieldValue('sprayDropZone')) {
           Object.keys(dropZones).forEach((dropZone) => {
             if(dropZones[dropZone].includes(formRef.current.getFieldValue('sprayDropZone'))) {
-              setSelectedDropZoneName(formRef.current.getFieldValue('sprayDropZone'));
+              setSelectedDropZoneIP(formRef.current.getFieldValue('sprayDropZone'));
               console.log(dropZone)
             }
           })
@@ -66,7 +67,7 @@ function BasicsTabSpray({enableEdit, editingAllowed, addingNewAsset, clearState,
       clusterId: selectedCluster, 
       dropZoneName: selectedDropZoneName,
       nameFilter: searchString, 
-      server: formRef.current.getFieldValue('sprayDropZone').label[0]
+      server: selectedDropZoneIP
     });
     fetch("/api/hpcc/read/dropZoneFileSearch", {
       method: 'post',
@@ -95,7 +96,14 @@ function BasicsTabSpray({enableEdit, editingAllowed, addingNewAsset, clearState,
   }
 
   const onDropZoneChange = (e) => {
-    setSelectedDropZoneName(e.value)
+    console.log(e);
+    setSelectedDropZoneIP(e);
+    Object.keys(dropZones).filter((dropZone) => {
+      if(dropZones[dropZone].includes(e)) {
+        setSelectedDropZoneName(dropZone);
+      }
+      console.log(dropZones[dropZone]);
+    })
   }
 
   return (    
