@@ -10,6 +10,7 @@ import {
 } from "react-router-dom";
 import { connect } from 'react-redux';
 import { hasAdminRole, hasEditPermission } from "../common/AuthUtil.js";
+import { dataflowReducer } from "../../redux/reducers/DataflowReducer.js";
 
 const { Sider, Content } = Layout;
 const { SubMenu } = Menu;
@@ -21,8 +22,11 @@ class LeftNav extends Component {
     selectedTopNav: this.props.selectedTopNav
   };
 
+  
   componentDidUpdate() {
-    $('[data-toggle="popover"]').popover({placement : 'right', trigger: 'focus', title: 'Application', html:true, content:'Please select an application from the dropdown or create a new application using Applications option under Settings'});
+    $('[data-toggle="popover"]').popover({placement : 'right', trigger: 'focus',
+     title: 'Application', html:true, 
+     content:'Please select an application from the dropdown or create a new application using Applications option under Settings'});
     var _self=this;
     $('[data-toggle="popover"]').click(function(event) {
       if(!_self.props.application || _self.props.application.applicationId == '') {
@@ -80,15 +84,20 @@ class LeftNav extends Component {
               </li>*/}
               <li className="nav-item dropdown">
                 <a className="nav-link dropdown-toggle" href="#"><i className="fa fa-lg fa-random"></i> <span className={this.state.collapsed ? "d-none" : ""}>Workflow</span></a>
-                <ul className="list-unstyled bg-dark text-light submenu level-1">
-                <li className="nav-item" >
-                  <NavLink to={"/"+applicationId+"/dataflow"} className="nav-link" data-toggle="popover" tabIndex="3"><i className="fa fa-lg fa-clock-o"></i> <span className={this.state.collapsed ? "d-none" : ""}>Definitions</span></NavLink>
-                </li>
-                <li className="nav-item" >
-                  <NavLink to={"/"+applicationId+"/dataflowinstances"} className="nav-link" data-toggle="popover" tabIndex="4"><i className="fa fa-lg fa-microchip"></i> <span className={this.state.collapsed ? "d-none" : ""}>Job Execution</span></NavLink>
-                </li>
-              </ul>
-              </li>
+                  <ul className="list-unstyled bg-dark text-light submenu level-1">
+                  <li className="nav-item" >
+                    <NavLink to={this.props.dataflowId.id ?  "/"+applicationId+"/dataflow/details" : "/"+applicationId+"/dataflow"} className="nav-link" data-toggle="popover" tabIndex="3">
+                      <i className="fa fa-lg fa-clock-o"></i>
+                      <span className={this.state.collapsed ? "d-none" : ""}>Definitions</span>
+                    </NavLink>
+                  </li>
+                  <li className="nav-item" >
+                    <NavLink to={"/"+applicationId+"/dataflowinstances"} className="nav-link" data-toggle="popover" tabIndex="4">
+                      <i className="fa fa-lg fa-microchip"></i> <span className={this.state.collapsed ? "d-none" : ""}>Job Execution</span>
+                    </NavLink>
+                  </li>
+                </ul>
+              </li> 
 
 
               {/*<li className="nav-item" >
@@ -151,11 +160,13 @@ class LeftNav extends Component {
 function mapStateToProps(state) {
   const { application, selectedTopNav } = state.applicationReducer;
   const { loggedIn, user} = state.authenticationReducer;
+  const {dataflowId} = state.dataflowReducer;
   return {
       application,
       selectedTopNav,
       loggedIn,
-      user
+      user,
+      dataflowId
   };
 }
 

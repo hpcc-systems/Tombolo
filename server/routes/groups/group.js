@@ -1,6 +1,7 @@
 const express = require('express');
 const router = express.Router();
 const validatorUtil = require('../../utils/validator');
+
 const { body, query, oneOf, validationResult } = require('express-validator');
 let Sequelize = require('sequelize');
 const Op = Sequelize.Op;
@@ -536,13 +537,18 @@ router.put('/move', [
 
 router.put('/move/asset', [
   body('app_id').isUUID(4).withMessage('Invalid app id'),
-  body('assetId').isUUID(4).withMessage('Invalid asset id'),
+  body('assetId').isInt().withMessage('Invalid asset id'),
   body('destGroupId').optional({checkFalsy:true}).isInt().withMessage('Invalid target group id'),
   body('groupId').optional({checkFalsy:true}).isInt().withMessage('Invalid group id'),
   body('assetType').matches(/^[a-zA-Z]/).withMessage('Invalid asset type')
 ], (req, res) => {
+  console.log(">>>> Route to move groups found")
+
     const errors = validationResult(req).formatWith(validatorUtil.errorFormatter);
+    console.log("Error >>>",  JSON.stringify(errors))
     if (!errors.isEmpty()) {
+      console.log(">>>> Validation error occured")
+
         return res.status(422).json({ success: false, errors: errors.array() });
     }
     let appId = req.body.app_id, assetId = req.body.assetId, groupId = req.body.groupId, destGroupId = req.body.destGroupId ? req.body.destGroupId : "";
@@ -560,6 +566,7 @@ router.put('/move/asset', [
             }
         })
       } else {
+        console.log(">>>> Group found needs update")
         Groups.update({parent_group:destGroupId}, {where:{application_id:appId, id:assetId}}).then((updated) => {
           res.json({"success":true});
         })

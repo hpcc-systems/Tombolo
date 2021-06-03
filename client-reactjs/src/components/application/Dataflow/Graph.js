@@ -39,6 +39,7 @@ class Graph extends Component {
     openJobDetailsDialog: false,
     openIndexDetailsDialog: false,
     selectedFile: '',
+    selectedAssetTitle : '',
     selectedNodeId: '',
     selectedIndex: '',
     isNew:false,
@@ -153,9 +154,9 @@ class Graph extends Component {
             isNew: isNew,
             openFileDetailsDialog: true,
             selectedFile: d.fileId,
-            selectedNodeId: d.id
+            selectedNodeId: d.id,
+            selectedAssetTitle: d.title
           });
-
           this.props.dispatch(assetsActions.assetSelected(
             d.fileId,
             this.props.applicationId,
@@ -182,10 +183,10 @@ class Graph extends Component {
             isNewJob: isNew,
             openJobDetailsDialog: true,
             selectedJob: d.jobId,
-            selectedJobType: d.type == 'Job' ? 'Job' : d.type,
-            mousePosition: [d.x, d.y]
+            selectedAssetTitle: d.title,
+            selectedJobType: d.type == 'Job' ? 'General' : d.type,
+            mousePosition: [d.x, d.y],
           });
-
           this.props.dispatch(assetsActions.assetSelected(
             d.jobId,
             this.props.applicationId,
@@ -204,7 +205,8 @@ class Graph extends Component {
           this.setState({
             isNewIndex: isNew,
             openIndexDetailsDialog: true,
-            selectedIndex: d.indexId
+            selectedIndex: d.indexId,
+            selectedAssetTitle: d.title,
           });
 
           this.props.dispatch(assetsActions.assetSelected(
@@ -576,7 +578,7 @@ class Graph extends Component {
     } else {
       //limit the dragging within svg boundary
       let left = d3.event.x, top = d3.event.y;
-      if (left + svgNodeWidth + svgNodeStrokeWidth > (svgUsableWidth + svgPalleteBarWidth)) {
+      /*if (left + svgNodeWidth + svgNodeStrokeWidth > (svgUsableWidth + svgPalleteBarWidth)) {
         left = (svgUsableWidth + svgPalleteBarWidth) - svgNodeWidth - svgNodeStrokeWidth
       } else if (d3.event.x < svgPalleteBarWidth) {
         left = svgPalleteBarWidth;
@@ -585,7 +587,7 @@ class Graph extends Component {
         top = svgUsableHeight - svgNodeHeight - svgNodeStrokeWidth
       } else if (d3.event.y < 0) {
         top = 0
-      }
+      }*/
 
       d.x = left;
       d.y = top;
@@ -1564,16 +1566,15 @@ class Graph extends Component {
       <React.Fragment>
         <div className="graph-div">
           <div className="graph-btns-container" style={{"left":svgUsableWidth - 300}}>
-            <span>
-              <Tooltip placement="topRight" title={"Refresh will validate the file/job relationship and update graph accordingly"}>
-                <Button style={{ float: 'right' }} className="refresh-btn"
+            <span >
+              <Tooltip placement="topRight" title={"Refresh will validate the file/job relationship and update graph accordingly"}   >
+                <Button  style={{ float: 'right' }} className="refresh-btn"
                   onClick={this.refreshGraph}
                   icon={
                   <ReloadOutlined
                     style={{
                       fontSize: '28px',
-                      backgroundColor: '#f0f0f0',
-                    }}
+                      backgroundColor: '#f0f0f0'                    }}
                   />
                 }/>
               </Tooltip>
@@ -1602,7 +1603,17 @@ class Graph extends Component {
         </div>
 
       {this.state.openFileDetailsDialog ?
-        <AssetDetailsDialog assetType="file" fileId={this.props.selectedFile} selectedAsset={this.props.selectedFile} application={this.props.application} user={this.props.user} handleClose={this.handleClose}/>
+        <AssetDetailsDialog 
+          assetType="file"
+          assetId={this.state.selectedFile} 
+          fileId={this.props.selectedFile} 
+          nodes={this.thisGraph.nodes}
+          selectedAsset={this.state.selectedFile} 
+          title=  {this.state.selectedAssetTitle}
+          application={this.props.application} 
+          user={this.props.user} 
+          handleClose={this.handleClose}
+        />
       : null }
 
       {this.state.openJobDetailsDialog ?
@@ -1613,6 +1624,7 @@ class Graph extends Component {
           edges={this.thisGraph.edges}
           nodeIndex={this.state.currentlyEditingNode ? this.state.currentlyEditingNode.id : ''}
           selectedAsset={this.state.selectedJob}
+          title=  {this.state.selectedAssetTitle}
           selectedDataflow={this.state.selectedDataflow}
           application={this.props.application}
           user={this.props.user}
@@ -1621,7 +1633,15 @@ class Graph extends Component {
       : null}
 
       {this.state.openIndexDetailsDialog ?
-        <AssetDetailsDialog assetType="index" assetId={this.state.selectedIndex} selectedAsset={this.state.selectedIndex} application={this.props.application} user={this.props.user} handleClose={this.closeIndexDlg}/>
+        <AssetDetailsDialog 
+          assetType="index" 
+          assetId={this.state.selectedIndex} 
+          nodes={this.thisGraph.nodes}
+          selectedAsset={this.state.selectedIndex} 
+          title=  {this.state.selectedAssetTitle}
+          application={this.props.application} 
+          user={this.props.user} 
+          handleClose={this.closeIndexDlg}/>
         : null}
 
         <Modal

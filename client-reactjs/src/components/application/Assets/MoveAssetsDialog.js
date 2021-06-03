@@ -1,13 +1,22 @@
 import React, { useState, useEffect } from 'react'
 import { authHeader, handleError } from "../../common/AuthHeader.js"
 import { Modal, Button, Tree, message } from 'antd/lib';
+import { useSelector, useDispatch } from "react-redux";
+import { moveGroup } from '../../../redux/actions/GroupsMove'
+import { store } from '../../../redux/store/Store'
+import {Constants} from "../../common/Constants"
+
 const { TreeNode, DirectoryTree } = Tree;
 const { confirm } = Modal;
+
 
 function MoveAssetsDialog({isShowing, toggle, application, assetToMove, reloadTable, refreshGroups}) {
   const [moveDestinationGroup, setMoveDestinationGroup] = useState({id:'', key:''});
   const [expandedGroups, setExpandedGroups] = useState([]);
   const [treeData, setTreeData] = useState([]);
+  const dispatch = useDispatch();
+
+
 
   useEffect(() => {
     if(application && application.applicationId) {
@@ -48,9 +57,8 @@ function MoveAssetsDialog({isShowing, toggle, application, assetToMove, reloadTa
   }
 
   const handleMove = () => {
-    console.log('moveDestinationGroup: '+moveDestinationGroup)
     message.config({top:130})
-    if(assetToMove.selectedGroup.id == moveDestinationGroup.id) {
+    if(assetToMove.id == moveDestinationGroup.id) {
       message.error('"'+assetToMove.title + '" is already in "'+moveDestinationGroup.title+'" group. Please select a different group to move it.')
       return;
     }
@@ -64,7 +72,7 @@ function MoveAssetsDialog({isShowing, toggle, application, assetToMove, reloadTa
           method: 'put',
           headers: authHeader(),
           body: JSON.stringify({
-            "groupId": assetToMove.selectedGroup.id,
+            "groupId": assetToMove.id,
             "destGroupId": moveDestinationGroup.id,
             "app_id": application.applicationId,
             "assetType": assetToMove.type,
@@ -74,13 +82,16 @@ function MoveAssetsDialog({isShowing, toggle, application, assetToMove, reloadTa
           if(response.ok) {
             return response.json();
           }
-
           handleError(response);
         }).then(function(data) {
           message.success('"'+assetToMove.title+'" has been moved to "'+moveDestinationGroup.title+'" group.')
-          reloadTable();
-          refreshGroups();
-          handleClose();
+          // reloadTable();
+          store.dispatch({
+            type: Constants.MOVE_GROUP,
+            payload: assetToMove.id
+          })
+          toggle();
+          // refreshGroups();
         }).catch(error => {
           console.log(error);
         });
@@ -96,7 +107,7 @@ function MoveAssetsDialog({isShowing, toggle, application, assetToMove, reloadTa
     <React.Fragment>
       <div>
         <Modal
-          title="Move Asset"
+          title="Select Group to Move"
           visible={isShowing}
           width={520}
           footer={[
@@ -114,7 +125,8 @@ function MoveAssetsDialog({isShowing, toggle, application, assetToMove, reloadTa
               treeData={treeData}
               selectedKeys={[moveDestinationGroup.key]}
               expandedKeys={expandedGroups}
-              defaultExpandAll={true}/>
+              defaultExpandAll={true}
+              />
          </Modal>
       </div>
      </React.Fragment>

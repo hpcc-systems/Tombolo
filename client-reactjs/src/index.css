@@ -726,15 +726,6 @@ overflow: hidden;
   display: none;
   color: transparent;
 }
-.view-change-toggle-btn {
-  border-bottom :  2px slid whitesmoke;
-   padding-bottom: 6.2px;
-}
-
-.edit-toggle-btn {
-  border-bottom :  2px solid whitesmoke;
-   padding-bottom: 6.5px;
-}
 
 .read-only-markdown{
   display: flex;
@@ -754,4 +745,42 @@ overflow: hidden;
   line-height: 18px !important;
   text-align: center;
   vertical-align: top;
+}
+
+.drop-target{
+  border: 2px dotted gray !important;
+  padding-left:  5px !important;
+}
+
+.ant-tree-drop-indicator{
+  display: none !important;
+}
+
+.ant-tree .ant-tree-treenode.drop-container > [draggable] {
+  -webkit-box-shadow: 0 0 0 0px;
+          box-shadow: 0 0 0 0px;
+}
+
+.backLink{
+  color: var(--dark);
+}
+.backLink:hover{
+  color: var(--primary);
+  text-decoration: none;
+  font-weight: 500;
+}
+
+.directorytree-rightclick-menuitem{
+  display: flex;
+  place-items: center;
+}
+
+.ant-modal-header{
+  background: var(--light)
+}
+.ant-modal-title{
+  color: var(--dark);
+}
+.ant-modal-close-x{
+  color: var(--dark);
 }
