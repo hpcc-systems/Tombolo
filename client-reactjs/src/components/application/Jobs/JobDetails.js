@@ -1224,17 +1224,6 @@ class JobDetails extends Component {
 
     return (
       <React.Fragment>
-          {!this.state.enableEdit && editingAllowed?  <div className="button-container edit-toggle-btn">
-            <Button type="primary" onClick={makeFieldsEditable}>
-              Edit
-            </Button>
-        </div> : null }
-        {this.state.editing ?  <div className="button-container view-change-toggle-btn" >
-          <Button  onClick={switchToViewOnly} type="primary" ghost>
-            View Changes
-          </Button>
-
-        </div> : null }
       <div>
           {!this.props.isNew ?
             <div className="loader">
