@@ -119,20 +119,24 @@ class JobScheduler {
     console.log('scheduleMessageBasedJobs')
     try {
       let job = await Job.findOne({where: {name: message.jobName}, attributes: {exclude: ['assetId']}});
-      let messageBasedJobs = await MessageBasedJobs.findAll({where: {jobId: job.id}});
-      for(const messageBasedjob of messageBasedJobs) {
-        await this.executeJob(
-          job.name,
-          job.cluster_id,
-          messageBasedjob.dataflowId,
-          messageBasedjob.applicationId,
-          job.id,
-          job.jobType == 'Script' ? SUBMIT_SCRIPT_JOB_FILE_NAME : SUBMIT_JOB_FILE_NAME,
-          job.jobType,
-          job.sprayedFileScope,
-          job.sprayFileName,
-          job.sprayDropZone
-          );
+      if(job) {
+        let messageBasedJobs = await MessageBasedJobs.findAll({where: {jobId: job.id}});
+        for(const messageBasedjob of messageBasedJobs) {
+          await this.executeJob(
+            job.name,
+            job.cluster_id,
+            messageBasedjob.dataflowId,
+            messageBasedjob.applicationId,
+            job.id,
+            job.jobType == 'Script' ? SUBMIT_SCRIPT_JOB_FILE_NAME : SUBMIT_JOB_FILE_NAME,
+            job.jobType,
+            job.sprayedFileScope,
+            job.sprayFileName,
+            job.sprayDropZone
+            );
+        }
+      } else {
+        console.error("***Could not find job with name "+message.jobName);
       }
     } catch (err) {
       console.log(err);
