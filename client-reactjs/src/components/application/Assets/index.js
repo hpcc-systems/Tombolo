@@ -31,26 +31,28 @@ const CheckboxGroup = Checkbox.Group;
 
 message.config({top: 100});
 
-function Assets(props) {
+const Assets = () => {
   const { isShowing, toggle, OpenDetailsForm } = useFileDetailsForm();
   const {showMoveDialog=isShowing, toggleMoveDialog=toggle} = useModal();
-  const applicationReducer = useSelector(state => state.applicationReducer);
-  const [assetToMove, setAssetToMove] = useState({
+  let assetToMove = {
     id: '',
     type: '',
     title: '',
     selectedGroup: {}
-  });
+  };
   const groupsReducer = useSelector(state => state.groupsReducer);
   const assetReducer = useSelector(state => state.assetReducer);
-  const [application, setApplication] = useState({...props});
-  const [selectedGroup, setSelectedGroup] = useState({'id':groupsReducer.selectedKeys.id, 'title' : '','key':groupsReducer.selectedKeys.key});
+  const applicationReducer = useSelector(state => state.applicationReducer);
+  let application = applicationReducer.application;
+  //const [selectedGroup, setSelectedGroup] = useState({'id':groupsReducer.selectedKeys.id, 'title' : '','key':groupsReducer.selectedKeys.key});
+  let selectedGroup = {'id':groupsReducer.selectedKeys.id, 'title' : '','key':groupsReducer.selectedKeys.key};
   const [itemToMove, setItemToMove] = useState({})
-  const [expandedGroups, setExpandedGroups] = useState(groupsReducer.expandedKeys);
+  //const [expandedGroups, setExpandedGroups] = useState(groupsReducer.expandedKeys);
+  let expandedGroups = groupsReducer.expandedKeys;
   const [newGroup, setNewGroup] = useState({name:'', description:'', id: ''});
   const [newGroupForm, setNewGroupForm] = useState({submitted:false});
   const [treeData, setTreeData] = useState([]);
-  const [openCreateGroupDialog, setOpenCreateGroupDialog] = useState(false);
+  const [openCreateGroupDialog, setOpenCreateGroupDialog] = useState(false);  
   const [rightClickNodeTreeItem, setRightClickNodeTreeItem] = useState({
     visible: false,
     pageX: 0,
@@ -58,9 +60,12 @@ function Assets(props) {
     id: '',
     categoryName: ''
   });
-  const [assetTypeFilter, setAssetTypeFilter] = useState(['File', 'Job', 'Query', 'Indexes', 'Groups']);
-  const [searchKeyWord, setSearchKeyWord] = useState('');
-  const [dataList, setDataList] = useState([]);
+  //const [assetTypeFilter, setAssetTypeFilter] = useState(['File', 'Job', 'Query', 'Indexes', 'Groups']);
+  let assetTypeFilter = ['File', 'Job', 'Query', 'Indexes', 'Groups'];
+  //const [searchKeyWord, setSearchKeyWord] = useState('');
+  let searchKeyWord = '';
+  //const [dataList, setDataList] = useState([]);
+  let dataList = [];
   //id of the group clicked from Asset table after a search
   const {assetInGroupId} = assetReducer;
   const groupsMoveReducer = useSelector(state => state.groupsMoveReducer)
@@ -82,23 +87,19 @@ function Assets(props) {
 
   //ref for More Options context menu
   const ref = useRef();
-  //hook for outside click to close the more options context menu
+  //hook for outside click to close the more options context menu  
   useOnClickOutside(ref, () => setRightClickNodeTreeItem({visible: false}));
 
-  let list = [];
-  useEffect(() => {
-    if(application.applicationId) {
-      fetchGroups();
-      
-    }
-  }, [application]);
+  let list = [];  
 
   //Re-render Directory Tree when the tree structure us chaged on modal
   useEffect(() =>{
    fetchGroups();
-   setSelectedGroup({'id':"", 'title' : '','key':"0-0"});
-
-  }, [groupsMoveReducer])
+   selectedGroup = {'id':"", 'title' : '','key':"0-0"};
+   if(assetInGroupId) {
+      openGroup(assetInGroupId);
+   }
+  }, [groupsMoveReducer, assetInGroupId])
 
   useEffect(() => {
     //if there is a search term and filter is changed, then trigger search
@@ -106,13 +107,6 @@ function Assets(props) {
       handleAssetSearch(searchKeyWord);
     }
   }, [assetTypeFilter]);
-
-  useEffect(() => {
-    fetchGroups();
-    if(assetInGroupId) {
-      openGroup(assetInGroupId);
-    }
-  }, [assetInGroupId]);
 
   const fetchGroups = () => {
     let url = "/api/groups?app_id="+application.applicationId;
@@ -129,9 +123,9 @@ function Assets(props) {
       setTreeData(data);
       //flatten the tree
       let list = generateList(data);
-      setDataList(list);
+      dataList = list;
 
-      clearSearch();
+      //clearSearch();
     }).catch(error => {
       console.log(error);
     });
@@ -140,7 +134,7 @@ function Assets(props) {
   const dispatch = useDispatch();
 
   const clearSearch = () => {
-    setSearchKeyWord('');
+    searchKeyWord = '';
     document.querySelector('.ant-input-clear-icon').click();
     dispatch(assetsActions.searchAsset(
       '',
@@ -150,7 +144,7 @@ function Assets(props) {
 
   const onSelect = (keys, event) => {
     event.nativeEvent.stopPropagation();
-    setSelectedGroup({id:event.node.props.id, title: event.node.props.title, key:event.node.props.eventKey});
+    selectedGroup = {id:event.node.props.id, title: event.node.props.title, key:event.node.props.eventKey};
 
     dispatch(groupsActions.groupExpanded(
       {id:event.node.props.id, key:keys[0]},
@@ -162,7 +156,7 @@ function Assets(props) {
   };
 
   const onExpand = (expandedKeys) => {
-    setExpandedGroups(expandedKeys);
+    expandedGroups = expandedKeys;
     dispatch(groupsActions.groupExpanded(
       selectedGroup,
       expandedKeys
@@ -203,8 +197,8 @@ function Assets(props) {
         let parent = getParent(match[0].key, treeData);
         if(parent) {
           let expandedKeys = !groupsReducer.expandedKeys.includes(parent.key) ? groupsReducer.expandedKeys.concat([parent.key]) : groupsReducer.expandedKeys;
-          setSelectedGroup({id:match[0].id, key:match[0].key});
-          setExpandedGroups(expandedKeys);
+          selectedGroup = {id:match[0].id, key:match[0].key};
+          expandedGroups = expandedKeys;
           dispatch(groupsActions.groupExpanded(
             {id:match[0].id, key:match[0].key},
             expandedKeys
@@ -212,19 +206,20 @@ function Assets(props) {
         }
       }
     } else if(groupId == '') {
-      setSelectedGroup({id:"", key:"0-0"});
+      selectedGroup = {id:"", key:"0-0"};
       onExpand(["0-0"]);
     }
     dispatch(assetsActions.assetInGroupSelected(
       ''
     ));
+    clearSearch();
   }
 
   const showMoreOptions = e => {
     setItemToMove({id: e.target.getAttribute('data-id'), key: e.target.getAttribute('data-key'), title: e.target.getAttribute('data-title'), type: "Group" });
     e.preventDefault();
     e.stopPropagation();
-    setSelectedGroup({id: e.target.getAttribute('data-id'), key: e.target.getAttribute('data-key'), title:e.target.getAttribute('title')});
+    selectedGroup = {id: e.target.getAttribute('data-id'), key: e.target.getAttribute('data-key'), title:e.target.getAttribute('title')};
     dispatch(groupsActions.groupExpanded(
       {id:e.target.getAttribute('data-id'), key:e.target.getAttribute('data-key')},
       expandedGroups
@@ -250,7 +245,7 @@ function Assets(props) {
     setOpenCreateGroupDialog(false);
     form.setFieldsValue({name:'', description:'', id:''})
     setNewGroup({name:'', description:'', id:''});
-    setNewGroupForm({submitted: false})
+    setNewGroupForm({submitted: false});
   }
 
   const handleMenuClick = (e) => {
@@ -262,19 +257,19 @@ function Assets(props) {
 
     switch (e.key) {
       case 'File':
-        props.history.push('/' + application.applicationId + '/assets/file');
+        this.props.history.push('/' + application.applicationId + '/assets/file');
         break;
 
       case 'Index':
-        props.history.push('/' + application.applicationId + '/assets/index');
+        this.props.history.push('/' + application.applicationId + '/assets/index');
         break;
 
       case 'Query':
-        props.history.push('/' + application.applicationId + '/assets/query');
+        this.props.history.push('/' + application.applicationId + '/assets/query');
         break;
 
       case 'Job':
-        props.history.push('/' + application.applicationId + '/assets/job');
+        this.props.history.push('/' + application.applicationId + '/assets/job');
         break;
 
       case 'Group':
@@ -338,7 +333,7 @@ function Assets(props) {
     }).then(function(data) {
       if(data && data.success) {
         let expandedKeys = !groupsReducer.expandedKeys.includes(selectedGroup.key) ? groupsReducer.expandedKeys.concat([selectedGroup.key]) : groupsReducer.expandedKeys;
-        setExpandedGroups(expandedKeys);
+        expandedGroups = expandedKeys;
         dispatch(groupsActions.groupExpanded(
           {id:selectedGroup.id, key:selectedGroup.key},
           expandedKeys
@@ -409,7 +404,7 @@ function Assets(props) {
         'name': data.name,
         'description': data.description,
         'id': data.id
-      })
+      });
     }).catch(error => {
       console.log(error);
     });
@@ -421,14 +416,12 @@ function Assets(props) {
   }
 
  const handleMoveAsset = (assetId, assetType, assetTitle) => {
-    setAssetToMove({id: assetId, type: assetType, title: assetTitle, selectedGroup: selectedGroup})
+    assetToMove = {id: assetId, type: assetType, title: assetTitle, selectedGroup: selectedGroup};
     toggleMoveDialog();
   }
 
   const toggleModal = () =>{
   }
-
-
 
   const handleDragDrop = (info) => {
     if(info.node != undefined && info.dragNode != undefined) {
@@ -479,7 +472,7 @@ function Assets(props) {
       message.error("Please select atleast one asset type")
       return;
     }
-    setSearchKeyWord(value);
+    searchKeyWord = value;
     let assetFilter = assetTypeFilter.length != searchOptions.length ? assetTypeFilter.join(',') : ''
     dispatch(assetsActions.searchAsset(
       assetFilter,
@@ -492,7 +485,7 @@ function Assets(props) {
   }
 
   const onAssetTypeFilterChange = (selectedValues) => {
-    setAssetTypeFilter(selectedValues);
+    assetTypeFilter = selectedValues;
   }
 
   const authReducer = useSelector(state => state.authenticationReducer);
@@ -521,9 +514,9 @@ function Assets(props) {
       </Select>
   );
 
-  return (
-
+  return (      
       <React.Fragment>
+        {console.log("rendering...")}
         <div style={{"height":"100%", overflow: "hidden"}}>
           <div className="d-flex justify-content-end" style={{margin: "5px"}}>
             <BreadCrumbs applicationId={application.applicationId} applicationTitle={application.applicationTitle}/>
@@ -557,6 +550,7 @@ function Assets(props) {
                 selectedKeys={[groupsReducer.selectedKeys.key]}
                 expandedKeys={[...groupsReducer.expandedKeys]}
                 autoExpandParent={false}
+                defaultExpandParent={false}
                 draggable
                 blockNode={true}
                 autoExpandParent={true}
@@ -564,15 +558,14 @@ function Assets(props) {
                 onDrop={handleDragDrop}
                 expandAction={false}
                 titleRender={titleRenderer}
-                onScroll={e => console.log(e)
-                }
+                onScroll={e => console.log(e)}
               />
             </div>
             <div className="asset-table">
-              <AssetsTable 
+              {<AssetsTable 
               selectedGroup={selectedGroup} 
               handleEditGroup={handleEditGroup} 
-              refreshGroups={fetchGroups}/>
+              refreshGroups={fetchGroups}/>}
             </div>
           </div>
           <RightClickMenu/>
@@ -604,7 +597,7 @@ function Assets(props) {
                   </Form.Item>
                 </div>
                 <Form.Item {...formItemLayout} label="Description" name="description">
-                  <MarkdownEditor id="desc" name="description" onChange={e => setNewGroup({...newGroup, [e.target.name]: e.target.value})} targetDomId="fileDescr" value={newGroup.description} disabled={!editingAllowed}/>
+                <MarkdownEditor id="desc" name="description" onChange={e => setNewGroup({...newGroup, [e.target.name]: e.target.value})} targetDomId="fileDescr" value={newGroup.description} disabled={!editingAllowed}/>
                 </Form.Item>
                 </Form>
             </Modal>

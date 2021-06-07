@@ -54,12 +54,6 @@ class App extends React.Component {
       return <DataDictionary applicationId={applicationId} applicationTitle={applicationTitle} user={this.props.user}/>;
     }
 
-    const assetsComp = () => {
-      let applicationId = this.props.application ? this.props.application.applicationId : '';
-      let applicationTitle = this.props.application ? this.props.application.applicationTitle : '';
-      return <Assets applicationId={applicationId} applicationTitle={applicationTitle} user={this.props.user}/>;
-    }
-
     return (
         <Router history={history}>
             <Route exact path="/login" component={LoginPage} />
@@ -73,11 +67,11 @@ class App extends React.Component {
                           <Content style={{background: '#fff', margin: '0 16px'}}>
                               <Switch>
                                 <PrivateRoute exact path="/" component={dataFlowComp}/>
+                                <PrivateRoute path="/:applicationId/assets" component={Assets} />
                                 <PrivateRoute path="/:applicationId/assets/file/:fileId?" component={FileDetailsForm}/>
                                 <PrivateRoute path="/:applicationId/assets/job/:jobId?" component={JobDetailsForm}/>
                                 <PrivateRoute path="/:applicationId/assets/index/:indexId?" component={IndexDetailsForm}/>
-                                <PrivateRoute path="/:applicationId/assets/query/:queryId?" component={QueryDetailsForm}/>
-                                <PrivateRoute path="/:applicationId/assets" component={assetsComp} />
+                                <PrivateRoute path="/:applicationId/assets/query/:queryId?" component={QueryDetailsForm}/>                                
                                 <PrivateRoute path="/:applicationId/data-dictionary" component={dataDictionaryComp}/>
                                 <PrivateRoute path="/:applicationId/dataflow/details" component={DataflowDetails}/>
                                 <PrivateRoute path="/:applicationId/dataflow" component={dataFlowComp}/>
