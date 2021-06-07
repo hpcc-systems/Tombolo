@@ -1,8 +1,9 @@
 import React, { useState, useEffect } from "react";
 // import { getFileDetails } from "./assetDetailsForPdf";
-// import styled, { createGlobalStyle } from "styled-components";
+import styled, { createGlobalStyle } from "styled-components";
 import { authHeader, handleError } from "./AuthHeader";
 import ReactMarkdown from "react-markdown";
+import { downloadPdf } from "./downloadPdf";
 
 function FileDetailsPdf(props) {
   //Local States
@@ -30,24 +31,17 @@ function FileDetailsPdf(props) {
         console.log("<<<< Final Data ", data);
         setBasicData(data.basic);
         setFileLayouts(data.file_layouts);
+        downloadPdf();
+        props.printingTaskCompleted();
       });
   }, []);
 
   return (
-    // <FileDetailsPdfContainer className="exportAsPdf"></FileDetailsPdfContainer>
-    <div
-      className="exportAsPdf"
-      style={{
-        height: "842px",
-        width: "595px",
-        marginRight: "10px",
-        padding: "10px",
-        display: "flex",
-        flexDirection: "column",
-        placeItems: "flex-start",
-      }}
-    >
-      <p>Title : {basicData.title}</p>
+    <FileDetailsPdfContainer className="exportAsPdf">
+      <h3> Basic Deails</h3>
+      <p>
+        <label>Title : </label> {basicData.title}
+      </p>
       <p>Name : {basicData.name}</p>
       <p>Scope : {basicData.scope}</p>
       <div className="read-only-markdown">
@@ -68,103 +62,106 @@ function FileDetailsPdf(props) {
       <p>Consumer : {basicData.consumer}</p>
       <p>Owner : {basicData.owner}</p>
 
-      <div>
-        <table
-          style={{
-            width: "100%",
-            border: "1px solid black",
-            borderCollapse: "collapse",
-          }}
-        >
-          {/* <tbody> */}
-          <tr
-            style={{
-              border: "1px solid black",
-              borderCollapse: "collapse",
-              padding: "5px",
-            }}
-          >
-            <th
-              style={{
-                border: "1px solid black",
-                borderCollapse: "collapse",
-                padding: "5px",
-              }}
-            >
-              Field
-            </th>
-            <th
-              style={{
-                border: "1px solid black",
-                borderCollapse: "collapse",
-                padding: "5px",
-              }}
-            >
-              Type
-            </th>
-            <th
-              style={{
-                border: "1px solid black",
-                borderCollapse: "collapse",
-                padding: "5px",
-                textAlign: "left",
-              }}
-            >
-              Description
-            </th>
-          </tr>
-          {/* </tbody> */}
+      <TableContainer>
+        <h3>Layout</h3>
+        <Table>
+          <tbody>
+            <tr>
+              <th>Field</th>
+              <th>Type</th>
+              <th>Description</th>
+            </tr>
+          </tbody>
 
           {fileLayouts.map((value, index) => {
             return (
               // <tbody key={index}>
               <tr key={index}>
-                <td
-                  style={{
-                    border: "1px solid black",
-                    borderCollapse: "collapse",
-                    padding: "5px",
-                    width: "198px",
-                  }}
-                >
-                  {value.name}
-                </td>
-                <td
-                  style={{
-                    border: "1px solid black",
-                    borderCollapse: "collapse",
-                    padding: "5px",
-                    width: "198px",
-                  }}
-                >
-                  {value.type}
-                </td>
-                <td
-                  style={{
-                    border: "1px solid black",
-                    borderCollapse: "collapse",
-                    padding: "5px",
-                    width: "198px",
-                  }}
-                >
-                  {value.description}
-                </td>
+                <td>{value.name}</td>
+                <td>{value.type}</td>
+                <td>{value.description}</td>
               </tr>
               // </tbody>
             );
           })}
-        </table>
-      </div>
-    </div>
+          {fileLayouts.map((value, index) => {
+            return (
+              // <tbody key={index}>
+              <tr key={index}>
+                <td>{value.name}</td>
+                <td>{value.type}</td>
+                <td>{value.description}</td>
+              </tr>
+              // </tbody>
+            );
+          })}
+        </Table>
+      </TableContainer>
+    </FileDetailsPdfContainer>
   );
 }
 
 export default FileDetailsPdf;
 
 //Styled components
-// const FileDetailsPdfContainer = styled.div`
-//   height: 842px;
-//   width: 595px;
-//   margin-right: 10px;
-//   padding: 10px;
-// `;
+const FileDetailsPdfContainer = styled.div`
+  height: 842px;
+  width: 595px;
+  margin-right: 10px;
+  margin-top: 50px;
+  padding: 50px;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  font-size: 12px;
+
+  > h3 {
+    font-size: 18px;
+    font-weight: bold;
+  }
+
+  > p {
+    > label : {
+      font-weight: bold;
+    }
+  }
+`;
+
+const TableContainer = styled.div`
+  margin-top: 30px;
+
+  > h3 {
+    font-size: 18px;
+    font-weight: bold;
+  }
+`;
+
+const Table = styled.table`
+  width: 100%;
+  border-style: solid
+  border-width: thin;
+  page-break-inside : auto
+
+  th,
+  td,
+  tr {
+    // border-style: solid;
+    // border-width: thin;
+    // border-collapse: collapse;
+    width: 100%;
+  }
+  th,
+  td,
+  tr {
+    padding: 5px;
+    border: 1px solid gray;
+    
+  }
+  th {
+    text-align: left;
+    
+  }
+  td {
+    width: 198px;
+  }
+`;

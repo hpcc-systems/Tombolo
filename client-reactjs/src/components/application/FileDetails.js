@@ -40,8 +40,6 @@ import Paragraph from "antd/lib/skeleton/Paragraph";
 import { viewOnlyModeReducer } from "../../redux/reducers/ViewOnlyModeReducer";
 import { readOnlyMode, editableMode } from "../common/readOnlyUtil";
 import FileDetailsPdf from "../common/FileDetailsPdf";
-import { downloadPdf } from "../common/downloadPdf";
-
 const TabPane = Tabs.TabPane;
 const Option = Select.Option;
 const { confirm } = Modal;
@@ -1228,11 +1226,11 @@ class FileDetails extends PureComponent {
 
     //Generate PDF function
     const generatePdf = () => {
-      this.setState({ generatingPdf: true }, () => {
-        console.log("<<<< Generating PDF ...", this.state.generatingPdf);
-        downloadPdf();
-        this.setState({ generatingPdf: false });
-      });
+      this.setState({ generatingPdf: true });
+    };
+
+    const printingTaskCompleted = () => {
+      this.setState({ generatingPdf: false });
     };
 
     // view edit buttons on tabpane
@@ -1791,12 +1789,15 @@ class FileDetails extends PureComponent {
         )}
 
         {/* For Generating PDF */}
-        <div style={{ display: "none" }}>
-          <FileDetailsPdf
-            selectedAssetId={this.props.selectedAsset.id}
-            applicationId={this.props.application.applicationId}
-          />
-        </div>
+        {this.state.generatingPdf ? (
+          <div style={{ display: "none" }}>
+            <FileDetailsPdf
+              selectedAssetId={this.props.selectedAsset.id}
+              applicationId={this.props.application.applicationId}
+              printingTaskCompleted={printingTaskCompleted}
+            />
+          </div>
+        ) : null}
       </React.Fragment>
     );
   }
