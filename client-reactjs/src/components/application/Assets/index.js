@@ -216,7 +216,7 @@ const Assets = () => {
   }
 
   const showMoreOptions = e => {
-    setItemToMove({id: e.target.getAttribute('data-id'), key: e.target.getAttribute('data-key'), title: e.target.getAttribute('data-title'), type: "Group" });
+    setItemToMove({id: e.target.getAttribute('data-id'), key: e.target.getAttribute('data-key'), title: e.target.getAttribute('data-title'), selectedGroup: selectedGroup, type: "Group" });
     e.preventDefault();
     e.stopPropagation();
     selectedGroup = {id: e.target.getAttribute('data-id'), key: e.target.getAttribute('data-key'), title:e.target.getAttribute('title')};
