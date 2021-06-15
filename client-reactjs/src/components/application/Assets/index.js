@@ -6,6 +6,7 @@ import { authHeader, handleError } from "../../common/AuthHeader.js"
 import { hasEditPermission } from "../../common/AuthUtil.js";
 import { Constants } from '../../common/Constants';
 import { useSelector, useDispatch } from "react-redux";
+import { useHistory } from 'react-router';
 import ReactDOM from 'react-dom';
 import { withRouter, NavLink } from 'react-router-dom';
 import { assetsActions } from '../../../redux/actions/Assets';
@@ -69,6 +70,7 @@ const Assets = () => {
   //id of the group clicked from Asset table after a search
   const {assetInGroupId} = assetReducer;
   const groupsMoveReducer = useSelector(state => state.groupsMoveReducer)
+  const history = useHistory();
 
   const formItemLayout = {
     labelCol: {
@@ -257,19 +259,19 @@ const Assets = () => {
 
     switch (e.key) {
       case 'File':
-        this.props.history.push('/' + application.applicationId + '/assets/file');
+        history.push('/' + application.applicationId + '/assets/file');
         break;
 
       case 'Index':
-        this.props.history.push('/' + application.applicationId + '/assets/index');
+        history.push('/' + application.applicationId + '/assets/index');
         break;
 
       case 'Query':
-        this.props.history.push('/' + application.applicationId + '/assets/query');
+        history.push('/' + application.applicationId + '/assets/query');
         break;
 
       case 'Job':
-        this.props.history.push('/' + application.applicationId + '/assets/job');
+        history.push('/' + application.applicationId + '/assets/job');
         break;
 
       case 'Group':
@@ -293,7 +295,7 @@ const Assets = () => {
     return (rightClickNodeTreeItem.visible ?
       <React.Fragment>
       <div ref={ref} style={{left: `${rightClickNodeTreeItem.pageX + 40}px`, top: `${rightClickNodeTreeItem.pageY}px`}} className="self-right-menu">
-        <Menu style={{ width: 150 }} mode="vertical" theme="dark" onClick={handleMenuClick} ref={ref}>
+        <Menu style={{ width: 150 }} mode="vertical" theme="dark" onClick={(e) => handleMenuClick(e)} ref={ref}>
          <Menu.Item key="Group" className="directorytree-rightclick-menuitem"><FolderOutlined /> New Group</Menu.Item>
          {(selectedGroup && selectedGroup.id != null && selectedGroup.id != '') ?
            <Menu.Item key="Edit-Group"  className="directorytree-rightclick-menuitem"><EditOutlined />Edit</Menu.Item> : null}
@@ -492,7 +494,7 @@ const Assets = () => {
   const editingAllowed = hasEditPermission(authReducer.user);
 
   const menu = (
-    <Menu onClick={handleMenuClick}>
+    <Menu onClick={(e) => handleMenuClick(e)}>
       <Menu.Item key="File" onClick={addingAssetMode}><i className="fa fa-lg fa-file"></i> File</Menu.Item>
       <Menu.Item key="Index" onClick={addingAssetMode}><i className="fa fa-lg fa-indent"></i> Index</Menu.Item>
       <Menu.Item key="Query" onClick={addingAssetMode}><i className="fa fa-lg fa-search"></i> Query</Menu.Item>

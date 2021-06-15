@@ -67,11 +67,11 @@ class App extends React.Component {
                           <Content style={{background: '#fff', margin: '0 16px'}}>
                               <Switch>
                                 <PrivateRoute exact path="/" component={dataFlowComp}/>
-                                <PrivateRoute path="/:applicationId/assets" component={Assets} />
                                 <PrivateRoute path="/:applicationId/assets/file/:fileId?" component={FileDetailsForm}/>
                                 <PrivateRoute path="/:applicationId/assets/job/:jobId?" component={JobDetailsForm}/>
                                 <PrivateRoute path="/:applicationId/assets/index/:indexId?" component={IndexDetailsForm}/>
                                 <PrivateRoute path="/:applicationId/assets/query/:queryId?" component={QueryDetailsForm}/>                                
+                                <PrivateRoute path="/:applicationId/assets" component={Assets} />                                
                                 <PrivateRoute path="/:applicationId/data-dictionary" component={dataDictionaryComp}/>
                                 <PrivateRoute path="/:applicationId/dataflow/details" component={DataflowDetails}/>
                                 <PrivateRoute path="/:applicationId/dataflow" component={dataFlowComp}/>
