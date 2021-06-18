@@ -8,7 +8,7 @@ import { MarkdownEditor } from "../../common/MarkdownEditor.js";
 import { formItemLayout, threeColformItemLayout } from "../../common/CommonUtil.js";
 const { Option, OptGroup } = Select;  
 
-function BasicsTabGeneral({enableEdit, editingAllowed, addingNewAsset, jobType, clearState, onChange, clusters, localState, formRef, applicationId}) {
+function BasicsTabGeneral({enableEdit, editingAllowed, addingNewAsset, jobType, clearState, onChange, clusters, localState, formRef, applicationId, setJobDetails}) {
   const assetReducer = useSelector(state => state.assetReducer);
   const dataflowReducer = useSelector(state => state.dataflowReducer);
   const [jobSearchErrorShown, setJobSearchErrorShown] = useState(false);
@@ -61,7 +61,7 @@ function BasicsTabGeneral({enableEdit, editingAllowed, addingNewAsset, jobType, 
       }
       handleError(response);
     })
-    .then(jobInfo => {
+    .then(jobInfo => {      
       localState.job = {
         ...localState.job,
         id: jobInfo.id,
@@ -79,6 +79,7 @@ function BasicsTabGeneral({enableEdit, editingAllowed, addingNewAsset, jobType, 
         ecl: jobInfo.ecl,
         entryBWR: jobInfo.entryBWR
       })
+      setJobDetails(jobInfo);
       return jobInfo;
     })
     .catch(error => {

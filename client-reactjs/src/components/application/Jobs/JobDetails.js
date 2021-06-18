@@ -276,6 +276,18 @@ class JobDetails extends Component {
     }
   }
 
+  setJobDetails = (jobDetails) => {
+    this.setState({
+      ...this.state,
+      job: {
+        ...this.state.job,
+        inputFiles: jobDetails.jobfiles.filter(jobFile => jobFile.file_type == 'input'),
+        outputFiles: jobDetails.jobfiles.filter(jobFile => jobFile.file_type == 'output'),
+        ecl: jobDetails.ecl,
+     }
+    });
+  }
+
   getFiles() {
     let fileUrl = "/api/file/read/file_list",
         queryStringParams = {};
@@ -1252,7 +1264,7 @@ class JobDetails extends Component {
                   case 'Query Build':
                   case 'Scoring':                    
                   case '':
-                    return <BasicsTabGeneral enableEdit={this.state.enableEdit} editingAllowed={editingAllowed} addingNewAsset={this.state.addingNewAsset} jobType={this.state.job.jobType} clearState={this.clearState} onChange={this.onChange} clusters={this.props.clusters} localState={this.state} formRef={this.formRef} applicationId={this.props.application.applicationId}/>;
+                    return <BasicsTabGeneral enableEdit={this.state.enableEdit} editingAllowed={editingAllowed} addingNewAsset={this.state.addingNewAsset} jobType={this.state.job.jobType} clearState={this.clearState} onChange={this.onChange} clusters={this.props.clusters} localState={this.state} formRef={this.formRef} applicationId={this.props.application.applicationId} setJobDetails={this.setJobDetails}/>;
                   case 'Script':
                     return <BasicsTabScript enableEdit={this.state.enableEdit} editingAllowed={editingAllowed} onChange={this.onChange} localState={this.state} />;
                   case 'Spray':

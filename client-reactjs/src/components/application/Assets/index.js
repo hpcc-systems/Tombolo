@@ -101,7 +101,7 @@ const Assets = () => {
    if(assetInGroupId) {
       openGroup(assetInGroupId);
    }
-  }, [groupsMoveReducer, assetInGroupId])
+  }, [groupsMoveReducer, assetInGroupId, application])
 
   useEffect(() => {
     //if there is a search term and filter is changed, then trigger search
@@ -518,7 +518,6 @@ const Assets = () => {
 
   return (      
       <React.Fragment>
-        {console.log("rendering...")}
         <div style={{"height":"100%", overflow: "hidden"}}>
           <div className="d-flex justify-content-end" style={{margin: "5px"}}>
             <BreadCrumbs applicationId={application.applicationId} applicationTitle={application.applicationTitle}/>
