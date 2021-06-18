@@ -356,7 +356,6 @@ function AssetsTable({ selectedGroup, handleEditGroup, refreshGroups }) {
               type="primary"
               style={{ color: "var(--primary)", cursor: "pointer" }}
               onClick={() => {
-                console.log("REcord <<<<", record);
                 setSelectedAsset({ id: record.id, type: record.type });
                 setSelectDetailsforPdfDialogVisibility(true);
               }}

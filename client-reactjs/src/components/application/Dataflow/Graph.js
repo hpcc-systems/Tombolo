@@ -573,7 +573,7 @@ class Graph extends Component {
     let _self=this;
     if (_self.graphState.shiftNodeDrag) {
       //path dragging
-      _self.thisGraph.dragLine.attr('d', 'M' + (d.x + 5) + ',' + (d.y + 5) + 'L' + (d3.mouse(_self.thisGraph.svgG.node())[0] + 15)+ ',' + d3.mouse(_self.thisGraph.svgG.node())[1]);
+      _self.thisGraph.dragLine.attr('d', 'M' + (d.x + 5) + ',' + (d.y + 15) + 'L' + (d3.mouse(_self.thisGraph.svgG.node())[0] + 15)+ ',' + d3.mouse(_self.thisGraph.svgG.node())[1]);
       _self.updateGraph();
     } else {
       //limit the dragging within svg boundary

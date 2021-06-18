@@ -2,7 +2,8 @@ const express = require('express');
 const router = express.Router();
 const validatorUtil = require('../../utils/validator');
 
-const { body, query, oneOf, validationResult } = require('express-validator');
+const { body, query, validationResult } = require('express-validator');
+const { oneOf, check } = require('express-validator/check');
 let Sequelize = require('sequelize');
 const Op = Sequelize.Op;
 var models  = require('../../models');
@@ -536,29 +537,26 @@ router.put('/move', [
 });
 
 router.put('/move/asset', [
+  oneOf([
+    check('assetId').isInt(),
+    check('assetId').isUUID(4)
+  ]),
   body('app_id').isUUID(4).withMessage('Invalid app id'),
-  body('assetId').isInt().withMessage('Invalid asset id'),
   body('destGroupId').optional({checkFalsy:true}).isInt().withMessage('Invalid target group id'),
-  body('groupId').optional({checkFalsy:true}).isInt().withMessage('Invalid group id'),
   body('assetType').matches(/^[a-zA-Z]/).withMessage('Invalid asset type')
 ], (req, res) => {
-  console.log(">>>> Route to move groups found")
-
     const errors = validationResult(req).formatWith(validatorUtil.errorFormatter);
-    console.log("Error >>>",  JSON.stringify(errors))
     if (!errors.isEmpty()) {
-      console.log(">>>> Validation error occured")
-
         return res.status(422).json({ success: false, errors: errors.array() });
     }
     let appId = req.body.app_id, assetId = req.body.assetId, groupId = req.body.groupId, destGroupId = req.body.destGroupId ? req.body.destGroupId : "";
     try {
       if(req.body.assetType != 'Group') {
         AssetsGroups.findOrCreate({
-          where: {assetId: assetId, groupId: destGroupId},
-          defaults:{assetId: assetId, groupId: destGroupId}}).then((assetsGroupsCreated) => {
-            if(req.body.groupId && req.body.groupId != '') {
-              AssetsGroups.destroy({where:{assetId: assetId, groupId: groupId}}).then((existingGroupAssociationRemoved) => {
+          where: {assetId: assetId},
+          defaults:{assetId: assetId, groupId: destGroupId}}).then((assetsGroupsRow, created) => {
+            if(!created) {
+              AssetsGroups.update({groupId: destGroupId}, {where:{assetId: assetId, id: assetsGroupsRow[0].id}}).then((existingGroupAssociationUpdated) => {
                 res.json({"success":true});
               })
             } else {

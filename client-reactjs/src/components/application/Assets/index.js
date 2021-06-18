@@ -19,6 +19,7 @@ import { authHeader, handleError } from "../../common/AuthHeader.js";
 import { hasEditPermission } from "../../common/AuthUtil.js";
 import { Constants } from "../../common/Constants";
 import { useSelector, useDispatch } from "react-redux";
+import { useHistory } from "react-router";
 import ReactDOM from "react-dom";
 import { withRouter, NavLink } from "react-router-dom";
 import { assetsActions } from "../../../redux/actions/Assets";
@@ -53,28 +54,32 @@ const CheckboxGroup = Checkbox.Group;
 
 message.config({ top: 100 });
 
-function Assets(props) {
+const Assets = () => {
   const { isShowing, toggle, OpenDetailsForm } = useFileDetailsForm();
   const { showMoveDialog = isShowing, toggleMoveDialog = toggle } = useModal();
-  const applicationReducer = useSelector((state) => state.applicationReducer);
-  const [assetToMove, setAssetToMove] = useState({
+  let assetToMove = {
     id: "",
     type: "",
     title: "",
     selectedGroup: {},
-  });
+  };
   const groupsReducer = useSelector((state) => state.groupsReducer);
   const assetReducer = useSelector((state) => state.assetReducer);
-  const [application, setApplication] = useState({ ...props });
-  const [selectedGroup, setSelectedGroup] = useState({
+  const applicationReducer = useSelector((state) => state.applicationReducer);
+  let application = applicationReducer.application;
+  // const [selectedGroup, setSelectedGroup] = useState({
+  //   id: groupsReducer.selectedKeys.id,
+  //   title: "",
+  //   key: groupsReducer.selectedKeys.key,
+  // });
+  let selectedGroup = {
     id: groupsReducer.selectedKeys.id,
     title: "",
     key: groupsReducer.selectedKeys.key,
-  });
+  };
   const [itemToMove, setItemToMove] = useState({});
-  const [expandedGroups, setExpandedGroups] = useState(
-    groupsReducer.expandedKeys
-  );
+  //const [expandedGroups, setExpandedGroups] = useState(groupsReducer.expandedKeys);
+  let expandedGroups = groupsReducer.expandedKeys;
   const [newGroup, setNewGroup] = useState({
     name: "",
     description: "",
@@ -90,24 +95,22 @@ function Assets(props) {
     id: "",
     categoryName: "",
   });
-  const [assetTypeFilter, setAssetTypeFilter] = useState([
-    "File",
-    "Job",
-    "Query",
-    "Indexes",
-    "Groups",
-  ]);
-  const [searchKeyWord, setSearchKeyWord] = useState("");
-  const [dataList, setDataList] = useState([]);
+
   const [
     selectDetailsforPdfDialogVisibility,
     setSelectDetailsforPdfDialogVisibility,
   ] = useState(false);
   const [selectedAsset, setSelectedAsset] = useState();
 
+  let assetTypeFilter = ["File", "Job", "Query", "Indexes", "Groups"];
+  //const [searchKeyWord, setSearchKeyWord] = useState('');
+  let searchKeyWord = "";
+  // const [dataList, setDataList] = useState([]);
+  let dataList = [];
   //id of the group clicked from Asset table after a search
   const { assetInGroupId } = assetReducer;
   const groupsMoveReducer = useSelector((state) => state.groupsMoveReducer);
+  const history = useHistory();
 
   const formItemLayout = {
     labelCol: {
@@ -130,17 +133,15 @@ function Assets(props) {
   useOnClickOutside(ref, () => setRightClickNodeTreeItem({ visible: false }));
 
   let list = [];
-  useEffect(() => {
-    if (application.applicationId) {
-      fetchGroups();
-    }
-  }, [application]);
 
   //Re-render Directory Tree when the tree structure us chaged on modal
   useEffect(() => {
     fetchGroups();
-    setSelectedGroup({ id: "", title: "", key: "0-0" });
-  }, [groupsMoveReducer]);
+    selectedGroup = { id: "", title: "", key: "0-0" };
+    if (assetInGroupId) {
+      openGroup(assetInGroupId);
+    }
+  }, [groupsMoveReducer, assetInGroupId]);
 
   useEffect(() => {
     //if there is a search term and filter is changed, then trigger search
@@ -171,7 +172,7 @@ function Assets(props) {
         setTreeData(data);
         //flatten the tree
         let list = generateList(data);
-        setDataList(list);
+        // setDataList(list);
 
         clearSearch();
       })
@@ -183,19 +184,18 @@ function Assets(props) {
   const dispatch = useDispatch();
 
   const clearSearch = () => {
-    setSearchKeyWord("");
+    searchKeyWord = "";
     document.querySelector(".ant-input-clear-icon").click();
     dispatch(assetsActions.searchAsset("", ""));
   };
 
   const onSelect = (keys, event) => {
-    console.log("<<<< set group function running");
     event.nativeEvent.stopPropagation();
-    setSelectedGroup({
-      id: event.node.props.id,
-      title: event.node.props.title,
-      key: event.node.props.eventKey,
-    });
+    // setSelectedGroup({
+    //   id: event.node.props.id,
+    //   title: event.node.props.title,
+    //   key: event.node.props.eventKey,
+    // });
 
     dispatch(
       groupsActions.groupExpanded(
@@ -209,7 +209,7 @@ function Assets(props) {
   };
 
   const onExpand = (expandedKeys) => {
-    setExpandedGroups(expandedKeys);
+    expandedGroups = expandedKeys;
     dispatch(groupsActions.groupExpanded(selectedGroup, expandedKeys));
   };
 
@@ -249,8 +249,8 @@ function Assets(props) {
           let expandedKeys = !groupsReducer.expandedKeys.includes(parent.key)
             ? groupsReducer.expandedKeys.concat([parent.key])
             : groupsReducer.expandedKeys;
-          setSelectedGroup({ id: match[0].id, key: match[0].key });
-          setExpandedGroups(expandedKeys);
+          selectedGroup = { id: match[0].id, key: match[0].key };
+          expandedGroups = expandedKeys;
           dispatch(
             groupsActions.groupExpanded(
               { id: match[0].id, key: match[0].key },
@@ -260,10 +260,11 @@ function Assets(props) {
         }
       }
     } else if (groupId == "") {
-      setSelectedGroup({ id: "", key: "0-0" });
+      selectedGroup = { id: "", key: "0-0" };
       onExpand(["0-0"]);
     }
     dispatch(assetsActions.assetInGroupSelected(""));
+    clearSearch();
   };
 
   const showMoreOptions = (e) => {
@@ -271,15 +272,16 @@ function Assets(props) {
       id: e.target.getAttribute("data-id"),
       key: e.target.getAttribute("data-key"),
       title: e.target.getAttribute("data-title"),
+      selectedGroup: selectedGroup,
       type: "Group",
     });
     e.preventDefault();
     e.stopPropagation();
-    setSelectedGroup({
+    selectedGroup = {
       id: e.target.getAttribute("data-id"),
       key: e.target.getAttribute("data-key"),
       title: e.target.getAttribute("title"),
-    });
+    };
     dispatch(
       groupsActions.groupExpanded(
         {
@@ -321,19 +323,19 @@ function Assets(props) {
 
     switch (e.key) {
       case "File":
-        props.history.push("/" + application.applicationId + "/assets/file");
+        history.push("/" + application.applicationId + "/assets/file");
         break;
 
       case "Index":
-        props.history.push("/" + application.applicationId + "/assets/index");
+        history.push("/" + application.applicationId + "/assets/index");
         break;
 
       case "Query":
-        props.history.push("/" + application.applicationId + "/assets/query");
+        history.push("/" + application.applicationId + "/assets/query");
         break;
 
       case "Job":
-        props.history.push("/" + application.applicationId + "/assets/job");
+        history.push("/" + application.applicationId + "/assets/job");
         break;
 
       case "Group":
@@ -453,6 +455,12 @@ function Assets(props) {
         }
         handleError(response);
       })
+      .then(function (response) {
+        if (response.ok && response.status == 200) {
+          return response.json();
+        }
+        handleError(response);
+      })
       .then(function (data) {
         if (data && data.success) {
           let expandedKeys = !groupsReducer.expandedKeys.includes(
@@ -460,7 +468,7 @@ function Assets(props) {
           )
             ? groupsReducer.expandedKeys.concat([selectedGroup.key])
             : groupsReducer.expandedKeys;
-          setExpandedGroups(expandedKeys);
+          expandedGroups = expandedKeys;
           dispatch(
             groupsActions.groupExpanded(
               { id: selectedGroup.id, key: selectedGroup.key },
@@ -559,12 +567,12 @@ function Assets(props) {
   const handleDragEnter = (info) => {};
 
   const handleMoveAsset = (assetId, assetType, assetTitle) => {
-    setAssetToMove({
+    assetToMove = {
       id: assetId,
       type: assetType,
       title: assetTitle,
       selectedGroup: selectedGroup,
-    });
+    };
     toggleMoveDialog();
   };
 
@@ -625,7 +633,7 @@ function Assets(props) {
       message.error("Please select atleast one asset type");
       return;
     }
-    setSearchKeyWord(value);
+    searchKeyWord = value;
     let assetFilter =
       assetTypeFilter.length != searchOptions.length
         ? assetTypeFilter.join(",")
@@ -645,14 +653,14 @@ function Assets(props) {
   };
 
   const onAssetTypeFilterChange = (selectedValues) => {
-    setAssetTypeFilter(selectedValues);
+    assetTypeFilter = selectedValues;
   };
 
   const authReducer = useSelector((state) => state.authenticationReducer);
   const editingAllowed = hasEditPermission(authReducer.user);
 
   const menu = (
-    <Menu onClick={handleMenuClick}>
+    <Menu onClick={(e) => handleMenuClick(e)}>
       <Menu.Item key="File" onClick={addingAssetMode}>
         <i className="fa fa-lg fa-file"></i> File
       </Menu.Item>
@@ -760,6 +768,13 @@ function Assets(props) {
           visible={openCreateGroupDialog}
           width={520}
         >
+          {/* <Form layout="vertical" form={form} onFinish={handleCreateGroup}>
+            <div
+              className={
+                "form-group" +
+                (newGroupForm.submitted && !newGroup.name ? " has-error" : "")
+              }
+            > */}
           <Form layout="vertical" form={form} onFinish={handleCreateGroup}>
             <div
               className={
@@ -832,6 +847,6 @@ function Assets(props) {
       ) : null}
     </React.Fragment>
   );
-}
+};
 
 export default withRouter(Assets);

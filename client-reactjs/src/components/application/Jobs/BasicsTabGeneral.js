@@ -9,11 +9,14 @@ import { formItemLayout, threeColformItemLayout } from "../../common/CommonUtil.
 const { Option, OptGroup } = Select;  
 
 function BasicsTabGeneral({enableEdit, editingAllowed, addingNewAsset, jobType, clearState, onChange, clusters, localState, formRef, applicationId}) {
+  const assetReducer = useSelector(state => state.assetReducer);
+  const dataflowReducer = useSelector(state => state.dataflowReducer);
   const [jobSearchErrorShown, setJobSearchErrorShown] = useState(false);
   const [searchResultsLoaded, setSearchResultsLoaded] = useState(false);
   const [jobSearchSuggestions, setJobSearchSuggestions] = useState([]);  
-  const [selectedCluster, setSelectedCluster] = useState();
+  const [selectedCluster, setSelectedCluster] = useState(assetReducer.clusterId);
   const dispatch = useDispatch();
+  
 
   const searchJobs = (searchString) => {
     if(searchString.length <= 3 || jobSearchErrorShown) {
@@ -77,11 +80,6 @@ function BasicsTabGeneral({enableEdit, editingAllowed, addingNewAsset, jobType, 
         entryBWR: jobInfo.entryBWR
       })
       return jobInfo;
-    })
-    .then(data => {
-      if (this.props.selectedDataflow) {
-        this.getFiles();
-      }
     })
     .catch(error => {
       console.log(error);

@@ -1125,7 +1125,7 @@ class JobDetails extends Component {
     })
   }
 
-  render() {
+  render() {    
     const editingAllowed = hasEditPermission(this.props.user);
     const {
       visible, confirmLoading, jobTypes, paramName,

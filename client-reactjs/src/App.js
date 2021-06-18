@@ -79,22 +79,6 @@ class App extends React.Component {
       );
     };
 
-    const assetsComp = () => {
-      let applicationId = this.props.application
-        ? this.props.application.applicationId
-        : "";
-      let applicationTitle = this.props.application
-        ? this.props.application.applicationTitle
-        : "";
-      return (
-        <Assets
-          applicationId={applicationId}
-          applicationTitle={applicationTitle}
-          user={this.props.user}
-        />
-      );
-    };
-
     return (
       <Router history={history}>
         <Route exact path="/login" component={LoginPage} />
@@ -131,7 +115,7 @@ class App extends React.Component {
                   />
                   <PrivateRoute
                     path="/:applicationId/assets"
-                    component={assetsComp}
+                    component={Assets}
                   />
                   <PrivateRoute
                     path="/:applicationId/data-dictionary"

@@ -57,8 +57,8 @@ function MoveAssetsDialog({isShowing, toggle, application, assetToMove, reloadTa
   }
 
   const handleMove = () => {
-    message.config({top:130})
-    if(assetToMove.id == moveDestinationGroup.id) {
+    message.config({top:130});
+    if(assetToMove.selectedGroup.id == moveDestinationGroup.id) {
       message.error('"'+assetToMove.title + '" is already in "'+moveDestinationGroup.title+'" group. Please select a different group to move it.')
       return;
     }
@@ -72,7 +72,6 @@ function MoveAssetsDialog({isShowing, toggle, application, assetToMove, reloadTa
           method: 'put',
           headers: authHeader(),
           body: JSON.stringify({
-            "groupId": assetToMove.id,
             "destGroupId": moveDestinationGroup.id,
             "app_id": application.applicationId,
             "assetType": assetToMove.type,
