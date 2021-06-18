@@ -39,7 +39,6 @@ import { assetsActions } from "../../redux/actions/Assets";
 import Paragraph from "antd/lib/skeleton/Paragraph";
 import { viewOnlyModeReducer } from "../../redux/reducers/ViewOnlyModeReducer";
 import { readOnlyMode, editableMode } from "../common/readOnlyUtil";
-import FileDetailsPdf from "../common/FileDetailsPdf";
 const TabPane = Tabs.TabPane;
 const Option = Select.Option;
 const { confirm } = Modal;
@@ -84,7 +83,6 @@ class FileDetails extends PureComponent {
     enableEdit: false,
     editing: false,
     dataAltered: false,
-    generatingPdf: false,
   };
 
   dataTypes = [];
@@ -1224,29 +1222,12 @@ class FileDetails extends PureComponent {
       });
     };
 
-    //Generate PDF function
-    const generatePdf = () => {
-      this.setState({ generatingPdf: true });
-    };
-
-    const printingTaskCompleted = () => {
-      this.setState({ generatingPdf: false });
-    };
-
     // view edit buttons on tabpane
     const editButton =
       !this.state.enableEdit && editingAllowed ? (
         <>
           <Button type="primary" onClick={makeFieldsEditable}>
             Edit
-          </Button>
-          <Button
-            type="ghost"
-            style={{ marginLeft: "10px" }}
-            onClick={generatePdf}
-            loading={this.state.generatingPdf}
-          >
-            Generate PDF
           </Button>
         </>
       ) : null;
@@ -1263,7 +1244,6 @@ class FileDetails extends PureComponent {
 
     return (
       <React.Fragment>
-        {console.log(this.props, "<<<< Props sent to file detials page")}
         {this.props.displayingInModal || this.state.addingNewAsset ? null : (
           <div
             style={{
@@ -1787,17 +1767,6 @@ class FileDetails extends PureComponent {
             )}
           </div>
         )}
-
-        {/* For Generating PDF */}
-        {this.state.generatingPdf ? (
-          <div style={{ display: "none" }}>
-            <FileDetailsPdf
-              selectedAssetId={this.props.selectedAsset.id}
-              applicationId={this.props.application.applicationId}
-              printingTaskCompleted={printingTaskCompleted}
-            />
-          </div>
-        ) : null}
       </React.Fragment>
     );
   }

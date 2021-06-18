@@ -791,13 +791,20 @@ div.tooltip {
   display: flex;
   flex-direction: column;
   align-items: flex-start;
-  /* padding: 7px; */
 }
 
 .read-only-markdown > * {
   text-align: left;
 }
 
+.read-only-markdown > h1,
+h2,
+h3,
+h4,
+h5,
+h6 {
+  font-size: 1.5em !important;
+}
 .ant-tree .ant-tree-node-content-wrapper .ant-tree-iconEle {
   display: inline-block;
   width: 24px;
