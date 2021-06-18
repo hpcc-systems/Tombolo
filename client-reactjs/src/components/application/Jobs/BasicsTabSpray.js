@@ -1,12 +1,14 @@
 import React, { useState, useEffect } from 'react'
 import { Form, Input, Button, Select, Spin, message, Row, Col } from 'antd/lib';
 import { authHeader, handleError } from "../../common/AuthHeader.js";
-import { useDispatch } from "react-redux";
+import { useSelector, useDispatch } from "react-redux";
 import { assetsActions } from '../../../redux/actions/Assets';
 import { formItemLayout } from "../../common/CommonUtil.js"
 const { Option, OptGroup } = Select;  
 
 function BasicsTabSpray({enableEdit, editingAllowed, addingNewAsset, clearState, onChange, clusters, localState, formRef}) {
+  const assetReducer = useSelector(state => state.assetReducer);
+  const [selectedCluster, setSelectedCluster] = useState(assetReducer.clusterId);
   const [jobSearchErrorShown, setJobSearchErrorShown] = useState(false);
   const [searchResultsLoaded, setSearchResultsLoaded] = useState(false);
   const [dropZoneFileSearchSuggestions, setDropZoneFileSearchSuggestions] = useState([]);
@@ -14,8 +16,7 @@ function BasicsTabSpray({enableEdit, editingAllowed, addingNewAsset, clearState,
   const [selectedDropZoneName, setSelectedDropZoneName] = useState('');
   const [selectedDropZoneIP, setSelectedDropZoneIP] = useState('');
   const [sprayedFileScope, setSprayedFileScope] = useState('');
-  const [sprayFileName, setSprayFileName] = useState('');
-  const [selectedCluster, setSelectedCluster] = useState();
+  const [sprayFileName, setSprayFileName] = useState('');  
   const dispatch = useDispatch();
 
   useEffect(() => {
