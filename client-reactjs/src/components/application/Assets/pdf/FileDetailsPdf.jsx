@@ -8,7 +8,6 @@ import {
   PdfContainer,
   Heading,
   SectionTitle,
-  Footer,
   TableContainer,
   Table,
 } from "./pdfStyledComponents";

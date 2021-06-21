@@ -8,6 +8,7 @@ import QueryDetailsPdf from "./QueryDetailsPdf";
 import IndexDetailsPdf from "./IndexDetailsPdf";
 import GroupDetailsPdf from "./GroupDetailsPdf";
 import { CollapseWrapper, PanelItems } from "./pdfStyledComponents";
+import JobDetailsPdf from "./JobDetailsPdf";
 
 function SelectDetailsForPdfDialog(props) {
   //Local States and variables
@@ -60,16 +61,22 @@ function SelectDetailsForPdfDialog(props) {
       active: true,
       checked: true,
     },
-    { name: "ECL", value: "jobPdf_ecl", active: true, checked: false },
+    // { name: "ECL", value: "jobPdf_ecl", active: true, checked: false },
+    {
+      name: "Input Params",
+      value: "jobPdf_inputParams",
+      active: true,
+      checked: false,
+    },
     {
       name: "Input Files",
-      value: "jobPdf_input",
+      value: "jobPdf_inputFiles",
       active: true,
       checked: false,
     },
     {
       name: "Output Files",
-      value: "jobPdf_output",
+      value: "jobPdf_outputFiles",
       active: true,
       checked: false,
     },
@@ -221,7 +228,7 @@ function SelectDetailsForPdfDialog(props) {
                   disabled={!option.active}
                   defaultChecked={option.checked}
                 >
-                  {option}
+                  {option.name}
                 </Checkbox>
               </div>
             ))}
@@ -367,6 +374,20 @@ function SelectDetailsForPdfDialog(props) {
         return (
           <div>
             <IndexDetailsPdf
+              selectedAssetType={props.selectedAsset.type}
+              selectedAssetId={props.selectedAsset.id}
+              applicationId={applicationId}
+              classesToExport={classesToExportAsPdf}
+              setVisiblity={props.setVisiblity}
+              printingTaskCompleted={props.printingTaskCompleted}
+            />
+          </div>
+        );
+
+      case "Job":
+        return (
+          <div>
+            <JobDetailsPdf
               selectedAssetType={props.selectedAsset.type}
               selectedAssetId={props.selectedAsset.id}
               applicationId={applicationId}

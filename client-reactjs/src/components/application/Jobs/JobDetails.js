@@ -1,68 +1,114 @@
 import React, { Component, Fragment } from "react";
-import { Modal, Tabs, Form, Input, Checkbox, Button, Space, Select, Table, AutoComplete, Spin, message, Row, Col } from 'antd/lib';
-import { authHeader, handleError } from "../../common/AuthHeader.js"
-import AssociatedDataflows from "../AssociatedDataflows"
+import {
+  Modal,
+  Tabs,
+  Form,
+  Input,
+  Checkbox,
+  Button,
+  Space,
+  Select,
+  Table,
+  AutoComplete,
+  Spin,
+  message,
+  Row,
+  Col,
+} from "antd/lib";
+import { authHeader, handleError } from "../../common/AuthHeader.js";
+import AssociatedDataflows from "../AssociatedDataflows";
 import { hasEditPermission } from "../../common/AuthUtil.js";
-import { fetchDataDictionary, eclTypes, omitDeep, formItemLayout, threeColformItemLayout } from "../../common/CommonUtil.js"
-import EditableTable from "../../common/EditableTable.js"
-import { EclEditor } from "../../common/EclEditor.js"
-import {handleJobDelete} from "../../common/WorkflowUtil";
-import { connect } from 'react-redux';
-import { SearchOutlined } from '@ant-design/icons';
-import { assetsActions } from '../../../redux/actions/Assets';
-import { store } from '../../../redux/store/Store';
-import {Constants} from "../../common/Constants";
-import ReactMarkdown from 'react-markdown';
-import {readOnlyMode, editableMode} from "../../common/readOnlyUtil"
+import {
+  fetchDataDictionary,
+  eclTypes,
+  omitDeep,
+  formItemLayout,
+  threeColformItemLayout,
+} from "../../common/CommonUtil.js";
+import EditableTable from "../../common/EditableTable.js";
+import { EclEditor } from "../../common/EclEditor.js";
+import { handleJobDelete } from "../../common/WorkflowUtil";
+import { connect } from "react-redux";
+import { SearchOutlined } from "@ant-design/icons";
+import { assetsActions } from "../../../redux/actions/Assets";
+import { store } from "../../../redux/store/Store";
+import { Constants } from "../../common/Constants";
+import ReactMarkdown from "react-markdown";
+import { readOnlyMode, editableMode } from "../../common/readOnlyUtil";
 import BasicsTabGeneral from "./BasicsTabGeneral";
 import BasicsTabSpray from "./BasicsTabSpray";
 import BasicsTabScript from "./BasicsTabScript";
-
 
 const TabPane = Tabs.TabPane;
 const { Option, OptGroup } = Select;
 const { confirm } = Modal;
 
 const monthMap = {
-  1: 'January', 2: 'February', 3: 'March', 4: 'April', 5: 'May', 6: 'June',
-  7: 'July', 8: 'August', 9: 'September', 10: 'October', 11: 'November', 12: 'December'
+  1: "January",
+  2: "February",
+  3: "March",
+  4: "April",
+  5: "May",
+  6: "June",
+  7: "July",
+  8: "August",
+  9: "September",
+  10: "October",
+  11: "November",
+  12: "December",
 };
 const monthAbbrMap = {
-  'JAN': 'January', 'FEB': 'February', 'MAR': 'March', 'APR': 'April', 'MAY': 'May', 'JUN': 'June',
-  'JUL': 'July', 'AUG': 'August', 'SEP': 'September', 'OCT': 'October', 'NOV': 'November', 'DEC': 'December'
+  JAN: "January",
+  FEB: "February",
+  MAR: "March",
+  APR: "April",
+  MAY: "May",
+  JUN: "June",
+  JUL: "July",
+  AUG: "August",
+  SEP: "September",
+  OCT: "October",
+  NOV: "November",
+  DEC: "December",
 };
 const dayMap = {
-  0: 'Sunday', 1: 'Monday', 2: 'Tuesday', 3: 'Wednesday', 4: 'Thursday',
-  5: 'Friday', 6: 'Saturday', 7: 'Sunday'
+  0: "Sunday",
+  1: "Monday",
+  2: "Tuesday",
+  3: "Wednesday",
+  4: "Thursday",
+  5: "Friday",
+  6: "Saturday",
+  7: "Sunday",
 };
 const dayAbbrMap = {
-  'SUN': 'Sunday', 'MON': 'Monday', 'TUE': 'Tuesday', 'WED': 'Wednesday',
-  'THU': 'Thursday', 'FRI': 'Friday', 'SAT': 'Saturday'
+  SUN: "Sunday",
+  MON: "Monday",
+  TUE: "Tuesday",
+  WED: "Wednesday",
+  THU: "Thursday",
+  FRI: "Friday",
+  SAT: "Saturday",
 };
 const _minutes = [
-  0,   1,  2,  3,  4,  5,  6,  7,  8,  9,
-  10, 11, 12, 13, 14, 15, 16, 17, 18, 19,
-  20, 21, 22, 23, 24, 25, 26, 27, 28, 29,
-  30, 31, 32, 33, 34, 35, 36, 37, 38, 39,
-  40, 41, 42, 43, 44, 45, 46, 47, 48, 49,
-  50, 51, 52, 53, 54, 55, 56, 57, 58, 59
+  0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21,
+  22, 23, 24, 25, 26, 27, 28, 29, 30, 31, 32, 33, 34, 35, 36, 37, 38, 39, 40,
+  41, 42, 43, 44, 45, 46, 47, 48, 49, 50, 51, 52, 53, 54, 55, 56, 57, 58, 59,
 ];
 const _hours = [
-  0,  1,  2,  3,  4,  5,  6,  7,  8,  9,  10,
-  11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21,
-  22, 23
- ];
+  0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21,
+  22, 23,
+];
 const _dayOfMonth = [
-  1,   2,  3,  4,  5,  6,  7,  8,  9, 10,
-  11, 12, 13, 14, 15, 16, 17, 18, 19, 20,
-  21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31
+  1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22,
+  23, 24, 25, 26, 27, 28, 29, 30, 31,
 ];
 let scheduleCronParts = {
-  'minute': [],
-  'hour': [],
-  'day-of-month': [],
-  'month': [],
-  'day-of-week': []
+  minute: [],
+  hour: [],
+  "day-of-month": [],
+  month: [],
+  "day-of-week": [],
 };
 let cronExamples = [];
 
@@ -77,103 +123,112 @@ class JobDetails extends Component {
     visible: true,
     confirmLoading: false,
     loading: false,
-    jobTypes:["Data Profile", "ETL", "Job", "Modeling", "Query Build", "Scoring", "Script", "Spray"],
+    jobTypes: [
+      "Data Profile",
+      "ETL",
+      "Job",
+      "Modeling",
+      "Query Build",
+      "Scoring",
+      "Script",
+      "Spray",
+    ],
     paramName: "",
-    paramType:"",
-    sourceFiles:[],
-    selectedInputFile:"",
-    selectedScheduleType:"",
-    scheduleMinute:"*",
-    scheduleHour:"*",
+    paramType: "",
+    sourceFiles: [],
+    selectedInputFile: "",
+    selectedScheduleType: "",
+    scheduleMinute: "*",
+    scheduleHour: "*",
     scheduleDayMonth: "*",
-    scheduleMonth:"*",
-    scheduleDayWeek:"*",
-    schedulePredecessor:[],
-    predecessorJobs:[],
-    clusters:[],
+    scheduleMonth: "*",
+    scheduleDayWeek: "*",
+    schedulePredecessor: [],
+    predecessorJobs: [],
+    clusters: [],
     selectedCluster: this.props.clusterId ? this.props.clusterId : "",
-    jobSearchSuggestions:[],
-    jobSearchErrorShown:false,
-    autoCompleteSuffix: <SearchOutlined/>,
+    jobSearchSuggestions: [],
+    jobSearchErrorShown: false,
+    autoCompleteSuffix: <SearchOutlined />,
     searchResultsLoaded: false,
     initialDataLoading: false,
     dropZones: {},
-    dropZoneFileSearchSuggestions: [],    
+    dropZoneFileSearchSuggestions: [],
     job: {
-      id:"",
+      id: "",
       groupId: "",
-      dataflowId: this.props.selectedDataflow ? this.props.selectedDataflow.id : '',
+      dataflowId: this.props.selectedDataflow
+        ? this.props.selectedDataflow.id
+        : "",
       ecl: "",
-      entryBWR:"",
-      jobType: this.props.selectedJobType ? this.props.selectedJobType : '',
-      gitRepo:"",
-      contact:"",
+      entryBWR: "",
+      jobType: this.props.selectedJobType ? this.props.selectedJobType : "",
+      gitRepo: "",
+      contact: "",
       inputParams: [],
       inputFiles: [],
       outputFiles: [],
-      sprayFileName: '',
-      sprayedFileScope: '',
-      selectedDropZoneName:{}
+      sprayFileName: "",
+      sprayedFileScope: "",
+      selectedDropZoneName: {},
     },
     enableEdit: false,
     editing: false,
     dataAltered: false,
-  }
+  };
 
   componentDidMount() {
     //this.props.onRef(this);
-    if(this.props.application && this.props.application.applicationId) {
+    if (this.props.application && this.props.application.applicationId) {
       this.getJobDetails();
       this.setClusters(this.props.clusterId);
       if (this.props.selectedDataflow) {
         this.getFiles();
       }
     }
-    if (this.props.scheduleType === 'Predecessor') {
-      this.handleScheduleTypeSelect('Predecessor');
+    if (this.props.scheduleType === "Predecessor") {
+      this.handleScheduleTypeSelect("Predecessor");
     }
 
     //Getting global state
-    const {viewOnlyModeReducer} = store.getState()
-    if(viewOnlyModeReducer.addingNewAsset){
+    const { viewOnlyModeReducer } = store.getState();
+    if (viewOnlyModeReducer.addingNewAsset) {
       this.setState({
-        addingNewAsset : true
-      })
+        addingNewAsset: true,
+      });
     }
-    if(viewOnlyModeReducer.editMode){
+    if (viewOnlyModeReducer.editMode) {
       this.setState({
-        enableEdit : viewOnlyModeReducer.editMode,
-        editing: true
-      })
-    }else{
+        enableEdit: viewOnlyModeReducer.editMode,
+        editing: true,
+      });
+    } else {
       this.setState({
-        enableEdit : viewOnlyModeReducer.editMode,
-
-      })
+        enableEdit: viewOnlyModeReducer.editMode,
+      });
     }
   }
-
 
   //Unmounting phase
-  componentWillUnmount(){
+  componentWillUnmount() {
     store.dispatch({
       type: Constants.ENABLE_EDIT,
-      payload: false
-    })
+      payload: false,
+    });
 
     store.dispatch({
-      type:  Constants.ADD_ASSET,
-      payload: false
-    })
+      type: Constants.ADD_ASSET,
+      payload: false,
+    });
   }
   getJobDetails() {
-    if(this.props.selectedAsset !== '' && !this.props.isNew) {
+    if (this.props.selectedAsset !== "" && !this.props.isNew) {
       this.setState({
-        initialDataLoading: true
+        initialDataLoading: true,
       });
 
       let jobDetailsUrl = "/api/job/job_details",
-          queryStringParams = {};
+        queryStringParams = {};
 
       if (this.props.selectedAsset && this.props.selectedAsset.id) {
         queryStringParams["job_id"] = this.props.selectedAsset.id;
@@ -190,95 +245,110 @@ class JobDetails extends Component {
         for (let [key, value] of Object.entries(queryStringParams)) {
           jobDetailsUrl += `${key}=${value}&`;
         }
-        jobDetailsUrl = jobDetailsUrl.replace(/&$/, '');
+        jobDetailsUrl = jobDetailsUrl.replace(/&$/, "");
+        console.log("<<<< URL", jobDetailsUrl);
       }
 
       fetch(jobDetailsUrl, {
-        headers: authHeader()
+        headers: authHeader(),
       })
-      .then((response) => {
-        if(response.ok) {
-          return response.json();
-        }
-        handleError(response);
-      })
-      .then(data => {
-        var jobfiles = [], cronParts = [];
-        data.jobfiles.forEach(function(doc, idx) {
-          var fileObj = {};
-          fileObj=doc;
-          fileObj.fileTitle=(doc.title) ? doc.title : doc.name;
-          jobfiles.push(fileObj);
-        });
-        if (data.schedule && data.schedule.cron) {
-          cronParts = data.schedule.cron.split(' ');
-        }
-        if (data.schedule && data.schedule.type) {
-          this.handleScheduleTypeSelect(data.schedule.type);
-        }        
+        .then((response) => {
+          if (response.ok) {
+            return response.json();
+          }
+          handleError(response);
+        })
+        .then((data) => {
+          var jobfiles = [],
+            cronParts = [];
+          data.jobfiles.forEach(function (doc, idx) {
+            var fileObj = {};
+            fileObj = doc;
+            fileObj.fileTitle = doc.title ? doc.title : doc.name;
+            jobfiles.push(fileObj);
+          });
+          if (data.schedule && data.schedule.cron) {
+            cronParts = data.schedule.cron.split(" ");
+          }
+          if (data.schedule && data.schedule.type) {
+            this.handleScheduleTypeSelect(data.schedule.type);
+          }
 
-        this.setState({
-          ...this.state,
-          initialDataLoading: false,
-          selectedScheduleType: (data.schedule && data.schedule.type) ? data.schedule.type : this.state.selectedScheduleType,
-          scheduleMinute: (cronParts.length > 0) ? cronParts[0] : this.state.scheduleMinute,
-          scheduleHour: (cronParts.length > 0) ? cronParts[1] : this.state.scheduleHour,
-          scheduleDayMonth: (cronParts.length > 0) ? cronParts[2] : this.state.scheduleDayMonth,
-          scheduleMonth: (cronParts.length > 0) ? cronParts[3] : this.state.scheduleMonth,
-          scheduleDayWeek: (cronParts.length > 0) ? cronParts[4] : this.state.scheduleDayWeek,
-          schedulePredecessor: (data.schedule && data.schedule.jobs) ? data.schedule.jobs : [],
-          selectedCluster: data.cluster_id,
-          job: {
-            ...this.state.job,
-            id: data.id,
+          this.setState({
+            ...this.state,
+            initialDataLoading: false,
+            selectedScheduleType:
+              data.schedule && data.schedule.type
+                ? data.schedule.type
+                : this.state.selectedScheduleType,
+            scheduleMinute:
+              cronParts.length > 0 ? cronParts[0] : this.state.scheduleMinute,
+            scheduleHour:
+              cronParts.length > 0 ? cronParts[1] : this.state.scheduleHour,
+            scheduleDayMonth:
+              cronParts.length > 0 ? cronParts[2] : this.state.scheduleDayMonth,
+            scheduleMonth:
+              cronParts.length > 0 ? cronParts[3] : this.state.scheduleMonth,
+            scheduleDayWeek:
+              cronParts.length > 0 ? cronParts[4] : this.state.scheduleDayWeek,
+            schedulePredecessor:
+              data.schedule && data.schedule.jobs ? data.schedule.jobs : [],
+            selectedCluster: data.cluster_id,
+            job: {
+              ...this.state.job,
+              id: data.id,
+              name: data.name,
+              groupId: data.groupId,
+              inputParams: data.jobparams,
+              inputFiles: jobfiles.filter(
+                (field) => field.file_type == "input"
+              ),
+              outputFiles: jobfiles.filter(
+                (field) => field.file_type == "output"
+              ),
+              ecl: data.ecl,
+              jobType: data.jobType,
+              //For read only input
+              description: data.description,
+              sprayFileName: data.sprayFileName,
+              sprayedFileScope: data.sprayedFileScope,
+            },
+          });
+
+          this.formRef.current.setFieldsValue({
             name: data.name,
-            groupId: data.groupId,
-            inputParams: data.jobparams,
-            inputFiles: jobfiles.filter(field => field.file_type == 'input'),
-            outputFiles: jobfiles.filter(field => field.file_type == 'output'),
-            ecl: data.ecl,
-            jobType: data.jobType,
-            //For read only input
+            title: data.title == "" ? data.name : data.title,
             description: data.description,
+            type: data.type,
+            url: data.url,
+            gitRepo: data.gitRepo,
+            ecl: data.ecl,
+            gitRepo: data.gitRepo,
+            entryBWR: data.entryBWR,
+            jobType: data.jobType,
+            contact: data.contact,
+            author: data.author,
+            scriptPath: data.scriptPath ? data.scriptPath : "",
             sprayFileName: data.sprayFileName,
-            sprayedFileScope: data.sprayedFileScope
-         }
+            sprayDropZone: data.sprayDropZone,
+            sprayedFileScope: data.sprayedFileScope,
+          });
+          this.setClusters(this.props.clusterId);
+          return data;
+        })
+        .catch((error) => {
+          console.log(error);
+          this.setState({
+            ...this.state,
+            initialDataLoading: false,
+          });
         });
-
-        this.formRef.current.setFieldsValue({
-          name: data.name,
-          title: (data.title == '' ? data.name : data.title),
-          description: data.description,
-          type: data.type,
-          url: data.url,
-          gitRepo: data.gitRepo,
-          ecl: data.ecl,
-          gitRepo: data.gitRepo,
-          entryBWR: data.entryBWR,
-          jobType: data.jobType,
-          contact: data.contact,
-          author: data.author,
-          scriptPath: data.scriptPath ? data.scriptPath : '',
-          sprayFileName: data.sprayFileName,
-          sprayDropZone: data.sprayDropZone,
-          sprayedFileScope: data.sprayedFileScope 
-        })
-        this.setClusters(this.props.clusterId);        
-        return data;
-      })
-      .catch(error => {
-        console.log(error);
-        this.setState({
-          ...this.state,
-          initialDataLoading: false
-        })
-      });
     }
   }
 
   getFiles() {
     let fileUrl = "/api/file/read/file_list",
-        queryStringParams = {};
+      queryStringParams = {};
 
     if (this.props.application && this.props.application.applicationId) {
       queryStringParams["app_id"] = this.props.application.applicationId;
@@ -291,42 +361,45 @@ class JobDetails extends Component {
       for (let [key, value] of Object.entries(queryStringParams)) {
         fileUrl += `${key}=${value}&`;
       }
-      fileUrl = fileUrl.replace(/&$/, '');
+      fileUrl = fileUrl.replace(/&$/, "");
     }
 
     fetch(fileUrl, {
-      headers: authHeader()
+      headers: authHeader(),
     })
-    .then((response) => {
-      if(response.ok) {
-        return response.json();
-      }
-      handleError(response);
-    })
-    .then(files => {
-      var fileList = [];
-      files.forEach(function(doc, idx) {
-        var fileObj = {};
-        fileObj=doc;
-        fileObj.fileTitle=(doc.title)?doc.title:doc.name;
-        fileList.push(fileObj);
+      .then((response) => {
+        if (response.ok) {
+          return response.json();
+        }
+        handleError(response);
+      })
+      .then((files) => {
+        var fileList = [];
+        files.forEach(function (doc, idx) {
+          var fileObj = {};
+          fileObj = doc;
+          fileObj.fileTitle = doc.title ? doc.title : doc.name;
+          fileList.push(fileObj);
+        });
+        this.setState({
+          ...this.state,
+          sourceFiles: fileList,
+        });
+      })
+      .catch((error) => {
+        console.log(error);
       });
-      this.setState({
-        ...this.state,
-        sourceFiles: fileList
-      });
-    }).catch(error => {
-      console.log(error);
-    });
   }
 
   setClusters(clusterId) {
-    if(this.props.clusters) {
-      let selectedCluster = this.props.clusters.filter(cluster => cluster.id == clusterId);
-      if(selectedCluster.length > 0) {
+    if (this.props.clusters) {
+      let selectedCluster = this.props.clusters.filter(
+        (cluster) => cluster.id == clusterId
+      );
+      if (selectedCluster.length > 0) {
         this.formRef.current.setFieldsValue({
-          "clusters": selectedCluster[0].id
-        })
+          clusters: selectedCluster[0].id,
+        });
       }
     }
   }
@@ -337,51 +410,52 @@ class JobDetails extends Component {
     });
     this.clearState();
     //this.getJobDetails();
-  }
+  };
 
   setInputParamsData = (data) => {
-    let omitResults = omitDeep(data, 'id')
+    let omitResults = omitDeep(data, "id");
     this.setState({
       ...this.state,
       job: {
         ...this.state.job,
-        inputParams: omitResults
-      }
-    })
-  }
-
+        inputParams: omitResults,
+      },
+    });
+  };
 
   clearState() {
     this.setState({
       ...this.state,
-      sourceFiles:[],
-      selectedInputFile:"",
-      selectedScheduleType:"",
-      scheduleMinute:"*",
-      scheduleHour:"*",
-      scheduleDayMonth:"*",
-      scheduleMonth:"*",
-      scheduleDayWeek:"*",
-      schedulePredecessor:[],
-      predecessorJobs:[],
-      selectedTab:0,
-      clusters:[],
-      selectedCluster:"",
-      jobSearchSuggestions:[],
+      sourceFiles: [],
+      selectedInputFile: "",
+      selectedScheduleType: "",
+      scheduleMinute: "*",
+      scheduleHour: "*",
+      scheduleDayMonth: "*",
+      scheduleMonth: "*",
+      scheduleDayWeek: "*",
+      schedulePredecessor: [],
+      predecessorJobs: [],
+      selectedTab: 0,
+      clusters: [],
+      selectedCluster: "",
+      jobSearchSuggestions: [],
       searchResultsLoaded: false,
       job: {
-        id:"",
+        id: "",
         groupId: "",
-        dataflowId: this.props.selectedDataflow ? this.props.selectedDataflow.id : '',
+        dataflowId: this.props.selectedDataflow
+          ? this.props.selectedDataflow.id
+          : "",
         ecl: "",
-        entryBWR:"",
-        jobType: this.props.selectedJobType ? this.props.selectedJobType : '',
-        gitRepo:"",
-        contact:"",
+        entryBWR: "",
+        jobType: this.props.selectedJobType ? this.props.selectedJobType : "",
+        gitRepo: "",
+        contact: "",
         inputParams: [],
         inputFiles: [],
-        outputFiles: []
-      }
+        outputFiles: [],
+      },
     });
     this.formRef.current.resetFields();
   }
@@ -391,142 +465,168 @@ class JobDetails extends Component {
     this.setState({
       selectedCluster: value,
     });
-  }
+  };
 
   searchJobs(searchString) {
-    if(searchString.length <= 3 || this.state.jobSearchErrorShown) {
+    if (searchString.length <= 3 || this.state.jobSearchErrorShown) {
       return;
     }
     this.setState({
       ...this.state,
       jobSearchErrorShown: false,
-      searchResultsLoaded: false
+      searchResultsLoaded: false,
     });
 
-    var data = JSON.stringify({clusterid: this.state.selectedCluster, keyword: searchString, indexSearch:true});
+    var data = JSON.stringify({
+      clusterid: this.state.selectedCluster,
+      keyword: searchString,
+      indexSearch: true,
+    });
     fetch("/api/hpcc/read/jobsearch", {
-      method: 'post',
+      method: "post",
       headers: authHeader(),
-      body: data
-    }).then((response) => {
-      if(response.ok) {
-        return response.json();
-      } else {
-        throw response;
-      }
-      handleError(response);
+      body: data,
     })
-    .then(suggestions => {
-      this.setState({
-        ...this.state,
-        jobSearchSuggestions: suggestions,
-        searchResultsLoaded: true
-      });
-    }).catch(error => {
-      if(!this.state.jobSearchErrorShown) {
-        error.json().then((body) => {
-          message.config({top:130})
-          message.error("There was an error searching the job from cluster");
-        });
+      .then((response) => {
+        if (response.ok) {
+          return response.json();
+        } else {
+          throw response;
+        }
+        handleError(response);
+      })
+      .then((suggestions) => {
         this.setState({
           ...this.state,
-          jobSearchErrorShown: true
+          jobSearchSuggestions: suggestions,
+          searchResultsLoaded: true,
         });
-      }
-    });
+      })
+      .catch((error) => {
+        if (!this.state.jobSearchErrorShown) {
+          error.json().then((body) => {
+            message.config({ top: 130 });
+            message.error("There was an error searching the job from cluster");
+          });
+          this.setState({
+            ...this.state,
+            jobSearchErrorShown: true,
+          });
+        }
+      });
   }
 
   searchDropZoneFiles = (searchString) => {
-    if(searchString.length <= 3 || this.state.jobSearchErrorShown) {
+    if (searchString.length <= 3 || this.state.jobSearchErrorShown) {
       return;
     }
     this.setState({
       ...this.state,
       jobSearchErrorShown: false,
-      searchResultsLoaded: false
+      searchResultsLoaded: false,
     });
     var data = JSON.stringify({
-      clusterId: this.state.selectedCluster, 
+      clusterId: this.state.selectedCluster,
       dropZoneName: this.state.selectedDropZoneName,
-      nameFilter: searchString, 
-      server:this.formRef.current.getFieldValue('sprayDropZone').label[0]
+      nameFilter: searchString,
+      server: this.formRef.current.getFieldValue("sprayDropZone").label[0],
     });
     fetch("/api/hpcc/read/dropZoneFileSearch", {
-      method: 'post',
+      method: "post",
       headers: authHeader(),
-      body: data
-    }).then((response) => {
-      if(response.ok) {
-        return response.json();
-      } else {
-        throw response;
-      }
-      handleError(response);
+      body: data,
     })
-    .then(suggestions => {
-      this.setState({
-        ...this.state,
-        dropZoneFileSearchSuggestions: suggestions,
-        searchResultsLoaded: true
-      });
-    }).catch(error => {
-      if(!this.state.jobSearchErrorShown) {
-        error.json().then((body) => {
-          message.config({top:130})
-          message.error("There was an error searching the files from cluster");
-        });
+      .then((response) => {
+        if (response.ok) {
+          return response.json();
+        } else {
+          throw response;
+        }
+        handleError(response);
+      })
+      .then((suggestions) => {
         this.setState({
           ...this.state,
-          jobSearchErrorShown: true
+          dropZoneFileSearchSuggestions: suggestions,
+          searchResultsLoaded: true,
         });
-      }
-    });
-  }
+      })
+      .catch((error) => {
+        if (!this.state.jobSearchErrorShown) {
+          error.json().then((body) => {
+            message.config({ top: 130 });
+            message.error(
+              "There was an error searching the files from cluster"
+            );
+          });
+          this.setState({
+            ...this.state,
+            jobSearchErrorShown: true,
+          });
+        }
+      });
+  };
 
   onJobSelected(option) {
-    fetch("/api/hpcc/read/getJobInfo?jobWuid="+option.key+"&jobName="+option.value+"&clusterid="+this.state.selectedCluster+"&jobType="+this.state.job.jobType+"&applicationId="+this.props.application.applicationId, {
-      headers: authHeader()
-    })
-    .then((response) => {
-      if(response.ok) {
-        return response.json();
+    fetch(
+      "/api/hpcc/read/getJobInfo?jobWuid=" +
+        option.key +
+        "&jobName=" +
+        option.value +
+        "&clusterid=" +
+        this.state.selectedCluster +
+        "&jobType=" +
+        this.state.job.jobType +
+        "&applicationId=" +
+        this.props.application.applicationId,
+      {
+        headers: authHeader(),
       }
-      handleError(response);
-    })
-    .then(jobInfo => {
-      this.setState({
-        ...this.state,
-        job: {
-          ...this.state.job,
-          id: jobInfo.id,
-          inputFiles: jobInfo.jobfiles.filter(jobFile => jobFile.file_type == 'input'),
-          outputFiles: jobInfo.jobfiles.filter(jobFile => jobFile.file_type == 'output'),
-          groupId: jobInfo.groupId,
-          ecl: jobInfo.ecl
+    )
+      .then((response) => {
+        if (response.ok) {
+          return response.json();
+        }
+        handleError(response);
+      })
+      .then((jobInfo) => {
+        this.setState({
+          ...this.state,
+          job: {
+            ...this.state.job,
+            id: jobInfo.id,
+            inputFiles: jobInfo.jobfiles.filter(
+              (jobFile) => jobFile.file_type == "input"
+            ),
+            outputFiles: jobInfo.jobfiles.filter(
+              (jobFile) => jobFile.file_type == "output"
+            ),
+            groupId: jobInfo.groupId,
+            ecl: jobInfo.ecl,
+          },
+        });
+        this.formRef.current.setFieldsValue({
+          name: jobInfo.name,
+          title: jobInfo.title,
+          description: jobInfo.description,
+          gitRepo: jobInfo.gitRepo,
+          ecl: jobInfo.ecl,
+          entryBWR: jobInfo.entryBWR,
+        });
+        return jobInfo;
+      })
+      .then((data) => {
+        if (this.props.selectedDataflow) {
+          this.getFiles();
         }
       })
-      this.formRef.current.setFieldsValue({
-        name: jobInfo.name,
-        title: jobInfo.title,
-        description: jobInfo.description,
-        gitRepo: jobInfo.gitRepo,
-        ecl: jobInfo.ecl,
-        entryBWR: jobInfo.entryBWR
-      })
-      return jobInfo;
-    })
-    .then(data => {
-      if (this.props.selectedDataflow) {
-        this.getFiles();
-      }
-    })
-    .catch(error => {
-      console.log(error);
-    });
+      .catch((error) => {
+        console.log(error);
+      });
   }
 
   onDropZoneFileSelected(option) {
-    this.setState({sprayFileName: option.value});
+    this.setState({ sprayFileName: option.value });
   }
 
   handleOk = async () => {
@@ -545,63 +645,80 @@ class JobDetails extends Component {
       //this.props.onClose();
       //this.props.onRefresh(saveResponse);
       if (this.props.history) {
-        this.props.history.push('/' + this.props.application.applicationId + '/assets')
+        this.props.history.push(
+          "/" + this.props.application.applicationId + "/assets"
+        );
       } else {
-        document.querySelector('button.ant-modal-close').click();
+        document.querySelector("button.ant-modal-close").click();
         this.props.dispatch(assetsActions.assetSaved(saveResponse));
       }
     }, 2000);
-  }
+  };
 
   onAutoCreateFiles = (e) => {
     this.state.autoCreateFiles = e.target.checked;
-  }
+  };
 
   handleDelete = () => {
-    let _self=this;
+    let _self = this;
     confirm({
-      title: 'Delete file?',
-      content: 'Are you sure you want to delete this Job?',
+      title: "Delete file?",
+      content: "Are you sure you want to delete this Job?",
       onOk() {
-        handleJobDelete(_self.props.selectedAsset.id, _self.props.application.applicationId)
-        .then(result => {
-          if(_self.props.onDelete) {
-            _self.props.onDelete(_self.props.currentlyEditingNode)
-          } else {
-            //_self.props.onRefresh()
-            _self.props.history.push('/' + _self.props.application.applicationId + '/assets');
-          }
-          //_self.props.onClose();
-          message.success("Job deleted sucessfully");
-        }).catch(error => {
-          console.log(error);
-          message.error("There was an error deleting the Job file");
-        });
+        handleJobDelete(
+          _self.props.selectedAsset.id,
+          _self.props.application.applicationId
+        )
+          .then((result) => {
+            if (_self.props.onDelete) {
+              _self.props.onDelete(_self.props.currentlyEditingNode);
+            } else {
+              //_self.props.onRefresh()
+              _self.props.history.push(
+                "/" + _self.props.application.applicationId + "/assets"
+              );
+            }
+            //_self.props.onClose();
+            message.success("Job deleted sucessfully");
+          })
+          .catch((error) => {
+            console.log(error);
+            message.error("There was an error deleting the Job file");
+          });
       },
       onCancel() {},
     });
-  }
+  };
 
   saveJobDetails() {
     return new Promise((resolve) => {
-      fetch('/api/job/saveJob', {
-        method: 'post',
+      fetch("/api/job/saveJob", {
+        method: "post",
         headers: authHeader(),
-        body: JSON.stringify({isNew : this.props.isNew, id: this.state.job.id, job : this.populateJobDetails()})
-      }).then(function(response) {
-        if(response.ok) {
-          return response.json();
-        }
-        handleError(response);
-      }).then(function(data) {
-        console.log('Saved..');
-        resolve(data);
-      }).catch(error => {
-        message.error("Error occured while saving the data. Please check the form data")
-        this.setState({
-          confirmLoading: false,
+        body: JSON.stringify({
+          isNew: this.props.isNew,
+          id: this.state.job.id,
+          job: this.populateJobDetails(),
+        }),
+      })
+        .then(function (response) {
+          if (response.ok) {
+            return response.json();
+          }
+          handleError(response);
+        })
+        .then(function (data) {
+          console.log("Saved..");
+          resolve(data);
+        })
+        .catch((error) => {
+          message.error(
+            "Error occured while saving the data. Please check the form data"
+          );
+          this.setState({
+            confirmLoading: false,
+          });
         });
-      });
     });
   }
 
@@ -610,7 +727,7 @@ class JobDetails extends Component {
     var inputFiles = this.state.job.inputFiles.map(function (element) {
       element.file_type = "input";
       //new job creation
-      if(!element.file_id) {
+      if (!element.file_id) {
         element.file_id = element.id;
       }
       delete element.id;
@@ -618,7 +735,7 @@ class JobDetails extends Component {
     });
     var outputFiles = this.state.job.outputFiles.map(function (element) {
       element.file_type = "output";
-      if(!element.file_id) {
+      if (!element.file_id) {
         element.file_id = element.id;
       }
       delete element.id;
@@ -626,31 +743,35 @@ class JobDetails extends Component {
     });
     console.log(this.formRef.current.getFieldsValue());
     let formFieldsValue = this.formRef.current.getFieldsValue();
-    if(formFieldsValue['sprayDropZone']) {
-      formFieldsValue['sprayDropZone'] = formFieldsValue['sprayDropZone'];
+    if (formFieldsValue["sprayDropZone"]) {
+      formFieldsValue["sprayDropZone"] = formFieldsValue["sprayDropZone"];
     }
     var jobDetails = {
-      "basic": {
+      basic: {
         ...formFieldsValue,
-        "application_id":applicationId,
-        "dataflowId" : this.props.selectedDataflow ? this.props.selectedDataflow.id : '',
-        "cluster_id": this.state.selectedCluster,
-        "ecl": this.state.job.ecl,
-        "sprayFileName": this.state.job.sprayFileName
+        application_id: applicationId,
+        dataflowId: this.props.selectedDataflow
+          ? this.props.selectedDataflow.id
+          : "",
+        cluster_id: this.state.selectedCluster,
+        ecl: this.state.job.ecl,
+        sprayFileName: this.state.job.sprayFileName,
       },
-      "schedule": {
-        "type": this.state.selectedScheduleType,
-        "jobs": this.state.schedulePredecessor,
-        "cron": this.joinCronTerms()
+      schedule: {
+        type: this.state.selectedScheduleType,
+        jobs: this.state.schedulePredecessor,
+        cron: this.joinCronTerms(),
       },
-      "params": this.state.job.inputParams,
-      "files" : inputFiles.concat(outputFiles),
-      "mousePosition": this.props.mousePosition,
-      "currentlyEditingId": this.props.currentlyEditingId,
-      "autoCreateFiles": false
+      params: this.state.job.inputParams,
+      files: inputFiles.concat(outputFiles),
+      mousePosition: this.props.mousePosition,
+      currentlyEditingId: this.props.currentlyEditingId,
+      autoCreateFiles: false,
     };
-    let groupId = this.props.groupId ? this.props.groupId : this.state.job.groupId;
-    if(groupId) {
+    let groupId = this.props.groupId
+      ? this.props.groupId
+      : this.state.job.groupId;
+    if (groupId) {
       jobDetails.basic.groupId = groupId;
     }
 
@@ -663,82 +784,104 @@ class JobDetails extends Component {
     });
     //this.props.onClose();
     if (this.props.history) {
-      this.props.history.push('/' + this.props.application.applicationId + '/assets');
+      this.props.history.push(
+        "/" + this.props.application.applicationId + "/assets"
+      );
     } else {
-      this.props.onClose();//document.querySelector('button.ant-modal-close').click();
+      this.props.onClose(); //document.querySelector('button.ant-modal-close').click();
     }
-  }
+  };
 
   onChange = (e) => {
-    this.setState({...this.state, job: {...this.state.job, [e.target.name]: e.target.value }});
-  }
+    this.setState({
+      ...this.state,
+      job: { ...this.state.job, [e.target.name]: e.target.value },
+    });
+  };
 
   onParamChange = (e) => {
-    this.setState({...this.state, [e.target.name]: e.target.value });
-  }
+    this.setState({ ...this.state, [e.target.name]: e.target.value });
+  };
 
   handleAddInputParams = (e) => {
     var inputParams = this.state.job.inputParams;
-    inputParams.push({"name":document.querySelector("#paramName").value, "type":document.querySelector("#paramType").value})
-    this.setState({
-        ...this.state,
-        paramName:'',
-        paramType:'',
-        job: {
-            ...this.state.job,
-            inputParams: inputParams
-        }
+    inputParams.push({
+      name: document.querySelector("#paramName").value,
+      type: document.querySelector("#paramType").value,
     });
-  }
+    this.setState({
+      ...this.state,
+      paramName: "",
+      paramType: "",
+      job: {
+        ...this.state.job,
+        inputParams: inputParams,
+      },
+    });
+  };
 
   handleAddInputFile = (e) => {
-    let selectedFile = this.state.sourceFiles.filter(sourceFile => sourceFile.id==this.state.selectedInputFile)[0];
+    let selectedFile = this.state.sourceFiles.filter(
+      (sourceFile) => sourceFile.id == this.state.selectedInputFile
+    )[0];
 
     var inputFiles = this.state.job.inputFiles;
     inputFiles.push(selectedFile);
     this.setState({
-        ...this.state,
-        job: {
-            ...this.state.job,
-            inputFiles: inputFiles
-        }
+      ...this.state,
+      job: {
+        ...this.state.job,
+        inputFiles: inputFiles,
+      },
     });
-  }
+  };
 
   handleInputFileChange = (value) => {
-    this.setState({selectedInputFile:value});
-  }
+    this.setState({ selectedInputFile: value });
+  };
 
   handleOutputFileChange = (value) => {
-    this.setState({selectedOutputFile:value});
-  }
+    this.setState({ selectedOutputFile: value });
+  };
 
   onJobTypeChange = (value) => {
-    this.setState({...this.state, job: {...this.state.job, jobType: value }}, () => console.log(this.state.job.jobType));
-  }
+    this.setState(
+      { ...this.state, job: { ...this.state.job, jobType: value } },
+      () => console.log(this.state.job.jobType)
+    );
+  };
 
   onDropZoneFileChange = (value) => {
-    this.setState({...this.state, job: {...this.state.job, sprayFileName: value }}, () => console.log(this.state.job.sprayFileName));
-  }
+    this.setState(
+      { ...this.state, job: { ...this.state.job, sprayFileName: value } },
+      () => console.log(this.state.job.sprayFileName)
+    );
+  };
 
   handleAddOutputFile = (e) => {
-    let selectedFile = this.state.sourceFiles.filter(sourceFile => sourceFile.id==this.state.selectedOutputFile)[0];
+    let selectedFile = this.state.sourceFiles.filter(
+      (sourceFile) => sourceFile.id == this.state.selectedOutputFile
+    )[0];
     var outputFiles = this.state.job.outputFiles;
-    outputFiles.push(selectedFile)
+    outputFiles.push(selectedFile);
     this.setState({
-        ...this.state,
-        job: {
-            ...this.state.job,
-            outputFiles: outputFiles
-        }
+      ...this.state,
+      job: {
+        ...this.state.job,
+        outputFiles: outputFiles,
+      },
     });
-  }
+  };
 
   handleScheduleTypeSelect = (value) => {
-    let dataflowId = this.props.selectedDataflow ? this.props.selectedDataflow.id : '',
-        applicationId = this.props.application ? this.props.application.applicationId : '',
-        upstreamIds = [],
-        predecessors = [];
+    let dataflowId = this.props.selectedDataflow
+        ? this.props.selectedDataflow.id
+        : "",
+      applicationId = this.props.application
+        ? this.props.application.applicationId
+        : "",
+      upstreamIds = [],
+      predecessors = [];
     /*if (value === 'Predecessor') {
       upstreamIds = this.props.edges.filter(edge => edge.target.id == this.props.nodeIndex).map(edge => edge.source.id);
 
@@ -749,7 +892,15 @@ class JobDetails extends Component {
         .map(node => node[0])
         .map(node => { return { 'id': node.id, jobId: node.jobId, 'name': node.title } });
     }*/
-    predecessors = this.props.nodes.filter(node => (node.type == 'Job' && node.title != this.formRef.current.getFieldValue('title'))).map(node => { return { 'id': node.id, jobId: node.jobId, 'name': node.title } });
+    predecessors = this.props.nodes
+      .filter(
+        (node) =>
+          node.type == "Job" &&
+          node.title != this.formRef.current.getFieldValue("title")
+      )
+      .map((node) => {
+        return { id: node.id, jobId: node.jobId, name: node.title };
+      });
 
     this.setState({ predecessorJobs: predecessors });
   };
@@ -759,49 +910,93 @@ class JobDetails extends Component {
   };
 
   nextMinute = (date) => {
-    var t, n, r = 0 !== (n = (t = date).getMilliseconds()) ? new Date(t.getTime() + (1e3 - n)) : t, o = r.getSeconds();
+    var t,
+      n,
+      r =
+        0 !== (n = (t = date).getMilliseconds())
+          ? new Date(t.getTime() + (1e3 - n))
+          : t,
+      o = r.getSeconds();
     return 0 !== o ? new Date(r.getTime() + 1e3 * (60 - o)) : r;
-  }
+  };
 
   nextDate = (schedule, date) => {
     let self = this;
-    return Object.keys(schedule).length && schedule.month.length && schedule['day-of-month'].length && schedule['day-of-week'].length && schedule.hour.length && schedule.minute.length ? function e(schedule, _date, counter) {
-      if (127 < counter) {
-        return null;
-      }
-      let utcMonth = _date.getMonth() + 1,
-          utcFullYear = _date.getFullYear();
-      if (!schedule.month.includes(utcMonth)) {
-        return e(schedule, self.generateDate(utcFullYear, utcMonth + 1 - 1, 1, 0, 0), ++counter);
-      }
-      let utcDate = _date.getDate(),
-          utcDay = _date.getDay(),
-          s = schedule['day-of-month'].includes(utcDate),
-          c = schedule['day-of-week'].includes(utcDay);
-      if (!s || !c) {
-        return e(schedule, self.generateDate(utcFullYear, utcMonth - 1, utcDate + 1, 0, 0), ++counter);
-      }
-      let utcHour = _date.getHours();
-      if (!schedule.hour.includes(utcHour)) {
-        return e(schedule, self.generateDate(utcFullYear, utcMonth - 1, utcDate, utcHour + 1, 0), ++counter);
-      }
-      let utcMinute = _date.getMinutes();
-      if (schedule.minute.includes(utcMinute)) {
-        return _date;
-      } else {
-        return e(schedule, self.generateDate(utcFullYear, utcMonth - 1, utcDate, utcHour, utcMinute + 1), ++counter);
-      }
-    }(schedule, this.nextMinute(date), 1) : null;
-  }
+    return Object.keys(schedule).length &&
+      schedule.month.length &&
+      schedule["day-of-month"].length &&
+      schedule["day-of-week"].length &&
+      schedule.hour.length &&
+      schedule.minute.length
+      ? (function e(schedule, _date, counter) {
+          if (127 < counter) {
+            return null;
+          }
+          let utcMonth = _date.getMonth() + 1,
+            utcFullYear = _date.getFullYear();
+          if (!schedule.month.includes(utcMonth)) {
+            return e(
+              schedule,
+              self.generateDate(utcFullYear, utcMonth + 1 - 1, 1, 0, 0),
+              ++counter
+            );
+          }
+          let utcDate = _date.getDate(),
+            utcDay = _date.getDay(),
+            s = schedule["day-of-month"].includes(utcDate),
+            c = schedule["day-of-week"].includes(utcDay);
+          if (!s || !c) {
+            return e(
+              schedule,
+              self.generateDate(utcFullYear, utcMonth - 1, utcDate + 1, 0, 0),
+              ++counter
+            );
+          }
+          let utcHour = _date.getHours();
+          if (!schedule.hour.includes(utcHour)) {
+            return e(
+              schedule,
+              self.generateDate(
+                utcFullYear,
+                utcMonth - 1,
+                utcDate,
+                utcHour + 1,
+                0
+              ),
+              ++counter
+            );
+          }
+          let utcMinute = _date.getMinutes();
+          if (schedule.minute.includes(utcMinute)) {
+            return _date;
+          } else {
+            return e(
+              schedule,
+              self.generateDate(
+                utcFullYear,
+                utcMonth - 1,
+                utcDate,
+                utcHour,
+                utcMinute + 1
+              ),
+              ++counter
+            );
+          }
+        })(schedule, this.nextMinute(date), 1)
+      : null;
+  };
 
   generateCronExplainer = () => {
-    let msg = '', minMatches = [], hrMatches = [], date = new Date();
+    let msg = "",
+      minMatches = [],
+      hrMatches = [],
+      date = new Date();
 
-    msg += this.generateCronTerm(this.state.scheduleMinute, 'minute');
-    msg += this.generateCronTerm(this.state.scheduleHour, 'hour');
-    msg += this.generateCronTerm(this.state.scheduleDayMonth, 'day-of-month');
-    msg += this.generateCronTerm(this.state.scheduleDayWeek, 'day-of-week');
-    msg += this.generateCronTerm(this.state.scheduleMonth, 'month');
+    msg += this.generateCronTerm(this.state.scheduleMinute, "minute");
+    msg += this.generateCronTerm(this.state.scheduleHour, "hour");
+    msg += this.generateCronTerm(this.state.scheduleDayMonth, "day-of-month");
+    msg += this.generateCronTerm(this.state.scheduleDayWeek, "day-of-week");
+    msg += this.generateCronTerm(this.state.scheduleMonth, "month");
 
     cronExamples = [];
 
@@ -814,31 +1009,40 @@ class JobDetails extends Component {
       }
     }
 
-    return msg + ((msg != '') ? '.' : '');
+    return msg + (msg != "" ? "." : "");
   };
 
   generateCronTerm = (term, type) => {
-    let msg = '', matches = [];
+    let msg = "",
+      matches = [];
 
     if (term.match(new RegExp(/^\*$/gm))) {
       msg += this.matchAsteriskCronTerm(type);
-    } else if (matches = term.match(new RegExp(/^JAN|FEB|MAR|APR|MAY|JU[NL]|AUG|SEP|OCT|NOV|DEC|MON|TUE|WED|THU|FRI|SAT|SUN$/gm))) {
+    } else if (
+      (matches = term.match(
+        new RegExp(
+          /^JAN|FEB|MAR|APR|MAY|JU[NL]|AUG|SEP|OCT|NOV|DEC|MON|TUE|WED|THU|FRI|SAT|SUN$/gm
+        )
+      ))
+    ) {
       if (matches.length > 0) {
         msg += this.matchAbbrCronTerm(matches, type);
       }
-    } else if (matches = term.match(new RegExp(/^\d+$/gm))) {
+    } else if ((matches = term.match(new RegExp(/^\d+$/gm)))) {
       if (matches.length > 0) {
-       msg += this.matchDigitsCronTerm(matches, type);
+        msg += this.matchDigitsCronTerm(matches, type);
       }
-    } else if (matches = term.match(new RegExp(/^(\d+,)+\d+$/gm))) {
+    } else if ((matches = term.match(new RegExp(/^(\d+,)+\d+$/gm)))) {
       if (matches.length > 0) {
-       msg += this.matchCommaCronTerm(matches, type);
+        msg += this.matchCommaCronTerm(matches, type);
       }
-    } else if (matches = term.match(new RegExp(/^\d+\-\d+/gm))) {
+    } else if ((matches = term.match(new RegExp(/^\d+\-\d+/gm)))) {
       if (matches.length > 0) {
         msg += this.matchRangeCronTerm(matches, type);
       }
-    } else if (matches = [...term.matchAll(new RegExp(/^\*\s*\/\s*(\d+)/gm))]) {
+    } else if (
+      (matches = [...term.matchAll(new RegExp(/^\*\s*\/\s*(\d+)/gm))])
+    ) {
       if (matches.length > 0) {
         msg += this.matchStepCronTerm(matches, type);
       }
@@ -849,153 +1053,167 @@ class JobDetails extends Component {
 
   matchAsteriskCronTerm = (type) => {
     switch (type) {
-      case 'minute':
-        scheduleCronParts['minute'] = _minutes;
-        return 'Every minute';
-      case 'hour':
-        scheduleCronParts['hour'] = _hours;
-        return '';
-      case 'day-of-month':
-        scheduleCronParts['day-of-month'] = _dayOfMonth;
-        return '';
-      case 'month':
-        scheduleCronParts['month'] = Object.keys(monthMap).map(n => Number(n));
-        return '';
-      case 'day-of-week':
-        scheduleCronParts['day-of-week'] = Object.keys(dayMap).filter(n => n < 7).map(n => Number(n));
-        return '';
+      case "minute":
+        scheduleCronParts["minute"] = _minutes;
+        return "Every minute";
+      case "hour":
+        scheduleCronParts["hour"] = _hours;
+        return "";
+      case "day-of-month":
+        scheduleCronParts["day-of-month"] = _dayOfMonth;
+        return "";
+      case "month":
+        scheduleCronParts["month"] = Object.keys(monthMap).map((n) =>
+          Number(n)
+        );
+        return "";
+      case "day-of-week":
+        scheduleCronParts["day-of-week"] = Object.keys(dayMap)
+          .filter((n) => n < 7)
+          .map((n) => Number(n));
+        return "";
     }
   };
 
   matchDigitsCronTerm = (matches, type) => {
     switch (type) {
-      case 'minute':
-        scheduleCronParts['minute'] = [Number(matches[0])];
+      case "minute":
+        scheduleCronParts["minute"] = [Number(matches[0])];
         return `At ${type} ${matches[0]}`;
-      case 'hour':
-        scheduleCronParts['hour'] = [Number(matches[0])];
+      case "hour":
+        scheduleCronParts["hour"] = [Number(matches[0])];
         return ` past ${type} ${matches[0]}`;
-      case 'day-of-month':
-        scheduleCronParts['day-of-month'] = [Number(matches[0])];
+      case "day-of-month":
+        scheduleCronParts["day-of-month"] = [Number(matches[0])];
         return ` on ${type} ${matches[0]}`;
-      case 'month':
-        scheduleCronParts['month'] = [Number(matches[0])];
+      case "month":
+        scheduleCronParts["month"] = [Number(matches[0])];
         return ` in ${monthMap[matches[0]]}`;
-      case 'day-of-week':
-        scheduleCronParts['day-of-week'] = [Number(matches[0])];
+      case "day-of-week":
+        scheduleCronParts["day-of-week"] = [Number(matches[0])];
         return ` on ${dayMap[matches[0]]}`;
     }
   };
 
   matchCommaCronTerm = (matches, type) => {
-    let values = matches[0].split(','),
-        lastVal = values.pop();
+    let values = matches[0].split(","),
+      lastVal = values.pop();
 
     switch (type) {
-      case 'minute':
-        scheduleCronParts['minute'] = [...values, lastVal].map(n => Number(n));
-        return `At ${type} ${values.join(', ')}, and ${lastVal}`;
-      case 'hour':
-        scheduleCronParts['hour'] = [...values, lastVal].map(n => Number(n));
-        return ` past ${type} ${values.join(', ')}, and ${lastVal}`;
-      case 'day-of-month':
-        scheduleCronParts['day-of-month'] = [...values, lastVal].map(n => Number(n));
-        return ` on ${type} ${values.join(', ')}, and ${lastVal}`;
-      case 'month':
-        scheduleCronParts['month'] = [...values, lastVal].map(n => Number(n));
-        return ` in ${values.map(v => monthMap[v]).join(', ')}, and ${monthMap[lastVal]}`;
-      case 'day-of-week':
-        scheduleCronParts['day-of-week'] = [...values, lastVal].map(n => Number(n));
-        return ` on ${values.map(v => dayMap[v]).join(', ')}, and ${dayMap[lastVal]}`;
+      case "minute":
+        scheduleCronParts["minute"] = [...values, lastVal].map((n) =>
+          Number(n)
+        );
+        return `At ${type} ${values.join(", ")}, and ${lastVal}`;
+      case "hour":
+        scheduleCronParts["hour"] = [...values, lastVal].map((n) => Number(n));
+        return ` past ${type} ${values.join(", ")}, and ${lastVal}`;
+      case "day-of-month":
+        scheduleCronParts["day-of-month"] = [...values, lastVal].map((n) =>
+          Number(n)
+        );
+        return ` on ${type} ${values.join(", ")}, and ${lastVal}`;
+      case "month":
+        scheduleCronParts["month"] = [...values, lastVal].map((n) => Number(n));
+        return ` in ${values.map((v) => monthMap[v]).join(", ")}, and ${
+          monthMap[lastVal]
+        }`;
+      case "day-of-week":
+        scheduleCronParts["day-of-week"] = [...values, lastVal].map((n) =>
+          Number(n)
+        );
+        return ` on ${values.map((v) => dayMap[v]).join(", ")}, and ${
+          dayMap[lastVal]
+        }`;
     }
   };
 
   matchRangeCronTerm = (matches, type) => {
-    let msg = '',
-        values = matches[0].split('-');
+    let msg = "",
+      values = matches[0].split("-");
 
     switch (type) {
-      case 'minute':
-        scheduleCronParts['minute'] = (() => {
+      case "minute":
+        scheduleCronParts["minute"] = (() => {
           let arr = [];
           for (let i = values[0]; i <= values[1]; i++) {
             arr.push(Number(i));
           }
           return arr;
         })();
-        msg += 'At every ';
+        msg += "At every ";
         break;
-      case 'hour':
-        scheduleCronParts['hour'] = (() => {
+      case "hour":
+        scheduleCronParts["hour"] = (() => {
           let arr = [];
           for (let i = values[0]; i <= values[1]; i++) {
             arr.push(Number(i));
           }
           return arr;
         })();
-        msg += ' past every ';
+        msg += " past every ";
         break;
-      case 'day-of-month':
-        scheduleCronParts['day-of-month'] = (() => {
+      case "day-of-month":
+        scheduleCronParts["day-of-month"] = (() => {
           let arr = [];
           for (let i = values[0]; i <= values[1]; i++) {
             arr.push(Number(i));
           }
           return arr;
         })();
-        msg += ' on every ';
+        msg += " on every ";
         break;
-      case 'month':
-        scheduleCronParts['month'] = (() => {
+      case "month":
+        scheduleCronParts["month"] = (() => {
           let arr = [];
           for (let i = values[0]; i <= values[1]; i++) {
             arr.push(Number(i));
           }
           return arr;
         })();
-        msg += ' in every ';
-        values = values.map(v => monthMap[v]);
+        msg += " in every ";
+        values = values.map((v) => monthMap[v]);
         break;
-      case 'day-of-week':
-        scheduleCronParts['day-of-week'] = (() => {
+      case "day-of-week":
+        scheduleCronParts["day-of-week"] = (() => {
           let arr = [];
           for (let i = values[0]; i <= values[1]; i++) {
             arr.push(Number(i));
           }
           return arr;
         })();
-        msg += ' on every ';
-        values = values.map(v => dayMap[v]);
+        msg += " on every ";
+        values = values.map((v) => dayMap[v]);
         break;
     }
 
-    msg += type + ' from ' + values.join(' through ');
+    msg += type + " from " + values.join(" through ");
     return msg;
   };
 
   matchStepCronTerm = (matches, type) => {
-    let msg = '',
-        lastVal = matches[0][matches.length],
-        lastValNum = parseInt(lastVal),
-        steps = [],
-        stepMax = 0;
+    let msg = "",
+      lastVal = matches[0][matches.length],
+      lastValNum = parseInt(lastVal),
+      steps = [],
+      stepMax = 0;
 
     switch (type) {
-      case 'minute':
-        scheduleCronParts['minute'] = steps;
+      case "minute":
+        scheduleCronParts["minute"] = steps;
         stepMax = 59;
-        msg += 'Every ';
+        msg += "Every ";
         break;
-      case 'hour':
-        scheduleCronParts['hour'] = steps;
+      case "hour":
+        scheduleCronParts["hour"] = steps;
         stepMax = 23;
-        msg += ' past every ';
+        msg += " past every ";
         break;
-      case 'day-of-month':
-        scheduleCronParts['day-of-month'] = steps;
+      case "day-of-month":
+        scheduleCronParts["day-of-month"] = steps;
         stepMax = 31;
         let currentMonth = new Date().getMonth() + 1,
-            currentYear = new Date().getFullYear();
+          currentYear = new Date().getFullYear();
         if (currentMonth % 2 == 0) {
           stepMax = 30;
         } else if (currentMonth == 2) {
@@ -1005,17 +1223,17 @@ class JobDetails extends Component {
             stepMax = 28;
           }
         }
-        msg += ' on every ';
+        msg += " on every ";
         break;
-      case 'month':
-        scheduleCronParts['month'] = steps;
+      case "month":
+        scheduleCronParts["month"] = steps;
         stepMax = 11;
-        msg += ' in every ';
+        msg += " in every ";
         break;
-      case 'day-of-week':
-        scheduleCronParts['day-of-week'] = steps;
+      case "day-of-week":
+        scheduleCronParts["day-of-week"] = steps;
         stepMax = 6;
-        msg += ' on every ';
+        msg += " on every ";
         break;
     }
 
@@ -1025,16 +1243,16 @@ class JobDetails extends Component {
 
     switch (20 < lastValNum ? lastValNum % 10 : lastValNum) {
       case 1:
-        msg += lastVal + 'st ';
+        msg += lastVal + "st ";
         break;
       case 2:
-        msg += lastVal + 'nd ';
+        msg += lastVal + "nd ";
         break;
       case 3:
-        msg += lastVal + 'rd ';
+        msg += lastVal + "rd ";
         break;
       default:
-        msg += lastVal + 'th '
+        msg += lastVal + "th ";
     }
     msg += type;
     return msg;
@@ -1042,33 +1260,38 @@ class JobDetails extends Component {
 
   matchAbbrCronTerm = (matches, type) => {
     switch (type) {
-      case 'month':
+      case "month":
         return ` in ${monthAbbrMap[matches[0]]}`;
-      case 'day-of-week':
-        return `${((this.state.scheduleDayMonth !== '*') ? ' and ' : '')} on ${dayAbbrMap[matches[0]]}`;
+      case "day-of-week":
+        return `${this.state.scheduleDayMonth !== "*" ? " and " : ""} on ${
+          dayAbbrMap[matches[0]]
+        }`;
     }
   };
 
   joinCronTerms = () => {
     return {
-      'minute': this.state.scheduleMinute,
-      'hour': this.state.scheduleHour,
-      'dayMonth': this.state.scheduleDayMonth,
-      'month': this.state.scheduleMonth,
-      'dayWeek': this.state.scheduleDayWeek
+      minute: this.state.scheduleMinute,
+      hour: this.state.scheduleHour,
+      dayMonth: this.state.scheduleDayMonth,
+      month: this.state.scheduleMonth,
+      dayWeek: this.state.scheduleDayWeek,
     };
   };
 
   graphFromNodesAndEdges = () => {
     let graph = {};
 
-    this.props.nodes.map(n => { graph[n.id] = [] });
+    this.props.nodes.map((n) => {
+      graph[n.id] = [];
+    });
 
-    this.props.nodes.map(n => n.id)
-      .map(id => this.props.edges.filter(e => e.source.id == id))
-      .forEach(arr => {
+    this.props.nodes
+      .map((n) => n.id)
+      .map((id) => this.props.edges.filter((e) => e.source.id == id))
+      .forEach((arr) => {
         if (arr[0] && arr[0].source && arr[0].source.id) {
-          graph[arr[0].source.id] = arr.map(n => n.target.id)
+          graph[arr[0].source.id] = arr.map((n) => n.target.id);
         }
       });
 
@@ -1077,8 +1300,8 @@ class JobDetails extends Component {
 
   ancestorJobs = (graph, jobIds) => {
     let path = [],
-        keys = Object.keys(graph),
-        values = Object.values(graph);
+      keys = Object.keys(graph),
+      values = Object.values(graph);
 
     while (jobIds.length > 0) {
       let jobId = jobIds.shift();
@@ -1090,459 +1313,716 @@ class JobDetails extends Component {
       }
     }
 
-    return path.reverse()
-               .map(id => this.props.nodes.filter(n => n.id == id && n.type == 'Job'))
-               .filter(n => n.length > 0);
+    return path
+      .reverse()
+      .map((id) =>
+        this.props.nodes.filter((n) => n.id == id && n.type == "Job")
+      )
+      .filter((n) => n.length > 0);
   };
 
   executeJob = () => {
-    let _self=this;
+    let _self = this;
     _self.setState({
       initialDataLoading: true,
     });
-    fetch('/api/job/executeJob', {
-      method: 'post',
+    fetch("/api/job/executeJob", {
+      method: "post",
       headers: authHeader(),
       body: JSON.stringify({
-        clusterId : _self.state.selectedCluster,
-        jobName: _self.formRef.current.getFieldValue('name'),
+        clusterId: _self.state.selectedCluster,
+        jobName: _self.formRef.current.getFieldValue("name"),
         jobId: _self.state.job.id,
-        dataflowId: _self.props.selectedDataflow ? _self.props.selectedDataflow.id : '',
-        applicationId: _self.props.application.applicationId
-      })
-    }).then(function(response) {
-      if(response.ok) {
-        return response.json();
-      }
-      handleError(response);
-    }).then(function(data) {
-      _self.setState({
-        initialDataLoading: false,
-      });
-      if(data && data.success) {
-        message.success("Job has been submitted")
-      }
+        dataflowId: _self.props.selectedDataflow
+          ? _self.props.selectedDataflow.id
+          : "",
+        applicationId: _self.props.application.applicationId,
+      }),
     })
-  }
+      .then(function (response) {
+        if (response.ok) {
+          return response.json();
+        }
+        handleError(response);
+      })
+      .then(function (data) {
+        _self.setState({
+          initialDataLoading: false,
+        });
+        if (data && data.success) {
+          message.success("Job has been submitted");
+        }
+      });
+  };
 
-  render() {    
+  render() {
     const editingAllowed = hasEditPermission(this.props.user);
     const {
-      visible, confirmLoading, jobTypes, paramName,
-      paramType, sourceFiles, jobSearchSuggestions, clusters, searchResultsLoaded, dropZones,
-      dropZoneFileSearchSuggestions
+      visible,
+      confirmLoading,
+      jobTypes,
+      paramName,
+      paramType,
+      sourceFiles,
+      jobSearchSuggestions,
+      clusters,
+      searchResultsLoaded,
+      dropZones,
+      dropZoneFileSearchSuggestions,
     } = this.state;
 
     const eclItemLayout = {
-      labelCol: { xs: { span: 2 }, sm: { span: 2 }, md: { span: 2 }, lg: { span: 2 } },
-      wrapperCol: { xs: { span: 4 }, sm: { span: 24 }, md: { span: 24 }, lg: { span: 24 }, xl: { span: 24 } }
+      labelCol: {
+        xs: { span: 2 },
+        sm: { span: 2 },
+        md: { span: 2 },
+        lg: { span: 2 },
+      },
+      wrapperCol: {
+        xs: { span: 4 },
+        sm: { span: 24 },
+        md: { span: 24 },
+        lg: { span: 24 },
+        xl: { span: 24 },
+      },
     };
 
     const longFieldLayout = {
       labelCol: { span: 2 },
-      wrapperCol: { span: 12 }
+      wrapperCol: { span: 12 },
     };
 
-    const columns = [{
-      title: 'Name',
-      dataIndex: 'name',
-      editable: editingAllowed
-    },
-    {
-      title: 'Type',
-      dataIndex: 'type',
-      editable: editingAllowed,
-      celleditor: "select",
-      showdatadefinitioninfield: true,
-      celleditorparams: {
-        values: eclTypes.sort()
-      }
-    }];
+    const columns = [
+      {
+        title: "Name",
+        dataIndex: "name",
+        editable: editingAllowed,
+      },
+      {
+        title: "Type",
+        dataIndex: "type",
+        editable: editingAllowed,
+        celleditor: "select",
+        showdatadefinitioninfield: true,
+        celleditorparams: {
+          values: eclTypes.sort(),
+        },
+      },
+    ];
 
-    const scriptInputParamscolumns = [{
-      title: 'Name',
-      dataIndex: 'name',
-      editable: editingAllowed
-    },
-    {
-      title: 'Value',
-      dataIndex: 'type',
-      editable: editingAllowed
-    }];
+    const scriptInputParamscolumns = [
+      {
+        title: "Name",
+        dataIndex: "name",
+        editable: editingAllowed,
+      },
+      {
+        title: "Value",
+        dataIndex: "type",
+        editable: editingAllowed,
+      },
+    ];
 
-    const fileColumns = [{
-      title: 'Name',
-      dataIndex: 'name',
-      width: '20%',
-    }, {
-      title: 'Description',
-      dataIndex: 'description',
-      width: '30%'
-    }];
+    const fileColumns = [
+      {
+        title: "Name",
+        dataIndex: "name",
+        width: "20%",
+      },
+      {
+        title: "Description",
+        dataIndex: "description",
+        width: "30%",
+      },
+    ];
 
     const {
-      name, title, description, ecl, entryBWR, gitRepo,
-      jobType, inputParams, outputFiles, inputFiles, contact, author, scriptPath, sprayedFileScope
+      name,
+      title,
+      description,
+      ecl,
+      entryBWR,
+      gitRepo,
+      jobType,
+      inputParams,
+      outputFiles,
+      inputFiles,
+      contact,
+      author,
+      scriptPath,
+      sprayedFileScope,
     } = this.state.job;
-    const selectedCluster = clusters.filter(cluster => cluster.id == this.props.clusterId);
+    const selectedCluster = clusters.filter(
+      (cluster) => cluster.id == this.props.clusterId
+    );
     //render only after fetching the data from the server
-    if(!name && !this.props.selectedAsset && !this.props.isNew) {
+    if (!name && !this.props.selectedAsset && !this.props.isNew) {
       return null;
     }
 
-
-     //Function to make fields editable
-     const makeFieldsEditable = () => {
+    //Function to make fields editable
+    const makeFieldsEditable = () => {
       editableMode();
 
       this.setState({
         enableEdit: !this.state.enableEdit,
-        editing: true
+        editing: true,
       });
     };
 
     //Switch to view only mode
     const switchToViewOnly = () => {
-      readOnlyMode()
+      readOnlyMode();
 
       this.setState({
         enableEdit: !this.state.enableEdit,
         editing: false,
-        dataAltered: true
+        dataAltered: true,
       });
-    }
+    };
 
     //scheduled predecessors
-    const scheduledPredecessors = (allPredecessors, selectedPredecessor) =>{
-     return allPredecessors.filter(predecessor => selectedPredecessor.includes(predecessor.jobId))
-    }
+    const scheduledPredecessors = (allPredecessors, selectedPredecessor) => {
+      return allPredecessors.filter((predecessor) =>
+        selectedPredecessor.includes(predecessor.jobId)
+      );
+    };
 
     // view edit buttons on tabpane
-    const editButton  = !this.state.enableEdit && editingAllowed ?  <Button type="primary" onClick={makeFieldsEditable}> Edit  </Button> :  null ;
-    const viewChangesBtn = this.state.editing ?  <Button  onClick={switchToViewOnly} type="primary" ghost> View Changes </Button> : null;
-    const editandViewBtns = <div> {editButton} {viewChangesBtn}</div>
+    const editButton =
+      !this.state.enableEdit && editingAllowed ? (
+        <Button type="primary" onClick={makeFieldsEditable}>
+          {" "}
+          Edit{" "}
+        </Button>
+      ) : null;
+    const viewChangesBtn = this.state.editing ? (
+      <Button onClick={switchToViewOnly} type="primary" ghost>
+        {" "}
+        View Changes{" "}
+      </Button>
+    ) : null;
+    const editandViewBtns = (
+      <div>
+        {" "}
+        {editButton} {viewChangesBtn}
+      </div>
+    );
 
     return (
       <React.Fragment>
-        {this.props.displayingInModal || this.state.addingNewAsset ? null : <div style={{padding: "5px 16px", background: "var(--light)", fontWeight: "600", margin: "0px -16px"}} > Job :  {this.state.job.name}</div>}
-      <div>
-          {!this.props.isNew ?
+        {this.props.displayingInModal || this.state.addingNewAsset ? null : (
+          <div
+            style={{
+              padding: "5px 16px",
+              background: "var(--light)",
+              fontWeight: "600",
+              margin: "0px -16px",
+            }}
+          >
+            {" "}
+            Job : {this.state.job.name}
+          </div>
+        )}
+        <div>
+          {!this.props.isNew ? (
             <div className="loader">
               <Spin spinning={this.state.initialDataLoading} size="large" />
-            </div> : null}
-          <Form {...formItemLayout} labelAlign="left" ref={this.formRef} onFinish={this.handleOk} >
-          <Tabs defaultActiveKey="1" tabBarExtraContent = {editandViewBtns }>
-
-            <TabPane tab="Basic" key="1">
-              <Form.Item label="Job Type" name="jobType"> 
-                {!this.state.enableEdit ? 
-                <textarea className="read-only-textarea"/>
-                :
-                <Select placeholder="Job Type" value={(jobType != '') ? jobType : "Job"} style={{ width: 190 }} onChange={this.onJobTypeChange} disabled={!editingAllowed}>
-                  {jobTypes.map(d => <Option key={d}>{d}</Option>)}
-                </Select>
-                }
-              </Form.Item>                            
-              {(() =>  {
-                switch (jobType) {
-                  case 'Data Profile':
-                  case 'ETL':
-                  case 'Job':
-                  case 'Modeling':  
-                  case 'Query Build':
-                  case 'Scoring':                    
-                  case '':
-                    return <BasicsTabGeneral enableEdit={this.state.enableEdit} editingAllowed={editingAllowed} addingNewAsset={this.state.addingNewAsset} jobType={this.state.job.jobType} clearState={this.clearState} onChange={this.onChange} clusters={this.props.clusters} localState={this.state} formRef={this.formRef} applicationId={this.props.application.applicationId}/>;
-                  case 'Script':
-                    return <BasicsTabScript enableEdit={this.state.enableEdit} editingAllowed={editingAllowed} onChange={this.onChange} localState={this.state} />;
-                  case 'Spray':
-                    return <BasicsTabSpray enableEdit={this.state.enableEdit} editingAllowed={editingAllowed} addingNewAsset={this.state.addingNewAsset} clearState={this.clearState} onChange={this.onChange} clusters={this.props.clusters} localState={this.state} formRef={this.formRef}/>;
-                }
-
-              })()}
-            </TabPane>
-            {this.state.job.jobType != 'Script' && this.state.job.jobType != 'Spray' ?
-              <TabPane tab="ECL" key="2">
-
-                <Form.Item {...eclItemLayout} label="ECL" name="ecl">
-                  <EclEditor
-                  id="job_ecl"
-                  targetDomId="jobEcl"
-                  disabled={true}
-                  />
-                </Form.Item>
-              </TabPane> 
-              : (this.state.job.jobType == 'Script' ? 
-                <TabPane tab="Script" key="2">
-                  <Form.Item {...longFieldLayout} label="Script Path" name="scriptPath" rules={[{
-                    required: true,
-                    pattern: new RegExp(/^[a-zA-Z0-9:$._/ '~]*$/),
-                    message: 'Please enter a valid path',
-                  }]}>
-                    {this.state.enableEdit ?
-                    <Input id="job_scriptPath"
-                    onChange={this.onChange}
-                      placeholder="Main script path"
-                      value={scriptPath}
+            </div>
+          ) : null}
+          <Form
+            {...formItemLayout}
+            labelAlign="left"
+            ref={this.formRef}
+            onFinish={this.handleOk}
+          >
+            <Tabs defaultActiveKey="1" tabBarExtraContent={editandViewBtns}>
+              <TabPane tab="Basic" key="1">
+                <Form.Item label="Job Type" name="jobType">
+                  {!this.state.enableEdit ? (
+                    <textarea className="read-only-textarea" />
+                  ) : (
+                    <Select
+                      placeholder="Job Type"
+                      value={jobType != "" ? jobType : "Job"}
+                      style={{ width: 190 }}
+                      onChange={this.onJobTypeChange}
                       disabled={!editingAllowed}
-
-                      /> :
-                      <textarea className="read-only-textarea" />
-                    }
-                  </Form.Item>
-                </TabPane> : null)   
-            }
-            
-                      
-            {this.state.job.jobType != 'Script' && this.state.job.jobType != 'Spray' ?   
-              <React.Fragment>
-              <TabPane tab="Input Params" key="3">
-                <EditableTable
-                  columns={this.state.job.jobType != 'Script' ? columns : scriptInputParamscolumns}
-                  dataSource={inputParams}
-                  editingAllowed={editingAllowed}
-                  dataDefinitions={[]}
-                  showDataDefinition={false}
-                  setData={this.setInputParamsData}
-                  enableEdit={this.state.enableEdit}
-                  />
-              </TabPane>
-              
-              <TabPane tab="Input Files" key="4">
-
-                <div>
-                  {this.state.enableEdit ?
-                  <>
-                  <Form.Item label="Input Files">
-                    <Select id="inputfiles" placeholder="Select Input Files" defaultValue={this.state.selectedInputdFile} onChange={this.handleInputFileChange} style={{ width: 290 }} disabled={!editingAllowed}>
-                      {sourceFiles.map(d => <Option value={d.id} key={d.id}>{(d.title)?d.title:d.name}</Option>)}
-                    </Select>
-                  </Form.Item>
-
-                  <Form.Item>
-                    <Button type="primary" onClick={this.handleAddInputFile} disabled={!editingAllowed}>
-                      Add
-                    </Button>
-                  </Form.Item>
-                  </>
-                  : null}
-
-
-                  <Table
-                    columns={fileColumns}
-                    rowKey={record => record.id}
-                    dataSource={inputFiles}
-                    pagination={{ pageSize: 10 }} scroll={{ y: 460 }}
-                  />
-                </div>
-              </TabPane></React.Fragment> : null}
-            {this.state.job.jobType != 'Script' && this.state.job.jobType != 'Spray'?       
-              <TabPane tab="Output Files" key="5">
-
-                <div>
-                {!this.state.enableEdit ?  null :
-                <>
-                  <Form.Item label="Output Files">
-                    <Select id="outputfiles" placeholder="Select Output Files" defaultValue={this.state.selectedOutputFile} onChange={this.handleOutputFileChange} style={{ width: 290 }} disabled={!editingAllowed}>
-                      {sourceFiles.map(d => <Option value={d.id} key={d.id}>{(d.title)?d.title:d.name}</Option>)}
-                    </Select>
-                  </Form.Item>
-                  <Form.Item>
-                    <Button type="primary" disabled={!editingAllowed} onClick={this.handleAddOutputFile}>
-                      Add
-                    </Button>
-                  </Form.Item>
-                  </> }
-
-                  <Table
-                    columns={fileColumns}
-                    rowKey={record => record.id}
-                    dataSource={outputFiles}
-                    pagination={{ pageSize: 10 }} scroll={{ y: 460 }}
-                  />
-                </div>
-              </TabPane>
-            : null}
-            { this.props.selectedDataflow ?
-            <TabPane tab="Schedule" key="6">
-              <div>
-                <Form {...threeColformItemLayout}>
-                  {this.state.selectedScheduleType .length > 0 || this.state.enableEdit ?
-                  <Form.Item label="Type">
-                    {!this.state.enableEdit   ?
-                    <Input className="read-only-input"  value={this.state.selectedScheduleType ? this.state.selectedScheduleType : null} />
-                    :
-
-                    <Select id="scheduleType"
-                      placeholder="Select a schedule type"
-                      allowClear
-                      onClear={() => { this.setState({...this.state, selectedScheduleType: "" }); }}
-                      onSelect={(value) => {
-                        console.log(value);
-                        this.handleScheduleTypeSelect(value);
-                        this.setState({ selectedScheduleType: value });
-                      }}
-                      value={this.state.selectedScheduleType ? this.state.selectedScheduleType : null}
                     >
-                      <Option value="Time">Timer based (run at specific interval)</Option>
-                      <Option value="Predecessor">Job based (run after another job completes)</Option>
-                      <Option value="Message">Run on External Message (run when a message is received in a Kafka topic)</Option>
+                      {jobTypes.map((d) => (
+                        <Option key={d}>{d}</Option>
+                      ))}
                     </Select>
-  }
-
-                  </Form.Item> : null
-  }
-                  { this.state.selectedScheduleType === "Time" ?
-                    <Fragment>
-                    <Form.Item label="Run Every">
-                      <Space>
-                        <Input
-                          style={{width: "40px", padding: "2px 6px"}}
-                          onChange={ evt =>  this.setState({ scheduleMinute: evt.target.value }) }
-                          value={this.state.scheduleMinute}
-                          className={this.state.enableEdit? null : "read-only-input"}
+                  )}
+                </Form.Item>
+                {(() => {
+                  switch (jobType) {
+                    case "Data Profile":
+                    case "ETL":
+                    case "Job":
+                    case "Modeling":
+                    case "Query Build":
+                    case "Scoring":
+                    case "":
+                      return (
+                        <BasicsTabGeneral
+                          enableEdit={this.state.enableEdit}
+                          editingAllowed={editingAllowed}
+                          addingNewAsset={this.state.addingNewAsset}
+                          jobType={this.state.job.jobType}
+                          clearState={this.clearState}
+                          onChange={this.onChange}
+                          clusters={this.props.clusters}
+                          localState={this.state}
+                          formRef={this.formRef}
+                          applicationId={this.props.application.applicationId}
                         />
-                        Minute,
-                        <Input
-                          style={{width: "40px", padding: "2px 6px"}}
-                          onChange={ evt => this.setState({ scheduleHour: evt.target.value }) }
-                          value={this.state.scheduleHour}
-                          className={this.state.enableEdit? null : "read-only-input"}
-
+                      );
+                    case "Script":
+                      return (
+                        <BasicsTabScript
+                          enableEdit={this.state.enableEdit}
+                          editingAllowed={editingAllowed}
+                          onChange={this.onChange}
+                          localState={this.state}
                         />
-                        Hour,
-                        <Input
-                          style={{width: "40px", padding: "2px 6px"}}
-                          onChange={ evt => this.setState({ scheduleDayMonth: evt.target.value }) }
-                          value={this.state.scheduleDayMonth}
-                          className={this.state.enableEdit? null : "read-only-input"}
-
+                      );
+                    case "Spray":
+                      return (
+                        <BasicsTabSpray
+                          enableEdit={this.state.enableEdit}
+                          editingAllowed={editingAllowed}
+                          addingNewAsset={this.state.addingNewAsset}
+                          clearState={this.clearState}
+                          onChange={this.onChange}
+                          clusters={this.props.clusters}
+                          localState={this.state}
+                          formRef={this.formRef}
                         />
-                        Day of Month,
-                        <Input
-                          style={{width: "40px", padding: "2px 6px"}}
-                          onChange={ evt => this.setState({ scheduleMonth: evt.target.value }) }
-                          value={this.state.scheduleMonth}
-                          className={this.state.enableEdit? null : "read-only-input"}
+                      );
+                  }
+                })()}
+              </TabPane>
+              {this.state.job.jobType != "Script" &&
+              this.state.job.jobType != "Spray" ? (
+                <TabPane tab="ECL" key="2">
+                  <Form.Item {...eclItemLayout} label="ECL" name="ecl">
+                    <EclEditor
+                      id="job_ecl"
+                      targetDomId="jobEcl"
+                      disabled={true}
+                    />
+                  </Form.Item>
+                </TabPane>
+              ) : this.state.job.jobType == "Script" ? (
+                <TabPane tab="Script" key="2">
+                  <Form.Item
+                    {...longFieldLayout}
+                    label="Script Path"
+                    name="scriptPath"
+                    rules={[
+                      {
+                        required: true,
+                        pattern: new RegExp(/^[a-zA-Z0-9:$._/ '~]*$/),
+                        message: "Please enter a valid path",
+                      },
+                    ]}
+                  >
+                    {this.state.enableEdit ? (
+                      <Input
+                        id="job_scriptPath"
+                        onChange={this.onChange}
+                        placeholder="Main script path"
+                        value={scriptPath}
+                        disabled={!editingAllowed}
+                      />
+                    ) : (
+                      <textarea className="read-only-textarea" />
+                    )}
+                  </Form.Item>
+                </TabPane>
+              ) : null}
 
-                        />
-                        Month,
-                        <Input
-                          style={{width: "40px", padding: "2px 6px"}}
-                          onChange={ evt => this.setState({ scheduleDayWeek: evt.target.value }) }
-                          value={this.state.scheduleDayWeek}
-                          className={this.state.enableEdit? null : "read-only-input"}
+              {this.state.job.jobType != "Script" &&
+              this.state.job.jobType != "Spray" ? (
+                <React.Fragment>
+                  <TabPane tab="Input Params" key="3">
+                    <EditableTable
+                      columns={
+                        this.state.job.jobType != "Script"
+                          ? columns
+                          : scriptInputParamscolumns
+                      }
+                      dataSource={inputParams}
+                      editingAllowed={editingAllowed}
+                      dataDefinitions={[]}
+                      showDataDefinition={false}
+                      setData={this.setInputParamsData}
+                      enableEdit={this.state.enableEdit}
+                    />
+                  </TabPane>
 
-                        />
-                        Day of Week
-                      </Space>
-                    </Form.Item>
-                    <Form.Item label="Explained">
-                      { this.generateCronExplainer() }
-                    </Form.Item>
-                    <Form.Item label="Would run at">
-                      {(cronExamples.length > 0) ?
+                  <TabPane tab="Input Files" key="4">
+                    <div>
+                      {this.state.enableEdit ? (
+                        <>
+                          <Form.Item label="Input Files">
+                            <Select
+                              id="inputfiles"
+                              placeholder="Select Input Files"
+                              defaultValue={this.state.selectedInputdFile}
+                              onChange={this.handleInputFileChange}
+                              style={{ width: 290 }}
+                              disabled={!editingAllowed}
+                            >
+                              {sourceFiles.map((d) => (
+                                <Option value={d.id} key={d.id}>
+                                  {d.title ? d.title : d.name}
+                                </Option>
+                              ))}
+                            </Select>
+                          </Form.Item>
+
+                          <Form.Item>
+                            <Button
+                              type="primary"
+                              onClick={this.handleAddInputFile}
+                              disabled={!editingAllowed}
+                            >
+                              Add
+                            </Button>
+                          </Form.Item>
+                        </>
+                      ) : null}
+
+                      <Table
+                        columns={fileColumns}
+                        rowKey={(record) => record.id}
+                        dataSource={inputFiles}
+                        pagination={{ pageSize: 10 }}
+                        scroll={{ y: 460 }}
+                      />
+                    </div>
+                  </TabPane>
+                </React.Fragment>
+              ) : null}
+              {this.state.job.jobType != "Script" &&
+              this.state.job.jobType != "Spray" ? (
+                <TabPane tab="Output Files" key="5">
+                  <div>
+                    {!this.state.enableEdit ? null : (
+                      <>
+                        <Form.Item label="Output Files">
+                          <Select
+                            id="outputfiles"
+                            placeholder="Select Output Files"
+                            defaultValue={this.state.selectedOutputFile}
+                            onChange={this.handleOutputFileChange}
+                            style={{ width: 290 }}
+                            disabled={!editingAllowed}
+                          >
+                            {sourceFiles.map((d) => (
+                              <Option value={d.id} key={d.id}>
+                                {d.title ? d.title : d.name}
+                              </Option>
+                            ))}
+                          </Select>
+                        </Form.Item>
+                        <Form.Item>
+                          <Button
+                            type="primary"
+                            disabled={!editingAllowed}
+                            onClick={this.handleAddOutputFile}
+                          >
+                            Add
+                          </Button>
+                        </Form.Item>
+                      </>
+                    )}
+
+                    <Table
+                      columns={fileColumns}
+                      rowKey={(record) => record.id}
+                      dataSource={outputFiles}
+                      pagination={{ pageSize: 10 }}
+                      scroll={{ y: 460 }}
+                    />
+                  </div>
+                </TabPane>
+              ) : null}
+              {this.props.selectedDataflow ? (
+                <TabPane tab="Schedule" key="6">
+                  <div>
+                    <Form {...threeColformItemLayout}>
+                      {this.state.selectedScheduleType.length > 0 ||
+                      this.state.enableEdit ? (
+                        <Form.Item label="Type">
+                          {!this.state.enableEdit ? (
+                            <Input
+                              className="read-only-input"
+                              value={
+                                this.state.selectedScheduleType
+                                  ? this.state.selectedScheduleType
+                                  : null
+                              }
+                            />
+                          ) : (
+                            <Select
+                              id="scheduleType"
+                              placeholder="Select a schedule type"
+                              allowClear
+                              onClear={() => {
+                                this.setState({
+                                  ...this.state,
+                                  selectedScheduleType: "",
+                                });
+                              }}
+                              onSelect={(value) => {
+                                console.log(value);
+                                this.handleScheduleTypeSelect(value);
+                                this.setState({ selectedScheduleType: value });
+                              }}
+                              value={
+                                this.state.selectedScheduleType
+                                  ? this.state.selectedScheduleType
+                                  : null
+                              }
+                            >
+                              <Option value="Time">
+                                Timer based (run at specific interval)
+                              </Option>
+                              <Option value="Predecessor">
+                                Job based (run after another job completes)
+                              </Option>
+                              <Option value="Message">
+                                Run on External Message (run when a message is
+                                received in a Kafka topic)
+                              </Option>
+                            </Select>
+                          )}
+                        </Form.Item>
+                      ) : null}
+                      {this.state.selectedScheduleType === "Time" ? (
                         <Fragment>
-                        { cronExamples.map(d => {
-                          return (
-                          <Fragment>
-                          <span>
-                            { d ? d.toLocaleString('en-US') : '' }
-                          </span><br />
-                          </Fragment>
-                          );
-                        }) }
-                        <span>and so on...</span>
+                          <Form.Item label="Run Every">
+                            <Space>
+                              <Input
+                                style={{ width: "40px", padding: "2px 6px" }}
+                                onChange={(evt) =>
+                                  this.setState({
+                                    scheduleMinute: evt.target.value,
+                                  })
+                                }
+                                value={this.state.scheduleMinute}
+                                className={
+                                  this.state.enableEdit
+                                    ? null
+                                    : "read-only-input"
+                                }
+                              />
+                              Minute,
+                              <Input
+                                style={{ width: "40px", padding: "2px 6px" }}
+                                onChange={(evt) =>
+                                  this.setState({
+                                    scheduleHour: evt.target.value,
+                                  })
+                                }
+                                value={this.state.scheduleHour}
+                                className={
+                                  this.state.enableEdit
+                                    ? null
+                                    : "read-only-input"
+                                }
+                              />
+                              Hour,
+                              <Input
+                                style={{ width: "40px", padding: "2px 6px" }}
+                                onChange={(evt) =>
+                                  this.setState({
+                                    scheduleDayMonth: evt.target.value,
+                                  })
+                                }
+                                value={this.state.scheduleDayMonth}
+                                className={
+                                  this.state.enableEdit
+                                    ? null
+                                    : "read-only-input"
+                                }
+                              />
+                              Day of Month,
+                              <Input
+                                style={{ width: "40px", padding: "2px 6px" }}
+                                onChange={(evt) =>
+                                  this.setState({
+                                    scheduleMonth: evt.target.value,
+                                  })
+                                }
+                                value={this.state.scheduleMonth}
+                                className={
+                                  this.state.enableEdit
+                                    ? null
+                                    : "read-only-input"
+                                }
+                              />
+                              Month,
+                              <Input
+                                style={{ width: "40px", padding: "2px 6px" }}
+                                onChange={(evt) =>
+                                  this.setState({
+                                    scheduleDayWeek: evt.target.value,
+                                  })
+                                }
+                                value={this.state.scheduleDayWeek}
+                                className={
+                                  this.state.enableEdit
+                                    ? null
+                                    : "read-only-input"
+                                }
+                              />
+                              Day of Week
+                            </Space>
+                          </Form.Item>
+                          <Form.Item label="Explained">
+                            {this.generateCronExplainer()}
+                          </Form.Item>
+                          <Form.Item label="Would run at">
+                            {cronExamples.length > 0 ? (
+                              <Fragment>
+                                {cronExamples.map((d) => {
+                                  return (
+                                    <Fragment>
+                                      <span>
+                                        {d ? d.toLocaleString("en-US") : ""}
+                                      </span>
+                                      <br />
+                                    </Fragment>
+                                  );
+                                })}
+                                <span>and so on...</span>
+                              </Fragment>
+                            ) : null}
+                          </Form.Item>
                         </Fragment>
-                      : null}
-                    </Form.Item>
-                    </Fragment>
-                  : null }
-                  { this.state.selectedScheduleType === "Predecessor" ?
-                    <Form.Item label="Run After">
-                      {!this.state.enableEdit ?
+                      ) : null}
+                      {this.state.selectedScheduleType === "Predecessor" ? (
+                        <Form.Item label="Run After">
+                          {!this.state.enableEdit ? (
+                            scheduledPredecessors(
+                              this.state.predecessorJobs,
+                              this.state.schedulePredecessor
+                            ).map((item, index) =>
+                              index > 0 ? ", " + item.name : item.name
+                            )
+                          ) : (
+                            // this.state.schedulePredecessor
+                            <Select
+                              id="schedulePredecessor"
+                              mode="single"
+                              placeholder="Select Job(s) that will trigger execution"
+                              // allowClear
+                              // onClear={() => { this.setState({...this.state, schedulePredecessor: [] }); }}
+                              onSelect={(value) => {
+                                let predecessors = [];
+                                predecessors.push(value);
+                                this.setState({
+                                  schedulePredecessor: predecessors,
+                                });
+                              }}
+                              // onDeselect={value => {
+                              //   let predecessors = [];
+                              //   predecessors.splice(predecessors.indexOf(value), 1);
+                              //   this.setState({schedulePredecessor: predecessors });
+                              // }}
+                              value={this.state.schedulePredecessor}
+                            >
+                              {this.state.predecessorJobs.map((job) => {
+                                return (
+                                  <Option key={job.name} value={job.jobId}>
+                                    {job.name}
+                                  </Option>
+                                );
+                              })}
+                            </Select>
+                          )}
+                        </Form.Item>
+                      ) : null}
+                    </Form>
+                  </div>
+                </TabPane>
+              ) : null}
 
-                    scheduledPredecessors(this.state.predecessorJobs, this.state.schedulePredecessor).map((item, index)  => index > 0 ? ', ' +  item.name : item.name)
-                    // this.state.schedulePredecessor
-                       :
-                      <Select id="schedulePredecessor"
-                        mode="single"
-                        placeholder="Select Job(s) that will trigger execution"
-                        // allowClear
-                        // onClear={() => { this.setState({...this.state, schedulePredecessor: [] }); }}
-                        onSelect={value => {
-                          let predecessors = [];
-                          predecessors.push(value);
-                          this.setState({schedulePredecessor: predecessors });
-                        }}
-                        // onDeselect={value => {
-                        //   let predecessors = [];
-                        //   predecessors.splice(predecessors.indexOf(value), 1);
-                        //   this.setState({schedulePredecessor: predecessors });
-                        // }}
-                        value={this.state.schedulePredecessor}
-                      >
-                        { this.state.predecessorJobs.map(job => {
-                          return (
-                            <Option key={job.name} value={job.jobId}>
-                              {job.name}
-                            </Option>
-                          );
-                        }) }
-                      </Select>
-  }
-                    </Form.Item>
-                  : null }
-                </Form>
-              </div>
-            </TabPane>
-             : null }
-
-            {!this.props.isNew ?
-            <TabPane tab="Workflows" key="7">
-              <AssociatedDataflows assetId={this.state.job.id} assetType={'Job'}/>
-            </TabPane> : null}
-          </Tabs>
+              {!this.props.isNew ? (
+                <TabPane tab="Workflows" key="7">
+                  <AssociatedDataflows
+                    assetId={this.state.job.id}
+                    assetType={"Job"}
+                  />
+                </TabPane>
+              ) : null}
+            </Tabs>
           </Form>
-      </div>
+        </div>
         <div>
-          <span style={{"float": "left"}}>
-            <Button disabled={!editingAllowed ||  !this.state.enableEdit || this.props.isNew} type="primary" key="execute" onClick={this.executeJob}>
+          <span style={{ float: "left" }}>
+            <Button
+              disabled={
+                !editingAllowed || !this.state.enableEdit || this.props.isNew
+              }
+              type="primary"
+              key="execute"
+              onClick={this.executeJob}
+            >
               Execute Job
             </Button>
           </span>
-          {this.state.enableEdit ?
-          <div className="button-container">
-            {!this.props.isNew ?
-             <Button key="danger" type="danger" onClick={this.handleDelete}>Delete</Button> : null }
-             <Button key="back" onClick={this.handleCancel}>
-              Cancel
-            </Button>
-            <Button key="submit" htmlType="submit" disabled={!editingAllowed} type="primary" loading={confirmLoading} onClick={this.handleOk}>
-              Save
-            </Button>
-          </div> :
-          <div>
-            {this.state.dataAltered ?
-             <div className="button-container">
+          {this.state.enableEdit ? (
+            <div className="button-container">
+              {!this.props.isNew ? (
+                <Button key="danger" type="danger" onClick={this.handleDelete}>
+                  Delete
+                </Button>
+              ) : null}
               <Button key="back" onClick={this.handleCancel}>
                 Cancel
               </Button>
-              <Button key="submit" disabled={!editingAllowed} type="primary" loading={confirmLoading} onClick={this.handleOk}>
-              Save
-            </Button>
-            </div> :
-              <div className="button-container">
-              <Button key="back" onClick={this.handleCancel}>
-                Cancel
+              <Button
+                key="submit"
+                htmlType="submit"
+                disabled={!editingAllowed}
+                type="primary"
+                loading={confirmLoading}
+                onClick={this.handleOk}
+              >
+                Save
               </Button>
             </div>
-  }
-          </div>
-
-
-
-           }
+          ) : (
+            <div>
+              {this.state.dataAltered ? (
+                <div className="button-container">
+                  <Button key="back" onClick={this.handleCancel}>
+                    Cancel
+                  </Button>
+                  <Button
+                    key="submit"
+                    disabled={!editingAllowed}
+                    type="primary"
+                    loading={confirmLoading}
+                    onClick={this.handleOk}
+                  >
+                    Save
+                  </Button>
+                </div>
+              ) : (
+                <div className="button-container">
+                  <Button key="back" onClick={this.handleCancel}>
+                    Cancel
+                  </Button>
+                </div>
+              )}
+            </div>
+          )}
         </div>
       </React.Fragment>
     );
@@ -1550,19 +2030,19 @@ class JobDetails extends Component {
 }
 
 function mapStateToProps(state) {
-    const { selectedAsset, newAsset={}, clusterId } = state.assetReducer;
-    const { user } = state.authenticationReducer;
-    const { application, clusters } = state.applicationReducer;
-    const { isNew=false, groupId='' } = newAsset;
-    return {
-      user,
-      selectedAsset,
-      application,
-      isNew,
-      groupId,
-      clusterId,
-      clusters
-    };
+  const { selectedAsset, newAsset = {}, clusterId } = state.assetReducer;
+  const { user } = state.authenticationReducer;
+  const { application, clusters } = state.applicationReducer;
+  const { isNew = false, groupId = "" } = newAsset;
+  return {
+    user,
+    selectedAsset,
+    application,
+    isNew,
+    groupId,
+    clusterId,
+    clusters,
+  };
 }
 
 const JobDetailsForm = connect(mapStateToProps)(JobDetails);

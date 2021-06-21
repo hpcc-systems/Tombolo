@@ -11,7 +11,7 @@ export function downloadPdf(fileName, targetClass) {
     callback: function (doc) {
       let pageCount = doc.internal.getNumberOfPages();
       console.log("<<<< Page count", pageCount);
-      doc.deletePage(pageCount);
+      // doc.deletePage(pageCount);
       doc.save(`${fileName}.pdf`);
     },
   });

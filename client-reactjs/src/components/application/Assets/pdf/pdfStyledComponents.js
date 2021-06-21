@@ -45,7 +45,7 @@ export const BasicTitle = styled.div`
 //Page Heading
 export const Heading = styled.div`
   margin: 0px 0px 0px -10px;
-  width: 105%;
+  width: 550px !important;
   padding: 5px 0px 5px 15px;
   font-size: 18px;
   background: lightgray;
