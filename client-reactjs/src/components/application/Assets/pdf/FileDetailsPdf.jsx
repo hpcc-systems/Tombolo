@@ -11,7 +11,6 @@ import {
   TableContainer,
   Table,
 } from "./pdfStyledComponents";
-import { FileOutlined } from "@ant-design/icons";
 
 function FileDetailsPdf(props) {
   //Local States
@@ -138,8 +137,9 @@ function FileDetailsPdf(props) {
       </div>
 
       <div className="filePdf_layout">
+      <SectionTitle style={{marginTop : "50px"}}>Layout</SectionTitle>
+        {fileLayouts.length > 0 ?
         <TableContainer>
-          <h3>Layout</h3>
           <Table>
             <tbody>
               <tr>
@@ -160,7 +160,7 @@ function FileDetailsPdf(props) {
               })}
             </tbody>
           </Table>
-        </TableContainer>
+        </TableContainer> :  <div style={{color: "gray"}}> No Layout data <datagrid></datagrid> </div>}
       </div>
     </PdfContainer>
   );

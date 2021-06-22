@@ -32,13 +32,7 @@ function SelectDetailsForPdfDialog(props) {
       value: "indexPdf_basic",
       active: true,
       checked: true,
-    },
-    {
-      name: "Source File",
-      value: "indexPdf_source",
-      active: false,
-      checked: false,
-    },
+    }
   ];
   const queryOptions = [
     {
@@ -46,13 +40,7 @@ function SelectDetailsForPdfDialog(props) {
       value: "queryPdf_basic",
       active: true,
       checked: true,
-    },
-    {
-      name: "Input Fields",
-      value: "queryPdf_input",
-      active: false,
-      checked: false,
-    },
+    }
   ];
   const jobOptions = [
     {
@@ -454,7 +442,7 @@ function SelectDetailsForPdfDialog(props) {
       {props.selectedAsset.type === "Group" && nestedAssets.length < 1
         ? null
         : renderOptions(props)}
-      <div style={{ display: "none" }}>
+      <div style={{position:"absolute", left:"-999em"}}>
         {downloadPdf ? assetToPrint(props.selectedAsset, props) : null}
       </div>
     </Modal>

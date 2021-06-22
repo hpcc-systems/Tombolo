@@ -5,6 +5,8 @@ export function downloadPdf(fileName, targetClass) {
   const doc = new jsPDF("p", "pt", "a4", true);
 
   const target = document.getElementsByClassName(targetClass);
+ 
+
 
   doc.html(target[0], {
     margin: [400, 60, 40, 60],

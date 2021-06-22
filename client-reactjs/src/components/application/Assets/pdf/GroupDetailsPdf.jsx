@@ -9,7 +9,6 @@ function GroupDetailsPdf(props) {
   const { nestedAssets: assets, applicationId } = props;
 
   useEffect(() => {
-    console.log("Class to print in group level >>>>", props.classesToExport);
     //Remove unchecked elements from DOM
     const removeElements = (elms) => elms.forEach((el) => el.remove());
     let elements = document.querySelectorAll(".pdfContainer");

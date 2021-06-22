@@ -1,6 +1,5 @@
 import React, { useState, useEffect } from "react";
 import ReactMarkdown from "react-markdown";
-import { ECLEditor as eclCodemirror } from '@hpcc-js/codemirror';
 import {
   PdfContainer,
   Heading,
@@ -51,7 +50,12 @@ function JobDetailsPdf(props) {
       if (data && props.selectedAssetType !== "Group") {
         //Break lines for ecl code
         const ele = document.getElementById("ecl_render");
-        ele.innerHTML = ele.innerHTML.replace(/;/g, ";<br/>");
+        if(ele){
+          ele.innerHTML = ele.innerHTML.replace(/;/g, ";<br/>");
+        }
+        const clientHeight = document.getElementById('pdfContainer').clientHeight;
+        console.log("<<<< Client Height", clientHeight)
+        console.log("<<<< Item ", document.getElementById("pdfContainer"))
 
         downloadPdf(data.title, "pdfContainer");
         props.printingTaskCompleted();
@@ -78,14 +82,17 @@ function JobDetailsPdf(props) {
       childElements.map((item) => {
         removeElements(document.querySelectorAll(`.${item}`));
       });
+ 
     }
   }, []);
 
+
+  
   //Table Headers
   const th = ["Name", "Description"]
 
   return (
-    <PdfContainer className="pdfContainer">
+    <PdfContainer className="pdfContainer" id="pdfContainer">
       <div className="jobPdf_basic">
         <Heading> Job - {data?.title}</Heading>
         <BasicTitle>Baic Data</BasicTitle>
@@ -132,6 +139,7 @@ function JobDetailsPdf(props) {
 
       <div className="jobPdf_inputFiles">
         <BasicTitle>Input Files</BasicTitle>
+        {input?.length > 0 ? 
         <TableContainer>
           <Table>
             <tbody>
@@ -152,10 +160,11 @@ function JobDetailsPdf(props) {
               })}
             </tbody>
           </Table>
-        </TableContainer>
+        </TableContainer> : <div style={{color: "gray"}}> No input Files </div>}
       </div>
       <div className="jobPdf_outputFiles">
         <BasicTitle>Output Files</BasicTitle>
+        {output?.length > 0 ?
         <TableContainer>
           <Table>
             <tbody>
@@ -176,7 +185,7 @@ function JobDetailsPdf(props) {
               })}
             </tbody>
           </Table>
-        </TableContainer>
+        </TableContainer> :  <div style={{color: "gray"}}> No output Files </div>}
       </div>
     </PdfContainer>
   );
