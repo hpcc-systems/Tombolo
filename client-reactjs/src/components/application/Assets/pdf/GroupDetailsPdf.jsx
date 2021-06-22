@@ -26,9 +26,7 @@ function GroupDetailsPdf(props) {
       (item) => !exportClasses.includes(item)
     );
 
-    console.log("<<<< Sorted Elements", sortedElements);
     sortedElements.map((item) => {
-      console.log("<<<< item", item);
       removeElements(document.querySelectorAll(`.${item}`));
     });
   }, []);

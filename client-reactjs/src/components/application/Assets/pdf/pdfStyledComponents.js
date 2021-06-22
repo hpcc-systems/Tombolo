@@ -9,6 +9,7 @@ export const PdfContainer = styled.div`
   align-items: flex-start;
   font-size: 11.5px;
   position: relative;
+  margin-right: 50px !important;
 
   //All Asset Type 
   > .queryPdf_basic, .filePdf_basic, .indexPdf_basic {
@@ -38,6 +39,7 @@ export const PdfContainer = styled.div`
 
 //Basic Title - eg : Basic Details
 export const BasicTitle = styled.div`
+  margin-top: 10px;
   font-size: 16px;
   font-weight: 700;
 `;

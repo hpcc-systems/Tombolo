@@ -10,7 +10,6 @@ export function downloadPdf(fileName, targetClass) {
     margin: [400, 60, 40, 60],
     callback: function (doc) {
       let pageCount = doc.internal.getNumberOfPages();
-      console.log("<<<< Page count", pageCount);
       // doc.deletePage(pageCount);
       doc.save(`${fileName}.pdf`);
     },

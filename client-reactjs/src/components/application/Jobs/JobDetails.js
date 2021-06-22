@@ -246,7 +246,6 @@ class JobDetails extends Component {
           jobDetailsUrl += `${key}=${value}&`;
         }
         jobDetailsUrl = jobDetailsUrl.replace(/&$/, "");
-        console.log("<<<< URL", jobDetailsUrl);
       }
 
       fetch(jobDetailsUrl, {

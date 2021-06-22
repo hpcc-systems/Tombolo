@@ -61,13 +61,8 @@ function SelectDetailsForPdfDialog(props) {
       active: true,
       checked: true,
     },
-    // { name: "ECL", value: "jobPdf_ecl", active: true, checked: false },
-    {
-      name: "Input Params",
-      value: "jobPdf_inputParams",
-      active: true,
-      checked: false,
-    },
+    { name: "ECL", value: "jobPdf_ecl", active: true, checked: false },
+
     {
       name: "Input Files",
       value: "jobPdf_inputFiles",

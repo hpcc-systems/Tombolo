@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from "react";
 import ReactMarkdown from "react-markdown";
+import { ECLEditor as eclCodemirror } from '@hpcc-js/codemirror';
 import {
   PdfContainer,
   Heading,
@@ -14,9 +15,8 @@ function JobDetailsPdf(props) {
   //Local States & vars
   const [data, setData] = useState();
   const { selectedAssetId, applicationId } = props;
-
-  //Input params table
-  const th = ["Name", "Type"];
+  const [ input, setInput] = useState();
+  const [output, setOutput] = useState();
 
   //Make api call and get job detail and set in local state
   useEffect(() => {
@@ -32,7 +32,6 @@ function JobDetailsPdf(props) {
         handleError(response);
       })
       .then((data) => {
-        console.log(data, "<<<< Returned data");
         setData(data);
       })
       .catch((error) => {
@@ -42,9 +41,18 @@ function JobDetailsPdf(props) {
 
   //once the job data is pulled and set in local state
   useEffect(() => {
-    console.log("Props >>>>", props);
+    //Saperate input and output files 
+    if(data){
+      setInput(data.jobfiles.filter(item => item.file_type === "input"));
+      setOutput(data.jobfiles.filter(item => item.file_type === "output"));
+    }
+  
     setTimeout(() => {
       if (data && props.selectedAssetType !== "Group") {
+        //Break lines for ecl code
+        const ele = document.getElementById("ecl_render");
+        ele.innerHTML = ele.innerHTML.replace(/;/g, ";<br/>");
+
         downloadPdf(data.title, "pdfContainer");
         props.printingTaskCompleted();
       }
@@ -73,10 +81,13 @@ function JobDetailsPdf(props) {
     }
   }, []);
 
+  //Table Headers
+  const th = ["Name", "Description"]
+
   return (
     <PdfContainer className="pdfContainer">
       <div className="jobPdf_basic">
-        <Heading>{data?.title}</Heading>
+        <Heading> Job - {data?.title}</Heading>
         <BasicTitle>Baic Data</BasicTitle>
         <div>
           <strong>Job Type :</strong> {data?.jobType}
@@ -109,10 +120,19 @@ function JobDetailsPdf(props) {
           <ReactMarkdown source={data?.description}></ReactMarkdown>
         </div>
       </div>
+      <div className="jobPdf_ecl" style={{width: "550px" }}>
+        <BasicTitle>ECL</BasicTitle>
+       <code id="ecl_render" style={{color: "black"}}>
+       {data?.ecl}
+       </code>
+       
 
-      <div className="jobPdf_inputParams">
-        <BasicTitle>Input Params</BasicTitle>
-        <TableContainer style={{ marginTop: "10px" }}>
+       {/* </code> */}
+      </div>
+
+      <div className="jobPdf_inputFiles">
+        <BasicTitle>Input Files</BasicTitle>
+        <TableContainer>
           <Table>
             <tbody>
               <tr>
@@ -122,11 +142,11 @@ function JobDetailsPdf(props) {
               </tr>
             </tbody>
             <tbody>
-              {data?.jobparams.map((value, index) => {
+              {input?.map((value, index) => {
                 return (
                   <tr key={index}>
                     <td>{value.name}</td>
-                    <td>{value.type}</td>
+                    <td>{value.description}</td>
                   </tr>
                 );
               })}
@@ -134,11 +154,29 @@ function JobDetailsPdf(props) {
           </Table>
         </TableContainer>
       </div>
-      <div className="jobPdf_inputFiles">
-        <BasicTitle>Input Files</BasicTitle>
-      </div>
       <div className="jobPdf_outputFiles">
         <BasicTitle>Output Files</BasicTitle>
+        <TableContainer>
+          <Table>
+            <tbody>
+              <tr>
+                {th.map((head, index) => (
+                  <th key={index}> {head}</th>
+                ))}
+              </tr>
+            </tbody>
+            <tbody>
+              {output?.map((value, index) => {
+                return (
+                  <tr key={index}>
+                    <td>{value.name}</td>
+                    <td>{value.description}</td>
+                  </tr>
+                );
+              })}
+            </tbody>
+          </Table>
+        </TableContainer>
       </div>
     </PdfContainer>
   );
