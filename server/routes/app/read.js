@@ -4,6 +4,10 @@ const assert = require('assert');[]
 var models  = require('../../models');
 let UserApplication = models.user_application;
 let Application = models.application;
+let File = models.file;
+let FileLayout = models.file_layout;
+let FileLicense = models.file_license;
+let FileValidation = models.file_validation;
 const validatorUtil = require('../../utils/validator');
 const { body, query, validationResult } = require('express-validator');
 const NotificationModule = require('../notifications/email-notification');
@@ -142,4 +146,38 @@ router.post('/saveUserApp', function (req, res) {
     return res.status(500).json({ success: false, message: "Error occured while saving user application mapping" });
   }
 });
+
+router.post('/export', [
+  body('id').isUUID(4).withMessage('Invalid application id')
+], (req, res) => {
+  const errors = validationResult(req).formatWith(validatorUtil.errorFormatter);
+  if (!errors.isEmpty()) {
+    return res.status(422).json({ success: false, errors: errors.array() });
+  } 
+
+  try {
+    let applicationExport = {};
+    Application.findOne({
+      where: {id: req.body.id},
+    }).then(async (application) => {
+      applicationExport.title = application.title,
+      applicationExport.description = application.description;
+      applicationExport.cluster = application.cluster;
+
+      let files = await File.findAll({where: {application_id: application.id}, 
+        include: [FileLayout, FileLicense, FileValidation],
+        attributes: { exclude: ['createdAt', 'updatedAt', 'id', 'application_id'] }
+      }); 
+      applicationExport.assets = {files: files};
+        
+      //assetUtil.fileInfo(req.query.app_id, req.query.file_id).then((fileInfo)
+
+      res.json(applicationExport);
+    })
+  } catch (err) {
+    console.log('err', err);
+    return res.status(500).json({ success: false, message: "Error occured while removing application" });
+  }
+});
+
 module.exports = router;
