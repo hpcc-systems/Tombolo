@@ -1,9 +1,6 @@
 const express = require('express');
 const router = express.Router();
 const validatorUtil = require('../../utils/validator');
-const chalk = require('chalk');
-
-
 const { body, query, validationResult } = require('express-validator');
 const { oneOf, check } = require('express-validator/check');
 let Sequelize = require('sequelize');
@@ -336,13 +333,10 @@ router.get('/assetsSearch', [
   query('assetTypeFilter').optional({checkFalsy:true}).matches(/^[a-zA-Z]{1}[a-zA-Z,]*$/).withMessage('Invalid assetTypeFilter'),
   query('keywords').optional({checkFalsy:true}).matches(/^[*"a-zA-Z]{1}[a-zA-Z0-9_ :.\-*"\"]*$/).withMessage('Invalid keywords')
 ], async (req, res) => {
-  console.log(chalk.magenta("<<<< Search asset route"))
-  console.log(chalk.magenta("<<<< Request", req.query.keywords))
   let replacements={}, query;
   let keywords = getKeywordsForQuery(req.query.keywords);
   let assetFilters = req.query.assetTypeFilter ? req.query.assetTypeFilter.split(',') : [];
   if(req.query.group_id) {
-    console.log(chalk.magenta("<<<< Request data" ,req.query.group_id,));
     query = "select assets.id, assets.name, assets.title, assets.description, assets.createdAt, assets.type, hie.name as group_name, hie.id as groupId from "+
       "(select  id, name, parent_group "+
       "from    (select * from groups "+
@@ -370,7 +364,6 @@ router.get('/assetsSearch', [
       if(assetFilters.length == 0 || assetFilters.includes("Groups")) {
         query += "select g.id, g.name, g.parent_group, g.name as title, g.description, g.createdAt, 'Group' as type  from groups g where g.application_id = (:applicationId) and (g.name REGEXP (:keyword) ) ";
         query += (assetFilters.length == 0 || assetFilters.length > 1) ? "union all " : "";
-        console.log(chalk.magenta("<<<< Query >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>"), query)
 
       }
 
