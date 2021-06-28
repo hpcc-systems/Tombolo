@@ -20,7 +20,7 @@ import {
 import { store } from "../../../redux/store/Store";
 import showdown from "showdown";
 import SelectDetailsForPdfDialog from "../Assets/pdf/SelectDetailsForPdfDialog";
-import {fetchNestedAssets} from "../Assets/pdf/downloadPdf"
+import {handleGeneratePdf} from "../Assets/pdf/downloadPdf"
 
 function AssetsTable({ selectedGroup, handleEditGroup, refreshGroups }) {
   const [assets, setAssets] = useState([]);
@@ -70,52 +70,6 @@ function AssetsTable({ selectedGroup, handleEditGroup, refreshGroups }) {
       generatePdf();
     }
   }, [selectedAsset]);
-
-  //Handle generate pdf 
-  // const handleGeneratePdf = (record) =>{
-  //   if(record.type === "Group"){
-  //     fetchNestedAssets(record,applicationId).then(data => {
-  //         if(data.length < 1){
-  //          message.error("Empty Group")
-  //          setSelectDetailsforPdfDialogVisibility(false);
-  //       }
-  //     } )}
-  //     setSelectedAsset({ id: record.id, type: record.type });
-  //     setSelectDetailsforPdfDialogVisibility(true);
-   
-  // }
-
-  //Handle Generate PDF
-  function handleGeneratePdf(selectedGroup ){  
-    fetchNestedAssets(selectedGroup,applicationId).then(data => {
-      const allNestedAssetsAreGroups = data.every( cv => cv.type === "Group");
-        if(data.length < 1){
-          setSelectDetailsforPdfDialogVisibility(false);  
-          message.error("Empty Group");
-        }else if(allNestedAssetsAreGroups){
-          let nestedItems = []
-          let dataLength = data.length;
-          let run = 0;
-        data.map(item => {
-          fetchNestedAssets(item, applicationId)
-          .then(data => {
-                nestedItems.push(data); 
-                run +=1; 
-                if(dataLength == run && nestedItems.every(item => item.length < 1)){
-                  return message.error("Empty Group")
-                }else if(nestedItems[run -1].length > 0){
-                  setSelectedAsset({ id: selectedGroup.id, type: "Group" });
-                  setSelectDetailsforPdfDialogVisibility(true);
-                }
-              })
-        })
-      }else{
-        setSelectedAsset({ id: selectedGroup.id, type: "Group" });
-        setSelectDetailsforPdfDialogVisibility(true);
-      }
-    } 
-    )
-}
 
   const fetchDataAndRenderTable = () => {
     let url =
@@ -392,7 +346,9 @@ function AssetsTable({ selectedGroup, handleEditGroup, refreshGroups }) {
             <FilePdfOutlined
               type="primary"
               style={{ color: "var(--primary)", cursor: "pointer" }}
-              onClick={() =>handleGeneratePdf(record)}
+              // onClick={() =>handleGeneratePdf(record)}
+              onClick= { () =>{ handleGeneratePdf(selectedGroup, applicationId, setSelectDetailsforPdfDialogVisibility,setSelectedAsset  )
+              }}
             />
           </Tooltip>
         </span>

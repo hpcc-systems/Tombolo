@@ -45,7 +45,7 @@ import MoveAssetsDialog from "./MoveAssetsDialog";
 import useFileDetailsForm from "../../../hooks/useFileDetailsForm";
 import useModal from "../../../hooks/useModal";
 import SelectDetailsForPdfDialog from "../Assets/pdf/SelectDetailsForPdfDialog";
-import {fetchNestedAssets} from "../Assets/pdf/downloadPdf"
+import {handleGeneratePdf} from "../Assets/pdf/downloadPdf"
 import { store } from "../../../redux/store/Store";
 
 
@@ -357,66 +357,6 @@ const Assets = () => {
   };
 
 
-  //Handle Generate PDF
-
-    function handleGeneratePdf(selectedGroup ){  
-        fetchNestedAssets(selectedGroup,application.applicationId).then(data => {
-          const allNestedAssetsAreGroups = data.every( cv => cv.type === "Group");
-            if(data.length < 1){
-              setSelectDetailsforPdfDialogVisibility(false);  
-              message.error("Empty Group");
-            }else if(allNestedAssetsAreGroups){
-              let nestedItems = []
-              let dataLength = data.length;
-              let run = 0;
-            data.map(item => {
-              // handleGeneratePdf(item)})
-              fetchNestedAssets(item, application.applicationId)
-              .then(data => {
-                // console.log("<<<, Data to push", data)
-                    //  console.log("<<<< Nested", data); 
-                    nestedItems.push(data); 
-                    console.log("<<<< Length of each array " , nestedItems[run].length, nestedItems.every(item => item.length > 1));
-                    run +=1; 
-                    console.log("<<<< Data Length - ", dataLength , ":", run, "- <<<< Run", nestedItems.every(item => item.length > 1));
-                    // console.log(nestedItems.length, "<<<< nested items length")
-                    // console.log("<<<< nested items " ,nestedItems)
-                    if(dataLength == run && nestedItems.every(item => item.length < 1)){
-                      return message.error("Empty Group")
-                    }else if(nestedItems[run -1].length > 0){
-                      console.log("<<<< is this running ? - 2")
-                      setSelectedAsset({ id: selectedGroup.id, type: "Group" });
-                      setSelectDetailsforPdfDialogVisibility(true);
-                    }
-                  })
-            })
-          }else{
-            console.log("<<<< is this running ?")
-            setSelectedAsset({ id: selectedGroup.id, type: "Group" });
-            setSelectDetailsforPdfDialogVisibility(true);
-          }
-        } 
-        )
-    }
-
-
-  //   function handleGeneratePdf(selectedGroup ){  
-  //     fetchNestedAssets(selectedGroup,application.applicationId).then(data => {
-  //       const allNestedAssetsAreGroups = data.every( cv => cv.type === "Group");
-  //         if(data.length < 1){
-  //           setSelectDetailsforPdfDialogVisibility(false);  
-  //         }else if(allNestedAssetsAreGroups){
-  //         data.map(item => {
-  //           handleGeneratePdf(item)})
-  //       }else{
-  //         setSelectedAsset({ id: selectedGroup.id, type: "Group" });
-  //         setSelectDetailsforPdfDialogVisibility(true);
-  //       }
-  //     } 
-  //     )
-  // }
-   
-
   const RightClickMenu = (props) => {
     return rightClickNodeTreeItem.visible ? (
       <React.Fragment>
@@ -486,9 +426,8 @@ const Assets = () => {
               <>
                   <Menu.Item
               className="directorytree-rightclick-menuitem"
-              onClick={() => {handleGeneratePdf(selectedGroup);
-                //  checkErr(errMsg)
-                // setTimeout(() => {message.error(errMsg)}, 650)
+              onClick={() => {
+                handleGeneratePdf(selectedGroup, application.applicationId, setSelectDetailsforPdfDialogVisibility,setSelectedAsset  )
               } 
               }
 
