@@ -3,6 +3,7 @@ import FileDetailsPdf from "./FileDetailsPdf";
 import IndexDetailsPdf from "./IndexDetailsPdf";
 import QueryDetailsPdf from "./QueryDetailsPdf";
 import { downloadPdf } from "./downloadPdf";
+import JobDetailsPdf from "./JobDetailsPdf";
 
 function GroupDetailsPdf(props) {
   //Local state and variables
@@ -32,6 +33,10 @@ function GroupDetailsPdf(props) {
 
   useEffect(() => {
     setTimeout(() => {
+      const ele = document.getElementById("ecl_render");
+      if(ele){
+        ele.innerHTML = ele.innerHTML.replace(/;/g, ";<br/>");
+      }
       downloadPdf("assetDetails", "pdfContainerWraper");
       props.printingTaskCompleted();
     }, 2000);
@@ -43,7 +48,7 @@ function GroupDetailsPdf(props) {
         switch (asset.type) {
           case "File":
             return (
-              <>
+              <div key={index}>
                 <FileDetailsPdf
                   key={index}
                   selectedAssetType={props.selectedAssetType}
@@ -54,7 +59,7 @@ function GroupDetailsPdf(props) {
                   printingTaskCompleted={props.printingTaskCompleted}
                 ></FileDetailsPdf>
                 <hr />
-              </>
+              </div>
             );
 
           case "Index":
@@ -83,7 +88,18 @@ function GroupDetailsPdf(props) {
               ></QueryDetailsPdf>
             );
 
-          // case "Job":
+          case "Job":
+            return (
+              <JobDetailsPdf
+                selectedAssetType={props.selectedAssetType}
+                key={index}
+                selectedAssetId={asset.id}
+                applicationId={applicationId}
+                classesToExport={props.classesToExport}
+                setVisiblity={props.setVisiblity}
+                printingTaskCompleted={props.printingTaskCompleted}
+              ></JobDetailsPdf>
+            );
         }
       })}
     </div>

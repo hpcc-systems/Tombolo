@@ -53,10 +53,6 @@ function JobDetailsPdf(props) {
         if(ele){
           ele.innerHTML = ele.innerHTML.replace(/;/g, ";<br/>");
         }
-        const clientHeight = document.getElementById('pdfContainer').clientHeight;
-        console.log("<<<< Client Height", clientHeight)
-        console.log("<<<< Item ", document.getElementById("pdfContainer"))
-
         downloadPdf(data.title, "pdfContainer");
         props.printingTaskCompleted();
       }
@@ -129,7 +125,7 @@ function JobDetailsPdf(props) {
       </div>
       <div className="jobPdf_ecl" style={{width: "550px" }}>
         <BasicTitle>ECL</BasicTitle>
-       <code id="ecl_render" style={{color: "black"}}>
+       <code className ="ecl_render" id="ecl_render" style={{color: "black"}}>
        {data?.ecl}
        </code>
        

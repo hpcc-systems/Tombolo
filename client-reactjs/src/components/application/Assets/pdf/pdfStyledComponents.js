@@ -1,15 +1,15 @@
 import styled from "styled-components";
 //Styled components
 export const PdfContainer = styled.div`
-  min-height: 842px;
-  width: 595px;
-  padding: 30px;
-  display: flex;
-  flex-direction: column;
-  align-items: flex-start;
-  font-size: 11.5px;
-  position: relative;
-  margin-right: 50px !important;
+// min-height: 842px;
+width: 595px;
+padding: 30px;
+display: flex;
+flex-direction: column;
+align-items: flex-start;
+font-size: 11.5px;
+position: relative;
+margin-right: 50px !important;
 
   //All Asset Type 
   > .queryPdf_basic, .filePdf_basic, .indexPdf_basic {

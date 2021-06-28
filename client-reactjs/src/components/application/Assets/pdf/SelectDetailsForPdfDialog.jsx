@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useRef } from "react";
 import { useSelector } from "react-redux";
 import { Modal, Button, Checkbox, Collapse, message } from "antd";
 import { authHeader, handleError } from "../../../common/AuthHeader";
@@ -12,63 +12,18 @@ import JobDetailsPdf from "./JobDetailsPdf";
 
 function SelectDetailsForPdfDialog(props) {
   //Local States and variables
-  const fileOptions = [
-    {
-      name: "Basic Information",
-      value: "filePdf_basic",
-      active: true,
-      checked: true,
-    },
-    {
-      name: "Layout Information",
-      value: "filePdf_layout",
-      active: true,
-      checked: false,
-    },
-  ];
-  const indexOptions = [
-    {
-      name: "Basic Information",
-      value: "indexPdf_basic",
-      active: true,
-      checked: true,
-    }
-  ];
-  const queryOptions = [
-    {
-      name: "Basic Information",
-      value: "queryPdf_basic",
-      active: true,
-      checked: true,
-    }
-  ];
-  const jobOptions = [
-    {
-      name: "Basic Information",
-      value: "jobPdf_basic",
-      active: true,
-      checked: true,
-    },
-    { name: "ECL", value: "jobPdf_ecl", active: true, checked: false },
-
-    {
-      name: "Input Files",
-      value: "jobPdf_inputFiles",
-      active: true,
-      checked: false,
-    },
-    {
-      name: "Output Files",
-      value: "jobPdf_outputFiles",
-      active: true,
-      checked: false,
-    },
-  ];
+  const fileOptions = [{name: "Basic Information",value: "filePdf_basic",active: true,checked: true,},
+                       {name: "Layout Information", value: "filePdf_layout",active: true,checked: false,},];
+  const indexOptions = [{name: "Basic Information",value: "indexPdf_basic",active: true,checked: true,}];
+  const queryOptions = [{name: "Basic Information", value: "queryPdf_basic",active: true,checked: true, }];
+  const jobOptions = [{name: "Basic Information",value: "jobPdf_basic", active: true,checked: true,},
+                      { name: "ECL", value: "jobPdf_ecl", active: true, checked: false },
+                      {name: "Input Files",value: "jobPdf_inputFiles",active: true,checked: false,},
+                      { name: "Output Files",value: "jobPdf_outputFiles", active: true,checked: false, }, ];
   const [classesToExportAsPdf, setClassesToExport] = useState([]);
-  useState([]);
   const [nestedAssets, setNestedAssets] = useState([]);
   const [downloadPdf, setDownloadPdf] = useState(false);
-
+  const directoryTree = useSelector(state => state.directoryTreeReducer)
   const { Panel } = Collapse;
 
   //Getting application id
@@ -77,8 +32,8 @@ function SelectDetailsForPdfDialog(props) {
   );
 
   //Function to fetch nested assets if props.selectedAsset.type is Group
-  const fetchNestedAssets = (props, applicationId) => {
-    let url = `/api/groups/assets?app_id=${applicationId}&group_id=${props.selectedAsset.id}`;
+  const fetchNestedAssets = ( applicationId, assetId, callback) => {
+    let url = `/api/groups/assets?app_id=${applicationId}&group_id=${assetId}`;
     return fetch(url, {
       headers: authHeader(),
     })
@@ -88,26 +43,55 @@ function SelectDetailsForPdfDialog(props) {
         }
         handleError(response);
       })
-      .then((data) => {
-        setNestedAssets(data);
-      })
       .catch((error) => {
         console.log(error);
       });
   };
 
+
+  //Flatten tree
+  let list = [];
+  const generateList = (data) => {
+    for (let i = 0; i < data.length; i++) {
+      const node = data[i];
+      const { key, title, id } = node;
+      list.push({ key, title, id });
+      if (node.children) {
+        generateList(node.children);
+      }
+    }
+    return list;
+  };
+
+  //Find correct node
+  const findCorrectNode = (data, assetId) =>{
+    for(let i=0; i < data.length; i++){
+      let item = data[i];
+      if(item.id == assetId){
+         generateList([item])
+      }else if (item.children){
+        findCorrectNode(item.children, assetId);
+      }   
+    }
+  }
+
+
   useEffect(() => {
+    const abortFetch = new AbortController();
     const { type } = props.selectedAsset;
+    findCorrectNode(directoryTree.tree, props.selectedAsset.id);
+   
     //Set default export classes for individual assets
     if (props.selectedAsset.type !== "Group") {
       setClassesToExport([_.lowerCase(type) + "Pdf_basic"]);
     }
 
-    //Calling func to fetch nested asset
-    const abortFetch = new AbortController();
-    if (props.selectedAsset.type === "Group") {
-      fetchNestedAssets(props, applicationId, { signal: abortFetch });
-    }
+    list.map(item => {
+      fetchNestedAssets(applicationId, item.id, abortFetch ).then(data => {
+        setNestedAssets(existingAssets => [...existingAssets, ...data])
+
+      });
+    })
 
     //Clean up
     return () => abortFetch.abort();
@@ -408,18 +392,12 @@ function SelectDetailsForPdfDialog(props) {
   return (
     <Modal
       visible={props.visible}
-      title={
-        props.selectedAsset.type === "Group" && nestedAssets.length < 1
-          ? "Empty Group - No assets to print"
-          : "Select items to include in PDF"
-      }
+      title="Select items to include in PDF"
       onOk={downloadDoc}
       onCancel={() => props.setVisiblity(false)}
       width={650}
       footer={
-        props.selectedAsset.type === "Group" && nestedAssets.length < 1
-          ? null
-          : [
+         [
               <Button
                 key="back"
                 onClick={() => props.setVisiblity(false)}
@@ -439,13 +417,11 @@ function SelectDetailsForPdfDialog(props) {
             ]
       }
     >
-      {props.selectedAsset.type === "Group" && nestedAssets.length < 1
-        ? null
-        : renderOptions(props)}
+      { renderOptions(props)}
       <div style={{position:"absolute", left:"-999em"}}>
         {downloadPdf ? assetToPrint(props.selectedAsset, props) : null}
       </div>
-    </Modal>
+    </Modal> 
   );
 }
 

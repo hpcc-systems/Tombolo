@@ -160,7 +160,7 @@ function FileDetailsPdf(props) {
               })}
             </tbody>
           </Table>
-        </TableContainer> :  <div style={{color: "gray"}}> No Layout data <datagrid></datagrid> </div>}
+        </TableContainer> :  <div style={{color: "gray"}}> No Layout data  </div>}
       </div>
     </PdfContainer>
   );

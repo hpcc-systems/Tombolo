@@ -5,13 +5,6 @@ import FileDetailsForm from "../FileDetails";
 import MoveAssetsDialog from "./MoveAssetsDialog";
 import { hasEditPermission } from "../../common/AuthUtil.js";
 import useFileDetailsForm from "../../../hooks/useFileDetailsForm";
-import {
-  handleFileDelete,
-  handleJobDelete,
-  handleIndexDelete,
-  handleQueryDelete,
-  updateGraph,
-} from "../../common/WorkflowUtil";
 import { useSelector, useDispatch } from "react-redux";
 import { Constants } from "../../common/Constants";
 import { assetsActions } from "../../../redux/actions/Assets";
@@ -25,10 +18,9 @@ import {
   FilePdfOutlined,
 } from "@ant-design/icons";
 import { store } from "../../../redux/store/Store";
-import { viewOnly } from "../../../redux/actions/ViewOnly";
-import MarkdownView from "react-showdown";
 import showdown from "showdown";
 import SelectDetailsForPdfDialog from "../Assets/pdf/SelectDetailsForPdfDialog";
+import {fetchNestedAssets} from "../Assets/pdf/downloadPdf"
 
 function AssetsTable({ selectedGroup, handleEditGroup, refreshGroups }) {
   const [assets, setAssets] = useState([]);
@@ -42,8 +34,6 @@ function AssetsTable({ selectedGroup, handleEditGroup, refreshGroups }) {
     : "";
   const { showMoveDialog = isShowing, toggleMoveDialog = toggle } = useModal();
   const { assetTypeFilter, keywords } = assetReducer.searchParams;
-  let assetId = "",
-    assetType = "";
   const [assetToMove, setAssetToMove] = useState({
     id: "",
     type: "",
@@ -56,7 +46,7 @@ function AssetsTable({ selectedGroup, handleEditGroup, refreshGroups }) {
     selectDetailsforPdfDialogVisibility,
     setSelectDetailsforPdfDialogVisibility,
   ] = useState(false);
-
+  
   useEffect(() => {
     if (
       (applicationId && selectedGroup && selectedGroup.groupId != "") || //a group has been selected
@@ -69,7 +59,7 @@ function AssetsTable({ selectedGroup, handleEditGroup, refreshGroups }) {
 
   const dispatch = useDispatch();
 
-  // Rerender table when Directory tree structure is changed
+  // Re-render table when Directory tree structure is changed
   useEffect(() => {
     fetchDataAndRenderTable();
   }, [groupsMoveReducer]);
@@ -80,6 +70,52 @@ function AssetsTable({ selectedGroup, handleEditGroup, refreshGroups }) {
       generatePdf();
     }
   }, [selectedAsset]);
+
+  //Handle generate pdf 
+  // const handleGeneratePdf = (record) =>{
+  //   if(record.type === "Group"){
+  //     fetchNestedAssets(record,applicationId).then(data => {
+  //         if(data.length < 1){
+  //          message.error("Empty Group")
+  //          setSelectDetailsforPdfDialogVisibility(false);
+  //       }
+  //     } )}
+  //     setSelectedAsset({ id: record.id, type: record.type });
+  //     setSelectDetailsforPdfDialogVisibility(true);
+   
+  // }
+
+  //Handle Generate PDF
+  function handleGeneratePdf(selectedGroup ){  
+    fetchNestedAssets(selectedGroup,applicationId).then(data => {
+      const allNestedAssetsAreGroups = data.every( cv => cv.type === "Group");
+        if(data.length < 1){
+          setSelectDetailsforPdfDialogVisibility(false);  
+          message.error("Empty Group");
+        }else if(allNestedAssetsAreGroups){
+          let nestedItems = []
+          let dataLength = data.length;
+          let run = 0;
+        data.map(item => {
+          fetchNestedAssets(item, applicationId)
+          .then(data => {
+                nestedItems.push(data); 
+                run +=1; 
+                if(dataLength == run && nestedItems.every(item => item.length < 1)){
+                  return message.error("Empty Group")
+                }else if(nestedItems[run -1].length > 0){
+                  setSelectedAsset({ id: selectedGroup.id, type: "Group" });
+                  setSelectDetailsforPdfDialogVisibility(true);
+                }
+              })
+        })
+      }else{
+        setSelectedAsset({ id: selectedGroup.id, type: "Group" });
+        setSelectDetailsforPdfDialogVisibility(true);
+      }
+    } 
+    )
+}
 
   const fetchDataAndRenderTable = () => {
     let url =
@@ -105,6 +141,7 @@ function AssetsTable({ selectedGroup, handleEditGroup, refreshGroups }) {
         handleError(response);
       })
       .then((data) => {
+        // console.log("Data <<<<", data)
         //Converting Markdown to plain text
         const converter = new showdown.Converter();
         data.map((item) =>
@@ -355,10 +392,7 @@ function AssetsTable({ selectedGroup, handleEditGroup, refreshGroups }) {
             <FilePdfOutlined
               type="primary"
               style={{ color: "var(--primary)", cursor: "pointer" }}
-              onClick={() => {
-                setSelectedAsset({ id: record.id, type: record.type });
-                setSelectDetailsforPdfDialogVisibility(true);
-              }}
+              onClick={() =>handleGeneratePdf(record)}
             />
           </Tooltip>
         </span>

@@ -7,6 +7,7 @@ import { assetReducer } from './AssetReducer';
 import { groupsReducer } from './GroupsReducer';
 import { viewOnlyModeReducer} from './ViewOnlyModeReducer'
 import {groupsMoveReducer} from './GroupsMoveReducer'
+import {directoryTreeReducer} from "./DirectoryTreeReducer"
 const rootReducer = combineReducers({
     authenticationReducer,
     applicationReducer,
@@ -15,7 +16,8 @@ const rootReducer = combineReducers({
     assetReducer,
     groupsReducer,
     viewOnlyModeReducer,
-    groupsMoveReducer
+    groupsMoveReducer,
+    directoryTreeReducer
 });
 
 export default rootReducer;
