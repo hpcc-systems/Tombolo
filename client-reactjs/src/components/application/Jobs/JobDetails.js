@@ -1288,7 +1288,7 @@ class JobDetails extends Component {
                 <TabPane tab="Script" key="2">
                   <Form.Item {...longFieldLayout} label="Script Path" name="scriptPath" rules={[{
                     required: true,
-                    pattern: new RegExp(/^[a-zA-Z0-9:$._/ '~]*$/),
+                    pattern: new RegExp(/^[a-zA-Z0-9:$.\-_/ '~]*$/),
                     message: 'Please enter a valid path',
                   }]}>
                     {this.state.enableEdit ?
