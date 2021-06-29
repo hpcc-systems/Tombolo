@@ -99,9 +99,9 @@ class Graph extends Component {
 
 
 
-  componentDidMount() {
+  async componentDidMount() {
     this.loadGraphComponents();
-    this.fetchSavedGraph();
+    await this.fetchSavedGraph();
     document.addEventListener('mousedown', this.handleClickOutside);
   }
 
@@ -115,8 +115,12 @@ class Graph extends Component {
         //this.fetchSavedGraph();
       });
     }
-    if(props.workflowDetails && props.workflowDetails.wuDetails.length > 0) {
+
+    if(props.workflowDetails && props.workflowDetails.wuDetails && props.workflowDetails.wuDetails.length > 0) {
       this.updateCompletionStatus(props.workflowDetails);
+      /*this.fetchSavedGraph().then((result) => {
+        this.updateCompletionStatus(props.workflowDetails);
+      })*/      
     }
 
     if(props.saveResponse && props.saveResponse.success) {
@@ -303,7 +307,7 @@ class Graph extends Component {
     let completedTasks = [];
     if(workflowDetails.wuDetails) {
       workflowDetails.wuDetails.forEach((workflowDetail) => {
-        let nodeObj = _self.thisGraph.nodes.filter((node) => {
+        let nodeObj = _self.state.nodes.filter((node) => {
           return (node.fileId == workflowDetail.task || node.jobId == workflowDetail.task || node.indexId == workflowDetail.task)
         })
         if(nodeObj[0] && nodeObj[0].id) {
@@ -360,7 +364,7 @@ class Graph extends Component {
     this.saveGraph();
   }
 
-  onFileAdded = (saveResponse) => {
+  onFileAdded = async (saveResponse) => {
     if(saveResponse) {
       var newData = this.thisGraph.nodes.map(el => {
         if(el.id == this.state.currentlyEditingId) {
@@ -415,7 +419,7 @@ class Graph extends Component {
       this.updateGraph();
       this.saveGraph();
     } else {
-      this.fetchSavedGraph();
+      await this.fetchSavedGraph();
     }
   }
 
@@ -438,9 +442,9 @@ class Graph extends Component {
         return response.json();
       }
       handleError(response);
-    }).then(data => {
+    }).then(async data => {
       console.log(`Saved file relationship...`);
-      this.fetchSavedGraph();
+      await this.fetchSavedGraph();
       this.setState({
         loading: false
       });
@@ -507,49 +511,53 @@ class Graph extends Component {
   }
 
   fetchSavedGraph() {
-    var _self=this, nodes = [], edges = [];
-    if(this.props.selectedDataflow && this.props.selectedDataflow.id != '' && this.props.selectedDataflow.id != undefined) {
-      fetch("/api/dataflowgraph?application_id="+this.props.applicationId+"&dataflowId="+this.props.selectedDataflow.id, {
-         headers: authHeader()
-      })
-      .then((response) => {
-        if(response.ok) {
-          return response.json();
-        }
-        handleError(response);
-      })
-      .then(data => {
-        if(data != undefined && data != null) {
-          nodes = JSON.parse(data.nodes);
-          edges = JSON.parse(data.edges);
+    return new Promise((resolve, reject) => {
+      var _self=this, nodes = [], edges = [];
+      if(this.props.selectedDataflow && this.props.selectedDataflow.id != '' && this.props.selectedDataflow.id != undefined) {
+        fetch("/api/dataflowgraph?application_id="+this.props.applicationId+"&dataflowId="+this.props.selectedDataflow.id, {
+          headers: authHeader()
+        })
+        .then((response) => {
+          if(response.ok) {
+            return response.json();
+          }
+          handleError(response);
+        })
+        .then(data => {
+          if(data != undefined && data != null) {
+            nodes = JSON.parse(data.nodes);
+            edges = JSON.parse(data.edges);
 
-          edges.forEach(function (e, i) {
-          edges[i] = {
-              source: nodes.filter(function (n) {
-                return n.id === e.source;
-              })[0],
-              target: nodes.filter(function (n) {
-                return n.id === e.target;
-              })[0]
-            };
+            edges.forEach(function (e, i) {
+            edges[i] = {
+                source: nodes.filter(function (n) {
+                  return n.id === e.source;
+                })[0],
+                target: nodes.filter(function (n) {
+                  return n.id === e.target;
+                })[0]
+              };
+            });
+          }
+          _self.thisGraph.nodes = nodes;
+          _self.thisGraph.edges = edges;
+          _self.setState({
+            nodes: nodes
           });
-        }
-        _self.thisGraph.nodes = nodes;
-        _self.thisGraph.edges = edges;
-        _self.setState({
-          nodes: nodes
+
+          _self.setIdCt(nodes.length);
+          _self.updateGraph();
+          resolve();
+          //this.updateCompletionStatus();
+        }).catch(error => {
+          console.log(error);
+          reject(error)
         });
-
-        _self.setIdCt(nodes.length);
-        _self.updateGraph();
-
-        //this.updateCompletionStatus();
-      }).catch(error => {
-        console.log(error);
-      });
-    } else {
-      this.clearSVG();
-    }
+      } else {
+        this.clearSVG();
+        resolve();
+      }
+    })
   }
 
   clearSVG = () => {
@@ -1147,13 +1155,13 @@ class Graph extends Component {
     let _self=this;
     switch(d.type) {
       case 'File':
-        updateGraph((d.fileId ? d.fileId : d.id), _self.props.applicationId, _self.props.selectedDataflow).then((response) => {
-          _self.fetchSavedGraph();
+        updateGraph((d.fileId ? d.fileId : d.id), _self.props.applicationId, _self.props.selectedDataflow).then(async (response) => {
+          await _self.fetchSavedGraph();
         });
         break;
       case 'Index':
-        updateGraph((d.indexId ? d.indexId : d.id), _self.props.applicationId, _self.props.selectedDataflow).then((response) => {
-          _self.fetchSavedGraph();
+        updateGraph((d.indexId ? d.indexId : d.id), _self.props.applicationId, _self.props.selectedDataflow).then(async (response) => {
+          await _self.fetchSavedGraph();
         });
         break;
       case 'Job':
@@ -1162,16 +1170,16 @@ class Graph extends Component {
       case 'Query Build':
       case 'ETL':
       case 'Data Profile':
-        updateGraph((d.jobId ? d.jobId : d.id), _self.props.applicationId, _self.props.selectedDataflow).then((response) => {
-          _self.fetchSavedGraph();
+        updateGraph((d.jobId ? d.jobId : d.id), _self.props.applicationId, _self.props.selectedDataflow).then(async (response) => {
+          await _self.fetchSavedGraph();
         });
         break;
       case 'Sub-Process':
         /*if(d.subProcessId) {
           handleSubProcessDelete(d.subProcessId, _self.props.applicationId);
         }*/
-        updateGraph((d.subProcessId ? d.subProcessId : d.id), _self.props.applicationId, _self.props.selectedDataflow).then((response) => {
-          _self.fetchSavedGraph();
+        updateGraph((d.subProcessId ? d.subProcessId : d.id), _self.props.applicationId, _self.props.selectedDataflow).then(async (response) => {
+          await _self.fetchSavedGraph();
         });
         break;
     }
@@ -1185,8 +1193,8 @@ class Graph extends Component {
       //gEl.remove();
       gEl.attr("class", "d-none")
     }
-    changeVisibility((d.fileId ? d.fileId : d.id), this.props.applicationId, this.props.selectedDataflow, true).then((response) => {
-      this.fetchSavedGraph();
+    changeVisibility((d.fileId ? d.fileId : d.id), this.props.applicationId, this.props.selectedDataflow, true).then(async (response) => {
+      await this.fetchSavedGraph();
     });
   }
 
@@ -1477,8 +1485,8 @@ class Graph extends Component {
       if(rec) {
         let gEl = d3.select(d3.select('#rec-'+evt.key).node().parentNode);
         gEl.classed("d-none", false);
-        changeVisibility(evt.key, this.props.applicationId, this.props.selectedDataflow, false).then((response) => {
-          this.fetchSavedGraph();
+        changeVisibility(evt.key, this.props.applicationId, this.props.selectedDataflow, false).then(async (response) => {
+          await this.fetchSavedGraph();
         });
       }
     } else {
@@ -1488,8 +1496,8 @@ class Graph extends Component {
           gEl.classed("d-none", false);
         }
       })
-      changeVisibility('', this.props.applicationId, this.props.selectedDataflow, false).then((response) => {
-        this.fetchSavedGraph();
+      changeVisibility('', this.props.applicationId, this.props.selectedDataflow, false).then(async (response) => {
+        await this.fetchSavedGraph();
       });
     }
   }
@@ -1525,9 +1533,9 @@ class Graph extends Component {
         return response.json();
       }
       handleError(response);
-    }).then(function(data) {
+    }).then(async function(data) {
       console.log('Refreshed graph..');
-      _self.fetchSavedGraph();
+      await _self.fetchSavedGraph();
       _self.setState({
         loading: false
       });
@@ -1676,14 +1684,14 @@ class Graph extends Component {
             </Descriptions>
 
         </Modal>
-
-        <SubProcessDialog
-          show={this.state.showSubProcessDetails}
-          applicationId={this.props.applicationId}
-          selectedParentDataflow={this.props.selectedDataflow}
-          onRefresh={this.onFileAdded}
-          selectedSubProcess={this.state.selectedSubProcess}
-          nodeId={this.state.currentlyEditingId}/>
+        {this.state.showSubProcessDetails ?         
+          <SubProcessDialog
+            show={this.state.showSubProcessDetails}
+            applicationId={this.props.applicationId}
+            selectedParentDataflow={this.props.selectedDataflow}
+            onRefresh={this.onFileAdded}
+            selectedSubProcess={this.state.selectedSubProcess}
+            nodeId={this.state.currentlyEditingId}/> : null}
         {this.state.showAssetListDlg ?
           <ExistingAssetListDialog
             show={this.state.showAssetListDlg}
