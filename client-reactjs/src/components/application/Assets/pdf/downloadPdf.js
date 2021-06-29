@@ -9,7 +9,7 @@ export function downloadPdf(fileName, targetClass) {
 
   const target = document.getElementsByClassName(targetClass);
  
-  doc.html(target[0], {
+  doc.html(target[0],  {
     margin: [400, 60, 40, 60],
     callback: function (doc) {
       // let pageCount = doc.internal.getNumberOfPages();
@@ -20,49 +20,28 @@ export function downloadPdf(fileName, targetClass) {
 }
 
 
-//Get Nested Assets from Group
-export const fetchNestedAssets = (record, applicationId) => {
-  let url = `/api/groups/assets?app_id=${applicationId}&group_id=${record.id}`;
-  return fetch(url, {
-    headers: authHeader(),
-  })
-    .then((response) => {
+export const getNestedAssets = (applicationId, setSelectedAsset, setSelectDetailsforPdfDialogVisibility, record) => {
+  if(record.type === "Group"){
+    let url = `/api/groups/nestedAssets?app_id=${applicationId}&group_id=${record.id}`;
+    fetch(url,  {
+      headers: authHeader(),
+    }).then((response) => {
       if (response.ok) {
         return response.json();
       }
       handleError(response);
-    })
-};
-
-
-  //Handle Generate PDF
-  export function handleGeneratePdf(selectedGroup, applicationId, setSelectDetailsforPdfDialogVisibility,setSelectedAsset  ){  
-    fetchNestedAssets(selectedGroup,applicationId).then(data => {
-      const allNestedAssetsAreGroups = data.every( cv => cv.type === "Group");
-        if(data.length < 1){
-          setSelectDetailsforPdfDialogVisibility(false);  
-          message.error("Empty Group");
-        }else if(allNestedAssetsAreGroups){
-          let nestedItems = []
-          let dataLength = data.length;
-          let run = 0;
-        data.map(item => {
-          fetchNestedAssets(item, applicationId)
-          .then(data => {
-                nestedItems.push(data); 
-                run +=1; 
-                if(dataLength == run && nestedItems.every(item => item.length < 1)){
-                  return message.error("Empty Group")
-                }else if(nestedItems[run -1].length > 0){
-                  setSelectedAsset({ id: selectedGroup.id, type: "Group" });
-                  setSelectDetailsforPdfDialogVisibility(true);
-                }
-              })
-        })
-      }else{
-        setSelectedAsset({ id: selectedGroup.id, type: "Group" });
-        setSelectDetailsforPdfDialogVisibility(true);
+    }).then((data) => {
+      let allGroups = data.every(item => item.type === "Group");
+      if(allGroups || data.length < 1){ message.error("Empty Group")}
+      else{
+       setSelectedAsset({ id: record.id, type: "Group" });
+       setSelectDetailsforPdfDialogVisibility(true);
       }
-    } 
-    )
+    } ).catch((error) => {
+      console.log(error)
+    });
+  }else{
+    setSelectedAsset({ id: record.id, type: record.type });
+    setSelectDetailsforPdfDialogVisibility(true)
+  }
 }

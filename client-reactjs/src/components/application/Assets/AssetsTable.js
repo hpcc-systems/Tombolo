@@ -20,7 +20,7 @@ import {
 import { store } from "../../../redux/store/Store";
 import showdown from "showdown";
 import SelectDetailsForPdfDialog from "../Assets/pdf/SelectDetailsForPdfDialog";
-import {handleGeneratePdf} from "../Assets/pdf/downloadPdf"
+import { getNestedAssets} from "../Assets/pdf/downloadPdf"
 
 function AssetsTable({ selectedGroup, handleEditGroup, refreshGroups }) {
   const [assets, setAssets] = useState([]);
@@ -95,7 +95,6 @@ function AssetsTable({ selectedGroup, handleEditGroup, refreshGroups }) {
         handleError(response);
       })
       .then((data) => {
-        // console.log("Data <<<<", data)
         //Converting Markdown to plain text
         const converter = new showdown.Converter();
         data.map((item) =>
@@ -111,6 +110,7 @@ function AssetsTable({ selectedGroup, handleEditGroup, refreshGroups }) {
         console.log(error);
       });
   };
+
 
   //When edit icon is clicked
   const handleEdit = (id, type, action) => {
@@ -346,9 +346,7 @@ function AssetsTable({ selectedGroup, handleEditGroup, refreshGroups }) {
             <FilePdfOutlined
               type="primary"
               style={{ color: "var(--primary)", cursor: "pointer" }}
-              // onClick={() =>handleGeneratePdf(record)}
-              onClick= { () =>{ handleGeneratePdf(selectedGroup, applicationId, setSelectDetailsforPdfDialogVisibility,setSelectedAsset  )
-              }}
+              onClick={ () =>  getNestedAssets(applicationId, setSelectedAsset, setSelectDetailsforPdfDialogVisibility, record)}
             />
           </Tooltip>
         </span>

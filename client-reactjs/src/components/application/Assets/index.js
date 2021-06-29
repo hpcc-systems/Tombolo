@@ -20,7 +20,6 @@ import { hasEditPermission } from "../../common/AuthUtil.js";
 import { Constants } from "../../common/Constants";
 import { useSelector, useDispatch } from "react-redux";
 import { useHistory } from "react-router";
-import ReactDOM from "react-dom";
 import { withRouter, NavLink } from "react-router-dom";
 import { assetsActions } from "../../../redux/actions/Assets";
 import { groupsActions } from "../../../redux/actions/Groups";
@@ -30,27 +29,22 @@ import useOnClickOutside from "../../../hooks/useOnClickOutside";
 import {
   DeleteOutlined,
   EditOutlined,
-  QuestionCircleOutlined,
   FolderOutlined,
   DownOutlined,
-  BarsOutlined,
-  SearchOutlined,
   SettingOutlined,
   FilePdfOutlined,
 } from "@ant-design/icons";
 import TitleRenderer from "./TitleRenderer.js";
-import { flatten } from "../../common/CommonUtil.js";
-import { editableMode, addingAssetMode } from "../../common/readOnlyUtil";
+import {  addingAssetMode } from "../../common/readOnlyUtil";
 import MoveAssetsDialog from "./MoveAssetsDialog";
 import useFileDetailsForm from "../../../hooks/useFileDetailsForm";
 import useModal from "../../../hooks/useModal";
 import SelectDetailsForPdfDialog from "../Assets/pdf/SelectDetailsForPdfDialog";
-import {handleGeneratePdf} from "../Assets/pdf/downloadPdf"
+import { getNestedAssets} from "../Assets/pdf/downloadPdf"
 import { store } from "../../../redux/store/Store";
 
 
-const { TreeNode, DirectoryTree } = Tree;
-const { SubMenu } = Menu;
+const {  DirectoryTree } = Tree;
 const { confirm } = Modal;
 const { Search } = Input;
 const CheckboxGroup = Checkbox.Group;
@@ -187,6 +181,8 @@ const Assets = () => {
         console.log(error);
       });
   };
+
+
 
   const dispatch = useDispatch();
 
@@ -420,18 +416,18 @@ const Assets = () => {
               </>
             ) : null}
 
-{selectedGroup &&
+        {selectedGroup &&
             selectedGroup.id != null &&
             selectedGroup.id != "" ? (
               <>
-                  <Menu.Item
+              <Menu.Item
               className="directorytree-rightclick-menuitem"
-              onClick={() => {
-                handleGeneratePdf(selectedGroup, application.applicationId, setSelectDetailsforPdfDialogVisibility,setSelectedAsset  )
-              } 
-              }
-
-            >
+              onClick={() => { 
+                let applicationId=application.applicationId;
+                let record = selectedGroup;
+                record.type= "Group"
+                getNestedAssets(applicationId, setSelectedAsset, setSelectDetailsforPdfDialogVisibility, record)}}
+              >
               <FilePdfOutlined />
               Print Assets
             </Menu.Item>
