@@ -1,8 +1,25 @@
 import React, { PureComponent, Component } from "react";
-import { store } from '../../redux/store/Store';
-import {Constants} from "../common/Constants";
-import ReactMarkdown from 'react-markdown'
-import { Modal, Tabs, Form, Input, Select, Button, Table, AutoComplete, Tag, message, Drawer, Row, Col, Spin, Radio, Checkbox, } from "antd/lib";
+import { store } from "../../redux/store/Store";
+import { Constants } from "../common/Constants";
+import ReactMarkdown from "react-markdown";
+import {
+  Modal,
+  Tabs,
+  Form,
+  Input,
+  Select,
+  Button,
+  Table,
+  AutoComplete,
+  Tag,
+  message,
+  Drawer,
+  Row,
+  Col,
+  Spin,
+  Radio,
+  Checkbox,
+} from "antd/lib";
 import { debounce } from "lodash";
 import AssociatedDataflows from "./AssociatedDataflows";
 import { authHeader, handleError } from "../common/AuthHeader.js";
@@ -21,8 +38,7 @@ import { SearchOutlined } from "@ant-design/icons";
 import { assetsActions } from "../../redux/actions/Assets";
 import Paragraph from "antd/lib/skeleton/Paragraph";
 import { viewOnlyModeReducer } from "../../redux/reducers/ViewOnlyModeReducer";
-import {readOnlyMode, editableMode} from "../common/readOnlyUtil"
-
+import { readOnlyMode, editableMode } from "../common/readOnlyUtil";
 const TabPane = Tabs.TabPane;
 const Option = Select.Option;
 const { confirm } = Modal;
@@ -65,8 +81,8 @@ class FileDetails extends PureComponent {
       groupId: "",
     },
     enableEdit: false,
-    editing : false,
-    dataAltered : false
+    editing: false,
+    dataAltered: false,
   };
 
   dataTypes = [];
@@ -80,36 +96,35 @@ class FileDetails extends PureComponent {
       this.setClusters();
     }
     //Getting global state
-    const {viewOnlyModeReducer} = store.getState();
-    if(viewOnlyModeReducer.addingNewAsset){
+    const { viewOnlyModeReducer } = store.getState();
+    if (viewOnlyModeReducer.addingNewAsset) {
       this.setState({
-        addingNewAsset : true
-      })
+        addingNewAsset: true,
+      });
     }
-    if(viewOnlyModeReducer.editMode){
+    if (viewOnlyModeReducer.editMode) {
       this.setState({
-        enableEdit : viewOnlyModeReducer.editMode,
-        editing: true
-      })
-    }else{
+        enableEdit: viewOnlyModeReducer.editMode,
+        editing: true,
+      });
+    } else {
       this.setState({
-        enableEdit : viewOnlyModeReducer.editMode,
-
-      })
+        enableEdit: viewOnlyModeReducer.editMode,
+      });
     }
-}
+  }
 
   //Component will unmount
-  componentWillUnmount(){
-      store.dispatch({
-        type: Constants.ENABLE_EDIT,
-        payload: false
-      })
+  componentWillUnmount() {
+    store.dispatch({
+      type: Constants.ENABLE_EDIT,
+      payload: false,
+    });
 
-      store.dispatch({
-        type:  Constants.ADD_ASSET,
-        payload: false
-      })
+    store.dispatch({
+      type: Constants.ADD_ASSET,
+      payload: false,
+    });
   }
 
   clearState = () => {
@@ -137,18 +152,18 @@ class FileDetails extends PureComponent {
     fetch("/api/file/read/dataTypes", {
       headers: authHeader(),
     })
-    .then((response) => {
-      if (response.ok) {
-        return response.json();
-      }
-      handleError(response);
-    })
-    .then((data) => {
-      this.dataTypes = data;
-    })
-    .catch((error) => {
-      console.log(error);
-    });
+      .then((response) => {
+        if (response.ok) {
+          return response.json();
+        }
+        handleError(response);
+      })
+      .then((data) => {
+        this.dataTypes = data;
+      })
+      .catch((error) => {
+        console.log(error);
+      });
   }
 
   getFileDetails() {
@@ -194,7 +209,7 @@ class FileDetails extends PureComponent {
                 description: data.basic.description,
                 isSuperFile: data.basic.isSuperFile,
                 supplier: data.basic.supplier,
-                consumer : data.basic.consumer,
+                consumer: data.basic.consumer,
                 owner: data.basic.owner,
 
                 fileType:
@@ -205,7 +220,9 @@ class FileDetails extends PureComponent {
                 licenses: data.file_licenses,
                 relations: data.file_relations,
                 validations: data.file_validations,
-                fileDataColHeaders: data.file_layouts.map(layout => layout.name)
+                fileDataColHeaders: data.file_layouts.map(
+                  (layout) => layout.name
+                ),
               },
             });
 
@@ -222,7 +239,6 @@ class FileDetails extends PureComponent {
               supplier: data.basic.supplier,
               isSuperFile: data.basic.isSuperFile,
             });
-
           } else {
             message.config({ top: 130 });
             message.error(
@@ -287,7 +303,6 @@ class FileDetails extends PureComponent {
     e.preventDefault();
     this.setState({
       confirmLoading: true,
-
     });
 
     try {
@@ -431,10 +446,11 @@ class FileDetails extends PureComponent {
   }
 
   searchFiles = debounce((searchString) => {
-    if(searchString.length <= 3 || this.state.fileSearchErrorShown)
-      return;
-    if(!searchString.match(/^[a-zA-Z0-9_-]*$/)) {
-      message.error("Invalid search keyword. Please remove any special characters from the keyword.")
+    if (searchString.length <= 3 || this.state.fileSearchErrorShown) return;
+    if (!searchString.match(/^[a-zA-Z0-9_-]*$/)) {
+      message.error(
+        "Invalid search keyword. Please remove any special characters from the keyword."
+      );
       return;
     }
     this.setState({
@@ -481,68 +497,78 @@ class FileDetails extends PureComponent {
 
   async onFileSelected(selectedSuggestion) {
     message.config({ top: 150 });
-    fetch("/api/hpcc/read/getFileInfo?fileName=" +selectedSuggestion +"&clusterid=" +this.state.selectedCluster +"&applicationId=" +this.props.application.applicationId,
-    {
-      headers: authHeader()
-    }).then((response) => {
-      if (response.ok) {
-        return response.json();
+    fetch(
+      "/api/hpcc/read/getFileInfo?fileName=" +
+        selectedSuggestion +
+        "&clusterid=" +
+        this.state.selectedCluster +
+        "&applicationId=" +
+        this.props.application.applicationId,
+      {
+        headers: authHeader(),
       }
-      handleError(response);
-    })
-    .then((fileInfo) => {
-      if (fileInfo && fileInfo.basic.groups) {
-        if (
-          fileInfo.basic.groups.filter(
-            (group) => group.id == this.props.groupId
-          ).length > 0
-        ) {
-          message.error(
-            "There is already a file with the same name in this Group. Please select another file"
-          );
-          return;
+    )
+      .then((response) => {
+        if (response.ok) {
+          return response.json();
         }
-      }
-      this.setState({
-        ...this.state,
-        disableReadOnlyFields: true,
-        file: {
-          ...this.state.file,
-          id: fileInfo.basic.id,
-          layout: fileInfo.file_layouts,
-          validations: fileInfo.file_validations,
-          fileDataColHeaders: fileInfo.file_layouts.map(layout => layout.name)
-        },
-      });
+        handleError(response);
+      })
+      .then((fileInfo) => {
+        if (fileInfo && fileInfo.basic.groups) {
+          if (
+            fileInfo.basic.groups.filter(
+              (group) => group.id == this.props.groupId
+            ).length > 0
+          ) {
+            message.error(
+              "There is already a file with the same name in this Group. Please select another file"
+            );
+            return;
+          }
+        }
+        this.setState({
+          ...this.state,
+          disableReadOnlyFields: true,
+          file: {
+            ...this.state.file,
+            id: fileInfo.basic.id,
+            layout: fileInfo.file_layouts,
+            validations: fileInfo.file_validations,
+            fileDataColHeaders: fileInfo.file_layouts.map(
+              (layout) => layout.name
+            ),
+          },
+        });
 
-      this.formRef.current.setFieldsValue({
-        title: fileInfo.basic.name.substring(
-          fileInfo.basic.name.lastIndexOf("::") + 2
-        ),
-        name: fileInfo.basic.name,
-        description: fileInfo.basic.description,
-        scope: fileInfo.basic.scope,
-        serviceURL: fileInfo.basic.serviceUrl,
-        qualifiedPath: fileInfo.basic.qualifiedPath,
-        owner: fileInfo.basic.owner,
-        consumer: fileInfo.basic.consumer,
-        supplier: fileInfo.basic.supplier,
-        isSuperFile: fileInfo.basic.isSuperFile,
+        this.formRef.current.setFieldsValue({
+          title: fileInfo.basic.name.substring(
+            fileInfo.basic.name.lastIndexOf("::") + 2
+          ),
+          name: fileInfo.basic.name,
+          description: fileInfo.basic.description,
+          scope: fileInfo.basic.scope,
+          serviceURL: fileInfo.basic.serviceUrl,
+          qualifiedPath: fileInfo.basic.qualifiedPath,
+          owner: fileInfo.basic.owner,
+          consumer: fileInfo.basic.consumer,
+          supplier: fileInfo.basic.supplier,
+          isSuperFile: fileInfo.basic.isSuperFile,
+        });
+        return fileInfo;
+      })
+      .then((data) => {
+        return this.getLicenses();
+      })
+      .then((licenses) => {
+        return this.getFileData(selectedSuggestion, this.state.selectedCluster);
+      })
+      .catch((error) => {
+        console.log(error);
+        message.error(
+          "There was an error getting file information from the cluster. Please try again"
+        );
       });
-      return fileInfo;
-    })
-    .then((data) => {
-      return this.getLicenses();
-    })
-    .then((licenses) => {
-      return this.getFileData(selectedSuggestion, this.state.selectedCluster);
-    })
-    .catch((error) => {
-      console.log(error);
-      message.error(
-        "There was an error getting file information from the cluster. Please try again"
-      );
-    });
   }
 
   saveFileDetails() {
@@ -680,9 +706,11 @@ class FileDetails extends PureComponent {
       visible: false,
     });
     if (this.props.history) {
-      this.props.history.push('/' + this.props.application.applicationId + '/assets')
+      this.props.history.push(
+        "/" + this.props.application.applicationId + "/assets"
+      );
     } else {
-      document.querySelector('button.ant-modal-close').click();
+      document.querySelector("button.ant-modal-close").click();
     }
   };
 
@@ -715,21 +743,18 @@ class FileDetails extends PureComponent {
   };
 
   onChange = (e) => {
-    if (this.setState.formValueChanged){
+    if (this.setState.formValueChanged) {
       this.setState({
         ...this.state,
         file: { ...this.state.file, [e.target.name]: e.target.value },
-      })
-    }else{
+      });
+    } else {
       this.setState({
         ...this.state,
         file: { ...this.state.file, [e.target.name]: e.target.value },
-        formValueChanged : true
-      })
+        formValueChanged: true,
+      });
     }
-
-
-
   };
 
   onCheckbox = (e) => {
@@ -915,10 +940,7 @@ class FileDetails extends PureComponent {
     });
   };
 
-
   render() {
-
-
     const {
       visible,
       confirmLoading,
@@ -1051,8 +1073,8 @@ class FileDetails extends PureComponent {
         },
 
         headerCheckboxSelection: this.state.enableEdit,
-        headerCheckboxSelectionFilteredOnly:this.state.enableEdit,
-        checkboxSelection: this.state.enableEdit
+        headerCheckboxSelectionFilteredOnly: this.state.enableEdit,
+        checkboxSelection: this.state.enableEdit,
       },
       {
         field: "description",
@@ -1185,32 +1207,55 @@ class FileDetails extends PureComponent {
 
       this.setState({
         enableEdit: !this.state.enableEdit,
-        editing: true
+        editing: true,
       });
     };
 
     //Switch to view only mode
     const switchToViewOnly = () => {
-      readOnlyMode()
+      readOnlyMode();
 
       this.setState({
         enableEdit: !this.state.enableEdit,
         editing: false,
-        dataAltered: true
+        dataAltered: true,
       });
-    }
+    };
+
     // view edit buttons on tabpane
-    const editButton  = !this.state.enableEdit && editingAllowed ?  <Button type="primary" onClick={makeFieldsEditable}> Edit  </Button> :  null ;
-    const viewChangesBtn = this.state.editing ?  <Button  onClick={switchToViewOnly} type="primary" ghost> View Changes </Button> : null;
-    const editandViewBtns = <div> {editButton} {viewChangesBtn}</div>
+    const editButton =
+      !this.state.enableEdit && editingAllowed ? (
+        <>
+          <Button type="primary" onClick={makeFieldsEditable}>
+            Edit
+          </Button>
+        </>
+      ) : null;
+    const viewChangesBtn = this.state.editing ? (
+      <Button onClick={switchToViewOnly} type="primary" ghost>
+        View Changes
+      </Button>
+    ) : null;
+    const editandViewBtns = (
+      <div>
+        {editButton} {viewChangesBtn}
+      </div>
+    );
 
     return (
       <React.Fragment>
-        {this.props.displayingInModal || this.state.addingNewAsset ? null : 
-          <div style={{padding: "5px 16px", background: "var(--light)", fontWeight: "600", margin: "0px -16px"}} > 
-              File :  {this.state.file.name}
+        {this.props.displayingInModal || this.state.addingNewAsset ? null : (
+          <div
+            style={{
+              padding: "5px 16px",
+              background: "var(--light)",
+              fontWeight: "600",
+              margin: "0px -16px",
+            }}
+          >
+            File : {this.state.file.name}
           </div>
-        }
+        )}
         <div>
           {/*<BreadCrumbs applicationId={this.props.application.applicationId} applicationTitle={this.props.application.applicationTitle}/>*/}
           {!this.props.isNew ? (
@@ -1218,7 +1263,7 @@ class FileDetails extends PureComponent {
               <Spin spinning={this.state.initialDataLoading} size="large" />
             </div>
           ) : null}
-          <Tabs defaultActiveKey="1" tabBarExtraContent = {editandViewBtns}>
+          <Tabs defaultActiveKey="1" tabBarExtraContent={editandViewBtns}>
             <TabPane tab="Basic" key="1">
               <Form
                 {...formItemLayout}
@@ -1226,89 +1271,96 @@ class FileDetails extends PureComponent {
                 ref={this.formRef}
                 onFinish={this.handleOk}
               >
-                {this.state.enableEdit ?
-                <div>
-                  {this.state.addingNewAsset ?
-                  <>
-                  <Form.Item label="Type">
-                    <Radio.Group
-                      onChange={this.fileTypeChange}
-                      value={this.state.file.fileType}
-                    >
-                      <Radio value={"thor_file"}>Thor File</Radio>
-                      <Radio value={"csv"}>CSV</Radio>
-                      <Radio value={"json"}>JSON</Radio>
-                      <Radio value={"xml"}>XML</Radio>
-                    </Radio.Group>
-                  </Form.Item>
-                  {this.state.file.fileType == "thor_file" ? (
-                    <React.Fragment>
-                      <Form.Item label="Cluster" name="clusters">
-                        <Select
-                          placeholder="Select a Cluster"
-                          disabled={!editingAllowed}
-                          onChange={this.onClusterSelection}
-                          style={{ width: 190 }}
-                        >
-                          {this.props.clusters.map((cluster) => (
-                            <Option key={cluster.id}>{cluster.name}</Option>
-                          ))}
-                        </Select>
-                      </Form.Item>
-
-                      <Form.Item label="File" name="fileSearchValue">
-                        <Row type="flex">
-                          <Col span={21} order={1}>
-                            <AutoComplete
-                              className="certain-category-search"
-                              dropdownClassName="certain-category-search-dropdown"
-                              dropdownMatchSelectWidth={false}
-                              dropdownStyle={{ width: 300 }}
-                              style={{ width: "100%" }}
-                              onSearch={(value) => this.searchFiles(value)}
-                              onSelect={(value) => this.onFileSelected(value)}
-                              placeholder="Search files"
-                              disabled={!editingAllowed}
-                              notFoundContent={
-                                this.state.fileSearchSuggestions.length > 0 ? (
-                                  "Not Found"
-                                ) : (
-                                  <Spin />
-                                )
-                              }
-                            >
-                              {this.state.fileSearchSuggestions.map(
-                                (suggestion) => (
-                                  <Option
-                                    key={suggestion.text}
-                                    value={suggestion.value}
-                                  >
-                                    {suggestion.text}
-                                  </Option>
-                                )
-                              )}
-                            </AutoComplete>
-                          </Col>
-                          <Col
-                            span={3}
-                            order={2}
-                            style={{ paddingLeft: "3px" }}
+                {this.state.enableEdit ? (
+                  <div>
+                    {this.state.addingNewAsset ? (
+                      <>
+                        <Form.Item label="Type">
+                          <Radio.Group
+                            onChange={this.fileTypeChange}
+                            value={this.state.file.fileType}
                           >
-                            <Button htmlType="button" onClick={this.clearState}>
-                              Clear
-                            </Button>
-                          </Col>
-                        </Row>
-                      </Form.Item>
-                    </React.Fragment>
-                  ) : null}
-                  </>
-                  :null}
-                </div>
-                :
-                null}
+                            <Radio value={"thor_file"}>Thor File</Radio>
+                            <Radio value={"csv"}>CSV</Radio>
+                            <Radio value={"json"}>JSON</Radio>
+                            <Radio value={"xml"}>XML</Radio>
+                          </Radio.Group>
+                        </Form.Item>
+                        {this.state.file.fileType == "thor_file" ? (
+                          <React.Fragment>
+                            <Form.Item label="Cluster" name="clusters">
+                              <Select
+                                placeholder="Select a Cluster"
+                                disabled={!editingAllowed}
+                                onChange={this.onClusterSelection}
+                                style={{ width: 190 }}
+                              >
+                                {this.props.clusters.map((cluster) => (
+                                  <Option key={cluster.id}>
+                                    {cluster.name}
+                                  </Option>
+                                ))}
+                              </Select>
+                            </Form.Item>
 
-
+                            <Form.Item label="File" name="fileSearchValue">
+                              <Row type="flex">
+                                <Col span={21} order={1}>
+                                  <AutoComplete
+                                    className="certain-category-search"
+                                    dropdownClassName="certain-category-search-dropdown"
+                                    dropdownMatchSelectWidth={false}
+                                    dropdownStyle={{ width: 300 }}
+                                    style={{ width: "100%" }}
+                                    onSearch={(value) =>
+                                      this.searchFiles(value)
+                                    }
+                                    onSelect={(value) =>
+                                      this.onFileSelected(value)
+                                    }
+                                    placeholder="Search files"
+                                    disabled={!editingAllowed}
+                                    notFoundContent={
+                                      this.state.fileSearchSuggestions.length >
+                                      0 ? (
+                                        "Not Found"
+                                      ) : (
+                                        <Spin />
+                                      )
+                                    }
+                                  >
+                                    {this.state.fileSearchSuggestions.map(
+                                      (suggestion) => (
+                                        <Option
+                                          key={suggestion.text}
+                                          value={suggestion.value}
+                                        >
+                                          {suggestion.text}
+                                        </Option>
+                                      )
+                                    )}
+                                  </AutoComplete>
+                                </Col>
+                                <Col
+                                  span={3}
+                                  order={2}
+                                  style={{ paddingLeft: "3px" }}
+                                >
+                                  <Button
+                                    htmlType="button"
+                                    onClick={this.clearState}
+                                  >
+                                    Clear
+                                  </Button>
+                                </Col>
+                              </Row>
+                            </Form.Item>
+                          </React.Fragment>
+                        ) : null}
+                      </>
+                    ) : null}
+                  </div>
+                ) : null}
 
                 <Form.Item
                   label="Title"
@@ -1321,16 +1373,14 @@ class FileDetails extends PureComponent {
                     },
                   ]}
                 >
-
                   <Input
-                  id="file_title"
-                  name="title"
-                  onChange={this.onChange}
-                  placeholder="Title"
-                  disabled={!editingAllowed}
-                  className={!this.state.enableEdit ? "read-only-input": ""}
-
-                />
+                    id="file_title"
+                    name="title"
+                    onChange={this.onChange}
+                    placeholder="Title"
+                    disabled={!editingAllowed}
+                    className={!this.state.enableEdit ? "read-only-input" : ""}
+                  />
                 </Form.Item>
                 <Form.Item
                   label="Name"
@@ -1343,18 +1393,13 @@ class FileDetails extends PureComponent {
                     },
                   ]}
                 >
-
                   <Input
                     id="file_name"
                     onChange={this.onChange}
                     placeholder="Name"
                     disabled={disableReadOnlyFields || !editingAllowed}
-                    className={!this.state.enableEdit ? "read-only-input": ""}
-
+                    className={!this.state.enableEdit ? "read-only-input" : ""}
                   />
-
-
-
                 </Form.Item>
                 <Form.Item
                   label="Scope"
@@ -1368,35 +1413,34 @@ class FileDetails extends PureComponent {
                     },
                   ]}
                 >
-
-                    <Input
-                      id="file_scope"
-                      onChange={this.onChange}
-                      placeholder="Scope"
-                      disabled={disableReadOnlyFields || !editingAllowed}
-                      className={!this.state.enableEdit ? "read-only-input": ""}
-
-                    />
-
+                  <Input
+                    id="file_scope"
+                    onChange={this.onChange}
+                    placeholder="Scope"
+                    disabled={disableReadOnlyFields || !editingAllowed}
+                    className={!this.state.enableEdit ? "read-only-input" : ""}
+                  />
                 </Form.Item>
-
 
                 <Form.Item label="Description" name="description">
-                  {this.state.enableEdit ?
-                  <MarkdownEditor
-                  id="file_desc"
-                  name="description"
-                  onChange={this.onChange}
-                  targetDomId="fileDescr"
-                  value={description}
-                  disabled={!editingAllowed}
-                  />
-                  :
-                  <div className="read-only-markdown">  <ReactMarkdown source={this.state.file.description} /> </div>
-
-                  }
+                  {this.state.enableEdit ? (
+                    <MarkdownEditor
+                      id="file_desc"
+                      name="description"
+                      onChange={this.onChange}
+                      targetDomId="fileDescr"
+                      value={description}
+                      disabled={!editingAllowed}
+                    />
+                  ) : (
+                    <div className="read-only-markdown">
+                      {" "}
+                      <ReactMarkdown
+                        source={this.state.file.description}
+                      />{" "}
+                    </div>
+                  )}
                 </Form.Item>
-
 
                 <Form.Item
                   label="Service URL"
@@ -1408,19 +1452,15 @@ class FileDetails extends PureComponent {
                     },
                   ]}
                 >
-
                   <Input
-                  id="file_primary_svc"
-                  onChange={this.onChange}
-                  placeholder="Service URL"
-                  disabled={!editingAllowed}
-                  className={!this.state.enableEdit ? "read-only-input": ""}
-                />
-
-
+                    id="file_primary_svc"
+                    onChange={this.onChange}
+                    placeholder="Service URL"
+                    disabled={!editingAllowed}
+                    className={!this.state.enableEdit ? "read-only-input" : ""}
+                  />
                 </Form.Item>
                 <Row type="flex">
-
                   <Col span={8} order={1}>
                     <Form.Item
                       label="Path"
@@ -1433,81 +1473,77 @@ class FileDetails extends PureComponent {
                         },
                       ]}
                     >
-
-                    <Input
-                    id="file_path"
-                    onChange={this.onChange}
-                    placeholder="Path"
-                    disabled={!editingAllowed}
-                    className={!this.state.enableEdit ? "read-only-input": ""}
-                  />
-
+                      <Input
+                        id="file_path"
+                        onChange={this.onChange}
+                        placeholder="Path"
+                        disabled={!editingAllowed}
+                        className={
+                          !this.state.enableEdit ? "read-only-input" : ""
+                        }
+                      />
                     </Form.Item>
                   </Col>
                   <Col span={8} order={1}>
-
                     <Form.Item
                       {...threeColformItemLayout}
                       label="Is Super File"
                       name="isSuperFile"
                       valuePropName="checked"
                     >
-
-                   {this.state.enableEdit ?
-
-                      <Checkbox
-                        id="isSuperFile"
-                        onChange={this.onCheckbox}
-                        checked={isSuperFile === true}
-                        disabled={!editingAllowed}
-                      />:
-                      <Input className="read-only-input" value={this.state.file.isSuperFile ? "Yes" : "No"}/>
-
-                   }
-
+                      {this.state.enableEdit ? (
+                        <Checkbox
+                          id="isSuperFile"
+                          onChange={this.onCheckbox}
+                          checked={isSuperFile === true}
+                          disabled={!editingAllowed}
+                        />
+                      ) : (
+                        <Input
+                          className="read-only-input"
+                          value={this.state.file.isSuperFile ? "Yes" : "No"}
+                        />
+                      )}
                     </Form.Item>
                   </Col>
                 </Row>
 
                 <Row type="flex">
                   <Col span={8} order={1}>
-
                     <Form.Item
                       {...threeColformItemLayout}
                       label="Supplier"
                       name="supplier"
                     >
-                      {!this.state.enableEdit ?
-
-                      (this.props.consumers.map(consumer => {
-                        if( consumer.assetType === "Supplier" && consumer.id === this.state.file.supplier){
-                          return consumer.name
-                        }
-                      }))
-                        :
-                      <Select
-                        id="supplier"
-                        value={
-                          this.state.file.supplier != ""
-                            ? this.state.file.supplier
-                            : "Select a supplier"
-                        }
-                        placeholder="Select a supplier"
-                        onChange={this.onSupplierSelection}
-                        style={{ width: 190 }}
-                        disabled={!editingAllowed}
-
-                      >
-                        {this.props.consumers.map((consumer) =>
-                          consumer.assetType == "Supplier" ? (
-                            <Option key={consumer.id}>{consumer.name}</Option>
-                          ) : null
-                        )}
-                      </Select>
-
+                      {!this.state.enableEdit ? (
+                        this.props.consumers.map((consumer) => {
+                          if (
+                            consumer.assetType === "Supplier" &&
+                            consumer.id === this.state.file.supplier
+                          ) {
+                            return consumer.name;
                           }
-
-
+                        })
+                      ) : (
+                        <Select
+                          id="supplier"
+                          value={
+                            this.state.file.supplier != ""
+                              ? this.state.file.supplier
+                              : "Select a supplier"
+                          }
+                          placeholder="Select a supplier"
+                          onChange={this.onSupplierSelection}
+                          style={{ width: 190 }}
+                          disabled={!editingAllowed}
+                        >
+                          {this.props.consumers.map((consumer) =>
+                            consumer.assetType == "Supplier" ? (
+                              <Option key={consumer.id}>{consumer.name}</Option>
+                            ) : null
+                          )}
+                        </Select>
+                      )}
                     </Form.Item>
                   </Col>
                   <Col span={8} order={2}>
@@ -1516,33 +1552,35 @@ class FileDetails extends PureComponent {
                       label="Consumer"
                       name="consumer"
                     >
-                      {this.state.enableEdit ?
-                      <Select
-                        id="consumer"
-                        value={
-                          this.state.file.consumer != ""
-                            ? this.state.file.consumer
-                            : "Select a consumer"
-                        }
-                        placeholder="Select a consumer"
-                        onChange={this.onConsumerSelection}
-                        style={{ width: 190 }}
-                        disabled={!editingAllowed}
-                      >
-                        {this.props.consumers.map((consumer) =>
-                          consumer.assetType == "Consumer" ? (
-                            <Option key={consumer.id}>{consumer.name}</Option>
-                          ) : null
-                        )}
-                      </Select>
-                      :
-
-                      (this.props.consumers.map(consumer => {
-                        if( consumer.assetType === "Consumer" && consumer.id === this.state.file.consumer){
-                          return consumer.name
-                        }
-                      }))
-                     }
+                      {this.state.enableEdit ? (
+                        <Select
+                          id="consumer"
+                          value={
+                            this.state.file.consumer != ""
+                              ? this.state.file.consumer
+                              : "Select a consumer"
+                          }
+                          placeholder="Select a consumer"
+                          onChange={this.onConsumerSelection}
+                          style={{ width: 190 }}
+                          disabled={!editingAllowed}
+                        >
+                          {this.props.consumers.map((consumer) =>
+                            consumer.assetType == "Consumer" ? (
+                              <Option key={consumer.id}>{consumer.name}</Option>
+                            ) : null
+                          )}
+                        </Select>
+                      ) : (
+                        this.props.consumers.map((consumer) => {
+                          if (
+                            consumer.assetType === "Consumer" &&
+                            consumer.id === this.state.file.consumer
+                          ) {
+                            return consumer.name;
+                          }
+                        })
+                      )}
                     </Form.Item>
                   </Col>
 
@@ -1552,56 +1590,60 @@ class FileDetails extends PureComponent {
                       label="Owner"
                       name="owner"
                     >
-                      {!this.state.enableEdit ?
-                       (this.props.consumers.map(consumer => {
-                        if( consumer.assetType === "Owner" && consumer.id === this.state.file.owner){
-                          return consumer.name
-                        }
-                      }))
-                      :
-                      <Select
-                        id="owner"
-                        value={
-                          this.state.file.owner != ""
-                            ? this.state.file.owner
-                            : "Select an Owner"
-                        }
-                        placeholder="Select an Owner"
-                        onChange={this.onOwnerSelection}
-                        style={{ width: 190 }}
-                        disabled={!editingAllowed}
-                      >
-                        {this.props.consumers.map((consumer) =>
-                          consumer.assetType == "Owner" ? (
-                            <Option key={consumer.id}>{consumer.name}</Option>
-                          ) : null
-                        )}
-                      </Select>
-  }
+                      {!this.state.enableEdit ? (
+                        this.props.consumers.map((consumer) => {
+                          if (
+                            consumer.assetType === "Owner" &&
+                            consumer.id === this.state.file.owner
+                          ) {
+                            return consumer.name;
+                          }
+                        })
+                      ) : (
+                        <Select
+                          id="owner"
+                          value={
+                            this.state.file.owner != ""
+                              ? this.state.file.owner
+                              : "Select an Owner"
+                          }
+                          placeholder="Select an Owner"
+                          onChange={this.onOwnerSelection}
+                          style={{ width: 190 }}
+                          disabled={!editingAllowed}
+                        >
+                          {this.props.consumers.map((consumer) =>
+                            consumer.assetType == "Owner" ? (
+                              <Option key={consumer.id}>{consumer.name}</Option>
+                            ) : null
+                          )}
+                        </Select>
+                      )}
                     </Form.Item>
                   </Col>
                 </Row>
               </Form>
             </TabPane>
             <TabPane tab="Layout" key="3">
-                <ComplianceInfo tags={complianceTags}/>
-                <div
-                  className="layout_tbl"
-                  style={{
-                  width: '100%' }}
-                >
-                  <EditableTable
-                    columns={layoutColumns}
-                    dataSource={layout}
-                    ref={node => (this.layoutTable = node)}
-                    fileType={this.state.file.fileType}
-                    editingAllowed={editingAllowed}
-                    showDataDefinition={false}
-                    dataDefinitions={[]}
-                    setData={this.setLayoutData}
-                    enableEdit={this.state.enableEdit}
-                    />
-                </div>
+              <ComplianceInfo tags={complianceTags} />
+              <div
+                className="layout_tbl"
+                style={{
+                  width: "100%",
+                }}
+              >
+                <EditableTable
+                  columns={layoutColumns}
+                  dataSource={layout}
+                  ref={(node) => (this.layoutTable = node)}
+                  fileType={this.state.file.fileType}
+                  editingAllowed={editingAllowed}
+                  showDataDefinition={false}
+                  dataDefinitions={[]}
+                  setData={this.setLayoutData}
+                  enableEdit={this.state.enableEdit}
+                />
+              </div>
             </TabPane>
             <TabPane tab="Permissable Purpose" key="4">
               <InheritedLicenses relation={inheritedLicensing} />
@@ -1625,22 +1667,23 @@ class FileDetails extends PureComponent {
             </TabPane>
             <TabPane tab="Validation Rules" key="5">
               <div
-                  className="ag-theme-balham"
-                  style={{
-                  height: '415px',
-                  width: '100%' }}
-                >
-                  <EditableTable
-                    columns={validationRuleColumns}
-                    dataSource={validations}
-                    ref={node => (this.validationTable = node)}
-                    editingAllowed={editingAllowed}
-                    showDataDefinition={false}
-                    dataDefinitions={[]}
-                    setData={this.setValidationData}
-                    enableEdit={this.state.enableEdit}
-                    />
-                </div>
+                className="ag-theme-balham"
+                style={{
+                  height: "415px",
+                  width: "100%",
+                }}
+              >
+                <EditableTable
+                  columns={validationRuleColumns}
+                  dataSource={validations}
+                  ref={(node) => (this.validationTable = node)}
+                  editingAllowed={editingAllowed}
+                  showDataDefinition={false}
+                  dataDefinitions={[]}
+                  setData={this.setValidationData}
+                  enableEdit={this.state.enableEdit}
+                />
+              </div>
             </TabPane>
             {VIEW_DATA_PERMISSION ? (
               <TabPane tab="File Preview" key="6">
@@ -1666,64 +1709,64 @@ class FileDetails extends PureComponent {
 
             {!this.props.isNew ? (
               <TabPane tab="Workflows" key="7">
-                <AssociatedDataflows assetId={this.state.file.id} assetType={"File"} />
+                <AssociatedDataflows
+                  assetId={this.state.file.id}
+                  assetType={"File"}
+                />
               </TabPane>
             ) : null}
           </Tabs>
         </div>
 
-
-
-        {this.state.enableEdit ?
-        <div className="button-container">
-          <Button
-            key="danger"
-            disabled={!this.state.file.id || !editingAllowed}
-            type="danger"
-            onClick={this.handleDelete}
-          >
-            Delete
-          </Button>
-          <Button key="back" onClick={this.handleCancel}>
-            Cancel
-          </Button>
-          <Button
-            key="submit"
-            disabled={!editingAllowed}
-            type="primary"
-            loading={confirmLoading}
-            onClick={this.handleOk}
-          >
-            Save
-          </Button>
-        </div> :
-        <div>
-          {this.state.dataAltered ?
-
+        {this.state.enableEdit ? (
           <div className="button-container">
-          <Button key="back" onClick={this.handleCancel}>
-            Cancel
-          </Button>
-          <Button
-            key="submit"
-            disabled={!editingAllowed}
-            type="primary"
-            loading={confirmLoading}
-            onClick={this.handleOk}
-          >
-            Save
-          </Button>
-        </div>
-          :
-          <div className="button-container">
-          <Button key="back" onClick={this.handleCancel}>
-            Cancel
-          </Button>
-
-        </div>
-  }
-        </div>
-         }
+            <Button
+              key="danger"
+              disabled={!this.state.file.id || !editingAllowed}
+              type="danger"
+              onClick={this.handleDelete}
+            >
+              Delete
+            </Button>
+            <Button key="back" onClick={this.handleCancel}>
+              Cancel
+            </Button>
+            <Button
+              key="submit"
+              disabled={!editingAllowed}
+              type="primary"
+              loading={confirmLoading}
+              onClick={this.handleOk}
+            >
+              Save
+            </Button>
+          </div>
+        ) : (
+          <div>
+            {this.state.dataAltered ? (
+              <div className="button-container">
+                <Button key="back" onClick={this.handleCancel}>
+                  Cancel
+                </Button>
+                <Button
+                  key="submit"
+                  disabled={!editingAllowed}
+                  type="primary"
+                  loading={confirmLoading}
+                  onClick={this.handleOk}
+                >
+                  Save
+                </Button>
+              </div>
+            ) : (
+              <div className="button-container">
+                <Button key="back" onClick={this.handleCancel}>
+                  Cancel
+                </Button>
+              </div>
+            )}
+          </div>
+        )}
       </React.Fragment>
     );
   }
