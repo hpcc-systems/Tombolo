@@ -117,10 +117,10 @@ class Graph extends Component {
     }
 
     if(props.workflowDetails && props.workflowDetails.wuDetails && props.workflowDetails.wuDetails.length > 0) {
-      this.updateCompletionStatus(props.workflowDetails);
-      /*this.fetchSavedGraph().then((result) => {
+      //this.updateCompletionStatus(props.workflowDetails);
+      this.fetchSavedGraph().then((result) => {
         this.updateCompletionStatus(props.workflowDetails);
-      })*/      
+      })
     }
 
     if(props.saveResponse && props.saveResponse.success) {
