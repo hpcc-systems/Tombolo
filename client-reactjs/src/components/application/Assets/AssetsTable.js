@@ -304,7 +304,6 @@ function AssetsTable({ selectedGroup, handleEditGroup, refreshGroups }) {
       dataJob: "",
       className: editingAllowed ? "show-column" : "hide-column",
       render: (text, record) => (
-        // <span style={{display: "flex", placeItems: "center", justifyContent: "center"}}>
         <span> 
           <a
             href="#"
@@ -372,7 +371,7 @@ function AssetsTable({ selectedGroup, handleEditGroup, refreshGroups }) {
         rowKey={(record) => record.id}
         dataSource={assets}
         pagination={{ pageSize: 20 }}
-        scroll={{ y: "70vh", x : "vw" }}
+        scroll={{ y: "70vh"}}
       />
       {showMoveDialog ? (
         <MoveAssetsDialog

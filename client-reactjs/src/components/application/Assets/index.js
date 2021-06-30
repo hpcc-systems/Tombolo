@@ -425,10 +425,7 @@ const Assets = () => {
               className="directorytree-rightclick-menuitem"
               onClick={ () =>{ 
                 selectedGroup.type = "Group"
-                getNestedAssets(  application.applicationId, setSelectedAsset, setSelectDetailsforPdfDialogVisibility, selectedGroup, setToPrintAssets)
-              }
-              }
-
+                getNestedAssets(  application.applicationId, setSelectedAsset, setSelectDetailsforPdfDialogVisibility, selectedGroup, setToPrintAssets)}}
               >
               <FilePdfOutlined />
               Print Assets

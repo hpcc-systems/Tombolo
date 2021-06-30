@@ -52,8 +52,7 @@ function JobDetailsPdf(props) {
     const ele = document.getElementById("ecl_render");
     if(ele){
       ele.innerHTML = ele.innerHTML.replace(/;/g, ";<br/>");
-    }
-      }
+    }}
      
       if (data && props.assets?.length == 1) {
         downloadPdf(data.title, "pdfContainer");
