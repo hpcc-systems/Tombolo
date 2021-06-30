@@ -142,8 +142,8 @@ exports.executeScriptJob = (jobId) => {
 
 exports.recordJobExecution = (workerData, wuid) => {
   try {
-    return new Promise(async (resolve, reject) => {
-      await JobExecution.findOrCreate({
+    return new Promise((resolve, reject) => {
+      JobExecution.findOrCreate({
         where: {
           jobId: workerData.jobId,
           applicationId: workerData.applicationId
@@ -156,10 +156,10 @@ exports.recordJobExecution = (workerData, wuid) => {
           clusterId: workerData.clusterId,
           status: 'submitted'
         }
-      }).then((results, created) => {
+      }).then(async (results, created) => {
         let jobExecutionId = results[0].id;
         if(!created) {
-          return JobExecution.update({
+          await JobExecution.update({
             jobId: workerData.jobId,
             dataflowId: workerData.dataflowId,
             applicationId: workerData.applicationId,
@@ -168,9 +168,11 @@ exports.recordJobExecution = (workerData, wuid) => {
           },
           {where: {id: jobExecutionId}})
         }
+        resolve();
       })   
     })
   }catch (err) {
+    reject(err);
     Promise.reject(err)
   }
 }
