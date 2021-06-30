@@ -32,7 +32,7 @@ export const getNestedAssets = (applicationId, setSelectedAsset, setSelectDetail
       handleError(response);
     }).then((data) => {
       let allGroups = data.every(item => item.type === "Group");
-      if(allGroups || data.length < 1){ message.error("Empty Group")}
+      if(allGroups || data.length < 1){ message.error("No assets found to Print in the selected group")}
       else{
        setSelectedAsset({ id: record.id, type: "Group" });      
       setToPrintAssets(data);

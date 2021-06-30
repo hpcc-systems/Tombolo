@@ -10,6 +10,7 @@ import ShareApp from "./ShareApp";
 import ReactMarkdown from 'react-markdown';
 import { applicationActions } from '../../redux/actions/Application';
 import { DeleteOutlined, EditOutlined, QuestionCircleOutlined, ShareAltOutlined  } from '@ant-design/icons';
+import ImportApp from "./importApp"
 
 class Applications extends Component {
   constructor(props) {
@@ -297,11 +298,14 @@ class Applications extends Component {
     <React.Fragment>
       <div className="d-flex justify-content-end">
         <BreadCrumbs applicationId={this.state.applicationId}/>
-        <span style={{ marginLeft: "auto" }}>
+        <span style={{marginRight: "10px"}}>
+          <ImportApp />
+        </span>
+        <span style={{ marginLeft: "auto", display:"flex" }}>
             <Tooltip placement="bottom" title={"Click to add a new Application"}>
               <Button className="btn btn-secondary btn-sm" onClick={() => this.handleAdd()}><i className="fa fa-plus"></i> Add Application</Button>
             </Tooltip>
-          </span>
+          </span>  
       </div>
       <div style={{padding:"15px"}}>
       	<Table
