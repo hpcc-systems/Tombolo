@@ -47,12 +47,15 @@ function JobDetailsPdf(props) {
     }
   
     setTimeout(() => {
-      if (data && props.selectedAssetType !== "Group") {
-        //Break lines for ecl code
-        const ele = document.getElementById("ecl_render");
-        if(ele){
-          ele.innerHTML = ele.innerHTML.replace(/;/g, ";<br/>");
-        }
+      if(data){
+    //Break lines for ecl code
+    const ele = document.getElementById("ecl_render");
+    if(ele){
+      ele.innerHTML = ele.innerHTML.replace(/;/g, ";<br/>");
+    }
+      }
+     
+      if (data && props.assets?.length == 1) {
         downloadPdf(data.title, "pdfContainer");
         props.printingTaskCompleted();
       }

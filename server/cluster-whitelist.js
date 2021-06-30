@@ -21,12 +21,5 @@ module.exports = {
       roxie: "http://10.173.147.1",
       roxie_port: "8002",
     },
-    {
-      name: "4-Way-3",
-      thor: "http://52.255.183.194",
-      thor_port: "8010",
-      roxie: " http://52.255.183.194",
-      roxie_port: "8002",
-    },
   ],
 };

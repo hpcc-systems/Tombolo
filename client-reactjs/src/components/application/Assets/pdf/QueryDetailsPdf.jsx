@@ -4,7 +4,6 @@ import { authHeader, handleError } from "../../../common/AuthHeader";
 import ReactMarkdown from "react-markdown";
 import { downloadPdf } from "./downloadPdf";
 import { message } from "antd";
-import { SearchOutlined } from "@ant-design/icons";
 
 function QueryDetailsPdf(props) {
   //Local state
@@ -47,7 +46,7 @@ function QueryDetailsPdf(props) {
   //Print when fetching and set state is complete
   useEffect(() => {
     setTimeout(() => {
-      if (queryData && props.selectedAssetType !== "Group") {
+      if (queryData && props.assets?.length == 1) {
         downloadPdf(queryData.title, "pdfContainer");
         props.printingTaskCompleted();
       }

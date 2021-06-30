@@ -59,6 +59,4 @@ export const Constants = {
     ADD_ASSET: 'ADD_ASSET',
 
     MOVE_GROUP: 'MOVE_GROUP',
-
-    UPDATE_TREE : 'UPDATE_TREE'
 };

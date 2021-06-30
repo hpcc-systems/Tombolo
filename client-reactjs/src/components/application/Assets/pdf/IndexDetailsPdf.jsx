@@ -48,7 +48,7 @@ function IndexDetailsPdf(props) {
 
   //Once data is set in state
   useEffect(() => {
-    if (indexData && props.selectedAssetType !== "Group") {
+    if (indexData && props.assets?.length == 1) {
       downloadPdf(indexData.basic.title, "pdfContainer");
       printingTaskCompleted();
     }

@@ -42,6 +42,7 @@ function AssetsTable({ selectedGroup, handleEditGroup, refreshGroups }) {
   });
   const groupsMoveReducer = useSelector((state) => state.groupsMoveReducer);
   const [selectedAsset, setSelectedAsset] = useState();
+  const [toPrintAssets, setToPrintAssets] = useState([])
   const [
     selectDetailsforPdfDialogVisibility,
     setSelectDetailsforPdfDialogVisibility,
@@ -242,7 +243,7 @@ function AssetsTable({ selectedGroup, handleEditGroup, refreshGroups }) {
     {
       title: "Name",
       dataIndex: "name",
-      width: "30%",
+      width: "25%",
       ellipsis: {
         showTitle: false,
       },
@@ -298,12 +299,13 @@ function AssetsTable({ selectedGroup, handleEditGroup, refreshGroups }) {
       },
     },
     {
-      width: "10%",
+      width: "15%",
       title: "Action",
       dataJob: "",
       className: editingAllowed ? "show-column" : "hide-column",
       render: (text, record) => (
-        <span>
+        // <span style={{display: "flex", placeItems: "center", justifyContent: "center"}}>
+        <span> 
           <a
             href="#"
             onClick={(row) => handleEdit(record.id, record.type, "edit")}
@@ -346,7 +348,7 @@ function AssetsTable({ selectedGroup, handleEditGroup, refreshGroups }) {
             <FilePdfOutlined
               type="primary"
               style={{ color: "var(--primary)", cursor: "pointer" }}
-              onClick={ () =>  getNestedAssets(applicationId, setSelectedAsset, setSelectDetailsforPdfDialogVisibility, record)}
+              onClick={ () =>  getNestedAssets(applicationId, setSelectedAsset, setSelectDetailsforPdfDialogVisibility, record, setToPrintAssets)}
             />
           </Tooltip>
         </span>
@@ -370,7 +372,7 @@ function AssetsTable({ selectedGroup, handleEditGroup, refreshGroups }) {
         rowKey={(record) => record.id}
         dataSource={assets}
         pagination={{ pageSize: 20 }}
-        scroll={{ y: "70vh" }}
+        scroll={{ y: "70vh", x : "vw" }}
       />
       {showMoveDialog ? (
         <MoveAssetsDialog
@@ -389,6 +391,7 @@ function AssetsTable({ selectedGroup, handleEditGroup, refreshGroups }) {
           setVisiblity={setSelectDetailsforPdfDialogVisibility}
           visible={selectDetailsforPdfDialogVisibility}
           selectedAsset={selectedAsset}
+          toPrintAssets={toPrintAssets}
           printingTaskCompleted={printingTaskCompleted}
         />
       ) : null}

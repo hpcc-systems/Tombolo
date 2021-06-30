@@ -20,7 +20,7 @@ export function downloadPdf(fileName, targetClass) {
 }
 
 
-export const getNestedAssets = (applicationId, setSelectedAsset, setSelectDetailsforPdfDialogVisibility, record) => {
+export const getNestedAssets = (applicationId, setSelectedAsset, setSelectDetailsforPdfDialogVisibility, record, setToPrintAssets) => {
   if(record.type === "Group"){
     let url = `/api/groups/nestedAssets?app_id=${applicationId}&group_id=${record.id}`;
     fetch(url,  {
@@ -34,7 +34,8 @@ export const getNestedAssets = (applicationId, setSelectedAsset, setSelectDetail
       let allGroups = data.every(item => item.type === "Group");
       if(allGroups || data.length < 1){ message.error("Empty Group")}
       else{
-       setSelectedAsset({ id: record.id, type: "Group" });
+       setSelectedAsset({ id: record.id, type: "Group" });      
+      setToPrintAssets(data);
        setSelectDetailsforPdfDialogVisibility(true);
       }
     } ).catch((error) => {
@@ -42,6 +43,8 @@ export const getNestedAssets = (applicationId, setSelectedAsset, setSelectDetail
     });
   }else{
     setSelectedAsset({ id: record.id, type: record.type });
+    setToPrintAssets([{id: record.id, type: record.type}])
+
     setSelectDetailsforPdfDialogVisibility(true)
   }
 }

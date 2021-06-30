@@ -48,25 +48,22 @@ function GroupDetailsPdf(props) {
         switch (asset.type) {
           case "File":
             return (
-              <div key={index}>
                 <FileDetailsPdf
                   key={index}
-                  selectedAssetType={props.selectedAssetType}
+                  selectedAssetType={asset[index]}
                   selectedAssetId={asset.id}
                   applicationId={applicationId}
                   classesToExport={props.classesToExport}
                   setVisiblity={props.setVisiblity}
                   printingTaskCompleted={props.printingTaskCompleted}
                 ></FileDetailsPdf>
-                <hr />
-              </div>
             );
 
           case "Index":
             return (
               <IndexDetailsPdf
-                selectedAssetType={props.selectedAssetType}
-                key={index}
+              selectedAssetType={asset[index]}
+              key={index}
                 selectedAssetId={asset.id}
                 applicationId={applicationId}
                 classesToExport={props.classesToExport}
@@ -78,8 +75,8 @@ function GroupDetailsPdf(props) {
           case "Query":
             return (
               <QueryDetailsPdf
-                selectedAssetType={props.selectedAssetType}
-                key={index}
+              selectedAssetType={asset[index]}
+              key={index}
                 selectedAssetId={asset.id}
                 applicationId={applicationId}
                 classesToExport={props.classesToExport}
@@ -91,8 +88,8 @@ function GroupDetailsPdf(props) {
           case "Job":
             return (
               <JobDetailsPdf
-                selectedAssetType={props.selectedAssetType}
-                key={index}
+              selectedAssetType={asset[index]}
+              key={index}
                 selectedAssetId={asset.id}
                 applicationId={applicationId}
                 classesToExport={props.classesToExport}

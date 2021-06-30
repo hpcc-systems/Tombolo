@@ -75,7 +75,7 @@ function FileDetailsPdf(props) {
       })
       .then((data) => {
         setFileLayouts(data.file_layouts);
-        if (props.selectedAssetType !== "Group") {
+        if (props.assets?.length == 1) {
           setTimeout(() => {
             downloadPdf(data.basic.title, "pdfContainer");
             props.printingTaskCompleted();
@@ -87,6 +87,8 @@ function FileDetailsPdf(props) {
         props.printingTaskCompleted();
       });
   }, []);
+
+
 
   return (
     <PdfContainer className="pdfContainer">

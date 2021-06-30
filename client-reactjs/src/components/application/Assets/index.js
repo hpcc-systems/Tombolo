@@ -98,6 +98,7 @@ const Assets = () => {
     setSelectDetailsforPdfDialogVisibility,
   ] = useState(false);
   const [selectedAsset, setSelectedAsset] = useState();
+  const [toPrintAssets, setToPrintAssets] = useState([])
 
   let assetTypeFilter = ["File", "Job", "Query", "Indexes", "Groups"];
   //const [searchKeyWord, setSearchKeyWord] = useState('');
@@ -422,11 +423,12 @@ const Assets = () => {
               <>
               <Menu.Item
               className="directorytree-rightclick-menuitem"
-              onClick={() => { 
-                let applicationId=application.applicationId;
-                let record = selectedGroup;
-                record.type= "Group"
-                getNestedAssets(applicationId, setSelectedAsset, setSelectDetailsforPdfDialogVisibility, record)}}
+              onClick={ () =>{ 
+                selectedGroup.type = "Group"
+                getNestedAssets(  application.applicationId, setSelectedAsset, setSelectDetailsforPdfDialogVisibility, selectedGroup, setToPrintAssets)
+              }
+              }
+
               >
               <FilePdfOutlined />
               Print Assets
@@ -845,6 +847,7 @@ const Assets = () => {
           setVisiblity={setSelectDetailsforPdfDialogVisibility}
           visible={selectDetailsforPdfDialogVisibility}
           selectedAsset={selectedAsset}
+          toPrintAssets={toPrintAssets}
           printingTaskCompleted={printingTaskCompleted}
         />
       ) : null}
