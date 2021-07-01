@@ -138,7 +138,7 @@ const Assets = () => {
   //Re-render Directory Tree when the tree structure us chaged on modal
   useEffect(() => {
     //application changed
-    if(prevSelectedApplicationRef.current.applicationId != application.applicationId) {      
+    if(application && prevSelectedApplicationRef.current && application.applicationId != prevSelectedApplicationRef.current.applicationId) {      
       selectedGroup = { id: "", title: "", key: "0-0" };
       dispatch(
         groupsActions.groupExpanded(
