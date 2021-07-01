@@ -303,7 +303,7 @@ class Applications extends Component {
             <Tooltip placement="bottom" title={"Click to add a new Application"}>
               <Button className="btn btn-secondary btn-sm" onClick={() => this.handleAdd()}><i className="fa fa-plus"></i> Add Application</Button>
             </Tooltip>
-          </span>
+          </span>  
       </div>
       <div style={{padding:"15px"}}>
       	<Table

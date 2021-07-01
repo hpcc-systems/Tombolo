@@ -58,5 +58,5 @@ export const Constants = {
     ENABLE_EDIT: 'ENABLE_EDIT',
     ADD_ASSET: 'ADD_ASSET',
 
-    MOVE_GROUP: 'MOVE_GROUP'
+    MOVE_GROUP: 'MOVE_GROUP',
 };

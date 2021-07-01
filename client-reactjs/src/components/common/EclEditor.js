@@ -28,6 +28,8 @@ class EclEditor extends Component {
       .readOnly(this.props.disabled)
       .render();
 
+
+
     this.eclEditor._codemirror.doc.on('change', debounce(() => {
       this.value = this.eclEditor.ecl();
       this.props.onChange({ target: this });

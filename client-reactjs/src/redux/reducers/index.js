@@ -15,7 +15,7 @@ const rootReducer = combineReducers({
     assetReducer,
     groupsReducer,
     viewOnlyModeReducer,
-    groupsMoveReducer
+    groupsMoveReducer,
 });
 
 export default rootReducer;

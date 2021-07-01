@@ -1,7 +1,6 @@
 const express = require('express');
 const router = express.Router();
 const validatorUtil = require('../../utils/validator');
-
 const { body, query, validationResult } = require('express-validator');
 const { oneOf, check } = require('express-validator/check');
 let Sequelize = require('sequelize');
@@ -328,6 +327,25 @@ router.get('/assets', [
     }
 });
 
+router.get("/nestedAssets",
+ [
+  query('app_id').isUUID(4).withMessage('Invalid app id'),
+  query('group_id').optional({checkFalsy:true}).isInt().withMessage('Invalid group id')
+], 
+ async (req, res) => {
+   const {app_id, group_id} = req.query;
+   let query  = `select assets.id, assets.name, assets.title, assets.description, assets.createdAt, assets.type, hie.name as group_name, hie.id as groupId from (select  id, name, parent_group from    (select * from groups order by parent_group, id) groups_sorted, (select @pv := (${group_id})) initialisation where find_in_set(parent_group, @pv) and length(@pv := concat(@pv, ',', id)) > 0 or id=(${group_id})) as hie join (select f.id, f.name, ag.groupId, f.title, f.description, f.createdAt, 'File' as type from file f, assets_groups ag where f.application_id = ('${app_id}') and ag.assetId=f.id union all select q.id, q.name, ag.groupId, q.title, q.description, q.createdAt, 'Query' as type from query q, assets_groups ag where q.application_id = ('${app_id}') and ag.assetId=q.id union all select idx.id, idx.name, ag.groupId, idx.title, idx.description, idx.createdAt, 'Index' as type  from indexes idx, assets_groups ag where idx.application_id = ('${app_id}') and ag.assetId=idx.id union all select j.id, j.name, ag.groupId, j.title, j.description, j.createdAt, 'Job' as type  from job j, assets_groups ag where j.application_id = ('${app_id}') and j.id = ag.assetId union all select g.id, g.name, g.parent_group, g.name as title, g.description, g.createdAt, 'Group' as type  from groups g where g.application_id = ('${app_id}') ) as assets on (assets.groupId = hie.id) `
+                  models.sequelize.query(query, {
+                    type: models.sequelize.QueryTypes.SELECT
+                  }).then(assets => {
+                    res.json(assets);
+                  }).catch(function(err) {
+                    console.log(err);
+                    return res.status(500).send("Error occured while retrieving assets");
+                  });
+}
+);
+
 router.get('/assetsSearch', [
   query('app_id').isUUID(4).withMessage('Invalid app id'),
   query('group_id').optional({checkFalsy:true}).isInt().withMessage('Invalid group id'),
@@ -365,12 +383,13 @@ router.get('/assetsSearch', [
       if(assetFilters.length == 0 || assetFilters.includes("Groups")) {
         query += "select g.id, g.name, g.parent_group, g.name as title, g.description, g.createdAt, 'Group' as type  from groups g where g.application_id = (:applicationId) and (g.name REGEXP (:keyword) ) ";
         query += (assetFilters.length == 0 || assetFilters.length > 1) ? "union all " : "";
+
       }
 
       query = query.endsWith(" union all ") ? query.substring(0, query.lastIndexOf(" union all ")) : query;
-      console.log(query);
       query += " ) as assets on (assets.groupId = hie.id) "
       replacements = { applicationId: req.query.app_id, groupId: req.query.group_id, keyword: keywords }
+
   } else {
     query = "";
     if(assetFilters.length == 0 || assetFilters.includes("File")) {
@@ -380,21 +399,26 @@ router.get('/assetsSearch', [
     if(assetFilters.length == 0 || assetFilters.includes("Query")) {
       query += "select queries_res.*, g.name as group_name from (select q.id, q.name, ag.groupId, q.title, q.description, q.createdAt, 'Query' as type from query q left join assets_groups ag on q.id = ag.assetId where q.application_id = (:applicationId) and  (q.name REGEXP (:keyword) or q.title REGEXP (:keyword))) as queries_res left join groups g on queries_res.groupId = g.id ";
       query += (assetFilters.length == 0 || assetFilters.length > 1) ? "union all " : "";
+
     }
     if(assetFilters.length == 0 || assetFilters.includes("Indexes")) {
       query += "select idx_res.*, g.name as group_name from (select idx.id, idx.name, ag.groupId, idx.title, idx.description, idx.createdAt, 'Index' as type from indexes idx left join assets_groups ag on idx.id = ag.assetId where idx.application_id = (:applicationId) and  (idx.name REGEXP (:keyword) or idx.title REGEXP (:keyword))) as idx_res left join groups g on idx_res.groupId = g.id ";
       query += (assetFilters.length == 0 || assetFilters.length > 1) ? "union all " : "";
+
     }
     if(assetFilters.length == 0 || assetFilters.includes("Job")) {
       query += "select j_res.*, g.name as group_name from (select j.id, j.name, ag.groupId, j.title, j.description, j.createdAt, 'Job' as type from job j left join assets_groups ag on j.id = ag.assetId where j.application_id = (:applicationId) and  (j.name REGEXP (:keyword) or j.title REGEXP (:keyword))) as j_res left join groups g on j_res.groupId = g.id ";
       query += (assetFilters.length == 0 || assetFilters.length > 1) ? "union all " : "";
+
     }
     if(assetFilters.length == 0 || assetFilters.includes("Groups")) {
       query += "select g.id, g.name, g.parent_group as groupId, gp.name as group_name, '' as title, g.description, g.createdAt, 'Group' as type  from groups g inner join groups gp on g.parent_group = gp.id where g.application_id = (:applicationId) and g.name REGEXP (:keyword) ";
       //query += (assetFilters.length == 0 || assetFilters.length > 1) ? "union all " : "";
+
     }
     replacements = { applicationId: req.query.app_id, keyword: keywords }
   }
+
   models.sequelize.query(query, {
     type: models.sequelize.QueryTypes.SELECT,
     replacements: replacements
@@ -564,7 +588,6 @@ router.put('/move/asset', [
             }
         })
       } else {
-        console.log(">>>> Group found needs update")
         Groups.update({parent_group:destGroupId}, {where:{application_id:appId, id:assetId}}).then((updated) => {
           res.json({"success":true});
         })
