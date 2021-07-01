@@ -31,27 +31,31 @@ class QueueDaemon {
   }
 
   async bootstrap() {
-    await this.consumer.connect();
+    try {
+      await this.consumer.connect();
 
-    await this.consumer.subscribe({ topic: JOB_COMPLETE_TOPIC, fromBeginning: true });
+      await this.consumer.subscribe({ topic: JOB_COMPLETE_TOPIC, fromBeginning: true });
 
-    await this.consumer.subscribe({ topic: START_JOB_TOPIC, fromBeginning: true });
+      await this.consumer.subscribe({ topic: START_JOB_TOPIC, fromBeginning: true });
 
-    await this.consumer.run({
-      eachMessage: async ({ topic, partition, message }) => {
-        console.log('topic: '+topic);
-        switch (topic) {
-          case JOB_COMPLETE_TOPIC:
-            this.processJob(message.value.toString());
-            break;
-          case START_JOB_TOPIC:
-            this.startJob(message.value.toString());
-            break;
-        }
-      },
-    });
+      await this.consumer.run({
+        eachMessage: async ({ topic, partition, message }) => {
+          console.log('topic: '+topic);
+          switch (topic) {
+            case JOB_COMPLETE_TOPIC:
+              this.processJob(message.value.toString());
+              break;
+            case START_JOB_TOPIC:
+              this.startJob(message.value.toString());
+              break;
+          }
+        },
+      });
 
-    await this.producer.connect();
+      await this.producer.connect();
+    }catch (err) {      
+      console.log(err);
+    }
   }
 
   async shutdown() {
