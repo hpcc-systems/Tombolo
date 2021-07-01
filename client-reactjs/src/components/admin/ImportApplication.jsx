@@ -11,7 +11,7 @@ function ImportApplication() {
           console.log("Uploading >>>>" , info.file, info.fileList);
         }
         if (info.file.status === 'done') {
-          console.log(`<<<< ${info.file.name} file uploaded successfully`);
+          console.log(`<<<< 0${info.file.name} file uploaded successfully`);
         } else if (info.file.status === 'error') {
           console.log(` <<<< ${info.file.name} file upload failed.`);
         }
