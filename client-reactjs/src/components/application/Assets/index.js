@@ -168,11 +168,6 @@ const Assets = () => {
       })
       .then((data) => {
         setTreeData(data);
-      
-        store.dispatch({
-          type: Constants.UPDATE_TREE,
-          payload: data,
-        });
         //flatten the tree
         let list = generateList(data);
         // setDataList(list);
