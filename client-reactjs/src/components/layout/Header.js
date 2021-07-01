@@ -10,8 +10,7 @@ import { groupsActions } from '../../redux/actions/Groups';
 import { assetsActions } from '../../redux/actions/Assets';
 import { QuestionCircleOutlined, DownOutlined  } from '@ant-design/icons';
 import $ from 'jquery';
-import {Constants} from "../common/Constants"
-import {store} from "../../redux/store/Store"
+
 
 const { Header, Content } = Layout;
 const { Search } = Input;
@@ -152,10 +151,6 @@ class AppHeader extends Component {
     }
 
     handleChange(event) {
-      store.dispatch({
-        type: Constants.DATAFLOW_SELECTED,
-        selectedDataflow: {dataflowId: ""}
-      })
       this.props.dispatch(applicationActions.applicationSelected(event.target.getAttribute("data-value"), event.target.getAttribute("data-display")));
       localStorage.setItem("activeProjectId", event.target.getAttribute("data-value"));
       this.setState({ selected: event.target.getAttribute("data-display") });
