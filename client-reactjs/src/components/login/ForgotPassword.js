@@ -44,10 +44,8 @@ class ForgotPassword extends React.Component {
 	    }).then(response =>{
         message.config({top:110})
         if(response.ok){
-          console.log("email sent sucess >>>>" , response )
           this.setState({sendingEmail: false, success: true})
         }else if(response.status === 422){
-          console.log("error >>>>", response)
           message.error("Invalid Email")
           this.setState({sendingEmail: false, submitted: false})
         }else if(response.status === 500){
@@ -57,9 +55,7 @@ class ForgotPassword extends React.Component {
           this.setState({sendingEmail: false, submitted: false})
           message.error("Unable to send Password reset instructions")
         }
-      }
-        )
-        
+      })     
 	  }
   }
 

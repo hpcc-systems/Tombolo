@@ -17,6 +17,7 @@
     "history": "^4.10.1",
     "http-proxy-middleware": "^1.0.6",
     "jquery": "^3.6.0",
+    "jspdf": "^2.3.1",
     "jwt-decode": "^2.2.0",
     "papaparse": "^5.2.0",
     "path-to-regexp": "^1.7.0",
@@ -34,6 +35,7 @@
     "redux": "^4.0.5",
     "redux-thunk": "^2.3.0",
     "showdown": "^1.9.1",
+    "styled-components": "^5.3.0",
     "swr": "^0.4.2",
     "treant-js": "^1.0.1",
     "xml2js": "^0.4.23"
