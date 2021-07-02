@@ -13,15 +13,100 @@ function ImportApplication() {
   const [ applicationStatus, setApplicationStatus] = useState("pending")
   const [ assetsStatus, setAssetsStatus] = useState("pending")
 
-//<<<< Test simulation
+
+  //Import app function
+  const importApp  = () => {
+    console.log("<<<< Importing application")
+
+    //Steps 
+    // 1. Check if importing is true
+    //2. check if file is uploaded
+      //2.a. hide import btn
+      //2.b. hide file name
+      //2.c. hide modal cancel btn
+    //3. if 1 and 3 are satisfied make API call
+    //4. Check file data
+    //5. if file has incorrect data send back to clent with appropriate message
+    //6. if correct create app, group and assets
+    //7. send status of each action on number 6
+
+
+    // if(this.state.applications.filter(application => {
+    //   if (application.id != this.state.newApp.id && application.title == this.state.newApp.title) {
+    //     return application;
+    //   }
+    // }).length > 0) {
+    //   message.config({top:150})
+    //   message.error("There is already an application with the same name. Please select a different name.")
+    //   return;
+    // }
+    // this.setState({
+    //   confirmLoading: true,
+    //   submitted: true
+    // });
+
+    // if(this.state.newApp.title) {
+    //   var userId = (this.props.user) ? this.props.user.username : "";
+    //   let data = JSON.stringify({
+    //     "id": this.state.newApp.id,
+    //     "title" : this.state.newApp.title,
+    //     "description" : this.state.newApp.description,
+    //     "user_id":userId,
+    //     "creator":this.props.user.username});
+
+    // 	  fetch("/api/app/read/newapp", {
+    //       method: 'post',
+    //       headers: authHeader(),
+    //       body: data
+    //     }).then((response) => {
+    //     if(response.ok) {
+    //       return response.json();
+    //     }
+    //     handleError(response);
+    //   })
+    //   .then(response => {
+    //     if(this.state.newApp.id == '') {
+    //       console.log('new app')
+    //       //new application
+    //       this.props.dispatch(applicationActions.newApplicationAdded(response.id, this.state.newApp.title));
+    //     } else {
+    //       console.log('update app')
+    //       //updating an application
+    //       this.props.dispatch(applicationActions.applicationUpdated(this.state.newApp.id, this.state.newApp.title));
+    //     }
+
+  	//   	this.setState({
+    //     ...this.state,
+    //       newApp: {
+    //         ...this.state.newApp,
+    //         id : '',
+    //         title: '',
+    //         description:''
+    //       },
+    //       showAddApp: false,
+    //       confirmLoading: false,
+    //       submitted:false
+    //     });
+
+  	//     this.getApplications();
+    //   }).catch(error => {
+    //     console.log(error);
+    //   });
+    }
+//<<<< <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<Test simulation
 const startSimulation = (time, status, action) =>{
   setTimeout(() =>{
     action(status)
   }, time)
   }
+
+
   //Handle Import
   const handleImport = () => {
     setImportStatus(true);
+
+
+    //Simulation
     startSimulation(1000, "underway",setDataStatus);
     startSimulation(3000, "completed",setDataStatus);
     startSimulation(3100, "underway",setApplicationStatus);
@@ -30,6 +115,7 @@ const startSimulation = (time, status, action) =>{
     startSimulation(9000, "completed",setAssetsStatus);
   }
 
+  //Status icon
   const statusIconSwitch = (item) => {
     switch(item){
       case 'pending':
@@ -38,10 +124,11 @@ const startSimulation = (time, status, action) =>{
         return <LoadingOutlined />
       case 'completed':
         return <CheckCircleOutlined style={{color: "green"}}/>
-
     }
   }
 
+
+  // Test Props <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
   const props = {
     name: 'file',
     multiple: true,
@@ -49,6 +136,7 @@ const startSimulation = (time, status, action) =>{
     onChange(info) {
       setUploadStatus("")
       const { status } = info.file;
+      console.log("<<<< Status", info.file.status)
       if (status !== 'uploading') {
         console.log("uploading <<<<", info.file, info.fileList);
         setUploadStatus("loaded")
@@ -95,15 +183,13 @@ const startSimulation = (time, status, action) =>{
                     Data must be in JSON format
                   </p>
                 </Dragger>
+
                 <ImportSteps style={{display : importing?"block":"none"}}>
                     <div>{statusIconSwitch(dataStatus)} <span>Inspecting Data ...</span></div>
                     <div>{statusIconSwitch(applicationStatus)} <span>Importing Application ...</span></div>
                     <div>{statusIconSwitch(assetsStatus)} <span>Importing Assets ...</span></div>
-
                   </ImportSteps>
             </Modal>
-          
-         
         </ImportElemnt>
     )
 }

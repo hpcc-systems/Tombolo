@@ -142,4 +142,44 @@ router.post('/saveUserApp', function (req, res) {
     return res.status(500).json({ success: false, message: "Error occured while saving user application mapping" });
   }
 });
+
+//Import application
+router.post('/importApp', [
+  body('user_id')
+    .optional({checkFalsy:true})
+    .matches(/^[a-zA-Z]{1}[a-zA-Z0-9_:.\-]*$/).withMessage('Invalid user_id'),
+  body('title')
+    .matches(/^[a-zA-Z]{1}[a-zA-Z0-9_:.\-]*$/).withMessage('Invalid title'),
+  body('description')
+    .optional({checkFalsy:true}),
+  body('creator')
+    .matches(/^[a-zA-Z]{1}[a-zA-Z0-9_:.\-]*$/).withMessage('Invalid creator'),
+],function (req, res) {
+  console.log("<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<< creating app", req.body)
+  const errors = validationResult(req).formatWith(validatorUtil.errorFormatter);
+  if (!errors.isEmpty()) {
+    return res.status(422).json({ success: false, errors: errors.array() });
+  }
+  try {
+    if(req.body.id == '') {
+      models.application.create({"title":req.body.title, "description":req.body.description, "creator": req.body.creator}).then(function(application) {
+        if(req.body.user_id)
+          models.user_application.create({"user_id":req.body.user_id, "application_id":application.id}).then(function(userapp) {
+          res.json({"result":"success", "id": application.id});
+        });
+      else
+          res.json({"result":"success", "id": application.id});
+      });
+    } else {
+      models.application.update(req.body, {where:{id:req.body.id}}).then(function(result){
+          res.json({"result":"success", "id": result.id});
+      })
+    }
+  } catch (err) {
+    console.log('err', err);
+    return res.status(500).json({ success: false, message: "Error occured while creating application" });
+  }
+});
+
+
 module.exports = router;
