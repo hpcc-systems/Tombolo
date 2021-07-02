@@ -33,6 +33,7 @@ import {
   DownOutlined,
   SettingOutlined,
   FilePdfOutlined,
+  PlusOutlined
 } from "@ant-design/icons";
 import TitleRenderer from "./TitleRenderer.js";
 import {  addingAssetMode } from "../../common/readOnlyUtil";
@@ -385,7 +386,7 @@ const Assets = () => {
               key="Group"
               className="directorytree-rightclick-menuitem"
             >
-              <FolderOutlined /> New Group
+              <PlusOutlined /> New Group
             </Menu.Item>
             {selectedGroup &&
             selectedGroup.id != null &&
@@ -464,39 +465,33 @@ const Assets = () => {
         id: newGroup.id,
       }),
     })
-      .then(function (response) {
-        if (response.ok && response.status == 200) {
-          return response.json();
-        }
-        handleError(response);
-      })
-      .then(function (response) {
-        if (response.ok && response.status == 200) {
-          return response.json();
-        }
-        handleError(response);
-      })
-      .then(function (data) {
-        if (data && data.success) {
-          let expandedKeys = !groupsReducer.expandedKeys.includes(
-            selectedGroup.key
+    .then(function (response) {
+      if (response.ok && response.status == 200) {
+        return response.json();
+      }
+      handleError(response);
+    })      
+    .then(function (data) {
+      if (data && data.success) {
+        let expandedKeys = !groupsReducer.expandedKeys.includes(
+          selectedGroup.key
+        )
+          ? groupsReducer.expandedKeys.concat([selectedGroup.key])
+          : groupsReducer.expandedKeys;
+        expandedGroups = expandedKeys;
+        dispatch(
+          groupsActions.groupExpanded(
+            { id: selectedGroup.id, key: selectedGroup.key },
+            expandedKeys
           )
-            ? groupsReducer.expandedKeys.concat([selectedGroup.key])
-            : groupsReducer.expandedKeys;
-          expandedGroups = expandedKeys;
-          dispatch(
-            groupsActions.groupExpanded(
-              { id: selectedGroup.id, key: selectedGroup.key },
-              expandedKeys
-            )
-          );
-          closeCreateGroupDialog();
-          fetchGroups();
-        }
-      })
-      .catch((error) => {
-        console.log(error);
-      });
+        );
+        closeCreateGroupDialog();
+        fetchGroups();
+      }
+    })
+    .catch((error) => {
+      console.log(error);
+    });
   };
 
   const handleDeleteGroup = () => {
