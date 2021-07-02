@@ -54,16 +54,19 @@ message.config({ top: 100 });
 const Assets = () => {
   const { isShowing, toggle, OpenDetailsForm } = useFileDetailsForm();
   const { showMoveDialog = isShowing, toggleMoveDialog = toggle } = useModal();
+  const groupsReducer = useSelector((state) => state.groupsReducer);
+  const assetReducer = useSelector((state) => state.assetReducer);
+  const applicationReducer = useSelector((state) => state.applicationReducer);
+  let application = applicationReducer.application;
+  
+  const prevSelectedApplicationRef = useRef();
   let assetToMove = {
     id: "",
     type: "",
     title: "",
     selectedGroup: {},
   };
-  const groupsReducer = useSelector((state) => state.groupsReducer);
-  const assetReducer = useSelector((state) => state.assetReducer);
-  const applicationReducer = useSelector((state) => state.applicationReducer);
-  let application = applicationReducer.application;
+  
   // const [selectedGroup, setSelectedGroup] = useState({
   //   id: groupsReducer.selectedKeys.id,
   //   title: "",
@@ -134,11 +137,22 @@ const Assets = () => {
 
   //Re-render Directory Tree when the tree structure us chaged on modal
   useEffect(() => {
+    //application changed
+    if(application && prevSelectedApplicationRef.current && application.applicationId != prevSelectedApplicationRef.current.applicationId) {      
+      selectedGroup = { id: "", title: "", key: "0-0" };
+      dispatch(
+        groupsActions.groupExpanded(
+          selectedGroup,
+          ["0-0"]
+        )
+      );
+    }
+    prevSelectedApplicationRef.current = application;
     fetchGroups();
-    selectedGroup = { id: "", title: "", key: "0-0" };
+    
     if (assetInGroupId) {
       openGroup(assetInGroupId);
-   }
+    }
   }, [groupsMoveReducer, assetInGroupId, application])
 
   useEffect(() => {
@@ -168,11 +182,6 @@ const Assets = () => {
       })
       .then((data) => {
         setTreeData(data);
-      
-        store.dispatch({
-          type: Constants.UPDATE_TREE,
-          payload: data,
-        });
         //flatten the tree
         let list = generateList(data);
         // setDataList(list);

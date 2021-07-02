@@ -182,7 +182,7 @@ router.get('/assets', [
       order: [['name', 'ASC']]
       }).then(async (assets) => {
         let childGroups = await getChildGroups(req.query.app_id, req.query.group_id)
-        assets[0].files.forEach((file) => {
+        assets[0] && assets[0].files.forEach((file) => {
           finalAssets.push({
             type: 'File',
             id: file.id,
@@ -192,7 +192,7 @@ router.get('/assets', [
             createdAt: file.createdAt
           })
         })
-        assets[0].jobs.forEach((job) => {
+        assets[0] && assets[0].jobs.forEach((job) => {
           finalAssets.push({
             type: 'Job',
             id: job.id,
@@ -202,7 +202,7 @@ router.get('/assets', [
             createdAt: job.createdAt
           })
         })
-        assets[0].indexes.forEach((index) => {
+        assets[0] && assets[0].indexes.forEach((index) => {
           finalAssets.push({
             type: 'Index',
             id: index.id,
@@ -212,7 +212,7 @@ router.get('/assets', [
             createdAt: index.createdAt
           })
         })
-        assets[0].queries.forEach((query) => {
+        assets[0] && assets[0].queries.forEach((query) => {
           finalAssets.push({
             type: 'Query',
             id: query.id,
