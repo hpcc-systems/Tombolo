@@ -107,8 +107,8 @@ const Assets = () => {
   let assetTypeFilter = ["File", "Job", "Query", "Indexes", "Groups"];
   //const [searchKeyWord, setSearchKeyWord] = useState('');
   let searchKeyWord = "";
-  // const [dataList, setDataList] = useState([]);
-  let dataList = [];
+  const [dataList, setDataList] = useState([]);
+  //let dataList = [];
   //id of the group clicked from Asset table after a search
   const { assetInGroupId } = assetReducer;
   const groupsMoveReducer = useSelector((state) => state.groupsMoveReducer);
@@ -185,7 +185,7 @@ const Assets = () => {
         setTreeData(data);
         //flatten the tree
         let list = generateList(data);
-        // setDataList(list);
+        setDataList(list);        
         clearSearch();
       })
       .catch((error) => {
@@ -248,10 +248,10 @@ const Assets = () => {
     return list;
   };
 
-  const openGroup = (groupId) => {
-    if (groupId && groupId.length > 0) {
+  const openGroup = (groupId) => {        
+    if (groupId) {      
       let match = dataList.filter((group) => group.id == groupId);
-      if (match) {
+      if (match && match.length > 0) {
         let parent = getParent(match[0].key, treeData);
         if (parent) {
           let expandedKeys = !groupsReducer.expandedKeys.includes(parent.key)
@@ -324,6 +324,7 @@ const Assets = () => {
   };
 
   const handleMenuClick = (e) => {
+    console.log("handleMenuClick")
     setRightClickNodeTreeItem({ visible: false });
     dispatch(
       assetsActions.newAsset(application.applicationId, selectedGroup.id)
@@ -759,6 +760,7 @@ const Assets = () => {
           <div className="asset-table">
             <AssetsTable
               selectedGroup={selectedGroup}
+              openGroup={openGroup}
               handleEditGroup={handleEditGroup}
               refreshGroups={fetchGroups}
             />

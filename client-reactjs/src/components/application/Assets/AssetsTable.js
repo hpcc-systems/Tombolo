@@ -22,7 +22,7 @@ import showdown from "showdown";
 import SelectDetailsForPdfDialog from "../Assets/pdf/SelectDetailsForPdfDialog";
 import { getNestedAssets} from "../Assets/pdf/downloadPdf"
 
-function AssetsTable({ selectedGroup, handleEditGroup, refreshGroups }) {
+function AssetsTable({ selectedGroup, openGroup, handleEditGroup, refreshGroups }) {
   const [assets, setAssets] = useState([]);
   const { isShowing, toggle, OpenDetailsForm } = useFileDetailsForm();
   const authReducer = useSelector((state) => state.authenticationReducer);
@@ -89,27 +89,27 @@ function AssetsTable({ selectedGroup, handleEditGroup, refreshGroups }) {
     fetch(url, {
       headers: authHeader(),
     })
-      .then((response) => {
-        if (response.ok) {
-          return response.json();
-        }
-        handleError(response);
-      })
-      .then((data) => {
-        //Converting Markdown to plain text
-        const converter = new showdown.Converter();
-        data.map((item) =>
-          item.description
-            ? (item.description = converter
-                .makeHtml(item.description)
-                .replace(/<[^>]*>/g, ""))
-            : ""
-        );
-        setAssets(data);
-      })
-      .catch((error) => {
-        console.log(error);
-      });
+    .then((response) => {
+      if (response.ok) {
+        return response.json();
+      }
+      handleError(response);
+    })
+    .then((data) => {
+      //Converting Markdown to plain text
+      const converter = new showdown.Converter();
+      data.map((item) =>
+        item.description
+          ? (item.description = converter
+              .makeHtml(item.description)
+              .replace(/<[^>]*>/g, ""))
+          : ""
+      );
+      setAssets(data);
+    })
+    .catch((error) => {
+      console.log(error);
+    });
   };
 
 
@@ -138,7 +138,11 @@ function AssetsTable({ selectedGroup, handleEditGroup, refreshGroups }) {
         history.push("/" + applicationId + "/assets/query/" + id);
         break;
       case "Group":
-        handleEditGroup(id);
+        if(action != 'edit') {
+          openGroup(id);
+        } else {
+          handleEditGroup(id);
+        }
         break;
       default:
         break;
