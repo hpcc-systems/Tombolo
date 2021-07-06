@@ -8,6 +8,17 @@ let File = models.file;
 let FileLayout = models.file_layout;
 let FileLicense = models.file_license;
 let FileValidation = models.file_validation;
+let Index = models.indexes;
+let IndexKey = models.index_key;
+let IndexPayload = models.index_payload;
+let Job = models.job;
+let JobFile = models.jobfile;
+let JobParam = models.jobparam;
+let Query = models.query;
+let QueryField = models.query_field;
+let Dataflow = models.dataflow;
+let DataflowGraph = models.dataflowgraph;
+
 const validatorUtil = require('../../utils/validator');
 const { body, query, validationResult } = require('express-validator');
 const NotificationModule = require('../notifications/email-notification');
@@ -165,14 +176,65 @@ router.post('/export', [
       applicationExport.cluster = application.cluster;
 
       let files = await File.findAll({where: {application_id: application.id}, 
-        include: [FileLayout, FileLicense, FileValidation],
+        include: [
+          {model: FileLayout, attributes: { exclude: ['createdAt', 'updatedAt', 'id', 'application_id'] }}, 
+          {model: FileLicense, attributes: { exclude: ['createdAt', 'updatedAt', 'id', 'application_id'] }}, 
+          {model: FileValidation, attributes: { exclude: ['createdAt', 'updatedAt', 'id', 'application_id'] }}
+        ],
         attributes: { exclude: ['createdAt', 'updatedAt', 'id', 'application_id'] }
       }); 
-      applicationExport.assets = {files: files};
-        
-      //assetUtil.fileInfo(req.query.app_id, req.query.file_id).then((fileInfo)
 
-      res.json(applicationExport);
+      let indexes = await Index.findAll({where: {application_id: application.id}, 
+        include: [
+          {model: IndexKey, attributes: { exclude: ['createdAt', 'updatedAt', 'id', 'application_id'] }}, 
+          {model: IndexPayload, attributes: { exclude: ['createdAt', 'updatedAt', 'id', 'application_id'] }}
+        ],
+        attributes: { exclude: ['createdAt', 'updatedAt', 'id', 'application_id'] }
+      }); 
+
+      let queries = await Query.findAll({where: {application_id: application.id}, 
+        include: [{model: QueryField, attributes: { exclude: ['createdAt', 'updatedAt', 'id', 'application_id'] }}],
+        attributes: { exclude: ['createdAt', 'updatedAt', 'id', 'application_id'] }
+      }); 
+
+      let jobs = await Job.findAll({where: {application_id: application.id}, 
+        include: [
+          {model: JobFile, attributes: { exclude: ['createdAt', 'updatedAt', 'id', 'application_id'] }}, 
+          {model: JobParam, attributes: { exclude: ['createdAt', 'updatedAt', 'id', 'application_id'] }}
+        ],
+        attributes: { exclude: ['createdAt', 'updatedAt', 'id', 'application_id', 'assetId'] }
+      }); 
+
+      let dataflow = await Dataflow.findAll({where: {application_id: application.id}, 
+        include: [{model: DataflowGraph, attributes: { exclude: ['createdAt', 'updatedAt', 'id', 'application_id'] }}],
+        attributes: { exclude: ['createdAt', 'updatedAt', 'id', 'application_id'] }
+      }); 
+
+      applicationExport.assets = {files: files, indexes: indexes, queries: queries, jobs: jobs, dataflow: dataflow};
+        
+      var schemaDir = path.join(__dirname, '..', '..', 'export');
+      if (!fs.existsSync(schemaDir)){
+        fs.mkdirSync(schemaDir);
+      }
+      var exportFile = path.join(__dirname, '..', '..', 'schemas', application.title+'-export.ecl');
+      
+      fs.appendFile(applicationExport.toString(), schema, function (err) {
+          if (err) return res.status(500).send("Error occured while exporting application");
+          res.download(exportFile, function(err){
+            if (err) {
+              console.log("Error occured during download...")
+              res.status(500).send("Error occured while exporting application");;
+            } else {
+              console.log("Download completed...")
+              fs.unlink(exportFile, (err) => {
+                if (err) res.status(500).send("Error occured while exporting application");;
+                console.log(exportFile + ' was deleted after download');
+              });
+            }
+          });
+      });
+
+      //res.json(applicationExport);
     })
   } catch (err) {
     console.log('err', err);
