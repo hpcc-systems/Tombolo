@@ -550,8 +550,8 @@ router.post('/saveJob', [
             cron: null,
           }, {
             where: { assetId: jobId, dataflowId: req.body.job.basic.dataflowId }
-          }).then((assetDataflowupdated) => {
-            JobScheduler.removeJobFromScheduler(req.body.job.basic.name + '-' + req.body.job.basic.dataflowId + '-' + jobId);
+          }).then(async (assetDataflowupdated) => {
+            await JobScheduler.removeJobFromScheduler(req.body.job.basic.name + '-' + req.body.job.basic.dataflowId + '-' + jobId);
           })
           await MessageBasedJobs.destroy({
             where: {
@@ -604,7 +604,7 @@ router.post('/saveJob', [
 
               //remove existing job with same name
               try {
-                JobScheduler.removeJobFromScheduler(req.body.job.basic.name + '-' + req.body.job.basic.dataflowId + '-' + jobId);
+                await JobScheduler.removeJobFromScheduler(req.body.job.basic.name + '-' + req.body.job.basic.dataflowId + '-' + jobId);
                 await JobScheduler.addJobToScheduler(
                   req.body.job.basic.name,
                   cronExpression,
@@ -646,8 +646,8 @@ router.post('/saveJob', [
               cron: null,
             }, {
               where: { assetId: jobId, dataflowId: req.body.job.basic.dataflowId }
-            }).then((assetDataflowupdated) => {
-              JobScheduler.removeJobFromScheduler(req.body.job.basic.name + '-' + req.body.job.basic.dataflowId + '-' + jobId);
+            }).then(async (assetDataflowupdated) => {
+              await JobScheduler.removeJobFromScheduler(req.body.job.basic.name + '-' + req.body.job.basic.dataflowId + '-' + jobId);
             })
 
             await DependentJobs.destroy({
