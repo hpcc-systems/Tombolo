@@ -33,7 +33,6 @@ import { SearchOutlined } from "@ant-design/icons";
 import { assetsActions } from "../../../redux/actions/Assets";
 import { store } from "../../../redux/store/Store";
 import { Constants } from "../../common/Constants";
-import ReactMarkdown from "react-markdown";
 import { readOnlyMode, editableMode } from "../../common/readOnlyUtil";
 import BasicsTabGeneral from "./BasicsTabGeneral";
 import BasicsTabSpray from "./BasicsTabSpray";
@@ -1535,12 +1534,12 @@ class JobDetails extends Component {
             Job : {this.state.job.name}
           </div>
         )}
-        <div>
+        <div className={this.props.displayingInModal? "assetDetails-content-wrapper-modal" :   "assetDetails-content-wrapper"} >
           {!this.props.isNew ? (
             <div className="loader">
               <Spin spinning={this.state.initialDataLoading} size="large" />
             </div>) : null}
-          <Form {...formItemLayout} labelAlign="left" ref={this.formRef} onFinish={this.handleOk} >
+          <Form {...formItemLayout} labelAlign="left" ref={this.formRef} onFinish={this.handleOk}  >
           <Tabs defaultActiveKey="1" tabBarExtraContent = {editandViewBtns }>
 
           <TabPane tab="Basic" key="1">
@@ -1932,8 +1931,8 @@ class JobDetails extends Component {
             </Tabs>
           </Form>
         </div>
-        <div>
-          <span style={{ float: "left" }}>
+        <div className={this.props.displayingInModal ? "assetDetail-buttons-wrapper-modal" : "assetDetail-buttons-wrapper"}>
+          <span >
             <Button
               disabled={
                 !editingAllowed || !this.state.enableEdit || this.props.isNew

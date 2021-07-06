@@ -179,7 +179,6 @@ const startSimulation = (time, status, action) =>{
   //<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
   const onFileChange = (e) =>{
     setFile(e.target.files[0])
-    alert(e.target.files[0])
   }
 
   const handleFileSubmit = (e) => {
@@ -193,18 +192,19 @@ const startSimulation = (time, status, action) =>{
       headers: authHeader("importApp"),
       body: formData
     }).then((response) => {
-      console.log("<<<< Api called")
+      console.log("<<<< response ", response)
     if(response.ok) {
       return response.json();
     }
     handleError(response);
+    console.log("Error occured")
   })
   }
   //<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
   
     return (
         <ImportElemnt>
-            <Button style={{display: "flex", placeItems : "center", marginRight: "10px"}} 
+           <Button style={{display: "flex", placeItems : "center", marginRight: "10px"}} 
               className="btn btn-sm btn-primary" 
               onClick={() =>setModalVisiblity(true)}
               icon={<ImportOutlined  />}>Import App
@@ -222,6 +222,7 @@ const startSimulation = (time, status, action) =>{
                       onClick={ handleImport}
                       >Start Import</Button> 
                       : null}>
+                        <br></br>
                 <Dragger 
                 maxCount={1}
                 className="importApplication_dragger"
@@ -235,8 +236,10 @@ const startSimulation = (time, status, action) =>{
                   <p className="ant-upload-hint">
                     Data must be in JSON format
                   </p>
-                </Dragger>
+                </Dragger> 
              {/* --------------------------------------------------------------- */}
+             <br></br> <br></br> <br></br>
+
              <form>
                 <input type="file" id="myFile" name="filename" onChange={onFileChange}/>
                 <input type="submit" onClick={handleFileSubmit} />

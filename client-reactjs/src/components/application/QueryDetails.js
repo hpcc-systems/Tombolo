@@ -546,7 +546,7 @@ class QueryDetails extends PureComponent {
               Query :  {this.state.query.name}
           </div>
         }
-        <div>
+        <div className="assetDetails-content-wrapper">
         {!this.props.isNew ?
             <div className="loader">
               <Spin spinning={this.state.initialDataLoading} size="large" />
@@ -719,8 +719,9 @@ class QueryDetails extends PureComponent {
             </TabPane> : null}
         </Tabs>
       </div>
+      <div className="assetDetail-buttons-wrapper" style={{justifyContent: "flex-end"}} >
       {this.state.enableEdit ?
-          <div className="button-container">
+          <div className="button-container" >
             <Button key="danger" type="danger" onClick={this.handleDelete}>Delete</Button>
             <Button key="back" onClick={this.handleCancel}>
               Cancel
@@ -749,6 +750,8 @@ class QueryDetails extends PureComponent {
         </div>
       
       }
+      </div>
+  
       </React.Fragment>
     );
   }

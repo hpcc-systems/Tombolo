@@ -7,9 +7,7 @@ export function authHeader(action) {
 
     if( user && user.token && action){
       return {
-        'Authorization': 'Bearer ' + user.token,
-        // 'Accept': 'application/json',
-        // 'Content-Type': 'application/json'
+        'Authorization': 'Bearer ' + user.token
     };
     }
     else if (user && user.token) {

@@ -851,3 +851,38 @@ h6 {
 .ant-modal-close-x {
   color: var(--dark);
 }
+
+.assetDetail-buttons-wrapper-modal{
+  padding: 10px 0px 0px 20px; 
+   background: var(--light);
+   margin: 10px 0px 0px -16px;
+   display: flex;
+   place-items: center;
+   justify-content: space-between;
+}
+
+.assetDetails-content-wrapper-modal{
+  height: 55vh;
+   overflow:auto;  
+   padding-bottom : 20px;
+}
+
+.assetDetail-buttons-wrapper{
+  position: fixed;
+  bottom: 0;
+  padding: 10px 0px 0px 20px; 
+  border-top: 1px solid lightgray;
+  width: 88.5vw;
+   bottom: 0; 
+   background: var(--light);
+   margin: 10px 0px 0px -16px;
+   display: flex; 
+   place-items: center;
+   justify-content: space-between;
+}
+
+.assetDetails-content-wrapper{
+  height: 80vh;
+   overflow:auto;  
+   padding-bottom : 50px;
+}

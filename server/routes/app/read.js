@@ -11,6 +11,7 @@ const authServiceUtil = require('../../utils/auth-service-utils');
 let Sequelize = require('sequelize');
 const Op = Sequelize.Op;
 const multer = require('multer');
+const fs = require('fs');
 
 
 router.get('/app_list', (req, res) => {
@@ -147,7 +148,15 @@ router.post('/saveUserApp', function (req, res) {
 
 //Import application
 let upload = multer();
- upload = multer({ dest: 'uploads/' })
+upload = multer({ dest: 'uploads/'})
+const validateJSON = (data) =>{
+  try{
+    var data = JSON.parse(data)
+    return data;
+  }catch(e){
+    return "error"
+  }
+}
 
 router.post('/importApp', [
   body('user_id')
@@ -160,9 +169,36 @@ router.post('/importApp', [
   body('creator')
     .matches(/^[a-zA-Z]{1}[a-zA-Z0-9_:.\-]*$/).withMessage('Invalid creator'),
 ], upload.single("file"), function (req, res) {
-  console.log("<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<")
-  console.log("<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<< creating app",  req.file);
+  console.log("<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<");
+fs.readFile(`uploads/${req.file.filename}`, (err,data) => {
+  if(err){
+    res.status().send("Unable to read file. Data must be in JSON format")
+    return;
+  }else{
+    console.log("<<<< Data", data)
+    let parsedData = validateJSON(data)
+    if(parsedData === "error"){
+      res.status(400).json({success: false, error: "Unable to read file uploaded. Data must be in JSON format"});
+      return;
+    }else {
+      console.log(parsedData, "<<<< Data returned ")
+      // create app and assets
+      //delete file 
+      setTimeout(() => {
+        // console.log("<<<< Remove file", `/upload/${parsedData.filename}`)
+        fs.unlink(`uploads/${req.file.filename}`, (err) =>{
+          if(err){
+            console.log("<<<< Error", err)
+          }else{
+            console.log("deleted <<<<")
 
+          }
+        })
+      },2000)
+
+    }
+  }
+})
   // const errors = validationResult(req).formatWith(validatorUtil.errorFormatter);
   // if (!errors.isEmpty()) {
   //   return res.status(422).json({ success: false, errors: errors.array() });
