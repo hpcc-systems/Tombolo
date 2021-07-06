@@ -522,10 +522,10 @@ router.post('/saveJob', [
         console.log("Error occured in updateJobDetails....")
         return res.status(500).json({ success: false, message: "Error occured while saving the job" });
       });
-      if (req.body.job.schedule.type) {
       switch (req.body.job.schedule.type) {
+        
         case "":
-          await AssetDataflow.update({
+          AssetDataflow.update({
             cron: null,
           }, {
             where: { assetId: jobId, dataflowId: req.body.job.basic.dataflowId }
@@ -682,22 +682,7 @@ router.post('/saveJob', [
               message: 'Unable to save job schedule'
             });
           }
-      }
-
-    } else {
-      await AssetDataflow.update({
-        cron: null,
-      }, {
-        where: { assetId: jobId, dataflowId: req.body.job.basic.dataflowId }
-      });
-      await DependentJobs.destroy({
-        where: {
-          jobId: jobId,
-          dataflowId: req.body.job.basic.dataflowId
-        }
-      });
-    }
-
+      }    
     return res.json(response);
   });
 

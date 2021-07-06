@@ -174,6 +174,7 @@ class JobScheduler {
   async executeJob(name, clusterId, dataflowId, applicationId, jobId, jobfileName, jobType, sprayedFileScope, sprayFileName, sprayDropZone) {
     try {
       let uniqueJobName = name + '-' + dataflowId + '-' + jobId;
+      await this.removeJobFromScheduler(uniqueJobName);
       this.bree.add({
         name: uniqueJobName,
         timeout: 0,
