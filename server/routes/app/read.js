@@ -10,6 +10,8 @@ const NotificationModule = require('../notifications/email-notification');
 const authServiceUtil = require('../../utils/auth-service-utils');
 let Sequelize = require('sequelize');
 const Op = Sequelize.Op;
+const multer = require('multer');
+
 
 router.get('/app_list', (req, res) => {
   console.log("[app/read.js] - App route called");
@@ -144,6 +146,9 @@ router.post('/saveUserApp', function (req, res) {
 });
 
 //Import application
+let upload = multer();
+ upload = multer({ dest: 'uploads/' })
+
 router.post('/importApp', [
   body('user_id')
     .optional({checkFalsy:true})
@@ -154,31 +159,33 @@ router.post('/importApp', [
     .optional({checkFalsy:true}),
   body('creator')
     .matches(/^[a-zA-Z]{1}[a-zA-Z0-9_:.\-]*$/).withMessage('Invalid creator'),
-],function (req, res) {
-  console.log("<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<< creating app", req.body)
-  const errors = validationResult(req).formatWith(validatorUtil.errorFormatter);
-  if (!errors.isEmpty()) {
-    return res.status(422).json({ success: false, errors: errors.array() });
-  }
-  try {
-    if(req.body.id == '') {
-      models.application.create({"title":req.body.title, "description":req.body.description, "creator": req.body.creator}).then(function(application) {
-        if(req.body.user_id)
-          models.user_application.create({"user_id":req.body.user_id, "application_id":application.id}).then(function(userapp) {
-          res.json({"result":"success", "id": application.id});
-        });
-      else
-          res.json({"result":"success", "id": application.id});
-      });
-    } else {
-      models.application.update(req.body, {where:{id:req.body.id}}).then(function(result){
-          res.json({"result":"success", "id": result.id});
-      })
-    }
-  } catch (err) {
-    console.log('err', err);
-    return res.status(500).json({ success: false, message: "Error occured while creating application" });
-  }
+], upload.single("file"), function (req, res) {
+  console.log("<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<")
+  console.log("<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<< creating app",  req.file);
+
+  // const errors = validationResult(req).formatWith(validatorUtil.errorFormatter);
+  // if (!errors.isEmpty()) {
+  //   return res.status(422).json({ success: false, errors: errors.array() });
+  // }
+  // try {
+  //   if(req.body.id == '') {
+  //     models.application.create({"title":req.body.title, "description":req.body.description, "creator": req.body.creator}).then(function(application) {
+  //       if(req.body.user_id)
+  //         models.user_application.create({"user_id":req.body.user_id, "application_id":application.id}).then(function(userapp) {
+  //         res.json({"result":"success", "id": application.id});
+  //       });
+  //     else
+  //         res.json({"result":"success", "id": application.id});
+  //     });
+  //   } else {
+  //     models.application.update(req.body, {where:{id:req.body.id}}).then(function(result){
+  //         res.json({"result":"success", "id": result.id});
+  //     })
+  //   }
+  // } catch (err) {
+  //   console.log('err', err);
+  //   return res.status(500).json({ success: false, message: "Error occured while creating application" });
+  // }
 });
 
 

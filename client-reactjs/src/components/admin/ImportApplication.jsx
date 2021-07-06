@@ -2,12 +2,27 @@ import React, {useState} from 'react'
 import { Upload, message, Button , Modal} from 'antd';
 import { ImportOutlined, InboxOutlined , MinusCircleOutlined , LoadingOutlined, CheckCircleOutlined} from '@ant-design/icons';
 import styled from "styled-components"
+import { authHeader, handleError } from "../common/AuthHeader.js";
+
+    //Steps 
+    // 1. Check if importing is true
+    //2. check if file is uploaded
+      //2.a. hide import btn
+      //2.b. hide file name
+      //2.c. hide modal cancel btn
+     // 🔥 /3. if 1 and 3 are satisfied make API call  
+    //4. Check file data
+    //5. if file has incorrect data send back to clent with appropriate message
+    //6. if correct create app, group and assets
+    //7. send status of each action on number 6
+
 
 
 function ImportApplication() {
   const { Dragger } = Upload;
   const [ modalVisible, setModalVisiblity] = useState(false);
   const [uploadStatus, setUploadStatus] = useState("")
+  const [file, setFile] = useState();
   const [importing, setImportStatus] = useState(false)
   const [ dataStatus, setDataStatus] = useState("pending")
   const [ applicationStatus, setApplicationStatus] = useState("pending")
@@ -16,19 +31,6 @@ function ImportApplication() {
 
   //Import app function
   const importApp  = () => {
-    console.log("<<<< Importing application")
-
-    //Steps 
-    // 1. Check if importing is true
-    //2. check if file is uploaded
-      //2.a. hide import btn
-      //2.b. hide file name
-      //2.c. hide modal cancel btn
-    //3. if 1 and 3 are satisfied make API call
-    //4. Check file data
-    //5. if file has incorrect data send back to clent with appropriate message
-    //6. if correct create app, group and assets
-    //7. send status of each action on number 6
 
 
     // if(this.state.applications.filter(application => {
@@ -64,7 +66,8 @@ function ImportApplication() {
     //     }
     //     handleError(response);
     //   })
-    //   .then(response => {
+    //   .then(response => {  
+     //  🔥 
     //     if(this.state.newApp.id == '') {
     //       console.log('new app')
     //       //new application
@@ -105,6 +108,25 @@ const startSimulation = (time, status, action) =>{
   const handleImport = () => {
     setImportStatus(true);
 
+    //<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
+    let formData = new FormData();
+    formData.append("file", file)
+    for (var pair of formData.entries()) {
+      console.log("<<<< ", pair[0]+ ', ' + pair[1]); 
+  }
+    fetch("/api/app/read/importApp", {
+      method: 'post',
+      headers: authHeader("importApp"),
+      body: formData
+    }).then((response) => {
+      console.log("<<<< Api called")
+    if(response.ok) {
+      return response.json();
+    }
+    handleError(response);
+  })
+
+  //<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
 
     //Simulation
     startSimulation(1000, "underway",setDataStatus);
@@ -118,12 +140,12 @@ const startSimulation = (time, status, action) =>{
   //Status icon
   const statusIconSwitch = (item) => {
     switch(item){
-      case 'pending':
-        return <MinusCircleOutlined/>
+      // case 'pending':
+      //   return <MinusCircleOutlined/>
       case 'underway' :
-        return <LoadingOutlined />
+        return <LoadingOutlined style={{color: "#FFA500	"}} />
       case 'completed':
-        return <CheckCircleOutlined style={{color: "green"}}/>
+        return <CheckCircleOutlined style={{color: "#00FF00"}}/>
     }
   }
 
@@ -131,20 +153,21 @@ const startSimulation = (time, status, action) =>{
   // Test Props <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
   const props = {
     name: 'file',
-    multiple: true,
+    multiple: false,
     action: 'https://www.mocky.io/v2/5cc8019d300000980a055e76',
     onChange(info) {
       setUploadStatus("")
       const { status } = info.file;
-      console.log("<<<< Status", info.file.status)
       if (status !== 'uploading') {
-        console.log("uploading <<<<", info.file, info.fileList);
-        setUploadStatus("loaded")
+        setUploadStatus(status)
       }
       if (status === 'done') {
-        message.success(`<<< Done ${info.file.name} file uploaded successfully.`);
+        setUploadStatus(status);
+        console.log("<<<< File 0", info )
+        console.log("<<<< File", info.file)
+        setFile(info.file);
       } else if (status === 'error') {
-        message.error(`Err <<<< ${info.file.name} file upload failed.`);
+        setUploadStatus(status)
       }
     },
     onDrop(e) {
@@ -152,6 +175,33 @@ const startSimulation = (time, status, action) =>{
     }
   };
 
+
+  //<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
+  const onFileChange = (e) =>{
+    setFile(e.target.files[0])
+    alert(e.target.files[0])
+  }
+
+  const handleFileSubmit = (e) => {
+    console.log(file, "<<<<<<<<<<<<<<<<<<<<<<<<")
+    e.preventDefault();
+    const formData = new FormData();
+    formData.append("file", file)
+
+    fetch("/api/app/read/importApp", {
+      method: 'post',
+      headers: authHeader("importApp"),
+      body: formData
+    }).then((response) => {
+      console.log("<<<< Api called")
+    if(response.ok) {
+      return response.json();
+    }
+    handleError(response);
+  })
+  }
+  //<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
+  
     return (
         <ImportElemnt>
             <Button style={{display: "flex", placeItems : "center", marginRight: "10px"}} 
@@ -160,11 +210,14 @@ const startSimulation = (time, status, action) =>{
               icon={<ImportOutlined  />}>Import App
             </Button>
            
-            <Modal title="Import Application" 
-            className="importApplication__modal"
+            <Modal 
+              // title="Import Application" 
+              title={importing ? null : "Import Application"}
+              closable={!importing}
+              className="importApplication__modal"
               visible={modalVisible} 
               onCancel={() => {setModalVisiblity(false); setUploadStatus("")}}
-              footer={uploadStatus === "loaded" && !importing ? 
+              footer={uploadStatus === "done" && !importing ? 
                       <Button className="btn-primary" 
                       onClick={ handleImport}
                       >Start Import</Button> 
@@ -183,6 +236,12 @@ const startSimulation = (time, status, action) =>{
                     Data must be in JSON format
                   </p>
                 </Dragger>
+             {/* --------------------------------------------------------------- */}
+             <form>
+                <input type="file" id="myFile" name="filename" onChange={onFileChange}/>
+                <input type="submit" onClick={handleFileSubmit} />
+              </form>
+              {/* --------------------------------------------------------------- */}
 
                 <ImportSteps style={{display : importing?"block":"none"}}>
                     <div>{statusIconSwitch(dataStatus)} <span>Inspecting Data ...</span></div>
@@ -192,14 +251,14 @@ const startSimulation = (time, status, action) =>{
             </Modal>
         </ImportElemnt>
     )
+
+    
 }
 
 export default ImportApplication
 
-//Styled Components
-const ImportElemnt = styled.span`
- 
-`
+// <<<<< Styled Components
+const ImportElemnt = styled.span``
 
 const ImportSteps = styled.div`
 > div{
@@ -208,7 +267,7 @@ const ImportSteps = styled.div`
 
   >span{
     margin-left: 15px;
-    color: black;
-  }
+    color: gray 
+ }
 }
 `
