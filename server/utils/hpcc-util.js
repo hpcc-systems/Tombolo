@@ -42,7 +42,7 @@ exports.fileInfo = (fileName, clusterId) => {
       			"scope": response.FileDetail.Name.substring(0, response.FileDetail.Name.lastIndexOf('::')),
       			"pathMask" : response.FileDetail.PathMask,
       			"isSuperfile" : response.FileDetail.isSuperfile,
-      			"fileType": response.FileDetail.ContentType,
+      			"fileType": response.FileDetail.ContentType
       		}
           fileInfo.file_layouts = fileLayout;
           fileInfo.file_validations = [];
