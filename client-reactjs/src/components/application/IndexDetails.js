@@ -472,6 +472,8 @@ class IndexDetails extends PureComponent {
       title: 'Name',
       dataIndex: 'name',
       editable: editingAllowed,
+      celleditor: "text",
+      regEx: /^[a-zA-Z0-9.,:;()?!""@&#*/'$_ -]*$/      
     },
     {
       title: 'Type',
