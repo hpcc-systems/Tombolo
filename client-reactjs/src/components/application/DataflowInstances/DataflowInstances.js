@@ -152,7 +152,7 @@ class DataflowInstances extends Component {
         title: 'Name',
         dataIndex: 'title',
         width: '30%',
-        render: (text, record) => <a onClick={(row) => this.handleViewDetails(record)}>{text}</a>
+        render: (text, record) => <a href='#' onClick={(row) => this.handleViewDetails(record)}>{text}</a>
       },
       {
         title: 'Description',

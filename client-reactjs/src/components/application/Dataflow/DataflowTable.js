@@ -63,7 +63,7 @@ function DataflowTable({data, applicationId, onSelectDataflow, onDataFlowUpdated
     title: 'Name',
     dataIndex: 'title',
     width: '30%',
-    render: (text, record) => <a onClick={(row) => rowSelected(record)}>{text}</a>
+    render: (text, record) => <a href='#' onClick={(row) => rowSelected(record)}>{text}</a>
   },
   {
     title: 'Description',
