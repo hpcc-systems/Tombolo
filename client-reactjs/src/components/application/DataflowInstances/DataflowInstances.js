@@ -182,7 +182,8 @@ class DataflowInstances extends Component {
               columns={dataflowCols}
               rowKey={record => record.id}
               dataSource={this.state.dataflows}
-              pagination={{ pageSize: 10 }} scroll={{ y: 380 }}
+              pagination={this.state.dataflows > 10 ? {pageSize: 10}: false}
+              scroll={{ y: 380 }}
            />
         </div>
         {this.state.workflowDetailsVisible ?

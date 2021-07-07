@@ -21,7 +21,7 @@ import { DownOutlined, EyeOutlined, ReloadOutlined, EyeInvisibleOutlined  } from
 const { Text } = Typography;
 const svgPalleteBarWidth = 90,
   svgUsableWidth = window.innerWidth - 100,
-  svgUsableHeight = window.innerHeight - 50,
+  svgUsableHeight = window.innerHeight - 130,
   svgViewBox = '0 0 '+window.innerWidth+' '+window.innerHeight,
   svgNodeWidth = 38,
   svgNodeHeight = 38,
@@ -1577,13 +1577,13 @@ class Graph extends Component {
             <span >
               <Tooltip placement="topRight" title={"Refresh will validate the file/job relationship and update graph accordingly"}   >
                 <Button 
-                style={{ float: 'right', }} 
+                style={{ float: 'right', display : "flex", placeItems: "center", paddingBottom: "14px" }} 
                 className="refresh-btn"
                   onClick={this.refreshGraph}
                   icon={
                   <ReloadOutlined
                     style={{
-                      fontSize: '28px',
+                      fontSize: '20px',
                       backgroundColor: '#f0f0f0',
                       marginRight: "30px" 
                     }}
@@ -1609,9 +1609,9 @@ class Graph extends Component {
           </div>
 
           <div id={this.props.graphContainer} className={(!editingAllowed || this.props.viewMode) ? " readonly graph-view-mode" : "graph-edit-mode"} tabIndex="-1">
-            <div className={this.state.loading ? "graph-overlay" : "graph-overlay d-none"}></div>
+            <div className={this.state.loading ? "graph-overlay" : "graph-overlay d-none"} style={{background: "blue"}}></div>
             <Spin spinning={this.state.loading} className="graph-loading" size="large" />
-          </div>
+          </div> 
         </div>
 
       {this.state.openFileDetailsDialog ?

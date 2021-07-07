@@ -307,7 +307,10 @@ class Applications extends Component {
       	<Table
           columns={applicationColumns}
           rowKey={record => record.id}
-          dataSource={this.state.applications}/>
+          dataSource={this.state.applications}
+          pagination={this.state.applications.length > 10 ? {pageSize: 10}: false}
+          />
+
       </div>
 
       <div>

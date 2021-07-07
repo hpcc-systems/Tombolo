@@ -304,10 +304,13 @@ class Clusters extends Component {
         <Spin spinning={this.state.initialDataLoading} size="large" />
       </div>
       <div style={{padding:"15px"}}>
+        {console.log("<<<< Clusters", this.props.clusters.length)}
       	<Table
           columns={clusterColumns}
           rowKey={record => record.id}
-          dataSource={this.props.clusters}/>
+          dataSource={this.props.clusters}
+          pagination={this.props.clusters.length > 10 ? {pageSize: 10}: false}
+          />
       </div>
       <div>
 	      <Modal
