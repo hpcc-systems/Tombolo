@@ -225,7 +225,6 @@ class FileDetails extends PureComponent {
                 ),
               },
             });
-
             this.formRef.current.setFieldsValue({
               title: data.basic.title,
               name: data.basic.name,
@@ -238,6 +237,7 @@ class FileDetails extends PureComponent {
               consumer: data.basic.consumer,
               supplier: data.basic.supplier,
               isSuperFile: data.basic.isSuperFile,
+              fileType: data.basic.fileType
             });
           } else {
             message.config({ top: 130 });
@@ -538,6 +538,11 @@ class FileDetails extends PureComponent {
             fileDataColHeaders: fileInfo.file_layouts.map(
               (layout) => layout.name
             ),
+            fileType:
+            fileInfo.basic.fileType == "" || fileInfo.basic.fileType == "flat"
+              ? "thor_file"
+              : fileInfo.basic.fileType,
+
           },
         });
 
@@ -554,6 +559,7 @@ class FileDetails extends PureComponent {
           consumer: fileInfo.basic.consumer,
           supplier: fileInfo.basic.supplier,
           isSuperFile: fileInfo.basic.isSuperFile,
+          fileType: fileInfo.basic.fileType
         });
         return fileInfo;
       })
@@ -1286,7 +1292,6 @@ class FileDetails extends PureComponent {
                             <Radio value={"xml"}>XML</Radio>
                           </Radio.Group>
                         </Form.Item>
-                        {this.state.file.fileType == "thor_file" ? (
                           <React.Fragment>
                             <Form.Item label="Cluster" name="clusters">
                               <Select
@@ -1356,7 +1361,6 @@ class FileDetails extends PureComponent {
                               </Row>
                             </Form.Item>
                           </React.Fragment>
-                        ) : null}
                       </>
                     ) : null}
                   </div>

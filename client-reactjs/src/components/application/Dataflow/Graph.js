@@ -5,20 +5,17 @@ import $ from 'jquery';
 import { Button, Icon, Drawer, Row, Col, Descriptions, Badge, Modal, message, Spin, Tooltip, Menu, Checkbox, Dropdown} from 'antd/lib';
 import { Typography } from 'antd';
 import { withRouter } from 'react-router-dom';
-import FileDetailsForm from "../FileDetails";
-import JobDetailsForm from "../Jobs/JobDetails";
 import AssetDetailsDialog from "../AssetDetailsDialog"
-import IndexDetailsForm from "../IndexDetails";
 import ExistingAssetListDialog from "./ExistingAssetListDialog";
-import {handleFileDelete, handleFileInstanceDelete, handleJobDelete, handleIndexDelete, handleQueryDelete, handleSubProcessDelete, updateGraph, changeVisibility} from "../../common/WorkflowUtil";
+import {updateGraph, changeVisibility} from "../../common/WorkflowUtil";
 import { authHeader, handleError } from "../../common/AuthHeader.js"
 import { hasEditPermission } from "../../common/AuthUtil.js";
 import { shapesData, appendDefs, jobIcons } from "./Utils.js"
 import SubProcessDialog from "./SubProcessDialog";
 import { connect } from 'react-redux';
 import { assetsActions } from '../../../redux/actions/Assets';
-import { DownOutlined, EyeOutlined, ReloadOutlined, EyeInvisibleOutlined  } from '@ant-design/icons';
-const { Text } = Typography;
+import { EyeOutlined, ReloadOutlined, EyeInvisibleOutlined  } from '@ant-design/icons';
+
 const svgPalleteBarWidth = 90,
   svgUsableWidth = window.innerWidth - 100,
   svgUsableHeight = window.innerHeight - 130,

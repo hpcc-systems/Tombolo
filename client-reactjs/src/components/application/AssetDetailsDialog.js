@@ -37,7 +37,7 @@ function AssetDetailsDialog(props) {
       ...props,
       "type": props.assetType,
       "isNew":false,
-      "selectedAsset": props.assetId,
+      "selectedAsset": props.selectedAsset,
       "selectedDataflow": props.selectedDataflow,
       "nodes": props.nodes,
       "edges": props.edges,
@@ -62,6 +62,7 @@ function AssetDetailsDialog(props) {
         >
         <DetailsForm
           assetType={props.assetType}
+          assetId={props.assetId}
           fileId={props.fileId}
           application={props.application}
           user={props.user}
@@ -70,6 +71,7 @@ function AssetDetailsDialog(props) {
           edges={props.edges}
           nodeIndex={props.nodeIndex}
           displayingInModal={true}
+          reload={props.reload}
         />
       </Modal>
 	  </React.Fragment>
