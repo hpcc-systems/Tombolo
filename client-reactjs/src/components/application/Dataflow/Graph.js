@@ -1606,7 +1606,7 @@ class Graph extends Component {
           </div>
 
           <div id={this.props.graphContainer} className={(!editingAllowed || this.props.viewMode) ? " readonly graph-view-mode" : "graph-edit-mode"} tabIndex="-1">
-            <div className={this.state.loading ? "graph-overlay" : "graph-overlay d-none"} style={{background: "blue"}}></div>
+            <div className={this.state.loading ? "graph-overlay" : "graph-overlay d-none"}></div>
             <Spin spinning={this.state.loading} className="graph-loading" size="large" />
           </div> 
         </div>
