@@ -613,8 +613,8 @@ class QueryDetails extends PureComponent {
               : null}
             </div> : null }
             <Form.Item label="Title" name="title" rules={[{ required: true, message: 'Please enter a title!' }, {
-                pattern: new RegExp(/^[a-zA-Z0-9:._-]*$/),
-                message: 'Please enter a valid title',
+                pattern: new RegExp(/^[ a-zA-Z0-9:._-]*$/),
+                message: 'Please enter a valid title. Title can have  a-zA-Z0-9:._- and space',
               }]}>
               <Input id="query_title"
               onChange={this.onChange}

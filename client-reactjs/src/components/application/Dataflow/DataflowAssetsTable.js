@@ -128,7 +128,8 @@ function DataflowAssetsTable({applicationId, selectedDataflow, user, application
         columns={jobColumns}
         rowKey={record => record.id}
         dataSource={dataflowAssets}
-        pagination={{ pageSize: 50 }} scroll={{ y: 660 }}
+        pagination={dataflowAssets.length > 10? { pageSize: 10 }:  false}
+         scroll={{ y: 660 }}
 			/>
 			{isShowing ?
       <AssetDetailsDialog

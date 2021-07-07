@@ -1375,8 +1375,8 @@ class FileDetails extends PureComponent {
                   rules={[
                     { required: true, message: "Please enter a title!" },
                     {
-                      pattern: new RegExp(/^[a-zA-Z0-9:._-]*$/),
-                      message: "Please enter a valid title",
+                      pattern: new RegExp(/^[ a-zA-Z0-9:._-]*$/),
+                      message: "Please enter a valid title. Title can have  a-zA-Z0-9:._- and space",
                     },
                   ]}
                 >
