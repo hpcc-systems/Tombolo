@@ -199,7 +199,9 @@ const Assets = () => {
 
   const clearSearch = () => {
     searchKeyWord = "";
-    document.querySelector(".ant-input-clear-icon").click();
+    if(document.querySelector(".ant-input-clear-icon")) {
+      document.querySelector(".ant-input-clear-icon").click();
+    }    
     dispatch(assetsActions.searchAsset("", ""));
   };
 

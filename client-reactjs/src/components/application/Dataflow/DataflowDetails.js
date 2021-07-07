@@ -20,6 +20,7 @@ function DataflowDetails({props}) {
   const history = useHistory();
   const dispatch = useDispatch();
   const dataflowReducer = useSelector(state => state.dataflowReducer);
+  const applicationReducer = useSelector(state => state.applicationReducer);
   const applicationId = useSelector(state => state.applicationReducer.application.applicationId);
 
   const handleBackToAllJobs = () => {
@@ -58,6 +59,7 @@ function DataflowDetails({props}) {
                 applicationId={dataflowReducer.applicationId}
                 selectedDataflow={dataflowReducer.dataflowId}
                 user={dataflowReducer.user}
+                application={applicationReducer.application}
               />
             </TabPane>
    
