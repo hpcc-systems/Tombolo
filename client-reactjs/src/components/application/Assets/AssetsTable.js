@@ -260,7 +260,8 @@ function AssetsTable({ selectedGroup, openGroup, handleEditGroup, refreshGroups 
                 href="#"
                 onClick={(row) => handleEdit(record.id, record.type, "view")}
               >
-                {text}
+                {record.title ? record.title : text}
+                {console.log(record, "<<<<<<<<<<<<<<<<<<<<<")}
               </a>
             </span>
             {keywords && keywords.length > 0 ? (
