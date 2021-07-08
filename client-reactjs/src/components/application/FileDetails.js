@@ -987,10 +987,19 @@ class FileDetails extends PureComponent {
 
     const layoutColumns = [
       {
-        title: "Field",
+        title: "System Name",
         dataIndex: "name",
         sort: "asc",
         editable: false,
+        width: "25%",
+      },
+      {
+        title: "Name",
+        dataIndex: "name",
+        sort: "asc",
+        editable: true,
+        celleditor: "text",
+        regEx: /^[a-zA-Z0-9.,:;()@&#*/$_ -]*$/,  
         width: "25%",
       },
       {
