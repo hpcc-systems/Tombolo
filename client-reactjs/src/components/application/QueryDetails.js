@@ -477,7 +477,9 @@ class QueryDetails extends PureComponent {
     const columns = [{
       title: 'Name',
       dataIndex: 'name',
-      editable: editingAllowed
+      celleditor: "text",
+      editable: editingAllowed,
+      regEx: /^[a-zA-Z0-9.,:;()?!""@&#*/'$_ -]*$/,
     },
     {
       title: 'Type',
