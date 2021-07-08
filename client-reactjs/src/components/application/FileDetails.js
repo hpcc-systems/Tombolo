@@ -70,6 +70,7 @@ class FileDetails extends PureComponent {
     disableReadOnlyFields: false,
     initialDataLoading: false,
     fileSearchSuggestions: [],
+    showFilePreview: false,
     file: {
       id: "",
       fileType: "thor_file",
@@ -625,14 +626,18 @@ class FileDetails extends PureComponent {
           handleError(response);
         })
         .then(function (rows) {
-          /*if (rows.length > 0) {
+          if (rows.length > 0) {
             _self.setState({
               fileDataColHeaders: Object.keys(rows[0]),
               fileDataContent: rows,
+              showFilePreview: true
             });
-          }*/
+          }
         })
         .catch((error) => {
+          _self.setState({
+            showFilePreview: false
+          });          
           console.log(error);
         });
     }
@@ -1067,7 +1072,7 @@ class FileDetails extends PureComponent {
       },
     ];
 
-    const { complianceTags } = this.state;
+    const { complianceTags, showFilePreview } = this.state;
     const licenseColumns = [
       {
         field: "name",
@@ -1164,20 +1169,11 @@ class FileDetails extends PureComponent {
 
     const {
       title,
-      name,
       description,
-      scope,
-      serviceUrl,
-      qualifiedPath,
-      consumer,
-      owner,
-      fileType,
       isSuperFile,
       layout,
-      relations,
-      fileFieldRelations,
       validations,
-      inheritedLicensing,
+      inheritedLicensing
     } = this.state.file;
     const selectedCluster = this.state.clusters.filter(
       (cluster) => cluster.id == this.props.clusterId
@@ -1692,7 +1688,7 @@ class FileDetails extends PureComponent {
                 />
               </div>
             </TabPane>
-            {VIEW_DATA_PERMISSION ? (
+            {VIEW_DATA_PERMISSION && showFilePreview ? (
               <TabPane tab="File Preview" key="6">
                 <div
                   className="ag-theme-balham"
