@@ -532,7 +532,7 @@ class IndexDetails extends PureComponent {
               Index :  {this.state.index.name}
           </div>
         }
-        <div>
+        <div className={this.props.displayingInModal ? "assetDetails-content-wrapper-modal" : "assetDetails-content-wrapper"}>
           {!this.props.isNew ?
             <div className="loader">
               <Spin spinning={this.state.initialDataLoading} size="large" />
@@ -702,10 +702,11 @@ class IndexDetails extends PureComponent {
               </TabPane> : null}
           </Tabs>
         </div>
+        <div className={this.props.displayingInModal ? "assetDetail-buttons-wrapper-modal" : "assetDetail-buttons-wrapper"} style={{justifyContent: "flex-end"}} >
         {this.state.enableEdit ?
-        <div className="button-container">
+        <div className="button-container" >
           <Button key="danger" type="danger" disabled={!this.state.index.id || !editingAllowed} onClick={this.handleDelete}>Delete</Button>
-          <Button key="back" onClick={this.handleCancel}>
+          <Button key="back" onClick={this.handleCancel} type="primary" ghost>
             Cancel
           </Button>
           <Button key="submit" disabled={!editingAllowed} type="primary" loading={confirmLoading} onClick={this.handleOk}>
@@ -715,7 +716,7 @@ class IndexDetails extends PureComponent {
         <div>
           {this.state.dataAltered ?
            <div className="button-container">
-           <Button key="back" onClick={this.handleCancel}>
+           <Button key="back" onClick={this.handleCancel} type="primary" ghost>
              Cancel
            </Button>
            <Button key="submit" disabled={!editingAllowed} type="primary" loading={confirmLoading} onClick={this.handleOk}>
@@ -724,16 +725,14 @@ class IndexDetails extends PureComponent {
            </div>
            :
            <div className="button-container">
-           <Button key="back" onClick={this.handleCancel}>
+           <Button key="back" onClick={this.handleCancel} type="primary" ghost>
              Cancel
            </Button>
            </div>
           }
         </div>
-
-
-
          }
+         </div>
       </React.Fragment>
     );
   }

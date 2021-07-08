@@ -1275,7 +1275,7 @@ class FileDetails extends PureComponent {
             File : {this.state.file.name}
           </div>
         )}
-        <div>
+        <div className={this.props.displayingInModal ? "assetDetails-content-wrapper-modal" : "assetDetails-content-wrapper"}>
           {/*<BreadCrumbs applicationId={this.props.application.applicationId} applicationTitle={this.props.application.applicationTitle}/>*/}
           {!this.props.isNew ? (
             <div className="loader">
@@ -1735,6 +1735,7 @@ class FileDetails extends PureComponent {
           </Tabs>
         </div>
 
+<div className = {this.props.displayingInModal ? "assetDetail-buttons-wrapper-modal" :"assetDetail-buttons-wrapper"} style={{justifyContent: "flex-end"}}>
         {this.state.enableEdit ? (
           <div className="button-container">
             <Button
@@ -1762,7 +1763,7 @@ class FileDetails extends PureComponent {
           <div>
             {this.state.dataAltered ? (
               <div className="button-container">
-                <Button key="back" onClick={this.handleCancel}>
+                <Button key="back" onClick={this.handleCancel} type="primary" ghost>
                   Cancel
                 </Button>
                 <Button
@@ -1777,13 +1778,14 @@ class FileDetails extends PureComponent {
               </div>
             ) : (
               <div className="button-container">
-                <Button key="back" onClick={this.handleCancel}>
+                <Button key="back" onClick={this.handleCancel} type="primary" ghost>
                   Cancel
                 </Button>
               </div>
             )}
           </div>
         )}
+        </div>
       </React.Fragment>
     );
   }
