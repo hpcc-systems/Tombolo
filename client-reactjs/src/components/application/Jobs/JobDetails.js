@@ -1539,7 +1539,7 @@ class JobDetails extends Component {
             Job : {this.state.job.name}
           </div>
         )}
-        <div>
+        <div className={this.props.displayingInModal? "assetDetails-content-wrapper-modal" :   "assetDetails-content-wrapper"}>
           {!this.props.isNew ? (
             <div className="loader">
               <Spin spinning={this.state.initialDataLoading} size="large" />
@@ -1936,7 +1936,7 @@ class JobDetails extends Component {
             </Tabs>
           </Form>
         </div>
-        <div>
+        <div className={this.props.displayingInModal ? "assetDetail-buttons-wrapper-modal" : "assetDetail-buttons-wrapper"}>
           <span style={{ float: "left" }}>
             <Button
               disabled={
@@ -1956,7 +1956,7 @@ class JobDetails extends Component {
                   Delete
                 </Button>
               ) : null}
-              <Button key="back" onClick={this.handleCancel}>
+              <Button key="back" onClick={this.handleCancel} type="primary" ghost>
                 Cancel
               </Button>
               <Button
@@ -1974,7 +1974,7 @@ class JobDetails extends Component {
             <div>
               {this.state.dataAltered ? (
                 <div className="button-container">
-                  <Button key="back" onClick={this.handleCancel}>
+                  <Button key="back" onClick={this.handleCancel} type="primary"  ghost>
                     Cancel
                   </Button>
                   <Button
@@ -1989,7 +1989,7 @@ class JobDetails extends Component {
                 </div>
               ) : (
                 <div className="button-container">
-                  <Button key="back" onClick={this.handleCancel}>
+                  <Button key="back" onClick={this.handleCancel} type="primary" ghost>
                     Cancel
                   </Button>
                 </div>
