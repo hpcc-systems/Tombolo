@@ -33,7 +33,7 @@ import {
   DownOutlined,
   SettingOutlined,
   FilePdfOutlined,
-  PlusOutlined
+  PlusOutlined, 
 } from "@ant-design/icons";
 import TitleRenderer from "./TitleRenderer.js";
 import {  addingAssetMode } from "../../common/readOnlyUtil";
@@ -210,18 +210,19 @@ const Assets = () => {
     dispatch(
       groupsActions.groupExpanded(
         { id: event.node.props.id, key: keys[0] },
-
         expandedGroups
       )
     );
-
     clearSearch();
   };
+
 
   const onExpand = (expandedKeys) => {
     expandedGroups = expandedKeys;
     dispatch(groupsActions.groupExpanded(selectedGroup, expandedKeys));
   };
+
+
 
   const getParent = (key, data) => {
     let parent;
@@ -747,13 +748,12 @@ const Assets = () => {
               treeData={treeData}
               selectedKeys={[groupsReducer.selectedKeys.key]}
               expandedKeys={[...groupsReducer.expandedKeys]}
-              autoExpandParent={false}
               draggable
               blockNode={true}
               autoExpandParent={true}
               onDragEnter={handleDragEnter}
               onDrop={handleDragDrop}
-              expandAction={false}
+              // expandAction={false}
               titleRender={titleRenderer}
               onScroll={(e) => console.log(e)}
             />

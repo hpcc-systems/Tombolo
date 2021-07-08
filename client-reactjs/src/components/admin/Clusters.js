@@ -304,7 +304,6 @@ class Clusters extends Component {
         <Spin spinning={this.state.initialDataLoading} size="large" />
       </div>
       <div style={{padding:"15px"}}>
-        {console.log("<<<< Clusters", this.props.clusters.length)}
       	<Table
           columns={clusterColumns}
           rowKey={record => record.id}
