@@ -89,7 +89,7 @@ class EditableCell extends React.Component {
           }
         }
       ]}>
-         {(celleditor == 'select' ? <Select ref={node => (this.input = node)} placeholder="Select" onChange={this.saveSelect} >
+         {(celleditor == 'select' ? <Select ref={node => (this.input = node)} allowClear placeholder="Select" onChange={this.saveSelect} >
            {celleditorparams && celleditorparams.values ? celleditorparams.values.map(cellEditorParam =>  <Option key={cellEditorParam} value={cellEditorParam}>{cellEditorParam}</Option>) : null}
           (celleditorparams != undefined) ?
           </Select> : celleditor == 'text' ? <Input ref={node => (this.input = node)} onBlur={this.saveText} /> : <TextArea ref={node => (this.input = node)} rows="5" cols="25" onBlur={this.saveText} />

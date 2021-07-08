@@ -31,6 +31,35 @@ const eclTypes = [
     "Enum"
 ];
 
+const validationRules = [
+  'Allowed Values', 
+  'Not-Allowed Values', 
+  'Empty_Check', 
+  'Date_Check', 
+  'Currency_Check', 
+  'String_Check', 
+  'Null_Check', 
+  'Int_Check',
+  'Invalid_IP_Check',
+  'Invalid_State_Check',
+  'Invalid_Credit_Card_Check',
+  'Invalid_Email_Check',
+  'Invalid_Phone_Num_Check',
+  'Invalid_Zip_Code_Check',
+  'Invalid_SSN_Check',
+  'Begins With',
+  'Equal',
+  'In',
+  'Not-In'
+];
+
+const validationRuleFixes = [
+  'Drop Record',
+  'Fix Date',
+  'Convert to State Code',
+  'Trim'
+];
+
 const fetchDataDictionary = (applicationId) => {
   return new Promise((resolve, reject) => {
     fetch("/api/data-dictionary?application_id="+applicationId, {
@@ -75,4 +104,4 @@ const threeColformItemLayout = {
 
 
 
-export {omitDeep, eclTypes, fetchDataDictionary, flatten, formItemLayout, threeColformItemLayout};
+export {omitDeep, eclTypes, fetchDataDictionary, flatten, formItemLayout, threeColformItemLayout, validationRules, validationRuleFixes};

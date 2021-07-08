@@ -23,7 +23,7 @@ import {
 import { debounce } from "lodash";
 import AssociatedDataflows from "./AssociatedDataflows";
 import { authHeader, handleError } from "../common/AuthHeader.js";
-import { fetchDataDictionary } from "../common/CommonUtil.js";
+import { validationRules, validationRuleFixes } from "../common/CommonUtil.js";
 import { omitDeep } from "../common/CommonUtil.js";
 import EditableTable from "../common/EditableTable.js";
 import { MarkdownEditor } from "../common/MarkdownEditor.js";
@@ -1053,21 +1053,26 @@ class FileDetails extends PureComponent {
         title: "Rule Name",
         dataIndex: "rule_name",
         editable: editingAllowed,
-        regEx: /^[a-zA-Z0-9.,:;()?!""@&#*/'$_ -]*$/,
+        celleditor: "select",
+        celleditorparams: {
+          values: validationRules
+        },
         width: "15%",
       },
       {
         title: "Rule",
         dataIndex: "rule_test",
-        regEx: /^[a-zA-Z0-9.,:;()?!""@&#*/'$_ -]*$/,
         editable: editingAllowed,
         width: "15%",
       },
       {
         title: "Fix",
         dataIndex: "rule_fix",
-        regEx: /^[a-zA-Z0-9.,:;()?!""@&#*/'$_ -]*$/,
+        celleditor: "select",
         editable: editingAllowed,
+        celleditorparams: {
+          values: validationRuleFixes
+        },
         width: "15%",
       },
     ];
