@@ -120,7 +120,7 @@ const searchUser = (req, res, next) => {
             user.email.toLowerCase().indexOf(searchTerm.toLowerCase()) >= 0)
           {
 
-            searchResults.push({"text": user.username, "value": user.username});
+            searchResults.push({"text": user.firstName + ' ' + user.lastName, "value": user.username});
           }
         });
         resolve(searchResults);
