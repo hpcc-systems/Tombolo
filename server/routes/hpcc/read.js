@@ -341,7 +341,7 @@ router.get('/getData', [
 		hpccUtil.getCluster(req.query.clusterid).then(function(cluster) {
 			let clusterAuth = hpccUtil.getClusterAuth(cluster);
 			let wuService = new hpccJSComms.WorkunitsService({ baseUrl: cluster.thor_host + ':' + cluster.thor_port, userID:(clusterAuth ? clusterAuth.user : ""), password:(clusterAuth ? clusterAuth.password : "")});
-			wuService.WUResult({"LogicalName":req.query.fileName, "Count":50}).then(response => {
+			wuService.WUResult({"LogicalName":req.query.fileName, "Cluster": "mythor", "Count":50}).then(response => {
 				if(response.Result != undefined && response.Result != undefined && response.Result.Row != undefined) {
 					var rows = response.Result.Row, indexInfo = {};
 					if(rows.length > 0) {
@@ -354,10 +354,14 @@ router.get('/getData', [
 				else {
       		res.json([]);
       	}
-			});
+			}).catch((err) => {
+				console.log('err', err);
+				return res.status(500).send("Error occured while getting file data");		
+			})
 		});
 	} catch (err) {
-      console.log('err', err);
+    console.log('err', err);
+		return res.status(500).send("Error occured while getting file data");
   }
 });
 

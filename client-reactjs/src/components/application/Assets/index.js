@@ -33,6 +33,7 @@ import {
   DownOutlined,
   SettingOutlined,
   FilePdfOutlined,
+  PlusOutlined
 } from "@ant-design/icons";
 import TitleRenderer from "./TitleRenderer.js";
 import {  addingAssetMode } from "../../common/readOnlyUtil";
@@ -106,8 +107,8 @@ const Assets = () => {
   let assetTypeFilter = ["File", "Job", "Query", "Indexes", "Groups"];
   //const [searchKeyWord, setSearchKeyWord] = useState('');
   let searchKeyWord = "";
-  // const [dataList, setDataList] = useState([]);
-  let dataList = [];
+  const [dataList, setDataList] = useState([]);
+  //let dataList = [];
   //id of the group clicked from Asset table after a search
   const { assetInGroupId } = assetReducer;
   const groupsMoveReducer = useSelector((state) => state.groupsMoveReducer);
@@ -184,7 +185,7 @@ const Assets = () => {
         setTreeData(data);
         //flatten the tree
         let list = generateList(data);
-        // setDataList(list);
+        setDataList(list);        
         clearSearch();
       })
       .catch((error) => {
@@ -198,7 +199,9 @@ const Assets = () => {
 
   const clearSearch = () => {
     searchKeyWord = "";
-    document.querySelector(".ant-input-clear-icon").click();
+    if(document.querySelector(".ant-input-clear-icon")) {
+      document.querySelector(".ant-input-clear-icon").click();
+    }    
     dispatch(assetsActions.searchAsset("", ""));
   };
 
@@ -247,10 +250,10 @@ const Assets = () => {
     return list;
   };
 
-  const openGroup = (groupId) => {
-    if (groupId && groupId.length > 0) {
+  const openGroup = (groupId) => {        
+    if (groupId) {      
       let match = dataList.filter((group) => group.id == groupId);
-      if (match) {
+      if (match && match.length > 0) {
         let parent = getParent(match[0].key, treeData);
         if (parent) {
           let expandedKeys = !groupsReducer.expandedKeys.includes(parent.key)
@@ -323,6 +326,7 @@ const Assets = () => {
   };
 
   const handleMenuClick = (e) => {
+    console.log("handleMenuClick")
     setRightClickNodeTreeItem({ visible: false });
     dispatch(
       assetsActions.newAsset(application.applicationId, selectedGroup.id)
@@ -385,7 +389,7 @@ const Assets = () => {
               key="Group"
               className="directorytree-rightclick-menuitem"
             >
-              <FolderOutlined /> New Group
+              <PlusOutlined /> New Group
             </Menu.Item>
             {selectedGroup &&
             selectedGroup.id != null &&
@@ -464,39 +468,33 @@ const Assets = () => {
         id: newGroup.id,
       }),
     })
-      .then(function (response) {
-        if (response.ok && response.status == 200) {
-          return response.json();
-        }
-        handleError(response);
-      })
-      .then(function (response) {
-        if (response.ok && response.status == 200) {
-          return response.json();
-        }
-        handleError(response);
-      })
-      .then(function (data) {
-        if (data && data.success) {
-          let expandedKeys = !groupsReducer.expandedKeys.includes(
-            selectedGroup.key
+    .then(function (response) {
+      if (response.ok && response.status == 200) {
+        return response.json();
+      }
+      handleError(response);
+    })      
+    .then(function (data) {
+      if (data && data.success) {
+        let expandedKeys = !groupsReducer.expandedKeys.includes(
+          selectedGroup.key
+        )
+          ? groupsReducer.expandedKeys.concat([selectedGroup.key])
+          : groupsReducer.expandedKeys;
+        expandedGroups = expandedKeys;
+        dispatch(
+          groupsActions.groupExpanded(
+            { id: selectedGroup.id, key: selectedGroup.key },
+            expandedKeys
           )
-            ? groupsReducer.expandedKeys.concat([selectedGroup.key])
-            : groupsReducer.expandedKeys;
-          expandedGroups = expandedKeys;
-          dispatch(
-            groupsActions.groupExpanded(
-              { id: selectedGroup.id, key: selectedGroup.key },
-              expandedKeys
-            )
-          );
-          closeCreateGroupDialog();
-          fetchGroups();
-        }
-      })
-      .catch((error) => {
-        console.log(error);
-      });
+        );
+        closeCreateGroupDialog();
+        fetchGroups();
+      }
+    })
+    .catch((error) => {
+      console.log(error);
+    });
   };
 
   const handleDeleteGroup = () => {
@@ -764,6 +762,7 @@ const Assets = () => {
           <div className="asset-table">
             <AssetsTable
               selectedGroup={selectedGroup}
+              openGroup={openGroup}
               handleEditGroup={handleEditGroup}
               refreshGroups={fetchGroups}
             />

@@ -23,7 +23,7 @@ import {
 import { debounce } from "lodash";
 import AssociatedDataflows from "./AssociatedDataflows";
 import { authHeader, handleError } from "../common/AuthHeader.js";
-import { fetchDataDictionary } from "../common/CommonUtil.js";
+import { validationRules, validationRuleFixes } from "../common/CommonUtil.js";
 import { omitDeep } from "../common/CommonUtil.js";
 import EditableTable from "../common/EditableTable.js";
 import { MarkdownEditor } from "../common/MarkdownEditor.js";
@@ -70,6 +70,7 @@ class FileDetails extends PureComponent {
     disableReadOnlyFields: false,
     initialDataLoading: false,
     fileSearchSuggestions: [],
+    showFilePreview: false,
     file: {
       id: "",
       fileType: "thor_file",
@@ -225,7 +226,6 @@ class FileDetails extends PureComponent {
                 ),
               },
             });
-
             this.formRef.current.setFieldsValue({
               title: data.basic.title,
               name: data.basic.name,
@@ -238,6 +238,7 @@ class FileDetails extends PureComponent {
               consumer: data.basic.consumer,
               supplier: data.basic.supplier,
               isSuperFile: data.basic.isSuperFile,
+              fileType: data.basic.fileType
             });
           } else {
             message.config({ top: 130 });
@@ -538,6 +539,11 @@ class FileDetails extends PureComponent {
             fileDataColHeaders: fileInfo.file_layouts.map(
               (layout) => layout.name
             ),
+            fileType:
+            fileInfo.basic.fileType == "" || fileInfo.basic.fileType == "flat"
+              ? "thor_file"
+              : fileInfo.basic.fileType,
+
           },
         });
 
@@ -554,6 +560,7 @@ class FileDetails extends PureComponent {
           consumer: fileInfo.basic.consumer,
           supplier: fileInfo.basic.supplier,
           isSuperFile: fileInfo.basic.isSuperFile,
+          fileType: fileInfo.basic.fileType
         });
         return fileInfo;
       })
@@ -619,14 +626,18 @@ class FileDetails extends PureComponent {
           handleError(response);
         })
         .then(function (rows) {
-          /*if (rows.length > 0) {
+          if (rows.length > 0) {
             _self.setState({
               fileDataColHeaders: Object.keys(rows[0]),
               fileDataContent: rows,
+              showFilePreview: true
             });
-          }*/
+          }
         })
         .catch((error) => {
+          _self.setState({
+            showFilePreview: false
+          });          
           console.log(error);
         });
     }
@@ -976,10 +987,19 @@ class FileDetails extends PureComponent {
 
     const layoutColumns = [
       {
-        title: "Field",
+        title: "System Name",
         dataIndex: "name",
         sort: "asc",
         editable: false,
+        width: "25%",
+      },
+      {
+        title: "Name",
+        dataIndex: "name",
+        sort: "asc",
+        editable: true,
+        celleditor: "text",
+        regEx: /^[a-zA-Z0-9.,:;()@&#*/$_ -]*$/,  
         width: "25%",
       },
       {
@@ -1042,6 +1062,10 @@ class FileDetails extends PureComponent {
         title: "Rule Name",
         dataIndex: "rule_name",
         editable: editingAllowed,
+        celleditor: "select",
+        celleditorparams: {
+          values: validationRules
+        },
         width: "15%",
       },
       {
@@ -1053,12 +1077,16 @@ class FileDetails extends PureComponent {
       {
         title: "Fix",
         dataIndex: "rule_fix",
+        celleditor: "select",
         editable: editingAllowed,
+        celleditorparams: {
+          values: validationRuleFixes
+        },
         width: "15%",
       },
     ];
 
-    const { complianceTags } = this.state;
+    const { complianceTags, showFilePreview } = this.state;
     const licenseColumns = [
       {
         field: "name",
@@ -1155,20 +1183,11 @@ class FileDetails extends PureComponent {
 
     const {
       title,
-      name,
       description,
-      scope,
-      serviceUrl,
-      qualifiedPath,
-      consumer,
-      owner,
-      fileType,
       isSuperFile,
       layout,
-      relations,
-      fileFieldRelations,
       validations,
-      inheritedLicensing,
+      inheritedLicensing
     } = this.state.file;
     const selectedCluster = this.state.clusters.filter(
       (cluster) => cluster.id == this.props.clusterId
@@ -1286,7 +1305,6 @@ class FileDetails extends PureComponent {
                             <Radio value={"xml"}>XML</Radio>
                           </Radio.Group>
                         </Form.Item>
-                        {this.state.file.fileType == "thor_file" ? (
                           <React.Fragment>
                             <Form.Item label="Cluster" name="clusters">
                               <Select
@@ -1356,7 +1374,6 @@ class FileDetails extends PureComponent {
                               </Row>
                             </Form.Item>
                           </React.Fragment>
-                        ) : null}
                       </>
                     ) : null}
                   </div>
@@ -1368,8 +1385,8 @@ class FileDetails extends PureComponent {
                   rules={[
                     { required: true, message: "Please enter a title!" },
                     {
-                      pattern: new RegExp(/^[a-zA-Z0-9:._-]*$/),
-                      message: "Please enter a valid title",
+                      pattern: new RegExp(/^[ a-zA-Z0-9:._-]*$/),
+                      message: "Please enter a valid title. Title can have  a-zA-Z0-9:._- and space",
                     },
                   ]}
                 >
@@ -1685,7 +1702,7 @@ class FileDetails extends PureComponent {
                 />
               </div>
             </TabPane>
-            {VIEW_DATA_PERMISSION ? (
+            {VIEW_DATA_PERMISSION && showFilePreview ? (
               <TabPane tab="File Preview" key="6">
                 <div
                   className="ag-theme-balham"

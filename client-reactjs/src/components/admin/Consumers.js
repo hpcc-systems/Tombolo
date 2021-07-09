@@ -386,7 +386,10 @@ class Consumers extends Component {
       	<Table
           columns={consumerColumns}
           rowKey={record => record.id}
-          dataSource={this.props.consumers}/>
+          dataSource={this.props.consumers}
+          pagination={this.props.consumers.length > 10 ? {pageSize: 10}: false}
+
+          />
       </div>
 
       <div>

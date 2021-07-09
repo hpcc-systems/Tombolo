@@ -227,8 +227,7 @@ class JobDetails extends Component {
       });
 
       let jobDetailsUrl = "/api/job/job_details",
-        queryStringParams = {};
-
+        queryStringParams = {};      
       if (this.props.selectedAsset && this.props.selectedAsset.id) {
         queryStringParams["job_id"] = this.props.selectedAsset.id;
       }
@@ -701,6 +700,7 @@ class JobDetails extends Component {
   };
 
   saveJobDetails() {
+    let _self = this;
     return new Promise((resolve) => {
       fetch("/api/job/saveJob", {
         method: "post",
@@ -712,16 +712,20 @@ class JobDetails extends Component {
         }),
       })
         .then(function (response) {
-          if (response.ok) {
+          if (response.ok) {            
             return response.json();
           }
           handleError(response);
         })
         .then(function (data) {
-          console.log("Saved..");
+          console.log("Saved..");          
+          if(_self.props.reload) {
+            _self.props.reload();
+          }
           resolve(data);
         })
         .catch((error) => {
+          console.log(error)
           message.error(
             "Error occured while saving the data. Please check the form data"
           );
@@ -1407,6 +1411,8 @@ class JobDetails extends Component {
         title: "Name",
         dataIndex: "name",
         editable: editingAllowed,
+        celleditor: "text",
+        regEx: /^[a-zA-Z0-9.,:;()?!""@&#*/'$_ -]*$/
       },
       {
         title: "Type",

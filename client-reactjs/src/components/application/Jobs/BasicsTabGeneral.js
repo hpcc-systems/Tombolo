@@ -152,8 +152,8 @@ function BasicsTabGeneral({enableEdit, editingAllowed, addingNewAsset, jobType, 
                   className={enableEdit ? null : "read-only-input"} />
               </Form.Item>
               <Form.Item label="Title" name="title" rules={[{ required: true, message: 'Please enter a title!' }, {
-                pattern: new RegExp(/^[a-zA-Z0-9:._-]*$/),
-                message: 'Please enter a valid Title',
+                pattern: new RegExp(/^[ a-zA-Z0-9:._-]*$/),
+                message: 'Please enter a valid Title. Title can have  a-zA-Z0-9:._- and space',
               }]}>
                 <Input id="job_title"
                   onChange={onChange}

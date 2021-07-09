@@ -736,7 +736,7 @@ div.tooltip {
 
 .refresh-btn {
   border: none;
-  vertical-align: top;
+  vertical-align: middle;
 }
 
 .refresh-btn > span {

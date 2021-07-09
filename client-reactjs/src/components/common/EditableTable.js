@@ -69,7 +69,7 @@ class EditableCell extends React.Component {
 
 
   renderCell = form => {
-    const { children, dataIndex, record, title, celleditor, celleditorparams, required, showdatadefinitioninfield, datadefinitions } = this.props;
+    const { children, dataIndex, record, title, celleditor, celleditorparams, required, showdatadefinitioninfield, datadefinitions, regEx } = this.props;
     const { editing } = this.state;
     this.datadefinitions = datadefinitions
     return editing ? (
@@ -80,14 +80,20 @@ class EditableCell extends React.Component {
           message: `${title} is required.`,
         },
         {
-          pattern: new RegExp(/^[a-zA-Z0-9.,:;()?!""@&#*/'$_ -]*$/),
-          message: 'Please enter a valid '+dataIndex,
+          validator: async (_, value) => {
+            if(dataIndex != 'description') {
+              if(regEx && !regEx.test(value)) {
+                return Promise.reject(new Error('Please enter a valid '+dataIndex));
+              }
+            }
+          }
         }
       ]}>
-         {(celleditor == 'select' ? <Select ref={node => (this.input = node)} placeholder="Select" onChange={this.saveSelect} >
+         {(celleditor == 'select' ? <Select ref={node => (this.input = node)} allowClear placeholder="Select" onChange={this.saveSelect} >
            {celleditorparams && celleditorparams.values ? celleditorparams.values.map(cellEditorParam =>  <Option key={cellEditorParam} value={cellEditorParam}>{cellEditorParam}</Option>) : null}
           (celleditorparams != undefined) ?
-          </Select> : <TextArea ref={node => (this.input = node)} onPressEnter={this.saveText} rows="5" cols="25" onBlur={this.saveText} />)}
+          </Select> : celleditor == 'text' ? <Input ref={node => (this.input = node)} onBlur={this.saveText} /> : <TextArea ref={node => (this.input = node)} rows="5" cols="25" onBlur={this.saveText} />
+          )}
       </Form.Item>
       </Form>
     ) : (
@@ -259,6 +265,7 @@ class EditableTable extends React.Component {
           celleditor: col.celleditor,
           celleditorparams: col.celleditorparams,
           required: col.required ? col.required : false,
+          regEx: col.regEx,
           title: col.title,
           handleSave: this.handleSave,
           showdatadefinitioninfield: col.showdatadefinitioninfield ? col.showdatadefinitioninfield : false,

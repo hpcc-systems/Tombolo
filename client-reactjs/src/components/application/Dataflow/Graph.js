@@ -5,23 +5,20 @@ import $ from 'jquery';
 import { Button, Icon, Drawer, Row, Col, Descriptions, Badge, Modal, message, Spin, Tooltip, Menu, Checkbox, Dropdown} from 'antd/lib';
 import { Typography } from 'antd';
 import { withRouter } from 'react-router-dom';
-import FileDetailsForm from "../FileDetails";
-import JobDetailsForm from "../Jobs/JobDetails";
 import AssetDetailsDialog from "../AssetDetailsDialog"
-import IndexDetailsForm from "../IndexDetails";
 import ExistingAssetListDialog from "./ExistingAssetListDialog";
-import {handleFileDelete, handleFileInstanceDelete, handleJobDelete, handleIndexDelete, handleQueryDelete, handleSubProcessDelete, updateGraph, changeVisibility} from "../../common/WorkflowUtil";
+import {updateGraph, changeVisibility} from "../../common/WorkflowUtil";
 import { authHeader, handleError } from "../../common/AuthHeader.js"
 import { hasEditPermission } from "../../common/AuthUtil.js";
 import { shapesData, appendDefs, jobIcons } from "./Utils.js"
 import SubProcessDialog from "./SubProcessDialog";
 import { connect } from 'react-redux';
 import { assetsActions } from '../../../redux/actions/Assets';
-import { DownOutlined, EyeOutlined, ReloadOutlined, EyeInvisibleOutlined  } from '@ant-design/icons';
-const { Text } = Typography;
+import { EyeOutlined, ReloadOutlined, EyeInvisibleOutlined  } from '@ant-design/icons';
+
 const svgPalleteBarWidth = 90,
   svgUsableWidth = window.innerWidth - 100,
-  svgUsableHeight = window.innerHeight - 50,
+  svgUsableHeight = window.innerHeight - 130,
   svgViewBox = '0 0 '+window.innerWidth+' '+window.innerHeight,
   svgNodeWidth = 38,
   svgNodeHeight = 38,
@@ -1577,13 +1574,13 @@ class Graph extends Component {
             <span >
               <Tooltip placement="topRight" title={"Refresh will validate the file/job relationship and update graph accordingly"}   >
                 <Button 
-                style={{ float: 'right', }} 
+                style={{ float: 'right', display : "flex", placeItems: "center", paddingBottom: "14px" }} 
                 className="refresh-btn"
                   onClick={this.refreshGraph}
                   icon={
                   <ReloadOutlined
                     style={{
-                      fontSize: '28px',
+                      fontSize: '20px',
                       backgroundColor: '#f0f0f0',
                       marginRight: "30px" 
                     }}
@@ -1611,7 +1608,7 @@ class Graph extends Component {
           <div id={this.props.graphContainer} className={(!editingAllowed || this.props.viewMode) ? " readonly graph-view-mode" : "graph-edit-mode"} tabIndex="-1">
             <div className={this.state.loading ? "graph-overlay" : "graph-overlay d-none"}></div>
             <Spin spinning={this.state.loading} className="graph-loading" size="large" />
-          </div>
+          </div> 
         </div>
 
       {this.state.openFileDetailsDialog ?

@@ -144,55 +144,68 @@ class JobScheduler {
   }
 
   async addJobToScheduler(name, cron, clusterId, dataflowId, applicationId, jobId, jobfileName, jobType, sprayedFileScope, sprayFileName, sprayDropZone) {
-    let uniqueJobName = name + '-' + dataflowId + '-' + jobId;
-    this.bree.add({
-      name: uniqueJobName,
-      cron: cron,
-      path: path.join(__dirname, 'jobs', jobfileName),
-      worker: {
-        workerData: {
-          jobName: name,
-          clusterId: clusterId,
-          jobId: jobId,
-          applicationId: applicationId,
-          dataflowId: dataflowId,
-          jobType: jobType,
-          sprayedFileScope: sprayedFileScope,
-          sprayFileName: sprayFileName,
-          sprayDropZone: sprayDropZone
+    try {
+      let uniqueJobName = name + '-' + dataflowId + '-' + jobId;
+      this.bree.add({
+        name: uniqueJobName,
+        cron: cron,
+        path: path.join(__dirname, 'jobs', jobfileName),
+        worker: {
+          workerData: {
+            jobName: name,
+            clusterId: clusterId,
+            jobId: jobId,
+            applicationId: applicationId,
+            dataflowId: dataflowId,
+            jobType: jobType,
+            sprayedFileScope: sprayedFileScope,
+            sprayFileName: sprayFileName,
+            sprayDropZone: sprayDropZone
+          }
         }
-      }
-    })
+      })
 
-    this.bree.start(uniqueJobName);
+      this.bree.start(uniqueJobName);
+    } catch (err) {
+      console.log(err);
+    }
   }
 
   async executeJob(name, clusterId, dataflowId, applicationId, jobId, jobfileName, jobType, sprayedFileScope, sprayFileName, sprayDropZone) {
-    let uniqueJobName = name + '-' + dataflowId + '-' + jobId + '-' + Date.now();
-    this.bree.add({
-      name: uniqueJobName,
-      timeout: 0,
-      path: path.join(__dirname, 'jobs', jobfileName),
-      worker: {
-        workerData: {
-          jobName: name,
-          clusterId: clusterId,
-          jobId: jobId,
-          applicationId: applicationId,
-          dataflowId: dataflowId,
-          jobType: jobType,
-          sprayedFileScope: sprayedFileScope,
-          sprayFileName: sprayFileName,
-          sprayDropZone: sprayDropZone
+    try {
+      let uniqueJobName = name + '-' + dataflowId + '-' + jobId;
+      await this.removeJobFromScheduler(uniqueJobName);
+      this.bree.add({
+        name: uniqueJobName,
+        timeout: 0,
+        path: path.join(__dirname, 'jobs', jobfileName),
+        worker: {
+          workerData: {
+            jobName: name,
+            clusterId: clusterId,
+            jobId: jobId,
+            applicationId: applicationId,
+            dataflowId: dataflowId,
+            jobType: jobType,
+            sprayedFileScope: sprayedFileScope,
+            sprayFileName: sprayFileName,
+            sprayDropZone: sprayDropZone
+          }
         }
-      }
-    })
+      })
 
-    this.bree.start(uniqueJobName);
+      this.bree.start(uniqueJobName);
+    } catch (err) {
+      console.log(err);
+    }
   }
 
-  removeJobFromScheduler(name) {
-    this.bree.remove(name);
+  async removeJobFromScheduler(name) {
+    try {
+      await this.bree.remove(name);
+    } catch (err) {
+      console.log(err)
+    }
   }
 }
 

@@ -152,7 +152,7 @@ class DataflowInstances extends Component {
         title: 'Name',
         dataIndex: 'title',
         width: '30%',
-        render: (text, record) => <a onClick={(row) => this.handleViewDetails(record)}>{text}</a>
+        render: (text, record) => <a href='#' onClick={(row) => this.handleViewDetails(record)}>{text}</a>
       },
       {
         title: 'Description',
@@ -182,7 +182,8 @@ class DataflowInstances extends Component {
               columns={dataflowCols}
               rowKey={record => record.id}
               dataSource={this.state.dataflows}
-              pagination={{ pageSize: 10 }} scroll={{ y: 380 }}
+              pagination={this.state.dataflows > 10 ? {pageSize: 10}: false}
+              scroll={{ y: 380 }}
            />
         </div>
         {this.state.workflowDetailsVisible ?
