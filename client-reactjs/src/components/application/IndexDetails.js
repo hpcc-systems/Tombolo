@@ -170,11 +170,12 @@ class IndexDetails extends PureComponent {
       this.setState({
         visible: false,
         initialDataLoading: false,
+        confirmLoading: false
       });
       //this.props.onClose();
       //this.props.onRefresh(saveResponse);
       if(this.props.history) {
-        this.props.history.push('/' + this.props.application.applicationId + '/assets')
+        // this.props.history.push('/' + this.props.application.applicationId + '/assets')
       } else {
         document.querySelector('button.ant-modal-close').click();
       }
@@ -356,6 +357,7 @@ class IndexDetails extends PureComponent {
         body: JSON.stringify({isNew : this.props.isNew, id: this.state.index.id, index : this.populateIndexDetails()})
       }).then(function(response) {
         if(response.ok) {
+          message.success("Data saved")
           return response.json();
         }
         handleError(response);
@@ -363,6 +365,7 @@ class IndexDetails extends PureComponent {
         console.log('Saved..');
         resolve(data);
       }).catch(error => {
+        this.setState({confirmLoading : false})
         message.error("Error occured while saving the data. Please check the form data")
       });
     });
