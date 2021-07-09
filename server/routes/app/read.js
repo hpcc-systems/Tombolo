@@ -158,6 +158,18 @@ const validateJSON = (data) =>{
   }
 }
 
+// Remove file
+const removeFile = (filePath) => {
+  setTimeout(() => {
+    fs.unlink(filePath, (err) =>{
+      if(err){
+        console.log("<<<< <<<<<<<<<< Error Deleting file", err)
+      }else{
+        console.log("<<<< <<<<<<<<<< File deleted")
+      }
+    })    },2000)
+}
+
 router.post('/importApp', [
   body('user_id')
     .optional({checkFalsy:true})
@@ -169,59 +181,70 @@ router.post('/importApp', [
   body('creator')
     .matches(/^[a-zA-Z]{1}[a-zA-Z0-9_:.\-]*$/).withMessage('Invalid creator'),
 ], upload.single("file"), function (req, res) {
-  console.log("<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<");
 fs.readFile(`uploads/${req.file.filename}`, (err,data) => {
   if(err){
+    console.log("<<<< <<<<<<<<<< Issue uploading file")
     res.status().send("Unable to read file. Data must be in JSON format")
     return;
   }else{
-    console.log("<<<< Data", data)
     let parsedData = validateJSON(data)
     if(parsedData === "error"){
       res.status(400).json({success: false, error: "Unable to read file uploaded. Data must be in JSON format"});
+      console.log("<<<< <<<<<<<<<< Data is not in JSON format");
+      removeFile(`uploads/${req.file.filename}`);
       return;
     }else {
-      console.log(parsedData, "<<<< Data returned ")
-      // create app and assets
-      //delete file 
-      setTimeout(() => {
-        // console.log("<<<< Remove file", `/upload/${parsedData.filename}`)
-        fs.unlink(`uploads/${req.file.filename}`, (err) =>{
-          if(err){
-            console.log("<<<< Error", err)
-          }else{
-            console.log("deleted <<<<")
+      if(parsedData.application){
+        console.log("<<<< <<<<<<<<<< Application ID present")
+      }
+      else{
+        console.log("<<<< <<<<<<<<<< No app ID");
+        res.status(400).json({success: false, error: "Unable to read file uploaded. Data must be in JSON format"});
+      }
+      // Start creating app
+      // 1. send update to client ...
+      try {
+      
+        models.application.create({"title":req.body.title, "description":req.body.description, "creator": req.body.creator}).then(function(application) {
+          if(req.body.user_id)
+            models.user_application.create({"user_id":req.body.user_id, "application_id":application.id}).then(function(userapp) {
+            res.json({"result":"success", "id": application.id});
+          });
+        else
+            res.json({"result":"success", "id": application.id});
+        });
 
-          }
-        })
-      },2000)
-
+    } catch (err) {
+      console.log('err', err);
+      return res.status(500).json({ success: false, message: "Error occured while creating application" });
     }
+     
+    }
+    setTimeout(() => {
+      removeFile(`uploads/${req.file.filename}`);
+      },2000)
   }
 })
-  // const errors = validationResult(req).formatWith(validatorUtil.errorFormatter);
-  // if (!errors.isEmpty()) {
-  //   return res.status(422).json({ success: false, errors: errors.array() });
-  // }
-  // try {
-  //   if(req.body.id == '') {
-  //     models.application.create({"title":req.body.title, "description":req.body.description, "creator": req.body.creator}).then(function(application) {
-  //       if(req.body.user_id)
-  //         models.user_application.create({"user_id":req.body.user_id, "application_id":application.id}).then(function(userapp) {
-  //         res.json({"result":"success", "id": application.id});
-  //       });
-  //     else
-  //         res.json({"result":"success", "id": application.id});
-  //     });
-  //   } else {
-  //     models.application.update(req.body, {where:{id:req.body.id}}).then(function(result){
-  //         res.json({"result":"success", "id": result.id});
-  //     })
-  //   }
-  // } catch (err) {
-  //   console.log('err', err);
-  //   return res.status(500).json({ success: false, message: "Error occured while creating application" });
-  // }
+ 
+  try {
+    if(req.body.id == '') {
+      models.application.create({"title":req.body.title, "description":req.body.description, "creator": req.body.creator}).then(function(application) {
+        if(req.body.user_id)
+          models.user_application.create({"user_id":req.body.user_id, "application_id":application.id}).then(function(userapp) {
+          res.json({"result":"success", "id": application.id});
+        });
+      else
+          res.json({"result":"success", "id": application.id});
+      });
+    } else {
+      models.application.update(req.body, {where:{id:req.body.id}}).then(function(result){
+          res.json({"result":"success", "id": result.id});
+      })
+    }
+  } catch (err) {
+    console.log('err', err);
+    return res.status(500).json({ success: false, message: "Error occured while creating application" });
+  }
 });
 
 
