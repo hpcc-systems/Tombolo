@@ -663,7 +663,7 @@ class JobDetails extends Component {
         document.querySelector("button.ant-modal-close").click();
         this.props.dispatch(assetsActions.assetSaved(saveResponse));
       }
-    }, 1500);
+    }, 2000);
   };
 
   onAutoCreateFiles = (e) => {
