@@ -73,43 +73,45 @@ function AssetsTable({ selectedGroup, openGroup, handleEditGroup, refreshGroups 
   }, [selectedAsset]);
 
   const fetchDataAndRenderTable = () => {
-    let url =
-      keywords != ""
-        ? "/api/groups/assetsSearch?app_id=" + applicationId + ""
-        : "/api/groups/assets?app_id=" + applicationId;
-    if (selectedGroup && selectedGroup.id) {
-      url += "&group_id=" + selectedGroup.id;
-    }
-    if (assetTypeFilter != "") {
-      url += "&assetTypeFilter=" + assetTypeFilter;
-    }
-    if (keywords != "") {
-      url += "&keywords=" + keywords;
-    }
-    fetch(url, {
-      headers: authHeader(),
-    })
-    .then((response) => {
-      if (response.ok) {
-        return response.json();
+    if(applicationId) {
+      let url =
+        keywords != ""
+          ? "/api/groups/assetsSearch?app_id=" + applicationId + ""
+          : "/api/groups/assets?app_id=" + applicationId;
+      if (selectedGroup && selectedGroup.id) {
+        url += "&group_id=" + selectedGroup.id;
       }
-      handleError(response);
-    })
-    .then((data) => {
-      //Converting Markdown to plain text
-      const converter = new showdown.Converter();
-      data.map((item) =>
-        item.description
-          ? (item.description = converter
-              .makeHtml(item.description)
-              .replace(/<[^>]*>/g, ""))
-          : ""
-      );
-      setAssets(data);
-    })
-    .catch((error) => {
-      console.log(error);
-    });
+      if (assetTypeFilter != "") {
+        url += "&assetTypeFilter=" + assetTypeFilter;
+      }
+      if (keywords != "") {
+        url += "&keywords=" + keywords;
+      }
+      fetch(url, {
+        headers: authHeader(),
+      })
+      .then((response) => {
+        if (response.ok) {
+          return response.json();
+        }
+        handleError(response);
+      })
+      .then((data) => {
+        //Converting Markdown to plain text
+        const converter = new showdown.Converter();
+        data.map((item) =>
+          item.description
+            ? (item.description = converter
+                .makeHtml(item.description)
+                .replace(/<[^>]*>/g, ""))
+            : ""
+        );
+        setAssets(data);
+      })
+      .catch((error) => {
+        console.log(error);
+      });
+    }
   };
 
 

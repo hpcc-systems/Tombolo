@@ -171,10 +171,11 @@ const Assets = () => {
   }, [assetInGroupId]);
 
   const fetchGroups = () => {
-    let url = "/api/groups?app_id=" + application.applicationId;
-    fetch(url, {
-      headers: authHeader(),
-    })
+    if(application.applicationId) {
+      let url = "/api/groups?app_id=" + application.applicationId;
+      fetch(url, {
+        headers: authHeader(),
+      })
       .then((response) => {
         if (response.ok) {
           return response.json();
@@ -191,9 +192,8 @@ const Assets = () => {
       .catch((error) => {
         console.log(error);
       });
+    }
   };
-
-
 
   const dispatch = useDispatch();
 
