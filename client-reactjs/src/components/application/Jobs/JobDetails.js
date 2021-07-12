@@ -658,12 +658,12 @@ class JobDetails extends Component {
         // this.props.history.push(
         //   "/" + this.props.application.applicationId + "/assets"
         // );
-        message.success("Data Saved")
+        // message.success("Data Saved")
       } else {
         document.querySelector("button.ant-modal-close").click();
         this.props.dispatch(assetsActions.assetSaved(saveResponse));
       }
-    }, 2000);
+    }, 1500);
   };
 
   onAutoCreateFiles = (e) => {
