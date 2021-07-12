@@ -1,22 +1,8 @@
-import React, {useState, useEffect} from 'react'
-import { Upload, message, Button , Modal} from 'antd';
+import React, {useState} from 'react'
+import { Upload, Button , Modal} from 'antd';
 import { ImportOutlined, InboxOutlined , MinusCircleOutlined , LoadingOutlined, CheckCircleOutlined} from '@ant-design/icons';
 import styled from "styled-components"
 import { authHeader, handleError } from "../common/AuthHeader.js";
-
-    //Steps 
-    // 1. Check if importing is true
-    //2. check if file is uploaded
-      //2.a. hide import btn
-      //2.b. hide file name
-      //2.c. hide modal cancel btn
-     // 🔥 /3. if 1 and 3 are satisfied make API call  
-    //4. Check file data
-    //5. if file has incorrect data send back to clent with appropriate message
-    //6. if correct create app, group and assets
-    //7. send status of each action on number 6
-
-
 
 function ImportApplication(props) {
   const { Dragger } = Upload;
@@ -28,78 +14,7 @@ function ImportApplication(props) {
   const [ applicationStatus, setApplicationStatus] = useState("pending")
   const [ assetsStatus, setAssetsStatus] = useState("pending")
 
-  useEffect(() => {
-    console.log(props.user)
-   }, [])
-
-  //Import app function
-  const importApp  = () => {
   
-
-
-    // if(this.state.applications.filter(application => {
-    //   if (application.id != this.state.newApp.id && application.title == this.state.newApp.title) {
-    //     return application;
-    //   }
-    // }).length > 0) {
-    //   message.config({top:150})
-    //   message.error("There is already an application with the same name. Please select a different name.")
-    //   return;
-    // }
-    // this.setState({
-    //   confirmLoading: true,
-    //   submitted: true
-    // });
-
-    // if(this.state.newApp.title) {
-    //   var userId = (this.props.user) ? this.props.user.username : "";
-    //   let data = JSON.stringify({
-    //     "id": this.state.newApp.id,
-    //     "title" : this.state.newApp.title,
-    //     "description" : this.state.newApp.description,
-    //     "user_id":userId,
-    //     "creator":this.props.user.username});
-
-    // 	  fetch("/api/app/read/newapp", {
-    //       method: 'post',
-    //       headers: authHeader(),
-    //       body: data
-    //     }).then((response) => {
-    //     if(response.ok) {
-    //       return response.json();
-    //     }
-    //     handleError(response);
-    //   })
-    //   .then(response => {  
-     //  🔥 
-    //     if(this.state.newApp.id == '') {
-    //       console.log('new app')
-    //       //new application
-    //       this.props.dispatch(applicationActions.newApplicationAdded(response.id, this.state.newApp.title));
-    //     } else {
-    //       console.log('update app')
-    //       //updating an application
-    //       this.props.dispatch(applicationActions.applicationUpdated(this.state.newApp.id, this.state.newApp.title));
-    //     }
-
-  	//   	this.setState({
-    //     ...this.state,
-    //       newApp: {
-    //         ...this.state.newApp,
-    //         id : '',
-    //         title: '',
-    //         description:''
-    //       },
-    //       showAddApp: false,
-    //       confirmLoading: false,
-    //       submitted:false
-    //     });
-
-  	//     this.getApplications();
-    //   }).catch(error => {
-    //     console.log(error);
-    //   });
-    }
 //<<<< <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<Test simulation
 const startSimulation = (time, status, action) =>{
   setTimeout(() =>{
@@ -107,18 +22,16 @@ const startSimulation = (time, status, action) =>{
   }, time)
   }
 
-
   //Handle Import
   const handleImport = () => {
     setImportStatus(true);
 
     //<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
     let formData = new FormData();
+    formData.append("user", props.user.username);
     formData.append("file", file);
-    // formData.append("user", props.user)
-    for (var pair of formData.entries()) {
-      console.log("<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<< ", pair[0]+ ', ' + pair[1]); 
-  }
+    
+ 
     fetch("/api/app/read/importApp", {
       method: 'post',
       headers: authHeader("importApp"),
@@ -131,15 +44,13 @@ const startSimulation = (time, status, action) =>{
     handleError(response);
   })
 
-  //<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
-
     //Simulation
     startSimulation(1000, "underway",setDataStatus);
     startSimulation(3000, "completed",setDataStatus);
     startSimulation(3100, "underway",setApplicationStatus);
     startSimulation(6000, "completed",setApplicationStatus);
     startSimulation(6100, "underway",setAssetsStatus);
-    startSimulation(9000, "completed",setAssetsStatus);
+    startSimulation(90000000000000, "completed",setAssetsStatus);
   }
 
   //Status icon
@@ -154,25 +65,24 @@ const startSimulation = (time, status, action) =>{
     }
   }
 
-
-  // Test Props <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
+  //Draggeer's props
   const propss = {
     name: 'file',
     multiple: false,
-    action: 'https://www.mocky.io/v2/5cc8019d300000980a055e76',
     onChange(info) {
       setUploadStatus("")
       const { status } = info.file;
       if (status !== 'uploading') {
         setUploadStatus(status)
+        console.log("<<<< Uploading ...")
       }
       if (status === 'done') {
         setUploadStatus(status);
-        console.log("<<<< File 0", info )
-        console.log("<<<< File", info.file)
-        setFile(info.file);
+        console.log("<<<< antD dragger", info.file.originFileObj)
+        setFile(info.file.originFileObj);
       } else if (status === 'error') {
         setUploadStatus(status)
+        console.log("<<<< Error uploading")
       }
     },
     onDrop(e) {
@@ -181,39 +91,13 @@ const startSimulation = (time, status, action) =>{
   };
 
 
-  //<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
-  const onFileChange = (e) =>{
-    setFile(e.target.files[0])
-  }
-
-  const handleFileSubmit = (e) => {
-    console.log(file, "<<<<<<<<<<<<<<<<<<<<<<<<")
-    e.preventDefault();
-    const formData = new FormData();
-    formData.append("user", props.user.username)
-    formData.append("file", file)
-
-    console.log(props.user.username,  " <<<<<<<<<<<<<<<<<<")
+  //customRequest
+  const customRequest = ({ file, onSuccess }) => {
+    setTimeout(() => {
+      onSuccess("ok");
+    }, 0);
+  };
     
-    for (var pair of formData.entries()) {
-      console.log("<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<< ", pair[0]+ ', ' + pair[1]); 
-  }
-
-    fetch("/api/app/read/importApp", {
-      method: 'post',
-      headers: authHeader("importApp"),
-      body: formData
-    }).then((response) => {
-      console.log("<<<< response ", response)
-    if(response.ok) {
-      return response.json();
-    }
-    handleError(response);
-    console.log("Error occured")
-  })
-  }
-  //<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
-  
     return (
         <ImportElemnt>
            <Button style={{display: "flex", placeItems : "center", marginRight: "10px"}} 
@@ -240,6 +124,7 @@ const startSimulation = (time, status, action) =>{
                 className="importApplication_dragger"
                 style={{display : importing?"none":"block"}}
                 {...propss}
+                customRequest={customRequest}
                 >
                   <p className="ant-upload-drag-icon">
                     <InboxOutlined />
@@ -249,15 +134,7 @@ const startSimulation = (time, status, action) =>{
                     Data must be in JSON format
                   </p>
                 </Dragger> 
-             {/* --------------------------------------------------------------- */}
-             <br></br> 
-
-             <form>
-                <input type="file" id="myFile" name="filename" onChange={onFileChange}/>
-                <input type="submit" onClick={handleFileSubmit} />
-              </form>
-              {/* --------------------------------------------------------------- */}
-
+          
                 <ImportSteps style={{display : importing?"block":"none"}}>
                     <div>{statusIconSwitch(dataStatus)} <span>Inspecting Data ...</span></div>
                     <div>{statusIconSwitch(applicationStatus)} <span>Importing Application ...</span></div>
@@ -282,7 +159,7 @@ const ImportSteps = styled.div`
 
   >span{
     margin-left: 15px;
-    color: gray 
+    color: black 
  }
 }
 `
