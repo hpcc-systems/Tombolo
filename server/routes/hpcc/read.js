@@ -105,7 +105,7 @@ router.post('/jobsearch', [
     return res.status(422).json({ success: false, errors: errors.array() });
   }
 	hpccUtil.getCluster(req.body.clusterid).then(function(cluster) {
-		let url = cluster.thor_host + ':' + cluster.thor_port +'/WsWorkunits/WUQuery.json?Jobname=*'+req.body.keyword+'*';
+		let url = cluster.thor_host + ':' + cluster.thor_port +'/WsWorkunits/WUQuery.json?Jobname=*'+req.body.keyword+'*&PageSize=1&PageStartFrom=0';
         request.get({
 		  url: url,
 		  auth : hpccUtil.getClusterAuth(cluster)
