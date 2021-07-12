@@ -24,3 +24,6 @@ yarn-error.log*
 
 #custom scripts folder
 /scripts
+
+#Sequelize data
+sequelize-data.json
