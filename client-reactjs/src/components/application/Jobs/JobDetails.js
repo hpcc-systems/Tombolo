@@ -655,9 +655,10 @@ class JobDetails extends Component {
       //this.props.onClose();
       //this.props.onRefresh(saveResponse);
       if (this.props.history) {
-        this.props.history.push(
-          "/" + this.props.application.applicationId + "/assets"
-        );
+        // this.props.history.push(
+        //   "/" + this.props.application.applicationId + "/assets"
+        // );
+        message.success("Data Saved")
       } else {
         document.querySelector("button.ant-modal-close").click();
         this.props.dispatch(assetsActions.assetSaved(saveResponse));
