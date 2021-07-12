@@ -229,15 +229,16 @@ class QueryDetails extends PureComponent {
   }
 
   handleOk = async (e) => {
+    this.setState({confirmLoading : true})
     let saveResponse = await this.saveQueryDetails();
-
+    
     setTimeout(() => {
       this.setState({
         visible: false,
         confirmLoading: false,
       });
-      this.props.history.push('/' + this.props.application.applicationId + '/assets')
-    }, 2000);
+      // this.props.history.push('/' + this.props.application.applicationId + '/assets')
+    }, 1000);
   };
 
   getClusters() {
@@ -374,12 +375,16 @@ class QueryDetails extends PureComponent {
 
   saveQueryDetails() {
     return new Promise((resolve) => {
+      this.setState({
+        initialDataLoading: true
+      });
       fetch('/api/query/saveQuery', {
         method: 'post',
         headers: authHeader(),
         body: JSON.stringify({isNew : this.props.isNew, id: this.state.query.id, query : this.populateQueryDetails()})
       }).then(function(response) {
         if(response.ok) {
+          message.success("Data Saved")
           return response.json();
         }
         handleError(response);
@@ -387,6 +392,7 @@ class QueryDetails extends PureComponent {
         console.log('Saved..');
         resolve(data);
       }).catch(error => {
+        this.setState({confirmLoading : false})
         message.error("Error occured while saving the data. Please check the form data")
       });
     //this.populateFileDetails()
@@ -525,8 +531,6 @@ class QueryDetails extends PureComponent {
 
     //Switch to view only mode
     const switchToViewOnly = () => {
-      readOnlyMode()
-
       this.setState({
         enableEdit: !this.state.enableEdit,
         editing: false,
@@ -724,7 +728,7 @@ class QueryDetails extends PureComponent {
       <div className="assetDetail-buttons-wrapper" style={{justifyContent: "flex-end"}} >
       {this.state.enableEdit ?
           <div className="button-container">
-            <Button key="danger" type="danger" onClick={this.handleDelete}>Delete</Button>
+            <Button key="danger" type="danger"  disabled={!this.state.query.id || !editingAllowed} onClick={this.handleDelete}>Delete</Button>
             <Button key="back" onClick={this.handleCancel} type="primary" ghost>
               Cancel
             </Button>
