@@ -1,4 +1,4 @@
-import React, {useState} from 'react'
+import React, {useState, useEffect} from 'react'
 import { Upload, message, Button , Modal} from 'antd';
 import { ImportOutlined, InboxOutlined , MinusCircleOutlined , LoadingOutlined, CheckCircleOutlined} from '@ant-design/icons';
 import styled from "styled-components"
@@ -18,7 +18,7 @@ import { authHeader, handleError } from "../common/AuthHeader.js";
 
 
 
-function ImportApplication() {
+function ImportApplication(props) {
   const { Dragger } = Upload;
   const [ modalVisible, setModalVisiblity] = useState(false);
   const [uploadStatus, setUploadStatus] = useState("")
@@ -28,9 +28,13 @@ function ImportApplication() {
   const [ applicationStatus, setApplicationStatus] = useState("pending")
   const [ assetsStatus, setAssetsStatus] = useState("pending")
 
+  useEffect(() => {
+    console.log(props.user)
+   }, [])
 
   //Import app function
   const importApp  = () => {
+  
 
 
     // if(this.state.applications.filter(application => {
@@ -110,9 +114,10 @@ const startSimulation = (time, status, action) =>{
 
     //<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
     let formData = new FormData();
-    formData.append("file", file)
+    formData.append("file", file);
+    // formData.append("user", props.user)
     for (var pair of formData.entries()) {
-      console.log("<<<< ", pair[0]+ ', ' + pair[1]); 
+      console.log("<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<< ", pair[0]+ ', ' + pair[1]); 
   }
     fetch("/api/app/read/importApp", {
       method: 'post',
@@ -151,7 +156,7 @@ const startSimulation = (time, status, action) =>{
 
 
   // Test Props <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
-  const props = {
+  const propss = {
     name: 'file',
     multiple: false,
     action: 'https://www.mocky.io/v2/5cc8019d300000980a055e76',
@@ -185,7 +190,14 @@ const startSimulation = (time, status, action) =>{
     console.log(file, "<<<<<<<<<<<<<<<<<<<<<<<<")
     e.preventDefault();
     const formData = new FormData();
+    formData.append("user", props.user.username)
     formData.append("file", file)
+
+    console.log(props.user.username,  " <<<<<<<<<<<<<<<<<<")
+    
+    for (var pair of formData.entries()) {
+      console.log("<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<< ", pair[0]+ ', ' + pair[1]); 
+  }
 
     fetch("/api/app/read/importApp", {
       method: 'post',
@@ -227,7 +239,7 @@ const startSimulation = (time, status, action) =>{
                 maxCount={1}
                 className="importApplication_dragger"
                 style={{display : importing?"none":"block"}}
-                {...props}
+                {...propss}
                 >
                   <p className="ant-upload-drag-icon">
                     <InboxOutlined />
@@ -238,7 +250,7 @@ const startSimulation = (time, status, action) =>{
                   </p>
                 </Dragger> 
              {/* --------------------------------------------------------------- */}
-             <br></br> <br></br> <br></br>
+             <br></br> 
 
              <form>
                 <input type="file" id="myFile" name="filename" onChange={onFileChange}/>

@@ -300,7 +300,7 @@ class Applications extends Component {
     <React.Fragment>
       <div className="d-flex justify-content-end" style={{display: "flex", placeItems: "center"}}>
         <BreadCrumbs applicationId={this.state.applicationId}/>
-        < ImportApplication />
+        < ImportApplication user={this.props.user}/>
         <span style={{ marginLeft: "auto" }}>
             <Tooltip placement="bottom" title={"Click to add a new Application"}>
               <Button className="btn btn-secondary btn-sm" onClick={() => this.handleAdd()}><i className="fa fa-plus"></i> Add Application</Button>
