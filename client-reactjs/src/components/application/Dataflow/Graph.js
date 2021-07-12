@@ -14,7 +14,7 @@ import { shapesData, appendDefs, jobIcons } from "./Utils.js"
 import SubProcessDialog from "./SubProcessDialog";
 import { connect } from 'react-redux';
 import { assetsActions } from '../../../redux/actions/Assets';
-import { EyeOutlined, ReloadOutlined, EyeInvisibleOutlined  } from '@ant-design/icons';
+import { EyeOutlined, ReloadOutlined, EyeInvisibleOutlined , ExclamationCircleOutlined } from '@ant-design/icons';
 
 const svgPalleteBarWidth = 90,
   svgUsableWidth = window.innerWidth - 100,
@@ -64,6 +64,8 @@ class Graph extends Component {
     loading: false,
     nodes: []
   }
+
+ 
 
   consts = {
       selectedClass: "selected",
@@ -1148,41 +1150,65 @@ class Graph extends Component {
     }
   }
 
+
+
   deleteNode = (d, gEl) => {
-    let _self=this;
-    switch(d.type) {
-      case 'File':
-        updateGraph((d.fileId ? d.fileId : d.id), _self.props.applicationId, _self.props.selectedDataflow).then(async (response) => {
-          await _self.fetchSavedGraph();
-        });
-        break;
-      case 'Index':
-        updateGraph((d.indexId ? d.indexId : d.id), _self.props.applicationId, _self.props.selectedDataflow).then(async (response) => {
-          await _self.fetchSavedGraph();
-        });
-        break;
-      case 'Job':
-      case 'Modeling':
-      case 'Scoring':
-      case 'Query Build':
-      case 'ETL':
-      case 'Data Profile':
-        updateGraph((d.jobId ? d.jobId : d.id), _self.props.applicationId, _self.props.selectedDataflow).then(async (response) => {
-          await _self.fetchSavedGraph();
-        });
-        break;
-      case 'Sub-Process':
-        /*if(d.subProcessId) {
-          handleSubProcessDelete(d.subProcessId, _self.props.applicationId);
-        }*/
-        updateGraph((d.subProcessId ? d.subProcessId : d.id), _self.props.applicationId, _self.props.selectedDataflow).then(async (response) => {
-          await _self.fetchSavedGraph();
-        });
-        break;
+   const  handleOK = () => {
+      let _self=this;
+      switch(d.type) {
+        case 'File':
+          updateGraph((d.fileId ? d.fileId : d.id), _self.props.applicationId, _self.props.selectedDataflow).then(async (response) => {
+            await _self.fetchSavedGraph();
+          });
+          break;
+        case 'Index':
+          updateGraph((d.indexId ? d.indexId : d.id), _self.props.applicationId, _self.props.selectedDataflow).then(async (response) => {
+            await _self.fetchSavedGraph();
+          });
+          break;
+        case 'Job':
+        case 'Modeling':
+        case 'Scoring':
+        case 'Query Build':
+        case 'ETL':
+        case 'Data Profile':
+          updateGraph((d.jobId ? d.jobId : d.id), _self.props.applicationId, _self.props.selectedDataflow).then(async (response) => {
+            await _self.fetchSavedGraph();
+          });
+          break;
+        case 'Sub-Process':
+          /*if(d.subProcessId) {
+            handleSubProcessDelete(d.subProcessId, _self.props.applicationId);
+          }*/
+          updateGraph((d.subProcessId ? d.subProcessId : d.id), _self.props.applicationId, _self.props.selectedDataflow).then(async (response) => {
+            await _self.fetchSavedGraph();
+          });
+          break;
+      }
+      if(gEl) {
+        gEl.remove();
+      }
     }
-    if(gEl) {
-      gEl.remove();
+
+    const handleCancel = () => {
+      this.setState({deleteNode: false})
+      return;
     }
+
+    Modal.confirm({
+      icon: <ExclamationCircleOutlined style={{color: "red"}} />,
+      title: `Do you really want to remove this ${d.type } ?`,
+      okText: 'Yes',
+      cancelText: 'No',
+      okButtonProps: {type: 'danger'},
+      cancelButtonProps: {type: 'primary'},
+      onOk(){
+        handleOK();
+      },
+      onCancel() {
+        handleCancel();
+      }
+    });
   }
 
   hideNode = (d, gEl) => {
@@ -1699,6 +1725,8 @@ class Graph extends Component {
             onFileAdded={this.onFileAdded}
             user={this.props.user} 
             currentlyEditingNodeId={this.state.currentlyEditingId}/>  : null}
+
+
     </React.Fragment>
   )
   }
@@ -1717,7 +1745,6 @@ function mapStateToProps(state) {
       saveResponse
   };
 }
-
 const connectedGraph = connect(mapStateToProps)((withRouter(Graph)));
 export { connectedGraph as Graph };
 

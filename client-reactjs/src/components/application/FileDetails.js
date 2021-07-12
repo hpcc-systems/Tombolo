@@ -1736,7 +1736,7 @@ class FileDetails extends PureComponent {
         </div>
 
 <div className = {this.props.displayingInModal ? "assetDetail-buttons-wrapper-modal" :"assetDetail-buttons-wrapper"} style={{justifyContent: "flex-end"}}>
-          {this.state.enableEdit ? (
+        {this.state.enableEdit ? (
           <div className="button-container">
             <Button
               key="danger"
@@ -1763,7 +1763,7 @@ class FileDetails extends PureComponent {
           <div>
             {this.state.dataAltered ? (
               <div className="button-container">
-                <Button key="back" onClick={this.handleCancel}>
+                <Button key="back" onClick={this.handleCancel} type="primary" ghost>
                   Cancel
                 </Button>
                 <Button
@@ -1778,7 +1778,7 @@ class FileDetails extends PureComponent {
               </div>
             ) : (
               <div className="button-container">
-                <Button key="back" onClick={this.handleCancel}>
+                <Button key="back" onClick={this.handleCancel} type="primary" ghost>
                   Cancel
                 </Button>
               </div>

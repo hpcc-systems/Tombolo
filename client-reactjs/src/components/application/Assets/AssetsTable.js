@@ -261,7 +261,6 @@ function AssetsTable({ selectedGroup, openGroup, handleEditGroup, refreshGroups 
                 onClick={(row) => handleEdit(record.id, record.type, "view")}
               >
                 {record.title ? record.title : text}
-                {console.log(record, "<<<<<<<<<<<<<<<<<<<<<")}
               </a>
             </span>
             {keywords && keywords.length > 0 ? (

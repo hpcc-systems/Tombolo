@@ -293,7 +293,7 @@ exports.getJobWuidByName = (clusterId, jobName) => {
     module.exports.getCluster(clusterId).then(function(cluster) {
       let clusterAuth = module.exports.getClusterAuth(cluster);
       let wuService = new hpccJSComms.WorkunitsService({ baseUrl: cluster.thor_host + ':' + cluster.thor_port, userID:(clusterAuth ? clusterAuth.user : ""), password:(clusterAuth ? clusterAuth.password : "")});
-      wuService.WUQuery({"Jobname":jobName}).then((response) => {
+      wuService.WUQuery({"Jobname":jobName, "PageSize":1, "PageStartFrom":0}).then((response) => {
         if(response.Workunits
           && response.Workunits.ECLWorkunit
           && response.Workunits.ECLWorkunit.length > 0) {

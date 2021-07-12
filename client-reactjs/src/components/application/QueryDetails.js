@@ -725,7 +725,7 @@ class QueryDetails extends PureComponent {
       {this.state.enableEdit ?
           <div className="button-container" >
             <Button key="danger" type="danger" onClick={this.handleDelete}>Delete</Button>
-            <Button key="back" onClick={this.handleCancel}>
+            <Button key="back" onClick={this.handleCancel} type="primary" ghost>
               Cancel
             </Button>
             <Button key="submit" disabled={!editingAllowed} type="primary" loading={confirmLoading} onClick={this.handleOk}>
@@ -736,7 +736,7 @@ class QueryDetails extends PureComponent {
         <div>
           {this.state.dataAltered ?
             <div className="button-container">
-            <Button key="back" onClick={this.handleCancel}>
+            <Button key="back" onClick={this.handleCancel} type="primary" ghost>
              Cancel
             </Button>
             <Button key="submit" disabled={!editingAllowed} type="primary" loading={confirmLoading} onClick={this.handleOk}>
@@ -744,16 +744,14 @@ class QueryDetails extends PureComponent {
             </Button>
           </div>:
             <div className="button-container">
-            <Button key="back" onClick={this.handleCancel}>
+            <Button key="back" onClick={this.handleCancel} type="primary" ghost>
              Cancel
             </Button>
           </div>
   }
         </div>
-      
       }
       </div>
-  
       </React.Fragment>
     );
   }
