@@ -171,7 +171,7 @@ function BasicsTabGeneral({enableEdit, editingAllowed, addingNewAsset, jobType, 
                 value={localState.description}
                 disabled={!editingAllowed}/>
                 :
-                <div className="read-only-markdown"> <ReactMarkdown source={localState.job.description} />{console.log(localState)}</div>
+                <div className="read-only-markdown"> <ReactMarkdown source={localState.job.description} /></div>
               }
 
               </Form.Item>
