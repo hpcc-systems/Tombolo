@@ -9,7 +9,7 @@ module.exports = (sequelize, DataTypes) => {
       autoIncrement: false
     },
     name: DataTypes.STRING
-  }, {freezeTableName: true});
+  }, {paranoid: true, freezeTableName: true});
   data_types.associate = function(models) {
     // associations can be defined here
   };

@@ -14,7 +14,7 @@ module.exports = (sequelize, DataTypes) => {
     name: DataTypes.STRING,
     description: DataTypes.TEXT,
     file_id: DataTypes.STRING
-  }, {freezeTableName: true});
+  }, {paranoid: true, freezeTableName: true});
   jobfile.associate = function(models) {
     // associations can be defined here
   };

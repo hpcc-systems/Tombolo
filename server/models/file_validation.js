@@ -14,7 +14,7 @@ module.exports = (sequelize, DataTypes) => {
     rule_name: DataTypes.STRING,
     rule_test: DataTypes.STRING,
     rule_fix: DataTypes.STRING
-  }, {freezeTableName: true});
+  }, {paranoid: true, freezeTableName: true});
   file_validation.associate = function(models) {
   };
   return file_validation;

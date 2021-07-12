@@ -12,7 +12,7 @@ module.exports = (sequelize, DataTypes) => {
     application_id: DataTypes.STRING,
     name: DataTypes.STRING,
     type: DataTypes.STRING
-  }, {freezeTableName: true});
+  }, {paranoid: true, freezeTableName: true});
   jobparam.associate = function(models) {
     // associations can be defined here
   };

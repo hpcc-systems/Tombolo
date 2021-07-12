@@ -23,7 +23,7 @@ module.exports = (sequelize, DataTypes) => {
     sprayFileName: DataTypes.STRING,
     sprayDropZone: DataTypes.STRING,
     sprayedFileScope: DataTypes.STRING
-  }, {freezeTableName: true});
+  }, {paranoid: true, freezeTableName: true});
   job.associate = function(models) {
     job.hasMany(models.jobfile,{
       foreignKey:'job_id',

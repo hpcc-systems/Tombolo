@@ -10,7 +10,7 @@ module.exports = (sequelize, DataTypes) => {
     },
     compliance: DataTypes.STRING,
     data_types:DataTypes.STRING,
-  }, {freezeTableName: true});
+  }, {paranoid: true, freezeTableName: true});
   controls_regulations.associate = function(models) {
     // associations can be defined here
   };

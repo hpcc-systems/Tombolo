@@ -20,7 +20,7 @@ module.exports = (sequelize, DataTypes) => {
     wu_duration: DataTypes.STRING,
     owner: DataTypes.STRING,
     jobName: DataTypes.STRING
-  }, {});
+  }, {paranoid: true});
   WorkflowDetails.associate = function(models) {
     // associations can be defined here
   };

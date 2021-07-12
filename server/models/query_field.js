@@ -13,7 +13,7 @@ module.exports = (sequelize, DataTypes) => {
     field_type: DataTypes.STRING,
     name: DataTypes.STRING,
     type: DataTypes.STRING
-  }, {freezeTableName: true});
+  }, {paranoid: true, freezeTableName: true});
   query_field.associate = function(models) {
     // associations can be defined here
   };

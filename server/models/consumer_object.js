@@ -11,7 +11,7 @@ module.exports = (sequelize, DataTypes) => {
     consumer_id: DataTypes.STRING,
     object_id: DataTypes.STRING,
     object_type: DataTypes.STRING
-  }, {freezeTableName: true});
+  }, {paranoid: true, freezeTableName: true});
   consumer_object.associate = function(models) {
     // associations can be defined here
   };

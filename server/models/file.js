@@ -21,7 +21,7 @@ module.exports = (sequelize, DataTypes) => {
     supplier: DataTypes.STRING,
     owner: DataTypes.STRING,
     scope: DataTypes.STRING
-  }, {freezeTableName: true});
+  }, {paranoid: true, freezeTableName: true});
   file.associate = function(models) {
     file.hasMany(models.file_layout,{
       foreignKey:'file_id',

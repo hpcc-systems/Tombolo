@@ -17,7 +17,7 @@ module.exports = (sequelize, DataTypes) => {
     wu_end: DataTypes.STRING,
     wu_duration: DataTypes.STRING,
     clusterId: DataTypes.UUID
-  }, {freezeTableName: true});
+  }, {paranoid: true, freezeTableName: true});
   job_execution.associate = function(models) {
   };
   return job_execution;

@@ -13,7 +13,7 @@ module.exports = (sequelize, DataTypes) => {
     application_id: DataTypes.STRING,
     dataflowId: DataTypes.STRING,
     status: DataTypes.STRING
-  }, {freezeTableName: true});
+  }, {paranoid: true, freezeTableName: true});
   Workflow.associate = function(models) {
     // associations can be defined here
     Workflow.hasMany(models.workflowdetails,{

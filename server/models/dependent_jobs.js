@@ -11,7 +11,7 @@ module.exports = (sequelize, DataTypes) => {
     jobId: DataTypes.UUID,
     dataflowId: DataTypes.UUID,
     dependsOnJobId: DataTypes.UUID,
-  }, {freezeTableName: true});
+  }, {paranoid: true, freezeTableName: true});
 
   return dependent_jobs;
 };

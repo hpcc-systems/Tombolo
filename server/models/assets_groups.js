@@ -10,6 +10,6 @@ module.exports = (sequelize, DataTypes) => {
     },
     assetId: DataTypes.UUID,
     groupId: DataTypes.INTEGER
-  }, {freezeTableName: true});
+  }, {paranoid: true, freezeTableName: true});
   return assets_groups;
 };
