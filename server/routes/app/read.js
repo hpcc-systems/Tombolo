@@ -1,6 +1,8 @@
 const express = require('express');
 const router = express.Router();
 const assert = require('assert');[]
+var path = require('path');
+var fs = require('fs');
 var models  = require('../../models');
 let UserApplication = models.user_application;
 let Application = models.application;
@@ -212,16 +214,17 @@ router.post('/export', [
 
       applicationExport.assets = {files: files, indexes: indexes, queries: queries, jobs: jobs, dataflow: dataflow};
         
-      var schemaDir = path.join(__dirname, '..', '..', 'export');
+      var schemaDir = path.join(__dirname, '..', '..', 'schemas');
       if (!fs.existsSync(schemaDir)){
         fs.mkdirSync(schemaDir);
       }
-      var exportFile = path.join(__dirname, '..', '..', 'schemas', application.title+'-export.ecl');
+      var exportFile = path.join(__dirname, '..', '..', 'schemas', application.title+'-export.json');
       
-      fs.appendFile(applicationExport.toString(), schema, function (err) {
+      fs.appendFile(exportFile, JSON.stringify(applicationExport, null, 4), function (err) {
           if (err) return res.status(500).send("Error occured while exporting application");
           res.download(exportFile, function(err){
             if (err) {
+              console.log(err);
               console.log("Error occured during download...")
               res.status(500).send("Error occured while exporting application");;
             } else {
