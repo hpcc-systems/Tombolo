@@ -25,8 +25,25 @@ const startSimulation = (time, status, action) =>{
   //Handle Import
   const handleImport = () => {
     setImportStatus(true);
+    //<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<SOCKET
+    // Create WebSocket connection.
+    // const socket = new WebSocket('ws://localhost:8080');
 
-    //<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
+    // // Connection opened 
+    // socket.addEventListener('open', function (event) {
+    //     socket.send('<<<<<<<<<<<<<<  Hello Server!');
+    // });
+
+    // // Listen for messages
+    // socket.addEventListener('message', function (event) {
+    //     console.log('Message from server ', event.data);
+    // });
+
+    // socket.onclose = function (event) {
+    //   console.log('The connection has been closed successfully.');
+    // };
+    // //<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
+    
     let formData = new FormData();
     formData.append("user", props.user.username);
     formData.append("file", file);
@@ -37,20 +54,28 @@ const startSimulation = (time, status, action) =>{
       headers: authHeader("importApp"),
       body: formData
     }).then((response) => {
-      console.log("<<<< Api called")
+      console.log("<<<<  response from back end", response)
     if(response.ok) {
+      console.log(response, "<<<<<<<<<<<<<<<<<<")
       return response.json();
     }
     handleError(response);
   })
 
+
+
     //Simulation
     startSimulation(1000, "underway",setDataStatus);
-    startSimulation(3000, "completed",setDataStatus);
-    startSimulation(3100, "underway",setApplicationStatus);
-    startSimulation(6000, "completed",setApplicationStatus);
-    startSimulation(6100, "underway",setAssetsStatus);
-    startSimulation(90000000000000, "completed",setAssetsStatus);
+    startSimulation(1000, "completed",setDataStatus);
+    startSimulation(1000, "underway",setApplicationStatus);
+    startSimulation(1000, "completed",setApplicationStatus);
+    startSimulation(1000, "underway",setAssetsStatus);
+    startSimulation(1000, "completed",setAssetsStatus);
+    setUploadStatus("")
+    setImportStatus(false)
+    setFile(null)
+    setModalVisiblity(false);
+   
   }
 
   //Status icon
