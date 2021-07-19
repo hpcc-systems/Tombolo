@@ -6,6 +6,10 @@ var fs = require('fs');
 var models  = require('../../models');
 let UserApplication = models.user_application;
 let Application = models.application;
+let AssetsGroups=models.assets_groups;
+let AssetsDataflows=models.assets_dataflows;
+let DependentJobs=models.dependent_jobs;
+let Groups = models.groups;
 let File = models.file;
 let FileLayout = models.file_layout;
 let FileLicense = models.file_license;
@@ -173,46 +177,82 @@ router.post('/export', [
     Application.findOne({
       where: {id: req.body.id},
     }).then(async (application) => {
-      applicationExport.title = application.title,
-      applicationExport.description = application.description;
-      applicationExport.cluster = application.cluster;
+      applicationExport = {
+        "application" : {
+          title: application.title,
+          description: application.description,
+          cluster: application.cluster
+        }
 
+      }      
+
+      let groups = await Groups.findAll({
+        where: {application_id: req.body.id},
+        attributes: { exclude: ['createdAt', 'updatedAt', 'application_id'] }
+      })
+      applicationExport.application.groups = groups;
+      
       let files = await File.findAll({where: {application_id: application.id}, 
         include: [
           {model: FileLayout, attributes: { exclude: ['createdAt', 'updatedAt', 'id', 'application_id'] }}, 
           {model: FileLicense, attributes: { exclude: ['createdAt', 'updatedAt', 'id', 'application_id'] }}, 
-          {model: FileValidation, attributes: { exclude: ['createdAt', 'updatedAt', 'id', 'application_id'] }}
-        ],
-        attributes: { exclude: ['createdAt', 'updatedAt', 'id', 'application_id'] }
+          {model: FileValidation, attributes: { exclude: ['createdAt', 'updatedAt', 'id', 'application_id'] }},
+          {model: Groups, as: 'groups', attributes: ['id', 'name', 'description', 'parent_group'], 
+          through: {
+            attributes: []
+          }},
+          {model: Dataflow, as: 'dataflows', attributes: ['id']}
+        ]      
       }); 
 
       let indexes = await Index.findAll({where: {application_id: application.id}, 
         include: [
           {model: IndexKey, attributes: { exclude: ['createdAt', 'updatedAt', 'id', 'application_id'] }}, 
-          {model: IndexPayload, attributes: { exclude: ['createdAt', 'updatedAt', 'id', 'application_id'] }}
+          {model: IndexPayload, attributes: { exclude: ['createdAt', 'updatedAt', 'id', 'application_id'] }},
+          {model: Groups, as: 'groups', attributes: ['id', 'name', 'description', 'parent_group'], 
+          through: {
+            attributes: []
+          }},
+          {model: Dataflow, as: 'dataflows', attributes: ['id']}
         ],
         attributes: { exclude: ['createdAt', 'updatedAt', 'id', 'application_id'] }
       }); 
 
       let queries = await Query.findAll({where: {application_id: application.id}, 
-        include: [{model: QueryField, attributes: { exclude: ['createdAt', 'updatedAt', 'id', 'application_id'] }}],
+        include: [
+          {model: QueryField, attributes: { exclude: ['createdAt', 'updatedAt', 'id', 'application_id'] }}, 
+          {model: Groups, as: 'groups', attributes: ['id', 'name', 'description', 'parent_group'], 
+          through: {
+            attributes: []
+          }},
+          {model: Dataflow, as: 'dataflows', attributes: ['id']}
+        ],        
         attributes: { exclude: ['createdAt', 'updatedAt', 'id', 'application_id'] }
       }); 
 
       let jobs = await Job.findAll({where: {application_id: application.id}, 
         include: [
           {model: JobFile, attributes: { exclude: ['createdAt', 'updatedAt', 'id', 'application_id'] }}, 
-          {model: JobParam, attributes: { exclude: ['createdAt', 'updatedAt', 'id', 'application_id'] }}
+          {model: JobParam, attributes: { exclude: ['createdAt', 'updatedAt', 'id', 'application_id'] }},
+          {model: Groups, as: 'groups', attributes: ['id', 'name', 'description', 'parent_group'], 
+          through: {
+            attributes: []
+          }},
+          {model: Dataflow, as: 'dataflows', attributes: ['id']},
+          {model: DependentJobs, as: 'dependsOnJobs', attributes: { exclude: ['createdAt', 'updatedAt'], through: {
+            attributes: []
+          } }}
         ],
-        attributes: { exclude: ['createdAt', 'updatedAt', 'id', 'application_id', 'assetId'] }
-      }); 
-
-      let dataflow = await Dataflow.findAll({where: {application_id: application.id}, 
-        include: [{model: DataflowGraph, attributes: { exclude: ['createdAt', 'updatedAt', 'id', 'application_id'] }}],
         attributes: { exclude: ['createdAt', 'updatedAt', 'id', 'application_id'] }
       }); 
 
-      applicationExport.assets = {files: files, indexes: indexes, queries: queries, jobs: jobs, dataflow: dataflow};
+      let dataflow = await Dataflow.findAll({where: {application_id: application.id}, 
+        include: [{model: DataflowGraph, attributes: { exclude: ['createdAt', 'updatedAt', 'id', 'application_id'] }}                  
+                ],
+        attributes: { exclude: ['createdAt', 'updatedAt', 'id', 'application_id'] }
+      }); 
+
+      applicationExport.application.assets = {files: files, indexes: indexes, queries: queries, jobs: jobs, dataflow: dataflow};
         
       var schemaDir = path.join(__dirname, '..', '..', 'schemas');
       if (!fs.existsSync(schemaDir)){
