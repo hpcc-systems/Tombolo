@@ -852,7 +852,7 @@ router.post('/visualization', [
     let cluster = await Cluster.findOne({where: {id: file.cluster_id}});
     let bodyObj = {
       user: { 
-        email: 'kostiantyn.agapov@lexisnexisrisk.com' 
+        email: req.body.email 
       },
       cluster: {
         name: cluster.name,
