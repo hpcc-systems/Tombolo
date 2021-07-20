@@ -11,7 +11,7 @@ let FileLayout = models.file_layout;
 let FileLicense = models.file_license;
 let FileValidation = models.file_validation;
 let License = models.license;
-let Dataflow = models.dataflow;
+var Cluster = models.cluster;
 let Rules = models.rules;
 let DataTypes=models.data_types;
 let AssetsGroups=models.assets_groups;
@@ -24,6 +24,9 @@ const Op = Sequelize.Op;
 let Indexes=models.indexes;
 let Query=models.query;
 let Job=models.job;
+let AssetsVisualization=models.assets_visualization;
+var request = require('request');
+var requestPromise = require('request-promise');
 const validatorUtil = require('../../utils/validator');
 const { body, query, check, validationResult } = require('express-validator');
 
@@ -832,6 +835,70 @@ router.get('/filelayout', [
 
 });
 
+router.post('/visualization', [
+  body('id').isUUID(4).withMessage('Invalid file id'),
+  body('application_id').isUUID(4).withMessage('Invalid application id'),
+  body('email').isEmail().withMessage('Invalid email')
+],async (req, res) => {
+  const errors = validationResult(req).formatWith(validatorUtil.errorFormatter);
+  if (!errors.isEmpty()) {
+    return res.status(422).json({ success: false, errors: errors.array() });
+  }
 
+  console.log("[file visualization] - create visualization = " + req.body.id + " appId: "+req.body.application_id);
+  try {
+
+    let file = await File.findOne({where: {id: req.body.id}});
+    let cluster = await Cluster.findOne({where: {id: file.cluster_id}});
+    let bodyObj = {
+      user: { 
+        email: 'kostiantyn.agapov@lexisnexisrisk.com' 
+      },
+      cluster: {
+        name: cluster.name,
+        host: cluster.thor_host,
+        infoPort: cluster.thor_port,
+        dataPort: cluster.roxie_port,
+      },
+      selectedSource: {
+        cluster: 'hthor__eclagent', // hpcc file object has ClusterName key in it
+        hpccID: file.name, // hpcc file object has Name key in it
+        name: file.name,
+        target: 'file',
+      },
+      workspaceName: 'Tombolo', 
+      dashboardName: 'Tombolo', 
+    };
+
+    console.log(bodyObj);
+
+    request.post({
+      url: process.env["REALBI_URL"] + '/api/v1/integration',
+      body: JSON.stringify(bodyObj),
+      headers: {'content-type' : 'application/json'},
+    }, function(err, response, body) {
+      if (err) {
+        console.log('ERROR - ', err);        
+        return res.status(500).send("Error occured while creating visualization");
+      } else {
+        var result = JSON.parse(body);
+        console.log(result);
+        AssetsVisualization.create({
+          assetId: file.id,
+          url: result.workspaceUrl
+        }).then((result) => {
+          res.json({"success": true, 'url': result.workspaceUrl});
+        }).catch(err => {
+          console.log(err);
+          return res.status(500).send("Error occured while creating visualization");
+        })        
+      }
+    });
+
+  } catch(err) {
+    console.log(err);
+    return res.status(500).send("Error occured while creating visualization");
+  }
+});  
 
 module.exports = router;

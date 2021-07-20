@@ -16,6 +16,7 @@ import {
   QuestionCircleOutlined,
   FolderOpenOutlined,
   FilePdfOutlined,
+  AreaChartOutlined
 } from "@ant-design/icons";
 import { store } from "../../../redux/store/Store";
 import showdown from "showdown";
@@ -221,6 +222,28 @@ function AssetsTable({ selectedGroup, openGroup, handleEditGroup, refreshGroups 
     dispatch(assetsActions.assetInGroupSelected(groupId));
   };
 
+  const handleCreateVisualization = (id) => {
+    fetch("/api/file/read/visualization", {
+      method: "post",
+      headers: authHeader(),
+      body: JSON.stringify({
+        id: id,
+        application_id: applicationId,
+        email: authReducer.user.email
+      }),
+    })
+    .then(function (response) {
+      if (response.ok && response.status == 200) {
+        return response.json();
+      }
+      handleError(response);
+    })      
+    .then(function (data) {
+      if (data && data.success) {
+      }
+    })
+  }
+
   const editingAllowed = hasEditPermission(authReducer.user);
 
   const generateAssetIcon = (type) => {
@@ -346,7 +369,7 @@ function AssetsTable({ selectedGroup, openGroup, handleEditGroup, refreshGroups 
             <Tooltip placement="right" title={"Move"}>
               <FolderOpenOutlined />
             </Tooltip>
-          </a>
+          </a>          
 
           <Divider type="vertical" />
           <Tooltip placement="right" title="Print">
@@ -356,6 +379,29 @@ function AssetsTable({ selectedGroup, openGroup, handleEditGroup, refreshGroups 
               onClick={ () =>  getNestedAssets(applicationId, setSelectedAsset, setSelectDetailsforPdfDialogVisibility, record, setToPrintAssets)}
             />
           </Tooltip>
+          {record.type == 'File' ?   
+            <React.Fragment>
+              <Divider type="vertical" />  
+              {record.visualization ? 
+                <a href={record.visualization} target="_blank">
+                  <Tooltip placement="right" title={"Visualization"}>
+                  <AreaChartOutlined />
+                  </Tooltip>
+                </a>
+              : <Popconfirm
+                  title="Are you sure you want to create a chart with this data?"
+                  onConfirm={() => handleCreateVisualization(record.id)}
+                  icon={<QuestionCircleOutlined />}
+                >
+                  <a href="#">
+                    <Tooltip placement="right" title={"Visualization"}>
+                    <AreaChartOutlined />
+                    </Tooltip>
+                  </a>
+                </Popconfirm>            
+              }              
+            </React.Fragment>  
+            : null}          
         </span>
       ),
     },

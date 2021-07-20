@@ -11,6 +11,7 @@ let Index = models.indexes;
 let File = models.file;
 let Query = models.query;
 let Job = models.job;
+let AssetsVisualization = models.assets_visualization;
 let AssetsGroups = models.assets_groups;
 
 let createGroupHierarchy = (groups) => {
@@ -178,7 +179,13 @@ router.get('/assets', [
         "application_id":req.query.app_id,
         "id": req.query.group_id
       },
-      include: [{model:File, as:'files', attributes:['id', 'name', 'title', 'description', 'createdAt']}, {model:Job, as: 'jobs', attributes:['id', 'name', 'title', 'description', 'createdAt']}, {model:Query, as: 'queries', attributes:['id', 'name', 'title', 'description', 'createdAt']}, {model:Index, as: 'indexes', attributes:['id', 'name', 'title', 'description', 'createdAt']}],
+      include: [
+        {model:File, as:'files', attributes:['id', 'name', 'title', 'description', 'createdAt'], 
+          include:[{model: AssetsVisualization}]
+        }, 
+        {model:Job, as: 'jobs', attributes:['id', 'name', 'title', 'description', 'createdAt']}, 
+        {model:Query, as: 'queries', attributes:['id', 'name', 'title', 'description', 'createdAt']}, 
+        {model:Index, as: 'indexes', attributes:['id', 'name', 'title', 'description', 'createdAt']}],
       order: [['name', 'ASC']]
       }).then(async (assets) => {
         let childGroups = await getChildGroups(req.query.app_id, req.query.group_id)
@@ -189,7 +196,8 @@ router.get('/assets', [
             name: file.name,
             title: file.title,
             description: file.description,
-            createdAt: file.createdAt
+            visualization: file.assets_visualization ? file.assets_visualization.url : null,
+            createdAt: file.createdAt            
           })
         })
         assets[0] && assets[0].jobs.forEach((job) => {
