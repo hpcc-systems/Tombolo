@@ -1,94 +1,82 @@
-import React, {useState} from 'react'
-import { Upload, Button , Modal} from 'antd';
-import { ImportOutlined, InboxOutlined , MinusCircleOutlined , LoadingOutlined, CheckCircleOutlined} from '@ant-design/icons';
-import styled from "styled-components"
-import { authHeader, handleError } from "../common/AuthHeader.js";
+import React, {useState, useEffect} from 'react'
+import { Upload, Button , Modal, message} from 'antd';
+import { ImportOutlined, InboxOutlined } from '@ant-design/icons';
+import { authHeader } from "../common/AuthHeader.js";
+//<<<< Socket
+import {io} from "socket.io-client";
+
+
+//<<<< Dragger
+const { Dragger } = Upload;
+
+
 
 function ImportApplication(props) {
-  const { Dragger } = Upload;
   const [ modalVisible, setModalVisiblity] = useState(false);
   const [uploadStatus, setUploadStatus] = useState("")
-  const [file, setFile] = useState();
-  const [importing, setImportStatus] = useState(false)
-  const [ dataStatus, setDataStatus] = useState("pending")
-  const [ applicationStatus, setApplicationStatus] = useState("pending")
-  const [ assetsStatus, setAssetsStatus] = useState("pending")
+  const [file, setFile] = useState({});
+  const [importing, setImporting] = useState(false)
+  const [ importUpdates, setImportUpdates] = useState([])
 
-  
-//<<<< <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<Test simulation
-const startSimulation = (time, status, action) =>{
-  setTimeout(() =>{
-    action(status)
-  }, time)
-  }
+
+  useEffect(() => {
+    //Establish connection when  component loads
+    const socket = io("http://localhost:3000", {
+    transports: ["websocket"]
+  });
+
+  //When the connection is established
+     socket.on("connect", () => {
+      console.log("<<<< socket connection success ")
+    })
+
+    //When message is received from back end
+    socket.on("message", (message) =>{
+      setImportUpdates(existingMsgs => [...existingMsgs , message])
+      console.log("Message <<<<", message)
+    })
+
+    //Clean up when component unmounts
+    // return function cleanup(){
+    //   socket.close()
+    //   console.log("<<<< Component unmouting ")
+    // }
+  }, [importUpdates])
+
+
+  //message config
+  message.config({ top: 150 });
 
   //Handle Import
   const handleImport = () => {
-    setImportStatus(true);
-    //<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<SOCKET
-    // Create WebSocket connection.
-    // const socket = new WebSocket('ws://localhost:8080');
-
-    // // Connection opened 
-    // socket.addEventListener('open', function (event) {
-    //     socket.send('<<<<<<<<<<<<<<  Hello Server!');
-    // });
-
-    // // Listen for messages
-    // socket.addEventListener('message', function (event) {
-    //     console.log('Message from server ', event.data);
-    // });
-
-    // socket.onclose = function (event) {
-    //   console.log('The connection has been closed successfully.');
-    // };
-    // //<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
-    
+    setImporting(true);
     let formData = new FormData();
     formData.append("user", props.user.username);
     formData.append("file", file);
     
- 
     fetch("/api/app/read/importApp", {
       method: 'post',
       headers: authHeader("importApp"),
       body: formData
-    }).then((response) => {
-      console.log("<<<<  response from back end", response)
-    if(response.ok) {
-      console.log(response, "<<<<<<<<<<<<<<<<<<")
-      return response.json();
-    }
-    handleError(response);
-  })
-
-
-
-    //Simulation
-    startSimulation(1000, "underway",setDataStatus);
-    startSimulation(1000, "completed",setDataStatus);
-    startSimulation(1000, "underway",setApplicationStatus);
-    startSimulation(1000, "completed",setApplicationStatus);
-    startSimulation(1000, "underway",setAssetsStatus);
-    startSimulation(1000, "completed",setAssetsStatus);
-    setUploadStatus("")
-    setImportStatus(false)
-    setFile(null)
-    setModalVisiblity(false);
-   
+    }).then((response) => response.json())
+      .then(data => {
+        console.log("<<<< Response Data", data)
+        if(data.success){
+          console.log("Import Success <<<<",data.message)
+          message.success(data.message)
+          setModalVisiblity(false)
+          setFile({})
+          setImporting(false)
+        }else{
+          console.log("<<<< import error", data.message)
+          message.error(data.message)
+          setModalVisiblity(false)
+          setFile({})
+          setImporting(false)
+        }
+      })
   }
 
-  //Status icon
-  const statusIconSwitch = (item) => {
-    switch(item){
-      // case 'pending':
-      //   return <MinusCircleOutlined/>
-      case 'underway' :
-        return <LoadingOutlined style={{color: "#FFA500	"}} />
-      case 'completed':
-        return <CheckCircleOutlined style={{color: "#00FF00"}}/>
-    }
-  }
 
   //Draggeer's props
   const propss = {
@@ -117,25 +105,21 @@ const startSimulation = (time, status, action) =>{
 
 
   //customRequest
-  const customRequest = ({ file, onSuccess }) => {
-    setTimeout(() => {
+  const customRequest = ({ onSuccess }) => {
       onSuccess("ok");
-    }, 0);
   };
     
     return (
-        <ImportElemnt>
+        <div>
            <Button style={{display: "flex", placeItems : "center", marginRight: "10px"}} 
               className="btn btn-sm btn-primary" 
               onClick={() =>setModalVisiblity(true)}
               icon={<ImportOutlined  />}>Import App
             </Button>
-           
+
             <Modal 
-              // title="Import Application" 
               title={importing ? null : "Import Application"}
               closable={!importing}
-              className="importApplication__modal"
               visible={modalVisible} 
               onCancel={() => {setModalVisiblity(false); setUploadStatus("")}}
               footer={uploadStatus === "done" && !importing ? 
@@ -146,6 +130,7 @@ const startSimulation = (time, status, action) =>{
                         <br></br>
                 <Dragger 
                 maxCount={1}
+                showUploadList={false}
                 className="importApplication_dragger"
                 style={{display : importing?"none":"block"}}
                 {...propss}
@@ -158,33 +143,17 @@ const startSimulation = (time, status, action) =>{
                   <p className="ant-upload-hint">
                     Data must be in JSON format
                   </p>
+                  <p><b>{file?file.name:null}</b></p>
+                
                 </Dragger> 
-          
-                <ImportSteps style={{display : importing?"block":"none"}}>
-                    <div>{statusIconSwitch(dataStatus)} <span>Inspecting Data ...</span></div>
-                    <div>{statusIconSwitch(applicationStatus)} <span>Importing Application ...</span></div>
-                    <div>{statusIconSwitch(assetsStatus)} <span>Importing Assets ...</span></div>
-                  </ImportSteps>
+                <div style={{background: "black", color: "white", textAlign: "left", padding: "10px", height: "100px", overflow: "auto"}}>
+                  {importUpdates.map(item => <div style={{textAlign: "left"}}><small>{item}</small></div>)}
+                </div>
+               
+               
             </Modal>
-        </ImportElemnt>
+        </div>
     )
-
-    
 }
 
 export default ImportApplication
-
-// <<<<< Styled Components
-const ImportElemnt = styled.span``
-
-const ImportSteps = styled.div`
-> div{
-  display: flex;
-  place-items: center;
-
-  >span{
-    margin-left: 15px;
-    color: black 
- }
-}
-`
