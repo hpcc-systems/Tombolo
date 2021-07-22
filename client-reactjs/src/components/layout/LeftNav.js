@@ -67,7 +67,7 @@ class LeftNav extends Component {
             collapsed={this.state.collapsed}
             onCollapse={this.onCollapse}
             width={150}
-            collapsedWidth={60}
+            collapsedWidth={55}
       >
           <nav className="d-md-block bg-dark sidebar">
           <div className="sidebar-sticky"  >
