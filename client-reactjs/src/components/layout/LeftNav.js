@@ -18,7 +18,7 @@ const { SubMenu } = Menu;
 class LeftNav extends Component {
   state = {
     current: '/files',
-    collapsed: false,
+    collapsed: true,
     selectedTopNav: this.props.selectedTopNav,
   };
 
