@@ -18,7 +18,7 @@ const { SubMenu } = Menu;
 class LeftNav extends Component {
   state = {
     current: '/files',
-    collapsed: false,
+    collapsed: true,
     selectedTopNav: this.props.selectedTopNav,
   };
 
@@ -62,14 +62,16 @@ class LeftNav extends Component {
         return false;
     return (
       <React.Fragment>
-      <Sider style={{ background: '#343a40', height: '100vh', paddingTop:"60px" }}
+      <Sider style={{ background: '#343a40', height: '100vh', paddingTop:"60px"}}
             collapsible
             collapsed={this.state.collapsed}
             onCollapse={this.onCollapse}
+            width={150}
+            collapsedWidth={55}
       >
           <nav className="d-md-block bg-dark sidebar">
-          <div className="sidebar-sticky">
-            <ul className="nav flex-column">
+          <div className="sidebar-sticky"  >
+            <ul className="nav flex-column" >
               {/*<li className="nav-item">
                 <NavLink to={"/"+applicationId+"/data-dictionary"} className="nav-link" data-toggle="popover" tabIndex="1"><i className="fa fa-lg fa-table"></i> <span className={this.state.collapsed ? "d-none" : ""}>Data Dictionary</span></NavLink>
               </li>*/}
@@ -82,12 +84,13 @@ class LeftNav extends Component {
               <li className="nav-item">
                 <NavLink to={"/"+applicationId+"/queries"} className="nav-link" data-toggle="popover" tabIndex="5"><i className="fa fa-lg fa-search"></i> <span className={this.state.collapsed ? "d-none" : ""}>Queries</span></NavLink>
               </li>*/}
-              <li className="nav-item dropdown">
-                <a className="nav-link dropdown-toggle" href="#"><i className="fa fa-lg fa-random"></i> <span className={this.state.collapsed ? "d-none" : ""}>Workflow</span></a>
+              {/* <li className="nav-item dropdown"> */}
+                {/* <a className="nav-link dropdown-toggle" href="#"><i className="fa fa-lg fa-random"></i> <span className={this.state.collapsed ? "d-none" : ""}>Workflow</span></a> */}
                   <ul className="list-unstyled bg-dark text-light submenu level-1">
                   <li className="nav-item" >
                     <NavLink to={this.props.dataflowId.id ?  "/"+applicationId+"/dataflow/details" : "/"+applicationId+"/dataflow"} className="nav-link" data-toggle="popover" tabIndex="3">
-                      <i className="fa fa-lg fa-clock-o"></i>
+                    {/* <i className="fa fa-lg fa-clock-o"></i> */}
+                    <i className="fa fa-lg fa-random"></i>
                       <span className={this.state.collapsed ? "d-none" : ""}>Definitions</span>
                     </NavLink>
                   </li>
@@ -97,7 +100,7 @@ class LeftNav extends Component {
                     </NavLink>
                   </li>
                 </ul>
-              </li> 
+              {/* </li>  */}
 
 
               {/*<li className="nav-item" >
