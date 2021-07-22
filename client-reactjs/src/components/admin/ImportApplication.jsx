@@ -1,7 +1,13 @@
-import React, {useState, useEffect} from 'react'
+import React, {useState, useEffect, useRef} from 'react'
 import { Upload, Button , Modal, message} from 'antd';
 import { ImportOutlined, InboxOutlined } from '@ant-design/icons';
 import { authHeader } from "../common/AuthHeader.js";
+import { applicationActions } from '../../redux/actions/Application';
+import { store } from "../../redux/store/Store";
+import { useHistory } from "react-router";
+
+
+
 //<<<< Socket
 import {io} from "socket.io-client";
 
@@ -17,6 +23,19 @@ function ImportApplication(props) {
   const [file, setFile] = useState({});
   const [importing, setImporting] = useState(false)
   const [ importUpdates, setImportUpdates] = useState([])
+  const history = useHistory();
+  const scrollToBottomRef = useRef(null);
+
+  //Log color
+  const logColor = (status) =>{
+    if(status === "error"){
+      return "#ff0000"
+    }else if(status === "success"){
+      return "#00ff00"
+    }else{
+      return "#FFFFFF"
+    }
+  }
 
 
   useEffect(() => {
@@ -32,8 +51,8 @@ function ImportApplication(props) {
 
     //When message is received from back end
     socket.on("message", (message) =>{
-      setImportUpdates(existingMsgs => [...existingMsgs , message])
-      console.log("Message <<<<", message)
+      setImportUpdates(existingMsgs => [...existingMsgs , JSON.parse(message)])
+      console.log("<<<<<<<<<<<", importUpdates)
     })
 
     //Clean up when component unmounts
@@ -42,6 +61,14 @@ function ImportApplication(props) {
     //   console.log("<<<< Component unmouting ")
     // }
   }, [importUpdates])
+
+  //Scroll logs to bottom
+ const scrollLogs = () => {
+  scrollToBottomRef.current?.scrollIntoView({behavior : "smooth"})
+ }
+ useEffect(() => {
+  scrollLogs()
+ }, [importUpdates])
 
 
   //message config
@@ -67,6 +94,10 @@ function ImportApplication(props) {
           setModalVisiblity(false)
           setFile({})
           setImporting(false)
+          store.dispatch(applicationActions.applicationSelected(data.appId, data.appTitle));
+          localStorage.setItem("activeProjectId", data.appTitle);
+
+          history.push(`/${data.appId}/assets`);
         }else{
           console.log("<<<< import error", data.message)
           message.error(data.message)
@@ -146,8 +177,9 @@ function ImportApplication(props) {
                   <p><b>{file?file.name:null}</b></p>
                 
                 </Dragger> 
-                <div style={{background: "black", color: "white", textAlign: "left", padding: "10px", height: "100px", overflow: "auto"}}>
-                  {importUpdates.map(item => <div style={{textAlign: "left"}}><small>{item}</small></div>)}
+                <div style={{background: "black", textAlign: "left", padding: "10px", height: "150px", overflow: "auto",  display: importing ? "block" : "none" }} >
+                  {importUpdates.map(item => <div style={{textAlign: "left"}}><small style={{color: "white" }}>{item.message}</small></div>)}
+                  <div ref={scrollToBottomRef}></div>
                 </div>
                
                

@@ -12,7 +12,6 @@ let Sequelize = require('sequelize');
 const Op = Sequelize.Op;
 const multer = require('multer');
 const fs = require('fs');
-const { map, indexOf } = require('lodash');
 const { INSPECT_MAX_BYTES } = require('buffer');
 const File = models.file;
 const Index = models.indexes;
@@ -22,9 +21,12 @@ const DataFlow = models.dataflow;
 const WebSocket = require('ws');
 const { count } = require('console');
 const { SIGSTOP } = require('constants');
+const { create } = require('domain');
 const Groups = models.groups;
 const AssetGroups = models.assets_groups;
 const AssetDataflows = models.assets_dataflows;
+const Dataflowgraph = models.dataflowgraph;
+const DependentJobs = models.dependent_jobs;
 
 
 
@@ -169,8 +171,6 @@ const removeFile = (filePath) => {
     fs.unlink(filePath, (err) =>{
       if(err){
         console.log("<<<<  Error Deleting file", err)
-      }else{
-        console.log("<<<<  File deleted")
       }
     }) 
 }
@@ -187,9 +187,8 @@ const validateJSON = (data, filePath) =>{
   }
 }
 
-
 //import asset and create asset groups
-function createAssetAndAssetGroups(currentItem, groupIdMap, modal, newAppId){
+function createAssetsAndAssetGroups(currentItem, groupIdMap, model, newAppId){
   currentItem[1].map(asset =>{
     asset.application_id = newAppId;
     asset.groups.map(item => {
@@ -198,122 +197,185 @@ function createAssetAndAssetGroups(currentItem, groupIdMap, modal, newAppId){
         item.id = groupIdMap[indexOfObject].newId;
       }
     })
-    modal.create(asset).then((newAsset) =>{
-      asset.groups.map((item) => {
-        if(asset.groups.length > 0){
-          AssetGroups.create({
-            assetId: newAsset.id,
-            groupId: item.id
+      model.create(asset).then((newAsset) =>{
+          asset.dataflows.map(assetsDataflow =>{
+            // <<<<< Dataflow and Dependent Jobs
+            if(model !== "dataflow" || "jobs"){
+              AssetDataflows.create(assetsDataflow.assets_dataflows)
+              .then(data => {
+                // <<<< EMMIT Message
+                console.log("success <<<<<<<<<<<< Asset data flow created  - indexs/files", data );
+                return data;
+              })
+              .catch(err => { 
+                // <<<< EMMIT Message
+                console.log("failed <<<<<<<<<<<<<< Asset data flow creation failed - ERR occured while adding asset index/files", err.message)
+                return err;
+              })
+            }else if( model === "jobs"){
+             assetsDataflow.dependsOnJobs.map(dependentJob => {
+              DependentJobs.create(dependentJob)
+              .then(data => {
+                // <<<< EMMIT Message
+                console.log("success <<<<<<<<<<<< Dependent JOB  - job", data );
+                return data;
+              })
+              .catch(err => { 
+                // <<<< EMMIT Message
+                console.log("failed <<<<<<<<<<<<<< Dependent JOB - ERR occured while adding dependent job", err.message)
+                return err;
+              })
+             });
+            }
           })
-        }
+        
+        // <<<< Asset Groups
+        asset.groups.map((item) => {
+          if(asset.groups.length > 0){
+            AssetGroups.create({
+              assetId: newAsset.id,
+              groupId: item.id
+            }).then( data =>{
+                console.log("******************* DATA", data)
+                return data;
+            }).catch(err =>{
+              console.log("******************* ERR", err.message);
+              return err.message;
+            })
+          }
+        })
+      }).catch(err =>{
+        console.log("<<<<<<<<<< issue creating asset", err)
+        return err.message;
       })
-    })
   })
 }
 
 
  //import root groups
-  function importRootGroups(newAppId,importingGroups,groupIdMap,numberOfImportAttemptedGroups, assetData){
-  console.log("import function running <<<<<<<");
-  //  const testData = assetData;
-  try{
+  function importRootGroups(newAppId,importingGroups,groupIdMap,numberOfAttemptedImport, assetData, io){
     let promises = [];
     importingGroups.map((item, index) =>{
       if(item.parent_group == ""){
+        // let message = `importing group ${importingGroups[index].name}`
+        // emmitUpdates(io, message)
         item.doneImportingGroup = true;
-        numberOfImportAttemptedGroups++;
+        numberOfAttemptedImport++;
+        console.log("$$$$$$$$$$$$$$$$ root <<<<  Root ", numberOfAttemptedImport , "<<<<<<<", importingGroups.length)
         promises.push( Groups.create({
           name: importingGroups[index].name,
           description: importingGroups[index].description,
           application_id: newAppId,
           parent_group: "",
           importingGroupId: importingGroups[index].id
-        }))
-      }
-    })
-    Promise.all(promises).then(result =>{
-      result.map(item =>{
-        let {id, importingGroupId} = item.dataValues
-        groupIdMap.push({staleId: importingGroupId, newId: id});
-      })
-      importChildGroups(newAppId,importingGroups,groupIdMap,numberOfImportAttemptedGroups, assetData);
-    })
-  }catch(err){
-    console.log(">>>>> Err", err, "<<<<<<<< Error")
-  } 
-}
-
-//import children groups
-function importChildGroups(newAppId,importingGroups,groupIdMap,numberOfImportAttemptedGroups, assetData){
-  try{
-    let promises = [];
-    importingGroups.map((item, index) => {
-    
-      if(!item.doneImportingGroup){
-      let indexOfObject = groupIdMap.findIndex(element => element["staleId"] == item.parent_group)
-      if(indexOfObject != -1){
-        item.doneImportingGroup = true;
-        numberOfImportAttemptedGroups++;
-        promises.push(
-          Groups.create({
-            name: importingGroups[index].name,
-            description: importingGroups[index].description,
-            application_id: newAppId,
-            parent_group: "",
-            importingGroupId: importingGroups[index].id,
-            parent_group: groupIdMap[indexOfObject].newId
-          })
+        }).then(data =>{
+          // <<<< EMMIT message
+          console.log("s u c e s s  <<<<<<<<<<<<<<<<<<<", `import group ${data.dataValues?.name} sucessful`)
+          return data;
+        }).catch((err) =>{
+          // <<<< EMMIT message
+          console.log("F A I L <<<<<<<<<<<<<<<<<<<<",  `import  group ${importingGroups[index].name}, failed-  ${err.message}`)
+          return `import ${importingGroups[index].name}, ${err.message}`
+        })
         )
       }
+    })
+    Promise.all(promises).then(result =>{
+      result.map(item =>{
+        if(item.dataValues){
+          let {id, importingGroupId} = item.dataValues
+          groupIdMap.push({staleId: importingGroupId, newId: id});
+        }  
+      })
+      importChildGroups(newAppId,importingGroups,groupIdMap,numberOfAttemptedImport, assetData);
+    })
+}
+
+//import child groups
+function importChildGroups(newAppId,importingGroups,groupIdMap,numberOfAttemptedImport, assetData,io){
+  let importChildGroupsPromise = [];
+
+  if(importingGroups.length !== numberOfAttemptedImport){
+    importingGroups.map((item, index) => {
+      if(!item.doneImportingGroup){
+      let indexOfObject = groupIdMap.findIndex(element => element["staleId"] == item.parent_group)
+        if(indexOfObject != -1){
+          item.doneImportingGroup = true;
+          numberOfAttemptedImport++;
+          importChildGroupsPromise.push(
+            Groups.create({
+              name: importingGroups[index].name,
+              description: importingGroups[index].description,
+              application_id: newAppId,
+              parent_group: "",
+              importingGroupId: importingGroups[index].id,
+              parent_group: groupIdMap[indexOfObject].newId
+            })
+            .then(data =>{
+              // <<<< EMMIT message
+              console.log("s u c e s s   adding C H I L D <<<<<<<<<<<<<<<<<<<", `import group ${data.dataValues?.name} sucessful`)
+              return data;
+            }).catch((err) =>{
+              // <<<< EMMIT message
+              console.log("F A I L adding C H I L D<<<<<<<<<<<<<<<<<<<<",  `import  group ${importingGroups[index].name}, failed-  ${err.message}`)
+              return `import ${importingGroups[index].name}, ${err.message}`
+            })
+          )
+        }
       }
     })
+      }
+      
 
-    Promise.all(promises).then(result =>{
-      console.log( typeof result );
+    Promise.all(importChildGroupsPromise).then(result =>{
+      //push new and old id pair into an array
       result.map(item =>{
-        let {id, importingGroupId} = item.dataValues
+        let {id, importingGroupId} = item.dataValues;
         groupIdMap.push({staleId: importingGroupId, newId: id});
       })
-      if(numberOfImportAttemptedGroups === importingGroups.length){
-      
+
+      //Attempt to import all the groups if done importing - start importing assets
+      if(numberOfAttemptedImport == importingGroups.length){
         //Importing assets
         assetData.map(item => {
-          console.log("<<<<<<<<<<<<<<<<<<<<< Mapping through asset data", assetData.length)
           switch(item[0]){
             case "files":
-              createAssetAndAssetGroups(item,groupIdMap,File, newAppId)
+              createAssetsAndAssetGroups(item,groupIdMap,File, newAppId)
               return;
             case "indexes" :
-              createAssetAndAssetGroups(item,groupIdMap,Index, newAppId)
+              createAssetsAndAssetGroups(item,groupIdMap,Index, newAppId)
               return;
             case "queries" :
-              createAssetAndAssetGroups(item,groupIdMap,Query, newAppId)
+              createAssetsAndAssetGroups(item,groupIdMap,Query, newAppId)
               return;
             case "jobs" : 
-            createAssetAndAssetGroups(item,groupIdMap,Job, newAppId)
+              createAssetsAndAssetGroups(item,groupIdMap,Job, newAppId)
             return;
             case "dataflow" : 
             item[1].map(dataflow => {
                 dataflow.application_id = newAppId;
                   DataFlow.create(dataflow).then((newDataflow) =>{
-                    AssetDataflows.create({
+                  Dataflowgraph.create({
+                      application_id: newAppId,
+                      nodes:dataflow.dataflowgraph.nodes,
+                      edges: dataflow.dataflowgraph.edges,
                       dataflowId: newDataflow.id,
-                      assetId : "1ac683ab-ad79-4cff-8eac-606d2ac8ff44"
-                    })
+                    });
                     })
             })
               return;
           }
         })
-      }
-      else{
-        importChildGroups(newAppId,importingGroups,groupIdMap,numberOfImportAttemptedGroups, assetData);
+        
+      }else{
+        importChildGroups(newAppId,importingGroups,groupIdMap,numberOfAttemptedImport, assetData,io)
       }
     })
+}
 
-  }catch(err){
-    console.log("<<<< Error ", err)
-  }
+//Emmit message with socket io
+const emmitUpdates = (io, message) => {
+      return io.emit("message", JSON.stringify(message));
 }
 
 router.post('/importApp', [
@@ -327,57 +389,69 @@ router.post('/importApp', [
   body('creator')
     .matches(/^[a-zA-Z]{1}[a-zA-Z0-9_:.\-]*$/).withMessage('Invalid creator'),
 ], upload.single("file"), function (req, res) {
+  // ###########################################
+    const  io = req.app.get('socketio');
+  // ###########################################
+
+
   fs.readFile(`uploads/${req.file.filename}`, (err,data) => {
   if(err){
-    console.log("<<<< <<<<<<<<<< Issue uploading file")
     res.status().send("Unable to read file. Data must be in JSON format")
     return;
   }else{
-    console.log("<<<< validating if data is in JSON")
+    emmitUpdates(io, {step : "Extracting data", status : "normal"})
     let parsedData = validateJSON(data, `uploads/${req.file.filename}` )
     if(parsedData === "error"){
-      console.log("<<<< <<<<<<<<<< Data is not in JSON format");
-      res.status(404).send({success: false, error: "Unable to read file uploaded. Data must be in JSON format"});
+      emmitUpdates(io, "ERR - extracting data")
+      res.status(404).send({success: false, message: "Unable to read file uploaded. Data must be in JSON format"});
       return;
     }else {
+      emmitUpdates(io, "SUCCESS - extracting data")
+      emmitUpdates(io, "Validating application data")
       if(parsedData.application){
-        console.log("<<<< <<<<<<<<<< Application ID present")
+        emmitUpdates(io, "SUCCESS -  Validating application data")
         const {application} = parsedData;
         try {
-          console.log(req.body.user, "<<<< User")
+          emmitUpdates(io, "Checking if application name is unique")
           models.application.findAll({where:{
           creator: req.body.user, title: application.title
           }, order: [['updatedAt', 'DESC']],
           include: [UserApplication]
               }).then(function(applications) {
-                // console.log("<<<<<<<<<<<<<<<<<<< Mapping", applications)
-                // applications.map(item =>console.log("<<<<<<<<<<<<<<<<<<<<< Items ",  item.title))
                 const matchedApp = applications.filter(app => app.title === application.title)
-                // console.log("<<<< Matched apps ", matchedApp)
-                // if( matchedApp.length > 0){
-                  if( matchedApp.length > 1000){  // for test only <<<< 
-                  //1.c <<<<< App with same title already exists. send upadte to client
-                  // TODO - get user input if they want to override existing app and move forward accordingly
-                  console.log("<<<< app with this title already exists")
-                  // res.status(200).json({success: false, message: `Application with title ${application.title} already exists `})
-                
+                  if( matchedApp.length > 0){ 
+                  // TODO - get new app name or get abort permission
+                  emmitUpdates(io, `FAILED - Application with title ${application.title} already exists `)
+                  res.status(409).json({success: false, message: `Application with title ${application.title} already exists `})
                 }else{
-                  //1.d <<<< app with same title not found create app - Send update to client
-                  console.log("<<<< Unique app title go forward")
+                  emmitUpdates(io, "SUCCESS -  Unique application name")
                   try {
+                    //<<<<<<
+                    emmitUpdates(io, "Validating user credentials")
+                   let newAppId;
                     if(req.body.user){
+                      emmitUpdates(io, "SUCCESS - Validating user credentials")
+                      emmitUpdates(io, "Creating application")
                        //Creating App
                         models.application.create({"title": application.title, "description":application.description, "creator" : req.body.user}).then(function(application) {   
-                        const newAppId = application.id;
+                        newAppId = application.id;
                         //Importing groups to newly created App
                         let importingGroups = parsedData.application.groups;
                         const assetData =  Object.entries(parsedData.application.assets);
                         let groupIdMap = [];
-                        let numberOfImportAttemptedGroups=0;
-                        importRootGroups(newAppId,importingGroups,groupIdMap,numberOfImportAttemptedGroups, assetData);
-                      })
-                      //Sample response
-                      return res.send({success : true, message : "Sucess importing app"})
+                        let numberOfAttemptedImport=0;
+                        importRootGroups(newAppId,importingGroups,groupIdMap,numberOfAttemptedImport, assetData, io).then(result =>{
+                          
+                        })
+                     }).catch(err =>{
+                        // unable to create application send feedback
+                     }) 
+                       //Sample response
+                       setTimeout(() => {
+                        console.log("Done <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<");
+                          res.status(200).json({success : true, message : "Success importing app", appId : newAppId, appTitle: application.title})
+                        }, 5000)
+                      
                   }
                     else
                     return res.status(400).json({ success: false, message: "Inadquate permission" });        
@@ -399,11 +473,12 @@ router.post('/importApp', [
         }
       }
       else{
-        console.log("<<<< No app ID");
         //File uploaded does not have app ID
-        res.status(404).send({success: false, error: "Unable to read file uploaded. Data must be in JSON format"});
+        emmitUpdates(io, "FAILED -  Validating application data")
+        res.status(404).send({success: false, message: "Unable to read file uploaded. Data must be in JSON format"});
       }
     }}
 })
 });
+
 module.exports = router;

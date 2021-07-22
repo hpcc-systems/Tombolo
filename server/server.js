@@ -4,6 +4,13 @@ const app = express();
 const tokenService = require('./utils/token_service');
 const {NotificationModule} = require('./routes/notifications/email-notification');
 
+//#############################################################
+const http = require('http').Server(app);
+const io = require('socket.io')(http);
+app.set('socketio', io);
+//#############################################################
+
+
 app.set('trust proxy', 1);
 const limiter = rateLimit({
   windowMs: 15 * 60 * 1000, // 15 minutes
@@ -62,4 +69,4 @@ app.use('/api/groups', tokenService.verifyToken, groups);
 
 //process.env["NODE_TLS_REJECT_UNAUTHORIZED"] = 0;
 
-app.listen(3000, '0.0.0.0', () => console.log('Server listening on port 3000!'));
+http.listen(3000, '0.0.0.0', () => console.log('Server listening on port 3000!'));
