@@ -2,14 +2,28 @@ const express = require('express');
 const rateLimit = require("express-rate-limit");
 const app = express();
 const tokenService = require('./utils/token_service');
+const jwt = require('jsonwebtoken');
 const {NotificationModule} = require('./routes/notifications/email-notification');
 
-//#############################################################
-const http = require('http').Server(app);
-const io = require('socket.io')(http);
+// Socket
+const server = require('http').Server(app);
+const io = require('socket.io')(server);
 app.set('socketio', io);
-//#############################################################
 
+// io.use(function(socket, next){
+//   if (socket.handshake.query && socket.handshake.query.token){
+//     const token = socket.handshake.query.token;
+//     jwt.verify(token, process.env.secret, function(err, decoded){
+//       if(err){
+//         console.log(
+//           "<<<<< ERR ", err
+//         )
+//       }else {
+//         console.log("<<<<", decoded)
+//       }
+//     })
+//   }
+// })
 
 app.set('trust proxy', 1);
 const limiter = rateLimit({
@@ -69,4 +83,4 @@ app.use('/api/groups', tokenService.verifyToken, groups);
 
 //process.env["NODE_TLS_REJECT_UNAUTHORIZED"] = 0;
 
-http.listen(3000, '0.0.0.0', () => console.log('Server listening on port 3000!'));
+server.listen(3000, '0.0.0.0', () => console.log('Server listening on port 3000!'));

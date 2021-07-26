@@ -152,7 +152,6 @@ class AppHeader extends Component {
 
     handleChange(event) {
       this.props.dispatch(applicationActions.applicationSelected(event.target.getAttribute("data-value"), event.target.getAttribute("data-display")));
-      console.log("<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<< ..", event.target.getAttribute("data-display"))
       localStorage.setItem("activeProjectId", event.target.getAttribute("data-value"));
       this.setState({ selected: event.target.getAttribute("data-display") });
       //if it is asset details url, dont redirect to default /dataflow page
