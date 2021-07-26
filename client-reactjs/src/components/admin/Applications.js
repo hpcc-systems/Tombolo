@@ -139,7 +139,6 @@ class Applications extends Component {
   }
 
   handleAdd = (event) => {
-    console.log("<<<< Add app btn clicked")
     this.resetFields();
     this.setState({
       showAddApp: true
@@ -170,7 +169,6 @@ class Applications extends Component {
   }
 
   handleAddAppOk = () => {
-    console.log("<<<< Adding a new app")
     if(this.state.applications.filter(application => {
       if (application.id != this.state.newApp.id && application.title == this.state.newApp.title) {
         return application;

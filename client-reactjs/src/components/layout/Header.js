@@ -11,7 +11,6 @@ import { assetsActions } from '../../redux/actions/Assets';
 import { QuestionCircleOutlined, DownOutlined  } from '@ant-design/icons';
 import $ from 'jquery';
 
-
 const { Header, Content } = Layout;
 const { Search } = Input;
 

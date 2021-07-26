@@ -723,7 +723,7 @@ class QueryDetails extends PureComponent {
       </div>
       <div className="assetDetail-buttons-wrapper" style={{justifyContent: "flex-end"}} >
       {this.state.enableEdit ?
-          <div className="button-container" >
+          <div className="button-container">
             <Button key="danger" type="danger" onClick={this.handleDelete}>Delete</Button>
             <Button key="back" onClick={this.handleCancel} type="primary" ghost>
               Cancel

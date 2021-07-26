@@ -24,7 +24,6 @@ function login(username, password) {
         body: JSON.stringify({ username, password })
       }).then(handleResponse)
       .then(user => {
-        console.log("<<<<<<<<<<<<<<<<<<<<<<<<<<<", user.accessToken)
         var decoded = jwtDecode(user.accessToken);
         var user = {
             "token": user.accessToken,
