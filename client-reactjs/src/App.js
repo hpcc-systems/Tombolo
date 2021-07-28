@@ -21,6 +21,7 @@ import FileDetailsForm from "./components/application/FileDetails";
 import JobDetailsForm from "./components/application/Jobs/JobDetails";
 import IndexDetailsForm from "./components/application/IndexDetails";
 import QueryDetailsForm from "./components/application/QueryDetails";
+import VisualizationDetailsForm from "./components/application/VisualizationDetails";
 
 import { AdminApplications } from "./components/admin/Applications";
 import AdminClusters from "./components/admin/Clusters";
@@ -112,6 +113,10 @@ class App extends React.Component {
                   <PrivateRoute
                     path="/:applicationId/assets/query/:queryId?"
                     component={QueryDetailsForm}
+                  />
+                  <PrivateRoute
+                    path="/:applicationId/assets/visualizations/:visualizationId?"
+                    component={VisualizationDetailsForm}
                   />
                   <PrivateRoute
                     path="/:applicationId/assets"

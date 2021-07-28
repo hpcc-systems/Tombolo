@@ -350,6 +350,10 @@ const Assets = () => {
         history.push("/" + application.applicationId + "/assets/job");
         break;
 
+      case "Visualization":
+          history.push("/" + application.applicationId + "/assets/visualizations");
+          break;
+  
       case "Group":
         openNewGroupDialog();
         break;
@@ -686,6 +690,9 @@ const Assets = () => {
       </Menu.Item>
       <Menu.Item key="Job" onClick={addingAssetMode}>
         <i className="fa fa-lg fa-clock-o"></i> Job
+      </Menu.Item>
+      <Menu.Item key="Visualization" onClick={addingAssetMode}>
+        <i className="fa fa-lg fa-area-chart"></i> Visualization
       </Menu.Item>
     </Menu>
   );
