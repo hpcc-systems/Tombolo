@@ -190,24 +190,25 @@ const emmitUpdates = (io, message) => {
  //1. #### import root groups 
  function importRootGroups(newAppId,importingGroups,groupIdMap,numberOfAttemptedImport, assetData, io, res){
   let promises = [];
-
   emmitUpdates(io, {step : "Importing root groups", status: "normal"})
   importingGroups.map((item, index) =>{
     if(item.parent_group == ""){
       item.doneImportingGroup = true;
       numberOfAttemptedImport++;
-      promises.push( Groups.create({
-        name: importingGroups[index].name,
-        description: importingGroups[index].description,
+
+      promises.push(Groups.create({
+        name: item.name,
+        description: item.description,
         application_id: newAppId,
-        parent_group: "",
-        importingGroupId: importingGroups[index].id
-      }).then(data =>{
+        parent_group: ""
+      })
+      .then(data =>{
+        groupIdMap.push({staleId: item.id, newId:  data.dataValues.id});
         emmitUpdates(io, {step : `SUCCESS- importing ${data.dataValues?.name} `, status: "success"})
-        return data;
-      }).catch((err) =>{
+        // return data;
+      }).catch (err => {
         emmitUpdates(io, {step : `ERR- importing ${data.dataValues?.name} `, status: "error"})
-        return `import ${importingGroups[index].name}, ${err.message}`
+        console.log("<< err", err)
       })
       )
     }
@@ -215,12 +216,6 @@ const emmitUpdates = (io, message) => {
   Promise.all(promises).then(result =>{
     emmitUpdates(io, {step : `Done importing root groups`, status: "normal"})
     emmitUpdates(io, {step : `Importing child groups`, status: "normal"})
-    result.map(item =>{
-      if(item.dataValues){
-        let {id, importingGroupId} = item.dataValues
-        groupIdMap.push({staleId: importingGroupId, newId: id});
-      }  
-    })
     importChildGroups(newAppId,importingGroups,groupIdMap,numberOfAttemptedImport, assetData, io, res);
   })
 }
@@ -236,25 +231,26 @@ function importChildGroups(newAppId,importingGroups,groupIdMap,numberOfAttempted
         if(indexOfObject != -1){
           item.doneImportingGroup = true;
           numberOfAttemptedImport++;
+
           importChildGroupsPromise.push(
             Groups.create({
-              name: importingGroups[index].name,
-              description: importingGroups[index].description,
+              name: index.name,
+              description: index.description,
               application_id: newAppId,
               parent_group: "",
-              importingGroupId: importingGroups[index].id,
+              importingGroupId: index.id,
               parent_group: groupIdMap[indexOfObject].newId
             })
             .then(data =>{
               emmitUpdates(io, {step : `SUCCESS - importing ${data.dataValues?.name} `, status: "success"});
-           
+              groupIdMap.push({staleId: item.id, newId: data.dataValues.id});
               return data;
             }).catch((err) =>{
-              emmitUpdates(io, {step : `ERR - importing ${importingGroups[index].name} `, status: "success"})
+              emmitUpdates(io, {step : `ERR - importing ${index.name} `, status: "success"})
               console.log("ERR -", err)
-              return `import ${importingGroups[index].name}, ${err.message}`
             })
           )
+
         }
       }
     })
@@ -262,12 +258,6 @@ function importChildGroups(newAppId,importingGroups,groupIdMap,numberOfAttempted
       
       
     Promise.all(importChildGroupsPromise).then(result =>{
-      //push new and old id pair into an array
-      result.map(item =>{
-        let {id, importingGroupId} = item.dataValues;
-        groupIdMap.push({staleId: importingGroupId, newId: id});
-      })
-
       //Attempt to import all the groups if done importing - start importing assets
       if(numberOfAttemptedImport == importingGroups.length){
         emmitUpdates(io, {step : `Done importing groups`, status: "normal"})
@@ -285,8 +275,6 @@ function importChildGroups(newAppId,importingGroups,groupIdMap,numberOfAttempted
           .catch(err =>{
             console.log(err)
           })
-        
-
       }else{
         importChildGroups(newAppId,importingGroups,groupIdMap,numberOfAttemptedImport, assetData,io, res)
       }
@@ -465,6 +453,7 @@ router.post('/importApp', [
                         })
                         .catch(err =>{
                             emmitUpdates(io, {step : `ERR- Creating application`, status: "error"})
+                            console.log("Error creating app <<<< " , err)
                             return res.status(400).json({success: false, message: "Unable to create application"})
                         })          
                     }
@@ -480,7 +469,6 @@ router.post('/importApp', [
             });
           } catch (err) {
             console.log('err', err);
-            // <<<< send update to client
             return res.status(500).json({ success: false, message: "Error occured while getting application list" });
           }
         }

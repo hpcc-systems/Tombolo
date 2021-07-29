@@ -32,8 +32,7 @@ async function authenticate(req, res, { username, password }) {
     });
 }
 
-async function verifyToken(req, res, next) {
-    let token = req.headers['x-access-token'] || req.headers['authorization'];
+async function verifyToken(token) {
     if(token) {
         var authServiceUrl = process.env.AUTH_SERVICE_URL + '/verify';
         return new Promise(function(resolve, reject) {
@@ -53,11 +52,13 @@ async function verifyToken(req, res, next) {
     }
 }
 
+
+
+
 async function validateToken(req, res, next) {
   let token = req.headers['x-access-token'] || req.headers['authorization'];
   if (token) {
       if (token.startsWith('Bearer ')) {
-        console.log("<<<<<<<<<<<<<<<<", token )
         token = token.slice(7, token.length);
         console.log('token: '+token);
         return new Promise((resolve, reject) => {

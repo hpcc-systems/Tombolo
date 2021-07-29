@@ -1,4 +1,5 @@
 import React, {useState, useEffect, useRef} from 'react'
+import { useSelector } from 'react-redux';
 import { Upload, Button , Modal, message} from 'antd';
 import { ImportOutlined, InboxOutlined } from '@ant-design/icons';
 import { authHeader } from "../common/AuthHeader.js";
@@ -19,7 +20,8 @@ function ImportApplication(props) {
   const history = useHistory();
   const scrollToBottomRef = useRef(null);
   const { Dragger } = Upload;
-  const token = JSON.parse(localStorage.getItem('user')).token;
+  const authReducer = useSelector(state => state.authenticationReducer);
+
 
 
   //Log color
@@ -34,17 +36,24 @@ function ImportApplication(props) {
   }
 
   useEffect(() => {
-    //Establish socket connection when  component loads
-    const socket = io(`http://localhost:3000`, {
-    transports: ["websocket"]
-    });
-
-    setSocket(socket);
-
-    //Clean up socket connection when component unmounts
-    return function cleanup(){
-      socket.close()
+    if(process.env.NODE_ENV === "development"){
+      const socket = io(`http://localhost:3000`, {
+        transports: ["websocket"],
+        auth : {
+          token : authReducer.user.token
+        }
+        });
+        setSocket(socket);
+    }else{
+      const socket = io({
+        transports: ["websocket"],
+        auth : {
+          token : authReducer.user.token
+        }
+        });
+        setSocket(socket);
     }
+   
   }, [])
 
 
@@ -54,6 +63,13 @@ function ImportApplication(props) {
     socket.on("message", (message) =>{
       setImportUpdates(existingMsgs => [...existingMsgs , JSON.parse(message)])
     })
+   }
+
+   //Clean up socket connection when component unmounts
+   return function cleanup(){
+     if(socket){
+      socket.close()
+     }
    }
   }, [socket])
 
@@ -65,9 +81,6 @@ function ImportApplication(props) {
   scrollLogs()
  }, [importUpdates])
 
-
-  //message config
-  message.config({ top: 150 });
 
   //Handle Import
   const handleImport = () => {
@@ -85,13 +98,11 @@ function ImportApplication(props) {
         if(data.success){
           setImportStatus("done")
           setImportSuccess(true);
-          // message.success(data.message)
           store.dispatch(applicationActions.applicationSelected(data.appId, data.appTitle));
           localStorage.setItem("activeProjectId", data.appTitle);
           setRoutingURL(`/${data.appId}/assets`);
         }else{
           setImportStatus("done")
-          // message.error(data.message)
         }
       })
   }

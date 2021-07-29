@@ -2,28 +2,22 @@ const express = require('express');
 const rateLimit = require("express-rate-limit");
 const app = express();
 const tokenService = require('./utils/token_service');
+const {verifyToken} = require("./routes/user/userservice")
 const jwt = require('jsonwebtoken');
 const {NotificationModule} = require('./routes/notifications/email-notification');
 
 // Socket
 const server = require('http').Server(app);
 const io = require('socket.io')(server);
-app.set('socketio', io);
 
-// io.use(function(socket, next){
-//   if (socket.handshake.query && socket.handshake.query.token){
-//     const token = socket.handshake.query.token;
-//     jwt.verify(token, process.env.secret, function(err, decoded){
-//       if(err){
-//         console.log(
-//           "<<<<< ERR ", err
-//         )
-//       }else {
-//         console.log("<<<<", decoded)
-//       }
-//     })
-//   }
-// })
+io.use(function(socket, next){
+  const token =  socket.handshake.auth.token;
+  verifyToken(token).then(() => {
+    next();
+    app.set('socketio', io);
+  })
+})
+
 
 app.set('trust proxy', 1);
 const limiter = rateLimit({

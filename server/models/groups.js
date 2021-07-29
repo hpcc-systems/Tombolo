@@ -10,8 +10,7 @@ module.exports = (sequelize, DataTypes) => {
     name: DataTypes.STRING,
     description: DataTypes.TEXT,
     parent_group: DataTypes.INTEGER,
-    application_id: DataTypes.UUIDV4,
-    importingGroupId: DataTypes.INTEGER
+    application_id: DataTypes.UUIDV4
   }, {freezeTableName: true});
   groups.associate = function(models) {
     groups.belongsToMany(models.file, {
