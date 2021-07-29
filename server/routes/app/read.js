@@ -197,8 +197,8 @@ const emmitUpdates = (io, message) => {
       numberOfAttemptedImport++;
 
       promises.push(Groups.create({
-        name: item.name,
-        description: item.description,
+        name: importingGroups[index].name,
+        description: importingGroups[index].description,
         application_id: newAppId,
         parent_group: ""
       })
@@ -231,14 +231,14 @@ function importChildGroups(newAppId,importingGroups,groupIdMap,numberOfAttempted
         if(indexOfObject != -1){
           item.doneImportingGroup = true;
           numberOfAttemptedImport++;
+          console.log("<<<<<<<<<<<<<<<<<<<<<< New group ID ", groupIdMap[indexOfObject] )
 
           importChildGroupsPromise.push(
             Groups.create({
-              name: item.name,
-              description: item.description,
+              name: importingGroups[index].name,
+              description: importingGroups[index].description,
               application_id: newAppId,
-              parent_group: "",
-              importingGroupId: item.id,
+              parent_group: groupIdMap[indexOfObject].newId,
             })
             .then(data =>{
               emmitUpdates(io, {step : `SUCCESS - importing ${data.dataValues?.name} `, status: "success"});

@@ -62,7 +62,7 @@ async function validateToken(req, res, next) {
         token = token.slice(7, token.length);
         console.log('token: '+token);
         return new Promise((resolve, reject) => {
-            verifyToken(req, res, next).then((verifyTokenRes) => {
+            verifyToken(token).then((verifyTokenRes) => {
               if(verifyTokenRes) {
                   let verifyTokenResParsed = JSON.parse(verifyTokenRes);
                   if(verifyTokenResParsed && verifyTokenResParsed.verified) {
