@@ -16,7 +16,7 @@ function ImportApplication(props) {
   const [importStatus, setImportStatus] = useState(null)
   const [ importUpdates, setImportUpdates] = useState([])
   const [ importSuccess, setImportSuccess] = useState();
-  const [ routingURL, setRoutingURL] = useState("")
+  const [ routingURL, setRoutingURL] = useState("");
   const history = useHistory();
   const scrollToBottomRef = useRef(null);
   const { Dragger } = Upload;
@@ -35,6 +35,7 @@ function ImportApplication(props) {
     }
   }
 
+  // Socket io
   useEffect(() => {
     if(process.env.NODE_ENV === "development"){
       const socket = io(`http://localhost:3000`, {
@@ -98,7 +99,8 @@ function ImportApplication(props) {
         if(data.success){
           setImportStatus("done")
           setImportSuccess(true);
-          store.dispatch(applicationActions.applicationSelected(data.appId, data.appTitle));
+          console.log(JSON.stringify(data))
+          store.dispatch(applicationActions.applicationSelected(data.appId, data.app.appTitle));
           localStorage.setItem("activeProjectId", data.appTitle);
           setRoutingURL(`/${data.appId}/assets`);
         }else{
