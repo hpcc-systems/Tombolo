@@ -234,12 +234,11 @@ function importChildGroups(newAppId,importingGroups,groupIdMap,numberOfAttempted
 
           importChildGroupsPromise.push(
             Groups.create({
-              name: index.name,
-              description: index.description,
+              name: item.name,
+              description: item.description,
               application_id: newAppId,
               parent_group: "",
-              importingGroupId: index.id,
-              parent_group: groupIdMap[indexOfObject].newId
+              importingGroupId: item.id,
             })
             .then(data =>{
               emmitUpdates(io, {step : `SUCCESS - importing ${data.dataValues?.name} `, status: "success"});
