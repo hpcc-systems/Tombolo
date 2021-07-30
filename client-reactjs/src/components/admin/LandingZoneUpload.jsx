@@ -67,12 +67,11 @@ function LandingZoneUpload() {
 
 
     return (
-    <div style={{ height: "85vh"}}>
+    <div>
         <Dragger 
         {...props}
-        style={{height: "90vh"}}
         customRequest={customRequest}
-        showUploadList={false}
+        showUploadList={true}
         >
             <p className="ant-upload-drag-icon">
             <InboxOutlined />
@@ -81,7 +80,6 @@ function LandingZoneUpload() {
             <p className="ant-upload-hint">
             Support for a single or bulk upload. 
             </p>
-            <p style={{padding: "20px", fontWeight: "600", color: "var(--green)"}}>{file? file.name : null}</p>
         </Dragger>
         <Button> Upload</Button>
     </div>
