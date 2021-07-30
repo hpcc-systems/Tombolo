@@ -347,8 +347,13 @@ function importAssetDetails(item , assetType, newAppId, groupIdMap, io){
               emitUpdates(io, {step : `SUCCESS - creating depend on job `, status: "success"})
 
             }).catch(err =>{
+              if(err.errors[0].validatorKey === 'not_unique'){
+                emitUpdates(io, {step : `Depends on Job already exists`, status: "warning"})
+              }else{
               emitUpdates(io, {step : `ERR - creating depend on job`, status: "error"})
               console.log("ERR -", err)
+              }
+              
             })
           })
         })
@@ -364,8 +369,13 @@ function importAssetDetails(item , assetType, newAppId, groupIdMap, io){
                 emitUpdates(io, {step : `SUCCESS - creating dataflow graph`, status: "success"})
               })
               .catch(err =>{
-                emitUpdates(io, {step : `SUCCESS - creating asset group ${result.id} `, status: "success"});
+                if(err.errors[0].validatorKey === 'not_unique'){
+                  emitUpdates(io, {step : `Dataflow graph already exists`, status: "warning"})
+                }else{
+                emitUpdates(io, {step : `ERR - creating depend on job`, status: "error"})
                 console.log("ERR -", err)
+                }
+                
               })
              
           }
