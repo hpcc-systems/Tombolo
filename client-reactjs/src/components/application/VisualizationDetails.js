@@ -1,6 +1,8 @@
-import React, { useState, useEffect, useRef } from "react";
+import React, { useState, useEffect } from "react";
 import { useSelector, useDispatch } from "react-redux";
 import { hasEditPermission } from "../common/AuthUtil.js";
+import ReactMarkdown from "react-markdown";
+import { MarkdownEditor } from "../common/MarkdownEditor.js";
 import {
   Row,
   Col,
@@ -10,8 +12,16 @@ import {
   Select,
   Tabs,
   Spin,
-  AutoComplete
+  AutoComplete,
+  message,
+  Radio
 } from "antd/lib";
+import { authHeader, handleError } from "../common/AuthHeader.js";
+import {editableMode} from "../common/readOnlyUtil";
+import { assetsActions } from "../../redux/actions/Assets";
+import { debounce } from "lodash";
+import { useHistory } from "react-router";
+
 const TabPane = Tabs.TabPane;
 const Option = Select.Option;
 const formItemLayout = {
@@ -21,25 +31,62 @@ const formItemLayout = {
 
 
 function VisualizationDetails({ selectedGroup, openGroup, handleEditGroup, refreshGroups }) {
-  const [form, setForm] = useState({
+  const [formState, setFormState] = useState({
     initialDataLoading: false,
-    fileSearchSuggestions: []
+    fileSearchSuggestions: [],
+    enableEdit: true,
+    editing: true,
+    dataAltered: false,    
+    fileSearchErrorShown: false,
+    selectedFileId: ''
   });
   const [visualization, setVisualization] = useState({
-    id: "",
+    id: '',
     chartType: "table",
-    url: "",
-    title: "",
-    name: ""
-  });
-  const editingAllowed = hasEditPermission(this.props.user);
-
+    url: '',
+    title: '',
+    name: '',
+    description: '',
+    selectedCluster: '',
+  });  
+  
+  const authReducer = useSelector((state) => state.authenticationReducer);
   const assetReducer = useSelector((state) => state.assetReducer);
   const viewOnlyModeReducer = useSelector((state) => state.viewOnlyModeReducer);
+  const applicationReducer = useSelector((state) => state.applicationReducer);
+  const editingAllowed = hasEditPermission(authReducer.user);
+  const [form] = Form.useForm();
+  const dispatch = useDispatch();
+  const history = useHistory();
+
+  console.log(assetReducer.selectedAsset)
+
+  useEffect(() => {
+    getVisualizationDetails();
+  }, [assetReducer.selectedAsset]);
+
+  const makeFieldsEditable = () => {
+    editableMode();
+
+    setFormState({
+      ...formState,
+      enableEdit: true,
+      editing: true
+    })
+  };
+
+  const switchToViewOnly = () => {
+    setFormState({
+      ...formState,
+      enableEdit: false,
+      editing: false,
+      dataAltered: true
+    })
+  }
 
   // view edit buttons on tabpane
   const editButton =
-  !this.state.enableEdit && editingAllowed ? (
+  !formState.enableEdit && editingAllowed ? (
     <>
       <Button type="primary" onClick={makeFieldsEditable}>
         Edit
@@ -47,7 +94,7 @@ function VisualizationDetails({ selectedGroup, openGroup, handleEditGroup, refre
     </>
   ) : null;
 
-  const viewChangesBtn = this.state.editing ? (
+  const viewChangesBtn = formState.editing ? (
     <Button onClick={switchToViewOnly} type="primary" ghost>
       View Changes
     </Button>
@@ -59,7 +106,199 @@ function VisualizationDetails({ selectedGroup, openGroup, handleEditGroup, refre
     </div>
   );
 
- 
+  const handleOk = async (e) => {
+    e.preventDefault();
+    setFormState({
+      ...formState,
+      confirmLoading: true
+    })
+
+    try {
+      const values = await form.current.validateFields();
+      console.log(visualization.selectedCluster)
+      fetch("/api/file/read/visualization", {
+        method: "post",
+        headers: authHeader(),
+        body: JSON.stringify({
+          id: formState.selectedFileId,
+          application_id: applicationReducer.application.applicationId,
+          email: authReducer.user.email,
+          clusterId: formState.selectedCluster,
+          fileName: form.current.getFieldValue("name"),
+          groupId: assetReducer.newAsset.groupId ? assetReducer.newAsset.groupId : "",
+          description: form.current.getFieldValue("description"),
+          clusterId: visualization.selectedCluster
+        }),
+      })
+      .then(function (response) {
+        if (response.ok && response.status == 200) {
+          return response.json();
+        }
+        handleError(response);
+      })      
+      .then(function (data) {
+        if (data && data.success) {
+          setFormState({
+            ...formState,
+            confirmLoading: false,
+          });
+
+          history.push("/" + applicationReducer.application.applicationId + "/assets");
+        }
+      })
+    } catch(err) {
+
+    }
+  }
+
+  const handleCancel = () => {
+
+  }
+
+  const getVisualizationDetails = () => {
+    if(assetReducer.selectedAsset && assetReducer.selectedAsset.id != '') {
+      setFormState({
+        ...formState,
+        initialDataLoading: true
+      })
+      
+      fetch("/api/file/read/getVisualizationDetails?id="+assetReducer.selectedAsset.id,{
+        headers: authHeader(),
+      }).then((response) => {
+        if (response.ok) {
+          return response.json();
+        }
+        handleError(response);
+      })
+      .then((data) => {
+        setFormState({
+          ...formState,
+          initialDataLoading: false
+        })
+        setVisualization({
+          id: data.id,
+          chartType: "table",
+          url: data.url,
+          name: data.name,
+          description: data.description,
+          clusterId: data.clusterId
+
+        })
+        form.current.setFieldsValue({
+          chartType: "table",
+          url: data.url,
+          name: data.name,
+          description: data.description      
+        })
+      })
+    }
+  }  
+
+  const onChange = (e) => {
+    setFormState({
+      ...formState,
+      dataAltered: true
+    })      
+  }
+    
+  const onClusterSelection = (value) => {
+    dispatch(assetsActions.clusterSelected(value));
+    setFormState({
+      ...formState,
+      selectedCluster: value
+    })
+  }
+
+  const clearState = () => {
+    setFormState({
+      initialDataLoading: false,
+      fileSearchSuggestions: [],
+      enableEdit: false,
+      editing: false,
+      dataAltered: false,
+      selectedCluster: ''
+    })
+  }
+
+  const searchFiles = debounce((searchString) => {
+    if (searchString.length <= 3 || formState.fileSearchErrorShown) return;
+    if (!searchString.match(/^[a-zA-Z0-9_-]*$/)) {
+      message.error(
+        "Invalid search keyword. Please remove any special characters from the keyword."
+      );
+      return;
+    }
+
+    setFormState({
+      ...formState,
+      fileSearchErrorShown: false
+    })
+
+    var data = JSON.stringify({
+      clusterid: formState.selectedCluster,
+      keyword: searchString,
+    });
+    fetch("/api/hpcc/read/filesearch", {
+      method: "post",
+      headers: authHeader(),
+      body: data,
+    })
+      .then((response) => {
+        if (response.ok) {
+          return response.json();
+        } else {
+          throw response;
+        }
+      })
+      .then((suggestions) => {
+        setFormState({
+          ...formState,
+          fileSearchSuggestions: suggestions
+        })        
+      })
+      .catch((error) => {
+        if (!formState.fileSearchErrorShown) {
+          error.json().then((body) => {
+            message.error(
+              "There was an error searching the files from cluster."
+            );
+          });
+          setFormState({
+            ...formState,
+            fileSearchErrorShown: true,
+          });
+        }
+      });
+  }, 100);
+
+  const onFileSelected = (selectedSuggestion) => {
+    fetch("/api/hpcc/read/getFileInfo?fileName="+selectedSuggestion+"&clusterid="+formState.selectedCluster+"&applicationId="+applicationReducer.application.applicationId,{
+        headers: authHeader(),
+    })
+    .then((response) => {
+      if (response.ok) {
+        return response.json();
+      }
+      handleError(response);
+    })
+    .then((fileInfo) => {
+      setFormState({
+        ...formState,
+        selectedFileId: fileInfo.basic.id
+      })                
+      form.current.setFieldsValue({
+        name: fileInfo.basic.name
+      });
+      return fileInfo;
+    })
+    .catch((error) => {
+      console.log(error);
+      message.error(
+        "There was an error getting file information from the cluster. Please try again"
+      );
+    });
+  }
+
   return (
     <React.Fragment>
         {viewOnlyModeReducer.addingNewAsset ? null : (
@@ -77,7 +316,7 @@ function VisualizationDetails({ selectedGroup, openGroup, handleEditGroup, refre
         <div className={"assetDetails-content-wrapper"}>
           {!assetReducer.newAsset.isNew ? (
             <div className="loader">
-              <Spin spinning={form.initialDataLoading} size="large" />
+              <Spin spinning={formState.initialDataLoading} size="large" />
             </div>
           ) : null}
           <Tabs defaultActiveKey="1" tabBarExtraContent={editandViewBtns}>
@@ -85,8 +324,8 @@ function VisualizationDetails({ selectedGroup, openGroup, handleEditGroup, refre
               <Form
                 {...formItemLayout}
                 labelAlign="left"
-                ref={this.formRef}
-                onFinish={this.handleOk}
+                ref={form}
+                onFinish={handleOk}
               >
                 {viewOnlyModeReducer.editMode ? (
                   <div>
@@ -96,10 +335,10 @@ function VisualizationDetails({ selectedGroup, openGroup, handleEditGroup, refre
                           <Select
                             placeholder="Select a Cluster"
                             disabled={!editingAllowed}
-                            onChange={this.onClusterSelection}
                             style={{ width: 190 }}
+                            onChange={onClusterSelection}
                           >
-                            {this.props.clusters.map((cluster) => (
+                            {applicationReducer.clusters.map((cluster) => (
                               <Option key={cluster.id}>
                                 {cluster.name}
                               </Option>
@@ -117,15 +356,16 @@ function VisualizationDetails({ selectedGroup, openGroup, handleEditGroup, refre
                                 dropdownStyle={{ width: 300 }}
                                 style={{ width: "100%" }}
                                 onSearch={(value) =>
-                                  this.searchFiles(value)
+                                  searchFiles(value)
                                 }
                                 onSelect={(value) =>
-                                  this.onFileSelected(value)
+                                  onFileSelected(value)
                                 }
                                 placeholder="Search files"
                                 disabled={!editingAllowed}
+                                onChange={onChange}
                                 notFoundContent={
-                                  form.fileSearchSuggestions.length >
+                                  formState.fileSearchSuggestions.length >
                                   0 ? (
                                     "Not Found"
                                   ) : (
@@ -133,7 +373,7 @@ function VisualizationDetails({ selectedGroup, openGroup, handleEditGroup, refre
                                   )
                                 }
                               >
-                                {form.fileSearchSuggestions.map(
+                                {formState.fileSearchSuggestions.map(
                                   (suggestion) => (
                                     <Option
                                       key={suggestion.text}
@@ -152,7 +392,7 @@ function VisualizationDetails({ selectedGroup, openGroup, handleEditGroup, refre
                             >
                               <Button
                                 htmlType="button"
-                                onClick={this.clearState}
+                                onClick={clearState}
                               >
                                 Clear
                               </Button>
@@ -163,27 +403,7 @@ function VisualizationDetails({ selectedGroup, openGroup, handleEditGroup, refre
                     ) : null}
                   </div>
                 ) : null}
-
-                <Form.Item
-                  label="Title"
-                  name="title"
-                  rules={[
-                    { required: true, message: "Please enter a title!" },
-                    {
-                      pattern: new RegExp(/^[ a-zA-Z0-9:._-]*$/),
-                      message: "Please enter a valid title. Title can have  a-zA-Z0-9:._- and space",
-                    },
-                  ]}
-                >
-                  <Input
-                    id="file_title"
-                    name="title"
-                    onChange={this.onChange}
-                    placeholder="Title"
-                    disabled={!editingAllowed}
-                    className={!this.state.enableEdit ? "read-only-input" : ""}
-                  />
-                </Form.Item>
+                
                 <Form.Item
                   label="Name"
                   name="name"
@@ -197,15 +417,57 @@ function VisualizationDetails({ selectedGroup, openGroup, handleEditGroup, refre
                 >
                   <Input
                     id="file_name"
-                    onChange={this.onChange}
                     placeholder="Name"
-                    disabled={disableReadOnlyFields || !editingAllowed}
-                    className={!this.state.enableEdit ? "read-only-input" : ""}
+                    disabled={!editingAllowed}
+                    onChange={onChange}
+                    className={!formState.enableEdit ? "read-only-input" : ""}
                   />
                 </Form.Item>
+
+                <Form.Item label="Description" name="description">
+                  {formState.enableEdit ? (
+                    <MarkdownEditor
+                      id="description"
+                      name="description"
+                      targetDomId="fileDescr"
+                      value={visualization.description}
+                      disabled={!editingAllowed}
+                      onChange={onChange}
+                    />
+                  ) : (
+                    <div className="read-only-markdown">
+                      {" "}
+                      <ReactMarkdown
+                        source={visualization.description}
+                      />{" "}
+                    </div>
+                  )}
+                </Form.Item>
+
+                <Form.Item label="Chart Type">
+                  <Radio.Group value={"table"}>
+                    <Radio value={"table"}>Table</Radio>
+                  </Radio.Group>
+                </Form.Item>
+
             </Form>
           </TabPane> 
         </Tabs>  
+
+        <div>
+          {formState.dataAltered ?
+            <div className="button-container">
+              <Button key="submit" disabled={!editingAllowed} type="primary" loading={formState.confirmLoading} onClick={handleOk}>
+                Save
+              </Button>
+            </div> : null}
+            <div className="button-container">
+              <Button key="back" onClick={handleCancel} type="primary" ghost>
+                Cancel
+              </Button> 
+          </div> 
+          
+        </div>  
       </div>       
     </React.Fragment>
   )

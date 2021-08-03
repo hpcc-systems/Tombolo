@@ -589,22 +589,22 @@ class FileDetails extends PureComponent {
           file: this.populateFileDetails(),
         }),
       })
-        .then(function (response) {
-          if (response.ok) {
-            message.success("Data saved")
-            return response.json();
-          }
-          handleError(response);
-          reject();
-        })
-        .then(function (data) {
-          resolve(data);
-        })
-        .catch((error) => {
-          message.error(
-            "Error occured while saving the data. Please check the form data"
-          );
-        });
+      .then(function (response) {
+        if (response.ok) {
+          message.success("Data saved")
+          return response.json();
+        }
+        handleError(response);
+        reject();
+      })
+      .then(function (data) {
+        resolve(data);
+      })
+      .catch((error) => {
+        message.error(
+          "Error occured while saving the data. Please check the form data"
+        );
+      });
     });
   }
 

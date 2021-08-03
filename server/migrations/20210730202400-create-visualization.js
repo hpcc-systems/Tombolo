@@ -1,7 +1,7 @@
 'use strict';
 module.exports = {
   up: (queryInterface, Sequelize) => {
-    return queryInterface.createTable('assets_visualization', {
+    return queryInterface.createTable('visualizations', {
       id: {
         allowNull: false,
         primaryKey: true,
@@ -10,8 +10,23 @@ module.exports = {
       assetId: {
         type: Sequelize.UUID
       },
+      name: {
+        type: Sequelize.STRING
+      },
+      application_id: {
+        type: Sequelize.UUID
+      },
+      type: {
+        type: Sequelize.STRING
+      },
       url: {
         type: Sequelize.STRING
+      },
+      description: {
+        type: Sequelize.STRING
+      },
+      clusterId: {
+        type: Sequelize.UUID
       },
       createdAt: {
         allowNull: false,
@@ -22,11 +37,12 @@ module.exports = {
         type: Sequelize.DATE
       },
       deletedAt: {
+        allowNull: true,
         type: Sequelize.DATE
-      }
+      },
     });
   },
   down: (queryInterface, Sequelize) => {
-    return queryInterface.dropTable('assets_visualization');
+    return queryInterface.dropTable('visualizations');
   }
 };

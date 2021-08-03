@@ -64,7 +64,7 @@ module.exports = (sequelize, DataTypes) => {
       foreignKey: 'job_id',
       otherKey: 'file_id'
     });
-    file.hasOne(models.assets_visualization, {
+    file.hasOne(models.visualizations, {
       foreignKey:'assetId',
       onDelete: 'CASCADE',
       hooks: true

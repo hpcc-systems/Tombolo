@@ -37,6 +37,12 @@ module.exports = (sequelize, DataTypes) => {
       foreignKey: 'groupId',
       otherKey: 'assetId'
     });
+    groups.belongsToMany(models.visualizations, {
+      through: 'assets_groups',
+      as: 'visualizations',
+      foreignKey: 'groupId',
+      otherKey: 'assetId'
+    });
     groups.hasMany(models.groups, {
       as: 'child',
       foreignKey: {

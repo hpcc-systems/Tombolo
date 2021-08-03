@@ -11,7 +11,7 @@ let Index = models.indexes;
 let File = models.file;
 let Query = models.query;
 let Job = models.job;
-let AssetsVisualization = models.assets_visualization;
+let Visualization = models.visualizations;
 let AssetsGroups = models.assets_groups;
 
 let createGroupHierarchy = (groups) => {
@@ -181,11 +181,13 @@ router.get('/assets', [
       },
       include: [
         {model:File, as:'files', attributes:['id', 'name', 'title', 'description', 'createdAt'], 
-          include:[{model: AssetsVisualization}]
+          include:[{model: Visualization}]
         }, 
         {model:Job, as: 'jobs', attributes:['id', 'name', 'title', 'description', 'createdAt']}, 
         {model:Query, as: 'queries', attributes:['id', 'name', 'title', 'description', 'createdAt']}, 
-        {model:Index, as: 'indexes', attributes:['id', 'name', 'title', 'description', 'createdAt']}],
+        {model:Index, as: 'indexes', attributes:['id', 'name', 'title', 'description', 'createdAt']},
+        {model:Visualization, as: 'visualizations', attributes:['id', 'name', 'description', 'url', 'createdAt']}
+      ],        
       order: [['name', 'ASC']]
       }).then(async (assets) => {
         let childGroups = await getChildGroups(req.query.app_id, req.query.group_id)
@@ -196,7 +198,7 @@ router.get('/assets', [
             name: file.name,
             title: file.title,
             description: file.description,
-            visualization: file.assets_visualization ? file.assets_visualization.url : null,
+            visualization: file.visualization ? file.visualization.url : null,
             createdAt: file.createdAt            
           })
         })
@@ -228,6 +230,16 @@ router.get('/assets', [
             title: query.title,
             description: query.description,
             createdAt: query.createdAt
+          })
+        })
+        assets[0] && assets[0].visualizations.forEach((visualization) => {
+          finalAssets.push({
+            type: 'Visualization',
+            id: visualization.id,
+            name: visualization.name,
+            description: visualization.description,
+            url: visualization.url,
+            createdAt: visualization.createdAt
           })
         })
 
@@ -309,6 +321,25 @@ router.get('/assets', [
             title: query.title,
             description: query.description,
             createdAt: query.createdAt
+          })
+        })
+      }))
+
+      promises.push(Visualization.findAll({
+        where:{
+          application_id:req.query.app_id,
+          [Op.and]:Sequelize.literal('not exists (select * from assets_groups where assets_groups.assetId = visualizations.id)')
+        }
+      }).then((visualizations) => {
+        visualizations.forEach((visualization) => {
+          finalAssets.push({
+            type: 'Visualization',
+            id: visualization.id,
+            name: visualization.name,
+            title: visualization.title,
+            description: visualization.description,
+            url: visualization.url,
+            createdAt: visualization.createdAt
           })
         })
       }))

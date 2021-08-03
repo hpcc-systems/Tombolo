@@ -24,7 +24,7 @@ const Op = Sequelize.Op;
 let Indexes=models.indexes;
 let Query=models.query;
 let Job=models.job;
-let AssetsVisualization=models.assets_visualization;
+let Visualization=models.visualizations;
 var request = require('request');
 var requestPromise = require('request-promise');
 const validatorUtil = require('../../utils/validator');
@@ -836,9 +836,12 @@ router.get('/filelayout', [
 });
 
 router.post('/visualization', [
-  body('id').isUUID(4).withMessage('Invalid file id'),
+  body('id').optional({checkFalsy:true}).isUUID(4).withMessage('Invalid file id'),
   body('application_id').isUUID(4).withMessage('Invalid application id'),
-  body('email').isEmail().withMessage('Invalid email')
+  body('email').isEmail().withMessage('Invalid email'),
+  body('fileName').matches(/^[a-zA-Z]{1}[a-zA-Z0-9_:.\-]*$/).withMessage('Invalid name'),
+  body('clusterId').isUUID(4).withMessage('Invalid cluster'),
+  body('groupId').optional({checkFalsy:true}).isInt().withMessage('Invalid groupId')
 ],async (req, res) => {
   const errors = validationResult(req).formatWith(validatorUtil.errorFormatter);
   if (!errors.isEmpty()) {
@@ -847,8 +850,14 @@ router.post('/visualization', [
 
   console.log("[file visualization] - create visualization = " + req.body.id + " appId: "+req.body.application_id);
   try {
-
-    let file = await File.findOne({where: {id: req.body.id}});
+    let file=null;
+    if(req.body.id) {
+       file = await File.findOne({where: {id: req.body.id}});
+    } else {
+      let fileInfo = await hpccUtil.fileInfo(req.body.fileName, req.body.clusterId);
+      file = await File.create({...fileInfo.basic, cluster_id: req.body.clusterId, application_id: req.body.application_id});      
+    }
+    
     let cluster = await Cluster.findOne({where: {id: file.cluster_id}});
     let bodyObj = {
       user: { 
@@ -876,22 +885,32 @@ router.post('/visualization', [
       url: process.env["REALBI_URL"] + '/api/v1/integration',
       body: JSON.stringify(bodyObj),
       headers: {'content-type' : 'application/json'},
-    }, function(err, response, body) {
+    }, async function (err, response, body) {
       if (err) {
         console.log('ERROR - ', err);        
         return res.status(500).send("Error occured while creating visualization");
       } else {
         var result = JSON.parse(body);
         console.log(result);
-        AssetsVisualization.create({
+        let viz = await Visualization.create({
+          name: req.body.fileName,
+          application_id: req.body.application_id,
+          url: result.workspaceUrl,
+          type: req.body.type,
+          description: req.body.description,
           assetId: file.id,
-          url: result.workspaceUrl
-        }).then((result) => {
-          res.json({"success": true, 'url': result.workspaceUrl});
-        }).catch(err => {
-          console.log(err);
-          return res.status(500).send("Error occured while creating visualization");
-        })        
+          clusterId: file.cluster_id
+        })
+        if(req.body.groupId && req.body.groupId != '') {
+          let assetsGroups = await AssetsGroups.findOrCreate({
+            where: {assetId: viz.id, groupId: req.body.groupId},
+            defaults:{
+              assetId: viz.id,
+              groupId: req.body.groupId
+            }
+          })        
+        }
+        res.json({"success": true, 'url': result.workspaceUrl});
       }
     });
 
@@ -900,5 +919,43 @@ router.post('/visualization', [
     return res.status(500).send("Error occured while creating visualization");
   }
 });  
+
+router.post('/deleteVisualization', [
+  body('id')
+    .isUUID(4).withMessage('Invalid id'),
+],async (req, res) => {
+  const errors = validationResult(req).formatWith(validatorUtil.errorFormatter);
+  if (!errors.isEmpty()) {
+    return res.status(422).json({ success: false, errors: errors.array() });
+  }
+  try {
+
+    let vizDestroyed = await Visualization.destroy({where: {id: req.body.id}});
+    let assetsGroupsDestroyed = await  AssetsGroups.destroy({where: {assetId: req.body.id}})
+
+    res.json({"success": true});
+  }catch(err) {
+    console.log(err);
+    return res.status(500).send("Error occured while deleting visualization");
+  }
+});  
+
+router.get('/getVisualizationDetails', [
+  query('id').isUUID(4).withMessage('Invalid id'),
+],async (req, res) => {
+  const errors = validationResult(req).formatWith(validatorUtil.errorFormatter);
+  if (!errors.isEmpty()) {
+    return res.status(422).json({ success: false, errors: errors.array() });
+  }
+  try {
+    let visualization = await Visualization.findOne({where: {id: req.query.id}, attributes: ['id', 'name', 'url', 'description', 'clusterId']});
+    res.json(visualization);
+  }catch(err) {
+    console.log(err);
+    return res.status(500).send("Error occured while retrieving visualization details");
+  }
+});  
+
+
 
 module.exports = router;

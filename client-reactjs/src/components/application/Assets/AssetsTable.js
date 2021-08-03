@@ -117,7 +117,7 @@ function AssetsTable({ selectedGroup, openGroup, handleEditGroup, refreshGroups 
 
 
   //When edit icon is clicked
-  const handleEdit = (id, type, action) => {
+  const handleEdit = (id, type, action, vizUrl) => {
     if (action === "edit") {
       store.dispatch({
         type: Constants.ENABLE_EDIT,
@@ -140,6 +140,13 @@ function AssetsTable({ selectedGroup, openGroup, handleEditGroup, refreshGroups 
       case "Query":
         history.push("/" + applicationId + "/assets/query/" + id);
         break;
+      case "Visualization":
+        if(action != 'edit') {
+          window.open(vizUrl);
+        } else {
+          history.push("/" + applicationId + "/assets/visualizations/" + id);
+        }          
+        break;  
       case "Group":
         if(action != 'edit') {
           openGroup(id);
@@ -193,6 +200,11 @@ function AssetsTable({ selectedGroup, openGroup, handleEditGroup, refreshGroups 
         deleteUrl = "/api/groups";
         method = "delete";
         break;
+      case "Visualization":
+        data = JSON.stringify({ id: id });
+        deleteUrl = "/api/file/read/deleteVisualization";
+        break;
+
     }
     fetch(deleteUrl, {
       method: method,
@@ -222,28 +234,6 @@ function AssetsTable({ selectedGroup, openGroup, handleEditGroup, refreshGroups 
     dispatch(assetsActions.assetInGroupSelected(groupId));
   };
 
-  const handleCreateVisualization = (id) => {
-    fetch("/api/file/read/visualization", {
-      method: "post",
-      headers: authHeader(),
-      body: JSON.stringify({
-        id: id,
-        application_id: applicationId,
-        email: authReducer.user.email
-      }),
-    })
-    .then(function (response) {
-      if (response.ok && response.status == 200) {
-        return response.json();
-      }
-      handleError(response);
-    })      
-    .then(function (data) {
-      if (data && data.success) {
-      }
-    })
-  }
-
   const editingAllowed = hasEditPermission(authReducer.user);
 
   const generateAssetIcon = (type) => {
@@ -264,7 +254,10 @@ function AssetsTable({ selectedGroup, openGroup, handleEditGroup, refreshGroups 
       case "Group":
         icon = <i className="fa fa-folder-o"></i>;
         break;
-    }
+      case "Visualization":
+          icon = <i className="fa fa-area-chart"></i>;
+          break;
+      }
     return <React.Fragment>{icon}</React.Fragment>;
   };
 
@@ -283,7 +276,7 @@ function AssetsTable({ selectedGroup, openGroup, handleEditGroup, refreshGroups 
               {generateAssetIcon(record.type)}
               <a
                 href="#"
-                onClick={(row) => handleEdit(record.id, record.type, "view")}
+                onClick={(row) => handleEdit(record.id, record.type, "view", record.url)}
               >
                 {record.title ? record.title : text}
               </a>
@@ -388,17 +381,7 @@ function AssetsTable({ selectedGroup, openGroup, handleEditGroup, refreshGroups 
                   <AreaChartOutlined />
                   </Tooltip>
                 </a>
-              : <Popconfirm
-                  title="Are you sure you want to create a chart with this data?"
-                  onConfirm={() => handleCreateVisualization(record.id)}
-                  icon={<QuestionCircleOutlined />}
-                >
-                  <a href="#">
-                    <Tooltip placement="right" title={"Visualization"}>
-                    <AreaChartOutlined />
-                    </Tooltip>
-                  </a>
-                </Popconfirm>            
+              : null         
               }              
             </React.Fragment>  
             : null}          
