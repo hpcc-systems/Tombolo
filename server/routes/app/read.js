@@ -134,13 +134,22 @@ router.post('/newapp', [
   }
 });
 
-router.post('/removeapp', function (req, res) {
+router.post('/removeapp', async function (req, res) {
   try {
-      models.application.destroy({
-          where:{id: req.body.appIdsToDelete}
-      }).then(function(deleted) {
-          return res.status(200).send({"result":"success"});
-      });
+    let dataflows = await Dataflow.findAll({where: {application_id: req.body.appIdsToDelete}, raw: true, attributes: ['id']});
+    if(dataflows && dataflows.length > 0) {
+      let dataflowIds = dataflows.map(dataflow => dataflow.id);
+
+      let assetsDataflows = await AssetsDataflows.destroy({where: {id: {[Sequelize.Op.in]:dataflowIds}}});
+      let dependantJobs = await DependentJobs.destroy({where: {id: {[Sequelize.Op.in]:dataflowIds}}});
+      let dataflowsDeleted = await Dataflow.destroy({where: {application_id: req.body.appIdsToDelete}});
+    }
+    
+    Application.destroy({
+        where:{id: req.body.appIdsToDelete}
+    }).then(function(deleted) {
+        return res.status(200).send({"result":"success"});
+    });
   } catch (err) {
     console.log('err', err);
     return res.status(500).json({ success: false, message: "Error occured while removing application" });
