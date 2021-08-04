@@ -14,10 +14,13 @@ var Index = models.indexes;
 var Job = models.job;
 let algorithm = 'aes-256-ctr';
 let hpccJSComms = require("@hpcc-js/comms")
-var http = require('http');
 const { body, query, oneOf, validationResult } = require('express-validator');
 const ClusterWhitelist = require('../../cluster-whitelist');
 let lodash = require('lodash');
+const {socketIo : io} = require('../../server');
+const fs = require("fs");
+const { file } = require('tmp');
+const { Socket } = require('dgram');
 
 router.post('/filesearch', [
   body('keyword')
@@ -30,6 +33,7 @@ router.post('/filesearch', [
   console.log('clusterid: '+req.body.clusterid);
 
 	hpccUtil.getCluster(req.body.clusterid).then(function(cluster) {
+		console.log("<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<< Request ", req)
 		let results = [];
 		try {
 			let clusterAuth = hpccUtil.getClusterAuth(cluster);
@@ -628,6 +632,106 @@ router.post('/executeSprayJob', [
 		return response.status(500).send('Error occured during dropzone file search');
 	}
 });
+
+
+// Drop Zone file upload namespace
+io.of("landingZoneFileUpload").on("connection", (socket) => {
+
+	// request slice for large files
+	const requestSlice = (fileName, files) => {
+		socket.emit('supply-slice', {fileName, sliceStart : files[fileName].sliceStartsAt, sliceEnd : files[fileName].sliceEndsAt})
+	}
+
+	// request whole file in one shot for smaller file
+	const requestFile = (fileName) =>{
+		socket.emit('supply-file', {fileName});
+	}
+	console.log("<<<< Websocket Connection established");
+	let files = {};
+
+	//When start-upload emit is received
+	socket.on('start-upload', (data) =>{
+		const {fileName} = data;
+		files[fileName]= Object.assign({slice : null, uploaded: 0, data : [] , sliceStartsAt : 0, sliceEndsAt : 100000 }, data);
+		if(files[fileName].fileSize <= 100000){
+			console.log("<<<< File not too big, upload in one shot");
+			requestFile(fileName);
+		}else{
+			console.log("<<<< File is large upload by chunks ");
+			requestSlice(fileName, files)
+		}
+	})
+
+	//When whole file is supplied by the client
+	socket.on('upload-file', (message) =>{
+		console.log("<<<< Small File", message);
+		let {fileName} =  message.data;
+		fs.writeFile(`uploads/${fileName}`, message.data, function(err){
+			if(err){
+				console.log("<<<< Error occured while saving file in FS", err)
+			}else{
+				console.log("<<<< Small file saved");
+				//<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
+				try {
+					hpccUtil.getCluster("261c602b-aad8-4c75-b8e3-9a83f67bc0b1").then(function(cluster) {
+						request.post({
+							url: cluster.thor_host + ':' + cluster.thor_port +'/FileSpray/DropZoneFileSearch.json',
+							auth : hpccUtil.getClusterAuth(cluster),
+							headers: {'content-type' : 'application/x-www-form-urlencoded'},
+							body: 'DropZoneName='+req.body.dropZoneName+'&Server='+req.body.server+'&NameFilter=*'+req.body.nameFilter+'*&__dropZoneMachine.label='+req.body.server+'&__dropZoneMachine.value='+req.body.server+'&__dropZoneMachine.selected=true&rawxml_=true'				
+						}, function(err, response, body) {
+						  if (err) {
+								console.log('ERROR - ', err);
+								return response.status(500).send('Error occured during dropzone file search');
+							}
+							else {
+								var result = JSON.parse(body);
+								let files = [];
+								if(result && result.DropZoneFileSearchResponse && 
+									result.DropZoneFileSearchResponse['Files'] && 
+										result.DropZoneFileSearchResponse['Files']['PhysicalFileStruct']) {
+									files = result.DropZoneFileSearchResponse['Files']['PhysicalFileStruct'];						
+								}	
+								console.log("<<<<<<<<<<<<<<<<<< Files ", files)					
+
+								return res.status(200).send(files);		
+							}
+						})
+					})
+				} catch (err) {
+					console.log('err', err);
+					return response.status(500).send('Error occured during dropzone file search');
+				}
+				//<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
+			}
+		})
+	})
+
+	//when a slice of file is supplied by the client
+	socket.on('upload-slice', (message) =>{
+		let {fileName} = message;
+		files[fileName].data.push(message.data);
+		files[fileName].sliceStartsAt = message.sliceStartsAt;
+		files[fileName].sliceEndsAt = files[fileName].fileSize >= (files[fileName].sliceStartsAt + 100000 )? files[fileName].sliceStartsAt + 100000 : files[fileName].fileSize;
+
+		if(files[fileName].fileSize == files[fileName].sliceStartsAt){
+			let file = files[fileName].data.join('');
+			let fileBuffer = Buffer(file);
+			fs.writeFile(`uploads/${fileName}`,  fileBuffer, function(err){
+				if(err){
+					console.log("<<<< Err ", err)
+				}else{
+					console.log("<<<< File saved ");
+					return;
+				}
+			})
+			// console.log("<<<< File buffer: ", fileBuffer);
+		}else{
+			requestSlice(fileName, files);
+		}
+	})
+});
+
 
 
 module.exports = router;
