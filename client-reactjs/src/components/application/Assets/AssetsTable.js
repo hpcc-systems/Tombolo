@@ -48,6 +48,8 @@ function AssetsTable({ selectedGroup, openGroup, handleEditGroup, refreshGroups 
     selectDetailsforPdfDialogVisibility,
     setSelectDetailsforPdfDialogVisibility,
   ] = useState(false);
+  let componentAlive = true;
+
   
   useEffect(() => {
     if (
@@ -57,6 +59,8 @@ function AssetsTable({ selectedGroup, openGroup, handleEditGroup, refreshGroups 
     ) {
       fetchDataAndRenderTable();
     }
+
+    return () => componentAlive = false;
   }, [applicationId, selectedGroup, assetTypeFilter, keywords]);
 
   const dispatch = useDispatch();
@@ -64,6 +68,9 @@ function AssetsTable({ selectedGroup, openGroup, handleEditGroup, refreshGroups 
   // Re-render table when Directory tree structure is changed
   useEffect(() => {
     fetchDataAndRenderTable();
+
+    return () => componentAlive = false;
+
   }, [groupsMoveReducer]);
 
   //Execute generate pdf function after asset is selected
@@ -107,13 +114,15 @@ function AssetsTable({ selectedGroup, openGroup, handleEditGroup, refreshGroups 
                 .replace(/<[^>]*>/g, ""))
             : ""
         );
-        setAssets(data);
+        if(componentAlive){
+          setAssets(data);
+        }
       })
       .catch((error) => {
         console.log(error);
       });
-    }
-  };
+  }
+}
 
 
   //When edit icon is clicked

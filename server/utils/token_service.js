@@ -6,7 +6,8 @@ module.exports = {
 };
 function verifyToken(req, res, next)
 {
-  userService.verifyToken(req, res, next).then(function(verified){
+  let token = req.headers['x-access-token'] || req.headers['authorization'];
+  userService.verifyToken(token).then(function(verified){
     if(verified != undefined) {
       next()
     } else {

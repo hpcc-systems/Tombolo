@@ -33,7 +33,6 @@ import { SearchOutlined } from "@ant-design/icons";
 import { assetsActions } from "../../../redux/actions/Assets";
 import { store } from "../../../redux/store/Store";
 import { Constants } from "../../common/Constants";
-import ReactMarkdown from "react-markdown";
 import { readOnlyMode, editableMode } from "../../common/readOnlyUtil";
 import BasicsTabGeneral from "./BasicsTabGeneral";
 import BasicsTabSpray from "./BasicsTabSpray";

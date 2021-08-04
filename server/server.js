@@ -2,7 +2,22 @@ const express = require('express');
 const rateLimit = require("express-rate-limit");
 const app = express();
 const tokenService = require('./utils/token_service');
+const {verifyToken} = require("./routes/user/userservice")
+const jwt = require('jsonwebtoken');
 const {NotificationModule} = require('./routes/notifications/email-notification');
+
+// Socket
+const server = require('http').Server(app);
+const io = require('socket.io')(server);
+
+io.use(function(socket, next){
+  const token =  socket.handshake.auth.token;
+  verifyToken(token).then(() => {
+    next();
+    app.set('socketio', io);
+  })
+})
+
 
 app.set('trust proxy', 1);
 const limiter = rateLimit({
@@ -62,4 +77,4 @@ app.use('/api/groups', tokenService.verifyToken, groups);
 
 //process.env["NODE_TLS_REJECT_UNAUTHORIZED"] = 0;
 
-app.listen(3000, '0.0.0.0', () => console.log('Server listening on port 3000!'));
+server.listen(3000, '0.0.0.0', () => console.log('Server listening on port 3000!'));

@@ -9,7 +9,7 @@ module.exports = (sequelize, DataTypes) => {
     },
     name: DataTypes.STRING,
     description: DataTypes.TEXT,
-    parent_group: DataTypes.UUIDV4,
+    parent_group: DataTypes.INTEGER,
     application_id: DataTypes.UUIDV4
   }, {paranoid: true, freezeTableName: true});
   groups.associate = function(models) {
