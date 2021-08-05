@@ -7,7 +7,7 @@ WORKDIR app
 
 RUN apt-get update -y && apt-get install -y build-essential curl
 
-RUN curl -sL https://deb.nodesource.com/setup_12.x | bash -
+RUN curl -sL https://deb.nodesource.com/setup_14.x | bash -
 
 RUN apt-get install -y nodejs
 
@@ -28,7 +28,7 @@ RUN apt-get install -y openssh-client openssh-server \
     libpython2.7 libpython3.6 libxslt1.1 libcurl3-gnutls netcat git
 
 ARG cdnUrl=https://cdn.hpccsystems.com
-ARG hpccVersion=14.17.4
+ARG hpccVersion=7.12.50
 
 ARG clientToolsUrl=$cdnUrl/releases/CE-Candidate-$hpccVersion/bin/clienttools/hpccsystems-clienttools-community_$hpccVersion-1bionic_amd64.deb
 
