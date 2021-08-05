@@ -12,7 +12,7 @@ module.exports = (sequelize, DataTypes) => {
     nodes: DataTypes.TEXT,
     edges: DataTypes.TEXT,
     dataflowId: DataTypes.UUID
-  }, {freezeTableName: true});
+  }, {paranoid: true, freezeTableName: true});
   dataflowgraph.associate = function(models) {
     dataflowgraph.belongsTo(models.dataflow)
   };

@@ -11,7 +11,7 @@ module.exports = (sequelize, DataTypes) => {
     assetId: DataTypes.UUID,
     dataflowId: DataTypes.UUID,
     cron: DataTypes.STRING,
-  }, {freezeTableName: true});
+  }, {paranoid: true, freezeTableName: true});
 
   return assets_dataflows;
 };

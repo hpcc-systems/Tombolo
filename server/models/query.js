@@ -17,7 +17,7 @@ module.exports = (sequelize, DataTypes) => {
     primaryService: DataTypes.STRING,
     backupService: DataTypes.STRING,
     type: DataTypes.STRING
-  }, {freezeTableName: true});
+  }, {paranoid: true, freezeTableName: true});
   query.associate = function(models) {
     query.hasMany(models.query_field,{
       foreignKey:'query_id',

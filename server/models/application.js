@@ -11,7 +11,7 @@ module.exports = (sequelize, DataTypes) => {
     title: DataTypes.STRING,
     description: DataTypes.TEXT,
     creator: DataTypes.STRING
-  }, {freezeTableName: true});
+  }, {paranoid: true, freezeTableName: true});
   application.associate = function(models) {
     application.hasMany(models.user_application,{
       foreignKey:'application_id',

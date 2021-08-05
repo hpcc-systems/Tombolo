@@ -1,6 +1,6 @@
 'use strict';
 module.exports = (sequelize, DataTypes) => {
-  const controls_regulations = sequelize.define('controls_regulations', {
+  const assets_visualization = sequelize.define('assets_visualization', {
     id: {
       primaryKey: true,
       type: DataTypes.UUID,
@@ -8,11 +8,10 @@ module.exports = (sequelize, DataTypes) => {
       allowNull: false,
       autoIncrement: false
     },
-    compliance: DataTypes.STRING,
-    data_types:DataTypes.STRING,
+    assetId: DataTypes.UUID,
+    url: DataTypes.STRING
   }, {paranoid: true, freezeTableName: true});
-  controls_regulations.associate = function(models) {
-    // associations can be defined here
+  assets_visualization.associate = function(models) {
   };
-  return controls_regulations;
+  return assets_visualization;
 };

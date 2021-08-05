@@ -11,7 +11,7 @@ module.exports = (sequelize, DataTypes) => {
     applicationId: DataTypes.UUID,
     jobId: DataTypes.UUID,
     dataflowId: DataTypes.UUID
-  }, {freezeTableName: true});
+  }, {paranoid: true, freezeTableName: true});
   message_based_jobs.associate = function(models) {
     // associations can be defined here
   };

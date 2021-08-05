@@ -19,7 +19,7 @@ module.exports = (sequelize, DataTypes) => {
     registrationTime: DataTypes.STRING,
     updatedDateTime: DataTypes.STRING,
     dataLastUpdatedTime: DataTypes.STRING
-  }, {freezeTableName: true});
+  }, {paranoid: true, freezeTableName: true});
   indexes.associate = function(models) {
     indexes.hasMany(models.index_key,{
       foreignKey:'index_id',

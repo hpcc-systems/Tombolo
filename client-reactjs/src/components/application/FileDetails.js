@@ -315,9 +315,9 @@ class FileDetails extends PureComponent {
           confirmLoading: false,
         });
         if (this.props.history) {
-          _self.props.history.push(
-            "/" + this.props.application.applicationId + "/assets"
-          );
+          // _self.props.history.push(
+          //   "/" + this.props.application.applicationId + "/assets"
+          // );
         } else {
           document.querySelector("button.ant-modal-close").click();
         }
@@ -591,6 +591,7 @@ class FileDetails extends PureComponent {
       })
         .then(function (response) {
           if (response.ok) {
+            message.success("Data saved")
             return response.json();
           }
           handleError(response);

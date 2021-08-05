@@ -23,7 +23,7 @@ module.exports = (sequelize, DataTypes) => {
     sprayFileName: DataTypes.STRING,
     sprayDropZone: DataTypes.STRING,
     sprayedFileScope: DataTypes.STRING
-  }, {freezeTableName: true});
+  }, {paranoid: true, freezeTableName: true});
   job.associate = function(models) {
     job.hasMany(models.jobfile,{
       foreignKey:'job_id',
@@ -35,11 +35,11 @@ module.exports = (sequelize, DataTypes) => {
       onDelete: 'CASCADE',
       hooks: true
     });
-    job.belongsToMany(models.job, {
-      through: 'dependent_jobs',
+    job.hasMany(models.dependent_jobs, {
+      foreignKey: 'jobId',
       as: 'dependsOnJobs',
-      foreignKey: 'dependsOnJobId',
-      otherKey: 'jobId'
+      onDelete: 'CASCADE',
+      hooks: true
     });
     job.belongsToMany(models.dataflow, {
       through: 'assets_dataflows',
@@ -50,7 +50,7 @@ module.exports = (sequelize, DataTypes) => {
     job.belongsTo(models.application, {
       foreignKey: 'application_id'
     });
-    job.belongsTo(models.groups, {
+    job.belongsToMany(models.groups, {
       through: 'assets_groups',
       as: 'groups',
       foreignKey: 'assetId',

@@ -20,7 +20,7 @@ module.exports = (sequelize, DataTypes) => {
       }
     },*/
     fields: DataTypes.TEXT
-  }, {freezeTableName: true});
+  }, {paranoid: true, freezeTableName: true});
   file_layout.associate = function(models) {
     file_layout.belongsTo(models.file, {
       foreignKey: 'file_id'

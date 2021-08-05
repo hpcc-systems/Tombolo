@@ -10,7 +10,7 @@ module.exports = (sequelize, DataTypes) => {
     },
     user_id: DataTypes.STRING,
     application_id: DataTypes.STRING
-  }, {freezeTableName: true});
+  }, {paranoid: true, freezeTableName: true});
   user_application.associate = function(models) {
     // associations can be defined here
   };

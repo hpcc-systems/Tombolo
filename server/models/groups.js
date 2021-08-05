@@ -11,7 +11,7 @@ module.exports = (sequelize, DataTypes) => {
     description: DataTypes.TEXT,
     parent_group: DataTypes.INTEGER,
     application_id: DataTypes.UUIDV4
-  }, {freezeTableName: true});
+  }, {paranoid: true, freezeTableName: true});
   groups.associate = function(models) {
     groups.belongsToMany(models.file, {
       through: 'assets_groups',

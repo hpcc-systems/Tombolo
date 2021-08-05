@@ -16,6 +16,7 @@ import {
   QuestionCircleOutlined,
   FolderOpenOutlined,
   FilePdfOutlined,
+  AreaChartOutlined
 } from "@ant-design/icons";
 import { store } from "../../../redux/store/Store";
 import showdown from "showdown";
@@ -80,46 +81,48 @@ function AssetsTable({ selectedGroup, openGroup, handleEditGroup, refreshGroups 
   }, [selectedAsset]);
 
   const fetchDataAndRenderTable = () => {
-    let url =
-      keywords != ""
-        ? "/api/groups/assetsSearch?app_id=" + applicationId + ""
-        : "/api/groups/assets?app_id=" + applicationId;
-    if (selectedGroup && selectedGroup.id) {
-      url += "&group_id=" + selectedGroup.id;
-    }
-    if (assetTypeFilter != "") {
-      url += "&assetTypeFilter=" + assetTypeFilter;
-    }
-    if (keywords != "") {
-      url += "&keywords=" + keywords;
-    }
-    fetch(url, {
-      headers: authHeader(),
-    })
-    .then((response) => {
-      if (response.ok) {
-        return response.json();
+    if(applicationId) {
+      let url =
+        keywords != ""
+          ? "/api/groups/assetsSearch?app_id=" + applicationId + ""
+          : "/api/groups/assets?app_id=" + applicationId;
+      if (selectedGroup && selectedGroup.id) {
+        url += "&group_id=" + selectedGroup.id;
       }
-      handleError(response);
-    })
-    .then((data) => {
-      //Converting Markdown to plain text
-      const converter = new showdown.Converter();
-      data.map((item) =>
-        item.description
-          ? (item.description = converter
-              .makeHtml(item.description)
-              .replace(/<[^>]*>/g, ""))
-          : ""
-      );
-      if(componentAlive){
-        setAssets(data);
+      if (assetTypeFilter != "") {
+        url += "&assetTypeFilter=" + assetTypeFilter;
       }
-    })
-    .catch((error) => {
-      console.log(error);
-    });
-  };
+      if (keywords != "") {
+        url += "&keywords=" + keywords;
+      }
+      fetch(url, {
+        headers: authHeader(),
+      })
+      .then((response) => {
+        if (response.ok) {
+          return response.json();
+        }
+        handleError(response);
+      })
+      .then((data) => {
+        //Converting Markdown to plain text
+        const converter = new showdown.Converter();
+        data.map((item) =>
+          item.description
+            ? (item.description = converter
+                .makeHtml(item.description)
+                .replace(/<[^>]*>/g, ""))
+            : ""
+        );
+        if(componentAlive){
+          setAssets(data);
+        }
+      })
+      .catch((error) => {
+        console.log(error);
+      });
+  }
+}
 
 
   //When edit icon is clicked
@@ -227,6 +230,28 @@ function AssetsTable({ selectedGroup, openGroup, handleEditGroup, refreshGroups 
   const handleGroupClick = (groupId) => {
     dispatch(assetsActions.assetInGroupSelected(groupId));
   };
+
+  const handleCreateVisualization = (id) => {
+    fetch("/api/file/read/visualization", {
+      method: "post",
+      headers: authHeader(),
+      body: JSON.stringify({
+        id: id,
+        application_id: applicationId,
+        email: authReducer.user.email
+      }),
+    })
+    .then(function (response) {
+      if (response.ok && response.status == 200) {
+        return response.json();
+      }
+      handleError(response);
+    })      
+    .then(function (data) {
+      if (data && data.success) {
+      }
+    })
+  }
 
   const editingAllowed = hasEditPermission(authReducer.user);
 
@@ -353,7 +378,7 @@ function AssetsTable({ selectedGroup, openGroup, handleEditGroup, refreshGroups 
             <Tooltip placement="right" title={"Move"}>
               <FolderOpenOutlined />
             </Tooltip>
-          </a>
+          </a>          
 
           <Divider type="vertical" />
           <Tooltip placement="right" title="Print">
@@ -363,6 +388,29 @@ function AssetsTable({ selectedGroup, openGroup, handleEditGroup, refreshGroups 
               onClick={ () =>  getNestedAssets(applicationId, setSelectedAsset, setSelectDetailsforPdfDialogVisibility, record, setToPrintAssets)}
             />
           </Tooltip>
+          {record.type == 'File' ?   
+            <React.Fragment>
+              <Divider type="vertical" />  
+              {record.visualization ? 
+                <a href={record.visualization} target="_blank">
+                  <Tooltip placement="right" title={"Visualization"}>
+                  <AreaChartOutlined />
+                  </Tooltip>
+                </a>
+              : <Popconfirm
+                  title="Are you sure you want to create a chart with this data?"
+                  onConfirm={() => handleCreateVisualization(record.id)}
+                  icon={<QuestionCircleOutlined />}
+                >
+                  <a href="#">
+                    <Tooltip placement="right" title={"Visualization"}>
+                    <AreaChartOutlined />
+                    </Tooltip>
+                  </a>
+                </Popconfirm>            
+              }              
+            </React.Fragment>  
+            : null}          
         </span>
       ),
     },

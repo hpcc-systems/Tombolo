@@ -1,9 +1,30 @@
 const express = require('express');
 const router = express.Router();
 const assert = require('assert');[]
+var path = require('path');
+var fs = require('fs');
 var models  = require('../../models');
 let UserApplication = models.user_application;
 let Application = models.application;
+let AssetsGroups=models.assets_groups;
+let AssetsDataflows=models.assets_dataflows;
+let DependentJobs=models.dependent_jobs;
+let Groups = models.groups;
+let File = models.file;
+let FileLayout = models.file_layout;
+let FileLicense = models.file_license;
+let FileValidation = models.file_validation;
+let Index = models.indexes;
+let IndexKey = models.index_key;
+let IndexPayload = models.index_payload;
+let Job = models.job;
+let JobFile = models.jobfile;
+let JobParam = models.jobparam;
+let Query = models.query;
+let QueryField = models.query_field;
+let Dataflow = models.dataflow;
+let DataflowGraph = models.dataflowgraph;
+
 const validatorUtil = require('../../utils/validator');
 const { body, query, validationResult } = require('express-validator');
 const NotificationModule = require('../notifications/email-notification');
@@ -11,17 +32,9 @@ const authServiceUtil = require('../../utils/auth-service-utils');
 let Sequelize = require('sequelize');
 const Op = Sequelize.Op;
 const multer = require('multer');
-const fs = require('fs');
-const File = models.file;
-const Index = models.indexes;
-const Query = models.query;
-const Job = models.job;
-const Dataflow = models.dataflow;
-const Groups = models.groups;
 const AssetGroups = models.assets_groups;
 const AssetDataflows = models.assets_dataflows;
 const Dataflowgraph = models.dataflowgraph;
-const DependentJobs = models.dependent_jobs;
 
 
 
@@ -127,13 +140,22 @@ router.post('/newapp', [
   }
 });
 
-router.post('/removeapp', function (req, res) {
+router.post('/removeapp', async function (req, res) {
   try {
-      models.application.destroy({
-          where:{id: req.body.appIdsToDelete}
-      }).then(function(deleted) {
-          return res.status(200).send({"result":"success"});
-      });
+    let dataflows = await Dataflow.findAll({where: {application_id: req.body.appIdsToDelete}, raw: true, attributes: ['id']});
+    if(dataflows && dataflows.length > 0) {
+      let dataflowIds = dataflows.map(dataflow => dataflow.id);
+
+      let assetsDataflows = await AssetsDataflows.destroy({where: {id: {[Sequelize.Op.in]:dataflowIds}}});
+      let dependantJobs = await DependentJobs.destroy({where: {id: {[Sequelize.Op.in]:dataflowIds}}});
+      let dataflowsDeleted = await Dataflow.destroy({where: {application_id: req.body.appIdsToDelete}});
+    }
+    
+    Application.destroy({
+        where:{id: req.body.appIdsToDelete}
+    }).then(function(deleted) {
+        return res.status(200).send({"result":"success"});
+    });
   } catch (err) {
     console.log('err', err);
     return res.status(500).json({ success: false, message: "Error occured while removing application" });

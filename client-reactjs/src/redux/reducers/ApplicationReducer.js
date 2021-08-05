@@ -17,16 +17,22 @@ export function applicationReducer(state = initialState, action) {
     case Constants.NEW_APPLICATION_ADDED:
       return {
         ...state,
+        deletedApplicationId: '',
+        updatedApplication: '',
         newApplication: action.newApplication
       };
     case Constants.APPLICATION_UPDATED:
       return {
         ...state,
+        newApplication: '',
+        deletedApplicationId: '',
         updatedApplication: action.updatedApplication
       };
     case Constants.APPLICATION_DELETED:
       return {
         ...state,
+        newApplication: '',
+        updatedApplication: '',      
         deletedApplicationId: action.applicationId
       };
     case Constants.CLUSTERS_RETRIEVED:
