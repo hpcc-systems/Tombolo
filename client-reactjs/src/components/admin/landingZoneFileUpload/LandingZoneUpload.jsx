@@ -13,6 +13,7 @@ function LandingZoneUpload() {
   const [files, setFiles] = useState([]);
   const [socket, setSocket] = useState(null);
   const [tableData, setTableData] = useState([]);
+  const [destinationFolder, setDestinationFolder] = useState(null)
   const [cluster, setCluster] = useState(null)
   const authReducer = useSelector(state => state.authReducer);
   const clusters = useSelector(state => state.applicationReducer.clusters);
@@ -77,13 +78,14 @@ function LandingZoneUpload() {
 
   //Handle File Upload
   const handleFileUpload = () =>{
-    if(!cluster){
-      console.log("<<<< Select cluster");
-      message.config({top:150,   maxCount: 2,
-      })
-      message.error("Select a cluster")
-    }else{
+    message.config({top:150,   maxCount: 2})
 
+    if(!cluster){
+      message.error("Select a cluster")
+    }else if(!destinationFolder){
+      message.error("Select upload destination folder")
+    }
+      else{
     // Start by sending some file details to server
     socket.emit('start-upload', {fileName: files[0].name, fileSize: files[0].size, cluster});
 
