@@ -1,20 +1,26 @@
 import React, {useState, useEffect} from 'react';
 import {useSelector} from "react-redux"
-import { Upload } from 'antd';
+import { Upload, Table, Select, message, Input  } from 'antd';
 import { InboxOutlined } from '@ant-design/icons';
 import {Button} from "antd"
 import { io } from "socket.io-client";
+import{LandingZoneUploadContainer,LandingZoneUploadContainer__table, columns } from "./landingZoneUploadStyles";
+import {v4 as uuidv4} from 'uuid';
+const { Option,  } = Select;
 
 function LandingZoneUpload() {
   //Local States and variables
   const [files, setFiles] = useState([]);
   const [socket, setSocket] = useState(null);
-  const authReducer = useSelector(state => state.authReducer)
+  const [tableData, setTableData] = useState([]);
+  const [cluster, setCluster] = useState(null)
+  const authReducer = useSelector(state => state.authReducer);
+  const clusters = useSelector(state => state.applicationReducer.clusters);
   const devURL = 'http://localhost:3000/landingZoneFileUpload';
   const prodURL  = '/landingZoneFileUpload'
 
-  // Socket io
   useEffect(() => {
+    // Socket io connection
     if(process.env.NODE_ENV === "development"){
       const socket = io(devURL, {
         transports: ["websocket"],
@@ -52,9 +58,16 @@ function LandingZoneUpload() {
      }
   }, [socket])
 
-  // <<<< Test
+  //Setting table data
   useEffect(() =>{
-    console.log("<<<< Files ", files)
+    console.log("<<<< Files ", files, files.length);
+    console.log(typeof files)
+    if(files.length > 0){
+      files.map(item => {
+        setTableData([...tableData, {key : uuidv4(), sno : tableData.length + 1, 
+                                    type : item.type, fileName : item.name, fileSize : item.size, }]);
+      })
+    }
   }, [files])
 
  
@@ -64,11 +77,15 @@ function LandingZoneUpload() {
 
   //Handle File Upload
   const handleFileUpload = () =>{
-    //Test
-    socket.emit('upload-files', {data : files[0].data})
-    
+    if(!cluster){
+      console.log("<<<< Select cluster");
+      message.config({top:150,   maxCount: 2,
+      })
+      message.error("Select a cluster")
+    }else{
+
     // Start by sending some file details to server
-    socket.emit('start-upload', {fileName: files[0].name, fileSize: files[0].size});
+    socket.emit('start-upload', {fileName: files[0].name, fileSize: files[0].size, cluster});
 
     //when asked to supply the whole file
     socket.on('supply-file', (message) =>{
@@ -98,7 +115,7 @@ function LandingZoneUpload() {
           })
         }
       })
-
+    }
     }
 
   
@@ -124,20 +141,31 @@ function LandingZoneUpload() {
   
   };
 
-  //customRequest
-  const customRequest = ({ onSuccess }) => {
-      onSuccess("ok");
-  };
-  
-
+  // Select drop down
+  function handleChange(value) {
+    setCluster(value);
+  }
 
     return (
-    <div>
+        <LandingZoneUploadContainer>
+          <Select defaultValue = ""  onChange={handleChange}  size="large"
+         style={{width: "100%"}}>
+            <Option value="" disabled>Select Cluster</Option>
+            {clusters.map(item => {
+                return <Option  value={JSON.stringify(item)}>{item.name}</Option>
+            })}
+        </Select>
+        <Input placeholder="Folder"  size="large"/>
+
+        
+        
         <Dragger 
         {...props}
-        customRequest={customRequest}
-        showUploadList={true}
-        multiple={false}
+        customRequest={({ onSuccess }) => {
+          onSuccess("ok");
+      }}
+        showUploadList={false}
+        multiple={true}
         >
             <p className="ant-upload-drag-icon">
             <InboxOutlined />
@@ -147,11 +175,13 @@ function LandingZoneUpload() {
             Support for a single or bulk upload. 
             </p>
         </Dragger>
-        <Button onClick={handleFileUpload}> Upload</Button>
-    </div>
+        <span  style={{display : files.length > 0 ? "block" : "none"}}>
+          <Table   columns={columns} dataSource={tableData} size="small" pagination={false} style={{width: "100%", maxHeight : "70vh", overflow: "auto"}}/>
+        </span>
+
+        <Button size="large" onClick={handleFileUpload} type="primary" block > Upload</Button>
+        </LandingZoneUploadContainer>
     )
 }
 
-export default LandingZoneUpload
-
-
+export default LandingZoneUpload;

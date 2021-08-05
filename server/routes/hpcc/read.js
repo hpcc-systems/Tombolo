@@ -19,8 +19,10 @@ const ClusterWhitelist = require('../../cluster-whitelist');
 let lodash = require('lodash');
 const {socketIo : io} = require('../../server');
 const fs = require("fs");
+const path = require('path');
 const { file } = require('tmp');
 const { Socket } = require('dgram');
+
 
 router.post('/filesearch', [
   body('keyword')
@@ -33,7 +35,6 @@ router.post('/filesearch', [
   console.log('clusterid: '+req.body.clusterid);
 
 	hpccUtil.getCluster(req.body.clusterid).then(function(cluster) {
-		console.log("<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<< Request ", req)
 		let results = [];
 		try {
 			let clusterAuth = hpccUtil.getClusterAuth(cluster);
@@ -552,7 +553,6 @@ router.post('/dropZoneFileSearch', [
 	if (!errors.isEmpty()) {
 	  return res.status(422).json({ success: false, errors: errors.array() });
 	}
-	
 	try {
 		hpccUtil.getCluster(req.body.clusterId).then(function(cluster) {
 			request.post({
@@ -653,6 +653,7 @@ io.of("landingZoneFileUpload").on("connection", (socket) => {
 	socket.on('start-upload', (data) =>{
 		const {fileName} = data;
 		files[fileName]= Object.assign({slice : null, uploaded: 0, data : [] , sliceStartsAt : 0, sliceEndsAt : 100000 }, data);
+		console.log("<<<< Initail data sent from client ", files);
 		if(files[fileName].fileSize <= 100000){
 			console.log("<<<< File not too big, upload in one shot");
 			requestFile(fileName);
@@ -671,38 +672,32 @@ io.of("landingZoneFileUpload").on("connection", (socket) => {
 				console.log("<<<< Error occured while saving file in FS", err)
 			}else{
 				console.log("<<<< Small file saved");
-				//<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
-				try {
-					hpccUtil.getCluster("261c602b-aad8-4c75-b8e3-9a83f67bc0b1").then(function(cluster) {
-						request.post({
-							url: cluster.thor_host + ':' + cluster.thor_port +'/FileSpray/DropZoneFileSearch.json',
-							auth : hpccUtil.getClusterAuth(cluster),
-							headers: {'content-type' : 'application/x-www-form-urlencoded'},
-							body: 'DropZoneName='+req.body.dropZoneName+'&Server='+req.body.server+'&NameFilter=*'+req.body.nameFilter+'*&__dropZoneMachine.label='+req.body.server+'&__dropZoneMachine.value='+req.body.server+'&__dropZoneMachine.selected=true&rawxml_=true'				
-						}, function(err, response, body) {
-						  if (err) {
-								console.log('ERROR - ', err);
-								return response.status(500).send('Error occured during dropzone file search');
+				//<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
+					if(fs.existsSync('uploads/yadhap.json')){
+						console.log("<<<< Yes file exists");
+						request({
+							url : 'http://10.173.147.1:8010/FileSpray/UploadFile.json?upload_&rawxml_=1&NetAddress=10.173.147.1&OS=2&Path=/var/lib/HPCCSystems/mydropzone/',
+							method : 'POST',
+							formData : {
+								'UploadedFiles[]' : {
+									value : 'uploads/yadhap.json',
+									options : {
+										filename : 'yadhap.json',
+										contentType : 'json'
+									}
+								}
 							}
-							else {
-								var result = JSON.parse(body);
-								let files = [];
-								if(result && result.DropZoneFileSearchResponse && 
-									result.DropZoneFileSearchResponse['Files'] && 
-										result.DropZoneFileSearchResponse['Files']['PhysicalFileStruct']) {
-									files = result.DropZoneFileSearchResponse['Files']['PhysicalFileStruct'];						
-								}	
-								console.log("<<<<<<<<<<<<<<<<<< Files ", files)					
-
-								return res.status(200).send(files);		
-							}
-						})
-					})
-				} catch (err) {
-					console.log('err', err);
-					return response.status(500).send('Error occured during dropzone file search');
-				}
-				//<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
+							  },
+							  function(err, httpResponse,body){
+								console.log("<<<< Request to upload file executed..")
+								//   console.log("<<<< ERR ", httpResponse);
+								//   console.log("<<<< ERR ", httpResponse);
+								  console.log("<<<< ERR ", body)
+							  }
+						)
+					}else{
+						console.log("<<<< No file found")
+					}
 			}
 		})
 	})

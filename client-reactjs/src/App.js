@@ -31,7 +31,7 @@ import { store } from "./redux/store/Store";
 
 import { Report } from "./components/Report/Report";
 import Regulations from "./components/admin/ControlsAndRegulations";
-import LandingZoneUpload from "./components/admin/LandingZoneUpload";
+import LandingZoneUpload from "./components/admin/landingZoneFileUpload/LandingZoneUpload";
 const { Content } = Layout;
 
 class App extends React.Component {
