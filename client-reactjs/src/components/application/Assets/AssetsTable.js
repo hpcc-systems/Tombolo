@@ -231,14 +231,15 @@ function AssetsTable({ selectedGroup, openGroup, handleEditGroup, refreshGroups 
     dispatch(assetsActions.assetInGroupSelected(groupId));
   };
 
-  const handleCreateVisualization = (id) => {
+  const handleCreateVisualization = (id, cluster_id) => {
     fetch("/api/file/read/visualization", {
       method: "post",
       headers: authHeader(),
       body: JSON.stringify({
         id: id,
         application_id: applicationId,
-        email: authReducer.user.email
+        email: authReducer.user.email,
+        cluster_id: cluster_id
       }),
     })
     .then(function (response) {
@@ -249,6 +250,8 @@ function AssetsTable({ selectedGroup, openGroup, handleEditGroup, refreshGroups 
     })      
     .then(function (data) {
       if (data && data.success) {
+        console.log(data);
+        window.open(data.url);
       }
     })
   }
@@ -399,7 +402,7 @@ function AssetsTable({ selectedGroup, openGroup, handleEditGroup, refreshGroups 
                 </a>
               : <Popconfirm
                   title="Are you sure you want to create a chart with this data?"
-                  onConfirm={() => handleCreateVisualization(record.id)}
+                  onConfirm={() => handleCreateVisualization(record.id, record.cluster_id)}
                   icon={<QuestionCircleOutlined />}
                 >
                   <a href="#">

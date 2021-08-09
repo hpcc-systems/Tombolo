@@ -860,14 +860,9 @@ router.post('/visualization', [
         infoPort: cluster.thor_port,
         dataPort: cluster.roxie_port,
       },
-      selectedSource: {
-        cluster: 'hthor__eclagent', // hpcc file object has ClusterName key in it
-        hpccID: file.name, // hpcc file object has Name key in it
-        name: file.name,
-        target: 'file',
-      },
+      filename: file.name,
       workspaceName: 'Tombolo', 
-      dashboardName: 'Tombolo', 
+      dashboardName: 'Tombolo'
     };
 
     console.log(bodyObj);
@@ -883,15 +878,7 @@ router.post('/visualization', [
       } else {
         var result = JSON.parse(body);
         console.log(result);
-        AssetsVisualization.create({
-          assetId: file.id,
-          url: result.workspaceUrl
-        }).then((result) => {
-          res.json({"success": true, 'url': result.workspaceUrl});
-        }).catch(err => {
-          console.log(err);
-          return res.status(500).send("Error occured while creating visualization");
-        })        
+        res.json({"success": true, 'url': result.workspaceUrl});
       }
     });
 

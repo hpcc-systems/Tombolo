@@ -11,7 +11,6 @@ let Index = models.indexes;
 let File = models.file;
 let Query = models.query;
 let Job = models.job;
-let AssetsVisualization = models.assets_visualization;
 let AssetsGroups = models.assets_groups;
 
 let createGroupHierarchy = (groups) => {
@@ -180,9 +179,7 @@ router.get('/assets', [
         "id": req.query.group_id
       },
       include: [
-        {model:File, as:'files', attributes:['id', 'name', 'title', 'description', 'createdAt'], 
-          include:[{model: AssetsVisualization}]
-        }, 
+        {model:File, as:'files', attributes:['id', 'name', 'title', 'cluster_id', 'description', 'createdAt']},
         {model:Job, as: 'jobs', attributes:['id', 'name', 'title', 'description', 'createdAt']}, 
         {model:Query, as: 'queries', attributes:['id', 'name', 'title', 'description', 'createdAt']}, 
         {model:Index, as: 'indexes', attributes:['id', 'name', 'title', 'description', 'createdAt']}],
@@ -196,7 +193,7 @@ router.get('/assets', [
             name: file.name,
             title: file.title,
             description: file.description,
-            visualization: file.assets_visualization ? file.assets_visualization.url : null,
+            cluster_id: file.cluster_id,
             createdAt: file.createdAt            
           })
         })
@@ -251,6 +248,7 @@ router.get('/assets', [
             type: 'File',
             id: file.id,
             name: file.name,
+            cluster_id: file.cluster_id,
             title: file.title,
             description: file.description,
             createdAt: file.createdAt
