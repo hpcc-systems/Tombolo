@@ -34,7 +34,7 @@ class QueueDaemon {
     try {
       await this.consumer.connect();
 
-      await this.consumer.subscribe({ topic: JOB_COMPLETE_TOPIC, fromBeginning: true });
+      //await this.consumer.subscribe({ topic: JOB_COMPLETE_TOPIC, fromBeginning: true });
 
       await this.consumer.subscribe({ topic: START_JOB_TOPIC, fromBeginning: true });
 
@@ -83,7 +83,7 @@ class QueueDaemon {
         let jobExecution = await JobExecution.findOne({where: {wuid: msgJson.wuid}});
         if(jobExecution) {
           let cluster = await hpccUtil.getCluster(jobExecution.clusterId)
-          let wuInfo = await hpccUtil.workunitInfo(msgJson.wuid, cluster);
+          let wuInfo = await hpccUtil.workunitInfo(msgJson.wuid, jobExecution.clusterId);
           if(wuInfo.Workunit.State == 'completed' || wuInfo.Workunit.State == 'wait' || wuInfo.Workunit.State == 'blocked') {
             await JobScheduler.scheduleCheckForJobsWithSingleDependency(wuInfo.Workunit.Jobname);
           } else if(wuInfo.Workunit.State == 'failed') {

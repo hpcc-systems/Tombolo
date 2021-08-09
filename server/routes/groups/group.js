@@ -373,23 +373,23 @@ router.get('/assetsSearch', [
       "where find_in_set(parent_group, @pv) and length(@pv := concat(@pv, ',', id)) > 0 or id=(:groupId)) as hie " +
       "join (";
       if(assetFilters.length == 0 || assetFilters.includes("File")) {
-        query += "select f.id, f.name, ag.groupId, f.title, f.description, f.createdAt, 'File' as type from file f, assets_groups ag where f.application_id = (:applicationId) and ag.assetId=f.id and (f.name REGEXP (:keyword) or f.title REGEXP (:keyword)) ";
+        query += "select f.id, f.name, ag.groupId, f.title, f.description, f.createdAt, 'File' as type from file f, assets_groups ag where f.application_id = (:applicationId) and ag.assetId=f.id and f.deletedAt IS NULL and (f.name REGEXP (:keyword) or f.title REGEXP (:keyword)) ";
         query += (assetFilters.length == 0 || assetFilters.length > 1) ? "union all " : "";
       }
       if(assetFilters.length == 0 || assetFilters.includes("Query")) {
-        query += "select q.id, q.name, ag.groupId, q.title, q.description, q.createdAt, 'Query' as type from query q, assets_groups ag where q.application_id = (:applicationId) and ag.assetId=q.id and (q.name REGEXP (:keyword) or q.title REGEXP (:keyword)) ";
+        query += "select q.id, q.name, ag.groupId, q.title, q.description, q.createdAt, 'Query' as type from query q, assets_groups ag where q.application_id = (:applicationId) and ag.assetId=q.id and q.deletedAt IS NULL and (q.name REGEXP (:keyword) or q.title REGEXP (:keyword)) ";
         query += (assetFilters.length == 0 || assetFilters.length > 1) ? "union all " : "";
       }
       if(assetFilters.length == 0 || assetFilters.includes("Indexes")) {
-        query += "select idx.id, idx.name, ag.groupId, idx.title, idx.description, idx.createdAt, 'Index' as type  from indexes idx, assets_groups ag where idx.application_id = (:applicationId) and ag.assetId=idx.id and (idx.name REGEXP (:keyword) or idx.title REGEXP (:keyword)) ";
+        query += "select idx.id, idx.name, ag.groupId, idx.title, idx.description, idx.createdAt, 'Index' as type  from indexes idx, assets_groups ag where idx.application_id = (:applicationId) and ag.assetId=idx.id and idx.deletedAt IS NULL and (idx.name REGEXP (:keyword) or idx.title REGEXP (:keyword)) ";
         query += (assetFilters.length == 0 || assetFilters.length > 1) ? "union all " : "";
       }
       if(assetFilters.length == 0 || assetFilters.includes("Job")) {
-        query += "select j.id, j.name, ag.groupId, j.title, j.description, j.createdAt, 'Job' as type  from job j, assets_groups ag where j.application_id = (:applicationId) and j.id = ag.assetId and (j.name REGEXP (:keyword) or j.title REGEXP (:keyword) ) ";
+        query += "select j.id, j.name, ag.groupId, j.title, j.description, j.createdAt, 'Job' as type  from job j, assets_groups ag where j.application_id = (:applicationId) and j.id = ag.assetId and j.deletedAt IS NULL and (j.name REGEXP (:keyword) or j.title REGEXP (:keyword)) ";
         query += (assetFilters.length == 0 || assetFilters.length > 1) ? "union all " : "";
       }
       if(assetFilters.length == 0 || assetFilters.includes("Groups")) {
-        query += "select g.id, g.name, g.parent_group, g.name as title, g.description, g.createdAt, 'Group' as type  from groups g where g.application_id = (:applicationId) and (g.name REGEXP (:keyword) ) ";
+        query += "select g.id, g.name, g.parent_group, g.name as title, g.description, g.createdAt, 'Group' as type  from groups g where g.application_id = (:applicationId) and (g.name REGEXP (:keyword) and g.deletedAt IS NULL) ";
         query += (assetFilters.length == 0 || assetFilters.length > 1) ? "union all " : "";
 
       }
@@ -401,26 +401,26 @@ router.get('/assetsSearch', [
   } else {
     query = "";
     if(assetFilters.length == 0 || assetFilters.includes("File")) {
-      query += "select files_res.*, g.name as group_name from (select f.id, f.name, ag.groupId, f.title, f.description, f.createdAt, 'File' as type from file f left join assets_groups ag on f.id = ag.assetId where f.application_id = (:applicationId) and  (f.name REGEXP (:keyword) or f.title REGEXP (:keyword))) as files_res left join groups g on files_res.groupId = g.id ";
+      query += "select files_res.*, g.name as group_name from (select f.id, f.name, ag.groupId, f.title, f.description, f.createdAt, 'File' as type from file f left join assets_groups ag on f.id = ag.assetId where f.application_id = (:applicationId) and  (f.name REGEXP (:keyword) or f.title REGEXP (:keyword)) and f.deletedAt IS NULL) as files_res left join groups g on files_res.groupId = g.id ";
       query += (assetFilters.length == 0 || assetFilters.length > 1) ? "union all " : "";
     }
     if(assetFilters.length == 0 || assetFilters.includes("Query")) {
-      query += "select queries_res.*, g.name as group_name from (select q.id, q.name, ag.groupId, q.title, q.description, q.createdAt, 'Query' as type from query q left join assets_groups ag on q.id = ag.assetId where q.application_id = (:applicationId) and  (q.name REGEXP (:keyword) or q.title REGEXP (:keyword))) as queries_res left join groups g on queries_res.groupId = g.id ";
+      query += "select queries_res.*, g.name as group_name from (select q.id, q.name, ag.groupId, q.title, q.description, q.createdAt, 'Query' as type from query q left join assets_groups ag on q.id = ag.assetId where q.application_id = (:applicationId) and  (q.name REGEXP (:keyword) or q.title REGEXP (:keyword)) and q.deletedAt IS NULL) as queries_res left join groups g on queries_res.groupId = g.id ";
       query += (assetFilters.length == 0 || assetFilters.length > 1) ? "union all " : "";
 
     }
     if(assetFilters.length == 0 || assetFilters.includes("Indexes")) {
-      query += "select idx_res.*, g.name as group_name from (select idx.id, idx.name, ag.groupId, idx.title, idx.description, idx.createdAt, 'Index' as type from indexes idx left join assets_groups ag on idx.id = ag.assetId where idx.application_id = (:applicationId) and  (idx.name REGEXP (:keyword) or idx.title REGEXP (:keyword))) as idx_res left join groups g on idx_res.groupId = g.id ";
+      query += "select idx_res.*, g.name as group_name from (select idx.id, idx.name, ag.groupId, idx.title, idx.description, idx.createdAt, 'Index' as type from indexes idx left join assets_groups ag on idx.id = ag.assetId where idx.application_id = (:applicationId) and  (idx.name REGEXP (:keyword) or idx.title REGEXP (:keyword)) and idx.deletedAt IS NULL) as idx_res left join groups g on idx_res.groupId = g.id ";
       query += (assetFilters.length == 0 || assetFilters.length > 1) ? "union all " : "";
 
     }
     if(assetFilters.length == 0 || assetFilters.includes("Job")) {
-      query += "select j_res.*, g.name as group_name from (select j.id, j.name, ag.groupId, j.title, j.description, j.createdAt, 'Job' as type from job j left join assets_groups ag on j.id = ag.assetId where j.application_id = (:applicationId) and  (j.name REGEXP (:keyword) or j.title REGEXP (:keyword))) as j_res left join groups g on j_res.groupId = g.id ";
+      query += "select j_res.*, g.name as group_name from (select j.id, j.name, ag.groupId, j.title, j.description, j.createdAt, 'Job' as type from job j left join assets_groups ag on j.id = ag.assetId where j.application_id = (:applicationId) and  (j.name REGEXP (:keyword) or j.title REGEXP (:keyword)) and j.deletedAt IS NULL) as j_res left join groups g on j_res.groupId = g.id ";
       query += (assetFilters.length == 0 || assetFilters.length > 1) ? "union all " : "";
 
     }
     if(assetFilters.length == 0 || assetFilters.includes("Groups")) {
-      query += "select g.id, g.name, g.parent_group as groupId, gp.name as group_name, '' as title, g.description, g.createdAt, 'Group' as type  from groups g inner join groups gp on g.parent_group = gp.id where g.application_id = (:applicationId) and g.name REGEXP (:keyword) ";
+      query += "select g.id, g.name, g.parent_group as groupId, gp.name as group_name, '' as title, g.description, g.createdAt, 'Group' as type  from groups g inner join groups gp on g.parent_group = gp.id where g.application_id = (:applicationId) and g.name REGEXP (:keyword) and g.deletedAt IS NULL";
       //query += (assetFilters.length == 0 || assetFilters.length > 1) ? "union all " : "";
 
     }

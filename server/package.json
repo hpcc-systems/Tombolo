@@ -9,7 +9,7 @@
   "author": "",
   "license": "ISC",
   "dependencies": {
-    "@hpcc-js/comms": "^2.49.0",
+    "@hpcc-js/comms": "^2.52.0",
     "activedirectory": "^0.7.2",
     "bcryptjs": "^2.4.3",
     "bree": "^6.2.1",

@@ -17,6 +17,7 @@ let JobParam = models.jobparam;
 let ConsumerObject = models.consumer_object;
 let JobExecution = models.job_execution;
 let Index = models.indexes;
+let Sequelize = require('sequelize');
 const path = require('path');
 const { exec } = require('child_process');
 
@@ -154,25 +155,48 @@ exports.recordJobExecution = (workerData, wuid) => {
           applicationId: workerData.applicationId,
           wuid: wuid,
           clusterId: workerData.clusterId,
-          status: 'submitted'
+          status: workerData.status
         }
-      }).then(async (results, created) => {
-        let jobExecutionId = results[0].id;
-        if(!created) {
+      }).then(async (result) => {
+        let jobExecutionId = result[0].id;
+        if(!result[1]) {
           await JobExecution.update({
             jobId: workerData.jobId,
             dataflowId: workerData.dataflowId,
             applicationId: workerData.applicationId,
             wuid: wuid,
-            status: 'submitted'
+            status: workerData.status
           },
           {where: {id: jobExecutionId}})
         }
-        resolve();
-      })   
+        resolve({jobExecutionId});
+      }).catch((err) => {
+        console.log(err);
+        reject(err)
+      })
     })
   }catch (err) {
+    console.log(err)
     reject(err);
-    Promise.reject(err)
+    //Promise.reject(err)
   }
 }
+
+exports.getJobForProcessing = async () => {
+  try {
+    console.log("**********************getJobForProcessing*******************")
+    const jobExecution = await JobExecution.findOne({
+      where: {'status': 'submitted'}, 
+      order: [["createdAt", "desc"]]
+    });
+    /*if(jobExecution) {
+      let jobExecutionAwaited = await JobExecution.update({
+        status: 'processing'
+      },{where: {jobId: jobExecution.jobId}});  
+    }*/
+
+    return jobExecution;  
+  } catch (error) {
+    console.log(error);
+  }
+} 

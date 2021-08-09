@@ -337,6 +337,7 @@ exports.resubmitWU = (clusterId, wuid) => {
           reject(err);
         } else {
           var result = JSON.parse(body);
+          console.log(result);
           resolve(result)
         }
       });
@@ -346,7 +347,8 @@ exports.resubmitWU = (clusterId, wuid) => {
   })
 }
 
-exports.workunitInfo = (wuid, cluster) => {
+exports.workunitInfo = async (wuid, clusterId) => {
+  let cluster = await module.exports.getCluster(clusterId);
   let clusterAuth = module.exports.getClusterAuth(cluster);
   let wsWorkunits = new hpccJSComms.WorkunitsService({ baseUrl: cluster.thor_host + ':' + cluster.thor_port, userID:(clusterAuth ? clusterAuth.user : ""), password:(clusterAuth ? clusterAuth.password : ""), type: "get" });
   return new Promise((resolve, reject) => {
@@ -357,7 +359,6 @@ exports.workunitInfo = (wuid, cluster) => {
         setTimeout(_ => {
           resolve(module.exports.workunitInfo(wuid, cluster));
         }, 500);
-
       }
     })
   });

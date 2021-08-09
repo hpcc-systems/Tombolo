@@ -7,19 +7,6 @@ var smtpConfig = {
 };
 var transporter = nodemailer.createTransport(smtpConfig);
 
-var kafkaConsumerOptions = {
-  kafkaHost: process.env.KAFKA_HOST_NAME + ':' + process.env.KAFKA_PORT, // connect directly to kafka broker (instantiates a KafkaClient)
-  batch: undefined,
-  ssl: false,
-  groupId: 'ExampleTestGroup',
-  sessionTimeout: 15000,
-  protocol: ['roundrobin'],
-  encoding: 'utf8', // default is utf8, use 'buffer' for binary data
-  fromOffset: 'latest', // default
-  commitOffsetsOnFirstJoin: true, // on the very first time this consumer group subscribes to a topic, record the offset returned in fromOffset (latest/earliest)
-  outOfRangeOffset: 'earliest'
-};
-
 exports.notify = (notification) => {
   const mailOptions = {
     to: notification.to,

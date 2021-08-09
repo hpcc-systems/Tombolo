@@ -16,6 +16,7 @@ if (parentPort) {
 		let executionResult = await assetUtil.executeScriptJob(workerData.jobId);
 		console.log(executionResult);
     //record workflow execution
+		workerData.status = 'submitted';
     let jobExecutionRecorded = await assetUtil.recordJobExecution(workerData, '');
 
 	} catch (err) {
