@@ -647,16 +647,16 @@ class JobDetails extends Component {
     saveResponse.jobType = this.formRef.current.getFieldValue("jobType");
 
     setTimeout(() => {
-      this.setState({
-        visible: false,
-        confirmLoading: false,
-      });
+      // this.setState({
+      //   visible: false,
+      //   confirmLoading: false,
+      // });
       //this.props.onClose();
       //this.props.onRefresh(saveResponse);
       if (this.props.history) {
-        // this.props.history.push(
-        //   "/" + this.props.application.applicationId + "/assets"
-        // );
+        this.props.history.push(
+          "/" + this.props.application.applicationId + "/assets"
+        );
         // message.success("Data Saved")
       } else {
         document.querySelector("button.ant-modal-close").click();
@@ -731,10 +731,11 @@ class JobDetails extends Component {
           message.error(
             "Error occured while saving the data. Please check the form data"
           );
+        }).finally(() => {
           this.setState({
             confirmLoading: false,
           });
-        });
+        })
     });
   }
 
