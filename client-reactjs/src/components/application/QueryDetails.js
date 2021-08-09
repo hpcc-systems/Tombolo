@@ -232,13 +232,13 @@ class QueryDetails extends PureComponent {
     this.setState({confirmLoading : true})
     let saveResponse = await this.saveQueryDetails();
     
-    setTimeout(() => {
-      // this.setState({
-      //   visible: false,
-      //   confirmLoading: false,
-      // });
+    // setTimeout(() => {
+      this.setState({
+        visible: false,
+        // confirmLoading: false,
+      });
       this.props.history.push('/' + this.props.application.applicationId + '/assets')
-    }, 1000);
+    // }, 1000);
   };
 
   getClusters() {

@@ -166,7 +166,7 @@ class IndexDetails extends PureComponent {
 
     let saveResponse = await this.saveIndexDetails();
 
-    setTimeout(() => {
+    // setTimeout(() => {
       this.setState({
         visible: false,
         initialDataLoading: false,
@@ -179,7 +179,7 @@ class IndexDetails extends PureComponent {
       } else {
         document.querySelector('button.ant-modal-close').click();
       }
-    }, 200);
+    // }, 200);
   };
 
   handleDelete = () => {

@@ -309,7 +309,7 @@ class FileDetails extends PureComponent {
     try {
       const values = await this.formRef.current.validateFields();
       let saveResponse = await _self.saveFileDetails();
-      setTimeout(() => {
+      // setTimeout(() => {
         _self.setState({
           visible: false,
           // confirmLoading: false,
@@ -321,7 +321,7 @@ class FileDetails extends PureComponent {
         } else {
           document.querySelector("button.ant-modal-close").click();
         }
-      }, 2000);
+      // }, 2000);
     } catch (e) {
       console.log(e);
       _self.setState({

@@ -646,7 +646,7 @@ class JobDetails extends Component {
     let saveResponse = await this.saveJobDetails();
     saveResponse.jobType = this.formRef.current.getFieldValue("jobType");
 
-    setTimeout(() => {
+    // setTimeout(() => {
       // this.setState({
       //   visible: false,
       //   confirmLoading: false,
@@ -662,7 +662,7 @@ class JobDetails extends Component {
         document.querySelector("button.ant-modal-close").click();
         this.props.dispatch(assetsActions.assetSaved(saveResponse));
       }
-    }, 2000);
+    // }, 2000);
   };
 
   onAutoCreateFiles = (e) => {
