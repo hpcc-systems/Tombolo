@@ -1,21 +1,23 @@
 import React, {useState, useEffect} from 'react';
 import {useSelector} from "react-redux"
-import { Upload, Table, Select, message, Input  } from 'antd';
-import { InboxOutlined } from '@ant-design/icons';
-import {Button} from "antd"
+import { Upload, Table, Select, message, Input, TreeSelect, Button  } from 'antd';
+import { InboxOutlined, FolderOutlined } from '@ant-design/icons';
 import { io } from "socket.io-client";
-import{LandingZoneUploadContainer,LandingZoneUploadContainer__table, columns } from "./landingZoneUploadStyles";
+import{LandingZoneUploadContainer, columns } from "./landingZoneUploadStyles";
 import {v4 as uuidv4} from 'uuid';
+
 const { Option,  } = Select;
+const { TreeNode } = TreeSelect;
+
 
 function LandingZoneUpload() {
-  //Local States and variables
   const [files, setFiles] = useState([]);
   const [socket, setSocket] = useState(null);
   const [tableData, setTableData] = useState([]);
   const [destinationFolder, setDestinationFolder] = useState("test_despray");
   const [cluster, setCluster] = useState(null);
   const [clusterIp, setClusterIp] = useState("10.173.147.1");
+  const [treeData, setTreeData] = useState([]);
   const authReducer = useSelector(state => state.authReducer);
   const clusters = useSelector(state => state.applicationReducer.clusters);
   const devURL = 'http://localhost:3000/landingZoneFileUpload';
@@ -41,7 +43,37 @@ function LandingZoneUpload() {
         });
         setSocket(socket);
     }
-  }, [])
+
+    //Get directory
+    let data = {
+      Netaddr : "10.173.147.1",
+      Path : "/var/lib/HPCCSystems/mydropzone/",
+      OS : 2,
+      rawxml_ : true,
+      DirectoryOnly: true
+    }
+    const formData = new FormData();
+    for(let key in data){
+      formData.append(key, data[key])
+    }
+
+    fetch('http://10.173.147.1:8010/FileSpray/FileList.json', {
+          method :'POST',
+          body : formData})
+          .then(response => response.json())
+          .then(result => {
+            console.log('Success <<<<', result.FileListResponse.files.PhysicalFileStruct);
+            setTreeData(result.FileListResponse.files.PhysicalFileStruct);
+          })
+          .catch(err =>{
+            console.log("Err <<<<", err)
+          })
+  }, []);
+
+  //Test
+  useEffect(() =>{
+    console.log("Directory Tree <<<<<<<<<<<   ", treeData)
+  }, [treeData])
 
   // Listining to msgs from socket
   useEffect(() =>{
@@ -63,13 +95,12 @@ function LandingZoneUpload() {
 
   //Setting table data
   useEffect(() =>{
-    console.log("<<<< Files ", files, files.length);
     if(files.length > 0){
       files.map(item => {
-        console.log("<<<<<<<<<<<<<<<<<<<<< >>>>>>>>>>>>>> File", item.success)
+        console.log("<<<<<<<<<<<<<<<<<<<<< >>>>>>>>>>>>>> File", item)
         setTableData([ {key : uuidv4(), sno : tableData.length + 1, 
                                     // type : item.type,
-                                     fileName : item.name, fileSize : item.size, uploadSuccess : item.success}]);
+                                     fileName : item.name, fileSize : item.size, uploadSuccess : item.uploadSuccess}]);
       })
       console.log("Table data <<<<<", tableData)
     }
@@ -116,7 +147,7 @@ function LandingZoneUpload() {
       let newFilesArray = files.map(item => {
         console.log("<<<< Current item ",  item.uid)
         if(item.uid === response.id){
-          item.success = true;
+          item.uploadSuccess = true;
           return item;
         }
         return item;
@@ -221,6 +252,28 @@ function LandingZoneUpload() {
             <small> Destination Folder</small>
             <Input  value= {destinationFolder} onChange ={(e) => {setDestinationFolder(e.target.value)}} size="large"/>
           </span>
+          {console.log("Folder <<<<",  FolderOutlined)}
+
+          <TreeSelect
+            showSearch
+            style={{ width: '100%' }}
+            // value={value}
+            dropdownStyle={{ maxHeight: 400, overflow: 'auto' }}
+            placeholder="Please select"
+            allowClear
+            treeDefaultExpandAll
+            // treeIcon = {false}
+            // onChange={onChange}
+          >
+            {treeData.map(item => {
+                return (
+                // <span> <FolderOutlined /> 
+                <TreeNode value={item.name} title={FolderOutlined, item.name}  suffixIcon={FolderOutlined}></TreeNode>
+                //  </span>
+                )
+            })}
+            
+        </TreeSelect>
 
         <Dragger 
         {...props}
