@@ -652,6 +652,7 @@ io.of("landingZoneFileUpload").on("connection", (socket) => {
 
 	//Upload File 
 	const upload = (cluster, destinationFolder, id ,fileName) =>{
+		console.log("<<<< Uploading files", "<<<< Cluster" , cluster, "<<<< Destination", destinationFolder, "Cluster IP <<<<", clusterIp,  id ,fileName)
 		request({
 			url : `${cluster.thor_host}:${cluster.thor_port}/FileSpray/UploadFile.json?upload_&rawxml_=1&NetAddress=${clusterIp}&OS=2&Path=/var/lib/HPCCSystems/mydropzone/${destinationFolder}`,
 			method : 'POST',
@@ -665,6 +666,7 @@ io.of("landingZoneFileUpload").on("connection", (socket) => {
 			}
 			  },
 			  function(err, httpResponse,body){
+				  console.log("<<<< Response received")
 				const response = JSON.parse(body)
 				console.log("<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<< Response", response)
 				if(response.Exceptions){

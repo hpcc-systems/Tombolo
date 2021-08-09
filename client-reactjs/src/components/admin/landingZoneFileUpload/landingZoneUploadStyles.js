@@ -31,6 +31,10 @@ export const columns = [
       title: 'Size',
       dataIndex: 'fileSize',
     },
+    {
+      title: 'uploaded',
+      dataIndex: 'uploadSuccess',
+    },
     // {
     //   title: '',
     //   dataIndex: '',

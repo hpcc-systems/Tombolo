@@ -13,9 +13,9 @@ function LandingZoneUpload() {
   const [files, setFiles] = useState([]);
   const [socket, setSocket] = useState(null);
   const [tableData, setTableData] = useState([]);
-  const [destinationFolder, setDestinationFolder] = useState("");
+  const [destinationFolder, setDestinationFolder] = useState("test_despray");
   const [cluster, setCluster] = useState(null);
-  const [clusterIp, setClusterIp] = useState(null);
+  const [clusterIp, setClusterIp] = useState("10.173.147.1");
   const authReducer = useSelector(state => state.authReducer);
   const clusters = useSelector(state => state.applicationReducer.clusters);
   const devURL = 'http://localhost:3000/landingZoneFileUpload';
@@ -66,10 +66,12 @@ function LandingZoneUpload() {
     console.log("<<<< Files ", files, files.length);
     if(files.length > 0){
       files.map(item => {
-        setTableData([...tableData, {key : uuidv4(), sno : tableData.length + 1, 
+        console.log("<<<<<<<<<<<<<<<<<<<<< >>>>>>>>>>>>>> File", item.success)
+        setTableData([ {key : uuidv4(), sno : tableData.length + 1, 
                                     // type : item.type,
-                                     fileName : item.name, fileSize : item.size, }]);
+                                     fileName : item.name, fileSize : item.size, uploadSuccess : item.success}]);
       })
+      console.log("Table data <<<<<", tableData)
     }
   }, [files])
 
@@ -92,7 +94,7 @@ function LandingZoneUpload() {
     socket.emit('start-upload', {destinationFolder, cluster, clusterIp});
     files.map(item => {
       // data.push({id : item.uid, fileName : item.name, fileSize : item.size})
-      if(item.size <= 100000){
+      if(item.size <= 10000000){
          let reader = new FileReader();
          reader.readAsArrayBuffer(item);
           reader.onload = function(e){
@@ -112,14 +114,16 @@ function LandingZoneUpload() {
     socket.on('file-upload-response', (response => {
       console.log("<<<< Response ", response)
       let newFilesArray = files.map(item => {
+        console.log("<<<< Current item ",  item.uid)
         if(item.uid === response.id){
-          console.log("<<<<<<<<<<<<<<<<<<<<<<<<<< Item", item)
-          return {...item, success : response.success}
+          item.success = true;
+          return item;
         }
         return item;
       })
       console.log("<<<< New files array:", newFilesArray)
-      // setFiles(newFilesArray);
+      console.log("<<<<", files)
+      setFiles(newFilesArray);
     }))
 
 
@@ -176,7 +180,7 @@ function LandingZoneUpload() {
       if (status !== 'uploading') {
       }
       if (status === 'done') {
-        setFiles(info.file.originFileObj);
+        // setFiles(info.file.originFileObj);
         let newFilesArray  = ([...files, info.file.originFileObj]);
         setFiles(newFilesArray);
       } else if (status === 'error') {
