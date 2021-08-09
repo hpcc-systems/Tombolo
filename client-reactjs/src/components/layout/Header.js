@@ -313,7 +313,6 @@ class AppHeader extends Component {
     return (
         <React.Fragment>
           <nav className="navbar navbar-expand-md navbar-dark bg-dark fixed-top">
-            {/* <a className="home-logo navbar-brand" href="/">Tombolo</a> */}
             <a href="/" class="navbar-left" style={{marginRight: "40px"}}><img src={logo} /></a>
 
             <button className="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarsExampleDefault" aria-controls="navbarsExampleDefault" aria-expanded="false" aria-label="Toggle navigation">
