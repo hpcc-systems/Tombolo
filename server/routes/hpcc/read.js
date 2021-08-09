@@ -22,6 +22,7 @@ const fs = require("fs");
 const path = require('path');
 const { file } = require('tmp');
 const { Socket } = require('dgram');
+const { default: cluster } = require('cluster');
 
 
 router.post('/filesearch', [
@@ -636,71 +637,143 @@ router.post('/executeSprayJob', [
 
 // Drop Zone file upload namespace
 io.of("landingZoneFileUpload").on("connection", (socket) => {
-
-	// request slice for large files
-	const requestSlice = (fileName, files) => {
-		socket.emit('supply-slice', {fileName, sliceStart : files[fileName].sliceStartsAt, sliceEnd : files[fileName].sliceEndsAt})
-	}
-
-	// request whole file in one shot for smaller file
-	const requestFile = (fileName) =>{
-		socket.emit('supply-file', {fileName});
-	}
 	console.log("<<<< Websocket Connection established");
-	let files = {};
+	let cluster;
+	let destinationFolder;
+	let clusterIp;
 
-	//When start-upload emit is received
-	socket.on('start-upload', (data) =>{
-		const {fileName} = data;
-		files[fileName]= Object.assign({slice : null, uploaded: 0, data : [] , sliceStartsAt : 0, sliceEndsAt : 100000 }, data);
-		console.log("<<<< Initail data sent from client ", files);
-		if(files[fileName].fileSize <= 100000){
-			console.log("<<<< File not too big, upload in one shot");
-			requestFile(fileName);
-		}else{
-			console.log("<<<< File is large upload by chunks ");
-			requestSlice(fileName, files)
-		}
+	//Receive cluster and destination folder info when client clicks upload
+	socket.on('start-upload', message=> {
+		console.log("<<<< Message - upload Start", message)
+		cluster = JSON.parse(message.cluster);
+		destinationFolder = message.destinationFolder;
+		clusterIp = message.clusterIp;
 	})
+
+	//Upload File 
+	const upload = (cluster, destinationFolder, id ,fileName) =>{
+		request({
+			url : `${cluster.thor_host}:${cluster.thor_port}/FileSpray/UploadFile.json?upload_&rawxml_=1&NetAddress=${clusterIp}&OS=2&Path=/var/lib/HPCCSystems/mydropzone/${destinationFolder}`,
+			method : 'POST',
+			formData : {
+				'UploadedFiles[]' : {
+					value : `uploads/${fileName}`,
+					options : {
+						filename : fileName,
+					}
+				}
+			}
+			  },
+			  function(err, httpResponse,body){
+				const response = JSON.parse(body)
+				console.log("<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<< Response", response)
+				if(response.Exceptions){
+					socket.emit('file-upload-response', {id, success : "false", message : response.Exceptions.Exception[0].Message})
+				}else{
+					socket.emit('file-upload-response', {id,success : true, message : response.UploadFilesResponse.UploadFileResults.DFUActionResult[0].Result });
+				}
+			  }
+		)
+	}
+		
+
 
 	//When whole file is supplied by the client
-	socket.on('upload-file', (message) =>{
-		console.log("<<<< Small File", message);
-		let {fileName} =  message.data;
-		fs.writeFile(`uploads/${fileName}`, message.data, function(err){
+	socket.on('upload-file', (message) => {
+		console.log(message, "<<<< Message from client");
+		const {id,fileName, data} = message;
+		fs.writeFile(`uploads/${fileName}`, data, function(err){
 			if(err){
-				console.log("<<<< Error occured while saving file in FS", err)
+				console.log(`Error occured while saving ${fileName} in FS`, err)
 			}else{
-				console.log("<<<< Small file saved");
-				//<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
-					if(fs.existsSync('uploads/yadhap.json')){
-						console.log("<<<< Yes file exists");
-						request({
-							url : 'http://10.173.147.1:8010/FileSpray/UploadFile.json?upload_&rawxml_=1&NetAddress=10.173.147.1&OS=2&Path=/var/lib/HPCCSystems/mydropzone/',
-							method : 'POST',
-							formData : {
-								'UploadedFiles[]' : {
-									value : 'uploads/yadhap.json',
-									options : {
-										filename : 'yadhap.json',
-										contentType : 'json'
-									}
-								}
-							}
-							  },
-							  function(err, httpResponse,body){
-								console.log("<<<< Request to upload file executed..")
-								//   console.log("<<<< ERR ", httpResponse);
-								//   console.log("<<<< ERR ", httpResponse);
-								  console.log("<<<< ERR ", body)
-							  }
-						)
-					}else{
-						console.log("<<<< No file found")
-					}
+				console.log("<<<< success saving file to fs");
+				upload(cluster, destinationFolder, id, fileName )
 			}
-		})
-	})
+		});
+	});
+
+	// request slice for large files
+	// const requestSlice = (fileName, files) => {
+	// 	socket.emit('supply-slice', {fileName, sliceStart : files[fileName].sliceStartsAt, sliceEnd : files[fileName].sliceEndsAt})
+	// }
+
+	// request whole file in one shot for smaller file
+	// const requestFile = (item) =>{
+	// 	socket.emit('supply-file', {item});
+	// }
+	// let files = {};
+
+	//When start-upload emit is received
+	// socket.on('start-upload', (message) =>{
+		// const fileData = message.data;
+		// const cluster = JSON.parse(message.cluster);
+		// fileData.map(item => {
+		// 	console.log("Iterating item", item)
+		// 	const {fileName} = item;
+		// 	files[fileName]= Object.assign({slice : null, uploaded: 0, data : [] , sliceStartsAt : 0, sliceEndsAt : 100000 }, item);
+		// 	if(item.fileSize < 100000){
+		// 		console.log("<<<< Small file upload at one shot")
+		// 		requestFile(item)
+		// 	}else{
+		// 		console.log("<<<< Large file uplad by chunks")
+		// 	}
+		// })
+		// console.log("<<<< Files", files)
+		// const {fileName} = data;
+		// const cluster = JSON.parse(data.cluster);
+
+		// files[fileName]= Object.assign({slice : null, uploaded: 0, data : [] , sliceStartsAt : 0, sliceEndsAt : 100000 }, data);
+		// console.log("<<<< Initail data sent from client ", data);
+		// console.log("<<<< Files ", files)
+		// console.log("<<<< Culster information " , cluster)
+
+		// if(files[fileName].fileSize <= 100000){
+		// 	console.log("<<<< File not too big, upload in one shot");
+		// 	// requestFile(fileName);
+		// }else{
+		// 	console.log("<<<< File is large upload by chunks ");
+		// 	// requestSlice(fileName, files)
+		// }
+	// })
+
+	
+	// socket.on('upload-file', (message) =>{
+	// 	console.log("<<<< Small File", message);
+	// 	let {fileName} =  message.data;
+	// 	fs.writeFile(`uploads/${fileName}`, message.data, function(err){
+	// 		if(err){
+	// 			console.log("<<<< Error occured while saving file in FS", err)
+	// 		}else{
+	// 			console.log("<<<< Small file saved");
+	// 			//<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
+					// if(fs.existsSync('uploads/yadhap.json')){
+					// 	console.log("<<<< Yes file exists");
+					// 	request({
+					// 		url : 'http://10.173.147.1:8010/FileSpray/UploadFile.json?upload_&rawxml_=1&NetAddress=10.173.147.1&OS=2&Path=/var/lib/HPCCSystems/mydropzone/',
+					// 		method : 'POST',
+					// 		formData : {
+					// 			'UploadedFiles[]' : {
+					// 				value : 'uploads/yadhap.json',
+					// 				options : {
+					// 					filename : 'yadhap.json',
+					// 					contentType : 'json'
+					// 				}
+					// 			}
+					// 		}
+					// 		  },
+					// 		  function(err, httpResponse,body){
+					// 			console.log("<<<< Request to upload file executed..")
+					// 			//   console.log("<<<< ERR ", httpResponse);
+					// 			//   console.log("<<<< ERR ", httpResponse);
+					// 			  console.log("<<<< ERR ", body)
+					// 		  }
+					// 	)
+					// }else{
+					// 	console.log("<<<< No file found")
+					// }
+			// }
+	// 	})
+	// })
 
 	//when a slice of file is supplied by the client
 	socket.on('upload-slice', (message) =>{

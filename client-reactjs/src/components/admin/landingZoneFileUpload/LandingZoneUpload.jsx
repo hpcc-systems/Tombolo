@@ -13,12 +13,14 @@ function LandingZoneUpload() {
   const [files, setFiles] = useState([]);
   const [socket, setSocket] = useState(null);
   const [tableData, setTableData] = useState([]);
-  const [destinationFolder, setDestinationFolder] = useState(null)
-  const [cluster, setCluster] = useState(null)
+  const [destinationFolder, setDestinationFolder] = useState("");
+  const [cluster, setCluster] = useState(null);
+  const [clusterIp, setClusterIp] = useState(null);
   const authReducer = useSelector(state => state.authReducer);
   const clusters = useSelector(state => state.applicationReducer.clusters);
   const devURL = 'http://localhost:3000/landingZoneFileUpload';
   const prodURL  = '/landingZoneFileUpload'
+  const { Dragger } = Upload;
 
   useEffect(() => {
     // Socket io connection
@@ -62,45 +64,88 @@ function LandingZoneUpload() {
   //Setting table data
   useEffect(() =>{
     console.log("<<<< Files ", files, files.length);
-    console.log(typeof files)
     if(files.length > 0){
       files.map(item => {
         setTableData([...tableData, {key : uuidv4(), sno : tableData.length + 1, 
-                                    type : item.type, fileName : item.name, fileSize : item.size, }]);
+                                    // type : item.type,
+                                     fileName : item.name, fileSize : item.size, }]);
       })
     }
   }, [files])
 
- 
-
-  //State and vars
-  const { Dragger } = Upload;
 
   //Handle File Upload
   const handleFileUpload = () =>{
     message.config({top:150,   maxCount: 2})
-
     if(!cluster){
       message.error("Select a cluster")
     }else if(!destinationFolder){
-      message.error("Select upload destination folder")
+      message.error("Select  destination folder")
+    }
+    else if(!clusterIp){
+      message.error("Select Cluster Ip")
+    }  else if(files.length < 1){
+      message.error("Add files")
     }
       else{
     // Start by sending some file details to server
-    socket.emit('start-upload', {fileName: files[0].name, fileSize: files[0].size, cluster});
+    socket.emit('start-upload', {destinationFolder, cluster, clusterIp});
+    files.map(item => {
+      // data.push({id : item.uid, fileName : item.name, fileSize : item.size})
+      if(item.size <= 100000){
+         let reader = new FileReader();
+         reader.readAsArrayBuffer(item);
+          reader.onload = function(e){
+            let arrayBuffer = e.target.result;
+            socket.emit('upload-file', {
+              id : item.uid,
+              fileName : item.name,
+              data: arrayBuffer
+            })
+          }
+      }else{
+        console.log("<<<< Big files send in chunks")
+      }
+    })
+
+    //Response
+    socket.on('file-upload-response', (response => {
+      console.log("<<<< Response ", response)
+      let newFilesArray = files.map(item => {
+        if(item.uid === response.id){
+          console.log("<<<<<<<<<<<<<<<<<<<<<<<<<< Item", item)
+          return {...item, success : response.success}
+        }
+        return item;
+      })
+      console.log("<<<< New files array:", newFilesArray)
+      // setFiles(newFilesArray);
+    }))
+
+
+    // console.log("<<<< Data redy to be sent to server ", {data, clusters})
+    // socket.emit('start-upload', {data, cluster});
 
     //when asked to supply the whole file
-    socket.on('supply-file', (message) =>{
-        let reader = new FileReader();
-        reader.readAsArrayBuffer(files[0]);
-        reader.onload = function(e){
-          let arrayBuffer = e.target.result;
-          socket.emit('upload-file', {
-            fileName : files[0].name,
-            data: arrayBuffer
-          })
-        }
-      })
+    // socket.on('supply-file', (item) =>{
+    //   console.log("<<<<< file upload message ", item.item.id)
+      // files.map(item  => {
+      //   if(item === message){
+      //     console.log("Small files <<<< Send now")
+      //   }
+      // })
+        // let reader = new FileReader();
+        // reader.readAsArrayBuffer(files[0]);
+        // reader.onload = function(e){
+        //   let arrayBuffer = e.target.result;
+        //   socket.emit('upload-file', {
+        //     fileName : files[0].name,
+        //     data: arrayBuffer
+        //   })
+        // }
+      // })
+
+
     
       //When server asks for a slice of a file
       socket.on('supply-slice', (message) =>{
@@ -148,19 +193,31 @@ function LandingZoneUpload() {
     setCluster(value);
   }
 
+  useEffect(() =>{
+    console.log(clusterIp, " <<<< Cluster IP")
+  }, [clusterIp])
     return (
         <LandingZoneUploadContainer>
-          <Select defaultValue = ""  onChange={handleChange}  size="large"
-         style={{width: "100%"}}>
-            <Option value="" disabled>Select Cluster</Option>
-            {clusters.map(item => {
-                return <Option  value={JSON.stringify(item)}>{item.name}</Option>
-            })}
-        </Select>
-        <Input placeholder="Folder"  size="large"/>
+          <span>
+            <small>Cluster</small>
+            <Select defaultValue = "" style={{color: "red"}}  onChange={handleChange}  size="large"
+              style={{width: "100%"}}>
+                  {clusters.map((item, index) => {
+                      return <Option key={index} value={JSON.stringify(item)}>{item.name}</Option>
+                  })}
+            </Select>
+          </span>
 
-        
-        
+          <span>
+            <small>Cluster IP</small>
+            <Input value= {clusterIp} onChange ={(e) => {setClusterIp(e.target.value)}} size="large"/>
+          </span>
+
+          <span>
+            <small> Destination Folder</small>
+            <Input  value= {destinationFolder} onChange ={(e) => {setDestinationFolder(e.target.value)}} size="large"/>
+          </span>
+
         <Dragger 
         {...props}
         customRequest={({ onSuccess }) => {
@@ -177,8 +234,8 @@ function LandingZoneUpload() {
             Support for a single or bulk upload. 
             </p>
         </Dragger>
-        <span  style={{display : files.length > 0 ? "block" : "none"}}>
-          <Table   columns={columns} dataSource={tableData} size="small" pagination={false} style={{width: "100%", maxHeight : "70vh", overflow: "auto"}}/>
+        <span  style={{display : files.length > 0 ? "block" : "none", margin : "20px 0px 20px 0px"}}>
+          <Table   columns={columns} dataSource={tableData} size="small" pagination={false} style={{width: "100%", maxHeight : "300px", overflow: "auto"}}/>
         </span>
 
         <Button size="large" onClick={handleFileUpload} type="primary" block > Upload</Button>
