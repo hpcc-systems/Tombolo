@@ -646,23 +646,23 @@ class JobDetails extends Component {
     let saveResponse = await this.saveJobDetails();
     saveResponse.jobType = this.formRef.current.getFieldValue("jobType");
 
-    setTimeout(() => {
-      this.setState({
-        visible: false,
-        confirmLoading: false,
-      });
+    // setTimeout(() => {
+      // this.setState({
+      //   visible: false,
+      //   confirmLoading: false,
+      // });
       //this.props.onClose();
       //this.props.onRefresh(saveResponse);
       if (this.props.history) {
-        // this.props.history.push(
-        //   "/" + this.props.application.applicationId + "/assets"
-        // );
+        this.props.history.push(
+          "/" + this.props.application.applicationId + "/assets"
+        );
         // message.success("Data Saved")
       } else {
         document.querySelector("button.ant-modal-close").click();
         this.props.dispatch(assetsActions.assetSaved(saveResponse));
       }
-    }, 2000);
+    // }, 2000);
   };
 
   onAutoCreateFiles = (e) => {
@@ -731,10 +731,11 @@ class JobDetails extends Component {
           message.error(
             "Error occured while saving the data. Please check the form data"
           );
+        }).finally(() => {
           this.setState({
             confirmLoading: false,
           });
-        });
+        })
     });
   }
 

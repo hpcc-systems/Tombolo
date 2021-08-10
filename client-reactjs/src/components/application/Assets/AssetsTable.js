@@ -63,6 +63,8 @@ function AssetsTable({ selectedGroup, openGroup, handleEditGroup, refreshGroups 
     return () => componentAlive = false;
   }, [applicationId, selectedGroup, assetTypeFilter, keywords]);
 
+
+
   const dispatch = useDispatch();
 
   // Re-render table when Directory tree structure is changed

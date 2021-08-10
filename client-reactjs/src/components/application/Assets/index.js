@@ -327,7 +327,6 @@ const Assets = () => {
   };
 
   const handleMenuClick = (e) => {
-    console.log("handleMenuClick")
     setRightClickNodeTreeItem({ visible: false });
     dispatch(
       assetsActions.newAsset(application.applicationId, selectedGroup.id)
