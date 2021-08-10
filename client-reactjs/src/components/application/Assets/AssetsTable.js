@@ -222,7 +222,6 @@ function AssetsTable({ selectedGroup, openGroup, handleEditGroup, refreshGroups 
           refreshGroups();
         }
         message.success(type + " deleted sucessfully");
-        fetchDataAndRenderTable();
       })
       .catch((error) => {
         console.log(error);
