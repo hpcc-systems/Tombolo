@@ -148,7 +148,7 @@ const Assets = () => {
         )
       );
     }
-    prevSelectedApplicationRef.current = application;
+    prevSelectedApplicationRef.current = application;    
     fetchGroups();
     
     if (assetInGroupId) {

@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useCallback } from "react";
 import { Table, message, Popconfirm, Tooltip, Divider } from "antd/lib";
 import { authHeader, handleError } from "../../common/AuthHeader.js";
 import FileDetailsForm from "../FileDetails";
@@ -10,6 +10,7 @@ import { Constants } from "../../common/Constants";
 import { assetsActions } from "../../../redux/actions/Assets";
 import { useHistory } from "react-router";
 import useModal from "../../../hooks/useModal";
+import { debounce } from "lodash";
 import {
   DeleteOutlined,
   EditOutlined,
@@ -50,37 +51,7 @@ function AssetsTable({ selectedGroup, openGroup, handleEditGroup, refreshGroups 
   ] = useState(false);
   let componentAlive = true;
 
-  
-  useEffect(() => {
-    if (
-      (applicationId && selectedGroup && selectedGroup.groupId != "") || //a group has been selected
-      assetTypeFilter != "" ||
-      keywords != "" //a search triggered
-    ) {
-      fetchDataAndRenderTable();
-    }
-
-    return () => componentAlive = false;
-  }, [applicationId, selectedGroup, assetTypeFilter, keywords]);
-
-
-
-  const dispatch = useDispatch();
-
-  // Re-render table when Directory tree structure is changed
-  useEffect(() => {
-    fetchDataAndRenderTable();
-
-    return () => componentAlive = false;
-
-  }, [groupsMoveReducer]);
-
-  //Execute generate pdf function after asset is selected
-  useEffect(() => {
-    if (selectedAsset) {
-      generatePdf();
-    }
-  }, [selectedAsset]);
+  const dispatch = useDispatch();  
 
   const fetchDataAndRenderTable = () => {
     if(applicationId) {
@@ -125,6 +96,35 @@ function AssetsTable({ selectedGroup, openGroup, handleEditGroup, refreshGroups 
       });
   }
 }
+
+  const deboucedFetchDataAndRenderTable = useCallback(debounce(fetchDataAndRenderTable, 100));
+
+  useEffect(() => {
+    if (
+      (applicationId && selectedGroup && selectedGroup.groupId != "") || //a group has been selected
+      assetTypeFilter != "" ||
+      keywords != "" //a search triggered
+    ) {
+      deboucedFetchDataAndRenderTable();
+    }
+
+    return () => componentAlive = false;
+  }, [applicationId, selectedGroup]);
+
+  // Re-render table when Directory tree structure is changed
+  useEffect(() => {
+    deboucedFetchDataAndRenderTable();
+
+    return () => componentAlive = false;
+
+  }, [groupsMoveReducer]);
+
+  //Execute generate pdf function after asset is selected
+  useEffect(() => {
+    if (selectedAsset) {
+      generatePdf();
+    }
+  }, [selectedAsset]);
 
 
   //When edit icon is clicked
@@ -465,11 +465,4 @@ function AssetsTable({ selectedGroup, openGroup, handleEditGroup, refreshGroups 
   );
 }
 
-function areEqual(prevProps, nextProps) {
-  if (prevProps.selectedGroup != nextProps.selectedGroup) {
-    return false;
-  } else {
-    return true;
-  }
-}
-export default React.memo(AssetsTable, areEqual);
+export default React.memo(AssetsTable);

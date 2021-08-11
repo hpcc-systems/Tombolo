@@ -15,7 +15,7 @@ if (parentPort) {
   let wuResult, wuid='';
   try {
     let job = await assetUtil.getJobForProcessing();
-    if(job) {
+    if(job && job.wuid) {
       //check WU status
       wuResult = await hpccUtil.workunitInfo(job.wuid, job.clusterId);    
       //check WU status
