@@ -145,7 +145,7 @@ class LeftNav extends Component {
                 <NavLink to={"/admin/applications"} className="nav-link"><i className="fa fa-lg fa-desktop"></i><span className={this.state.collapsed ? "d-none" : ""}> Applications</span></NavLink>
               </li>
               <li className="nav-item">
-                <NavLink to={"/admin/fileUpload"} className="nav-link"><i className="fa fa-lg fa-upload"></i><span className={this.state.collapsed ? "d-none" : ""}> Applications</span></NavLink>
+                <NavLink to={"/admin/fileUpload"} className="nav-link"><i className="fa fa-lg fa-upload"></i><span className={this.state.collapsed ? "d-none" : ""}> Upload </span></NavLink>
               </li>
               {/*}
               <li className="nav-item">

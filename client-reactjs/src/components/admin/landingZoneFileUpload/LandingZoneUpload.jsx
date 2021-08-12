@@ -1,20 +1,16 @@
 import React, {useState, useEffect} from 'react';
 import {useSelector} from "react-redux"
 import { Upload, Table, Select, message, Input, TreeSelect, Button  } from 'antd';
-import { InboxOutlined, FolderOutlined } from '@ant-design/icons';
+import { InboxOutlined} from '@ant-design/icons';
 import { io } from "socket.io-client";
 import{LandingZoneUploadContainer, columns } from "./landingZoneUploadStyles";
 import {v4 as uuidv4} from 'uuid';
-
-const { Option,  } = Select;
-const { TreeNode } = TreeSelect;
-
 
 function LandingZoneUpload() {
   const [files, setFiles] = useState([]);
   const [socket, setSocket] = useState(null);
   const [tableData, setTableData] = useState([]);
-  const [destinationFolder, setDestinationFolder] = useState("test_despray");
+  const [destinationFolder, setDestinationFolder] = useState("");
   const [cluster, setCluster] = useState(null);
   const [clusterIp, setClusterIp] = useState("10.173.147.1");
   const [treeData, setTreeData] = useState([]);
@@ -23,6 +19,7 @@ function LandingZoneUpload() {
   const devURL = 'http://localhost:3000/landingZoneFileUpload';
   const prodURL  = '/landingZoneFileUpload'
   const { Dragger } = Upload;
+  const { Option,  } = Select;
 
   useEffect(() => {
     // Socket io connection
@@ -44,10 +41,147 @@ function LandingZoneUpload() {
         setSocket(socket);
     }
 
-    //Get directory
+    // Get directory tree on initial render
+    getDirectories("")
+    .then((result) =>{
+      let data = result.FileListResponse.files.PhysicalFileStruct.map(item =>{
+        return {...item, title : item.name, key : uuidv4(),  directorypath: "",  children: [{title : "...  Loading", disabled : true, key : uuidv4()}]}
+      })
+      setTreeData(data)
+    }).catch((err) => {
+      console.log("<<<< err ", err)
+    })
+  }, []);
+
+  // Get child dirs
+  const [currentlyExpandedNodes, setCurrentlyExpandedNodes] = useState([]);
+  const getNestedDirectories = (expandedKeys) =>{
+
+    if(currentlyExpandedNodes.length < expandedKeys.length){
+      //Tree is expanded
+      setCurrentlyExpandedNodes(expandedKeys)
+      let targetDirectory = expandedKeys[expandedKeys.length - 1];
+
+     // <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
+     let path="";
+     let pathKeys=[];
+
+     const getPath = (data) =>{
+      let directoryFound = false;
+      function getParent(data){
+         for(let  i= 0; i <= data.length; i++){
+           if(directoryFound){
+              return {path, pathKeys};
+           }
+            else if(data[i].key === targetDirectory){
+              pathKeys=[]
+                path =data[i].title + "/";
+               pathKeys.push(i);
+
+              return {path, pathKeys};;
+            }else if(data[i].children){
+                 path =data[i].title + "/";
+                 pathKeys=[];
+                 pathKeys.push(i)
+                 getChildPath(data[i].children);
+          }else{
+            console.log("Do nothing")
+          }
+      }
+      }
+      
+      function getChildPath(data){
+         for(let i=0; i < data.length; i++){
+              if(directoryFound){
+                   break;
+              }
+              else if(data[i].key === targetDirectory){
+                  path = path + data[i].title + "/";
+                  pathKeys.push(i);
+                  directoryFound = true;
+                  break;
+              }else if(data[i].children){
+                getChildPath(data[i].children)
+        }
+      }
+      }
+     return getParent(data); 
+    }
+
+    let directoryPath = getPath(treeData);
+     // <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
+
+      //Make a call
+      getDirectories(directoryPath.path)
+      .then((result) => {
+ 
+        let nestedDirs = result.FileListResponse.files?.PhysicalFileStruct;
+        if(nestedDirs){
+          let newNestedDirs = nestedDirs.map(item =>{
+            return {...item, title : item.name, key : uuidv4(), children: [{title : "... Loading", disabled : true, key : uuidv4()}]}
+          })
+
+          let currentItem;
+
+          for(let i = 0; i < directoryPath.pathKeys.length; i++){
+            if(i==0){
+              currentItem = `treeData[${directoryPath.pathKeys[i]}]`
+            }else{
+              currentItem = currentItem+`.children[${directoryPath.pathKeys[i]}]`
+            }
+          }
+
+
+         let convertedCurrentItem = eval(currentItem);
+         let updatedCurrentItem = {...convertedCurrentItem, children : newNestedDirs}
+
+
+          //>>>>>>>>>>>>>>>>>>>>>>>>>>
+          let treeDataCopy = [...treeData];
+          let currentItemOnCopy = currentItem.replace('treeData', "treeDataCopy");
+           eval(`${currentItemOnCopy}=updatedCurrentItem`);
+           setTreeData(treeDataCopy)
+
+          // setTreeData(newTreeData)
+        }else{
+       
+          let currentItem;
+
+          for(let i = 0; i < directoryPath.pathKeys.length; i++){
+            if(i==0){
+              currentItem = `treeData[${directoryPath.pathKeys[i]}]`
+            }else{
+              currentItem = currentItem+`.children[${directoryPath.pathKeys[i]}]`
+            }
+          }
+
+
+         let convertedCurrentItem = eval(currentItem);
+         let updatedCurrentItem = {...convertedCurrentItem, children : [{title : "No data", disabled : true, key : uuidv4()}]}
+
+
+          //>>>>>>>>>>>>>>>>>>>>>>>>>>
+          let treeDataCopy = [...treeData];
+          let currentItemOnCopy = currentItem.replace('treeData', "treeDataCopy");
+           eval(`${currentItemOnCopy}=updatedCurrentItem`);
+           setTreeData(treeDataCopy)
+        }
+      })
+      .catch(err => {
+        console.log("<<<< Err ", err)
+      })
+    }else{
+      //tree collapsed
+      setCurrentlyExpandedNodes(expandedKeys)
+    }
+ 
+  }
+
+  //Get directories func
+  const getDirectories = (path) =>{
     let data = {
       Netaddr : "10.173.147.1",
-      Path : "/var/lib/HPCCSystems/mydropzone/",
+      Path : `/var/lib/HPCCSystems/mydropzone/${path}`,
       OS : 2,
       rawxml_ : true,
       DirectoryOnly: true
@@ -56,24 +190,14 @@ function LandingZoneUpload() {
     for(let key in data){
       formData.append(key, data[key])
     }
-
-    fetch('http://10.173.147.1:8010/FileSpray/FileList.json', {
+  
+    return fetch('http://10.173.147.1:8010/FileSpray/FileList.json', {
           method :'POST',
           body : formData})
           .then(response => response.json())
-          .then(result => {
-            console.log('Success <<<<', result.FileListResponse.files.PhysicalFileStruct);
-            setTreeData(result.FileListResponse.files.PhysicalFileStruct);
-          })
-          .catch(err =>{
-            console.log("Err <<<<", err)
-          })
-  }, []);
+  }
+  
 
-  //Test
-  useEffect(() =>{
-    console.log("Directory Tree <<<<<<<<<<<   ", treeData)
-  }, [treeData])
 
   // Listining to msgs from socket
   useEffect(() =>{
@@ -97,12 +221,10 @@ function LandingZoneUpload() {
   useEffect(() =>{
     if(files.length > 0){
       files.map(item => {
-        console.log("<<<<<<<<<<<<<<<<<<<<< >>>>>>>>>>>>>> File", item)
         setTableData([ {key : uuidv4(), sno : tableData.length + 1, 
                                     // type : item.type,
                                      fileName : item.name, fileSize : item.size, uploadSuccess : item.uploadSuccess}]);
       })
-      console.log("Table data <<<<<", tableData)
     }
   }, [files])
 
@@ -152,36 +274,10 @@ function LandingZoneUpload() {
         }
         return item;
       })
-      console.log("<<<< New files array:", newFilesArray)
       console.log("<<<<", files)
       setFiles(newFilesArray);
     }))
-
-
-    // console.log("<<<< Data redy to be sent to server ", {data, clusters})
-    // socket.emit('start-upload', {data, cluster});
-
-    //when asked to supply the whole file
-    // socket.on('supply-file', (item) =>{
-    //   console.log("<<<<< file upload message ", item.item.id)
-      // files.map(item  => {
-      //   if(item === message){
-      //     console.log("Small files <<<< Send now")
-      //   }
-      // })
-        // let reader = new FileReader();
-        // reader.readAsArrayBuffer(files[0]);
-        // reader.onload = function(e){
-        //   let arrayBuffer = e.target.result;
-        //   socket.emit('upload-file', {
-        //     fileName : files[0].name,
-        //     data: arrayBuffer
-        //   })
-        // }
-      // })
-
-
-    
+  
       //When server asks for a slice of a file
       socket.on('supply-slice', (message) =>{
         console.log(message, "<<<< Message")
@@ -200,8 +296,6 @@ function LandingZoneUpload() {
     }
     }
 
-  
-   
   //Draggeer's props
   const props = {
     name: 'file',
@@ -211,7 +305,6 @@ function LandingZoneUpload() {
       if (status !== 'uploading') {
       }
       if (status === 'done') {
-        // setFiles(info.file.originFileObj);
         let newFilesArray  = ([...files, info.file.originFileObj]);
         setFiles(newFilesArray);
       } else if (status === 'error') {
@@ -228,9 +321,11 @@ function LandingZoneUpload() {
     setCluster(value);
   }
 
-  useEffect(() =>{
-    console.log(clusterIp, " <<<< Cluster IP")
-  }, [clusterIp])
+  //Handle node tree selection
+  const handleTreeNodeSelection = (value) => {
+    setDestinationFolder(value);
+  }
+
     return (
         <LandingZoneUploadContainer>
           <span>
@@ -247,32 +342,16 @@ function LandingZoneUpload() {
             <small>Cluster IP</small>
             <Input value= {clusterIp} onChange ={(e) => {setClusterIp(e.target.value)}} size="large"/>
           </span>
-
-          <span>
-            <small> Destination Folder</small>
-            <Input  value= {destinationFolder} onChange ={(e) => {setDestinationFolder(e.target.value)}} size="large"/>
-          </span>
-          {console.log("Folder <<<<",  FolderOutlined)}
-
           <TreeSelect
-            showSearch
             style={{ width: '100%' }}
-            // value={value}
+            value={destinationFolder}
             dropdownStyle={{ maxHeight: 400, overflow: 'auto' }}
             placeholder="Please select"
             allowClear
-            treeDefaultExpandAll
-            // treeIcon = {false}
-            // onChange={onChange}
+            // onChange={handleTreeNodeSelection}
+            treeData={treeData}
+            onTreeExpand={getNestedDirectories}
           >
-            {treeData.map(item => {
-                return (
-                // <span> <FolderOutlined /> 
-                <TreeNode value={item.name} title={FolderOutlined, item.name}  suffixIcon={FolderOutlined}></TreeNode>
-                //  </span>
-                )
-            })}
-            
         </TreeSelect>
 
         <Dragger 
