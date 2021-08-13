@@ -24,7 +24,6 @@ const Op = Sequelize.Op;
 let Indexes=models.indexes;
 let Query=models.query;
 let Job=models.job;
-let AssetsVisualization=models.assets_visualization;
 var request = require('request');
 var requestPromise = require('request-promise');
 const validatorUtil = require('../../utils/validator');
@@ -862,7 +861,7 @@ router.post('/visualization', [
       },
       filename: file.name,
       workspaceName: 'Tombolo', 
-      dashboardName: 'Tombolo'
+      dashboardName: file.title ? file.title : file.name
     };
 
     console.log(bodyObj);

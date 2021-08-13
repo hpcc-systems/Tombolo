@@ -187,7 +187,7 @@ exports.getJobForProcessing = async () => {
     console.log("**********************getJobForProcessing*******************")
     const jobExecution = await JobExecution.findOne({
       where: {'status': 'submitted'}, 
-      order: [["createdAt", "desc"]]
+      order: [["updatedAt", "desc"]]
     });
     /*if(jobExecution) {
       let jobExecutionAwaited = await JobExecution.update({
