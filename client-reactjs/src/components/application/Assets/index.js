@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from "react";
+import React, { useState, useEffect, useRef, useCallback } from "react";
 import {
   Tree,
   Row,
@@ -111,6 +111,8 @@ const Assets = () => {
   //let dataList = [];
   //id of the group clicked from Asset table after a search
   const { assetInGroupId } = assetReducer;
+  const dispatch = useDispatch();
+
   const groupsMoveReducer = useSelector((state) => state.groupsMoveReducer);
   const history = useHistory();
 
@@ -135,40 +137,6 @@ const Assets = () => {
   useOnClickOutside(ref, () => setRightClickNodeTreeItem({ visible: false }));
 
   let list = [];
-
-  //Re-render Directory Tree when the tree structure us chaged on modal
-  useEffect(() => {
-    //application changed
-    if(application && prevSelectedApplicationRef.current && application.applicationId != prevSelectedApplicationRef.current.applicationId) {      
-      selectedGroup = { id: "", title: "", key: "0-0" };
-      dispatch(
-        groupsActions.groupExpanded(
-          selectedGroup,
-          ["0-0"]
-        )
-      );
-    }
-    prevSelectedApplicationRef.current = application;    
-    fetchGroups();
-    
-    if (assetInGroupId) {
-      openGroup(assetInGroupId);
-    }
-  }, [groupsMoveReducer, assetInGroupId, application])
-
-  useEffect(() => {
-    //if there is a search term and filter is changed, then trigger search
-    if (searchKeyWord && searchKeyWord.length > 0) {
-      handleAssetSearch(searchKeyWord);
-    }
-  }, [assetTypeFilter]);
-
-  useEffect(() => {
-    fetchGroups();
-    if (assetInGroupId) {
-      openGroup(assetInGroupId);
-    }
-  }, [assetInGroupId]);
 
   const fetchGroups = () => {
     if(application.applicationId) {
@@ -195,8 +163,42 @@ const Assets = () => {
     }
   };
 
-  const dispatch = useDispatch();
+  const deboucedFetchGroups = useCallback(debounce(fetchGroups, 100));
 
+  //Re-render Directory Tree when the tree structure us chaged on modal
+  useEffect(() => {
+    //application changed
+    if(application && prevSelectedApplicationRef.current && application.applicationId != prevSelectedApplicationRef.current.applicationId) {      
+      selectedGroup = { id: "", title: "", key: "0-0" };
+      dispatch(
+        groupsActions.groupExpanded(
+          selectedGroup,
+          ["0-0"]
+        )
+      );
+    }
+    prevSelectedApplicationRef.current = application;        
+    deboucedFetchGroups()
+    
+    if (assetInGroupId) {
+      openGroup(assetInGroupId);
+    }
+  }, [groupsMoveReducer, assetInGroupId, application])
+
+  useEffect(() => {
+    //if there is a search term and filter is changed, then trigger search
+    if (searchKeyWord && searchKeyWord.length > 0) {
+      handleAssetSearch(searchKeyWord);
+    }
+  }, [assetTypeFilter]);
+
+  useEffect(() => {
+    deboucedFetchGroups();
+    if (assetInGroupId) {
+      openGroup(assetInGroupId);
+    }
+  }, [assetInGroupId]);
+  
   const clearSearch = () => {
     searchKeyWord = "";
     if(document.querySelector(".ant-input-clear-icon")) {
@@ -489,7 +491,7 @@ const Assets = () => {
           )
         );
         closeCreateGroupDialog();
-        fetchGroups();
+        deboucedFetchGroups();
       }
     })
     .catch((error) => {
@@ -529,7 +531,7 @@ const Assets = () => {
               )
             );
 
-            fetchGroups();
+            deboucedFetchGroups();
           })
           .catch((error) => {
             message.error(error);
@@ -624,7 +626,7 @@ const Assets = () => {
               handleError(response);
             })
             .then(function (data) {
-              fetchGroups();
+              deboucedFetchGroups();
             })
             .catch((error) => {
               console.log(error);
@@ -763,7 +765,7 @@ const Assets = () => {
               selectedGroup={selectedGroup}
               openGroup={openGroup}
               handleEditGroup={handleEditGroup}
-              refreshGroups={fetchGroups}
+              refreshGroups={deboucedFetchGroups}
             />
           </div>
         </div>

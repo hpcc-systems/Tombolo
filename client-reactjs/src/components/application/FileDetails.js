@@ -679,7 +679,7 @@ class FileDetails extends PureComponent {
       isSuperFile: !this.formRef.current.getFieldValue("isSuperFile")
         ? false
         : this.formRef.current.getFieldValue("isSuperFile"),
-      cluster_id: this.props.clusterId,
+      cluster_id: this.props.clusterId ? this.props.clusterId : this.state.file.clusterId,
       fileType: this.state.file.fileType,
       application_id: applicationId,
       dataflowId: this.props.selectedDataflow
