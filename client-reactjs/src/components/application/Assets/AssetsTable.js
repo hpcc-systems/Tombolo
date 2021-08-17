@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useCallback } from "react";
 import { Table, message, Popconfirm, Tooltip, Divider } from "antd/lib";
 import { authHeader, handleError } from "../../common/AuthHeader.js";
 import FileDetailsForm from "../FileDetails";
@@ -10,6 +10,7 @@ import { Constants } from "../../common/Constants";
 import { assetsActions } from "../../../redux/actions/Assets";
 import { useHistory } from "react-router";
 import useModal from "../../../hooks/useModal";
+import { debounce } from "lodash";
 import {
   DeleteOutlined,
   EditOutlined,
@@ -48,30 +49,9 @@ function AssetsTable({ selectedGroup, openGroup, handleEditGroup, refreshGroups 
     selectDetailsforPdfDialogVisibility,
     setSelectDetailsforPdfDialogVisibility,
   ] = useState(false);
-  
-  useEffect(() => {
-    if (
-      (applicationId && selectedGroup && selectedGroup.groupId != "") || //a group has been selected
-      assetTypeFilter != "" ||
-      keywords != "" //a search triggered
-    ) {
-      fetchDataAndRenderTable();
-    }
-  }, [applicationId, selectedGroup, assetTypeFilter, keywords]);
+  let componentAlive = true;
 
-  const dispatch = useDispatch();
-
-  // Re-render table when Directory tree structure is changed
-  useEffect(() => {
-    fetchDataAndRenderTable();
-  }, [groupsMoveReducer]);
-
-  //Execute generate pdf function after asset is selected
-  useEffect(() => {
-    if (selectedAsset) {
-      generatePdf();
-    }
-  }, [selectedAsset]);
+  const dispatch = useDispatch();  
 
   const fetchDataAndRenderTable = () => {
     if(applicationId) {
@@ -107,13 +87,44 @@ function AssetsTable({ selectedGroup, openGroup, handleEditGroup, refreshGroups 
                 .replace(/<[^>]*>/g, ""))
             : ""
         );
-        setAssets(data);
+        if(componentAlive){
+          setAssets(data);
+        }
       })
       .catch((error) => {
         console.log(error);
       });
+  }
+}
+
+  const deboucedFetchDataAndRenderTable = useCallback(debounce(fetchDataAndRenderTable, 100));
+
+  useEffect(() => {
+    if (
+      (applicationId && selectedGroup && selectedGroup.groupId != "") || //a group has been selected
+      assetTypeFilter != "" ||
+      keywords != "" //a search triggered
+    ) {
+      deboucedFetchDataAndRenderTable();
     }
-  };
+
+    return () => componentAlive = false;
+  }, [applicationId, selectedGroup]);
+
+  // Re-render table when Directory tree structure is changed
+  useEffect(() => {
+    deboucedFetchDataAndRenderTable();
+
+    return () => componentAlive = false;
+
+  }, [groupsMoveReducer]);
+
+  //Execute generate pdf function after asset is selected
+  useEffect(() => {
+    if (selectedAsset) {
+      generatePdf();
+    }
+  }, [selectedAsset]);
 
 
   //When edit icon is clicked
@@ -233,6 +244,31 @@ function AssetsTable({ selectedGroup, openGroup, handleEditGroup, refreshGroups 
   const handleGroupClick = (groupId) => {
     dispatch(assetsActions.assetInGroupSelected(groupId));
   };
+
+  const handleCreateVisualization = (id, cluster_id) => {
+    fetch("/api/file/read/visualization", {
+      method: "post",
+      headers: authHeader(),
+      body: JSON.stringify({
+        id: id,
+        application_id: applicationId,
+        email: authReducer.user.email,
+        cluster_id: cluster_id
+      }),
+    })
+    .then(function (response) {
+      if (response.ok && response.status == 200) {
+        return response.json();
+      }
+      handleError(response);
+    })      
+    .then(function (data) {
+      if (data && data.success) {
+        console.log(data);
+        window.open(data.url);
+      }
+    })
+  }
 
   const editingAllowed = hasEditPermission(authReducer.user);
 
@@ -381,7 +417,17 @@ function AssetsTable({ selectedGroup, openGroup, handleEditGroup, refreshGroups 
                   <AreaChartOutlined />
                   </Tooltip>
                 </a>
-              : null         
+              : <Popconfirm
+                  title="Are you sure you want to create a chart with this data?"
+                  onConfirm={() => handleCreateVisualization(record.id, record.cluster_id)}
+                  icon={<QuestionCircleOutlined />}
+                >
+                  <a href="#">
+                    <Tooltip placement="right" title={"Visualization"}>
+                    <AreaChartOutlined />
+                    </Tooltip>
+                  </a>
+                </Popconfirm>            
               }              
             </React.Fragment>  
             : null}          
@@ -434,11 +480,4 @@ function AssetsTable({ selectedGroup, openGroup, handleEditGroup, refreshGroups 
   );
 }
 
-function areEqual(prevProps, nextProps) {
-  if (prevProps.selectedGroup != nextProps.selectedGroup) {
-    return false;
-  } else {
-    return true;
-  }
-}
-export default React.memo(AssetsTable, areEqual);
+export default React.memo(AssetsTable);

@@ -868,15 +868,10 @@ h6 {
 }
 
 .assetDetail-buttons-wrapper{
-  position: fixed;
-  bottom: 0;
-  padding: 10px 0px 0px 20px; 
-  border-top: 1px solid lightgray;
-  width: 88.5vw;
-   bottom: 0; 
+   padding: 10px 0px 0px 20px; 
    background: var(--light);
    margin: 10px 0px 0px -16px;
-   display: flex; 
+   display: flex;
    place-items: center;
    justify-content: space-between;
 }

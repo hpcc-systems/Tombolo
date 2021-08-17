@@ -8,6 +8,7 @@ import { MarkdownEditor } from "../../common/MarkdownEditor.js";
 import { formItemLayout, threeColformItemLayout } from "../../common/CommonUtil.js";
 const { Option, OptGroup } = Select;  
 
+
 function BasicsTabGeneral({enableEdit, editingAllowed, addingNewAsset, jobType, clearState, onChange, clusters, localState, formRef, applicationId, setJobDetails}) {
   const assetReducer = useSelector(state => state.assetReducer);
   const dataflowReducer = useSelector(state => state.dataflowReducer);
@@ -171,7 +172,9 @@ function BasicsTabGeneral({enableEdit, editingAllowed, addingNewAsset, jobType, 
                 value={localState.description}
                 disabled={!editingAllowed}/>
                 :
-                <div className="read-only-markdown"> <ReactMarkdown source={localState.job.description} /></div>
+                <div className="read-only-markdown">
+                   <ReactMarkdown source={localState.description} />
+                   </div>
               }
 
               </Form.Item>

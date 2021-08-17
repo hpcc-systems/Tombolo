@@ -105,35 +105,35 @@ router.post('/jobsearch', [
     return res.status(422).json({ success: false, errors: errors.array() });
   }
 	hpccUtil.getCluster(req.body.clusterid).then(function(cluster) {
-		let url = cluster.thor_host + ':' + cluster.thor_port +'/WsWorkunits/WUQuery.json?Jobname=*'+req.body.keyword+'*&PageSize=1&PageStartFrom=0';
+		let url = cluster.thor_host + ':' + cluster.thor_port +'/WsWorkunits/WUQuery.json?Jobname=*'+req.body.keyword+'*';
         request.get({
 		  url: url,
 		  auth : hpccUtil.getClusterAuth(cluster)
 		}, function(err, response, body) {
 		  if (err) {
-			console.log('ERROR - ', err);
-			return response.status(500).send('Error');
-	      }
-	      else {
-	      	var result = JSON.parse(body);
-	      	if(result.WUQueryResponse && result.WUQueryResponse.Workunits != undefined) {
-	      		var jobSearchAutoComplete = [], workunits = result.WUQueryResponse.Workunits.ECLWorkunit;
+				console.log('ERROR - ', err);
+				return response.status(500).send('Error');
+			}
+			else {
+				var result = JSON.parse(body);
+				if(result.WUQueryResponse && result.WUQueryResponse.Workunits != undefined) {
+					var jobSearchAutoComplete = [], workunits = result.WUQueryResponse.Workunits.ECLWorkunit;
 
-				workunits.forEach((workunit, index) => {
-					//dont add any duplicates
-					var exists = jobSearchAutoComplete.filter(function(job) {
-						return workunit.Jobname == job.text;
+					workunits.forEach((workunit, index) => {
+						//dont add any duplicates
+						var exists = jobSearchAutoComplete.filter(function(job) {
+							return workunit.Jobname == job.text;
+						});
+						if(exists != undefined && exists.length == 0) {
+							jobSearchAutoComplete.push({"text" : workunit.Jobname, "value" : workunit.Wuid});
+						}
 					});
-					if(exists != undefined && exists.length == 0) {
-						jobSearchAutoComplete.push({"text" : workunit.Jobname, "value" : workunit.Wuid});
-					}
-				});
-	      	 	res.json(jobSearchAutoComplete);
-	      	} else {
-	      		res.json([]);
-	      	}
-	      }
-      	});
+					res.json(jobSearchAutoComplete);
+				} else {
+						res.json([]);
+				}
+			}
+		});
     }).catch(err => {
     	console.log('Cluster not reachable: '+JSON.stringify(err));
     	res.status(500).send({"success":"false", "message": "Search failed. Please check if the cluster is running."});

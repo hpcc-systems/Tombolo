@@ -309,19 +309,19 @@ class FileDetails extends PureComponent {
     try {
       const values = await this.formRef.current.validateFields();
       let saveResponse = await _self.saveFileDetails();
-      setTimeout(() => {
+      // setTimeout(() => {
         _self.setState({
           visible: false,
-          confirmLoading: false,
+          // confirmLoading: false,
         });
         if (this.props.history) {
-          // _self.props.history.push(
-          //   "/" + this.props.application.applicationId + "/assets"
-          // );
+          _self.props.history.push(
+            "/" + this.props.application.applicationId + "/assets"
+          );
         } else {
           document.querySelector("button.ant-modal-close").click();
         }
-      }, 2000);
+      // }, 2000);
     } catch (e) {
       console.log(e);
       _self.setState({
@@ -589,22 +589,24 @@ class FileDetails extends PureComponent {
           file: this.populateFileDetails(),
         }),
       })
-      .then(function (response) {
-        if (response.ok) {
-          message.success("Data saved")
-          return response.json();
-        }
-        handleError(response);
-        reject();
-      })
-      .then(function (data) {
-        resolve(data);
-      })
-      .catch((error) => {
-        message.error(
-          "Error occured while saving the data. Please check the form data"
-        );
-      });
+        .then(function (response) {
+          if (response.ok) {
+            message.success("Data saved");
+            return response.json();
+          }
+          handleError(response);
+          reject();
+        })
+        .then(function (data) {
+          resolve(data);
+        })
+        .catch((error) => {
+          message.error(
+            "Error occured while saving the data. Please check the form data"
+          );
+        }).finally(() =>{
+          this.setState({confirmLoading : false})
+        });
     });
   }
 
@@ -677,7 +679,7 @@ class FileDetails extends PureComponent {
       isSuperFile: !this.formRef.current.getFieldValue("isSuperFile")
         ? false
         : this.formRef.current.getFieldValue("isSuperFile"),
-      cluster_id: this.props.clusterId,
+      cluster_id: this.props.clusterId ? this.props.clusterId : this.state.file.clusterId,
       fileType: this.state.file.fileType,
       application_id: applicationId,
       dataflowId: this.props.selectedDataflow

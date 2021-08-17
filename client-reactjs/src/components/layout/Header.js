@@ -12,6 +12,8 @@ import { QuestionCircleOutlined, DownOutlined  } from '@ant-design/icons';
 import $ from 'jquery';
 import {Constants} from "../common/Constants"
 import {store} from "../../redux/store/Store"
+import { debounce } from "lodash";
+import logo from  "../../images/logo.png"
 
 const { Header, Content } = Layout;
 const { Search } = Input;
@@ -38,6 +40,26 @@ class AppHeader extends Component {
       confirmnewpassword: '',
       isAboutModalVisible: false
     }
+
+    handleRef() {      
+      const appDropdownItem = this.appDropDown.current.querySelector('[data-value="'+localStorage.getItem("activeProjectId")+'"]');
+      //if no activeProjectId select the first application by default.
+      if(appDropdownItem == null && this.state.applications.length > 0) {
+        this.setState({ selected: this.state.applications[0].display });
+        this.props.dispatch(applicationActions.applicationSelected(this.state.applications[0].value, this.state.applications[0].display));
+        localStorage.setItem("activeProjectId", this.state.applications[0].value);
+        //if it is asset details url, dont redirect to default /dataflow page
+        if(!this.props.history.location.pathname.startsWith('/details')) {
+          this.props.history.push('/'+this.state.applications[0].value+'/assets');
+        }
+      } else {
+        appDropdownItem.click();
+      }
+    }    
+
+    debouncedHandleRef = debounce(() => {
+      this.handleRef();
+    }, 100)
 
     componentWillReceiveProps(props) {
       if(props.application && props.application.applicationTitle!=''){
@@ -71,7 +93,8 @@ class AppHeader extends Component {
           let applications = data.map(application => { return {value: application.id, display: application.title} })
           if(applications && applications.length > 0) {
             this.setState({ applications });
-            this.handleRef();
+            //this.handleRef();
+            this.debouncedHandleRef();
             this.props.dispatch(applicationActions.getClusters());
             this.props.dispatch(applicationActions.getConsumers());
           } else {
@@ -164,23 +187,7 @@ class AppHeader extends Component {
         this.props.history.push('/'+event.target.getAttribute("data-value")+'/assets');
       }
       $('[data-toggle="popover"]').popover('disable');
-    }
-
-    handleRef() {
-      const appDropdownItem = this.appDropDown.current.querySelector('[data-value="'+localStorage.getItem("activeProjectId")+'"]');
-      //if no activeProjectId select the first application by default.
-      if(appDropdownItem == null && this.state.applications.length > 0) {
-        this.setState({ selected: this.state.applications[0].display });
-        this.props.dispatch(applicationActions.applicationSelected(this.state.applications[0].value, this.state.applications[0].display));
-        localStorage.setItem("activeProjectId", this.state.applications[0].value);
-        //if it is asset details url, dont redirect to default /dataflow page
-        if(!this.props.history.location.pathname.startsWith('/details')) {
-          this.props.history.push('/'+this.state.applications[0].value+'/assets');
-        }
-      } else {
-        appDropdownItem.click();
-      }
-    }
+    }    
 
     openHelpNotification = () => {
       const key = `open${Date.now()}`;
@@ -312,7 +319,8 @@ class AppHeader extends Component {
     return (
         <React.Fragment>
           <nav className="navbar navbar-expand-md navbar-dark bg-dark fixed-top">
-            <a className="home-logo navbar-brand" href="/">Tombolo</a>
+            <a href="/" class="navbar-left" style={{marginRight: "40px"}}><img src={logo} /></a>
+
             <button className="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarsExampleDefault" aria-controls="navbarsExampleDefault" aria-expanded="false" aria-label="Toggle navigation">
               <span className="navbar-toggler-icon"></span>
             </button>
