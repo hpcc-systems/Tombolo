@@ -642,7 +642,6 @@ io.of("landingZoneFileUpload").on("connection", (socket) => {
 
 	//Receive cluster and destination folder info when client clicks upload
 	socket.on('start-upload', message=> {
-		console.log("<<<< Message - upload Start", message)
 		cluster = JSON.parse(message.cluster);
 		destinationFolder = message.destinationFolder;
 		machine = message.machine;
@@ -665,9 +664,12 @@ io.of("landingZoneFileUpload").on("connection", (socket) => {
 				}
 			}
 			  },
-			  function(err, httpResponse,body){
+			  function(err, httpResponse, body){
 				const response = JSON.parse(body);
-				console.log("<<<< Response received", body )
+				console.log("<<<< Response received", body );
+				fs.unlink(`uploads/${fileName}`, err =>{
+					console.log(err)
+				});
 
 				if(response.Exceptions){
 					socket.emit('file-upload-response', {id, fileName,success : false, message : response.Exceptions.Exception[0].Message})
@@ -693,27 +695,42 @@ io.of("landingZoneFileUpload").on("connection", (socket) => {
 	});
 
 	//when a slice of file is supplied by the client
+	let files = [""];
 	socket.on('upload-slice', (message) =>{
-		let {fileName} = message;
-		files[fileName].data.push(message.data);
-		files[fileName].sliceStartsAt = message.sliceStartsAt;
-		files[fileName].sliceEndsAt = files[fileName].fileSize >= (files[fileName].sliceStartsAt + 100000 )? files[fileName].sliceStartsAt + 100000 : files[fileName].fileSize;
+		console.log(" <<<< Upload Slice ", message.id);
+		let {id, fileName, data, sliceStartsAt} = message;
+		files.map(item => {
+			if(item.id === id){
+				console.log("<<<< file already exists, just update the data and act accordingly")
+				item.data = item.data + data
+				return item
+			}else{
+				console.log("<<<<<<<<<<<<<<<<<<<<<<<< This is a new file");
+				files.push({id, fileName, data : data,sliceStartsAt});
+			}
+		})
+		
+		console.log(files,"<<<<<<<<<<<<<<<< Files")
 
-		if(files[fileName].fileSize == files[fileName].sliceStartsAt){
-			let file = files[fileName].data.join('');
-			let fileBuffer = Buffer(file);
-			fs.writeFile(`uploads/${fileName}`,  fileBuffer, function(err){
-				if(err){
-					console.log("<<<< Err ", err)
-				}else{
-					console.log("<<<< File saved ");
-					return;
-				}
-			})
-			// console.log("<<<< File buffer: ", fileBuffer);
-		}else{
-			requestSlice(fileName, files);
-		}
+		// files[fileName].data.push(message.data);
+		// files[fileName].sliceStartsAt = message.sliceStartsAt;
+		// files[fileName].sliceEndsAt = files[fileName].fileSize >= (files[fileName].sliceStartsAt + 100000 )? files[fileName].sliceStartsAt + 100000 : files[fileName].fileSize;
+
+		// if(files[fileName].fileSize == files[fileName].sliceStartsAt){
+		// 	let file = files[fileName].data.join('');
+		// 	let fileBuffer = Buffer(file);
+		// 	fs.writeFile(`uploads/${fileName}`,  fileBuffer, function(err){
+		// 		if(err){
+		// 			console.log("<<<< Err ", err)
+		// 		}else{
+		// 			console.log("<<<< File saved ");
+		// 			return;
+		// 		}
+		// 	})
+		// 	// console.log("<<<< File buffer: ", fileBuffer);
+		// }else{
+		// 	requestSlice(fileName, files);
+		// }
 	})
 });
 

@@ -1,6 +1,4 @@
 import styled from "styled-components";
-// import {DeleteOutlined} from '@ant-design/icons';
-
 
 export const LandingZoneUploadContainer = styled.div`
   height: 20vh;
@@ -19,10 +17,6 @@ export const columns = [
       title: '#',
       dataIndex: 'sno',
     },
-    // {
-    //   title: 'Type',
-    //   dataIndex: 'type',
-    // },
     {
       title: 'File Name',
       dataIndex: 'fileName',
@@ -35,10 +29,4 @@ export const columns = [
       title: '',
       dataIndex: 'uploading',
     },
-    // {
-    //   title: '',
-    //   dataIndex: '',
-    //   key: 'x',
-    //   render: (text,record, index) => <DeleteOutlined onClick= {(e) => {console.log(text)}} />,
-    // },
   ];

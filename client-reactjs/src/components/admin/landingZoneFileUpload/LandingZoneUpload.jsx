@@ -239,7 +239,7 @@ useEffect(() =>{
     // Start by sending some file details to server
     socket.emit('start-upload', {destinationFolder, cluster, machine, dropZone : JSON.parse(selectedDropZone)?.name});
     files.map(item => {
-      if(item.size <= 10000000){
+      if(item.size <= 1000000000){
          let reader = new FileReader();
          reader.readAsArrayBuffer(item);
           reader.onload = function(e){
@@ -251,7 +251,19 @@ useEffect(() =>{
             })
           }
       }else{
-        console.log("<<<< Big files send in chunks")
+        console.log("<<<< Big files send in chunks");
+        let slice = item.slice(0, 10000000);
+        let reader = new FileReader();
+        reader.readAsArrayBuffer(slice);
+        reader.onload = function(e){
+          let arrayBuffer = e.target.result;
+          socket.emit('upload-slice', {
+            id: item.uid,
+            fileName : item.name,
+            data: arrayBuffer,
+            sliceStartsAt : 100000000
+          })
+        }
       }
     })
 
@@ -374,6 +386,7 @@ useEffect(() =>{
         <span  style={{display : files.length > 0 ? "block" : "none", margin : "20px 0px 20px 0px"}}>
           <Table   columns={columns} dataSource={tableData} size="small" pagination={false} style={{width: "100%", maxHeight : "300px", overflow: "auto"}}/>
         </span>
+
         {/* <span>
         <Checkbox onChange={onCheckBoxChnage}>Overwrite</Checkbox>
         </span> */}
