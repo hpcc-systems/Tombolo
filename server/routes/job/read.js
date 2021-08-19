@@ -522,8 +522,7 @@ router.post('/saveJob', [
         console.log("Error occured in updateJobDetails....")
         return res.status(500).json({ success: false, message: "Error occured while saving the job" });
       });
-      switch (req.body.job.schedule.type) {
-        
+      switch (req.body.job.schedule.type) {        
         case "":
           AssetDataflow.update({
             cron: null,
@@ -534,13 +533,13 @@ router.post('/saveJob', [
           })
           await DependentJobs.destroy({
             where: {
-              jobId: req.body.id,
+              jobId: jobId,
               dataflowId: req.body.job.basic.dataflowId
             }
           });
           await MessageBasedJobs.destroy({
             where: {
-              jobId: req.body.id,
+              jobId: jobId,
               dataflowId: req.body.job.basic.dataflowId,
               applicationId: req.body.job.basic.application_id
             }
@@ -555,22 +554,22 @@ router.post('/saveJob', [
           })
           await MessageBasedJobs.destroy({
             where: {
-              jobId: req.body.id,
+              jobId: jobId,
               dataflowId: req.body.job.basic.dataflowId,
               applicationId: req.body.job.basic.application_id
             }
           });
           await DependentJobs.destroy({
             where: {
-              jobId: req.body.id,
+              jobId: jobId,
               dataflowId: req.body.job.basic.dataflowId
             }
           });
-          const promises = req.body.job.schedule.jobs.map(async jobId => {
+          const promises = req.body.job.schedule.jobs.map(async dependsOnJobId => {
             await DependentJobs.create({
-              jobId: req.body.id,
+              jobId: jobId,
               dataflowId: req.body.job.basic.dataflowId,
-              dependsOnJobId: jobId
+              dependsOnJobId: dependsOnJobId
             });
           });
 
@@ -597,7 +596,7 @@ router.post('/saveJob', [
             if(success || success[0]) {
               await DependentJobs.destroy({
                 where: {
-                  jobId: req.body.id,
+                  jobId: jobId,
                   dataflowId: req.body.job.basic.dataflowId
                 }
               });
@@ -652,7 +651,7 @@ router.post('/saveJob', [
 
             await DependentJobs.destroy({
               where: {
-                jobId: req.body.id,
+                jobId: jobId,
                 dataflowId: req.body.job.basic.dataflowId
               }
             });
@@ -709,7 +708,7 @@ router.get('/job_list', [
     'left join assets_dataflows asd '+
     'on j.id = asd.assetId '+
     'where j.application_id=(:applicationId) '+
-    'and j.id not in (select assetId from assets_dataflows where dataflowId = (:dataflowId)) group by j.id, asd.dataflowId order by j.name asc';
+    'and j.deletedAt IS NULL and j.id not in (select assetId from assets_dataflows where dataflowId = (:dataflowId) and deletedAt IS NULL) group by j.id order by j.name asc';
     /*let query = 'select j.id, j.name, j.title, j.createdAt, asd.dataflowId from job j, assets_dataflows asd where j.application_id=(:applicationId) '+
         'and j.id = asd.assetId and j.id not in (select assetId from assets_dataflows where dataflowId = (:dataflowId))';*/
     let replacements = { applicationId: req.query.app_id, dataflowId: dataflowId};

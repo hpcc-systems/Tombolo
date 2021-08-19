@@ -1,12 +1,13 @@
 const Bree = require('bree');
 const models = require('./models');
-const request = require('request-promise');
-const hpccUtil = require('./utils/hpcc-util');
 var path = require('path');
 let Job = models.job;
+const hpccUtil = require('./utils/hpcc-util');
+const assetUtil = require('./utils/assets.js');
 let MessageBasedJobs = models.message_based_jobs;
 const SUBMIT_JOB_FILE_NAME = 'submitJob.js';
 const SUBMIT_SCRIPT_JOB_FILE_NAME = 'submitScriptJob.js';
+const JOB_STATUS_POLLER = 'statusPoller.js';
 
 class JobScheduler {
   constructor() {
@@ -31,46 +32,63 @@ class JobScheduler {
 
   async bootstrap() {
     await this.scheduleActiveCronJobs();
+    
+    await this.scheduleJobStatusPolling();
   }
 
   async scheduleCheckForJobsWithSingleDependency(jobName) {
-    const query = `SELECT j1.id, j1.name, j1.jobType, j1.sprayedFileScope, j1.sprayFileName, j1.sprayDropZone, dj.dependsOnJobId as dependsOnJobId, dj.jobId, c.id as clusterId, d.id as dataflowId, d.application_id, count(*) as count
-      FROM tombolo.dependent_jobs dj
-      left join job j1 on j1.id = dj.jobId
-      left join job j2 on j2.id = dj.dependsOnJobId
-      left join dataflow d on d.id = dj.dataflowId
-      left join cluster c on c.id = d.clusterId
-      where j2.name=(:jobName)
-      group by dj.jobId
-      having count = 1
-      order by d.updatedAt desc
-      ;`;
-
-    let replacements = { jobName: jobName};
-    const jobs = await models.sequelize.query(query, {
-      type: models.sequelize.QueryTypes.SELECT,
-      replacements: replacements
-    });
-
-    //jobs.forEach(async job => {
-    for(const job of jobs) {
-      //this.bree.add({ });
+    return new Promise(async (resolve, reject) => {    
       try {
-        await this.executeJob(
-          job.name, 
-          job.clusterId, 
-          job.dataflowId, 
-          job.application_id, 
-          job.jobId, 
-          job.jobType == 'Script' ? SUBMIT_SCRIPT_JOB_FILE_NAME : SUBMIT_JOB_FILE_NAME,
-          job.jobType,
-          job.sprayedFileScope,
-          job.sprayFileName,
-          job.sprayDropZone);
+        const query = `SELECT j1.id, j1.name, j1.jobType, j1.sprayedFileScope, j1.sprayFileName, j1.sprayDropZone, dj.dependsOnJobId as dependsOnJobId, dj.jobId, c.id as clusterId, d.id as dataflowId, d.application_id, count(*) as count
+          FROM tombolo.dependent_jobs dj
+          left join job j1 on j1.id = dj.jobId
+          left join job j2 on j2.id = dj.dependsOnJobId
+          left join dataflow d on d.id = dj.dataflowId
+          left join cluster c on c.id = d.clusterId
+          where j2.name=(:jobName)
+          and j1.deletedAt is null
+          and j2.deletedAt is null
+          and dj.deletedAt is null
+          group by dj.jobId
+          having count = 1
+          order by d.updatedAt desc
+          ;`;
+
+        let replacements = { jobName: jobName};
+        const jobs = await models.sequelize.query(query, {
+          type: models.sequelize.QueryTypes.SELECT,
+          replacements: replacements
+        });
+
+        for(const job of jobs) {
+          //submit the dependant job's wu and record the execution in job_execution table for the statusPoller to pick
+          let job = jobs[0];
+          let wuid = await hpccUtil.getJobWuidByName(job.clusterId, job.name);      
+          console.log(
+            `submitting dependant job ${job.name} ` +
+            `(WU: ${wuid}) to url ${job.clusterId}/WsWorkunits/WUResubmit.json?ver_=1.78`
+            );
+          let wuInfo = await hpccUtil.resubmitWU(job.clusterId, wuid);    
+          let jobExecutionData = {
+            name: job.name, 
+            clusterId: job.clusterId, 
+            dataflowId: job.dataflowId, 
+            applicationId: job.application_id, 
+            jobId: job.id, 
+            jobType: job.jobType == 'Script' ? SUBMIT_SCRIPT_JOB_FILE_NAME : SUBMIT_JOB_FILE_NAME,
+            sprayedFileScope: job.sprayedFileScope,
+            sprayFileName: job.sprayFileName,
+            sprayDropZone: job.sprayDropZone,
+            status: 'submitted'
+          }
+          await assetUtil.recordJobExecution(jobExecutionData, wuid)
+        }
+        resolve();
       } catch (err) {
-        console.log(err);
+        console.log(err)
+        reject(err)
       }
-    }
+    });
   }
 
   async scheduleActiveCronJobs() {
@@ -82,6 +100,7 @@ class JobScheduler {
       left join job j on j.id = ad.assetId
       left join cluster c on c.id = d.clusterId
       where ad.cron IS NOT NULL
+      and ad.deletedAt IS NULL
       order by ad.updatedAt desc
       ;`;
 
@@ -116,7 +135,6 @@ class JobScheduler {
   }
 
   async scheduleMessageBasedJobs(message) {
-    console.log('scheduleMessageBasedJobs')
     try {
       let job = await Job.findOne({where: {name: message.jobName}, attributes: {exclude: ['assetId']}});
       if(job) {
@@ -174,7 +192,7 @@ class JobScheduler {
   async executeJob(name, clusterId, dataflowId, applicationId, jobId, jobfileName, jobType, sprayedFileScope, sprayFileName, sprayDropZone) {
     try {
       let uniqueJobName = name + '-' + dataflowId + '-' + jobId;
-      await this.removeJobFromScheduler(uniqueJobName);
+      //await this.removeJobFromScheduler(uniqueJobName);
       this.bree.add({
         name: uniqueJobName,
         timeout: 0,
@@ -205,6 +223,32 @@ class JobScheduler {
       await this.bree.remove(name);
     } catch (err) {
       console.log(err)
+    }
+  }
+
+  async scheduleJobStatusPolling() {    
+    console.log(`
+      status polling scheduler started...
+    `);
+    try {
+      let jobName = 'job-status-poller-'+new Date().getTime();
+      //if(job) {
+        this.bree.add({
+          name: jobName,
+          interval: '20s',
+          path: path.join(__dirname, 'jobs', JOB_STATUS_POLLER),
+          worker: {
+            workerData: {
+              jobName: jobName
+            }
+          }
+        })
+
+        this.bree.start(jobName);  
+      //}
+  
+    } catch (err) {
+      console.log(err);
     }
   }
 }

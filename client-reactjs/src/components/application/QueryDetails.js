@@ -232,13 +232,13 @@ class QueryDetails extends PureComponent {
     this.setState({confirmLoading : true})
     let saveResponse = await this.saveQueryDetails();
     
-    setTimeout(() => {
+    // setTimeout(() => {
       this.setState({
         visible: false,
-        confirmLoading: false,
+        // confirmLoading: false,
       });
-      // this.props.history.push('/' + this.props.application.applicationId + '/assets')
-    }, 1000);
+      this.props.history.push('/' + this.props.application.applicationId + '/assets')
+    // }, 1000);
   };
 
   getClusters() {
@@ -392,9 +392,10 @@ class QueryDetails extends PureComponent {
         console.log('Saved..');
         resolve(data);
       }).catch(error => {
-        this.setState({confirmLoading : false})
         message.error("Error occured while saving the data. Please check the form data")
-      });
+      }).finally(() => {
+        this.setState({confirmLoading : false})
+      })
     //this.populateFileDetails()
     });
   }

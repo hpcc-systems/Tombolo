@@ -166,20 +166,20 @@ class IndexDetails extends PureComponent {
 
     let saveResponse = await this.saveIndexDetails();
 
-    setTimeout(() => {
+    // setTimeout(() => {
       this.setState({
         visible: false,
         initialDataLoading: false,
-        confirmLoading: false
+        // confirmLoading: false
       });
       //this.props.onClose();
       //this.props.onRefresh(saveResponse);
       if(this.props.history) {
-        // this.props.history.push('/' + this.props.application.applicationId + '/assets')
+        this.props.history.push('/' + this.props.application.applicationId + '/assets')
       } else {
         document.querySelector('button.ant-modal-close').click();
       }
-    }, 200);
+    // }, 200);
   };
 
   handleDelete = () => {
@@ -365,9 +365,10 @@ class IndexDetails extends PureComponent {
         console.log('Saved..');
         resolve(data);
       }).catch(error => {
-        this.setState({confirmLoading : false})
         message.error("Error occured while saving the data. Please check the form data")
-      });
+      }).finally(() => {
+        this.setState({confirmLoading : false})
+      })
     });
   }
 

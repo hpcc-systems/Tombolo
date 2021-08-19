@@ -24,7 +24,6 @@ const Op = Sequelize.Op;
 let Indexes=models.indexes;
 let Query=models.query;
 let Job=models.job;
-let AssetsVisualization=models.assets_visualization;
 var request = require('request');
 var requestPromise = require('request-promise');
 const validatorUtil = require('../../utils/validator');
@@ -50,7 +49,7 @@ router.get('/file_list', [
       'left join assets_dataflows asd '+
       'on f.id = asd.assetId '+
       'where f.application_id=(:applicationId) '+
-      'and f.id not in (select assetId from assets_dataflows where dataflowId = (:dataflowId)) order by f.name asc';
+      'and f.deletedAt IS NULL and f.id not in (select assetId from assets_dataflows where dataflowId = (:dataflowId) and deletedAt IS NULL) order by f.name asc';
       /*let query = 'select j.id, j.name, j.title, j.createdAt, asd.dataflowId from job j, assets_dataflows asd where j.application_id=(:applicationId) '+
           'and j.id = asd.assetId and j.id not in (select assetId from assets_dataflows where dataflowId = (:dataflowId))';*/
       let replacements = { applicationId: req.query.app_id, dataflowId: dataflowId};
@@ -860,14 +859,9 @@ router.post('/visualization', [
         infoPort: cluster.thor_port,
         dataPort: cluster.roxie_port,
       },
-      selectedSource: {
-        cluster: 'hthor__eclagent', // hpcc file object has ClusterName key in it
-        hpccID: file.name, // hpcc file object has Name key in it
-        name: file.name,
-        target: 'file',
-      },
+      filename: file.name,
       workspaceName: 'Tombolo', 
-      dashboardName: 'Tombolo', 
+      dashboardName: file.title ? file.title : file.name
     };
 
     console.log(bodyObj);
@@ -883,15 +877,7 @@ router.post('/visualization', [
       } else {
         var result = JSON.parse(body);
         console.log(result);
-        AssetsVisualization.create({
-          assetId: file.id,
-          url: result.workspaceUrl
-        }).then((result) => {
-          res.json({"success": true, 'url': result.workspaceUrl});
-        }).catch(err => {
-          console.log(err);
-          return res.status(500).send("Error occured while creating visualization");
-        })        
+        res.json({"success": true, 'url': result.workspaceUrl});
       }
     });
 
