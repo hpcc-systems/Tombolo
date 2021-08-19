@@ -14,20 +14,10 @@ const socketIo = io.use(function(socket, next){
   const token =  socket.handshake.auth.token;
   verifyToken(token).then(() => {
     next();
-    // app.set('socketio', io);
   })
 })
 
 exports.socketIo = socketIo;
-
-// io.use(function(socket, next){
-//   const token =  socket.handshake.auth.token;
-//   verifyToken(token).then(() => {
-//     next();
-//     app.set('socketio', io);
-//   })
-// })
-
 
 app.set('trust proxy', 1);
 const limiter = rateLimit({

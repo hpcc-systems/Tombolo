@@ -19,11 +19,6 @@ const ClusterWhitelist = require('../../cluster-whitelist');
 let lodash = require('lodash');
 const {socketIo : io} = require('../../server');
 const fs = require("fs");
-const path = require('path');
-const { file } = require('tmp');
-const { Socket } = require('dgram');
-const { default: cluster } = require('cluster');
-
 
 router.post('/filesearch', [
   body('keyword')
@@ -647,7 +642,6 @@ io.of("landingZoneFileUpload").on("connection", (socket) => {
 		machine = message.machine;
 		dropZone = message.dropZone;
 		console.log("UPLOAD <<<< " , `${cluster.thor_host}:${cluster.thor_port}`)
-
 	})
 
 	//Upload File 
@@ -710,8 +704,6 @@ io.of("landingZoneFileUpload").on("connection", (socket) => {
 			}
 		})
 		
-		console.log(files,"<<<<<<<<<<<<<<<< Files")
-
 		// files[fileName].data.push(message.data);
 		// files[fileName].sliceStartsAt = message.sliceStartsAt;
 		// files[fileName].sliceEndsAt = files[fileName].fileSize >= (files[fileName].sliceStartsAt + 100000 )? files[fileName].sliceStartsAt + 100000 : files[fileName].fileSize;
@@ -733,7 +725,4 @@ io.of("landingZoneFileUpload").on("connection", (socket) => {
 		// }
 	})
 });
-
-
-
 module.exports = router;

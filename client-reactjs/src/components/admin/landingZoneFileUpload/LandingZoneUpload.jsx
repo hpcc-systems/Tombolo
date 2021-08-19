@@ -189,14 +189,14 @@ useEffect(() =>{
     //When message is received from back end
     if(socket){
       socket.on("message", (message) =>{
-        console.log("<<<< ",message)
+        console.log(message)
       })
      }
 
      //Response
      if(socket){
       socket.on('file-upload-response', (response => {
-        console.log(response)
+        // console.log(response)
         if(response.success){
           setSuccessItem(response.id);
         }else if(!response.success){
@@ -251,7 +251,6 @@ useEffect(() =>{
             })
           }
       }else{
-        console.log("<<<< Big files send in chunks");
         let slice = item.slice(0, 10000000);
         let reader = new FileReader();
         reader.readAsArrayBuffer(slice);

@@ -25,8 +25,6 @@ let QueryField = models.query_field;
 let Dataflow = models.dataflow;
 let DataflowGraph = models.dataflowgraph;
 const {socketIo : io} = require('../../server');
-
-
 const validatorUtil = require('../../utils/validator');
 const { body, query, validationResult } = require('express-validator');
 const NotificationModule = require('../notifications/email-notification');
@@ -37,8 +35,6 @@ const multer = require('multer');
 const AssetGroups = models.assets_groups;
 const AssetDataflows = models.assets_dataflows;
 const Dataflowgraph = models.dataflowgraph;
-
-
 
 router.get('/app_list', (req, res) => {
   console.log("[app/read.js] - App route called");
