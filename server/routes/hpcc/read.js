@@ -236,12 +236,9 @@ router.post('/removecluster', function (req, res) {
 });
 
 router.get('/getFileInfo', [
-  query('fileName')
-    .matches(/^[a-zA-Z]{1}[a-zA-Z0-9_:.\-]*$/).withMessage('Invalid file name'),
-  query('clusterid')
-    .isUUID(4).withMessage('Invalid cluster id'),
-  query('applicationId')
-    .isUUID(4).withMessage('Invalid application id')
+  query('fileName').matches(/^[a-zA-Z]{1}[a-zA-Z0-9_:.\-]*$/).withMessage('Invalid file name'),
+  query('clusterid').optional({checkFalsy:true}).isUUID(4).withMessage('Invalid cluster id'),
+  query('applicationId').isUUID(4).withMessage('Invalid application id')
 ], function (req, res) {
 	const errors = validationResult(req).formatWith(validatorUtil.errorFormatter);
   if (!errors.isEmpty()) {

@@ -59,8 +59,6 @@ function VisualizationDetails({ selectedGroup, openGroup, handleEditGroup, refre
   const dispatch = useDispatch();
   const history = useHistory();
 
-  console.log(assetReducer.selectedAsset)
-
   useEffect(() => {
     getVisualizationDetails();
   }, [assetReducer.selectedAsset]);
@@ -115,7 +113,7 @@ function VisualizationDetails({ selectedGroup, openGroup, handleEditGroup, refre
 
     try {
       const values = await form.current.validateFields();
-      console.log(visualization.selectedCluster)
+      console.log(formState.selectedCluster)
       fetch("/api/file/read/visualization", {
         method: "post",
         headers: authHeader(),
@@ -127,7 +125,7 @@ function VisualizationDetails({ selectedGroup, openGroup, handleEditGroup, refre
           fileName: form.current.getFieldValue("name"),
           groupId: assetReducer.newAsset.groupId ? assetReducer.newAsset.groupId : "",
           description: form.current.getFieldValue("description"),
-          clusterId: visualization.selectedCluster
+          editingAllowed: editingAllowed
         }),
       })
       .then(function (response) {
@@ -147,7 +145,7 @@ function VisualizationDetails({ selectedGroup, openGroup, handleEditGroup, refre
         }
       })
     } catch(err) {
-
+      console.log(err);
     }
   }
 
@@ -222,57 +220,57 @@ function VisualizationDetails({ selectedGroup, openGroup, handleEditGroup, refre
 
   const searchFiles = debounce((searchString) => {
     if (searchString.length <= 3 || formState.fileSearchErrorShown) return;
-    if (!searchString.match(/^[a-zA-Z0-9_-]*$/)) {
+    if (!searchString.match(/^[a-zA-Z0-9_ -]*$/)) {
       message.error(
         "Invalid search keyword. Please remove any special characters from the keyword."
-      );
+      );      
       return;
     }
-
     setFormState({
       ...formState,
       fileSearchErrorShown: false
     })
 
     var data = JSON.stringify({
-      clusterid: formState.selectedCluster,
+      app_id: applicationReducer.application.applicationId,
       keyword: searchString,
     });
-    fetch("/api/hpcc/read/filesearch", {
+    fetch("/api/file/read/tomboloFileSearch", {
       method: "post",
       headers: authHeader(),
       body: data,
     })
-      .then((response) => {
-        if (response.ok) {
-          return response.json();
-        } else {
-          throw response;
-        }
-      })
-      .then((suggestions) => {
+    .then((response) => {
+      if (response.ok) {
+        return response.json();
+      } else {
+        throw response;
+      }
+    })
+    .then((suggestions) => {
+      setFormState({
+        ...formState,
+        fileSearchSuggestions: suggestions
+      })        
+    })
+    .catch((error) => {
+      console.log(formState.fileSearchErrorShown);
+      if (!formState.fileSearchErrorShown) {
+        error.json().then((body) => {
+          message.error(
+            "There was an error searching the files from cluster."
+          );
+        });
         setFormState({
           ...formState,
-          fileSearchSuggestions: suggestions
-        })        
-      })
-      .catch((error) => {
-        if (!formState.fileSearchErrorShown) {
-          error.json().then((body) => {
-            message.error(
-              "There was an error searching the files from cluster."
-            );
-          });
-          setFormState({
-            ...formState,
-            fileSearchErrorShown: true,
-          });
-        }
-      });
+          fileSearchErrorShown: true
+        });
+      }
+    });
   }, 100);
 
   const onFileSelected = (selectedSuggestion) => {
-    fetch("/api/hpcc/read/getFileInfo?fileName="+selectedSuggestion+"&clusterid="+formState.selectedCluster+"&applicationId="+applicationReducer.application.applicationId,{
+    fetch("/api/hpcc/read/getFileInfo?fileName="+selectedSuggestion+"&applicationId="+applicationReducer.application.applicationId,{
         headers: authHeader(),
     })
     .then((response) => {
@@ -330,22 +328,7 @@ function VisualizationDetails({ selectedGroup, openGroup, handleEditGroup, refre
                 {viewOnlyModeReducer.editMode ? (
                   <div>
                     {viewOnlyModeReducer.addingNewAsset ? (
-                      <React.Fragment>
-                        <Form.Item label="Cluster" name="clusters">
-                          <Select
-                            placeholder="Select a Cluster"
-                            disabled={!editingAllowed}
-                            style={{ width: 190 }}
-                            onChange={onClusterSelection}
-                          >
-                            {applicationReducer.clusters.map((cluster) => (
-                              <Option key={cluster.id}>
-                                {cluster.name}
-                              </Option>
-                            ))}
-                          </Select>
-                        </Form.Item>
-
+                      <React.Fragment>                        
                         <Form.Item label="File" name="fileSearchValue">
                           <Row type="flex">
                             <Col span={21} order={1}>
@@ -410,7 +393,7 @@ function VisualizationDetails({ selectedGroup, openGroup, handleEditGroup, refre
                   rules={[
                     { required: true, message: "Please enter a name!" },
                     {
-                      pattern: new RegExp(/^[a-zA-Z0-9:._-]*$/),
+                      pattern: new RegExp(/^[a-zA-Z0-9:._ -]*$/),
                       message: "Please enter a valid name",
                     },
                   ]}
@@ -443,13 +426,6 @@ function VisualizationDetails({ selectedGroup, openGroup, handleEditGroup, refre
                     </div>
                   )}
                 </Form.Item>
-
-                <Form.Item label="Chart Type">
-                  <Radio.Group value={"table"}>
-                    <Radio value={"table"}>Table</Radio>
-                  </Radio.Group>
-                </Form.Item>
-
             </Form>
           </TabPane> 
         </Tabs>  

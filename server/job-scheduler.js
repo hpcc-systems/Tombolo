@@ -62,7 +62,6 @@ class JobScheduler {
 
         for(const job of jobs) {
           //submit the dependant job's wu and record the execution in job_execution table for the statusPoller to pick
-          let job = jobs[0];
           let wuid = await hpccUtil.getJobWuidByName(job.clusterId, job.name);      
           console.log(
             `submitting dependant job ${job.name} ` +

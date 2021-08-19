@@ -11,6 +11,7 @@ exports.fileInfo = (fileName, clusterId) => {
 		module.exports.getCluster(clusterId).then(function(cluster) {
       var fileInfo = {};
 			let clusterAuth = module.exports.getClusterAuth(cluster);
+      console.log(clusterAuth);
 			let dfuService = new hpccJSComms.DFUService({ baseUrl: cluster.thor_host + ':' + cluster.thor_port, userID:(clusterAuth ? clusterAuth.user : ""), password:(clusterAuth ? clusterAuth.password : "")});
 			dfuService.DFUInfo({"Name":fileName}).then(response => {
         if(response.DFUInfoResponse && response.DFUInfoResponse.Exceptions) {
@@ -460,21 +461,29 @@ exports.getClusterAuth = (cluster) => {
 }
 
 exports.getCluster = (clusterId) => {
-	return Cluster.findOne( {where: {id:clusterId}} ).then(async function(cluster) {
-		if(cluster == null) {
-      throw new Error("Cluster not reachable...");
-    }
+  return new Promise(async (resolve, reject) => {
+    try {
+      let cluster = await Cluster.findOne( {where: {id:clusterId}} );
+      if(cluster == null) {
+        throw new Error("Cluster not reachable...");
+      }
+      if(cluster.hash) {
+        cluster.hash = crypto.createDecipher(algorithm,process.env['cluster_cred_secret']).update(cluster.hash,'hex','utf8');
+      }
+      let isReachable = await module.exports.isClusterReachable(cluster.thor_host, cluster.thor_port, cluster.username, cluster.password);
+      if(isReachable)	 {
 
-    if(cluster.hash) {
-			cluster.hash = crypto.createDecipher(algorithm,process.env['cluster_cred_secret']).update(cluster.hash,'hex','utf8');
-		}
-		let isReachable = await module.exports.isClusterReachable(cluster.thor_host, cluster.thor_port, cluster.username, cluster.password);
-		if(isReachable)	 {
-			return cluster;
-		} else {
-			throw new Error("Cluster not reachable...");
-		}
-	})
+        resolve(cluster);
+      } else {
+        reject("Cluster not reachable...")
+        //throw new Error("Cluster not reachable...");
+      }      
+    } catch(err) {
+      console.log("Error occured while getting Cluster info....."+err);
+      reject(err);
+    }
+  })
+	
 }
 
 exports.isClusterReachable = async (clusterHost, port, username, password) => {

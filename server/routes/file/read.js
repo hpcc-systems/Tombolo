@@ -839,9 +839,10 @@ router.post('/visualization', [
   body('id').optional({checkFalsy:true}).isUUID(4).withMessage('Invalid file id'),
   body('application_id').isUUID(4).withMessage('Invalid application id'),
   body('email').isEmail().withMessage('Invalid email'),
-  body('fileName').matches(/^[a-zA-Z]{1}[a-zA-Z0-9_:.\-]*$/).withMessage('Invalid name'),
-  body('clusterId').isUUID(4).withMessage('Invalid cluster'),
-  body('groupId').optional({checkFalsy:true}).isInt().withMessage('Invalid groupId')
+  body('fileName').optional({checkFalsy:true}).matches(/^[a-zA-Z]{1}[a-zA-Z0-9_:.\ -]*$/).withMessage('Invalid name'),
+  body('clusterId').optional({checkFalsy:true}).isUUID(4).withMessage('Invalid cluster'),
+  body('groupId').optional({checkFalsy:true}).isInt().withMessage('Invalid groupId'),
+  body('editingAllowed').isBoolean().withMessage('Invalid value for editingAllowed')
 ],async (req, res) => {
   const errors = validationResult(req).formatWith(validatorUtil.errorFormatter);
   if (!errors.isEmpty()) {
@@ -871,7 +872,8 @@ router.post('/visualization', [
       },
       filename: file.name,
       workspaceName: 'Tombolo', 
-      dashboardName: file.title ? file.title : file.name
+      dashboardName: file.title ? file.title : file.name,
+      editingAllowed: req.body.editingAllowed
     };
 
     console.log(bodyObj);
@@ -888,7 +890,7 @@ router.post('/visualization', [
         var result = JSON.parse(body);
         console.log(result);
         let viz = await Visualization.create({
-          name: req.body.fileName,
+          name: req.body.fileName ? req.body.fileName : file.name,
           application_id: req.body.application_id,
           url: result.workspaceUrl,
           type: req.body.type,
@@ -951,6 +953,21 @@ router.get('/getVisualizationDetails', [
   }
 });  
 
-
+router.post('/tomboloFileSearch', [
+  body('app_id').isUUID(4).withMessage('Invalid application id'),
+  body('keyword').matches(/^[a-zA-Z]{1}[a-zA-Z0-9_:.\-]*$/).withMessage('Invalid keyword'),
+  ], async (req, res) => {
+    const errors = validationResult(req).formatWith(validatorUtil.errorFormatter);
+    if (!errors.isEmpty()) {
+      return res.status(422).json({ success: false, errors: errors.array() });
+    }
+    try {
+      let files = await assetUtil.fileSearch(req.body.app_id, req.body.keyword);
+      res.json(files);
+    } catch(err) {
+      console.log(err);
+      return res.status(500).send("Error occured while retrieving visualization details");
+    }
+  });
 
 module.exports = router;

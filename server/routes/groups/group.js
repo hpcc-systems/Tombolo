@@ -234,7 +234,7 @@ router.get('/assets', [
         })
         assets[0] && assets[0].visualizations.forEach((visualization) => {
           finalAssets.push({
-            type: 'Visualization',
+            type: 'RealBI Dashboard',
             id: visualization.id,
             name: visualization.name,
             description: visualization.description,
@@ -334,7 +334,7 @@ router.get('/assets', [
       }).then((visualizations) => {
         visualizations.forEach((visualization) => {
           finalAssets.push({
-            type: 'Visualization',
+            type: 'RealBI Dashboard',
             id: visualization.id,
             name: visualization.name,
             title: visualization.title,

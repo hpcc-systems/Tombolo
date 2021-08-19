@@ -49,6 +49,29 @@ exports.fileInfo = (applicationId, file_id) => {
   })
 }
 
+exports.fileSearch = (applicationId, keyword) => {
+  var results={};
+  return new Promise((resolve, reject) => {
+    let query =  "select f.id, f.name, f.title, f.description, f.createdAt, 'File' as type from file f where f.application_id = (:applicationId) and f.deletedAt IS NULL and (f.name REGEXP (:keyword) or f.title REGEXP (:keyword)) ";
+    let replacements = { applicationId: applicationId, keyword: keyword };
+    models.sequelize.query(query, {
+      type: models.sequelize.QueryTypes.SELECT,
+      replacements: replacements
+    }).then(files => {
+      let results=[];
+      if(files) {
+        files.forEach((file) => {
+          results.push({"text": file.name ? file.name : file.title, "value":file.name});
+        })
+        resolve(results);
+      }
+    }).catch(function(err) {
+      console.log(err);
+      reject(err);
+    });
+  })
+}
+
 exports.indexInfo = (applicationId, indexId) => {
   var basic = {}, results={};
   try {

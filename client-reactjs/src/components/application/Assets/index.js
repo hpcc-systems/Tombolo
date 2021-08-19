@@ -351,7 +351,7 @@ const Assets = () => {
         history.push("/" + application.applicationId + "/assets/job");
         break;
 
-      case "Visualization":
+      case "RealBI Dashboard":
           history.push("/" + application.applicationId + "/assets/visualizations");
           break;
   
@@ -692,8 +692,8 @@ const Assets = () => {
       <Menu.Item key="Job" onClick={addingAssetMode}>
         <i className="fa fa-lg fa-clock-o"></i> Job
       </Menu.Item>
-      <Menu.Item key="Visualization" onClick={addingAssetMode}>
-        <i className="fa fa-lg fa-area-chart"></i> Visualization
+      <Menu.Item key="RealBI Dashboard" onClick={addingAssetMode}>
+        <i className="fa fa-lg fa-area-chart"></i> RealBI Dashboard
       </Menu.Item>
     </Menu>
   );

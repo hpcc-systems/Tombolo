@@ -52,6 +52,7 @@ function AssetsTable({ selectedGroup, openGroup, handleEditGroup, refreshGroups 
   let componentAlive = true;
 
   const dispatch = useDispatch();  
+  const editingAllowed = hasEditPermission(authReducer.user);
 
   const fetchDataAndRenderTable = () => {
     if(applicationId) {
@@ -151,12 +152,8 @@ function AssetsTable({ selectedGroup, openGroup, handleEditGroup, refreshGroups 
       case "Query":
         history.push("/" + applicationId + "/assets/query/" + id);
         break;
-      case "Visualization":
-        if(action != 'edit') {
-          window.open(vizUrl);
-        } else {
-          history.push("/" + applicationId + "/assets/visualizations/" + id);
-        }          
+      case "RealBI Dashboard":
+        window.open(vizUrl);
         break;  
       case "Group":
         if(action != 'edit') {
@@ -211,7 +208,7 @@ function AssetsTable({ selectedGroup, openGroup, handleEditGroup, refreshGroups 
         deleteUrl = "/api/groups";
         method = "delete";
         break;
-      case "Visualization":
+      case "RealBI Dashboard":
         data = JSON.stringify({ id: id });
         deleteUrl = "/api/file/read/deleteVisualization";
         break;
@@ -246,6 +243,7 @@ function AssetsTable({ selectedGroup, openGroup, handleEditGroup, refreshGroups 
   };
 
   const handleCreateVisualization = (id, cluster_id) => {
+    console.log(cluster_id);
     fetch("/api/file/read/visualization", {
       method: "post",
       headers: authHeader(),
@@ -253,7 +251,7 @@ function AssetsTable({ selectedGroup, openGroup, handleEditGroup, refreshGroups 
         id: id,
         application_id: applicationId,
         email: authReducer.user.email,
-        cluster_id: cluster_id
+        editingAllowed: editingAllowed
       }),
     })
     .then(function (response) {
@@ -264,13 +262,11 @@ function AssetsTable({ selectedGroup, openGroup, handleEditGroup, refreshGroups 
     })      
     .then(function (data) {
       if (data && data.success) {
-        console.log(data);
+        deboucedFetchDataAndRenderTable();
         window.open(data.url);
       }
     })
-  }
-
-  const editingAllowed = hasEditPermission(authReducer.user);
+  }  
 
   const generateAssetIcon = (type) => {
     let icon = "";
@@ -290,7 +286,7 @@ function AssetsTable({ selectedGroup, openGroup, handleEditGroup, refreshGroups 
       case "Group":
         icon = <i className="fa fa-folder-o"></i>;
         break;
-      case "Visualization":
+      case "RealBI Dashboard":
           icon = <i className="fa fa-area-chart"></i>;
           break;
       }
@@ -365,7 +361,7 @@ function AssetsTable({ selectedGroup, openGroup, handleEditGroup, refreshGroups 
         <span> 
           <a
             href="#"
-            onClick={(row) => handleEdit(record.id, record.type, "edit")}
+            onClick={(row) => handleEdit(record.id, record.type, "edit", record.url)}
           >
             <Tooltip placement="right" title={"Edit"}>
               <EditOutlined />
@@ -413,7 +409,7 @@ function AssetsTable({ selectedGroup, openGroup, handleEditGroup, refreshGroups 
               <Divider type="vertical" />  
               {record.visualization ? 
                 <a href={record.visualization} target="_blank">
-                  <Tooltip placement="right" title={"Visualization"}>
+                  <Tooltip placement="right" title={"RealBI Dashboard"}>
                   <AreaChartOutlined />
                   </Tooltip>
                 </a>
@@ -423,7 +419,7 @@ function AssetsTable({ selectedGroup, openGroup, handleEditGroup, refreshGroups 
                   icon={<QuestionCircleOutlined />}
                 >
                   <a href="#">
-                    <Tooltip placement="right" title={"Visualization"}>
+                    <Tooltip placement="right" title={"RealBI Dashboard"}>
                     <AreaChartOutlined />
                     </Tooltip>
                   </a>
