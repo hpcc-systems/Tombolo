@@ -3,38 +3,38 @@
 module.exports = {
   up: (queryInterface, Sequelize) => {
     return Promise.all([
-      // queryInterface.addColumn(
-      //   'application',
-      //   'deletedAt', Sequelize.DATE
-      // ),
-      // queryInterface.addColumn(
-      //   'assets_dataflows',
-      //   'deletedAt', Sequelize.DATE
-      // ),
-      // queryInterface.addColumn(
-      //   'assets_groups',
-      //   'deletedAt', Sequelize.DATE
-      // ),
-      // queryInterface.addColumn(
-      //   'cluster',
-      //   'deletedAt', Sequelize.DATE
-      // ),
-      // queryInterface.addColumn(
-      //   'consumer_object',
-      //   'deletedAt', Sequelize.DATE
-      // ),
-      // queryInterface.addColumn(
-      //   'consumer',
-      //   'deletedAt', Sequelize.DATE
-      // ),
+      queryInterface.addColumn(
+        'application',
+        'deletedAt', Sequelize.DATE
+      ),
+      queryInterface.addColumn(
+        'assets_dataflows',
+        'deletedAt', Sequelize.DATE
+      ),
+      queryInterface.addColumn(
+        'assets_groups',
+        'deletedAt', Sequelize.DATE
+      ),
+      queryInterface.addColumn(
+        'cluster',
+        'deletedAt', Sequelize.DATE
+      ),
+      queryInterface.addColumn(
+        'consumer_object',
+        'deletedAt', Sequelize.DATE
+      ),
+      queryInterface.addColumn(
+        'consumer',
+        'deletedAt', Sequelize.DATE
+      ),
       queryInterface.addColumn(
         'controls_regulations',
         'deletedAt', Sequelize.DATE
       ),
-      // queryInterface.addColumn(
-      //   'data_types',
-      //   'deletedAt', Sequelize.DATE
-      // ),
+      queryInterface.addColumn(
+        'data_types',
+        'deletedAt', Sequelize.DATE
+      ),
       queryInterface.addColumn(
         'dataflow',
         'deletedAt', Sequelize.DATE
@@ -51,42 +51,42 @@ module.exports = {
         'file_layout',
         'deletedAt', Sequelize.DATE
       ),
-      // queryInterface.addColumn(
-      //   'file_license',
-      //   'deletedAt', Sequelize.DATE
-      // ),
-      // queryInterface.addColumn(
-      //   'file_validation',
-      //   'deletedAt', Sequelize.DATE
-      // ),
-      // queryInterface.addColumn(
-      //   'file',
-      //   'deletedAt', Sequelize.DATE
-      // ),
-      // queryInterface.addColumn(
-      //   'groups',
-      //   'deletedAt', Sequelize.DATE
-      // ),
-      // queryInterface.addColumn(
-      //   'index_key',
-      //   'deletedAt', Sequelize.DATE
-      // ),
-      // queryInterface.addColumn(
-      //   'index_payload',
-      //   'deletedAt', Sequelize.DATE
-      // ),
-      // queryInterface.addColumn(
-      //   'indexes',
-      //   'deletedAt', Sequelize.DATE
-      // ),
-      // queryInterface.addColumn(
-      //   'job_execution',
-      //   'deletedAt', Sequelize.DATE
-      // ),
-      // queryInterface.addColumn(
-      //   'job',
-      //   'deletedAt', Sequelize.DATE
-      // ),
+      queryInterface.addColumn(
+        'file_license',
+        'deletedAt', Sequelize.DATE
+      ),
+      queryInterface.addColumn(
+        'file_validation',
+        'deletedAt', Sequelize.DATE
+      ),
+      queryInterface.addColumn(
+        'file',
+        'deletedAt', Sequelize.DATE
+      ),
+      queryInterface.addColumn(
+        'groups',
+        'deletedAt', Sequelize.DATE
+      ),
+      queryInterface.addColumn(
+        'index_key',
+        'deletedAt', Sequelize.DATE
+      ),
+      queryInterface.addColumn(
+        'index_payload',
+        'deletedAt', Sequelize.DATE
+      ),
+      queryInterface.addColumn(
+        'indexes',
+        'deletedAt', Sequelize.DATE
+      ),
+      queryInterface.addColumn(
+        'job_execution',
+        'deletedAt', Sequelize.DATE
+      ),
+      queryInterface.addColumn(
+        'job',
+        'deletedAt', Sequelize.DATE
+      ),
       queryInterface.addColumn(
         'jobfile',
         'deletedAt', Sequelize.DATE
@@ -111,10 +111,10 @@ module.exports = {
         'rules',
         'deletedAt', Sequelize.DATE
       ),
-      // queryInterface.addColumn(
-      //   'user_application',
-      //   'deletedAt', Sequelize.DATE
-      // ),
+      queryInterface.addColumn(
+        'user_application',
+        'deletedAt', Sequelize.DATE
+      ),
       queryInterface.addColumn(
         'workflows',
         'deletedAt', Sequelize.DATE
