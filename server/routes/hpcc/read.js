@@ -19,6 +19,7 @@ const ClusterWhitelist = require('../../cluster-whitelist');
 let lodash = require('lodash');
 const {socketIo : io} = require('../../server');
 const fs = require("fs");
+const { file } = require('tmp');
 
 router.post('/filesearch', [
   body('keyword')
@@ -646,12 +647,14 @@ io.of("landingZoneFileUpload").on("connection", (socket) => {
 
 	//Upload File 
 	const upload = (cluster, destinationFolder, id ,fileName) =>{
+		fileStream = fs.createReadStream('uploads/' + fileName)
 		request({
 			url : `${cluster.thor_host}:${cluster.thor_port}/FileSpray/UploadFile.json?upload_&rawxml_=1&NetAddress=${machine}&OS=2&Path=/var/lib/HPCCSystems/${dropZone}/${destinationFolder}`,
 			method : 'POST',
 			formData : {
 				'UploadedFiles[]' : {
-					value : `uploads/${fileName}`,
+					// value : `uploads/${fileName}`,
+					value : fileStream,
 					options : {
 						filename : fileName,
 					}
@@ -660,7 +663,7 @@ io.of("landingZoneFileUpload").on("connection", (socket) => {
 			  },
 			  function(err, httpResponse, body){
 				const response = JSON.parse(body);
-				console.log("<<<< Response received", body );
+				console.log("<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<< Response received", body );
 				fs.unlink(`uploads/${fileName}`, err =>{
 					console.log(err)
 				});
@@ -673,6 +676,31 @@ io.of("landingZoneFileUpload").on("connection", (socket) => {
 			  }
 		)
 	}
+
+	// const upload = (cluster, destinationFolder, id ,fileName) => {
+	// 	_fileStream = fs.createReadStream('uploads/' + fileName)
+
+	// request({
+	// 	method: 'POST',
+	// 	uri: `${cluster.thor_host}:${cluster.thor_port}/FileSpray/UploadFile.json?upload_&rawxml_=1&NetAddress=${machine}&OS=2&Path=/var/lib/HPCCSystems/${dropZone}/${destinationFolder}`,
+	// 	formData: {
+	// 	  'UploadedFiles[]': {
+	// 		value: _fileStream,
+	// 		options: {
+	// 		  filename: fileName,
+	// 		}
+	// 	  },
+	// 	},
+	// 	resolveWithFullResponse: true
+	//   }).then((response) => {
+	// 	console.log("<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<< R  E  S  P  O  N  S E >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>" , response.body);
+	// 	let json = JSON.parse(response.body);
+	// 	_fileStream.destroy();
+	//   }).catch((err) => {
+	// 	console.log(err);
+	// 	res.json(err);
+	//   });
+	// };
 		
 	//When whole file is supplied by the client
 	socket.on('upload-file', (message) => {
@@ -688,41 +716,58 @@ io.of("landingZoneFileUpload").on("connection", (socket) => {
 		});
 	});
 
-	//when a slice of file is supplied by the client
-	let files = [""];
-	socket.on('upload-slice', (message) =>{
-		console.log(" <<<< Upload Slice ", message.id);
-		let {id, fileName, data, sliceStartsAt} = message;
-		files.map(item => {
-			if(item.id === id){
-				console.log("<<<< file already exists, just update the data and act accordingly")
-				item.data = item.data + data
-				return item
-			}else{
-				console.log("<<<<<<<<<<<<<<<<<<<<<<<< This is a new file");
-				files.push({id, fileName, data : data,sliceStartsAt});
-			}
-		})
-		
-		// files[fileName].data.push(message.data);
-		// files[fileName].sliceStartsAt = message.sliceStartsAt;
-		// files[fileName].sliceEndsAt = files[fileName].fileSize >= (files[fileName].sliceStartsAt + 100000 )? files[fileName].sliceStartsAt + 100000 : files[fileName].fileSize;
+	
 
-		// if(files[fileName].fileSize == files[fileName].sliceStartsAt){
-		// 	let file = files[fileName].data.join('');
-		// 	let fileBuffer = Buffer(file);
-		// 	fs.writeFile(`uploads/${fileName}`,  fileBuffer, function(err){
-		// 		if(err){
-		// 			console.log("<<<< Err ", err)
-		// 		}else{
-		// 			console.log("<<<< File saved ");
-		// 			return;
-		// 		}
-		// 	})
-		// 	// console.log("<<<< File buffer: ", fileBuffer);
-		// }else{
-		// 	requestSlice(fileName, files);
-		// }
+	//Ask for more
+	const supplySlice = (file) =>{
+		if(file.fileSize - file.received <= 0){
+				console.log(" All chunks received >>>>>>>>>>>>>>>>>>>>>>>>>>", file.received);
+				let fileData = file.data.join('');
+				let fileBuffer = Buffer.from(fileData);
+				console.log("<<<< File Buffer" , fileBuffer)
+				fs.writeFile(`uploads/${file.fileName}`, fileBuffer, function(err){
+					if(err){
+						console.log("<<<< uploading large file", err)
+					}else{
+						console.log("<<<< Large file was saved in fs")
+						upload(cluster, destinationFolder, file.id ,file.fileName)
+					}
+				})
+		}
+		else if(file.fileSize - file.received >= 100000){
+				console.log("Not received all chuncks >>>>>>>>>>>>>>>>>>>>>>>", file.received)
+				socket.emit('supply-slice', {
+					id:file.id,
+					chunkStart : file.received,
+					chunkSize: 100000
+				})
+		
+		}else if(file.fileSize -file.received < 100000){
+				console.log("Requesting last piece of file >>>>>>>>>>>>>>>>>>>>>>>", file.received)
+				socket.emit('supply-slice', {
+					id:file.id,
+					chunkStart : file.received, 
+					chunkSize: file.fileSize - file.received
+				})	
+		}
+	}
+	//when a slice of file is supplied by the client
+	let files = [{}];
+	socket.on('upload-slice', (message) =>{
+		let {id, fileName, data, fileSize, chunkSize} = message;
+		let indexOfCurrentItem = files.findIndex(item => item.id === id);
+		console.log(indexOfCurrentItem, "<<<<<<<<<<<<<< Index of current Item");
+		if(indexOfCurrentItem < 0){
+			files.push({id, fileName, data : [data], fileSize, received : chunkSize});
+			let i = files.findIndex(item => item.id === id);
+				supplySlice(files[i])
+		}else{
+			let i = files.findIndex(item => item.id === id);
+			files[i].data.push(data);
+			files[i].received = files[i].received + chunkSize;
+			console.log("<<<< Current file " , files[i])
+			supplySlice(files[i])
+		}
 	})
 });
 module.exports = router;

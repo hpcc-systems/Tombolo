@@ -156,7 +156,7 @@ class App extends React.Component {
                     path="/:applicationId/dataflowinstances"
                     component={DataflowInstances}
                   />
-                  <PrivateRoute
+                  <Route
                     path="/admin/fileUpload"
                     component={LandingZoneUpload}
                   />

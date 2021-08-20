@@ -1,7 +1,7 @@
 import React, {useState, useEffect} from 'react';
 import {useSelector} from "react-redux"
-import { Upload, Table, Select, message, TreeSelect, Button,Checkbox   } from 'antd';
-import { InboxOutlined} from '@ant-design/icons';
+import { Upload, Table, Select, message, TreeSelect, Button,Checkbox,Spin    } from 'antd';
+import { InboxOutlined, LoadingOutlined } from '@ant-design/icons';
 import { io } from "socket.io-client";
 import{LandingZoneUploadContainer, columns } from "./landingZoneUploadStyles";
 import {v4 as uuidv4} from 'uuid';
@@ -174,14 +174,18 @@ useEffect(() =>{
   if(files.length > 0){
     files.map((item, index) => {
         newTableData.push({key : uuidv4(), sno : index + 1, 
-          fileName : item.name, fileSize : item.size, uploading: uploading   });
+          fileName : item.name, fileSize : item.size, uploading: item.uploading?<LoadingOutlined style={{ fontSize: 24 }} spin />: null   });
     })
   }
   if(files.length < 1 && successItem !== null){
     message.success("Upload Success");
+    setUploading(false)
     setSuccessItem(null)
   }
   setTableData(newTableData);
+
+  //<<<< Test
+  console.log("<<<< All files", files)
 }, [files])
 
   // Listining to msgs from socket
@@ -196,11 +200,12 @@ useEffect(() =>{
      //Response
      if(socket){
       socket.on('file-upload-response', (response => {
-        // console.log(response)
+        console.log("<<<< Response ", response )
         if(response.success){
           setSuccessItem(response.id);
         }else if(!response.success){
-          message.error(`Unable to upload file - ${response.message}`)
+          message.error(`Unable to upload file - ${response.message}`);
+          setUploading(false)
         }
       }))
     }
@@ -224,7 +229,6 @@ useEffect(() =>{
   //Handle File Upload
   const handleFileUpload = () =>{
     message.config({top:150,   maxCount: 1});
-    setUploading(true);
     if(!cluster){
       message.error("Select a cluster")
     }else if(!machine){
@@ -235,11 +239,18 @@ useEffect(() =>{
     else if(files.length < 1){
       message.error("Add files")
     }
-      else{
+    else{
+    setUploading(true);
+    let filesCopy = [...files];
+    filesCopy.map(item => {
+      item.uploading = true;
+      return item;
+    })
+    setFiles(filesCopy)
     // Start by sending some file details to server
     socket.emit('start-upload', {destinationFolder, cluster, machine, dropZone : JSON.parse(selectedDropZone)?.name});
     files.map(item => {
-      if(item.size <= 1000000000){
+      if(item.size <= 100){
          let reader = new FileReader();
          reader.readAsArrayBuffer(item);
           reader.onload = function(e){
@@ -251,7 +262,8 @@ useEffect(() =>{
             })
           }
       }else{
-        let slice = item.slice(0, 10000000);
+        console.log("<<<< Large file,upload by chunks")
+        let slice = item.slice(0, 100000);
         let reader = new FileReader();
         reader.readAsArrayBuffer(slice);
         reader.onload = function(e){
@@ -260,7 +272,9 @@ useEffect(() =>{
             id: item.uid,
             fileName : item.name,
             data: arrayBuffer,
-            sliceStartsAt : 100000000
+            fileSize : item.size,
+            chunkStart : 100000,
+            chunkSize: 100000
           })
         }
       }
@@ -268,15 +282,19 @@ useEffect(() =>{
 
       //When server asks for a slice of a file
       socket.on('supply-slice', (message) =>{
-        let slice = files[0].slice(message.sliceStart, message.sliceEnd);
+        let currentFile = files.filter(item => item.uid === message.id);
+        console.log("Current file >>>>", currentFile, "<<<< All files ", files, "<<<< Looking for ",message.id)
+        let slice = currentFile[0].slice(message.chunkStart, message.chunkStart + message.chunkSize);
         let reader = new FileReader();
         reader.readAsArrayBuffer(slice);
         reader.onload = function(e){
           let arrayBuffer = e.target.result;
           socket.emit('upload-slice', {
-            fileName : files[0].name,
+            id: currentFile[0].uid,
+            fileName : currentFile[0].name,
             data: arrayBuffer,
-            sliceStartsAt : message.sliceEnd
+            fileSize : currentFile[0].size,
+            chunkSize : message.chunkSize
           })
         }
       })
@@ -391,7 +409,7 @@ useEffect(() =>{
         </span> */}
 
         <span>
-          <Button size="large" onClick={handleFileUpload} type="primary" block > Upload</Button>
+          <Button size="large" disabled={uploading}onClick={handleFileUpload} type="primary" block > Upload</Button>
         </span>
         </LandingZoneUploadContainer>
     )
