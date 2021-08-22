@@ -99,6 +99,9 @@ class LeftNav extends Component {
                       <i className="fa fa-lg fa-microchip"></i> <span className={this.state.collapsed ? "d-none" : ""}>Job Execution</span>
                     </NavLink>
                   </li>
+                  <li className="nav-item">
+                      <NavLink to={"/admin/fileUpload"} className="nav-link"><i className="fa fa-lg fa-upload"></i><span className={this.state.collapsed ? "d-none" : ""}> Upload </span></NavLink>
+                  </li>
                 </ul>
               {/* </li>  */}
 
@@ -144,9 +147,7 @@ class LeftNav extends Component {
               <li className="nav-item">
                 <NavLink to={"/admin/applications"} className="nav-link"><i className="fa fa-lg fa-desktop"></i><span className={this.state.collapsed ? "d-none" : ""}> Applications</span></NavLink>
               </li>
-              <li className="nav-item">
-                <NavLink to={"/admin/fileUpload"} className="nav-link"><i className="fa fa-lg fa-upload"></i><span className={this.state.collapsed ? "d-none" : ""}> Upload </span></NavLink>
-              </li>
+             
               {/*}
               <li className="nav-item">
                 <NavLink to={"/admin/controlsAndRegulations"} className="nav-link"><i className='fa fa-lg fa-address-card-o'></i><span className={this.state.collapsed ? "d-none" : ""}> Compliance</span></NavLink>

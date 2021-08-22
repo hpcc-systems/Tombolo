@@ -47,8 +47,12 @@ useEffect(() => {
   }, []);
 
   useEffect(() => {
+    if(cluster){
+      let {thor_host, thor_port} = JSON.parse(cluster);
+      console.log("<<<< The selected cluster is <<<<", thor_host, thor_port);
+
       //Get Dropzones and cluster IP
-      fetch('http://10.173.147.1:8010/WsTopology/TpDropZoneQuery.json')
+      fetch(`${thor_host}:${thor_port}/WsTopology/TpDropZoneQuery.json`)
       .then(response => response.json())
       .then(data => {
         let drop = data.TpDropZoneQueryResponse.TpDropZones.TpDropZone;
@@ -56,10 +60,11 @@ useEffect(() => {
           setDropZones([{name : item.Name, machines : item.TpMachines.TpMachine, id: uuidv4()}])
         })
       });
-  
+    }
+
       // Get directory tree on initial render
-      if(selectedDropZone  != null && machine != null){
-        getDirectories("")
+      if(selectedDropZone  != null && machine != null && cluster !== null){
+        getDirectories("", cluster)
         .then((result) =>{
           let data = result.FileListResponse.files.PhysicalFileStruct.map(item =>{
             return {...item, title : item.name, key : uuidv4(),  directorypath: `/${item.name}`,  children: [{title : "...  Loading", disabled : true, key : uuidv4()}]}
@@ -69,7 +74,7 @@ useEffect(() => {
           console.log("<<<< err ", err)
         })
       }  
-  }, [selectedDropZone, machine])
+  }, [cluster, selectedDropZone, machine])
 
   // Get child dirs
   const [currentlyExpandedNodes, setCurrentlyExpandedNodes] = useState([]);
@@ -80,7 +85,7 @@ useEffect(() => {
       //Tree is expanded
       let targetDirectoryPath = getDirectoryPath(targetDirectory);
       //Get nested dirs for expanded node
-      getDirectories(targetDirectoryPath).then(result =>{
+      getDirectories(targetDirectoryPath, cluster).then(result =>{
         const directory = result.FileListResponse?.files;
         let treeDataCopy = [...treeData];
 
@@ -114,7 +119,8 @@ useEffect(() => {
   }
 
   //Get directories func
-  const getDirectories = (path) =>{
+  const getDirectories = (path, cluster) =>{
+    let{thor_host, thor_port} = JSON.parse(cluster)
     let data = {
       Netaddr : machine,
       Path : `/var/lib/HPCCSystems/${JSON.parse(selectedDropZone).name}${path}`,
@@ -127,7 +133,7 @@ useEffect(() => {
       formData.append(key, data[key])
     }
   
-    return fetch('http://10.173.147.1:8010/FileSpray/FileList.json', {
+    return fetch(`${thor_host}:${thor_port}/FileSpray/FileList.json`, {
           method :'POST',
           body : formData})
           .then(response => response.json())
