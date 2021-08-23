@@ -633,7 +633,6 @@ router.post('/executeSprayJob', [
 
 // Drop Zone file upload namespace
 io.of("landingZoneFileUpload").on("connection", (socket) => {
-	console.log("<<<< Websocket Connection established");
 	let cluster, destinationFolder, dropZone;
 
 	//Receive cluster and destination folder info when client clicks upload
@@ -642,7 +641,6 @@ io.of("landingZoneFileUpload").on("connection", (socket) => {
 		destinationFolder = message.destinationFolder;
 		machine = message.machine;
 		dropZone = message.dropZone;
-		console.log("UPLOAD <<<< " , `${cluster.thor_host}:${cluster.thor_port}`)
 	})
 
 	//Upload File 
@@ -663,7 +661,6 @@ io.of("landingZoneFileUpload").on("connection", (socket) => {
 			  },
 			  function(err, httpResponse, body){
 				const response = JSON.parse(body);
-				console.log("<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<< Response received", body );
 				fs.unlink(`uploads/${fileName}`, err =>{
 					console.log(err)
 				});
@@ -676,66 +673,32 @@ io.of("landingZoneFileUpload").on("connection", (socket) => {
 			  }
 		)
 	}
-
-	// const upload = (cluster, destinationFolder, id ,fileName) => {
-	// 	_fileStream = fs.createReadStream('uploads/' + fileName)
-
-	// request({
-	// 	method: 'POST',
-	// 	uri: `${cluster.thor_host}:${cluster.thor_port}/FileSpray/UploadFile.json?upload_&rawxml_=1&NetAddress=${machine}&OS=2&Path=/var/lib/HPCCSystems/${dropZone}/${destinationFolder}`,
-	// 	formData: {
-	// 	  'UploadedFiles[]': {
-	// 		value: _fileStream,
-	// 		options: {
-	// 		  filename: fileName,
-	// 		}
-	// 	  },
-	// 	},
-	// 	resolveWithFullResponse: true
-	//   }).then((response) => {
-	// 	console.log("<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<< R  E  S  P  O  N  S E >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>" , response.body);
-	// 	let json = JSON.parse(response.body);
-	// 	_fileStream.destroy();
-	//   }).catch((err) => {
-	// 	console.log(err);
-	// 	res.json(err);
-	//   });
-	// };
 		
 	//When whole file is supplied by the client
 	socket.on('upload-file', (message) => {
-		console.log(message, "<<<< Message from client");
 		const {id,fileName, data} = message;
 		fs.writeFile(`uploads/${fileName}`, data, function(err){
 			if(err){
 				console.log(`Error occured while saving ${fileName} in FS`, err)
 			}else{
-				console.log("<<<< success saving file to fs");
 				upload(cluster, destinationFolder, id, fileName )
 			}
 		});
 	});
 
-	
-
 	//Ask for more
 	const supplySlice = (file) =>{
 		if(file.fileSize - file.received <= 0){
-				console.log(" All chunks received >>>>>>>>>>>>>>>>>>>>>>>>>>", file.received);
 				let fileData = file.data.join('');
 				let fileBuffer = Buffer.from(fileData);
-				console.log("<<<< File Buffer" , fileBuffer)
 				fs.writeFile(`uploads/${file.fileName}`, fileBuffer, function(err){
 					if(err){
-						console.log("<<<< uploading large file", err)
 					}else{
-						console.log("<<<< Large file was saved in fs")
 						upload(cluster, destinationFolder, file.id ,file.fileName)
 					}
 				})
 		}
 		else if(file.fileSize - file.received >= 100000){
-				console.log("Not received all chuncks >>>>>>>>>>>>>>>>>>>>>>>", file.received)
 				socket.emit('supply-slice', {
 					id:file.id,
 					chunkStart : file.received,
@@ -743,7 +706,6 @@ io.of("landingZoneFileUpload").on("connection", (socket) => {
 				})
 		
 		}else if(file.fileSize -file.received < 100000){
-				console.log("Requesting last piece of file >>>>>>>>>>>>>>>>>>>>>>>", file.received)
 				socket.emit('supply-slice', {
 					id:file.id,
 					chunkStart : file.received, 
@@ -756,7 +718,6 @@ io.of("landingZoneFileUpload").on("connection", (socket) => {
 	socket.on('upload-slice', (message) =>{
 		let {id, fileName, data, fileSize, chunkSize} = message;
 		let indexOfCurrentItem = files.findIndex(item => item.id === id);
-		console.log(indexOfCurrentItem, "<<<<<<<<<<<<<< Index of current Item");
 		if(indexOfCurrentItem < 0){
 			files.push({id, fileName, data : [data], fileSize, received : chunkSize});
 			let i = files.findIndex(item => item.id === id);
@@ -765,7 +726,6 @@ io.of("landingZoneFileUpload").on("connection", (socket) => {
 			let i = files.findIndex(item => item.id === id);
 			files[i].data.push(data);
 			files[i].received = files[i].received + chunkSize;
-			console.log("<<<< Current file " , files[i])
 			supplySlice(files[i])
 		}
 	})

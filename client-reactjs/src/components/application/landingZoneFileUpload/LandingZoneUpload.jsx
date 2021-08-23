@@ -15,6 +15,7 @@ function LandingZoneUpload() {
   const [dropzones, setDropZones] = useState([]);
   const [selectedDropZone, setSelectedDropZone]= useState(null)
   const [machine, setMachine] = useState(null);
+  const [directory, setDirectory] = useState(null)
   const [treeData, setTreeData] = useState([]);
   const [uploading, setUploading] = useState(false);
   const [successItem, setSuccessItem] = useState(null);
@@ -49,7 +50,6 @@ useEffect(() => {
   useEffect(() => {
     if(cluster){
       let {thor_host, thor_port} = JSON.parse(cluster);
-      console.log("<<<< The selected cluster is <<<<", thor_host, thor_port);
 
       //Get Dropzones and cluster IP
       fetch(`${thor_host}:${thor_port}/WsTopology/TpDropZoneQuery.json`)
@@ -123,7 +123,8 @@ useEffect(() => {
     let{thor_host, thor_port} = JSON.parse(cluster)
     let data = {
       Netaddr : machine,
-      Path : `/var/lib/HPCCSystems/${JSON.parse(selectedDropZone).name}${path}`,
+      // Path : `/var/lib/HPCCSystems/${JSON.parse(selectedDropZone).name}${path}`,
+      Path : `${directory}${path}`,
       OS : 2,
       rawxml_ : true,
       DirectoryOnly: true
@@ -189,9 +190,6 @@ useEffect(() =>{
     setSuccessItem(null)
   }
   setTableData(newTableData);
-
-  //<<<< Test
-  console.log("<<<< All files", files)
 }, [files])
 
   // Listining to msgs from socket
@@ -199,14 +197,12 @@ useEffect(() =>{
     //When message is received from back end
     if(socket){
       socket.on("message", (message) =>{
-        console.log(message)
       })
      }
 
      //Response
      if(socket){
       socket.on('file-upload-response', (response => {
-        console.log("<<<< Response ", response )
         if(response.success){
           setSuccessItem(response.id);
         }else if(!response.success){
@@ -268,7 +264,6 @@ useEffect(() =>{
             })
           }
       }else{
-        console.log("<<<< Large file,upload by chunks")
         let slice = item.slice(0, 100000);
         let reader = new FileReader();
         reader.readAsArrayBuffer(slice);
@@ -289,7 +284,6 @@ useEffect(() =>{
       //When server asks for a slice of a file
       socket.on('supply-slice', (message) =>{
         let currentFile = files.filter(item => item.uid === message.id);
-        console.log("Current file >>>>", currentFile, "<<<< All files ", files, "<<<< Looking for ",message.id)
         let slice = currentFile[0].slice(message.chunkStart, message.chunkStart + message.chunkSize);
         let reader = new FileReader();
         reader.readAsArrayBuffer(slice);
@@ -338,7 +332,12 @@ useEffect(() =>{
   }
   //Machine Selection
   const  handleMachineChange = (value) => {
-    setMachine(value)
+    setMachine(value);
+    JSON.parse(selectedDropZone)?.machines.map(item =>{
+      if(item.Netaddress === value){
+        setDirectory(item.Directory)
+      }
+    });
   }
   //Handle node tree selection
   const handleTreeNodeSelection = (value) => {
@@ -347,7 +346,6 @@ useEffect(() =>{
   }
   //Handle override checkbox change
   const onCheckBoxChnage = (e) =>{
-    console.log(e.target.checked, "<<<< Check box value")
   }
 
     return (
@@ -382,14 +380,14 @@ useEffect(() =>{
           <span style={{display: machine == null? "none" : "block"}}>
             <small>Folder</small>
             <TreeSelect
-            style={{ width: '100%'}}
-            value={destinationFolder}
-            placeholder="Please select"
-            allowClear
-            onChange={handleTreeNodeSelection}
-            treeData={treeData}
-            onTreeExpand={getNestedDirectories}
-            >
+              style={{ width: '100%'}}
+              value={destinationFolder}
+              placeholder="Please select"
+              allowClear
+              onChange={handleTreeNodeSelection}
+              treeData={treeData}
+              onTreeExpand={getNestedDirectories}
+              >
               <span style={{height: "900px"}}> Hello</span>
             </TreeSelect>
           </span>

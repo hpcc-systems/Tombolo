@@ -31,7 +31,7 @@ import { store } from "./redux/store/Store";
 
 import { Report } from "./components/Report/Report";
 import Regulations from "./components/admin/ControlsAndRegulations";
-import LandingZoneUpload from "./components/admin/landingZoneFileUpload/LandingZoneUpload";
+import LandingZoneUpload from "./components/application/landingZoneFileUpload/LandingZoneUpload";
 const { Content } = Layout;
 
 class App extends React.Component {
@@ -157,7 +157,7 @@ class App extends React.Component {
                     component={DataflowInstances}
                   />
                   <Route
-                    path="/admin/fileUpload"
+                    path="/:application/fileUpload"
                     component={LandingZoneUpload}
                   />
 
