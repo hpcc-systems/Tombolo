@@ -504,4 +504,125 @@ router.post('/importApp', [
 })
 });
 
+router.post('/export', [
+  body('id').isUUID(4).withMessage('Invalid application id')
+], (req, res) => {
+  const errors = validationResult(req).formatWith(validatorUtil.errorFormatter);
+  if (!errors.isEmpty()) {
+    return res.status(422).json({ success: false, errors: errors.array() });
+  } 
+
+  try {
+    let applicationExport = {};
+    Application.findOne({
+      where: {id: req.body.id},
+    }).then(async (application) => {
+      applicationExport = {
+        "application" : {
+          title: application.title,
+          description: application.description,
+          cluster: application.cluster
+        }
+
+      }      
+
+      let groups = await Groups.findAll({
+        where: {application_id: req.body.id},
+        attributes: { exclude: ['createdAt', 'updatedAt', 'application_id'] }
+      })
+      applicationExport.application.groups = groups;
+      
+      let files = await File.findAll({where: {application_id: application.id}, 
+        include: [
+          {model: FileLayout, attributes: { exclude: ['createdAt', 'updatedAt', 'id', 'application_id'] }}, 
+          {model: FileLicense, attributes: { exclude: ['createdAt', 'updatedAt', 'id', 'application_id'] }}, 
+          {model: FileValidation, attributes: { exclude: ['createdAt', 'updatedAt', 'id', 'application_id'] }},
+          {model: Groups, as: 'groups', attributes: ['id', 'name', 'description', 'parent_group'], 
+          through: {
+            attributes: []
+          }},
+          {model: Dataflow, as: 'dataflows', attributes: ['id']}
+        ]      
+      }); 
+
+      let indexes = await Index.findAll({where: {application_id: application.id}, 
+        include: [
+          {model: IndexKey, attributes: { exclude: ['createdAt', 'updatedAt', 'id', 'application_id'] }}, 
+          {model: IndexPayload, attributes: { exclude: ['createdAt', 'updatedAt', 'id', 'application_id'] }},
+          {model: Groups, as: 'groups', attributes: ['id', 'name', 'description', 'parent_group'], 
+          through: {
+            attributes: []
+          }},
+          {model: Dataflow, as: 'dataflows', attributes: ['id']}
+        ],
+        attributes: { exclude: ['createdAt', 'updatedAt', 'id', 'application_id'] }
+      }); 
+
+      let queries = await Query.findAll({where: {application_id: application.id}, 
+        include: [
+          {model: QueryField, attributes: { exclude: ['createdAt', 'updatedAt', 'id', 'application_id'] }}, 
+          {model: Groups, as: 'groups', attributes: ['id', 'name', 'description', 'parent_group'], 
+          through: {
+            attributes: []
+          }},
+          {model: Dataflow, as: 'dataflows', attributes: ['id']}
+        ],        
+        attributes: { exclude: ['createdAt', 'updatedAt', 'id', 'application_id'] }
+      }); 
+
+      let jobs = await Job.findAll({where: {application_id: application.id}, 
+        include: [
+          {model: JobFile, attributes: { exclude: ['createdAt', 'updatedAt', 'id', 'application_id'] }}, 
+          {model: JobParam, attributes: { exclude: ['createdAt', 'updatedAt', 'id', 'application_id'] }},
+          {model: Groups, as: 'groups', attributes: ['id', 'name', 'description', 'parent_group'], 
+          through: {
+            attributes: []
+          }},
+          {model: Dataflow, as: 'dataflows', attributes: ['id']},
+          {model: DependentJobs, as: 'dependsOnJobs', attributes: { exclude: ['createdAt', 'updatedAt'], through: {
+            attributes: []
+          } }}
+        ],
+        attributes: { exclude: ['createdAt', 'updatedAt', 'id', 'application_id'] }
+      }); 
+
+      let dataflow = await Dataflow.findAll({where: {application_id: application.id}, 
+        include: [{model: DataflowGraph, attributes: { exclude: ['createdAt', 'updatedAt', 'id', 'application_id'] }}                  
+                ],
+        attributes: { exclude: ['createdAt', 'updatedAt', 'id', 'application_id'] }
+      }); 
+
+      applicationExport.application.assets = {files: files, indexes: indexes, queries: queries, jobs: jobs, dataflow: dataflow};
+        
+      var schemaDir = path.join(__dirname, '..', '..', 'schemas');
+      if (!fs.existsSync(schemaDir)){
+        fs.mkdirSync(schemaDir);
+      }
+      var exportFile = path.join(__dirname, '..', '..', 'schemas', application.title+'-export.json');
+      
+      fs.appendFile(exportFile, JSON.stringify(applicationExport, null, 4), function (err) {
+          if (err) return res.status(500).send("Error occured while exporting application");
+          res.download(exportFile, function(err){
+            if (err) {
+              console.log(err);
+              console.log("Error occured during download...")
+              res.status(500).send("Error occured while exporting application");;
+            } else {
+              console.log("Download completed...")
+              fs.unlink(exportFile, (err) => {
+                if (err) res.status(500).send("Error occured while exporting application");;
+                console.log(exportFile + ' was deleted after download');
+              });
+            }
+          });
+      });
+
+      //res.json(applicationExport);
+    })
+  } catch (err) {
+    console.log('err', err);
+    return res.status(500).json({ success: false, message: "Error occured while removing application" });
+  }
+});
+
 module.exports = router;
