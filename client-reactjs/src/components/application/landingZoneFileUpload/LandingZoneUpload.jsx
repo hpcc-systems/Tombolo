@@ -181,11 +181,11 @@ useEffect(() =>{
   if(files.length > 0){
     files.map((item, index) => {
         newTableData.push({key : uuidv4(), sno : index + 1, 
-          fileName : item.name, fileSize : item.size, uploading: item.uploading?<LoadingOutlined style={{ fontSize: 24 }} spin />: null   });
+          fileName : item.name, fileSize : `${item.size / 1000000} MB` , uploading: item.uploading?<LoadingOutlined style={{ fontSize: 24 }} spin />: null   });
     })
   }
   if(files.length < 1 && successItem !== null){
-    message.success("Upload Success");
+    message.success("The file has been uploaded successfully to the Landing Zone");
     setUploading(false)
     setSuccessItem(null)
   }
@@ -239,7 +239,7 @@ useEffect(() =>{
       message.error("Select  destination folder")
     }
     else if(files.length < 1){
-      message.error("Add files")
+      message.error("Please select atleast one file to upload")
     }
     else{
     setUploading(true);
@@ -413,7 +413,7 @@ useEffect(() =>{
         </span> */}
 
         <span>
-          <Button size="large" disabled={uploading}onClick={handleFileUpload} type="primary" block > Upload</Button>
+          <Button size="large" disabled={files.length< 1 || uploading}onClick={handleFileUpload} type="primary"  > Upload</Button>
         </span>
         </LandingZoneUploadContainer>
     )
