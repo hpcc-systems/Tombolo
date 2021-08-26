@@ -205,7 +205,7 @@ useEffect(() =>{
     setUploading(false)
     setSuccessItem(null)
     socket.close();
-    history.push(`${app.application.applicationId}/actions`)
+    history.push(`/`);
   }
   setTableData(newTableData);
 }, [files])
