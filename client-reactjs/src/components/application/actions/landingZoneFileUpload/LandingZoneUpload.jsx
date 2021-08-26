@@ -7,6 +7,7 @@ import{LandingZoneUploadContainer, columns } from "./landingZoneUploadStyles";
 import {v4 as uuidv4} from 'uuid';
 import { authHeader, handleError } from "../../../common/AuthHeader";
 import { useHistory } from 'react-router';
+import { applicationReducer } from '../../../../redux/reducers/ApplicationReducer';
 
 function LandingZoneUpload() {
   const [files, setFiles] = useState([]);
@@ -200,12 +201,11 @@ useEffect(() =>{
     })
   }
   if(files.length < 1 && successItem !== null){
-    console.log("APPPPPP >>>>>>>>", app)
     message.success("The file(s) has been uploaded successfully to the Landing Zone");
     setUploading(false)
     setSuccessItem(null)
     socket.close();
-    history.push('/')
+    history.push(`${app.application.applicationId}/actions`)
   }
   setTableData(newTableData);
 }, [files])

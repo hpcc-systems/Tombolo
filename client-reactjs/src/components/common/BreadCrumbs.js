@@ -17,8 +17,10 @@ class BreadCrumbs extends Component {
         else if(location.pathname.includes('/chart'))
           path = 'report'
         else
+        console.log("<<< Here", this.props)
           path = pathSnippets[2];
         if(this.props.applicationId && this.props.applicationId !== '') {
+          console.log("App title <<<<", this.props.applicationTitle, "<<<< Path ", path)
             breadCrumbItems.push(<Breadcrumb.Item key={this.props.applicationTitle}>{this.props.applicationTitle}</Breadcrumb.Item>);
             breadCrumbItems.push(<Breadcrumb.Item key={path}>{path}</Breadcrumb.Item>);
         } else {

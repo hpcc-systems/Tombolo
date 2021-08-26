@@ -6,15 +6,15 @@ import BreadCrumbs from "../../common/BreadCrumbs";
 
 
 function Actions() {
-    const dataflowReducer = useSelector(state => state.dataflowReducer);
+    const applicationReducer = useSelector(state => state.applicationReducer);
     const TabPane = Tabs.TabPane;
     return (
         <div>
          <div style={{display: "flex", justifyContent: "space-between"}}>
          <div className="d-flex justify-content-end">
           <BreadCrumbs
-            applicationId={dataflowReducer.applicationId}
-            applicationTitle={dataflowReducer.applicationTitle}
+            applicationId={applicationReducer.application.applicationId}
+            applicationTitle={applicationReducer.application.applicationTitle}
           />
         </div>
         </div>
