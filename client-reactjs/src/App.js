@@ -156,11 +156,6 @@ class App extends React.Component {
                     path="/:applicationId/dataflowinstances"
                     component={DataflowInstances}
                   />
-                  <Route
-                    path="/:application/fileUpload"
-                    component={LandingZoneUpload}
-                  />
-
                 </Switch>
               </Content>
             </Layout>

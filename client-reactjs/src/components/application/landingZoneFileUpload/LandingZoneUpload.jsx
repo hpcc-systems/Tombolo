@@ -5,6 +5,8 @@ import { InboxOutlined, LoadingOutlined } from '@ant-design/icons';
 import { io } from "socket.io-client";
 import{LandingZoneUploadContainer, columns } from "./landingZoneUploadStyles";
 import {v4 as uuidv4} from 'uuid';
+import { authHeader, handleError } from "../../common/AuthHeader.js";
+import { useHistory } from 'react-router';
 
 function LandingZoneUpload() {
   const [files, setFiles] = useState([]);
@@ -15,8 +17,10 @@ function LandingZoneUpload() {
   const [dropzones, setDropZones] = useState([]);
   const [selectedDropZone, setSelectedDropZone]= useState(null)
   const [machine, setMachine] = useState(null);
-  const [directory, setDirectory] = useState(null)
+  const [directory, setDirectory] = useState(null);
+  const [currentDirectoryFiles, setCurrentDirectoryFiles] = useState([])
   const [treeData, setTreeData] = useState([]);
+  const [overWriteFiles, setOverWriteFiles] = useState(false);
   const [uploading, setUploading] = useState(false);
   const [successItem, setSuccessItem] = useState(null);
   const authReducer = useSelector(state => state.authReducer);
@@ -25,6 +29,7 @@ function LandingZoneUpload() {
   const prodURL  = '/landingZoneFileUpload';
   const { Dragger } = Upload;
   const { Option,  } = Select;
+  const history = useHistory();
 
 useEffect(() => {
     // Socket io connection
@@ -49,29 +54,30 @@ useEffect(() => {
 
   useEffect(() => {
     if(cluster){
-      let {thor_host, thor_port} = JSON.parse(cluster);
-
-      //Get Dropzones and cluster IP
-      fetch(`${thor_host}:${thor_port}/WsTopology/TpDropZoneQuery.json`)
-      .then(response => response.json())
-      .then(data => {
-        let drop = data.TpDropZoneQueryResponse.TpDropZones.TpDropZone;
-        drop.map(item => {
-          setDropZones([{name : item.Name, machines : item.TpMachines.TpMachine, id: uuidv4()}])
-        })
-      });
+      let {id} = JSON.parse(cluster);
+      fetch(`/api/hpcc/read/getDropzones?clusterId=${id}&for=fileUpload`,{
+        headers : authHeader()
+      }).then(response => {
+        if(response.ok){
+          return response.json()
+        }
+        handleError(response);
+      }).then(data =>{
+        data.map(item => {
+          setDropZones([{name: item.name, path: item.path, machines: item.machines, id: uuidv4()}])
+        })   
+      })
     }
-
       // Get directory tree on initial render
       if(selectedDropZone  != null && machine != null && cluster !== null){
-        getDirectories("", cluster)
+        getDirectories("/", cluster)
         .then((result) =>{
           let data = result.FileListResponse.files.PhysicalFileStruct.map(item =>{
             return {...item, title : item.name, key : uuidv4(),  directorypath: `/${item.name}`,  children: [{title : "...  Loading", disabled : true, key : uuidv4()}]}
           })
           setTreeData(data)
         }).catch((err) => {
-          console.log("<<<< err ", err)
+          console.log("Err ", err)
         })
       }  
   }, [cluster, selectedDropZone, machine])
@@ -88,8 +94,8 @@ useEffect(() => {
       getDirectories(targetDirectoryPath, cluster).then(result =>{
         const directory = result.FileListResponse?.files;
         let treeDataCopy = [...treeData];
-
         if(directory){
+          
           let newChildDirArray = directory.PhysicalFileStruct.map(item => {
             return {...item, key: uuidv4(), title: item.name, directorypath : `${targetDirectoryPath}/${item.name}`, children: [{key: uuidv4(), title: "... Loading", disabled: true}]}
           })
@@ -123,21 +129,29 @@ useEffect(() => {
     let{thor_host, thor_port} = JSON.parse(cluster)
     let data = {
       Netaddr : machine,
-      // Path : `/var/lib/HPCCSystems/${JSON.parse(selectedDropZone).name}${path}`,
       Path : `${directory}${path}`,
       OS : 2,
       rawxml_ : true,
       DirectoryOnly: true
     }
-    const formData = new FormData();
-    for(let key in data){
-      formData.append(key, data[key])
-    }
-  
-    return fetch(`${thor_host}:${thor_port}/FileSpray/FileList.json`, {
-          method :'POST',
-          body : formData})
-          .then(response => response.json())
+
+    return fetch(`/api/hpcc/read/getDirectories?data=${JSON.stringify(data)}&host=${thor_host}&port=${thor_port}`,{
+      headers : authHeader(),
+    }).then(response => response.json())
+  }
+
+  //Get files
+   const getFiles = (path, cluster) =>{
+
+    let{thor_host, thor_port} = JSON.parse(cluster)
+    return fetch(`/api/hpcc/read/getDirectories?data=${JSON.stringify({Netaddr : machine,
+      Path : `${directory}${path}`,
+      OS : 2,
+      rawxml_ : true,
+      DirectoryOnly: false})}&host=${thor_host}&port=${thor_port}`,{
+      headers : authHeader(),
+    }).then(response => response.json())
+      .then(data => {setCurrentDirectoryFiles( data.FileListResponse.files.PhysicalFileStruct)})
   }
 
 
@@ -188,6 +202,8 @@ useEffect(() =>{
     message.success("The file has been uploaded successfully to the Landing Zone");
     setUploading(false)
     setSuccessItem(null)
+    socket.close();
+    history.push("/")
   }
   setTableData(newTableData);
 }, [files])
@@ -230,6 +246,10 @@ useEffect(() =>{
 
   //Handle File Upload
   const handleFileUpload = () =>{
+    let existingDirFiles = currentDirectoryFiles.map(item => item.name);
+    let newFiles = files.map(item => item.name);
+    let commonFiles = existingDirFiles.filter(item => newFiles.includes(item));
+
     message.config({top:150,   maxCount: 1});
     if(!cluster){
       message.error("Select a cluster")
@@ -240,6 +260,8 @@ useEffect(() =>{
     }
     else if(files.length < 1){
       message.error("Please select atleast one file to upload")
+    }else if(commonFiles.length > 0 && !overWriteFiles){
+      message.error("Some file(s) already exist. Please check overwrite box to continue")
     }
     else{
     setUploading(true);
@@ -252,7 +274,7 @@ useEffect(() =>{
     // Start by sending some file details to server
     socket.emit('start-upload', {destinationFolder, cluster, machine, dropZone : JSON.parse(selectedDropZone)?.name});
     files.map(item => {
-      if(item.size <= 100){
+      if(item.size <= 1000000){
          let reader = new FileReader();
          reader.readAsArrayBuffer(item);
           reader.onload = function(e){
@@ -280,26 +302,26 @@ useEffect(() =>{
         }
       }
     })
-
-      //When server asks for a slice of a file
-      socket.on('supply-slice', (message) =>{
-        let currentFile = files.filter(item => item.uid === message.id);
-        let slice = currentFile[0].slice(message.chunkStart, message.chunkStart + message.chunkSize);
-        let reader = new FileReader();
-        reader.readAsArrayBuffer(slice);
-        reader.onload = function(e){
-          let arrayBuffer = e.target.result;
-          socket.emit('upload-slice', {
-            id: currentFile[0].uid,
-            fileName : currentFile[0].name,
-            data: arrayBuffer,
-            fileSize : currentFile[0].size,
-            chunkSize : message.chunkSize
-          })
-        }
-      })
     }
-    }
+    //When server asks for a slice of a file
+    socket.on('supply-slice', (message) =>{
+      let currentFile = files.filter(item => item.uid === message.id);
+      let slice = currentFile[0].slice(message.chunkStart, message.chunkStart + message.chunkSize);
+      let reader = new FileReader();
+      reader.readAsArrayBuffer(slice);
+      reader.onload = function(e){
+        let arrayBuffer = e.target.result;
+        socket.emit('upload-slice', {
+          id: currentFile[0].uid,
+          fileName : currentFile[0].name,
+          data: arrayBuffer,
+          fileSize : currentFile[0].size,
+          chunkSize : message.chunkSize
+        })
+      }
+    })
+    
+  }
 
   //Draggeer's props
   const props = {
@@ -342,10 +364,12 @@ useEffect(() =>{
   //Handle node tree selection
   const handleTreeNodeSelection = (value) => {
     let targetDirectoryPath = getDirectoryPath(value);
-      setDestinationFolder(targetDirectoryPath);
+    setDestinationFolder(targetDirectoryPath);
+    getFiles(targetDirectoryPath, cluster)
   }
   //Handle override checkbox change
   const onCheckBoxChnage = (e) =>{
+    setOverWriteFiles(e.target.checked)
   }
 
     return (
@@ -408,9 +432,9 @@ useEffect(() =>{
           <Table   columns={columns} dataSource={tableData} size="small" pagination={false} style={{width: "100%", maxHeight : "300px", overflow: "auto"}}/>
         </span>
 
-        {/* <span>
-        <Checkbox onChange={onCheckBoxChnage}>Overwrite</Checkbox>
-        </span> */}
+        <span style={{ margin : "20px 0px 20px 0px"}}>
+        <Checkbox onChange={onCheckBoxChnage}>Overwrite File(s)</Checkbox>
+        </span>
 
         <span>
           <Button size="large" disabled={files.length< 1 || uploading}onClick={handleFileUpload} type="primary"  > Upload</Button>

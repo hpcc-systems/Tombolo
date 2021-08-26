@@ -117,6 +117,36 @@ exports.indexInfo = (clusterId, indexName) => {
   });
 }
 
+  exports.fetchDirectories = (host, port, data) => {
+    let formData={};
+    for(let key in data){
+      formData[key] = data[key].toString()
+    }
+    try {
+      return new Promise((resolve, reject) => {
+          request.post({
+            url: `${host}:${port}/FileSpray/FileList.json`,
+            headers: {'content-type' : 'application/x-www-form-urlencoded'},
+            formData: formData,
+            resolveWithFullResponse: true
+          }, function(err, response, body) {
+            if (err) {
+              console.log('ERROR - ', err);
+              reject(' Error occured during dropzone file search');
+            }
+            else {
+              var result = JSON.parse(body);		
+              resolve(result);							
+            }
+        })
+      })
+    } catch (err) {
+      console.log('err', err);
+      reject('Error occured during dropzone file search');
+    }
+  }
+
+
 exports.executeSprayJob = (job) => {
   try {
     return new Promise((resolve, reject) => {

@@ -10,6 +10,7 @@ import {Graph} from "./Graph";
 import BreadCrumbs from "../../common/BreadCrumbs";
 import {Constants} from "../../common/Constants"
 import {store} from "../../../redux/store/Store"
+import LandingZoneUpload from "../../application/landingZoneFileUpload/LandingZoneUpload"
 const TabPane = Tabs.TabPane;
 
 function DataflowDetails({props}) {
@@ -42,7 +43,7 @@ function DataflowDetails({props}) {
 
           <Tabs defaultActiveKey="1">
             <TabPane tab="Designer" key="1">
-              <span style={{display: "flex", placeItems: "center", justifyContent: "center", paddingBottom: "5px" }}>
+              <span style={{display: "flex", placeItems: "center", justifyContent: "center", paddingBottom: "5px"}}>
               <InfoCircleOutlined style={{paddingRight: "8px", fontWeight: "800"}} />
             To connect nodes, hold <span style={{fontWeight: "700", paddingRight: "8px", paddingLeft: "8px"}}>  SHIFT </span> key and drag
               </span>
@@ -55,13 +56,19 @@ function DataflowDetails({props}) {
                 sidebarContainer="sidebar"
               />
             </TabPane>
-            <TabPane tab="Assets" key="2">
+            <TabPane tab="Assets" key="2" style={{background: "red"}}>
+            <span style={{display: "flex", placeItems: "center", justifyContent: "center", paddingBottom: "5px" , background: "red", height: "100vh"}}>
               <DataflowAssetsTable
                 applicationId={dataflowReducer.applicationId}
                 selectedDataflow={dataflowReducer.dataflowId}
                 user={dataflowReducer.user}
                 application={applicationReducer.application}
               />
+              </span>
+            </TabPane>
+
+            <TabPane tab="File Upload" key="3">
+              <LandingZoneUpload/>
             </TabPane>
    
           </Tabs>

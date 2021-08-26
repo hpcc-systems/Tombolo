@@ -524,19 +524,48 @@ router.get('/getDropZones', [
 				let result = JSON.parse(body);
 				let dropZones = result.TpDropZoneQueryResponse.TpDropZones.TpDropZone;
 				let _dropZones = {};
+				let dropZoneDetails = []
 				dropZones.map(dropzone => {
 					_dropZones[dropzone.Name] = [];
 					lodash.flatMap(dropzone.TpMachines.TpMachine, (tpMachine) => {
 						_dropZones[dropzone.Name] = _dropZones[dropzone.Name].concat([tpMachine.Netaddress]);
+						dropZoneDetails.push({name : dropzone.Name, path: dropzone.Path, machines : dropzone.TpMachines.TpMachine})
 					})
 				});
-				res.json(_dropZones);
+
+				if(req.query.for === "fileUpload"){
+					res.json(dropZoneDetails)
+				}else{
+					res.json(_dropZones);
+				}
 			}
 			})
 		})
 	} catch (err) {
 		console.log('err', err);
 		return res.status(500).send("Error occured while getting dropzones");
+	}
+})
+
+router.get('/getDirectories',[
+	query('data').exists().withMessage('Invalid data'),
+	query('host').exists().withMessage('Invalid host name'),
+	query('port').exists().withMessage('Invalid Port')
+], function (req, res) {
+	const errors = validationResult(req).formatWith(validatorUtil.errorFormatter);
+	if (!errors.isEmpty()) {
+	  return res.status(422).json({ success: false, errors: errors.array() });
+	}
+	else{
+		const {data,host, port} = req.query;
+		let inputs = JSON.parse(data)		
+		try {
+			hpccUtil.fetchDirectories(host, port, inputs)
+			.then(response => {console.log("Response from hpcc in read file <<<<", response); res.json(response)});
+			} catch (err) {
+				console.log('err', err);
+				return res.status(500).send("Error occured while getting directories");
+			}
 	}
 })
 
@@ -651,7 +680,6 @@ io.of("landingZoneFileUpload").on("connection", (socket) => {
 			method : 'POST',
 			formData : {
 				'UploadedFiles[]' : {
-					// value : `uploads/${fileName}`,
 					value : fileStream,
 					options : {
 						filename : fileName,
@@ -661,14 +689,20 @@ io.of("landingZoneFileUpload").on("connection", (socket) => {
 			  },
 			  function(err, httpResponse, body){
 				const response = JSON.parse(body);
-				fs.unlink(`uploads/${fileName}`, err =>{
-					console.log(err)
-				});
+				
 
 				if(response.Exceptions){
-					socket.emit('file-upload-response', {id, fileName,success : false, message : response.Exceptions.Exception[0].Message})
+					socket.emit('file-upload-response', {id, fileName,success : false, message : response.Exceptions.Exception[0].Message});
+					fs.unlink(`uploads/${fileName}`, err =>{
+						console.log( err)
+					});
 				}else{
 					socket.emit('file-upload-response', {id,success : true, message : response.UploadFilesResponse.UploadFileResults.DFUActionResult[0].Result });
+					fs.unlink(`uploads/${fileName}`, err =>{
+						console.log(err);
+						console.log( err)
+
+					});
 				}
 			  }
 		)

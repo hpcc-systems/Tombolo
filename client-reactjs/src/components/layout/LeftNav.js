@@ -99,9 +99,6 @@ class LeftNav extends Component {
                       <i className="fa fa-lg fa-microchip"></i> <span className={this.state.collapsed ? "d-none" : ""}>Job Execution</span>
                     </NavLink>
                   </li>
-                  <li className="nav-item">
-                      <NavLink to={"/"+applicationId+"/fileUpload"} className="nav-link"><i className="fa fa-lg fa-upload"></i><span className={this.state.collapsed ? "d-none" : ""}> Upload </span></NavLink>
-                  </li>
                 </ul>
               {/* </li>  */}
 
