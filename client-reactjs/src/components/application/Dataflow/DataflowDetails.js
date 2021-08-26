@@ -10,7 +10,6 @@ import {Graph} from "./Graph";
 import BreadCrumbs from "../../common/BreadCrumbs";
 import {Constants} from "../../common/Constants"
 import {store} from "../../../redux/store/Store"
-import LandingZoneUpload from "../../application/landingZoneFileUpload/LandingZoneUpload"
 const TabPane = Tabs.TabPane;
 
 function DataflowDetails({props}) {
@@ -66,11 +65,6 @@ function DataflowDetails({props}) {
               />
               </span>
             </TabPane>
-
-            <TabPane tab="File Upload" key="3">
-              <LandingZoneUpload/>
-            </TabPane>
-   
           </Tabs>
         </div>
      </React.Fragment>

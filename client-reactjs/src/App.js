@@ -22,6 +22,7 @@ import JobDetailsForm from "./components/application/Jobs/JobDetails";
 import IndexDetailsForm from "./components/application/IndexDetails";
 import QueryDetailsForm from "./components/application/QueryDetails";
 
+import Actions from "./components/application/actions/actions";
 import { AdminApplications } from "./components/admin/Applications";
 import AdminClusters from "./components/admin/Clusters";
 import { AdminConsumers } from "./components/admin/Consumers";
@@ -31,7 +32,6 @@ import { store } from "./redux/store/Store";
 
 import { Report } from "./components/Report/Report";
 import Regulations from "./components/admin/ControlsAndRegulations";
-import LandingZoneUpload from "./components/application/landingZoneFileUpload/LandingZoneUpload";
 const { Content } = Layout;
 
 class App extends React.Component {
@@ -155,6 +155,10 @@ class App extends React.Component {
                   <PrivateRoute
                     path="/:applicationId/dataflowinstances"
                     component={DataflowInstances}
+                  />
+                    <PrivateRoute
+                    path="/:applicationId/actions"
+                    component={Actions}
                   />
                 </Switch>
               </Content>

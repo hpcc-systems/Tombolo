@@ -5,7 +5,7 @@ import { InboxOutlined, LoadingOutlined } from '@ant-design/icons';
 import { io } from "socket.io-client";
 import{LandingZoneUploadContainer, columns } from "./landingZoneUploadStyles";
 import {v4 as uuidv4} from 'uuid';
-import { authHeader, handleError } from "../../common/AuthHeader.js";
+import { authHeader, handleError } from "../../../common/AuthHeader";
 import { useHistory } from 'react-router';
 
 function LandingZoneUpload() {
@@ -25,6 +25,7 @@ function LandingZoneUpload() {
   const [successItem, setSuccessItem] = useState(null);
   const authReducer = useSelector(state => state.authReducer);
   const clusters = useSelector(state => state.applicationReducer.clusters);
+  const app = useSelector(state => state.applicationReducer)
   const devURL = 'http://localhost:3000/landingZoneFileUpload';
   const prodURL  = '/landingZoneFileUpload';
   const { Dragger } = Upload;
@@ -199,11 +200,12 @@ useEffect(() =>{
     })
   }
   if(files.length < 1 && successItem !== null){
-    message.success("The file has been uploaded successfully to the Landing Zone");
+    console.log("APPPPPP >>>>>>>>", app)
+    message.success("The file(s) has been uploaded successfully to the Landing Zone");
     setUploading(false)
     setSuccessItem(null)
     socket.close();
-    history.push("/")
+    history.push('/')
   }
   setTableData(newTableData);
 }, [files])
@@ -222,8 +224,8 @@ useEffect(() =>{
         if(response.success){
           setSuccessItem(response.id);
         }else if(!response.success){
-          message.error(`Unable to upload file - ${response.message}`);
           setUploading(false)
+          message.error(`Unable to upload file(s) - ${response.message}`);
         }
       }))
     }
@@ -378,7 +380,7 @@ useEffect(() =>{
             <small>Cluster</small>
             <Select defaultValue = ""  onChange={handleClusterChange}  size="large"style={{width: "100%"}}>
                   {clusters.map((item) => {
-                      return <Option key={uuidv4()} value={JSON.stringify(item)}>{item.name}</Option>
+                      return <Option key={uuidv4()} value={JSON.stringify(item)}>{item.name} ({item.thor_host.substring(7)})</Option>
                   })}
             </Select>
           </span>
@@ -393,7 +395,7 @@ useEffect(() =>{
           </span>
 
           <span style={{display: selectedDropZone == null ? "none" : "block"}}>
-            <small>Machine: </small>
+            <small>Machines: </small>
             <Select defaultValue = "" onChange={handleMachineChange}  size="large" style={{width: "100%"}}>
                   {JSON.parse(selectedDropZone)?.machines.map(item => {
                     return <Option key={uuidv4()} value={item.Netaddress}>{item.Netaddress}</Option>

@@ -99,6 +99,11 @@ class LeftNav extends Component {
                       <i className="fa fa-lg fa-microchip"></i> <span className={this.state.collapsed ? "d-none" : ""}>Job Execution</span>
                     </NavLink>
                   </li>
+                  <li className="nav-item" >
+                    <NavLink to={"/"+applicationId+"/actions"} className="nav-link" data-toggle="popover" tabIndex="5">
+                      <i className="fa fa-lg fa-mouse-pointer"></i> <span className={this.state.collapsed ? "d-none" : ""}>Actions</span>
+                    </NavLink>
+                  </li>
                 </ul>
               {/* </li>  */}
 
