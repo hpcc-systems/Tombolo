@@ -14,10 +14,12 @@ var Index = models.indexes;
 var Job = models.job;
 let algorithm = 'aes-256-ctr';
 let hpccJSComms = require("@hpcc-js/comms")
-var http = require('http');
 const { body, query, oneOf, validationResult } = require('express-validator');
 const ClusterWhitelist = require('../../cluster-whitelist');
 let lodash = require('lodash');
+const {socketIo : io} = require('../../server');
+const fs = require("fs");
+const { file } = require('tmp');
 
 router.post('/filesearch', [
   body('keyword')
@@ -519,19 +521,48 @@ router.get('/getDropZones', [
 				let result = JSON.parse(body);
 				let dropZones = result.TpDropZoneQueryResponse.TpDropZones.TpDropZone;
 				let _dropZones = {};
+				let dropZoneDetails = []
 				dropZones.map(dropzone => {
 					_dropZones[dropzone.Name] = [];
 					lodash.flatMap(dropzone.TpMachines.TpMachine, (tpMachine) => {
 						_dropZones[dropzone.Name] = _dropZones[dropzone.Name].concat([tpMachine.Netaddress]);
+						dropZoneDetails.push({name : dropzone.Name, path: dropzone.Path, machines : dropzone.TpMachines.TpMachine})
 					})
 				});
-				res.json(_dropZones);
+
+				if(req.query.for === "fileUpload"){
+					res.json(dropZoneDetails)
+				}else{
+					res.json(_dropZones);
+				}
 			}
 			})
 		})
 	} catch (err) {
 		console.log('err', err);
 		return res.status(500).send("Error occured while getting dropzones");
+	}
+})
+
+router.get('/getDirectories',[
+	query('data').exists().withMessage('Invalid data'),
+	query('host').exists().withMessage('Invalid host name'),
+	query('port').exists().withMessage('Invalid Port')
+], function (req, res) {
+	const errors = validationResult(req).formatWith(validatorUtil.errorFormatter);
+	if (!errors.isEmpty()) {
+	  return res.status(422).json({ success: false, errors: errors.array() });
+	}
+	else{
+		const {data,host, port} = req.query;
+		let inputs = JSON.parse(data)		
+		try {
+			hpccUtil.fetchDirectories(host, port, inputs)
+			.then(response => {console.log("Response from hpcc in read file <<<<", response); res.json(response)});
+			} catch (err) {
+				console.log('err', err);
+				return res.status(500).send("Error occured while getting directories");
+			}
 	}
 })
 
@@ -545,7 +576,6 @@ router.post('/dropZoneFileSearch', [
 	if (!errors.isEmpty()) {
 	  return res.status(422).json({ success: false, errors: errors.array() });
 	}
-	
 	try {
 		hpccUtil.getCluster(req.body.clusterId).then(function(cluster) {
 			request.post({
@@ -627,4 +657,108 @@ router.post('/executeSprayJob', [
 });
 
 
+// Drop Zone file upload namespace
+io.of("landingZoneFileUpload").on("connection", (socket) => {
+	let cluster, destinationFolder, dropZone;
+
+	//Receive cluster and destination folder info when client clicks upload
+	socket.on('start-upload', message=> {
+		cluster = JSON.parse(message.cluster);
+		destinationFolder = message.destinationFolder;
+		machine = message.machine;
+		dropZone = message.dropZone;
+	})
+
+	//Upload File 
+	const upload = (cluster, destinationFolder, id ,fileName) =>{
+		fileStream = fs.createReadStream('uploads/' + fileName)
+		request({
+			url : `${cluster.thor_host}:${cluster.thor_port}/FileSpray/UploadFile.json?upload_&rawxml_=1&NetAddress=${machine}&OS=2&Path=/var/lib/HPCCSystems/${dropZone}/${destinationFolder}`,
+			method : 'POST',
+			formData : {
+				'UploadedFiles[]' : {
+					value : fileStream,
+					options : {
+						filename : fileName,
+					}
+				}
+			}
+			  },
+			  function(err, httpResponse, body){
+				const response = JSON.parse(body);
+				
+
+				if(response.Exceptions){
+					socket.emit('file-upload-response', {id, fileName,success : false, message : response.Exceptions.Exception[0].Message});
+					fs.unlink(`uploads/${fileName}`, err =>{
+						console.log( err)
+					});
+				}else{
+					socket.emit('file-upload-response', {id,success : true, message : response.UploadFilesResponse.UploadFileResults.DFUActionResult[0].Result });
+					fs.unlink(`uploads/${fileName}`, err =>{
+						console.log(err);
+						console.log( err)
+
+					});
+				}
+			  }
+		)
+	}
+		
+	//When whole file is supplied by the client
+	socket.on('upload-file', (message) => {
+		const {id,fileName, data} = message;
+		fs.writeFile(`uploads/${fileName}`, data, function(err){
+			if(err){
+				console.log(`Error occured while saving ${fileName} in FS`, err)
+			}else{
+				upload(cluster, destinationFolder, id, fileName )
+			}
+		});
+	});
+
+	//Ask for more
+	const supplySlice = (file) =>{
+		if(file.fileSize - file.received <= 0){
+				let fileData = file.data.join('');
+				let fileBuffer = Buffer.from(fileData);
+				fs.writeFile(`uploads/${file.fileName}`, fileBuffer, function(err){
+					if(err){
+					}else{
+						upload(cluster, destinationFolder, file.id ,file.fileName)
+					}
+				})
+		}
+		else if(file.fileSize - file.received >= 100000){
+				socket.emit('supply-slice', {
+					id:file.id,
+					chunkStart : file.received,
+					chunkSize: 100000
+				})
+		
+		}else if(file.fileSize -file.received < 100000){
+				socket.emit('supply-slice', {
+					id:file.id,
+					chunkStart : file.received, 
+					chunkSize: file.fileSize - file.received
+				})	
+		}
+	}
+	//when a slice of file is supplied by the client
+	let files = [{}];
+	socket.on('upload-slice', (message) =>{
+		let {id, fileName, data, fileSize, chunkSize} = message;
+		let indexOfCurrentItem = files.findIndex(item => item.id === id);
+		if(indexOfCurrentItem < 0){
+			files.push({id, fileName, data : [data], fileSize, received : chunkSize});
+			let i = files.findIndex(item => item.id === id);
+				supplySlice(files[i])
+		}else{
+			let i = files.findIndex(item => item.id === id);
+			files[i].data.push(data);
+			files[i].received = files[i].received + chunkSize;
+			supplySlice(files[i])
+		}
+	})
+});
 module.exports = router;

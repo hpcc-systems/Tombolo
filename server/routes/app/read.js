@@ -24,7 +24,7 @@ let Query = models.query;
 let QueryField = models.query_field;
 let Dataflow = models.dataflow;
 let DataflowGraph = models.dataflowgraph;
-
+const {socketIo : io} = require('../../server');
 const validatorUtil = require('../../utils/validator');
 const { body, query, validationResult } = require('express-validator');
 const NotificationModule = require('../notifications/email-notification');
@@ -35,8 +35,6 @@ const multer = require('multer');
 const AssetGroups = models.assets_groups;
 const AssetDataflows = models.assets_dataflows;
 const Dataflowgraph = models.dataflowgraph;
-
-
 
 router.get('/app_list', (req, res) => {
   console.log("[app/read.js] - App route called");
@@ -414,7 +412,7 @@ router.post('/importApp', [
   body('creator')
     .matches(/^[a-zA-Z]{1}[a-zA-Z0-9_:.\-]*$/).withMessage('Invalid creator'),
 ], upload.single("file"), function (req, res) {
-    const  io = req.app.get('socketio');
+    // const  io = req.app.get('socketio');
     fs.readFile(`uploads/${req.file.filename}`, (err,data) => {
     if(err){
       res.status().send("Unable to read file. Data must be in JSON format")

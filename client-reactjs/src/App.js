@@ -23,6 +23,7 @@ import IndexDetailsForm from "./components/application/IndexDetails";
 import QueryDetailsForm from "./components/application/QueryDetails";
 import VisualizationDetailsForm from "./components/application/VisualizationDetails";
 
+import Actions from "./components/application/actions/actions";
 import { AdminApplications } from "./components/admin/Applications";
 import AdminClusters from "./components/admin/Clusters";
 import { AdminConsumers } from "./components/admin/Consumers";
@@ -159,6 +160,10 @@ class App extends React.Component {
                   <PrivateRoute
                     path="/:applicationId/dataflowinstances"
                     component={DataflowInstances}
+                  />
+                    <PrivateRoute
+                    path="/:applicationId/actions"
+                    component={Actions}
                   />
                 </Switch>
               </Content>
