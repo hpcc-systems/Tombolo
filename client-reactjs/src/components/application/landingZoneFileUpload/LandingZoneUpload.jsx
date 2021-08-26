@@ -302,9 +302,9 @@ useEffect(() =>{
         }
       }
     })
-    }
-    //When server asks for a slice of a file
-    socket.on('supply-slice', (message) =>{
+
+     //When server asks for a slice of a file
+     socket.on('supply-slice', (message) =>{
       let currentFile = files.filter(item => item.uid === message.id);
       let slice = currentFile[0].slice(message.chunkStart, message.chunkStart + message.chunkSize);
       let reader = new FileReader();
@@ -320,7 +320,7 @@ useEffect(() =>{
         })
       }
     })
-    
+    }
   }
 
   //Draggeer's props
