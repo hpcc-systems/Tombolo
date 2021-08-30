@@ -27,4 +27,7 @@ jobs:
         with:
           login-server: hpccsolutionsteamacr.azurecr.io
           username: ${{ secrets.REGISTRY_USERNAME }}
-          password: ${{ secrets.REGISTRY_PASSWORD }}        
+          password: ${{ secrets.REGISTRY_PASSWORD }}
+      - run: |
+          docker build . -t hpccsolutionsteamacr.azurecr.io/appdb:${{ github.sha }}
+          docker push hpccsolutionsteamacr.azurecr.io/appdb:${{ github.sha }}    
