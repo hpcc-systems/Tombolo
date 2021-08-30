@@ -29,5 +29,6 @@ jobs:
           username: ${{ secrets.REGISTRY_USERNAME }}
           password: ${{ secrets.REGISTRY_PASSWORD }}
       - run: |
-          docker build . -t hpccsolutionsteamacr.azurecr.io/appdb:${{ github.sha }}
-          docker push hpccsolutionsteamacr.azurecr.io/appdb:${{ github.sha }}    
+          docker-compose up --build -d
+          #docker-compose build . -t hpccsolutionsteamacr.azurecr.io/appdb:${{ github.sha }}
+          #docker push hpccsolutionsteamacr.azurecr.io/appdb:${{ github.sha }}    
