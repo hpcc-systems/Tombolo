@@ -47,7 +47,7 @@ useEffect(() => {
       const socket = io(prodURL, {
         transports: ["websocket"],
         auth : {
-          token : authReducer.user.token
+          token : authReducer?.user.token
         }
         });
         setSocket(socket);

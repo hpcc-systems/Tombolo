@@ -284,6 +284,7 @@ async function registerUser(req, res) {
         "clientId": process.env.AUTHSERVICE_TOMBOLO_CLIENT_ID
       }
     }, function(err, response, body) {
+      console.log("RESPONSE <<<<< ", response )
       if (response.statusCode == 422) {
         reject(new Error(body.errors.concat(',')));
       }
