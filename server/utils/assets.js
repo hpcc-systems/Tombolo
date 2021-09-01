@@ -17,6 +17,7 @@ let JobParam = models.jobparam;
 let ConsumerObject = models.consumer_object;
 let JobExecution = models.job_execution;
 let Index = models.indexes;
+const hpccUtil = require('./hpcc-util');
 let Sequelize = require('sequelize');
 const path = require('path');
 const { exec } = require('child_process');
@@ -26,7 +27,27 @@ exports.fileInfo = (applicationId, file_id) => {
   return new Promise((resolve, reject) => {
     File.findOne({where:{"application_id":applicationId, "id":file_id}, include: [{model: Groups, as: 'groups'}]}).then(function(files) {
       results.basic = files;
-      FileLayout.findAll({where:{"application_id":applicationId, "file_id":file_id}}).then(function(fileLayout) {
+      FileLayout.findAll({where:{"application_id":applicationId, "file_id":file_id}}).then(async function(fileLayout) {
+        if(!fileLayout || (fileLayout && (fileLayout.length == 0 || !fileLayout.fields || fileLayout.fields.length == 0))) {
+          //for some reason, if file layout is empty, fetch it from hpcc and save it to db
+          console.log("File Layout Empty....."+files.name, files.cluster_id)
+          let fileInfo  = await hpccUtil.fileInfo(files.name, files.cluster_id);
+          fileLayout = fileInfo.file_layouts;          
+          //save file layout back to db
+          await FileLayout.findOrCreate({
+            where:{application_id:applicationId, file_id: file_id},
+            defaults:{
+              application_id: applicationId,
+              file_id: file_id,
+              fields: JSON.stringify(fileLayout)
+            }
+          }).then((fileLayout) => {
+            let fileLayoutId = fileLayout[0].id;
+            if(!fileLayout[1]) {
+              return FileLayout.update({fields:JSON.stringify(fileLayout)}, {where: {application_id:applicationId, file_id: file_id}});
+            }
+          })
+        }
         let fileLayoutObj = (fileLayout.length == 1 && fileLayout[0].fields) ? JSON.parse(fileLayout[0].fields) : fileLayout;
         results.file_layouts = fileLayoutObj.filter(item => item.name != '__fileposition__');
         FileLicense.findAll({where:{"application_id":applicationId, "file_id":file_id}}).then(function(fileLicenses) {

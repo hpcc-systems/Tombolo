@@ -21,7 +21,11 @@ function Dataflow(props) {
     {graphHeight: 700, display:'block'}
   );
 
-	const [form, setForm] = useState({
+  const authReducer = useSelector(state => state.authenticationReducer);
+
+  const dispatch = useDispatch();
+
+  const [form, setForm] = useState({
     selectedDataflow: '',
     tableView: false
   });
@@ -37,10 +41,6 @@ function Dataflow(props) {
 	  	getData();
 	  }
 	}, []);
-
-  const authReducer = useSelector(state => state.authenticationReducer);
-
-  const dispatch = useDispatch();
 
 	const getData = async () => {
     fetch('/api/dataflow?application_id='+application.applicationId, {
@@ -62,13 +62,13 @@ function Dataflow(props) {
 
   const onSelectDataflow = (selectedDataflow) => {
     setForm({
-      selectedDataflow: selectedDataflow
+      selectedDataflow: selectedDataflow.id
     });
 
     dispatch(dataflowAction.dataflowSelected(
       application.applicationId,
       application.applicationTitle,
-      selectedDataflow,
+      selectedDataflow.id,
       application.user
     ));
     props.history.push('/'+application.applicationId+'/dataflow/details');
