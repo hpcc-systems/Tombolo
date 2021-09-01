@@ -881,3 +881,8 @@ h6 {
    overflow:auto;  
    padding-bottom : 50px;
 }
+
+.graphNotice{
+  right: 40vw;
+  min-width: 460px;
+}

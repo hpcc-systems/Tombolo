@@ -1738,7 +1738,7 @@ class FileDetails extends PureComponent {
           </Tabs>
         </div>
 
-<div className = {this.props.displayingInModal ? "assetDetail-buttons-wrapper-modal" :"assetDetail-buttons-wrapper"} style={{justifyContent: "flex-end"}}>
+{/* <div className = {this.props.displayingInModal ? "assetDetail-buttons-wrapper-modal" :"assetDetail-buttons-wrapper"} style={{justifyContent: "flex-end"}}>
         {this.state.enableEdit ? (
           <div className="button-container">
             <Button
@@ -1788,7 +1788,7 @@ class FileDetails extends PureComponent {
             )}
           </div>
         )}
-        </div>
+        </div> */}
       </React.Fragment>
     );
   }

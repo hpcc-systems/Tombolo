@@ -127,6 +127,12 @@ class Graph extends Component {
     }
   }
 
+  componentDidUpdate(prevProps){
+    if(this.props.refreshGraph !== prevProps.refreshGraph){
+      this.refreshGraph();
+    }
+  }
+
   componentWillUnmount() {
     document.removeEventListener('mousedown', this.handleClickOutside);
   }
@@ -1541,9 +1547,9 @@ class Graph extends Component {
 
   refreshGraph = () => {
     let _self=this;
-    _self.setState({
-      loading: true
-    });
+    // _self.setState({
+    //   loading: true
+    // });
     fetch('/api/job/refreshDataflow', {
       method: 'post',
       headers: authHeader(),
@@ -1559,9 +1565,10 @@ class Graph extends Component {
     }).then(async function(data) {
       console.log('Refreshed graph..');
       await _self.fetchSavedGraph();
-      _self.setState({
-        loading: false
-      });
+      // _self.setState({
+      //   loading: false
+      // });
+      // return;
 
     });
   }
@@ -1595,26 +1602,9 @@ class Graph extends Component {
     const editingAllowed = hasEditPermission(this.props.user);
   return (
       <React.Fragment>
-        <div className="graph-div">
-          <div className="graph-btns-container" style={{"left":svgUsableWidth - 300}}>
-            <span >
-              <Tooltip placement="topRight" title={"Refresh will validate the file/job relationship and update graph accordingly"}   >
-                <Button 
-                style={{ float: 'right', display : "flex", placeItems: "center", paddingBottom: "14px" }} 
-                className="refresh-btn"
-                  onClick={this.refreshGraph}
-                  icon={
-                  <ReloadOutlined
-                    style={{
-                      fontSize: '20px',
-                      backgroundColor: '#f0f0f0',
-                      marginRight: "30px" 
-                    }}
-                  />
-                }/>
-              </Tooltip>
-            </span>
-            {nodes.filter(node => node.isHidden).length > 0 ?
+        <div className="graph-div" >
+          <div className="graph-btns-container" style={{"left":svgUsableWidth - 100}}> 
+          {nodes.filter(node => node.isHidden).length > 0 ?
             <span>
               <Tooltip placement="topRight" title={"Show hidden assets in the Workflow"}>
               <Dropdown.Button className="dropdown-btn" overlay={this.hiddenAssetsMenu}
@@ -1629,6 +1619,24 @@ class Graph extends Component {
               />
               </Tooltip>
             </span> : null}
+          </div>
+          <div className="graph-btns-container" style={{"left":svgUsableWidth - 100, display:"none"}}>
+            <span >
+              <Tooltip placement="topRight" title={"Refresh will validate the file/job relationship and update graph accordingly"}   >
+                <Button 
+                className="refresh-btn"
+                  onClick={this.refreshGraph}
+                  icon={
+                  <ReloadOutlined
+                    style={{
+                      fontSize: '20px',
+                      backgroundColor: '#f0f0f0',
+                      marginRight: "30px" 
+                    }}
+                  />
+                }/>
+              </Tooltip>
+            </span>
           </div>
 
           <div id={this.props.graphContainer} className={(!editingAllowed || this.props.viewMode) ? " readonly graph-view-mode" : "graph-edit-mode"} tabIndex="-1">
