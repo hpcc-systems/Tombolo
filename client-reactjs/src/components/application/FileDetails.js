@@ -1244,25 +1244,68 @@ class FileDetails extends PureComponent {
       });
     };
 
-    // view edit buttons on tabpane
-    const editButton =
-      !this.state.enableEdit && editingAllowed ? (
-        <>
-          <Button type="primary" onClick={makeFieldsEditable}>
-            Edit
-          </Button>
-        </>
-      ) : null;
-    const viewChangesBtn = this.state.editing ? (
-      <Button onClick={switchToViewOnly} type="primary" ghost>
-        View Changes
-      </Button>
-    ) : null;
-    const editandViewBtns = (
-      <div>
-        {editButton} {viewChangesBtn}
-      </div>
-    );
+    //Controls
+    const controls =   <div className ='assetDetail-buttons-wrapper ' style={{justifyContent: "flex-end"}}>
+      <span className="button-container">
+      { !this.state.enableEdit && editingAllowed ? (<><Button type="primary" onClick={makeFieldsEditable} style={{marginRight: "5px"}}>Edit</Button></>) : null}
+      {this.state.editing ? (<Button onClick={switchToViewOnly}   style={{marginRight: "5px"}}> View Changes </Button>) : null}
+        {this.state.enableEdit ? (
+          <span>
+            <Button
+              key="danger"
+              disabled={!this.state.file.id || !editingAllowed}
+              type="danger"
+              onClick={this.handleDelete}
+              style={{marginRight: "5px", background: 'var(--danger)'}}
+            >
+              Delete
+            </Button>
+            <Button key="back" onClick={this.handleCancel}style={{marginRight: "5px"}}
+    >
+              Cancel
+            </Button>
+            <Button
+              key="submit"
+              disabled={!editingAllowed}
+              type="primary"
+              loading={confirmLoading}
+              onClick={this.handleOk}
+              style={{marginRight: "10px", background: 'var(--success)'}}
+            >
+              Save
+            </Button>
+          </span>
+        ) : (
+          <span>
+            {this.state.dataAltered ? (
+              <span>
+                <Button key="back" onClick={this.handleCancel} type="primary" ghost style={{marginRight: "5px"}}
+    >
+                  Cancel
+                </Button>
+                <Button
+                  key="submit"
+                  disabled={!editingAllowed}
+                  type="primary"
+                  loading={confirmLoading}
+                  onClick={this.handleOk}
+                  style={{marginRight: "5px", background: 'var(--success)'}}
+                >
+                  Save
+                </Button>
+              </span>
+            ) : (
+              <span>
+                <Button key="back" onClick={this.handleCancel} type="primary" ghost style={{marginRight: "5px"}}
+    >
+                  Cancel
+                </Button>
+              </span>
+            )}
+          </span>
+        )}
+        </span>
+  </div>
 
     return (
       <React.Fragment>
@@ -1285,7 +1328,7 @@ class FileDetails extends PureComponent {
               <Spin spinning={this.state.initialDataLoading} size="large" />
             </div>
           ) : null}
-          <Tabs defaultActiveKey="1" tabBarExtraContent={editandViewBtns}>
+          <Tabs defaultActiveKey="1" tabBarExtraContent={this.props.displayingInModal ? null : controls}>
             <TabPane tab="Basic" key="1">
               <Form
                 {...formItemLayout}
@@ -1737,58 +1780,7 @@ class FileDetails extends PureComponent {
             ) : null}
           </Tabs>
         </div>
-
-<div className = {this.props.displayingInModal ? "assetDetail-buttons-wrapper-modal" :"assetDetail-buttons-wrapper"} style={{justifyContent: "flex-end"}}>
-        {this.state.enableEdit ? (
-          <div className="button-container">
-            <Button
-              key="danger"
-              disabled={!this.state.file.id || !editingAllowed}
-              type="danger"
-              onClick={this.handleDelete}
-            >
-              Delete
-            </Button>
-            <Button key="back" onClick={this.handleCancel}>
-              Cancel
-            </Button>
-            <Button
-              key="submit"
-              disabled={!editingAllowed}
-              type="primary"
-              loading={confirmLoading}
-              onClick={this.handleOk}
-            >
-              Save
-            </Button>
-          </div>
-        ) : (
-          <div>
-            {this.state.dataAltered ? (
-              <div className="button-container">
-                <Button key="back" onClick={this.handleCancel} type="primary" ghost>
-                  Cancel
-                </Button>
-                <Button
-                  key="submit"
-                  disabled={!editingAllowed}
-                  type="primary"
-                  loading={confirmLoading}
-                  onClick={this.handleOk}
-                >
-                  Save
-                </Button>
-              </div>
-            ) : (
-              <div className="button-container">
-                <Button key="back" onClick={this.handleCancel} type="primary" ghost>
-                  Cancel
-                </Button>
-              </div>
-            )}
-          </div>
-        )}
-        </div>
+        {this.props.displayingInModal ? controls : null}
       </React.Fragment>
     );
   }

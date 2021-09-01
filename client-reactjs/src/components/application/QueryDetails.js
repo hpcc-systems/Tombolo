@@ -540,9 +540,40 @@ class QueryDetails extends PureComponent {
     }
 
     // view edit buttons on tabpane
-    const editButton  = !this.state.enableEdit && editingAllowed ?  <Button type="primary" onClick={makeFieldsEditable}> Edit  </Button> :  null ;
-    const viewChangesBtn = this.state.editing ?  <Button  onClick={switchToViewOnly} type="primary" ghost> View Changes </Button> : null;
-    const editandViewBtns = <div> {editButton} {viewChangesBtn}</div>
+    const controls =  <div className="assetDetail-buttons-wrapper" style={{justifyContent: "flex-end"}} >
+      {!this.state.enableEdit && editingAllowed ?  <Button type="primary" onClick={makeFieldsEditable}> Edit  </Button> :  null}
+      {this.state.editing ?  <Button  onClick={switchToViewOnly}> View Changes </Button> : null}
+      {this.state.enableEdit ?
+          <span className="button-container">
+            <Button key="danger" type="danger"  disabled={!this.state.query.id || !editingAllowed} onClick={this.handleDelete}>Delete</Button>
+            <Button key="back" onClick={this.handleCancel} type="primary" ghost>
+              Cancel
+            </Button>
+            <Button key="submit" disabled={!editingAllowed} type="primary" loading={confirmLoading} onClick={this.handleOk} style={{background: 'var(--success)'}}>
+              Save
+            </Button>
+          </span>
+        :
+        <span>
+          {this.state.dataAltered ?
+            <span className="button-container">
+            <Button key="back" onClick={this.handleCancel} type="primary" ghost>
+            Cancel
+            </Button>
+            <Button key="submit" disabled={!editingAllowed} type="primary" loading={confirmLoading} onClick={this.handleOk} style={{background: 'var(--success)'}}>
+              Save
+            </Button>
+          </span>:
+            <span className="button-container">
+            <Button key="back" onClick={this.handleCancel} type="primary" ghost>
+            Cancel
+            </Button>
+          </span>
+      }
+        </span>
+      }
+    </div>
+
 
     //render only after fetching the data from the server
     //{console.log(title + ', ' + this.props.selectedQuery + ', ' + this.props.isNewFile)}
@@ -560,7 +591,7 @@ class QueryDetails extends PureComponent {
             </div> : null}
         <Tabs
           defaultActiveKey="1"
-          tabBarExtraContent = {editandViewBtns}
+          tabBarExtraContent = {controls}
         >
           <TabPane tab="Basic" key="1">
            <Form {...formItemLayout} labelAlign="left" ref={this.formRef} onFinish={this.handleOk} initialValues={{type: "roxie_query"}}>
@@ -725,37 +756,6 @@ class QueryDetails extends PureComponent {
               <AssociatedDataflows assetName={name} assetType={'Query'}/>
             </TabPane> : null}
         </Tabs>
-      </div>
-      <div className="assetDetail-buttons-wrapper" style={{justifyContent: "flex-end"}} >
-      {this.state.enableEdit ?
-          <div className="button-container">
-            <Button key="danger" type="danger"  disabled={!this.state.query.id || !editingAllowed} onClick={this.handleDelete}>Delete</Button>
-            <Button key="back" onClick={this.handleCancel} type="primary" ghost>
-              Cancel
-            </Button>
-            <Button key="submit" disabled={!editingAllowed} type="primary" loading={confirmLoading} onClick={this.handleOk}>
-              Save
-            </Button>
-          </div>
-        :
-        <div>
-          {this.state.dataAltered ?
-            <div className="button-container">
-            <Button key="back" onClick={this.handleCancel} type="primary" ghost>
-             Cancel
-            </Button>
-            <Button key="submit" disabled={!editingAllowed} type="primary" loading={confirmLoading} onClick={this.handleOk}>
-              Save
-            </Button>
-          </div>:
-            <div className="button-container">
-            <Button key="back" onClick={this.handleCancel} type="primary" ghost>
-             Cancel
-            </Button>
-          </div>
-  }
-        </div>
-      }
       </div>
       </React.Fragment>
     );

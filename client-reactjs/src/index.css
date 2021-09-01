@@ -853,7 +853,7 @@ h6 {
 }
 
 .assetDetail-buttons-wrapper-modal{
-  padding: 10px 0px 0px 20px; 
+  padding: 10px 0px 0px 40px; 
    background: var(--light);
    margin: 10px 0px 0px -16px;
    display: flex;
@@ -869,7 +869,6 @@ h6 {
 
 .assetDetail-buttons-wrapper{
    padding: 10px 0px 0px 20px; 
-   background: var(--light);
    margin: 10px 0px 0px -16px;
    display: flex;
    place-items: center;
@@ -880,4 +879,9 @@ h6 {
   height: 80vh;
    overflow:auto;  
    padding-bottom : 50px;
+}
+
+.graphNotice{
+  right: 40vw;
+  min-width: 460px;
 }

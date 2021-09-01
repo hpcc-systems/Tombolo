@@ -1507,26 +1507,91 @@ class JobDetails extends Component {
       );
     };
 
-    // view edit buttons on tabpane
-    const editButton =
-      !this.state.enableEdit && editingAllowed ? (
+
+    //controls
+    const controls =  <div className={this.props.displayingInModal ? "assetDetail-buttons-wrapper-modal" : "assetDetail-buttons-wrapper "}>
+       <span style={{ float: "left" }} >
+          <Button
+            disabled={
+              !editingAllowed || !this.state.enableEdit || this.props.isNew
+            }
+            type="primary"
+            key="execute"
+            onClick={this.executeJob}
+          >
+            Execute Job
+          </Button>
+        </span>
+     
+      <span className="button-container">
+        {!this.state.enableEdit && editingAllowed ? (
         <Button type="primary" onClick={makeFieldsEditable}>
           {" "}
           Edit{" "}
         </Button>
-      ) : null;
-    const viewChangesBtn = this.state.editing ? (
-      <Button onClick={switchToViewOnly} type="primary" ghost>
+      ) : null }
+
+      {this.state.editing ? (
+      <Button onClick={switchToViewOnly}>
         {" "}
         View Changes{" "}
       </Button>
-    ) : null;
-    const editandViewBtns = (
-      <div>
-        {" "}
-        {editButton} {viewChangesBtn}
-      </div>
-    );
+    ) : null}
+
+        {this.state.enableEdit ? (
+          <span>
+            {!this.props.isNew ? (
+              <Button key="danger" type="danger" onClick={this.handleDelete}>
+                Delete
+              </Button>
+            ) : null}
+            <span  style={{marginLeft: "25px"}}>
+              <Button key="back" onClick={this.handleCancel} type="primary" ghost>
+                Cancel
+              </Button>
+              <Button
+                key="submit"
+                htmlType="submit"
+                disabled={!editingAllowed}
+                type="primary"
+                loading={confirmLoading}
+                onClick={this.handleOk}
+                style={{background: 'var(--success)'}}
+              >
+                Save
+              </Button>
+            </span>
+          </span>
+        ) : (
+          <span>
+            {this.state.dataAltered ? (
+              <span style={{marginLeft: "25px"}}>
+                <Button key="back" onClick={this.handleCancel} type="primary"  ghost>
+                  Cancel
+                </Button>
+                <Button
+                  key="submit"
+                  disabled={!editingAllowed}
+                  type="primary"
+                  loading={confirmLoading}
+                  onClick={this.handleOk}
+                  style={{background: 'var(--success)'}}
+                >
+                  Save
+                </Button>
+              </span>
+            ) : (
+              <span>
+                <Button key="back" onClick={this.handleCancel} type="primary" ghost>
+                  Cancel
+                </Button>
+              </span>
+            )}
+          </span>
+        )}
+      </span>
+
+  </div>
 
     return (
       <React.Fragment>
@@ -1549,7 +1614,7 @@ class JobDetails extends Component {
               <Spin spinning={this.state.initialDataLoading} size="large" />
             </div>) : null}
           <Form {...formItemLayout} labelAlign="left" ref={this.formRef} onFinish={this.handleOk} >
-          <Tabs defaultActiveKey="1" tabBarExtraContent = {editandViewBtns }>
+          <Tabs defaultActiveKey="1" tabBarExtraContent = {this.props.displayingInModal ? null : controls }>
 
           <TabPane tab="Basic" key="1">
               <Form.Item label="Job Type" name="jobType"> 
@@ -1940,67 +2005,7 @@ class JobDetails extends Component {
             </Tabs>
           </Form>
         </div>
-        <div className={this.props.displayingInModal ? "assetDetail-buttons-wrapper-modal" : "assetDetail-buttons-wrapper"}>
-          <span style={{ float: "left" }}>
-            <Button
-              disabled={
-                !editingAllowed || !this.state.enableEdit || this.props.isNew
-              }
-              type="primary"
-              key="execute"
-              onClick={this.executeJob}
-            >
-              Execute Job
-            </Button>
-          </span>
-          {this.state.enableEdit ? (
-            <div className="button-container">
-              {!this.props.isNew ? (
-                <Button key="danger" type="danger" onClick={this.handleDelete}>
-                  Delete
-                </Button>
-              ) : null}
-              <Button key="back" onClick={this.handleCancel} type="primary" ghost>
-                Cancel
-              </Button>
-              <Button
-                key="submit"
-                htmlType="submit"
-                disabled={!editingAllowed}
-                type="primary"
-                loading={confirmLoading}
-                onClick={this.handleOk}
-              >
-                Save
-              </Button>
-            </div>
-          ) : (
-            <div>
-              {this.state.dataAltered ? (
-                <div className="button-container">
-                  <Button key="back" onClick={this.handleCancel} type="primary"  ghost>
-                    Cancel
-                  </Button>
-                  <Button
-                    key="submit"
-                    disabled={!editingAllowed}
-                    type="primary"
-                    loading={confirmLoading}
-                    onClick={this.handleOk}
-                  >
-                    Save
-                  </Button>
-                </div>
-              ) : (
-                <div className="button-container">
-                  <Button key="back" onClick={this.handleCancel} type="primary" ghost>
-                    Cancel
-                  </Button>
-                </div>
-              )}
-            </div>
-          )}
-        </div>
+        {this.props.displayingInModal ? controls : null}
       </React.Fragment>
     );
   }

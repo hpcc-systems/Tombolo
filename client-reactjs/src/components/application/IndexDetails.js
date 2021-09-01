@@ -524,10 +524,40 @@ class IndexDetails extends PureComponent {
         });
       }
 
-     // view edit buttons on tabpane
-     const editButton  = !this.state.enableEdit && editingAllowed ?  <Button type="primary" onClick={makeFieldsEditable}> Edit  </Button> :  null ;
-     const viewChangesBtn = this.state.editing ?  <Button  onClick={switchToViewOnly} type="primary" ghost> View Changes </Button> : null;
-     const editandViewBtns = <div> {editButton} {viewChangesBtn}</div>
+     //Controls
+     let controls = <div className={this.props.displayingInModal ? "assetDetail-buttons-wrapper-modal" : "assetDetail-buttons-wrapper"} style={{justifyContent: "flex-end"}} >
+      {!this.state.enableEdit && editingAllowed ?  <Button  onClick={makeFieldsEditable} type="primary"> Edit  </Button> :  null}
+      {this.state.editing ?  <Button  onClick={switchToViewOnly} > View Changes </Button> : null}
+      {this.state.enableEdit ?
+        <span className="button-container" >
+          <Button key="danger" type="danger" disabled={!this.state.index.id || !editingAllowed} onClick={this.handleDelete}>Delete</Button>
+          <Button key="back" onClick={this.handleCancel} type="primary" ghost>
+            Cancel
+          </Button>
+          <Button key="submit" disabled={!editingAllowed} type="primary" loading={confirmLoading} onClick={this.handleOk} style={{background: 'var(--success)'}}>
+            Save
+          </Button>
+        </span> :
+        <span>
+          {this.state.dataAltered ?
+            <span className="button-container">
+            <Button key="back" onClick={this.handleCancel} type="primary" ghost>
+              Cancel
+            </Button>
+            <Button key="submit" disabled={!editingAllowed} type="primary" loading={confirmLoading} onClick={this.handleOk} style={{background: 'var(--success)'}}>
+            Save
+          </Button>
+            </span>
+            :
+            <span className="button-container">
+            <Button key="back" onClick={this.handleCancel} type="primary" ghost>
+              Cancel
+            </Button>
+            </span>
+        }
+      </span>
+        }
+      </div>
 
     return (
       <React.Fragment>
@@ -544,7 +574,7 @@ class IndexDetails extends PureComponent {
 
           <Tabs
             defaultActiveKey="1"
-            tabBarExtraContent = {editandViewBtns}
+            tabBarExtraContent = {this.props.displayingInModal ? null : controls}
           >
             <TabPane tab="Basic" key="1">
 
@@ -706,37 +736,8 @@ class IndexDetails extends PureComponent {
               </TabPane> : null}
           </Tabs>
         </div>
-        <div className={this.props.displayingInModal ? "assetDetail-buttons-wrapper-modal" : "assetDetail-buttons-wrapper"} style={{justifyContent: "flex-end"}} >
-        {this.state.enableEdit ?
-        <div className="button-container" >
-          <Button key="danger" type="danger" disabled={!this.state.index.id || !editingAllowed} onClick={this.handleDelete}>Delete</Button>
-          <Button key="back" onClick={this.handleCancel} type="primary" ghost>
-            Cancel
-          </Button>
-          <Button key="submit" disabled={!editingAllowed} type="primary" loading={confirmLoading} onClick={this.handleOk}>
-            Save
-          </Button>
-        </div> :
-        <div>
-          {this.state.dataAltered ?
-           <div className="button-container">
-           <Button key="back" onClick={this.handleCancel} type="primary" ghost>
-             Cancel
-           </Button>
-           <Button key="submit" disabled={!editingAllowed} type="primary" loading={confirmLoading} onClick={this.handleOk}>
-            Save
-          </Button>
-           </div>
-           :
-           <div className="button-container">
-           <Button key="back" onClick={this.handleCancel} type="primary" ghost>
-             Cancel
-           </Button>
-           </div>
-          }
-        </div>
-         }
-         </div>
+
+       {this.props.displayingInModal ? controls : null}
       </React.Fragment>
     );
   }

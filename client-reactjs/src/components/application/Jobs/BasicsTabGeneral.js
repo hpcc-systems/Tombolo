@@ -17,7 +17,6 @@ function BasicsTabGeneral({enableEdit, editingAllowed, addingNewAsset, jobType, 
   const [jobSearchSuggestions, setJobSearchSuggestions] = useState([]);  
   const [selectedCluster, setSelectedCluster] = useState(assetReducer.clusterId);
   const dispatch = useDispatch();
-  
 
   const searchJobs = (searchString) => {
     if(searchString.length <= 3 || jobSearchErrorShown) {
@@ -173,8 +172,8 @@ function BasicsTabGeneral({enableEdit, editingAllowed, addingNewAsset, jobType, 
                 disabled={!editingAllowed}/>
                 :
                 <div className="read-only-markdown">
-                   <ReactMarkdown source={localState.description} />
-                   </div>
+                   <ReactMarkdown children={localState.job.description} />
+                </div>
               }
 
               </Form.Item>

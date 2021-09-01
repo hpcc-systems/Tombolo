@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react'
 import { useHistory } from 'react-router';
-import { Tabs, Button } from 'antd/lib';
+import { Tabs, Button, Tooltip, notification } from 'antd/lib';
 import { InfoCircleOutlined, StepBackwardOutlined  } from '@ant-design/icons';
 import { useSelector } from "react-redux";
 import DataflowAssetsTable from "./DataflowAssetsTable";
@@ -12,8 +12,12 @@ const TabPane = Tabs.TabPane;
 
 function DataflowDetails({props}) {  
   const history = useHistory();
+  // const dispatch = useDispatch();
+  const [currentTab, setCurrentTab] = useState("1")
   const dataflowReducer = useSelector(state => state.dataflowReducer);
   const applicationReducer = useSelector(state => state.applicationReducer);
+  const applicationId = useSelector(state => state.applicationReducer.application.applicationId);
+  const [refreshGraph, setGraphRefresh] = useState(false)
 
   const handleBackToAllJobs = () => {
     history.push("/"+applicationReducer.application.applicationId+"/dataflow")
@@ -22,6 +26,26 @@ function DataflowDetails({props}) {
       selectedDataflow: {dataflowId: ""}
     })
   }
+
+  //Show how to connect node instruction
+  useEffect(() =>{
+    if(currentTab === "1"){
+      notification.open({
+        message: <span style={{display: "flex", placeItems : "center"}}>
+          <InfoCircleOutlined style={{paddingRight: "10px"}}/>  <span>To connect nodes, hold down <b>SHIFT</b>  key and drag</span></span>,
+        duration: 0,
+        className: 'graphNotice',
+        placement: 'bottomRight'
+      })
+    }else{
+      notification.destroy()
+    }
+  
+    //Clean up
+    return() =>{
+      notification.destroy()
+    }
+  }, [currentTab])
 
 	return (
 	  <React.Fragment>
@@ -32,27 +56,28 @@ function DataflowDetails({props}) {
             applicationTitle={dataflowReducer.applicationTitle}
           />
         </div>
-        <Button type="link" onClick={handleBackToAllJobs} style={{display: "flex", placeItems:"center", paddingRight: "10px"}}> <StepBackwardOutlined />Definitions</Button>
         </div>
         <div>
-
-          <Tabs defaultActiveKey="1">
+          <Tabs defaultActiveKey="1"
+          onChange={(activeKey) => { setCurrentTab(activeKey)}}
+          tabBarExtraContent = {<span> 
+            <Tooltip placement="topRight" title={"Refresh will validate the file/job relationship and update graph accordingly"}>
+                <Button style={{marginRight: "5px"}} type="primary" onClick={() =>  setGraphRefresh(!refreshGraph)}>Refresh</Button> 
+            </Tooltip>
+                <Button type="link" onClick={(handleBackToAllJobs)} type="primary" ghost> Cancel</Button> </span>}
+          >
             <TabPane tab="Designer" key="1">
-              <span style={{display: "flex", placeItems: "center", justifyContent: "center", paddingBottom: "5px"}}>
-              <InfoCircleOutlined style={{paddingRight: "8px", fontWeight: "800"}} />
-            To connect nodes, hold <span style={{fontWeight: "700", paddingRight: "8px", paddingLeft: "8px"}}>  SHIFT </span> key and drag
-              </span>
-
               <Graph
                 applicationId={dataflowReducer.applicationId}
                 applicationTitle={dataflowReducer.applicationTitle}
                 selectedDataflow={{id: dataflowReducer.dataflowId}}
                 graphContainer="graph"
                 sidebarContainer="sidebar"
+                refreshGraph= {refreshGraph}
               />
             </TabPane>
-            <TabPane tab="Assets" key="2" style={{background: "red"}}>
-            <span style={{display: "flex", placeItems: "center", justifyContent: "center", paddingBottom: "5px" , background: "red", height: "100vh"}}>
+            <TabPane tab="Assets" key="2" >
+            <span style={{display: "flex", placeItems: "center", justifyContent: "center", paddingBottom: "5px" , height: "100vh"}}>
               <DataflowAssetsTable
                 applicationId={dataflowReducer.applicationId}
                 selectedDataflow={dataflowReducer.dataflowId}
