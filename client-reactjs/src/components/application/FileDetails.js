@@ -1256,12 +1256,11 @@ class FileDetails extends PureComponent {
               disabled={!this.state.file.id || !editingAllowed}
               type="danger"
               onClick={this.handleDelete}
-              style={{marginRight: "5px", background: 'var(--danger)'}}
+              style={{marginRight: "5px", background: 'var(--danger)', color: 'var(--light)'}}
             >
               Delete
             </Button>
-            <Button key="back" onClick={this.handleCancel}style={{marginRight: "5px"}}
-    >
+            <Button key="back" onClick={this.handleCancel}style={{marginRight: "5px",  marginLeft: "25px"}}>
               Cancel
             </Button>
             <Button
@@ -1279,8 +1278,7 @@ class FileDetails extends PureComponent {
           <span>
             {this.state.dataAltered ? (
               <span>
-                <Button key="back" onClick={this.handleCancel} type="primary" ghost style={{marginRight: "5px"}}
-    >
+                <Button key="back" onClick={this.handleCancel} type="primary" ghost style={{marginRight: "5px",  marginLeft: "25px"}}>
                   Cancel
                 </Button>
                 <Button
@@ -1296,8 +1294,7 @@ class FileDetails extends PureComponent {
               </span>
             ) : (
               <span>
-                <Button key="back" onClick={this.handleCancel} type="primary" ghost style={{marginRight: "5px"}}
-    >
+                <Button key="back" onClick={this.handleCancel} type="primary" ghost style={{marginRight: "5px"}}>
                   Cancel
                 </Button>
               </span>
