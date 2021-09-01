@@ -1547,9 +1547,9 @@ class Graph extends Component {
 
   refreshGraph = () => {
     let _self=this;
-    // _self.setState({
-    //   loading: true
-    // });
+    _self.setState({
+      loading: true
+    });
     fetch('/api/job/refreshDataflow', {
       method: 'post',
       headers: authHeader(),
@@ -1565,11 +1565,10 @@ class Graph extends Component {
     }).then(async function(data) {
       console.log('Refreshed graph..');
       await _self.fetchSavedGraph();
-      // _self.setState({
-      //   loading: false
-      // });
-      // return;
-
+      _self.setState({
+        loading: false
+      });
+      return;
     });
   }
 

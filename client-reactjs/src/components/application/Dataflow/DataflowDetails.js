@@ -10,7 +10,6 @@ import {Graph} from "./Graph";
 import BreadCrumbs from "../../common/BreadCrumbs";
 import {Constants} from "../../common/Constants"
 import {store} from "../../../redux/store/Store"
-import { active } from 'd3';
 const TabPane = Tabs.TabPane;
 
 function DataflowDetails({props}) {
