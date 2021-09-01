@@ -21,10 +21,14 @@ jobs:
     # Steps represent a sequence of tasks that will be executed as part of the job
     steps:
       # Checks-out your repository under $GITHUB_WORKSPACE, so your job can access it
-      - uses: actions/checkout@v2
+      #- uses: actions/checkout@v2
 
-      - uses: azure/docker-login@v1
-        with:
-          login-server: ${{ secrets.REGISTRY_NAME }}
-          username: ${{ secrets.REGISTRY_USERNAME }}
-          password: ${{ secrets.REGISTRY_PASSWORD }}      
+      - name: Set Azure variables for Terraform
+        run: |
+          # authentication is initiated on vm using 'az login --identity'
+          echo "ARM_SUBSCRIPTION_ID=$(az account show --output tsv --query id)" >> $GITHUB_ENV
+          echo "ARM_TENANT_ID=$(az account show --output tsv --query tenantId)" >> $GITHUB_ENV
+      - name: list all workflows
+        run: | 
+          echo "-------- List all workflows in this subscription ---------------"
+          az logic workflow list
