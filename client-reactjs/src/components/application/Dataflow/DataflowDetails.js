@@ -30,11 +30,9 @@ function DataflowDetails({props}) {
     })
   }
 
-  //
+  //Show how to connect node instruction
   useEffect(() =>{
-    console.log("Current tab is ", currentTab)
     if(currentTab === "1"){
-      console.log("OPEN")
       notification.open({
         message: <span style={{display: "flex", placeItems : "center"}}>
           <InfoCircleOutlined style={{paddingRight: "10px"}}/>  <span>To connect nodes, hold down <b>SHIFT</b>  key and drag</span></span>,
@@ -46,6 +44,7 @@ function DataflowDetails({props}) {
       notification.destroy()
     }
   
+    //Clean up
     return() =>{
       notification.destroy()
     }
