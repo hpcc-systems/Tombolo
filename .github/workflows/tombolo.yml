@@ -28,8 +28,7 @@ jobs:
           # authentication is initiated on vm using 'az login --identity'
           echo "ARM_SUBSCRIPTION_ID=$(az account show --output tsv --query id)" >> $GITHUB_ENV
           echo "ARM_TENANT_ID=$(az account show --output tsv --query tenantId)" >> $GITHUB_ENV
-      - name: list all workflows
+      - name: list all rg
         run: | 
-          echo "-------- List all workflows in this subscription ---------------"
-          az config set extension.use_dynamic_install=yes_without_prompt
-          az logic workflow list
+          echo "-------- List all resource groups in this subscription ---------------"
+          az group list
