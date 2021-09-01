@@ -1581,7 +1581,7 @@ class FileDetails extends PureComponent {
                       {!this.state.enableEdit ? (
                         this.props.consumers.map((consumer) => {
                           if (
-                            consumer.assetType === "Supplier" &&
+                            consumer.assetType && consumer.assetType.indexOf("Supplier") != -1 &&
                             consumer.id === this.state.file.supplier
                           ) {
                             return consumer.name;
@@ -1601,7 +1601,7 @@ class FileDetails extends PureComponent {
                           disabled={!editingAllowed}
                         >
                           {this.props.consumers.map((consumer) =>
-                            consumer.assetType == "Supplier" ? (
+                            consumer.assetType && consumer.assetType.indexOf("Supplier") != -1 ? (
                               <Option key={consumer.id}>{consumer.name}</Option>
                             ) : null
                           )}
@@ -1629,7 +1629,7 @@ class FileDetails extends PureComponent {
                           disabled={!editingAllowed}
                         >
                           {this.props.consumers.map((consumer) =>
-                            consumer.assetType == "Consumer" ? (
+                            consumer.assetType && consumer.assetType.indexOf("Consumer") != -1 ? (
                               <Option key={consumer.id}>{consumer.name}</Option>
                             ) : null
                           )}
@@ -1637,7 +1637,7 @@ class FileDetails extends PureComponent {
                       ) : (
                         this.props.consumers.map((consumer) => {
                           if (
-                            consumer.assetType === "Consumer" &&
+                            consumer.assetType && consumer.assetType.indexOf("Consumer") != -1 &&
                             consumer.id === this.state.file.consumer
                           ) {
                             return consumer.name;
@@ -1656,7 +1656,7 @@ class FileDetails extends PureComponent {
                       {!this.state.enableEdit ? (
                         this.props.consumers.map((consumer) => {
                           if (
-                            consumer.assetType === "Owner" &&
+                            consumer.assetType && consumer.assetType.indexOf("Owner") != -1 &&
                             consumer.id === this.state.file.owner
                           ) {
                             return consumer.name;
@@ -1676,7 +1676,7 @@ class FileDetails extends PureComponent {
                           disabled={!editingAllowed}
                         >
                           {this.props.consumers.map((consumer) =>
-                            consumer.assetType == "Owner" ? (
+                            consumer.assetType && consumer.assetType.indexOf("Owner") != -1 ? (
                               <Option key={consumer.id}>{consumer.name}</Option>
                             ) : null
                           )}
@@ -1799,7 +1799,9 @@ export class BooleanCellRenderer extends Component {
 function mapStateToProps(state) {
   const { selectedAsset, newAsset = {}, clusterId } = state.assetReducer;
   const { user } = state.authenticationReducer;
+  console.log(state.applicationReducer)
   const { application, clusters, consumers } = state.applicationReducer;
+  console.log(consumers);
 
   const { isNew = false, groupId = "" } = newAsset;
   return {

@@ -1,10 +1,8 @@
 import React, { useState, useEffect } from 'react'
 import { useHistory } from 'react-router';
-import ReactDOM from 'react-dom';
 import { Tabs, Button, Tooltip, notification } from 'antd/lib';
 import { InfoCircleOutlined, StepBackwardOutlined  } from '@ant-design/icons';
-import { authHeader, handleError } from "../../common/AuthHeader.js"
-import { useSelector, useDispatch } from "react-redux";
+import { useSelector } from "react-redux";
 import DataflowAssetsTable from "./DataflowAssetsTable";
 import {Graph} from "./Graph";
 import BreadCrumbs from "../../common/BreadCrumbs";
@@ -12,9 +10,9 @@ import {Constants} from "../../common/Constants"
 import {store} from "../../../redux/store/Store"
 const TabPane = Tabs.TabPane;
 
-function DataflowDetails({props}) {
+function DataflowDetails({props}) {  
   const history = useHistory();
-  const dispatch = useDispatch();
+  // const dispatch = useDispatch();
   const [currentTab, setCurrentTab] = useState("1")
   const dataflowReducer = useSelector(state => state.dataflowReducer);
   const applicationReducer = useSelector(state => state.applicationReducer);
@@ -22,7 +20,7 @@ function DataflowDetails({props}) {
   const [refreshGraph, setGraphRefresh] = useState(false)
 
   const handleBackToAllJobs = () => {
-    history.push("/"+applicationId+"/dataflow")
+    history.push("/"+applicationReducer.application.applicationId+"/dataflow")
     store.dispatch({
       type: Constants.DATAFLOW_SELECTED,
       selectedDataflow: {dataflowId: ""}
@@ -72,7 +70,7 @@ function DataflowDetails({props}) {
               <Graph
                 applicationId={dataflowReducer.applicationId}
                 applicationTitle={dataflowReducer.applicationTitle}
-                selectedDataflow={dataflowReducer.dataflowId}
+                selectedDataflow={{id: dataflowReducer.dataflowId}}
                 graphContainer="graph"
                 sidebarContainer="sidebar"
                 refreshGraph= {refreshGraph}
