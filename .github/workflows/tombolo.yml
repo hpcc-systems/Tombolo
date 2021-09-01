@@ -31,4 +31,5 @@ jobs:
       - name: list all workflows
         run: | 
           echo "-------- List all workflows in this subscription ---------------"
+          az config set extension.use_dynamic_install=yes_without_prompt
           az logic workflow list
