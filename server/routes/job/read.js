@@ -310,7 +310,7 @@ let findFilesRemovedFromJob = (currentFiles, filesFromCluster) => {
   This method updates the JobFile table based on the changes happend to the Job
   It also identifies the files that are removed from the Job, so the nodes & edges can be removed
 **/
-let updateJobDetails = (applicationId, jobId, jobReqObj, autoCreateFiles, nodes) => {
+let updateJobDetails = (applicationId, jobId, jobReqObj, autoCreateFiles, nodes, dataflowId) => {
   let fieldsToUpdate = {"job_id"  : jobId, "application_id" : applicationId};
 
   return new Promise(async (resolve, reject) => {
@@ -347,6 +347,13 @@ let updateJobDetails = (applicationId, jobId, jobReqObj, autoCreateFiles, nodes)
           name: file.name
         }
       });
+      await AssetDataflow.findOrCreate({
+        where: {assetId: jobId, dataflowId: dataflowId},
+        defaults: {
+          assetId: file.id,
+          dataflowId: dataflowId
+        }
+      })
     }
 
      var jobParamsToSave = updateCommonData(jobReqObj.params, fieldsToUpdate);
@@ -460,7 +467,7 @@ router.post('/refreshDataflow', [
             }
             console.log("**************************"+job.name+"*******************"+job.id)
             jobObj.mousePosition = [dataflowJobNode[0].x, dataflowJobNode[0].y];
-            return updateJobDetails(req.body.application_id, job.id, jobObj, true, nodes);
+            return updateJobDetails(req.body.application_id, job.id, jobObj, true, nodes, req.body.dataflowId);
           }
         })
       }))
@@ -518,7 +525,7 @@ router.post('/saveJob', [
           }
         })
       }
-      let response = await updateJobDetails(applicationId, jobId, req.body.job, req.body.job.autoCreateFiles).catch((err) => {
+      let response = await updateJobDetails(applicationId, jobId, req.body.job, req.body.job.autoCreateFiles, [], req.body.job.basic.dataflowId).catch((err) => {
         console.log("Error occured in updateJobDetails....")
         return res.status(500).json({ success: false, message: "Error occured while saving the job" });
       });
