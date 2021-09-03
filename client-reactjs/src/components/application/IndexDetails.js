@@ -531,23 +531,25 @@ class IndexDetails extends PureComponent {
       {this.state.enableEdit ?
         <span className="button-container" >
           <Button key="danger" type="danger" disabled={!this.state.index.id || !editingAllowed} onClick={this.handleDelete}>Delete</Button>
-          <Button key="back" onClick={this.handleCancel} type="primary" ghost>
-            Cancel
-          </Button>
-          <Button key="submit" disabled={!editingAllowed} type="primary" loading={confirmLoading} onClick={this.handleOk} style={{background: 'var(--success)'}}>
-            Save
-          </Button>
-        </span> :
-        <span>
-          {this.state.dataAltered ?
-            <span className="button-container">
+          <span style={{ marginLeft: "25px"}}>
             <Button key="back" onClick={this.handleCancel} type="primary" ghost>
               Cancel
             </Button>
             <Button key="submit" disabled={!editingAllowed} type="primary" loading={confirmLoading} onClick={this.handleOk} style={{background: 'var(--success)'}}>
-            Save
-          </Button>
-            </span>
+              Save
+            </Button>
+          </span>
+        </span> :
+          <span>
+            {this.state.dataAltered ?
+              <span className="button-container">
+              <Button key="back" onClick={this.handleCancel} type="primary" ghost>
+                Cancel
+              </Button>
+              <Button key="submit" disabled={!editingAllowed} type="primary" loading={confirmLoading} onClick={this.handleOk} style={{background: 'var(--success)'}}>
+              Save
+            </Button>
+          </span>
             :
             <span className="button-container">
             <Button key="back" onClick={this.handleCancel} type="primary" ghost>

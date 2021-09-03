@@ -644,7 +644,7 @@ class JobDetails extends Component {
     });
     const values = await this.formRef.current.validateFields();
     let saveResponse = await this.saveJobDetails();
-    saveResponse.jobType = this.formRef.current.getFieldValue("jobType");
+    saveResponse.jobType = this.formRef.current?.getFieldValue("jobType");
 
     // setTimeout(() => {
       // this.setState({
@@ -713,7 +713,10 @@ class JobDetails extends Component {
         }),
       })
         .then(function (response) {
-          if (response.ok) {       
+          if (response.ok) {  
+            message.config({
+              maxCount : 1
+            })     
             message.success("Data saved")     
             return response.json();
           }

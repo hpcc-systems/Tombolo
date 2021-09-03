@@ -474,7 +474,6 @@ router.post('/importApp', [
                         })
                         .catch(err =>{
                             emitUpdates(io, {step : `ERR- Creating application`, status: "error"})
-                            console.log("Error creating app <<<< " , err)
                             return res.status(400).json({success: false, message: "Unable to create application"})
                         })          
                     }

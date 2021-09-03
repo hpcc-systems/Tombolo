@@ -46,6 +46,8 @@ exports.fileInfo = (applicationId, file_id) => {
             if(!fileLayout[1]) {
               return FileLayout.update({fields:JSON.stringify(fileLayout)}, {where: {application_id:applicationId, file_id: file_id}});
             }
+          }).catch(err => {
+            console.log(err)
           })
         }
         let fileLayoutObj = (fileLayout.length == 1 && fileLayout[0].fields) ? JSON.parse(fileLayout[0].fields) : fileLayout;
