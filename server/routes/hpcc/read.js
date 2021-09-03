@@ -558,7 +558,7 @@ router.get('/getDirectories',[
 		let inputs = JSON.parse(data)		
 		try {
 			hpccUtil.fetchDirectories(host, port, inputs)
-			.then(response => {console.log("Response from hpcc in read file <<<<", response); res.json(response)});
+			.then(response => {res.json(response)});
 			} catch (err) {
 				console.log('err', err);
 				return res.status(500).send("Error occured while getting directories");

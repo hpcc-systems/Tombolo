@@ -310,7 +310,6 @@ async function forgotPassword(req, res) {
         "resetUrl": process.env.TOMBOLO_PASSWORD_RESET_URL
       }
     }, function(err, response, body) {
-      console.log(response.body,  "<<< response from auth service")
       if(response.body.success){
         resolve({'statusCode': response.statusCode, 'message': body});
         res.status(200).json({ "success": true})
