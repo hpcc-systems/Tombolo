@@ -75,8 +75,10 @@ let updateDataFlowGraph = (applicationId, dataflowId, nodes, edges, filesToBeRem
         let duplicate = false;
         for (var i=0; i<currentNodes.length; i++) {
           //duplicate node found
-          //console.log(currentNode.id, currentNode.title, currentNode.type, node.id, node.title, node.type);
-          if(currentNodes[i].id == nodes[nodeIdx].id && currentNodes[i].type == nodes[nodeIdx].type) {
+          //console.log("*****************duplicate checking******************")
+          //check node id, title and type
+          //console.log(currentNodes[i], node);
+          if((currentNodes[i].id == nodes[nodeIdx].id || currentNodes[i].name == node.name) && currentNodes[i].type == nodes[nodeIdx].type) {
             duplicate = true;
             edges = edges.map((edge) => {
               if(edge.source == nodes[nodeIdx].id) {
@@ -139,9 +141,11 @@ let updateFileRelationship = (jobId, job, files, filesToBeRemoved, existingNodes
   let fieldsToUpdate={}, promises=[], nodes = [], edges = [], inputY=0, outputY=0, existingNode={};
   return new Promise(async (resolve, reject) => {
     try {
-      let query = 'select f.id, f.name, jf.file_type from file f, jobfile jf where '+
+      let query = 'select f.id, f.name, f.title, jf.file_type from file f, jobfile jf where '+
         'f.application_id = (:applicationId) AND '+
         'f.name =(:fileName) AND '+
+        'f.deletedAt is null AND '+
+        'jf.deletedAt is null AND '+
         'jf.job_id = (:job_id) and jf.file_type = (:file_type) group by f.id';
       files = sortFiles(files);
       //files.forEach(async (file, idx) => {
@@ -157,6 +161,7 @@ let updateFileRelationship = (jobId, job, files, filesToBeRemoved, existingNodes
           })
           //file does not exists or exists with a different type
           if(!existingFile || existingFile.length == 0) {
+            //console.log("****************file does not exist**************")
            let fileCreated = await File.create({
               "application_id": job.basic.application_id,
               "title": fileInfo.basic.fileName,
@@ -174,13 +179,13 @@ let updateFileRelationship = (jobId, job, files, filesToBeRemoved, existingNodes
               dataflowId: job.basic.dataflowId
             });
             //update file_id in JobFile
-            console.log(fileCreated.id, job.basic.id, file.file_type, fileInfo.basic.name);
+            //console.log(fileCreated.id, job.basic.id, file.file_type, fileInfo.basic.name);
             let jobFileUpdated = await JobFile.update({
               file_id: fileCreated.id
             }, {where: {application_id: job.basic.application_id, job_id: job.basic.jobId, file_type: file.file_type, name: fileInfo.basic.name}})
 
             let id=fileCreated.id, edge={};
-            console.log('jobFile: '+JSON.stringify(file));
+            //console.log('jobFile: '+JSON.stringify(file));
             //starting from top
 
             if(file.file_type == 'input') {
@@ -188,11 +193,12 @@ let updateFileRelationship = (jobId, job, files, filesToBeRemoved, existingNodes
             } else if(file.file_type == 'output') {
               outputY = getYPosition(outputY, file.file_type, job.mousePosition[1], files);
             }
-            console.log(idx)
+            //console.log(idx)
             let posX = file.file_type == 'input' ? job.mousePosition[0] - 114  : parseInt(job.mousePosition[0]) + 114;
             let posY = file.file_type == 'input' ? inputY  : outputY;
             nodes.push({
               "title": fileInfo.basic.fileName,
+              "name": fileInfo.basic.fileName,
               "id": fileCreated.id,
               "x": posX,
               "y": posY,
@@ -217,11 +223,16 @@ let updateFileRelationship = (jobId, job, files, filesToBeRemoved, existingNodes
               fileValidationsToSave,
               {updateOnDuplicate: ["name", "ruleType", "rule", "action", "fixScript"]}
             )
-          } else {
+          } else {            
+            //console.log("****************file exist**************")
             let id=existingFile[0].id, edge={};
-            console.log(id);
+            //console.log("*********************** "+existingFile[0].name, id);
             if(existingNodes) {
               existingNode = existingNodes.filter(node => node.id == id)[0];
+              //adding name attribute to old file nodes
+              if(existingNode) {
+                existingNode.name = existingFile[0].name;
+              }
             }
             //console.log(existingNode)
             //update file_id in JobFile - this is the case when a job was added via assets and later the job is added to a workflow
@@ -230,9 +241,12 @@ let updateFileRelationship = (jobId, job, files, filesToBeRemoved, existingNodes
               file_id: id
             }, {where: {application_id: job.basic.application_id, job_id: job.basic.jobId, file_type: file.file_type, name: fileInfo.basic.name}})
 
-            let assetsDataflowCreated = await AssetDataflow.create({
-              assetId: id,
-              dataflowId: job.basic.dataflowId
+            let assetsDataflowCreated = await AssetDataflow.findOrCreate({
+              where: {assetId: id, dataflowId: job.basic.dataflowId},
+              defaults: {
+                assetId: id,
+                dataflowId: job.basic.dataflowId
+              }
             });
 
             //starting from top
@@ -244,8 +258,10 @@ let updateFileRelationship = (jobId, job, files, filesToBeRemoved, existingNodes
 
             let posX = file.file_type == 'input' ? job.mousePosition[0] - 114  : parseInt(job.mousePosition[0]) + 114;
             let posY = file.file_type == 'input' ? inputY  : outputY;
+            //console.log(existingFile[0]);
             let node = {
-              "title": fileInfo.basic.fileName,
+              "title": existingFile[0].title,
+              "name": existingFile[0].name,
               "id": existingFile[0].id,
               "x": posX,
               "y": posY,
@@ -362,7 +378,7 @@ let updateJobDetails = (applicationId, jobId, jobReqObj, autoCreateFiles, nodes,
       }).then(function(jobParam) {
         if(autoCreateFiles) {
           updateFileRelationship(jobId, jobReqObj, jobReqObj.files, filesToBeRemoved, nodes).then((results) => {
-            console.log("****************")
+            //console.log("****************")
             resolve({"success": true, "title":jobReqObj.basic.title, "jobId":jobId, "dataflow":results})
           }).catch((err) => {
             console.error("****************-2")
@@ -496,7 +512,9 @@ router.post('/saveJob', [
   body('job.basic.application_id')
     .isUUID(4).withMessage('Invalid application id'),
   body('job.basic.name')
-  .matches(/^[a-zA-Z]{1}[a-zA-Z0-9_.\-:]*$/).withMessage('Invalid title'),
+  .matches(/^[a-zA-Z]{1}[a-zA-Z0-9_.\-:]*$/).withMessage('Invalid name'),
+  body('job.basic.title')
+  .matches(/^[a-zA-Z]{1}[a-zA-Z0-9_. \-:]*$/).withMessage('Invalid title'),
 ], (req, res) => {
   const errors = validationResult(req).formatWith(validatorUtil.errorFormatter);
   if (!errors.isEmpty()) {
@@ -505,7 +523,6 @@ router.post('/saveJob', [
   console.log("[saveJob] - Get file list for app_id = " + req.body.job.basic.application_id + " isNewJob: "+req.body.isNew);
   var jobId=req.body.id, applicationId=req.body.job.basic.application_id, fieldsToUpdate={}, nodes=[], edges=[];
   try {
-
     Job.findOne({where: {name: req.body.job.basic.name, application_id: applicationId}, attributes:['id']}).then(async (existingJob) => {
       let job = null;
       if (!existingJob) {
@@ -525,10 +542,12 @@ router.post('/saveJob', [
           }
         })
       }
+      
       let response = await updateJobDetails(applicationId, jobId, req.body.job, req.body.job.autoCreateFiles, [], req.body.job.basic.dataflowId).catch((err) => {
         console.log("Error occured in updateJobDetails....")
         return res.status(500).json({ success: false, message: "Error occured while saving the job" });
       });
+
       switch (req.body.job.schedule.type) {        
         case "":
           AssetDataflow.update({
@@ -551,6 +570,14 @@ router.post('/saveJob', [
               applicationId: req.body.job.basic.application_id
             }
           });
+          return res.json({
+            success: true,
+            type: "",
+            jobs: [],
+            jobId: jobId,
+            title: req.body.job.basic.title
+          });
+          break;
         case 'Predecessor':
           await AssetDataflow.update({
             cron: null,
@@ -584,9 +611,12 @@ router.post('/saveJob', [
           return res.json({
             success: true,
             type: req.body.job.schedule.type,
-            jobs: req.body.job.schedule.jobs
+            jobs: req.body.job.schedule.jobs,
+            jobId: jobId,
+            title: req.body.job.basic.title
           });
           break;
+          
         case 'Time':
           try {
             let cronExpression = req.body.job.schedule.cron['minute'] + ' ' +
@@ -624,7 +654,6 @@ router.post('/saveJob', [
               } catch (err) {
                 console.log("could not remove job from scheduler"+ err)
               }
-
             }
 
             if (!success || !success[0]) {
@@ -636,8 +665,11 @@ router.post('/saveJob', [
             return res.json({
               success: true,
               type: req.body.job.schedule.type,
-              cron: req.body.job.schedule.cron
+              cron: req.body.job.schedule.cron,
+              jobId: jobId,
+              title: req.body.job.basic.title
             });
+            
           } catch (err) {
             console.log(err);
             return res.json({
@@ -678,7 +710,9 @@ router.post('/saveJob', [
             return res.json({
               success: true,
               type: req.body.job.schedule.type,
-              jobs: req.body.job.schedule.jobs
+              jobs: req.body.job.schedule.jobs,
+              jobId: jobId,
+              title: req.body.job.basic.title
             });
             break;
           } catch (err) {
@@ -688,12 +722,11 @@ router.post('/saveJob', [
               message: 'Unable to save job schedule'
             });
           }
-      }    
+      }
     return res.json(response);
   });
 
   } catch (err) {
-
     console.log('err', err);
   }
 });
@@ -711,11 +744,10 @@ router.get('/job_list', [
   console.log("[job list/read.js] - Get job list for app_id = " + req.query.app_id);
   try {
     let dataflowId = req.query.dataflowId;
-    let query = 'select j.id, j.name, j.title, j.jobType, j.createdAt, asd.dataflowId from job j '+
-    'left join assets_dataflows asd '+
-    'on j.id = asd.assetId '+
-    'where j.application_id=(:applicationId) '+
-    'and j.deletedAt IS NULL and j.id not in (select assetId from assets_dataflows where dataflowId = (:dataflowId) and deletedAt IS NULL) group by j.id order by j.name asc';
+    let query = 'select j.id, j.name, j.title, j.jobType, j.description, j.createdAt from job j '+
+    'where j.id not in (select asd.assetId from assets_dataflows asd where asd.dataflowId = (:dataflowId) and asd.deletedAt is null)'+    
+    'and j.application_id = (:applicationId)'+
+    'and j.deletedAt is null;';
     /*let query = 'select j.id, j.name, j.title, j.createdAt, asd.dataflowId from job j, assets_dataflows asd where j.application_id=(:applicationId) '+
         'and j.id = asd.assetId and j.id not in (select assetId from assets_dataflows where dataflowId = (:dataflowId))';*/
     let replacements = { applicationId: req.query.app_id, dataflowId: dataflowId};

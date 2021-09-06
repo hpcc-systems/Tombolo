@@ -43,7 +43,7 @@ exports.fileInfo = (fileName, clusterId) => {
       			"scope": response.FileDetail.Name.substring(0, response.FileDetail.Name.lastIndexOf('::')),
       			"pathMask" : response.FileDetail.PathMask,
       			"isSuperfile" : response.FileDetail.isSuperfile,
-      			"fileType": response.FileDetail.ContentType
+      			"fileType": response.FileDetail.ContentType ? response.FileDetail.ContentType : (response.FileDetail.Format ? response.FileDetail.Format : "thor_file")
       		}
           fileInfo.file_layouts = fileLayout;
           fileInfo.file_validations = [];
@@ -51,6 +51,7 @@ exports.fileInfo = (fileName, clusterId) => {
     		})
 
 		  }).catch((err) => {
+        console.log(err);
         resolve(null);
       })
 		}).catch((err) => {

@@ -69,7 +69,7 @@ function ExistingAssetListDialog({show, applicationId, selectedDataflow, assetTy
   }
 
   const selectAsset = (record) => {
-    let fileAddedResponse = {"title": record.title}
+    let fileAddedResponse = {"title": record.title, "name": record.name}
     switch(assetType) {
       case 'File':
         fileAddedResponse.fileId = record.id;

@@ -32,23 +32,23 @@ exports.fileInfo = (applicationId, file_id) => {
           //for some reason, if file layout is empty, fetch it from hpcc and save it to db
           console.log("File Layout Empty....."+files.name, files.cluster_id)
           let fileInfo  = await hpccUtil.fileInfo(files.name, files.cluster_id);
-          fileLayout = fileInfo.file_layouts;          
-          //save file layout back to db
-          await FileLayout.findOrCreate({
-            where:{application_id:applicationId, file_id: file_id},
-            defaults:{
-              application_id: applicationId,
-              file_id: file_id,
-              fields: JSON.stringify(fileLayout)
-            }
-          }).then((fileLayout) => {
-            let fileLayoutId = fileLayout[0].id;
-            if(!fileLayout[1]) {
-              return FileLayout.update({fields:JSON.stringify(fileLayout)}, {where: {application_id:applicationId, file_id: file_id}});
-            }
-          }).catch(err => {
-            console.log(err)
-          })
+          if(fileInfo) {
+            fileLayout = fileInfo.file_layouts;          
+            //save file layout back to db
+            await FileLayout.findOrCreate({
+              where:{application_id:applicationId, file_id: file_id},
+              defaults:{
+                application_id: applicationId,
+                file_id: file_id,
+                fields: JSON.stringify(fileLayout)
+              }
+            }).then((fileLayout) => {
+              let fileLayoutId = fileLayout[0].id;
+              if(!fileLayout[1]) {
+                return FileLayout.update({fields:JSON.stringify(fileLayout)}, {where: {application_id:applicationId, file_id: file_id}});
+              }
+            })
+          }
         }
         let fileLayoutObj = (fileLayout.length == 1 && fileLayout[0].fields) ? JSON.parse(fileLayout[0].fields) : fileLayout;
         results.file_layouts = fileLayoutObj.filter(item => item.name != '__fileposition__');

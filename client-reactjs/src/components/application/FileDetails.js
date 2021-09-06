@@ -309,6 +309,9 @@ class FileDetails extends PureComponent {
     try {
       const values = await this.formRef.current.validateFields();
       let saveResponse = await _self.saveFileDetails();
+      if(this.props.onAssetSaved) {
+        this.props.onAssetSaved(saveResponse);
+      }
       // setTimeout(() => {
         _self.setState({
           visible: false,
@@ -443,6 +446,10 @@ class FileDetails extends PureComponent {
       this.formRef.current.setFieldsValue({
         clusters: selectedCluster[0].id,
       });
+      this.setState({
+        ...this.state,
+        selectedCluster: selectedCluster[0].id
+      });      
     }
   }
 
@@ -629,7 +636,7 @@ class FileDetails extends PureComponent {
           handleError(response);
         })
         .then(function (rows) {
-          if (rows.length > 0) {
+          if (rows && rows.length > 0) {
             _self.setState({
               fileDataColHeaders: Object.keys(rows[0]),
               fileDataContent: rows,
@@ -679,7 +686,7 @@ class FileDetails extends PureComponent {
       isSuperFile: !this.formRef.current.getFieldValue("isSuperFile")
         ? false
         : this.formRef.current.getFieldValue("isSuperFile"),
-      cluster_id: this.props.clusterId ? this.props.clusterId : this.state.file.clusterId,
+      cluster_id: this.state.selectedCluster,
       fileType: this.state.file.fileType,
       application_id: applicationId,
       dataflowId: this.props.selectedDataflow

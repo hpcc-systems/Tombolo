@@ -14,10 +14,11 @@ function BasicsTabGeneral({enableEdit, editingAllowed, addingNewAsset, jobType, 
   const dataflowReducer = useSelector(state => state.dataflowReducer);
   const [jobSearchErrorShown, setJobSearchErrorShown] = useState(false);
   const [searchResultsLoaded, setSearchResultsLoaded] = useState(false);
+  const [disableReadOnlyFields, setDisableReadOnlyFields] = useState(enableEdit);
   const [jobSearchSuggestions, setJobSearchSuggestions] = useState([]);  
   const [selectedCluster, setSelectedCluster] = useState(assetReducer.clusterId);
-  const dispatch = useDispatch();
-
+  const dispatch = useDispatch();  
+  
   const searchJobs = (searchString) => {
     if(searchString.length <= 3 || jobSearchErrorShown) {
       return;
@@ -62,6 +63,7 @@ function BasicsTabGeneral({enableEdit, editingAllowed, addingNewAsset, jobType, 
       handleError(response);
     })
     .then(jobInfo => {      
+      setDisableReadOnlyFields(true);
       localState.job = {
         ...localState.job,
         id: jobInfo.id,
@@ -92,7 +94,6 @@ function BasicsTabGeneral({enableEdit, editingAllowed, addingNewAsset, jobType, 
     setSelectedCluster(value);
     localState.selectedCluster = value;
   }
-
 
   return (
     
@@ -146,9 +147,8 @@ function BasicsTabGeneral({enableEdit, editingAllowed, addingNewAsset, jobType, 
                   id="job_name"
                   onChange={onChange}
                   placeholder="Name"
-                  disabled={true}
-                  disabled={!editingAllowed}
-                  className={enableEdit ? null : "read-only-input"} />
+                  disabled={!editingAllowed || disableReadOnlyFields}
+                  className={(addingNewAsset || disableReadOnlyFields) ? null : "read-only-input"} />
               </Form.Item>
               <Form.Item label="Title" name="title" rules={[{ required: true, message: 'Please enter a title!' }, {
                 pattern: new RegExp(/^[ a-zA-Z0-9:._-]*$/),

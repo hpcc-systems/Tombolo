@@ -368,8 +368,11 @@ class Graph extends Component {
 
     this.saveGraph();
   }
-
-  onFileAdded = async (saveResponse) => {
+  //after editing the dataflow asset by double clicking from dataflow diagram
+  //if title is updated, update title in the dataflow
+  onAssetSaved = async (saveResponse) => {
+    console.log("onAssetSaved", saveResponse);
+    
     if(saveResponse) {
       var newData = this.thisGraph.nodes.map(el => {
         if(el.id == this.state.currentlyEditingId) {
@@ -378,6 +381,43 @@ class Graph extends Component {
           switch(el.type) {
             case 'File':
               el.fileId=saveResponse.fileId;
+              break;
+            case 'Index':
+              el.indexId=saveResponse.indexId;
+              break;
+            case 'Job':
+              el.jobId=saveResponse.jobId;
+              el.jobType = saveResponse.jobType;
+              break;
+            case 'Sub-Process':
+              el.subProcessId=saveResponse.id;
+              this.setState({
+                showSubProcessDetails: false
+              });
+              this.saveGraph();
+              break;
+          }
+          return el;
+           //return Object.assign({}, el, {title:saveResponse.title, fileId:saveResponse.fileId, jobId:saveResponse.jobId, queryId:saveResponse.queryId, indexId:saveResponse.indexId})
+        }
+        return el
+      });
+      this.thisGraph.nodes = newData;
+      this.updateGraph();
+      this.saveGraph();
+    }
+  }
+
+  onFileAdded = async (saveResponse) => {
+    if(saveResponse) {
+      var newData = this.thisGraph.nodes.map(el => {
+        if(el.id == this.state.currentlyEditingId) {
+          el.title=saveResponse.title;
+          el.name=saveResponse.name;
+          d3.select("#label-"+el.id).text(saveResponse.title);
+          switch(el.type) {
+            case 'File':
+              el.fileId=saveResponse.fileId;              
               this.saveAssetToDataflow(el.fileId, this.props.selectedDataflow.id, el.type);
               break;
             case 'Index':
@@ -1379,7 +1419,7 @@ class Graph extends Component {
         }
 
         //95 = width of sidebar, 50 = height of tabs+breadcrumb etc
-        _self.thisGraph.nodes.push({"title":"New "+d3.select(this).select("text.entity").text(),"id":newNodeId,"x":x,"y":y, "type":d3.select(this).select("text.entity").text(), "jobType": "Job"})
+        _self.thisGraph.nodes.push({"title":"New "+d3.select(this).select("text.entity").text(),"name":"New "+d3.select(this).select("text.entity").text(),"id":newNodeId,"x":x,"y":y, "type":d3.select(this).select("text.entity").text(), "jobType": "Job"})
         _self.setIdCt(idct);
         _self.updateGraph();
       })
@@ -1655,6 +1695,7 @@ class Graph extends Component {
           application={this.props.application} 
           user={this.props.user} 
           handleClose={this.handleClose}
+          onAssetSaved={this.onAssetSaved}
         />
       : null }
 
@@ -1671,6 +1712,7 @@ class Graph extends Component {
           application={this.props.application}
           user={this.props.user}
           handleClose={this.closeJobDlg}
+          onAssetSaved={this.onAssetSaved}
         />
       : null}
 
@@ -1683,7 +1725,8 @@ class Graph extends Component {
           title=  {this.state.selectedAssetTitle}
           application={this.props.application} 
           user={this.props.user} 
-          handleClose={this.closeIndexDlg}/>
+          handleClose={this.closeIndexDlg}
+          onAssetSaved={this.onAssetSaved}/>
         : null}
 
         <Modal

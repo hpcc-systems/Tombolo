@@ -72,6 +72,7 @@ function AssetDetailsDialog(props) {
           nodeIndex={props.nodeIndex}
           displayingInModal={true}
           reload={props.reload}
+          onAssetSaved={props.onAssetSaved}
         />
       </Modal>
 	  </React.Fragment>

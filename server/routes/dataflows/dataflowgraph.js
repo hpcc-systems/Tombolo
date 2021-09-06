@@ -6,6 +6,8 @@ let AssetDataflow = models.assets_dataflows;
 let DataflowGraph = models.dataflowgraph;
 let Dataflow = models.dataflow;
 let Job = models.job;
+let File = models.file;
+let Index = models.indexes;
 const validatorUtil = require('../../utils/validator');
 const { body, query, validationResult } = require('express-validator');
 const JobScheduler = require('../../job-scheduler');
@@ -81,6 +83,43 @@ router.post('/save', [
     }
 });
 
+
+let addNameAttributeToNodes = async (nodes) => {
+  let nodesWithName = [];
+  return new Promise(async (resolve, reject) => {
+    try {
+      for(const node of nodes) {
+        if(!node.hasOwnProperty('name')) {
+          switch (node.type) {
+            case 'File': 
+              let file = await File.findOne({where: {id: node.fileId}});
+              if(file) {
+                node.name = file.name;
+              }
+              break;
+            case 'Job': 
+              let job = await Job.findOne({where: {id: node.jobId}});
+              if(job) {
+                node.name = job.name;
+              }
+              break;
+            case 'Index': 
+              let index = await Index.findOne({where: {id: node.indexId}});
+              if(index) {
+                node.name = index.name;
+              }
+              break;
+          }
+        }
+        nodesWithName.push(node);
+      }
+      resolve(nodesWithName)
+    }catch(err) {
+      console.log(err);
+      reject(err);
+    }
+  })
+}
 router.get('/', [
   query('application_id')
     .optional({checkFalsy:true})
@@ -95,13 +134,18 @@ router.get('/', [
 
     console.log("[graph] - Get graph list for app_id = " + req.query.application_id);
     try {
-        let nodes = [];
-        DataflowGraph.findOne({where:{"application_Id":req.query.application_id, "dataflowId":req.query.dataflowId}}).then(async function(graph) {
-          res.json(graph);
-        })
-        .catch(function(err) {
-            console.log(err);
-        });
+      let nodes = [];
+      DataflowGraph.findOne({
+        where:{"application_Id":req.query.application_id, "dataflowId":req.query.dataflowId},
+        raw: true
+      }).then(async function(graph) {
+        let nodesWithNames = await addNameAttributeToNodes(JSON.parse(graph.nodes));        
+        graph.nodes = JSON.stringify(nodesWithNames);
+        res.json(graph);
+      })
+      .catch(function(err) {
+          console.log(err);
+      });
     } catch (err) {
         console.log('err', err);
     }

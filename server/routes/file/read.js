@@ -46,13 +46,12 @@ router.get('/file_list', [
     console.log("[file list/read.js] - Get file list for app_id = " + req.query.app_id);
     try {
       let dataflowId = req.query.dataflowId;
-      let query = 'select f.id, f.name, f.title, f.createdAt, asd.dataflowId from file f '+
-      'left join assets_dataflows asd '+
-      'on f.id = asd.assetId '+
-      'where f.application_id=(:applicationId) '+
-      'and f.deletedAt IS NULL and f.id not in (select assetId from assets_dataflows where dataflowId = (:dataflowId) and deletedAt IS NULL) order by f.name asc';
-      /*let query = 'select j.id, j.name, j.title, j.createdAt, asd.dataflowId from job j, assets_dataflows asd where j.application_id=(:applicationId) '+
-          'and j.id = asd.assetId and j.id not in (select assetId from assets_dataflows where dataflowId = (:dataflowId))';*/
+      let query = 'select f.id, f.name, f.title, f.description, f.createdAt, f.application_id, f.deletedAt '+
+        'from file f ' + 
+        'where f.id not in (select asd.assetId from assets_dataflows asd where asd.dataflowId = (:dataflowId) and asd.deletedAt is null)' +
+        'and f.application_id = (:applicationId) '+
+        'and f.deletedAt is null';
+      
       let replacements = { applicationId: req.query.app_id, dataflowId: dataflowId};
       let existingFile = models.sequelize.query(query, {
         type: models.sequelize.QueryTypes.SELECT,
@@ -325,7 +324,7 @@ let updateFileDetails = (fileId, applicationId, req) => {
         )
       }
     }).then(function(fieldValidation) {
-      resolve({"result":"success", "fileId":fileId, "title":req.body.file.basic.title})
+      resolve({"result":"success", "fileId":fileId, "title":req.body.file.basic.title, "name": req.body.file.basic.name})
     }), function(err) {
       reject(err)
     }

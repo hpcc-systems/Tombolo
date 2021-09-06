@@ -165,6 +165,10 @@ class IndexDetails extends PureComponent {
     });
 
     let saveResponse = await this.saveIndexDetails();
+    if(this.props.onAssetSaved) {
+      this.props.onAssetSaved(saveResponse);
+    }
+    
 
     // setTimeout(() => {
       this.setState({
@@ -627,6 +631,19 @@ class IndexDetails extends PureComponent {
               : null }
               </div>
               : null}
+              <Form.Item label="Name" name="name" rules={[{ required: true, message: 'Please enter a Name!' }, {
+                  pattern: new RegExp(/^[a-zA-Z0-9:._-]*$/),
+                  message: 'Please enter a valid name',
+                }]}>
+                <Input id="name"
+                 onChange={this.onChange}
+                 disabled={!editingAllowed}
+                 placeholder="Name" disabled={searchResultsLoaded || !editingAllowed}
+                 className={this.state.enableEdit ? null : "read-only-input"}
+
+                 />
+              </Form.Item>
+
               <Form.Item label="Title" name="title" rules={[{ required: true, message: 'Please enter a title!' }, {
                   pattern: new RegExp(/^[ a-zA-Z0-9:._-]*$/),
                   message: 'Please enter a valid Title. Title can have  a-zA-Z0-9:._- and space',
@@ -638,18 +655,6 @@ class IndexDetails extends PureComponent {
                 className={this.state.enableEdit ? null : "read-only-input"}
                 />
 
-              </Form.Item>
-
-              <Form.Item label="Name" name="name" rules={[{ required: true, message: 'Please enter a Name!' }, {
-                  pattern: new RegExp(/^[a-zA-Z0-9:._-]*$/),
-                  message: 'Please enter a valid name',
-                }]}>
-                <Input id="name"
-                 onChange={this.onChange}
-                 placeholder="Name" disabled={searchResultsLoaded || !editingAllowed}
-                 className={this.state.enableEdit ? null : "read-only-input"}
-
-                 />
               </Form.Item>
 
               <Form.Item label="Description" name="description">
