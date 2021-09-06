@@ -30,8 +30,7 @@ class DataflowInstanceDetails extends Component {
     this.setState({
       loading: true
     })
-
-    fetch("/api/job/jobExecutionDetails?dataflowId="+this.props.dataflowId.id+"&applicationId="+this.props.application.applicationId, {
+    fetch("/api/job/jobExecutionDetails?dataflowId="+this.props.dataflowId+"&applicationId="+this.props.application.applicationId, {
       headers: authHeader()
     })
     .then((response) => {
@@ -63,7 +62,7 @@ class DataflowInstanceDetails extends Component {
             <Graph
               applicationId={this.props.applicationId}
               viewMode={true}
-              selectedDataflow={this.props.dataflowId}
+              selectedDataflow={{'id':this.props.dataflowId}}
               workflowDetails={this.state.jobExecutionDetails}
               graphContainer="graph"
               sidebarContainer="sidebar"

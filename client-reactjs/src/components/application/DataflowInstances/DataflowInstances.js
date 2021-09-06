@@ -94,7 +94,7 @@ class DataflowInstances extends Component {
     this.props.dispatch(dataflowAction.dataflowSelected(
       this.state.applicationId,
       this.props.application.applicationTitle,
-      {"id": record.id},
+      record.id,
       this.props.user
     ));
     this.props.history.push('/'+this.state.applicationId+'/dataflowinstances/dataflowInstanceDetails');
