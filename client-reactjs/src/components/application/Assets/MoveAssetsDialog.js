@@ -111,7 +111,7 @@ function MoveAssetsDialog({isShowing, toggle, application, assetToMove, reloadTa
           width={520}
           footer={[
             <Button key="close" onClick={handleClose}>
-              Close
+              Cancel
             </Button>,
             <Button key="move" type="primary" onClick={handleMove}>
               Move

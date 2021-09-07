@@ -270,6 +270,9 @@ class JobDetails extends Component {
           if (data.schedule && data.schedule.type) {
             this.handleScheduleTypeSelect(data.schedule.type);
           }
+          if(!data.jobType){
+            data.jobType="";
+          }
 
           this.setState({
             ...this.state,
@@ -1825,7 +1828,6 @@ class JobDetails extends Component {
                                 });
                               }}
                               onSelect={(value) => {
-                                console.log(value);
                                 this.handleScheduleTypeSelect(value);
                                 this.setState({ selectedScheduleType: value });
                               }}
@@ -2011,6 +2013,7 @@ class JobDetails extends Component {
           </Form>
         </div>
         {this.props.displayingInModal ? controls : null}
+        
       </React.Fragment>
     );
   }
