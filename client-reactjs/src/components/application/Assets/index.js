@@ -822,6 +822,7 @@ const Assets = () => {
               <Form.Item
                 label="Name : "
                 name="name"
+                style={{fontWeight: "bold"}}
                 rules={readOnly ? false : [
                   {
                     required: true,
@@ -847,8 +848,10 @@ const Assets = () => {
             <Form.Item
               label="Description : "
               name="description"
-            >
+              style={{fontWeight: "bold"}}
 
+            >
+              <span style={{fontWeight: "normal"}}>
               {readOnly ? <ReactMarkdown className="read-only-markdown" children={newGroup.description}></ReactMarkdown> : 
               <MarkdownEditor
                 id="desc"
@@ -859,8 +862,8 @@ const Assets = () => {
                 targetDomId="fileDescr"
                 value={newGroup.description}
                 disabled={!editingAllowed}
-              />
-}
+              />}
+              </span>
             </Form.Item>
           </Form>
         </Modal>
