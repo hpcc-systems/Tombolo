@@ -28,12 +28,12 @@ import { MarkdownEditor } from "../../common/MarkdownEditor.js";
 import useOnClickOutside from "../../../hooks/useOnClickOutside";
 import {
   DeleteOutlined,
-  EditOutlined,
   FolderOutlined,
   DownOutlined,
   SettingOutlined,
   FilePdfOutlined,
   PlusOutlined, 
+  EyeOutlined
 } from "@ant-design/icons";
 import ReactMarkdown from 'react-markdown'
 import TitleRenderer from "./TitleRenderer.js";
@@ -409,8 +409,8 @@ const Assets = () => {
                 key="Edit-Group"
                 className="directorytree-rightclick-menuitem"
               >
-                <EditOutlined />
-                Edit
+               <EyeOutlined />
+                View
               </Menu.Item>
             ) : null}
             {selectedGroup &&
