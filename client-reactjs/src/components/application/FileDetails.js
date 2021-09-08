@@ -226,7 +226,7 @@ class FileDetails extends PureComponent {
                 ),
               },
             });
-            this.formRef.current.setFieldsValue({
+            this.formRef.current?.setFieldsValue({
               title: data.basic.title,
               name: data.basic.name,
               description: data.basic.description,
@@ -671,7 +671,6 @@ class FileDetails extends PureComponent {
     var fileDetails = { app_id: applicationId };
     var fileLayout = {},
       license = {};
-    console.log(this.formRef.current.getFieldsValue());
 
     var file_basic = {
       //"id" : this.state.file.id,
@@ -709,9 +708,6 @@ class FileDetails extends PureComponent {
 
     //validations
     fileDetails.validation = this.state.file.validations;
-
-    console.log(fileDetails);
-
     return fileDetails;
   }
 
@@ -1219,7 +1215,6 @@ class FileDetails extends PureComponent {
     };
     //render only after fetching the data from the server
     if (!title && !this.props.selectedAsset && !this.props.isNew) {
-      console.log("not rendering");
       return null;
     }
 
@@ -1765,7 +1760,7 @@ class FileDetails extends PureComponent {
                   {}
                 </div>
               </TabPane>
-            ) : null}
+         ) : null}
 
             {!this.props.isNew ? (
               <TabPane tab="Workflows" key="7">
@@ -1796,9 +1791,7 @@ export class BooleanCellRenderer extends Component {
 function mapStateToProps(state) {
   const { selectedAsset, newAsset = {}, clusterId } = state.assetReducer;
   const { user } = state.authenticationReducer;
-  console.log(state.applicationReducer)
   const { application, clusters, consumers } = state.applicationReducer;
-  console.log(consumers);
 
   const { isNew = false, groupId = "" } = newAsset;
   return {

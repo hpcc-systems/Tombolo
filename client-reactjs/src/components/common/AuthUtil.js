@@ -12,7 +12,7 @@ export function canViewPII(user) {
   let canViewPII = false;
   if(user.role) {
     user.role.forEach((role) => {
-      if(role.permissions && 'View PII' in role.permissions && role.permissions['View PII'] == 'allow') {
+      if(role.permissions && 'View PII' in role.permissions && role.permissions['View PII'] === 'allow') {
         canViewPII = true;
         return;
       }
