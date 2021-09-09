@@ -28,13 +28,14 @@ import { MarkdownEditor } from "../../common/MarkdownEditor.js";
 import useOnClickOutside from "../../../hooks/useOnClickOutside";
 import {
   DeleteOutlined,
-  EditOutlined,
   FolderOutlined,
   DownOutlined,
   SettingOutlined,
   FilePdfOutlined,
   PlusOutlined, 
+  EyeOutlined
 } from "@ant-design/icons";
+import ReactMarkdown from 'react-markdown'
 import TitleRenderer from "./TitleRenderer.js";
 import {  addingAssetMode } from "../../common/readOnlyUtil";
 import MoveAssetsDialog from "./MoveAssetsDialog";
@@ -103,7 +104,8 @@ const Assets = () => {
   ] = useState(false);
   const [selectedAsset, setSelectedAsset] = useState();
   const [toPrintAssets, setToPrintAssets] = useState([])
-
+  const [readOnly, setReadOnly] = useState(false);
+  const [editing, setEditing] = useState(false);
   let assetTypeFilter = ["File", "Job", "Query", "Indexes", "Groups"];
   //const [searchKeyWord, setSearchKeyWord] = useState('');
   let searchKeyWord = "";
@@ -314,6 +316,7 @@ const Assets = () => {
 
   const openNewGroupDialog = () => {
     setOpenCreateGroupDialog(true);
+    setReadOnly(false)
   };
 
   const onClickOutside = () => {
@@ -323,6 +326,7 @@ const Assets = () => {
 
   const closeCreateGroupDialog = () => {
     setOpenCreateGroupDialog(false);
+    setEditing(false)
     form.setFieldsValue({ name: "", description: "", id: "" });
     setNewGroup({ name: "", description: "", id: "" });
     setNewGroupForm({ submitted: false });
@@ -397,6 +401,7 @@ const Assets = () => {
             >
               <PlusOutlined /> New Group
             </Menu.Item>
+
             {selectedGroup &&
             selectedGroup.id != null &&
             selectedGroup.id != "" ? (
@@ -404,8 +409,8 @@ const Assets = () => {
                 key="Edit-Group"
                 className="directorytree-rightclick-menuitem"
               >
-                <EditOutlined />
-                Edit
+               <EyeOutlined />
+                View
               </Menu.Item>
             ) : null}
             {selectedGroup &&
@@ -495,6 +500,7 @@ const Assets = () => {
           )
         );
         closeCreateGroupDialog();
+        setEditing(false)
         deboucedFetchGroups();
       }
     })
@@ -502,7 +508,10 @@ const Assets = () => {
       console.log(error);
     });
   };
-
+  //Handle Edit groups
+  const handleEdit = () => {
+    setReadOnly(false);
+  }
   const handleDeleteGroup = () => {
     let parent = {};
     confirm({
@@ -581,6 +590,8 @@ const Assets = () => {
         console.log(error);
       });
     setOpenCreateGroupDialog(true);
+    setReadOnly(true);
+    setEditing(true);
   };
 
   const handleDragEnter = (info) => {};
@@ -780,12 +791,15 @@ const Assets = () => {
 
       <div>
         <Modal
-          title="Create Group"
+          title={editing || readOnly ? "Edit Group" : "Create Group"}
           onOk={handleCreateGroup}
           onCancel={closeCreateGroupDialog}
           visible={openCreateGroupDialog}
+          destroyOnClose={true}
+          maskClosable={false}
           width={520}
-        >
+          footer={readOnly ? <Button type="primary" onClick={handleEdit}>Edit</Button> : 
+                            <span><Button type="primary" ghost onClick={closeCreateGroupDialog}>Cancel</Button> <Button type="primary" onClick={handleCreateGroup}>Save</Button></span>}>
           {/* <Form layout="vertical" form={form} onFinish={handleCreateGroup}>
             <div
               className={
@@ -793,7 +807,12 @@ const Assets = () => {
                 (newGroupForm.submitted && !newGroup.name ? " has-error" : "")
               }
             > */}
-          <Form layout="vertical" form={form} onFinish={handleCreateGroup}>
+          <Form
+          form={form} onFinish={handleCreateGroup}  
+          layout={readOnly ? "inline" : "vertical"}
+          labelCol={{ span: 0 }}
+          wrapperCol={readOnly ? { span: 16} : {span : 30}}
+          >
             <div
               className={
                 "form-group" +
@@ -801,10 +820,10 @@ const Assets = () => {
               }
             >
               <Form.Item
-                {...formItemLayout}
-                label="Name"
+                label="Name : "
                 name="name"
-                rules={[
+                style={{fontWeight: "bold"}}
+                rules={readOnly ? false : [
                   {
                     required: true,
                     pattern: new RegExp(/^[a-zA-Z0-9_-]*$/),
@@ -814,6 +833,7 @@ const Assets = () => {
               >
                 <Input
                   id="name"
+                  className={readOnly ? "read-only-input" : null}
                   name="name"
                   onChange={(e) =>
                     setNewGroup({
@@ -826,10 +846,13 @@ const Assets = () => {
               </Form.Item>
             </div>
             <Form.Item
-              {...formItemLayout}
-              label="Description"
+              label="Description : "
               name="description"
+              style={{fontWeight: "bold"}}
+
             >
+              <span style={{fontWeight: "normal"}}>
+              {readOnly ? <ReactMarkdown className="read-only-markdown" children={newGroup.description}></ReactMarkdown> : 
               <MarkdownEditor
                 id="desc"
                 name="description"
@@ -839,7 +862,8 @@ const Assets = () => {
                 targetDomId="fileDescr"
                 value={newGroup.description}
                 disabled={!editingAllowed}
-              />
+              />}
+              </span>
             </Form.Item>
           </Form>
         </Modal>

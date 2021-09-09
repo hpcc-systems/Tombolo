@@ -791,6 +791,7 @@ div.tooltip {
   display: flex;
   flex-direction: column;
   align-items: flex-start;
+  padding-top: 5px;
 }
 
 .read-only-markdown > * {
