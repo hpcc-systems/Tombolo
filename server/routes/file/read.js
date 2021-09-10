@@ -296,7 +296,8 @@ let updateFileDetails = (fileId, applicationId, req) => {
     }).then(function(result) {
       let fileLayoutId = result[0].id;
       if(!result[1]) {
-        return FileLayout.update({fields:JSON.stringify(req.body.file.fields)}, {where: {application_id:applicationId, file_id: fileId}});
+        console.log("updating layout: "+fileLayoutId);
+        return FileLayout.update({fields:JSON.stringify(req.body.file.fields)}, {where: {id: fileLayoutId}});
       }
     }).then(function(fileLayout) {
       FileLicense.destroy(
