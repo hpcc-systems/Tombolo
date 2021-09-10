@@ -33,7 +33,7 @@ exports.fileInfo = (applicationId, file_id) => {
           console.log("File Layout Empty....."+files.name, files.cluster_id)
           let fileInfo  = await hpccUtil.fileInfo(files.name, files.cluster_id);
           if(fileInfo) {
-            fileLayout = fileInfo.file_layouts;          
+            fileLayout = fileInfo.file_layouts; 
             //save file layout back to db
             await FileLayout.findOrCreate({
               where:{application_id:applicationId, file_id: file_id},

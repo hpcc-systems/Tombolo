@@ -195,14 +195,15 @@ class FileDetails extends PureComponent {
           this.setState({
             initialDataLoading: false,
           });
+          console.log("<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<< Data ", data)
           if (data && data.basic) {
             this.setState({
               ...this.state,
+              selectedCluster: data.basic.cluster_id,
               disableReadOnlyFields: true,
               file: {
                 ...this.state.file,
                 id: data.basic.id,
-                clusterId: data.basic.cluster_id,
                 groupId: data.basic.groupId,
                 name: data.basic.name,
 
@@ -1694,6 +1695,7 @@ class FileDetails extends PureComponent {
                   width: "100%",
                 }}
               >
+                {console.log('<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<', layout)}
                 <EditableTable
                   columns={layoutColumns}
                   dataSource={layout}

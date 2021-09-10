@@ -270,6 +270,7 @@ router.get('/file_details', [
     var basic = {}, results={};
     try {
         assetUtil.fileInfo(req.query.app_id, req.query.file_id).then((fileInfo) => {
+          // console.log("<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<< FILE INFO ", fileInfo)
           res.json(fileInfo);
         })
         .catch(function(err) {
@@ -285,6 +286,7 @@ router.get('/file_details', [
 
 let updateFileDetails = (fileId, applicationId, req) => {
   let fieldsToUpdate = {"file_id"  : fileId, "application_id" : applicationId};
+  console.log("<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<", req.body.file.fields)
   return new Promise((resolve, reject) => {
     FileLayout.findOrCreate({
       where:{application_id:applicationId, file_id: fileId},
@@ -295,6 +297,7 @@ let updateFileDetails = (fileId, applicationId, req) => {
       }
     }).then(function(result) {
       let fileLayoutId = result[0].id;
+      console.log("<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<< Result ", result[0].fields)
       if(!result[1]) {
         return FileLayout.update({fields:JSON.stringify(req.body.file.fields)}, {where: {application_id:applicationId, file_id: fileId}});
       }
