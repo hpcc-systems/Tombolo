@@ -433,8 +433,9 @@ class Consumers extends Component {
                 <Form.Item {...formItemLayout} label="Data Transfer">
                   <Select name="type" id="data_transfer" onSelect={this.handleDataTransferChange} value={this.state.newConsumer.transferType}>
                     <Option value=""></Option>
-                      <Option value="SFTP">SFTP</Option>
-                      <Option value="Batch">Batch</Option>
+                    <Option value="API">API</Option>  
+                    <Option value="Batch">Batch</Option>                    
+                    <Option value="SFTP">SFTP</Option>                    
                   </Select>
                 </Form.Item> : null}
               <Form.Item {...formItemLayout} label="Contact Name">

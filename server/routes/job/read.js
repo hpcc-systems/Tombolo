@@ -146,7 +146,7 @@ let updateFileRelationship = (jobId, job, files, filesToBeRemoved, existingNodes
         'f.name =(:fileName) AND '+
         'f.deletedAt is null AND '+
         'jf.deletedAt is null AND '+
-        'jf.job_id = (:job_id) and jf.file_type = (:file_type) group by f.id';
+        'jf.job_id = (:job_id) and jf.file_type = (:file_type) group by f.id, f.title';
       files = sortFiles(files);
       //files.forEach(async (file, idx) => {
       for(let idx = 0; idx < files.length; idx++) {

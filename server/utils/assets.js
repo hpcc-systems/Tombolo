@@ -27,11 +27,12 @@ exports.fileInfo = (applicationId, file_id) => {
   return new Promise((resolve, reject) => {
     File.findOne({where:{"application_id":applicationId, "id":file_id}, include: [{model: Groups, as: 'groups'}]}).then(function(files) {
       results.basic = files;
-      FileLayout.findAll({where:{"application_id":applicationId, "file_id":file_id}}).then(async function(fileLayout) {
-        if(!fileLayout || (fileLayout && (fileLayout.length == 0 || !fileLayout.fields || fileLayout.fields.length == 0))) {
+      FileLayout.findAll({where:{"application_id":applicationId, "file_id":file_id}}).then(async function(dbFileLayout) {
+        if(!dbFileLayout || (dbFileLayout && (dbFileLayout.length == 0 || !dbFileLayout.fields || dbFileLayout.fields.length == 0))) {
           //for some reason, if file layout is empty, fetch it from hpcc and save it to db
           console.log("File Layout Empty....."+files.name, files.cluster_id)
           let fileInfo  = await hpccUtil.fileInfo(files.name, files.cluster_id);
+          let fileLayout = {};
           if(fileInfo) {
             fileLayout = fileInfo.file_layouts; 
             //save file layout back to db
@@ -42,9 +43,12 @@ exports.fileInfo = (applicationId, file_id) => {
                 file_id: file_id,
                 fields: JSON.stringify(fileLayout)
               }
-            }).then((fileLayout) => {
-              let fileLayoutId = fileLayout[0].id;
-              if(!fileLayout[1]) {
+            }).then((dbFileLayout) => {
+              let fileLayoutId = dbFileLayout[0].id;
+              //console.log(fileLayout);
+              if(!dbFileLayout[1]) {
+                console.log("updating file layout")
+                console.log(fileLayout.length)
                 return FileLayout.update({fields:JSON.stringify(fileLayout)}, {where: {application_id:applicationId, file_id: file_id}});
               }
             })

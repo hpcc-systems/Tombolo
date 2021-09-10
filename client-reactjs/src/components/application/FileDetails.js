@@ -195,7 +195,6 @@ class FileDetails extends PureComponent {
           this.setState({
             initialDataLoading: false,
           });
-          console.log("<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<< Data ", data)
           if (data && data.basic) {
             this.setState({
               ...this.state,
@@ -203,7 +202,7 @@ class FileDetails extends PureComponent {
               disableReadOnlyFields: true,
               file: {
                 ...this.state.file,
-                id: data.basic.id,
+                id: data.basic.id,                
                 groupId: data.basic.groupId,
                 name: data.basic.name,
 
@@ -234,7 +233,7 @@ class FileDetails extends PureComponent {
               scope: data.basic.scope,
               serviceURL: data.basic.serviceUrl,
               serviceURL: data.basic.serviceURL,
-              qualifiedPath: data.basic.qualifiedPath,
+              qualifiedPath: data.basic.pathMask,
               owner: data.basic.owner,
               consumer: data.basic.consumer,
               supplier: data.basic.supplier,
@@ -1695,7 +1694,6 @@ class FileDetails extends PureComponent {
                   width: "100%",
                 }}
               >
-                {console.log('<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<', layout)}
                 <EditableTable
                   columns={layoutColumns}
                   dataSource={layout}
