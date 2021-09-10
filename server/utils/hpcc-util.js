@@ -11,7 +11,6 @@ exports.fileInfo = (fileName, clusterId) => {
 		module.exports.getCluster(clusterId).then(function(cluster) {
       var fileInfo = {};
 			let clusterAuth = module.exports.getClusterAuth(cluster);
-      console.log(clusterAuth);
 			let dfuService = new hpccJSComms.DFUService({ baseUrl: cluster.thor_host + ':' + cluster.thor_port, userID:(clusterAuth ? clusterAuth.user : ""), password:(clusterAuth ? clusterAuth.password : "")});
 			dfuService.DFUInfo({"Name":fileName}).then(response => {
         if(response.DFUInfoResponse && response.DFUInfoResponse.Exceptions) {
