@@ -198,11 +198,11 @@ class FileDetails extends PureComponent {
           if (data && data.basic) {
             this.setState({
               ...this.state,
+              selectedCluster: data.basic.cluster_id,
               disableReadOnlyFields: true,
               file: {
                 ...this.state.file,
-                id: data.basic.id,
-                clusterId: data.basic.cluster_id,
+                id: data.basic.id,                
                 groupId: data.basic.groupId,
                 name: data.basic.name,
 
@@ -233,7 +233,7 @@ class FileDetails extends PureComponent {
               scope: data.basic.scope,
               serviceURL: data.basic.serviceUrl,
               serviceURL: data.basic.serviceURL,
-              qualifiedPath: data.basic.qualifiedPath,
+              qualifiedPath: data.basic.pathMask,
               owner: data.basic.owner,
               consumer: data.basic.consumer,
               supplier: data.basic.supplier,

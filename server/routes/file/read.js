@@ -850,28 +850,34 @@ router.post('/visualization', [
 
   console.log("[file visualization] - create visualization = " + req.body.id + " appId: "+req.body.application_id);
   try {
-    let file=null;
+    let file=null, cluster=null, bodyObj={};
     if(req.body.id) {
-       file = await File.findOne({where: {id: req.body.id}});
-    } else {
+       file = await File.findOne({where: {id: req.body.id}});       
+    } /*else if(req.body.fileName) {
       let fileInfo = await hpccUtil.fileInfo(req.body.fileName, req.body.clusterId);
       file = await File.create({...fileInfo.basic, cluster_id: req.body.clusterId, application_id: req.body.application_id});      
+    } */
+    console.log(file)
+    if(file && file.cluster_id) {
+      cluster = await Cluster.findOne({where: {id: file.cluster_id}});
     }
-    
-    let cluster = await Cluster.findOne({where: {id: file.cluster_id}});
-    let bodyObj = {
-      user: { 
-        email: req.body.email 
-      },
-      cluster: {
+    console.log(cluster)
+    if(cluster) {
+      bodyObj.cluster = {
         name: cluster.name,
         host: cluster.thor_host,
         infoPort: cluster.thor_port,
         dataPort: cluster.roxie_port,
+      }
+    }
+    
+    bodyObj = {
+      user: { 
+        email: req.body.email 
       },
-      filename: file.name,
+      filename: file ? file.name : req.body.name,
       workspaceName: 'Tombolo', 
-      dashboardName: file.title ? file.title : file.name,
+      dashboardName: (file && file.name) ? file.name : req.body.fileName,
       editingAllowed: req.body.editingAllowed
     };
 
@@ -894,8 +900,8 @@ router.post('/visualization', [
           url: result.workspaceUrl,
           type: req.body.type,
           description: req.body.description,
-          assetId: file.id,
-          clusterId: file.cluster_id
+          assetId: file ? file.id : '',
+          clusterId: file ? file.cluster_id : ''
         })
         if(req.body.groupId && req.body.groupId != '') {
           let assetsGroups = await AssetsGroups.findOrCreate({

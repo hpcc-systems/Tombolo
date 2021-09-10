@@ -247,9 +247,10 @@ router.get('/getFileInfo', [
     return res.status(422).json({ success: false, errors: errors.array() });
   }
 	console.log('fileName: '+req.query.fileName+ " clusterId: "+req.query.clusterid );
-  File.findOne({where: {name: req.query.fileName, application_id: req.query.applicationId}}).then((existingFile) => {
+  File.findOne({where: {name: req.query.fileName, application_id: req.query.applicationId}}).then(async (existingFile) => {
+		console.log(existingFile);
     if(existingFile) {
-      assetUtil.fileInfo(req.query.applicationId, existingFile.id).then((existingFileInfo) => {
+      await assetUtil.fileInfo(req.query.applicationId, existingFile.id).then((existingFileInfo) => {
         res.json(existingFileInfo);
       })
     } else {
