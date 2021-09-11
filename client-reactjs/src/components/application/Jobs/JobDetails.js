@@ -647,7 +647,7 @@ class JobDetails extends Component {
     });
     const values = await this.formRef.current.validateFields();
     let saveResponse = await this.saveJobDetails();
-    saveResponse.jobType = this.formRef.current.getFieldValue("jobType");
+    //saveResponse.jobType = this.formRef.current.getFieldValue("jobType");
     if(this.props.onAssetSaved) {
       this.props.onAssetSaved(saveResponse);
     }

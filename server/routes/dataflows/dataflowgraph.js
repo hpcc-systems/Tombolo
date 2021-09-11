@@ -84,33 +84,35 @@ router.post('/save', [
 });
 
 
-let addNameAttributeToNodes = async (nodes) => {
+let updateNodeNameAndTitle = async (nodes) => {
   let nodesWithName = [];
   return new Promise(async (resolve, reject) => {
     try {
       for(const node of nodes) {
-        if(!node.hasOwnProperty('name')) {
-          switch (node.type) {
-            case 'File': 
-              let file = await File.findOne({where: {id: node.fileId}});
-              if(file) {
-                node.name = file.name;
-              }
-              break;
-            case 'Job': 
-              let job = await Job.findOne({where: {id: node.jobId}});
-              if(job) {
-                node.name = job.name;
-              }
-              break;
-            case 'Index': 
-              let index = await Index.findOne({where: {id: node.indexId}});
-              if(index) {
-                node.name = index.name;
-              }
-              break;
-          }
+        switch (node.type) {
+          case 'File': 
+            let file = await File.findOne({where: {id: node.fileId}});
+            if(file) {              
+              node.name = file.name;
+              node.title = file.title;
+            }
+            break;
+          case 'Job': 
+            let job = await Job.findOne({where: {id: node.jobId}});
+            if(job) {
+              node.name = job.name;
+              node.title = job.title;              
+            }
+            break;
+          case 'Index': 
+            let index = await Index.findOne({where: {id: node.indexId}});
+            if(index) {
+              node.name = index.name;
+              node.title = index.title;
+            }
+            break;
         }
+
         nodesWithName.push(node);
       }
       resolve(nodesWithName)
@@ -139,7 +141,7 @@ router.get('/', [
         where:{"application_Id":req.query.application_id, "dataflowId":req.query.dataflowId},
         raw: true
       }).then(async function(graph) {
-        let nodesWithNames = await addNameAttributeToNodes(JSON.parse(graph.nodes));        
+        let nodesWithNames = await updateNodeNameAndTitle(JSON.parse(graph.nodes));        
         graph.nodes = JSON.stringify(nodesWithNames);
         res.json(graph);
       })
