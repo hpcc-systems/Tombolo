@@ -61,7 +61,6 @@ function AssetDetailsDialog(props) {
           bodyStyle={{display: "flex", flexDirection: "column"}}
           title={_.startCase(_.toLower(props.assetType)) + " : " +   props.title}
         > 
-        {console.log(" <<<<<<<<<<<<<< testting ")}
         <DetailsForm
           assetType={props.assetType}
           assetId={props.assetId}

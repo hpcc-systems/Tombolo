@@ -1016,7 +1016,7 @@ class FileDetails extends PureComponent {
         celleditorparams: {
           values: eclTypes.sort(),
         },
-        // showdatadefinitioninfield: true,
+        showdatadefinitioninfield: true,
         width: "18%",
       },
       // {
