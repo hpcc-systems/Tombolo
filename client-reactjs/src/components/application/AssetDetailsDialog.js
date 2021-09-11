@@ -52,6 +52,7 @@ function AssetDetailsDialog(props) {
   return (
 	  (authReducer.user && authReducer.user.token != undefined) ?
 	  <React.Fragment>
+      
 	    <Modal
           visible={isShowing}
           width="1200px"
@@ -59,7 +60,8 @@ function AssetDetailsDialog(props) {
           footer={null}
           bodyStyle={{display: "flex", flexDirection: "column"}}
           title={_.startCase(_.toLower(props.assetType)) + " : " +   props.title}
-        >
+        > 
+        {console.log(" <<<<<<<<<<<<<< testting ")}
         <DetailsForm
           assetType={props.assetType}
           assetId={props.assetId}

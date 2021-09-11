@@ -166,7 +166,7 @@ class EditableTable extends React.Component {
       width: '8%',
       render: (text, record) =>
         <span>
-            <a href="#" onClick={() => this.handleDelete(record.id)}><DeleteOutlined /></a>
+            <a  onClick={() => this.handleDelete(record.id)}><DeleteOutlined /></a>
         </span>
     }
     if(this.props.editingAllowed ) {
