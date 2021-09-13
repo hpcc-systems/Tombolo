@@ -300,14 +300,7 @@ function VisualizationDetails({ selectedGroup, openGroup, handleEditGroup, refre
   return (
     <React.Fragment>
         {viewOnlyModeReducer.addingNewAsset ? null : (
-          <div
-            style={{
-              padding: "5px 16px",
-              background: "var(--light)",
-              fontWeight: "600",
-              margin: "0px -16px",
-            }}
-          >
+          <div className="assetTitle">
             File : {visualization.name}
           </div>
         )}

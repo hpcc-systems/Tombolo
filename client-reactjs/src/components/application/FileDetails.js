@@ -1310,13 +1310,7 @@ class FileDetails extends PureComponent {
       <React.Fragment>
         {this.props.displayingInModal || this.state.addingNewAsset ? null : (
           <div
-            style={{
-              padding: "5px 16px",
-              background: "var(--light)",
-              fontWeight: "600",
-              margin: "0px -16px",
-            }}
-          >
+          className="assetTitle">
             File : {this.state.file.name}
           </div>
         )}
