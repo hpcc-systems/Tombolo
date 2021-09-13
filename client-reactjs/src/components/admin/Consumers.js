@@ -1,4 +1,5 @@
 import React, { Component } from "react";
+import { useSelector } from "react-redux";
 import { Table, Button, Row, Col, Modal, Form, Input, Select, notification, Tooltip, Popconfirm, Divider, AutoComplete, message, Radio, Typography, Checkbox } from 'antd/lib';
 import BreadCrumbs from "../common/BreadCrumbs";
 import { authHeader, handleError } from "../common/AuthHeader.js";
@@ -113,7 +114,7 @@ class Consumers extends Component {
       });
       this.setState({
         showAddConsumer: true,
-        showAdGroupField: (data.consumer.type == 'Internal') ? true : false
+        showAdGroupField: (data.consumer.type == 'Internal') ? true : false,
       });
 
     })
@@ -124,7 +125,6 @@ class Consumers extends Component {
 
   handleRemove = (consumer_id) => {
   	var data = JSON.stringify({consumerToDelete:consumer_id});
-  	console.log(data);
     fetch("/api/consumer/delete", {
       method: 'post',
       headers: authHeader(),
@@ -236,6 +236,11 @@ class Consumers extends Component {
   }
 
   handleAddConsumerOk = () => {
+    let consumer = []
+    consumer = this.props.consumers.map(consumer => {return this.state.newConsumer.name === consumer.name});
+    if(consumer[0]){
+     return  message.error(`Consumer name must be unique`)
+    }
     this.setState({
       confirmLoading: true,
       submitted: true
@@ -292,7 +297,7 @@ class Consumers extends Component {
 
   handleClose = () => {
     this.setState({
-      openShareAppDialog: false
+      openShareAppDialog: false,
     });
   }
 
@@ -372,6 +377,7 @@ class Consumers extends Component {
       },
     };
 
+  
     return (
     <React.Fragment>
       <div className="d-flex justify-content-end">
@@ -387,7 +393,7 @@ class Consumers extends Component {
           columns={consumerColumns}
           rowKey={record => record.id}
           dataSource={this.props.consumers}
-          pagination={this.props.consumers.length > 10 ? {pageSize: 10}: false}
+          pagination={this.props.consumers?.length > 10 ? {pageSize: 10}: false}
 
           />
       </div>
@@ -399,6 +405,7 @@ class Consumers extends Component {
 	          onOk={this.handleAddConsumerOk.bind(this)}
 	          onCancel={this.handleAddConsumerCancel}
 	          confirmLoading={confirmLoading}
+            destroyOnClose={true}
 	        >
 		        <Form layout="vertical">
               <Paragraph>
@@ -411,7 +418,7 @@ class Consumers extends Component {
                 Owner - Contact Person/Group for an asset
               </Paragraph>
               <div className={'form-group'+ (this.state.submitted && !this.state.newConsumer.name ? ' has-error' : '')}>
-                <Checkbox.Group options={options} defaultValue={this.state.newConsumer.assetType} onChange={this.onConsumerSupplierChange} />
+                <Checkbox.Group options={options} onChange={this.onConsumerSupplierChange} />
               </div>
 
             <div className={'form-group'}>
@@ -425,6 +432,7 @@ class Consumers extends Component {
               <Form.Item {...formItemLayout} label="Type">
                 <Select name="type" id="consumer_type" onSelect={this.handleTypeChange} value={this.state.newConsumer.type}>
                   <Option value=""></Option>
+                    <Option value="Api">API</Option>
                     <Option value="External">External</Option>
                     <Option value="Internal">Internal</Option>
                 </Select>

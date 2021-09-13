@@ -26,10 +26,10 @@ router.post('/filesearch', [
     .matches(/^[a-zA-Z]{1}[a-zA-Z0-9_:.\-]*$/).withMessage('Invalid keyword')
 ], function (req, res) {
 	const errors = validationResult(req).formatWith(validatorUtil.errorFormatter);
-  if (!errors.isEmpty()) {
-    return res.status(422).json({ success: false, errors: errors.array() });
-  }
-  console.log('clusterid: '+req.body.clusterid);
+	if (!errors.isEmpty()) {
+		return res.status(422).send({"success":"false", "message": "Error occured during search."});
+	}
+	console.log(' <<<<<<<<<<<<<<<<<<<<<<<<<< clusterid: '+req.body.clusterid);
 
 	hpccUtil.getCluster(req.body.clusterid).then(function(cluster) {
 		let results = [];
