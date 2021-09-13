@@ -523,6 +523,7 @@ class FileDetails extends PureComponent {
         handleError(response);
       })
       .then((fileInfo) => {
+        console.log("File info <<<<<<<<<<<<<<<<<<", fileInfo)
         if (fileInfo && fileInfo.basic.groups) {
           if (
             fileInfo.basic.groups.filter(
@@ -1310,13 +1311,7 @@ class FileDetails extends PureComponent {
       <React.Fragment>
         {this.props.displayingInModal || this.state.addingNewAsset ? null : (
           <div
-            style={{
-              padding: "5px 16px",
-              background: "var(--light)",
-              fontWeight: "600",
-              margin: "0px -16px",
-            }}
-          >
+          className="assetTitle">
             File : {this.state.file.name}
           </div>
         )}
@@ -1335,6 +1330,86 @@ class FileDetails extends PureComponent {
                 ref={this.formRef}
                 onFinish={this.handleOk}
               >
+                <Form.Item
+                  label="Title"
+                  name="title"
+                  rules={[
+                    { required: true, message: "Please enter a title!" },
+                    {
+                      pattern: new RegExp(/^[ a-zA-Z0-9:._-]*$/),
+                      message: "Please enter a valid title. Title can have  a-zA-Z0-9:._- and space",
+                    },
+                  ]}
+                >
+                  <Input
+                    id="file_title"
+                    name="title"
+                    onChange={this.onChange}
+                    placeholder="Title"
+                    disabled={!editingAllowed}
+                    className={!this.state.enableEdit ? "read-only-input" : ""}
+                  />
+                </Form.Item>
+                <Form.Item
+                  label="Name"
+                  name="name"
+                  rules={[
+                    { required: true, message: "Please enter a name!" },
+                    {
+                      pattern: new RegExp(/^[a-zA-Z0-9:._-]*$/),
+                      message: "Please enter a valid name",
+                    },
+                  ]}
+                >
+                  <Input
+                    id="file_name"
+                    onChange={this.onChange}
+                    placeholder="Name"
+                    disabled={disableReadOnlyFields || !editingAllowed}
+                    className={!this.state.enableEdit ? "read-only-input" : ""}
+                  />
+                </Form.Item>
+                <Form.Item
+                  label="Scope"
+                  name="scope"
+                  rules={[
+                    {
+                      required: true,
+                    },
+                    {
+                      validator: this.scopeValidator,
+                    },
+                  ]}
+                >
+                  <Input
+                    id="file_scope"
+                    onChange={this.onChange}
+                    placeholder="Scope"
+                    disabled={disableReadOnlyFields || !editingAllowed}
+                    className={!this.state.enableEdit ? "read-only-input" : ""}
+                  />
+                </Form.Item>
+
+                <Form.Item label="Description" name="description">
+                  {this.state.enableEdit ? (
+                    <MarkdownEditor
+                      id="file_desc"
+                      name="description"
+                      onChange={this.onChange}
+                      targetDomId="fileDescr"
+                      value={description}
+                      disabled={!editingAllowed}
+                    />
+                  ) : (
+                    <div className="read-only-markdown">
+                      {" "}
+                      <ReactMarkdown
+                        source={this.state.file.description}
+                      />{" "}
+                    </div>
+                  )}
+                </Form.Item>
+
                 {this.state.enableEdit ? (
                   <div>
                     {this.state.addingNewAsset ? (
@@ -1423,86 +1498,6 @@ class FileDetails extends PureComponent {
                     ) : null}
                   </div>
                 ) : null}
-
-                <Form.Item
-                  label="Title"
-                  name="title"
-                  rules={[
-                    { required: true, message: "Please enter a title!" },
-                    {
-                      pattern: new RegExp(/^[ a-zA-Z0-9:._-]*$/),
-                      message: "Please enter a valid title. Title can have  a-zA-Z0-9:._- and space",
-                    },
-                  ]}
-                >
-                  <Input
-                    id="file_title"
-                    name="title"
-                    onChange={this.onChange}
-                    placeholder="Title"
-                    disabled={!editingAllowed}
-                    className={!this.state.enableEdit ? "read-only-input" : ""}
-                  />
-                </Form.Item>
-                <Form.Item
-                  label="Name"
-                  name="name"
-                  rules={[
-                    { required: true, message: "Please enter a name!" },
-                    {
-                      pattern: new RegExp(/^[a-zA-Z0-9:._-]*$/),
-                      message: "Please enter a valid name",
-                    },
-                  ]}
-                >
-                  <Input
-                    id="file_name"
-                    onChange={this.onChange}
-                    placeholder="Name"
-                    disabled={disableReadOnlyFields || !editingAllowed}
-                    className={!this.state.enableEdit ? "read-only-input" : ""}
-                  />
-                </Form.Item>
-                <Form.Item
-                  label="Scope"
-                  name="scope"
-                  rules={[
-                    {
-                      required: true,
-                    },
-                    {
-                      validator: this.scopeValidator,
-                    },
-                  ]}
-                >
-                  <Input
-                    id="file_scope"
-                    onChange={this.onChange}
-                    placeholder="Scope"
-                    disabled={disableReadOnlyFields || !editingAllowed}
-                    className={!this.state.enableEdit ? "read-only-input" : ""}
-                  />
-                </Form.Item>
-
-                <Form.Item label="Description" name="description">
-                  {this.state.enableEdit ? (
-                    <MarkdownEditor
-                      id="file_desc"
-                      name="description"
-                      onChange={this.onChange}
-                      targetDomId="fileDescr"
-                      value={description}
-                      disabled={!editingAllowed}
-                    />
-                  ) : (
-                    <div className="read-only-markdown">
-                      {" "}
-                      <ReactMarkdown
-                        source={this.state.file.description}
-                      />{" "}
-                    </div>
-                  )}
-                </Form.Item>
 
                 <Form.Item
                   label="Service URL"

@@ -1604,14 +1604,7 @@ class JobDetails extends Component {
     return (
       <React.Fragment>
         {this.props.displayingInModal || this.state.addingNewAsset ? null : (
-          <div
-            style={{
-              padding: "5px 16px",
-              background: "var(--light)",
-              fontWeight: "600",
-              margin: "0px -16px",
-            }}
-          >
+          <div className="assetTitle">
             {" "}
             Job : {this.state.job.name}
           </div>

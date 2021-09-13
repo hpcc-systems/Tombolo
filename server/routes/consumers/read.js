@@ -4,6 +4,8 @@ const assert = require('assert');
 var models  = require('../../models');
 let Consumer = models.consumer;
 let ConsumerObject = models.consumer_object;
+const { body, validationResult} = require('express-validator');
+const validatorUtil = require('../../utils/validator');
 
 router.get('/consumers', (req, res) => {
     console.log("[consumer/read.js] - Get consumer list");
@@ -15,7 +17,11 @@ router.get('/consumers', (req, res) => {
     });
 });
 
-router.post('/consumer', (req, res) => {
+router.post('/consumer',[
+    body('contact_email').isEmail().withMessage('Invalid E-mail')
+], (req, res) => {
+    const errors = validationResult(req).formatWith(validatorUtil.errorFormatter);
+    console.log("Erros <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<< ", errors )
     console.log("[save consumer/read.js] ");
     var consumerId, fieldsToUpdate;
     try {

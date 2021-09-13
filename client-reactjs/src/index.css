@@ -277,10 +277,9 @@ path,
 .jtk-endpoint {
   cursor: pointer;
 }
-
-/*.ant-layout-content {
-  overflow:hidden;
-}*/
+.ant-layout-content {
+  /* margin-left: 0px !important; */
+}
 
 /*.ant-btn-primary:active, .ant-btn-primary.active {
   color: #fff;
@@ -320,6 +319,10 @@ path,
 
 .sidebar .nav-link {
   color: white;
+}
+
+.leftNav-link{
+  padding-left: 10px;
 }
 
 .active {
@@ -879,7 +882,15 @@ h6 {
 .assetDetails-content-wrapper{
   height: 80vh;
    overflow:auto;  
-   padding-bottom : 50px;
+   padding : 10px 10px 50px 15px;
+   margin-left:0;
+}
+
+.assetTitle{
+  margin-top: 10px;
+  padding: 5px 15px;
+  background: var(--light);
+  font-weight: 600;
 }
 
 .graphNotice{
