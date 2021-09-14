@@ -73,7 +73,7 @@ function DataflowTable({data, applicationId, onSelectDataflow, onDataFlowUpdated
     className: 'overflow-hidden',
     ellipsis: true,
     width: '30%',
-      render: (text, record) => <ReactMarkdown children={text} />
+      render: (text, record) => <ReactMarkdown children={text} className="read-only-markdown"/>
   },
   {
     title: 'Process Type',
