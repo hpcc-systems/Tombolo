@@ -21,7 +21,6 @@ router.post('/consumer',[
     body('contact_email').isEmail().withMessage('Invalid E-mail')
 ], (req, res) => {
     const errors = validationResult(req).formatWith(validatorUtil.errorFormatter);
-    console.log("Erros <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<< ", errors )
     console.log("[save consumer/read.js] ");
     var consumerId, fieldsToUpdate;
     try {

@@ -8,7 +8,8 @@ import {DataflowInstanceDetails} from "./DataflowInstanceDetails"
 import { dataflowAction } from '../../../redux/actions/Dataflow';
 import { dataflowInstancesAction } from '../../../redux/actions/DataflowInstances';
 import { Constants } from '../../common/Constants';
-import ReactMarkdown from 'react-markdown';
+import showdown from "showdown";
+
 
 class DataflowInstances extends Component {
 
@@ -160,7 +161,7 @@ class DataflowInstances extends Component {
         className: 'overflow-hidden',
         ellipsis: true,
         width: '30%',
-        render: (text, record) => <ReactMarkdown children={text} />
+        render: (text, record) => {const converter = new showdown.Converter(); return converter.makeHtml(text).replace(/<[^>]*>/g, "")}
       },
       {
         title: 'Created',

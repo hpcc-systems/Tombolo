@@ -6,7 +6,7 @@ import { MarkdownEditor } from "../../common/MarkdownEditor.js";
 import { useSelector } from "react-redux";
 const { Option, OptGroup } = Select;  
 
-function AddDataflow({isShowing, toggle, applicationId, onDataFlowUpdated, selectedDataflow, dataflows}) {
+function AddDataflow({action,actionType, isShowing, toggle, applicationId, onDataFlowUpdated, selectedDataflow, dataflows}) {
   const assetReducer = useSelector(state => state.assetReducer);
   const [dataFlow, setDataFlow] = useState({
 		id: '',
@@ -77,7 +77,7 @@ function AddDataflow({isShowing, toggle, applicationId, onDataFlowUpdated, selec
       submitted: true
     });
 
-    let dataflowExistsWithSameName = (dataflows.filter(existingDataflow => existingDataflow.title == dataFlow.title).length > 0);
+    let dataflowExistsWithSameName = (dataflows.filter(existingDataflow => existingDataflow.title === dataFlow.title && existingDataflow.id !== dataFlow.id).length > 0);
     if(dataflowExistsWithSameName) {
       message.error("A dataflow exists with the same name. Please select a different name")
       return true;
@@ -114,7 +114,6 @@ function AddDataflow({isShowing, toggle, applicationId, onDataFlowUpdated, selec
 	    });
 
 	    toggle();
-
 			clearForm();
 
 	    onDataFlowUpdated();
@@ -130,6 +129,7 @@ function AddDataflow({isShowing, toggle, applicationId, onDataFlowUpdated, selec
   const openAddDataflowDlg = () => {
   	clearForm();
 		toggle();
+    actionType("addNew")
   }
 
   const clearForm = () => {
@@ -151,29 +151,41 @@ function AddDataflow({isShowing, toggle, applicationId, onDataFlowUpdated, selec
 	  </span>
 	  <div>
       <Modal
-          title="Add Dataflow"
+          title={action === "addNew" ? "Add Dataflow" : "Edit Dataflow"}
           onOk={handleAddAppOk}
           onCancel={handleAddAppCancel}
           visible={isShowing}
           confirmLoading={form.confirmLoading}
+          destroyOnClose={true}
         >
 	        <Form layout="vertical" form={formObj} onFinish={handleAddAppOk}>
 	            <div className={'form-group' + (form.submitted && !dataFlow.title ? ' has-error' : '')}>
-		            <Form.Item {...formItemLayout} label="Title"
+		            <Form.Item  label="Title"
                   rules={[{
                       required: true,
-                      pattern: new RegExp(
-                        /^[a-zA-Z0-9_-]*$/
-                      ),
-                      message: "Please enter a valid Name"
+                      // pattern: new RegExp(/^[a-zA-Z0-9_-]*$/),
+                      message: "Please enter a valid Title"
                     }
                   ]}
                 >
-							    <Input id="title" name="title" onChange={e => setDataFlow({...dataFlow, [e.target.name]: e.target.value})} placeholder="Title" value={dataFlow.title} onPressEnter={handleAddAppOk}/>
-		            </Form.Item>
+							    <Input 
+                    id="title" name="title" 
+                    onChange={e => setDataFlow({...dataFlow, [e.target.name]: e.target.value})} 
+                    placeholder="Title" 
+                    value={dataFlow.title} 
+                    onPressEnter={handleAddAppOk}
+                  />
+
+		          </Form.Item>
 	            </div>
 	            <Form.Item {...formItemLayout} label="Description">
-				    		<MarkdownEditor id="description" name="description" targetDomId="dataflowDescr" onChange={e => setDataFlow({...dataFlow, [e.target.name]: e.target.value})} value={dataFlow.description}/>
+				    		<MarkdownEditor 
+                 id="description" 
+                 name="description" 
+                 targetDomId="dataflowDescr" 
+                 onChange={e => setDataFlow({...dataFlow, [e.target.name]: e.target.value})} 
+                 value={dataFlow.description}
+                 />
 	            </Form.Item>
               <Form.Item {...formItemLayout} label="Cluster">
                 <Select placeholder="Select a Cluster" onChange={onClusterSelection} style={{ width: 290 }} value={clusterSelected}>

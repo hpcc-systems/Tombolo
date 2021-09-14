@@ -29,7 +29,6 @@ router.post('/filesearch', [
 	if (!errors.isEmpty()) {
 		return res.status(422).send({"success":"false", "message": "Error occured during search."});
 	}
-	console.log(' <<<<<<<<<<<<<<<<<<<<<<<<<< clusterid: '+req.body.clusterid);
 
 	hpccUtil.getCluster(req.body.clusterid).then(function(cluster) {
 		let results = [];

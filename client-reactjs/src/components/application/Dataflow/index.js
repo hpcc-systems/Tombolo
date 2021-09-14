@@ -15,7 +15,7 @@ const { Panel } = Collapse;
 function Dataflow(props) {
 	const [dataFlows, setDataFlows] = useState([]);
 
-	const {isShowing, toggle} = useModal();
+	const {isShowing, toggle, actionType, action} = useModal();
 
   const [tableDisplay, setTableDisplay] = useState(
     {graphHeight: 700, display:'block'}
@@ -82,11 +82,12 @@ function Dataflow(props) {
 		getData();
   }
 
-  const onDataFlowEdit = (selectedDataflow) => {
+  const onDataFlowEdit = (selectedDataflow, action) => {
   	setForm({
       selectedDataflow: selectedDataflow
     });
     toggle()
+    actionType(action)
   }
 
   const onChange = (key) => {
@@ -116,10 +117,12 @@ function Dataflow(props) {
     	          <AddDataflow
     	          	isShowing={isShowing}
     	          	toggle={toggle}
+                  actionType={actionType}
     	          	applicationId={application.applicationId}
     	          	onDataFlowUpdated={onDataFlowUpdated}
     	          	selectedDataflow={form.selectedDataflow}
                   dataflows={dataFlows}
+                  action={action}
     	          	/>
                : null}
   	        </span>
