@@ -23,7 +23,6 @@ import { store } from "../../../redux/store/Store";
 import showdown from "showdown";
 import SelectDetailsForPdfDialog from "../Assets/pdf/SelectDetailsForPdfDialog";
 import { getNestedAssets} from "../Assets/pdf/downloadPdf";
-const removeMd = require('remove-markdown');
 
 function AssetsTable({ selectedGroup, openGroup, handleEditGroup, refreshGroups }) {
   const [assets, setAssets] = useState([]);
