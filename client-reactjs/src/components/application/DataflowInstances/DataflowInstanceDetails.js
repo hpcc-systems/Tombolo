@@ -69,7 +69,7 @@ class DataflowInstanceDetails extends Component {
               />
           </div>
 
-          <div >
+          <div style={{"position": "fixed"}}>
             <Tabs type="card">
              <TabPane tab="Workunits" key="1">
                <Spin spinning={this.state.loading}>
