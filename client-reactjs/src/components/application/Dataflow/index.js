@@ -51,7 +51,6 @@ function Dataflow(props) {
       }
       handleError(response);
     }).then(function(data) {
-      console.log("Data <<<<<<<<<<<<<<<<<<<<", data)
       setDataFlows(data);
       if(data.length == 0) {
         toggle();

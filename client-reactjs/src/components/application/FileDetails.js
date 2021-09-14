@@ -233,10 +233,6 @@ class FileDetails extends PureComponent {
               scope: data.basic.scope,
               serviceURL: data.basic.serviceUrl,
               serviceURL: data.basic.serviceURL,
-              // qualifiedPath: data.basic.pathMask,
-              // qualifiedPath: data.basic.qualifiedPath,
-              //
-              //<<<<<<<<<<<<<
               qualifiedPath: data.basic.qualifiedPath,
               owner: data.basic.owner,
               consumer: data.basic.consumer,
