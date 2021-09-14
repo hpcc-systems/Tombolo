@@ -74,8 +74,12 @@ function DataflowTable({data, applicationId, onSelectDataflow, onDataFlowUpdated
     ellipsis: true,
     width: '30%',
     render: (text, record) => { 
+      console.log("text <<<<<<<<<<", text)
       const converter = new showdown.Converter();
-      return converter.makeHtml(text).replace(/<[^>]*>/g, "")
+      if(text){
+        return converter.makeHtml(text).replace(/<[^>]*>/g, "")
+      }
+      return text;
     }
 
   },
