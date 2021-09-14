@@ -233,7 +233,8 @@ class FileDetails extends PureComponent {
               scope: data.basic.scope,
               serviceURL: data.basic.serviceUrl,
               serviceURL: data.basic.serviceURL,
-              qualifiedPath: data.basic.pathMask,
+              // qualifiedPath: data.basic.pathMask,
+              qualifiedPath: data.basic.qualifiedPath,
               owner: data.basic.owner,
               consumer: data.basic.consumer,
               supplier: data.basic.supplier,
@@ -523,7 +524,6 @@ class FileDetails extends PureComponent {
         handleError(response);
       })
       .then((fileInfo) => {
-        console.log("File info <<<<<<<<<<<<<<<<<<", fileInfo)
         if (fileInfo && fileInfo.basic.groups) {
           if (
             fileInfo.basic.groups.filter(

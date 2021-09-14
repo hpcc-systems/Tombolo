@@ -12,6 +12,7 @@ import { applicationActions } from '../../redux/actions/Application';
 import { DeleteOutlined, EditOutlined, QuestionCircleOutlined, ShareAltOutlined, ExportOutlined  } from '@ant-design/icons';
 import ImportApplication from "./ImportApplication"
 import download from "downloadjs"
+import showdown from "showdown";
 
 class Applications extends Component {
   constructor(props) {
@@ -269,7 +270,7 @@ class Applications extends Component {
       dataIndex: 'description',
       className: 'overflow-hidden',
       ellipsis: true,
-      render: (text, record) => <ReactMarkdown children={text} />
+      render: (text, record) => {const converter = new showdown.Converter(); return converter.makeHtml(text).replace(/<[^>]*>/g, "")} 
     }, {
       width: '10%',
       title: 'Created By',

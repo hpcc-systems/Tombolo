@@ -6,10 +6,12 @@ import { Constants } from '../../common/Constants';
 import { useSelector } from "react-redux";
 import ReactMarkdown from 'react-markdown';
 import { DeleteOutlined, EditOutlined, QuestionCircleOutlined } from '@ant-design/icons';
+import showdown from "showdown";
+import useModal from '../../../hooks/useModal';
+
 
 function DataflowTable({data, applicationId, onSelectDataflow, onDataFlowUpdated, onDataFlowEdit}) {
   const [selectedRowKeys, setSelectedRowKeys] = useState([]);
-
 
   useEffect(() => {
     if(data && data.length > 0) {
@@ -32,7 +34,7 @@ function DataflowTable({data, applicationId, onSelectDataflow, onDataFlowUpdated
   }
 
   const handleEditDataflow = (selectedDataflow) => {
-    onDataFlowEdit(selectedDataflow);
+    onDataFlowEdit(selectedDataflow, "editExisting");
   }
 
   const handleDataflowDelete = (id) => {
@@ -71,7 +73,11 @@ function DataflowTable({data, applicationId, onSelectDataflow, onDataFlowUpdated
     className: 'overflow-hidden',
     ellipsis: true,
     width: '30%',
-    render: (text, record) => <ReactMarkdown children={text} />
+    render: (text, record) => { 
+      const converter = new showdown.Converter();
+      return converter.makeHtml(text).replace(/<[^>]*>/g, "")
+    }
+
   },
   {
     title: 'Process Type',

@@ -336,7 +336,15 @@ class Consumers extends Component {
     {
       width: '15%',
       title: 'Contact Email',
-      dataIndex: 'contact_email'
+      dataIndex: 'contact_email',
+      rules : [{
+        required: true,
+        pattern: new RegExp(
+          /^[a-zA-Z0-9_-]*$/
+        ),
+        message: "Please enter a valid Name"
+      }
+    ]
     },
     {
       width: '10%',
