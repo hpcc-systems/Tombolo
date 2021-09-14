@@ -42,6 +42,7 @@ router.post('/save', [
   body('application_id')
     .isUUID(4).withMessage('Invalid application id'),
 ], async (req, res) => {
+  console.log("<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<< Save data flow graph")
     const errors = validationResult(req).formatWith(validatorUtil.errorFormatter);
     if (!errors.isEmpty()) {
       return res.status(422).json({ success: false, errors: errors.array() });
@@ -129,18 +130,20 @@ router.get('/', [
   query('dataflowId')
     .isUUID(4).withMessage('Invalid dataflow id'),
 ], (req, res) => {
+  console.log("<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<")
     const errors = validationResult(req).formatWith(validatorUtil.errorFormatter);
     if (!errors.isEmpty()) {
       return res.status(422).json({ success: false, errors: errors.array() });
     }
 
-    console.log("[graph] - Get graph list for app_id = " + req.query.application_id);
+    console.log("<<<<<<<<<<<<<<<<<<<< [graph] - Get graph list for app_id = " + req.query.application_id , "<<<<<<<<<<<<<<<<< dataflow id ", req.query.dataflowId);
     try {
       let nodes = [];
       DataflowGraph.findOne({
         where:{"application_Id":req.query.application_id, "dataflowId":req.query.dataflowId},
         raw: true
       }).then(async function(graph) {
+        console.log("<<<<<<<<<<<<<<<<<<<<<<<<< Graph ", graph)
         let nodesWithNames = await updateNodeNameAndTitle(JSON.parse(graph.nodes));        
         graph.nodes = JSON.stringify(nodesWithNames);
         res.json(graph);
