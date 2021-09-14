@@ -58,7 +58,6 @@ exports.fileInfo = (applicationId, file_id) => {
         }
 
         let fileLayoutObj = (dbFileLayout.length == 1 && dbFileLayout[0].fields) ? JSON.parse(dbFileLayout[0].fields) : fileLayout;
-        console.log("<<<<<<<<<<<<<<<<<<< File Layout obj", fileLayoutObj)
         results.file_layouts = fileLayoutObj.filter(item => item.name != '__fileposition__');
 
         FileLicense.findAll({where:{"application_id":applicationId, "file_id":file_id}}).then(function(fileLicenses) {
