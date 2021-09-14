@@ -73,15 +73,7 @@ function DataflowTable({data, applicationId, onSelectDataflow, onDataFlowUpdated
     className: 'overflow-hidden',
     ellipsis: true,
     width: '30%',
-    render: (text, record) => { 
-      console.log("text <<<<<<<<<<", text)
-      const converter = new showdown.Converter();
-      if(text){
-        return converter.makeHtml(text).replace(/<[^>]*>/g, "")
-      }
-      return text;
-    }
-
+      render: (text, record) => <ReactMarkdown children={text} />
   },
   {
     title: 'Process Type',
