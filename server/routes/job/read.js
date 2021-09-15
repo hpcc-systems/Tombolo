@@ -406,7 +406,6 @@ router.post('/createFileRelation', [
   body('mousePosition').optional({checkFalsy:true}).isString().withMessage('Invalid mousePostion')
 ], async (req, res) => {
   const errors = validationResult(req).formatWith(validatorUtil.errorFormatter);
-  console.log("ERRORS <<<<<<<<<<<<<<<<<<<<<<<", errors)
   if (!errors.isEmpty()) {
     return res.status(422).json({ success: false, errors: errors.array() });
   }
