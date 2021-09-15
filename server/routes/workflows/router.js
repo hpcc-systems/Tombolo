@@ -1,6 +1,5 @@
 const express = require('express');
 const router = express.Router();
-let mongoose = require('mongoose');
 var models  = require('../../models');
 let Workflow = models.workflows;
 let WorkflowDetails = models.workflowdetails;

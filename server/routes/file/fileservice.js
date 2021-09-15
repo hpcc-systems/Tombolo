@@ -1,5 +1,4 @@
 const express = require('express');
-let mongoose = require('mongoose');
 var models  = require('../../models');
 let FileLayout = models.file_layout;
 let File = models.file;

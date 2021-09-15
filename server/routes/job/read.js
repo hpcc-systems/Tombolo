@@ -1,6 +1,5 @@
 const express = require('express');
 const router = express.Router();
-let mongoose = require('mongoose');
 var models  = require('../../models');
 let Sequelize = require('sequelize');
 const Op = Sequelize.Op;

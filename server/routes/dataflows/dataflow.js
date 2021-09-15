@@ -1,6 +1,5 @@
 const express = require('express');
 const router = express.Router();
-let mongoose = require('mongoose');
 var models  = require('../../models');
 let AssetDataflow = models.assets_dataflows;
 let Dataflow = models.dataflow;
