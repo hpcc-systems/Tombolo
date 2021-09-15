@@ -233,7 +233,6 @@ class FileDetails extends PureComponent {
               scope: data.basic.scope,
               serviceURL: data.basic.serviceUrl,
               serviceURL: data.basic.serviceURL,
-              // qualifiedPath: data.basic.pathMask,
               qualifiedPath: data.basic.qualifiedPath,
               owner: data.basic.owner,
               consumer: data.basic.consumer,
@@ -445,7 +444,7 @@ class FileDetails extends PureComponent {
     );
     if (selectedCluster.length > 0) {
       this.formRef.current.setFieldsValue({
-        clusters: selectedCluster[0].id,
+        clusters: selectedCluster[0].id
       });
       this.setState({
         ...this.state,
@@ -524,6 +523,7 @@ class FileDetails extends PureComponent {
         handleError(response);
       })
       .then((fileInfo) => {
+        console.log("<<<<<<<<<<<<<<<<<<<<<<<<<<<< File info", fileInfo)
         if (fileInfo && fileInfo.basic.groups) {
           if (
             fileInfo.basic.groups.filter(
@@ -555,6 +555,8 @@ class FileDetails extends PureComponent {
           },
         });
 
+        console.log("<<<<<<<<<<<<<<<<<<<<<<< Path ", fileInfo.basic.pathMask)
+
         this.formRef.current.setFieldsValue({
           title: fileInfo.basic.name.substring(
             fileInfo.basic.name.lastIndexOf("::") + 2
@@ -563,7 +565,8 @@ class FileDetails extends PureComponent {
           description: fileInfo.basic.description,
           scope: fileInfo.basic.scope,
           serviceURL: fileInfo.basic.serviceUrl,
-          qualifiedPath: fileInfo.basic.qualifiedPath,
+          qualifiedPath: fileInfo.basic.pathMask,
+          //<<<<<<<<<<<<<<<<<
           owner: fileInfo.basic.owner,
           consumer: fileInfo.basic.consumer,
           supplier: fileInfo.basic.supplier,
@@ -1519,6 +1522,7 @@ class FileDetails extends PureComponent {
                 </Form.Item>
                 <Row type="flex">
                   <Col span={8} order={1}>
+                    {console.log("<<<<<<<<<<<< Qualified Path ", this.state.qualifiedPath)}
                     <Form.Item
                       label="Path"
                       name="qualifiedPath"
