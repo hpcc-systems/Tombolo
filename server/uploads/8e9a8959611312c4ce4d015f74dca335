@@ -1,0 +1,460 @@
+{
+    "application": {
+        "title": "Yadhapv",
+        "description": "",
+        "groups": [
+            {
+                "id": 44,
+                "name": "a",
+                "description": "",
+                "parent_group": "45",
+                "deletedAt": null
+            },
+            {
+                "id": 45,
+                "name": "b",
+                "description": "",
+                "parent_group": "",
+                "deletedAt": null
+            },
+            {
+                "id": 46,
+                "name": "c",
+                "description": "",
+                "parent_group": "45",
+                "deletedAt": null
+            },
+            {
+                "id": 48,
+                "name": "M",
+                "description": "",
+                "parent_group": "",
+                "deletedAt": null
+            }
+        ],
+        "assets": {
+            "files": [
+                {
+                    "id": "4fd08fd3-b24e-414c-927d-b7ed006d910d",
+                    "application_id": "de25b9ff-feb6-4c08-a139-8cf9b6589af3",
+                    "title": "level2",
+                    "name": "hpccsystems::covid19::file::input::level2",
+                    "cluster_id": "b2c55b36-3871-48ec-bf10-0be7fde0e62c",
+                    "description": "",
+                    "fileType": null,
+                    "isSuperFile": null,
+                    "serviceURL": null,
+                    "qualifiedPath": "level2._$P$_of_2",
+                    "consumer": null,
+                    "supplier": null,
+                    "owner": null,
+                    "scope": "hpccsystems::covid19::file::input",
+                    "createdAt": "2021-07-07T13:33:37.000Z",
+                    "updatedAt": "2021-07-07T13:33:37.000Z",
+                    "deletedAt": null,
+                    "file_layouts": [
+                        {
+                            "file_id": "4fd08fd3-b24e-414c-927d-b7ed006d910d",
+                            "fields": "[{\"id\":0,\"name\":\"fips\",\"type\":\"String\",\"eclType\":\"string\",\"displayType\":\"\",\"displaySize\":\"\",\"textJustification\":\"right\",\"format\":\"\",\"isPCI\":\"false\",\"isPII\":\"false\",\"isHIPAA\":\"false\",\"required\":\"false\",\"description\":\"\"},{\"id\":1,\"name\":\"country\",\"type\":\"String\",\"eclType\":\"string\",\"displayType\":\"\",\"displaySize\":\"\",\"textJustification\":\"right\",\"format\":\"\",\"isPCI\":\"false\",\"isPII\":\"false\",\"isHIPAA\":\"false\",\"required\":\"false\",\"description\":\"\"},{\"id\":2,\"name\":\"level2\",\"type\":\"String\",\"eclType\":\"string\",\"displayType\":\"\",\"displaySize\":\"\",\"textJustification\":\"right\",\"format\":\"\",\"isPCI\":\"false\",\"isPII\":\"false\",\"isHIPAA\":\"false\",\"required\":\"false\",\"description\":\"\"},{\"id\":3,\"name\":\"level3\",\"type\":\"String\",\"eclType\":\"string\",\"displayType\":\"\",\"displaySize\":\"\",\"textJustification\":\"right\",\"format\":\"\",\"isPCI\":\"false\",\"isPII\":\"false\",\"isHIPAA\":\"false\",\"required\":\"false\",\"description\":\"\"},{\"id\":4,\"name\":\"date\",\"type\":\"Unsigned Integer\",\"eclType\":\"unsigned4\",\"displayType\":\"\",\"displaySize\":\"\",\"textJustification\":\"right\",\"format\":\"\",\"isPCI\":\"false\",\"isPII\":\"false\",\"isHIPAA\":\"false\",\"required\":\"false\",\"description\":\"\"},{\"id\":5,\"name\":\"cumcases\",\"type\":\"Integer\",\"eclType\":\"integer8\",\"displayType\":\"\",\"displaySize\":\"\",\"textJustification\":\"right\",\"format\":\"\",\"isPCI\":\"false\",\"isPII\":\"false\",\"isHIPAA\":\"false\",\"required\":\"false\",\"description\":\"\"},{\"id\":6,\"name\":\"cumdeaths\",\"type\":\"Integer\",\"eclType\":\"integer8\",\"displayType\":\"\",\"displaySize\":\"\",\"textJustification\":\"right\",\"format\":\"\",\"isPCI\":\"false\",\"isPII\":\"false\",\"isHIPAA\":\"false\",\"required\":\"false\",\"description\":\"\"},{\"id\":7,\"name\":\"cumhosp\",\"type\":\"Integer\",\"eclType\":\"integer8\",\"displayType\":\"\",\"displaySize\":\"\",\"textJustification\":\"right\",\"format\":\"\",\"isPCI\":\"false\",\"isPII\":\"false\",\"isHIPAA\":\"false\",\"required\":\"false\",\"description\":\"\"},{\"id\":8,\"name\":\"tested\",\"type\":\"Integer\",\"eclType\":\"integer8\",\"displayType\":\"\",\"displaySize\":\"\",\"textJustification\":\"right\",\"format\":\"\",\"isPCI\":\"false\",\"isPII\":\"false\",\"isHIPAA\":\"false\",\"required\":\"false\",\"description\":\"\"},{\"id\":9,\"name\":\"positive\",\"type\":\"Integer\",\"eclType\":\"integer8\",\"displayType\":\"\",\"displaySize\":\"\",\"textJustification\":\"right\",\"format\":\"\",\"isPCI\":\"false\",\"isPII\":\"false\",\"isHIPAA\":\"false\",\"required\":\"false\",\"description\":\"\"},{\"id\":10,\"name\":\"negative\",\"type\":\"Integer\",\"eclType\":\"integer8\",\"displayType\":\"\",\"displaySize\":\"\",\"textJustification\":\"right\",\"format\":\"\",\"isPCI\":\"false\",\"isPII\":\"false\",\"isHIPAA\":\"false\",\"required\":\"false\",\"description\":\"\"},{\"id\":11,\"name\":\"population\",\"type\":\"Integer\",\"eclType\":\"integer8\",\"displayType\":\"\",\"displaySize\":\"\",\"textJustification\":\"right\",\"format\":\"\",\"isPCI\":\"false\",\"isPII\":\"false\",\"isHIPAA\":\"false\",\"required\":\"false\",\"description\":\"\"},{\"id\":12,\"name\":\"latitude\",\"type\":\"Real\",\"eclType\":\"udecimal11_8\",\"displayType\":\"\",\"displaySize\":\"\",\"textJustification\":\"right\",\"format\":\"\",\"isPCI\":\"false\",\"isPII\":\"false\",\"isHIPAA\":\"false\",\"required\":\"false\",\"description\":\"\"},{\"id\":13,\"name\":\"longitude\",\"type\":\"Real\",\"eclType\":\"udecimal11_8\",\"displayType\":\"\",\"displaySize\":\"\",\"textJustification\":\"right\",\"format\":\"\",\"isPCI\":\"false\",\"isPII\":\"false\",\"isHIPAA\":\"false\",\"required\":\"false\",\"description\":\"\"},{\"id\":14,\"name\":\"vacc_total_dist\",\"type\":\"Integer\",\"eclType\":\"integer8\",\"displayType\":\"\",\"displaySize\":\"\",\"textJustification\":\"right\",\"format\":\"\",\"isPCI\":\"false\",\"isPII\":\"false\",\"isHIPAA\":\"false\",\"required\":\"false\",\"description\":\"\"},{\"id\":15,\"name\":\"vacc_total_admin\",\"type\":\"Integer\",\"eclType\":\"integer8\",\"displayType\":\"\",\"displaySize\":\"\",\"textJustification\":\"right\",\"format\":\"\",\"isPCI\":\"false\",\"isPII\":\"false\",\"isHIPAA\":\"false\",\"required\":\"false\",\"description\":\"\"},{\"id\":16,\"name\":\"vacc_total_people\",\"type\":\"Integer\",\"eclType\":\"integer8\",\"displayType\":\"\",\"displaySize\":\"\",\"textJustification\":\"right\",\"format\":\"\",\"isPCI\":\"false\",\"isPII\":\"false\",\"isHIPAA\":\"false\",\"required\":\"false\",\"description\":\"\"},{\"id\":17,\"name\":\"vacc_people_complete\",\"type\":\"Integer\",\"eclType\":\"integer8\",\"displayType\":\"\",\"displaySize\":\"\",\"textJustification\":\"right\",\"format\":\"\",\"isPCI\":\"false\",\"isPII\":\"false\",\"isHIPAA\":\"false\",\"required\":\"false\",\"description\":\"\"}]",
+                            "deletedAt": null
+                        }
+                    ],
+                    "file_licenses": [],
+                    "file_validations": [],
+                    "groups": [],
+                    "dataflows": []
+                },
+                {
+                    "id": "4c2d9f03-515b-45de-876a-c534508dc8f7",
+                    "application_id": "de25b9ff-feb6-4c08-a139-8cf9b6589af3",
+                    "title": "level3.flat",
+                    "name": "hpccsystems::covid19::file::public::stats::level3.flat",
+                    "cluster_id": "b2c55b36-3871-48ec-bf10-0be7fde0e62c",
+                    "description": "",
+                    "fileType": "flat",
+                    "isSuperFile": null,
+                    "serviceURL": null,
+                    "qualifiedPath": "level3.flat._$P$_of_2",
+                    "consumer": null,
+                    "supplier": null,
+                    "owner": null,
+                    "scope": "hpccsystems::covid19::file::public::stats",
+                    "createdAt": "2021-07-07T13:33:37.000Z",
+                    "updatedAt": "2021-07-07T13:33:37.000Z",
+                    "deletedAt": null,
+                    "file_layouts": [
+                        {
+                            "file_id": "4c2d9f03-515b-45de-876a-c534508dc8f7",
+                            "fields": "[{\"id\":0,\"name\":\"fips\",\"type\":\"String\",\"eclType\":\"string\",\"displayType\":\"\",\"displaySize\":\"\",\"textJustification\":\"right\",\"format\":\"\",\"isPCI\":\"false\",\"isPII\":\"false\",\"isHIPAA\":\"false\",\"required\":\"false\",\"description\":\"\"},{\"id\":1,\"name\":\"country\",\"type\":\"String\",\"eclType\":\"string\",\"displayType\":\"\",\"displaySize\":\"\",\"textJustification\":\"right\",\"format\":\"\",\"isPCI\":\"false\",\"isPII\":\"false\",\"isHIPAA\":\"false\",\"required\":\"false\",\"description\":\"\"},{\"id\":2,\"name\":\"level2\",\"type\":\"String\",\"eclType\":\"string\",\"displayType\":\"\",\"displaySize\":\"\",\"textJustification\":\"right\",\"format\":\"\",\"isPCI\":\"false\",\"isPII\":\"false\",\"isHIPAA\":\"false\",\"required\":\"false\",\"description\":\"\"},{\"id\":3,\"name\":\"level3\",\"type\":\"String\",\"eclType\":\"string\",\"displayType\":\"\",\"displaySize\":\"\",\"textJustification\":\"right\",\"format\":\"\",\"isPCI\":\"false\",\"isPII\":\"false\",\"isHIPAA\":\"false\",\"required\":\"false\",\"description\":\"\"},{\"id\":4,\"name\":\"date\",\"type\":\"Unsigned Integer\",\"eclType\":\"unsigned4\",\"displayType\":\"\",\"displaySize\":\"\",\"textJustification\":\"right\",\"format\":\"\",\"isPCI\":\"false\",\"isPII\":\"false\",\"isHIPAA\":\"false\",\"required\":\"false\",\"description\":\"\"},{\"id\":5,\"name\":\"cumcases\",\"type\":\"Integer\",\"eclType\":\"integer8\",\"displayType\":\"\",\"displaySize\":\"\",\"textJustification\":\"right\",\"format\":\"\",\"isPCI\":\"false\",\"isPII\":\"false\",\"isHIPAA\":\"false\",\"required\":\"false\",\"description\":\"\"},{\"id\":6,\"name\":\"cumdeaths\",\"type\":\"Integer\",\"eclType\":\"integer8\",\"displayType\":\"\",\"displaySize\":\"\",\"textJustification\":\"right\",\"format\":\"\",\"isPCI\":\"false\",\"isPII\":\"false\",\"isHIPAA\":\"false\",\"required\":\"false\",\"description\":\"\"},{\"id\":7,\"name\":\"cumhosp\",\"type\":\"Integer\",\"eclType\":\"integer8\",\"displayType\":\"\",\"displaySize\":\"\",\"textJustification\":\"right\",\"format\":\"\",\"isPCI\":\"false\",\"isPII\":\"false\",\"isHIPAA\":\"false\",\"required\":\"false\",\"description\":\"\"},{\"id\":8,\"name\":\"tested\",\"type\":\"Integer\",\"eclType\":\"integer8\",\"displayType\":\"\",\"displaySize\":\"\",\"textJustification\":\"right\",\"format\":\"\",\"isPCI\":\"false\",\"isPII\":\"false\",\"isHIPAA\":\"false\",\"required\":\"false\",\"description\":\"\"},{\"id\":9,\"name\":\"positive\",\"type\":\"Integer\",\"eclType\":\"integer8\",\"displayType\":\"\",\"displaySize\":\"\",\"textJustification\":\"right\",\"format\":\"\",\"isPCI\":\"false\",\"isPII\":\"false\",\"isHIPAA\":\"false\",\"required\":\"false\",\"description\":\"\"},{\"id\":10,\"name\":\"negative\",\"type\":\"Integer\",\"eclType\":\"integer8\",\"displayType\":\"\",\"displaySize\":\"\",\"textJustification\":\"right\",\"format\":\"\",\"isPCI\":\"false\",\"isPII\":\"false\",\"isHIPAA\":\"false\",\"required\":\"false\",\"description\":\"\"},{\"id\":11,\"name\":\"population\",\"type\":\"Integer\",\"eclType\":\"integer8\",\"displayType\":\"\",\"displaySize\":\"\",\"textJustification\":\"right\",\"format\":\"\",\"isPCI\":\"false\",\"isPII\":\"false\",\"isHIPAA\":\"false\",\"required\":\"false\",\"description\":\"\"},{\"id\":12,\"name\":\"latitude\",\"type\":\"Real\",\"eclType\":\"udecimal11_8\",\"displayType\":\"\",\"displaySize\":\"\",\"textJustification\":\"right\",\"format\":\"\",\"isPCI\":\"false\",\"isPII\":\"false\",\"isHIPAA\":\"false\",\"required\":\"false\",\"description\":\"\"},{\"id\":13,\"name\":\"longitude\",\"type\":\"Real\",\"eclType\":\"udecimal11_8\",\"displayType\":\"\",\"displaySize\":\"\",\"textJustification\":\"right\",\"format\":\"\",\"isPCI\":\"false\",\"isPII\":\"false\",\"isHIPAA\":\"false\",\"required\":\"false\",\"description\":\"\"},{\"id\":14,\"name\":\"vacc_total_dist\",\"type\":\"Integer\",\"eclType\":\"integer8\",\"displayType\":\"\",\"displaySize\":\"\",\"textJustification\":\"right\",\"format\":\"\",\"isPCI\":\"false\",\"isPII\":\"false\",\"isHIPAA\":\"false\",\"required\":\"false\",\"description\":\"\"},{\"id\":15,\"name\":\"vacc_total_admin\",\"type\":\"Integer\",\"eclType\":\"integer8\",\"displayType\":\"\",\"displaySize\":\"\",\"textJustification\":\"right\",\"format\":\"\",\"isPCI\":\"false\",\"isPII\":\"false\",\"isHIPAA\":\"false\",\"required\":\"false\",\"description\":\"\"},{\"id\":16,\"name\":\"vacc_total_people\",\"type\":\"Integer\",\"eclType\":\"integer8\",\"displayType\":\"\",\"displaySize\":\"\",\"textJustification\":\"right\",\"format\":\"\",\"isPCI\":\"false\",\"isPII\":\"false\",\"isHIPAA\":\"false\",\"required\":\"false\",\"description\":\"\"},{\"id\":17,\"name\":\"vacc_people_complete\",\"type\":\"Integer\",\"eclType\":\"integer8\",\"displayType\":\"\",\"displaySize\":\"\",\"textJustification\":\"right\",\"format\":\"\",\"isPCI\":\"false\",\"isPII\":\"false\",\"isHIPAA\":\"false\",\"required\":\"false\",\"description\":\"\"},{\"id\":18,\"name\":\"location\",\"type\":\"String\",\"eclType\":\"string\",\"displayType\":\"\",\"displaySize\":\"\",\"textJustification\":\"right\",\"format\":\"\",\"isPCI\":\"false\",\"isPII\":\"false\",\"isHIPAA\":\"false\",\"required\":\"false\",\"description\":\"\"},{\"id\":19,\"name\":\"id\",\"type\":\"Unsigned Integer\",\"eclType\":\"unsigned8\",\"displayType\":\"\",\"displaySize\":\"\",\"textJustification\":\"right\",\"format\":\"\",\"isPCI\":\"false\",\"isPII\":\"false\",\"isHIPAA\":\"false\",\"required\":\"false\",\"description\":\"\"},{\"id\":20,\"name\":\"period\",\"type\":\"Unsigned Integer\",\"eclType\":\"unsigned8\",\"displayType\":\"\",\"displaySize\":\"\",\"textJustification\":\"right\",\"format\":\"\",\"isPCI\":\"false\",\"isPII\":\"false\",\"isHIPAA\":\"false\",\"required\":\"false\",\"description\":\"\"},{\"id\":21,\"name\":\"prevcases\",\"type\":\"Integer\",\"eclType\":\"integer8\",\"displayType\":\"\",\"displaySize\":\"\",\"textJustification\":\"right\",\"format\":\"\",\"isPCI\":\"false\",\"isPII\":\"false\",\"isHIPAA\":\"false\",\"required\":\"false\",\"description\":\"\"},{\"id\":22,\"name\":\"newcases\",\"type\":\"Integer\",\"eclType\":\"integer8\",\"displayType\":\"\",\"displaySize\":\"\",\"textJustification\":\"right\",\"format\":\"\",\"isPCI\":\"false\",\"isPII\":\"false\",\"isHIPAA\":\"false\",\"required\":\"false\",\"description\":\"\"},{\"id\":23,\"name\":\"prevdeaths\",\"type\":\"Integer\",\"eclType\":\"integer8\",\"displayType\":\"\",\"displaySize\":\"\",\"textJustification\":\"right\",\"format\":\"\",\"isPCI\":\"false\",\"isPII\":\"false\",\"isHIPAA\":\"false\",\"required\":\"false\",\"description\":\"\"},{\"id\":24,\"name\":\"newdeaths\",\"type\":\"Integer\",\"eclType\":\"integer8\",\"displayType\":\"\",\"displaySize\":\"\",\"textJustification\":\"right\",\"format\":\"\",\"isPCI\":\"false\",\"isPII\":\"false\",\"isHIPAA\":\"false\",\"required\":\"false\",\"description\":\"\"},{\"id\":25,\"name\":\"active\",\"type\":\"Integer\",\"eclType\":\"integer8\",\"displayType\":\"\",\"displaySize\":\"\",\"textJustification\":\"right\",\"format\":\"\",\"isPCI\":\"false\",\"isPII\":\"false\",\"isHIPAA\":\"false\",\"required\":\"false\",\"description\":\"\"},{\"id\":26,\"name\":\"prevactive\",\"type\":\"Integer\",\"eclType\":\"integer8\",\"displayType\":\"\",\"displaySize\":\"\",\"textJustification\":\"right\",\"format\":\"\",\"isPCI\":\"false\",\"isPII\":\"false\",\"isHIPAA\":\"false\",\"required\":\"false\",\"description\":\"\"},{\"id\":27,\"name\":\"recovered\",\"type\":\"Integer\",\"eclType\":\"integer8\",\"displayType\":\"\",\"displaySize\":\"\",\"textJustification\":\"right\",\"format\":\"\",\"isPCI\":\"false\",\"isPII\":\"false\",\"isHIPAA\":\"false\",\"required\":\"false\",\"description\":\"\"},{\"id\":28,\"name\":\"cases7dma\",\"type\":\"Real\",\"eclType\":\"real8\",\"displayType\":\"\",\"displaySize\":\"\",\"textJustification\":\"right\",\"format\":\"\",\"isPCI\":\"false\",\"isPII\":\"false\",\"isHIPAA\":\"false\",\"required\":\"false\",\"description\":\"\"},{\"id\":29,\"name\":\"deaths7dma\",\"type\":\"Real\",\"eclType\":\"real8\",\"displayType\":\"\",\"displaySize\":\"\",\"textJustification\":\"right\",\"format\":\"\",\"isPCI\":\"false\",\"isPII\":\"false\",\"isHIPAA\":\"false\",\"required\":\"false\",\"description\":\"\"},{\"id\":30,\"name\":\"cfr\",\"type\":\"Real\",\"eclType\":\"decimal5_3\",\"displayType\":\"\",\"displaySize\":\"\",\"textJustification\":\"right\",\"format\":\"\",\"isPCI\":\"false\",\"isPII\":\"false\",\"isHIPAA\":\"false\",\"required\":\"false\",\"description\":\"\"},{\"id\":31,\"name\":\"adjcumcases\",\"type\":\"Integer\",\"eclType\":\"integer8\",\"displayType\":\"\",\"displaySize\":\"\",\"textJustification\":\"right\",\"format\":\"\",\"isPCI\":\"false\",\"isPII\":\"false\",\"isHIPAA\":\"false\",\"required\":\"false\",\"description\":\"\"},{\"id\":32,\"name\":\"adjcumdeaths\",\"type\":\"Integer\",\"eclType\":\"integer8\",\"displayType\":\"\",\"displaySize\":\"\",\"textJustification\":\"right\",\"format\":\"\",\"isPCI\":\"false\",\"isPII\":\"false\",\"isHIPAA\":\"false\",\"required\":\"false\",\"description\":\"\"},{\"id\":33,\"name\":\"adjprevcases\",\"type\":\"Integer\",\"eclType\":\"integer8\",\"displayType\":\"\",\"displaySize\":\"\",\"textJustification\":\"right\",\"format\":\"\",\"isPCI\":\"false\",\"isPII\":\"false\",\"isHIPAA\":\"false\",\"required\":\"false\",\"description\":\"\"},{\"id\":34,\"name\":\"adjprevdeaths\",\"type\":\"Integer\",\"eclType\":\"integer8\",\"displayType\":\"\",\"displaySize\":\"\",\"textJustification\":\"right\",\"format\":\"\",\"isPCI\":\"false\",\"isPII\":\"false\",\"isHIPAA\":\"false\",\"required\":\"false\",\"description\":\"\"},{\"id\":35,\"name\":\"caseadjustment\",\"type\":\"Integer\",\"eclType\":\"integer8\",\"displayType\":\"\",\"displaySize\":\"\",\"textJustification\":\"right\",\"format\":\"\",\"isPCI\":\"false\",\"isPII\":\"false\",\"isHIPAA\":\"false\",\"required\":\"false\",\"description\":\"\"},{\"id\":36,\"name\":\"deathsadjustment\",\"type\":\"Integer\",\"eclType\":\"integer8\",\"displayType\":\"\",\"displaySize\":\"\",\"textJustification\":\"right\",\"format\":\"\",\"isPCI\":\"false\",\"isPII\":\"false\",\"isHIPAA\":\"false\",\"required\":\"false\",\"description\":\"\"},{\"id\":37,\"name\":\"vacc_daily_dist\",\"type\":\"Integer\",\"eclType\":\"integer8\",\"displayType\":\"\",\"displaySize\":\"\",\"textJustification\":\"right\",\"format\":\"\",\"isPCI\":\"false\",\"isPII\":\"false\",\"isHIPAA\":\"false\",\"required\":\"false\",\"description\":\"\"},{\"id\":38,\"name\":\"vacc_daily_admin\",\"type\":\"Integer\",\"eclType\":\"integer8\",\"displayType\":\"\",\"displaySize\":\"\",\"textJustification\":\"right\",\"format\":\"\",\"isPCI\":\"false\",\"isPII\":\"false\",\"isHIPAA\":\"false\",\"required\":\"false\",\"description\":\"\"},{\"id\":39,\"name\":\"vacc_daily_people\",\"type\":\"Integer\",\"eclType\":\"integer8\",\"displayType\":\"\",\"displaySize\":\"\",\"textJustification\":\"right\",\"format\":\"\",\"isPCI\":\"false\",\"isPII\":\"false\",\"isHIPAA\":\"false\",\"required\":\"false\",\"description\":\"\"},{\"id\":40,\"name\":\"vacc_daily_complete\",\"type\":\"Integer\",\"eclType\":\"integer8\",\"displayType\":\"\",\"displaySize\":\"\",\"textJustification\":\"right\",\"format\":\"\",\"isPCI\":\"false\",\"isPII\":\"false\",\"isHIPAA\":\"false\",\"required\":\"false\",\"description\":\"\"}]",
+                            "deletedAt": null
+                        }
+                    ],
+                    "file_licenses": [],
+                    "file_validations": [],
+                    "groups": [],
+                    "dataflows": [
+                        {
+                            "id": "637316fe-27d0-454d-931c-e6f017586110",
+                            "assets_dataflows": {
+                                "id": "bc435082-46b5-48d7-91d1-592fc150a4f7",
+                                "assetId": "4c2d9f03-515b-45de-876a-c534508dc8f7",
+                                "dataflowId": "637316fe-27d0-454d-931c-e6f017586110",
+                                "cron": null,
+                                "createdAt": "2021-07-07T13:33:37.000Z",
+                                "updatedAt": "2021-07-07T13:33:37.000Z",
+                                "deletedAt": null
+                            }
+                        }
+                    ]
+                },
+                {
+                    "id": "9ce073ef-f556-47f2-9dbc-47aa0474add4",
+                    "application_id": "de25b9ff-feb6-4c08-a139-8cf9b6589af3",
+                    "title": "guid",
+                    "name": "covid19::kafka::guid",
+                    "cluster_id": "b2c55b36-3871-48ec-bf10-0be7fde0e62c",
+                    "description": "",
+                    "fileType": "thor_file",
+                    "isSuperFile": false,
+                    "serviceURL": null,
+                    "qualifiedPath": null,
+                    "consumer": null,
+                    "supplier": null,
+                    "owner": null,
+                    "scope": "covid19::kafka",
+                    "createdAt": "2021-06-03T13:41:50.000Z",
+                    "updatedAt": "2021-06-03T13:41:50.000Z",
+                    "deletedAt": null,
+                    "file_layouts": [
+                        {
+                            "file_id": "9ce073ef-f556-47f2-9dbc-47aa0474add4",
+                            "fields": "[{\"id\":0,\"name\":\"s\",\"type\":\"String\",\"eclType\":\"string\",\"displayType\":\"\",\"displaySize\":\"\",\"textJustification\":\"right\",\"format\":\"\",\"isPCI\":\"false\",\"isPII\":\"false\",\"isHIPAA\":\"false\",\"required\":\"false\",\"description\":\"\"}]",
+                            "deletedAt": null
+                        }
+                    ],
+                    "file_licenses": [],
+                    "file_validations": [],
+                    "groups": [
+                        {
+                            "id": 44,
+                            "name": "a",
+                            "description": "",
+                            "parent_group": "45"
+                        }
+                    ],
+                    "dataflows": []
+                },
+                {
+                    "id": "59c8c8f3-9c54-4655-8f94-1168dfe2bc8c",
+                    "application_id": "de25b9ff-feb6-4c08-a139-8cf9b6589af3",
+                    "title": "level0.flat",
+                    "name": "hpccsystems::covid19::file::public::stats::level0.flat",
+                    "cluster_id": "b2c55b36-3871-48ec-bf10-0be7fde0e62c",
+                    "description": "",
+                    "fileType": "flat",
+                    "isSuperFile": null,
+                    "serviceURL": null,
+                    "qualifiedPath": "level0.flat._$P$_of_2",
+                    "consumer": null,
+                    "supplier": null,
+                    "owner": null,
+                    "scope": "hpccsystems::covid19::file::public::stats",
+                    "createdAt": "2021-07-07T13:33:37.000Z",
+                    "updatedAt": "2021-07-07T13:33:37.000Z",
+                    "deletedAt": null,
+                    "file_layouts": [
+                        {
+                            "file_id": "59c8c8f3-9c54-4655-8f94-1168dfe2bc8c",
+                            "fields": "[{\"id\":0,\"name\":\"fips\",\"type\":\"String\",\"eclType\":\"string\",\"displayType\":\"\",\"displaySize\":\"\",\"textJustification\":\"right\",\"format\":\"\",\"isPCI\":\"false\",\"isPII\":\"false\",\"isHIPAA\":\"false\",\"required\":\"false\",\"description\":\"\"},{\"id\":1,\"name\":\"country\",\"type\":\"String\",\"eclType\":\"string\",\"displayType\":\"\",\"displaySize\":\"\",\"textJustification\":\"right\",\"format\":\"\",\"isPCI\":\"false\",\"isPII\":\"false\",\"isHIPAA\":\"false\",\"required\":\"false\",\"description\":\"\"},{\"id\":2,\"name\":\"level2\",\"type\":\"String\",\"eclType\":\"string\",\"displayType\":\"\",\"displaySize\":\"\",\"textJustification\":\"right\",\"format\":\"\",\"isPCI\":\"false\",\"isPII\":\"false\",\"isHIPAA\":\"false\",\"required\":\"false\",\"description\":\"\"},{\"id\":3,\"name\":\"level3\",\"type\":\"String\",\"eclType\":\"string\",\"displayType\":\"\",\"displaySize\":\"\",\"textJustification\":\"right\",\"format\":\"\",\"isPCI\":\"false\",\"isPII\":\"false\",\"isHIPAA\":\"false\",\"required\":\"false\",\"description\":\"\"},{\"id\":4,\"name\":\"date\",\"type\":\"Unsigned Integer\",\"eclType\":\"unsigned4\",\"displayType\":\"\",\"displaySize\":\"\",\"textJustification\":\"right\",\"format\":\"\",\"isPCI\":\"false\",\"isPII\":\"false\",\"isHIPAA\":\"false\",\"required\":\"false\",\"description\":\"\"},{\"id\":5,\"name\":\"cumcases\",\"type\":\"Integer\",\"eclType\":\"integer8\",\"displayType\":\"\",\"displaySize\":\"\",\"textJustification\":\"right\",\"format\":\"\",\"isPCI\":\"false\",\"isPII\":\"false\",\"isHIPAA\":\"false\",\"required\":\"false\",\"description\":\"\"},{\"id\":6,\"name\":\"cumdeaths\",\"type\":\"Integer\",\"eclType\":\"integer8\",\"displayType\":\"\",\"displaySize\":\"\",\"textJustification\":\"right\",\"format\":\"\",\"isPCI\":\"false\",\"isPII\":\"false\",\"isHIPAA\":\"false\",\"required\":\"false\",\"description\":\"\"},{\"id\":7,\"name\":\"cumhosp\",\"type\":\"Integer\",\"eclType\":\"integer8\",\"displayType\":\"\",\"displaySize\":\"\",\"textJustification\":\"right\",\"format\":\"\",\"isPCI\":\"false\",\"isPII\":\"false\",\"isHIPAA\":\"false\",\"required\":\"false\",\"description\":\"\"},{\"id\":8,\"name\":\"tested\",\"type\":\"Integer\",\"eclType\":\"integer8\",\"displayType\":\"\",\"displaySize\":\"\",\"textJustification\":\"right\",\"format\":\"\",\"isPCI\":\"false\",\"isPII\":\"false\",\"isHIPAA\":\"false\",\"required\":\"false\",\"description\":\"\"},{\"id\":9,\"name\":\"positive\",\"type\":\"Integer\",\"eclType\":\"integer8\",\"displayType\":\"\",\"displaySize\":\"\",\"textJustification\":\"right\",\"format\":\"\",\"isPCI\":\"false\",\"isPII\":\"false\",\"isHIPAA\":\"false\",\"required\":\"false\",\"description\":\"\"},{\"id\":10,\"name\":\"negative\",\"type\":\"Integer\",\"eclType\":\"integer8\",\"displayType\":\"\",\"displaySize\":\"\",\"textJustification\":\"right\",\"format\":\"\",\"isPCI\":\"false\",\"isPII\":\"false\",\"isHIPAA\":\"false\",\"required\":\"false\",\"description\":\"\"},{\"id\":11,\"name\":\"population\",\"type\":\"Integer\",\"eclType\":\"integer8\",\"displayType\":\"\",\"displaySize\":\"\",\"textJustification\":\"right\",\"format\":\"\",\"isPCI\":\"false\",\"isPII\":\"false\",\"isHIPAA\":\"false\",\"required\":\"false\",\"description\":\"\"},{\"id\":12,\"name\":\"latitude\",\"type\":\"Real\",\"eclType\":\"udecimal11_8\",\"displayType\":\"\",\"displaySize\":\"\",\"textJustification\":\"right\",\"format\":\"\",\"isPCI\":\"false\",\"isPII\":\"false\",\"isHIPAA\":\"false\",\"required\":\"false\",\"description\":\"\"},{\"id\":13,\"name\":\"longitude\",\"type\":\"Real\",\"eclType\":\"udecimal11_8\",\"displayType\":\"\",\"displaySize\":\"\",\"textJustification\":\"right\",\"format\":\"\",\"isPCI\":\"false\",\"isPII\":\"false\",\"isHIPAA\":\"false\",\"required\":\"false\",\"description\":\"\"},{\"id\":14,\"name\":\"vacc_total_dist\",\"type\":\"Integer\",\"eclType\":\"integer8\",\"displayType\":\"\",\"displaySize\":\"\",\"textJustification\":\"right\",\"format\":\"\",\"isPCI\":\"false\",\"isPII\":\"false\",\"isHIPAA\":\"false\",\"required\":\"false\",\"description\":\"\"},{\"id\":15,\"name\":\"vacc_total_admin\",\"type\":\"Integer\",\"eclType\":\"integer8\",\"displayType\":\"\",\"displaySize\":\"\",\"textJustification\":\"right\",\"format\":\"\",\"isPCI\":\"false\",\"isPII\":\"false\",\"isHIPAA\":\"false\",\"required\":\"false\",\"description\":\"\"},{\"id\":16,\"name\":\"vacc_total_people\",\"type\":\"Integer\",\"eclType\":\"integer8\",\"displayType\":\"\",\"displaySize\":\"\",\"textJustification\":\"right\",\"format\":\"\",\"isPCI\":\"false\",\"isPII\":\"false\",\"isHIPAA\":\"false\",\"required\":\"false\",\"description\":\"\"},{\"id\":17,\"name\":\"vacc_people_complete\",\"type\":\"Integer\",\"eclType\":\"integer8\",\"displayType\":\"\",\"displaySize\":\"\",\"textJustification\":\"right\",\"format\":\"\",\"isPCI\":\"false\",\"isPII\":\"false\",\"isHIPAA\":\"false\",\"required\":\"false\",\"description\":\"\"},{\"id\":18,\"name\":\"location\",\"type\":\"String\",\"eclType\":\"string\",\"displayType\":\"\",\"displaySize\":\"\",\"textJustification\":\"right\",\"format\":\"\",\"isPCI\":\"false\",\"isPII\":\"false\",\"isHIPAA\":\"false\",\"required\":\"false\",\"description\":\"\"},{\"id\":19,\"name\":\"id\",\"type\":\"Unsigned Integer\",\"eclType\":\"unsigned8\",\"displayType\":\"\",\"displaySize\":\"\",\"textJustification\":\"right\",\"format\":\"\",\"isPCI\":\"false\",\"isPII\":\"false\",\"isHIPAA\":\"false\",\"required\":\"false\",\"description\":\"\"},{\"id\":20,\"name\":\"period\",\"type\":\"Unsigned Integer\",\"eclType\":\"unsigned8\",\"displayType\":\"\",\"displaySize\":\"\",\"textJustification\":\"right\",\"format\":\"\",\"isPCI\":\"false\",\"isPII\":\"false\",\"isHIPAA\":\"false\",\"required\":\"false\",\"description\":\"\"},{\"id\":21,\"name\":\"prevcases\",\"type\":\"Integer\",\"eclType\":\"integer8\",\"displayType\":\"\",\"displaySize\":\"\",\"textJustification\":\"right\",\"format\":\"\",\"isPCI\":\"false\",\"isPII\":\"false\",\"isHIPAA\":\"false\",\"required\":\"false\",\"description\":\"\"},{\"id\":22,\"name\":\"newcases\",\"type\":\"Integer\",\"eclType\":\"integer8\",\"displayType\":\"\",\"displaySize\":\"\",\"textJustification\":\"right\",\"format\":\"\",\"isPCI\":\"false\",\"isPII\":\"false\",\"isHIPAA\":\"false\",\"required\":\"false\",\"description\":\"\"},{\"id\":23,\"name\":\"prevdeaths\",\"type\":\"Integer\",\"eclType\":\"integer8\",\"displayType\":\"\",\"displaySize\":\"\",\"textJustification\":\"right\",\"format\":\"\",\"isPCI\":\"false\",\"isPII\":\"false\",\"isHIPAA\":\"false\",\"required\":\"false\",\"description\":\"\"},{\"id\":24,\"name\":\"newdeaths\",\"type\":\"Integer\",\"eclType\":\"integer8\",\"displayType\":\"\",\"displaySize\":\"\",\"textJustification\":\"right\",\"format\":\"\",\"isPCI\":\"false\",\"isPII\":\"false\",\"isHIPAA\":\"false\",\"required\":\"false\",\"description\":\"\"},{\"id\":25,\"name\":\"active\",\"type\":\"Integer\",\"eclType\":\"integer8\",\"displayType\":\"\",\"displaySize\":\"\",\"textJustification\":\"right\",\"format\":\"\",\"isPCI\":\"false\",\"isPII\":\"false\",\"isHIPAA\":\"false\",\"required\":\"false\",\"description\":\"\"},{\"id\":26,\"name\":\"prevactive\",\"type\":\"Integer\",\"eclType\":\"integer8\",\"displayType\":\"\",\"displaySize\":\"\",\"textJustification\":\"right\",\"format\":\"\",\"isPCI\":\"false\",\"isPII\":\"false\",\"isHIPAA\":\"false\",\"required\":\"false\",\"description\":\"\"},{\"id\":27,\"name\":\"recovered\",\"type\":\"Integer\",\"eclType\":\"integer8\",\"displayType\":\"\",\"displaySize\":\"\",\"textJustification\":\"right\",\"format\":\"\",\"isPCI\":\"false\",\"isPII\":\"false\",\"isHIPAA\":\"false\",\"required\":\"false\",\"description\":\"\"},{\"id\":28,\"name\":\"cases7dma\",\"type\":\"Real\",\"eclType\":\"real8\",\"displayType\":\"\",\"displaySize\":\"\",\"textJustification\":\"right\",\"format\":\"\",\"isPCI\":\"false\",\"isPII\":\"false\",\"isHIPAA\":\"false\",\"required\":\"false\",\"description\":\"\"},{\"id\":29,\"name\":\"deaths7dma\",\"type\":\"Real\",\"eclType\":\"real8\",\"displayType\":\"\",\"displaySize\":\"\",\"textJustification\":\"right\",\"format\":\"\",\"isPCI\":\"false\",\"isPII\":\"false\",\"isHIPAA\":\"false\",\"required\":\"false\",\"description\":\"\"},{\"id\":30,\"name\":\"cfr\",\"type\":\"Real\",\"eclType\":\"decimal5_3\",\"displayType\":\"\",\"displaySize\":\"\",\"textJustification\":\"right\",\"format\":\"\",\"isPCI\":\"false\",\"isPII\":\"false\",\"isHIPAA\":\"false\",\"required\":\"false\",\"description\":\"\"},{\"id\":31,\"name\":\"adjcumcases\",\"type\":\"Integer\",\"eclType\":\"integer8\",\"displayType\":\"\",\"displaySize\":\"\",\"textJustification\":\"right\",\"format\":\"\",\"isPCI\":\"false\",\"isPII\":\"false\",\"isHIPAA\":\"false\",\"required\":\"false\",\"description\":\"\"},{\"id\":32,\"name\":\"adjcumdeaths\",\"type\":\"Integer\",\"eclType\":\"integer8\",\"displayType\":\"\",\"displaySize\":\"\",\"textJustification\":\"right\",\"format\":\"\",\"isPCI\":\"false\",\"isPII\":\"false\",\"isHIPAA\":\"false\",\"required\":\"false\",\"description\":\"\"},{\"id\":33,\"name\":\"adjprevcases\",\"type\":\"Integer\",\"eclType\":\"integer8\",\"displayType\":\"\",\"displaySize\":\"\",\"textJustification\":\"right\",\"format\":\"\",\"isPCI\":\"false\",\"isPII\":\"false\",\"isHIPAA\":\"false\",\"required\":\"false\",\"description\":\"\"},{\"id\":34,\"name\":\"adjprevdeaths\",\"type\":\"Integer\",\"eclType\":\"integer8\",\"displayType\":\"\",\"displaySize\":\"\",\"textJustification\":\"right\",\"format\":\"\",\"isPCI\":\"false\",\"isPII\":\"false\",\"isHIPAA\":\"false\",\"required\":\"false\",\"description\":\"\"},{\"id\":35,\"name\":\"caseadjustment\",\"type\":\"Integer\",\"eclType\":\"integer8\",\"displayType\":\"\",\"displaySize\":\"\",\"textJustification\":\"right\",\"format\":\"\",\"isPCI\":\"false\",\"isPII\":\"false\",\"isHIPAA\":\"false\",\"required\":\"false\",\"description\":\"\"},{\"id\":36,\"name\":\"deathsadjustment\",\"type\":\"Integer\",\"eclType\":\"integer8\",\"displayType\":\"\",\"displaySize\":\"\",\"textJustification\":\"right\",\"format\":\"\",\"isPCI\":\"false\",\"isPII\":\"false\",\"isHIPAA\":\"false\",\"required\":\"false\",\"description\":\"\"},{\"id\":37,\"name\":\"vacc_daily_dist\",\"type\":\"Integer\",\"eclType\":\"integer8\",\"displayType\":\"\",\"displaySize\":\"\",\"textJustification\":\"right\",\"format\":\"\",\"isPCI\":\"false\",\"isPII\":\"false\",\"isHIPAA\":\"false\",\"required\":\"false\",\"description\":\"\"},{\"id\":38,\"name\":\"vacc_daily_admin\",\"type\":\"Integer\",\"eclType\":\"integer8\",\"displayType\":\"\",\"displaySize\":\"\",\"textJustification\":\"right\",\"format\":\"\",\"isPCI\":\"false\",\"isPII\":\"false\",\"isHIPAA\":\"false\",\"required\":\"false\",\"description\":\"\"},{\"id\":39,\"name\":\"vacc_daily_people\",\"type\":\"Integer\",\"eclType\":\"integer8\",\"displayType\":\"\",\"displaySize\":\"\",\"textJustification\":\"right\",\"format\":\"\",\"isPCI\":\"false\",\"isPII\":\"false\",\"isHIPAA\":\"false\",\"required\":\"false\",\"description\":\"\"},{\"id\":40,\"name\":\"vacc_daily_complete\",\"type\":\"Integer\",\"eclType\":\"integer8\",\"displayType\":\"\",\"displaySize\":\"\",\"textJustification\":\"right\",\"format\":\"\",\"isPCI\":\"false\",\"isPII\":\"false\",\"isHIPAA\":\"false\",\"required\":\"false\",\"description\":\"\"}]",
+                            "deletedAt": null
+                        }
+                    ],
+                    "file_licenses": [],
+                    "file_validations": [],
+                    "groups": [],
+                    "dataflows": []
+                },
+                {
+                    "id": "327861b1-5612-4086-a496-12f2d29039c3",
+                    "application_id": "de25b9ff-feb6-4c08-a139-8cf9b6589af3",
+                    "title": "level1.flat",
+                    "name": "hpccsystems::covid19::file::public::stats::level1.flat",
+                    "cluster_id": "b2c55b36-3871-48ec-bf10-0be7fde0e62c",
+                    "description": "",
+                    "fileType": "flat",
+                    "isSuperFile": null,
+                    "serviceURL": null,
+                    "qualifiedPath": "level1.flat._$P$_of_2",
+                    "consumer": null,
+                    "supplier": null,
+                    "owner": null,
+                    "scope": "hpccsystems::covid19::file::public::stats",
+                    "createdAt": "2021-07-07T13:33:37.000Z",
+                    "updatedAt": "2021-07-07T13:33:37.000Z",
+                    "deletedAt": null,
+                    "file_layouts": [
+                        {
+                            "file_id": "327861b1-5612-4086-a496-12f2d29039c3",
+                            "fields": "[{\"id\":0,\"name\":\"fips\",\"type\":\"String\",\"eclType\":\"string\",\"displayType\":\"\",\"displaySize\":\"\",\"textJustification\":\"right\",\"format\":\"\",\"isPCI\":\"false\",\"isPII\":\"false\",\"isHIPAA\":\"false\",\"required\":\"false\",\"description\":\"\"},{\"id\":1,\"name\":\"country\",\"type\":\"String\",\"eclType\":\"string\",\"displayType\":\"\",\"displaySize\":\"\",\"textJustification\":\"right\",\"format\":\"\",\"isPCI\":\"false\",\"isPII\":\"false\",\"isHIPAA\":\"false\",\"required\":\"false\",\"description\":\"\"},{\"id\":2,\"name\":\"level2\",\"type\":\"String\",\"eclType\":\"string\",\"displayType\":\"\",\"displaySize\":\"\",\"textJustification\":\"right\",\"format\":\"\",\"isPCI\":\"false\",\"isPII\":\"false\",\"isHIPAA\":\"false\",\"required\":\"false\",\"description\":\"\"},{\"id\":3,\"name\":\"level3\",\"type\":\"String\",\"eclType\":\"string\",\"displayType\":\"\",\"displaySize\":\"\",\"textJustification\":\"right\",\"format\":\"\",\"isPCI\":\"false\",\"isPII\":\"false\",\"isHIPAA\":\"false\",\"required\":\"false\",\"description\":\"\"},{\"id\":4,\"name\":\"date\",\"type\":\"Unsigned Integer\",\"eclType\":\"unsigned4\",\"displayType\":\"\",\"displaySize\":\"\",\"textJustification\":\"right\",\"format\":\"\",\"isPCI\":\"false\",\"isPII\":\"false\",\"isHIPAA\":\"false\",\"required\":\"false\",\"description\":\"\"},{\"id\":5,\"name\":\"cumcases\",\"type\":\"Integer\",\"eclType\":\"integer8\",\"displayType\":\"\",\"displaySize\":\"\",\"textJustification\":\"right\",\"format\":\"\",\"isPCI\":\"false\",\"isPII\":\"false\",\"isHIPAA\":\"false\",\"required\":\"false\",\"description\":\"\"},{\"id\":6,\"name\":\"cumdeaths\",\"type\":\"Integer\",\"eclType\":\"integer8\",\"displayType\":\"\",\"displaySize\":\"\",\"textJustification\":\"right\",\"format\":\"\",\"isPCI\":\"false\",\"isPII\":\"false\",\"isHIPAA\":\"false\",\"required\":\"false\",\"description\":\"\"},{\"id\":7,\"name\":\"cumhosp\",\"type\":\"Integer\",\"eclType\":\"integer8\",\"displayType\":\"\",\"displaySize\":\"\",\"textJustification\":\"right\",\"format\":\"\",\"isPCI\":\"false\",\"isPII\":\"false\",\"isHIPAA\":\"false\",\"required\":\"false\",\"description\":\"\"},{\"id\":8,\"name\":\"tested\",\"type\":\"Integer\",\"eclType\":\"integer8\",\"displayType\":\"\",\"displaySize\":\"\",\"textJustification\":\"right\",\"format\":\"\",\"isPCI\":\"false\",\"isPII\":\"false\",\"isHIPAA\":\"false\",\"required\":\"false\",\"description\":\"\"},{\"id\":9,\"name\":\"positive\",\"type\":\"Integer\",\"eclType\":\"integer8\",\"displayType\":\"\",\"displaySize\":\"\",\"textJustification\":\"right\",\"format\":\"\",\"isPCI\":\"false\",\"isPII\":\"false\",\"isHIPAA\":\"false\",\"required\":\"false\",\"description\":\"\"},{\"id\":10,\"name\":\"negative\",\"type\":\"Integer\",\"eclType\":\"integer8\",\"displayType\":\"\",\"displaySize\":\"\",\"textJustification\":\"right\",\"format\":\"\",\"isPCI\":\"false\",\"isPII\":\"false\",\"isHIPAA\":\"false\",\"required\":\"false\",\"description\":\"\"},{\"id\":11,\"name\":\"population\",\"type\":\"Integer\",\"eclType\":\"integer8\",\"displayType\":\"\",\"displaySize\":\"\",\"textJustification\":\"right\",\"format\":\"\",\"isPCI\":\"false\",\"isPII\":\"false\",\"isHIPAA\":\"false\",\"required\":\"false\",\"description\":\"\"},{\"id\":12,\"name\":\"latitude\",\"type\":\"Real\",\"eclType\":\"udecimal11_8\",\"displayType\":\"\",\"displaySize\":\"\",\"textJustification\":\"right\",\"format\":\"\",\"isPCI\":\"false\",\"isPII\":\"false\",\"isHIPAA\":\"false\",\"required\":\"false\",\"description\":\"\"},{\"id\":13,\"name\":\"longitude\",\"type\":\"Real\",\"eclType\":\"udecimal11_8\",\"displayType\":\"\",\"displaySize\":\"\",\"textJustification\":\"right\",\"format\":\"\",\"isPCI\":\"false\",\"isPII\":\"false\",\"isHIPAA\":\"false\",\"required\":\"false\",\"description\":\"\"},{\"id\":14,\"name\":\"vacc_total_dist\",\"type\":\"Integer\",\"eclType\":\"integer8\",\"displayType\":\"\",\"displaySize\":\"\",\"textJustification\":\"right\",\"format\":\"\",\"isPCI\":\"false\",\"isPII\":\"false\",\"isHIPAA\":\"false\",\"required\":\"false\",\"description\":\"\"},{\"id\":15,\"name\":\"vacc_total_admin\",\"type\":\"Integer\",\"eclType\":\"integer8\",\"displayType\":\"\",\"displaySize\":\"\",\"textJustification\":\"right\",\"format\":\"\",\"isPCI\":\"false\",\"isPII\":\"false\",\"isHIPAA\":\"false\",\"required\":\"false\",\"description\":\"\"},{\"id\":16,\"name\":\"vacc_total_people\",\"type\":\"Integer\",\"eclType\":\"integer8\",\"displayType\":\"\",\"displaySize\":\"\",\"textJustification\":\"right\",\"format\":\"\",\"isPCI\":\"false\",\"isPII\":\"false\",\"isHIPAA\":\"false\",\"required\":\"false\",\"description\":\"\"},{\"id\":17,\"name\":\"vacc_people_complete\",\"type\":\"Integer\",\"eclType\":\"integer8\",\"displayType\":\"\",\"displaySize\":\"\",\"textJustification\":\"right\",\"format\":\"\",\"isPCI\":\"false\",\"isPII\":\"false\",\"isHIPAA\":\"false\",\"required\":\"false\",\"description\":\"\"},{\"id\":18,\"name\":\"location\",\"type\":\"String\",\"eclType\":\"string\",\"displayType\":\"\",\"displaySize\":\"\",\"textJustification\":\"right\",\"format\":\"\",\"isPCI\":\"false\",\"isPII\":\"false\",\"isHIPAA\":\"false\",\"required\":\"false\",\"description\":\"\"},{\"id\":19,\"name\":\"id\",\"type\":\"Unsigned Integer\",\"eclType\":\"unsigned8\",\"displayType\":\"\",\"displaySize\":\"\",\"textJustification\":\"right\",\"format\":\"\",\"isPCI\":\"false\",\"isPII\":\"false\",\"isHIPAA\":\"false\",\"required\":\"false\",\"description\":\"\"},{\"id\":20,\"name\":\"period\",\"type\":\"Unsigned Integer\",\"eclType\":\"unsigned8\",\"displayType\":\"\",\"displaySize\":\"\",\"textJustification\":\"right\",\"format\":\"\",\"isPCI\":\"false\",\"isPII\":\"false\",\"isHIPAA\":\"false\",\"required\":\"false\",\"description\":\"\"},{\"id\":21,\"name\":\"prevcases\",\"type\":\"Integer\",\"eclType\":\"integer8\",\"displayType\":\"\",\"displaySize\":\"\",\"textJustification\":\"right\",\"format\":\"\",\"isPCI\":\"false\",\"isPII\":\"false\",\"isHIPAA\":\"false\",\"required\":\"false\",\"description\":\"\"},{\"id\":22,\"name\":\"newcases\",\"type\":\"Integer\",\"eclType\":\"integer8\",\"displayType\":\"\",\"displaySize\":\"\",\"textJustification\":\"right\",\"format\":\"\",\"isPCI\":\"false\",\"isPII\":\"false\",\"isHIPAA\":\"false\",\"required\":\"false\",\"description\":\"\"},{\"id\":23,\"name\":\"prevdeaths\",\"type\":\"Integer\",\"eclType\":\"integer8\",\"displayType\":\"\",\"displaySize\":\"\",\"textJustification\":\"right\",\"format\":\"\",\"isPCI\":\"false\",\"isPII\":\"false\",\"isHIPAA\":\"false\",\"required\":\"false\",\"description\":\"\"},{\"id\":24,\"name\":\"newdeaths\",\"type\":\"Integer\",\"eclType\":\"integer8\",\"displayType\":\"\",\"displaySize\":\"\",\"textJustification\":\"right\",\"format\":\"\",\"isPCI\":\"false\",\"isPII\":\"false\",\"isHIPAA\":\"false\",\"required\":\"false\",\"description\":\"\"},{\"id\":25,\"name\":\"active\",\"type\":\"Integer\",\"eclType\":\"integer8\",\"displayType\":\"\",\"displaySize\":\"\",\"textJustification\":\"right\",\"format\":\"\",\"isPCI\":\"false\",\"isPII\":\"false\",\"isHIPAA\":\"false\",\"required\":\"false\",\"description\":\"\"},{\"id\":26,\"name\":\"prevactive\",\"type\":\"Integer\",\"eclType\":\"integer8\",\"displayType\":\"\",\"displaySize\":\"\",\"textJustification\":\"right\",\"format\":\"\",\"isPCI\":\"false\",\"isPII\":\"false\",\"isHIPAA\":\"false\",\"required\":\"false\",\"description\":\"\"},{\"id\":27,\"name\":\"recovered\",\"type\":\"Integer\",\"eclType\":\"integer8\",\"displayType\":\"\",\"displaySize\":\"\",\"textJustification\":\"right\",\"format\":\"\",\"isPCI\":\"false\",\"isPII\":\"false\",\"isHIPAA\":\"false\",\"required\":\"false\",\"description\":\"\"},{\"id\":28,\"name\":\"cases7dma\",\"type\":\"Real\",\"eclType\":\"real8\",\"displayType\":\"\",\"displaySize\":\"\",\"textJustification\":\"right\",\"format\":\"\",\"isPCI\":\"false\",\"isPII\":\"false\",\"isHIPAA\":\"false\",\"required\":\"false\",\"description\":\"\"},{\"id\":29,\"name\":\"deaths7dma\",\"type\":\"Real\",\"eclType\":\"real8\",\"displayType\":\"\",\"displaySize\":\"\",\"textJustification\":\"right\",\"format\":\"\",\"isPCI\":\"false\",\"isPII\":\"false\",\"isHIPAA\":\"false\",\"required\":\"false\",\"description\":\"\"},{\"id\":30,\"name\":\"cfr\",\"type\":\"Real\",\"eclType\":\"decimal5_3\",\"displayType\":\"\",\"displaySize\":\"\",\"textJustification\":\"right\",\"format\":\"\",\"isPCI\":\"false\",\"isPII\":\"false\",\"isHIPAA\":\"false\",\"required\":\"false\",\"description\":\"\"},{\"id\":31,\"name\":\"adjcumcases\",\"type\":\"Integer\",\"eclType\":\"integer8\",\"displayType\":\"\",\"displaySize\":\"\",\"textJustification\":\"right\",\"format\":\"\",\"isPCI\":\"false\",\"isPII\":\"false\",\"isHIPAA\":\"false\",\"required\":\"false\",\"description\":\"\"},{\"id\":32,\"name\":\"adjcumdeaths\",\"type\":\"Integer\",\"eclType\":\"integer8\",\"displayType\":\"\",\"displaySize\":\"\",\"textJustification\":\"right\",\"format\":\"\",\"isPCI\":\"false\",\"isPII\":\"false\",\"isHIPAA\":\"false\",\"required\":\"false\",\"description\":\"\"},{\"id\":33,\"name\":\"adjprevcases\",\"type\":\"Integer\",\"eclType\":\"integer8\",\"displayType\":\"\",\"displaySize\":\"\",\"textJustification\":\"right\",\"format\":\"\",\"isPCI\":\"false\",\"isPII\":\"false\",\"isHIPAA\":\"false\",\"required\":\"false\",\"description\":\"\"},{\"id\":34,\"name\":\"adjprevdeaths\",\"type\":\"Integer\",\"eclType\":\"integer8\",\"displayType\":\"\",\"displaySize\":\"\",\"textJustification\":\"right\",\"format\":\"\",\"isPCI\":\"false\",\"isPII\":\"false\",\"isHIPAA\":\"false\",\"required\":\"false\",\"description\":\"\"},{\"id\":35,\"name\":\"caseadjustment\",\"type\":\"Integer\",\"eclType\":\"integer8\",\"displayType\":\"\",\"displaySize\":\"\",\"textJustification\":\"right\",\"format\":\"\",\"isPCI\":\"false\",\"isPII\":\"false\",\"isHIPAA\":\"false\",\"required\":\"false\",\"description\":\"\"},{\"id\":36,\"name\":\"deathsadjustment\",\"type\":\"Integer\",\"eclType\":\"integer8\",\"displayType\":\"\",\"displaySize\":\"\",\"textJustification\":\"right\",\"format\":\"\",\"isPCI\":\"false\",\"isPII\":\"false\",\"isHIPAA\":\"false\",\"required\":\"false\",\"description\":\"\"},{\"id\":37,\"name\":\"vacc_daily_dist\",\"type\":\"Integer\",\"eclType\":\"integer8\",\"displayType\":\"\",\"displaySize\":\"\",\"textJustification\":\"right\",\"format\":\"\",\"isPCI\":\"false\",\"isPII\":\"false\",\"isHIPAA\":\"false\",\"required\":\"false\",\"description\":\"\"},{\"id\":38,\"name\":\"vacc_daily_admin\",\"type\":\"Integer\",\"eclType\":\"integer8\",\"displayType\":\"\",\"displaySize\":\"\",\"textJustification\":\"right\",\"format\":\"\",\"isPCI\":\"false\",\"isPII\":\"false\",\"isHIPAA\":\"false\",\"required\":\"false\",\"description\":\"\"},{\"id\":39,\"name\":\"vacc_daily_people\",\"type\":\"Integer\",\"eclType\":\"integer8\",\"displayType\":\"\",\"displaySize\":\"\",\"textJustification\":\"right\",\"format\":\"\",\"isPCI\":\"false\",\"isPII\":\"false\",\"isHIPAA\":\"false\",\"required\":\"false\",\"description\":\"\"},{\"id\":40,\"name\":\"vacc_daily_complete\",\"type\":\"Integer\",\"eclType\":\"integer8\",\"displayType\":\"\",\"displaySize\":\"\",\"textJustification\":\"right\",\"format\":\"\",\"isPCI\":\"false\",\"isPII\":\"false\",\"isHIPAA\":\"false\",\"required\":\"false\",\"description\":\"\"}]",
+                            "deletedAt": null
+                        }
+                    ],
+                    "file_licenses": [],
+                    "file_validations": [],
+                    "groups": [],
+                    "dataflows": []
+                },
+                {
+                    "id": "da39291c-d873-4ffe-ab1c-314983e430ac",
+                    "application_id": "de25b9ff-feb6-4c08-a139-8cf9b6589af3",
+                    "title": "aldxdata.flat",
+                    "name": "hpccsystems::covid19::file::etl::aldxdata.flat",
+                    "cluster_id": "b2c55b36-3871-48ec-bf10-0be7fde0e62c",
+                    "description": "",
+                    "fileType": "thor_file",
+                    "isSuperFile": false,
+                    "serviceURL": null,
+                    "qualifiedPath": null,
+                    "consumer": null,
+                    "supplier": null,
+                    "owner": null,
+                    "scope": "hpccsystems::covid19::file::etl",
+                    "createdAt": "2021-06-30T20:15:20.000Z",
+                    "updatedAt": "2021-06-30T20:15:20.000Z",
+                    "deletedAt": null,
+                    "file_layouts": [
+                        {
+                            "file_id": "da39291c-d873-4ffe-ab1c-314983e430ac",
+                            "fields": "[{\"id\":0,\"name\":\"iata\",\"type\":\"String\",\"eclType\":\"string\",\"displayType\":\"\",\"displaySize\":\"\",\"textJustification\":\"right\",\"format\":\"\",\"isPCI\":\"false\",\"isPII\":\"false\",\"isHIPAA\":\"false\",\"required\":\"false\",\"description\":\"\"},{\"id\":1,\"name\":\"name\",\"type\":\"String\",\"eclType\":\"string\",\"displayType\":\"\",\"displaySize\":\"\",\"textJustification\":\"right\",\"format\":\"\",\"isPCI\":\"false\",\"isPII\":\"false\",\"isHIPAA\":\"false\",\"required\":\"false\",\"description\":\"\"},{\"id\":2,\"name\":\"city\",\"type\":\"String\",\"eclType\":\"string\",\"displayType\":\"\",\"displaySize\":\"\",\"textJustification\":\"right\",\"format\":\"\",\"isPCI\":\"false\",\"isPII\":\"false\",\"isHIPAA\":\"false\",\"required\":\"false\",\"description\":\"\"},{\"id\":3,\"name\":\"state\",\"type\":\"String\",\"eclType\":\"string\",\"displayType\":\"\",\"displaySize\":\"\",\"textJustification\":\"right\",\"format\":\"\",\"isPCI\":\"false\",\"isPII\":\"false\",\"isHIPAA\":\"false\",\"required\":\"false\",\"description\":\"\"},{\"id\":4,\"name\":\"country\",\"type\":\"String\",\"eclType\":\"string\",\"displayType\":\"\",\"displaySize\":\"\",\"textJustification\":\"right\",\"format\":\"\",\"isPCI\":\"false\",\"isPII\":\"false\",\"isHIPAA\":\"false\",\"required\":\"false\",\"description\":\"\"},{\"id\":5,\"name\":\"latitude\",\"type\":\"Integer\",\"eclType\":\"integer8\",\"displayType\":\"\",\"displaySize\":\"\",\"textJustification\":\"right\",\"format\":\"\",\"isPCI\":\"false\",\"isPII\":\"false\",\"isHIPAA\":\"false\",\"required\":\"false\",\"description\":\"\"},{\"id\":6,\"name\":\"longitude\",\"type\":\"Integer\",\"eclType\":\"integer8\",\"displayType\":\"\",\"displaySize\":\"\",\"textJustification\":\"right\",\"format\":\"\",\"isPCI\":\"false\",\"isPII\":\"false\",\"isHIPAA\":\"false\",\"required\":\"false\",\"description\":\"\"}]",
+                            "deletedAt": null
+                        }
+                    ],
+                    "file_licenses": [],
+                    "file_validations": [],
+                    "groups": [
+                        {
+                            "id": 48,
+                            "name": "M",
+                            "description": "",
+                            "parent_group": ""
+                        }
+                    ],
+                    "dataflows": []
+                },
+                {
+                    "id": "996c76bc-9c82-48ac-a629-c0a2e583d55a",
+                    "application_id": "de25b9ff-feb6-4c08-a139-8cf9b6589af3",
+                    "title": "level1",
+                    "name": "hpccsystems::covid19::file::input::level1",
+                    "cluster_id": "b2c55b36-3871-48ec-bf10-0be7fde0e62c",
+                    "description": "",
+                    "fileType": null,
+                    "isSuperFile": null,
+                    "serviceURL": null,
+                    "qualifiedPath": "level1._$P$_of_2",
+                    "consumer": null,
+                    "supplier": null,
+                    "owner": null,
+                    "scope": "hpccsystems::covid19::file::input",
+                    "createdAt": "2021-07-07T13:33:37.000Z",
+                    "updatedAt": "2021-07-07T13:33:37.000Z",
+                    "deletedAt": null,
+                    "file_layouts": [
+                        {
+                            "file_id": "996c76bc-9c82-48ac-a629-c0a2e583d55a",
+                            "fields": "[{\"id\":0,\"name\":\"fips\",\"type\":\"String\",\"eclType\":\"string\",\"displayType\":\"\",\"displaySize\":\"\",\"textJustification\":\"right\",\"format\":\"\",\"isPCI\":\"false\",\"isPII\":\"false\",\"isHIPAA\":\"false\",\"required\":\"false\",\"description\":\"\"},{\"id\":1,\"name\":\"country\",\"type\":\"String\",\"eclType\":\"string\",\"displayType\":\"\",\"displaySize\":\"\",\"textJustification\":\"right\",\"format\":\"\",\"isPCI\":\"false\",\"isPII\":\"false\",\"isHIPAA\":\"false\",\"required\":\"false\",\"description\":\"\"},{\"id\":2,\"name\":\"level2\",\"type\":\"String\",\"eclType\":\"string\",\"displayType\":\"\",\"displaySize\":\"\",\"textJustification\":\"right\",\"format\":\"\",\"isPCI\":\"false\",\"isPII\":\"false\",\"isHIPAA\":\"false\",\"required\":\"false\",\"description\":\"\"},{\"id\":3,\"name\":\"level3\",\"type\":\"String\",\"eclType\":\"string\",\"displayType\":\"\",\"displaySize\":\"\",\"textJustification\":\"right\",\"format\":\"\",\"isPCI\":\"false\",\"isPII\":\"false\",\"isHIPAA\":\"false\",\"required\":\"false\",\"description\":\"\"},{\"id\":4,\"name\":\"date\",\"type\":\"Unsigned Integer\",\"eclType\":\"unsigned4\",\"displayType\":\"\",\"displaySize\":\"\",\"textJustification\":\"right\",\"format\":\"\",\"isPCI\":\"false\",\"isPII\":\"false\",\"isHIPAA\":\"false\",\"required\":\"false\",\"description\":\"\"},{\"id\":5,\"name\":\"cumcases\",\"type\":\"Integer\",\"eclType\":\"integer8\",\"displayType\":\"\",\"displaySize\":\"\",\"textJustification\":\"right\",\"format\":\"\",\"isPCI\":\"false\",\"isPII\":\"false\",\"isHIPAA\":\"false\",\"required\":\"false\",\"description\":\"\"},{\"id\":6,\"name\":\"cumdeaths\",\"type\":\"Integer\",\"eclType\":\"integer8\",\"displayType\":\"\",\"displaySize\":\"\",\"textJustification\":\"right\",\"format\":\"\",\"isPCI\":\"false\",\"isPII\":\"false\",\"isHIPAA\":\"false\",\"required\":\"false\",\"description\":\"\"},{\"id\":7,\"name\":\"cumhosp\",\"type\":\"Integer\",\"eclType\":\"integer8\",\"displayType\":\"\",\"displaySize\":\"\",\"textJustification\":\"right\",\"format\":\"\",\"isPCI\":\"false\",\"isPII\":\"false\",\"isHIPAA\":\"false\",\"required\":\"false\",\"description\":\"\"},{\"id\":8,\"name\":\"tested\",\"type\":\"Integer\",\"eclType\":\"integer8\",\"displayType\":\"\",\"displaySize\":\"\",\"textJustification\":\"right\",\"format\":\"\",\"isPCI\":\"false\",\"isPII\":\"false\",\"isHIPAA\":\"false\",\"required\":\"false\",\"description\":\"\"},{\"id\":9,\"name\":\"positive\",\"type\":\"Integer\",\"eclType\":\"integer8\",\"displayType\":\"\",\"displaySize\":\"\",\"textJustification\":\"right\",\"format\":\"\",\"isPCI\":\"false\",\"isPII\":\"false\",\"isHIPAA\":\"false\",\"required\":\"false\",\"description\":\"\"},{\"id\":10,\"name\":\"negative\",\"type\":\"Integer\",\"eclType\":\"integer8\",\"displayType\":\"\",\"displaySize\":\"\",\"textJustification\":\"right\",\"format\":\"\",\"isPCI\":\"false\",\"isPII\":\"false\",\"isHIPAA\":\"false\",\"required\":\"false\",\"description\":\"\"},{\"id\":11,\"name\":\"population\",\"type\":\"Integer\",\"eclType\":\"integer8\",\"displayType\":\"\",\"displaySize\":\"\",\"textJustification\":\"right\",\"format\":\"\",\"isPCI\":\"false\",\"isPII\":\"false\",\"isHIPAA\":\"false\",\"required\":\"false\",\"description\":\"\"},{\"id\":12,\"name\":\"latitude\",\"type\":\"Real\",\"eclType\":\"udecimal11_8\",\"displayType\":\"\",\"displaySize\":\"\",\"textJustification\":\"right\",\"format\":\"\",\"isPCI\":\"false\",\"isPII\":\"false\",\"isHIPAA\":\"false\",\"required\":\"false\",\"description\":\"\"},{\"id\":13,\"name\":\"longitude\",\"type\":\"Real\",\"eclType\":\"udecimal11_8\",\"displayType\":\"\",\"displaySize\":\"\",\"textJustification\":\"right\",\"format\":\"\",\"isPCI\":\"false\",\"isPII\":\"false\",\"isHIPAA\":\"false\",\"required\":\"false\",\"description\":\"\"},{\"id\":14,\"name\":\"vacc_total_dist\",\"type\":\"Integer\",\"eclType\":\"integer8\",\"displayType\":\"\",\"displaySize\":\"\",\"textJustification\":\"right\",\"format\":\"\",\"isPCI\":\"false\",\"isPII\":\"false\",\"isHIPAA\":\"false\",\"required\":\"false\",\"description\":\"\"},{\"id\":15,\"name\":\"vacc_total_admin\",\"type\":\"Integer\",\"eclType\":\"integer8\",\"displayType\":\"\",\"displaySize\":\"\",\"textJustification\":\"right\",\"format\":\"\",\"isPCI\":\"false\",\"isPII\":\"false\",\"isHIPAA\":\"false\",\"required\":\"false\",\"description\":\"\"},{\"id\":16,\"name\":\"vacc_total_people\",\"type\":\"Integer\",\"eclType\":\"integer8\",\"displayType\":\"\",\"displaySize\":\"\",\"textJustification\":\"right\",\"format\":\"\",\"isPCI\":\"false\",\"isPII\":\"false\",\"isHIPAA\":\"false\",\"required\":\"false\",\"description\":\"\"},{\"id\":17,\"name\":\"vacc_people_complete\",\"type\":\"Integer\",\"eclType\":\"integer8\",\"displayType\":\"\",\"displaySize\":\"\",\"textJustification\":\"right\",\"format\":\"\",\"isPCI\":\"false\",\"isPII\":\"false\",\"isHIPAA\":\"false\",\"required\":\"false\",\"description\":\"\"}]",
+                            "deletedAt": null
+                        }
+                    ],
+                    "file_licenses": [],
+                    "file_validations": [],
+                    "groups": [],
+                    "dataflows": []
+                },
+                {
+                    "id": "17fca44e-7e1b-4b6c-bc85-ab2bea7da9e9",
+                    "application_id": "de25b9ff-feb6-4c08-a139-8cf9b6589af3",
+                    "title": "level2.flat",
+                    "name": "hpccsystems::covid19::file::public::stats::level2.flat",
+                    "cluster_id": "b2c55b36-3871-48ec-bf10-0be7fde0e62c",
+                    "description": "",
+                    "fileType": "flat",
+                    "isSuperFile": null,
+                    "serviceURL": null,
+                    "qualifiedPath": "level2.flat._$P$_of_2",
+                    "consumer": null,
+                    "supplier": null,
+                    "owner": null,
+                    "scope": "hpccsystems::covid19::file::public::stats",
+                    "createdAt": "2021-07-07T13:33:37.000Z",
+                    "updatedAt": "2021-07-07T13:33:37.000Z",
+                    "deletedAt": null,
+                    "file_layouts": [
+                        {
+                            "file_id": "17fca44e-7e1b-4b6c-bc85-ab2bea7da9e9",
+                            "fields": "[{\"id\":0,\"name\":\"fips\",\"type\":\"String\",\"eclType\":\"string\",\"displayType\":\"\",\"displaySize\":\"\",\"textJustification\":\"right\",\"format\":\"\",\"isPCI\":\"false\",\"isPII\":\"false\",\"isHIPAA\":\"false\",\"required\":\"false\",\"description\":\"\"},{\"id\":1,\"name\":\"country\",\"type\":\"String\",\"eclType\":\"string\",\"displayType\":\"\",\"displaySize\":\"\",\"textJustification\":\"right\",\"format\":\"\",\"isPCI\":\"false\",\"isPII\":\"false\",\"isHIPAA\":\"false\",\"required\":\"false\",\"description\":\"\"},{\"id\":2,\"name\":\"level2\",\"type\":\"String\",\"eclType\":\"string\",\"displayType\":\"\",\"displaySize\":\"\",\"textJustification\":\"right\",\"format\":\"\",\"isPCI\":\"false\",\"isPII\":\"false\",\"isHIPAA\":\"false\",\"required\":\"false\",\"description\":\"\"},{\"id\":3,\"name\":\"level3\",\"type\":\"String\",\"eclType\":\"string\",\"displayType\":\"\",\"displaySize\":\"\",\"textJustification\":\"right\",\"format\":\"\",\"isPCI\":\"false\",\"isPII\":\"false\",\"isHIPAA\":\"false\",\"required\":\"false\",\"description\":\"\"},{\"id\":4,\"name\":\"date\",\"type\":\"Unsigned Integer\",\"eclType\":\"unsigned4\",\"displayType\":\"\",\"displaySize\":\"\",\"textJustification\":\"right\",\"format\":\"\",\"isPCI\":\"false\",\"isPII\":\"false\",\"isHIPAA\":\"false\",\"required\":\"false\",\"description\":\"\"},{\"id\":5,\"name\":\"cumcases\",\"type\":\"Integer\",\"eclType\":\"integer8\",\"displayType\":\"\",\"displaySize\":\"\",\"textJustification\":\"right\",\"format\":\"\",\"isPCI\":\"false\",\"isPII\":\"false\",\"isHIPAA\":\"false\",\"required\":\"false\",\"description\":\"\"},{\"id\":6,\"name\":\"cumdeaths\",\"type\":\"Integer\",\"eclType\":\"integer8\",\"displayType\":\"\",\"displaySize\":\"\",\"textJustification\":\"right\",\"format\":\"\",\"isPCI\":\"false\",\"isPII\":\"false\",\"isHIPAA\":\"false\",\"required\":\"false\",\"description\":\"\"},{\"id\":7,\"name\":\"cumhosp\",\"type\":\"Integer\",\"eclType\":\"integer8\",\"displayType\":\"\",\"displaySize\":\"\",\"textJustification\":\"right\",\"format\":\"\",\"isPCI\":\"false\",\"isPII\":\"false\",\"isHIPAA\":\"false\",\"required\":\"false\",\"description\":\"\"},{\"id\":8,\"name\":\"tested\",\"type\":\"Integer\",\"eclType\":\"integer8\",\"displayType\":\"\",\"displaySize\":\"\",\"textJustification\":\"right\",\"format\":\"\",\"isPCI\":\"false\",\"isPII\":\"false\",\"isHIPAA\":\"false\",\"required\":\"false\",\"description\":\"\"},{\"id\":9,\"name\":\"positive\",\"type\":\"Integer\",\"eclType\":\"integer8\",\"displayType\":\"\",\"displaySize\":\"\",\"textJustification\":\"right\",\"format\":\"\",\"isPCI\":\"false\",\"isPII\":\"false\",\"isHIPAA\":\"false\",\"required\":\"false\",\"description\":\"\"},{\"id\":10,\"name\":\"negative\",\"type\":\"Integer\",\"eclType\":\"integer8\",\"displayType\":\"\",\"displaySize\":\"\",\"textJustification\":\"right\",\"format\":\"\",\"isPCI\":\"false\",\"isPII\":\"false\",\"isHIPAA\":\"false\",\"required\":\"false\",\"description\":\"\"},{\"id\":11,\"name\":\"population\",\"type\":\"Integer\",\"eclType\":\"integer8\",\"displayType\":\"\",\"displaySize\":\"\",\"textJustification\":\"right\",\"format\":\"\",\"isPCI\":\"false\",\"isPII\":\"false\",\"isHIPAA\":\"false\",\"required\":\"false\",\"description\":\"\"},{\"id\":12,\"name\":\"latitude\",\"type\":\"Real\",\"eclType\":\"udecimal11_8\",\"displayType\":\"\",\"displaySize\":\"\",\"textJustification\":\"right\",\"format\":\"\",\"isPCI\":\"false\",\"isPII\":\"false\",\"isHIPAA\":\"false\",\"required\":\"false\",\"description\":\"\"},{\"id\":13,\"name\":\"longitude\",\"type\":\"Real\",\"eclType\":\"udecimal11_8\",\"displayType\":\"\",\"displaySize\":\"\",\"textJustification\":\"right\",\"format\":\"\",\"isPCI\":\"false\",\"isPII\":\"false\",\"isHIPAA\":\"false\",\"required\":\"false\",\"description\":\"\"},{\"id\":14,\"name\":\"vacc_total_dist\",\"type\":\"Integer\",\"eclType\":\"integer8\",\"displayType\":\"\",\"displaySize\":\"\",\"textJustification\":\"right\",\"format\":\"\",\"isPCI\":\"false\",\"isPII\":\"false\",\"isHIPAA\":\"false\",\"required\":\"false\",\"description\":\"\"},{\"id\":15,\"name\":\"vacc_total_admin\",\"type\":\"Integer\",\"eclType\":\"integer8\",\"displayType\":\"\",\"displaySize\":\"\",\"textJustification\":\"right\",\"format\":\"\",\"isPCI\":\"false\",\"isPII\":\"false\",\"isHIPAA\":\"false\",\"required\":\"false\",\"description\":\"\"},{\"id\":16,\"name\":\"vacc_total_people\",\"type\":\"Integer\",\"eclType\":\"integer8\",\"displayType\":\"\",\"displaySize\":\"\",\"textJustification\":\"right\",\"format\":\"\",\"isPCI\":\"false\",\"isPII\":\"false\",\"isHIPAA\":\"false\",\"required\":\"false\",\"description\":\"\"},{\"id\":17,\"name\":\"vacc_people_complete\",\"type\":\"Integer\",\"eclType\":\"integer8\",\"displayType\":\"\",\"displaySize\":\"\",\"textJustification\":\"right\",\"format\":\"\",\"isPCI\":\"false\",\"isPII\":\"false\",\"isHIPAA\":\"false\",\"required\":\"false\",\"description\":\"\"},{\"id\":18,\"name\":\"location\",\"type\":\"String\",\"eclType\":\"string\",\"displayType\":\"\",\"displaySize\":\"\",\"textJustification\":\"right\",\"format\":\"\",\"isPCI\":\"false\",\"isPII\":\"false\",\"isHIPAA\":\"false\",\"required\":\"false\",\"description\":\"\"},{\"id\":19,\"name\":\"id\",\"type\":\"Unsigned Integer\",\"eclType\":\"unsigned8\",\"displayType\":\"\",\"displaySize\":\"\",\"textJustification\":\"right\",\"format\":\"\",\"isPCI\":\"false\",\"isPII\":\"false\",\"isHIPAA\":\"false\",\"required\":\"false\",\"description\":\"\"},{\"id\":20,\"name\":\"period\",\"type\":\"Unsigned Integer\",\"eclType\":\"unsigned8\",\"displayType\":\"\",\"displaySize\":\"\",\"textJustification\":\"right\",\"format\":\"\",\"isPCI\":\"false\",\"isPII\":\"false\",\"isHIPAA\":\"false\",\"required\":\"false\",\"description\":\"\"},{\"id\":21,\"name\":\"prevcases\",\"type\":\"Integer\",\"eclType\":\"integer8\",\"displayType\":\"\",\"displaySize\":\"\",\"textJustification\":\"right\",\"format\":\"\",\"isPCI\":\"false\",\"isPII\":\"false\",\"isHIPAA\":\"false\",\"required\":\"false\",\"description\":\"\"},{\"id\":22,\"name\":\"newcases\",\"type\":\"Integer\",\"eclType\":\"integer8\",\"displayType\":\"\",\"displaySize\":\"\",\"textJustification\":\"right\",\"format\":\"\",\"isPCI\":\"false\",\"isPII\":\"false\",\"isHIPAA\":\"false\",\"required\":\"false\",\"description\":\"\"},{\"id\":23,\"name\":\"prevdeaths\",\"type\":\"Integer\",\"eclType\":\"integer8\",\"displayType\":\"\",\"displaySize\":\"\",\"textJustification\":\"right\",\"format\":\"\",\"isPCI\":\"false\",\"isPII\":\"false\",\"isHIPAA\":\"false\",\"required\":\"false\",\"description\":\"\"},{\"id\":24,\"name\":\"newdeaths\",\"type\":\"Integer\",\"eclType\":\"integer8\",\"displayType\":\"\",\"displaySize\":\"\",\"textJustification\":\"right\",\"format\":\"\",\"isPCI\":\"false\",\"isPII\":\"false\",\"isHIPAA\":\"false\",\"required\":\"false\",\"description\":\"\"},{\"id\":25,\"name\":\"active\",\"type\":\"Integer\",\"eclType\":\"integer8\",\"displayType\":\"\",\"displaySize\":\"\",\"textJustification\":\"right\",\"format\":\"\",\"isPCI\":\"false\",\"isPII\":\"false\",\"isHIPAA\":\"false\",\"required\":\"false\",\"description\":\"\"},{\"id\":26,\"name\":\"prevactive\",\"type\":\"Integer\",\"eclType\":\"integer8\",\"displayType\":\"\",\"displaySize\":\"\",\"textJustification\":\"right\",\"format\":\"\",\"isPCI\":\"false\",\"isPII\":\"false\",\"isHIPAA\":\"false\",\"required\":\"false\",\"description\":\"\"},{\"id\":27,\"name\":\"recovered\",\"type\":\"Integer\",\"eclType\":\"integer8\",\"displayType\":\"\",\"displaySize\":\"\",\"textJustification\":\"right\",\"format\":\"\",\"isPCI\":\"false\",\"isPII\":\"false\",\"isHIPAA\":\"false\",\"required\":\"false\",\"description\":\"\"},{\"id\":28,\"name\":\"cases7dma\",\"type\":\"Real\",\"eclType\":\"real8\",\"displayType\":\"\",\"displaySize\":\"\",\"textJustification\":\"right\",\"format\":\"\",\"isPCI\":\"false\",\"isPII\":\"false\",\"isHIPAA\":\"false\",\"required\":\"false\",\"description\":\"\"},{\"id\":29,\"name\":\"deaths7dma\",\"type\":\"Real\",\"eclType\":\"real8\",\"displayType\":\"\",\"displaySize\":\"\",\"textJustification\":\"right\",\"format\":\"\",\"isPCI\":\"false\",\"isPII\":\"false\",\"isHIPAA\":\"false\",\"required\":\"false\",\"description\":\"\"},{\"id\":30,\"name\":\"cfr\",\"type\":\"Real\",\"eclType\":\"decimal5_3\",\"displayType\":\"\",\"displaySize\":\"\",\"textJustification\":\"right\",\"format\":\"\",\"isPCI\":\"false\",\"isPII\":\"false\",\"isHIPAA\":\"false\",\"required\":\"false\",\"description\":\"\"},{\"id\":31,\"name\":\"adjcumcases\",\"type\":\"Integer\",\"eclType\":\"integer8\",\"displayType\":\"\",\"displaySize\":\"\",\"textJustification\":\"right\",\"format\":\"\",\"isPCI\":\"false\",\"isPII\":\"false\",\"isHIPAA\":\"false\",\"required\":\"false\",\"description\":\"\"},{\"id\":32,\"name\":\"adjcumdeaths\",\"type\":\"Integer\",\"eclType\":\"integer8\",\"displayType\":\"\",\"displaySize\":\"\",\"textJustification\":\"right\",\"format\":\"\",\"isPCI\":\"false\",\"isPII\":\"false\",\"isHIPAA\":\"false\",\"required\":\"false\",\"description\":\"\"},{\"id\":33,\"name\":\"adjprevcases\",\"type\":\"Integer\",\"eclType\":\"integer8\",\"displayType\":\"\",\"displaySize\":\"\",\"textJustification\":\"right\",\"format\":\"\",\"isPCI\":\"false\",\"isPII\":\"false\",\"isHIPAA\":\"false\",\"required\":\"false\",\"description\":\"\"},{\"id\":34,\"name\":\"adjprevdeaths\",\"type\":\"Integer\",\"eclType\":\"integer8\",\"displayType\":\"\",\"displaySize\":\"\",\"textJustification\":\"right\",\"format\":\"\",\"isPCI\":\"false\",\"isPII\":\"false\",\"isHIPAA\":\"false\",\"required\":\"false\",\"description\":\"\"},{\"id\":35,\"name\":\"caseadjustment\",\"type\":\"Integer\",\"eclType\":\"integer8\",\"displayType\":\"\",\"displaySize\":\"\",\"textJustification\":\"right\",\"format\":\"\",\"isPCI\":\"false\",\"isPII\":\"false\",\"isHIPAA\":\"false\",\"required\":\"false\",\"description\":\"\"},{\"id\":36,\"name\":\"deathsadjustment\",\"type\":\"Integer\",\"eclType\":\"integer8\",\"displayType\":\"\",\"displaySize\":\"\",\"textJustification\":\"right\",\"format\":\"\",\"isPCI\":\"false\",\"isPII\":\"false\",\"isHIPAA\":\"false\",\"required\":\"false\",\"description\":\"\"},{\"id\":37,\"name\":\"vacc_daily_dist\",\"type\":\"Integer\",\"eclType\":\"integer8\",\"displayType\":\"\",\"displaySize\":\"\",\"textJustification\":\"right\",\"format\":\"\",\"isPCI\":\"false\",\"isPII\":\"false\",\"isHIPAA\":\"false\",\"required\":\"false\",\"description\":\"\"},{\"id\":38,\"name\":\"vacc_daily_admin\",\"type\":\"Integer\",\"eclType\":\"integer8\",\"displayType\":\"\",\"displaySize\":\"\",\"textJustification\":\"right\",\"format\":\"\",\"isPCI\":\"false\",\"isPII\":\"false\",\"isHIPAA\":\"false\",\"required\":\"false\",\"description\":\"\"},{\"id\":39,\"name\":\"vacc_daily_people\",\"type\":\"Integer\",\"eclType\":\"integer8\",\"displayType\":\"\",\"displaySize\":\"\",\"textJustification\":\"right\",\"format\":\"\",\"isPCI\":\"false\",\"isPII\":\"false\",\"isHIPAA\":\"false\",\"required\":\"false\",\"description\":\"\"},{\"id\":40,\"name\":\"vacc_daily_complete\",\"type\":\"Integer\",\"eclType\":\"integer8\",\"displayType\":\"\",\"displaySize\":\"\",\"textJustification\":\"right\",\"format\":\"\",\"isPCI\":\"false\",\"isPII\":\"false\",\"isHIPAA\":\"false\",\"required\":\"false\",\"description\":\"\"}]",
+                            "deletedAt": null
+                        }
+                    ],
+                    "file_licenses": [],
+                    "file_validations": [],
+                    "groups": [],
+                    "dataflows": []
+                }
+            ],
+            "indexes": [],
+            "queries": [],
+            "jobs": [
+                {
+                    "author": null,
+                    "contact": null,
+                    "description": "## Testsss",
+                    "ecl": "#WORKUNIT('name', 'Produce_Daily_Stats');\r\n\r\nIMPORT Std;\r\nIMPORT $.USPopulationFiles as pop;\r\nIMPORT $.Types2 AS Types;\r\nIMPORT $ AS COVID19;\r\nIMPORT COVID19.Paths;\r\n\r\ninputRec := Types.inputRec;\r\nstatsRec := Types.statsRec;\r\n\r\nCalcStats := COVID19.CalcStats;\r\n\r\nminSpreadingInfections := 500;\r\n\r\n// Read Input Superfiles\r\nL1InputDat := DATASET(Paths.InputLevel1, inputRec, THOR);\r\nL2InputDat := DATASET(Paths.InputLevel2, inputRec, THOR);\r\n//OUTPUT(L2InputDat(date > 20200629), ALL, NAMED('L2Input'));\r\n// We need to roll up the input data, L2 Rollup = Rollup(L3);  L1 Rollup = Rollup(L2 Rollup + L2) ;  It does not work well to rollup the stats.  We need to run\r\n// stats on the rolled up inputs.\r\nL3InputDat := DATASET(Paths.InputLevel3, inputRec, THOR);\r\nL2InputRollup0 := TABLE(L3InputDat, {Country, Level2, date, totCases := SUM(GROUP, cumCases), totDeaths := SUM(GROUP, cumDeaths), totPopulation := SUM(GROUP, population),\r\n                          tot_vacc_dist := SUM(GROUP, vacc_total_dist), tot_vacc_admin := SUM(GROUP, vacc_total_admin), \r\n                          tot_vacc_ppl := SUM(GROUP, vacc_total_people),\r\n                          tot_vacc_complete := SUM(GROUP, vacc_people_complete)}, Country, Level2, date);\r\nL2InputRollup := PROJECT(L2InputRollup0, TRANSFORM(inputRec,\r\n                        SELF.country := LEFT.country,\r\n                        SELF.Level2 := LEFT.Level2,\r\n                        SELF.Level3 := '',\r\n                        SELF.cumCases := LEFT.totCases,\r\n                        SELF.cumDeaths := LEFT.totDeaths,\r\n                        SELF.population := LEFT.totPopulation,\r\n                        SELF.vacc_total_dist := LEFT.tot_vacc_dist,\r\n                        SELF.vacc_total_admin := LEFT.tot_vacc_admin,\r\n                        SELF.vacc_total_people := LEFT.tot_vacc_ppl,\r\n                        SELF.vacc_people_complete := LEFT.tot_vacc_complete,\r\n                        SELF.FIPS := '',\r\n                        SELF.date := LEFT.date));\r\n//OUTPUT(L2InputRollup, ALL, NAMED('L2InputRollup'));\r\n//OUTPUT(L2InputDat, ALL, NAMED('L2InputDat'));\r\nL1InputRollup0 := JOIN(L2InputRollup, L2InputDat, LEFT.Country = RIGHT.Country AND LEFT.Level2 = RIGHT.Level2 AND LEFT.date = RIGHT.date, TRANSFORM(RECORDOF(LEFT),\r\n                  SELF := IF(LEFT.country != '', LEFT, RIGHT)), FULL OUTER);\r\nL1InputRollup1 := TABLE(L1InputRollup0, {Country, date, totCases := SUM(GROUP, cumCases), totDeaths := SUM(GROUP, cumDeaths), totPopulation := SUM(GROUP, population),\r\n                          tot_vacc_dist := SUM(GROUP, vacc_total_dist), tot_vacc_admin := SUM(GROUP, vacc_total_admin), \r\n                          tot_vacc_ppl := SUM(GROUP, vacc_total_people),\r\n                          tot_vacc_complete := SUM(GROUP, vacc_people_complete)}, Country, date);\r\n                          \r\nL1InputRollup := PROJECT(L1InputRollup1, TRANSFORM(inputRec,\r\n                        SELF.country := LEFT.country,\r\n                        SELF.Level2 := '',\r\n                        SELF.Level3 := '',\r\n                        SELF.cumCases := LEFT.totCases,\r\n                        SELF.cumDeaths := LEFT.totDeaths,\r\n                        SELF.population := LEFT.totPopulation,\r\n                        SELF.vacc_total_dist := LEFT.tot_vacc_dist,\r\n                        SELF.vacc_total_admin := LEFT.tot_vacc_admin,\r\n                        SELF.vacc_total_people := LEFT.tot_vacc_ppl,\r\n                        SELF.vacc_people_complete := LEFT.tot_vacc_complete,\r\n                        SELF.FIPS := '',\r\n                        SELF.date := LEFT.date));\r\n// Start with the Level 3 Stats\r\nL3Stats := CalcStats.DailyStats(L3InputDat, 3);\r\n\r\nOUTPUT(L3Stats, , Paths.StatsLevel3, Thor, OVERWRITE);\r\n//OUTPUT(L3Stats[..10000], ALL, NAMED('L3Stats'));\r\n\r\n// Now the Level 2 Stats based on L2 input\r\nL2Stats := CalcStats.DailyStats(L2InputDat, 2, noFilter := FALSE);\r\n//OUTPUT(L2Stats(date >= 20210101), ALL, NAMED('L2Stats'));\r\n\r\n// Run the stats based on the L2 Input Rollup\r\n//L2Rollup := CalcStats.RollupStats(L3Stats, 2);\r\nL2Rollup := CalcStats.DailyStats(L2InputRollup, 2);\r\n//OUTPUT(L2Rollup(Country = 'INDIA'), ALL, NAMED('L2Rollup'));\r\n\r\n// Merge the L2 Stats and the L2 Rollup.  Favor the rollup stats\r\n// when there are overlaps.\r\nL2Merged := CalcStats.MergeStats(L2Rollup, L2Stats, 2);  // Merge at Level 2\r\nOUTPUT(L2Merged, , Paths.StatsLevel2, Thor, OVERWRITE);\r\n//OUTPUT(L2Merged(date > 20200531), ALL, NAMED('L2Merged'));\r\n\r\n// Calculate L1 Stats from L1 source data\r\nL1Stats := CalcStats.DailyStats(L1InputDat, 1, noFilter := FALSE);\r\n//OUTPUT(L1Stats, ALL, NAMED('L1Stats'));\r\n// Also calculate the stats based on the L1 Input Rollup.\r\n//L1Rollup := CalcStats.RollupStats(L2Merged, 1);\r\nL1Rollup := CalcStats.DailyStats(L1InputRollup, 1);\r\n//OUTPUT(L1Rollup, ALL, NAMED('L1Rollup'));\r\n\r\n// Merge the L1 Stats and the L1 Rollup.  Favor the rollup stats\r\n// when things overlap\r\nL1Merged := CalcStats.MergeStats(L1Rollup, L1Stats, 1);\r\n\r\nOUTPUT(L1Merged, , Paths.StatsLevel1, Thor, OVERWRITE);\r\n\r\n// Rollup the L1 Stats to L0 (The World).\r\nL0Stats0 := CalcStats.RollupStats(L1Merged, 0);\r\n// Call merge, even though there's nothing to merge with, since some stats get recomputed there.\r\nL0Stats := CalcStats.MergeStats(L0Stats0, DATASET([], statsRec), 0);\r\nOUTPUT(L0Stats, , Paths.StatsLevel0, Thor, OVERWRITE);\r\n\r\n\r\nimport $.^.scheduler.utils;\r\nutils.runOrPublishByName('Produce_Daily_Stats', 'RUN');",
+                    "entryBWR": "Produce_Daily_Stats",
+                    "gitRepo": null,
+                    "jobType": "Job",
+                    "title": "Produce_Daily_Stats bb",
+                    "name": "Produce_Daily_Stats",
+                    "cluster_id": "b2c55b36-3871-48ec-bf10-0be7fde0e62c",
+                    "scriptPath": null,
+                    "sprayFileName": "",
+                    "sprayDropZone": null,
+                    "sprayedFileScope": null,
+                    "deletedAt": null,
+                    "jobfiles": [
+                        {
+                            "job_id": "b167a183-0e6b-4ce5-919d-ddda35492479",
+                            "file_type": "output",
+                            "name": "hpccsystems::covid19::file::public::stats::level0.flat",
+                            "description": null,
+                            "file_id": "59c8c8f3-9c54-4655-8f94-1168dfe2bc8c",
+                            "deletedAt": null
+                        },
+                        {
+                            "job_id": "b167a183-0e6b-4ce5-919d-ddda35492479",
+                            "file_type": "input",
+                            "name": "hpccsystems::covid19::file::input::level3",
+                            "description": null,
+                            "file_id": "d93574c7-1edf-4399-9f45-69b90ddfd999",
+                            "deletedAt": null
+                        },
+                        {
+                            "job_id": "b167a183-0e6b-4ce5-919d-ddda35492479",
+                            "file_type": "input",
+                            "name": "hpccsystems::covid19::file::input::level2",
+                            "description": null,
+                            "file_id": "4fd08fd3-b24e-414c-927d-b7ed006d910d",
+                            "deletedAt": null
+                        },
+                        {
+                            "job_id": "b167a183-0e6b-4ce5-919d-ddda35492479",
+                            "file_type": "output",
+                            "name": "hpccsystems::covid19::file::public::stats::level2.flat",
+                            "description": null,
+                            "file_id": "17fca44e-7e1b-4b6c-bc85-ab2bea7da9e9",
+                            "deletedAt": null
+                        },
+                        {
+                            "job_id": "b167a183-0e6b-4ce5-919d-ddda35492479",
+                            "file_type": "input",
+                            "name": "hpccsystems::covid19::file::public::stats::level1.flat",
+                            "description": null,
+                            "file_id": "327861b1-5612-4086-a496-12f2d29039c3",
+                            "deletedAt": null
+                        },
+                        {
+                            "job_id": "b167a183-0e6b-4ce5-919d-ddda35492479",
+                            "file_type": "input",
+                            "name": "hpccsystems::covid19::file::input::level1",
+                            "description": null,
+                            "file_id": "996c76bc-9c82-48ac-a629-c0a2e583d55a",
+                            "deletedAt": null
+                        },
+                        {
+                            "job_id": "b167a183-0e6b-4ce5-919d-ddda35492479",
+                            "file_type": "output",
+                            "name": "hpccsystems::covid19::file::public::stats::level3.flat",
+                            "description": null,
+                            "file_id": "4c2d9f03-515b-45de-876a-c534508dc8f7",
+                            "deletedAt": null
+                        },
+                        {
+                            "job_id": "b167a183-0e6b-4ce5-919d-ddda35492479",
+                            "file_type": "output",
+                            "name": "hpccsystems::covid19::file::public::stats::level1.flat",
+                            "description": null,
+                            "file_id": "327861b1-5612-4086-a496-12f2d29039c3",
+                            "deletedAt": null
+                        }
+                    ],
+                    "jobparams": [],
+                    "groups": [
+                        {
+                            "id": 44,
+                            "name": "a",
+                            "description": "",
+                            "parent_group": "45"
+                        }
+                    ],
+                    "dataflows": [],
+                    "dependsOnJobs": []
+                },
+                {
+                    "author": null,
+                    "contact": null,
+                    "description": "",
+                    "ecl": "#WORKUNIT('name', 'hpccsystems_covid19_query_travel_form');\n\nIMPORT hpccsystems.covid19.file.public.TravelForm as travelForm;\nIMPORT hpccsystems.covid19.file.public.OxCGRT as ds;\nIMPORT Std;\n\n_stateFilter := 'states':STORED('statesFilter');\n\nnameRec := RECORD\n    STRING iata;\n    STRING name;\n    STRING city;\n    STRING state;\n    STRING country;\n    STRING latitude;\n    STRING longitude;\nEND;\n\nlayout := RECORD\n    STRING CountryName;\n    STRING CountryCode;\n    STRING RegionName;\n    STRING RegionCode;\n    STRING Jurisdiction;\n    STRING Date;\n    END;\n    \nten := layout;\neleven := nameRec;\n\nOUTPUT(ds);\n\n                    \n\n",
+                    "entryBWR": "hpccsystems_covid19_query_travel_form",
+                    "gitRepo": null,
+                    "jobType": "Job",
+                    "title": "hpccsystems_covid19_query_travel_form",
+                    "name": "hpccsystems_covid19_query_travel_form",
+                    "cluster_id": "b2c55b36-3871-48ec-bf10-0be7fde0e62c",
+                    "scriptPath": null,
+                    "sprayFileName": "",
+                    "sprayDropZone": null,
+                    "sprayedFileScope": null,
+                    "deletedAt": null,
+                    "jobfiles": [
+                        {
+                            "job_id": "f6baa794-5994-4d2f-b2b7-5d1c691c37bb",
+                            "file_type": "input",
+                            "name": "hpccsystems::covid19::file::public::oxcgrt::v2::oxcgrt.flat",
+                            "description": null,
+                            "file_id": null,
+                            "deletedAt": null
+                        }
+                    ],
+                    "jobparams": [],
+                    "groups": [
+                        {
+                            "id": 44,
+                            "name": "a",
+                            "description": "",
+                            "parent_group": "45"
+                        }
+                    ],
+                    "dataflows": [],
+                    "dependsOnJobs": []
+                }
+            ],
+            "dataflow": [
+                {
+                    "title": "Test",
+                    "description": null,
+                    "input": null,
+                    "output": null,
+                    "clusterId": "8feb0264-8b78-4282-92d4-fdd679ebb477",
+                    "type": "main",
+                    "deletedAt": null,
+                    "dataflowgraph": {
+                        "nodes": "[{\"title\":\"level3.flat\",\"id\":\"4c2d9f03-515b-45de-876a-c534508dc8f7\",\"x\":1016,\"y\":463,\"type\":\"File\",\"fileId\":\"4c2d9f03-515b-45de-876a-c534508dc8f7\"}]",
+                        "edges": "[]",
+                        "dataflowId": "637316fe-27d0-454d-931c-e6f017586110",
+                        "deletedAt": null
+                    }
+                }
+            ]
+        }
+    }
+}
