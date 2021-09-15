@@ -49,7 +49,6 @@ function DataflowAssetsTable({applicationId, selectedDataflow, user, application
   }
 
   const fetchDataflowGraph = () => {
-    console.log("<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<< Fetching dataflow data")
     return new Promise((resolve, reject) => {
       fetch("/api/dataflowgraph?application_id="+applicationId+"&dataflowId="+selectedDataflow.id, {
         headers: authHeader()

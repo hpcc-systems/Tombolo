@@ -42,7 +42,6 @@ router.post('/save', [
   body('application_id')
     .isUUID(4).withMessage('Invalid application id'),
 ], async (req, res) => {
-  console.log("<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<< Save data flow graph")
     const errors = validationResult(req).formatWith(validatorUtil.errorFormatter);
     if (!errors.isEmpty()) {
       return res.status(422).json({ success: false, errors: errors.array() });
@@ -91,21 +90,21 @@ let updateNodeNameAndTitle = async (nodes) => {
     try {
       for(const node of nodes) {
         switch (node.type) {
-          case 'File': 
+          case 'File' && node.fileId: 
             let file = await File.findOne({where: {id: node.fileId}});
             if(file) {              
               node.name = file.name;
               node.title = file.title;
             }
             break;
-          case 'Job': 
+          case 'Job' && node.jobId: 
             let job = await Job.findOne({where: {id: node.jobId}});
             if(job) {
               node.name = job.name;
               node.title = job.title;              
             }
             break;
-          case 'Index': 
+          case 'Index' && node.indexId: 
             let index = await Index.findOne({where: {id: node.indexId}});
             if(index) {
               node.name = index.name;
@@ -130,26 +129,29 @@ router.get('/', [
   query('dataflowId')
     .isUUID(4).withMessage('Invalid dataflow id'),
 ], (req, res) => {
-  console.log("<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<")
     const errors = validationResult(req).formatWith(validatorUtil.errorFormatter);
     if (!errors.isEmpty()) {
       return res.status(422).json({ success: false, errors: errors.array() });
     }
 
-    console.log("<<<<<<<<<<<<<<<<<<<< [graph] - Get graph list for app_id = " + req.query.application_id , "<<<<<<<<<<<<<<<<< dataflow id ", req.query.dataflowId);
     try {
       let nodes = [];
       DataflowGraph.findOne({
         where:{"application_Id":req.query.application_id, "dataflowId":req.query.dataflowId},
         raw: true
       }).then(async function(graph) {
-        console.log("<<<<<<<<<<<<<<<<<<<<<<<<< Graph ", graph)
-        let nodesWithNames = await updateNodeNameAndTitle(JSON.parse(graph.nodes));        
-        graph.nodes = JSON.stringify(nodesWithNames);
-        res.json(graph);
+        if(graph){
+          let nodesWithNames = await updateNodeNameAndTitle(JSON.parse(graph.nodes));        
+          graph.nodes = JSON.stringify(nodesWithNames);
+          return res.json(graph);
+        }else{
+          //If there is no graph
+         //return res.status(200).json({message : "No Graph"})
+         res.json(graph)
+        }
       })
       .catch(function(err) {
-          console.log(err);
+          res.status(400).json({message: "Unable to fetch the graph", error: err})
       });
     } catch (err) {
         console.log('err', err);
