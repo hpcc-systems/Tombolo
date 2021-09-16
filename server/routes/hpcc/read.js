@@ -660,7 +660,7 @@ router.post('/executeSprayJob', [
 // Drop Zone file upload namespace
 io.of("landingZoneFileUpload").on("connection", (socket) => {
 	let cluster, destinationFolder, dropZone;
-
+	
 	//Receive cluster and destination folder info when client clicks upload
 	socket.on('start-upload', message=> {
 		cluster = JSON.parse(message.cluster);
@@ -671,6 +671,13 @@ io.of("landingZoneFileUpload").on("connection", (socket) => {
 
 	//Upload File 
 	const upload = (cluster, destinationFolder, id ,fileName) =>{
+		//Check file ext
+		let fileExtenstion = fileName.substr(fileName.lastIndexOf('.') + 1).toLowerCase();
+		if(fileExtenstion !== "csv" && fileExtenstion !== "json"){
+			socket.emit('file-upload-response', {success : false, message :"Invalid file type"});
+			return;
+		}
+
 		fileStream = fs.createReadStream('uploads/' + fileName)
 		request({
 			url : `${cluster.thor_host}:${cluster.thor_port}/FileSpray/UploadFile.json?upload_&rawxml_=1&NetAddress=${machine}&OS=2&Path=/var/lib/HPCCSystems/${dropZone}/${destinationFolder}`,
