@@ -45,13 +45,13 @@ exports.fileInfo = (applicationId, file_id) => {
                 file_id: file_id,
                 fields: JSON.stringify(fileLayout)
               }
-            }).then((dbFileLayout) => {
+            }).then(async (dbFileLayout) => {
               let fileLayoutId = dbFileLayout[0].id;
               //console.log(fileLayout);
               if(!dbFileLayout[1]) {
                 console.log("updating file layout")
                 console.log(fileLayout.length)
-                return FileLayout.update({fields:JSON.stringify(fileLayout)}, {where: {application_id:applicationId, file_id: file_id}});
+                await FileLayout.update({fields:JSON.stringify(fileLayout)}, {where: {application_id:applicationId, file_id: file_id}});
               }
             })
           }

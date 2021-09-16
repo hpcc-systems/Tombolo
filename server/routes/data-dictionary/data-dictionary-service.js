@@ -1,6 +1,5 @@
 const express = require('express');
 const router = express.Router();
-let mongoose = require('mongoose');
 var models  = require('../../models');
 let DataDictionary = models.datadictionary;
 const validatorUtil = require('../../utils/validator');
