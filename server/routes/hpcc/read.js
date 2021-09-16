@@ -184,9 +184,7 @@ router.post('/newcluster', [
   body('id').optional({checkFalsy:true}).isUUID(4).withMessage('Invalid id')
 	], async function (req, res) {
 		const errors = validationResult(req).formatWith(validatorUtil.errorFormatter);
-		console.log("NEW cluster <<<<<<<<<<<<<<<<<<<<<<<<<<<<<", req.body.name)
     if (!errors.isEmpty()) {
-		console.log("<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<", errors)
       return res.status(422).json({ success: false, errors: errors.array() });
     }
     try {

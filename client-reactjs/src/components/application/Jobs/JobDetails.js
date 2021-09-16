@@ -642,7 +642,6 @@ class JobDetails extends Component {
   }
 
   handleOk = async () => {
-    console.log("Handling OK <<<<<<<<<<<<<<<<< - 1")
     this.setState({
       confirmLoading: true,
     });
@@ -707,7 +706,6 @@ class JobDetails extends Component {
   };
 
   saveJobDetails() {
-    console.log("<<<<<<<<<<<<<<<<<<<<< 2. Saving a job")
     let _self = this;
     return new Promise((resolve) => {
       fetch("/api/job/saveJob", {
