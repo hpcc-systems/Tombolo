@@ -412,18 +412,21 @@ router.post('/importApp', [
   body('creator')
     .matches(/^[a-zA-Z]{1}[a-zA-Z0-9_:.\-]*$/).withMessage('Invalid creator'),
 ], upload.single("file"), function (req, res) {
-    // const  io = req.app.get('socketio');
-    const fileName = req.file.filename;
-    const isFileNameValid = /^[a-zA-Z0-9,]*[.]{0,1}[a-zA-Z,]*$/.test(fileName)
-    if(!isFileNameValid){
-      return res.status(500).json({ success: false, message: "Error occured while importing application" });
+
+    const{ filename, originalname, mimetype} = req.file; 
+    console.log("<<<<<<<<< ",  filename, originalname, mimetype)
+    
+     const isFileNameValid = /^[a-zA-Z0-9,(\)-_ ]*[.]{0,1}[a-zA-Z,(\)-_]*$/.test(filename);
+    if(!isFileNameValid || mimetype !== "application/json"){
+      emitUpdates(io, {step : "ERR - Invalid file name or type", status:"error"})
+      return res.status(500).json({ success: false, message: "Invalid file name or format" });
     }
-    fs.readFile(`uploads/${fileName}`, (err,data) => {
+    fs.readFile(`uploads/${filename}`, (err,data) => {
     if(err){
       return res.status(500).json({ success: false, message: "Error occured while importing application" });
     }else{
       emitUpdates(io, {step : "Extracting data", status : "normal"})
-      let parsedData = validateJSON(data, `uploads/${fileName}` )
+      let parsedData = validateJSON(data, `uploads/${filename}` )
       if(parsedData === "error"){
         emitUpdates(io, {step : "ERR - extracting data", status:"error"})
         res.status(404).send({success: false, message: "Unable to read file uploaded. Data must be in JSON format"});

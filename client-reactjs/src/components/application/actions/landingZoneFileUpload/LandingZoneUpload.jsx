@@ -276,6 +276,7 @@ useEffect(() =>{
     // Start by sending some file details to server
     socket.emit('start-upload', {destinationFolder, cluster, machine, dropZone : JSON.parse(selectedDropZone)?.name});
     files.map(item => {
+      console.log("File Type <<<<<<<<<<<<<<<<<< ", item.name)
       if(item.size <= 1000000){
          let reader = new FileReader();
          reader.readAsArrayBuffer(item);
