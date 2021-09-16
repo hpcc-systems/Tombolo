@@ -642,6 +642,7 @@ class JobDetails extends Component {
   }
 
   handleOk = async () => {
+    console.log("Handling OK <<<<<<<<<<<<<<<<< - 1")
     this.setState({
       confirmLoading: true,
     });
@@ -706,6 +707,7 @@ class JobDetails extends Component {
   };
 
   saveJobDetails() {
+    console.log("<<<<<<<<<<<<<<<<<<<<< 2. Saving a job")
     let _self = this;
     return new Promise((resolve) => {
       fetch("/api/job/saveJob", {
@@ -1614,7 +1616,7 @@ class JobDetails extends Component {
             <div className="loader">
               <Spin spinning={this.state.initialDataLoading} size="large" />
             </div>) : null}
-          <Form {...formItemLayout} labelAlign="left" ref={this.formRef} onFinish={this.handleOk} >
+          <Form {...formItemLayout} labelAlign="left" ref={this.formRef}>
           <Tabs defaultActiveKey="1" tabBarExtraContent = {this.props.displayingInModal ? null : controls }>
 
           <TabPane tab="Basic" key="1">
