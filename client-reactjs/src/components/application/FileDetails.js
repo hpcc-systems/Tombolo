@@ -523,7 +523,6 @@ class FileDetails extends PureComponent {
         handleError(response);
       })
       .then((fileInfo) => {
-        console.log("<<<<<<<<<<<<<<<<<<<<<<<<<<<< File info", fileInfo)
         if (fileInfo && fileInfo.basic.groups) {
           if (
             fileInfo.basic.groups.filter(
@@ -555,8 +554,6 @@ class FileDetails extends PureComponent {
           },
         });
 
-        console.log("<<<<<<<<<<<<<<<<<<<<<<< Path ", fileInfo.basic.pathMask)
-
         this.formRef.current.setFieldsValue({
           title: fileInfo.basic.name.substring(
             fileInfo.basic.name.lastIndexOf("::") + 2
@@ -566,7 +563,6 @@ class FileDetails extends PureComponent {
           scope: fileInfo.basic.scope,
           serviceURL: fileInfo.basic.serviceUrl,
           qualifiedPath: fileInfo.basic.pathMask,
-          //<<<<<<<<<<<<<<<<<
           owner: fileInfo.basic.owner,
           consumer: fileInfo.basic.consumer,
           supplier: fileInfo.basic.supplier,
@@ -1522,7 +1518,6 @@ class FileDetails extends PureComponent {
                 </Form.Item>
                 <Row type="flex">
                   <Col span={8} order={1}>
-                    {console.log("<<<<<<<<<<<< Qualified Path ", this.state.qualifiedPath)}
                     <Form.Item
                       label="Path"
                       name="qualifiedPath"

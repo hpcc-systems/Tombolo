@@ -1614,7 +1614,7 @@ class JobDetails extends Component {
             <div className="loader">
               <Spin spinning={this.state.initialDataLoading} size="large" />
             </div>) : null}
-          <Form {...formItemLayout} labelAlign="left" ref={this.formRef} onFinish={this.handleOk} >
+          <Form {...formItemLayout} labelAlign="left" ref={this.formRef}>
           <Tabs defaultActiveKey="1" tabBarExtraContent = {this.props.displayingInModal ? null : controls }>
 
           <TabPane tab="Basic" key="1">

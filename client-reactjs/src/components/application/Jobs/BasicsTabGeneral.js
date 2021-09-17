@@ -197,7 +197,7 @@ function BasicsTabGeneral({enableEdit, editingAllowed, addingNewAsset, jobType, 
               {jobType != 'Spray' ? 
               <React.Fragment>
               <Form.Item label="Entry BWR" name="entryBWR" rules={[{
-                  pattern: new RegExp(/^[a-zA-Z0-9:$._]*$/),
+                  pattern: new RegExp(/^[a-zA-Z0-9:$._-]*$/),
                   message: 'Please enter a valid BWR',
               }]}>
                   {enableEdit ?
