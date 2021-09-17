@@ -261,17 +261,17 @@ class Applications extends Component {
   	const { confirmLoading} = this.state;
   	const applicationColumns = [
     {
-      width: '20%',
+      width: '10%',
       title: 'Title',
       dataIndex: 'title'
     }, {
-      width: '20%',
+      width: '30%',
       title: 'Description',
       dataIndex: 'description',
       className: 'overflow-hidden',
       ellipsis: true,
-      render: (text, record) => {const converter = new showdown.Converter(); return converter.makeHtml(text).replace(/<[^>]*>/g, "")} 
-    }, {
+      render: (text, record) =>  <span className="description-text"><ReactMarkdown children={text} /></span>
+  }, {
       width: '10%',
       title: 'Created By',
       dataIndex: 'creator'
@@ -331,7 +331,7 @@ class Applications extends Component {
           columns={applicationColumns}
           rowKey={record => record.id}
           dataSource={this.state.applications}
-          pagination={this.state.applications.length > 10 ? {pageSize: 10}: false}
+          pagination={this.state.applications?.length > 10 ? {pageSize: 10}: false}
           />
 
       </div>

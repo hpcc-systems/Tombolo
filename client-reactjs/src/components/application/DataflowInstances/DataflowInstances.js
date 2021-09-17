@@ -161,7 +161,9 @@ class DataflowInstances extends Component {
         className: 'overflow-hidden',
         ellipsis: true,
         width: '30%',
-        render: (text, record) => <ReactMarkdown children={text} />
+        // render: (text, record) => <ReactMarkdown children={text} />
+        render: (text, record) =>  <span className="description-text"><ReactMarkdown children={text} /></span>
+
       },
       {
         title: 'Created',
