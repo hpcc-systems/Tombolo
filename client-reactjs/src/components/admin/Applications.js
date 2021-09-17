@@ -270,7 +270,6 @@ class Applications extends Component {
       dataIndex: 'description',
       className: 'overflow-hidden',
       ellipsis: true,
-      // render: (text, record) =>  <span className="description-text"><ReactMarkdown children={text} /></span>
       render: (text, record) =>  <span className="description-text"><ReactMarkdown children={text} /></span>
   }, {
       width: '10%',
