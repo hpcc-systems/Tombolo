@@ -794,7 +794,10 @@ div.tooltip {
   display: flex;
   flex-direction: column;
   align-items: flex-start;
-  padding-top: 5px;
+  padding: 5px 0px 0px 6px;
+}
+ReactMarkdown *{
+  text-align: left !important;
 }
 
 .read-only-markdown > * {

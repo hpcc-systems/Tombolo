@@ -862,15 +862,7 @@ router.post('/visualization', [
     if(file && file.cluster_id) {
       cluster = await Cluster.findOne({where: {id: file.cluster_id}});
     }
-    console.log(cluster)
-    if(cluster) {
-      bodyObj.cluster = {
-        name: cluster.name,
-        host: cluster.thor_host,
-        infoPort: cluster.thor_port,
-        dataPort: cluster.roxie_port,
-      }
-    }
+    console.log(cluster);    
     
     bodyObj = {
       user: { 
@@ -881,6 +873,15 @@ router.post('/visualization', [
       dashboardName: (file && file.name) ? file.name : req.body.fileName,
       editingAllowed: req.body.editingAllowed
     };
+
+    if(cluster) {
+      bodyObj.cluster = {
+        name: cluster.name,
+        host: cluster.thor_host,
+        infoPort: cluster.thor_port,
+        dataPort: cluster.roxie_port,
+      }
+    }
 
     console.log(bodyObj);
 

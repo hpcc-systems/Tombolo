@@ -77,7 +77,7 @@ function DataflowDetails({props}) {
               />
             </TabPane>
             <TabPane tab="Assets" key="2" >
-            <span style={{display: "flex", placeItems: "center", justifyContent: "center", paddingBottom: "5px" , height: "100vh"}}>
+            <span style={{display: "flex", placeItems: "center", justifyContent: "center", paddingBottom: "5px"}}>
               <DataflowAssetsTable
                 applicationId={dataflowReducer.applicationId}
                 selectedDataflow={dataflowReducer.dataflowId}

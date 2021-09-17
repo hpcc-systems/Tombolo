@@ -180,7 +180,7 @@ router.get('/getCluster', function (req, res) {
 
 
 router.post('/newcluster', [
-  body('name').matches(/^[a-zA-Z0-9]{1}[a-zA-Z0-9_:.\-]*$/).withMessage('Invalid name'),
+  body('name').matches(/^[a-zA-Z0-9_:\s\-]*$/).withMessage('Invalid name'),
   body('id').optional({checkFalsy:true}).isUUID(4).withMessage('Invalid id')
 	], async function (req, res) {
 		const errors = validationResult(req).formatWith(validatorUtil.errorFormatter);

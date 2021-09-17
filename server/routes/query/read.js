@@ -1,6 +1,5 @@
 const express = require('express');
 const router = express.Router();
-let mongoose = require('mongoose');
 var models  = require('../../models');
 let Query = models.query;
 let QueryField = models.query_field;
