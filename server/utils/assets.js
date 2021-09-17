@@ -20,7 +20,7 @@ let Index = models.indexes;
 const hpccUtil = require('./hpcc-util');
 let Sequelize = require('sequelize');
 const path = require('path');
-const { exec } = require('child_process');
+const {execFile, spawn} = require('child_process');
 
 exports.fileInfo = (applicationId, file_id) => {
   var results={};
@@ -179,8 +179,12 @@ exports.executeScriptJob = (jobId) => {
   try {
     return new Promise(async (resolve, reject) => {
       let scriptJob = await Job.findOne({where: {id: jobId}, attributes: {exclude: ['assetId']}});
-      let scriptPath = path.join(__dirname, '..', scriptJob.scriptPath), scriptRootFolder = path.dirname(scriptPath);
-      exec(scriptPath, {cwd: scriptRootFolder}, (err, stdout, stderr) => {
+      let scriptName = scriptJob.scriptPath && scriptJob.scriptPath.indexOf(' ') != -1 ? scriptJob.scriptPath.substr(0, scriptJob.scriptPath.indexOf(' ')) : scriptJob.scriptPath;
+      let scriptParams = scriptJob.scriptPath && scriptJob.scriptPath.indexOf(' ') != -1 ? scriptJob.scriptPath.substr(scriptJob.scriptPath.indexOf(' ') + 1) : '';
+      let scriptPath = path.join(__dirname, '../scripts', scriptName), scriptRootFolder = path.dirname(scriptPath);
+      let cmd = process.platform == 'win32' ? 'cmd.exe' : 'sh';
+      execFile(cmd, [scriptPath, scriptParams], {cwd: scriptRootFolder}, (err, stdout, stderr) => {
+        console.log(stdout)
         if (err) {
           reject(err)
         }
@@ -188,7 +192,7 @@ exports.executeScriptJob = (jobId) => {
           reject(stderr);
         }
         resolve(stdout);
-      });                  
+      });
     })
   }catch (err) {
     Promise.reject(err)

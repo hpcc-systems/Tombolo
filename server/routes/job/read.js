@@ -890,7 +890,7 @@ router.post('/executeJob', [
       .isUUID(4).withMessage('Invalid job id'),
   body('applicationId')
       .isUUID(4).withMessage('Invalid application id'),
-  body('dataflowId')
+  body('dataflowId').optional({ checkFalsy: true })
       .isUUID(4).withMessage('Invalid dataflow id'),
   body('jobName')
     .matches(/^[a-zA-Z]{1}[a-zA-Z0-9_.\-:]*$/).withMessage('Invalid job name'),
