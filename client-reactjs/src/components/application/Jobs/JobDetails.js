@@ -1666,7 +1666,7 @@ class JobDetails extends Component {
                     rules={[
                       {
                         required: true,
-                        pattern: new RegExp(/^[a-zA-Z0-9:$._/ '~]*$/),
+                        pattern: new RegExp(/[a-zA-Z~`_'\"\.-]+$/i),
                         message: "Please enter a valid path",
                       },
                     ]}

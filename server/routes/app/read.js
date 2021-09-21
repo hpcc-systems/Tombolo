@@ -184,6 +184,10 @@ let allPromises = [];
 
 // Remove file
 const removeFile = (filePath) => {
+  const isFileNameValid = /^[a-zA-Z0-9/]*$/.test(filePath);
+  if(!isFileNameValid){
+    emitUpdates(io, {step : "ERR - Invalid file name or type", status:"error"})
+  }
     fs.unlink(filePath, (err) =>{
       if(err){
         console.log("Error Deleting file", err)
@@ -413,14 +417,14 @@ router.post('/importApp', [
     .matches(/^[a-zA-Z]{1}[a-zA-Z0-9_:.\-]*$/).withMessage('Invalid creator'),
 ], upload.single("file"), function (req, res) {
 
-    const{ filename, originalname, mimetype} = req.file; 
-    console.log("<<<<<<<<< ",  filename, originalname, mimetype)
-    
-     const isFileNameValid = /^[a-zA-Z0-9,(\)-_ ]*[.]{0,1}[a-zA-Z,(\)-_]*$/.test(filename);
+    const{ filename, originalname, mimetype} = req.file;     
+    const isFileNameValid = /^[a-zA-Z0-9,(\)-_ ]*[.]{0,1}[a-zA-Z,(\)-_]*$/.test(filename);
     if(!isFileNameValid || mimetype !== "application/json"){
+      removeFile(`uploads/${filename}`)
       emitUpdates(io, {step : "ERR - Invalid file name or type", status:"error"})
       return res.status(500).json({ success: false, message: "Invalid file name or format" });
     }
+
     fs.readFile(`uploads/${filename}`, (err,data) => {
     if(err){
       return res.status(500).json({ success: false, message: "Error occured while importing application" });

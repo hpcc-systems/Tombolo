@@ -23,6 +23,7 @@ import { store } from "../../../redux/store/Store";
 import showdown from "showdown";
 import SelectDetailsForPdfDialog from "../Assets/pdf/SelectDetailsForPdfDialog";
 import { getNestedAssets} from "../Assets/pdf/downloadPdf";
+import ReactMarkdown from "react-markdown"
 
 function AssetsTable({ selectedGroup, openGroup, handleEditGroup, refreshGroups }) {
   const [assets, setAssets] = useState([]);
@@ -78,17 +79,7 @@ function AssetsTable({ selectedGroup, openGroup, handleEditGroup, refreshGroups 
         }
         handleError(response);
       })
-      .then((data) => {
-        //Converting Markdown to plain text
-        const converter = new showdown.Converter();
-        data.map((item) =>
-          item.description
-            ? (item.description = converter
-                .makeHtml(item.description)
-                .replace(/<[^>]*>/g, ""))
-            : ""
-        );
-        
+      .then((data) => {  
         if(componentAlive){
           setAssets(data);
         }
@@ -331,9 +322,7 @@ function AssetsTable({ selectedGroup, openGroup, handleEditGroup, refreshGroups 
       dataIndex: "description",
       width: "25%",
       ellipsis: true,
-      render: (text, record) => {
-        return text ? text.split("\n")[0] : "";
-      },
+      render: (text, record) =>  <span className="description-text"><ReactMarkdown children={text} /></span>
     },
     {
       title: "Type",
