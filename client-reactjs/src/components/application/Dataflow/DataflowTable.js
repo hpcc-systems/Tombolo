@@ -34,6 +34,7 @@ function DataflowTable({data, applicationId, onSelectDataflow, onDataFlowUpdated
   }
 
   const handleEditDataflow = (selectedDataflow) => {
+    console.log("<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<< Editing dataflow")
     onDataFlowEdit(selectedDataflow, "read");
   }
 

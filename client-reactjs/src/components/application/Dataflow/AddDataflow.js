@@ -38,12 +38,12 @@ function AddDataflow({action, actionType, isShowing, toggle, applicationId, onDa
 
   //Get action from props and set to local state
   useEffect(() => {
-    console.log("Running this set state <<<<<<<<<<< ", actionType )
-    setFormAction("cow")
-  }, [])
+    console.log("<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<", action)
+    setFormAction(action)
+  }, [action])
 
   const formItemLayout = 
-    action !== "view" ? {
+    action !== "reads" ? {
     labelCol: {
       xs: { span: 2 },
       sm: { span: 8 },
@@ -163,15 +163,28 @@ function AddDataflow({action, actionType, isShowing, toggle, applicationId, onDa
 	  </span>
 	  <div>
       <Modal
-          title={action === "addNew" ? "Add Dataflow" : "Edit Dataflow"}
+          title="Dataflow"
           onOk={handleAddAppOk}
           onCancel={handleAddAppCancel}
           visible={isShowing}
           confirmLoading={form.confirmLoading}
           destroyOnClose={true}
+          footer={[
+            <Button key="submit" type="primary"  >
+              Cancel
+            </Button>,
+            <Button
+              key="link"
+              href="https://google.com"
+              type="primary"
+              
+            >
+              Search on Google
+            </Button>,
+          ]}
         >
 	        <Form 
-          layout={action === "view" ? "horizontal" : "vertical"} 
+          layout={action === "reads" ? "horizontal" : "vertical"} 
           form={formObj} onFinish={handleAddAppOk}>
 	            <div className={'form-group' + (form.submitted && !dataFlow.title ? ' has-error' : '')}>
 		            <Form.Item  label="Title" {...formItemLayout}
@@ -188,13 +201,13 @@ function AddDataflow({action, actionType, isShowing, toggle, applicationId, onDa
                     placeholder="Title" 
                     value={dataFlow.title} 
                     onPressEnter={handleAddAppOk}
-                    className={action === "view" ? "read-only-input" : ""}
+                    className={action === "reads" ? "read-only-input" : ""}
                   />
 
 		          </Form.Item>
 	            </div>
 	            <Form.Item label="Description" {...formItemLayout}>
-                {action === "view" ? <div> <ReactMarkdown className="read-only-markdown"children={dataFlow.description} /> </div> :
+                {action === "reads" ? <div> <ReactMarkdown className="read-only-markdown"children={dataFlow.description} /> </div> :
                 <MarkdownEditor 
                   id="description" 
                   name="description" 
@@ -205,7 +218,7 @@ function AddDataflow({action, actionType, isShowing, toggle, applicationId, onDa
 
 	            </Form.Item>
               <Form.Item {...formItemLayout} label="Cluster">
-                {action === "view" ? <span> {whitelistedClusters.map(item =>{if( item.id === clusterSelected){return item.name;}} )} </span> : 
+                {action === "reads" ? <span> {whitelistedClusters.map(item =>{if( item.id === clusterSelected){return item.name;}} )} </span> : 
                 <Select placeholder="Select a Cluster" onChange={onClusterSelection} style={{ width: 290 }} value={clusterSelected}>
                   {whitelistedClusters.map(cluster => <Option key={cluster.id}>{cluster.name}</Option>)}
                 </Select>
