@@ -1,5 +1,5 @@
 import React, { Component } from "react";
-import { Table, Button, Row, Col, Modal, Form, Input, notification, Tooltip, Popconfirm, Divider, message } from 'antd/lib';
+import { Table, Button, Row, Col, Modal, Form, Input, notification, Tooltip, Popconfirm, Divider, message, Radio } from 'antd/lib';
 import BreadCrumbs from "../common/BreadCrumbs";
 import { authHeader, handleError } from "../common/AuthHeader.js";
 import { hasAdminRole } from "../common/AuthUtil.js";
@@ -27,7 +27,8 @@ class Applications extends Component {
   	newApp : {
 	  	id: '',
 	  	title: '',
-      description:''
+      description:'',
+      visibility: 'Private'
   },
   openShareAppDialog:false,
   appId:"",
@@ -93,7 +94,8 @@ class Applications extends Component {
           ...this.state.newApp,
           id : data.id,
           title: data.title,
-          description: data.description
+          description: data.description,
+          visibility: data.visibility ? data.visibility : 'Private'
         }
       });
       this.setState({
@@ -156,7 +158,8 @@ class Applications extends Component {
         ...this.state.newApp,
         id : '',
         title: '',
-        description:''
+        description:'',
+        visibility: 'Private'
       },
       showAddApp: false
     });
@@ -167,6 +170,7 @@ class Applications extends Component {
   }
 
   onChange = (e) => {
+    console.log(e.target.value);
     this.setState({...this.state,confirmLoading:false, newApp: {...this.state.newApp, [e.target.name]: e.target.value }});
   }
 
@@ -192,13 +196,15 @@ class Applications extends Component {
         "title" : this.state.newApp.title,
         "description" : this.state.newApp.description,
         "user_id":userId,
-        "creator":this.props.user.username});
+        "creator":this.props.user.username,
+        "visibility": this.state.newApp.visibility
+      });
 
-    	  fetch("/api/app/read/newapp", {
-          method: 'post',
-          headers: authHeader(),
-          body: data
-        }).then((response) => {
+    	fetch("/api/app/read/newapp", {
+        method: 'post',
+        headers: authHeader(),
+        body: data
+      }).then((response) => {
         if(response.ok) {
           return response.json();
         }
@@ -221,7 +227,8 @@ class Applications extends Component {
             ...this.state.newApp,
             id : '',
             title: '',
-            description:''
+            description:'',
+            visibility: 'Private'
           },
           showAddApp: false,
           confirmLoading: false,
@@ -358,6 +365,13 @@ class Applications extends Component {
             <Form.Item {...formItemLayout} label="Description">
               <MarkdownEditor id="app_description" name="description" onChange={this.onChange} targetDomId="AppDescr" value={this.state.newApp.description}/>
             </Form.Item>
+            
+            <Form.Item {...formItemLayout} label="Visibility">
+              <Radio.Group onChange={this.onChange} name="visibility" value={this.state.newApp.visibility}>
+                <Radio value={'Private'}>Private</Radio>
+                <Radio value={'Public'}>Public</Radio>
+              </Radio.Group>
+            </Form.Item>  
           </Form>
         </Modal>
       </div>
