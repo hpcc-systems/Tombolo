@@ -10,13 +10,6 @@ var eventsInstance = require('events');
 const validatorUtil = require('../../utils/validator');
 const { body, query, validationResult } = require('express-validator');
 var fileInstanceEventEmitter = new eventsInstance.EventEmitter();
-console.log('fileinstance - kafka list: '+process.env.KAFKA_HOST_NAME + ':' + process.env.KAFKA_PORT);
-var kafka = require('kafka-node'),
-    Producer = kafka.Producer;
-    //HighLevelProducer = kafka.HighLevelProducer,
-    //client = new kafka.KafkaClient({kafkaHost: process.env.KAFKA_ADVERTISED_LISTENER+':'+process.env.KAFKA_PORT}),
-    //producer = new Producer(client),
-    //KeyedMessage = kafka.KeyedMessage;
 
 router.post('/create', (req, res) => {
     console.log("[file_instance create] ");
