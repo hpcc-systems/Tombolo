@@ -1478,7 +1478,7 @@ class FileDetails extends PureComponent {
                   />
                 </Form.Item>
 
-                <Form.Item label="Description" name="description">
+                <Form.Item label="Description" name="description"  className="markdown-editor">
                   {this.state.enableEdit ? (
                     <MarkdownEditor
                       id="file_desc"
@@ -1487,6 +1487,7 @@ class FileDetails extends PureComponent {
                       targetDomId="fileDescr"
                       value={description}
                       disabled={!editingAllowed}
+                     
                     />
                   ) : (
                     <div className="read-only-markdown">

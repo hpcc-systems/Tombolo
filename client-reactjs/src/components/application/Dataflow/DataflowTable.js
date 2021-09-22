@@ -5,7 +5,7 @@ import { hasEditPermission } from "../../common/AuthUtil.js";
 import { Constants } from '../../common/Constants';
 import { useSelector } from "react-redux";
 import ReactMarkdown from 'react-markdown';
-import { DeleteOutlined, EditOutlined, QuestionCircleOutlined } from '@ant-design/icons';
+import { DeleteOutlined, EyeOutlined, QuestionCircleOutlined } from '@ant-design/icons';
 import showdown from "showdown";
 import useModal from '../../../hooks/useModal';
 
@@ -34,7 +34,7 @@ function DataflowTable({data, applicationId, onSelectDataflow, onDataFlowUpdated
   }
 
   const handleEditDataflow = (selectedDataflow) => {
-    onDataFlowEdit(selectedDataflow, "editExisting");
+    onDataFlowEdit(selectedDataflow, "read");
   }
 
   const handleDataflowDelete = (id) => {
@@ -98,7 +98,7 @@ function DataflowTable({data, applicationId, onSelectDataflow, onDataFlowUpdated
     className: editingAllowed ? "show-column" : "hide-column",
     render: (text, record) =>
       <span>
-        <a href="#" onClick={(row) => handleEditDataflow(record)}><Tooltip placement="right" title={"Edit Dataflow"}><EditOutlined /></Tooltip></a>
+        <a onClick={(row) => handleEditDataflow(record)}><Tooltip placement="right" title={"Edit Dataflow"}><EyeOutlined /></Tooltip></a>
         <Divider type="vertical" />
         <Popconfirm title="Are you sure you want to delete this Dataflow and it's associated graph?" onConfirm={() => handleDataflowDelete(record.id)} icon={<QuestionCircleOutlined/>}>
           <a href="#"><Tooltip placement="right" title={"Delete Dataflow"}><DeleteOutlined /></Tooltip></a>

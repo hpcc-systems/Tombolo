@@ -773,6 +773,7 @@ div.tooltip {
   resize: none;
   height: auto;
   width: 100%;
+  padding-left: 0;
 }
 
 .read-only-textarea {
@@ -794,7 +795,7 @@ div.tooltip {
   display: flex;
   flex-direction: column;
   align-items: flex-start;
-  padding: 5px 0px 0px 6px;
+  padding: 5px 0px 0px 0px;
 }
 ReactMarkdown *{
   text-align: left !important;
@@ -909,3 +910,13 @@ h6 {
   display: inline;
 }
 
+.CodeMirror {
+  width: 100% !important;
+}
+.CodeMirror *{
+  width: 100% !important;
+}
+
+.nav-link > .fa{
+  font-size: 1.33333333em;
+}
