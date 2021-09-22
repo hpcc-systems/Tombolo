@@ -10,7 +10,8 @@ module.exports = (sequelize, DataTypes) => {
     },
     title: DataTypes.STRING,
     description: DataTypes.TEXT,
-    creator: DataTypes.STRING
+    creator: DataTypes.STRING,
+    visibility: DataTypes.STRING
   }, {paranoid: true, freezeTableName: true});
   application.associate = function(models) {
     application.hasMany(models.user_application,{
