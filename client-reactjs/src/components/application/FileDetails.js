@@ -84,6 +84,7 @@ class FileDetails extends PureComponent {
     enableEdit: false,
     editing: false,
     dataAltered: false,
+    errors: false
   };
 
   dataTypes = [];
@@ -1258,7 +1259,6 @@ class FileDetails extends PureComponent {
               disabled={!this.state.file.id || !editingAllowed}
               type="danger"
               onClick={this.handleDelete}
-              style={{marginRight: "5px", background: 'var(--danger)', color: 'var(--light)'}}
             >
               Delete
             </Button>
@@ -1267,7 +1267,7 @@ class FileDetails extends PureComponent {
             </Button>
             <Button
               key="submit"
-              disabled={!editingAllowed}
+              disabled={!editingAllowed || this.state.errors}
               type="primary"
               loading={confirmLoading}
               onClick={this.handleOk}
@@ -1285,7 +1285,7 @@ class FileDetails extends PureComponent {
                 </Button>
                 <Button
                   key="submit"
-                  disabled={!editingAllowed}
+                  disabled={!editingAllowed || this.state.errors}
                   type="primary"
                   loading={confirmLoading}
                   onClick={this.handleOk}
@@ -1306,6 +1306,16 @@ class FileDetails extends PureComponent {
         </span>
   </div>
 
+      //When input input field value is changed
+      const onFieldsChange = (changedFields, allFields) => {
+      this.setState({dataAltered : true})
+      const inputErrors = allFields.filter(item => { return item.errors.length > 0} )
+      if(inputErrors.length > 0){
+        this.setState({errors : true})
+      }else{
+        this.setState({errors: false})
+      }
+      }
     return (
       <React.Fragment>
         {this.props.displayingInModal || this.state.addingNewAsset ? null : (
@@ -1328,6 +1338,7 @@ class FileDetails extends PureComponent {
                 labelAlign="left"
                 ref={this.formRef}
                 onFinish={this.handleOk}
+                onFieldsChange={onFieldsChange}
               >
                  {this.state.enableEdit ? (
                   <div>

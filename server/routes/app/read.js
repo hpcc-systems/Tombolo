@@ -56,15 +56,24 @@ router.get('/appListByUserId', (req, res) => {
   console.log("[app/read.js] -  Get app list for user id ="+ req.query.user_id);
 
   try {
-    models.application.findAll({where:{
-      [Op.or]: [
-        {"$user_id$":req.query.user_id},
-        {"$user_id$": req.query.user_name}
-      ]
-    }, order: [['updatedAt', 'DESC']],
-    include: [UserApplication]
-        }).then(function(applications) {
-        res.json(applications);
+    models.application.findAll({
+      where:{
+        [Op.or]: [{
+            'visibility': 'Public'
+          },
+          {
+            [Op.or]: [
+              {"$user_id$":req.query.user_id},
+              {"$user_id$": req.query.user_name}
+            ]
+          }
+        ],
+      }, 
+      order: [['updatedAt', 'DESC']],
+      include: [UserApplication]
+    }).then(async function(applications) {
+      
+      res.json(applications);
     })
     .catch(function(err) {
       console.log(err);
@@ -112,6 +121,8 @@ router.post('/newapp', [
     .optional({checkFalsy:true}),
   body('creator')
     .matches(/^[a-zA-Z]{1}[a-zA-Z0-9_:.\-]*$/).withMessage('Invalid creator'),
+    body('creator')
+    .matches(/^[a-zA-Z]/).withMessage('Invalid visibility'),
 ],function (req, res) {
   const errors = validationResult(req).formatWith(validatorUtil.errorFormatter);
   if (!errors.isEmpty()) {
@@ -119,17 +130,24 @@ router.post('/newapp', [
   }
   try {
     if(req.body.id == '') {
-      models.application.create({"title":req.body.title, "description":req.body.description, "creator": req.body.creator}).then(function(application) {
-        if(req.body.user_id)
+      models.application.create({
+        "title":req.body.title, 
+        "description":req.body.description, 
+        "creator": req.body.creator,
+        "visibility": req.body.visibility
+      }).then(function(application) {
+        if(req.body.user_id) {
           models.user_application.create({"user_id":req.body.user_id, "application_id":application.id}).then(function(userapp) {
+            res.json({"result":"success", "id": application.id});
+          });
+        }
+        else {
           res.json({"result":"success", "id": application.id});
-        });
-      else
-          res.json({"result":"success", "id": application.id});
-      });
+        }
+      })
     } else {
       models.application.update(req.body, {where:{id:req.body.id}}).then(function(result){
-          res.json({"result":"success", "id": result.id});
+        res.json({"result":"success", "id": result.id});
       })
     }
   } catch (err) {

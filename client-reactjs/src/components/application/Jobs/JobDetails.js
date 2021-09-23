@@ -174,6 +174,7 @@ class JobDetails extends Component {
     enableEdit: false,
     editing: false,
     dataAltered: false,
+    errors: false
   };
 
   componentDidMount() {
@@ -1560,7 +1561,7 @@ class JobDetails extends Component {
               <Button
                 key="submit"
                 htmlType="submit"
-                disabled={!editingAllowed}
+                disabled={!editingAllowed || this.state.errors}
                 type="primary"
                 loading={confirmLoading}
                 onClick={this.handleOk}
@@ -1579,7 +1580,7 @@ class JobDetails extends Component {
                 </Button>
                 <Button
                   key="submit"
-                  disabled={!editingAllowed}
+                  disabled={!editingAllowed || this.state.errors}
                   type="primary"
                   loading={confirmLoading}
                   onClick={this.handleOk}
@@ -1600,6 +1601,16 @@ class JobDetails extends Component {
       </span>
 
   </div>
+    //When input input field value is changed
+    const onFieldsChange = (changedFields, allFields) => {
+      this.setState({dataAltered : true})
+      const inputErrors = allFields.filter(item => { return item.errors.length > 0} )
+      if(inputErrors.length > 0){
+        this.setState({errors : true})
+      }else{
+        this.setState({errors: false})
+      }
+      }
 
     return (
       <React.Fragment>
@@ -1614,7 +1625,7 @@ class JobDetails extends Component {
             <div className="loader">
               <Spin spinning={this.state.initialDataLoading} size="large" />
             </div>) : null}
-          <Form {...formItemLayout} labelAlign="left" ref={this.formRef}>
+          <Form {...formItemLayout} labelAlign="left" ref={this.formRef} onFieldsChange={onFieldsChange}>
           <Tabs defaultActiveKey="1" tabBarExtraContent = {this.props.displayingInModal ? null : controls }>
 
           <TabPane tab="Basic" key="1">
