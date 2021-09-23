@@ -118,17 +118,6 @@ const Assets = () => {
   const groupsMoveReducer = useSelector((state) => state.groupsMoveReducer);
   const history = useHistory();
 
-  const formItemLayout = {
-    labelCol: {
-      xs: { span: 2 },
-      sm: { span: 10 },
-    },
-    wrapperCol: {
-      xs: { span: 4 },
-      sm: { span: 24 },
-    },
-  };
-
   const searchOptions = ["File", "Job", "Query", "Indexes", "Groups"];
 
   const [form] = Form.useForm();
@@ -731,6 +720,29 @@ const Assets = () => {
     setSelectDetailsforPdfDialogVisibility(false);
   };
 
+  //Layout for form
+  const formItemLayout = 
+  !readOnly ? {
+  labelCol: {
+    xs: { span: 2 },
+    sm: { span: 8 },
+  },
+  wrapperCol: {
+    xs: { span: 4 },
+    sm: { span: 24 },
+  }
+} : 
+{
+  labelCol: {
+    xs: { span: 3 },
+    sm: { span: 5 },
+  },
+  wrapperCol: {
+    xs: { span: 4 },
+    sm: { span: 24 },
+  }
+}
+
   return (
     <React.Fragment>
       <div style={{ height: "100%", overflow: "hidden" }}>
@@ -791,14 +803,14 @@ const Assets = () => {
 
       <div>
         <Modal
-          title={editing || readOnly ? "Edit Group" : "Create Group"}
+          title= "Group"
           onOk={handleCreateGroup}
           onCancel={closeCreateGroupDialog}
           visible={openCreateGroupDialog}
           destroyOnClose={true}
           maskClosable={false}
           width={520}
-          footer={readOnly ? <Button type="primary" onClick={handleEdit}>Edit</Button> : 
+          footer={readOnly ? <span><Button type="primary" onClick={handleEdit}>Edit</Button> <Button type="primary" ghost onClick={closeCreateGroupDialog}>Cancel</Button></span> : 
                             <span><Button type="primary" ghost onClick={closeCreateGroupDialog}>Cancel</Button> <Button type="primary" onClick={handleCreateGroup}>Save</Button></span>}>
           {/* <Form layout="vertical" form={form} onFinish={handleCreateGroup}>
             <div
@@ -809,9 +821,9 @@ const Assets = () => {
             > */}
           <Form
           form={form} onFinish={handleCreateGroup}  
-          layout={readOnly ? "inline" : "vertical"}
+          layout={readOnly ? "horizontal" : "vertical"}
           labelCol={{ span: 0 }}
-          wrapperCol={readOnly ? { span: 16} : {span : 30}}
+          className="GroupDialog"
           >
             <div
               className={
@@ -822,7 +834,7 @@ const Assets = () => {
               <Form.Item
                 label="Name : "
                 name="name"
-                style={{fontWeight: "bold"}}
+                {...formItemLayout}
                 rules={readOnly ? false : [
                   {
                     required: true,
@@ -846,10 +858,9 @@ const Assets = () => {
               </Form.Item>
             </div>
             <Form.Item
-              label="Description : "
+              label="Description"
               name="description"
-              style={{fontWeight: "bold"}}
-
+              {...formItemLayout}
             >
               <span style={{fontWeight: "normal"}}>
               {readOnly ? <ReactMarkdown className="read-only-markdown" children={newGroup.description}></ReactMarkdown> : 
