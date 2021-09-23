@@ -174,7 +174,7 @@ class JobDetails extends Component {
     enableEdit: false,
     editing: false,
     dataAltered: false,
-    errors: true
+    errors: false
   };
 
   componentDidMount() {
