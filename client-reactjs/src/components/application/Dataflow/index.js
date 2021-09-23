@@ -83,7 +83,6 @@ function Dataflow(props) {
   }
 
   const onDataFlowEdit = (selectedDataflow, action) => {
-    console.log("<<<<<<<<<<<<<<<<<<<<<<< Action sent from dataflow table", action)
   	setForm({
       selectedDataflow: selectedDataflow
     });
