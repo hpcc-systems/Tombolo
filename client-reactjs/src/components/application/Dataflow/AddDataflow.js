@@ -38,12 +38,11 @@ function AddDataflow({action, actionType, isShowing, toggle, applicationId, onDa
 
   //Get action from props and set to local state
   useEffect(() => {
-    console.log("<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<", action)
     setFormAction(action)
   }, [action])
 
   const formItemLayout = 
-    action !== "reads" ? {
+    formAction !== "read" ? {
     labelCol: {
       xs: { span: 2 },
       sm: { span: 8 },
@@ -54,8 +53,14 @@ function AddDataflow({action, actionType, isShowing, toggle, applicationId, onDa
     }
   } : 
   {
-          // labelCol: { span: 4 },
-          wrapperCol: { span: 14 },
+    labelCol: {
+      xs: { span: 3 },
+      sm: { span: 5 },
+    },
+    wrapperCol: {
+      xs: { span: 4 },
+      sm: { span: 24 },
+    }
   }
    
 
@@ -122,9 +127,9 @@ function AddDataflow({action, actionType, isShowing, toggle, applicationId, onDa
     }).then(function(data) {
       setForm({
 	      confirmLoading: false,
-	      submitted: false
+	      submitted: false,
 	    });
-
+      setFormAction("read")
 	    toggle();
 			clearForm();
 
@@ -135,13 +140,14 @@ function AddDataflow({action, actionType, isShowing, toggle, applicationId, onDa
   }
 
   const handleAddAppCancel = () => {
+    setFormAction("read")
   	toggle();
   }
 
   const openAddDataflowDlg = () => {
   	clearForm();
 		toggle();
-    actionType("addNew")
+    actionType("write")
   }
 
   const clearForm = () => {
@@ -153,6 +159,11 @@ function AddDataflow({action, actionType, isShowing, toggle, applicationId, onDa
   }
 
   const splCharacters = /[ `!@#$%^&*()+\=\[\]{};':"\\|,.<>\/?~]/;
+
+  //Handle Edit dataflow
+  const editDataflow = () =>{
+    setFormAction("write")
+  }
 
 	return (
 	  <React.Fragment>
@@ -170,22 +181,13 @@ function AddDataflow({action, actionType, isShowing, toggle, applicationId, onDa
           confirmLoading={form.confirmLoading}
           destroyOnClose={true}
           footer={[
-            <Button key="submit" type="primary"  >
-              Cancel
-            </Button>,
-            <Button
-              key="link"
-              href="https://google.com"
-              type="primary"
-              
-            >
-              Search on Google
-            </Button>,
+            <Button  type="primary" onClick={formAction ==="read" ? editDataflow : handleAddAppOk }> {formAction === "read" ? "Edit" : "Save"} </Button>,
+            <Button onClick={handleAddAppCancel}> Cancel </Button>,
           ]}
         >
 	        <Form 
-          layout={action === "reads" ? "horizontal" : "vertical"} 
-          form={formObj} onFinish={handleAddAppOk}>
+          layout={formAction === "read" ? "horizontal" : "vertical"} 
+          form={formObj} onFinish={handleAddAppOk} className="dataFlowDialog">
 	            <div className={'form-group' + (form.submitted && !dataFlow.title ? ' has-error' : '')}>
 		            <Form.Item  label="Title" {...formItemLayout}
                   rules={[{
@@ -201,13 +203,13 @@ function AddDataflow({action, actionType, isShowing, toggle, applicationId, onDa
                     placeholder="Title" 
                     value={dataFlow.title} 
                     onPressEnter={handleAddAppOk}
-                    className={action === "reads" ? "read-only-input" : ""}
+                    className={formAction === "read" ? "read-only-input" : ""}
                   />
 
 		          </Form.Item>
 	            </div>
 	            <Form.Item label="Description" {...formItemLayout}>
-                {action === "reads" ? <div> <ReactMarkdown className="read-only-markdown"children={dataFlow.description} /> </div> :
+                {formAction === "read" ? <div> <ReactMarkdown className="read-only-markdown"children={dataFlow.description} /> </div> :
                 <MarkdownEditor 
                   id="description" 
                   name="description" 
@@ -218,7 +220,7 @@ function AddDataflow({action, actionType, isShowing, toggle, applicationId, onDa
 
 	            </Form.Item>
               <Form.Item {...formItemLayout} label="Cluster">
-                {action === "reads" ? <span> {whitelistedClusters.map(item =>{if( item.id === clusterSelected){return item.name;}} )} </span> : 
+                {formAction === "read" ? <span> {whitelistedClusters.map(item =>{if( item.id === clusterSelected){return item.name;}} )} </span> : 
                 <Select placeholder="Select a Cluster" onChange={onClusterSelection} style={{ width: 290 }} value={clusterSelected}>
                   {whitelistedClusters.map(cluster => <Option key={cluster.id}>{cluster.name}</Option>)}
                 </Select>

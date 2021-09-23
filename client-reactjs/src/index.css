@@ -469,6 +469,14 @@ div.tooltip {
 .dataflow-tbl-wrapper {
 }
 
+.dataFlowDialog * {
+  text-align: left;
+}
+
+.GroupDialog *{
+  text-align:  left;
+}
+
 .dataflow-tbl-controls i {
   padding: 2px;
   position: relative;
