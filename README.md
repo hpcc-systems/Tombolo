@@ -27,13 +27,16 @@
 1. Clone repository
 2. Locate '.env-sample' file on the root directory and rename it to '.env'
 3. On that  '.env' file update the information below
-	1. MYSQL_ROOT_PASSWORD
-	2. secret *( You can generate a strong and unique string [here](https://www.grc.com/passwords.htm))*
-  3. AUTH_SERVICE_URL - *( Tombolo uses Auth Service for user authentication. An existing Auth Service can be used or you may set up Auth Service separately. 
+   1. HOST_NAME
+	1. DB_USERNAME
+	2. DB_PASSWORD
+	3. secret -  *( You can generate a strong and unique string [here](https://www.grc.com/passwords.htm))*
+   3. AUTH_SERVICE_URL - *( Tombolo uses Auth Service for user authentication. An existing Auth Service can be used or you may set up Auth Service separately. 
     You can find the Authservice setup instructions [here](https://github.com/hpcc-systems/Auth-Service). Once you have an instance of Authservice up and running, 
     update this value.)*
-  4. CERT_PATH - *(SSL certificate location only if SSL is enabled)*
-  5. KAFKA_HOST_NAME
+    4. AUTHSERVICE_TOMBOLO_CLIENT_ID - *(Unique id of Tombolo app in Auth Service. This will be used in the communication between Tombolo and AuthService)*
+   4. CERT_PATH - *(SSL certificate location only if you are using SSL)*
+   5. KAFKA_HOST_NAME
 4. If you are going to be running this application without SSL, locate 'nginx.conf.template' file located at 'client-reactjs/nginx/confd' and remove all SSL-related configuration. 
 4. Locate '.env' file on '/server' directory and rename it to '.env'
 5. Update the following information on that recently renamed '.env' file
