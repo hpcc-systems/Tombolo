@@ -388,8 +388,8 @@ exports.workunitInfo = async (wuid, clusterId) => {
         resolve(wuInfo);
       } else {
         setTimeout(_ => {
-          resolve(module.exports.workunitInfo(wuid, cluster));
-        }, 500);
+          resolve(module.exports.workunitInfo(wuid, clusterId));
+        }, 2000);
       }
     })
   });
@@ -502,7 +502,6 @@ exports.getCluster = (clusterId) => {
       }
       let isReachable = await module.exports.isClusterReachable(cluster.thor_host, cluster.thor_port, cluster.username, cluster.password);
       if(isReachable)	 {
-
         resolve(cluster);
       } else {
         reject("Cluster not reachable...")
