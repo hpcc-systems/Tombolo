@@ -73,36 +73,36 @@ class LeftNav extends Component {
           <div className="sidebar-sticky"  >
             <ul className="nav flex-column" >
               {/*<li className="nav-item">
-                <NavLink to={"/"+applicationId+"/data-dictionary"} className="nav-link" data-toggle="popover" tabIndex="1"><i className="fa fa-lg fa-table"></i> <span className={this.state.collapsed ? "d-none" : ""}>Data Dictionary</span></NavLink>
+                <NavLink to={"/"+applicationId+"/data-dictionary"} className="nav-link" data-toggle="popover" tabIndex="1"><i className="fa fa-fw fa-table"></i> <span className={this.state.collapsed ? "d-none" : ""}>Data Dictionary</span></NavLink>
               </li>*/}
               <li className="nav-item">
                 <NavLink to={"/"+applicationId+"/assets"} className="nav-link" data-toggle="popover" tabIndex="2">
-                  <i className="fa fa-lg fa-cubes"></i> <span className={this.state.collapsed ? "d-none" : "leftNav-link"}>Assets</span></NavLink>
+                  <i className="fa fa-fw fa-cubes"></i> <span className={this.state.collapsed ? "d-none" : "leftNav-link"}>Assets</span></NavLink>
               </li>
               {/*<li className="nav-item">
-                <NavLink to={"/"+applicationId+"/api"} className="nav-link" data-toggle="popover" tabIndex="4"><i className="fa fa-lg fa-rocket"></i> <span className={this.state.collapsed ? "d-none" : ""}>API</span></NavLink>
+                <NavLink to={"/"+applicationId+"/api"} className="nav-link" data-toggle="popover" tabIndex="4"><i className="fa fa-fw fa-rocket"></i> <span className={this.state.collapsed ? "d-none" : ""}>API</span></NavLink>
               </li>
               <li className="nav-item">
-                <NavLink to={"/"+applicationId+"/queries"} className="nav-link" data-toggle="popover" tabIndex="5"><i className="fa fa-lg fa-search"></i> <span className={this.state.collapsed ? "d-none" : ""}>Queries</span></NavLink>
+                <NavLink to={"/"+applicationId+"/queries"} className="nav-link" data-toggle="popover" tabIndex="5"><i className="fa fa-fw fa-search"></i> <span className={this.state.collapsed ? "d-none" : ""}>Queries</span></NavLink>
               </li>*/}
               {/* <li className="nav-item dropdown"> */}
-                {/* <a className="nav-link dropdown-toggle" href="#"><i className="fa fa-lg fa-random"></i> <span className={this.state.collapsed ? "d-none" : "leftNav-link"}>Workflow</span></a> */}
+                {/* <a className="nav-link dropdown-toggle" href="#"><i className="fa fa-fw fa-random"></i> <span className={this.state.collapsed ? "d-none" : "leftNav-link"}>Workflow</span></a> */}
                   <ul className="list-unstyled bg-dark text-light submenu level-1">
                   <li className="nav-item" >
                     <NavLink to={this.props.dataflowId.id ?  "/"+applicationId+"/dataflow/details" : "/"+applicationId+"/dataflow"} className="nav-link" data-toggle="popover" tabIndex="3">
-                    {/* <i className="fa fa-lg fa-clock-o"></i> */}
-                    <i className="fa fa-lg fa-random"></i>
+                    {/* <i className="fa fa-fw fa-clock-o"></i> */}
+                    <i className="fa fa-fw fa-random"></i>
                       <span className={this.state.collapsed ? "d-none" : "leftNav-link"}>Definitions</span>
                     </NavLink>
                   </li>
                   <li className="nav-item" >
                     <NavLink to={"/"+applicationId+"/dataflowinstances"} className="nav-link" data-toggle="popover" tabIndex="4">
-                      <i className="fa fa-lg fa-microchip"></i> <span className={this.state.collapsed ? "d-none" : "leftNav-link"}>Job Execution</span>
+                      <i className="fa fa-fw fa-microchip"></i> <span className={this.state.collapsed ? "d-none" : "leftNav-link"}>Job Execution</span>
                     </NavLink>
                   </li>
                   <li className="nav-item" >
                     <NavLink to={"/"+applicationId+"/actions"} className="nav-link" data-toggle="popover" tabIndex="5">
-                      <i className="fa fa-lg fa-telegram"></i> <span className={this.state.collapsed ? "d-none" : "leftNav-link"}>Actions</span>
+                      <i className="fa fa-fw fa-telegram"></i> <span className={this.state.collapsed ? "d-none" : "leftNav-link"}>Actions</span>
                     </NavLink>
                   </li>
                 </ul>
@@ -110,7 +110,7 @@ class LeftNav extends Component {
 
 
               {/*<li className="nav-item" >
-                <NavLink to={"/"+applicationId+"/chart"} className="nav-link" data-toggle="popover" tabIndex="5"><i className="fa fa-lg fa-bar-chart"></i> <span className={this.state.collapsed ? "d-none" : ""}>Report</span></NavLink>
+                <NavLink to={"/"+applicationId+"/chart"} className="nav-link" data-toggle="popover" tabIndex="5"><i className="fa fa-fw fa-bar-chart"></i> <span className={this.state.collapsed ? "d-none" : ""}>Report</span></NavLink>
               </li>*/}
             </ul>
             { canEdit ?
@@ -123,10 +123,10 @@ class LeftNav extends Component {
             </h6>
             <ul className="nav flex-column mb-2">
               <li className="nav-item">
-                <NavLink to={"/admin/clusters"} className="nav-link"><i className="fa fa-lg fa-server"></i><span className={this.state.collapsed ? "d-none" : "leftNav-link"}> Clusters</span></NavLink>
+                <NavLink to={"/admin/clusters"} className="nav-link"><i className="fa fa-fw fa-server"></i><span className={this.state.collapsed ? "d-none" : "leftNav-link"}> Clusters</span></NavLink>
               </li>
               <li className="nav-item">
-                <NavLink to={"/admin/consumers"} className="nav-link"><i className='fa fa-lg fa-user-circle'></i><span className={this.state.collapsed ? "d-none" : "leftNav-link"}> Collaborator</span></NavLink>
+                <NavLink to={"/admin/consumers"} className="nav-link"><i className='fa fa-fw fa-user-circle'></i><span className={this.state.collapsed ? "d-none" : "leftNav-link"}> Collaborator</span></NavLink>
               </li>
             </ul>
 
@@ -145,15 +145,15 @@ class LeftNav extends Component {
 
             <ul className="nav flex-column mb-2">
               {/*<li className="nav-item">
-                <NavLink to={"/admin/users"} className="nav-link"><i className="fa fa-lg fa-desktop"></i><span className={this.state.collapsed ? "d-none" : ""}> Users</span></NavLink>
+                <NavLink to={"/admin/users"} className="nav-link"><i className="fa fa-fw fa-desktop"></i><span className={this.state.collapsed ? "d-none" : ""}> Users</span></NavLink>
               </li>*/}
               <li className="nav-item">
-                <NavLink to={"/admin/applications"} className="nav-link"><i className="fa fa-lg fa-desktop"></i><span className={this.state.collapsed ? "d-none" : "leftNav-link"}> Applications</span></NavLink>
+                <NavLink to={"/admin/applications"} className="nav-link"><i className="fa fa-fw fa-desktop"></i><span className={this.state.collapsed ? "d-none" : "leftNav-link"}> Applications</span></NavLink>
               </li>
              
               {/*}
               <li className="nav-item">
-                <NavLink to={"/admin/controlsAndRegulations"} className="nav-link"><i className='fa fa-lg fa-address-card-o'></i><span className={this.state.collapsed ? "d-none" : ""}> Compliance</span></NavLink>
+                <NavLink to={"/admin/controlsAndRegulations"} className="nav-link"><i className='fa fa-fw fa-address-card-o'></i><span className={this.state.collapsed ? "d-none" : ""}> Compliance</span></NavLink>
               </li>*/}
             </ul>
             </React.Fragment>
