@@ -466,15 +466,8 @@ div.tooltip {
   pointer-events: none;
 }
 
-.dataflow-tbl-wrapper {
-}
-
-.dataFlowDialog * {
+.formInModal *{
   text-align: left;
-}
-
-.GroupDialog *{
-  text-align:  left;
 }
 
 .dataflow-tbl-controls i {
