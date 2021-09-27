@@ -187,7 +187,7 @@ function AddDataflow({action, actionType, isShowing, toggle, applicationId, onDa
         >
 	        <Form 
           layout={formAction === "read" ? "horizontal" : "vertical"} 
-          form={formObj} onFinish={handleAddAppOk} className="dataFlowDialog">
+          form={formObj} onFinish={handleAddAppOk} className="formInModal">
 	            <div className={'form-group' + (form.submitted && !dataFlow.title ? ' has-error' : '')}>
 		            <Form.Item  label="Title" {...formItemLayout}
                   rules={[{

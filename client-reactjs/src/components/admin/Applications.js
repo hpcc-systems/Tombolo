@@ -9,7 +9,7 @@ import { MarkdownEditor } from "../common/MarkdownEditor.js";
 import ShareApp from "./ShareApp";
 import ReactMarkdown from 'react-markdown';
 import { applicationActions } from '../../redux/actions/Application';
-import { DeleteOutlined, EditOutlined, QuestionCircleOutlined, ShareAltOutlined, ExportOutlined  } from '@ant-design/icons';
+import { DeleteOutlined, EyeOutlined, QuestionCircleOutlined, ShareAltOutlined, ExportOutlined  } from '@ant-design/icons';
 import ImportApplication from "./ImportApplication"
 import download from "downloadjs"
 import showdown from "showdown";
@@ -33,7 +33,8 @@ class Applications extends Component {
   openShareAppDialog:false,
   appId:"",
   appTitle:"",
-  submitted: false
+  submitted: false,
+  action : "read"
   }
 
   componentDidMount() {
@@ -300,7 +301,7 @@ class Applications extends Component {
           { (record.creator && record.creator == this.props.user.username) ?
             <React.Fragment>
               <Divider type="vertical" />
-              <a href="#" onClick={(row) => this.handleEditApplication(record.id)}><Tooltip placement="right" title={"Edit Application"}><EditOutlined /></Tooltip></a>
+              <a href="#" onClick={(row) => {this.handleEditApplication(record.id); this.setState({action : "read"})}}><Tooltip placement="right" title={"Edit Application"}><EyeOutlined /></Tooltip></a>
               <Divider type="vertical" />
               <a href="#" onClick={(row) => this.handleExportApplication(record.id, record.title)}><Tooltip placement="right" title={"Export Application"}><ExportOutlined /></Tooltip></a>
               <Divider type="vertical" />
@@ -311,7 +312,8 @@ class Applications extends Component {
           : null }
         </span>
     }];
-  const formItemLayout = {
+    const formItemLayout = 
+    this.state.action !== "read" ? {
     labelCol: {
       xs: { span: 2 },
       sm: { span: 8 },
@@ -319,8 +321,18 @@ class Applications extends Component {
     wrapperCol: {
       xs: { span: 4 },
       sm: { span: 24 },
+    }
+  } : 
+  {
+    labelCol: {
+      xs: { span: 3 },
+      sm: { span: 5 },
     },
-  };
+    wrapperCol: {
+      xs: { span: 4 },
+      sm: { span: 24 },
+    }
+  }
 
     return (
     <React.Fragment>
@@ -345,13 +357,13 @@ class Applications extends Component {
 
       <div>
 	      <Modal
-          title="Add Application"
+          title="Application"
           visible={this.state.showAddApp}
           onOk={this.handleAddAppOk.bind(this)}
           onCancel={this.handleAddAppCancel}
           confirmLoading={confirmLoading}
         >
-	        <Form layout="vertical">
+	        <Form layout={this.state.action === "read" ? "horizontal" : "vertical"} className="formInModal">
             <Form.Item {...formItemLayout} onFinish={this.handleAddAppOk.bind(this)} label="Title" rules={[
               {
                 required: true,
@@ -359,13 +371,21 @@ class Applications extends Component {
                 message: 'Invalid title!'
               }
             ]}>
-              <Input id="app_title" name="title" onChange={this.onChange} placeholder="Title" value={this.state.newApp.title} onPressEnter={this.handleAddAppOk.bind(this)}/>
+              <Input id="app_title" name="title" onChange={this.onChange} placeholder="Title" value={this.state.newApp.title} onPressEnter={this.handleAddAppOk.bind(this)} className={this.state.action === "read" ? "read-only-input" : ""}/>
             </Form.Item>
 
             <Form.Item {...formItemLayout} label="Description">
-              <MarkdownEditor id="app_description" name="description" onChange={this.onChange} targetDomId="AppDescr" value={this.state.newApp.description}/>
+              {/* <MarkdownEditor id="app_description" name="description" onChange={this.onChange} targetDomId="AppDescr" value={this.state.newApp.description}/> */}
+              {this.state.action === "read" ? <div> <ReactMarkdown className="read-only-markdown"children={this.state.newApp.description} /> </div> :
+                <MarkdownEditor 
+                  id="description" 
+                  name="description" 
+                  targetDomId="dataflowDescr" 
+                  onChange={this.onChange}
+                  value={this.state.newApp.description}
+                  />}
             </Form.Item>
-            
+
             <Form.Item {...formItemLayout} label="Visibility">
               <Radio.Group onChange={this.onChange} name="visibility" value={this.state.newApp.visibility}>
                 <Radio value={'Private'}>Private</Radio>

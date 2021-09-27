@@ -823,7 +823,7 @@ const Assets = () => {
           form={form} onFinish={handleCreateGroup}  
           layout={readOnly ? "horizontal" : "vertical"}
           labelCol={{ span: 0 }}
-          className="GroupDialog"
+          className="formInModal"
           >
             <div
               className={

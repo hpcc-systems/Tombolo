@@ -161,9 +161,8 @@ router.post('/removeapp', async function (req, res) {
     let dataflows = await Dataflow.findAll({where: {application_id: req.body.appIdsToDelete}, raw: true, attributes: ['id']});
     if(dataflows && dataflows.length > 0) {
       let dataflowIds = dataflows.map(dataflow => dataflow.id);
-
-      let assetsDataflows = await AssetsDataflows.destroy({where: {id: {[Sequelize.Op.in]:dataflowIds}}});
-      let dependantJobs = await DependentJobs.destroy({where: {id: {[Sequelize.Op.in]:dataflowIds}}});
+      let assetsDataflows = await AssetsDataflows.destroy({where: {dataflowId: {[Sequelize.Op.in]:dataflowIds}}})
+      let dependantJobs = await DependentJobs.destroy({where: {dataflowId: {[Sequelize.Op.in]:dataflowIds}}});
       let dataflowsDeleted = await Dataflow.destroy({where: {application_id: req.body.appIdsToDelete}});
     }
     
