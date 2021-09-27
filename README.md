@@ -19,7 +19,7 @@
     2. Inside '/client-reactjs' run *'npm install'*
 8. Now, under '/server' directory, run *'npx sequelize-cli db:migrate'*. This will create all the necessary tables on the database.
 9. Once the database tables are created, you will need to seed the tables with some  data. While still inside server directory run *'npx sequelize-cli db:seed:all'*.
-10. Tombolo is now ready for lunch on your local machine. Run *'nodemon server.js'* to spin up the server. Make sure you are still inside the '/server' directory when you run this command.
+10. Tombolo is now ready for launch on your local machine. Run *'nodemon server.js'* to spin up the server. Make sure you are still inside the '/server' directory when you run this command.
 11. Finally, on a separate terminal go to '/client-reactjs' directory and run *'npm start'*. This should open the client on your default browser. If a browser does not open, manually open it and go to 'localhost:3001'
 
 ----
