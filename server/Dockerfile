@@ -1,7 +1,7 @@
 FROM ubuntu:bionic
 
 COPY . app
-COPY [".env",  "/app/.env"]
+# COPY [".env",  "/app/.env"]
 
 WORKDIR app
 
