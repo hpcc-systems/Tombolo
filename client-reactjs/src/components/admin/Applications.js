@@ -146,7 +146,8 @@ class Applications extends Component {
   handleAdd = (event) => {
     this.resetFields();
     this.setState({
-      showAddApp: true
+      showAddApp: true,
+      action: "write"
     });
   }
 
@@ -155,6 +156,7 @@ class Applications extends Component {
       ...this.state,
       confirmLoading: false,
       submitted: false,
+      action : "read",
       newApp: {
         ...this.state.newApp,
         id : '',
@@ -241,6 +243,11 @@ class Applications extends Component {
         console.log(error);
       });
     }
+  }
+
+  //When edit btn is clicked
+   handleEdit = () =>{
+    this.setState({action : "write"})
   }
 
   handleExportApplication = (id, title) => {
@@ -359,38 +366,57 @@ class Applications extends Component {
 	      <Modal
           title="Application"
           visible={this.state.showAddApp}
-          onOk={this.handleAddAppOk.bind(this)}
+          // onOk={this.handleAddAppOk.bind(this)}
           onCancel={this.handleAddAppCancel}
           confirmLoading={confirmLoading}
-        >
+          footer={[
+            <Button  type="primary" onClick={this.state.action ==="read" ? this.handleEdit.bind(this) : this.handleAddAppOk.bind(this) }> {this.state.action === "read" ? "Edit" : "Save"} </Button>,
+            <Button onClick={this.handleAddAppCancel}> Cancel </Button>,
+          ]}
+          >
 	        <Form layout={this.state.action === "read" ? "horizontal" : "vertical"} className="formInModal">
-            <Form.Item {...formItemLayout} onFinish={this.handleAddAppOk.bind(this)} label="Title" rules={[
-              {
-                required: true,
-                pattern: new RegExp(/^[a-zA-Z]{1}[a-zA-Z0-9_:.\-]*$/),
-                message: 'Invalid title!'
-              }
+            <Form.Item {...formItemLayout} onFinish={this.handleAddAppOk.bind(this)} label="Title" 
+            // rules={[
+              // {
+              //   required: true,
+              //   pattern: new RegExp(/^[a-zA-Z]{1}[a-zA-Z0-9_:.\-]*$/),
+              //   message: 'Invalid title!'
+              // }
+              
+              rules={[
+                { required: true, message: "Please enter a title!" },
+                {
+                  pattern: new RegExp(/^[a-zA-Z]{1}[a-zA-Z0-9_:.\-]*$/),
+                  message: "Please enter a valid title. Title can have  a-zA-Z0-9:._- and space",
+                },
+              
             ]}>
               <Input id="app_title" name="title" onChange={this.onChange} placeholder="Title" value={this.state.newApp.title} onPressEnter={this.handleAddAppOk.bind(this)} className={this.state.action === "read" ? "read-only-input" : ""}/>
             </Form.Item>
 
+            {this.state.action === "read" ?
+            <Form.Item {...formItemLayout} label="Description" >
+                <ReactMarkdown className="read-only-markdown" children={this.state.newApp.description} />
+            </Form.Item>
+              :
             <Form.Item {...formItemLayout} label="Description">
-              {/* <MarkdownEditor id="app_description" name="description" onChange={this.onChange} targetDomId="AppDescr" value={this.state.newApp.description}/> */}
-              {this.state.action === "read" ? <div> <ReactMarkdown className="read-only-markdown"children={this.state.newApp.description} /> </div> :
-                <MarkdownEditor 
-                  id="description" 
+                 <MarkdownEditor 
+                  id="app_description" 
                   name="description" 
-                  targetDomId="dataflowDescr" 
+                  targetDomId="AppDescr" 
                   onChange={this.onChange}
                   value={this.state.newApp.description}
-                  />}
+                  />
             </Form.Item>
-
+          }
             <Form.Item {...formItemLayout} label="Visibility">
+              {this.state.action === "read" ? 
+              <Input value={this.state.newApp.visibility} className="read-only-input" /> : 
               <Radio.Group onChange={this.onChange} name="visibility" value={this.state.newApp.visibility}>
                 <Radio value={'Private'}>Private</Radio>
                 <Radio value={'Public'}>Public</Radio>
               </Radio.Group>
+              }
             </Form.Item>  
           </Form>
         </Modal>
