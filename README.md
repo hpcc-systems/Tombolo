@@ -36,15 +36,10 @@
     update this value.)*
     4. AUTHSERVICE_TOMBOLO_CLIENT_ID - *(Unique id of Tombolo app in Auth Service. This will be used in the communication between Tombolo and AuthService)*
    4. CERT_PATH - *(SSL certificate location only if you are using SSL)*
-   5. KAFKA_HOST_NAME
+   5. KAFKA_HOST_NAME 
+   6. EMAIL_SMTP_HOST
+   7. EMAIL_PORT
 4. If you are going to be running this application without SSL, locate 'nginx.conf.template' file located at 'client-reactjs/nginx/confd' and remove all SSL-related configuration. 
-4. Locate '.env' file on '/server' directory and rename it to '.env'
-5. Update the following information on that recently renamed '.env' file
-    1. DB_USERNAME
-    2. DB_PASSWORD
-    3. secret *(Same secret used above)*
-    4. EMAIL_SMTP_HOST
-    5. EMAIL_PORT
  6. Now from the root directory run *'docker-compose up -d'*. This will create and run all necessary containers.
  7. Once the build  successfully completes, the application will be accessible at *'http://<host_name>:<WEB_EXPOSED_PORT>'*
 
