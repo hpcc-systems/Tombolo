@@ -1662,7 +1662,7 @@ class JobDetails extends Component {
                 <TabPane tab="ECL" key="2">
                   <Form.Item {...eclItemLayout} label="ECL" name="ecl">
                     <EclEditor
-                      id="job_ecl"
+                      // id="job_ecl"
                       targetDomId="jobEcl"
                       disabled={true}
                     />
