@@ -375,14 +375,7 @@ class Applications extends Component {
           ]}
           >
 	        <Form layout={this.state.action === "read" ? "horizontal" : "vertical"} className="formInModal">
-            <Form.Item {...formItemLayout} onFinish={this.handleAddAppOk.bind(this)} label="Title" 
-            // rules={[
-              // {
-              //   required: true,
-              //   pattern: new RegExp(/^[a-zA-Z]{1}[a-zA-Z0-9_:.\-]*$/),
-              //   message: 'Invalid title!'
-              // }
-              
+            <Form.Item {...formItemLayout} onFinish={this.handleAddAppOk.bind(this)} label="Title"
               rules={[
                 { required: true, message: "Please enter a title!" },
                 {
@@ -391,7 +384,7 @@ class Applications extends Component {
                 },
               
             ]}>
-              <Input id="app_title" name="title" onChange={this.onChange} placeholder="Title" value={this.state.newApp.title} onPressEnter={this.handleAddAppOk.bind(this)} className={this.state.action === "read" ? "read-only-input" : ""}/>
+              <Input autoFocus={true} id="app_title" name="title" onChange={this.onChange} placeholder="Title" value={this.state.newApp.title} onPressEnter={this.handleAddAppOk.bind(this)} className={this.state.action === "read" ? "read-only-input" : ""}/>
             </Form.Item>
 
             {this.state.action === "read" ?

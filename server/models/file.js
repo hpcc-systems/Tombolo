@@ -10,7 +10,7 @@ module.exports = (sequelize, DataTypes) => {
     },
     application_id: DataTypes.STRING,
     title: DataTypes.STRING,
-    name: DataTypes.STRING,
+    name: DataTypes.STRING(500),
     cluster_id: DataTypes.STRING,
     description: DataTypes.TEXT,
     fileType: DataTypes.STRING,
@@ -20,7 +20,7 @@ module.exports = (sequelize, DataTypes) => {
     consumer: DataTypes.STRING,
     supplier: DataTypes.STRING,
     owner: DataTypes.STRING,
-    scope: DataTypes.STRING
+    scope: DataTypes.STRING(500)
   }, {paranoid: true, freezeTableName: true});
   file.associate = function(models) {
     file.hasMany(models.file_layout,{

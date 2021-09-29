@@ -487,7 +487,7 @@ router.post('/', [
   body('parentGroupId').optional({checkFalsy:true}).isInt().withMessage('Invalid parent group id'),
   body('id').optional({checkFalsy:true}).isInt().withMessage('Invalid id'),
   body('applicationId').isUUID(4).withMessage('Invalid application id'),
-  body('name').matches(/^[a-zA-Z0-9_.\-:]*$/).withMessage('Invalid Name')
+  body('name').matches(/^[a-zA-Z0-9_. \-:]*$/).withMessage('Invalid Name')
 ], async (req, res) => {
   const errors = validationResult(req).formatWith(validatorUtil.errorFormatter);
   if (!errors.isEmpty()) {
