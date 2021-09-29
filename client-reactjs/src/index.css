@@ -912,12 +912,6 @@ h6 {
   display: inline;
 }
 
-.CodeMirror {
-  width: 100% !important;
-}
-.CodeMirror *{
-  width: 100% !important;
-}
 
 .nav-link > .fa{
   font-size: 1.33333333em;

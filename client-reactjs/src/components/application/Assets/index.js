@@ -841,6 +841,7 @@ const Assets = () => {
                   id="name"
                   className={readOnly ? "read-only-input" : null}
                   name="name"
+                  autoFocus={true}
                   onChange={(e) =>
                     setNewGroup({
                       ...newGroup,

@@ -394,6 +394,7 @@ class AppHeader extends Component {
             </Button>
             ]}>
           <p className="float-left font-weight-bold">Tombolo v{process.env.REACT_APP_VERSION}</p>
+
         </Modal>
        </React.Fragment>
     )

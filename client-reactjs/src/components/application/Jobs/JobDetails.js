@@ -1660,9 +1660,10 @@ class JobDetails extends Component {
             {this.state.job.jobType != "Script" &&
               this.state.job.jobType != "Spray" ? (
                 <TabPane tab="ECL" key="2">
-                  <Form.Item {...eclItemLayout} label="ECL" name="ecl">
+                  <Form.Item {...eclItemLayout} label="ECL" name="ecl" >
+                    
                     <EclEditor
-                      // id="job_ecl"
+                      id="job_ecl"
                       targetDomId="jobEcl"
                       disabled={true}
                     />
