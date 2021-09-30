@@ -843,7 +843,7 @@ router.post('/visualization', [
   body('clusterId').optional({checkFalsy:true}).isUUID(4).withMessage('Invalid cluster'),
   body('groupId').optional({checkFalsy:true}).isInt().withMessage('Invalid groupId'),
   body('editingAllowed').isBoolean().withMessage('Invalid value for editingAllowed')
-],async (req, res) => {
+],async (req, res) => {  
   const errors = validationResult(req).formatWith(validatorUtil.errorFormatter);
   if (!errors.isEmpty()) {
     return res.status(422).json({ success: false, errors: errors.array() });
@@ -851,7 +851,7 @@ router.post('/visualization', [
 
   console.log("[file visualization] - create visualization = " + req.body.id + " appId: "+req.body.application_id);
   try {
-    let file=null, cluster=null, bodyObj={};
+    let file=null, cluster=null, bodyObj={}, authToken='';    
     if(req.body.id) {
        file = await File.findOne({where: {id: req.body.id}});       
     } /*else if(req.body.fileName) {
@@ -864,10 +864,7 @@ router.post('/visualization', [
     }
     console.log(cluster);    
     
-    bodyObj = {
-      user: { 
-        email: req.body.email 
-      },
+    bodyObj = {      
       filename: file ? file.name : req.body.name,
       workspaceName: 'Tombolo', 
       dashboardName: (file && file.name) ? file.name : req.body.fileName,
@@ -883,12 +880,14 @@ router.post('/visualization', [
       }
     }
 
+    if (req.headers['authorization'] && req.headers['authorization'].startsWith('Bearer ')) {
+      authToken = req.headers['authorization'].slice(7, req.headers['authorization'].length)
+    }
     console.log(bodyObj);
-
     request.post({
       url: process.env["REALBI_URL"] + '/api/v1/integration',
       body: JSON.stringify(bodyObj),
-      headers: {'content-type' : 'application/json'},
+      headers: {'content-type' : 'application/json', 'Authorization': authToken},
     }, async function (err, response, body) {
       if (err) {
         console.log('ERROR - ', err);        
