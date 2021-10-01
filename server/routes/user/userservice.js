@@ -256,7 +256,7 @@ async function changePassword(req, res, { username, password }) {
       }
 
       if (response.statusCode != 200) {
-        reject(new Error(err));
+        reject(new Error({'message': body}));
       } else {
         resolve(body);
       }

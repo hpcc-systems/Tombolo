@@ -19,13 +19,14 @@ const { Header, Content } = Layout;
 const { Search } = Input;
 
 class AppHeader extends Component {
+    pwdformRef = React.createRef();
     constructor(props) {
       super(props);
       this.handleChange = this.handleChange.bind(this);
       this.handleTopNavClick = this.handleTopNavClick.bind(this);
       this.search = this.search.bind(this);
       this.onChangeSearch = this.onChangeSearch.bind(this);
-      this.appDropDown = React.createRef();
+      this.appDropDown = React.createRef();      
     }
 
     state = {
@@ -220,32 +221,32 @@ class AppHeader extends Component {
       this.setState({visible: true });
     }
 
-    handleOk = () => {
+    handleOk = async () => {
       let _self=this;
-      this.props.form.validateFields(async (err, values) => {
-        if(!err) {
-          this.setState({loading: true });
-          fetch("/api/user/changePassword", {
-            method: 'post',
-            headers: authHeader(),
-            body: JSON.stringify({"username": this.props.user.username, "oldpassword":this.state.oldpassword, "newpassword": this.state.newpassword, "confirmnewpassword": this.state.confirmnewpassword})
-          }).then((response) => {
-            if(response.ok) {
-                return response.json();
-            }
-            handleError(response);
-          }).then((response) => {
-            _self.clearChangePasswordDlg()
-            message.config({top:130})
-            message.success('Password changed successfully.');
-            _self.setState({loading: false, visible: false });
-          }).catch(function(err) {
-            _self.clearChangePasswordDlg()
-            _self.setState({loading: false, visible: false });
-            message.config({top:130})
-            message.error('There was an error while changing the password.');
-          });
+      const values = await this.pwdformRef.current.validateFields();
+
+      this.setState({loading: true });
+      fetch("/api/user/changePassword", {
+        method: 'post',
+        headers: authHeader(),
+        body: JSON.stringify({"username": this.props.user.username, "oldpassword":this.state.oldpassword, "newpassword": this.state.newpassword, "confirmnewpassword": this.state.confirmnewpassword})
+      }).then((response) => {
+        if(response.ok) {
+          return response.json();
+        }        
+        else {
+          throw response;
         }
+      }).then((response) => {
+        _self.clearChangePasswordDlg()
+        message.config({top:130})
+        message.success('Password changed successfully.');
+        _self.setState({loading: false, visible: false });
+      }).catch(function(err) {
+        _self.clearChangePasswordDlg()
+        _self.setState({loading: false, visible: false });
+        message.config({top:130})
+        message.error('There was an error while changing the password.');
       });
     }
 
@@ -271,6 +272,11 @@ class AppHeader extends Component {
         newpassword: '',
         confirmnewpassword: ''
       });
+      this.pwdformRef.current.setFieldsValue({
+        oldpassword: '',
+        newpassword: '',
+        confirmnewpassword: ''
+      })
     }
 
     handleAboutClose = () => {
@@ -374,18 +380,19 @@ class AppHeader extends Component {
             </Button>
           ]}
         >
-          <Form.Item {...formItemLayout} label="Password" rules={[{ required: true, message: 'Please enter the current password!' }]}>
-            <Input type="password" name="oldpassword" placeholder="Password" onChange={this.handleChangePasswordFieldChange}/>
-          </Form.Item>
+          <Form ref={this.pwdformRef}>
+            <Form.Item {...formItemLayout} name="oldpassword" label="Password" rules={[{ required: true, message: 'Please enter the current password!' }]}>
+              <Input type="password" name="oldpassword" placeholder="Password" onChange={this.handleChangePasswordFieldChange}/>
+            </Form.Item>
 
-          <Form.Item {...formItemLayout} label="New Password" rules={[{ required: true, message: 'Please enter the new password!' }]}>
-            <Input type="password" name="newpassword" placeholder="New Password" onChange={this.handleChangePasswordFieldChange}/>
-          </Form.Item>
+            <Form.Item {...formItemLayout} name="newpassword" label="New Password" rules={[{ required: true, message: 'Please enter the new password!' }]}>
+              <Input type="password" name="newpassword" placeholder="New Password" onChange={this.handleChangePasswordFieldChange}/>
+            </Form.Item>
 
-          <Form.Item {...formItemLayout} label="Confirm Password" rules={[{ required: true, message: 'Please confirm the new password!' }]}>
-            <Input type="password" name="confirmnewpassword" placeholder="Confirm Password" onChange={this.handleChangePasswordFieldChange}/>
+            <Form.Item {...formItemLayout} name="confirmnewpassword" label="Confirm Password" rules={[{ required: true, message: 'Please confirm the new password!' }]}>
+              <Input type="password" name="confirmnewpassword" placeholder="Confirm Password" onChange={this.handleChangePasswordFieldChange}/>
           </Form.Item>
-
+          </Form>
         </Modal>
         <Modal title="Tombolo" visible={this.state.isAboutModalVisible}
           footer={[
