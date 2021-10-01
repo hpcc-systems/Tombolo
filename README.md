@@ -49,3 +49,5 @@
 ----
 ## Documentation 
 Click [here](https://github.com/hpcc-systems/Tombolo/blob/master/docs/README.md) to view complete documentation.
+Click [here](https://github.com/hpcc-systems/Tombolo/client-reactjs/public/Tombolo-User-Guide.pdf) to view complete documentation.
+
