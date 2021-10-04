@@ -48,7 +48,7 @@
 
 ----
 ## Documentation 
-Click [here](https://github.com/hpcc-systems/Tombolo/blob/read-me/docs/images/tombolo/Tombolo%20User%20Guide.pdf) to view complete documentation.
+Click [here](https://github.com/hpcc-systems/Tombolo/blob/read-me/docs/images/tombolo/Tombolo%20User%20Guide.pdf) to view complete documentation
   
   
 
