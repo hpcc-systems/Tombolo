@@ -215,9 +215,8 @@ class Applications extends Component {
       })
       .then(response => {
         if(this.state.newApp.id == '') {
-          console.log('new app')
-          //new application
-          this.props.dispatch(applicationActions.newApplicationAdded(response.id, this.state.newApp.title));
+          this.props.dispatch(applicationActions.applicationSelected(response.id, response.title, response.title));
+          localStorage.setItem("activeProjectId", response.id);
         } else {
           console.log('update app')
           //updating an application

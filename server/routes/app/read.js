@@ -138,7 +138,7 @@ router.post('/newapp', [
       }).then(function(application) {
         if(req.body.user_id) {
           models.user_application.create({"user_id":req.body.user_id, "application_id":application.id}).then(function(userapp) {
-            res.json({"result":"success", "id": application.id});
+            res.json({"result":"success", "id": application.id, "title" :application.title});
           });
         }
         else {

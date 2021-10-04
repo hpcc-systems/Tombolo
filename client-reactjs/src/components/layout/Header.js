@@ -54,6 +54,7 @@ class AppHeader extends Component {
         }
       } else {
         appDropdownItem.click();
+        console.log("<<<<<<<<<<<<<<<<<<<", this.appDropDown.current.querySelector('[data-value="'+localStorage.getItem("activeProjectId")+'"]'))
       }
     }    
 
