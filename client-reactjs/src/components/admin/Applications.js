@@ -173,11 +173,11 @@ class Applications extends Component {
   }
 
   onChange = (e) => {
-    console.log(e.target.value);
     this.setState({...this.state,confirmLoading:false, newApp: {...this.state.newApp, [e.target.name]: e.target.value }});
   }
 
-  handleAddAppOk = () => {
+  handleAddAppOk = () => { 
+    const form = this.form;
     if(this.state.applications.filter(application => {
       if (application.id != this.state.newApp.id && application.title == this.state.newApp.title) {
         return application;
@@ -218,7 +218,6 @@ class Applications extends Component {
           this.props.dispatch(applicationActions.applicationSelected(response.id, response.title, response.title));
           localStorage.setItem("activeProjectId", response.id);
         } else {
-          console.log('update app')
           //updating an application
           this.props.dispatch(applicationActions.applicationUpdated(this.state.newApp.id, this.state.newApp.title));
         }
@@ -365,7 +364,7 @@ class Applications extends Component {
 	      <Modal
           title="Application"
           visible={this.state.showAddApp}
-          // onOk={this.handleAddAppOk.bind(this)}
+          onOk={this.handleAddAppOk.bind(this)}
           onCancel={this.handleAddAppCancel}
           confirmLoading={confirmLoading}
           footer={[
