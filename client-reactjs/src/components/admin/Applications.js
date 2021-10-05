@@ -1,5 +1,5 @@
 import React, { Component } from "react";
-import { Table, Button, Row, Col, Modal, Form, Input, notification, Tooltip, Popconfirm, Divider, message, Radio } from 'antd/lib';
+import { Table, Button, Modal, Form, Input, notification, Tooltip, Popconfirm, Divider, message, Radio } from 'antd/lib';
 import BreadCrumbs from "../common/BreadCrumbs";
 import { authHeader, handleError } from "../common/AuthHeader.js";
 import { hasAdminRole } from "../common/AuthUtil.js";
@@ -12,7 +12,6 @@ import { applicationActions } from '../../redux/actions/Application';
 import { DeleteOutlined, EyeOutlined, QuestionCircleOutlined, ShareAltOutlined, ExportOutlined  } from '@ant-design/icons';
 import ImportApplication from "./ImportApplication"
 import download from "downloadjs"
-import showdown from "showdown";
 
 class Applications extends Component {
   constructor(props) {
@@ -37,6 +36,7 @@ class Applications extends Component {
   action : "read"
   }
 
+  //When the compononts first mounts
   componentDidMount() {
   	this.getApplications();
   }
@@ -54,6 +54,7 @@ class Applications extends Component {
 
   }
 
+  //Get all apps from the DB
   getApplications() {
   	var url="/api/app/read/appListByUserId?user_id="+this.props.user.id+"&user_name="+this.props.user.username;
     if(hasAdminRole(this.props.user))
@@ -78,6 +79,7 @@ class Applications extends Component {
     	});
   }
 
+  //Handle Edit application
   handleEditApplication(app_id) {
     fetch("/api/app/read/app?app_id="+app_id, {
       headers: authHeader()
@@ -108,6 +110,7 @@ class Applications extends Component {
   	});
   }
 
+  //Handle share application
   handleShareApplication(app_id,app_tittle){
     this.setState({
       appId: app_id,
@@ -116,6 +119,7 @@ class Applications extends Component {
     });
   }
 
+  //Handle Application deletion
   handleRemove = (app_id) => {
   	var data = JSON.stringify({appIdsToDelete:app_id});
     fetch("/api/app/read/removeapp", {
@@ -143,6 +147,7 @@ class Applications extends Component {
     });
   }
 
+  //When add application button is clicked
   handleAdd = (event) => {
     this.resetFields();
     this.setState({
@@ -151,6 +156,7 @@ class Applications extends Component {
     });
   }
 
+  //Function to reset the form fields
   resetFields = () => {
     this.setState({
       ...this.state,
@@ -168,16 +174,19 @@ class Applications extends Component {
     });
   }
 
+  // When the modal close is triggered by the cancel button or the X on the modal
   handleAddAppCancel= (event) => {
   	this.resetFields();
   }
 
+  //On form field change
   onChange = (e) => {
     this.setState({...this.state,confirmLoading:false, newApp: {...this.state.newApp, [e.target.name]: e.target.value }});
   }
 
-  handleAddAppOk = () => { 
-    const form = this.form;
+  //When save button is clicked
+  handleAddAppOk = (values) => { 
+    this.formRef.current.validateFields();
     if(this.state.applications.filter(application => {
       if (application.id != this.state.newApp.id && application.title == this.state.newApp.title) {
         return application;
@@ -191,7 +200,6 @@ class Applications extends Component {
       confirmLoading: true,
       submitted: true
     });
-
     if(this.state.newApp.title) {
       var userId = (this.props.user) ? this.props.user.username : "";
       let data = JSON.stringify({
@@ -217,6 +225,7 @@ class Applications extends Component {
         if(this.state.newApp.id == '') {
           this.props.dispatch(applicationActions.applicationSelected(response.id, response.title, response.title));
           localStorage.setItem("activeProjectId", response.id);
+          this.formRef.current.resetFields();
         } else {
           //updating an application
           this.props.dispatch(applicationActions.applicationUpdated(this.state.newApp.id, this.state.newApp.title));
@@ -248,6 +257,7 @@ class Applications extends Component {
     this.setState({action : "write"})
   }
 
+  //When export icon is clicked
   handleExportApplication = (id, title) => {
     fetch("/api/app/read/export", {
       method: 'post',
@@ -265,11 +275,17 @@ class Applications extends Component {
     });
   }
 
+  //When close btn on share app modal is clicked
   handleClose = () => {
     this.setState({
       openShareAppDialog: false
     });
   }
+
+  // Reference to the form inside app modal
+  formRef = React.createRef();
+
+  //JSX
   render() {
   	const { confirmLoading} = this.state;
   	const applicationColumns = [
@@ -339,6 +355,7 @@ class Applications extends Component {
     }
   }
 
+
     return (
     <React.Fragment>
       <div className="d-flex justify-content-end" style={{display: "flex", placeItems: "center"}}>
@@ -364,26 +381,29 @@ class Applications extends Component {
 	      <Modal
           title="Application"
           visible={this.state.showAddApp}
-          onOk={this.handleAddAppOk.bind(this)}
           onCancel={this.handleAddAppCancel}
           confirmLoading={confirmLoading}
           footer={[
             <Button  type="primary" onClick={this.state.action ==="read" ? this.handleEdit.bind(this) : this.handleAddAppOk.bind(this) }> {this.state.action === "read" ? "Edit" : "Save"} </Button>,
             <Button onClick={this.handleAddAppCancel}> Cancel </Button>,
-          ]}
-          >
-	        <Form layout={this.state.action === "read" ? "horizontal" : "vertical"} className="formInModal">
-            <Form.Item {...formItemLayout} onFinish={this.handleAddAppOk.bind(this)} label="Title"
+          ]}>
+
+	        <Form layout={this.state.action === "read" ? "horizontal" : "vertical"} className="formInModal" ref={this.formRef}>
+            <Form.Item {...formItemLayout} 
+            label="Title" 
+            name="title"
               rules={[
-                { required: true, message: "Please enter a title!" },
+                { required: true, 
+                message: "Please enter a title!" },
                 {
                   pattern: new RegExp(/^[a-zA-Z]{1}[a-zA-Z0-9_:.\-]*$/),
                   message: "Please enter a valid title. Title can have  a-zA-Z0-9:._- and space",
                 },
               
             ]}>
-              <Input autoFocus={true} id="app_title" name="title" onChange={this.onChange} placeholder="Title" value={this.state.newApp.title} onPressEnter={this.handleAddAppOk.bind(this)} className={this.state.action === "read" ? "read-only-input" : ""}/>
-            </Form.Item>
+            <Input autoFocus={true} id="app_title" name="title" onChange={this.onChange} placeholder="Title" 
+              value={this.state.newApp.title}
+              className={this.state.action === "read" ? "read-only-input" : ""}/></Form.Item>
 
             {this.state.action === "read" ?
             <Form.Item {...formItemLayout} label="Description" >
@@ -400,6 +420,7 @@ class Applications extends Component {
                   />
             </Form.Item>
           }
+
             <Form.Item {...formItemLayout} label="Visibility">
               {this.state.action === "read" ? 
               <Input value={this.state.newApp.visibility} className="read-only-input" /> : 
@@ -409,6 +430,7 @@ class Applications extends Component {
               </Radio.Group>
               }
             </Form.Item>  
+
           </Form>
         </Modal>
       </div>
