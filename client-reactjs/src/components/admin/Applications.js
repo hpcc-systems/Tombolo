@@ -396,7 +396,7 @@ class Applications extends Component {
                 { required: true, 
                 message: "Please enter a title!" },
                 {
-                  pattern: new RegExp(/^[a-zA-Z]{1}[a-zA-Z0-9_:.\-]*$/),
+                  pattern: new RegExp(/^[a-zA-Z]{1}[a-zA-Z0-9_: .\-]*$/),
                   message: "Please enter a valid title. Title can have  a-zA-Z0-9:._- and space",
                 },
               

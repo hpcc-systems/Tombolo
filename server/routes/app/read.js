@@ -116,7 +116,7 @@ router.post('/newapp', [
     .optional({checkFalsy:true})
     .matches(/^[a-zA-Z]{1}[a-zA-Z0-9_:.\-]*$/).withMessage('Invalid user_id'),
   body('title')
-    .matches(/^[a-zA-Z]{1}[a-zA-Z0-9_:.\-]*$/).withMessage('Invalid title'),
+    .matches(/^[a-zA-Z]{1}[a-zA-Z0-9_: .\-]*$/).withMessage('Invalid title'),
   body('description')
     .optional({checkFalsy:true}),
   body('creator')
