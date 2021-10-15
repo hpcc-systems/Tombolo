@@ -7,26 +7,27 @@ var jwtDecode = require('jwt-decode');
 
 function AzureUserHome() {
     const { instance, accounts, inProgress } = useMsal();
-    // const [user, setUser] =useState(null)
-    // const [accessToken, setAccessToken] = useState(null);
+    const [user, setUser] =useState(null)
+    const [accessToken, setAccessToken] = useState(null);
 
-    // const name = accounts[0] && accounts[0].name;
-    // const dispatch = useDispatch();
+    const name = accounts[0] && accounts[0].name;
+    const dispatch = useDispatch();
 
-    // useEffect(() => {
-    //     if(accounts.length > 0 && accessToken){
-    //         console.log(accessToken)
-    //         let userAccount = accounts[0]
-    //         console.log(userAccount)
-    //         let user = {
-    //             firstName : userAccount.name.split(' ')[0],
-    //             lastName : userAccount.name.split(' ')[1],
-    //             role : 'tombolo_user',
-    //             email : userAccount.username,
-    //             username : userAccount.idTokenClaims.preferred_username.split('@')[0],
-    //             type: 'azureUser',
-    //             token: accessToken
-    //         }
+
+    useEffect(() => {
+        if(accounts.length > 0 && accessToken){
+            console.log(accessToken)
+            let userAccount = accounts[0]
+            console.log(userAccount)
+            let user = {
+                firstName : userAccount.name.split(' ')[0],
+                lastName : userAccount.name.split(' ')[1],
+                role : 'tombolo_user',
+                email : userAccount.username,
+                username : userAccount.idTokenClaims.preferred_username.split('@')[0],
+                type: 'azureUser',
+                token: accessToken
+            }
 
         //    dispatch( userActions.azureLogin(user));
         //     fetch('/api/user/loginAzureUser', {
@@ -44,47 +45,42 @@ function AzureUserHome() {
         //       }).catch(error => {
         //        console.log(error);
         //       })
-        //     console.log("<<<<<<<<<<<<<<<<<<<<<<<<<<< SILENTLY ACQUIRED THE ACCESS TOKEN >>>>>>>>>>>>>>>>>>>>>>>>>>", accessToken)
-        // }
+            console.log("<<<<<<<<<<<<<<<<<<<<<<<<<<< SILENTLY ACQUIRED THE ACCESS TOKEN >>>>>>>>>>>>>>>>>>>>>>>>>>", accessToken)
+        }
         
-    // }, [accounts, accessToken])
+    }, [accounts, accessToken])
 
     // useEffect(() => {
     //     dispatch(userActions.azureLogin)
     // }, [userActions])
 
-    // useEffect(() => {
-    //     if(inProgress === "none"){
-    //         RequestAccessToken();
-    //     }
-    // }, [inProgress])
+    useEffect(() => {
+        if(inProgress === "none"){
+            RequestAccessToken();
+        }
+    }, [instance, accounts, inProgress])
 
-    // function RequestAccessToken() {
-    //     const request = {
-    //         // ...loginRequest,
-    //         account: accounts[0]
-    //     };
+    function RequestAccessToken() {
+        const request = {
+            // ...loginRequest,
+            account: accounts[0]
+        };
 
-    //     // Silently acquires an access token 
-    //     instance.acquireTokenSilent(request).then((response) => {
-    //         alert("<<<<<<<<<<<<< Silently acquering token")
-    //         setAccessToken(response.accessToken);
-    //         console.log("<<<<<<<<<<< Response after silently fetching token")
-    //     })
-    //     .catch((e) => {
-    //         alert('<<<<<<<<<<<<<<<<<<<< error while silently getting token')
-    //         instance.acquireTokenRedirect(request).then((response) => {
-    //             alert('<<<<<<<<<<<<<<<<<<<< error while silently getting token')
-    //             setAccessToken(response.accessToken);
-    //         });
-    //     });
-    // }
+        // Silently acquires an access token 
+        instance.acquireTokenSilent(request).then((response) => {
+            setAccessToken(response.accessToken);
+            console.log("<<<<<<<<<<< Response after silently fetching token", response.accessToken )
+        })
+        .catch((e) => {
+            instance.acquireTokenRedirect(request).then((response) => {
+                setAccessToken(response.accessToken);
+            });
+        });
+    }
 
     return (
          <>
-         Azure user home
             {console.log(instance)}
-            {alert("<<<<<<< on azure user home")}
         </>
     )
 }

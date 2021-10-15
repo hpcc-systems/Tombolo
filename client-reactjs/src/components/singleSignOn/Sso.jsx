@@ -7,7 +7,6 @@ function Sso() {
     const { instance, accounts, inProgress } = useMsal();
 
     useEffect(() =>{
-        alert(inProgress);
         instance.loginRedirect(loginRequest).catch(e =>{
             console.log(e)
         })
