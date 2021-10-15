@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useState } from "react";
 import { connect } from "react-redux";
 import { Layout } from "antd/lib";
 import "font-awesome/css/font-awesome.min.css";
@@ -22,6 +22,8 @@ import JobDetailsForm from "./components/application/Jobs/JobDetails";
 import IndexDetailsForm from "./components/application/IndexDetails";
 import QueryDetailsForm from "./components/application/QueryDetails";
 import VisualizationDetailsForm from "./components/application/VisualizationDetails";
+import Sso from "./components/singleSignOn/Sso";
+import AzureUserHome from "./components/singleSignOn/AzureUserHome"
 
 import Actions from "./components/application/actions/actions";
 import { AdminApplications } from "./components/admin/Applications";
@@ -33,9 +35,11 @@ import { store } from "./redux/store/Store";
 
 import { Report } from "./components/Report/Report";
 import Regulations from "./components/admin/ControlsAndRegulations";
+
 const { Content } = Layout;
 
-class App extends React.Component {
+
+class App extends React.Component {  
   componentDidMount() {
     store.dispatch(userActions.validateToken());
   }
@@ -80,10 +84,13 @@ class App extends React.Component {
         />
       );
     };
+    
 
     return (
       <Router history={history}>
-        <Route exact path="/login" component={LoginPage} />
+        <Route exact path="/login" component={process.env.REACT_APP_SSO==='azure_ad'? Sso:LoginPage} />
+        <Route exact path="/AzureUserHome" component={AzureUserHome} />
+
         <Route exact path="/forgot-password" component={ForgotPassword} />
         <Route exact path="/reset-password/:id" component={ResetPassword} />
         <Layout>

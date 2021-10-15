@@ -1,7 +1,7 @@
 import { Constants } from '../../components/common/Constants';
 
 let user = {}, userRegistrationError = [];
-const initialState = user ? { loggedIn: true, loginFailed:false, user, userRegistrationSuccess: false, newUserRegistering: false, userRegistrationError } : {};
+const initialState = user ? { loggedIn: false, loginFailed:false, user, userRegistrationSuccess: false, newUserRegistering: false, userRegistrationError } : {};
 
 export function authenticationReducer(state = initialState, action) {
   switch (action.type) {
@@ -11,6 +11,7 @@ export function authenticationReducer(state = initialState, action) {
         user: action.user
       };
     case Constants.LOGIN_SUCCESS:
+      console.log("<<<<<<<<<<<< Loggin success")
       return {
         loggedIn: true,
         user: action.user

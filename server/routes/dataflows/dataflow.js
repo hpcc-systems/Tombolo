@@ -104,6 +104,7 @@ router.get('/', [
   query('application_id')
     .isUUID(4).withMessage('Invalid cluster id')
 ],(req, res) => {
+  console.log("<<<<<<<<<<<<<<<<<<<<<<<<<<< Checking dataflows")
   const errors = validationResult(req).formatWith(validatorUtil.errorFormatter);
   if (!errors.isEmpty()) {
     return res.status(422).json({ success: false, errors: errors.array() });

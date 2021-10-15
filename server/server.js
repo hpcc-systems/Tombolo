@@ -5,6 +5,8 @@ const tokenService = require('./utils/token_service');
 const {verifyToken} = require("./routes/user/userservice")
 const jwt = require('jsonwebtoken');
 const {NotificationModule} = require('./routes/notifications/email-notification');
+const passport = require('passport');
+const BearerStrategy = require('passport-azure-ad').BearerStrategy;
 
 // Socket
 const server = require('http').Server(app);
@@ -33,6 +35,34 @@ app.use(function(req, res, next) {
 });
 //apply to all requests
 app.use(limiter);
+//<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
+const EXPOSED_SCOPES = [ 'access_as_user' ]
+
+const options = {
+  identityMetadata: `https://${process.env.AUTHORITY}/${process.env.TENENT_ID}/${ process.env.MSAL_VERSION}/${process.env.DISCOVERY}`,
+  issuer: `https://${process.env.AUTHORITY}/${process.env.TENENT_ID}/${process.env.MSAL_VERSION}`,
+  clientID: process.env.CLIENT_ID,
+  audience: process.env.AUDIENCE,
+  validateIssuer: process.env.VALIDATE_ISSUER,
+  passReqToCallback: process.env.PASS_REQ_TO_CALLBACK,
+  loggingLevel: process.env.LOGGING_LEVEL,
+  // scope: EXPOSED_SCOPES
+};
+
+
+const bearerStrategy = new BearerStrategy(options, (token, done) => {
+  // Send user info using the second argument
+  done(null, {}, token);
+});
+
+app.use(passport.initialize());
+
+passport.use(bearerStrategy);
+
+
+
+//<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
+
 
 const QueueDaemon = require('./queue-daemon');
 const JobScheduler = require('./job-scheduler');
@@ -70,6 +100,7 @@ app.use('/api/ldap', ldap);
 app.use('/api/controlsAndRegulations', tokenService.verifyToken, regulations);
 app.use('/api/dataflowgraph', tokenService.verifyToken, dataflowGraph);
 app.use('/api/dataflow', tokenService.verifyToken, dataflow);
+
 app.use('/api/workflows', tokenService.verifyToken, workflows);
 app.use('/api/data-dictionary', tokenService.verifyToken, dataDictionary);
 app.use('/api/user', userRead);

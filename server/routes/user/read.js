@@ -7,6 +7,9 @@ const errorFormatter = ({ location, msg, param, value, nestedErrors }) => {
 };
 const jwt = require('jsonwebtoken');
 const { JsonWebTokenError } = require('jsonwebtoken');
+let models = require('../../models');
+let User = models.user;
+
 // routes
 router.get('/searchuser', searchUser);
 router.post('/authenticate', authenticate);
@@ -32,6 +35,7 @@ function authenticate(req, res, next) {
 }
 
 function register(req, res, next) {
+  console.log("<<<<<<<<<<<<<<<<<< ################### creating a new user")
   userService.create(req.body)
       .then(() => res.json({}))
       .catch(err => res.status(500).json({ "message": "Error Occured while registering user" }));
@@ -69,10 +73,12 @@ function _delete(req, res, next) {
 }
 
 function validateToken(req, res, next) {
+  console.log("<<<<<<<<<<<<<<<< 2222222222222222222222222222222222222")
   userService.validateToken(req, res, next)
       .then(user => user ? res.json(user.userWithoutHash) : res.status(401).json({ message: 'Invalid Token' }))
       .catch(err => res.status(401).json({ "message": "Invalid Token" }));
 }
+
 function GetuserListToShareApp(req, res, next) {
   userService.GetuserListToShareApp(req, res, next)
       .then(user => user ? res.json(user) : res.sendStatus(404))
@@ -166,5 +172,34 @@ router.post('/resetPassword'
     console.log(err);
     res.status(500).json({ errors: [err.message] });
   })
+})
 
+router.post('/loginAzureUser', [
+  body('firstName')
+    .matches(/^[a-zA-Z]{1}[a-zA-Z0-9_-]*$/).withMessage('Invalid First Name'),
+  body('lastName')
+    .matches(/^[a-zA-Z]{1}[a-zA-Z0-9_-]*$/).withMessage('Invalid Last Name'),
+  body('email')
+    .isEmail().withMessage('Invalid Email Address'),
+  body('type')
+  .matches(/^[a-zA-Z]{1}[a-zA-Z0-9]*$/).withMessage('Invalid account type'),
+  body('role')
+  .matches(/^[a-zA-Z]{1}[a-zA-Z0-9_-]*$/).withMessage('Invalid role'),
+  // body('organization').optional({checkFalsy:true})
+  //   .matches(/^[a-zA-Z]{1}[a-zA-Z0-9_-]*$/).withMessage('Invalid Organization Name'),
+  // body('password').optional({checkFalsy:true}).isLength({ min: 4 })
+], (req, res, next) => {
+  const errors = validationResult(req).formatWith(errorFormatter);
+  if (!errors.isEmpty()) {
+    return res.status(422).json({ success: false, errors: errors.array() });
+  }
+  User.findOne({ where: {"email": req.body.email}}).then(user =>{
+    if(user){
+      res.status(200).json({success: true, message : 'User exists in the DB', user : user})
+    }else{
+      User.create(req.body)
+      .then( res.status(200).json({success: true, message : 'New user added'}))
+      .catch(err => {res.status(500).json({success: false, message : 'Error querying DB'})})             
+    }
+  }).catch(err => {res.status(500).json({success: false, message : 'Error querying DB'})})
 })

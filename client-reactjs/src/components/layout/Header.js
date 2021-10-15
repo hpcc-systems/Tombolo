@@ -77,6 +77,7 @@ class AppHeader extends Component {
         });
       }
       if(this.state.applications.length == 0) {
+        console.log("<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<< GETTING APP LIST FROM hEADER")
         var url="/api/app/read/appListByUserId?user_id="+this.props.user.id+'&user_name='+this.props.user.username;
         if(hasAdminRole(this.props.user)) {
           url="/api/app/read/app_list";
@@ -85,12 +86,16 @@ class AppHeader extends Component {
           headers: authHeader()
         })
         .then((response) => {
+          console.log("<<<<<<<<<<<<<<<<<<<<<<< response form header ", response);
+
           if(response.ok) {
             return response.json();
+
           }
-          handleError(response);
+          return handleError(response);
         })
         .then(data => {
+          console.log("<<<<<<<<<<<<<<<<<<<<<<<<<<<<< Data  from HEADER", data)
           let applications = data.map(application => { return {value: application.id, display: application.title} })
           if(applications && applications.length > 0) {
             this.setState({ applications });

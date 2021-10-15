@@ -36,6 +36,8 @@ async function authenticate(req, res, { username, password }) {
 }
 
 async function verifyToken(token) {
+  console.log("33333333333333333333333<<<<<<<<<<<<<<<<<<<<<<<<<<< verifying if token is there")
+
     if(token) {
         var authServiceUrl = process.env.AUTH_SERVICE_URL + '/verify';
         return new Promise(function(resolve, reject) {
@@ -59,8 +61,11 @@ async function verifyToken(token) {
 
 
 async function validateToken(req, res, next) {
+  console.log("333333333333333333333333333333333333333 <<<<<<<<<<<<<<<<<<<<<<<<<<< Validating TOKEN")
+
   let token = req.headers['x-access-token'] || req.headers['authorization'];
   if (token) {
+    console.log("<<<<<<<<<<<<<<<<<<<<<<<<<<< Checking if token is there")
       if (token.startsWith('Bearer ')) {
         token = token.slice(7, token.length);
         console.log('token: '+token);
@@ -266,6 +271,7 @@ async function changePassword(req, res, { username, password }) {
 
 async function registerUser(req, res) {
   var authServiceUrl = process.env.AUTH_SERVICE_URL + '/registerUser';
+  console.log("<<<<<<<<<<<<<<<< Registering user ", authServiceUrl)
   return new Promise(function(resolve, reject) {
     request.post({
       url: authServiceUrl,
