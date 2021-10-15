@@ -54,7 +54,6 @@ router.get('/app_list', (req, res) => {
 });
 router.get('/appListByUserId', (req, res) => {
   console.log("[app/read.js] -  Get app list for user id ="+ req.query.user_id);
-
   try {
     models.application.findAll({
       where:{

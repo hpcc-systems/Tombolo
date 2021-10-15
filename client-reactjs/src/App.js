@@ -89,7 +89,7 @@ class App extends React.Component {
     return (
       <Router history={history}>
         <Route exact path="/login" component={process.env.REACT_APP_SSO==='azure_ad'? Sso:LoginPage} />
-        <Route exact path="/AzureUserHome" component={AzureUserHome} />
+        <Route exact path="/azureuserhome" component={AzureUserHome} />
 
         <Route exact path="/forgot-password" component={ForgotPassword} />
         <Route exact path="/reset-password/:id" component={ResetPassword} />

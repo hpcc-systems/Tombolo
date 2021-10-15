@@ -73,7 +73,6 @@ function _delete(req, res, next) {
 }
 
 function validateToken(req, res, next) {
-  console.log("<<<<<<<<<<<<<<<< 2222222222222222222222222222222222222")
   userService.validateToken(req, res, next)
       .then(user => user ? res.json(user.userWithoutHash) : res.status(401).json({ message: 'Invalid Token' }))
       .catch(err => res.status(401).json({ "message": "Invalid Token" }));

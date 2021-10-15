@@ -47,6 +47,7 @@ const options = {
   passReqToCallback: process.env.PASS_REQ_TO_CALLBACK,
   loggingLevel: process.env.LOGGING_LEVEL,
   // scope: EXPOSED_SCOPES
+  loggingNoPII: false
 };
 
 
@@ -58,6 +59,8 @@ const bearerStrategy = new BearerStrategy(options, (token, done) => {
 app.use(passport.initialize());
 
 passport.use(bearerStrategy);
+
+console.log( `https://${process.env.AUTHORITY}/${process.env.TENENT_ID}/${ process.env.MSAL_VERSION}/${process.env.DISCOVERY}`,)
 
 
 
@@ -87,7 +90,11 @@ const workflows = require('./routes/workflows/router');
 const dataDictionary = require('./routes/data-dictionary/data-dictionary-service');
 const groups = require('./routes/groups/group');
 
-app.use('/api/app/read', tokenService.verifyToken, appRead);
+// app.use('/api/app/read', tokenService.verifyToken, appRead);
+// app.use('/api/app/read',  passport.authenticate('oauth-bearer', {session: false}), appRead);
+app.use('/api/app/read', appRead);
+
+
 app.use('/api/file/read', tokenService.verifyToken, fileRead);
 app.use('/api/index/read', tokenService.verifyToken, indexRead);
 app.use('/api/hpcc/read', tokenService.verifyToken, hpccRead);

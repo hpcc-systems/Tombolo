@@ -86,11 +86,8 @@ class AppHeader extends Component {
           headers: authHeader()
         })
         .then((response) => {
-          console.log("<<<<<<<<<<<<<<<<<<<<<<< response form header ", response);
-
           if(response.ok) {
             return response.json();
-
           }
           return handleError(response);
         })

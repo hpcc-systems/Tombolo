@@ -143,13 +143,11 @@ function validateToken() {
 
 // ## Azure user
 function azureLogin(user) {
-  console.log("Loggin in with Azure <<<<<<<<<<<<<<<<<<<< 1")
-
+  alert("Loggin in with Azure <<<<<<<<<<<")
   let _self = this;
   return dispatch => {
     // dispatch(request({ username }));
-    console.log("Loggin in with Azure <<<<<<<<<<<<<<<<<<<<")
-
+    alert("Disptatching an action <<<<<<<<<<<")
     fetch('/api/user/loginAzureUser', {
       method: 'post',
       headers: {
@@ -162,43 +160,12 @@ function azureLogin(user) {
       console.log("<<<<<<<<<<<<<< MR DATA", data);
       user.id = data.user.id;
       localStorage.setItem('user', JSON.stringify(user));
-      console.log("Dispatched success <<<<<<<<<<");
       dispatch(success(user))
     }).catch(error => {
      console.log(error);
      localStorage.removeItem('user');
       dispatch(failure(error));
     })
-
-  //   fetch('/api/user/authenticate', {
-  //     method: 'post',
-  //     headers: {
-  //         'Accept': 'application/json',
-  //         'Content-Type': 'application/json'
-  //     },
-  //     body: JSON.stringify({ username, password })
-  //   }).then(handleResponse)
-  //   .then(user => {
-  //     var decoded = jwtDecode(user.accessToken);
-  //     var user = {
-  //         "token": user.accessToken,
-  //         "id": decoded.id,
-  //         "username": decoded.username,
-  //         "firstName": decoded.firstName,
-  //         "lastName": decoded.lastName,
-  //         "email": decoded.email,
-  //         "organization": decoded.organization,
-  //         "role":decoded.role,
-  //         "permissions": decoded.role[0].name,
-  //     }
-  //     localStorage.setItem('user', JSON.stringify(user));
-  //     dispatch(success(user));
-  //   }).catch(error => {
-  //     console.log(error);
-  //     localStorage.removeItem('user');
-  //     dispatch(failure(error));
-  //   });
-  // };
 
   function request(user) { return { type: Constants.LOGIN_REQUEST, user } }
   function success(user) { return { type: Constants.LOGIN_SUCCESS, user } }
