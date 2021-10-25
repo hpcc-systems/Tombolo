@@ -3,8 +3,8 @@ const Cluster = models.cluster;
 const Job = models.job;
 const NotificationModule = require('../routes/notifications/email-notification');
 
-exports.notifyJobFailure = (fileName, clusterId) => {
-  Job.findOne({where: {name: wuResult.Workunit.Jobname}, attributes: {exclude: ['assetId']}}).then(async (job) => {
+exports.notifyJobFailure = (jobName, clusterId) => {
+  Job.findOne({where: {name: jobName}, attributes: {exclude: ['assetId']}}).then(async (job) => {
     if(job.contact && job.contact != '') {
       let cluster = await Cluster.findOne({where: {id: job.cluster_id}});
       NotificationModule.notify({

@@ -193,8 +193,8 @@ router.post('/newcluster', [
     		var ThorReachable=false;
     		var RoxieReachable=false;
     		ThorReachable = await hpccUtil.isClusterReachable(cluster[0].thor, cluster[0].thor_port, req.body.username, req.body.password);
-    		RoxieReachable = await hpccUtil.isClusterReachable(cluster[0].roxie, cluster[0].roxie_port, req.body.username, req.body.password);
-    		if(ThorReachable && RoxieReachable) {
+    		//RoxieReachable = await hpccUtil.isClusterReachable(cluster[0].roxie, cluster[0].roxie_port, req.body.username, req.body.password);
+    		if(ThorReachable) {
     			var newCluster = {"name":req.body.name, "thor_host":cluster[0].thor, "thor_port":cluster[0].thor_port,
     			 "roxie_host":cluster[0].roxie, "roxie_port":cluster[0].roxie_port};
     			if (req.body.username && req.body.password) {
