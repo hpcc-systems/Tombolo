@@ -38,10 +38,9 @@ const Dataflowgraph = models.dataflowgraph;
 
 router.get('/app_list', (req, res) => {
   console.log("[app/read.js] - App route called");
-
   try {
     models.application.findAll({order: [['updatedAt', 'DESC']]}).then(function(applications) {
-        res.json(applications);
+        res.status(200).json(applications);
     })
     .catch(function(err) {
       console.log(err);
@@ -52,6 +51,7 @@ router.get('/app_list', (req, res) => {
     return res.status(500).json({ success: false, message: "Error occured while getting application list" });
   }
 });
+
 router.get('/appListByUserId', (req, res) => {
   console.log("[app/read.js] -  Get app list for user id ="+ req.query.user_id);
   try {

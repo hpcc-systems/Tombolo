@@ -22,8 +22,7 @@ import JobDetailsForm from "./components/application/Jobs/JobDetails";
 import IndexDetailsForm from "./components/application/IndexDetails";
 import QueryDetailsForm from "./components/application/QueryDetails";
 import VisualizationDetailsForm from "./components/application/VisualizationDetails";
-import Sso from "./components/singleSignOn/Sso";
-import AzureUserHome from "./components/singleSignOn/AzureUserHome"
+import AzureUserHome from "./components/azureSso/AzureUserHome"
 
 import Actions from "./components/application/actions/actions";
 import { AdminApplications } from "./components/admin/Applications";
@@ -88,9 +87,7 @@ class App extends React.Component {
 
     return (
       <Router history={history}>
-        <Route exact path="/login" component={process.env.REACT_APP_SSO==='azure_ad'? Sso:LoginPage} />
-        <Route exact path="/azureuserhome" component={AzureUserHome} />
-
+        <Route exact path="/login" component={process.env.REACT_APP_SSO==='azure_ad'? AzureUserHome :LoginPage} />
         <Route exact path="/forgot-password" component={ForgotPassword} />
         <Route exact path="/reset-password/:id" component={ResetPassword} />
         <Layout>

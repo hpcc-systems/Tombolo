@@ -9,9 +9,9 @@ import { Provider } from 'react-redux';
 import { store } from './redux/store/Store';
 import { PublicClientApplication } from "@azure/msal-browser";
 import { MsalProvider } from "@azure/msal-react";
-import { msalConfig } from "./azureSso/azureAuthConfig";
+import { msalConfig } from "./components/azureSso/azureAuthConfig";
 
-const msalInstance = new PublicClientApplication(msalConfig);
+export const msalInstance = new PublicClientApplication(msalConfig);
 
 ReactDOM.render(
   <Provider store={store}>

@@ -1,12 +1,14 @@
+require('dotenv').config();
 const express = require('express');
 const rateLimit = require("express-rate-limit");
 const app = express();
-const tokenService = require('./utils/token_service');
+const {verifyUserToken} = require('./utils/token_service');
 const {verifyToken} = require("./routes/user/userservice")
 const jwt = require('jsonwebtoken');
 const {NotificationModule} = require('./routes/notifications/email-notification');
 const passport = require('passport');
 const BearerStrategy = require('passport-azure-ad').BearerStrategy;
+const {options} = require("./config/azureConfig")
 
 // Socket
 const server = require('http').Server(app);
@@ -14,7 +16,9 @@ const io = require('socket.io')(server);
 
 const socketIo = io.use(function(socket, next){
   const token =  socket.handshake.auth.token;
+  console.log("<<<<<<<<<<<<<<<<<<<<<<<<<<<<< Verify token")
   verifyToken(token).then(() => {
+    console.log("<<<<<<<<<<<<<<<<<<<<<< after verifying token ")
     next();
   })
 })
@@ -35,41 +39,18 @@ app.use(function(req, res, next) {
 });
 //apply to all requests
 app.use(limiter);
-//<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
-const EXPOSED_SCOPES = [ 'access_as_user' ]
-
-const options = {
-  identityMetadata: `https://${process.env.AUTHORITY}/${process.env.TENENT_ID}/${ process.env.MSAL_VERSION}/${process.env.DISCOVERY}`,
-  issuer: `https://${process.env.AUTHORITY}/${process.env.TENENT_ID}/${process.env.MSAL_VERSION}`,
-  clientID: process.env.CLIENT_ID,
-  audience: process.env.AUDIENCE,
-  validateIssuer: process.env.VALIDATE_ISSUER,
-  passReqToCallback: process.env.PASS_REQ_TO_CALLBACK,
-  loggingLevel: process.env.LOGGING_LEVEL,
-  // scope: EXPOSED_SCOPES
-  loggingNoPII: false
-};
-
 
 const bearerStrategy = new BearerStrategy(options, (token, done) => {
   // Send user info using the second argument
-  done(null, {}, token);
+  done(null, {id: 12}, token);
 });
 
+// This will initialize the passport object on every request
 app.use(passport.initialize());
-
 passport.use(bearerStrategy);
-
-console.log( `https://${process.env.AUTHORITY}/${process.env.TENENT_ID}/${ process.env.MSAL_VERSION}/${process.env.DISCOVERY}`,)
-
-
-
-//<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
-
 
 const QueueDaemon = require('./queue-daemon');
 const JobScheduler = require('./job-scheduler');
-
 const assert = require('assert');
 
 const appRead = require('./routes/app/read');
@@ -90,29 +71,25 @@ const workflows = require('./routes/workflows/router');
 const dataDictionary = require('./routes/data-dictionary/data-dictionary-service');
 const groups = require('./routes/groups/group');
 
-// app.use('/api/app/read', tokenService.verifyToken, appRead);
-// app.use('/api/app/read',  passport.authenticate('oauth-bearer', {session: false}), appRead);
-app.use('/api/app/read', appRead);
 
-
-app.use('/api/file/read', tokenService.verifyToken, fileRead);
-app.use('/api/index/read', tokenService.verifyToken, indexRead);
-app.use('/api/hpcc/read', tokenService.verifyToken, hpccRead);
-app.use('/api/query', tokenService.verifyToken, query);
-app.use('/api/job', tokenService.verifyToken, job);
-app.use('/api/fileinstance', tokenService.verifyToken, fileInstance);
-app.use('/api/report/read', tokenService.verifyToken, reportRead);
-app.use('/api/consumer', tokenService.verifyToken, consumer);
+app.use('/api/app/read',verifyUserToken,   appRead);
+app.use('/api/file/read', verifyUserToken,  fileRead);
+app.use('/api/index/read', verifyUserToken,  indexRead);
+app.use('/api/hpcc/read', verifyUserToken,  hpccRead);
+app.use('/api/query', verifyUserToken,  query);
+app.use('/api/job', verifyUserToken,  job);
+app.use('/api/fileinstance', verifyUserToken,  fileInstance);
+app.use('/api/report/read', verifyUserToken,  reportRead);
+app.use('/api/consumer', verifyUserToken,  consumer);
 app.use('/api/ldap', ldap);
-app.use('/api/controlsAndRegulations', tokenService.verifyToken, regulations);
-app.use('/api/dataflowgraph', tokenService.verifyToken, dataflowGraph);
-app.use('/api/dataflow', tokenService.verifyToken, dataflow);
+app.use('/api/controlsAndRegulations', verifyUserToken,  regulations);
+app.use('/api/dataflowgraph', verifyUserToken,  dataflowGraph);
+app.use('/api/dataflow', verifyUserToken,  dataflow);
 
-app.use('/api/workflows', tokenService.verifyToken, workflows);
-app.use('/api/data-dictionary', tokenService.verifyToken, dataDictionary);
+app.use('/api/workflows', verifyUserToken,  workflows);
+app.use('/api/data-dictionary', verifyUserToken,  dataDictionary);
 app.use('/api/user', userRead);
-app.use('/api/groups', tokenService.verifyToken, groups);
+app.use('/api/groups', verifyUserToken,  groups);
 
 //process.env["NODE_TLS_REJECT_UNAUTHORIZED"] = 0;
-
 server.listen(3000, '0.0.0.0', () => console.log('Server listening on port 3000!'));

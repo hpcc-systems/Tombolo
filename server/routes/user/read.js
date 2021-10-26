@@ -35,7 +35,6 @@ function authenticate(req, res, next) {
 }
 
 function register(req, res, next) {
-  console.log("<<<<<<<<<<<<<<<<<< ################### creating a new user")
   userService.create(req.body)
       .then(() => res.json({}))
       .catch(err => res.status(500).json({ "message": "Error Occured while registering user" }));
@@ -73,6 +72,7 @@ function _delete(req, res, next) {
 }
 
 function validateToken(req, res, next) {
+  console.log("Validating token <<<<<<<<<<<<<<<<<<<<<<<<")
   userService.validateToken(req, res, next)
       .then(user => user ? res.json(user.userWithoutHash) : res.status(401).json({ message: 'Invalid Token' }))
       .catch(err => res.status(401).json({ "message": "Invalid Token" }));
@@ -173,6 +173,8 @@ router.post('/resetPassword'
   })
 })
 
+
+//Azure user login route
 router.post('/loginAzureUser', [
   body('firstName')
     .matches(/^[a-zA-Z]{1}[a-zA-Z0-9_-]*$/).withMessage('Invalid First Name'),
@@ -182,23 +184,34 @@ router.post('/loginAzureUser', [
     .isEmail().withMessage('Invalid Email Address'),
   body('type')
   .matches(/^[a-zA-Z]{1}[a-zA-Z0-9]*$/).withMessage('Invalid account type'),
-  body('role')
-  .matches(/^[a-zA-Z]{1}[a-zA-Z0-9_-]*$/).withMessage('Invalid role'),
-  // body('organization').optional({checkFalsy:true})
-  //   .matches(/^[a-zA-Z]{1}[a-zA-Z0-9_-]*$/).withMessage('Invalid Organization Name'),
-  // body('password').optional({checkFalsy:true}).isLength({ min: 4 })
+  // body('role')
+  // .matches(/^[a-zA-Z]{1}[a-zA-Z0-9_-]*$/).withMessage('Invalid role'),
 ], (req, res, next) => {
   const errors = validationResult(req).formatWith(errorFormatter);
+
   if (!errors.isEmpty()) {
     return res.status(422).json({ success: false, errors: errors.array() });
   }
-  User.findOne({ where: {"email": req.body.email}}).then(user =>{
-    if(user){
-      res.status(200).json({success: true, message : 'User exists in the DB', user : user})
-    }else{
-      User.create(req.body)
-      .then( res.status(200).json({success: true, message : 'New user added'}))
-      .catch(err => {res.status(500).json({success: false, message : 'Error querying DB'})})             
+
+  User.findOrCreate({
+    where : {email: req.body.email },
+    defaults: { 
+      "firstName": req.body.firstName,
+      "lastName": req.body.lastName,
+      "username": req.body.username,
+      "email": req.body.email,
+      "type" : 'azure_user',
     }
-  }).catch(err => {res.status(500).json({success: false, message : 'Error querying DB'})})
+  })
+  .then((data) =>{
+    res.status(200)
+    .json({success : true, 
+           message: data[1] ? "New user created" : "Found existing user in DB",
+          user: data[0].dataValues })
+  })
+  .catch(error =>{
+    res.status(500)
+    .json({success: false,
+          message: error })
+  })
 })

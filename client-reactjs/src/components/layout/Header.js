@@ -13,7 +13,8 @@ import $ from 'jquery';
 import {Constants} from "../common/Constants"
 import {store} from "../../redux/store/Store"
 import { debounce } from "lodash";
-import logo from  "../../images/logo.png"
+import logo from  "../../images/logo.png";
+import { msalInstance } from '../../index';
 
 const { Header, Content } = Layout;
 const { Search } = Input;
@@ -77,7 +78,6 @@ class AppHeader extends Component {
         });
       }
       if(this.state.applications.length == 0) {
-        console.log("<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<< GETTING APP LIST FROM hEADER")
         var url="/api/app/read/appListByUserId?user_id="+this.props.user.id+'&user_name='+this.props.user.username;
         if(hasAdminRole(this.props.user)) {
           url="/api/app/read/app_list";
@@ -89,11 +89,10 @@ class AppHeader extends Component {
           if(response.ok) {
             return response.json();
           }
-          return handleError(response);
+          handleError(response);
         })
         .then(data => {
-          console.log("<<<<<<<<<<<<<<<<<<<<<<<<<<<<< Data  from HEADER", data)
-          let applications = data.map(application => { return {value: application.id, display: application.title} })
+          let applications = data?.map(application => { return {value: application.id, display: application.title} })
           if(applications && applications.length > 0) {
             this.setState({ applications });
             //this.handleRef();
@@ -159,9 +158,14 @@ class AppHeader extends Component {
       }
       this.props.history.push(nav);
     }
+    
 
     handleLogOut = (e) => {
-      localStorage.removeItem('user');
+      if(process.env.REACT_APP_SSO === 'azure_ad'){
+        msalInstance.logout();
+      }
+      // localStorage.removeItem('user');
+      localStorage.clear();
       this.setState({
           applicationId: '',
           selected: 'Select an Application'
@@ -171,9 +175,11 @@ class AppHeader extends Component {
       this.props.dispatch(groupsActions.groupExpanded({'id':'', 'key':'0-0'}, ['0-0']));
       //reset cluster selectiong
       this.props.dispatch(assetsActions.clusterSelected(''));
-      this.props.dispatch(userActions.logout());
+      // this.props.dispatch(userActions.logout());
 
-      this.props.history.push('/login');
+      setTimeout(() =>{
+        this.props.history.push('/login');
+      }, 6000)
       message.success('You have been successfully logged out. ');
     }
 

@@ -37,6 +37,7 @@ async function authenticate(req, res, { username, password }) {
 
 async function verifyToken(token) {
     if(token) {
+      console.log("Token present <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<", token)
         var authServiceUrl = process.env.AUTH_SERVICE_URL + '/verify';
         return new Promise(function(resolve, reject) {
             request.post({
@@ -47,15 +48,15 @@ async function verifyToken(token) {
               }
             }, function(err, response, body) {
               if (err || response.statusCode != 200) {
+                console.log("Token verification error  <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<", token)
                 reject(err);
               }
+              console.log("<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<< Token verified", body)
               resolve(body);
           });
         });
     }
 }
-
-
 
 
 async function validateToken(req, res, next) {
@@ -88,6 +89,7 @@ async function validateToken(req, res, next) {
         }*/
       }
   }
+  next();
 }
 
 async function getAll() {
@@ -266,7 +268,6 @@ async function changePassword(req, res, { username, password }) {
 
 async function registerUser(req, res) {
   var authServiceUrl = process.env.AUTH_SERVICE_URL + '/registerUser';
-  console.log("<<<<<<<<<<<<<<<< Registering user ", authServiceUrl)
   return new Promise(function(resolve, reject) {
     request.post({
       url: authServiceUrl,

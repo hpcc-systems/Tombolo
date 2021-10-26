@@ -11,7 +11,6 @@ export function authenticationReducer(state = initialState, action) {
         user: action.user
       };
     case Constants.LOGIN_SUCCESS:
-      console.log("<<<<<<<<<<<< Loggin success")
       return {
         loggedIn: true,
         user: action.user
