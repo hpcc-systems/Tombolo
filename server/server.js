@@ -16,9 +16,7 @@ const io = require('socket.io')(server);
 
 const socketIo = io.use(function(socket, next){
   const token =  socket.handshake.auth.token;
-  console.log("<<<<<<<<<<<<<<<<<<<<<<<<<<<<< Verify token")
   verifyToken(token).then(() => {
-    console.log("<<<<<<<<<<<<<<<<<<<<<< after verifying token ")
     next();
   })
 })

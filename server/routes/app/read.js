@@ -44,11 +44,11 @@ router.get('/app_list', (req, res) => {
     })
     .catch(function(err) {
       console.log(err);
-      return res.status(500).json({ success: false, message: "Error occured while getting application list" });
+      return res.status(500).json({ success: false, message: "Error occured while getting application lists" });
     });
   } catch (err) {
     console.log('err', err);
-    return res.status(500).json({ success: false, message: "Error occured while getting application list" });
+    return res.status(500).json({ success: false, message: "Error occured while getting applications" });
   }
 });
 

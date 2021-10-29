@@ -37,6 +37,7 @@ import { readOnlyMode, editableMode } from "../../common/readOnlyUtil";
 import BasicsTabGeneral from "./BasicsTabGeneral";
 import BasicsTabSpray from "./BasicsTabSpray";
 import BasicsTabScript from "./BasicsTabScript";
+import BasicsTabManul from "./BasicsTabManaul.jsx"
 
 const TabPane = Tabs.TabPane;
 const { Option, OptGroup } = Select;
@@ -126,6 +127,7 @@ class JobDetails extends Component {
       "Data Profile",
       "ETL",
       "Job",
+      "Manual",
       "Modeling",
       "Query Build",
       "Scoring",
@@ -1652,6 +1654,8 @@ class JobDetails extends Component {
                     return <BasicsTabScript enableEdit={this.state.enableEdit} editingAllowed={editingAllowed} onChange={this.onChange} localState={this.state} />;
                   case 'Spray':
                     return <BasicsTabSpray enableEdit={this.state.enableEdit} editingAllowed={editingAllowed} addingNewAsset={this.state.addingNewAsset} clearState={this.clearState} onChange={this.onChange} clusters={this.props.clusters} localState={this.state} formRef={this.formRef}/>;
+                  case 'Manual' :
+                    return <BasicsTabManul enableEdit={this.state.enableEdit} editingAllowed={editingAllowed} addingNewAsset={this.state.addingNewAsset} clearState={this.clearState} onChange={this.onChange} clusters={this.props.clusters} localState={this.state} formRef={this.formRef} />;
                 }
 
               })()}

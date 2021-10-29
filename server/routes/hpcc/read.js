@@ -20,6 +20,7 @@ let lodash = require('lodash');
 const {socketIo : io} = require('../../server');
 const fs = require("fs");
 const { file } = require('tmp');
+const { response } = require('express');
 
 router.post('/filesearch', [
   body('keyword')
@@ -558,9 +559,9 @@ router.get('/getDirectories',[
 		let inputs = JSON.parse(data)		
 		try {
 			hpccUtil.fetchDirectories(host, port, inputs)
-			.then(response => {res.json(response)});
+			.then(response => {res.json(response)})
+			.catch(err =>{ res.status(500).json({success: false, message: "Error occured while getting directories"})});
 			} catch (err) {
-				console.log('err', err);
 				return res.status(500).send("Error occured while getting directories");
 			}
 	}

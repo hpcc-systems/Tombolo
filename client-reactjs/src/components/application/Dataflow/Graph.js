@@ -6,6 +6,7 @@ import { Button, Icon, Drawer, Row, Col, Descriptions, Badge, Modal, message, Sp
 import { Typography } from 'antd';
 import { withRouter } from 'react-router-dom';
 import AssetDetailsDialog from "../AssetDetailsDialog"
+import ManualJobDialog from "./ManualJobDialog"
 import ExistingAssetListDialog from "./ExistingAssetListDialog";
 import {updateGraph, changeVisibility} from "../../common/WorkflowUtil";
 import { authHeader, handleError } from "../../common/AuthHeader.js"
@@ -57,6 +58,7 @@ class Graph extends Component {
     wu_start: '',
     wu_duration: '',
     showSubProcessDetails: false,
+    showManualJobDialog: false,
     selectedSubProcess: {"id":''},
     currentlyEditingNode: {},
     showAssetListDlg: false,
@@ -231,6 +233,11 @@ class Graph extends Component {
           showSubProcessDetails: true
         });
         break;
+      case 'Manual Job':
+          this.setState({
+            showManualJobDialog: true
+          });
+          break;
    }
   }
 
@@ -742,7 +749,7 @@ class Graph extends Component {
       case 'Job':
         gEl.select(".icon").remove();
         shape = shapesData[0];
-        //remove the icon for jobs as it needs to updated based on jobType        
+        //remove the icon for jobs as it needs to updated based on jobType        FshapesData
         break;
       case 'File':
         shape = shapesData[1];
@@ -752,6 +759,9 @@ class Graph extends Component {
         break;
       case 'Sub-Process':
         shape = shapesData[3];
+        break;
+      case 'Manual Job' : 
+        shape = shapesData[4];
         break;
       case '':  
         shape = shapesData[0];
@@ -1175,25 +1185,53 @@ class Graph extends Component {
               }
 
               break;
+
+              case 'Manual Job':
+                if(d3.select("#rec-"+d.id).empty()) {
+                  d3.select(this)
+                    .append("rect")
+                    .text(function(d, i) {
+                      return "Helloooooo";
+                    })
+                    .attr("id", "rec-"+d.id)
+                    .attr("rx", shapesData[4].rx)
+                    .attr("ry", shapesData[4].ry)
+                    .attr("width", shapesData[4].rectwidth)
+                    .attr("height", shapesData[4].rectheight)
+                    .attr("stroke", "grey")
+                    .attr("fill", shapesData[4].color)
+                    .attr("stroke-width", "3")
+                    .attr("filter", "url(#glow)")
+                    //.call(_self.nodeDragHandler)
+                  }
+  
+                // _self.insertBgImage(d3.select(this), d.x, d.y, d);
+                // _self.insertTitle(d3.select(this), d.title, d.x, d.y, d);
+                // if(d.hasOwnProperty('isHidden') && d.isHidden) {
+                //   d3.select(d3.select("#rec-"+d.id).node().parentNode).attr("class", "d-none")
+                // }
+  
+                break;
           }
+          
 
       });
       //_self.saveGraph()
   }
 
   toggleDeleteIcon = (node, d) => {
-    if(!this.props.viewMode && hasEditPermission(this.props.user)) {
-      if(d3.select("#t"+d.id).classed("hide-graph-icon")) {
-        d3.select("#t"+d.id).classed("hide-graph-icon", false)
-      } else {
-        d3.select("#t"+d.id).classed("hide-graph-icon", true)
-      }
-      if(!d3.select("#hide"+d.id).empty() && d3.select("#hide"+d.id).classed("hide-graph-icon")) {
-        d3.select("#hide"+d.id).classed("hide-graph-icon", false)
-      } else {
-        d3.select("#hide"+d.id).classed("hide-graph-icon", true)
-      }
-    }
+    // if(!this.props.viewMode && hasEditPermission(this.props.user)) {
+    //   if(d3.select("#t"+d.id).classed("hide-graph-icon")) {
+    //     d3.select("#t"+d.id).classed("hide-graph-icon", false)
+    //   } else {
+    //     d3.select("#t"+d.id).classed("hide-graph-icon", true)
+    //   }
+    //   if(!d3.select("#hide"+d.id).empty() && d3.select("#hide"+d.id).classed("hide-graph-icon")) {
+    //     d3.select("#hide"+d.id).classed("hide-graph-icon", false)
+    //   } else {
+    //     d3.select("#hide"+d.id).classed("hide-graph-icon", true)
+    //   }
+    // }
   }
 
 
@@ -1223,6 +1261,7 @@ class Graph extends Component {
           });
           break;
         case 'Sub-Process':
+
           /*if(d.subProcessId) {
             handleSubProcessDelete(d.subProcessId, _self.props.applicationId);
           }*/
@@ -1639,6 +1678,12 @@ class Graph extends Component {
     }
 
     const editingAllowed = hasEditPermission(this.props.user);
+
+    //Handle ManualJobDialog cancel click
+    const onManualJobDialogCancel = () =>{
+      this.setState({ showManualJobDialog : false})
+    }
+
   return (
       <React.Fragment>
         <div className="graph-div" >
@@ -1765,6 +1810,7 @@ class Graph extends Component {
             onRefresh={this.onFileAdded}
             selectedSubProcess={this.state.selectedSubProcess}
             nodeId={this.state.currentlyEditingId}/> : null}
+            
         {this.state.showAssetListDlg ?
           <ExistingAssetListDialog
             show={this.state.showAssetListDlg}
@@ -1775,6 +1821,11 @@ class Graph extends Component {
             onFileAdded={this.onFileAdded}
             user={this.props.user} 
             currentlyEditingNodeId={this.state.currentlyEditingId}/>  : null}
+        
+        <ManualJobDialog
+          modalVisible={this.state.showManualJobDialog}
+          onCancel = {onManualJobDialogCancel}
+         />
 
 
     </React.Fragment>

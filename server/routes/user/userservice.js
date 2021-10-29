@@ -37,7 +37,6 @@ async function authenticate(req, res, { username, password }) {
 
 async function verifyToken(token) {
     if(token) {
-      console.log("Token present <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<", token)
         var authServiceUrl = process.env.AUTH_SERVICE_URL + '/verify';
         return new Promise(function(resolve, reject) {
             request.post({
@@ -48,10 +47,8 @@ async function verifyToken(token) {
               }
             }, function(err, response, body) {
               if (err || response.statusCode != 200) {
-                console.log("Token verification error  <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<", token)
                 reject(err);
               }
-              console.log("<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<< Token verified", body)
               resolve(body);
           });
         });
