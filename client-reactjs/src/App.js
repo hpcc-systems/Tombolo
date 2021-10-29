@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React  from "react";
 import { connect } from "react-redux";
 import { Layout } from "antd/lib";
 import "font-awesome/css/font-awesome.min.css";
@@ -10,7 +10,6 @@ import ResetPassword from "./components/login/ResetPassword";
 import { PrivateRoute } from "./components/common/PrivateRoute";
 import Assets from "./components/application/Assets";
 import { LeftNav } from "./components/layout/LeftNav";
-import AssetDetailsDialog from "./components/application/AssetDetailsDialog";
 import DataDictionary from "./components/application/DataDictionary";
 import Dataflow from "./components/application/Dataflow";
 import DataflowDetails from "./components/application/Dataflow/DataflowDetails";
@@ -45,12 +44,12 @@ class App extends React.Component {
 
   render() {
     const isApplicationSet =
-      this.props.application && this.props.application.applicationId != ""
+      this.props.application && this.props.application.applicationId !== ""
         ? true
         : false;
     const selectedTopNav =
       this.props.selectedTopNav &&
-      this.props.selectedTopNav.indexOf("/admin") != -1
+      this.props.selectedTopNav.indexOf("/admin") !== -1
         ? "/admin/applications"
         : "/files";
     const dataFlowComp = () => {

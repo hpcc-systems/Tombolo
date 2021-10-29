@@ -37,7 +37,6 @@ async function authenticate(req, res, { username, password }) {
 
 async function verifyToken(token) {
     if(token) {
-      console.log("Token present <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<", token)
         var authServiceUrl = process.env.AUTH_SERVICE_URL + '/verify';
         return new Promise(function(resolve, reject) {
             request.post({
@@ -60,6 +59,8 @@ async function verifyToken(token) {
 
 
 async function validateToken(req, res, next) {
+  console.log
+  ("Validate TOKEN <<<<<<<<<<<<<<<<<<")
   let token = req.headers['x-access-token'] || req.headers['authorization'];
   if (token) {
       if (token.startsWith('Bearer ')) {

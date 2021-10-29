@@ -24,7 +24,7 @@ export function handleError(response) {
 }
 
 // When the client sends a fetch requst the header requires an auth token. 
-// This function grabs the token from the LS. The returned value is palced in the header of the API calls
+// This function grabs the token from the Local Storage. The returned value is palced in the header of the API calls
 // If the application is using Azure sso, the function below this one replaces this function's returned value
 export function authHeader(action){
   // return authorization header with jwt token
@@ -48,7 +48,7 @@ export function authHeader(action){
 // This async function gets the refresh token for the active azure account
 // The refreshed/latest token  replaces the existing token by intercepting the API calls
 // Function below this one is doing the intercepting and replacing job
- export async function authHeaders() {
+ export async function getFreshAzureToken() {
    if(process.env.REACT_APP_SSO === 'azure_ad'){
     const currentAccount = msalInstance.getActiveAccount();
     const silentRequest = {
@@ -57,7 +57,7 @@ export function authHeader(action){
         forceRefresh: false
       };
 
-    const tokenResponse = await msalInstance.acquireTokenSilent(silentRequest).catch(error => {
+    const tokenResponse = await msalInstance.acquireTokenSilent(silentRequest => {console.log("<<<<<<<<<<< Silent request ", silentRequest)}).catch(error => {
       console.log("Error occured", error)
     });
 
@@ -67,16 +67,15 @@ export function authHeader(action){
    }
 }
 
-//Intercepts all the fetch requests and update token for necessary routes
+//if Azure sso is being used intercept all the fetch requests and update token for necessary routes
 const newFetch = window.fetch;
 window.fetch =  async function() {
     if(process.env.REACT_APP_SSO === 'azure_ad' && arguments[1].headers.Authorization){
-      let newToken = await authHeaders();
+      let newToken = await getFreshAzureToken();
          arguments[1] = {headers: newToken};
          return newFetch.apply(this, arguments)
         
     }else{
       return newFetch.apply(this, arguments);
-
     }
 }

@@ -1,4 +1,4 @@
-import React, {useState, useEffect} from 'react'
+import React, {useState, useEffect} from 'react';
 import { useMsal } from "@azure/msal-react";
 import { useDispatch } from "react-redux";
 import { userActions } from '../../redux/actions/User';
@@ -8,26 +8,27 @@ import { Spin } from 'antd';
 function AzureUserHome() {
     const dispatch = useDispatch();
     const { instance, accounts, inProgress } = useMsal();
+    const [apiData, setApiData] = useState(null);
 
     useEffect(() => {
-        console.log("Inprogress <<<<", inProgress, "accounts <<<<", accounts, "instance <<<< ", instance);
-
         // When the user is successfully authenticated and MSL has users account info
+        // set active account for msal instance
         if(accounts.length > 0 && inProgress === 'none'){
             let userAccount = accounts[0];
             instance.setActiveAccount(userAccount);
+            console.log(userAccount)
             let user = {
                 firstName : userAccount.name.split(' ')[0],
                 lastName : userAccount.name.split(' ')[1],
                 email : userAccount.username,
                 username : userAccount.idTokenClaims.preferred_username.split('@')[0],
                 type: 'azureUser',
-                token : userAccount.localAccountId,
+                permissions: userAccount.idTokenClaims.roles[0],
+                token : userAccount.idTokenClaims.aio,
             }
 
           // This dispatch function makes a call to /loginAzureUser. 
           //login azure user adds a user in the user table if not already there
-          console.log("<<<< This block of code is running")
           dispatch( userActions.azureLogin(user));
         } 
         

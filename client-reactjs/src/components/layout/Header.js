@@ -161,9 +161,7 @@ class AppHeader extends Component {
     
 
     handleLogOut = (e) => {
-      if(process.env.REACT_APP_SSO === 'azure_ad'){
-        msalInstance.logout();
-      }
+     
       // localStorage.removeItem('user');
       localStorage.clear();
       this.setState({
@@ -176,6 +174,11 @@ class AppHeader extends Component {
       //reset cluster selectiong
       this.props.dispatch(assetsActions.clusterSelected(''));
       // this.props.dispatch(userActions.logout());
+
+      if(process.env.REACT_APP_SSO === 'azure_ad'){
+        msalInstance.logout();
+        return;
+      }
 
       setTimeout(() =>{
         this.props.history.push('/login');
@@ -305,7 +308,7 @@ class AppHeader extends Component {
     const appNav = (applicationId != '' ? "/" + applicationId + "/dataflow" : "/dataflow");
     const userActionMenu = (
       <Menu onClick={this.handleUserActionMenuClick}>
-        <Menu.Item key="1">Change Password</Menu.Item>
+        {process.env.REACT_APP_SSO !== 'azure_ad' ? <Menu.Item key="1">Change Password</Menu.Item> : null}
         <Menu.Item key="2">Logout</Menu.Item>
       </Menu>
     );
