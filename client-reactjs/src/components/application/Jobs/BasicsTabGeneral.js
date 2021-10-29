@@ -95,12 +95,14 @@ function BasicsTabGeneral({enableEdit, editingAllowed, addingNewAsset, jobType, 
     localState.selectedCluster = value;
   }
 
+  const isFilesFromGitHub = formRef.current?.getFieldValue("isFilesFromGitHub");
+
   return (
     
     <React.Fragment>
       {enableEdit ?
         <div>
-          {addingNewAsset ?
+          {addingNewAsset && !isFilesFromGitHub ?
             <React.Fragment>
               <Form.Item {...formItemLayout} label="Cluster" name="clusters">
                 <Select placeholder="Select a Cluster" disabled={!editingAllowed} onChange={onClusterSelection} style={{ width: 190 }}>
@@ -177,7 +179,7 @@ function BasicsTabGeneral({enableEdit, editingAllowed, addingNewAsset, jobType, 
               }
 
               </Form.Item>
-              {jobType != 'Data Profile' && jobType != 'Spray' ?
+              {jobType != 'Data Profile' && jobType != 'Spray' ? 
               <Form.Item label="Git Repo" name="gitRepo" rules={[{
                   type: 'url',
                   message: 'Please enter a valid url',

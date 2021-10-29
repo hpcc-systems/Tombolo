@@ -519,6 +519,10 @@ router.post('/saveJob', [
   if (!errors.isEmpty()) {
       return res.status(422).json({ success: false, errors: errors.array() });
   }
+  console.log('------------------------------------------');
+  console.dir(req.body,{ depth: null });
+  console.log('------------------------------------------');
+
   console.log("[saveJob] - Get file list for app_id = " + req.body.job.basic.application_id + " isNewJob: "+req.body.isNew);
   var jobId=req.body.id, applicationId=req.body.job.basic.application_id, fieldsToUpdate={}, nodes=[], edges=[];
   try {

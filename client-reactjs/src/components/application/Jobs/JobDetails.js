@@ -37,6 +37,7 @@ import { readOnlyMode, editableMode } from "../../common/readOnlyUtil";
 import BasicsTabGeneral from "./BasicsTabGeneral";
 import BasicsTabSpray from "./BasicsTabSpray";
 import BasicsTabScript from "./BasicsTabScript";
+import GitHubForm from "./GitHubForm.js";
 
 const TabPane = Tabs.TabPane;
 const { Option, OptGroup } = Select;
@@ -170,11 +171,12 @@ class JobDetails extends Component {
       sprayFileName: "",
       sprayedFileScope: "",
       selectedDropZoneName: {},
-    },
+      },
     enableEdit: false,
     editing: false,
     dataAltered: false,
-    errors: false
+    errors: false,
+    isFilesFromGitHub:false
   };
 
   componentDidMount() {
@@ -772,9 +774,11 @@ class JobDetails extends Component {
     if (formFieldsValue["sprayDropZone"]) {
       formFieldsValue["sprayDropZone"] = formFieldsValue["sprayDropZone"];
     }
+    const {filesFromGithub,...formFields} = formFieldsValue;
+
     var jobDetails = {
       basic: {
-        ...formFieldsValue,
+        ...formFields,
         application_id: applicationId,
         dataflowId: this.props.selectedDataflow
           ? this.props.selectedDataflow.id
@@ -793,6 +797,7 @@ class JobDetails extends Component {
       mousePosition: this.props.mousePosition,
       currentlyEditingId: this.props.currentlyEditingId,
       autoCreateFiles: false,
+      filesFromGithub // all fields related to github is stored here
     };
     let groupId = this.props.groupId
       ? this.props.groupId
@@ -1603,6 +1608,8 @@ class JobDetails extends Component {
   </div>
     //When input input field value is changed
     const onFieldsChange = (changedFields, allFields) => {
+      // console.log(`changedFields`, changedFields)
+      console.log(`allFields`, allFields)
       this.setState({dataAltered : true})
       const inputErrors = allFields.filter(item => { return item.errors.length > 0} )
       if(inputErrors.length > 0){
@@ -1625,7 +1632,7 @@ class JobDetails extends Component {
             <div className="loader">
               <Spin spinning={this.state.initialDataLoading} size="large" />
             </div>) : null}
-          <Form {...formItemLayout} labelAlign="left" ref={this.formRef} onFieldsChange={onFieldsChange}>
+          <Form {...formItemLayout} initialValues={{selectedFile:null}} labelAlign="left" ref={this.formRef} onFieldsChange={onFieldsChange}>
           <Tabs defaultActiveKey="1" tabBarExtraContent = {this.props.displayingInModal ? null : controls }>
 
           <TabPane tab="Basic" key="1">
@@ -1637,7 +1644,19 @@ class JobDetails extends Component {
                   {jobTypes.map(d => <Option key={d}>{d}</Option>)}
                 </Select>
                 }
-              </Form.Item>                            
+              </Form.Item>   
+
+              <Form.Item 
+                valuePropName="checked"
+                name='isFilesFromGitHub' 
+                label="Pull files from GitHub"
+                labelCol={{ xxl: {span: 2} }}
+                > 
+               <Checkbox  /> 
+              </Form.Item>   
+
+              {this.formRef.current?.getFieldValue("isFilesFromGitHub") && <GitHubForm form={this.formRef} /> }                             
+
               {(() =>  {
                 switch (jobType) {
                   case 'Data Profile':
