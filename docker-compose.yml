@@ -95,7 +95,7 @@ services:
   mysql_db:
     image: mysql:5.7
     restart: always
-    command: --innodb_use_native_aio=0
+    command: --innodb_use_native_aio=0 --sql_mode=""
     volumes:
       - ./mysql-data:/var/lib/mysql
     ports:
