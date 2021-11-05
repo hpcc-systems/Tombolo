@@ -1,10 +1,16 @@
 var request = require('request');
+const path = require('path');
 var requestPromise = require('request-promise');
 var models  = require('../models');
 var Cluster = models.cluster;
 let hpccJSComms = require("@hpcc-js/comms");
 const crypto = require('crypto');
 let algorithm = 'aes-256-ctr';
+
+const axios = require('axios');
+const simpleGit = require('simple-git');
+const cp = require('child_process');
+const fs = require('fs');
 
 exports.fileInfo = (fileName, clusterId) => {
 	return new Promise((resolve, reject) => {
@@ -550,7 +556,182 @@ exports.isClusterReachable = async (clusterHost, port, username, password) => {
     return objArray;
 }
 
+exports.getWorkunitsService = async (clusterId) =>{
+  const cluster = await module.exports.getCluster(clusterId);
+  const clusterAuth = await module.exports.getClusterAuth(cluster);
+
+ const connectionSettings= {
+   baseUrl: cluster.thor_host + ':' + cluster.thor_port,
+   userID: clusterAuth ? clusterAuth.user : "",
+   password:clusterAuth ? clusterAuth.password : ""
+  }
+ return new hpccJSComms.WorkunitsService(connectionSettings);
+}
+
+exports.createWorkUnit = async (clusterId,WUbody = {}) =>{
+  const cluster = await module.exports.getCluster(clusterId);
+  const requestConfig = {headers:{ auth : module.exports.getClusterAuth(cluster)}}; // hpcc auth headers.
+   try {
+    const createBody ={ "WUCreateRequest": WUbody };
+    const {data} = await axios.post(`${cluster.thor_host}:${cluster.thor_port}/WsWorkunits/WUCreate`, createBody, requestConfig);
+    const wuid = data.WUCreateResponse?.Workunit?.Wuid
+    if (!wuid) throw data.WUCreateResponse;
+    return wuid;
+  } catch (error) {
+    console.log('create workunit error------------------------------------');
+    console.dir(error, { depth: null });
+    throw new Error('Failed to create new Work Unit.')
+   }
+};
+
+exports.updateWorkUnit = async (clusterId, WUupdateBody) =>{
+  const cluster = await module.exports.getCluster(clusterId);
+  const requestConfig = {headers:{ auth : module.exports.getClusterAuth(cluster)}}; // hpcc auth headers.
+  try {
+    const updateBody ={ "WUUpdateRequest": WUupdateBody };
+    const {data:updatedWuid} = await axios.post(`${cluster.thor_host}:${cluster.thor_port}/WsWorkunits/WUUpdate`, updateBody , requestConfig);
+    if (!updatedWuid.WUSubmitResponse?.Workunit?.Wuid) throw updatedWuid.WUSubmitResponse; // assume that Wuid field is always gonna be in "happy" response
+    return updatedWuid;
+  } catch (error) {
+    console.log('update workunit error------------------------------------');
+    console.dir(error, { depth: null });
+    throw new Error('Failed to update Work Unit.')
+  }
+};
+
+exports.submitWU = async (clusterId, WUsubmitBody) =>{
+  try {
+    const wuService = await module.exports.getWorkunitsService(clusterId);
+    const respond = await wuService.WUSubmit(WUsubmitBody);
+    if (respond.WUSubmitResponse?.Exceptions) throw respond.WUSubmitResponse;
+    return respond;
+  } catch (error) {
+    console.log('submit workunit error------------------------------------');
+    console.dir(error, { depth: null });
+    throw new Error('Failed to submit Work Unit.')
+  }
+};
+
+exports.updateWUAction = async (clusterId,WUactionBody) =>{  
+  try {
+    const wuService = await module.exports.getWorkunitsService(clusterId);
+    const respond = await wuService.WUAction(WUactionBody);
+    const result =respond.ActionResults?.WUActionResult?.[0]?.Result
+    if (!result || result !== 'Success' ) throw respond.ActionResults;
+    console.dir(respond, { depth: null });
+    console.log('------------------------------------------');
+    return respond;
+  } catch (error) {
+    console.log('update workunit action error------------------------------------');
+    console.dir(error, { depth: null });
+    throw error;
+  }
+}
+
+exports.pullFilesFromGithub  =  async ( wuid, clusterId, fileData ) => {
+
+  const { selectedGitBranch, providedGithubRepo, selectedFile } = fileData;
+  const { projectOwner, projectName, name:startFileName, path:filePath } = selectedFile;
+
+  const allClonesPath = path.join(process.cwd(),'..','gitClones');
+  const currentClonedRepoPath = `${allClonesPath}/${projectOwner}_${projectName}` ;
+
+  const executionRepoPath = path.join(currentClonedRepoPath,filePath.replace(startFileName,''));
+  const startFilePath =path.join(currentClonedRepoPath,filePath);
+
+  const gitOptions= { baseDir: allClonesPath };
+  const git = simpleGit(gitOptions);
+
+  const tasks ={ repoCloned: false, repoDeleted: false, archiveCreated: false, WUupdated: false, WUsubmitted: false, WUaction: null, error: null };
+
+  try {
+    // #1 - Clone repo
+    console.log('CLONING STARTED-------------------------------------');
+    await git.clone(providedGithubRepo, currentClonedRepoPath ,{'--branch':selectedGitBranch, '--single-branch':true} );
+    tasks.repoCloned = true;
+    console.log('CLONING FINISHED------------------------------------------');
+
+    // #2 - Create Archive XML File     
+    let args = ['-E', startFilePath, '-I', executionRepoPath];
+    const archived = await createEclArchive(args, executionRepoPath);
+    tasks.archiveCreated =true;
+    console.log('archived----------------------------------------');
+    console.dir(archived);
+
+    // #3 - Update the Workunit with Archive XML 
+    const updateBody ={ "Wuid": wuid, "QueryText": archived.stdout};
+    const updatedWuid =  await module.exports.updateWorkUnit(clusterId,updateBody);
+    tasks.WUupdated = true;
+    console.log('WU updated------------------------------------');
+    console.dir(updatedWuid, { depth: null });
+    console.log('------------------------------------------');
+    
+    // #4 - Submit the Workunit to HPCC 
+    const submitBody ={ "Wuid": wuid, "Cluster": 'thor' };
+    const submittedWU =  await module.exports.submitWU(clusterId,submitBody);
+    tasks.WUsubmitted = true;
+    console.log('submittedWU------------------------------------------');
+    console.dir(submittedWU, { depth: null });
+
+  } catch (error) { 
+    // Error going to have messages related to where in process error happened, it will end up in router.post('/executeJob' catch block.
+    try {
+      const WUactionBody = { "Wuids": { "Item": [wuid] }, "WUActionType": "SetToFailed" };
+      const updatedWithFailure = await module.exports.updateWUAction(clusterId, WUactionBody );
+      tasks.WUaction = updatedWithFailure.ActionResults.WUActionResult;
+    } catch (error) {
+      error.message ? tasks.WUaction= {message:error.message, failedToUpdate: true} : tasks.WUaction= {...error, failedToUpdate: true };    
+    }
+    tasks.error = error;
+    console.log('Error------------------------------------');
+    console.dir(error, { depth: null });
+
+  } finally {
+    //  delete repo;
+    // let tries= 1
+    // try {
+    //     fs.rmSync(currentClonedRepoPath, { recursive: true, maxRetries:5, force: true });
+    //     tasks.repoDeleted = true;
+    //     console.log('repo deleted successfully-----------------------------------');
+    //   } catch (err) {
+    //     console.log(`Failed to delete a repo, try - ${tries}`, err, '-----------------------------------------');
+    //     tries++;
+    //   } 
+
+      return { wuid, ...tasks };
+  }
+};
+
 let sortFiles = (files) => {
   return files.sort((a, b) => (a.name > b.name) ? 1 : -1);
 }
 
+
+const createEclArchive = (args, cwd) => {
+  console.log('------------------------------------------');
+  console.log('in createEclArchive',);
+  console.log(`args`, args);
+  console.log(`cwd`, cwd)
+  console.log('------------------------------------------');
+
+  return new Promise((resolve, reject) => {
+    const child = cp.spawn('eclcc', args, { cwd: cwd });
+    child.on('error',(error)=>{
+      error.message = 'Failed to create ECL Archive';
+      reject(error)
+    })
+    let stdOut = "", stdErr = "";
+    child.stdout.on("data", (data) => {
+      stdOut += data.toString();
+    });
+    child.stderr.on("data", (data) => {
+      stdErr += data.toString();
+    });
+    child.on("close", (_code, _signal) => {
+      resolve({
+        stdout: stdOut.trim(),
+        stderr: stdErr.trim()
+      });
+    });
+  });
+};
