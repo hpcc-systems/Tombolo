@@ -7,7 +7,6 @@ let hpccJSComms = require("@hpcc-js/comms");
 const crypto = require('crypto');
 let algorithm = 'aes-256-ctr';
 
-const axios = require('axios');
 const simpleGit = require('simple-git');
 const cp = require('child_process');
 const fs = require('fs');
@@ -558,44 +557,45 @@ exports.isClusterReachable = async (clusterHost, port, username, password) => {
 
 exports.getWorkunitsService = async (clusterId) =>{
   const cluster = await module.exports.getCluster(clusterId);
-  const clusterAuth = await module.exports.getClusterAuth(cluster);
+  const clusterAuth =  module.exports.getClusterAuth(cluster);
 
  const connectionSettings= {
    baseUrl: cluster.thor_host + ':' + cluster.thor_port,
    userID: clusterAuth ? clusterAuth.user : "",
-   password:clusterAuth ? clusterAuth.password : ""
-  }
+   password: clusterAuth ? clusterAuth.password : ""
+ }
+
  return new hpccJSComms.WorkunitsService(connectionSettings);
 }
 
 exports.createWorkUnit = async (clusterId,WUbody = {}) =>{
-  const cluster = await module.exports.getCluster(clusterId);
-  const requestConfig = {headers:{ auth : module.exports.getClusterAuth(cluster)}}; // hpcc auth headers.
    try {
-    const createBody ={ "WUCreateRequest": WUbody };
-    const {data} = await axios.post(`${cluster.thor_host}:${cluster.thor_port}/WsWorkunits/WUCreate`, createBody, requestConfig);
-    const wuid = data.WUCreateResponse?.Workunit?.Wuid
-    if (!wuid) throw data.WUCreateResponse;
+    const wuService = await module.exports.getWorkunitsService(clusterId);
+    const respond = await wuService.WUCreate(WUbody);
+    const wuid = respond.Workunit?.Wuid
+    if (!wuid) throw respond;
     return wuid;
   } catch (error) {
     console.log('create workunit error------------------------------------');
     console.dir(error, { depth: null });
-    throw new Error('Failed to create new Work Unit.')
+    const customError = new Error('Failed to create new Work Unit.');
+    customError.details = error; // RESPOND WITH EXCEPTIONS CAN BE FOUND HERE.
+    throw customError;
    }
 };
 
 exports.updateWorkUnit = async (clusterId, WUupdateBody) =>{
-  const cluster = await module.exports.getCluster(clusterId);
-  const requestConfig = {headers:{ auth : module.exports.getClusterAuth(cluster)}}; // hpcc auth headers.
   try {
-    const updateBody ={ "WUUpdateRequest": WUupdateBody };
-    const {data:updatedWuid} = await axios.post(`${cluster.thor_host}:${cluster.thor_port}/WsWorkunits/WUUpdate`, updateBody , requestConfig);
-    if (!updatedWuid.WUSubmitResponse?.Workunit?.Wuid) throw updatedWuid.WUSubmitResponse; // assume that Wuid field is always gonna be in "happy" response
-    return updatedWuid;
+    const wuService = await module.exports.getWorkunitsService(clusterId);
+    const respond = await wuService.WUUpdate(WUupdateBody);
+    if (!respond.Workunit?.Wuid) throw respond; // assume that Wuid field is always gonna be in "happy" response
+    return respond;
   } catch (error) {
     console.log('update workunit error------------------------------------');
     console.dir(error, { depth: null });
-    throw new Error('Failed to update Work Unit.')
+    const customError = new Error('Failed to update Work Unit.')
+    customError.details = error; // RESPOND WITH EXCEPTIONS CAN BE FOUND HERE.
+    throw customError;
   }
 };
 
@@ -603,12 +603,14 @@ exports.submitWU = async (clusterId, WUsubmitBody) =>{
   try {
     const wuService = await module.exports.getWorkunitsService(clusterId);
     const respond = await wuService.WUSubmit(WUsubmitBody);
-    if (respond.WUSubmitResponse?.Exceptions) throw respond.WUSubmitResponse;
+    if (respond.Exceptions) throw respond;
     return respond;
   } catch (error) {
     console.log('submit workunit error------------------------------------');
     console.dir(error, { depth: null });
-    throw new Error('Failed to submit Work Unit.')
+    const customError = new Error('Failed to submit Work Unit.')
+    customError.details = error; // RESPOND WITH EXCEPTIONS CAN BE FOUND HERE.
+    throw customError; 
   }
 };
 
@@ -616,21 +618,23 @@ exports.updateWUAction = async (clusterId,WUactionBody) =>{
   try {
     const wuService = await module.exports.getWorkunitsService(clusterId);
     const respond = await wuService.WUAction(WUactionBody);
-    const result =respond.ActionResults?.WUActionResult?.[0]?.Result
-    if (!result || result !== 'Success' ) throw respond.ActionResults;
+    const result = respond.ActionResults?.WUActionResult?.[0]?.Result
+    if (!result || result !== 'Success' ) throw respond;
     console.dir(respond, { depth: null });
     console.log('------------------------------------------');
     return respond;
   } catch (error) {
     console.log('update workunit action error------------------------------------');
     console.dir(error, { depth: null });
-    throw error;
+    const customError = new Error("Failed to update Work Unit action");
+    customError.details = error; // RESPOND WITH EXCEPTIONS CAN BE FOUND HERE.
+    throw customError; 
   }
 }
 
-exports.pullFilesFromGithub  =  async ( wuid, clusterId, fileData ) => {
+exports.pullFilesFromGithub  =  async ( wuid, jobName="", clusterId, fileData ) => {
 
-  const { selectedGitBranch, providedGithubRepo, selectedFile } = fileData;
+  const { selectedGitBranch, providedGithubRepo, selectedFile } = fileData; // TODO will need username and token in order to pull private repo
   const { projectOwner, projectName, name:startFileName, path:filePath } = selectedFile;
 
   const allClonesPath = path.join(process.cwd(),'..','gitClones');
@@ -643,8 +647,11 @@ exports.pullFilesFromGithub  =  async ( wuid, clusterId, fileData ) => {
   const git = simpleGit(gitOptions);
 
   const tasks ={ repoCloned: false, repoDeleted: false, archiveCreated: false, WUupdated: false, WUsubmitted: false, WUaction: null, error: null };
-
+ 
+  let wuService;
   try {
+    // initializing wuService to update hpcc.
+    wuService = await module.exports.getWorkunitsService(clusterId); 
     // #1 - Clone repo
     console.log('CLONING STARTED-------------------------------------');
     await git.clone(providedGithubRepo, currentClonedRepoPath ,{'--branch':selectedGitBranch, '--single-branch':true} );
@@ -659,46 +666,62 @@ exports.pullFilesFromGithub  =  async ( wuid, clusterId, fileData ) => {
     console.dir(archived);
 
     // #3 - Update the Workunit with Archive XML 
-    const updateBody ={ "Wuid": wuid, "QueryText": archived.stdout};
-    const updatedWuid =  await module.exports.updateWorkUnit(clusterId,updateBody);
+    const updateBody ={ "Wuid": wuid, "Jobname": jobName, "QueryText": archived.stdout};
+    const updateRespond = await wuService.WUUpdate(updateBody)
+    if (!updateRespond.Workunit?.Wuid) { // assume that Wuid field is always gonna be in "happy" response
+      console.log('---WUupdate error---------------------------------------');
+      console.dir(updateRespond, { depth: null });
+      throw new Error('Failed to update Work Unit.')
+    }
     tasks.WUupdated = true;
-    console.log('WU updated------------------------------------');
-    console.dir(updatedWuid, { depth: null });
-    console.log('------------------------------------------');
+    console.log('WUupdate------------------------------------');
+    console.dir(updateRespond, { depth: null });
     
     // #4 - Submit the Workunit to HPCC 
     const submitBody ={ "Wuid": wuid, "Cluster": 'thor' };
-    const submittedWU =  await module.exports.submitWU(clusterId,submitBody);
+    const submitRespond = await wuService.WUSubmit(submitBody)
+    if (submitRespond.Exceptions) {
+      console.log('---WUsubmit error---------------------------------------');
+      console.dir(submitRespond, { depth: null });
+      throw new Error('Failed to submit Work Unit.')
+    } 
     tasks.WUsubmitted = true;
-    console.log('submittedWU------------------------------------------');
-    console.dir(submittedWU, { depth: null });
-
+    console.log('WUsubmit------------------------------------------');
+    console.dir(submitRespond, { depth: null });
   } catch (error) { 
     // Error going to have messages related to where in process error happened, it will end up in router.post('/executeJob' catch block.
     try {
       const WUactionBody = { "Wuids": { "Item": [wuid] }, "WUActionType": "SetToFailed" };
-      const updatedWithFailure = await module.exports.updateWUAction(clusterId, WUactionBody );
-      tasks.WUaction = updatedWithFailure.ActionResults.WUActionResult;
+      const actionRespond = await wuService.WUAction(WUactionBody);
+      const result = actionRespond.ActionResults?.WUActionResult?.[0]?.Result
+      if (!result || result !== 'Success' ) {
+        console.log('WUaction error------------------------------------------');
+        console.dir(actionRespond, { depth: null });
+        throw actionRespond
+      }
+      tasks.WUaction = actionRespond.ActionResults.WUActionResult;
     } catch (error) {
-      error.message ? tasks.WUaction= {message:error.message, failedToUpdate: true} : tasks.WUaction= {...error, failedToUpdate: true };    
+       error.message ?
+       tasks.WUaction= {message:error.message, failedToUpdate: true} :
+       tasks.WUaction= {...error, failedToUpdate: true };    
     }
-    tasks.error = error;
-    console.log('Error------------------------------------');
-    console.dir(error, { depth: null });
 
+    tasks.error = error;
+    console.log('ERROR IN MAIN CATCH------------------------------------');
+    console.dir(error, { depth: null });
   } finally {
     //  delete repo;
-    // let tries= 1
-    // try {
-    //     fs.rmSync(currentClonedRepoPath, { recursive: true, maxRetries:5, force: true });
-    //     tasks.repoDeleted = true;
-    //     console.log('repo deleted successfully-----------------------------------');
-    //   } catch (err) {
-    //     console.log(`Failed to delete a repo, try - ${tries}`, err, '-----------------------------------------');
-    //     tries++;
-    //   } 
+    let tries= 1
+    try {
+        fs.rmSync(currentClonedRepoPath, { recursive: true, maxRetries:5, force: true });
+        tasks.repoDeleted = true;
+        console.log('repo deleted successfully-----------------------------------');
+      } catch (err) {
+        console.log(`Failed to delete a repo, try - ${tries}`, err, '-----------------------------------------');
+        tries++;
+      } 
 
-      return { wuid, ...tasks };
+    return { wuid, ...tasks };
   }
 };
 
@@ -708,11 +731,6 @@ let sortFiles = (files) => {
 
 
 const createEclArchive = (args, cwd) => {
-  console.log('------------------------------------------');
-  console.log('in createEclArchive',);
-  console.log(`args`, args);
-  console.log(`cwd`, cwd)
-  console.log('------------------------------------------');
 
   return new Promise((resolve, reject) => {
     const child = cp.spawn('eclcc', args, { cwd: cwd });
