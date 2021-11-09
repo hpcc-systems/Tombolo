@@ -176,7 +176,8 @@ class JobDetails extends Component {
     enableEdit: false,
     editing: false,
     dataAltered: false,
-    errors: false
+    errors: false,
+    isNew : this.props.isNew
   };
 
   componentDidMount() {
@@ -644,33 +645,27 @@ class JobDetails extends Component {
     this.setState({ sprayFileName: option.value });
   }
 
-  handleOk = async () => {
-    this.setState({
-      confirmLoading: true,
-    });
-    const values = await this.formRef.current.validateFields();
-    let saveResponse = await this.saveJobDetails();
-    //saveResponse.jobType = this.formRef.current.getFieldValue("jobType");
-    if(this.props.onAssetSaved) {
-      this.props.onAssetSaved(saveResponse);
-    }
-    // setTimeout(() => {
-      // this.setState({
-      //   visible: false,
-      //   confirmLoading: false,
-      // });
-      //this.props.onClose();
-      //this.props.onRefresh(saveResponse);
-      if (this.props.history) {
-        this.props.history.push(
-          "/" + this.props.application.applicationId + "/assets"
-        );
-        // message.success("Data Saved")
-      } else {
-        document.querySelector("button.ant-modal-close").click();
-        this.props.dispatch(assetsActions.assetSaved(saveResponse));
+  handleOk = async (values) => {
+  this.formRef.current.validateFields().then( response => {
+     this.setState({
+        confirmLoading: true,
+      });
+      
+      let saveResponse =  this.saveJobDetails();
+      if(this.props.onAssetSaved) {
+        this.props.onAssetSaved(saveResponse);
       }
-    // }, 2000);
+        if (this.props.history) {
+          this.props.history.push(
+            "/" + this.props.application.applicationId + "/assets"
+          );
+        } else {
+          document.querySelector("button.ant-modal-close").click();
+          this.props.dispatch(assetsActions.assetSaved(saveResponse));
+        }
+  }).catch(error => {
+    return;
+  })
   };
 
   onAutoCreateFiles = (e) => {
@@ -1542,7 +1537,8 @@ class JobDetails extends Component {
         </Button>
       ) : null }
 
-      {this.state.editing ? (
+
+      {this.state.dataAltered && this.state.enableEdit ? (
       <Button onClick={switchToViewOnly}>
         {" "}
         View Changes{" "}
@@ -1603,7 +1599,7 @@ class JobDetails extends Component {
       </span>
 
   </div>
-    //When input input field value is changed
+    //When input field value is changed
     const onFieldsChange = (changedFields, allFields) => {
       this.setState({dataAltered : true})
       const inputErrors = allFields.filter(item => { return item.errors.length > 0} )
@@ -1627,13 +1623,13 @@ class JobDetails extends Component {
             <div className="loader">
               <Spin spinning={this.state.initialDataLoading} size="large" />
             </div>) : null}
-          <Form {...formItemLayout} labelAlign="left" ref={this.formRef} onFieldsChange={onFieldsChange}>
+          <Form {...formItemLayout} labelAlign="left" ref={this.formRef} onFieldsChange={onFieldsChange} scrollToFirstError>
           <Tabs defaultActiveKey="1" tabBarExtraContent = {this.props.displayingInModal ? null : controls }>
 
           <TabPane tab="Basic" key="1">
               <Form.Item label="Job Type" name="jobType"> 
                 {!this.state.enableEdit ? 
-                <textarea className="read-only-textarea"/>
+                <input className="read-only-input"/>
                 :
                 <Select placeholder="Job Type" value={(jobType != '') ? jobType : "Job"} style={{ width: 190 }} onChange={this.onJobTypeChange} disabled={!editingAllowed}>
                   {jobTypes.map(d => <Option key={d}>{d}</Option>)}
@@ -1662,7 +1658,8 @@ class JobDetails extends Component {
             </TabPane>            
 
             {this.state.job.jobType != "Script" &&
-              this.state.job.jobType != "Spray" ? (
+              this.state.job.jobType != "Spray" && 
+              this.state.job.jobType !== "Manual" ? (
                 <TabPane tab="ECL" key="2">
                   <Form.Item {...eclItemLayout} label="ECL" name="ecl" >
                     
@@ -1703,7 +1700,8 @@ class JobDetails extends Component {
               ) : null}
 
               {this.state.job.jobType != "Script" &&
-              this.state.job.jobType != "Spray" ? (
+              this.state.job.jobType != "Spray" &&
+              this.state.job.jobType !== "Manual"? (
                 <React.Fragment>
                   <TabPane tab="Input Params" key="3">
                     <EditableTable
@@ -1765,8 +1763,11 @@ class JobDetails extends Component {
                   </TabPane>
                 </React.Fragment>
               ) : null}
+
+
               {this.state.job.jobType != "Script" &&
-              this.state.job.jobType != "Spray" ? (
+              this.state.job.jobType != "Spray" &&
+              this.state.job.jobType !== "Manual"  ? (
                 <TabPane tab="Output Files" key="5">
                   <div>
                     {!this.state.enableEdit ? null : (
@@ -1809,6 +1810,8 @@ class JobDetails extends Component {
                   </div>
                 </TabPane>
               ) : null}
+
+              
               {this.props.selectedDataflow ? (
                 <TabPane tab="Schedule" key="6">
                   <div>

@@ -3,6 +3,8 @@ const hpccUtil = require('../utils/hpcc-util');
 const assetUtil = require('../utils/assets.js');
 const workflowUtil = require('../utils/workflow-util.js');
 const JobScheduler = require('../job-scheduler');
+const notificationMoudle = require("../utils/emailNotification");
+const jobScheduler = require("../job-scheduler");
 
 let isCancelled = false;
 if (parentPort) {
@@ -15,6 +17,7 @@ if (parentPort) {
   let wuResult, wuid='';
   try {
     let job = await assetUtil.getJobForProcessing();
+    // await JobScheduler.scheduleCheckForJobsWithSingleDependency('Tombolo_Workflow_Scheduler2'); 
     if(job && job.wuid) {
       //check WU status
       wuResult = await hpccUtil.workunitInfo(job.wuid, job.clusterId);    
@@ -30,8 +33,9 @@ if (parentPort) {
           wu_duration: wuResult.Workunit.TotalClusterTime
         };
         let jobComplettionRecorded = await assetUtil.recordJobExecution(jobCompletionData, job.wuid);      
+        await JobScheduler.scheduleCheckForJobsWithSingleDependency(wuResult.Workunit.Jobname); 
 
-        await JobScheduler.scheduleCheckForJobsWithSingleDependency(wuResult.Workunit.Jobname);        
+     
       } else if(wuResult.Workunit.State == 'failed') {
         workflowUtil.notifyJobFailure(workerData.jobName, workerData.clusterId)
       }

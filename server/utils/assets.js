@@ -213,7 +213,8 @@ exports.recordJobExecution = (workerData, wuid) => {
           applicationId: workerData.applicationId,
           wuid: wuid,
           clusterId: workerData.clusterId,
-          status: workerData.status
+          status: workerData.status,
+          manualJob_meta : workerData.manualJob_meta
         }
       }).then(async (result) => {
         let jobExecutionId = result[0].id;
@@ -223,7 +224,8 @@ exports.recordJobExecution = (workerData, wuid) => {
             dataflowId: workerData.dataflowId,
             applicationId: workerData.applicationId,
             wuid: wuid,
-            status: workerData.status
+            status: workerData.status,
+            manualJob_meta : workerData.manualJob_meta
           },
           {where: {id: jobExecutionId}})
         }
@@ -252,7 +254,6 @@ exports.getJobForProcessing = async () => {
         status: 'processing'
       },{where: {jobId: jobExecution.jobId}});  
     }*/
-
     return jobExecution;  
   } catch (error) {
     console.log(error);

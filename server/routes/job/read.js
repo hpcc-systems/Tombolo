@@ -780,7 +780,7 @@ router.get('/job_details', [
   if (!errors.isEmpty()) {
       return res.status(422).json({ success: false, errors: errors.array() });
   }
-  console.log(`[job_details] - Get job list for:
+  console.log(`<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<< [job_details] - Get job list for:
     app_id = ${req.query.app_id}
     query_id = ${req.query.job_id}
     dataflow_id = ${req.query.dataflow_id}
@@ -951,13 +951,14 @@ router.get('/jobExecutionDetails', [
   query('applicationId')
     .isUUID(4).withMessage('Invalid application id'),
 ], (req, res) => {
+  console.log("Job execution details <<<<<<<<<<<<<<<<<<<<<< route")
   const errors = validationResult(req).formatWith(validatorUtil.errorFormatter);
   if (!errors.isEmpty()) {
       return res.status(422).json({ success: false, errors: errors.array() });
   }
   console.log("[jobExecutionDetails] - Get jobExecutionDetails for app_id = " + req.query.applicationId);
   try {
-    let query = 'select je.id, je.jobId as task, je.dataflowId, je.applicationId, je.status, je.wuid, je.wu_duration, je.clusterId, je.updatedAt, j.name from '+
+    let query = 'select je.id,  je.jobId as task, je.dataflowId, je.applicationId, je.status, je.wuid, je.wu_duration, je.clusterId, je.updatedAt, je.manualJob_meta, j.jobType, j.name from '+
             'job_execution je, job j '+
             'where je.dataflowId = (:dataflowId) and je.applicationId = (:applicationId) and j.id = je.jobId';
     let replacements = { applicationId: req.query.applicationId, dataflowId: req.query.dataflowId};
@@ -976,6 +977,42 @@ router.get('/jobExecutionDetails', [
     return res.status(500).json({ success: false, message: "Error occured while retrieving Job Execution Details" });
   }
 });
+
+//when user manually respond to a manual job - Update job status and metadata on job execution table
+router.post('/jobExecution', [
+  body('jobId').isUUID(4).withMessage('Invalid Job Id'),
+  body('newManaulJob_meta').notEmpty().withMessage('Invalid meta data')], 
+  (req, res) => {
+    const errors = validationResult(req).formatWith(validatorUtil.errorFormatter);
+    if (!errors.isEmpty()) {
+        return res.status(422).json({ success: false, errors: errors.array() });
+    }
+    JobExecution.findOne({where : {jobId: req.body.jobId}})
+                .then(job => {
+                  let newMeta = {...job.manualJob_meta, ...req.body.newManaulJob_meta}
+                    job.update({status : 'completed', manualJob_meta : newMeta})
+                            .then(job => { console.log("<<<<<<<<<<<<<<< $$$$$$$$$$$$$$ JOB", job); 
+                                          res.status(200).json({success: true, data: job})})
+                            .catch(err => {res.status(501).json({success: false, message : 'Error occured while saving data'})})
+                  })
+                .catch(error => {
+                  res.status(501).json({success: false, data: error})})
+
+});
+
+// Once manaul job is completed serach for any dependent jobs - if any add to job execution table
+router.post('/dependOnManualJob', [
+  body('jobName').isEmpty().withMessage("Invalid Job Name ..")], 
+  (req, res) => {
+    const errors = validationResult(req).formatWith(validatorUtil.errorFormatter);
+    if (!errors.isEmpty()) {
+        return res.status(422).json({ success: false, errors: errors.array() });
+    }
+    JobScheduler.scheduleCheckForJobsWithSingleDependency(req.body.name);  
+    res.status(200).json({success: true, message : 'Job with single dependency searched'})
+
+  });
+
 
 const QueueDaemon = require('../../queue-daemon');
 

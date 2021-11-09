@@ -8,6 +8,7 @@ let MessageBasedJobs = models.message_based_jobs;
 const SUBMIT_JOB_FILE_NAME = 'submitJob.js';
 const SUBMIT_SCRIPT_JOB_FILE_NAME = 'submitScriptJob.js';
 const JOB_STATUS_POLLER = 'statusPoller.js';
+const notificationMoudle = require("./utils/emailNotification")
 
 class JobScheduler {
   constructor() {
@@ -32,14 +33,15 @@ class JobScheduler {
 
   async bootstrap() {
     await this.scheduleActiveCronJobs();
-    
+  
     await this.scheduleJobStatusPolling();
   }
+
 
   async scheduleCheckForJobsWithSingleDependency(jobName) {
     return new Promise(async (resolve, reject) => {    
       try {
-        const query = `SELECT j1.id, j1.name, j1.jobType, j1.sprayedFileScope, j1.sprayFileName, j1.sprayDropZone, dj.dependsOnJobId as dependsOnJobId, dj.jobId, c.id as clusterId, d.id as dataflowId, d.application_id, count(*) as count
+        const query = `SELECT j1.id, j1.name, j1.title, j1.contact, j1.jobType, j1.sprayedFileScope, j1.sprayFileName, j1.sprayDropZone, dj.dependsOnJobId as dependsOnJobId, dj.jobId, c.id as clusterId, d.id as dataflowId, d.application_id, count(*) as count
           FROM tombolo.dependent_jobs dj
           left join job j1 on j1.id = dj.jobId
           left join job j2 on j2.id = dj.dependsOnJobId
@@ -55,33 +57,84 @@ class JobScheduler {
           ;`;
 
         let replacements = { jobName: jobName};
+        //getting jobs based on above query
         const jobs = await models.sequelize.query(query, {
           type: models.sequelize.QueryTypes.SELECT,
           replacements: replacements
         });
 
+        //Lopping through all the jobs
         for(const job of jobs) {
-          //submit the dependant job's wu and record the execution in job_execution table for the statusPoller to pick
-          let wuid = await hpccUtil.getJobWuidByName(job.clusterId, job.name);      
-          console.log(
-            `submitting dependant job ${job.name} ` +
-            `(WU: ${wuid}) to url ${job.clusterId}/WsWorkunits/WUResubmit.json?ver_=1.78`
-            );
-          let wuInfo = await hpccUtil.resubmitWU(job.clusterId, wuid);    
-          let jobExecutionData = {
-            name: job.name, 
-            clusterId: job.clusterId, 
-            dataflowId: job.dataflowId, 
-            applicationId: job.application_id, 
-            jobId: job.id, 
-            jobType: job.jobType == 'Script' ? SUBMIT_SCRIPT_JOB_FILE_NAME : SUBMIT_JOB_FILE_NAME,
-            sprayedFileScope: job.sprayedFileScope,
-            sprayFileName: job.sprayFileName,
-            sprayDropZone: job.sprayDropZone,
-            status: 'submitted'
+          if(job.jobType === "Manual"){
+
+            let notificationOptions = {
+              for : 'manaulJob',
+              jobName : job.name,
+              jobTitle: job.title,
+              contact: job.contact,
+              url : `${process.env.WEB_URI}${job.application_id}/manualJobDetails/${job.id}`
+            }
+
+            // if the dependent job has type manual send email notification
+            await notificationMoudle.sendEmailNotification(notificationOptions).then(
+              result => {
+                if(result.accepted){
+                  console.log(" manual job notification sent");
+                }else{
+                  console.log("unable to send manaul job notification")
+                }
+              });
+
+            // once the end user is notified add the manaul job to job execution queue 
+            const wuid = await hpccUtil.getJobWuidByName(job.clusterId, job.name);    
+            let manualJob_meta = {
+              notifiedTo : job.contact,
+              notifiedOn: new Date().getTime(),
+              url : `/${job.application_id}/manualJobDetails/${job.id}`
+            };
+
+    
+              let jobExecutionData = {
+                name: job.name, 
+                clusterId: job.clusterId, 
+                dataflowId: job.dataflowId, 
+                applicationId: job.application_id, 
+                jobId: job.id, 
+                jobType: job.jobType == 'Script' ? SUBMIT_SCRIPT_JOB_FILE_NAME : SUBMIT_JOB_FILE_NAME,
+                sprayedFileScope: job.sprayedFileScope,
+                sprayFileName: job.sprayFileName,
+                sprayDropZone: job.sprayDropZone,
+                status: 'wait',
+                manualJob_meta : manualJob_meta
+              }
+
+              await assetUtil.recordJobExecution(jobExecutionData, wuid)
+
+          }else{   
+              // Getting wuid
+            const  wuid = await hpccUtil.getJobWuidByName(job.clusterId, job.name);      
+            console.log(`submitting dependant job ${job.name} (WU: ${wuid}) to url ${job.clusterId}/WsWorkunits/WUResubmit.json?ver_=1.78`);
+
+            //submit the dependant job's wu and record the execution in job_execution table for the statusPoller to pick
+            let wuInfo = await hpccUtil.resubmitWU(job.clusterId, wuid); 
+
+            let jobExecutionData = {
+              name: job.name, 
+              clusterId: job.clusterId, 
+              dataflowId: job.dataflowId, 
+              applicationId: job.application_id, 
+              jobId: job.id, 
+              jobType: job.jobType == 'Script' ? SUBMIT_SCRIPT_JOB_FILE_NAME : SUBMIT_JOB_FILE_NAME,
+              sprayedFileScope: job.sprayedFileScope,
+              sprayFileName: job.sprayFileName,
+              sprayDropZone: job.sprayDropZone,
+              status: 'submitted'
+            }
+            await assetUtil.recordJobExecution(jobExecutionData, wuid)
           }
-          await assetUtil.recordJobExecution(jobExecutionData, wuid)
+          
         }
+          
         resolve();
       } catch (err) {
         console.log(err)

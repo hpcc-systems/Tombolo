@@ -23,6 +23,7 @@ import IndexDetailsForm from "./components/application/IndexDetails";
 import QueryDetailsForm from "./components/application/QueryDetails";
 import VisualizationDetailsForm from "./components/application/VisualizationDetails";
 import AzureUserHome from "./components/azureSso/AzureUserHome"
+import ManualJobDetail from "./components/application/DataflowInstances/ManualJobDetail"
 
 import Actions from "./components/application/actions/actions";
 import { AdminApplications } from "./components/admin/Applications";
@@ -123,6 +124,7 @@ class App extends React.Component {
                     path="/:applicationId/assets/visualizations/:visualizationId?"
                     component={VisualizationDetailsForm}
                   />
+                 
                   <PrivateRoute
                     path="/:applicationId/assets"
                     component={Assets}
@@ -169,6 +171,10 @@ class App extends React.Component {
                     path="/:applicationId/actions"
                     component={Actions}
                   />
+                  <PrivateRoute
+                    path="/:applicationId/manualJobDetails"
+                    component={ManualJobDetail}
+                  /> 
                 </Switch>
               </Content>
             </Layout>
