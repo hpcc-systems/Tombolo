@@ -8,7 +8,7 @@ module.exports = (sequelize, DataTypes) => {
       allowNull: false,
       autoIncrement: false
     },
-    job_id: DataTypes.STRING,
+    job_id: DataTypes.UUID,
     application_id: DataTypes.STRING,
     file_type: DataTypes.STRING,
     name: DataTypes.STRING,
@@ -16,6 +16,7 @@ module.exports = (sequelize, DataTypes) => {
     file_id: DataTypes.STRING
   }, {paranoid: true, freezeTableName: true});
   jobfile.associate = function(models) {
+    jobfile.belongsTo(models.job, {foreignKey: 'job_id'});
     // associations can be defined here
   };
   return jobfile;
