@@ -30,10 +30,10 @@ if (parentPort) {
           wu_duration: wuResult.Workunit.TotalClusterTime
         };
         let jobComplettionRecorded = await assetUtil.recordJobExecution(jobCompletionData, job.wuid);      
-
-        await JobScheduler.scheduleCheckForJobsWithSingleDependency(wuResult.Workunit.Jobname);        
+      
+        await JobScheduler.scheduleCheckForJobsWithSingleDependency(wuResult.Workunit.Jobname);    
       } else if(wuResult.Workunit.State == 'failed') {
-        workflowUtil.notifyJobFailure(workerData.jobName, workerData.clusterId)
+        workflowUtil.notifyJobFailure(workerData.jobName, workerData.clusterId, job.wuid)
       }
     }    
   } catch (err) {
