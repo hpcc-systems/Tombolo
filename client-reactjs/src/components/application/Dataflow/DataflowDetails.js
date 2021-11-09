@@ -5,6 +5,7 @@ import { InfoCircleOutlined, StepBackwardOutlined  } from '@ant-design/icons';
 import { useSelector } from "react-redux";
 import DataflowAssetsTable from "./DataflowAssetsTable";
 import {Graph} from "./Graph";
+import AntdGraph from "./AntdGraph";
 import BreadCrumbs from "../../common/BreadCrumbs";
 import {Constants} from "../../common/Constants"
 import {store} from "../../../redux/store/Store"
@@ -59,22 +60,28 @@ function DataflowDetails({props}) {
         </div>
         <div>
           <Tabs defaultActiveKey="1"
-          onChange={(activeKey) => { setCurrentTab(activeKey)}}
-          tabBarExtraContent = {<span> 
-            <Tooltip placement="topRight" title={"Refresh will validate the file/job relationship and update graph accordingly"}>
-                <Button style={{marginRight: "5px"}} type="primary" onClick={() =>  setGraphRefresh(!refreshGraph)}>Refresh</Button> 
-            </Tooltip>
+            onChange={(activeKey) => { setCurrentTab(activeKey)}}
+            tabBarExtraContent = {<span> 
+              <Tooltip placement="topRight" title={"Refresh will validate the file/job relationship and update graph accordingly"}>
+                  <Button style={{marginRight: "5px"}} type="primary" onClick={() =>  setGraphRefresh(!refreshGraph)}>Refresh</Button> 
+              </Tooltip>
                 <Button type="link" onClick={(handleBackToAllJobs)} type="primary" ghost> Cancel</Button> </span>}
           >
-            <TabPane tab="Designer" key="1">
-              <Graph
+            <TabPane tab="Designer" key="1" forceRender={true}>
+              <AntdGraph                 
+                applicationId={dataflowReducer.applicationId}
+                applicationTitle={dataflowReducer.applicationTitle}
+                selectedDataflow={{id: dataflowReducer.dataflowId}}
+                user={dataflowReducer.user}
+              />
+              {/*<Graph
                 applicationId={dataflowReducer.applicationId}
                 applicationTitle={dataflowReducer.applicationTitle}
                 selectedDataflow={{id: dataflowReducer.dataflowId}}
                 graphContainer="graph"
                 sidebarContainer="sidebar"
                 refreshGraph= {refreshGraph}
-              />
+              />*/}
             </TabPane>
             <TabPane tab="Assets" key="2" >
             <span style={{display: "flex", placeItems: "center", justifyContent: "center", paddingBottom: "5px"}}>

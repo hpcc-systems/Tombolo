@@ -3,6 +3,7 @@
   "version": "1.0.0",
   "private": true,
   "dependencies": {
+    "@antv/x6": "^1.28.1",
     "@hpcc-js/codemirror": "^2.38.0",
     "@testing-library/jest-dom": "^5.11.9",
     "@testing-library/react": "^9.3.2",

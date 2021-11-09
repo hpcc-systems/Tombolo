@@ -10,6 +10,7 @@ import AssetDetailsDialog from "../AssetDetailsDialog"
 const Option = Select.Option;
 
 function ExistingAssetListDialog({show, applicationId, selectedDataflow, assetType, onClose, onFileAdded, user, currentlyEditingNodeId}) {
+console.log(assetType)
   const [assets, setAssets] = useState([]);
   const [visible, setVisible] = useState(show);
   const [showDetailsForm, setShowDetailsForm] = useState(false);
