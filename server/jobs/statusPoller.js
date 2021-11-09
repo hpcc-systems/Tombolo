@@ -21,23 +21,25 @@ if (parentPort) {
     if(job && job.wuid) {
       //check WU status
       wuResult = await hpccUtil.workunitInfo(job.wuid, job.clusterId);    
+      let jobCompletionData = {
+        jobId: job.jobId,
+        applicationId: job.applicationId,
+        dataflowId: job.dataflowId,
+        wuid: job.wuid,
+        clusterId: job.clusterId,
+        status: wuResult.Workunit.State,
+        wu_duration: wuResult.Workunit.TotalClusterTime
+      };
       //check WU status
-      if(wuResult.Workunit.State == 'completed' || wuResult.Workunit.State == 'wait' || wuResult.Workunit.State == 'blocked') {        
-        let jobCompletionData = {
-          jobId: job.jobId,
-          applicationId: job.applicationId,
-          dataflowId: job.dataflowId,
-          wuid: job.wuid,
-          clusterId: job.clusterId,
-          status: wuResult.Workunit.State,
-          wu_duration: wuResult.Workunit.TotalClusterTime
-        };
+      if(wuResult.Workunit.State == 'completed' || wuResult.Workunit.State == 'wait') {                
         let jobComplettionRecorded = await assetUtil.recordJobExecution(jobCompletionData, job.wuid);      
         await JobScheduler.scheduleCheckForJobsWithSingleDependency(wuResult.Workunit.Jobname); 
 
      
       } else if(wuResult.Workunit.State == 'failed') {
-        workflowUtil.notifyJobFailure(workerData.jobName, workerData.clusterId)
+        jobCompletionData.status = 'failed';
+        let jobComplettionRecorded = await assetUtil.recordJobExecution(jobCompletionData, job.wuid);      
+        workflowUtil.notifyJobFailure(workerData.jobName, workerData.clusterId)        
       }
     }    
   } catch (err) {

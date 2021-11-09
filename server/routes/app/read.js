@@ -115,7 +115,7 @@ router.post('/newapp', [
     .optional({checkFalsy:true})
     .matches(/^[a-zA-Z]{1}[a-zA-Z0-9_:.\-]*$/).withMessage('Invalid user_id'),
   body('title')
-    .matches(/^[a-zA-Z]{1}[a-zA-Z0-9_:.\-]*$/).withMessage('Invalid title'),
+    .matches(/^[a-zA-Z]{1}[a-zA-Z0-9_: .\-]*$/).withMessage('Invalid title'),
   body('description')
     .optional({checkFalsy:true}),
   body('creator')
@@ -137,7 +137,7 @@ router.post('/newapp', [
       }).then(function(application) {
         if(req.body.user_id) {
           models.user_application.create({"user_id":req.body.user_id, "application_id":application.id}).then(function(userapp) {
-            res.json({"result":"success", "id": application.id});
+            res.json({"result":"success", "id": application.id, "title" :application.title});
           });
         }
         else {
