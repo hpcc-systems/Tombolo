@@ -547,7 +547,8 @@ router.post('/saveJob', [
         return res.status(500).json({ success: false, message: "Error occured while saving the job" });
       });
 
-      switch (req.body.job.schedule.type) {        
+      console.log("<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<< ", req.body.job)
+      switch (req.body.job.schedule.type) { 
         case "":
           AssetDataflow.update({
             cron: null,

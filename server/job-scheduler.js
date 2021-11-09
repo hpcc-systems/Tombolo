@@ -271,6 +271,7 @@ class JobScheduler {
   }
 
   async removeJobFromScheduler(name) {
+    console.log("<<<<<<<<<<<<<<<<<<<<< RFemoving job from schedular", name, "<<<<<<<<<<<")
     try {
       await this.bree.remove(name);
     } catch (err) {

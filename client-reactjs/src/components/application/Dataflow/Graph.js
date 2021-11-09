@@ -2,7 +2,7 @@ import React, { Component } from "react";
 import * as d3 from "d3";
 import '../../graph-creator/graph-creator.css';
 import $ from 'jquery';
-import { Button, Icon, Drawer, Row, Col, Descriptions, Badge, Modal, message, Spin, Tooltip, Menu, Checkbox, Dropdown, Alert} from 'antd/lib';
+import { Button, Icon, Drawer, Row, Col, Descriptions, Badge, Modal, message, Spin, Tooltip, Menu, Checkbox, Dropdown} from 'antd/lib';
 import { Typography } from 'antd';
 import { withRouter } from 'react-router-dom';
 import AssetDetailsDialog from "../AssetDetailsDialog"
@@ -231,7 +231,6 @@ class Graph extends Component {
           showSubProcessDetails: true
         });
         break;
-    
    }
   }
 
@@ -660,8 +659,8 @@ class Graph extends Component {
   }
 
   insertTitle = (gEl, title, x, y, d) => {
+    console.log("<<<<<<<<<<<<<<<<<<<<<<<<<<<< Title", title)
     let _self=this;
-    console.log("<<<<<<<<<<<<<<<<<<<<<<<<< Title", title)
     let words = title.split(/\s+/g),
         nwords = words.length;
     d3.select("#txt-"+d.id).remove();
@@ -744,7 +743,7 @@ class Graph extends Component {
       case 'Job':
         gEl.select(".icon").remove();
         shape = shapesData[0];
-        //remove the icon for jobs as it needs to updated based on jobType        FshapesData
+        //remove the icon for jobs as it needs to updated based on jobType        
         break;
       case 'File':
         shape = shapesData[1];
@@ -791,7 +790,6 @@ class Graph extends Component {
             })
             .attr("style", "width: 100px;")
             .on("blur", function (d) {
-              console.log("This .value <<<<<<<<<", this.value)
               d3node.select("foreignObject").remove()
               _self.insertTitle(d3node, this.value, d.x, d.y, d);
             });
@@ -1099,7 +1097,6 @@ class Graph extends Component {
         //if (this.childNodes.length === 0) {
           switch(d.type) {
             case 'Job':
-              console.log(d, "<<<<<<<<<<<<<<<<<<<<<< D")
               if(d3.select("#rec-"+d.id).empty()) {
                 d3.select(this)
                   .append("rect")
@@ -1180,25 +1177,24 @@ class Graph extends Component {
 
               break;
           }
-          
 
       });
       //_self.saveGraph()
   }
 
   toggleDeleteIcon = (node, d) => {
-    // if(!this.props.viewMode && hasEditPermission(this.props.user)) {
-    //   if(d3.select("#t"+d.id).classed("hide-graph-icon")) {
-    //     d3.select("#t"+d.id).classed("hide-graph-icon", false)
-    //   } else {
-    //     d3.select("#t"+d.id).classed("hide-graph-icon", true)
-    //   }
-    //   if(!d3.select("#hide"+d.id).empty() && d3.select("#hide"+d.id).classed("hide-graph-icon")) {
-    //     d3.select("#hide"+d.id).classed("hide-graph-icon", false)
-    //   } else {
-    //     d3.select("#hide"+d.id).classed("hide-graph-icon", true)
-    //   }
-    // }
+    if(!this.props.viewMode && hasEditPermission(this.props.user)) {
+      if(d3.select("#t"+d.id).classed("hide-graph-icon")) {
+        d3.select("#t"+d.id).classed("hide-graph-icon", false)
+      } else {
+        d3.select("#t"+d.id).classed("hide-graph-icon", true)
+      }
+      if(!d3.select("#hide"+d.id).empty() && d3.select("#hide"+d.id).classed("hide-graph-icon")) {
+        d3.select("#hide"+d.id).classed("hide-graph-icon", false)
+      } else {
+        d3.select("#hide"+d.id).classed("hide-graph-icon", true)
+      }
+    }
   }
 
 
@@ -1228,7 +1224,6 @@ class Graph extends Component {
           });
           break;
         case 'Sub-Process':
-
           /*if(d.subProcessId) {
             handleSubProcessDelete(d.subProcessId, _self.props.applicationId);
           }*/
@@ -1645,7 +1640,6 @@ class Graph extends Component {
     }
 
     const editingAllowed = hasEditPermission(this.props.user);
-
   return (
       <React.Fragment>
         <div className="graph-div" >
@@ -1772,7 +1766,6 @@ class Graph extends Component {
             onRefresh={this.onFileAdded}
             selectedSubProcess={this.state.selectedSubProcess}
             nodeId={this.state.currentlyEditingId}/> : null}
-            
         {this.state.showAssetListDlg ?
           <ExistingAssetListDialog
             show={this.state.showAssetListDlg}
@@ -1783,6 +1776,7 @@ class Graph extends Component {
             onFileAdded={this.onFileAdded}
             user={this.props.user} 
             currentlyEditingNodeId={this.state.currentlyEditingId}/>  : null}
+
 
     </React.Fragment>
   )

@@ -2,7 +2,6 @@ import React, {useEffect, useState} from 'react';
 import { Button, message, Tabs, Row, Col } from 'antd';
 import { withRouter } from "react-router-dom";
 import { authHeader, handleError } from '../../common/AuthHeader';
-import History from '../../common/History';
 
 function ManualJobDetail() {
     const [ jobId, setJobID]= useState('');
@@ -69,7 +68,7 @@ function ManualJobDetail() {
             fetch("/api/job/dependOnManualJob", {
                 headers: authHeader(),
                 method : 'POST',
-                body : JSON.stringify({name: jobDetails.name})
+                body : JSON.stringify({name: jobDetails?.name})
               })
               .then((response) => {
                 if(response.ok) {
@@ -79,7 +78,7 @@ function ManualJobDetail() {
               })
               .then(data => {
                 setTimeout(() =>{
-                    History.push("/")
+                    window.location.href = "/"
                 }, 2000)
               })
               .catch(error => {
@@ -90,7 +89,7 @@ function ManualJobDetail() {
 
     //When user clicks cancel button
     const handleCancel = () => {
-        History.push("/")
+        window.location.href = "/"
     }
 
     //styles
@@ -106,10 +105,10 @@ function ManualJobDetail() {
 
     return (
         <div>
-            <div className="assetTitle">{jobDetails.name}</div>
+            <div className="assetTitle">{jobDetails?.name}</div>
                 <Tabs  tabBarExtraContent={actions} >
                     <TabPane tab="Basic" key="1">
-                    { Object.keys(jobDetails).map((key, index) =>
+                    {jobDetails ? Object.keys(jobDetails).map((key, index) =>
                             (<Row key={index} gutter={{ xs: 8, sm: 8, md: 8, lg: 8 }}>
                                             <Col className="gutter-row" span={6}>
                                                 <div >{key}</div>
@@ -118,7 +117,7 @@ function ManualJobDetail() {
                                                 <div >{jobDetails[key]}</div>
                                             </Col>  
                                 </Row> 
-                            ))}    
+                            )) : null }    
                     </TabPane>
                 </Tabs>
         </div>
