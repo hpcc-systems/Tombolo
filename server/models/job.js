@@ -35,6 +35,10 @@ module.exports = (sequelize, DataTypes) => {
       onDelete: 'CASCADE',
       hooks: true
     });
+    job.hasMany(models.job_execution,{
+      foreignKey:'jobId', 
+      onDelete: 'CASCADE',
+    });
     job.hasMany(models.jobparam,{
       foreignKey:'job_id',
       onDelete: 'CASCADE',
