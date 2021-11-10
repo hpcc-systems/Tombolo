@@ -22,7 +22,7 @@ import JobDetailsForm from "./components/application/Jobs/JobDetails";
 import IndexDetailsForm from "./components/application/IndexDetails";
 import QueryDetailsForm from "./components/application/QueryDetails";
 import VisualizationDetailsForm from "./components/application/VisualizationDetails";
-import AzureUserHome from "./components/azureSso/AzureUserHome"
+
 import ManualJobDetail from "./components/application/Jobs/ManualJobDetail"
 
 import Actions from "./components/application/actions/actions";
@@ -35,9 +35,7 @@ import { store } from "./redux/store/Store";
 
 import { Report } from "./components/Report/Report";
 import Regulations from "./components/admin/ControlsAndRegulations";
-
 const { Content } = Layout;
-
 
 class App extends React.Component {  
   componentDidMount() {
@@ -88,7 +86,7 @@ class App extends React.Component {
 
     return (
       <Router history={history}>
-        <Route exact path="/login" component={process.env.REACT_APP_SSO==='azure_ad'? AzureUserHome :LoginPage} />
+        <Route exact path="/login" component={LoginPage} />
         <Route exact path="/forgot-password" component={ForgotPassword} />
         <Route exact path="/reset-password/:id" component={ResetPassword} />
         <Layout>

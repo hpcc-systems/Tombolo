@@ -1,10 +1,26 @@
 import { userActions } from '../../redux/actions/User';
 import { store } from '../../redux/store/Store';
 import { message } from 'antd/lib';
-import { msalInstance } from '../../index';
+export function authHeader(action) {
+    // return authorization header with jwt token
+    let user = JSON.parse(localStorage.getItem('user'));
 
+    if( user && user.token && action){
+      return {
+        'Authorization': 'Bearer ' + user.token
+    };
+    }
+    else if (user && user.token) {
+        return {
+            'Authorization': 'Bearer ' + user.token,
+            'Accept': 'application/json',
+            'Content-Type': 'application/json'
+        };
+    } else {
+        return {};
+    }
+}
 
-//Handle error from srver
 export function handleError(response) {
   message.config({top:130})
   if(response.status == 401) {
@@ -22,62 +38,4 @@ export function handleError(response) {
       message.error(errorMessage);
     })
   }
-}
-
-// When the client sends a fetch requst the header requires an auth token. 
-// This function grabs the token from the LS. The returned value is palced in the header of the API calls
-// If the application is using Azure sso, the function below this one replaces this function's returned value
-export function authHeader(action){
-  // return authorization header with jwt token
-  let user = JSON.parse(localStorage.getItem('user'));
-  if( user && user.token && action){
-    return {
-      'Authorization': 'Bearer ' + user.token
-  };
-  }
-  else if (user && user.token) {
-      return {
-          'Authorization': 'Bearer ' + user.token,
-          'Accept': 'application/json',
-          'Content-Type': 'application/json'
-      };
-  } else {
-      return {};
-  }
-}
-
-// This async function gets the refresh token for the active azure account
-// The refreshed/latest token  replaces the existing token by intercepting the API calls
-// Function below this one is doing the intercepting and replacing job
- export async function authHeaders() {
-   if(process.env.REACT_APP_SSO === 'azure_ad'){
-    const currentAccount = msalInstance.getActiveAccount();
-    const silentRequest = {
-        scopes: ["User.Read"],
-        account: currentAccount,
-        forceRefresh: false
-      };
-
-    const tokenResponse = await msalInstance.acquireTokenSilent(silentRequest).catch(error => {
-      console.log("Error occured", error)
-    });
-
-    return {
-      'Authorization': 'Bearer ' + tokenResponse.idToken
-      }
-   }
-}
-
-//Intercepts all the fetch requests and update token for necessary routes
-const newFetch = window.fetch;
-window.fetch =  async function() {
-    if(process.env.REACT_APP_SSO === 'azure_ad' && arguments[1].headers.Authorization){
-      let newToken = await authHeaders();
-         arguments[1] = {headers: newToken};
-         return newFetch.apply(this, arguments)
-        
-    }else{
-      return newFetch.apply(this, arguments);
-
-    }
 }

@@ -7,9 +7,6 @@ const errorFormatter = ({ location, msg, param, value, nestedErrors }) => {
 };
 const jwt = require('jsonwebtoken');
 const { JsonWebTokenError } = require('jsonwebtoken');
-let models = require('../../models');
-let User = models.user;
-
 // routes
 router.get('/searchuser', searchUser);
 router.post('/authenticate', authenticate);
@@ -76,7 +73,6 @@ function validateToken(req, res, next) {
       .then(user => user ? res.json(user.userWithoutHash) : res.status(401).json({ message: 'Invalid Token' }))
       .catch(err => res.status(401).json({ "message": "Invalid Token" }));
 }
-
 function GetuserListToShareApp(req, res, next) {
   userService.GetuserListToShareApp(req, res, next)
       .then(user => user ? res.json(user) : res.sendStatus(404))
@@ -170,47 +166,5 @@ router.post('/resetPassword'
     console.log(err);
     res.status(500).json({ errors: [err.message] });
   })
-})
 
-
-//Azure user login route
-router.post('/loginAzureUser', [
-  body('firstName')
-    .matches(/^[a-zA-Z]{1}[a-zA-Z0-9_-]*$/).withMessage('Invalid First Name'),
-  body('lastName')
-    .matches(/^[a-zA-Z]{1}[a-zA-Z0-9_-]*$/).withMessage('Invalid Last Name'),
-  body('email')
-    .isEmail().withMessage('Invalid Email Address'),
-  body('type')
-  .matches(/^[a-zA-Z]{1}[a-zA-Z0-9]*$/).withMessage('Invalid account type'),
-  // body('role')
-  // .matches(/^[a-zA-Z]{1}[a-zA-Z0-9_-]*$/).withMessage('Invalid role'),
-], (req, res, next) => {
-  const errors = validationResult(req).formatWith(errorFormatter);
-
-  if (!errors.isEmpty()) {
-    return res.status(422).json({ success: false, errors: errors.array() });
-  }
-
-  User.findOrCreate({
-    where : {email: req.body.email },
-    defaults: { 
-      "firstName": req.body.firstName,
-      "lastName": req.body.lastName,
-      "username": req.body.username,
-      "email": req.body.email,
-      "type" : 'azure_user',
-    }
-  })
-  .then((data) =>{
-    res.status(200)
-    .json({success : true, 
-           message: data[1] ? "New user created" : "Found existing user in DB",
-          user: data[0].dataValues })
-  })
-  .catch(error =>{
-    res.status(500)
-    .json({success: false,
-          message: error })
-  })
 })

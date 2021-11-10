@@ -85,8 +85,6 @@ function getClusters() {
   };
 
   function success(clusters) { return { type: Constants.CLUSTERS_RETRIEVED, clusters } }
-
-   
 }
 
 function getConsumers() {

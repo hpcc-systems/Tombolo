@@ -74,7 +74,6 @@ class AppHeader extends Component {
         return; 
       }
 
-
       if(this.props.location.pathname.includes('report/')){
         const pathSnippets = this.props.location.pathname.split('/');
         this.setState({
@@ -111,10 +110,8 @@ class AppHeader extends Component {
           console.log(error);
         });
       }
-
     }
 
-    
     componentDidUpdate(prevProps, prevState) {
       if(this.props.newApplication) {
         let applications = this.state.applications;

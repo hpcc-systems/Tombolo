@@ -103,7 +103,7 @@ class LeftNav extends Component {
                   <li className="nav-item" >
                     <NavLink to={"/"+applicationId+"/actions"} className="nav-link" data-toggle="popover" tabIndex="5">
                       <i className="fa fa-fw fa-telegram"></i> <span className={this.state.collapsed ? "d-none" : "leftNav-link"}>Actions</span>
-                    </NavLink>                
+                    </NavLink>
                   </li>
                 </ul>
               {/* </li>  */}

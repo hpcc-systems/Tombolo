@@ -6,6 +6,7 @@ import { Constants } from '../../common/Constants';
 import { useSelector } from "react-redux";
 
 function JobExecutionDetails({workflowDetails}) {
+  
   const jobColumns = [
     {
       title: 'Job',
