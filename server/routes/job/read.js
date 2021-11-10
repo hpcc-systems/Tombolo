@@ -520,7 +520,6 @@ router.post('/saveJob', [
   if (!errors.isEmpty()) {
       return res.status(422).json({ success: false, errors: errors.array() });
   }
-
   console.log("[saveJob] - Get file list for app_id = " + req.body.job.basic.application_id + " isNewJob: "+req.body.isNew);
   var jobId=req.body.id, applicationId=req.body.job.basic.application_id, fieldsToUpdate={}, nodes=[], edges=[];
   try {
@@ -971,9 +970,7 @@ router.post('/executeJob', [
         {where: {id: jobExecutionId}})
       }
     })
-
     res.json({"success":true});
-
     if (isStoredOnGithub){
       const tasks =  await hpccUtil.pullFilesFromGithub( wuid,req.body.jobName ,req.body.clusterId, job.metaData.gitHubFiles );
       if (tasks.WUaction?.failedToUpdate) {

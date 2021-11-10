@@ -174,10 +174,11 @@ class JobDetails extends Component {
     enableEdit: false,
     editing: false,
     dataAltered: false,
-    errors: false,
+    errors: false
   };
 
   componentDidMount() {
+        //this.props.onRef(this);
     if (this.props.application && this.props.application.applicationId) {
         this.getJobDetails();
         this.setClusters(this.props.clusterId);
@@ -1625,8 +1626,6 @@ class JobDetails extends Component {
   </div>
     //When input input field value is changed
     const onFieldsChange = (changedFields, allFields) => {
-      // console.log(`changedFields`, changedFields)
-      console.log(`allFields`, allFields)
       this.setState({dataAltered : true})
       const inputErrors = allFields.filter(item => { return item.errors.length > 0} )
       if(inputErrors.length > 0){
@@ -2054,7 +2053,6 @@ function mapStateToProps(state) {
   const { application, clusters } = state.applicationReducer;
   const { isNew = false, groupId = "" } = newAsset;
   const { editMode, addingNewAsset } = state.viewOnlyModeReducer;
-
   return {
     user,
     selectedAsset,
