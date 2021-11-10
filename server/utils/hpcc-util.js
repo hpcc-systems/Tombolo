@@ -319,7 +319,7 @@ exports.getJobInfo = (clusterId, jobWuid, jobType) => {
   });
 }
 
-exports.getJobWuidByName = (clusterId, jobName) => {
+exports.getJobWuDetails = (clusterId, jobName) => {
   return new Promise((resolve, reject) => {
     module.exports.getCluster(clusterId).then(function(cluster) {
       let clusterAuth = module.exports.getClusterAuth(cluster);
@@ -329,7 +329,7 @@ exports.getJobWuidByName = (clusterId, jobName) => {
           && response.Workunits.ECLWorkunit
           && response.Workunits.ECLWorkunit.length > 0) {
           //return the first wuid assuming that is the latest one
-          resolve(response.Workunits.ECLWorkunit[0].Wuid);
+          resolve({wuid: response.Workunits.ECLWorkunit[0].Wuid, cluster: response.Workunits.ECLWorkunit[0].Cluster});
         } else {
           resolve(null);
         }
@@ -341,24 +341,20 @@ exports.getJobWuidByName = (clusterId, jobName) => {
   })
 }
 
-exports.resubmitWU = (clusterId, wuid) => {
+exports.resubmitWU = (clusterId, wuid, wucluster) => {
   return new Promise(async (resolve, reject) => {
+    console.log(clusterId, wuid, wucluster);
     try {
       let body = {
-        "WUResubmitRequest": {
-           "Wuids": {
-             "Item": [
-               wuid
-             ]
-           },
-           "BlockTillFinishTimer": 0,
-           "ResetWorkflow": true,
-           "CloneWorkunit": false
-         }
+        "WURunRequest": {
+          "Wuid": wuid,
+          "CloneWorkunit": true,
+          "Cluster": wucluster,
+        }
       }
       let cluster = await module.exports.getCluster(clusterId);
       request.post({
-        url: cluster.thor_host + ':' + cluster.thor_port +'/WsWorkunits/WUResubmit.json?ver_=1.77',
+        url: cluster.thor_host + ':' + cluster.thor_port +'/WsWorkunits/WURun.json?ver_=1.8',
         auth : module.exports.getClusterAuth(cluster),
         body: JSON.stringify(body),
         headers: {'content-type' : 'application/json'},

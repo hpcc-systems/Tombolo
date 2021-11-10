@@ -62,12 +62,13 @@ class JobScheduler {
 
         for(const job of jobs) {
           //submit the dependant job's wu and record the execution in job_execution table for the statusPoller to pick
-          let wuid = await hpccUtil.getJobWuidByName(job.clusterId, job.name);      
+          let wuDetails = await hpccUtil.getJobWuDetails(job.clusterId, job.name);      
+          let wuid = wuDetails.wuid;
           console.log(
             `submitting dependant job ${job.name} ` +
             `(WU: ${wuid}) to url ${job.clusterId}/WsWorkunits/WUResubmit.json?ver_=1.78`
             );
-          let wuInfo = await hpccUtil.resubmitWU(job.clusterId, wuid);    
+          let wuInfo = await hpccUtil.resubmitWU(job.clusterId, wuid, wuDetails.cluster);    
           let jobExecutionData = {
             name: job.name, 
             clusterId: job.clusterId, 

@@ -28,14 +28,14 @@ if (parentPort) {
         wu_duration: wuResult.Workunit.TotalClusterTime
       };
       //check WU status
+      console.log('statusPoller: '+wuResult.Workunit.State)
       if(wuResult.Workunit.State == 'completed' || wuResult.Workunit.State == 'wait') {                
         let jobComplettionRecorded = await assetUtil.recordJobExecution(jobCompletionData, job.wuid);      
 
         await JobScheduler.scheduleCheckForJobsWithSingleDependency(wuResult.Workunit.Jobname);        
       } else if(wuResult.Workunit.State == 'failed') {
-        jobCompletionData.status = 'failed';
         let jobComplettionRecorded = await assetUtil.recordJobExecution(jobCompletionData, job.wuid);      
-        workflowUtil.notifyJobFailure(workerData.jobName, workerData.clusterId)        
+        await workflowUtil.notifyJobFailure(wuResult.Workunit.Jobname, workerData.clusterId, job.wuid);
       }
     }    
   } catch (err) {
