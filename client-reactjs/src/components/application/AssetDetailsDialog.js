@@ -52,7 +52,6 @@ function AssetDetailsDialog(props) {
   return (
 	  (authReducer.user && authReducer.user.token != undefined) ?
 	  <React.Fragment>
-      
 	    <Modal
           visible={isShowing}
           width="1200px"

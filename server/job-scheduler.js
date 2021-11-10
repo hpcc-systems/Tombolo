@@ -79,7 +79,7 @@ class JobScheduler {
             await notificationMoudle.sendEmailNotification(notificationOptions).then(
               result => {
                 if(result.accepted){
-                  console.log(" manual job notification sent");
+                  console.log("Manual job notification sent"   );  
                 }else{
                   console.log("unable to send manaul job notification")
                 }
@@ -90,7 +90,9 @@ class JobScheduler {
             let manualJob_meta = {
               notifiedTo : job.contact,
               notifiedOn: new Date().getTime(),
-              url : `/${job.application_id}/manualJobDetails/${job.id}`
+              url : `/${job.application_id}/manualJobDetails/${job.id}`,
+              jobName : job.name,
+              jobTitle: job.title,
             };
 
     
@@ -271,7 +273,6 @@ class JobScheduler {
   }
 
   async removeJobFromScheduler(name) {
-    console.log("<<<<<<<<<<<<<<<<<<<<< RFemoving job from schedular", name, "<<<<<<<<<<<")
     try {
       await this.bree.remove(name);
     } catch (err) {

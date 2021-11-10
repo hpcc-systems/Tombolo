@@ -23,6 +23,7 @@ const { body, query, param, validationResult } = require('express-validator');
 const assetUtil = require('../../utils/assets');
 const SUBMIT_JOB_FILE_NAME = 'submitJob.js';
 const SUBMIT_SCRIPT_JOB_FILE_NAME = 'submitScriptJob.js';
+const notificationMoudle = require("../../utils/emailNotification")
 
 /**
   Updates Dataflow graph by
@@ -521,6 +522,7 @@ router.post('/saveJob', [
   }
   console.log("[saveJob] - Get file list for app_id = " + req.body.job.basic.application_id + " isNewJob: "+req.body.isNew);
   var jobId=req.body.id, applicationId=req.body.job.basic.application_id, fieldsToUpdate={}, nodes=[], edges=[];
+
   try {
     Job.findOne({where: {name: req.body.job.basic.name, application_id: applicationId}, attributes:['id']}).then(async (existingJob) => {
       let job = null;
@@ -547,7 +549,6 @@ router.post('/saveJob', [
         return res.status(500).json({ success: false, message: "Error occured while saving the job" });
       });
 
-      console.log("<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<< ", req.body.job)
       switch (req.body.job.schedule.type) { 
         case "":
           AssetDataflow.update({
@@ -781,11 +782,6 @@ router.get('/job_details', [
   if (!errors.isEmpty()) {
       return res.status(422).json({ success: false, errors: errors.array() });
   }
-  console.log(`<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<< [job_details] - Get job list for:
-    app_id = ${req.query.app_id}
-    query_id = ${req.query.job_id}
-    dataflow_id = ${req.query.dataflow_id}
-  `);
   let jobFiles = [];
   try {
     Job.findOne({
@@ -952,7 +948,6 @@ router.get('/jobExecutionDetails', [
   query('applicationId')
     .isUUID(4).withMessage('Invalid application id'),
 ], (req, res) => {
-  console.log("Job execution details <<<<<<<<<<<<<<<<<<<<<< route")
   const errors = validationResult(req).formatWith(validatorUtil.errorFormatter);
   if (!errors.isEmpty()) {
       return res.status(422).json({ success: false, errors: errors.array() });
@@ -992,9 +987,29 @@ router.post('/jobExecution', [
                 .then(job => {
                   let newMeta = {...job.manualJob_meta, ...req.body.newManaulJob_meta}
                     job.update({status : 'completed', manualJob_meta : newMeta})
-                            .then(job => { console.log("<<<<<<<<<<<<<<< $$$$$$$$$$$$$$ JOB", job); 
-                                          res.status(200).json({success: true, data: job})})
-                            .catch(err => {res.status(501).json({success: false, message : 'Error occured while saving data'})})
+                            .then(job => {
+                                          const notificationOptions = {
+                                            for : "manualJobCompletion",
+                                            result : newMeta.response,
+                                            url : process.env.WEB_URI + "/"+newMeta.url,
+                                            jobName: newMeta.jobName,
+                                            jobTitle : newMeta.jobTitle,
+                                            contact : newMeta.notifiedTo
+                                          }
+                                          // send manual job completion notification
+                                         notificationMoudle.sendEmailNotification(notificationOptions).then(
+                                          result => {
+                                            if(result.accepted){
+                                              console.log("Manual job completion notification sent"   );  
+                                            }else{
+                                              console.log("unable to send manaul job notification", result)
+                                            }
+                                            res.status(200).json({success: true, data: job});
+                                          });
+                                          
+                                        })
+                            .catch(err => {
+                              res.status(501).json({success: false, message : 'Error occured while saving data'})})
                   })
                 .catch(error => {
                   res.status(501).json({success: false, data: error})})

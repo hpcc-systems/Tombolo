@@ -19,7 +19,6 @@ function ManualJobDetail() {
     useEffect(() =>{
         //1. When the component loads pull  app id, job id and other necessary details from url
         const data = window.location.href.split("/");
-        console.log(data, "Data from url <<<<", `/api/job/job_details?app_id=${data[3]}&job_id=${data[5]}`);
 
         //2. Once the appid and job id is obtained make call to get job details 
         fetch(`/api/job/job_details?app_id=${data[3]}&job_id=${data[5]}`, {
@@ -68,7 +67,7 @@ function ManualJobDetail() {
             fetch("/api/job/dependOnManualJob", {
                 headers: authHeader(),
                 method : 'POST',
-                body : JSON.stringify({name: jobDetails?.name})
+                body : JSON.stringify({name: jobDetails.name})
               })
               .then((response) => {
                 if(response.ok) {
@@ -89,7 +88,7 @@ function ManualJobDetail() {
 
     //When user clicks cancel button
     const handleCancel = () => {
-        window.location.href = "/"
+      window.location.href = "/"
     }
 
     //styles
@@ -102,24 +101,33 @@ function ManualJobDetail() {
             <Button style={actionBtnsStyle} danger type="default" value="rejected" onClick={handleResponse}> Reject </Button> 
             <Button style={actionBtnsStyle} type="primary" ghost  value="rejected" onClick={handleCancel}> Cancel </Button>
         </div>
+    //Job details
+    const jobData = [{label : 'Title', value: jobDetails.title}, 
+                      {label : 'Name', value : jobDetails.name},
+                      {label : 'Job Type', value : jobDetails.jobType},
+                      {label : 'Contact', value : jobDetails.contact},
+                      {label : 'Created on', value : jobDetails.createdAt},
+                    ]
 
     return (
         <div>
-            <div className="assetTitle">{jobDetails?.name}</div>
-                <Tabs  tabBarExtraContent={actions} >
+            <div className="assetTitle">Job : {jobDetails.name}</div>
+               <Tabs  tabBarExtraContent={actions} >
                     <TabPane tab="Basic" key="1">
-                    {jobDetails ? Object.keys(jobDetails).map((key, index) =>
-                            (<Row key={index} gutter={{ xs: 8, sm: 8, md: 8, lg: 8 }}>
-                                            <Col className="gutter-row" span={6}>
-                                                <div >{key}</div>
-                                            </Col>
-                                            <Col className="gutter-row" span={18}>
-                                                <div >{jobDetails[key]}</div>
-                                            </Col>  
-                                </Row> 
-                            )) : null }    
+                      {
+                      jobData.map(item => 
+                        (<Row  gutter={{ xs: 8, sm: 8, md: 8, lg: 8 }}>
+                              <Col className="gutter-row" span={6}>
+                                  <div >{item.label}</div>
+                              </Col>
+                              <Col className="gutter-row" span={18}>
+                                  <div >{item.value}</div>
+                              </Col>  
+                            </Row> )
+                      )
+                    }
                     </TabPane>
-                </Tabs>
+                </Tabs> 
         </div>
     )
 }

@@ -143,6 +143,7 @@ router.get('/', [
           let nodesWithNames = await updateNodeNameAndTitle(JSON.parse(graph.nodes));        
           graph.nodes = JSON.stringify(nodesWithNames);
           return res.json(graph);
+
         }else{
           //If there is no graph
          //return res.status(200).json({message : "No Graph"})

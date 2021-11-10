@@ -10,8 +10,6 @@ function AzureUserHome() {
     const { instance, accounts, inProgress } = useMsal();
 
     useEffect(() => {
-        console.log("Inprogress <<<<", inProgress, "accounts <<<<", accounts, "instance <<<< ", instance);
-
         // When the user is successfully authenticated and MSL has users account info
         if(accounts.length > 0 && inProgress === 'none'){
             let userAccount = accounts[0];
@@ -27,7 +25,6 @@ function AzureUserHome() {
 
           // This dispatch function makes a call to /loginAzureUser. 
           //login azure user adds a user in the user table if not already there
-          console.log("<<<< This block of code is running")
           dispatch( userActions.azureLogin(user));
         } 
         

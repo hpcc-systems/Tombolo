@@ -52,7 +52,6 @@ function ManualJobsStatus({workflowDetails}) {
 
     //Table Data - filter jobs with type manual
     const manualJobs = workflowDetails.wuDetails.filter( item => item.jobType === "Manual" );
-    console.log(manualJobs, "<<<<<<<<<<<<<<<< Manual jobs")
     manualJobs.map(item => { 
                             item.name = <Link  to={item.manualJob_meta.url}> {item.name}</Link>; 
                              item.notifiedTo = item.manualJob_meta.notifiedTo;

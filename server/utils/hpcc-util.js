@@ -119,7 +119,6 @@ exports.indexInfo = (clusterId, indexName) => {
 }
 
   exports.fetchDirectories = (host, port, data) => {
-    console.log("URL >>>>>>>>>>>>>>", `${host}:${port}/FileSpray/FileList.json`)
     let formData={};
     for(let key in data){
       formData[key] = data[key].toString()

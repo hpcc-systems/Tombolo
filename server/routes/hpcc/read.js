@@ -550,7 +550,6 @@ router.get('/getDirectories',[
 	query('host').exists().withMessage('Invalid host name'),
 	query('port').exists().withMessage('Invalid Port')
 ], function (req, res) {
-	console.log("<<<<<<<<<<<<<<<<<< Getting dirs", req.query.data, req.query.host, req.query.port)
 	const errors = validationResult(req).formatWith(validatorUtil.errorFormatter);
 	if (!errors.isEmpty()) {
 	  return res.status(422).json({ success: false, errors: errors.array() });

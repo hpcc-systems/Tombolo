@@ -6,25 +6,17 @@ import { MarkdownEditor } from "../../common/MarkdownEditor.js";
 import { useSelector,useDispatch } from "react-redux";
 import { assetsActions } from '../../../redux/actions/Assets';
 import { Cascader } from "antd";
-const _ = require("lodash")
 
 function BasicsTabManul(props) {
     const assetReducer = useSelector(state => state.assetReducer);
-    const {enableEdit, localState, editingAllowed, clusters, onChange, formRef} = props;
-    const [cluster, setCluster] = useState({});
+    const applicationReducer = useSelector(state => state.applicationReducer)
+    const {enableEdit, localState, editingAllowed,  onChange, formRef} = props;
     const [options, setOptions] = useState([]);
     const [machines, setMachines] = useState({});
     const [selectedCluster, setSelectedCluster] = useState(assetReducer.clusterId);
+    const [clusters, setClusters] = useState(applicationReducer.clusters)
     const { Option } = Select; 
     const dispatch = useDispatch();  
-
-
-    //if cluster is in props assign to local state
-    useEffect(() =>{
-      const clusterObjFromProp = clusters.filter(item => item.id === localState.selectedCluster);
-      console.log(clusterObjFromProp, "<<<<<<< Selected cluster from prop", localState.selectedCluster);
-      clusterObjFromProp ? setCluster(clusterObjFromProp) : setCluster({});
-    }, [] )
 
     // On form file path (cascader value) change 
     const onFilePathChange = (value) =>{
@@ -33,6 +25,7 @@ function BasicsTabManul(props) {
     }
 
 
+    //When cluster is selected
     const onClusterSelection = (value) => {
       dispatch(assetsActions.clusterSelected(value));
       setSelectedCluster(value);
@@ -41,7 +34,8 @@ function BasicsTabManul(props) {
 
     //When the cluster id changes make a call and get all dropzones within that cluster
     useEffect(() => {
-      if(!_.isEmpty(cluster)){
+      if(selectedCluster){
+        console.log("Selected cluster is <<<<", selectedCluster)
           fetch(`/api/hpcc/read/getDropzones?clusterId=${selectedCluster}&for=fileUpload`,{
             headers : authHeader()
           }).then(response => {
@@ -60,16 +54,14 @@ function BasicsTabManul(props) {
               console.log(err)
           })
       }  
-      }, [cluster])
+      }, [selectedCluster])
 
 
     //when dropzone is selected make call to get the dirs and files
-    //TDO - get host and port detail form redux store
     const loadData = ( selectedOptions) =>{      
       let path = selectedOptions.map(item => item.value);
       let pathToAsset = path.join("/");
-
-      //current path
+      const host = clusters.filter(item => item.id === selectedCluster)
       const targetOption = selectedOptions[selectedOptions.length - 1];
       targetOption.loading = true;
      
@@ -79,7 +71,7 @@ function BasicsTabManul(props) {
             OS : machines.OS,
             rawxml_ : true,
             DirectoryOnly: false})
-              fetch(`/api/hpcc/read/getDirectories?data=${data}&host=http://10.173.147.1&port=8010`, {
+              fetch(`/api/hpcc/read/getDirectories?data=${data}&host=${host[0].thor_host}&port=${host[0].thor_port}`, {
                 headers : authHeader()
               }).then(response =>{
                 if(response.ok){

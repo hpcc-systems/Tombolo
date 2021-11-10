@@ -70,8 +70,6 @@ class AppHeader extends Component {
     }
 
     componentDidMount(){
-      console.log("2. <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<< window ", window.location.href.split("/").includes('manualJobDetails'));
-
       if(window.location.href.split("/").includes('manualJobDetails')){
         return; 
       }

@@ -23,7 +23,7 @@ import IndexDetailsForm from "./components/application/IndexDetails";
 import QueryDetailsForm from "./components/application/QueryDetails";
 import VisualizationDetailsForm from "./components/application/VisualizationDetails";
 import AzureUserHome from "./components/azureSso/AzureUserHome"
-import ManualJobDetail from "./components/application/DataflowInstances/ManualJobDetail"
+import ManualJobDetail from "./components/application/Jobs/ManualJobDetail"
 
 import Actions from "./components/application/actions/actions";
 import { AdminApplications } from "./components/admin/Applications";

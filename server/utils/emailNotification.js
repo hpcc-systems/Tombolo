@@ -1,6 +1,7 @@
 require('dotenv').config();
 const nodemailer = require("nodemailer");
 
+// 🔔  Notification sender
 const sendEmailNotification = async (notificationOptions) => {
     //Creating transporter
   const transporter = nodemailer.createTransport({
@@ -17,23 +18,36 @@ const sendEmailNotification = async (notificationOptions) => {
   // This function returns an object and assgign to option variable
   // It has email content, subject, receiver and sender info
   const options = (notificationOptions) =>{
-    if(notificationOptions.for === "manaulJob"){
+    switch (notificationOptions.for){
+    case "manaulJob" :
         return {
             from: process.env.EMAIL_SENDER,
             to: notificationOptions.contact,
             subject: "Manaul Job awaiting your action",
             text: ``,
             html : `<p>Hello,</p>
-                    <p> Below job requires your attention</p>
-                    <ul>
-                        <li> Name : ${notificationOptions.jobName}</li>
-                        <li> Title : ${notificationOptions.jobTitle}</li>
-                        <li> url : ${notificationOptions.url}</li>
-                    <ul>
-                    <div>
+                    <p> Below job requires your attention. Please click <a href=${notificationOptions.url}>Here</a> to view job details</p>
+                        <p> Name : ${notificationOptions.jobName}</p>
+                        <p> Title : ${notificationOptions.jobTitle}</p>
+                    <p>
                     <b>Tombolo Team </b>
-                    </div>
+                    </p>
             `
+        }
+      case "manualJobCompletion" :
+        return {
+          from: process.env.EMAIL_SENDER,
+          to: notificationOptions.contact,
+          subject: "Manaul Job Completed",
+          text: ``,
+          html : `<p>Hello,</p>
+                  <p> You have ${notificationOptions.result} the job below. Please click <a href=${notificationOptions.url}>Here</a> to view job details or to modify your action.</p>
+                      <p> Name : ${notificationOptions.jobName}</p>
+                      <p> Title : ${notificationOptions.jobTitle}</p>
+                  <p>
+                  <b>Tombolo Team </b>
+                  </p>
+          `
         }
     }
   }
