@@ -37,7 +37,6 @@ import { readOnlyMode, editableMode } from "../../common/readOnlyUtil";
 import BasicsTabGeneral from "./BasicsTabGeneral";
 import BasicsTabSpray from "./BasicsTabSpray";
 import BasicsTabScript from "./BasicsTabScript";
-import GitHubForm from "./GitHubForm.js";
 
 const TabPane = Tabs.TabPane;
 const { Option, OptGroup } = Select;
@@ -176,39 +175,21 @@ class JobDetails extends Component {
     editing: false,
     dataAltered: false,
     errors: false,
-    isFilesFromGitHub:false
   };
 
   componentDidMount() {
-    //this.props.onRef(this);
     if (this.props.application && this.props.application.applicationId) {
-      this.getJobDetails();
-      this.setClusters(this.props.clusterId);
-      if (this.props.selectedDataflow) {
-        this.getFiles();
-      }
+        this.getJobDetails();
+        this.setClusters(this.props.clusterId);
+        if (this.props.selectedDataflow) {
+          this.getFiles();
+        }
     }
     if (this.props.scheduleType === "Predecessor") {
       this.handleScheduleTypeSelect("Predecessor");
     }
-
     //Getting global state
-    const { viewOnlyModeReducer } = store.getState();
-    if (viewOnlyModeReducer.addingNewAsset) {
-      this.setState({
-        addingNewAsset: true,
-      });
-    }
-    if (viewOnlyModeReducer.editMode) {
-      this.setState({
-        enableEdit: viewOnlyModeReducer.editMode,
-        editing: true,
-      });
-    } else {
-      this.setState({
-        enableEdit: viewOnlyModeReducer.editMode,
-      });
-    }
+    this.handleViewOnlyMode()
   }
 
   //Unmounting phase
@@ -223,6 +204,16 @@ class JobDetails extends Component {
       payload: false,
     });
   }
+
+  handleViewOnlyMode(){
+    //Getting global state
+    this.setState({ 
+        enableEdit: this.props.editMode,
+        editing: this.props.editMode,
+        addingNewAsset: this.props.addingNewAsset 
+      });
+  }
+
   getJobDetails() {
     if (this.props.selectedAsset !== "" && !this.props.isNew) {
       this.setState({
@@ -335,6 +326,8 @@ class JobDetails extends Component {
             sprayFileName: data.sprayFileName,
             sprayDropZone: data.sprayDropZone,
             sprayedFileScope: data.sprayedFileScope,
+            isStoredOnGithub:data.metaData.isStoredOnGithub || false,
+            gitHubFiles: data.metaData?.gitHubFiles ||  null
           });
           this.setClusters(this.props.clusterId);
           return data;
@@ -345,7 +338,9 @@ class JobDetails extends Component {
             ...this.state,
             initialDataLoading: false,
           });
-        });
+        }).finally(()=>{
+          this.handleViewOnlyMode()
+      })
     }
   }
 
@@ -710,7 +705,7 @@ class JobDetails extends Component {
 
   saveJobDetails() {
     let _self = this;
-    return new Promise((resolve) => {
+     return new Promise((resolve) => {
       fetch("/api/job/saveJob", {
         method: "post",
         headers: authHeader(),
@@ -774,7 +769,29 @@ class JobDetails extends Component {
     if (formFieldsValue["sprayDropZone"]) {
       formFieldsValue["sprayDropZone"] = formFieldsValue["sprayDropZone"];
     }
-    const {filesFromGithub,...formFields} = formFieldsValue;
+
+    const { gitHubFiles, isStoredOnGithub, ...formFields} = formFieldsValue;
+    // gitHubFiles give us more fields but we will save only one that we are using into DB.
+    //console.log(`gitHubFiles`, gitHubFiles)
+    const metaData={}; // metadata will be stored as JSON
+    metaData.isStoredOnGithub = isStoredOnGithub;
+    if (gitHubFiles) {
+      metaData.gitHubFiles ={
+        providedGithubRepo:gitHubFiles.providedGithubRepo,
+        selectedGitBranch : gitHubFiles.selectedGitBranch,
+        gitHubUserName:gitHubFiles.gitHubUserName,
+        gitHubPassword:gitHubFiles.gitHubPassword,
+        pathToFile:gitHubFiles.pathToFile, // we need to save this field to recreate view in cascader.
+        selectedFile:{
+          projectOwner: gitHubFiles.selectedFile.projectOwner,
+          projectName:gitHubFiles.selectedFile.projectName,
+          name: gitHubFiles.selectedFile.name,
+          path: gitHubFiles.selectedFile.path,
+        }
+      }
+    } else {
+      metaData.gitHubFiles = null;
+    }
 
     var jobDetails = {
       basic: {
@@ -786,6 +803,7 @@ class JobDetails extends Component {
         cluster_id: this.state.selectedCluster,
         ecl: this.state.job.ecl,
         sprayFileName: this.state.job.sprayFileName,
+        metaData // all fields related to github is stored here 
       },
       schedule: {
         type: this.state.selectedScheduleType,
@@ -797,7 +815,6 @@ class JobDetails extends Component {
       mousePosition: this.props.mousePosition,
       currentlyEditingId: this.props.currentlyEditingId,
       autoCreateFiles: false,
-      filesFromGithub // all fields related to github is stored here
     };
     let groupId = this.props.groupId
       ? this.props.groupId
@@ -1645,18 +1662,6 @@ class JobDetails extends Component {
                 </Select>
                 }
               </Form.Item>   
-
-              <Form.Item 
-                valuePropName="checked"
-                name='isFilesFromGitHub' 
-                label="Pull files from GitHub"
-                labelCol={{ xxl: {span: 2} }}
-                > 
-               <Checkbox  /> 
-              </Form.Item>   
-
-              {this.formRef.current?.getFieldValue("isFilesFromGitHub") && <GitHubForm form={this.formRef} /> }                             
-
               {(() =>  {
                 switch (jobType) {
                   case 'Data Profile':
@@ -2048,6 +2053,8 @@ function mapStateToProps(state) {
   const { user } = state.authenticationReducer;
   const { application, clusters } = state.applicationReducer;
   const { isNew = false, groupId = "" } = newAsset;
+  const { editMode, addingNewAsset } = state.viewOnlyModeReducer;
+
   return {
     user,
     selectedAsset,
@@ -2056,6 +2063,8 @@ function mapStateToProps(state) {
     groupId,
     clusterId,
     clusters,
+    editMode,
+    addingNewAsset
   };
 }
 
