@@ -240,6 +240,38 @@ exports.recordJobExecution = (workerData, wuid) => {
   }
 }
 
+exports.createFilesandJobfiles = async ({file, cluster_id, application_id, id})=>{
+  try {
+    const fileInfo = await hpccUtil.fileInfo(file.name, cluster_id);
+    if (!fileInfo) throw new Error("Failed to get File Info");
+    const fileCreated = await File.create({
+      "description": fileInfo.basic.description,
+      "isSuperFile": fileInfo.basic.isSuperfile,
+      "qualifiedPath": fileInfo.basic.pathMask,
+      "fileType": fileInfo.basic.fileType,
+      "application_id": application_id,
+      "title": fileInfo.basic.fileName,
+      "scope": fileInfo.basic.scope,
+      "name": fileInfo.basic.name,
+      "cluster_id": cluster_id,
+      "dataflowId":'',
+    })
+    // #2 create JobFile;
+     await JobFile.create({
+      application_id: application_id,
+      name: fileInfo.basic.name,
+      file_type: file.file_type,
+      file_id: fileCreated.id,
+      job_id: id, 
+    });
+  } catch (error) {
+    console.log('--Error in createFilesandJobfiles----------------------------------------');
+    console.dir(error, { depth: null });
+    console.log('------------------------------------------');
+    throw error;
+  }
+}
+
 exports.getJobForProcessing = async () => {
   try {
     console.log("**********************getJobForProcessing*******************")

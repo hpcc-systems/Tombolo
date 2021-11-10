@@ -18,6 +18,7 @@ let JobExecution = models.job_execution;
 let MessageBasedJobs = models.message_based_jobs;
 const JobScheduler = require('../../job-scheduler');
 const hpccUtil = require('../../utils/hpcc-util');
+const workflowUtil = require('../../utils/workflow-util.js');
 const validatorUtil = require('../../utils/validator');
 const { body, query, param, validationResult } = require('express-validator');
 const assetUtil = require('../../utils/assets');
@@ -519,9 +520,6 @@ router.post('/saveJob', [
   if (!errors.isEmpty()) {
       return res.status(422).json({ success: false, errors: errors.array() });
   }
-  console.log('------------------------------------------');
-  console.dir(req.body,{ depth: null });
-  console.log('------------------------------------------');
 
   console.log("[saveJob] - Get file list for app_id = " + req.body.job.basic.application_id + " isNewJob: "+req.body.isNew);
   var jobId=req.body.id, applicationId=req.body.job.basic.application_id, fieldsToUpdate={}, nodes=[], edges=[];
@@ -545,7 +543,7 @@ router.post('/saveJob', [
           }
         })
       }
-      
+
       let response = await updateJobDetails(applicationId, jobId, req.body.job, req.body.job.autoCreateFiles, [], req.body.job.basic.dataflowId).catch((err) => {
         console.log("Error occured in updateJobDetails....")
         return res.status(500).json({ success: false, message: "Error occured while saving the job" });
@@ -793,10 +791,35 @@ router.get('/job_details', [
   try {
     Job.findOne({
       where: { "application_id": req.query.app_id, "id":req.query.job_id },
-      include: [JobFile, JobParam],
+      include: [JobFile, JobParam, JobExecution],
       attributes: { exclude: ['assetId'] },
     }).then(async function(job) {
-      if(job) {
+      if(job) {       
+
+        const isStoredOnGithub = job?.metaData?.isStoredOnGithub;
+        const jobStatus = job.job_executions?.[0]?.status;
+        const ecl = job.ecl
+
+        if(isStoredOnGithub && !ecl && jobStatus === 'completed' ) { 
+          const wuid = job.job_executions[0].wuid;
+          const { application_id, cluster_id, jobType,id } = job;
+ 
+          try{
+            const hpccJobInfo = await hpccUtil.getJobInfo(cluster_id, wuid, jobType);
+            // #1 create records in Files and JobFiles
+            hpccJobInfo.jobfiles.forEach( async (file) => await assetUtil.createFilesandJobfiles({file, cluster_id, application_id, id}));
+            // #2 update local job instance and save ECL to DB.
+            const jobFiles = await job.getJobfiles(); 
+            // this will update local instance only
+            job.set("jobfiles", jobFiles);
+            job.set("ecl",  hpccJobInfo.ecl);
+            await job.save()  
+          } catch (error){
+            console.log('--FAILED TO UPDATE ECL----------------------------------------');
+            console.dir(error, { depth: null });
+          }
+        }
+
         var jobData = job.get({ plain: true });
         for (jobFileIdx in jobData.jobfiles) {
           var jobFile = jobData.jobfiles[jobFileIdx];
@@ -906,16 +929,22 @@ router.post('/executeJob', [
   try {
     let wuid = '';
     let job = await Job.findOne({where: {id:req.body.jobId}, attributes: {exclude: ['assetId']}, include: [JobParam]});
+    const isStoredOnGithub = job.metaData?.isStoredOnGithub;
     if(job.jobType == 'Spray') {
       let sprayJobExecution = await hpccUtil.executeSprayJob(job);
       wuid = sprayJobExecution.SprayResponse && sprayJobExecution.SprayResponse.Wuid ? sprayJobExecution.SprayResponse.Wuid : ''
     } else if(job.jobType == 'Script') {
       let executionResult = await assetUtil.executeScriptJob(req.body.jobId);
     } else if(job.jobType != 'Script' && job.jobType != 'Spray') {
-      wuid = await hpccUtil.getJobWuidByName(req.body.clusterId, req.body.jobName);
-      let wuResubmitResult = await hpccUtil.resubmitWU(req.body.clusterId, wuid);
+      if (isStoredOnGithub){
+        wuid = await hpccUtil.createWorkUnit(req.body.clusterId); // creates empty WU, this is needed to update and submit WU after repo from git is cloned
+      } else {
+        wuid = await hpccUtil.getJobWuidByName(req.body.clusterId, req.body.jobName);
+        let wuResubmitResult = await hpccUtil.resubmitWU(req.body.clusterId, wuid);
+      }
     } 
     //record workflow execution
+    let jobExecutionId;
     await JobExecution.findOrCreate({
       where: {
         jobId: req.body.jobId,
@@ -930,7 +959,7 @@ router.post('/executeJob', [
         status: 'submitted'
       }
     }).then((results, created) => {
-      let jobExecutionId = results[0].id;
+      jobExecutionId = results[0].id;
       if(!created) {
         return JobExecution.update({
           jobId: req.body.jobId,
@@ -942,7 +971,24 @@ router.post('/executeJob', [
         {where: {id: jobExecutionId}})
       }
     })
+
     res.json({"success":true});
+
+    if (isStoredOnGithub){
+      const tasks =  await hpccUtil.pullFilesFromGithub( wuid,req.body.jobName ,req.body.clusterId, job.metaData.gitHubFiles );
+      if (tasks.WUaction?.failedToUpdate) {
+          // Failed to update WU action to status 'failed', status polled keep polling this wu, manually update JobExecution and notify job failure.
+        try {
+          await JobExecution.update({status: 'failed'}, {where: {id: jobExecutionId}});
+          workflowUtil.notifyJobFailure(job.name,req.body.clusterId, wuid)
+        } catch (error) {
+          console.log('------------------------------------------');
+          console.log("Failed to notify", error);
+        }
+      }
+      console.log('GitHub Flow Summary-----------------------------------------');
+      console.dir(tasks, { depth: null });
+    }
   } catch (err) {
     console.error('err', err);
     return res.status(500).json({ success: false, message: "Error occured while re-submiting the job" });
