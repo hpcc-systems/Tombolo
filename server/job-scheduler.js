@@ -37,6 +37,48 @@ class JobScheduler {
     await this.scheduleJobStatusPolling();
   }
 
+  //Handle Manual Job notification 
+  async handleManualJobScheduling (job){
+    let notificationOptions = {
+      for : 'manaulJob',
+      jobName : job.name,
+      jobTitle: job.title,
+      contact: job.contact,
+      url : `${process.env.WEB_URI}${job.application_id}/manualJobDetails/${job.id}`
+    }
+
+    const result = await notificationMoudle.sendEmailNotification(notificationOptions)
+    
+    if(result.accepted){
+      // once the end user is notified add the job to job execution queue 
+      const wuid = await hpccUtil.getJobWuidByName(job.clusterId, job.name);    
+      let manualJob_meta = {
+        notifiedTo : job.contact,
+        notifiedOn: new Date().getTime(),
+        url : `/${job.application_id}/manualJobDetails/${job.id}`,
+        jobName : job.name,
+        jobTitle: job.title,
+      };
+
+      let jobExecutionData = {
+        name: job.name, 
+        clusterId: job.clusterId, 
+        dataflowId: job.dataflowId, 
+        applicationId: job.application_id, 
+        jobId: job.id, 
+        jobType: job.jobType == 'Script' ? SUBMIT_SCRIPT_JOB_FILE_NAME : SUBMIT_JOB_FILE_NAME,
+        sprayedFileScope: job.sprayedFileScope,
+        sprayFileName: job.sprayFileName,
+        sprayDropZone: job.sprayDropZone,
+        status: 'wait',
+        manualJob_meta : manualJob_meta
+      }
+
+      await assetUtil.recordJobExecution(jobExecutionData, wuid)
+    }else{
+      console.log(result)
+    }
+  } 
 
   async scheduleCheckForJobsWithSingleDependency(jobName) {
     return new Promise(async (resolve, reject) => {    
@@ -66,52 +108,7 @@ class JobScheduler {
         //Lopping through all the jobs
         for(const job of jobs) {
           if(job.jobType === "Manual"){
-
-            let notificationOptions = {
-              for : 'manaulJob',
-              jobName : job.name,
-              jobTitle: job.title,
-              contact: job.contact,
-              url : `${process.env.WEB_URI}${job.application_id}/manualJobDetails/${job.id}`
-            }
-
-            // if the dependent job has type manual send email notification
-            await notificationMoudle.sendEmailNotification(notificationOptions).then(
-              result => {
-                if(result.accepted){
-                  console.log("Manual job notification sent"   );  
-                }else{
-                  console.log("unable to send manaul job notification")
-                }
-              });
-
-            // once the end user is notified add the manaul job to job execution queue 
-            const wuid = await hpccUtil.getJobWuidByName(job.clusterId, job.name);    
-            let manualJob_meta = {
-              notifiedTo : job.contact,
-              notifiedOn: new Date().getTime(),
-              url : `/${job.application_id}/manualJobDetails/${job.id}`,
-              jobName : job.name,
-              jobTitle: job.title,
-            };
-
-    
-              let jobExecutionData = {
-                name: job.name, 
-                clusterId: job.clusterId, 
-                dataflowId: job.dataflowId, 
-                applicationId: job.application_id, 
-                jobId: job.id, 
-                jobType: job.jobType == 'Script' ? SUBMIT_SCRIPT_JOB_FILE_NAME : SUBMIT_JOB_FILE_NAME,
-                sprayedFileScope: job.sprayedFileScope,
-                sprayFileName: job.sprayFileName,
-                sprayDropZone: job.sprayDropZone,
-                status: 'wait',
-                manualJob_meta : manualJob_meta
-              }
-
-              await assetUtil.recordJobExecution(jobExecutionData, wuid)
-
+            await this.handleManualJobScheduling(job);
           }else{   
               // Getting wuid
             const  wuid = await hpccUtil.getJobWuidByName(job.clusterId, job.name);      
@@ -147,7 +144,7 @@ class JobScheduler {
 
   async scheduleActiveCronJobs() {
     let promises=[];
-    const query = `SELECT ad.id, ad.cron, j.name as name, j.jobType, j.sprayedFileScope, j.sprayFileName, j.sprayDropZone, ad.dataflowId, ad.assetId, d.application_id, c.id as clusterId, c.thor_host, c.thor_port,
+    const query = `SELECT ad.id, ad.cron, j.title, j.contact, j.name as name, j.jobType, j.sprayedFileScope, j.sprayFileName, j.sprayDropZone, ad.dataflowId, ad.assetId, d.application_id, c.id as clusterId, c.thor_host, c.thor_port,
       d.title as dataflowName
       FROM tombolo.assets_dataflows ad
       left join dataflow d on d.id = ad.dataflowId
@@ -168,7 +165,8 @@ class JobScheduler {
         add job to bree { name: ${job.name}, cron: ${job.cron}, path: ..., workerData: {workunitId: $WUID, cluster: ${job.thor_host}, ...} }
       `);
       try {
-        //finally add the job to the scheduler
+        // finally add the job to the scheduler
+        // console.log("<<<<<<<<<<< JOB DATA >>>>>>>>>>>>>>>", job)
         await this.addJobToScheduler(
           job.name, 
           job.cron, 
@@ -178,9 +176,11 @@ class JobScheduler {
           job.assetId, 
           job.jobType == 'Script' ? SUBMIT_SCRIPT_JOB_FILE_NAME : SUBMIT_JOB_FILE_NAME,
           job.jobType,
+          job.contact,
+          job.title,
           job.sprayedFileScope,
           job.sprayFileName,
-          job.sprayDropZone
+          job.sprayDropZone,
         );
       } catch (err) {
         console.log(err);
@@ -215,7 +215,7 @@ class JobScheduler {
     }
   }
 
-  async addJobToScheduler(name, cron, clusterId, dataflowId, applicationId, jobId, jobfileName, jobType, sprayedFileScope, sprayFileName, sprayDropZone) {
+  async addJobToScheduler(name, cron, clusterId, dataflowId, applicationId, jobId, jobfileName, jobType,  contact, title, sprayedFileScope, sprayFileName, sprayDropZone,) {
     try {
       let uniqueJobName = name + '-' + dataflowId + '-' + jobId;
       this.bree.add({
@@ -230,9 +230,11 @@ class JobScheduler {
             applicationId: applicationId,
             dataflowId: dataflowId,
             jobType: jobType,
+            title: title,
+            contact : contact,
             sprayedFileScope: sprayedFileScope,
             sprayFileName: sprayFileName,
-            sprayDropZone: sprayDropZone
+            sprayDropZone: sprayDropZone,
           }
         }
       })
@@ -261,7 +263,7 @@ class JobScheduler {
             jobType: jobType,
             sprayedFileScope: sprayedFileScope,
             sprayFileName: sprayFileName,
-            sprayDropZone: sprayDropZone
+            sprayDropZone: sprayDropZone,
           }
         }
       })

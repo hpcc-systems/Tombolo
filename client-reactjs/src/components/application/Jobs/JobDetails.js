@@ -1346,6 +1346,7 @@ class JobDetails extends Component {
 
   executeJob = () => {
     let _self = this;
+    console.log(_self.formRef.current.getFieldsValue())
     _self.setState({
       initialDataLoading: true,
     });
@@ -1354,12 +1355,15 @@ class JobDetails extends Component {
       headers: authHeader(),
       body: JSON.stringify({
         clusterId: _self.state.selectedCluster,
-        jobName: _self.formRef.current.getFieldValue("name"),
-        jobId: _self.state.job.id,
+        name: _self.formRef.current.getFieldValue("name"),
+        contact : _self.formRef.current.getFieldValue("contact"),
+        jobType: _self.state.job.jobType,
+        title: _self.formRef.current.getFieldValue("title"),
+        id: _self.state.job.id,
         dataflowId: _self.props.selectedDataflow
           ? _self.props.selectedDataflow.id
           : "",
-        applicationId: _self.props.application.applicationId,
+          application_id: _self.props.application.applicationId,
       }),
     })
       .then(function (response) {
@@ -1862,7 +1866,9 @@ class JobDetails extends Component {
                             </Select>
                           )}
                         </Form.Item>
-                      ) : null}
+                      ) : 
+                      <div style={{textAlign: "center", paddingTop: "100px"}}>Please press Edit button to configure scheduling for this job</div>
+                      }
                       {this.state.selectedScheduleType === "Time" ? (
                         <Fragment>
                           <Form.Item label="Run Every">

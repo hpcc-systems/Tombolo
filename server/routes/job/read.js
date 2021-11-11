@@ -650,7 +650,9 @@ router.post('/saveJob', [
                   applicationId,
                   jobId,
                   req.body.job.basic.jobType == 'Script' ? SUBMIT_SCRIPT_JOB_FILE_NAME : SUBMIT_JOB_FILE_NAME,
-                  req.body.job.basic.jobType
+                  req.body.job.basic.jobType,
+                  req.body.job.basic.contact,
+                  req.body.job.basic.title
                 )
               } catch (err) {
                 console.log("could not remove job from scheduler"+ err)
@@ -883,41 +885,44 @@ router.post('/delete', [
 router.post('/executeJob', [
   body('clusterId')
   .optional({ checkFalsy: true }).isUUID(4).withMessage('Invalid cluster id'),
-  body('jobId')
+  body('id')
       .isUUID(4).withMessage('Invalid job id'),
-  body('applicationId')
+  body('application_id')
       .isUUID(4).withMessage('Invalid application id'),
   body('dataflowId').optional({ checkFalsy: true })
       .isUUID(4).withMessage('Invalid dataflow id'),
-  body('jobName')
+  body('name')
     .matches(/^[a-zA-Z]{1}[a-zA-Z0-9_.\-:]*$/).withMessage('Invalid job name'),
 ], async (req, res) => {
   const errors = validationResult(req).formatWith(validatorUtil.errorFormatter);
   if (!errors.isEmpty()) {
       return res.status(422).json({ success: false, errors: errors.array() });
   }
+  if(req.body.jobType === 'Manual'){
+    await jobScheduler.handleManualJobScheduling(req.body);
+  }
   try {
     let wuid = '';
-    let job = await Job.findOne({where: {id:req.body.jobId}, attributes: {exclude: ['assetId']}, include: [JobParam]});
+    let job = await Job.findOne({where: {id:req.body.id}, attributes: {exclude: ['assetId']}, include: [JobParam]});
     if(job.jobType == 'Spray') {
       let sprayJobExecution = await hpccUtil.executeSprayJob(job);
       wuid = sprayJobExecution.SprayResponse && sprayJobExecution.SprayResponse.Wuid ? sprayJobExecution.SprayResponse.Wuid : ''
     } else if(job.jobType == 'Script') {
-      let executionResult = await assetUtil.executeScriptJob(req.body.jobId);
+      let executionResult = await assetUtil.executeScriptJob(req.body.id);
     } else if(job.jobType != 'Script' && job.jobType != 'Spray') {
-      wuid = await hpccUtil.getJobWuidByName(req.body.clusterId, req.body.jobName);
+      wuid = await hpccUtil.getJobWuidByName(req.body.clusterId, req.body.name);
       let wuResubmitResult = await hpccUtil.resubmitWU(req.body.clusterId, wuid);
     } 
     //record workflow execution
     await JobExecution.findOrCreate({
       where: {
-        jobId: req.body.jobId,
-        applicationId: req.body.applicationId
+        jobId: req.body.id,
+        applicationId: req.body.application_id
       },
       defaults: {
-        jobId: req.body.jobId,
+        jobId: req.body.id,
         dataflowId: req.body.dataflowId,
-        applicationId: req.body.applicationId,
+        applicationId: req.body.application_id,
         wuid: wuid,
         clusterId: req.body.clusterId,
         status: 'submitted'
@@ -926,9 +931,9 @@ router.post('/executeJob', [
       let jobExecutionId = results[0].id;
       if(!created) {
         return JobExecution.update({
-          jobId: req.body.jobId,
+          jobId: req.body.id,
           dataflowId: req.body.dataflowId,
-          applicationId: req.body.applicationId,
+          applicationId: req.body.application_id,
           wuid: wuid,
           status: 'submitted'
         },
@@ -975,7 +980,7 @@ router.get('/jobExecutionDetails', [
 });
 
 //when user manually respond to a manual job - Update job status and metadata on job execution table
-router.post('/jobExecution', [
+router.post('/manaulJobResponse', [
   body('jobId').isUUID(4).withMessage('Invalid Job Id'),
   body('newManaulJob_meta').notEmpty().withMessage('Invalid meta data')], 
   (req, res) => {
@@ -1000,7 +1005,7 @@ router.post('/jobExecution', [
                                          notificationMoudle.sendEmailNotification(notificationOptions).then(
                                           result => {
                                             if(result.accepted){
-                                              console.log("Manual job completion notification sent"   );  
+                                              console.log(" Manual job completion notification sent"   );  
                                             }else{
                                               console.log("unable to send manaul job notification", result)
                                             }
@@ -1031,6 +1036,7 @@ router.post('/dependOnManualJob', [
 
 
 const QueueDaemon = require('../../queue-daemon');
+const jobScheduler = require('../../job-scheduler');
 
 router.get('/msg', (req, res) => {
   if (req.query.topic && req.query.message) {

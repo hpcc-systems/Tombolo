@@ -30,6 +30,7 @@ if (parentPort) {
         status: wuResult.Workunit.State,
         wu_duration: wuResult.Workunit.TotalClusterTime
       };
+      
       //check WU status
       if(wuResult.Workunit.State == 'completed' || wuResult.Workunit.State == 'wait') {                
         let jobComplettionRecorded = await assetUtil.recordJobExecution(jobCompletionData, job.wuid);      

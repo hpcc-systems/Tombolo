@@ -41,7 +41,7 @@ function ManualJobDetail() {
     //When user clicks approve or reject btn 
     const handleResponse = (e) => {
         const response = e.currentTarget.value;
-        fetch("/api/job/jobExecution", {
+        fetch("/api/job/manaulJobResponse", {
             headers: authHeader(),
             method : 'POST',
             body : JSON.stringify({jobId: jobId, newManaulJob_meta :{response, respondedOn :  Date.now()}})
