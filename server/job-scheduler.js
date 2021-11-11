@@ -68,7 +68,7 @@ class JobScheduler {
             `submitting dependant job ${job.name} ` +
             `(WU: ${wuid}) to url ${job.clusterId}/WsWorkunits/WUResubmit.json?ver_=1.78`
             );
-          let wuInfo = await hpccUtil.resubmitWU(job.clusterId, wuid, wuDetails.cluster);    
+          let wuResubmitResult = await hpccUtil.resubmitWU(job.clusterId, wuid, wuDetails.cluster);    
           let jobExecutionData = {
             name: job.name, 
             clusterId: job.clusterId, 
@@ -81,7 +81,7 @@ class JobScheduler {
             sprayDropZone: job.sprayDropZone,
             status: 'submitted'
           }
-          await assetUtil.recordJobExecution(jobExecutionData, wuid)
+          await assetUtil.recordJobExecution(jobExecutionData, wuResubmitResult?.WURunResponse.Wuid)
         }
         resolve();
       } catch (err) {

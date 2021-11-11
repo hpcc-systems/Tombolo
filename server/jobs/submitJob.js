@@ -31,10 +31,10 @@ if (parentPort) {
     `submitting job ${workerData.jobName} ` +
     `(WU: ${wuid}) to url ${workerData.clusterId}/WsWorkunits/WUResubmit.json?ver_=1.78`
     );
-    let wuInfo = await hpccUtil.resubmitWU(workerData.clusterId, wuid, wuDetails.cluster);    
+    let wuResubmitResult = await hpccUtil.resubmitWU(workerData.clusterId, wuid, wuDetails.cluster);    
     workerData.status = 'submitted';
     //record workflow execution
-    let jobExecutionRecorded = await assetUtil.recordJobExecution(workerData, wuid);          
+    let jobExecutionRecorded = await assetUtil.recordJobExecution(workerData, wuResubmitResult?.WURunResponse.Wuid);          
     
   } catch (err) {
     console.log(err);

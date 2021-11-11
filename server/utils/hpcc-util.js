@@ -364,7 +364,7 @@ exports.resubmitWU = (clusterId, wuid, wucluster) => {
           reject(err);
         } else {
           var result = JSON.parse(body);
-          console.log(result);
+          //console.log(result);
           resolve(result)
         }
       });

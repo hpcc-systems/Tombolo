@@ -912,6 +912,8 @@ router.post('/executeJob', [
       let wuDetails = await hpccUtil.getJobWuDetails(req.body.clusterId, req.body.jobName);
       wuid = wuDetails.wuid
       let wuResubmitResult = await hpccUtil.resubmitWU(req.body.clusterId, wuid, wuDetails.cluster);
+      //store the new wuid for status polling
+      wuid = wuResubmitResult?.WURunResponse.Wuid;
     } 
     //record workflow execution
     await JobExecution.findOrCreate({
