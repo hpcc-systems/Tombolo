@@ -1682,7 +1682,7 @@ class JobDetails extends Component {
 
             {this.state.job.jobType != "Script" &&
               this.state.job.jobType != "Spray" ? (
-                <TabPane tab="ECL" key="2">
+                <TabPane disabled={!this.state.job.ecl} tab="ECL" key="2">
                   <Form.Item {...eclItemLayout} label="ECL" name="ecl" >
                     
                     <EclEditor
@@ -1693,7 +1693,7 @@ class JobDetails extends Component {
                   </Form.Item>
                 </TabPane>
               ) : this.state.job.jobType == "Script" ? (
-                <TabPane tab="Script" key="2">
+                <TabPane disabled={!this.state.job.ecl} tab="Script" key="2">
                   <Form.Item
                     {...longFieldLayout}
                     label="Script Path"
@@ -1724,7 +1724,7 @@ class JobDetails extends Component {
               {this.state.job.jobType != "Script" &&
               this.state.job.jobType != "Spray" ? (
                 <React.Fragment>
-                  <TabPane tab="Input Params" key="3">
+                  <TabPane disabled={!this.state.job.ecl} tab="Input Params" key="3">
                     <EditableTable
                       columns={
                         this.state.job.jobType != "Script"
@@ -1740,7 +1740,7 @@ class JobDetails extends Component {
                     />
                   </TabPane>
 
-                  <TabPane tab="Input Files" key="4">
+                  <TabPane disabled={!this.state.job.ecl} tab="Input Files" key="4">
                     <div>
                       {this.state.enableEdit ? (
                         <>
@@ -1784,9 +1784,10 @@ class JobDetails extends Component {
                   </TabPane>
                 </React.Fragment>
               ) : null}
+              
               {this.state.job.jobType != "Script" &&
               this.state.job.jobType != "Spray" ? (
-                <TabPane tab="Output Files" key="5">
+                <TabPane disabled={!this.state.job.ecl} tab="Output Files" key="5">
                   <div>
                     {!this.state.enableEdit ? null : (
                       <>
@@ -1828,6 +1829,7 @@ class JobDetails extends Component {
                   </div>
                 </TabPane>
               ) : null}
+
               {this.props.selectedDataflow ? (
                 <TabPane tab="Schedule" key="6">
                   <div>
