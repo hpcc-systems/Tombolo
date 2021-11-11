@@ -963,7 +963,7 @@ router.get('/jobExecutionDetails', [
   try {
     let query = 'select je.id, je.jobId as task, je.dataflowId, je.applicationId, je.status, je.wuid, je.wu_duration, je.clusterId, je.updatedAt, j.name from '+
             'job_execution je, job j '+
-            'where je.dataflowId = (:dataflowId) and je.applicationId = (:applicationId) and j.id = je.jobId';
+            'where je.dataflowId = (:dataflowId) and je.applicationId = (:applicationId) and j.id = je.jobId and je.deletedAt is null';
     let replacements = { applicationId: req.query.applicationId, dataflowId: req.query.dataflowId};
     let jobExecution = models.sequelize.query(query, {
       type: models.sequelize.QueryTypes.SELECT,
