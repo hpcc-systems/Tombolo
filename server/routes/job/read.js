@@ -432,7 +432,8 @@ router.post('/createFileRelation', [
     }
     job.mousePosition = mousePos;
 
-    let wuid = await hpccUtil.getJobWuidByName(savedJob.cluster_id, savedJob.name);
+    let wuDetails = await hpccUtil.getJobWuDetails(savedJob.cluster_id, savedJob.name);
+    let wuid = wuDetails.wuid;
 
     let jobInfo = await hpccUtil.getJobInfo(savedJob.cluster_id, wuid, savedJob.jobType);
 
@@ -465,8 +466,8 @@ router.post('/refreshDataflow', [
 
   try {
     jobs.forEach((job) => {
-      promises.push(hpccUtil.getJobWuidByName(job.cluster_id, job.name).then((wuid) => {
-        return hpccUtil.getJobInfo(job.cluster_id, wuid, job.jobType).then(async (jobInfo) => {
+      promises.push(hpccUtil.getJobWuDetails(job.cluster_id, job.name).then((wuDetails) => {
+        return hpccUtil.getJobInfo(job.cluster_id, wuDetails.wuid, job.jobType).then(async (jobInfo) => {
           let jobObj = {}, jobFiles=[];
           let dataflowJobNode = nodes.filter(node => node.jobId == job.id);
           if(dataflowJobNode && dataflowJobNode.length > 0) {
@@ -957,8 +958,11 @@ router.post('/executeJob', [
     } else if(job.jobType == 'Script') {
       let executionResult = await assetUtil.executeScriptJob(req.body.jobId);
     } else if(job.jobType != 'Script' && job.jobType != 'Spray') {
-        wuid = await hpccUtil.getJobWuidByName(req.body.clusterId, req.body.jobName);
-        let wuResubmitResult = await hpccUtil.resubmitWU(req.body.clusterId, wuid);
+      let wuDetails = await hpccUtil.getJobWuDetails(req.body.clusterId, req.body.jobName);
+      wuid = wuDetails.wuid
+      let wuResubmitResult = await hpccUtil.resubmitWU(req.body.clusterId, wuid, wuDetails.cluster);
+      //store the new wuid for status polling
+      wuid = wuResubmitResult?.WURunResponse.Wuid;
     } 
     //record workflow execution
     await JobExecution.findOrCreate({
@@ -1008,7 +1012,7 @@ router.get('/jobExecutionDetails', [
   try {
     let query = 'select je.id, je.jobId as task, je.dataflowId, je.applicationId, je.status, je.wuid, je.wu_duration, je.clusterId, je.updatedAt, j.name from '+
             'job_execution je, job j '+
-            'where je.dataflowId = (:dataflowId) and je.applicationId = (:applicationId) and j.id = je.jobId';
+            'where je.dataflowId = (:dataflowId) and je.applicationId = (:applicationId) and j.id = je.jobId and je.deletedAt is null';
     let replacements = { applicationId: req.query.applicationId, dataflowId: req.query.dataflowId};
     let jobExecution = models.sequelize.query(query, {
       type: models.sequelize.QueryTypes.SELECT,

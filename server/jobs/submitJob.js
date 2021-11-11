@@ -41,17 +41,18 @@ if (parentPort) {
       });
       wuid = sprayJobExecution.SprayResponse && sprayJobExecution.SprayResponse.Wuid ? sprayJobExecution.SprayResponse.Wuid : ''      
     } else {
-        wuid = await hpccUtil.getJobWuidByName(workerData.clusterId, workerData.jobName);
+      let wuDetails = await hpccUtil.getJobWuDetails(workerData.clusterId, workerData.jobName);
+      wuid = wuDetails.wuid;
     }
     console.log(
-      `submitting job ${workerData.jobName} ` +
-      `(WU: ${wuid}) to url ${workerData.clusterId}/WsWorkunits/WUResubmit.json?ver_=1.78`
-      );
-      let wuInfo = await hpccUtil.resubmitWU(workerData.clusterId, wuid);    
-      workerData.status = 'submitted';
-      //record workflow execution
-      let jobExecutionRecorded = await assetUtil.recordJobExecution(workerData, wuid);          
-  
+    `submitting job ${workerData.jobName} ` +
+    `(WU: ${wuid}) to url ${workerData.clusterId}/WsWorkunits/WUResubmit.json?ver_=1.78`
+    );
+    let wuResubmitResult = await hpccUtil.resubmitWU(workerData.clusterId, wuid, wuDetails.cluster);    
+    workerData.status = 'submitted';
+    //record workflow execution
+    let jobExecutionRecorded = await assetUtil.recordJobExecution(workerData, wuResubmitResult?.WURunResponse.Wuid);          
+    
   } catch (err) {
     console.log(err);
   } finally {
