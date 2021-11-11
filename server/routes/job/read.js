@@ -641,16 +641,20 @@ router.post('/saveJob', [
               //remove existing job with same name
               try {
                 await JobScheduler.removeJobFromScheduler(req.body.job.basic.name + '-' + req.body.job.basic.dataflowId + '-' + jobId);
-                await JobScheduler.addJobToScheduler(
-                  req.body.job.basic.name,
-                  cronExpression,
-                  req.body.job.basic.cluster_id,
-                  req.body.job.basic.dataflowId,
-                  applicationId,
-                  jobId,
-                  req.body.job.basic.jobType == 'Script' ? SUBMIT_SCRIPT_JOB_FILE_NAME : SUBMIT_JOB_FILE_NAME,
-                  req.body.job.basic.jobType
-                )
+                await JobScheduler.addJobToScheduler({
+                    name: req.body.job.basic.name, 
+                    cron: cronExpression, 
+                    clusterId: req.body.job.basic.cluster_id,
+                    dataflowId: req.body.job.basic.dataflowId,
+                    applicationId: req.body.job.basic.application_id,
+                    jobId: jobId,
+                    jobfileName: req.body.job.basic.jobType == 'Script' ? SUBMIT_SCRIPT_JOB_FILE_NAME : SUBMIT_JOB_FILE_NAME,
+                    jobType: req.body.job.basic.jobType,
+                    sprayedFileScope: job.sprayedFileScope,
+                    sprayFileName: job.sprayFileName, // TODO DO WE HAVE sprayFileName WHEN WE ADD JOB TO SCHEDULE THIS DATA GOES TO WORKER
+                    sprayDropZone: job.sprayFileName, // TODO DO WE HAVE sprayDropZone WHEN WE ADD JOB TO SCHEDULE THIS DATA GOES TO WORKER
+                    metaData: req.body.job.basic.metaData
+                   })
               } catch (err) {
                 console.log("could not remove job from scheduler"+ err)
               }
@@ -799,7 +803,7 @@ router.get('/job_details', [
         const jobStatus = job.job_executions?.[0]?.status;
         const ecl = job.ecl
 
-        if(isStoredOnGithub && !ecl && jobStatus === 'completed' ) { 
+        if(isStoredOnGithub && !ecl && (jobStatus === 'completed' || jobStatus === "failed" )) { 
           const wuid = job.job_executions[0].wuid;
           const { application_id, cluster_id, jobType,id } = job;
  
@@ -814,8 +818,10 @@ router.get('/job_details', [
             job.set("ecl",  hpccJobInfo.ecl);
             await job.save()  
           } catch (error){
-            console.log('--FAILED TO UPDATE ECL----------------------------------------');
+            console.log('------------------------------------------');
+            console.log('--FAILED TO UPDATE ECL');
             console.dir(error, { depth: null });
+            console.log('------------------------------------------');
           }
         }
 
@@ -928,22 +934,33 @@ router.post('/executeJob', [
   try {
     let wuid = '';
     let job = await Job.findOne({where: {id:req.body.jobId}, attributes: {exclude: ['assetId']}, include: [JobParam]});
-    const isStoredOnGithub = job.metaData?.isStoredOnGithub;
+    if (job.metaData?.isStoredOnGithub) {
+      res.json({"success":true})// send the respond and proceed with the cloning flow
+      const flowSettings ={
+        gitHubFiles : job.metaData.gitHubFiles,
+        applicationId: req.body.applicationId,
+        dataflowId: req.body.dataflowId,
+        clusterId: req.body.clusterId,
+        jobName : req.body.jobName,
+        jobId: req.body.jobId,
+      }
+      const summary = await assetUtil.createGithubFlow(flowSettings);
+      console.log('------------------------------------------');
+      console.log("router.post('/executeJob': MANUAL JOB EXECUTION GITHUB FLOW, SUMMARY!");
+      console.dir(summary);
+      console.log('------------------------------------------');
+      return; // return from function to prevent code running further.
+    }
     if(job.jobType == 'Spray') {
       let sprayJobExecution = await hpccUtil.executeSprayJob(job);
       wuid = sprayJobExecution.SprayResponse && sprayJobExecution.SprayResponse.Wuid ? sprayJobExecution.SprayResponse.Wuid : ''
     } else if(job.jobType == 'Script') {
       let executionResult = await assetUtil.executeScriptJob(req.body.jobId);
     } else if(job.jobType != 'Script' && job.jobType != 'Spray') {
-      if (isStoredOnGithub){
-        wuid = await hpccUtil.createWorkUnit(req.body.clusterId); // creates empty WU, this is needed to update and submit WU after repo from git is cloned
-      } else {
         wuid = await hpccUtil.getJobWuidByName(req.body.clusterId, req.body.jobName);
         let wuResubmitResult = await hpccUtil.resubmitWU(req.body.clusterId, wuid);
-      }
     } 
     //record workflow execution
-    let jobExecutionId;
     await JobExecution.findOrCreate({
       where: {
         jobId: req.body.jobId,
@@ -958,7 +975,7 @@ router.post('/executeJob', [
         status: 'submitted'
       }
     }).then((results, created) => {
-      jobExecutionId = results[0].id;
+      let jobExecutionId = results[0].id;
       if(!created) {
         return JobExecution.update({
           jobId: req.body.jobId,
@@ -971,21 +988,6 @@ router.post('/executeJob', [
       }
     })
     res.json({"success":true});
-    if (isStoredOnGithub){
-      const tasks =  await hpccUtil.pullFilesFromGithub( wuid,req.body.jobName ,req.body.clusterId, job.metaData.gitHubFiles );
-      if (tasks.WUaction?.failedToUpdate) {
-          // Failed to update WU action to status 'failed', status polled keep polling this wu, manually update JobExecution and notify job failure.
-        try {
-          await JobExecution.update({status: 'failed'}, {where: {id: jobExecutionId}});
-          workflowUtil.notifyJobFailure(job.name,req.body.clusterId, wuid)
-        } catch (error) {
-          console.log('------------------------------------------');
-          console.log("Failed to notify", error);
-        }
-      }
-      console.log('GitHub Flow Summary-----------------------------------------');
-      console.dir(tasks, { depth: null });
-    }
   } catch (err) {
     console.error('err', err);
     return res.status(500).json({ success: false, message: "Error occured while re-submiting the job" });
