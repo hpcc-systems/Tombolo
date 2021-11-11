@@ -350,6 +350,7 @@ exports.resubmitWU = (clusterId, wuid, wucluster) => {
           "Wuid": wuid,
           "CloneWorkunit": true,
           "Cluster": wucluster,
+          "Wait": 0
         }
       }
       let cluster = await module.exports.getCluster(clusterId);
