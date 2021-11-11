@@ -12,28 +12,28 @@ const JOB_STATUS_POLLER = 'statusPoller.js';
 class JobScheduler {
   constructor() {
     this.bree = new Bree({
-     root: false,
-     errorHandler: (error, workerMetadata) => {
-      if (workerMetadata.threadId) {
-        console.log(`There was an error while running a worker ${workerMetadata.name} with thread ID: ${workerMetadata.threadId}`)
-      } else {
-        console.log(`There was an error while running a worker ${workerMetadata.name}`)
-      }
-
-      console.error(error);
-      //errorService.captureException(error);
-    }
-    });
-    (async () => {
-      await this.bootstrap();
-      //this.bree.start();
-    })();
+      root: false,
+      errorHandler: (error, workerMetadata) => {
+       if (workerMetadata.threadId) {
+         console.log(`There was an error while running a worker ${workerMetadata.name} with thread ID: ${workerMetadata.threadId}`)
+       } else {
+         console.log(`There was an error while running a worker ${workerMetadata.name}`)
+       }
+    
+       console.error(error);
+       //errorService.captureException(error);
+     }
+     });
   }
 
-  async bootstrap() {
-    await this.scheduleActiveCronJobs();
-    
-    await this.scheduleJobStatusPolling();
+  bootstrap() {
+    (async()=>{
+      await this.scheduleActiveCronJobs();
+      await this.scheduleJobStatusPolling();
+      console.log('------------------------------------------');
+      console.log('job-scheduler.js: class JobScheduler ----JOBSCHEDULER IS BOOTSTRAPED ')
+      console.log('------------------------------------------');
+    })()
   }
 
   async scheduleCheckForJobsWithSingleDependency(jobName) {
@@ -92,7 +92,7 @@ class JobScheduler {
 
   async scheduleActiveCronJobs() {
     let promises=[];
-    const query = `SELECT ad.id, ad.cron, j.name as name, j.jobType, j.sprayedFileScope, j.sprayFileName, j.sprayDropZone, ad.dataflowId, ad.assetId, d.application_id, c.id as clusterId, c.thor_host, c.thor_port,
+    const query = `SELECT ad.id, ad.cron, j.name as name, j.jobType, j.sprayedFileScope, j.sprayFileName, j.sprayDropZone, j.metaData, ad.dataflowId, ad.assetId, d.application_id, c.id as clusterId, c.thor_host, c.thor_port,
       d.title as dataflowName
       FROM tombolo.assets_dataflows ad
       left join dataflow d on d.id = ad.dataflowId
@@ -105,32 +105,33 @@ class JobScheduler {
 
     const jobs = await models.sequelize.query(query, {
       type: models.sequelize.QueryTypes.SELECT,
-    });
+    });  
 
-    for(const job of jobs) {
-      console.log(`
-        fetch WU id from ${job.thor_host}:${job.thor_port}/WsWorkunits/WUQuery.json for job name: ${job.name}
-        add job to bree { name: ${job.name}, cron: ${job.cron}, path: ..., workerData: {workunitId: $WUID, cluster: ${job.thor_host}, ...} }
-      `);
+    for(const job of jobs) {           
       try {
         //finally add the job to the scheduler
-        await this.addJobToScheduler(
-          job.name, 
-          job.cron, 
-          job.clusterId, 
-          job.dataflowId, 
-          job.application_id, 
-          job.assetId, 
-          job.jobType == 'Script' ? SUBMIT_SCRIPT_JOB_FILE_NAME : SUBMIT_JOB_FILE_NAME,
-          job.jobType,
-          job.sprayedFileScope,
-          job.sprayFileName,
-          job.sprayDropZone
-        );
+        await this.addJobToScheduler({
+           name:  job.name, 
+           cron:  job.cron, 
+           clusterId:  job.clusterId,
+           dataflowId:job.dataflowId,
+           applicationId:job.application_id,
+           jobId: job.assetId,
+           jobfileName: job.jobType == 'Script' ? SUBMIT_SCRIPT_JOB_FILE_NAME : SUBMIT_JOB_FILE_NAME,
+           jobType:job.jobType,
+           sprayedFileScope:job.sprayedFileScope,
+           sprayFileName: job.sprayFileName,
+           sprayDropZone: job.sprayDropZone,
+           metaData: job.metaData
+          });
       } catch (err) {
         console.log(err);
       }
-     }
+     } 
+       console.log('------------------------------------------');
+       console.log("LIST OF ALL ACTIVE JOBS SCHEDULED:" )
+       console.dir(this.bree.config.jobs,{depth:4});
+       console.log('------------------------------------------');
   }
 
   async scheduleMessageBasedJobs(message) {
@@ -160,7 +161,7 @@ class JobScheduler {
     }
   }
 
-  async addJobToScheduler(name, cron, clusterId, dataflowId, applicationId, jobId, jobfileName, jobType, sprayedFileScope, sprayFileName, sprayDropZone) {
+  async addJobToScheduler({name, cron, clusterId, dataflowId, applicationId, jobId, jobfileName, jobType, sprayedFileScope, sprayFileName, sprayDropZone, metaData}) {
     try {
       let uniqueJobName = name + '-' + dataflowId + '-' + jobId;
       this.bree.add({
@@ -177,12 +178,16 @@ class JobScheduler {
             jobType: jobType,
             sprayedFileScope: sprayedFileScope,
             sprayFileName: sprayFileName,
-            sprayDropZone: sprayDropZone
+            sprayDropZone: sprayDropZone,
+            metaData: metaData
           }
         }
       })
 
       this.bree.start(uniqueJobName);
+      console.log('------------------------------------------');
+      console.log(`job-scheduler.js: addJobToScheduler : JOB WAS SCHEDULED AS - ${uniqueJobName}`)
+      console.log('------------------------------------------');
     } catch (err) {
       console.log(err);
     }
