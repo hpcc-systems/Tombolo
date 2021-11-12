@@ -1867,7 +1867,7 @@ class JobDetails extends Component {
                           )}
                         </Form.Item>
                       ) : 
-                      <div style={{textAlign: "center", paddingTop: "100px"}}>Please press Edit button to configure scheduling for this job</div>
+                      <div style={{textAlign: "center", paddingTop: "100px"}}>Please press <b>Edit</b> button to configure scheduling for this job</div>
                       }
                       {this.state.selectedScheduleType === "Time" ? (
                         <Fragment>

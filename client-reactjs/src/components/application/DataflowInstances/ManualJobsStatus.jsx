@@ -60,8 +60,6 @@ function ManualJobsStatus({workflowDetails}) {
                              item.result = item.manualJob_meta.response
                             });
 
-
-
     // JSX
     return (
         <div>

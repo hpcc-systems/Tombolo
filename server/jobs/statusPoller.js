@@ -3,7 +3,6 @@ const hpccUtil = require('../utils/hpcc-util');
 const assetUtil = require('../utils/assets.js');
 const workflowUtil = require('../utils/workflow-util.js');
 const JobScheduler = require('../job-scheduler');
-const notificationMoudle = require("../utils/emailNotification");
 const jobScheduler = require("../job-scheduler");
 
 let isCancelled = false;

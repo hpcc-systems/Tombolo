@@ -3,9 +3,7 @@ const request = require('request-promise');
 const hpccUtil = require('../utils/hpcc-util');
 const assetUtil = require('../utils/assets.js');
 const workflowUtil = require('../utils/workflow-util.js');
-const JobScheduler = require('../job-scheduler');
-// const sendEmailNotification = require("./../utils/emailNotification")
-const manualJobNotification = require("./../utils/manualJobNotification");
+const jobScheduler = require('../job-scheduler');
 
 let isCancelled = false;
 if (parentPort) {
@@ -26,12 +24,23 @@ if (parentPort) {
       });
       wuid = sprayJobExecution.SprayResponse && sprayJobExecution.SprayResponse.Wuid ? sprayJobExecution.SprayResponse.Wuid : ''      
     }else if(workerData.jobType === "Manual"){
-      // await manualJobNotification().notify();
-    } else {
+      let job = {
+        id:workerData.jobId,
+        name:workerData.jobName,
+        title:workerData.title,
+        contact:workerData.contact,
+        application_id: workerData.applicationId,
+        clusterId:workerData.clusterId,
+        dataflowId:workerData.dataflowId,
+        jobType:workerData.jobType
+      }
+      await jobScheduler.handleManualJobScheduling(job);
+    }
+     else {
       wuid = await hpccUtil.getJobWuidByName(workerData.clusterId, workerData.jobName);
     }
     console.log(
-    `submitting job, ${JSON.stringify(workerData)}, ${workerData.jobName} ` +
+    ` submitting job ${workerData.jobName} ` +
     `(WU: ${wuid}) to url ${workerData.clusterId}/WsWorkunits/WUResubmit.json?ver_=1.78`
     );
     let wuInfo = await hpccUtil.resubmitWU(workerData.clusterId, wuid);    
@@ -40,6 +49,7 @@ if (parentPort) {
     let jobExecutionRecorded = await assetUtil.recordJobExecution(workerData, wuid);          
     
   } catch (err) {
+    console.log(err);
   } finally {
     if (parentPort) {            
       console.log(`signaling done for ${workerData.jobName}`)

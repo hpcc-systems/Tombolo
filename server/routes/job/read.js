@@ -23,7 +23,7 @@ const { body, query, param, validationResult } = require('express-validator');
 const assetUtil = require('../../utils/assets');
 const SUBMIT_JOB_FILE_NAME = 'submitJob.js';
 const SUBMIT_SCRIPT_JOB_FILE_NAME = 'submitScriptJob.js';
-const notificationMoudle = require("../../utils/emailNotification")
+const notificationMoudle = require("../../utils/manualJobNotification")
 
 /**
   Updates Dataflow graph by

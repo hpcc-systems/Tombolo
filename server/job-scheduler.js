@@ -8,7 +8,7 @@ let MessageBasedJobs = models.message_based_jobs;
 const SUBMIT_JOB_FILE_NAME = 'submitJob.js';
 const SUBMIT_SCRIPT_JOB_FILE_NAME = 'submitScriptJob.js';
 const JOB_STATUS_POLLER = 'statusPoller.js';
-const notificationMoudle = require("./utils/emailNotification")
+const notificationMoudle = require("./utils/manualJobNotification")
 
 class JobScheduler {
   constructor() {
@@ -37,7 +37,9 @@ class JobScheduler {
     await this.scheduleJobStatusPolling();
   }
 
-  //Handle Manual Job notification 
+  //Handle Manual Job 
+  // This function sends email notification
+  // and record job execution
   async handleManualJobScheduling (job){
     let notificationOptions = {
       for : 'manaulJob',
@@ -166,7 +168,6 @@ class JobScheduler {
       `);
       try {
         // finally add the job to the scheduler
-        // console.log("<<<<<<<<<<< JOB DATA >>>>>>>>>>>>>>>", job)
         await this.addJobToScheduler(
           job.name, 
           job.cron, 

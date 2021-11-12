@@ -35,7 +35,6 @@ function BasicsTabManul(props) {
     //When the cluster id changes make a call and get all dropzones within that cluster
     useEffect(() => {
       if(selectedCluster){
-        console.log("Selected cluster is <<<<", selectedCluster)
           fetch(`/api/hpcc/read/getDropzones?clusterId=${selectedCluster}&for=fileUpload`,{
             headers : authHeader()
           }).then(response => {
