@@ -7,6 +7,7 @@ function ManualJobDetail() {
     const [ jobId, setJobID]= useState('');
     const [jobDetails, setJobDetails] = useState({});
     const [userResponseRecorded, setUserResponseRecorded] = useState(false);
+    const [savingData, setSavingData] = useState({save : false, response : ''})
 
     //antd message config
     message.config({
@@ -41,6 +42,7 @@ function ManualJobDetail() {
     //When user clicks approve or reject btn 
     const handleResponse = (e) => {
         const response = e.currentTarget.value;
+        setSavingData({saving : response ? true : false, response : response})
         fetch("/api/job/manaulJobResponse", {
             headers: authHeader(),
             method : 'POST',
@@ -53,7 +55,8 @@ function ManualJobDetail() {
             handleError(response);
           })
           .then(data => {
-            setUserResponseRecorded(true)
+            setUserResponseRecorded(true);
+            setSavingData({saving : false, response : ''});
             message.success('Your response has been recorded')
           })
           .catch(error => {
@@ -70,6 +73,7 @@ function ManualJobDetail() {
                 body : JSON.stringify({name: jobDetails.name})
               })
               .then((response) => {
+                
                 if(response.ok) {
                   return response.json();
                 }
@@ -78,7 +82,7 @@ function ManualJobDetail() {
               .then(data => {
                 setTimeout(() =>{
                     window.location.href = "/"
-                }, 2000)
+                }, 222000)
               })
               .catch(error => {
                 console.log(error);
@@ -97,8 +101,8 @@ function ManualJobDetail() {
     //Buttons on tab pane
     const actions =
          <div> 
-            <Button style={actionBtnsStyle} type="primary" value="approved" onClick={handleResponse}> Approve </Button>
-            <Button style={actionBtnsStyle} danger type="default" value="rejected" onClick={handleResponse}> Reject </Button> 
+            <Button style={actionBtnsStyle} type="primary" value="approved" onClick={handleResponse} loading={savingData.saving && savingData.response === 'approved'}> Approve </Button>
+            <Button style={actionBtnsStyle} danger type="default" value="rejected" onClick={handleResponse} loading={savingData.saving && savingData.response === 'rejected'}> Reject </Button> 
             <Button style={actionBtnsStyle} type="primary" ghost  value="rejected" onClick={handleCancel}> Cancel </Button>
         </div>
     //Job details
@@ -115,8 +119,8 @@ function ManualJobDetail() {
                <Tabs  tabBarExtraContent={actions} >
                     <TabPane tab="Basic" key="1">
                       {
-                      jobData.map(item => 
-                        (<Row  gutter={{ xs: 8, sm: 8, md: 8, lg: 8 }}>
+                      jobData.map((item, i) => 
+                        (<Row  id={i}gutter={{ xs: 8, sm: 8, md: 8, lg: 8 }}>
                               <Col className="gutter-row" span={6}>
                                   <div >{item.label}</div>
                               </Col>
