@@ -3,6 +3,7 @@ const nodemailer = require("nodemailer");
 
 // 🔔  Notification sender
 const sendEmailNotification = async (notificationOptions) => {
+  console.log("<<<<<<<<<<<<<<<<< E-mail notification sent")
   //Creating transporter
   const transporter = nodemailer.createTransport({
     host: process.env.EMAIL_SMTP_HOST,
