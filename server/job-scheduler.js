@@ -11,23 +11,21 @@ const JOB_STATUS_POLLER = 'statusPoller.js';
 
 class JobScheduler {
   constructor() {
-    this.bree = new Bree({
-     root: false,
-     errorHandler: (error, workerMetadata) => {
-      if (workerMetadata.threadId) {
-        console.log(`There was an error while running a worker ${workerMetadata.name} with thread ID: ${workerMetadata.threadId}`)
-      } else {
-        console.log(`There was an error while running a worker ${workerMetadata.name}`)
-      }
+    if(!this.bree) {
+      this.bree = new Bree({
+      root: false,
+      errorHandler: (error, workerMetadata) => {
+        if (workerMetadata.threadId) {
+          console.log(`There was an error while running a worker ${workerMetadata.name} with thread ID: ${workerMetadata.threadId}`)
+        } else {
+          console.log(`There was an error while running a worker ${workerMetadata.name}`)
+        }
 
-      console.error(error);
-      //errorService.captureException(error);
+        console.error(error);
+        //errorService.captureException(error);
+      }
+      });
     }
-    });
-    (async () => {
-      await this.bootstrap();
-      //this.bree.start();
-    })();
   }
 
   async bootstrap() {

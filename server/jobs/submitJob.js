@@ -4,6 +4,7 @@ const hpccUtil = require('../utils/hpcc-util');
 const assetUtil = require('../utils/assets.js');
 const workflowUtil = require('../utils/workflow-util.js');
 const JobScheduler = require('../job-scheduler');
+const NotificationModule = require('../routes/notifications/email-notification');
 
 let isCancelled = false;
 if (parentPort) {
@@ -13,7 +14,8 @@ if (parentPort) {
 }
 
 (async () => {
-  let wuResult, wuid='';
+  let wuid='', wuDetails;
+  console.log(workerData);
   try {
     if(workerData.jobType == 'Spray') {
       let sprayJobExecution = await hpccUtil.executeSprayJob({
@@ -24,7 +26,7 @@ if (parentPort) {
       });
       wuid = sprayJobExecution.SprayResponse && sprayJobExecution.SprayResponse.Wuid ? sprayJobExecution.SprayResponse.Wuid : ''      
     } else {
-      let wuDetails = await hpccUtil.getJobWuDetails(workerData.clusterId, workerData.jobName);
+      wuDetails = await hpccUtil.getJobWuDetails(workerData.clusterId, workerData.jobName);
       wuid = wuDetails.wuid;
     }
     console.log(

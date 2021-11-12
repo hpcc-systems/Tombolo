@@ -36,6 +36,11 @@ app.use(limiter);
 
 const QueueDaemon = require('./queue-daemon');
 const JobScheduler = require('./job-scheduler');
+(async () => {
+  await JobScheduler.bootstrap();
+  //this.bree.start();
+})();
+
 
 const assert = require('assert');
 
