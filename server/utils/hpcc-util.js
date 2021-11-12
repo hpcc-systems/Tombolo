@@ -627,72 +627,74 @@ exports.updateWUAction = async (clusterId,WUactionBody) =>{
 
 exports.pullFilesFromGithub = async( jobName="", clusterId, fileData ) => {
 
-  const { selectedGitBranch, providedGithubRepo, selectedFile } = fileData; // TODO will need username and token in order to pull private repo
-  const { projectOwner, projectName, name:startFileName, path:filePath } = selectedFile;
-
-  const allClonesPath = path.join(process.cwd(),'..','gitClones');
-  const currentClonedRepoPath = `${allClonesPath}/${projectOwner}_${projectName}` ;
-
-  const executionRepoPath = path.join(currentClonedRepoPath,filePath.replace(startFileName,''));
-  const startFilePath =path.join(currentClonedRepoPath,filePath);
-
-  const gitOptions= { baseDir: allClonesPath };
-  const git = simpleGit(gitOptions);
-
   const tasks ={ repoCloned: false, repoDeleted: false, archiveCreated: false, WUCreated:false, WUupdated: false, WUsubmitted: false, WUaction: null, error: null };
- 
+  let currentClonedRepoPath;
   let wuService;
   let wuid;
+
   try {
     // initializing wuService to update hpcc.
     wuService = await module.exports.getWorkunitsService(clusterId); 
-    console.log('pullFilesFromGithub: DELETING REPO IF EXISTS-----------------------------------');
-    deleteRepo(currentClonedRepoPath);
+    //  Create empty Work Unit;
+    const createRespond = await wuService.WUCreate({}); 
+    wuid = createRespond.Workunit?.Wuid
+    if (!wuid) {
+      console.log('❌ pullFilesFromGithub: WUCreate error-----------------------------------------');
+      console.dir(createRespond, { depth: null });
+      throw new Error('Failed to update Work Unit.')
+    }
+    tasks.WUCreated = true;
+    console.log('------------------------------------------');
+    console.log(`✔️ pullFilesFromGithub: WUCreated-  ${wuid}`);
+
+    const { selectedGitBranch, providedGithubRepo, selectedFile } = fileData; // TODO will need username and token in order to pull private repo
+    const { projectOwner, projectName, name:startFileName, path:filePath } = selectedFile;
+
+    const allClonesPath = path.join(process.cwd(),'..','gitClones');
+    currentClonedRepoPath = `${allClonesPath}/${projectOwner}-${projectName}-${wuid}` ;
+
+    const executionRepoPath = path.join(currentClonedRepoPath,filePath.replace(startFileName,''));
+    const startFilePath =path.join(currentClonedRepoPath,filePath);
+
+    const gitOptions= { baseDir: allClonesPath };
+    const git = simpleGit(gitOptions);
+
     // #1 - Clone repo
-    console.log('pullFilesFromGithub: CLONING STARTED-------------------------------------------');
+    console.log(`✔️ pullFilesFromGithub: CLONING STARTED-${providedGithubRepo}, branch: ${selectedGitBranch}`);
+    console.log('------------------------------------------');
     await git.clone(providedGithubRepo, currentClonedRepoPath ,{'--branch':selectedGitBranch, '--single-branch':true} );
     tasks.repoCloned = true;
-    console.log('pullFilesFromGithub: CLONING FINISHED------------------------------------------');
+    console.log('------------------------------------------');
+    console.log(`✔️ pullFilesFromGithub: CLONING FINISHED-${providedGithubRepo}, branch: ${selectedGitBranch}`);
 
     // #2 - Create Archive XML File     
     let args = ['-E', startFilePath, '-I', executionRepoPath];
     const archived = await createEclArchive(args, executionRepoPath);
     tasks.archiveCreated =true;
-    console.log('pullFilesFromGithub: Archive Created-------------------------------------------');
-    console.dir(archived);
-
-    // #3 - Create empty Work Unit;
-    const createRespond = await wuService.WUCreate({}); 
-    wuid = createRespond.Workunit?.Wuid
-    if (!wuid) {
-      console.log('pullFilesFromGithub: WUCreate error-----------------------------------------');
-      console.dir(createRespond, { depth: null });
-      throw new Error('Failed to update Work Unit.')
-    }
-    tasks.WUCreated = true;
-    console.log('pullFilesFromGithub: WUCreated------------------------------------------------');
+    console.log('✔️ pullFilesFromGithub: Archive Created');
+    // console.dir(archived);
 
     // #4 - Update the Workunit with Archive XML 
     const updateBody ={ "Wuid": wuid, "Jobname": jobName, "QueryText": archived.stdout};
     const updateRespond = await wuService.WUUpdate(updateBody)
     if (!updateRespond.Workunit?.Wuid) { // assume that Wuid field is always gonna be in "happy" response
-      console.log('pullFilesFromGithub: WUupdate error----------------------------------------');
+      console.log('❌ pullFilesFromGithub: WUupdate error----------------------------------------');
       console.dir(updateRespond, { depth: null });
       throw new Error('Failed to update Work Unit.')
     }
     tasks.WUupdated = true;
-    console.log('pullFilesFromGithub: WUupdated-----------------------------------------------');
+    console.log(`✔️ pullFilesFromGithub: WUupdated-  ${wuid}`);
     
     // #5 - Submit the Workunit to HPCC 
     const submitBody ={ "Wuid": wuid, "Cluster": 'thor' };
     const submitRespond = await wuService.WUSubmit(submitBody)
     if (submitRespond.Exceptions) {
-      console.log('pullFilesFromGithub: WUsubmit error---------------------------------------');
+      console.log('❌ pullFilesFromGithub: WUsubmit error---------------------------------------');
       console.dir(submitRespond, { depth: null });
       throw new Error('Failed to submit Work Unit.')
     } 
     tasks.WUsubmitted = true;
-    console.log('pullFilesFromGithub: WUsubmitted--------------------------------------------');
+    console.log(`✔️ pullFilesFromGithub: WUsubmitted-  ${wuid}`);
 
   } catch (error) { 
     // Error going to have messages related to where in process error happened, it will end up in router.post('/executeJob' catch block.
@@ -701,7 +703,7 @@ exports.pullFilesFromGithub = async( jobName="", clusterId, fileData ) => {
       const actionRespond = await wuService.WUAction(WUactionBody);
       const result = actionRespond.ActionResults?.WUActionResult?.[0]?.Result
       if (!result || result !== 'Success' ) {
-        console.log('pullFilesFromGithub: WUaction error-------------------------------------');
+        console.log('❌ pullFilesFromGithub: WUaction error-------------------------------------');
         console.dir(actionRespond, { depth: null });
         throw actionRespond
       }
@@ -713,12 +715,12 @@ exports.pullFilesFromGithub = async( jobName="", clusterId, fileData ) => {
     }
 
     tasks.error = error;
-    console.log('pullFilesFromGithub: ERROR IN MAIN CATCH------------------------------------');
+    console.log('❌ pullFilesFromGithub: ERROR IN MAIN CATCH------------------------------------');
     console.dir(error, { depth: null });
   } finally {
     //  delete repo;
     const isDeleted = deleteRepo(currentClonedRepoPath);
-    console.log('pullFilesFromGithub: CLEANUP, REPO DELETED SUCCESSFULLY---------------------');
+    console.log(`✔️ pullFilesFromGithub: CLEANUP, REPO DELETED SUCCESSFULLY-  ${currentClonedRepoPath}`);
     tasks.repoDeleted = isDeleted;
     const summary = { wuid, ...tasks };
     return summary;
@@ -732,7 +734,7 @@ const deleteRepo = (currentClonedRepoPath) => {
       isRepoDeleted = true;
     } catch (err) {
       console.log('------------------------------------------');
-      console.log('pullFilesFromGithub: Failed to delete a repo')
+      console.log(`❌ pullFilesFromGithub: Failed to delete a repo ${currentClonedRepoPath}`)
       console.dir(err);
       isRepoDeleted = false;
     } 

@@ -28,14 +28,15 @@ class JobScheduler {
 
   bootstrap() {
     (async()=>{
+      console.log('------------------------------------------');
+      console.log('✔️ JOBSCHEDULER IS BOOTSTRAPED, job-scheduler.js: class JobScheduler ')
+      console.log('------------------------------------------');
       await this.scheduleActiveCronJobs();
       await this.scheduleJobStatusPolling();
-      console.log('------------------------------------------');
-      console.log('job-scheduler.js: class JobScheduler ----JOBSCHEDULER IS BOOTSTRAPED ')
-      console.log('------------------------------------------');
     })()
   }
-
+  
+   // TODO PASS DATAFLOW!
   async scheduleCheckForJobsWithSingleDependency(jobName) {
     return new Promise(async (resolve, reject) => {    
       try {
@@ -130,7 +131,7 @@ class JobScheduler {
       }
      } 
        console.log('------------------------------------------');
-       console.log("LIST OF ALL ACTIVE JOBS SCHEDULED:" )
+       console.log("📢 LIST OF ALL ACTIVE JOBS SCHEDULED:")
        console.dir(this.bree.config.jobs,{depth:4});
        console.log('------------------------------------------');
   }
@@ -155,7 +156,9 @@ class JobScheduler {
             );
         }
       } else {
-        console.error("***Could not find job with name "+message.jobName);
+        console.log('------------------------------------------');
+        console.error("📢 COULD NOT FIND JOB WITH NAME "+message.jobName);
+        console.log('------------------------------------------');
       }
     } catch (err) {
       console.log(err);
@@ -187,7 +190,8 @@ class JobScheduler {
 
       this.bree.start(uniqueJobName);
       console.log('------------------------------------------');
-      console.log(`job-scheduler.js: addJobToScheduler : JOB WAS SCHEDULED AS - ${uniqueJobName}`)
+      console.log(`📢 JOB WAS SCHEDULED AS - ${uniqueJobName},  job-scheduler.js: addJobToScheduler`)
+      console.log(`📢 TOTAL ACTIVE JOBS: ${this.bree.config.jobs.length}`)
       console.log('------------------------------------------');
     } catch (err) {
       console.log(err);
@@ -232,9 +236,7 @@ class JobScheduler {
   }
 
   async scheduleJobStatusPolling() {    
-    console.log(`
-      status polling scheduler started...
-    `);
+    console.log("📢 STATUS POLLING SCHEDULER STARTED...");
     try {
       let jobName = 'job-status-poller-'+new Date().getTime();
       //if(job) {

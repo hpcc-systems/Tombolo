@@ -13,11 +13,19 @@ if (parentPort) {
 
 (async () => {
   try {
-    const jobExecution = await assetUtil.getJobEXecutionForProcessing();
+    const jobExecutions = await assetUtil.getJobEXecutionForProcessing();
+    if (jobExecutions.length === 0) {
+      console.log("☕ NO JOBEXECUTIONS WITH STATUS 'SUBMITTED' HAS BEEN FOUND");
+      console.log('------------------------------------------');
+      return;
+    }
+
+   for (let i = 0; i < jobExecutions.length; i++) {
+     const jobExecution = jobExecutions[i];
     if(jobExecution && jobExecution.wuid) {
       console.log('------------------------------------------');
-      console.log(`statusPoller.js: FOUND JOBEXECUTION WITH STATUS= '${jobExecution.status}', PROCEED WITH CHECKING ON STATUS WITH HPCC`);
-      console.dir(jobExecution.toJSON());
+      console.log(`💡 statusPoller.js: FOUND JOBEXECUTION (id:${jobExecution.id}) ${jobExecution.wuid} WITH STATUS= '${jobExecution.status}', PROCEED WITH CHECKING ON STATUS WITH HPCC`);
+      // console.dir(jobExecution.toJSON());
       console.log('------------------------------------------')
   
       //check WU status
@@ -29,23 +37,24 @@ if (parentPort) {
         const newjobExecution = { status: WUstate, wu_duration : wuResult.Workunit.TotalClusterTime || null };
         const result = await jobExecution.update(newjobExecution);
         console.log('------------------------------------------');
-        console.log(`statusPoller.js: JOB EXECUTION GOT UPDATED, ${result.wuid} = ${result.status}`);
+        console.log(`✔️ statusPoller.js: JOB EXECUTION GOT UPDATED, ${result.wuid} = ${result.status} ${result.status === 'completed' ? "👍" : "🚩🚩🚩"}`);
         console.dir(result.toJSON());
-        console.log('THIS JOBEXECUTION FLOW IS ENDED');
+        console.log('✔️ THIS JOBEXECUTION FLOW IS ENDED');
         console.log('------------------------------------------');
         if (WUstate  === 'failed') {
           console.log('------------------------------------------');
-          console.log('statusPoller.js: SENDING EMAIL ABOUT FAILURE...');
+          console.log('❌ statusPoller.js: SENDING EMAIL ABOUT FAILURE...📧');
           console.log('------------------------------------------');
           await workflowUtil.notifyJobFailure(wuResult.Workunit.Jobname, jobExecution.clusterId, jobExecution.wuid)
         }else{
           console.log('------------------------------------------');
-          console.log('statusPoller.js: CHECKING FOR JOBS WITH SINGLE DEPENDENCY...');
+          console.log('🔍 statusPoller.js: CHECKING FOR JOBS WITH SINGLE DEPENDENCY...');
           console.log('------------------------------------------');
           await JobScheduler.scheduleCheckForJobsWithSingleDependency(wuResult.Workunit.Jobname);    
         }
       } 
     }    
+  }
   } catch (err) {
     console.log(err);
   } finally {

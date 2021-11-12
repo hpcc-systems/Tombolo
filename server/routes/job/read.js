@@ -947,7 +947,7 @@ router.post('/executeJob', [
       }
       const summary = await assetUtil.createGithubFlow(flowSettings);
       console.log('------------------------------------------');
-      console.log("router.post('/executeJob': MANUAL JOB EXECUTION GITHUB FLOW, SUMMARY!");
+      console.log("✔️ router.post('/executeJob': MANUAL JOB EXECUTION GITHUB FLOW, SUMMARY!");
       console.dir(summary);
       console.log('------------------------------------------');
       return; // return from function to prevent code running further.

@@ -26,11 +26,11 @@ if (parentPort) {
           jobId: workerData.jobId,
         }
         console.log('------------------------------------------');
-        console.log('SUBMITJOB.JS: CREATING GITHUB FLOW WITH BREE');
+        console.log('✔️ SUBMITJOB.JS: CREATING GITHUB FLOW WITH BREE');
         console.log('------------------------------------------');
         const summary = await assetUtil.createGithubFlow(flowSettings);
         console.log('------------------------------------------');
-        console.log('SUBMITJOB.JS: SUBMITTED JOB FROM BREE, SUMMARY!');
+        console.log('✔️ SUBMITJOB.JS: SUBMITTED JOB FROM BREE, SUMMARY!');
         console.log('------------------------------------------');
         console.dir(summary, { depth: null });
         return;
