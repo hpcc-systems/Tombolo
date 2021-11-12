@@ -386,13 +386,9 @@ exports.workunitInfo = async (wuid, clusterId) => {
   let wsWorkunits = new hpccJSComms.WorkunitsService({ baseUrl: cluster.thor_host + ':' + cluster.thor_port, userID:(clusterAuth ? clusterAuth.user : ""), password:(clusterAuth ? clusterAuth.password : ""), type: "get" });
   return new Promise((resolve, reject) => {
     wsWorkunits.WUInfo({"Wuid":wuid, "IncludeExceptions":true, "IncludeSourceFiles":true, "IncludeResults":true, "IncludeTotalClusterTime": true}).then(async (wuInfo) => {
-      if(wuInfo.Workunit.State == 'completed' || wuInfo.Workunit.State == 'failed' || wuInfo.Workunit.State == 'wait' || wuInfo.Workunit.State == 'compiled') {
-        resolve(wuInfo);
-      } else {
-        setTimeout(_ => {
-          resolve(module.exports.workunitInfo(wuid, clusterId));
-        }, 2000);
-      }
+      resolve(wuInfo);
+    }).catch((err) => {
+      reject(err);
     })
   });
 }
