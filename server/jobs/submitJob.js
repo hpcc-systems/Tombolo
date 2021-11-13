@@ -26,7 +26,7 @@ if (parentPort) {
           jobId: workerData.jobId,
         }
         console.log('------------------------------------------');
-        console.log('✔️ SUBMITJOB.JS: CREATING GITHUB FLOW WITH BREE');
+        console.log(`✔️ SUBMITJOB.JS: CREATING GITHUB FLOW WITH BREE FOR JOB ${workerData.jobName} id:${workerData.jobId}; dflow: ${workerData.dataflowId};`);
         console.log('------------------------------------------');
         const summary = await assetUtil.createGithubFlow(flowSettings);
         console.log('------------------------------------------');
