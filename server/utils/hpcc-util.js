@@ -309,7 +309,7 @@ exports.getJobInfo = (clusterId, jobWuid, jobType) => {
                 "name": result.WUInfoResponse.Workunit.Jobname,
                 "title": result.WUInfoResponse.Workunit.Jobname,
                 "description": result.WUInfoResponse.Workunit.Description,
-                "ecl": result.WUInfoResponse.Workunit.Query.Text,
+                "ecl": result.WUInfoResponse.Workunit?.Query?.Text || '',
                 "entryBWR": result.WUInfoResponse.Workunit.Jobname,
                 "wuid": result.WUInfoResponse.Workunit.Wuid,
                 "jobfiles": sortFiles(sourceFiles.concat(outputFiles))

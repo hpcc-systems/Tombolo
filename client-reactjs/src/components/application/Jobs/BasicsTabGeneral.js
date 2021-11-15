@@ -238,7 +238,7 @@ const readOnlyView = !enableEdit || !addingNewAsset;
           </Col>
           <Col span={12} order={2}>
           <Form.Item label="Author:" name="author" rules={[{
-              pattern: new RegExp(/^[a-zA-Z0-9:$._-]*$/),
+              pattern: new RegExp(/^[a-zA-Z0-9: $._-]*$/), // WHITESPACE IS ADDED TO PATTERN
               message: 'Please enter a valid author',
           }]}>
           {enableEdit ?

@@ -17,8 +17,9 @@ function GitHubForm({ form ,enableEdit }) {
     const url = value.split("/");
     const owner = url[3];
     const repo = url[4];
-    setBranchesRequest((prev) => ({ ...prev, loading: true }));
     try {
+    if(!owner || !repo || !value.includes('github.com')) throw new Error("Invalid repo provided.")
+    setBranchesRequest((prev) => ({ ...prev, loading: true }));
       const respond = await fetch( `https://api.github.com/repos/${owner}/${repo}/branches` );
       const branches = await respond.json();
       if (branches.message) throw new Error(branches.message);
@@ -156,7 +157,7 @@ function GitHubForm({ form ,enableEdit }) {
 
       <Form.Item
         
-        label="Start File"
+        label="Main File"
         validateTrigger={["onBlur"]}
         name={["gitHubFiles", "pathToFile"]}
         rules={[
