@@ -18,7 +18,7 @@ function GitHubForm({ form ,enableEdit }) {
     const owner = url[3];
     const repo = url[4];
     try {
-    if(!owner || !repo || !value.includes('github.com')) throw new Error("Invalid repo provided.")
+    if(!owner || !repo || !value.startsWith('https://github.com/')) throw new Error("Invalid repo provided.")
     setBranchesRequest((prev) => ({ ...prev, loading: true }));
       const respond = await fetch( `https://api.github.com/repos/${owner}/${repo}/branches` );
       const branches = await respond.json();
