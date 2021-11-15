@@ -11,29 +11,32 @@ const JOB_STATUS_POLLER = 'statusPoller.js';
 
 class JobScheduler {
   constructor() {
-    if(!this.bree) {
-      this.bree = new Bree({
+    this.bree = new Bree({
       root: false,
       errorHandler: (error, workerMetadata) => {
-        if (workerMetadata.threadId) {
-          console.log(`There was an error while running a worker ${workerMetadata.name} with thread ID: ${workerMetadata.threadId}`)
-        } else {
-          console.log(`There was an error while running a worker ${workerMetadata.name}`)
-        }
-
-        console.error(error);
-        //errorService.captureException(error);
-      }
-      });
-    }
-  }
-
-  async bootstrap() {
-    await this.scheduleActiveCronJobs();
+       if (workerMetadata.threadId) {
+         console.log(`There was an error while running a worker ${workerMetadata.name} with thread ID: ${workerMetadata.threadId}`)
+       } else {
+         console.log(`There was an error while running a worker ${workerMetadata.name}`)
+       }
     
-    await this.scheduleJobStatusPolling();
+       console.error(error);
+       //errorService.captureException(error);
+     }
+     });
   }
 
+  bootstrap() {
+    (async()=>{
+      console.log('------------------------------------------');
+      console.log('✔️ JOBSCHEDULER IS BOOTSTRAPED, job-scheduler.js: class JobScheduler ')
+      console.log('------------------------------------------');
+      await this.scheduleActiveCronJobs();
+      await this.scheduleJobStatusPolling();
+    })()
+  }
+  
+   // TODO PASS DATAFLOW!
   async scheduleCheckForJobsWithSingleDependency(jobName) {
     return new Promise(async (resolve, reject) => {    
       try {
@@ -91,7 +94,7 @@ class JobScheduler {
 
   async scheduleActiveCronJobs() {
     let promises=[];
-    const query = `SELECT ad.id, ad.cron, j.name as name, j.jobType, j.sprayedFileScope, j.sprayFileName, j.sprayDropZone, ad.dataflowId, ad.assetId, d.application_id, c.id as clusterId, c.thor_host, c.thor_port,
+    const query = `SELECT ad.id, ad.cron, j.name as name, j.jobType, j.sprayedFileScope, j.sprayFileName, j.sprayDropZone, j.metaData, ad.dataflowId, ad.assetId, d.application_id, c.id as clusterId, c.thor_host, c.thor_port,
       d.title as dataflowName
       FROM tombolo.assets_dataflows ad
       left join dataflow d on d.id = ad.dataflowId
@@ -104,32 +107,33 @@ class JobScheduler {
 
     const jobs = await models.sequelize.query(query, {
       type: models.sequelize.QueryTypes.SELECT,
-    });
+    });  
 
-    for(const job of jobs) {
-      console.log(`
-        fetch WU id from ${job.thor_host}:${job.thor_port}/WsWorkunits/WUQuery.json for job name: ${job.name}
-        add job to bree { name: ${job.name}, cron: ${job.cron}, path: ..., workerData: {workunitId: $WUID, cluster: ${job.thor_host}, ...} }
-      `);
+    for(const job of jobs) {           
       try {
         //finally add the job to the scheduler
-        await this.addJobToScheduler(
-          job.name, 
-          job.cron, 
-          job.clusterId, 
-          job.dataflowId, 
-          job.application_id, 
-          job.assetId, 
-          job.jobType == 'Script' ? SUBMIT_SCRIPT_JOB_FILE_NAME : SUBMIT_JOB_FILE_NAME,
-          job.jobType,
-          job.sprayedFileScope,
-          job.sprayFileName,
-          job.sprayDropZone
-        );
+        await this.addJobToScheduler({
+           name:  job.name, 
+           cron:  job.cron, 
+           clusterId:  job.clusterId,
+           dataflowId:job.dataflowId,
+           applicationId:job.application_id,
+           jobId: job.assetId,
+           jobfileName: job.jobType == 'Script' ? SUBMIT_SCRIPT_JOB_FILE_NAME : SUBMIT_JOB_FILE_NAME,
+           jobType:job.jobType,
+           sprayedFileScope:job.sprayedFileScope,
+           sprayFileName: job.sprayFileName,
+           sprayDropZone: job.sprayDropZone,
+           metaData: job.metaData
+          });
       } catch (err) {
         console.log(err);
       }
-     }
+     } 
+       console.log('------------------------------------------');
+       console.log("📢 LIST OF ALL ACTIVE JOBS SCHEDULED:")
+       console.dir(this.bree.config.jobs,{depth:4});
+       console.log('------------------------------------------');
   }
 
   async scheduleMessageBasedJobs(message) {
@@ -152,14 +156,16 @@ class JobScheduler {
             );
         }
       } else {
-        console.error("***Could not find job with name "+message.jobName);
+        console.log('------------------------------------------');
+        console.error("📢 COULD NOT FIND JOB WITH NAME "+message.jobName);
+        console.log('------------------------------------------');
       }
     } catch (err) {
       console.log(err);
     }
   }
 
-  async addJobToScheduler(name, cron, clusterId, dataflowId, applicationId, jobId, jobfileName, jobType, sprayedFileScope, sprayFileName, sprayDropZone) {
+  async addJobToScheduler({name, cron, clusterId, dataflowId, applicationId, jobId, jobfileName, jobType, sprayedFileScope, sprayFileName, sprayDropZone, metaData}) {
     try {
       let uniqueJobName = name + '-' + dataflowId + '-' + jobId;
       this.bree.add({
@@ -176,12 +182,17 @@ class JobScheduler {
             jobType: jobType,
             sprayedFileScope: sprayedFileScope,
             sprayFileName: sprayFileName,
-            sprayDropZone: sprayDropZone
+            sprayDropZone: sprayDropZone,
+            metaData: metaData
           }
         }
       })
 
       this.bree.start(uniqueJobName);
+      console.log('------------------------------------------');
+      console.log(`📢 JOB WAS SCHEDULED AS - ${uniqueJobName},  job-scheduler.js: addJobToScheduler`)
+      console.log(`📢 TOTAL ACTIVE JOBS: ${this.bree.config.jobs.length}`)
+      console.log('------------------------------------------');
     } catch (err) {
       console.log(err);
     }
@@ -225,9 +236,7 @@ class JobScheduler {
   }
 
   async scheduleJobStatusPolling() {    
-    console.log(`
-      status polling scheduler started...
-    `);
+    console.log("📢 STATUS POLLING SCHEDULER STARTED...");
     try {
       let jobName = 'job-status-poller-'+new Date().getTime();
       //if(job) {

@@ -19,6 +19,7 @@ module.exports = (sequelize, DataTypes) => {
     clusterId: DataTypes.UUID
   }, {paranoid: true, freezeTableName: true});
   job_execution.associate = function(models) {
+    job_execution.belongsTo(models.job);
   };
   return job_execution;
 };

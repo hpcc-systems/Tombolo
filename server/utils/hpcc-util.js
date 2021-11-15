@@ -1,10 +1,15 @@
 var request = require('request');
+const path = require('path');
 var requestPromise = require('request-promise');
 var models  = require('../models');
 var Cluster = models.cluster;
 let hpccJSComms = require("@hpcc-js/comms");
 const crypto = require('crypto');
 let algorithm = 'aes-256-ctr';
+
+const simpleGit = require('simple-git');
+const cp = require('child_process');
+const fs = require('fs');
 
 exports.fileInfo = (fileName, clusterId) => {
 	return new Promise((resolve, reject) => {
@@ -304,7 +309,7 @@ exports.getJobInfo = (clusterId, jobWuid, jobType) => {
                 "name": result.WUInfoResponse.Workunit.Jobname,
                 "title": result.WUInfoResponse.Workunit.Jobname,
                 "description": result.WUInfoResponse.Workunit.Description,
-                "ecl": result.WUInfoResponse.Workunit.Query.Text,
+                "ecl": result.WUInfoResponse.Workunit?.Query?.Text || '',
                 "entryBWR": result.WUInfoResponse.Workunit.Jobname,
                 "wuid": result.WUInfoResponse.Workunit.Wuid,
                 "jobfiles": sortFiles(sourceFiles.concat(outputFiles))
@@ -543,7 +548,224 @@ exports.isClusterReachable = async (clusterHost, port, username, password) => {
     return objArray;
 }
 
+exports.getWorkunitsService = async (clusterId) =>{
+  const cluster = await module.exports.getCluster(clusterId);
+  const clusterAuth =  module.exports.getClusterAuth(cluster);
+
+ const connectionSettings= {
+   baseUrl: cluster.thor_host + ':' + cluster.thor_port,
+   userID: clusterAuth ? clusterAuth.user : "",
+   password: clusterAuth ? clusterAuth.password : ""
+ }
+
+ return new hpccJSComms.WorkunitsService(connectionSettings);
+}
+
+exports.createWorkUnit = async (clusterId,WUbody = {}) =>{
+   try {
+    const wuService = await module.exports.getWorkunitsService(clusterId);
+    const respond = await wuService.WUCreate(WUbody);
+    const wuid = respond.Workunit?.Wuid
+    if (!wuid) throw respond;
+    return wuid;
+  } catch (error) {
+    console.log('create workunit error------------------------------------');
+    console.dir(error, { depth: null });
+    const customError = new Error('Failed to create new Work Unit.');
+    customError.details = error; // RESPOND WITH EXCEPTIONS CAN BE FOUND HERE.
+    throw customError;
+   }
+};
+
+exports.updateWorkUnit = async (clusterId, WUupdateBody) =>{
+  try {
+    const wuService = await module.exports.getWorkunitsService(clusterId);
+    const respond = await wuService.WUUpdate(WUupdateBody);
+    if (!respond.Workunit?.Wuid) throw respond; // assume that Wuid field is always gonna be in "happy" response
+    return respond;
+  } catch (error) {
+    console.log('update workunit error------------------------------------');
+    console.dir(error, { depth: null });
+    const customError = new Error('Failed to update Work Unit.')
+    customError.details = error; // RESPOND WITH EXCEPTIONS CAN BE FOUND HERE.
+    throw customError;
+  }
+};
+
+exports.submitWU = async (clusterId, WUsubmitBody) =>{
+  try {
+    const wuService = await module.exports.getWorkunitsService(clusterId);
+    const respond = await wuService.WUSubmit(WUsubmitBody);
+    if (respond.Exceptions) throw respond;
+    return respond;
+  } catch (error) {
+    console.log('submit workunit error-----------------------------------');
+    console.dir(error, { depth: null });
+    const customError = new Error('Failed to submit Work Unit.')
+    customError.details = error; // RESPOND WITH EXCEPTIONS CAN BE FOUND HERE.
+    throw customError; 
+  }
+};
+
+exports.updateWUAction = async (clusterId,WUactionBody) =>{  
+  try {
+    const wuService = await module.exports.getWorkunitsService(clusterId);
+    const respond = await wuService.WUAction(WUactionBody);
+    const result = respond.ActionResults?.WUActionResult?.[0]?.Result
+    if (!result || result !== 'Success' ) throw respond;
+    console.dir(respond, { depth: null });
+    console.log('------------------------------------------');
+    return respond;
+  } catch (error) {
+    console.log('update workunit action error----------------------------');
+    console.dir(error, { depth: null });
+    const customError = new Error("Failed to update Work Unit action");
+    customError.details = error; // RESPOND WITH EXCEPTIONS CAN BE FOUND HERE.
+    throw customError; 
+  }
+}
+
+exports.pullFilesFromGithub = async( jobName="", clusterId, fileData ) => {
+
+  const tasks ={ repoCloned: false, repoDeleted: false, archiveCreated: false, WUCreated:false, WUupdated: false, WUsubmitted: false, WUaction: null, error: null };
+  let currentClonedRepoPath;
+  let wuService;
+  let wuid;
+
+  try {
+    // initializing wuService to update hpcc.
+    wuService = await module.exports.getWorkunitsService(clusterId); 
+    //  Create empty Work Unit;
+    const createRespond = await wuService.WUCreate({}); 
+    wuid = createRespond.Workunit?.Wuid
+    if (!wuid) {
+      console.log('❌ pullFilesFromGithub: WUCreate error-----------------------------------------');
+      console.dir(createRespond, { depth: null });
+      throw new Error('Failed to update Work Unit.')
+    }
+    tasks.WUCreated = true;
+    console.log('------------------------------------------');
+    console.log(`✔️ pullFilesFromGithub: WUCreated-  ${wuid}`);
+
+    const { selectedGitBranch, providedGithubRepo, selectedFile } = fileData; // TODO will need username and token in order to pull private repo
+    const { projectOwner, projectName, name:startFileName, path:filePath } = selectedFile;
+
+    const allClonesPath = path.join(process.cwd(),'..','gitClones');
+    currentClonedRepoPath = `${allClonesPath}/${projectOwner}-${projectName}-${wuid}` ;
+
+    const executionRepoPath = path.join(currentClonedRepoPath,filePath.replace(startFileName,''));
+    const startFilePath =path.join(currentClonedRepoPath,filePath);
+
+    const gitOptions= { baseDir: allClonesPath };
+    const git = simpleGit(gitOptions);
+
+    // #1 - Clone repo
+    console.log(`✔️ pullFilesFromGithub: CLONING STARTED-${providedGithubRepo}, branch: ${selectedGitBranch}`);
+    console.log('------------------------------------------');
+    await git.clone(providedGithubRepo, currentClonedRepoPath ,{'--branch':selectedGitBranch, '--single-branch':true} );
+    tasks.repoCloned = true;
+    console.log('------------------------------------------');
+    console.log(`✔️ pullFilesFromGithub: CLONING FINISHED-${providedGithubRepo}, branch: ${selectedGitBranch}`);
+
+    // #2 - Create Archive XML File     
+    let args = ['-E', startFilePath, '-I', executionRepoPath];
+    const archived = await createEclArchive(args, executionRepoPath);
+    tasks.archiveCreated =true;
+    console.log('✔️ pullFilesFromGithub: Archive Created');
+    // console.dir(archived);
+
+    // #4 - Update the Workunit with Archive XML 
+    const updateBody ={ "Wuid": wuid, "Jobname": jobName, "QueryText": archived.stdout};
+    const updateRespond = await wuService.WUUpdate(updateBody)
+    if (!updateRespond.Workunit?.Wuid) { // assume that Wuid field is always gonna be in "happy" response
+      console.log('❌ pullFilesFromGithub: WUupdate error----------------------------------------');
+      console.dir(updateRespond, { depth: null });
+      throw new Error('Failed to update Work Unit.')
+    }
+    tasks.WUupdated = true;
+    console.log(`✔️ pullFilesFromGithub: WUupdated-  ${wuid}`);
+    
+    // #5 - Submit the Workunit to HPCC 
+    const submitBody ={ "Wuid": wuid, "Cluster": 'thor' };
+    const submitRespond = await wuService.WUSubmit(submitBody)
+    if (submitRespond.Exceptions) {
+      console.log('❌ pullFilesFromGithub: WUsubmit error---------------------------------------');
+      console.dir(submitRespond, { depth: null });
+      throw new Error('Failed to submit Work Unit.')
+    } 
+    tasks.WUsubmitted = true;
+    console.log(`✔️ pullFilesFromGithub: WUsubmitted-  ${wuid}`);
+
+  } catch (error) { 
+    // Error going to have messages related to where in process error happened, it will end up in router.post('/executeJob' catch block.
+    try {
+      const WUactionBody = { "Wuids": { "Item": [wuid] }, "WUActionType": "SetToFailed" };
+      const actionRespond = await wuService.WUAction(WUactionBody);
+      const result = actionRespond.ActionResults?.WUActionResult?.[0]?.Result
+      if (!result || result !== 'Success' ) {
+        console.log('❌ pullFilesFromGithub: WUaction error-------------------------------------');
+        console.dir(actionRespond, { depth: null });
+        throw actionRespond
+      }
+      tasks.WUaction = actionRespond.ActionResults.WUActionResult;
+    } catch (error) {
+       error.message ?
+       tasks.WUaction= {message:error.message, failedToUpdate: true} :
+       tasks.WUaction= {...error, failedToUpdate: true };    
+    }
+
+    tasks.error = error;
+    console.log('❌ pullFilesFromGithub: ERROR IN MAIN CATCH------------------------------------');
+    console.dir(error, { depth: null });
+  } finally {
+    //  delete repo;
+    const isDeleted = deleteRepo(currentClonedRepoPath);
+    console.log(`✔️ pullFilesFromGithub: CLEANUP, REPO DELETED SUCCESSFULLY-  ${currentClonedRepoPath}`);
+    tasks.repoDeleted = isDeleted;
+    const summary = { wuid, ...tasks };
+    return summary;
+  }
+};
+
+const deleteRepo = (currentClonedRepoPath) => {
+  let isRepoDeleted
+  try {
+      fs.rmSync(currentClonedRepoPath, { recursive: true, maxRetries:5, force: true });
+      isRepoDeleted = true;
+    } catch (err) {
+      console.log('------------------------------------------');
+      console.log(`❌ pullFilesFromGithub: Failed to delete a repo ${currentClonedRepoPath}`)
+      console.dir(err);
+      isRepoDeleted = false;
+    } 
+    return isRepoDeleted;
+  }
+
 let sortFiles = (files) => {
   return files.sort((a, b) => (a.name > b.name) ? 1 : -1);
 }
 
+
+const createEclArchive = (args, cwd) => {
+
+  return new Promise((resolve, reject) => {
+    const child = cp.spawn('eclcc', args, { cwd: cwd });
+    child.on('error',(error)=>{
+      error.message = 'Failed to create ECL Archive';
+      reject(error)
+    })
+    let stdOut = "", stdErr = "";
+    child.stdout.on("data", (data) => {
+      stdOut += data.toString();
+    });
+    child.stderr.on("data", (data) => {
+      stdErr += data.toString();
+    });
+    child.on("close", (_code, _signal) => {
+      resolve({
+        stdout: stdOut.trim(),
+        stderr: stdErr.trim()
+      });
+    });
+  });
+};

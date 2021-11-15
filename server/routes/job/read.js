@@ -18,6 +18,7 @@ let JobExecution = models.job_execution;
 let MessageBasedJobs = models.message_based_jobs;
 const JobScheduler = require('../../job-scheduler');
 const hpccUtil = require('../../utils/hpcc-util');
+const workflowUtil = require('../../utils/workflow-util.js');
 const validatorUtil = require('../../utils/validator');
 const { body, query, param, validationResult } = require('express-validator');
 const assetUtil = require('../../utils/assets');
@@ -542,7 +543,7 @@ router.post('/saveJob', [
           }
         })
       }
-      
+
       let response = await updateJobDetails(applicationId, jobId, req.body.job, req.body.job.autoCreateFiles, [], req.body.job.basic.dataflowId).catch((err) => {
         console.log("Error occured in updateJobDetails....")
         return res.status(500).json({ success: false, message: "Error occured while saving the job" });
@@ -641,16 +642,20 @@ router.post('/saveJob', [
               //remove existing job with same name
               try {
                 await JobScheduler.removeJobFromScheduler(req.body.job.basic.name + '-' + req.body.job.basic.dataflowId + '-' + jobId);
-                await JobScheduler.addJobToScheduler(
-                  req.body.job.basic.name,
-                  cronExpression,
-                  req.body.job.basic.cluster_id,
-                  req.body.job.basic.dataflowId,
-                  applicationId,
-                  jobId,
-                  req.body.job.basic.jobType == 'Script' ? SUBMIT_SCRIPT_JOB_FILE_NAME : SUBMIT_JOB_FILE_NAME,
-                  req.body.job.basic.jobType
-                )
+                await JobScheduler.addJobToScheduler({
+                    name: req.body.job.basic.name, 
+                    cron: cronExpression, 
+                    clusterId: req.body.job.basic.cluster_id,
+                    dataflowId: req.body.job.basic.dataflowId,
+                    applicationId: req.body.job.basic.application_id,
+                    jobId: jobId,
+                    jobfileName: req.body.job.basic.jobType == 'Script' ? SUBMIT_SCRIPT_JOB_FILE_NAME : SUBMIT_JOB_FILE_NAME,
+                    jobType: req.body.job.basic.jobType,
+                    sprayedFileScope: job.sprayedFileScope,
+                    sprayFileName: job.sprayFileName, // TODO DO WE HAVE sprayFileName WHEN WE ADD JOB TO SCHEDULE THIS DATA GOES TO WORKER
+                    sprayDropZone: job.sprayFileName, // TODO DO WE HAVE sprayDropZone WHEN WE ADD JOB TO SCHEDULE THIS DATA GOES TO WORKER
+                    metaData: req.body.job.basic.metaData
+                   })
               } catch (err) {
                 console.log("could not remove job from scheduler"+ err)
               }
@@ -790,10 +795,37 @@ router.get('/job_details', [
   try {
     Job.findOne({
       where: { "application_id": req.query.app_id, "id":req.query.job_id },
-      include: [JobFile, JobParam],
+      include: [JobFile, JobParam, JobExecution],
       attributes: { exclude: ['assetId'] },
     }).then(async function(job) {
-      if(job) {
+      if(job) {       
+
+        const isStoredOnGithub = job?.metaData?.isStoredOnGithub;
+        const jobStatus = job.job_executions?.[0]?.status;
+        const ecl = job.ecl
+
+        if(isStoredOnGithub && !ecl && (jobStatus === 'completed' || jobStatus === "failed" )) { 
+          const wuid = job.job_executions[0].wuid;
+          const { application_id, cluster_id, jobType,id } = job;
+ 
+          try{
+            const hpccJobInfo = await hpccUtil.getJobInfo(cluster_id, wuid, jobType);
+            // #1 create records in Files and JobFiles
+            hpccJobInfo.jobfiles.forEach( async (file) => await assetUtil.createFilesandJobfiles({file, cluster_id, application_id, id}));
+            // #2 update local job instance and save ECL to DB.
+            const jobFiles = await job.getJobfiles(); 
+            // this will update local instance only
+            job.set("jobfiles", jobFiles);
+            job.set("ecl",  hpccJobInfo.ecl);
+            await job.save()  
+          } catch (error){
+            console.log('------------------------------------------');
+            console.log('--FAILED TO UPDATE ECL');
+            console.dir(error, { depth: null });
+            console.log('------------------------------------------');
+          }
+        }
+
         var jobData = job.get({ plain: true });
         for (jobFileIdx in jobData.jobfiles) {
           var jobFile = jobData.jobfiles[jobFileIdx];
@@ -903,6 +935,23 @@ router.post('/executeJob', [
   try {
     let wuid = '';
     let job = await Job.findOne({where: {id:req.body.jobId}, attributes: {exclude: ['assetId']}, include: [JobParam]});
+    if (job.metaData?.isStoredOnGithub) {
+      res.json({"success":true})// send the respond and proceed with the cloning flow
+      const flowSettings ={
+        gitHubFiles : job.metaData.gitHubFiles,
+        applicationId: req.body.applicationId,
+        dataflowId: req.body.dataflowId,
+        clusterId: req.body.clusterId,
+        jobName : req.body.jobName,
+        jobId: req.body.jobId,
+      }
+      const summary = await assetUtil.createGithubFlow(flowSettings);
+      console.log('------------------------------------------');
+      console.log("✔️ router.post('/executeJob': MANUAL JOB EXECUTION GITHUB FLOW, SUMMARY!");
+      console.dir(summary);
+      console.log('------------------------------------------');
+      return; // return from function to prevent code running further.
+    }
     if(job.jobType == 'Spray') {
       let sprayJobExecution = await hpccUtil.executeSprayJob(job);
       wuid = sprayJobExecution.SprayResponse && sprayJobExecution.SprayResponse.Wuid ? sprayJobExecution.SprayResponse.Wuid : ''

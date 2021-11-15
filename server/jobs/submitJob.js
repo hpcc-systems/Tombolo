@@ -1,5 +1,4 @@
 const { parentPort, workerData } = require("worker_threads");
-const request = require('request-promise');
 const hpccUtil = require('../utils/hpcc-util');
 const assetUtil = require('../utils/assets.js');
 const workflowUtil = require('../utils/workflow-util.js');
@@ -17,6 +16,26 @@ if (parentPort) {
   let wuid='', wuDetails;
   console.log(workerData);
   try {
+    if (workerData.metaData?.isStoredOnGithub){
+        const flowSettings ={
+          gitHubFiles : workerData.metaData.gitHubFiles,
+          applicationId: workerData.applicationId,
+          dataflowId: workerData.dataflowId,
+          clusterId: workerData.clusterId,
+          jobName : workerData.jobName,
+          jobId: workerData.jobId,
+        }
+        console.log('------------------------------------------');
+        console.log(`✔️ SUBMITJOB.JS: CREATING GITHUB FLOW WITH BREE FOR JOB ${workerData.jobName} id:${workerData.jobId}; dflow: ${workerData.dataflowId};`);
+        console.log('------------------------------------------');
+        const summary = await assetUtil.createGithubFlow(flowSettings);
+        console.log('------------------------------------------');
+        console.log('✔️ SUBMITJOB.JS: SUBMITTED JOB FROM BREE, SUMMARY!');
+        console.log('------------------------------------------');
+        console.dir(summary, { depth: null });
+        return;
+      } 
+
     if(workerData.jobType == 'Spray') {
       let sprayJobExecution = await hpccUtil.executeSprayJob({
         cluster_id: workerData.clusterId, 
@@ -44,7 +63,7 @@ if (parentPort) {
     if (parentPort) {            
       console.log(`signaling done for ${workerData.jobName}`)
       parentPort.postMessage('done');      
-      
+
     } else {
       process.exit(0);
     }

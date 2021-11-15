@@ -170,7 +170,7 @@ class JobDetails extends Component {
       sprayFileName: "",
       sprayedFileScope: "",
       selectedDropZoneName: {},
-    },
+      },
     enableEdit: false,
     editing: false,
     dataAltered: false,
@@ -178,35 +178,19 @@ class JobDetails extends Component {
   };
 
   componentDidMount() {
-    //this.props.onRef(this);
+        //this.props.onRef(this);
     if (this.props.application && this.props.application.applicationId) {
-      this.getJobDetails();
-      this.setClusters(this.props.clusterId);
-      if (this.props.selectedDataflow) {
-        this.getFiles();
-      }
+        this.getJobDetails();
+        this.setClusters(this.props.clusterId);
+        if (this.props.selectedDataflow) {
+          this.getFiles();
+        }
     }
     if (this.props.scheduleType === "Predecessor") {
       this.handleScheduleTypeSelect("Predecessor");
     }
-
     //Getting global state
-    const { viewOnlyModeReducer } = store.getState();
-    if (viewOnlyModeReducer.addingNewAsset) {
-      this.setState({
-        addingNewAsset: true,
-      });
-    }
-    if (viewOnlyModeReducer.editMode) {
-      this.setState({
-        enableEdit: viewOnlyModeReducer.editMode,
-        editing: true,
-      });
-    } else {
-      this.setState({
-        enableEdit: viewOnlyModeReducer.editMode,
-      });
-    }
+    this.handleViewOnlyMode()
   }
 
   //Unmounting phase
@@ -221,6 +205,16 @@ class JobDetails extends Component {
       payload: false,
     });
   }
+
+  handleViewOnlyMode(){
+    //Getting global state
+    this.setState({ 
+        enableEdit: this.props.editMode,
+        editing: this.props.editMode,
+        addingNewAsset: this.props.addingNewAsset 
+      });
+  }
+
   getJobDetails() {
     if (this.props.selectedAsset !== "" && !this.props.isNew) {
       this.setState({
@@ -333,6 +327,8 @@ class JobDetails extends Component {
             sprayFileName: data.sprayFileName,
             sprayDropZone: data.sprayDropZone,
             sprayedFileScope: data.sprayedFileScope,
+            isStoredOnGithub:data.metaData.isStoredOnGithub || false,
+            gitHubFiles: data.metaData?.gitHubFiles ||  null
           });
           this.setClusters(this.props.clusterId);
           return data;
@@ -343,7 +339,9 @@ class JobDetails extends Component {
             ...this.state,
             initialDataLoading: false,
           });
-        });
+        }).finally(()=>{
+          this.handleViewOnlyMode()
+      })
     }
   }
 
@@ -708,7 +706,7 @@ class JobDetails extends Component {
 
   saveJobDetails() {
     let _self = this;
-    return new Promise((resolve) => {
+     return new Promise((resolve) => {
       fetch("/api/job/saveJob", {
         method: "post",
         headers: authHeader(),
@@ -772,9 +770,33 @@ class JobDetails extends Component {
     if (formFieldsValue["sprayDropZone"]) {
       formFieldsValue["sprayDropZone"] = formFieldsValue["sprayDropZone"];
     }
+
+    const { gitHubFiles, isStoredOnGithub, ...formFields} = formFieldsValue;
+    // gitHubFiles give us more fields but we will save only one that we are using into DB.
+    //console.log(`gitHubFiles`, gitHubFiles)
+    const metaData={}; // metadata will be stored as JSON
+    metaData.isStoredOnGithub = isStoredOnGithub;
+    if (gitHubFiles) {
+      metaData.gitHubFiles ={
+        providedGithubRepo:gitHubFiles.providedGithubRepo,
+        selectedGitBranch : gitHubFiles.selectedGitBranch,
+        gitHubUserName:gitHubFiles.gitHubUserName,
+        gitHubPassword:gitHubFiles.gitHubPassword,
+        pathToFile:gitHubFiles.pathToFile, // we need to save this field to recreate view in cascader.
+        selectedFile:{
+          projectOwner: gitHubFiles.selectedFile.projectOwner,
+          projectName:gitHubFiles.selectedFile.projectName,
+          name: gitHubFiles.selectedFile.name,
+          path: gitHubFiles.selectedFile.path,
+        }
+      }
+    } else {
+      metaData.gitHubFiles = null;
+    }
+
     var jobDetails = {
       basic: {
-        ...formFieldsValue,
+        ...formFields,
         application_id: applicationId,
         dataflowId: this.props.selectedDataflow
           ? this.props.selectedDataflow.id
@@ -782,6 +804,7 @@ class JobDetails extends Component {
         cluster_id: this.state.selectedCluster,
         ecl: this.state.job.ecl,
         sprayFileName: this.state.job.sprayFileName,
+        metaData // all fields related to github is stored here 
       },
       schedule: {
         type: this.state.selectedScheduleType,
@@ -1625,7 +1648,7 @@ class JobDetails extends Component {
             <div className="loader">
               <Spin spinning={this.state.initialDataLoading} size="large" />
             </div>) : null}
-          <Form {...formItemLayout} labelAlign="left" ref={this.formRef} onFieldsChange={onFieldsChange}>
+          <Form {...formItemLayout} initialValues={{selectedFile:null}} labelAlign="left" ref={this.formRef} onFieldsChange={onFieldsChange}>
           <Tabs defaultActiveKey="1" tabBarExtraContent = {this.props.displayingInModal ? null : controls }>
 
           <TabPane tab="Basic" key="1">
@@ -1637,7 +1660,7 @@ class JobDetails extends Component {
                   {jobTypes.map(d => <Option key={d}>{d}</Option>)}
                 </Select>
                 }
-              </Form.Item>                            
+              </Form.Item>   
               {(() =>  {
                 switch (jobType) {
                   case 'Data Profile':
@@ -1659,7 +1682,7 @@ class JobDetails extends Component {
 
             {this.state.job.jobType != "Script" &&
               this.state.job.jobType != "Spray" ? (
-                <TabPane tab="ECL" key="2">
+                <TabPane disabled={!this.state.job.ecl} tab="ECL" key="2">
                   <Form.Item {...eclItemLayout} label="ECL" name="ecl" >
                     
                     <EclEditor
@@ -1670,7 +1693,7 @@ class JobDetails extends Component {
                   </Form.Item>
                 </TabPane>
               ) : this.state.job.jobType == "Script" ? (
-                <TabPane tab="Script" key="2">
+                <TabPane disabled={!this.state.job.ecl} tab="Script" key="2">
                   <Form.Item
                     {...longFieldLayout}
                     label="Script Path"
@@ -1701,7 +1724,7 @@ class JobDetails extends Component {
               {this.state.job.jobType != "Script" &&
               this.state.job.jobType != "Spray" ? (
                 <React.Fragment>
-                  <TabPane tab="Input Params" key="3">
+                  <TabPane disabled={!this.state.job.ecl} tab="Input Params" key="3">
                     <EditableTable
                       columns={
                         this.state.job.jobType != "Script"
@@ -1717,7 +1740,7 @@ class JobDetails extends Component {
                     />
                   </TabPane>
 
-                  <TabPane tab="Input Files" key="4">
+                  <TabPane disabled={!this.state.job.ecl} tab="Input Files" key="4">
                     <div>
                       {this.state.enableEdit ? (
                         <>
@@ -1761,9 +1784,10 @@ class JobDetails extends Component {
                   </TabPane>
                 </React.Fragment>
               ) : null}
+              
               {this.state.job.jobType != "Script" &&
               this.state.job.jobType != "Spray" ? (
-                <TabPane tab="Output Files" key="5">
+                <TabPane disabled={!this.state.job.ecl} tab="Output Files" key="5">
                   <div>
                     {!this.state.enableEdit ? null : (
                       <>
@@ -1805,6 +1829,7 @@ class JobDetails extends Component {
                   </div>
                 </TabPane>
               ) : null}
+
               {this.props.selectedDataflow ? (
                 <TabPane tab="Schedule" key="6">
                   <div>
@@ -2029,6 +2054,7 @@ function mapStateToProps(state) {
   const { user } = state.authenticationReducer;
   const { application, clusters } = state.applicationReducer;
   const { isNew = false, groupId = "" } = newAsset;
+  const { editMode, addingNewAsset } = state.viewOnlyModeReducer;
   return {
     user,
     selectedAsset,
@@ -2037,6 +2063,8 @@ function mapStateToProps(state) {
     groupId,
     clusterId,
     clusters,
+    editMode,
+    addingNewAsset
   };
 }
 
