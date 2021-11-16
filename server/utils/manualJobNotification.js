@@ -3,7 +3,6 @@ const nodemailer = require("nodemailer");
 
 // 🔔  Notification sender
 const sendEmailNotification = async (notificationOptions) => {
-  console.log("<<<<<<<<<<<<<<<<< E-mail notification sent")
   //Creating transporter
   const transporter = nodemailer.createTransport({
     host: process.env.EMAIL_SMTP_HOST,
@@ -56,9 +55,12 @@ const sendEmailNotification = async (notificationOptions) => {
 
   //Calling send mail function provided by nodemailer and catching errs if any
   try{
+    console.log("<<<<<<<<<<<<<<<<< Sending email notification", notificationOptions)
     let info = await transporter.sendMail(options(notificationOptions));
+    console.log(info, "<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<< email response info")
     return info;
   }catch (error){
+    console.log(error, "<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<< email response error")
     return error;
   }
 };

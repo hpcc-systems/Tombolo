@@ -17,3 +17,30 @@ exports.notifyJobFailure = (jobName, clusterId) => {
     }
   })
 }
+
+
+// Send notification for manual jobs in a workflow and update job execution table 
+exports.notifyManualJob = async (options) => {
+  // Send email
+    const response = await NotificationModule.notify({
+        from: process.env.EMAIL_SENDER,
+        to: options.contact,
+        subject: 'Manual Job - Action Required',
+        html: `<p>Hello,</p>
+                <p> Below job requires your attention. Please click <a href=${options.url}>Here</a> to view job details</p>
+                    <p> Name : ${options.jobName}</p>
+                <p>
+                <b>Tombolo Team </b>
+                </p>`
+        
+      })
+
+      // Notification delivered in user's mailbox - add job to job_execution table with status 'wait'
+      if(response.accepted){
+        Job.create(options).then(job => {
+          console.log('job added to job execution table with status -wait')
+        })
+
+      }
+      
+}

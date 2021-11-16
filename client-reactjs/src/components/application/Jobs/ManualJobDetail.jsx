@@ -6,7 +6,6 @@ import { authHeader, handleError } from '../../common/AuthHeader';
 function ManualJobDetail() {
     const [ jobId, setJobID]= useState('');
     const [jobDetails, setJobDetails] = useState({});
-    const [userResponseRecorded, setUserResponseRecorded] = useState(false);
     const [savingData, setSavingData] = useState({save : false, response : ''})
 
     //antd message config
@@ -55,40 +54,15 @@ function ManualJobDetail() {
             handleError(response);
           })
           .then(data => {
-            setUserResponseRecorded(true);
             setSavingData({saving : false, response : ''});
             message.success('Your response has been recorded')
           })
           .catch(error => {
             console.log(error);
-          });
+          }).finally(setTimeout(() =>{
+            window.location.href = "/"
+        }, 2000))
     }
-
-    //Once user response is registered, if any dependent jobs - add to job execution queue
-    useEffect(() =>{
-        if(userResponseRecorded){
-            fetch("/api/job/dependOnManualJob", {
-                headers: authHeader(),
-                method : 'POST',
-                body : JSON.stringify({name: jobDetails.name})
-              })
-              .then((response) => {
-                
-                if(response.ok) {
-                  return response.json();
-                }
-                handleError(response);
-              })
-              .then(data => {
-                setTimeout(() =>{
-                    window.location.href = "/"
-                }, 2000)
-              })
-              .catch(error => {
-                console.log(error);
-              });
-        }
-    }, [userResponseRecorded])
 
     //When user clicks cancel button
     const handleCancel = () => {

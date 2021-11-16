@@ -23,7 +23,7 @@ const { body, query, param, validationResult } = require('express-validator');
 const assetUtil = require('../../utils/assets');
 const SUBMIT_JOB_FILE_NAME = 'submitJob.js';
 const SUBMIT_SCRIPT_JOB_FILE_NAME = 'submitScriptJob.js';
-const notificationMoudle = require("../../utils/manualJobNotification")
+const SUBMIT_MANUAL_JOB_FILE_NAME = 'submitManualJob.js'
 
 /**
   Updates Dataflow graph by
@@ -639,6 +639,19 @@ router.post('/saveJob', [
                 }
               });
 
+              // <<<<<<<<<<<<<
+              const fileName = () =>{
+                switch (req.body.job.basic.jobType){
+                  case 'Script':
+                    return SUBMIT_SCRIPT_JOB_FILE_NAME;
+                  case 'Manual' :
+                    return SUBMIT_MANUAL_JOB_FILE_NAME;
+                  default :
+                  return SUBMIT_JOB_FILE_NAME
+                }
+              }
+              
+
               //remove existing job with same name
               try {
                 await JobScheduler.removeJobFromScheduler(req.body.job.basic.name + '-' + req.body.job.basic.dataflowId + '-' + jobId);
@@ -649,11 +662,14 @@ router.post('/saveJob', [
                   req.body.job.basic.dataflowId,
                   applicationId,
                   jobId,
-                  req.body.job.basic.jobType == 'Script' ? SUBMIT_SCRIPT_JOB_FILE_NAME : SUBMIT_JOB_FILE_NAME,
+                  // req.body.job.basic.jobType == 'Script' ? SUBMIT_SCRIPT_JOB_FILE_NAME : SUBMIT_JOB_FILE_NAME,
+                  fileName(),
                   req.body.job.basic.jobType,
                   req.body.job.basic.contact,
                   req.body.job.basic.title
                 )
+
+                console.log("<<<<<<<<<<<<<<<<<<<<< ### ans", fileName())
               } catch (err) {
                 console.log("could not remove job from scheduler"+ err)
               }
@@ -898,9 +914,7 @@ router.post('/executeJob', [
   if (!errors.isEmpty()) {
       return res.status(422).json({ success: false, errors: errors.array() });
   }
-  if(req.body.jobType === 'Manual'){
-    await jobScheduler.handleManualJobScheduling(req.body);
-  }
+
   try {
     let wuid = '';
     let job = await Job.findOne({where: {id:req.body.id}, attributes: {exclude: ['assetId']}, include: [JobParam]});
@@ -909,10 +923,20 @@ router.post('/executeJob', [
       wuid = sprayJobExecution.SprayResponse && sprayJobExecution.SprayResponse.Wuid ? sprayJobExecution.SprayResponse.Wuid : ''
     } else if(job.jobType == 'Script') {
       let executionResult = await assetUtil.executeScriptJob(req.body.id);
+    } else if(job.jobType === 'Manual'){
+      const result = await  jobScheduler.executeJob(req.body);
+      if(result.success){
+        res.status(200).json(result);
+        return;
+      }else{
+        res.status(500).json(result);
+        return;
+      }
     } else if(job.jobType != 'Script' && job.jobType != 'Spray') {
       wuid = await hpccUtil.getJobWuidByName(req.body.clusterId, req.body.name);
       let wuResubmitResult = await hpccUtil.resubmitWU(req.body.clusterId, wuid);
-    } 
+    }
+    
     //record workflow execution
     await JobExecution.findOrCreate({
       where: {
@@ -979,7 +1003,7 @@ router.get('/jobExecutionDetails', [
   }
 });
 
-//when user manually respond to a manual job - Update job status and metadata on job execution table
+//when user responds to a manual job - Update job status and metadata on job execution table
 router.post('/manaulJobResponse', [
   body('jobId').isUUID(4).withMessage('Invalid Job Id'),
   body('newManaulJob_meta').notEmpty().withMessage('Invalid meta data')], 
@@ -993,25 +1017,8 @@ router.post('/manaulJobResponse', [
                   let newMeta = {...job.manualJob_meta, ...req.body.newManaulJob_meta}
                     job.update({status : 'completed', manualJob_meta : newMeta})
                             .then(job => {
-                                          const notificationOptions = {
-                                            for : "manualJobCompletion",
-                                            result : newMeta.response,
-                                            url : process.env.WEB_URI + "/"+newMeta.url,
-                                            jobName: newMeta.jobName,
-                                            jobTitle : newMeta.jobTitle,
-                                            contact : newMeta.notifiedTo
-                                          }
-                                          // send manual job completion notification
-                                         notificationMoudle.sendEmailNotification(notificationOptions).then(
-                                          result => {
-                                            if(result.accepted){
-                                              console.log(" Manual job completion notification sent"   );  
-                                            }else{
-                                              console.log("unable to send manaul job notification", result)
-                                            }
-                                            res.status(200).json({success: true, data: job});
-                                          });
-                                          
+                              JobScheduler.scheduleCheckForJobsWithSingleDependency(job.manualJob_meta.jobName);
+                              //TDO - Send confirmation email to end user here                                       
                                         })
                             .catch(err => {
                               res.status(501).json({success: false, message : 'Error occured while saving data'})})
@@ -1020,19 +1027,6 @@ router.post('/manaulJobResponse', [
                   res.status(501).json({success: false, data: error})})
 
 });
-
-// Once manaul job is completed serach for any dependent jobs - if any add to job execution table
-router.post('/dependOnManualJob', [
-  body('jobName').isEmpty().withMessage("Invalid Job Name ..")], 
-  (req, res) => {
-    const errors = validationResult(req).formatWith(validatorUtil.errorFormatter);
-    if (!errors.isEmpty()) {
-        return res.status(422).json({ success: false, errors: errors.array() });
-    }
-    JobScheduler.scheduleCheckForJobsWithSingleDependency(req.body.name);  
-    res.status(200).json({success: true, message : 'Job with single dependency searched'})
-
-  });
 
 
 const QueueDaemon = require('../../queue-daemon');

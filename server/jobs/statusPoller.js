@@ -16,8 +16,7 @@ if (parentPort) {
   let wuResult, wuid='';
   try {
     let job = await assetUtil.getJobForProcessing();
-    // await JobScheduler.scheduleCheckForJobsWithSingleDependency('Tombolo_Workflow_Scheduler2'); 
-    if(job && job.wuid) {
+     if(job && job.wuid) {
       //check WU status
       wuResult = await hpccUtil.workunitInfo(job.wuid, job.clusterId);    
       let jobCompletionData = {

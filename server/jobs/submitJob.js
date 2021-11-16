@@ -23,20 +23,7 @@ if (parentPort) {
         sprayDropZone: workerData.sprayDropZone
       });
       wuid = sprayJobExecution.SprayResponse && sprayJobExecution.SprayResponse.Wuid ? sprayJobExecution.SprayResponse.Wuid : ''      
-    }else if(workerData.jobType === "Manual"){
-      let job = {
-        id:workerData.jobId,
-        name:workerData.jobName,
-        title:workerData.title,
-        contact:workerData.contact,
-        application_id: workerData.applicationId,
-        clusterId:workerData.clusterId,
-        dataflowId:workerData.dataflowId,
-        jobType:workerData.jobType
-      }
-      await jobScheduler.handleManualJobScheduling(job);
-    }
-     else {
+    } else {
       wuid = await hpccUtil.getJobWuidByName(workerData.clusterId, workerData.jobName);
       //record workflow execution
       workerData.status = 'submitted';

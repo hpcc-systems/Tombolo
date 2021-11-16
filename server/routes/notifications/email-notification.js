@@ -7,7 +7,7 @@ var smtpConfig = {
 };
 var transporter = nodemailer.createTransport(smtpConfig);
 
-exports.notify = (notification) => {
+exports.notify =   async (notification) => {
   const mailOptions = {
     to: notification.to,
     from: notification.from,
@@ -16,12 +16,15 @@ exports.notify = (notification) => {
     html: notification.html
   };
 
-  transporter.sendMail(mailOptions, function(error, info){
-    if(error){
-      return console.log(error);
-    }
-    console.log('Message sent: ' + info.response);
-  });
+  try{
+   const response = await transporter.sendMail(mailOptions)
+   console.log("Email sent success ")
+   return response;
+  }catch(err){
+    console.log("Unable to send E-mail", err)
+    return err;
+  }
+
 }
 
 exports.notifyApplicationShare = (sharedWithUserEmail, applicationName, req) => {
