@@ -373,6 +373,7 @@ class Graph extends Component {
   onAssetSaved = async (saveResponse) => {
     saveResponse.then(response =>{
       if(response.success){
+        console.log("<<<<<<<<<<< Graph response", response)
         var newData = this.thisGraph.nodes.map(el => {
           if(el.id == this.state.currentlyEditingId) {
             el.title=response.title;
