@@ -20,6 +20,7 @@ module.exports = (sequelize, DataTypes) => {
     manualJob_meta : DataTypes.JSON
   }, {paranoid: true, freezeTableName: true});
   job_execution.associate = function(models) {
+    job_execution.belongsTo(models.job);
   };
   return job_execution;
 };

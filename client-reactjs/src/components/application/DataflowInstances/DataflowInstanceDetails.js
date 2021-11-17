@@ -59,7 +59,7 @@ class DataflowInstanceDetails extends Component {
     return (
       <React.Fragment>
         <div>
-          <div style={{"paddingTop": "5px", "overflow": "auto"}}>
+          <div style={{border:'1px solid #f0f0f0', borderBottomColor: "#fff", borderRadius:'5px'}}> 
             <Graph
               applicationId={this.props.applicationId}
               viewMode={true}
@@ -70,7 +70,7 @@ class DataflowInstanceDetails extends Component {
               />
           </div>
 
-          <div style={{"position": "fixed"}}>
+          <div>
             <Tabs type="card">
              <TabPane tab="Workunits" key="1">
                <Spin spinning={this.state.loading}>

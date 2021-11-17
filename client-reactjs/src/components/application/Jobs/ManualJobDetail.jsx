@@ -42,10 +42,13 @@ function ManualJobDetail() {
     const handleResponse = (e) => {
         const response = e.currentTarget.value;
         setSavingData({saving : response ? true : false, response : response})
-        fetch("/api/job/manaulJobResponse", {
+        fetch("/api/job/manualJobResponse", {
             headers: authHeader(),
             method : 'POST',
-            body : JSON.stringify({jobId: jobId, newManaulJob_meta :{response, respondedOn :  Date.now()}})
+            body : JSON.stringify({
+              jobId: jobId,  
+              status: response === 'approved' ? 'completed' : 'failed',
+              newManaulJob_meta :{response, respondedOn :  Date.now()}})
           })
           .then((response) => {
             if(response.ok) {

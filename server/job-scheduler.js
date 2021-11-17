@@ -2,8 +2,9 @@ const Bree = require('bree');
 const models = require('./models');
 var path = require('path');
 let Job = models.job;
+const JobExecution = models.job_execution;
 const hpccUtil = require('./utils/hpcc-util');
-const assetUtil = require('./utils/assets.js');
+const assetUtil = require('./utils/workflow-util.js');
 let MessageBasedJobs = models.message_based_jobs;
 const SUBMIT_JOB_FILE_NAME = 'submitJob.js';
 const SUBMIT_SCRIPT_JOB_FILE_NAME = 'submitScriptJob.js';
@@ -11,86 +12,39 @@ const JOB_STATUS_POLLER = 'statusPoller.js';
 const notificationMoudle = require("./utils/manualJobNotification");
 const workflowUtil = require('./utils/workflow-util');
 
-
 class JobScheduler {
   constructor() {
     this.bree = new Bree({
-     root: false,
-     errorHandler: (error, workerMetadata) => {
-      if (workerMetadata.threadId) {
-        console.log(`There was an error while running a worker ${workerMetadata.name} with thread ID: ${workerMetadata.threadId}`)
-      } else {
-        console.log(`There was an error while running a worker ${workerMetadata.name}`)
-      }
-
-      console.error(error);
-      //errorService.captureException(error);
-    }
-    });
-    (async () => {
-      await this.bootstrap();
-      //this.bree.start();
-    })();
-  }
-
-  async bootstrap() {
-    await this.scheduleActiveCronJobs();
-  
-    await this.scheduleJobStatusPolling();
-  }
-
- 
-  //Handle Manual Job 
-  async handleManualJobScheduling (job){
-    console.log("<<<<<<<<<<<<<<< Hanlding manual job >>>>>>>>>>>>>>>>>>>", job);
-
-    //Test
-    workflowUtil.notifyManualJob()  ;     
-    // let notificationOptions = {
-    //   for : 'manaulJob',
-    //   jobName : job.name,
-    //   jobTitle: job.title,
-    //   contact: job.contact,
-    //   url : `${process.env.WEB_URI}${job.application_id}/manualJobDetails/${job.id}`
-    // }
-
-    // const result = await notificationMoudle.sendEmailNotification(notificationOptions)
+      root: false,
+      errorHandler: (error, workerMetadata) => {
+       if (workerMetadata.threadId) {
+         console.log(`There was an error while running a worker ${workerMetadata.name} with thread ID: ${workerMetadata.threadId}`)
+       } else {
+         console.log(`There was an error while running a worker ${workerMetadata.name}`)
+       }
     
-    // if(result.accepted){
-    //   // once the end user is notified add the job to job execution queue 
-    //   // const wuid = await hpccUtil.getJobWuidByName(job.clusterId, job.name);    
-    //   let manualJob_meta = {
-    //     notifiedTo : job.contact,
-    //     notifiedOn: new Date().getTime(),
-    //     url : `/${job.application_id}/manualJobDetails/${job.id}`,
-    //     jobName : job.name,
-    //     jobTitle: job.title,
-    //   };
+       console.error(error);
+       //errorService.captureException(error);
+     }
+     });
+  }
 
-    //   let jobExecutionData = {
-    //     name: job.name, 
-    //     clusterId: job.clusterId, 
-    //     dataflowId: job.dataflowId, 
-    //     applicationId: job.application_id, 
-    //     jobId: job.id, 
-    //     jobType: job.jobType == 'Script' ? SUBMIT_SCRIPT_JOB_FILE_NAME : SUBMIT_JOB_FILE_NAME,
-    //     sprayedFileScope: job.sprayedFileScope,
-    //     sprayFileName: job.sprayFileName,
-    //     sprayDropZone: job.sprayDropZone,
-    //     // status: 'wait',
-    //     manualJob_meta : manualJob_meta
-    //   }
+  bootstrap() {
+    (async()=>{
+      console.log('------------------------------------------');
+      console.log('✔️ JOBSCHEDULER IS BOOTSTRAPED, job-scheduler.js: class JobScheduler ')
+      console.log('------------------------------------------');
+      await this.scheduleActiveCronJobs();
+      await this.scheduleJobStatusPolling();
+    })()
+  }
+  
 
-    //   await assetUtil.recordJobExecution(jobExecutionData, wuid)
-    // }else{
-    //   console.log(result)
-    // }
-  } 
-
-  async scheduleCheckForJobsWithSingleDependency(jobName) {
+   // TODO PASS DATAFLOW!
+   async scheduleCheckForJobsWithSingleDependency(jobName) {
     return new Promise(async (resolve, reject) => {    
       try {
-        const query = `SELECT j1.id, j1.name, j1.title, j1.contact, j1.jobType, j1.sprayedFileScope, j1.sprayFileName, j1.sprayDropZone, dj.dependsOnJobId as dependsOnJobId, dj.jobId, c.id as clusterId, d.id as dataflowId, d.application_id, count(*) as count
+        const query = `SELECT j1.id, j1.name, j1.contact, j1.jobType, j1.sprayedFileScope, j1.sprayFileName, j1.sprayDropZone, dj.dependsOnJobId as dependsOnJobId, dj.jobId, c.id as clusterId, d.id as dataflowId, d.application_id, count(*) as count
           FROM tombolo.dependent_jobs dj
           left join job j1 on j1.id = dj.jobId
           left join job j2 on j2.id = dj.dependsOnJobId
@@ -106,59 +60,49 @@ class JobScheduler {
           ;`;
 
         let replacements = { jobName: jobName};
-        //getting jobs based on above query
         const jobs = await models.sequelize.query(query, {
           type: models.sequelize.QueryTypes.SELECT,
           replacements: replacements
         });
-        
 
-        //Lopping through all the jobs
+        console.log('------------------------------------------');
+        console.log(`✔️  job-scheduler.js: FOUND ${jobs.length} DEPENDENT JOB/S` );
+        console.log('------------------------------------------');
+
         for(const job of jobs) {
           if(job.jobType === "Manual"){
-            console.log("scheduleCheckForJobsWithSingleDependency <<<<<<<<<<<<<<<<< manual job")
-            await this.executeJob(job);
-            // await this.handleManualJobScheduling(job);
-            // console.log("<<<<<<<<<<<<<<<< Dependent job is manual >>>>>>>>>>>>>", job);
-            // let jobExecutionData = {
-            //   name: job.name, 
-            //   clusterId: job.clusterId, 
-            //   dataflowId: job.dataflowId, 
-            //   applicationId: job.application_id, 
-            //   jobId: job.id, 
-            //   jobType: job.jobType == 'Script' ? SUBMIT_SCRIPT_JOB_FILE_NAME : SUBMIT_JOB_FILE_NAME,
-            //   sprayedFileScope: job.sprayedFileScope,
-            //   sprayFileName: job.sprayFileName,
-            //   sprayDropZone: job.sprayDropZone,
-            //   status: 'submitted',
-            //   manualJob_meta : {jobName : job.name, jobType : 'Manual', contact: job.contact, title : job.title}
-            // }
-            // const result = await assetUtil.recordJobExecution(jobExecutionData);
-            // console.log("<<<<<<<<<<< Dependent manual job record job execution result ", result)
-          }else{   
-              // Getting wuid
-            const  wuid = await hpccUtil.getJobWuidByName(job.clusterId, job.name);      
-            console.log(`submitting dependant job ${job.name} (WU: ${wuid}) to url ${job.clusterId}/WsWorkunits/WUResubmit.json?ver_=1.78`);
-
-            //submit the dependant job's wu and record the execution in job_execution table for the statusPoller to pick
-            let wuInfo = await hpccUtil.resubmitWU(job.clusterId, wuid); 
-
-            let jobExecutionData = {
-              name: job.name, 
-              clusterId: job.clusterId, 
-              dataflowId: job.dataflowId, 
-              applicationId: job.application_id, 
-              jobId: job.id, 
-              jobType: job.jobType == 'Script' ? SUBMIT_SCRIPT_JOB_FILE_NAME : SUBMIT_JOB_FILE_NAME,
-              sprayedFileScope: job.sprayedFileScope,
-              sprayFileName: job.sprayFileName,
-              sprayDropZone: job.sprayDropZone,
-              status: 'submitted'
-            }
-            await assetUtil.recordJobExecution(jobExecutionData, wuid)
+            // this.executeJob(job);
+	          job.url = `${process.env.WEB_URI}${job.application_id}/manualJobDetails/${job.id}`
+            job.applicationId = job.application_id;
+            job.status = 'wait';
+            job.manualJob_meta = {jobName: job.name, notifiedTo : job.contact, notifiedOn : new Date().getTime()}
+            console.log("<<<<<<<<<<<< Add this to the je table", job)
+            await JobExecution.create(job)
+            await  assetUtil.notifyManualJob(job);
+          }else{
+             //submit the dependant job's wu and record the execution in job_execution table for the statusPoller to pick
+          let wuDetails = await hpccUtil.getJobWuDetails(job.clusterId, job.name);      
+          let wuid = wuDetails.wuid;
+          console.log(
+            `submitting dependant job ${job.name} ` +
+            `(WU: ${wuid}) to url ${job.clusterId}/WsWorkunits/WUResubmit.json?ver_=1.78`
+            );
+          let wuResubmitResult = await hpccUtil.resubmitWU(job.clusterId, wuid, wuDetails.cluster);    
+          let jobExecutionData = {
+            name: job.name, 
+            clusterId: job.clusterId, 
+            dataflowId: job.dataflowId, 
+            applicationId: job.application_id, 
+            jobId: job.id, 
+            jobType: job.jobType == 'Script' ? SUBMIT_SCRIPT_JOB_FILE_NAME : SUBMIT_JOB_FILE_NAME,
+            sprayedFileScope: job.sprayedFileScope,
+            sprayFileName: job.sprayFileName,
+            sprayDropZone: job.sprayDropZone,
+            status: 'submitted'
           }
-          
-        }      
+          await assetUtil.recordJobExecution(jobExecutionData, wuResubmitResult?.WURunResponse.Wuid)
+          }
+        }
         resolve();
       } catch (err) {
         console.log(err)
@@ -169,7 +113,7 @@ class JobScheduler {
 
   async scheduleActiveCronJobs() {
     let promises=[];
-    const query = `SELECT ad.id, ad.cron, j.title, j.contact, j.name as name, j.jobType, j.sprayedFileScope, j.sprayFileName, j.sprayDropZone, ad.dataflowId, ad.assetId, d.application_id, c.id as clusterId, c.thor_host, c.thor_port,
+    const query = `SELECT ad.id, ad.cron, j.name as name, j.jobType, j.sprayedFileScope, j.sprayFileName, j.sprayDropZone, j.metaData, ad.dataflowId, ad.assetId, d.application_id, c.id as clusterId, c.thor_host, c.thor_port,
       d.title as dataflowName
       FROM tombolo.assets_dataflows ad
       left join dataflow d on d.id = ad.dataflowId
@@ -182,34 +126,33 @@ class JobScheduler {
 
     const jobs = await models.sequelize.query(query, {
       type: models.sequelize.QueryTypes.SELECT,
-    });
+    });  
 
-    for(const job of jobs) {
-      console.log(`
-        fetch WU id from ${job.thor_host}:${job.thor_port}/WsWorkunits/WUQuery.json for job name: ${job.name}
-        add job to bree { name: ${job.name}, cron: ${job.cron}, path: ..., workerData: {workunitId: $WUID, cluster: ${job.thor_host}, ...} }
-      `);
+    for(const job of jobs) {           
       try {
-        // finally add the job to the scheduler
-        await this.addJobToScheduler(
-          job.name, 
-          job.cron, 
-          job.clusterId, 
-          job.dataflowId, 
-          job.application_id, 
-          job.assetId, 
-          job.jobType == 'Script' ? SUBMIT_SCRIPT_JOB_FILE_NAME : SUBMIT_JOB_FILE_NAME,
-          job.jobType,
-          job.contact,
-          job.title,
-          job.sprayedFileScope,
-          job.sprayFileName,
-          job.sprayDropZone,
-        );
+        //finally add the job to the scheduler
+        await this.addJobToScheduler({
+           name:  job.name, 
+           cron:  job.cron, 
+           clusterId:  job.clusterId,
+           dataflowId:job.dataflowId,
+           applicationId:job.application_id,
+           jobId: job.assetId,
+           jobfileName: job.jobType == 'Script' ? SUBMIT_SCRIPT_JOB_FILE_NAME : SUBMIT_JOB_FILE_NAME,
+           jobType:job.jobType,
+           sprayedFileScope:job.sprayedFileScope,
+           sprayFileName: job.sprayFileName,
+           sprayDropZone: job.sprayDropZone,
+           metaData: job.metaData
+          });
       } catch (err) {
         console.log(err);
       }
-     }
+     } 
+       console.log('------------------------------------------');
+       console.log("📢 LIST OF ALL ACTIVE JOBS SCHEDULED:")
+       console.dir(this.bree.config.jobs,{depth:4});
+       console.log('------------------------------------------');
   }
 
   async scheduleMessageBasedJobs(message) {
@@ -232,14 +175,17 @@ class JobScheduler {
             );
         }
       } else {
-        console.error("***Could not find job with name "+message.jobName);
+        console.log('------------------------------------------');
+        console.error("📢 COULD NOT FIND JOB WITH NAME "+message.jobName);
+        console.log('------------------------------------------');
       }
     } catch (err) {
       console.log(err);
     }
   }
 
-  async addJobToScheduler(name, cron, clusterId, dataflowId, applicationId, jobId, jobfileName, jobType,  contact, title, sprayedFileScope, sprayFileName, sprayDropZone,) {
+  async addJobToScheduler({name, cron, clusterId, dataflowId, applicationId, jobId, jobfileName, jobType, sprayedFileScope, sprayFileName, sprayDropZone, metaData}) {
+    console.log("Job file name ##########", jobfileName)
     try {
       let uniqueJobName = name + '-' + dataflowId + '-' + jobId;
       this.bree.add({
@@ -259,11 +205,16 @@ class JobScheduler {
             sprayedFileScope: sprayedFileScope,
             sprayFileName: sprayFileName,
             sprayDropZone: sprayDropZone,
+            metaData: metaData
           }
         }
       })
 
       this.bree.start(uniqueJobName);
+      console.log('------------------------------------------');
+      console.log(`📢 JOB WAS SCHEDULED AS - ${uniqueJobName},  job-scheduler.js: addJobToScheduler`)
+      console.log(`📢 TOTAL ACTIVE JOBS: ${this.bree.config.jobs.length}`)
+      console.log('------------------------------------------');
     } catch (err) {
       console.log(err);
     }
@@ -274,7 +225,6 @@ class JobScheduler {
     console.log("Calling from inside execute Job function <<<<<<<<<<<", job)
     try {
       let uniqueJobName = job.name + '-' + job.dataflowId + '-' + job.id;
-      console.log(uniqueJobName, "<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<")
       //TDO - first check before trying to remoe from the queue. It is throwing err if the job is not there
       // await this.removeJobFromScheduler(uniqueJobName);
       this.bree.add({
@@ -296,11 +246,10 @@ class JobScheduler {
       })
 
       this.bree.start(uniqueJobName);
-      
-      // return {success : true, message : `Successfully executed ${job.name}`}
+      return {success : true, message : `Successfully executed ${job.name}`}
     } catch (err) {
       console.log(err);
-      // return {success : false, message : `Error executing  ${job.name} - ${err}`}
+      return {success : false, message : `Error executing  ${job.name} - ${err}`}
     }
   }
 
@@ -313,9 +262,7 @@ class JobScheduler {
   }
 
   async scheduleJobStatusPolling() {    
-    console.log(`
-      status polling scheduler started...
-    `);
+    console.log("📢 STATUS POLLING SCHEDULER STARTED...");
     try {
       let jobName = 'job-status-poller-'+new Date().getTime();
       //if(job) {
