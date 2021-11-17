@@ -85,7 +85,7 @@ class QueueDaemon {
           let cluster = await hpccUtil.getCluster(jobExecution.clusterId)
           let wuInfo = await hpccUtil.workunitInfo(msgJson.wuid, jobExecution.clusterId);
           if(wuInfo.Workunit.State == 'completed' || wuInfo.Workunit.State == 'wait' || wuInfo.Workunit.State == 'blocked') {
-            await JobScheduler.scheduleCheckForJobsWithSingleDependency(wuInfo.Workunit.Jobname);
+            await JobScheduler.scheduleCheckForJobsWithSingleDependency({ dependsOnJobId: jobExecution.jobId, dataflowId:jobExecution.dataflowId });
           } else if(wuInfo.Workunit.State == 'failed') {
             Job.findOne({where: {name: wuInfo.Workunit.Jobname}, attributes: {exclude: ['assetId']}}).then(async (job) => {
               if(job.contact) {
