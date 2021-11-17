@@ -799,15 +799,44 @@ router.get('/job_details', [
   if (!errors.isEmpty()) {
       return res.status(422).json({ success: false, errors: errors.array() });
   }
+  console.log(`[job_details] - Get job list for:
+    app_id = ${req.query.app_id}
+    query_id = ${req.query.job_id}
+    dataflow_id = ${req.query.dataflow_id}
+  `);
   let jobFiles = [];
   try {
     Job.findOne({
       where: { "application_id": req.query.app_id, "id":req.query.job_id },
-      include: [JobFile, JobParam],
+      include: [JobFile, JobParam, JobExecution],
       attributes: { exclude: ['assetId'] },
     }).then(async function(job) {
-      if(job) {
-        var jobData = job.get({ plain: true });
+      if(job) {       
+        const isStoredOnGithub = job?.metaData?.isStoredOnGithub;
+        const jobStatus = job.job_executions?.[0]?.status;
+        const ecl = job.ecl
+        if(isStoredOnGithub && !ecl && (jobStatus === 'completed' || jobStatus === "failed" )) { 
+          const wuid = job.job_executions[0].wuid;
+          const { application_id, cluster_id, jobType,id } = job;
+ 
+          try{
+            const hpccJobInfo = await hpccUtil.getJobInfo(cluster_id, wuid, jobType);
+            // #1 create records in Files and JobFiles
+            hpccJobInfo.jobfiles.forEach( async (file) => await assetUtil.createFilesandJobfiles({file, cluster_id, application_id, id}));
+            // #2 update local job instance and save ECL to DB.
+            const jobFiles = await job.getJobfiles(); 
+            // this will update local instance only
+            job.set("jobfiles", jobFiles);
+            job.set("ecl",  hpccJobInfo.ecl);
+            await job.save()  
+          } catch (error){
+            console.log('------------------------------------------');
+            console.log('--FAILED TO UPDATE ECL');
+            console.dir(error, { depth: null });
+            console.log('------------------------------------------');
+          }
+        }
+       var jobData = job.get({ plain: true });
         for (jobFileIdx in jobData.jobfiles) {
           var jobFile = jobData.jobfiles[jobFileIdx];
           var file = await File.findOne({where:{"application_id":req.query.app_id, "id":jobFile.file_id}});
