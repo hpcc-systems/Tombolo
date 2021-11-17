@@ -24,30 +24,21 @@ exports.notifyJobFailure = (fileName, clusterId, wuid) => {
   })
 }
 
-// >>>>>>>>>>>>>>>>>>>>>>>>>>>>> Changing .....
 
-exports.notifyJobFailure = (options) => {
-  // return new Promise((resolve,reject) =>{
-    // Job.findOne({where: {name: fileName}, attributes: {exclude: ['assetId']}}).then(async (job) => {
-      // if(job.contact && job.contact != '') {
-        // let cluster = await Cluster.findOne({where: {id: clusterId}});
-        NotificationModule.notify({
-          from: process.env.EMAIL_SENDER,
-          to: options.contact,
-          subject: 'Manual Job - Action Required',
-          html: `<p>Hello,</p>
-          <p> A job requires your attention. Please click <a href=${options.url}>Here</a> to view  details</p>
-            
-          <p>
-          <b>Tombolo </b>
-          </p>`
-        })
-        console.log('-----------------------------------------------------------------');
-        console.log(`!!! MANUAL jOB EMAIL nOTIFICATION SENT to ${options.contact}!!!`)
-        console.log('------------------------------------------------------------------');
-        resolve();
+// Send notification for manual jobs in a workflow and update job execution table 
+exports.notifyManualJob = async (options) => {
+  // Send email
+    const response = await NotificationModule.notify({
+        from: process.env.EMAIL_SENDER,
+        to: options.contact,
+        subject: 'Manual Job - Action Required',
+        html: `<p>Hello,</p>
+                <p> A job requires your attention. Please click <a href=${options.url}>Here</a> to view  details</p>
+                  
+
+                <p>
+                <b>Tombolo Team </b>
+                </p>`
         
-      // }
-    // }).catch(reject);
-  // })
+      })      
 }

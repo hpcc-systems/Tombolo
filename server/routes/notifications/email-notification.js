@@ -31,7 +31,7 @@ exports.notifyApplicationShare = (sharedWithUserEmail, applicationName, req) => 
   msg.to = sharedWithUserEmail;
   msg.from = process.env.EMAIL_SENDER; // Use the email address or domain you verified above
   msg.subject = 'Tombolo application has been shared with you';
-  msg.html = 'A Tombolo application has been shared with you. Please <a href='+req.protocol+'://'+req.get('host') +'>login</a> to Tombolo to access the application';
+  msg.html = `A Tombolo application has been shared with you. Please <a href=${process.env.WEB_URL}/login>login</a> to Tombolo to access the application`;
 
   module.exports.notify(msg);
 }

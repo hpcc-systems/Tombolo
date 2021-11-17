@@ -72,7 +72,7 @@ class JobScheduler {
           // If the dependent job is a manual job
           if(job.jobType === "Manual"){
             // this.executeJob(job);
-	          job.url = `${process.env.WEB_URI}${job.application_id}/manualJobDetails/${job.id}`
+	          job.url = `${process.env.WEB_URL}${job.application_id}/manualJobDetails/${job.id}`
             job.applicationId = job.application_id;
             job.status = 'wait';
             job.manualJob_meta = {jobName: job.name, notifiedTo : job.contact, notifiedOn : new Date().getTime()}
