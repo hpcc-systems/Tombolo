@@ -70,13 +70,18 @@ class AppHeader extends Component {
     }
 
     componentDidMount(){
+      if(this.props.location.pathname.split("/").includes('manualJobDetails')){
+        return; 
+      }
+
       if(this.props.location.pathname.includes('report/')){
         const pathSnippets = this.props.location.pathname.split('/');
         this.setState({
           searchText: pathSnippets[2]
         });
       }
-      if(this.state.applications.length == 0) {
+
+      if(this.state.applications.length === 0) {
         var url="/api/app/read/appListByUserId?user_id="+this.props.user.id+'&user_name='+this.props.user.username;
         if(hasAdminRole(this.props.user)) {
           url="/api/app/read/app_list";
@@ -97,7 +102,7 @@ class AppHeader extends Component {
             //this.handleRef();
             this.debouncedHandleRef();
             this.props.dispatch(applicationActions.getClusters());
-            this.props.dispatch(applicationActions.getConsumers());
+            this.props.dispatch(applicationActions.getConsumers())
           } else {
             this.openHelpNotification();
           }
@@ -106,6 +111,7 @@ class AppHeader extends Component {
         });
       }
     }
+
     componentDidUpdate(prevProps, prevState) {
       if(this.props.newApplication) {
         let applications = this.state.applications;

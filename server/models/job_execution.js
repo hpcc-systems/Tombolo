@@ -16,7 +16,8 @@ module.exports = (sequelize, DataTypes) => {
     wu_start: DataTypes.STRING,
     wu_end: DataTypes.STRING,
     wu_duration: DataTypes.STRING,
-    clusterId: DataTypes.UUID
+    clusterId: DataTypes.UUID,
+    manualJob_meta : DataTypes.JSON
   }, {paranoid: true, freezeTableName: true});
   job_execution.associate = function(models) {
     job_execution.belongsTo(models.job);

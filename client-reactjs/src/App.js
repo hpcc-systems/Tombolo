@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useState } from "react";
 import { connect } from "react-redux";
 import { Layout } from "antd/lib";
 import "font-awesome/css/font-awesome.min.css";
@@ -23,6 +23,8 @@ import IndexDetailsForm from "./components/application/IndexDetails";
 import QueryDetailsForm from "./components/application/QueryDetails";
 import VisualizationDetailsForm from "./components/application/VisualizationDetails";
 
+import ManualJobDetail from "./components/application/Jobs/ManualJobDetail"
+
 import Actions from "./components/application/actions/actions";
 import { AdminApplications } from "./components/admin/Applications";
 import AdminClusters from "./components/admin/Clusters";
@@ -35,7 +37,7 @@ import { Report } from "./components/Report/Report";
 import Regulations from "./components/admin/ControlsAndRegulations";
 const { Content } = Layout;
 
-class App extends React.Component {
+class App extends React.Component {  
   componentDidMount() {
     store.dispatch(userActions.validateToken());
   }
@@ -80,6 +82,7 @@ class App extends React.Component {
         />
       );
     };
+    
 
     return (
       <Router history={history}>
@@ -119,6 +122,7 @@ class App extends React.Component {
                     path="/:applicationId/assets/visualizations/:visualizationId?"
                     component={VisualizationDetailsForm}
                   />
+                 
                   <PrivateRoute
                     path="/:applicationId/assets"
                     component={Assets}
@@ -165,6 +169,10 @@ class App extends React.Component {
                     path="/:applicationId/actions"
                     component={Actions}
                   />
+                  <PrivateRoute
+                    path="/:applicationId/manualJobDetails"
+                    component={ManualJobDetail}
+                  /> 
                 </Switch>
               </Content>
             </Layout>

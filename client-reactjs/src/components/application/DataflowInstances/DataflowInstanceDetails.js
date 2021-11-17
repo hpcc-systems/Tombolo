@@ -6,6 +6,7 @@ import {FileTable} from "../FileTable";
 import QueryTable from "../QueryTable";
 import DataflowInstanceWorkUnits from "./DataflowInstanceWorkUnits";
 import JobExecutionDetails from "./JobExecutionDetails";
+import ManualJobsStatus from "./ManualJobsStatus";
 import { connect } from 'react-redux';
 import { authHeader, handleError } from "../../common/AuthHeader.js"
 import { Constants } from '../../common/Constants';
@@ -74,6 +75,11 @@ class DataflowInstanceDetails extends Component {
              <TabPane tab="Workunits" key="1">
                <Spin spinning={this.state.loading}>
                   <JobExecutionDetails workflowDetails={this.state.jobExecutionDetails}/>
+               </Spin>
+              </TabPane>
+              <TabPane tab="Manual Jobs" key="2">
+               <Spin spinning={this.state.loading}>
+                  <ManualJobsStatus workflowDetails={this.state.jobExecutionDetails}/>
                </Spin>
               </TabPane>
             </Tabs>
