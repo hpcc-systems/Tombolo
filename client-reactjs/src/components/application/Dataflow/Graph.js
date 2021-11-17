@@ -373,7 +373,6 @@ class Graph extends Component {
   onAssetSaved = async (saveResponse) => {
     saveResponse.then(response =>{
       if(response.success){
-        console.log("<<<<<<<<<<< Graph response", response)
         var newData = this.thisGraph.nodes.map(el => {
           if(el.id == this.state.currentlyEditingId) {
             el.title=response.title;
@@ -539,7 +538,6 @@ class Graph extends Component {
       }
     });
 
-    console.log("<<<<<<<<<<<<<< Edges", edges)
 
     fetch('/api/dataflowgraph/save', {
         method: 'post',
@@ -566,7 +564,6 @@ class Graph extends Component {
   }
 
   fetchSavedGraph() {
-    console.log("Getting saved graph <<<<<<<<<<<")
     return new Promise((resolve, reject) => {
       var _self=this, nodes = [], edges = [];
       if(this.props.selectedDataflow && this.props.selectedDataflow.id != '' && this.props.selectedDataflow.id != undefined) {
@@ -617,7 +614,6 @@ class Graph extends Component {
   }
 
   clearSVG = () => {
-    console.log("<<<<<<<<<<< Clearing svg")
     this.thisGraph.nodes = [];
     this.thisGraph.edges = [];
     this.setIdCt(0);
@@ -671,7 +667,6 @@ class Graph extends Component {
   }
 
   insertTitle = (gEl, title, x, y, d) => {
-    console.log("<<<<<<<<<<<<<<<<<<<<< Inserrt title", title)
     let _self=this;
     let words = title.split(/\s+/g),
         nwords = words.length;
@@ -728,7 +723,6 @@ class Graph extends Component {
   }
 
   addScheduleIcon = (gEl, d) => {
-    console.log("<<<<<<<<<<<<<<<< adding schedule icon")
     if(d.type == 'Job' ) {
       let scheduleIcon = gEl.append('text')
         .attr('font-family', 'FontAwesome')
@@ -751,7 +745,6 @@ class Graph extends Component {
   }
 
   insertBgImage = (gEl, x, y, d) => {
-    console.log("<<<<<<<<<<<<<<<<<<<<<<<< inserting bg image")
     let _self=this, shape=[];
     switch (d.type) {      
       case 'Job':
@@ -1111,7 +1104,6 @@ class Graph extends Component {
         //if (this.childNodes.length === 0) {
           switch(d.type) {
             case 'Job':
-              console.log("job node selected <<<<<<<<<<<<<<")
               if(d3.select("#rec-"+d.id).empty()) {
                 d3.select(this)
                   .append("rect")

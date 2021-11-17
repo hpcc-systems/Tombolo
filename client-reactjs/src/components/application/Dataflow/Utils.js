@@ -22,7 +22,8 @@ export const jobIcons = {
   "Query Build": "\uf002",
   "Data Profile": "\uf0e3",
   "Script": "\uf121",
-  "Spray": "\uf2cc"
+  "Spray": "\uf2cc",
+  "Manual" : "\uf085"
 }
 
 export function appendDefs(svg)  {
