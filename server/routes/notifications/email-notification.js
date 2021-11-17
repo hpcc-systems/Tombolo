@@ -6,8 +6,8 @@ var smtpConfig = {
   tls : { rejectUnauthorized: false }
 };
 var transporter = nodemailer.createTransport(smtpConfig);
-
-exports.notify =   async (notification) => {
+exports.notify = (notification) => {
+  return new Promise((resolve,reject)=>{
   const mailOptions = {
     to: notification.to,
     from: notification.from,
@@ -15,16 +15,15 @@ exports.notify =   async (notification) => {
     text: notification.message,
     html: notification.html
   };
-
-  try{
-   const response = await transporter.sendMail(mailOptions)
-   console.log("Email sent success ")
-   return response;
-  }catch(err){
-    console.log("Unable to send E-mail", err)
-    return err;
-  }
-
+  transporter.sendMail(mailOptions, function(error, info){
+    if(error){
+       console.log(error);
+       reject(error);
+    }
+    console.log('Message sent: ' + info.response);
+    resolve();
+  });
+})
 }
 
 exports.notifyApplicationShare = (sharedWithUserEmail, applicationName, req) => {
