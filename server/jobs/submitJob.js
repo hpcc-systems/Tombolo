@@ -36,7 +36,13 @@ if (parentPort) {
         return;
       } 
 
-    if(workerData.jobType == 'Spray') {
+    if(workerData.jobType === 'Manual'){
+      // for corn jobs - sends email to user, sets status to wait so pooler wont pick
+      workerData.status = 'wait';
+      workerData.manualJob_meta = {jobType : 'Manual', jobName: workerData.jobName, notifiedTo : workerData.contact, notifiedOn : new Date().getTime()}
+      JobScheduler.executeJob(workerData);
+    }
+    else if(workerData.jobType == 'Spray') {
       let sprayJobExecution = await hpccUtil.executeSprayJob({
         cluster_id: workerData.clusterId, 
         sprayedFileScope: workerData.sprayedFileScope,

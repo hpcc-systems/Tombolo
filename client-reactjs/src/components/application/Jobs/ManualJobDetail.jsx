@@ -3,7 +3,7 @@ import { Button, message, Tabs, Row, Col } from 'antd';
 import { withRouter } from "react-router-dom";
 import { authHeader, handleError } from '../../common/AuthHeader';
 
-function ManualJobDetail() {
+function ManualJobDetail(props) {
     const [ jobId, setJobID]= useState('');
     const [jobDetails, setJobDetails] = useState({});
     const [savingData, setSavingData] = useState({save : false, response : ''})
@@ -18,10 +18,10 @@ function ManualJobDetail() {
 
     useEffect(() =>{
         //1. When the component loads pull  app id, job id and other necessary details from url
-        const data = window.location.href.split("/");
+        const data = props.location.pathname.split("/");
 
         //2. Once the appid and job id is obtained make call to get job details 
-        fetch(`/api/job/job_details?app_id=${data[3]}&job_id=${data[5]}`, {
+        fetch(`/api/job/job_details?app_id=${data[1]}&job_id=${data[3]}`, {
             headers : authHeader(),
         }).then(response =>{
             if(response.ok){
@@ -48,7 +48,7 @@ function ManualJobDetail() {
             body : JSON.stringify({
               jobId: jobId,  
               status: response === 'approved' ? 'completed' : 'failed',
-              newManaulJob_meta :{response, respondedOn :  Date.now()}})
+              newManaulJob_meta :{jobName: jobDetails.name, response, respondedOn :  Date.now()}})
           })
           .then((response) => {
             if(response.ok) {

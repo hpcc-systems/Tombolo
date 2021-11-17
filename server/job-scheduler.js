@@ -4,13 +4,12 @@ var path = require('path');
 let Job = models.job;
 const JobExecution = models.job_execution;
 const hpccUtil = require('./utils/hpcc-util');
-const assetUtil = require('./utils/workflow-util.js');
+const assetUtil = require('./utils/assets.js');
+const workflowUtil = require('./utils/workflow-util.js');
 let MessageBasedJobs = models.message_based_jobs;
 const SUBMIT_JOB_FILE_NAME = 'submitJob.js';
 const SUBMIT_SCRIPT_JOB_FILE_NAME = 'submitScriptJob.js';
 const JOB_STATUS_POLLER = 'statusPoller.js';
-const notificationMoudle = require("./utils/manualJobNotification");
-const workflowUtil = require('./utils/workflow-util');
 
 class JobScheduler {
   constructor() {
@@ -70,15 +69,15 @@ class JobScheduler {
         console.log('------------------------------------------');
 
         for(const job of jobs) {
+          // If the dependent job is a manual job
           if(job.jobType === "Manual"){
             // this.executeJob(job);
 	          job.url = `${process.env.WEB_URI}${job.application_id}/manualJobDetails/${job.id}`
             job.applicationId = job.application_id;
             job.status = 'wait';
             job.manualJob_meta = {jobName: job.name, notifiedTo : job.contact, notifiedOn : new Date().getTime()}
-            console.log("<<<<<<<<<<<< Add this to the je table", job)
             await JobExecution.create(job)
-            await  assetUtil.notifyManualJob(job);
+            await  workflowUtil.notifyManualJob(job);
           }else{
              //submit the dependant job's wu and record the execution in job_execution table for the statusPoller to pick
           let wuDetails = await hpccUtil.getJobWuDetails(job.clusterId, job.name);      
@@ -100,7 +99,7 @@ class JobScheduler {
             sprayDropZone: job.sprayDropZone,
             status: 'submitted'
           }
-          await assetUtil.recordJobExecution(jobExecutionData, wuResubmitResult?.WURunResponse.Wuid)
+          assetUtil.recordJobExecution(jobExecutionData, wuResubmitResult?.WURunResponse.Wuid)
           }
         }
         resolve();
@@ -113,7 +112,7 @@ class JobScheduler {
 
   async scheduleActiveCronJobs() {
     let promises=[];
-    const query = `SELECT ad.id, ad.cron, j.name as name, j.jobType, j.sprayedFileScope, j.sprayFileName, j.sprayDropZone, j.metaData, ad.dataflowId, ad.assetId, d.application_id, c.id as clusterId, c.thor_host, c.thor_port,
+    const query = `SELECT ad.id, ad.cron, j.name as name,j.title, j.jobType, j.sprayedFileScope, j.sprayFileName, j.sprayDropZone, j.metaData, ad.dataflowId, ad.assetId, d.application_id, c.id as clusterId, c.thor_host, c.thor_port,
       d.title as dataflowName
       FROM tombolo.assets_dataflows ad
       left join dataflow d on d.id = ad.dataflowId
@@ -184,8 +183,7 @@ class JobScheduler {
     }
   }
 
-  async addJobToScheduler({name, cron, clusterId, dataflowId, applicationId, jobId, jobfileName, jobType, sprayedFileScope, sprayFileName, sprayDropZone, metaData}) {
-    console.log("Job file name ##########", jobfileName)
+  async addJobToScheduler({name, cron, clusterId, dataflowId, applicationId, jobId, jobfileName, jobType, sprayedFileScope, sprayFileName, sprayDropZone, metaData, title, contact}) {
     try {
       let uniqueJobName = name + '-' + dataflowId + '-' + jobId;
       this.bree.add({
@@ -222,7 +220,6 @@ class JobScheduler {
 
   // async executeJob(name, clusterId, dataflowId, applicationId, jobId, jobfileName, jobType, sprayedFileScope, sprayFileName, sprayDropZone) {
     async executeJob(job) {
-    console.log("Calling from inside execute Job function <<<<<<<<<<<", job)
     try {
       let uniqueJobName = job.name + '-' + job.dataflowId + '-' + job.id;
       //TDO - first check before trying to remoe from the queue. It is throwing err if the job is not there

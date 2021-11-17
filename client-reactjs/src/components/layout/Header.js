@@ -70,7 +70,7 @@ class AppHeader extends Component {
     }
 
     componentDidMount(){
-      if(window.location.href.split("/").includes('manualJobDetails')){
+      if(this.props.location.pathname.split("/").includes('manualJobDetails')){
         return; 
       }
 
