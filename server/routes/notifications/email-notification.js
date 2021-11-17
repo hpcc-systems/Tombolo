@@ -8,6 +8,7 @@ var smtpConfig = {
 var transporter = nodemailer.createTransport(smtpConfig);
 
 exports.notify = (notification) => {
+  return new Promise((resolve,reject)=>{
   const mailOptions = {
     to: notification.to,
     from: notification.from,
@@ -18,10 +19,13 @@ exports.notify = (notification) => {
 
   transporter.sendMail(mailOptions, function(error, info){
     if(error){
-      return console.log(error);
+       console.log(error);
+       reject(error);
     }
     console.log('Message sent: ' + info.response);
+    resolve();
   });
+})
 }
 
 exports.notifyApplicationShare = (sharedWithUserEmail, applicationName, req) => {
