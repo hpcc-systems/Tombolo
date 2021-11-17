@@ -820,7 +820,7 @@ router.get('/job_details', [
             await job.save()  
           } catch (error){
             console.log('------------------------------------------');
-            console.log('--FAILED TO UPDATE ECL');
+            console.log(`FAILED TO UPDATE ECL FOR "${job.name}"`);
             console.dir(error, { depth: null });
             console.log('------------------------------------------');
           }
@@ -947,7 +947,7 @@ router.post('/executeJob', [
       }
       const summary = await assetUtil.createGithubFlow(flowSettings);
       console.log('------------------------------------------');
-      console.log("✔️ router.post('/executeJob': MANUAL JOB EXECUTION GITHUB FLOW, SUMMARY!");
+      console.log("✔️ router.post('/executeJob': JOB EXECUTION GITHUB FLOW, SUMMARY!");
       console.dir(summary);
       console.log('------------------------------------------');
       return; // return from function to prevent code running further.
