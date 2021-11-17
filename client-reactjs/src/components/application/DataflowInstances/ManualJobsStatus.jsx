@@ -1,9 +1,10 @@
-import React from 'react'
+import React, {useEffect, useState} from 'react'
 import { Table } from 'antd';
 import { Constants } from '../../common/Constants';
 import {Link} from "react-router-dom";
 
 function ManualJobsStatus({workflowDetails}) {
+  const [manualJobs, setManualJobs] = useState([]);
     //Table columns
     const columns = [
         {
@@ -51,15 +52,21 @@ function ManualJobsStatus({workflowDetails}) {
     ]
 
     //Table Data - filter jobs with type manual
-    const manualJobs = workflowDetails.wuDetails.filter( item => item.jobType === "Manual" );
-    manualJobs.map(item => { 
-                            item.name = <Link  to={item.manualJob_meta.url}> {item.name}</Link>; 
-                             item.notifiedTo = item.manualJob_meta.notifiedTo;
-                             item.notifiedOn = item.manualJob_meta.notifiedOn;
-                             item.respondedOn = item.manualJob_meta.respondedOn;
-                             item.result = item.manualJob_meta.response
-                            });
-
+    useEffect(() => {
+      if(workflowDetails){
+      const manualJobs = workflowDetails.wuDetails.filter( item => item.jobType === "Manual" );
+      setManualJobs(manualJobs)
+      manualJobs.map(item => { 
+                              item.name = <Link  to={item.manualJob_meta.url}> {item.name}</Link>; 
+                               item.notifiedTo = item.manualJob_meta.notifiedTo;
+                               item.notifiedOn = item.manualJob_meta.notifiedOn;
+                               item.respondedOn = item.manualJob_meta.respondedOn;
+                               item.result = item.manualJob_meta.response
+                              });
+      }
+  
+    }, [workflowDetails])
+    
     // JSX
     return (
         <div>
