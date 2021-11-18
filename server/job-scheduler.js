@@ -1,6 +1,7 @@
 const Bree = require('bree');
 const models = require('./models');
 var path = require('path');
+<<<<<<< HEAD
 const Job = models.job;
 const JobExecution = models.job_execution;
 const DependentJobs = models.dependent_jobs;
@@ -9,6 +10,14 @@ const hpccUtil = require('./utils/hpcc-util');
 const assetUtil = require('./utils/assets.js');
 const workflowUtil = require('./utils/workflow-util.js');
 
+=======
+let Job = models.job;
+const JobExecution = models.job_execution;
+const hpccUtil = require('./utils/hpcc-util');
+const assetUtil = require('./utils/assets.js');
+const workflowUtil = require('./utils/workflow-util.js');
+let MessageBasedJobs = models.message_based_jobs;
+>>>>>>> 9e4786bd9b922ea1bed8815223dc10a4bc50db32
 const SUBMIT_JOB_FILE_NAME = 'submitJob.js';
 const SUBMIT_SCRIPT_JOB_FILE_NAME = 'submitScriptJob.js';
 const JOB_STATUS_POLLER = 'statusPoller.js';
