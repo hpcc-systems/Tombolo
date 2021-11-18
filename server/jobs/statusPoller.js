@@ -13,7 +13,7 @@ if (parentPort) {
 
 (async () => {
   try {
-    const jobExecutions = await assetUtil.getJobEXecutionForProcessing();
+    const jobExecutions = await assetUtil.getJobEXecutionForProcessing();    
     if (jobExecutions.length === 0) {
       console.log("☕ NO JOBEXECUTIONS WITH STATUS 'SUBMITTED' HAS BEEN FOUND");
       console.log('------------------------------------------');
@@ -41,7 +41,7 @@ if (parentPort) {
       //update JobExecution
       if(WUstate === 'completed' || WUstate === 'wait' || WUstate === 'blocked' || WUstate === 'failed') {              
         const newjobExecution = { status: WUstate, wu_duration : wuResult.Workunit.TotalClusterTime || null };
-        const result = await jobExecution.update(newjobExecution);
+        const result = await jobExecution.update(newjobExecution,{where:{id:jobExecution.id}});
         console.log('------------------------------------------');
         console.log(`✔️ statusPoller.js: JOB EXECUTION GOT UPDATED, ("${jobExecution.job.name}") ${result.wuid} = ${result.status} ${result.status === 'completed' ? "👍" : "🚩🚩🚩"}`);
         console.dir(result.toJSON());

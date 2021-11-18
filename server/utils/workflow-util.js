@@ -3,7 +3,7 @@ const Cluster = models.cluster;
 const Job = models.job;
 const NotificationModule = require('../routes/notifications/email-notification');
 
-exports.notifyJobFailure = ({jobId, clusterId, wuid}) => {
+exports.notifyJobFailure = async ({jobId, clusterId, wuid}) => {
   return new Promise(async (resolve,reject) =>{
     Job.findOne({where: {id: jobId}}).then(async (job) => {     
       if(job.contact) {

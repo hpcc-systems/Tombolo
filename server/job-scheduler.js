@@ -70,10 +70,9 @@ class JobScheduler {
             console.log(`✔️  scheduleCheckForJobsWithSingleDependency: SUBMITTED DEPENDENT JOB ${job.name} id:${job.id}; dflow: ${dataflowId}, SUMMARY!`);
             console.dir(summary, { depth: null });
             console.log('------------------------------------------');
-          } 
-          //------------------------------------------
-          // MANUAL FLOW
-          if(job.jobType === "Manual"){
+          } else if (job.jobType === "Manual"){
+            //------------------------------------------
+            // MANUAL FLOW
             // this.executeJob(job);
             const newJobExecution ={
               status:'wait',
@@ -91,10 +90,9 @@ class JobScheduler {
             
             await JobExecution.create(newJobExecution)
             await  workflowUtil.notifyManualJob({contact:job.contact, url: newJobExecution.url});
-          }
+          } else {  
           //------------------------------------------
           // REGULAR FLOW
-          else{  
           //submit the dependant job's wu and record the execution in job_execution table for the statusPoller to pick
           let wuDetails = await hpccUtil.getJobWuDetails(job.cluster_id, job.name);      
           let wuid = wuDetails.wuid;
@@ -102,7 +100,8 @@ class JobScheduler {
           console.log( `✔️ scheduleCheckForJobsWithSingleDependency: submitting dependant job ${job.name} ` + `(WU: ${wuid}) to url ${job.cluster_id}/WsWorkunits/WUResubmit.json?ver_=1.78` );
           console.log('------------------------------------------');
           let wuResubmitResult = await hpccUtil.resubmitWU(job.cluster_id, wuid, wuDetails.cluster);
-          await JobExecution.update({status:'submitted', wuid : wuResubmitResult?.WURunResponse.Wuid },{ where:{ jobId:job.id }});
+          const newJobExecution = { status:'submitted', wuid : wuResubmitResult?.WURunResponse.Wuid, jobId: job.id, clusterId: job.cluster_id, dataflowId, applicationId: job.application_id }
+          await JobExecution.create(newJobExecution);
          }
         }
         resolve();
