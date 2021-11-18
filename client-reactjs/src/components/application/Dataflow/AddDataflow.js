@@ -222,7 +222,7 @@ function AddDataflow({action, actionType, isShowing, toggle, applicationId, onDa
               <Form.Item {...formItemLayout} label="Cluster">
                 {formAction === "read" ? <span> {whitelistedClusters.map(item =>{if( item.id === clusterSelected){return item.name;}} )} </span> : 
                 <Select placeholder="Select a Cluster" onChange={onClusterSelection} style={{ width: 290 }} value={clusterSelected}>
-                  {whitelistedClusters.map(cluster => <Option key={cluster.id}>{cluster.name}</Option>)}
+                  {whitelistedClusters?.map(cluster => <Option key={cluster.id}>{cluster.name}</Option>)}
                 </Select>
               }
                 {form.submitted && clusterSelected == '' &&

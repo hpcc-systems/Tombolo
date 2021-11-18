@@ -22,7 +22,6 @@ export function authHeader(action) {
 }
 
 export function handleError(response) {
-  console.log("<<<<<<<<<<<<<<<<<<<<<<<", response)
   message.config({top:130})
   if(response.status == 401) {
     //token expired

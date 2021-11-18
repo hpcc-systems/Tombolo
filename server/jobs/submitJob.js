@@ -36,7 +36,14 @@ if (parentPort) {
         return;
       } 
 
-    if(workerData.jobType == 'Spray') {
+    if(workerData.jobType === 'Manual'){
+      // for corn jobs - sends email to user, sets status to wait so pooler wont pick
+      workerData.status = 'wait';
+      workerData.manualJob_meta = {jobType : 'Manual', jobName: workerData.jobName, notifiedTo : workerData.contact, notifiedOn : new Date().getTime()}
+      JobScheduler.executeJob(workerData);
+      return;
+    }
+    else if(workerData.jobType == 'Spray') {
       let sprayJobExecution = await hpccUtil.executeSprayJob({
         cluster_id: workerData.clusterId, 
         sprayedFileScope: workerData.sprayedFileScope,
@@ -49,7 +56,7 @@ if (parentPort) {
       wuid = wuDetails.wuid;
     }
     console.log(
-    `submitting job ${workerData.jobName} ` +
+    ` ${workerData.jobName} ` +
     `(WU: ${wuid}) to url ${workerData.clusterId}/WsWorkunits/WUResubmit.json?ver_=1.78`
     );
     let wuResubmitResult = await hpccUtil.resubmitWU(workerData.clusterId, wuid, wuDetails.cluster);    

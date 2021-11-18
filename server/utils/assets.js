@@ -22,6 +22,7 @@ const workflowUtil = require('./workflow-util');
 let Sequelize = require('sequelize');
 const path = require('path');
 const {execFile, spawn} = require('child_process');
+const JobSchedular = require('../job-scheduler');
 
 exports.fileInfo = (applicationId, file_id) => {
   var results={};
@@ -200,45 +201,47 @@ exports.executeScriptJob = (jobId) => {
   }
 }
 
-exports.recordJobExecution = (workerData, wuid) => {
-  try {
-    return new Promise((resolve, reject) => {
-      JobExecution.findOrCreate({
-        where: {
-          jobId: workerData.jobId,
-          applicationId: workerData.applicationId
-        },
-        defaults: {
-          jobId: workerData.jobId,
-          dataflowId: workerData.dataflowId,
-          applicationId: workerData.applicationId,
-          wuid: wuid,
-          clusterId: workerData.clusterId,
-          status: workerData.status
-        }
-      }).then(async (result) => {
-        let jobExecutionId = result[0].id;
-        if(!result[1]) {
-          await JobExecution.update({
+exports.recordJobExecution =  async (workerData, wuid) => {
+    try {
+      return new Promise((resolve, reject) => {
+        JobExecution.findOrCreate({
+          where: {
+            jobId: workerData.jobId,
+            applicationId: workerData.applicationId
+          },
+          defaults: {
             jobId: workerData.jobId,
             dataflowId: workerData.dataflowId,
             applicationId: workerData.applicationId,
             wuid: wuid,
-            status: workerData.status
-          },
-          {where: {id: jobExecutionId}})
-        }
-        resolve({jobExecutionId});
-      }).catch((err) => {
-        console.log(err);
-        reject(err)
+            clusterId: workerData.clusterId,
+            status: workerData.status,
+          }
+        }).then(async (result) => {
+          let jobExecutionId = result[0].id;
+          if(!result[1]) {
+            await JobExecution.update({
+              jobId: workerData.jobId,
+              dataflowId: workerData.dataflowId,
+              applicationId: workerData.applicationId,
+              wuid: wuid,
+              status: workerData.status,
+            },
+            {where: {id: jobExecutionId}})
+          }
+          resolve({jobExecutionId});
+        }).catch((err) => {
+          console.log(err);
+          reject(err)
+        })
       })
-    })
-  }catch (err) {
-    console.log(err)
-    reject(err);
-    //Promise.reject(err)
-  }
+    }catch (err) {
+      console.log(err)
+      reject(err);
+      //Promise.reject(err)
+    }
+
+  
 }
 
 exports.createFilesandJobfiles = async ({file, cluster_id, application_id, id})=>{
@@ -326,7 +329,6 @@ exports.getJobEXecutionForProcessing = async () => {
       order: [["updatedAt", "desc"]],
       include:[{model:Job, attributes:['name']}]
     });
-
     return jobExecution;  
   } catch (error) {
     console.log(error);
