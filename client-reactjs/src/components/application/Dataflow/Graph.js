@@ -396,10 +396,12 @@ class Graph extends Component {
                 this.saveGraph();
                 break;
             }
+            this.showScheduleIcons(response);
             return el;
              //return Object.assign({}, el, {title:saveResponse.title, fileId:saveResponse.fileId, jobId:saveResponse.jobId, queryId:saveResponse.queryId, indexId:saveResponse.indexId})
           }
           return el
+          
         });
         this.thisGraph.nodes = newData;
         this.updateGraph();
