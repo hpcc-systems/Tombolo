@@ -41,6 +41,7 @@ if (parentPort) {
       workerData.status = 'wait';
       workerData.manualJob_meta = {jobType : 'Manual', jobName: workerData.jobName, notifiedTo : workerData.contact, notifiedOn : new Date().getTime()}
       JobScheduler.executeJob(workerData);
+      return;
     }
     else if(workerData.jobType == 'Spray') {
       let sprayJobExecution = await hpccUtil.executeSprayJob({

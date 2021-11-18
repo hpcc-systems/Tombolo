@@ -653,7 +653,7 @@ exports.pullFilesFromGithub = async( jobName="", clusterId, fileData ) => {
     const allClonesPath = path.join(process.cwd(),'..','gitClones');
     currentClonedRepoPath = `${allClonesPath}/${projectOwner}-${projectName}-${wuid}` ;
 
-    const executionRepoPath = path.join(currentClonedRepoPath,filePath.replace(startFileName,''));
+    // const executionRepoPath = path.join(currentClonedRepoPath,filePath.replace(startFileName,''));
     const startFilePath =path.join(currentClonedRepoPath,filePath);
 
     const gitOptions= { baseDir: allClonesPath };
@@ -668,8 +668,8 @@ exports.pullFilesFromGithub = async( jobName="", clusterId, fileData ) => {
     console.log(`✔️ pullFilesFromGithub: CLONING FINISHED-${providedGithubRepo}, branch: ${selectedGitBranch}`);
 
     // #2 - Create Archive XML File     
-    let args = ['-E', startFilePath, '-I', executionRepoPath];
-    const archived = await createEclArchive(args, executionRepoPath);
+    let args = ['-E', startFilePath, '-I', currentClonedRepoPath];
+    const archived = await createEclArchive(args, currentClonedRepoPath); 
     tasks.archiveCreated =true;
     console.log('✔️ pullFilesFromGithub: Archive Created');
     // console.dir(archived);

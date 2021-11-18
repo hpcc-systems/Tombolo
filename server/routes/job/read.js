@@ -831,13 +831,13 @@ router.get('/job_details', [
             await job.save()  
           } catch (error){
             console.log('------------------------------------------');
-            console.log('--FAILED TO UPDATE ECL');
+            console.log(`FAILED TO UPDATE ECL FOR "${job.name}"`);
             console.dir(error, { depth: null });
             console.log('------------------------------------------');
           }
         }
        var jobData = job.get({ plain: true });
-        for (jobFileIdx in jobData.jobfiles) {
+       for (jobFileIdx in jobData.jobfiles) {
           var jobFile = jobData.jobfiles[jobFileIdx];
           var file = await File.findOne({where:{"application_id":req.query.app_id, "id":jobFile.file_id}});
           if (file != undefined) {
@@ -957,7 +957,7 @@ router.post('/executeJob', [
       }
       const summary = await assetUtil.createGithubFlow(flowSettings);
       console.log('------------------------------------------');
-      console.log("✔️ router.post('/executeJob': MANUAL JOB EXECUTION GITHUB FLOW, SUMMARY!");
+      console.log("✔️ router.post('/executeJob': JOB EXECUTION GITHUB FLOW, SUMMARY!");
       console.dir(summary);
       console.log('------------------------------------------');
       return; // return from function to prevent code running further.
@@ -1053,11 +1053,14 @@ router.post('/manualJobResponse', [
         return res.status(422).json({ success: false, errors: errors.array() });
     }
     JobExecution.findOne({where : {jobId: req.body.jobId}})
-                .then(job => {
-                  let newMeta = {...job.manualJob_meta, ...req.body.newManaulJob_meta}
-                    job.update({status : req.body.status, manualJob_meta : newMeta, })
-                            .then(job => {
-                              JobScheduler.scheduleCheckForJobsWithSingleDependency(job.manualJob_meta.jobName);
+                .then(jobExecution => {
+                  let newMeta = {...jobExecution.manualJob_meta, ...req.body.newManaulJob_meta}
+                  jobExecution.update({status : req.body.status, manualJob_meta : newMeta, })
+                            .then(async jobExecution => {
+                            await  JobScheduler.scheduleCheckForJobsWithSingleDependency({
+                                dependsOnJobId : jobExecution.jobId,
+                                 dataflowId : jobExecution.dataflowId
+                               });
                               //TDO - Send confirmation email to end user here                                       
                                         })
                             .catch(err => {

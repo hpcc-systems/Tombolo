@@ -287,19 +287,19 @@ exports.createGithubFlow = async ({jobId, jobName, gitHubFiles, dataflowId, appl
     // # pull from github and submit job to HPCC.
     tasks =  await hpccUtil.pullFilesFromGithub( jobName ,clusterId, gitHubFiles );
     if (tasks.WUaction?.failedToUpdate) {
-     await manuallyUpdateJobExecutionFailure({jobExecution,tasks,jobName,clusterId}); 
+     await manuallyUpdateJobExecutionFailure({jobExecution,tasks}); 
     } else {
       // changing jobExecution status to 'submitted' will signal status poller that this job if ready to be executed
-     const updated = await jobExecution.update({status:'submitted', wuid: tasks.wuid }) 
+     const updated = await jobExecution.update({status:'submitted', wuid: tasks.wuid },{where:{id:jobExecution.id, status:'cloning'}}) 
      console.log('------------------------------------------');
-     console.log('✔️ LAST STEP IN --createGithubFlow--');
+     console.log(`✔️ LAST STEP IN  "${jobName}" ${jobExecution.id} --createGithubFlow--`);
      console.log("✔️ createGithubFlow: JOB EXECUTION UPDATED");
      console.dir(updated.toJSON(), { depth: null });
      console.log('------------------------------------------');
     }
     return tasks; // quick summary about github flow that happened.
   } catch (error) {
-    await manuallyUpdateJobExecutionFailure({jobExecution,tasks,jobName,clusterId}); 
+    await manuallyUpdateJobExecutionFailure({jobExecution,tasks}); 
     console.log('------------------------------------------');
     console.log('❌ createGithubFlow: "Error happened"');
     console.dir(error);
@@ -307,11 +307,12 @@ exports.createGithubFlow = async ({jobId, jobName, gitHubFiles, dataflowId, appl
   }
 }
 
-const manuallyUpdateJobExecutionFailure = async ({jobExecution,tasks,jobName,clusterId}) =>{
+const manuallyUpdateJobExecutionFailure = async ({jobExecution,tasks}) =>{
   try {
     // attempt to update WU at hpcc as failed was unsuccessful, we need to update our record manually as current status "cloning" will not be picked up by status poller.
-    await jobExecution.update({status: 'failed', wuid: tasks.wuid ||''});
-    await workflowUtil.notifyJobFailure(jobName, clusterId, tasks.wuid);
+    const wuid = tasks?.wuid ||'';
+    await jobExecution.update({status: 'failed', wuid},{where:{id:jobExecution.id, status:'cloning'}});
+    await workflowUtil.notifyJobFailure({ jobId: jobExecution.jobId, clusterId: jobExecution.clusterId, wuid});
   } catch (error) {
     console.log('------------------------------------------');
     console.log("❌ createGithubFlow: Failed to notify", error);
@@ -325,7 +326,8 @@ exports.getJobEXecutionForProcessing = async () => {
     console.log("🔍 GETTING JOBS FOR PROCCESSING")
     const jobExecution = await JobExecution.findAll({
       where: {'status': 'submitted'}, 
-      order: [["updatedAt", "desc"]]
+      order: [["updatedAt", "desc"]],
+      include:[{model:Job, attributes:['name']}]
     });
     return jobExecution;  
   } catch (error) {
