@@ -11,20 +11,25 @@ if (parentPort) {
   });
 }
 
+
+const logToConsole = (message) => parentPort.postMessage({action:"logging", data: message});
+const dispatchAction = (action,data) =>  parentPort.postMessage({ action, data });   
+
 (async () => {
-	console.log("Send notification ...")
+	logToConsole("Send notification ...");	
 	try {
 		workerData.url = `${process.env.WEB_URL}${workerData.applicationId}/manualJobDetails/${workerData.jobId}`
 		const jobExecution = await JobExecution.create(workerData);
 		await assetUtil.notifyManualJob(workerData);
 	}catch (err) {
-	console.log(err);
-	} finally {
-		if (parentPort) {
-			console.log(`signaling done for ${workerData.jobName}`)
-			parentPort.postMessage('done');
-		} else {
-			process.exit(0);
-		}
+		logToConsole(err)
+	} finally{
+	if (!workerData.isCronJob) dispatchAction("remove");   // REMOVE JOB FROM BREE IF ITS NOT CRON JOB!
+
+	if (parentPort) {          
+		parentPort.postMessage('done');     
+	} else {
+		process.exit(0);
+	}  
 	}
 })();      
