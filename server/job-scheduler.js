@@ -250,19 +250,18 @@ class JobScheduler {
     this.bree.add(job)
   }
 
-   removeJobFromScheduler(name) {
-    try {
-    const existingJob = this.bree.config.jobs.find(job=> job.name === name);
-      if (existingJob){
-        this.bree.remove(name);
+ async removeJobFromScheduler(name) {
+      try {
+        const existingJob = this.bree.config.jobs.find(job=> job.name === name);    
+        if (existingJob){
+         await this.bree.remove(name);
+        }
+      } catch (err) {
+        console.log(err)
       }
-    } catch (err) {
-      console.log(err)
     }
     
-  }
-
-  async scheduleJobStatusPolling() {    
+    async scheduleJobStatusPolling() {    
     console.log("📢 STATUS POLLING SCHEDULER STARTED...");
     try {
       let jobName = 'job-status-poller-'+new Date().getTime();
