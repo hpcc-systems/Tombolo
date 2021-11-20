@@ -148,7 +148,7 @@ router.post('/delete', [
     if(node.type == 'Job' && node.schedulerType == 'Time') {
       let job = await Job.findOne({where: {id: node.jobId}, attributes: ['name']});
       console.log("**************************removing "+job.name+" scheduler");
-      await JobScheduler.removeJobFromScheduler(job.name + '-' + req.body.dataflowId + '-' + node.jobId);
+      JobScheduler.removeJobFromScheduler(job.name + '-' + req.body.dataflowId + '-' + node.jobId);
     }
   }
 }
