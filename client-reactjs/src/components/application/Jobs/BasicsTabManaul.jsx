@@ -8,9 +8,9 @@ import { assetsActions } from '../../../redux/actions/Assets';
 import { Cascader } from "antd";
 
 function BasicsTabManul(props) {
+  const {enableEdit, localState, editingAllowed,  onChange, formRef} = props;
     const assetReducer = useSelector(state => state.assetReducer);
     const applicationReducer = useSelector(state => state.applicationReducer)
-    const {enableEdit, localState, editingAllowed,  onChange, formRef} = props;
     const [options, setOptions] = useState([]);
     const [machines, setMachines] = useState({});
     const [selectedCluster, setSelectedCluster] = useState(assetReducer.clusterId);
@@ -54,6 +54,18 @@ function BasicsTabManul(props) {
       }  
       }, [selectedCluster])
 
+      //<<<<<  Test
+      const clearError = (e) => {
+        console.log("clear error for >>>>>>>>> ", formRef.current);
+        formRef.current.setFields([
+          {
+            name: e.target.id,
+            errors: [],
+          },
+       ]);
+       formRef.current.setFieldsValue([{errors : []}])
+      }
+
 
     //when dropzone is selected make call to get the dirs and files
     const loadData = ( selectedOptions) =>{      
@@ -81,11 +93,11 @@ function BasicsTabManul(props) {
                  data.FileListResponse.files.PhysicalFileStruct.map(item =>{
                   let child = {};
                   child.value =item.name;
-                  child.label = `${item.name}${item.isDir ?` /`:``}`;
+                  child.label = item.name;
                   child.isLeaf = !item.isDir;
                   children.push(child);
                 });
-                children=children.sort(function(a,b){
+                children.sort(function(a,b){
                   if(a.isLeaf < b.isLeaf){ return -1};
                 })
                 targetOption.loading= false;
@@ -126,9 +138,10 @@ function BasicsTabManul(props) {
             <Form.Item 
                 label="Name" 
                 name="name" 
+                validateTrigger= "onBlur"
+                onFocus={clearError}
                 rules={[{ required: true, message: 'Please enter a Name!' }]}>
                 <Input
-                    id="job_name"
                     onChange={onChange}
                     placeholder="Name"
                     disabled={formRef.current.getFieldValue('path') ? true : false}
@@ -138,8 +151,12 @@ function BasicsTabManul(props) {
 
             <Form.Item label="Title" 
                 name="title" 
-                rules={[{ required: true, message: 'Please enter a title!' }]}>
-                <Input id="job_title"
+                rules={[{ required: true, message: 'Please enter a title!' }]}
+                onFocus={clearError}
+                validateTrigger= "onBlur"
+                onFocus={clearError}
+                >
+                <Input
                     onChange={onChange}
                     placeholder="Title"
                     disabled={!editingAllowed}
@@ -148,11 +165,11 @@ function BasicsTabManul(props) {
             </Form.Item>
 
             <Form.Item label="Description" 
-                name="description">
+                name="description"
+                >
                 {enableEdit ?
                 <MarkdownEditor
                     name="description"
-                    id="job_desc"
                     onChange={onChange}
                     targetDomId="jobDescr"
                     value={localState.description}
@@ -168,11 +185,12 @@ function BasicsTabManul(props) {
             <Form.Item  
                 label="Contact" 
                 name="contact" 
+                validateTrigger= "onBlur"
+                onFocus={clearError}
                 rules={[{ type: 'email',
                     required : true,
                     message: 'Please enter a valid email address'}]}>
                 <Input 
-                    id="job_bkp_svc"
                     onChange={onChange}
                     placeholder="Contact"
                     disabled={!editingAllowed}

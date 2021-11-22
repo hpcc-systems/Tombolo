@@ -912,10 +912,13 @@ h6 {
   display: inline;
 }
 
-
 .nav-link > .fa{
   font-size: 1.33333333em;
 }
 .ant-cascader-menu{
   height: 50vh;;
+}
+
+.ant-cascader-menu * {
+  max-width: 200px;
 }
