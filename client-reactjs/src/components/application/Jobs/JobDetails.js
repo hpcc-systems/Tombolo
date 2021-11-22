@@ -1634,11 +1634,7 @@ class JobDetails extends Component {
       }
 
     return (
-      <React.Fragment>
-         {
-         console.count("<<<<<<<<<<< Job Details component render count is - ")
-        }
-        
+      <React.Fragment> 
         {this.props.displayingInModal || this.state.addingNewAsset ? null : (
           <div className="assetTitle">
             {" "}
