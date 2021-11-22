@@ -1,5 +1,5 @@
 import React, { Component } from "react";
-import { Table, Button, Row, Col, Modal, Form, Input, notification, Tooltip, Popconfirm, Divider, message } from 'antd/lib';
+import { Table, Button, Modal, Form, Input, notification, Tooltip, Popconfirm, Divider, message, Radio } from 'antd/lib';
 import BreadCrumbs from "../common/BreadCrumbs";
 import { authHeader, handleError } from "../common/AuthHeader.js";
 import { hasAdminRole } from "../common/AuthUtil.js";
@@ -9,10 +9,9 @@ import { MarkdownEditor } from "../common/MarkdownEditor.js";
 import ShareApp from "./ShareApp";
 import ReactMarkdown from 'react-markdown';
 import { applicationActions } from '../../redux/actions/Application';
-import { DeleteOutlined, EditOutlined, QuestionCircleOutlined, ShareAltOutlined, ExportOutlined  } from '@ant-design/icons';
+import { DeleteOutlined, EyeOutlined, QuestionCircleOutlined, ShareAltOutlined, ExportOutlined  } from '@ant-design/icons';
 import ImportApplication from "./ImportApplication"
 import download from "downloadjs"
-import showdown from "showdown";
 
 class Applications extends Component {
   constructor(props) {
@@ -27,14 +26,17 @@ class Applications extends Component {
   	newApp : {
 	  	id: '',
 	  	title: '',
-      description:''
+      description:'',
+      visibility: 'Private'
   },
   openShareAppDialog:false,
   appId:"",
   appTitle:"",
-  submitted: false
+  submitted: false,
+  action : "read"
   }
 
+  //When the compononts first mounts
   componentDidMount() {
   	this.getApplications();
   }
@@ -52,6 +54,7 @@ class Applications extends Component {
 
   }
 
+  //Get all apps from the DB
   getApplications() {
   	var url="/api/app/read/appListByUserId?user_id="+this.props.user.id+"&user_name="+this.props.user.username;
     if(hasAdminRole(this.props.user))
@@ -76,6 +79,7 @@ class Applications extends Component {
     	});
   }
 
+  //Handle Edit application
   handleEditApplication(app_id) {
     fetch("/api/app/read/app?app_id="+app_id, {
       headers: authHeader()
@@ -93,7 +97,8 @@ class Applications extends Component {
           ...this.state.newApp,
           id : data.id,
           title: data.title,
-          description: data.description
+          description: data.description,
+          visibility: data.visibility ? data.visibility : 'Private'
         }
       });
       this.setState({
@@ -105,6 +110,7 @@ class Applications extends Component {
   	});
   }
 
+  //Handle share application
   handleShareApplication(app_id,app_tittle){
     this.setState({
       appId: app_id,
@@ -113,6 +119,7 @@ class Applications extends Component {
     });
   }
 
+  //Handle Application deletion
   handleRemove = (app_id) => {
   	var data = JSON.stringify({appIdsToDelete:app_id});
     fetch("/api/app/read/removeapp", {
@@ -140,37 +147,46 @@ class Applications extends Component {
     });
   }
 
+  //When add application button is clicked
   handleAdd = (event) => {
     this.resetFields();
     this.setState({
-      showAddApp: true
+      showAddApp: true,
+      action: "write"
     });
   }
 
+  //Function to reset the form fields
   resetFields = () => {
     this.setState({
       ...this.state,
       confirmLoading: false,
       submitted: false,
+      action : "read",
       newApp: {
         ...this.state.newApp,
         id : '',
         title: '',
-        description:''
+        description:'',
+        visibility: 'Private'
       },
       showAddApp: false
     });
   }
 
+  // When the modal close is triggered by the cancel button or the X on the modal
   handleAddAppCancel= (event) => {
   	this.resetFields();
   }
 
+  //On form field change
   onChange = (e) => {
     this.setState({...this.state,confirmLoading:false, newApp: {...this.state.newApp, [e.target.name]: e.target.value }});
   }
 
-  handleAddAppOk = () => {
+  //When save button is clicked
+  handleAddAppOk = (values) => { 
+    this.formRef.current.validateFields();
     if(this.state.applications.filter(application => {
       if (application.id != this.state.newApp.id && application.title == this.state.newApp.title) {
         return application;
@@ -184,7 +200,6 @@ class Applications extends Component {
       confirmLoading: true,
       submitted: true
     });
-
     if(this.state.newApp.title) {
       var userId = (this.props.user) ? this.props.user.username : "";
       let data = JSON.stringify({
@@ -192,13 +207,15 @@ class Applications extends Component {
         "title" : this.state.newApp.title,
         "description" : this.state.newApp.description,
         "user_id":userId,
-        "creator":this.props.user.username});
+        "creator":this.props.user.username,
+        "visibility": this.state.newApp.visibility
+      });
 
-    	  fetch("/api/app/read/newapp", {
-          method: 'post',
-          headers: authHeader(),
-          body: data
-        }).then((response) => {
+    	fetch("/api/app/read/newapp", {
+        method: 'post',
+        headers: authHeader(),
+        body: data
+      }).then((response) => {
         if(response.ok) {
           return response.json();
         }
@@ -206,11 +223,10 @@ class Applications extends Component {
       })
       .then(response => {
         if(this.state.newApp.id == '') {
-          console.log('new app')
-          //new application
-          this.props.dispatch(applicationActions.newApplicationAdded(response.id, this.state.newApp.title));
+          this.props.dispatch(applicationActions.applicationSelected(response.id, response.title, response.title));
+          localStorage.setItem("activeProjectId", response.id);
+          this.formRef.current.resetFields();
         } else {
-          console.log('update app')
           //updating an application
           this.props.dispatch(applicationActions.applicationUpdated(this.state.newApp.id, this.state.newApp.title));
         }
@@ -221,7 +237,8 @@ class Applications extends Component {
             ...this.state.newApp,
             id : '',
             title: '',
-            description:''
+            description:'',
+            visibility: 'Private'
           },
           showAddApp: false,
           confirmLoading: false,
@@ -235,6 +252,12 @@ class Applications extends Component {
     }
   }
 
+  //When edit btn is clicked
+   handleEdit = () =>{
+    this.setState({action : "write"})
+  }
+
+  //When export icon is clicked
   handleExportApplication = (id, title) => {
     fetch("/api/app/read/export", {
       method: 'post',
@@ -252,11 +275,17 @@ class Applications extends Component {
     });
   }
 
+  //When close btn on share app modal is clicked
   handleClose = () => {
     this.setState({
       openShareAppDialog: false
     });
   }
+
+  // Reference to the form inside app modal
+  formRef = React.createRef();
+
+  //JSX
   render() {
   	const { confirmLoading} = this.state;
   	const applicationColumns = [
@@ -293,7 +322,7 @@ class Applications extends Component {
           { (record.creator && record.creator == this.props.user.username) ?
             <React.Fragment>
               <Divider type="vertical" />
-              <a href="#" onClick={(row) => this.handleEditApplication(record.id)}><Tooltip placement="right" title={"Edit Application"}><EditOutlined /></Tooltip></a>
+              <a href="#" onClick={(row) => {this.handleEditApplication(record.id); this.setState({action : "read"})}}><Tooltip placement="right" title={"Edit Application"}><EyeOutlined /></Tooltip></a>
               <Divider type="vertical" />
               <a href="#" onClick={(row) => this.handleExportApplication(record.id, record.title)}><Tooltip placement="right" title={"Export Application"}><ExportOutlined /></Tooltip></a>
               <Divider type="vertical" />
@@ -304,7 +333,8 @@ class Applications extends Component {
           : null }
         </span>
     }];
-  const formItemLayout = {
+    const formItemLayout = 
+    this.state.action !== "read" ? {
     labelCol: {
       xs: { span: 2 },
       sm: { span: 8 },
@@ -312,8 +342,19 @@ class Applications extends Component {
     wrapperCol: {
       xs: { span: 4 },
       sm: { span: 24 },
+    }
+  } : 
+  {
+    labelCol: {
+      xs: { span: 3 },
+      sm: { span: 5 },
     },
-  };
+    wrapperCol: {
+      xs: { span: 4 },
+      sm: { span: 24 },
+    }
+  }
+
 
     return (
     <React.Fragment>
@@ -338,26 +379,58 @@ class Applications extends Component {
 
       <div>
 	      <Modal
-          title="Add Application"
+          title="Application"
           visible={this.state.showAddApp}
-          onOk={this.handleAddAppOk.bind(this)}
           onCancel={this.handleAddAppCancel}
           confirmLoading={confirmLoading}
-        >
-	        <Form layout="vertical">
-            <Form.Item {...formItemLayout} onFinish={this.handleAddAppOk.bind(this)} label="Title" rules={[
-              {
-                required: true,
-                pattern: new RegExp(/^[a-zA-Z]{1}[a-zA-Z0-9_:.\-]*$/),
-                message: 'Invalid title!'
-              }
-            ]}>
-              <Input id="app_title" name="title" onChange={this.onChange} placeholder="Title" value={this.state.newApp.title} onPressEnter={this.handleAddAppOk.bind(this)}/>
-            </Form.Item>
+          footer={[
+            <Button  type="primary" onClick={this.state.action ==="read" ? this.handleEdit.bind(this) : this.handleAddAppOk.bind(this) }> {this.state.action === "read" ? "Edit" : "Save"} </Button>,
+            <Button onClick={this.handleAddAppCancel}> Cancel </Button>,
+          ]}>
 
-            <Form.Item {...formItemLayout} label="Description">
-              <MarkdownEditor id="app_description" name="description" onChange={this.onChange} targetDomId="AppDescr" value={this.state.newApp.description}/>
+	        <Form layout={this.state.action === "read" ? "horizontal" : "vertical"} className="formInModal" ref={this.formRef}>
+            <Form.Item {...formItemLayout} 
+            label="Title" 
+            name="title"
+              rules={[
+                { required: true, 
+                message: "Please enter a title!" },
+                {
+                  pattern: new RegExp(/^[a-zA-Z]{1}[a-zA-Z0-9_: .\-]*$/),
+                  message: "Please enter a valid title. Title can have  a-zA-Z0-9:._- and space",
+                },
+              
+            ]}>
+            <Input autoFocus={true} id="app_title" name="title" onChange={this.onChange} placeholder="Title" 
+              value={this.state.newApp.title}
+              className={this.state.action === "read" ? "read-only-input" : ""}/></Form.Item>
+
+            {this.state.action === "read" ?
+            <Form.Item {...formItemLayout} label="Description" >
+                <ReactMarkdown className="read-only-markdown" children={this.state.newApp.description} />
             </Form.Item>
+              :
+            <Form.Item {...formItemLayout} label="Description">
+                 <MarkdownEditor 
+                  id="app_description" 
+                  name="description" 
+                  targetDomId="AppDescr" 
+                  onChange={this.onChange}
+                  value={this.state.newApp.description}
+                  />
+            </Form.Item>
+          }
+
+            <Form.Item {...formItemLayout} label="Visibility">
+              {this.state.action === "read" ? 
+              <Input value={this.state.newApp.visibility} className="read-only-input" /> : 
+              <Radio.Group onChange={this.onChange} name="visibility" value={this.state.newApp.visibility}>
+                <Radio value={'Private'}>Private</Radio>
+                <Radio value={'Public'}>Public</Radio>
+              </Radio.Group>
+              }
+            </Form.Item>  
+
           </Form>
         </Modal>
       </div>

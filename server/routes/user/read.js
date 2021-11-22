@@ -166,5 +166,4 @@ router.post('/resetPassword'
     console.log(err);
     res.status(500).json({ errors: [err.message] });
   })
-
 })

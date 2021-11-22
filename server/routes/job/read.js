@@ -23,6 +23,7 @@ const { body, query, param, validationResult } = require('express-validator');
 const assetUtil = require('../../utils/assets');
 const SUBMIT_JOB_FILE_NAME = 'submitJob.js';
 const SUBMIT_SCRIPT_JOB_FILE_NAME = 'submitScriptJob.js';
+const SUBMIT_MANUAL_JOB_FILE_NAME = 'submitManualJob.js'
 
 /**
   Updates Dataflow graph by
@@ -521,6 +522,7 @@ router.post('/saveJob', [
   }
   console.log("[saveJob] - Get file list for app_id = " + req.body.job.basic.application_id + " isNewJob: "+req.body.isNew);
   var jobId=req.body.id, applicationId=req.body.job.basic.application_id, fieldsToUpdate={}, nodes=[], edges=[];
+
   try {
     Job.findOne({where: {name: req.body.job.basic.name, application_id: applicationId}, attributes:['id']}).then(async (existingJob) => {
       let job = null;
@@ -547,7 +549,7 @@ router.post('/saveJob', [
         return res.status(500).json({ success: false, message: "Error occured while saving the job" });
       });
 
-      switch (req.body.job.schedule.type) {        
+      switch (req.body.job.schedule.type) { 
         case "":
           AssetDataflow.update({
             cron: null,
@@ -637,19 +639,36 @@ router.post('/saveJob', [
                 }
               });
 
+              const fileName = () =>{
+                switch (req.body.job.basic.jobType){
+                  case 'Script':
+                    return SUBMIT_SCRIPT_JOB_FILE_NAME;
+                  case 'Manual' :
+                    return SUBMIT_MANUAL_JOB_FILE_NAME;
+                  default :
+                  return SUBMIT_JOB_FILE_NAME
+                }
+              }
+              
               //remove existing job with same name
               try {
                 await JobScheduler.removeJobFromScheduler(req.body.job.basic.name + '-' + req.body.job.basic.dataflowId + '-' + jobId);
-                await JobScheduler.addJobToScheduler(
-                  req.body.job.basic.name,
-                  cronExpression,
-                  req.body.job.basic.cluster_id,
-                  req.body.job.basic.dataflowId,
-                  applicationId,
-                  jobId,
-                  req.body.job.basic.jobType == 'Script' ? SUBMIT_SCRIPT_JOB_FILE_NAME : SUBMIT_JOB_FILE_NAME,
-                  req.body.job.basic.jobType
-                )
+                await JobScheduler.addJobToScheduler({	
+                  name: req.body.job.basic.name, 
+                  title: req.body.job.basic.title,	
+                  cron: cronExpression, 	
+                  clusterId: req.body.job.basic.cluster_id,	
+                  dataflowId: req.body.job.basic.dataflowId,	
+                  applicationId: req.body.job.basic.application_id,	
+                  jobId: jobId,	
+                  jobfileName: fileName(),	
+                  jobType: req.body.job.basic.jobType,	
+                  sprayedFileScope: job.sprayedFileScope,	
+                  sprayFileName: job.sprayFileName, // TODO DO WE HAVE sprayFileName WHEN WE ADD JOB TO SCHEDULE THIS DATA GOES TO WORKER	
+                  sprayDropZone: job.sprayFileName, // TODO DO WE HAVE sprayDropZone WHEN WE ADD JOB TO SCHEDULE THIS DATA GOES TO WORKER	
+                  metaData: req.body.job.basic.metaData,
+                  contact : req.body.job.basic.contact
+                 })
               } catch (err) {
                 console.log("could not remove job from scheduler"+ err)
               }
@@ -789,12 +808,36 @@ router.get('/job_details', [
   try {
     Job.findOne({
       where: { "application_id": req.query.app_id, "id":req.query.job_id },
-      include: [JobFile, JobParam],
+      include: [JobFile, JobParam, JobExecution],
       attributes: { exclude: ['assetId'] },
     }).then(async function(job) {
-      if(job) {
-        var jobData = job.get({ plain: true });
-        for (jobFileIdx in jobData.jobfiles) {
+      if(job) {       
+        const isStoredOnGithub = job?.metaData?.isStoredOnGithub;
+        const jobStatus = job.job_executions?.[0]?.status;
+        const ecl = job.ecl
+        if(isStoredOnGithub && !ecl && (jobStatus === 'completed' || jobStatus === "failed" )) { 
+          const wuid = job.job_executions[0].wuid;
+          const { application_id, cluster_id, jobType,id } = job;
+ 
+          try{
+            const hpccJobInfo = await hpccUtil.getJobInfo(cluster_id, wuid, jobType);
+            // #1 create records in Files and JobFiles
+            hpccJobInfo.jobfiles.forEach( async (file) => await assetUtil.createFilesandJobfiles({file, cluster_id, application_id, id}));
+            // #2 update local job instance and save ECL to DB.
+            const jobFiles = await job.getJobfiles(); 
+            // this will update local instance only
+            job.set("jobfiles", jobFiles);
+            job.set("ecl",  hpccJobInfo.ecl);
+            await job.save()  
+          } catch (error){
+            console.log('------------------------------------------');
+            console.log(`FAILED TO UPDATE ECL FOR "${job.name}"`);
+            console.dir(error, { depth: null });
+            console.log('------------------------------------------');
+          }
+        }
+       var jobData = job.get({ plain: true });
+       for (jobFileIdx in jobData.jobfiles) {
           var jobFile = jobData.jobfiles[jobFileIdx];
           var file = await File.findOne({where:{"application_id":req.query.app_id, "id":jobFile.file_id}});
           if (file != undefined) {
@@ -890,7 +933,7 @@ router.post('/executeJob', [
       .isUUID(4).withMessage('Invalid job id'),
   body('applicationId')
       .isUUID(4).withMessage('Invalid application id'),
-  body('dataflowId')
+  body('dataflowId').optional({ checkFalsy: true })
       .isUUID(4).withMessage('Invalid dataflow id'),
   body('jobName')
     .matches(/^[a-zA-Z]{1}[a-zA-Z0-9_.\-:]*$/).withMessage('Invalid job name'),
@@ -902,15 +945,38 @@ router.post('/executeJob', [
   try {
     let wuid = '';
     let job = await Job.findOne({where: {id:req.body.jobId}, attributes: {exclude: ['assetId']}, include: [JobParam]});
+    if (job.metaData?.isStoredOnGithub) {
+      res.json({"success":true})// send the respond and proceed with the cloning flow
+      const flowSettings ={
+        gitHubFiles : job.metaData.gitHubFiles,
+        applicationId: req.body.applicationId,
+        dataflowId: req.body.dataflowId,
+        clusterId: req.body.clusterId,
+        jobName : req.body.jobName,
+        jobId: req.body.jobId,
+      }
+      const summary = await assetUtil.createGithubFlow(flowSettings);
+      console.log('------------------------------------------');
+      console.log("✔️ router.post('/executeJob': JOB EXECUTION GITHUB FLOW, SUMMARY!");
+      console.dir(summary);
+      console.log('------------------------------------------');
+      return; // return from function to prevent code running further.
+    }
     if(job.jobType == 'Spray') {
       let sprayJobExecution = await hpccUtil.executeSprayJob(job);
       wuid = sprayJobExecution.SprayResponse && sprayJobExecution.SprayResponse.Wuid ? sprayJobExecution.SprayResponse.Wuid : ''
     } else if(job.jobType == 'Script') {
       let executionResult = await assetUtil.executeScriptJob(req.body.jobId);
-    } else if(job.jobType != 'Script' && job.jobType != 'Spray') {
-      wuid = await hpccUtil.getJobWuidByName(req.body.clusterId, req.body.jobName);
-      let wuResubmitResult = await hpccUtil.resubmitWU(req.body.clusterId, wuid);
-    } 
+    }else if(job.jobType === 'Manual'){
+      const response = await JobScheduler.executeJob(job);
+       response.success ? res.status(200) : res.status(500)
+     } else if(job.jobType != 'Script' && job.jobType != 'Spray') {
+      let wuDetails = await hpccUtil.getJobWuDetails(req.body.clusterId, req.body.jobName);
+      wuid = wuDetails.wuid
+      let wuResubmitResult = await hpccUtil.resubmitWU(req.body.clusterId, wuid, wuDetails.cluster);
+      //store the new wuid for status polling
+      wuid = wuResubmitResult?.WURunResponse.Wuid;
+    }
     //record workflow execution
     await JobExecution.findOrCreate({
       where: {
@@ -957,7 +1023,7 @@ router.get('/jobExecutionDetails', [
   }
   console.log("[jobExecutionDetails] - Get jobExecutionDetails for app_id = " + req.query.applicationId);
   try {
-    let query = 'select je.id, je.jobId as task, je.dataflowId, je.applicationId, je.status, je.wuid, je.wu_duration, je.clusterId, je.updatedAt, j.name from '+
+    let query = 'select je.id,  je.jobId as task, je.dataflowId, je.applicationId, je.status, je.wuid, je.wu_duration, je.clusterId, je.updatedAt, je.manualJob_meta, j.jobType, j.name from '+
             'job_execution je, job j '+
             'where je.dataflowId = (:dataflowId) and je.applicationId = (:applicationId) and j.id = je.jobId';
     let replacements = { applicationId: req.query.applicationId, dataflowId: req.query.dataflowId};
@@ -977,7 +1043,37 @@ router.get('/jobExecutionDetails', [
   }
 });
 
+//when user responds to a manual job - Update job status and metadata on job execution table
+router.post('/manualJobResponse', [
+  body('jobId').isUUID(4).withMessage('Invalid Job Id'),
+  body('newManaulJob_meta').notEmpty().withMessage('Invalid meta data')], 
+  (req, res) => {
+    const errors = validationResult(req).formatWith(validatorUtil.errorFormatter);
+    if (!errors.isEmpty()) {
+        return res.status(422).json({ success: false, errors: errors.array() });
+    }
+    JobExecution.findOne({where : {jobId: req.body.jobId}})
+                .then(jobExecution => {
+                  let newMeta = {...jobExecution.manualJob_meta, ...req.body.newManaulJob_meta}
+                  jobExecution.update({status : req.body.status, manualJob_meta : newMeta, })
+                            .then(async jobExecution => {
+                            await  JobScheduler.scheduleCheckForJobsWithSingleDependency({
+                                dependsOnJobId : jobExecution.jobId,
+                                 dataflowId : jobExecution.dataflowId
+                               });
+                              //TDO - Send confirmation email to end user here                                       
+                                        })
+                            .catch(err => {
+                              res.status(501).json({success: false, message : 'Error occured while saving data'})})
+                  })
+                .catch(error => {
+                  res.status(501).json({success: false, data: error})})
+
+});
+
+
 const QueueDaemon = require('../../queue-daemon');
+const jobScheduler = require('../../job-scheduler');
 
 router.get('/msg', (req, res) => {
   if (req.query.topic && req.query.message) {

@@ -1,7 +1,8 @@
 FROM ubuntu:bionic
 
+RUN mkdir -p /gitClones
 COPY . app
-COPY [".env",  "/app/.env"]
+# COPY [".env",  "/app/.env"]
 
 WORKDIR app
 

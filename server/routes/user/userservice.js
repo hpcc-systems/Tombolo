@@ -256,7 +256,7 @@ async function changePassword(req, res, { username, password }) {
       }
 
       if (response.statusCode != 200) {
-        reject(new Error(err));
+        reject(new Error({'message': body}));
       } else {
         resolve(body);
       }
@@ -306,7 +306,7 @@ async function forgotPassword(req, res) {
       json: {
         "email": req.body.email,
         "clientId": process.env.AUTHSERVICE_TOMBOLO_CLIENT_ID,
-        "resetUrl": process.env.TOMBOLO_PASSWORD_RESET_URL
+        "resetUrl": `${process.env.WEB_URL}reset-password`
       }
     }, function(err, response, body) {
       if(response.body.success){

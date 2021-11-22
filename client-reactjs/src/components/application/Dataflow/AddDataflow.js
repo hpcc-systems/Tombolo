@@ -4,9 +4,11 @@ import { Button, Form, Input, message, Popconfirm, Icon, Tooltip, Modal, Select 
 import { authHeader, handleError } from "../../common/AuthHeader.js";
 import { MarkdownEditor } from "../../common/MarkdownEditor.js";
 import { useSelector } from "react-redux";
+import ReactMarkdown from 'react-markdown'
+
 const { Option, OptGroup } = Select;  
 
-function AddDataflow({action,actionType, isShowing, toggle, applicationId, onDataFlowUpdated, selectedDataflow, dataflows}) {
+function AddDataflow({action, actionType, isShowing, toggle, applicationId, onDataFlowUpdated, selectedDataflow, dataflows}) {
   const assetReducer = useSelector(state => state.assetReducer);
   const [dataFlow, setDataFlow] = useState({
 		id: '',
@@ -14,15 +16,13 @@ function AddDataflow({action,actionType, isShowing, toggle, applicationId, onDat
 		description: '',
     clusterId: ''
 	});
-
   const [form, setForm] = useState({
     submitted: false,
     confirmLoading: false
   });
-
   const [whitelistedClusters, setWhitelistedClusters] = useState([]);
-
   const [clusterSelected, setClusterSelected] = useState('');
+  const [formAction, setFormAction] = useState("mm")
 
   useEffect(() => {
     setDataFlow({...selectedDataflow});
@@ -36,7 +36,13 @@ function AddDataflow({action,actionType, isShowing, toggle, applicationId, onDat
     }
   }, [selectedDataflow])
 
-  const formItemLayout = {
+  //Get action from props and set to local state
+  useEffect(() => {
+    setFormAction(action)
+  }, [action])
+
+  const formItemLayout = 
+    formAction !== "read" ? {
     labelCol: {
       xs: { span: 2 },
       sm: { span: 8 },
@@ -44,8 +50,19 @@ function AddDataflow({action,actionType, isShowing, toggle, applicationId, onDat
     wrapperCol: {
       xs: { span: 4 },
       sm: { span: 24 },
+    }
+  } : 
+  {
+    labelCol: {
+      xs: { span: 3 },
+      sm: { span: 5 },
     },
-  };
+    wrapperCol: {
+      xs: { span: 4 },
+      sm: { span: 24 },
+    }
+  }
+   
 
   const [formObj] = Form.useForm();
 
@@ -110,9 +127,9 @@ function AddDataflow({action,actionType, isShowing, toggle, applicationId, onDat
     }).then(function(data) {
       setForm({
 	      confirmLoading: false,
-	      submitted: false
+	      submitted: false,
 	    });
-
+      setFormAction("read")
 	    toggle();
 			clearForm();
 
@@ -123,13 +140,14 @@ function AddDataflow({action,actionType, isShowing, toggle, applicationId, onDat
   }
 
   const handleAddAppCancel = () => {
+    setFormAction("read")
   	toggle();
   }
 
   const openAddDataflowDlg = () => {
   	clearForm();
 		toggle();
-    actionType("addNew")
+    actionType("write")
   }
 
   const clearForm = () => {
@@ -142,6 +160,11 @@ function AddDataflow({action,actionType, isShowing, toggle, applicationId, onDat
 
   const splCharacters = /[ `!@#$%^&*()+\=\[\]{};':"\\|,.<>\/?~]/;
 
+  //Handle Edit dataflow
+  const editDataflow = () =>{
+    setFormAction("write")
+  }
+
 	return (
 	  <React.Fragment>
 	  <span style={{ marginLeft: "auto", paddingTop:"5px"}}>
@@ -151,20 +174,26 @@ function AddDataflow({action,actionType, isShowing, toggle, applicationId, onDat
 	  </span>
 	  <div>
       <Modal
-          title={action === "addNew" ? "Add Dataflow" : "Edit Dataflow"}
+          title="Dataflow"
           onOk={handleAddAppOk}
           onCancel={handleAddAppCancel}
           visible={isShowing}
           confirmLoading={form.confirmLoading}
           destroyOnClose={true}
+          footer={[
+            <Button  type="primary" onClick={formAction ==="read" ? editDataflow : handleAddAppOk }> {formAction === "read" ? "Edit" : "Save"} </Button>,
+            <Button onClick={handleAddAppCancel}> Cancel </Button>,
+          ]}
         >
-	        <Form layout="vertical" form={formObj} onFinish={handleAddAppOk}>
+	        <Form 
+          layout={formAction === "read" ? "horizontal" : "vertical"} 
+          form={formObj} onFinish={handleAddAppOk} className="formInModal">
 	            <div className={'form-group' + (form.submitted && !dataFlow.title ? ' has-error' : '')}>
-		            <Form.Item  label="Title"
+		            <Form.Item  label="Title" {...formItemLayout}
                   rules={[{
                       required: true,
                       // pattern: new RegExp(/^[a-zA-Z0-9_-]*$/),
-                      message: "Please enter a valid Title"
+                      message: "Please enter a valid Title",
                     }
                   ]}
                 >
@@ -174,23 +203,28 @@ function AddDataflow({action,actionType, isShowing, toggle, applicationId, onDat
                     placeholder="Title" 
                     value={dataFlow.title} 
                     onPressEnter={handleAddAppOk}
+                    className={formAction === "read" ? "read-only-input" : ""}
                   />
 
 		          </Form.Item>
 	            </div>
-	            <Form.Item {...formItemLayout} label="Description">
-				    		<MarkdownEditor 
-                 id="description" 
-                 name="description" 
-                 targetDomId="dataflowDescr" 
-                 onChange={e => setDataFlow({...dataFlow, [e.target.name]: e.target.value})} 
-                 value={dataFlow.description}
-                 />
+	            <Form.Item label="Description" {...formItemLayout}>
+                {formAction === "read" ? <div> <ReactMarkdown className="read-only-markdown"children={dataFlow.description} /> </div> :
+                <MarkdownEditor 
+                  id="description" 
+                  name="description" 
+                  targetDomId="dataflowDescr" 
+                  onChange={e => setDataFlow({...dataFlow, [e.target.name]: e.target.value})} 
+                  value={dataFlow.description}
+                  />}
+
 	            </Form.Item>
               <Form.Item {...formItemLayout} label="Cluster">
+                {formAction === "read" ? <span> {whitelistedClusters.map(item =>{if( item.id === clusterSelected){return item.name;}} )} </span> : 
                 <Select placeholder="Select a Cluster" onChange={onClusterSelection} style={{ width: 290 }} value={clusterSelected}>
-                  {whitelistedClusters.map(cluster => <Option key={cluster.id}>{cluster.name}</Option>)}
+                  {whitelistedClusters?.map(cluster => <Option key={cluster.id}>{cluster.name}</Option>)}
                 </Select>
+              }
                 {form.submitted && clusterSelected == '' &&
                   <div className="error">Cluster is required</div>
                 }

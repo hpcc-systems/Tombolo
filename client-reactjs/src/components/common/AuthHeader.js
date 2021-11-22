@@ -28,7 +28,8 @@ export function handleError(response) {
     localStorage.removeItem('user');
     store.dispatch(userActions.logout());
   } else if(response.status == 422) {
-    throw Error("Error occured while saving the data. Please check the form data");
+    // throw Error("Error occured while saving the data. Please check the form data");
+    message.error("Error occured while saving the data. Please check the form data")
   } else {
     let errorMessage = '';
     response.json().then((responseData) => {

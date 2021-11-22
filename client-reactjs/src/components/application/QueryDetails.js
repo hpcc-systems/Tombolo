@@ -49,9 +49,9 @@ class QueryDetails extends PureComponent {
     },
     enableEdit: false,
     editing: false,
-    dataAltered: false
+    dataAltered: false,
+    errors: false
   }
-
   //querySearchSuggestions = [];
 
   //Mounting phase
@@ -550,7 +550,7 @@ class QueryDetails extends PureComponent {
               <Button key="back" onClick={this.handleCancel} type="primary" ghost>
                 Cancel
               </Button>
-              <Button key="submit" disabled={!editingAllowed} type="primary" loading={confirmLoading} onClick={this.handleOk} style={{background: 'var(--success)'}}>
+              <Button key="submit" disabled={!editingAllowed || this.state.errors} type="primary" loading={confirmLoading} onClick={this.handleOk} style={{background: 'var(--success)'}}>
                 Save
               </Button>
               </span>
@@ -562,7 +562,7 @@ class QueryDetails extends PureComponent {
             <Button key="back" onClick={this.handleCancel} type="primary" ghost>
             Cancel
             </Button>
-            <Button key="submit" disabled={!editingAllowed} type="primary" loading={confirmLoading} onClick={this.handleOk} style={{background: 'var(--success)'}}>
+            <Button key="submit" disabled={!editingAllowed || this.state.errors} type="primary" loading={confirmLoading} onClick={this.handleOk} style={{background: 'var(--success)'}}>
               Save
             </Button>
           </span>:
@@ -575,6 +575,18 @@ class QueryDetails extends PureComponent {
         </span>
       }
     </div>
+
+     //When input input field value is changed
+     const onFieldsChange = (changedFields, allFields) => {
+      this.setState({dataAltered : true})
+      const inputErrors = allFields.filter(item => { return item.errors.length > 0} )
+      if(inputErrors.length > 0){
+        this.setState({errors : true})
+      }else{
+        this.setState({errors: false})
+      }
+      }
+
 
 
     //render only after fetching the data from the server
@@ -596,7 +608,7 @@ class QueryDetails extends PureComponent {
           tabBarExtraContent = {controls}
         >
           <TabPane tab="Basic" key="1">
-           <Form {...formItemLayout} labelAlign="left" ref={this.formRef} onFinish={this.handleOk} initialValues={{type: "roxie_query"}}>
+           <Form {...formItemLayout} labelAlign="left" ref={this.formRef} onFinish={this.handleOk} initialValues={{type: "roxie_query"}} onFieldsChange={onFieldsChange}>
             {this.state.enableEdit ?
             <div>
 

@@ -11,7 +11,7 @@ export const shapesData = [
   //{ "x": "10", "y": "320", "rx":"10", "ry":"10", "rectx":"10", "recty":"420", "rectwidth":"35", "rectheight":"35", "tx":"15", "ty":"445", "title":"File Instance", "color":"#7AAAD0", "icon":"\uf0c5", "iconx":"70", "icony":"65", "description":"An Instance of a File Definition"},
   //{ "x": "10", "y": "120", "rx":"10", "ry":"10", "rectx":"10", "recty":"170", "rectwidth":"55", "rectheight":"55", "tx":"20", "ty":"210", "title":"Query", "color":"#9B6A97", "icon":"\uf00e", "iconx":"90", "icony":"65"},
   { "x": "10", "y": "120", "rx":"10", "ry":"10", "rectx":"10", "recty":"140", "rectwidth":"38", "rectheight":"38", "tx":"15", "ty":"168", "title":"Index", "color":"#7DC470", "icon":"\uf2b9", "iconx":"90", "icony":"65", "description":"Index"},
-  { "x": "10", "y": "170", "rx":"10", "ry":"10", "rectx":"10", "recty":"210", "rectwidth":"38", "rectheight":"38", "tx":"15", "ty":"238", "title":"Sub-Process", "color":"#F5A9A9", "icon":"\uf074", "iconx":"90", "icony":"65", "description":"Sub-Process / Dataflow. "}
+  { "x": "10", "y": "170", "rx":"10", "ry":"10", "rectx":"10", "recty":"210", "rectwidth":"38", "rectheight":"38", "tx":"15", "ty":"238", "title":"Sub-Process", "color":"#F5A9A9", "icon":"\uf074", "iconx":"90", "icony":"65", "description":"Sub-Process / Dataflow. "},
 ];
 
 export const jobIcons = {
@@ -22,7 +22,8 @@ export const jobIcons = {
   "Query Build": "\uf002",
   "Data Profile": "\uf0e3",
   "Script": "\uf121",
-  "Spray": "\uf2cc"
+  "Spray": "\uf2cc",
+  "Manual" : "\uf085"
 }
 
 export function appendDefs(svg)  {

@@ -9,7 +9,7 @@
       1. DB_USERNAME -*(mysql database username)*
       2. DB_PASSWORD -*(mysql database password)*
       3. secret - *(You can generate a strong and unique string [here](https://www.grc.com/passwords.htm))*
-      4. TOMBOLO_PASSWORD_RESET_URL - *(Example - \<protocol>://<host_name:port>/reset-password)*
+      4. WEB_URL - *(Example - \<protocol>://<host_name:port>/reset-password)*
 5. Tombolo uses Auth Service for user authentication. An existing Auth Service can be used or you may set up Auth Service separately. 
     You can find the Authservice setup instructions [here](https://github.com/hpcc-systems/Auth-Service). Once you have an instance of Authservice up and running, 
     update the following information on the '.env' file located on the '/server' directory.
@@ -48,6 +48,7 @@
 
 ----
 ## Documentation 
-Click [here](https://github.com/hpcc-systems/Tombolo/blob/master/docs/README.md) to view complete documentation.
-Click [here](https://github.com/hpcc-systems/Tombolo/blob/master/client-reactjs/public/Tombolo-User-Guide.pdf) to view complete documentation.
+Click [here](https://github.com/hpcc-systems/Tombolo/blob/read-me/docs/images/tombolo/Tombolo%20User%20Guide.pdf) to view complete documentation
+  
+  
 

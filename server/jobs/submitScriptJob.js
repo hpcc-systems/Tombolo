@@ -16,11 +16,15 @@ if (parentPort) {
 		let executionResult = await assetUtil.executeScriptJob(workerData.jobId);
 		console.log(executionResult);
     //record workflow execution
-		workerData.status = 'submitted';
+		//since it is a script job, there is no easy way to identify the completion status, hence marking as completed after invoking the script job
+		//in future if script jobs can return back a proper status, this can be changed
+		workerData.status = 'completed';
     let jobExecutionRecorded = await assetUtil.recordJobExecution(workerData, '');
 
 	} catch (err) {
 			console.log(err);
+			workerData.status = 'failed';
+			let jobExecutionRecorded = await assetUtil.recordJobExecution(workerData, '');	
 	} finally {
 		if (parentPort) {
 			console.log(`signaling done for ${workerData.jobName}`)

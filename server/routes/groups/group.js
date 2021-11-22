@@ -373,10 +373,11 @@ router.get("/nestedAssets",
   query('group_id').optional({checkFalsy:true}).isInt().withMessage('Invalid group id')
 ], 
  async (req, res) => {
-   const {app_id, group_id} = req.query;
-   let query  = `select assets.id, assets.name, assets.title, assets.description, assets.createdAt, assets.type, hie.name as group_name, hie.id as groupId from (select  id, name, parent_group from    (select * from groups order by parent_group, id) groups_sorted, (select @pv := (${group_id})) initialisation where find_in_set(parent_group, @pv) and length(@pv := concat(@pv, ',', id)) > 0 or id=(${group_id})) as hie join (select f.id, f.name, ag.groupId, f.title, f.description, f.createdAt, 'File' as type from file f, assets_groups ag where f.application_id = ('${app_id}') and ag.assetId=f.id union all select q.id, q.name, ag.groupId, q.title, q.description, q.createdAt, 'Query' as type from query q, assets_groups ag where q.application_id = ('${app_id}') and ag.assetId=q.id union all select idx.id, idx.name, ag.groupId, idx.title, idx.description, idx.createdAt, 'Index' as type  from indexes idx, assets_groups ag where idx.application_id = ('${app_id}') and ag.assetId=idx.id union all select j.id, j.name, ag.groupId, j.title, j.description, j.createdAt, 'Job' as type  from job j, assets_groups ag where j.application_id = ('${app_id}') and j.id = ag.assetId union all select g.id, g.name, g.parent_group, g.name as title, g.description, g.createdAt, 'Group' as type  from groups g where g.application_id = ('${app_id}') ) as assets on (assets.groupId = hie.id) `
-                  models.sequelize.query(query, {
-                    type: models.sequelize.QueryTypes.SELECT
+   const replacements = {applicationId : req.query.app_id, groupId: req.query.group_id}
+   let query  = `select assets.id, assets.name, assets.title, assets.description, assets.createdAt, assets.type, hie.name as group_name, hie.id as groupId from (select  id, name, parent_group from    (select * from groups order by parent_group, id) groups_sorted, (select @pv := (:groupId)) initialisation where find_in_set(parent_group, @pv) and length(@pv := concat(@pv, ',', id)) > 0 or id=(:groupId)) as hie join (select f.id, f.name, ag.groupId, f.title, f.description, f.createdAt, 'File' as type from file f, assets_groups ag where f.application_id = (:applicationId) and ag.assetId=f.id union all select q.id, q.name, ag.groupId, q.title, q.description, q.createdAt, 'Query' as type from query q, assets_groups ag where q.application_id = (:applicationId) and ag.assetId=q.id union all select idx.id, idx.name, ag.groupId, idx.title, idx.description, idx.createdAt, 'Index' as type  from indexes idx, assets_groups ag where idx.application_id = (:applicationId) and ag.assetId=idx.id union all select j.id, j.name, ag.groupId, j.title, j.description, j.createdAt, 'Job' as type  from job j, assets_groups ag where j.application_id = (:applicationId) and j.id = ag.assetId union all select g.id, g.name, g.parent_group, g.name as title, g.description, g.createdAt, 'Group' as type  from groups g where g.application_id = (:applicationId) ) as assets on (assets.groupId = hie.id) `               
+   models.sequelize.query(query, {
+                    type: models.sequelize.QueryTypes.SELECT,
+                    replacements : replacements
                   }).then(assets => {
                     res.json(assets);
                   }).catch(function(err) {
@@ -486,7 +487,7 @@ router.post('/', [
   body('parentGroupId').optional({checkFalsy:true}).isInt().withMessage('Invalid parent group id'),
   body('id').optional({checkFalsy:true}).isInt().withMessage('Invalid id'),
   body('applicationId').isUUID(4).withMessage('Invalid application id'),
-  body('name').matches(/^[a-zA-Z0-9_.\-:]*$/).withMessage('Invalid Name')
+  body('name').matches(/^[a-zA-Z0-9_. \-:]*$/).withMessage('Invalid Name')
 ], async (req, res) => {
   const errors = validationResult(req).formatWith(validatorUtil.errorFormatter);
   if (!errors.isEmpty()) {

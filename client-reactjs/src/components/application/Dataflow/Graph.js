@@ -371,41 +371,50 @@ class Graph extends Component {
   //after editing the dataflow asset by double clicking from dataflow diagram
   //if title is updated, update title in the dataflow
   onAssetSaved = async (saveResponse) => {
-    console.log("onAssetSaved", saveResponse);
-    
-    if(saveResponse) {
-      var newData = this.thisGraph.nodes.map(el => {
-        if(el.id == this.state.currentlyEditingId) {
-          el.title=saveResponse.title;
-          d3.select("#label-"+el.id).text(saveResponse.title);
-          switch(el.type) {
-            case 'File':
-              el.fileId=saveResponse.fileId;
-              break;
-            case 'Index':
-              el.indexId=saveResponse.indexId;
-              break;
-            case 'Job':
-              el.jobId=saveResponse.jobId;
-              el.jobType = saveResponse.jobType;
-              break;
-            case 'Sub-Process':
-              el.subProcessId=saveResponse.id;
-              this.setState({
-                showSubProcessDetails: false
-              });
-              this.saveGraph();
-              break;
+    saveResponse.then(response =>{
+      if(response.success){
+        var newData = this.thisGraph.nodes.map(el => {
+          if(el.id == this.state.currentlyEditingId) {
+            el.title=response.title;
+            d3.select("#label-"+el.id).text(response.title);
+            switch(el.type) {
+              case 'File':
+                el.fileId=response.fileId;
+                break;
+              case 'Index':
+                el.indexId=response.indexId;
+                break;
+              case 'Job':
+                el.jobId=response.jobId;
+                el.jobType = response.jobType;
+                break;
+              case 'Sub-Process':
+                el.subProcessId=response.id;
+                this.setState({
+                  showSubProcessDetails: false
+                });
+                this.saveGraph();
+                break;
+            }
+            this.showScheduleIcons(response);
+            return el;
+             //return Object.assign({}, el, {title:saveResponse.title, fileId:saveResponse.fileId, jobId:saveResponse.jobId, queryId:saveResponse.queryId, indexId:saveResponse.indexId})
           }
-          return el;
-           //return Object.assign({}, el, {title:saveResponse.title, fileId:saveResponse.fileId, jobId:saveResponse.jobId, queryId:saveResponse.queryId, indexId:saveResponse.indexId})
-        }
-        return el
-      });
-      this.thisGraph.nodes = newData;
-      this.updateGraph();
-      this.saveGraph();
-    }
+          return el
+          
+        });
+        this.thisGraph.nodes = newData;
+        this.updateGraph();
+        this.saveGraph();
+
+      }
+    } ).catch(err =>{
+      console.log(err)
+    })
+    
+ 
+     
+
   }
 
   onFileAdded = async (saveResponse) => {
@@ -530,6 +539,7 @@ class Graph extends Component {
         edges.push({source: val.source.id, target: val.target.id});
       }
     });
+
 
     fetch('/api/dataflowgraph/save', {
         method: 'post',

@@ -9,3 +9,8 @@
 **/server/scripts
 sequelize-data.json
 docs/~$tombolo.pptx
+Auth-Service/
+gitClones/**
+!gitClones/.gitkeep
+.vscode
+.prettierignore 

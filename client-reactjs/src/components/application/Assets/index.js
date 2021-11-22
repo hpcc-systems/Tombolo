@@ -45,7 +45,6 @@ import SelectDetailsForPdfDialog from "../Assets/pdf/SelectDetailsForPdfDialog";
 import { getNestedAssets} from "../Assets/pdf/downloadPdf"
 import { store } from "../../../redux/store/Store";
 
-
 const {  DirectoryTree } = Tree;
 const { confirm } = Modal;
 const { Search } = Input;
@@ -105,7 +104,8 @@ const Assets = () => {
   const [selectedAsset, setSelectedAsset] = useState();
   const [toPrintAssets, setToPrintAssets] = useState([])
   const [readOnly, setReadOnly] = useState(false);
-  const [editing, setEditing] = useState(false);
+  const [formErr, setFormErr] = useState(false);
+  const [form] = Form.useForm();
   let assetTypeFilter = ["File", "Job", "Query", "Indexes", "Groups"];
   //const [searchKeyWord, setSearchKeyWord] = useState('');
   let searchKeyWord = "";
@@ -114,24 +114,10 @@ const Assets = () => {
   //id of the group clicked from Asset table after a search
   const { assetInGroupId } = assetReducer;
   const dispatch = useDispatch();
-
   const groupsMoveReducer = useSelector((state) => state.groupsMoveReducer);
   const history = useHistory();
-
-  const formItemLayout = {
-    labelCol: {
-      xs: { span: 2 },
-      sm: { span: 10 },
-    },
-    wrapperCol: {
-      xs: { span: 4 },
-      sm: { span: 24 },
-    },
-  };
-
   const searchOptions = ["File", "Job", "Query", "Indexes", "Groups"];
 
-  const [form] = Form.useForm();
 
   //ref for More Options context menu
   const ref = useRef();
@@ -326,7 +312,6 @@ const Assets = () => {
 
   const closeCreateGroupDialog = () => {
     setOpenCreateGroupDialog(false);
-    setEditing(false)
     form.setFieldsValue({ name: "", description: "", id: "" });
     setNewGroup({ name: "", description: "", id: "" });
     setNewGroupForm({ submitted: false });
@@ -464,8 +449,10 @@ const Assets = () => {
   };
 
   const handleCreateGroup = (e) => {
-    //e.preventDefault();
-    let isNew = newGroup.id && newGroup.id != "" ? false : true;
+
+    form.validateFields().
+    then((values) => {
+      let isNew = newGroup.id && newGroup.id != "" ? false : true;
     setNewGroupForm({ submitted: true });
     fetch("/api/groups", {
       method: "post",
@@ -483,7 +470,8 @@ const Assets = () => {
       if (response.ok && response.status == 200) {
         return response.json();
       }
-      handleError(response);
+      // handleError(response);
+      return response.json();
     })      
     .then(function (data) {
       if (data && data.success) {
@@ -500,14 +488,18 @@ const Assets = () => {
           )
         );
         closeCreateGroupDialog();
-        setEditing(false)
+  
         deboucedFetchGroups();
       }
     })
     .catch((error) => {
       console.log(error);
     });
+    }).catch((info) =>{
+      console.log('Validate Failed:', info);
+    })
   };
+
   //Handle Edit groups
   const handleEdit = () => {
     setReadOnly(false);
@@ -591,7 +583,6 @@ const Assets = () => {
       });
     setOpenCreateGroupDialog(true);
     setReadOnly(true);
-    setEditing(true);
   };
 
   const handleDragEnter = (info) => {};
@@ -731,6 +722,29 @@ const Assets = () => {
     setSelectDetailsforPdfDialogVisibility(false);
   };
 
+  //Layout for form
+  const formItemLayout = 
+  !readOnly ? {
+  labelCol: {
+    xs: { span: 2 },
+    sm: { span: 8 },
+  },
+  wrapperCol: {
+    xs: { span: 4 },
+    sm: { span: 24 },
+  }
+} : 
+{
+  labelCol: {
+    xs: { span: 3 },
+    sm: { span: 5 },
+  },
+  wrapperCol: {
+    xs: { span: 4 },
+    sm: { span: 24 },
+  }
+}
+
   return (
     <React.Fragment>
       <div style={{ height: "100%", overflow: "hidden" }}>
@@ -791,27 +805,19 @@ const Assets = () => {
 
       <div>
         <Modal
-          title={editing || readOnly ? "Edit Group" : "Create Group"}
-          onOk={handleCreateGroup}
+          title= "Group"
           onCancel={closeCreateGroupDialog}
           visible={openCreateGroupDialog}
           destroyOnClose={true}
           maskClosable={false}
           width={520}
-          footer={readOnly ? <Button type="primary" onClick={handleEdit}>Edit</Button> : 
-                            <span><Button type="primary" ghost onClick={closeCreateGroupDialog}>Cancel</Button> <Button type="primary" onClick={handleCreateGroup}>Save</Button></span>}>
-          {/* <Form layout="vertical" form={form} onFinish={handleCreateGroup}>
-            <div
-              className={
-                "form-group" +
-                (newGroupForm.submitted && !newGroup.name ? " has-error" : "")
-              }
-            > */}
+          footer={readOnly ? <span><Button type="primary" onClick={handleEdit}>Edit</Button> <Button type="primary" ghost onClick={closeCreateGroupDialog}>Cancel</Button></span> : 
+                            <span><Button type="primary" ghost onClick={closeCreateGroupDialog}>Cancel</Button> <Button type="primary" onClick={handleCreateGroup} disabled={formErr}>Save</Button></span>}>
           <Form
-          form={form} onFinish={handleCreateGroup}  
-          layout={readOnly ? "inline" : "vertical"}
+          form={form} 
+          layout={readOnly ? "horizontal" : "vertical"}
           labelCol={{ span: 0 }}
-          wrapperCol={readOnly ? { span: 16} : {span : 30}}
+          className="formInModal"
           >
             <div
               className={
@@ -822,11 +828,11 @@ const Assets = () => {
               <Form.Item
                 label="Name : "
                 name="name"
-                style={{fontWeight: "bold"}}
+                {...formItemLayout}
                 rules={readOnly ? false : [
                   {
                     required: true,
-                    pattern: new RegExp(/^[a-zA-Z0-9_-]*$/),
+                    pattern: new RegExp(/^[a-zA-Z0-9_ -]*$/),
                     message: "Please enter a valid Name",
                   },
                 ]}
@@ -835,6 +841,7 @@ const Assets = () => {
                   id="name"
                   className={readOnly ? "read-only-input" : null}
                   name="name"
+                  autoFocus={true}
                   onChange={(e) =>
                     setNewGroup({
                       ...newGroup,
@@ -846,10 +853,9 @@ const Assets = () => {
               </Form.Item>
             </div>
             <Form.Item
-              label="Description : "
+              label="Description"
               name="description"
-              style={{fontWeight: "bold"}}
-
+              {...formItemLayout}
             >
               <span style={{fontWeight: "normal"}}>
               {readOnly ? <ReactMarkdown className="read-only-markdown" children={newGroup.description}></ReactMarkdown> : 

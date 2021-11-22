@@ -49,7 +49,8 @@ class IndexDetails extends PureComponent {
     },
     enableEdit: false,
     editing: false,
-    dataAltered : false
+    dataAltered : false,
+    errors: false
   }
 
   //Mounting Phase
@@ -539,7 +540,7 @@ class IndexDetails extends PureComponent {
             <Button key="back" onClick={this.handleCancel} type="primary" ghost>
               Cancel
             </Button>
-            <Button key="submit" disabled={!editingAllowed} type="primary" loading={confirmLoading} onClick={this.handleOk} style={{background: 'var(--success)'}}>
+            <Button key="submit" disabled={!editingAllowed || this.state.errors} type="primary" loading={confirmLoading} onClick={this.handleOk} style={{background: 'var(--success)'}}>
               Save
             </Button>
           </span>
@@ -550,7 +551,7 @@ class IndexDetails extends PureComponent {
               <Button key="back" onClick={this.handleCancel} type="primary" ghost>
                 Cancel
               </Button>
-              <Button key="submit" disabled={!editingAllowed} type="primary" loading={confirmLoading} onClick={this.handleOk} style={{background: 'var(--success)'}}>
+              <Button key="submit" disabled={!editingAllowed || this.state.errors} type="primary" loading={confirmLoading} onClick={this.handleOk} style={{background: 'var(--success)'}}>
               Save
             </Button>
           </span>
@@ -564,6 +565,18 @@ class IndexDetails extends PureComponent {
       </span>
         }
       </div>
+
+       //When input input field value is changed
+      const onFieldsChange = (changedFields, allFields) => {
+        this.setState({dataAltered : true})
+        const inputErrors = allFields.filter(item => { return item.errors.length > 0} )
+        if(inputErrors.length > 0){
+          this.setState({errors : true})
+        }else{
+          this.setState({errors: false})
+        }
+        }
+
 
     return (
       <React.Fragment>
@@ -584,7 +597,7 @@ class IndexDetails extends PureComponent {
           >
             <TabPane tab="Basic" key="1">
 
-             <Form {...formItemLayout} labelAlign="left" ref={this.formRef} onFinish={this.handleOk}>
+             <Form {...formItemLayout} labelAlign="left" ref={this.formRef} onFinish={this.handleOk} onFieldsChange={onFieldsChange}>
 
                  {this.state.enableEdit?
               <div>

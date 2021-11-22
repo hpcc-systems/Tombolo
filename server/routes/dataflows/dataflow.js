@@ -142,6 +142,7 @@ router.post('/delete', [
   //find all jobs in this dataflow and remove them from scheduler
   let dataflowGraph = await DataflowGraph.findOne({where: {dataflowId: req.body.dataflowId}});
   console.log(dataflowGraph);
+  if(dataflowGraph){
   for(const node of dataflowGraph.nodes) {
     console.log(node);
     if(node.type == 'Job' && node.schedulerType == 'Time') {
@@ -150,6 +151,7 @@ router.post('/delete', [
       await JobScheduler.removeJobFromScheduler(job.name + '-' + req.body.dataflowId + '-' + node.jobId);
     }
   }
+}
 
   await JobExecution.destroy({where: {dataflowId: req.body.dataflowId}});
 

@@ -72,6 +72,8 @@ services:
       - ${CERT_PATH}:/etc/ssl
     depends_on:
       - mysql_db
+    env_file:
+      - .env
     entrypoint: [sh, /etc/nginx/run_nginx.sh, "${HOST_HOSTNAME}"]
   node:
     #restart: always
@@ -87,11 +89,13 @@ services:
       - ${PORT}:${PORT}
     depends_on:
       - mysql_db
+    env_file:
+      - .env
 
   mysql_db:
     image: mysql:5.7
     restart: always
-    command: --innodb_use_native_aio=0
+    command: --innodb_use_native_aio=0 --sql_mode=""
     volumes:
       - ./mysql-data:/var/lib/mysql
     ports:
@@ -104,6 +108,8 @@ services:
       MYSQL_HOST: ${DB_HOSTNAME}
     networks:
       - tombolo-network
+    env_file:
+      - .env
 
 networks:
   tombolo-network:
