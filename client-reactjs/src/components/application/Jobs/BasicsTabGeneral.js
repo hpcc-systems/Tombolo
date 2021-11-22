@@ -149,8 +149,11 @@ const readOnlyView = !enableEdit || !addingNewAsset;
         <GitHubForm enableEdit={enableEdit} form={formRef}/>
       }
 
-      <Form.Item label="Name" name="name" 
-      rules={[{ required: true, message: 'Please enter a Name!', pattern: new RegExp(/^[a-zA-Z0-9:._-]*$/) }]}>
+      <Form.Item label="Name" 
+      name="name" 
+      validateTrigger= "onBlur"
+      rules={[{ required: true, message: 'Please enter a Name!', 
+                pattern: new RegExp(/^[a-zA-Z0-9:._-]*$/) }]}>
         <Input
           id="job_name"
           onChange={onChange}
@@ -158,7 +161,10 @@ const readOnlyView = !enableEdit || !addingNewAsset;
           disabled={!editingAllowed || disableReadOnlyFields}
           className={(addingNewAsset || disableReadOnlyFields) ? null : "read-only-input"} />
       </Form.Item>
-      <Form.Item label="Title" name="title" rules={[{ required: true, message: 'Please enter a title!' }, {
+      <Form.Item label="Title" 
+      name="title" 
+      validateTrigger= "onBlur"
+      rules={[{ required: true, message: 'Please enter a title!' }, {
         pattern: new RegExp(/^[ a-zA-Z0-9:._-]*$/),
         message: 'Please enter a valid Title. Title can have  a-zA-Z0-9:._- and space',
       }]}>
@@ -186,7 +192,10 @@ const readOnlyView = !enableEdit || !addingNewAsset;
 
       </Form.Item>
       {jobType != 'Data Profile' && jobType != 'Spray' ? 
-      <Form.Item hidden={filesStoredOnGithub} label="Git Repo" name="gitRepo" rules={[{
+      <Form.Item hidden={filesStoredOnGithub} 
+      label="Git Repo" name="gitRepo" 
+      validateTrigger= "onBlur"
+      rules={[{
           type: 'url',
           message: 'Please enter a valid url',
       }]}>
@@ -204,7 +213,10 @@ const readOnlyView = !enableEdit || !addingNewAsset;
       : null }
       {jobType != 'Spray' ? 
       <React.Fragment>
-      <Form.Item label="Entry BWR" name="entryBWR" rules={[{
+      <Form.Item 
+      label="Entry BWR" 
+      validateTrigger= "onBlur"
+      name="entryBWR" rules={[{
           pattern: new RegExp(/^[a-zA-Z0-9:$._-]*$/),
           message: 'Please enter a valid BWR',
       }]}>
@@ -220,7 +232,11 @@ const readOnlyView = !enableEdit || !addingNewAsset;
       </Form.Item>
       <Row type="flex">
           <Col span={12} order={1}>
-          <Form.Item {...threeColformItemLayout} label="Contact Email" name="contact" rules={[{
+          <Form.Item 
+          {...threeColformItemLayout} 
+          label="Contact Email" 
+          validateTrigger= "onBlur"
+          name="contact" rules={[{
               type: 'email',
               message: 'Please enter a valid email address',
           }]}>
@@ -237,7 +253,11 @@ const readOnlyView = !enableEdit || !addingNewAsset;
           </Form.Item>
           </Col>
           <Col span={12} order={2}>
-          <Form.Item label="Author:" name="author" rules={[{
+          <Form.Item 
+          label="Author:" 
+          name="author"
+          validateTrigger= "onBlur"
+           rules={[{
               pattern: new RegExp(/^[a-zA-Z0-9: $._-]*$/), // WHITESPACE IS ADDED TO PATTERN
               message: 'Please enter a valid author',
           }]}>

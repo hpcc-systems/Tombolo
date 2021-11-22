@@ -54,18 +54,15 @@ function BasicsTabManul(props) {
       }  
       }, [selectedCluster])
 
-      //<<<<<  Test
+      //Clear error when on focus
       const clearError = (e) => {
-        console.log("clear error for >>>>>>>>> ", formRef.current);
         formRef.current.setFields([
           {
             name: e.target.id,
             errors: [],
           },
        ]);
-       formRef.current.setFieldsValue([{errors : []}])
       }
-
 
     //when dropzone is selected make call to get the dirs and files
     const loadData = ( selectedOptions) =>{      
@@ -108,6 +105,7 @@ function BasicsTabManul(props) {
                 console.log(err)
               })         
     }
+
 
     //JSX
     return (
@@ -154,7 +152,6 @@ function BasicsTabManul(props) {
                 rules={[{ required: true, message: 'Please enter a title!' }]}
                 onFocus={clearError}
                 validateTrigger= "onBlur"
-                onFocus={clearError}
                 >
                 <Input
                     onChange={onChange}

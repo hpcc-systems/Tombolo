@@ -1710,6 +1710,7 @@ class JobDetails extends Component {
                     {...longFieldLayout}
                     label="Script Path"
                     name="scriptPath"
+                    validateTrigger= "onBlur"
                     rules={[
                       {
                         required: true,
