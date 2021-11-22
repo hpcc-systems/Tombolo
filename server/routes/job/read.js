@@ -24,6 +24,7 @@ const assetUtil = require('../../utils/assets');
 const SUBMIT_JOB_FILE_NAME = 'submitJob.js';
 const SUBMIT_SCRIPT_JOB_FILE_NAME = 'submitScriptJob.js';
 const SUBMIT_MANUAL_JOB_FILE_NAME = 'submitManualJob.js'
+const SUBMIT_GITHUB_JOB_FILE_NAME = 'submitGithubJob.js'
 
 /**
   Updates Dataflow graph by
@@ -556,7 +557,7 @@ router.post('/saveJob', [
           }, {
             where: { assetId: jobId, dataflowId: req.body.job.basic.dataflowId }
           }).then(async (assetDataflowupdated) => {
-            await JobScheduler.removeJobFromScheduler(req.body.job.basic.name + '-' + req.body.job.basic.dataflowId + '-' + req.body.id);
+             await JobScheduler.removeJobFromScheduler(req.body.job.basic.name + '-' + req.body.job.basic.dataflowId + '-' + req.body.id);
           })
           await DependentJobs.destroy({
             where: {
@@ -585,7 +586,7 @@ router.post('/saveJob', [
           }, {
             where: { assetId: jobId, dataflowId: req.body.job.basic.dataflowId }
           }).then(async (assetDataflowupdated) => {
-            await JobScheduler.removeJobFromScheduler(req.body.job.basic.name + '-' + req.body.job.basic.dataflowId + '-' + jobId);
+             await JobScheduler.removeJobFromScheduler(req.body.job.basic.name + '-' + req.body.job.basic.dataflowId + '-' + req.body.id);
           })
           await MessageBasedJobs.destroy({
             where: {
@@ -645,31 +646,45 @@ router.post('/saveJob', [
                     return SUBMIT_SCRIPT_JOB_FILE_NAME;
                   case 'Manual' :
                     return SUBMIT_MANUAL_JOB_FILE_NAME;
-                  default :
-                  return SUBMIT_JOB_FILE_NAME
+                  default : {
+                    if (req.body.job.basic?.metaData.isStoredOnGithub){
+                      return SUBMIT_GITHUB_JOB_FILE_NAME
+                    }else{
+                      return SUBMIT_JOB_FILE_NAME
+                    }
+                  }
                 }
               }
               
               //remove existing job with same name
               try {
-                await JobScheduler.removeJobFromScheduler(req.body.job.basic.name + '-' + req.body.job.basic.dataflowId + '-' + jobId);
-                await JobScheduler.addJobToScheduler({	
-                  name: req.body.job.basic.name, 
-                  title: req.body.job.basic.title,	
-                  cron: cronExpression, 	
-                  clusterId: req.body.job.basic.cluster_id,	
-                  dataflowId: req.body.job.basic.dataflowId,	
-                  applicationId: req.body.job.basic.application_id,	
-                  jobId: jobId,	
-                  jobfileName: fileName(),	
-                  jobType: req.body.job.basic.jobType,	
-                  sprayedFileScope: job.sprayedFileScope,	
-                  sprayFileName: job.sprayFileName, // TODO DO WE HAVE sprayFileName WHEN WE ADD JOB TO SCHEDULE THIS DATA GOES TO WORKER	
-                  sprayDropZone: job.sprayFileName, // TODO DO WE HAVE sprayDropZone WHEN WE ADD JOB TO SCHEDULE THIS DATA GOES TO WORKER	
-                  metaData: req.body.job.basic.metaData,
-                  contact : req.body.job.basic.contact
-                 })
-              } catch (err) {
+                  await JobScheduler.removeJobFromScheduler(req.body.job.basic.name + '-' + req.body.job.basic.dataflowId + '-' + jobId);
+                  
+                  const jobSettings ={	
+                    jobName: req.body.job.basic.name, 
+                    title: req.body.job.basic.title,	
+                    cron: cronExpression, 	
+                    clusterId: req.body.job.basic.cluster_id,	
+                    dataflowId: req.body.job.basic.dataflowId,	
+                    applicationId: req.body.job.basic.application_id,	
+                    jobId: jobId,	
+                    jobfileName: fileName(),	
+                    jobType: req.body.job.basic.jobType,	
+                    sprayedFileScope: job.sprayedFileScope,	
+                    sprayFileName: job.sprayFileName, 
+                    sprayDropZone: job.sprayFileName,
+                    metaData: req.body.job.basic.metaData,
+                    contact : req.body.job.basic.contact,
+                  }
+                  
+                  if(jobSettings.jobType === "Manual"){ 
+                    jobSettings.status = 'wait';
+                    jobSettings.manualJob_meta = {jobType : 'Manual', jobName: jobSettings.jobName, notifiedTo : jobSettings.contact, notifiedOn : new Date().getTime()}
+                  }
+                  
+                  JobScheduler.addJobToScheduler(jobSettings);
+         
+                } catch (err) {
                 console.log("could not remove job from scheduler"+ err)
               }
             }
@@ -703,7 +718,7 @@ router.post('/saveJob', [
             }, {
               where: { assetId: jobId, dataflowId: req.body.job.basic.dataflowId }
             }).then(async (assetDataflowupdated) => {
-              await JobScheduler.removeJobFromScheduler(req.body.job.basic.name + '-' + req.body.job.basic.dataflowId + '-' + jobId);
+                await JobScheduler.removeJobFromScheduler(req.body.job.basic.name + '-' + req.body.job.basic.dataflowId + '-' + req.body.id);
             })
 
             await DependentJobs.destroy({
@@ -947,28 +962,39 @@ router.post('/executeJob', [
     let job = await Job.findOne({where: {id:req.body.jobId}, attributes: {exclude: ['assetId']}, include: [JobParam]});
     if (job.metaData?.isStoredOnGithub) {
       res.json({"success":true})// send the respond and proceed with the cloning flow
-      const flowSettings ={
-        gitHubFiles : job.metaData.gitHubFiles,
+      JobScheduler.executeJob({     
+        jobfileName: SUBMIT_GITHUB_JOB_FILE_NAME, 
         applicationId: req.body.applicationId,
         dataflowId: req.body.dataflowId,
         clusterId: req.body.clusterId,
         jobName : req.body.jobName,
-        jobId: req.body.jobId,
-      }
-      const summary = await assetUtil.createGithubFlow(flowSettings);
-      console.log('------------------------------------------');
-      console.log("✔️ router.post('/executeJob': JOB EXECUTION GITHUB FLOW, SUMMARY!");
-      console.dir(summary);
-      console.log('------------------------------------------');
-      return; // return from function to prevent code running further.
-    }
+        metaData : job.metaData,
+        jobId: req.body.jobId
+      });
+      return;
+   }
     if(job.jobType == 'Spray') {
       let sprayJobExecution = await hpccUtil.executeSprayJob(job);
       wuid = sprayJobExecution.SprayResponse && sprayJobExecution.SprayResponse.Wuid ? sprayJobExecution.SprayResponse.Wuid : ''
     } else if(job.jobType == 'Script') {
       let executionResult = await assetUtil.executeScriptJob(req.body.jobId);
     }else if(job.jobType === 'Manual'){
-      const response = await JobScheduler.executeJob(job);
+      const response = JobScheduler.executeJob({
+        jobfileName: SUBMIT_MANUAL_JOB_FILE_NAME,
+        jobId: job.id,
+        jobName: job.name,
+        contact: job.contact,
+        clusterId: job.cluster_id,
+        dataflowId: job.dataflowId,
+        applicationId: job.application_id,
+        status : 'wait',
+        manualJob_meta : {
+          jobType : 'Manual',
+          jobName: job.name,
+          notifiedTo : job.contact,
+          notifiedOn : new Date().getTime()
+        }
+      });
        response.success ? res.status(200) : res.status(500)
      } else if(job.jobType != 'Script' && job.jobType != 'Spray') {
       let wuDetails = await hpccUtil.getJobWuDetails(req.body.clusterId, req.body.jobName);
@@ -1073,7 +1099,6 @@ router.post('/manualJobResponse', [
 
 
 const QueueDaemon = require('../../queue-daemon');
-const jobScheduler = require('../../job-scheduler');
 
 router.get('/msg', (req, res) => {
   if (req.query.topic && req.query.message) {

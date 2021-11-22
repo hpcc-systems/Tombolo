@@ -282,20 +282,17 @@ exports.createGithubFlow = async ({jobId, jobName, gitHubFiles, dataflowId, appl
     // # create Job Execution with status 'cloning'
     jobExecution = await JobExecution.create({ jobId, dataflowId, applicationId, clusterId, wuid:"",  status: 'cloning' });
     console.log('------------------------------------------');
-    console.log(`✔️ createGithubFlow: START: JOB EXECUTION RECORD CREATED --${jobExecution.id}---`);    
-    console.log('------------------------------------------');
+    console.log(`✔️  createGithubFlow: START: JOB EXECUTION RECORD CREATED ${jobExecution.id}`);    
+
     // # pull from github and submit job to HPCC.
     tasks =  await hpccUtil.pullFilesFromGithub( jobName ,clusterId, gitHubFiles );
     if (tasks.WUaction?.failedToUpdate) {
      await manuallyUpdateJobExecutionFailure({jobExecution,tasks}); 
     } else {
       // changing jobExecution status to 'submitted' will signal status poller that this job if ready to be executed
-     const updated = await jobExecution.update({status:'submitted', wuid: tasks.wuid },{where:{id:jobExecution.id, status:'cloning'}}) 
-     console.log('------------------------------------------');
-     console.log(`✔️ LAST STEP IN  "${jobName}" ${jobExecution.id} --createGithubFlow--`);
-     console.log("✔️ createGithubFlow: JOB EXECUTION UPDATED");
-     console.dir(updated.toJSON(), { depth: null });
-     console.log('------------------------------------------');
+      const updated = await jobExecution.update({status:'submitted', wuid: tasks.wuid },{where:{id:jobExecution.id, status:'cloning'}}) 
+      tasks.jobExecution= updated.toJSON();
+
     }
     return tasks; // quick summary about github flow that happened.
   } catch (error) {

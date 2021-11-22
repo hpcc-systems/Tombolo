@@ -57,7 +57,7 @@ function ManualJobsStatus({workflowDetails}) {
       const manualJobs = workflowDetails.wuDetails.filter( item => item.jobType === "Manual" );
       setManualJobs(manualJobs)
       manualJobs.map(item => { 
-                              item.name = <Link  to={item.manualJob_meta?.url}> {item.name}</Link>; 
+                              item.name =  item?.name; 
                                item.notifiedTo = item.manualJob_meta?.notifiedTo;
                                item.notifiedOn = item.manualJob_meta?.notifiedOn;
                                item.respondedOn = item.manualJob_meta?.respondedOn;
