@@ -348,7 +348,6 @@ exports.getJobWuDetails = (clusterId, jobName) => {
 
 exports.resubmitWU = (clusterId, wuid, wucluster) => {
   return new Promise(async (resolve, reject) => {
-    console.log(clusterId, wuid, wucluster);
     try {
       let body = {
         "WURunRequest": {
