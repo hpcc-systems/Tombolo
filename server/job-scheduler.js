@@ -223,8 +223,7 @@ class JobScheduler {
     async executeJob(job) {
     try {
       let uniqueJobName = job.name + '-' + job.dataflowId + '-' + job.id;
-      //TDO - first check before trying to remoe from the queue. It is throwing err if the job is not there
-      // await this.removeJobFromScheduler(uniqueJobName);
+      await this.removeJobFromScheduler(uniqueJobName);
       this.bree.add({
         name: uniqueJobName,
         timeout: 0,

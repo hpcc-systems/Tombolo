@@ -24,7 +24,6 @@ function BasicsTabManul(props) {
                                       title: value[value.length -1] })
     }
 
-
     //When cluster is selected
     const onClusterSelection = (value) => {
       dispatch(assetsActions.clusterSelected(value));
@@ -82,7 +81,7 @@ function BasicsTabManul(props) {
                  data.FileListResponse.files.PhysicalFileStruct.map(item =>{
                   let child = {};
                   child.value =item.name;
-                  child.label = item.name;
+                  child.label = `${item.name}${item.isDir ?` /`:``}`;
                   child.isLeaf = !item.isDir;
                   children.push(child);
                 });
@@ -115,14 +114,11 @@ function BasicsTabManul(props) {
                 name="path"
                 >
                 <Cascader
-                    showSearch={true}
                     options={options}
                     onChange={onFilePathChange}
                     loadData={loadData}
                     placeholder="Please select"
-                    onChange={onFilePathChange}
                     className={enableEdit ? null : "read-only-input"}
-                    className={enableEdit ? null : "read-only-input" }
                     allowClear
                 />
             </Form.Item> : null}
@@ -135,17 +131,14 @@ function BasicsTabManul(props) {
                     id="job_name"
                     onChange={onChange}
                     placeholder="Name"
-                    disabled={true}
-                    disabled={!editingAllowed}
+                    disabled={formRef.current.getFieldValue('path') ? true : false}
                     className={enableEdit ? null : "read-only-input"}
-                    disabled />
+                     />
             </Form.Item>
 
             <Form.Item label="Title" 
                 name="title" 
-                rules={[{ required: true, 
-                    message: 'Please enter a title!' }, {
-                    message: 'Please enter a valid Title',}]}>
+                rules={[{ required: true, message: 'Please enter a title!' }]}>
                 <Input id="job_title"
                     onChange={onChange}
                     placeholder="Title"
