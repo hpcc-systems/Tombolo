@@ -37,17 +37,17 @@ exports.notifyManualJob = async (options) => {
             to: options.contact,
             subject: 'Manual Job - Action Required',
             html: `<p>Hello,</p>
-                    <p> A job requires your attention. Please click <a href=${options.url}>Here</a> to view  details</p>
+                    <p> A job requires your attention. Please click <a href=${options.url}>here</a> to view  details</p>
                       
 
                     <p>
-                    <b>Tombolo Team </b>
+                    <b>Tombolo</b>
                     </p>`
-          });
+          });  
           console.log('------------------------------------------');
-          console.log(`!!!EMAIL SENT to ${options.contact}!!!`)
+          console.log(` ✉  EMAIL SENT to ${options.contact}!!!`) 
           console.log('------------------------------------------');
-        resolve();
+        resolve(); 
       } catch (error) {
         reject(error)
       }

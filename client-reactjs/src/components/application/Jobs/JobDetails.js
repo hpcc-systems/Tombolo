@@ -1634,7 +1634,7 @@ class JobDetails extends Component {
       }
 
     return (
-      <React.Fragment>
+      <React.Fragment> 
         {this.props.displayingInModal || this.state.addingNewAsset ? null : (
           <div className="assetTitle">
             {" "}
@@ -1646,8 +1646,15 @@ class JobDetails extends Component {
             <div className="loader">
               <Spin spinning={this.state.initialDataLoading} size="large" />
             </div>) : null}
-          <Form {...formItemLayout} initialValues={{selectedFile:null}} labelAlign="left" ref={this.formRef} onFieldsChange={onFieldsChange}>
-          <Tabs defaultActiveKey="1" tabBarExtraContent = {this.props.displayingInModal ? null : controls }>
+          <Form 
+            {...formItemLayout} 
+            initialValues={{selectedFile:null}} 
+            labelAlign="left" 
+            ref={this.formRef} 
+            scrollToFirstError
+            onFieldsChange={onFieldsChange}
+            >
+            <Tabs defaultActiveKey="1" tabBarExtraContent = {this.props.displayingInModal ? null : controls }>
 
           <TabPane tab="Basic" key="1">
               <Form.Item label="Job Type" name="jobType"> 
@@ -1699,6 +1706,7 @@ class JobDetails extends Component {
                     {...longFieldLayout}
                     label="Script Path"
                     name="scriptPath"
+                    validateTrigger= "onBlur"
                     rules={[
                       {
                         required: true,

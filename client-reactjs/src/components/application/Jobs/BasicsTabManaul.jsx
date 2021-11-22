@@ -8,9 +8,9 @@ import { assetsActions } from '../../../redux/actions/Assets';
 import { Cascader } from "antd";
 
 function BasicsTabManul(props) {
+  const {enableEdit, localState, editingAllowed,  onChange, formRef} = props;
     const assetReducer = useSelector(state => state.assetReducer);
     const applicationReducer = useSelector(state => state.applicationReducer)
-    const {enableEdit, localState, editingAllowed,  onChange, formRef} = props;
     const [options, setOptions] = useState([]);
     const [machines, setMachines] = useState({});
     const [selectedCluster, setSelectedCluster] = useState(assetReducer.clusterId);
@@ -23,7 +23,6 @@ function BasicsTabManul(props) {
       formRef.current.setFieldsValue({name : value[value.length -1],
                                       title: value[value.length -1] })
     }
-
 
     //When cluster is selected
     const onClusterSelection = (value) => {
@@ -55,6 +54,15 @@ function BasicsTabManul(props) {
       }  
       }, [selectedCluster])
 
+      //Clear error when on focus
+      const clearError = (e) => {
+        formRef.current.setFields([
+          {
+            name: e.target.id,
+            errors: [],
+          },
+       ]);
+      }
 
     //when dropzone is selected make call to get the dirs and files
     const loadData = ( selectedOptions) =>{      
@@ -86,7 +94,7 @@ function BasicsTabManul(props) {
                   child.isLeaf = !item.isDir;
                   children.push(child);
                 });
-                children=children.sort(function(a,b){
+                children.sort(function(a,b){
                   if(a.isLeaf < b.isLeaf){ return -1};
                 })
                 targetOption.loading= false;
@@ -97,6 +105,7 @@ function BasicsTabManul(props) {
                 console.log(err)
               })         
     }
+
 
     //JSX
     return (
@@ -115,14 +124,11 @@ function BasicsTabManul(props) {
                 name="path"
                 >
                 <Cascader
-                    showSearch={true}
                     options={options}
                     onChange={onFilePathChange}
                     loadData={loadData}
                     placeholder="Please select"
-                    onChange={onFilePathChange}
                     className={enableEdit ? null : "read-only-input"}
-                    className={enableEdit ? null : "read-only-input" }
                     allowClear
                 />
             </Form.Item> : null}
@@ -130,23 +136,24 @@ function BasicsTabManul(props) {
             <Form.Item 
                 label="Name" 
                 name="name" 
+                validateTrigger= "onBlur"
+                onFocus={clearError}
                 rules={[{ required: true, message: 'Please enter a Name!' }]}>
                 <Input
-                    id="job_name"
                     onChange={onChange}
                     placeholder="Name"
-                    disabled={true}
-                    disabled={!editingAllowed}
+                    disabled={formRef.current.getFieldValue('path') ? true : false}
                     className={enableEdit ? null : "read-only-input"}
-                    disabled />
+                     />
             </Form.Item>
 
             <Form.Item label="Title" 
                 name="title" 
-                rules={[{ required: true, 
-                    message: 'Please enter a title!' }, {
-                    message: 'Please enter a valid Title',}]}>
-                <Input id="job_title"
+                rules={[{ required: true, message: 'Please enter a title!' }]}
+                onFocus={clearError}
+                validateTrigger= "onBlur"
+                >
+                <Input
                     onChange={onChange}
                     placeholder="Title"
                     disabled={!editingAllowed}
@@ -155,11 +162,11 @@ function BasicsTabManul(props) {
             </Form.Item>
 
             <Form.Item label="Description" 
-                name="description">
+                name="description"
+                >
                 {enableEdit ?
                 <MarkdownEditor
                     name="description"
-                    id="job_desc"
                     onChange={onChange}
                     targetDomId="jobDescr"
                     value={localState.description}
@@ -175,11 +182,12 @@ function BasicsTabManul(props) {
             <Form.Item  
                 label="Contact" 
                 name="contact" 
+                validateTrigger= "onBlur"
+                onFocus={clearError}
                 rules={[{ type: 'email',
                     required : true,
                     message: 'Please enter a valid email address'}]}>
                 <Input 
-                    id="job_bkp_svc"
                     onChange={onChange}
                     placeholder="Contact"
                     disabled={!editingAllowed}
