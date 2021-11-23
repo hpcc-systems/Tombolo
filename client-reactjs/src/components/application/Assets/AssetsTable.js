@@ -20,7 +20,6 @@ import {
   AreaChartOutlined
 } from "@ant-design/icons";
 import { store } from "../../../redux/store/Store";
-import showdown from "showdown";
 import SelectDetailsForPdfDialog from "../Assets/pdf/SelectDetailsForPdfDialog";
 import { getNestedAssets} from "../Assets/pdf/downloadPdf";
 import ReactMarkdown from "react-markdown"
