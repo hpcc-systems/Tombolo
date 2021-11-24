@@ -37,17 +37,18 @@ function GitHubForm({ form ,enableEdit }) {
   };
 
   const onChange = (value, selectedOptions) => {
-  // console.log(`value`, value); console.log(`selectedFile`, selectedOptions[selectedOptions.length - 1]); console.log("selectedRepo", selectedOptions[selectedOptions.length - 2]); // this object has children prop with all files currently in repo, can be stale info if saved to db
-    if (value.length === 0) {
-      form.current.setFieldsValue({ gitHubFiles: { selectedFile: null } }); // this is triggered when user resets cascader
-    }
-    if (selectedOptions[selectedOptions.length - 1]?.isLeaf) {
-      form.current.setFieldsValue({ gitHubFiles: {
-          selectedFile: { ...selectedOptions[selectedOptions.length - 1], projectOwner:branchesRequest.owner, projectName:branchesRequest.repo },
-        },
-      });
-    }
-  };
+    // console.log(`value`, value); console.log(`selectedFile`, selectedOptions[selectedOptions.length - 1]); console.log("selectedRepo", selectedOptions[selectedOptions.length - 2]); // this object has children prop with all files currently in repo, can be stale info if saved to db
+      if (value.length === 0) {
+        form.current.setFieldsValue({ gitHubFiles: { selectedFile: null } }); // this is triggered when user resets cascader
+      }
+      if (selectedOptions[selectedOptions.length - 1]?.isLeaf) {
+        form.current.setFieldsValue({
+           gitHubFiles: { selectedFile: { ...selectedOptions[selectedOptions.length - 1], projectOwner:branchesRequest.owner, projectName:branchesRequest.repo }, },
+           name: value[value.length -1],
+           title: value[value.length -1],
+        });
+      }
+    };
 
   const loadBranchTree = async (selectedOptions) => {
     const targetOption = selectedOptions[selectedOptions.length - 1];
