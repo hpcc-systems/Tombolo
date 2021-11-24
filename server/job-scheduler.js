@@ -9,9 +9,10 @@ const hpccUtil = require('./utils/hpcc-util');
 const assetUtil = require('./utils/assets.js');
 const workflowUtil = require('./utils/workflow-util.js');
 const SUBMIT_JOB_FILE_NAME = 'submitJob.js';
-const SUBMIT_GITHUB_JOB_FILE_NAME= 'submitGithubJob.js';
-const SUBMIT_MANUAL_JOB_FILE_NAME = 'submitManualJob.js'
+const SUBMIT_SPRAY_JOB_FILE_NAME = 'submitSprayJob.js'
 const SUBMIT_SCRIPT_JOB_FILE_NAME = 'submitScriptJob.js';
+const SUBMIT_MANUAL_JOB_FILE_NAME = 'submitManualJob.js'
+const SUBMIT_GITHUB_JOB_FILE_NAME = 'submitGithubJob.js'
 const JOB_STATUS_POLLER = 'statusPoller.js';
 
 class JobScheduler {
@@ -70,60 +71,57 @@ class JobScheduler {
         console.log(`✔️  FOUND ${dependantJobs.length} DEPENDENT JOB/S` );
         console.log('------------------------------------------');
 
+        const failedJobsList =[];
+
         for (let i = 0; i < dependantJobs.length; i++) {
-
+        
+        let job;  
+        try { 
           const dependantJob = dependantJobs[i]; 
-          const job = await Job.findOne({where:{ id: dependantJob.jobId }});
+          job = await Job.findOne({where:{ id: dependantJob.jobId }});
 
-          const gitHubJob = job.metaData?.isStoredOnGithub;
-          const manualJob = job.jobType === "Manual";
+          let status;  
+          const isSprayJob = job.jobType == 'Spray';
+          const isScriptJob = job.jobType == 'Script';
+          const isManualJob = job.jobType === 'Manual';
+          const isGitHubJob = job.metaData?.isStoredOnGithub;
 
           console.log('------------------------------------------');
           console.log(`🔄  scheduleCheckForJobsWithSingleDependency: EXECUTING DEPENDANT JOB "${job.name}" id:${job.id}; dflow: ${dataflowId};`);
           console.log('------------------------------------------');
-
-          if (gitHubJob){
-              // EXECUTING GITHUB FILE WITH ALL NEEDED DATA IN WORKERDATA OBJECT
-           this.executeJob({
+     
+          const commonWorkerData = { 
             applicationId: job.application_id,
-            jobfileName: SUBMIT_GITHUB_JOB_FILE_NAME,
             clusterId: job.cluster_id,
-            metaData:job.metaData,
+            dataflowId: dataflowId,
             jobName: job.name,
             jobId: job.id,
-            dataflowId,
-            });
-
-          } else if (manualJob){
-            // EXECUTING MANUAL FILE WITH ALL NEEDED DATA IN WORKERDATA OBJECT
-           this.executeJob({
-            applicationId: job.application_id,
-            jobfileName: SUBMIT_MANUAL_JOB_FILE_NAME,
-            clusterId: job.cluster_id,
-            metaData: job.metaData,
-            contact: job.contact,
-            jobName: job.name,
-            jobId: job.id,
-            status: 'wait',
-            dataflowId,
-            title: '', 
-            manualJob_meta : {
-              jobName: job.name,
-              notifiedTo : job.contact,
-              notifiedOn : new Date().getTime()
-            }});
-
+          };
+            
+          if (isSprayJob) {
+            status = this.executeJob({ jobfileName: SUBMIT_SPRAY_JOB_FILE_NAME, ...commonWorkerData, sprayedFileScope: job.sprayedFileScope, sprayFileName: job.sprayFileName, sprayDropZone: job.sprayDropZone });
+          } else if (isScriptJob) {
+            status = this.executeJob({ jobfileName: SUBMIT_SCRIPT_JOB_FILE_NAME, ...commonWorkerData });
+          } else if (isManualJob){
+            status = this.executeJob({ jobfileName: SUBMIT_MANUAL_JOB_FILE_NAME, ...commonWorkerData, contact: job.contact, status : 'wait', manualJob_meta : { jobType : 'Manual', jobName: job.name, notifiedTo : job.contact, notifiedOn : new Date().getTime() } });
+          } else if (isGitHubJob) {
+            status = this.executeJob({ jobfileName: SUBMIT_GITHUB_JOB_FILE_NAME, ...commonWorkerData,  metaData : job.metaData, });
           } else {
-            // REGULAR FLOW
-            //submit the dependant job's wu and record the execution in job_execution table for the statusPoller to pick
-            let wuDetails = await hpccUtil.getJobWuDetails(job.cluster_id, job.name);      
-            let wuid = wuDetails.wuid;
-            console.log( `✔️  scheduleCheckForJobsWithSingleDependency: submitting dependant job ${job.name} ` + `(WU: ${wuid}) to url ${job.cluster_id}/WsWorkunits/WUResubmit.json?ver_=1.78` );
-            let wuResubmitResult = await hpccUtil.resubmitWU(job.cluster_id, wuid, wuDetails.cluster);
-            const newJobExecution = { status:'submitted', wuid : wuResubmitResult?.WURunResponse.Wuid, jobId: job.id, clusterId: job.cluster_id, dataflowId, applicationId: job.application_id }
-            await JobExecution.create(newJobExecution);
+            status = this.executeJob({ jobfileName: SUBMIT_JOB_FILE_NAME, ...commonWorkerData });
           }
-        } // for loop ends.
+          if (!status.success) throw status
+        } catch (error) {
+          console.log(error); // failed to execute dependent job through bree. Should notify user.
+          if (error.contact) failedJobs.push(error);
+        }
+      } // for loop ends.
+
+      if (failedJobsList.length > 0) {
+        const contact = failedJobsList[0].contact;
+        const dataflowId =failedJobsList[0].dataflowId
+        await workflowUtil.notifyDependentJobsFailure({contact, dataflowId, failedJobsList})
+      }
+
       } catch (err) {
         console.log(err)
       }
@@ -148,29 +146,50 @@ class JobScheduler {
 
     for(const job of jobs) {           
       try {
+        const isSprayJob = job.jobType == 'Spray';
+        const isScriptJob = job.jobType == 'Script';
+        const isManualJob = job.jobType === 'Manual';
+        const isGitHubJob = job.metaData?.isStoredOnGithub;
+        
+        const workerData = { 
+          applicationId: job.application_id,
+          clusterId: job.cluster_id,
+          dataflowId: job.dataflowId,
+          jobType:job.jobType,
+          jobName: job.name,
+          cron:  job.cron, 
+          jobId: job.id,
+        };
+
+        workerData.jobfileName = SUBMIT_JOB_FILE_NAME;
+        
+        if (isScriptJob) jobfileName= SUBMIT_SCRIPT_JOB_FILE_NAME;
+        if (isSprayJob){
+          workerData.jobfileName= SUBMIT_SPRAY_JOB_FILE_NAME;
+          workerData.sprayedFileScope= job.sprayedFileScope;
+          workerData.sprayFileName=  job.sprayFileName;
+          workerData.sprayDropZone=  job.sprayDropZone;
+        }
+        if (isManualJob){
+          workerData.manualJob_meta= { jobType : 'Manual', jobName: job.name, notifiedTo : job.contact, notifiedOn : new Date().getTime() }; //? maybe needs to be refactored
+          workerData.jobfileName= SUBMIT_MANUAL_JOB_FILE_NAME;
+          workerData.contact= job.contact;
+          workerData.status= 'wait';
+        }
+        if (isGitHubJob) {
+          workerData.jobfileName= SUBMIT_GITHUB_JOB_FILE_NAME;
+          workerData.metaData= job.metaData;
+        }
         //finally add the job to the scheduler
-     this.addJobToScheduler({
-           jobName: job.name, 
-           cron:  job.cron, 
-           clusterId:  job.clusterId,
-           dataflowId:job.dataflowId,
-           applicationId:job.application_id,
-           jobId: job.assetId,
-           jobfileName: job.jobType == 'Script' ? SUBMIT_SCRIPT_JOB_FILE_NAME : SUBMIT_JOB_FILE_NAME,
-           jobType:job.jobType,
-           sprayedFileScope:job.sprayedFileScope,
-           sprayFileName: job.sprayFileName,
-           sprayDropZone: job.sprayDropZone,
-           metaData: job.metaData
-          });
+        this.addJobToScheduler(workerData);
       } catch (err) {
         console.log(err);
       }
-     } 
-       console.log('------------------------------------------');
-       console.log(`📢 LIST OF ALL SCHEDULED JOBS IN BREE (${this.bree.config.jobs.length}) (may not include dependent jobs):`)
-       console.dir(this.bree.config.jobs,{depth:4});
-       console.log('------------------------------------------');
+    } // loop ended.
+    console.log('------------------------------------------');
+    console.log(`📢 LIST OF ALL SCHEDULED JOBS IN BREE (${this.bree.config.jobs.length}) (may not include dependent jobs):`)
+    console.dir(this.bree.config.jobs,{depth:4});
+    console.log('------------------------------------------');
   }
 
   async scheduleMessageBasedJobs(message) {
@@ -225,10 +244,10 @@ class JobScheduler {
       console.log(`✔️  BREE HAS STARTED JOB: "${uniqueJobName}"`)
       console.dir(this.bree.config.jobs, { depth: 3 });
       console.log('------------------------------------------');
-      return {success : true, message : `Successfully executed ${jobName}`} //?? check if this is necessary 
+      return {success : true, message : `Successfully executed ${jobName}`} 
     } catch (err) {
       console.log(err);
-      return {success : false, message : `Error executing  ${jobName} - ${err}`}
+      return { success : false, message : `Error executing  ${jobName} - ${err.message}`, clusterId, dataflowId, contact, jobName, }
     }
   }
 
