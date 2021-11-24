@@ -15,7 +15,6 @@
     update the following information on the '.env' file located on the '/server' directory.
     1. AUTH_SERVICE_URL - *(URL to the AuthService. Eg - \<protocol>://<host_name>:<port>/api/auth)*
     2. AUTHSERVICE_TOMBOLO_CLIENT_ID - *(Unique identifier used to identify an application in AuthService. This value can be found in AuthService UI under applications)*
-    3. APP_ADMIN_PASSWORD - *(create an admin password)*
 7. Locate cluster-whitelist.js file inside the "/server" directory and add cluster information.
 8. Go Inside '/client-react.js' and rename the .env-sample file to '.env'
 8. Install dependencies.
