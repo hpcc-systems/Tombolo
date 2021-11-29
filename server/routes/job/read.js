@@ -22,6 +22,7 @@ const validatorUtil = require('../../utils/validator');
 const { body, query, param, validationResult } = require('express-validator');
 const assetUtil = require('../../utils/assets');
 const SUBMIT_JOB_FILE_NAME = 'submitJob.js';
+const SUBMIT_SPRAY_JOB_FILE_NAME = 'submitSprayJob.js'
 const SUBMIT_SCRIPT_JOB_FILE_NAME = 'submitScriptJob.js';
 const SUBMIT_MANUAL_JOB_FILE_NAME = 'submitManualJob.js'
 const SUBMIT_GITHUB_JOB_FILE_NAME = 'submitGithubJob.js'
@@ -958,82 +959,41 @@ router.post('/executeJob', [
       return res.status(422).json({ success: false, errors: errors.array() });
   }
   try {
-    let wuid = '';
-    let job = await Job.findOne({where: {id:req.body.jobId}, attributes: {exclude: ['assetId']}, include: [JobParam]});
-    if (job.metaData?.isStoredOnGithub) {
-      res.json({"success":true})// send the respond and proceed with the cloning flow
-      JobScheduler.executeJob({     
-        jobfileName: SUBMIT_GITHUB_JOB_FILE_NAME, 
-        applicationId: req.body.applicationId,
-        dataflowId: req.body.dataflowId,
-        clusterId: req.body.clusterId,
-        jobName : req.body.jobName,
-        metaData : job.metaData,
-        jobId: req.body.jobId
-      });
-      return;
-   }
-    if(job.jobType == 'Spray') {
-      let sprayJobExecution = await hpccUtil.executeSprayJob(job);
-      wuid = sprayJobExecution.SprayResponse && sprayJobExecution.SprayResponse.Wuid ? sprayJobExecution.SprayResponse.Wuid : ''
-    } else if(job.jobType == 'Script') {
-      let executionResult = await assetUtil.executeScriptJob(req.body.jobId);
-    }else if(job.jobType === 'Manual'){
-      const response = JobScheduler.executeJob({
-        jobfileName: SUBMIT_MANUAL_JOB_FILE_NAME,
-        jobId: job.id,
-        jobName: job.name,
-        contact: job.contact,
-        clusterId: job.cluster_id,
-        dataflowId: job.dataflowId,
-        applicationId: job.application_id,
-        status : 'wait',
-        manualJob_meta : {
-          jobType : 'Manual',
-          jobName: job.name,
-          notifiedTo : job.contact,
-          notifiedOn : new Date().getTime()
-        }
-      });
-       response.success ? res.status(200) : res.status(500)
-     } else if(job.jobType != 'Script' && job.jobType != 'Spray') {
-      let wuDetails = await hpccUtil.getJobWuDetails(req.body.clusterId, req.body.jobName);
-      wuid = wuDetails.wuid
-      let wuResubmitResult = await hpccUtil.resubmitWU(req.body.clusterId, wuid, wuDetails.cluster);
-      //store the new wuid for status polling
-      wuid = wuResubmitResult?.WURunResponse.Wuid;
+    const job = await Job.findOne({where: {id:req.body.jobId}, attributes: {exclude: ['assetId']}, include: [JobParam]});
+    
+    let status;
+
+    const isSprayJob = job.jobType == 'Spray';
+    const isScriptJob = job.jobType == 'Script';
+    const isManualJob = job.jobType === 'Manual';
+    const isGitHubJob = job.metaData?.isStoredOnGithub;
+    
+    const commonWorkerData = { 
+      applicationId: req.body.applicationId,
+      dataflowId: req.body.dataflowId,
+      clusterId: req.body.clusterId,
+      jobName : req.body.jobName,
+      jobId: req.body.jobId
+    };
+      
+    if (isSprayJob) {
+      status = JobScheduler.executeJob({ jobfileName: SUBMIT_SPRAY_JOB_FILE_NAME, ...commonWorkerData, sprayedFileScope: job.sprayedFileScope, sprayFileName: job.sprayFileName, sprayDropZone: job.sprayDropZone });
+    } else if (isScriptJob) {
+      status = JobScheduler.executeJob({ jobfileName: SUBMIT_SCRIPT_JOB_FILE_NAME, ...commonWorkerData });
+    } else if (isManualJob){
+      status = JobScheduler.executeJob({ jobfileName: SUBMIT_MANUAL_JOB_FILE_NAME, ...commonWorkerData, contact: job.contact, status : 'wait', manualJob_meta : { jobType : 'Manual', jobName: job.name, notifiedTo : job.contact, notifiedOn : new Date().getTime() } });
+    } else if (isGitHubJob) {
+      status = JobScheduler.executeJob({ jobfileName: SUBMIT_GITHUB_JOB_FILE_NAME, ...commonWorkerData,  metaData : job.metaData, });
+    } else {
+      status = JobScheduler.executeJob({ jobfileName: SUBMIT_JOB_FILE_NAME, ...commonWorkerData });
     }
-    //record workflow execution
-    await JobExecution.findOrCreate({
-      where: {
-        jobId: req.body.jobId,
-        applicationId: req.body.applicationId
-      },
-      defaults: {
-        jobId: req.body.jobId,
-        dataflowId: req.body.dataflowId,
-        applicationId: req.body.applicationId,
-        wuid: wuid,
-        clusterId: req.body.clusterId,
-        status: 'submitted'
-      }
-    }).then((results, created) => {
-      let jobExecutionId = results[0].id;
-      if(!created) {
-        return JobExecution.update({
-          jobId: req.body.jobId,
-          dataflowId: req.body.dataflowId,
-          applicationId: req.body.applicationId,
-          wuid: wuid,
-          status: 'submitted'
-        },
-        {where: {id: jobExecutionId}})
-      }
-    })
-    res.json({"success":true});
+
+    if (!status.success) throw status;
+
+    res.status(200).json({"success":true});
   } catch (err) {
     console.error('err', err);
-    return res.status(500).json({ success: false, message: "Error occured while re-submiting the job" });
+    return res.status(500).json({ success: false, message: "Error occured while submiting the job" });
   }
 });
 
@@ -1083,10 +1043,12 @@ router.post('/manualJobResponse', [
                   let newMeta = {...jobExecution.manualJob_meta, ...req.body.newManaulJob_meta}
                   jobExecution.update({status : req.body.status, manualJob_meta : newMeta, })
                             .then(async jobExecution => {
-                            await  JobScheduler.scheduleCheckForJobsWithSingleDependency({
-                                dependsOnJobId : jobExecution.jobId,
-                                 dataflowId : jobExecution.dataflowId
-                               });
+                              if (!jobExecution.status === 'failed') {
+                                await  JobScheduler.scheduleCheckForJobsWithSingleDependency({
+                                  dependsOnJobId : jobExecution.jobId,
+                                  dataflowId : jobExecution.dataflowId
+                                });
+                              }
                               //TDO - Send confirmation email to end user here                                       
                                         })
                             .catch(err => {

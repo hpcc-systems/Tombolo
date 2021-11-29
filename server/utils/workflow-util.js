@@ -1,5 +1,7 @@
 const models  = require('../models');
 const Cluster = models.cluster;
+const Dataflow = models.dataflow;
+
 const Job = models.job;
 const NotificationModule = require('../routes/notifications/email-notification');
 
@@ -52,4 +54,26 @@ exports.notifyManualJob = async (options) => {
         reject(error)
       }
     })
+}
+
+exports.notifyDependentJobsFailure = async ({contact, dataflowId, failedJobsList}) => {
+ try{
+   const dataflow = await Dataflow.findOne({where: {id: dataflowId}});
+   await NotificationModule.notify({
+     from: process.env.EMAIL_SENDER,
+     to: contact,
+     subject:"Failed to execute dependent job",
+     html: `<p>Failed to execute dependent job/s in "${dataflow.title}" dataflow:</p>
+            ${failedJobsList.map(job=>{
+              return `<p>${job.jobName}</p>`
+            }).join(",")}`            
+   })
+    console.log('------------------------------------------');
+    console.log(`!!!EMAIL SENT to ${contact}!!!`)
+    console.log('------------------------------------------');
+ } catch (error){
+    console.log('------------------------------------------');
+    console.dir(error, { depth: null });
+    console.log('------------------------------------------');
+ }
 }
