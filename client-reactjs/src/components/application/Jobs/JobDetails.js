@@ -172,7 +172,7 @@ class JobDetails extends Component {
       sprayFileName: "",
       sprayedFileScope: "",
       selectedDropZoneName: {},
-      path : []
+      manualJobFilePath : []
       },  //file path to show in cascader 
     enableEdit: false,
     editing: false,
@@ -272,6 +272,7 @@ class JobDetails extends Component {
           if(!data.jobType){
             data.jobType="";
           }
+
           this.setState({
             ...this.state,
             initialDataLoading: false,
@@ -310,7 +311,7 @@ class JobDetails extends Component {
               description: data.description,
               sprayFileName: data.sprayFileName,
               sprayedFileScope: data.sprayedFileScope,
-              path : data.metaData?.manualJobs?.pathToFile
+              manualJobFilePath : data.metaData?.manualJobs?.pathToFile
             },
           });
 
@@ -794,12 +795,12 @@ class JobDetails extends Component {
 
     //If Job type is Manual
     if( formFieldsValue["jobType"] === 'Manual'){
-      if(formFieldsValue["path"]){
+      if(formFieldsValue["manualJobFilePath"]){
         metaData.manualJobs = {
-          pathToFile : formFieldsValue["path"]}
+          pathToFile : formFieldsValue["manualJobFilePath"]}
       }else{
         metaData.manualJobs = {
-          pathToFile : formFieldsValue["path"]}
+          pathToFile : []}
             }
        }
 

@@ -108,7 +108,7 @@ function BasicsTabManul(props) {
 
     //Cascader initial value
     useEffect(() => {
-      formRef.current.setFieldsValue({ path : localState.job.path})
+      formRef.current.setFieldsValue({ manualJobFilePath : localState.job.manualJobFilePath})
     }, [])
 
     //JSX
@@ -125,7 +125,7 @@ function BasicsTabManul(props) {
             {localState.isNew || enableEdit? 
             <Form.Item 
                 label="File Path" 
-                name="path"
+                name="manualJobFilePath"
                 >
                 <Cascader
                     options={options}
