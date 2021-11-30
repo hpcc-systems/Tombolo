@@ -6,7 +6,6 @@ import { Constants } from '../../common/Constants';
 import { useSelector } from "react-redux";
 import ReactMarkdown from 'react-markdown';
 import { DeleteOutlined, EyeOutlined, QuestionCircleOutlined } from '@ant-design/icons';
-import showdown from "showdown";
 import useModal from '../../../hooks/useModal';
 
 

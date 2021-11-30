@@ -3,7 +3,6 @@ const assetUtil = require('../utils/workflow-util');
 const models = require('../models')
 const JobExecution = models.job_execution;
 
-
 let isCancelled = false;
 if (parentPort) {
   parentPort.once('message', (message) => {
@@ -11,15 +10,14 @@ if (parentPort) {
   });
 }
 
-
 const logToConsole = (message) => parentPort.postMessage({action:"logging", data: message});
 const dispatchAction = (action,data) =>  parentPort.postMessage({ action, data });   
 
 (async () => {
 	logToConsole("Send notification ...");	
 	try {
-		workerData.url = `${process.env.WEB_URL}${workerData.applicationId}/manualJobDetails/${workerData.jobId}`
 		const jobExecution = await JobExecution.create(workerData);
+		workerData.url = `${process.env.WEB_URL}${workerData.applicationId}/manualJobDetails/${workerData.jobId}/${jobExecution.id}`;
 		await assetUtil.notifyManualJob(workerData);
 	}catch (err) {
 		logToConsole(err)

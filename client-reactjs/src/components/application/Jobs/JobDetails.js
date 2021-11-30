@@ -172,12 +172,13 @@ class JobDetails extends Component {
       sprayFileName: "",
       sprayedFileScope: "",
       selectedDropZoneName: {},
-      },
+      path : []
+      },  //file path to show in cascader 
     enableEdit: false,
     editing: false,
     dataAltered: false,
     errors: false,
-    isNew : this.props.isNew
+    isNew : this.props.isNew,
   };
 
   componentDidMount() {
@@ -272,6 +273,9 @@ class JobDetails extends Component {
             data.jobType="";
           }
 
+          console.log('<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<');
+          console.dir(data, { depth: null });
+          console.log('<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<');
           this.setState({
             ...this.state,
             initialDataLoading: false,
@@ -310,6 +314,7 @@ class JobDetails extends Component {
               description: data.description,
               sprayFileName: data.sprayFileName,
               sprayedFileScope: data.sprayedFileScope,
+              path : data.metaData?.manualJobs?.pathToFile
             },
           });
 
@@ -768,7 +773,7 @@ class JobDetails extends Component {
       formFieldsValue["sprayDropZone"] = formFieldsValue["sprayDropZone"];
     }
 
-    const { gitHubFiles, isStoredOnGithub, ...formFields} = formFieldsValue;
+    const { gitHubFiles, isStoredOnGithub,  ...formFields} = formFieldsValue;
     // gitHubFiles give us more fields but we will save only one that we are using into DB.
     //console.log(`gitHubFiles`, gitHubFiles)
     const metaData={}; // metadata will be stored as JSON
@@ -790,6 +795,17 @@ class JobDetails extends Component {
     } else {
       metaData.gitHubFiles = null;
     }
+
+    //If Job type is Manual
+    if( formFieldsValue["jobType"] === 'Manual'){
+      if(formFieldsValue["path"]){
+        metaData.manualJobs = {
+          pathToFile : formFieldsValue["path"]}
+      }else{
+        metaData.manualJobs = {
+          pathToFile : formFieldsValue["path"]}
+            }
+       }
 
     var jobDetails = {
       basic: {

@@ -20,7 +20,6 @@ import {
   AreaChartOutlined
 } from "@ant-design/icons";
 import { store } from "../../../redux/store/Store";
-import showdown from "showdown";
 import SelectDetailsForPdfDialog from "../Assets/pdf/SelectDetailsForPdfDialog";
 import { getNestedAssets} from "../Assets/pdf/downloadPdf";
 import ReactMarkdown from "react-markdown"
@@ -437,7 +436,7 @@ function AssetsTable({ selectedGroup, openGroup, handleEditGroup, refreshGroups 
         columns={columns}
         rowKey={(record) => record.id}
         dataSource={assets}
-        pagination={assets.length > 10 ? { pageSize: 10 }:  false}
+        pagination={assets?.length > 10 ? { pageSize: 10 }:  false}
         scroll={{ y: "70vh"}}
         hideOnSinglePage={true}
       />

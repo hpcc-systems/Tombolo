@@ -8,9 +8,10 @@ import { assetsActions } from '../../../redux/actions/Assets';
 import { Cascader } from "antd";
 
 function BasicsTabManul(props) {
-  const {enableEdit, localState, editingAllowed,  onChange, formRef} = props;
+    const {enableEdit, localState, editingAllowed,  onChange, formRef, addingNewAsset} = props;
     const assetReducer = useSelector(state => state.assetReducer);
-    const applicationReducer = useSelector(state => state.applicationReducer)
+    const applicationReducer = useSelector(state => state.applicationReducer);
+    const readOnlyView = !enableEdit || !addingNewAsset;
     const [options, setOptions] = useState([]);
     const [machines, setMachines] = useState({});
     const [selectedCluster, setSelectedCluster] = useState(assetReducer.clusterId);
@@ -71,7 +72,6 @@ function BasicsTabManul(props) {
       const host = clusters.filter(item => item.id === selectedCluster)
       const targetOption = selectedOptions[selectedOptions.length - 1];
       targetOption.loading = true;
-     
           const data = JSON.stringify({
             Netaddr : machines.Netaddress,
             Path : pathToAsset,
@@ -106,12 +106,16 @@ function BasicsTabManul(props) {
               })         
     }
 
+    //Cascader initial value
+    useEffect(() => {
+      formRef.current.setFieldsValue({ path : localState.job.path})
+    }, [])
 
     //JSX
     return (
         <>  
             {enableEdit ? 
-             <Form.Item  label="Cluster" name="clusters">
+             <Form.Item  label="Cluster" name="clusters" hidden={readOnlyView}>
                 <Select placeholder="Select a Cluster" disabled={!editingAllowed} onChange={onClusterSelection} style={{ width: 190 }}>
                     {clusters.map(cluster => <Option key={cluster.id}>{cluster.name}</Option>)}
                 </Select>
@@ -142,7 +146,7 @@ function BasicsTabManul(props) {
                 <Input
                     onChange={onChange}
                     placeholder="Name"
-                    disabled={formRef.current.getFieldValue('path') ? true : false}
+                    disabled={formRef.current.getFieldValue('path') && formRef.current.getFieldValue('path')?.length > 0? true : false}
                     className={enableEdit ? null : "read-only-input"}
                      />
             </Form.Item>
