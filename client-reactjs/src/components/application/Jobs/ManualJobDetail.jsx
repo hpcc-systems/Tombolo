@@ -5,6 +5,7 @@ import { authHeader, handleError } from '../../common/AuthHeader';
 
 function ManualJobDetail(props) {
     const [ jobId, setJobID]= useState('');
+    const [jobExecutionId, setJobExecutionId] = useState('');
     const [jobDetails, setJobDetails] = useState({});
     const [savingData, setSavingData] = useState({save : false, response : ''})
 
@@ -19,6 +20,7 @@ function ManualJobDetail(props) {
     useEffect(() =>{
         //1. When the component loads pull  app id, job id and other necessary details from url
         const data = props.location.pathname.split("/");
+        setJobExecutionId(data[4]);
 
         //2. Once the appid and job id is obtained make call to get job details 
         fetch(`/api/job/job_details?app_id=${data[1]}&job_id=${data[3]}`, {
@@ -46,9 +48,12 @@ function ManualJobDetail(props) {
             headers: authHeader(),
             method : 'POST',
             body : JSON.stringify({
-              jobId: jobId,  
+              jobExecutionId : jobExecutionId, 
               status: response === 'approved' ? 'completed' : 'failed',
-              newManaulJob_meta :{jobName: jobDetails.name, response, respondedOn :  Date.now()}})
+              newManaulJob_meta :{
+                // jobName: jobDetails.name, 
+                response, 
+                respondedOn : Date.now()}})
           })
           .then((response) => {
             if(response.ok) {

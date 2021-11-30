@@ -436,7 +436,7 @@ function AssetsTable({ selectedGroup, openGroup, handleEditGroup, refreshGroups 
         columns={columns}
         rowKey={(record) => record.id}
         dataSource={assets}
-        pagination={assets.length > 10 ? { pageSize: 10 }:  false}
+        pagination={assets?.length > 10 ? { pageSize: 10 }:  false}
         scroll={{ y: "70vh"}}
         hideOnSinglePage={true}
       />
