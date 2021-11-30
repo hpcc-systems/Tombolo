@@ -44,7 +44,7 @@ exports.notifyManualJob = async (options) => {
                     </p>`
           });  
           console.log('------------------------------------------');
-          console.log(` ✉  EMAIL SENT to ${options.contact}!!!`) 
+          console.log(` ✉  EMAIL SENT to ${options.manualJob_meta.notifiedTo}!!!`) 
           console.log('------------------------------------------');
         resolve(); 
       } catch (error) {
