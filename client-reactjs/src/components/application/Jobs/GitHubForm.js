@@ -146,7 +146,6 @@ function GitHubForm({ form ,enableEdit }) {
       </Form.Item>
 
       <Form.Item
-        
         label="Branch"
         validateTrigger={["onBlur"]}
         name={["gitHubFiles", "selectedGitBranch"]}
@@ -172,7 +171,6 @@ function GitHubForm({ form ,enableEdit }) {
       </Form.Item>
 
       <Form.Item
-        
         label="Main File"
         validateTrigger={["onBlur"]}
         name={["gitHubFiles", "pathToFile"]}

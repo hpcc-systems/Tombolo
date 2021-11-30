@@ -24,6 +24,7 @@
     "path-to-regexp": "^1.7.0",
     "plotly.js": "^1.58.4",
     "plotly.js-basic-dist": "^1.58.4",
+    "re-resizable": "^6.9.1",
     "react": "^16.14.0",
     "react-dom": "^16.14.0",
     "react-markdown": "^5.0.3",

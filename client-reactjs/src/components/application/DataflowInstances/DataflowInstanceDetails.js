@@ -10,6 +10,7 @@ import ManualJobsStatus from "./ManualJobsStatus";
 import { connect } from 'react-redux';
 import { authHeader, handleError } from "../../common/AuthHeader.js"
 import { Constants } from '../../common/Constants';
+import { Resizable } from "re-resizable";
 const { TabPane } = Tabs;
 
 class DataflowInstanceDetails extends Component {
@@ -20,11 +21,20 @@ class DataflowInstanceDetails extends Component {
 
   state = {
     jobExecutionDetails: {},
-    loading: false
+    loading: false,
+    graphSize:{
+      width:"100%",
+      height:400
+    }
   }
 
   componentDidMount() {
     this.getJobExecutionDetails();
+    const LSGraphHeight = JSON.parse(localStorage.getItem('graphSize'));
+    console.log(`typeof LSGraphHeight`, typeof LSGraphHeight)
+   if (LSGraphHeight) {
+     this.setState({graphSize:{height: LSGraphHeight}})
+   }
   }
 
   getJobExecutionDetails = () => {
@@ -51,15 +61,22 @@ class DataflowInstanceDetails extends Component {
       console.log(error);
     });
   }
-
   render() {
     //if(this.props.dataflowId == undefined || this.props.applicationId == undefined)
     if(!this.props.application || !this.props.application.applicationId)
-      return null;
+    return null;
     return (
       <React.Fragment>
-        <div>
-          <div style={{border:'1px solid #f0f0f0', borderBottomColor: "#fff", borderRadius:'5px'}}> 
+          <Resizable
+           style={{ border: '2px solid #ddd',borderRadius:'5px' , overflow: 'hidden'}}
+           enable={{bottom:true}}
+           size={{ width: this.state.graphSize.width, height: this.state.graphSize.height }}
+           onResizeStop={(e, direction, ref, d) => {
+             const newHeight = this.state.graphSize.height + d.height;
+             this.setState({graphSize:{height: newHeight}});
+             localStorage.setItem("graphSize",JSON.stringify(newHeight));
+           }}
+           >
             <Graph
               applicationId={this.props.applicationId}
               viewMode={true}
@@ -68,23 +85,20 @@ class DataflowInstanceDetails extends Component {
               graphContainer="graph"
               sidebarContainer="sidebar"
               />
-          </div>
+            </Resizable>
 
-          <div>
             <Tabs type="card">
              <TabPane tab="Workunits" key="1">
                <Spin spinning={this.state.loading}>
-                  <JobExecutionDetails workflowDetails={this.state.jobExecutionDetails}/>
+                  <JobExecutionDetails refreshData={this.getJobExecutionDetails}  workflowDetails={this.state.jobExecutionDetails}/>
                </Spin>
               </TabPane>
               <TabPane tab="Manual Jobs" key="2">
                <Spin spinning={this.state.loading}>
-                  <ManualJobsStatus workflowDetails={this.state.jobExecutionDetails}/>
+                  <ManualJobsStatus refreshData={this.getJobExecutionDetails}   workflowDetails={this.state.jobExecutionDetails}/>
                </Spin>
               </TabPane>
             </Tabs>
-          </div>
-        </div>
       </React.Fragment>
     )
   }
