@@ -272,10 +272,6 @@ class JobDetails extends Component {
           if(!data.jobType){
             data.jobType="";
           }
-
-          console.log('<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<');
-          console.dir(data, { depth: null });
-          console.log('<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<');
           this.setState({
             ...this.state,
             initialDataLoading: false,
