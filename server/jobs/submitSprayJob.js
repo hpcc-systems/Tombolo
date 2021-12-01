@@ -1,7 +1,6 @@
 const { parentPort, workerData } = require("worker_threads");
+const hpccUtil = require('../utils/hpcc-util');
 const assetUtil = require('../utils/assets');
-const models = require('../models');
-let Job = models.job;
 
 let isCancelled = false;
 if (parentPort) {
@@ -15,19 +14,20 @@ const dispatchAction = (action,data) =>  parentPort.postMessage({ action, data }
 
 (async () => {
 	try {
-		logToConsole("running script job: "+ workerData.jobId);
-		let executionResult = await assetUtil.executeScriptJob(workerData.jobId);
-		logToConsole(executionResult);
-   		//record workflow execution
-		//since it is a script job, there is no easy way to identify the completion status, hence marking as completed after invoking the script job
-		//in future if script jobs can return back a proper status, this can be changed
-		workerData.status = 'completed';
-		await assetUtil.recordJobExecution(workerData, '');
+
+		logToConsole("running spray job: "+ workerData.jobName);
+    const sprayJobExecution = await hpccUtil.executeSprayJob({ cluster_id: workerData.clusterId, sprayedFileScope: workerData.sprayedFileScope, sprayFileName: workerData.sprayFileName, sprayDropZone: workerData.sprayDropZone });
+    const wuid = sprayJobExecution?.SprayResponse?.Wuid   
+    if (!wuid) throw sprayJobExecution;
+
+    workerData.status = 'submitted';
+    await assetUtil.recordJobExecution(workerData, wuid);       
 
 	} catch (err) {
-		logToConsole(err);
-		workerData.status = 'failed';
-		await assetUtil.recordJobExecution(workerData, '');	
+    
+    logToConsole(err);
+    workerData.status = 'error';
+    await assetUtil.recordJobExecution(workerData, '');     
 	} finally{
 		if (!workerData.isCronJob) dispatchAction("remove");   // REMOVE JOB FROM BREE IF ITS NOT CRON JOB!
 	
