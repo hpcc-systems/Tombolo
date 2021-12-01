@@ -22,7 +22,7 @@ const dispatchAction = (action,data) =>  parentPort.postMessage({ action, data }
 		await assetUtil.notifyManualJob(workerData);
 	}catch (err) {
 		if(jobExecution){
-			jobExecution.update({status : 'error'})
+			await jobExecution.update({status : 'error'})
 		}
 		logToConsole(err)
 	} finally{
