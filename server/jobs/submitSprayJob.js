@@ -28,7 +28,6 @@ const dispatchAction = (action,data) =>  parentPort.postMessage({ action, data }
     logToConsole(err);
     workerData.status = 'error';
     await assetUtil.recordJobExecution(workerData, '');     
-
 	} finally{
 		if (!workerData.isCronJob) dispatchAction("remove");   // REMOVE JOB FROM BREE IF ITS NOT CRON JOB!
 	
