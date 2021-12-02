@@ -76,6 +76,29 @@ exports.confirmationManualJobAction = async (options) => {
     })
 }
 
+// Send notification for manual jobs in a workflow and update job execution table 
+exports.confirmationManualJobAction = async (options) => {
+  const {notifiedTo, response, jobName} = options;
+  return new Promise(async (resolve,reject) =>{
+      try {
+       await NotificationModule.notify({
+            from: process.env.EMAIL_SENDER,
+            to: notifiedTo,
+            subject: 'Confirmation - Manual job action taken',
+            html: `<p>Hello,</p>
+                    <p> Your response for <b>${jobName}</b> has been recorded as <b>${response}</b>.<p>
+                    <b>Tombolo</b>`
+          });  
+          console.log('------------------------------------------');
+          console.log(` ✉ EMAIL CONFIRMATION OF ACTION TAKEN FOR MANUAL JOB  SENT TO -  ${notifiedTo}!!!`) 
+          console.log('------------------------------------------');
+        resolve(); 
+      } catch (error) {
+        reject(error)
+      }
+    })
+}
+
 exports.notifyDependentJobsFailure = async ({contact, dataflowId, failedJobsList}) => {
  try{
    const dataflow = await Dataflow.findOne({where: {id: dataflowId}});
