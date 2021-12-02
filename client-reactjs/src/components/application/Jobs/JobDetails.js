@@ -172,7 +172,7 @@ class JobDetails extends Component {
       sprayFileName: "",
       sprayedFileScope: "",
       selectedDropZoneName: {},
-      path : []
+      manualJobFilePath : []
       },  //file path to show in cascader 
     enableEdit: false,
     editing: false,
@@ -314,7 +314,7 @@ class JobDetails extends Component {
               description: data.description,
               sprayFileName: data.sprayFileName,
               sprayedFileScope: data.sprayedFileScope,
-              path : data.metaData?.manualJobs?.pathToFile
+              manualJobFilePath : data.metaData?.manualJobs?.pathToFile
             },
           });
 
@@ -798,12 +798,12 @@ class JobDetails extends Component {
 
     //If Job type is Manual
     if( formFieldsValue["jobType"] === 'Manual'){
-      if(formFieldsValue["path"]){
+      if(formFieldsValue["manualJobFilePath"]){
         metaData.manualJobs = {
-          pathToFile : formFieldsValue["path"]}
+          pathToFile : formFieldsValue["manualJobFilePath"]}
       }else{
         metaData.manualJobs = {
-          pathToFile : formFieldsValue["path"]}
+          pathToFile : []}
             }
        }
 
@@ -1649,6 +1649,8 @@ class JobDetails extends Component {
       }
       }
 
+     const noECLAvailable = this.formRef.current?.getFieldValue("isStoredOnGithub") && !this.state.job.ecl;
+
     return (
       <React.Fragment> 
         {this.props.displayingInModal || this.state.addingNewAsset ? null : (
@@ -1706,7 +1708,7 @@ class JobDetails extends Component {
             {this.state.job.jobType != "Script" &&
               this.state.job.jobType != "Spray" && 
               this.state.job.jobType !== "Manual" ? (
-                <TabPane tab="ECL" key="2">
+                <TabPane tab="ECL" disabled={noECLAvailable} key="2">
                   <Form.Item {...eclItemLayout} label="ECL" name="ecl" >
                     
                     <EclEditor
@@ -1717,7 +1719,7 @@ class JobDetails extends Component {
                   </Form.Item>
                 </TabPane>
               ) : this.state.job.jobType == "Script" ? (
-                <TabPane disabled={!this.state.job.ecl} tab="Script" key="2">
+                <TabPane disabled={noECLAvailable} tab="Script" key="2">
                   <Form.Item
                     {...longFieldLayout}
                     label="Script Path"
@@ -1750,7 +1752,7 @@ class JobDetails extends Component {
               this.state.job.jobType != "Spray" &&
               this.state.job.jobType !== "Manual"? (
                 <React.Fragment>
-                  <TabPane disabled={!this.state.job.ecl} tab="Input Params" key="3">
+                  <TabPane disabled={noECLAvailable} tab="Input Params" key="3">
                     <EditableTable
                       columns={
                         this.state.job.jobType != "Script"
@@ -1766,7 +1768,7 @@ class JobDetails extends Component {
                     />
                   </TabPane>
 
-                  <TabPane disabled={!this.state.job.ecl} tab="Input Files" key="4">
+                  <TabPane disabled={noECLAvailable} tab="Input Files" key="4">
                     <div>
                       {this.state.enableEdit ? (
                         <>
@@ -1815,7 +1817,7 @@ class JobDetails extends Component {
               {this.state.job.jobType != "Script" &&
               this.state.job.jobType != "Spray" &&
               this.state.job.jobType !== "Manual"  ? (
-                <TabPane tab="Output Files" key="5">
+                <TabPane tab="Output Files" disabled={noECLAvailable}  key="5">
                   <div>
                     {!this.state.enableEdit ? null : (
                       <>

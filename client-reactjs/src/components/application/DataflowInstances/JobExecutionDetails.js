@@ -1,11 +1,11 @@
 import React,{useState} from 'react'
-import { Button, Table } from 'antd/lib';
+import { Button, Space, Table } from 'antd/lib';
 import { Constants } from '../../common/Constants';
 // import { authHeader, handleError } from "../../common/AuthHeader.js";
 // import ReactDOM from 'react-dom';
 // import { useSelector } from "react-redux";
 
-function JobExecutionDetails({workflowDetails}) {
+function JobExecutionDetails({workflowDetails, refreshData}) {
 
   const createUniqueFiltersArr =(baseArr,column) =>{
   const columnsNames ={updatedAt:'updatedAt', name:"name",wuid: 'wuid', status:"status"}; 
@@ -89,11 +89,13 @@ function JobExecutionDetails({workflowDetails}) {
   const handleClearFilters =()=>{
     setFilters(()=>({}));
   }
-  console.log(`filters`, filters)
 
   return (
     <React.Fragment>
-      <Button type='primary' disabled={!Object.keys(filters).length}  size='small' onClick={handleClearFilters}>Clear all Filters</Button>
+      <Space size={'large'} style={{marginBottom:'10px'}}>
+        <Button type='primary' disabled={!Object.keys(filters).length}  size='small' onClick={handleClearFilters}>Clear all Filters</Button>
+        <Button type="primary" size='small'  onClick={refreshData} > Refresh Records </Button>
+      </Space>
       <Table
         size="small"
         columns={jobColumns}
@@ -101,7 +103,6 @@ function JobExecutionDetails({workflowDetails}) {
         rowKey={record => record.id}
         dataSource={workflowDetails.wuDetails}
         pagination={{ pageSize: 10 }} 
-        scroll={{ y: 190 }}
       />
     </React.Fragment>
     )
