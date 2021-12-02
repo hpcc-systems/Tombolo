@@ -6,6 +6,7 @@ import { MarkdownEditor } from "../../common/MarkdownEditor.js";
 import { useSelector,useDispatch } from "react-redux";
 import { assetsActions } from '../../../redux/actions/Assets';
 import { Cascader } from "antd";
+import {FolderOutlined} from "@ant-design/icons"
 
 function BasicsTabManul(props) {
     const {enableEdit, localState, editingAllowed,  onChange, formRef, addingNewAsset} = props;
@@ -132,7 +133,7 @@ function BasicsTabManul(props) {
                     onChange={onFilePathChange}
                     loadData={loadData}
                     placeholder="Please select"
-                    className={enableEdit ? null : "read-only-input"}
+                    className={enableEdit ? "manulJobCascader" : "manulJobCascader read-only-input"}    
                     allowClear
                 />
             </Form.Item> : null}
