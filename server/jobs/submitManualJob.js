@@ -1,8 +1,7 @@
 const { parentPort, workerData } = require("worker_threads");
 const assetUtil = require('../utils/workflow-util');
-const models = require('../models')
+const models = require('../models');
 const JobExecution = models.job_execution;
-
 
 let isCancelled = false;
 if (parentPort) {
@@ -11,17 +10,20 @@ if (parentPort) {
   });
 }
 
-
 const logToConsole = (message) => parentPort.postMessage({action:"logging", data: message});
 const dispatchAction = (action,data) =>  parentPort.postMessage({ action, data });   
 
 (async () => {
 	logToConsole("Send notification ...");	
+	let jobExecution;
 	try {
-		workerData.url = `${process.env.WEB_URL}${workerData.applicationId}/manualJobDetails/${workerData.jobId}`
-		const jobExecution = await JobExecution.create(workerData);
+		jobExecution = await JobExecution.create(workerData);
+		workerData.url = `${process.env.WEB_URL}${workerData.applicationId}/manualJobDetails/${workerData.jobId}/${jobExecution.id}`;
 		await assetUtil.notifyManualJob(workerData);
 	}catch (err) {
+		if(jobExecution){
+			await jobExecution.update({status : 'error'})
+		}
 		logToConsole(err)
 	} finally{
 	if (!workerData.isCronJob) dispatchAction("remove");   // REMOVE JOB FROM BREE IF ITS NOT CRON JOB!

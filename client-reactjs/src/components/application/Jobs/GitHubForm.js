@@ -5,11 +5,11 @@ import Search from "antd/lib/input/Search";
 import Form from "antd/lib/form/Form";
 import { UserOutlined, LockOutlined } from '@ant-design/icons';
 
-function GitHubForm({ form ,enableEdit }) {
-
-  const [branchesRequest, setBranchesRequest] = useState({ validateStatus: null, selectedBranch: null, loading: false, branches: null, error: null, owner: null, repo: null, });
+function GitHubForm({ form ,enableEdit }) { 
   
-  const [repoTree, setRepoTree] = useState([{ value: "/", label: "root", isLeaf: false }]);
+  const [branchesRequest, setBranchesRequest] = useState({ validateStatus: null, selectedBranch: null, loading: false, branches: null, error: null, owner: null, repo: null, });
+
+  const [repoTree, setRepoTree] = useState([]);
   
   const [defaultCascader, setDefaultCascader] = useState(null);
 
@@ -39,33 +39,38 @@ function GitHubForm({ form ,enableEdit }) {
     form.current.resetFields([["gitHubFiles", "selectedGitBranch"],["gitHubFiles", "pathToFile"],["gitHubFiles", "selectedFile"]])
   };
 
-  const handleBranchSelect = async (value) => {
+  const handleBranchSelect = (value) => {
     const selectedBranch = branchesRequest.branches.find( (branch) => branch.name === value );
     setBranchesRequest((prev) => ({ ...prev, selectedBranch }));
   };
 
   const onChange = (value, selectedOptions) => {
-  // console.log(`value`, value); console.log(`selectedFile`, selectedOptions[selectedOptions.length - 1]); console.log("selectedRepo", selectedOptions[selectedOptions.length - 2]); // this object has children prop with all files currently in repo, can be stale info if saved to db
-    if (value.length === 0) {
-      form.current.setFieldsValue({ gitHubFiles: { selectedFile: null } }); // this is triggered when user resets cascader
-    }
-    if (selectedOptions[selectedOptions.length - 1]?.isLeaf) {
-      form.current.setFieldsValue({ gitHubFiles: {
-          selectedFile: { ...selectedOptions[selectedOptions.length - 1], projectOwner:branchesRequest.owner, projectName:branchesRequest.repo },
-        },
-      });
-    }
-  };
+    // console.log(`value`, value); console.log(`selectedFile`, selectedOptions[selectedOptions.length - 1]); console.log("selectedRepo", selectedOptions[selectedOptions.length - 2]); // this object has children prop with all files currently in repo, can be stale info if saved to db
+      if (value.length === 0) {
+        form.current.setFieldsValue({ gitHubFiles: { selectedFile: null } }); // this is triggered when user resets cascader
+      }
+      if (selectedOptions[selectedOptions.length - 1]?.isLeaf) {
+        form.current.setFieldsValue({
+           gitHubFiles: { selectedFile: { ...selectedOptions[selectedOptions.length - 1], projectOwner: branchesRequest.owner, projectName: branchesRequest.repo }, },
+           name: value[value.length -1],
+           title: value[value.length -1],
+        });
+      }
+    };
+
+  const fetchFilesFromBranch = async (targetOption) =>{
+      const respond = await fetch( `https://api.github.com/repos/${branchesRequest.owner}/${ branchesRequest.repo }/contents${targetOption.path ? "/" + targetOption.path : ""}?ref=${ branchesRequest.selectedBranch.name }` );    
+      const content = await respond.json();
+      if (content.message) throw new Error(content.message);
+      return content
+  }
 
   const loadBranchTree = async (selectedOptions) => {
-    const targetOption = selectedOptions[selectedOptions.length - 1];
-    targetOption.loading = true;
-
     try {
-      const respond = await fetch( `https://api.github.com/repos/${branchesRequest.owner}/${ branchesRequest.repo }/contents${targetOption.path ? "/" + targetOption.path : ""}?ref=${ branchesRequest.selectedBranch.name }`,{headers: getAuthorizationHeaders()});
-      const content = await respond.json();
+    const targetOption = selectedOptions[selectedOptions.length - 1];
+      targetOption.loading = true;
+      const content = await fetchFilesFromBranch(targetOption);
       targetOption.loading = false;
-      if (content.message) throw new Error(content.message);
       targetOption.children = content.map((el) => ({
         ...el,
         value: el.name,
@@ -75,12 +80,23 @@ function GitHubForm({ form ,enableEdit }) {
       setRepoTree([...repoTree]);
     } catch (error) {
       console.log(`error`, error);
+      form.current.setFields([{name:["gitHubFiles", "pathToFile"], errors:[error.message]}]);
     }
   };
 
   useEffect(() => {
-    if (branchesRequest.selectedBranch?.name) loadBranchTree(repoTree); // start loading files from root of the project.
-  }, [branchesRequest.selectedBranch?.name]);
+    if (branchesRequest.selectedBranch?.name) {
+      (async()=>{
+        try{
+          const content = await fetchFilesFromBranch({path:null});         
+          const initialTree = content.map((el) => ({ ...el, value: el.name, label: el.name, isLeaf: el.type === "dir" ? false : true, }));
+          setRepoTree(initialTree);
+        } catch (error){
+          form.current.setFields([{name:["gitHubFiles", "pathToFile"], errors:[error.message]}]);
+        }
+      })()
+    }
+}, [branchesRequest.selectedBranch?.name]);
 
   useEffect(() => {
     const defaultCascader = form?.current.getFieldValue([ "gitHubFiles", "pathToFile", ]);
@@ -89,7 +105,7 @@ function GitHubForm({ form ,enableEdit }) {
       const createOptionsTree = ( defaultCascader, currentNode = {}, repoTree = {} ) => {
         const [currentValue, ...rest] = defaultCascader;
 
-        const currentObject = { value: currentValue, label: currentValue === "/" ? "root" : currentValue, children: [] };
+        const currentObject = { value: currentValue, label: currentValue, children: [] };
 
         if (!repoTree.children) {
           repoTree = currentObject;
@@ -235,7 +251,7 @@ function GitHubForm({ form ,enableEdit }) {
         <Cascader
           defaultValue={defaultCascader}
           className={!enableEdit && "read-only-input"}
-          disabled={!repoTree[0].children || !branchesRequest.branches}
+          disabled={!branchesRequest.selectedBranch}
           changeOnSelect
           options={repoTree}
           onChange={onChange}

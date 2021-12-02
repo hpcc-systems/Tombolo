@@ -18,6 +18,7 @@ let JobExecution = models.job_execution;
 let MessageBasedJobs = models.message_based_jobs;
 const JobScheduler = require('../../job-scheduler');
 const hpccUtil = require('../../utils/hpcc-util');
+const workFlowUtil = require('../../utils/workflow-util');
 const validatorUtil = require('../../utils/validator');
 const { body, query, param, validationResult } = require('express-validator');
 const assetUtil = require('../../utils/assets');
@@ -29,6 +30,7 @@ const SUBMIT_SPRAY_JOB_FILE_NAME = 'submitSprayJob.js'
 const SUBMIT_SCRIPT_JOB_FILE_NAME = 'submitScriptJob.js';
 const SUBMIT_MANUAL_JOB_FILE_NAME = 'submitManualJob.js'
 const SUBMIT_GITHUB_JOB_FILE_NAME = 'submitGithubJob.js'
+
 
 /**
   Updates Dataflow graph by
@@ -517,11 +519,12 @@ router.post('/saveJob', [
   body('job.basic.application_id')
     .isUUID(4).withMessage('Invalid application id'),
   body('job.basic.name')
-  .matches(/^[a-zA-Z]{1}[a-zA-Z0-9_.\-:]*$/).withMessage('Invalid name'),
+  .matches(/^[a-zA-Z]{1}[a-zA-Z0-9_. \-:]*$/).withMessage('Invalid name'),
   body('job.basic.title')
   .matches(/^[a-zA-Z]{1}[a-zA-Z0-9_. \-:]*$/).withMessage('Invalid title'),
 ], (req, res) => {
   const errors = validationResult(req).formatWith(validatorUtil.errorFormatter);
+
   if (!errors.isEmpty()) {
       return res.status(422).json({ success: false, errors: errors.array() });
   }
@@ -1009,7 +1012,7 @@ router.post('/executeJob', [
     } else if (isScriptJob) {
       status = JobScheduler.executeJob({ jobfileName: SUBMIT_SCRIPT_JOB_FILE_NAME, ...commonWorkerData });
     } else if (isManualJob){
-      status = JobScheduler.executeJob({ jobfileName: SUBMIT_MANUAL_JOB_FILE_NAME, ...commonWorkerData, contact: job.contact, status : 'wait', manualJob_meta : { jobType : 'Manual', jobName: job.name, notifiedTo : job.contact, notifiedOn : new Date().getTime() } });
+      status = JobScheduler.executeJob({ jobfileName: SUBMIT_MANUAL_JOB_FILE_NAME, ...commonWorkerData, status : 'wait', manualJob_meta : { jobType : 'Manual', jobName: job.name, notifiedTo : job.contact, notifiedOn : new Date().getTime() } });
     } else if (isGitHubJob) {
       status = JobScheduler.executeJob({ jobfileName: SUBMIT_GITHUB_JOB_FILE_NAME, ...commonWorkerData,  metaData : job.metaData, });
     } else {
@@ -1059,26 +1062,27 @@ router.get('/jobExecutionDetails', [
 
 //when user responds to a manual job - Update job status and metadata on job execution table
 router.post('/manualJobResponse', [
-  body('jobId').isUUID(4).withMessage('Invalid Job Id'),
+  body('jobExecutionId').isUUID(4).withMessage('Invalid Job Execution Id'),
   body('newManaulJob_meta').notEmpty().withMessage('Invalid meta data')], 
   (req, res) => {
     const errors = validationResult(req).formatWith(validatorUtil.errorFormatter);
     if (!errors.isEmpty()) {
         return res.status(422).json({ success: false, errors: errors.array() });
     }
-    JobExecution.findOne({where : {jobId: req.body.jobId}})
+    JobExecution.findOne({where : {id: req.body.jobExecutionId}})
                 .then(jobExecution => {
                   let newMeta = {...jobExecution.manualJob_meta, ...req.body.newManaulJob_meta}
                   jobExecution.update({status : req.body.status, manualJob_meta : newMeta, })
                             .then(async jobExecution => {
-                              if (!jobExecution.status === 'failed') {
+                              //once the job execution is updated, send confirmation email
+                              await workFlowUtil.confirmationManualJobAction(jobExecution.manualJob_meta);
+                              if (jobExecution.status === 'completed') {
                                 await  JobScheduler.scheduleCheckForJobsWithSingleDependency({
                                   dependsOnJobId : jobExecution.jobId,
                                   dataflowId : jobExecution.dataflowId
                                 });
                               }
-                              //TDO - Send confirmation email to end user here                                       
-                                        })
+                              }).then(res.status(200).json({success : true}))
                             .catch(err => {
                               res.status(501).json({success: false, message : 'Error occured while saving data'})})
                   })

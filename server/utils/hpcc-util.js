@@ -155,7 +155,7 @@ exports.indexInfo = (clusterId, indexName) => {
 
 
 exports.executeSprayJob = (job) => {
-  try {
+  // try {
     return new Promise((resolve, reject) => {
       let cluster = module.exports.getCluster(job.cluster_id).then(async function(cluster) {			
         let sprayPayload = {
@@ -190,13 +190,14 @@ exports.executeSprayJob = (job) => {
             resolve(result);							
           }
         })
-      })
+      }).catch((error) => reject('Error occured during dropzone file search'))
     })
-	} catch (err) {
-		console.log('err', err);
-		reject('Error occured during dropzone file search');
 	}
-}
+  //  catch (err) {
+	// 	console.log('err', err);
+	// 	reject('Error occured during dropzone file search');
+	// }
+// }
 
 exports.queryInfo = (clusterId, queryName) => {
   let resultObj = {basic:{}}, requestObj = [], responseObj = [];
