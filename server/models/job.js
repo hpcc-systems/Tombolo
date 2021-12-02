@@ -1,4 +1,6 @@
 'use strict';
+const crypto = require('crypto');
+
 module.exports = (sequelize, DataTypes) => {
   const job = sequelize.define('job', {
     id: {

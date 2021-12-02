@@ -7,6 +7,7 @@ let hpccJSComms = require("@hpcc-js/comms");
 const crypto = require('crypto');
 let algorithm = 'aes-256-ctr';
 
+const debug = require('debug');
 const simpleGit = require('simple-git');
 const cp = require('child_process');
 const fs = require('fs');
@@ -626,7 +627,7 @@ exports.updateWUAction = async (clusterId,WUactionBody) =>{
 
 exports.pullFilesFromGithub = async( jobName="", clusterId, fileData ) => {
 
-  const tasks ={ repoCloned: false, repoDeleted: false, archiveCreated: false, WUCreated:false, WUupdated: false, WUsubmitted: false, WUaction: null, error: null };
+  const tasks ={ repoCloned: false, gitSubmoduleUpdated: false, repoDeleted: false, archiveCreated: false, WUCreated:false, WUupdated: false, WUsubmitted: false, WUaction: null, error: null };
   let currentClonedRepoPath;
   let wuService;
   let wuid;
@@ -645,24 +646,48 @@ exports.pullFilesFromGithub = async( jobName="", clusterId, fileData ) => {
     tasks.WUCreated = true;
     console.log(`✔️  pullFilesFromGithub: WUCreated-  ${wuid}`);
 
-    const { selectedGitBranch, providedGithubRepo, selectedFile } = fileData; // TODO will need username and token in order to pull private repo
+    const { selectedGitBranch, selectedFile } = fileData; 
     const { projectOwner, projectName, name:startFileName, path:filePath } = selectedFile;
-
+    
     const allClonesPath = path.join(process.cwd(),'..','gitClones');
-    currentClonedRepoPath = `${allClonesPath}/${projectOwner}-${projectName}-${wuid}` ;
+    currentClonedRepoPath =  path.join(allClonesPath,`${projectOwner}-${projectName}-${wuid}`);
 
-    // const executionRepoPath = path.join(currentClonedRepoPath,filePath.replace(startFileName,''));
     const startFilePath =path.join(currentClonedRepoPath,filePath);
-
+    
     const gitOptions= { baseDir: allClonesPath };
-    const git = simpleGit(gitOptions);
-
+    debug.enable('simple-git,simple-git:*');
+    const git = simpleGit(gitOptions);    
+    
+    let{ providedGithubRepo, gitHubUserName, gitHubUserAccessToken }= fileData;
+    if (gitHubUserName && gitHubUserAccessToken) {
+      gitHubUserName= crypto.createDecipher(algorithm, process.env['cluster_cred_secret']).update(gitHubUserName,'hex','utf8');
+      gitHubUserAccessToken= crypto.createDecipher(algorithm, process.env['cluster_cred_secret']).update(gitHubUserAccessToken,'hex','utf8');
+      providedGithubRepo = providedGithubRepo.slice(0, 8) + gitHubUserName + ':' + gitHubUserAccessToken + '@' + providedGithubRepo.slice(8);
+    }
+  
     // #1 - Clone repo
     console.log(`✔️  pullFilesFromGithub: CLONING STARTED-${providedGithubRepo}, branch: ${selectedGitBranch}`);
     await git.clone(providedGithubRepo, currentClonedRepoPath ,{'--branch':selectedGitBranch, '--single-branch':true} );
     tasks.repoCloned = true;
     console.log(`✔️  pullFilesFromGithub: CLONING FINISHED-${providedGithubRepo}, branch: ${selectedGitBranch}`);
 
+    // update submodules // TODO NOT DONE
+    try {
+      console.log('-currentClonedRepoPath----------------------------------------');
+      console.dir({currentClonedRepoPath,relative:`${projectOwner}-${projectName}-${wuid}`}, { depth: null });
+      console.log('------------------------------------------');
+      
+      const commands =['submodule', 'update', '--init', '-–recursive'];
+
+      // await simpleGit(currentClonedRepoPath).raw( ...commands);
+      await git.cwd({ path: currentClonedRepoPath, root: true }).submoduleUpdate(['--init','-–recursive']);
+      tasks.gitSubmoduleUpdated = true;
+      console.log(`✔️  pullFilesFromGithub: SUBMODULES UPDATED ${providedGithubRepo}, branch: ${selectedGitBranch}`);
+    } catch (error) {
+      console.log('❌  pullFilesFromGithub: git submodule update error----------------------------------------');
+      console.dir(error, { depth: null });
+      tasks.gitSubmoduleUpdated = false;
+    }
     // #2 - Create Archive XML File     
     let args = ['-E', startFilePath, '-I', currentClonedRepoPath];
     const archived = await createEclArchive(args, currentClonedRepoPath); 
