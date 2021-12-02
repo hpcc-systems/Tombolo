@@ -13,6 +13,14 @@ function GitHubForm({ form ,enableEdit }) {
   
   const [defaultCascader, setDefaultCascader] = useState(null);
 
+  const getAuthorizationHeaders = () =>{
+  // const gitHubUserName = form?.current.getFieldValue([ "gitHubFiles", "gitHubUserName", ]);
+  const gitHubUserAccessToken = form?.current.getFieldValue([ "gitHubFiles", "gitHubUserAccessToken", ]);   
+  const headers ={ 'Accept': 'application/json', 'Content-Type': 'application/json' };
+  if (gitHubUserAccessToken) headers.Authorization = `token ${gitHubUserAccessToken}`;
+  return headers;
+}
+
   const onSearch = async (value, event) => {
     const url = value.split("/");
     const owner = url[3];
@@ -20,8 +28,8 @@ function GitHubForm({ form ,enableEdit }) {
     try {
     if(!owner || !repo || !value.startsWith('https://github.com/')) throw new Error("Invalid repo provided.")
     setBranchesRequest((prev) => ({ ...prev, loading: true }));
-      const respond = await fetch( `https://api.github.com/repos/${owner}/${repo}/branches` );
-      const branches = await respond.json();
+      const respond = await fetch( `https://api.github.com/repos/${owner}/${repo}/branches`,{headers: getAuthorizationHeaders()} );
+      const branches = await respond.json();      
       if (branches.message) throw new Error(branches.message);
       setBranchesRequest((prev) => ({ ...prev, repo, owner, error: null, loading: false, validateStatus: "success", branches: branches, }));
     } catch (error) {
@@ -120,6 +128,60 @@ function GitHubForm({ form ,enableEdit }) {
 
   return (
     <>
+      <Form.Item 
+      label="Credentials"  
+      help="GitHub credentials are not required for public repos, although they are usually autofilled by your browser, please check inputs."
+      >
+       <Row gutter={[8, 8]}>
+        <Col span={12}>
+          <Form.Item 
+             name={["gitHubFiles", "gitHubUserName"]}
+             validateTrigger={["onBlur", "onSubmit"]}
+             className={!enableEdit && "read-only-input"}
+             rules={[
+              ({ getFieldValue, setFields }) => ({
+                validator: (field, value) => {
+                  const token = getFieldValue(["gitHubFiles", "gitHubUserAccessToken"])
+                  if (!value && token) {
+                    return Promise.reject(new Error("Provide Github Username"));
+                  }
+                  if (!value && !token){
+                    setFields([{name:["gitHubFiles", "gitHubUserName"],errors:[]}, {name:["gitHubFiles", "gitHubUserAccessToken"],errors:[]}])
+                  }
+                  return Promise.resolve();
+                },
+              }),
+            ]}
+          >
+            <Input autoComplete="new-password" allowClear prefix={<UserOutlined className="site-form-item-icon" />} placeholder="GitHub User Name" />
+          </Form.Item>
+        </Col>
+        <Col span={12}>
+          <Form.Item 
+           name={["gitHubFiles", "gitHubUserAccessToken"]}
+           className={!enableEdit && "read-only-input"}
+           validateTrigger={["onBlur", "onSubmit"]}
+           rules={[      
+            ({ getFieldValue,setFields }) => ({
+              validator: (field, value) => {
+                const gitHubUserName = getFieldValue(["gitHubFiles", "gitHubUserName"]);
+                if (!value && gitHubUserName) {
+                  return Promise.reject(new Error("Provide Github Access Token"));
+                }
+                if (!value && !gitHubUserName){
+                  setFields([{name:["gitHubFiles", "gitHubUserName"],errors:[]}, {name:["gitHubFiles", "gitHubUserAccessToken"],errors:[]}])
+                }
+                return Promise.resolve();
+              },
+            }),
+          ]}
+          >
+            <Input autoComplete="new-password" allowClear prefix={<LockOutlined className="site-form-item-icon" />} type="password" placeholder="Private Access Token" />
+          </Form.Item>
+        </Col>
+       </Row>
+      </Form.Item>
+
       <Form.Item
         label="GitHub repo"
         validateTrigger={["onBlur"]}
@@ -196,22 +258,6 @@ function GitHubForm({ form ,enableEdit }) {
           loadData={loadBranchTree}
         />
       </Form.Item>
-      {/* //!! not used in public repo flow */}
-      <Form.Item   hidden={true} wrapperCol={{ offset: 2, span: 8}} help="GitHub credentials are not required for public repos, although they are usually autofilled by your browser, please check your inputs.">
-       <Row gutter={[8, 8]}>
-        <Col span={12}>
-          <Form.Item  name={["gitHubFiles", "gitHubUserName"]}>
-            <Input autoComplete="off" allowClear prefix={<UserOutlined className="site-form-item-icon" />} placeholder="GitHub test" />
-          </Form.Item>
-        </Col>
-        <Col span={12}>
-          <Form.Item   name={["gitHubFiles", "gitHubPassword"]}>
-            <Input autoComplete="off" allowClear prefix={<LockOutlined className="site-form-item-icon" />} type="password" placeholder="GitHub test" />
-          </Form.Item>
-        </Col>
-       </Row>
-      </Form.Item>
-
       <Form.Item hidden={true} name={["gitHubFiles", "selectedFile"]} /> 
     </>
   );

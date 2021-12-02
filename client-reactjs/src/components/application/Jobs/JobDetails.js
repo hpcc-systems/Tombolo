@@ -780,7 +780,7 @@ class JobDetails extends Component {
         providedGithubRepo:gitHubFiles.providedGithubRepo,
         selectedGitBranch : gitHubFiles.selectedGitBranch,
         gitHubUserName:gitHubFiles.gitHubUserName,
-        gitHubPassword:gitHubFiles.gitHubPassword,
+        gitHubUserAccessToken:gitHubFiles.gitHubUserAccessToken,
         pathToFile:gitHubFiles.pathToFile, // we need to save this field to recreate view in cascader.
         selectedFile:{
           projectOwner: gitHubFiles.selectedFile.projectOwner,
