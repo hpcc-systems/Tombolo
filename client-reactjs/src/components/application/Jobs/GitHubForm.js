@@ -59,7 +59,7 @@ function GitHubForm({ form ,enableEdit }) {
     };
 
   const fetchFilesFromBranch = async (targetOption) =>{
-      const respond = await fetch( `https://api.github.com/repos/${branchesRequest.owner}/${ branchesRequest.repo }/contents${targetOption.path ? "/" + targetOption.path : ""}?ref=${ branchesRequest.selectedBranch.name }` );    
+      const respond = await fetch( `https://api.github.com/repos/${branchesRequest.owner}/${ branchesRequest.repo }/contents${targetOption.path ? "/" + targetOption.path : ""}?ref=${ branchesRequest.selectedBranch.name }`,{headers: getAuthorizationHeaders()} );    
       const content = await respond.json();
       if (content.message) throw new Error(content.message);
       return content
