@@ -674,14 +674,8 @@ exports.pullFilesFromGithub = async( jobName="", clusterId, fileData ) => {
 
     // update submodules // TODO NOT DONE
     try {
-      console.log('-currentClonedRepoPath----------------------------------------');
-      console.dir({currentClonedRepoPath,relative:`${projectOwner}-${projectName}-${wuid}`}, { depth: null });
-      console.log('------------------------------------------');
-      
-      const commands =['submodule', 'update', '--init', '-–recursive'];
-
-      // await simpleGit(currentClonedRepoPath).raw( ...commands);
-      await git.cwd({ path: currentClonedRepoPath, root: true }).submoduleUpdate(['--init','-–recursive']);
+      console.dir({currentClonedRepoPath: currentClonedRepoPath,relative:`${projectOwner}-${projectName}-${wuid}`}, { depth: null });
+      await git.cwd({ path: currentClonedRepoPath, root: true }).submoduleUpdate(['--init','--recursive']);
       tasks.gitSubmoduleUpdated = true;
       console.log(`✔️  pullFilesFromGithub: SUBMODULES UPDATED ${providedGithubRepo}, branch: ${selectedGitBranch}`);
     } catch (error) {
