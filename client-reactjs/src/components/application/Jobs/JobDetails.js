@@ -779,6 +779,7 @@ class JobDetails extends Component {
       metaData.gitHubFiles ={
         providedGithubRepo:gitHubFiles.providedGithubRepo,
         selectedGitBranch : gitHubFiles.selectedGitBranch,
+        selectedGitTag : gitHubFiles.selectedGitTag,
         gitHubUserName:gitHubFiles.gitHubUserName,
         gitHubUserAccessToken:gitHubFiles.gitHubUserAccessToken,
         pathToFile:gitHubFiles.pathToFile, // we need to save this field to recreate view in cascader.

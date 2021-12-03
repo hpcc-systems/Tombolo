@@ -7,7 +7,9 @@ import { UserOutlined, LockOutlined } from '@ant-design/icons';
 
 function GitHubForm({ form ,enableEdit }) { 
   
-  const [branchesRequest, setBranchesRequest] = useState({ validateStatus: null, selectedBranch: null, loading: false, branches: null, error: null, owner: null, repo: null, });
+  const [branchesRequest, setBranchesRequest] = useState({ validateStatus: null, selectedBranch: null, loading: false, branches: null, error: null });
+  const [tagsRequest, setTagsRequest] = useState({ validateStatus: null, selectedTag: null, loading: false, tags: null, error: null });
+  const [gitRepo,setGitRepo] = useState({owner: null, repo: null})  
 
   const [repoTree, setRepoTree] = useState([]);
   
@@ -28,20 +30,32 @@ function GitHubForm({ form ,enableEdit }) {
     try {
     if(!owner || !repo || !value.startsWith('https://github.com/')) throw new Error("Invalid repo provided.")
     setBranchesRequest((prev) => ({ ...prev, loading: true }));
-      const respond = await fetch( `https://api.github.com/repos/${owner}/${repo}/branches`,{headers: getAuthorizationHeaders()} );
-      const branches = await respond.json();      
-      if (branches.message) throw new Error(branches.message);
-      setBranchesRequest((prev) => ({ ...prev, repo, owner, error: null, loading: false, validateStatus: "success", branches: branches, }));
+    setTagsRequest((prev) => ({ ...prev, loading: true }));
+    const response = await Promise.all(['branches','tags'].map(el => fetch( `https://api.github.com/repos/${owner}/${repo}/${el}`,{headers: getAuthorizationHeaders()})));
+    const [branches,tags] = await Promise.all(response.map(promise => promise.json())) ;
+
+    branches.message ? setBranchesRequest({ loading: false, validateStatus: "error", error:branches.message, }) : setBranchesRequest((prev) => ({ ...prev, error: null, loading: false, validateStatus: "success", branches: branches, }));
+    tags.message ? setTagsRequest({ loading: false, validateStatus: "error", error:tags.message, }) : setTagsRequest((prev) => ({ ...prev, error: null, loading: false, validateStatus: "success", tags: tags, }));
+    setGitRepo(prev =>({...prev, repo, owner}))
     } catch (error) {
       console.log(`error`, error);
       setBranchesRequest({ loading: false, validateStatus: "error", error: error.message, });
+      setTagsRequest({ loading: false, validateStatus: "error", error:error.message, })
     }
-    form.current.resetFields([["gitHubFiles", "selectedGitBranch"],["gitHubFiles", "pathToFile"],["gitHubFiles", "selectedFile"]])
+    form.current.resetFields([["gitHubFiles", "selectedGitBranch"],["gitHubFiles", "pathToFile"],["gitHubFiles", "selectedFile"],["gitHubFiles", "selectedGitTag"]])
   };
 
   const handleBranchSelect = (value) => {
     const selectedBranch = branchesRequest.branches.find( (branch) => branch.name === value );
     setBranchesRequest((prev) => ({ ...prev, selectedBranch }));
+    form.current.resetFields([["gitHubFiles", "selectedGitTag"]]);
+
+  };
+
+  const handleTagSelect = (value) => {
+    const selectedTag= tagsRequest.tags.find((tags) => tags.name === value );
+    setTagsRequest((prev) => ({ ...prev, selectedTag }));
+    form.current.resetFields([["gitHubFiles", "selectedGitBranch"]]);
   };
 
   const onChange = (value, selectedOptions) => {
@@ -58,8 +72,8 @@ function GitHubForm({ form ,enableEdit }) {
       }
     };
 
-  const fetchFilesFromBranch = async (targetOption) =>{
-      const respond = await fetch( `https://api.github.com/repos/${branchesRequest.owner}/${ branchesRequest.repo }/contents${targetOption.path ? "/" + targetOption.path : ""}?ref=${ branchesRequest.selectedBranch.name }`,{headers: getAuthorizationHeaders()} );    
+  const fetchFilesFromGit = async (targetOption) =>{
+      const respond = await fetch( `https://api.github.com/repos/${gitRepo.owner}/${ gitRepo.repo }/contents${targetOption.path ? "/" + targetOption.path : ""}?ref=${ targetOption.ref }`,{headers: getAuthorizationHeaders()} );    
       const content = await respond.json();
       if (content.message) throw new Error(content.message);
       return content
@@ -69,7 +83,8 @@ function GitHubForm({ form ,enableEdit }) {
     try {
     const targetOption = selectedOptions[selectedOptions.length - 1];
       targetOption.loading = true;
-      const content = await fetchFilesFromBranch(targetOption);
+      targetOption.ref =  targetOption.url.match(/(?<=ref=).+/)[0];
+      const content = await fetchFilesFromGit(targetOption);
       targetOption.loading = false;
       targetOption.children = content.map((el) => ({
         ...el,
@@ -85,10 +100,11 @@ function GitHubForm({ form ,enableEdit }) {
   };
 
   useEffect(() => {
-    if (branchesRequest.selectedBranch?.name) {
+    if (branchesRequest.selectedBranch?.name || tagsRequest.selectedTag?.name) {
+      const filesFrom = tagsRequest.selectedTag?.name ? tagsRequest.selectedTag?.name : branchesRequest.selectedBranch?.name;
       (async()=>{
         try{
-          const content = await fetchFilesFromBranch({path:null});         
+          const content = await fetchFilesFromGit({path:null,ref: filesFrom});         
           const initialTree = content.map((el) => ({ ...el, value: el.name, label: el.name, isLeaf: el.type === "dir" ? false : true, }));
           setRepoTree(initialTree);
         } catch (error){
@@ -96,7 +112,7 @@ function GitHubForm({ form ,enableEdit }) {
         }
       })()
     }
-}, [branchesRequest.selectedBranch?.name]);
+}, [branchesRequest.selectedBranch?.name, tagsRequest.selectedTag?.name]);
 
   useEffect(() => {
     const defaultCascader = form?.current.getFieldValue([ "gitHubFiles", "pathToFile", ]);
@@ -194,7 +210,7 @@ function GitHubForm({ form ,enableEdit }) {
             branchesRequest.error
           ) : branchesRequest.validateStatus === "success" ? (
             <span style={{ color: "green" }}>
-              Success! Choose the branch you want to browse
+              Success! Choose the branch or tags you want to browse
             </span>
           ) : null
         }
@@ -207,30 +223,43 @@ function GitHubForm({ form ,enableEdit }) {
         />
       </Form.Item>
 
-      <Form.Item
-        label="Branch"
-        validateTrigger={["onBlur"]}
-        name={["gitHubFiles", "selectedGitBranch"]}
-        className={!enableEdit && "read-only-input"}
-        rules={[
-          {
-            required: true,
-            message: "Select branch",
-          },
-        ]}
-      >
-        <Select
-          placeholder="Select branch"
-          disabled={enableEdit && !branchesRequest.branches}
-          onChange={handleBranchSelect}
-        >
-          {branchesRequest.branches?.map((branch) => (
-            <Select.Option key={branch.name} value={branch.name}>
-              {branch.name}
-            </Select.Option>
-          ))}
-        </Select>
+
+      <Form.Item required label="Branch"> 
+        <Row gutter={[8, 8]}>
+          <Col span={11}>
+            <Form.Item
+              validateTrigger={["onBlur"]}
+              name={["gitHubFiles", "selectedGitBranch"]}
+              className={!enableEdit && "read-only-input"}
+              rules={[ { required:  !form.current?.getFieldValue(["gitHubFiles", "selectedGitTag"]), message: "Select branch", }, ]}
+            >
+              <Select allowClear placeholder="Select branch" disabled={enableEdit && !branchesRequest.branches} onChange={handleBranchSelect} >
+                {branchesRequest.branches?.map((branch) => (
+                  <Select.Option key={branch.name} value={branch.name}> {branch.name} </Select.Option>
+                ))}
+              </Select>
+            </Form.Item>
+          </Col>
+
+          <Col style={{display:'flex',justifyContent:'center'}} span={2}>or</Col>
+
+          <Col span={11}>
+           <Form.Item
+              validateTrigger={["onBlur"]}
+              name={["gitHubFiles", "selectedGitTag"]}
+              className={!enableEdit && "read-only-input"}
+              rules={[ { required:  !form.current?.getFieldValue(["gitHubFiles", "selectedGitBranch"]), message: "Select Tag", }, ]}
+            >
+              <Select allowClear placeholder="Select Tag" disabled={enableEdit && !tagsRequest.tags} onChange={handleTagSelect} >
+                {tagsRequest.tags?.map((tags) => (
+                  <Select.Option key={tags.name} value={tags.name}> {tags.name} </Select.Option>
+                ))}
+              </Select>
+            </Form.Item>
+          </Col>
+        </Row>
       </Form.Item>
+   
 
       <Form.Item
         label="Main File"
@@ -251,7 +280,7 @@ function GitHubForm({ form ,enableEdit }) {
         <Cascader
           defaultValue={defaultCascader}
           className={!enableEdit && "read-only-input"}
-          disabled={!branchesRequest.selectedBranch}
+          disabled={!branchesRequest.selectedBranch && !tagsRequest.selectedTag}
           changeOnSelect
           options={repoTree}
           onChange={onChange}
