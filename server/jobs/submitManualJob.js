@@ -19,7 +19,7 @@ const dispatchAction = (action,data) =>  parentPort.postMessage({ action, data }
 	try {
 		workerData.notifiedOn = new Date().getTime();
 		jobExecution = await JobExecution.create(workerData);
-		workerData.url = `${process.env.WEB_URL}${workerData.applicationId}/manualJobDetails/${workerData.jobId}/${jobExecution.id}`;
+    workerData.url = `${process.env.WEB_URL}${workerData.applicationId}/manualJobDetails/${workerData.jobId}/${jobExecution.id}`;
 		await assetUtil.notifyManualJob(workerData);
 	}catch (err) {
 		if(jobExecution){

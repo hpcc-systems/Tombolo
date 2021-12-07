@@ -13,6 +13,7 @@ function BasicsTabManul(props) {
     const applicationReducer = useSelector(state => state.applicationReducer);
     const readOnlyView = !enableEdit || !addingNewAsset;
     const [options, setOptions] = useState([]);
+
     const [selectedCluster, setSelectedCluster] = useState(assetReducer.clusterId);
     const [clusters, setClusters] = useState(applicationReducer.clusters)
     const { Option } = Select; 
