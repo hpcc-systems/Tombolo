@@ -238,7 +238,7 @@ class Consumers extends Component {
   handleAddConsumerOk = () => {
     let consumer = []
     consumer = this.props.consumers.map(consumer => {return this.state.newConsumer.name === consumer.name});
-    if(consumer[0]){
+    if(consumer[0] && !this.state.isEditing){
      return  message.error(`Consumer name must be unique`)
     }
     this.setState({

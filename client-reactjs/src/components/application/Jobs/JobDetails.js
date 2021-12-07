@@ -159,7 +159,7 @@ class JobDetails extends Component {
       id: "",
       groupId: "",
       dataflowId: this.props.selectedDataflow
-        ? this.props.selectedDataflow.id
+        ? this.props.selectedDataflow
         : "",
       ecl: "",
       entryBWR: "",
@@ -233,7 +233,7 @@ class JobDetails extends Component {
       if (this.props.application && this.props.application.applicationId) {
         queryStringParams["app_id"] = this.props.application.applicationId;
       }
-      if (this.props.selectedDataflow && this.props.selectedDataflow.id) {
+      if (this.props.selectedDataflow) {
         queryStringParams["dataflow_id"] = this.props.selectedDataflow.id;
       }
 
@@ -372,7 +372,7 @@ class JobDetails extends Component {
     if (this.props.application && this.props.application.applicationId) {
       queryStringParams["app_id"] = this.props.application.applicationId;
     }
-    if (this.props.selectedDataflow && this.props.selectedDataflow.id) {
+    if (this.props.selectedDataflow) {
       queryStringParams["dataflowId"] = this.props.selectedDataflow.id;
     }
     if (Object.keys(queryStringParams).length > 0) {
@@ -464,7 +464,7 @@ class JobDetails extends Component {
         id: "",
         groupId: "",
         dataflowId: this.props.selectedDataflow
-          ? this.props.selectedDataflow.id
+          ? this.props.selectedDataflow
           : "",
         ecl: "",
         entryBWR: "",
@@ -782,8 +782,9 @@ class JobDetails extends Component {
       metaData.gitHubFiles ={
         providedGithubRepo:gitHubFiles.providedGithubRepo,
         selectedGitBranch : gitHubFiles.selectedGitBranch,
+        selectedGitTag : gitHubFiles.selectedGitTag,
         gitHubUserName:gitHubFiles.gitHubUserName,
-        gitHubPassword:gitHubFiles.gitHubPassword,
+        gitHubUserAccessToken:gitHubFiles.gitHubUserAccessToken,
         pathToFile:gitHubFiles.pathToFile, // we need to save this field to recreate view in cascader.
         selectedFile:{
           projectOwner: gitHubFiles.selectedFile.projectOwner,
@@ -812,7 +813,7 @@ class JobDetails extends Component {
         ...formFields,
         application_id: applicationId,
         dataflowId: this.props.selectedDataflow
-          ? this.props.selectedDataflow.id
+          ? this.props.selectedDataflow
           : "",
         cluster_id: this.state.selectedCluster,
         ecl: this.state.job.ecl,
@@ -937,7 +938,7 @@ class JobDetails extends Component {
 
   handleScheduleTypeSelect = (value) => {
     let dataflowId = this.props.selectedDataflow
-        ? this.props.selectedDataflow.id
+        ? this.props.selectedDataflow
         : "",
       applicationId = this.props.application
         ? this.props.application.applicationId
@@ -1651,6 +1652,7 @@ class JobDetails extends Component {
 
      const noECLAvailable = this.formRef.current?.getFieldValue("isStoredOnGithub") && !this.state.job.ecl;
 
+     //JSX
     return (
       <React.Fragment> 
         {this.props.displayingInModal || this.state.addingNewAsset ? null : (

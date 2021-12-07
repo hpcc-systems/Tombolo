@@ -22,8 +22,8 @@ exports.notifyJobFailure = async ({jobId, clusterId, wuid}) => {
         console.log('------------------------------------------');
         console.log(`!!!EMAIL SENT to ${job.contact}!!!`)
         console.log('------------------------------------------');
-        resolve();
       }
+      resolve();
     }).catch(reject);
   })
 }
