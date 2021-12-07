@@ -124,10 +124,10 @@ exports.indexInfo = (clusterId, indexName) => {
   });
 }
 
-  exports.fetchDirectories = (host, port, data) => {
+  exports.fetchDirectories = (host, port, data, cluster) => {
     let formData={};
     for(let key in data){
-      formData[key] = data[key].toString()
+      formData[key] = data[key].toString();
     }
     try {
       return new Promise((resolve, reject) => {
@@ -135,6 +135,7 @@ exports.indexInfo = (clusterId, indexName) => {
             url: `${host}:${port}/FileSpray/FileList.json`,
             headers: {'content-type' : 'application/x-www-form-urlencoded'},
             formData: formData,
+            auth : this.getClusterAuth(cluster),
             resolveWithFullResponse: true
           }, function(err, response, body) {
             if (err) {

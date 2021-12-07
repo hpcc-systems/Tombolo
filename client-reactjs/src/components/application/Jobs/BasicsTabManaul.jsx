@@ -6,7 +6,6 @@ import { MarkdownEditor } from "../../common/MarkdownEditor.js";
 import { useSelector,useDispatch } from "react-redux";
 import { assetsActions } from '../../../redux/actions/Assets';
 import { Cascader } from "antd";
-import {FolderOutlined} from "@ant-design/icons"
 
 function BasicsTabManul(props) {
     const {enableEdit, localState, editingAllowed,  onChange, formRef, addingNewAsset} = props;
@@ -14,11 +13,15 @@ function BasicsTabManul(props) {
     const applicationReducer = useSelector(state => state.applicationReducer);
     const readOnlyView = !enableEdit || !addingNewAsset;
     const [options, setOptions] = useState([]);
-    const [machines, setMachines] = useState({});
+    // const [machines, setMachines] = useState({});
     const [selectedCluster, setSelectedCluster] = useState(assetReducer.clusterId);
     const [clusters, setClusters] = useState(applicationReducer.clusters)
     const { Option } = Select; 
     const dispatch = useDispatch();  
+
+    useEffect(() => {
+    // console.log("<<<<<<<<<<< Selected cluster", selectedCluster)
+    }, [selectedCluster])
 
     // On form file path (cascader value) change 
     const onFilePathChange = (value) =>{
@@ -36,7 +39,7 @@ function BasicsTabManul(props) {
     //When the cluster id changes make a call and get all dropzones within that cluster
     useEffect(() => {
       if(selectedCluster){
-          fetch(`/api/hpcc/read/getDropzones?clusterId=${selectedCluster}&for=fileUpload`,{
+          fetch(`/api/hpcc/read/getDropzones?clusterId=${selectedCluster}&for=manualJobSerach`,{
             headers : authHeader()
           }).then(response => {
             if(response.ok){
@@ -46,8 +49,10 @@ function BasicsTabManul(props) {
           }).then(data =>{
               let newOptions = [];
               data.map(item => {
-                  newOptions.push( {'value' : item.path, 'label' : item.name, isLeaf: false});
-                  setMachines(item.machines[0]);
+                  // console.log("<<<<<<<<<<<<<<<< Machine ", item.machines)
+                  // item.machines.map(machine =>{dropZoneMachines.push({label : machine.Netaddress, value : machine.Netaddress, os: machine.os, isLeaf: false})});
+                  newOptions.push( {'value' : item.path, 'label' : item.name, machine: item.machines[0], isLeaf: false});
+                  // setMachines(item.machines[0]);
               })
               setOptions(newOptions);             
           }).catch(err =>{
@@ -66,20 +71,23 @@ function BasicsTabManul(props) {
        ]);
       }
 
+
     //when dropzone is selected make call to get the dirs and files
-    const loadData = ( selectedOptions) =>{      
-      let path = selectedOptions.map(item => item.value);
-      let pathToAsset = path.join("/");
+    const loadData = (selectedOptions) =>{
+      let pathOptions = [...selectedOptions];  // make a copy so the original array is not mutated
+      pathOptions.splice(1,1); // Remove machine address
+      const pathToAsset = pathOptions.map(item =>item.value).join("/") + "/"; // join options array with "/" to create a path
       const host = clusters.filter(item => item.id === selectedCluster)
       const targetOption = selectedOptions[selectedOptions.length - 1];
+
       targetOption.loading = true;
           const data = JSON.stringify({
-            Netaddr : machines.Netaddress,
+            Netaddr : selectedOptions[0].machine.Netaddress,
             Path : pathToAsset,
-            OS : machines.OS,
+            OS : selectedOptions[0].OS,
             rawxml_ : true,
             DirectoryOnly: false})
-              fetch(`/api/hpcc/read/getDirectories?data=${data}&host=${host[0].thor_host}&port=${host[0].thor_port}`, {
+              fetch(`/api/hpcc/read/getDirectories?data=${data}&host=${host[0].thor_host}&port=${host[0].thor_port}&clusterId=${selectedCluster}`, {
                 headers : authHeader()
               }).then(response =>{
                 if(response.ok){
@@ -87,6 +95,7 @@ function BasicsTabManul(props) {
                 }
                 handleError(response)
               }).then(data =>{
+                if(data.FileListResponse.files){
                 let children = [];
                  data.FileListResponse.files.PhysicalFileStruct.map(item =>{
                   let child = {};
@@ -95,12 +104,20 @@ function BasicsTabManul(props) {
                   child.isLeaf = !item.isDir;
                   children.push(child);
                 });
+
+                //Sort the result so the dirs are always on top
                 children.sort(function(a,b){
                   if(a.isLeaf < b.isLeaf){ return -1};
                 })
                 targetOption.loading= false;
                 targetOption.children = children;
                 setOptions([...options]);
+              }else{
+                targetOption.loading= false;
+                targetOption.disabled= true;
+                targetOption.children = [];
+                setOptions([...options]);
+              }
               })
               .catch(err =>{
                 console.log(err)
@@ -133,7 +150,7 @@ function BasicsTabManul(props) {
                     onChange={onFilePathChange}
                     loadData={loadData}
                     placeholder="Please select"
-                    className={enableEdit ? "manulJobCascader" : "manulJobCascader read-only-input"}    
+                    className={enableEdit ? null : "read-only-input"}   
                     allowClear
                 />
             </Form.Item> : null}
