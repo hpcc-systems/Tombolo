@@ -1,7 +1,7 @@
-import React, { useState, useEffect, useCallback } from "react";
-import { Table, message, Popconfirm, Tooltip, Divider } from "antd/lib";
+import React, { useState, useEffect } from "react";
+import { Table, message, Popconfirm, Tooltip, Divider, Space , Typography} from "antd/lib";
 import { authHeader, handleError } from "../../common/AuthHeader.js";
-import FileDetailsForm from "../FileDetails";
+// import FileDetailsForm from "../FileDetails";
 import MoveAssetsDialog from "./MoveAssetsDialog";
 import { hasEditPermission } from "../../common/AuthUtil.js";
 import useFileDetailsForm from "../../../hooks/useFileDetailsForm";
@@ -10,46 +10,37 @@ import { Constants } from "../../common/Constants";
 import { assetsActions } from "../../../redux/actions/Assets";
 import { useHistory } from "react-router";
 import useModal from "../../../hooks/useModal";
-import { debounce } from "lodash";
-import {
-  DeleteOutlined,
-  EditOutlined,
-  QuestionCircleOutlined,
-  FolderOpenOutlined,
-  FilePdfOutlined,
-  AreaChartOutlined
-} from "@ant-design/icons";
+import { DeleteOutlined, EditOutlined, QuestionCircleOutlined, FolderOpenOutlined, FilePdfOutlined, AreaChartOutlined } from "@ant-design/icons";
 import { store } from "../../../redux/store/Store";
 import SelectDetailsForPdfDialog from "../Assets/pdf/SelectDetailsForPdfDialog";
 import { getNestedAssets} from "../Assets/pdf/downloadPdf";
 import ReactMarkdown from "react-markdown"
 
-function AssetsTable({ selectedGroup, openGroup, handleEditGroup, refreshGroups }) {
+function AssetsTable({ openGroup, handleEditGroup, refreshGroups }) {
   const [assets, setAssets] = useState([]);
   const { isShowing, toggle, OpenDetailsForm } = useFileDetailsForm();
-  const authReducer = useSelector((state) => state.authenticationReducer);
-  const applicationReducer = useSelector((state) => state.applicationReducer);
-  const assetReducer = useSelector((state) => state.assetReducer);
+  const { authReducer, applicationReducer, assetReducer, groupsMoveReducer, groupsReducer } = useSelector(
+    (state) => ({
+      groupsReducer:state.groupsReducer,
+      authReducer: state.authenticationReducer,
+      applicationReducer: state.applicationReducer,
+      assetReducer: state.assetReducer,
+      groupsMoveReducer: state.groupsMoveReducer
+     }));
+       
+     
+  const selectedGroup = groupsReducer
+
   const history = useHistory();
-  const applicationId = applicationReducer.application
-    ? applicationReducer.application.applicationId
-    : "";
+  const applicationId = applicationReducer?.application?.applicationId || ''
+
   const { showMoveDialog = isShowing, toggleMoveDialog = toggle } = useModal();
   const { assetTypeFilter, keywords } = assetReducer.searchParams;
-  const [assetToMove, setAssetToMove] = useState({
-    id: "",
-    type: "",
-    title: "",
-    selectedGroup: {},
-  });
-  const groupsMoveReducer = useSelector((state) => state.groupsMoveReducer);
+  const [assetToMove, setAssetToMove] = useState({ id: "", type: "", title: "", selectedGroup: {}, });
   const [selectedAsset, setSelectedAsset] = useState();
   const [toPrintAssets, setToPrintAssets] = useState([])
-  const [
-    selectDetailsforPdfDialogVisibility,
-    setSelectDetailsforPdfDialogVisibility,
-  ] = useState(false);
-  let componentAlive = true;
+  const [selectDetailsforPdfDialogVisibility, setSelectDetailsforPdfDialogVisibility] = useState(false);
+
 
   const dispatch = useDispatch();  
   const editingAllowed = hasEditPermission(authReducer.user);
@@ -60,8 +51,8 @@ function AssetsTable({ selectedGroup, openGroup, handleEditGroup, refreshGroups 
         keywords != ""
           ? "/api/groups/assetsSearch?app_id=" + applicationId + ""
           : "/api/groups/assets?app_id=" + applicationId;
-      if (selectedGroup && selectedGroup.id) {
-        url += "&group_id=" + selectedGroup.id;
+      if (selectedGroup?.selectedKeys?.id) {
+        url += "&group_id=" + selectedGroup.selectedKeys.id;
       }
       if (assetTypeFilter != "") {
         url += "&assetTypeFilter=" + assetTypeFilter;
@@ -79,9 +70,7 @@ function AssetsTable({ selectedGroup, openGroup, handleEditGroup, refreshGroups 
         handleError(response);
       })
       .then((data) => {  
-        if(componentAlive){
           setAssets(data);
-        }
       })
       .catch((error) => {
         console.log(error);
@@ -89,27 +78,11 @@ function AssetsTable({ selectedGroup, openGroup, handleEditGroup, refreshGroups 
   }
 }
 
-  const deboucedFetchDataAndRenderTable = useCallback(debounce(fetchDataAndRenderTable, 100));
 
   useEffect(() => {
-    if (
-      (applicationId && selectedGroup && selectedGroup.groupId != "") || //a group has been selected
-      assetTypeFilter != "" ||
-      keywords != "" //a search triggered
-    ) {
-      deboucedFetchDataAndRenderTable();
-    }
+    fetchDataAndRenderTable();
 
-    return () => componentAlive = false;
-  }, [applicationId, selectedGroup]);
-
-  // Re-render table when Directory tree structure is changed
-  useEffect(() => {
-    deboucedFetchDataAndRenderTable();
-
-    return () => componentAlive = false;
-
-  }, [groupsMoveReducer]);
+  }, [applicationId, assetTypeFilter, keywords, groupsMoveReducer, selectedGroup?.selectedKeys?.id]);
 
   //Execute generate pdf function after asset is selected
   useEffect(() => {
@@ -253,7 +226,7 @@ function AssetsTable({ selectedGroup, openGroup, handleEditGroup, refreshGroups 
     })      
     .then(function (data) {
       if (data && data.success) {
-        deboucedFetchDataAndRenderTable();
+        fetchDataAndRenderTable();
         window.open(data.url);
       }
     })
@@ -292,26 +265,20 @@ function AssetsTable({ selectedGroup, openGroup, handleEditGroup, refreshGroups 
       ellipsis: {
         showTitle: false,
       },
+      shouldCellUpdate : 	(record, prevRecord) => record.title !== prevRecord.title,
       render: (text, record) => (
         <React.Fragment>
           <Tooltip placement="topLeft" title={record.name}>
-            <span className="asset-name">
+            <Space>
               {generateAssetIcon(record.type)}
-              <a
-                href="#"
-                onClick={(row) => handleEdit(record.id, record.type, "view", record.url)}
-              >
-                {record.title ? record.title : text}
-              </a>
-            </span>
-            {keywords && keywords.length > 0 ? (
-              <span className={"group-name"}>
-                In Group:{" "}
-                <a href="#" onClick={(row) => handleGroupClick(record.groupId)}>
-                  {record.group_name ? record.group_name : "Groups"}
-                </a>
-              </span>
-            ) : null}
+              <Typography.Link onClick={() => handleEdit(record.id, record.type, "view", record.url)}>{record.title ? record.title : text}</Typography.Link>
+                {keywords && keywords.length > 0 ? (
+                  <span className={"group-name"}>
+                    In Group:
+                    <Typography.Link onClick={() => handleGroupClick(record.groupId)}>{record.group_name ? record.group_name : "Groups"}</Typography.Link> 
+                  </span>
+                ): null}
+            </Space>
           </Tooltip>
         </React.Fragment>
       ),
@@ -321,6 +288,7 @@ function AssetsTable({ selectedGroup, openGroup, handleEditGroup, refreshGroups 
       dataIndex: "description",
       width: "25%",
       ellipsis: true,
+      shouldCellUpdate : 	(record, prevRecord) => record.description !== prevRecord.description,
       render: (text, record) =>  <span className="description-text"><ReactMarkdown children={text} /></span>
     },
     {
@@ -332,6 +300,7 @@ function AssetsTable({ selectedGroup, openGroup, handleEditGroup, refreshGroups 
       title: "Created",
       dataIndex: "createdAt",
       width: "20%",
+      shouldCellUpdate : (record, prevRecord) => record.createdAt !== prevRecord.createdAt ,
       render: (text, record) => {
         let createdAt = new Date(text);
         return (
@@ -346,77 +315,47 @@ function AssetsTable({ selectedGroup, openGroup, handleEditGroup, refreshGroups 
       title: "Action",
       dataJob: "",
       className: editingAllowed ? "show-column" : "hide-column",
+      shouldCellUpdate : 	(record, prevRecord) => record.id !== prevRecord.id,
       render: (text, record) => (
-        <span> 
-          <a
-            href="#"
-            onClick={(row) => handleEdit(record.id, record.type, "edit", record.url)}
-          >
-            <Tooltip placement="right" title={"Edit"}>
-              <EditOutlined />
-            </Tooltip>
-          </a>
-          <Divider type="vertical" />
+       <Space split={<Divider type="vertical" />}>
+          <Tooltip placement="right" title={"Edit"}>
+            <EditOutlined className="asset-action-icon" onClick={() => handleEdit(record.id, record.type, "edit", record.url)}/>
+          </Tooltip>
+
           <Popconfirm
             title="Deleting an asset will delete their metadata and make them unusable in workflows. Are you sure you want to delete this?"
             onConfirm={() => handleDelete(record.id, record.type)}
             icon={<QuestionCircleOutlined />}
           >
-            <a href="#">
-              <Tooltip placement="right" title={"Delete"}>
-                <DeleteOutlined />
-              </Tooltip>
-            </a>
-          </Popconfirm>
-          <Divider type="vertical" />
-          <a
-            href="#"
-            onClick={(row) =>
-              handleMoveAsset(
-                record.id,
-                record.type,
-                record.name,
-                selectedGroup
-              )
-            }
-          >
-            <Tooltip placement="right" title={"Move"}>
-              <FolderOpenOutlined />
+            <Tooltip placement="right" title={"Delete"}>
+              <DeleteOutlined className="asset-action-icon" />
             </Tooltip>
-          </a>          
+          </Popconfirm>
 
-          <Divider type="vertical" />
-          <Tooltip placement="right" title="Print">
-            <FilePdfOutlined
-              type="primary"
-              style={{ color: "var(--primary)", cursor: "pointer" }}
-              onClick={ () =>  getNestedAssets(applicationId, setSelectedAsset, setSelectDetailsforPdfDialogVisibility, record, setToPrintAssets)}
-            />
+          <Tooltip placement="right" title={"Move"}>
+            <FolderOpenOutlined className="asset-action-icon" onClick={() => handleMoveAsset( record.id, record.type, record.name, selectedGroup ) } />
           </Tooltip>
-          {record.type == 'File' ?   
-            <React.Fragment>
-              <Divider type="vertical" />  
-              {record.visualization ? 
-                <a href={record.visualization} target="_blank">
-                  <Tooltip placement="right" title={"RealBI Dashboard"}>
-                  <AreaChartOutlined />
-                  </Tooltip>
-                </a>
-              : <Popconfirm
-                  title="Are you sure you want to create a chart with this data?"
-                  onConfirm={() => handleCreateVisualization(record.id, record.cluster_id)}
-                  icon={<QuestionCircleOutlined />}
+         
+          <Tooltip placement="right" title="Print">
+            <FilePdfOutlined className="asset-action-icon" onClick={ () =>  getNestedAssets(applicationId, setSelectedAsset, setSelectDetailsforPdfDialogVisibility, record, setToPrintAssets)} />
+          </Tooltip>
+
+          {record.type === 'File'  ?
+            record.visualization ? 
+            ( <Tooltip placement="right" title={"RealBI Dashboard"}> <a href={record.visualization} target="_blank" rel="noreferrer"> <AreaChartOutlined className="asset-action-icon" /> </a> </Tooltip> ) :
+            (
+              <Popconfirm
+                title="Are you sure you want to create a chart with this data?"
+                onConfirm={() => handleCreateVisualization(record.id, record.cluster_id)}
+                icon={<QuestionCircleOutlined />}
                 >
-                  <a href="#">
-                    <Tooltip placement="right" title={"RealBI Dashboard"}>
-                    <AreaChartOutlined />
-                    </Tooltip>
-                  </a>
-                </Popconfirm>            
-              }              
-            </React.Fragment>  
-            : null}          
-        </span>
+                  <Tooltip placement="right" title={"RealBI Dashboard"}>
+                    <AreaChartOutlined className="asset-action-icon" />
+                  </Tooltip>
+              </Popconfirm>  
+            )
+            : null}
+        </Space>
       ),
     },
   ];

@@ -710,6 +710,11 @@ div.tooltip {
   display: inline;
 }
 
+.asset-action-icon {
+  color: var(--primary);
+  cursor: "pointer";
+}
+
 .ant-tree-list {
   padding-top: 5px;
 }
