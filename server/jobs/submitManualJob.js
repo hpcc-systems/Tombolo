@@ -17,8 +17,9 @@ const dispatchAction = (action,data) =>  parentPort.postMessage({ action, data }
 	logToConsole("Send notification ...");	
 	let jobExecution;
 	try {
-		jobExecution = await JobExecution.create(workerData);
+		workerData.notifiedOn = new Date().getTime();
 		workerData.url = `${process.env.WEB_URL}${workerData.applicationId}/manualJobDetails/${workerData.jobId}/${jobExecution.id}`;
+		jobExecution = await JobExecution.create(workerData);
 		await assetUtil.notifyManualJob(workerData);
 	}catch (err) {
 		if(jobExecution){
