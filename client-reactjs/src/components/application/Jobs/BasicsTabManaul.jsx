@@ -13,15 +13,10 @@ function BasicsTabManul(props) {
     const applicationReducer = useSelector(state => state.applicationReducer);
     const readOnlyView = !enableEdit || !addingNewAsset;
     const [options, setOptions] = useState([]);
-    // const [machines, setMachines] = useState({});
     const [selectedCluster, setSelectedCluster] = useState(assetReducer.clusterId);
     const [clusters, setClusters] = useState(applicationReducer.clusters)
     const { Option } = Select; 
     const dispatch = useDispatch();  
-
-    useEffect(() => {
-    // console.log("<<<<<<<<<<< Selected cluster", selectedCluster)
-    }, [selectedCluster])
 
     // On form file path (cascader value) change 
     const onFilePathChange = (value) =>{
