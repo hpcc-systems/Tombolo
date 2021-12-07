@@ -647,7 +647,7 @@ exports.pullFilesFromGithub = async( jobName="", clusterId, fileData ) => {
     tasks.WUCreated = true;
     console.log(`✔️  pullFilesFromGithub: WUCreated-  ${wuid}`);
 
-    const { selectedGitBranch, selectedFile } = fileData; 
+    const { selectedGitBranch, selectedGitTag, selectedFile } = fileData; 
     const { projectOwner, projectName, name:startFileName, path:filePath } = selectedFile;
     
     const allClonesPath = path.join(process.cwd(),'..','gitClones');
@@ -667,17 +667,17 @@ exports.pullFilesFromGithub = async( jobName="", clusterId, fileData ) => {
     }
   
     // #1 - Clone repo
-    console.log(`✔️  pullFilesFromGithub: CLONING STARTED-${providedGithubRepo}, branch: ${selectedGitBranch}`);
-    await git.clone(providedGithubRepo, currentClonedRepoPath ,{'--branch':selectedGitBranch, '--single-branch':true} );
+    console.log(`✔️  pullFilesFromGithub: CLONING STARTED-${providedGithubRepo}, branch: ${selectedGitBranch}, tag:${selectedGitTag}`);
+    await git.clone(providedGithubRepo, currentClonedRepoPath ,{'--branch': selectedGitTag ? selectedGitTag : selectedGitBranch, '--single-branch':true} );
     tasks.repoCloned = true;
-    console.log(`✔️  pullFilesFromGithub: CLONING FINISHED-${providedGithubRepo}, branch: ${selectedGitBranch}`);
+    console.log(`✔️  pullFilesFromGithub: CLONING FINISHED-${providedGithubRepo}, branch: ${selectedGitBranch}, tag:${selectedGitTag} `);
 
     // update submodules // TODO NOT DONE
     try {
       console.dir({currentClonedRepoPath: currentClonedRepoPath,relative:`${projectOwner}-${projectName}-${wuid}`}, { depth: null });
       await git.cwd({ path: currentClonedRepoPath, root: true }).submoduleUpdate(['--init','--recursive']);
       tasks.gitSubmoduleUpdated = true;
-      console.log(`✔️  pullFilesFromGithub: SUBMODULES UPDATED ${providedGithubRepo}, branch: ${selectedGitBranch}`);
+      console.log(`✔️  pullFilesFromGithub: SUBMODULES UPDATED ${providedGithubRepo}, branch: ${selectedGitBranch}, tag:${selectedGitTag}`);
     } catch (error) {
       console.log('❌  pullFilesFromGithub: git submodule update error----------------------------------------');
       console.dir(error, { depth: null });
