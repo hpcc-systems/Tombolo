@@ -49,10 +49,7 @@ function BasicsTabManul(props) {
           }).then(data =>{
               let newOptions = [];
               data.map(item => {
-                  // console.log("<<<<<<<<<<<<<<<< Machine ", item.machines)
-                  // item.machines.map(machine =>{dropZoneMachines.push({label : machine.Netaddress, value : machine.Netaddress, os: machine.os, isLeaf: false})});
                   newOptions.push( {'value' : item.path, 'label' : item.name, machine: item.machines[0], isLeaf: false});
-                  // setMachines(item.machines[0]);
               })
               setOptions(newOptions);             
           }).catch(err =>{
