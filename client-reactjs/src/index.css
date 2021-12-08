@@ -916,9 +916,6 @@ h6 {
   font-size: 1.33333333em;
 }
 .ant-cascader-menu{
-  height: 50vh;;
-}
-
-.ant-cascader-menu * {
-  max-width: 200px;
-}
+  height: 40vh;
+  max-width:200px;
+  min-width: 130px;}

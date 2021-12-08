@@ -531,7 +531,7 @@ router.get('/getDropZones', [
 					})
 				});
 
-				if(req.query.for === "fileUpload"){
+				if(req.query.for === "fileUpload" || req.query.for === "manualJobSerach"){
 					res.json(dropZoneDetails)
 				}else{
 					res.json(_dropZones);
@@ -554,16 +554,20 @@ router.get('/getDirectories',[
 	if (!errors.isEmpty()) {
 	  return res.status(422).json({ success: false, errors: errors.array() });
 	}
+		
 	else{
-		const {data,host, port} = req.query;
-		let inputs = JSON.parse(data)		
-		try {
-			hpccUtil.fetchDirectories(host, port, inputs)
-			.then(response => {res.json(response)})
-			.catch(err =>{ res.status(500).json({success: false, message: "Error occured while getting directories"})});
-			} catch (err) {
-				return res.status(500).send("Error occured while getting directories");
-			}
+		const {data,host, port, clusterId} = req.query;
+		let inputs = JSON.parse(data);
+		hpccUtil.getCluster(clusterId)
+				.then((cluster) =>{
+					hpccUtil.fetchDirectories(host,port, inputs, cluster)
+					.then(response =>{
+						return res.status(200).json(response)
+					})
+				}).catch(err =>{
+					  console.log(err)
+					  return res.status(500).json({success : false, message : 'Error occured while getting directories'})
+				})
 	}
 })
 
