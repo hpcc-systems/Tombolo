@@ -489,7 +489,7 @@ div.tooltip {
 }
 
 .show-column {
-  display: block;
+  display: table-cell;
 }
 
 .overflow-hidden > * {

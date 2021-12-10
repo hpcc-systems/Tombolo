@@ -350,10 +350,10 @@ function AssetsTable({ openGroup, handleEditGroup, refreshGroups }) {
       },
     },
     {
-      width: "15%",
+      width: "20%",
       title: "Action",
       dataJob: "",
-      className: editingAllowed ? "show-column" : "hide-column",
+      className: editingAllowed ? "show-columns" : "hide-column",
       shouldCellUpdate : 	(record, prevRecord) => record.id !== prevRecord.id,
       render: (text, record) => (
        <Space split={<Divider type="vertical" />}>
@@ -411,7 +411,7 @@ function AssetsTable({ openGroup, handleEditGroup, refreshGroups }) {
   return (
     <React.Fragment>
       <div style={{position:'relative'}}>
-        <Button style={{display:!Object.keys(filters).length ? 'none': 'inline-block', position:'absolute', zIndex:'9999', left:"38%", top:'-10px'}} type='primary'  size='small' onClick={handleClearFilters} shape="round" >Remove Active Filters</Button>
+        <Button style={{display:!Object.keys(filters).length ? 'none': 'inline-block', position:'absolute', zIndex:'9999', left:"35%", top:'-15px'}} type='primary'  size='small' onClick={handleClearFilters} shape="round" >Remove Active Filters</Button>
         <Table
           columns={columns}
           rowKey={(record) => record.id}

@@ -39,8 +39,14 @@ class LeftNav extends Component {
     if(selectedTopNav == '/login')
         return false;
     return (
-        <Sider collapsible collapsed={this.state.collapsed}  onCollapse={this.onCollapse} style={{backgroundColor:'#343a40'}}  >
-          <Menu theme="dark"  mode="inline" defaultSelectedKeys={['1']}  style={{backgroundColor:'#343a40', paddingTop:"80px"}} >
+        <Sider
+          collapsible 
+          collapsed={this.state.collapsed}
+          onCollapse={this.onCollapse} 
+          collapsedWidth={55}
+          style={{backgroundColor:'#343a40'}} 
+         >
+          <Menu theme="dark"  mode="inline" defaultSelectedKeys={['1']}  style={{backgroundColor:'#343a40', maxWidth:'100%', paddingTop:"80px"}} >
 
               <Menu.Item key="1" icon={<i className="fa fa-fw fa-cubes"></i>}>         
                 <Link to={"/"+applicationId+"/assets"}>
