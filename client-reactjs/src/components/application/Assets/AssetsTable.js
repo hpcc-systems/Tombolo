@@ -353,7 +353,7 @@ function AssetsTable({ openGroup, handleEditGroup, refreshGroups }) {
       width: "20%",
       title: "Action",
       dataJob: "",
-      className: editingAllowed ? "show-columns" : "hide-column",
+      className: editingAllowed ? "show-column" : "hide-column",
       shouldCellUpdate : 	(record, prevRecord) => record.id !== prevRecord.id,
       render: (text, record) => (
        <Space split={<Divider type="vertical" />}>
