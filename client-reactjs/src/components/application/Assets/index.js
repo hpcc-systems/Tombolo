@@ -83,8 +83,9 @@ const Assets = () => {
   const [readOnly, setReadOnly] = useState(false);
   const [formErr, setFormErr] = useState(false);
   const [form] = Form.useForm();
-  let assetTypeFilter = ["File", "Job", "Query", "Indexes", "Groups"];
   
+  const defaultAssetTypeFilter = ["File", "Job", "Query", "Indexes", "Groups"];
+  const assetTypeFilter = useRef([...defaultAssetTypeFilter])
   const [searchKeyword, setSearchKeyword] = useState('');
   const [dataList, setDataList] = useState([]);
   //let dataList = [];
@@ -143,20 +144,20 @@ const Assets = () => {
       );
     }
     prevSelectedApplicationRef.current = application;        
+
     deboucedFetchGroups()
-    
     if (assetInGroupId) {
       openGroup(assetInGroupId);
     }
   }, [groupsMoveReducer, assetInGroupId, application])
 
 
-  useEffect(() => {
-    deboucedFetchGroups();
-    if (assetInGroupId) {
-      openGroup(assetInGroupId);
-    }
-  }, [assetInGroupId]);
+  // useEffect(() => {
+  //   deboucedFetchGroups();
+  //   if (assetInGroupId) {
+  //     openGroup(assetInGroupId);
+  //   }
+  // }, [assetInGroupId]);
   
   const clearSearch = () => {
     setSearchKeyword('')
@@ -610,10 +611,15 @@ const Assets = () => {
     }
   };
 
-  const handleAssetSearch =(value, event) => {
-    if (assetTypeFilter.length === 0) return message.error("Please select at least one asset type");
-    const assetFilter = assetTypeFilter.length !== searchOptions.length ? assetTypeFilter.join(",") : "";
+  const handleAssetSearch = useCallback(debounce((value, event) => {
+    if (assetTypeFilter.current.length === 0) { return message.error("Please select at least one asset type"); }
+    const assetFilter = assetTypeFilter.current.length !== searchOptions.length ? assetTypeFilter.current.join(",") : "";
     dispatch(assetsActions.searchAsset(assetFilter, value));
+  },300) ,[assetTypeFilter.current]);
+  
+  const handleSearchKeywordChange = (e)=>{
+    setSearchKeyword(e.target.value);
+    handleAssetSearch(e.target.value); // this function is memoised and debouced, it will not on every keyhit
   };
 
   const titleRenderer = (nodeData) => {
@@ -628,7 +634,7 @@ const Assets = () => {
   };
 
   const onAssetTypeFilterChange = (selectedValues) => {
-    assetTypeFilter = selectedValues;
+    assetTypeFilter.current = selectedValues;
   };
 
   const authReducer = useSelector((state) => state.authenticationReducer);
@@ -662,7 +668,7 @@ const Assets = () => {
     content={
         <CheckboxGroup 
         options={searchOptions}
-        defaultValue={assetTypeFilter} 
+        defaultValue={assetTypeFilter.current} 
         onChange={onAssetTypeFilterChange} 
         style={{display:"flex", flexDirection:'column'}}
         />
@@ -726,7 +732,7 @@ const Assets = () => {
               placeholder="Search assets"
               allowClear
               value={searchKeyword}
-              onChange={(e)=>setSearchKeyword(e.target.value)}
+              onChange={handleSearchKeywordChange}
               onSearch={handleAssetSearch}
             />
 

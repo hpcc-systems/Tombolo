@@ -272,13 +272,10 @@ function AssetsTable({ openGroup, handleEditGroup, refreshGroups }) {
             <Space>
               {generateAssetIcon(record.type)}
               <Typography.Link onClick={() => handleEdit(record.id, record.type, "view", record.url)}>{record.title ? record.title : text}</Typography.Link>
-                {keywords && keywords.length > 0 ? (
-                  <span className={"group-name"}>
-                    In Group:
-                    <Typography.Link onClick={() => handleGroupClick(record.groupId)}>{record.group_name ? record.group_name : "Groups"}</Typography.Link> 
-                  </span>
-                ): null}
             </Space>
+                {keywords && keywords.length > 0 ? 
+                  ( <span className={"group-name"}>In Group: <Typography.Link onClick={() => handleGroupClick(record.groupId)}>{record.group_name ? record.group_name : "Groups"}</Typography.Link> </span> )
+                    : null}
           </Tooltip>
         </React.Fragment>
       ),
