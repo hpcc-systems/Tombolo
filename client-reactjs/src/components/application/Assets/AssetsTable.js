@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { Table, message, Popconfirm, Tooltip, Divider, Space , Typography} from "antd/lib";
+import { Table, message, Popconfirm, Tooltip, Divider, Space , Typography, Button} from "antd/lib";
 import { authHeader, handleError } from "../../common/AuthHeader.js";
 // import FileDetailsForm from "../FileDetails";
 import MoveAssetsDialog from "./MoveAssetsDialog";
@@ -257,6 +257,39 @@ function AssetsTable({ openGroup, handleEditGroup, refreshGroups }) {
     return <React.Fragment>{icon}</React.Fragment>;
   };
 
+  // -------------------- SORTING AND FILTERING --------------------------//
+  const [filters, setFilters] = useState({});
+
+  const createUniqueFiltersArr =(baseArr,column) =>{
+    const columnsNames ={createdAt:'createdAt', name:"name", type:"type"}; 
+    if(!baseArr || !column || !columnsNames[column]) return [];
+    const dictionary = baseArr.reduce((acc,el)=> {
+         let key = el[column] || 'empty';
+        if (column === 'createdAt'){
+           key = new Date(el.createdAt).toLocaleDateString('en-US', Constants.DATE_FORMAT_OPTIONS);
+        }
+        if (!acc[key]){
+          acc[key] = true;
+          acc.result.push({text: key, value: key })
+        }
+       return acc;
+      },{result:[]});
+      return dictionary.result;
+    }
+
+    const handleTablechange =(pagination, filters, sorter)=>{
+      const activeFilters = {};
+      for(const key in filters) filters[key] && (activeFilters[key] = filters[key]);
+      setFilters(()=> activeFilters);
+    }
+  
+    const handleClearFilters =(e)=>{
+      e.stopPropagation();
+      setFilters(()=>({}));
+    }
+    
+  // -------------------- SORTING AND FILTERING END--------------------------//
+  
   const columns = [
     {
       title: "Name",
@@ -265,9 +298,12 @@ function AssetsTable({ openGroup, handleEditGroup, refreshGroups }) {
       ellipsis: {
         showTitle: false,
       },
+      sorter: (a, b) => a.name.localeCompare(b.name),
+      onFilter: (value, record) => record.name.includes(value),
+      filters: createUniqueFiltersArr(assets,'name'),
+      filteredValue: filters.name || null,
       shouldCellUpdate : 	(record, prevRecord) => record.title !== prevRecord.title,
       render: (text, record) => (
-        <React.Fragment>
           <Tooltip placement="topLeft" title={record.name}>
             <Space>
               {generateAssetIcon(record.type)}
@@ -277,7 +313,6 @@ function AssetsTable({ openGroup, handleEditGroup, refreshGroups }) {
                   ( <span className={"group-name"}>In Group: <Typography.Link onClick={() => handleGroupClick(record.groupId)}>{record.group_name ? record.group_name : "Groups"}</Typography.Link> </span> )
                     : null}
           </Tooltip>
-        </React.Fragment>
       ),
     },
     {
@@ -285,26 +320,33 @@ function AssetsTable({ openGroup, handleEditGroup, refreshGroups }) {
       dataIndex: "description",
       width: "25%",
       ellipsis: true,
-      shouldCellUpdate : 	(record, prevRecord) => record.description !== prevRecord.description,
+      shouldCellUpdate: (record, prevRecord) => record.description !== prevRecord.description,
       render: (text, record) =>  <span className="description-text"><ReactMarkdown children={text} /></span>
     },
     {
       title: "Type",
       dataIndex: "type",
       width: "10%",
+      sorter: (a, b) => a.type.localeCompare(b.type),
+      onFilter: (value, record) => record.type.includes(value),
+      filters: createUniqueFiltersArr(assets,'type'),
+      filteredValue: filters.type || null,
+      shouldCellUpdate : 	(record, prevRecord) => record.type !== prevRecord.type,
     },
     {
       title: "Created",
       dataIndex: "createdAt",
       width: "20%",
+      sorter: (a, b) => new Date(b.createdAt) - new Date(a.createdAt),
+      onFilter: (value, record) =>{
+        const createdAt = new Date(record.createdAt).toLocaleDateString('en-US', Constants.DATE_FORMAT_OPTIONS);
+        return createdAt.includes(value)},
+      filters: createUniqueFiltersArr(assets,'createdAt'),
+      filteredValue: filters.createdAt || null,
       shouldCellUpdate : (record, prevRecord) => record.createdAt !== prevRecord.createdAt ,
       render: (text, record) => {
         let createdAt = new Date(text);
-        return (
-          createdAt.toLocaleDateString("en-US", Constants.DATE_FORMAT_OPTIONS) +
-          " @ " +
-          createdAt.toLocaleTimeString("en-US")
-        );
+        return ( createdAt.toLocaleDateString("en-US", Constants.DATE_FORMAT_OPTIONS) + " @ " + createdAt.toLocaleTimeString("en-US") );
       },
     },
     {
@@ -368,14 +410,18 @@ function AssetsTable({ openGroup, handleEditGroup, refreshGroups }) {
 
   return (
     <React.Fragment>
-      <Table
-        columns={columns}
-        rowKey={(record) => record.id}
-        dataSource={assets}
-        pagination={assets?.length > 10 ? { pageSize: 10 }:  false}
-        scroll={{ y: "70vh"}}
-        hideOnSinglePage={true}
-      />
+      <div style={{position:'relative'}}>
+        <Button style={{display:!Object.keys(filters).length ? 'none': 'inline-block', position:'absolute', zIndex:'9999', left:"38%", top:'-10px'}} type='primary'  size='small' onClick={handleClearFilters} shape="round" >Remove Active Filters</Button>
+        <Table
+          columns={columns}
+          rowKey={(record) => record.id}
+          onChange={handleTablechange}
+          dataSource={assets}
+          pagination={assets?.length > 10 ? { pageSize: 10 }:  false}
+          scroll={{ y: "70vh"}}
+          hideOnSinglePage={true}
+          />
+      </div>
       {showMoveDialog ? (
         <MoveAssetsDialog
           isShowing={showMoveDialog}
