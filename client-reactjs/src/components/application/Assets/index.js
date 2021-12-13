@@ -1,18 +1,5 @@
 import React, { useState, useEffect, useRef, useCallback } from "react";
-import {
-  Tree,
-  Row,
-  Col,
-  Menu,
-  Button,
-  Modal,
-  Form,
-  Input,
-  Dropdown,
-  Checkbox,
-  Select,
-  message,
-} from "antd/lib";
+import { Tree, Menu, Button, Modal, Form, Input, Dropdown, Checkbox, message, Popover, } from "antd/lib";
 import { debounce } from "lodash";
 import BreadCrumbs from "../../common/BreadCrumbs";
 import { authHeader, handleError } from "../../common/AuthHeader.js";
@@ -20,21 +7,12 @@ import { hasEditPermission } from "../../common/AuthUtil.js";
 import { Constants } from "../../common/Constants";
 import { useSelector, useDispatch } from "react-redux";
 import { useHistory } from "react-router";
-import { withRouter, NavLink } from "react-router-dom";
 import { assetsActions } from "../../../redux/actions/Assets";
 import { groupsActions } from "../../../redux/actions/Groups";
 import AssetsTable from "./AssetsTable";
 import { MarkdownEditor } from "../../common/MarkdownEditor.js";
 import useOnClickOutside from "../../../hooks/useOnClickOutside";
-import {
-  DeleteOutlined,
-  FolderOutlined,
-  DownOutlined,
-  SettingOutlined,
-  FilePdfOutlined,
-  PlusOutlined, 
-  EyeOutlined
-} from "@ant-design/icons";
+import { DeleteOutlined, FolderOutlined, DownOutlined, SettingOutlined, FilePdfOutlined, PlusOutlined, EyeOutlined } from "@ant-design/icons";
 import ReactMarkdown from 'react-markdown'
 import TitleRenderer from "./TitleRenderer.js";
 import {  addingAssetMode } from "../../common/readOnlyUtil";
@@ -43,7 +21,6 @@ import useFileDetailsForm from "../../../hooks/useFileDetailsForm";
 import useModal from "../../../hooks/useModal";
 import SelectDetailsForPdfDialog from "../Assets/pdf/SelectDetailsForPdfDialog";
 import { getNestedAssets} from "../Assets/pdf/downloadPdf"
-import { store } from "../../../redux/store/Store";
 
 const {  DirectoryTree } = Tree;
 const { confirm } = Modal;
@@ -106,9 +83,10 @@ const Assets = () => {
   const [readOnly, setReadOnly] = useState(false);
   const [formErr, setFormErr] = useState(false);
   const [form] = Form.useForm();
-  let assetTypeFilter = ["File", "Job", "Query", "Indexes", "Groups"];
-  //const [searchKeyWord, setSearchKeyWord] = useState('');
-  let searchKeyWord = "";
+  
+  const defaultAssetTypeFilter = ["File", "Job", "Query", "Indexes", "Groups"];
+  const assetTypeFilter = useRef([...defaultAssetTypeFilter])
+  const [searchKeyword, setSearchKeyword] = useState('');
   const [dataList, setDataList] = useState([]);
   //let dataList = [];
   //id of the group clicked from Asset table after a search
@@ -151,7 +129,7 @@ const Assets = () => {
     }
   };
 
-  const deboucedFetchGroups = useCallback(debounce(fetchGroups, 100));
+  const deboucedFetchGroups = useCallback(debounce(fetchGroups, 100),[application.applicationId]);
 
   //Re-render Directory Tree when the tree structure us chaged on modal
   useEffect(() => {
@@ -166,32 +144,23 @@ const Assets = () => {
       );
     }
     prevSelectedApplicationRef.current = application;        
+
     deboucedFetchGroups()
-    
     if (assetInGroupId) {
       openGroup(assetInGroupId);
     }
   }, [groupsMoveReducer, assetInGroupId, application])
 
-  useEffect(() => {
-    //if there is a search term and filter is changed, then trigger search
-    if (searchKeyWord && searchKeyWord.length > 0) {
-      handleAssetSearch(searchKeyWord);
-    }
-  }, [assetTypeFilter]);
 
-  useEffect(() => {
-    deboucedFetchGroups();
-    if (assetInGroupId) {
-      openGroup(assetInGroupId);
-    }
-  }, [assetInGroupId]);
+  // useEffect(() => {
+  //   deboucedFetchGroups();
+  //   if (assetInGroupId) {
+  //     openGroup(assetInGroupId);
+  //   }
+  // }, [assetInGroupId]);
   
   const clearSearch = () => {
-    searchKeyWord = "";
-    if(document.querySelector(".ant-input-clear-icon")) {
-      document.querySelector(".ant-input-clear-icon").click();
-    }    
+    setSearchKeyword('')
     dispatch(assetsActions.searchAsset("", ""));
   };
 
@@ -241,7 +210,7 @@ const Assets = () => {
     return list;
   };
 
-  const openGroup = (groupId) => {        
+  const openGroup = (groupId) => {  
     if (groupId) {      
       let match = dataList.filter((group) => group.id == groupId);
       if (match && match.length > 0) {
@@ -642,25 +611,16 @@ const Assets = () => {
     }
   };
 
-  const handleAssetSearch = debounce((value, enterPress) => {
-    let expandedKeys = [];
-    //validate only if enter pressed otherwise clearing search term will also trigger this validation
-    if (enterPress && !value) {
-      message.error("Please enter a valid search term");
-      return;
-    }
-
-    if (assetTypeFilter.length == 0) {
-      message.error("Please select atleast one asset type");
-      return;
-    }
-    searchKeyWord = value;
-    let assetFilter =
-      assetTypeFilter.length != searchOptions.length
-        ? assetTypeFilter.join(",")
-        : "";
+  const handleAssetSearch = useCallback(debounce((value, event) => {
+    if (assetTypeFilter.current.length === 0) { return message.error("Please select at least one asset type"); }
+    const assetFilter = assetTypeFilter.current.length !== searchOptions.length ? assetTypeFilter.current.join(",") : "";
     dispatch(assetsActions.searchAsset(assetFilter, value));
-  }, 350);
+  },300) ,[assetTypeFilter.current]);
+  
+  const handleSearchKeywordChange = (e)=>{
+    setSearchKeyword(e.target.value);
+    handleAssetSearch(e.target.value); // this function is memoised and debouced, it will not on every keyhit
+  };
 
   const titleRenderer = (nodeData) => {
     return (
@@ -674,7 +634,7 @@ const Assets = () => {
   };
 
   const onAssetTypeFilterChange = (selectedValues) => {
-    assetTypeFilter = selectedValues;
+    assetTypeFilter.current = selectedValues;
   };
 
   const authReducer = useSelector((state) => state.authenticationReducer);
@@ -701,20 +661,21 @@ const Assets = () => {
   );
 
   const selectBefore = (
-    <Select
-      style={{ width: 20 }}
-      suffixIcon={<SettingOutlined className="search-options-icon" />}
-      dropdownClassName="search-filter"
-      dropdownRender={(menu) => (
-        <div style={{ display: "flex", flexWrap: "nowrap", padding: 8 }}>
-          <CheckboxGroup
-            options={searchOptions}
-            defaultValue={assetTypeFilter}
-            onChange={onAssetTypeFilterChange}
-          />
-        </div>
-      )}
-    ></Select>
+  <Popover
+    title="Search Filters" 
+    placement="bottom"
+    trigger="click"
+    content={
+        <CheckboxGroup 
+        options={searchOptions}
+        defaultValue={assetTypeFilter.current} 
+        onChange={onAssetTypeFilterChange} 
+        style={{display:"flex", flexDirection:'column'}}
+        />
+     } 
+     >
+      <SettingOutlined />  
+  </Popover>
   );
 
   //Generate PDF & printing task complete function
@@ -770,8 +731,9 @@ const Assets = () => {
               addonBefore={selectBefore}
               placeholder="Search assets"
               allowClear
-              onPressEnter={(e) => handleAssetSearch(e.target.value, true)}
-              onChange={(e) => handleAssetSearch(e.target.value)}
+              value={searchKeyword}
+              onChange={handleSearchKeywordChange}
+              onSearch={handleAssetSearch}
             />
 
             <DirectoryTree
@@ -794,7 +756,6 @@ const Assets = () => {
           </div>
           <div className="asset-table">
             <AssetsTable
-              selectedGroup={selectedGroup}
               openGroup={openGroup}
               handleEditGroup={handleEditGroup}
               refreshGroups={deboucedFetchGroups}
@@ -898,4 +859,4 @@ const Assets = () => {
   );
 };
 
-export default withRouter(Assets);
+export default Assets;
