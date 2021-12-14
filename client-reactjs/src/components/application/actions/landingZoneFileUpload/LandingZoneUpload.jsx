@@ -1,37 +1,33 @@
 import React, {useState, useEffect} from 'react';
 import {useSelector} from "react-redux"
-import { Upload, Table, Select, message, TreeSelect, Button,Checkbox,Spin    } from 'antd';
+import { Upload, Table, Select, message, TreeSelect, Button,Checkbox,Spin, Cascader   } from 'antd';
 import { InboxOutlined, LoadingOutlined } from '@ant-design/icons';
 import { io } from "socket.io-client";
 import{LandingZoneUploadContainer, columns } from "./landingZoneUploadStyles";
 import {v4 as uuidv4} from 'uuid';
 import { authHeader, handleError } from "../../../common/AuthHeader";
 import { useHistory } from 'react-router';
-import { applicationReducer } from '../../../../redux/reducers/ApplicationReducer';
 
 function LandingZoneUpload() {
   const [files, setFiles] = useState([]);
   const [socket, setSocket] = useState(null);
   const [tableData, setTableData] = useState([]);
-  const [destinationFolder, setDestinationFolder] = useState("");
   const [cluster, setCluster] = useState(null);
-  const [dropzones, setDropZones] = useState([]);
-  const [selectedDropZone, setSelectedDropZone]= useState(null)
-  const [machine, setMachine] = useState(null);
-  const [directory, setDirectory] = useState(null);
-  const [currentDirectoryFiles, setCurrentDirectoryFiles] = useState([])
-  const [treeData, setTreeData] = useState([]);
+  const [machine, setMachine] = useState(null); //ip address of dropzone
+  const [currentDirectoryFiles, setCurrentDirectoryFiles] = useState([]);
+  const [pathToAsset, setPathToAsset] = useState('')
   const [overWriteFiles, setOverWriteFiles] = useState(false);
   const [uploading, setUploading] = useState(false);
   const [successItem, setSuccessItem] = useState(null);
+  const [options, setOptions] = useState([]);
   const authReducer = useSelector(state => state.authReducer);
   const clusters = useSelector(state => state.applicationReducer.clusters);
-  const app = useSelector(state => state.applicationReducer)
-  const devURL = 'http://localhost:3000/landingZoneFileUpload';
+  const devURL = `${process.env.REACT_APP_PROXY_URL}/landingZoneFileUpload`;
   const prodURL  = '/landingZoneFileUpload';
   const { Dragger } = Upload;
   const { Option,  } = Select;
   const history = useHistory();
+
 
 useEffect(() => {
     // Socket io connection
@@ -54,142 +50,6 @@ useEffect(() => {
     }
   }, []);
 
-  useEffect(() => {
-    if(cluster){
-      let {id} = JSON.parse(cluster);
-      fetch(`/api/hpcc/read/getDropzones?clusterId=${id}&for=fileUpload`,{
-        headers : authHeader()
-      }).then(response => {
-        if(response.ok){
-          return response.json()
-        }
-        handleError(response);
-      }).then(data =>{
-        data.map(item => {
-          setDropZones([{name: item.name, path: item.path, machines: item.machines, id: uuidv4()}])
-        })   
-      })
-    }
-      // Get directory tree on initial render
-      if(selectedDropZone  != null && machine != null && cluster !== null){
-        getDirectories("/", cluster)
-        .then((result) =>{
-          let data = result.FileListResponse.files.PhysicalFileStruct.map(item =>{
-            return {...item, title : item.name, key : uuidv4(),  directorypath: `/${item.name}`,  children: [{title : "...  Loading", disabled : true, key : uuidv4()}]}
-          })
-          setTreeData(data)
-        }).catch((err) => {
-          console.log("Err ", err)
-        })
-      }  
-  }, [cluster, selectedDropZone, machine])
-
-  // Get child dirs
-  const [currentlyExpandedNodes, setCurrentlyExpandedNodes] = useState([]);
-  const getNestedDirectories = (expandedKeys) =>{
-    if(currentlyExpandedNodes.length < expandedKeys.length){
-      setCurrentlyExpandedNodes(expandedKeys)
-      let targetDirectory = expandedKeys[expandedKeys.length - 1];
-      //Tree is expanded
-      let targetDirectoryPath = getDirectoryPath(targetDirectory);
-      //Get nested dirs for expanded node
-      getDirectories(targetDirectoryPath, cluster).then(result =>{
-        const directory = result.FileListResponse?.files;
-        let treeDataCopy = [...treeData];
-        if(directory){
-          
-          let newChildDirArray = directory.PhysicalFileStruct.map(item => {
-            return {...item, key: uuidv4(), title: item.name, directorypath : `${targetDirectoryPath}/${item.name}`, children: [{key: uuidv4(), title: "... Loading", disabled: true}]}
-          })
-          reCalcTreeData(targetDirectory, newChildDirArray, treeDataCopy)
-        }else{
-          let newChildDirArray = [{title : "No Data", disabled : true, key : uuidv4()}]
-          reCalcTreeData(targetDirectory, newChildDirArray, treeDataCopy)
-        }
-      })
-    }else{
-      //Tree is collapsed
-      setCurrentlyExpandedNodes(expandedKeys)
-    }
-  }
-
-  //Recalculate treedata after a node is expanded
-  const reCalcTreeData = (key, newChildDirArray, data) =>{
-    for (let i = 0; i < data.length; i++){
-      if(data[i].key === key){
-        data[i].children = newChildDirArray;
-        break;
-      }else if (data[i].children){
-        reCalcTreeData(key,newChildDirArray, data[i].children)
-      }
-    }
-    setTreeData(data)
-  }
-
-  //Get directories func
-  const getDirectories = (path, cluster) =>{
-    let{thor_host, thor_port} = JSON.parse(cluster)
-    let data = {
-      Netaddr : machine,
-      Path : `${directory}${path}`,
-      OS : 2,
-      rawxml_ : true,
-      DirectoryOnly: true
-    }
-
-    return fetch(`/api/hpcc/read/getDirectories?data=${JSON.stringify(data)}&host=${thor_host}&port=${thor_port}`,{
-      headers : authHeader(),
-    }).then(response => response.json())
-  }
-
-  //Get files
-   const getFiles = (path, cluster) =>{
-
-    let{thor_host, thor_port} = JSON.parse(cluster)
-    return fetch(`/api/hpcc/read/getDirectories?data=${JSON.stringify({Netaddr : machine,
-      Path : `${directory}${path}`,
-      OS : 2,
-      rawxml_ : true,
-      DirectoryOnly: false})}&host=${thor_host}&port=${thor_port}`,{
-      headers : authHeader(),
-    }).then(response => response.json())
-      .then(data => {setCurrentDirectoryFiles( data.FileListResponse.files.PhysicalFileStruct)})
-  }
-
-
-// Recurssive dir lookup
-let correctChild;
-const findCorrectChild = (key, dirObj) =>{
-  if(dirObj.children){
-    for(let i = 0; i <  dirObj.children.length;i++){
-      if(dirObj.children[i].key === key){
-        correctChild = dirObj.children[i];
-        break;
-      }else if(dirObj.children[i].children){
-        findCorrectChild(key, dirObj.children[i])
-      }
-    }
-  }
-  return correctChild;
-}
-
-//Get directory path
-const getDirectoryPath = (key) => {
-  let targetDirectorypath;
-  treeData.map(item => {
-    if(item.key === key){
-      targetDirectorypath =  item.directorypath;
-      return;
-    }else{
-      //not root dirs
-      let child = findCorrectChild(key, item);
-      if(child){
-      targetDirectorypath = child.directorypath
-      }
-    }
-  })
-  return targetDirectorypath;
-}
 
 //Setting table data
 useEffect(() =>{
@@ -212,15 +72,10 @@ useEffect(() =>{
 
   // Listining to msgs from socket
   useEffect(() =>{
-    //When message is received from back end
-    if(socket){
-      socket.on("message", (message) =>{
-      })
-     }
-
      //Response
      if(socket){
       socket.on('file-upload-response', (response => {
+        console.log('File upload reponse <<<<<<<<', response)
         if(response.success){
           setSuccessItem(response.id);
         }else if(!response.success){
@@ -248,16 +103,14 @@ useEffect(() =>{
 
   //Handle File Upload
   const handleFileUpload = () =>{
-    let existingDirFiles = currentDirectoryFiles.map(item => item.name);
+    console.log('<<<<< Existing', currentDirectoryFiles);    
     let newFiles = files.map(item => item.name);
-    let commonFiles = existingDirFiles.filter(item => newFiles.includes(item));
+    let commonFiles = currentDirectoryFiles.filter(item => newFiles.includes(item));
 
     message.config({top:150,   maxCount: 1});
     if(!cluster){
       message.error("Select a cluster")
-    }else if(!machine){
-      message.error("Select machine")
-    }else if(!destinationFolder){
+    }else if(!pathToAsset){
       message.error("Select  destination folder")
     }
     else if(files.length < 1){
@@ -272,9 +125,10 @@ useEffect(() =>{
       item.uploading = true;
       return item;
     })
-    setFiles(filesCopy)
-    // Start by sending some file details to server
-    socket.emit('start-upload', {destinationFolder, cluster, machine, dropZone : JSON.parse(selectedDropZone)?.name});
+
+    setFiles(filesCopy);
+    // Start by sending some file and destination details to server
+    socket.emit('start-upload', {pathToAsset, cluster, machine});
     files.map(item => {
       if(item.size <= 1000000){
          let reader = new FileReader();
@@ -346,33 +200,95 @@ useEffect(() =>{
   
   };
 
-  // Select drop down
+  // When the value of cluster dropdown changes
   function handleClusterChange(value) {
-    setCluster(value);
+    //set selected cluster
+    let selectedCluster = JSON.parse(value);
+    let {thor_host, thor_port, name} = selectedCluster;
+    setCluster(selectedCluster);
+
+  //Make a call to get all dropzones within that cluster
+  fetch(`/api/hpcc/read/getDropzones?clusterId=${selectedCluster.id}&for=fileUpload`,{
+    headers : authHeader()
+  }).then(response => {
+    if(response.ok){
+      return response.json()
+    }
+    handleError(response);
+  }).then(data =>{
+      let newOptions = [];
+      data.map(item => {
+          newOptions.push( {'value' : item.path, 'label' : item.name, machine: item.machines[0], isLeaf: false, selectedCluster});
+      })
+      setOptions(newOptions);             
+  }).catch(err =>{
+      console.log(err)
+  })
   }
-  //Dropzone selection
-  const handleLandingZoneChange = (value) =>{
-    setSelectedDropZone(value)
-  }
-  //Machine Selection
-  const  handleMachineChange = (value) => {
-    setMachine(value);
-    JSON.parse(selectedDropZone)?.machines.map(item =>{
-      if(item.Netaddress === value){
-        setDirectory(item.Directory)
+
+  //Load cascader data 
+  const loadData = (selectedOptions) => {
+    let {thor_host, thor_port, id:clusterId} = cluster;
+    const targetOption = selectedOptions[selectedOptions.length - 1];
+    targetOption.loading = true;
+    const pathToAsset = selectedOptions.map(option => option.value).join('/')+'/';
+    setPathToAsset(pathToAsset);
+    if(targetOption === selectedOptions[0]){
+      setMachine(targetOption.machine.Netaddress) // checking this condition so the machine is set only once to avoid unnecessary component re-render
+    }
+
+    //constructing data object to be sent as query params
+    const data = JSON.stringify({
+      Netaddr : selectedOptions[0].machine.Netaddress,
+      Path : pathToAsset,
+      OS : selectedOptions[0].OS,
+      rawxml_ : true,
+      DirectoryOnly: false});
+    
+    // Everytime user clicks a option on cascader make a call to fetch children
+    fetch(`/api/hpcc/read/getDirectories?data=${data}&host=${thor_host}&port=${thor_port}&clusterId=${clusterId}`, {
+      headers : authHeader()
+    }).then(response =>{
+      if(response.ok){
+        return response.json()
       }
-    });
-  }
-  //Handle node tree selection
-  const handleTreeNodeSelection = (value) => {
-    let targetDirectoryPath = getDirectoryPath(value);
-    setDestinationFolder(targetDirectoryPath);
-    getFiles(targetDirectoryPath, cluster)
-  }
+      handleError(response)
+    }).then(data =>{
+      if(data.FileListResponse.files){
+      let children = [];
+      let files = []
+       data.FileListResponse.files.PhysicalFileStruct.map(item =>{
+         if(item.isDir){
+          let child = {};
+          child.value =item.name;
+          child.label = item.name;
+          child.isLeaf = !item.isDir;
+          children.push(child);
+         }else{
+            files.push(item.name)
+         }
+      });
+      targetOption.loading= false;
+      targetOption.children = children;
+      setOptions([...options]);
+      setCurrentDirectoryFiles(files);
+    }else{
+      targetOption.loading= false;
+      targetOption.disabled= true;
+      targetOption.children = [];
+      setOptions([...options]);
+    }
+    })
+    .catch(err =>{
+      console.log(err)
+    }) 
+    }
+
   //Handle override checkbox change
   const onCheckBoxChnage = (e) =>{
     setOverWriteFiles(e.target.checked)
   }
+
 
     return (
         <LandingZoneUploadContainer>
@@ -386,37 +302,18 @@ useEffect(() =>{
           </span>
 
           <span>
-            <small>Landing Zone: </small>
-            <Select defaultValue = ""  onChange={handleLandingZoneChange}  size="large" style={{width: "100%"}}>
-                  {dropzones.map((item) => {
-                      return <Option key={uuidv4()} value={JSON.stringify(item)}>{item.name}</Option>
-                  })}
-            </Select>
-          </span>
+            <small>Destination Folder</small>
+            <Cascader
+                    options={options}
+                    loadData={loadData}
+                    placeholder="Please select"
+                    allowClear
+                    changeOnSelect={true}
+                    style={{ width: '100%'}}
 
-          <span style={{display: selectedDropZone == null ? "none" : "block"}}>
-            <small>Machines: </small>
-            <Select defaultValue = "" onChange={handleMachineChange}  size="large" style={{width: "100%"}}>
-                  {JSON.parse(selectedDropZone)?.machines.map(item => {
-                    return <Option key={uuidv4()} value={item.Netaddress}>{item.Netaddress}</Option>
-                  })}
-            </Select>
-          </span> 
-          
-          <span style={{display: machine == null? "none" : "block"}}>
-            <small>Folder</small>
-            <TreeSelect
-              style={{ width: '100%'}}
-              value={destinationFolder}
-              placeholder="Please select"
-              allowClear
-              onChange={handleTreeNodeSelection}
-              treeData={treeData}
-              onTreeExpand={getNestedDirectories}
-              >
-              <span style={{height: "900px"}}> Hello</span>
-            </TreeSelect>
-          </span>
+                />
+           </span>
+        
         
         <Dragger 
         {...props}
@@ -425,9 +322,9 @@ useEffect(() =>{
             <p className="ant-upload-drag-icon">
             <InboxOutlined />
             </p>
-            <p className="ant-upload-text"><b>Click or drag file to this area to upload</b></p>
+            <p className="ant-upload-text"><b>Click or drag files to this area to upload</b></p>
             <p className="ant-upload-hint">
-            Support for a single or bulk upload. 
+                Supports xls, xlsm, xlsx, txt, json and csv
             </p>
         </Dragger>
         <span  style={{display : files.length > 0 ? "block" : "none", margin : "20px 0px 20px 0px"}}>
@@ -446,3 +343,7 @@ useEffect(() =>{
 }
 
 export default LandingZoneUpload;
+
+//Give option to remove file
+//Support protected clusters
+//Dont route users

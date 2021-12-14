@@ -664,29 +664,35 @@ router.post('/executeSprayJob', [
 
 // Drop Zone file upload namespace
 io.of("landingZoneFileUpload").on("connection", (socket) => {
-	let cluster, destinationFolder, dropZone;
-	
+	let cluster, destinationFolder, machine;
 	//Receive cluster and destination folder info when client clicks upload
 	socket.on('start-upload', message=> {
-		cluster = JSON.parse(message.cluster);
-		destinationFolder = message.destinationFolder;
+		cluster = message.cluster;
+		destinationFolder = message.pathToAsset;
 		machine = message.machine;
-		dropZone = message.dropZone;
 	})
 
 	//Upload File 
-	const upload = (cluster, destinationFolder, id ,fileName) =>{
+	const upload = async (cluster, destinationFolder, id ,fileName) =>{
 		//Check file ext
+		const acceptableFileTypes = ['xls', 'xlsm', 'xlsx', 'txt', 'json', 'csv']
 		let fileExtenstion = fileName.substr(fileName.lastIndexOf('.') + 1).toLowerCase();
-		if(fileExtenstion !== "csv" && fileExtenstion !== "json"){
+		if(!acceptableFileTypes.includes(fileExtenstion)){
 			socket.emit('file-upload-response', {success : false, message :"Invalid file type"});
+			fs.unlink(`uploads/${fileName}`, err =>{
+				if(err){
+					console.log(`Failed to remove ${fileName} from FS - `, err)
+				}
+			});
 			return;
 		}
 
 		fileStream = fs.createReadStream('uploads/' + fileName)
+		const selectedCluster = await hpccUtil.getCluster(cluster.id);
 		request({
-			url : `${cluster.thor_host}:${cluster.thor_port}/FileSpray/UploadFile.json?upload_&rawxml_=1&NetAddress=${machine}&OS=2&Path=/var/lib/HPCCSystems/${dropZone}/${destinationFolder}`,
+			url : `${cluster.thor_host}:${cluster.thor_port}/FileSpray/UploadFile.json?upload_&rawxml_=1&NetAddress=${machine}&OS=2&Path=${destinationFolder}`,
 			method : 'POST',
+			auth : hpccUtil.getClusterAuth(selectedCluster),
 			formData : {
 				'UploadedFiles[]' : {
 					value : fileStream,
@@ -698,21 +704,23 @@ io.of("landingZoneFileUpload").on("connection", (socket) => {
 			  },
 			  function(err, httpResponse, body){
 				const response = JSON.parse(body);
-				
+				if(err){
+					socket.emit('file-upload-response', {id, fileName,success : false, message : err});
+					return;
+				}
 
 				if(response.Exceptions){
 					socket.emit('file-upload-response', {id, fileName,success : false, message : response.Exceptions.Exception[0].Message});
-					fs.unlink(`uploads/${fileName}`, err =>{
-						console.log( err)
-					});
 				}else{
 					socket.emit('file-upload-response', {id,success : true, message : response.UploadFilesResponse.UploadFileResults.DFUActionResult[0].Result });
-					fs.unlink(`uploads/${fileName}`, err =>{
-						console.log(err);
-						console.log( err)
-
-					});
 				}
+				// Remove file on file upload success/failure
+				fs.unlink(`uploads/${fileName}`, err =>{
+					if(err){
+						console.log(`Failed to remove ${fileName} from FS - `, err)
+					}
+				});
+
 			  }
 		)
 	}
@@ -722,9 +730,10 @@ io.of("landingZoneFileUpload").on("connection", (socket) => {
 		const {id,fileName, data} = message;
 		fs.writeFile(`uploads/${fileName}`, data, function(err){
 			if(err){
-				console.log(`Error occured while saving ${fileName} in FS`, err)
+				console.log(`Error occured while saving ${fileName} in FS`, err);
+				socket.emit('file-upload-response', {fileName,success : false, message : err});
 			}else{
-				upload(cluster, destinationFolder, id, fileName )
+				 upload(cluster, destinationFolder, id, fileName )
 			}
 		});
 	});
@@ -736,8 +745,10 @@ io.of("landingZoneFileUpload").on("connection", (socket) => {
 				let fileBuffer = Buffer.from(fileData);
 				fs.writeFile(`uploads/${file.fileName}`, fileBuffer, function(err){
 					if(err){
+						console.log('Error writing file to the FS', error);
+						socket.emit('file-upload-response', {fileName,success : false, message : err});
 					}else{
-						upload(cluster, destinationFolder, file.id ,file.fileName)
+					  upload(cluster, destinationFolder, file.id ,file.fileName)
 					}
 				})
 		}
