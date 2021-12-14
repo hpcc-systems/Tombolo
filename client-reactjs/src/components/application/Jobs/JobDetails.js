@@ -777,18 +777,20 @@ class JobDetails extends Component {
     metaData.isStoredOnGithub = isStoredOnGithub;
     if (gitHubFiles) {
       metaData.gitHubFiles ={
-        providedGithubRepo:gitHubFiles.providedGithubRepo,
-        selectedGitBranch : gitHubFiles.selectedGitBranch,
-        selectedGitTag : gitHubFiles.selectedGitTag,
         gitHubUserName:gitHubFiles.gitHubUserName,
         gitHubUserAccessToken:gitHubFiles.gitHubUserAccessToken,
-        pathToFile:gitHubFiles.pathToFile, // we need to save this field to recreate view in cascader.
-        selectedFile:{
-          projectOwner: gitHubFiles.selectedFile.projectOwner,
-          projectName:gitHubFiles.selectedFile.projectName,
-          name: gitHubFiles.selectedFile.name,
-          path: gitHubFiles.selectedFile.path,
-        }
+        reposList: gitHubFiles.reposList.map(repo =>({
+          providedGithubRepo: repo.providedGithubRepo,
+          selectedGitBranch : repo.selectedGitBranch,
+          selectedGitTag : repo.selectedGitTag,
+          pathToFile:repo.pathToFile, // we need to save this field to recreate view in cascader.
+          selectedFile:{
+            projectOwner: repo.selectedFile.projectOwner,
+            projectName:repo.selectedFile.projectName,
+            name: repo.selectedFile.name,
+            path: repo.selectedFile.path,
+          }
+        })),
       }
     } else {
       metaData.gitHubFiles = null;
@@ -834,10 +836,12 @@ class JobDetails extends Component {
     if (groupId) {
       jobDetails.basic.groupId = groupId;
     }
-
+    console.log('--jobDetails----------------------------------------');
+    console.dir(jobDetails, { depth: null });
+    console.log('------------------------------------------');
+    
     return jobDetails;
   }
-
   handleCancel = () => {
     this.setState({
       visible: false,
