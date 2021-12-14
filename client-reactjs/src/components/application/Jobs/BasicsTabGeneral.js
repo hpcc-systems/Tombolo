@@ -7,7 +7,7 @@ import { assetsActions } from '../../../redux/actions/Assets';
 import { MarkdownEditor } from "../../common/MarkdownEditor.js";
 import { formItemLayout, threeColformItemLayout } from "../../common/CommonUtil.js";
 
-import GitHubForm from './GitHubForm.js';
+import GitHubForm from './GitHubForm/GitHubForm.js';
 
 const { Option, OptGroup } = Select;  
 
