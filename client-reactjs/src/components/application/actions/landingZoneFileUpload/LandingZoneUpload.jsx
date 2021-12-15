@@ -1,7 +1,7 @@
 import React, {useState, useEffect} from 'react';
 import {useSelector} from "react-redux"
-import { Upload, Table, Select, message, TreeSelect, Button,Checkbox,Spin, Cascader   } from 'antd';
-import { InboxOutlined, LoadingOutlined } from '@ant-design/icons';
+import { Upload, Table, Select, message, Button,Checkbox,Spin, Cascader, Tooltip,    } from 'antd';
+import { InboxOutlined, LoadingOutlined , CheckCircleOutlined, CloseCircleOutlined} from '@ant-design/icons';
 import { io } from "socket.io-client";
 import{LandingZoneUploadContainer, columns } from "./landingZoneUploadStyles";
 import {v4 as uuidv4} from 'uuid';
@@ -12,13 +12,13 @@ function LandingZoneUpload() {
   const [files, setFiles] = useState([]);
   const [socket, setSocket] = useState(null);
   const [tableData, setTableData] = useState([]);
+  const [uploadAttempted, setUploadAttempted] = useState([]);
   const [cluster, setCluster] = useState(null);
   const [machine, setMachine] = useState(null); //ip address of dropzone
   const [currentDirectoryFiles, setCurrentDirectoryFiles] = useState([]);
   const [pathToAsset, setPathToAsset] = useState('')
   const [overWriteFiles, setOverWriteFiles] = useState(false);
   const [uploading, setUploading] = useState(false);
-  const [successItem, setSuccessItem] = useState(null);
   const [options, setOptions] = useState([]);
   const authReducer = useSelector(state => state.authReducer);
   const clusters = useSelector(state => state.applicationReducer.clusters);
@@ -51,37 +51,48 @@ useEffect(() => {
   }, []);
 
 
+//File upload status icon 
+const renderUploadStatusIcon = (status, message) =>{
+  switch (status){
+    case 'uploading' :
+      return <LoadingOutlined style={{ fontSize: 18 }} spin />
+    case 'success' :
+      return <Tooltip title={message}> <CheckCircleOutlined style={{ fontSize: 18, color: 'green'}} /> </Tooltip>;
+    case 'failed' :
+      return <Tooltip title={message} placement="topLeft"> <CloseCircleOutlined style={{ fontSize: 18, color: 'red' }}/> </Tooltip>;
+  }
+}
 //Setting table data
 useEffect(() =>{
   let newTableData =  [];
   if(files.length > 0){
     files.map((item, index) => {
         newTableData.push({key : uuidv4(), sno : index + 1, 
-          fileName : item.name, fileSize : `${item.size / 1000000} MB` , uploading: item.uploading?<LoadingOutlined style={{ fontSize: 24 }} spin />: null   });
+          fileName : item.name, fileSize : `${item.size / 1000000} MB` , 
+          uploading:   renderUploadStatusIcon(item.uploadStatus, item.statusDescription) });
+
     })
-  }
-  if(files.length < 1 && successItem !== null){
-    message.success("The file(s) has been uploaded successfully to the Landing Zone");
-    setUploading(false)
-    setSuccessItem(null)
-    socket.close();
-    history.push(`/`);
   }
   setTableData(newTableData);
 }, [files])
+
+useEffect(() =>{
+   const newFiles = files.map(file => {
+          if(file.uid ===  uploadAttempted[0].id){
+            file.uploadStatus = uploadAttempted[0].success ? 'success' : 'failed';
+            file.statusDescription = uploadAttempted[0].message
+          }
+          return file;
+        });
+    setFiles(newFiles);
+}, [uploadAttempted])
 
   // Listining to msgs from socket
   useEffect(() =>{
      //Response
      if(socket){
       socket.on('file-upload-response', (response => {
-        console.log('File upload reponse <<<<<<<<', response)
-        if(response.success){
-          setSuccessItem(response.id);
-        }else if(!response.success){
-          setUploading(false)
-          message.error(`Unable to upload file(s) - ${response.message}`);
-        }
+        setUploadAttempted([ {id : response.id, success : response.success, message: response.message}])
       }))
     }
   
@@ -93,17 +104,8 @@ useEffect(() =>{
      }
   }, [socket])
 
-  //Remove files from file array after successful upload
-  useEffect(() =>{
-    if(successItem){
-      let filteredFiles = files.filter(item =>item.uid !== successItem);
-      setFiles(filteredFiles);
-    }   
-  }, [successItem])
-
   //Handle File Upload
   const handleFileUpload = () =>{
-    console.log('<<<<< Existing', currentDirectoryFiles);    
     let newFiles = files.map(item => item.name);
     let commonFiles = currentDirectoryFiles.filter(item => newFiles.includes(item));
 
@@ -122,11 +124,11 @@ useEffect(() =>{
     setUploading(true);
     let filesCopy = [...files];
     filesCopy.map(item => {
-      item.uploading = true;
+      item.uploadStatus = 'uploading'
       return item;
     })
-
     setFiles(filesCopy);
+
     // Start by sending some file and destination details to server
     socket.emit('start-upload', {pathToAsset, cluster, machine});
     files.map(item => {
@@ -184,6 +186,8 @@ useEffect(() =>{
     name: 'file',
     multiple: true,
     showUploadList:false,
+    maxCount:5,
+    accept: '.xls, .xlsm, .xlsx, .txt, .json, .csv',
     onChange(info) {
       const { status } = info.file;
       if (status !== 'uploading') {
@@ -204,7 +208,6 @@ useEffect(() =>{
   function handleClusterChange(value) {
     //set selected cluster
     let selectedCluster = JSON.parse(value);
-    let {thor_host, thor_port, name} = selectedCluster;
     setCluster(selectedCluster);
 
   //Make a call to get all dropzones within that cluster
@@ -214,7 +217,7 @@ useEffect(() =>{
     if(response.ok){
       return response.json()
     }
-    handleError(response);
+     handleError(response);
   }).then(data =>{
       let newOptions = [];
       data.map(item => {
@@ -292,7 +295,7 @@ useEffect(() =>{
 
     return (
         <LandingZoneUploadContainer>
-          <span>
+          <span style={{display : uploading ? 'none' : 'block'}}>
             <small>Cluster</small>
             <Select defaultValue = ""  onChange={handleClusterChange}  size="large"style={{width: "100%"}}>
                   {clusters.map((item) => {
@@ -301,7 +304,7 @@ useEffect(() =>{
             </Select>
           </span>
 
-          <span>
+          <span style={{display : uploading ? 'none' : 'block'}}>
             <small>Destination Folder</small>
             <Cascader
                     options={options}
@@ -318,11 +321,12 @@ useEffect(() =>{
         <Dragger 
         {...props}
         customRequest={({ onSuccess }) => { onSuccess("ok");}}
+        style={{display : uploading ? 'none' : 'block'}}
         >
             <p className="ant-upload-drag-icon">
             <InboxOutlined />
             </p>
-            <p className="ant-upload-text"><b>Click or drag files to this area to upload</b></p>
+            <p className="ant-upload-text"><b>Click or drag files here to upload (Up to 5 files)</b></p>
             <p className="ant-upload-hint">
                 Supports xls, xlsm, xlsx, txt, json and csv
             </p>
@@ -331,19 +335,18 @@ useEffect(() =>{
           <Table   columns={columns} dataSource={tableData} size="small" pagination={false} style={{width: "100%", maxHeight : "300px", overflow: "auto"}}/>
         </span>
 
-        <span style={{ margin : "20px 0px 20px 0px"}}>
+        <span style={{ margin : "20px 0px 20px 0px", display : uploading ? 'none' : 'block'}}>
         <Checkbox onChange={onCheckBoxChnage}>Overwrite File(s)</Checkbox>
         </span>
 
         <span>
-          <Button size="large" disabled={files.length< 1 || uploading}onClick={handleFileUpload} type="primary"  > Upload</Button>
+          <Button size="large"
+           disabled={files.length< 1}
+           onClick={!uploading ? handleFileUpload : () =>{history.push('/')} } 
+           type="primary"  > {!uploading ? 'Upload' : 'Done'} </Button>
         </span>
         </LandingZoneUploadContainer>
     )
 }
 
 export default LandingZoneUpload;
-
-//Give option to remove file
-//Support protected clusters
-//Dont route users

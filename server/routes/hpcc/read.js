@@ -502,13 +502,13 @@ router.get('/getJobInfo', [
 router.get('/getDropZones', [
 	query('clusterId')
     .isUUID(4).withMessage('Invalid cluster id'),
-  ], function (req, res) {
+  ],  function (req, res) {
 	  const errors = validationResult(req).formatWith(validatorUtil.errorFormatter);
 	if (!errors.isEmpty()) {
 	  return res.status(422).json({ success: false, errors: errors.array() });
 	}
 	try {
-		hpccUtil.getCluster(req.query.clusterId).then(function(cluster) {
+		 hpccUtil.getCluster(req.query.clusterId).then(function(cluster) {
 			let url = cluster.thor_host + ':' + cluster.thor_port +'/WsTopology/TpDropZoneQuery.json';
 			request.get({
 				url: url,
@@ -538,6 +538,8 @@ router.get('/getDropZones', [
 				}
 			}
 			})
+		}).catch(err =>{
+			res.status(500).json({success: false, message : err});
 		})
 	} catch (err) {
 		console.log('err', err);
@@ -678,7 +680,7 @@ io.of("landingZoneFileUpload").on("connection", (socket) => {
 		const acceptableFileTypes = ['xls', 'xlsm', 'xlsx', 'txt', 'json', 'csv']
 		let fileExtenstion = fileName.substr(fileName.lastIndexOf('.') + 1).toLowerCase();
 		if(!acceptableFileTypes.includes(fileExtenstion)){
-			socket.emit('file-upload-response', {success : false, message :"Invalid file type"});
+			socket.emit('file-upload-response', {id, fileName,  success : false, message :"Invalid file type, Acceptable filetypes are xls, xlsm, xlsx, txt, json and csv"});
 			fs.unlink(`uploads/${fileName}`, err =>{
 				if(err){
 					console.log(`Failed to remove ${fileName} from FS - `, err)
@@ -687,7 +689,6 @@ io.of("landingZoneFileUpload").on("connection", (socket) => {
 			return;
 		}
 
-		fileStream = fs.createReadStream('uploads/' + fileName)
 		const selectedCluster = await hpccUtil.getCluster(cluster.id);
 		request({
 			url : `${cluster.thor_host}:${cluster.thor_port}/FileSpray/UploadFile.json?upload_&rawxml_=1&NetAddress=${machine}&OS=2&Path=${destinationFolder}`,
@@ -695,45 +696,41 @@ io.of("landingZoneFileUpload").on("connection", (socket) => {
 			auth : hpccUtil.getClusterAuth(selectedCluster),
 			formData : {
 				'UploadedFiles[]' : {
-					value : fileStream,
+					value : `uploads/${fileName}`,
 					options : {
 						filename : fileName,
 					}
 				}
 			}
 			  },
-			  function(err, httpResponse, body){
+			   function(err, httpResponse, body){
 				const response = JSON.parse(body);
 				if(err){
-					socket.emit('file-upload-response', {id, fileName,success : false, message : err});
-					return;
+					return console.log(err)
 				}
-
 				if(response.Exceptions){
 					socket.emit('file-upload-response', {id, fileName,success : false, message : response.Exceptions.Exception[0].Message});
 				}else{
-					socket.emit('file-upload-response', {id,success : true, message : response.UploadFilesResponse.UploadFileResults.DFUActionResult[0].Result });
+					socket.emit('file-upload-response', {id, fileName, success : true, message : response.UploadFilesResponse.UploadFileResults.DFUActionResult[0].Result });
 				}
-				// Remove file on file upload success/failure
 				fs.unlink(`uploads/${fileName}`, err =>{
 					if(err){
 						console.log(`Failed to remove ${fileName} from FS - `, err)
 					}
-				});
-
+				})
 			  }
 		)
 	}
 		
 	//When whole file is supplied by the client
-	socket.on('upload-file', (message) => {
-		const {id,fileName, data} = message;
-		fs.writeFile(`uploads/${fileName}`, data, function(err){
+	socket.on('upload-file',  (message) => {
+		const {id, fileName, data} = message;
+		 fs.writeFile(`uploads/${fileName}`, data, function(err){
 			if(err){
 				console.log(`Error occured while saving ${fileName} in FS`, err);
-				socket.emit('file-upload-response', {fileName,success : false, message : err});
+				socket.emit('file-upload-response', {fileName, id, success : false, message : 'Unknown error occured during upload'});
 			}else{
-				 upload(cluster, destinationFolder, id, fileName )
+				  upload(cluster, destinationFolder, id, fileName )
 			}
 		});
 	});
