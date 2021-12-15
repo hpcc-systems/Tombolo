@@ -94,7 +94,7 @@ const flatten = (obj) => {
 
 const formItemLayout = {
   labelCol: { span: 2 },
-  wrapperCol: { span: 8 }
+  wrapperCol: { span: 11 }
 }
 
 const threeColformItemLayout = {

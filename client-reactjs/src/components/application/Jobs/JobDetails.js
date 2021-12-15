@@ -765,7 +765,7 @@ class JobDetails extends Component {
       return element;
     });
     console.log(this.formRef.current.getFieldsValue());
-    let formFieldsValue = this.formRef.current.getFieldsValue();
+    let formFieldsValue = this.formRef.current.getFieldsValue(true);
     if (formFieldsValue["sprayDropZone"]) {
       formFieldsValue["sprayDropZone"] = formFieldsValue["sprayDropZone"];
     }
@@ -1678,14 +1678,14 @@ class JobDetails extends Component {
             <Tabs defaultActiveKey="1" tabBarExtraContent = {this.props.displayingInModal ? null : controls }>
 
           <TabPane tab="Basic" key="1">
-              <Form.Item label="Job Type" name="jobType"> 
-                {!this.state.enableEdit ? 
-                <input className="read-only-input"/>
-                :
-                <Select placeholder="Job Type" value={(jobType != '') ? jobType : "Job"} style={{ width: 190 }} onChange={this.onJobTypeChange} disabled={!editingAllowed}>
+              <Form.Item label="Job Type" name="jobType" className={this.state.enableEdit ? null : "read-only-input"}>
+              
+              {!this.state.enableEdit ? 
+                <Input disabled={!editingAllowed}  placeholder="Job Type" value={(jobType !== '') ? jobType : "Job"} /> :
+                <Select placeholder="Job Type" value={(jobType !== '') ? jobType : "Job"} style={{ width: 190 }} onChange={this.onJobTypeChange} >
                   {jobTypes.map(d => <Option key={d}>{d}</Option>)}
                 </Select>
-                }
+              }
               </Form.Item>   
               {(() =>  {
                 switch (jobType) {

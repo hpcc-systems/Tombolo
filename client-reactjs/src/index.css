@@ -666,7 +666,19 @@ div.tooltip {
 .noGutters .codemirror_MarkdownEditor .CodeMirror-linenumber {
   display: none;
 }
+.noScroll *{
+  max-width: 100%;
+}
 
+.noScroll *::-webkit-scrollbar {
+  width: 0;  /* Remove scrollbar space */
+  background: transparent;  /* Optional: just make scrollbar invisible */
+}
+/* Optional: show position indicator in red */
+.noScroll *::-webkit-scrollbar-thumb {
+  width: 0;
+  height: 0;
+}
 .ant-tree-switcher {
   position: relative;
   -ms-flex: none;
@@ -798,12 +810,12 @@ div.tooltip {
 }
 
 .read-only-markdown {
-  display: flex;
-  flex-direction: column;
-  align-items: flex-start;
-  padding: 5px 0px 0px 0px;
-
+  min-height: 40px;
+  border: 1px solid #d9d9d9;
+  border-radius: 2px;
+  padding: 4px 11px;
 }
+
 ReactMarkdown *{
   text-align: left !important;
 }
