@@ -1,11 +1,10 @@
-/* eslint-disable react-hooks/exhaustive-deps */
 import React, { useState, useEffect } from "react";
-import { Select, Cascader, Row, Col,Popconfirm } from "antd";
+import { Select, Cascader, Row, Col, Button ,Typography} from "antd";
 import Search from "antd/lib/input/Search";
 import Form from "antd/lib/form/Form";
-import { MinusCircleOutlined } from '@ant-design/icons';
+import { formItemLayout } from "../../../common/CommonUtil";
 
-const initialRequestState ={
+const initialRequestState= {
     error: null,
     loading: false,
     validateStatus: null,
@@ -20,7 +19,7 @@ const initialRequestState ={
     repo: null
   };
   
- const GitRepoSection =({name, fieldKey, restField, form, remove, enableEdit}) =>{
+ const GHFormFields =({form, enableEdit}) =>{
     
     const [gitHubRequest, setGitHubRequest] = useState(initialRequestState)
   
@@ -28,12 +27,11 @@ const initialRequestState ={
     
     const [defaultCascader, setDefaultCascader] = useState(null);
   
-    const pathToCurrentIndex = ["gitHubFiles", "reposList", parseInt(name)];
+    const pathToCurrentIndex = ["gitHubFiles", "currentSettings"];
   
     const getAuthorizationHeaders = () =>{
-    // const gitHubUserName = form?.current.getFieldValue([ "gitHubFiles", "gitHubUserName", ]);
-    const gitHubUserAccessToken = form?.current.getFieldValue([ "gitHubFiles", "gitHubUserAccessToken", ]);   
-    const headers ={ 'Accept': 'application/json', 'Content-Type': 'application/json' };
+    const gitHubUserAccessToken= form?.current.getFieldValue([ "gitHubFiles", "gitHubUserAccessToken", ]);   
+    const headers={ 'Accept': 'application/json', 'Content-Type': 'application/json' };
     if (gitHubUserAccessToken) headers.Authorization = `token ${gitHubUserAccessToken}`;
     return headers;
   }
@@ -76,17 +74,17 @@ const initialRequestState ={
     const onChange = (value, selectedOptions) => {
       // console.log(`value`, value); console.log(`selectedFile`, selectedOptions[selectedOptions.length - 1]); console.log("selectedRepo", selectedOptions[selectedOptions.length - 2]); // this object has children prop with all files currently in repo, can be stale info if saved to db
         if (value.length === 0) {
-          form.current.resetFields([[...pathToCurrentIndex ,"selectedFile"]]); // this is triggered when user resets cascader
-        } 
+          form.current.setFieldsValue({ gitHubFiles: { selectedFile: null } }); // this is triggered when user resets cascader
+        }
         if (selectedOptions[selectedOptions.length - 1]?.isLeaf) {
-          const allRepos = form.current.getFieldValue(["gitHubFiles", "reposList"]);
-          allRepos[name].selectedFile = { ...selectedOptions[selectedOptions.length - 1], projectOwner: gitHubRequest.owner, projectName: gitHubRequest.repo }
-          const updatedFields = { gitHubFiles: {reposList: [...allRepos] }}
-          if (name === 0) {
-            updatedFields.name= value[value.length -1];
-            updatedFields.title= value[value.length -1];
-          }
-          form.current.setFieldsValue(updatedFields);
+          form.current.setFieldsValue({
+            gitHubFiles: {
+              currentSettings :{
+                selectedFile: { ...selectedOptions[selectedOptions.length - 1], projectOwner: gitHubRequest.owner, projectName: gitHubRequest.repo }, },
+                name: value[value.length -1],
+                title: value[value.length -1],
+              } 
+          });
         }
       };
   
@@ -133,7 +131,7 @@ const initialRequestState ={
   }, [gitHubRequest.selectedBranch, gitHubRequest.selectedTag]);
   
     useEffect(() => {
-      const defaultCascader = form?.current.getFieldValue([...pathToCurrentIndex, "pathToFile", ]);
+      const defaultCascader = form?.current.getFieldValue([...pathToCurrentIndex, "pathToFile" ]);
       
       if (defaultCascader?.length > 1) {
         const createOptionsTree = ( defaultCascader, currentNode = {}, repoTree = {} ) => {
@@ -159,57 +157,59 @@ const initialRequestState ={
         setRepoTree([defaultOptions]);
       }
     }, []);
+
+    const saveRepo = () =>{
+      const currentRepo = form.current.getFieldValue([...pathToCurrentIndex]);
+      const allRepos = form.current.getFieldValue(['gitHubFiles', "reposList"]) || [];
+      const updatedFields = { gitHubFiles: { reposList: [...allRepos,currentRepo] }};
+      if (allRepos.length === 0) { // will update Job name and Title
+        updatedFields.name = currentRepo.selectedFile.name
+        updatedFields.title = currentRepo.selectedFile.name
+      }
+      form.current.setFieldsValue(updatedFields);
+      const resetFields = Object.keys(currentRepo);
+      form.current.resetFields(resetFields.map((field)=>([...pathToCurrentIndex, field])));
+      setGitHubRequest(()=>({...initialRequestState}));
+      console.log('--GH----------------------------------------');
+      console.dir({gh: form.current.getFieldsValue(true)}, { depth: null });
+      console.log('------------------------------------------');
+    }
   
-    
+    const disableSave= !form.current.getFieldValue([...pathToCurrentIndex, "pathToFile" ]);
+
     return(
     <>
-      <Form.Item required label="GitHub repo"  className={!enableEdit && "read-only-input"}>
-        <Row gutter={[8, 8]}>
-          <Col span={ name > 0 && enableEdit ? 23 : 24}>
-            <Form.Item 
-              validateTrigger={["onBlur"]}
-              {...restField}
-              name={[name, 'providedGithubRepo']}
-              fieldKey={[fieldKey, 'providedGithubRepo']}
-              validateStatus={gitHubRequest.validateStatus}
-              rules={[ { required: true, message: "Provide valid Github repo" }, { type: "url", message: "Invalid URL" }, ]}
-              help={
-                gitHubRequest.error ? (
-                  gitHubRequest.error
-                ) : gitHubRequest.validateStatus === "success" ? (
-                  <span style={{ color: "green" }}>
-                    Success! Choose the branch or tags you want to browse
-                  </span>
-                ) : null
-              }
-              >
-              <Search
-                onSearch={onSearch}
-                loading={gitHubRequest.loading}
-                enterButton={enableEdit ? true : false}
-                placeholder="Provide a link to GitHub repo"
-              />
-            </Form.Item>
-          </Col>
-          {name > 0 && enableEdit ? 
-          <Col span={1}>
-            <Popconfirm placement="right" title={"Are you sure you want to delete setting?"} onConfirm={() => {remove(name); form.current.validateFields()}} okText="Yes" cancelText="No">
-              <MinusCircleOutlined />
-            </Popconfirm>
-          </Col> : null  }
-        </Row>
+      <Form.Item 
+        label="GitHub repo"
+        className={!enableEdit && "read-only-input"}
+        name={[...pathToCurrentIndex, 'providedGithubRepo']}
+        validateTrigger={["onBlur"]}
+        validateStatus={gitHubRequest.validateStatus}
+        rules={[ { type: "url", message: "Invalid URL" }]}
+        help={
+          gitHubRequest.error ? (
+            gitHubRequest.error
+          ) : gitHubRequest.validateStatus === "success" ? (
+            <Typography.Text type="success">Success! Choose the branch or tags you want to browse</Typography.Text>
+          ) : null
+        }
+        >
+        <Search
+          onSearch={onSearch}
+          loading={gitHubRequest.loading}
+          enterButton={enableEdit ? true : false}
+          placeholder="Provide a link to GitHub repo"
+        />
       </Form.Item>
-  
-      <Form.Item required label="Branch"> 
+
+      <Form.Item  label="Branch"> 
         <Row gutter={[8, 8]}>
           <Col span={11}>
             <Form.Item
-              validateTrigger={["onBlur"]}
-              {...restField}
-              name={[name, 'selectedGitBranch']}
-              fieldKey={[fieldKey, 'selectedGitBranch']}
+              name={[...pathToCurrentIndex, 'selectedGitBranch']}
               className={!enableEdit && "read-only-input"}
-              rules={[ { required:  !form.current?.getFieldValue([...pathToCurrentIndex, "selectedGitTag"]), message: "Select branch", }, ]}
+              // validateTrigger={["onBlur"]}
+              // rules={[ { required:   !form.current?.getFieldValue([...pathToCurrentIndex, "selectedGitTag"]), message: "Select branch", }, ]}
             >
               <Select allowClear placeholder="Select branch" disabled={enableEdit && !gitHubRequest.branches} onChange={handleBranchSelect} >
                 {gitHubRequest.branches?.map((branch) => (
@@ -223,12 +223,10 @@ const initialRequestState ={
   
           <Col span={11}>
            <Form.Item
-              validateTrigger={["onBlur"]}
-              {...restField}
-              name={[name, 'selectedGitTag']}
-              fieldKey={[fieldKey, 'selectedGitTag']}
+              name={[...pathToCurrentIndex, 'selectedGitTag']}
               className={!enableEdit && "read-only-input"}
-              rules={[ { required:  !form.current?.getFieldValue([...pathToCurrentIndex, "selectedGitBranch"]), message: "Select Tag", }, ]}
+              // validateTrigger={["onBlur"]}
+              // rules={[ { required:  !form.current?.getFieldValue([...pathToCurrentIndex, "selectedGitBranch"]), message: "Select Tag", }, ]}
             >
               <Select allowClear placeholder="Select Tag" disabled={enableEdit && !gitHubRequest.tags} onChange={handleTagSelect} >
                 {gitHubRequest.tags?.map((tags) => (
@@ -243,21 +241,19 @@ const initialRequestState ={
   
       <Form.Item
         label="Main File"
-        validateTrigger={["onBlur"]}
-        {...restField}
-        name={[name, 'pathToFile']}
-        fieldKey={[fieldKey, 'pathToFile']}
-        rules={[
-          { required: true, message: "" },
-          ({ getFieldValue }) => ({
-            validator(field, value) {
-              if (getFieldValue([...pathToCurrentIndex, "selectedFile"])) {
-                return Promise.resolve();
-              }
-              return Promise.reject(new Error("Select a start file"));
-            },
-          }),
-        ]}
+        name={[...pathToCurrentIndex, 'pathToFile']}
+        // validateTrigger={["onBlur"]}
+        // rules={[
+        //   { required: true, message: "" },
+        //   ({ getFieldValue }) => ({
+        //     validator(field, value) {
+        //       if (getFieldValue([...pathToCurrentIndex, "selectedFile"])) {
+        //         return Promise.resolve();
+        //       }
+        //       return Promise.reject(new Error("Select a start file"));
+        //     },
+        //   }),
+        // ]}
       >
         <Cascader
           defaultValue={defaultCascader}
@@ -270,7 +266,14 @@ const initialRequestState ={
         />
       </Form.Item>
       <Form.Item hidden={true} name={[...pathToCurrentIndex, "selectedFile"]} /> 
+      {enableEdit &&
+        <Form.Item wrapperCol={{ offset:formItemLayout.labelCol.span, span: formItemLayout.wrapperCol.span }}>
+          <div style={{display:'flex', justifyContent:'flex-end'}}>
+            <Button disabled={disableSave} shape="round"  size='small' type="primary" onClick={saveRepo}> Save Repository</Button>
+          </div>
+        </Form.Item>
+      }
       </>)
   }
   
-  export default GitRepoSection;
+  export default GHFormFields;

@@ -3,7 +3,7 @@ import { Input, Row, Col } from "antd";
 import Form from "antd/lib/form/Form";
 import { UserOutlined, LockOutlined } from '@ant-design/icons';
 
-function GitHubCredentials({enableEdit}) {
+function GHCredentials({enableEdit}) {
 
   const helperText ="GitHub credentials are not required for public repos, although they are usually autofilled by your browser, please check inputs."
     return (
@@ -60,4 +60,4 @@ function GitHubCredentials({enableEdit}) {
     )
 }
 
-export default GitHubCredentials
+export default GHCredentials
