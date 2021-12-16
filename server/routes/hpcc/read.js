@@ -17,10 +17,13 @@ let hpccJSComms = require("@hpcc-js/comms")
 const { body, query, oneOf, validationResult } = require('express-validator');
 const ClusterWhitelist = require('../../cluster-whitelist');
 let lodash = require('lodash');
-const {socketIo : io} = require('../../server');
+// const {socketIo : io} = require('../../server');
+const {io} = require('../../server');
 const fs = require("fs");
 const { file } = require('tmp');
 const { response } = require('express');
+const {verifyToken} = require('../user/userservice');
+const { nextTick } = require('process');
 
 router.post('/filesearch', [
   body('keyword')
@@ -665,7 +668,13 @@ router.post('/executeSprayJob', [
 
 
 // Drop Zone file upload namespace
-io.of("landingZoneFileUpload").on("connection", (socket) => {
+io.of("/landingZoneFileUpload").on("connection", (socket,) => {
+	verifyToken("cc").then(() =>{
+	}).catch(err =>{
+		console.log(`Handshake refused - ${err}- destroying ws connection ...`);
+		socket.disconnect();
+	})
+
 	let cluster, destinationFolder, machine;
 	//Receive cluster and destination folder info when client clicks upload
 	socket.on('start-upload', message=> {

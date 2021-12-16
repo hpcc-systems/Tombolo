@@ -10,14 +10,25 @@ const {NotificationModule} = require('./routes/notifications/email-notification'
 const server = require('http').Server(app);
 const io = require('socket.io')(server);
 
-const socketIo = io.use(function(socket, next){
-  const token =  socket.handshake.auth.token;
-  verifyToken(token).then(() => {
-    next();
-  })
-})
+// const socketIo = io.use( function(socket, next){
+//   if (socket.handshake && socket.handshake.auth.token){
+//        verifyToken(socket.handshake.auth.token).then(() =>{
+//          console.log('------------------------------------------');
+//          console.log('WS connection  authenticated to receive further events', )
+//          console.log('------------------------------------------');
+//          next();
+//        }).catch(err =>{
+//          console.log(err)
+//        })
+//   }
+//   else {
+//     next(new Error('Authentication error'));
+//   }    
+// })
 
-exports.socketIo = socketIo;
+
+// exports.socketIo = socketIo;
+exports.io = io;
 
 app.set('trust proxy', 1);
 const limiter = rateLimit({

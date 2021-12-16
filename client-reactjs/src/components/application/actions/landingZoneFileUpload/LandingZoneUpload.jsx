@@ -28,20 +28,8 @@ function LandingZoneUpload() {
   const { Option,  } = Select;
   const history = useHistory();
 
-
 useEffect(() => {
-  const test = io(`${process.env.REACT_APP_PROXY_URL}/landingZoneNameSpace`,  {
-    transports: ["websocket"],
-    auth : {
-      token : authReducer?.user.token
-    }
-    });
-
-    test.on("hi", () => console.log("Hello world"));
-
-    console.log(test)
-
-    // Socket io connection
+ // Socket io connection
     if(process.env.NODE_ENV === "development"){
       const socket = io(devURL, {
         transports: ["websocket"],
@@ -59,8 +47,6 @@ useEffect(() => {
         });
         setSocket(socket);
     }
-
-    //<<<<<<<<<<<<<<<<< Test
   }, []);
 
 
