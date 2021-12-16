@@ -20,7 +20,7 @@ function LandingZoneUpload() {
   const [overWriteFiles, setOverWriteFiles] = useState(false);
   const [uploading, setUploading] = useState(false);
   const [options, setOptions] = useState([]);
-  const authReducer = useSelector(state => state.authReducer);
+  const authReducer = useSelector((state) => state.authenticationReducer);
   const clusters = useSelector(state => state.applicationReducer.clusters);
   const devURL = `${process.env.REACT_APP_PROXY_URL}/landingZoneFileUpload`;
   const prodURL  = '/landingZoneFileUpload';
@@ -30,6 +30,17 @@ function LandingZoneUpload() {
 
 
 useEffect(() => {
+  const test = io(`${process.env.REACT_APP_PROXY_URL}/landingZoneNameSpace`,  {
+    transports: ["websocket"],
+    auth : {
+      token : authReducer?.user.token
+    }
+    });
+
+    test.on("hi", () => console.log("Hello world"));
+
+    console.log(test)
+
     // Socket io connection
     if(process.env.NODE_ENV === "development"){
       const socket = io(devURL, {
@@ -48,6 +59,8 @@ useEffect(() => {
         });
         setSocket(socket);
     }
+
+    //<<<<<<<<<<<<<<<<< Test
   }, []);
 
 
