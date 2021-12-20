@@ -105,7 +105,7 @@ function DataDefinitionDetailsDialog({selectedDataDefinition, applicationId, onD
         onDataUpdated();
         message.success("Data Defintion saved successfully.")
       }).catch(error => {
-        message.error(error);
+        console.log(error);
       });
     }
   }
