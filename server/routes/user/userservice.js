@@ -47,12 +47,13 @@ async function verifyToken(token) {
               }
             }, function(err, response, body) {
               if (err || response.statusCode != 200) {
-                reject('Unable to verify token'); // Err null when status code is != 200 -> safe to reject custom error
+                const error = err ? err : response.body;
+                reject(error)
               }
               resolve(body);
           });
         });
-    }
+  }
 }
 
 
