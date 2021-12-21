@@ -1,0 +1,4 @@
+{
+    "ignore": ["*.json"],
+    "comment" : "When a json file is added to fs, nodemon considers it as a change in file and restarts the server. This interrupts file uploading process. This file is added so nodemon ignores any change in .json files"
+}
