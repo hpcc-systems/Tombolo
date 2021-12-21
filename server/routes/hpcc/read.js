@@ -20,7 +20,8 @@ let lodash = require('lodash');
 const {io} = require('../../server');
 const fs = require("fs");
 const { response } = require('express');
-const userservice = require('../user/userservice');
+const userService = require('../user/userservice');
+const path = require('path');
 
 router.post('/filesearch', [
   body('keyword')
@@ -668,7 +669,7 @@ router.post('/executeSprayJob', [
 io.of("/landingZoneFileUpload").on("connection", (socket) => {
 
 	if(socket.handshake.auth){
-		userservice.verifyToken(socket.handshake.auth.token)
+		userService.verifyToken(socket.handshake.auth.token)
 		.then(response =>{ 
 			return response;
 		}).catch(err =>{
@@ -688,7 +689,9 @@ io.of("/landingZoneFileUpload").on("connection", (socket) => {
 	//Upload File 
 	const upload = async (cluster, destinationFolder, id ,fileName) =>{
 		//Check file ext
-		const acceptableFileTypes = ['xls', 'xlsm', 'xlsx', 'txt', 'json', 'csv']
+		const acceptableFileTypes = ['xls', 'xlsm', 'xlsx', 'txt', 'json', 'csv'];
+		const filePath = path.join(__dirname, '..', '..', 'uploads', fileName);
+
 		let fileExtenstion = fileName.substr(fileName.lastIndexOf('.') + 1).toLowerCase();
 		if(!acceptableFileTypes.includes(fileExtenstion)){
 			socket.emit('file-upload-response', {id, fileName,  success : false, message :"Invalid file type, Acceptable filetypes are xls, xlsm, xlsx, txt, json and csv"});
@@ -707,7 +710,7 @@ io.of("/landingZoneFileUpload").on("connection", (socket) => {
 				auth : hpccUtil.getClusterAuth(selectedCluster),
 				formData : {
 					'UploadedFiles[]' : {
-						value : `uploads/${fileName}`,
+						value : filePath,
 						options : {
 							filename : fileName,
 						}
@@ -724,7 +727,7 @@ io.of("/landingZoneFileUpload").on("connection", (socket) => {
 					}else{
 						socket.emit('file-upload-response', {id, fileName, success : true, message : response.UploadFilesResponse.UploadFileResults.DFUActionResult[0].Result });
 					}
-					fs.unlink(`uploads/${fileName}`, err =>{
+					fs.unlink(filePath, err =>{
 						if(err){
 							console.log(`Failed to remove ${fileName} from FS - `, err)
 						}
@@ -740,7 +743,8 @@ io.of("/landingZoneFileUpload").on("connection", (socket) => {
 	//When whole file is supplied by the client
 	socket.on('upload-file',  (message) => {
 		const {id, fileName, data} = message;
-		 fs.writeFile(`uploads/${fileName}`, data, function(err){
+		const filePath = path.join(__dirname, '..', '..', 'uploads', fileName);
+		 fs.writeFile(filePath, data, function(err){
 			if(err){
 				console.log(`Error occured while saving ${fileName} in FS`, err);
 				socket.emit('file-upload-response', {fileName, id, success : false, message : 'Unknown error occured during upload'});
@@ -755,7 +759,8 @@ io.of("/landingZoneFileUpload").on("connection", (socket) => {
 		if(file.fileSize - file.received <= 0){
 				let fileData = file.data.join('');
 				let fileBuffer = Buffer.from(fileData);
-				fs.writeFile(`uploads/${file.fileName}`, fileBuffer, function(err){
+				const filePath = path.join(__dirname, '..', '..', 'uploads', file.fileName);
+				fs.writeFile(filePath, fileBuffer, function(err){
 					if(err){
 						console.log('Error writing file to the FS', error);
 						socket.emit('file-upload-response', {fileName,success : false, message : err});
