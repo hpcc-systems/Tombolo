@@ -320,10 +320,10 @@ function AssetsTable({ openGroup, handleEditGroup, refreshGroups }) {
       width: "25%",
       ellipsis: true,
       shouldCellUpdate: (record, prevRecord) => record.description !== prevRecord.description,
-      render: (text, record) => {
-        const truncatedText = text?.substring(0,20).replace(/[`#/-]/g,'');
-        return <Typography.Text>{truncatedText}</Typography.Text>
-      }
+      // render: (text, record) => {
+      //   const truncatedText = text?.substring(0,20).replace(/[`#/-]/g,'');
+      //   return <Typography.Text>{truncatedText}</Typography.Text>
+      // }
     },
     {
       title: "Type",
