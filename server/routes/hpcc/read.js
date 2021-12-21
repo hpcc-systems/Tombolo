@@ -691,12 +691,13 @@ io.of("/landingZoneFileUpload").on("connection", (socket) => {
 	const upload = async (cluster, destinationFolder, id ,fileName) =>{
 		//Check file ext
 		const acceptableFileTypes = ['xls', 'xlsm', 'xlsx', 'txt', 'json', 'csv'];
-		const filePath = path.join(__dirname, '..', '..', 'uploads', fileName);
+		const sanitizedFileName = sanitize(fileName)
+		const filePath = path.join(__dirname, '..', '..', 'uploads', sanitizedFileName);
 
 		let fileExtension = fileName.substr(fileName.lastIndexOf('.') + 1).toLowerCase();
 		if(!acceptableFileTypes.includes(fileExtension)){
 			socket.emit('file-upload-response', {id, fileName,  success : false, message :"Invalid file type, Acceptable filetypes are xls, xlsm, xlsx, txt, json and csv"});
-			fs.unlink(`uploads/${fileName}`, err =>{
+			fs.unlink(filePath, err =>{
 				if(err){
 					console.log(`Failed to remove ${fileName} from FS - `, err)
 				}
