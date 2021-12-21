@@ -22,6 +22,7 @@ const fs = require("fs");
 const { response } = require('express');
 const userService = require('../user/userservice');
 const path = require('path');
+var sanitize = require("sanitize-filename");
 
 router.post('/filesearch', [
   body('keyword')
@@ -692,8 +693,8 @@ io.of("/landingZoneFileUpload").on("connection", (socket) => {
 		const acceptableFileTypes = ['xls', 'xlsm', 'xlsx', 'txt', 'json', 'csv'];
 		const filePath = path.join(__dirname, '..', '..', 'uploads', fileName);
 
-		let fileExtenstion = fileName.substr(fileName.lastIndexOf('.') + 1).toLowerCase();
-		if(!acceptableFileTypes.includes(fileExtenstion)){
+		let fileExtension = fileName.substr(fileName.lastIndexOf('.') + 1).toLowerCase();
+		if(!acceptableFileTypes.includes(fileExtension)){
 			socket.emit('file-upload-response', {id, fileName,  success : false, message :"Invalid file type, Acceptable filetypes are xls, xlsm, xlsx, txt, json and csv"});
 			fs.unlink(`uploads/${fileName}`, err =>{
 				if(err){
@@ -742,7 +743,8 @@ io.of("/landingZoneFileUpload").on("connection", (socket) => {
 		
 	//When whole file is supplied by the client
 	socket.on('upload-file',  (message) => {
-		const {id, fileName, data} = message;
+		let {id, fileName, data} = message;
+		fileName = sanitize(fileName);
 		const filePath = path.join(__dirname, '..', '..', 'uploads', fileName);
 		 fs.writeFile(filePath, data, function(err){
 			if(err){
@@ -759,13 +761,14 @@ io.of("/landingZoneFileUpload").on("connection", (socket) => {
 		if(file.fileSize - file.received <= 0){
 				let fileData = file.data.join('');
 				let fileBuffer = Buffer.from(fileData);
-				const filePath = path.join(__dirname, '..', '..', 'uploads', file.fileName);
+				const fileName = sanitize(file.fileName);
+				const filePath = path.join(__dirname, '..', '..', 'uploads', fileName);
 				fs.writeFile(filePath, fileBuffer, function(err){
 					if(err){
 						console.log('Error writing file to the FS', error);
 						socket.emit('file-upload-response', {fileName,success : false, message : err});
 					}else{
-					  upload(cluster, destinationFolder, file.id ,file.fileName)
+					  upload(cluster, destinationFolder, file.id , fileName)
 					}
 				})
 		}
