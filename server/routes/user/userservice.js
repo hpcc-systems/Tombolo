@@ -47,12 +47,13 @@ async function verifyToken(token) {
               }
             }, function(err, response, body) {
               if (err || response.statusCode != 200) {
-                reject(err);
+                const error = err ? err : response.body;
+                reject(error)
               }
               resolve(body);
           });
         });
-    }
+  }
 }
 
 

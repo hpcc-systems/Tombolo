@@ -8,16 +8,17 @@ const {NotificationModule} = require('./routes/notifications/email-notification'
 
 // Socket
 const server = require('http').Server(app);
-const io = require('socket.io')(server);
+const socketIo = require('socket.io')(server);
 
-const socketIo = io.use(function(socket, next){
-  const token =  socket.handshake.auth.token;
-  verifyToken(token).then(() => {
-    next();
-  })
-})
+// const socketIo = io.use(function(socket, next){
+//   const token =  socket.handshake.auth.token;
+//   verifyToken(token).then(() => {
+//     next();
+//   })
+// })
 
-exports.socketIo = socketIo;
+
+exports.io = socketIo;
 
 app.set('trust proxy', 1);
 const limiter = rateLimit({

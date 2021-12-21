@@ -159,7 +159,7 @@ class JobDetails extends Component {
       id: "",
       groupId: "",
       dataflowId: this.props.selectedDataflow
-        ? this.props.selectedDataflow
+        ? this.props.selectedDataflow.id
         : "",
       ecl: "",
       entryBWR: "",
@@ -464,7 +464,7 @@ class JobDetails extends Component {
         id: "",
         groupId: "",
         dataflowId: this.props.selectedDataflow
-          ? this.props.selectedDataflow
+          ? this.props.selectedDataflow.id
           : "",
         ecl: "",
         entryBWR: "",
@@ -813,7 +813,7 @@ class JobDetails extends Component {
         ...formFields,
         application_id: applicationId,
         dataflowId: this.props.selectedDataflow
-          ? this.props.selectedDataflow
+          ? this.props.selectedDataflow.id
           : "",
         cluster_id: this.state.selectedCluster,
         ecl: this.state.job.ecl,
@@ -938,7 +938,7 @@ class JobDetails extends Component {
 
   handleScheduleTypeSelect = (value) => {
     let dataflowId = this.props.selectedDataflow
-        ? this.props.selectedDataflow
+        ? this.props.selectedDataflow.id
         : "",
       applicationId = this.props.application
         ? this.props.application.applicationId
@@ -1415,7 +1415,9 @@ class JobDetails extends Component {
         if (data && data.success) {
           message.success("Job has been submitted");
         }
-      });
+      }).catch(err =>{
+        console.log(err)
+      })
   };
 
   render() {
