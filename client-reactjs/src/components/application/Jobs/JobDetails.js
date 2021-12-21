@@ -1412,7 +1412,9 @@ class JobDetails extends Component {
         if (data && data.success) {
           message.success("Job has been submitted");
         }
-      });
+      }).catch(err =>{
+        console.log(err)
+      })
   };
 
   render() {
