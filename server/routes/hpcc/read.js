@@ -699,7 +699,7 @@ io.of("/landingZoneFileUpload").on("connection", (socket) => {
 			socket.emit('file-upload-response', {id, fileName,  success : false, message :"Invalid file type, Acceptable filetypes are xls, xlsm, xlsx, txt, json and csv"});
 			fs.unlink(filePath, err =>{
 				if(err){
-					console.log(`Failed to remove ${fileName} from FS - `, err)
+					console.log(`Failed to remove ${sanitizedFileName} from FS - `, err)
 				}
 			});
 			return;
@@ -731,7 +731,7 @@ io.of("/landingZoneFileUpload").on("connection", (socket) => {
 					}
 					fs.unlink(filePath, err =>{
 						if(err){
-							console.log(`Failed to remove ${fileName} from FS - `, err)
+							console.log(`Failed to remove ${sanitizedFileName} from FS - `, err)
 						}
 					})
 				}
@@ -745,14 +745,14 @@ io.of("/landingZoneFileUpload").on("connection", (socket) => {
 	//When whole file is supplied by the client
 	socket.on('upload-file',  (message) => {
 		let {id, fileName, data} = message;
-		fileName = sanitize(fileName);
-		const filePath = path.join(__dirname, '..', '..', 'uploads', fileName);
+		const sanitizedFileName  = sanitize(fileName);
+		const filePath = path.join(__dirname, '..', '..', 'uploads', sanitizedFileName);
 		 fs.writeFile(filePath, data, function(err){
 			if(err){
-				console.log(`Error occured while saving ${fileName} in FS`, err);
+				console.log(`Error occured while saving ${sanitizedFileName} in FS`, err);
 				socket.emit('file-upload-response', {fileName, id, success : false, message : 'Unknown error occured during upload'});
 			}else{
-				  upload(cluster, destinationFolder, id, fileName )
+				  upload(cluster, destinationFolder, id, sanitizedFileName )
 			}
 		});
 	});
