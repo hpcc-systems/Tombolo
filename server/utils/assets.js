@@ -18,9 +18,11 @@ let ConsumerObject = models.consumer_object;
 let JobExecution = models.job_execution;
 let Index = models.indexes;
 const hpccUtil = require('./hpcc-util');
+const workflowUtil = require('./workflow-util');
 let Sequelize = require('sequelize');
 const path = require('path');
 const {execFile, spawn} = require('child_process');
+const JobSchedular = require('../job-scheduler');
 
 exports.fileInfo = (applicationId, file_id) => {
   var results={};
@@ -195,64 +197,135 @@ exports.executeScriptJob = (jobId) => {
       });
     })
   }catch (err) {
-    Promise.reject(err)
+   return Promise.reject(err)
   }
 }
 
-exports.recordJobExecution = (workerData, wuid) => {
-  try {
-    return new Promise((resolve, reject) => {
-      JobExecution.findOrCreate({
-        where: {
-          jobId: workerData.jobId,
-          applicationId: workerData.applicationId
-        },
-        defaults: {
-          jobId: workerData.jobId,
-          dataflowId: workerData.dataflowId,
-          applicationId: workerData.applicationId,
-          wuid: wuid,
-          clusterId: workerData.clusterId,
-          status: workerData.status
-        }
-      }).then(async (result) => {
-        let jobExecutionId = result[0].id;
-        if(!result[1]) {
-          await JobExecution.update({
+exports.recordJobExecution =  async (workerData, wuid) => {
+    try {
+      return new Promise((resolve, reject) => {
+        JobExecution.findOrCreate({
+          where: {
+            jobId: workerData.jobId,
+            applicationId: workerData.applicationId
+          },
+          defaults: {
             jobId: workerData.jobId,
             dataflowId: workerData.dataflowId,
             applicationId: workerData.applicationId,
             wuid: wuid,
-            status: workerData.status
-          },
-          {where: {id: jobExecutionId}})
-        }
-        resolve({jobExecutionId});
-      }).catch((err) => {
-        console.log(err);
-        reject(err)
+            clusterId: workerData.clusterId,
+            status: workerData.status,
+          }
+        }).then(async (result) => {
+          let jobExecutionId = result[0].id;
+          if(!result[1]) {
+            await JobExecution.update({
+              jobId: workerData.jobId,
+              dataflowId: workerData.dataflowId,
+              applicationId: workerData.applicationId,
+              wuid: wuid,
+              status: workerData.status,
+            },
+            {where: {id: jobExecutionId}})
+          }
+          resolve({jobExecutionId});
+        }).catch((err) => {
+          console.log(err);
+          reject(err)
+        })
       })
+    }catch (err) {
+      console.log(err)
+      reject(err);
+      //Promise.reject(err)
+    }
+
+  
+}
+
+exports.createFilesandJobfiles = async ({file, cluster_id, application_id, id})=>{
+  try {
+    const fileInfo = await hpccUtil.fileInfo(file.name, cluster_id);
+    if (!fileInfo) throw new Error("Failed to get File Info");
+    const fileCreated = await File.create({
+      "description": fileInfo.basic.description,
+      "isSuperFile": fileInfo.basic.isSuperfile,
+      "qualifiedPath": fileInfo.basic.pathMask,
+      "fileType": fileInfo.basic.fileType,
+      "application_id": application_id,
+      "title": fileInfo.basic.fileName,
+      "scope": fileInfo.basic.scope,
+      "name": fileInfo.basic.name,
+      "cluster_id": cluster_id,
+      "dataflowId":'',
     })
-  }catch (err) {
-    console.log(err)
-    reject(err);
-    //Promise.reject(err)
+    // #2 create JobFile;
+     await JobFile.create({
+      application_id: application_id,
+      name: fileInfo.basic.name,
+      file_type: file.file_type,
+      file_id: fileCreated.id,
+      job_id: id, 
+    });
+  } catch (error) {
+    console.log('--Error in createFilesandJobfiles----------------------------------------');
+    console.dir(error, { depth: null });
+    console.log('------------------------------------------');
+    throw error;
   }
 }
 
-exports.getJobForProcessing = async () => {
+exports.createGithubFlow = async ({jobId, jobName, gitHubFiles, dataflowId, applicationId, clusterId }) =>{
+  let jobExecution, tasks;
   try {
-    console.log("**********************getJobForProcessing*******************")
-    const jobExecution = await JobExecution.findOne({
-      where: {'status': 'submitted'}, 
-      order: [["updatedAt", "desc"]]
-    });
-    /*if(jobExecution) {
-      let jobExecutionAwaited = await JobExecution.update({
-        status: 'processing'
-      },{where: {jobId: jobExecution.jobId}});  
-    }*/
+    // # create Job Execution with status 'cloning'
+    jobExecution = await JobExecution.create({ jobId, dataflowId, applicationId, clusterId, wuid:"",  status: 'cloning' });
+    console.log('------------------------------------------');
+    console.log(`✔️  createGithubFlow: START: JOB EXECUTION RECORD CREATED ${jobExecution.id}`);    
 
+    // # pull from github and submit job to HPCC.
+    tasks =  await hpccUtil.pullFilesFromGithub( jobName ,clusterId, gitHubFiles );
+    if (tasks.WUaction?.failedToUpdate) {
+     await manuallyUpdateJobExecutionFailure({jobExecution,tasks}); 
+    } else {
+      // changing jobExecution status to 'submitted' will signal status poller that this job if ready to be executed
+      const updated = await jobExecution.update({status:'submitted', wuid: tasks.wuid },{where:{id:jobExecution.id, status:'cloning'}}) 
+      tasks.jobExecution= updated.toJSON();
+
+    }
+    return tasks; // quick summary about github flow that happened.
+  } catch (error) {
+    await manuallyUpdateJobExecutionFailure({jobExecution,tasks}); 
+    console.log('------------------------------------------');
+    console.log('❌ createGithubFlow: "Error happened"');
+    console.dir(error);
+    console.log('------------------------------------------');
+  }
+}
+
+const manuallyUpdateJobExecutionFailure = async ({jobExecution,tasks}) =>{
+  try {
+    // attempt to update WU at hpcc as failed was unsuccessful, we need to update our record manually as current status "cloning" will not be picked up by status poller.
+    const wuid = tasks?.wuid ||'';
+    await jobExecution.update({status: 'failed', wuid},{where:{id:jobExecution.id, status:'cloning'}});
+    await workflowUtil.notifyJobFailure({ jobId: jobExecution.jobId, clusterId: jobExecution.clusterId, wuid});
+  } catch (error) {
+    console.log('------------------------------------------');
+    console.log("❌ createGithubFlow: Failed to notify", error);
+    console.log('------------------------------------------');
+  }
+};
+
+exports.getJobEXecutionForProcessing = async () => {
+  try {
+    console.log('------------------------------------------');
+    console.log("🔍 GETTING JOBS FOR PROCCESSING")
+    const jobExecution = await JobExecution.findAll({
+      where: {'status': 'submitted'}, 
+      order: [["updatedAt", "desc"]],
+      include:[{model:Job, attributes:['name']}]
+    });
     return jobExecution;  
   } catch (error) {
     console.log(error);

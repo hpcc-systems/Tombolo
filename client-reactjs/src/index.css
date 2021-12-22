@@ -489,7 +489,7 @@ div.tooltip {
 }
 
 .show-column {
-  display: block;
+  display: table-cell;
 }
 
 .overflow-hidden > * {
@@ -710,6 +710,11 @@ div.tooltip {
   display: inline;
 }
 
+.asset-action-icon {
+  color: var(--primary);
+  cursor: "pointer";
+}
+
 .ant-tree-list {
   padding-top: 5px;
 }
@@ -912,7 +917,10 @@ h6 {
   display: inline;
 }
 
-
 .nav-link > .fa{
   font-size: 1.33333333em;
 }
+.ant-cascader-menu{
+  height: 40vh;
+  max-width:200px;
+  min-width: 130px;}

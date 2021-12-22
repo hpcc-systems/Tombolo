@@ -9,13 +9,14 @@
       1. DB_USERNAME -*(mysql database username)*
       2. DB_PASSWORD -*(mysql database password)*
       3. secret - *(You can generate a strong and unique string [here](https://www.grc.com/passwords.htm))*
-      4. TOMBOLO_PASSWORD_RESET_URL - *(Example - \<protocol>://<host_name:port>/reset-password)*
+      4. WEB_URL - *(Example - \<protocol>://<host_name:port>/)*
 5. Tombolo uses Auth Service for user authentication. An existing Auth Service can be used or you may set up Auth Service separately. 
     You can find the Authservice setup instructions [here](https://github.com/hpcc-systems/Auth-Service). Once you have an instance of Authservice up and running, 
     update the following information on the '.env' file located on the '/server' directory.
     1. AUTH_SERVICE_URL - *(URL to the AuthService. Eg - \<protocol>://<host_name>:<port>/api/auth)*
     2. AUTHSERVICE_TOMBOLO_CLIENT_ID - *(Unique identifier used to identify an application in AuthService. This value can be found in AuthService UI under applications)*
-7. Locate cluster-whitelist.js file inside the "/server" directory and add cluster information.
+7. Locate 'cluster-whitelist.sample.js' file inside the "/server" directory, rename it to 'cluster-whitelist.js' and add cluster information.
+8. Go Inside '/client-react.js' and rename the .env-sample file to '.env'
 8. Install dependencies.
     1. Inside '/server' run *'npm install'*
     2. Inside '/client-reactjs' run *'npm install'*
@@ -42,7 +43,7 @@
    9. JOB_COMPLETE_GROUP_ID
    10. JOB_COMPLETE_TOPIC
 4. If you are going to be running this application without SSL, locate 'nginx.conf.template' file located at 'client-reactjs/nginx/confd' and remove all SSL-related configuration. 
- 5.  Locate cluster-whitelist.js file inside the "/server" directory and add cluster information.
+ 5.  Locate 'cluster-whitelist.sample.js' file inside the "/server" directory, rename it to 'cluster-whitelist.js' and add cluster information.
  6. Now from the root directory run *'docker-compose up -d'*. This will create and run all necessary containers.
  7. Once the build  successfully completes, the application will be accessible at *'http://<host_name>:<WEB_EXPOSED_PORT>'*
 

@@ -41,7 +41,7 @@ router.get('/app_list', (req, res) => {
 
   try {
     models.application.findAll({order: [['updatedAt', 'DESC']]}).then(function(applications) {
-        res.json(applications);
+        res.status(200).json(applications);
     })
     .catch(function(err) {
       console.log(err);

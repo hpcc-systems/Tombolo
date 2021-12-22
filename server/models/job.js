@@ -1,4 +1,6 @@
 'use strict';
+const crypto = require('crypto');
+
 module.exports = (sequelize, DataTypes) => {
   const job = sequelize.define('job', {
     id: {
@@ -22,13 +24,22 @@ module.exports = (sequelize, DataTypes) => {
     scriptPath: DataTypes.STRING,
     sprayFileName: DataTypes.STRING,
     sprayDropZone: DataTypes.STRING,
-    sprayedFileScope: DataTypes.STRING
+    sprayedFileScope: DataTypes.STRING,
+    metaData:{
+      type: DataTypes.JSON,
+      allowNull: true,
+      defaultValue: null,
+    } 
   }, {paranoid: true, freezeTableName: true});
   job.associate = function(models) {
     job.hasMany(models.jobfile,{
       foreignKey:'job_id',
       onDelete: 'CASCADE',
       hooks: true
+    });
+    job.hasMany(models.job_execution,{
+      foreignKey:'jobId', 
+      onDelete: 'CASCADE',
     });
     job.hasMany(models.jobparam,{
       foreignKey:'job_id',

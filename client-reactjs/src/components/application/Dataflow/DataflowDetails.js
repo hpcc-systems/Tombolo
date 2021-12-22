@@ -60,12 +60,12 @@ function DataflowDetails({props}) {
         </div>
         <div>
           <Tabs defaultActiveKey="1"
-            onChange={(activeKey) => { setCurrentTab(activeKey)}}
-            tabBarExtraContent = {<span> 
-              <Tooltip placement="topRight" title={"Refresh will validate the file/job relationship and update graph accordingly"}>
-                  <Button style={{marginRight: "5px"}} type="primary" onClick={() =>  setGraphRefresh(!refreshGraph)}>Refresh</Button> 
-              </Tooltip>
-                <Button type="link" onClick={(handleBackToAllJobs)} type="primary" ghost> Cancel</Button> </span>}
+          onChange={(activeKey) => { setCurrentTab(activeKey)}}
+          tabBarExtraContent = {currentTab === "1" ? <span> 
+            <Tooltip placement="topRight" title={"Refresh will validate the file/job relationship and update graph accordingly"}>
+                <Button style={{marginRight: "5px"}} type="primary" onClick={() =>  setGraphRefresh(!refreshGraph)}>Refresh</Button> 
+            </Tooltip>
+                <Button type="link" onClick={(handleBackToAllJobs)} type="primary" ghost> Cancel</Button> </span> : null}
           >
             <TabPane tab="Designer" key="1" forceRender={true}>
               <AntdGraph                 
@@ -87,7 +87,7 @@ function DataflowDetails({props}) {
             <span style={{display: "flex", placeItems: "center", justifyContent: "center", paddingBottom: "5px"}}>
               <DataflowAssetsTable
                 applicationId={dataflowReducer.applicationId}
-                selectedDataflow={dataflowReducer.dataflowId}
+                selectedDataflow={{id: dataflowReducer.dataflowId}}
                 user={dataflowReducer.user}
                 application={applicationReducer.application}
               />

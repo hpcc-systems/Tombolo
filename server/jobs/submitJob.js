@@ -1,9 +1,6 @@
 const { parentPort, workerData } = require("worker_threads");
-const request = require('request-promise');
 const hpccUtil = require('../utils/hpcc-util');
 const assetUtil = require('../utils/assets.js');
-const workflowUtil = require('../utils/workflow-util.js');
-const JobScheduler = require('../job-scheduler');
 
 let isCancelled = false;
 if (parentPort) {
@@ -12,38 +9,37 @@ if (parentPort) {
   });
 }
 
+const logToConsole = (message) => parentPort.postMessage({action:"logging", data: message});
+const dispatchAction = (action,data) =>  parentPort.postMessage({ action, data });   
+
 (async () => {
-  let wuResult, wuid='';
+
   try {
-    if(workerData.jobType == 'Spray') {
-      let sprayJobExecution = await hpccUtil.executeSprayJob({
-        cluster_id: workerData.clusterId, 
-        sprayedFileScope: workerData.sprayedFileScope,
-        sprayFileName: workerData.sprayFileName,
-        sprayDropZone: workerData.sprayDropZone
-      });
-      wuid = sprayJobExecution.SprayResponse && sprayJobExecution.SprayResponse.Wuid ? sprayJobExecution.SprayResponse.Wuid : ''      
-    } else {
-      wuid = await hpccUtil.getJobWuidByName(workerData.clusterId, workerData.jobName);
-    }
-    console.log(
-    `submitting job ${workerData.jobName} ` +
-    `(WU: ${wuid}) to url ${workerData.clusterId}/WsWorkunits/WUResubmit.json?ver_=1.78`
-    );
-    let wuInfo = await hpccUtil.resubmitWU(workerData.clusterId, wuid);    
+    const wuDetails = await hpccUtil.getJobWuDetails(workerData.clusterId, workerData.jobName);
+    let wuid = wuDetails.wuid;
+
+    
+    logToConsole(`${workerData.jobName} (WU: ${wuid}) to url ${workerData.clusterId}/WsWorkunits/WUResubmit.json?ver_=1.78`)
+ 
+    let wuResubmitResult = await hpccUtil.resubmitWU(workerData.clusterId, wuid, wuDetails.cluster);
+    wuid = wuResubmitResult?.WURunResponse.Wuid;
+    if (!wuid) throw wuResubmitResult;
     workerData.status = 'submitted';
     //record workflow execution
-    let jobExecutionRecorded = await assetUtil.recordJobExecution(workerData, wuid);          
+    await assetUtil.recordJobExecution(workerData, wuid);          
     
   } catch (err) {
-    console.log(err);
-  } finally {
-    if (parentPort) {            
-      console.log(`signaling done for ${workerData.jobName}`)
-      parentPort.postMessage('done');      
-      
+    logToConsole(err);
+    workerData.status = 'error';
+    await assetUtil.recordJobExecution(workerData, '');  
+
+  }  finally{
+    if (!workerData.isCronJob)  dispatchAction("remove");   // REMOVE JOB FROM BREE IF ITS NOT CRON JOB!
+
+    if (parentPort) {          
+      parentPort.postMessage('done');     
     } else {
       process.exit(0);
-    }
+    }  
   }
 })();
