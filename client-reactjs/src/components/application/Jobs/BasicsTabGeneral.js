@@ -255,9 +255,9 @@ const hideOnReadOnlyView = !enableEdit || !addingNewAsset;
 
           {/* {GitHub Repos Table will be shown in preview mode on the bottom of the form} */}
           {enableEdit ? null :
-          <Form.Item shouldUpdate wrapperCol={{ span:13 }}>
-            {()=> <GHTable enableEdit={enableEdit} form={formRef} />}
-          </Form.Item>
+            <Form.Item shouldUpdate noStyle >
+              {()=> <GHTable enableEdit={enableEdit} form={formRef} />}
+            </Form.Item>
           }
         </React.Fragment>
         : null}                            

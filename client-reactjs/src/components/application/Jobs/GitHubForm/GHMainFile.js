@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Select, Cascader, Input } from 'antd';
+import { Select, Cascader, Input ,Tag} from 'antd';
 import Form from 'antd/lib/form/Form';
 
 function GHMainFile({ enableEdit, form, getAuthorizationHeaders }) {
@@ -95,6 +95,7 @@ function GHMainFile({ enableEdit, form, getAuthorizationHeaders }) {
         <Form.Item
           noStyle
           name={['gitHubFiles', 'selectedRepoId']}
+          validateTrigger={["onBlur", "onSubmit"]}
           rules={[{ required: true, message: 'Please select main file repo' }]}
         >
           <Select
@@ -106,9 +107,7 @@ function GHMainFile({ enableEdit, form, getAuthorizationHeaders }) {
           >
             {repoList.map((repo) => (
               <Select.Option key={repo.repoId} value={repo.repoId}>
-                {`${repo.providedGithubRepo.replace('https://github.com/', '')} - ${
-                  repo.selectedGitTag || repo.selectedGitBranch
-                }`}
+                {`${repo.providedGithubRepo.replace('https://github.com/', '')} -`} <Tag color={repo.selectedGitTag ? 'magenta' : 'cyan'}>{repo.selectedGitTag || repo.selectedGitBranch}</Tag>
               </Select.Option>
             ))}
           </Select>
@@ -117,7 +116,16 @@ function GHMainFile({ enableEdit, form, getAuthorizationHeaders }) {
         <Form.Item
           noStyle
           name={['gitHubFiles', 'pathToFile']}
-          rules={[{ required: true, message: 'Please select main file path' }]}
+          validateTrigger={['onBlur', 'onSubmit']}
+          rules={[
+            { required: true, message: '' },
+            ({ getFieldValue }) => ({
+              validator(field, value) {
+                if (getFieldValue(['gitHubFiles', 'selectedFile']))  return Promise.resolve();
+                return Promise.reject(new Error('Please select a main file'));
+              },
+            }),
+          ]}
         >
           <Cascader
             style={{ width: '50%' }}

@@ -1,5 +1,5 @@
 import React from 'react';
-import { Table, Tag, Popconfirm, Typography } from 'antd';
+import { Table, Tag, Popconfirm, Typography, Form } from 'antd';
 
 const GHTable = ({ form, enableEdit }) => {
   const reposList = form.current?.getFieldValue(['gitHubFiles', 'reposList']);
@@ -77,16 +77,18 @@ const GHTable = ({ form, enableEdit }) => {
   if (enableEdit) columns = [...columns, actionColumn];
 
   return (
-    <Table
-      size='small'
-      columns={columns}
-      dataSource={reposList}
-      style={{ margin: '10px 0' }}
-      rowKey={(row) => row.repoId}
-      bordered={enableEdit ? false : true}
-      showHeader={true}
-      pagination={{ position: ['none', 'none'] }}
-    />
+    <Form.Item wrapperCol={{ offset: enableEdit ? 2 : 0, span: enableEdit ? 11 : 13 }}>
+      <Table
+        size='small'
+        columns={columns}
+        dataSource={reposList}
+        style={{ margin: '10px 0' }}
+        rowKey={(row) => row.repoId}
+        bordered={enableEdit ? false : true}
+        showHeader={true}
+        pagination={{ position: ['none', 'none'] }}
+      />
+    </Form.Item>
   );
 };
 

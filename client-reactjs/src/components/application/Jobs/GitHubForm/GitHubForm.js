@@ -13,17 +13,24 @@ function GitHubForm({ form, enableEdit }) {
     return headers;
   };
 
-  const repoList = form.current?.getFieldValue(['gitHubFiles', 'reposList']) || [];
+const updateFields= (prevValues, curValues) =>{
+return prevValues.gitHubFiles?.reposList !== curValues.gitHubFiles?.reposList
+};
+
   return (
     <>
       {enableEdit ? (
         <>
           <GHCredentials enableEdit={enableEdit} />
           <GHSearchAndBranches form={form} enableEdit={enableEdit} getAuthorizationHeaders={getAuthorizationHeaders} />
-          <Form.Item hidden={repoList.length === 0} shouldUpdate wrapperCol={{ offset: 2, span: 11 }}>
-            {() => <GHTable form={form} enableEdit={enableEdit} />}
+          <Form.Item shouldUpdate={updateFields} noStyle>
+            {() => (
+              <>
+                <GHTable form={form} enableEdit={enableEdit} />
+                <GHMainFile form={form} enableEdit={enableEdit} getAuthorizationHeaders={getAuthorizationHeaders} />
+              </>
+            )}
           </Form.Item>
-          <GHMainFile form={form} enableEdit={enableEdit} getAuthorizationHeaders={getAuthorizationHeaders} />
         </>
       ) : null}
     </>
