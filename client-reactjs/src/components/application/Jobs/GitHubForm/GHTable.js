@@ -7,22 +7,17 @@ const GHTable = ({ form, enableEdit }) => {
   const selectedFile = form.current?.getFieldValue(['gitHubFiles', 'selectedFile']);
   const pathToFile = form.current?.getFieldValue(['gitHubFiles', 'pathToFile']);
 
-
   if (!reposList) return null;
 
-  const remove = (tableRecord) => {    
-    if (tableRecord.repoId === selectedRepoId){
-      const resetFields= ['selectedFile','pathToFile','selectedRepoId'];
-      form.current.resetFields(resetFields.map((field) => (['gitHubFiles', field])));
-      form.current.resetFields(['name','title']);
+  const remove = (tableRecord) => {
+    if (tableRecord.repoId === selectedRepoId) {
+      const resetFields = ['selectedFile', 'pathToFile', 'selectedRepoId'];
+      form.current.resetFields(resetFields.map((field) => ['gitHubFiles', field]));
+      form.current.resetFields(['name', 'title']);
     }
-    
-    const newReposList = reposList.filter((repo ) => repo.repoId !== tableRecord.repoId);
-    console.log('-----newReposList-------------------------------------');
-    console.dir({tableRecord, newReposList,  }, { depth: null });
-    console.log('------------------------------------------');
-    
-    form.current.setFieldsValue({ gitHubFiles: { reposList: newReposList  } });
+
+    const newReposList = reposList.filter((repo) => repo.repoId !== tableRecord.repoId);
+    form.current.setFieldsValue({ gitHubFiles: { reposList: newReposList } });
   };
 
   let columns = [
@@ -47,15 +42,15 @@ const GHTable = ({ form, enableEdit }) => {
       title: 'Main File',
       key: 'pathToFile',
       dataIndex: 'pathToFile',
-      render: (_,record) => {
-        if (selectedRepoId && selectedFile){
-          if ( record.repoId === selectedRepoId) {
-            return <Tag color='geekblue'> {pathToFile?.join('/')} </Tag> 
-          }else{
-            return ''
+      render: (_, record) => {
+        if (selectedRepoId && selectedFile) {
+          if (record.repoId === selectedRepoId) {
+            return <Tag color='geekblue'> {pathToFile?.join('/')} </Tag>;
+          } else {
+            return '';
           }
         }
-      } 
+      },
     },
   ];
 
@@ -87,7 +82,7 @@ const GHTable = ({ form, enableEdit }) => {
       columns={columns}
       dataSource={reposList}
       style={{ margin: '10px 0' }}
-      rowKey={(row)=> row.repoId}
+      rowKey={(row) => row.repoId}
       bordered={enableEdit ? false : true}
       showHeader={true}
       pagination={{ position: ['none', 'none'] }}
