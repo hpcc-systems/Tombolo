@@ -775,22 +775,18 @@ class JobDetails extends Component {
     //console.log(`gitHubFiles`, gitHubFiles)
     const metaData={}; // metadata will be stored as JSON
     metaData.isStoredOnGithub = isStoredOnGithub;
+     console.log('--gitHubFiles----------------------------------------');
+    console.dir({gitHubFiles}, { depth: null });
+    console.log('------------------------------------------');
+    
     if (gitHubFiles) {
       metaData.gitHubFiles ={
         gitHubUserName:gitHubFiles.gitHubUserName,
         gitHubUserAccessToken:gitHubFiles.gitHubUserAccessToken,
-        reposList: gitHubFiles.reposList.map(repo =>({
-          providedGithubRepo: repo.providedGithubRepo,
-          selectedGitBranch : repo.selectedGitBranch,
-          selectedGitTag : repo.selectedGitTag,
-          pathToFile:repo.pathToFile, // we need to save this field to recreate view in cascader.
-          selectedFile:{
-            projectOwner: repo.selectedFile.projectOwner,
-            projectName:repo.selectedFile.projectName,
-            name: repo.selectedFile.name,
-            path: repo.selectedFile.path,
-          }
-        })),
+        reposList: gitHubFiles.reposList, // List of all selected repos
+        selectedRepoId: gitHubFiles.selectedRepoId, // Id of repo with main file
+        selectedFile : gitHubFiles.selectedFile, // main file data
+        pathToFile: gitHubFiles.pathToFile,// pathToFile is essential for rebuilding cascader on selected file
       }
     } else {
       metaData.gitHubFiles = null;
@@ -1668,6 +1664,7 @@ class JobDetails extends Component {
               <Spin spinning={this.state.initialDataLoading} size="large" />
             </div>) : null}
           <Form 
+            // colon={false}
             {...formItemLayout} 
             initialValues={{selectedFile:null}} 
             labelAlign="left" 
