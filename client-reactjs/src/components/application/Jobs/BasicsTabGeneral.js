@@ -201,8 +201,8 @@ const hideOnReadOnlyView = !enableEdit || !addingNewAsset;
 
           <Form.Item 
             name="author"
-            label="Author:" 
-            validateTrigger= "onBlur"
+            label="Author" 
+            validateTrigger="onBlur"
             className={enableEdit? null : "read-only-input"}
             rules={[{ pattern: new RegExp(/^[a-zA-Z0-9: $._-]*$/), message: 'Please enter a valid author', }]}
           >
@@ -231,10 +231,7 @@ const hideOnReadOnlyView = !enableEdit || !addingNewAsset;
             />
           </Form.Item>
 
-          <Form.Item 
-            name="description" 
-            label="Description"
-            className={enableEdit? null : "read-only-input"}>
+          <Form.Item  name="description"  label="Description" >
             {enableEdit ?
               <MarkdownEditor
                 name="description"
@@ -245,7 +242,7 @@ const hideOnReadOnlyView = !enableEdit || !addingNewAsset;
                 disabled={!editingAllowed}
               />
               :
-              <div className="read-only-markdown">
+              <div className="read-only-markdown custom-scroll">
                 {localState.job.description ?
                   <ReactMarkdown children={localState.job.description} />
                   : <Typography.Text type="secondary">Description is not provided</Typography.Text>} 

@@ -1549,7 +1549,7 @@ class JobDetails extends Component {
         selectedPredecessor.includes(predecessor.jobId)
       );
     };
-
+    
 
     //controls
     const controls =  <div className={this.props.displayingInModal ? "assetDetail-buttons-wrapper-modal" : "assetDetail-buttons-wrapper "}>
@@ -1664,7 +1664,7 @@ class JobDetails extends Component {
               <Spin spinning={this.state.initialDataLoading} size="large" />
             </div>) : null}
           <Form 
-            // colon={false}
+            colon={ this.state.enableEdit ? true : false}
             {...formItemLayout} 
             initialValues={{selectedFile:null}} 
             labelAlign="left" 
@@ -2074,7 +2074,7 @@ class JobDetails extends Component {
             </Tabs>
           </Form>
         </div>
-        {this.props.displayingInModal ? controls : null}
+        {this.props.displayingInModal && !this.props.viewMode  ? controls : null}
         
       </React.Fragment>
     );
