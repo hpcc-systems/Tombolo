@@ -78,8 +78,8 @@ class DataflowInstanceDetails extends Component {
            }}
            >
             <Graph
-              applicationId={this.props.applicationId}
               viewMode={true}
+              applicationId={this.props.applicationId}
               selectedDataflow={{'id':this.props.dataflowId}}
               workflowDetails={this.state.jobExecutionDetails}
               graphContainer="graph"

@@ -68,6 +68,7 @@ function DataflowDetails({props}) {
           >
             <TabPane tab="Designer" key="1">
               <Graph
+                viewMode={false}
                 applicationId={dataflowReducer.applicationId}
                 applicationTitle={dataflowReducer.applicationTitle}
                 selectedDataflow={{id: dataflowReducer.dataflowId}}
