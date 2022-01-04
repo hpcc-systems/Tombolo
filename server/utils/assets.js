@@ -201,35 +201,24 @@ exports.executeScriptJob = (jobId) => {
   }
 }
 
+//The only job of recordJobExecution func is to add the job execution record.
+//Update in Job execution status is done through status poller
 exports.recordJobExecution =  async (workerData, wuid) => {
     try {
       return new Promise((resolve, reject) => {
-        JobExecution.findOrCreate({
-          where: {
-            jobId: workerData.jobId,
-            applicationId: workerData.applicationId
-          },
-          defaults: {
+        JobExecution.create(
+          {
             jobId: workerData.jobId,
             dataflowId: workerData.dataflowId,
             applicationId: workerData.applicationId,
             wuid: wuid,
             clusterId: workerData.clusterId,
             status: workerData.status,
-          }
-        }).then(async (result) => {
-          let jobExecutionId = result[0].id;
-          if(!result[1]) {
-            await JobExecution.update({
-              jobId: workerData.jobId,
-              dataflowId: workerData.dataflowId,
-              applicationId: workerData.applicationId,
-              wuid: wuid,
-              status: workerData.status,
-            },
-            {where: {id: jobExecutionId}})
-          }
-          resolve({jobExecutionId});
+            jobExecutionGroupId : workerData.jobExecutionGroupId,
+            manualJob_meta : workerData.manualJob_meta
+          } 
+        ).then(async (result) => {
+          resolve(result.dataValues.id);
         }).catch((err) => {
           console.log(err);
           reject(err)
@@ -238,11 +227,9 @@ exports.recordJobExecution =  async (workerData, wuid) => {
     }catch (err) {
       console.log(err)
       reject(err);
-      //Promise.reject(err)
     }
-
-  
 }
+
 
 exports.createFilesandJobfiles = async ({file, cluster_id, application_id, id})=>{
   try {

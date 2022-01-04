@@ -153,7 +153,7 @@ const readOnlyView = !enableEdit || !addingNewAsset;
       name="name" 
       validateTrigger= "onBlur"
       rules={[{ required: true, message: 'Please enter a Name!', 
-                pattern: new RegExp(/^[a-zA-Z0-9:._-]*$/) }]}>
+                pattern: new RegExp(/^[a-zA-Z0-9: ._-]*$/) }]}>
         <Input
           id="job_name"
           onChange={onChange}

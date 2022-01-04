@@ -1,4 +1,5 @@
 const { parentPort, workerData } = require("worker_threads");
+const { v4: uuidv4 } = require('uuid');
 const hpccUtil = require('../utils/hpcc-util');
 const assetUtil = require('../utils/assets');
 
@@ -13,8 +14,11 @@ const logToConsole = (message) => parentPort.postMessage({action:"logging", data
 const dispatchAction = (action,data) =>  parentPort.postMessage({ action, data });   
 
 (async () => {
-	try {
+   if(!workerData.jobExecutionGroupId){
+		workerData.jobExecutionGroupId = uuidv4();
+	}
 
+	try {
 		logToConsole("running spray job: "+ workerData.jobName);
     const sprayJobExecution = await hpccUtil.executeSprayJob({ cluster_id: workerData.clusterId, sprayedFileScope: workerData.sprayedFileScope, sprayFileName: workerData.sprayFileName, sprayDropZone: workerData.sprayDropZone });
     const wuid = sprayJobExecution?.SprayResponse?.Wuid   
