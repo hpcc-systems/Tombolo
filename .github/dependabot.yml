@@ -7,4 +7,4 @@ updates:
     allow:
       - dependency-type: "production"
     ignore:
-      - dependency-type: "devDependencies"
+      - dependency-name: "react-scripts"
