@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Select, Cascader, Input ,Tag} from 'antd';
+import { Select, Cascader, Input ,Tag } from 'antd';
 import Form from 'antd/lib/form/Form';
 
 function GHMainFile({ enableEdit, form, getAuthorizationHeaders }) {
@@ -104,6 +104,7 @@ function GHMainFile({ enableEdit, form, getAuthorizationHeaders }) {
             onChange={handleSelectRepo}
             disabled={repoList.length === 0}
             placeholder='Select Main File Repo'
+            dropdownMatchSelectWidth={false}
           >
             {repoList.map((repo) => (
               <Select.Option key={repo.repoId} value={repo.repoId}>

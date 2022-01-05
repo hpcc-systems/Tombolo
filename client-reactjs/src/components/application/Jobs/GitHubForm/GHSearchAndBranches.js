@@ -115,11 +115,11 @@ function GHSearchAndBranch({ form, enableEdit, getAuthorizationHeaders }) {
             </Form.Item>
           </Col>
 
-          <Col style={{ display: 'flex', justifyContent: 'center' }} span={1}>
+          <Col style={{ display: 'flex', justifyContent: 'center' }} xs={{ span: 1 }} xxl={{span: 2}}>
             or
           </Col>
 
-          <Col span={9}>
+          <Col xs={{ span: 8 }} xxl={{span: 9}} >
             <Form.Item noStyle name={[...pathToCurrentIndex, 'selectedGitTag']} className={!enableEdit && 'read-only-input'}>
               <Select allowClear placeholder='Select Tag' disabled={enableEdit && !gitHubRequest.tags} onChange={handleTagSelect}>
                 {gitHubRequest.tags?.map((tags) => (
@@ -131,7 +131,7 @@ function GHSearchAndBranch({ form, enableEdit, getAuthorizationHeaders }) {
             </Form.Item>
           </Col>
 
-          <Col span={5}>
+          <Col xs={{ span: 6 }} xxl={{span: 4}} >
             <Button disabled={disableSave} block type='primary' onClick={saveRepo}>
               Add Repository
             </Button>

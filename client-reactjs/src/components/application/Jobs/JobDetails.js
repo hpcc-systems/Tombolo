@@ -705,14 +705,14 @@ class JobDetails extends Component {
 
   saveJobDetails() {
     let _self = this;
-     return new Promise((resolve) => {
+     return new Promise( async (resolve) => {
       fetch("/api/job/saveJob", {
         method: "post",
         headers: authHeader(),
         body: JSON.stringify({
           isNew: this.props.isNew,
           id: this.state.job.id,
-          job: this.populateJobDetails(),
+          job: await this.populateJobDetails(),
         }),
       })
         .then(function (response) {
@@ -745,7 +745,26 @@ class JobDetails extends Component {
     });
   }
 
-  populateJobDetails() {
+async sendGHCreds({ GHUsername, GHToken }){
+    try {
+      const payload = { GHUsername, GHToken };
+      console.log(`payload`, payload)
+      const respond = await fetch('/api/ghcredentials', { method: "POST", headers: authHeader(), body: JSON.stringify(payload) });  
+      console.log(`respond`, respond)   
+      if (!respond.ok) throw new Error("Failed to send credentials!");
+      const result = await respond.json();
+      console.log(`result`, result)
+      return result.id
+    } catch (error) {
+       console.log('-error-----------------------------------------');
+       console.dir({error}, { depth: null });
+       console.log('------------------------------------------');
+       message.error(error.message)
+    }
+  }
+  
+
+ async populateJobDetails() {
     var applicationId = this.props.application.applicationId;
     var inputFiles = this.state.job.inputFiles.map(function (element) {
       element.file_type = "input";
@@ -775,14 +794,24 @@ class JobDetails extends Component {
     //console.log(`gitHubFiles`, gitHubFiles)
     const metaData={}; // metadata will be stored as JSON
     metaData.isStoredOnGithub = isStoredOnGithub;
-     console.log('--gitHubFiles----------------------------------------');
+
+    console.log('--gitHubFiles----------------------------------------');
     console.dir({gitHubFiles}, { depth: null });
     console.log('------------------------------------------');
     
     if (gitHubFiles) {
+      const GHUsername = gitHubFiles.gitHubUserName;
+      const GHToken = gitHubFiles.gitHubUserAccessToken
+      let credsId = "";
+      if(GHUsername && GHToken ) {
+        credsId = await this.sendGHCreds({ GHUsername, GHToken });
+      }
+      console.log('-credsId-----------------------------------------');
+      console.dir({credsId}, { depth: null });
+      console.log('------------------------------------------');
+      
       metaData.gitHubFiles ={
-        gitHubUserName:gitHubFiles.gitHubUserName,
-        gitHubUserAccessToken:gitHubFiles.gitHubUserAccessToken,
+        credsId, 
         reposList: gitHubFiles.reposList, // List of all selected repos
         selectedRepoId: gitHubFiles.selectedRepoId, // Id of repo with main file
         selectedFile : gitHubFiles.selectedFile, // main file data
@@ -791,6 +820,11 @@ class JobDetails extends Component {
     } else {
       metaData.gitHubFiles = null;
     }
+
+    console.log('-gh: metadata.githubFIles-----------------------------------------');
+    console.dir({gh: metaData.gitHubFiles}, { depth: null });
+    console.log('------------------------------------------');
+    
 
     //If Job type is Manual
     if( formFieldsValue["jobType"] === 'Manual'){

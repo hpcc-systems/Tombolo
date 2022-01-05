@@ -22,10 +22,10 @@ const GHTable = ({ form, enableEdit }) => {
 
   let columns = [
     {
-      title: 'Github Repos',
+      title: 'https://github.com/...',
       dataIndex: 'providedGithubRepo',
       key: 'providedGithubRepo',
-      render: (text) => <Typography.Link copyable={{ text: text.trim() }}> {text} </Typography.Link>,
+      render: (text) => <Typography.Link copyable={{ text: text.trim() }}> {text.replace('https://github.com/','')} </Typography.Link>,
     },
     {
       title: 'Branch / Tag',
@@ -77,14 +77,17 @@ const GHTable = ({ form, enableEdit }) => {
   if (enableEdit) columns = [...columns, actionColumn];
 
   return (
-    <Form.Item wrapperCol={{ offset: enableEdit ? 2 : 0, span: enableEdit ? 11 : 13 }}>
+    <Form.Item wrapperCol={{
+      xs : { offset: 0, span: 13 },
+      xxl : { offset: enableEdit ? 2 : 0, span: enableEdit ? 11 : 13 },   
+    }}>
       <Table
         size='small'
         columns={columns}
         dataSource={reposList}
         style={{ margin: '10px 0' }}
         rowKey={(row) => row.repoId}
-        bordered={enableEdit ? false : true}
+        bordered={true}
         showHeader={true}
         pagination={{ position: ['none', 'none'] }}
       />

@@ -21,7 +21,7 @@ return prevValues.gitHubFiles?.reposList !== curValues.gitHubFiles?.reposList
     <>
       {enableEdit ? (
         <>
-          <GHCredentials enableEdit={enableEdit} />
+          <GHCredentials enableEdit={enableEdit} form={form}/>
           <GHSearchAndBranches form={form} enableEdit={enableEdit} getAuthorizationHeaders={getAuthorizationHeaders} />
           <Form.Item shouldUpdate={updateFields} noStyle>
             {() => (

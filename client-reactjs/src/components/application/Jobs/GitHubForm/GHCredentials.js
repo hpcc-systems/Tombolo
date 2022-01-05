@@ -1,11 +1,31 @@
-import React from 'react';
+import React, {useEffect} from 'react';
 import { Input, Row, Col } from 'antd';
 import Form from 'antd/lib/form/Form';
 import { UserOutlined, LockOutlined } from '@ant-design/icons';
+import { authHeader } from "../../../common/AuthHeader";
+import { message } from 'antd/lib';
 
-function GHCredentials({ enableEdit }) {
-  const helperText =
-    'GitHub credentials are not required for public repos, although they are usually autofilled by your browser, please check inputs.';
+function GHCredentials({ enableEdit, form}) {
+
+  useEffect(() => {
+    (async()=>{
+      try {
+        const response = await fetch('/api/ghcredentials',{ headers: authHeader() });
+        if (!response.ok) throw new Error("Not able to get credentials");        
+        const result = await response.json();
+        if (!result.credentials) return;
+        form.current?.setFieldsValue({gitHubFiles:{ gitHubUserName: result.credentials.GHUsername, gitHubUserAccessToken: result.credentials.GHToken }});
+      } catch (error) {
+        console.log('-error-----------------------------------------');
+        console.dir({error}, { depth: null });
+        console.log('------------------------------------------');
+        message.error(error.message)
+      }
+    })()
+  }, [])
+
+  const helperText = 'GitHub credentials are shared between all GitHub jobs, editing or deleting these fields will effect all GitHub jobs.';
+
   return (
     <Form.Item label='Credentials' help={helperText}>
       <Row gutter={[8, 8]}>
