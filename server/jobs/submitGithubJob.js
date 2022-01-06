@@ -13,9 +13,6 @@ const logToConsole = (message) => parentPort.postMessage({action:"logging", data
 const dispatchAction = (action,data) =>  parentPort.postMessage({ action, data });   
 
 (async () => { 
-  if(!workerData.jobExecutionGroupId){
-    workerData.jobExecutionGroupId = uuidv4();
-  }
 
   try {
     const flowSettings ={
@@ -25,6 +22,7 @@ const dispatchAction = (action,data) =>  parentPort.postMessage({ action, data }
       clusterId: workerData.clusterId,
       jobName : workerData.jobName,
       jobId: workerData.jobId,
+      jobExecutionGroupId : workerData.jobExecutionGroupId || uuidv4()
     }
 
     logToConsole(`✔️ SUBMITGITHUBJOB.JS: CREATING GITHUB FLOW WITH BREE FOR JOB ${workerData.jobName} id:${workerData.jobId}; dflow: ${workerData.dataflowId};`);     

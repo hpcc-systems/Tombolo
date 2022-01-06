@@ -5,7 +5,6 @@ module.exports = {
     return Promise.all([
       queryInterface.addColumn('job_execution', 'manualJob_meta', {
         type: Sequelize.JSON,
-        after: 'clusterId'
       })
     ])
   },

@@ -22,6 +22,7 @@ class DataflowInstanceDetails extends Component {
       height: 400,
     },
     jobExecutionTableFilters: {},
+    selectedJobExecutionGroup : ''
   };
 
   componentDidMount() {
@@ -63,6 +64,11 @@ class DataflowInstanceDetails extends Component {
     this.setState({jobExecutionTableFilters: data});
   };
 
+  //Set selected Job Execution group
+  setSelectedJobExecutionGroup = (id) => {
+    this.setState({selectedJobExecutionGroup : id})
+  }
+
   //Tab pane control btns
   controls = (
     <Space size={'small'} style={{marginBottom: '10px'}}>
@@ -100,6 +106,7 @@ class DataflowInstanceDetails extends Component {
             workflowDetails={this.state.jobExecutionDetails}
             graphContainer="graph"
             sidebarContainer="sidebar"
+            selectedJobExecutionGroup= {this.state.selectedJobExecutionGroup}
           />
         </Resizable>
 
@@ -113,6 +120,8 @@ class DataflowInstanceDetails extends Component {
                 jobExecution={{
                   manageJobExecutionFilters: this.manageJobExecutionFilters,
                   jobExecutionTableFilters: this.state.jobExecutionTableFilters,
+                  setSelectedJobExecutionGroup : this.setSelectedJobExecutionGroup,
+                  selectedJobExecutionGroup : this.state.selectedJobExecutionGroup
                 }}
               />
             </Spin>

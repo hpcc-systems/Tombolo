@@ -263,11 +263,11 @@ exports.createFilesandJobfiles = async ({file, cluster_id, application_id, id})=
   }
 }
 
-exports.createGithubFlow = async ({jobId, jobName, gitHubFiles, dataflowId, applicationId, clusterId }) =>{
+exports.createGithubFlow = async ({jobId, jobName, gitHubFiles, dataflowId, applicationId, clusterId, jobExecutionGroupId }) =>{
   let jobExecution, tasks;
   try {
     // # create Job Execution with status 'cloning'
-    jobExecution = await JobExecution.create({ jobId, dataflowId, applicationId, clusterId, wuid:"",  status: 'cloning' });
+    jobExecution = await JobExecution.create({ jobId, dataflowId, applicationId, clusterId, wuid:"",  status: 'cloning', jobExecutionGroupId });
     console.log('------------------------------------------');
     console.log(`✔️  createGithubFlow: START: JOB EXECUTION RECORD CREATED ${jobExecution.id}`);    
 
