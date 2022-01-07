@@ -671,18 +671,19 @@ exports.pullFilesFromGithub = async (jobName = '', clusterId, gitHubFiles) => {
     for (repo of reposList) {
       let { providedGithubRepo, selectedGitTag, selectedGitBranch, owner: projectOwner, repo: projectName } = repo;
       const ref = selectedGitTag ||  selectedGitBranch;
-      let currentClonedRepoPath = path.join(masterFolder, `${projectOwner}_${projectName}_${ref}`); 
+      // let currentClonedRepoPath = path.join(masterFolder, `${projectOwner}_${projectName}_${ref}`); // Will make copying from same project but different brunches possible
+      let currentClonedRepoPath = path.join(masterFolder, projectName); 
       // Add credentials to git request if they are present
       if (GHUsername && GHToken) {
         providedGithubRepo = providedGithubRepo.slice(0, 8) + GHUsername + ':' + GHToken + '@' + providedGithubRepo.slice(8);
       }
+
       console.log( `✔️  pullFilesFromGithub: CLONING STARTED-${providedGithubRepo}, branch: ${selectedGitBranch}, tag:${selectedGitTag}` );
       await git.clone(providedGithubRepo, currentClonedRepoPath, { '--branch': ref, '--single-branch': true });
       console.log( `✔️  pullFilesFromGithub: CLONING FINISHED-${providedGithubRepo}, branch: ${selectedGitBranch}, tag:${selectedGitTag} ` );
 
       //Update submodules
       try {
-        console.dir( { currentClonedRepoPath: currentClonedRepoPath }, { depth: null } );
         await git.cwd({ path: currentClonedRepoPath, root: true }).submoduleUpdate(['--init', '--recursive']);
         console.log( `✔️  pullFilesFromGithub: SUBMODULES UPDATED ${providedGithubRepo}, branch: ${selectedGitBranch}, tag:${selectedGitTag}` );
       } catch (error) {
@@ -697,8 +698,8 @@ exports.pullFilesFromGithub = async (jobName = '', clusterId, gitHubFiles) => {
 
     //Create a path to main file
     const { ref, owner: projectOwner, repo: projectName, path: filePath,  } = selectedFile;
-    const mainFileRepoPath = path.join(masterFolder, `${projectOwner}_${projectName}_${ref}`);
-    const startFilePath = path.join(mainFileRepoPath, filePath);
+    // const startFilePath = path.join(masterFolder, `${projectOwner}_${projectName}_${ref}`, filePath); // Will make copying from same project but different brunches possible
+    const startFilePath = path.join(masterFolder, projectName, filePath);
 
     let args = ['-E', startFilePath, '-I', masterFolder];
     const archived = await createEclArchive(args, masterFolder);
