@@ -159,7 +159,7 @@ class JobDetails extends Component {
       id: "",
       groupId: "",
       dataflowId: this.props.selectedDataflow
-        ? this.props.selectedDataflow
+        ? this.props.selectedDataflow.id
         : "",
       ecl: "",
       entryBWR: "",
@@ -461,7 +461,7 @@ class JobDetails extends Component {
         id: "",
         groupId: "",
         dataflowId: this.props.selectedDataflow
-          ? this.props.selectedDataflow
+          ? this.props.selectedDataflow.id
           : "",
         ecl: "",
         entryBWR: "",
@@ -842,7 +842,7 @@ async sendGHCreds({ GHUsername, GHToken }){
         ...formFields,
         application_id: applicationId,
         dataflowId: this.props.selectedDataflow
-          ? this.props.selectedDataflow
+          ? this.props.selectedDataflow.id
           : "",
         cluster_id: this.state.selectedCluster,
         ecl: this.state.job.ecl,
@@ -969,7 +969,7 @@ async sendGHCreds({ GHUsername, GHToken }){
 
   handleScheduleTypeSelect = (value) => {
     let dataflowId = this.props.selectedDataflow
-        ? this.props.selectedDataflow
+        ? this.props.selectedDataflow.id
         : "",
       applicationId = this.props.application
         ? this.props.application.applicationId
@@ -1446,7 +1446,9 @@ async sendGHCreds({ GHUsername, GHToken }){
         if (data && data.success) {
           message.success("Job has been submitted");
         }
-      });
+      }).catch(err =>{
+        console.log(err)
+      })
   };
 
   render() {

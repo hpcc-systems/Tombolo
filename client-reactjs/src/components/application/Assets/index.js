@@ -508,7 +508,7 @@ const Assets = () => {
             deboucedFetchGroups();
           })
           .catch((error) => {
-            message.error(error);
+            console.log(error);
           });
       },
       onCancel() {},
