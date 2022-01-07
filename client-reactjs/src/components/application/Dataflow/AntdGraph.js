@@ -36,7 +36,7 @@ function AntdGraph({applicationId, applicationTitle, selectedDataflow, user}) {
 const dispatch = useDispatch();
 
 const graph = useRef(null);
-const SVG_IMAGE_BGCOLOR = {
+const SVG_IMAGE = {
   'Job': {
     'image': '#gears',
     'bgcolor': '#EE7423'
@@ -52,9 +52,10 @@ const SVG_IMAGE_BGCOLOR = {
   'SubProcess': {
     'image': '#retweet',
     'bgcolor': '#F5A9A9'
-  }
-
+  }  
 }
+
+const DELETE_ICON = '#delete-left'
 
   const fetchSavedGraph = () => {
     console.log('fetchSavedGraph')
@@ -85,10 +86,38 @@ const SVG_IMAGE_BGCOLOR = {
                   attrs: {
                     body: {
                       stroke: '#2CB9FF',
-                      fill: node.type ? SVG_IMAGE_BGCOLOR[node.type].bgcolor : '',
+                      fill: node.type ? SVG_IMAGE[node.type].bgcolor : '',
                     },
                     svgimage: {
-                      'href': node.type ? sprite + SVG_IMAGE_BGCOLOR[node.type].image : ''
+                      'href': node.type ? sprite + SVG_IMAGE[node.type].image : ''
+                    },
+                    '.btn.del': {
+                      refDx: -7,
+                      refY: 6,
+                      event: 'node:delete',
+                    },
+                    '.btn > circle': {
+                      r: 5,
+                      fill: 'transparent',
+                      stroke: '#fff',
+                      strokeWidth: 1,
+                    },
+                    '.btn.del > text': {
+                      x: -40,
+                      y: -13,
+                      fontFamily: 'FontAwesome',
+                      text: '\uf1f8',
+                    },
+                    '.btn.hide': {
+                      refDx: -20,
+                      refY: 6,
+                      event: 'node:hide',
+                    },
+                    '.btn.hide > text': {
+                      x: -43,
+                      y: -13,
+                      fontFamily: 'FontAwesome',
+                      text: '\uf070'
                     },
                     props: {
                       type: node.type,
@@ -341,6 +370,10 @@ const SVG_IMAGE_BGCOLOR = {
         console.log(graph)
         openDetailsDialog(cell);
       })      
+      graph.current.on('node:delete', ({ e, x, y, cell, view }) => {
+        console.log('node deleted')
+      })      
+      
       // #endregion
 
       // #region 初始化图形
@@ -429,8 +462,8 @@ const SVG_IMAGE_BGCOLOR = {
         'custom-image',
         {
           inherit: 'rect',
-          width: 52,
-          height: 52,
+          width: 80,
+          height: 32,
           markup: [
             {
               tagName: 'rect',
@@ -446,6 +479,34 @@ const SVG_IMAGE_BGCOLOR = {
               ]
             },
             {
+              tagName: 'g',
+              attrs: {
+                class: 'btn del',
+              },
+              children: [                
+                {
+                  tagName: 'text',
+                  attrs: {
+                    class: 'del',
+                  },
+                },
+              ],
+            },
+            {
+              tagName: 'g',
+              attrs: {
+                class: 'btn hide',
+              },
+              children: [                
+                {
+                  tagName: 'text',
+                  attrs: {
+                    class: 'hide',
+                  },
+                },
+              ],
+            },
+            {
               tagName: 'text',
               selector: 'label',
             },
@@ -457,25 +518,23 @@ const SVG_IMAGE_BGCOLOR = {
               fill: '#26C160',
             },
             svg: {
-              width: 40,
-              height: 40,
-              refX: 38,
-              refY: 22,
+              width: 35,
+              height: 35,
             },
             label: {
               refX: 3,
               refY: 1,
               textAnchor: 'center',
-              textVerticalAnchor: 'top',
-              fontSize: 10,
+              textVerticalAnchor: 'bottom',
+              fontSize: 8,
               fill: '#fff',
             },
             svgimage: {
               href: '',
-              width: 26,
-              height: 26,
-              refX: 12,
-              refY: 12
+              width: 20,
+              height: 20,
+              refX: 4,
+              refY: 2
             },
             props: {
               fileId: '',
@@ -498,10 +557,10 @@ const SVG_IMAGE_BGCOLOR = {
         attrs: {
           body: {
             stroke: '#2CB9FF',
-            fill: SVG_IMAGE_BGCOLOR.Job.bgcolor,
+            fill: SVG_IMAGE.Job.bgcolor,
           },
           svgimage: {
-            'href': sprite + SVG_IMAGE_BGCOLOR.Job.image
+            'href': sprite + SVG_IMAGE.Job.image
           },
           props: {
             type: 'Job',
@@ -515,10 +574,10 @@ const SVG_IMAGE_BGCOLOR = {
         attrs: {
           body: {
             stroke: '#2CB9FF',
-            fill: SVG_IMAGE_BGCOLOR.File.bgcolor,
+            fill: SVG_IMAGE.File.bgcolor,
           },
           svgimage: {
-            'href': sprite + SVG_IMAGE_BGCOLOR.File.image
+            'href': sprite + SVG_IMAGE.File.image
           },
           props: {
             type: 'File', 
@@ -532,10 +591,10 @@ const SVG_IMAGE_BGCOLOR = {
         attrs: {
           body: {
             stroke: '#5AB0BE',
-            fill: SVG_IMAGE_BGCOLOR.Index.bgcolor,
+            fill: SVG_IMAGE.Index.bgcolor,
           },
           svgimage: {
-            'href': sprite + SVG_IMAGE_BGCOLOR.Index.image
+            'href': sprite + SVG_IMAGE.Index.image
           },
           props: {
             type: 'Index',
@@ -549,10 +608,10 @@ const SVG_IMAGE_BGCOLOR = {
         attrs: {
           body: {
             stroke: '#E6475B',
-            fill: SVG_IMAGE_BGCOLOR.SubProcess.bgcolor,
+            fill: SVG_IMAGE.SubProcess.bgcolor,
           },
           svgimage: {
-            'href': sprite + SVG_IMAGE_BGCOLOR.SubProcess.image
+            'href': sprite + SVG_IMAGE.SubProcess.image
           },
           props: {
             type: 'Sub-Process',
