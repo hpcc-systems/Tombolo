@@ -27,7 +27,14 @@ function GHSearchAndBranch({ form, enableEdit, getAuthorizationHeaders }) {
     const url = value.split('/');
     const owner = url[3];
     const repo = url[4];
+    const allRepos = form.current.getFieldValue(['gitHubFiles', 'reposList']);
+
     try {
+      if (allRepos) {
+        const duplicateRepo = allRepos.find(savedRepo=>savedRepo.providedGithubRepo === value)
+        if (duplicateRepo) throw new Error("Provided project already exists") // Will prevent user add multiple branches of same project
+      }
+    
       if (!owner || !repo || !value.startsWith('https://github.com/')) throw new Error('Invalid repo provided.');
       setGitHubRequest((prev) => ({ ...prev, loading: true }));
       const response = await Promise.all( ['branches', 'tags'].map((el) => fetch(`https://api.github.com/repos/${owner}/${repo}/${el}`, { headers: getAuthorizationHeaders() }) ) );
