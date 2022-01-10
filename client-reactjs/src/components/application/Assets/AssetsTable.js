@@ -48,16 +48,16 @@ function AssetsTable({ openGroup, handleEditGroup, refreshGroups }) {
   const fetchDataAndRenderTable = () => {
     if(applicationId) {
       let url =
-        keywords != ""
+        keywords !== ""
           ? "/api/groups/assetsSearch?app_id=" + applicationId + ""
           : "/api/groups/assets?app_id=" + applicationId;
       if (selectedGroup?.selectedKeys?.id) {
         url += "&group_id=" + selectedGroup.selectedKeys.id;
       }
-      if (assetTypeFilter != "") {
+      if (assetTypeFilter !== "") {
         url += "&assetTypeFilter=" + assetTypeFilter;
       }
-      if (keywords != "") {
+      if (keywords !== "") {
         url += "&keywords=" + keywords;
       }
       fetch(url, {
@@ -318,7 +318,7 @@ function AssetsTable({ openGroup, handleEditGroup, refreshGroups }) {
     {
       title: "Description",
       dataIndex: "description",
-      width: "25%",
+      width: "23%",
       ellipsis: {
         showTitle: false,
       },
@@ -342,7 +342,7 @@ function AssetsTable({ openGroup, handleEditGroup, refreshGroups }) {
     {
       title: "Created",
       dataIndex: "createdAt",
-      width: "20%",
+      width: "23%",
       sorter: (a, b) => new Date(b.createdAt) - new Date(a.createdAt),
       onFilter: (value, record) =>{
         const createdAt = new Date(record.createdAt).toLocaleDateString('en-US', Constants.DATE_FORMAT_OPTIONS);
