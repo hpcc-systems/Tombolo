@@ -7,6 +7,7 @@ const DependentJobs = models.dependent_jobs;
 const MessageBasedJobs = models.message_based_jobs;
 const hpccUtil = require('./utils/hpcc-util');
 const assetUtil = require('./utils/assets.js');
+const { v4: uuidv4 } = require('uuid'); 
 const workflowUtil = require('./utils/workflow-util.js');
 const SUBMIT_JOB_FILE_NAME = 'submitJob.js';
 const SUBMIT_SPRAY_JOB_FILE_NAME = 'submitSprayJob.js'
@@ -64,7 +65,7 @@ class JobScheduler {
   }
   
 
-  async scheduleCheckForJobsWithSingleDependency({ dependsOnJobId , dataflowId }) {
+  async scheduleCheckForJobsWithSingleDependency({ dependsOnJobId , dataflowId, jobExecutionGroupId }) {
       try {
         const dependantJobs  = await DependentJobs.findAll({where:{ dependsOnJobId, dataflowId }})
         console.log('------------------------------------------');
@@ -96,6 +97,7 @@ class JobScheduler {
             dataflowId: dataflowId,
             jobName: job.name,
             jobId: job.id,
+            jobExecutionGroupId
           };
             
           if (isSprayJob) {
@@ -153,12 +155,12 @@ class JobScheduler {
         
         const workerData = { 
           applicationId: job.application_id,
-          clusterId: job.cluster_id,
+          clusterId: job.clusterId,
           dataflowId: job.dataflowId,
           jobType:job.jobType,
           jobName: job.name,
           cron:  job.cron, 
-          jobId: job.id,
+          jobId: job.assetId,
         };
 
         workerData.jobfileName = SUBMIT_JOB_FILE_NAME;
@@ -174,7 +176,6 @@ class JobScheduler {
           workerData.manualJob_meta= { jobType : 'Manual', jobName: job.name, notifiedTo : job.contact, notifiedOn : new Date().getTime() }; //? maybe needs to be refactored
           workerData.jobfileName= SUBMIT_MANUAL_JOB_FILE_NAME;
           workerData.contact= job.contact;
-          workerData.status= 'wait';
         }
         if (isGitHubJob) {
           workerData.jobfileName= SUBMIT_GITHUB_JOB_FILE_NAME;
@@ -235,10 +236,10 @@ class JobScheduler {
       }
     }
 
- executeJob({ jobfileName, sprayedFileScope, manualJob_meta, sprayFileName, sprayDropZone, applicationId, dataflowId, clusterId, metaData, jobName, contact, jobType, status, jobId, title }) {
+ executeJob({ jobfileName, sprayedFileScope, manualJob_meta, sprayFileName, sprayDropZone, applicationId, dataflowId, clusterId, metaData, jobName, contact, jobType, status, jobId, title, jobExecutionGroupId }) {
     try {
-      let uniqueJobName = jobName + '-' + dataflowId + '-' + jobId; // TODO WILL HAVE TO BE A UNIQUE NAME
-      this.createNewBreeJob({uniqueJobName, jobfileName, sprayedFileScope, manualJob_meta, sprayFileName, sprayDropZone, applicationId, dataflowId, clusterId, metaData, jobName, contact, jobType, status, jobId, title });
+      let uniqueJobName = jobName + '-' + dataflowId + '-' + jobId + '-' + uuidv4();
+      this.createNewBreeJob({uniqueJobName, jobfileName, sprayedFileScope, manualJob_meta, sprayFileName, sprayDropZone, applicationId, dataflowId, clusterId, metaData, jobName, contact, jobType, status, jobId, title, jobExecutionGroupId });
       this.bree.start(uniqueJobName);
       console.log('------------------------------------------');
       console.log(`✔️  BREE HAS STARTED JOB: "${uniqueJobName}"`)
@@ -251,12 +252,12 @@ class JobScheduler {
     }
   }
 
-  createNewBreeJob({ uniqueJobName, cron, jobfileName, sprayedFileScope, manualJob_meta, sprayFileName, sprayDropZone, applicationId, dataflowId, clusterId, metaData, jobName, contact, jobType, status, jobId, title}){
+  createNewBreeJob({ uniqueJobName, cron, jobfileName, sprayedFileScope, manualJob_meta, sprayFileName, sprayDropZone, applicationId, dataflowId, clusterId, metaData, jobName, contact, jobType, status, jobId, title, jobExecutionGroupId}){
     const job ={
       name: uniqueJobName,
       path: path.join(__dirname, 'jobs', jobfileName),
       worker: {
-        workerData: { sprayedFileScope, manualJob_meta, sprayFileName, sprayDropZone, applicationId, dataflowId, clusterId, metaData, jobName, contact, jobType, status, jobId, title, }
+        workerData: { sprayedFileScope, manualJob_meta, sprayFileName, sprayDropZone, applicationId, dataflowId, clusterId, metaData, jobName, contact, jobType, status, jobId, title,jobExecutionGroupId }
       }
     }
     if (cron){

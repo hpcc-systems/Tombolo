@@ -37,6 +37,5 @@ export function handleError(response) {
       //throw new Error(errorMessage);
       message.error(errorMessage);
     })
-    throw Error(errorMessage)
   }
 }

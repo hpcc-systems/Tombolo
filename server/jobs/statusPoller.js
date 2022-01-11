@@ -16,7 +16,7 @@ const dispatchAction = (action,data) =>  parentPort.postMessage({ action, data }
 
 (async () => {
   try {
-    const jobExecutions = await assetUtil.getJobEXecutionForProcessing();    
+    const jobExecutions = await assetUtil.getJobEXecutionForProcessing();   
     if (jobExecutions.length === 0) {
       logToConsole('☕ NO JOBEXECUTIONS WITH STATUS "SUBMITTED" HAS BEEN FOUND');
       return;
@@ -39,7 +39,7 @@ const dispatchAction = (action,data) =>  parentPort.postMessage({ action, data }
       //update JobExecution
       if(WUstate === 'completed' || WUstate === 'wait' || WUstate === 'blocked' || WUstate === 'failed') {              
         const newjobExecution = { status: WUstate, wu_duration : wuResult.Workunit.TotalClusterTime || null };
-        const result = await jobExecution.update(newjobExecution,{where:{id:jobExecution.id}});
+        const result = await jobExecution.update(newjobExecution,{where:{id:jobExecution.id}}); 
         logToConsole(`✔️  JOB EXECUTION GOT UPDATED, ("${jobExecution.job.name}") ${result.wuid} = ${result.status} ${result.status === 'completed' ? "👍" : "🚩🚩🚩"}`);
         logToConsole(result.toJSON());
         if (WUstate  === 'failed') {
@@ -48,7 +48,7 @@ const dispatchAction = (action,data) =>  parentPort.postMessage({ action, data }
         }else{
           logToConsole(`🔍  WORKER_THREAD IS DONE, PASSING CHECKING ON DEPENDING JOBS TO MAIN THREAD, "${jobExecution.job.name}" - ${jobExecution.wuid} - ${jobExecution.jobId}...`);
           // will trigger JobScheduler.scheduleCheckForJobsWithSingleDependency on main thread.
-          dispatchAction('scheduleDependentJobs',{ dependsOnJobId: jobExecution.jobId, dataflowId: jobExecution.dataflowId });
+          dispatchAction('scheduleDependentJobs',{ dependsOnJobId: jobExecution.jobId, dataflowId: jobExecution.dataflowId, jobExecutionGroupId: jobExecution.jobExecutionGroupId });
           // await JobScheduler.scheduleCheckForJobsWithSingleDependency({ dependsOnJobId: jobExecution.jobId, dataflowId: jobExecution.dataflowId });    
         }
       } 

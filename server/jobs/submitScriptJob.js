@@ -1,4 +1,5 @@
 const { parentPort, workerData } = require("worker_threads");
+const { v4: uuidv4 } = require('uuid');
 const assetUtil = require('../utils/assets');
 const models = require('../models');
 let Job = models.job;
@@ -14,6 +15,10 @@ const logToConsole = (message) => parentPort.postMessage({action:"logging", data
 const dispatchAction = (action,data) =>  parentPort.postMessage({ action, data });   
 
 (async () => {
+	if(!workerData.jobExecutionGroupId){
+		workerData.jobExecutionGroupId = uuidv4();
+	}	
+		
 	try {
 		logToConsole("running script job: "+ workerData.jobId);
 		let executionResult = await assetUtil.executeScriptJob(workerData.jobId);

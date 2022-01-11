@@ -1,111 +1,182 @@
-import React,{useState} from 'react'
-import { Button, Space, Table } from 'antd/lib';
-import { Constants } from '../../common/Constants';
-// import { authHeader, handleError } from "../../common/AuthHeader.js";
-// import ReactDOM from 'react-dom';
-// import { useSelector } from "react-redux";
+import React, { useState, useEffect } from "react";
+import { Space, Table, Badge, Tooltip, Tag } from "antd/lib";
+import { Constants } from "../../common/Constants";
+import  useWindowSize from "../../../hooks/useWindowSize";
 
-function JobExecutionDetails({workflowDetails, refreshData}) {
-
-  const createUniqueFiltersArr =(baseArr,column) =>{
-  const columnsNames ={updatedAt:'updatedAt', name:"name",wuid: 'wuid', status:"status"}; 
-  if(!baseArr || !column || !columnsNames[column]) return [];
-  const dictionary = baseArr.reduce((acc,el)=> {
-       let key = el[column] || 'empty';
-      if (column === 'updatedAt'){
-         key = new Date(el.updatedAt).toLocaleDateString('en-US', Constants.DATE_FORMAT_OPTIONS);
-      }
-      if (!acc[key]){
-        acc[key] = true;
-        acc.result.push({text: key, value: key })
-      }
-     return acc;
-    },{result:[]});
+function JobExecutionDetails({ workflowDetails, graphSize, jobExecution}) {
+  const [parentTableData, setParentTableData] = useState([]);
+  const [ windowHeight] = useWindowSize();
+  // Unique filters
+  const createUniqueFiltersArr = (baseArr, column) => {
+    const columnsNames = { createdAt: "createdAt", name: "name", wuid: "wuid", status: "status" };
+    if (!baseArr || !column || !columnsNames[column]) return [];
+    const dictionary = baseArr.reduce(
+      (acc, el) => {
+        let key = el[column] || "empty";
+        if (column === "createdAt") {
+          key = new Date(el.createdAt).toLocaleDateString("en-US", Constants.DATE_FORMAT_OPTIONS);
+        }
+        if (!acc[key]) {
+          acc[key] = true;
+          acc.result.push({ text: key, value: key });
+        }
+        return acc;
+      },
+      { result: [] }
+    );
     return dictionary.result;
-  }
+  };
 
-  const [filters, setFilters] = useState({});
-
-  const jobColumns = [
-    {
-      title: 'Job',
-      dataIndex: 'name',
-      width: '20%',
-      sorter: (a, b) => a.name.localeCompare(b.name),
-      onFilter: (value, record) => record.name.includes(value),
-      filters: createUniqueFiltersArr(workflowDetails.wuDetails,'name'),
-      filteredValue: filters.name || null,
-    },
-    {
-      title: 'Wuid',
-      dataIndex: 'wuid',
-      width: '15%',
-      sorter: (a, b) => a.wuid.localeCompare(b.wuid),
-      onFilter: (value, record) =>{
-        if (value === 'empty' && !record.wuid ) return true;
-        return  record.wuid.includes(value)
-      },
-      filters: createUniqueFiltersArr(workflowDetails.wuDetails,'wuid'),
-      filteredValue: filters.wuid || null,
-    },
-    {
-      title: 'Date',
-      dataIndex: 'updatedAt',
-      render: (text, record) => {
-        let updatedAt = new Date(text);
-        return updatedAt.toLocaleDateString('en-US', Constants.DATE_FORMAT_OPTIONS) +' @ '+ updatedAt.toLocaleTimeString('en-US')
-      },
-      width: '25%',
-      defaultSortOrder: 'ascend',
-      sorter: (a, b) => new Date(b.updatedAt) - new Date(a.updatedAt),
-      onFilter: (value, record) =>{
-        const updatedAt = new Date(record.updatedAt).toLocaleDateString('en-US', Constants.DATE_FORMAT_OPTIONS);
-        return updatedAt.includes(value)},
-      filters: createUniqueFiltersArr(workflowDetails.wuDetails,'updatedAt'),
-      filteredValue: filters.updatedAt || null,
-    },
-    {
-      title: 'Status',
-      dataIndex: 'status',
-      width: '20%',
-      sorter: (a, b) => a.status.localeCompare(b.status),
-      onFilter: (value, record) => record.status.includes(value),
-      filters: createUniqueFiltersArr(workflowDetails.wuDetails, 'status'),
-      filteredValue: filters.status || null,
-    },
-    {
-      title: 'Duration',
-      dataIndex: 'wu_duration',
-      width: '20%',
-    },
-  ]
-  
-  const handleTablechange =(pagination, filters, sorter)=>{
+// when the table changes - eg : sorting, filtering, pagination etc
+  const handleTableChange = (pagination, filters, sorter) => {
     const activeFilters = {};
-    for(const key in filters) filters[key] && (activeFilters[key] = filters[key]);
-    setFilters(()=> activeFilters);
-  }
+    for (const key in filters) filters[key] && (activeFilters[key] = filters[key]);
+    jobExecution.manageJobExecutionFilters(activeFilters);
+  };
 
-  const handleClearFilters =()=>{
-    setFilters(()=>({}));
-  }
+  //Badge color
+  const setBadgeColor = (jonExecutionStatus) => {
+    switch (jonExecutionStatus) {
+      case "completed":
+        return "#3bb44a";
+      case "failed":
+        return "#FF0000";
+      case "blocked":
+        return "#FFA500";
+      case "some-failed":
+        return "#FFA500";
+      default:
+        return "#808080";
+    }
+  };
+
+  const jobExecutionGroupStatus = (groupStatus) => {
+    const executionStatuses = [...new Set(groupStatus)];
+    if (executionStatuses.length == 1 && executionStatuses[0] === "completed") {
+      // all job executions in group completed
+      return "completed";
+    } else if (executionStatuses.length == 1 && ((executionStatuses[0] === "failed" || executionStatuses[0] === "error" ))) {
+      // all job execution in group  failed
+      return "failed";
+    } else if (executionStatuses.includes("wait") || executionStatuses.includes("submitted")) {
+      // some execution does not have result (eg: they have status submitted, wait etc.)
+      return "in-progress";
+    } else {
+      return "some-failed"; // some execution failed and some were completed
+    }
+  };
+
+  //Parent table columns
+  const parentTableColumns = [
+    {
+      title: "Date",
+      dataIndex: "createdAt",
+      render: (text, record) => {
+        let createdAt = new Date(record.createdAt);
+        return (
+          <Space size="small">
+            <Badge color={setBadgeColor(record.status)}></Badge>
+            {createdAt.toLocaleDateString("en-US", Constants.DATE_FORMAT_OPTIONS) + " @ " + createdAt.toLocaleTimeString("en-US")}
+            <small> <b>[ {record.count} job{record.count > 1 ? "s" : ""} ]</b></small>
+          </Space>
+          )
+      },
+      sorter: (a, b) => new Date(b.createdAt) - new Date(a.createdAt),
+      defaultSortOrder: "ascend",
+      onFilter: (value, record) => {
+        const createdAt = new Date(record.createdAt).toLocaleDateString("en-US", Constants.DATE_FORMAT_OPTIONS);
+        return createdAt === value;
+      },
+      filters: createUniqueFiltersArr(workflowDetails.wuDetails, "createdAt"),
+      filteredValue: jobExecution.jobExecutionTableFilters.createdAt || null,
+    },
+  ];
+
+  //When component loads, find the count of job execution with same job execution group ID and group them together
+  useEffect(() => {
+    if (workflowDetails?.wuDetails) {
+      const workFlows = workflowDetails.wuDetails.sort((a,b) => {
+        return new Date(a.createdAt) - new Date(b.createdAt)
+      });
+      const execution = {};
+      workFlows.forEach((item) => {
+        if (!execution[item.jobExecutionGroupId]) {
+          execution[item.jobExecutionGroupId] = { jobExecutionGroupId: item.jobExecutionGroupId, count: 1, createdAt: item.createdAt, statuses: [item.status] };
+        } else {
+          execution[item.jobExecutionGroupId].count += 1;
+          execution[item.jobExecutionGroupId].statuses = [...execution[item.jobExecutionGroupId].statuses, item.status];
+        }
+        execution[item.jobExecutionGroupId].status = jobExecutionGroupStatus(execution[item.jobExecutionGroupId].statuses);
+      });
+      setParentTableData(Object.values(execution));
+      jobExecution.setSelectedJobExecutionGroup(Object.values(execution)[Object.values(execution).length - 1].jobExecutionGroupId)
+    }
+  }, [workflowDetails]);
+
+  // Function that renders a child table when + icon is clicked
+  const expandedRowRender = (record, index, indent, expanded) => {
+    //Nested table columns
+    const nestedTableColumns = [
+      { title: "Job", dataIndex: "name", width: "20%" },
+      { title: "Wuid", dataIndex: "wuid", width: "20%" },
+      { title: "Date", dataIndex: "createdAt", width: "20%", render : (text, record) =>{
+        let createdAt = new Date(text);
+        return createdAt.toLocaleDateString("en-US", Constants.DATE_FORMAT_OPTIONS) + " @ " + createdAt.toLocaleTimeString("en-US");
+      },  
+          sorter: (a, b) => new Date(b.createdAt) - new Date(a.createdAt),
+          defaultSortOrder : "descend"
+         },
+      {
+        title: "Status",
+        dataIndex: "status",
+        width: "20%",
+        render: (text, record) => {
+          return (
+            <span>
+              <Badge color={setBadgeColor(record.status)}></Badge>
+              {record.status}
+            </span>
+          );
+        },
+      },
+      { title: "Duration", dataIndex: "wu_duration", width: "20%" },
+    ];
+
+    //Nested table data
+    const nestedTableData = workflowDetails.wuDetails.filter((item) => item.jobExecutionGroupId === record.jobExecutionGroupId);
+    return <Table columns={nestedTableColumns} dataSource={nestedTableData} bordered pagination={false}   rowKey={(record) => record.id}
+    />;
+  };
 
   return (
     <React.Fragment>
-      <Space size={'large'} style={{marginBottom:'10px'}}>
-        <Button type='primary' disabled={!Object.keys(filters).length}  size='small' onClick={handleClearFilters}>Clear all Filters</Button>
-        <Button type="primary" size='small'  onClick={refreshData} > Refresh Records </Button>
-      </Space>
       <Table
         size="small"
-        columns={jobColumns}
-        onChange={handleTablechange}
-        rowKey={record => record.id}
-        dataSource={workflowDetails.wuDetails}
-        pagination={{ pageSize: 10 }} 
+        columns={parentTableColumns}
+        onChange={handleTableChange}
+        rowKey={(record) => record.jobExecutionGroupId}
+        dataSource={parentTableData}
+        expandable={{ expandedRowRender }}
+        pagination={{ pageSize: Math.round((windowHeight - graphSize.height) / 60 )}}
+        rowClassName={(record) => {
+          if(jobExecution.selectedJobExecutionGroup === record.jobExecutionGroupId){
+            return "jobExecutionDetails_antdTable_selectedRow"
+          } }}
+        onExpand={(expanded, record ) => {
+          if(expanded){
+            jobExecution.setSelectedJobExecutionGroup(record.jobExecutionGroupId)
+          }else{
+            jobExecution.setSelectedJobExecutionGroup('');
+          }
+        }}
+        expandedRowClassName= { () =>{
+          return "jobExecutionDetails_antdTable_child"
+        } } 
+        expandRowByClick={true}
+        expandedRowKeys={[jobExecution.selectedJobExecutionGroup]}
       />
     </React.Fragment>
-    )
+  );
 }
 
 export default JobExecutionDetails;
