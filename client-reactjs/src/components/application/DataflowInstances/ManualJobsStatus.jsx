@@ -2,7 +2,7 @@ import React, {useEffect, useState} from 'react'
 import { Constants } from '../../common/Constants';
 import { Button, Space, Table } from 'antd/lib';
 
-function ManualJobsStatus({workflowDetails,  refreshData}) {
+function ManualJobsStatus({workflowDetails, jobExecution}) {
 
   const [manualJobs, setManualJobs] = useState([]);
   const [filters, setFilters] = useState({});
@@ -37,7 +37,7 @@ function ManualJobsStatus({workflowDetails,  refreshData}) {
         sorter: (a, b) => a.name.localeCompare(b.name),
         onFilter: (value, record) => record.name.includes(value),
         filters: createUniqueFiltersArr(manualJobs,'name'),
-        filteredValue: filters.name || null,
+        filteredValue: jobExecution.jobExecutionTableFilters.name || null,
       },
       {
         title: 'Status',
@@ -46,7 +46,7 @@ function ManualJobsStatus({workflowDetails,  refreshData}) {
         sorter: (a, b) => a.status.localeCompare(b.status),
         onFilter: (value, record) => record.status.includes(value),
         filters: createUniqueFiltersArr(manualJobs, 'status'),
-        filteredValue: filters.status || null,
+        filteredValue: jobExecution.jobExecutionTableFilters.status || null,
       },  
       {
         title: 'Notified To',
@@ -54,7 +54,7 @@ function ManualJobsStatus({workflowDetails,  refreshData}) {
         width: '20%',
         onFilter: (value, record) => record.notifiedTo.includes(value),
         filters: createUniqueFiltersArr(manualJobs, 'notifiedTo'),
-        filteredValue: filters.notifiedTo || null,
+        filteredValue: jobExecution.jobExecutionTableFilters.notifiedTo || null,
       },
       {
         title: 'Notified On',
@@ -70,7 +70,7 @@ function ManualJobsStatus({workflowDetails,  refreshData}) {
           const notifiedOn = new Date(record.notifiedOn).toLocaleDateString('en-US', Constants.DATE_FORMAT_OPTIONS);
           return notifiedOn.includes(value)},
         filters: createUniqueFiltersArr(manualJobs,'notifiedOn'),
-        filteredValue: filters.notifiedOn || null,
+        filteredValue: jobExecution.jobExecutionTableFilters.notifiedOn || null,
       },
       {
         title: 'Responded On',
@@ -86,7 +86,7 @@ function ManualJobsStatus({workflowDetails,  refreshData}) {
           const respondedOn = new Date(record.respondedOn).toLocaleDateString('en-US', Constants.DATE_FORMAT_OPTIONS);
           return respondedOn.includes(value)},
         filters: createUniqueFiltersArr(manualJobs,'respondedOn'),
-        filteredValue: filters.respondedOn || null,
+        filteredValue: jobExecution.jobExecutionTableFilters.respondedOn || null,
       }
   ]
 
@@ -115,19 +115,12 @@ function ManualJobsStatus({workflowDetails,  refreshData}) {
   const handleTablechange =(pagination, filters, sorter)=>{
     const activeFilters = {};
     for(const key in filters) filters[key] && (activeFilters[key] = filters[key]);
-    setFilters(()=> activeFilters);
+    jobExecution.manageJobExecutionFilters(activeFilters)
   }
   
-  const handleClearFilters =()=>{
-    setFilters(()=>({}));
-  }
   // JSX
   return (
     <React.Fragment>
-      <Space size={'large'} style={{marginBottom:'10px'}}>
-        <Button type='primary' disabled={!Object.keys(filters).length}  size='small' onClick={handleClearFilters}>Clear all Filters</Button>
-        <Button type="primary" size='small'  onClick={refreshData} > Refresh Records </Button>
-      </Space>
       <Table
         size="small"
         columns={columns}
