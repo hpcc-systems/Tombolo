@@ -67,9 +67,7 @@ function BasicsTabManul(props) {
 
     //when dropzone is selected make call to get the dirs and files
     const loadData = (selectedOptions) =>{
-      let pathOptions = [...selectedOptions];  // make a copy so the original array is not mutated
-      pathOptions.splice(1,1); // Remove machine address
-      const pathToAsset = pathOptions.map(item =>item.value).join("/") + "/"; // join options array with "/" to create a path
+      const pathToAsset = selectedOptions.map(item =>item.value).join("/") + "/"; // join options array with "/" to create a path
       const host = clusters.filter(item => item.id === selectedCluster)
       const targetOption = selectedOptions[selectedOptions.length - 1];
 
