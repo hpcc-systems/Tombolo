@@ -148,7 +148,7 @@ const hideOnReadOnlyView = !enableEdit || !addingNewAsset;
         name="name" 
         label="Name" 
         validateTrigger= "onBlur"
-        rules={[{ required: enableEdit ? true : false , message: 'Please enter the name', pattern: new RegExp(/^[a-zA-Z0-9:._-]*$/) }]}
+        rules={[{ required: enableEdit ? true : false , message: 'Please enter the name', pattern: new RegExp(/^[a-zA-Z0-9: ._-]*$/) }]}
         className={enableEdit ? null : "read-only-input"} 
       >    
         <Input id="job_name" onChange={onChange} placeholder={enableEdit ? "Name" : 'Name is not provided'} disabled={!editingAllowed || disableReadOnlyFields} />

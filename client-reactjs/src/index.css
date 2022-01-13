@@ -958,3 +958,12 @@ div.tooltip {
   height: 40vh;
   max-width:200px;
   min-width: 130px;}
+
+.jobExecutionDetails_antdTable_selectedRow > td{
+ background : lightgray !important;
+ font-weight: bold;
+}
+.jobExecutionDetails_antdTable_child > *{
+  border-bottom: 1px dotted lightgray !important;
+  padding-bottom: 15px !important;
+}

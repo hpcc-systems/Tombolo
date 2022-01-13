@@ -1018,7 +1018,7 @@ router.get('/jobExecutionDetails', [
   }
   console.log("[jobExecutionDetails] - Get jobExecutionDetails for app_id = " + req.query.applicationId);
   try {
-    let query = 'select je.id,  je.jobId as task, je.dataflowId, je.applicationId, je.status, je.wuid, je.wu_duration, je.clusterId, je.updatedAt, je.manualJob_meta, j.jobType, j.name from '+
+    let query = 'select je.id,  je.jobId as task, je.dataflowId, je.applicationId, je.status, je.wuid, je.wu_duration, je.clusterId, je.updatedAt, je.createdAt, je.manualJob_meta, je.jobExecutionGroupId, j.jobType, j.name from '+
             'job_execution je, job j '+
             'where je.dataflowId = (:dataflowId) and je.applicationId = (:applicationId) and j.id = je.jobId';
     let replacements = { applicationId: req.query.applicationId, dataflowId: req.query.dataflowId};
@@ -1057,7 +1057,8 @@ router.post('/manualJobResponse', [
                               if (jobExecution.status === 'completed') {
                                 await  JobScheduler.scheduleCheckForJobsWithSingleDependency({
                                   dependsOnJobId : jobExecution.jobId,
-                                  dataflowId : jobExecution.dataflowId
+                                  dataflowId : jobExecution.dataflowId,
+                                  jobExecutionGroupId : jobExecution.jobExecutionGroupId
                                 });
                               }
                               }).then(res.status(200).json({success : true}))
