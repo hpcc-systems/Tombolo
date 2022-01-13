@@ -735,7 +735,7 @@ class JobDetails extends Component {
         .catch((error) => {
           console.log(error)
           message.error(
-            "Error occured while saving the data. Please check the form data"
+            "Error occurred while saving the data. Please check the form data"
           );
         }).finally(() => {
           this.setState({
@@ -748,12 +748,9 @@ class JobDetails extends Component {
 async sendGHCreds({ GHUsername, GHToken }){
     try {
       const payload = { GHUsername, GHToken };
-      console.log(`payload`, payload)
       const respond = await fetch('/api/ghcredentials', { method: "POST", headers: authHeader(), body: JSON.stringify(payload) });  
-      console.log(`respond`, respond)   
       if (!respond.ok) throw new Error("Failed to send credentials!");
       const result = await respond.json();
-      console.log(`result`, result)
       return result.id
     } catch (error) {
        console.log('-error-----------------------------------------');
@@ -795,10 +792,6 @@ async sendGHCreds({ GHUsername, GHToken }){
     const metaData={}; // metadata will be stored as JSON
     metaData.isStoredOnGithub = isStoredOnGithub;
 
-    console.log('--gitHubFiles----------------------------------------');
-    console.dir({gitHubFiles}, { depth: null });
-    console.log('------------------------------------------');
-    
     if (gitHubFiles) {
       const GHUsername = gitHubFiles.gitHubUserName;
       const GHToken = gitHubFiles.gitHubUserAccessToken
@@ -806,9 +799,6 @@ async sendGHCreds({ GHUsername, GHToken }){
       if(GHUsername && GHToken ) {
         credsId = await this.sendGHCreds({ GHUsername, GHToken });
       }
-      console.log('-credsId-----------------------------------------');
-      console.dir({credsId}, { depth: null });
-      console.log('------------------------------------------');
       
       metaData.gitHubFiles ={
         credsId, 
@@ -820,12 +810,6 @@ async sendGHCreds({ GHUsername, GHToken }){
     } else {
       metaData.gitHubFiles = null;
     }
-
-    console.log('-gh: metadata.githubFIles-----------------------------------------');
-    console.dir({gh: metaData.gitHubFiles}, { depth: null });
-    console.log('------------------------------------------');
-    
-
     //If Job type is Manual
     if( formFieldsValue["jobType"] === 'Manual'){
       if(formFieldsValue["manualJobFilePath"]){
@@ -866,12 +850,10 @@ async sendGHCreds({ GHUsername, GHToken }){
     if (groupId) {
       jobDetails.basic.groupId = groupId;
     }
-    console.log('--jobDetails----------------------------------------');
-    console.dir(jobDetails, { depth: null });
-    console.log('------------------------------------------');
-    
+
     return jobDetails;
   }
+
   handleCancel = () => {
     this.setState({
       visible: false,
@@ -1585,7 +1567,7 @@ async sendGHCreds({ GHUsername, GHToken }){
         selectedPredecessor.includes(predecessor.jobId)
       );
     };
-    
+
 
     //controls
     const controls =  <div className={this.props.displayingInModal ? "assetDetail-buttons-wrapper-modal" : "assetDetail-buttons-wrapper "}>
@@ -1712,13 +1694,12 @@ async sendGHCreds({ GHUsername, GHToken }){
 
           <TabPane tab="Basic" key="1">
               <Form.Item label="Job Type" name="jobType" className={this.state.enableEdit ? null : "read-only-input"}>
-              
               {!this.state.enableEdit ? 
                 <Input disabled={!editingAllowed}  placeholder="Job Type" value={(jobType !== '') ? jobType : "Job"} /> :
                 <Select placeholder="Job Type" value={(jobType !== '') ? jobType : "Job"} style={{ width: 190 }} onChange={this.onJobTypeChange} >
                   {jobTypes.map(d => <Option key={d}>{d}</Option>)}
                 </Select>
-              }
+                }
               </Form.Item>   
               {(() =>  {
                 switch (jobType) {
