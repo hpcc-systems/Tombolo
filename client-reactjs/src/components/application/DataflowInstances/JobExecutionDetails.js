@@ -3,7 +3,7 @@ import { Space, Table, Badge, Tooltip, Tag } from "antd/lib";
 import { Constants } from "../../common/Constants";
 import  useWindowSize from "../../../hooks/useWindowSize";
 
-function JobExecutionDetails({ workflowDetails, graphSize, jobExecution}) {
+function JobExecutionDetails({ workflowDetails, graphSize, manageJobExecutionFilters, setSelectedJobExecutionGroup, jobExecutionTableFilters, selectedJobExecutionGroup}) {
   const [parentTableData, setParentTableData] = useState([]);
   const [ windowHeight] = useWindowSize();
   // Unique filters
@@ -31,7 +31,7 @@ function JobExecutionDetails({ workflowDetails, graphSize, jobExecution}) {
   const handleTableChange = (pagination, filters, sorter) => {
     const activeFilters = {};
     for (const key in filters) filters[key] && (activeFilters[key] = filters[key]);
-    jobExecution.manageJobExecutionFilters(activeFilters);
+    manageJobExecutionFilters(activeFilters);
   };
 
   //Badge color
@@ -88,7 +88,7 @@ function JobExecutionDetails({ workflowDetails, graphSize, jobExecution}) {
         return createdAt === value;
       },
       filters: createUniqueFiltersArr(workflowDetails.wuDetails, "createdAt"),
-      filteredValue: jobExecution.jobExecutionTableFilters.createdAt || null,
+      filteredValue: jobExecutionTableFilters.createdAt || null,
     },
   ];
 
@@ -98,23 +98,25 @@ function JobExecutionDetails({ workflowDetails, graphSize, jobExecution}) {
       const workFlows = workflowDetails.wuDetails.sort((a,b) => {
         return new Date(a.createdAt) - new Date(b.createdAt)
       });
+
       const execution = {};
-      workFlows.forEach((item) => {
-        if (!execution[item.jobExecutionGroupId]) {
-          execution[item.jobExecutionGroupId] = { jobExecutionGroupId: item.jobExecutionGroupId, count: 1, createdAt: item.createdAt, statuses: [item.status] };
-        } else {
-          execution[item.jobExecutionGroupId].count += 1;
-          execution[item.jobExecutionGroupId].statuses = [...execution[item.jobExecutionGroupId].statuses, item.status];
-        }
-        execution[item.jobExecutionGroupId].status = jobExecutionGroupStatus(execution[item.jobExecutionGroupId].statuses);
-      });
+        workFlows?.forEach((item) => {
+          if (!execution[item.jobExecutionGroupId]) {
+            execution[item.jobExecutionGroupId] = { jobExecutionGroupId: item.jobExecutionGroupId, count: 1, createdAt: item.createdAt, statuses: [item.status] };
+          } else {
+            execution[item.jobExecutionGroupId].count += 1;
+            execution[item.jobExecutionGroupId].statuses = [...execution[item.jobExecutionGroupId].statuses, item.status];
+          }
+          execution[item.jobExecutionGroupId].status = jobExecutionGroupStatus(execution[item.jobExecutionGroupId].statuses);
+        });      
       setParentTableData(Object.values(execution));
-      jobExecution.setSelectedJobExecutionGroup(Object.values(execution)[Object.values(execution).length - 1].jobExecutionGroupId)
+        const executionKeys = Object.keys(execution);
+        setSelectedJobExecutionGroup(executionKeys.length > 0 ? executionKeys[executionKeys.length -1] : '') 
     }
   }, [workflowDetails]);
 
   // Function that renders a child table when + icon is clicked
-  const expandedRowRender = (record, index, indent, expanded) => {
+  const expandedRowRender = (record) => {
     //Nested table columns
     const nestedTableColumns = [
       { title: "Job", dataIndex: "name", width: "20%" },
@@ -157,23 +159,23 @@ function JobExecutionDetails({ workflowDetails, graphSize, jobExecution}) {
         rowKey={(record) => record.jobExecutionGroupId}
         dataSource={parentTableData}
         expandable={{ expandedRowRender }}
-        pagination={{ pageSize: Math.round((windowHeight - graphSize.height) / 60 )}}
+        pagination={{ pageSize: Math.abs(Math.round((windowHeight - graphSize.height) / 60 ))}}
         rowClassName={(record) => {
-          if(jobExecution.selectedJobExecutionGroup === record.jobExecutionGroupId){
+          if(selectedJobExecutionGroup === record.jobExecutionGroupId){
             return "jobExecutionDetails_antdTable_selectedRow"
           } }}
         onExpand={(expanded, record ) => {
           if(expanded){
-            jobExecution.setSelectedJobExecutionGroup(record.jobExecutionGroupId)
+            setSelectedJobExecutionGroup(record.jobExecutionGroupId)
           }else{
-            jobExecution.setSelectedJobExecutionGroup('');
+            setSelectedJobExecutionGroup('');
           }
         }}
         expandedRowClassName= { () =>{
           return "jobExecutionDetails_antdTable_child"
         } } 
         expandRowByClick={true}
-        expandedRowKeys={[jobExecution.selectedJobExecutionGroup]}
+        expandedRowKeys={[selectedJobExecutionGroup]}
       />
     </React.Fragment>
   );
