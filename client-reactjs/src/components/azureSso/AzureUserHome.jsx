@@ -1,53 +1,59 @@
-import React, {useState, useEffect} from 'react';
+import React, { useState, useEffect } from "react";
 import { useMsal } from "@azure/msal-react";
 import { useDispatch } from "react-redux";
-import { userActions } from '../../redux/actions/User';
+import { userActions } from "../../redux/actions/User";
 import { loginRequest } from "./azureAuthConfig";
-import { Spin } from 'antd';
+import { Spin } from "antd";
 
 function AzureUserHome() {
-    const dispatch = useDispatch();
-    const { instance, accounts, inProgress } = useMsal();
-    const [apiData, setApiData] = useState(null);
+  const dispatch = useDispatch();
+  const { instance, accounts, inProgress } = useMsal();
 
-    useEffect(() => {
-        // When the user is successfully authenticated and MSL has users account info
-        // set active account for msal instance
-        if(accounts.length > 0 && inProgress === 'none'){
-            let userAccount = accounts[0];
-            instance.setActiveAccount(userAccount);
-            console.log(userAccount)
-            let user = {
-                firstName : userAccount.name.split(' ')[0],
-                lastName : userAccount.name.split(' ')[1],
-                email : userAccount.username,
-                username : userAccount.idTokenClaims.preferred_username.split('@')[0],
-                type: 'azureUser',
-                permissions: userAccount.idTokenClaims.roles[0],
-                token : userAccount.idTokenClaims.aio,
-            }
+  useEffect(() => {
+    // When the user is successfully authenticated and MSL has users account info
+    // set active account for msal instance
+    if (accounts.length > 0 && inProgress === "none") {
+      let userAccount = accounts[0];
+      instance.setActiveAccount(userAccount);
 
-          // This dispatch function makes a call to /loginAzureUser. 
-          //login azure user adds a user in the user table if not already there
-          dispatch( userActions.azureLogin(user));
-        } 
-        
-        if(accounts.length < 1 && inProgress === 'none'){
-            instance.loginRedirect(loginRequest).catch(e =>{
-                console.log(e)
-            })
-        }
-    }, [accounts, inProgress])
+      // console.log(userAccount)
+      let user = {
+        lastName: userAccount.name.split(",")[0],
+        firstName: userAccount.name.split(" ")[1],
+        email: userAccount.username,
+        username: userAccount.idTokenClaims.preferred_username.split("@")[0],
+        type: "azureUser",
+        role: userAccount.idTokenClaims.roles || ["Reader"],
+        token: userAccount.idTokenClaims.aio,
+      };
 
+      // This dispatch function makes a call to /loginAzureUser.
+      //login azure user adds a user in the user table if not already there
+      dispatch(userActions.azureLogin(user));
+    }
 
-    return (
-         <>
-            <div style={{display:'flex',justifyContent:'center', alignItems: 'center', width: '100vw', height: '100vh'}}>
-            <Spin /> <span style={{marginLeft: "20px"}}> Tombolo </span>
-        </div>
-        </>
-    )
+    if (accounts.length < 1 && inProgress === "none") {
+      instance.loginRedirect(loginRequest).catch((e) => {
+        console.log(e);
+      });
+    }
+  }, [accounts, inProgress]);
+
+  return (
+    <>
+      <div
+        style={{
+          display: "flex",
+          justifyContent: "center",
+          alignItems: "center",
+          width: "100vw",
+          height: "100vh",
+        }}
+      >
+        <Spin /> <span style={{ marginLeft: "20px" }}> Tombolo </span>
+      </div>
+    </>
+  );
 }
 
 export default AzureUserHome;
-

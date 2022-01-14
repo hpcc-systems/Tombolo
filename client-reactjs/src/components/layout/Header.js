@@ -1,6 +1,6 @@
 import React, { Component } from "react";
-import {Layout, Menu, message, Tooltip, Input, Button, Dropdown, Modal, Alert, Form, notification} from 'antd/lib';
-import { NavLink, Switch, Route, withRouter } from 'react-router-dom';
+import {Layout, Menu, message, Input, Button, Dropdown, Modal, Alert, Form, notification} from 'antd/lib';
+import { withRouter } from 'react-router-dom';
 import { userActions } from '../../redux/actions/User';
 import { connect } from 'react-redux';
 import { authHeader, handleError } from "../common/AuthHeader.js"
@@ -161,7 +161,6 @@ class AppHeader extends Component {
     
 
     handleLogOut = (e) => {
-     
       // localStorage.removeItem('user');
       localStorage.clear();
       this.setState({
@@ -169,21 +168,20 @@ class AppHeader extends Component {
           selected: 'Select an Application'
       });
       this.props.dispatch(applicationActions.applicationSelected('', ''));
-      //reset the group heiracrhy selection
+      //reset the group hierarchy selection
       this.props.dispatch(groupsActions.groupExpanded({'id':'', 'key':'0-0'}, ['0-0']));
-      //reset cluster selectiong
+      //reset cluster selections
       this.props.dispatch(assetsActions.clusterSelected(''));
-      // this.props.dispatch(userActions.logout());
+      this.props.dispatch(userActions.logout());
 
-      if(process.env.REACT_APP_SSO === 'azure_ad'){
-        msalInstance.logout();
-        return;
+      if(process.env.REACT_APP_APP_AUTH_METHOD === 'azure_ad'){
+        this.props.history.push('/logout');
+
+        // msalInstance.logout();
+        // return;
       }
 
-      setTimeout(() =>{
-        this.props.history.push('/login');
-      }, 6000)
-      message.success('You have been successfully logged out. ');
+      // message.success('You have been successfully logged out. ');
     }
 
     handleChange(event) {
@@ -308,7 +306,7 @@ class AppHeader extends Component {
     const appNav = (applicationId != '' ? "/" + applicationId + "/dataflow" : "/dataflow");
     const userActionMenu = (
       <Menu onClick={this.handleUserActionMenuClick}>
-        {process.env.REACT_APP_SSO !== 'azure_ad' ? <Menu.Item key="1">Change Password</Menu.Item> : null}
+        {process.env.REACT_APP_APP_AUTH_METHOD !== 'azure_ad' ? <Menu.Item key="1">Change Password</Menu.Item> : null}
         <Menu.Item key="2">Logout</Menu.Item>
       </Menu>
     );

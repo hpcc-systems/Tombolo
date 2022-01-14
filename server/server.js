@@ -40,7 +40,7 @@ app.use(limiter);
 
 const bearerStrategy = new BearerStrategy(options, (token, done) => {
   // Send user info using the second argument
-  done(null, {id: 12}, token);
+  done(null, {}, token);
 });
 
 // This will initialize the passport object on every request

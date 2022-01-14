@@ -47,10 +47,8 @@ async function verifyToken(token) {
               }
             }, function(err, response, body) {
               if (err || response.statusCode != 200) {
-                console.log("Token verification error  <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<", token)
                 reject(err);
               }
-              console.log("<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<< Token verified", body)
               resolve(body);
           });
         });
@@ -60,7 +58,6 @@ async function verifyToken(token) {
 
 async function validateToken(req, res, next) {
   console.log
-  ("Validate TOKEN <<<<<<<<<<<<<<<<<<")
   let token = req.headers['x-access-token'] || req.headers['authorization'];
   if (token) {
       if (token.startsWith('Bearer ')) {

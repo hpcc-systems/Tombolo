@@ -1,4 +1,3 @@
-require('dotenv').config();
 const passport = require('passport');
 const userService = require('../routes/user/userservice');
 
@@ -22,7 +21,6 @@ async function verifyAuthServiceToken(req, res, next)
 
 //azure token validation
 const verifyAzureToken =  passport.authenticate('oauth-bearer', {session: false});
-
 
 module.exports = {
   verifyUserToken : process.env.APP_AUTH_METHOD === 'azure_ad' ? verifyAzureToken : verifyAuthServiceToken,
