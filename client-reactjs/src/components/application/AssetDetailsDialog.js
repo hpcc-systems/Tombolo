@@ -1,84 +1,51 @@
-import React, { useState, useEffect } from 'react'
-import { authHeader, handleError } from "../common/AuthHeader.js"
+import React, {  useEffect } from 'react'
 import useFileDetailsForm from '../../hooks/useFileDetailsForm';
 import { useSelector } from "react-redux";
-import { useParams } from "react-router-dom";
-import { Modal, Button } from 'antd/lib';
-import _ from "lodash";
+import { Modal } from 'antd/lib';
 
 function AssetDetailsDialog(props) {
-  const [application, setApplication] = useState({...props});
 
 	const { isShowing, toggle, OpenDetailsForm } = useFileDetailsForm();
-
-  let { assetType, applicationId, assetId, selectedDataflow } = useParams();
-
-  useEffect(() => {
-  	setApplication({...props});
-    if (props.assetId != '') {
-      handleOpen();
-    }
-  }, [props.assetId])
-
   const authReducer = useSelector(state => state.authenticationReducer);
 
-  const handleOpen = () => {
-    toggle();
-  }
+  useEffect(() => {
+    console.log("asetdialogprops", props)
+    if (props.selectedAsset.id)  toggle(); // opens dialog
+  }, [props.selectedAsset.id])
 
   const handleClose = () => {
     toggle();
-    //flip the state in the parent component
     props.handleClose();
   }
 
-  const DetailsForm = props => {
-    return OpenDetailsForm({
-      ...props,
-      "type": props.assetType,
-      "isNew":false,
-      "selectedAsset": props.selectedAsset,
-      "selectedDataflow": props.selectedDataflow,
-      "nodes": props.nodes,
-      "edges": props.edges,
-      "nodeIndex": props.nodeIndex,
-      "application": props.application,
-      "user": props.user,
-      "onClose": handleClose,
-      "viewMode": true
-    })
-  }
+  const capitalize = (word) => {
+    if (!word || typeof word !== 'string') return '';
+    return word[0].toUpperCase() + word.slice(1);
+  };
 
-  return (
-	  (authReducer.user && authReducer.user.token != undefined) ?
-	  <React.Fragment>
-      
+  return(
+    <>
+      {authReducer.user?.token ?
 	    <Modal
           visible={isShowing}
           width="1200px"
           onCancel={handleClose}
           footer={null}
           bodyStyle={{display: "flex", flexDirection: "column"}}
-          title={_.startCase(_.toLower(props.assetType)) + " : " +   props.title}
-        > 
-        <DetailsForm
-          assetType={props.assetType}
-          assetId={props.assetId}
-          fileId={props.fileId}
-          application={props.application}
-          user={props.user}
-          selectedDataflow={props.selectedDataflow}
-          nodes={props.nodes}
-          edges={props.edges}
-          nodeIndex={props.nodeIndex}
-          displayingInModal={true}
-          reload={props.reload}
-          onAssetSaved={props.onAssetSaved}
+          title={`${capitalize(props.selectedJobType)} : ${props.selectedNodeTitle}`}
+          > 
+        <OpenDetailsForm
+          {...props}
+          type={props.selectedJobType} // OpenDetailsForm needs this prop
+          viewMode={true} // ?
+          displayingInModal={true} // ?
+          fileId={props.selectedAsset.id} // ?
+          onClose={handleClose} 
         />
       </Modal>
-	  </React.Fragment>
-	  : null
-
+	
+	  : null}
+    </>
 	)
 }
 

@@ -116,7 +116,7 @@ const Icon = React.memo(({ data }) => {
       >
         {icons[data.type]}
       </div>
-      <div style={{ textAlign: 'center' }}>{data.text}</div>
+      <div style={{ textAlign: 'center' }}>{data.title}</div>
     </div>
   );
 });

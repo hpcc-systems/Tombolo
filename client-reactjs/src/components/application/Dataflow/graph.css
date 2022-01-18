@@ -14,6 +14,10 @@
   flex:1;
   box-shadow: 0 0 10px 1px #e9e9e9;
 }
+.graph-icon-hide{
+  width: 13px;
+  height: 13px;
+}
 .x6-widget-stencil  {
   background-color: #fff;
 }

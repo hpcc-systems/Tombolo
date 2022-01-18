@@ -38,7 +38,9 @@ export default class Stencil {
         shape: 'custom-shape',
         data: {
           type: asset,
-          text: asset,
+          title: asset,
+          assetId: undefined,
+          subProcessId: undefined,
         },
       });
     });

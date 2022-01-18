@@ -19,16 +19,16 @@ export default class Canvas {
         allowEdge: true,
         allowPort: false,
         highlight: true,
-        router: 'manhattan',
+        // router: 'manhattan',
         connector: {
           name: 'rounded',
-          args: {
-            radius: 2,
-          },
+          // args: {
+          //   radius: 2,
+          // },
         },
-        snap: {
-          radius: 10,
-        },
+        // snap: {
+        //   radius: 10,
+        // },
       },
       mousewheel: {
         enabled: true,

@@ -1,19 +1,15 @@
 import React, { useState, useEffect } from 'react'
-import ReactDOM from 'react-dom';
-import { Button, Form, Input, message, Popconfirm, Icon, Tooltip, Modal, Table, Select } from 'antd/lib';
+import { Button,  Modal, Table } from 'antd/lib';
 import { authHeader, handleError } from "../../common/AuthHeader.js"
-import useFileDetailsForm from '../../../hooks/useFileDetailsForm';
+
 import { useSelector } from "react-redux";
 import { hasEditPermission } from "../../common/AuthUtil.js";
 import { Constants } from '../../common/Constants';
-import AssetDetailsDialog from "../AssetDetailsDialog"
-const Option = Select.Option;
 
-function ExistingAssetListDialog({show, applicationId, selectedDataflow, assetType, onClose, onFileAdded, user, currentlyEditingNodeId}) {
-console.log(assetType)
+
+function ExistingAssetListDialog({show, applicationId, dataflowId, assetType, handleClose}) {
+  console.log(assetType)
   const [assets, setAssets] = useState([]);
-  const [visible, setVisible] = useState(show);
-  const [showDetailsForm, setShowDetailsForm] = useState(false);
 
   useEffect(() => {
     if(applicationId) {
@@ -21,11 +17,6 @@ console.log(assetType)
     }
   }, []);
 
-  useEffect(() => {
-    if(showDetailsForm) {
-      setVisible(false)
-    }
-  }, [showDetailsForm])
 
   const authReducer = useSelector(state => state.authenticationReducer);
 
@@ -33,10 +24,10 @@ console.log(assetType)
     let url='';
     switch(assetType) {
       case 'File':
-        url = '/api/file/read/file_list?app_id='+applicationId+"&dataflowId="+selectedDataflow.id;
+        url = '/api/file/read/file_list?app_id='+applicationId+"&dataflowId="+dataflowId;
         break;
       case 'Index':
-        url = '/api/index/read/index_list?app_id='+applicationId+"&dataflowId="+selectedDataflow.id;
+        url = '/api/index/read/index_list?app_id='+applicationId+"&dataflowId="+dataflowId;
         break;
       case 'Job':
       case 'Modeling':
@@ -44,7 +35,8 @@ console.log(assetType)
       case 'ETL':
       case 'Query Build':
       case 'Data Profile':
-        url = '/api/job/job_list?app_id='+applicationId+"&dataflowId="+selectedDataflow.id;
+        default:
+        url = '/api/job/job_list?app_id='+applicationId+"&dataflowId="+dataflowId;
         break;
     }
 
@@ -62,45 +54,6 @@ console.log(assetType)
     }).catch(error => {
       console.log(error);
     });
-  }
-
-  const handleClose = () => {
-    setVisible(false)
-    onClose();
-  }
-
-  const selectAsset = (record) => {
-    let fileAddedResponse = {"title": record.title, "name": record.name}
-    switch(assetType) {
-      case 'File':
-        fileAddedResponse.fileId = record.id;
-        break;
-      case 'Index':
-        fileAddedResponse.indexId = record.id;
-        break;
-      case 'Job':
-      case 'Modeling':
-      case 'Scoring':
-      case 'ETL':
-      case 'Query Build':
-      case 'Data Profile':
-        fileAddedResponse.id = currentlyEditingNodeId;
-        fileAddedResponse.jobId = record.id;
-        fileAddedResponse.type = 'Job';
-        fileAddedResponse.success = true;
-        if(record.jobType) {
-          fileAddedResponse.jobType = record.jobType;
-        } else {
-          fileAddedResponse.jobType = 'Job';
-        }
-        break;
-    }
-    onFileAdded(fileAddedResponse);
-    handleClose();
-  }
-
-  const handleNewAsset = () => {
-    setShowDetailsForm(true)
   }
 
   const editingAllowed = hasEditPermission(authReducer.user);
@@ -137,7 +90,7 @@ console.log(assetType)
     className: editingAllowed ? "show-column" : "hide-column",
     render: (text, record) =>
       <span>
-        <Button className="btn btn-secondary btn-sm" onClick={() => selectAsset(record)}>Select</Button>
+        <Button className="btn btn-secondary btn-sm" onClick={() => handleClose(record)}>Select</Button>
       </span>
   }];
 
@@ -145,13 +98,13 @@ console.log(assetType)
     <React.Fragment>
       <Modal
           title={"Select from existing "+assetType}
-          visible={visible}
+          visible={show}
           destroyOnClose={true}
-          onCancel={handleClose}
+          onCancel={()=>handleClose()}
           maskClosable={false}
           width="1200px"
           footer={[
-            <Button key="cancel" onClick={handleClose}>
+            <Button key="cancel" onClick={()=>handleClose()}>
               Cancel
             </Button>,
           ]}
