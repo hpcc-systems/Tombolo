@@ -76,6 +76,7 @@ const DELETE_ICON = '#delete-left'
             let nodes = JSON.parse(data.nodes);
             let edges = JSON.parse(data.edges);
             if(nodes && nodes.length > 0){              
+              
               nodes.forEach((node) => {
                 graph.current.addNode({
                   shape: 'custom-image',
@@ -132,20 +133,8 @@ const DELETE_ICON = '#delete-left'
 
               edges.forEach((edge) => {
                 graph.current.addEdge({
-                  source: {
-                    cell: edge.source, 
-                    port: 'port2', 
-                  },
-                  target: {
-                    cell: edge.target, 
-                    port: 'port4',
-                  },
-                  attrs: {
-                    line: {
-                      stroke: '#A2B1C3'
-                    }
-                  }
-
+                  source: edge.source,
+                  target:edge.target,
                 })
               })
               //data.forEach()
@@ -350,14 +339,17 @@ const DELETE_ICON = '#delete-left'
       graph.current.on('node:added', ({ node, index, options }) => { 
         handleSave();
       })
+      
       graph.current.on('node:removed', ({ node, index, options }) => { 
         console.log('node removed');
         handleSave();
       })
+
       graph.current.on('node:changed', ({ node, options }) => { 
         console.log('node changed');
         handleSave();
       })
+
       graph.current.on('edge:connected', ({ isNew, edge }) => {
         console.log(edge);
         console.log(isNew);
@@ -370,6 +362,7 @@ const DELETE_ICON = '#delete-left'
         console.log(graph)
         openDetailsDialog(cell);
       })      
+
       graph.current.on('node:delete', ({ e, x, y, cell, view }) => {
         console.log('node deleted')
       })      
@@ -873,8 +866,9 @@ const DELETE_ICON = '#delete-left'
         <AssetDetailsDialog 
           assetType="file"
           assetId={graphState.selectedFile} 
-          fileId={graphState.selectedFile} 
           nodes={graphState.nodes}
+
+          fileId={graphState.selectedFile} 
           selectedAsset={graphState.selectedFile} 
           title=  {graphState.selectedAssetTitle}
           application={applicationId} 
@@ -889,6 +883,7 @@ const DELETE_ICON = '#delete-left'
           assetType="job"
           assetId={graphState.selectedJob}
           nodes={graphState.nodes}
+
           edges={graphState.edges}
           nodeIndex={graphState.currentlyEditingNode ? graphState.currentlyEditingNode.id : ''}
           selectedAsset={graphState.selectedJob}

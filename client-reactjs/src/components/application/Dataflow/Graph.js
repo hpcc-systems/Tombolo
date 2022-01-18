@@ -231,6 +231,8 @@ class Graph extends Component {
           showSubProcessDetails: true
         });
         break;
+        default:
+          return
    }
   }
 

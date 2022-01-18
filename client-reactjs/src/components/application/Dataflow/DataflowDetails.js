@@ -9,6 +9,7 @@ import AntdGraph from "./AntdGraph";
 import BreadCrumbs from "../../common/BreadCrumbs";
 import {Constants} from "../../common/Constants"
 import {store} from "../../../redux/store/Store"
+import GraphX6 from './GraphX6';
 const TabPane = Tabs.TabPane;
 
 function DataflowDetails({props}) {  
@@ -68,12 +69,13 @@ function DataflowDetails({props}) {
                 <Button type="link" onClick={(handleBackToAllJobs)} type="primary" ghost> Cancel</Button> </span> : null}
           >
             <TabPane tab="Designer" key="1" forceRender={true}>
-              <AntdGraph                 
+              <GraphX6 />
+              {/* <AntdGraph                 
                 applicationId={dataflowReducer.applicationId}
                 applicationTitle={dataflowReducer.applicationTitle}
                 selectedDataflow={{id: dataflowReducer.dataflowId}}
                 user={dataflowReducer.user}
-              />
+              /> */}
               {/*<Graph
                 applicationId={dataflowReducer.applicationId}
                 applicationTitle={dataflowReducer.applicationTitle}
