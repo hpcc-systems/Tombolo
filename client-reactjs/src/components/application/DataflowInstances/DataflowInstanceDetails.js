@@ -28,7 +28,6 @@ class DataflowInstanceDetails extends Component {
   componentDidMount() {
     this.getJobExecutionDetails();
     const LSGraphHeight = JSON.parse(localStorage.getItem('graphSize'));
-    console.log(`typeof LSGraphHeight`, typeof LSGraphHeight);
     if (LSGraphHeight) {
       this.setState({graphSize: {height: LSGraphHeight}});
     }
@@ -69,23 +68,9 @@ class DataflowInstanceDetails extends Component {
     this.setState({selectedJobExecutionGroup : id})
   }
 
-  //Tab pane control btns
-  controls = (
-    <Space size={'small'} style={{marginBottom: '10px'}}>
-      <Button
-        type="primary"
-        // disabled={!Object.keys(filters).length}
-        onClick={() => this.manageJobExecutionFilters({})}
-        ghost>
-        Clear all Filters
-      </Button>
-      <Button type="primary" onClick={this.getJobExecutionDetails}>
-        Refresh Records
-      </Button>
-    </Space>
-  );
 
   render() {
+    console.log(this.state)
     //if(this.props.dataflowId == undefined || this.props.applicationId == undefined)
     if (!this.props.application || !this.props.application.applicationId) return null;
     return (
@@ -110,19 +95,30 @@ class DataflowInstanceDetails extends Component {
           />
         </Resizable>
 
-        <Tabs type="card" tabBarExtraContent={this.controls} style={{padding: '10px'}}>
+        <Tabs
+          type="card"
+          tabBarExtraContent={
+            <Space size={'small'} style={{ marginBottom: '10px' }}>
+              <Button type="primary" disabled={Object.keys(this.state.jobExecutionTableFilters).length < 1} onClick={() => this.manageJobExecutionFilters({})} ghost>
+                Clear all Filters
+              </Button>
+              <Button type="primary" onClick={this.getJobExecutionDetails}>
+                Refresh Records
+              </Button>
+            </Space>
+          }
+          style={{ padding: '10px' }}
+        >
           <TabPane tab="Workunits" key="1">
             <Spin spinning={this.state.loading}>
               <JobExecutionDetails
                 refreshData={this.getJobExecutionDetails}
                 workflowDetails={this.state.jobExecutionDetails}
                 graphSize={this.state.graphSize}
-                jobExecution={{
-                  manageJobExecutionFilters: this.manageJobExecutionFilters,
-                  jobExecutionTableFilters: this.state.jobExecutionTableFilters,
-                  setSelectedJobExecutionGroup : this.setSelectedJobExecutionGroup,
-                  selectedJobExecutionGroup : this.state.selectedJobExecutionGroup
-                }}
+                manageJobExecutionFilters = {this.manageJobExecutionFilters}
+                setSelectedJobExecutionGroup = { this.setSelectedJobExecutionGroup}
+                jobExecutionTableFilters = { this.state.jobExecutionTableFilters}
+                selectedJobExecutionGroup = { this.state.selectedJobExecutionGroup}
               />
             </Spin>
           </TabPane>
@@ -131,12 +127,9 @@ class DataflowInstanceDetails extends Component {
               <ManualJobsStatus
                 refreshData={this.getJobExecutionDetails}
                 workflowDetails={this.state.jobExecutionDetails}
-                manageJobExecutionFilters={this.manageJobExecutionFilters}
                 graphSize={this.state.graphSize}
-                jobExecution={{
-                  manageJobExecutionFilters: this.manageJobExecutionFilters,
-                  jobExecutionTableFilters: this.state.jobExecutionTableFilters,
-                }}
+                manageJobExecutionFilters={this.manageJobExecutionFilters}
+                jobExecutionTableFilters = { this.state.jobExecutionTableFilters}
               />
             </Spin>
           </TabPane>
