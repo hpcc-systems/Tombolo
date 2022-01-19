@@ -21,8 +21,9 @@ const defaultState= {
     subProcessId: "",
     assetId: "",
     title: "",
+    name:'',
     type: "",
-    id: "",
+    nodeId: "",
     cell: null,
     nodes:[], // ?? not sure if needed
     edges:[], // ?? not sure if needed
@@ -63,6 +64,7 @@ function GraphX6() {
                 y: node.y,
                 shape: 'custom-shape',
                 data: {
+                  nodeId: node.id,
                   type: node.type,
                   title: node.title,
                   assetId: node.assetId,
@@ -145,8 +147,8 @@ function GraphX6() {
         edge.removeTools();
       });
 
-      graph.on('node:removed', async ({ node, cell }) =>{
-        const nodeData = node.store.data.data;
+      graph.on('node:removed', async ({ cell }) =>{
+        const nodeData = cell.getData();
         try {
           /* deleting asset from dataflow is multi step operation
           1. delete asset from Asset_Dataflow table
@@ -156,7 +158,7 @@ function GraphX6() {
             const options ={
               method: 'POST',
               headers: authHeader(),
-              body: JSON.stringify({ id: nodeData.assetId, dataflowId })
+              body: JSON.stringify({ id: nodeData.assetId, type: nodeData.type, dataflowId })
             }
             
             const response = await fetch("/api/dataflowgraph/deleteAsset", options); 
@@ -171,8 +173,8 @@ function GraphX6() {
       })
 
       graph.on('node:dblclick', ({ node, cell }) => {
-        const nodeData = node.store.data.data;   
-        setConfigDialog(()=>({...nodeData, openDialog: true, cell, id: node.id, nodes: graph.getEdges(), edges: graph.getNodes()}))
+        const nodeData = cell.getData();
+        setConfigDialog(()=>({...nodeData, openDialog: true, cell, nodes: graph.getEdges(), edges: graph.getNodes()}))
       })  
 
       graph.history.on('change', async ( { cmds, options }) => { 
@@ -225,13 +227,15 @@ function GraphX6() {
   }, 1000);
   
   const saveNewAsset = async (newAsset) => {
-    if (newAsset) {
+    if (newAsset) {     
       const cell = configDialog.cell;
       /* updating cell will cause a POST request to '/api/dataflowgraph/save with latest nodes and edges*/
       cell.updateData(
         {
+          name: newAsset.name,
           title: newAsset.title,
           assetId: newAsset.id,
+          nodeId: configDialog.nodeId,
           subProcessId: newAsset.jobType === "Sub-Process" ? newAsset.id : undefined,
         },
         { name: "add-asset" }
@@ -282,10 +286,8 @@ function GraphX6() {
     if (asset){
       const cell = configDialog.cell
       /* updating cell will cause a POST request to '/api/dataflowgraph/save with latest nodes and edges*/
-      cell.updateData({
-        title: asset.title,
-        //add icons or statuses
-      }, { name: 'update-asset' })
+      //add icons or statuses
+      cell.updateData({ title: asset.title }, { name: 'update-asset' })
     }
     setConfigDialog({...defaultState}) // RESETS LOCAL STATE AND CLOSES DIALOG
   }
@@ -303,7 +305,7 @@ function GraphX6() {
           selectedJobType={ configDialog.type }
           selectedAsset={{ id: configDialog.assetId }} 
           selectedDataflow={{ id: dataflowId }}
-          selectedNodeId={configDialog.id}
+          selectedNodeId={configDialog.nodeId}
           selectedNodeTitle={configDialog.title}
           nodes={configDialog.nodes}
           edges={configDialog.edges}
@@ -316,7 +318,7 @@ function GraphX6() {
       {configDialog.openDialog && !configDialog.assetId ?
         <ExistingAssetListDialog
           assetType={configDialog.type}
-          currentlyEditingNodeId={configDialog.id}  
+          currentlyEditingNodeId={configDialog.nodeId}  
           show={configDialog.openDialog}
           onClose={saveNewAsset}
           dataflowId={dataflowId}

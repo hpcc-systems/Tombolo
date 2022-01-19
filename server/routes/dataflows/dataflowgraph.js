@@ -189,14 +189,16 @@ router.post(
 
     try {
       await AssetDataflow.destroy({ where: { dataflowId: req.body.dataflowId, assetId: req.body.id } });
-      const job = await Job.findOne({ where: { id: req.body.id } });
-      await JobScheduler.removeJobFromScheduler(job.name + "-" + req.body.dataflowId + "-" + req.body.id);
+      if (req.body.type.toLowerCase() === "job"){
+        const job = await Job.findOne({ where: { id: req.body.id } });
+        await JobScheduler.removeJobFromScheduler(job.name + "-" + req.body.dataflowId + "-" + req.body.id);
+      }
       res.json({ result: "success" });
     } catch (error) {
       console.log('-/deleteAsset error-----------------------------------------');
       console.dir({error}, { depth: null });
       console.log('------------------------------------------');
-      res.status(422).json({ success: false, error: errors.message });
+      res.status(422).json({ success: false, error: error.message });
     }
   }
 );
