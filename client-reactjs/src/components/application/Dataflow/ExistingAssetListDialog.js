@@ -1,122 +1,103 @@
-import React, { useState, useEffect } from 'react'
-import { Button,  Modal, Table } from 'antd/lib';
-import { authHeader, handleError } from "../../common/AuthHeader.js"
+import React, { useState, useEffect } from "react";
+import { Button, message, Modal, Table } from "antd/lib";
+import { authHeader, handleError } from "../../common/AuthHeader.js";
 
 import { useSelector } from "react-redux";
 import { hasEditPermission } from "../../common/AuthUtil.js";
-import { Constants } from '../../common/Constants';
+import { Constants } from "../../common/Constants";
 
-
-function ExistingAssetListDialog({show, applicationId, dataflowId, assetType, handleClose}) {
-  console.log(assetType)
+function ExistingAssetListDialog({ show, applicationId, dataflowId, assetType, onClose }) {
   const [assets, setAssets] = useState([]);
+  const authReducer = useSelector((state) => state.authenticationReducer);
+  const editingAllowed = hasEditPermission(authReducer.user);
 
   useEffect(() => {
-    if(applicationId) {
-      fetchDataAndRenderTable();
+    if (applicationId) {
+      (async () => {
+        const queryParams= `app_id=${applicationId}&dataflowId=${dataflowId}`
+        const options = {
+          File: `/api/file/read/file_list?${queryParams}`,
+          Index: `/api/index/read/index_list?${queryParams}`,
+          default: `/api/job/job_list?${queryParams}`, //  'Job'- 'Modeling'- 'Scoring'- 'ETL'- 'Query Build'- 'Data Profile'
+        };
+
+        const url = options[assetType] || options.default;
+
+        try {
+          const response = await fetch(url, { headers: authHeader() });
+          if (!response.ok) handleError(response);
+          const data = await response.json();
+          setAssets(data);
+        } catch (error) {
+          console.log(`error`, error);
+          message.error('Could not download assets list');
+        }
+      })();
     }
   }, []);
 
-
-  const authReducer = useSelector(state => state.authenticationReducer);
-
-  const fetchDataAndRenderTable = () => {
-    let url='';
-    switch(assetType) {
-      case 'File':
-        url = '/api/file/read/file_list?app_id='+applicationId+"&dataflowId="+dataflowId;
-        break;
-      case 'Index':
-        url = '/api/index/read/index_list?app_id='+applicationId+"&dataflowId="+dataflowId;
-        break;
-      case 'Job':
-      case 'Modeling':
-      case 'Scoring':
-      case 'ETL':
-      case 'Query Build':
-      case 'Data Profile':
-        default:
-        url = '/api/job/job_list?app_id='+applicationId+"&dataflowId="+dataflowId;
-        break;
-    }
-
-    fetch(url, {
-      headers: authHeader()
-    })
-    .then((response) => {
-      if(response.ok) {
-        return response.json();
-      }
-      handleError(response);
-    })
-    .then(data => {
-      setAssets(data)
-    }).catch(error => {
-      console.log(error);
-    });
-  }
-
-  const editingAllowed = hasEditPermission(authReducer.user);
-
   const assetColumns = [
-  {
-    title: 'Name',
-    dataIndex: 'name',
-    width: '35%'
-  },
-  {
-    title: 'Title',
-    dataIndex: 'title',
-    width: '30%'
-  },
-  {
-    title: 'Description',
-    dataIndex: 'description',
-    width: '35%',
-  },
-  {
-    title: 'Created',
-    dataIndex: 'createdAt',
-    width: '30%',
-    render: (text, record) => {
-      let createdAt = new Date(text);
-      return createdAt.toLocaleDateString('en-US', Constants.DATE_FORMAT_OPTIONS) +' @ '+ createdAt.toLocaleTimeString('en-US')
-    }
-  },
-  {
-    width: '15%',
-    title: 'Action',
-    dataJob: '',
-    className: editingAllowed ? "show-column" : "hide-column",
-    render: (text, record) =>
-      <span>
-        <Button className="btn btn-secondary btn-sm" onClick={() => handleClose(record)}>Select</Button>
-      </span>
-  }];
+    {
+      title: "Name",
+      dataIndex: "name",
+      width: "35%",
+    },
+    {
+      title: "Title",
+      dataIndex: "title",
+      width: "30%",
+    },
+    {
+      title: "Description",
+      dataIndex: "description",
+      width: "35%",
+    },
+    {
+      title: "Created",
+      dataIndex: "createdAt",
+      width: "30%",
+      render: (text, record) => {
+        let createdAt = new Date(text);
+        return ( createdAt.toLocaleDateString("en-US", Constants.DATE_FORMAT_OPTIONS) + " @ " + createdAt.toLocaleTimeString("en-US") );
+      },
+    },
+    {
+      width: "15%",
+      title: "Action",
+      dataJob: "",
+      className: editingAllowed ? "show-column" : "hide-column",
+      render: (text, record) => (
+        <span>
+          <Button className="btn btn-secondary btn-sm" onClick={() => onClose(record)}>
+            Select
+          </Button>
+        </span>
+      ),
+    },
+  ];
 
   return (
-    <React.Fragment>
-      <Modal
-          title={"Select from existing "+assetType}
-          visible={show}
-          destroyOnClose={true}
-          onCancel={()=>handleClose()}
-          maskClosable={false}
-          width="1200px"
-          footer={[
-            <Button key="cancel" onClick={()=>handleClose()}>
-              Cancel
-            </Button>,
-          ]}
-        >
-          <Table
-            columns={assetColumns}
-            rowKey={record => record.id}
-            dataSource={assets}
-            pagination={{ pageSize: 10 }} scroll={{ y: 460 }}
-          />
-      </Modal>
-    </React.Fragment>
-  )
+    <Modal
+      title={"Select from existing " + assetType}
+      visible={show}
+      destroyOnClose={true}
+      onCancel={() => onClose()}
+      maskClosable={false}
+      width="1200px"
+      footer={[
+        <Button key="cancel" onClick={() => onClose()}>
+          Cancel
+        </Button>,
+      ]}
+    >
+      <Table
+        columns={assetColumns}
+        rowKey={(record) => record.id}
+        dataSource={assets}
+        pagination={{ pageSize: 10 }}
+        scroll={{ y: 460 }}
+      />
+    </Modal>
+  );
 }
-export default ExistingAssetListDialog
+export default ExistingAssetListDialog;
