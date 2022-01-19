@@ -177,45 +177,30 @@ router.post('/delete', [
     });
 });
 
-router.post('/deleteAsset', [
-  body('dataflowId')
-    .isUUID(4).withMessage('Invalid dataflow id'),
-  body('application_id')
-    .isUUID(4).withMessage('Invalid application id'),
-],(req, res) => {
+router.post(
+  "/deleteAsset",
+  [
+    body("dataflowId").isUUID(4).withMessage("Invalid dataflow id"),
+    body("id").isUUID(4).withMessage("Invalid asset id"),
+  ],
+  async (req, res) => {
     const errors = validationResult(req).formatWith(validatorUtil.errorFormatter);
-    if (!errors.isEmpty()) {
-      return res.status(422).json({ success: false, errors: errors.array() });
-    }
-    let assetId=req.body.id, edgeId='';
-    DataflowGraph.findOne({where:{"application_Id":req.body.application_id, dataflowId:req.body.dataflowId}}).then(function(graph) {
-      let nodes = JSON.parse(graph.nodes), edges = JSON.parse(graph.edges), DataflowGraphId=graph.id;
-      nodes.forEach((node, idx) => {
-        if (node.id == assetId || (node.fileId == assetId || node.indexId == assetId || node.queryId == assetId || node.jobId == assetId || node.subProcessId == assetId)) {
-          edgeId=node.id;
-          nodes.splice(idx, 1);
-        }
-      });
-      edges = edges.filter(edge => (edge.source != edgeId && edge.target != edgeId));
+    if (!errors.isEmpty()) return res.status(422).json({ success: false, errors: errors.array() });
 
-      DataflowGraph.update(
-        {nodes:JSON.stringify(nodes), edges:JSON.stringify(edges)},
-        {where:{"id": DataflowGraphId, "application_id":req.body.application_id}}
-      ).then(async function(updated) {
-        if (body('id').isUUID(4)) {
-          await AssetDataflow.destroy({ where: { dataflowId: req.body.dataflowId, assetId: assetId } }).catch(err => console.log(err));
-          Job.findOne({where:{id: assetId}, attributes: {exclude: ['assetId']}}).then(async (job) => {
-            if(job) {
-             await JobScheduler.removeJobFromScheduler(job.name + '-' + req.body.dataflowId + '-' + assetId);
-            }
-            res.json({"result":"success"});
-          })
-        }
-      }).catch(function(err) {
-          console.log(err);
-      });
-    })
-});
+    try {
+      await AssetDataflow.destroy({ where: { dataflowId: req.body.dataflowId, assetId: req.body.id } });
+      const job = await Job.findOne({ where: { id: req.body.id } });
+      await JobScheduler.removeJobFromScheduler(job.name + "-" + req.body.dataflowId + "-" + req.body.id);
+      res.json({ result: "success" });
+    } catch (error) {
+      console.log('-/deleteAsset error-----------------------------------------');
+      console.dir({error}, { depth: null });
+      console.log('------------------------------------------');
+      res.status(422).json({ success: false, error: errors.message });
+    }
+  }
+);
+
 
 router.post('/changeNodeVisibility', [
   body('id').optional({checkFalsy:true})

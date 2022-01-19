@@ -9,7 +9,7 @@ import Event from '../Graph/Event';
 import Canvas from '../Graph/Canvas';
 import Stencil from '../Graph/Stencil';
 import Keyboard from '../Graph/Keyboard';
-import { useDispatch, useSelector } from 'react-redux';
+import { useSelector } from 'react-redux';
 
 import AssetDetailsDialog from "../AssetDetailsDialog"
 import ExistingAssetListDialog from "./ExistingAssetListDialog";
@@ -29,14 +29,13 @@ const defaultState= {
 }
 
 function GraphX6() {
+  const graphRef = useRef();
   const graphContainerRef = useRef();
   const stencilContainerRef = useRef();
-  const graphRef = useRef();
-  const {applicationId, applicationTitle, dataflowId, user} = useSelector(state => state.dataflowReducer);
+
+  const {applicationId, dataflowId } = useSelector(state => state.dataflowReducer);
  
   const [configDialog, setConfigDialog] = useState({...defaultState});
-
-const dispatch = useDispatch();
 
   useEffect(() => {
     const graph = Canvas.init(graphContainerRef.current);
@@ -56,9 +55,6 @@ const dispatch = useDispatch();
             // Nodes and Edges comes as a string, need to parse it to object
             const nodes = data.nodes ? JSON.parse(data.nodes) : [];
             const edges = data.edges ? JSON.parse(data.edges) : [];
-            console.log('-nodes-----------------------------------------');
-            console.dir({nodes}, { depth: null });
-            console.log('------------------------------------------');
             
             nodes.forEach((node) => {
               graph.addNode({
@@ -85,8 +81,6 @@ const dispatch = useDispatch();
           message.error('Could not download graph nodes');
         }
     })();
-
-    console.log(`Graph`, graph);
 
       graph.on('node:mouseenter', ({ node }) => {
         // Show visible ports
@@ -151,25 +145,44 @@ const dispatch = useDispatch();
         edge.removeTools();
       });
 
-      graph.on('node:dblclick', ({node, cell}) => {
+      graph.on('node:removed', async ({ node, cell }) =>{
         const nodeData = node.store.data.data;
-        const nodes = graph.getNodes();
-        const edges = graph.getEdges();
-        setConfigDialog(()=>({...nodeData, openDialog: true, cell, nodes, edges}))
+        try {
+          /* deleting asset from dataflow is multi step operation
+          1. delete asset from Asset_Dataflow table
+          2. make sure that any Job scheduled with this asset is deleted too
+          3. update graph in Dataflowgraph table */
+          if (nodeData.assetId) {
+            const options ={
+              method: 'POST',
+              headers: authHeader(),
+              body: JSON.stringify({ id: nodeData.assetId, dataflowId })
+            }
+            
+            const response = await fetch("/api/dataflowgraph/deleteAsset", options); 
+            if (!response.ok) handleError(response)
+          }
+
+          await handleSave(graph)
+        } catch (error) {
+          console.log(error);
+          message.error("Could not delete an asset");
+        }
+      })
+
+      graph.on('node:dblclick', ({ node, cell }) => {
+        const nodeData = node.store.data.data;   
+        setConfigDialog(()=>({...nodeData, openDialog: true, cell, id: node.id, nodes: graph.getEdges(), edges: graph.getNodes()}))
       })  
 
-      graph.history.on('change', ( { cmds, options }) => { 
+      graph.history.on('change', async ( { cmds, options }) => { 
         if (cmds[0].event === 'cell:change:tools') return; // ignoring hover events
         
-        const actions = ['dnd',"resize","mouse","remove",'add-edge','add-asset'];
+        const actions = ['dnd',"resize","mouse",'add-edge','add-asset','update-asset'];
         if(actions.includes(options?.name)){
-          handleSave(graph)
+          await handleSave(graph)
           console.log(`saved`)
         }
-        
-        // console.log('-cmds, options-----------------------------------------');
-        // console.dir({cmds, options}, { depth: null });
-        // console.log('------------------------------------------');
         
       })
   }, []);
@@ -211,58 +224,70 @@ const dispatch = useDispatch();
     }
   }, 1000);
   
+  const saveNewAsset = async (newAsset) => {
+    if (newAsset) {
+      const cell = configDialog.cell;
+      /* updating cell will cause a POST request to '/api/dataflowgraph/save with latest nodes and edges*/
+      cell.updateData(
+        {
+          title: newAsset.title,
+          assetId: newAsset.id,
+          subProcessId: newAsset.jobType === "Sub-Process" ? newAsset.id : undefined,
+        },
+        { name: "add-asset" }
+      );
+  
+      try {
+        const options = {
+          method: "POST",
+          headers: authHeader(),
+          body: JSON.stringify({ assetId: newAsset.id, dataflowId }),
+        };
+  
+        /* this POST will create record in asset_dataflows table*/
+        const response = await fetch("/api/dataflow/saveAsset", options);
+        if (!response.ok) handleError(response);
 
-  const onAssetAdded = async (selectedAsset) => {
-    const cell = configDialog.cell
-    
-    cell.updateData({
-        title: selectedAsset.title,
-        assetId: selectedAsset.id,
-        subProcessId: selectedAsset.jobType === 'Sub-Process' ? selectedAsset.id : undefined
-    }, { name:'add-asset' }) // HISTORY EVENT LISTENER WILL SAVE NEW GRAPH NODES TO DB IF 'add-asset' is triggered
-
-    try {
-      const options = {
-        method: 'POST',
-        headers: authHeader(),
-        body: JSON.stringify({ assetId: selectedAsset.id, dataflowId })
+        // TODO NEEDS TO CREATE RELATIONSHOP! some methods on backend throwing errors  
+        // const jobtypes = ['Job','Modeling','Scoring','ETL','Query Build','Data Profile'];
+  
+        // if (configDialog.type === "Job" && jobtypes.includes(newAsset.jobType)){
+        //   // CREATE JOB FILE RELATIONSHIP
+        //   const options={
+        //     method: 'POST',
+        //     headers: authHeader(),
+        //     body: JSON.stringify({
+        //       currentlyEditingId: configDialog.id,
+        //       application_id: applicationId,
+        //       jobId: newAsset.id,
+        //       mousePosition: "", //  !! we dont track that
+        //       dataflowId
+        //     })
+        //   }
+        //   const response = await fetch('/api/job/createFileRelation',options);
+        //   if (!response.ok) handleError(response);
+        //   console.log(`Saved file relationship...`);
+        //   //refresh
+        // }
+      } catch (error) {
+        console.log(error);
+        message.error("Could not download graph nodes");
       }
-
-      const response = await fetch('/api/dataflow/saveAsset', options);
-      if (!response.ok) handleError(response);
-
-      // const jobtypes = ['Job','Modeling','Scoring','ETL','Query Build','Data Profile'];
-      // if (configDialog.type === "Job" && jobtypes.includes(selectedAsset.jobType)){
-      //   const options={
-      //     method: 'POST',
-      //     headers: authHeader(),
-      //     body: JSON.stringify({
-      //       currentlyEditingId: configDialog.id,
-      //       application_id: applicationId,
-      //       jobId: selectedAsset.id,
-      //       mousePosition: "", //  !! we dont track that
-      //       dataflowId
-      //     })
-      //   }
-      //   const response = await fetch('/api/job/createFileRelation',options);
-      //   if (!response.ok) handleError(response);
-      //   console.log(`Saved file relationship...`);
-      //   //refresh
-      // }
-    } catch (error) {
-      console.log(error);
-      message.error('Could not download graph nodes');
     }
-
-    setConfigDialog({...defaultState})
-  }
-
-  const handleClose = (record) =>{
-    if (record) {
-      onAssetAdded(record)
-    } else {
-      setConfigDialog({...defaultState})
+  
+    setConfigDialog({ ...defaultState }); // RESETS LOCAL STATE AND CLOSES DIALOG
+  };
+  
+  const updateAsset = (asset) =>{
+    if (asset){
+      const cell = configDialog.cell
+      /* updating cell will cause a POST request to '/api/dataflowgraph/save with latest nodes and edges*/
+      cell.updateData({
+        title: asset.title,
+        //add icons or statuses
+      }, { name: 'update-asset' })
     }
+    setConfigDialog({...defaultState}) // RESETS LOCAL STATE AND CLOSES DIALOG
   }
 
   return (
@@ -272,8 +297,9 @@ const dispatch = useDispatch();
         <div id="graph-container" ref={graphContainerRef} />
       </div>
 
-       {configDialog.openDialog && configDialog.assetId ?
+      {configDialog.openDialog && configDialog.assetId ?
         <AssetDetailsDialog 
+          show={configDialog.openDialog}
           selectedJobType={ configDialog.type }
           selectedAsset={{ id: configDialog.assetId }} 
           selectedDataflow={{ id: dataflowId }}
@@ -281,21 +307,22 @@ const dispatch = useDispatch();
           selectedNodeTitle={configDialog.title}
           nodes={configDialog.nodes}
           edges={configDialog.edges}
-          handleClose={handleClose}
-          onAssetSaved={()=> console.log(`saved`)}
+          onClose={updateAsset}
+          viewMode={true} // ?
+          displayingInModal={true} // ?
         />
-        : null } 
+      : null } 
 
-        {configDialog.openDialog && !configDialog.assetId ?
-          <ExistingAssetListDialog
-            assetType={configDialog.type}
-            currentlyEditingNodeId={configDialog.id}  
-            show={configDialog.openDialog}
-            handleClose={handleClose}
-            dataflowId={dataflowId}
-            applicationId={applicationId}
-          /> 
-         : null}  
+      {configDialog.openDialog && !configDialog.assetId ?
+        <ExistingAssetListDialog
+          assetType={configDialog.type}
+          currentlyEditingNodeId={configDialog.id}  
+          show={configDialog.openDialog}
+          onClose={saveNewAsset}
+          dataflowId={dataflowId}
+          applicationId={applicationId}
+        /> 
+      : null}  
 
       {/* {graphState.showSubProcessDetails ?         
           <SubProcessDialog
