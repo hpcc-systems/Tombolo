@@ -310,8 +310,8 @@ class FileDetails extends PureComponent {
     try {
       const values = await this.formRef.current.validateFields();
       let saveResponse = await _self.saveFileDetails();
-      if(this.props.onAssetSaved) {
-        this.props.onAssetSaved(saveResponse);
+      if(this.props.onClose) {
+        this.props.onClose(saveResponse);
       }
       // setTimeout(() => {
         _self.setState({
@@ -1801,12 +1801,15 @@ export class BooleanCellRenderer extends Component {
   }
 }
 
-function mapStateToProps(state) {
-  const { selectedAsset, newAsset = {}, clusterId } = state.assetReducer;
+function mapStateToProps(state, ownProps) {
+  let { selectedAsset, newAsset = {}, clusterId } = state.assetReducer;
   const { user } = state.authenticationReducer;
   const { application, clusters, consumers } = state.applicationReducer;
 
   const { isNew = false, groupId = "" } = newAsset;
+
+  if (ownProps.selectedAsset)  selectedAsset = ownProps.selectedAsset;
+
   return {
     user,
     selectedAsset,

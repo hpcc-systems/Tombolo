@@ -166,8 +166,8 @@ class IndexDetails extends PureComponent {
     });
 
     let saveResponse = await this.saveIndexDetails();
-    if(this.props.onAssetSaved) {
-      this.props.onAssetSaved(saveResponse);
+    if(this.props.onClose) {
+      this.props.onClose(saveResponse);
     }
     
 
@@ -763,11 +763,14 @@ class IndexDetails extends PureComponent {
   }
 }
 
-function mapStateToProps(state) {
-    const { selectedAsset, newAsset={}, clusterId } = state.assetReducer;
+function mapStateToProps(state, ownProps) {
+    let { selectedAsset, newAsset={}, clusterId } = state.assetReducer;
     const { user } = state.authenticationReducer;
     const { application, clusters} = state.applicationReducer;
     const {isNew=false, groupId='' } = newAsset;
+
+    if (ownProps.selectedAsset)  selectedAsset = ownProps.selectedAsset;
+    
     return {
       user,
       selectedAsset,

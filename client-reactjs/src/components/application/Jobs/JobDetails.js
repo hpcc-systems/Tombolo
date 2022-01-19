@@ -646,14 +646,14 @@ class JobDetails extends Component {
   }
 
   handleOk = async (values) => {
-  this.formRef.current.validateFields().then( response => {
+  this.formRef.current.validateFields().then( async response => {
      this.setState({
         confirmLoading: true,
       });
       
-      let saveResponse =  this.saveJobDetails();
-      if(this.props.onAssetSaved) {
-        this.props.onAssetSaved(saveResponse);
+      let saveResponse = await this.saveJobDetails();
+      if(this.props.onClose) {
+        this.props.onClose(saveResponse);
       }
         if (this.props.history) {
           this.props.history.push(
@@ -825,7 +825,7 @@ class JobDetails extends Component {
       params: this.state.job.inputParams,
       files: inputFiles.concat(outputFiles),
       mousePosition: this.props.mousePosition,
-      currentlyEditingId: this.props.currentlyEditingId,
+      currentlyEditingId: this.props.selectedNodeId,
       autoCreateFiles: false,
     };
     let groupId = this.props.groupId
@@ -2082,12 +2082,15 @@ class JobDetails extends Component {
   }
 }
 
-function mapStateToProps(state) {
-  const { selectedAsset, newAsset = {}, clusterId } = state.assetReducer;
+function mapStateToProps(state, ownProps) {
+  let { selectedAsset, newAsset = {}, clusterId } = state.assetReducer;
   const { user } = state.authenticationReducer;
   const { application, clusters } = state.applicationReducer;
   const { isNew = false, groupId = "" } = newAsset;
   const { editMode, addingNewAsset } = state.viewOnlyModeReducer;
+  
+  if (ownProps.selectedAsset)  selectedAsset = ownProps.selectedAsset;
+
   return {
     user,
     selectedAsset,
