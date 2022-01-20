@@ -102,6 +102,11 @@ const threeColformItemLayout = {
   wrapperCol: { span: 12 }
 };
 
+//Label and input in different line
+const multiLineFormItemLayout = {
+  labelCol : {span : 24},
+  wrapperCol : {span :8},
+}
 
 
-export {omitDeep, eclTypes, fetchDataDictionary, flatten, formItemLayout, threeColformItemLayout, validationRules, validationRuleFixes};
+export {omitDeep, eclTypes, fetchDataDictionary, flatten, formItemLayout, threeColformItemLayout, multiLineFormItemLayout, validationRules, validationRuleFixes};

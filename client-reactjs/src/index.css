@@ -933,3 +933,11 @@ h6 {
   border-bottom: 1px dotted lightgray !important;
   padding-bottom: 15px !important;
 }
+/* To reduce gap between label and input field */
+.MultiLineFormItem > div:first-child{
+  height: 30px;
+}
+
+label {
+  font-weight: 600
+}
