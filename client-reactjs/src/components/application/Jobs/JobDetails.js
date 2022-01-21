@@ -1,20 +1,5 @@
 import React, { Component, Fragment } from "react";
-import {
-  Modal,
-  Tabs,
-  Form,
-  Input,
-  Checkbox,
-  Button,
-  Space,
-  Select,
-  Table,
-  AutoComplete,
-  Spin,
-  message,
-  Row,
-  Col,
-} from "antd/lib";
+import { Modal,Tabs,Form,Input,Button,Space,Select,Table,Spin, message,} from "antd/lib";
 import { authHeader, handleError } from "../../common/AuthHeader.js";
 import AssociatedDataflows from "../AssociatedDataflows";
 import { hasEditPermission } from "../../common/AuthUtil.js";
@@ -42,6 +27,8 @@ import BasicsTabManul from "./BasicsTabManaul.jsx"
 const TabPane = Tabs.TabPane;
 const { Option, OptGroup } = Select;
 const { confirm } = Modal;
+const { TextArea } = Input;
+
 
 const monthMap = {
   1: "January",
@@ -314,7 +301,7 @@ class JobDetails extends Component {
               manualJobFilePath : data.metaData?.manualJobs?.pathToFile
             },
           });
-
+          
           this.formRef.current.setFieldsValue({
             name: data.name,
             title: data.title == "" ? data.name : data.title,
@@ -333,7 +320,11 @@ class JobDetails extends Component {
             sprayDropZone: data.sprayDropZone,
             sprayedFileScope: data.sprayedFileScope,
             isStoredOnGithub:data.metaData.isStoredOnGithub || false,
-            gitHubFiles: data.metaData?.gitHubFiles ||  null
+            gitHubFiles: data.metaData?.gitHubFiles ||  null,
+            notify : data.metaData?.notificationSettings?.notify,
+            notificationSuccessMessage : data.metaData?.notificationSettings?.successMessage,
+            notificationFailureMessage : data.metaData?.notificationSettings?.failureMessage,
+            notificationRecipients : data.metaData?.notificationSettings?.recipients?.join(',')
           });
           this.setClusters(this.props.clusterId);
           return data;
@@ -798,7 +789,14 @@ async sendGHCreds({ GHUsername, GHToken }){
           pathToFile : []}
             }
        }
-
+    //Combine notification related values and send as object
+    const notificationSettings = {};
+    notificationSettings.notify = formFields['notify'];
+    notificationSettings.successMessage = formFields['notificationSuccessMessage'];
+    notificationSettings.failureMessage = formFields['notificationFailureMessage'];
+    notificationSettings.recipients = formFields['notificationRecipients']?.split(',');
+    metaData.notificationSettings = notificationSettings;
+ 
     var jobDetails = {
       basic: {
         ...formFields,
@@ -809,7 +807,8 @@ async sendGHCreds({ GHUsername, GHToken }){
         cluster_id: this.state.selectedCluster,
         ecl: this.state.job.ecl,
         sprayFileName: this.state.job.sprayFileName,
-        metaData // all fields related to github is stored here 
+        metaData, // all fields related to github is stored here
+        notificationSettings // All fields related to notifications
       },
       schedule: {
         type: this.state.selectedScheduleType,
@@ -1662,19 +1661,20 @@ async sendGHCreds({ GHUsername, GHToken }){
           <Form 
             colon={ this.state.enableEdit ? true : false}
             {...formItemLayout} 
-            initialValues={{selectedFile:null}} 
+            initialValues={{selectedFile:null,notify :  'never'}} 
             labelAlign="left" 
             ref={this.formRef} 
             scrollToFirstError
             onFieldsChange={onFieldsChange}
+            labelAlign = "right"
             >
             <Tabs defaultActiveKey="1" tabBarExtraContent = {this.props.displayingInModal ? null : controls }>
 
           <TabPane tab="Basic" key="1">
-              <Form.Item label="Job Type" name="jobType" className={this.state.enableEdit ? null : "read-only-input"}>
+              <Form.Item label="Job Type" name="jobType" className={this.state.enableEdit ? null : "read-only-input"} >
               {!this.state.enableEdit ? 
                 <Input disabled={!editingAllowed}  placeholder="Job Type" value={(jobType !== '') ? jobType : "Job"} /> :
-                <Select placeholder="Job Type" value={(jobType !== '') ? jobType : "Job"} style={{ width: 190 }} onChange={this.onJobTypeChange} >
+                <Select placeholder="Job Type" value={(jobType !== '') ? jobType : "Job"} style={{ width: '50%' }} onChange={this.onJobTypeChange} >
                   {jobTypes.map(d => <Option key={d}>{d}</Option>)}
                 </Select>
                 }
@@ -1722,7 +1722,7 @@ async sendGHCreds({ GHUsername, GHToken }){
                     validateTrigger= "onBlur"
                     rules={[
                       {
-                        required: true,
+                        required: this.state.enableEdit,
                         pattern: new RegExp(/[a-zA-Z~`_'\"\.-]+$/i),
                         message: "Please enter a valid path",
                       },
@@ -1737,7 +1737,7 @@ async sendGHCreds({ GHUsername, GHToken }){
                         disabled={!editingAllowed}
                       />
                     ) : (
-                      <textarea className="read-only-textarea" />
+                      <TextArea className="read-only-textarea" disabled />
                     )}
                   </Form.Item>
                 </TabPane>
@@ -1865,6 +1865,7 @@ async sendGHCreds({ GHUsername, GHToken }){
                           {!this.state.enableEdit ? (
                             <Input
                               className="read-only-input"
+                              disabled
                               value={
                                 this.state.selectedScheduleType
                                   ? this.state.selectedScheduleType
