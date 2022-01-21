@@ -14,7 +14,7 @@ import { DeleteOutlined, EditOutlined, QuestionCircleOutlined, FolderOpenOutline
 import { store } from "../../../redux/store/Store";
 import SelectDetailsForPdfDialog from "../Assets/pdf/SelectDetailsForPdfDialog";
 import { getNestedAssets} from "../Assets/pdf/downloadPdf";
-import ReactMarkdown from "react-markdown"
+import ReactMarkdown from "react-markdown";
 
 function AssetsTable({ openGroup, handleEditGroup, refreshGroups }) {
   const [assets, setAssets] = useState([]);
@@ -48,16 +48,16 @@ function AssetsTable({ openGroup, handleEditGroup, refreshGroups }) {
   const fetchDataAndRenderTable = () => {
     if(applicationId) {
       let url =
-        keywords != ""
+        keywords !== ""
           ? "/api/groups/assetsSearch?app_id=" + applicationId + ""
           : "/api/groups/assets?app_id=" + applicationId;
       if (selectedGroup?.selectedKeys?.id) {
         url += "&group_id=" + selectedGroup.selectedKeys.id;
       }
-      if (assetTypeFilter != "") {
+      if (assetTypeFilter !== "") {
         url += "&assetTypeFilter=" + assetTypeFilter;
       }
-      if (keywords != "") {
+      if (keywords !== "") {
         url += "&keywords=" + keywords;
       }
       fetch(url, {
@@ -289,7 +289,7 @@ function AssetsTable({ openGroup, handleEditGroup, refreshGroups }) {
     }
     
   // -------------------- SORTING AND FILTERING END--------------------------//
-  
+
   const columns = [
     {
       title: "Name",
@@ -318,10 +318,16 @@ function AssetsTable({ openGroup, handleEditGroup, refreshGroups }) {
     {
       title: "Description",
       dataIndex: "description",
-      width: "25%",
-      ellipsis: true,
+      width: "23%",
+      ellipsis: {
+        showTitle: false,
+      },
       shouldCellUpdate: (record, prevRecord) => record.description !== prevRecord.description,
-      render: (text, record) =>  <span className="description-text"><ReactMarkdown children={text} /></span>
+      render: (text, record) => (
+        <Tooltip placement="topLeft" title={<div className="markdown-tooltip custom-scroll" ><ReactMarkdown children={text}/></div>}>
+         {text?.replace(/(?:__|[*#])|\[(.*?)\]\(.*?\)/gm, '')}
+        </Tooltip>
+    ),
     },
     {
       title: "Type",
@@ -336,7 +342,7 @@ function AssetsTable({ openGroup, handleEditGroup, refreshGroups }) {
     {
       title: "Created",
       dataIndex: "createdAt",
-      width: "20%",
+      width: "23%",
       sorter: (a, b) => new Date(b.createdAt) - new Date(a.createdAt),
       onFilter: (value, record) =>{
         const createdAt = new Date(record.createdAt).toLocaleDateString('en-US', Constants.DATE_FORMAT_OPTIONS);
