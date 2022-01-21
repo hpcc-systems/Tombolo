@@ -532,17 +532,6 @@ router.post('/saveJob', [
   var jobId=req.body.id, applicationId=req.body.job.basic.application_id, fieldsToUpdate={}, nodes=[], edges=[];
   
   try {
-  const metadata = req.body.job.basic.metaData;
-    if (metadata?.isStoredOnGithub){
-      try{
-         if (metadata.gitHubFiles?.gitHubUserName ) metadata.gitHubFiles.gitHubUserName = crypto.createCipher(algorithm, process.env['cluster_cred_secret']).update(metadata.gitHubFiles.gitHubUserName,'utf8','hex');
-         if (metadata.gitHubFiles?.gitHubUserAccessToken)  metadata.gitHubFiles.gitHubUserAccessToken =crypto.createCipher(algorithm, process.env['cluster_cred_secret']).update(metadata.gitHubFiles.gitHubUserAccessToken,'utf8','hex');
-       }catch(error){
-        console.log('CIPHER ERROR------------------------------------------');
-        console.dir(error, { depth: null });
-        console.log('------------------------------------------');    
-       }
-    }
 
     Job.findOne({where: {name: req.body.job.basic.name, application_id: applicationId}, attributes:['id']}).then(async (existingJob) => {
       let job = null;
@@ -912,17 +901,6 @@ router.get('/job_details', [
           }
         }
 
-        const metadata = jobData.metaData;
-        if (metadata?.isStoredOnGithub){
-            try {
-              if (metadata.gitHubFiles?.gitHubUserName) metadata.gitHubFiles.gitHubUserName = crypto.createDecipher(algorithm, process.env['cluster_cred_secret']).update(metadata.gitHubFiles.gitHubUserName,'hex','utf8');
-              if (metadata.gitHubFiles?.gitHubUserAccessToken) metadata.gitHubFiles.gitHubUserAccessToken =crypto.createDecipher(algorithm, process.env['cluster_cred_secret']).update(metadata.gitHubFiles.gitHubUserAccessToken,'hex','utf8');
-            } catch (error) {
-              console.log( 'COULD NOT DECIPHER------------------------------------------');
-              console.dir(error, { depth: null });
-              console.log('------------------------------------------');
-          }
-        }
  
         return jobData;
       } else {

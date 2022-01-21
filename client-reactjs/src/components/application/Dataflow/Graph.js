@@ -2,9 +2,7 @@ import React, { Component } from "react";
 import * as d3 from "d3";
 import '../../graph-creator/graph-creator.css';
 import $ from 'jquery';
-import { Button, Icon, Drawer, Row, Col, Descriptions, Badge, Modal, message, Spin, Tooltip, Menu, Checkbox, Dropdown} from 'antd/lib';
-import { Typography } from 'antd';
-import { withRouter } from 'react-router-dom';
+import { Button, Descriptions, Badge, Modal, message, Spin, Tooltip, Menu,  Dropdown} from 'antd/lib';
 import AssetDetailsDialog from "../AssetDetailsDialog"
 import ExistingAssetListDialog from "./ExistingAssetListDialog";
 import {updateGraph, changeVisibility} from "../../common/WorkflowUtil";
@@ -1710,6 +1708,7 @@ class Graph extends Component {
 
       {this.state.openJobDetailsDialog ?
         <AssetDetailsDialog
+          viewMode={this.props.viewMode}
           assetType="job"
           assetId={this.state.selectedJob}
           nodes={this.thisGraph.nodes}
@@ -1804,7 +1803,7 @@ function mapStateToProps(state) {
       saveResponse
   };
 }
-const connectedGraph = connect(mapStateToProps)((withRouter(Graph)));
+const connectedGraph = connect(mapStateToProps)(Graph);
 export { connectedGraph as Graph };
 
 //export default Graph;

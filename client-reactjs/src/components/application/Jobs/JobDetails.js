@@ -635,29 +635,26 @@ class JobDetails extends Component {
   onDropZoneFileSelected(option) {
     this.setState({ sprayFileName: option.value });
   }
-
-  handleOk = async (values) => {
-  this.formRef.current.validateFields().then( response => {
-     this.setState({
-        confirmLoading: true,
-      });
-      
-      let saveResponse =  this.saveJobDetails();
-      if(this.props.onAssetSaved) {
-        this.props.onAssetSaved(saveResponse);
+  
+  handleOk = async () => {
+    try {
+      await this.formRef.current.validateFields();
+      this.setState({ confirmLoading: true });
+      const saveResponse = await this.saveJobDetails();
+      this.setState({ confirmLoading: false });
+      if (this.props.onAssetSaved) this.props.onAssetSaved(saveResponse);
+      if (this.props.history) {
+        return this.props.history.push(`/${this.props.application.applicationId}/assets`);
+      } else {
+        document.querySelector('button.ant-modal-close').click();
+        this.props.dispatch(assetsActions.assetSaved(saveResponse));
       }
-        if (this.props.history) {
-          this.props.history.push(
-            "/" + this.props.application.applicationId + "/assets"
-          );
-        } else {
-          document.querySelector("button.ant-modal-close").click();
-          this.props.dispatch(assetsActions.assetSaved(saveResponse));
-        }
-  }).catch(error => {
-    return;
-  })
+    } catch (error) {
+      console.log(`handleOk error`, error);
+      if(error?.errorFields) message.error("Please check your fields for errors") 
+    }
   };
+  
 
   onAutoCreateFiles = (e) => {
     this.state.autoCreateFiles = e.target.checked;
@@ -694,49 +691,46 @@ class JobDetails extends Component {
     });
   };
 
-  saveJobDetails() {
-    let _self = this;
-     return new Promise((resolve) => {
-      fetch("/api/job/saveJob", {
-        method: "post",
+  async saveJobDetails() {
+    message.config({ maxCount: 1 });
+    try {
+      const payload = {
+        method: 'POST',
         headers: authHeader(),
-        body: JSON.stringify({
-          isNew: this.props.isNew,
-          id: this.state.job.id,
-          job: this.populateJobDetails(),
-        }),
-      })
-        .then(function (response) {
-          if (response.ok) {  
-            message.config({
-              maxCount : 1
-            })     
-            message.success("Data saved")     
-            return response.json();
-          }
-          handleError(response);
-        })
-        .then(function (data) {
-          console.log("Saved..");          
-          if(_self.props.reload) {
-            _self.props.reload();
-          }
-          resolve(data);
-        })
-        .catch((error) => {
-          console.log(error)
-          message.error(
-            "Error occured while saving the data. Please check the form data"
-          );
-        }).finally(() => {
-          this.setState({
-            confirmLoading: false,
-          });
-        })
-    });
-  }
+        body: JSON.stringify({ isNew: this.props.isNew, id: this.state.job.id, job: await this.populateJobDetails() }),
+      };
+      const response = await fetch('/api/job/saveJob', payload);
+  
+      if (!response.ok) handleError(response);
+      if (this.props.reload) this.props.reload();
+  
+      message.success('Data saved');
+      return await response.json();
+    } catch (error) {
+      console.log('saveJobDetails error', error);
+      message.error('Error occurred while saving the data. Please check the form data');
+    } finally {
+      this.setState({ confirmLoading: false });
+    }
+  };
 
-  populateJobDetails() {
+async sendGHCreds({ GHUsername, GHToken }){
+    try {
+      const payload = { GHUsername, GHToken };
+      const respond = await fetch('/api/ghcredentials', { method: "POST", headers: authHeader(), body: JSON.stringify(payload) });  
+      if (!respond.ok) throw new Error("Failed to send credentials!");
+      const result = await respond.json();
+      return result.id
+    } catch (error) {
+       console.log('-error-----------------------------------------');
+       console.dir({error}, { depth: null });
+       console.log('------------------------------------------');
+       message.error(error.message)
+    }
+  }
+  
+
+ async populateJobDetails() {
     var applicationId = this.props.application.applicationId;
     var inputFiles = this.state.job.inputFiles.map(function (element) {
       element.file_type = "input";
@@ -756,7 +750,7 @@ class JobDetails extends Component {
       return element;
     });
     console.log(this.formRef.current.getFieldsValue());
-    let formFieldsValue = this.formRef.current.getFieldsValue();
+    let formFieldsValue = this.formRef.current.getFieldsValue(true);
     if (formFieldsValue["sprayDropZone"]) {
       formFieldsValue["sprayDropZone"] = formFieldsValue["sprayDropZone"];
     }
@@ -766,25 +760,25 @@ class JobDetails extends Component {
     //console.log(`gitHubFiles`, gitHubFiles)
     const metaData={}; // metadata will be stored as JSON
     metaData.isStoredOnGithub = isStoredOnGithub;
+
     if (gitHubFiles) {
+      const GHUsername = gitHubFiles.gitHubUserName;
+      const GHToken = gitHubFiles.gitHubUserAccessToken
+      let credsId = "";
+      if(GHUsername && GHToken ) {
+        credsId = await this.sendGHCreds({ GHUsername, GHToken });
+      }
+      
       metaData.gitHubFiles ={
-        providedGithubRepo:gitHubFiles.providedGithubRepo,
-        selectedGitBranch : gitHubFiles.selectedGitBranch,
-        selectedGitTag : gitHubFiles.selectedGitTag,
-        gitHubUserName:gitHubFiles.gitHubUserName,
-        gitHubUserAccessToken:gitHubFiles.gitHubUserAccessToken,
-        pathToFile:gitHubFiles.pathToFile, // we need to save this field to recreate view in cascader.
-        selectedFile:{
-          projectOwner: gitHubFiles.selectedFile.projectOwner,
-          projectName:gitHubFiles.selectedFile.projectName,
-          name: gitHubFiles.selectedFile.name,
-          path: gitHubFiles.selectedFile.path,
-        }
+        credsId, 
+        reposList: gitHubFiles.reposList, // List of all selected repos
+        selectedRepoId: gitHubFiles.selectedRepoId, // Id of repo with main file
+        selectedFile : gitHubFiles.selectedFile, // main file data
+        pathToFile: gitHubFiles.pathToFile,// pathToFile is essential for rebuilding cascader on selected file
       }
     } else {
       metaData.gitHubFiles = null;
     }
-
     //If Job type is Manual
     if( formFieldsValue["jobType"] === 'Manual'){
       if(formFieldsValue["manualJobFilePath"]){
@@ -1665,6 +1659,7 @@ class JobDetails extends Component {
               <Spin spinning={this.state.initialDataLoading} size="large" />
             </div>) : null}
           <Form 
+            colon={ this.state.enableEdit ? true : false}
             {...formItemLayout} 
             initialValues={{selectedFile:null,notify :  'never'}} 
             labelAlign="left" 
@@ -1676,11 +1671,10 @@ class JobDetails extends Component {
             <Tabs defaultActiveKey="1" tabBarExtraContent = {this.props.displayingInModal ? null : controls }>
 
           <TabPane tab="Basic" key="1">
-              <Form.Item label="Job Type" name="jobType"> 
-                {!this.state.enableEdit ? 
-                <Input className="read-only-input" disabled/>
-                :
-                <Select placeholder="Job Type"  style={{ width: '50%' }} onChange={this.onJobTypeChange} disabled={!editingAllowed}>
+              <Form.Item label="Job Type" name="jobType" className={this.state.enableEdit ? null : "read-only-input"} >
+              {!this.state.enableEdit ? 
+                <Input disabled={!editingAllowed}  placeholder="Job Type" value={(jobType !== '') ? jobType : "Job"} /> :
+                <Select placeholder="Job Type" value={(jobType !== '') ? jobType : "Job"} style={{ width: '50%' }} onChange={this.onJobTypeChange} >
                   {jobTypes.map(d => <Option key={d}>{d}</Option>)}
                 </Select>
                 }
@@ -2076,7 +2070,7 @@ class JobDetails extends Component {
             </Tabs>
           </Form>
         </div>
-        {this.props.displayingInModal ? controls : null}
+        {this.props.displayingInModal && !this.props.viewMode  ? controls : null}
         
       </React.Fragment>
     );

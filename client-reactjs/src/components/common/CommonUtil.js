@@ -94,7 +94,7 @@ const flatten = (obj) => {
 
 const formItemLayout = {
   labelCol: { span: 2 },
-  wrapperCol: { span: 8 }
+  wrapperCol: { span: 11 }
 }
 
 const threeColformItemLayout = {
@@ -105,7 +105,7 @@ const threeColformItemLayout = {
 //Label and input in different line
 const multiLineFormItemLayout = {
   labelCol : {span : 24},
-  wrapperCol : {span :8},
+  wrapperCol : {span :6},
 }
 
 

@@ -1,15 +1,16 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { Form, Input, Checkbox, Button, Select, AutoComplete, Spin, message, Row, Col, Space, Tooltip, Typography } from 'antd/lib';
 import { authHeader, handleError } from '../../common/AuthHeader.js';
 import ReactMarkdown from 'react-markdown';
 import { useSelector, useDispatch } from 'react-redux';
 import { assetsActions } from '../../../redux/actions/Assets';
+
 import { MarkdownEditor } from '../../common/MarkdownEditor.js';
-import { formItemLayout, threeColformItemLayout, multiLineFormItemLayout } from '../../common/CommonUtil.js';
+import { formItemLayout, multiLineFormItemLayout } from '../../common/CommonUtil.js';
+import GitHubForm from './GitHubForm/GitHubForm.js';
+import GHTable from './GitHubForm/GHTable.js';
 
-import GitHubForm from './GitHubForm.js';
-
-const { Option, OptGroup } = Select;
+const { Option } = Select;
 const { TextArea } = Input;
 const notificationOptions = [
   { label: 'Never', value: 'never' },
@@ -22,6 +23,7 @@ function BasicsTabGeneral({ enableEdit, editingAllowed, addingNewAsset, jobType,
   const assetReducer = useSelector((state) => state.assetReducer);
   const [jobSearchErrorShown, setJobSearchErrorShown] = useState(false);
   const [searchResultsLoaded, setSearchResultsLoaded] = useState(false);
+  const [disableReadOnlyFields, setDisableReadOnlyFields] = useState(enableEdit);
   const [jobSearchSuggestions, setJobSearchSuggestions] = useState([]);
   const [selectedCluster, setSelectedCluster] = useState(assetReducer.clusterId);
   const [notificationSettingsVisibility, changeNotificationSettingsVisibility] = useState(false);
@@ -77,6 +79,7 @@ function BasicsTabGeneral({ enableEdit, editingAllowed, addingNewAsset, jobType,
         handleError(response);
       })
       .then((jobInfo) => {
+        setDisableReadOnlyFields(true);
         localState.job = {
           ...localState.job,
           id: jobInfo.id,
@@ -110,10 +113,11 @@ function BasicsTabGeneral({ enableEdit, editingAllowed, addingNewAsset, jobType,
   const filesStoredOnGithub = formRef.current?.getFieldValue('isStoredOnGithub');
   const notifyJobExecutionStatus = formRef.current?.getFieldValue('notify');
   const readOnlyView = !enableEdit || !addingNewAsset;
+  const hideOnReadOnlyView = !enableEdit || !addingNewAsset;
 
   return (
     <React.Fragment>
-      <Form.Item hidden={readOnlyView} {...formItemLayout} label="Cluster" name="clusters">
+      <Form.Item hidden={hideOnReadOnlyView} {...formItemLayout} label="Cluster" name="clusters">
         <Select placeholder="Select a Cluster" disabled={!editingAllowed} onChange={onClusterSelection} style={{ width: '50%' }}>
           {clusters.map((cluster) => (
             <Option key={cluster.id}>{cluster.name}</Option>
@@ -122,7 +126,7 @@ function BasicsTabGeneral({ enableEdit, editingAllowed, addingNewAsset, jobType,
       </Form.Item>
 
       <Form.Item
-        hidden={readOnlyView}
+        hidden={hideOnReadOnlyView}
         valuePropName="checked"
         name="isStoredOnGithub"
         labelCol={{ xxl: { span: 2 } }}
@@ -131,7 +135,7 @@ function BasicsTabGeneral({ enableEdit, editingAllowed, addingNewAsset, jobType,
         <Checkbox className={!enableEdit && 'read-only-input'} />
       </Form.Item>
 
-      <Form.Item hidden={readOnlyView || filesStoredOnGithub || jobType === 'Spray'} label="Job" name="querySearchValue">
+      <Form.Item hidden={hideOnReadOnlyView || filesStoredOnGithub || jobType === 'Spray'} label="Job" name="querySearchValue">
         <Row gutter={[8, 0]}>
           <Col span={19}>
             <AutoComplete
@@ -161,16 +165,16 @@ function BasicsTabGeneral({ enableEdit, editingAllowed, addingNewAsset, jobType,
         </Row>
       </Form.Item>
 
-      {filesStoredOnGithub && <GitHubForm enableEdit={enableEdit} form={formRef} />}
+      {filesStoredOnGithub ? <GitHubForm enableEdit={enableEdit} form={formRef} /> : null}
 
       <Form.Item
-        disabled
-        label="Name"
         name="name"
+        label="Name"
         validateTrigger="onBlur"
-        rules={[{ required: enableEdit, message: 'Please enter a Name!', pattern: new RegExp(/^[a-zA-Z0-9: ._-]*$/) }]}
+        rules={[{ required: enableEdit ? true : false, message: 'Please enter the name', pattern: new RegExp(/^[a-zA-Z0-9: ._-]*$/) }]}
+        className={enableEdit ? null : 'read-only-input'}
       >
-        <Input id="job_name" onChange={!enableEdit} placeholder="Name" disabled={!enableEdit} className={!enableEdit ? 'read-only-input' : null} />
+        <Input id="job_name" onChange={onChange} placeholder={enableEdit ? 'Name' : 'Name is not provided'} disabled={!editingAllowed || disableReadOnlyFields} />
       </Form.Item>
 
       {enableEdit ? (
@@ -263,109 +267,89 @@ function BasicsTabGeneral({ enableEdit, editingAllowed, addingNewAsset, jobType,
       ) : null}
 
       <Form.Item
-        label="Title"
         name="title"
+        label="Title"
         validateTrigger="onBlur"
+        className={enableEdit ? null : 'read-only-input'}
         rules={[
-          { required: enableEdit, message: 'Please enter a title!' },
-          {
-            pattern: new RegExp(/^[ a-zA-Z0-9:._-]*$/),
-            message: 'Please enter a valid Title. Title can have  a-zA-Z0-9:._- and space',
-          },
+          { required: enableEdit ? true : false, message: 'Please enter a title!' },
+          { pattern: new RegExp(/^[ a-zA-Z0-9:._-]*$/), message: 'Please enter a valid Title. Title can have  a-zA-Z0-9:._- and space' },
         ]}
       >
-        <Input id="job_title" onChange={onChange} placeholder="Title" disabled={!editingAllowed} className={enableEdit ? null : 'read-only-input'} />
+        <Input id="job_title" onChange={onChange} placeholder={enableEdit ? 'Title' : 'Title is not provided'} disabled={!editingAllowed} />
       </Form.Item>
 
-      <Form.Item label="Description" name="description">
-        {enableEdit ? (
-          <MarkdownEditor name="description" id="job_desc" onChange={onChange} targetDomId="jobDescr" value={localState.description} disabled={!editingAllowed} />
-        ) : (
-          <div className="read-only-markdown">
-            <ReactMarkdown children={localState.job.description} />
-          </div>
-        )}
-      </Form.Item>
-      {jobType != 'Data Profile' && jobType != 'Spray' ? (
+      {jobType !== 'Data Profile' && jobType !== 'Spray' ? (
         <Form.Item
           hidden={filesStoredOnGithub}
-          label="Git Repo"
           name="gitRepo"
+          label="Git Repo"
           validateTrigger="onBlur"
-          rules={[
-            {
-              type: 'url',
-              message: 'Please enter a valid url',
-            },
-          ]}
+          rules={[{ type: 'url', message: 'Please enter a valid url' }]}
+          className={enableEdit ? null : 'read-only-input'}
         >
-          {enableEdit ? (
-            <Input id="job_gitRepo" onChange={onChange} placeholder="Git Repo" value={localState.gitRepo} disabled={!editingAllowed} />
-          ) : (
-            <TextArea className="read-only-textarea" />
-          )}
+          <Input id="job_gitRepo" onChange={onChange} placeholder={enableEdit ? 'Git Repo' : 'Git Repo is not provided'} value={localState.gitRepo} disabled={!editingAllowed} />
         </Form.Item>
       ) : null}
-      {jobType != 'Spray' ? (
+
+      {jobType !== 'Spray' ? (
         <React.Fragment>
           <Form.Item
-            label="Entry BWR"
-            validateTrigger="onBlur"
             name="entryBWR"
-            rules={[
-              {
-                pattern: new RegExp(/^[a-zA-Z0-9:$._-]*$/),
-                message: 'Please enter a valid BWR',
-              },
-            ]}
+            label="Entry BWR"
+            className={enableEdit ? null : 'read-only-input'}
+            validateTrigger="onBlur"
+            rules={[{ pattern: new RegExp(/^[a-zA-Z0-9:$._-]*$/), message: 'Please enter a valid BWR' }]}
           >
+            <Input
+              id="job_entryBWR"
+              onChange={onChange}
+              placeholder={enableEdit ? 'Entry BWR' : 'Entry BWR is not provided'}
+              value={localState.entryBWR}
+              disabled={!editingAllowed}
+            />
+          </Form.Item>
+
+          <Form.Item
+            name="author"
+            label="Author"
+            validateTrigger="onBlur"
+            className={enableEdit ? null : 'read-only-input'}
+            rules={[{ pattern: new RegExp(/^[a-zA-Z0-9: $._-]*$/), message: 'Please enter a valid author' }]}
+          >
+            <Input id="job_author" onChange={onChange} placeholder={enableEdit ? 'Author' : 'Author is not provided'} value={localState.author} disabled={!editingAllowed} />
+          </Form.Item>
+
+          <Form.Item
+            name="contact"
+            label="Contact Email"
+            validateTrigger="onBlur"
+            className={enableEdit ? null : 'read-only-input'}
+            rules={[{ type: 'email', message: 'Please enter a valid email address' }]}
+          >
+            <Input id="job_bkp_svc" onChange={onChange} placeholder={enableEdit ? 'Contact' : 'Contact is not provided'} value={localState.contact} disabled={!editingAllowed} />
+          </Form.Item>
+
+          <Form.Item name="description" label="Description">
             {enableEdit ? (
-              <Input id="job_entryBWR" onChange={onChange} placeholder="Entry BWR" value={localState.entryBWR} disabled={!editingAllowed} />
+              <MarkdownEditor name="description" id="job_desc" onChange={onChange} targetDomId="jobDescr" value={localState.description} disabled={!editingAllowed} />
             ) : (
-              <TextArea className="read-only-textarea" />
+              <div className="read-only-markdown custom-scroll">
+                {localState.job.description ? (
+                  <ReactMarkdown children={localState.job.description} />
+                ) : (
+                  <Typography.Text type="secondary">Description is not provided</Typography.Text>
+                )}
+              </div>
             )}
           </Form.Item>
-          <Row type="flex">
-            <Col span={12} order={1}>
-              <Form.Item
-                {...threeColformItemLayout}
-                label="Contact Email"
-                validateTrigger="onBlur"
-                name="contact"
-                rules={[
-                  {
-                    type: 'email',
-                    message: 'Please enter a valid email address',
-                  },
-                ]}
-              >
-                {enableEdit ? (
-                  <Input id="job_bkp_svc" onChange={onChange} placeholder="Contact" value={localState.contact} disabled={!editingAllowed} />
-                ) : (
-                  <TextArea className="read-only-textarea" />
-                )}
-              </Form.Item>
-            </Col>
-            <Col span={12} order={2}>
-              <Form.Item
-                label="Author:"
-                name="author"
-                validateTrigger="onBlur"
-                rules={[
-                  {
-                    pattern: new RegExp(/^[a-zA-Z0-9: $._-]*$/), // WHITESPACE IS ADDED TO PATTERN
-                    message: 'Please enter a valid author',
-                  },
-                ]}
-              >
-                {enableEdit ? (
-                  <Input id="job_author" onChange={onChange} placeholder="Author" value={localState.author} disabled={!editingAllowed} />
-                ) : (
-                  <TextArea className="read-only-textarea" />
-                )}
-              </Form.Item>
-            </Col>
-          </Row>{' '}
+
+          {/* {GitHub Repos Table will be shown in preview mode on the bottom of the form} */}
+          {enableEdit ? null : (
+            <Form.Item shouldUpdate noStyle>
+              {() => <GHTable enableEdit={enableEdit} form={formRef} />}
+            </Form.Item>
+          )}
         </React.Fragment>
       ) : null}
     </React.Fragment>
