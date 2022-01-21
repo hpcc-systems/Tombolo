@@ -40,7 +40,6 @@ export default class Stencil {
           type: asset,
           title: asset,
           name:undefined,
-          nodeId: undefined,
           assetId: undefined,
           subProcessId: undefined,
         },

@@ -123,8 +123,8 @@ const Icon = React.memo(({ data }) => {
 
 Graph.registerNode('custom-shape', {
   inherit: 'react-shape',
-  width: 60,
-  height: 60,
+  width: 50,
+  height: 50,
   ports,
   component(node) {
     const data = node.getData();

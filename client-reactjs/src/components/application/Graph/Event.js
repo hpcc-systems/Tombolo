@@ -15,6 +15,8 @@ export default class Event {
         {
           name: 'button',
           args: {
+            x: '100%',
+            y: 3,
             markup: [
               {
                 tagName: 'text',
@@ -28,9 +30,6 @@ export default class Event {
                 },
               },
             ],
-            x: '100%',
-            y: 3,
-            // offset: { x: -20, y: 10 },
             onClick({ cell }) {
               console.log('hello');
             },
@@ -57,26 +56,14 @@ export default class Event {
       edge.removeTools();
     });
 
-    graph.on('node:added', ({ node, index, options }) => { })
-    graph.on('node:removed', ({ node, index, options }) => { })
-    graph.on('node:changed', ({ node, options }) => { this.saveChanges(graph) })
+    // graph.on('node:added', ({ node, index, options }) => { })
+    // graph.on('node:removed', ({ node, index, options }) => { })
+    // graph.on('node:changed', ({ node, options }) => { })
     
-    graph.on('edge:added', ({ edge, index, options }) => { })
-    graph.on('edge:removed', ({ edge, index, options }) => { })
-    graph.on('edge:changed', ({ edge, options }) => { })
+    // graph.on('edge:added', ({ edge, index, options }) => { })
+    // graph.on('edge:removed', ({ edge, index, options }) => { })
+    // graph.on('edge:changed', ({ edge, options }) => { })
 
 
   }
-
- static saveChanges(graph){
-    const nodes = graph.getNodes();
-    const edges = graph.getEdges();
-    console.log('-nodes-----------------------------------------');
-    console.dir({nodes,edges}, { depth: null });
-    console.log('------------------------------------------');
-  }
-
-  
-
-
 }
