@@ -246,8 +246,8 @@ function BasicsTabGeneral({ enableEdit, editingAllowed, addingNewAsset, jobType,
                 () => ({
                   validator(_, value) {
                     const emails = value.split(',');
-
-                    const invalidEmails = emails.filter((email) => !/^\w+([\.-]?\w+)*@\w+([\.-]?\w+)*(\.\w{2,3})+$/.test(email.trim()));
+                    //Basic email validation
+                    const invalidEmails = emails.filter((email) => !/^\S+@\S+\.\S+$/.test(email.trim()));
                     if (invalidEmails.length < 1) {
                       return Promise.resolve();
                     }
