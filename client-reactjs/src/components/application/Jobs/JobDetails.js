@@ -644,29 +644,26 @@ class JobDetails extends Component {
   onDropZoneFileSelected(option) {
     this.setState({ sprayFileName: option.value });
   }
-
-  handleOk = async (values) => {
-  this.formRef.current.validateFields().then( response => {
-     this.setState({
-        confirmLoading: true,
-      });
-      
-      let saveResponse =  this.saveJobDetails();
-      if(this.props.onAssetSaved) {
-        this.props.onAssetSaved(saveResponse);
+  
+  handleOk = async () => {
+    try {
+      await this.formRef.current.validateFields();
+      this.setState({ confirmLoading: true });
+      const saveResponse = await this.saveJobDetails();
+      this.setState({ confirmLoading: false });
+      if (this.props.onAssetSaved) this.props.onAssetSaved(saveResponse);
+      if (this.props.history) {
+        return this.props.history.push(`/${this.props.application.applicationId}/assets`);
+      } else {
+        document.querySelector('button.ant-modal-close').click();
+        this.props.dispatch(assetsActions.assetSaved(saveResponse));
       }
-        if (this.props.history) {
-          this.props.history.push(
-            "/" + this.props.application.applicationId + "/assets"
-          );
-        } else {
-          document.querySelector("button.ant-modal-close").click();
-          this.props.dispatch(assetsActions.assetSaved(saveResponse));
-        }
-  }).catch(error => {
-    return;
-  })
+    } catch (error) {
+      console.log(`handleOk error`, error);
+      if(error?.errorFields) message.error("Please check your fields for errors") 
+    }
   };
+  
 
   onAutoCreateFiles = (e) => {
     this.state.autoCreateFiles = e.target.checked;
@@ -703,47 +700,28 @@ class JobDetails extends Component {
     });
   };
 
-  saveJobDetails() {
-    let _self = this;
-     return new Promise( async (resolve) => {
-      fetch("/api/job/saveJob", {
-        method: "post",
+  async saveJobDetails() {
+    message.config({ maxCount: 1 });
+    try {
+      const payload = {
+        method: 'POST',
         headers: authHeader(),
-        body: JSON.stringify({
-          isNew: this.props.isNew,
-          id: this.state.job.id,
-          job: await this.populateJobDetails(),
-        }),
-      })
-        .then(function (response) {
-          if (response.ok) {  
-            message.config({
-              maxCount : 1
-            })     
-            message.success("Data saved")     
-            return response.json();
-          }
-          handleError(response);
-        })
-        .then(function (data) {
-          console.log("Saved..");          
-          if(_self.props.reload) {
-            _self.props.reload();
-          }
-          resolve(data);
-        })
-        .catch((error) => {
-          console.log(error)
-          message.error(
-            "Error occurred while saving the data. Please check the form data"
-          );
-        }).finally(() => {
-          this.setState({
-            confirmLoading: false,
-          });
-        })
-    });
-  }
+        body: JSON.stringify({ isNew: this.props.isNew, id: this.state.job.id, job: await this.populateJobDetails() }),
+      };
+      const response = await fetch('/api/job/saveJob', payload);
+  
+      if (!response.ok) handleError(response);
+      if (this.props.reload) this.props.reload();
+  
+      message.success('Data saved');
+      return await response.json();
+    } catch (error) {
+      console.log('saveJobDetails error', error);
+      message.error('Error occurred while saving the data. Please check the form data');
+    } finally {
+      this.setState({ confirmLoading: false });
+    }
+  };
 
 async sendGHCreds({ GHUsername, GHToken }){
     try {
