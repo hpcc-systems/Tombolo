@@ -1,4 +1,5 @@
 const { parentPort, workerData } = require("worker_threads");
+const { v4: uuidv4 } = require('uuid');
 const assetUtil = require('../utils/assets');
 const models = require('../models');
 let Job = models.job;
@@ -10,27 +11,35 @@ if (parentPort) {
   });
 }
 
+const logToConsole = (message) => parentPort.postMessage({action:"logging", data: message});
+const dispatchAction = (action,data) =>  parentPort.postMessage({ action, data });   
+
 (async () => {
+	if(!workerData.jobExecutionGroupId){
+		workerData.jobExecutionGroupId = uuidv4();
+	}	
+		
 	try {
-		console.log("running script job: "+workerData.jobId);
+		logToConsole("running script job: "+ workerData.jobId);
 		let executionResult = await assetUtil.executeScriptJob(workerData.jobId);
-		console.log(executionResult);
-    //record workflow execution
+		logToConsole(executionResult);
+   		//record workflow execution
 		//since it is a script job, there is no easy way to identify the completion status, hence marking as completed after invoking the script job
 		//in future if script jobs can return back a proper status, this can be changed
 		workerData.status = 'completed';
-    let jobExecutionRecorded = await assetUtil.recordJobExecution(workerData, '');
+		await assetUtil.recordJobExecution(workerData, '');
 
 	} catch (err) {
-			console.log(err);
-			workerData.status = 'failed';
-			let jobExecutionRecorded = await assetUtil.recordJobExecution(workerData, '');	
-	} finally {
-		if (parentPort) {
-			console.log(`signaling done for ${workerData.jobName}`)
-			parentPort.postMessage('done');
+		logToConsole(err);
+		workerData.status = 'failed';
+		await assetUtil.recordJobExecution(workerData, '');	
+	} finally{
+		if (!workerData.isCronJob) dispatchAction("remove");   // REMOVE JOB FROM BREE IF ITS NOT CRON JOB!
+	
+		if (parentPort) {          
+			parentPort.postMessage('done');     
 		} else {
 			process.exit(0);
-		}
+		}  
 	}
 })();      

@@ -5,6 +5,7 @@ import "font-awesome/css/font-awesome.min.css";
 import { Router, Route, Switch } from "react-router-dom";
 import history from "./components/common/History";
 import { LoginPage } from "./components/login/LoginPage";
+import AzureUserHome from "./components/azureSso/AzureUserHome";
 import LoggedOut from "./components/login/LoggedOut";
 import ForgotPassword from "./components/login/ForgotPassword";
 import ResetPassword from "./components/login/ResetPassword";
@@ -22,7 +23,8 @@ import JobDetailsForm from "./components/application/Jobs/JobDetails";
 import IndexDetailsForm from "./components/application/IndexDetails";
 import QueryDetailsForm from "./components/application/QueryDetails";
 import VisualizationDetailsForm from "./components/application/VisualizationDetails";
-import AzureUserHome from "./components/azureSso/AzureUserHome"
+
+import ManualJobDetail from "./components/application/Jobs/ManualJobDetail"
 
 import Actions from "./components/application/actions/actions";
 import { AdminApplications } from "./components/admin/Applications";
@@ -34,9 +36,7 @@ import { store } from "./redux/store/Store";
 
 import { Report } from "./components/Report/Report";
 import Regulations from "./components/admin/ControlsAndRegulations";
-
 const { Content } = Layout;
-
 
 class App extends React.Component {  
   componentDidMount() {
@@ -127,6 +127,7 @@ class App extends React.Component {
                     path="/:applicationId/assets/visualizations/:visualizationId?"
                     component={VisualizationDetailsForm}
                   />
+                 
                   <PrivateRoute
                     path="/:applicationId/assets"
                     component={Assets}
@@ -173,6 +174,10 @@ class App extends React.Component {
                     path="/:applicationId/actions"
                     component={Actions}
                   />
+                  <PrivateRoute
+                    path="/:applicationId/manualJobDetails"
+                    component={ManualJobDetail}
+                  /> 
                 </Switch>
               </Content>
             </Layout>

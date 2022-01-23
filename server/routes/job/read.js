@@ -18,11 +18,19 @@ let JobExecution = models.job_execution;
 let MessageBasedJobs = models.message_based_jobs;
 const JobScheduler = require('../../job-scheduler');
 const hpccUtil = require('../../utils/hpcc-util');
+const workFlowUtil = require('../../utils/workflow-util');
 const validatorUtil = require('../../utils/validator');
 const { body, query, param, validationResult } = require('express-validator');
 const assetUtil = require('../../utils/assets');
+const crypto = require('crypto');
+const algorithm ='aes-256-ctr';
+
 const SUBMIT_JOB_FILE_NAME = 'submitJob.js';
+const SUBMIT_SPRAY_JOB_FILE_NAME = 'submitSprayJob.js'
 const SUBMIT_SCRIPT_JOB_FILE_NAME = 'submitScriptJob.js';
+const SUBMIT_MANUAL_JOB_FILE_NAME = 'submitManualJob.js'
+const SUBMIT_GITHUB_JOB_FILE_NAME = 'submitGithubJob.js'
+
 
 /**
   Updates Dataflow graph by
@@ -511,17 +519,31 @@ router.post('/saveJob', [
   body('job.basic.application_id')
     .isUUID(4).withMessage('Invalid application id'),
   body('job.basic.name')
-  .matches(/^[a-zA-Z]{1}[a-zA-Z0-9_.\-:]*$/).withMessage('Invalid name'),
+  .matches(/^[a-zA-Z]{1}[a-zA-Z0-9_. \-:]*$/).withMessage('Invalid name'),
   body('job.basic.title')
   .matches(/^[a-zA-Z]{1}[a-zA-Z0-9_. \-:]*$/).withMessage('Invalid title'),
 ], (req, res) => {
   const errors = validationResult(req).formatWith(validatorUtil.errorFormatter);
+
   if (!errors.isEmpty()) {
       return res.status(422).json({ success: false, errors: errors.array() });
   }
   console.log("[saveJob] - Get file list for app_id = " + req.body.job.basic.application_id + " isNewJob: "+req.body.isNew);
   var jobId=req.body.id, applicationId=req.body.job.basic.application_id, fieldsToUpdate={}, nodes=[], edges=[];
+  
   try {
+  const metadata = req.body.job.basic.metaData;
+    if (metadata?.isStoredOnGithub){
+      try{
+         if (metadata.gitHubFiles?.gitHubUserName ) metadata.gitHubFiles.gitHubUserName = crypto.createCipher(algorithm, process.env['cluster_cred_secret']).update(metadata.gitHubFiles.gitHubUserName,'utf8','hex');
+         if (metadata.gitHubFiles?.gitHubUserAccessToken)  metadata.gitHubFiles.gitHubUserAccessToken =crypto.createCipher(algorithm, process.env['cluster_cred_secret']).update(metadata.gitHubFiles.gitHubUserAccessToken,'utf8','hex');
+       }catch(error){
+        console.log('CIPHER ERROR------------------------------------------');
+        console.dir(error, { depth: null });
+        console.log('------------------------------------------');    
+       }
+    }
+
     Job.findOne({where: {name: req.body.job.basic.name, application_id: applicationId}, attributes:['id']}).then(async (existingJob) => {
       let job = null;
       if (!existingJob) {
@@ -547,14 +569,14 @@ router.post('/saveJob', [
         return res.status(500).json({ success: false, message: "Error occured while saving the job" });
       });
 
-      switch (req.body.job.schedule.type) {        
+      switch (req.body.job.schedule.type) { 
         case "":
           AssetDataflow.update({
             cron: null,
           }, {
             where: { assetId: jobId, dataflowId: req.body.job.basic.dataflowId }
           }).then(async (assetDataflowupdated) => {
-            await JobScheduler.removeJobFromScheduler(req.body.job.basic.name + '-' + req.body.job.basic.dataflowId + '-' + req.body.id);
+             await JobScheduler.removeJobFromScheduler(req.body.job.basic.name + '-' + req.body.job.basic.dataflowId + '-' + req.body.id);
           })
           await DependentJobs.destroy({
             where: {
@@ -583,7 +605,7 @@ router.post('/saveJob', [
           }, {
             where: { assetId: jobId, dataflowId: req.body.job.basic.dataflowId }
           }).then(async (assetDataflowupdated) => {
-            await JobScheduler.removeJobFromScheduler(req.body.job.basic.name + '-' + req.body.job.basic.dataflowId + '-' + jobId);
+             await JobScheduler.removeJobFromScheduler(req.body.job.basic.name + '-' + req.body.job.basic.dataflowId + '-' + req.body.id);
           })
           await MessageBasedJobs.destroy({
             where: {
@@ -637,20 +659,51 @@ router.post('/saveJob', [
                 }
               });
 
+              const fileName = () =>{
+                switch (req.body.job.basic.jobType){
+                  case 'Script':
+                    return SUBMIT_SCRIPT_JOB_FILE_NAME;
+                  case 'Manual' :
+                    return SUBMIT_MANUAL_JOB_FILE_NAME;
+                  default : {
+                    if (req.body.job.basic?.metaData.isStoredOnGithub){
+                      return SUBMIT_GITHUB_JOB_FILE_NAME
+                    }else{
+                      return SUBMIT_JOB_FILE_NAME
+                    }
+                  }
+                }
+              }
+              
               //remove existing job with same name
               try {
-                await JobScheduler.removeJobFromScheduler(req.body.job.basic.name + '-' + req.body.job.basic.dataflowId + '-' + jobId);
-                await JobScheduler.addJobToScheduler(
-                  req.body.job.basic.name,
-                  cronExpression,
-                  req.body.job.basic.cluster_id,
-                  req.body.job.basic.dataflowId,
-                  applicationId,
-                  jobId,
-                  req.body.job.basic.jobType == 'Script' ? SUBMIT_SCRIPT_JOB_FILE_NAME : SUBMIT_JOB_FILE_NAME,
-                  req.body.job.basic.jobType
-                )
-              } catch (err) {
+                  await JobScheduler.removeJobFromScheduler(req.body.job.basic.name + '-' + req.body.job.basic.dataflowId + '-' + jobId);
+                  
+                  const jobSettings ={	
+                    jobName: req.body.job.basic.name, 
+                    title: req.body.job.basic.title,	
+                    cron: cronExpression, 	
+                    clusterId: req.body.job.basic.cluster_id,	
+                    dataflowId: req.body.job.basic.dataflowId,	
+                    applicationId: req.body.job.basic.application_id,	
+                    jobId: jobId,	
+                    jobfileName: fileName(),	
+                    jobType: req.body.job.basic.jobType,	
+                    sprayedFileScope: job.sprayedFileScope,	
+                    sprayFileName: job.sprayFileName, 
+                    sprayDropZone: job.sprayFileName,
+                    metaData: req.body.job.basic.metaData,
+                    contact : req.body.job.basic.contact,
+                  }
+                  
+                  if(jobSettings.jobType === "Manual"){ 
+                    jobSettings.status = 'wait';
+                    jobSettings.manualJob_meta = {jobType : 'Manual', jobName: jobSettings.jobName, notifiedTo : jobSettings.contact, notifiedOn : new Date().getTime()}
+                  }
+                  
+                  JobScheduler.addJobToScheduler(jobSettings);
+         
+                } catch (err) {
                 console.log("could not remove job from scheduler"+ err)
               }
             }
@@ -684,7 +737,7 @@ router.post('/saveJob', [
             }, {
               where: { assetId: jobId, dataflowId: req.body.job.basic.dataflowId }
             }).then(async (assetDataflowupdated) => {
-              await JobScheduler.removeJobFromScheduler(req.body.job.basic.name + '-' + req.body.job.basic.dataflowId + '-' + jobId);
+                await JobScheduler.removeJobFromScheduler(req.body.job.basic.name + '-' + req.body.job.basic.dataflowId + '-' + req.body.id);
             })
 
             await DependentJobs.destroy({
@@ -789,12 +842,36 @@ router.get('/job_details', [
   try {
     Job.findOne({
       where: { "application_id": req.query.app_id, "id":req.query.job_id },
-      include: [JobFile, JobParam],
+      include: [JobFile, JobParam, JobExecution],
       attributes: { exclude: ['assetId'] },
     }).then(async function(job) {
-      if(job) {
-        var jobData = job.get({ plain: true });
-        for (jobFileIdx in jobData.jobfiles) {
+      if(job) {       
+        const isStoredOnGithub = job?.metaData?.isStoredOnGithub;
+        const jobStatus = job.job_executions?.[0]?.status;
+        const ecl = job.ecl
+        if(isStoredOnGithub && !ecl && (jobStatus === 'completed' || jobStatus === "failed" )) { 
+          const wuid = job.job_executions[0].wuid;
+          const { application_id, cluster_id, jobType,id } = job;
+ 
+          try{
+            const hpccJobInfo = await hpccUtil.getJobInfo(cluster_id, wuid, jobType);
+            // #1 create records in Files and JobFiles
+            hpccJobInfo.jobfiles.forEach( async (file) => await assetUtil.createFilesandJobfiles({file, cluster_id, application_id, id}));
+            // #2 update local job instance and save ECL to DB.
+            const jobFiles = await job.getJobfiles(); 
+            // this will update local instance only
+            job.set("jobfiles", jobFiles);
+            job.set("ecl",  hpccJobInfo.ecl);
+            await job.save()  
+          } catch (error){
+            console.log('------------------------------------------');
+            console.log(`FAILED TO UPDATE ECL FOR "${job.name}"`);
+            console.dir(error, { depth: null });
+            console.log('------------------------------------------');
+          }
+        }
+       var jobData = job.get({ plain: true });
+       for (jobFileIdx in jobData.jobfiles) {
           var jobFile = jobData.jobfiles[jobFileIdx];
           var file = await File.findOne({where:{"application_id":req.query.app_id, "id":jobFile.file_id}});
           if (file != undefined) {
@@ -834,6 +911,19 @@ router.get('/job_details', [
             };
           }
         }
+
+        const metadata = jobData.metaData;
+        if (metadata?.isStoredOnGithub){
+            try {
+              if (metadata.gitHubFiles?.gitHubUserName) metadata.gitHubFiles.gitHubUserName = crypto.createDecipher(algorithm, process.env['cluster_cred_secret']).update(metadata.gitHubFiles.gitHubUserName,'hex','utf8');
+              if (metadata.gitHubFiles?.gitHubUserAccessToken) metadata.gitHubFiles.gitHubUserAccessToken =crypto.createDecipher(algorithm, process.env['cluster_cred_secret']).update(metadata.gitHubFiles.gitHubUserAccessToken,'hex','utf8');
+            } catch (error) {
+              console.log( 'COULD NOT DECIPHER------------------------------------------');
+              console.dir(error, { depth: null });
+              console.log('------------------------------------------');
+          }
+        }
+ 
         return jobData;
       } else {
         return res.status(500).json({ success: false, message: "Job details could not be found. Please check if the job exists in Assets. " });
@@ -900,48 +990,41 @@ router.post('/executeJob', [
       return res.status(422).json({ success: false, errors: errors.array() });
   }
   try {
-    let wuid = '';
-    let job = await Job.findOne({where: {id:req.body.jobId}, attributes: {exclude: ['assetId']}, include: [JobParam]});
-    if(job.jobType == 'Spray') {
-      let sprayJobExecution = await hpccUtil.executeSprayJob(job);
-      wuid = sprayJobExecution.SprayResponse && sprayJobExecution.SprayResponse.Wuid ? sprayJobExecution.SprayResponse.Wuid : ''
-    } else if(job.jobType == 'Script') {
-      let executionResult = await assetUtil.executeScriptJob(req.body.jobId);
-    } else if(job.jobType != 'Script' && job.jobType != 'Spray') {
-      wuid = await hpccUtil.getJobWuidByName(req.body.clusterId, req.body.jobName);
-      let wuResubmitResult = await hpccUtil.resubmitWU(req.body.clusterId, wuid);
-    } 
-    //record workflow execution
-    await JobExecution.findOrCreate({
-      where: {
-        jobId: req.body.jobId,
-        applicationId: req.body.applicationId
-      },
-      defaults: {
-        jobId: req.body.jobId,
-        dataflowId: req.body.dataflowId,
-        applicationId: req.body.applicationId,
-        wuid: wuid,
-        clusterId: req.body.clusterId,
-        status: 'submitted'
-      }
-    }).then((results, created) => {
-      let jobExecutionId = results[0].id;
-      if(!created) {
-        return JobExecution.update({
-          jobId: req.body.jobId,
-          dataflowId: req.body.dataflowId,
-          applicationId: req.body.applicationId,
-          wuid: wuid,
-          status: 'submitted'
-        },
-        {where: {id: jobExecutionId}})
-      }
-    })
-    res.json({"success":true});
+    const job = await Job.findOne({where: {id:req.body.jobId}, attributes: {exclude: ['assetId']}, include: [JobParam]});
+    
+    let status;
+
+    const isSprayJob = job.jobType == 'Spray';
+    const isScriptJob = job.jobType == 'Script';
+    const isManualJob = job.jobType === 'Manual';
+    const isGitHubJob = job.metaData?.isStoredOnGithub;
+    
+    const commonWorkerData = { 
+      applicationId: req.body.applicationId,
+      dataflowId: req.body.dataflowId,
+      clusterId: req.body.clusterId,
+      jobName : req.body.jobName,
+      jobId: req.body.jobId
+    };
+      
+    if (isSprayJob) {
+      status = JobScheduler.executeJob({ jobfileName: SUBMIT_SPRAY_JOB_FILE_NAME, ...commonWorkerData, sprayedFileScope: job.sprayedFileScope, sprayFileName: job.sprayFileName, sprayDropZone: job.sprayDropZone });
+    } else if (isScriptJob) {
+      status = JobScheduler.executeJob({ jobfileName: SUBMIT_SCRIPT_JOB_FILE_NAME, ...commonWorkerData });
+    } else if (isManualJob){
+      status = JobScheduler.executeJob({ jobfileName: SUBMIT_MANUAL_JOB_FILE_NAME, ...commonWorkerData, status : 'wait', manualJob_meta : { jobType : 'Manual', jobName: job.name, notifiedTo : job.contact, notifiedOn : new Date().getTime() } });
+    } else if (isGitHubJob) {
+      status = JobScheduler.executeJob({ jobfileName: SUBMIT_GITHUB_JOB_FILE_NAME, ...commonWorkerData,  metaData : job.metaData, });
+    } else {
+      status = JobScheduler.executeJob({ jobfileName: SUBMIT_JOB_FILE_NAME, ...commonWorkerData });
+    }
+
+    if (!status.success) throw status;
+
+    res.status(200).json({"success":true});
   } catch (err) {
     console.error('err', err);
-    return res.status(500).json({ success: false, message: "Error occured while re-submiting the job" });
+    return res.status(500).json({ success: false, message: "Error occured while submiting the job" });
   }
 });
 
@@ -957,7 +1040,7 @@ router.get('/jobExecutionDetails', [
   }
   console.log("[jobExecutionDetails] - Get jobExecutionDetails for app_id = " + req.query.applicationId);
   try {
-    let query = 'select je.id, je.jobId as task, je.dataflowId, je.applicationId, je.status, je.wuid, je.wu_duration, je.clusterId, je.updatedAt, j.name from '+
+    let query = 'select je.id,  je.jobId as task, je.dataflowId, je.applicationId, je.status, je.wuid, je.wu_duration, je.clusterId, je.updatedAt, je.createdAt, je.manualJob_meta, je.jobExecutionGroupId, j.jobType, j.name from '+
             'job_execution je, job j '+
             'where je.dataflowId = (:dataflowId) and je.applicationId = (:applicationId) and j.id = je.jobId';
     let replacements = { applicationId: req.query.applicationId, dataflowId: req.query.dataflowId};
@@ -976,6 +1059,39 @@ router.get('/jobExecutionDetails', [
     return res.status(500).json({ success: false, message: "Error occured while retrieving Job Execution Details" });
   }
 });
+
+//when user responds to a manual job - Update job status and metadata on job execution table
+router.post('/manualJobResponse', [
+  body('jobExecutionId').isUUID(4).withMessage('Invalid Job Execution Id'),
+  body('newManaulJob_meta').notEmpty().withMessage('Invalid meta data')], 
+  (req, res) => {
+    const errors = validationResult(req).formatWith(validatorUtil.errorFormatter);
+    if (!errors.isEmpty()) {
+        return res.status(422).json({ success: false, errors: errors.array() });
+    }
+    JobExecution.findOne({where : {id: req.body.jobExecutionId}})
+                .then(jobExecution => {
+                  let newMeta = {...jobExecution.manualJob_meta, ...req.body.newManaulJob_meta}
+                  jobExecution.update({status : req.body.status, manualJob_meta : newMeta, })
+                            .then(async jobExecution => {
+                              //once the job execution is updated, send confirmation email
+                              await workFlowUtil.confirmationManualJobAction(jobExecution.manualJob_meta);
+                              if (jobExecution.status === 'completed') {
+                                await  JobScheduler.scheduleCheckForJobsWithSingleDependency({
+                                  dependsOnJobId : jobExecution.jobId,
+                                  dataflowId : jobExecution.dataflowId,
+                                  jobExecutionGroupId : jobExecution.jobExecutionGroupId
+                                });
+                              }
+                              }).then(res.status(200).json({success : true}))
+                            .catch(err => {
+                              res.status(501).json({success: false, message : 'Error occured while saving data'})})
+                  })
+                .catch(error => {
+                  res.status(501).json({success: false, data: error})})
+
+});
+
 
 const QueueDaemon = require('../../queue-daemon');
 

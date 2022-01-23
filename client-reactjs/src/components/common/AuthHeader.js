@@ -3,7 +3,6 @@ import { store } from "../../redux/store/Store";
 import { message } from "antd/lib";
 import { msalInstance } from "../../index";
 
-//Handle error from saver
 export function handleError(response) {
   message.config({ top: 130 });
   if (response.status == 401) {
@@ -49,28 +48,33 @@ export function authHeader(action) {
 // The refreshed/latest token  replaces the existing token by intercepting the API calls
 // Function below this one is doing the intercepting and replacing job
 export async function getFreshAzureToken() {
-  if (process.env.REACT_APP_APP_AUTH_METHOD === "azure_ad") {
-    const currentAccount = msalInstance.getActiveAccount();
+  const currentAccount = msalInstance.getActiveAccount();
+
+  //If no current account found throw error
+  if (currentAccount) {
     const silentRequest = {
-      scopes: ["User.Read"],
+      scopes: ['User.Read'],
       account: currentAccount,
       forceRefresh: false,
     };
-
-    const tokenResponse = await msalInstance
+    const freshToken = await msalInstance
       .acquireTokenSilent(silentRequest)
-      .then((response) => {
-        return response;
-      })
-      .catch((error) => {
-        console.log("Error occurred", error);
+      .catch((err) => {
+        console.log(err);
       });
+    
+    if(freshToken.idToken){
+      return 'Bearer ' + freshToken.idToken
+    }else{
+      console.log('could not get id token');
+      return '';
+    }
 
-    return {
-      Authorization: "Bearer " + tokenResponse.idToken,
-    };
+  } else {
+    return console.log('No active account');
   }
 }
+
 
 //if Azure sso is being used intercept all the fetch requests and update token for necessary routes
 const newFetch = window.fetch;
@@ -80,7 +84,7 @@ window.fetch = async function () {
     arguments[1].headers.Authorization
   ) {
     let newToken = await getFreshAzureToken();
-    arguments[1] = { headers: newToken };
+    arguments[1].headers= {Authorization : newToken};
     return newFetch.apply(this, arguments);
   } else {
     return newFetch.apply(this, arguments);

@@ -8,7 +8,6 @@ import {DataflowInstanceDetails} from "./DataflowInstanceDetails"
 import { dataflowAction } from '../../../redux/actions/Dataflow';
 import { dataflowInstancesAction } from '../../../redux/actions/DataflowInstances';
 import { Constants } from '../../common/Constants';
-import showdown from "showdown";
 import ReactMarkdown from 'react-markdown';
 
 class DataflowInstances extends Component {

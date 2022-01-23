@@ -1,15 +1,15 @@
 const express = require('express');
 const router = express.Router();
 const userService = require('./userservice');
+var models  = require('../../models');
+let User = models.user;
+
 const { body, query, check, validationResult } = require('express-validator');
 const errorFormatter = ({ location, msg, param, value, nestedErrors }) => {
   return `${msg}`;
 };
 const jwt = require('jsonwebtoken');
 const { JsonWebTokenError } = require('jsonwebtoken');
-let models = require('../../models');
-let User = models.user;
-
 // routes
 router.get('/searchuser', searchUser);
 router.post('/authenticate', authenticate);
@@ -76,7 +76,6 @@ function validateToken(req, res, next) {
       .then(user => user ? res.json(user.userWithoutHash) : res.status(401).json({ message: 'Invalid Token' }))
       .catch(err => res.status(401).json({ "message": "Invalid Token" }));
 }
-
 function GetuserListToShareApp(req, res, next) {
   userService.GetuserListToShareApp(req, res, next)
       .then(user => user ? res.json(user) : res.sendStatus(404))
@@ -172,7 +171,6 @@ router.post('/resetPassword'
   })
 })
 
-
 //Azure user login route
 router.post('/loginAzureUser', [
   body('firstName')
@@ -181,8 +179,8 @@ router.post('/loginAzureUser', [
     .matches(/^[a-zA-Z]{1}[a-zA-Z0-9_-]*$/).withMessage('Invalid Last Name'),
   body('email')
     .isEmail().withMessage('Invalid Email Address'),
-  body('type')
-  .matches(/^[a-zA-Z]{1}[a-zA-Z0-9]*$/).withMessage('Invalid account type'),
+  // body('type')
+  // .matches(/^[a-zA-Z]{1}[a-zA-Z0-9]*$/).withMessage('Invalid account type'),
   // body('role')
   // .matches(/^[a-zA-Z]{1}[a-zA-Z0-9_-]*$/).withMessage('Invalid role'),
 ], (req, res, next) => {

@@ -37,6 +37,7 @@ import { readOnlyMode, editableMode } from "../../common/readOnlyUtil";
 import BasicsTabGeneral from "./BasicsTabGeneral";
 import BasicsTabSpray from "./BasicsTabSpray";
 import BasicsTabScript from "./BasicsTabScript";
+import BasicsTabManul from "./BasicsTabManaul.jsx"
 
 const TabPane = Tabs.TabPane;
 const { Option, OptGroup } = Select;
@@ -126,6 +127,7 @@ class JobDetails extends Component {
       "Data Profile",
       "ETL",
       "Job",
+      "Manual",
       "Modeling",
       "Query Build",
       "Scoring",
@@ -170,43 +172,29 @@ class JobDetails extends Component {
       sprayFileName: "",
       sprayedFileScope: "",
       selectedDropZoneName: {},
-    },
+      manualJobFilePath : []
+      },  //file path to show in cascader 
     enableEdit: false,
     editing: false,
     dataAltered: false,
-    errors: false
+    errors: false,
+    isNew : this.props.isNew,
   };
 
   componentDidMount() {
-    //this.props.onRef(this);
+        //this.props.onRef(this);
     if (this.props.application && this.props.application.applicationId) {
-      this.getJobDetails();
-      this.setClusters(this.props.clusterId);
-      if (this.props.selectedDataflow) {
-        this.getFiles();
-      }
+        this.getJobDetails();
+        this.setClusters(this.props.clusterId);
+        if (this.props.selectedDataflow) {
+          this.getFiles();
+        }
     }
     if (this.props.scheduleType === "Predecessor") {
       this.handleScheduleTypeSelect("Predecessor");
     }
-
     //Getting global state
-    const { viewOnlyModeReducer } = store.getState();
-    if (viewOnlyModeReducer.addingNewAsset) {
-      this.setState({
-        addingNewAsset: true,
-      });
-    }
-    if (viewOnlyModeReducer.editMode) {
-      this.setState({
-        enableEdit: viewOnlyModeReducer.editMode,
-        editing: true,
-      });
-    } else {
-      this.setState({
-        enableEdit: viewOnlyModeReducer.editMode,
-      });
-    }
+    this.handleViewOnlyMode()
   }
 
   //Unmounting phase
@@ -221,6 +209,16 @@ class JobDetails extends Component {
       payload: false,
     });
   }
+
+  handleViewOnlyMode(){
+    //Getting global state
+    this.setState({ 
+        enableEdit: this.props.editMode,
+        editing: this.props.editMode,
+        addingNewAsset: this.props.addingNewAsset 
+      });
+  }
+
   getJobDetails() {
     if (this.props.selectedAsset !== "" && !this.props.isNew) {
       this.setState({
@@ -235,7 +233,7 @@ class JobDetails extends Component {
       if (this.props.application && this.props.application.applicationId) {
         queryStringParams["app_id"] = this.props.application.applicationId;
       }
-      if (this.props.selectedDataflow && this.props.selectedDataflow.id) {
+      if (this.props.selectedDataflow) {
         queryStringParams["dataflow_id"] = this.props.selectedDataflow.id;
       }
 
@@ -275,6 +273,9 @@ class JobDetails extends Component {
             data.jobType="";
           }
 
+          console.log('<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<');
+          console.dir(data, { depth: null });
+          console.log('<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<');
           this.setState({
             ...this.state,
             initialDataLoading: false,
@@ -313,6 +314,7 @@ class JobDetails extends Component {
               description: data.description,
               sprayFileName: data.sprayFileName,
               sprayedFileScope: data.sprayedFileScope,
+              manualJobFilePath : data.metaData?.manualJobs?.pathToFile
             },
           });
 
@@ -333,6 +335,8 @@ class JobDetails extends Component {
             sprayFileName: data.sprayFileName,
             sprayDropZone: data.sprayDropZone,
             sprayedFileScope: data.sprayedFileScope,
+            isStoredOnGithub:data.metaData.isStoredOnGithub || false,
+            gitHubFiles: data.metaData?.gitHubFiles ||  null
           });
           this.setClusters(this.props.clusterId);
           return data;
@@ -343,7 +347,9 @@ class JobDetails extends Component {
             ...this.state,
             initialDataLoading: false,
           });
-        });
+        }).finally(()=>{
+          this.handleViewOnlyMode()
+      })
     }
   }
 
@@ -366,7 +372,7 @@ class JobDetails extends Component {
     if (this.props.application && this.props.application.applicationId) {
       queryStringParams["app_id"] = this.props.application.applicationId;
     }
-    if (this.props.selectedDataflow && this.props.selectedDataflow.id) {
+    if (this.props.selectedDataflow) {
       queryStringParams["dataflowId"] = this.props.selectedDataflow.id;
     }
     if (Object.keys(queryStringParams).length > 0) {
@@ -642,33 +648,27 @@ class JobDetails extends Component {
     this.setState({ sprayFileName: option.value });
   }
 
-  handleOk = async () => {
-    this.setState({
-      confirmLoading: true,
-    });
-    const values = await this.formRef.current.validateFields();
-    let saveResponse = await this.saveJobDetails();
-    //saveResponse.jobType = this.formRef.current.getFieldValue("jobType");
-    if(this.props.onAssetSaved) {
-      this.props.onAssetSaved(saveResponse);
-    }
-    // setTimeout(() => {
-      // this.setState({
-      //   visible: false,
-      //   confirmLoading: false,
-      // });
-      //this.props.onClose();
-      //this.props.onRefresh(saveResponse);
-      if (this.props.history) {
-        this.props.history.push(
-          "/" + this.props.application.applicationId + "/assets"
-        );
-        // message.success("Data Saved")
-      } else {
-        document.querySelector("button.ant-modal-close").click();
-        this.props.dispatch(assetsActions.assetSaved(saveResponse));
+  handleOk = async (values) => {
+  this.formRef.current.validateFields().then( response => {
+     this.setState({
+        confirmLoading: true,
+      });
+      
+      let saveResponse =  this.saveJobDetails();
+      if(this.props.onAssetSaved) {
+        this.props.onAssetSaved(saveResponse);
       }
-    // }, 2000);
+        if (this.props.history) {
+          this.props.history.push(
+            "/" + this.props.application.applicationId + "/assets"
+          );
+        } else {
+          document.querySelector("button.ant-modal-close").click();
+          this.props.dispatch(assetsActions.assetSaved(saveResponse));
+        }
+  }).catch(error => {
+    return;
+  })
   };
 
   onAutoCreateFiles = (e) => {
@@ -708,7 +708,7 @@ class JobDetails extends Component {
 
   saveJobDetails() {
     let _self = this;
-    return new Promise((resolve) => {
+     return new Promise((resolve) => {
       fetch("/api/job/saveJob", {
         method: "post",
         headers: authHeader(),
@@ -772,9 +772,45 @@ class JobDetails extends Component {
     if (formFieldsValue["sprayDropZone"]) {
       formFieldsValue["sprayDropZone"] = formFieldsValue["sprayDropZone"];
     }
+
+    const { gitHubFiles, isStoredOnGithub,  ...formFields} = formFieldsValue;
+    // gitHubFiles give us more fields but we will save only one that we are using into DB.
+    //console.log(`gitHubFiles`, gitHubFiles)
+    const metaData={}; // metadata will be stored as JSON
+    metaData.isStoredOnGithub = isStoredOnGithub;
+    if (gitHubFiles) {
+      metaData.gitHubFiles ={
+        providedGithubRepo:gitHubFiles.providedGithubRepo,
+        selectedGitBranch : gitHubFiles.selectedGitBranch,
+        selectedGitTag : gitHubFiles.selectedGitTag,
+        gitHubUserName:gitHubFiles.gitHubUserName,
+        gitHubUserAccessToken:gitHubFiles.gitHubUserAccessToken,
+        pathToFile:gitHubFiles.pathToFile, // we need to save this field to recreate view in cascader.
+        selectedFile:{
+          projectOwner: gitHubFiles.selectedFile.projectOwner,
+          projectName:gitHubFiles.selectedFile.projectName,
+          name: gitHubFiles.selectedFile.name,
+          path: gitHubFiles.selectedFile.path,
+        }
+      }
+    } else {
+      metaData.gitHubFiles = null;
+    }
+
+    //If Job type is Manual
+    if( formFieldsValue["jobType"] === 'Manual'){
+      if(formFieldsValue["manualJobFilePath"]){
+        metaData.manualJobs = {
+          pathToFile : formFieldsValue["manualJobFilePath"]}
+      }else{
+        metaData.manualJobs = {
+          pathToFile : []}
+            }
+       }
+
     var jobDetails = {
       basic: {
-        ...formFieldsValue,
+        ...formFields,
         application_id: applicationId,
         dataflowId: this.props.selectedDataflow
           ? this.props.selectedDataflow.id
@@ -782,6 +818,7 @@ class JobDetails extends Component {
         cluster_id: this.state.selectedCluster,
         ecl: this.state.job.ecl,
         sprayFileName: this.state.job.sprayFileName,
+        metaData // all fields related to github is stored here 
       },
       schedule: {
         type: this.state.selectedScheduleType,
@@ -1378,7 +1415,9 @@ class JobDetails extends Component {
         if (data && data.success) {
           message.success("Job has been submitted");
         }
-      });
+      }).catch(err =>{
+        console.log(err)
+      })
   };
 
   render() {
@@ -1540,7 +1579,8 @@ class JobDetails extends Component {
         </Button>
       ) : null }
 
-      {this.state.editing ? (
+
+      {this.state.dataAltered && this.state.enableEdit ? (
       <Button onClick={switchToViewOnly}>
         {" "}
         View Changes{" "}
@@ -1601,7 +1641,7 @@ class JobDetails extends Component {
       </span>
 
   </div>
-    //When input input field value is changed
+    //When input field value is changed
     const onFieldsChange = (changedFields, allFields) => {
       this.setState({dataAltered : true})
       const inputErrors = allFields.filter(item => { return item.errors.length > 0} )
@@ -1612,8 +1652,11 @@ class JobDetails extends Component {
       }
       }
 
+     const noECLAvailable = this.formRef.current?.getFieldValue("isStoredOnGithub") && !this.state.job.ecl;
+
+     //JSX
     return (
-      <React.Fragment>
+      <React.Fragment> 
         {this.props.displayingInModal || this.state.addingNewAsset ? null : (
           <div className="assetTitle">
             {" "}
@@ -1625,19 +1668,26 @@ class JobDetails extends Component {
             <div className="loader">
               <Spin spinning={this.state.initialDataLoading} size="large" />
             </div>) : null}
-          <Form {...formItemLayout} labelAlign="left" ref={this.formRef} onFieldsChange={onFieldsChange}>
-          <Tabs defaultActiveKey="1" tabBarExtraContent = {this.props.displayingInModal ? null : controls }>
+          <Form 
+            {...formItemLayout} 
+            initialValues={{selectedFile:null}} 
+            labelAlign="left" 
+            ref={this.formRef} 
+            scrollToFirstError
+            onFieldsChange={onFieldsChange}
+            >
+            <Tabs defaultActiveKey="1" tabBarExtraContent = {this.props.displayingInModal ? null : controls }>
 
           <TabPane tab="Basic" key="1">
               <Form.Item label="Job Type" name="jobType"> 
                 {!this.state.enableEdit ? 
-                <textarea className="read-only-textarea"/>
+                <input className="read-only-input"/>
                 :
                 <Select placeholder="Job Type" value={(jobType != '') ? jobType : "Job"} style={{ width: 190 }} onChange={this.onJobTypeChange} disabled={!editingAllowed}>
                   {jobTypes.map(d => <Option key={d}>{d}</Option>)}
                 </Select>
                 }
-              </Form.Item>                            
+              </Form.Item>   
               {(() =>  {
                 switch (jobType) {
                   case 'Data Profile':
@@ -1652,14 +1702,17 @@ class JobDetails extends Component {
                     return <BasicsTabScript enableEdit={this.state.enableEdit} editingAllowed={editingAllowed} onChange={this.onChange} localState={this.state} />;
                   case 'Spray':
                     return <BasicsTabSpray enableEdit={this.state.enableEdit} editingAllowed={editingAllowed} addingNewAsset={this.state.addingNewAsset} clearState={this.clearState} onChange={this.onChange} clusters={this.props.clusters} localState={this.state} formRef={this.formRef}/>;
+                  case 'Manual' :
+                    return <BasicsTabManul enableEdit={this.state.enableEdit} editingAllowed={editingAllowed} addingNewAsset={this.state.addingNewAsset} clearState={this.clearState} onChange={this.onChange} clusters={this.props.clusters} localState={this.state} formRef={this.formRef} />;
                 }
 
               })()}
             </TabPane>            
 
             {this.state.job.jobType != "Script" &&
-              this.state.job.jobType != "Spray" ? (
-                <TabPane tab="ECL" key="2">
+              this.state.job.jobType != "Spray" && 
+              this.state.job.jobType !== "Manual" ? (
+                <TabPane tab="ECL" disabled={noECLAvailable} key="2">
                   <Form.Item {...eclItemLayout} label="ECL" name="ecl" >
                     
                     <EclEditor
@@ -1670,11 +1723,12 @@ class JobDetails extends Component {
                   </Form.Item>
                 </TabPane>
               ) : this.state.job.jobType == "Script" ? (
-                <TabPane tab="Script" key="2">
+                <TabPane disabled={noECLAvailable} tab="Script" key="2">
                   <Form.Item
                     {...longFieldLayout}
                     label="Script Path"
                     name="scriptPath"
+                    validateTrigger= "onBlur"
                     rules={[
                       {
                         required: true,
@@ -1699,9 +1753,10 @@ class JobDetails extends Component {
               ) : null}
 
               {this.state.job.jobType != "Script" &&
-              this.state.job.jobType != "Spray" ? (
+              this.state.job.jobType != "Spray" &&
+              this.state.job.jobType !== "Manual"? (
                 <React.Fragment>
-                  <TabPane tab="Input Params" key="3">
+                  <TabPane disabled={noECLAvailable} tab="Input Params" key="3">
                     <EditableTable
                       columns={
                         this.state.job.jobType != "Script"
@@ -1717,7 +1772,7 @@ class JobDetails extends Component {
                     />
                   </TabPane>
 
-                  <TabPane tab="Input Files" key="4">
+                  <TabPane disabled={noECLAvailable} tab="Input Files" key="4">
                     <div>
                       {this.state.enableEdit ? (
                         <>
@@ -1761,9 +1816,12 @@ class JobDetails extends Component {
                   </TabPane>
                 </React.Fragment>
               ) : null}
+
+
               {this.state.job.jobType != "Script" &&
-              this.state.job.jobType != "Spray" ? (
-                <TabPane tab="Output Files" key="5">
+              this.state.job.jobType != "Spray" &&
+              this.state.job.jobType !== "Manual"  ? (
+                <TabPane tab="Output Files" disabled={noECLAvailable}  key="5">
                   <div>
                     {!this.state.enableEdit ? null : (
                       <>
@@ -1805,6 +1863,7 @@ class JobDetails extends Component {
                   </div>
                 </TabPane>
               ) : null}
+
               {this.props.selectedDataflow ? (
                 <TabPane tab="Schedule" key="6">
                   <div>
@@ -1855,7 +1914,9 @@ class JobDetails extends Component {
                             </Select>
                           )}
                         </Form.Item>
-                      ) : null}
+                      ) : 
+                      <div style={{textAlign: "center", paddingTop: "100px"}}>Please press <b>Edit</b> button to configure scheduling for this job</div>
+                      }
                       {this.state.selectedScheduleType === "Time" ? (
                         <Fragment>
                           <Form.Item label="Run Every">
@@ -2029,6 +2090,7 @@ function mapStateToProps(state) {
   const { user } = state.authenticationReducer;
   const { application, clusters } = state.applicationReducer;
   const { isNew = false, groupId = "" } = newAsset;
+  const { editMode, addingNewAsset } = state.viewOnlyModeReducer;
   return {
     user,
     selectedAsset,
@@ -2037,6 +2099,8 @@ function mapStateToProps(state) {
     groupId,
     clusterId,
     clusters,
+    editMode,
+    addingNewAsset
   };
 }
 

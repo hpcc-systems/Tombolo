@@ -47,13 +47,16 @@ async function verifyToken(token) {
               }
             }, function(err, response, body) {
               if (err || response.statusCode != 200) {
-                reject(err);
+                const error = err ? err : response.body;
+                reject(error)
               }
               resolve(body);
           });
         });
-    }
+  }
 }
+
+
 
 
 async function validateToken(req, res, next) {
@@ -87,7 +90,6 @@ async function validateToken(req, res, next) {
         }*/
       }
   }
-  next();
 }
 
 async function getAll() {
@@ -306,7 +308,7 @@ async function forgotPassword(req, res) {
       json: {
         "email": req.body.email,
         "clientId": process.env.AUTHSERVICE_TOMBOLO_CLIENT_ID,
-        "resetUrl": process.env.TOMBOLO_PASSWORD_RESET_URL
+        "resetUrl": `${process.env.WEB_URL}reset-password`
       }
     }, function(err, response, body) {
       if(response.body.success){

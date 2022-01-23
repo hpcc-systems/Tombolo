@@ -7,7 +7,9 @@ import { threeColformItemLayout } from "../../common/CommonUtil.js";
 function BasicsTabScript({enableEdit, editingAllowed, onChange, localState}) {
   return (    
     <React.Fragment>      
-      <Form.Item label="Name" name="name" 
+      <Form.Item label="Name" 
+      name="name" 
+      validateTrigger= "onBlur"
       rules={[{ required: true, message: 'Please enter a Name!', pattern: new RegExp(/^[a-zA-Z0-9:._-]*$/) }]}>
         <Input
           id="job_name"
@@ -17,7 +19,12 @@ function BasicsTabScript({enableEdit, editingAllowed, onChange, localState}) {
           disabled={!editingAllowed}
           className={enableEdit ? null : "read-only-input"} />
       </Form.Item>
-      <Form.Item label="Title" name="title" rules={[{ required: true, message: 'Please enter a title!' }, {
+
+      <Form.Item 
+      label="Title" 
+      name="title"
+      validateTrigger= "onBlur"
+      rules={[{ required: true, message: 'Please enter a title!' }, {
         pattern: new RegExp(/^[a-zA-Z0-9:._-]*$/),
         message: 'Please enter a valid Title',
       }]}>
@@ -28,6 +35,7 @@ function BasicsTabScript({enableEdit, editingAllowed, onChange, localState}) {
           className={enableEdit? null : "read-only-input"}
         />
       </Form.Item>
+
       <Form.Item label="Description" name="description">
       {enableEdit ?
         <MarkdownEditor
@@ -45,7 +53,12 @@ function BasicsTabScript({enableEdit, editingAllowed, onChange, localState}) {
       
       <Row type="flex">
         <Col span={12} order={1}>
-        <Form.Item {...threeColformItemLayout} label="Contact Email" name="contact" rules={[{
+        <Form.Item 
+        {...threeColformItemLayout} 
+        label="Contact Email" 
+        name="contact"
+        validateTrigger= "onBlur"
+        rules={[{
             type: 'email',
             message: 'Please enter a valid email address',
         }]}>
@@ -60,9 +73,14 @@ function BasicsTabScript({enableEdit, editingAllowed, onChange, localState}) {
             <textarea className="read-only-textarea" />
         }
         </Form.Item>
+
         </Col>
         <Col span={12} order={2}>
-        <Form.Item label="Author:" name="author" rules={[{
+        <Form.Item 
+        label="Author:" 
+        name="author" 
+        validateTrigger= "onBlur"
+        rules={[{
             pattern: new RegExp(/^[a-zA-Z0-9:$._-]*$/),
             message: 'Please enter a valid author',
         }]}>

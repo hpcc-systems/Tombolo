@@ -4,7 +4,7 @@ const { Constants } = require("./Constants");
 export function hasAdminRole(user) {
   if (process.env.REACT_APP_APP_AUTH_METHOD === "azure_ad") {
     return (
-      user.role && user.role.some((role) => role === Constants.TOMBOLO_ADMIN)
+      user.roles && user.roles.some((role) => role === Constants.TOMBOLO_ADMIN)
     );
   }
   return (
@@ -16,7 +16,7 @@ export function hasAdminRole(user) {
 export function hasEditPermission(user) {
   if (process.env.REACT_APP_APP_AUTH_METHOD === "azure_ad") {
     return (
-      user.role && user.role.some((role) => role === Constants.TOMBOLO_ADMIN || role === Constants.TOMBOLO_CREATOR)
+      user.roles && user.roles.some((role) => role === Constants.TOMBOLO_ADMIN || role === Constants.TOMBOLO_CREATOR)
     );
   }
   return (

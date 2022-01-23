@@ -111,7 +111,6 @@ function handleResponse(response) {
   return response.text().then((text) => {
     const data = text && JSON.parse(text);
     data.status = response.status;
-
     if (!response.ok) {
       const error =
         (data && data.message) || (data && data.errors) || response.statusText;
@@ -149,7 +148,6 @@ function validateToken() {
             organization: decoded.organization,
             role: decoded.role,
             permissions: decoded.role[0].name,
-            test: "Test",
           };
           localStorage.setItem("user", JSON.stringify(user));
           dispatch(success(user));
@@ -172,40 +170,12 @@ function validateToken() {
   }
 }
 
-// ## Azure login call
+// ## Azure user login
 function azureLogin(user) {
-  console.log("<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<");
-  console.log("Action disptachexd to have user logged in");
-  console.log("<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<");
-  return (dispatch) => {
-    fetch("/api/user/loginAzureUser", {
-      method: "post",
-      headers: {
-        Accept: "application/json",
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify(user),
-    })
-      .then((response) => {
-        return response.json();
-      })
-      .then((data) => {
-        user.id = data.user.id;
-        localStorage.setItem("user", JSON.stringify(user));
-        history.push("/dataflows");
-        dispatch(success(user));
-      })
-      .catch((error) => {
-        console.log(error);
-        localStorage.removeItem("user");
-        dispatch(failure(error));
-      });
-
-    function success(user) {
-      return { type: Constants.LOGIN_SUCCESS, user };
+  return dispatch => {
+      localStorage.setItem('user', JSON.stringify(user));
+      dispatch(success(user))
+      history.push("/dataflows");
     }
-    function failure(error) {
-      return { type: Constants.LOGIN_FAILURE, error };
-    }
-  };
+  function success(user) { return { type: Constants.LOGIN_SUCCESS, user } }
 }

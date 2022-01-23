@@ -1,10 +1,16 @@
 var request = require('request');
+const path = require('path');
 var requestPromise = require('request-promise');
 var models  = require('../models');
 var Cluster = models.cluster;
 let hpccJSComms = require("@hpcc-js/comms");
 const crypto = require('crypto');
 let algorithm = 'aes-256-ctr';
+
+const debug = require('debug');
+const simpleGit = require('simple-git');
+const cp = require('child_process');
+const fs = require('fs');
 
 exports.fileInfo = (fileName, clusterId) => {
 	return new Promise((resolve, reject) => {
@@ -118,10 +124,10 @@ exports.indexInfo = (clusterId, indexName) => {
   });
 }
 
-  exports.fetchDirectories = (host, port, data) => {
+  exports.fetchDirectories = (host, port, data, cluster) => {
     let formData={};
     for(let key in data){
-      formData[key] = data[key].toString()
+      formData[key] = data[key].toString();
     }
     try {
       return new Promise((resolve, reject) => {
@@ -129,6 +135,7 @@ exports.indexInfo = (clusterId, indexName) => {
             url: `${host}:${port}/FileSpray/FileList.json`,
             headers: {'content-type' : 'application/x-www-form-urlencoded'},
             formData: formData,
+            auth : this.getClusterAuth(cluster),
             resolveWithFullResponse: true
           }, function(err, response, body) {
             if (err) {
@@ -149,7 +156,7 @@ exports.indexInfo = (clusterId, indexName) => {
 
 
 exports.executeSprayJob = (job) => {
-  try {
+  // try {
     return new Promise((resolve, reject) => {
       let cluster = module.exports.getCluster(job.cluster_id).then(async function(cluster) {			
         let sprayPayload = {
@@ -184,13 +191,14 @@ exports.executeSprayJob = (job) => {
             resolve(result);							
           }
         })
-      })
+      }).catch((error) => reject('Error occured during dropzone file search'))
     })
-	} catch (err) {
-		console.log('err', err);
-		reject('Error occured during dropzone file search');
 	}
-}
+  //  catch (err) {
+	// 	console.log('err', err);
+	// 	reject('Error occured during dropzone file search');
+	// }
+// }
 
 exports.queryInfo = (clusterId, queryName) => {
   let resultObj = {basic:{}}, requestObj = [], responseObj = [];
@@ -304,7 +312,7 @@ exports.getJobInfo = (clusterId, jobWuid, jobType) => {
                 "name": result.WUInfoResponse.Workunit.Jobname,
                 "title": result.WUInfoResponse.Workunit.Jobname,
                 "description": result.WUInfoResponse.Workunit.Description,
-                "ecl": result.WUInfoResponse.Workunit.Query.Text,
+                "ecl": result.WUInfoResponse.Workunit?.Query?.Text || '',
                 "entryBWR": result.WUInfoResponse.Workunit.Jobname,
                 "wuid": result.WUInfoResponse.Workunit.Wuid,
                 "jobfiles": sortFiles(sourceFiles.concat(outputFiles))
@@ -319,7 +327,7 @@ exports.getJobInfo = (clusterId, jobWuid, jobType) => {
   });
 }
 
-exports.getJobWuidByName = (clusterId, jobName) => {
+exports.getJobWuDetails = (clusterId, jobName) => {
   return new Promise((resolve, reject) => {
     module.exports.getCluster(clusterId).then(function(cluster) {
       let clusterAuth = module.exports.getClusterAuth(cluster);
@@ -329,7 +337,7 @@ exports.getJobWuidByName = (clusterId, jobName) => {
           && response.Workunits.ECLWorkunit
           && response.Workunits.ECLWorkunit.length > 0) {
           //return the first wuid assuming that is the latest one
-          resolve(response.Workunits.ECLWorkunit[0].Wuid);
+          resolve({wuid: response.Workunits.ECLWorkunit[0].Wuid, cluster: response.Workunits.ECLWorkunit[0].Cluster});
         } else {
           resolve(null);
         }
@@ -341,24 +349,20 @@ exports.getJobWuidByName = (clusterId, jobName) => {
   })
 }
 
-exports.resubmitWU = (clusterId, wuid) => {
+exports.resubmitWU = (clusterId, wuid, wucluster) => {
   return new Promise(async (resolve, reject) => {
     try {
       let body = {
-        "WUResubmitRequest": {
-           "Wuids": {
-             "Item": [
-               wuid
-             ]
-           },
-           "BlockTillFinishTimer": 0,
-           "ResetWorkflow": true,
-           "CloneWorkunit": false
-         }
+        "WURunRequest": {
+          "Wuid": wuid,
+          "CloneWorkunit": true,
+          "Cluster": wucluster,
+          "Wait": 0
+        }
       }
       let cluster = await module.exports.getCluster(clusterId);
       request.post({
-        url: cluster.thor_host + ':' + cluster.thor_port +'/WsWorkunits/WUResubmit.json?ver_=1.77',
+        url: cluster.thor_host + ':' + cluster.thor_port +'/WsWorkunits/WURun.json?ver_=1.8',
         auth : module.exports.getClusterAuth(cluster),
         body: JSON.stringify(body),
         headers: {'content-type' : 'application/json'},
@@ -368,7 +372,7 @@ exports.resubmitWU = (clusterId, wuid) => {
           reject(err);
         } else {
           var result = JSON.parse(body);
-          console.log(result);
+          //console.log(result);
           resolve(result)
         }
       });
@@ -384,13 +388,9 @@ exports.workunitInfo = async (wuid, clusterId) => {
   let wsWorkunits = new hpccJSComms.WorkunitsService({ baseUrl: cluster.thor_host + ':' + cluster.thor_port, userID:(clusterAuth ? clusterAuth.user : ""), password:(clusterAuth ? clusterAuth.password : ""), type: "get" });
   return new Promise((resolve, reject) => {
     wsWorkunits.WUInfo({"Wuid":wuid, "IncludeExceptions":true, "IncludeSourceFiles":true, "IncludeResults":true, "IncludeTotalClusterTime": true}).then(async (wuInfo) => {
-      if(wuInfo.Workunit.State == 'completed' || wuInfo.Workunit.State == 'failed' || wuInfo.Workunit.State == 'wait' || wuInfo.Workunit.State == 'compiled') {
-        resolve(wuInfo);
-      } else {
-        setTimeout(_ => {
-          resolve(module.exports.workunitInfo(wuid, clusterId));
-        }, 2000);
-      }
+      resolve(wuInfo);
+    }).catch((err) => {
+      reject(err);
     })
   });
 }
@@ -550,7 +550,239 @@ exports.isClusterReachable = async (clusterHost, port, username, password) => {
     return objArray;
 }
 
+exports.getWorkunitsService = async (clusterId) =>{
+  const cluster = await module.exports.getCluster(clusterId);
+  const clusterAuth =  module.exports.getClusterAuth(cluster);
+
+ const connectionSettings= {
+   baseUrl: cluster.thor_host + ':' + cluster.thor_port,
+   userID: clusterAuth ? clusterAuth.user : "",
+   password: clusterAuth ? clusterAuth.password : ""
+ }
+
+ return new hpccJSComms.WorkunitsService(connectionSettings);
+}
+
+exports.createWorkUnit = async (clusterId,WUbody = {}) =>{
+   try {
+    const wuService = await module.exports.getWorkunitsService(clusterId);
+    const respond = await wuService.WUCreate(WUbody);
+    const wuid = respond.Workunit?.Wuid
+    if (!wuid) throw respond;
+    return wuid;
+  } catch (error) {
+    console.log('create workunit error------------------------------------');
+    console.dir(error, { depth: null });
+    const customError = new Error('Failed to create new Work Unit.');
+    customError.details = error; // RESPOND WITH EXCEPTIONS CAN BE FOUND HERE.
+    throw customError;
+   }
+};
+
+exports.updateWorkUnit = async (clusterId, WUupdateBody) =>{
+  try {
+    const wuService = await module.exports.getWorkunitsService(clusterId);
+    const respond = await wuService.WUUpdate(WUupdateBody);
+    if (!respond.Workunit?.Wuid) throw respond; // assume that Wuid field is always gonna be in "happy" response
+    return respond;
+  } catch (error) {
+    console.log('update workunit error------------------------------------');
+    console.dir(error, { depth: null });
+    const customError = new Error('Failed to update Work Unit.')
+    customError.details = error; // RESPOND WITH EXCEPTIONS CAN BE FOUND HERE.
+    throw customError;
+  }
+};
+
+exports.submitWU = async (clusterId, WUsubmitBody) =>{
+  try {
+    const wuService = await module.exports.getWorkunitsService(clusterId);
+    const respond = await wuService.WUSubmit(WUsubmitBody);
+    if (respond.Exceptions) throw respond;
+    return respond;
+  } catch (error) {
+    console.log('submit workunit error-----------------------------------');
+    console.dir(error, { depth: null });
+    const customError = new Error('Failed to submit Work Unit.')
+    customError.details = error; // RESPOND WITH EXCEPTIONS CAN BE FOUND HERE.
+    throw customError; 
+  }
+};
+
+exports.updateWUAction = async (clusterId,WUactionBody) =>{  
+  try {
+    const wuService = await module.exports.getWorkunitsService(clusterId);
+    const respond = await wuService.WUAction(WUactionBody);
+    const result = respond.ActionResults?.WUActionResult?.[0]?.Result
+    if (!result || result !== 'Success' ) throw respond;
+    console.dir(respond, { depth: null });
+    console.log('------------------------------------------');
+    return respond;
+  } catch (error) {
+    console.log('update workunit action error----------------------------');
+    console.dir(error, { depth: null });
+    const customError = new Error("Failed to update Work Unit action");
+    customError.details = error; // RESPOND WITH EXCEPTIONS CAN BE FOUND HERE.
+    throw customError; 
+  }
+}
+
+exports.pullFilesFromGithub = async( jobName="", clusterId, fileData ) => {
+
+  const tasks ={ repoCloned: false, gitSubmoduleUpdated: false, repoDeleted: false, archiveCreated: false, WUCreated:false, WUupdated: false, WUsubmitted: false, WUaction: null, error: null };
+  let currentClonedRepoPath;
+  let wuService;
+  let wuid;
+
+  try {
+    // initializing wuService to update hpcc.
+    wuService = await module.exports.getWorkunitsService(clusterId); 
+    //  Create empty Work Unit;
+    const createRespond = await wuService.WUCreate({}); 
+    wuid = createRespond.Workunit?.Wuid
+    if (!wuid) {
+      console.log('❌ pullFilesFromGithub: WUCreate error-----------------------------------------');
+      console.dir(createRespond, { depth: null });
+      throw new Error('Failed to update Work Unit.')
+    }
+    tasks.WUCreated = true;
+    console.log(`✔️  pullFilesFromGithub: WUCreated-  ${wuid}`);
+
+    const { selectedGitBranch, selectedGitTag, selectedFile } = fileData; 
+    const { projectOwner, projectName, name:startFileName, path:filePath } = selectedFile;
+    
+    const allClonesPath = path.join(process.cwd(),'..','gitClones');
+    currentClonedRepoPath =  path.join(allClonesPath,`${projectOwner}-${projectName}-${wuid}`);
+
+    const startFilePath =path.join(currentClonedRepoPath,filePath);
+    
+    const gitOptions= { baseDir: allClonesPath };
+    debug.enable('simple-git,simple-git:*');
+    const git = simpleGit(gitOptions);    
+    
+    let{ providedGithubRepo, gitHubUserName, gitHubUserAccessToken }= fileData;
+    if (gitHubUserName && gitHubUserAccessToken) {
+      gitHubUserName= crypto.createDecipher(algorithm, process.env['cluster_cred_secret']).update(gitHubUserName,'hex','utf8');
+      gitHubUserAccessToken= crypto.createDecipher(algorithm, process.env['cluster_cred_secret']).update(gitHubUserAccessToken,'hex','utf8');
+      providedGithubRepo = providedGithubRepo.slice(0, 8) + gitHubUserName + ':' + gitHubUserAccessToken + '@' + providedGithubRepo.slice(8);
+    }
+  
+    // #1 - Clone repo
+    console.log(`✔️  pullFilesFromGithub: CLONING STARTED-${providedGithubRepo}, branch: ${selectedGitBranch}, tag:${selectedGitTag}`);
+    await git.clone(providedGithubRepo, currentClonedRepoPath ,{'--branch': selectedGitTag ? selectedGitTag : selectedGitBranch, '--single-branch':true} );
+    tasks.repoCloned = true;
+    console.log(`✔️  pullFilesFromGithub: CLONING FINISHED-${providedGithubRepo}, branch: ${selectedGitBranch}, tag:${selectedGitTag} `);
+
+    // update submodules // TODO NOT DONE
+    try {
+      console.dir({currentClonedRepoPath: currentClonedRepoPath,relative:`${projectOwner}-${projectName}-${wuid}`}, { depth: null });
+      await git.cwd({ path: currentClonedRepoPath, root: true }).submoduleUpdate(['--init','--recursive']);
+      tasks.gitSubmoduleUpdated = true;
+      console.log(`✔️  pullFilesFromGithub: SUBMODULES UPDATED ${providedGithubRepo}, branch: ${selectedGitBranch}, tag:${selectedGitTag}`);
+    } catch (error) {
+      console.log('❌  pullFilesFromGithub: git submodule update error----------------------------------------');
+      console.dir(error, { depth: null });
+      tasks.gitSubmoduleUpdated = false;
+    }
+    // #2 - Create Archive XML File     
+    let args = ['-E', startFilePath, '-I', currentClonedRepoPath];
+    const archived = await createEclArchive(args, currentClonedRepoPath); 
+    tasks.archiveCreated =true;
+    console.log('✔️  pullFilesFromGithub: Archive Created');
+    // console.dir(archived);
+
+    // #4 - Update the Workunit with Archive XML 
+    const updateBody ={ "Wuid": wuid, "Jobname": jobName, "QueryText": archived.stdout};
+    const updateRespond = await wuService.WUUpdate(updateBody)
+    if (!updateRespond.Workunit?.Wuid) { // assume that Wuid field is always gonna be in "happy" response
+      console.log('❌  pullFilesFromGithub: WUupdate error----------------------------------------');
+      console.dir(updateRespond, { depth: null });
+      throw new Error('Failed to update Work Unit.')
+    }
+    tasks.WUupdated = true;
+    console.log(`✔️  pullFilesFromGithub: WUupdated-  ${wuid}`);
+    
+    // #5 - Submit the Workunit to HPCC 
+    const submitBody ={ "Wuid": wuid, "Cluster": 'thor' };
+    const submitRespond = await wuService.WUSubmit(submitBody)
+    if (submitRespond.Exceptions) {
+      console.log('❌  pullFilesFromGithub: WUsubmit error---------------------------------------');
+      console.dir(submitRespond, { depth: null });
+      throw new Error('Failed to submit Work Unit.')
+    } 
+    tasks.WUsubmitted = true;
+    console.log(`✔️  pullFilesFromGithub: WUsubmitted-  ${wuid}`);
+
+  } catch (error) { 
+    // Error going to have messages related to where in process error happened, it will end up in router.post('/executeJob' catch block.
+    try {
+      const WUactionBody = { "Wuids": { "Item": [wuid] }, "WUActionType": "SetToFailed" };
+      const actionRespond = await wuService.WUAction(WUactionBody);
+      const result = actionRespond.ActionResults?.WUActionResult?.[0]?.Result
+      if (!result || result !== 'Success' ) {
+        console.log('❌  pullFilesFromGithub: WUaction error-------------------------------------');
+        console.dir(actionRespond, { depth: null });
+        throw actionRespond
+      }
+      tasks.WUaction = actionRespond.ActionResults.WUActionResult;
+    } catch (error) {
+       error.message ?
+       tasks.WUaction= {message:error.message, failedToUpdate: true} :
+       tasks.WUaction= {...error, failedToUpdate: true };    
+    }
+
+    tasks.error = error;
+    console.log('❌  pullFilesFromGithub: ERROR IN MAIN CATCH------------------------------------');
+    console.dir(error, { depth: null });
+  } finally {
+    //  delete repo;
+    const isDeleted = deleteRepo(currentClonedRepoPath);
+    console.log(`✔️  pullFilesFromGithub: CLEANUP, REPO DELETED SUCCESSFULLY-  ${currentClonedRepoPath}`);
+    tasks.repoDeleted = isDeleted;
+    const summary = { wuid, ...tasks };
+    return summary;
+  }
+};
+
+const deleteRepo = (currentClonedRepoPath) => {
+  let isRepoDeleted
+  try {
+      fs.rmSync(currentClonedRepoPath, { recursive: true, maxRetries:5, force: true });
+      isRepoDeleted = true;
+    } catch (err) {
+      console.log('------------------------------------------');
+      console.log(`❌  pullFilesFromGithub: Failed to delete a repo ${currentClonedRepoPath}`)
+      console.dir(err);
+      isRepoDeleted = false;
+    } 
+    return isRepoDeleted;
+  }
+
 let sortFiles = (files) => {
   return files.sort((a, b) => (a.name > b.name) ? 1 : -1);
 }
 
+
+const createEclArchive = (args, cwd) => {
+
+  return new Promise((resolve, reject) => {
+    const child = cp.spawn('eclcc', args, { cwd: cwd });
+    child.on('error',(error)=>{
+      error.message = 'Failed to create ECL Archive';
+      reject(error)
+    })
+    let stdOut = "", stdErr = "";
+    child.stdout.on("data", (data) => {
+      stdOut += data.toString();
+    });
+    child.stderr.on("data", (data) => {
+      stdErr += data.toString();
+    });
+    child.on("close", (_code, _signal) => {
+      resolve({
+        stdout: stdOut.trim(),
+        stderr: stdErr.trim()
+      });
+    });
+  });
+};

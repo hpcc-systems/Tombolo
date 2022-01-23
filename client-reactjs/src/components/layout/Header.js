@@ -1,6 +1,6 @@
 import React, { Component } from "react";
-import {Layout, Menu, message, Input, Button, Dropdown, Modal, Alert, Form, notification} from 'antd/lib';
-import { withRouter } from 'react-router-dom';
+import {Layout, Menu, message, Tooltip, Input, Button, Dropdown, Modal, Alert, Form, notification} from 'antd/lib';
+import { NavLink, Switch, Route, withRouter } from 'react-router-dom';
 import { userActions } from '../../redux/actions/User';
 import { connect } from 'react-redux';
 import { authHeader, handleError } from "../common/AuthHeader.js"
@@ -13,8 +13,7 @@ import $ from 'jquery';
 import {Constants} from "../common/Constants"
 import {store} from "../../redux/store/Store"
 import { debounce } from "lodash";
-import logo from  "../../images/logo.png";
-import { msalInstance } from '../../index';
+import logo from  "../../images/logo.png"
 
 const { Header, Content } = Layout;
 const { Search } = Input;
@@ -71,13 +70,18 @@ class AppHeader extends Component {
     }
 
     componentDidMount(){
+      if(this.props.location.pathname.split("/").includes('manualJobDetails')){
+        return; 
+      }
+
       if(this.props.location.pathname.includes('report/')){
         const pathSnippets = this.props.location.pathname.split('/');
         this.setState({
           searchText: pathSnippets[2]
         });
       }
-      if(this.state.applications.length == 0) {
+
+      if(this.state.applications.length === 0) {
         var url="/api/app/read/appListByUserId?user_id="+this.props.user.id+'&user_name='+this.props.user.username;
         if(hasAdminRole(this.props.user)) {
           url="/api/app/read/app_list";
@@ -92,13 +96,13 @@ class AppHeader extends Component {
           handleError(response);
         })
         .then(data => {
-          let applications = data?.map(application => { return {value: application.id, display: application.title} })
+          let applications = data.map(application => { return {value: application.id, display: application.title} })
           if(applications && applications.length > 0) {
             this.setState({ applications });
             //this.handleRef();
             this.debouncedHandleRef();
             this.props.dispatch(applicationActions.getClusters());
-            this.props.dispatch(applicationActions.getConsumers());
+            this.props.dispatch(applicationActions.getConsumers())
           } else {
             this.openHelpNotification();
           }
@@ -107,6 +111,7 @@ class AppHeader extends Component {
         });
       }
     }
+
     componentDidUpdate(prevProps, prevState) {
       if(this.props.newApplication) {
         let applications = this.state.applications;
@@ -158,30 +163,22 @@ class AppHeader extends Component {
       }
       this.props.history.push(nav);
     }
-    
 
     handleLogOut = (e) => {
-      // localStorage.removeItem('user');
-      localStorage.clear();
+      localStorage.removeItem('user');
       this.setState({
           applicationId: '',
           selected: 'Select an Application'
       });
       this.props.dispatch(applicationActions.applicationSelected('', ''));
-      //reset the group hierarchy selection
+      //reset the group heiracrhy selection
       this.props.dispatch(groupsActions.groupExpanded({'id':'', 'key':'0-0'}, ['0-0']));
-      //reset cluster selections
+      //reset cluster selectiong
       this.props.dispatch(assetsActions.clusterSelected(''));
       this.props.dispatch(userActions.logout());
 
-      if(process.env.REACT_APP_APP_AUTH_METHOD === 'azure_ad'){
-        this.props.history.push('/logout');
-
-        // msalInstance.logout();
-        // return;
-      }
-
-      // message.success('You have been successfully logged out. ');
+      this.props.history.push('/login');
+      message.success('You have been successfully logged out. ');
     }
 
     handleChange(event) {
@@ -306,7 +303,7 @@ class AppHeader extends Component {
     const appNav = (applicationId != '' ? "/" + applicationId + "/dataflow" : "/dataflow");
     const userActionMenu = (
       <Menu onClick={this.handleUserActionMenuClick}>
-        {process.env.REACT_APP_APP_AUTH_METHOD !== 'azure_ad' ? <Menu.Item key="1">Change Password</Menu.Item> : null}
+        <Menu.Item key="1">Change Password</Menu.Item>
         <Menu.Item key="2">Logout</Menu.Item>
       </Menu>
     );

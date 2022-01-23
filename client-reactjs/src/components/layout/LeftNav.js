@@ -1,19 +1,11 @@
 import React, { Component } from "react";
-import {
-  Layout, Menu, Icon, Breadcrumb
-} from 'antd/lib';
-import $ from 'jquery';
-import {
-  Link,
-  NavLink,
-  withRouter,
-} from "react-router-dom";
+import { Link } from "react-router-dom";
 import { connect } from 'react-redux';
 import { hasAdminRole, hasEditPermission } from "../common/AuthUtil.js";
-import { dataflowReducer } from "../../redux/reducers/DataflowReducer.js";
+import Title from "antd/lib/typography/Title";
+import { Layout, Menu } from 'antd/lib';
 
-const { Sider, Content } = Layout;
-const { SubMenu } = Menu;
+const { Sider } = Layout;
 
 class LeftNav extends Component {
   state = {
@@ -21,19 +13,6 @@ class LeftNav extends Component {
     collapsed: true,
     selectedTopNav: this.props.selectedTopNav,
   };
-
-  
-  componentDidUpdate() {
-    $('[data-toggle="popover"]').popover({placement : 'right', trigger: 'focus',
-     title: 'Application', html:true, 
-     content:'Please select an application from the dropdown or create a new application using Applications option under Settings'});
-    var _self=this;
-    $('[data-toggle="popover"]').click(function(event) {
-      if(!_self.props.application || _self.props.application.applicationId == '') {
-        event.preventDefault();
-      }
-    })
-  }
 
   handleClick = (e) => {
     this.setState({
@@ -43,7 +22,6 @@ class LeftNav extends Component {
 
   onCollapse = (collapsed) => {
     this.setState({ collapsed });
-
   }
 
   render() {
@@ -61,110 +39,70 @@ class LeftNav extends Component {
     if(selectedTopNav == '/login')
         return false;
     return (
-      <React.Fragment>
-      <Sider style={{ background: '#343a40', height: '100vh', paddingTop:"60px"}}
-            collapsible
-            collapsed={this.state.collapsed}
-            onCollapse={this.onCollapse}
-            width={150}
-            collapsedWidth={55}
-      >
-          <nav className="d-md-block bg-dark sidebar">
-          <div className="sidebar-sticky"  >
-            <ul className="nav flex-column" >
-              {/*<li className="nav-item">
-                <NavLink to={"/"+applicationId+"/data-dictionary"} className="nav-link" data-toggle="popover" tabIndex="1"><i className="fa fa-fw fa-table"></i> <span className={this.state.collapsed ? "d-none" : ""}>Data Dictionary</span></NavLink>
-              </li>*/}
-              <li className="nav-item">
-                <NavLink to={"/"+applicationId+"/assets"} className="nav-link" data-toggle="popover" tabIndex="2">
-                  <i className="fa fa-fw fa-cubes"></i> <span className={this.state.collapsed ? "d-none" : "leftNav-link"}>Assets</span></NavLink>
-              </li>
-              {/*<li className="nav-item">
-                <NavLink to={"/"+applicationId+"/api"} className="nav-link" data-toggle="popover" tabIndex="4"><i className="fa fa-fw fa-rocket"></i> <span className={this.state.collapsed ? "d-none" : ""}>API</span></NavLink>
-              </li>
-              <li className="nav-item">
-                <NavLink to={"/"+applicationId+"/queries"} className="nav-link" data-toggle="popover" tabIndex="5"><i className="fa fa-fw fa-search"></i> <span className={this.state.collapsed ? "d-none" : ""}>Queries</span></NavLink>
-              </li>*/}
-              {/* <li className="nav-item dropdown"> */}
-                {/* <a className="nav-link dropdown-toggle" href="#"><i className="fa fa-fw fa-random"></i> <span className={this.state.collapsed ? "d-none" : "leftNav-link"}>Workflow</span></a> */}
-                  <ul className="list-unstyled bg-dark text-light submenu level-1">
-                  <li className="nav-item" >
-                    <NavLink to={this.props.dataflowId.id ?  "/"+applicationId+"/dataflow/details" : "/"+applicationId+"/dataflow"} className="nav-link" data-toggle="popover" tabIndex="3">
-                    {/* <i className="fa fa-fw fa-clock-o"></i> */}
-                    <i className="fa fa-fw fa-random"></i>
-                      <span className={this.state.collapsed ? "d-none" : "leftNav-link"}>Definitions</span>
-                    </NavLink>
-                  </li>
-                  <li className="nav-item" >
-                    <NavLink to={"/"+applicationId+"/dataflowinstances"} className="nav-link" data-toggle="popover" tabIndex="4">
-                      <i className="fa fa-fw fa-microchip"></i> <span className={this.state.collapsed ? "d-none" : "leftNav-link"}>Job Execution</span>
-                    </NavLink>
-                  </li>
-                  <li className="nav-item" >
-                    <NavLink to={"/"+applicationId+"/actions"} className="nav-link" data-toggle="popover" tabIndex="5">
-                      <i className="fa fa-fw fa-telegram"></i> <span className={this.state.collapsed ? "d-none" : "leftNav-link"}>Actions</span>
-                    </NavLink>
-                  </li>
-                </ul>
-              {/* </li>  */}
+        <Sider
+          collapsible 
+          collapsed={this.state.collapsed}
+          onCollapse={this.onCollapse} 
+          collapsedWidth={55}
+          style={{backgroundColor:'#343a40'}} 
+         >
+          <Menu theme="dark"  mode="inline" defaultSelectedKeys={['1']}  style={{backgroundColor:'#343a40', maxWidth:'100%', paddingTop:"80px"}} >
 
+              <Menu.Item key="1" icon={<i className="fa fa-fw fa-cubes"></i>}>         
+                <Link to={"/"+applicationId+"/assets"}>
+                    Assets
+                </Link>
+              </Menu.Item>
 
-              {/*<li className="nav-item" >
-                <NavLink to={"/"+applicationId+"/chart"} className="nav-link" data-toggle="popover" tabIndex="5"><i className="fa fa-fw fa-bar-chart"></i> <span className={this.state.collapsed ? "d-none" : ""}>Report</span></NavLink>
-              </li>*/}
-            </ul>
-            { canEdit ?
-            <React.Fragment>
-            <h6 className="sidebar-heading d-flex justify-content-between align-items-center px-3 mt-4 mb-1 text-muted">
-              <span className={this.state.collapsed ? "d-none" : ""}>Settings</span>
-              <a className="d-flex align-items-center text-muted" href="#">
-                <span data-feather="plus-circle"></span>
-              </a>
-            </h6>
-            <ul className="nav flex-column mb-2">
-              <li className="nav-item">
-                <NavLink to={"/admin/clusters"} className="nav-link"><i className="fa fa-fw fa-server"></i><span className={this.state.collapsed ? "d-none" : "leftNav-link"}> Clusters</span></NavLink>
-              </li>
-              <li className="nav-item">
-                <NavLink to={"/admin/consumers"} className="nav-link"><i className='fa fa-fw fa-user-circle'></i><span className={this.state.collapsed ? "d-none" : "leftNav-link"}> Collaborator</span></NavLink>
-              </li>
-            </ul>
+              <Menu.Item key="2" icon={<i className="fa fa-fw fa-random"/>}>         
+                <Link to={this.props.dataflowId.id ?  "/"+applicationId+"/dataflow/details" : "/"+applicationId+"/dataflow"}>
+                    Definitions
+                </Link>
+              </Menu.Item>
 
+              <Menu.Item key="3" icon={<i className="fa fa-fw fa-microchip"/>}>         
+                <Link to={"/"+applicationId+"/dataflowinstances"}>
+                  Job Execution
+                </Link>
+              </Menu.Item> 
 
-            </React.Fragment>
-            : null}
+              <Menu.Item key="4" icon={<i className="fa fa-fw fa-telegram"/>}>         
+                <Link to={"/"+applicationId+"/actions"}>
+                  Actions
+                </Link>
+              </Menu.Item>
 
-            { isAdmin ?
-              <React.Fragment>
-            <h6 className="sidebar-heading d-flex justify-content-between align-items-center px-3 mt-4 mb-1 text-muted">
-              <span className={this.state.collapsed ? "d-none" : ""}>Admin</span>
-              <a className="d-flex align-items-center text-muted" href="#">
-                <span data-feather="plus-circle"></span>
-              </a>
-            </h6>
+              {canEdit ? 
+                <>
+                  {this.state.collapsed ? null : <Title style={{fontSize:'24px'}} ellipsis={true} className="px-3 mt-4 mb-1 text-muted" >Settings</Title>}
+                  <Menu.Item key="5" icon={<i className="fa fa-fw fa-server"/>}>         
+                    <Link to={"/admin/clusters"}>
+                      Clusters
+                    </Link>
+                  </Menu.Item>
+                      
+                  <Menu.Item key="6" icon={<i className="fa fa-fw fa-user-circle"/>}>         
+                    <Link to={"/admin/consumers"}>
+                      Collaborator
+                    </Link>
+                  </Menu.Item>
+                </>
+                : null }
 
-            <ul className="nav flex-column mb-2">
-              {/*<li className="nav-item">
-                <NavLink to={"/admin/users"} className="nav-link"><i className="fa fa-fw fa-desktop"></i><span className={this.state.collapsed ? "d-none" : ""}> Users</span></NavLink>
-              </li>*/}
-              <li className="nav-item">
-                <NavLink to={"/admin/applications"} className="nav-link"><i className="fa fa-fw fa-desktop"></i><span className={this.state.collapsed ? "d-none" : "leftNav-link"}> Applications</span></NavLink>
-              </li>
-             
-              {/*}
-              <li className="nav-item">
-                <NavLink to={"/admin/controlsAndRegulations"} className="nav-link"><i className='fa fa-fw fa-address-card-o'></i><span className={this.state.collapsed ? "d-none" : ""}> Compliance</span></NavLink>
-              </li>*/}
-            </ul>
-            </React.Fragment>
-            : null}
-          </div>
-        </nav>
-      </Sider>
-    </React.Fragment>
+              { isAdmin ?
+                <>
+                  {this.state.collapsed ? null : <Title style={{fontSize:'24px'}} ellipsis={true} className="px-3 mt-4 mb-1 text-muted" >Admin</Title>}
+                  <Menu.Item key="7" icon={<i className="fa fa-fw fa-desktop"/>}>         
+                    <Link to={"/admin/applications"}>
+                      Applications
+                    </Link>
+                  </Menu.Item>
+                </>
+                : null } 
+          </Menu>
+        </Sider>
     );
   }
-
 }
 
 function mapStateToProps(state) {
@@ -180,7 +118,5 @@ function mapStateToProps(state) {
   };
 }
 
-const connectedLeftNav = connect(mapStateToProps)(withRouter(LeftNav));
+const connectedLeftNav = connect(mapStateToProps)(LeftNav);
 export { connectedLeftNav as LeftNav };
-
-//export default withRouter(LeftNav);

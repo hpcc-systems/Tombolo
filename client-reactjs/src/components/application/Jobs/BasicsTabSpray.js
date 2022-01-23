@@ -129,7 +129,9 @@ function BasicsTabSpray({enableEdit, editingAllowed, addingNewAsset, clearState,
         <textarea className="read-only-textarea" />
         }
       </Form.Item>
-      <Form.Item label="Name" name="name" 
+      <Form.Item label="Name" 
+      name="name" 
+      validateTrigger= "onBlur"
       rules={[{ required: true, message: 'Please enter a Name!', pattern: new RegExp(/^[a-zA-Z0-9:._-]*$/) }]}>
         <Input
           id="job_name"
@@ -139,7 +141,12 @@ function BasicsTabSpray({enableEdit, editingAllowed, addingNewAsset, clearState,
           disabled={!editingAllowed}
           className={enableEdit ? null : "read-only-input"} />
       </Form.Item>
-      <Form.Item label="Title" name="title" rules={[{ required: true, message: 'Please enter a title!' }, {
+
+      <Form.Item 
+      label="Title" 
+      name="title" 
+      validateTrigger= "onBlur"
+      rules={[{ required: true, message: 'Please enter a title!' }, {
         pattern: new RegExp(/^[a-zA-Z0-9:._-]*$/),
         message: 'Please enter a valid Title',
       }]}>
@@ -150,7 +157,10 @@ function BasicsTabSpray({enableEdit, editingAllowed, addingNewAsset, clearState,
           className={enableEdit? null : "read-only-input"}
         />
       </Form.Item>      
-      <Form.Item label="File" name="sprayFileName">
+
+      <Form.Item
+      label="File" 
+      name="sprayFileName">
         {addingNewAsset ? 
         <Row type="flex">
           <Col span={21} order={1}>

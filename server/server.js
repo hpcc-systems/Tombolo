@@ -1,8 +1,7 @@
-require('dotenv').config();
 const express = require('express');
 const rateLimit = require("express-rate-limit");
 const app = express();
-const {verifyUserToken} = require('./utils/token_service');
+const tokenService = require('./utils/token_service');
 const {verifyToken} = require("./routes/user/userservice")
 const jwt = require('jsonwebtoken');
 const {NotificationModule} = require('./routes/notifications/email-notification');
@@ -12,16 +11,9 @@ const {options} = require("./config/azureConfig")
 
 // Socket
 const server = require('http').Server(app);
-const io = require('socket.io')(server);
+const socketIo = require('socket.io')(server);
 
-const socketIo = io.use(function(socket, next){
-  const token =  socket.handshake.auth.token;
-  verifyToken(token).then(() => {
-    next();
-  })
-})
-
-exports.socketIo = socketIo;
+exports.io = socketIo;
 
 app.set('trust proxy', 1);
 const limiter = rateLimit({
@@ -40,15 +32,30 @@ app.use(limiter);
 
 const bearerStrategy = new BearerStrategy(options, (token, done) => {
   // Send user info using the second argument
+  console.log('<<<<<<<<<<<<<< checking <<<<<<<<<<<<<<<<<<<<<<<<<<<<<');
+  console.log("Done validating", token )
+    console.log("Done validating", done )
+
+  console.log('<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<');
   done(null, {}, token);
 });
 
+
+
 // This will initialize the passport object on every request
+if(process.env.APP_AUTH_METHOD==='azure_ad'){
+  console.log('<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<');
+  console.log("using az ad", )
+  console.log('<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<');
 app.use(passport.initialize());
 passport.use(bearerStrategy);
+}
+
 
 const QueueDaemon = require('./queue-daemon');
 const JobScheduler = require('./job-scheduler');
+JobScheduler.bootstrap(); // initializing Bree, starting status poller and checking for active cron jobs.
+
 const assert = require('assert');
 
 const appRead = require('./routes/app/read');
@@ -69,25 +76,24 @@ const workflows = require('./routes/workflows/router');
 const dataDictionary = require('./routes/data-dictionary/data-dictionary-service');
 const groups = require('./routes/groups/group');
 
-
-app.use('/api/app/read',verifyUserToken,   appRead);
-app.use('/api/file/read', verifyUserToken,  fileRead);
-app.use('/api/index/read', verifyUserToken,  indexRead);
-app.use('/api/hpcc/read', verifyUserToken,  hpccRead);
-app.use('/api/query', verifyUserToken,  query);
-app.use('/api/job', verifyUserToken,  job);
-app.use('/api/fileinstance', verifyUserToken,  fileInstance);
-app.use('/api/report/read', verifyUserToken,  reportRead);
-app.use('/api/consumer', verifyUserToken,  consumer);
+app.use('/api/app/read', tokenService.verifyToken, appRead);
+app.use('/api/file/read', tokenService.verifyToken, fileRead);
+app.use('/api/index/read', tokenService.verifyToken, indexRead);
+app.use('/api/hpcc/read', tokenService.verifyToken, hpccRead);
+app.use('/api/query', tokenService.verifyToken, query);
+app.use('/api/job', tokenService.verifyToken, job);
+app.use('/api/fileinstance', tokenService.verifyToken, fileInstance);
+app.use('/api/report/read', tokenService.verifyToken, reportRead);
+app.use('/api/consumer', tokenService.verifyToken, consumer);
 app.use('/api/ldap', ldap);
-app.use('/api/controlsAndRegulations', verifyUserToken,  regulations);
-app.use('/api/dataflowgraph', verifyUserToken,  dataflowGraph);
-app.use('/api/dataflow', verifyUserToken,  dataflow);
-
-app.use('/api/workflows', verifyUserToken,  workflows);
-app.use('/api/data-dictionary', verifyUserToken,  dataDictionary);
+app.use('/api/controlsAndRegulations', tokenService.verifyToken, regulations);
+app.use('/api/dataflowgraph', tokenService.verifyToken, dataflowGraph);
+app.use('/api/dataflow', tokenService.verifyToken, dataflow);
+app.use('/api/workflows', tokenService.verifyToken, workflows);
+app.use('/api/data-dictionary', tokenService.verifyToken, dataDictionary);
 app.use('/api/user', userRead);
-app.use('/api/groups', verifyUserToken,  groups);
+app.use('/api/groups', tokenService.verifyToken, groups);
 
 //process.env["NODE_TLS_REJECT_UNAUTHORIZED"] = 0;
+
 server.listen(3000, '0.0.0.0', () => console.log('Server listening on port 3000!'));

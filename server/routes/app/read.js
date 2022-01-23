@@ -38,6 +38,7 @@ const Dataflowgraph = models.dataflowgraph;
 
 router.get('/app_list', (req, res) => {
   console.log("[app/read.js] - App route called");
+
   try {
     models.application.findAll({order: [['updatedAt', 'DESC']]}).then(function(applications) {
         res.status(200).json(applications);
@@ -51,9 +52,9 @@ router.get('/app_list', (req, res) => {
     return res.status(500).json({ success: false, message: "Error occured while getting application list" });
   }
 });
-
 router.get('/appListByUserId', (req, res) => {
   console.log("[app/read.js] -  Get app list for user id ="+ req.query.user_id);
+
   try {
     models.application.findAll({
       where:{
@@ -111,19 +112,22 @@ router.get('/app', [
 });
 
 router.post('/newapp', [
-  body('user_id')
-    .optional({checkFalsy:true})
-    .matches(/^[a-zA-Z]{1}[a-zA-Z0-9_:.\-]*$/).withMessage('Invalid user_id'),
-  body('title')
-    .matches(/^[a-zA-Z]{1}[a-zA-Z0-9_:.\-]*$/).withMessage('Invalid title'),
-  body('description')
-    .optional({checkFalsy:true}),
-  body('creator')
-    .matches(/^[a-zA-Z]{1}[a-zA-Z0-9_:.\-]*$/).withMessage('Invalid creator'),
-    body('creator')
-    .matches(/^[a-zA-Z]/).withMessage('Invalid visibility'),
+  // body('user_id')
+  //   .optional({checkFalsy:true})
+  //   .matches(/^[a-zA-Z]{1}[a-zA-Z0-9_:.\-]*$/).withMessage('Invalid user_id'),
+  // body('title')
+  //   .matches(/^[a-zA-Z]{1}[a-zA-Z0-9_: .\-]*$/).withMessage('Invalid title'),
+  // body('description')
+  //   .optional({checkFalsy:true}),
+  // body('creator')
+  //   .matches(/^[a-zA-Z]{1}[a-zA-Z0-9_:.\-]*$/).withMessage('Invalid creator'),
+  //   body('creator')
+  //   .matches(/^[a-zA-Z]/).withMessage('Invalid visibility'),
 ],function (req, res) {
   const errors = validationResult(req).formatWith(validatorUtil.errorFormatter);
+  console.log('<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<');
+  console.log("NEW APP", )
+  console.log('<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<');
   if (!errors.isEmpty()) {
     return res.status(422).json({ success: false, errors: errors.array() });
   }
@@ -137,7 +141,7 @@ router.post('/newapp', [
       }).then(function(application) {
         if(req.body.user_id) {
           models.user_application.create({"user_id":req.body.user_id, "application_id":application.id}).then(function(userapp) {
-            res.json({"result":"success", "id": application.id});
+            res.json({"result":"success", "id": application.id, "title" :application.title});
           });
         }
         else {
