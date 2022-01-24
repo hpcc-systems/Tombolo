@@ -1661,7 +1661,7 @@ async sendGHCreds({ GHUsername, GHToken }){
           <Form 
             colon={ this.state.enableEdit ? true : false}
             {...formItemLayout} 
-            initialValues={{selectedFile:null,notify :  'never'}} 
+            initialValues={{selectedFile:null,notify :  'Never'}} 
             labelAlign="left" 
             ref={this.formRef} 
             scrollToFirstError

@@ -116,7 +116,7 @@ exports.notifyJobExecutionStatus = async ({ jobId, clusterId, WUstate }) => {
         } else if (job && job.metaData.notificationSettings?.notify) {
           let cluster = await Cluster.findOne({ where: { id: clusterId } });
           let notify = job.metaData.notificationSettings.notify;
-          if (notify === 'always') {
+          if (notify === 'Always') {
             await NotificationModule.notify({
               from: process.env.EMAIL_SENDER,
               to: job.metaData.notificationSettings.recipients,
@@ -124,7 +124,7 @@ exports.notifyJobExecutionStatus = async ({ jobId, clusterId, WUstate }) => {
               html: `<p> ${WUstate === 'failed' ? job.metaData.notificationSettings.failureMessage : job.metaData.notificationSettings.successMessage} </p><p>Tombolo</p>`,
             });
             logNotificationStatus(job.metaData.notificationSettings.recipients, job.name, WUstate, cluster.dataValues.name);
-          } else if (notify === 'onSuccess' && WUstate === 'completed') {
+          } else if (notify === 'Only on success' && WUstate === 'completed') {
             await NotificationModule.notify({
               from: process.env.EMAIL_SENDER,
               to: job.metaData.notificationSettings.recipients,
@@ -132,10 +132,10 @@ exports.notifyJobExecutionStatus = async ({ jobId, clusterId, WUstate }) => {
               html: `<p>  ${job.metaData.notificationSettings.successMessage} </p><p>Tombolo</p>`,
             });
             logNotificationStatus(job.metaData.notificationSettings.recipients, job.name, WUstate, cluster.dataValues.name);
-          } else if (notify === 'onFailure' && WUstate === 'failed') {
+          } else if ((notify === 'Only on failure' && WUstate === 'failed')) {
             await NotificationModule.notify({
               from: process.env.EMAIL_SENDER,
-              to: job.metaData.notificationSettings.recipients,
+              to: job.metaData.notificationSettings?.recipients || job.contact,
               subject: `${job.name} ${WUstate} on ${cluster.dataValues.name} cluster`,
               html: `<p>  ${job.metaData.notificationSettings.failureMessage} </p><p>Tombolo</p>`,
             });
