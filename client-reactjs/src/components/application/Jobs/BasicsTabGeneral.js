@@ -13,10 +13,10 @@ import GHTable from './GitHubForm/GHTable.js';
 const { Option } = Select;
 const { TextArea } = Input;
 const notificationOptions = [
-  { label: 'Never', value: 'never' },
-  { label: 'Only on success', value: 'onSuccess' },
-  { label: 'Only on failure', value: 'onFail' },
-  { label: 'On both success and failure', value: 'always' },
+  { label: 'Never', value: 'Never' },
+  { label: 'Only on success', value: 'Only on success' },
+  { label: 'Only on failure', value: 'Only on failure' },
+  { label: 'Always', value: 'Always' },
 ];
 
 function BasicsTabGeneral({ enableEdit, editingAllowed, addingNewAsset, jobType, clearState, onChange, clusters, localState, formRef, applicationId, setJobDetails }) {
@@ -118,7 +118,7 @@ function BasicsTabGeneral({ enableEdit, editingAllowed, addingNewAsset, jobType,
   return (
     <React.Fragment>
       <Form.Item hidden={hideOnReadOnlyView} {...formItemLayout} label="Cluster" name="clusters">
-        <Select placeholder="Select a Cluster" disabled={!editingAllowed} onChange={onClusterSelection} style={{ width: '50%' }}>
+        <Select placeholder="Select a Cluster" disabled={!editingAllowed} onChange={onClusterSelection} style={{ width: '70%' }}>
           {clusters.map((cluster) => (
             <Option key={cluster.id}>{cluster.name}</Option>
           ))}
@@ -179,7 +179,7 @@ function BasicsTabGeneral({ enableEdit, editingAllowed, addingNewAsset, jobType,
 
       {enableEdit ? (
         <Form.Item label="Notify" name="notify">
-          <Select style={{ width: '50%' }}>
+          <Select style={{ width: '70%' }}>
             {notificationOptions.map((option) => (
               <Option key={option.value} value={option.value}>
                 {option.label}
@@ -190,8 +190,8 @@ function BasicsTabGeneral({ enableEdit, editingAllowed, addingNewAsset, jobType,
       ) : (
         <Form.Item label="Notify">
           <Space>
-            <Form.Item name="notify" noStyle>
-              <Input disabled className="read-only-input" style={{ width: '50%' }} />
+            <Form.Item name="notify" >
+              <Input disabled className="read-only-input" style={{ width: '70%', paddingLeft: '8px' }} />
             </Form.Item>
             <Tooltip title="Useful information">
               <Typography.Link
@@ -207,44 +207,44 @@ function BasicsTabGeneral({ enableEdit, editingAllowed, addingNewAsset, jobType,
       )}
 
       {enableEdit || notificationSettingsVisibility ? (
-        <Col offset={2} style={{ marginBottom: '10px' }}>
-          {notifyJobExecutionStatus === 'always' || notifyJobExecutionStatus === 'onSuccess' ? (
+        <Col offset={2} style={{ marginBottom: '10px', paddingLeft: '8px' }}>
+          {notifyJobExecutionStatus === 'Always' || notifyJobExecutionStatus === 'Only on success' ? (
             <Form.Item
               label="Success Message "
               name="notificationSuccessMessage"
               {...multiLineFormItemLayout}
               className="MultiLineFormItem"
               validateTrigger="onBlur"
-              rules={[{ required: (notifyJobExecutionStatus === 'always' || notifyJobExecutionStatus === 'onSuccess') && enableEdit, message: 'Success Message Required' }]}
+              rules={[{ required: (notifyJobExecutionStatus === 'Always' || notifyJobExecutionStatus === 'Only on success') && enableEdit, message: 'Success Message Required' }]}
             >
               <TextArea placeholder="success message" className={!enableEdit && 'read-only-input'} autoSize={{ minRows: 2 }} />
             </Form.Item>
           ) : null}
 
-          {notifyJobExecutionStatus === 'always' || notifyJobExecutionStatus === 'onFail' ? (
+          {notifyJobExecutionStatus === 'Always' || notifyJobExecutionStatus === 'Only on failure' ? (
             <Form.Item
               label="Failure Message "
               name="notificationFailureMessage"
               {...multiLineFormItemLayout}
               className="MultiLineFormItem"
               validateTrigger="onBlur"
-              rules={[{ required: (notifyJobExecutionStatus === 'always' || notifyJobExecutionStatus === 'onFail') && enableEdit, message: 'Failure Message Required' }]}
+              rules={[{ required: (notifyJobExecutionStatus === 'Always' || notifyJobExecutionStatus === 'Only on failure') && enableEdit, message: 'Failure Message Required' }]}
             >
               <TextArea placeholder="Failure message" className={!enableEdit && 'read-only-input'} autoSize={{ minRows: 2 }} />
             </Form.Item>
           ) : null}
 
-          {notifyJobExecutionStatus !== 'never' ? (
+          {notifyJobExecutionStatus !== 'Never' ? (
             <Form.Item
               label="Recipients"
               name="notificationRecipients"
               {...multiLineFormItemLayout}
               className="MultiLineFormItem"
               validateTrigger="onBlur"
-              rules={[{ required: notifyJobExecutionStatus !== 'never' && enableEdit, message: 'Recipient(s) E-mail required' }]}
+              rules={[{ required: notifyJobExecutionStatus !== 'Never' && enableEdit, message: 'Recipient(s) E-mail required' }]}
               rules={[
                 {
-                  required: notifyJobExecutionStatus !== 'never' && enableEdit,
+                  required: notifyJobExecutionStatus !== 'Never' && enableEdit,
                   message: 'Recipient(s) E-mail required',
                 },
                 () => ({
