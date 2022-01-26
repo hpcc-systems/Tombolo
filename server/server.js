@@ -1,18 +1,24 @@
 const express = require('express');
 const rateLimit = require("express-rate-limit");
-const app = express();
 const tokenService = require('./utils/token_service');
-const {verifyToken} = require("./routes/user/userservice")
-const jwt = require('jsonwebtoken');
-const {NotificationModule} = require('./routes/notifications/email-notification');
 const passport = require('passport');
+
+//Initialize express app
+const app = express();
+
+// Azure setup
 const BearerStrategy = require('passport-azure-ad').BearerStrategy;
 const {options} = require("./config/azureConfig")
+const bearerStrategy = new BearerStrategy(options, (req, profile, done) => {
+  console.log('<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<');
+  console.log(req.body)
+  console.log('<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<');
+  done(null, {}, profile);
+});
 
 // Socket
 const server = require('http').Server(app);
 const socketIo = require('socket.io')(server);
-
 exports.io = socketIo;
 
 app.set('trust proxy', 1);
@@ -21,36 +27,24 @@ const limiter = rateLimit({
   max: 400 // limit each IP to 400 requests per windowMs
 });
 
+//Use express middleware
+app.use(express.urlencoded({ extended: true }));
 app.use(express.json());
-app.use(function(req, res, next) {
-  //res.header("Access-Control-Allow-Origin", "*");
-  //res.header("Access-Control-Allow-Headers", "Origin, X-Requested-With, Content-Type, Accept");
-  next();
-});
+// app.use(function(req, res, next) {
+//   //res.header("Access-Control-Allow-Origin", "*");
+//   //res.header("Access-Control-Allow-Headers", "Origin, X-Requested-With, Content-Type, Accept");
+//   next();
+// });
+
 //apply to all requests
-app.use(limiter);
-
-const bearerStrategy = new BearerStrategy(options, (token, done) => {
-  // Send user info using the second argument
-  console.log('<<<<<<<<<<<<<< checking <<<<<<<<<<<<<<<<<<<<<<<<<<<<<');
-  console.log("Done validating", token )
-    console.log("Done validating", done )
-
-  console.log('<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<');
-  done(null, {}, token);
-});
+// app.use(limiter);
 
 
-
-// This will initialize the passport object on every request
+// This will initialize the passport object on every request if Azure flow
 if(process.env.APP_AUTH_METHOD==='azure_ad'){
-  console.log('<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<');
-  console.log("using az ad", )
-  console.log('<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<');
-app.use(passport.initialize());
-passport.use(bearerStrategy);
+  app.use(passport.initialize());
+  passport.use(bearerStrategy);
 }
-
 
 const QueueDaemon = require('./queue-daemon');
 const JobScheduler = require('./job-scheduler');
@@ -75,6 +69,7 @@ const dataflowGraph = require('./routes/dataflows/dataflowgraph');
 const workflows = require('./routes/workflows/router');
 const dataDictionary = require('./routes/data-dictionary/data-dictionary-service');
 const groups = require('./routes/groups/group');
+const ghCredentials = require('./routes/ghCredentials');
 
 app.use('/api/app/read', tokenService.verifyToken, appRead);
 app.use('/api/file/read', tokenService.verifyToken, fileRead);
@@ -93,6 +88,7 @@ app.use('/api/workflows', tokenService.verifyToken, workflows);
 app.use('/api/data-dictionary', tokenService.verifyToken, dataDictionary);
 app.use('/api/user', userRead);
 app.use('/api/groups', tokenService.verifyToken, groups);
+app.use('/api/ghcredentials', tokenService.verifyToken, ghCredentials);
 
 //process.env["NODE_TLS_REJECT_UNAUTHORIZED"] = 0;
 

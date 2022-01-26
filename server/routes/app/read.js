@@ -112,21 +112,21 @@ router.get('/app', [
 });
 
 router.post('/newapp', [
-  // body('user_id')
-  //   .optional({checkFalsy:true})
-  //   .matches(/^[a-zA-Z]{1}[a-zA-Z0-9_:.\-]*$/).withMessage('Invalid user_id'),
-  // body('title')
-  //   .matches(/^[a-zA-Z]{1}[a-zA-Z0-9_: .\-]*$/).withMessage('Invalid title'),
-  // body('description')
-  //   .optional({checkFalsy:true}),
-  // body('creator')
-  //   .matches(/^[a-zA-Z]{1}[a-zA-Z0-9_:.\-]*$/).withMessage('Invalid creator'),
-  //   body('creator')
-  //   .matches(/^[a-zA-Z]/).withMessage('Invalid visibility'),
+  body('user_id')
+    .optional({checkFalsy:true})
+    .matches(/^[a-zA-Z]{1}[a-zA-Z0-9_:.\-]*$/).withMessage('Invalid user_id'),
+  body('title')
+    .matches(/^[a-zA-Z]{1}[a-zA-Z0-9_: .\-]*$/).withMessage('Invalid title'),
+  body('description')
+    .optional({checkFalsy:true}),
+  body('creator')
+    .matches(/^[a-zA-Z]{1}[a-zA-Z0-9_:.\-]*$/).withMessage('Invalid creator'),
+    body('creator')
+    .matches(/^[a-zA-Z]/).withMessage('Invalid visibility'),
 ],function (req, res) {
   const errors = validationResult(req).formatWith(validatorUtil.errorFormatter);
   console.log('<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<');
-  console.log("NEW APP", )
+  console.log("NEW APP", req.user)
   console.log('<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<');
   if (!errors.isEmpty()) {
     return res.status(422).json({ success: false, errors: errors.array() });

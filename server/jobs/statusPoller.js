@@ -42,9 +42,8 @@ const dispatchAction = (action,data) =>  parentPort.postMessage({ action, data }
         const result = await jobExecution.update(newjobExecution,{where:{id:jobExecution.id}}); 
         logToConsole(`✔️  JOB EXECUTION GOT UPDATED, ("${jobExecution.job.name}") ${result.wuid} = ${result.status} ${result.status === 'completed' ? "👍" : "🚩🚩🚩"}`);
         logToConsole(result.toJSON());
-        if (WUstate  === 'failed') {
-          logToConsole(`❌  SENDING EMAIL ABOUT "${jobExecution.job.name}" - ${jobExecution.wuid} FAILURE...📧`);
-          await workflowUtil.notifyJobFailure({jobId:jobExecution.jobId, clusterId:jobExecution.clusterId,wuid:jobExecution.wuid})
+        if(WUstate === 'completed' || WUstate === 'failed'){
+          await workflowUtil.notifyJobExecutionStatus({jobId:jobExecution.jobId, clusterId:jobExecution.clusterId,wuid:jobExecution.wuid, WUstate})
         }else{
           logToConsole(`🔍  WORKER_THREAD IS DONE, PASSING CHECKING ON DEPENDING JOBS TO MAIN THREAD, "${jobExecution.job.name}" - ${jobExecution.wuid} - ${jobExecution.jobId}...`);
           // will trigger JobScheduler.scheduleCheckForJobsWithSingleDependency on main thread.

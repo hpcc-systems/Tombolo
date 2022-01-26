@@ -4,13 +4,13 @@ const options = {
     clientID: process.env.CLIENT_ID,
     audience: process.env.AUDIENCE,
     validateIssuer: true,
-    passReqToCallback: false,
+    passReqToCallback: true,
     loggingLevel: process.env.LOGGING_LEVEL,
     // scope: EXPOSED_SCOPES,
-    // loggingNoPII: true,
-    // Optional. Default value is false.
+    loggingNoPII: true,
+    // Optional -> Default value is false.
     // Set to true if you accept access_token whose `aud` claim contains multiple values.
-    allowMultiAudiencesInToken: false,
+    // allowMultiAudiencesInToken: false,
   };
 
   module.exports = {
