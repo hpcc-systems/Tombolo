@@ -9,13 +9,8 @@ function LoggedOut() {
   const { instance, accounts, inProgress } = useMsal();
 
   useEffect(() => {
-    console.log(
-      "<<<<<<<<<<<<<<< Logged out accounts <<<<<<<<<<<<<<<<<<<<<<<<<<<<"
-    );
     console.log(accounts);
     instance.setActiveAccount({});
-
-    console.log("<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<");
   }, []);
 
   const handleLogin = () => {

@@ -4,7 +4,7 @@ const options = {
     clientID: process.env.CLIENT_ID,
     audience: process.env.AUDIENCE,
     validateIssuer: true,
-    passReqToCallback: true,
+    passReqToCallback: false,
     loggingLevel: process.env.LOGGING_LEVEL,
     // scope: EXPOSED_SCOPES,
     loggingNoPII: true,

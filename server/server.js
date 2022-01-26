@@ -6,17 +6,21 @@ const passport = require('passport');
 //Initialize express app
 const app = express();
 
+//Caching issue - Test
+app.set('etag', false)
+app.use((req, res, next) => {
+  res.set('Cache-Control', 'no-store')
+  next()
+})
+
 // Azure setup
 const BearerStrategy = require('passport-azure-ad').BearerStrategy;
 const {options} = require("./config/azureConfig")
-const bearerStrategy = new BearerStrategy(options, (req, profile, done) => {
-  console.log('<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<');
-  console.log(req.body)
-  console.log('<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<');
-  done(null, {}, profile);
+const bearerStrategy = new BearerStrategy(options, (profile, done) => {
+      done(null, {}, profile);
 });
 
-// Socket
+// Socket IO
 const server = require('http').Server(app);
 const socketIo = require('socket.io')(server);
 exports.io = socketIo;
@@ -37,7 +41,7 @@ app.use(express.json());
 // });
 
 //apply to all requests
-// app.use(limiter);
+app.use(limiter);
 
 
 // This will initialize the passport object on every request if Azure flow
@@ -50,7 +54,7 @@ const QueueDaemon = require('./queue-daemon');
 const JobScheduler = require('./job-scheduler');
 JobScheduler.bootstrap(); // initializing Bree, starting status poller and checking for active cron jobs.
 
-const assert = require('assert');
+// const assert = require('assert');
 
 const appRead = require('./routes/app/read');
 const fileRead = require('./routes/file/read');
@@ -71,12 +75,12 @@ const dataDictionary = require('./routes/data-dictionary/data-dictionary-service
 const groups = require('./routes/groups/group');
 const ghCredentials = require('./routes/ghCredentials');
 
-app.use('/api/app/read', tokenService.verifyToken, appRead);
+app.use('/api/app/read',  appRead);
 app.use('/api/file/read', tokenService.verifyToken, fileRead);
 app.use('/api/index/read', tokenService.verifyToken, indexRead);
 app.use('/api/hpcc/read', tokenService.verifyToken, hpccRead);
 app.use('/api/query', tokenService.verifyToken, query);
-app.use('/api/job', tokenService.verifyToken, job);
+app.use('/api/job',  job);
 app.use('/api/fileinstance', tokenService.verifyToken, fileInstance);
 app.use('/api/report/read', tokenService.verifyToken, reportRead);
 app.use('/api/consumer', tokenService.verifyToken, consumer);

@@ -125,9 +125,6 @@ router.post('/newapp', [
     .matches(/^[a-zA-Z]/).withMessage('Invalid visibility'),
 ],function (req, res) {
   const errors = validationResult(req).formatWith(validatorUtil.errorFormatter);
-  console.log('<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<');
-  console.log("NEW APP", req.user)
-  console.log('<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<');
   if (!errors.isEmpty()) {
     return res.status(422).json({ success: false, errors: errors.array() });
   }

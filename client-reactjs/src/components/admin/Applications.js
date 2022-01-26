@@ -222,9 +222,6 @@ class Applications extends Component {
         handleError(response);
       })
       .then(response => {
-        console.log('<<<<<<<<<<<< new app response <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<');
-        console.log(response , )
-        console.log('<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<');
         if(this.state.newApp.id == '') {
           this.props.dispatch(applicationActions.applicationSelected(response.id, response.title, response.title));
           localStorage.setItem("activeProjectId", response.id);

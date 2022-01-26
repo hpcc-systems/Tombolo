@@ -204,7 +204,6 @@ router.post('/newcluster', [
     				newCluster.username = req.body.username;
     				newCluster.hash = crypto.createCipher(algorithm, process.env['cluster_cred_secret']).update(req.body.password,'utf8','hex');
     			}
-    			console.log(req.body.id);
     			if(req.body.id == undefined || req.body.id == "") {
     				Cluster.create(newCluster).then(function(cluster) {
     					res.json({"result":"success"});

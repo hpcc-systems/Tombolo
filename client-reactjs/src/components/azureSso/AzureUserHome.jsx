@@ -1,4 +1,4 @@
-import React, {useState, useEffect} from 'react';
+import React, {useEffect} from 'react';
 import { useMsal } from "@azure/msal-react";
 import { useDispatch } from "react-redux";
 import { userActions } from '../../redux/actions/User';

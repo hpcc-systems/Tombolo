@@ -140,7 +140,6 @@ class LoginPage extends React.Component {
   }
 
   render() {
-    {console.log("<<<<<<<<<< User back in login page")}
       const { username, password, submitted, firstName, lastName, email, newUsername, newPassword, confirmNewPassword, loginView } = this.state;
       const { id } = this.props.match.params;
       return (
