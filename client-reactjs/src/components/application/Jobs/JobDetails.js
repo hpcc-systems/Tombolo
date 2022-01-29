@@ -959,7 +959,7 @@ class JobDetails extends Component {
           node.title != this.formRef.current.getFieldValue("title")
       )
       .map((node) => {
-        return { id: node.id, jobId: node.jobId, name: node.title };
+        return { id: node.id, jobId: node.jobId || node.assetId, name: node.title };
       });
 
     this.setState({ predecessorJobs: predecessors });
