@@ -8,9 +8,20 @@ export default class Canvas {
     const graph = new Graph({
       container: container,
       autoResize: true,
-      history: true,
-      selecting: true,
       grid: true,
+      history: true,
+      selecting: {
+        strict:true,
+        enabled: true,
+        multiple: true,
+        rubberband: true,
+        modifiers: 'shift',
+        showNodeSelectionBox: true,
+      },
+      panning: {
+        enabled: true,
+        modifiers: 'ctrl',
+      },
       connecting: {
         allowBlank: false,
         allowMulti: true,

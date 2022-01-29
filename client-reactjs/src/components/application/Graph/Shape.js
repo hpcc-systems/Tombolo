@@ -5,7 +5,15 @@ import {
   FileTextOutlined,
   SettingOutlined,
   SisternodeOutlined,
+  CheckCircleOutlined,
+  CloseCircleOutlined,
+  ReloadOutlined,
+  HourglassOutlined,
+  LinkOutlined,
+  MessageOutlined
 } from '@ant-design/icons/lib/icons';
+
+import './Shape.css'
 
 const ports = {
   groups: {
@@ -85,49 +93,66 @@ const ports = {
     },
   ],
 };
+ class Node extends React.Component {
+  shouldComponentUpdate() {
+    const { node } = this.props
+    if (node) {
+      if (node.hasChanged('data')) {
+        return true
+      }
+    }
+    return false
+  }
 
-const Icon = React.memo(({ data }) => {
-  const colors = {
-    Job: 'orange',
-    File: 'blue',
-    Index: 'green',
-    SubProcess: 'red',
-  };
-  const icons = {
+  status ={
+    success : <CheckCircleOutlined style={{color:'green'}} />,
+    failed: <CloseCircleOutlined style={{color:'red'}} />,
+    running: <ReloadOutlined  style={{color:'grey'}} />
+  }
+
+  schedule ={ 
+    Time: <HourglassOutlined />,
+    Predecessor: <LinkOutlined />,
+    Message : <MessageOutlined />
+  }
+
+ entities = {
     Job: <SettingOutlined />,
     File: <FileTextOutlined />,
     Index: <BookOutlined />,
-    SubProcess: <SisternodeOutlined />,
+    'Sub-Process': <SisternodeOutlined />,
   };
 
-  return (
-    <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
-      <div
-        style={{
-          padding: '5px',
-          background: colors[data.type],
-          borderRadius: 5,
-          border: `2px solid dark${colors[data.type]}`,
-          display: 'flex', alignItems: 'center', justifyContent:"center",
-          color: 'white',
-          width: "30px",
-          height:'30px'
-        }}
-      >
-        {icons[data.type]}
-      </div>
-      <div style={{ textAlign: 'center' }}>{data.title}</div>
+  render() {
+    const { node } = this.props
+    const data = node?.getData()
+    const { type, title, status, scheduleType, isStencil } = data
+
+    if (isStencil){
+      return ( 
+       <div className={`${type} stencil-node`}>
+          {title}
+        </div>
+      )
+    }
+
+    return (
+     <div className={`node ${type} ${status}`}>
+      {this.entities[type]}
+      <span className="label">{title}</span>
+      <span className="status">
+        {this.schedule[scheduleType]}
+        {this.status[status]}
+      </span>
     </div>
-  );
-});
+    )
+  }
+}
 
 Graph.registerNode('custom-shape', {
   inherit: 'react-shape',
-  width: 50,
-  height: 50,
+  component : <Node />,
+  width: 180,
+  height: 36,
   ports,
-  component(node) {
-    const data = node.getData();
-    return <Icon data={data} />;
-  },
 });

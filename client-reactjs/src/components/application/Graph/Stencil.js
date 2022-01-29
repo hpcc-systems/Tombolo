@@ -10,7 +10,7 @@ export default class Stencil {
       layoutOptions: {
         columns: 1,
         columnWidth: 80,
-        rowHeight: 75,
+        rowHeight: 50,
       },
       stencilGraphWidth: 100,
       stencilGraphHeight: 400,
@@ -21,6 +21,9 @@ export default class Stencil {
           collapsable: false,
         },
       ],
+      getDropNode(node) {
+        return node.clone().size(180, 36).setData({isStencil:false})
+      }
     });
 
     if (stencilContainer) {
@@ -31,12 +34,15 @@ export default class Stencil {
   }
 
   static addShape(graph) {
-    const assetsNames = ['Job', 'File', 'Index', 'SubProcess'];
+    const assetsNames = ['Job', 'File', 'Index', 'Sub-Process'];
 
     const assetsNodes = assetsNames.map(asset => {
       return graph.createNode({
         shape: 'custom-shape',
+        width: 80,
+        height: 50,
         data: {
+          isStencil:true,
           type: asset,
           title: asset,
           name:undefined,
