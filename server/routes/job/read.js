@@ -405,6 +405,126 @@ let updateJobDetails = (applicationId, jobId, jobReqObj, autoCreateFiles, nodes,
   })
 }
 
+router.post( "/jobFileRelation", [
+    body("jobId").optional({ checkFalsy: true }).isUUID(4).withMessage("Invalid job id"),
+    body("dataflowId").optional({ checkFalsy: true }).isUUID(4).withMessage("Invalid dataflowId"),],  async (req, res) => {
+
+    const errors = validationResult(req).formatWith(validatorUtil.errorFormatter);
+    if (!errors.isEmpty()) return res.status(422).json({ success: false, errors: errors.array() });
+
+    console.time('jobFileRelation');
+
+    try {
+      const job = await Job.findOne({ where: { id: req.body.jobId } });
+      if (!job) throw new Error("Job does not exist");
+
+      const result = await hpccUtil.getJobWuDetails(job.cluster_id, job.name);
+      if (!result.wuid) throw new Error("Could not find WU details by job name");
+
+      const jobInfo = await hpccUtil.getJobInfo(job.cluster_id, result.wuid, job.jobType);
+      const jobfiles = jobInfo?.jobfiles;
+
+      const relatedFiles = [];
+
+      if (jobfiles?.length > 0) {
+
+        for (const jobfile of jobfiles) {
+          const fileInfo = await hpccUtil.fileInfo(jobfile.name, job.cluster_id);
+          if (fileInfo) {
+            // create or update File
+            const fileFields = {
+              title: fileInfo.basic.fileName,
+              scope: fileInfo.basic.scope,
+              fileType: fileInfo.basic.fileType,
+              isSuperFile: fileInfo.basic.isSuperFile,
+              description: fileInfo.basic.description,
+              qualifiedPath: fileInfo.basic.pathMask,
+            };
+
+            let [file, isFileCreated] = await File.findOrCreate({
+              where: {
+                name: fileInfo.basic.name,
+                cluster_id: job.cluster_id,
+                application_id: job.application_id,
+              },
+              defaults: fileFields,
+            });
+            if (!isFileCreated) file = await file.update(fileFields);
+
+            // create or update FileLayout
+            const layoutFields = { fields: JSON.stringify(fileInfo.file_layouts) };
+
+            let [layout, isLayoutCreated] = await FileLayout.findOrCreate({
+              where: {
+                file_id: file.id,
+                application_id: file.application_id,
+              },
+              defaults: layoutFields,
+            });
+            if (!isLayoutCreated) layout = await layout.update(layoutFields);
+
+            // updateCommonData
+            const fileValidations = fileInfo.file_validations.map(el=> ({
+              ...el,
+              file_id: file.id,
+              application_id: file.application_id
+            }))
+            
+            // create FileValidation
+            await FileValidation.bulkCreate(fileValidations, {
+              updateOnDuplicate: ["name", "ruleType", "rule", "action", "fixScript"],
+            });
+
+            // create or update JobFile relationship
+            const jobfileFields = {
+              name: file.name,
+              file_type: file.fileType,
+              description: file.description,
+            };
+
+            let [jobFile, isJobFileCreated] = await JobFile.findOrCreate({
+              where: {
+                job_id: job.id,
+                file_id: file.id,
+                application_id: file.application_id,
+              },
+              defaults: jobfileFields,
+            });
+            if (!isJobFileCreated) jobFile = await jobFile.update(jobfileFields);
+
+            // create assetDataflow if still not exists
+            await AssetDataflow.findOrCreate({
+              where: {
+                assetId: file.id,
+                dataflowId: req.body.dataflowId,
+              },
+            });
+            // construct object with fields that is going to be used to create a graph nodes
+            const relatedFile ={ 
+              assetId: file.id,
+              name: file.name,
+              title: file.title,
+              file_type: jobfile.file_type //'input' | 'output' 
+            }
+            // ADD FILE TO RELATED FILE LIST
+            relatedFiles.push(relatedFile);
+          }
+        }
+      }
+      console.log('------------------------------------------');
+      console.timeEnd('jobFileRelation');
+      console.log('------------------------------------------');
+      res.send(relatedFiles);
+    } catch (error) {
+      console.log("-error /jobFileRelation-----------------------------------------");
+      console.dir({ error }, { depth: null });
+      console.log("------------------------------------------");
+      res.status(500).send("Error occurred while creating file relation");
+    }
+  }
+);
+
+
 router.post('/createFileRelation', [
   body('jobId').optional({checkFalsy:true}).isUUID(4).withMessage('Invalid job id'),
   body('clusterId').optional({checkFalsy:true}).isUUID(4).withMessage('Invalid cluster id'),

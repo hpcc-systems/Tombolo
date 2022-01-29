@@ -191,7 +191,9 @@ router.post(
       await AssetDataflow.destroy({ where: { dataflowId: req.body.dataflowId, assetId: req.body.id } });
       if (req.body.type.toLowerCase() === "job"){
         const job = await Job.findOne({ where: { id: req.body.id } });
-        await JobScheduler.removeJobFromScheduler(job.name + "-" + req.body.dataflowId + "-" + req.body.id);
+        if(job){
+          await JobScheduler.removeJobFromScheduler(job.name + "-" + req.body.dataflowId + "-" + req.body.id);
+        }
       }
       res.json({ result: "success" });
     } catch (error) {
