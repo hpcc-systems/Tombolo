@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useCallback  } from 'react';
 import { Form, Input, Checkbox, Button, Select, AutoComplete, Spin, message, Row, Col, Space, Tooltip, Typography } from 'antd/lib';
 import { authHeader, handleError } from '../../common/AuthHeader.js';
 import ReactMarkdown from 'react-markdown';
@@ -9,6 +9,7 @@ import { MarkdownEditor } from '../../common/MarkdownEditor.js';
 import { formItemLayout, multiLineFormItemLayout } from '../../common/CommonUtil.js';
 import GitHubForm from './GitHubForm/GitHubForm.js';
 import GHTable from './GitHubForm/GHTable.js';
+import debounce from 'lodash/debounce';
 
 const { Option } = Select;
 const { TextArea } = Input;
@@ -21,102 +22,84 @@ const notificationOptions = [
 
 function BasicsTabGeneral({ enableEdit, editingAllowed, addingNewAsset, jobType, clearState, onChange, clusters, localState, formRef, applicationId, setJobDetails }) {
   const assetReducer = useSelector((state) => state.assetReducer);
-  const [jobSearchErrorShown, setJobSearchErrorShown] = useState(false);
-  const [searchResultsLoaded, setSearchResultsLoaded] = useState(false);
-  const [disableReadOnlyFields, setDisableReadOnlyFields] = useState(enableEdit);
-  const [jobSearchSuggestions, setJobSearchSuggestions] = useState([]);
-  const [selectedCluster, setSelectedCluster] = useState(assetReducer.clusterId);
+
+  const [search, setSearch] = useState({ loading:false, error:'', data:[] });
+  const [job, setJob] = useState({loading: false, disableFields:false });
+
   const [notificationSettingsVisibility, changeNotificationSettingsVisibility] = useState(false);
+
   const dispatch = useDispatch();
 
-  const searchJobs = (searchString) => {
-    if (searchString.length <= 3 || jobSearchErrorShown) {
-      return;
-    }
-    setJobSearchErrorShown(false);
-    setSearchResultsLoaded(false);
+  const searchJobs = useCallback(debounce(async ({ searchString, clusterId }) => {
+    message.config({maxCount: 1});
+    if (searchString.length <= 3 ) return;      
+    if (!clusterId) return message.info('Please select cluster before searching');
 
-    var data = JSON.stringify({ clusterid: selectedCluster, keyword: searchString, indexSearch: true });
-    fetch('/api/hpcc/read/jobsearch', {
-      method: 'post',
-      headers: authHeader(),
-      body: data,
-    })
-      .then((response) => {
-        if (response.ok) {
-          return response.json();
-        } else {
-          throw response;
-        }
-        handleError(response);
-      })
-      .then((suggestions) => {
-        setSearchResultsLoaded(true);
-        setJobSearchSuggestions(suggestions);
-      })
-      .catch((error) => {
-        if (!jobSearchErrorShown) {
-          error.json().then((body) => {
-            message.config({ top: 130 });
-            message.error('There was an error searching the job from cluster');
-          });
-          setJobSearchErrorShown(true);
-        }
-      });
-  };
-
-  const onJobSelected = (option) => {
-    fetch(
-      '/api/hpcc/read/getJobInfo?jobWuid=' + option.key + '&jobName=' + option.value + '&clusterid=' + selectedCluster + '&jobType=' + jobType + '&applicationId=' + applicationId,
-      {
+    try {
+      setSearch(prev=>({...prev, loading:true, error:'' }));
+      const options = {
+        method: 'POST',
         headers: authHeader(),
-      }
-    )
-      .then((response) => {
-        if (response.ok) {
-          return response.json();
-        }
-        handleError(response);
-      })
-      .then((jobInfo) => {
-        setDisableReadOnlyFields(true);
-        localState.job = {
-          ...localState.job,
-          id: jobInfo.id,
-          inputFiles: jobInfo.jobfiles.filter((jobFile) => jobFile.file_type == 'input'),
-          outputFiles: jobInfo.jobfiles.filter((jobFile) => jobFile.file_type == 'output'),
-          groupId: jobInfo.groupId,
-          ecl: jobInfo.ecl,
-        };
-        formRef.current.setFieldsValue({
-          name: jobInfo.name,
-          title: jobInfo.title,
-          description: jobInfo.description,
-          gitRepo: jobInfo.gitRepo,
-          ecl: jobInfo.ecl,
-          entryBWR: jobInfo.entryBWR,
-        });
-        setJobDetails(jobInfo);
-        return jobInfo;
-      })
-      .catch((error) => {
-        console.log(error);
+        body: JSON.stringify({ clusterid: clusterId, keyword: searchString, indexSearch: true })
+      }; 
+      
+      const response = await fetch('/api/hpcc/read/jobsearch', options);
+      if (!response.ok) handleError(response);
+      const suggestions = await response.json();
+      setSearch(prev => ({prev, loading:false, data : suggestions }))
+
+    } catch (error) {
+      message.error('There was an error searching the job from cluster');
+      setSearch(prev => ({prev, loading:false, error:error.message }))
+    }
+  }, 500)
+  , []);
+ 
+
+  const onJobSelected =  async (option) => {
+    try {
+      const url = `/api/hpcc/read/getJobInfo?jobWuid=${option.key}&jobName=${option.value}&clusterid=${assetReducer.clusterId}&jobType=${jobType}&applicationId=${applicationId}`
+      setJob(() => ({loading:true, disableFields: false }));
+      const respond = await fetch(url, { headers: authHeader() });
+      if (!respond.ok) handleError(respond)
+      const jobInfo = await respond.json();
+      
+      formRef.current.setFieldsValue({ // will update antD form values;
+        name: jobInfo.name,
+        title: jobInfo.title,
+        description: jobInfo.description,
+        gitRepo: jobInfo.gitRepo,
+        ecl: jobInfo.ecl,
+        entryBWR: jobInfo.entryBWR,
       });
+
+      setJobDetails(jobInfo);// will update state in JobDetails;
+      
+      setJob(() => ({loading:false, disableFields:true })); // will update local loading indicator
+    } catch (error) {
+      console.log('onJobSelected', error);
+      message.error('There was an error selecting a the job');
+      setJob(() => ({loading:false, disableFields:false })); // will update local loading indicator
+    }
   };
 
   const onClusterSelection = (value) => {
     dispatch(assetsActions.clusterSelected(value));
-    setSelectedCluster(value);
-    localState.selectedCluster = value;
   };
+
+  const resetSearch = () =>{
+    formRef.current.resetFields(['querySearchValue','name','title','entryBWR','ecl', 'gitRepo','description']);
+    setSearch(prev => ({...prev, data:[]}));
+    setJob((prev)=>({ ...prev, disableFields:false }))
+  }
 
   const filesStoredOnGithub = formRef.current?.getFieldValue('isStoredOnGithub');
   const notifyJobExecutionStatus = formRef.current?.getFieldValue('notify');
-  const readOnlyView = !enableEdit || !addingNewAsset;
   const hideOnReadOnlyView = !enableEdit || !addingNewAsset;
 
   return (
     <React.Fragment>
+     <Spin spinning={job.loading} tip="loading job details"> 
       <Form.Item hidden={hideOnReadOnlyView} {...formItemLayout} label="Cluster" name="clusters">
         <Select placeholder="Select a Cluster" disabled={!editingAllowed} onChange={onClusterSelection} style={{ width: '70%' }}>
           {clusters.map((cluster) => (
@@ -144,13 +127,13 @@ function BasicsTabGeneral({ enableEdit, editingAllowed, addingNewAsset, jobType,
               dropdownMatchSelectWidth={false}
               dropdownStyle={{ width: 300 }}
               style={{ width: '100%' }}
-              onSearch={(value) => searchJobs(value)}
+              onSearch={(value) => searchJobs({ searchString: value , clusterId: assetReducer.clusterId })}
               onSelect={(value, option) => onJobSelected(option)}
               placeholder="Search jobs"
               disabled={!editingAllowed}
-              notFoundContent={searchResultsLoaded ? 'Not Found' : <Spin />}
+              notFoundContent={search.loading ? <Spin />  : 'Not Found' }
             >
-              {jobSearchSuggestions.map((suggestion) => (
+              {search.data.map((suggestion) => (
                 <Option key={suggestion.value} value={suggestion.text}>
                   {suggestion.wuid}
                 </Option>
@@ -158,7 +141,7 @@ function BasicsTabGeneral({ enableEdit, editingAllowed, addingNewAsset, jobType,
             </AutoComplete>
           </Col>
           <Col span={5}>
-            <Button htmlType="button" block onClick={clearState}>
+            <Button htmlType="button" block onClick={resetSearch}>
               Clear
             </Button>
           </Col>
@@ -174,7 +157,7 @@ function BasicsTabGeneral({ enableEdit, editingAllowed, addingNewAsset, jobType,
         rules={[{ required: enableEdit ? true : false, message: 'Please enter the name', pattern: new RegExp(/^[a-zA-Z0-9: ._-]*$/) }]}
         className={enableEdit ? null : 'read-only-input'}
       >
-        <Input id="job_name" onChange={onChange} placeholder={enableEdit ? 'Name' : 'Name is not provided'} disabled={!editingAllowed || disableReadOnlyFields} />
+        <Input id="job_name" onChange={onChange} placeholder={enableEdit ? 'Name' : 'Name is not provided'} disabled={!editingAllowed || job.disableFields} />
       </Form.Item>
 
       {enableEdit ? (
@@ -241,8 +224,8 @@ function BasicsTabGeneral({ enableEdit, editingAllowed, addingNewAsset, jobType,
               {...multiLineFormItemLayout}
               className="MultiLineFormItem"
               validateTrigger="onBlur"
-              rules={[{ required: notifyJobExecutionStatus !== 'Never' && enableEdit, message: 'Recipient(s) E-mail required' }]}
               rules={[
+                { required: notifyJobExecutionStatus !== 'Never' && enableEdit, message: 'Recipient(s) E-mail required' },
                 {
                   required: notifyJobExecutionStatus !== 'Never' && enableEdit,
                   message: 'Recipient(s) E-mail required',
@@ -352,6 +335,7 @@ function BasicsTabGeneral({ enableEdit, editingAllowed, addingNewAsset, jobType,
           )}
         </React.Fragment>
       ) : null}
+      </Spin>
     </React.Fragment>
   );
 }

@@ -346,9 +346,11 @@ class JobDetails extends Component {
       ...this.state,
       job: {
         ...this.state.job,
-        inputFiles: jobDetails.jobfiles.filter(jobFile => jobFile.file_type == 'input'),
-        outputFiles: jobDetails.jobfiles.filter(jobFile => jobFile.file_type == 'output'),
+        id: jobDetails.id,
+        groupId: jobDetails.groupId,
         ecl: jobDetails.ecl,
+        inputFiles: jobDetails.jobfiles.filter(jobFile => jobFile.file_type === 'input'),
+        outputFiles: jobDetails.jobfiles.filter(jobFile => jobFile.file_type === 'output'),
      }
     });
   }
