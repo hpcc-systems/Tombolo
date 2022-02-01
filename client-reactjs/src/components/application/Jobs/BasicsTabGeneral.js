@@ -1,15 +1,16 @@
 import React, { useState, useCallback  } from 'react';
-import { Form, Input, Checkbox, Button, Select, AutoComplete, Spin, message, Row, Col, Space, Tooltip, Typography } from 'antd/lib';
+import { Form, Input, Checkbox, Button, Select, AutoComplete, Spin, message, Row, Col, Space,  Typography, Radio } from 'antd/lib';
 import { authHeader, handleError } from '../../common/AuthHeader.js';
 import ReactMarkdown from 'react-markdown';
 import { useSelector, useDispatch } from 'react-redux';
 import { assetsActions } from '../../../redux/actions/Assets';
 
 import { MarkdownEditor } from '../../common/MarkdownEditor.js';
-import { formItemLayout, multiLineFormItemLayout } from '../../common/CommonUtil.js';
+import { formItemLayout , formItemLayoutWithOutLabel } from '../../common/CommonUtil.js';
 import GitHubForm from './GitHubForm/GitHubForm.js';
 import GHTable from './GitHubForm/GHTable.js';
 import debounce from 'lodash/debounce';
+import { MinusCircleOutlined, PlusOutlined } from '@ant-design/icons';
 
 const { Option } = Select;
 const { TextArea } = Input;
@@ -26,7 +27,7 @@ function BasicsTabGeneral({ enableEdit, editingAllowed, addingNewAsset, jobType,
   const [search, setSearch] = useState({ loading:false, error:'', data:[] });
   const [job, setJob] = useState({loading: false, disableFields:false });
 
-  const [notificationSettingsVisibility, changeNotificationSettingsVisibility] = useState(false);
+  const [showDetails, setShowDetails] = useState(false);
 
   const dispatch = useDispatch();
 
@@ -44,13 +45,23 @@ function BasicsTabGeneral({ enableEdit, editingAllowed, addingNewAsset, jobType,
       }; 
       
       const response = await fetch('/api/hpcc/read/jobsearch', options);
-      if (!response.ok) handleError(response);
+      
+      if (!response.ok) {
+        const error = new Error(response.statusText);
+        error.status = response.status;
+        throw error;
+      }
+
       const suggestions = await response.json();
       setSearch(prev => ({prev, loading:false, data : suggestions }))
 
     } catch (error) {
-      message.error('There was an error searching the job from cluster');
-      setSearch(prev => ({prev, loading:false, error:error.message }))
+      if (error.status === 422) {
+        message.error('Some characters are not allowed in search, please check your input');
+      } else{
+        message.error('There was an error searching the job from cluster');
+      }
+      setSearch(prev => ({...prev, loading:false, error: error.message }))
     }
   }, 500)
   , []);
@@ -94,26 +105,31 @@ function BasicsTabGeneral({ enableEdit, editingAllowed, addingNewAsset, jobType,
   }
 
   const filesStoredOnGithub = formRef.current?.getFieldValue('isStoredOnGithub');
-  const notifyJobExecutionStatus = formRef.current?.getFieldValue('notify');
+  const notifyStatus = formRef.current?.getFieldValue('notify');
   const hideOnReadOnlyView = !enableEdit || !addingNewAsset;
 
+  console.log('formRef.current?.getFieldValue("re")', formRef.current?.getFieldValue("notificationRecipients"));
+  
   return (
     <React.Fragment>
      <Spin spinning={job.loading} tip="loading job details"> 
-      <Form.Item hidden={hideOnReadOnlyView} {...formItemLayout} label="Cluster" name="clusters">
-        <Select placeholder="Select a Cluster" disabled={!editingAllowed} onChange={onClusterSelection} style={{ width: '70%' }}>
-          {clusters.map((cluster) => (
-            <Option key={cluster.id}>{cluster.name}</Option>
-          ))}
-        </Select>
+      <Form.Item hidden={hideOnReadOnlyView} label="Cluster" name="clusters">
+        <Row gutter={[8, 8]}>
+          <Col span={12}>
+            <Select placeholder="Select a Cluster" disabled={!editingAllowed} onChange={onClusterSelection}>
+              {clusters.map((cluster) => (
+                <Option key={cluster.id}>{cluster.name}</Option>
+              ))}
+            </Select>
+          </Col>
+        </Row>
       </Form.Item>
 
       <Form.Item
         hidden={hideOnReadOnlyView}
         valuePropName="checked"
         name="isStoredOnGithub"
-        labelCol={{ xxl: { span: 2 } }}
-        label={!enableEdit ? 'Files from GitHub' : 'Pull files from GitHub'}
+        label='Github Job'
       >
         <Checkbox className={!enableEdit && 'read-only-input'} />
       </Form.Item>
@@ -159,95 +175,6 @@ function BasicsTabGeneral({ enableEdit, editingAllowed, addingNewAsset, jobType,
       >
         <Input id="job_name" onChange={onChange} placeholder={enableEdit ? 'Name' : 'Name is not provided'} disabled={!editingAllowed || job.disableFields} />
       </Form.Item>
-
-      {enableEdit ? (
-        <Form.Item label="Notify" name="notify">
-          <Select style={{ width: '70%' }}>
-            {notificationOptions.map((option) => (
-              <Option key={option.value} value={option.value}>
-                {option.label}
-              </Option>
-            ))}
-          </Select>
-        </Form.Item>
-      ) : (
-        <Form.Item label="Notify">
-          <Space>
-            <Form.Item name="notify" >
-              <Input disabled className="read-only-input" style={{ width: '70%', paddingLeft: '8px' }} />
-            </Form.Item>
-            <Tooltip title="Useful information">
-              <Typography.Link
-                onClick={() => {
-                  changeNotificationSettingsVisibility(!notificationSettingsVisibility);
-                }}
-              >
-                {notificationSettingsVisibility ? 'Hide Settings' : 'Show settings'}
-              </Typography.Link>
-            </Tooltip>
-          </Space>
-        </Form.Item>
-      )}
-
-      {enableEdit || notificationSettingsVisibility ? (
-        <Col offset={2} style={{ marginBottom: '10px', paddingLeft: '8px' }}>
-          {notifyJobExecutionStatus === 'Always' || notifyJobExecutionStatus === 'Only on success' ? (
-            <Form.Item
-              label="Success Message "
-              name="notificationSuccessMessage"
-              {...multiLineFormItemLayout}
-              className="MultiLineFormItem"
-              validateTrigger="onBlur"
-              rules={[{ required: (notifyJobExecutionStatus === 'Always' || notifyJobExecutionStatus === 'Only on success') && enableEdit, message: 'Success Message Required' }]}
-            >
-              <TextArea placeholder="success message" className={!enableEdit && 'read-only-input'} autoSize={{ minRows: 2 }} />
-            </Form.Item>
-          ) : null}
-
-          {notifyJobExecutionStatus === 'Always' || notifyJobExecutionStatus === 'Only on failure' ? (
-            <Form.Item
-              label="Failure Message "
-              name="notificationFailureMessage"
-              {...multiLineFormItemLayout}
-              className="MultiLineFormItem"
-              validateTrigger="onBlur"
-              rules={[{ required: (notifyJobExecutionStatus === 'Always' || notifyJobExecutionStatus === 'Only on failure') && enableEdit, message: 'Failure Message Required' }]}
-            >
-              <TextArea placeholder="Failure message" className={!enableEdit && 'read-only-input'} autoSize={{ minRows: 2 }} />
-            </Form.Item>
-          ) : null}
-
-          {notifyJobExecutionStatus !== 'Never' ? (
-            <Form.Item
-              label="Recipients"
-              name="notificationRecipients"
-              {...multiLineFormItemLayout}
-              className="MultiLineFormItem"
-              validateTrigger="onBlur"
-              rules={[
-                { required: notifyJobExecutionStatus !== 'Never' && enableEdit, message: 'Recipient(s) E-mail required' },
-                {
-                  required: notifyJobExecutionStatus !== 'Never' && enableEdit,
-                  message: 'Recipient(s) E-mail required',
-                },
-                () => ({
-                  validator(_, value) {
-                    const emails = value.split(',');
-                    //Basic email validation
-                    const invalidEmails = emails.filter((email) => !/^\S+@\S+\.\S+$/.test(email.trim()));
-                    if (invalidEmails.length < 1) {
-                      return Promise.resolve();
-                    }
-                    return Promise.reject(new Error(`${invalidEmails.length} invalid E-mail(s), Note : Do not enter ',' after the last email address`));
-                  },
-                }),
-              ]}
-            >
-              <TextArea placeholder="Multiple E-mails, separate with comas (,)" className={!enableEdit && 'read-only-input'} autoSize={{ minRows: 2 }} />
-            </Form.Item>
-          ) : null}
-        </Col>
-      ) : null}
 
       <Form.Item
         name="title"
@@ -312,6 +239,128 @@ function BasicsTabGeneral({ enableEdit, editingAllowed, addingNewAsset, jobType,
           >
             <Input id="job_bkp_svc" onChange={onChange} placeholder={enableEdit ? 'Contact' : 'Contact is not provided'} value={localState.contact} disabled={!editingAllowed} />
           </Form.Item>
+
+          <Form.Item label="Notify" >
+            <Space>
+              <Form.Item name="notify">
+                <Radio.Group className={enableEdit ? null : 'read-only-input'} >
+                  {notificationOptions.map((option) => (
+                    <Radio key={option.value} value={option.value}>{option.label}</Radio>
+                  ))}
+                </Radio.Group>
+              </Form.Item>
+              {!enableEdit && (notifyStatus !== 'Never') && <Button onClick={()=>setShowDetails(prev=> !prev)}>Show Details</Button>}
+            </Space>
+          </Form.Item>
+
+          
+          {(notifyStatus === 'Always' || notifyStatus === 'Only on success') && (
+            <Form.Item
+              label="On Success"
+              hidden={!enableEdit && !showDetails}
+              name="notificationSuccessMessage"
+              className={enableEdit ? null : 'read-only-input'}
+              validateTrigger="onBlur"
+              rules={[{ required: enableEdit, message: 'Success Message Required' }]}
+            >
+              <TextArea  allowClear={enableEdit}  placeholder="Success message"  autoSize={{ minRows: 1 }} className={!enableEdit && 'read-only-input'}  />
+            </Form.Item>
+          )}
+
+          {(notifyStatus === 'Always' || notifyStatus === 'Only on failure') && (
+            <Form.Item
+              label="On Failure"
+              hidden={!enableEdit && !showDetails}
+              name="notificationFailureMessage"
+              className={enableEdit ? null : 'read-only-input'}
+              validateTrigger="onBlur"
+              rules={[{ required: enableEdit, message: 'Failure Message Required' }]}
+            >
+              <TextArea allowClear={enableEdit} placeholder="Failure message" className={!enableEdit && 'read-only-input'}  autoSize={{ minRows: 1 }} />
+            </Form.Item>
+            )}
+
+             
+          {notifyStatus !== 'Never' && (
+                <Form.List
+                  name="notificationRecipients"
+                  className={enableEdit ? null : 'read-only-input'}
+               
+                  rules={[
+                    {
+                      validator: async (_, names) => {
+                        if (!names || names.length < 1) {
+                          return Promise.reject(new Error('At least 1 Recipient'));
+                        }
+                      },
+                    },
+                  ]}
+                >
+                  {(fields, { add, remove }, { errors }) => {
+                    if ( !enableEdit && !showDetails) return null
+                    return (
+                      <>
+                        {fields.map((field, index) => (
+                          <Form.Item
+                            {...(index === 0 ? formItemLayout : formItemLayoutWithOutLabel)}
+                            label={index === 0 ? "Recipients" : ""}
+                            required={enableEdit}
+                            key={field.key}
+                            className={enableEdit ? null : 'read-only-input'}
+                            validateTrigger={['onChange', 'onBlur']}
+                            rules={[
+                              { 
+                                type: 'email', 
+                                required: true,
+                                whitespace: true,
+                                message: 'Please enter a valid email address'
+                              },
+                            ]}
+                          >
+                            <Row gutter={[8, 8]} style={{marginBottom:"8px"}}>
+                              <Col span={12}>
+                                <Form.Item
+                                  {...field}
+                                  noStyle
+                                  validateTrigger={['onChange', 'onBlur']}
+                                  rules={[
+                                    { 
+                                      type: 'email', 
+                                      required: true,
+                                      whitespace: true,
+                                      message: 'Please enter a valid email address'
+                                    },
+                                  ]}
+                                >
+                                  <Input className={enableEdit ? null : 'read-only-input'} placeholder="recipient email" />
+                                </Form.Item>
+                              </Col>
+                              {enableEdit ?
+                                <Col span={3}>
+                                  <MinusCircleOutlined
+                                    className="dynamic-delete-button"
+                                    onClick={() => remove(field.name)}
+                                    />
+                                </Col>
+                              : null }
+                            </Row>
+                          </Form.Item>
+                        ))}
+                        {enableEdit ? 
+                        <Form.Item {...formItemLayoutWithOutLabel} >
+                          <Button style={{marginBottom:"8px"}} type="dashed" onClick={() => add()} icon={<PlusOutlined />}>
+                            Add Recipient
+                          </Button>
+                          <Form.ErrorList errors={errors} />
+                        </Form.Item>
+                        : null}
+                      </>
+                    )
+                  }
+                  }
+                </Form.List>
+           )}
+
 
           <Form.Item name="description" label="Description">
             {enableEdit ? (
