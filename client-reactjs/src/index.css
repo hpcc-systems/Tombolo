@@ -971,7 +971,3 @@ div.tooltip {
 .MultiLineFormItem > div:first-child{
   height: 30px;
 }
-
-label {
-  font-weight: 600
-}
