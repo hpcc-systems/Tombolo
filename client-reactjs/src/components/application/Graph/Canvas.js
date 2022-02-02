@@ -1,15 +1,59 @@
-import { Graph, Shape } from '@antv/x6';
+import { Graph, Shape, NodeView } from '@antv/x6';
 import './Shape';
-
+class SimpleNodeView extends NodeView {
+  renderMarkup() {
+     return this.renderJSONMarkup({
+       tagName: 'rect',
+       selector: 'body',
+     })
+   }
+ 
+   update() {
+     super.update({
+       body: {
+         refWidth: '100%',
+         refHeight: '100%',
+         fill: '#31d0c6',
+       },
+     })
+   }
+ }
+ 
 export default class Canvas {
   static graph;
 
-  static init(container) {
+  static init(container, minimapContainer) {
     const graph = new Graph({
       container: container,
       autoResize: true,
       grid: true,
       history: true,
+      // scroller: {
+      //   enabled: true,
+      //   pageVisible: false,
+      //   pageBreak: false,
+      //   pannable: true,
+      // },
+      minimap: {
+        enabled: true,
+        container: minimapContainer,
+        width: 200,
+        height: 160,
+        padding: 10,
+        graphOptions: {
+          async: true,
+          getCellView(cell) {
+            if (cell.isNode()) {
+              return SimpleNodeView
+            }
+          },
+          createCellView(cell) {
+            if (cell.isEdge()) {
+              return null
+            }
+          },
+        },
+      },
       selecting: {
         strict:true,
         enabled: true,
@@ -83,3 +127,5 @@ export default class Canvas {
     return graph;
   }
 }
+
+

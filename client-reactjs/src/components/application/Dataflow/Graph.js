@@ -422,7 +422,7 @@ class Graph extends Component {
   onFileAdded = async (saveResponse) => {
     if(saveResponse) {
       var newData = this.thisGraph.nodes.map(el => {
-        if(el.id == this.state.currentlyEditingId) {
+        if(el.id === this.state.currentlyEditingId) {
           el.title=saveResponse.title;
           el.name=saveResponse.name;
           d3.select("#label-"+el.id).text(saveResponse.title);
@@ -441,6 +441,7 @@ class Graph extends Component {
               this.saveAssetToDataflow(el.jobId, this.props.selectedDataflow.id, el.type, el.jobType);
               break;
             case 'Sub-Process':
+              default:
               el.subProcessId=saveResponse.id;
               this.setState({
                 showSubProcessDetails: false

@@ -748,6 +748,7 @@ const DELETE_ICON = '#delete-left'
         }
         break;
       case 'Sub-Process':
+        default:
         setGraphState({
           ...graphState,
           selectedSubProcess: {"id": cell.attrs.props.subProcessId, "title":cell.attrs.props.title},
@@ -804,6 +805,7 @@ const DELETE_ICON = '#delete-left'
           node.label=saveResponse.name;
 
           switch(node.attrs.props.type) {
+            default:
             case 'File':
               node.attrs.props.fileId=saveResponse.fileId;              
               saveAssetToDataflow(node.attrs.props.fileId, selectedDataflow.id, node.attrs.props.type);

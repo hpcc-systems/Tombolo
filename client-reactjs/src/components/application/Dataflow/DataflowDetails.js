@@ -69,7 +69,7 @@ function DataflowDetails({props}) {
                 <Button type="link" onClick={(handleBackToAllJobs)} type="primary" ghost> Cancel</Button> </span> : null}
           >
             <TabPane tab="Designer" key="1" forceRender={true}>
-              <GraphX6 />
+              <GraphX6 readOnly={false} />
               {/* <AntdGraph                 
                 applicationId={dataflowReducer.applicationId}
                 applicationTitle={dataflowReducer.applicationTitle}

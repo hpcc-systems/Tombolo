@@ -28,21 +28,25 @@ const defaultState = {
   edges: [], // ?? not sure if needed
 };
 
-function GraphX6() {
+function GraphX6({readOnly = false}) {
   const graphRef = useRef();
   const graphContainerRef = useRef();
   const stencilContainerRef = useRef();
+  const miniMapContainer = useRef()
 
   const { applicationId, dataflowId } = useSelector((state) => state.dataflowReducer);
 
   const [configDialog, setConfigDialog] = useState({ ...defaultState });
 
   useEffect(() => {
-    const graph = Canvas.init(graphContainerRef.current);
+    const graph = Canvas.init(graphContainerRef.current, miniMapContainer.current);
     graphRef.current = graph;
-    Stencil.init(stencilContainerRef.current, graph);
-    Event.init(graph, graphContainerRef); // some static event that does not require local state changes will be sitting here
-    Keyboard.init(graph);
+
+    if (!readOnly) {
+      Stencil.init(stencilContainerRef.current, graph);
+      Event.init(graph, graphContainerRef ); // some static event that does not require local state changes will be sitting here
+    }
+    // Keyboard.init(graph); // not ready yet
 
     // FETCH SAVED GRAPH
     (async () => {
@@ -93,7 +97,7 @@ function GraphX6() {
         console.log(error);
         message.error('Could not download graph nodes');
       }
-
+      graph.center() 
       // graph.centerContent() // Will align the center of the canvas content with the center of the viewport
     })();
 
@@ -164,7 +168,7 @@ function GraphX6() {
         ...nodeData,
       };
     });
-
+  
     const edges = graph.getEdges().map((edge) => ({
       source: edge.getSourceCellId(),
       target: edge.getTargetCellId(),
@@ -260,11 +264,11 @@ function GraphX6() {
                 source: fileExistsOnGraph ? fileExistsOnGraph : newNode,
                 attrs: {
                   line: {
-                    stroke: relatedFile.file_type === 'output' ? '#d64b4e': "#35991c", // red for output, green for input
+                    stroke: relatedFile.file_type === 'output' ? "#35991c" : '#d64b4e', // green for output, red for input
                   },
                 },
               }
-              if ( relatedFile.file_type === 'input') {
+              if ( relatedFile.file_type === 'output') {
                 edge.target = fileExistsOnGraph ? fileExistsOnGraph : newNode;
                 edge.source = cell;
               }
@@ -294,9 +298,10 @@ function GraphX6() {
 
   return (
     <>
-      <div id="container">
-        <div id="stencil" ref={stencilContainerRef} />
-        <div id="graph-container" ref={graphContainerRef} />
+      <div className='graph-container'>
+        {readOnly ? null : <div className='stencil' ref={stencilContainerRef} /> }
+        <div className={`${readOnly ? 'graph-container-readonly' : 'graph-container-stencil'}`} ref={graphContainerRef} />
+        <div className="graph-minimap" ref={miniMapContainer} />
       </div>
 
       {configDialog.openDialog && configDialog.assetId ? (
@@ -310,7 +315,7 @@ function GraphX6() {
           nodes={configDialog.nodes}
           edges={configDialog.edges}
           onClose={updateAsset}
-          viewMode={true} // ?
+          viewMode={readOnly}
           displayingInModal={true} // ?
         />
       ) : null}

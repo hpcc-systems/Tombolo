@@ -1,6 +1,7 @@
 import React, { Component } from "react";
 import { Button, Table, Divider, message, Icon, Tooltip, Row, Col, Tabs, Spin } from 'antd/lib';
 import { NavLink, Switch, Route, withRouter } from 'react-router-dom';
+import GraphX6 from "../Dataflow/GraphX6";
 import {Graph} from "../Dataflow/Graph";
 import {FileTable} from "../FileTable";
 import QueryTable from "../QueryTable";
@@ -15,16 +16,12 @@ const { TabPane } = Tabs;
 
 class DataflowInstanceDetails extends Component {
 
-  constructor(props) {
-    super(props);
-  }
-
   state = {
     jobExecutionDetails: {},
     loading: false,
     graphSize:{
       width:"100%",
-      height:400
+      height:"100%"
     }
   }
 
@@ -77,6 +74,7 @@ class DataflowInstanceDetails extends Component {
              localStorage.setItem("graphSize",JSON.stringify(newHeight));
            }}
            >
+             {/* <GraphX6 readOnly={true} /> */}
             <Graph
               applicationId={this.props.applicationId}
               viewMode={true}
