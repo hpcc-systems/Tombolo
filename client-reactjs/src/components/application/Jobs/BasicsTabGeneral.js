@@ -1,33 +1,23 @@
 import React, { useState, useCallback  } from 'react';
-import { Form, Input, Checkbox, Button, Select, AutoComplete, Spin, message, Row, Col, Space,  Typography, Radio } from 'antd/lib';
+import { Form, Input, Checkbox, Button, Select, AutoComplete, Spin, message, Row, Col, Typography } from 'antd/lib';
 import { authHeader, handleError } from '../../common/AuthHeader.js';
 import ReactMarkdown from 'react-markdown';
 import { useSelector, useDispatch } from 'react-redux';
 import { assetsActions } from '../../../redux/actions/Assets';
 
 import { MarkdownEditor } from '../../common/MarkdownEditor.js';
-import { formItemLayout , formItemLayoutWithOutLabel } from '../../common/CommonUtil.js';
 import GitHubForm from './GitHubForm/GitHubForm.js';
 import GHTable from './GitHubForm/GHTable.js';
 import debounce from 'lodash/debounce';
-import { MinusCircleOutlined, PlusOutlined } from '@ant-design/icons';
+import Notifications from './Notifications/index.js';
 
 const { Option } = Select;
-const { TextArea } = Input;
-const notificationOptions = [
-  { label: 'Never', value: 'Never' },
-  { label: 'Only on success', value: 'Only on success' },
-  { label: 'Only on failure', value: 'Only on failure' },
-  { label: 'Always', value: 'Always' },
-];
 
 function BasicsTabGeneral({ enableEdit, editingAllowed, addingNewAsset, jobType, clearState, onChange, clusters, localState, formRef, applicationId, setJobDetails }) {
   const assetReducer = useSelector((state) => state.assetReducer);
 
   const [search, setSearch] = useState({ loading:false, error:'', data:[] });
   const [job, setJob] = useState({loading: false, disableFields:false });
-
-  const [showDetails, setShowDetails] = useState(false);
 
   const dispatch = useDispatch();
 
@@ -105,10 +95,7 @@ function BasicsTabGeneral({ enableEdit, editingAllowed, addingNewAsset, jobType,
   }
 
   const filesStoredOnGithub = formRef.current?.getFieldValue('isStoredOnGithub');
-  const notifyStatus = formRef.current?.getFieldValue('notify');
   const hideOnReadOnlyView = !enableEdit || !addingNewAsset;
-
-  console.log('formRef.current?.getFieldValue("re")', formRef.current?.getFieldValue("notificationRecipients"));
   
   return (
     <React.Fragment>
@@ -240,128 +227,8 @@ function BasicsTabGeneral({ enableEdit, editingAllowed, addingNewAsset, jobType,
             <Input id="job_bkp_svc" onChange={onChange} placeholder={enableEdit ? 'Contact' : 'Contact is not provided'} value={localState.contact} disabled={!editingAllowed} />
           </Form.Item>
 
-          <Form.Item label="Notify" >
-            <Space>
-              <Form.Item name="notify">
-                <Radio.Group className={enableEdit ? null : 'read-only-input'} >
-                  {notificationOptions.map((option) => (
-                    <Radio key={option.value} value={option.value}>{option.label}</Radio>
-                  ))}
-                </Radio.Group>
-              </Form.Item>
-              {!enableEdit && (notifyStatus !== 'Never') && <Button onClick={()=>setShowDetails(prev=> !prev)}>Show Details</Button>}
-            </Space>
-          </Form.Item>
-
+          <Notifications enableEdit={enableEdit} formRef={formRef} />
           
-          {(notifyStatus === 'Always' || notifyStatus === 'Only on success') && (
-            <Form.Item
-              label="On Success"
-              hidden={!enableEdit && !showDetails}
-              name="notificationSuccessMessage"
-              className={enableEdit ? null : 'read-only-input'}
-              validateTrigger="onBlur"
-              rules={[{ required: enableEdit, message: 'Success Message Required' }]}
-            >
-              <TextArea  allowClear={enableEdit}  placeholder="Success message"  autoSize={{ minRows: 1 }} className={!enableEdit && 'read-only-input'}  />
-            </Form.Item>
-          )}
-
-          {(notifyStatus === 'Always' || notifyStatus === 'Only on failure') && (
-            <Form.Item
-              label="On Failure"
-              hidden={!enableEdit && !showDetails}
-              name="notificationFailureMessage"
-              className={enableEdit ? null : 'read-only-input'}
-              validateTrigger="onBlur"
-              rules={[{ required: enableEdit, message: 'Failure Message Required' }]}
-            >
-              <TextArea allowClear={enableEdit} placeholder="Failure message" className={!enableEdit && 'read-only-input'}  autoSize={{ minRows: 1 }} />
-            </Form.Item>
-            )}
-
-             
-          {notifyStatus !== 'Never' && (
-                <Form.List
-                  name="notificationRecipients"
-                  className={enableEdit ? null : 'read-only-input'}
-               
-                  rules={[
-                    {
-                      validator: async (_, names) => {
-                        if (!names || names.length < 1) {
-                          return Promise.reject(new Error('At least 1 Recipient'));
-                        }
-                      },
-                    },
-                  ]}
-                >
-                  {(fields, { add, remove }, { errors }) => {
-                    if ( !enableEdit && !showDetails) return null
-                    return (
-                      <>
-                        {fields.map((field, index) => (
-                          <Form.Item
-                            {...(index === 0 ? formItemLayout : formItemLayoutWithOutLabel)}
-                            label={index === 0 ? "Recipients" : ""}
-                            required={enableEdit}
-                            key={field.key}
-                            className={enableEdit ? null : 'read-only-input'}
-                            validateTrigger={['onChange', 'onBlur']}
-                            rules={[
-                              { 
-                                type: 'email', 
-                                required: true,
-                                whitespace: true,
-                                message: 'Please enter a valid email address'
-                              },
-                            ]}
-                          >
-                            <Row gutter={[8, 8]} style={{marginBottom:"8px"}}>
-                              <Col span={12}>
-                                <Form.Item
-                                  {...field}
-                                  noStyle
-                                  validateTrigger={['onChange', 'onBlur']}
-                                  rules={[
-                                    { 
-                                      type: 'email', 
-                                      required: true,
-                                      whitespace: true,
-                                      message: 'Please enter a valid email address'
-                                    },
-                                  ]}
-                                >
-                                  <Input className={enableEdit ? null : 'read-only-input'} placeholder="recipient email" />
-                                </Form.Item>
-                              </Col>
-                              {enableEdit ?
-                                <Col span={3}>
-                                  <MinusCircleOutlined
-                                    className="dynamic-delete-button"
-                                    onClick={() => remove(field.name)}
-                                    />
-                                </Col>
-                              : null }
-                            </Row>
-                          </Form.Item>
-                        ))}
-                        {enableEdit ? 
-                        <Form.Item {...formItemLayoutWithOutLabel} >
-                          <Button style={{marginBottom:"8px"}} type="dashed" onClick={() => add()} icon={<PlusOutlined />}>
-                            Add Recipient
-                          </Button>
-                          <Form.ErrorList errors={errors} />
-                        </Form.Item>
-                        : null}
-                      </>
-                    )
-                  }
-                  }
-                </Form.List>
-           )}
-
-
           <Form.Item name="description" label="Description">
             {enableEdit ? (
               <MarkdownEditor name="description" id="job_desc" onChange={onChange} targetDomId="jobDescr" value={localState.description} disabled={!editingAllowed} />

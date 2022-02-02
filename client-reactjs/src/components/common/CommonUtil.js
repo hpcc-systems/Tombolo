@@ -98,7 +98,7 @@ const formItemLayout = {
 }
 
 const formItemLayoutWithOutLabel = {
-  wrapperCol: { span: 11 , offset: 2}
+  wrapperCol: { span: 11 , offset: 2 }
 };
 
 const threeColformItemLayout = {
