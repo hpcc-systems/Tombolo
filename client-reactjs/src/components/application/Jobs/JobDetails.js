@@ -1,5 +1,5 @@
 import React, { Component, Fragment } from "react";
-import { Modal,Tabs,Form,Input,Button,Space,Select,Table,Spin, message,} from "antd/lib";
+import { Modal,Tabs,Form,Input,Button,Space,Select,Table,Spin, message, Row, Col,} from "antd/lib";
 import { authHeader, handleError } from "../../common/AuthHeader.js";
 import AssociatedDataflows from "../AssociatedDataflows";
 import { hasEditPermission } from "../../common/AuthUtil.js";
@@ -324,7 +324,7 @@ class JobDetails extends Component {
             notify : data.metaData?.notificationSettings?.notify,
             notificationSuccessMessage : data.metaData?.notificationSettings?.successMessage,
             notificationFailureMessage : data.metaData?.notificationSettings?.failureMessage,
-            notificationRecipients : data.metaData?.notificationSettings?.recipients?.join(',')
+            notificationRecipients : data.metaData?.notificationSettings?.recipients
           });
           this.setClusters(this.props.clusterId);
           return data;
@@ -346,9 +346,11 @@ class JobDetails extends Component {
       ...this.state,
       job: {
         ...this.state.job,
-        inputFiles: jobDetails.jobfiles.filter(jobFile => jobFile.file_type == 'input'),
-        outputFiles: jobDetails.jobfiles.filter(jobFile => jobFile.file_type == 'output'),
+        id: jobDetails.id,
+        groupId: jobDetails.groupId,
         ecl: jobDetails.ecl,
+        inputFiles: jobDetails.jobfiles.filter(jobFile => jobFile.file_type === 'input'),
+        outputFiles: jobDetails.jobfiles.filter(jobFile => jobFile.file_type === 'output'),
      }
     });
   }
@@ -751,6 +753,7 @@ async sendGHCreds({ GHUsername, GHToken }){
     });
     console.log(this.formRef.current.getFieldsValue());
     let formFieldsValue = this.formRef.current.getFieldsValue(true);
+
     if (formFieldsValue["sprayDropZone"]) {
       formFieldsValue["sprayDropZone"] = formFieldsValue["sprayDropZone"];
     }
@@ -789,13 +792,13 @@ async sendGHCreds({ GHUsername, GHToken }){
           pathToFile : []}
             }
        }
-    //Combine notification related values and send as object
-    const notificationSettings = {};
-    notificationSettings.notify = formFields['notify'];
-    notificationSettings.successMessage = formFields['notificationSuccessMessage'];
-    notificationSettings.failureMessage = formFields['notificationFailureMessage'];
-    notificationSettings.recipients = formFields['notificationRecipients']?.split(',');
-    metaData.notificationSettings = notificationSettings;
+       //Combine notification related values and send as object
+       metaData.notificationSettings = {
+        notify: formFields.notify,
+        successMessage: formFields.notificationSuccessMessage,
+        failureMessage: formFields.notificationFailureMessage,
+        recipients: formFields.notificationRecipients
+      };
  
     var jobDetails = {
       basic: {
@@ -808,7 +811,6 @@ async sendGHCreds({ GHUsername, GHToken }){
         ecl: this.state.job.ecl,
         sprayFileName: this.state.job.sprayFileName,
         metaData, // all fields related to github is stored here
-        notificationSettings // All fields related to notifications
       },
       schedule: {
         type: this.state.selectedScheduleType,
@@ -1666,18 +1668,23 @@ async sendGHCreds({ GHUsername, GHToken }){
             ref={this.formRef} 
             scrollToFirstError
             onFieldsChange={onFieldsChange}
-            labelAlign = "right"
+            // labelAlign = "right"
             >
             <Tabs defaultActiveKey="1" tabBarExtraContent = {this.props.displayingInModal ? null : controls }>
 
           <TabPane tab="Basic" key="1">
               <Form.Item label="Job Type" name="jobType" className={this.state.enableEdit ? null : "read-only-input"} >
-              {!this.state.enableEdit ? 
-                <Input disabled={!editingAllowed}  placeholder="Job Type" value={(jobType !== '') ? jobType : "Job"} /> :
-                <Select placeholder="Job Type" value={(jobType !== '') ? jobType : "Job"} style={{ width: '50%' }} onChange={this.onJobTypeChange} >
-                  {jobTypes.map(d => <Option key={d}>{d}</Option>)}
-                </Select>
-                }
+                <Row gutter={[8, 8]}>
+                  <Col span={12}>
+                    {!this.state.enableEdit ? 
+                      <Input disabled={!editingAllowed}  placeholder="Job Type" value={(jobType !== '') ? jobType : "Job"} /> 
+                      :
+                      <Select placeholder="Job Type" value={(jobType !== '') ? jobType : "Job"} onChange={this.onJobTypeChange} >
+                        {jobTypes.map(d => <Option key={d}>{d}</Option>)}
+                      </Select>
+                    }
+                  </Col>
+                </Row>
               </Form.Item>   
               {(() =>  {
                 switch (jobType) {
