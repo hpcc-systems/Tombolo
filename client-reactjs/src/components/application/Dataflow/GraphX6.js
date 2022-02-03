@@ -4,12 +4,13 @@ import { authHeader, handleError } from '../../common/AuthHeader.js';
 import '@antv/x6-react-shape';
 import { message } from 'antd';
 import { debounce } from 'lodash';
+import { useSelector } from 'react-redux';
 
 import Event from '../Graph/Event';
 import Canvas from '../Graph/Canvas';
 import Stencil from '../Graph/Stencil';
 import Keyboard from '../Graph/Keyboard';
-import { useSelector } from 'react-redux';
+import CustomToolbar from '../Graph/Toolbar/Toolbar';
 
 import AssetDetailsDialog from '../AssetDetailsDialog';
 import ExistingAssetListDialog from './ExistingAssetListDialog';
@@ -71,6 +72,7 @@ function GraphX6({readOnly = false}) {
               width: node.width,
               height: node.height,
               shape: 'custom-shape',
+              visible: node.visible,
               data: {
                 type: node.type,
                 title: node.title,
@@ -165,6 +167,7 @@ function GraphX6({readOnly = false}) {
         y: position.y,
         width: size.width,
         height: size.height,
+        visible: node.visible,
         ...nodeData,
       };
     });
@@ -296,8 +299,10 @@ function GraphX6({readOnly = false}) {
     setConfigDialog({ ...defaultState }); // RESETS LOCAL STATE AND CLOSES DIALOG
   };
 
+
   return (
     <>
+      <CustomToolbar graphRef={graphRef} />
       <div className='graph-container'>
         {readOnly ? null : <div className='stencil' ref={stencilContainerRef} /> }
         <div className={`${readOnly ? 'graph-container-readonly' : 'graph-container-stencil'}`} ref={graphContainerRef} />
