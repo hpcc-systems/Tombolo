@@ -134,7 +134,7 @@ class JobDetails extends Component {
     schedulePredecessor: [],
     predecessorJobs: [],
     clusters: [],
-    selectedCluster: this.props.clusterId ? this.props.clusterId : "",
+    selectedCluster: this.props.clusterId || "",
     jobSearchSuggestions: [],
     jobSearchErrorShown: false,
     autoCompleteSuffix: <SearchOutlined />,
@@ -1695,7 +1695,23 @@ async sendGHCreds({ GHUsername, GHToken }){
                   case 'Query Build':
                   case 'Scoring':                    
                   case '':
-                    return <BasicsTabGeneral enableEdit={this.state.enableEdit} editingAllowed={editingAllowed} addingNewAsset={this.state.addingNewAsset} jobType={this.state.job.jobType} clearState={this.clearState} onChange={this.onChange} clusters={this.props.clusters} localState={this.state} formRef={this.formRef} applicationId={this.props.application.applicationId} setJobDetails={this.setJobDetails}/>;
+                    return (
+                      <BasicsTabGeneral
+                        enableEdit={this.state.enableEdit}
+                        editingAllowed={editingAllowed}
+                        addingNewAsset={this.state.addingNewAsset}
+                        jobType={this.state.job.jobType}
+                        clearState={this.clearState}
+                        onChange={this.onChange}
+                        clusters={this.props.clusters}
+                        localState={this.state}
+                        formRef={this.formRef}
+                        applicationId={this.props.application.applicationId}
+                        setJobDetails={this.setJobDetails}
+                        onClusterSelection={this.onClusterSelection}
+                      />
+                    );
+
                   case 'Script':
                     return <BasicsTabScript enableEdit={this.state.enableEdit} editingAllowed={editingAllowed} onChange={this.onChange} localState={this.state} />;
                   case 'Spray':

@@ -13,7 +13,7 @@ import Notifications from './Notifications/index.js';
 
 const { Option } = Select;
 
-function BasicsTabGeneral({ enableEdit, editingAllowed, addingNewAsset, jobType, clearState, onChange, clusters, localState, formRef, applicationId, setJobDetails }) {
+function BasicsTabGeneral({ enableEdit, editingAllowed, addingNewAsset, jobType, clearState, onChange, clusters, localState, formRef, applicationId, setJobDetails, onClusterSelection }) {
   const assetReducer = useSelector((state) => state.assetReducer);
 
   const [search, setSearch] = useState({ loading:false, error:'', data:[] });
@@ -82,10 +82,6 @@ function BasicsTabGeneral({ enableEdit, editingAllowed, addingNewAsset, jobType,
       message.error('There was an error selecting a the job');
       setJob(() => ({loading:false, disableFields:false })); // will update local loading indicator
     }
-  };
-
-  const onClusterSelection = (value) => {
-    dispatch(assetsActions.clusterSelected(value));
   };
 
   const resetSearch = () =>{
@@ -196,7 +192,7 @@ function BasicsTabGeneral({ enableEdit, editingAllowed, addingNewAsset, jobType,
             label="Entry BWR"
             className={enableEdit ? null : 'read-only-input'}
             validateTrigger="onBlur"
-            rules={[{ pattern: new RegExp(/^[a-zA-Z0-9:$._-]*$/), message: 'Please enter a valid BWR' }]}
+            // rules={[{ pattern: new RegExp(/^[a-zA-Z0-9:$._-]*$/), message: 'Please enter a valid BWR' }]}
           >
             <Input
               id="job_entryBWR"
