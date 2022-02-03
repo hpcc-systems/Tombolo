@@ -88,6 +88,21 @@ export default class Event {
               },
             ],
             onClick({ cell }) {
+              const nodeData = cell.getData();
+              Modal.confirm({
+                icon: <ExclamationCircleOutlined style={{color: "red"}} />,
+                title: `Do you really want to hide ${nodeData.title}?`,
+                okText: 'Yes',
+                cancelText: 'No',
+                okButtonProps: {type: 'danger'},
+                cancelButtonProps: {type: 'primary'},
+                onOk(){
+                  cell.hide({ name: "update-asset" });
+                },
+                onCancel() {
+                  return;
+                }
+              });
              console.log('-cell-----------------------------------------');
              console.dir({cell}, { depth: null });
              console.log('------------------------------------------');
