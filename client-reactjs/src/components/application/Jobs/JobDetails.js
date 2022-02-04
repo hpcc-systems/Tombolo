@@ -1408,7 +1408,10 @@ async sendGHCreds({ GHUsername, GHToken }){
           message.success("Job has been submitted");
         }
       }).catch(err =>{
-        console.log(err)
+         _self.setState({
+          initialDataLoading: false,
+        });
+        message.error(err.message)
       })
   };
 

@@ -961,7 +961,7 @@ router.post('/executeJob', [
   body('dataflowId').optional({ checkFalsy: true })
       .isUUID(4).withMessage('Invalid dataflow id'),
   body('jobName')
-    .matches(/^[a-zA-Z]{1}[a-zA-Z0-9_.\-:]*$/).withMessage('Invalid job name'),
+    .matches(/^[a-zA-Z]{1}[a-zA-Z0-9_.\-: ]*$/).withMessage('Invalid job name'),
 ], async (req, res) => {
   const errors = validationResult(req).formatWith(validatorUtil.errorFormatter);
   if (!errors.isEmpty()) {
