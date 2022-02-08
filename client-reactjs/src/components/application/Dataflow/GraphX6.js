@@ -61,8 +61,8 @@ function GraphX6({readOnly = false}) {
 
         if (data) {
           // Nodes and Edges comes as a string, need to parse it to object
-          const nodes = data.nodes ? JSON.parse(data.nodes) : [];
-          const edges = data.edges ? JSON.parse(data.edges) : [];
+          const nodes = data.nodes || [];
+          const edges = data.edges || [];
 
           nodes.forEach((node) => {
             graph.addNode({

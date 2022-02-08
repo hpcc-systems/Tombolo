@@ -58,8 +58,8 @@ router.post('/save', [
         where: {application_id:application_id, dataflowId:dataflowId},
         defaults: {
           application_id: req.body.application_id,
-          nodes: JSON.stringify(nodes),
-          edges: JSON.stringify(edges),
+          nodes: nodes,
+          edges: edges,
           dataflowId: dataflowId
         }
       }).then(async function(result) {
@@ -67,8 +67,8 @@ router.post('/save', [
         if(!result[1]) {
           return DataflowGraph.update({
             application_id: req.body.application_id,
-            nodes: JSON.stringify(nodes),
-            edges: JSON.stringify(edges),
+            nodes: nodes,
+            edges: edges,
             dataflowId: dataflowId
           }, {where:{application_id:application_id, dataflowId:dataflowId}})
         }
@@ -140,8 +140,8 @@ router.get('/', [
         raw: true
       }).then(async function(graph) {
         if(graph){
-          let nodesWithNames = await updateNodeNameAndTitle(JSON.parse(graph.nodes));        
-          graph.nodes = JSON.stringify(nodesWithNames);
+          let nodesWithNames = await updateNodeNameAndTitle(graph.nodes);        
+          graph.nodes = nodesWithNames;
           return res.json(graph);
         }else{
           //If there is no graph
@@ -224,7 +224,7 @@ router.post('/changeNodeVisibility', [
     let assetId=req.body.id, edgeId='';
     console.log('assetId: '+assetId+' dataflowId: '+req.body.dataflowId);
     DataflowGraph.findOne({where:{"application_Id":req.body.application_id, dataflowId:req.body.dataflowId}}).then(function(graph) {
-      let nodes = JSON.parse(graph.nodes), edges = JSON.parse(graph.edges), DataflowGraphId=graph.id;
+      let nodes = graph.nodes, edges = graph.edges, DataflowGraphId=graph.id;
       nodes.forEach((node, idx) => {
         if(!assetId) {
           node.isHidden = false;

@@ -61,8 +61,8 @@ function DataflowAssetsTable({applicationId, selectedDataflow, user, application
       })
       .then(data => {
         setDataflowGraph({
-          nodes: JSON.parse(data.nodes),
-          edges: JSON.parse(data.edges)
+          nodes: data.nodes,
+          edges: data.edges
         })
         resolve();
   

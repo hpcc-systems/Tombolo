@@ -519,7 +519,7 @@ router.post( "/jobFileRelation", [
       console.log("-error /jobFileRelation-----------------------------------------");
       console.dir({ error }, { depth: null });
       console.log("------------------------------------------");
-      res.status(500).send("Error occurred while creating file relation");
+      res.status(500).send("Could not find related files");
     }
   }
 );

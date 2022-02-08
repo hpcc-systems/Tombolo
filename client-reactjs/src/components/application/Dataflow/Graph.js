@@ -583,8 +583,8 @@ class Graph extends Component {
         })
         .then(data => {
           if(data != undefined && data != null) {
-            nodes = JSON.parse(data.nodes);
-            edges = JSON.parse(data.edges);
+            nodes = data.nodes;
+            edges = data.edges;
 
             edges.forEach(function (e, i) {
             edges[i] = {

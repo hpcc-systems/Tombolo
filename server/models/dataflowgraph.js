@@ -9,8 +9,8 @@ module.exports = (sequelize, DataTypes) => {
       autoIncrement: false
     },
     application_id: DataTypes.STRING,
-    nodes: DataTypes.TEXT,
-    edges: DataTypes.TEXT,
+    nodes: DataTypes.JSON,
+    edges: DataTypes.JSON,
     dataflowId: DataTypes.UUID
   }, {paranoid: true, freezeTableName: true});
   dataflowgraph.associate = function(models) {
