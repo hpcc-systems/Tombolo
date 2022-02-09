@@ -4,9 +4,9 @@ export const dataflowAction = {
   dataflowSelected
 };
 
-function dataflowSelected(applicationId, applicationTitle, dataflowId, user) {
+function dataflowSelected(applicationId, applicationTitle, dataflowId, clusterId , user ) {
   return dispatch => {
-    dispatch(request({ applicationId, applicationTitle, dataflowId, user }));
+    dispatch(request({ applicationId, applicationTitle, dataflowId, user , clusterId }));
   };
   function request(selectedDataflow) {
     return {
