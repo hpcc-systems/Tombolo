@@ -153,6 +153,6 @@ Graph.registerNode('custom-shape', {
   inherit: 'react-shape',
   component : <Node />,
   width: 180,
-  height: 36,
+  height: 40,
   ports,
 });

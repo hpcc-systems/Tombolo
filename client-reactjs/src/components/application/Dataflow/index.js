@@ -69,7 +69,8 @@ function Dataflow(props) {
       application.applicationId,
       application.applicationTitle,
       selectedDataflow.id,
-      application.user
+      selectedDataflow.clusterId,
+      application.user,
     ));
     props.history.push('/'+application.applicationId+'/dataflow/details');
   }

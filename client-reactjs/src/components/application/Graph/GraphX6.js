@@ -6,15 +6,15 @@ import { message } from 'antd';
 import { debounce } from 'lodash';
 import { useSelector } from 'react-redux';
 
-import Event from '../Graph/Event';
-import Canvas from '../Graph/Canvas';
-import Stencil from '../Graph/Stencil';
-import Keyboard from '../Graph/Keyboard';
-import CustomToolbar from '../Graph/Toolbar/Toolbar';
+import Event from './Event';
+import Canvas from './Canvas';
+import Stencil from './Stencil';
+import Keyboard from './Keyboard';
+import CustomToolbar from './Toolbar/Toolbar';
 
 import AssetDetailsDialog from '../AssetDetailsDialog';
-import ExistingAssetListDialog from './ExistingAssetListDialog';
-import SubProcessDialog from './SubProcessDialog';
+import ExistingAssetListDialog from '../Dataflow/ExistingAssetListDialog';
+import SubProcessDialog from '../Dataflow/SubProcessDialog';
 
 const defaultState = {
   openDialog: false,
@@ -35,9 +35,12 @@ function GraphX6({readOnly = false}) {
   const stencilContainerRef = useRef();
   const miniMapContainer = useRef()
 
-  const { applicationId, dataflowId } = useSelector((state) => state.dataflowReducer);
+  const { applicationId, dataflowId, clusterId } = useSelector((state) => state.dataflowReducer);
 
   const [configDialog, setConfigDialog] = useState({ ...defaultState });
+
+  const [sync, setSync] = useState({ error:"", loading:false  });
+
 
   useEffect(() => {
     const graph = Canvas.init(graphContainerRef.current, miniMapContainer.current);
@@ -75,6 +78,7 @@ function GraphX6({readOnly = false}) {
               visible: node.visible,
               data: {
                 type: node.type,
+                name: node.name,
                 title: node.title,
                 assetId: node.assetId,
                 scheduleType: node.scheduleType,
@@ -102,9 +106,10 @@ function GraphX6({readOnly = false}) {
       graph.center() 
       // graph.centerContent() // Will align the center of the canvas content with the center of the viewport
     })();
-
+    
     graph.on('node:removed', async ({ cell }) => {
       const nodeData = cell.getData();
+      console.log('nodeData', nodeData);
       try {
         /* deleting asset from dataflow is multi step operation
         1. delete asset from Asset_Dataflow table
@@ -127,6 +132,10 @@ function GraphX6({readOnly = false}) {
         message.error('Could not delete an asset');
       }
     });
+    // EDGE REMOVE TRIGGERS 'remove' event, and same event is triggered when nodes getting removed. because node removal is multistep operation, we need to have separate listeners for both
+    graph.on('edge:removed', async () => {
+      await handleSave(graph);
+    });
 
     graph.on('node:dblclick', ({ node, cell }) => {
       const nodeData = cell.getData();
@@ -136,11 +145,10 @@ function GraphX6({readOnly = false}) {
         nodeId: node.id,
         openDialog: true,
         edges : graph.getEdges(), // ?? not used anywhere currently
-        nodes: graph.getNodes().reduce((acc, el) =>{
+        nodes: graph.getNodes().filter(el =>{
           const nodeData = el.getData();
-          if (nodeData.assetId) acc.push(nodeData)
-          return acc;
-        },[]),
+          return nodeData.assetId ? true : false
+        }) 
       }));
     });
 
@@ -187,12 +195,7 @@ function GraphX6({readOnly = false}) {
 
       const response = await fetch('/api/dataflowgraph/save', options);
       if (!response.ok) handleError(response);
-
-      const data = await response.json();
-      console.log('------------------------------------------');
       console.log('Graph saved');
-      console.dir({ data }, { depth: null });
-      console.log('------------------------------------------');
     } catch (error) {
       console.log(error);
       message.error('Could not save graph');
@@ -201,6 +204,7 @@ function GraphX6({readOnly = false}) {
 
   const saveNewAsset = async (newAsset) => {
     // console.time('jobFileRelation');
+    
     if (newAsset) {
       const cell = configDialog.cell;
       /* updating cell will cause a POST request to '/api/dataflowgraph/save with latest nodes and edges*/
@@ -238,45 +242,7 @@ function GraphX6({readOnly = false}) {
           const realtedFiles = await response.json();
 
           if (realtedFiles.length > 0) {
-            // 1. get all files,
-            const allFiles = graphRef.current.getNodes().filter(node => node.data.type === 'File' );
-            realtedFiles.forEach((relatedFile, index) => {
-              // 2. find all existing files on graph and add edge to point to them
-              const fileExistsOnGraph = allFiles.find((file) => file.data.assetId === relatedFile.assetId );
-              let newNode;
-
-              if (!fileExistsOnGraph) {            
-                // 3. create file nodes, place input file on top and output below job node.
-                const nodePositions = cell.getProp('position');
-                newNode = graphRef.current.addNode({
-                  x: nodePositions.x + (index * 70),
-                  y: relatedFile.file_type === 'output' ? nodePositions.y + 70 : nodePositions.y - 70,
-                  shape: 'custom-shape',
-                  data: {
-                    type: 'File',
-                    name: relatedFile.name,
-                    title: relatedFile.title,
-                    assetId: relatedFile.assetId,
-                    subProcessId: undefined,
-                  },
-                });
-              }
-              //4. Create Edges from Job to File
-              const edge = {
-                target: cell, 
-                source: fileExistsOnGraph ? fileExistsOnGraph : newNode,
-                attrs: {
-                  line: {
-                    stroke: relatedFile.file_type === 'output' ? "#35991c" : '#d64b4e', // green for output, red for input
-                  },
-                },
-              }
-              if ( relatedFile.file_type === 'output') {
-                edge.target = fileExistsOnGraph ? fileExistsOnGraph : newNode;
-                edge.source = cell;
-              }
-                graphRef.current.addEdge(edge, { name: 'add-asset' });
-            });
+            addRelatedFiles(realtedFiles, cell)
           }
         }
       } catch (error) {
@@ -289,6 +255,48 @@ function GraphX6({readOnly = false}) {
     // console.timeEnd('jobFileRelation');
   };
 
+  const addRelatedFiles = ( realtedFiles, cell ) =>{
+     // 1. get all files,
+     const allFiles = graphRef.current.getNodes().filter(node => node.data.type === 'File' );
+     realtedFiles.forEach((relatedFile, index) => {
+       // 2. find all existing files on graph and add edge to point to them
+       const fileExistsOnGraph = allFiles.find((file) => file.data.assetId === relatedFile.assetId );
+       let newNode;
+
+       if (!fileExistsOnGraph) {            
+         // 3. create file nodes, place input file on top and output below job node.
+         const nodePositions = cell.getProp('position');
+         newNode = graphRef.current.addNode({
+           x: nodePositions.x + (index * 70),
+           y: relatedFile.file_type === 'output' ? nodePositions.y + 70 : nodePositions.y - 70,
+           shape: 'custom-shape',
+           data: {
+             type: 'File',
+             name: relatedFile.name,
+             title: relatedFile.title,
+             assetId: relatedFile.assetId,
+             subProcessId: undefined,
+           },
+         });
+       }
+       //4. Create Edges from Job to File
+       const edge = {
+         target: cell, 
+         source: fileExistsOnGraph ? fileExistsOnGraph : newNode,
+         attrs: {
+           line: {
+             stroke: relatedFile.file_type === 'output' ? "#35991c" : '#d64b4e', // green for output, red for input
+           },
+         },
+       }
+       if ( relatedFile.file_type === 'output') {
+         edge.target = fileExistsOnGraph ? fileExistsOnGraph : newNode;
+         edge.source = cell;
+       }
+         graphRef.current.addEdge(edge, { name: 'add-asset' });
+     });
+  }
+
   const updateAsset = (asset) => {
     if (asset) {
       const cell = configDialog.cell;
@@ -299,10 +307,119 @@ function GraphX6({readOnly = false}) {
     setConfigDialog({ ...defaultState }); // RESETS LOCAL STATE AND CLOSES DIALOG
   };
 
+  const handleSync = async () =>{
+    const graphJSON=  graphRef.current.toJSON({diff:true});
+    console.log('-graphJSON-----------------------------------------');
+    console.dir({graphJSON}, { depth: null });
+    console.log('------------------------------------------');
+    
+    try {
+      setSync(prev=>({...prev, loading: true, error:""}))
+      const cellsJSON = graphJSON.cells.reduce((acc, cell)=>{
+        if (cell.shape === 'edge'){
+          acc.edges.push(cell);
+        } else{
+          if (cell.data.type === 'Job' && cell.data.assetId){
+            acc.jobsToServer.push({id:cell.data.assetId, name: cell.data.name});
+            acc.jobs.push(cell)
+          }
+          if (cell.data.type === 'File' && cell.data.assetId){
+            acc.files.push(cell);
+          }
+        }
+        return acc
+      },{ jobs:[], files:[], edges:[], jobsToServer:[] })
+
+      const options = {
+        method: 'POST',
+        headers: authHeader(),
+        body: JSON.stringify({
+          applicationId: applicationId,
+          dataflowId: dataflowId,
+          clusterId:clusterId,
+          jobList: cellsJSON.jobsToServer
+        })
+      }
+
+      const response = await fetch('/api/job/syncDataflow', options)
+      if (!response.ok) handleError(response)
+      
+      const data = await response.json();
+
+      const result = data.result// array of {job:<assetId>, relatedFiles:{...}}
+      const assetsIds = data.assetsIds // array of strings of all assetIds created or modified
+    
+      const {files, jobs, edges} = cellsJSON;
+      
+      console.log('-data-----------------------------------------');
+      console.dir({data,  files,  jobs, edges}, { depth: null });
+      console.log('------------------------------------------');
+
+      if (result?.length > 0){
+        result.forEach(el =>{
+          if (el.relatedFiles.length > 0){
+            const cellJSON = jobs.find(existingJob => {
+              return existingJob.data.assetId === el.job
+            });
+            const cell = graphRef.current.getCellById(cellJSON.id);
+            // REMOVE NOT RELATED EDGES
+            const incomingEdges = graphRef.current.getIncomingEdges(cell);
+            const outgoingEdges = graphRef.current.getOutgoingEdges(cell)
+
+            if (incomingEdges) {
+              incomingEdges.forEach(edge =>{
+                const source = edge.getSourceNode();
+                if (source) {
+                  const isFile = source.data.type === 'File'
+                  if (isFile){
+                    const fileExist = assetsIds.includes(source.data.assetId);
+                    if(!fileExist){
+                      source.remove()
+                    }else{
+                      graphRef.current.removeEdge(edge);
+                    }
+                  }
+                }
+              })
+            }
+
+            if (outgoingEdges) {
+              outgoingEdges.forEach(edge =>{
+                const target = edge.getTargetNode();
+                if (target) {
+                  const isFile = target.data.type === 'File';
+                  if (isFile){
+                    const fileExist = assetsIds.includes(target.data.assetId);
+                    if(!fileExist){
+                      target.remove()
+                    }else{
+                      graphRef.current.removeEdge(edge);
+                    }
+                  }
+                }
+              })
+            }
+
+            // ADD NEW EDGES
+            addRelatedFiles(el.relatedFiles, cell)
+          }
+        })
+      }
+      
+      setSync(prev=>({...prev, loading: false}))
+    } catch (error) {
+      console.log('-error-----------------------------------------');
+      console.dir({error}, { depth: null });
+      console.log('------------------------------------------');
+      
+      setSync(prev=>({...prev, error: error.message, loading: false}))
+      message.error('Could not synchronize graph ');
+    }
+  }
 
   return (
     <>
-      <CustomToolbar graphRef={graphRef} />
+      <CustomToolbar graphRef={graphRef} handleSync={handleSync} isSyncing={sync.loading} />
       <div className='graph-container'>
         {readOnly ? null : <div className='stencil' ref={stencilContainerRef} /> }
         <div className={`${readOnly ? 'graph-container-readonly' : 'graph-container-stencil'}`} ref={graphContainerRef} />

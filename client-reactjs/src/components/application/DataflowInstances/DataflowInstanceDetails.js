@@ -1,7 +1,6 @@
 import React, { Component } from "react";
 import { Button, Table, Divider, message, Icon, Tooltip, Row, Col, Tabs, Spin } from 'antd/lib';
 import { NavLink, Switch, Route, withRouter } from 'react-router-dom';
-import GraphX6 from "../Dataflow/GraphX6";
 import {Graph} from "../Dataflow/Graph";
 import {FileTable} from "../FileTable";
 import QueryTable from "../QueryTable";

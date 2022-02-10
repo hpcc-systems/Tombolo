@@ -38,6 +38,7 @@ const SUBMIT_GITHUB_JOB_FILE_NAME = 'submitGithubJob.js'
     - removing edges to those nodes
     - finally de-duping nodes and edges array
 **/
+// !! NOT IN USE ANYMORE
 let updateDataFlowGraph = (applicationId, dataflowId, nodes, edges, filesToBeRemoved) => {
   return new Promise((resolve, reject) => {
     DataflowGraph.findOrCreate({
@@ -54,7 +55,7 @@ let updateDataFlowGraph = (applicationId, dataflowId, nodes, edges, filesToBeRem
         return DataflowGraph.findOne({where: {application_id:applicationId, dataflowId:dataflowId}});
       }
     }).then((dataflowGraph) => {
-      let currentNodes = JSON.parse(dataflowGraph.nodes);
+      let currentNodes = JSON.parse(dataflowGraph.nodes); 
       let currentEdges = JSON.parse(dataflowGraph.edges);
       //console.log("***************filesToBeRemoved**********")
       //console.log(currentNodes);
@@ -144,6 +145,7 @@ let updateDataFlowGraph = (applicationId, dataflowId, nodes, edges, filesToBeRem
   from previous job, instead of creating a new set of files, the dataflow will be updated showing a path from the input files from previous jobs to
   the new job
 **/
+// !! NOT IN USE ANYMORE
 let updateFileRelationship = (jobId, job, files, filesToBeRemoved, existingNodes) => {
   let fieldsToUpdate={}, promises=[], nodes = [], edges = [], inputY=0, outputY=0, existingNode={};
   return new Promise(async (resolve, reject) => {
@@ -304,7 +306,7 @@ let updateFileRelationship = (jobId, job, files, filesToBeRemoved, existingNodes
     }
   })
 }
-
+// !! NOT IN USE ANYMORE
 let getYPosition = (yPos, type, jobYPos, files) => {
   //find the y of the first node assmuming nodes are placed from top to bottom.
   //TopY = No:Of input files / 2 * (2 * 65)
@@ -317,7 +319,7 @@ let getYPosition = (yPos, type, jobYPos, files) => {
   }
   return yPos;
 }
-
+// !! NOT IN USE ANYMORE
 let findFilesRemovedFromJob = (currentFiles, filesFromCluster) => {
   let filesTobeRemoved = [];
   currentFiles.forEach((currentFile) => {
@@ -333,6 +335,7 @@ let findFilesRemovedFromJob = (currentFiles, filesFromCluster) => {
   This method updates the JobFile table based on the changes happend to the Job
   It also identifies the files that are removed from the Job, so the nodes & edges can be removed
 **/
+// !! NOT IN USE ANYMORE
 let updateJobDetails = (applicationId, jobId, jobReqObj, autoCreateFiles, nodes, dataflowId) => {
   let fieldsToUpdate = {"job_id"  : jobId, "application_id" : applicationId};
 
@@ -373,13 +376,13 @@ let updateJobDetails = (applicationId, jobId, jobReqObj, autoCreateFiles, nodes,
       await AssetDataflow.findOrCreate({
         where: {assetId: jobId, dataflowId: dataflowId},
         defaults: {
-          assetId: file.id,
+          assetId: file.id, // ?? undefined
           dataflowId: dataflowId
         }
       })
     }
 
-     var jobParamsToSave = updateCommonData(jobReqObj.params, fieldsToUpdate);
+     var jobParamsToSave = updateCommonData(jobReqObj.params, fieldsToUpdate); //?? jobReqObj.params = []
      JobParam.destroy({where:{application_id:applicationId, job_id: jobId}}).then((deleted) => {
         return JobParam.bulkCreate(jobParamsToSave)
       }).then(function(jobParam) {
@@ -405,127 +408,8 @@ let updateJobDetails = (applicationId, jobId, jobReqObj, autoCreateFiles, nodes,
   })
 }
 
-router.post( "/jobFileRelation", [
-    body("jobId").optional({ checkFalsy: true }).isUUID(4).withMessage("Invalid job id"),
-    body("dataflowId").optional({ checkFalsy: true }).isUUID(4).withMessage("Invalid dataflowId"),],  async (req, res) => {
-
-    const errors = validationResult(req).formatWith(validatorUtil.errorFormatter);
-    if (!errors.isEmpty()) return res.status(422).json({ success: false, errors: errors.array() });
-
-    console.time('jobFileRelation');
-
-    try {
-      const job = await Job.findOne({ where: { id: req.body.jobId } });
-      if (!job) throw new Error("Job does not exist");
-
-      const result = await hpccUtil.getJobWuDetails(job.cluster_id, job.name);
-      if (!result.wuid) throw new Error("Could not find WU details by job name");
-
-      const jobInfo = await hpccUtil.getJobInfo(job.cluster_id, result.wuid, job.jobType);
-      const jobfiles = jobInfo?.jobfiles;
-
-      const relatedFiles = [];
-
-      if (jobfiles?.length > 0) {
-
-        for (const jobfile of jobfiles) {
-          const fileInfo = await hpccUtil.fileInfo(jobfile.name, job.cluster_id);
-          if (fileInfo) {
-            // create or update File
-            const fileFields = {
-              title: fileInfo.basic.fileName,
-              scope: fileInfo.basic.scope,
-              fileType: fileInfo.basic.fileType,
-              isSuperFile: fileInfo.basic.isSuperFile,
-              description: fileInfo.basic.description,
-              qualifiedPath: fileInfo.basic.pathMask,
-            };
-
-            let [file, isFileCreated] = await File.findOrCreate({
-              where: {
-                name: fileInfo.basic.name,
-                cluster_id: job.cluster_id,
-                application_id: job.application_id,
-              },
-              defaults: fileFields,
-            });
-            if (!isFileCreated) file = await file.update(fileFields);
-
-            // create or update FileLayout
-            const layoutFields = { fields: JSON.stringify(fileInfo.file_layouts) };
-
-            let [layout, isLayoutCreated] = await FileLayout.findOrCreate({
-              where: {
-                file_id: file.id,
-                application_id: file.application_id,
-              },
-              defaults: layoutFields,
-            });
-            if (!isLayoutCreated) layout = await layout.update(layoutFields);
-
-            // updateCommonData
-            const fileValidations = fileInfo.file_validations.map(el=> ({
-              ...el,
-              file_id: file.id,
-              application_id: file.application_id
-            }))
-            
-            // create FileValidation
-            await FileValidation.bulkCreate(fileValidations, {
-              updateOnDuplicate: ["name", "ruleType", "rule", "action", "fixScript"],
-            });
-
-            // create or update JobFile relationship
-            const jobfileFields = {
-              name: file.name,
-              file_type: file.fileType,
-              description: file.description,
-            };
-
-            let [jobFile, isJobFileCreated] = await JobFile.findOrCreate({
-              where: {
-                job_id: job.id,
-                file_id: file.id,
-                application_id: file.application_id,
-              },
-              defaults: jobfileFields,
-            });
-            if (!isJobFileCreated) jobFile = await jobFile.update(jobfileFields);
-
-            // create assetDataflow if still not exists
-            await AssetDataflow.findOrCreate({
-              where: {
-                assetId: file.id,
-                dataflowId: req.body.dataflowId,
-              },
-            });
-            // construct object with fields that is going to be used to create a graph nodes
-            const relatedFile ={ 
-              assetId: file.id,
-              name: file.name,
-              title: file.title,
-              file_type: jobfile.file_type //'input' | 'output' 
-            }
-            // ADD FILE TO RELATED FILE LIST
-            relatedFiles.push(relatedFile);
-          }
-        }
-      }
-      console.log('------------------------------------------');
-      console.timeEnd('jobFileRelation');
-      console.log('------------------------------------------');
-      res.send(relatedFiles);
-    } catch (error) {
-      console.log("-error /jobFileRelation-----------------------------------------");
-      console.dir({ error }, { depth: null });
-      console.log("------------------------------------------");
-      res.status(500).send("Could not find related files");
-    }
-  }
-);
-
-
-router.post('/createFileRelation', [
+// !! NOT IN USE ANYMORE
+router.post('/createFileRelation[old]', [
   body('jobId').optional({checkFalsy:true}).isUUID(4).withMessage('Invalid job id'),
   body('clusterId').optional({checkFalsy:true}).isUUID(4).withMessage('Invalid cluster id'),
   body('dataflowId').optional({checkFalsy:true}).isUUID(4).withMessage('Invalid dataflowId'),
@@ -572,7 +456,8 @@ router.post('/createFileRelation', [
   })
 });
 
-router.post('/refreshDataflow', [
+// !! NOT IN USE ANYMORE
+router.post('/refreshDataflow[old]', [
   body('dataflowId').isUUID(4).withMessage('Invalid dataflow id'),
   body('application_id').isUUID(4).withMessage('Invalid application id'),
 ], async (req, res) => {
@@ -632,6 +517,244 @@ router.post('/refreshDataflow', [
   }
 })
 
+const createOrUpdateFile = async ({jobfile, jobId, clusterId, dataflowId, applicationId}) =>{
+  try {
+    const fileInfo = await hpccUtil.fileInfo(jobfile.name, clusterId);
+    if (fileInfo) {
+      // create or update File
+      const fileFields = {
+        title: fileInfo.basic.fileName,
+        scope: fileInfo.basic.scope,
+        fileType: fileInfo.basic.fileType,
+        isSuperFile: fileInfo.basic.isSuperFile,
+        description: fileInfo.basic.description,
+        qualifiedPath: fileInfo.basic.pathMask,
+      };
+
+      let [file, isFileCreated] = await File.findOrCreate({
+        where: {
+          name: fileInfo.basic.name,
+          cluster_id: clusterId,
+          application_id: applicationId,
+        },
+        defaults: fileFields,
+      });
+      if (!isFileCreated) file = await file.update(fileFields);
+
+      // create or update FileLayout
+      const layoutFields = { fields: JSON.stringify(fileInfo.file_layouts) };
+
+      let [layout, isLayoutCreated] = await FileLayout.findOrCreate({
+        where: {
+          file_id: file.id,
+          application_id: file.application_id,
+        },
+        defaults: layoutFields,
+      });
+      if (!isLayoutCreated) layout = await layout.update(layoutFields);
+
+      // updateCommonData
+      const fileValidations = fileInfo.file_validations.map((el) => ({
+        ...el,
+        file_id: file.id,
+        application_id: file.application_id,
+      }));
+
+      // create FileValidation
+      await FileValidation.bulkCreate(fileValidations, {
+        updateOnDuplicate: ['name', 'ruleType', 'rule', 'action', 'fixScript'],
+      });
+
+      // create or update JobFile relationship
+      const jobfileFields = {
+        name: file.name,
+        file_type: file.fileType,
+        description: file.description,
+      };
+
+      let [jobFile, isJobFileCreated] = await JobFile.findOrCreate({
+        where: {
+          job_id: jobId,
+          file_id: file.id,
+          application_id: file.application_id,
+        },
+        defaults: jobfileFields,
+      });
+      if (!isJobFileCreated) jobFile = await jobFile.update(jobfileFields);
+
+      // create assetDataflow if still not exists
+      await AssetDataflow.findOrCreate({
+        where: {
+          assetId: file.id,
+          dataflowId: dataflowId,
+        },
+      });
+      // construct object with fields that is going to be used to create a graph nodes
+      const relatedFile = {
+        assetId: file.id,
+        relatedTo: jobId,
+        name: file.name,
+        title: file.title,
+        file_type: jobfile.file_type, //'input' | 'output'
+      };
+      // ADD FILE TO RELATED FILE LIST
+      return relatedFile;
+    }
+  } catch (error) {
+    console.log('------------------------------------------');
+    console.dir({ error }, { depth: null });
+    return null;
+  }
+}; 
+
+router.post( '/jobFileRelation',
+  [
+    body('jobId').optional({ checkFalsy: true }).isUUID(4).withMessage('Invalid job id'),
+    body('dataflowId').optional({ checkFalsy: true }).isUUID(4).withMessage('Invalid dataflowId'),
+  ],
+  async (req, res) => {
+    const errors = validationResult(req).formatWith(validatorUtil.errorFormatter);
+    if (!errors.isEmpty()) return res.status(422).json({ success: false, errors: errors.array() });
+
+    console.time('jobFileRelation');
+
+    try {
+      const job = await Job.findOne({ where: { id: req.body.jobId } });
+      if (!job) throw new Error('Job does not exist');
+
+      const result = await hpccUtil.getJobWuDetails(job.cluster_id, job.name);
+      if (!result.wuid) throw new Error('Could not find WU details by job name');
+
+      const jobInfo = await hpccUtil.getJobInfo(job.cluster_id, result.wuid, job.jobType);
+      const jobfiles = jobInfo?.jobfiles;
+      //{ jobfiles: [ { name: 'usa::cars.csv', file_type: 'input' } ] }
+      
+      const relatedFiles = [];
+
+      if (jobfiles?.length > 0) {
+        for (const jobfile of jobfiles) {
+         const file = await createOrUpdateFile({
+           jobfile: jobfile,
+           jobId: job.id,
+           applicationId:job.application_id,
+           clusterId: job.cluster_id,
+           dataflowId: req.body.dataflowId,
+          })
+          if (file){
+            relatedFiles.push(file)
+          }
+        }
+      }
+      console.log('------------------------------------------');
+      console.timeEnd('jobFileRelation');
+      console.log('------------------------------------------');
+      res.send(relatedFiles);
+    } catch (error) {
+      console.log('-error /jobFileRelation-----------------------------------------');
+      console.dir({ error }, { depth: null });
+      console.log('------------------------------------------');
+      res.status(500).send('Could not find related files');
+    }
+  }
+);
+
+router.post('/syncDataflow', [
+  body('dataflowId').isUUID(4).withMessage('Invalid dataflow id'),
+  body('application_id').isUUID(4).withMessage('Invalid application id'),
+], async (req, res) => {
+  // {
+  //   applicationId: 'e06563e9-9490-4940-a737-bad9a5a765ee',
+  //   dataflowId: '898a568d-9fed-4464-bf94-8a4609f198cd',
+  //   clusterId: 'd399a40a-e2b3-4b65-9804-266ef2031cee',
+  //   jobList: [
+  //     { id: '708da72c-2d96-4066-be64-86e8342432cc', name: 'getCars.ecl' }
+  //   ]
+  console.log('-req.body-----------------------------------------');
+  console.dir(req.body, { depth: null });
+  console.log('------------------------------------------');
+try {
+  
+  const { applicationId, dataflowId, clusterId, jobList } = req.body
+
+  const filesPromises = [];
+
+  for ( const job of jobList) {
+    const getFiles = new Promise(async(resolve, reject) =>{
+        try {
+          const result = await hpccUtil.getJobWuDetails(clusterId, job.name);
+        if (!result.wuid) throw new Error('Could not find WU details by job name');
+    
+        const jobInfo = await hpccUtil.getJobInfo(clusterId, result.wuid, "Job" );
+        const jobfiles = jobInfo?.jobfiles;
+        //{ jobfiles: [ { name: 'usa::cars.csv', file_type: 'input' } ] }
+        const relatedFiles=[];
+        if (jobfiles?.length > 0) {
+          for (const jobfile of jobfiles) {
+           const file = await createOrUpdateFile({ jobId: job.id, applicationId, dataflowId, clusterId, jobfile, })
+            if (file){
+              relatedFiles.push(file)
+            }
+          }
+        }
+        resolve({job:job.id, relatedFiles})
+      } catch (error) {
+        console.log('error', error);
+        reject();
+      }
+    })
+    
+    filesPromises.push(getFiles)
+  }
+
+  const settled = await Promise.allSettled(filesPromises);
+
+  const result = settled.reduce((acc,el) =>{
+    if (el.status === 'fulfilled'){
+      acc.push(el.value)
+    }
+    return acc;
+  },[])
+
+  const allAssetsIds = [];
+
+  // Delete JobFile record if file is not associated anymore
+  if (result.length > 0) {    
+    for (const record of result){
+      if (record.relatedFiles.length > 0 ){
+        const filesIds = record.relatedFiles.map(file => file.assetId) 
+        allAssetsIds.push(filesIds)     
+        try {
+          const deleted = await JobFile.destroy({
+            where:{
+              job_id: record.job,
+              application_id: applicationId,
+              file_id:{
+                [Op.not]: filesIds
+              }
+            }}) 
+            console.log('-deleted-----------------------------------------');
+            console.dir({deleted}, { depth: null });
+            console.log('------------------------------------------');
+          } catch (error) {
+            console.log('error', error);
+          }
+        }
+      }
+  }
+  const respond= {
+    result, // array of {job:<assetId>, relatedFiles:{...}}
+    assetsIds: allAssetsIds.flat(Infinity) // array of strings of all assetIds created or modified
+  }
+  console.log('-respond-----------------------------------------');
+  console.dir({respond}, { depth: null });
+  console.log('------------------------------------------');
+  res.json(respond);
+} catch (error) {
+  console.log(err);
+  return res.status(500).json({ success: false, message: "Error occurred while updating" });
+}
+});
+
 router.post('/saveJob', [
   body('id')
   .optional({checkFalsy:true})
@@ -682,12 +805,7 @@ router.post('/saveJob', [
             groupId: req.body.job.basic.groupId
           }
         })
-      }
-      
-      let response = await updateJobDetails(applicationId, jobId, req.body.job, req.body.job.autoCreateFiles, [], req.body.job.basic.dataflowId).catch((err) => {
-        console.log("Error occured in updateJobDetails....")
-        return res.status(500).json({ success: false, message: "Error occured while saving the job" });
-      });
+      }     
 
       switch (req.body.job.schedule.type) { 
         case "":
@@ -895,7 +1013,7 @@ router.post('/saveJob', [
             });
           }
       }
-    return res.json(response);
+    return res.json({"success": true, "title":req.body.job.basic.title, "jobId":job.id});
   });
 
   } catch (err) {
@@ -938,7 +1056,6 @@ router.get('/job_list', [
     return res.status(500).json({ success: false, message: "Error occured while retrieving jobs" });
   }
 });
-
 
 router.get('/job_details', [
   query('app_id')
@@ -1213,6 +1330,8 @@ router.post('/manualJobResponse', [
 
 
 const QueueDaemon = require('../../queue-daemon');
+const { resolve } = require('path');
+const { reject } = require('lodash');
 
 router.get('/msg', (req, res) => {
   if (req.query.topic && req.query.message) {

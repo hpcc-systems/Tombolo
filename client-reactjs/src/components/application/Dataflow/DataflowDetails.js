@@ -9,7 +9,7 @@ import AntdGraph from "./AntdGraph";
 import BreadCrumbs from "../../common/BreadCrumbs";
 import {Constants} from "../../common/Constants"
 import {store} from "../../../redux/store/Store"
-import GraphX6 from './GraphX6';
+import GraphX6 from '../Graph/GraphX6';
 const TabPane = Tabs.TabPane;
 
 function DataflowDetails({props}) {  
@@ -29,26 +29,6 @@ function DataflowDetails({props}) {
     })
   }
 
-  //Show how to connect node instruction
-  useEffect(() =>{
-    if(currentTab === "1"){
-      notification.open({
-        message: <span style={{display: "flex", placeItems : "center"}}>
-          <InfoCircleOutlined style={{paddingRight: "10px"}}/>  <span>To connect nodes, hold down <b>SHIFT</b>  key and drag</span></span>,
-        duration: 0,
-        className: 'graphNotice',
-        placement: 'bottomRight'
-      })
-    }else{
-      notification.destroy()
-    }
-  
-    //Clean up
-    return() =>{
-      notification.destroy()
-    }
-  }, [currentTab])
-
 	return (
 	  <React.Fragment>
        <div style={{display: "flex", justifyContent: "space-between"}}>
@@ -63,10 +43,7 @@ function DataflowDetails({props}) {
           <Tabs defaultActiveKey="1"
           onChange={(activeKey) => { setCurrentTab(activeKey)}}
           tabBarExtraContent = {currentTab === "1" ? <span> 
-            <Tooltip placement="topRight" title={"Refresh will validate the file/job relationship and update graph accordingly"}>
-                <Button style={{marginRight: "5px"}} type="primary" onClick={() =>  setGraphRefresh(!refreshGraph)}>Refresh</Button> 
-            </Tooltip>
-                <Button type="link" onClick={(handleBackToAllJobs)} type="primary" ghost> Cancel</Button> </span> : null}
+                <Button type='primary' onClick={(handleBackToAllJobs)}  ghost> Cancel</Button> </span> : null}
           >
             <TabPane tab="Designer" key="1" forceRender={true}>
               <GraphX6 readOnly={false} />
