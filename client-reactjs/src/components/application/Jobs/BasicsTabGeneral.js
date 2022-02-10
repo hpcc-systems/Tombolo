@@ -96,14 +96,16 @@ function BasicsTabGeneral({ enableEdit, editingAllowed, addingNewAsset, jobType,
   return (
     <React.Fragment>
      <Spin spinning={job.loading} tip="loading job details"> 
-      <Form.Item hidden={hideOnReadOnlyView} label="Cluster" name="clusters">
+      <Form.Item hidden={hideOnReadOnlyView} label="Cluster" >
         <Row gutter={[8, 8]}>
           <Col span={12}>
-            <Select placeholder="Select a Cluster" disabled={!editingAllowed} onChange={onClusterSelection}>
-              {clusters.map((cluster) => (
-                <Option key={cluster.id}>{cluster.name}</Option>
-              ))}
-            </Select>
+            <Form.Item noStyle name="clusters" >
+              <Select placeholder="Select a Cluster" disabled={!editingAllowed} onChange={onClusterSelection}>
+                {clusters.map((cluster) => (
+                  <Option key={cluster.id}>{cluster.name}</Option>
+                ))}
+              </Select>
+            </Form.Item>
           </Col>
         </Row>
       </Form.Item>
