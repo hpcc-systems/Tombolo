@@ -1,4 +1,5 @@
 const { parentPort, workerData } = require("worker_threads");
+const { v4: uuidv4 } = require('uuid');
 const assetUtil = require('../utils/assets.js');
 
 let isCancelled = false;
@@ -21,6 +22,7 @@ const dispatchAction = (action,data) =>  parentPort.postMessage({ action, data }
       clusterId: workerData.clusterId,
       jobName : workerData.jobName,
       jobId: workerData.jobId,
+      jobExecutionGroupId : workerData.jobExecutionGroupId || uuidv4()
     }
 
     logToConsole(`✔️ SUBMITGITHUBJOB.JS: CREATING GITHUB FLOW WITH BREE FOR JOB ${workerData.jobName} id:${workerData.jobId}; dflow: ${workerData.dataflowId};`);     

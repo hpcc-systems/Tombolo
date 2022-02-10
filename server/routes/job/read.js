@@ -775,17 +775,6 @@ router.post('/saveJob', [
   var jobId=req.body.id, applicationId=req.body.job.basic.application_id, fieldsToUpdate={}, nodes=[], edges=[];
   
   try {
-  const metadata = req.body.job.basic.metaData;
-    if (metadata?.isStoredOnGithub){
-      try{
-         if (metadata.gitHubFiles?.gitHubUserName ) metadata.gitHubFiles.gitHubUserName = crypto.createCipher(algorithm, process.env['cluster_cred_secret']).update(metadata.gitHubFiles.gitHubUserName,'utf8','hex');
-         if (metadata.gitHubFiles?.gitHubUserAccessToken)  metadata.gitHubFiles.gitHubUserAccessToken =crypto.createCipher(algorithm, process.env['cluster_cred_secret']).update(metadata.gitHubFiles.gitHubUserAccessToken,'utf8','hex');
-       }catch(error){
-        console.log('CIPHER ERROR------------------------------------------');
-        console.dir(error, { depth: null });
-        console.log('------------------------------------------');    
-       }
-    }
 
     Job.findOne({where: {name: req.body.job.basic.name, application_id: applicationId}, attributes:['id']}).then(async (existingJob) => {
       let job = null;
@@ -1149,17 +1138,6 @@ router.get('/job_details', [
           }
         }
 
-        const metadata = jobData.metaData;
-        if (metadata?.isStoredOnGithub){
-            try {
-              if (metadata.gitHubFiles?.gitHubUserName) metadata.gitHubFiles.gitHubUserName = crypto.createDecipher(algorithm, process.env['cluster_cred_secret']).update(metadata.gitHubFiles.gitHubUserName,'hex','utf8');
-              if (metadata.gitHubFiles?.gitHubUserAccessToken) metadata.gitHubFiles.gitHubUserAccessToken =crypto.createDecipher(algorithm, process.env['cluster_cred_secret']).update(metadata.gitHubFiles.gitHubUserAccessToken,'hex','utf8');
-            } catch (error) {
-              console.log( 'COULD NOT DECIPHER------------------------------------------');
-              console.dir(error, { depth: null });
-              console.log('------------------------------------------');
-          }
-        }
  
         return jobData;
       } else {
@@ -1220,7 +1198,7 @@ router.post('/executeJob', [
   body('dataflowId').optional({ checkFalsy: true })
       .isUUID(4).withMessage('Invalid dataflow id'),
   body('jobName')
-    .matches(/^[a-zA-Z]{1}[a-zA-Z0-9_.\-:]*$/).withMessage('Invalid job name'),
+    .matches(/^[a-zA-Z]{1}[a-zA-Z0-9_.\-: ]*$/).withMessage('Invalid job name'),
 ], async (req, res) => {
   const errors = validationResult(req).formatWith(validatorUtil.errorFormatter);
   if (!errors.isEmpty()) {
@@ -1277,7 +1255,7 @@ router.get('/jobExecutionDetails', [
   }
   console.log("[jobExecutionDetails] - Get jobExecutionDetails for app_id = " + req.query.applicationId);
   try {
-    let query = 'select je.id,  je.jobId as task, je.dataflowId, je.applicationId, je.status, je.wuid, je.wu_duration, je.clusterId, je.updatedAt, je.manualJob_meta, j.jobType, j.name from '+
+    let query = 'select je.id,  je.jobId as task, je.dataflowId, je.applicationId, je.status, je.wuid, je.wu_duration, je.clusterId, je.updatedAt, je.createdAt, je.manualJob_meta, je.jobExecutionGroupId, j.jobType, j.name from '+
             'job_execution je, job j '+
             'where je.dataflowId = (:dataflowId) and je.applicationId = (:applicationId) and j.id = je.jobId';
     let replacements = { applicationId: req.query.applicationId, dataflowId: req.query.dataflowId};
@@ -1316,7 +1294,8 @@ router.post('/manualJobResponse', [
                               if (jobExecution.status === 'completed') {
                                 await  JobScheduler.scheduleCheckForJobsWithSingleDependency({
                                   dependsOnJobId : jobExecution.jobId,
-                                  dataflowId : jobExecution.dataflowId
+                                  dataflowId : jobExecution.dataflowId,
+                                  jobExecutionGroupId : jobExecution.jobExecutionGroupId
                                 });
                               }
                               }).then(res.status(200).json({success : true}))

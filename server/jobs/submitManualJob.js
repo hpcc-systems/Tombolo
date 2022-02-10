@@ -1,7 +1,10 @@
 const { parentPort, workerData } = require("worker_threads");
-const assetUtil = require('../utils/workflow-util');
+const workFlowUtil = require('../utils/workflow-util');
+const assetUtil = require('../utils/assets.js');
 const models = require('../models');
+const { v4: uuidv4 } = require('uuid');
 const JobExecution = models.job_execution;
+
 
 let isCancelled = false;
 if (parentPort) {
@@ -14,16 +17,21 @@ const logToConsole = (message) => parentPort.postMessage({action:"logging", data
 const dispatchAction = (action,data) =>  parentPort.postMessage({ action, data });   
 
 (async () => {
-	logToConsole("Send notification ...");	
-	let jobExecution;
+	logToConsole("Send notification ...");
+	if(!workerData.jobExecutionGroupId){
+		workerData.jobExecutionGroupId = uuidv4();
+	}
+		
+	let execution;
 	try {
 		workerData.notifiedOn = new Date().getTime();
-		jobExecution = await JobExecution.create(workerData);
-    workerData.url = `${process.env.WEB_URL}${workerData.applicationId}/manualJobDetails/${workerData.jobId}/${jobExecution.id}`;
-		await assetUtil.notifyManualJob(workerData);
+		workerData.status= 'wait';
+		execution = await assetUtil.recordJobExecution(workerData)
+    	workerData.url = `${process.env.WEB_URL}${workerData.applicationId}/manualJobDetails/${workerData.jobId}/${execution}`;
+		await workFlowUtil.notifyManualJob(workerData);
 	}catch (err) {
-		if(jobExecution){
-			await jobExecution.update({status : 'error'})
+		if(execution){
+			await JobExecution.update({status : 'error'}, {where : {id : execution}})
 		}
 		logToConsole(err)
 	} finally{

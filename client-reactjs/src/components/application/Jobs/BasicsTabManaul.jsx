@@ -1,6 +1,6 @@
 import React, {useState, useEffect} from 'react'
 import { authHeader, handleError } from "../../common/AuthHeader.js"
-import { Form, Input, Select} from 'antd/lib';
+import { Col, Form, Input, Row, Select} from 'antd/lib';
 import ReactMarkdown from 'react-markdown';
 import { MarkdownEditor } from "../../common/MarkdownEditor.js";
 import { useSelector,useDispatch } from "react-redux";
@@ -67,9 +67,7 @@ function BasicsTabManul(props) {
 
     //when dropzone is selected make call to get the dirs and files
     const loadData = (selectedOptions) =>{
-      let pathOptions = [...selectedOptions];  // make a copy so the original array is not mutated
-      pathOptions.splice(1,1); // Remove machine address
-      const pathToAsset = pathOptions.map(item =>item.value).join("/") + "/"; // join options array with "/" to create a path
+      const pathToAsset = selectedOptions.map(item =>item.value).join("/") + "/"; // join options array with "/" to create a path
       const host = clusters.filter(item => item.id === selectedCluster)
       const targetOption = selectedOptions[selectedOptions.length - 1];
 
@@ -127,9 +125,13 @@ function BasicsTabManul(props) {
         <>  
             {enableEdit ? 
              <Form.Item  label="Cluster" name="clusters" hidden={readOnlyView}>
-                <Select placeholder="Select a Cluster" disabled={!editingAllowed} onChange={onClusterSelection} style={{ width: 190 }}>
-                    {clusters.map(cluster => <Option key={cluster.id}>{cluster.name}</Option>)}
-                </Select>
+                <Row gutter={[8, 8]}>
+                  <Col span={12}>
+                    <Select placeholder="Select a Cluster" disabled={!editingAllowed} onChange={onClusterSelection}>
+                      {clusters.map(cluster => <Option key={cluster.id}>{cluster.name}</Option>)}
+                    </Select>
+                  </Col>
+                </Row>
               </Form.Item>
            : null}
 

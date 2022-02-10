@@ -58,6 +58,7 @@ const dataflowGraph = require('./routes/dataflows/dataflowgraph');
 const workflows = require('./routes/workflows/router');
 const dataDictionary = require('./routes/data-dictionary/data-dictionary-service');
 const groups = require('./routes/groups/group');
+const ghCredentials = require('./routes/ghCredentials');
 
 app.use('/api/app/read', tokenService.verifyToken, appRead);
 app.use('/api/file/read', tokenService.verifyToken, fileRead);
@@ -76,6 +77,7 @@ app.use('/api/workflows', tokenService.verifyToken, workflows);
 app.use('/api/data-dictionary', tokenService.verifyToken, dataDictionary);
 app.use('/api/user', userRead);
 app.use('/api/groups', tokenService.verifyToken, groups);
+app.use('/api/ghcredentials', tokenService.verifyToken, ghCredentials);
 
 //process.env["NODE_TLS_REJECT_UNAUTHORIZED"] = 0;
 

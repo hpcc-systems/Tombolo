@@ -38,4 +38,4 @@ function AssetDetailsDialog(props) {
 	)
 }
 
-export default AssetDetailsDialog
+export default AssetDetailsDialog;

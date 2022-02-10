@@ -7,6 +7,7 @@
     "@antv/x6": "^1.28.1",
     "@antv/x6-react-components": "^1.1.15",
     "@antv/x6-react-shape": "^1.6.0",
+    "@ant-design/icons": "^4.7.0",
     "@hpcc-js/codemirror": "^2.38.0",
     "@testing-library/jest-dom": "^5.11.9",
     "@testing-library/react": "^9.3.2",
@@ -45,7 +46,7 @@
     "xml2js": "^0.4.23"
   },
   "devDependencies": {
-    "react-scripts": "^4.0.1"
+    "react-scripts": "^4.0.3"
   },
   "scripts": {
     "start": "react-scripts start",

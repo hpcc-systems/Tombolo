@@ -23,20 +23,18 @@ export function authHeader(action) {
 
 export function handleError(response) {
   message.config({top:130})
+  
   if(response.status == 401) {
     //token expired
     localStorage.removeItem('user');
     store.dispatch(userActions.logout());
   } else if(response.status == 422) {
-    throw Error("Error occured while saving the data. Please check the form data");
-    // message.error("Error occured while saving the data. Please check the form data")
+    throw Error("Error ocurred while saving the data. Please check the form data");
   } else {
     let errorMessage = '';
     response.json().then((responseData) => {
       errorMessage = responseData.message;
-      //throw new Error(errorMessage);
-      message.error(errorMessage);
+      throw  Error(errorMessage);
     })
-    throw Error(errorMessage)
   }
 }

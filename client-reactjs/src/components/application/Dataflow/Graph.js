@@ -2,9 +2,7 @@ import React, { Component } from "react";
 import * as d3 from "d3";
 import '../../graph-creator/graph-creator.css';
 import $ from 'jquery';
-import { Button, Icon, Drawer, Row, Col, Descriptions, Badge, Modal, message, Spin, Tooltip, Menu, Checkbox, Dropdown} from 'antd/lib';
-import { Typography } from 'antd';
-import { withRouter } from 'react-router-dom';
+import { Button, Descriptions, Badge, Modal, message, Spin, Tooltip, Menu,  Dropdown} from 'antd/lib';
 import AssetDetailsDialog from "../AssetDetailsDialog"
 import ExistingAssetListDialog from "./ExistingAssetListDialog";
 import {updateGraph, changeVisibility} from "../../common/WorkflowUtil";
@@ -62,10 +60,8 @@ class Graph extends Component {
     showAssetListDlg: false,
     assetDetailsFormRef: null,
     loading: false,
-    nodes: []
+    nodes: [],
   }
-
- 
 
   consts = {
       selectedClass: "selected",
@@ -115,10 +111,10 @@ class Graph extends Component {
       });
     }
 
-    if(props.workflowDetails && props.workflowDetails.wuDetails && props.workflowDetails.wuDetails.length > 0) {
+    if(props.workflowDetails && props.workflowDetails.wuDetails && props.workflowDetails.wuDetails.length > 0 && props.selectedJobExecutionGroup) {
       //this.updateCompletionStatus(props.workflowDetails);
       this.fetchSavedGraph().then((result) => {
-        this.updateCompletionStatus(props.workflowDetails);
+        this.updateCompletionStatus(props.workflowDetails, props.selectedJobExecutionGroup);
       })
     }
 
@@ -269,7 +265,7 @@ class Graph extends Component {
       .on("end", console.log('blink ending'))*/
   }
 
-  updateCompletionStatus = (workflowDetails) => {
+  updateCompletionStatus = (workflowDetails, executionID) => {
     let _self=this;
     if(workflowDetails) {
       let completedTasks = _self.getTaskDetails(workflowDetails);
@@ -279,7 +275,7 @@ class Graph extends Component {
 
       d3.selectAll('.node rect').each(function(d) {
         let task = completedTasks.filter((task) => {
-          return task.id == d3.select(this).attr("id")
+          return task.id === d3.select(this).attr("id") &&  task.jobExecGroupId === executionID;
         })
         if(task && task.length > 0) {
           if(task[0].status == 'completed' || task[0].status == 'compiled') {
@@ -325,7 +321,8 @@ class Graph extends Component {
             "wu_start": workflowDetail.wu_start,
             "wu_end": workflowDetail.wu_end,
             "wu_duration": workflowDetail.wu_duration,
-            "cluster": workflowDetails.cluster
+            "cluster": workflowDetails.cluster,
+            "jobExecGroupId" : workflowDetail.jobExecutionGroupId
           })
         }
       });
@@ -1714,6 +1711,7 @@ class Graph extends Component {
 
       {this.state.openJobDetailsDialog ?
         <AssetDetailsDialog
+          viewMode={this.props.viewMode}
           assetType="job"
           assetId={this.state.selectedJob}
           nodes={this.thisGraph.nodes}
@@ -1808,7 +1806,7 @@ function mapStateToProps(state) {
       saveResponse
   };
 }
-const connectedGraph = connect(mapStateToProps)((withRouter(Graph)));
+const connectedGraph = connect(mapStateToProps)(Graph);
 export { connectedGraph as Graph };
 
 //export default Graph;

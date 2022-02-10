@@ -76,28 +76,6 @@ exports.confirmationManualJobAction = async (options) => {
     })
 }
 
-// Send notification for manual jobs in a workflow and update job execution table 
-exports.confirmationManualJobAction = async (options) => {
-  const {notifiedTo, response, jobName} = options;
-  return new Promise(async (resolve,reject) =>{
-      try {
-       await NotificationModule.notify({
-            from: process.env.EMAIL_SENDER,
-            to: notifiedTo,
-            subject: 'Confirmation - Manual job action taken',
-            html: `<p>Hello,</p>
-                    <p> Your response for <b>${jobName}</b> has been recorded as <b>${response}</b>.<p>
-                    <b>Tombolo</b>`
-          });  
-          console.log('------------------------------------------');
-          console.log(` ✉ EMAIL CONFIRMATION OF ACTION TAKEN FOR MANUAL JOB  SENT TO -  ${notifiedTo}!!!`) 
-          console.log('------------------------------------------');
-        resolve(); 
-      } catch (error) {
-        reject(error)
-      }
-    })
-}
 
 exports.notifyDependentJobsFailure = async ({contact, dataflowId, failedJobsList}) => {
  try{
@@ -120,3 +98,56 @@ exports.notifyDependentJobsFailure = async ({contact, dataflowId, failedJobsList
     console.log('------------------------------------------');
  }
 }
+
+//Send job execution status (success / failure) notification, if user has subscribed
+exports.notifyJobExecutionStatus = async ({ jobId, clusterId, WUstate }) => {
+  const logNotificationStatus = (recipients, jobName, workUnitStatus, clusterName) => {
+    console.log('------------------------------------------');
+    console.log(`✉  ${recipients} notified about ${jobName} job execution '${workUnitStatus}' status on ${clusterName} cluster`);
+    console.log('------------------------------------------');
+  };
+  return new Promise(async (resolve, reject) => {
+    Job.findOne({ where: { id: jobId } })
+      .then(async (job) => {
+        if (!job) {
+          console.log('------------------------------------------');
+          console.log(`Unable to notify user - Job with id ${jobId} notFound`);
+          console.log('------------------------------------------');
+        } else if (job && job.metaData.notificationSettings?.notify) {
+          let cluster = await Cluster.findOne({ where: { id: clusterId } });
+          let notify = job.metaData.notificationSettings.notify;
+          if (notify === 'Always') {
+            await NotificationModule.notify({
+              from: process.env.EMAIL_SENDER,
+              to: job.metaData.notificationSettings.recipients,
+              subject: `${job.name} ${WUstate} on ${cluster.dataValues.name} cluster`,
+              html: `<p> ${WUstate === 'failed' ? job.metaData.notificationSettings.failureMessage : job.metaData.notificationSettings.successMessage} </p><p>Tombolo</p>`,
+            });
+            logNotificationStatus(job.metaData.notificationSettings.recipients, job.name, WUstate, cluster.dataValues.name);
+          } else if (notify === 'Only on success' && WUstate === 'completed') {
+            await NotificationModule.notify({
+              from: process.env.EMAIL_SENDER,
+              to: job.metaData.notificationSettings.recipients,
+              subject: `${job.name} ${WUstate} on ${cluster.dataValues.name} cluster`,
+              html: `<p>  ${job.metaData.notificationSettings.successMessage} </p><p>Tombolo</p>`,
+            });
+            logNotificationStatus(job.metaData.notificationSettings.recipients, job.name, WUstate, cluster.dataValues.name);
+          } else if ((notify === 'Only on failure' && WUstate === 'failed')) {
+            await NotificationModule.notify({
+              from: process.env.EMAIL_SENDER,
+              to: job.metaData.notificationSettings?.recipients || job.contact,
+              subject: `${job.name} ${WUstate} on ${cluster.dataValues.name} cluster`,
+              html: `<p>  ${job.metaData.notificationSettings.failureMessage} </p><p>Tombolo</p>`,
+            });
+            logNotificationStatus(job.metaData.notificationSettings.recipients, job.name, WUstate, cluster.dataValues.name);
+          } else {
+            console.log('------------------------------------------');
+            console.log(`Not subscribed for '${WUstate}' Job Execution status for ${job.name}`);
+            console.log('------------------------------------------');
+          }
+        }
+        resolve();
+      })
+      .catch(reject);
+  });
+};
