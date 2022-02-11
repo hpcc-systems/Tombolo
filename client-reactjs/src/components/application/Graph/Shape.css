@@ -1,4 +1,4 @@
-.node {
+  .node {
     display: flex;
     align-items: center;
     justify-content: space-between;
@@ -10,6 +10,7 @@
     border-radius: 4px;
     box-shadow: 0 2px 5px 1px rgba(0, 0, 0, 0.06);
   }
+
   .node svg {
     width: 20px;
     height: 20px;
@@ -20,7 +21,7 @@
     flex-grow: 1;
     overflow: hidden;
     margin-left: 8px;
-    color: rgb(95, 94, 94);
+    color: rgb(49, 49, 49);
     font-size: 14px;
   }
   
@@ -33,7 +34,8 @@
     width: 15px;
     height: 15px;
   }
-    .stencil-node{
+
+  .stencil-node {
     display: flex;
     align-items: center;
     justify-content: center;
@@ -42,19 +44,23 @@
     box-shadow: 0 2px 5px 1px rgba(0, 0, 0, 0.06);
     padding: 5px;
     text-align: center;
-    }
-    .Job {
-    border-left: 5px solid #ddb661;
-    }
-    .File {
-    border-left: 5px solid #84c3ee;
-    }
-    .Index {
-    border-left: 5px solid #35991c;
-    }
-    .Sub-Process {
-    border-left: 5px solid #d64b4e;
-}
+  }
+
+  .Job {
+  border-left: 5px solid #ddb661;
+  }
+  
+  .File {
+  border-left: 5px solid #84c3ee;
+  }
+
+  .Index {
+  border-left: 5px solid #35991c;
+  }
+
+  .Sub-Process {
+  border-left: 5px solid #d64b4e;
+  }
 
   .node.running .status svg {
     animation: spin 1s linear infinite;
@@ -66,14 +72,16 @@
     box-shadow: 0 0 0 4px #d4e8fe;
   } */
 
-  .x6-node-selected .node.success {
-    border-color: #52c41a;
-    border-radius: 2px;
-    box-shadow: 0 0 0 4px #ccecc0;
+ .node.completed, .node.compiled {
+  border-color: #5cf325;
+  border-left: 5px solid #ddb661;
+  border-radius: 2px;
+  box-shadow: 0 0 0 4px #b9ceb1;
   }
   
-  .x6-node-selected .node.failed {
+ .node.failed {
     border-color: #ff4d4f;
+    border-left: 5px solid #ddb661;
     border-radius: 2px;
     box-shadow: 0 0 0 4px #fedcdc;
   }

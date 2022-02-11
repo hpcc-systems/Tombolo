@@ -9,12 +9,12 @@ import { useSelector } from 'react-redux';
 import Event from './Event';
 import Canvas from './Canvas';
 import Stencil from './Stencil';
-import Keyboard from './Keyboard';
+// import Keyboard from './Keyboard';
 import CustomToolbar from './Toolbar/Toolbar';
 
 import AssetDetailsDialog from '../AssetDetailsDialog';
 import ExistingAssetListDialog from '../Dataflow/ExistingAssetListDialog';
-import SubProcessDialog from '../Dataflow/SubProcessDialog';
+// import SubProcessDialog from '../Dataflow/SubProcessDialog';
 
 const defaultState = {
   openDialog: false,
@@ -25,11 +25,11 @@ const defaultState = {
   type: '',
   nodeId: '',
   cell: null,
-  nodes: [], // ?? not sure if needed
+  nodes: [], // needed for scheduling 
   edges: [], // ?? not sure if needed
 };
 
-function GraphX6({readOnly = false}) {
+function GraphX6({readOnly = false, statuses}) {
   const graphRef = useRef();
   const graphContainerRef = useRef();
   const stencilContainerRef = useRef();
@@ -145,10 +145,13 @@ function GraphX6({readOnly = false}) {
         nodeId: node.id,
         openDialog: true,
         edges : graph.getEdges(), // ?? not used anywhere currently
-        nodes: graph.getNodes().filter(el =>{
+        nodes: graph.getNodes().reduce((acc,el) =>{ // we dont need Nodes full object but just what is inside node.data
           const nodeData = el.getData();
-          return nodeData.assetId ? true : false
-        }) 
+          if (nodeData.assetId){
+            acc.push(nodeData)
+          }
+          return acc
+        },[]) 
       }));
     });
 
@@ -163,6 +166,18 @@ function GraphX6({readOnly = false}) {
       }
     });
   }, []);
+
+  useEffect(()=>{
+    if( readOnly === true &&  statuses?.length > 0 ){
+      const nodes =graphRef.current.getNodes();
+      nodes.forEach(node =>{
+        const nodeStatus = statuses.find(status => status.assetId === node.data.assetId);
+        if (nodeStatus){
+          node.updateData({ status: nodeStatus.status });
+        }
+      })
+    }
+  },[statuses,readOnly])
 
   const handleSave = debounce(async (graph) => {
     const nodes = graph.getNodes().map((node) => {
@@ -285,7 +300,7 @@ function GraphX6({readOnly = false}) {
          source: fileExistsOnGraph ? fileExistsOnGraph : newNode,
          attrs: {
            line: {
-             stroke: relatedFile.file_type === 'output' ? "#35991c" : '#d64b4e', // green for output, red for input
+             stroke: relatedFile.file_type === 'output' ? "#b3eb97" : '#e69495', // green for output, red for input
            },
          },
        }
@@ -419,8 +434,10 @@ function GraphX6({readOnly = false}) {
 
   return (
     <>
+     {readOnly ? null :
       <CustomToolbar graphRef={graphRef} handleSync={handleSync} isSyncing={sync.loading} />
-      <div className='graph-container'>
+     }
+      <div id="graphx6" className='graph-container'>
         {readOnly ? null : <div className='stencil' ref={stencilContainerRef} /> }
         <div className={`${readOnly ? 'graph-container-readonly' : 'graph-container-stencil'}`} ref={graphContainerRef} />
         <div className="graph-minimap" ref={miniMapContainer} />

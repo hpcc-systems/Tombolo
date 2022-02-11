@@ -948,6 +948,11 @@ async sendGHCreds({ GHUsername, GHToken }){
         .map(node => node[0])
         .map(node => { return { 'id': node.id, jobId: node.jobId, 'name': node.title } });
     }*/
+
+    console.log('-this.props.nodes-----------------------------------------');
+    console.dir(this.props.nodes, { depth: null });
+    console.log('------------------------------------------');
+    
     predecessors = this.props.nodes
       .filter(
         (node) =>

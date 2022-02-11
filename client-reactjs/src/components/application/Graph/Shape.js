@@ -104,10 +104,14 @@ const ports = {
     return false
   }
 
+  // ['failed','running','completed','compiled',  ]
   status ={
-    success : <CheckCircleOutlined style={{color:'green'}} />,
+    completed : <CheckCircleOutlined style={{color:'green'}} />,
+    compiled: <CheckCircleOutlined style={{color:'green'}} />,
     failed: <CloseCircleOutlined style={{color:'red'}} />,
-    running: <ReloadOutlined  style={{color:'grey'}} />
+    running: <ReloadOutlined  style={{color:'grey'}} />,
+    waiting: null,
+    submitted: null
   }
 
   schedule ={ 

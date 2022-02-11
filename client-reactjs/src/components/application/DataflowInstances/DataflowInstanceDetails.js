@@ -7,17 +7,19 @@ import ManualJobsStatus from './ManualJobsStatus';
 import {connect} from 'react-redux';
 import {authHeader, handleError} from '../../common/AuthHeader.js';
 import {Resizable} from 're-resizable';
+import GraphX6 from '../Graph/GraphX6';
 const {TabPane} = Tabs;
 
 class DataflowInstanceDetails extends Component {
 
   state = {
-    jobExecutionDetails: {},
     loading: false,
     graphSize: {
       width: '100%',
-      height: '100%',
+      height: 650,
     },
+    statuses:[],
+    jobExecutionDetails: {},
     jobExecutionTableFilters: {},
     selectedJobExecutionGroup : ''
   };
@@ -26,6 +28,10 @@ class DataflowInstanceDetails extends Component {
     this.getJobExecutionDetails();
     const LSGraphHeight = JSON.parse(localStorage.getItem('graphSize'));
     if (LSGraphHeight) {
+    console.log('------------------------------------------');
+    console.dir({LSGraphHeight}, { depth: null });
+    console.log('------------------------------------------');
+    
       this.setState({graphSize: {height: LSGraphHeight}});
     }
   }
@@ -62,12 +68,27 @@ class DataflowInstanceDetails extends Component {
 
   //Set selected Job Execution group
   setSelectedJobExecutionGroup = (id) => {
-    this.setState({selectedJobExecutionGroup : id})
+    const statuses = this.state.jobExecutionDetails?.wuDetails.reduce((acc,el)=>{
+      if (el.jobExecutionGroupId === id){
+        acc.push({status:el.status, assetId: el.task})
+      }
+      return acc;
+    },[])
+    this.setState({selectedJobExecutionGroup : id, statuses})
   }
 
 
   render() {
-    console.log(this.state)
+    // console.log(this.state)
+
+    // console.log('this.state.jobExecutionDetails----------------------------------------');
+    // console.dir(this.state.jobExecutionDetails, { depth: null });
+    // console.log('------------------------------------------');
+    // console.log('this.state.selectedJobExecutionGroup----------------------------------------');
+    // console.dir(this.state.selectedJobExecutionGroup, { depth: null });
+    // console.log('------------------------------------------');
+    
+    
     //if(this.props.dataflowId == undefined || this.props.applicationId == undefined)
     if (!this.props.application || !this.props.application.applicationId) return null;
     return (
@@ -77,11 +98,19 @@ class DataflowInstanceDetails extends Component {
           enable={{bottom: true}}
           size={{width: this.state.graphSize.width, height: this.state.graphSize.height}}
           onResizeStop={(e, direction, ref, d) => {
+            console.log('-d-----------------------------------------');
+            console.dir({d}, { depth: null });
+            console.log('------------------------------------------');
+            
             const newHeight = this.state.graphSize.height + d.height;
             this.setState({graphSize: {height: newHeight}});
             localStorage.setItem('graphSize', JSON.stringify(newHeight));
           }}>
-          <Graph
+            <GraphX6
+             readOnly={true}
+             statuses={this.state.statuses} 
+              />
+          {/* <Graph
             applicationId={this.props.applicationId}
             viewMode={true}
             selectedDataflow={{id: this.props.dataflowId}}
@@ -89,7 +118,7 @@ class DataflowInstanceDetails extends Component {
             graphContainer="graph"
             sidebarContainer="sidebar"
             selectedJobExecutionGroup= {this.state.selectedJobExecutionGroup}
-          />
+          /> */}
         </Resizable>
 
         <Tabs
@@ -149,5 +178,5 @@ function mapStateToProps(state) {
   };
 }
 
-const connectedDataflowInstances = connect(mapStateToProps)(withRouter(DataflowInstanceDetails));
+const connectedDataflowInstances = connect(mapStateToProps)(DataflowInstanceDetails);
 export {connectedDataflowInstances as DataflowInstanceDetails};
