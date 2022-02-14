@@ -46,7 +46,11 @@
     "xml2js": "^0.4.23"
   },
   "devDependencies": {
+    "react-error-overlay": "^6.0.9",
     "react-scripts": "^4.0.3"
+  },
+  "resolutions": {
+    "react-error-overlay": "6.0.9"
   },
   "scripts": {
     "start": "react-scripts start",
