@@ -1245,30 +1245,48 @@ router.post('/executeJob', [
 
 router.get('/jobExecutionDetails', [
   query('dataflowId')
-    .isUUID(4).withMessage('Invalid datafow id'),
+    .isUUID(4).withMessage('Invalid dataflow id'),
   query('applicationId')
     .isUUID(4).withMessage('Invalid application id'),
-], (req, res) => {
+],  async (req, res) => {
   const errors = validationResult(req).formatWith(validatorUtil.errorFormatter);
   if (!errors.isEmpty()) {
       return res.status(422).json({ success: false, errors: errors.array() });
   }
   console.log("[jobExecutionDetails] - Get jobExecutionDetails for app_id = " + req.query.applicationId);
   try {
-    let query = 'select je.id,  je.jobId as task, je.dataflowId, je.applicationId, je.status, je.wuid, je.wu_duration, je.clusterId, je.updatedAt, je.createdAt, je.manualJob_meta, je.jobExecutionGroupId, j.jobType, j.name from '+
-            'job_execution je, job j '+
-            'where je.dataflowId = (:dataflowId) and je.applicationId = (:applicationId) and j.id = je.jobId'; // QUERY RETURNS TOO MANY OBJECTS
-    let replacements = { applicationId: req.query.applicationId, dataflowId: req.query.dataflowId};
-    let jobExecution = models.sequelize.query(query, {
-      type: models.sequelize.QueryTypes.SELECT,
-      replacements: replacements
-    }).then((jobExecution) => {
-      res.json(jobExecution);
-    })
-    .catch(function(err) {
-      console.error(err);
-      return res.status(500).json({ success: false, message: "Error occured while retrieving Job Execution Details" });
+    const jobExecutions = await JobExecution.findAll({
+      where:{
+        dataflowId: req.query.dataflowId,
+        applicationId:req.query.applicationId
+       },
+       include:[{
+        model: Job,
+        attributes:['name', 'jobType'],
+        paranoid: false // will pull softDeleted Records
+      }]
     });
+
+    const formatted = jobExecutions.map(je =>({ // this is the way frontend is expecting this data to come
+      id: je.id,
+      task: je.jobId, 
+      wuid: je.wuid,
+      name: je.job.name,
+      status: je.status,
+      jobType:je.job.jobType,
+      updatedAt:je.updatedAt,
+      createdAt: je.createdAt,
+      wu_end: je.wu_end,
+      wu_start: je.wu_start,
+      wu_duration:je.wu_duration,
+      manualJob_meta: je.manualJob_meta,
+      jobExecutionGroupId: je.jobExecutionGroupId,
+      clusterId:je.clusterId,
+      dataflowId: je.dataflowId,
+      applicationId: je.applicationId,
+    }));
+    
+    res.json(formatted);
   } catch (err) {
     console.error('err', err);
     return res.status(500).json({ success: false, message: "Error occured while retrieving Job Execution Details" });
