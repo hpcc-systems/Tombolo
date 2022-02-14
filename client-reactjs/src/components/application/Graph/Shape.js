@@ -10,7 +10,8 @@ import {
   ReloadOutlined,
   HourglassOutlined,
   LinkOutlined,
-  MessageOutlined
+  MessageOutlined,
+  MailOutlined
 } from '@ant-design/icons/lib/icons';
 
 import './Shape.css'
@@ -124,13 +125,14 @@ const ports = {
     Job: <SettingOutlined />,
     File: <FileTextOutlined />,
     Index: <BookOutlined />,
+    Manual : <MailOutlined />,
     'Sub-Process': <SisternodeOutlined />,
   };
 
   render() {
     const { node } = this.props
     const data = node?.getData()
-    const { type, title, status, scheduleType, isStencil } = data
+    let { type, title, status, scheduleType, jobType, isStencil } = data
 
     if (isStencil){
       return ( 
@@ -140,6 +142,8 @@ const ports = {
       )
     }
 
+    if (jobType === 'Manual') type = "Manual" // Show different icon for Manual job
+    
     return (
      <div className={`node ${type} ${status}`}>
       {this.entities[type]}

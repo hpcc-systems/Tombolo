@@ -46,7 +46,7 @@ const CustomToolbar = ({ graphRef, handleSync, isSyncing }) => {
             icon={isSyncing ? <LoadingOutlined /> : <SyncOutlined />  }
             onClick={handleSync}
           >
-            Synchronize graph
+            {isSyncing ? '...synchronizing' : "Synchronize graph" } 
           </Item>
         </Group>
       </Toolbar>

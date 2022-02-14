@@ -22,7 +22,7 @@ export default class Stencil {
         },
       ],
       getDropNode(node) {
-        return node.clone().size(180, 36).setData({isStencil:false})
+        return node.clone().size(180, 40).setData({isStencil:false})
       }
     });
 
