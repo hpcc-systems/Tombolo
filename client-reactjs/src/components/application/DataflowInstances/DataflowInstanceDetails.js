@@ -16,7 +16,7 @@ class DataflowInstanceDetails extends Component {
     loading: false,
     graphSize: {
       width: '100%',
-      height: 650,
+      height: 600,
     },
     statuses:[],
     jobExecutionDetails: {},
@@ -27,11 +27,7 @@ class DataflowInstanceDetails extends Component {
   componentDidMount() {
     this.getJobExecutionDetails();
     const LSGraphHeight = JSON.parse(localStorage.getItem('graphSize'));
-    if (LSGraphHeight) {
-    console.log('------------------------------------------');
-    console.dir({LSGraphHeight}, { depth: null });
-    console.log('------------------------------------------');
-    
+    if (LSGraphHeight) {    
       this.setState({graphSize: {height: LSGraphHeight}});
     }
   }
@@ -80,15 +76,6 @@ class DataflowInstanceDetails extends Component {
 
   render() {
     // console.log(this.state)
-
-    // console.log('this.state.jobExecutionDetails----------------------------------------');
-    // console.dir(this.state.jobExecutionDetails, { depth: null });
-    // console.log('------------------------------------------');
-    // console.log('this.state.selectedJobExecutionGroup----------------------------------------');
-    // console.dir(this.state.selectedJobExecutionGroup, { depth: null });
-    // console.log('------------------------------------------');
-    
-    
     //if(this.props.dataflowId == undefined || this.props.applicationId == undefined)
     if (!this.props.application || !this.props.application.applicationId) return null;
     return (
@@ -98,27 +85,11 @@ class DataflowInstanceDetails extends Component {
           enable={{bottom: true}}
           size={{width: this.state.graphSize.width, height: this.state.graphSize.height}}
           onResizeStop={(e, direction, ref, d) => {
-            console.log('-d-----------------------------------------');
-            console.dir({d}, { depth: null });
-            console.log('------------------------------------------');
-            
             const newHeight = this.state.graphSize.height + d.height;
             this.setState({graphSize: {height: newHeight}});
             localStorage.setItem('graphSize', JSON.stringify(newHeight));
           }}>
-            <GraphX6
-             readOnly={true}
-             statuses={this.state.statuses} 
-              />
-          {/* <Graph
-            applicationId={this.props.applicationId}
-            viewMode={true}
-            selectedDataflow={{id: this.props.dataflowId}}
-            workflowDetails={this.state.jobExecutionDetails}
-            graphContainer="graph"
-            sidebarContainer="sidebar"
-            selectedJobExecutionGroup= {this.state.selectedJobExecutionGroup}
-          /> */}
+            <GraphX6 readOnly={true} statuses={this.state.statuses} />
         </Resizable>
 
         <Tabs

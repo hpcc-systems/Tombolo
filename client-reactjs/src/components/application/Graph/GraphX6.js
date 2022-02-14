@@ -31,16 +31,15 @@ const defaultState = {
 
 function GraphX6({readOnly = false, statuses}) {
   const graphRef = useRef();
+  const miniMapContainer = useRef()
   const graphContainerRef = useRef();
   const stencilContainerRef = useRef();
-  const miniMapContainer = useRef()
-
-  const { applicationId, dataflowId, clusterId } = useSelector((state) => state.dataflowReducer);
-
+  
+  const [graphReady, setGraphReady] = useState(false);
+  const [sync, setSync] = useState({ error:"", loading:false  });
   const [configDialog, setConfigDialog] = useState({ ...defaultState });
 
-  const [sync, setSync] = useState({ error:"", loading:false  });
-
+  const { applicationId, dataflowId, clusterId } = useSelector((state) => state.dataflowReducer);
 
   useEffect(() => {
     const graph = Canvas.init(graphContainerRef.current, miniMapContainer.current);
@@ -80,6 +79,7 @@ function GraphX6({readOnly = false, statuses}) {
                 type: node.type,
                 name: node.name,
                 title: node.title,
+                jobType: node.jobType,
                 assetId: node.assetId,
                 scheduleType: node.scheduleType,
                 subProcessId: node.subProcessId,
@@ -103,6 +103,7 @@ function GraphX6({readOnly = false, statuses}) {
         console.log(error);
         message.error('Could not download graph nodes');
       }
+      setGraphReady(true)
       graph.center() 
       // graph.centerContent() // Will align the center of the canvas content with the center of the viewport
     })();
@@ -156,7 +157,7 @@ function GraphX6({readOnly = false, statuses}) {
     });
 
     graph.history.on('change', async ({ cmds, options }) => {
-      if (cmds[0].event === 'cell:change:tools') return; // ignoring hover events
+      if (cmds[0].event === 'cell:change:tools' || readOnly) return; // ignoring hover events and not saving to db when in readOnly mode
       // console.log('-cmds, options-----------------------------------------');
       // console.dir({cmds, options}, { depth: null });
       // console.log('------------------------------------------');
@@ -168,16 +169,18 @@ function GraphX6({readOnly = false, statuses}) {
   }, []);
 
   useEffect(()=>{
-    if( readOnly === true &&  statuses?.length > 0 ){
-      const nodes =graphRef.current.getNodes();
-      nodes.forEach(node =>{
+    if( graphReady && readOnly === true &&  statuses?.length > 0 ){
+      let jobs =graphRef.current.getNodes().filter(node => node.data.type === 'Job');
+      jobs.forEach(node =>{
         const nodeStatus = statuses.find(status => status.assetId === node.data.assetId);
         if (nodeStatus){
           node.updateData({ status: nodeStatus.status });
+        } else{
+          node.updateData({ status: 'not-exist' }); // change status to '' if you want to return regular node
         }
       })
     }
-  },[statuses,readOnly])
+  },[statuses, readOnly, graphReady])
 
   const handleSave = debounce(async (graph) => {
     const nodes = graph.getNodes().map((node) => {
@@ -219,7 +222,7 @@ function GraphX6({readOnly = false, statuses}) {
 
   const saveNewAsset = async (newAsset) => {
     // console.time('jobFileRelation');
-    
+
     if (newAsset) {
       const cell = configDialog.cell;
       /* updating cell will cause a POST request to '/api/dataflowgraph/save with latest nodes and edges*/
@@ -227,6 +230,7 @@ function GraphX6({readOnly = false, statuses}) {
           name: newAsset.name,
           title: newAsset.title,
           assetId: newAsset.id,
+          jobType: newAsset.jobType,
           subProcessId: newAsset.jobType === 'Sub-Process' ? newAsset.id : undefined,
         }, { name: 'add-asset' }
       );
@@ -329,12 +333,13 @@ function GraphX6({readOnly = false, statuses}) {
     console.log('------------------------------------------');
     
     try {
-      setSync(prev=>({...prev, loading: true, error:""}))
+      setSync(()=>({ loading: true, error:"" }))
       const cellsJSON = graphJSON.cells.reduce((acc, cell)=>{
         if (cell.shape === 'edge'){
           acc.edges.push(cell);
         } else{
-          if (cell.data.type === 'Job' && cell.data.assetId){
+          // Add only Job that can produce files, ignore Manual Jobs
+          if (cell.data.type === 'Job' && cell.data.jobType !== "Manual" && cell.data.assetId){
             acc.jobsToServer.push({id:cell.data.assetId, name: cell.data.name});
             acc.jobs.push(cell)
           }
@@ -454,7 +459,7 @@ function GraphX6({readOnly = false, statuses}) {
           nodes={configDialog.nodes}
           edges={configDialog.edges}
           onClose={updateAsset}
-          viewMode={readOnly}
+          viewMode={readOnly} // THIS PROP WILL REMOVE EDIT OPTIONS FROM MODAL
           displayingInModal={true} // ?
         />
       ) : null}
