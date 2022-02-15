@@ -1154,39 +1154,33 @@ router.get('/job_details', [
   }
 });
 
-router.post('/delete', [
-  body('application_id')
-    .isUUID(4).withMessage('Invalid application id'),
-  body('jobId')
-    .isUUID(4).withMessage('Invalid job id'),
-], (req, res) => {
-  const errors = validationResult(req).formatWith(validatorUtil.errorFormatter);
-  if (!errors.isEmpty()) {
+router.post( '/delete',
+  [
+    body('application_id').isUUID(4).withMessage('Invalid application id'),
+    body('jobId').isUUID(4).withMessage('Invalid job id'),
+  ],
+  async (req, res) => {
+    const errors = validationResult(req).formatWith(validatorUtil.errorFormatter);
+    if (!errors.isEmpty()) {
       return res.status(422).json({ success: false, errors: errors.array() });
+    }
+    console.log('[delete/read.js] - delete job = ' + req.body.jobId + ' appId: ' + req.body.application_id);
+
+    try {
+      await Promise.all([
+        Job.destroy({ where: { id: req.body.jobId, application_id: req.body.application_id } }),
+        JobFile.destroy({ where: { job_id: req.body.jobId } }),
+        JobParam.destroy({ where: { job_id: req.body.jobId } }),
+        AssetDataflow.destroy({ where: { assetId: req.body.jobId } }),
+      ]);
+      res.json({ result: 'success' });
+    } catch (error) {
+      console.log(err);
+      return res.status(500).json({ success: false, message: 'Error occured while deleting the job' });
+    }
   }
-  console.log("[delete/read.js] - delete job = " + req.body.jobId + " appId: "+req.body.application_id);
-  Job.destroy(
-      {where:{"id": req.body.jobId, "application_id":req.body.application_id}}
-  ).then(function(deleted) {
-    JobFile.destroy(
-      {where:{ job_id: req.body.jobId }}
-    ).then(function(jobFileDeleted) {
-      JobParam.destroy(
-        {where:{ job_id: req.body.jobId }}
-      ).then(function(jobParamDeleted) {
-        JobExecution.destroy({
-          where:{ jobId: req.body.jobId }
-        }).then(async (jobExecutionDeleted) => {
-          await AssetDataflow.destroy({ where: { assetId: req.body.jobId } });
-          res.json({"result":"success"});
-        })
-      });
-    });
-  }).catch(function(err) {
-    console.log(err);
-    return res.status(500).json({ success: false, message: "Error occured while deleting the job" });
-  });
-});
+);
+
 
 router.post('/executeJob', [
   body('clusterId')
