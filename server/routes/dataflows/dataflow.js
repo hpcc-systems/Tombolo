@@ -288,4 +288,34 @@ router.get('/assets', [
   */
 });
 
+router.get( '/checkAssetDataflows',
+  [query('assetId').isUUID(4).withMessage('Invalid assetId')],
+  async (req, res) => {
+    const errors = validationResult(req).formatWith(validatorUtil.errorFormatter);
+    if (!errors.isEmpty()) return res.status(422).json({ success: false, errors: errors.array() });
+
+    try {
+
+      const assetsInDataflows = await AssetDataflow.findAll({
+         where: { assetId: req.query.assetId },
+         attributes:["dataflowId"]
+        });
+
+      const dataflows = await Dataflow.findAll({
+        where:{ id: assetsInDataflows.map(ad => ad.dataflowId) },
+        attributes:['id','application_id','title']
+      });
+      
+      res.send(dataflows);
+    } catch (error) {
+      console.log('-error-----------------------------------------');
+      console.dir({error}, { depth: null });
+      console.log('------------------------------------------');
+      
+      res.status(500).send('Error occurred while checking asset in dataflows');
+    }
+  }
+);
+
+
 module.exports = router;

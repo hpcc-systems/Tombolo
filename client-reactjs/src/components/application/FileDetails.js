@@ -3,7 +3,6 @@ import { store } from "../../redux/store/Store";
 import { Constants } from "../common/Constants";
 import ReactMarkdown from "react-markdown";
 import {
-  Modal,
   Tabs,
   Form,
   Input,
@@ -39,9 +38,9 @@ import { assetsActions } from "../../redux/actions/Assets";
 import Paragraph from "antd/lib/skeleton/Paragraph";
 import { viewOnlyModeReducer } from "../../redux/reducers/ViewOnlyModeReducer";
 import { readOnlyMode, editableMode } from "../common/readOnlyUtil";
+import DeleteAsset from "../common/DeleteAsset";
 const TabPane = Tabs.TabPane;
 const Option = Select.Option;
-const { confirm } = Modal;
 const layoutGrid = undefined;
 const { TextArea } = Input;
 message.config({ top: 130 });
@@ -336,45 +335,40 @@ class FileDetails extends PureComponent {
 
   // Tests
   handleDelete = () => {
-    let _self = this;
-    confirm({
-      title: "Delete file?",
-      content: "Are you sure you want to delete this file?",
-      onOk() {
-        var data = JSON.stringify({
-          fileId: _self.props.selectedAsset,
-          application_id: _self.props.application.applicationId,
-        });
-        fetch("/api/file/read/delete", {
-          method: "post",
-          headers: authHeader(),
-          body: data,
-        })
-          .then((response) => {
-            if (response.ok) {
-              return response.json();
-            }
-            handleError(response);
-          })
-          .then((result) => {
-            //if called from Graph.js
-            if (_self.props.onDelete) {
-              _self.props.onDelete(_self.props.currentlyEditingNode);
-            } else {
-              _self.props.onRefresh();
-            }
-            message.success("File deleted sucessfully");
-            _self.setState({
-              visible: false,
-              confirmLoading: false,
-            });
-          })
-          .catch((error) => {
-            console.log(error);
-            message.error("There was an error deleting the file");
-          });
-      },
-      onCancel() {},
+    console.log('this.props----------------------------------------');
+    console.dir(this.props, { depth: null });
+    console.log('------------------------------------------');
+    
+  fetch("/api/file/read/delete", {
+    method: "post",
+    headers: authHeader(),
+    body: JSON.stringify({
+      fileId: this.props.selectedAsset.id,
+      application_id: this.props.application.applicationId,
+    })
+  })
+    .then((response) => {
+      if (response.ok) {
+        return response.json();
+      }
+      handleError(response);
+    })
+    .then((result) => {
+      //if called from Graph.js
+      if (this.props.onDelete) {
+        this.props.onDelete(this.props.currentlyEditingNode);
+      } else {
+        this.props.history.push( "/" + this.props.application.applicationId + "/assets" );
+      }
+      message.success("File deleted successfully");
+      this.setState({
+        visible: false,
+        confirmLoading: false,
+      });
+    })
+    .catch((error) => {
+      console.log(error);
+      message.error("There was an error deleting the file");
     });
   };
 
@@ -1254,14 +1248,16 @@ class FileDetails extends PureComponent {
       {this.state.editing ? (<Button onClick={switchToViewOnly}   style={{marginRight: "5px"}}> View Changes </Button>) : null}
         {this.state.enableEdit ? (
           <span>
-            <Button
-              key="danger"
-              disabled={!this.state.file.id || !editingAllowed}
-              type="danger"
-              onClick={this.handleDelete}
-            >
-              Delete
-            </Button>
+            <DeleteAsset
+              asset={{
+                id: this.state.file.id,
+                type: 'File',
+                title: this.formRef.current.getFieldValue('title') || this.formRef.current.getFieldValue('name')
+              }}
+              style={{ display: 'inline-block' }}
+              onDelete={this.handleDelete}
+              component={<Button key="danger" disabled={!this.state.file.id || !editingAllowed} type="danger" > Delete </Button>}
+            />
             <Button key="back" onClick={this.handleCancel}style={{marginRight: "5px",  marginLeft: "25px"}}>
               Cancel
             </Button>

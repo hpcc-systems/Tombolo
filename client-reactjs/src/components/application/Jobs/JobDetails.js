@@ -23,6 +23,7 @@ import BasicsTabGeneral from "./BasicsTabGeneral";
 import BasicsTabSpray from "./BasicsTabSpray";
 import BasicsTabScript from "./BasicsTabScript";
 import BasicsTabManul from "./BasicsTabManaul.jsx"
+import DeleteAsset from "../../common/DeleteAsset/index.js";
 
 const TabPane = Tabs.TabPane;
 const { Option, OptGroup } = Select;
@@ -664,34 +665,26 @@ class JobDetails extends Component {
   };
 
   handleDelete = () => {
-    let _self = this;
-    confirm({
-      title: "Delete file?",
-      content: "Are you sure you want to delete this Job?",
-      onOk() {
-        handleJobDelete(
-          _self.props.selectedAsset.id,
-          _self.props.application.applicationId
-        )
-          .then((result) => {
-            if (_self.props.onDelete) {
-              _self.props.onDelete(_self.props.currentlyEditingNode);
-            } else {
-              //_self.props.onRefresh()
-              _self.props.history.push(
-                "/" + _self.props.application.applicationId + "/assets"
-              );
-            }
-            //_self.props.onClose();
-            message.success("Job deleted sucessfully");
-          })
-          .catch((error) => {
-            console.log(error);
-            message.error("There was an error deleting the Job file");
-          });
-      },
-      onCancel() {},
-    });
+    handleJobDelete(
+      this.props.selectedAsset.id,
+      this.props.application.applicationId
+    )
+      .then((result) => {
+        if (this.props.onDelete) {
+          this.props.onDelete(this.props.currentlyEditingNode);
+        } else {
+          //this.props.onRefresh()
+          this.props.history.push(
+            "/" + this.props.application.applicationId + "/assets"
+          );
+        }
+        //this.props.onClose();
+        message.success("Job deleted successfully");
+      })
+      .catch((error) => {
+        console.log(error);
+        message.error("There was an error deleting the Job file");
+      });
   };
 
   async saveJobDetails() {
@@ -1591,9 +1584,16 @@ async sendGHCreds({ GHUsername, GHToken }){
         {this.state.enableEdit ? (
           <span>
             {!this.props.isNew ? (
-              <Button key="danger" type="danger" onClick={this.handleDelete}>
-                Delete
-              </Button>
+            <DeleteAsset
+              asset={{
+                id: this.state.job.id,
+                type: 'Job',
+                title: this.formRef.current.getFieldValue('title') || this.formRef.current.getFieldValue('name')
+              }}
+              style={{ display: 'inline-block' }}
+              onDelete={this.handleDelete}
+              component={ <Button key="danger" type="danger"> Delete </Button> }
+            />
             ) : null}
             <span  style={{marginLeft: "25px"}}>
               <Button key="back" onClick={this.handleCancel} type="primary" ghost>
@@ -1654,7 +1654,6 @@ async sendGHCreds({ GHUsername, GHToken }){
       }
 
      const noECLAvailable = this.formRef.current?.getFieldValue("isStoredOnGithub") && !this.state.job.ecl;
-
      //JSX
     return (
       <React.Fragment> 
