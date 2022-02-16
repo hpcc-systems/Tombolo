@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useCallback, useState } from 'react';
 import { useEffect, useRef } from 'react';
 import { authHeader, handleError } from '../../common/AuthHeader.js';
 import '@antv/x6-react-shape';
@@ -182,7 +182,8 @@ function GraphX6({readOnly = false, statuses}) {
     }
   },[statuses, readOnly, graphReady])
 
-  const handleSave = debounce(async (graph) => {
+  const handleSave = useCallback(  
+    debounce(async (graph) => {
     const nodes = graph.getNodes().map((node) => {
       const nodeData = node.data;
       const position = node.getPosition();
@@ -218,7 +219,9 @@ function GraphX6({readOnly = false, statuses}) {
       console.log(error);
       message.error('Could not save graph');
     }
-  }, 500);
+  }, 500)
+    ,[]);
+
 
   const saveNewAsset = async (newAsset) => {
     // console.time('jobFileRelation');
@@ -277,17 +280,33 @@ function GraphX6({readOnly = false, statuses}) {
   const addRelatedFiles = ( realtedFiles, cell ) =>{
      // 1. get all files,
      const allFiles = graphRef.current.getNodes().filter(node => node.data.type === 'File' );
-     realtedFiles.forEach((relatedFile, index) => {
+
+     const nodePositions = cell.getProp('position'); // {x,y} of node on a graph
+     const nodeHeight = 50;
+     const nodeWidth = 210;
+     // input and output files comes mixed in one array, we will keep track how many output and input files by counting them so we can add proper distance between them;
+     const yAxis ={
+       input:0,
+       output:0
+     };
+     
+     realtedFiles.forEach((relatedFile) => {
        // 2. find all existing files on graph and add edge to point to them
        const fileExistsOnGraph = allFiles.find((file) => file.data.assetId === relatedFile.assetId );
        let newNode;
 
        if (!fileExistsOnGraph) {            
          // 3. create file nodes, place input file on top and output below job node.
-         const nodePositions = cell.getProp('position');
+         relatedFile.file_type === 'input' ? yAxis.input += 1 : yAxis.output += 1; // calculate how many input and output files to give them proper positioning
+         
+         const newNodeIndex = relatedFile.file_type === 'input' ? yAxis.input - 1 : yAxis.output - 1; 
+
+         const newNodeX = relatedFile.file_type === 'input' ? nodePositions.x - nodeWidth : nodePositions.x + nodeWidth;
+         const newNodeY = nodePositions.y + (nodeHeight * newNodeIndex);
+
          newNode = graphRef.current.addNode({
-           x: nodePositions.x + (index * 70),
-           y: relatedFile.file_type === 'output' ? nodePositions.y + 70 : nodePositions.y - 70,
+           x: newNodeX,
+           y:  newNodeY,
            shape: 'custom-shape',
            data: {
              type: 'File',
