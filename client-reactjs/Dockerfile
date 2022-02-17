@@ -25,4 +25,6 @@ COPY nginx/conf.d/nginx.conf.template /etc/nginx/conf.d/nginx.conf.template
 
 COPY nginx/run_nginx.sh /etc/nginx/run_nginx.sh
 
+RUN dos2unix /etc/nginx/run_nginx.sh
+
 RUN ["chmod", "+x", "/etc/nginx/run_nginx.sh"]
