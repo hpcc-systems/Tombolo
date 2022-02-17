@@ -2,7 +2,6 @@ import React, { useContext, useState, useEffect, useRef } from 'react';
 import { Table, Input, Button, Popconfirm, Form, Select, Upload, message } from 'antd';
 import { DeleteOutlined, UploadOutlined  } from '@ant-design/icons';
 import Papa from 'papaparse';
-import {parseString} from 'xml2js';
 import {omitDeep} from './CommonUtil';
 import { store } from '../../redux/store/Store';
 import {Constants} from "../common/Constants";
@@ -361,9 +360,9 @@ class EditableTable extends React.Component {
     }
 
     const parseXml = (xmlText) => {
-      parseString(xmlText, (err, result) => {
+      /*parseString(xmlText, (err, result) => {
         parseJsonResult(result)
-      })
+      })*/
     }
 
     return (

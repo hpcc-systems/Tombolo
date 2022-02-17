@@ -1352,7 +1352,7 @@ class FileDetails extends PureComponent {
                             <Radio value={"thor_file"}>Thor File</Radio>
                             <Radio value={"csv"}>CSV</Radio>
                             <Radio value={"json"}>JSON</Radio>
-                            <Radio value={"xml"}>XML</Radio>
+                            {/*<Radio value={"xml"}>XML</Radio>*/}
                           </Radio.Group>
                         </Form.Item>
                           <React.Fragment>

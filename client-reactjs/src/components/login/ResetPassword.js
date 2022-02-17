@@ -5,7 +5,6 @@ import { connect } from 'react-redux';
 import {message, Row, Col, Icon, Tooltip} from 'antd/lib';
 import { Constants } from '../../components/common/Constants';
 import { timeSaturday } from 'plotly.js-basic-dist';
-const queryString = require('query-string');
 
 
 class ResetPassword extends React.Component {
