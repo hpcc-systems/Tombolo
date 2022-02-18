@@ -5,6 +5,7 @@ import '@antv/x6-react-shape';
 import { message } from 'antd';
 import { debounce } from 'lodash';
 import { useSelector } from 'react-redux';
+import './GraphX6.css'
 
 import Event from './Event';
 import Canvas from './Canvas';
@@ -47,7 +48,8 @@ function GraphX6({readOnly = false, statuses}) {
 
     if (!readOnly) {
       Stencil.init(stencilContainerRef.current, graph);
-      Event.init(graph, graphContainerRef ); // some static event that does not require local state changes will be sitting here
+      Event.init(graph); // some static event that does not require local state changes will be sitting here
+      if (readOnly) graph.disableHistory() // we dont need to save anything to db so when we readonly
     }
     // Keyboard.init(graph); // not ready yet
 
@@ -67,7 +69,7 @@ function GraphX6({readOnly = false, statuses}) {
           const edges = data.edges || [];
 
           nodes.forEach((node) => {
-            graph.addNode({
+            const nodeSettings ={
               id: node.id,
               x: node.x,
               y: node.y,
@@ -75,6 +77,7 @@ function GraphX6({readOnly = false, statuses}) {
               height: node.height,
               shape: 'custom-shape',
               visible: node.visible,
+              zIndex:999,
               data: {
                 type: node.type,
                 name: node.name,
@@ -84,19 +87,24 @@ function GraphX6({readOnly = false, statuses}) {
                 scheduleType: node.scheduleType,
                 subProcessId: node.subProcessId,
               },
-            });
+            };
+     
+            graph.addNode(nodeSettings);
           });
 
           edges.forEach((edge) => {
-            graph.addEdge({
+            const edgeSetting={
               source: edge.source, 
               target: edge.target, 
+              zIndex:-1,
               attrs: {
                 line: {
                   stroke: edge.stroke,
                 },
               },
-            });
+            }
+
+           graph.addEdge(edgeSetting);
           });
         }
       } catch (error) {
@@ -104,7 +112,7 @@ function GraphX6({readOnly = false, statuses}) {
         message.error('Could not download graph nodes');
       }
       setGraphReady(true)
-      graph.center() 
+      graph.centerContent({ padding: { bottom: 200 }}) 
       // graph.centerContent() // Will align the center of the canvas content with the center of the viewport
     })();
     
@@ -156,12 +164,22 @@ function GraphX6({readOnly = false, statuses}) {
       }));
     });
 
+    graph.on('cell:changed', async ({cell,options}) => { 
+      if (options.ignoreEvent || readOnly) return;// ignoring hover events and not saving to db when in readOnly mode
+      // console.log('-{cell,options}-----------------------------------------');
+      // console.dir({cell,options}, { depth: null });
+      // console.log('------------------------------------------');
+      
+      // console.log('graph.isHistoryEnabled()', graph.isHistoryEnabled())
+      // if (!readOnly && !graph.isHistoryEnabled()) {
+      //   graph.enableHistory()
+      //   await handleSave(graph);
+      // }
+    });
+
     graph.history.on('change', async ({ cmds, options }) => {
       if (cmds[0].event === 'cell:change:tools' || readOnly) return; // ignoring hover events and not saving to db when in readOnly mode
-      // console.log('-cmds, options-----------------------------------------');
-      // console.dir({cmds, options}, { depth: null });
-      // console.log('------------------------------------------');
-      const actions = ['dnd', 'resize', 'mouse', 'add-edge', 'add-asset', 'update-asset'];
+      const actions = ['dnd', 'mouse', 'add-edge', 'add-asset', 'update-asset'];
       if (actions.includes(options?.name)) {
         await handleSave(graph);
       }
@@ -282,8 +300,8 @@ function GraphX6({readOnly = false, statuses}) {
      const allFiles = graphRef.current.getNodes().filter(node => node.data.type === 'File' );
 
      const nodePositions = cell.getProp('position'); // {x,y} of node on a graph
-     const nodeHeight = 50;
-     const nodeWidth = 210;
+     const yOffset = 70;
+     const xOffset = 140;
      // input and output files comes mixed in one array, we will keep track how many output and input files by counting them so we can add proper distance between them;
      const yAxis ={
        input:0,
@@ -301,8 +319,8 @@ function GraphX6({readOnly = false, statuses}) {
          
          const newNodeIndex = relatedFile.file_type === 'input' ? yAxis.input - 1 : yAxis.output - 1; 
 
-         const newNodeX = relatedFile.file_type === 'input' ? nodePositions.x - nodeWidth : nodePositions.x + nodeWidth;
-         const newNodeY = nodePositions.y + (nodeHeight * newNodeIndex);
+         const newNodeX = relatedFile.file_type === 'input' ? nodePositions.x - xOffset : nodePositions.x + xOffset;
+         const newNodeY = nodePositions.y + (yOffset * newNodeIndex);
 
          newNode = graphRef.current.addNode({
            x: newNodeX,
@@ -321,6 +339,7 @@ function GraphX6({readOnly = false, statuses}) {
        const edge = {
          target: cell, 
          source: fileExistsOnGraph ? fileExistsOnGraph : newNode,
+         zIndex:-1,
          attrs: {
            line: {
              stroke: relatedFile.file_type === 'output' ? "#b3eb97" : '#e69495', // green for output, red for input
@@ -491,6 +510,7 @@ function GraphX6({readOnly = false, statuses}) {
           onClose={saveNewAsset}
           dataflowId={dataflowId}
           applicationId={applicationId}
+          clusterId={clusterId}
         />
       ) : null}
 

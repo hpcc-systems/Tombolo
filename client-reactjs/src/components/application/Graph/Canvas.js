@@ -28,12 +28,13 @@ export default class Canvas {
       autoResize: true,
       grid: true,
       history: true,
-      // scroller: {
-      //   enabled: true,
-      //   pageVisible: false,
-      //   pageBreak: false,
-      //   pannable: true,
-      // },
+      scroller: {
+        enabled: true,
+        pageVisible: false,
+        pageBreak: false,
+        pannable: true,
+        className: 'custom-scroll',
+      },
       minimap: {
         enabled: true,
         container: minimapContainer,
@@ -55,7 +56,7 @@ export default class Canvas {
         },
       },
       selecting: {
-        strict:true,
+        strict:false,
         enabled: true,
         multiple: true,
         rubberband: true,
@@ -71,19 +72,49 @@ export default class Canvas {
         allowMulti: true,
         allowLoop: true,
         allowNode: true,
-        allowEdge: true,
+        allowEdge: false,
         allowPort: false,
         highlight: true,
-        // router: 'manhattan',
-        connector: {
-          name: 'rounded',
-          // args: {
-          //   radius: 2,
-          // },
+        connectionPoint: {
+          name:'boundary',
+          args:{
+            offset: 10,
+            sticky:true
+          },
         },
-        // snap: {
-        //   radius: 10,
+        anchor: 'center',
+        // router: {
+        //   name: 'orth',
         // },
+        connector: {
+          name: 'jumpover',
+          args: {
+            type: 'gap',
+            radius: 10
+          },
+        },
+        snap: {
+          radius: 40,
+        },
+        validateEdge({ edge }) {
+          const source = edge.getSourceCell()
+          const target= edge.getTargetCell();
+          // Prevent Files to be connected to anything, connection will still exist if synced with HPCC
+          if( source.data.type === "File" || target.data.type === "File") {
+            return false;
+          }
+          // if node is not assigned to any of assets prevent it from being connected
+          if (!source.data?.assetId || !target.data?.assetId){
+            return false;
+          }
+          
+          return true;
+        },
+        createEdge() {
+          return new Shape.Edge({
+            zIndex: -1,
+          });
+        },
       },
       mousewheel: {
         enabled: true,
@@ -97,30 +128,11 @@ export default class Canvas {
         sharp: true,
       },
       resizing: {
-        enabled: true,
-        orthogonal: false,
-        restricted: false,
-        allowReverse: false,
-        preserveAspectRatio: false,
+        enabled: false,
       },
       keyboard: true,
       clipboard: true,
-      createEdge() {
-        return new Shape.Edge({
-          attrs: {
-            line: {
-              stroke: '#A2B1C3',
-              strokeWidth: 2,
-              targetMarker: {
-                name: 'block',
-                width: 12,
-                height: 8,
-              },
-            },
-          },
-          zIndex: 0,
-        });
-      },
+    
     });
 
     this.graph = graph;

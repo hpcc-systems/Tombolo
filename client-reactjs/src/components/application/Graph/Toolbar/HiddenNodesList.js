@@ -12,14 +12,20 @@ const HiddenNodesList = ({ graphRef, refresh, setRefresh }) => {
     node.show({ name: 'update-asset' });
     setRefresh((prev) => !prev);
     const edges = graphRef.current.getConnectedEdges(node, { incoming: true, outgoing: true });
-    edges.forEach((edge) => edge.setVisible(true)); // this will update each edge to be visible
+    edges.forEach((edge) => {
+      edge.setVisible(true);
+      edge.toBack();
+    }); // this will update each edge to be visible
   };
 
   const showAllNodes = (nodes) => {
     nodes.forEach((node) => {
       node.show({ name: 'update-asset' });
       const edges = graphRef.current.getConnectedEdges(node, { incoming: true, outgoing: true });
-      edges.forEach((edge) => edge.setVisible(true)); // this will update each edge to be visible
+      edges.forEach((edge) =>{
+        edge.setVisible(true);
+        edge.toBack();
+      }); // this will update each edge to be visible
     });
     setRefresh((prev) => !prev);
   };
