@@ -1,11 +1,8 @@
-import React, { useState, useEffect } from 'react'
+import React, { useState } from 'react'
 import { useHistory } from 'react-router';
-import { Tabs, Button, Tooltip, notification } from 'antd/lib';
-import { InfoCircleOutlined, StepBackwardOutlined  } from '@ant-design/icons';
+import { Tabs, Button, } from 'antd/lib';
 import { useSelector } from "react-redux";
 import DataflowAssetsTable from "./DataflowAssetsTable";
-import {Graph} from "./Graph";
-import AntdGraph from "./AntdGraph";
 import BreadCrumbs from "../../common/BreadCrumbs";
 import {Constants} from "../../common/Constants"
 import {store} from "../../../redux/store/Store"
@@ -18,8 +15,6 @@ function DataflowDetails({props}) {
   const [currentTab, setCurrentTab] = useState("1")
   const dataflowReducer = useSelector(state => state.dataflowReducer);
   const applicationReducer = useSelector(state => state.applicationReducer);
-  const applicationId = useSelector(state => state.applicationReducer.application.applicationId);
-  const [refreshGraph, setGraphRefresh] = useState(false)
 
   const handleBackToAllJobs = () => {
     history.push("/"+applicationReducer.application.applicationId+"/dataflow")
@@ -47,20 +42,6 @@ function DataflowDetails({props}) {
           >
             <TabPane tab="Designer" key="1" forceRender={true}>
               <GraphX6 readOnly={false} />
-              {/* <AntdGraph                 
-                applicationId={dataflowReducer.applicationId}
-                applicationTitle={dataflowReducer.applicationTitle}
-                selectedDataflow={{id: dataflowReducer.dataflowId}}
-                user={dataflowReducer.user}
-              /> */}
-              {/*<Graph
-                applicationId={dataflowReducer.applicationId}
-                applicationTitle={dataflowReducer.applicationTitle}
-                selectedDataflow={{id: dataflowReducer.dataflowId}}
-                graphContainer="graph"
-                sidebarContainer="sidebar"
-                refreshGraph= {refreshGraph}
-              />*/}
             </TabPane>
             <TabPane tab="Assets" key="2" >
             <span style={{display: "flex", placeItems: "center", justifyContent: "center", paddingBottom: "5px"}}>
