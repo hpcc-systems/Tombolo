@@ -38,6 +38,8 @@ router.get('/file_list', [
     .isUUID(4).withMessage('Invalid application id'),
   query('dataflowId')
     .isUUID(4).withMessage('Invalid dataflow id'),
+    query('clusterId')
+    .isUUID(4).withMessage('Invalid cluster id'),
 ],(req, res) => {
   const errors = validationResult(req).formatWith(validatorUtil.errorFormatter);
     if (!errors.isEmpty()) {
@@ -50,9 +52,10 @@ router.get('/file_list', [
         'from file f ' + 
         'where f.id not in (select asd.assetId from assets_dataflows asd where asd.dataflowId = (:dataflowId) and asd.deletedAt is null)' +
         'and f.application_id = (:applicationId) '+
+        'and f.cluster_id = (:clusterId)'+
         'and f.deletedAt is null';
       
-      let replacements = { applicationId: req.query.app_id, dataflowId: dataflowId};
+      let replacements = { applicationId: req.query.app_id, dataflowId: dataflowId, clusterId: req.query.clusterId};
       let existingFile = models.sequelize.query(query, {
         type: models.sequelize.QueryTypes.SELECT,
         replacements: replacements
@@ -61,11 +64,11 @@ router.get('/file_list', [
       })
       .catch(function(err) {
         console.log(err);
-        return res.status(500).json({ success: false, message: "Error occured while getting file list" });
+        return res.status(500).json({ success: false, message: "Error occurred while getting file list" });
       });
     } catch (err) {
       console.log('err', err);
-      return res.status(500).json({ success: false, message: "Error occured while getting file list" });
+      return res.status(500).json({ success: false, message: "Error occurred while getting file list" });
     }
 });
 

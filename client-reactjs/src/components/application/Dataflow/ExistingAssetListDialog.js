@@ -1,20 +1,21 @@
 import React, { useState, useEffect } from "react";
-import { Button, message, Modal, Table } from "antd/lib";
+import { Button, message, Modal,  Table } from "antd/lib";
 import { authHeader, handleError } from "../../common/AuthHeader.js";
 
 import { useSelector } from "react-redux";
 import { hasEditPermission } from "../../common/AuthUtil.js";
 import { Constants } from "../../common/Constants";
 
-function ExistingAssetListDialog({ show, applicationId, dataflowId, assetType, onClose }) {
+function ExistingAssetListDialog({ show, applicationId, dataflowId, clusterId, assetType, onClose }) {
   const [assets, setAssets] = useState([]);
   const authReducer = useSelector((state) => state.authenticationReducer);
   const editingAllowed = hasEditPermission(authReducer.user);
+  const [loading, setLoading] = useState(false)
 
   useEffect(() => {
     if (applicationId) {
       (async () => {
-        const queryParams= `app_id=${applicationId}&dataflowId=${dataflowId}`
+        const queryParams= `app_id=${applicationId}&dataflowId=${dataflowId}&clusterId=${clusterId}`
         const options = {
           File: `/api/file/read/file_list?${queryParams}`,
           Index: `/api/index/read/index_list?${queryParams}`,
@@ -34,6 +35,7 @@ function ExistingAssetListDialog({ show, applicationId, dataflowId, assetType, o
         }
       })();
     }
+    return (()=>{ setLoading(false)})
   }, []);
 
   const assetColumns = [
@@ -68,7 +70,11 @@ function ExistingAssetListDialog({ show, applicationId, dataflowId, assetType, o
       className: editingAllowed ? "show-column" : "hide-column",
       render: (text, record) => (
         <span>
-          <Button className="btn btn-secondary btn-sm" onClick={() => onClose(record)}>
+          <Button className="btn btn-secondary btn-sm" onClick={() =>{
+            setLoading(true);
+            onClose(record);
+          } 
+          }>
             Select
           </Button>
         </span>
@@ -91,12 +97,13 @@ function ExistingAssetListDialog({ show, applicationId, dataflowId, assetType, o
       ]}
     >
       <Table
+        loading={loading}
         columns={assetColumns}
         rowKey={(record) => record.id}
         dataSource={assets}
         pagination={{ pageSize: 10 }}
         scroll={{ y: 460 }}
-      />
+        />
     </Modal>
   );
 }

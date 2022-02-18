@@ -1015,6 +1015,8 @@ router.get('/job_list', [
     .isUUID(4).withMessage('Invalid application id'),
   query('dataflowId')
     .isUUID(4).withMessage('Invalid dataflow id'),
+    query('clusterId')
+    .isUUID(4).withMessage('Invalid cluster id'),
 ], (req, res) => {
   const errors = validationResult(req).formatWith(validatorUtil.errorFormatter);
   if (!errors.isEmpty()) {
@@ -1026,10 +1028,11 @@ router.get('/job_list', [
     let query = 'select j.id, j.name, j.title, j.jobType, j.description, j.createdAt from job j '+
     'where j.id not in (select asd.assetId from assets_dataflows asd where asd.dataflowId = (:dataflowId) and asd.deletedAt is null)'+    
     'and j.application_id = (:applicationId)'+
+    'and j.cluster_id = (:clusterId)'+
     'and j.deletedAt is null;';
     /*let query = 'select j.id, j.name, j.title, j.createdAt, asd.dataflowId from job j, assets_dataflows asd where j.application_id=(:applicationId) '+
         'and j.id = asd.assetId and j.id not in (select assetId from assets_dataflows where dataflowId = (:dataflowId))';*/
-    let replacements = { applicationId: req.query.app_id, dataflowId: dataflowId};
+    let replacements = { applicationId: req.query.app_id, dataflowId: dataflowId, clusterId: req.query.clusterId};
     let existingFile = models.sequelize.query(query, {
       type: models.sequelize.QueryTypes.SELECT,
       replacements: replacements
@@ -1038,11 +1041,11 @@ router.get('/job_list', [
     })
     .catch(function(err) {
       console.log(err);
-      return res.status(500).json({ success: false, message: "Error occured while retrieving jobs" });
+      return res.status(500).json({ success: false, message: "Error occurred while retrieving jobs" });
     });
   } catch (err) {
     console.log('err', err);
-    return res.status(500).json({ success: false, message: "Error occured while retrieving jobs" });
+    return res.status(500).json({ success: false, message: "Error occurred while retrieving jobs" });
   }
 });
 
