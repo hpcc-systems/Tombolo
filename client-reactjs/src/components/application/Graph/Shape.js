@@ -22,7 +22,7 @@ const ports = {
       position: 'top',
       attrs: {
         circle: {
-          r: 3,
+          r: 5,
           magnet: true,
           stroke: '#5F95FF',
           strokeWidth: 1,
@@ -37,7 +37,7 @@ const ports = {
       position: 'right',
       attrs: {
         circle: {
-          r: 3,
+          r: 5,
           magnet: true,
           stroke: '#5F95FF',
           strokeWidth: 1,
@@ -52,7 +52,7 @@ const ports = {
       position: 'bottom',
       attrs: {
         circle: {
-          r: 3,
+          r: 5,
           magnet: true,
           stroke: '#5F95FF',
           strokeWidth: 1,
@@ -67,7 +67,7 @@ const ports = {
       position: 'left',
       attrs: {
         circle: {
-          r: 3,
+          r: 5,
           magnet: true,
           stroke: '#5F95FF',
           strokeWidth: 1,
@@ -132,27 +132,33 @@ const ports = {
   render() {
     const { node } = this.props
     const data = node?.getData()
-    let { type, title, status, scheduleType, jobType, isStencil } = data
-
-    if (isStencil){
-      return ( 
-       <div className={`${type} stencil-node`}>
-          {title}
-        </div>
-      )
+    let { type, title, status='', scheduleType, jobType } = data
+   
+    const showTitle = (title)=>{
+      const limit= 14;
+        if (title.length >limit) {
+          const shortTitle =  title.substring(0,limit) + '...';         
+          return shortTitle;
+        }
+        return title
     }
 
     if (jobType === 'Manual') type = "Manual" // Show different icon for Manual job
-    
+
     return (
-     <div className={`node ${type} ${status}`}>
-      {this.entities[type]}
-      <span className="label">{title}</span>
-      <span className="status">
-        {this.schedule[scheduleType]}
-        {this.status[status]}
-      </span>
-    </div>
+      <div className='node-outer'>
+        <div className={`node-icon ${type} status-${status}`}>
+          {this.entities[type]}
+        </div>
+        {scheduleType ?
+        <div className='node-schedule'>
+          {this.schedule[scheduleType]}
+        </div> : null
+        }
+        <div className='node-title'> 
+            {showTitle(title)}
+        </div>
+      </div>
     )
   }
 }
@@ -160,7 +166,7 @@ const ports = {
 Graph.registerNode('custom-shape', {
   inherit: 'react-shape',
   component : <Node />,
-  width: 180,
-  height: 40,
+  width: 90,
+  height: 70,
   ports,
 });

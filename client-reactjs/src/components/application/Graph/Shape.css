@@ -1,40 +1,73 @@
-  .node {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    padding: 0 5px;
+  /* NEW NODE */
+  .node-outer {
+    padding: 5px;
     width: 100%;
     height: 100%;
-    background-color: #fff;
-    border: 1px solid #c2c8d5;
-    border-radius: 4px;
-    box-shadow: 0 2px 5px 1px rgba(0, 0, 0, 0.06);
   }
 
-  .node svg {
-    width: 20px;
-    height: 20px;
+  .node-icon{
+    width: 50px;
+    min-height: 40px;
+    border-radius: 3px;
+    margin: 0 auto;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    transition: box-shadow .3s linear;
+  }
+  .node-icon:hover{
+    box-shadow: rgba(14, 30, 37, 0.12) 0px 2px 4px 0px, rgba(14, 30, 37, 0.32) 0px 2px 16px 0px;
+  }
+  .node-icon svg{
+    font-size: 27px;
+  }
+
+  .Job, .Manual {
+    background-color: #f1a261 ;
+    border: 2px solid #ff7300d7;
   }
   
-  .node .label {
-    display: inline-block;
-    flex-grow: 1;
-    overflow: hidden;
-    margin-left: 8px;
-    color: rgb(49, 49, 49);
-    font-size: 14px;
+  .File {
+    background-color: #9dd6fc ;
+    border: 2px solid #0995f1c2;
+  }
+
+  .Index {
+    background-color: #76e25a ;
+    border: 2px solid #146400ad;
+  }
+
+  .Sub-Process {
+    background-color: #df7274 ;
+    border: 2px solid #eb1518;
   }
   
-  .node .status {
-      display: flex;
-      gap:4px;
+  .node-schedule{
+    width: 103%; 
+    margin-top: -16px;
+    display: flex;
+    justify-content: flex-end;
+  }
+ 
+  .node-title{
+    display: flex;
+    justify-content: center;
+    text-align: center;
+  }
+  
+  .status-completed, .status-completed:hover, .status-compiled {
+    border-color:#04880a;
+    box-shadow: 0px 0px 8px 2px #08a710
+  }
+ .status-failed,  .status-failed:hover {
+    border-color:#eb1518;
+    box-shadow: 0px 0px 8px 2px #ff4d4f;
+  }
+  .status-not-exist{
+    /* box-shadow: 0px 0px 8px 2px #8f8f8f; */
   }
 
-  .node .status  svg{
-    width: 15px;
-    height: 15px;
-  }
-
+ /* STENCIL */
   .stencil-node {
     display: flex;
     align-items: center;
@@ -45,74 +78,15 @@
     padding: 5px;
     text-align: center;
   }
-
-  .Job, .Manual {
-  border-left: 5px solid #ddb661;
+  .stencil-Job{
+    border-left: 5px solid #ec8633d7;
   }
-  
-  .File {
-  border-left: 5px solid #84c3ee;
+  .stencil-File{
+    border-left: 5px solid #84c4eec2;
   }
-
-  .Index {
-  border-left: 5px solid #35991c;
+  .stencil-Index{
+    border-left: 5px solid #35991cad;
   }
-
-  .Sub-Process {
-  border-left: 5px solid #d64b4e;
+  .stencil-Sub-Process{
+    border-left: 5px solid #d64b4e;
   }
-
-  
- .node.completed, .node.compiled {
-    border: 4px solid #3ecf09;
-    /* border-left: 5px solid #ddb661; */
-    border-radius: 2px;
-    /* box-shadow: 0 0 0 4px #b9ceb1; */
-  }
-  
- .node.failed {
-    border: 4px solid #ff4d4f;
-    /* border-left: 5px solid #ddb661; */
-    border-radius: 2px;
-    /* box-shadow: 0 0 0 4px #fedcdc; */
-  }
-  .node.not-exist{
-    border-color: #8f8f8f;
-    border-radius: 2px;
-    /* background-color: #e7e7e7; */
-  }
-
-/* .x6-node-selected .node {
-    border-color: #1890ff;
-    border-radius: 2px;
-    box-shadow: 0 0 0 4px #d4e8fe;
-  } 
-
-   .x6-edge:hover path:nth-child(2){
-    stroke: #1890ff;
-    stroke-width: 1px;
-  }
-  
-  .x6-edge-selected path:nth-child(2){
-    stroke: #1890ff;
-    stroke-width: 1.5px !important;
-  }
-
-  .node.running .status svg {
-    animation: spin 1s linear infinite;
-  }
-   
-  @keyframes running-line {
-    to {
-      stroke-dashoffset: -1000;
-    }
-  }
-  @keyframes spin {
-    from {
-        transform: rotate(0deg);
-    }
-    to {
-        transform: rotate(360deg);
-    }
-  }
-  */

@@ -10,7 +10,7 @@ export default class Stencil {
       layoutOptions: {
         columns: 1,
         columnWidth: 80,
-        rowHeight: 50,
+        rowHeight: 75,
       },
       stencilGraphWidth: 100,
       stencilGraphHeight: 400,
@@ -22,7 +22,7 @@ export default class Stencil {
         },
       ],
       getDropNode(node) {
-        return node.clone().size(180, 40).setData({isStencil:false})
+        return node.clone().setData({isStencil:false})
       }
     });
 
@@ -39,8 +39,6 @@ export default class Stencil {
     const assetsNodes = assetsNames.map(asset => {
       return graph.createNode({
         shape: 'custom-shape',
-        width: 80,
-        height: 50,
         data: {
           isStencil:true,
           type: asset,
