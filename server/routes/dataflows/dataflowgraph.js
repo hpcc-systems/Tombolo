@@ -49,10 +49,6 @@ router.post('/save', [
     console.log('/save - dataflowgraph: '+application_id)
     try {
       let nodes = req.body.nodes, edges = req.body.edges;
-      if(dataflowId == undefined && dataflowType == 'sub-process') {
-        let dataflowCreated = await createDataflow(application_id, dataflowType, parentDataflow);
-        dataflowId = dataflowCreated.id;
-      }
 
       DataflowGraph.findOrCreate({
         where: {application_id:application_id, dataflowId:dataflowId},
@@ -121,6 +117,7 @@ let updateNodeNameAndTitle = async (nodes) => {
     }
   })
 }
+
 router.get('/', [
   query('application_id')
     .optional({checkFalsy:true})
@@ -134,20 +131,11 @@ router.get('/', [
     }
 
     try {
-      let nodes = [];
       DataflowGraph.findOne({
         where:{"application_Id":req.query.application_id, "dataflowId":req.query.dataflowId},
         raw: true
       }).then(async function(graph) {
-        if(graph){
-          let nodesWithNames = await updateNodeNameAndTitle(graph.nodes);        
-          graph.nodes = nodesWithNames;
-          return res.json(graph);
-        }else{
-          //If there is no graph
-         //return res.status(200).json({message : "No Graph"})
-         res.json(graph)
-        }
+        res.json(graph)
       })
       .catch(function(err) {
           res.status(400).json({message: "Unable to fetch the graph", error: err})
@@ -177,32 +165,41 @@ router.post('/delete', [
     });
 });
 
-router.post(
-  "/deleteAsset",
+router.post('/deleteAsset',
   [
-    body("dataflowId").isUUID(4).withMessage("Invalid dataflow id"),
-    body("id").isUUID(4).withMessage("Invalid asset id"),
+    body('dataflowId').isUUID(4).withMessage('Invalid dataflow id'),
+    body('assetId').isUUID(4).withMessage('Invalid asset id'),
+    body('name').not().isEmpty().trim().escape(),
+    body('type').custom(value =>{
+      const types = ['job', 'file', 'index','sub-process']
+      if (!types.includes(value)){
+        throw new Error('Invalid asset type');
+      }
+       // Indicates the success of this synchronous custom validator
+      return true;
+    })
   ],
   async (req, res) => {
     const errors = validationResult(req).formatWith(validatorUtil.errorFormatter);
     if (!errors.isEmpty()) return res.status(422).json({ success: false, errors: errors.array() });
 
     try {
-     const deleted =  await AssetDataflow.destroy({ where: { dataflowId: req.body.dataflowId, assetId: req.body.id } });
-     console.log('-deleted-----------------------------------------');
-     console.dir({deleted}, { depth: null });
-     console.log('------------------------------------------');
-     
-     if (req.body.type.toLowerCase() === "job"){
-        const job = await Job.findOne({ where: { id: req.body.id } });
-        if(job){
-          await JobScheduler.removeJobFromScheduler(job.name + "-" + req.body.dataflowId + "-" + req.body.id);
-        }
+      const deleted = await AssetDataflow.destroy({
+        where: { dataflowId: req.body.dataflowId, assetId: req.body.assetId },
+      });
+      console.log('-deleted-----------------------------------------');
+      console.dir({ deleted }, { depth: null });
+      console.log('------------------------------------------');
+
+      if (req.body.type === 'job') {
+        await JobScheduler.removeJobFromScheduler(
+          req.body.name + '-' + req.body.dataflowId + '-' + req.body.assetId
+        );
       }
-      res.json({ result: "success" });
+      res.json({ result: 'success' });
     } catch (error) {
       console.log('-/deleteAsset error-----------------------------------------');
-      console.dir({error}, { depth: null });
+      console.dir({ error }, { depth: null });
       console.log('------------------------------------------');
       res.status(422).json({ success: false, error: error.message });
     }

@@ -87,11 +87,14 @@ function ExistingAssetListDialog({ show, applicationId, dataflowId, clusterId, a
       title={"Select from existing " + assetType}
       visible={show}
       destroyOnClose={true}
-      onCancel={() => onClose()}
+      onCancel={() => {
+        if (loading) return;
+        onClose()
+      }}
       maskClosable={false}
       width="1200px"
       footer={[
-        <Button key="cancel" onClick={() => onClose()}>
+        <Button key="cancel" disabled={loading} onClick={() => onClose()}>
           Cancel
         </Button>,
       ]}

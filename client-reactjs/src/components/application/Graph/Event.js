@@ -140,9 +140,6 @@ export default class Event {
                 return;
               },
             });
-            console.log('-cell-----------------------------------------');
-            console.dir({ cell }, { depth: null });
-            console.log('------------------------------------------');
           },
         },
       };
@@ -169,8 +166,8 @@ export default class Event {
     });
 
     // graph.on('node:added', ({ node, index, options }) => { })
-    // graph.on('node:removed', ({ node, index, options }) => { })
     // graph.on('node:changed', ({ node, options }) => { })
+    // graph.on('node:removed', ({ node, index, options }) => { })
     
     // graph.on('edge:added', ({ edge, index, options }) => { })
     // graph.on('edge:removed', ({ edge, index, options }) => { })

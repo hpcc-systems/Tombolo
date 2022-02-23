@@ -568,7 +568,7 @@ const createOrUpdateFile = async ({jobfile, jobId, clusterId, dataflowId, applic
       // create or update JobFile relationship
       const jobfileFields = {
         name: file.name,
-        file_type: file.fileType,
+        file_type: jobfile.file_type,
         description: file.description,
       };
 
@@ -576,6 +576,7 @@ const createOrUpdateFile = async ({jobfile, jobId, clusterId, dataflowId, applic
         where: {
           job_id: jobId,
           file_id: file.id,
+          file_type: jobfile.file_type,
           application_id: file.application_id,
         },
         defaults: jobfileFields,
@@ -591,11 +592,12 @@ const createOrUpdateFile = async ({jobfile, jobId, clusterId, dataflowId, applic
       });
       // construct object with fields that is going to be used to create a graph nodes
       const relatedFile = {
+        name: file.name,
         assetId: file.id,
         relatedTo: jobId,
-        name: file.name,
         title: file.title,
         file_type: jobfile.file_type, //'input' | 'output'
+        description: file.description,
       };
       // ADD FILE TO RELATED FILE LIST
       return relatedFile;
@@ -627,21 +629,48 @@ router.post( '/jobFileRelation',
 
       const jobInfo = await hpccUtil.getJobInfo(job.cluster_id, result.wuid, job.jobType);
       const jobfiles = jobInfo?.jobfiles;
-      //{ jobfiles: [ { name: 'usa::cars.csv', file_type: 'input' } ] }
+      //{ jobfiles: [ { name: 'covid19::kafka::guid', file_type: 'input' } ,{ name: 'covid19::kafka::guid', file_type: 'output' } ] }
       
       const relatedFiles = [];
-
+      
       if (jobfiles?.length > 0) {
         for (const jobfile of jobfiles) {
-         const file = await createOrUpdateFile({
-           jobfile: jobfile,
-           jobId: job.id,
-           applicationId:job.application_id,
-           clusterId: job.cluster_id,
-           dataflowId: req.body.dataflowId,
-          })
-          if (file){
-            relatedFiles.push(file)
+          // jobfiles array has many files with same name but file_type is different;
+          // when we lookup in HPCC by file name and update our tables we dont need to do it for files with same name.
+          // if file was already processed we need to create new JOBFILE record with different file_type and skip createOrUpdateFile(...)
+          const duplicateFile = relatedFiles.find((file) => file.name === jobfile.name);
+
+          if (duplicateFile) {
+            const jobfileFields = {
+              name: duplicateFile.name,
+              file_type: jobfile.file_type,
+              description: duplicateFile.description,
+            };
+      
+            let [jobFile, isJobFileCreated] = await JobFile.findOrCreate({
+              where: {
+                job_id: job.id,
+                file_id: duplicateFile.assetId,
+                file_type: jobfile.file_type,
+                application_id: job.application_id,
+              },
+              defaults: jobfileFields,
+            });
+
+            if (!isJobFileCreated) jobFile = await jobFile.update(jobfileFields);
+            relatedFiles.push({ ...duplicateFile, file_type: jobfile.file_type });
+          } else {
+            // create or update JobFile relationship
+            const file = await createOrUpdateFile({
+              jobId: job.id,
+              jobfile: jobfile, //{ name: 'covid19::kafka::guid', file_type: 'output' }
+              clusterId: job.cluster_id,
+              dataflowId: req.body.dataflowId,
+              applicationId: job.application_id,
+            });
+            if (file) {
+              relatedFiles.push(file);
+            }
           }
         }
       }
@@ -1100,7 +1129,8 @@ router.get('/job_details', [
           }
         }
        var jobData = job.get({ plain: true });
-       for (jobFileIdx in jobData.jobfiles) {
+
+       for (const jobFileIdx in jobData.jobfiles) {
           var jobFile = jobData.jobfiles[jobFileIdx];
           var file = await File.findOne({where:{"application_id":req.query.app_id, "id":jobFile.file_id}});
           if (file != undefined) {
@@ -1141,7 +1171,6 @@ router.get('/job_details', [
           }
         }
 
- 
         return jobData;
       } else {
         return res.status(500).json({ success: false, message: "Job details could not be found. Please check if the job exists in Assets. " });
@@ -1324,8 +1353,6 @@ router.post('/manualJobResponse', [
 
 
 const QueueDaemon = require('../../queue-daemon');
-const { resolve } = require('path');
-const { reject } = require('lodash');
 
 router.get('/msg', (req, res) => {
   if (req.query.topic && req.query.message) {

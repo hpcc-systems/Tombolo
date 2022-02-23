@@ -13,6 +13,7 @@ let JobExecution = models.job_execution;
 const validatorUtil = require('../../utils/validator');
 const { body, query, validationResult } = require('express-validator');
 const { recordJobExecution } = require('../../utils/assets');
+const jobScheduler = require('../../job-scheduler');
 
 router.post('/save', [
   body('id')
@@ -128,49 +129,37 @@ router.get('/', [
     }
 });
 
-router.post('/delete', [
-  body('applicationId')
-    .isUUID(4).withMessage('Invalid application_id'),
-  body('dataflowId')
-    .isUUID(4).withMessage('Invalid dataflowId')
-], async (req, res) => {
-  const errors = validationResult(req).formatWith(validatorUtil.errorFormatter);
-  if (!errors.isEmpty()) {
-    return res.status(422).json({ success: false, errors: errors.array() });
-  }
+router.post( '/delete',
+  [
+    body('applicationId').isUUID(4).withMessage('Invalid application_id'),
+    body('dataflowId').isUUID(4).withMessage('Invalid dataflowId'),
+  ],
+  async (req, res) => {
+    const errors = validationResult(req).formatWith(validatorUtil.errorFormatter);
+    if (!errors.isEmpty()) {
+      return res.status(422).json({ success: false, errors: errors.array() });
+    }
 
-  //find all jobs in this dataflow and remove them from scheduler
-  let dataflowGraph = await DataflowGraph.findOne({where: {dataflowId: req.body.dataflowId}});
-  console.log(dataflowGraph);
-  if(dataflowGraph){
-  for(const node of dataflowGraph.nodes) {
-    console.log(node);
-    if(node.type == 'Job' && node.schedulerType == 'Time') {
-      let job = await Job.findOne({where: {id: node.jobId}, attributes: ['name']});
-      console.log("**************************removing "+job.name+" scheduler");
-      await JobScheduler.removeJobFromScheduler(job.name + '-' + req.body.dataflowId + '-' + node.jobId);
+    try {
+      await Promise.all([
+        jobScheduler.removeAllDataflowJobs(req.body.dataflowId),
+        // JobExecution.destroy({ where: { dataflowId: req.body.dataflowId } }), // !! will delete all job executions of this dataflow
+        AssetDataflow.destroy({ where: { dataflowId: req.body.dataflowId } }),
+        DependentJobs.destroy({ where: { dataflowId: req.body.dataflowId } }),
+        Dataflow.destroy({ where: { id: req.body.dataflowId, application_id: req.body.applicationId } }),
+        DataflowGraph.destroy({ where: { dataflowId: req.body.dataflowId, application_id: req.body.applicationId } }),
+      ]);
+
+      res.json({ result: 'success' });
+    } catch (error) {
+      console.log('-error-----------------------------------------');
+      console.dir({ error }, { depth: null });
+      console.log('------------------------------------------');
+      res.status(422).json({ result: false, message: error.message });
     }
   }
-}
+);
 
-  await JobExecution.destroy({where: {dataflowId: req.body.dataflowId}});
-
-  await AssetDataflow.destroy({where: {'dataflowId': req.body.dataflowId}});
-  
-  await DependentJobs.destroy({where: {'dataflowId': req.body.dataflowId}});
-
-  Dataflow.destroy(
-    {where:{"id": req.body.dataflowId, "application_id":req.body.applicationId}}
-  ).then(function(deleted) {
-    DataflowGraph.destroy(
-      {where:{"dataflowId": req.body.dataflowId, "application_id":req.body.applicationId}}
-    ).then(function(deleted) {
-        res.json({"result":"success"});
-    })
-  }).catch(function(err) {
-      console.log(err);
-  });
-});
 
 router.get('/assets', [
   query('app_id')

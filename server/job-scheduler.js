@@ -275,6 +275,25 @@ class JobScheduler {
         const existingJob = this.bree.config.jobs.find(job=> job.name === name);    
         if (existingJob){
          await this.bree.remove(name);
+         console.log('-job.name removed-----------------------------------------');
+         console.dir(existingJob.name, { depth: null });
+         console.log('------------------------------------------');
+        }
+      } catch (err) {
+        console.log(err)
+      }
+    }
+
+    async removeAllDataflowJobs(dataflowId) {
+      try {
+        const existingJobs = this.bree.config.jobs.filter(job=> job.name.includes(dataflowId));    
+        if (existingJobs.length > 0){
+          for (const job of existingJobs) {
+            await this.bree.remove(job.name);
+            console.log('-job.name removed-----------------------------------------');
+            console.dir(job.name, { depth: null });
+            console.log('------------------------------------------');
+          }
         }
       } catch (err) {
         console.log(err)
