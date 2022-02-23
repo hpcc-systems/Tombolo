@@ -43,6 +43,7 @@ const assert = require('assert');
 
 const appRead = require('./routes/app/read');
 const fileRead = require('./routes/file/read');
+const fileTemplateRead = require('./routes/fileTemplate/read')
 const indexRead = require('./routes/index/read');
 const hpccRead = require('./routes/hpcc/read');
 const userRead = require('./routes/user/read');
@@ -62,6 +63,7 @@ const ghCredentials = require('./routes/ghCredentials');
 
 app.use('/api/app/read', tokenService.verifyToken, appRead);
 app.use('/api/file/read', tokenService.verifyToken, fileRead);
+app.use('/api/fileTemplate/read', tokenService.verifyToken, fileTemplateRead);
 app.use('/api/index/read', tokenService.verifyToken, indexRead);
 app.use('/api/hpcc/read', tokenService.verifyToken, hpccRead);
 app.use('/api/query', tokenService.verifyToken, query);

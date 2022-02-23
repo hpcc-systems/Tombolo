@@ -18,6 +18,7 @@ import { DataflowInstances } from "./components/application/DataflowInstances/Da
 import { DataflowInstanceDetails } from "./components/application/DataflowInstances/DataflowInstanceDetails";
 import Users from "./components/admin/Users";
 import FileDetailsForm from "./components/application/FileDetails";
+import FileTemplate from "./components/application/fileTemplate/FileTemplate"
 import JobDetailsForm from "./components/application/Jobs/JobDetails";
 import IndexDetailsForm from "./components/application/IndexDetails";
 import QueryDetailsForm from "./components/application/QueryDetails";
@@ -105,6 +106,10 @@ class App extends React.Component {
                   <PrivateRoute
                     path="/:applicationId/assets/file/:fileId?"
                     component={FileDetailsForm}
+                  />
+                  <PrivateRoute
+                    path="/:applicationId/assets/fileTemplate/:fileId?"
+                    component={FileTemplate}
                   />
                   <PrivateRoute
                     path="/:applicationId/assets/job/:jobId?"

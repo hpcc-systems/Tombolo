@@ -107,6 +107,9 @@ function AssetsTable({ openGroup, handleEditGroup, refreshGroups }) {
       case "File":
         history.push("/" + applicationId + "/assets/file/" + id);
         break;
+      case "File Template" :
+         history.push("/" + applicationId + "/assets/fileTemplate/" + id);
+        break;
       case "Job":
         history.push("/" + applicationId + "/assets/job/" + id);
         break;
@@ -237,6 +240,9 @@ function AssetsTable({ openGroup, handleEditGroup, refreshGroups }) {
     switch (type) {
       case "File":
         icon = <i className="fa fa-file"></i>;
+        break;
+      case "File Template":
+        icon = <i className="fa fa-file-text-o"></i>;
         break;
       case "Index":
         icon = <i className="fa fa-indent"></i>;
