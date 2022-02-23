@@ -62,8 +62,17 @@ function GraphX6({readOnly = false, statuses}) {
         );
         if (!response.ok) handleError(response);
         const data = await response.json();
+        // if (data){
+        //   console.time("graph")
+        //   graph.fromJSON(data);
+        //   console.log('------------------------------------------');
+        //   console.timeEnd("graph")
+        //   console.log('------------------------------------------');
 
+        // }
         if (data) {
+          console.time("graph")
+
           // Nodes and Edges comes as a string, need to parse it to object
           const nodes = data.nodes || [];
           const edges = data.edges || [];
@@ -82,8 +91,8 @@ function GraphX6({readOnly = false, statuses}) {
                 type: node.type,
                 name: node.name,
                 title: node.title,
-                jobType: node.jobType,
                 assetId: node.assetId,
+                jobType: node.jobType,
                 scheduleType: node.scheduleType,
                 subProcessId: node.subProcessId,
               },
@@ -98,56 +107,26 @@ function GraphX6({readOnly = false, statuses}) {
               target: edge.target, 
               zIndex:-1,
               attrs: {
-                line: {
-                  stroke: edge.stroke,
-                },
+                line: edge.line
               },
             }
 
            graph.addEdge(edgeSetting);
           });
+          console.log('------------------------------------------');
+          console.timeEnd("graph")
+          console.log('------------------------------------------');
         }
       } catch (error) {
         console.log(error);
         message.error('Could not download graph nodes');
       }
-      setGraphReady(true)
-      graph.centerContent({ padding: { bottom: 200 }}) 
-      // graph.centerContent() // Will align the center of the canvas content with the center of the viewport
-    })();
-    
-    graph.on('node:removed', async ({ cell }) => {
-      const nodeData = cell.getData();
-      console.log('nodeData', nodeData);
-      try {
-        /* deleting asset from dataflow is multi step operation
-        1. delete asset from Asset_Dataflow table
-        2. make sure that any Job scheduled with this asset is deleted too
-        3. update graph in Dataflowgraph table */
-        if (nodeData.assetId) {
-          const options = {
-            method: 'POST',
-            headers: authHeader(),
-            body: JSON.stringify({ id: nodeData.assetId, type: nodeData.type, dataflowId }),
-          };
-
-          const response = await fetch('/api/dataflowgraph/deleteAsset', options);
-          if (!response.ok) handleError(response);
-        }
-
-        await handleSave(graph);
-      } catch (error) {
-        console.log(error);
-        message.error('Could not delete an asset');
-      }
-    });
-    // EDGE REMOVE TRIGGERS 'remove' event, and same event is triggered when nodes getting removed. because node removal is multistep operation, we need to have separate listeners for both
-    graph.on('edge:removed', async () => {
-      await handleSave(graph);
-    });
 
     graph.on('node:dblclick', ({ node, cell }) => {
       const nodeData = cell.getData();
+      // prevent readonly users to open ExistingAssetListDialog modal 
+      if (readOnly && !nodeData.assetId) return; 
+      
       setConfigDialog(() => ({
         ...nodeData,
         cell,
@@ -164,26 +143,91 @@ function GraphX6({readOnly = false, statuses}) {
       }));
     });
 
-    graph.on('cell:changed', async ({cell,options}) => { 
-      if (options.ignoreEvent || readOnly) return;// ignoring hover events and not saving to db when in readOnly mode
-      // console.log('-{cell,options}-----------------------------------------');
-      // console.dir({cell,options}, { depth: null });
-      // console.log('------------------------------------------');
-      
-      // console.log('graph.isHistoryEnabled()', graph.isHistoryEnabled())
-      // if (!readOnly && !graph.isHistoryEnabled()) {
-      //   graph.enableHistory()
-      //   await handleSave(graph);
-      // }
-    });
+    if (!readOnly) {  // restrict readonly users to save changes to DB
+      graph.on('node:removed', async ({ cell }) => {
+      const nodeData = cell.getData();
+      // console.log('node:removed')
+      try {
+        /* deleting asset from dataflow is multi step operation
+        1. delete asset from Asset_Dataflow table
+        2. make sure that any Job scheduled with this asset is deleted too
+        3. update graph in Dataflowgraph table */
+        if (nodeData.assetId) {
+          const options = {
+            method: 'POST',
+            headers: authHeader(),
+            body: JSON.stringify({ assetId: nodeData.assetId, type: nodeData.type.toLowerCase(), name: nodeData.name, dataflowId }),
+          };
 
-    graph.history.on('change', async ({ cmds, options }) => {
-      if (cmds[0].event === 'cell:change:tools' || readOnly) return; // ignoring hover events and not saving to db when in readOnly mode
-      const actions = ['dnd', 'mouse', 'add-edge', 'add-asset', 'update-asset'];
-      if (actions.includes(options?.name)) {
+          const response = await fetch('/api/dataflowgraph/deleteAsset', options);
+          if (!response.ok) handleError(response);
+        }
+
         await handleSave(graph);
+      } catch (error) {
+        console.log(error);
+        message.error('Could not delete an asset');
       }
     });
+
+    graph.on('node:moved', async ({cell,options}) => { 
+      // console.log('node:moved')
+      await handleSave(graph);
+    });
+
+    graph.on('node:added',async ({ node, index, options }) => {
+      console.log('node:added')
+      await handleSave(graph);
+    })
+
+    graph.on('node:change:data', async ({ node, options }) => {
+      // ignoring hover events and not saving to db when in readOnly mode
+      if (options.ignoreEvent || readOnly) return;
+
+      if (options.name === 'update-asset'){
+      // console.log("node:change:data")
+        await handleSave(graph);
+      }
+    })
+
+    graph.on('node:change:visible', async ({ node, options }) => {
+      if (options.name === 'update-asset'){
+        // console.log("node:change:visible")
+        await handleSave(graph);
+      }
+    })
+
+    // EDGE REMOVE TRIGGERS 'remove' event, and same event is triggered when nodes getting removed. because node removal is multistep operation, we need to have separate listeners for both
+    graph.on('edge:added', async ({ edge, index, options }) => { 
+      await handleSave(graph);
+    })
+
+    graph.on('edge:removed', async () => {
+      console.log("edge:removed")
+      await handleSave(graph);
+    });
+    
+    graph.on('edge:connected', async (params) => {
+        console.log("edge:connected")
+        await handleSave(graph);
+    })
+
+  }
+    
+    // !! graph.history.on('change' stop firing when nodes moved a lot, switched to multiple event listeners, bug reported. https://github.com/antvis/X6/issues/1828
+    // graph.history.on('change', async ({ cmds, options }) => { 
+    //   if (cmds[0].event === 'cell:change:tools' || readOnly) return; // ignoring hover events and not saving to db when in readOnly mode
+    //   const actions = ['dnd', 'mouse', 'add-edge', 'add-asset', 'update-asset'];
+    //   if (actions.includes(options?.name)) {
+    //     await handleSave(graph);
+    //   }
+    // });
+
+    setGraphReady(true)
+    //  will scale graph to fit in to a viewport, will add bottom padding for read only views as they have a table too
+    graph.zoomToFit({maxScale:1 , padding: 20}); 
+    })();
+
   }, []);
 
   useEffect(()=>{
@@ -202,6 +246,7 @@ function GraphX6({readOnly = false, statuses}) {
 
   const handleSave = useCallback(  
     debounce(async (graph) => {
+      console.time('save')
     const nodes = graph.getNodes().map((node) => {
       const nodeData = node.data;
       const position = node.getPosition();
@@ -220,18 +265,27 @@ function GraphX6({readOnly = false, statuses}) {
     const edges = graph.getEdges().map((edge) => ({
       source: edge.getSourceCellId(),
       target: edge.getTargetCellId(),
-      stroke: edge.getAttrByPath('line/stroke')
+      line: edge.getAttrByPath('line')
     }));
-
+      // const graphToJson = graph.toJSON({ diff: true })
+      // console.log('-graphToJson-----------------------------------------');
+      // console.dir({graphToJson}, { depth: null });
+      // console.log('------------------------------------------');
+      
     try {
       const options = {
         method: 'POST',
         headers: authHeader(),
-        body: JSON.stringify({ nodes, edges, application_id: applicationId, dataflowId }),
+        body: JSON.stringify({ nodes:nodes, edges:edges, application_id: applicationId, dataflowId }),
       };
 
       const response = await fetch('/api/dataflowgraph/save', options);
       if (!response.ok) handleError(response);
+      console.log('------------------------------------------');
+      console.timeEnd('save')
+      console.log('------------------------------------------');
+
+
       console.log('Graph saved');
     } catch (error) {
       console.log(error);
@@ -243,7 +297,6 @@ function GraphX6({readOnly = false, statuses}) {
 
   const saveNewAsset = async (newAsset) => {
     // console.time('jobFileRelation');
-
     if (newAsset) {
       const cell = configDialog.cell;
       /* updating cell will cause a POST request to '/api/dataflowgraph/save with latest nodes and edges*/
@@ -253,7 +306,7 @@ function GraphX6({readOnly = false, statuses}) {
           assetId: newAsset.id,
           jobType: newAsset.jobType,
           subProcessId: newAsset.jobType === 'Sub-Process' ? newAsset.id : undefined,
-        }, { name: 'add-asset' }
+        }, { name: 'update-asset' }
       );
 
       try {
@@ -295,7 +348,7 @@ function GraphX6({readOnly = false, statuses}) {
     // console.timeEnd('jobFileRelation');
   };
 
-  const addRelatedFiles = ( realtedFiles, cell ) =>{
+  const addRelatedFiles = ( relatedFiles, cell ) =>{
      // 1. get all files,
      const allFiles = graphRef.current.getNodes().filter(node => node.data.type === 'File' );
 
@@ -308,50 +361,79 @@ function GraphX6({readOnly = false, statuses}) {
        output:0
      };
      
-     realtedFiles.forEach((relatedFile) => {
-       // 2. find all existing files on graph and add edge to point to them
-       const fileExistsOnGraph = allFiles.find((file) => file.data.assetId === relatedFile.assetId );
-       let newNode;
+     relatedFiles.forEach((relatedFile) => {
+      // 2. find existing files on graph and add edge to point to them
+      const fileExistsOnGraph = allFiles.find((file) => file.data.assetId === relatedFile.assetId);
+      let newNode;
+    
+      if (!fileExistsOnGraph) {
+        // 3. create file nodes, place input file on top and output below job node.
+        relatedFile.file_type === 'input' ? (yAxis.input += 1) : (yAxis.output += 1); // calculate how many input and output files to give them proper positioning
+    
+        const newNodeIndex = relatedFile.file_type === 'input' ? yAxis.input - 1 : yAxis.output - 1;
+        const newNodeX = relatedFile.file_type === 'input' ? nodePositions.x - xOffset : nodePositions.x + xOffset;
+        const newNodeY = nodePositions.y + yOffset * newNodeIndex;
+    
+        newNode = graphRef.current.addNode({
+          x: newNodeX,
+          y: newNodeY,
+          shape: 'custom-shape',
+          data: {
+            type: 'File',
+            name: relatedFile.name,
+            title: relatedFile.title,
+            assetId: relatedFile.assetId,
+            subProcessId: undefined,
+          },
+        });
+    
+        allFiles.push(newNode); // adding to allFiles to avoid creating new File node
+      }
 
-       if (!fileExistsOnGraph) {            
-         // 3. create file nodes, place input file on top and output below job node.
-         relatedFile.file_type === 'input' ? yAxis.input += 1 : yAxis.output += 1; // calculate how many input and output files to give them proper positioning
-         
-         const newNodeIndex = relatedFile.file_type === 'input' ? yAxis.input - 1 : yAxis.output - 1; 
+      const relateFileNode = fileExistsOnGraph ? fileExistsOnGraph : newNode;
 
-         const newNodeX = relatedFile.file_type === 'input' ? nodePositions.x - xOffset : nodePositions.x + xOffset;
-         const newNodeY = nodePositions.y + (yOffset * newNodeIndex);
+      const edges = graphRef.current.getConnectedEdges(relateFileNode);
+      // if we have edged associated with this file it means that they were just created now while syncing, loop through them and find out if they related to this Job,
+      // if edge between job and file already exists, that means that this file if Input and Output at same time, update edge marker to have two arrows green and red
+      let edgeUpdated = false;
 
-         newNode = graphRef.current.addNode({
-           x: newNodeX,
-           y:  newNodeY,
-           shape: 'custom-shape',
-           data: {
-             type: 'File',
-             name: relatedFile.name,
-             title: relatedFile.title,
-             assetId: relatedFile.assetId,
-             subProcessId: undefined,
-           },
-         });
-       }
-       //4. Create Edges from Job to File
-       const edge = {
-         target: cell, 
-         source: fileExistsOnGraph ? fileExistsOnGraph : newNode,
-         zIndex:-1,
-         attrs: {
-           line: {
-             stroke: relatedFile.file_type === 'output' ? "#b3eb97" : '#e69495', // green for output, red for input
-           },
-         },
-       }
-       if ( relatedFile.file_type === 'output') {
-         edge.target = fileExistsOnGraph ? fileExistsOnGraph : newNode;
-         edge.source = cell;
-       }
-         graphRef.current.addEdge(edge, { name: 'add-asset' });
-     });
+      if (edges.length > 0) {
+        edges.forEach((edge) => {
+          if (edge.getTargetCellId() === cell.id || edge.getSourceCellId() === cell.id) {
+            edge.attr({
+              line: {
+                sourceMarker: { fill: '#e69495', stroke: '#e69495', name: 'block' },
+                targetMarker: { fill: '#b3eb97', stroke: '#b3eb97', name: 'block' },
+                stroke: {
+                  type: 'linearGradient',
+                  stops: [
+                    { offset: '0%', color: '#e69495' },
+                    { offset: '50%', color: '#ccc' },
+                    { offset: '100%', color: '#b3eb97' },
+                  ],
+                },
+              },
+            });
+            edgeUpdated = true // if we successfully updated edge we will not need to create additional edges anymore
+          }
+        });
+      } 
+      
+      if (!edgeUpdated) {
+        const edge = {
+          target: relatedFile.file_type === 'output' ? relateFileNode : cell,
+          source: relatedFile.file_type === 'output' ? cell : relateFileNode,
+          zIndex: -1,
+          attrs: {
+            line: {
+              stroke: relatedFile.file_type === 'output' ? '#b3eb97' : '#e69495', // green for output, red for input
+            },
+          },
+        };
+      
+        graphRef.current.addEdge(edge, { name: 'add-asset' });
+      }
+    });
   }
 
   const updateAsset = (asset) => {
@@ -405,7 +487,7 @@ function GraphX6({readOnly = false, statuses}) {
       const data = await response.json();
 
       const result = data.result// array of {job:<assetId>, relatedFiles:{...}}
-      const assetsIds = data.assetsIds // array of strings of all assetIds created or modified
+      const assetsIds = data.assetsIds // array of strings of all assetIds created or modified on backend
     
       const {files, jobs, edges} = cellsJSON;
       
@@ -420,9 +502,9 @@ function GraphX6({readOnly = false, statuses}) {
               return existingJob.data.assetId === el.job
             });
             const cell = graphRef.current.getCellById(cellJSON.id);
-            // REMOVE NOT RELATED EDGES
-            const incomingEdges = graphRef.current.getIncomingEdges(cell);
-            const outgoingEdges = graphRef.current.getOutgoingEdges(cell)
+            // REMOVE FILE THAT DOES NOT PARTICIPATE ANYMORE AND ALL EDGES, RECREATE EDGES IN addRelatedFiles();
+            const incomingEdges = graphRef.current.getIncomingEdges(cell); // Job Input Files
+            const outgoingEdges = graphRef.current.getOutgoingEdges(cell) // Job Output Files
 
             if (incomingEdges) {
               incomingEdges.forEach(edge =>{
@@ -430,11 +512,11 @@ function GraphX6({readOnly = false, statuses}) {
                 if (source) {
                   const isFile = source.data.type === 'File'
                   if (isFile){
-                    const fileExist = assetsIds.includes(source.data.assetId);
+                    const fileExist = assetsIds.includes(source.data.assetId); // assetsIds is array of all assets in this dataflow
                     if(!fileExist){
-                      source.remove()
+                      source.remove() // Delete a File from graph because after syncing we found that it is no used in any job in this dataflow
                     }else{
-                      graphRef.current.removeEdge(edge);
+                      graphRef.current.removeEdge(edge); // 
                     }
                   }
                 }
