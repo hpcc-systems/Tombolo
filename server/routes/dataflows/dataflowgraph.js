@@ -10,160 +10,71 @@ let Index = models.indexes;
 const validatorUtil = require('../../utils/validator');
 const { body, query, validationResult } = require('express-validator');
 const JobScheduler = require('../../job-scheduler');
-var uuidv4  = require('uuid/v4');
-
-let createDataflow = (applicationId, dataflowType, parentDataflow) => {
-  console.log(applicationId +', '+dataflowType +', '+parentDataflow)
-  return new Promise((resolve, reject) => {
-    Dataflow.findOne({
-      where:{"application_id":applicationId, "id":parentDataflow.id}
-    }).then((parentDataflow) => {
-      console.log(parentDataflow.clusterId);
-      console.log(applicationId +', '+dataflowType +', '+parentDataflow)
-      Dataflow.create({
-        application_id: applicationId,
-        title: 'Default',
-        type: dataflowType,
-        clusterId: parentDataflow.clusterId
-      }).then((dataflowCreated) => {
-        resolve(dataflowCreated)
-      })
-    }).catch(function(err) {
-        console.log(err);
-    });
-  });
-}
-
-router.post('/save', [
-  /*body('dataflowId')
-    .optional({checkFalsy:true})
-    .isUUID(4).withMessage('Invalid dataflow id'),*/
-  body('application_id')
-    .isUUID(4).withMessage('Invalid application id'),
-], async (req, res) => {
-    const errors = validationResult(req).formatWith(validatorUtil.errorFormatter);
-    if (!errors.isEmpty()) {
-      return res.status(422).json({ success: false, errors: errors.array() });
-    }
-    var graphId='', application_id=req.body.application_id, dataflowId=req.body.dataflowId, dataflowType=req.body.dataflowType, parentDataflow=req.body.selectedParentDataflow;
-    console.log('/save - dataflowgraph: '+application_id)
-    try {
-      let nodes = req.body.nodes, edges = req.body.edges;
-
-      DataflowGraph.findOrCreate({
-        where: {application_id:application_id, dataflowId:dataflowId},
-        defaults: {
-          application_id: req.body.application_id,
-          nodes: nodes,
-          edges: edges,
-          dataflowId: dataflowId
-        }
-      }).then(async function(result) {
-        graphId = result[0].id;
-        if(!result[1]) {
-          return DataflowGraph.update({
-            application_id: req.body.application_id,
-            nodes: nodes,
-            edges: edges,
-            dataflowId: dataflowId
-          }, {where:{application_id:application_id, dataflowId:dataflowId}})
-        }
-      }).then(function(graph) {
-        res.json({"result":"success", "dataflowId":dataflowId});
-      }), function(err) {
-        return res.status(500).send("Error occured while saving Dataflow Graph");
-      }
-    } catch (err) {
-      console.log('err', err);
-    }
-});
 
 
-let updateNodeNameAndTitle = async (nodes) => {
-  let nodesWithName = [];
-  return new Promise(async (resolve, reject) => {
-    try {
-      for(const node of nodes) {
-        switch (node.type) {
-          case 'File' && node.fileId: 
-            let file = await File.findOne({where: {id: node.fileId}});
-            if(file) {              
-              node.name = file.name;
-              node.title = file.title;
-            }
-            break;
-          case 'Job' && node.jobId: 
-            let job = await Job.findOne({where: {id: node.jobId}});
-            if(job) {
-              node.name = job.name;
-              node.title = job.title;              
-            }
-            break;
-          case 'Index' && node.indexId: 
-            let index = await Index.findOne({where: {id: node.indexId}});
-            if(index) {
-              node.name = index.name;
-              node.title = index.title;
-            }
-            break;
-        }
 
-        nodesWithName.push(node);
-      }
-      resolve(nodesWithName)
-    }catch(err) {
-      console.log(err);
-      reject(err);
-    }
-  })
-}
-
-router.get('/', [
-  query('application_id')
-    .optional({checkFalsy:true})
-    .isUUID(4).withMessage('Invalid application id'),
-  query('dataflowId')
-    .isUUID(4).withMessage('Invalid dataflow id'),
-], (req, res) => {
+router.get( '/',
+  [
+    query('application_id').optional({ checkFalsy: true }).isUUID(4).withMessage('Invalid application id'),
+    query('dataflowId').isUUID(4).withMessage('Invalid dataflow id'),
+  ],
+  async (req, res) => {
     const errors = validationResult(req).formatWith(validatorUtil.errorFormatter);
     if (!errors.isEmpty()) {
       return res.status(422).json({ success: false, errors: errors.array() });
     }
 
     try {
-      DataflowGraph.findOne({
-        where:{"application_Id":req.query.application_id, "dataflowId":req.query.dataflowId},
-        raw: true
-      }).then(async function(graph) {
-        res.json(graph)
-      })
-      .catch(function(err) {
-          res.status(400).json({message: "Unable to fetch the graph", error: err})
+      const { application_id, dataflowId  } = req.query;
+      
+      const dataflowgraph = await DataflowGraph.findOne({
+         where: { application_id, dataflowId },
+         attributes:['graph'],
       });
-    } catch (err) {
-        console.log('err', err);
+
+      res.json(dataflowgraph);
+    } catch (error) {
+      console.log('-error-----------------------------------------');
+      console.dir({error}, { depth: null });
+      console.log('------------------------------------------');
+      
+      res.status(500).json({ message: 'Unable to fetch the graph' });
     }
-});
+  }
+);
 
-
-router.post('/delete', [
-  body('jobId')
-    .isUUID(4).withMessage('Invalid job id'),
-  body('application_id')
-    .isUUID(4).withMessage('Invalid application id'),
-], (req, res) => {
+router.post( '/save',
+  [
+    /*body('dataflowId') .optional({checkFalsy:true}) .isUUID(4).withMessage('Invalid dataflow id'),*/
+    body('application_id').isUUID(4).withMessage('Invalid application id'),
+  ],
+  async (req, res) => {
     const errors = validationResult(req).formatWith(validatorUtil.errorFormatter);
     if (!errors.isEmpty()) {
       return res.status(422).json({ success: false, errors: errors.array() });
     }
-    DataflowGraph.destroy(
-        {where:{"id": req.body.jobId, "application_id":req.body.application_id}}
-    ).then(function(deleted) {
-        res.json({"result":"success"});
-    }).catch(function(err) {
-        console.log(err);
-    });
-});
+
+    try {
+      const { application_id, dataflowId, graph } = req.body;
+
+      const dataflowGraphFields = { graph }
+
+      let [dataflowGraph, isDataflowGraphCreated] = await DataflowGraph.findOrCreate({
+        where: { application_id, dataflowId },
+        defaults: dataflowGraphFields,
+      });
+
+      if (!isDataflowGraphCreated) dataflowGraph = await dataflowGraph.update(dataflowGraphFields);
+
+      res.json({ result: 'success', dataflowId });
+    } catch (error) {
+      console.log('-error /dataflowgraph/save-----------------------------------------');
+      console.dir({ error }, { depth: null });
+      console.log('------------------------------------------');
+      return res.status(500).send({ message: 'Error occurred while saving Dataflow Graph' });
+    }
+  }
+);
 
 router.post('/deleteAsset',
   [
@@ -201,12 +112,13 @@ router.post('/deleteAsset',
       console.log('-/deleteAsset error-----------------------------------------');
       console.dir({ error }, { depth: null });
       console.log('------------------------------------------');
-      res.status(422).json({ success: false, error: error.message });
+      res.status(422).json({ success: false, error: "Failed to delete asset" });
     }
   }
 );
 
 
+// !! NOT IN USE
 router.post('/changeNodeVisibility', [
   body('id').optional({checkFalsy:true})
     .isUUID(4).withMessage('Invalid asset id'),
@@ -251,7 +163,7 @@ router.post('/changeNodeVisibility', [
 
 });
 
-
+// !! NOT IN USE
 router.get('/nodedetails', [
   query('application_id')
     .optional({checkFalsy:true})
@@ -279,5 +191,89 @@ router.get('/nodedetails', [
         console.log('err', err);
     }
 });
+
+//!! NOT IN USE
+router.post('/delete', [
+  body('jobId')
+    .isUUID(4).withMessage('Invalid job id'),
+  body('application_id')
+    .isUUID(4).withMessage('Invalid application id'),
+], (req, res) => {
+    const errors = validationResult(req).formatWith(validatorUtil.errorFormatter);
+    if (!errors.isEmpty()) {
+      return res.status(422).json({ success: false, errors: errors.array() });
+    }
+    DataflowGraph.destroy(
+        {where:{"id": req.body.jobId, "application_id":req.body.application_id}}
+    ).then(function(deleted) {
+        res.json({"result":"success"});
+    }).catch(function(err) {
+        console.log(err);
+    });
+});
+
+// !! NOT IN USE
+let createDataflow = (applicationId, dataflowType, parentDataflow) => {
+  console.log(applicationId +', '+dataflowType +', '+parentDataflow)
+  return new Promise((resolve, reject) => {
+    Dataflow.findOne({
+      where:{"application_id":applicationId, "id":parentDataflow.id}
+    }).then((parentDataflow) => {
+      console.log(parentDataflow.clusterId);
+      console.log(applicationId +', '+dataflowType +', '+parentDataflow)
+      Dataflow.create({
+        application_id: applicationId,
+        title: 'Default',
+        type: dataflowType,
+        clusterId: parentDataflow.clusterId
+      }).then((dataflowCreated) => {
+        resolve(dataflowCreated)
+      })
+    }).catch(function(err) {
+        console.log(err);
+    });
+  });
+}
+
+//!! NOT IN USE
+let updateNodeNameAndTitle = async (nodes) => {
+  let nodesWithName = [];
+  return new Promise(async (resolve, reject) => {
+    try {
+      for(const node of nodes) {
+        switch (node.type) {
+          case 'File' && node.fileId: 
+            let file = await File.findOne({where: {id: node.fileId}});
+            if(file) {              
+              node.name = file.name;
+              node.title = file.title;
+            }
+            break;
+          case 'Job' && node.jobId: 
+            let job = await Job.findOne({where: {id: node.jobId}});
+            if(job) {
+              node.name = job.name;
+              node.title = job.title;              
+            }
+            break;
+          case 'Index' && node.indexId: 
+            let index = await Index.findOne({where: {id: node.indexId}});
+            if(index) {
+              node.name = index.name;
+              node.title = index.title;
+            }
+            break;
+        }
+
+        nodesWithName.push(node);
+      }
+      resolve(nodesWithName)
+    }catch(err) {
+      console.log(err);
+      reject(err);
+    }
+  })
+}
+
 
 module.exports = router;
