@@ -124,12 +124,16 @@ function BasicsTabManul(props) {
     return (
         <>  
             {enableEdit ? 
-             <Form.Item  label="Cluster" name="clusters" hidden={readOnlyView}>
+             <Form.Item label="Cluster" hidden={readOnlyView}>
                 <Row gutter={[8, 8]}>
                   <Col span={12}>
-                    <Select placeholder="Select a Cluster" disabled={!editingAllowed} onChange={onClusterSelection}>
-                      {clusters.map(cluster => <Option key={cluster.id}>{cluster.name}</Option>)}
-                    </Select>
+                    <Form.Item noStyle name="clusters" >
+                      <Select placeholder="Select a Cluster" disabled={!editingAllowed} onChange={onClusterSelection}>
+                        {clusters.map((cluster) => (
+                          <Option key={cluster.id}>{cluster.name}</Option>
+                        ))}
+                      </Select>
+                    </Form.Item>
                   </Col>
                 </Row>
               </Form.Item>
