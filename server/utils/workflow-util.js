@@ -100,7 +100,7 @@ exports.notifyDependentJobsFailure = async ({contact, dataflowId, failedJobsList
 }
 
 //Send job execution status (success / failure) notification, if user has subscribed
-exports.notifyJobExecutionStatus = async ({ jobId, clusterId, WUstate }) => {
+exports.notifyJobExecutionStatus = async ({ jobId, clusterId, WUstate, wuURL, message, workFlowURL }) => {
   const logNotificationStatus = (recipients, jobName, workUnitStatus, clusterName) => {
     console.log('------------------------------------------');
     console.log(`✉  ${recipients} notified about ${jobName} job execution '${workUnitStatus}' status on ${clusterName} cluster`);
@@ -121,7 +121,10 @@ exports.notifyJobExecutionStatus = async ({ jobId, clusterId, WUstate }) => {
               from: process.env.EMAIL_SENDER,
               to: job.metaData.notificationSettings.recipients,
               subject: `${job.name} ${WUstate} on ${cluster.dataValues.name} cluster`,
-              html: `<p> ${WUstate === 'failed' || WUstate === 'not submitted' ? job.metaData.notificationSettings.failureMessage : job.metaData.notificationSettings.successMessage} </p><p>Tombolo</p>`,
+              html: `<p> ${WUstate === 'failed' || WUstate === 'not submitted' ? job.metaData.notificationSettings.failureMessage : job.metaData.notificationSettings.successMessage} </p>
+                     ${ workFlowURL ? `<p>To view workflow execution details in Tombolo, please click here <a href="${workFlowURL}"> here </a></p>` : ''}
+                     <p>To view details in HPCC , please click <a href = '${wuURL}'> here </a></p>
+                    <p>Tombolo</p>`,
             });
             logNotificationStatus(job.metaData.notificationSettings.recipients, job.name, WUstate, cluster.dataValues.name);
           } else if (notify === 'Only on success' && WUstate === 'completed') {
@@ -137,7 +140,10 @@ exports.notifyJobExecutionStatus = async ({ jobId, clusterId, WUstate }) => {
               from: process.env.EMAIL_SENDER,
               to: job.metaData.notificationSettings?.recipients || job.contact,
               subject: `${job.name} ${WUstate} on ${cluster.dataValues.name} cluster`,
-              html: `<p>  ${job.metaData.notificationSettings.failureMessage} </p><p>Tombolo</p>`,
+              html: `<p>  ${job.metaData.notificationSettings.failureMessage} </p>
+                     <p>To view workflow execution details in Tombolo, please click here <a href="${workFlowURL}"> here </a></p>
+                     <p>To view details in HPCC , please click <a href = '${wuURL}'> here </a></p>
+                     <p>Tombolo</p>`,
             });
             logNotificationStatus(job.metaData.notificationSettings.recipients, job.name, WUstate, cluster.dataValues.name);
           }
@@ -146,7 +152,10 @@ exports.notifyJobExecutionStatus = async ({ jobId, clusterId, WUstate }) => {
               from: process.env.EMAIL_SENDER,
               to: job.metaData.notificationSettings?.recipients || job.contact,
               subject: `${job.name} ${WUstate} on ${cluster.dataValues.name} cluster`,
-              html: `<p>  ${job.metaData.notificationSettings.failureMessage} </p><p>Tombolo</p>`,
+              html: `<p>  ${job.metaData.notificationSettings.failureMessage} </p>
+                    <p> Error occurred while submitting a Job </p>
+                    <p style="color : red">${message || ''}</p>
+                    <p>Tombolo</p>`,
             });
             logNotificationStatus(job.metaData.notificationSettings.recipients, job.name, WUstate, cluster.dataValues.name);
           }  else {

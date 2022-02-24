@@ -45,41 +45,60 @@ const dispatchAction = (action,data) =>  parentPort.postMessage({ action, data }
           logToConsole(`✔️  JOB EXECUTION GOT UPDATED, ("${jobExecution.job.name}") ${result.wuid} = ${result.status} ${result.status === 'completed' ? "👍" : "🚩🚩🚩"}`);
           logToConsole(result.toJSON());
           if(WUstate === 'completed' || WUstate === 'failed'){
+            let workFlowURL, dataflow;
+            const cluster = await Cluster.findOne({ where: { id: jobExecution.clusterId } });
+            wuURL = `${cluster.thor_host}:${cluster.thor_port}/?Wuid=${wuResult.Workunit.Wuid}&Widget=WUDetailsWidget`;
+
+            if(jobExecution.dataValues?.dataflowId){ // If job part of workflow build a URL
+                  dataflow = await Dataflow.findOne({ where: { id: jobExecution.dataValues?.dataflowId } });
+                  workFlowURL = `${process.env.WEB_URL}${dataflow.application_id}/dataflowinstances/dataflowInstanceDetails/${dataflow.id}/${jobExecution.jobExecutionGroupId}`
+            }
+             
             if(WUstate === 'completed'){
               logToConsole(`🔍  WORKER_THREAD IS DONE, PASSING CHECKING ON DEPENDING JOBS TO MAIN THREAD, "${jobExecution.job.name}" - ${jobExecution.wuid} - ${jobExecution.jobId}...`);
-              // will trigger JobScheduler.scheduleCheckForJobsWithSingleDependency on main thread.
+              //If the job just completed is  a part of a workflow + notification not set up at workflow level -> send notification if set at job level
+              if(dataflow && dataflow?.metaData?.notification?.notify === 'Never' ){
+                console.log('------------------------------------------');
+                console.log('Job completed part of a workflow - No notification set at workflow level. User will be notified if notification is set at job level', )
+                console.log('------------------------------------------');
+                await workflowUtil.notifyJobExecutionStatus({ jobId: jobExecution.jobId, clusterId: jobExecution.clusterId, wuid: jobExecution.wuid, WUstate, wuURL, cluster, workFlowURL })
+              }else{ //Job not a part of workflow
+                console.log('------------------------------------------');
+                console.log('Job completed not a part of a workflow (INDEPENDENT). User will be notified if notification is set at job level', )
+                console.log('------------------------------------------');
+                await workflowUtil.notifyJobExecutionStatus({ jobId: jobExecution.jobId, clusterId: jobExecution.clusterId, wuid: jobExecution.wuid, WUstate, wuURL, cluster })
+              }
+              
               dispatchAction('scheduleDependentJobs',{ dependsOnJobId: jobExecution.jobId, dataflowId: jobExecution.dataflowId, jobExecutionGroupId: jobExecution.jobExecutionGroupId, });
-              // await JobScheduler.scheduleCheckForJobsWithSingleDependency({ dependsOnJobId: jobExecution.jobId, dataflowId: jobExecution.dataflowId });
-            }else{
-                 //If failed
-              if (jobExecution.dataValues?.dataflowId) {
-                try {
-                  const dataflow = await Dataflow.findOne({ where: { id: jobExecution.dataValues?.dataflowId } });
-                  const cluster = await Cluster.findOne({ where: { id: jobExecution.clusterId } });
-                  const wuURL = `${cluster.thor_host}:${cluster.thor_port}/?Wuid=${wuResult.Workunit.Wuid}&Widget=WUDetailsWidget`;
-                  const workFlowURL = `${process.env.WEB_URL}/${dataflow.application_id}/dataflowinstances/dataflowInstanceDetails/${dataflow.id}/${jobExecution.jobExecutionGroupId}`
-                  if (dataflow.dataValues?.metaData?.notification?.notify === 'Always' || dataflow.dataValues?.metaData?.notification?.notify === 'Only on failure') {
+            }else{ // If job failed
+              if(!dataflow){ //Failed job not a part of workflow. Notify if notification set at job level
+                console.log('------------------------------------------');
+                console.log('Job failed - Not a part of workflow (INDEPENDENT) -> Notify if notification set at job level', )
+                console.log('------------------------------------------');
+                await workflowUtil.notifyJobExecutionStatus({ jobId: jobExecution.jobId, clusterId: jobExecution.clusterId, wuid: jobExecution.wuid, WUstate, wuURL, cluster })
+              }
+              else if(dataflow && dataflow?.metaData?.notification?.notify === 'Never' ){ // Job failed part of workflow, but no notification set at workflow level
+                console.log('------------------------------------------');
+                console.log('Job failed part of a workflow - No notification set at workflow level. User will be notified if notification is set at job level', )
+                console.log('------------------------------------------');
+                await workflowUtil.notifyJobExecutionStatus({ jobId: jobExecution.jobId, clusterId: jobExecution.clusterId, wuid: jobExecution.wuid, WUstate, wuURL, workFlowURL })
+              }else if(dataflow && dataflow?.metaData?.notification?.notify !== 'Never'){ //Job is part of workflow and notification set for failed jobs at workflow level.
+                 if (dataflow.dataValues?.metaData?.notification?.notify === 'Always' || dataflow.dataValues?.metaData?.notification?.notify === 'Only on failure') {
                     const notificationBody = `<div>
                                               <p>${dataflow.dataValues?.metaData?.notification?.failure_message} </p>
-                                              <p>Hello,</p> <p> <b>${jobExecution.job.name}</b> from  
-                                              <b>${dataflow.title}</b> <span style="color : red; font-weight: 700"> FAILED </span> on cluster <b>
-                                              ${cluster.name} </b>.</p>
+                                              <p>Hello,</p> 
+                                              <p> ${jobExecution.job.name} from  
+                                              ${dataflow.title} <span style="color : red;"> FAILED </span> on cluster
+                                              ${cluster.name}.</p>
                                               <p>To view workflow execution details in Tombolo, please click here <a href="${workFlowURL}"> here </a></p>
                                               <p>To view details in HPCC , please click <a href = '${wuURL}'> here </a></p>
                                               </div>
                                               `;
-
+                    console.log('------------------------------------------');
+                    console.log('Job failed - part of a workflow - Notification set at workflow level -> Notify', )
+                    console.log('------------------------------------------');
                     await workflowUtil.notifyWorkflowExecutionStatus({recipients: dataflow.dataValues?.metaData?.notification?.recipients, subject : 'Workflow failed', message : notificationBody});
-                  }else{ // Error notification not configured at job level -> notify user if error failure message configured at job level
-                    await workflowUtil.notifyJobExecutionStatus({ jobId: jobExecution.jobId, clusterId: jobExecution.clusterId, wuid: jobExecution.wuid, WUstate });
-                  }
-                } catch (err) {
-                  console.log('------------------------------------------');
-                  console.log(err);
-                  console.log('------------------------------------------');
-                }
-              } else { // Job not a part or Workflow. notify status if configured at job level
-                await workflowUtil.notifyJobExecutionStatus({ jobId: jobExecution.jobId, clusterId: jobExecution.clusterId, wuid: jobExecution.wuid, WUstate });
+              }
               }
             }
           }

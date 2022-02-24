@@ -77,7 +77,7 @@ class JobScheduler {
         const failedJobsList =[];
         if(dependantJobs.length === 0 && dataflowId){
           console.log('------------------------------------------');
-          console.log('Work flow execution complete, Checking if subscribed for notifications.', )
+          console.log('WORKFLOW EXECUTION COMPLETE, Checking if subscribed for notifications.', )
           console.log('------------------------------------------');
           try{
             const dataflow = await Dataflow.findOne({where : {id : dataflowId}});
@@ -100,7 +100,7 @@ class JobScheduler {
             }
             else{
               console.log('------------------------------------------');
-              console.log('Not subscribed for workflow execution complete(success) status')
+              console.log('Not subscribed for WORKFLOW EXECUTION COMPLETE(success) status')
               console.log('------------------------------------------');
             }
           }catch(error){

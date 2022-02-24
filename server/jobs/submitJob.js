@@ -39,20 +39,30 @@ const dispatchAction = (action,data) =>  parentPort.postMessage({ action, data }
     workerData.status = 'error';
     await assetUtil.recordJobExecution(workerData, '');  
     if(workerData.dataflowId){
-      try{
+      try{ // Job that failed to submit is part of workflow
        const dataflow = await Dataflow.findOne({where : {id: workerData.dataflowId}})
        if(dataflow?.dataValues?.metaData?.notification?.failure_message){ //If failure notification is set in Workflow level
-          const message = `<p>${dataflow?.dataValues?.metaData?.notification?.failure_message} </p><p>Hello,</p> <p> Below error occurred while submitting <b> ${workerData.jobName} </b></p> <p><span style="color: red">${errorMessage } </span></p>`
+        console.log('------------------------------------------');
+          console.log('Error occurred while submitting a job THAT IS PART OF WORKFLOW - notification set at workflow level -> Notifying now', );
+          console.log('------------------------------------------');
+          const message = `<p>${dataflow?.dataValues?.metaData?.notification?.failure_message} </p>
+                            <p>Hello,<p> Below error occurred while submitting <b> ${workerData.jobName} </p> 
+                            <p><span style="color: red">${errorMessage } </span></p>`
           await workFlowUtil.notifyWorkflowExecutionStatus({message , recipients: dataflow?.dataValues?.metaData?.notification?.recipients, subject : 'Workflow failed'})
        }else{ // Failure notification not set in Workflow level - notify user if notification is set in Job level
-          await workFlowUtil.notifyJobExecutionStatus({ jobId: jobExecution.jobId, clusterId: jobExecution.clusterId, wuid: jobExecution.wuid, WUstate });
+          console.log('------------------------------------------');
+          console.log('Error occurred while submitting a job THAT IS PART OF WORKFLOW - No notification set at workflow level - notify if set at job level', );
+          console.log('------------------------------------------');
+          await workFlowUtil.notifyJobExecutionStatus({ jobId: workerData.jobId, clusterId: workerData.clusterId,  WUstate : 'not submitted', message : errorMessage });
        }
       }catch(err){
         console.log(err)
       }
-    }else{
-      //Job is not a part of Workflow notify accordingly
-         await workFlowUtil.notifyJobExecutionStatus({ jobId: workerData.jobId, clusterId: workerData.clusterId,  WUstate : 'not submitted' });
+    }else{//Job that failed to submit is NOT a part of Workflow notify accordingly
+        console.log('------------------------------------------');
+          console.log('Error occurred while submitting an INDEPENDENT (not part of workflow) - Notify if notification is set at job level', );
+          console.log('------------------------------------------');
+         await workFlowUtil.notifyJobExecutionStatus({ jobId: workerData.jobId, clusterId: workerData.clusterId,  WUstate : 'not submitted', message : errorMessage });
     }
        
   }  finally{
