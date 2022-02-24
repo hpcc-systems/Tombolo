@@ -121,7 +121,7 @@ exports.notifyJobExecutionStatus = async ({ jobId, clusterId, WUstate }) => {
               from: process.env.EMAIL_SENDER,
               to: job.metaData.notificationSettings.recipients,
               subject: `${job.name} ${WUstate} on ${cluster.dataValues.name} cluster`,
-              html: `<p> ${WUstate === 'failed' ? job.metaData.notificationSettings.failureMessage : job.metaData.notificationSettings.successMessage} </p><p>Tombolo</p>`,
+              html: `<p> ${WUstate === 'failed' || WUstate === 'not submitted' ? job.metaData.notificationSettings.failureMessage : job.metaData.notificationSettings.successMessage} </p><p>Tombolo</p>`,
             });
             logNotificationStatus(job.metaData.notificationSettings.recipients, job.name, WUstate, cluster.dataValues.name);
           } else if (notify === 'Only on success' && WUstate === 'completed') {
@@ -140,7 +140,16 @@ exports.notifyJobExecutionStatus = async ({ jobId, clusterId, WUstate }) => {
               html: `<p>  ${job.metaData.notificationSettings.failureMessage} </p><p>Tombolo</p>`,
             });
             logNotificationStatus(job.metaData.notificationSettings.recipients, job.name, WUstate, cluster.dataValues.name);
-          } else {
+          }
+          else if ((notify === 'Only on failure' && WUstate === 'not submitted')) {
+            await NotificationModule.notify({
+              from: process.env.EMAIL_SENDER,
+              to: job.metaData.notificationSettings?.recipients || job.contact,
+              subject: `${job.name} ${WUstate} on ${cluster.dataValues.name} cluster`,
+              html: `<p>  ${job.metaData.notificationSettings.failureMessage} </p><p>Tombolo</p>`,
+            });
+            logNotificationStatus(job.metaData.notificationSettings.recipients, job.name, WUstate, cluster.dataValues.name);
+          }  else {
             console.log('------------------------------------------');
             console.log(`Not subscribed for '${WUstate}' Job Execution status for ${job.name}`);
             console.log('------------------------------------------');
@@ -151,3 +160,16 @@ exports.notifyJobExecutionStatus = async ({ jobId, clusterId, WUstate }) => {
       .catch(reject);
   });
 };
+
+
+exports.notifyWorkflowExecutionStatus = async ({recipients, subject, message}) => {
+  console.log('------------------------------------------');
+  console.log(`✉ ${recipients} notified of workflow status` )
+  console.log('------------------------------------------');
+  let ans = await NotificationModule.notify({
+              from: process.env.EMAIL_SENDER,
+              to: recipients,
+              subject: `${subject}`,
+              html: `${message} <p>Tombolo</p>`,
+            });
+}

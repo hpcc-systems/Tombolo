@@ -1,9 +1,12 @@
 import React, { useState, useEffect } from "react";
 import { Space, Table, Badge, Tooltip, Tag } from "antd/lib";
+import { useLocation } from "react-router";
+
 import { Constants } from "../../common/Constants";
 import  useWindowSize from "../../../hooks/useWindowSize";
 
 function JobExecutionDetails({ workflowDetails, graphSize, manageJobExecutionFilters, setSelectedJobExecutionGroup, jobExecutionTableFilters, selectedJobExecutionGroup}) {
+   const location = useLocation();
   const [parentTableData, setParentTableData] = useState([]);
   const [ windowHeight] = useWindowSize();
   // Unique filters
@@ -111,7 +114,11 @@ function JobExecutionDetails({ workflowDetails, graphSize, manageJobExecutionFil
         });      
       setParentTableData(Object.values(execution));
         const executionKeys = Object.keys(execution);
-        setSelectedJobExecutionGroup(executionKeys.length > 0 ? executionKeys[executionKeys.length -1] : '') 
+        if(location.pathname.split('/').length >= 6){
+           setSelectedJobExecutionGroup(location.pathname.split('/')[5])
+        }else{
+            setSelectedJobExecutionGroup(executionKeys.length > 0 ? executionKeys[executionKeys.length -1] : '') ;
+        }
     }
   }, [workflowDetails]);
 

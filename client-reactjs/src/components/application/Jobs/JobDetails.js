@@ -1666,7 +1666,11 @@ async sendGHCreds({ GHUsername, GHToken }){
           <Form 
             colon={ this.state.enableEdit ? true : false}
             {...formItemLayout} 
-            initialValues={{selectedFile:null,notify :  'Never'}} 
+            initialValues={{
+              selectedFile: null,
+              notify: 'Never', 
+              jobType: 'Job'
+            }} 
             labelAlign="left" 
             ref={this.formRef} 
             scrollToFirstError
@@ -1676,16 +1680,18 @@ async sendGHCreds({ GHUsername, GHToken }){
             <Tabs defaultActiveKey="1" tabBarExtraContent = {this.props.displayingInModal ? null : controls }>
 
           <TabPane tab="Basic" key="1">
-              <Form.Item label="Job Type" name="jobType" className={this.state.enableEdit ? null : "read-only-input"} >
+              <Form.Item label="Job Type" className={this.state.enableEdit ? null : "read-only-input"} >
                 <Row gutter={[8, 8]}>
                   <Col span={12}>
+                    <Form.Item noStyle name="jobType" >
                     {!this.state.enableEdit ? 
-                      <Input disabled={!editingAllowed}  placeholder="Job Type" value={(jobType !== '') ? jobType : "Job"} /> 
+                      <Input disabled={!editingAllowed}  placeholder="Job Type" /> 
                       :
-                      <Select placeholder="Job Type" value={(jobType !== '') ? jobType : "Job"} onChange={this.onJobTypeChange} >
+                      <Select placeholder="Job Type" onChange={this.onJobTypeChange} >
                         {jobTypes.map(d => <Option key={d}>{d}</Option>)}
                       </Select>
                     }
+                    </Form.Item>
                   </Col>
                 </Row>
               </Form.Item>   

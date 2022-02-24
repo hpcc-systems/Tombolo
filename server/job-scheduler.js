@@ -5,6 +5,8 @@ const Job = models.job;
 const JobExecution = models.job_execution;
 const DependentJobs = models.dependent_jobs;
 const MessageBasedJobs = models.message_based_jobs;
+const Dataflow = models.dataflow;
+const Cluster = models.cluster;
 const hpccUtil = require('./utils/hpcc-util');
 const assetUtil = require('./utils/assets.js');
 const { v4: uuidv4 } = require('uuid'); 
@@ -73,7 +75,40 @@ class JobScheduler {
         console.log('------------------------------------------');
 
         const failedJobsList =[];
+        if(dependantJobs.length === 0 && dataflowId){
+          console.log('------------------------------------------');
+          console.log('Work flow execution complete, Checking if subscribed for notifications.', )
+          console.log('------------------------------------------');
+          try{
+            const dataflow = await Dataflow.findOne({where : {id : dataflowId}});
+            const cluster = await Cluster.findOne({where : {id : dataflow.clusterId}});
 
+            if(dataflow.dataValues?.metaData?.notification?.notify === 'Always' || dataflow.dataValues?.metaData?.notification?.notify === 'Only on success'){
+              console.log('------------------------------------------');
+              console.log('Prepping to send workflow execution status', )
+              console.log('------------------------------------------');
+              const  hpccURL  = `${cluster.thor_host}:${cluster.thor_port}/#/stub/ECL-DL/Workunits-DL/Workunits`; 
+              const message = `<div>
+                                <p> ${dataflow.dataValues?.metaData?.notification?.success_message} </p>
+                                <p> Hello, </p>
+                                <p>Successfully executed <b>${dataflow.title} </b> on ${cluster.name} </p>
+                                <p> To view workflow execution details in Tombolo please click <a href="${process.env.WEB_URL}/${dataflow.application_id}/dataflowinstances/dataflowInstanceDetails/${dataflow.id}/${jobExecutionGroupId}"> here </a>
+                                <p> Click <a href="${hpccURL}"> here </a>
+                                to view execution  details in HPCC</p> </div>`
+              workflowUtil.notifyWorkflowExecutionStatus({recipients: dataflow.dataValues?.metaData?.notification?.recipients, message, subject : 'Workflow execution successful'})
+
+            }
+            else{
+              console.log('------------------------------------------');
+              console.log('Not subscribed for workflow execution complete(success) status')
+              console.log('------------------------------------------');
+            }
+          }catch(error){
+            console.log('------------------------------------------');
+            console.log(error, )
+            console.log('------------------------------------------');
+          }
+        }else{    
         for (let i = 0; i < dependantJobs.length; i++) {
         
         let job;  
@@ -117,6 +152,7 @@ class JobScheduler {
           if (error.contact) failedJobs.push(error);
         }
       } // for loop ends.
+    }
 
       if (failedJobsList.length > 0) {
         const contact = failedJobsList[0].contact;
