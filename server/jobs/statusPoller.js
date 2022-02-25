@@ -62,7 +62,7 @@ const dispatchAction = (action,data) =>  parentPort.postMessage({ action, data }
                 console.log('Job completed part of a workflow - No notification set at workflow level. User will be notified if notification is set at job level', )
                 console.log('------------------------------------------');
                 await workflowUtil.notifyJobExecutionStatus({ jobId: jobExecution.jobId, clusterId: jobExecution.clusterId, wuid: jobExecution.wuid, WUstate, wuURL, cluster, workFlowURL })
-              }else{ //Job not a part of workflow
+              }else if(!dataflow){ //Completed Job not a part of workflow
                 console.log('------------------------------------------');
                 console.log('Job completed not a part of a workflow (INDEPENDENT). User will be notified if notification is set at job level', )
                 console.log('------------------------------------------');

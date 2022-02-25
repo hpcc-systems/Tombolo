@@ -103,7 +103,7 @@ exports.notifyDependentJobsFailure = async ({contact, dataflowId, failedJobsList
 exports.notifyJobExecutionStatus = async ({ jobId, clusterId, WUstate, wuURL, message, workFlowURL }) => {
   const logNotificationStatus = (recipients, jobName, workUnitStatus, clusterName) => {
     console.log('------------------------------------------');
-    console.log(`✉  ${recipients} notified about ${jobName} job execution '${workUnitStatus}' status on ${clusterName} cluster`);
+    console.log(`✉ notifying ${recipients}  about ${jobName} job execution '${workUnitStatus}' status on ${clusterName} cluster`);
     console.log('------------------------------------------');
   };
   return new Promise(async (resolve, reject) => {
@@ -116,12 +116,12 @@ exports.notifyJobExecutionStatus = async ({ jobId, clusterId, WUstate, wuURL, me
         } else if (job && job.metaData.notificationSettings?.notify) {
           let cluster = await Cluster.findOne({ where: { id: clusterId } });
           let notify = job.metaData.notificationSettings.notify;
-          if (notify === 'Always') {
+          if (notify === 'Always' && WUstate !== 'not submitted' ) {
             await NotificationModule.notify({
               from: process.env.EMAIL_SENDER,
               to: job.metaData.notificationSettings.recipients,
               subject: `${job.name} ${WUstate} on ${cluster.dataValues.name} cluster`,
-              html: `<p> ${WUstate === 'failed' || WUstate === 'not submitted' ? job.metaData.notificationSettings.failureMessage : job.metaData.notificationSettings.successMessage} </p>
+              html: `<p> ${WUstate === 'failed' ? job.metaData.notificationSettings.failureMessage : job.metaData.notificationSettings.successMessage} </p>
                      ${ workFlowURL ? `<p>To view workflow execution details in Tombolo, please click here <a href="${workFlowURL}"> here </a></p>` : ''}
                      <p>To view details in HPCC , please click <a href = '${wuURL}'> here </a></p>
                     <p>Tombolo</p>`,
@@ -147,7 +147,7 @@ exports.notifyJobExecutionStatus = async ({ jobId, clusterId, WUstate, wuURL, me
             });
             logNotificationStatus(job.metaData.notificationSettings.recipients, job.name, WUstate, cluster.dataValues.name);
           }
-          else if ((notify === 'Only on failure' && WUstate === 'not submitted')) {
+          else if (((notify === 'Only on failure' || notify === 'Always') && WUstate === 'not submitted')) {
             await NotificationModule.notify({
               from: process.env.EMAIL_SENDER,
               to: job.metaData.notificationSettings?.recipients || job.contact,
@@ -158,7 +158,8 @@ exports.notifyJobExecutionStatus = async ({ jobId, clusterId, WUstate, wuURL, me
                     <p>Tombolo</p>`,
             });
             logNotificationStatus(job.metaData.notificationSettings.recipients, job.name, WUstate, cluster.dataValues.name);
-          }  else {
+          }  
+          else {
             console.log('------------------------------------------');
             console.log(`Not subscribed for '${WUstate}' Job Execution status for ${job.name}`);
             console.log('------------------------------------------');
@@ -180,7 +181,7 @@ exports.notifyWorkflowExecutionStatus = async ({hpccURL,executionStatus,dataflow
                         <p> ${success_message } </p>
                         <p> Hello, </p>
                         <p>Successfully executed ${dataflowName} on ${clusterName} </p>
-                        <p> To view workflow execution details in Tombolo please click <a href="${process.env.WEB_URL}/${appId}/dataflowinstances/dataflowInstanceDetails/${dataflowId}/${jobExecutionGroupId}"> here </a>
+                        <p> To view workflow execution details in Tombolo please click <a href="${process.env.WEB_URL}${appId}/dataflowinstances/dataflowInstanceDetails/${dataflowId}/${jobExecutionGroupId}"> here </a>
                         <p> Click <a href="${hpccURL}"> here </a>to view execution  details in HPCC</p> 
                       </div>`;
                       break;
@@ -195,7 +196,7 @@ exports.notifyWorkflowExecutionStatus = async ({hpccURL,executionStatus,dataflow
         message = `<div>
                       <p>${failure_message}</p>
                       <p>${dataflowName} failed.</p>
-                      <p> To view workflow execution details in Tombolo please click <a href="${process.env.WEB_URL}/${appId}/dataflowinstances/dataflowInstanceDetails/${dataflowId}/${jobExecutionGroupId}"> here </a>
+                      <p> To view workflow execution details in Tombolo please click <a href="${process.env.WEB_URL}${appId}/dataflowinstances/dataflowInstanceDetails/${dataflowId}/${jobExecutionGroupId}"> here </a>
                       <p> Click <a href="${hpccURL}"> here </a>to view execution  details in HPCC</p> 
                   </div>`
   }
