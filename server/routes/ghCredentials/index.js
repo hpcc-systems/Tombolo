@@ -2,6 +2,7 @@ const express = require('express');
 const router = express.Router();
 const algorithm = 'aes-256-ctr';
 const { GHCredentials } = require('../../models');
+const {encryptString, decryptString} = require('../../utils/cipher');
 
 const crypto = require('crypto');
 
@@ -9,8 +10,8 @@ router.post('/', async (req, res, next) => {
   try {
     const userId = req.user.id;
 
-    const GHUsername = crypto.createCipher(algorithm, process.env.cluster_cred_secret).update(req.body.GHUsername, 'utf8', 'hex');
-    const GHToken = crypto.createCipher(algorithm, process.env.cluster_cred_secret).update(req.body.GHToken, 'utf8', 'hex');
+    const GHUsername = encryptString(req.body.GHUsername);
+    const GHToken = encryptString(req.body.GHToken)
 
     let credentials = await GHCredentials.findOne({ where: { userId } });
     if (credentials) {
@@ -36,8 +37,8 @@ router.get('/', async (req, res, next) => {
     const credentials = await GHCredentials.findOne({ where: { userId } });
 
     if (credentials) {
-      credentials.GHUsername = crypto .createDecipher(algorithm, process.env.cluster_cred_secret) .update(credentials.GHUsername, 'hex', 'utf8');
-      credentials.GHToken = crypto .createDecipher(algorithm, process.env.cluster_cred_secret) .update(credentials.GHToken, 'hex', 'utf8');
+      credentials.GHUsername = decryptString(credentials.GHUsername);
+      credentials.GHToken = decryptString(credentials.GHToken);
     }
     res.send({ credentials });
   } catch (error) {

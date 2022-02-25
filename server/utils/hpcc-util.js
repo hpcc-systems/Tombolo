@@ -8,7 +8,7 @@ const { GHCredentials } = require('../models')
 let hpccJSComms = require("@hpcc-js/comms");
 const crypto = require('crypto');
 let algorithm = 'aes-256-ctr';
-const {decryptString} = require('./cipher')
+const {decryptString } = require('./cipher')
 
 const debug = require('debug');
 const simpleGit = require('simple-git');
@@ -712,8 +712,8 @@ exports.pullFilesFromGithub = async (jobName = '', clusterId, gitHubFiles) => {
     if (credsId) {
       const credentials = await GHCredentials.findOne({ where:{ id: credsId }});
       if (credentials) {
-        GHUsername = crypto.createDecipher(algorithm, process.env.cluster_cred_secret).update(credentials.GHUsername,'hex','utf8');
-        GHToken = crypto.createDecipher(algorithm, process.env.cluster_cred_secret).update(credentials.GHToken,'hex','utf8');
+        GHUsername = decryptString(credentials.GHUsername)
+        GHUsername = decryptString(credentials.GHToken)
       }
     }
 
