@@ -83,21 +83,22 @@ const dispatchAction = (action,data) =>  parentPort.postMessage({ action, data }
                 console.log('------------------------------------------');
                 await workflowUtil.notifyJobExecutionStatus({ jobId: jobExecution.jobId, clusterId: jobExecution.clusterId, wuid: jobExecution.wuid, WUstate, wuURL, workFlowURL })
               }else if(dataflow && dataflow?.metaData?.notification?.notify !== 'Never'){ //Job is part of workflow and notification set for failed jobs at workflow level.
+                const{dataValues : {metaData : {notification : {failure_message, recipients}}}} = dataflow;
                  if (dataflow.dataValues?.metaData?.notification?.notify === 'Always' || dataflow.dataValues?.metaData?.notification?.notify === 'Only on failure') {
-                    const notificationBody = `<div>
-                                              <p>${dataflow.dataValues?.metaData?.notification?.failure_message} </p>
-                                              <p>Hello,</p> 
-                                              <p> ${jobExecution.job.name} from  
-                                              ${dataflow.title} <span style="color : red;"> FAILED </span> on cluster
-                                              ${cluster.name}.</p>
-                                              <p>To view workflow execution details in Tombolo, please click here <a href="${workFlowURL}"> here </a></p>
-                                              <p>To view details in HPCC , please click <a href = '${wuURL}'> here </a></p>
-                                              </div>
-                                              `;
                     console.log('------------------------------------------');
                     console.log('Job failed - part of a workflow - Notification set at workflow level -> Notify', )
                     console.log('------------------------------------------');
-                    await workflowUtil.notifyWorkflowExecutionStatus({recipients: dataflow.dataValues?.metaData?.notification?.recipients, subject : 'Workflow failed', message : notificationBody});
+                     await workflowUtil.notifyWorkflowExecutionStatus({recipients,
+                       failure_message, 
+                       executionStatus: 'failed', 
+                       hpccURL : wuURL, 
+                       jobName: jobExecution.job.name, 
+                       dataflowName: dataflow.title, 
+                       clusterName : cluster.name,
+                      dataflowId: dataflow.id,
+                      jobExecutionGroupId: jobExecution.jobExecutionGroupId,
+                      appId: dataflow.application_id
+                     });
               }
               }
             }

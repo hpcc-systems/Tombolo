@@ -87,16 +87,20 @@ class JobScheduler {
               console.log('------------------------------------------');
               console.log('Prepping to send workflow execution status', )
               console.log('------------------------------------------');
-              const  hpccURL  = `${cluster.thor_host}:${cluster.thor_port}/#/stub/ECL-DL/Workunits-DL/Workunits`; 
-              const message = `<div>
-                                <p> ${dataflow.dataValues?.metaData?.notification?.success_message} </p>
-                                <p> Hello, </p>
-                                <p>Successfully executed <b>${dataflow.title} </b> on ${cluster.name} </p>
-                                <p> To view workflow execution details in Tombolo please click <a href="${process.env.WEB_URL}/${dataflow.application_id}/dataflowinstances/dataflowInstanceDetails/${dataflow.id}/${jobExecutionGroupId}"> here </a>
-                                <p> Click <a href="${hpccURL}"> here </a>
-                                to view execution  details in HPCC</p> </div>`
-              workflowUtil.notifyWorkflowExecutionStatus({recipients: dataflow.dataValues?.metaData?.notification?.recipients, message, subject : 'Workflow execution successful'})
+              const  hpccURL  = `${cluster.thor_host}:${cluster.thor_port}/#/stub/ECL-DL/Workunits-DL/Workunits`;
+              const {dataValues : {metaData : {notification : {recipients, success_message }}}} = dataflow;
 
+              workflowUtil.notifyWorkflowExecutionStatus({
+                hpccURL,
+                executionStatus : 'completed',
+                dataflowName: dataflow.title,
+                dataflowId : dataflow.id,
+                clusterName : cluster.name,
+                appId : dataflow.application_id,
+                success_message,
+                recipients,
+                jobExecutionGroupId
+              })
             }
             else{
               console.log('------------------------------------------');

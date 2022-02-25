@@ -42,13 +42,23 @@ const dispatchAction = (action,data) =>  parentPort.postMessage({ action, data }
       try{ // Job that failed to submit is part of workflow
        const dataflow = await Dataflow.findOne({where : {id: workerData.dataflowId}})
        if(dataflow?.dataValues?.metaData?.notification?.failure_message){ //If failure notification is set in Workflow level
+        const{dataValues, dataValues : {metaData : {notification : {failure_message, recipients}}}} = dataflow;
         console.log('------------------------------------------');
           console.log('Error occurred while submitting a job THAT IS PART OF WORKFLOW - notification set at workflow level -> Notifying now', );
           console.log('------------------------------------------');
-          const message = `<p>${dataflow?.dataValues?.metaData?.notification?.failure_message} </p>
-                            <p>Hello,<p> Below error occurred while submitting <b> ${workerData.jobName} </p> 
-                            <p><span style="color: red">${errorMessage } </span></p>`
-          await workFlowUtil.notifyWorkflowExecutionStatus({message , recipients: dataflow?.dataValues?.metaData?.notification?.recipients, subject : 'Workflow failed'})
+
+           await  workFlowUtil.notifyWorkflowExecutionStatus({
+                executionStatus : 'not_submitted',
+                dataflowName: dataValues.title,
+                dataflowId : dataValues.id,
+                appId : dataflow.application_id,
+                failure_message,
+                recipients,
+                errorMessage,
+                jobName : workerData.jobName
+              })
+
+
        }else{ // Failure notification not set in Workflow level - notify user if notification is set in Job level
           console.log('------------------------------------------');
           console.log('Error occurred while submitting a job THAT IS PART OF WORKFLOW - No notification set at workflow level - notify if set at job level', );
