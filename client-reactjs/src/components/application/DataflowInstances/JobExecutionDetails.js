@@ -1,11 +1,15 @@
 import React, { useState, useEffect } from "react";
 import { Space, Table, Badge, Tooltip, Tag } from "antd/lib";
+import {useParams} from "react-router-dom";
+
 import { Constants } from "../../common/Constants";
 import  useWindowSize from "../../../hooks/useWindowSize";
 
 function JobExecutionDetails({ workflowDetails, graphSize, manageJobExecutionFilters, setSelectedJobExecutionGroup, jobExecutionTableFilters, selectedJobExecutionGroup}) {
   const [parentTableData, setParentTableData] = useState([]);
   const [ windowHeight] = useWindowSize();
+  const {dataflowId, executionGroupId} = useParams();
+
   // Unique filters
   const createUniqueFiltersArr = (baseArr, column) => {
     const columnsNames = { createdAt: "createdAt", name: "name", wuid: "wuid", status: "status" };
@@ -111,7 +115,11 @@ function JobExecutionDetails({ workflowDetails, graphSize, manageJobExecutionFil
         });      
       setParentTableData(Object.values(execution));
         const executionKeys = Object.keys(execution);
-        setSelectedJobExecutionGroup(executionKeys.length > 0 ? executionKeys[executionKeys.length -1] : '') 
+        if(dataflowId){
+           setSelectedJobExecutionGroup(executionGroupId)
+        }else{
+            setSelectedJobExecutionGroup(executionKeys.length > 0 ? executionKeys[executionKeys.length -1] : '') ;
+        }
     }
   }, [workflowDetails]);
 

@@ -6,6 +6,7 @@ import { connect } from 'react-redux';
 import { authHeader, handleError } from "../common/AuthHeader.js"
 import { hasAdminRole } from "../common/AuthUtil.js";
 import { applicationActions } from '../../redux/actions/Application';
+import {dataflowAction} from "../../redux/actions/Dataflow"
 import { groupsActions } from '../../redux/actions/Groups';
 import { assetsActions } from '../../redux/actions/Assets';
 import { QuestionCircleOutlined, DownOutlined  } from '@ant-design/icons';
@@ -70,7 +71,15 @@ class AppHeader extends Component {
     }
 
     componentDidMount(){
-      if(this.props.location.pathname.split("/").includes('manualJobDetails')){
+      if(this.props.location.pathname.includes('manualJobDetails')){
+        return; 
+      }
+
+      if(this.props.location.pathname.includes('dataflowInstanceDetails/')){
+        const applicationId = this.props.location.pathname.split('/')[1];
+        const dataflowId = this.props.dataflowId || this.props.location.pathname.split('/')[4];
+        this.props.dispatch(applicationActions.applicationSelected(applicationId, ''));
+        this.props.dispatch(dataflowAction.dataflowSelected(applicationId,'',dataflowId,''));
         return; 
       }
 
