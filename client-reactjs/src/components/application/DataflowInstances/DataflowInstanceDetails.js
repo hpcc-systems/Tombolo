@@ -30,10 +30,15 @@ class DataflowInstanceDetails extends Component {
   }
 
   getJobExecutionDetails = () => {
+    const applicationId = this.props.application.applicationId || this.props.history.location.pathname.split("/")[1];
+    const dataflowId = this.props.dataflowId || this.props.history.location.pathname.split("/")[4]
+
     this.setState({
       loading: true,
     });
-    fetch( '/api/job/jobExecutionDetails?dataflowId=' + this.props.dataflowId + '&applicationId=' + this.props.application.applicationId, { headers: authHeader(), } )
+    fetch('/api/job/jobExecutionDetails?dataflowId=' + dataflowId + '&applicationId=' + applicationId, {
+      headers: authHeader(),
+    })
       .then((response) => {
         if (response.ok) {
           return response.json();

@@ -157,7 +157,7 @@ class App extends React.Component {
                     component={Regulations}
                   />
                   <PrivateRoute
-                    path="/:applicationId/dataflowinstances/dataflowInstanceDetails"
+                    path="/:applicationId/dataflowinstances/dataflowInstanceDetails/:dataflowId?/:executionGroupId?"
                     component={DataflowInstanceDetails}
                   />
                   <PrivateRoute

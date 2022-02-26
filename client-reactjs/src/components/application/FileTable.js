@@ -1,4 +1,3 @@
-//import 'treant-js/vendor/raphael.min.js';
 import { Table, Tooltip, Divider, message, Popconfirm, Drawer, Button } from 'antd/lib';
 import React, { Component } from "react";
 import FileDetailsForm from "./FileDetails";

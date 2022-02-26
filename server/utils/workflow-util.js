@@ -100,7 +100,7 @@ exports.notifyDependentJobsFailure = async ({contact, dataflowId, failedJobsList
 }
 
 //Send job execution status (success / failure) notification, if user has subscribed
-exports.notifyJobExecutionStatus = async ({ jobId, clusterId, WUstate }) => {
+exports.notifyJobExecutionStatus = async ({ jobId, clusterId, WUstate, wuURL, message, workFlowURL }) => {
   const logNotificationStatus = (recipients, jobName, workUnitStatus, clusterName) => {
     console.log('------------------------------------------');
     console.log(`✉  ${recipients} notified about ${jobName} job execution '${workUnitStatus}' status on ${clusterName} cluster`);
@@ -121,7 +121,10 @@ exports.notifyJobExecutionStatus = async ({ jobId, clusterId, WUstate }) => {
               from: process.env.EMAIL_SENDER,
               to: job.metaData.notificationSettings.recipients,
               subject: `${job.name} ${WUstate} on ${cluster.dataValues.name} cluster`,
-              html: `<p> ${WUstate === 'failed' ? job.metaData.notificationSettings.failureMessage : job.metaData.notificationSettings.successMessage} </p><p>Tombolo</p>`,
+              html: `<p> ${WUstate === 'failed' || WUstate === 'not submitted' ? job.metaData.notificationSettings.failureMessage : job.metaData.notificationSettings.successMessage} </p>
+                     ${ workFlowURL ? `<p>To view workflow execution details in Tombolo, please click here <a href="${workFlowURL}"> here </a></p>` : ''}
+                     <p>To view details in HPCC , please click <a href = '${wuURL}'> here </a></p>
+                    <p>Tombolo</p>`,
             });
             logNotificationStatus(job.metaData.notificationSettings.recipients, job.name, WUstate, cluster.dataValues.name);
           } else if (notify === 'Only on success' && WUstate === 'completed') {
@@ -137,10 +140,25 @@ exports.notifyJobExecutionStatus = async ({ jobId, clusterId, WUstate }) => {
               from: process.env.EMAIL_SENDER,
               to: job.metaData.notificationSettings?.recipients || job.contact,
               subject: `${job.name} ${WUstate} on ${cluster.dataValues.name} cluster`,
-              html: `<p>  ${job.metaData.notificationSettings.failureMessage} </p><p>Tombolo</p>`,
+              html: `<p>  ${job.metaData.notificationSettings.failureMessage} </p>
+                     <p>To view workflow execution details in Tombolo, please click here <a href="${workFlowURL}"> here </a></p>
+                     <p>To view details in HPCC , please click <a href = '${wuURL}'> here </a></p>
+                     <p>Tombolo</p>`,
             });
             logNotificationStatus(job.metaData.notificationSettings.recipients, job.name, WUstate, cluster.dataValues.name);
-          } else {
+          }
+          else if ((notify === 'Only on failure' && WUstate === 'not submitted')) {
+            await NotificationModule.notify({
+              from: process.env.EMAIL_SENDER,
+              to: job.metaData.notificationSettings?.recipients || job.contact,
+              subject: `${job.name} ${WUstate} on ${cluster.dataValues.name} cluster`,
+              html: `<p>  ${job.metaData.notificationSettings.failureMessage} </p>
+                    <p> Error occurred while submitting a Job </p>
+                    <p style="color : red">${message || ''}</p>
+                    <p>Tombolo</p>`,
+            });
+            logNotificationStatus(job.metaData.notificationSettings.recipients, job.name, WUstate, cluster.dataValues.name);
+          }  else {
             console.log('------------------------------------------');
             console.log(`Not subscribed for '${WUstate}' Job Execution status for ${job.name}`);
             console.log('------------------------------------------');
@@ -151,3 +169,57 @@ exports.notifyJobExecutionStatus = async ({ jobId, clusterId, WUstate }) => {
       .catch(reject);
   });
 };
+
+exports.notifyWorkflowExecutionStatus = async ({hpccURL,executionStatus,dataflowName,dataflowId,clusterName,appId,success_message, failure_message, recipients, jobExecutionGroupId, errorMessage, jobName}) => {
+  let message;
+  let subject;
+  //Email body
+  switch(executionStatus){
+    case 'completed' :
+        message = `<div>
+                        <p> ${success_message } </p>
+                        <p> Hello, </p>
+                        <p>Successfully executed ${dataflowName} on ${clusterName} </p>
+                        <p> To view workflow execution details in Tombolo please click <a href="${process.env.WEB_URL}/${appId}/dataflowinstances/dataflowInstanceDetails/${dataflowId}/${jobExecutionGroupId}"> here </a>
+                        <p> Click <a href="${hpccURL}"> here </a>to view execution  details in HPCC</p> 
+                      </div>`;
+                      break;
+    case 'not_submitted' :
+         message = `<div>${failure_message} </p>
+                          <p>Hello,<p>
+                          <p> Below error occurred while submitting  ${jobName} </p> 
+                          <p><span style="color: red">${errorMessage } </span>
+                        </div>`
+                        break;
+    case 'failed':
+        message = `<div>
+                      <p>${failure_message}</p>
+                      <p>${dataflowName} failed.</p>
+                      <p> To view workflow execution details in Tombolo please click <a href="${process.env.WEB_URL}/${appId}/dataflowinstances/dataflowInstanceDetails/${dataflowId}/${jobExecutionGroupId}"> here </a>
+                      <p> Click <a href="${hpccURL}"> here </a>to view execution  details in HPCC</p> 
+                  </div>`
+  }
+
+  //Email subject line
+  switch (executionStatus) {
+    case 'completed':
+       subject = `${dataflowName} execution successful`;
+       break;
+    case 'not_submitted' : 
+       subject = `Unable to submit ${jobName} for execution`;
+       break;
+    case 'failed' :
+      subject = `${dataflowName} Failed.`
+  }
+
+  await NotificationModule.notify({
+            from: process.env.EMAIL_SENDER,
+            to: recipients,
+            subject: `${subject}`,
+            html: `${message} <p>Tombolo</p>`,
+          });
+  console.log('------------------------------------------');
+  console.log(`✉ ${recipients} notified of workflow status` )
+  console.log('------------------------------------------');
+
+}
