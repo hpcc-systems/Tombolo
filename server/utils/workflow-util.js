@@ -181,11 +181,11 @@ exports.notifyWorkflowExecutionStatus = async ({hpccURL,executionStatus,dataflow
                         <p> ${success_message } </p>
                         <p> Hello, </p>
                         <p>Successfully executed ${dataflowName} on ${clusterName} </p>
-                        <p> To view workflow execution details in Tombolo please click <a href="${process.env.WEB_URL}${appId}/dataflowinstances/dataflowInstanceDetails/${dataflowId}/${jobExecutionGroupId}"> here </a>
+                        <p> To view workflow execution details in Tombolo please click <a href="${process.env.WEB_URL}/${appId}/dataflowinstances/dataflowInstanceDetails/${dataflowId}/${jobExecutionGroupId}"> here </a>
                         <p> Click <a href="${hpccURL}"> here </a>to view execution  details in HPCC</p> 
                       </div>`;
                       break;
-    case 'not_submitted' :
+    case 'error' :
          message = `<div>${failure_message} </p>
                           <p>Hello,<p>
                           <p> Below error occurred while submitting  ${jobName} </p> 
@@ -196,7 +196,7 @@ exports.notifyWorkflowExecutionStatus = async ({hpccURL,executionStatus,dataflow
         message = `<div>
                       <p>${failure_message}</p>
                       <p>${dataflowName} failed.</p>
-                      <p> To view workflow execution details in Tombolo please click <a href="${process.env.WEB_URL}${appId}/dataflowinstances/dataflowInstanceDetails/${dataflowId}/${jobExecutionGroupId}"> here </a>
+                      <p> To view workflow execution details in Tombolo please click <a href="${process.env.WEB_URL}/${appId}/dataflowinstances/dataflowInstanceDetails/${dataflowId}/${jobExecutionGroupId}"> here </a>
                       <p> Click <a href="${hpccURL}"> here </a>to view execution  details in HPCC</p> 
                   </div>`
   }
@@ -206,7 +206,7 @@ exports.notifyWorkflowExecutionStatus = async ({hpccURL,executionStatus,dataflow
     case 'completed':
        subject = `${dataflowName} execution successful`;
        break;
-    case 'not_submitted' : 
+    case 'error' : 
        subject = `Unable to submit ${jobName} for execution`;
        break;
     case 'failed' :

@@ -48,7 +48,7 @@ const dispatchAction = (action,data) =>  parentPort.postMessage({ action, data }
           console.log('------------------------------------------');
 
            await  workFlowUtil.notifyWorkflowExecutionStatus({
-                executionStatus : 'not_submitted',
+                executionStatus : 'error',
                 dataflowName: dataValues.title,
                 dataflowId : dataValues.id,
                 appId : dataflow.application_id,

@@ -51,7 +51,7 @@ const dispatchAction = (action,data) =>  parentPort.postMessage({ action, data }
 
             if(jobExecution.dataValues?.dataflowId){ // If job part of workflow build a URL
                   dataflow = await Dataflow.findOne({ where: { id: jobExecution.dataValues?.dataflowId } });
-                  workFlowURL = `${process.env.WEB_URL}${dataflow.application_id}/dataflowinstances/dataflowInstanceDetails/${dataflow.id}/${jobExecution.jobExecutionGroupId}`
+                  workFlowURL = `${process.env.WEB_URL}/${dataflow.application_id}/dataflowinstances/dataflowInstanceDetails/${dataflow.id}/${jobExecution.jobExecutionGroupId}`
             }
              
             if(WUstate === 'completed'){
