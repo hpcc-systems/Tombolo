@@ -307,7 +307,7 @@ async function forgotPassword(req, res) {
       json: {
         "email": req.body.email,
         "clientId": process.env.AUTHSERVICE_TOMBOLO_CLIENT_ID,
-        "resetUrl": `${process.env.WEB_URL}reset-password`
+        "resetUrl": `${process.env.WEB_URL}/reset-password`
       }
     }, function(err, response, body) {
       if(response.body.success){
