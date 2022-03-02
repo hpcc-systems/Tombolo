@@ -113,6 +113,11 @@ export default class Canvas {
         createEdge() {
           return new Shape.Edge({
             zIndex: -1,
+            attrs: {
+              line: {
+                stroke: '#47bfdd', // manually 
+              },
+            },
           });
         },
       },
