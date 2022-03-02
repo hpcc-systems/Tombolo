@@ -2,7 +2,8 @@ import React from 'react';
 import { Graph } from '@antv/x6';
 import {
   BookOutlined,
-  FileTextOutlined,
+  FileOutlined,
+  FileAddOutlined,
   SettingOutlined,
   SisternodeOutlined,
   CheckCircleOutlined,
@@ -11,7 +12,7 @@ import {
   HourglassOutlined,
   LinkOutlined,
   MessageOutlined,
-  MailOutlined
+  MailOutlined,
 } from '@ant-design/icons/lib/icons';
 
 import './Shape.css'
@@ -123,7 +124,8 @@ const ports = {
 
  entities = {
     Job: <SettingOutlined />,
-    File: <FileTextOutlined />,
+    File: <FileOutlined />,
+    SuperFile: <FileAddOutlined />,
     Index: <BookOutlined />,
     Manual : <MailOutlined />,
     'Sub-Process': <SisternodeOutlined />,
@@ -132,8 +134,8 @@ const ports = {
   render() {
     const { node } = this.props
     const data = node?.getData()
-    let { type, title, status='', scheduleType, jobType } = data
-   
+    let { type, title, status='', schedule, jobType, isSuperFile } = data
+  
     const showTitle = (title)=>{
       const limit= 14;
         if (title.length >limit) {
@@ -143,16 +145,17 @@ const ports = {
         return title
     }
 
-    if (jobType === 'Manual') type = "Manual" // Show different icon for Manual job
+    if (jobType === 'Manual') type = "Manual"; // Show different icon for Manual job
+    if (isSuperFile) type = 'SuperFile';
 
     return (
       <div className='node-outer'>
         <div className={`node-icon ${type} status-${status}`}>
           {this.entities[type]}
         </div>
-        {scheduleType ?
+        {schedule?.type ?
         <div className='node-schedule'>
-          {this.schedule[scheduleType]}
+          {this.schedule[schedule.type]}
         </div> : null
         }
         <div className='node-title'> 
