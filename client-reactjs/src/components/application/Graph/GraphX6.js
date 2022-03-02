@@ -61,7 +61,7 @@ function GraphX6({ readOnly = false, statuses }) {
         if (!response.ok) handleError(response);
         const data = await response.json();
 
-        if (data.graph) {
+        if (data?.graph) {
           console.time('graph');
           graph.fromJSON(data.graph);
           console.log('------------------------------------------');
@@ -88,7 +88,7 @@ function GraphX6({ readOnly = false, statuses }) {
             // we dont need Nodes full object but just what is inside node.data
             const nodeData = el.getData();
             if (nodeData.assetId) {
-              acc.push(nodeData);
+              acc.push({...nodeData, nodeId: el.id});
             }
             return acc;
           }, []),
@@ -231,16 +231,22 @@ function GraphX6({ readOnly = false, statuses }) {
     if (newAsset) {
       const cell = configDialog.cell;
       /* updating cell will cause a POST request to '/api/dataflowgraph/save with latest nodes and edges*/
-      cell.updateData(
-        {
-          name: newAsset.name,
-          title: newAsset.title,
-          assetId: newAsset.id,
-          jobType: newAsset.jobType,
-          subProcessId: newAsset.jobType === 'Sub-Process' ? newAsset.id : undefined,
-        },
-        { name: 'update-asset' }
-      );
+      const cellData =   {
+        name: newAsset.name,
+        title: newAsset.title,
+        assetId: newAsset.id,
+      }
+
+      if(newAsset.assetType === "File"){
+        cellData.isSuperFile = newAsset.isSuperFile;
+      }
+
+      if (newAsset.assetType === "Job"){
+        cellData.jobType = newAsset.jobType;
+        cellData.schedule = null;
+      }
+
+      cell.updateData( cellData, { name: 'update-asset' } );
 
       try {
         const options = {
@@ -297,7 +303,17 @@ function GraphX6({ readOnly = false, statuses }) {
     relatedFiles.forEach((relatedFile) => {
       // 2. find existing files on graph and add edge to point to them
       const fileExistsOnGraph = allFiles.find((file) => file.data.assetId === relatedFile.assetId);
+
       let newNode;
+
+      const relatedFileData ={
+        type: 'File',
+        name: relatedFile.name,
+        title: relatedFile.title,
+        assetId: relatedFile.assetId,
+        isSuperFile: relatedFile.isSuperFile,
+        subProcessId: undefined,
+      };
 
       if (!fileExistsOnGraph) {
         // 3. create file nodes, place input file on top and output below job node.
@@ -312,16 +328,12 @@ function GraphX6({ readOnly = false, statuses }) {
           x: newNodeX,
           y: newNodeY,
           shape: 'custom-shape',
-          data: {
-            type: 'File',
-            name: relatedFile.name,
-            title: relatedFile.title,
-            assetId: relatedFile.assetId,
-            subProcessId: undefined,
-          },
+          data: relatedFileData
         });
 
         allFiles.push(newNode); // adding to allFiles to avoid creating new File node
+      } else{
+        fileExistsOnGraph.updateData(relatedFileData, { name: 'update-asset' });
       }
 
       const relateFileNode = fileExistsOnGraph ? fileExistsOnGraph : newNode;
@@ -373,13 +385,50 @@ function GraphX6({ readOnly = false, statuses }) {
   const updateAsset = (asset) => {
     if (asset) {
       const cell = configDialog.cell;
+      const existingScheduledEdge = cell.data?.schedule?.scheduleEdgeId;
+      const newCellData = { title: asset.title };
       /* updating cell will cause a POST request to '/api/dataflowgraph/save with latest nodes and edges*/
       //add icons or statuses
-      cell.updateData({ title: asset.title, scheduleType: asset.type }, { name: 'update-asset' });
+      // cell.updateData({ title: asset.title, scheduleType: asset.type }, { name: 'update-asset' });
+      if (asset.type === 'Predecessor') {
+
+        // find a graph node that will be a source and clicked node will be a targed, add an edge;
+        const sourceJobId = asset.jobs[0];
+        const sourceNode = configDialog.nodes.find((node) => node.assetId === sourceJobId);
+    
+        // there can be only one scheduled edge
+        // if edge is already exist then we should delete it and create a new one
+        if (existingScheduledEdge) graphRef.current.removeEdge(cell.data.schedule.scheduleEdgeId); 
+        
+        if (sourceNode) {
+          const newEdge = graphRef.current.addEdge({
+            target: cell,
+            source: sourceNode.nodeId,
+            attrs: {
+              line: {
+                strokeDasharray: '5 5', // WILL MAKE EDGE DASHED
+              },
+            }, 
+          });
+
+          newCellData.schedule = {
+            type: 'Predecessor',
+            scheduledAfter: sourceJobId,
+            scheduleEdgeId: newEdge.id,
+          };
+        }
+      }
+      // If node was removed from schedule we will remove edge
+      if (existingScheduledEdge && !asset.type) {
+        graphRef.current.removeEdge(cell.data.schedule.scheduleEdgeId);
+        newCellData.schedule = null;
+      }
+  
+      cell.updateData(newCellData, { name: 'update-asset' });
     }
     setConfigDialog({ ...defaultState }); // RESETS LOCAL STATE AND CLOSES DIALOG
   };
-
+  
   const handleSync = async () => {
     const graphJSON = graphRef.current.toJSON({ diff: true });
     console.log('-graphJSON-----------------------------------------');
@@ -496,9 +545,7 @@ function GraphX6({ readOnly = false, statuses }) {
 
   return (
     <>
-      {readOnly ? null : (
-        <CustomToolbar graphRef={graphRef} handleSync={handleSync} isSyncing={sync.loading} />
-      )}
+      <CustomToolbar graphRef={graphRef} handleSync={handleSync} isSyncing={sync.loading}  readOnly={readOnly}/>
       <div id="graphx6" className="graph-container">
         {readOnly ? null : <div className="stencil" ref={stencilContainerRef} />}
         <div
