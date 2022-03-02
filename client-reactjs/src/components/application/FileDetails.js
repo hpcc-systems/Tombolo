@@ -8,11 +8,9 @@ import {
   Input,
   Select,
   Button,
-  Table,
   AutoComplete,
   Tag,
   message,
-  Drawer,
   Row,
   Col,
   Spin,
@@ -39,6 +37,8 @@ import Paragraph from "antd/lib/skeleton/Paragraph";
 import { viewOnlyModeReducer } from "../../redux/reducers/ViewOnlyModeReducer";
 import { readOnlyMode, editableMode } from "../common/readOnlyUtil";
 import DeleteAsset from "../common/DeleteAsset";
+import SuperFileMeta from "../common/SuperFileMeta";
+
 const TabPane = Tabs.TabPane;
 const Option = Select.Option;
 const layoutGrid = undefined;
@@ -209,6 +209,7 @@ class FileDetails extends PureComponent {
                 //For read only option
                 description: data.basic.description,
                 isSuperFile: data.basic.isSuperFile,
+                superFileData: data.basic.superFileData,
                 supplier: data.basic.supplier,
                 consumer: data.basic.consumer,
                 owner: data.basic.owner,
@@ -1188,8 +1189,10 @@ class FileDetails extends PureComponent {
       isSuperFile,
       layout,
       validations,
-      inheritedLicensing
+      inheritedLicensing,
+     superFileData
     } = this.state.file;
+    
     const selectedCluster = this.state.clusters.filter(
       (cluster) => cluster.id == this.props.clusterId
     );
@@ -1687,6 +1690,8 @@ class FileDetails extends PureComponent {
                   </Col>
                 </Row>
               </Form>
+              {/* SUPERFILE METADATA BLOCK */}
+              { !superFileData ? null : <SuperFileMeta superFileData={superFileData} /> }
             </TabPane>
             <TabPane tab="Layout" key="3">
               <ComplianceInfo tags={complianceTags} />
