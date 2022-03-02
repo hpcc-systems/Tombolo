@@ -48,7 +48,7 @@ router.get('/file_list', [
     console.log("[file list/read.js] - Get file list for app_id = " + req.query.app_id);
     try {
       let dataflowId = req.query.dataflowId;
-      let query = 'select f.id, f.name, f.title, f.description, f.createdAt, f.application_id, f.deletedAt '+
+      let query = 'select f.id, f.name, f.title, f.description, f.createdAt, f.isSuperFile, f.application_id, f.deletedAt '+
         'from file f ' + 
         'where f.id not in (select asd.assetId from assets_dataflows asd where asd.dataflowId = (:dataflowId) and asd.deletedAt is null)' +
         'and f.application_id = (:applicationId) '+

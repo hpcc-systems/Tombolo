@@ -520,13 +520,14 @@ router.post('/refreshDataflow[old]', [
 const createOrUpdateFile = async ({jobfile, jobId, clusterId, dataflowId, applicationId}) =>{
   try {
     const fileInfo = await hpccUtil.fileInfo(jobfile.name, clusterId);
+
     if (fileInfo) {
       // create or update File
       const fileFields = {
         title: fileInfo.basic.fileName,
         scope: fileInfo.basic.scope,
         fileType: fileInfo.basic.fileType,
-        isSuperFile: fileInfo.basic.isSuperFile,
+        isSuperFile: fileInfo.basic.isSuperfile, //!!  we keep the value camelCased when hpcc return isSuperfile
         description: fileInfo.basic.description,
         qualifiedPath: fileInfo.basic.pathMask,
       };
@@ -596,6 +597,7 @@ const createOrUpdateFile = async ({jobfile, jobId, clusterId, dataflowId, applic
         assetId: file.id,
         relatedTo: jobId,
         title: file.title,
+        isSuperFile: file.isSuperFile,
         file_type: jobfile.file_type, //'input' | 'output'
         description: file.description,
       };
