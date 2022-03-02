@@ -621,6 +621,19 @@ exports.getWorkunitsService = async (clusterId) =>{
  return new hpccJSComms.WorkunitsService(connectionSettings);
 }
 
+exports.getDFUService = async (clusterId) =>{
+  const cluster = await module.exports.getCluster(clusterId);
+  const clusterAuth =  module.exports.getClusterAuth(cluster);
+
+ const connectionSettings= {
+   baseUrl: cluster.thor_host + ':' + cluster.thor_port,
+   userID: clusterAuth ? clusterAuth.user : "",
+   password: clusterAuth ? clusterAuth.password : ""
+ }
+
+  return new hpccJSComms.DFUService(connectionSettings);
+}
+
 exports.createWorkUnit = async (clusterId,WUbody = {}) =>{
    try {
     const wuService = await module.exports.getWorkunitsService(clusterId);
