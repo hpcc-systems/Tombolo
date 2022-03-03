@@ -310,7 +310,7 @@ exports.getJobEXecutionForProcessing = async () => {
     console.log('------------------------------------------');
     console.log("🔍 GETTING JOBS FOR PROCCESSING")
     const jobExecution = await JobExecution.findAll({
-      where: { [Op.or]: [{status: 'submitted'}, {status: 'blocked'}]},
+      where: { [Op.or]: [{status: 'submitted'}, {status: 'blocked'}, {status : 'wait'}]},
       order: [["updatedAt", "desc"]],
       include:[{model:Job, attributes:['name']}]
     });
