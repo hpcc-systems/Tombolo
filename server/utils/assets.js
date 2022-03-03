@@ -23,6 +23,7 @@ let Sequelize = require('sequelize');
 const path = require('path');
 const {execFile, spawn} = require('child_process');
 const JobSchedular = require('../job-scheduler');
+const { Op } = require('sequelize');
 
 exports.fileInfo = (applicationId, file_id) => {
   var results={};
@@ -309,7 +310,7 @@ exports.getJobEXecutionForProcessing = async () => {
     console.log('------------------------------------------');
     console.log("🔍 GETTING JOBS FOR PROCCESSING")
     const jobExecution = await JobExecution.findAll({
-      where: {'status': 'submitted'}, 
+      where: { [Op.or]: [{status: 'submitted'}, {status: 'blocked'}]},
       order: [["updatedAt", "desc"]],
       include:[{model:Job, attributes:['name']}]
     });
