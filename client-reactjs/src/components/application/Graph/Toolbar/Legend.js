@@ -22,6 +22,10 @@ const data = [
     icon: <ArrowRightOutlined />,
   },
   {
+    title: 'File exists in superfile (dashed line, created automatically when file is connected to superfile)',
+    icon: <ArrowRightOutlined style={{ color: '#706bf0'}}  />,
+  },
+  {
     title: 'Time scheduled job',
     icon: <HourglassOutlined />,
   },
