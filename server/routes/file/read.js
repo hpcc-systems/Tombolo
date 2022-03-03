@@ -32,6 +32,42 @@ const { body, query, check, validationResult } = require('express-validator');
 
 //let FileTree = require('../../models/File_Tree');
 const fileService = require('./fileservice');
+const axios = require('axios');
+
+router.post( '/superfile_meta',
+  [body('superFileAssetId').isUUID(4).withMessage('Invalid asset id')],
+  async (req, res, next) => {
+    const errors = validationResult(req).formatWith(validatorUtil.errorFormatter);
+    if (!errors.isEmpty()) return res.status(422).json({ success: false, errors: errors.array() });
+
+    try {
+      const superFileAssetId = req.body.superFileAssetId;
+      const file = await File.findOne({ where: { id: superFileAssetId } });
+
+      if (!file || !file?.isSuperFile) throw new Error('Asset not found');
+
+      const cluster = await hpccUtil.getCluster(file.cluster_id);
+      const clusterAuth = hpccUtil.getClusterAuth(cluster);
+      
+      const payload = {
+        SuperfileListRequest: {
+          superfile: file.name,
+        },
+      };
+
+      const url =  cluster.thor_host + ':' + cluster.thor_port + '/WsDfu/SuperfileList?ver_=1.57';
+      const response = await axios.post(url, payload, { headers: clusterAuth });
+      
+      const subfiles = response.data?.SuperfileListResponse?.subfiles?.Item
+      if (!subfiles) throw new Error("Failed to get subfiles")
+
+      res.json(subfiles);
+    } catch (error) {
+      res.status(500).json({ success: false, message: error.message });
+    }
+  }
+);
+
 
 router.get('/file_list', [
   query('app_id')
