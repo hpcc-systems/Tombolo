@@ -34,7 +34,7 @@ const dispatchAction = (action,data) =>  parentPort.postMessage({ action, data }
         const wuResult = await hpccUtil.workunitInfo(jobExecution.wuid, jobExecution.clusterId).catch(error =>{
           logToConsole(`❌  FAILED TO GET INFO ABOUT "${jobExecution.job.name}" - ${jobExecution.wuid} FROM HPCC`);
           logToConsole(error);
-        return { Workunit: { State: "failed" ,Jobname : jobExecution.job.name } }
+          return { Workunit: { State: "error" ,Jobname : jobExecution.job.name } }
         });
         const WUstate = wuResult.Workunit.State;
 
