@@ -35,6 +35,7 @@ function GraphX6({ readOnly = false, statuses }) {
   const miniMapContainer = useRef();
   const graphContainerRef = useRef();
   const stencilContainerRef = useRef();
+  const subFileList = useRef({});  //  useState does not want to work with fileList, always showing empty object
 
   const [graphReady, setGraphReady] = useState(false);
   const [sync, setSync] = useState({ error: '', loading: false });
@@ -165,8 +166,69 @@ function GraphX6({ readOnly = false, statuses }) {
           await handleSave(graph);
         });
 
-        graph.on('edge:connected', async (params) => {
+        graph.on('edge:connected', async ({ isNew, edge }) => {
           console.log('edge:connected');
+          if (isNew) {
+            const source = edge.getSourceCell().data;
+            const target = edge.getTargetCell().data;
+        
+            if (source.type === 'File' && target.type === 'File') {
+              if (source.isSuperFile || target.isSuperFile) {
+                const superFileAssetId = source.isSuperFile ? source.assetId : target.assetId;
+                const superfilename = source.isSuperFile ? source.name : target.name;
+                const subFileName = !source.isSuperFile ? source.name : target.name;
+
+                // Check in cached list if this subfile exists;
+                const cachedSubFiles = subFileList.current[superfilename];
+                
+                if (cachedSubFiles){
+                  if (!cachedSubFiles.includes(subFileName)){
+                    edge.remove();
+                    message.error(`${subFileName} does not exist in superfile ${superfilename}`);
+                  }
+                 
+                  edge.attr({ line: { strokeDasharray: '5 5', stroke: '#706bf0', }});
+                  return; // Checked in cached list, connection is valid,  exit function;
+                } 
+
+                try {
+                  const options = {
+                    method: 'POST',
+                    headers: authHeader(),
+                    body: JSON.stringify({ superFileAssetId }),
+                  };
+        
+                  const response = await fetch('/api/file/read/superfile_meta', options);
+                  if (!response.ok) handleError(response);
+        
+                  const subfiles = await response.json();
+
+                  // Cache result of call in state and look up from list next time there is a new connection to avoid multiple calls;
+                  subFileList.current[superfilename] = subfiles;;
+
+                  if (!subfiles.includes(subFileName)) {
+                    message.error(`${subFileName} does not exist in superfile ${superfilename}`);
+                    edge.remove();
+                  } else{
+                    edge.attr({ line: { 
+                      sourceMarker: { fill: '#706bf0', stroke: '#706bf0', name: 'block' },
+                      targetMarker: { fill: '#706bf0', stroke: '#706bf0', name: 'block' },
+                      stroke: '#706bf0', 
+                      strokeDasharray: '5 5', 
+                    }});
+                  }
+                } catch (error) {
+                  console.log('-error-----------------------------------------');
+                  console.dir({ error }, { depth: null });
+                  console.log('------------------------------------------');
+                  message.error(error.message);
+                  edge.remove();
+                }
+              } else {
+                edge.remove();
+              }
+            }
+          }
           await handleSave(graph);
         });
       }
@@ -215,9 +277,8 @@ function GraphX6({ readOnly = false, statuses }) {
         if (!response.ok) handleError(response);
         console.log('------------------------------------------');
         console.timeEnd('save');
-        console.log('------------------------------------------');
-
         console.log('Graph saved');
+        console.log('------------------------------------------');
       } catch (error) {
         console.log(error);
         message.error('Could not save graph');
@@ -238,7 +299,7 @@ function GraphX6({ readOnly = false, statuses }) {
       }
 
       if(newAsset.assetType === "File"){
-        cellData.isSuperFile = newAsset.isSuperFile;
+        cellData.isSuperFile = newAsset.isSuperFile ? true : false;
       }
 
       if (newAsset.assetType === "Job"){
