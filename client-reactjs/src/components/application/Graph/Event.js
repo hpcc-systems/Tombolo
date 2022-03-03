@@ -6,15 +6,13 @@ import { ExclamationCircleOutlined } from '@ant-design/icons';
 export default class Event {
   static init(graph) {
     graph.on('node:mouseenter', ({ node }) => {
-      //Ports are added to each node by default but in case of Files we dont want it to be connected to random job, it should be always synced with hpccc.
-      //best way to avoid file being connected is to hide ports
-      if (node.data.type !== "File"){
+        //Ports are added to each node by default but in case of Files we dont want it to be connected to random job, it should be always synced with hpccc.
+        //best way to avoid file being connected is to hide ports
         // Show visible ports
         const ports = node.getPorts();
         if (ports) {
           ports.forEach(port => node.setPortProp( port.id, 'attrs/circle/style', { visibility: 'visible', }, {ignoreEvent:true} ) );
         }
-      }
 
       const deleteButton = {
         name: 'button',

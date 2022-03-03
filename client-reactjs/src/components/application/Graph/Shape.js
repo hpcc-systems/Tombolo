@@ -23,7 +23,7 @@ const ports = {
       position: 'top',
       attrs: {
         circle: {
-          r: 5,
+          r: 4,
           magnet: true,
           stroke: '#5F95FF',
           strokeWidth: 1,
@@ -38,7 +38,7 @@ const ports = {
       position: 'right',
       attrs: {
         circle: {
-          r: 5,
+          r: 4,
           magnet: true,
           stroke: '#5F95FF',
           strokeWidth: 1,
@@ -53,7 +53,7 @@ const ports = {
       position: 'bottom',
       attrs: {
         circle: {
-          r: 5,
+          r: 4,
           magnet: true,
           stroke: '#5F95FF',
           strokeWidth: 1,
@@ -68,7 +68,7 @@ const ports = {
       position: 'left',
       attrs: {
         circle: {
-          r: 5,
+          r: 4,
           magnet: true,
           stroke: '#5F95FF',
           strokeWidth: 1,
@@ -95,7 +95,8 @@ const ports = {
     },
   ],
 };
- class Node extends React.Component {
+
+class Node extends React.Component {
   shouldComponentUpdate() {
     const { node } = this.props
     if (node) {

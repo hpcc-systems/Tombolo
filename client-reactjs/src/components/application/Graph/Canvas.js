@@ -96,19 +96,13 @@ export default class Canvas {
         snap: {
           radius: 40,
         },
-        validateEdge({ edge }) {
-          const source = edge.getSourceCell()
-          const target= edge.getTargetCell();
-          // Prevent Files to be connected to anything, connection will still exist if synced with HPCC
-          if( source.data.type === "File" || target.data.type === "File") {
-            return false;
-          }
+         validateEdge({ edge }) {
+          const source = edge.getSourceCell().data;
+          const target= edge.getTargetCell().data;
           // if node is not assigned to any of assets prevent it from being connected
-          if (!source.data?.assetId || !target.data?.assetId){
-            return false;
-          }
+          if (!source?.assetId || !target?.assetId) return false;
           
-          return true;
+          return true // DEFAULT 
         },
         createEdge() {
           return new Shape.Edge({
@@ -139,7 +133,6 @@ export default class Canvas {
       clipboard: true,
     
     });
-
     this.graph = graph;
     return graph;
   }

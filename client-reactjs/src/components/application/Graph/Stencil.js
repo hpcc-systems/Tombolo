@@ -21,9 +21,9 @@ export default class Stencil {
           collapsable: false,
         },
       ],
-      getDropNode(node) {
-        return node.clone().setData({isStencil:false})
-      }
+      // getDropNode(node) {
+      //   return node.clone().setData({isStencil:false})
+      // }
     });
 
     if (stencilContainer) {
