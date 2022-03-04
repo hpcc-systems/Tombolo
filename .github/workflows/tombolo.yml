@@ -1,34 +1,100 @@
-# This is a basic workflow to help you get started with Actions
-
-name: CI
-
-# Controls when the workflow will run
-on:
-  # Triggers the workflow on push or pull request events but only for the master branch
+name: Build & Deploy to DEV 
+on: 
   push:
-    branches: [ master ]
-  
-  # Allows you to run this workflow manually from the Actions tab
-  workflow_dispatch:
+      branches:
+        - master
 
-# A workflow run is made up of one or more jobs that can run sequentially or in parallel
-jobs:
-  # This workflow contains a single job called "build"
-  build:
-    # The type of runner that the job will run on
-    runs-on: [self-hosted, Linux, X64]
+env:
+  PORT: ${{ secrets.PORT }}
+  WEB_PORT: ${{ secrets.WEB_PORT }}
+  WEB_EXPOSED_PORT: ${{ secrets.WEB_EXPOSED_PORT }}
+  WEB_EXPOSED_HTTP_PORT: ${{ secrets.WEB_EXPOSED_HTTP_PORT }}
+  PROXY_URL: ${{ secrets.PROXY_URL }}
+  HOST_HOSTNAME: ${{ secrets.HOST_HOSTNAME }}
+  WEB_URL: ${{ secrets.WEB_URL }}
+  DB_USERNAME: ${{ secrets.DB_USERNAME }}
+  DB_PASSWORD: ${{ secrets.DB_PASSWORD }}
+  DB_PORT: ${{ secrets.DB_PORT }}
+  DB_NAME: ${{ secrets.DB_NAME }}
+  DB_HOSTNAME: ${{ secrets.DB_HOSTNAME }}
+  AUTH_SERVICE_URL: ${{ secrets.AUTH_SERVICE_URL }}
+  AUTHSERVICE_TOMBOLO_CLIENT_ID: ${{ secrets.AUTHSERVICE_TOMBOLO_CLIENT_ID }}
+  REACT_APP_PROXY_URL: ${{ secrets.REACT_APP_PROXY_URL }}
+  secret: ${{ secrets.secret }}
+  AZURE_WEBAPP_PACKAGE_PATH: './client-reactjs/build'
+  AZURE_WEBAPP_PACKAGE_PATH_API: './server'
+  JOB_COMPLETE_GROUP_ID: 'tombolo_dev'
 
-    # Steps represent a sequence of tasks that will be executed as part of the job
+jobs:    
+  build-ui:
+    name: build-ui
+    runs-on: self-hosted    
+    #environment:
+      #name: 'DEV'
     steps:
-      # Checks-out your repository under $GITHUB_WORKSPACE, so your job can access it
-      #- uses: actions/checkout@v2
-
-      - name: Set Azure variables for Terraform
-        run: |
-          # authentication is initiated on vm using 'az login --identity'
-          echo "ARM_SUBSCRIPTION_ID=$(az account show --output tsv --query id)" >> $GITHUB_ENV
-          echo "ARM_TENANT_ID=$(az account show --output tsv --query tenantId)" >> $GITHUB_ENV
-      - name: list all rg
-        run: | 
-          echo "-------- az login ---------------"
-          az login --identity
+    - uses: actions/checkout@v2
+    - name: Use Node.js 14
+      uses: actions/setup-node@v2
+      with:
+        node-version: '14'
+    - name: npm install, build, and test
+      run: |
+        # Build and test the project, then
+        # deploy to Azure Web App.
+        npm install
+        CI=false && npm run build --if-present
+      working-directory: client-reactjs  
+        
+    - uses: azure/webapps-deploy@v2
+      with:
+        app-name: 'tomboloui2-eastus2-dev'
+        publish-profile: ${{ secrets.AZURE_WEBAPP_PUBLISH_PROFILE }}
+        package: ${{ env.AZURE_WEBAPP_PACKAGE_PATH }}
+        
+  build-api:
+    name: build-api
+    runs-on: self-hosted
+    #environment:
+      #name: 'DEV'
+    steps:
+    - uses: actions/checkout@main
+    
+    - name: Rename cluster-whitelist
+      run: cp cluster-whitelist.sample.js cluster-whitelist.js
+      working-directory: server
+      
+    - name: create env file
+      run: |
+        touch .env
+        echo DB_USERNAME=${{ secrets.DB_USERNAME }} >> .env
+        echo DB_PASSWORD=${{ secrets.DB_PASSWORD }} >> .env
+        echo DB_PORT=${{ secrets.DB_PORT }} >> .env
+        echo DB_NAME=${{ secrets.DB_NAME }} >> .env
+        echo DB_HOSTNAME=${{ secrets.DB_HOSTNAME }} >> .env
+        echo AUTH_SERVICE_URL=${{ secrets.AUTH_SERVICE_URL }} >> .env
+        echo AUTHSERVICE_TOMBOLO_CLIENT_ID=${{ secrets.AUTHSERVICE_TOMBOLO_CLIENT_ID }} >> .env
+        echo secret=${{ secrets.secret }} >> .env
+      working-directory: server   
+        
+    - name: Use Node.js 14
+      uses: actions/setup-node@v2
+      with:
+        node-version: 14
+    
+    - name: npm install, build, and test
+      run: |
+        npm install
+        npm run build --if-present
+      working-directory: server
+      
+    - name: dbmigrate
+      run: |
+        npx sequelize-cli db:migrate        
+      working-directory: server   
+    
+    - name: 'Deploy to Azure WebApp'
+      uses: azure/webapps-deploy@v2
+      with: 
+        app-name: 'tomboloapi-eastus2-dev'
+        publish-profile: ${{ secrets.AZURE_WEBAPP_PUBLISH_PROFILE_API }}
+        package: ${{ env.AZURE_WEBAPP_PACKAGE_PATH_API }}    
