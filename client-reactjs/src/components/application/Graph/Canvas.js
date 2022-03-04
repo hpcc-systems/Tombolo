@@ -24,7 +24,7 @@ export default class Canvas {
 
   static init(container, minimapContainer) {
     const graph = new Graph({
-      container: container,
+      container: container.current,
       autoResize: true,
       grid: true,
       history: true,
@@ -37,7 +37,7 @@ export default class Canvas {
       },
       minimap: {
         enabled: true,
-        container: minimapContainer,
+        container: minimapContainer.current,
         width: 200,
         height: 160,
         padding: 10,
@@ -97,10 +97,10 @@ export default class Canvas {
           radius: 40,
         },
          validateEdge({ edge }) {
-          const source = edge.getSourceCell().data;
-          const target= edge.getTargetCell().data;
+          // const source = edge.getSourceCell().data;
+          // const target= edge.getTargetCell().data;
           // if node is not assigned to any of assets prevent it from being connected
-          if (!source?.assetId || !target?.assetId) return false;
+          // if (!source?.assetId || !target?.assetId) return false;
           
           return true // DEFAULT 
         },

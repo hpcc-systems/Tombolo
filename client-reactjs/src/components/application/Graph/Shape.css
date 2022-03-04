@@ -68,6 +68,12 @@
     border-color:#eb1518;
     box-shadow: 0px 0px 8px 2px #ff4d4f;
   }
+
+  .no-asset{
+    background-color: rgba(248, 248, 248, 0.623);
+    box-shadow: rgba(0, 0, 0, 0.15) 1.95px 1.95px 2.6px;
+  }
+  
   .status-not-exist{
     /* box-shadow: 0px 0px 8px 2px #8f8f8f; */
   }

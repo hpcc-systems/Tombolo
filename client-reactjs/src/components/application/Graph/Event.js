@@ -154,7 +154,11 @@ export default class Event {
     });
 
     graph.on('edge:mouseenter', ({ edge }) => {
-      //add a remove button to edge
+      // do show delete remove edge button if target is scheduled;     
+      const isTargetScheduled = edge.getTargetNode().data?.schedule?.type === 'Predecessor';
+      if (isTargetScheduled) return;
+
+      //add a remove button to edge      
       edge.addTools({ name: 'button-remove' },{ignoreEvent:true});
     });
 

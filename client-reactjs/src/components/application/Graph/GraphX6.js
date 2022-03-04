@@ -15,6 +15,7 @@ import CustomToolbar from './Toolbar/Toolbar';
 
 import AssetDetailsDialog from '../AssetDetailsDialog';
 import ExistingAssetListDialog from '../Dataflow/ExistingAssetListDialog';
+import Shape from './Shape.js';
 // import SubProcessDialog from '../Dataflow/SubProcessDialog';
 
 const defaultState = {
@@ -32,7 +33,7 @@ const defaultState = {
 
 function GraphX6({ readOnly = false, statuses }) {
   const graphRef = useRef();
-  const miniMapContainer = useRef();
+  const miniMapContainerRef = useRef();
   const graphContainerRef = useRef();
   const stencilContainerRef = useRef();
   const subFileList = useRef({});  //  useState does not want to work with fileList, always showing empty object
@@ -43,16 +44,40 @@ function GraphX6({ readOnly = false, statuses }) {
 
   const { applicationId, dataflowId, clusterId } = useSelector((state) => state.dataflowReducer);
 
+  const handleContextMenu = (action, payload) => {
+    if (action === 'openDialog') {
+      const node = payload.node;
+      setConfigDialog(() => ({
+        ...node.getData(),
+        cell: node,
+        nodeId: node.id,
+        openDialog: true,
+        edges: graphRef.current.getEdges(), // ?? not used anywhere currently
+        nodes: graphRef.current.getNodes().reduce((acc, el) => {
+          // we dont need Nodes full object but just what is inside node.data
+          const nodeData = el.getData();
+          if (nodeData.assetId) {
+            acc.push({ ...nodeData, nodeId: el.id });
+          }
+          return acc;
+        }, []),
+      }));
+    }
+  };
+
   useEffect(() => {
     // INITIALIZING EVENT CANVAS AND STENCIL
-    const graph = Canvas.init(graphContainerRef.current, miniMapContainer.current);
+    const graph = Canvas.init(graphContainerRef, miniMapContainerRef);
     graphRef.current = graph;
 
+    Shape.init({ handleContextMenu, disableContextMenu: readOnly });
+
     if (!readOnly) {
-      Stencil.init(stencilContainerRef.current, graph);
+      Stencil.init(stencilContainerRef, graph);
       Event.init(graph); // some static event that does not require local state changes will be sitting here
-      if (readOnly) graph.disableHistory(); // we dont need to save anything to db so when we readonly
     }
+ 
+    if (readOnly) graph.disableHistory(); // we dont need to save anything to db so when we readonly
     // Keyboard.init(graph); // not ready yet
 
     // FETCH SAVED GRAPH
@@ -74,28 +99,36 @@ function GraphX6({ readOnly = false, statuses }) {
         message.error('Could not download graph nodes');
       }
 
-      graph.on('node:dblclick', ({ node, cell }) => {
-        const nodeData = cell.getData();
-        // prevent readonly users to open ExistingAssetListDialog modal
-        if (readOnly && !nodeData.assetId) return;
+      graph.on('node:dblclick', ({ node, e }) => {
+        // if Asset was already selected then open details dialog and dont let the user to change node value;
+        
+        if (readOnly && !node.data.assetId) return;
 
-        setConfigDialog(() => ({
-          ...nodeData,
-          cell,
-          nodeId: node.id,
-          openDialog: true,
-          edges: graph.getEdges(), // ?? not used anywhere currently
-          nodes: graph.getNodes().reduce((acc, el) => {
-            // we dont need Nodes full object but just what is inside node.data
-            const nodeData = el.getData();
-            if (nodeData.assetId) {
-              acc.push({...nodeData, nodeId: el.id});
-            }
-            return acc;
-          }, []),
-        }));
+        handleContextMenu('openDialog', { node });
+
+        // if (node.data.assetId) {
+        //   return handleContextMenu('openDialog', { node });
+        // }
+        
+        // if (!readOnly) {
+        //   const name = 'node-editor';
+        //   node.removeTool(name);
+        //   node.addTools({
+        //     name,
+        //     args: {
+        //       event: e,
+        //       setText: ({ cell, value }) => {
+        //         cell.setData({ title: value }, { name: 'update-asset' });
+        //       },
+        //       attrs: {
+        //         fontSize: 17,
+        //         backgroundColor: '#FFF',
+        //       },
+        //     },
+        //   });
+        // }
       });
-
+      
       if (!readOnly) {
         // restrict readonly users to save changes to DB
         graph.on('node:removed', async ({ cell }) => {
@@ -613,7 +646,7 @@ function GraphX6({ readOnly = false, statuses }) {
           className={`${readOnly ? 'graph-container-readonly' : 'graph-container-stencil'}`}
           ref={graphContainerRef}
         />
-        <div className="graph-minimap" ref={miniMapContainer} />
+        <div className="graph-minimap" ref={miniMapContainerRef} />
       </div>
 
       {configDialog.openDialog && configDialog.assetId ? (

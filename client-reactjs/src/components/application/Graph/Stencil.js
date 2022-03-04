@@ -21,13 +21,13 @@ export default class Stencil {
           collapsable: false,
         },
       ],
-      // getDropNode(node) {
-      //   return node.clone().setData({isStencil:false})
-      // }
+      getDropNode(node) {
+        return node.clone().setData({isStencil:false})
+      }
     });
 
-    if (stencilContainer) {
-      stencilContainer.appendChild(this.stencil.container);
+    if (stencilContainer.current) {
+      stencilContainer.current.appendChild(this.stencil.container);
     }
 
     this.addShape(graph);
