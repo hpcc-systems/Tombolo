@@ -1,6 +1,20 @@
 import { userActions } from '../../redux/actions/User';
 import { store } from '../../redux/store/Store';
 import { message } from 'antd/lib';
+
+const { fetch: originalFetch } = window;
+
+window.fetch = async (...args) => {  
+  let [resource, config ] = args;  
+  // request interceptor here
+  if(resource.startsWith("/api")) {
+    resource = process.env.REACT_APP_PROXY_URL + resource;
+  }
+  const response = await originalFetch(resource, config);
+  // response interceptor here
+  return response;
+};
+
 export function authHeader(action) {
     // return authorization header with jwt token
     let user = JSON.parse(localStorage.getItem('user'));
