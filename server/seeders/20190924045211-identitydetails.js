@@ -1,6 +1,5 @@
 'use strict';
-var uuidv4  = require('uuid/v4');
-
+import { v4 as uuidv4 } from 'uuid';
 module.exports = {
   up: (queryInterface, Sequelize) => {
     return queryInterface.bulkInsert('data_types', [{

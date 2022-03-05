@@ -10,7 +10,6 @@ let Index = models.indexes;
 const validatorUtil = require('../../utils/validator');
 const { body, query, validationResult } = require('express-validator');
 const JobScheduler = require('../../job-scheduler');
-var uuidv4  = require('uuid/v4');
 
 let createDataflow = (applicationId, dataflowType, parentDataflow) => {
   console.log(applicationId +', '+dataflowType +', '+parentDataflow)
