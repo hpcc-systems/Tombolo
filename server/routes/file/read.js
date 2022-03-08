@@ -37,7 +37,7 @@ router.get('/file_list', [
   query('app_id')
     .isUUID(4).withMessage('Invalid application id'),
   query('dataflowId')
-    .isUUID(4).withMessage('Invalid dataflow id'),
+    .isUUID(4).optional({nullable: true}).withMessage('Invalid dataflow id'),
 ],(req, res) => {
   const errors = validationResult(req).formatWith(validatorUtil.errorFormatter);
     if (!errors.isEmpty()) {
@@ -46,11 +46,19 @@ router.get('/file_list', [
     console.log("[file list/read.js] - Get file list for app_id = " + req.query.app_id);
     try {
       let dataflowId = req.query.dataflowId;
-      let query = 'select f.id, f.name, f.title, f.description, f.createdAt, f.application_id, f.deletedAt '+
+      let query;
+      if(dataflowId){
+        query = 'select f.id, f.name, f.title, f.description, f.createdAt, f.application_id, f.deletedAt '+
         'from file f ' + 
         'where f.id not in (select asd.assetId from assets_dataflows asd where asd.dataflowId = (:dataflowId) and asd.deletedAt is null)' +
         'and f.application_id = (:applicationId) '+
         'and f.deletedAt is null';
+      }else{
+         query = 'select f.id, f.name, f.title, f.description, f.createdAt, f.application_id, f.deletedAt '+
+        'from file f ' + 
+        'where  f.application_id = (:applicationId) '+
+        'and f.deletedAt is null';
+      } 
       
       let replacements = { applicationId: req.query.app_id, dataflowId: dataflowId};
       let existingFile = models.sequelize.query(query, {
@@ -283,7 +291,7 @@ router.get('/file_details', [
 
 });
 
-let updateFileDetails = (fileId, applicationId, req) => {
+exports.updateFileDetails = (fileId, applicationId, req) => {
   let fieldsToUpdate = {"file_id"  : fileId, "application_id" : applicationId};
   return new Promise((resolve, reject) => {
     FileLayout.findOrCreate({
@@ -369,7 +377,7 @@ router.post('/saveFile', [
             }
           })
         }
-        updateFileDetails(fileId, applicationId, req).then((response) => {
+        this.updateFileDetails(fileId, applicationId, req).then((response) => {
           res.json(response);
         })
       })

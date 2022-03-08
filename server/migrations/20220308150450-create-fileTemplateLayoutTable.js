@@ -1,7 +1,7 @@
 'use strict';
 module.exports = {
   up: (queryInterface, Sequelize) => {
-    return queryInterface.createTable('fileTemplate', {
+    return queryInterface.createTable('fileTemplateLayout', {
       id: {
         allowNull: false,
         primaryKey: true,
@@ -11,29 +11,14 @@ module.exports = {
         allowNull: false,
         type: Sequelize.UUID
       },
-      cluster_id: {
+      fileTemplate_id: {
         allowNull: false,
         type: Sequelize.UUID
       },
-      title: {
-        allowNull: false,
-        type: Sequelize.STRING
-      },
-      description: {
-        type: Sequelize.STRING
-      },
-      fileNamePattern: {
-        allowNull: false,
-        type: Sequelize.STRING
-      },
-      searchString: {
-        allowNull: false,
-        type: Sequelize.STRING
-      }, 
-      sampleLayoutFile:{
-        allowNull: false,
-         type: Sequelize.STRING
-      },
+     fields :{
+      allowNull: true,
+      type: Sequelize.JSON
+     },
       createdAt: {
         allowNull: false,
         type: Sequelize.DATE
@@ -49,6 +34,6 @@ module.exports = {
     });
   },
   down: (queryInterface, Sequelize) => {
-    return queryInterface.dropTable('fileTemplate');
+    return queryInterface.dropTable('fileTemplateLayout');
   }
 };

@@ -158,6 +158,10 @@ function AssetsTable({ openGroup, handleEditGroup, refreshGroups }) {
         data = JSON.stringify({ fileId: id, application_id: applicationId });
         deleteUrl = "/api/file/read/delete";
         break;
+      case "File Template":
+        data = JSON.stringify({id, application_id: applicationId });
+        deleteUrl = '/api/fileTemplate/read/deleteFileTemplate'
+        break;
       case "Index":
         data = JSON.stringify({ indexId: id, application_id: applicationId });
         deleteUrl = "/api/index/read/delete";
@@ -197,7 +201,7 @@ function AssetsTable({ openGroup, handleEditGroup, refreshGroups }) {
         if (type == "Group") {
           refreshGroups();
         }
-        message.success(type + " deleted sucessfully");
+        message.success(type + " deleted successfully");
       })
       .catch((error) => {
         console.log(error);

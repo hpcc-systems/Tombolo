@@ -1,5 +1,6 @@
 import React, { Component, Fragment } from "react";
-import { Modal,Tabs,Form,Input,Button,Space,Select,Table,Spin, message, Row, Col,} from "antd/lib";
+import { Modal,Tabs,Form,Input,Button,Space,Select,Table,Spin, message, Row, Col, List} from "antd/lib";
+import {ProfileOutlined, FileOutlined } from "@ant-design/icons"
 import { authHeader, handleError } from "../../common/AuthHeader.js";
 import AssociatedDataflows from "../AssociatedDataflows";
 import { hasEditPermission } from "../../common/AuthUtil.js";
@@ -23,73 +24,14 @@ import BasicsTabGeneral from "./BasicsTabGeneral";
 import BasicsTabSpray from "./BasicsTabSpray";
 import BasicsTabScript from "./BasicsTabScript";
 import BasicsTabManul from "./BasicsTabManaul.jsx"
+import  {monthMap, monthAbbrMap, dayMap, dayAbbrMap, _minutes, _hours, _dayOfMonth,expendedRowRender, eclItemLayout, longFieldLayout, fileColumns} from './jobDetailConstants'
+
 
 const TabPane = Tabs.TabPane;
 const { Option, OptGroup } = Select;
 const { confirm } = Modal;
 const { TextArea } = Input;
 
-
-const monthMap = {
-  1: "January",
-  2: "February",
-  3: "March",
-  4: "April",
-  5: "May",
-  6: "June",
-  7: "July",
-  8: "August",
-  9: "September",
-  10: "October",
-  11: "November",
-  12: "December",
-};
-const monthAbbrMap = {
-  JAN: "January",
-  FEB: "February",
-  MAR: "March",
-  APR: "April",
-  MAY: "May",
-  JUN: "June",
-  JUL: "July",
-  AUG: "August",
-  SEP: "September",
-  OCT: "October",
-  NOV: "November",
-  DEC: "December",
-};
-const dayMap = {
-  0: "Sunday",
-  1: "Monday",
-  2: "Tuesday",
-  3: "Wednesday",
-  4: "Thursday",
-  5: "Friday",
-  6: "Saturday",
-  7: "Sunday",
-};
-const dayAbbrMap = {
-  SUN: "Sunday",
-  MON: "Monday",
-  TUE: "Tuesday",
-  WED: "Wednesday",
-  THU: "Thursday",
-  FRI: "Friday",
-  SAT: "Saturday",
-};
-const _minutes = [
-  0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21,
-  22, 23, 24, 25, 26, 27, 28, 29, 30, 31, 32, 33, 34, 35, 36, 37, 38, 39, 40,
-  41, 42, 43, 44, 45, 46, 47, 48, 49, 50, 51, 52, 53, 54, 55, 56, 57, 58, 59,
-];
-const _hours = [
-  0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21,
-  22, 23,
-];
-const _dayOfMonth = [
-  1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22,
-  23, 24, 25, 26, 27, 28, 29, 30, 31,
-];
 let scheduleCronParts = {
   minute: [],
   hour: [],
@@ -173,9 +115,10 @@ class JobDetails extends Component {
     if (this.props.application && this.props.application.applicationId) {
         this.getJobDetails();
         this.setClusters(this.props.clusterId);
-        if (this.props.selectedDataflow) {
-          this.getFiles();
-        }
+        // if (this.props.selectedDataflow) {
+        //   this.getFiles();
+        // }
+        this.getFiles();
     }
     if (this.props.scheduleType === "Predecessor") {
       this.handleScheduleTypeSelect("Predecessor");
@@ -244,12 +187,19 @@ class JobDetails extends Component {
         .then((data) => {
           var jobfiles = [],
             cronParts = [];
-          data.jobfiles.forEach(function (doc, idx) {
-            var fileObj = {};
-            fileObj = doc;
-            fileObj.fileTitle = doc.title ? doc.title : doc.name;
-            jobfiles.push(fileObj);
+          // data.jobfiles.forEach(function (doc, idx) {
+          //   var fileObj = {};
+          //   fileObj = doc;
+          //   fileObj.fileTitle = doc.title ? doc.title : doc.name;
+          //   jobfiles.push(fileObj);
+          //   console.log(fileObj)
+          // });
+
+            data.jobFileTemplate.forEach(item => {
+             jobfiles.push(item);
           });
+
+
           if (data.schedule && data.schedule.cron) {
             cronParts = data.schedule.cron.split(" ");
           }
@@ -372,6 +322,9 @@ class JobDetails extends Component {
       }
       fileUrl = fileUrl.replace(/&$/, "");
     }
+
+        console.log('<<<< GETTING FILES ', queryStringParams)
+
 
     fetch(fileUrl, {
       headers: authHeader(),
@@ -576,63 +529,64 @@ class JobDetails extends Component {
       });
   };
 
-  onJobSelected(option) {
-    fetch(
-      "/api/hpcc/read/getJobInfo?jobWuid=" +
-        option.key +
-        "&jobName=" +
-        option.value +
-        "&clusterid=" +
-        this.state.selectedCluster +
-        "&jobType=" +
-        this.state.job.jobType +
-        "&applicationId=" +
-        this.props.application.applicationId,
-      {
-        headers: authHeader(),
-      }
-    )
-      .then((response) => {
-        if (response.ok) {
-          return response.json();
-        }
-        handleError(response);
-      })
-      .then((jobInfo) => {
-        this.setState({
-          ...this.state,
-          job: {
-            ...this.state.job,
-            id: jobInfo.id,
-            inputFiles: jobInfo.jobfiles.filter(
-              (jobFile) => jobFile.file_type == "input"
-            ),
-            outputFiles: jobInfo.jobfiles.filter(
-              (jobFile) => jobFile.file_type == "output"
-            ),
-            groupId: jobInfo.groupId,
-            ecl: jobInfo.ecl,
-          },
-        });
-        this.formRef.current.setFieldsValue({
-          name: jobInfo.name,
-          title: jobInfo.title,
-          description: jobInfo.description,
-          gitRepo: jobInfo.gitRepo,
-          ecl: jobInfo.ecl,
-          entryBWR: jobInfo.entryBWR,
-        });
-        return jobInfo;
-      })
-      .then((data) => {
-        if (this.props.selectedDataflow) {
-          this.getFiles();
-        }
-      })
-      .catch((error) => {
-        console.log(error);
-      });
-  }
+  // onJobSelected(option) {
+  //   console.log("<<< JOB selected")
+  //   fetch(
+  //     "/api/hpcc/read/getJobInfo?jobWuid=" +
+  //       option.key +
+  //       "&jobName=" +
+  //       option.value +
+  //       "&clusterid=" +
+  //       this.state.selectedCluster +
+  //       "&jobType=" +
+  //       this.state.job.jobType +
+  //       "&applicationId=" +
+  //       this.props.application.applicationId,
+  //     {
+  //       headers: authHeader(),
+  //     }
+  //   )
+  //     .then((response) => {
+  //       if (response.ok) {
+  //         return response.json();
+  //       }
+  //       handleError(response);
+  //     })
+  //     .then((jobInfo) => {
+  //       this.setState({
+  //         ...this.state,
+  //         job: {
+  //           ...this.state.job,
+  //           id: jobInfo.id,
+  //           inputFiles: jobInfo.jobfiles.filter(
+  //             (jobFile) => jobFile.file_type == "input"
+  //           ),
+  //           outputFiles: jobInfo.jobfiles.filter(
+  //             (jobFile) => jobFile.file_type == "output"
+  //           ),
+  //           groupId: jobInfo.groupId,
+  //           ecl: jobInfo.ecl,
+  //         },
+  //       });
+  //       this.formRef.current.setFieldsValue({
+  //         name: jobInfo.name,
+  //         title: jobInfo.title,
+  //         description: jobInfo.description,
+  //         gitRepo: jobInfo.gitRepo,
+  //         ecl: jobInfo.ecl,
+  //         entryBWR: jobInfo.entryBWR,
+  //       });
+  //       return jobInfo;
+  //     })
+  //     .then((data) => {
+  //       if (this.props.selectedDataflow) {
+  //         this.getFiles();
+  //       }
+  //     })
+  //     .catch((error) => {
+  //       console.log(error);
+  //     });
+  // }
 
   onDropZoneFileSelected(option) {
     this.setState({ sprayFileName: option.value });
@@ -892,6 +846,7 @@ async sendGHCreds({ GHUsername, GHToken }){
   };
 
   handleInputFileChange = (value) => {
+    console.log('Input file change <<<<')
     this.setState({ selectedInputFile: value });
   };
 
@@ -1431,27 +1386,7 @@ async sendGHCreds({ GHUsername, GHToken }){
       dropZoneFileSearchSuggestions,
     } = this.state;
 
-    const eclItemLayout = {
-      labelCol: {
-        xs: { span: 2 },
-        sm: { span: 2 },
-        md: { span: 2 },
-        lg: { span: 2 },
-      },
-      wrapperCol: {
-        xs: { span: 4 },
-        sm: { span: 24 },
-        md: { span: 24 },
-        lg: { span: 24 },
-        xl: { span: 24 },
-      },
-    };
-
-    const longFieldLayout = {
-      labelCol: { span: 2 },
-      wrapperCol: { span: 12 },
-    };
-
+    
     const columns = [
       {
         title: "Name",
@@ -1482,19 +1417,6 @@ async sendGHCreds({ GHUsername, GHToken }){
         title: "Value",
         dataIndex: "type",
         editable: editingAllowed,
-      },
-    ];
-
-    const fileColumns = [
-      {
-        title: "Name",
-        dataIndex: "name",
-        width: "20%",
-      },
-      {
-        title: "Description",
-        dataIndex: "description",
-        width: "30%",
       },
     ];
 
@@ -1788,6 +1710,7 @@ async sendGHCreds({ GHUsername, GHToken }){
                       }
                       dataSource={inputParams}
                       editingAllowed={editingAllowed}
+
                       dataDefinitions={[]}
                       showDataDefinition={false}
                       setData={this.setInputParamsData}
@@ -1797,6 +1720,7 @@ async sendGHCreds({ GHUsername, GHToken }){
 
                   <TabPane disabled={noECLAvailable} tab="Input Files" key="4">
                     <div>
+                      {console.log('<<<< source file', sourceFiles)}
                       {this.state.enableEdit ? (
                         <>
                           <Form.Item label="Input Files">
@@ -1828,12 +1752,17 @@ async sendGHCreds({ GHUsername, GHToken }){
                         </>
                       ) : null}
 
-                      <Table
+                      <Table                          
                         columns={fileColumns}
                         rowKey={(record) => record.id}
                         dataSource={inputFiles}
                         pagination={{ pageSize: 10 }}
-                        scroll={{ y: 460 }}
+                        scroll={{ y: 800 }}  // this should be calculated on fly per screen size
+                        size='small'
+                        rowExpandable={record => record.files}
+                        expandedRowRender={ (record) => expendedRowRender(record)}
+                        align='right'
+                        // expandIcon={(props) => customExpandIcon(props)}
                       />
                     </div>
                   </TabPane>
@@ -1881,7 +1810,13 @@ async sendGHCreds({ GHUsername, GHToken }){
                       rowKey={(record) => record.id}
                       dataSource={outputFiles}
                       pagination={{ pageSize: 10 }}
-                      scroll={{ y: 460 }}
+                      scroll={{ y: 800 }}
+                      size='small'
+
+                        pagination={{ pageSize: 10 }}
+                        rowExpandable={record => record.files}
+                        expandedRowRender={ (record) => expendedRowRender(record)}
+
                     />
                   </div>
                 </TabPane>

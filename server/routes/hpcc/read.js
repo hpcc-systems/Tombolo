@@ -26,21 +26,12 @@ var sanitize = require("sanitize-filename");
 
 router.post('/filesearch', [
   body('keyword')
-    .matches(/^[a-zA-Z]{1}[a-zA-Z0-9_:.\-]*$/).withMessage('Invalid keyword')
+    .matches(/^.[a-zA-Z]{1}[a-zA-Z0-9_:.\-]*$/).withMessage('Invalid keyword')
 ], function (req, res) {
-	console.log(`<<<< H E R E  <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<`);
-	console.log(req.body)
-	console.log('<<<< H E R E  <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<');
 	const errors = validationResult(req).formatWith(validatorUtil.errorFormatter);
-	console.log(`<<<< Errors <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<`);
-	console.log(errors)
-	console.log('<<<< Errors <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<');
 	if (!errors.isEmpty()) {
 		return res.status(422).send({"success":"false", "message": "Error occurred during search."});
 	}
-	console.log(`<<<< NOW HERE  <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<`);
-	console.log()
-	console.log('<<<< NOW HERE  <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<');
 
 	hpccUtil.getCluster(req.body.clusterid).then(function(cluster) {
 		let results = [];
@@ -736,7 +727,7 @@ io.of("/landingZoneFileUpload").on("connection", (socket) => {
 				auth : hpccUtil.getClusterAuth(selectedCluster),
 				formData : {
 					'UploadedFiles[]' : {
-						value : filePath,
+						value : fs.createReadStream(filePath),
 						options : {
 							filename : fileName,
 						}
