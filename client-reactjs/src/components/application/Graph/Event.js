@@ -48,7 +48,7 @@ export default class Event {
           onClick(param) {
             const cell = param.cell;
             const nodeData = cell.getData();
-            const deleteJobMessage = `Deleting a job will delete all related files from workflow. Do you really want to remove ${nodeData.title}? `;
+            const deleteJobMessage = `Removing a job will remove all related files from workflow. Do you really want to remove ${nodeData.title}? `;
             const defaultMessage = `Do you really want to remove ${nodeData.title}?`;
             Modal.confirm({
               icon: <ExclamationCircleOutlined style={{ color: 'red' }} />,

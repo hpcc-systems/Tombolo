@@ -261,6 +261,7 @@ class JobDetails extends Component {
     }
   }
   
+  // !! NOT IN USE
   setClusters(clusterId) {
     if (this.props.clusters) {
       const selectedCluster = this.props.clusters.find((cluster) => cluster.id === clusterId);
@@ -374,6 +375,7 @@ class JobDetails extends Component {
       const payload = {
         method: 'POST',
         headers: authHeader(),
+        //!! isNew: this.props.isNew, id: this.state.job.id = NOT IN USE 
         body: JSON.stringify({ isNew: this.props.isNew, id: this.state.job.id, job: await this.populateJobDetails() }),
       };
       const response = await fetch('/api/job/saveJob', payload);
