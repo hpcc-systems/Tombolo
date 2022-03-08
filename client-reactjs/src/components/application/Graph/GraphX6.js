@@ -495,6 +495,8 @@ function GraphX6({ readOnly = false, statuses }) {
       }
 
       const existingScheduledEdge = cell.data?.schedule?.scheduleEdgeId;
+      const existingScheduledTime = cell.data?.schedule?.cron;
+
       const newCellData = { title: asset.title, name: asset.name };
       /* updating cell will cause a POST request to '/api/dataflowgraph/save with latest nodes and edges*/
       //add icons or statuses
@@ -527,9 +529,22 @@ function GraphX6({ readOnly = false, statuses }) {
           };
         }
       }
+
+      if (asset.type === 'Time') {
+        newCellData.schedule = {
+          type: 'Time',
+          cron: asset.cron
+        };
+      }
+
       // If node was removed from schedule we will remove edge
       if (existingScheduledEdge && !asset.type) {
         graphRef.current.removeEdge(cell.data.schedule.scheduleEdgeId);
+        newCellData.schedule = null;
+      }
+      
+      // remove time data from node if time schedule was removed
+      if (existingScheduledTime && !asset.type) {
         newCellData.schedule = null;
       }
   
@@ -540,9 +555,6 @@ function GraphX6({ readOnly = false, statuses }) {
   
   const handleSync = async () => {
     const graphJSON = graphRef.current.toJSON({ diff: true });
-    console.log('-graphJSON-----------------------------------------');
-    console.dir({ graphJSON }, { depth: null });
-    console.log('------------------------------------------');
 
     try {
       setSync(() => ({ loading: true, error: '' }));
@@ -585,10 +597,9 @@ function GraphX6({ readOnly = false, statuses }) {
       const assetsIds = data.assetsIds; // array of strings of all assetIds created or modified on backend
 
       const { files, jobs, edges } = cellsJSON;
-      //TODO REDUCE TIME HERE!!!!!
-      console.log('-data-----------------------------------------');
-      console.dir({ data, files, jobs, edges }, { depth: null });
-      console.log('------------------------------------------');
+      // console.log('-data-----------------------------------------');
+      // console.dir({ data, files, jobs, edges }, { depth: null });
+      // console.log('------------------------------------------');
 
       if (result?.length > 0) {
         result.forEach((el) => {
