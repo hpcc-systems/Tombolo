@@ -76,6 +76,9 @@ jobs:
         echo DB_HOSTNAME=${{ secrets.DB_HOSTNAME }} >> .env
         echo AUTH_SERVICE_URL=${{ secrets.AUTH_SERVICE_URL }} >> .env
         echo AUTHSERVICE_TOMBOLO_CLIENT_ID=${{ secrets.AUTHSERVICE_TOMBOLO_CLIENT_ID }} >> .env
+        echo ALGORITHM=${{ secrets.ALGORITHM }} >> .env
+        echo IV_LENGTH=${{ secrets.IV_LENGTH }} >> .env
+        echo ENCRYPTION_KEY=${{ secrets.ENCRYPTION_KEY }} >> .env
         echo secret=${{ secrets.secret }} >> .env
       working-directory: server   
         
