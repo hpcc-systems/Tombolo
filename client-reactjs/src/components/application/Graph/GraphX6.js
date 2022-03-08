@@ -325,10 +325,12 @@ function GraphX6({ readOnly = false, statuses }) {
     if (newAsset) {
       const cell = configDialog.cell;
       /* updating cell will cause a POST request to '/api/dataflowgraph/save with latest nodes and edges*/
+
       const cellData =   {
         name: newAsset.name,
         title: newAsset.title,
         assetId: newAsset.id,
+        isAssociated: newAsset.isAssociated
       }
 
       if(newAsset.assetType === "File"){
@@ -356,7 +358,7 @@ function GraphX6({ readOnly = false, statuses }) {
         // Getting Job - File relations set up
         const jobtypes = ['Job', 'Modeling', 'Scoring', 'ETL', 'Query Build', 'Data Profile'];
 
-        if (configDialog.type === 'Job' && jobtypes.includes(newAsset.jobType)) {
+        if (configDialog.type === 'Job' && newAsset.isAssociated && jobtypes.includes(newAsset.jobType)) {
           // CREATE JOB FILE RELATIONSHIP
           const options = {
             method: 'POST',
@@ -479,8 +481,21 @@ function GraphX6({ readOnly = false, statuses }) {
   const updateAsset = (asset) => {
     if (asset) {
       const cell = configDialog.cell;
+      if (cell.data.type === "Job"){
+        // if asset was not just got associated then we need to save it as new so it can get updated and fetch related files;
+        if (!cell.data?.isAssociated && asset.isAssociated){
+          return saveNewAsset({
+            ...cell.data,
+            id: asset.assetId,
+            name: asset.name,
+            title: asset.title,
+            isAssociated: asset.isAssociated,
+          })
+        }
+      }
+
       const existingScheduledEdge = cell.data?.schedule?.scheduleEdgeId;
-      const newCellData = { title: asset.title };
+      const newCellData = { title: asset.title, name: asset.name };
       /* updating cell will cause a POST request to '/api/dataflowgraph/save with latest nodes and edges*/
       //add icons or statuses
       // cell.updateData({ title: asset.title, scheduleType: asset.type }, { name: 'update-asset' });
@@ -653,10 +668,11 @@ function GraphX6({ readOnly = false, statuses }) {
         <AssetDetailsDialog
           show={configDialog.openDialog}
           selectedJobType={configDialog.type}
-          selectedAsset={{ id: configDialog.assetId }}
+          selectedAsset={{ id: configDialog.assetId, isAssociated: configDialog.isAssociated }}
           selectedDataflow={{ id: dataflowId }}
           selectedNodeId={configDialog.nodeId}
           selectedNodeTitle={configDialog.title}
+          clusterId={clusterId}
           nodes={configDialog.nodes}
           edges={configDialog.edges}
           onClose={updateAsset}

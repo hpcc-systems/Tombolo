@@ -117,7 +117,11 @@ function ExistingAssetListDialog({ show, applicationId, dataflowId, clusterId, a
             className="btn btn-secondary btn-sm"
             onClick={() => {
               setLoading(true);
-              onClose({...record, assetType});
+              onClose({
+                ...record,
+                assetType,
+                isAssociated: record?.metaData?.isAssociated ? true: false,
+              });
             }}
           >
             Select
@@ -135,6 +139,17 @@ function ExistingAssetListDialog({ show, applicationId, dataflowId, clusterId, a
       render: (text, record) => `${text ? 'Yes' : 'No'}`,
     };
     assetColumns.splice(2, 0, isSuperFileColumn);
+  }
+
+  if (assetType === 'Job') {
+    const isJobAssociated =   {
+      title: 'Production',
+      width: '20%',
+      render: (text, record) => {
+        return record?.metaData?.isAssociated ? 'Yes' : 'No'
+      }
+    };
+    assetColumns.splice(2, 0, isJobAssociated);
   }
 
   return (

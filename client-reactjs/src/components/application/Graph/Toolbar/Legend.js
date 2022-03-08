@@ -30,6 +30,14 @@ const data = [
     icon: <HourglassOutlined />,
   },
   {
+    title: 'Job is in design',
+    icon: <SettingOutlined className="Job legend-icon no-asset" />,
+  },
+  {
+    title: 'Job is in production',
+    icon: <SettingOutlined className="Job legend-icon" />,
+  },
+  {
     title: 'Job failed',
     icon: <SettingOutlined className="Job legend-icon status-failed" />,
   },
