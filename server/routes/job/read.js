@@ -125,6 +125,19 @@ const createOrUpdateFile = async ({jobfile, jobId, clusterId, dataflowId, applic
   }
 }; 
 
+const clearAllPreviousScheduleRecords = async (props) => {       
+  return await Promise.all([
+    //1. Remove chron expression from assetDataflow table;
+    AssetDataflow.update( { cron: null }, { where: { assetId: props.id, dataflowId: props.dataflowId } } ),
+    //2. Remove job from Bree
+    JobScheduler.removeJobFromScheduler(props.name + '-' + props.dataflowId + '-' + props.id),
+    //3. Remove Dependent Job Record
+    DependentJobs.destroy({ where: { jobId: props.id, dataflowId: props.dataflowId } }),
+    //4. ...
+    MessageBasedJobs.destroy({ where: { jobId: props.id, dataflowId: props.dataflowId, applicationId: props.application_id }, }),
+  ]);
+};
+
 router.post( '/jobFileRelation',
   [
     body('jobId').optional({ checkFalsy: true }).isUUID(4).withMessage('Invalid job id'),
@@ -300,260 +313,245 @@ try {
 }
 });
 
-router.post('/saveJob', [
-  body('id')
-  .optional({checkFalsy:true})
-    .isUUID(4).withMessage('Invalid id'),
-  body('job.basic.application_id')
-    .isUUID(4).withMessage('Invalid application id'),
-  body('job.basic.name')
-  .matches(/^[a-zA-Z]{1}[a-zA-Z0-9_. \-:]*$/).withMessage('Invalid name'),
-  body('job.basic.title')
-  .matches(/^[a-zA-Z]{1}[a-zA-Z0-9_. \-:]*$/).withMessage('Invalid title'),
-], (req, res) => {
-  const errors = validationResult(req).formatWith(validatorUtil.errorFormatter);
+router.post( '/saveJob',
+  [
+    body('id').optional({ checkFalsy: true }).isUUID(4).withMessage('Invalid id'),
+    body('job.basic.application_id').isUUID(4).withMessage('Invalid application id'),
+    body('job.basic.name').matches(/^[a-zA-Z]{1}[a-zA-Z0-9_. \-:]*$/).withMessage('Invalid name'),
+    body('job.basic.title').matches(/^[a-zA-Z]{1}[a-zA-Z0-9_. \-:]*$/).withMessage('Invalid title'),
+  ],
+  async (req, res) => {
+    const errors = validationResult(req).formatWith(validatorUtil.errorFormatter);
+    if (!errors.isEmpty()) return res.status(422).json({ success: false, errors: errors.array() });
 
-  if (!errors.isEmpty()) {
-      return res.status(422).json({ success: false, errors: errors.array() });
-  }
-  console.log("[saveJob] - Get file list for app_id = " + req.body.job.basic.application_id + " isNewJob: "+req.body.isNew);
-  var jobId=req.body.id, applicationId=req.body.job.basic.application_id, fieldsToUpdate={}, nodes=[], edges=[];
-  
-  try {
+    // THIS IS A LIST OF FIELDS WE ARE CURRENTLY GETTING FROM FRONTEND, IF U ADD MORE FIELDS PLEASE UPDATE THIS LIST TOO
+    // basic: { name, title, ecl, author, contact, gitRepo, entryBWR, jobType, description, scriptPath, sprayFileName, sprayDropZone, sprayedFileScope, metaData : json{}, cluster_id, dataflowId, application_id, groupId }
+    // schedule: { type, jobs, cron}
+    // files: []
+    // params : []
 
-    Job.findOne({where: {name: req.body.job.basic.name, application_id: applicationId}, attributes:['id']}).then(async (existingJob) => {
-      let job = null;
-      if (!existingJob) {
-        job = await Job.create(req.body.job.basic);
-      } else {
-        job = await Job.update(req.body.job.basic, {where:{application_id: applicationId, id:req.body.id}}).then((updatedIndex) => {
-          return updatedIndex;
-        })
+    const { name, application_id, groupId, ...requestJobFields } = req.body.job.basic;
+    const schedule = req.body.job.schedule;
+
+    try {
+      // FIND OR CREATE JOB
+      let [job, isJobCreated] = await Job.findOrCreate({
+        where: { name, application_id },
+        defaults: requestJobFields,
+      });
+
+      if (!isJobCreated) job = await job.update(requestJobFields);
+
+      // UPDATE OR CREATE AssetsGroups RECORD FOR JOB
+      if (groupId){
+        const assetGroupsFields = { assetId: job.id, groupId};
+        await AssetsGroups.findOrCreate({ where: assetGroupsFields, defaults: assetGroupsFields });
       }
-      let jobId = job.id ? job.id : req.body.id;
-      if (req.body.job.basic && req.body.job.basic.groupId) {
-        let assetsGroupsCreated = await AssetsGroups.findOrCreate({
-          where: {assetId: jobId, groupId: req.body.job.basic.groupId},
-          defaults:{
-            assetId: jobId,
-            groupId: req.body.job.basic.groupId
-          }
-        })
-      }     
 
-      switch (req.body.job.schedule.type) { 
-        case "":
-          AssetDataflow.update({
-            cron: null,
-          }, {
-            where: { assetId: jobId, dataflowId: req.body.job.basic.dataflowId }
-          }).then(async (assetDataflowupdated) => {
-             await JobScheduler.removeJobFromScheduler(req.body.job.basic.name + '-' + req.body.job.basic.dataflowId + '-' + req.body.id);
-          })
-          await DependentJobs.destroy({
-            where: {
-              jobId: jobId,
-              dataflowId: req.body.job.basic.dataflowId
-            }
+      // console.log('-job:job.toJSON()-----------------------------------------');
+      // console.dir({ job: job.toJSON() }, { depth: null });
+      // console.log('------------------------------------------');
+
+      // JOB IS SCHEDULED AS 'Predecessor'
+      if (schedule.type === 'Predecessor') {
+        try {
+          // CLEAN UP
+          await clearAllPreviousScheduleRecords({ 
+            id: job.id,
+            name: job.name,
+            application_id,
+            dataflowId: requestJobFields.dataflowId
           });
-          await MessageBasedJobs.destroy({
-            where: {
-              jobId: jobId,
-              dataflowId: req.body.job.basic.dataflowId,
-              applicationId: req.body.job.basic.application_id
-            }
-          });
+
+          const dependentJobsPromises = schedule.jobs.map((dependsOnJobId) =>
+            DependentJobs.create({
+              jobId: job.id,
+              dependsOnJobId,
+              dataflowId: requestJobFields.dataflowId,
+            })
+          );
+          
+         const dependentJobs = await Promise.all(dependentJobsPromises);
+          console.log(`-JOB SCHEDULED-Predecessor----------------------------------------`);
+          console.dir({dependentJobs:dependentJobs.map(job=> job.toJSON())}, { depth: null });
+          console.log('------------------------------------------');
+
           return res.json({
             success: true,
-            type: "",
-            jobs: [],
-            jobId: jobId,
-            title: req.body.job.basic.title
+            jobId: job.id,
+            title: job.title,
+            jobs: schedule.jobs,
+            type: schedule.type,
           });
-          break;
-        case 'Predecessor':
-          await AssetDataflow.update({
-            cron: null,
-          }, {
-            where: { assetId: jobId, dataflowId: req.body.job.basic.dataflowId }
-          }).then(async (assetDataflowupdated) => {
-             await JobScheduler.removeJobFromScheduler(req.body.job.basic.name + '-' + req.body.job.basic.dataflowId + '-' + req.body.id);
-          })
-          await MessageBasedJobs.destroy({
-            where: {
-              jobId: jobId,
-              dataflowId: req.body.job.basic.dataflowId,
-              applicationId: req.body.job.basic.application_id
-            }
-          });
-          await DependentJobs.destroy({
-            where: {
-              jobId: jobId,
-              dataflowId: req.body.job.basic.dataflowId
-            }
-          });
-          const promises = req.body.job.schedule.jobs.map(async dependsOnJobId => {
-            await DependentJobs.create({
-              jobId: jobId,
-              dataflowId: req.body.job.basic.dataflowId,
-              dependsOnJobId: dependsOnJobId
-            });
+        } catch (error) {
+          console.log('-error- FAILED TO SCHEDULE Predecessor----------------------------------------');
+          console.dir({ error }, { depth: null });
+          console.log('------------------------------------------');
+          return res.status(422).send({ success: false, message: 'Failed to update scheduled job' });
+        }
+      }
+
+      // JOB IS SCHEDULED AS 'Time'
+      if (schedule.type === 'Time') {
+        try {
+          // CLEAN UP
+          await clearAllPreviousScheduleRecords({ 
+            id: job.id,
+            name: job.name,
+            application_id,
+            dataflowId: requestJobFields.dataflowId
           });
 
-          await Promise.all(promises);
+          const { minute, hour, dayMonth, month, dayWeek } = schedule.cron;
+          const cronExpression = `${minute} ${hour} ${dayMonth} ${month} ${dayWeek}`;
+
+          const [updatedRow] = await AssetDataflow.update(
+            { cron: cronExpression },
+            { where: { assetId: job.id, dataflowId: requestJobFields.dataflowId } }
+          );
+
+          if (!updatedRow) throw new Error('Failed to update AssetDataflow record');
+
+          // ADD JOB TO BREE SCHEDULE
+          const getfileName = () => {
+            switch (job.jobType) {
+              case 'Script':
+                return SUBMIT_SCRIPT_JOB_FILE_NAME;
+              case 'Manual':
+                return SUBMIT_MANUAL_JOB_FILE_NAME;
+              default: {
+                if (job.isStoredOnGithub) {
+                  return SUBMIT_GITHUB_JOB_FILE_NAME;
+                } else {
+                  return SUBMIT_JOB_FILE_NAME;
+                }
+              }
+            }
+          };
+
+          const jobSettings = {
+            jobId: job.id,
+            jobName: job.name,
+            jobfileName: getfileName(),
+            title: job.title,
+            cron: cronExpression,
+            jobType: job.jobType,
+            contact: job.contact,
+            metaData: job.metaData,
+            sprayFileName: job.sprayFileName,
+            sprayDropZone: job.sprayFileName,
+            sprayedFileScope: job.sprayedFileScope,
+            clusterId: job.cluster_id,
+            dataflowId: requestJobFields.dataflowId,
+            applicationId: job.application_id,
+          };
+
+          if (jobSettings.jobType === 'Manual') {
+            jobSettings.status = 'wait';
+            jobSettings.manualJob_meta = {
+              jobType: 'Manual',
+              jobName: jobSettings.jobName,
+              notifiedTo: jobSettings.contact,
+              notifiedOn: new Date().getTime(),
+            };
+          }
+
+          JobScheduler.addJobToScheduler(jobSettings);
+          console.log(`-JOB SCHEDULED-Time----------------------------------------`);
+          console.dir({jobSettings, job: job.id, jobname:job.name,schedule}, { depth: null });
+          console.log('------------------------------------------');
+          
+
+          return res.json({
+            jobId: job.id,
+            success: true,
+            title: job.title,
+            type: schedule.type,
+            cron: schedule.cron,
+          });
+        } catch (error) {
+          console.log('-error- FAILED TO SCHEDULE Time-----------------------------------------');
+          console.dir({ error }, { depth: null });
+          console.log('------------------------------------------');
+          return res.status(422).send({ success: false, message: 'Failed to update scheduled job' });
+        }
+      }
+
+      // JOB IS SCHEDULED AS 'Message'
+      if (schedule.type === 'Message') {
+        try {
+          // CLEAN UP
+          await clearAllPreviousScheduleRecords({ id: job.id, application_id, dataflowId: requestJobFields.dataflowId, });
+         
+          const messageBasedJobsFields = {
+            jobId: job.id,
+            applicationId: application_id,
+            dataflowId: requestJobFields.dataflowId,
+          };
+         
+          await MessageBasedJobs.findOrCreate({
+            where: messageBasedJobsFields,
+            defaults: messageBasedJobsFields,
+          });
+
           return res.json({
             success: true,
             type: req.body.job.schedule.type,
             jobs: req.body.job.schedule.jobs,
             jobId: jobId,
-            title: req.body.job.basic.title
+            title: req.body.job.basic.title,
           });
-          break;
-          
-        case 'Time':
-          try {
-            let cronExpression = req.body.job.schedule.cron['minute'] + ' ' +
-              req.body.job.schedule.cron['hour'] + ' ' +
-              req.body.job.schedule.cron['dayMonth'] + ' ' +
-              req.body.job.schedule.cron['month'] + ' ' +
-              req.body.job.schedule.cron['dayWeek'];
-
-            let success = await AssetDataflow.update({
-                cron: cronExpression,
-              }, {
-                where: { assetId: jobId, dataflowId: req.body.job.basic.dataflowId }
-              });
-            if(success || success[0]) {
-              await DependentJobs.destroy({
-                where: {
-                  jobId: jobId,
-                  dataflowId: req.body.job.basic.dataflowId
-                }
-              });
-
-              const fileName = () =>{
-                switch (req.body.job.basic.jobType){
-                  case 'Script':
-                    return SUBMIT_SCRIPT_JOB_FILE_NAME;
-                  case 'Manual' :
-                    return SUBMIT_MANUAL_JOB_FILE_NAME;
-                  default : {
-                    if (req.body.job.basic?.metaData.isStoredOnGithub){
-                      return SUBMIT_GITHUB_JOB_FILE_NAME
-                    }else{
-                      return SUBMIT_JOB_FILE_NAME
-                    }
-                  }
-                }
-              }
-              
-              //remove existing job with same name
-              try {
-                  await JobScheduler.removeJobFromScheduler(req.body.job.basic.name + '-' + req.body.job.basic.dataflowId + '-' + jobId);
-                  
-                  const jobSettings ={	
-                    jobName: req.body.job.basic.name, 
-                    title: req.body.job.basic.title,	
-                    cron: cronExpression, 	
-                    clusterId: req.body.job.basic.cluster_id,	
-                    dataflowId: req.body.job.basic.dataflowId,	
-                    applicationId: req.body.job.basic.application_id,	
-                    jobId: jobId,	
-                    jobfileName: fileName(),	
-                    jobType: req.body.job.basic.jobType,	
-                    sprayedFileScope: job.sprayedFileScope,	
-                    sprayFileName: job.sprayFileName, 
-                    sprayDropZone: job.sprayFileName,
-                    metaData: req.body.job.basic.metaData,
-                    contact : req.body.job.basic.contact,
-                  }
-                  
-                  if(jobSettings.jobType === "Manual"){ 
-                    jobSettings.status = 'wait';
-                    jobSettings.manualJob_meta = {jobType : 'Manual', jobName: jobSettings.jobName, notifiedTo : jobSettings.contact, notifiedOn : new Date().getTime()}
-                  }
-                  
-                  JobScheduler.addJobToScheduler(jobSettings);
-         
-                } catch (err) {
-                console.log("could not remove job from scheduler"+ err)
-              }
-            }
-
-            if (!success || !success[0]) {
-              return res.json({
-                success: false,
-                message: 'Unable to save job schedule'
-              });
-            }
-            return res.json({
-              success: true,
-              type: req.body.job.schedule.type,
-              cron: req.body.job.schedule.cron,
-              jobId: jobId,
-              title: req.body.job.basic.title
-            });
-            
-          } catch (err) {
-            console.log(err);
-            return res.json({
-              success: false,
-              message: 'Unable to save job schedule'
-            });
-          }
-          break;
-        case 'Message':
-          try {
-            await AssetDataflow.update({
-              cron: null,
-            }, {
-              where: { assetId: jobId, dataflowId: req.body.job.basic.dataflowId }
-            }).then(async (assetDataflowupdated) => {
-                await JobScheduler.removeJobFromScheduler(req.body.job.basic.name + '-' + req.body.job.basic.dataflowId + '-' + req.body.id);
-            })
-
-            await DependentJobs.destroy({
-              where: {
-                jobId: jobId,
-                dataflowId: req.body.job.basic.dataflowId
-              }
-            });
-
-            MessageBasedJobs.findOrCreate({
-              where: {
-                jobId: jobId,
-                applicationId: req.body.job.basic.application_id,
-                dataflowId: req.body.job.basic.dataflowId
-              },
-              defaults: {
-                jobId: jobId,
-                dataflowId: req.body.job.basic.dataflowId,
-                applicationId: req.body.job.basic.application_id,
-              }
-            })
-            return res.json({
-              success: true,
-              type: req.body.job.schedule.type,
-              jobs: req.body.job.schedule.jobs,
-              jobId: jobId,
-              title: req.body.job.basic.title
-            });
-            break;
-          } catch (err) {
-            console.log(err);
-            return res.json({
-              success: false,
-              message: 'Unable to save job schedule'
-            });
-          }
+        } catch (error) {
+          return res.json({
+            success: false,
+            message: 'Unable to save job schedule',
+          });
+        }
       }
-    return res.json({"success": true, "title":req.body.job.basic.title, "jobId":job.id});
-  });
 
-  } catch (err) {
-    console.log('err', err);
+      // JOB IS NOT SCHEDULED, we will remove all scheduled records from before.
+      if (!schedule.type) {
+        try {
+          // CLEAN UP
+          await clearAllPreviousScheduleRecords({ 
+            id: job.id,
+            name: job.name,
+            application_id,
+            dataflowId: requestJobFields.dataflowId
+          });
+
+          console.log('------------------------------------------');
+          console.log(`-JOB SAVED ${job.name}-${job.title}-${job.id}-----------------------------------------`);
+          console.log('------------------------------------------');
+         
+          return res.json({
+            success: true,
+            type: '',
+            jobs: [],
+            jobId: job.id,
+            title: job.title,
+          });
+       
+        } catch (error) {
+          console.log('-error-----------------------------------------');
+          console.dir({ error }, { depth: null });
+          console.log('------------------------------------------');
+          return res.status(422).send({ success: false, message: 'Failed to update scheduled job' });
+        }
+      }
+
+      // respond default if non of the above triggered
+      console.log('-Am I ever Running?-----------------------------------------');
+      res.json({ success: true, title: req.body.job.basic.title, jobId: job.id });
+      console.log('------------------------------------------');
+    } catch (error) {
+      console.log('-error- /saveJob----------------------------------------');
+      console.dir({ error }, { depth: null });
+      console.log('------------------------------------------');
+      return res.status(422).send({ success: false, message: 'Failed to Save job' });
+    }
   }
-});
+);
 
 router.get('/job_list', [
   query('app_id')
