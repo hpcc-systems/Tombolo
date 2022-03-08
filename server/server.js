@@ -5,11 +5,12 @@ const tokenService = require('./utils/token_service');
 const {verifyToken} = require("./routes/user/userservice")
 const jwt = require('jsonwebtoken');
 const {NotificationModule} = require('./routes/notifications/email-notification');
+const cors = require('cors');
 
 // Socket
 const server = require('http').Server(app);
 const socketIo = require('socket.io')(server);
-
+const port = process.env.PORT || 3000
 // const socketIo = io.use(function(socket, next){
 //   const token =  socket.handshake.auth.token;
 //   verifyToken(token).then(() => {
@@ -26,6 +27,7 @@ const limiter = rateLimit({
   max: 400 // limit each IP to 400 requests per windowMs
 });
 
+app.use(cors());
 app.use(express.json());
 app.use(function(req, res, next) {
   //res.header("Access-Control-Allow-Origin", "*");
@@ -81,4 +83,4 @@ app.use('/api/ghcredentials', tokenService.verifyToken, ghCredentials);
 
 //process.env["NODE_TLS_REJECT_UNAUTHORIZED"] = 0;
 
-server.listen(3000, '0.0.0.0', () => console.log('Server listening on port 3000!'));
+server.listen(port, '0.0.0.0', () => console.log('Server listening on port '+port+'!'));
