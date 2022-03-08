@@ -60,10 +60,12 @@ jobs:
     steps:
     - uses: actions/checkout@main
     
-    - name: Rename cluster-whitelist
-      run: cp cluster-whitelist.sample.js cluster-whitelist.js
-      working-directory: server
-      
+    - name: Create cluster-whitelist
+      run: |
+        touch cluster-whitelist.js
+        echo ${{ secrets.CLUSTER_WHITE_LIST }} >> cluster-whitelist.js
+      working-directory: server      
+    
     - name: create env file
       run: |
         touch .env
