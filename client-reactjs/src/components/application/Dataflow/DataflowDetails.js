@@ -1,13 +1,12 @@
-import React, { useState, useEffect } from 'react'
+import React, { useState } from 'react'
 import { useHistory } from 'react-router';
-import { Tabs, Button, Tooltip, notification } from 'antd/lib';
-import { InfoCircleOutlined, StepBackwardOutlined  } from '@ant-design/icons';
+import { Tabs, Button, } from 'antd/lib';
 import { useSelector } from "react-redux";
 import DataflowAssetsTable from "./DataflowAssetsTable";
-import {Graph} from "./Graph";
 import BreadCrumbs from "../../common/BreadCrumbs";
 import {Constants} from "../../common/Constants"
 import {store} from "../../../redux/store/Store"
+import GraphX6 from '../Graph/GraphX6';
 const TabPane = Tabs.TabPane;
 
 function DataflowDetails({props}) {  
@@ -16,8 +15,6 @@ function DataflowDetails({props}) {
   const [currentTab, setCurrentTab] = useState("1")
   const dataflowReducer = useSelector(state => state.dataflowReducer);
   const applicationReducer = useSelector(state => state.applicationReducer);
-  const applicationId = useSelector(state => state.applicationReducer.application.applicationId);
-  const [refreshGraph, setGraphRefresh] = useState(false)
 
   const handleBackToAllJobs = () => {
     history.push("/"+applicationReducer.application.applicationId+"/dataflow")
@@ -26,26 +23,6 @@ function DataflowDetails({props}) {
       selectedDataflow: {dataflowId: ""}
     })
   }
-
-  //Show how to connect node instruction
-  useEffect(() =>{
-    if(currentTab === "1"){
-      notification.open({
-        message: <span style={{display: "flex", placeItems : "center"}}>
-          <InfoCircleOutlined style={{paddingRight: "10px"}}/>  <span>To connect nodes, hold down <b>SHIFT</b>  key and drag</span></span>,
-        duration: 0,
-        className: 'graphNotice',
-        placement: 'bottomRight'
-      })
-    }else{
-      notification.destroy()
-    }
-  
-    //Clean up
-    return() =>{
-      notification.destroy()
-    }
-  }, [currentTab])
 
 	return (
 	  <React.Fragment>
@@ -61,21 +38,10 @@ function DataflowDetails({props}) {
           <Tabs defaultActiveKey="1"
           onChange={(activeKey) => { setCurrentTab(activeKey)}}
           tabBarExtraContent = {currentTab === "1" ? <span> 
-            <Tooltip placement="topRight" title={"Refresh will validate the file/job relationship and update graph accordingly"}>
-                <Button style={{marginRight: "5px"}} type="primary" onClick={() =>  setGraphRefresh(!refreshGraph)}>Refresh</Button> 
-            </Tooltip>
-                <Button type="link" onClick={(handleBackToAllJobs)} type="primary" ghost> Cancel</Button> </span> : null}
+                <Button type='primary' onClick={(handleBackToAllJobs)}  ghost> Cancel</Button> </span> : null}
           >
-            <TabPane tab="Designer" key="1">
-              <Graph
-                viewMode={false}
-                applicationId={dataflowReducer.applicationId}
-                applicationTitle={dataflowReducer.applicationTitle}
-                selectedDataflow={{id: dataflowReducer.dataflowId}}
-                graphContainer="graph"
-                sidebarContainer="sidebar"
-                refreshGraph= {refreshGraph}
-              />
+            <TabPane tab="Designer" key="1" forceRender={true}>
+              <GraphX6 readOnly={false} />
             </TabPane>
             <TabPane tab="Assets" key="2" >
             <span style={{display: "flex", placeItems: "center", justifyContent: "center", paddingBottom: "5px"}}>

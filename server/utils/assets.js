@@ -28,15 +28,41 @@ const { Op } = require('sequelize');
 exports.fileInfo = (applicationId, file_id) => {
   var results={};
   return new Promise((resolve, reject) => {
-    File.findOne({where:{"application_id":applicationId, "id":file_id}, include: [{model: Groups, as: 'groups'}]}).then(function(files) {
-      results.basic = files;
-      let fileLayout = {};
+    File.findOne({where:{"application_id":applicationId, "id":file_id}, include: [{model: Groups, as: 'groups'}]}).then( async function(file) {
+      results.basic = file.toJSON();
+      let fileLayout = {};     
+      if (file.isSuperFile) {
+        try {
+          const DFUService = await hpccUtil.getDFUService(file.cluster_id);
+      
+          const response = await DFUService.DFUInfo({ Name: file.name });
+      
+          if (!response.FileDetail) throw new Error('File details not found');
+
+          results.basic.superFileData = {
+            error:"",
+            subFiles: response.FileDetail.subfiles.Item,
+            recordCount: response.FileDetail.RecordCount,
+            fileSize: response.FileDetail.Filesize,
+            fileSizeInt64: response.FileDetail.FileSizeInt64,
+          };
+          
+        } catch (error) {
+          console.log('-error DFUInfo-----------------------------------------');
+          console.dir({ error }, { depth: null });
+          console.log('------------------------------------------');
+          results.basic.superFileData = {
+            error: error.message,
+          };
+        }
+      }
+      
       FileLayout.findAll({where:{"application_id":applicationId, "file_id":file_id}}).then(async function(dbFileLayout) {
         //console.log(dbFileLayout.fields.length)
         if(!dbFileLayout || (dbFileLayout && (dbFileLayout.length == 0 || !dbFileLayout[0].fields || dbFileLayout[0].fields.length == 0))) {
           //for some reason, if file layout is empty, fetch it from hpcc and save it to db
-          console.log("File Layout Empty....."+files.name, files.cluster_id)
-          let fileInfo  = await hpccUtil.fileInfo(files.name, files.cluster_id);
+          console.log("File Layout Empty....."+file.name, file.cluster_id)
+          let fileInfo  = await hpccUtil.fileInfo(file.name, file.cluster_id);
           let fileLayout = {};
           if(fileInfo) {
             fileLayout = fileInfo.file_layouts; 

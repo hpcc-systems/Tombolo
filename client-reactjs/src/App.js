@@ -10,7 +10,6 @@ import ResetPassword from "./components/login/ResetPassword";
 import { PrivateRoute } from "./components/common/PrivateRoute";
 import Assets from "./components/application/Assets";
 import { LeftNav } from "./components/layout/LeftNav";
-import AssetDetailsDialog from "./components/application/AssetDetailsDialog";
 import DataDictionary from "./components/application/DataDictionary";
 import Dataflow from "./components/application/Dataflow";
 import DataflowDetails from "./components/application/Dataflow/DataflowDetails";

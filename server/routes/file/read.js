@@ -32,12 +32,50 @@ const { body, query, check, validationResult } = require('express-validator');
 
 //let FileTree = require('../../models/File_Tree');
 const fileService = require('./fileservice');
+const axios = require('axios');
+
+router.post( '/superfile_meta',
+  [body('superFileAssetId').isUUID(4).withMessage('Invalid asset id')],
+  async (req, res, next) => {
+    const errors = validationResult(req).formatWith(validatorUtil.errorFormatter);
+    if (!errors.isEmpty()) return res.status(422).json({ success: false, errors: errors.array() });
+
+    try {
+      const superFileAssetId = req.body.superFileAssetId;
+      const file = await File.findOne({ where: { id: superFileAssetId } });
+
+      if (!file || !file?.isSuperFile) throw new Error('Asset not found');
+
+      const cluster = await hpccUtil.getCluster(file.cluster_id);
+      const clusterAuth = hpccUtil.getClusterAuth(cluster);
+      
+      const payload = {
+        SuperfileListRequest: {
+          superfile: file.name,
+        },
+      };
+
+      const url =  cluster.thor_host + ':' + cluster.thor_port + '/WsDfu/SuperfileList?ver_=1.57';
+      const response = await axios.post(url, payload, { headers: clusterAuth });
+      
+      const subfiles = response.data?.SuperfileListResponse?.subfiles?.Item
+      if (!subfiles) throw new Error("Failed to get subfiles")
+
+      res.json(subfiles);
+    } catch (error) {
+      res.status(500).json({ success: false, message: error.message });
+    }
+  }
+);
+
 
 router.get('/file_list', [
   query('app_id')
     .isUUID(4).withMessage('Invalid application id'),
   query('dataflowId')
     .isUUID(4).withMessage('Invalid dataflow id'),
+    query('clusterId')
+    .isUUID(4).withMessage('Invalid cluster id'),
 ],(req, res) => {
   const errors = validationResult(req).formatWith(validatorUtil.errorFormatter);
     if (!errors.isEmpty()) {
@@ -46,13 +84,14 @@ router.get('/file_list', [
     console.log("[file list/read.js] - Get file list for app_id = " + req.query.app_id);
     try {
       let dataflowId = req.query.dataflowId;
-      let query = 'select f.id, f.name, f.title, f.description, f.createdAt, f.application_id, f.deletedAt '+
+      let query = 'select f.id, f.name, f.title, f.description, f.createdAt, f.isSuperFile, f.application_id, f.deletedAt '+
         'from file f ' + 
         'where f.id not in (select asd.assetId from assets_dataflows asd where asd.dataflowId = (:dataflowId) and asd.deletedAt is null)' +
         'and f.application_id = (:applicationId) '+
+        'and f.cluster_id = (:clusterId)'+
         'and f.deletedAt is null';
       
-      let replacements = { applicationId: req.query.app_id, dataflowId: dataflowId};
+      let replacements = { applicationId: req.query.app_id, dataflowId: dataflowId, clusterId: req.query.clusterId};
       let existingFile = models.sequelize.query(query, {
         type: models.sequelize.QueryTypes.SELECT,
         replacements: replacements
@@ -61,11 +100,11 @@ router.get('/file_list', [
       })
       .catch(function(err) {
         console.log(err);
-        return res.status(500).json({ success: false, message: "Error occured while getting file list" });
+        return res.status(500).json({ success: false, message: "Error occurred while getting file list" });
       });
     } catch (err) {
       console.log('err', err);
-      return res.status(500).json({ success: false, message: "Error occured while getting file list" });
+      return res.status(500).json({ success: false, message: "Error occurred while getting file list" });
     }
 });
 

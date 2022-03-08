@@ -953,10 +953,14 @@ div.tooltip {
 .nav-link > .fa{
   font-size: 1.33333333em;
 }
-.ant-cascader-menu{
+.ant-cascader-menu {
   height: 40vh;
   max-width:200px;
-  min-width: 130px;}
+  min-width: 130px;
+}
+.x6-node .btn {
+  cursor: pointer;
+}
 
 .jobExecutionDetails_antdTable_selectedRow > td{
  background : lightgray !important;

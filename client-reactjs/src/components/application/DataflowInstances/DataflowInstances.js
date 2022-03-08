@@ -95,6 +95,7 @@ class DataflowInstances extends Component {
       this.state.applicationId,
       this.props.application.applicationTitle,
       record.id,
+      record.clusterId,
       this.props.user
     ));
     this.props.history.push('/'+this.state.applicationId+'/dataflowinstances/dataflowInstanceDetails');

@@ -776,11 +776,14 @@ class QueryDetails extends PureComponent {
   }
 }
 
-function mapStateToProps(state) {
-    const { selectedAsset, newAsset={}, clusterId } = state.assetReducer;
+function mapStateToProps(state, ownProps) {
+    let { selectedAsset, newAsset={}, clusterId } = state.assetReducer;
     const { user } = state.authenticationReducer;
     const { application, clusters } = state.applicationReducer;
     const {isNew=false, groupId='' } = newAsset;
+
+    if (ownProps.selectedAsset)  selectedAsset = ownProps.selectedAsset;
+    
     return {
       user,
       selectedAsset,
