@@ -34,7 +34,7 @@ const dispatchAction = (action,data) =>  parentPort.postMessage({ action, data }
         const wuResult = await hpccUtil.workunitInfo(jobExecution.wuid, jobExecution.clusterId).catch(error =>{
           logToConsole(`❌  FAILED TO GET INFO ABOUT "${jobExecution.job.name}" - ${jobExecution.wuid} FROM HPCC`);
           logToConsole(error);
-        return { Workunit: { State: "failed" ,Jobname : jobExecution.job.name } }
+          return { Workunit: { State: "error" ,Jobname : jobExecution.job.name } }
         });
         const WUstate = wuResult.Workunit.State;
 
@@ -51,7 +51,7 @@ const dispatchAction = (action,data) =>  parentPort.postMessage({ action, data }
 
             if(jobExecution.dataValues?.dataflowId){ // If job part of workflow build a URL
                   dataflow = await Dataflow.findOne({ where: { id: jobExecution.dataValues?.dataflowId } });
-                  workFlowURL = `${process.env.WEB_URL}${dataflow.application_id}/dataflowinstances/dataflowInstanceDetails/${dataflow.id}/${jobExecution.jobExecutionGroupId}`
+                  workFlowURL = `${process.env.WEB_URL}/${dataflow.application_id}/dataflowinstances/dataflowInstanceDetails/${dataflow.id}/${jobExecution.jobExecutionGroupId}`
             }
              
             if(WUstate === 'completed'){
@@ -62,7 +62,7 @@ const dispatchAction = (action,data) =>  parentPort.postMessage({ action, data }
                 console.log('Job completed part of a workflow - No notification set at workflow level. User will be notified if notification is set at job level', )
                 console.log('------------------------------------------');
                 await workflowUtil.notifyJobExecutionStatus({ jobId: jobExecution.jobId, clusterId: jobExecution.clusterId, wuid: jobExecution.wuid, WUstate, wuURL, cluster, workFlowURL })
-              }else{ //Job not a part of workflow
+              }else if(!dataflow){ //Completed Job not a part of workflow
                 console.log('------------------------------------------');
                 console.log('Job completed not a part of a workflow (INDEPENDENT). User will be notified if notification is set at job level', )
                 console.log('------------------------------------------');

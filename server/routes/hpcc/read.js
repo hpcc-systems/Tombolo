@@ -105,7 +105,7 @@ router.post('/querysearch', [
 
 router.post('/jobsearch', [
   body('keyword')
-    .matches(/^[a-zA-Z]{1}[a-zA-Z0-9_:.\-]*$/).withMessage('Invalid keyword')
+    .matches(/^[a-zA-Z]{1}[a-zA-Z0-9_: .\-]*$/).withMessage('Invalid keyword')
 ], function (req, res) {
 	const errors = validationResult(req).formatWith(validatorUtil.errorFormatter);
   if (!errors.isEmpty()) {
@@ -715,7 +715,7 @@ io.of("/landingZoneFileUpload").on("connection", (socket) => {
 				auth : hpccUtil.getClusterAuth(selectedCluster),
 				formData : {
 					'UploadedFiles[]' : {
-						value : filePath,
+						value : fs.createReadStream(filePath),
 						options : {
 							filename : fileName,
 						}

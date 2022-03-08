@@ -2,7 +2,8 @@ import React, { useState } from 'react';
 
 import RadioButtons from './RadioButtons';
 import TextAreaField from './TextAreaField';
-import RecipientsList from './RecipientsList';
+import UserSearch from '../../../common/UserSearch';
+import { formItemLayoutWithOutLabel, formItemLayout } from '../../../common/CommonUtil';
 
 const Notifications = ({ enableEdit, formRef }) => {
   const [showDetails, setShowDetails] = useState(false);
@@ -39,7 +40,11 @@ const Notifications = ({ enableEdit, formRef }) => {
       )}
 
       {notifyStatus !== 'Never' &&
-        <RecipientsList {...commonProps} />
+        <UserSearch 
+         {...commonProps}
+        layout={formItemLayout} 
+        noLabelLayout={formItemLayoutWithOutLabel}
+        />
       }
     </>
   );

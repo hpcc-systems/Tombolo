@@ -6,10 +6,6 @@ import debounce from 'lodash/debounce';
 import {authHeader} from '../common/AuthHeader'
 
 const { Option } = Select;
-const noLabelLayout = {
-  // labelCol: { span: 3 },
-  wrapperCol: { offset: 3 },
-};
 
 const groupedOption = (mainText, supportText) =>{
     return (
@@ -20,7 +16,7 @@ const groupedOption = (mainText, supportText) =>{
     )
 }
 
-function UserSearch({layout, enableEdit, showDetails}) {
+function UserSearch({layout, noLabelLayout, enableEdit, showDetails}) {
     const [searchingUser, setSearchingUser] = useState(false);
     const [searchResults, setSearchResults] = useState([]);
 
@@ -71,6 +67,7 @@ function UserSearch({layout, enableEdit, showDetails}) {
                         key={field.key}
                         required={enableEdit}
                         label={index === 0 ? 'Recipients' : ''}
+                        labelAlign='left'
                         validateTrigger={'onBlur'}
                         {...(index === 0 ? layout : noLabelLayout)}
 

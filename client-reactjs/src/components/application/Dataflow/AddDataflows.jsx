@@ -14,6 +14,9 @@ const formLayout = {
   wrapperCol: { span: 21 },
 };
 
+const noLabelLayout = {
+  wrapperCol: { offset: 3 },
+};
 // Var set outside, so change in these vars does not re-render component
 let selectedCluster = {};
 
@@ -254,7 +257,7 @@ function AddDataflow({ modalVisible, setModalVisibility, dataflowToEdit, setData
              </Form.Item>
           ) : null}
 
-          {notifyStatus !== 'Never' ? <UserSearch enableEdit={enableEdit} layout={formLayout} showDetails={showDetails}/> : null}
+          {notifyStatus !== 'Never' ? <UserSearch enableEdit={enableEdit} layout={formLayout} showDetails={showDetails} noLabelLayout={noLabelLayout}/> : null}
         </> : null}
         </Form>
       </Modal>
