@@ -5,6 +5,7 @@ var request = require('request');
 var requestPromise = require('request-promise');
 const hpccUtil = require('../../utils/hpcc-util');
 const assetUtil = require('../../utils/assets');
+const {encryptString} = require('../../utils/cipher')
 const validatorUtil = require('../../utils/validator');
 var models  = require('../../models');
 var Cluster = models.cluster;
@@ -66,8 +67,10 @@ router.post('/filesearch', [
 			res.status(500).send({"success":"false", "message": "Error occured during search."});
 		}
   }).catch(err => {
-  	console.log('Cluster not reachable: '+JSON.stringify(err));
-  	res.status(500).send({"success":false , "message": "Search failed. Please check if the cluster is running."});
+	console.log('------------------------------------------');
+	console.log('Cluster not reachable', +JSON.stringify(err) )
+	console.log('------------------------------------------');
+  	res.status(500).send({"success":"false", "message": "Search failed. Please check if the cluster is running."});
   });
 });
 
@@ -103,15 +106,15 @@ router.post('/querysearch', [
     	res.status(500).send({"success":"false", "message": "Search failed. Error occured while querying."});
     });
 	}).catch(err => {
-  	console.log('Cluster not reachable: '+JSON.stringify(err));
-  	res.status(500).send({"success":"false", "message": "Search failed. Please check if the cluster is running."});
+  	  	console.log('Cluster not reachable: '+JSON.stringify(err));
+  		res.status(500).send({"success":"false", "message": "Search failed. Please check if the cluster is running."});
   });
 });
 
 
 router.post('/jobsearch', [
   body('keyword')
-    .matches(/^[a-zA-Z]{1}[a-zA-Z0-9_:.\-]*$/).withMessage('Invalid keyword')
+    .matches(/^[a-zA-Z]{1}[a-zA-Z0-9_: .\-]*$/).withMessage('Invalid keyword')
 ], function (req, res) {
 	const errors = validationResult(req).formatWith(validatorUtil.errorFormatter);
   if (!errors.isEmpty()) {
@@ -211,7 +214,7 @@ router.post('/newcluster', [
     			 "roxie_host":cluster[0].roxie, "roxie_port":cluster[0].roxie_port};
     			if (req.body.username && req.body.password) {
     				newCluster.username = req.body.username;
-    				newCluster.hash = crypto.createCipher(algorithm, process.env['cluster_cred_secret']).update(req.body.password,'utf8','hex');
+					newCluster.hash= encryptString(req.body.password);
     			}
     			console.log(req.body.id);
     			if(req.body.id == undefined || req.body.id == "") {

@@ -1,43 +1,42 @@
-import React, {Component} from 'react';
-import {Button, Tabs, Spin, Space} from 'antd/lib';
-import {withRouter} from 'react-router-dom';
-import {Graph} from '../Dataflow/Graph';
+import React, { Component } from 'react';
+import { Button, Tabs, Spin, Space } from 'antd/lib';
 import JobExecutionDetails from './JobExecutionDetails';
 import ManualJobsStatus from './ManualJobsStatus';
-import {connect} from 'react-redux';
-import {authHeader, handleError} from '../../common/AuthHeader.js';
-import {Resizable} from 're-resizable';
-const {TabPane} = Tabs;
+import { connect } from 'react-redux';
+import { authHeader, handleError } from '../../common/AuthHeader.js';
+import { Resizable } from 're-resizable';
+import GraphX6 from '../Graph/GraphX6';
+const { TabPane } = Tabs;
 
 class DataflowInstanceDetails extends Component {
-  constructor(props) {
-    super(props);
-  }
-
   state = {
-    jobExecutionDetails: {},
     loading: false,
     graphSize: {
       width: '100%',
-      height: 400,
+      height: 200,
     },
+    statuses: [],
+    jobExecutionDetails: {},
     jobExecutionTableFilters: {},
-    selectedJobExecutionGroup : ''
+    selectedJobExecutionGroup: '',
   };
 
   componentDidMount() {
     this.getJobExecutionDetails();
     const LSGraphHeight = JSON.parse(localStorage.getItem('graphSize'));
     if (LSGraphHeight) {
-      this.setState({graphSize: {height: LSGraphHeight}});
+      this.setState({ graphSize: { height: LSGraphHeight } });
     }
   }
 
   getJobExecutionDetails = () => {
+    const applicationId = this.props.application.applicationId || this.props.history.location.pathname.split("/")[1];
+    const dataflowId = this.props.dataflowId || this.props.history.location.pathname.split("/")[4]
+
     this.setState({
       loading: true,
     });
-    fetch('/api/job/jobExecutionDetails?dataflowId=' + this.props.dataflowId + '&applicationId=' + this.props.application.applicationId, {
+    fetch('/api/job/jobExecutionDetails?dataflowId=' + dataflowId + '&applicationId=' + applicationId, {
       headers: authHeader(),
     })
       .then((response) => {
@@ -47,7 +46,7 @@ class DataflowInstanceDetails extends Component {
         handleError(response);
       })
       .then((data) => {
-        let jobExecutionDetails = {wuDetails: data};
+        let jobExecutionDetails = { wuDetails: data };
         this.setState({
           jobExecutionDetails: jobExecutionDetails,
           loading: false,
@@ -60,89 +59,108 @@ class DataflowInstanceDetails extends Component {
 
   //Manage job execution table filters
   manageJobExecutionFilters = (data) => {
-    this.setState({jobExecutionTableFilters: data});
+    this.setState({ jobExecutionTableFilters: data });
   };
 
   //Set selected Job Execution group
   setSelectedJobExecutionGroup = (id) => {
-    this.setState({selectedJobExecutionGroup : id})
-  }
-
+    const statuses = this.state.jobExecutionDetails?.wuDetails.reduce((acc, el) => {
+      if (el.jobExecutionGroupId === id) {
+        acc.push({ status: el.status, assetId: el.task });
+      }
+      return acc;
+    }, []);
+    this.setState({ selectedJobExecutionGroup: id, statuses });
+  };
 
   render() {
-    console.log(this.state)
-    //if(this.props.dataflowId == undefined || this.props.applicationId == undefined)
     if (!this.props.application || !this.props.application.applicationId) return null;
     return (
       <React.Fragment>
-        <Resizable
-          style={{border: '2px solid #ddd', borderRadius: '5px', overflow: 'hidden'}}
-          enable={{bottom: true}}
-          size={{width: this.state.graphSize.width, height: this.state.graphSize.height}}
-          onResizeStop={(e, direction, ref, d) => {
-            const newHeight = this.state.graphSize.height + d.height;
-            this.setState({graphSize: {height: newHeight}});
-            localStorage.setItem('graphSize', JSON.stringify(newHeight));
-          }}>
-          <Graph
-            applicationId={this.props.applicationId}
-            viewMode={true}
-            selectedDataflow={{id: this.props.dataflowId}}
-            workflowDetails={this.state.jobExecutionDetails}
-            graphContainer="graph"
-            sidebarContainer="sidebar"
-            selectedJobExecutionGroup= {this.state.selectedJobExecutionGroup}
-          />
-        </Resizable>
-
-        <Tabs
-          type="card"
-          tabBarExtraContent={
-            <Space size={'small'} style={{ marginBottom: '10px' }}>
-              <Button type="primary" disabled={Object.keys(this.state.jobExecutionTableFilters).length < 1} onClick={() => this.manageJobExecutionFilters({})} ghost>
-                Clear all Filters
-              </Button>
-              <Button type="primary" onClick={this.getJobExecutionDetails}>
-                Refresh Records
-              </Button>
-            </Space>
-          }
-          style={{ padding: '10px' }}
+        <div
+          style={{
+            position: 'relative',
+            width: '100%',
+            height: '100%',
+            display: 'flex',
+            flexDirection: 'column',
+            justifyContent: 'flex-end',
+          }}
         >
-          <TabPane tab="Workunits" key="1">
-            <Spin spinning={this.state.loading}>
-              <JobExecutionDetails
-                refreshData={this.getJobExecutionDetails}
-                workflowDetails={this.state.jobExecutionDetails}
-                graphSize={this.state.graphSize}
-                manageJobExecutionFilters = {this.manageJobExecutionFilters}
-                setSelectedJobExecutionGroup = { this.setSelectedJobExecutionGroup}
-                jobExecutionTableFilters = { this.state.jobExecutionTableFilters}
-                selectedJobExecutionGroup = { this.state.selectedJobExecutionGroup}
-              />
-            </Spin>
-          </TabPane>
-          <TabPane tab="Manual Jobs" key="2">
-            <Spin spinning={this.state.loading}>
-              <ManualJobsStatus
-                refreshData={this.getJobExecutionDetails}
-                workflowDetails={this.state.jobExecutionDetails}
-                graphSize={this.state.graphSize}
-                manageJobExecutionFilters={this.manageJobExecutionFilters}
-                jobExecutionTableFilters = { this.state.jobExecutionTableFilters}
-              />
-            </Spin>
-          </TabPane>
-        </Tabs>
+          <div style={{ position: 'absolute', top: 0, bottom: 0, right: 0, left: 0 }}>
+            <GraphX6 readOnly={true} statuses={this.state.statuses} />
+          </div>
+
+          <Resizable
+            style={{
+              overflow: 'hidden',
+              borderRadius: '5px',
+              border: '2px solid #ddd',
+              backgroundColor: 'white',
+            }}
+            enable={{ top: true }}
+            size={{ width: this.state.graphSize.width, height: this.state.graphSize.height }}
+            onResizeStop={(e, direction, ref, d) => {
+              const newHeight = this.state.graphSize.height + d.height;
+              this.setState({ graphSize: { height: newHeight } });
+              localStorage.setItem('graphSize', JSON.stringify(newHeight));
+            }}
+          >
+            <Tabs
+              type="card"
+              tabBarExtraContent={
+                <Space size={'small'} style={{ marginBottom: '10px' }}>
+                  <Button
+                    type="primary"
+                    disabled={Object.keys(this.state.jobExecutionTableFilters).length < 1}
+                    onClick={() => this.manageJobExecutionFilters({})}
+                    ghost
+                  >
+                    Clear all Filters
+                  </Button>
+                  <Button type="primary" onClick={this.getJobExecutionDetails}>
+                    Refresh Records
+                  </Button>
+                </Space>
+              }
+              style={{ padding: '10px' }}
+            >
+              <TabPane tab="Workunits" key="1">
+                <Spin spinning={this.state.loading}>
+                  <JobExecutionDetails
+                    refreshData={this.getJobExecutionDetails}
+                    workflowDetails={this.state.jobExecutionDetails}
+                    graphSize={this.state.graphSize}
+                    manageJobExecutionFilters={this.manageJobExecutionFilters}
+                    setSelectedJobExecutionGroup={this.setSelectedJobExecutionGroup}
+                    jobExecutionTableFilters={this.state.jobExecutionTableFilters}
+                    selectedJobExecutionGroup={this.state.selectedJobExecutionGroup}
+                  />
+                </Spin>
+              </TabPane>
+              <TabPane tab="Manual Jobs" key="2">
+                <Spin spinning={this.state.loading}>
+                  <ManualJobsStatus
+                    refreshData={this.getJobExecutionDetails}
+                    workflowDetails={this.state.jobExecutionDetails}
+                    graphSize={this.state.graphSize}
+                    manageJobExecutionFilters={this.manageJobExecutionFilters}
+                    jobExecutionTableFilters={this.state.jobExecutionTableFilters}
+                  />
+                </Spin>
+              </TabPane>
+            </Tabs>
+          </Resizable>
+        </div>
       </React.Fragment>
     );
   }
 }
 
 function mapStateToProps(state) {
-  const {user} = state.authenticationReducer;
-  const {application, selectedTopNav} = state.applicationReducer;
-  const {applicationId, dataflowId} = state.dataflowReducer;
+  const { user } = state.authenticationReducer;
+  const { application, selectedTopNav } = state.applicationReducer;
+  const { applicationId, dataflowId } = state.dataflowReducer;
   return {
     user,
     application,
@@ -152,5 +170,5 @@ function mapStateToProps(state) {
   };
 }
 
-const connectedDataflowInstances = connect(mapStateToProps)(withRouter(DataflowInstanceDetails));
-export {connectedDataflowInstances as DataflowInstanceDetails};
+const connectedDataflowInstances = connect(mapStateToProps)(DataflowInstanceDetails);
+export { connectedDataflowInstances as DataflowInstanceDetails };

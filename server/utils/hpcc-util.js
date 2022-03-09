@@ -3,10 +3,12 @@ const path = require('path');
 var requestPromise = require('request-promise');
 var models  = require('../models');
 var Cluster = models.cluster;
+const Dataflow_cluster_credentials = models.dataflow_cluster_credentials;
 const { GHCredentials } = require('../models')
 let hpccJSComms = require("@hpcc-js/comms");
 const crypto = require('crypto');
 let algorithm = 'aes-256-ctr';
+const {decryptString } = require('./cipher')
 
 const debug = require('debug');
 const simpleGit = require('simple-git');
@@ -328,7 +330,31 @@ exports.getJobInfo = (clusterId, jobWuid, jobType) => {
   });
 }
 
-exports.getJobWuDetails = (clusterId, jobName) => {
+exports.getJobWuDetails = async(clusterId, jobName, dataflowId) => {
+  if(dataflowId){ // if dataflow ID is present- you know the job is a part of a workflow
+    let clusterCredentials = await Dataflow_cluster_credentials.findOne({where : { dataflow_id : dataflowId}, include : [Cluster] });
+    const {thor_host, thor_port} = clusterCredentials.cluster.dataValues
+    return new Promise((resolve, reject) => {
+      let clusterAuth = {user : clusterCredentials.cluster_username, 
+        password : decryptString(clusterCredentials.cluster_hash)
+      }
+      let wuService = new hpccJSComms.WorkunitsService({ baseUrl: thor_host + ':' + thor_port, userID: clusterAuth.user,  password:clusterAuth.password});
+      wuService.WUQuery({"Jobname":jobName, "PageSize":1, "PageStartFrom":0}).then((response) => {
+        if(response.Workunits
+          && response.Workunits.ECLWorkunit
+          && response.Workunits.ECLWorkunit.length > 0) {
+          //return the first wuid assuming that is the latest one
+          resolve({wuid: response.Workunits.ECLWorkunit[0].Wuid, cluster: response.Workunits.ECLWorkunit[0].Cluster});
+        } else {
+          resolve(null);
+        }
+      }).catch(err => {
+        console.log(err);
+        reject(err)
+      })
+  })
+
+  }else{ // If dataflow id is undefined - it means the job is not a part of a workflow
   return new Promise((resolve, reject) => {
     module.exports.getCluster(clusterId).then(function(cluster) {
       let clusterAuth = module.exports.getClusterAuth(cluster);
@@ -348,9 +374,25 @@ exports.getJobWuDetails = (clusterId, jobName) => {
       })
     })
   })
+  }
+
 }
 
-exports.resubmitWU = (clusterId, wuid, wucluster) => {
+exports.resubmitWU = async (clusterId, wuid, wucluster, dataflowId) => {
+  let cluster_auth;
+  
+  if(dataflowId){
+    try{
+    const clusterCred = await Dataflow_cluster_credentials.findOne({where : { dataflow_id : dataflowId}, include : [Cluster] });
+    cluster_auth = {
+      user : clusterCred.dataValues.cluster_username,
+      password : decryptString(clusterCred.dataValues.cluster_hash)
+    }
+  }catch(error){
+    console.log(error)
+  }
+  }
+
   return new Promise(async (resolve, reject) => {
     try {
       let body = {
@@ -364,7 +406,7 @@ exports.resubmitWU = (clusterId, wuid, wucluster) => {
       let cluster = await module.exports.getCluster(clusterId);
       request.post({
         url: cluster.thor_host + ':' + cluster.thor_port +'/WsWorkunits/WURun.json?ver_=1.8',
-        auth : module.exports.getClusterAuth(cluster),
+        auth : dataflowId ? cluster_auth :module.exports.getClusterAuth(cluster),
         body: JSON.stringify(body),
         headers: {'content-type' : 'application/json'},
       }, function(err, response, body) {
@@ -372,9 +414,15 @@ exports.resubmitWU = (clusterId, wuid, wucluster) => {
           console.log('ERROR - ', err);
           reject(err);
         } else {
-          var result = JSON.parse(body);
-          //console.log(result);
-          resolve(result)
+          try{ // If access denied - a response is a staring not parsable, ∴ doing this check
+             const result = JSON.parse(body);
+             resolve(result)
+          }catch (err){
+            if(body.indexOf('Access Denied') > -1){
+              reject('Access Denied -- Valid username and password required!')
+              console.log(err)
+            }
+          }
         }
       });
     } catch(err) {
@@ -499,30 +547,37 @@ exports.getCluster = (clusterId) => {
         throw new Error("Cluster not reachable...");
       }
       if(cluster.hash) {
-        cluster.hash = crypto.createDecipher(algorithm,process.env['cluster_cred_secret']).update(cluster.hash,'hex','utf8');
+        cluster.hash = decryptString(cluster.hash)
       }
-      let isReachable = await module.exports.isClusterReachable(cluster.thor_host, cluster.thor_port, cluster.username, cluster.password);
-      if(isReachable)	 {
+
+      let isReachable = await module.exports.isClusterReachable(cluster.thor_host, cluster.thor_port, cluster.username, cluster.hash);
+      const{ reached, statusCode} = isReachable;
+      if(reached && statusCode === 200)	 {
         resolve(cluster);
-      } else {
+      } else if(reached && statusCode === 403){
+        reject('Invalid cluster credentials')
+      } else{
         reject("Cluster not reachable...")
-        //throw new Error("Cluster not reachable...");
-      }      
+      }    
     } catch(err) {
       console.log("Error occured while getting Cluster info....."+err);
       reject(err);
     }
   })
-	
 }
 
-exports.isClusterReachable = async (clusterHost, port, username, password) => {
-	let auth = null;
-	if(username && password) {
-		auth = {};
-		auth.user = username,
-		auth.password = password
-	}
+/*
+response :  undefined -> cluster not reached network issue or cluster not available
+response.status : 200 -> Cluster reachable 
+response.status : 401 -> Unauthorized
+*/
+
+exports.isClusterReachable =  (clusterHost, port, username, password) => {
+    let auth = {
+      user : username || '',
+      password: password || ''
+    }
+
 	return new Promise((resolve, reject) => {
 		request.get({
 		  url:clusterHost+":"+port,
@@ -530,11 +585,13 @@ exports.isClusterReachable = async (clusterHost, port, username, password) => {
 		  timeout: 3000
 		},
 		function (error, response, body) {
-	    if (!error && response.statusCode == 200) {
-	      resolve(true);
-	    } else {
-	    	console.log(error);
-	    	resolve(false);
+	    if (!error && response.statusCode === 200) {
+	      resolve({reached :true, statusCode : 200});
+	    }else if(!error && response.statusCode === 401){
+        resolve({reached :true, statusCode : 403})
+      }
+      else {
+	    	resolve({reached :false, statusCode : 503});
 	    }
 	  })
 	});
@@ -562,6 +619,19 @@ exports.getWorkunitsService = async (clusterId) =>{
  }
 
  return new hpccJSComms.WorkunitsService(connectionSettings);
+}
+
+exports.getDFUService = async (clusterId) =>{
+  const cluster = await module.exports.getCluster(clusterId);
+  const clusterAuth =  module.exports.getClusterAuth(cluster);
+
+ const connectionSettings= {
+   baseUrl: cluster.thor_host + ':' + cluster.thor_port,
+   userID: clusterAuth ? clusterAuth.user : "",
+   password: clusterAuth ? clusterAuth.password : ""
+ }
+
+  return new hpccJSComms.DFUService(connectionSettings);
 }
 
 exports.createWorkUnit = async (clusterId,WUbody = {}) =>{
@@ -655,8 +725,8 @@ exports.pullFilesFromGithub = async (jobName = '', clusterId, gitHubFiles) => {
     if (credsId) {
       const credentials = await GHCredentials.findOne({ where:{ id: credsId }});
       if (credentials) {
-        GHUsername = crypto.createDecipher(algorithm, process.env.cluster_cred_secret).update(credentials.GHUsername,'hex','utf8');
-        GHToken = crypto.createDecipher(algorithm, process.env.cluster_cred_secret).update(credentials.GHToken,'hex','utf8');
+        GHUsername = decryptString(credentials.GHUsername)
+        GHUsername = decryptString(credentials.GHToken)
       }
     }
 

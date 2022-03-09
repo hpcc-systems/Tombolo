@@ -9,7 +9,7 @@ import { DeleteOutlined, EyeOutlined, QuestionCircleOutlined } from '@ant-design
 import useModal from '../../../hooks/useModal';
 
 
-function DataflowTable({data, applicationId, onSelectDataflow, onDataFlowUpdated, onDataFlowEdit}) {
+function DataflowTable({data, applicationId, onSelectDataflow, onDataFlowUpdated, onEditDataFlow}) {
   const [selectedRowKeys, setSelectedRowKeys] = useState([]);
 
   useEffect(() => {
@@ -32,9 +32,7 @@ function DataflowTable({data, applicationId, onSelectDataflow, onDataFlowUpdated
     }
   }
 
-  const handleEditDataflow = (selectedDataflow) => {
-    onDataFlowEdit(selectedDataflow, "read");
-  }
+ 
 
   const handleDataflowDelete = (id) => {
     fetch('/api/dataflow/delete', {
@@ -97,7 +95,7 @@ function DataflowTable({data, applicationId, onSelectDataflow, onDataFlowUpdated
     className: editingAllowed ? "show-column" : "hide-column",
     render: (text, record) =>
       <span>
-        <a onClick={(row) => handleEditDataflow(record)}><Tooltip placement="right" title={"Edit Dataflow"}><EyeOutlined /></Tooltip></a>
+        <a onClick={(row) => onEditDataFlow(record)}><Tooltip placement="right" title={"Edit Dataflow"}><EyeOutlined /></Tooltip></a>
         <Divider type="vertical" />
         <Popconfirm title="Are you sure you want to delete this Dataflow and it's associated graph?" onConfirm={() => handleDataflowDelete(record.id)} icon={<QuestionCircleOutlined/>}>
           <a href="#"><Tooltip placement="right" title={"Delete Dataflow"}><DeleteOutlined /></Tooltip></a>

@@ -3,17 +3,14 @@ import { store } from "../../redux/store/Store";
 import { Constants } from "../common/Constants";
 import ReactMarkdown from "react-markdown";
 import {
-  Modal,
   Tabs,
   Form,
   Input,
   Select,
   Button,
-  Table,
   AutoComplete,
   Tag,
   message,
-  Drawer,
   Row,
   Col,
   Spin,
@@ -39,9 +36,11 @@ import { assetsActions } from "../../redux/actions/Assets";
 import Paragraph from "antd/lib/skeleton/Paragraph";
 import { viewOnlyModeReducer } from "../../redux/reducers/ViewOnlyModeReducer";
 import { readOnlyMode, editableMode } from "../common/readOnlyUtil";
+import DeleteAsset from "../common/DeleteAsset";
+import SuperFileMeta from "../common/SuperFileMeta";
+
 const TabPane = Tabs.TabPane;
 const Option = Select.Option;
-const { confirm } = Modal;
 const layoutGrid = undefined;
 const { TextArea } = Input;
 message.config({ top: 130 });
@@ -210,6 +209,7 @@ class FileDetails extends PureComponent {
                 //For read only option
                 description: data.basic.description,
                 isSuperFile: data.basic.isSuperFile,
+                superFileData: data.basic.superFileData,
                 supplier: data.basic.supplier,
                 consumer: data.basic.consumer,
                 owner: data.basic.owner,
@@ -310,8 +310,8 @@ class FileDetails extends PureComponent {
     try {
       const values = await this.formRef.current.validateFields();
       let saveResponse = await _self.saveFileDetails();
-      if(this.props.onAssetSaved) {
-        this.props.onAssetSaved(saveResponse);
+      if(this.props.onClose) {
+        this.props.onClose(saveResponse);
       }
       // setTimeout(() => {
         _self.setState({
@@ -336,45 +336,40 @@ class FileDetails extends PureComponent {
 
   // Tests
   handleDelete = () => {
-    let _self = this;
-    confirm({
-      title: "Delete file?",
-      content: "Are you sure you want to delete this file?",
-      onOk() {
-        var data = JSON.stringify({
-          fileId: _self.props.selectedAsset,
-          application_id: _self.props.application.applicationId,
-        });
-        fetch("/api/file/read/delete", {
-          method: "post",
-          headers: authHeader(),
-          body: data,
-        })
-          .then((response) => {
-            if (response.ok) {
-              return response.json();
-            }
-            handleError(response);
-          })
-          .then((result) => {
-            //if called from Graph.js
-            if (_self.props.onDelete) {
-              _self.props.onDelete(_self.props.currentlyEditingNode);
-            } else {
-              _self.props.onRefresh();
-            }
-            message.success("File deleted sucessfully");
-            _self.setState({
-              visible: false,
-              confirmLoading: false,
-            });
-          })
-          .catch((error) => {
-            console.log(error);
-            message.error("There was an error deleting the file");
-          });
-      },
-      onCancel() {},
+    console.log('this.props----------------------------------------');
+    console.dir(this.props, { depth: null });
+    console.log('------------------------------------------');
+    
+  fetch("/api/file/read/delete", {
+    method: "post",
+    headers: authHeader(),
+    body: JSON.stringify({
+      fileId: this.props.selectedAsset.id,
+      application_id: this.props.application.applicationId,
+    })
+  })
+    .then((response) => {
+      if (response.ok) {
+        return response.json();
+      }
+      handleError(response);
+    })
+    .then((result) => {
+      //if called from Graph.js
+      if (this.props.onDelete) {
+        this.props.onDelete(this.props.currentlyEditingNode);
+      } else {
+        this.props.history.push( "/" + this.props.application.applicationId + "/assets" );
+      }
+      message.success("File deleted successfully");
+      this.setState({
+        visible: false,
+        confirmLoading: false,
+      });
+    })
+    .catch((error) => {
+      console.log(error);
+      message.error("There was an error deleting the file");
     });
   };
 
@@ -1194,8 +1189,10 @@ class FileDetails extends PureComponent {
       isSuperFile,
       layout,
       validations,
-      inheritedLicensing
+      inheritedLicensing,
+     superFileData
     } = this.state.file;
+    
     const selectedCluster = this.state.clusters.filter(
       (cluster) => cluster.id == this.props.clusterId
     );
@@ -1254,14 +1251,16 @@ class FileDetails extends PureComponent {
       {this.state.editing ? (<Button onClick={switchToViewOnly}   style={{marginRight: "5px"}}> View Changes </Button>) : null}
         {this.state.enableEdit ? (
           <span>
-            <Button
-              key="danger"
-              disabled={!this.state.file.id || !editingAllowed}
-              type="danger"
-              onClick={this.handleDelete}
-            >
-              Delete
-            </Button>
+            <DeleteAsset
+              asset={{
+                id: this.state.file.id,
+                type: 'File',
+                title: this.formRef.current.getFieldValue('title') || this.formRef.current.getFieldValue('name')
+              }}
+              style={{ display: 'inline-block' }}
+              onDelete={this.handleDelete}
+              component={<Button key="danger" disabled={!this.state.file.id || !editingAllowed} type="danger" > Delete </Button>}
+            />
             <Button key="back" onClick={this.handleCancel}style={{marginRight: "5px",  marginLeft: "25px"}}>
               Cancel
             </Button>
@@ -1691,6 +1690,8 @@ class FileDetails extends PureComponent {
                   </Col>
                 </Row>
               </Form>
+              {/* SUPERFILE METADATA BLOCK */}
+              { !superFileData ? null : <SuperFileMeta superFileData={superFileData} /> }
             </TabPane>
             <TabPane tab="Layout" key="3">
               <ComplianceInfo tags={complianceTags} />
@@ -1801,12 +1802,15 @@ export class BooleanCellRenderer extends Component {
   }
 }
 
-function mapStateToProps(state) {
-  const { selectedAsset, newAsset = {}, clusterId } = state.assetReducer;
+function mapStateToProps(state, ownProps) {
+  let { selectedAsset, newAsset = {}, clusterId } = state.assetReducer;
   const { user } = state.authenticationReducer;
   const { application, clusters, consumers } = state.applicationReducer;
 
   const { isNew = false, groupId = "" } = newAsset;
+
+  if (ownProps.selectedAsset)  selectedAsset = ownProps.selectedAsset;
+
   return {
     user,
     selectedAsset,

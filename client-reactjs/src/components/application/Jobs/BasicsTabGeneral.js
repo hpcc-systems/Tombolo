@@ -16,6 +16,8 @@ const { Option } = Select;
 function BasicsTabGeneral({ enableEdit, editingAllowed, addingNewAsset, jobType, clearState, onChange, clusters, localState, formRef, applicationId, setJobDetails, onClusterSelection }) {
   const assetReducer = useSelector((state) => state.assetReducer);
 
+  const clusterId = assetReducer.clusterId || formRef.current?.getFieldValue("clusters");
+
   const [search, setSearch] = useState({ loading:false, error:'', data:[] });
   const [job, setJob] = useState({loading: false, disableFields:false });
 
@@ -59,20 +61,33 @@ function BasicsTabGeneral({ enableEdit, editingAllowed, addingNewAsset, jobType,
 
   const onJobSelected =  async (option) => {
     try {
-      const url = `/api/hpcc/read/getJobInfo?jobWuid=${option.key}&jobName=${option.value}&clusterid=${assetReducer.clusterId}&jobType=${jobType}&applicationId=${applicationId}`
+      const url = `/api/hpcc/read/getJobInfo?jobWuid=${option.key}&jobName=${option.value}&clusterid=${clusterId}&jobType=${jobType}&applicationId=${applicationId}`
       setJob(() => ({loading:true, disableFields: false }));
       const respond = await fetch(url, { headers: authHeader() });
       if (!respond.ok) handleError(respond)
       const jobInfo = await respond.json();
       
-      formRef.current.setFieldsValue({ // will update antD form values;
+      const updateFields ={ // will update antD form values;
         name: jobInfo.name,
         title: jobInfo.title,
-        description: jobInfo.description,
         gitRepo: jobInfo.gitRepo,
         ecl: jobInfo.ecl,
         entryBWR: jobInfo.entryBWR,
-      });
+        jobSelected: true, // IF JOB SELECTED THEN ITS NO LONGER DESIGNER JOB!
+      };
+      
+      const title = formRef.current?.getFieldValue('title');
+      const description = formRef.current?.getFieldValue('description');
+      if (description && jobInfo.description){
+        updateFields.description = jobInfo.description + "\n -----------------------\n****ADDED DESCRIPTION****\n -----------------------\n" + description;
+        // Because of the React Markdown we need to update local state of parent component to reflect changes;
+        const event = { target:{ name:"description", value: updateFields.description }};
+        onChange(event)
+      }
+      
+      if (!jobInfo.title) updateFields.title = title || jobInfo.name;
+
+      formRef.current.setFieldsValue(updateFields);
 
       setJobDetails(jobInfo);// will update state in JobDetails;
       
@@ -85,14 +100,18 @@ function BasicsTabGeneral({ enableEdit, editingAllowed, addingNewAsset, jobType,
   };
 
   const resetSearch = () =>{
-    formRef.current.resetFields(['querySearchValue','name','title','entryBWR','ecl', 'gitRepo','description']);
+    formRef.current.resetFields(['querySearchValue','name','entryBWR','ecl', 'gitRepo','jobSelected']);
     setSearch(prev => ({...prev, data:[]}));
     setJob((prev)=>({ ...prev, disableFields:false }))
   }
 
   const filesStoredOnGithub = formRef.current?.getFieldValue('isStoredOnGithub');
-  const hideOnReadOnlyView = !enableEdit || !addingNewAsset;
+  const isAssociated = formRef.current?.getFieldValue('isAssociated'); // this value is assign only at the time of saving job. if it is true - user can not change it.
   
+  let hideOnReadOnlyView = !enableEdit || !addingNewAsset;
+
+  if ( enableEdit && !isAssociated ) hideOnReadOnlyView = false;
+
   return (
     <React.Fragment>
      <Spin spinning={job.loading} tip="loading job details"> 
@@ -100,7 +119,7 @@ function BasicsTabGeneral({ enableEdit, editingAllowed, addingNewAsset, jobType,
         <Row gutter={[8, 8]}>
           <Col span={12}>
             <Form.Item noStyle name="clusters" >
-              <Select placeholder="Select a Cluster" disabled={!editingAllowed} onChange={onClusterSelection}>
+              <Select placeholder="Select a Cluster" disabled={!editingAllowed || !addingNewAsset } onChange={onClusterSelection}>
                 {clusters.map((cluster) => (
                   <Option key={cluster.id}>{cluster.name}</Option>
                 ))}
@@ -128,7 +147,7 @@ function BasicsTabGeneral({ enableEdit, editingAllowed, addingNewAsset, jobType,
               dropdownMatchSelectWidth={false}
               dropdownStyle={{ width: 300 }}
               style={{ width: '100%' }}
-              onSearch={(value) => searchJobs({ searchString: value , clusterId: assetReducer.clusterId })}
+              onSearch={(value) => searchJobs({ searchString: value , clusterId: clusterId})}
               onSelect={(value, option) => onJobSelected(option)}
               placeholder="Search jobs"
               disabled={!editingAllowed}
@@ -161,7 +180,7 @@ function BasicsTabGeneral({ enableEdit, editingAllowed, addingNewAsset, jobType,
         ]}
         className={enableEdit ? null : 'read-only-input'}
       >
-        <Input id="job_name" onChange={onChange} placeholder={enableEdit ? 'Name' : 'Name is not provided'} disabled={!editingAllowed || job.disableFields} />
+        <Input id="job_name" onChange={onChange} placeholder={enableEdit ? 'Name' : 'Name is not provided'} disabled={!editingAllowed || !addingNewAsset || job.disableFields} />
       </Form.Item>
 
       <Form.Item

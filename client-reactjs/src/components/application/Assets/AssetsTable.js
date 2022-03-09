@@ -15,6 +15,7 @@ import { store } from "../../../redux/store/Store";
 import SelectDetailsForPdfDialog from "../Assets/pdf/SelectDetailsForPdfDialog";
 import { getNestedAssets} from "../Assets/pdf/downloadPdf";
 import ReactMarkdown from "react-markdown";
+import DeleteAsset from "../../common/DeleteAsset";
 
 function AssetsTable({ openGroup, handleEditGroup, refreshGroups }) {
   const [assets, setAssets] = useState([]);
@@ -40,7 +41,6 @@ function AssetsTable({ openGroup, handleEditGroup, refreshGroups }) {
   const [selectedAsset, setSelectedAsset] = useState();
   const [toPrintAssets, setToPrintAssets] = useState([])
   const [selectDetailsforPdfDialogVisibility, setSelectDetailsforPdfDialogVisibility] = useState(false);
-
 
   const dispatch = useDispatch();  
   const editingAllowed = hasEditPermission(authReducer.user);
@@ -198,7 +198,7 @@ function AssetsTable({ openGroup, handleEditGroup, refreshGroups }) {
       })
       .then((result) => {
         fetchDataAndRenderTable();
-        if (type == "Group") {
+        if (type === "Group") {
           refreshGroups();
         }
         message.success(type + " deleted successfully");
@@ -377,15 +377,13 @@ function AssetsTable({ openGroup, handleEditGroup, refreshGroups }) {
             <EditOutlined className="asset-action-icon" onClick={() => handleEdit(record.id, record.type, "edit", record.url)}/>
           </Tooltip>
 
-          <Popconfirm
-            title="Deleting an asset will delete their metadata and make them unusable in workflows. Are you sure you want to delete this?"
-            onConfirm={() => handleDelete(record.id, record.type)}
-            icon={<QuestionCircleOutlined />}
-          >
-            <Tooltip placement="right" title={"Delete"}>
-              <DeleteOutlined className="asset-action-icon" />
-            </Tooltip>
-          </Popconfirm>
+          <Tooltip placement="right" title={"Delete"}>
+            <DeleteAsset
+             asset={record} 
+             onDelete={handleDelete} 
+             component={ <DeleteOutlined className="asset-action-icon"  />} 
+             />
+          </Tooltip>
 
           <Tooltip placement="right" title={"Move"}>
             <FolderOpenOutlined className="asset-action-icon" onClick={() => handleMoveAsset( record.id, record.type, record.name, selectedGroup ) } />
@@ -411,7 +409,7 @@ function AssetsTable({ openGroup, handleEditGroup, refreshGroups }) {
             )
             : null}
         </Space>
-      ),
+      )
     },
   ];
 

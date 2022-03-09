@@ -1,5 +1,5 @@
 import React, { PureComponent } from "react";
-import { Modal, Tabs, Form, Input, Icon, Select, Table, AutoComplete, message, Spin, Button, Row, Col } from 'antd/lib';
+import {  Tabs, Form, Input, Icon, Select, Table, AutoComplete, message, Spin, Button, Row, Col } from 'antd/lib';
 import { authHeader, handleError } from "../common/AuthHeader.js"
 import { hasEditPermission } from "../common/AuthUtil.js";
 import { fetchDataDictionary, eclTypes } from "../common/CommonUtil.js"
@@ -15,12 +15,12 @@ import { store } from '../../redux/store/Store';
 import {Constants} from "../common/Constants"
 import ReactMarkdown from 'react-markdown'
 import {readOnlyMode, editableMode} from "../common/readOnlyUtil"
+import DeleteAsset from "../common/DeleteAsset/index.js";
 
 
 
 const TabPane = Tabs.TabPane;
 const Option = Select.Option;
-const { confirm } = Modal;
 message.config({top:130})
 
 class IndexDetails extends PureComponent {
@@ -166,8 +166,8 @@ class IndexDetails extends PureComponent {
     });
 
     let saveResponse = await this.saveIndexDetails();
-    if(this.props.onAssetSaved) {
-      this.props.onAssetSaved(saveResponse);
+    if(this.props.onClose) {
+      this.props.onClose(saveResponse);
     }
     
 
@@ -188,38 +188,29 @@ class IndexDetails extends PureComponent {
   };
 
   handleDelete = () => {
-    let _self=this;
-    confirm({
-      title: 'Delete Index?',
-      content: 'Are you sure you want to delete this Index?',
-      onOk() {
-        var data = JSON.stringify({indexId: _self.props.selectedAsset.id, application_id: _self.props.application.applicationId});
-        fetch("/api/index/read/delete", {
-          method: 'post',
-          headers: authHeader(),
-          body: data
-        }).then((response) => {
-          if(response.ok) {
-            return response.json();
-          }
-          handleError(response);
-        })
-        .then(result => {
-          if(_self.props.onDelete) {
-            _self.props.onDelete(_self.props.currentlyEditingNode);
-          } else {
-            //_self.props.onRefresh();
-            _self.props.history.push('/' + _self.props.application.applicationId + '/assets');
-          }
-          //_self.props.onClose();
-          message.success("Index deleted sucessfully");
-        }).catch(error => {
-          console.log(error);
-          message.error("There was an error deleting the Index file");
-        });
-      },
-      onCancel() {},
+    fetch("/api/index/read/delete", {
+      method: 'post',
+      headers: authHeader(),
+      body: JSON.stringify({indexId: this.props.selectedAsset.id, application_id: this.props.application.applicationId})
+    }).then((response) => {
+      if(response.ok) {
+        return response.json();
+      }
+      handleError(response);
     })
+    .then(result => {
+      if(this.props.onDelete) {
+        this.props.onDelete(this.props.currentlyEditingNode);
+      } else {
+        //this.props.onRefresh();
+        this.props.history.push('/' + this.props.application.applicationId + '/assets');
+      }
+      //this.props.onClose();
+      message.success("Index deleted successfully");
+    }).catch(error => {
+      console.log(error);
+      message.error("There was an error deleting the Index file");
+    });
   }
 
   setClusters() {
@@ -535,7 +526,18 @@ class IndexDetails extends PureComponent {
       {this.state.editing ?  <Button  onClick={switchToViewOnly} > View Changes </Button> : null}
       {this.state.enableEdit ?
         <span className="button-container" >
-          <Button key="danger" type="danger" disabled={!this.state.index.id || !editingAllowed} onClick={this.handleDelete}>Delete</Button>
+
+             <DeleteAsset
+              asset={{
+                id: this.state.index.id,
+                type: 'Index',
+                title: this.formRef.current.getFieldValue('title') || this.formRef.current.getFieldValue('name')
+              }}
+              style={{ display: 'inline-block' }}
+              onDelete={this.handleDelete}
+              component={<Button key="danger" type="danger" disabled={!this.state.index.id || !editingAllowed}>Delete</Button>}
+            />
+          
           <span style={{ marginLeft: "25px"}}>
             <Button key="back" onClick={this.handleCancel} type="primary" ghost>
               Cancel
@@ -763,11 +765,14 @@ class IndexDetails extends PureComponent {
   }
 }
 
-function mapStateToProps(state) {
-    const { selectedAsset, newAsset={}, clusterId } = state.assetReducer;
+function mapStateToProps(state, ownProps) {
+    let { selectedAsset, newAsset={}, clusterId } = state.assetReducer;
     const { user } = state.authenticationReducer;
     const { application, clusters} = state.applicationReducer;
     const {isNew=false, groupId='' } = newAsset;
+
+    if (ownProps.selectedAsset)  selectedAsset = ownProps.selectedAsset;
+    
     return {
       user,
       selectedAsset,

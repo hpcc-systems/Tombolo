@@ -14,7 +14,12 @@ module.exports = (sequelize, DataTypes) => {
     input: DataTypes.STRING,
     output: DataTypes.STRING,
     clusterId: DataTypes.UUIDV4,
-    type: DataTypes.STRING
+    type: DataTypes.STRING,
+    dataFlowClusterCredId : {
+      type: DataTypes.UUIDV4,
+      defaultValue: DataTypes.UUIDV4,
+    },
+    metaData : DataTypes.JSON
   }, {paranoid: true, freezeTableName: true});
   dataflow.associate = function(models) {
     dataflow.hasOne(models.dataflowgraph, {
@@ -42,6 +47,10 @@ module.exports = (sequelize, DataTypes) => {
       as: 'jobs',
       foreignKey: 'dataflowId',
       otherKey: 'assetId'
+    });
+
+    dataflow.hasOne(models.dataflow_cluster_credentials, {
+      foreignKey: 'dataflow_id'
     });
 
   };

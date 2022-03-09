@@ -6,79 +6,95 @@ let Dataflow = models.dataflow;
 let DataflowGraph = models.dataflowgraph;
 let Index = models.indexes;
 let File = models.file;
-let Query = models.query;
 let Job = models.job;
 let DependentJobs = models.dependent_jobs;
 let JobExecution = models.job_execution;
+const Dataflow_cluster_credentials = models.dataflow_cluster_credentials;
 const validatorUtil = require('../../utils/validator');
 const { body, query, validationResult } = require('express-validator');
-const { recordJobExecution } = require('../../utils/assets');
+const jobScheduler = require('../../job-scheduler');
+const {isClusterReachable} = require('../../utils/hpcc-util');
+const {encryptString, decryptString} = require('../../utils/cipher')
 
-router.post('/save', [
-  body('id')
-    .optional({checkFalsy:true})
-    .isUUID(4).withMessage('Invalid dataflow id'),
-  body('application_id')
-    .isUUID(4).withMessage('Invalid application id'),
-  body('clusterId')
-    .isUUID(4).withMessage('Invalid cluster id'),
-], (req, res) => {
+router.post(
+  '/save',
+  [
+    body('id').optional({ checkFalsy: true }).isUUID(4).withMessage('Invalid dataflow id'),
+    body('application_id').isUUID(4).withMessage('Invalid application id'),
+    body('clusterId').isUUID(4).withMessage('Invalid cluster id'),
+  ],
+  async (req, res) => {
     const errors = validationResult(req).formatWith(validatorUtil.errorFormatter);
     if (!errors.isEmpty()) {
       return res.status(422).json({ success: false, errors: errors.array() });
     }
+    //Check if cluster is reachable
+    const { clusterHost, port, id, application_id, title, description, clusterId, metaData } = req.body;
 
-    console.log('dataflow save');
-    var id=req.body.id, application_id=req.body.application_id;
-    let whereClause = (!id || id == '' ? {application_id:req.body.application_id, title: req.body.title} : {id:id});
-    try {
-      Dataflow.findOrCreate({
-        where: whereClause,
-        defaults: {
-          application_id: req.body.application_id,
-          title: req.body.title,
-          type: 'main',
-          description: req.body.description,
-          clusterId: req.body.clusterId
+    const username = req.body.username || '';
+    const password = req.body.password || '';
+    const reachable = await isClusterReachable(clusterHost, port, username, password);
+
+
+    if (reachable.statusCode === 503) {
+      res.status(503).json({ success: false, message: 'Cluster not reachable' });
+    } else if (reachable.statusCode === 403) {
+      res.status(403).json({ success: false, message: 'Invalid cluster credentials' });
+    } else {
+      try {
+        if (id) {
+          // If id is available on req.body -> updating existing workflow
+          const dataFlow = await Dataflow.findOne({ where: { id } });
+          if (dataFlow) {
+            await Dataflow.update(
+              {
+                application_id,
+                title,
+                type: 'main',
+                description,
+                clusterId,
+                metaData,
+              },
+              { where: { id: id } }
+            );
+
+            await Dataflow_cluster_credentials.update(
+              {
+                cluster_id: clusterId,
+                cluster_username: username,
+                cluster_hash: encryptString(password),
+              },
+              { where: { dataflow_id: id } }
+            );
+            res.status(200).json({ success: true, message: 'Dataflow updated' });
+          } else {
+            // send error to front end - could not update no DF found
+            res.status(404).json({ success: false, message: 'Unable to update dataflow - dataflow not found' });
+          }
+        } else {
+          let newDataflow = await Dataflow.create({
+            application_id,
+            title,
+            type: 'main',
+            description,
+            clusterId,
+            metaData,
+          });
+
+          await Dataflow_cluster_credentials.create({
+            dataflow_id: newDataflow.id,
+            cluster_id: clusterId,
+            cluster_username: username,
+            cluster_hash: encryptString(password),
+          });
+          res.status(200).json({ success: true, message: 'Dataflow created successfully' });
         }
-      }).then(async function(result) {
-          id = result[0].id;
-          if(!result[1]) {
-            Dataflow.update({
-	            title: req.body.title,
-	            description: req.body.description,
-                  clusterId: req.body.clusterId
-            }, {where:{id:id, application_id:application_id}}).then((dataflowUpdate) => {
-              /*let promises=[];
-              DataflowGraph.findAll({
-                where: {application_id:application_id}
-              }).then((dataflowGraphs) => {
-                dataflowGraphs.forEach((dataflowGraph) => {
-                  let updatedNodes = JSON.parse(dataflowGraph.nodes).map((node) => {
-                    if(node.subProcessId == id) {
-                      node.title = req.body.title;
-                    }
-                    return node;
-                  })
-                  promises.push(DataflowGraph.update({nodes:JSON.stringify(updatedNodes)}, {where:{application_id: application_id, id: dataflowGraph.id}}));
-                })
-
-                Promise.all(promises).then(() => {
-                  res.json({"result":"success"});
-                })
-              })*/
-              res.json({"result":"success"});
-            })
-         } else {
-          res.json({"result":"success"});
-         }
-      }), function(err) {
-          return res.status(500).send("Error occured while saving Dataflow");
+      } catch (err) {
+        res.status(409).json({ success: false, message: 'Unable to create dataflow' });
       }
-    } catch (err) {
-        console.log('err', err);
     }
-});
+  }
+);
 
 router.post('/saveAsset', (req, res) => {
   AssetDataflow.findOne({
@@ -113,7 +129,8 @@ router.get('/', [
         Dataflow.findAll(
           {
             where:{"application_Id":req.query.application_id},
-            //include: [DataflowGraph],
+            include: {model : Dataflow_cluster_credentials,
+                      attributes: {exclude: ['cluster_hash']}},
             order: [
               ['createdAt', 'DESC']
             ],
@@ -121,56 +138,45 @@ router.get('/', [
             res.json(dataflow);
         })
         .catch(function(err) {
-            console.log(err);
+           res.status(500).json({success: false,  message : 'Unable to fetch dataflows'})
         });
     } catch (err) {
         console.log('err', err);
+        res.status(500).json({success: false,  message : 'Unable to fetch dataflows'})
     }
 });
 
-router.post('/delete', [
-  body('applicationId')
-    .isUUID(4).withMessage('Invalid application_id'),
-  body('dataflowId')
-    .isUUID(4).withMessage('Invalid dataflowId')
-], async (req, res) => {
-  const errors = validationResult(req).formatWith(validatorUtil.errorFormatter);
-  if (!errors.isEmpty()) {
-    return res.status(422).json({ success: false, errors: errors.array() });
-  }
+router.post( '/delete',
+  [
+    body('applicationId').isUUID(4).withMessage('Invalid application_id'),
+    body('dataflowId').isUUID(4).withMessage('Invalid dataflowId'),
+  ],
+  async (req, res) => {
+    const errors = validationResult(req).formatWith(validatorUtil.errorFormatter);
+    if (!errors.isEmpty()) {
+      return res.status(422).json({ success: false, errors: errors.array() });
+    }
 
-  //find all jobs in this dataflow and remove them from scheduler
-  let dataflowGraph = await DataflowGraph.findOne({where: {dataflowId: req.body.dataflowId}});
-  console.log(dataflowGraph);
-  if(dataflowGraph){
-  for(const node of dataflowGraph.nodes) {
-    console.log(node);
-    if(node.type == 'Job' && node.schedulerType == 'Time') {
-      let job = await Job.findOne({where: {id: node.jobId}, attributes: ['name']});
-      console.log("**************************removing "+job.name+" scheduler");
-      await JobScheduler.removeJobFromScheduler(job.name + '-' + req.body.dataflowId + '-' + node.jobId);
+    try {
+      await Promise.all([
+        jobScheduler.removeAllDataflowJobs(req.body.dataflowId),
+        // JobExecution.destroy({ where: { dataflowId: req.body.dataflowId } }), // !! will delete all job executions of this dataflow
+        AssetDataflow.destroy({ where: { dataflowId: req.body.dataflowId } }),
+        DependentJobs.destroy({ where: { dataflowId: req.body.dataflowId } }),
+        Dataflow.destroy({ where: { id: req.body.dataflowId, application_id: req.body.applicationId } }),
+        DataflowGraph.destroy({ where: { dataflowId: req.body.dataflowId, application_id: req.body.applicationId } }),
+      ]);
+
+      res.json({ result: 'success' });
+    } catch (error) {
+      console.log('-error-----------------------------------------');
+      console.dir({ error }, { depth: null });
+      console.log('------------------------------------------');
+      res.status(422).json({ result: false, message: error.message });
     }
   }
-}
+);
 
-  await JobExecution.destroy({where: {dataflowId: req.body.dataflowId}});
-
-  await AssetDataflow.destroy({where: {'dataflowId': req.body.dataflowId}});
-  
-  await DependentJobs.destroy({where: {'dataflowId': req.body.dataflowId}});
-
-  Dataflow.destroy(
-    {where:{"id": req.body.dataflowId, "application_id":req.body.applicationId}}
-  ).then(function(deleted) {
-    DataflowGraph.destroy(
-      {where:{"dataflowId": req.body.dataflowId, "application_id":req.body.applicationId}}
-    ).then(function(deleted) {
-        res.json({"result":"success"});
-    })
-  }).catch(function(err) {
-      console.log(err);
-  });
-});
 
 router.get('/assets', [
   query('app_id')
@@ -287,5 +293,35 @@ router.get('/assets', [
     });
   */
 });
+
+router.get( '/checkAssetDataflows',
+  [query('assetId').isUUID(4).withMessage('Invalid assetId')],
+  async (req, res) => {
+    const errors = validationResult(req).formatWith(validatorUtil.errorFormatter);
+    if (!errors.isEmpty()) return res.status(422).json({ success: false, errors: errors.array() });
+
+    try {
+
+      const assetsInDataflows = await AssetDataflow.findAll({
+         where: { assetId: req.query.assetId },
+         attributes:["dataflowId"]
+        });
+
+      const dataflows = await Dataflow.findAll({
+        where:{ id: assetsInDataflows.map(ad => ad.dataflowId) },
+        attributes:['id','application_id','title']
+      });
+      
+      res.send(dataflows);
+    } catch (error) {
+      console.log('-error-----------------------------------------');
+      console.dir({error}, { depth: null });
+      console.log('------------------------------------------');
+      
+      res.status(500).send('Error occurred while checking asset in dataflows');
+    }
+  }
+);
+
 
 module.exports = router;
