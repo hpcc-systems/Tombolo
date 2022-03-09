@@ -64,8 +64,8 @@ jobs:
       run: |
         touch cluster-whitelist.js
         echo ${{ secrets.CLUSTER_WHITE_LIST }} >> cluster-whitelist.js
-      working-directory: server      
-    
+      working-directory: server
+      
     - name: create env file
       run: |
         touch .env
