@@ -66,6 +66,7 @@ jobs:
         echo ${{ secrets.CLUSTER_WHITE_LIST }} >> cluster-whitelist.js
       working-directory: server
     - name: create env file
+    
       run: |
         touch .env
         echo DB_USERNAME=${{ secrets.DB_USERNAME }} >> .env
