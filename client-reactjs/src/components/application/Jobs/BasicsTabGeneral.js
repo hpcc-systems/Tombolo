@@ -174,7 +174,10 @@ function BasicsTabGeneral({ enableEdit, editingAllowed, addingNewAsset, jobType,
         name="name"
         label="Name"
         validateTrigger="onBlur"
-        rules={[{ required: enableEdit ? true : false, message: 'Please enter the name', pattern: new RegExp(/^[a-zA-Z0-9: ._-]*$/) }]}
+        rules={[
+          {required: enableEdit ? true : false, message: 'Please enter the name'},
+          { pattern: new RegExp(/^[a-zA-Z0-9: .@_-]*$/), message: 'Please enter a valid Title. Title can have  a-zA-Z0-9:._- and space' }
+        ]}
         className={enableEdit ? null : 'read-only-input'}
       >
         <Input id="job_name" onChange={onChange} placeholder={enableEdit ? 'Name' : 'Name is not provided'} disabled={!editingAllowed || !addingNewAsset || job.disableFields} />
@@ -187,7 +190,7 @@ function BasicsTabGeneral({ enableEdit, editingAllowed, addingNewAsset, jobType,
         className={enableEdit ? null : 'read-only-input'}
         rules={[
           { required: enableEdit ? true : false, message: 'Please enter a title!' },
-          { pattern: new RegExp(/^[ a-zA-Z0-9:._-]*$/), message: 'Please enter a valid Title. Title can have  a-zA-Z0-9:._- and space' },
+          { pattern: new RegExp(/^[ a-zA-Z0-9:@._-]*$/), message: 'Please enter a valid Title. Title can have  a-zA-Z0-9:._- and space' },
         ]}
       >
         <Input id="job_title" onChange={onChange} placeholder={enableEdit ? 'Title' : 'Title is not provided'} disabled={!editingAllowed} />

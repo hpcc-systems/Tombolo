@@ -4,6 +4,7 @@ var models  = require('../../models');
 let AssetDataflow = models.assets_dataflows;
 let Dataflow = models.dataflow;
 let DataflowGraph = models.dataflowgraph;
+let Cluster = models.cluster;
 let Index = models.indexes;
 let File = models.file;
 let Job = models.job;
@@ -28,9 +29,18 @@ router.post(
     if (!errors.isEmpty()) {
       return res.status(422).json({ success: false, errors: errors.array() });
     }
-    //Check if cluster is reachable
-    const { clusterHost, port, id, application_id, title, description, clusterId, metaData } = req.body;
+  const { id, application_id, title, description, clusterId, metaData } = req.body;
+    // Get cluster port and host
+    let clusterHost, port;
+    try{
+      let cluster =  await Cluster.findOne({where : {id : clusterId}});
+      clusterHost = cluster.thor_host;
+      port = cluster.thor_port
+    }catch(err){
+      console.log(err)
+    }
 
+    //Check if cluster is reachable
     const username = req.body.username || '';
     const password = req.body.password || '';
     const reachable = await isClusterReachable(clusterHost, port, username, password);

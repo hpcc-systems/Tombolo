@@ -11,6 +11,7 @@ let FileLayout = models.file_layout;
 let FileValidation = models.file_validation;
 let DataflowGraph = models.dataflowgraph;
 let Dataflow = models.dataflow;
+const FileTemplate = models.fileTemplate;
 let AssetDataflow = models.assets_dataflows;
 let DependentJobs = models.dependent_jobs;
 let AssetsGroups = models.assets_groups;
@@ -22,8 +23,6 @@ const workFlowUtil = require('../../utils/workflow-util');
 const validatorUtil = require('../../utils/validator');
 const { body, query, param, validationResult } = require('express-validator');
 const assetUtil = require('../../utils/assets');
-const crypto = require('crypto');
-const algorithm ='aes-256-ctr';
 
 const SUBMIT_JOB_FILE_NAME = 'submitJob.js';
 const SUBMIT_SPRAY_JOB_FILE_NAME = 'submitSprayJob.js'
@@ -685,6 +684,36 @@ router.get('/job_details', [
           }
         }
 
+        // Check if input and output files have matching file templates - wrap in try catch
+        const templates = await FileTemplate.findAll({
+          where: { cluster_id: job.cluster_id, application_id: req.query.app_id },
+        });
+
+        let fileAndTemplates = [];
+
+        job.jobfiles.forEach(file =>{
+          let{dataValues : {name : fileName, id: fileId, file_type, description : fileDescription}} = file;
+            for(let i = 0; i < templates.length; i++){
+              let {id : templateId, fileNamePattern, searchString, title : templateName, description : templateDescription} = templates[i]
+              let operation = fileNamePattern === 'contains' ? 'includes' : fileNamePattern;
+              if(fileName[operation](searchString)){ // Matching template found
+                let indexOfFileGroup = fileAndTemplates.findIndex(item => item.id === templateId && item.file_type === file_type);
+                if(indexOfFileGroup >= 0){
+                  fileAndTemplates[indexOfFileGroup].files.push({id: fileId, name: fileName, file_type, description: fileDescription, assetType: 'file'})
+                }else{
+                  fileAndTemplates = [...fileAndTemplates, {id : templateId, name : templateName, file_type, description : templateDescription, assetType: 'fileTemplate',
+                                                           files : [{id: fileId, name: fileName, file_type, description: fileDescription, assetType: 'file'}]}];
+                }
+                return;
+              }
+              
+              if(!fileName[operation](searchString) && i === templates.length -1){ // No matching template found
+                fileAndTemplates = [...fileAndTemplates, {id: fileId, name: fileName, file_type, description: fileDescription, assetType: 'file'}];
+              }
+            }
+        })
+
+        jobData.jobFileTemplate = fileAndTemplates;
         return jobData;
       } else {
         return res.status(500).json({ success: false, message: "Job details could not be found. Please check if the job exists in Assets. " });
