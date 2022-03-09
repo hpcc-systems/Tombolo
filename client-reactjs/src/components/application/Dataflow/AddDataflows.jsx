@@ -67,8 +67,7 @@ function AddDataflow({ modalVisible, setModalVisibility, dataflowToEdit, setData
       return;
     }
 
-    //fetch('/api/dataflow/save', {
-    fetch('/api/testRoute/save', {
+    fetch('/api/dataflow/save', {
       method: 'post',
       headers: authHeader(),
       body: JSON.stringify({

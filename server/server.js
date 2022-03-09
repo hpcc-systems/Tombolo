@@ -28,7 +28,6 @@ const limiter = rateLimit({
 });
 
 app.use(cors());
-app.options('*', cors())
 app.use(express.json());
 app.use(function(req, res, next) {
   //res.header("Access-Control-Allow-Origin", "*");
@@ -62,7 +61,6 @@ const workflows = require('./routes/workflows/router');
 const dataDictionary = require('./routes/data-dictionary/data-dictionary-service');
 const groups = require('./routes/groups/group');
 const ghCredentials = require('./routes/ghCredentials');
-const testRouter = require('./routes/testRouter');
 
 app.use('/api/app/read', tokenService.verifyToken, appRead);
 app.use('/api/file/read', tokenService.verifyToken, fileRead);
@@ -82,7 +80,6 @@ app.use('/api/data-dictionary', tokenService.verifyToken, dataDictionary);
 app.use('/api/user', userRead);
 app.use('/api/groups', tokenService.verifyToken, groups);
 app.use('/api/ghcredentials', tokenService.verifyToken, ghCredentials);
-app.use('/api/testRoute', tokenService.verifyToken, testRouter);
 
 //process.env["NODE_TLS_REJECT_UNAUTHORIZED"] = 0;
 
