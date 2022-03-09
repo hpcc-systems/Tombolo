@@ -264,16 +264,10 @@ router.get('/getFileInfo', [
   File.findOne({where: {name: req.query.fileName, application_id: req.query.applicationId}}).then(async (existingFile) => {
 		console.log(existingFile);
     if(existingFile) {
-		console.log(`<<<< File exists in  <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<`);
-		console.log()
-		console.log('<<<< File exists in  <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<');
       await assetUtil.fileInfo(req.query.applicationId, existingFile.id).then((existingFileInfo) => {
         res.json(existingFileInfo);
       })
     } else {
-		console.log(`<<<< File does not exist  search HPCC <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<`);
-		console.log()
-		console.log('<<<< File does not exist  search HPCC <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<');
       hpccUtil.fileInfo(req.query.fileName, req.query.clusterid).then((fileInfo) => {
         res.json(fileInfo);
       }).catch((err) => {

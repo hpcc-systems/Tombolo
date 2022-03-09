@@ -173,15 +173,6 @@ class JobDetails extends Component {
         const cronParts = data.schedule?.cron?.split(' ') || [];
 
         // GETTING JOB FILES 
-        // const { inputFiles, outputFiles } = data.jobfiles.reduce(
-        //   (acc, jobfile) => {
-        //     jobfile.fileTitle = jobfile.title || jobfile.name;
-        //     if (jobfile.file_type === 'input') acc.inputFiles.push(jobfile);
-        //     if (jobfile.file_type === 'output') acc.outputFiles.push(jobfile);
-        //     return acc;
-        //   },
-        //   { inputFiles: [], outputFiles: [] }
-        // );
         const { inputFiles, outputFiles } = data.jobFileTemplate.reduce(
           (acc, jobfile) => {
             jobfile.fileTitle = jobfile.title || jobfile.name;
