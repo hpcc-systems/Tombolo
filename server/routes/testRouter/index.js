@@ -22,8 +22,8 @@ router.post(
     }
     //Check if cluster is reachable
     const { clusterHost, port, id, application_id, title, description, clusterId, metaData } = req.body;
-
-    const username = req.body.username || '';
+    console.log("Dataflow Save...1")
+    /*const username = req.body.username || '';
     const password = req.body.password || '';
     const reachable = await isClusterReachable(clusterHost, port, username, password);
 
@@ -83,8 +83,9 @@ router.post(
         }
       } catch (err) {
         res.status(409).json({ success: false, message: 'Unable to create dataflow' });
-      }
-    }
+      }      
+    }*/
+    res.status(200).json({ success: true, message: 'Dataflow created successfully' });
   }
 );
 
