@@ -35,7 +35,7 @@ router.post(
     const password = req.body.password || '';
     const reachable = await isClusterReachable(clusterHost, port, username, password);
 
-
+    console.log("Dataflow Save..."+reachable);
     if (reachable.statusCode === 503) {
       res.status(503).json({ success: false, message: 'Cluster not reachable' });
     } else if (reachable.statusCode === 403) {
