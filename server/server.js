@@ -61,6 +61,7 @@ const workflows = require('./routes/workflows/router');
 const dataDictionary = require('./routes/data-dictionary/data-dictionary-service');
 const groups = require('./routes/groups/group');
 const ghCredentials = require('./routes/ghCredentials');
+const gh_projects = require('./routes/gh_projects');
 
 app.use('/api/app/read', tokenService.verifyToken, appRead);
 app.use('/api/file/read', tokenService.verifyToken, fileRead);
@@ -80,7 +81,9 @@ app.use('/api/data-dictionary', tokenService.verifyToken, dataDictionary);
 app.use('/api/user', userRead);
 app.use('/api/groups', tokenService.verifyToken, groups);
 app.use('/api/ghcredentials', tokenService.verifyToken, ghCredentials);
+app.use('/api/gh_projects', tokenService.verifyToken, gh_projects);
 
-//process.env["NODE_TLS_REJECT_UNAUTHORIZED"] = 0;
+
+// process.env["NODE_TLS_REJECT_UNAUTHORIZED"] = 0;
 
 server.listen(port, '0.0.0.0', () => console.log('Server listening on port '+port+'!'));
