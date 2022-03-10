@@ -77,7 +77,7 @@ router.delete('/',
 );
 
 router.get('/',
-  [query('application_Id').isUUID(4).withMessage('Invalid application id')],
+  [query('application_id').isUUID(4).withMessage('Invalid application id')],
   async (req, res) => {
     const errors = validationResult(req).formatWith(validatorUtil.errorFormatter);
     if (!errors.isEmpty()) return res.status(422).json({ success: false, errors: errors.array() });
