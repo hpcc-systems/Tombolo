@@ -34,6 +34,7 @@ import { store } from "./redux/store/Store";
 
 import { Report } from "./components/Report/Report";
 import Regulations from "./components/admin/ControlsAndRegulations";
+import GitHubSettings from "./components/admin/GitHubSettings/GitHubSettings";
 const { Content } = Layout;
 
 class App extends React.Component {  
@@ -146,6 +147,8 @@ class App extends React.Component {
                     path="/admin/clusters"
                     component={AdminClusters}
                   />
+
+                  <PrivateRoute path="/admin/github" component={GitHubSettings} />
                   <PrivateRoute path="/admin/users" component={Users} />
                   <PrivateRoute path="/report/:searchText" component={Report} />
                   <PrivateRoute
