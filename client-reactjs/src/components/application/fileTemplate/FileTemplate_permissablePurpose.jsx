@@ -89,6 +89,8 @@ function FileTemplate_permissablePurpose(props) {
         size={"small"}
         rowSelection={{type : 'checkbox', defaultSelectedRowKeys: selectedLicenses.map(license => license.id), ...rowSelection}}
         rowKey={(record) =>record.id}
+        pagination={false}
+        bordered={true}
       />
   );
 }

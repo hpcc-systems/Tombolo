@@ -43,6 +43,8 @@ function FileTemplate() {
   const [searchingFile, setSearchingFile] = useState(false);
   const [enableEdit, setEnableEdit] = useState(false);
   const [selectedLicenses, setSelectedLicenses] = useState([]);
+  const [selectedCluster, setSelectedCluster] = useState(null);
+  const [searchString, setSearchString] = useState(null)
 
   const [form] = Form.useForm();
   const history = useHistory();
@@ -50,27 +52,30 @@ function FileTemplate() {
 
   //Use Effect
   useEffect(() => {
-        if(selectedAsset.isNew){
-          setEnableEdit(true)
-        }else{
-        if(application){
-          getFileTemplate();
-          searchFile();
-        }
-        }
+    const getInitialData = async() =>{
+      try{
+        await getFileTemplate();
+        const files = await getFiles();
+        setFiles(files)
+      }catch(err){
+        console.log(err)
+      }  
+    }
+    if(selectedAsset.isNew){
+      setEnableEdit(true)
+    }else{
+    if(application){
+      getInitialData();
+    }
+    }
       
   }, [application]);
 
   //search files that matches the pattern and keyword
-  const searchFile = debounce(() => {
-    const { cluster, searchString, fileNamePattern } = form.getFieldsValue();
-    if (searchString?.length < 3) {
-      return;
-    }
-    if (!cluster) {
-      // message.info('Please select a cluster');
-      return;
-    }
+  const getFiles = () => {
+    const {fileNamePattern } = form.getFieldsValue();
+    const cluster = form.getFieldValue('cluster') || selectedCluster;
+    const searchString = form.getFieldValue('searchString') || searchString;
 
     const searchData = JSON.stringify({
       clusterid: cluster,
@@ -78,7 +83,7 @@ function FileTemplate() {
       fileNamePattern,
     });
 
-   fetch('/api/hpcc/read/filesearch', {
+   return fetch('/api/hpcc/read/filesearch', {
       method: 'post',
       headers: authHeader(),
       body: searchData,
@@ -89,30 +94,53 @@ function FileTemplate() {
         }
         return response.json();
       })
-      .then((data) => {
+
+  };
+
+  //Handle change in file search string
+  const handleSearch = debounce(() =>{
+    const { cluster, searchString } = form.getFieldsValue();
+    if(!cluster){
+      message.info('Please select a cluster');
+      return;
+    }
+    if (searchString?.length < 3) {
+      return;
+    }
+
+         getFiles()
+       .then((data) => {
         setFiles(data);
-        setSearchingFile(true);    // handle these 2 on initial load
-        form.setFieldsValue({sampleFile : ''}) // Handle these 2 on initial load
+        setSearchingFile(true);
+        form.setFieldsValue({sampleFile : ''})
       })
       .catch((err) => {
         setFiles([]);
         message.error(err.message);
       });
-  }, 500);
+  },500);
 
 
   //When cluster dropdown or file drop down changes  - get files again
   const onDropDownValueChange = () => {
     const { cluster, searchString, fileNamePattern } = form.getFieldsValue();
     if (cluster && searchString && fileNamePattern) {
-      searchFile()
+      getFiles()
+       .then((data) => {
+        setFiles(data);
+        setSearchingFile(true);
+        form.setFieldsValue({sampleFile : ''})
+      })
+      .catch((err) => {
+        setFiles([]);
+        message.error(err.message);
+      });
     }
   };
 
   //Save file template
   const saveFileTemplate = () => {
     console.log(selectedLicenses)
-    console.log(' Selected asset <<<<', selectedAsset);
     form.validateFields();
     fetch('/api/fileTemplate/read/saveFileTemplate', {
       method: 'post',
@@ -155,7 +183,6 @@ function FileTemplate() {
       }),
     })
     .then((response) =>{
-      console.log('<<<< Delete response ', response);
       if(!response.ok){
         throw Error('Unable to delete file template')
       }
@@ -171,7 +198,7 @@ function FileTemplate() {
   }
   // Get file Template
   const getFileTemplate = () => {
-    fetch('/api/fileTemplate/read/getFileTemplate', {
+    return fetch('/api/fileTemplate/read/getFileTemplate', {
       method: 'post',
       headers: authHeader(),
       body: JSON.stringify({
@@ -196,6 +223,8 @@ function FileTemplate() {
           ['clusterName'] : (clusters[clusters.findIndex(cluster => cluster.id === data.cluster_id)].name)
         });
         setLayoutData(data.fileTemplateLayout?.fields?.layout || []);
+         setSelectedCluster(data.cluster_id);
+         setSearchString(data.searchString);
       })
       .catch((err) => {
         console.log(err);
@@ -328,7 +357,7 @@ function FileTemplate() {
                       },
                     ]}
                   >
-                    <Input onChange={searchFile}></Input>
+                    <Input onChange={handleSearch}></Input>
                   </Form.Item>
                 </Input.Group>
               </Form.Item> : null}
@@ -345,6 +374,7 @@ function FileTemplate() {
                   open={searchingFile}
                   onFocus={() => setSearchingFile(true)}
                   onBlur={() => setSearchingFile(false)}
+                  notFoundContent={'Not Files Found'}
                 />:
                 <Input className={!enableEdit ? "read-only-input" : ""} />}
               </Form.Item>
