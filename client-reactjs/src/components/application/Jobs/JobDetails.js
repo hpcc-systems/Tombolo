@@ -1077,7 +1077,7 @@ class JobDetails extends Component {
         width: '30%',
         render: (text, record) => (
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-            <span>{record.fileTitle}</span>{' '}
+            <span>{record.fileTitle || record.name}</span>{' '}
             {record.assetType === 'fileTemplate' ? (
               <small style={{ color: 'var(--primary)' }}> [{record.files.length > 1 ? record.files.length + ' Files' : record.files.length + ' File'} ]</small>
             ) : null}
@@ -1093,7 +1093,7 @@ class JobDetails extends Component {
     ];
 
     const { name, jobType, inputParams, outputFiles, inputFiles, scriptPath, } = this.state.job;
-    
+
     //render only after fetching the data from the server
     if (!name && !this.props.selectedAsset && !this.props.isNew) {
       return null;

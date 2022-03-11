@@ -10,6 +10,7 @@ import { MarkdownEditor } from '../../common/MarkdownEditor.js';
 import { authHeader } from '../../common/AuthHeader.js';
 import FileTemplateTable from './FileTemplate_filesTab';
 import FileTemplateLayout from './FileTemplate_layoutTab.jsx';
+import FileTemplate_permissablePurpose from './FileTemplate_permissablePurpose'
 import { hasEditPermission } from '../../common/AuthUtil.js'; 
 
 //Local variables
@@ -41,6 +42,7 @@ function FileTemplate() {
   const [layoutData, setLayoutData] = useState([]);
   const [searchingFile, setSearchingFile] = useState(false);
   const [enableEdit, setEnableEdit] = useState(false);
+  const [selectedLicenses, setSelectedLicenses] = useState([]);
 
   const [form] = Form.useForm();
   const history = useHistory();
@@ -51,11 +53,13 @@ function FileTemplate() {
         if(selectedAsset.isNew){
           setEnableEdit(true)
         }else{
-        getFileTemplate();
-        searchFile();
+        if(application){
+          getFileTemplate();
+          searchFile();
+        }
         }
       
-  }, []);
+  }, [application]);
 
   //search files that matches the pattern and keyword
   const searchFile = debounce(() => {
@@ -107,6 +111,7 @@ function FileTemplate() {
 
   //Save file template
   const saveFileTemplate = () => {
+    console.log(selectedLicenses)
     console.log(' Selected asset <<<<', selectedAsset);
     form.validateFields();
     fetch('/api/fileTemplate/read/saveFileTemplate', {
@@ -121,6 +126,7 @@ function FileTemplate() {
         sampleLayoutFile: form.getFieldValue('sampleFile'),
         description: form.getFieldValue('description'),
         fileLayoutData :  layoutData,
+        licenses : selectedLicenses,
         selectedAsset
       }),
     })
@@ -128,9 +134,9 @@ function FileTemplate() {
         if (!response.ok) {
           throw Error('Unable to save file template - Try again');
         }
-        message.success('File template created');
+        message.success('File template saved successfully');
         setTimeout(() => {
-          history.push(`${application.applicationId}/assets`);
+          history.push(`/${application.applicationId}/assets`);
         }, 400);
       })
       .catch((err) => {
@@ -140,7 +146,6 @@ function FileTemplate() {
 
   // Delete file template 
   const deleteFileTemplate = () =>{
-    console.log('<<<< Deleting this asset ', selectedAsset)
      fetch('/api/fileTemplate/read/deleteFileTemplate', {
       method: 'post',
       headers: authHeader(),
@@ -157,7 +162,7 @@ function FileTemplate() {
       message.success('File template deleted successfully');
       setTimeout(() => {
         console.log('<<< History kick in ... ')
-        history.push(`${application.applicationId}/assets`);
+        history.push(`/${application.applicationId}/assets`);
       }, 400);
     })
     .catch((err) =>{
@@ -171,6 +176,7 @@ function FileTemplate() {
       headers: authHeader(),
       body: JSON.stringify({
         id: selectedAsset.id,
+        application_id: application.applicationId
       }),
     })
       .then((response) => {
@@ -189,7 +195,7 @@ function FileTemplate() {
           ['sampleFile']: data.sampleLayoutFile,
           ['clusterName'] : (clusters[clusters.findIndex(cluster => cluster.id === data.cluster_id)].name)
         });
-        setLayoutData(data.fileTemplateLayout?.fields?.layout);
+        setLayoutData(data.fileTemplateLayout?.fields?.layout || []);
       })
       .catch((err) => {
         console.log(err);
@@ -301,7 +307,7 @@ function FileTemplate() {
             }
 
               {enableEdit ?
-              <Form.Item label="File Template" >
+              <Form.Item label="File Template" required >
                 <Input.Group compact>
                   <Form.Item name="fileNamePattern" style={{ width: '30%' }}>
                     <Select style={{ width: '100%' }} onChange={onDropDownValueChange}>
@@ -363,7 +369,13 @@ function FileTemplate() {
             
           </TabPane>
           <TabPane tab="Permissable Purpose" key="4">
-            <Table />
+            <FileTemplate_permissablePurpose
+              enableEdit={enableEdit}
+              editingAllowed={editingAllowed}
+              setSelectedLicenses={setSelectedLicenses}
+              selectedLicenses = {selectedLicenses}
+              selectedAsset={selectedAsset}
+             />
           </TabPane>
           <TabPane tab="Validation Rules" key="5">
             <Table />
