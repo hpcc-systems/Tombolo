@@ -157,8 +157,8 @@ router.post('/all', [
 
 router.get('/licenses', (req, res) => {
   try {
-    License.findAll().then(function(licenses) {
-        res.json(licenses);
+    License.findAll({attributes: ["id", "name", "url", "description"]}).then(function(licenses) {
+      res.json(licenses);
     })
     .catch(function(err) {
       console.log(err);

@@ -10,6 +10,7 @@ import { MarkdownEditor } from '../../common/MarkdownEditor.js';
 import { authHeader } from '../../common/AuthHeader.js';
 import FileTemplateTable from './FileTemplate_filesTab';
 import FileTemplateLayout from './FileTemplate_layoutTab.jsx';
+import FileTemplate_permissablePurpose from './FileTemplate_permissablePurpose'
 import { hasEditPermission } from '../../common/AuthUtil.js'; 
 
 //Local variables
@@ -41,6 +42,9 @@ function FileTemplate() {
   const [layoutData, setLayoutData] = useState([]);
   const [searchingFile, setSearchingFile] = useState(false);
   const [enableEdit, setEnableEdit] = useState(false);
+  const [selectedLicenses, setSelectedLicenses] = useState([]);
+  const [selectedCluster, setSelectedCluster] = useState(null);
+  const [searchString, setSearchString] = useState(null)
 
   const [form] = Form.useForm();
   const history = useHistory();
@@ -48,25 +52,30 @@ function FileTemplate() {
 
   //Use Effect
   useEffect(() => {
-        if(selectedAsset.isNew){
-          setEnableEdit(true)
-        }else{
-        getFileTemplate();
-        searchFile();
-        }
+    const getInitialData = async() =>{
+      try{
+        await getFileTemplate();
+        const files = await getFiles();
+        setFiles(files)
+      }catch(err){
+        console.log(err)
+      }  
+    }
+    if(selectedAsset.isNew){
+      setEnableEdit(true)
+    }else{
+    if(application){
+      getInitialData();
+    }
+    }
       
-  }, []);
+  }, [application]);
 
   //search files that matches the pattern and keyword
-  const searchFile = debounce(() => {
-    const { cluster, searchString, fileNamePattern } = form.getFieldsValue();
-    if (searchString?.length < 3) {
-      return;
-    }
-    if (!cluster) {
-      // message.info('Please select a cluster');
-      return;
-    }
+  const getFiles = () => {
+    const {fileNamePattern } = form.getFieldsValue();
+    const cluster = form.getFieldValue('cluster') || selectedCluster;
+    const searchString = form.getFieldValue('searchString') || searchString;
 
     const searchData = JSON.stringify({
       clusterid: cluster,
@@ -74,7 +83,7 @@ function FileTemplate() {
       fileNamePattern,
     });
 
-   fetch('/api/hpcc/read/filesearch', {
+   return fetch('/api/hpcc/read/filesearch', {
       method: 'post',
       headers: authHeader(),
       body: searchData,
@@ -85,29 +94,53 @@ function FileTemplate() {
         }
         return response.json();
       })
-      .then((data) => {
+
+  };
+
+  //Handle change in file search string
+  const handleSearch = debounce(() =>{
+    const { cluster, searchString } = form.getFieldsValue();
+    if(!cluster){
+      message.info('Please select a cluster');
+      return;
+    }
+    if (searchString?.length < 3) {
+      return;
+    }
+
+         getFiles()
+       .then((data) => {
         setFiles(data);
-        setSearchingFile(true);    // handle these 2 on initial load
-        form.setFieldsValue({sampleFile : ''}) // Handle these 2 on initial load
+        setSearchingFile(true);
+        form.setFieldsValue({sampleFile : ''})
       })
       .catch((err) => {
         setFiles([]);
         message.error(err.message);
       });
-  }, 500);
+  },500);
 
 
   //When cluster dropdown or file drop down changes  - get files again
   const onDropDownValueChange = () => {
     const { cluster, searchString, fileNamePattern } = form.getFieldsValue();
     if (cluster && searchString && fileNamePattern) {
-      searchFile()
+      getFiles()
+       .then((data) => {
+        setFiles(data);
+        setSearchingFile(true);
+        form.setFieldsValue({sampleFile : ''})
+      })
+      .catch((err) => {
+        setFiles([]);
+        message.error(err.message);
+      });
     }
   };
 
   //Save file template
   const saveFileTemplate = () => {
-    console.log(' Selected asset <<<<', selectedAsset);
+    console.log(selectedLicenses)
     form.validateFields();
     fetch('/api/fileTemplate/read/saveFileTemplate', {
       method: 'post',
@@ -121,6 +154,7 @@ function FileTemplate() {
         sampleLayoutFile: form.getFieldValue('sampleFile'),
         description: form.getFieldValue('description'),
         fileLayoutData :  layoutData,
+        licenses : selectedLicenses,
         selectedAsset
       }),
     })
@@ -128,9 +162,9 @@ function FileTemplate() {
         if (!response.ok) {
           throw Error('Unable to save file template - Try again');
         }
-        message.success('File template created');
+        message.success('File template saved successfully');
         setTimeout(() => {
-          history.push(`${application.applicationId}/assets`);
+          history.push(`/${application.applicationId}/assets`);
         }, 400);
       })
       .catch((err) => {
@@ -140,7 +174,6 @@ function FileTemplate() {
 
   // Delete file template 
   const deleteFileTemplate = () =>{
-    console.log('<<<< Deleting this asset ', selectedAsset)
      fetch('/api/fileTemplate/read/deleteFileTemplate', {
       method: 'post',
       headers: authHeader(),
@@ -150,14 +183,13 @@ function FileTemplate() {
       }),
     })
     .then((response) =>{
-      console.log('<<<< Delete response ', response);
       if(!response.ok){
         throw Error('Unable to delete file template')
       }
       message.success('File template deleted successfully');
       setTimeout(() => {
         console.log('<<< History kick in ... ')
-        history.push(`${application.applicationId}/assets`);
+        history.push(`/${application.applicationId}/assets`);
       }, 400);
     })
     .catch((err) =>{
@@ -166,11 +198,12 @@ function FileTemplate() {
   }
   // Get file Template
   const getFileTemplate = () => {
-    fetch('/api/fileTemplate/read/getFileTemplate', {
+    return fetch('/api/fileTemplate/read/getFileTemplate', {
       method: 'post',
       headers: authHeader(),
       body: JSON.stringify({
         id: selectedAsset.id,
+        application_id: application.applicationId
       }),
     })
       .then((response) => {
@@ -189,7 +222,9 @@ function FileTemplate() {
           ['sampleFile']: data.sampleLayoutFile,
           ['clusterName'] : (clusters[clusters.findIndex(cluster => cluster.id === data.cluster_id)].name)
         });
-        setLayoutData(data.fileTemplateLayout?.fields?.layout);
+        setLayoutData(data.fileTemplateLayout?.fields?.layout || []);
+         setSelectedCluster(data.cluster_id);
+         setSearchString(data.searchString);
       })
       .catch((err) => {
         console.log(err);
@@ -301,7 +336,7 @@ function FileTemplate() {
             }
 
               {enableEdit ?
-              <Form.Item label="File Template" >
+              <Form.Item label="File Template" required >
                 <Input.Group compact>
                   <Form.Item name="fileNamePattern" style={{ width: '30%' }}>
                     <Select style={{ width: '100%' }} onChange={onDropDownValueChange}>
@@ -322,7 +357,7 @@ function FileTemplate() {
                       },
                     ]}
                   >
-                    <Input onChange={searchFile}></Input>
+                    <Input onChange={handleSearch}></Input>
                   </Form.Item>
                 </Input.Group>
               </Form.Item> : null}
@@ -339,6 +374,7 @@ function FileTemplate() {
                   open={searchingFile}
                   onFocus={() => setSearchingFile(true)}
                   onBlur={() => setSearchingFile(false)}
+                  notFoundContent={'Not Files Found'}
                 />:
                 <Input className={!enableEdit ? "read-only-input" : ""} />}
               </Form.Item>
@@ -363,7 +399,13 @@ function FileTemplate() {
             
           </TabPane>
           <TabPane tab="Permissable Purpose" key="4">
-            <Table />
+            <FileTemplate_permissablePurpose
+              enableEdit={enableEdit}
+              editingAllowed={editingAllowed}
+              setSelectedLicenses={setSelectedLicenses}
+              selectedLicenses = {selectedLicenses}
+              selectedAsset={selectedAsset}
+             />
           </TabPane>
           <TabPane tab="Validation Rules" key="5">
             <Table />
