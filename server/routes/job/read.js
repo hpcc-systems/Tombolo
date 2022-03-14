@@ -330,9 +330,9 @@ router.post( '/saveJob',
     // files: []
     // params : []
 
-    const { name, application_id, groupId, ...requestJobFields } = req.body.job.basic;
-    const schedule = req.body.job.schedule;
-
+    const { name, application_id, groupId, dataflowId, ...requestJobFields } = req.body.job.basic;
+    const {schedule, files, params} = req.body.job;
+    
     try {
       // FIND OR CREATE JOB
       let [job, isJobCreated] = await Job.findOrCreate({
@@ -347,10 +347,44 @@ router.post( '/saveJob',
         const assetGroupsFields = { assetId: job.id, groupId};
         await AssetsGroups.findOrCreate({ where: assetGroupsFields, defaults: assetGroupsFields });
       }
+      
+      try {
+        // Update JobFile table with fresh list of files;
+        let jobFiles = await JobFile.findAll({ where: { job_id: job.id, application_id, file_id: { [Op.not]: null } }, order: [['name', 'asc']], raw: true, });
 
-      // console.log('-job:job.toJSON()-----------------------------------------');
-      // console.dir({ job: job.toJSON() }, { depth: null });
-      // console.log('------------------------------------------');
+        //Find files that are removed from the Job and remove them from JobFile table
+        if (jobFiles.length > 0 && files.length > 0) {
+          const removeIds = jobFiles.reduce((acc, jobFile) => {
+            const exist = files.find((fromCluster) => fromCluster.file_type === jobFile.file_type && fromCluster.name === jobFile.name );
+            if (!exist) acc.push(jobFile.id);
+            return acc;
+          }, []);
+          
+          if (removeIds.length > 0) await JobFile.destroy({ where: { id: { [Sequelize.Op.in]: removeIds }, application_id } });
+        }
+
+        // Find and update or create JobFile.
+        for (const file of files) {
+          let [jobFile, isFJobFileCreated] = await JobFile.findOrCreate({
+            where: { job_id: job.id, application_id, file_type: file.file_type, name: file.name },
+            defaults: { job_id: job.id, application_id, file_type: file.file_type, name: file.name },
+          });
+
+          if (!isFJobFileCreated) jobFile = await jobFile.update({ file_type: file.file_type, name: file.name });
+
+          // If DataFlowId present update assetDataflow table so
+          if (dataflowId) await AssetDataflow.findOrCreate({ where: { assetId: job.id, dataflowId }, defaults: { assetId: file.id, dataflowId } });
+        }
+
+        // Update Job Params
+        const updateParams = params.map((el) => ({ ...el, job_id: job.id, application_id }));
+        await JobParam.destroy({ where: { application_id, job_id: job.id } });
+        await JobParam.bulkCreate(updateParams);
+      } catch (error) {
+        console.log('FAILED TO UPDATE JOBFILE AND JOBPARAMS----------------------------------------');
+        console.dir(error.message, { depth: null });
+        console.log('------------------------------------------');
+      }
 
       // JOB IS SCHEDULED AS 'Predecessor'
       if (schedule.type === 'Predecessor') {
@@ -360,14 +394,14 @@ router.post( '/saveJob',
             id: job.id,
             name: job.name,
             application_id,
-            dataflowId: requestJobFields.dataflowId
+            dataflowId: dataflowId
           });
 
           const dependentJobsPromises = schedule.jobs.map((dependsOnJobId) =>
             DependentJobs.create({
               jobId: job.id,
               dependsOnJobId,
-              dataflowId: requestJobFields.dataflowId,
+              dataflowId: dataflowId,
             })
           );
           
@@ -399,7 +433,7 @@ router.post( '/saveJob',
             id: job.id,
             name: job.name,
             application_id,
-            dataflowId: requestJobFields.dataflowId
+            dataflowId: dataflowId
           });
 
           const { minute, hour, dayMonth, month, dayWeek } = schedule.cron;
@@ -407,7 +441,7 @@ router.post( '/saveJob',
 
           const [updatedRow] = await AssetDataflow.update(
             { cron: cronExpression },
-            { where: { assetId: job.id, dataflowId: requestJobFields.dataflowId } }
+            { where: { assetId: job.id, dataflowId: dataflowId } }
           );
 
           if (!updatedRow) throw new Error('Failed to update AssetDataflow record');
@@ -442,7 +476,7 @@ router.post( '/saveJob',
             sprayDropZone: job.sprayFileName,
             sprayedFileScope: job.sprayedFileScope,
             clusterId: job.cluster_id,
-            dataflowId: requestJobFields.dataflowId,
+            dataflowId: dataflowId,
             applicationId: job.application_id,
           };
 
@@ -481,12 +515,12 @@ router.post( '/saveJob',
       if (schedule.type === 'Message') {
         try {
           // CLEAN UP
-          await clearAllPreviousScheduleRecords({ id: job.id, application_id, dataflowId: requestJobFields.dataflowId, });
+          await clearAllPreviousScheduleRecords({ id: job.id, application_id, dataflowId: dataflowId, });
          
           const messageBasedJobsFields = {
             jobId: job.id,
             applicationId: application_id,
-            dataflowId: requestJobFields.dataflowId,
+            dataflowId: dataflowId,
           };
          
           await MessageBasedJobs.findOrCreate({
@@ -517,7 +551,7 @@ router.post( '/saveJob',
             id: job.id,
             name: job.name,
             application_id,
-            dataflowId: requestJobFields.dataflowId
+            dataflowId: dataflowId
           });
 
           console.log('------------------------------------------');
@@ -571,7 +605,7 @@ router.get('/job_list', [
     let query = 'select j.id, j.name, j.title, j.jobType, j.metaData, j.description, j.createdAt from job j '+
     'where j.id not in (select asd.assetId from assets_dataflows asd where asd.dataflowId = (:dataflowId) and asd.deletedAt is null)'+    
     'and j.application_id = (:applicationId)'+
-    'and j.cluster_id = (:clusterId)'+
+    'and (j.cluster_id = (:clusterId) or j.cluster_id is null)'+
     'and j.deletedAt is null;';
     /*let query = 'select j.id, j.name, j.title, j.createdAt, asd.dataflowId from job j, assets_dataflows asd where j.application_id=(:applicationId) '+
         'and j.id = asd.assetId and j.id not in (select assetId from assets_dataflows where dataflowId = (:dataflowId))';*/
