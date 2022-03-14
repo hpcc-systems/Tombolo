@@ -296,6 +296,10 @@ const Assets = () => {
       case "File":
         history.push("/" + application.applicationId + "/assets/file");
         break;
+      
+      case "File Template":
+      history.push("/" + application.applicationId + "/assets/fileTemplate");
+      break;
 
       case "Index":
         history.push("/" + application.applicationId + "/assets/index");
@@ -644,6 +648,9 @@ const Assets = () => {
     <Menu onClick={(e) => handleMenuClick(e)}>
       <Menu.Item key="File" onClick={addingAssetMode}>
         <i className="fa fa-lg fa-file"></i> File
+      </Menu.Item>
+      <Menu.Item key="File Template" onClick={addingAssetMode}>
+        <i className="fa  fa-lg fa-file-text-o"></i> File Template
       </Menu.Item>
       <Menu.Item key="Index" onClick={addingAssetMode}>
         <i className="fa fa-lg fa-indent"></i> Index

@@ -72,8 +72,6 @@ function AddDataflow({ modalVisible, setModalVisibility, dataflowToEdit, setData
       headers: authHeader(),
       body: JSON.stringify({
         id: dataflowToEdit?.id,
-        clusterHost: selectedCluster.thor_host,
-        port: selectedCluster.thor_port,
         username: formValues.cluster_username,
         password: formValues.cluster_password,
         application_id: application.applicationId,

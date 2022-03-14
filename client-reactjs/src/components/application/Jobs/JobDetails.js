@@ -31,10 +31,36 @@ const dayAbbrMap = { SUN: 'Sunday', MON: 'Monday', TUE: 'Tuesday', WED: 'Wednesd
 const _minutes = [...Array(60).keys()]; // [1,2,3...59]
 const _hours = [...Array(24).keys()]; // [1,2,3...23]
 const _dayOfMonth = [...Array(32).keys()]; // [1,2,3...31]
+const expendedRowRender = (record) => {
+  // For displaying files that match a template in a nested table
+  const { files } = record;
+  const nestedTableColumns = [
+    {
+      dataIndex: 'name',
+      width: '24%',
+    },
+    {
+      dataIndex: 'description',
+    },
+  ];
+
+  return (
+    <Table
+      dataSource={files}
+      columns={nestedTableColumns}
+      rowKey={record.name}
+      pagination={false}
+      showHeader={false}
+      style={{ paddingLeft: '5px' }}
+    ></Table>
+  );
+};
+
 
 let scheduleCronParts = { minute: [], hour: [], 'day-of-month': [], month: [], 'day-of-week': [] };
 
 let cronExamples = [];
+
 
 class JobDetails extends Component {
   formRef = React.createRef();
@@ -93,9 +119,7 @@ class JobDetails extends Component {
   async componentDidMount() {
     if (this.props.application && this.props.application.applicationId) {
       await this.getJobDetails();
-      if (this.props.selectedDataflow && this.props.selectedAsset.isAssociated){
-        await this.getFiles();
-      } 
+      await this.getFiles();
     }
     if (this.props.scheduleType === 'Predecessor') {
       this.handleScheduleTypeSelect('Predecessor');
@@ -149,7 +173,7 @@ class JobDetails extends Component {
         const cronParts = data.schedule?.cron?.split(' ') || [];
 
         // GETTING JOB FILES 
-        const { inputFiles, outputFiles } = data.jobfiles.reduce(
+        const { inputFiles, outputFiles } = data.jobFileTemplate.reduce(
           (acc, jobfile) => {
             jobfile.fileTitle = jobfile.title || jobfile.name;
             if (jobfile.file_type === 'input') acc.inputFiles.push(jobfile);
@@ -1024,19 +1048,32 @@ class JobDetails extends Component {
 
     const fileColumns = [
       {
-        title: "Name",
-        dataIndex: "name",
-        width: "20%",
+        width: '2%',
+        render: (text, record) => (record.assetType === 'fileTemplate' ? <i className="fa  fa-lg fa-file-text-o"></i> : <i className="fa fa-lg fa-file-o"></i>),
       },
       {
-        title: "Description",
-        dataIndex: "description",
-        width: "30%",
+        title: 'Name',
+        dataIndex: 'name',
+        width: '30%',
+        render: (text, record) => (
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+            <span>{record.fileTitle || record.name}</span>{' '}
+            {record.assetType === 'fileTemplate' ? (
+              <small style={{ color: 'var(--primary)' }}> [{record.files.length > 1 ? record.files.length + ' Files' : record.files.length + ' File'} ]</small>
+            ) : null}
+          </div>
+        ),
+      },
+      Table.EXPAND_COLUMN,
+      {
+        title: 'Description',
+        dataIndex: 'description',
+        width: '68%',
       },
     ];
 
     const { name, jobType, inputParams, outputFiles, inputFiles, scriptPath, } = this.state.job;
-    
+
     //render only after fetching the data from the server
     if (!name && !this.props.selectedAsset && !this.props.isNew) {
       return null;
@@ -1316,49 +1353,56 @@ class JobDetails extends Component {
                     enableEdit={this.state.enableEdit}
                   />
                 </TabPane>
-    
-                <TabPane disabled={noECLAvailable} tab="Input Files" key="4">
-                  <div>
-                    {this.state.enableEdit ? (
-                      <>
-                        <Form.Item label="Input Files">
-                          <Select
-                            id="inputfiles"
-                            placeholder="Select Input Files"
-                            defaultValue={this.state.selectedInputdFile}
-                            onChange={this.handleInputFileChange}
-                            style={{ width: 290 }}
-                            disabled={!editingAllowed}
-                          >
-                            {sourceFiles.map((d) => (
-                              <Option value={d.id} key={d.id}>
-                                {d.title || d.name}
-                              </Option>
-                            ))}
-                          </Select>
-                        </Form.Item>
-    
-                        <Form.Item>
-                          <Button type="primary" onClick={this.handleAddInputFile} disabled={!editingAllowed}>
-                            Add
-                          </Button>
-                        </Form.Item>
-                      </>
-                    ) : null}
-    
-                    <Table
-                      columns={fileColumns}
-                      rowKey={(record) => record.id}
-                      dataSource={inputFiles}
-                      pagination={{ pageSize: 10 }}
-                      scroll={{ y: 460 }}
-                    />
-                  </div>
-                </TabPane>
+                  <TabPane disabled={noECLAvailable} tab="Input Files" key="4">
+                    <div>
+                      {this.state.enableEdit ? (
+                        <>
+                          <Form.Item label="Input Files">
+                            <Select
+                              id="inputfiles"
+                              placeholder="Select Input Files"
+                              defaultValue={this.state.selectedInputdFile}
+                              onChange={this.handleInputFileChange}
+                              style={{ width: 290 }}
+                              disabled={!editingAllowed}
+                            >
+                              {sourceFiles.map((d) => (
+                                <Option value={d.id} key={d.id}>
+                                  {d.title ? d.title : d.name}
+                                </Option>
+                              ))}
+                            </Select>
+                          </Form.Item>
 
-                <TabPane tab="Output Files" disabled={noECLAvailable} key="5">
-                <div>
-                  {!this.state.enableEdit ? null : (
+                          <Form.Item>
+                            <Button
+                              type="primary"
+                              onClick={this.handleAddInputFile}
+                              disabled={!editingAllowed}
+                            >
+                              Add
+                            </Button>
+                          </Form.Item>
+                        </>
+                      ) : null}
+
+                      <Table                          
+                        columns={fileColumns}
+                        rowKey={(record) => record.id}
+                        dataSource={inputFiles}
+                        pagination={{ pageSize: 10 }}
+                        scroll={{ y: 800 }}  
+                        size='small'
+                        rowExpandable={record => record.files}
+                        expandedRowRender={ (record) => expendedRowRender(record)}
+                        align='right'
+                      />
+                    </div>
+                  </TabPane>
+  
+                <TabPane tab="Output Files" disabled={noECLAvailable}  key="5">
+                  <div>
+              {!this.state.enableEdit ? null : (
                     <>
                       <Form.Item label="Output Files">
                         <Select
@@ -1381,15 +1425,21 @@ class JobDetails extends Component {
                       </Form.Item>
                     </>
                   )}
-                  <Table
-                    columns={fileColumns}
-                    rowKey={(record) => record.id}
-                    dataSource={outputFiles}
-                    pagination={{ pageSize: 10 }}
-                    scroll={{ y: 460 }}
-                  />
-                </div>
-              </TabPane>
+    
+                    <Table
+                      columns={fileColumns}
+                      rowKey={(record) => record.id}
+                      dataSource={outputFiles}
+                      pagination={{ pageSize: 10 }}
+                      scroll={{ y: 800 }}
+                      size='small'
+                      pagination={{ pageSize: 10 }}
+                      rowExpandable={record => record.files}
+                      expandedRowRender={ (record) => expendedRowRender(record)}
+
+                    />
+                  </div>
+                </TabPane>
               </React.Fragment>
             ) : null}
         

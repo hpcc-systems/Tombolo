@@ -13,6 +13,7 @@ let Query = models.query;
 let Job = models.job;
 let Visualization = models.visualizations;
 let AssetsGroups = models.assets_groups;
+let FileTemplate = models.fileTemplate;
 
 let createGroupHierarchy = (groups) => {
 
@@ -183,6 +184,7 @@ router.get('/assets', [
         {model:File, as:'files', attributes:['id', 'name', 'title', 'description', 'createdAt'], 
           include:[{model: Visualization}]
         }, 
+        {model:FileTemplate, as:'fileTemplate', attributes:['id', 'title', 'description', 'createdAt']}, 
         {model:Job, as: 'jobs', attributes:['id', 'name', 'title', 'description', 'createdAt']}, 
         {model:Query, as: 'queries', attributes:['id', 'name', 'title', 'description', 'createdAt']}, 
         {model:Index, as: 'indexes', attributes:['id', 'name', 'title', 'description', 'createdAt']},
@@ -202,6 +204,15 @@ router.get('/assets', [
             createdAt: file.createdAt            
           })
         })
+        assets[0] && assets[0].fileTemplate.forEach((fileTemplate) => {
+        finalAssets.push({
+          type: 'File Template',
+          id: fileTemplate.id,
+          title: fileTemplate.title,
+          description: fileTemplate.description,
+          createdAt: fileTemplate.createdAt            
+        })
+      })
         assets[0] && assets[0].jobs.forEach((job) => {
           finalAssets.push({
             type: 'Job',
@@ -267,6 +278,23 @@ router.get('/assets', [
             title: file.title,
             description: file.description,
             createdAt: file.createdAt
+          })
+        })
+      }))
+
+         promises.push(FileTemplate.findAll({
+        where:{
+          application_id:req.query.app_id,
+          [Op.and]:Sequelize.literal('not exists (select * from assets_groups where assets_groups.assetId = fileTemplate.id)')
+      }}).then((fileTemplates) => {
+        fileTemplates.forEach((fileTemplate) => {
+          finalAssets.push({
+            type: 'File Template',
+            id: fileTemplate.id,
+            cluster_id: fileTemplate.cluster_id,
+            title: fileTemplate.title,
+            description: fileTemplate.description,
+            createdAt: fileTemplate.createdAt
           })
         })
       }))

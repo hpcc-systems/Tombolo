@@ -11,6 +11,7 @@ let FileLayout = models.file_layout;
 let FileValidation = models.file_validation;
 let DataflowGraph = models.dataflowgraph;
 let Dataflow = models.dataflow;
+const FileTemplate = models.fileTemplate;
 let AssetDataflow = models.assets_dataflows;
 let DependentJobs = models.dependent_jobs;
 let AssetsGroups = models.assets_groups;
@@ -22,8 +23,6 @@ const workFlowUtil = require('../../utils/workflow-util');
 const validatorUtil = require('../../utils/validator');
 const { body, query, param, validationResult } = require('express-validator');
 const assetUtil = require('../../utils/assets');
-const crypto = require('crypto');
-const algorithm ='aes-256-ctr';
 
 const SUBMIT_JOB_FILE_NAME = 'submitJob.js';
 const SUBMIT_SPRAY_JOB_FILE_NAME = 'submitSprayJob.js'
@@ -332,7 +331,6 @@ router.post( '/saveJob',
 
     const { name, application_id, groupId, dataflowId, ...requestJobFields } = req.body.job.basic;
     const {schedule, files, params} = req.body.job;
-    
     try {
       // FIND OR CREATE JOB
       let [job, isJobCreated] = await Job.findOrCreate({
@@ -351,7 +349,6 @@ router.post( '/saveJob',
       try {
         // Update JobFile table with fresh list of files;
         let jobFiles = await JobFile.findAll({ where: { job_id: job.id, application_id, file_id: { [Op.not]: null } }, order: [['name', 'asc']], raw: true, });
-
         //Find files that are removed from the Job and remove them from JobFile table
         if (jobFiles.length > 0 && files.length > 0) {
           const removeIds = jobFiles.reduce((acc, jobFile) => {
@@ -359,29 +356,24 @@ router.post( '/saveJob',
             if (!exist) acc.push(jobFile.id);
             return acc;
           }, []);
-          
           if (removeIds.length > 0) await JobFile.destroy({ where: { id: { [Sequelize.Op.in]: removeIds }, application_id } });
         }
-
         // Find and update or create JobFile.
         for (const file of files) {
           let [jobFile, isFJobFileCreated] = await JobFile.findOrCreate({
             where: { job_id: job.id, application_id, file_type: file.file_type, name: file.name },
             defaults: { job_id: job.id, application_id, file_type: file.file_type, name: file.name },
           });
-
           if (!isFJobFileCreated) jobFile = await jobFile.update({ file_type: file.file_type, name: file.name });
-
           // If DataFlowId present update assetDataflow table so
-          if (dataflowId) await AssetDataflow.findOrCreate({ where: { assetId: job.id, dataflowId }, defaults: { assetId: file.id, dataflowId } });
+          if (dataflowId) await AssetDataflow.findOrCreate({ where: { assetId: job.id, dataflowId }, defaults: { assetId: file.id, dataflowId }, });
         }
-
         // Update Job Params
         const updateParams = params.map((el) => ({ ...el, job_id: job.id, application_id }));
         await JobParam.destroy({ where: { application_id, job_id: job.id } });
         await JobParam.bulkCreate(updateParams);
       } catch (error) {
-        console.log('FAILED TO UPDATE JOBFILE AND JOBPARAMS----------------------------------------');
+        console.log('FAILED TO UPDATE JOBFILE AND JOB PARAMS --');
         console.dir(error.message, { depth: null });
         console.log('------------------------------------------');
       }
@@ -394,14 +386,14 @@ router.post( '/saveJob',
             id: job.id,
             name: job.name,
             application_id,
-            dataflowId: dataflowId
+            dataflowId
           });
 
           const dependentJobsPromises = schedule.jobs.map((dependsOnJobId) =>
             DependentJobs.create({
               jobId: job.id,
               dependsOnJobId,
-              dataflowId: dataflowId,
+              dataflowId,
             })
           );
           
@@ -433,7 +425,7 @@ router.post( '/saveJob',
             id: job.id,
             name: job.name,
             application_id,
-            dataflowId: dataflowId
+            dataflowId
           });
 
           const { minute, hour, dayMonth, month, dayWeek } = schedule.cron;
@@ -441,7 +433,7 @@ router.post( '/saveJob',
 
           const [updatedRow] = await AssetDataflow.update(
             { cron: cronExpression },
-            { where: { assetId: job.id, dataflowId: dataflowId } }
+            { where: { assetId: job.id, dataflowId } }
           );
 
           if (!updatedRow) throw new Error('Failed to update AssetDataflow record');
@@ -476,7 +468,7 @@ router.post( '/saveJob',
             sprayDropZone: job.sprayFileName,
             sprayedFileScope: job.sprayedFileScope,
             clusterId: job.cluster_id,
-            dataflowId: dataflowId,
+            dataflowId,
             applicationId: job.application_id,
           };
 
@@ -515,12 +507,12 @@ router.post( '/saveJob',
       if (schedule.type === 'Message') {
         try {
           // CLEAN UP
-          await clearAllPreviousScheduleRecords({ id: job.id, application_id, dataflowId: dataflowId, });
+          await clearAllPreviousScheduleRecords({ id: job.id, application_id, dataflowId, });
          
           const messageBasedJobsFields = {
             jobId: job.id,
             applicationId: application_id,
-            dataflowId: dataflowId,
+            dataflowId,
           };
          
           await MessageBasedJobs.findOrCreate({
@@ -551,7 +543,7 @@ router.post( '/saveJob',
             id: job.id,
             name: job.name,
             application_id,
-            dataflowId: dataflowId
+            dataflowId
           });
 
           console.log('------------------------------------------');
@@ -719,6 +711,41 @@ router.get('/job_details', [
           }
         }
 
+        // Check if input and output files have matching file templates - wrap in try catch
+        const templates = await FileTemplate.findAll({
+          where: { cluster_id: job.cluster_id, application_id: req.query.app_id },
+        });
+
+        let fileAndTemplates = [];
+
+        job.jobfiles.forEach(file =>{
+          let{dataValues : {name : fileName, id: fileId, file_type, description : fileDescription}} = file;
+           if(templates.length > 0){
+            for(let i = 0; i < templates.length; i++){
+              let {id : templateId, fileNamePattern, searchString, title : templateName, description : templateDescription} = templates[i]
+              let operation = fileNamePattern === 'contains' ? 'includes' : fileNamePattern;
+              if(fileName[operation](searchString)){ // Matching template found
+                let indexOfFileGroup = fileAndTemplates.findIndex(item => item.id === templateId && item.file_type === file_type);
+                if(indexOfFileGroup >= 0){
+                  fileAndTemplates[indexOfFileGroup].files.push({id: fileId, name: fileName, file_type, description: fileDescription, assetType: 'file'})
+                }else{
+                  fileAndTemplates = [...fileAndTemplates, {id : templateId, name : templateName, file_type, description : templateDescription, assetType: 'fileTemplate',
+                                                           files : [{id: fileId, name: fileName, file_type, description: fileDescription, assetType: 'file'}]}];
+                }
+                return;
+              }
+              
+              if(!fileName[operation](searchString) && i === templates.length -1){ // No matching template found
+                fileAndTemplates = [...fileAndTemplates, {id: fileId, name: fileName, file_type, description: fileDescription, assetType: 'file'}];
+              }
+            }
+           }else{
+              fileAndTemplates = [...fileAndTemplates, {id: fileId, name: fileName, file_type, description: fileDescription, assetType: 'file'}];
+            }
+            
+        })
+
+        jobData.jobFileTemplate = fileAndTemplates;
         return jobData;
       } else {
         return res.status(500).json({ success: false, message: "Job details could not be found. Please check if the job exists in Assets. " });
