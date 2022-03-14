@@ -19,6 +19,7 @@ const initialRequestState = {
   repo: null,
 };
 
+//!! NOT IN USE
 function GHSearchAndBranch({ form, enableEdit, getAuthorizationHeaders }) {
   const [gitHubRequest, setGitHubRequest] = useState(initialRequestState);
   const pathToCurrentIndex = ['gitHubFiles', 'currentSettings'];
