@@ -65,6 +65,22 @@ function GraphX6({ readOnly = false, statuses }) {
     }
   };
 
+  const deleteAssetFromDataFlow = async (nodeData, dataflowId) =>{
+    const options = {
+      method: 'POST',
+      headers: authHeader(),
+      body: JSON.stringify({
+        type: nodeData.type.toLowerCase(),
+        assetId: nodeData.assetId,
+        name: nodeData.name,
+        dataflowId,
+      }),
+    };
+
+    const response = await fetch('/api/dataflowgraph/deleteAsset', options);
+    if (!response.ok) handleError(response);
+  }
+
   useEffect(() => {
     // INITIALIZING EVENT CANVAS AND STENCIL
     const graph = Canvas.init(graphContainerRef, miniMapContainerRef);
@@ -139,21 +155,8 @@ function GraphX6({ readOnly = false, statuses }) {
           1. delete asset from Asset_Dataflow table
           2. make sure that any Job scheduled with this asset is deleted too
           3. update graph in Dataflowgraph table */
-            if (nodeData.assetId) {
-              const options = {
-                method: 'POST',
-                headers: authHeader(),
-                body: JSON.stringify({
-                  assetId: nodeData.assetId,
-                  type: nodeData.type.toLowerCase(),
-                  name: nodeData.name,
-                  dataflowId,
-                }),
-              };
-
-              const response = await fetch('/api/dataflowgraph/deleteAsset', options);
-              if (!response.ok) handleError(response);
-            }
+            if (nodeData.assetId) await deleteAssetFromDataFlow(nodeData,dataflowId)
+            
 
             await handleSave(graph);
           } catch (error) {
@@ -478,12 +481,15 @@ function GraphX6({ readOnly = false, statuses }) {
     });
   };
 
-  const updateAsset = (asset) => {
+  const updateAsset = async (asset) => {
     if (asset) {
       const cell = configDialog.cell;
       if (cell.data.type === "Job"){
         // if asset was not just got associated then we need to save it as new so it can get updated and fetch related files;
         if (!cell.data?.isAssociated && asset.isAssociated){
+          // Cell is associated and renamed, new asset is created and assigned to this node, old asset should be removed from this dataflow
+          if (cell.data.name !== asset.name) await deleteAssetFromDataFlow(cell.data, dataflowId )
+            
           return saveNewAsset({
             ...cell.data,
             id: asset.assetId,
@@ -679,7 +685,10 @@ function GraphX6({ readOnly = false, statuses }) {
         <AssetDetailsDialog
           show={configDialog.openDialog}
           selectedJobType={configDialog.type}
-          selectedAsset={{ id: configDialog.assetId, isAssociated: configDialog.isAssociated }}
+          selectedAsset={{
+            id: configDialog.assetId,
+            isAssociated: configDialog.isAssociated
+          }}
           selectedDataflow={{ id: dataflowId }}
           selectedNodeId={configDialog.nodeId}
           selectedNodeTitle={configDialog.title}
