@@ -50,7 +50,6 @@ router.post( '/',
   }
 );
 
-
 router.delete('/',
   [
     query('id').isUUID(4).withMessage('Invalid id'),
@@ -87,7 +86,7 @@ router.get('/',
 
       const projects = await GHprojects.findAll({
         where: { application_id },
-        attributes: { exclude: ['createdAt', 'updatedAt', 'deletedAt'] },
+        attributes: { exclude: ['createdAt', 'updatedAt'] },
       });
 
       const projectList = projects.map((project) => {
@@ -96,10 +95,6 @@ router.get('/',
         if (projectJSON.ghUserName) projectJSON.ghUserName = decryptString(projectJSON.ghUserName);
         return projectJSON;
       });
-
-      console.log('-projectList-----------------------------------------');
-      console.dir({ projectList }, { depth: null });
-      console.log('------------------------------------------');
 
       res.send(projectList);
     } catch (error) {
