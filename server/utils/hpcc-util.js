@@ -4,10 +4,8 @@ var requestPromise = require('request-promise');
 var models  = require('../models');
 var Cluster = models.cluster;
 const Dataflow_cluster_credentials = models.dataflow_cluster_credentials;
-const { GHCredentials } = require('../models')
+const { GHCredentials, github_repo_settings: GHprojects } = require('../models')
 let hpccJSComms = require("@hpcc-js/comms");
-const crypto = require('crypto');
-let algorithm = 'aes-256-ctr';
 const {decryptString } = require('./cipher')
 
 const debug = require('debug');
@@ -719,16 +717,12 @@ exports.pullFilesFromGithub = async (jobName = '', clusterId, gitHubFiles) => {
     console.log(`✔️  pullFilesFromGithub: WUCreated-  ${wuid}`);
     
     // CLONING OPERATIONS
-    let { reposList, selectedFile, credsId } = gitHubFiles;
-    // Get decrypt username and accesstoken if provided
-    let GHUsername, GHToken;
-    if (credsId) {
-      const credentials = await GHCredentials.findOne({ where:{ id: credsId }});
-      if (credentials) {
-        GHUsername = decryptString(credentials.GHUsername)
-        GHUsername = decryptString(credentials.GHToken)
-      }
-    }
+  // gitHubFiles = {
+  //   selectedProjects // List of selected projects IDS! ['c1bdfedd-4be7-4391-9936-259b040786cd']
+  //   selectedRepoId // Id of repo with main file "c1bdfedd-4be7-4391-9936-259b040786cd"
+  //   selectedFile:{ // main file data
+  //      download_url, git_url, html_url, id, isLeaf, label, name, owner, path, ref, repo, sha, size, type, url, value,
+  //    }
 
     // Create one master folder that is going to hold all cloned repos, name of folder is newly created WUID number;
     masterFolder = path.join(process.cwd(), '..', 'gitClones', wuid);
@@ -737,25 +731,35 @@ exports.pullFilesFromGithub = async (jobName = '', clusterId, gitHubFiles) => {
     console.dir({dir});
     const git = simpleGit({ baseDir: masterFolder });
     
-    //Loop through the reposList and clone each repo into master folder;
-    for (repo of reposList) {
-      let { providedGithubRepo, selectedGitTag, selectedGitBranch, owner: projectOwner, repo: projectName } = repo;
-      const ref = selectedGitTag ||  selectedGitBranch;
-      // let currentClonedRepoPath = path.join(masterFolder, `${projectOwner}_${projectName}_${ref}`); // Will make copying from same project but different brunches possible
-      let currentClonedRepoPath = path.join(masterFolder, projectName); 
-      // Add credentials to git request if they are present
-      if (GHUsername && GHToken) {
-        providedGithubRepo = providedGithubRepo.slice(0, 8) + GHUsername + ':' + GHToken + '@' + providedGithubRepo.slice(8);
-      }
+    const { selectedProjects } = gitHubFiles;
 
-      console.log( `✔️  pullFilesFromGithub: CLONING STARTED-${providedGithubRepo}, branch: ${selectedGitBranch}, tag:${selectedGitTag}` );
-      await git.clone(providedGithubRepo, currentClonedRepoPath, { '--branch': ref, '--single-branch': true });
-      console.log( `✔️  pullFilesFromGithub: CLONING FINISHED-${providedGithubRepo}, branch: ${selectedGitBranch}, tag:${selectedGitTag} ` );
+    //Loop through the reposList(contains GHprojects ids that has all gh project data including tokens) and clone each repo into master folder;
+    for ( const repoId of selectedProjects) {
+
+      let project = await GHprojects.findOne({where:{ id: repoId}});
+      if (!project) throw new Error('Failed to find GitHub project');
+      
+      project = project.toJSON();
+  
+      if (project.ghToken) project.ghToken = decryptString(project.ghToken);
+      if (project.ghUserName) project.ghUserName = decryptString(project.ghUserName);
+  
+      let { ghLink, ghBranchOrTag, ghUserName, ghToken  } = project;
+
+      const ghProjectName = ghLink.split('/')[4];
+
+      const clonePath = path.join(masterFolder, ghProjectName); 
+      // Add credentials to git request if they are present
+      if (ghUserName && ghToken) ghLink = ghLink.slice(0, 8) + ghUserName + ':' + ghToken + '@' + ghLink.slice(8);
+
+      console.log( `✔️  pullFilesFromGithub: CLONING STARTED-${ghLink}, branch/tag: ${ghBranchOrTag}` );
+      await git.clone(ghLink, clonePath, { '--branch': ghBranchOrTag, '--single-branch': true });
+      console.log( `✔️  pullFilesFromGithub: CLONING FINISHED-${ghLink}, branch/tag: ${ghBranchOrTag}` );
 
       //Update submodules
       try {
-        await git.cwd({ path: currentClonedRepoPath, root: true }).submoduleUpdate(['--init', '--recursive']);
-        console.log( `✔️  pullFilesFromGithub: SUBMODULES UPDATED ${providedGithubRepo}, branch: ${selectedGitBranch}, tag:${selectedGitTag}` );
+        await git.cwd({ path: clonePath, root: true }).submoduleUpdate(['--init', '--recursive']);
+        console.log( `✔️  pullFilesFromGithub: SUBMODULES UPDATED ${ghLink}, branch/tag: ${ghBranchOrTag}` );
       } catch (error) {
         console.log('❌  pullFilesFromGithub: git submodule update error----------------------------------------');
         console.dir(error, { depth: null });
@@ -767,9 +771,9 @@ exports.pullFilesFromGithub = async (jobName = '', clusterId, gitHubFiles) => {
     tasks.repoCloned = true;
 
     //Create a path to main file
-    const { ref, owner: projectOwner, repo: projectName, path: filePath,  } = selectedFile;
-    // const startFilePath = path.join(masterFolder, `${projectOwner}_${projectName}_${ref}`, filePath); // Will make copying from same project but different brunches possible
-    const startFilePath = path.join(masterFolder, projectName, filePath);
+    const { repo: ghProjectName, path: filePath,  } = gitHubFiles.selectedFile;
+    
+    const startFilePath = path.join(masterFolder, ghProjectName, filePath);
 
     let args = ['-E', startFilePath, '-I', masterFolder];
     const archived = await createEclArchive(args, masterFolder);
