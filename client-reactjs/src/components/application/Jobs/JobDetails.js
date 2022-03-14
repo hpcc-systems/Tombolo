@@ -1,6 +1,6 @@
 /* eslint-disable no-useless-escape */
 import React, { Component, Fragment } from "react";
-import { Tabs,Form,Input,Button,Space,Select,Table,Spin, message, Row, Col,} from "antd/lib";
+import { Tabs,Form,Input,Button,Space,Select,Table,Spin, message, Row, Col, Typography,} from "antd/lib";
 import { authHeader, handleError } from "../../common/AuthHeader.js";
 import AssociatedDataflows from "../AssociatedDataflows";
 import { hasEditPermission } from "../../common/AuthUtil.js";
@@ -332,7 +332,7 @@ class JobDetails extends Component {
           name: this.formRef.current.getFieldValue('name'),
           title: this.formRef.current.getFieldValue('title'),
           // if job is newly associated jobSelected value is gonna be true, if it is undefined we will fall-back to isAssociated value, if it is true it mean that job was previously associated, if it is falsy, then we have no associations yet;
-          isAssociated: this.formRef.current.getFieldValue('jobSelected') || this.formRef.current.getFieldValue('isAssociated') ,
+          isAssociated: this.formRef.current.getFieldValue('jobSelected') || this.formRef.current.getFieldValue('isAssociated') || this.formRef.current.getFieldValue('isStoredOnGithub') ,
         }       
 
         this.props.onClose(resultToGraph);
@@ -424,43 +424,27 @@ class JobDetails extends Component {
   async populateJobDetails() {
     const formFieldsValue = this.formRef.current.getFieldsValue(true);
   
-    const { gitHubFiles, isStoredOnGithub, ...formFields } = formFieldsValue;
-  
-    const metaData = {}; // metadata will be stored as JSON
-  
+    const { gitHubFiles, isStoredOnGithub, jobSelected, manualJobFilePath, ...formFields } = formFieldsValue;
+    //Based on this value we will save or not coresponding job data;
+    const isAssociated = jobSelected || isStoredOnGithub ? true : false;
+    // Metadata will be stored as JSON we use this object for notifications, github configs and more...
+    const metaData = {};
+    // IF JOB IS NOT ASSIGN TO ANY JOB ON HPCC IT IS CONSIDERED DESIGNJOB!
+    metaData.isAssociated = isAssociated;
     // GITHUB RELATED CODE
     metaData.isStoredOnGithub = isStoredOnGithub;
-  
-    if (!gitHubFiles) {
-      metaData.gitHubFiles = null;
-    } else {
-      const GHUsername = gitHubFiles.gitHubUserName;
-      const GHToken = gitHubFiles.gitHubUserAccessToken;
-      let credsId = '';
-      if (GHUsername && GHToken) {
-        credsId = await this.sendGHCreds({ GHUsername, GHToken });
-      }
-  
-      metaData.gitHubFiles = {
-        credsId,
-        reposList: gitHubFiles.reposList, // List of all selected repos
-        selectedRepoId: gitHubFiles.selectedRepoId, // Id of repo with main file
-        selectedFile: gitHubFiles.selectedFile, // main file data
-        pathToFile: gitHubFiles.pathToFile, // pathToFile is essential for rebuilding cascader on selected file
-      };
-    }
+    metaData.gitHubFiles = !isStoredOnGithub ? null : {
+      pathToFile: gitHubFiles.pathToFile, // pathToFile is essential for rebuilding cascader on selected file
+      selectedFile: gitHubFiles.selectedFile, // main file data
+      selectedRepoId: gitHubFiles.selectedRepoId, // Id of repo with main file
+      selectedProjects: gitHubFiles.selectedProjects, // List of selected projects IDS!
+    };
   
     // MANUAL JOB RELATED CODE
     if (formFieldsValue['jobType'] === 'Manual') {
-      if (formFieldsValue['manualJobFilePath']) {
-        metaData.manualJobs = {
-          pathToFile: formFieldsValue['manualJobFilePath'],
-        };
-      } else {
-        metaData.manualJobs = {
-          pathToFile: [],
-        };
-      }
+      metaData.manualJobs = {
+        pathToFile: manualJobFilePath || []
+      };
     }
     
     //Combine notification related values and send as object
@@ -471,19 +455,16 @@ class JobDetails extends Component {
       failureMessage: formFields.notificationFailureMessage,
     };
   
-    // IF JOB IS NOT ASSIGN TO ANY JOB ON HPCC IT IS CONSIDERED DESIGNJOB!
-    metaData.isAssociated = formFields.jobSelected || isStoredOnGithub ? true : false;
-  
     // JOB FILES
-    const inputFiles = this.getRestructuredFiles(this.state.job.inputFiles, 'input');
-    const outputFiles = this.getRestructuredFiles(this.state.job.outputFiles, 'output');
+    const inputFiles = !isAssociated ? [] : this.getRestructuredFiles(this.state.job.inputFiles, 'input');
+    const outputFiles = !isAssociated ? [] : this.getRestructuredFiles(this.state.job.outputFiles, 'output');
 
     // PREPARING FINAL OBJECT TO BE SEND TO BACKEND
     const jobDetails = {
       basic: {
         name: formFields.name,
         title: formFields.title,
-        ecl: this.state.job.ecl,
+        ecl: !isAssociated ? "" : this.state.job.ecl,
         author: formFields.author,
         contact: formFields.contact,
         gitRepo: formFields.gitRepo,
@@ -496,8 +477,8 @@ class JobDetails extends Component {
         sprayedFileScope: formFields.sprayedFileScope,
     
         metaData, // all fields related to github,messaging, etc. is stored here as JSON
-        cluster_id: this.state.selectedCluster,
-        dataflowId: this.props.selectedDataflow?.id || '',
+        cluster_id: formFields.clusters || null, //keep value as null so dataflows can find this asset if no cluster selected.
+        dataflowId: this.props.selectedDataflow?.id || '', // THIS VALUE IS NOT SAVED ON JOB OBJECT BUT IS USED TO REMOVE OR ADD JOB TO SCHEDULE!
         application_id: this.props.application.applicationId,
         groupId: this.props.groupId || this.state.job.groupId || '',
       },
@@ -506,13 +487,12 @@ class JobDetails extends Component {
         jobs: this.state.schedulePredecessor,
         cron: this.joinCronTerms(),
       },
-      files: inputFiles.concat(outputFiles),
-      params: this.state.job.inputParams,
+      files: !isAssociated ? [] : inputFiles.concat(outputFiles),
+      params: !isAssociated ? [] : this.state.job.inputParams,
     };
     
     return jobDetails;
   }
-  
 
   handleCancel = () => {
     this.setState({ visible: false, });
@@ -1087,7 +1067,7 @@ class JobDetails extends Component {
       <div className={ this.props.displayingInModal ? 'assetDetail-buttons-wrapper-modal' : 'assetDetail-buttons-wrapper ' } >
         <span style={{ float: 'left' }}>
           <Button
-            disabled={!editingAllowed || !this.state.enableEdit || this.props.isNew}
+            disabled={!editingAllowed || !this.state.enableEdit}
             type="primary"
             key="execute"
             onClick={this.executeJob}
@@ -1177,6 +1157,9 @@ class JobDetails extends Component {
     };
 
      const noECLAvailable = this.formRef.current?.getFieldValue("isStoredOnGithub") && !this.state.job.ecl;
+     const isAssociated = this.formRef.current?.getFieldValue('isAssociated'); // this value is assign only at the time of saving job. if it is true - user can not change it.
+     // Make labels spacing a little wider for in modal view
+     this.props.displayingInModal ?  formItemLayout.labelCol.span = 3 : formItemLayout.labelCol.span = 2;
 
      //JSX
     return (
@@ -1199,6 +1182,7 @@ class JobDetails extends Component {
             selectedFile: null,
             notify: 'Never',
             jobType: 'Job',
+            isStoredOnGithub: false,
           }}
           labelAlign="left"
           ref={this.formRef}
@@ -1213,9 +1197,9 @@ class JobDetails extends Component {
                   <Col span={12}>
                     <Form.Item noStyle name="jobType">
                       {!this.state.enableEdit ? (
-                        <Input disabled={!editingAllowed} placeholder="Job Type" />
+                        <Typography.Text style={{ paddingLeft: '11px' }}>{jobType}</Typography.Text>
                       ) : (
-                        <Select placeholder="Job Type" onChange={this.onJobTypeChange}>
+                        <Select disabled={isAssociated} placeholder="Job Type" onChange={this.onJobTypeChange}>
                           {jobTypes.map((d) => (
                             <Option key={d}>{d}</Option>
                           ))}
@@ -1284,7 +1268,7 @@ class JobDetails extends Component {
             </TabPane>
     
             {this.shouldShowTab(jobType) ? (
-              <TabPane tab="ECL" disabled={noECLAvailable} key="2">
+              <TabPane tab="ECL" destroyInactiveTabPane disabled={noECLAvailable} key="2">
                 <Form.Item {...eclItemLayout} label="ECL" name="ecl">
                   <EclEditor id="job_ecl" targetDomId="jobEcl" disabled={true} />
                 </Form.Item>
@@ -1424,6 +1408,7 @@ class JobDetails extends Component {
                         ) : (
                           <Select
                             id="scheduleType"
+                            disabled={isAssociated}
                             placeholder="Select a schedule type"
                             allowClear
                             onClear={() => this.setState({ selectedScheduleType: '' })}
