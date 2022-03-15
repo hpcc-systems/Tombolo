@@ -519,6 +519,8 @@ function GraphX6({ readOnly = false, statuses }) {
             }, 
           });
 
+          newEdge.setData({scheduled: true});
+
           newCellData.schedule = {
             type: 'Predecessor',
             scheduledAfter: sourceJobId,
