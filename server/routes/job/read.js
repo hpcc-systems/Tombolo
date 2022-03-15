@@ -331,7 +331,6 @@ router.post( '/saveJob',
 
     const { name, application_id, groupId, dataflowId, ...requestJobFields } = req.body.job.basic;
     const {schedule, files, params} = req.body.job;
-
     try {
       // FIND OR CREATE JOB
       let [job, isJobCreated] = await Job.findOrCreate({
@@ -346,7 +345,7 @@ router.post( '/saveJob',
         const assetGroupsFields = { assetId: job.id, groupId};
         await AssetsGroups.findOrCreate({ where: assetGroupsFields, defaults: assetGroupsFields });
       }
-
+      
       try {
         // Update JobFile table with fresh list of files;
         let jobFiles = await JobFile.findAll({ where: { job_id: job.id, application_id, file_id: { [Op.not]: null } }, order: [['name', 'asc']], raw: true, });
@@ -598,7 +597,7 @@ router.get('/job_list', [
     let query = 'select j.id, j.name, j.title, j.jobType, j.metaData, j.description, j.createdAt from job j '+
     'where j.id not in (select asd.assetId from assets_dataflows asd where asd.dataflowId = (:dataflowId) and asd.deletedAt is null)'+    
     'and j.application_id = (:applicationId)'+
-    'and j.cluster_id = (:clusterId)'+
+    'and (j.cluster_id = (:clusterId) or j.cluster_id is null)'+
     'and j.deletedAt is null;';
     /*let query = 'select j.id, j.name, j.title, j.createdAt, asd.dataflowId from job j, assets_dataflows asd where j.application_id=(:applicationId) '+
         'and j.id = asd.assetId and j.id not in (select assetId from assets_dataflows where dataflowId = (:dataflowId))';*/

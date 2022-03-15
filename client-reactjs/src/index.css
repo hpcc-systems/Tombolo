@@ -329,12 +329,12 @@ path,
   color: #1890ff !important;
 }
 
-.ant-radio-group-solid
+/* .ant-radio-group-solid
   .ant-radio-button-wrapper-checked:not(.ant-radio-button-wrapper-disabled) {
   color: #fff;
   background: #6c757d;
   border-color: #6c757d;
-}
+} */
 
 .ant-radio-button-wrapper-checked:hover {
   color: #fff;

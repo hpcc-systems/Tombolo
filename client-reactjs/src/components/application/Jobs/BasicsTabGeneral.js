@@ -1,15 +1,15 @@
 import React, { useState, useCallback  } from 'react';
-import { Form, Input, Checkbox, Button, Select, AutoComplete, Spin, message, Row, Col, Typography } from 'antd/lib';
+import { Form, Input, Button, Select, AutoComplete, Spin, message, Row, Col, Typography, Radio } from 'antd/lib';
 import { authHeader, handleError } from '../../common/AuthHeader.js';
 import ReactMarkdown from 'react-markdown';
-import { useSelector, useDispatch } from 'react-redux';
-import { assetsActions } from '../../../redux/actions/Assets';
+import { useSelector } from 'react-redux';
 
 import { MarkdownEditor } from '../../common/MarkdownEditor.js';
 import GitHubForm from './GitHubForm/GitHubForm.js';
-import GHTable from './GitHubForm/GHTable.js';
 import debounce from 'lodash/debounce';
 import Notifications from './Notifications/index.js';
+
+// import GHTable from './GitHubForm/GHTable.js';
 
 const { Option } = Select;
 
@@ -20,8 +20,6 @@ function BasicsTabGeneral({ enableEdit, editingAllowed, addingNewAsset, jobType,
 
   const [search, setSearch] = useState({ loading:false, error:'', data:[] });
   const [job, setJob] = useState({loading: false, disableFields:false });
-
-  const dispatch = useDispatch();
 
   const searchJobs = useCallback(debounce(async ({ searchString, clusterId }) => {
     message.config({maxCount: 1});
@@ -79,7 +77,7 @@ function BasicsTabGeneral({ enableEdit, editingAllowed, addingNewAsset, jobType,
       const title = formRef.current?.getFieldValue('title');
       const description = formRef.current?.getFieldValue('description');
       if (description && jobInfo.description){
-        updateFields.description = jobInfo.description + "\n -----------------------\n****ADDED DESCRIPTION****\n -----------------------\n" + description;
+        updateFields.description = jobInfo.description + "->-Addition->-" + description;
         // Because of the React Markdown we need to update local state of parent component to reflect changes;
         const event = { target:{ name:"description", value: updateFields.description }};
         onChange(event)
@@ -107,35 +105,45 @@ function BasicsTabGeneral({ enableEdit, editingAllowed, addingNewAsset, jobType,
 
   const filesStoredOnGithub = formRef.current?.getFieldValue('isStoredOnGithub');
   const isAssociated = formRef.current?.getFieldValue('isAssociated'); // this value is assign only at the time of saving job. if it is true - user can not change it.
-  
+  const clusterName = clusters?.find(cluster => cluster.id === formRef.current?.getFieldValue('clusters'))?.name;
+  const jobName = formRef.current?.getFieldValue('name') || '';
+
   let hideOnReadOnlyView = !enableEdit || !addingNewAsset;
 
   if ( enableEdit && !isAssociated ) hideOnReadOnlyView = false;
-
   return (
     <React.Fragment>
      <Spin spinning={job.loading} tip="loading job details"> 
-      <Form.Item hidden={hideOnReadOnlyView} label="Cluster" >
+      <Form.Item label="Cluster" >
         <Row gutter={[8, 8]}>
           <Col span={12}>
-            <Form.Item noStyle name="clusters" >
-              <Select placeholder="Select a Cluster" disabled={!editingAllowed || !addingNewAsset } onChange={onClusterSelection}>
-                {clusters.map((cluster) => (
-                  <Option key={cluster.id}>{cluster.name}</Option>
-                ))}
-              </Select>
-            </Form.Item>
+            {enableEdit ? (
+              <Form.Item noStyle name="clusters">
+                <Select
+                  allowClear
+                  placeholder="Select a Cluster"
+                  disabled={isAssociated}
+                  onChange={onClusterSelection}
+                >
+                  {clusters.map((cluster) => (
+                    <Option key={cluster.id}>{cluster.name}</Option>
+                  ))}
+                </Select>
+              </Form.Item>
+            ) : (
+              <Typography.Text disabled={!clusterName} style={{ paddingLeft: '11px' }}>
+                {clusterName || 'Cluster is not provided'}
+              </Typography.Text>
+            )}
           </Col>
         </Row>
       </Form.Item>
 
-      <Form.Item
-        hidden={hideOnReadOnlyView}
-        valuePropName="checked"
-        name="isStoredOnGithub"
-        label='Github Job'
-      >
-        <Checkbox className={!enableEdit && 'read-only-input'} />
+      <Form.Item label="Source" name="isStoredOnGithub" hidden={!enableEdit || isAssociated}>
+        <Radio.Group size="middle" buttonStyle="solid">
+          <Radio.Button value={false}>HPCC</Radio.Button>
+          <Radio.Button value={true}>GitHub</Radio.Button>
+        </Radio.Group>
       </Form.Item>
 
       <Form.Item hidden={hideOnReadOnlyView || filesStoredOnGithub || jobType === 'Spray'} label="Job" name="querySearchValue">
@@ -179,8 +187,18 @@ function BasicsTabGeneral({ enableEdit, editingAllowed, addingNewAsset, jobType,
           { pattern: new RegExp(/^[a-zA-Z0-9: .@_-]*$/), message: 'Please enter a valid Title. Title can have  a-zA-Z0-9:._- and space' }
         ]}
         className={enableEdit ? null : 'read-only-input'}
+        tooltip={enableEdit ? 'Should match job name in HPCC' : null}
       >
-        <Input id="job_name" onChange={onChange} placeholder={enableEdit ? 'Name' : 'Name is not provided'} disabled={!editingAllowed || !addingNewAsset || job.disableFields} />
+        {enableEdit ? (
+          <Input
+            id="job_name"
+            onChange={onChange}
+            placeholder={enableEdit ? 'Name' : 'Name is not provided'}
+            disabled={!editingAllowed || !addingNewAsset || job.disableFields}
+          />
+        ) : (
+          <Typography.Text style={{ paddingLeft: '11px' }}>{jobName}</Typography.Text>
+        )}
       </Form.Item>
 
       <Form.Item
@@ -264,11 +282,11 @@ function BasicsTabGeneral({ enableEdit, editingAllowed, addingNewAsset, jobType,
           </Form.Item>
 
           {/* {GitHub Repos Table will be shown in preview mode on the bottom of the form} */}
-          {enableEdit ? null : (
+          {/* {enableEdit ? null : (
             <Form.Item shouldUpdate noStyle>
               {() => <GHTable enableEdit={enableEdit} form={formRef} />}
             </Form.Item>
-          )}
+          )} */}
         </React.Fragment>
       ) : null}
       </Spin>

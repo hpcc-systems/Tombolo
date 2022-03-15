@@ -168,11 +168,7 @@ class FileDetails extends PureComponent {
   }
 
   getFileDetails() {
-    if (
-      this.props.selectedAsset &&
-      this.props.selectedAsset.id != "" &&
-      !this.props.isNew
-    ) {
+    if ( this.props.selectedAsset && this.props.selectedAsset.id ) {
       this.setState({
         initialDataLoading: true,
       });
