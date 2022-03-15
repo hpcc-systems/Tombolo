@@ -14,7 +14,7 @@ const data = [
     icon: <ArrowRightOutlined style={{ color: '#b3eb97' }} />,
   },
   {
-    title: 'Manual connection (default line)',
+    title: 'Manual connection (dotted line)',
     icon: <ArrowRightOutlined style={{ color: '#47bfdd' }} />,
   },
   {
