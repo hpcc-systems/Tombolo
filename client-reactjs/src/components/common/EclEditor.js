@@ -30,7 +30,7 @@ class EclEditor extends Component {
 
 
 
-    this.eclEditor._codemirror.doc.on('change', debounce(() => {
+    this.eclEditor?._codemirror?.doc?.on('change', debounce(() => {
       this.value = this.eclEditor.ecl();
       this.props.onChange({ target: this });
     }, 500));
