@@ -1458,7 +1458,7 @@ class JobDetails extends Component {
                         ) : (
                           <Select
                             id="scheduleType"
-                            disabled={isAssociated}
+                            disabled={!isAssociated}
                             placeholder="Select a schedule type"
                             allowClear
                             onClear={() => this.setState({ selectedScheduleType: '' })}
