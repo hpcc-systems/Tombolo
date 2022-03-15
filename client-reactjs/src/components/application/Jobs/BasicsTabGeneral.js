@@ -31,7 +31,7 @@ function BasicsTabGeneral({ enableEdit, editingAllowed, addingNewAsset, jobType,
       const options = {
         method: 'POST',
         headers: authHeader(),
-        body: JSON.stringify({ clusterid: clusterId, keyword: searchString, indexSearch: true })
+        body: JSON.stringify({ clusterid: clusterId, keyword: searchString.trim(), indexSearch: true })
       }; 
       
       const response = await fetch('/api/hpcc/read/jobsearch', options);
@@ -280,13 +280,6 @@ function BasicsTabGeneral({ enableEdit, editingAllowed, addingNewAsset, jobType,
               </div>
             )}
           </Form.Item>
-
-          {/* {GitHub Repos Table will be shown in preview mode on the bottom of the form} */}
-          {/* {enableEdit ? null : (
-            <Form.Item shouldUpdate noStyle>
-              {() => <GHTable enableEdit={enableEdit} form={formRef} />}
-            </Form.Item>
-          )} */}
         </React.Fragment>
       ) : null}
       </Spin>
