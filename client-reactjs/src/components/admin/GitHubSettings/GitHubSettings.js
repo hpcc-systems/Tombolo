@@ -6,30 +6,6 @@ import useGitHubProjectList from '../../../hooks/useGitHubProjectList';
 const { Option, OptGroup } = Select;
 const { Search } = Input;
 
-const dummy = [
-  {
-    key: 1,
-    ghProject: 'ghProject',
-    ghUserName: `Edrward sdf`,
-    ghToken: 'asdgasdgasdgasdgasdg',
-    ghLink: 'https://github.com/hpcc-systems/REAL-BI',
-  },
-  {
-    key: 2,
-    ghProject: 'ghProject',
-    ghUserName: `Edrward sdf`,
-    ghToken: 'asdgasdgasdgasdgasdg',
-    ghLink: 'https://github.com/hpcc-systems/REAL-BI',
-  },
-  {
-    key: 3,
-    ghProject: 'ghProject',
-    ghUserName: `Edrward sdf`,
-    ghToken: 'asdgasdgasdgasdgasdg',
-    ghLink: 'https://github.com/hpcc-systems/REAL-BI',
-  },
-];
-
 const initialBranchAndTagList = {
     error: '',
     loading: false,
