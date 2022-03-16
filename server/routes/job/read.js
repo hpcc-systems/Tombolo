@@ -82,6 +82,7 @@ const createOrUpdateFile = async ({jobfile, jobId, clusterId, dataflowId, applic
       // create or update JobFile relationship
       const jobfileFields = {
         name: file.name,
+        file_id: file.id,
         file_type: jobfile.file_type,
         description: file.description,
       };
@@ -89,7 +90,7 @@ const createOrUpdateFile = async ({jobfile, jobId, clusterId, dataflowId, applic
       let [jobFile, isJobFileCreated] = await JobFile.findOrCreate({
         where: {
           job_id: jobId,
-          file_id: file.id,
+          name: jobfile.name,
           file_type: jobfile.file_type,
           application_id: file.application_id,
         },
@@ -184,13 +185,14 @@ router.post( '/jobFileRelation',
             const jobfileFields = {
               name: duplicateFile.name,
               file_type: jobfile.file_type,
+              file_id: duplicateFile.assetId,
               description: duplicateFile.description,
             };
       
             let [jobFile, isJobFileCreated] = await JobFile.findOrCreate({
               where: {
                 job_id: job.id,
-                file_id: duplicateFile.assetId,
+                name: jobfile.name,
                 file_type: jobfile.file_type,
                 application_id: job.application_id,
               },
@@ -379,11 +381,10 @@ router.post( '/saveJob',
         }
         // Find and update or create JobFile.
         for (const file of files) {
-          let [jobFile, isFJobFileCreated] = await JobFile.findOrCreate({
+          await JobFile.findOrCreate({
             where: { job_id: job.id, application_id, file_type: file.file_type, name: file.name },
             defaults: { job_id: job.id, application_id, file_type: file.file_type, name: file.name },
-          });
-          if (!isFJobFileCreated) jobFile = await jobFile.update({ file_type: file.file_type, name: file.name });
+          })
           // If DataFlowId present update assetDataflow table so
           if (dataflowId) await AssetDataflow.findOrCreate({ where: { assetId: job.id, dataflowId }, defaults: { assetId: file.id, dataflowId }, });
         }
