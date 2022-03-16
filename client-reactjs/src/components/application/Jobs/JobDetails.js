@@ -228,6 +228,7 @@ class JobDetails extends Component {
           jobType: data.jobType,
           contact: data.contact,
           author: data.author,
+          selectedAssetId: data.id,
           scriptPath: data.scriptPath || '',
           sprayFileName: data.sprayFileName,
           sprayDropZone: data.sprayDropZone,
@@ -447,8 +448,8 @@ class JobDetails extends Component {
   
   async populateJobDetails() {
     const formFieldsValue = this.formRef.current.getFieldsValue(true);
-  
-    const { gitHubFiles, isStoredOnGithub, jobSelected, manualJobFilePath, ...formFields } = formFieldsValue;
+
+    const { gitHubFiles, isStoredOnGithub, jobSelected, manualJobFilePath,  removeAssetId, renameAssetId, ...formFields } = formFieldsValue;
     //Based on this value we will save or not coresponding job data;
     const isAssociated = jobSelected || isStoredOnGithub ? true : false;
     // Metadata will be stored as JSON we use this object for notifications, github configs and more...
@@ -513,6 +514,8 @@ class JobDetails extends Component {
       },
       files: !isAssociated ? [] : inputFiles.concat(outputFiles),
       params: !isAssociated ? [] : this.state.job.inputParams,
+      removeAssetId, // Asset was a design job that got associated with existing in DB job
+      renameAssetId // Asset was a design job that got associated with none-existing in DB job
     };
     
     return jobDetails;
@@ -1433,7 +1436,6 @@ class JobDetails extends Component {
                       pagination={{ pageSize: 10 }}
                       scroll={{ y: 800 }}
                       size='small'
-                      pagination={{ pageSize: 10 }}
                       rowExpandable={record => record.files}
                       expandedRowRender={ (record) => expendedRowRender(record)}
 

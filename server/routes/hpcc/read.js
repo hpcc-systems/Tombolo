@@ -494,7 +494,7 @@ router.get('/getJobInfo', [
   }
   try {
   	console.log('jobName: '+req.query.jobWuid);
-    Job.findOne({where: {name: req.query.jobName, application_id: req.query.applicationId}, attributes:['id']}).then((existingJob) => {
+    Job.findOne({where: {name: req.query.jobName, cluster_id: req.query.clusterid, application_id: req.query.applicationId}, attributes:['id']}).then((existingJob) => {
       if(existingJob) {
         assetUtil.jobInfo(req.query.applicationId, existingJob.id).then((existingJobInfo) => {
           res.json(existingJobInfo);

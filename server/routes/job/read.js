@@ -98,12 +98,14 @@ const createOrUpdateFile = async ({jobfile, jobId, clusterId, dataflowId, applic
       if (!isJobFileCreated) jobFile = await jobFile.update(jobfileFields);
 
       // create assetDataflow if still not exists
-      await AssetDataflow.findOrCreate({
-        where: {
-          assetId: file.id,
-          dataflowId: dataflowId,
-        },
-      });
+      if (dataflowId){
+        await AssetDataflow.findOrCreate({
+          where: {
+            assetId: file.id,
+            dataflowId: dataflowId,
+          },
+        });
+      }
       // construct object with fields that is going to be used to create a graph nodes
       const relatedFile = {
         name: file.name,
@@ -136,6 +138,16 @@ const clearAllPreviousScheduleRecords = async (props) => {
     MessageBasedJobs.destroy({ where: { jobId: props.id, dataflowId: props.dataflowId, applicationId: props.application_id }, }),
   ]);
 };
+
+const deleteJob = async (jobId, application_id) =>{
+ return await Promise.all([
+    Job.destroy({ where: { id: jobId, application_id} }),
+    JobFile.destroy({ where: { job_id: jobId } }),
+    JobParam.destroy({ where: { job_id: jobId } }),
+    AssetDataflow.destroy({ where: { assetId: jobId } }),
+  ]);
+}
+
 
 router.post( '/jobFileRelation',
   [
@@ -328,13 +340,20 @@ router.post( '/saveJob',
     // schedule: { type, jobs, cron}
     // files: []
     // params : []
+    // removeAssetId: '' if this value is present we need to delete this asset as it was a design job that was ressign to something else
+    // renameAssetId: '' if job was a designer job and it was associated with job that was not on tombolo DB we will rename job instead of deleting it
 
-    const { name, application_id, groupId, dataflowId, ...requestJobFields } = req.body.job.basic;
-    const {schedule, files, params} = req.body.job;
+    const { name, application_id, groupId, dataflowId, cluster_id = null, ...requestJobFields } = req.body.job.basic;
+    const {schedule, files, params, removeAssetId='', renameAssetId=''} = req.body.job;
     try {
+      // We want to delete design job if it was associated with existing job that is already in Tombolo DB
+      if (removeAssetId) await deleteJob(removeAssetId, application_id);
+      // We want to update design job if it was associated with HPCC job that was not in Tombolo DB
+      if (renameAssetId) await Job.update({name, cluster_id },{where:{id: renameAssetId}});
+
       // FIND OR CREATE JOB
       let [job, isJobCreated] = await Job.findOrCreate({
-        where: { name, application_id },
+        where: { name, application_id, cluster_id },
         defaults: requestJobFields,
       });
 
@@ -345,10 +364,10 @@ router.post( '/saveJob',
         const assetGroupsFields = { assetId: job.id, groupId};
         await AssetsGroups.findOrCreate({ where: assetGroupsFields, defaults: assetGroupsFields });
       }
-      
+
       try {
         // Update JobFile table with fresh list of files;
-        let jobFiles = await JobFile.findAll({ where: { job_id: job.id, application_id, file_id: { [Op.not]: null } }, order: [['name', 'asc']], raw: true, });
+        let jobFiles = await JobFile.findAll({ where: { job_id: job.id, application_id, file_id: { [Op.not]: null } }, order: [['name', 'asc']], raw: true, });      
         //Find files that are removed from the Job and remove them from JobFile table
         if (jobFiles.length > 0 && files.length > 0) {
           const removeIds = jobFiles.reduce((acc, jobFile) => {
@@ -373,6 +392,7 @@ router.post( '/saveJob',
         await JobParam.destroy({ where: { application_id, job_id: job.id } });
         await JobParam.bulkCreate(updateParams);
       } catch (error) {
+        console.log('------------------------------------------');
         console.log('FAILED TO UPDATE JOBFILE AND JOB PARAMS --');
         console.dir(error.message, { depth: null });
         console.log('------------------------------------------');
@@ -774,12 +794,7 @@ router.post( '/delete',
     console.log('[delete/read.js] - delete job = ' + req.body.jobId + ' appId: ' + req.body.application_id);
 
     try {
-      await Promise.all([
-        Job.destroy({ where: { id: req.body.jobId, application_id: req.body.application_id } }),
-        JobFile.destroy({ where: { job_id: req.body.jobId } }),
-        JobParam.destroy({ where: { job_id: req.body.jobId } }),
-        AssetDataflow.destroy({ where: { assetId: req.body.jobId } }),
-      ]);
+      await deleteJob(req.body.jobId,req.body.application_id);
       res.json({ result: 'success' });
     } catch (error) {
       console.log(err);
