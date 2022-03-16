@@ -1,5 +1,5 @@
 import React, { useState, useCallback  } from 'react';
-import { Form, Input, Button, Select, AutoComplete, Spin, message, Row, Col, Typography, Radio } from 'antd/lib';
+import { Modal, Form, Input, Button, Select, AutoComplete, Spin, message, Row, Col, Typography, Radio, Alert } from 'antd/lib';
 import { authHeader, handleError } from '../../common/AuthHeader.js';
 import ReactMarkdown from 'react-markdown';
 import { useSelector } from 'react-redux';
@@ -10,7 +10,6 @@ import debounce from 'lodash/debounce';
 import Notifications from './Notifications/index.js';
 
 // import GHTable from './GitHubForm/GHTable.js';
-
 const { Option } = Select;
 
 function BasicsTabGeneral({ enableEdit, editingAllowed, addingNewAsset, jobType, clearState, onChange, clusters, localState, formRef, applicationId, setJobDetails, onClusterSelection }) {
@@ -19,8 +18,9 @@ function BasicsTabGeneral({ enableEdit, editingAllowed, addingNewAsset, jobType,
   const clusterId = assetReducer.clusterId || formRef.current?.getFieldValue("clusters");
 
   const [search, setSearch] = useState({ loading:false, error:'', data:[] });
-  const [job, setJob] = useState({loading: false, disableFields:false });
-
+  const [job, setJob] = useState({ loading: false, disableFields: false, jobExists: false });
+  const [existingJob, setExistingJob] = useState({ showModal: false, selectedAsset: {name:"", id:""}, jobInfo: null });
+  
   const searchJobs = useCallback(debounce(async ({ searchString, clusterId }) => {
     message.config({maxCount: 1});
     if (searchString.length <= 3 ) return;      
@@ -31,7 +31,7 @@ function BasicsTabGeneral({ enableEdit, editingAllowed, addingNewAsset, jobType,
       const options = {
         method: 'POST',
         headers: authHeader(),
-        body: JSON.stringify({ clusterid: clusterId, keyword: searchString, indexSearch: true })
+        body: JSON.stringify({ clusterid: clusterId, keyword: searchString.trim(), indexSearch: true })
       }; 
       
       const response = await fetch('/api/hpcc/read/jobsearch', options);
@@ -57,50 +57,72 @@ function BasicsTabGeneral({ enableEdit, editingAllowed, addingNewAsset, jobType,
   , []);
  
 
-  const onJobSelected =  async (option) => {
+  const onJobSelected = async (option) => {
     try {
-      const url = `/api/hpcc/read/getJobInfo?jobWuid=${option.key}&jobName=${option.value}&clusterid=${clusterId}&jobType=${jobType}&applicationId=${applicationId}`
-      setJob(() => ({loading:true, disableFields: false }));
+      const url = `/api/hpcc/read/getJobInfo?jobWuid=${option.key}&jobName=${option.value}&clusterid=${clusterId}&jobType=${jobType}&applicationId=${applicationId}`;
+      setJob(() => ({ loading: true, disableFields: false, jobExists: false }));
       const respond = await fetch(url, { headers: authHeader() });
-      if (!respond.ok) handleError(respond)
+      if (!respond.ok) handleError(respond);
       const jobInfo = await respond.json();
-      
-      const updateFields ={ // will update antD form values;
-        name: jobInfo.name,
-        title: jobInfo.title,
-        gitRepo: jobInfo.gitRepo,
-        ecl: jobInfo.ecl,
-        entryBWR: jobInfo.entryBWR,
-        jobSelected: true, // IF JOB SELECTED THEN ITS NO LONGER DESIGNER JOB!
-      };
-      
+  
+      const isExistingJob = jobInfo.id ? true : false;
+      const selectedAssetId = formRef.current?.getFieldValue('selectedAssetId');
+      const jobName = formRef.current?.getFieldValue('name');
       const title = formRef.current?.getFieldValue('title');
-      const description = formRef.current?.getFieldValue('description');
-      if (description && jobInfo.description){
-        updateFields.description = jobInfo.description + "->-Addition->-" + description;
-        // Because of the React Markdown we need to update local state of parent component to reflect changes;
-        const event = { target:{ name:"description", value: updateFields.description }};
-        onChange(event)
+  
+      let fieldsToUpdate = {
+        ecl: jobInfo.ecl,
+        name: jobInfo.name,
+        title: title || jobInfo.name,
+        entryBWR: jobInfo.entryBWR,
+        jobSelected: true, // IF JOB SELECTED THEN ITS NO LONGER DESIGNER JOB
+      };
+  
+      if (selectedAssetId) {
+        // is selectedAssetId exist it means that JOB WAS CREATED BUT WITH NO ASSOCIATION, makes it a design job...
+        setJob((prev) => ({ ...prev, loading: false })); // will update local loading indicator
+        // HPCC JOB ALREADY EXISTS IN TOMBOLO, ASK USE TO OVERWRITE METADATA
+        if (isExistingJob)
+         return setExistingJob({ showModal: true, selectedAsset:{ name:jobName, id:selectedAssetId }, jobInfo });
+        // HPCC JOB DOES NOT EXISTS IN TOMBOLO, associate this design job and Rename this job according to value found on HPCC;
+        fieldsToUpdate.renameAssetId = jobName !== jobInfo.name ? selectedAssetId : '';
       }
       
-      if (!jobInfo.title) updateFields.title = title || jobInfo.name;
-
-      formRef.current.setFieldsValue(updateFields);
-
-      setJobDetails(jobInfo);// will update state in JobDetails;
-      
-      setJob(() => ({loading:false, disableFields:true })); // will update local loading indicator
+      if (isExistingJob) {
+        // Job existed in DB, add additional fields;
+        const additionalFields = {
+          title: jobInfo.title,
+          gitRepo: jobInfo.gitRepo,
+          contact: jobInfo.contact,
+          author: jobInfo.author,
+          description: jobInfo.description,
+          metaData: jobInfo.metaData,
+          notify : jobInfo.metaData?.notificationSettings?.notify,
+          notificationSuccessMessage : jobInfo.metaData?.notificationSettings?.successMessage,
+          notificationFailureMessage : jobInfo.metaData?.notificationSettings?.failureMessage,
+          notificationRecipients : jobInfo.metaData?.notificationSettings?.recipients
+        };
+        // Adding additional fields when selecting existing job while creating job from scratch;
+        fieldsToUpdate = {
+          ...fieldsToUpdate,
+          ...additionalFields,
+        };
+      }
+      // will update antD form values;
+      formRef.current.setFieldsValue(fieldsToUpdate);
+      setJobDetails(jobInfo); // will update state in JobDetails;
+      setJob(() => ({ loading: false, disableFields: true, jobExists: isExistingJob })); // will update local loading indicator
     } catch (error) {
       console.log('onJobSelected', error);
       message.error('There was an error selecting a the job');
-      setJob(() => ({loading:false, disableFields:false })); // will update local loading indicator
+      setJob(() => ({ loading: false, disableFields: false, jobExists: false })); // will update local loading indicator
     }
   };
 
   const resetSearch = () =>{
     formRef.current.resetFields(['querySearchValue','name','entryBWR','ecl', 'gitRepo','jobSelected']);
     setSearch(prev => ({...prev, data:[]}));
-    setJob((prev)=>({ ...prev, disableFields:false }))
+    setJob((prev)=>({ ...prev, jobExists:false, disableFields:false }))
   }
 
   const filesStoredOnGithub = formRef.current?.getFieldValue('isStoredOnGithub');
@@ -146,7 +168,12 @@ function BasicsTabGeneral({ enableEdit, editingAllowed, addingNewAsset, jobType,
         </Radio.Group>
       </Form.Item>
 
-      <Form.Item hidden={hideOnReadOnlyView || filesStoredOnGithub || jobType === 'Spray'} label="Job" name="querySearchValue">
+      <Form.Item
+       label="Job"
+       name="querySearchValue"
+       hidden={hideOnReadOnlyView || filesStoredOnGithub || jobType === 'Spray'}
+       help={job.jobExists ? <Alert style={{border:"none",background:"transparent"}} message="Job already exists!" type="warning" showIcon /> : null}
+       >
         <Row gutter={[8, 0]}>
           <Col span={19}>
             <AutoComplete
@@ -280,18 +307,100 @@ function BasicsTabGeneral({ enableEdit, editingAllowed, addingNewAsset, jobType,
               </div>
             )}
           </Form.Item>
-
-          {/* {GitHub Repos Table will be shown in preview mode on the bottom of the form} */}
-          {/* {enableEdit ? null : (
-            <Form.Item shouldUpdate noStyle>
-              {() => <GHTable enableEdit={enableEdit} form={formRef} />}
-            </Form.Item>
-          )} */}
         </React.Fragment>
       ) : null}
+        <OverwriteAssetModal
+          formRef={formRef}
+          setJobDetails={setJobDetails}
+          existingJob={existingJob}
+          setExistingJob={setExistingJob} 
+        />
       </Spin>
     </React.Fragment>
   );
 }
 
 export default BasicsTabGeneral;
+
+
+const OverwriteAssetModal = ({ existingJob, setExistingJob, setJobDetails, formRef }) => {
+  const reset = () => {
+    setExistingJob(() => ({ showModal: false, selectedAsset: { id: '', name: '' }, jobInfo: null }));
+  };
+
+  const acceptExisting = () => {
+    const { jobInfo, selectedAsset } = existingJob;
+
+    const updateFields = {
+      ecl: jobInfo.ecl,
+      name: jobInfo.name,
+      title: jobInfo.title,
+      author: jobInfo.author,
+      gitRepo: jobInfo.gitRepo,
+      entryBWR: jobInfo.entryBWR,
+      description: jobInfo.description,
+      removeAssetId: selectedAsset.id, // We want to assign existing job to this design job, we will need to remove design job to avoid duplications
+      metaData: jobInfo.metaData,
+      notify: jobInfo.metaData?.notificationSettings?.notify,
+      notificationSuccessMessage: jobInfo.metaData?.notificationSettings?.successMessage,
+      notificationFailureMessage: jobInfo.metaData?.notificationSettings?.failureMessage,
+      notificationRecipients: jobInfo.metaData?.notificationSettings?.recipients,
+      jobSelected: true, // IF JOB SELECTED THEN ITS NO LONGER DESIGNER JOB!
+    };
+
+    formRef.current.setFieldsValue(updateFields);
+    setJobDetails(jobInfo); // will update state in JobDetails;
+    reset();
+  };
+
+  const acceptIncoming = () => {
+    const { jobInfo, selectedAsset } = existingJob;
+
+    const updateFields = {
+      ecl: jobInfo.ecl,
+      name: jobInfo.name,
+      entryBWR: jobInfo.entryBWR,
+      removeAssetId: selectedAsset.id, // We want to assign existing job to this design job, we will need to remove design job to avoid duplications
+      jobSelected: true, // IF JOB SELECTED THEN ITS NO LONGER DESIGNER JOB!
+    };
+
+    formRef.current.setFieldsValue(updateFields);
+    setJobDetails(jobInfo); // will update state in JobDetails
+    reset();
+  };
+
+  return (
+    <Modal
+      destroyOnClose
+      visible={existingJob.showModal}
+      title="Job already exists"
+      closable={false}
+      footer={[
+        <Button key="existing" type="primary" onClick={acceptExisting}>
+          Accept existing
+        </Button>,
+        <Button key="incoming" onClick={acceptIncoming}>
+          Accept incoming
+        </Button>,
+        <Button key="cancel" onClick={reset}>
+          Cancel
+        </Button>,
+      ]}
+    >
+      <Alert
+        showIcon
+        type="warning"
+        message="Job Settings conflict"
+        description={
+          <>
+            <ul>
+              <li>Incoming Job: {existingJob?.selectedAsset?.name}</li>
+              <li>Existing Job: {existingJob?.jobInfo?.name}</li>
+            </ul>
+            <p>Job settings will be overwritten, please select which settings to accept?</p>
+          </>
+        }
+      />
+    </Modal>
+  );
+};

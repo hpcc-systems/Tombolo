@@ -176,7 +176,7 @@ exports.jobInfo = (applicationId, jobId) => {
   let jobFiles = [];
   try {
     return new Promise((resolve, reject) => {
-      Job.findOne({where:{"application_id":applicationId, "id":jobId}, attributes:['id', 'description', 'title', 'name', 'author', 'contact', 'ecl', 'entryBWR', 'gitRepo', 'jobType', 'cluster_id'], include: [JobFile, JobParam]}).then(async function(job) {
+      Job.findOne({where:{"application_id":applicationId, "id":jobId}, attributes:['id', 'description', 'title', 'name', 'author', 'contact', 'ecl', 'entryBWR', 'gitRepo', 'jobType', 'cluster_id','metaData'], include: [JobFile, JobParam]}).then(async function(job) {
         var jobData = job.get({ plain: true });
         for(jobFileIdx in jobData.jobfiles) {
           var jobFile = jobData.jobfiles[jobFileIdx];

@@ -109,7 +109,10 @@ export default class Canvas {
             zIndex: -1,
             attrs: {
               line: {
-                stroke: '#47bfdd', // manually 
+                stroke: '#47bfdd', 
+                strokeWidth:"4",
+                strokeLinecap:"round",
+                strokeDasharray: '0 10',
               },
             },
           });

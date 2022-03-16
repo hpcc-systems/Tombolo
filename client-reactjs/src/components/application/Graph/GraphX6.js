@@ -121,28 +121,6 @@ function GraphX6({ readOnly = false, statuses }) {
         if (readOnly && !node.data.assetId) return;
 
         handleContextMenu('openDialog', { node });
-
-        // if (node.data.assetId) {
-        //   return handleContextMenu('openDialog', { node });
-        // }
-        
-        // if (!readOnly) {
-        //   const name = 'node-editor';
-        //   node.removeTool(name);
-        //   node.addTools({
-        //     name,
-        //     args: {
-        //       event: e,
-        //       setText: ({ cell, value }) => {
-        //         cell.setData({ title: value }, { name: 'update-asset' });
-        //       },
-        //       attrs: {
-        //         fontSize: 17,
-        //         backgroundColor: '#FFF',
-        //       },
-        //     },
-        //   });
-        // }
       });
       
       if (!readOnly) {
@@ -205,28 +183,45 @@ function GraphX6({ readOnly = false, statuses }) {
         graph.on('edge:connected', async ({ isNew, edge }) => {
           console.log('edge:connected');
           if (isNew) {
-            const source = edge.getSourceCell().data;
-            const target = edge.getTargetCell().data;
+            const sourceCell = edge.getSourceCell();
+            const targetCell = edge.getTargetCell();
         
-            if (source.type === 'File' && target.type === 'File') {
-              if (source.isSuperFile || target.isSuperFile) {
-                const superFileAssetId = source.isSuperFile ? source.assetId : target.assetId;
-                const superfilename = source.isSuperFile ? source.name : target.name;
-                const subFileName = !source.isSuperFile ? source.name : target.name;
-
+            if (sourceCell.data.type === 'File' && targetCell.data.type === 'File') {
+              if (sourceCell.data.isSuperFile || targetCell.data.isSuperFile) {
+                let superfileCell;
+                let fileCell;
+                if (sourceCell.data.isSuperFile) {
+                  superfileCell = sourceCell;
+                  fileCell = targetCell;
+                } else {
+                  superfileCell = targetCell;
+                  fileCell = sourceCell;
+                }
+        
+                const superFileAssetId = superfileCell.data.assetId;
+                const superfilename = superfileCell.data.name;
+                const subFileName = fileCell.data.name;
+        
                 // Check in cached list if this subfile exists;
                 const cachedSubFiles = subFileList.current[superfilename];
-                
-                if (cachedSubFiles){
-                  if (!cachedSubFiles.includes(subFileName)){
+
+                // Settings for superfile edge view
+                const superFileEdgeStyle ={
+                  line: { targetMarker: { fill: '#706bf0', stroke: '#706bf0', name: 'block' }, stroke: '#706bf0', strokeDasharray: 0 , strokeWidth:"2"},
+                }
+        
+                if (cachedSubFiles) {
+                  if (!cachedSubFiles.includes(subFileName)) {
                     edge.remove();
                     message.error(`${subFileName} does not exist in superfile ${superfilename}`);
                   }
-                 
-                  edge.attr({ line: { strokeDasharray: '5 5', stroke: '#706bf0', }});
+        
+                  edge.setSource(fileCell);
+                  edge.setTarget(superfileCell);
+                  edge.attr(superFileEdgeStyle);
                   return; // Checked in cached list, connection is valid,  exit function;
-                } 
-
+                }
+        
                 try {
                   const options = {
                     method: 'POST',
@@ -238,20 +233,17 @@ function GraphX6({ readOnly = false, statuses }) {
                   if (!response.ok) handleError(response);
         
                   const subfiles = await response.json();
-
+        
                   // Cache result of call in state and look up from list next time there is a new connection to avoid multiple calls;
-                  subFileList.current[superfilename] = subfiles;;
-
+                  subFileList.current[superfilename] = subfiles;
+        
                   if (!subfiles.includes(subFileName)) {
                     message.error(`${subFileName} does not exist in superfile ${superfilename}`);
                     edge.remove();
-                  } else{
-                    edge.attr({ line: { 
-                      sourceMarker: { fill: '#706bf0', stroke: '#706bf0', name: 'block' },
-                      targetMarker: { fill: '#706bf0', stroke: '#706bf0', name: 'block' },
-                      stroke: '#706bf0', 
-                      strokeDasharray: '5 5', 
-                    }});
+                  } else {
+                    edge.setSource(fileCell);
+                    edge.setTarget(superfileCell);
+                    edge.attr(superFileEdgeStyle);
                   }
                 } catch (error) {
                   console.log('-error-----------------------------------------');
@@ -527,6 +519,8 @@ function GraphX6({ readOnly = false, statuses }) {
               },
             }, 
           });
+
+          newEdge.setData({scheduled: true});
 
           newCellData.schedule = {
             type: 'Predecessor',
