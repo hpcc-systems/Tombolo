@@ -204,6 +204,11 @@ function GraphX6({ readOnly = false, statuses }) {
         
                 // Check in cached list if this subfile exists;
                 const cachedSubFiles = subFileList.current[superfilename];
+
+                // Settings for superfile edge view
+                const superFileEdgeStyle ={
+                  line: { targetMarker: { fill: '#706bf0', stroke: '#706bf0', name: 'block' }, stroke: '#706bf0', strokeDasharray: 0 , strokeWidth:"2"},
+                }
         
                 if (cachedSubFiles) {
                   if (!cachedSubFiles.includes(subFileName)) {
@@ -213,9 +218,7 @@ function GraphX6({ readOnly = false, statuses }) {
         
                   edge.setSource(fileCell);
                   edge.setTarget(superfileCell);
-                  edge.attr({
-                    line: { targetMarker: { fill: '#706bf0', stroke: '#706bf0', name: 'block' }, stroke: '#706bf0' },
-                  });
+                  edge.attr(superFileEdgeStyle);
                   return; // Checked in cached list, connection is valid,  exit function;
                 }
         
@@ -240,9 +243,7 @@ function GraphX6({ readOnly = false, statuses }) {
                   } else {
                     edge.setSource(fileCell);
                     edge.setTarget(superfileCell);
-                    edge.attr({
-                      line: { targetMarker: { fill: '#706bf0', stroke: '#706bf0', name: 'block' }, stroke: '#706bf0', },
-                    });
+                    edge.attr(superFileEdgeStyle);
                   }
                 } catch (error) {
                   console.log('-error-----------------------------------------');
