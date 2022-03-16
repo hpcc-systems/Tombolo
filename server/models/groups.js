@@ -19,6 +19,12 @@ module.exports = (sequelize, DataTypes) => {
       foreignKey: 'groupId',
       otherKey: 'assetId'
     });
+    groups.belongsToMany(models.fileTemplate, {
+    through: 'assets_groups',
+    as: 'fileTemplates',
+    foreignKey: 'groupId',
+    otherKey: 'assetId'
+  });
     groups.belongsToMany(models.job, {
       through: 'assets_groups',
       as: 'jobs',

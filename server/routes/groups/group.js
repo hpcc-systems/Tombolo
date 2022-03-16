@@ -184,7 +184,7 @@ router.get('/assets', [
         {model:File, as:'files', attributes:['id', 'name', 'title', 'description', 'createdAt'], 
           include:[{model: Visualization}]
         }, 
-        {model:FileTemplate, as:'fileTemplate', attributes:['id', 'title', 'description', 'createdAt']}, 
+        {model:FileTemplate, as:'fileTemplates', attributes:['id', 'title', 'description', 'createdAt']}, 
         {model:Job, as: 'jobs', attributes:['id', 'name', 'title', 'description', 'createdAt']}, 
         {model:Query, as: 'queries', attributes:['id', 'name', 'title', 'description', 'createdAt']}, 
         {model:Index, as: 'indexes', attributes:['id', 'name', 'title', 'description', 'createdAt']},
@@ -204,7 +204,7 @@ router.get('/assets', [
             createdAt: file.createdAt            
           })
         })
-        assets[0] && assets[0].fileTemplate.forEach((fileTemplate) => {
+        assets[0] && assets[0].fileTemplates.forEach((fileTemplate) => {
         finalAssets.push({
           type: 'File Template',
           id: fileTemplate.id,
