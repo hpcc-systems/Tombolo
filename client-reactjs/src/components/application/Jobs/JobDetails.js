@@ -449,9 +449,9 @@ class JobDetails extends Component {
   async populateJobDetails() {
     const formFieldsValue = this.formRef.current.getFieldsValue(true);
 
-    const { gitHubFiles, isStoredOnGithub, jobSelected, manualJobFilePath,  removeAssetId, renameAssetId, ...formFields } = formFieldsValue;
+    const { gitHubFiles, isStoredOnGithub,  jobSelected, manualJobFilePath,  removeAssetId, renameAssetId, ...formFields } = formFieldsValue;
     //Based on this value we will save or not coresponding job data;
-    const isAssociated = jobSelected || isStoredOnGithub ? true : false;
+    const isAssociated = formFieldsValue.isAssociated || jobSelected || isStoredOnGithub;
     // Metadata will be stored as JSON we use this object for notifications, github configs and more...
     const metaData = {};
     // IF JOB IS NOT ASSIGN TO ANY JOB ON HPCC IT IS CONSIDERED DESIGNJOB!
@@ -533,6 +533,7 @@ class JobDetails extends Component {
 
   handleAddInputFile = () => {
     const selectedFile = this.state.sourceFiles.find((sourceFile) => sourceFile.id === this.state.selectedInputFile );
+    selectedFile.addedManually = true;    
     this.setState({
       job: {
         ...this.state.job,
@@ -543,6 +544,7 @@ class JobDetails extends Component {
 
   handleAddOutputFile = () => {
     const selectedFile = this.state.sourceFiles.find((sourceFile) => sourceFile.id === this.state.selectedInputFile );
+    selectedFile.addedManually = true;
     this.setState({
       job: {
         ...this.state.job,

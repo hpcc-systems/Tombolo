@@ -149,6 +149,30 @@ const deleteJob = async (jobId, application_id) =>{
   ]);
 }
 
+const getManuallyAddedFiles = async (job) =>{
+  const manuallyAddedJobs= [];
+  // Check if there were manually added files to job via Input/Output file tabs on frontend and add them to main related files list
+  const manuallyAddedFiles = await JobFile.findAll({where:{job_id: job.id,  application_id: job.application_id, added_manually: true, file_id :{ [Op.not] : null} }});
+  
+  if (manuallyAddedFiles.length > 0) {
+    for (const el of manuallyAddedFiles) {
+      const file = await File.findOne({where:{id : el.file_id}});
+      if (file){
+        manuallyAddedJobs.push({
+          name: file.name,
+          assetId: file.id,
+          relatedTo: job.id,
+          title: file.title,
+          isSuperFile: file.isSuperFile,
+          file_type: el.file_type, //'input' | 'output'
+          description: file.description,
+        })
+      }
+    }
+  }
+  return manuallyAddedJobs;
+}
+
 
 router.post( '/jobFileRelation',
   [
@@ -171,9 +195,14 @@ router.post( '/jobFileRelation',
       const jobInfo = await hpccUtil.getJobInfo(job.cluster_id, result.wuid, job.jobType);
       const jobfiles = jobInfo?.jobfiles;
       //{ jobfiles: [ { name: 'covid19::kafka::guid', file_type: 'input' } ,{ name: 'covid19::kafka::guid', file_type: 'output' } ] }
+
+      let relatedFiles = [];
+      // Check if there were manually added files to job via Input/Output file tabs on frontend and add them to main related files list
+      const manuallyAddedFiles = await getManuallyAddedFiles(job);
       
-      const relatedFiles = [];
-      
+      if (manuallyAddedFiles.length > 0) relatedFiles = [...manuallyAddedFiles];
+ 
+      // Loop through files receiver from HPCC and make entries into DB and add them to main list
       if (jobfiles?.length > 0) {
         for (const jobfile of jobfiles) {
           // jobfiles array has many files with same name but file_type is different;
@@ -258,7 +287,11 @@ try {
         const jobInfo = await hpccUtil.getJobInfo(clusterId, result.wuid, "Job" );
         const jobfiles = jobInfo?.jobfiles;
         //{ jobfiles: [ { name: 'usa::cars.csv', file_type: 'input' } ] }
-        const relatedFiles=[];
+        let relatedFiles=[];
+        // Check if there were manually added files to job via Input/Output file tabs on frontend and add them to main related files list
+        const manuallyAddedFiles = await getManuallyAddedFiles({id:job.id, application_id : applicationId });
+        if (manuallyAddedFiles.length > 0) relatedFiles = [...manuallyAddedFiles];
+
         if (jobfiles?.length > 0) {
           for (const jobfile of jobfiles) {
            const file = await createOrUpdateFile({ jobId: job.id, applicationId, dataflowId, clusterId, jobfile, })
@@ -366,7 +399,7 @@ router.post( '/saveJob',
         const assetGroupsFields = { assetId: job.id, groupId};
         await AssetsGroups.findOrCreate({ where: assetGroupsFields, defaults: assetGroupsFields });
       }
-
+      
       try {
         // Update JobFile table with fresh list of files;
         let jobFiles = await JobFile.findAll({ where: { job_id: job.id, application_id, file_id: { [Op.not]: null } }, order: [['name', 'asc']], raw: true, });      
@@ -381,9 +414,18 @@ router.post( '/saveJob',
         }
         // Find and update or create JobFile.
         for (const file of files) {
+          const defaultFields = {
+            job_id: job.id,
+            application_id,
+            name: file.name,
+            file_id: file.file_id, // not always present
+            file_type: file.file_type,
+            added_manually: file.addedManually,
+          };
+          
           await JobFile.findOrCreate({
             where: { job_id: job.id, application_id, file_type: file.file_type, name: file.name },
-            defaults: { job_id: job.id, application_id, file_type: file.file_type, name: file.name },
+            defaults: defaultFields ,
           })
           // If DataFlowId present update assetDataflow table so
           if (dataflowId) await AssetDataflow.findOrCreate({ where: { assetId: job.id, dataflowId }, defaults: { assetId: file.id, dataflowId }, });
