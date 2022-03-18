@@ -82,7 +82,7 @@ router.post('/deleteAsset',
     body('assetId').isUUID(4).withMessage('Invalid asset id'),
     body('name').not().isEmpty().trim().escape(),
     body('type').custom(value =>{
-      const types = ['job', 'file', 'index','sub-process']
+      const types = ['job', 'file', 'index','sub-process', 'filetemplate']
       if (!types.includes(value)){
         throw new Error('Invalid asset type');
       }

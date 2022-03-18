@@ -127,15 +127,12 @@ function GraphX6({ readOnly = false, statuses }) {
         // restrict readonly users to save changes to DB
         graph.on('node:removed', async ({ cell }) => {
           const nodeData = cell.getData();
-          // console.log('node:removed')
           try {
           /* deleting asset from dataflow is multi step operation
           1. delete asset from Asset_Dataflow table
           2. make sure that any Job scheduled with this asset is deleted too
           3. update graph in Dataflowgraph table */
             if (nodeData.assetId) await deleteAssetFromDataFlow(nodeData,dataflowId)
-            
-
             await handleSave(graph);
           } catch (error) {
             console.log(error);
@@ -176,7 +173,6 @@ function GraphX6({ readOnly = false, statuses }) {
         });
 
         graph.on('edge:removed', async () => {
-          console.log('edge:removed');
           await handleSave(graph);
         });
 
@@ -380,7 +376,7 @@ function GraphX6({ readOnly = false, statuses }) {
 
   const addRelatedFiles = (relatedFiles, cell) => {
     // 1. get all files,
-    const allFiles = graphRef.current.getNodes().filter((node) => node.data.type === 'File');
+    const allFiles = graphRef.current.getNodes().filter((node) => node.data.type === 'File' || node.data.type === 'FileTemplate');
 
     const nodePositions = cell.getProp('position'); // {x,y} of node on a graph
     const yOffset = 70;
@@ -398,7 +394,7 @@ function GraphX6({ readOnly = false, statuses }) {
       let newNode;
 
       const relatedFileData ={
-        type: 'File',
+        type: relatedFile.assetType || 'File',
         name: relatedFile.name,
         title: relatedFile.title,
         assetId: relatedFile.assetId,
@@ -616,7 +612,7 @@ function GraphX6({ readOnly = false, statuses }) {
               incomingEdges.forEach((edge) => {
                 const source = edge.getSourceNode();
                 if (source) {
-                  const isFile = source.data.type === 'File';
+                  const isFile = source.data.type === 'File' || 'FileTemplate'
                   if (isFile) {
                     const fileExist = assetsIds.includes(source.data.assetId); // assetsIds is array of all assets in this dataflow
                     if (!fileExist) {
@@ -633,7 +629,7 @@ function GraphX6({ readOnly = false, statuses }) {
               outgoingEdges.forEach((edge) => {
                 const target = edge.getTargetNode();
                 if (target) {
-                  const isFile = target.data.type === 'File';
+                  const isFile = target.data.type === 'File' || 'FileTemplate';
                   if (isFile) {
                     const fileExist = assetsIds.includes(target.data.assetId);
                     if (!fileExist) {

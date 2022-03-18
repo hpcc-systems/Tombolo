@@ -13,6 +13,7 @@ import {
   LinkOutlined,
   MessageOutlined,
   MailOutlined,
+  ProfileOutlined,
 } from '@ant-design/icons/lib/icons';
 
 import { Menu, Dropdown } from '@antv/x6-react-components';
@@ -131,6 +132,7 @@ class Node extends React.Component {
     Job: <SettingOutlined />,
     File: <FileOutlined />,
     SuperFile: <FileAddOutlined />,
+    FileTemplate : <ProfileOutlined />,
     Index: <BookOutlined />,
     Manual: <MailOutlined />,
     'Sub-Process': <SisternodeOutlined />,
