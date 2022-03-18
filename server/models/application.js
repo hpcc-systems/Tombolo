@@ -19,6 +19,8 @@ module.exports = (sequelize, DataTypes) => {
       onDelete: 'CASCADE',
       hooks: true
     });
+
+    application.hasMany(models.github_repo_settings,{ foreignKey:'application_id', onDelete: 'CASCADE'});
   };
   return application;
 };

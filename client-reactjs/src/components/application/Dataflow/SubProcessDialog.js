@@ -78,8 +78,8 @@ function SubProcessDialog({show, applicationId, selectedParentDataflow, onRefres
       })
       .then(data => {
         if(data != undefined && data != null) {
-          let nodes = JSON.parse(data.nodes);
-          let edges = JSON.parse(data.edges);
+          let nodes = data.nodes;
+          let edges = data.edges;
 
           edges.forEach((edge) => {
           	if(edge.source == nodeId) {

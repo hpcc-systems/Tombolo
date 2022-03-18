@@ -4,6 +4,7 @@ var models  = require('../../models');
 let AssetDataflow = models.assets_dataflows;
 let Dataflow = models.dataflow;
 let DataflowGraph = models.dataflowgraph;
+let Cluster = models.cluster;
 let Index = models.indexes;
 let File = models.file;
 let Job = models.job;
@@ -12,6 +13,7 @@ let JobExecution = models.job_execution;
 const Dataflow_cluster_credentials = models.dataflow_cluster_credentials;
 const validatorUtil = require('../../utils/validator');
 const { body, query, validationResult } = require('express-validator');
+const jobScheduler = require('../../job-scheduler');
 const {isClusterReachable} = require('../../utils/hpcc-util');
 const {encryptString, decryptString} = require('../../utils/cipher')
 
@@ -27,14 +29,23 @@ router.post(
     if (!errors.isEmpty()) {
       return res.status(422).json({ success: false, errors: errors.array() });
     }
-    //Check if cluster is reachable
-    const { clusterHost, port, id, application_id, title, description, clusterId, metaData } = req.body;
+  const { id, application_id, title, description, clusterId, metaData } = req.body;
+    // Get cluster port and host
+    let clusterHost, port;
+    try{
+      let cluster =  await Cluster.findOne({where : {id : clusterId}});
+      clusterHost = cluster.thor_host;
+      port = cluster.thor_port
+    }catch(err){
+      console.log(err)
+    }
 
+    //Check if cluster is reachable
     const username = req.body.username || '';
     const password = req.body.password || '';
     const reachable = await isClusterReachable(clusterHost, port, username, password);
 
-
+    console.log("Dataflow Save..."+reachable);
     if (reachable.statusCode === 503) {
       res.status(503).json({ success: false, message: 'Cluster not reachable' });
     } else if (reachable.statusCode === 403) {
@@ -145,49 +156,37 @@ router.get('/', [
     }
 });
 
-router.post('/delete', [
-  body('applicationId')
-    .isUUID(4).withMessage('Invalid application_id'),
-  body('dataflowId')
-    .isUUID(4).withMessage('Invalid dataflowId')
-], async (req, res) => {
-  const errors = validationResult(req).formatWith(validatorUtil.errorFormatter);
-  if (!errors.isEmpty()) {
-    return res.status(422).json({ success: false, errors: errors.array() });
-  }
+router.post( '/delete',
+  [
+    body('applicationId').isUUID(4).withMessage('Invalid application_id'),
+    body('dataflowId').isUUID(4).withMessage('Invalid dataflowId'),
+  ],
+  async (req, res) => {
+    const errors = validationResult(req).formatWith(validatorUtil.errorFormatter);
+    if (!errors.isEmpty()) {
+      return res.status(422).json({ success: false, errors: errors.array() });
+    }
 
-  //find all jobs in this dataflow and remove them from scheduler
-  let dataflowGraph = await DataflowGraph.findOne({where: {dataflowId: req.body.dataflowId}});
-  console.log(dataflowGraph);
-  if(dataflowGraph){
-  for(const node of dataflowGraph.nodes) {
-    console.log(node);
-    if(node.type == 'Job' && node.schedulerType == 'Time') {
-      let job = await Job.findOne({where: {id: node.jobId}, attributes: ['name']});
-      console.log("**************************removing "+job.name+" scheduler");
-      await JobScheduler.removeJobFromScheduler(job.name + '-' + req.body.dataflowId + '-' + node.jobId);
+    try {
+      await Promise.all([
+        jobScheduler.removeAllDataflowJobs(req.body.dataflowId),
+        // JobExecution.destroy({ where: { dataflowId: req.body.dataflowId } }), // !! will delete all job executions of this dataflow
+        AssetDataflow.destroy({ where: { dataflowId: req.body.dataflowId } }),
+        DependentJobs.destroy({ where: { dataflowId: req.body.dataflowId } }),
+        Dataflow.destroy({ where: { id: req.body.dataflowId, application_id: req.body.applicationId } }),
+        DataflowGraph.destroy({ where: { dataflowId: req.body.dataflowId, application_id: req.body.applicationId } }),
+      ]);
+
+      res.json({ result: 'success' });
+    } catch (error) {
+      console.log('-error-----------------------------------------');
+      console.dir({ error }, { depth: null });
+      console.log('------------------------------------------');
+      res.status(422).json({ result: false, message: error.message });
     }
   }
-}
+);
 
-  await JobExecution.destroy({where: {dataflowId: req.body.dataflowId}});
-
-  await AssetDataflow.destroy({where: {'dataflowId': req.body.dataflowId}});
-  
-  await DependentJobs.destroy({where: {'dataflowId': req.body.dataflowId}});
-
-  Dataflow.destroy(
-    {where:{"id": req.body.dataflowId, "application_id":req.body.applicationId}}
-  ).then(function(deleted) {
-    DataflowGraph.destroy(
-      {where:{"dataflowId": req.body.dataflowId, "application_id":req.body.applicationId}}
-    ).then(function(deleted) {
-        res.json({"result":"success"});
-    })
-  }).catch(function(err) {
-      console.log(err);
-  });
-});
 
 router.get('/assets', [
   query('app_id')
@@ -304,5 +303,35 @@ router.get('/assets', [
     });
   */
 });
+
+router.get( '/checkAssetDataflows',
+  [query('assetId').isUUID(4).withMessage('Invalid assetId')],
+  async (req, res) => {
+    const errors = validationResult(req).formatWith(validatorUtil.errorFormatter);
+    if (!errors.isEmpty()) return res.status(422).json({ success: false, errors: errors.array() });
+
+    try {
+
+      const assetsInDataflows = await AssetDataflow.findAll({
+         where: { assetId: req.query.assetId },
+         attributes:["dataflowId"]
+        });
+
+      const dataflows = await Dataflow.findAll({
+        where:{ id: assetsInDataflows.map(ad => ad.dataflowId) },
+        attributes:['id','application_id','title']
+      });
+      
+      res.send(dataflows);
+    } catch (error) {
+      console.log('-error-----------------------------------------');
+      console.dir({error}, { depth: null });
+      console.log('------------------------------------------');
+      
+      res.status(500).send('Error occurred while checking asset in dataflows');
+    }
+  }
+);
+
 
 module.exports = router;

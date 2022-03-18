@@ -10,7 +10,6 @@ import ResetPassword from "./components/login/ResetPassword";
 import { PrivateRoute } from "./components/common/PrivateRoute";
 import Assets from "./components/application/Assets";
 import { LeftNav } from "./components/layout/LeftNav";
-import AssetDetailsDialog from "./components/application/AssetDetailsDialog";
 import DataDictionary from "./components/application/DataDictionary";
 import Dataflow from "./components/application/Dataflow";
 import DataflowDetails from "./components/application/Dataflow/DataflowDetails";
@@ -18,6 +17,7 @@ import { DataflowInstances } from "./components/application/DataflowInstances/Da
 import { DataflowInstanceDetails } from "./components/application/DataflowInstances/DataflowInstanceDetails";
 import Users from "./components/admin/Users";
 import FileDetailsForm from "./components/application/FileDetails";
+import FileTemplate from "./components/application/templates/FileTemplate"
 import JobDetailsForm from "./components/application/Jobs/JobDetails";
 import IndexDetailsForm from "./components/application/IndexDetails";
 import QueryDetailsForm from "./components/application/QueryDetails";
@@ -35,6 +35,7 @@ import { store } from "./redux/store/Store";
 
 import { Report } from "./components/Report/Report";
 import Regulations from "./components/admin/ControlsAndRegulations";
+import GitHubSettings from "./components/admin/GitHubSettings/GitHubSettings";
 const { Content } = Layout;
 
 class App extends React.Component {  
@@ -107,6 +108,10 @@ class App extends React.Component {
                     component={FileDetailsForm}
                   />
                   <PrivateRoute
+                    path="/:applicationId/assets/fileTemplate/:fileId?"
+                    component={FileTemplate}
+                  />
+                  <PrivateRoute
                     path="/:applicationId/assets/job/:jobId?"
                     component={JobDetailsForm}
                   />
@@ -147,6 +152,8 @@ class App extends React.Component {
                     path="/admin/clusters"
                     component={AdminClusters}
                   />
+
+                  <PrivateRoute path="/admin/github" component={GitHubSettings} />
                   <PrivateRoute path="/admin/users" component={Users} />
                   <PrivateRoute path="/report/:searchText" component={Report} />
                   <PrivateRoute

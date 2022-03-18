@@ -1,0 +1,109 @@
+  /* NEW NODE */
+  .node-outer {
+    padding: 5px;
+    width: 100%;
+    height: 100%;
+  }
+
+  .node-icon{
+    width: 50px;
+    min-height: 40px;
+    border-radius: 3px;
+    margin: 0 auto;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    transition: box-shadow .3s linear;
+  }
+  .node-icon:hover{
+    box-shadow: rgba(14, 30, 37, 0.12) 0px 2px 4px 0px, rgba(14, 30, 37, 0.32) 0px 2px 16px 0px;
+  }
+  .node-icon svg{
+    font-size: 27px;
+  }
+
+  .Job, .Manual {
+    background-color: #f1a261 ;
+    border: 2px solid #ff7300d7;
+  }
+  
+  .File {
+    background-color: #9dd6fc ;
+    border: 2px solid #0995f1c2;
+  }
+
+   .FileTemplate {
+    background-color: #141E27;
+    border : 2px solid #141E27;
+    color: #ffffff;
+  }
+  
+  .SuperFile{
+    background-color: #cbcaf5 ;
+    border: 2px solid #706bf0;
+  }
+
+  .Index {
+    background-color: #76e25a ;
+    border: 2px solid #146400ad;
+  }
+
+  .Sub-Process {
+    background-color: #df7274 ;
+    border: 2px solid #eb1518;
+  }
+  
+  .node-schedule{
+    width: 103%; 
+    margin-top: -16px;
+    display: flex;
+    justify-content: flex-end;
+  }
+ 
+  .node-title{
+    display: flex;
+    justify-content: center;
+    text-align: center;
+  }
+  
+  .status-completed, .status-completed:hover, .status-compiled {
+    border-color:#04880a;
+    box-shadow: 0px 0px 8px 2px #08a710
+  }
+ .status-failed,  .status-failed:hover {
+    border-color:#eb1518;
+    box-shadow: 0px 0px 8px 2px #ff4d4f;
+  }
+
+  .no-asset{
+    background-color: rgba(248, 248, 248, 0.623);
+    box-shadow: rgba(0, 0, 0, 0.15) 1.95px 1.95px 2.6px;
+  }
+  
+  .status-not-exist{
+    /* box-shadow: 0px 0px 8px 2px #8f8f8f; */
+  }
+
+ /* STENCIL */
+  .stencil-node {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border: 1px solid #c2c8d5;
+    border-radius: 4px;
+    box-shadow: 0 2px 5px 1px rgba(0, 0, 0, 0.06);
+    padding: 5px;
+    text-align: center;
+  }
+  .stencil-Job{
+    border-left: 5px solid #ec8633d7;
+  }
+  .stencil-File{
+    border-left: 5px solid #84c4eec2;
+  }
+  .stencil-Index{
+    border-left: 5px solid #35991cad;
+  }
+  .stencil-Sub-Process{
+    border-left: 5px solid #d64b4e;
+  }

@@ -27,11 +27,11 @@ var sanitize = require("sanitize-filename");
 
 router.post('/filesearch', [
   body('keyword')
-    .matches(/^[a-zA-Z]{1}[a-zA-Z0-9_:.\-]*$/).withMessage('Invalid keyword')
+    .matches(/^.[a-zA-Z]{1}[a-zA-Z0-9_:.\-]*$/).withMessage('Invalid keyword')
 ], function (req, res) {
 	const errors = validationResult(req).formatWith(validatorUtil.errorFormatter);
 	if (!errors.isEmpty()) {
-		return res.status(422).send({"success":"false", "message": "Error occured during search."});
+		return res.status(422).send({"success":"false", "message": "Error occurred during search."});
 	}
 
 	hpccUtil.getCluster(req.body.clusterid).then(function(cluster) {
@@ -41,7 +41,16 @@ router.post('/filesearch', [
 			let contentType = req.body.indexSearch ? "key" : "";
 			console.log("contentType: "+contentType);
 			let dfuService = new hpccJSComms.DFUService({ baseUrl: cluster.thor_host + ':' + cluster.thor_port, userID:(clusterAuth ? clusterAuth.user : ""), password:(clusterAuth ? clusterAuth.password : "")});
-			dfuService.DFUQuery({"LogicalName":"*"+req.body.keyword+"*", ContentType:contentType}).then(response => {
+			const {fileNamePattern} = req.body;
+
+			let logicalFileName = "*"+req.body.keyword+"*";
+			if(fileNamePattern === 'startsWith'){
+				logicalFileName = req.body.keyword+"*";
+			}else if(fileNamePattern === 'endsWith'){
+				logicalFileName = "*"+req.body.keyword
+			}
+			
+			dfuService.DFUQuery({"LogicalName": logicalFileName, ContentType:contentType}).then(response => {
 				if(response.DFULogicalFiles && response.DFULogicalFiles.DFULogicalFile && response.DFULogicalFiles.DFULogicalFile.length > 0) {
 					let searchResults = response.DFULogicalFiles.DFULogicalFile;
 					searchResults.forEach((logicalFile) => {
@@ -485,7 +494,7 @@ router.get('/getJobInfo', [
   }
   try {
   	console.log('jobName: '+req.query.jobWuid);
-    Job.findOne({where: {name: req.query.jobName, application_id: req.query.applicationId}, attributes:['id']}).then((existingJob) => {
+    Job.findOne({where: {name: req.query.jobName, cluster_id: req.query.clusterid, application_id: req.query.applicationId}, attributes:['id']}).then((existingJob) => {
       if(existingJob) {
         assetUtil.jobInfo(req.query.applicationId, existingJob.id).then((existingJobInfo) => {
           res.json(existingJobInfo);

@@ -1,43 +1,43 @@
-import React, { useEffect } from 'react';
-import useFileDetailsForm from '../../hooks/useFileDetailsForm';
-import { useSelector } from 'react-redux';
+import React from 'react'
 import { Modal } from 'antd/lib';
 
+import FileDetailsForm from './FileDetails';
+import FileTemplate from './templates/FileTemplate'
+import JobDetailsForm from './Jobs/JobDetails';
+import IndexDetailsForm from './IndexDetails';
+import QueryDetailsForm from './QueryDetails';
+
 function AssetDetailsDialog(props) {
-  const { isShowing, toggle, OpenDetailsForm } = useFileDetailsForm();
-  const authReducer = useSelector((state) => state.authenticationReducer);
-
-  useEffect(() => {
-    if (props.assetId) toggle();
-  }, [props.assetId]);
-
-  const handleClose = () => {
-    toggle();
-    //flip the state in the parent component
-    props.handleClose();
-  };
-
+  
   const capitalize = (word) => {
     if (!word || typeof word !== 'string') return '';
     return word[0].toUpperCase() + word.slice(1);
   };
 
-  const detailsFormProps = { ...props, isNew: false, onClose: handleClose, displayingInModal: true, type: props.assetType };
+  const DetailsForm = (props) =>{
+    const formOptions ={
+      job: <JobDetailsForm {...props}/>,
+      file: <FileDetailsForm {...props} />,
+      filetemplate : <FileTemplate {...props} />,
+      index: <IndexDetailsForm {...props}/>,
+      query: <QueryDetailsForm  {...props}/>
+    }
+    const jobType = props.selectedJobType.toLowerCase();
+    return formOptions[jobType];
+  } 
 
-  return authReducer.user && authReducer.user.token ? (
-    <React.Fragment>
-      <Modal
-        width='1200px'
-        footer={null}
-        visible={isShowing}
-        onCancel={handleClose}
-        bodyStyle={{ display: 'flex', flexDirection: 'column' }}
-        title={`${capitalize(props.assetType)} : ${props.title}`}
-      >
-        <OpenDetailsForm {...detailsFormProps} />
-      </Modal>
-    </React.Fragment>
-  ) : null;
+  return(
+    <Modal
+      visible={props.show}
+      onCancel={()=>props.onClose()}
+      width="1200px"
+      footer={null}
+      bodyStyle={{display: "flex", flexDirection: "column"}}
+      title={`${capitalize(props.selectedJobType)} : ${props.selectedNodeTitle}`}
+      > 
+      <DetailsForm {...props} />
+    </Modal>
+	)
 }
 
 export default AssetDetailsDialog;

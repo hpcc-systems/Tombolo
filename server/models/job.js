@@ -39,7 +39,6 @@ module.exports = (sequelize, DataTypes) => {
     });
     job.hasMany(models.job_execution,{
       foreignKey:'jobId', 
-      onDelete: 'CASCADE',
     });
     job.hasMany(models.jobparam,{
       foreignKey:'job_id',
