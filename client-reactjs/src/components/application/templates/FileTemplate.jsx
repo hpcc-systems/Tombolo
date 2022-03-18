@@ -259,6 +259,15 @@ function FileTemplate(props) {
     })
   };
 
+  //Handle cancel btn click
+  const handleCancel = () =>{
+    if(props.displayingInModal){
+      props.onClose()
+    }else{
+      history.push(`/${application.applicationId}/assets`)
+    }
+  }
+
   //Control Buttons
   const controls = (
     editingAllowed ? 
@@ -289,7 +298,7 @@ function FileTemplate(props) {
           Edit
         </Button> : null}
 
-        <Button onClick={() =>{history.push(`/${application.applicationId}/assets`)}}>
+        <Button onClick={handleCancel}>
           Cancel
         </Button>
         {enableEdit ?

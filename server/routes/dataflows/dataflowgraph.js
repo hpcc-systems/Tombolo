@@ -3,6 +3,7 @@ const router = express.Router();
 var models  = require('../../models');
 let AssetDataflow = models.assets_dataflows;
 let DataflowGraph = models.dataflowgraph;
+const DependentJobs = models.dependent_jobs;
 let Dataflow = models.dataflow;
 let Job = models.job;
 let File = models.file;
@@ -106,6 +107,7 @@ router.post('/deleteAsset',
         await JobScheduler.removeJobFromScheduler(
           req.body.name + '-' + req.body.dataflowId + '-' + req.body.assetId
         );
+        await DependentJobs.destroy({where : {jobId:req.body.assetId, dataflowId : req.body.dataflowId}})
       }
       res.json({ result: 'success' });
     } catch (error) {
