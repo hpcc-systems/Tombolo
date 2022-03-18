@@ -182,14 +182,12 @@ router.post( '/jobFileRelation',
   async (req, res) => {
     const errors = validationResult(req).formatWith(validatorUtil.errorFormatter);
     if (!errors.isEmpty()) return res.status(422).json({ success: false, errors: errors.array() });
-
-    console.time('jobFileRelation');
-
+    const {dataflowId} = req.body;
     try {
       const job = await Job.findOne({ where: { id: req.body.jobId } });
       if (!job) throw new Error('Job does not exist');
 
-      const result = await hpccUtil.getJobWuDetails(job.cluster_id, job.name);
+      const result = await hpccUtil.getJobWuDetails(job.cluster_id, job.name, dataflowId);
       if (!result.wuid) throw new Error('Could not find WU details by job name');
 
       const jobInfo = await hpccUtil.getJobInfo(job.cluster_id, result.wuid, job.jobType);
@@ -236,7 +234,7 @@ router.post( '/jobFileRelation',
               jobId: job.id,
               jobfile: jobfile, //{ name: 'covid19::kafka::guid', file_type: 'output' }
               clusterId: job.cluster_id,
-              dataflowId: req.body.dataflowId,
+              dataflowId,
               applicationId: job.application_id,
             });
             if (file) {
@@ -245,10 +243,39 @@ router.post( '/jobFileRelation',
           }
         }
       }
-      console.log('------------------------------------------');
-      console.timeEnd('jobFileRelation');
-      console.log('------------------------------------------');
-      res.send(relatedFiles);
+       // START of matching template ------------------
+        const templates = await FileTemplate.findAll({
+          where: { cluster_id: job.cluster_id, application_id: job.application_id },  
+        });
+
+        if(templates.length > 0){
+          let fileAndTemplates = []
+            relatedFiles.forEach(file =>{
+              let{name : fileName, assetId: fileId, relatedTo, title : fileTitle, file_type, description : fileDescription} = file;
+              for(let i = 0; i < templates.length; i++){
+                let {id : templateId, fileNamePattern, searchString, title : templateTitle,  description : templateDescription} = templates[i]
+                let operation = fileNamePattern === 'contains' ? 'includes' : fileNamePattern;
+                if(fileName[operation](searchString)){ // Matching template FOUND - > this is doing something like this : filename.endsWith('test')
+                  let indexOfFileGroup = fileAndTemplates.findIndex(item => item.id === templateId && item.file_type === file_type);
+                  if(indexOfFileGroup >= 0){
+                    fileAndTemplates[indexOfFileGroup].files.push({name: fileName, assetId: fileId, relatedTo, title: fileTitle, file_type, description: fileDescription, assetType: 'File'})
+                  }else{
+                    fileAndTemplates = [...fileAndTemplates, {name : templateTitle, assetId : templateId, relatedTo, title: templateTitle, file_type, description : templateDescription, assetType: 'FileTemplate',
+                                                            files : [{name: fileName, assetId: fileId, relatedTo, title: fileTitle, file_type, description: fileDescription, assetType: 'File'}]}];
+                  }
+                  return; // Breaking out of inner loop
+                }
+                
+                if(!fileName[operation](searchString) && i === templates.length -1){ // matching template NOT FOUND
+                  fileAndTemplates = [...fileAndTemplates, {name: fileName, assetId: fileId, relatedTo, title: fileTitle, file_type, description: fileDescription, assetType: 'File'}];
+                }
+              }
+        });
+          res.send(fileAndTemplates);
+          return;
+        }
+        // END of matching template ------------------
+        res.send(relatedFiles);
     } catch (error) {
       console.log('-error /jobFileRelation-----------------------------------------');
       console.dir({ error }, { depth: null });
@@ -281,7 +308,7 @@ try {
   for ( const job of jobList) {
     const getFiles = new Promise(async(resolve, reject) =>{
         try {
-          const result = await hpccUtil.getJobWuDetails(clusterId, job.name);
+        const result = await hpccUtil.getJobWuDetails(clusterId, job.name, dataflowId);
         if (!result.wuid) throw new Error('Could not find WU details by job name');
     
         const jobInfo = await hpccUtil.getJobInfo(clusterId, result.wuid, "Job" );
@@ -319,7 +346,7 @@ try {
     return acc;
   },[])
 
-  const allAssetsIds = [];
+  let allAssetsIds = [];
 
   // Delete JobFile record if file is not associated anymore
   if (result.length > 0) {    
@@ -345,16 +372,68 @@ try {
         }
       }
   }
-  const respond= {
-    result, // array of {job:<assetId>, relatedFiles:{...}}
-    assetsIds: allAssetsIds.flat(Infinity) // array of strings of all assetIds created or modified
-  }
-  console.log('-respond-----------------------------------------');
-  console.dir({respond}, { depth: null });
-  console.log('------------------------------------------');
-  res.json(respond);
+  
+  // When Synchronizing graph -> Tries to match the files with template again
+    // Get all templates
+        const templates = await FileTemplate.findAll({
+          where: { cluster_id: clusterId, application_id: applicationId },  
+        });
+
+        if(templates.length < 1){ // If no templates exists 
+          res.json({result, assetsIds: allAssetsIds.flat(Infinity)});
+          return;
+        }
+
+        let jobsWithRelatedFiles = [];
+        let jobWithoutRelatedFiles = [];
+
+        allAssetsIds = [] // resetting the asset all asset ids array -> it will have different items if template is matched
+        result.forEach(item => {
+          if(item.relatedFiles.length > 0){
+            jobsWithRelatedFiles.push(item)
+          }else{
+            jobWithoutRelatedFiles.push(item);
+            allAssetsIds.push(item.job)
+          }
+        })
+
+        jobsWithRelatedFiles.forEach(item =>{
+          allAssetsIds.push(item.job)
+          let {relatedFiles} = item;
+          let fileAndTemplates = [];
+          relatedFiles.forEach(file => {
+            let{name : fileName, assetId: fileId, relatedTo, title : fileTitle, file_type, description : fileDescription} = file;
+            for(let i = 0; i < templates.length; i++){
+                let {id : templateId, fileNamePattern, searchString, title : templateTitle,  description : templateDescription} = templates[i]
+                let operation = fileNamePattern === 'contains' ? 'includes' : fileNamePattern;
+                if(fileName[operation](searchString)){ // Matching template FOUND - > this is doing something like this : filename.endsWith('test')
+                  allAssetsIds.push(templateId);
+                  let indexOfFileGroup = fileAndTemplates.findIndex(item => item.id === templateId && item.file_type === file_type);
+                  if(indexOfFileGroup >= 0){
+                    fileAndTemplates[indexOfFileGroup].files.push({name: fileName, assetId: fileId, relatedTo, title: fileTitle, file_type, description: fileDescription, assetType: 'File'})
+                  }else{
+                    fileAndTemplates = [...fileAndTemplates, {name : templateTitle, assetId : templateId, relatedTo, title: templateTitle, file_type, description : templateDescription, assetType: 'FileTemplate',
+                                                            files : [{name: fileName, assetId: fileId, relatedTo, title: fileTitle, file_type, description: fileDescription, assetType: 'File'}]}];
+                  }
+                  return; // Exiting from inner loop when template is found
+                }
+                if(!fileName[operation](searchString) && i === templates.length -1){ // matching template NOT FOUND
+                  allAssetsIds.push(fileId);
+                  fileAndTemplates = [...fileAndTemplates, {name: fileName, assetId: fileId, relatedTo, title: fileTitle, file_type, description: fileDescription, assetType: 'File'}];
+                }
+              }
+          })
+          item.relatedFiles = fileAndTemplates;
+        })
+
+        console.dir({jobsWithRelatedFiles}, {depth : null});
+
+        const allJobs = [...jobsWithRelatedFiles, ...jobWithoutRelatedFiles];
+        res.send({result : allJobs, assetsIds : allAssetsIds})
+        
+
 } catch (error) {
-  console.log(err);
+  console.log(error);
   return res.status(500).json({ success: false, message: "Error occurred while updating" });
 }
 });
