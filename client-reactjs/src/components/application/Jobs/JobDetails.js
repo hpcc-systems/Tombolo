@@ -116,11 +116,16 @@ class JobDetails extends Component {
     isNew : this.props.isNew,
   };
 
-  async componentDidMount() {
-    if (this.props.application && this.props.application.applicationId) {
-      await this.getJobDetails();
-      await this.getFiles();
-    }
+  async componentDidMount() {    
+
+  const applicationId = (this.props.application && this.props.application.applicationId) || this.props.match?.params?.applicationId;
+  const assetId = (this.props.selectedAsset !== '' && this.props?.selectedAsset?.id) || this.props.match?.params?.jobId;
+  
+  if (applicationId && assetId) {
+    await this.getJobDetails({ assetId, applicationId });
+    await this.getFiles({ applicationId });
+  }
+  
     if (this.props.scheduleType === 'Predecessor') {
       this.handleScheduleTypeSelect('Predecessor');
     }
@@ -151,14 +156,16 @@ class JobDetails extends Component {
   }
 
 
-  async getJobDetails() {
-    if (this.props.selectedAsset !== '' && this.props?.selectedAsset?.id) {
+  async getJobDetails({assetId, applicationId}) {
+
+    if (assetId) {
       this.setState({ initialDataLoading: true });
       // CREATING REQUEST URL TO GET JOB DETAILS
       const queryStringParams = {};
-      if (this.props?.selectedAsset?.id) queryStringParams['job_id'] = this.props.selectedAsset.id;
-      if (this.props?.application?.applicationId) queryStringParams['app_id'] = this.props.application.applicationId;
+      if (assetId) queryStringParams['job_id'] = assetId;
+      if (applicationId) queryStringParams['app_id'] = applicationId;
       if (this.props.selectedDataflow) queryStringParams['dataflow_id'] = this.props.selectedDataflow.id;
+
 
       try {
         let queryString = new URLSearchParams(queryStringParams).toString();
@@ -266,11 +273,11 @@ class JobDetails extends Component {
     });
   }
 
-  async getFiles() {
+  async getFiles({applicationId}) {
     const queryStringParams = {};
-    if (this.props?.application?.applicationId) queryStringParams['app_id'] = this.props.application.applicationId;
+    if (applicationId) queryStringParams['app_id'] = applicationId;
     if (this.props.selectedDataflow) queryStringParams['dataflow_id'] = this.props.selectedDataflow.id;
-    
+
     try {
       let queryString = new URLSearchParams(queryStringParams).toString();
       const fileUrl = queryString ? `/api/file/read/file_list?${queryString}` : '/api/file/read/file_list';
@@ -1086,13 +1093,13 @@ class JobDetails extends Component {
 
     //Function to make fields editable
     const makeFieldsEditable = () => {
-      editableMode();
+      // editableMode();
       this.setState({ enableEdit: !this.state.enableEdit, editing: true,});
     };
 
     //Switch to view only mode
     const switchToViewOnly = () => {
-      readOnlyMode();
+      // readOnlyMode();
       this.setState({ enableEdit: !this.state.enableEdit, editing: false, dataAltered: true, });
     };
 
