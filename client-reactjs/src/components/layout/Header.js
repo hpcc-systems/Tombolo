@@ -50,10 +50,6 @@ class AppHeader extends Component {
         this.setState({ selected: this.state.applications[0].display });
         this.props.dispatch(applicationActions.applicationSelected(this.state.applications[0].value, this.state.applications[0].display));
         localStorage.setItem("activeProjectId", this.state.applications[0].value);
-        //if it is asset details url, dont redirect to default /dataflow page
-        if(!this.props.history.location.pathname.startsWith('/details')) {
-          this.props.history.push('/'+this.state.applications[0].value+'/assets');
-        }
       } else {
         appDropdownItem.click();
       }
@@ -74,15 +70,6 @@ class AppHeader extends Component {
       if(this.props.location.pathname.includes('manualJobDetails')){
         return; 
       }
-
-      if(this.props.location.pathname.includes('dataflowInstanceDetails/')){
-        const applicationId = this.props.location.pathname.split('/')[1];
-        const dataflowId = this.props.dataflowId || this.props.location.pathname.split('/')[4];
-        this.props.dispatch(applicationActions.applicationSelected(applicationId, ''));
-        this.props.dispatch(dataflowAction.dataflowSelected(applicationId,'',dataflowId,''));
-        return; 
-      }
-
       if(this.props.location.pathname.includes('report/')){
         const pathSnippets = this.props.location.pathname.split('/');
         this.setState({
@@ -191,17 +178,9 @@ class AppHeader extends Component {
     }
 
     handleChange(event) {
-      store.dispatch({
-        type: Constants.DATAFLOW_SELECTED,
-        selectedDataflow: {dataflowId: ""}
-      })
       this.props.dispatch(applicationActions.applicationSelected(event.target.getAttribute("data-value"), event.target.getAttribute("data-display")));
       localStorage.setItem("activeProjectId", event.target.getAttribute("data-value"));
       this.setState({ selected: event.target.getAttribute("data-display") });
-      //if it is asset details url, dont redirect to default /dataflow page
-      if(!this.props.history.location.pathname.startsWith('/details')) {
-        this.props.history.push('/'+event.target.getAttribute("data-value")+'/assets');
-      }
       $('[data-toggle="popover"]').popover('disable');
     }    
 
