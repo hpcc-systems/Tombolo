@@ -98,8 +98,7 @@ class DataflowInstances extends Component {
       record.clusterId,
       this.props.user
     ));
-    this.props.history.push('/'+this.state.applicationId+'/dataflowinstances/dataflowInstanceDetails');
-
+    this.props.history.push(`/${this.state.applicationId}/dataflowinstances/dataflowInstanceDetails/${record.id}`);
   }
 
   showWorkflowDetails = (id, dataflowId, instanceId) => {
@@ -153,7 +152,7 @@ class DataflowInstances extends Component {
         title: 'Name',
         dataIndex: 'title',
         width: '30%',
-        render: (text, record) => <a href='#' onClick={(row) => this.handleViewDetails(record)}>{text}</a>
+        render: (text, record) => <a onClick={(row) => this.handleViewDetails(record)}>{text}</a>
       },
       {
         title: 'Description',

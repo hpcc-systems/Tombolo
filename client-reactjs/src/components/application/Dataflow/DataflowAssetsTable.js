@@ -98,7 +98,7 @@ function DataflowAssetsTable({applicationId, selectedDataflow, user, application
     dataIndex: 'name',
     width: '30%',
     ellipsis: true,
-    render: (text, record) => <a href='#' onClick={(row) => handleEdit(record.id, record.objType)}>{text}</a>
+    render: (text, record) => <a onClick={(row) => handleEdit(record.id, record.objType)}>{text}</a>
   },
   {
     title: 'Description',
