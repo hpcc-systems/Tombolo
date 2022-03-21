@@ -84,7 +84,7 @@ class JobDetails extends Component {
     schedulePredecessor: [],
     predecessorJobs: [],
     clusters: [],
-    selectedCluster: this.props.clusterId || "",
+    selectedCluster: "",
     jobSearchSuggestions: [],
     jobSearchErrorShown: false,
     autoCompleteSuffix: <SearchOutlined />,
@@ -291,18 +291,7 @@ class JobDetails extends Component {
     } catch (error) {
       console.log(error);
     }
-  }
-  
-  // !! NOT IN USE
-  setClusters(clusterId) {
-    if (this.props.clusters) {
-      const selectedCluster = this.props.clusters.find((cluster) => cluster.id === clusterId);
-      if (selectedCluster) {
-        this.formRef.current.setFieldsValue({ clusters: selectedCluster.id, });
-      }
-    }
-  }
-  
+  } 
 
   setInputParamsData = (data) => {
     let omitResults = omitDeep(data, 'id');
@@ -345,7 +334,6 @@ class JobDetails extends Component {
   }
 
   onClusterSelection = (value) => {
-    this.props.dispatch(assetsActions.clusterSelected(value));
     this.setState({ selectedCluster: value, });
   };
   
