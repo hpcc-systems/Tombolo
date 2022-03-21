@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Form, Tabs, Select, Input, message, Table, Button, AutoComplete } from 'antd';
+import { Form, Tabs, Select, Input, message, Table, Button, AutoComplete, Space } from 'antd';
 import { useSelector } from 'react-redux';
 import { debounce } from 'lodash';
 import { useHistory } from 'react-router-dom';
@@ -12,6 +12,7 @@ import FileTemplateTable from './FileTemplate_filesTab';
 import FileTemplateLayout from './FileTemplate_layoutTab.jsx';
 import FileTemplate_permissablePurpose from './FileTemplate_permissablePurpose'
 import { hasEditPermission } from '../../common/AuthUtil.js'; 
+import DeleteAsset from "../../common/DeleteAsset/index.js";
 
 //Local variables
 const { Option } = Select;
@@ -26,14 +27,14 @@ const fileNameOptions = [
   { name: 'Ends with', value: 'endsWith' },
 ];
 
-//Antd message config
+//Message config
 message.config({
   top: 100,
   duration: 4,
   maxCount: 1,
 });
 
-function FileTemplate() {
+function FileTemplate(props) {
   const { clusters, application } = useSelector((state) => state.applicationReducer);
   const { selectedAsset } = useSelector((state) => state.assetReducer);
   const {user} = useSelector((state)=> state.authenticationReducer)
@@ -44,7 +45,6 @@ function FileTemplate() {
   const [enableEdit, setEnableEdit] = useState(false);
   const [selectedLicenses, setSelectedLicenses] = useState([]);
   const [selectedCluster, setSelectedCluster] = useState(null);
-  const [searchString, setSearchString] = useState(null)
 
   const [form] = Form.useForm();
   const history = useHistory();
@@ -52,6 +52,10 @@ function FileTemplate() {
 
   //Use Effect
   useEffect(() => {
+    console.log('Get initial adata ', application )
+    if(props.displayingInModal){
+      setEnableEdit(false)
+    }
     const getInitialData = async() =>{
       try{
         await getFileTemplate();
@@ -61,12 +65,11 @@ function FileTemplate() {
         console.log(err)
       }  
     }
-    if(selectedAsset.isNew){
+    if(selectedAsset.isNew && !props.displayingInModal){
       setEnableEdit(true)
     }else{
-    if(application){
+      console.log('Yes application')
       getInitialData();
-    }
     }
       
   }, [application]);
@@ -188,7 +191,6 @@ function FileTemplate() {
       }
       message.success('File template deleted successfully');
       setTimeout(() => {
-        console.log('<<< History kick in ... ')
         history.push(`/${application.applicationId}/assets`);
       }, 400);
     })
@@ -198,12 +200,14 @@ function FileTemplate() {
   }
   // Get file Template
   const getFileTemplate = () => {
+    console.log(' GET FILE TEMPLATE NOW ')
+    console.log('Asset id ', selectedAsset.id, 'App id', application.applicationId);
     return fetch('/api/fileTemplate/read/getFileTemplate', {
       method: 'post',
       headers: authHeader(),
       body: JSON.stringify({
-        id: selectedAsset.id,
-        application_id: application.applicationId
+        id: selectedAsset.id || props.selectedAsset.id,
+        application_id: application.applicationId 
       }),
     })
       .then((response) => {
@@ -224,7 +228,6 @@ function FileTemplate() {
         });
         setLayoutData(data.fileTemplateLayout?.fields?.layout || []);
          setSelectedCluster(data.cluster_id);
-         setSearchString(data.searchString);
       })
       .catch((err) => {
         console.log(err);
@@ -256,41 +259,73 @@ function FileTemplate() {
     })
   };
 
+  //Handle cancel btn click
+  const handleCancel = () =>{
+    if(props.displayingInModal){
+      props.onClose()
+    }else{
+      history.push(`/${application.applicationId}/assets`)
+    }
+  }
+
   //Control Buttons
   const controls = (
     editingAllowed ? 
-    <div className="button-container">
+    <div className={props.displayingInModal ? 'assetDetail-buttons-wrapper-modal' : 'assetDetail-buttons-wrapper '} style={{marginBottom: '10px'}} >
       <div style={{display: "inline-block", marginRight: '15px'}}>
-      {enableEdit ?  
-      <Button type='primary' ghost onClick={() => setEnableEdit(false)}>
-        View Changes
-      </Button> :null}
-      {enableEdit && !selectedAsset.isNew?
-      <Button type="danger" onClick={deleteFileTemplate}>
-        Delete
-      </Button> : null}
+      <Space>
+        {enableEdit ?  
+        <Button type='primary' ghost onClick={() => setEnableEdit(false)}>
+          View Changes
+        </Button> :null}
+        {enableEdit && !selectedAsset.isNew?
+        <DeleteAsset
+                  asset={{
+                    id: selectedAsset.id || props.selectedAsset.id,
+                    type: 'FileTemplate',
+                    title: form.getFieldValue('title'),
+                  }}
+                  style={{ display: 'inline-block' }}
+                  onDelete={deleteFileTemplate}
+                  component={ <Button key="danger" type="danger"> Delete </Button> }
+                />
+        : null}
+      </Space>
       </div>
-     {!enableEdit ?
-      <Button type= 'primary' onClick={() => setEnableEdit(true)}>
-        Edit
-      </Button> : null}
+      <Space>
+        {!enableEdit ?
+        <Button type= 'primary' onClick={() => setEnableEdit(true)}>
+          Edit
+        </Button> : null}
 
-       <Button onClick={() =>{history.push(`/${application.applicationId}/assets`)}}>
-        Cancel
-      </Button>
-       {enableEdit ?
-      <Button type="primary" onClick={saveFileTemplate}>
-        Save
-      </Button> :  null}
-    </div> : null
+        <Button onClick={handleCancel}>
+          Cancel
+        </Button>
+        {enableEdit ?
+        <Button type="primary" onClick={saveFileTemplate}>
+          Save
+        </Button> :  null}
+       </Space>
+      </div> : null
   );
   
+  // Change form layout based on where it is rendered
+  const formItemLayout = 
+   props.displayingInModal ? {
+    labelCol: { span: 3 },
+    wrapperCol: { span: 15 },
+   } : 
+   {
+    wrapperCol : {span: 8},
+    labelCol : {span : 2}
+  }
+
 
   //JSX
   return (
     <React.Fragment>
-      <div className="assetDetails-content-wrapper">
-        <Tabs defaultActiveKey="1" tabBarExtraContent={null} tabBarExtraContent={controls}>
+      <div className={props.displayingInModal ? 'assetDetails-content-wrapper-modal' : 'assetDetails-content-wrapper'} >
+        <Tabs defaultActiveKey="1" tabBarExtraContent={props.displayingInModal ? null : controls}>
           <TabPane tab="Basic" key="1">
             <Form {...formItemLayout} labelAlign="left" form={form} initialValues={{ fileNamePattern: 'contains' }}>
               <Form.Item
@@ -363,7 +398,7 @@ function FileTemplate() {
               </Form.Item> : null}
 
               <Form.Item name="sampleFile" label="Sample Layout"  rules={[
-                  { required: enableEdit ?true : false, message: 'Please enter a title!' },
+                  { required: enableEdit ? true : false, message: 'Please enter a title!' },
                 ]}>
                 {enableEdit ?
                 <AutoComplete
@@ -427,6 +462,10 @@ function FileTemplate() {
           </TabPane>
         </Tabs>
       </div>
+      <div style={{marginTop: '15px'}}>
+        {props.displayingInModal  ? controls : null}
+      </div>
+     
     </React.Fragment>
   );
 }

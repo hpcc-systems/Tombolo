@@ -18,13 +18,13 @@ const DeleteAssetModal = ({ asset, show, hide, onDelete }) => {
         const response = await fetch(`/api/dataflow/checkAssetDataflows?assetId=${asset.id}`, { headers: authHeader(), });
         if (!response.ok) handleError(response);
 
-        const data = await response.json();       
+        const data = await response.json();    
 
         setIsInDataflow((prev) => ({ ...prev, data }));
       } catch (error) {
-        console.log('-error failed to check asset in dataflows-----------------------------------------');
+        console.log('-err failed to check asset in dataflows-------');
         console.dir({ error }, { depth: null });
-        console.log('------------------------------------------');
+        console.log('----------------------------------------------');
 
         setIsInDataflow((prev) => ({ ...prev, error: 'Something went wrong, can not delete asset' }));
       } finally {

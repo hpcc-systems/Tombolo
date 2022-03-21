@@ -2,6 +2,7 @@ import React from 'react'
 import { Modal } from 'antd/lib';
 
 import FileDetailsForm from './FileDetails';
+import FileTemplate from './templates/FileTemplate'
 import JobDetailsForm from './Jobs/JobDetails';
 import IndexDetailsForm from './IndexDetails';
 import QueryDetailsForm from './QueryDetails';
@@ -17,6 +18,7 @@ function AssetDetailsDialog(props) {
     const formOptions ={
       job: <JobDetailsForm {...props}/>,
       file: <FileDetailsForm {...props} />,
+      filetemplate : <FileTemplate {...props} />,
       index: <IndexDetailsForm {...props}/>,
       query: <QueryDetailsForm  {...props}/>
     }

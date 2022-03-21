@@ -67,8 +67,8 @@ export default class Event {
                     incomingEdges.forEach((edge) => {
                       const source = edge.getSourceNode();
                       if (source) {
-                        const isFile = source.data.type === 'File';
-                        if (isFile) {
+                        const isFileOrTemplate = source.data.type === 'File' || 'FileTemplate';
+                        if (isFileOrTemplate) {
                           const connectedEdges = graph.getConnectedEdges(source);
                           if (connectedEdges.length === 1) {
                             source.remove();
@@ -82,8 +82,8 @@ export default class Event {
                     outgoingEdges.forEach((edge) => {
                       const target = edge.getTargetNode();
                       if (target) {
-                        const isFile = target.data.type === 'File';
-                        if (isFile) {
+                        const isFileOrTemplate = target.data.type === 'File' || 'FileTemplate';
+                        if (isFileOrTemplate) {
                           const connectedEdges = graph.getConnectedEdges(target);
                           if (connectedEdges.length === 1) {
                             target.remove();
