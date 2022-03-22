@@ -117,13 +117,15 @@ class JobDetails extends Component {
   };
 
   async componentDidMount() {    
-
   const applicationId = (this.props.application && this.props.application.applicationId) || this.props.match?.params?.applicationId;
   const assetId = (this.props.selectedAsset !== '' && this.props?.selectedAsset?.id) || this.props.match?.params?.jobId;
   
+  if(applicationId){
+   await this.getFiles({ applicationId });
+  }
+
   if (applicationId && assetId) {
     await this.getJobDetails({ assetId, applicationId });
-    await this.getFiles({ applicationId });
   }
   
     if (this.props.scheduleType === 'Predecessor') {
@@ -1048,13 +1050,13 @@ class JobDetails extends Component {
 
     const fileColumns = [
       {
-        width: '2%',
+        width: '3%',
         render: (text, record) => (record.assetType === 'fileTemplate' ? <i className="fa  fa-lg fa-file-text-o"></i> : <i className="fa fa-lg fa-file-o"></i>),
       },
       {
         title: 'Name',
         dataIndex: 'name',
-        width: '30%',
+        width: '47%',
         render: (text, record) => (
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
             <span>{record.fileTitle || record.name}</span>{' '}
@@ -1068,7 +1070,7 @@ class JobDetails extends Component {
       {
         title: 'Description',
         dataIndex: 'description',
-        width: '68%',
+        width: '50%',
       },
     ];
 
