@@ -146,7 +146,13 @@ function JobExecutionDetails({ workflowDetails, graphSize, manageJobExecutionFil
           );
         },
       },
-      { title: "Duration", dataIndex: "wu_duration", width: "20%" },
+      { 
+        title: "Duration",
+        dataIndex: "wu_duration",
+        width: "20%",
+        render : text =>  text || "0.000" 
+
+      },
     ];
 
     //Nested table data
