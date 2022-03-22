@@ -8,7 +8,7 @@ import  useWindowSize from "../../../hooks/useWindowSize";
 function JobExecutionDetails({ workflowDetails, graphSize, manageJobExecutionFilters, setSelectedJobExecutionGroup, jobExecutionTableFilters, selectedJobExecutionGroup}) {
   const [parentTableData, setParentTableData] = useState([]);
   const [ windowHeight] = useWindowSize();
-  const {dataflowId, executionGroupId} = useParams();
+  const { executionGroupId} = useParams();
 
   // Unique filters
   const createUniqueFiltersArr = (baseArr, column) => {
@@ -115,11 +115,8 @@ function JobExecutionDetails({ workflowDetails, graphSize, manageJobExecutionFil
         });      
       setParentTableData(Object.values(execution));
         const executionKeys = Object.keys(execution);
-        if(dataflowId){
-           setSelectedJobExecutionGroup(executionGroupId)
-        }else{
-            setSelectedJobExecutionGroup(executionKeys.length > 0 ? executionKeys[executionKeys.length -1] : '') ;
-        }
+      setSelectedJobExecutionGroup(executionGroupId ||  executionKeys.length > 0 ? executionKeys[executionKeys.length -1] : '') ;
+  
     }
   }, [workflowDetails]);
 
