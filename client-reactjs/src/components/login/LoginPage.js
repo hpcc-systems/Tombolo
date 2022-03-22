@@ -1,3 +1,5 @@
+/* eslint-disable eqeqeq */
+/* eslint-disable jsx-a11y/anchor-is-valid */
 import React from 'react';
 import {withRouter} from 'react-router';
 import { userActions } from '../../redux/actions/User';
@@ -44,7 +46,7 @@ class LoginPage extends React.Component {
           this.props.history.push(state.from.pathname);
         }
         else {
-          this.props.history.push('/dataflow');
+          this.props.history.push('/');
         }
       }
     }
