@@ -522,7 +522,7 @@ class QueryDetails extends PureComponent {
 
         //Function to make fields editable
     const makeFieldsEditable = () => {
-      editableMode();
+      // editableMode();
 
       this.setState({
         enableEdit: !this.state.enableEdit,
