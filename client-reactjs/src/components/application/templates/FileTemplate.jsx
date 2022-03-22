@@ -37,6 +37,7 @@ message.config({
 function FileTemplate(props) {
   const { clusters, application } = useSelector((state) => state.applicationReducer);
   const { selectedAsset } = useSelector((state) => state.assetReducer);
+  const groupsReducer = useSelector((state) => state.groupsReducer);
   const {user} = useSelector((state)=> state.authenticationReducer)
 
   const [files, setFiles] = useState([]);
@@ -52,7 +53,6 @@ function FileTemplate(props) {
 
   //Use Effect
   useEffect(() => {
-    console.log('Get initial adata ', application )
     if(props.displayingInModal){
       setEnableEdit(false)
     }
@@ -68,7 +68,6 @@ function FileTemplate(props) {
     if(selectedAsset.isNew && !props.displayingInModal){
       setEnableEdit(true)
     }else{
-      console.log('Yes application')
       getInitialData();
     }
       
@@ -158,7 +157,8 @@ function FileTemplate(props) {
         description: form.getFieldValue('description'),
         fileLayoutData :  layoutData,
         licenses : selectedLicenses,
-        selectedAsset
+        selectedAsset,
+        groupId: groupsReducer.selectedKeys.id
       }),
     })
       .then((response) => {
@@ -200,8 +200,6 @@ function FileTemplate(props) {
   }
   // Get file Template
   const getFileTemplate = () => {
-    console.log(' GET FILE TEMPLATE NOW ')
-    console.log('Asset id ', selectedAsset.id, 'App id', application.applicationId);
     return fetch('/api/fileTemplate/read/getFileTemplate', {
       method: 'post',
       headers: authHeader(),
