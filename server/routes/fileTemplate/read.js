@@ -6,6 +6,7 @@ const models = require('../../models');
 const FileTemplate = models.fileTemplate;
 const FileTemplateLayout = models.fileTemplateLayout;
 const FileTemplate_licenses = models.fileTemplate_license;
+const AssetsGroups = models.assets_groups;
 
 
 router.post('/saveFileTemplate', [
@@ -30,10 +31,11 @@ router.post('/saveFileTemplate', [
         return res.status(422).json({ success: false, errors: errors.array() });
       }
 
-      const {application_id, cluster, title, fileNamePattern, searchString, description,sampleLayoutFile, fileLayoutData, selectedAsset, licenses} = req.body;
+      const {application_id, cluster, title, fileNamePattern, searchString, groupId, description,sampleLayoutFile, fileLayoutData, selectedAsset, licenses} = req.body;
+
       if(!selectedAsset.isNew){
         // file template exists -> edit it
-        const fileTemplate = await FileTemplate.update(
+        await FileTemplate.update(
           {title, cluster_id : cluster, fileNamePattern, searchString, sampleLayoutFile, description},
           {where: {id : selectedAsset.id }}
         )
@@ -54,6 +56,7 @@ router.post('/saveFileTemplate', [
       }else{
         //New file template -> Create it
       const fileTemplate = await FileTemplate.create({application_id, title, cluster_id : cluster, fileNamePattern, searchString, sampleLayoutFile, description });
+      if(groupId) await AssetsGroups.create({assetId: fileTemplate.id, groupId});
       await FileTemplateLayout.create({application_id, fileTemplate_id : fileTemplate.id, fields : {layout : fileLayoutData}});
       licenses.forEach(license => {
         license.application_id = application_id;
