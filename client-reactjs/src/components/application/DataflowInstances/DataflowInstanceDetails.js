@@ -89,7 +89,7 @@ export const DataflowInstanceDetails = () => {
 
         <Resizable
           style={{
-            overflow: 'hidden',
+            overflow: 'auto',
             borderRadius: '5px',
             border: '2px solid #ddd',
             backgroundColor: 'white',

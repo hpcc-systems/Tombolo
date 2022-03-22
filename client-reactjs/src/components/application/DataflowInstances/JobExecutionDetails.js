@@ -170,7 +170,7 @@ function JobExecutionDetails({ workflowDetails, graphSize, manageJobExecutionFil
         rowKey={(record) => record.jobExecutionGroupId}
         dataSource={parentTableData}
         expandable={{ expandedRowRender }}
-        pagination={{ pageSize: Math.abs(Math.round((windowHeight - graphSize.height) / 60 ))}}
+        // pagination={{ pageSize: Math.abs(Math.round((windowHeight - graphSize.height) / 60 ))}}
         rowClassName={(record) => {
           if(selectedJobExecutionGroup === record.jobExecutionGroupId){
             return "jobExecutionDetails_antdTable_selectedRow"
