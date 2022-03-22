@@ -128,6 +128,8 @@ router.post('/saveAsset', (req, res) => {
 
 router.get('/', [
   query('application_id')
+    .isUUID(4).withMessage('Invalid cluster id'),
+    query('dataflow_id').optional({ checkFalsy: true })
     .isUUID(4).withMessage('Invalid cluster id')
 ],(req, res) => {
   const errors = validationResult(req).formatWith(validatorUtil.errorFormatter);
@@ -136,9 +138,12 @@ router.get('/', [
   }
     console.log("[dataflow] - Get dataflow list for app_id = " + req.query.application_id);
     try {
+      const searchParams = { application_Id: req.query.application_id };
+      if (req.query.dataflow_id) searchParams.id = req.query.dataflow_id;
+      
         Dataflow.findAll(
           {
-            where:{"application_Id":req.query.application_id},
+            where: searchParams,
             include: {model : Dataflow_cluster_credentials,
                       attributes: {exclude: ['cluster_hash']}},
             order: [

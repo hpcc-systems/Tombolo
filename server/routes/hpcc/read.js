@@ -156,18 +156,17 @@ router.post('/jobsearch', [
     });
 });
 
-router.get('/getClusters', function (req, res) {
-  try {
-		Cluster.findAll({order: [['createdAt', 'DESC']]}).then(function(clusters) {
-			res.json(clusters);
-		})
-		.catch(function(err) {
-        console.log(err);
-    });
-  } catch (err) {
-      console.log('err', err);
-  }
-});
+router.get('/getClusters', async (req, res) => {
+	try {
+	  const clusters = await Cluster.findAll({
+		attributes: { exclude: ['hash', 'username'] },
+		order: [['createdAt', 'DESC']],
+	  });
+	  res.send(clusters);
+	} catch (err) {
+	  res.status(500).send({ success: 'false', message: 'Error occurred while retrieving cluster list' });
+	}
+  });
 
 router.get('/getClusterWhitelist', function (req, res) {
   try {

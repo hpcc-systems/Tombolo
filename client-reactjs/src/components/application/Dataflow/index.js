@@ -66,7 +66,7 @@ function Dataflow(props) {
       selectedDataflow.clusterId,
       user
     ));
-    props.history.push('/'+ applicationId +'/dataflow/details');
+    props.history.push(`/${applicationId}/dataflow/details/${selectedDataflow.id}`);
   }
 
   // When edit icon/view is clicked 

@@ -6,7 +6,6 @@ import { Constants } from '../../common/Constants';
 import { useSelector } from "react-redux";
 import ReactMarkdown from 'react-markdown';
 import { DeleteOutlined, EyeOutlined, QuestionCircleOutlined } from '@ant-design/icons';
-import useModal from '../../../hooks/useModal';
 
 
 function DataflowTable({data, applicationId, onSelectDataflow, onDataFlowUpdated, onEditDataFlow}) {
@@ -62,7 +61,7 @@ function DataflowTable({data, applicationId, onSelectDataflow, onDataFlowUpdated
     title: 'Name',
     dataIndex: 'title',
     width: '30%',
-    render: (text, record) => <a href='#' onClick={(row) => rowSelected(record)}>{text}</a>
+    render: (text, record) => <a onClick={(row) => rowSelected(record)}>{text}</a>
   },
   {
     title: 'Description',

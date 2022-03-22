@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React from "react";
 import { connect } from "react-redux";
 import { Layout } from "antd/lib";
 import "font-awesome/css/font-awesome.min.css";
@@ -137,7 +137,7 @@ class App extends React.Component {
                     component={dataDictionaryComp}
                   />
                   <PrivateRoute
-                    path="/:applicationId/dataflow/details"
+                    path="/:applicationId/dataflow/details/:dataflowId?"
                     component={DataflowDetails}
                   />
                   <PrivateRoute
