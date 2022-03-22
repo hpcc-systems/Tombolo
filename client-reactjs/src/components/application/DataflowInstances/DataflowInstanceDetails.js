@@ -20,7 +20,6 @@ export const DataflowInstanceDetails = () => {
 
   const params = useParams();
 
-
   const getJobExecutionDetails = async () => {
     try {
       const applicationId = applicationReducer.application.applicationId || params.applicationId;
@@ -63,7 +62,7 @@ export const DataflowInstanceDetails = () => {
       await getJobExecutionDetails();
       const LSGraphHeight = JSON.parse(localStorage.getItem('graphSize'));
       if (LSGraphHeight) {
-        setGraphSize({ graphSize: { height: LSGraphHeight } });
+        setGraphSize( prev => ({...prev, height: LSGraphHeight }));
       }
     })();
   }, []);

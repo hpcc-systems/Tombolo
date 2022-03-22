@@ -107,7 +107,7 @@ class FileDetails extends PureComponent {
       this.setState({
         enableEdit: viewOnlyModeReducer.editMode,
         editing: true,
-      });
+      }); 
     } else {
       this.setState({
         enableEdit: viewOnlyModeReducer.editMode,

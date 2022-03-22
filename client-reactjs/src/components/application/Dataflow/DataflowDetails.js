@@ -20,7 +20,7 @@ function DataflowDetails() {
   if (!isDataflowReady)
   return (
     <div style={{ width: '100%', display: 'flex', justifyContent: 'center', marginTop:'50px' }}>
-      <Spin size="large" spinning={true} />;
+      <Spin size="large" spinning={true} />
     </div>
   );
 
@@ -35,9 +35,10 @@ function DataflowDetails() {
       <div>
         <Tabs
           defaultActiveKey="1"
+          destroyInactiveTabPane={true}
           tabBarExtraContent={ <span> <Button type="primary" onClick={handleBackToAllJobs} ghost> Cancel </Button> </span> }
         >
-          <TabPane tab="Designer" key="1" forceRender={true}>
+          <TabPane tab="Designer" key="1">
             <GraphX6 readOnly={false} />
           </TabPane>
           <TabPane tab="Assets" key="2">

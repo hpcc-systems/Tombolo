@@ -64,7 +64,7 @@ function VisualizationDetails({ selectedGroup, openGroup, handleEditGroup, refre
   }, [assetReducer.selectedAsset]);
 
   const makeFieldsEditable = () => {
-    editableMode();
+    // editableMode();
 
     setFormState({
       ...formState,
