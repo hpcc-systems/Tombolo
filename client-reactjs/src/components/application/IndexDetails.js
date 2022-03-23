@@ -501,7 +501,7 @@ class IndexDetails extends PureComponent {
 
       //Function to make fields editable
       const makeFieldsEditable = () => {
-        editableMode();
+        // editableMode();
 
         this.setState({
           enableEdit: !this.state.enableEdit,
@@ -511,7 +511,7 @@ class IndexDetails extends PureComponent {
 
       //Switch to view only mode
       const switchToViewOnly = () => {
-        readOnlyMode()
+        // readOnlyMode()
 
         this.setState({
           enableEdit: !this.state.enableEdit,

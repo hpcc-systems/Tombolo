@@ -8,7 +8,7 @@ import  useWindowSize from "../../../hooks/useWindowSize";
 function JobExecutionDetails({ workflowDetails, graphSize, manageJobExecutionFilters, setSelectedJobExecutionGroup, jobExecutionTableFilters, selectedJobExecutionGroup}) {
   const [parentTableData, setParentTableData] = useState([]);
   const [ windowHeight] = useWindowSize();
-  const {dataflowId, executionGroupId} = useParams();
+  const { executionGroupId} = useParams();
 
   // Unique filters
   const createUniqueFiltersArr = (baseArr, column) => {
@@ -115,11 +115,8 @@ function JobExecutionDetails({ workflowDetails, graphSize, manageJobExecutionFil
         });      
       setParentTableData(Object.values(execution));
         const executionKeys = Object.keys(execution);
-        if(dataflowId){
-           setSelectedJobExecutionGroup(executionGroupId)
-        }else{
-            setSelectedJobExecutionGroup(executionKeys.length > 0 ? executionKeys[executionKeys.length -1] : '') ;
-        }
+      setSelectedJobExecutionGroup(executionGroupId ||  executionKeys.length > 0 ? executionKeys[executionKeys.length -1] : '') ;
+  
     }
   }, [workflowDetails]);
 
@@ -149,7 +146,13 @@ function JobExecutionDetails({ workflowDetails, graphSize, manageJobExecutionFil
           );
         },
       },
-      { title: "Duration", dataIndex: "wu_duration", width: "20%" },
+      { 
+        title: "Duration",
+        dataIndex: "wu_duration",
+        width: "20%",
+        render : text =>  text || "0.000" 
+
+      },
     ];
 
     //Nested table data
@@ -167,7 +170,7 @@ function JobExecutionDetails({ workflowDetails, graphSize, manageJobExecutionFil
         rowKey={(record) => record.jobExecutionGroupId}
         dataSource={parentTableData}
         expandable={{ expandedRowRender }}
-        pagination={{ pageSize: Math.abs(Math.round((windowHeight - graphSize.height) / 60 ))}}
+        // pagination={{ pageSize: Math.abs(Math.round((windowHeight - graphSize.height) / 60 ))}}
         rowClassName={(record) => {
           if(selectedJobExecutionGroup === record.jobExecutionGroupId){
             return "jobExecutionDetails_antdTable_selectedRow"

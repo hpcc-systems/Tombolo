@@ -1,63 +1,53 @@
-import React, { useState } from 'react'
-import { useHistory } from 'react-router';
-import { Tabs, Button, } from 'antd/lib';
-import { useSelector } from "react-redux";
-import DataflowAssetsTable from "./DataflowAssetsTable";
-import BreadCrumbs from "../../common/BreadCrumbs";
-import {Constants} from "../../common/Constants"
-import {store} from "../../../redux/store/Store"
+import React from 'react';
+import { useHistory, useParams } from 'react-router';
+import { Tabs, Button, Spin } from 'antd/lib';
+import DataflowAssetsTable from './DataflowAssetsTable';
+import BreadCrumbs from '../../common/BreadCrumbs';
 import GraphX6 from '../Graph/GraphX6';
+import useSelectDataflow from '../../../hooks/useSelectDataflow';
 const TabPane = Tabs.TabPane;
 
-function DataflowDetails({props}) {  
+function DataflowDetails() {
   const history = useHistory();
-  // const dispatch = useDispatch();
-  const [currentTab, setCurrentTab] = useState("1")
-  const dataflowReducer = useSelector(state => state.dataflowReducer);
-  const applicationReducer = useSelector(state => state.applicationReducer);
+  const params = useParams();
+
+  const {isDataflowReady, applicationId, applicationTitle} = useSelectDataflow(); // this hook will check if dataflow is present in redux, if not it will request data from DB and update redux
 
   const handleBackToAllJobs = () => {
-    history.push("/"+applicationReducer.application.applicationId+"/dataflow")
-    store.dispatch({
-      type: Constants.DATAFLOW_SELECTED,
-      selectedDataflow: {dataflowId: ""}
-    })
-  }
+    history.push(`/${params.applicationId}/dataflow`);
+  };
 
-	return (
-	  <React.Fragment>
-       <div style={{display: "flex", justifyContent: "space-between"}}>
-         <div className="d-flex justify-content-end">
-          <BreadCrumbs
-            applicationId={dataflowReducer.applicationId}
-            applicationTitle={dataflowReducer.applicationTitle}
-          />
-        </div>
-        </div>
-        <div>
-          <Tabs defaultActiveKey="1"
-          onChange={(activeKey) => { setCurrentTab(activeKey)}}
-          tabBarExtraContent = {currentTab === "1" ? <span> 
-                <Button type='primary' onClick={(handleBackToAllJobs)}  ghost> Cancel</Button> </span> : null}
-          >
-            <TabPane tab="Designer" key="1" forceRender={true}>
-              <GraphX6 readOnly={false} />
-            </TabPane>
-            <TabPane tab="Assets" key="2" >
-            <span style={{display: "flex", placeItems: "center", justifyContent: "center", paddingBottom: "5px"}}>
-              <DataflowAssetsTable
-                applicationId={dataflowReducer.applicationId}
-                selectedDataflow={{id: dataflowReducer.dataflowId}}
-                user={dataflowReducer.user}
-                application={applicationReducer.application}
-              />
-              </span>
-            </TabPane>
-          </Tabs>
-        </div>
-     </React.Fragment>
-	  )
+  if (!isDataflowReady)
+  return (
+    <div style={{ width: '100%', display: 'flex', justifyContent: 'center', marginTop:'50px' }}>
+      <Spin size="large" spinning={true} />
+    </div>
+  );
 
+
+  return (
+    <React.Fragment>
+      <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+        <div className="d-flex justify-content-end">
+          <BreadCrumbs applicationId={applicationId} applicationTitle={applicationTitle} />
+        </div>
+      </div>
+      <div>
+        <Tabs
+          defaultActiveKey="1"
+          destroyInactiveTabPane={true}
+          tabBarExtraContent={ <span> <Button type="primary" onClick={handleBackToAllJobs} ghost> Cancel </Button> </span> }
+        >
+          <TabPane tab="Designer" key="1">
+            <GraphX6 readOnly={false} />
+          </TabPane>
+          <TabPane tab="Assets" key="2">
+            <DataflowAssetsTable />
+          </TabPane>
+        </Tabs>
+      </div>
+    </React.Fragment>
+  );
 }
 
-export default DataflowDetails
+export default DataflowDetails;

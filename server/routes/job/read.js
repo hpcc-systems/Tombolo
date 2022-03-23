@@ -251,23 +251,20 @@ router.post( '/jobFileRelation',
         if(templates.length > 0){
           let fileAndTemplates = []
             relatedFiles.forEach(file =>{
-              let{name : fileName, assetId: fileId, relatedTo, title : fileTitle, file_type, description : fileDescription} = file;
+              let{name : fileName, assetId: fileId, relatedTo, title : fileTitle, isSuperFile, file_type, description : fileDescription} = file;
               for(let i = 0; i < templates.length; i++){
                 let {id : templateId, fileNamePattern, searchString, title : templateTitle,  description : templateDescription} = templates[i]
                 let operation = fileNamePattern === 'contains' ? 'includes' : fileNamePattern;
                 if(fileName[operation](searchString)){ // Matching template FOUND - > this is doing something like this : filename.endsWith('test')
-                  let indexOfFileGroup = fileAndTemplates.findIndex(item => item.id === templateId && item.file_type === file_type);
-                  if(indexOfFileGroup >= 0){
-                    fileAndTemplates[indexOfFileGroup].files.push({name: fileName, assetId: fileId, relatedTo, title: fileTitle, file_type, description: fileDescription, assetType: 'File'})
-                  }else{
-                    fileAndTemplates = [...fileAndTemplates, {name : templateTitle, assetId : templateId, relatedTo, title: templateTitle, file_type, description : templateDescription, assetType: 'FileTemplate',
-                                                            files : [{name: fileName, assetId: fileId, relatedTo, title: fileTitle, file_type, description: fileDescription, assetType: 'File'}]}];
+                  let indexOfFileGroup = fileAndTemplates.findIndex(item => item.assetId === templateId && item.file_type === file_type);
+                  if(indexOfFileGroup < 0){
+                    fileAndTemplates = [...fileAndTemplates, {name : templateTitle, assetId : templateId, relatedTo, title: templateTitle, file_type, description : templateDescription, assetType: 'FileTemplate'}];
                   }
                   return; // Breaking out of inner loop
                 }
                 
                 if(!fileName[operation](searchString) && i === templates.length -1){ // matching template NOT FOUND
-                  fileAndTemplates = [...fileAndTemplates, {name: fileName, assetId: fileId, relatedTo, title: fileTitle, file_type, description: fileDescription, assetType: 'File'}];
+                  fileAndTemplates = [...fileAndTemplates, {name: fileName, assetId: fileId, relatedTo, title: fileTitle, isSuperFile, file_type, description: fileDescription, assetType: 'File'}];
                 }
               }
         });
@@ -393,45 +390,36 @@ try {
             jobsWithRelatedFiles.push(item)
           }else{
             jobWithoutRelatedFiles.push(item);
-            allAssetsIds.push(item.job)
           }
         })
 
         jobsWithRelatedFiles.forEach(item =>{
-          allAssetsIds.push(item.job)
           let {relatedFiles} = item;
           let fileAndTemplates = [];
           relatedFiles.forEach(file => {
-            let{name : fileName, assetId: fileId, relatedTo, title : fileTitle, file_type, description : fileDescription} = file;
+            let{name : fileName, assetId: fileId, relatedTo, title : fileTitle, isSuperFile, file_type, description : fileDescription} = file;
             for(let i = 0; i < templates.length; i++){
                 let {id : templateId, fileNamePattern, searchString, title : templateTitle,  description : templateDescription} = templates[i]
                 let operation = fileNamePattern === 'contains' ? 'includes' : fileNamePattern;
                 if(fileName[operation](searchString)){ // Matching template FOUND - > this is doing something like this : filename.endsWith('test')
                   allAssetsIds.push(templateId);
-                  let indexOfFileGroup = fileAndTemplates.findIndex(item => item.id === templateId && item.file_type === file_type);
-                  if(indexOfFileGroup >= 0){
-                    fileAndTemplates[indexOfFileGroup].files.push({name: fileName, assetId: fileId, relatedTo, title: fileTitle, file_type, description: fileDescription, assetType: 'File'})
-                  }else{
-                    fileAndTemplates = [...fileAndTemplates, {name : templateTitle, assetId : templateId, relatedTo, title: templateTitle, file_type, description : templateDescription, assetType: 'FileTemplate',
-                                                            files : [{name: fileName, assetId: fileId, relatedTo, title: fileTitle, file_type, description: fileDescription, assetType: 'File'}]}];
+                  let indexOfFileGroup = fileAndTemplates.findIndex(item => item.assetId === templateId && item.file_type === file_type);
+                  if(indexOfFileGroup < 0){
+                      fileAndTemplates = [...fileAndTemplates, {name : templateTitle, assetId : templateId, relatedTo, title: templateTitle, file_type, description : templateDescription, assetType: 'FileTemplate'}];
                   }
                   return; // Exiting from inner loop when template is found
                 }
                 if(!fileName[operation](searchString) && i === templates.length -1){ // matching template NOT FOUND
                   allAssetsIds.push(fileId);
-                  fileAndTemplates = [...fileAndTemplates, {name: fileName, assetId: fileId, relatedTo, title: fileTitle, file_type, description: fileDescription, assetType: 'File'}];
+                  fileAndTemplates = [...fileAndTemplates, {name: fileName, assetId: fileId, relatedTo, title: fileTitle, isSuperFile, file_type, description: fileDescription, assetType: 'File'}];
                 }
               }
           })
           item.relatedFiles = fileAndTemplates;
         })
-
-        console.dir({jobsWithRelatedFiles}, {depth : null});
-
         const allJobs = [...jobsWithRelatedFiles, ...jobWithoutRelatedFiles];
         res.send({result : allJobs, assetsIds : allAssetsIds})
         
-
 } catch (error) {
   console.log(error);
   return res.status(500).json({ success: false, message: "Error occurred while updating" });

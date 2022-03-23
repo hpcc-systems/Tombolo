@@ -1,5 +1,7 @@
 import React from 'react';
 import { Graph } from '@antv/x6';
+import { Tooltip } from 'antd';
+
 import {
   BookOutlined,
   FileOutlined,
@@ -172,9 +174,11 @@ class Node extends React.Component {
     return (
       <Dropdown overlay={getMenu()} trigger={['contextMenu']} disabled={disableContextMenu}>
         <div className={`node-outer`}>
-          <div className={`node-icon ${type} status-${status} ${notAssociated}`}>{this.entities[type]}</div>
-          {schedule?.type ? <div className="node-schedule">{this.schedule[schedule.type]}</div> : null}
-          <div className="node-title">{showTitle(title)}</div>
+          <Tooltip title={title} mouseEnterDelay={1.4} mouseLeaveDelay={0.1}>
+            <div className={`node-icon ${type} status-${status} ${notAssociated}`}>{this.entities[type]}</div>
+            {schedule?.type ? <div className="node-schedule">{this.schedule[schedule.type]}</div> : null}
+            <div className="node-title">{showTitle(title)}</div>
+          </Tooltip>
         </div>
       </Dropdown>
     );

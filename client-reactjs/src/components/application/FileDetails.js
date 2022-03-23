@@ -107,7 +107,7 @@ class FileDetails extends PureComponent {
       this.setState({
         enableEdit: viewOnlyModeReducer.editMode,
         editing: true,
-      });
+      }); 
     } else {
       this.setState({
         enableEdit: viewOnlyModeReducer.editMode,
@@ -1221,8 +1221,7 @@ class FileDetails extends PureComponent {
 
     //Function to make fields editable
     const makeFieldsEditable = () => {
-      editableMode();
-
+      // editableMode();
       this.setState({
         enableEdit: !this.state.enableEdit,
         editing: true,
@@ -1231,8 +1230,7 @@ class FileDetails extends PureComponent {
 
     //Switch to view only mode
     const switchToViewOnly = () => {
-      readOnlyMode();
-
+      // readOnlyMode();
       this.setState({
         enableEdit: !this.state.enableEdit,
         editing: false,
