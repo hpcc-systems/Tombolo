@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Form, Tabs, Select, Input, message, Table, Button, AutoComplete, Space } from 'antd';
+import { Form, Tabs, Select, Input, message, Table, Button, AutoComplete, Space, Descriptions } from 'antd';
 import { useSelector } from 'react-redux';
 import { debounce } from 'lodash';
 import { useHistory } from 'react-router-dom';
@@ -17,10 +17,6 @@ import DeleteAsset from "../../common/DeleteAsset/index.js";
 //Local variables
 const { Option } = Select;
 const TabPane = Tabs.TabPane;
-const formItemLayout = {
-  labelCol: { span: 2 },
-  wrapperCol: { span: 8 },
-};
 const fileNameOptions = [
   { name: 'Contains', value: 'contains' },
   { name: 'Starts with', value: 'startsWith' },
@@ -33,6 +29,12 @@ message.config({
   duration: 4,
   maxCount: 1,
 });
+
+//Lodash can do this -> but package not added already 
+const capitalizeString = (text) => {
+    let lower = text.toLowerCase();
+    return text.charAt(0).toUpperCase() + lower.slice(1);
+  };
 
 function FileTemplate(props) {
   const { clusters, application } = useSelector((state) => state.applicationReducer);
@@ -69,8 +71,7 @@ function FileTemplate(props) {
       setEnableEdit(true)
     }else{
       getInitialData();
-    }
-      
+    }      
   }, [application]);
 
   //search files that matches the pattern and keyword
@@ -101,7 +102,9 @@ function FileTemplate(props) {
 
   //Handle change in file search string
   const handleSearch = debounce(() =>{
-    const { cluster, searchString } = form.getFieldsValue();
+    const { cluster, searchString, fileNamePattern} = form.getFieldsValue();
+    form.setFieldsValue({fileTemplatePattern : `${capitalizeString(fileNamePattern.split(/(?=[A-Z])/).join(' '))}  ${searchString}`});
+
     if(!cluster){
       message.info('Please select a cluster');
       return;
@@ -109,8 +112,8 @@ function FileTemplate(props) {
     if (searchString?.length < 3) {
       return;
     }
-
-         getFiles()
+    
+       getFiles()
        .then((data) => {
         setFiles(data);
         setSearchingFile(true);
@@ -222,7 +225,8 @@ function FileTemplate(props) {
           ['fileNamePattern']: data.fileNamePattern,
           ['cluster']: data.cluster_id,
           ['sampleFile']: data.sampleLayoutFile,
-          ['clusterName'] : (clusters[clusters.findIndex(cluster => cluster.id === data.cluster_id)].name)
+          ['clusterName'] : (clusters[clusters.findIndex(cluster => cluster.id === data.cluster_id)].name),
+          ['fileTemplatePattern'] : `${capitalizeString(data.fileNamePattern.split(/(?=[A-Z])/).join(' '))}  ${data.searchString}`
         });
         setLayoutData(data.fileTemplateLayout?.fields?.layout || []);
          setSelectedCluster(data.cluster_id);
@@ -342,6 +346,15 @@ function FileTemplate(props) {
                 <Input id="file_title" name="title" placeholder="Title" />
               </Form.Item>
 
+            {!enableEdit && form.getFieldValue('searchString')?
+           <Form.Item
+            label='File Template Pattern'
+            name='fileTemplatePattern'
+            defaultValue='22'
+            className='read-only-input'>
+              <Input placeholder='No file pattern provided'/>
+           </Form.Item> : null}
+
             {enableEdit ?
               <Form.Item
                 label="Cluster"
@@ -382,7 +395,6 @@ function FileTemplate(props) {
                   <Form.Item
                     name="searchString"
                     style={{ width: '70%' }}
-                   
                     rules={[
                       {
                         required: true,
