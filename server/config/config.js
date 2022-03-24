@@ -7,12 +7,12 @@ module.exports = {
     host: process.env.DB_HOSTNAME,
     dialect: 'mysql',
     seederStorage: 'json',
-   //  "ssl": true,
-   //  "dialectOptions": {
-   //     "ssl": {
-   //        "require": true
-   //     }
-   //  }
+    "ssl": true,
+    "dialectOptions": {
+       "ssl": {
+          "require": true
+       }
+    }
   },
   production: {
     username: process.env.DB_USERNAME,

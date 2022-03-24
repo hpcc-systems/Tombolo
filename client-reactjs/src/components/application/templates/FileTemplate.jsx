@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Form, Tabs, Select, Input, message, Table, Button, AutoComplete, Space, Descriptions } from 'antd';
+import { Form, Tabs, Select, Input, message, Table, Button, AutoComplete, Space } from 'antd';
 import { useSelector } from 'react-redux';
 import { debounce } from 'lodash';
 import { useHistory } from 'react-router-dom';
