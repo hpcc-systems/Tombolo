@@ -169,9 +169,14 @@ class EditableTable extends React.Component {
         </span>
     }
     if(this.props.editingAllowed ) {
-      let columns = this.state.columns;
-      columns = columns.push(deleteColumn);
-      this.setState({ columns: columns});
+        let columns = this.state.columns;
+       let indexOfActionColumn = columns.findIndex(column => column.title === 'Action'); //Check if action column already exists
+        if(indexOfActionColumn > 0){
+          columns[indexOfActionColumn] = deleteColumn; // if exists modify so it gets id of new rows
+        }else{
+          columns = columns.push(deleteColumn); // Push action column if it don't already exist
+        }
+        this.setState({ columns: columns});
     } 
    
   }
