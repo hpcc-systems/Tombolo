@@ -776,28 +776,39 @@ router.get('/job_details', [
       if(job) {       
         const isStoredOnGithub = job?.metaData?.isStoredOnGithub;
         const jobStatus = job.job_executions?.[0]?.status;
-        const ecl = job.ecl
-        if(isStoredOnGithub && !ecl && (jobStatus === 'completed' || jobStatus === "failed" )) { 
+
+        if (isStoredOnGithub && (jobStatus === 'completed' || jobStatus === 'failed')) {
           const wuid = job.job_executions[0].wuid;
-          const { application_id, cluster_id, jobType,id } = job;
- 
-          try{
-            const hpccJobInfo = await hpccUtil.getJobInfo(cluster_id, wuid, jobType);
-            // #1 create records in Files and JobFiles
-            hpccJobInfo.jobfiles.forEach( async (file) => await assetUtil.createFilesandJobfiles({file, cluster_id, application_id, id}));
+          try {
+            const hpccJobInfo = await hpccUtil.getJobInfo(job.cluster_id, wuid, job.jobType);
+            // #1 create JobFiles
+            //change to create or updated
+            hpccJobInfo.jobfiles.forEach(async (file) => {
+              // create or update JobFile relationship
+              const jobfileFields = {
+                job_id: job.id,
+                name: file.name,
+                file_type: file.file_type,
+                application_id: job.application_id,
+              };
+        
+              await JobFile.findOrCreate({ where: jobfileFields, defaults: jobfileFields });
+            });
+            
             // #2 update local job instance and save ECL to DB.
-            const jobFiles = await job.getJobfiles(); 
+            const jobFiles = await job.getJobfiles();
             // this will update local instance only
-            job.set("jobfiles", jobFiles);
-            job.set("ecl",  hpccJobInfo.ecl);
-            await job.save()  
-          } catch (error){
+            job.set('jobfiles', jobFiles);
+            job.set('ecl', hpccJobInfo.ecl);
+            await job.save();
+          } catch (error) {
             console.log('------------------------------------------');
             console.log(`FAILED TO UPDATE ECL FOR "${job.name}"`);
             console.dir(error, { depth: null });
             console.log('------------------------------------------');
           }
         }
+        
        var jobData = job.get({ plain: true });
 
        for (const jobFileIdx in jobData.jobfiles) {

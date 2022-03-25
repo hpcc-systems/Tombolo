@@ -342,7 +342,7 @@ function GraphX6({ readOnly = false, statuses }) {
           body: JSON.stringify({ assetId: newAsset.id, dataflowId }),
         };
 
-        /* this POST will create record in asset_dataflows table*/
+        /* this POST will create record in asset_dataflows table*/ 
         const response = await fetch('/api/dataflow/saveAsset', options);
         if (!response.ok) handleError(response);
 
@@ -612,7 +612,7 @@ function GraphX6({ readOnly = false, statuses }) {
               incomingEdges.forEach((edge) => {
                 const source = edge.getSourceNode();
                 if (source) {
-                  const isFile = source.data.type === 'File' || 'FileTemplate'
+                  const isFile = source.data.type === 'File' || source.data.type ===  'FileTemplate'
                   if (isFile) {
                     const fileExist = assetsIds.includes(source.data.assetId); // assetsIds is array of all assets in this dataflow
                     if (!fileExist) {
@@ -629,7 +629,7 @@ function GraphX6({ readOnly = false, statuses }) {
               outgoingEdges.forEach((edge) => {
                 const target = edge.getTargetNode();
                 if (target) {
-                  const isFile = target.data.type === 'File' || 'FileTemplate';
+                  const isFile = target.data.type === 'File' || target.data.type === 'FileTemplate';
                   if (isFile) {
                     const fileExist = assetsIds.includes(target.data.assetId);
                     if (!fileExist) {
