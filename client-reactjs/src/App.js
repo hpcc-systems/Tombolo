@@ -187,7 +187,7 @@ class App extends React.Component {
                     component={Actions}
                   />
                   <PrivateRoute
-                    path="/:applicationId/manualJobDetails"
+                    path="/:applicationId/manualJobDetails/:jobId/:jobExecutionId"
                     component={ManualJobDetail}
                   /> 
                 </Switch>

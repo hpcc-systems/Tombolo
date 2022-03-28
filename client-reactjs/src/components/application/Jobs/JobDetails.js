@@ -348,13 +348,18 @@ class JobDetails extends Component {
       // if (this.props.onAssetSaved) this.props.onAssetSaved(saveResponse);
       if(this.props.onClose) {
         // THIS METHIS WILL PASS PROPS TO GRAPH!
+        const isAssociated=this.formRef.current.getFieldValue('jobSelected') 
+        || this.formRef.current.getFieldValue('isAssociated')
+        || this.formRef.current.getFieldValue('isStoredOnGithub') 
+        || this.formRef.current.getFieldValue('jobType') === "Manual"
+
         const resultToGraph ={
           ...saveResponse,
           assetId: saveResponse.jobId,
           name: this.formRef.current.getFieldValue('name'),
           title: this.formRef.current.getFieldValue('title'),
           // if job is newly associated jobSelected value is gonna be true, if it is undefined we will fall-back to isAssociated value, if it is true it mean that job was previously associated, if it is falsy, then we have no associations yet;
-          isAssociated: this.formRef.current.getFieldValue('jobSelected') || this.formRef.current.getFieldValue('isAssociated') || this.formRef.current.getFieldValue('isStoredOnGithub') ,
+          isAssociated,
         }       
 
         this.props.onClose(resultToGraph);
@@ -448,9 +453,16 @@ class JobDetails extends Component {
 
     const { gitHubFiles, isStoredOnGithub,  jobSelected, manualJobFilePath,  removeAssetId, renameAssetId, ...formFields } = formFieldsValue;
     //Based on this value we will save or not coresponding job data;
-    const isAssociated = formFieldsValue.isAssociated || jobSelected || isStoredOnGithub;
+    let isAssociated = formFieldsValue.isAssociated || jobSelected || isStoredOnGithub;
     // Metadata will be stored as JSON we use this object for notifications, github configs and more...
     const metaData = {};
+     // MANUAL JOB RELATED CODE
+    if (formFieldsValue['jobType'] === 'Manual') {
+      metaData.manualJobs = {
+        pathToFile: manualJobFilePath || []
+      };
+      isAssociated = true;
+    }
     // IF JOB IS NOT ASSIGN TO ANY JOB ON HPCC IT IS CONSIDERED DESIGNJOB!
     metaData.isAssociated = isAssociated;
     // GITHUB RELATED CODE
@@ -462,13 +474,7 @@ class JobDetails extends Component {
       selectedProjects: gitHubFiles.selectedProjects, // List of selected projects IDS!
     };
   
-    // MANUAL JOB RELATED CODE
-    if (formFieldsValue['jobType'] === 'Manual') {
-      metaData.manualJobs = {
-        pathToFile: manualJobFilePath || []
-      };
-    }
-    
+
     //Combine notification related values and send as object
     metaData.notificationSettings = {
       notify: formFields.notify,

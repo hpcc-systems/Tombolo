@@ -1034,41 +1034,46 @@ router.get('/jobExecutionDetails', [
 router.post( '/manualJobResponse',
   [
     body('jobExecutionId').isUUID(4).withMessage('Invalid Job Execution Id'),
-    body('newManaulJob_meta').notEmpty().withMessage('Invalid meta data'),
+    body('manualJob_metadata').notEmpty().withMessage('Invalid meta data'),
   ],
-  (req, res) => {
+  async (req, res) => {
     const errors = validationResult(req).formatWith(validatorUtil.errorFormatter);
     if (!errors.isEmpty()) {
       return res.status(422).json({ success: false, errors: errors.array() });
     }
-    JobExecution.findOne({ where: { id: req.body.jobExecutionId } })
-      .then((jobExecution) => {
-        let newMeta = { ...jobExecution.manualJob_meta, ...req.body.newManaulJob_meta };
-        jobExecution
-          .update({ status: req.body.status, manualJob_meta: newMeta })
-          .then(async (jobExecution) => {
-            //once the job execution is updated, send confirmation email
-            await workFlowUtil.confirmationManualJobAction(jobExecution.manualJob_meta);
-            if (jobExecution.status === 'completed') {
-              await JobScheduler.scheduleCheckForJobsWithSingleDependency({
-                dependsOnJobId: jobExecution.jobId,
-                dataflowId: jobExecution.dataflowId,
-                jobExecutionGroupId: jobExecution.jobExecutionGroupId,
-              });
-            }
-          })
-          .then(res.status(200).json({ success: true }))
-          .catch((err) => {
-            res.status(501).json({ success: false, message: 'Error occured while saving data' });
-          });
-      })
-      .catch((error) => {
-        res.status(501).json({ success: false, data: error });
-      });
+    const {jobExecutionId, status, manualJob_metadata} = req.body;
+    let jobExecution;
+    try{
+      jobExecution = await JobExecution.findOne({ where: { id: jobExecutionId }});
+      const newJobExecutionMetaData = {...jobExecution.manualJob_meta, ...manualJob_metadata}
+      await jobExecution.update({status, manualJob_meta : newJobExecutionMetaData });
+      res.status(200).json({success : true, message : 'Job execution updated'}) // Response to client if no error 
+    }catch(error){
+      console.log('-- Update manual job metadata -------------');
+      console.dir(error.message)
+      console.log('-------------------------------------------');
+      res.status(501).json({ success: false, message: 'Error occurred while saving data' }); // response to client when error and return
+      return;
+    }
+    
+    // Once response is recorded successfully check for dependent job & send confirmation email
+    try{
+      if(status === 'completed'){ //Checks for dependent job
+        await JobScheduler.scheduleCheckForJobsWithSingleDependency({
+          dependsOnJobId: jobExecution.jobId,
+          dataflowId: jobExecution.dataflowId,
+          jobExecutionGroupId: jobExecution.jobExecutionGroupId,
+        })
+      }
+      await workFlowUtil.confirmationManualJobAction(jobExecution.manualJob_meta); // Sends confirmation email
+
+    }catch(error){
+      console.log('-Manual job confirmation & dependent job checking -----');
+      console.dir(error)
+      console.log('-------------------------------------------------------');
+    }
   }
 );
-
-
 
 const QueueDaemon = require('../../queue-daemon');
 
