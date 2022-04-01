@@ -57,12 +57,12 @@ const fetchGroupsTreeFailure = (error) => {
 };
 
 
-const generateList = (data, parentKey="", list=[]) => {
+const generateList = (data, parentKey="", parentId='', list=[]) => {
   for (let i = 0; i < data.length; i++) {
     const { key, title, id, children } = data[i];
-    list.push({ key, title, id, parentKey });
+    list.push({ key, title, id, parentKey, parentId });
     if (children) {
-      generateList(children, key, list);
+      generateList(children, key, id, list);
     }
   }
   return list;

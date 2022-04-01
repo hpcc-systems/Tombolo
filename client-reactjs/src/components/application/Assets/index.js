@@ -105,21 +105,6 @@ const Assets = () => {
     dispatch(expandGroups(expandedKeys));
   };
 
-  const getParent = (key, data) => {
-    let parent;
-    for (let i = 0; i < data.length; i++) {
-      const node = data[i];
-      if (node.children) {
-        if (node.children.some((item) => item.key === key)) {
-          parent = node;
-        } else if (getParent(key, node.children)) {
-          parent = getParent(key, node.children);
-        }
-      }
-    }
-    return parent;
-  };
-
   const openGroup = (groupId) => {
     if (groupId) {
       const match = dataList.find((group) => group.id === groupId);
@@ -202,8 +187,8 @@ const Assets = () => {
               throw new Error(result.message || 'Failed to delete group');
             }
 
-            const parent = getParent(selectedKeys.key, tree);
-            dispatch(selectGroup({ id: parent.id, key: parent.key }));
+            const selectedGroup = dataList.find((group) => group.id === selectedKeys.id);
+            dispatch(selectGroup({ id: selectedGroup.parentId, key: selectedGroup.parentKey }));
             fetchGroups();
             resolve();
           } catch (error) {
@@ -382,7 +367,7 @@ const Assets = () => {
               blockNode={true}
               onSelect={onSelect}
               onExpand={onExpand}
-              autoExpandParent={true}
+              autoExpandParent={false}
               className="draggable-tree"
               titleRender={titleRenderer}
               onDrop={handleDragDrop}
