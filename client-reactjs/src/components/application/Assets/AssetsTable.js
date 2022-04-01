@@ -34,7 +34,7 @@ function AssetsTable({ openGroup, handleEditGroup, refreshGroups }) {
   const applicationId = applicationReducer?.application?.applicationId || ''
 
   const { assetTypeFilter, keywords } = assetReducer.searchParams;
-  const [assetToMove, setAssetToMove] = useState({ id: "", type: "", title: "", selectedGroup: {}, });
+  const [assetToMove, setAssetToMove] = useState({ id: "", type: "", title: "", selectedKeys: {}, });
   const [selectedAsset, setSelectedAsset] = useState();
   const [toPrintAssets, setToPrintAssets] = useState([])
   const [selectDetailsforPdfDialogVisibility, setSelectDetailsforPdfDialogVisibility] = useState(false);
@@ -132,11 +132,11 @@ function AssetsTable({ openGroup, handleEditGroup, refreshGroups }) {
   };
 
   const openMoveAssetDialog = (assetId, assetType, assetTitle, selectedGroup) => {
-    setAssetToMove({ id: assetId, type: assetType, title: assetTitle, selectedGroup: selectedGroup, });
+    setAssetToMove({ id: assetId, type: assetType, title: assetTitle, selectedKeys: selectedGroup.selectedKeys, });
   };
 
   const closeMoveDialog = () => {
-    setAssetToMove({ id: "", type: "", title: "", selectedGroup: {}, });
+    setAssetToMove({ id: "", type: "", title: "", selectedKeys: {}, });
   };
 
   const handleDelete = (id, type) => {

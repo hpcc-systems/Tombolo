@@ -158,7 +158,7 @@ const Assets = () => {
       Group: () => openNewGroupDialog({ edit: false, groupId: '' }),
       'Edit-Group': () => openNewGroupDialog({ edit: true, groupId: '' }),
       'Delete-Group': () => handleDeleteGroup(),
-      'Move-Group': () => openMoveAssetDialog(group),
+      'Move-Group': () => openMoveAssetDialog({...group, type: "Group"}),
       'Print-Assets': () => handlePrintAssets(),
     };
 
@@ -208,8 +208,8 @@ const Assets = () => {
     openNewGroupDialog({ edit: true, groupId: groupIdFromAssetsView });
   };
 
-  const openMoveAssetDialog = (group) => {
-    setItemToMove({ ...group, selectedKeys, type: 'Group' });
+  const openMoveAssetDialog = (asset) => {
+    setItemToMove({ ...asset, selectedKeys });
     toggleMoveDialog();
   };
 
