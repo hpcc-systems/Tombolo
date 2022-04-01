@@ -30,7 +30,7 @@ const SUBMIT_SCRIPT_JOB_FILE_NAME = 'submitScriptJob.js';
 const SUBMIT_MANUAL_JOB_FILE_NAME = 'submitManualJob.js'
 const SUBMIT_GITHUB_JOB_FILE_NAME = 'submitGithubJob.js'
 
-const createOrUpdateFile = async ({jobfile, jobId, clusterId, dataflowId, applicationId}) =>{
+const createOrUpdateFile = async ({jobfile, jobId, clusterId, dataflowId, applicationId, assetGroupId}) =>{
   try {
     const fileInfo = await hpccUtil.fileInfo(jobfile.name, clusterId);
 
@@ -55,6 +55,12 @@ const createOrUpdateFile = async ({jobfile, jobId, clusterId, dataflowId, applic
       });
       if (!isFileCreated) file = await file.update(fileFields);
 
+      //If group Id provided make entry in asset group table
+      if (assetGroupId){
+        const assetGroupsFields = { assetId: file.id, groupId : assetGroupId};
+        await AssetsGroups.findOrCreate({ where: assetGroupsFields, defaults: assetGroupId });
+      }
+      
       // create or update FileLayout
       const layoutFields = { fields: JSON.stringify(fileInfo.file_layouts) };
 
@@ -79,12 +85,12 @@ const createOrUpdateFile = async ({jobfile, jobId, clusterId, dataflowId, applic
         updateOnDuplicate: ['name', 'ruleType', 'rule', 'action', 'fixScript'],
       });
 
-      // create or update JobFile relationship
       const jobfileFields = {
         name: file.name,
         file_id: file.id,
         file_type: jobfile.file_type,
         description: file.description,
+        isSuperFile : jobfile.isSuperFile
       };
 
       let [jobFile, isJobFileCreated] = await JobFile.findOrCreate({
@@ -96,6 +102,7 @@ const createOrUpdateFile = async ({jobfile, jobId, clusterId, dataflowId, applic
         },
         defaults: jobfileFields,
       });
+
       if (!isJobFileCreated) jobFile = await jobFile.update(jobfileFields);
 
       // create assetDataflow if still not exists
@@ -468,35 +475,12 @@ router.post( '/saveJob',
       }
       
       try {
-        // Update JobFile table with fresh list of files;
-        let jobFiles = await JobFile.findAll({ where: { job_id: job.id, application_id, file_id: { [Op.not]: null } }, order: [['name', 'asc']], raw: true, });      
-        //Find files that are removed from the Job and remove them from JobFile table
-        if (jobFiles.length > 0 && files.length > 0) {
-          const removeIds = jobFiles.reduce((acc, jobFile) => {
-            const exist = files.find((fromCluster) => fromCluster.file_type === jobFile.file_type && fromCluster.name === jobFile.name );
-            if (!exist) acc.push(jobFile.id);
-            return acc;
-          }, []);
-          if (removeIds.length > 0) await JobFile.destroy({ where: { id: { [Sequelize.Op.in]: removeIds }, application_id } });
-        }
-        // Find and update or create JobFile.
-        for (const file of files) {
-          const defaultFields = {
-            job_id: job.id,
-            application_id,
-            name: file.name,
-            file_id: file.file_id, // not always present
-            file_type: file.file_type,
-            added_manually: file.addedManually,
-          };
-          
-          await JobFile.findOrCreate({
-            where: { job_id: job.id, application_id, file_type: file.file_type, name: file.name },
-            defaults: defaultFields ,
-          })
+        for(let i = 0; i < files.length; i++){
+          await createOrUpdateFile({jobfile: files[i], clusterId : cluster_id, applicationId : application_id, jobId : job.id, assetGroupId : groupId});
+        }          
+
           // If DataFlowId present update assetDataflow table so
           if (dataflowId) await AssetDataflow.findOrCreate({ where: { assetId: job.id, dataflowId }, defaults: { assetId: file.id, dataflowId }, });
-        }
         // Update Job Params
         const updateParams = params.map((el) => ({ ...el, job_id: job.id, application_id }));
         await JobParam.destroy({ where: { application_id, job_id: job.id } });
@@ -773,9 +757,15 @@ router.get('/job_details', [
       include: [JobFile, JobParam, JobExecution],
       attributes: { exclude: ['assetId'] },
     }).then(async function(job) {
+
       if(job) {       
         const isStoredOnGithub = job?.metaData?.isStoredOnGithub;
         const jobStatus = job.job_executions?.[0]?.status;
+
+        //Among the job files find which ones are super files
+        const filesIds = job.jobfiles.map(jf => jf.file_id);
+        const superFiles = await File.findAll({where:{id: filesIds, isSuperFile: true}});
+        const superFileIds = superFiles.map(file => file.id);
 
         if (isStoredOnGithub && (jobStatus === 'completed' || jobStatus === 'failed')) {
           const wuid = job.job_executions[0].wuid;
@@ -852,42 +842,45 @@ router.get('/job_details', [
           }
         }
 
-        // Check if input and output files have matching file templates - wrap in try catch
+        // Check if input and output files have matching file templates
         const templates = await FileTemplate.findAll({
           where: { cluster_id: job.cluster_id, application_id: req.query.app_id },
         });
 
-        let fileAndTemplates = [];
+        let fileAndTemplates = [];        
 
+        // If file template length > 0
         job.jobfiles.forEach(file =>{
-          let{dataValues : {name : fileName, id: fileId, file_type, description : fileDescription}} = file;
-           if(templates.length > 0){
-            for(let i = 0; i < templates.length; i++){
+          let{dataValues : {name : fileName, file_type}} = file;
+          let {dataValues : newFileObj} = file;
+          if(superFileIds.includes(file.file_id)) newFileObj.isSuperFile = true; // adds super file property
+          newFileObj.assetType = newFileObj.isSuperFile ? 'Super File' : 'Logical File' // Add assetType property
+          if(templates.length === 0){
+          fileAndTemplates.push(newFileObj)
+        }else{
+           for(let i = 0; i < templates.length; i++){
               let {id : templateId, fileNamePattern, searchString, title : templateName, description : templateDescription} = templates[i]
               let operation = fileNamePattern === 'contains' ? 'includes' : fileNamePattern;
               if(fileName[operation](searchString)){ // Matching template found
                 let indexOfFileGroup = fileAndTemplates.findIndex(item => item.id === templateId && item.file_type === file_type);
                 if(indexOfFileGroup >= 0){
-                  fileAndTemplates[indexOfFileGroup].files.push({id: fileId, name: fileName, file_type, description: fileDescription, assetType: 'file'})
+                  fileAndTemplates[indexOfFileGroup].files.push(newFileObj)
                 }else{
-                  fileAndTemplates = [...fileAndTemplates, {id : templateId, name : templateName, file_type, description : templateDescription, assetType: 'fileTemplate',
-                                                           files : [{id: fileId, name: fileName, file_type, description: fileDescription, assetType: 'file'}]}];
+                  fileAndTemplates = [...fileAndTemplates, {id : templateId, name : templateName, file_type, description : templateDescription, assetType: 'File Template',
+                                                           files : [newFileObj]}];
                 }
                 return;
               }
               
               if(!fileName[operation](searchString) && i === templates.length -1){ // No matching template found
-                fileAndTemplates = [...fileAndTemplates, {id: fileId, name: fileName, file_type, description: fileDescription, assetType: 'file'}];
+                fileAndTemplates = [...fileAndTemplates, newFileObj];
               }
-            }
-           }else{
-              fileAndTemplates = [...fileAndTemplates, {id: fileId, name: fileName, file_type, description: fileDescription, assetType: 'file'}];
-            }
-            
+            }  
+        } 
         })
-
         jobData.jobFileTemplate = fileAndTemplates;
         return jobData;
+
       } else {
         return res.status(500).json({ success: false, message: "Job details could not be found. Please check if the job exists in Assets. " });
       }
