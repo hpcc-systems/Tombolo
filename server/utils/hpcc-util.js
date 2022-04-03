@@ -274,13 +274,12 @@ exports.getJobInfo = async (clusterId, jobWuid, jobType) => {
       const sourceFiles = [];
       
       wuInfo.Workunit?.SourceFiles?.ECLSourceFile?.forEach((sourceFile) => {
-        sourceFiles.push({ name: sourceFile.Name, file_type: 'input' });
+        sourceFiles.push({ name: sourceFile.Name, file_type: 'input', isSuperFile: sourceFile.IsSuperFile });
       });
 
       wuInfo.Workunit?.Results?.ECLResult?.forEach((file) => {
-        if (file.FileName) sourceFiles.push({ name: file.FileName, file_type: 'output' });
+        if (file.FileName) sourceFiles.push({ name: file.FileName, file_type: 'output', isSuperFile: file.IsSuperFile ? true : false });
       });
-
       return createJobInfoObj(wuInfo.Workunit, sourceFiles);
     }
   } catch (error) {
