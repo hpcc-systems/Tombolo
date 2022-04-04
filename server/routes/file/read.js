@@ -86,11 +86,11 @@ router.get('/file_list', [
       let dataflowId = req.query.dataflowId;
       let query;
       if(dataflowId){
-        query = 'select f.id, f.name, f.title, f.description, f.isSuperFile, f.createdAt, f.application_id, f.deletedAt '+
+        query = 'select f.id, f.name, f.title, f.description, f.isSuperFile, f.metaData, f.createdAt, f.application_id, f.deletedAt '+
         'from file f ' + 
         'where f.id not in (select asd.assetId from assets_dataflows asd where asd.dataflowId = (:dataflowId) and asd.deletedAt is null)' +
         'and f.application_id = (:applicationId) '+
-        'and f.cluster_id = (:clusterId)'+
+        'and (f.cluster_id = (:clusterId) or f.cluster_id is null)'+
         'and f.deletedAt is null';
       }else{
          query = 'select f.id, f.name, f.title, f.description, f.isSuperFile, f.createdAt, f.application_id, f.deletedAt '+
