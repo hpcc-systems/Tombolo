@@ -330,6 +330,32 @@ router.get('/file_details', [
 
 });
 
+//Gets sub-files associated with a super file
+router.get('/getSubFiles',[
+  query('clusterId').isUUID(4).withMessage('Invalid cluster ID'),
+  query('fileName').notEmpty().withMessage('Invalid file name')
+],
+ async(req, res) =>{
+   const errors = validationResult(req).formatWith(validatorUtil.errorFormatter);
+  if (!errors.isEmpty()) {
+    return res.status(422).json({ success: false, errors: errors.array() });
+  }
+
+  try{
+  const{ clusterId, fileName} = req.query;
+  const DFUService = await hpccUtil.getDFUService(clusterId);
+  const response = await DFUService.DFUInfo({ Name: fileName });
+  if (!response.FileDetail) throw new Error('File details not found');
+  
+  res.send(response.FileDetail.subfiles.Item)
+  }catch(error){
+    console.log('---- error while fetching sub-files ---------');
+    console.dir({error}, {depth: null})
+    console.log('---------------------------------------------');
+    res.status(404).json({success : false, message : 'Unable to fetch subfiles'})
+  }
+});
+
 exports.updateFileDetails = (fileId, applicationId, req) => {
   let fieldsToUpdate = {"file_id"  : fileId, "application_id" : applicationId};
   return new Promise((resolve, reject) => {
