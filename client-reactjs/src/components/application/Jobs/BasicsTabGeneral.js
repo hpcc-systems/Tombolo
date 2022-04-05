@@ -1,5 +1,5 @@
 import React, { useState, useCallback  } from 'react';
-import { Modal, Form, Input, Button, Select, AutoComplete, Spin, message, Row, Col, Typography, Radio, Alert } from 'antd/lib';
+import { Form, Input, Button, Select, AutoComplete, Spin, message, Row, Col, Typography, Radio, Alert } from 'antd/lib';
 import { authHeader, handleError } from '../../common/AuthHeader.js';
 import ReactMarkdown from 'react-markdown';
 import { useSelector } from 'react-redux';
@@ -8,6 +8,7 @@ import { MarkdownEditor } from '../../common/MarkdownEditor.js';
 import GitHubForm from './GitHubForm/GitHubForm.js';
 import debounce from 'lodash/debounce';
 import Notifications from './Notifications/index.js';
+import OverwriteAssetModal from '../../common/OverWriteAssetModal.js';
 
 // import GHTable from './GitHubForm/GHTable.js';
 const { Option } = Select;
@@ -19,7 +20,7 @@ function BasicsTabGeneral({ enableEdit, editingAllowed, addingNewAsset, jobType,
 
   const [search, setSearch] = useState({ loading:false, error:'', data:[] });
   const [job, setJob] = useState({ loading: false, disableFields: false, jobExists: false });
-  const [existingJob, setExistingJob] = useState({ showModal: false, selectedAsset: {name:"", id:""}, jobInfo: null });
+  const [existingAsset, setExistingAsset] = useState({ showModal: false, dbAsset : null, selectedAsset: {name:"", id:""} });
   
   const searchJobs = useCallback(debounce(async ({ searchString, clusterId }) => {
     message.config({maxCount: 1});
@@ -56,6 +57,51 @@ function BasicsTabGeneral({ enableEdit, editingAllowed, addingNewAsset, jobType,
   }, 500)
   , []);
  
+    const resetModal = () => {
+      //this method is triggered when we click any of buttons on modal;
+      setExistingAsset({ showModal: false, dbAsset: null, selectedAsset: { id: '', name: '' }});
+    }
+
+    const acceptExistingSettings = () => {
+      const { dbAsset, selectedAsset } = existingAsset;
+        // this method is triggered when we selected existing settings, we will overwrite most of the previous settings with the one that we have in db
+      const updateFields = {
+        jobSelected: true, // IF JOB SELECTED THEN ITS NO LONGER DESIGNER JOB!
+        ecl: dbAsset.ecl,
+        name: dbAsset.name,
+        title: dbAsset.title,
+        author: dbAsset.author,
+        gitRepo: dbAsset.gitRepo,
+        metaData: dbAsset.metaData,
+        entryBWR: dbAsset.entryBWR,
+        description: dbAsset.description,
+        removeAssetId: selectedAsset.id, // We want to assign existing job to this design job, we will need to remove design job to avoid duplications
+        notify: dbAsset.metaData?.notificationSettings?.notify,
+        notificationRecipients: dbAsset.metaData?.notificationSettings?.recipients,
+        notificationSuccessMessage: dbAsset.metaData?.notificationSettings?.successMessage,
+        notificationFailureMessage: dbAsset.metaData?.notificationSettings?.failureMessage,
+      };
+  
+      formRef.current.setFieldsValue(updateFields);
+      setJobDetails(dbAsset); // will update state in FileDetails ||  JobDetails;
+      resetModal();
+    };
+  
+    const acceptIncomingSettings = () => {
+      const { dbAsset, selectedAsset } = existingAsset;
+      // this method is triggered when we selected incoming settings, we will just update missing values, no overwrites.
+      const updateFields = {
+        jobSelected: true, // IF JOB SELECTED THEN ITS NO LONGER DESIGNER JOB!
+        ecl: dbAsset.ecl,
+        name: dbAsset.name,
+        entryBWR: dbAsset.entryBWR,
+        removeAssetId: selectedAsset.id, // We want to assign existing job to this design job, we will need to remove design job to avoid duplications
+      };
+  
+      formRef.current.setFieldsValue(updateFields);
+      setJobDetails(dbAsset); // will update state in FileDetails ||  JobDetails;
+      resetModal();
+    };
 
   const onJobSelected = async (option) => {
     try {
@@ -71,11 +117,11 @@ function BasicsTabGeneral({ enableEdit, editingAllowed, addingNewAsset, jobType,
       const title = formRef.current?.getFieldValue('title');
   
       let fieldsToUpdate = {
+        jobSelected: true, // IF JOB SELECTED THEN ITS NO LONGER DESIGNER JOB
         ecl: jobInfo.ecl,
         name: jobInfo.name,
-        title: title || jobInfo.name,
         entryBWR: jobInfo.entryBWR,
-        jobSelected: true, // IF JOB SELECTED THEN ITS NO LONGER DESIGNER JOB
+        title: title || jobInfo.name,
       };
   
       if (selectedAssetId) {
@@ -83,14 +129,16 @@ function BasicsTabGeneral({ enableEdit, editingAllowed, addingNewAsset, jobType,
         setJob((prev) => ({ ...prev, loading: false })); // will update local loading indicator
         // HPCC JOB ALREADY EXISTS IN TOMBOLO, ASK USE TO OVERWRITE METADATA
         if (isExistingJob)
-         return setExistingJob({ showModal: true, selectedAsset:{ name:jobName, id:selectedAssetId }, jobInfo });
+         return setExistingAsset({ showModal: true, dbAsset: jobInfo,  selectedAsset:{ name:jobName, id:selectedAssetId }});
         // HPCC JOB DOES NOT EXISTS IN TOMBOLO, associate this design job and Rename this job according to value found on HPCC;
         fieldsToUpdate.renameAssetId = jobName !== jobInfo.name ? selectedAssetId : '';
       }
       
       if (isExistingJob) {
         // Job existed in DB, add additional fields;
-        const additionalFields = {
+        // Adding additional fields when selecting existing job while creating job from scratch;
+        fieldsToUpdate = {
+          ...fieldsToUpdate,
           title: jobInfo.title,
           gitRepo: jobInfo.gitRepo,
           contact: jobInfo.contact,
@@ -101,11 +149,6 @@ function BasicsTabGeneral({ enableEdit, editingAllowed, addingNewAsset, jobType,
           notificationSuccessMessage : jobInfo.metaData?.notificationSettings?.successMessage,
           notificationFailureMessage : jobInfo.metaData?.notificationSettings?.failureMessage,
           notificationRecipients : jobInfo.metaData?.notificationSettings?.recipients
-        };
-        // Adding additional fields when selecting existing job while creating job from scratch;
-        fieldsToUpdate = {
-          ...fieldsToUpdate,
-          ...additionalFields,
         };
       }
       // will update antD form values;
@@ -310,10 +353,12 @@ function BasicsTabGeneral({ enableEdit, editingAllowed, addingNewAsset, jobType,
         </React.Fragment>
       ) : null}
         <OverwriteAssetModal
-          formRef={formRef}
-          setJobDetails={setJobDetails}
-          existingJob={existingJob}
-          setExistingJob={setExistingJob} 
+          cancel={resetModal}
+          show={existingAsset.showModal}
+          acceptExisting={acceptExistingSettings} 
+          acceptIncoming={acceptIncomingSettings}
+          existingName={existingAsset?.dbAsset?.name}
+          incomingName={existingAsset?.selectedAsset?.name}
         />
       </Spin>
     </React.Fragment>
@@ -321,86 +366,3 @@ function BasicsTabGeneral({ enableEdit, editingAllowed, addingNewAsset, jobType,
 }
 
 export default BasicsTabGeneral;
-
-
-const OverwriteAssetModal = ({ existingJob, setExistingJob, setJobDetails, formRef }) => {
-  const reset = () => {
-    setExistingJob(() => ({ showModal: false, selectedAsset: { id: '', name: '' }, jobInfo: null }));
-  };
-
-  const acceptExisting = () => {
-    const { jobInfo, selectedAsset } = existingJob;
-
-    const updateFields = {
-      ecl: jobInfo.ecl,
-      name: jobInfo.name,
-      title: jobInfo.title,
-      author: jobInfo.author,
-      gitRepo: jobInfo.gitRepo,
-      entryBWR: jobInfo.entryBWR,
-      description: jobInfo.description,
-      removeAssetId: selectedAsset.id, // We want to assign existing job to this design job, we will need to remove design job to avoid duplications
-      metaData: jobInfo.metaData,
-      notify: jobInfo.metaData?.notificationSettings?.notify,
-      notificationSuccessMessage: jobInfo.metaData?.notificationSettings?.successMessage,
-      notificationFailureMessage: jobInfo.metaData?.notificationSettings?.failureMessage,
-      notificationRecipients: jobInfo.metaData?.notificationSettings?.recipients,
-      jobSelected: true, // IF JOB SELECTED THEN ITS NO LONGER DESIGNER JOB!
-    };
-
-    formRef.current.setFieldsValue(updateFields);
-    setJobDetails(jobInfo); // will update state in JobDetails;
-    reset();
-  };
-
-  const acceptIncoming = () => {
-    const { jobInfo, selectedAsset } = existingJob;
-
-    const updateFields = {
-      ecl: jobInfo.ecl,
-      name: jobInfo.name,
-      entryBWR: jobInfo.entryBWR,
-      removeAssetId: selectedAsset.id, // We want to assign existing job to this design job, we will need to remove design job to avoid duplications
-      jobSelected: true, // IF JOB SELECTED THEN ITS NO LONGER DESIGNER JOB!
-    };
-
-    formRef.current.setFieldsValue(updateFields);
-    setJobDetails(jobInfo); // will update state in JobDetails
-    reset();
-  };
-
-  return (
-    <Modal
-      destroyOnClose
-      visible={existingJob.showModal}
-      title="Job already exists"
-      closable={false}
-      footer={[
-        <Button key="existing" type="primary" onClick={acceptExisting}>
-          Accept existing
-        </Button>,
-        <Button key="incoming" onClick={acceptIncoming}>
-          Accept incoming
-        </Button>,
-        <Button key="cancel" onClick={reset}>
-          Cancel
-        </Button>,
-      ]}
-    >
-      <Alert
-        showIcon
-        type="warning"
-        message="Job Settings conflict"
-        description={
-          <>
-            <ul>
-              <li>Incoming Job: {existingJob?.selectedAsset?.name}</li>
-              <li>Existing Job: {existingJob?.jobInfo?.name}</li>
-            </ul>
-            <p>Job settings will be overwritten, please select which settings to accept?</p>
-          </>
-        }
-      />
-    </Modal>
-  );
-};
