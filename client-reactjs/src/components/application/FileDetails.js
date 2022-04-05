@@ -19,6 +19,7 @@ import { assetsActions } from '../../redux/actions/Assets';
 import DeleteAsset from '../common/DeleteAsset';
 import SuperFileMeta from '../common/SuperFileMeta';
 import { formItemLayout  } from "../common/CommonUtil";
+import OverwriteAssetModal from '../common/OverWriteAssetModal';
 
 const TabPane = Tabs.TabPane;
 const Option = Select.Option;
@@ -61,6 +62,14 @@ class FileDetails extends Component {
       validations: [],
       inheritedLicensing: [],
       isAssociated: false,
+    },
+    existingAsset: {
+      showModal: false,
+      dbAsset: null, 
+      selectedAsset: { 
+        id: '', 
+        name: '' 
+      }
     },
     addingNewAsset: this.props.addingNewAsset,
     enableEdit: this.props.editMode,
@@ -141,9 +150,6 @@ class FileDetails extends Component {
         if (!data?.basic) throw data;
 
         const fileType = !data.basic.fileType || data.basic.fileType === 'flat' ? 'thor_file' : data.basic.fileType;
-        console.log('-data-----------------------------------------');
-        console.dir({data}, { depth: null });
-        console.log('------------------------------------------');
         
         this.setState({
           initialDataLoading: false,
@@ -178,6 +184,7 @@ class FileDetails extends Component {
           title: data.basic.title,
           supplier: data.basic.supplier,
           consumer: data.basic.consumer,
+          selectedAssetId: data.basic.id,
           clusters: data.basic.cluster_id,
           serviceURL: data.basic.serviceUrl,
           isSuperFile: data.basic.isSuperFile,
@@ -350,9 +357,50 @@ class FileDetails extends Component {
         return message.error( 'There is already a file with the same name in this Group. Please select another file' );
       }
 
+      const isExistingFile = fileInfo.basic.id ? true : false;
+      const selectedAssetId = this.formRef.current?.getFieldValue('selectedAssetId');
+      const fileName = this.formRef.current?.getFieldValue('name');
+      const title = this.formRef.current?.getFieldValue('title');
+
       const fileType = !fileInfo.basic.fileType || fileInfo.basic.fileType === 'flat' ? 'thor_file' : fileInfo.basic.fileType;
      
+      let fieldsToUpdate = {
+        title: title || fileInfo.basic.name.substring(fileInfo.basic.name.lastIndexOf('::') + 2),
+        fileType: fileType,
+        fileSelected: true, // IF FILE WAS SELECTED AND SAVED AS SELECTED THEN WE ASSUME THAT FILE IS ASSOCIATED!
+        name: fileInfo.basic.name,
+        scope: fileInfo.basic.scope,
+        owner: fileInfo.basic.owner,
+        consumer: fileInfo.basic.consumer,
+        supplier: fileInfo.basic.supplier,
+        serviceURL: fileInfo.basic.serviceUrl,
+        qualifiedPath: fileInfo.basic.pathMask,
+        isSuperFile: fileInfo.basic.isSuperFile,
+      };
+
+        
+      if (selectedAssetId) {
+        // is selectedAssetId exist it means that FILE WAS CREATED BUT WITH NO ASSOCIATION, makes it a design job...
+        this.setState({initialDataLoading: false})// will update local loading indicator
+        // HPCC JOB ALREADY EXISTS IN TOMBOLO, ASK USE TO OVERWRITE METADATA
+        if (isExistingFile)
+         return this.setState({ existingAsset: { showModal: true, dbAsset: fileInfo.basic, selectedAsset: { name: fileName, id: selectedAssetId}, },
+        });
+        // HPCC FILE DOES NOT EXISTS IN TOMBOLO, associate this design job and Rename this file according to value found on HPCC;
+        fieldsToUpdate.renameAssetId = fileName !== fileInfo.basic.name ? selectedAssetId : '';
+      }
+
+      if (isExistingFile) {
+        // Job existed in DB, add additional fields;
+        // Adding additional fields when selecting existing job while creating job from scratch;
+        fieldsToUpdate = { 
+          ...fieldsToUpdate,
+          description: fileInfo.basic.description,
+        };
+      }
+
       this.setState({
+        initialDataLoading: false,
         disableReadOnlyFields: true,
         file: {
           ...this.state.file,
@@ -364,20 +412,7 @@ class FileDetails extends Component {
         },
       });
 
-      this.formRef.current.setFieldsValue({
-        fileType: fileType,
-        fileSelected: true, // IF FILE WAS SELECTED AND SAVED AS SELECTED THEN WE ASSUME THAT FILE IS ASSOCIATED!
-        name: fileInfo.basic.name,
-        scope: fileInfo.basic.scope,
-        owner: fileInfo.basic.owner,
-        consumer: fileInfo.basic.consumer,
-        supplier: fileInfo.basic.supplier,
-        serviceURL: fileInfo.basic.serviceUrl,
-        qualifiedPath: fileInfo.basic.pathMask,
-        isSuperFile: fileInfo.basic.isSuperFile,
-        description: fileInfo.basic.description,
-        title: fileInfo.basic.name.substring(fileInfo.basic.name.lastIndexOf('::') + 2),
-      });
+      this.formRef.current.setFieldsValue(fieldsToUpdate);
 
       await this.getFileData(fileInfo.basic.name, this.state.selectedCluster);
     } catch (error) {
@@ -385,9 +420,50 @@ class FileDetails extends Component {
       console.dir({ error }, { depth: null });
       console.log('------------------------------------------');
       message.error('There was an error getting file information from the cluster. Please try again');
+      this.setState({initialDataLoading: false})
     }
-    this.setState({initialDataLoading: false})
   }
+
+  resetModal = () => this.setState({ existingAsset: { showModal: false, dbAsset: null, selectedAsset: { id: '', name: '' }} });
+  
+  acceptExistingSettings = () => {
+    const { dbAsset, selectedAsset } = this.state.existingAsset;
+      // this method is triggered when we selected existing settings, we will overwrite most of the previous settings with the one that we have in db
+    const updateFields = {
+      fileSelected: true, // IF FILE WAS SELECTED AND SAVED AS SELECTED THEN WE ASSUME THAT FILE IS ASSOCIATED!
+      name: dbAsset.name,
+      scope: dbAsset.scope,
+      owner: dbAsset.owner,
+      title: dbAsset.title,
+      consumer: dbAsset.consumer,
+      supplier: dbAsset.supplier,
+      fileType: dbAsset.fileType,
+      serviceURL: dbAsset.serviceUrl,
+      isSuperFile: dbAsset.isSuperFile,
+      description: dbAsset.description,
+      qualifiedPath: dbAsset.pathMask,
+      removeAssetId: selectedAsset.id, // We want to assign existing job to this design job, we will need to remove design job to avoid duplications
+    };
+
+    this.formRef.current.setFieldsValue(updateFields);
+    
+    this.setState({ file: { ...this.state.file, ...dbAsset } });
+    this.resetModal();
+  };
+
+  acceptIncomingSettings = () => {
+    const { dbAsset, selectedAsset } = this.state.existingAsset;
+    // this method is triggered when we selected incoming settings, we will just update missing values, no overwrites.
+    const updateFields = {
+      fileSelected: true, // IF JOB SELECTED THEN ITS NO LONGER DESIGNER JOB!
+      name: dbAsset.name,
+      removeAssetId: selectedAsset.id, // We want to assign existing job to this design job, we will need to remove design job to avoid duplications
+    };
+
+    this.formRef.current.setFieldsValue(updateFields);
+    this.setState({ file: { ...this.state.file,  name: dbAsset.name } }); // will update state in FileDetails ||  JobDetails;
+    this.resetModal();
+  };
 
   saveFileDetails = async () => {
     try {
@@ -465,9 +541,11 @@ class FileDetails extends Component {
           isAssociated: this.formRef.current.getFieldValue('fileSelected') || this.state.file.isAssociated // field is not mounted so we take value separately
         }
       },
+      license: [],
       fields: this.state.file.layout,
       validation: this.state.file.validations,
-      license: [],
+      removeAssetId: this.formRef.current.getFieldValue('removeAssetId') || '', // Asset was a design file that got associated with existing in DB file
+      renameAssetId: this.formRef.current.getFieldValue('renameAssetId') || ''// Asset was a design file that got associated with none-existing in DB file
     };
 
     if (this?.licenseGridApi?.getSelectedNodes) {
@@ -1014,6 +1092,14 @@ class FileDetails extends Component {
                   )}
                 </Form.Item>
               </Form>
+              <OverwriteAssetModal
+                cancel={this.resetModal}
+                show={this.state.existingAsset.showModal}
+                acceptExisting={this.acceptExistingSettings} 
+                acceptIncoming={this.acceptIncomingSettings}
+                existingName={this.state.existingAsset?.dbAsset?.name}
+                incomingName={this.state.existingAsset?.selectedAsset?.name}
+              />
             </Spin>
               {/* SUPERFILE METADATA BLOCK */}
               {!superFileData ? null : <SuperFileMeta superFileData={superFileData} />}
