@@ -105,12 +105,21 @@ const Assets = () => {
     dispatch(expandGroups(expandedKeys));
   };
 
+  const getParentKeys = (node, keys =[]) =>{
+    if(node.parentId){
+      keys.push(node.parentKey);
+      const parent = dataList.find(group => group.id === node.parentId);
+      getParentKeys( parent, keys)
+    }
+    return keys
+  }
   const openGroup = (groupId) => {
     if (groupId) {
-      const match = dataList.find((group) => group.id === groupId);
+      const match = dataList.find((group) => group.id === parseInt(groupId));
       if (match) {
         if (!expandedKeys.includes(match.parentKey)) {
-          dispatch(expandGroups([...expandedKeys, match.parentKey]));
+          const parentKeys = getParentKeys(match);          
+          dispatch(expandGroups([...expandedKeys,...parentKeys]));
         }
         dispatch(selectGroup({ id: match.id, key: match.key }));
       }
