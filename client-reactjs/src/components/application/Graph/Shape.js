@@ -145,7 +145,7 @@ class Node extends React.Component {
     const data = node?.getData();
     let { type, title, status = '', schedule, jobType, isSuperFile, isStencil, isAssociated } = data;
 
-    const notAssociated  = type === "Job" && !isAssociated && !isStencil ? "no-asset" : ""
+    const notAssociated  = (type === "Job" || type === "File") && !isAssociated && !isStencil ? "no-asset" : ""
     
     const showTitle = (title) => {
       const limit = 14;

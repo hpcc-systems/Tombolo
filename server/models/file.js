@@ -20,7 +20,12 @@ module.exports = (sequelize, DataTypes) => {
     consumer: DataTypes.STRING,
     supplier: DataTypes.STRING,
     owner: DataTypes.STRING,
-    scope: DataTypes.STRING(500)
+    scope: DataTypes.STRING(500),
+    metaData:{
+      type: DataTypes.JSON,
+      allowNull: true,
+      defaultValue: null,
+    } 
   }, {paranoid: true, freezeTableName: true});
   file.associate = function(models) {
     file.hasMany(models.file_layout,{
