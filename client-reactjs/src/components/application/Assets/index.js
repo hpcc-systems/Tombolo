@@ -74,20 +74,20 @@ const Assets = () => {
   //Re-render Directory Tree when the tree structure us chaged on modal
   useEffect(() => {
     //application changed
-    if (
-      application &&
-      prevSelectedApplicationRef.current &&
-      application.applicationId !== prevSelectedApplicationRef.current.applicationId
-    ) {
-      fetchGroups().then(() => {
-        if (assetInGroupId) {
-          openGroup(assetInGroupId);
-        } else {
-          dispatch(expandGroups(['0-0']));
-          dispatch(selectGroup({ id: '', key: '0-0' }));
-        }
-      });
+    if(application?.applicationId){
+      if (groupsReducer.tree.length === 0 || groupsReducer.error){
+        fetchGroups(); // run this function on initial load to populate tree and datalist;
+      }
     }
+    
+    if ( application && prevSelectedApplicationRef.current && application.applicationId !== prevSelectedApplicationRef.current.applicationId ) {
+      dispatch(expandGroups(['0-0']));
+      dispatch(selectGroup({ id: '', key: '0-0' }));
+    }
+    if (assetInGroupId) {
+      openGroup(assetInGroupId);
+    }
+
     prevSelectedApplicationRef.current = application;
   }, [groupsMoveReducer, assetInGroupId, application]);
 
