@@ -24,6 +24,8 @@ const Op = Sequelize.Op;
 let Indexes=models.indexes;
 let Query=models.query;
 let Job=models.job;
+const JobFile = models.jobfile;
+let AssetDataflow = models.assets_dataflows;
 let Visualization=models.visualizations;
 var request = require('request');
 var requestPromise = require('request-promise');
@@ -86,11 +88,11 @@ router.get('/file_list', [
       let dataflowId = req.query.dataflowId;
       let query;
       if(dataflowId){
-        query = 'select f.id, f.name, f.title, f.description, f.isSuperFile, f.createdAt, f.application_id, f.deletedAt '+
+        query = 'select f.id, f.name, f.title, f.description, f.isSuperFile, f.metaData, f.createdAt, f.application_id, f.deletedAt '+
         'from file f ' + 
         'where f.id not in (select asd.assetId from assets_dataflows asd where asd.dataflowId = (:dataflowId) and asd.deletedAt is null)' +
         'and f.application_id = (:applicationId) '+
-        'and f.cluster_id = (:clusterId)'+
+        'and (f.cluster_id = (:clusterId) or f.cluster_id is null)'+
         'and f.deletedAt is null';
       }else{
          query = 'select f.id, f.name, f.title, f.description, f.isSuperFile, f.createdAt, f.application_id, f.deletedAt '+
@@ -413,7 +415,7 @@ router.post('/saveFile', [
       .isUUID(4).withMessage('Invalid application id'),
     body('file.basic.title')
     .matches(/^[a-zA-Z]{1}[a-zA-Z0-9_:.\-]*$/).withMessage('Invalid title')
-  ], (req, res) => {
+  ], async (req, res) => {
     console.log("[file list/read.js] - Get file list for app_id = " + req.body.file.app_id + " isNewFile: "+req.body.isNew);
     var fileId='', applicationId=req.body.file.app_id, fieldsToUpdate={};
 
@@ -422,6 +424,23 @@ router.post('/saveFile', [
       if (!errors.isEmpty()) {
         return res.status(422).json({ success: false, errors: errors.array() });
       }
+
+      const { removeAssetId = '', renameAssetId = '',  basic } = req.body.file;
+      const { name, cluster_id, application_id } = basic;
+      
+      // We want to delete design file if it was associated with existing file that is already in Tombolo DB
+      if (removeAssetId) {
+        await Promise.all([
+          JobFile.destroy({ where: { file_id: removeAssetId } }),
+          FileLayout.destroy({ where: { file_id: removeAssetId } }),
+          FileLicense.destroy({ where: { file_id: removeAssetId } }),
+          AssetDataflow.destroy({ where: { assetId: removeAssetId } }),
+          FileValidation.destroy({ where: { file_id: removeAssetId } }),
+          File.destroy({ where: { id: removeAssetId, application_id } }),
+        ]);
+      }
+      // We want to update design file if it was associated with HPCC file that was not in Tombolo DB
+      if (renameAssetId) await File.update({ name, cluster_id }, { where: { id: renameAssetId } });
 
       File.findOne({where: {name: req.body.file.basic.name, application_id: applicationId}}).then(async (existingFile) => {
         let file = null;

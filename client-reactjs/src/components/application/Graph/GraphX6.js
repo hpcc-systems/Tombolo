@@ -472,8 +472,8 @@ function GraphX6({ readOnly = false, statuses }) {
   const updateAsset = async (asset) => {
     if (asset) {
       const cell = configDialog.cell;
-      if (cell.data.type === "Job"){
-        // if asset was not just got associated then we need to save it as new so it can get updated and fetch related files;
+      if (cell.data.type === "Job" || cell.data.type === "File"){
+        // if asset just got associated then we need to save it as new so it can get updated and fetch related files;
         if (!cell.data?.isAssociated && asset.isAssociated){
           // Cell is associated and renamed, new asset is created and assigned to this node, old asset should be removed from this dataflow
           if (cell.data.name !== asset.name) await deleteAssetFromDataFlow(cell.data, dataflowId )
