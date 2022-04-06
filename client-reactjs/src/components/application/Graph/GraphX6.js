@@ -16,6 +16,7 @@ import CustomToolbar from './Toolbar/Toolbar';
 import AssetDetailsDialog from '../AssetDetailsDialog';
 import ExistingAssetListDialog from '../Dataflow/ExistingAssetListDialog';
 import Shape from './Shape.js';
+import { colors } from './graphColorsConfig.js';
 // import SubProcessDialog from '../Dataflow/SubProcessDialog';
 
 const defaultState = {
@@ -104,11 +105,7 @@ function GraphX6({ readOnly = false, statuses }) {
         const data = await response.json();
 
         if (data?.graph) {
-          console.time('graph');
           graph.fromJSON(data.graph);
-          console.log('------------------------------------------');
-          console.timeEnd('graph');
-          console.log('------------------------------------------');
         }
       } catch (error) {
         console.log(error);
@@ -203,7 +200,7 @@ function GraphX6({ readOnly = false, statuses }) {
 
                 // Settings for superfile edge view
                 const superFileEdgeStyle ={
-                  line: { targetMarker: { fill: '#706bf0', stroke: '#706bf0', name: 'block' }, stroke: '#706bf0', strokeDasharray: 0 , strokeWidth:"2"},
+                  line: { targetMarker: { fill: colors.superFileArrow, stroke: colors.superFileArrow, name: 'block' }, stroke: colors.superFileArrow, strokeDasharray: 0 , strokeWidth:"2"},
                 }
         
                 if (cachedSubFiles) {
@@ -288,7 +285,6 @@ function GraphX6({ readOnly = false, statuses }) {
 
   const handleSave = useCallback(
     debounce(async (graph) => {
-      console.time('save');
       const graphToJson = graph.toJSON({ diff: true });
       try {
         const options = {
@@ -299,8 +295,6 @@ function GraphX6({ readOnly = false, statuses }) {
 
         const response = await fetch('/api/dataflowgraph/save', options);
         if (!response.ok) handleError(response);
-        console.log('------------------------------------------');
-        console.timeEnd('save');
         console.log('Graph saved');
         console.log('------------------------------------------');
       } catch (error) {
@@ -399,6 +393,7 @@ function GraphX6({ readOnly = false, statuses }) {
         title: relatedFile.title,
         assetId: relatedFile.assetId,
         isSuperFile: relatedFile.isSuperFile,
+        isAssociated: relatedFile.isAssociated,
         subProcessId: undefined,
       };
 
@@ -435,14 +430,14 @@ function GraphX6({ readOnly = false, statuses }) {
           if (edge.getTargetCellId() === cell.id || edge.getSourceCellId() === cell.id) {
             edge.attr({
               line: {
-                sourceMarker: { fill: '#e69495', stroke: '#e69495', name: 'block' },
-                targetMarker: { fill: '#b3eb97', stroke: '#b3eb97', name: 'block' },
+                sourceMarker: { fill: colors.inputArrow, stroke: colors.inputArrow, name: 'block' },
+                targetMarker: { fill: colors.outputArrow, stroke: colors.outputArrow, name: 'block' },
                 stroke: {
                   type: 'linearGradient',
                   stops: [
-                    { offset: '0%', color: '#e69495' },
+                    { offset: '0%', color: colors.inputArrow },
                     { offset: '50%', color: '#ccc' },
-                    { offset: '100%', color: '#b3eb97' },
+                    { offset: '100%', color: colors.outputArrow },
                   ],
                 },
               },
@@ -459,10 +454,11 @@ function GraphX6({ readOnly = false, statuses }) {
           zIndex: -1,
           attrs: {
             line: {
-              stroke: relatedFile.file_type === 'output' ? '#b3eb97' : '#e69495', // green for output, red for input
+              stroke: relatedFile.file_type === 'output' ? colors.outputArrow : colors.inputArrow, // green for output, red for input
             },
           },
         };
+
 
         graphRef.current.addEdge(edge, { name: 'add-asset' });
       }
