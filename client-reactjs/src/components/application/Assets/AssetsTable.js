@@ -42,43 +42,32 @@ function AssetsTable({ openGroup, handleEditGroup, refreshGroups }) {
   const dispatch = useDispatch();  
   const editingAllowed = hasEditPermission(authReducer.user);
 
-  const fetchDataAndRenderTable = () => {
-    if(applicationId) {
-      let url =
-        keywords !== ""
-          ? "/api/groups/assetsSearch?app_id=" + applicationId + ""
-          : "/api/groups/assets?app_id=" + applicationId;
-      if (selectedGroup?.selectedKeys?.id) {
-        url += "&group_id=" + selectedGroup.selectedKeys.id;
+  const fetchDataAndRenderTable = async () => {
+    if (applicationId) {
+      let url = '';
+      if (keywords) {
+        url = '/api/groups/assetsSearch?app_id=' + applicationId + '&keywords=' + keywords;
+        if (assetTypeFilter) url += '&assetTypeFilter=' + assetTypeFilter;
+      } else {
+        url = '/api/groups/assets?app_id=' + applicationId;
+        if (selectedGroup?.selectedKeys?.id) url += '&group_id=' + selectedGroup.selectedKeys.id;
       }
-      if (assetTypeFilter !== "") {
-        url += "&assetTypeFilter=" + assetTypeFilter;
+      try {
+        const response = await fetch(url, { headers: authHeader() });
+        if (!response.ok) handleError(response);
+        const data = await response.json();
+        setAssets(data);
+      } catch (error) {
+        console.log('-error-----------------------------------------');
+        console.dir({ error }, { depth: null });
+        console.log('------------------------------------------');
+        message.error('Failed to fetch assets');
       }
-      if (keywords !== "") {
-        url += "&keywords=" + keywords;
-      }
-      fetch(url, {
-        headers: authHeader(),
-      })
-      .then((response) => {
-        if (response.ok) {
-          return response.json();
-        }
-        handleError(response);
-      })
-      .then((data) => {  
-          setAssets(data);
-      })
-      .catch((error) => {
-        console.log(error);
-      });
-  }
-}
-
+    }
+  };
 
   useEffect(() => {
     fetchDataAndRenderTable();
-
   }, [applicationId, assetTypeFilter, keywords, groupsMoveReducer, selectedGroup?.selectedKeys?.id]);
 
   //Execute generate pdf function after asset is selected
@@ -414,7 +403,6 @@ function AssetsTable({ openGroup, handleEditGroup, refreshGroups }) {
           />
       </div>
       {assetToMove.id ?
-     
         <MoveAssetsDialog
           isShowing={!!assetToMove.id}
           toggle={closeMoveDialog}
