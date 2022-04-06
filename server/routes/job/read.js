@@ -43,6 +43,7 @@ const createOrUpdateFile = async ({jobfile, jobId, clusterId, dataflowId, applic
         isSuperFile: fileInfo.basic.isSuperfile, //!!  we keep the value camelCased when hpcc return isSuperfile
         description: fileInfo.basic.description,
         qualifiedPath: fileInfo.basic.pathMask,
+        metaData:{ isAssociated: true },
       };
 
       let [file, isFileCreated] = await File.findOrCreate({
@@ -120,6 +121,7 @@ const createOrUpdateFile = async ({jobfile, jobId, clusterId, dataflowId, applic
         assetId: file.id,
         relatedTo: jobId,
         title: file.title,
+        isAssociated: true,
         isSuperFile: file.isSuperFile,
         file_type: jobfile.file_type, //'input' | 'output'
         description: file.description,
@@ -173,6 +175,7 @@ const getManuallyAddedFiles = async (job) =>{
           isSuperFile: file.isSuperFile,
           file_type: el.file_type, //'input' | 'output'
           description: file.description,
+          isAssociated: file.metaData ? file.metaData.isAssociated : true, // prev created files will have metadata as null, all prev files are associated files!
         })
       }
     }
@@ -238,10 +241,10 @@ router.post( '/jobFileRelation',
           } else {
             // create or update JobFile relationship
             const file = await createOrUpdateFile({
+              dataflowId,
               jobId: job.id,
               jobfile: jobfile, //{ name: 'covid19::kafka::guid', file_type: 'output' }
               clusterId: job.cluster_id,
-              dataflowId,
               applicationId: job.application_id,
             });
             if (file) {
@@ -258,7 +261,7 @@ router.post( '/jobFileRelation',
         if(templates.length > 0){
           let fileAndTemplates = []
             relatedFiles.forEach(file =>{
-              let{name : fileName, assetId: fileId, relatedTo, title : fileTitle, isSuperFile, file_type, description : fileDescription} = file;
+              let{name : fileName, assetId: fileId, relatedTo, title : fileTitle, isSuperFile, isAssociated, file_type, description : fileDescription} = file;
               for(let i = 0; i < templates.length; i++){
                 let {id : templateId, fileNamePattern, searchString, title : templateTitle,  description : templateDescription} = templates[i]
                 let operation = fileNamePattern === 'contains' ? 'includes' : fileNamePattern;
@@ -271,7 +274,7 @@ router.post( '/jobFileRelation',
                 }
                 
                 if(!fileName[operation](searchString) && i === templates.length -1){ // matching template NOT FOUND
-                  fileAndTemplates = [...fileAndTemplates, {name: fileName, assetId: fileId, relatedTo, title: fileTitle, isSuperFile, file_type, description: fileDescription, assetType: 'File'}];
+                  fileAndTemplates = [...fileAndTemplates, {name: fileName, assetId: fileId, relatedTo, title: fileTitle, isSuperFile, isAssociated, file_type, description: fileDescription, assetType: 'File'}];
                 }
               }
         });
@@ -404,7 +407,7 @@ try {
           let {relatedFiles} = item;
           let fileAndTemplates = [];
           relatedFiles.forEach(file => {
-            let{name : fileName, assetId: fileId, relatedTo, title : fileTitle, isSuperFile, file_type, description : fileDescription} = file;
+            let{name : fileName, assetId: fileId, relatedTo, title : fileTitle, isSuperFile, isAssociated, file_type, description : fileDescription} = file;
             for(let i = 0; i < templates.length; i++){
                 let {id : templateId, fileNamePattern, searchString, title : templateTitle,  description : templateDescription} = templates[i]
                 let operation = fileNamePattern === 'contains' ? 'includes' : fileNamePattern;
@@ -418,7 +421,7 @@ try {
                 }
                 if(!fileName[operation](searchString) && i === templates.length -1){ // matching template NOT FOUND
                   allAssetsIds.push(fileId);
-                  fileAndTemplates = [...fileAndTemplates, {name: fileName, assetId: fileId, relatedTo, title: fileTitle, isSuperFile, file_type, description: fileDescription, assetType: 'File'}];
+                  fileAndTemplates = [...fileAndTemplates, {name: fileName, assetId: fileId, relatedTo, title: fileTitle, isSuperFile, isAssociated, file_type, description: fileDescription, assetType: 'File'}];
                 }
               }
           })
