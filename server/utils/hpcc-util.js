@@ -274,7 +274,7 @@ exports.getJobInfo = async (clusterId, jobWuid, jobType) => {
       const sourceFiles = [];
       
       wuInfo.Workunit?.SourceFiles?.ECLSourceFile?.forEach((sourceFile) => {
-        sourceFiles.push({ name: sourceFile.Name, file_type: 'input', isSuperFile: sourceFile.IsSuperFile });
+        sourceFiles.push({ name: sourceFile.Name, file_type: 'input', isSuperFile: sourceFile.IsSuperFile ? true : false});
       });
 
       wuInfo.Workunit?.Results?.ECLResult?.forEach((file) => {
