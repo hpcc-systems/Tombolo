@@ -105,17 +105,28 @@ const Assets = () => {
     dispatch(expandGroups(expandedKeys));
   };
 
+  const getParentKeys = (node, keys = ['0-0']) =>{
+    if(node.parentId){
+      keys.push(node.parentKey);
+      const parent = dataList.find(group => group.id === node.parentId);
+      getParentKeys( parent, keys)
+    }
+    return keys
+  }
   const openGroup = (groupId) => {
-    if (groupId) {
-      const match = dataList.find((group) => group.id === groupId);
+    if (groupId === 'root'){
+      dispatch(selectGroup({ id: '', key: '0-0' }));
+    } else if (groupId) {
+      const match = dataList.find((group) => group.id === parseInt(groupId));
       if (match) {
-        if (!expandedKeys.includes(match.parentKey)) {
-          dispatch(expandGroups([...expandedKeys, match.parentKey]));
-        }
+        const parentKeys = getParentKeys(match);
+        const uniqueKeys = [...new Set([...expandedKeys,...parentKeys ])] // will keep all previously opened keys plus new path
+        dispatch(expandGroups(uniqueKeys));
         dispatch(selectGroup({ id: match.id, key: match.key }));
       }
     } else if (groupId === '') {
       dispatch(expandGroups(['0-0']));
+      dispatch(selectGroup({ id: '', key: '0-0' }));
     }
     dispatch(assetsActions.assetInGroupSelected(''));
     clearSearch();

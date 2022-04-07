@@ -3,6 +3,7 @@ import { Graph } from '@antv/x6';
 import { Tooltip } from 'antd';
 
 import {
+  SyncOutlined,
   BookOutlined,
   FileOutlined,
   FileAddOutlined,
@@ -143,8 +144,7 @@ class Node extends React.Component {
   render() {
     const { node, handleContextMenu, disableContextMenu } = this.props;
     const data = node?.getData();
-    let { type, title, status = '', schedule, jobType, isSuperFile, isStencil, isAssociated } = data;
-
+    let { type, title, status = '', schedule, jobType, isSuperFile, isStencil, isAssociated, fetchingFiles } = data;
     const notAssociated  = (type === "Job" || type === "File") && !isAssociated && !isStencil ? "no-asset" : ""
     
     const showTitle = (title) => {
@@ -179,6 +179,7 @@ class Node extends React.Component {
             {schedule?.type ? <div className="node-schedule">{this.schedule[schedule.type]}</div> : null}
             <div className="node-title">{showTitle(title)}</div>
           </Tooltip>
+          {!isStencil && fetchingFiles ? <div className='node-fetching-files'><SyncOutlined spin={true}/>  </div> : null}
         </div>
       </Dropdown>
     );
