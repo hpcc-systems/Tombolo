@@ -24,6 +24,12 @@
     font-size: 27px;
   }
 
+  .node-fetching-files{
+    position: absolute;
+    top: -15px;
+    right: 3px;
+  }
+
   .Job, .Manual {
     background-color: #ffa726; 
     border: 2px solid #c25e00; 

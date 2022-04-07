@@ -313,8 +313,8 @@ function GraphX6({ readOnly = false, statuses }) {
 
       const cellData =   {
         name: newAsset.name,
-        title: newAsset.title,
         assetId: newAsset.id,
+        title: newAsset.title,
         isAssociated: newAsset.isAssociated
       }
 
@@ -324,8 +324,11 @@ function GraphX6({ readOnly = false, statuses }) {
 
       if (newAsset.assetType === "Job"){
         cellData.jobType = newAsset.jobType;
+        cellData.fetchingFiles = true;
         cellData.schedule = null;
       }
+      //Close modal and show syncing indicator on node
+      setConfigDialog(prev =>({...prev, openDialog: false}));
 
       cell.updateData( cellData, { name: 'update-asset' } );
 
@@ -362,6 +365,7 @@ function GraphX6({ readOnly = false, statuses }) {
         console.log(error);
         message.error('Could not download graph nodes');
       }
+      cell.updateData({ fetchingFiles: false }, { name: 'update-asset' } );
     }
 
     setConfigDialog({ ...defaultState }); // RESETS LOCAL STATE AND CLOSES DIALOG
@@ -479,6 +483,7 @@ function GraphX6({ readOnly = false, statuses }) {
             id: asset.assetId,
             name: asset.name,
             title: asset.title,
+            assetType: cell.data.type,
             isAssociated: asset.isAssociated,
           })
         }
