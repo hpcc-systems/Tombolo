@@ -427,7 +427,7 @@ router.get('/assetsSearch', [
   if(req.query.group_id) {
     query = "select assets.id, assets.name, assets.title, assets.description, assets.createdAt, assets.type, hie.name as group_name, hie.id as groupId from "+
       "(select  id, name, parent_group "+
-      "from    (select * from groups "+
+      "from (select * from `groups` "+
            "order by parent_group, id) groups_sorted, "+
           "(select @pv := (:groupId)) initialisation "+
 

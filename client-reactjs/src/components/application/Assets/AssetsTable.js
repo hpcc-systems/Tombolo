@@ -48,6 +48,7 @@ function AssetsTable({ openGroup, handleEditGroup, refreshGroups }) {
       if (keywords) {
         url = '/api/groups/assetsSearch?app_id=' + applicationId + '&keywords=' + keywords;
         if (assetTypeFilter) url += '&assetTypeFilter=' + assetTypeFilter;
+        if (selectedGroup?.selectedKeys?.id) url += '&group_id=' + selectedGroup.selectedKeys.id;
       } else {
         url = '/api/groups/assets?app_id=' + applicationId;
         if (selectedGroup?.selectedKeys?.id) url += '&group_id=' + selectedGroup.selectedKeys.id;
