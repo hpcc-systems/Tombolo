@@ -645,23 +645,21 @@ router.put( '/move/asset',
     try {
       if (req.body.assetType !== 'Group') {
         // create or update File
-        if(!req.body.destGroupId) {
+        if (!req.body.destGroupId) {
           //when we move asset to root "Group" folder we will not have destGroupId, in order to make it work we will need to remove record from AssetGroups
-          await AssetsGroups.destroy({where:{assetId}, force: true});
-        }else{
-
-          const assetGroupFields = { assetId, groupId: req.body.destGroupId, };
-
-        let [assetGroup, isAssetGroupCreated] = await AssetsGroups.findOrCreate({
-          where: { assetId },
-          defaults: { assetGroupFields },
-        });
-        
-        if (!isAssetGroupCreated) assetGroup = await assetGroup.update(assetGroupFields);
-      }
-
+          await AssetsGroups.destroy({ where: { assetId }, force: true });
+        } else {
+          const assetGroupFields = { assetId, groupId: req.body.destGroupId };
+    
+          let [assetGroup, isAssetGroupCreated] = await AssetsGroups.findOrCreate({
+            where: { assetId },
+            defaults: assetGroupFields,
+          });
+    
+          if (!isAssetGroupCreated) assetGroup = await assetGroup.update(assetGroupFields);
+        }
+    
         res.json({ success: true });
-
       } else {
         await Groups.update(
           { parent_group: req.body.destGroupId || '' },

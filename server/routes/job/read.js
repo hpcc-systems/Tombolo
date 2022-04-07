@@ -197,6 +197,8 @@ router.post( '/jobFileRelation',
       const job = await Job.findOne({ where: { id: req.body.jobId } });
       if (!job) throw new Error('Job does not exist');
 
+      const assetGroup = await AssetsGroups.findOne({where:{assetId: job.id}});
+
       const result = await hpccUtil.getJobWuDetails(job.cluster_id, job.name, dataflowId);
       if (!result.wuid) throw new Error('Could not find WU details by job name');
 
@@ -246,6 +248,7 @@ router.post( '/jobFileRelation',
               jobfile: jobfile, //{ name: 'covid19::kafka::guid', file_type: 'output' }
               clusterId: job.cluster_id,
               applicationId: job.application_id,
+              assetGroupId: assetGroup ? assetGroup.groupId : ''
             });
             if (file) {
               relatedFiles.push(file);
@@ -328,7 +331,8 @@ try {
 
         if (jobfiles?.length > 0) {
           for (const jobfile of jobfiles) {
-           const file = await createOrUpdateFile({ jobId: job.id, applicationId, dataflowId, clusterId, jobfile, })
+           const assetGroup = await AssetsGroups.findOne({where:{assetId: job.id}});
+           const file = await createOrUpdateFile({ jobId: job.id, applicationId, dataflowId, clusterId, jobfile, assetGroupId: assetGroup ? assetGroup.groupId : '' })
             if (file){
               relatedFiles.push(file)
             }
@@ -476,14 +480,38 @@ router.post( '/saveJob',
         const assetGroupsFields = { assetId: job.id, groupId};
         await AssetsGroups.findOrCreate({ where: assetGroupsFields, defaults: assetGroupsFields });
       }
-      
-      try {
-        for(let i = 0; i < files.length; i++){
-          await createOrUpdateFile({jobfile: files[i], clusterId : cluster_id, applicationId : application_id, jobId : job.id, assetGroupId : groupId});
-        }          
 
-          // If DataFlowId present update assetDataflow table so
-          if (dataflowId) await AssetDataflow.findOrCreate({ where: { assetId: job.id, dataflowId }, defaults: { assetId: file.id, dataflowId }, });
+      try {
+         // Update JobFile table with fresh list of files;
+         let jobFiles = await JobFile.findAll({ where: { job_id: job.id, application_id, file_id: { [Op.not]: null } }, order: [['name', 'asc']], raw: true, });      
+         //Find files that are removed from the Job and remove them from JobFile table
+         if (jobFiles.length > 0 && files.length > 0) {
+           const removeIds = jobFiles.reduce((acc, jobFile) => {
+             const exist = files.find((fromCluster) => fromCluster.file_type === jobFile.file_type && fromCluster.name === jobFile.name );
+             if (!exist) acc.push(jobFile.id);
+             return acc;
+           }, []);
+           if (removeIds.length > 0) await JobFile.destroy({ where: { id: { [Sequelize.Op.in]: removeIds }, application_id } });
+         }
+         // Find and update or create JobFile.
+         for (const file of files) {
+           const defaultFields = {
+             job_id: job.id,
+             application_id,
+             name: file.name,
+             file_id: file.file_id, // not always present
+             file_type: file.file_type,
+             isSuperFile: file.isSuperFile,
+             added_manually: file.addedManually,
+           };
+           
+           await JobFile.findOrCreate({
+             where: { job_id: job.id, application_id, file_type: file.file_type, name: file.name },
+             defaults: defaultFields ,
+           })
+           // If DataFlowId present update assetDataflow table so
+           if (dataflowId) await AssetDataflow.findOrCreate({ where: { assetId: job.id, dataflowId }, defaults: { assetId: file.id, dataflowId }, });
+         }
         // Update Job Params
         const updateParams = params.map((el) => ({ ...el, job_id: job.id, application_id }));
         await JobParam.destroy({ where: { application_id, job_id: job.id } });
