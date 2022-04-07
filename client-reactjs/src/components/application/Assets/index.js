@@ -114,7 +114,9 @@ const Assets = () => {
     return keys
   }
   const openGroup = (groupId) => {
-    if (groupId) {
+    if (groupId === 'root'){
+      dispatch(selectGroup({ id: '', key: '0-0' }));
+    } else if (groupId) {
       const match = dataList.find((group) => group.id === parseInt(groupId));
       if (match) {
         const parentKeys = getParentKeys(match);
@@ -124,6 +126,7 @@ const Assets = () => {
       }
     } else if (groupId === '') {
       dispatch(expandGroups(['0-0']));
+      dispatch(selectGroup({ id: '', key: '0-0' }));
     }
     dispatch(assetsActions.assetInGroupSelected(''));
     clearSearch();

@@ -191,6 +191,7 @@ function AssetsTable({ openGroup, handleEditGroup, refreshGroups }) {
   };
 
   const handleGroupClick = (groupId) => {
+    if (!groupId) groupId = 'root'
     dispatch(assetsActions.assetInGroupSelected(groupId));
   };
 
