@@ -6,10 +6,9 @@ import { Constants } from '../../common/Constants';
 import { useSelector } from "react-redux";
 import ReactMarkdown from 'react-markdown';
 import { DeleteOutlined, EyeOutlined, QuestionCircleOutlined } from '@ant-design/icons';
-import useModal from '../../../hooks/useModal';
 
 
-function DataflowTable({data, applicationId, onSelectDataflow, onDataFlowUpdated, onDataFlowEdit}) {
+function DataflowTable({data, applicationId, onSelectDataflow, onDataFlowUpdated, onEditDataFlow}) {
   const [selectedRowKeys, setSelectedRowKeys] = useState([]);
 
   useEffect(() => {
@@ -32,9 +31,7 @@ function DataflowTable({data, applicationId, onSelectDataflow, onDataFlowUpdated
     }
   }
 
-  const handleEditDataflow = (selectedDataflow) => {
-    onDataFlowEdit(selectedDataflow, "read");
-  }
+ 
 
   const handleDataflowDelete = (id) => {
     fetch('/api/dataflow/delete', {
@@ -64,7 +61,7 @@ function DataflowTable({data, applicationId, onSelectDataflow, onDataFlowUpdated
     title: 'Name',
     dataIndex: 'title',
     width: '30%',
-    render: (text, record) => <a href='#' onClick={(row) => rowSelected(record)}>{text}</a>
+    render: (text, record) => <a onClick={(row) => rowSelected(record)}>{text}</a>
   },
   {
     title: 'Description',
@@ -97,7 +94,7 @@ function DataflowTable({data, applicationId, onSelectDataflow, onDataFlowUpdated
     className: editingAllowed ? "show-column" : "hide-column",
     render: (text, record) =>
       <span>
-        <a onClick={(row) => handleEditDataflow(record)}><Tooltip placement="right" title={"Edit Dataflow"}><EyeOutlined /></Tooltip></a>
+        <a onClick={(row) => onEditDataFlow(record)}><Tooltip placement="right" title={"Edit Dataflow"}><EyeOutlined /></Tooltip></a>
         <Divider type="vertical" />
         <Popconfirm title="Are you sure you want to delete this Dataflow and it's associated graph?" onConfirm={() => handleDataflowDelete(record.id)} icon={<QuestionCircleOutlined/>}>
           <a href="#"><Tooltip placement="right" title={"Delete Dataflow"}><DeleteOutlined /></Tooltip></a>

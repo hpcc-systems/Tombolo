@@ -6,6 +6,7 @@ import { connect } from 'react-redux';
 import { authHeader, handleError } from "../common/AuthHeader.js"
 import { hasAdminRole } from "../common/AuthUtil.js";
 import { applicationActions } from '../../redux/actions/Application';
+import {dataflowAction} from "../../redux/actions/Dataflow"
 import { groupsActions } from '../../redux/actions/Groups';
 import { assetsActions } from '../../redux/actions/Assets';
 import { QuestionCircleOutlined, DownOutlined  } from '@ant-design/icons';
@@ -49,10 +50,6 @@ class AppHeader extends Component {
         this.setState({ selected: this.state.applications[0].display });
         this.props.dispatch(applicationActions.applicationSelected(this.state.applications[0].value, this.state.applications[0].display));
         localStorage.setItem("activeProjectId", this.state.applications[0].value);
-        //if it is asset details url, dont redirect to default /dataflow page
-        if(!this.props.history.location.pathname.startsWith('/details')) {
-          this.props.history.push('/'+this.state.applications[0].value+'/assets');
-        }
       } else {
         appDropdownItem.click();
       }
@@ -70,10 +67,9 @@ class AppHeader extends Component {
     }
 
     componentDidMount(){
-      if(this.props.location.pathname.split("/").includes('manualJobDetails')){
+      if(this.props.location.pathname.includes('manualJobDetails')){
         return; 
       }
-
       if(this.props.location.pathname.includes('report/')){
         const pathSnippets = this.props.location.pathname.split('/');
         this.setState({
@@ -82,7 +78,7 @@ class AppHeader extends Component {
       }
 
       if(this.state.applications.length === 0) {
-        var url="/api/app/read/appListByUserId?user_id="+this.props.user.id+'&user_name='+this.props.user.username;
+        var url=`/api/app/read/appListByUsername?user_name=${this.props.user.username}`;
         if(hasAdminRole(this.props.user)) {
           url="/api/app/read/app_list";
         }
@@ -182,17 +178,9 @@ class AppHeader extends Component {
     }
 
     handleChange(event) {
-      store.dispatch({
-        type: Constants.DATAFLOW_SELECTED,
-        selectedDataflow: {dataflowId: ""}
-      })
       this.props.dispatch(applicationActions.applicationSelected(event.target.getAttribute("data-value"), event.target.getAttribute("data-display")));
       localStorage.setItem("activeProjectId", event.target.getAttribute("data-value"));
       this.setState({ selected: event.target.getAttribute("data-display") });
-      //if it is asset details url, dont redirect to default /dataflow page
-      if(!this.props.history.location.pathname.startsWith('/details')) {
-        this.props.history.push('/'+event.target.getAttribute("data-value")+'/assets');
-      }
       $('[data-toggle="popover"]').popover('disable');
     }    
 

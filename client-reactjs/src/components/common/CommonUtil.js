@@ -94,14 +94,23 @@ const flatten = (obj) => {
 
 const formItemLayout = {
   labelCol: { span: 2 },
-  wrapperCol: { span: 8 }
+  wrapperCol: { span: 11 }
 }
+
+const formItemLayoutWithOutLabel = {
+  wrapperCol: { span: 11 , offset: 2 }
+};
 
 const threeColformItemLayout = {
   labelCol: { span: 4 },
   wrapperCol: { span: 12 }
 };
 
+//Label and input in different line
+const multiLineFormItemLayout = {
+  labelCol : {span : 24},
+  wrapperCol : {span :6},
+}
 
 
-export {omitDeep, eclTypes, fetchDataDictionary, flatten, formItemLayout, threeColformItemLayout, validationRules, validationRuleFixes};
+export {omitDeep, eclTypes, fetchDataDictionary, flatten, formItemLayout, formItemLayoutWithOutLabel, threeColformItemLayout, multiLineFormItemLayout, validationRules, validationRuleFixes};

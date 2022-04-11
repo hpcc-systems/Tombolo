@@ -12,23 +12,20 @@ const useFileDetailsForm = () => {
     setIsShowing(!isShowing);
   }
 
-  function OpenDetailsForm ({...props}) {
-    let dialogRef;
-  	if(props.type.toLowerCase() === 'file'.toLowerCase())
-  		return	<FileDetailsForm	onRef={ref => (dialogRef = ref)} {...props} />
-  	else if(props.type.toLowerCase() === 'job'.toLowerCase())
-  		return	<JobDetailsForm	onRef={ref => (dialogRef = ref)} {...props}/>
-  	else if(props.type.toLowerCase() === 'index'.toLowerCase())
-  		return	<IndexDetailsForm	onRef={ref => (dialogRef = ref)} {...props}/>
-    else if(props.type.toLowerCase() === 'query'.toLowerCase())
-      return  <QueryDetailsForm onRef={ref => (dialogRef = ref)} {...props}/>
+  function OpenDetailsForm (props) {
+    const detailsForm  ={
+      file:<FileDetailsForm {...props} />,
+      job: <JobDetailsForm {...props}/>,
+      index : <IndexDetailsForm {...props}/>,
+      query: <QueryDetailsForm {...props}/>
+    }
+
+    const type= props.type.toLowerCase();
+
+    return detailsForm[type];
   }
 
-  return {
-    isShowing,
-    toggle,
-    OpenDetailsForm
-  }
+  return { isShowing, toggle, OpenDetailsForm }
 };
 
 export default useFileDetailsForm;

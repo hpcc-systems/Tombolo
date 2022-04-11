@@ -18,6 +18,9 @@ module.exports = (sequelize, DataTypes) => {
   }, {paranoid: true, freezeTableName: true});
   cluster.associate = function(models) {
     // associations can be defined here
+    cluster.hasMany(models.dataflow_cluster_credentials,{
+    foreignKey:'cluster_id', 
+    });
   };
   return cluster;
 };

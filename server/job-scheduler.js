@@ -5,6 +5,8 @@ const Job = models.job;
 const JobExecution = models.job_execution;
 const DependentJobs = models.dependent_jobs;
 const MessageBasedJobs = models.message_based_jobs;
+const Dataflow = models.dataflow;
+const Cluster = models.cluster;
 const hpccUtil = require('./utils/hpcc-util');
 const assetUtil = require('./utils/assets.js');
 const { v4: uuidv4 } = require('uuid'); 
@@ -73,7 +75,44 @@ class JobScheduler {
         console.log('------------------------------------------');
 
         const failedJobsList =[];
+        if(dependantJobs.length === 0 && dataflowId){
+          console.log('------------------------------------------');
+          console.log('WORKFLOW EXECUTION COMPLETE, Checking if subscribed for notifications.', )
+          console.log('------------------------------------------');
+          try{
+            const dataflow = await Dataflow.findOne({where : {id : dataflowId}});
+            const cluster = await Cluster.findOne({where : {id : dataflow.clusterId}});
 
+            if(dataflow.dataValues?.metaData?.notification?.notify === 'Always' || dataflow.dataValues?.metaData?.notification?.notify === 'Only on success'){
+              console.log('------------------------------------------');
+              console.log('Prepping to send workflow execution status', )
+              console.log('------------------------------------------');
+              const  hpccURL  = `${cluster.thor_host}:${cluster.thor_port}/#/stub/ECL-DL/Workunits-DL/Workunits`;
+              const {dataValues : {metaData : {notification : {recipients, success_message }}}} = dataflow;
+
+              workflowUtil.notifyWorkflowExecutionStatus({
+                hpccURL,
+                executionStatus : 'completed',
+                dataflowName: dataflow.title,
+                dataflowId : dataflow.id,
+                clusterName : cluster.name,
+                appId : dataflow.application_id,
+                success_message,
+                recipients,
+                jobExecutionGroupId
+              })
+            }
+            else{
+              console.log('------------------------------------------');
+              console.log('Not subscribed for WORKFLOW EXECUTION COMPLETE(success) status')
+              console.log('------------------------------------------');
+            }
+          }catch(error){
+            console.log('------------------------------------------');
+            console.log(error, )
+            console.log('------------------------------------------');
+          }
+        }else{    
         for (let i = 0; i < dependantJobs.length; i++) {
         
         let job;  
@@ -117,6 +156,7 @@ class JobScheduler {
           if (error.contact) failedJobs.push(error);
         }
       } // for loop ends.
+    }
 
       if (failedJobsList.length > 0) {
         const contact = failedJobsList[0].contact;
@@ -275,6 +315,25 @@ class JobScheduler {
         const existingJob = this.bree.config.jobs.find(job=> job.name === name);    
         if (existingJob){
          await this.bree.remove(name);
+         console.log('-job.name removed-----------------------------------------');
+         console.dir(existingJob.name, { depth: null });
+         console.log('------------------------------------------');
+        }
+      } catch (err) {
+        console.log(err)
+      }
+    }
+
+    async removeAllDataflowJobs(dataflowId) {
+      try {
+        const existingJobs = this.bree.config.jobs.filter(job=> job.name.includes(dataflowId));    
+        if (existingJobs.length > 0){
+          for (const job of existingJobs) {
+            await this.bree.remove(job.name);
+            console.log('-job.name removed-----------------------------------------');
+            console.dir(job.name, { depth: null });
+            console.log('------------------------------------------');
+          }
         }
       } catch (err) {
         console.log(err)

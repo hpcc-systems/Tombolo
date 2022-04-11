@@ -125,7 +125,7 @@ const searchUser = (req, res, next) => {
             user.email.toLowerCase().indexOf(searchTerm.toLowerCase()) >= 0)
           {
 
-            searchResults.push({"text": user.firstName + ' ' + user.lastName, "value": user.username});
+            searchResults.push({"text": user.firstName + ' ' + user.lastName, "value": user.username, "email" : user.email, "id": user.id});
           }
         });
         resolve(searchResults);
@@ -215,15 +215,10 @@ async function GetuserListToShareApp(req, res, next) {
 
 async function GetSharedAppUserList(req, res, next) {
   return new Promise((resolve, reject) => {
-    UserApplication.findAll({where:{application_id: req.params.app_id}}).then(async (users) => {
-      console.log(JSON.stringify(users));
-      let usernames=[], userids=[];
-      users.forEach((user) => {
-        usernames.push(user.user_id);
-      })
-
-      let userdetails = await authServiceUtil.getUserDetails(req, usernames.join(','));
-      resolve(userdetails)
+    UserApplication.findAll({where:{application_id: req.params.app_id}, raw: true}).then(async (users) => {
+      const sharedToUsers = users.filter(user => user.user_id !== req.params.username).map(user => user.user_id); // Remove creator of app from shared to users list
+      let userDetails = await authServiceUtil.getUserDetails(req, sharedToUsers);
+      resolve(userDetails)
     }).catch((err) => {
       reject(err);
     })
@@ -284,13 +279,10 @@ async function registerUser(req, res) {
         "clientId": process.env.AUTHSERVICE_TOMBOLO_CLIENT_ID
       }
     }, function(err, response, body) {
-      if (response.statusCode == 422) {
-        reject(new Error(body.errors.concat(',')));
-      }
-      if (response.statusCode != 200 && response.statusCode != 201 && response.statusCode && 202) {
-        reject(body);
-      } else {
-        resolve({'statusCode': response.statusCode, 'message': body});
+      if(response.statusCode !== 200){
+        reject({'statusCode': response.statusCode, 'message': body.message});
+      }else{
+        resolve({'statusCode': response.statusCode, 'message': body.message})
       }
     });
   });
@@ -307,7 +299,7 @@ async function forgotPassword(req, res) {
       json: {
         "email": req.body.email,
         "clientId": process.env.AUTHSERVICE_TOMBOLO_CLIENT_ID,
-        "resetUrl": `${process.env.WEB_URL}reset-password`
+        "resetUrl": `${process.env.WEB_URL}/reset-password`
       }
     }, function(err, response, body) {
       if(response.body.success){

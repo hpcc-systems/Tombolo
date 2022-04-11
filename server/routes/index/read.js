@@ -26,11 +26,12 @@ router.get('/index_list', [
     }
     console.log("[index/read.js] - Get file list for app_id = " + req.query.app_id);
     let dataflowId = req.query.dataflowId;
-    let query = 'select i.id, i.name, i.title, i.createdAt, asd.dataflowId from indexes i '+
-    'left join assets_dataflows asd '+
-    'on i.id = asd.assetId '+
-    'where i.application_id=(:applicationId) '+
-    'and i.deletedAt IS NULL and i.id not in (select assetId from assets_dataflows where dataflowId = (:dataflowId) and deletedAt IS NULL) order by i.name asc';
+
+    let query = 'select i.id, i.name, i.title, i.description, i.createdAt, i.deletedAt, i.application_id from indexes i '+
+    'where i.id not in (select asd.assetId from assets_dataflows asd where asd.dataflowId = (:dataflowId) and asd.deletedAt is null) ' +
+    'and i.application_id = (:applicationId) '+
+    'and i.deletedAt is null';
+
     /*let query = 'select j.id, j.name, j.title, j.createdAt, asd.dataflowId from job j, assets_dataflows asd where j.application_id=(:applicationId) '+
         'and j.id = asd.assetId and j.id not in (select assetId from assets_dataflows where dataflowId = (:dataflowId))';*/
     let replacements = { applicationId: req.query.app_id, dataflowId: dataflowId};

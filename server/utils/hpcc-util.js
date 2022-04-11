@@ -3,9 +3,10 @@ const path = require('path');
 var requestPromise = require('request-promise');
 var models  = require('../models');
 var Cluster = models.cluster;
+const Dataflow_cluster_credentials = models.dataflow_cluster_credentials;
+const { GHCredentials, github_repo_settings: GHprojects } = require('../models')
 let hpccJSComms = require("@hpcc-js/comms");
-const crypto = require('crypto');
-let algorithm = 'aes-256-ctr';
+const {decryptString } = require('./cipher')
 
 const debug = require('debug');
 const simpleGit = require('simple-git');
@@ -327,7 +328,31 @@ exports.getJobInfo = (clusterId, jobWuid, jobType) => {
   });
 }
 
-exports.getJobWuDetails = (clusterId, jobName) => {
+exports.getJobWuDetails = async(clusterId, jobName, dataflowId) => {
+  if(dataflowId){ // if dataflow ID is present- you know the job is a part of a workflow
+    let clusterCredentials = await Dataflow_cluster_credentials.findOne({where : { dataflow_id : dataflowId}, include : [Cluster] });
+    const {thor_host, thor_port} = clusterCredentials.cluster.dataValues
+    return new Promise((resolve, reject) => {
+      let clusterAuth = {user : clusterCredentials.cluster_username, 
+        password : decryptString(clusterCredentials.cluster_hash)
+      }
+      let wuService = new hpccJSComms.WorkunitsService({ baseUrl: thor_host + ':' + thor_port, userID: clusterAuth.user,  password:clusterAuth.password});
+      wuService.WUQuery({"Jobname":jobName, "PageSize":1, "PageStartFrom":0}).then((response) => {
+        if(response.Workunits
+          && response.Workunits.ECLWorkunit
+          && response.Workunits.ECLWorkunit.length > 0) {
+          //return the first wuid assuming that is the latest one
+          resolve({wuid: response.Workunits.ECLWorkunit[0].Wuid, cluster: response.Workunits.ECLWorkunit[0].Cluster});
+        } else {
+          resolve(null);
+        }
+      }).catch(err => {
+        console.log(err);
+        reject(err)
+      })
+  })
+
+  }else{ // If dataflow id is undefined - it means the job is not a part of a workflow
   return new Promise((resolve, reject) => {
     module.exports.getCluster(clusterId).then(function(cluster) {
       let clusterAuth = module.exports.getClusterAuth(cluster);
@@ -347,9 +372,25 @@ exports.getJobWuDetails = (clusterId, jobName) => {
       })
     })
   })
+  }
+
 }
 
-exports.resubmitWU = (clusterId, wuid, wucluster) => {
+exports.resubmitWU = async (clusterId, wuid, wucluster, dataflowId) => {
+  let cluster_auth;
+  
+  if(dataflowId){
+    try{
+    const clusterCred = await Dataflow_cluster_credentials.findOne({where : { dataflow_id : dataflowId}, include : [Cluster] });
+    cluster_auth = {
+      user : clusterCred.dataValues.cluster_username,
+      password : decryptString(clusterCred.dataValues.cluster_hash)
+    }
+  }catch(error){
+    console.log(error)
+  }
+  }
+
   return new Promise(async (resolve, reject) => {
     try {
       let body = {
@@ -363,7 +404,7 @@ exports.resubmitWU = (clusterId, wuid, wucluster) => {
       let cluster = await module.exports.getCluster(clusterId);
       request.post({
         url: cluster.thor_host + ':' + cluster.thor_port +'/WsWorkunits/WURun.json?ver_=1.8',
-        auth : module.exports.getClusterAuth(cluster),
+        auth : dataflowId ? cluster_auth :module.exports.getClusterAuth(cluster),
         body: JSON.stringify(body),
         headers: {'content-type' : 'application/json'},
       }, function(err, response, body) {
@@ -371,9 +412,15 @@ exports.resubmitWU = (clusterId, wuid, wucluster) => {
           console.log('ERROR - ', err);
           reject(err);
         } else {
-          var result = JSON.parse(body);
-          //console.log(result);
-          resolve(result)
+          try{ // If access denied - a response is a staring not parsable, ∴ doing this check
+             const result = JSON.parse(body);
+             resolve(result)
+          }catch (err){
+            if(body.indexOf('Access Denied') > -1){
+              reject('Access Denied -- Valid username and password required!')
+              console.log(err)
+            }
+          }
         }
       });
     } catch(err) {
@@ -498,30 +545,37 @@ exports.getCluster = (clusterId) => {
         throw new Error("Cluster not reachable...");
       }
       if(cluster.hash) {
-        cluster.hash = crypto.createDecipher(algorithm,process.env['cluster_cred_secret']).update(cluster.hash,'hex','utf8');
+        cluster.hash = decryptString(cluster.hash)
       }
-      let isReachable = await module.exports.isClusterReachable(cluster.thor_host, cluster.thor_port, cluster.username, cluster.password);
-      if(isReachable)	 {
+
+      let isReachable = await module.exports.isClusterReachable(cluster.thor_host, cluster.thor_port, cluster.username, cluster.hash);
+      const{ reached, statusCode} = isReachable;
+      if(reached && statusCode === 200)	 {
         resolve(cluster);
-      } else {
+      } else if(reached && statusCode === 403){
+        reject('Invalid cluster credentials')
+      } else{
         reject("Cluster not reachable...")
-        //throw new Error("Cluster not reachable...");
-      }      
+      }    
     } catch(err) {
       console.log("Error occured while getting Cluster info....."+err);
       reject(err);
     }
   })
-	
 }
 
-exports.isClusterReachable = async (clusterHost, port, username, password) => {
-	let auth = null;
-	if(username && password) {
-		auth = {};
-		auth.user = username,
-		auth.password = password
-	}
+/*
+response :  undefined -> cluster not reached network issue or cluster not available
+response.status : 200 -> Cluster reachable 
+response.status : 401 -> Unauthorized
+*/
+
+exports.isClusterReachable =  (clusterHost, port, username, password) => {
+    let auth = {
+      user : username || '',
+      password: password || ''
+    }
+
 	return new Promise((resolve, reject) => {
 		request.get({
 		  url:clusterHost+":"+port,
@@ -529,11 +583,13 @@ exports.isClusterReachable = async (clusterHost, port, username, password) => {
 		  timeout: 3000
 		},
 		function (error, response, body) {
-	    if (!error && response.statusCode == 200) {
-	      resolve(true);
-	    } else {
-	    	console.log(error);
-	    	resolve(false);
+	    if (!error && response.statusCode === 200) {
+	      resolve({reached :true, statusCode : 200});
+	    }else if(!error && response.statusCode === 401){
+        resolve({reached :true, statusCode : 403})
+      }
+      else {
+	    	resolve({reached :false, statusCode : 503});
 	    }
 	  })
 	});
@@ -561,6 +617,19 @@ exports.getWorkunitsService = async (clusterId) =>{
  }
 
  return new hpccJSComms.WorkunitsService(connectionSettings);
+}
+
+exports.getDFUService = async (clusterId) =>{
+  const cluster = await module.exports.getCluster(clusterId);
+  const clusterAuth =  module.exports.getClusterAuth(cluster);
+
+ const connectionSettings= {
+   baseUrl: cluster.thor_host + ':' + cluster.thor_port,
+   userID: clusterAuth ? clusterAuth.user : "",
+   password: clusterAuth ? clusterAuth.password : ""
+ }
+
+  return new hpccJSComms.DFUService(connectionSettings);
 }
 
 exports.createWorkUnit = async (clusterId,WUbody = {}) =>{
@@ -627,161 +696,182 @@ exports.updateWUAction = async (clusterId,WUactionBody) =>{
   }
 }
 
-exports.pullFilesFromGithub = async( jobName="", clusterId, fileData ) => {
-
-  const tasks ={ repoCloned: false, gitSubmoduleUpdated: false, repoDeleted: false, archiveCreated: false, WUCreated:false, WUupdated: false, WUsubmitted: false, WUaction: null, error: null };
-  let currentClonedRepoPath;
+exports.pullFilesFromGithub = async (jobName = '', clusterId, gitHubFiles) => {
+  const tasks = { repoCloned: false, repoDeleted: false, archiveCreated: false, WUCreated: false, WUupdated: false, WUsubmitted: false, WUaction: null, error: null, };
+  let masterFolder;
   let wuService;
   let wuid;
 
   try {
     // initializing wuService to update hpcc.
-    wuService = await module.exports.getWorkunitsService(clusterId); 
+    wuService = await module.exports.getWorkunitsService(clusterId);
     //  Create empty Work Unit;
-    const createRespond = await wuService.WUCreate({}); 
-    wuid = createRespond.Workunit?.Wuid
+    const createRespond = await wuService.WUCreate({});
+    wuid = createRespond.Workunit?.Wuid;
     if (!wuid) {
       console.log('❌ pullFilesFromGithub: WUCreate error-----------------------------------------');
       console.dir(createRespond, { depth: null });
-      throw new Error('Failed to update Work Unit.')
+      throw new Error('Failed to update Work Unit.');
     }
     tasks.WUCreated = true;
     console.log(`✔️  pullFilesFromGithub: WUCreated-  ${wuid}`);
+    
+    // CLONING OPERATIONS
+  // gitHubFiles = {
+  //   selectedProjects // List of selected projects IDS! ['c1bdfedd-4be7-4391-9936-259b040786cd']
+  //   selectedRepoId // Id of repo with main file "c1bdfedd-4be7-4391-9936-259b040786cd"
+  //   selectedFile:{ // main file data
+  //      download_url, git_url, html_url, id, isLeaf, label, name, owner, path, ref, repo, sha, size, type, url, value,
+  //    }
 
-    const { selectedGitBranch, selectedGitTag, selectedFile } = fileData; 
-    const { projectOwner, projectName, name:startFileName, path:filePath } = selectedFile;
+    // Create one master folder that is going to hold all cloned repos, name of folder is newly created WUID number;
+    masterFolder = path.join(process.cwd(), '..', 'gitClones', wuid);
+    const dir = await fs.promises.mkdir(masterFolder,{recursive:true});
+    console.log('--dir created----------------------------------------');
+    console.dir({dir});
+    const git = simpleGit({ baseDir: masterFolder });
     
-    const allClonesPath = path.join(process.cwd(),'..','gitClones');
-    currentClonedRepoPath =  path.join(allClonesPath,`${projectOwner}-${projectName}-${wuid}`);
+    const { selectedProjects } = gitHubFiles;
 
-    const startFilePath =path.join(currentClonedRepoPath,filePath);
-    
-    const gitOptions= { baseDir: allClonesPath };
-    debug.enable('simple-git,simple-git:*');
-    const git = simpleGit(gitOptions);    
-    
-    let{ providedGithubRepo, gitHubUserName, gitHubUserAccessToken }= fileData;
-    if (gitHubUserName && gitHubUserAccessToken) {
-      gitHubUserName= crypto.createDecipher(algorithm, process.env['cluster_cred_secret']).update(gitHubUserName,'hex','utf8');
-      gitHubUserAccessToken= crypto.createDecipher(algorithm, process.env['cluster_cred_secret']).update(gitHubUserAccessToken,'hex','utf8');
-      providedGithubRepo = providedGithubRepo.slice(0, 8) + gitHubUserName + ':' + gitHubUserAccessToken + '@' + providedGithubRepo.slice(8);
-    }
+    //Loop through the reposList(contains GHprojects ids that has all gh project data including tokens) and clone each repo into master folder;
+    for ( const repoId of selectedProjects) {
+
+      let project = await GHprojects.findOne({where:{ id: repoId}});
+      if (!project) throw new Error('Failed to find GitHub project');
+      
+      project = project.toJSON();
   
-    // #1 - Clone repo
-    console.log(`✔️  pullFilesFromGithub: CLONING STARTED-${providedGithubRepo}, branch: ${selectedGitBranch}, tag:${selectedGitTag}`);
-    await git.clone(providedGithubRepo, currentClonedRepoPath ,{'--branch': selectedGitTag ? selectedGitTag : selectedGitBranch, '--single-branch':true} );
-    tasks.repoCloned = true;
-    console.log(`✔️  pullFilesFromGithub: CLONING FINISHED-${providedGithubRepo}, branch: ${selectedGitBranch}, tag:${selectedGitTag} `);
+      if (project.ghToken) project.ghToken = decryptString(project.ghToken);
+      if (project.ghUserName) project.ghUserName = decryptString(project.ghUserName);
+  
+      let { ghLink, ghBranchOrTag, ghUserName, ghToken  } = project;
 
-    // update submodules // TODO NOT DONE
-    try {
-      console.dir({currentClonedRepoPath: currentClonedRepoPath,relative:`${projectOwner}-${projectName}-${wuid}`}, { depth: null });
-      await git.cwd({ path: currentClonedRepoPath, root: true }).submoduleUpdate(['--init','--recursive']);
-      tasks.gitSubmoduleUpdated = true;
-      console.log(`✔️  pullFilesFromGithub: SUBMODULES UPDATED ${providedGithubRepo}, branch: ${selectedGitBranch}, tag:${selectedGitTag}`);
-    } catch (error) {
-      console.log('❌  pullFilesFromGithub: git submodule update error----------------------------------------');
-      console.dir(error, { depth: null });
-      tasks.gitSubmoduleUpdated = false;
+      const ghProjectName = ghLink.split('/')[4];
+
+      const clonePath = path.join(masterFolder, ghProjectName); 
+      // Add credentials to git request if they are present
+      if (ghUserName && ghToken) ghLink = ghLink.slice(0, 8) + ghUserName + ':' + ghToken + '@' + ghLink.slice(8);
+
+      console.log( `✔️  pullFilesFromGithub: CLONING STARTED-${ghLink}, branch/tag: ${ghBranchOrTag}` );
+      await git.clone(ghLink, clonePath, { '--branch': ghBranchOrTag, '--single-branch': true });
+      console.log( `✔️  pullFilesFromGithub: CLONING FINISHED-${ghLink}, branch/tag: ${ghBranchOrTag}` );
+
+      //Update submodules
+      try {
+        await git.cwd({ path: clonePath, root: true }).submoduleUpdate(['--init', '--recursive']);
+        console.log( `✔️  pullFilesFromGithub: SUBMODULES UPDATED ${ghLink}, branch/tag: ${ghBranchOrTag}` );
+      } catch (error) {
+        console.log('❌  pullFilesFromGithub: git submodule update error----------------------------------------');
+        console.dir(error, { depth: null });
+      } finally {
+        // Switch back to root folder after updating submodules
+        await git.cwd({ path: masterFolder, root: true });
+      }
     }
-    // #2 - Create Archive XML File     
-    let args = ['-E', startFilePath, '-I', currentClonedRepoPath];
-    const archived = await createEclArchive(args, currentClonedRepoPath); 
-    tasks.archiveCreated =true;
+    tasks.repoCloned = true;
+
+    //Create a path to main file
+    const { repo: ghProjectName, path: filePath,  } = gitHubFiles.selectedFile;
+    
+    const startFilePath = path.join(masterFolder, ghProjectName, filePath);
+
+    let args = ['-E', startFilePath, '-I', masterFolder];
+    const archived = await createEclArchive(args, masterFolder);
+
+    tasks.archiveCreated = true;
     console.log('✔️  pullFilesFromGithub: Archive Created');
     // console.dir(archived);
 
-    // #4 - Update the Workunit with Archive XML 
-    const updateBody ={ "Wuid": wuid, "Jobname": jobName, "QueryText": archived.stdout};
-    const updateRespond = await wuService.WUUpdate(updateBody)
-    if (!updateRespond.Workunit?.Wuid) { // assume that Wuid field is always gonna be in "happy" response
+    // Update the Workunit with Archive XML
+    const updateBody = { Wuid: wuid, Jobname: jobName, QueryText: archived.stdout };
+    const updateRespond = await wuService.WUUpdate(updateBody);
+    if (!updateRespond.Workunit?.Wuid) {
+      // assume that Wuid field is always gonna be in "happy" response
       console.log('❌  pullFilesFromGithub: WUupdate error----------------------------------------');
       console.dir(updateRespond, { depth: null });
-      throw new Error('Failed to update Work Unit.')
+      throw new Error('Failed to update Work Unit.');
     }
     tasks.WUupdated = true;
     console.log(`✔️  pullFilesFromGithub: WUupdated-  ${wuid}`);
-    
-    // #5 - Submit the Workunit to HPCC 
-    const submitBody ={ "Wuid": wuid, "Cluster": 'thor' };
-    const submitRespond = await wuService.WUSubmit(submitBody)
+
+    // Submit the Workunit to HPCC
+    const submitBody = { Wuid: wuid, Cluster: 'thor' };
+    const submitRespond = await wuService.WUSubmit(submitBody);
     if (submitRespond.Exceptions) {
       console.log('❌  pullFilesFromGithub: WUsubmit error---------------------------------------');
       console.dir(submitRespond, { depth: null });
-      throw new Error('Failed to submit Work Unit.')
-    } 
+      throw new Error('Failed to submit Work Unit.');
+    }
     tasks.WUsubmitted = true;
     console.log(`✔️  pullFilesFromGithub: WUsubmitted-  ${wuid}`);
-
-  } catch (error) { 
+  } catch (error) {
     // Error going to have messages related to where in process error happened, it will end up in router.post('/executeJob' catch block.
     try {
-      const WUactionBody = { "Wuids": { "Item": [wuid] }, "WUActionType": "SetToFailed" };
+      const WUactionBody = { Wuids: { Item: [wuid] }, WUActionType: 'SetToFailed' };
       const actionRespond = await wuService.WUAction(WUactionBody);
-      const result = actionRespond.ActionResults?.WUActionResult?.[0]?.Result
-      if (!result || result !== 'Success' ) {
+      const result = actionRespond.ActionResults?.WUActionResult?.[0]?.Result;
+      if (!result || result !== 'Success') {
         console.log('❌  pullFilesFromGithub: WUaction error-------------------------------------');
         console.dir(actionRespond, { depth: null });
-        throw actionRespond
+        throw actionRespond;
       }
       tasks.WUaction = actionRespond.ActionResults.WUActionResult;
     } catch (error) {
-       error.message ?
-       tasks.WUaction= {message:error.message, failedToUpdate: true} :
-       tasks.WUaction= {...error, failedToUpdate: true };    
+      error.message
+        ? (tasks.WUaction = { message: error.message, failedToUpdate: true })
+        : (tasks.WUaction = { ...error, failedToUpdate: true });
     }
 
     tasks.error = error;
     console.log('❌  pullFilesFromGithub: ERROR IN MAIN CATCH------------------------------------');
     console.dir(error, { depth: null });
   } finally {
-    //  delete repo;
-    const isDeleted = deleteRepo(currentClonedRepoPath);
-    console.log(`✔️  pullFilesFromGithub: CLEANUP, REPO DELETED SUCCESSFULLY-  ${currentClonedRepoPath}`);
+    // Delete repo;
+    const isDeleted = deleteRepo(masterFolder);
+    console.log(`✔️  pullFilesFromGithub: CLEANUP, REPO DELETED SUCCESSFULLY-  ${masterFolder}`);
     tasks.repoDeleted = isDeleted;
     const summary = { wuid, ...tasks };
     return summary;
   }
 };
 
-const deleteRepo = (currentClonedRepoPath) => {
-  let isRepoDeleted
+const deleteRepo = (masterFolder) => {
+  let isRepoDeleted;
   try {
-      fs.rmSync(currentClonedRepoPath, { recursive: true, maxRetries:5, force: true });
-      isRepoDeleted = true;
-    } catch (err) {
-      console.log('------------------------------------------');
-      console.log(`❌  pullFilesFromGithub: Failed to delete a repo ${currentClonedRepoPath}`)
-      console.dir(err);
-      isRepoDeleted = false;
-    } 
-    return isRepoDeleted;
+    fs.rmSync(masterFolder, { recursive: true, maxRetries: 5, force: true });
+    isRepoDeleted = true;
+  } catch (err) {
+    console.log('------------------------------------------');
+    console.log(`❌  pullFilesFromGithub: Failed to delete a repo ${masterFolder}`);
+    console.dir(err);
+    isRepoDeleted = false;
   }
+  return isRepoDeleted;
+};
 
 let sortFiles = (files) => {
-  return files.sort((a, b) => (a.name > b.name) ? 1 : -1);
-}
-
+  return files.sort((a, b) => (a.name > b.name ? 1 : -1));
+};
 
 const createEclArchive = (args, cwd) => {
-
   return new Promise((resolve, reject) => {
     const child = cp.spawn('eclcc', args, { cwd: cwd });
-    child.on('error',(error)=>{
+    child.on('error', (error) => {
       error.message = 'Failed to create ECL Archive';
-      reject(error)
-    })
-    let stdOut = "", stdErr = "";
-    child.stdout.on("data", (data) => {
+      reject(error);
+    });
+    let stdOut = '',
+      stdErr = '';
+    child.stdout.on('data', (data) => {
       stdOut += data.toString();
     });
-    child.stderr.on("data", (data) => {
+    child.stderr.on('data', (data) => {
       stdErr += data.toString();
     });
-    child.on("close", (_code, _signal) => {
+    child.on('close', (_code, _signal) => {
       resolve({
         stdout: stdOut.trim(),
-        stderr: stdErr.trim()
+        stderr: stdErr.trim(),
       });
     });
   });

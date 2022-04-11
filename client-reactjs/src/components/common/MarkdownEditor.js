@@ -1,11 +1,11 @@
-import React, { Component, Fragment } from 'react';
+import React, { Component } from 'react';
 import { debounce } from 'lodash';
 import { MarkdownEditor as mdCodemirror } from '@hpcc-js/codemirror';
 
 class MarkdownEditor extends Component {
 
   mdEditor = null;
-  classList = ['noGutters'];
+  classList = ['noGutters','noScroll'];
 
   constructor(props) {
     super(props);
@@ -53,11 +53,7 @@ class MarkdownEditor extends Component {
   }
 
   render() {
-    return (
-      <Fragment>
-        <div id={this.props.targetDomId} className={this.classList.join(' ')}></div>
-      </Fragment>
-    );
+    return <div id={this.props.targetDomId}  className={this.classList.join(' ')}/>;
   }
 
 }

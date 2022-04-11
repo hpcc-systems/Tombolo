@@ -13,6 +13,7 @@ let Query = models.query;
 let Job = models.job;
 let Visualization = models.visualizations;
 let AssetsGroups = models.assets_groups;
+let FileTemplate = models.fileTemplate;
 
 let createGroupHierarchy = (groups) => {
 
@@ -183,6 +184,7 @@ router.get('/assets', [
         {model:File, as:'files', attributes:['id', 'name', 'title', 'description', 'createdAt'], 
           include:[{model: Visualization}]
         }, 
+        {model:FileTemplate, as:'fileTemplates', attributes:['id', 'title', 'description', 'createdAt']}, 
         {model:Job, as: 'jobs', attributes:['id', 'name', 'title', 'description', 'createdAt']}, 
         {model:Query, as: 'queries', attributes:['id', 'name', 'title', 'description', 'createdAt']}, 
         {model:Index, as: 'indexes', attributes:['id', 'name', 'title', 'description', 'createdAt']},
@@ -202,6 +204,15 @@ router.get('/assets', [
             createdAt: file.createdAt            
           })
         })
+        assets[0] && assets[0].fileTemplates.forEach((fileTemplate) => {
+        finalAssets.push({
+          type: 'File Template',
+          id: fileTemplate.id,
+          title: fileTemplate.title,
+          description: fileTemplate.description,
+          createdAt: fileTemplate.createdAt            
+        })
+      })
         assets[0] && assets[0].jobs.forEach((job) => {
           finalAssets.push({
             type: 'Job',
@@ -267,6 +278,23 @@ router.get('/assets', [
             title: file.title,
             description: file.description,
             createdAt: file.createdAt
+          })
+        })
+      }))
+
+         promises.push(FileTemplate.findAll({
+        where:{
+          application_id:req.query.app_id,
+          [Op.and]:Sequelize.literal('not exists (select * from assets_groups where assets_groups.assetId = fileTemplate.id)')
+      }}).then((fileTemplates) => {
+        fileTemplates.forEach((fileTemplate) => {
+          finalAssets.push({
+            type: 'File Template',
+            id: fileTemplate.id,
+            cluster_id: fileTemplate.cluster_id,
+            title: fileTemplate.title,
+            description: fileTemplate.description,
+            createdAt: fileTemplate.createdAt
           })
         })
       }))
@@ -422,7 +450,7 @@ router.get('/assetsSearch', [
         query += (assetFilters.length == 0 || assetFilters.length > 1) ? "union all " : "";
       }
       if(assetFilters.length == 0 || assetFilters.includes("Groups")) {
-        query += "select g.id, g.name, g.parent_group, g.name as title, g.description, g.createdAt, 'Group' as type  from groups g where g.application_id = (:applicationId) and (g.name REGEXP (:keyword) and g.deletedAt IS NULL) ";
+        query += "select g.id, g.name, g.parent_group, g.name as title, g.description, g.createdAt, 'Group' as type  from `groups` g where g.application_id = (:applicationId) and (g.name REGEXP (:keyword) and g.deletedAt IS NULL) ";
         query += (assetFilters.length == 0 || assetFilters.length > 1) ? "union all " : "";
 
       }
@@ -434,26 +462,26 @@ router.get('/assetsSearch', [
   } else {
     query = "";
     if(assetFilters.length == 0 || assetFilters.includes("File")) {
-      query += "select files_res.*, g.name as group_name from (select f.id, f.name, ag.groupId, f.title, f.description, f.createdAt, 'File' as type from file f left join assets_groups ag on f.id = ag.assetId where f.application_id = (:applicationId) and  (f.name REGEXP (:keyword) or f.title REGEXP (:keyword)) and f.deletedAt IS NULL) as files_res left join groups g on files_res.groupId = g.id ";
+      query += "select files_res.*, g.name as group_name from (select f.id, f.name, ag.groupId, f.title, f.description, f.createdAt, 'File' as type from file f left join assets_groups ag on f.id = ag.assetId where f.application_id = (:applicationId) and  (f.name REGEXP (:keyword) or f.title REGEXP (:keyword)) and f.deletedAt IS NULL) as files_res left join `groups` g on files_res.groupId = g.id ";
       query += (assetFilters.length == 0 || assetFilters.length > 1) ? "union all " : "";
     }
     if(assetFilters.length == 0 || assetFilters.includes("Query")) {
-      query += "select queries_res.*, g.name as group_name from (select q.id, q.name, ag.groupId, q.title, q.description, q.createdAt, 'Query' as type from query q left join assets_groups ag on q.id = ag.assetId where q.application_id = (:applicationId) and  (q.name REGEXP (:keyword) or q.title REGEXP (:keyword)) and q.deletedAt IS NULL) as queries_res left join groups g on queries_res.groupId = g.id ";
+      query += "select queries_res.*, g.name as group_name from (select q.id, q.name, ag.groupId, q.title, q.description, q.createdAt, 'Query' as type from query q left join assets_groups ag on q.id = ag.assetId where q.application_id = (:applicationId) and  (q.name REGEXP (:keyword) or q.title REGEXP (:keyword)) and q.deletedAt IS NULL) as queries_res left join `groups` g on queries_res.groupId = g.id ";
       query += (assetFilters.length == 0 || assetFilters.length > 1) ? "union all " : "";
 
     }
     if(assetFilters.length == 0 || assetFilters.includes("Indexes")) {
-      query += "select idx_res.*, g.name as group_name from (select idx.id, idx.name, ag.groupId, idx.title, idx.description, idx.createdAt, 'Index' as type from indexes idx left join assets_groups ag on idx.id = ag.assetId where idx.application_id = (:applicationId) and  (idx.name REGEXP (:keyword) or idx.title REGEXP (:keyword)) and idx.deletedAt IS NULL) as idx_res left join groups g on idx_res.groupId = g.id ";
+      query += "select idx_res.*, g.name as group_name from (select idx.id, idx.name, ag.groupId, idx.title, idx.description, idx.createdAt, 'Index' as type from indexes idx left join assets_groups ag on idx.id = ag.assetId where idx.application_id = (:applicationId) and  (idx.name REGEXP (:keyword) or idx.title REGEXP (:keyword)) and idx.deletedAt IS NULL) as idx_res left join `groups` g on idx_res.groupId = g.id ";
       query += (assetFilters.length == 0 || assetFilters.length > 1) ? "union all " : "";
 
     }
     if(assetFilters.length == 0 || assetFilters.includes("Job")) {
-      query += "select j_res.*, g.name as group_name from (select j.id, j.name, ag.groupId, j.title, j.description, j.createdAt, 'Job' as type from job j left join assets_groups ag on j.id = ag.assetId where j.application_id = (:applicationId) and  (j.name REGEXP (:keyword) or j.title REGEXP (:keyword)) and j.deletedAt IS NULL) as j_res left join groups g on j_res.groupId = g.id ";
+      query += "select j_res.*, g.name as group_name from (select j.id, j.name, ag.groupId, j.title, j.description, j.createdAt, 'Job' as type from job j left join assets_groups ag on j.id = ag.assetId where j.application_id = (:applicationId) and  (j.name REGEXP (:keyword) or j.title REGEXP (:keyword)) and j.deletedAt IS NULL) as j_res left join `groups` g on j_res.groupId = g.id ";
       query += (assetFilters.length == 0 || assetFilters.length > 1) ? "union all " : "";
 
     }
     if(assetFilters.length == 0 || assetFilters.includes("Groups")) {
-      query += "select g.id, g.name, g.parent_group as groupId, gp.name as group_name, '' as title, g.description, g.createdAt, 'Group' as type  from groups g inner join groups gp on g.parent_group = gp.id where g.application_id = (:applicationId) and g.name REGEXP (:keyword) and g.deletedAt IS NULL";
+      query += "select g.id, g.name, g.parent_group as groupId, gp.name as group_name, '' as title, g.description, g.createdAt, 'Group' as type  from `groups` g inner join `groups` gp on g.parent_group = gp.id where g.application_id = (:applicationId) and g.name REGEXP (:keyword) and g.deletedAt IS NULL";
       //query += (assetFilters.length == 0 || assetFilters.length > 1) ? "union all " : "";
 
     }

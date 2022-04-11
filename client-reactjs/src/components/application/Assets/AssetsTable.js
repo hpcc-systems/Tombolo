@@ -14,7 +14,8 @@ import { DeleteOutlined, EditOutlined, QuestionCircleOutlined, FolderOpenOutline
 import { store } from "../../../redux/store/Store";
 import SelectDetailsForPdfDialog from "../Assets/pdf/SelectDetailsForPdfDialog";
 import { getNestedAssets} from "../Assets/pdf/downloadPdf";
-import ReactMarkdown from "react-markdown"
+import ReactMarkdown from "react-markdown";
+import DeleteAsset from "../../common/DeleteAsset";
 
 function AssetsTable({ openGroup, handleEditGroup, refreshGroups }) {
   const [assets, setAssets] = useState([]);
@@ -41,23 +42,22 @@ function AssetsTable({ openGroup, handleEditGroup, refreshGroups }) {
   const [toPrintAssets, setToPrintAssets] = useState([])
   const [selectDetailsforPdfDialogVisibility, setSelectDetailsforPdfDialogVisibility] = useState(false);
 
-
   const dispatch = useDispatch();  
   const editingAllowed = hasEditPermission(authReducer.user);
 
   const fetchDataAndRenderTable = () => {
     if(applicationId) {
       let url =
-        keywords != ""
+        keywords !== ""
           ? "/api/groups/assetsSearch?app_id=" + applicationId + ""
           : "/api/groups/assets?app_id=" + applicationId;
       if (selectedGroup?.selectedKeys?.id) {
         url += "&group_id=" + selectedGroup.selectedKeys.id;
       }
-      if (assetTypeFilter != "") {
+      if (assetTypeFilter !== "") {
         url += "&assetTypeFilter=" + assetTypeFilter;
       }
-      if (keywords != "") {
+      if (keywords !== "") {
         url += "&keywords=" + keywords;
       }
       fetch(url, {
@@ -107,6 +107,9 @@ function AssetsTable({ openGroup, handleEditGroup, refreshGroups }) {
       case "File":
         history.push("/" + applicationId + "/assets/file/" + id);
         break;
+      case "File Template" :
+         history.push("/" + applicationId + "/assets/fileTemplate/" + id);
+        break;
       case "Job":
         history.push("/" + applicationId + "/assets/job/" + id);
         break;
@@ -155,6 +158,10 @@ function AssetsTable({ openGroup, handleEditGroup, refreshGroups }) {
         data = JSON.stringify({ fileId: id, application_id: applicationId });
         deleteUrl = "/api/file/read/delete";
         break;
+      case "File Template":
+        data = JSON.stringify({id, application_id: applicationId });
+        deleteUrl = '/api/fileTemplate/read/deleteFileTemplate'
+        break;
       case "Index":
         data = JSON.stringify({ indexId: id, application_id: applicationId });
         deleteUrl = "/api/index/read/delete";
@@ -191,10 +198,10 @@ function AssetsTable({ openGroup, handleEditGroup, refreshGroups }) {
       })
       .then((result) => {
         fetchDataAndRenderTable();
-        if (type == "Group") {
+        if (type === "Group") {
           refreshGroups();
         }
-        message.success(type + " deleted sucessfully");
+        message.success(type + " deleted successfully");
       })
       .catch((error) => {
         console.log(error);
@@ -237,6 +244,9 @@ function AssetsTable({ openGroup, handleEditGroup, refreshGroups }) {
     switch (type) {
       case "File":
         icon = <i className="fa fa-file"></i>;
+        break;
+      case "File Template":
+        icon = <i className="fa fa-file-text-o"></i>;
         break;
       case "Index":
         icon = <i className="fa fa-indent"></i>;
@@ -289,7 +299,7 @@ function AssetsTable({ openGroup, handleEditGroup, refreshGroups }) {
     }
     
   // -------------------- SORTING AND FILTERING END--------------------------//
-  
+
   const columns = [
     {
       title: "Name",
@@ -318,10 +328,16 @@ function AssetsTable({ openGroup, handleEditGroup, refreshGroups }) {
     {
       title: "Description",
       dataIndex: "description",
-      width: "25%",
-      ellipsis: true,
+      width: "23%",
+      ellipsis: {
+        showTitle: false,
+      },
       shouldCellUpdate: (record, prevRecord) => record.description !== prevRecord.description,
-      render: (text, record) =>  <span className="description-text"><ReactMarkdown children={text} /></span>
+      render: (text, record) => (
+        <Tooltip placement="topLeft" title={<div className="markdown-tooltip custom-scroll" ><ReactMarkdown children={text}/></div>}>
+         {text?.replace(/(?:__|[*#])|\[(.*?)\]\(.*?\)/gm, '')}
+        </Tooltip>
+    ),
     },
     {
       title: "Type",
@@ -336,7 +352,7 @@ function AssetsTable({ openGroup, handleEditGroup, refreshGroups }) {
     {
       title: "Created",
       dataIndex: "createdAt",
-      width: "20%",
+      width: "23%",
       sorter: (a, b) => new Date(b.createdAt) - new Date(a.createdAt),
       onFilter: (value, record) =>{
         const createdAt = new Date(record.createdAt).toLocaleDateString('en-US', Constants.DATE_FORMAT_OPTIONS);
@@ -361,15 +377,13 @@ function AssetsTable({ openGroup, handleEditGroup, refreshGroups }) {
             <EditOutlined className="asset-action-icon" onClick={() => handleEdit(record.id, record.type, "edit", record.url)}/>
           </Tooltip>
 
-          <Popconfirm
-            title="Deleting an asset will delete their metadata and make them unusable in workflows. Are you sure you want to delete this?"
-            onConfirm={() => handleDelete(record.id, record.type)}
-            icon={<QuestionCircleOutlined />}
-          >
-            <Tooltip placement="right" title={"Delete"}>
-              <DeleteOutlined className="asset-action-icon" />
-            </Tooltip>
-          </Popconfirm>
+          <Tooltip placement="right" title={"Delete"}>
+            <DeleteAsset
+             asset={record} 
+             onDelete={handleDelete} 
+             component={ <DeleteOutlined className="asset-action-icon"  />} 
+             />
+          </Tooltip>
 
           <Tooltip placement="right" title={"Move"}>
             <FolderOpenOutlined className="asset-action-icon" onClick={() => handleMoveAsset( record.id, record.type, record.name, selectedGroup ) } />
@@ -395,7 +409,7 @@ function AssetsTable({ openGroup, handleEditGroup, refreshGroups }) {
             )
             : null}
         </Space>
-      ),
+      )
     },
   ];
 

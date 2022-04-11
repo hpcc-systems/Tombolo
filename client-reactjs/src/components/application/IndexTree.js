@@ -1,5 +1,3 @@
-import {Treant} from 'treant-js/Treant.js';
-//import 'treant-js/vendor/raphael.min.js';
 import { Table, Divider, message, Popconfirm, Tooltip } from 'antd/lib';
 import React, { Component } from "react";
 import IndexDetailsForm from "./IndexDetails";
