@@ -463,6 +463,7 @@ function GraphX6({ readOnly = false, statuses }) {
           },
         };
 
+        
         graphRef.current.addEdge(edge, { name: 'add-asset' });
       }
     });
