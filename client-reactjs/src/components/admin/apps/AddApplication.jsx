@@ -64,7 +64,7 @@ function AddApplication(props) {
       if (!response.ok) return message.error("Error occurred while saving application");
       message.success("Application saved successfully");
       const responseData = await response.json()
-      dispatch(applicationActions.applicationSelected(responseData.id, responseData.title, responseData.title));
+      if(props.isCreatingNewApp)dispatch(applicationActions.applicationSelected(responseData.id, responseData.title, responseData.title));
       localStorage.setItem("activeProjectId", responseData.id);
       form.resetFields();
       props.closeAddApplicationModal();

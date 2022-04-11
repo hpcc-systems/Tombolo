@@ -4,12 +4,10 @@ import { authHeader, handleError } from "../../common/AuthHeader.js";
 // import FileDetailsForm from "../FileDetails";
 import MoveAssetsDialog from "./MoveAssetsDialog";
 import { hasEditPermission } from "../../common/AuthUtil.js";
-import useFileDetailsForm from "../../../hooks/useFileDetailsForm";
 import { useSelector, useDispatch } from "react-redux";
 import { Constants } from "../../common/Constants";
 import { assetsActions } from "../../../redux/actions/Assets";
 import { useHistory } from "react-router";
-import useModal from "../../../hooks/useModal";
 import { DeleteOutlined, EditOutlined, QuestionCircleOutlined, FolderOpenOutlined, FilePdfOutlined, AreaChartOutlined } from "@ant-design/icons";
 import { store } from "../../../redux/store/Store";
 import SelectDetailsForPdfDialog from "../Assets/pdf/SelectDetailsForPdfDialog";
@@ -19,7 +17,7 @@ import DeleteAsset from "../../common/DeleteAsset";
 
 function AssetsTable({ openGroup, handleEditGroup, refreshGroups }) {
   const [assets, setAssets] = useState([]);
-  const { isShowing, toggle, OpenDetailsForm } = useFileDetailsForm();
+
   const { authReducer, applicationReducer, assetReducer, groupsMoveReducer, groupsReducer } = useSelector(
     (state) => ({
       groupsReducer:state.groupsReducer,
@@ -35,9 +33,8 @@ function AssetsTable({ openGroup, handleEditGroup, refreshGroups }) {
   const history = useHistory();
   const applicationId = applicationReducer?.application?.applicationId || ''
 
-  const { showMoveDialog = isShowing, toggleMoveDialog = toggle } = useModal();
   const { assetTypeFilter, keywords } = assetReducer.searchParams;
-  const [assetToMove, setAssetToMove] = useState({ id: "", type: "", title: "", selectedGroup: {}, });
+  const [assetToMove, setAssetToMove] = useState({ id: "", type: "", title: "", selectedKeys: {}, });
   const [selectedAsset, setSelectedAsset] = useState();
   const [toPrintAssets, setToPrintAssets] = useState([])
   const [selectDetailsforPdfDialogVisibility, setSelectDetailsforPdfDialogVisibility] = useState(false);
@@ -45,43 +42,33 @@ function AssetsTable({ openGroup, handleEditGroup, refreshGroups }) {
   const dispatch = useDispatch();  
   const editingAllowed = hasEditPermission(authReducer.user);
 
-  const fetchDataAndRenderTable = () => {
-    if(applicationId) {
-      let url =
-        keywords !== ""
-          ? "/api/groups/assetsSearch?app_id=" + applicationId + ""
-          : "/api/groups/assets?app_id=" + applicationId;
-      if (selectedGroup?.selectedKeys?.id) {
-        url += "&group_id=" + selectedGroup.selectedKeys.id;
+  const fetchDataAndRenderTable = async () => {
+    if (applicationId) {
+      let url = '';
+      if (keywords) {
+        url = '/api/groups/assetsSearch?app_id=' + applicationId + '&keywords=' + keywords;
+        if (assetTypeFilter) url += '&assetTypeFilter=' + assetTypeFilter;
+        if (selectedGroup?.selectedKeys?.id) url += '&group_id=' + selectedGroup.selectedKeys.id;
+      } else {
+        url = '/api/groups/assets?app_id=' + applicationId;
+        if (selectedGroup?.selectedKeys?.id) url += '&group_id=' + selectedGroup.selectedKeys.id;
       }
-      if (assetTypeFilter !== "") {
-        url += "&assetTypeFilter=" + assetTypeFilter;
+      try {
+        const response = await fetch(url, { headers: authHeader() });
+        if (!response.ok) handleError(response);
+        const data = await response.json();
+        setAssets(data);
+      } catch (error) {
+        console.log('-error-----------------------------------------');
+        console.dir({ error }, { depth: null });
+        console.log('------------------------------------------');
+        message.error('Failed to fetch assets');
       }
-      if (keywords !== "") {
-        url += "&keywords=" + keywords;
-      }
-      fetch(url, {
-        headers: authHeader(),
-      })
-      .then((response) => {
-        if (response.ok) {
-          return response.json();
-        }
-        handleError(response);
-      })
-      .then((data) => {  
-          setAssets(data);
-      })
-      .catch((error) => {
-        console.log(error);
-      });
-  }
-}
-
+    }
+  };
 
   useEffect(() => {
     fetchDataAndRenderTable();
-
   }, [applicationId, assetTypeFilter, keywords, groupsMoveReducer, selectedGroup?.selectedKeys?.id]);
 
   //Execute generate pdf function after asset is selected
@@ -123,7 +110,7 @@ function AssetsTable({ openGroup, handleEditGroup, refreshGroups }) {
         window.open(vizUrl);
         break;  
       case "Group":
-        if(action != 'edit') {
+        if(action !== 'edit') {
           openGroup(id);
         } else {
           handleEditGroup(id);
@@ -134,18 +121,12 @@ function AssetsTable({ openGroup, handleEditGroup, refreshGroups }) {
     }
   };
 
-  const handleClose = () => {
-    //toggle();
+  const openMoveAssetDialog = (assetId, assetType, assetTitle, selectedGroup) => {
+    setAssetToMove({ id: assetId, type: assetType, title: assetTitle, selectedKeys: selectedGroup.selectedKeys, });
   };
 
-  const handleMoveAsset = (assetId, assetType, assetTitle) => {
-    setAssetToMove({
-      id: assetId,
-      type: assetType,
-      title: assetTitle,
-      selectedGroup: selectedGroup,
-    });
-    toggleMoveDialog();
+  const closeMoveDialog = () => {
+    setAssetToMove({ id: "", type: "", title: "", selectedKeys: {}, });
   };
 
   const handleDelete = (id, type) => {
@@ -183,7 +164,8 @@ function AssetsTable({ openGroup, handleEditGroup, refreshGroups }) {
         data = JSON.stringify({ id: id });
         deleteUrl = "/api/file/read/deleteVisualization";
         break;
-
+      default:
+        break;
     }
     fetch(deleteUrl, {
       method: method,
@@ -210,6 +192,7 @@ function AssetsTable({ openGroup, handleEditGroup, refreshGroups }) {
   };
 
   const handleGroupClick = (groupId) => {
+    if (!groupId) groupId = 'root'
     dispatch(assetsActions.assetInGroupSelected(groupId));
   };
 
@@ -240,31 +223,16 @@ function AssetsTable({ openGroup, handleEditGroup, refreshGroups }) {
   }  
 
   const generateAssetIcon = (type) => {
-    let icon = "";
-    switch (type) {
-      case "File":
-        icon = <i className="fa fa-file"></i>;
-        break;
-      case "File Template":
-        icon = <i className="fa fa-file-text-o"></i>;
-        break;
-      case "Index":
-        icon = <i className="fa fa-indent"></i>;
-        break;
-      case "Query":
-        icon = <i className="fa fa-search"></i>;
-        break;
-      case "Job":
-        icon = <i className="fa fa-clock-o"></i>;
-        break;
-      case "Group":
-        icon = <i className="fa fa-folder-o"></i>;
-        break;
-      case "RealBI Dashboard":
-          icon = <i className="fa fa-area-chart"></i>;
-          break;
-      }
-    return <React.Fragment>{icon}</React.Fragment>;
+    const icons = {
+      Job: <i className="fa fa-clock-o"></i>,
+      File: <i className="fa fa-file"></i>,
+      Index: <i className="fa fa-indent"></i>,
+      Query:  <i className="fa fa-search"></i>,
+      Group: <i className="fa fa-folder-o"></i>,
+      "File Template": <i className="fa fa-file-text-o"></i>,
+      'RealBI Dashboard': <i className="fa fa-area-chart"></i>
+    };
+    return <React.Fragment>{icons[type]}</React.Fragment>;
   };
 
   // -------------------- SORTING AND FILTERING --------------------------//
@@ -386,7 +354,7 @@ function AssetsTable({ openGroup, handleEditGroup, refreshGroups }) {
           </Tooltip>
 
           <Tooltip placement="right" title={"Move"}>
-            <FolderOpenOutlined className="asset-action-icon" onClick={() => handleMoveAsset( record.id, record.type, record.name, selectedGroup ) } />
+            <FolderOpenOutlined className="asset-action-icon" onClick={() => openMoveAssetDialog( record.id, record.type, record.name, selectedGroup ) } />
           </Tooltip>
          
           <Tooltip placement="right" title="Print">
@@ -436,16 +404,16 @@ function AssetsTable({ openGroup, handleEditGroup, refreshGroups }) {
           hideOnSinglePage={true}
           />
       </div>
-      {showMoveDialog ? (
+      {assetToMove.id ?
         <MoveAssetsDialog
-          isShowing={showMoveDialog}
-          toggle={toggleMoveDialog}
-          application={applicationReducer.application}
+          isShowing={!!assetToMove.id}
+          toggle={closeMoveDialog}
           assetToMove={assetToMove}
-          reloadTable={fetchDataAndRenderTable}
           refreshGroups={refreshGroups}
+          reloadTable={fetchDataAndRenderTable}
+          application={applicationReducer.application}
         />
-      ) : null}
+      : null}
 
       {/* Dialog box to select which element to export as PDF */}
       {selectDetailsforPdfDialogVisibility ? (

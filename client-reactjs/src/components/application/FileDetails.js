@@ -1,54 +1,32 @@
-import React, { PureComponent, Component } from "react";
-import { store } from "../../redux/store/Store";
-import { Constants } from "../common/Constants";
-import ReactMarkdown from "react-markdown";
-import {
-  Tabs,
-  Form,
-  Input,
-  Select,
-  Button,
-  AutoComplete,
-  Tag,
-  message,
-  Row,
-  Col,
-  Spin,
-  Radio,
-  Checkbox,
-} from "antd/lib";
-import { debounce } from "lodash";
-import AssociatedDataflows from "./AssociatedDataflows";
-import { authHeader, handleError } from "../common/AuthHeader.js";
-import { validationRules, validationRuleFixes } from "../common/CommonUtil.js";
-import { omitDeep } from "../common/CommonUtil.js";
-import EditableTable from "../common/EditableTable.js";
-import { MarkdownEditor } from "../common/MarkdownEditor.js";
-import { AgGridReact } from "ag-grid-react";
-import { hasEditPermission, canViewPII } from "../common/AuthUtil.js";
-import { eclTypes } from "../common/CommonUtil";
-import "ag-grid-community/dist/styles/ag-grid.css";
-import "ag-grid-community/dist/styles/ag-theme-balham.css";
-import { connect } from "react-redux";
-import BreadCrumbs from "../common/BreadCrumbs";
-import { SearchOutlined } from "@ant-design/icons";
-import { assetsActions } from "../../redux/actions/Assets";
-import Paragraph from "antd/lib/skeleton/Paragraph";
-import { viewOnlyModeReducer } from "../../redux/reducers/ViewOnlyModeReducer";
-import { readOnlyMode, editableMode } from "../common/readOnlyUtil";
-import DeleteAsset from "../common/DeleteAsset";
-import SuperFileMeta from "../common/SuperFileMeta";
+import React, { Component } from 'react';
+import { store } from '../../redux/store/Store';
+import { Constants } from '../common/Constants';
+import ReactMarkdown from 'react-markdown';
+import { Tabs, Form, Input, Select, Button, AutoComplete, Tag, message, Row, Col, Spin, Radio, Checkbox, Typography, } from "antd";
+import { debounce } from 'lodash';
+import AssociatedDataflows from './AssociatedDataflows';
+import { authHeader, handleError } from '../common/AuthHeader.js';
+import { validationRules, validationRuleFixes } from '../common/CommonUtil.js';
+import EditableTable from '../common/EditableTable.js';
+import { MarkdownEditor } from '../common/MarkdownEditor.js';
+import { AgGridReact } from 'ag-grid-react';
+import { hasEditPermission, canViewPII } from '../common/AuthUtil.js';
+import { eclTypes } from '../common/CommonUtil';
+import 'ag-grid-community/dist/styles/ag-grid.css';
+import 'ag-grid-community/dist/styles/ag-theme-balham.css';
+import { connect } from 'react-redux';
+import { assetsActions } from '../../redux/actions/Assets';
+import DeleteAsset from '../common/DeleteAsset';
+import SuperFileMeta from '../common/SuperFileMeta';
+import { formItemLayout  } from "../common/CommonUtil";
+import OverwriteAssetModal from '../common/OverWriteAssetModal';
 
 const TabPane = Tabs.TabPane;
 const Option = Select.Option;
-const layoutGrid = undefined;
-const { TextArea } = Input;
+
 message.config({ top: 130 });
-class FileDetails extends PureComponent {
+class FileDetails extends Component {
   formRef = React.createRef();
-  constructor(props) {
-    super(props);
-  }
 
   state = {
     visible: true,
@@ -59,7 +37,7 @@ class FileDetails extends PureComponent {
     selectedRowKeys: [],
     clusters: [],
     consumers: [],
-    selectedCluster: this.props.clusterId ? this.props.clusterId : "",
+    selectedCluster: this.props.clusterId || '',
     drawerVisible: false,
     fileDataColHeaders: [],
     fileDataContent: [],
@@ -68,77 +46,66 @@ class FileDetails extends PureComponent {
     fileSearchErrorShown: false,
     disableReadOnlyFields: false,
     initialDataLoading: false,
-    fileSearchSuggestions: [],
+    fileSearch: {
+      data: [],
+      loading: false,
+      error: '',
+    },
     showFilePreview: false,
     file: {
-      id: "",
-      fileType: "thor_file",
+      id: '',
+      groupId: '',
+      fileType: 'thor_file',
       layout: [],
       licenses: [],
       relations: [],
       validations: [],
       inheritedLicensing: [],
-      groupId: "",
+      isAssociated: false,
     },
-    enableEdit: false,
-    editing: false,
+    existingAsset: {
+      showModal: false,
+      dbAsset: null, 
+      selectedAsset: { 
+        id: '', 
+        name: '' 
+      }
+    },
+    addingNewAsset: this.props.addingNewAsset,
+    enableEdit: this.props.editMode,
+    editing: this.props.editMode,
     dataAltered: false,
-    errors: false
+    errors: false,
+    dataTypes: [],
   };
 
-  dataTypes = [];
-
   //Component did mount
-  componentDidMount() {
-    if (this.props.application && this.props.application.applicationId) {
-      this.getFileDetails();
-      this.fetchDataTypeDetails();
-      //this.getConsumers();
-      this.setClusters();
-    }
-    //Getting global state
-    const { viewOnlyModeReducer } = store.getState();
-    if (viewOnlyModeReducer.addingNewAsset) {
-      this.setState({
-        addingNewAsset: true,
-      });
-    }
-    if (viewOnlyModeReducer.editMode) {
-      this.setState({
-        enableEdit: viewOnlyModeReducer.editMode,
-        editing: true,
-      }); 
-    } else {
-      this.setState({
-        enableEdit: viewOnlyModeReducer.editMode,
-      });
+  async componentDidMount() {
+    const applicationId = this.props.application?.applicationId || this.props.match?.params?.applicationId;
+    const assetId =  this.props?.selectedAsset?.id || this.props.match?.params?.fileId;
+    if (applicationId) {
+      await this.getFileDetails({ assetId, applicationId });
+      await this.fetchDataTypeDetails();
+      await this.getLicenses();
     }
   }
 
   //Component will unmount
   componentWillUnmount() {
-    store.dispatch({
-      type: Constants.ENABLE_EDIT,
-      payload: false,
-    });
-
-    store.dispatch({
-      type: Constants.ADD_ASSET,
-      payload: false,
-    });
+    store.dispatch({ type: Constants.ENABLE_EDIT, payload: false });
+    store.dispatch({ type: Constants.ADD_ASSET, payload: false });
   }
 
   clearState = () => {
     this.setState({
-      ...this.state,
       complianceTags: [],
       fileDataContent: [],
       fileDataColHeaders: [],
       disableReadOnlyFields: false,
       file: {
         ...this.state.file,
-        id: "",
-        fileType: "thor_file",
+        id: '',
+        fileType: 'thor_file',
         layout: [],
         licenses: [],
         relations: [],
@@ -148,1342 +115,965 @@ class FileDetails extends PureComponent {
     this.formRef.current.resetFields();
   };
 
-  fetchDataTypeDetails() {
-    var self = this;
-    fetch("/api/file/read/dataTypes", {
-      headers: authHeader(),
-    })
-      .then((response) => {
-        if (response.ok) {
-          return response.json();
-        }
-        handleError(response);
-      })
-      .then((data) => {
-        this.dataTypes = data;
-      })
-      .catch((error) => {
-        console.log(error);
-      });
+  fetchDataTypeDetails = async () => {
+    try {
+      const response = await fetch('/api/file/read/dataTypes', { headers: authHeader() });
+      if (!response.ok) handleError(response);
+
+      const data = await response.json();
+      this.setState({ dataTypes: data });
+    } catch (error) {
+      console.log('-fetchDataTypeDetails-----------------------------------------');
+      console.dir({ error }, { depth: null });
+      console.log('------------------------------------------');
+    }
   }
 
-  getFileDetails() {
-    if ( this.props.selectedAsset && this.props.selectedAsset.id ) {
-      this.setState({
-        initialDataLoading: true,
-      });
-      fetch(
-        "/api/file/read/file_details?file_id=" +
-          this.props.selectedAsset.id +
-          "&app_id=" +
-          this.props.application.applicationId,
-        {
-          headers: authHeader(),
-        }
-      )
-        .then((response) => {
-          if (response.ok) {
-            return response.json();
-          }
-          handleError(response);
-        })
-        .then((data) => {
-          this.setState({
-            initialDataLoading: false,
-          });
-          if (data && data.basic) {
-            this.setState({
-              ...this.state,
-              selectedCluster: data.basic.cluster_id,
-              disableReadOnlyFields: true,
-              file: {
-                ...this.state.file,
-                id: data.basic.id,                
-                groupId: data.basic.groupId,
-                name: data.basic.name,
+   getFileDetails = async ({ assetId, applicationId }) => {
+    if (assetId) {
+      this.setState({ initialDataLoading: true });
 
-                //For read only option
-                description: data.basic.description,
-                isSuperFile: data.basic.isSuperFile,
-                superFileData: data.basic.superFileData,
-                supplier: data.basic.supplier,
-                consumer: data.basic.consumer,
-                owner: data.basic.owner,
+      // CREATING REQUEST URL TO GET JOB DETAILS
+      const queryStringParams = {};
+      if (assetId) queryStringParams['file_id'] = assetId;
+      if (applicationId) queryStringParams['app_id'] = applicationId;
+      if (this.props.selectedDataflow) queryStringParams['dataflow_id'] = this.props.selectedDataflow.id;
 
-                fileType:
-                  data.basic.fileType == "" || data.basic.fileType == "flat"
-                    ? "thor_file"
-                    : data.basic.fileType,
-                layout: data.file_layouts,
-                licenses: data.file_licenses,
-                relations: data.file_relations,
-                validations: data.file_validations,
-                fileDataColHeaders: data.file_layouts.map(
-                  (layout) => layout.name
-                ),
-              },
-            });
-            this.formRef.current?.setFieldsValue({
-              title: data.basic.title,
-              name: data.basic.name,
-              description: data.basic.description,
-              scope: data.basic.scope,
-              serviceURL: data.basic.serviceUrl,
-              serviceURL: data.basic.serviceURL,
-              qualifiedPath: data.basic.qualifiedPath,
-              owner: data.basic.owner,
-              consumer: data.basic.consumer,
-              supplier: data.basic.supplier,
-              isSuperFile: data.basic.isSuperFile,
-              fileType: data.basic.fileType
-            });
-          } else {
-            message.config({ top: 130 });
-            message.error(
-              "File details could not be found. Please check if the file exists in Assets"
-            );
-          }
-          return data;
-        })
-        .then((data) => {
-          this.getLicenses();
-          return data;
-        })
-        .then((data) => {
-          if (data.basic) {
-            this.getFileData(data.basic.name, data.basic.cluster_id);
-          }
-          return data;
-        })
-        .then((data) => {
-          if (data.basic && data.basic.id && this.props.selectedDataflow) {
-            this.getInheritedLicenses(
-              data.basic.id,
-              this.props.selectedNodeId,
-              this.props.selectedDataflow.id
-            );
-          }
-          return data;
-        })
-        .catch((error) => {
-          console.log(error);
+      try {
+        let queryString = new URLSearchParams(queryStringParams).toString();
+        const fileDetailsUrl = queryString ? `/api/file/read/file_details?${queryString}` : '/api/file/read/file_details/';
+        const response = await fetch(fileDetailsUrl, { headers: authHeader() });
+        if (!response.ok) handleError(response);
+
+        const data = await response.json();
+
+        if (!data?.basic) throw data;
+
+        const fileType = !data.basic.fileType || data.basic.fileType === 'flat' ? 'thor_file' : data.basic.fileType;
+        
+        this.setState({
+          initialDataLoading: false,
+          disableReadOnlyFields: true,
+          selectedCluster: data.basic.cluster_id,
+          file: {
+            ...this.state.file,
+            id: data.basic.id,
+            fileType: fileType,
+            name: data.basic.name,
+            owner: data.basic.owner,
+            groupId: data.basic.groupId,
+            layout: data.file_layouts,
+            licenses: data.file_licenses,
+            supplier: data.basic.supplier,
+            consumer: data.basic.consumer,
+            relations: data.file_relations,
+            validations: data.file_validations,
+            isSuperFile: data.basic.isSuperFile,
+            description: data.basic.description,
+            superFileData: data.basic.superFileData,
+            isAssociated: data.basic?.metaData?.isAssociated,
+            fileDataColHeaders: data.file_layouts.map((layout) => layout.name),
+          },
         });
+
+        this.formRef.current?.setFieldsValue({
+          fileType: fileType,
+          name: data.basic.name,
+          scope: data.basic.scope,
+          owner: data.basic.owner,
+          title: data.basic.title,
+          supplier: data.basic.supplier,
+          consumer: data.basic.consumer,
+          selectedAssetId: data.basic.id,
+          clusters: data.basic.cluster_id,
+          serviceURL: data.basic.serviceUrl,
+          isSuperFile: data.basic.isSuperFile,
+          description: data.basic.description,
+          qualifiedPath: data.basic.qualifiedPath,
+          isAssociated: data.basic?.metaData?.isAssociated,
+        });
+
+        await this.getFileData(data.basic.name, data.basic.cluster_id);
+
+        if (data.basic.id && this.props.selectedDataflow) {
+          await this.getInheritedLicenses( data.basic.id, this.props.selectedNodeId, this.props.selectedDataflow.id );
+        }
+
+        return data;
+      } catch (error) {
+        console.log('-getFileDetails-----------------------------------------');
+        console.dir({ error }, { depth: null });
+        console.log('------------------------------------------');
+        this.setState({ initialDataLoading: false });
+        message.error('File details could not be found. Please check if the file exists in Assets');
+      }
     }
   }
-
-  showModal = () => {
-    this.setState({
-      visible: true,
-    });
-    this.clearState();
-    //this.getConsumers();
-    this.getFileDetails();
-    //this.getClusters();
-    if (this.props.isNew) {
-      this.getScope();
-    }
-  };
-
-  onDrawerClose = () => {
-    this.setState({
-      drawerVisible: false,
-    });
-  };
-
-  onDrawerOpen = () => {
-    this.setState({
-      drawerVisible: true,
-    });
-  };
 
   handleOk = async (e) => {
-    let _self = this;
-    e.preventDefault();
-    this.setState({
-      confirmLoading: true,
-    });
-
     try {
-      const values = await this.formRef.current.validateFields();
-      let saveResponse = await _self.saveFileDetails();
-      if(this.props.onClose) {
-        this.props.onClose(saveResponse);
+      e.preventDefault();
+      await this.formRef.current.validateFields();
+      this.setState({ confirmLoading: true });
+      const saveResponse = await this.saveFileDetails();
+      if (this.props.onClose) {
+        // THIS METHOD WILL PASS PROPS TO GRAPH!
+        const isAssociated = this.formRef.current?.getFieldValue('fileSelected') || this.formRef.current?.getFieldValue('isAssociated');
+
+        const resultToGraph = {
+          ...saveResponse,
+          isAssociated,
+          assetId: saveResponse.fileId,
+          name: this.formRef.current?.getFieldValue('name'),
+          title: this.formRef.current?.getFieldValue('title'),
+        };
+
+        return this.props.onClose(resultToGraph);
       }
-      // setTimeout(() => {
-        _self.setState({
-          visible: false,
-          // confirmLoading: false,
-        });
-        if (this.props.history) {
-          _self.props.history.push(
-            "/" + this.props.application.applicationId + "/assets"
-          );
-        } else {
-          document.querySelector("button.ant-modal-close").click();
-        }
-      // }, 2000);
-    } catch (e) {
-      console.log(e);
-      _self.setState({
-        confirmLoading: false,
-      });
+
+      if (this.props.history) {
+        return this.props.history.push(`/${this.props.application.applicationId}/assets`);
+      } else {
+        document.querySelector('button.ant-modal-close').click();
+        this.props.dispatch(assetsActions.assetSaved(saveResponse));
+      }
+    } catch (error) {
+      console.log(`handleOk error`, error);
+      let errorMessage = error?.message || 'Please check your fields for errors';
+      if (error?.errorFields) errorMessage = error.errorFields[0].errors[0];
+
+      message.error(errorMessage);
     }
+    this.setState({ confirmLoading: false });
   };
 
-  // Tests
-  handleDelete = () => {
-    console.log('this.props----------------------------------------');
-    console.dir(this.props, { depth: null });
-    console.log('------------------------------------------');
-    
-  fetch("/api/file/read/delete", {
-    method: "post",
-    headers: authHeader(),
-    body: JSON.stringify({
-      fileId: this.props.selectedAsset.id,
-      application_id: this.props.application.applicationId,
-    })
-  })
-    .then((response) => {
-      if (response.ok) {
-        return response.json();
-      }
-      handleError(response);
-    })
-    .then((result) => {
-      //if called from Graph.js
+  handleDelete = async() => {
+    try {
+      const options = {
+        method: 'POST',
+        headers: authHeader(),
+        body: JSON.stringify({
+          fileId: this.props.selectedAsset.id,
+          application_id: this.props.application.applicationId,
+        }),
+      };
+
+      const response = await fetch('/api/file/read/delete', options);
+      if (!response.ok) handleError(response);
+
       if (this.props.onDelete) {
         this.props.onDelete(this.props.currentlyEditingNode);
       } else {
-        this.props.history.push( "/" + this.props.application.applicationId + "/assets" );
+        this.props.history.push('/' + this.props.application.applicationId + '/assets');
       }
-      message.success("File deleted successfully");
-      this.setState({
-        visible: false,
-        confirmLoading: false,
-      });
-    })
-    .catch((error) => {
+
+      message.success('File deleted successfully');
+      this.setState({ visible: false, confirmLoading: false });
+    } catch (error) {
       console.log(error);
-      message.error("There was an error deleting the file");
-    });
+      message.error('There was an error deleting the file');
+    }
+  }
+
+  getLicenses = async () => {
+    try {
+      const response = await fetch('/api/file/read/licenses', { headers: authHeader() });
+      if (!response.ok) handleError(response);
+
+      const data = await response.json();
+
+      this.setState({
+        availableLicenses: data,
+        selectedRowKeys: this.state.file.licenses.map((license) => license.id),
+      });
+    } catch (error) {
+      console.log('-getLicenses-----------------------------------------');
+      console.dir({ error }, { depth: null });
+      console.log('------------------------------------------');
+
+      // message.error("There was an error deleting the file");
+    }
+  }
+
+  getInheritedLicenses = async (fileId, nodeId, dataflowId) => {
+    try {
+      // CREATING REQUEST URL TO GET JOB DETAILS
+      const queryStringParams = { fileId, app_id: this.props.applicationId, id: nodeId, dataflowId };
+      const queryString = new URLSearchParams(queryStringParams).toString();
+
+      const response = await fetch('/api/file/read/inheritedLicenses?' + queryString, {
+        headers: authHeader(),
+      });
+      if (!response.ok) handleError(response);
+
+      const data = await response.json();
+      this.setState({ file: { ...this.state.file, inheritedLicensing: data } });
+    } catch (error) {
+      console.log('-error-----------------------------------------');
+      console.dir({ error }, { depth: null });
+      console.log('------------------------------------------');
+    }
+  }
+
+  searchFiles = debounce(async (searchString) => {
+    if (searchString.length <= 3) return;
+    if (!this.state.selectedCluster) return message.info('Please select cluster before searching');
+    if (!searchString.match(/^[a-zA-Z0-9:_-]*$/)) {
+      return message.error('Invalid search keyword. Please remove any special characters from the keyword.');
+    }
+    try {
+      const options = {
+        method: 'POST',
+        headers: authHeader(),
+        body: JSON.stringify({
+          keyword: searchString,
+          clusterid: this.state.selectedCluster,
+        }),
+      };
+
+      this.setState({ fileSearch: { ...this.state.fileSearch, loading: true, error: '' } });
+      const response = await fetch('/api/hpcc/read/filesearch', options);
+      if (!response.ok) handleError(response);
+
+      const suggestions = await response.json();
+      this.setState({ fileSearch: { ...this.state.fileSearch, loading: false, data: suggestions } });
+    } catch (error) {
+      this.setState({ fileSearch: { ...this.state.fileSearch, loading: false, error: error.message } });
+      message.error('There was an error searching the files from cluster');
+    }
+  }, 500);
+
+  onFileSelected = async (selectedSuggestion) => {
+    message.config({ top: 150 });
+    try {
+      this.setState({initialDataLoading: true})
+      const url = '/api/hpcc/read/getFileInfo?fileName=' + selectedSuggestion + '&clusterid=' + this.state.selectedCluster + '&applicationId=' + this.props.application.applicationId;
+      const response = await fetch(url, { headers: authHeader() });
+      if (!response.ok) handleError(response);
+
+      const fileInfo = await response.json();
+
+      if (fileInfo.basic?.groups?.filter((group) => group.id === this.props.groupId)?.length > 0) {
+        return message.error( 'There is already a file with the same name in this Group. Please select another file' );
+      }
+
+      const isExistingFile = fileInfo.basic.id ? true : false;
+      const selectedAssetId = this.formRef.current?.getFieldValue('selectedAssetId');
+      const fileName = this.formRef.current?.getFieldValue('name');
+      const title = this.formRef.current?.getFieldValue('title');
+
+      const fileType = !fileInfo.basic.fileType || fileInfo.basic.fileType === 'flat' ? 'thor_file' : fileInfo.basic.fileType;
+     
+      let fieldsToUpdate = {
+        title: title || fileInfo.basic.name.substring(fileInfo.basic.name.lastIndexOf('::') + 2),
+        fileType: fileType,
+        fileSelected: true, // IF FILE WAS SELECTED AND SAVED AS SELECTED THEN WE ASSUME THAT FILE IS ASSOCIATED!
+        name: fileInfo.basic.name,
+        scope: fileInfo.basic.scope,
+        owner: fileInfo.basic.owner,
+        consumer: fileInfo.basic.consumer,
+        supplier: fileInfo.basic.supplier,
+        serviceURL: fileInfo.basic.serviceUrl,
+        qualifiedPath: fileInfo.basic.pathMask,
+        isSuperFile: fileInfo.basic.isSuperFile,
+      };
+
+        
+      if (selectedAssetId) {
+        // is selectedAssetId exist it means that FILE WAS CREATED BUT WITH NO ASSOCIATION, makes it a design job...
+        this.setState({initialDataLoading: false})// will update local loading indicator
+        // HPCC JOB ALREADY EXISTS IN TOMBOLO, ASK USE TO OVERWRITE METADATA
+        if (isExistingFile)
+         return this.setState({ existingAsset: { showModal: true, dbAsset: fileInfo.basic, selectedAsset: { name: fileName, id: selectedAssetId}, },
+        });
+        // HPCC FILE DOES NOT EXISTS IN TOMBOLO, associate this design job and Rename this file according to value found on HPCC;
+        fieldsToUpdate.renameAssetId = fileName !== fileInfo.basic.name ? selectedAssetId : '';
+      }
+
+      if (isExistingFile) {
+        // Job existed in DB, add additional fields;
+        // Adding additional fields when selecting existing job while creating job from scratch;
+        fieldsToUpdate = { 
+          ...fieldsToUpdate,
+          description: fileInfo.basic.description,
+        };
+      }
+
+      this.setState({
+        initialDataLoading: false,
+        disableReadOnlyFields: true,
+        file: {
+          ...this.state.file,
+          fileType,
+          id: fileInfo.basic.id,
+          layout: fileInfo.file_layouts,
+          validations: fileInfo.file_validations,
+          fileDataColHeaders: fileInfo.file_layouts.map((layout) => layout.name),
+        },
+      });
+
+      this.formRef.current.setFieldsValue(fieldsToUpdate);
+
+      await this.getFileData(fileInfo.basic.name, this.state.selectedCluster);
+    } catch (error) {
+      console.log('-error-----------------------------------------');
+      console.dir({ error }, { depth: null });
+      console.log('------------------------------------------');
+      message.error('There was an error getting file information from the cluster. Please try again');
+      this.setState({initialDataLoading: false})
+    }
+  }
+
+  resetModal = () => this.setState({ existingAsset: { showModal: false, dbAsset: null, selectedAsset: { id: '', name: '' }} });
+  
+  acceptExistingSettings = () => {
+    const { dbAsset, selectedAsset } = this.state.existingAsset;
+      // this method is triggered when we selected existing settings, we will overwrite most of the previous settings with the one that we have in db
+    const updateFields = {
+      fileSelected: true, // IF FILE WAS SELECTED AND SAVED AS SELECTED THEN WE ASSUME THAT FILE IS ASSOCIATED!
+      name: dbAsset.name,
+      scope: dbAsset.scope,
+      owner: dbAsset.owner,
+      title: dbAsset.title,
+      consumer: dbAsset.consumer,
+      supplier: dbAsset.supplier,
+      fileType: dbAsset.fileType,
+      serviceURL: dbAsset.serviceUrl,
+      isSuperFile: dbAsset.isSuperFile,
+      description: dbAsset.description,
+      qualifiedPath: dbAsset.pathMask,
+      removeAssetId: selectedAsset.id, // We want to assign existing job to this design job, we will need to remove design job to avoid duplications
+    };
+
+    this.formRef.current.setFieldsValue(updateFields);
+    
+    this.setState({ file: { ...this.state.file, ...dbAsset } });
+    this.resetModal();
   };
 
-  getLicenses() {
-    fetch("/api/file/read/licenses", {
-      headers: authHeader(),
-    })
-      .then((response) => {
-        if (response.ok) {
-          return response.json();
-        }
-        handleError(response);
-      })
-      .then((data) => {
-        this.setState({
-          ...this.state,
-          availableLicenses: data,
-        });
+  acceptIncomingSettings = () => {
+    const { dbAsset, selectedAsset } = this.state.existingAsset;
+    // this method is triggered when we selected incoming settings, we will just update missing values, no overwrites.
+    const updateFields = {
+      fileSelected: true, // IF JOB SELECTED THEN ITS NO LONGER DESIGNER JOB!
+      name: dbAsset.name,
+      removeAssetId: selectedAsset.id, // We want to assign existing job to this design job, we will need to remove design job to avoid duplications
+    };
 
-        this.setState({
-          ...this.state,
-          selectedRowKeys: this.state.file.licenses.map(
-            (license) => license.id
-          ),
-        });
-      })
-      .catch((error) => {
-        console.log(error);
-      });
-  }
+    this.formRef.current.setFieldsValue(updateFields);
+    this.setState({ file: { ...this.state.file,  name: dbAsset.name } }); // will update state in FileDetails ||  JobDetails;
+    this.resetModal();
+  };
 
-  getInheritedLicenses(fileId, nodeId, dataflowId) {
-    let licensesUrl =
-      "/api/file/read/inheritedLicenses?fileId=" +
-      fileId +
-      "&app_id=" +
-      this.props.applicationId +
-      "&id=" +
-      nodeId +
-      "&dataflowId=" +
-      dataflowId;
-    fetch(licensesUrl, {
-      headers: authHeader(),
-    })
-      .then((response) => {
-        if (response.ok) {
-          return response.json();
-        }
-        handleError(response);
-      })
-      .then((data) => {
-        this.setState({
-          ...this.state,
-          file: {
-            ...this.state.file,
-            inheritedLicensing: data,
-          },
-        });
-      })
-      .catch((error) => {
-        console.log(error);
-      });
-  }
-
-  setClusters() {
-    let selectedCluster = this.props.clusters.filter(
-      (cluster) => cluster.id == this.props.clusterId
-    );
-    if (selectedCluster.length > 0) {
-      this.formRef.current.setFieldsValue({
-        clusters: selectedCluster[0].id
-      });
-      this.setState({
-        ...this.state,
-        selectedCluster: selectedCluster[0].id
-      });      
-    }
-  }
-
-  searchFiles = debounce((searchString) => {
-    if (searchString.length <= 3 || this.state.fileSearchErrorShown) return;
-    if (!searchString.match(/^[a-zA-Z0-9:_-]*$/)) {
-      message.error(
-        "Invalid search keyword. Please remove any special characters from the keyword."
-      );
-      return;
-    }
-    this.setState({
-      ...this.state,
-      fileSearchErrorShown: false,
-    });
-
-    var data = JSON.stringify({
-      clusterid: this.state.selectedCluster,
-      keyword: searchString,
-    });
-    fetch("/api/hpcc/read/filesearch", {
-      method: "post",
-      headers: authHeader(),
-      body: data,
-    })
-      .then((response) => {
-        if (response.ok) {
-          return response.json();
-        } else {
-          throw response;
-        }
-      })
-      .then((suggestions) => {
-        this.setState({
-          ...this.state,
-          fileSearchSuggestions: suggestions,
-        });
-      })
-      .catch((error) => {
-        if (!this.state.fileSearchErrorShown) {
-          error.json().then((body) => {
-            message.error(
-              "There was an error searching the files from cluster."
-            );
-          });
-          this.setState({
-            ...this.state,
-            fileSearchErrorShown: true,
-          });
-        }
-      });
-  }, 100);
-
-  async onFileSelected(selectedSuggestion) {
-    message.config({ top: 150 });
-    fetch(
-      "/api/hpcc/read/getFileInfo?fileName=" +
-        selectedSuggestion +
-        "&clusterid=" +
-        this.state.selectedCluster +
-        "&applicationId=" +
-        this.props.application.applicationId,
-      {
-        headers: authHeader(),
-      }
-    )
-      .then((response) => {
-        if (response.ok) {
-          return response.json();
-        }
-        handleError(response);
-      })
-      .then((fileInfo) => {
-        if (fileInfo && fileInfo.basic.groups) {
-          if (
-            fileInfo.basic.groups.filter(
-              (group) => group.id == this.props.groupId
-            ).length > 0
-          ) {
-            message.error(
-              "There is already a file with the same name in this Group. Please select another file"
-            );
-            return;
-          }
-        }
-        this.setState({
-          ...this.state,
-          disableReadOnlyFields: true,
-          file: {
-            ...this.state.file,
-            id: fileInfo.basic.id,
-            layout: fileInfo.file_layouts,
-            validations: fileInfo.file_validations,
-            fileDataColHeaders: fileInfo.file_layouts.map(
-              (layout) => layout.name
-            ),
-            fileType:
-            fileInfo.basic.fileType == "" || fileInfo.basic.fileType == "flat"
-              ? "thor_file"
-              : fileInfo.basic.fileType,
-
-          },
-        });
-
-        this.formRef.current.setFieldsValue({
-          title: fileInfo.basic.name.substring(
-            fileInfo.basic.name.lastIndexOf("::") + 2
-          ),
-          name: fileInfo.basic.name,
-          description: fileInfo.basic.description,
-          scope: fileInfo.basic.scope,
-          serviceURL: fileInfo.basic.serviceUrl,
-          qualifiedPath: fileInfo.basic.pathMask,
-          owner: fileInfo.basic.owner,
-          consumer: fileInfo.basic.consumer,
-          supplier: fileInfo.basic.supplier,
-          isSuperFile: fileInfo.basic.isSuperFile,
-          fileType: fileInfo.basic.fileType
-        });
-        return fileInfo;
-      })
-      .then((data) => {
-        return this.getLicenses();
-      })
-      .then((licenses) => {
-        return this.getFileData(selectedSuggestion, this.state.selectedCluster);
-      })
-      .catch((error) => {
-        console.log(error);
-        message.error(
-          "There was an error getting file information from the cluster. Please try again"
-        );
-      });
-  }
-
-  saveFileDetails() {
-    return new Promise((resolve, reject) => {
-      fetch("/api/file/read/savefile", {
-        method: "post",
+  saveFileDetails = async () => {
+    try {
+      const payload = {
+        method: 'POST',
         headers: authHeader(),
         body: JSON.stringify({
           isNew: this.props.isNew,
           id: this.state.file.id,
-          file: this.populateFileDetails(),
+          file: await this.populateFileDetails(),
         }),
-      })
-        .then(function (response) {
-          if (response.ok) {
-            message.success("Data saved");
-            return response.json();
-          }
-          handleError(response);
-          reject();
-        })
-        .then(function (data) {
-          resolve(data);
-        })
-        .catch((error) => {
-          message.error(
-            "Error occured while saving the data. Please check the form data"
-          );
-        }).finally(() =>{
-          this.setState({confirmLoading : false})
-        });
-    });
+      };
+
+      const response = await fetch('/api/file/read/savefile', payload);
+      if (!response.ok) handleError(response);
+
+      message.success('Data saved');
+      return await response.json();
+    } catch (error) {
+      console.log('saveFileDetails error', error);
+      message.error('Error occurred while saving the data. Please check the form data');
+    }
   }
 
-  getFileData = (fileName, clusterId) => {
-    var _self = this;
-    var cluster = this.state.selectedCluster
-      ? this.state.selectedCluster
-      : clusterId;
-    if (cluster) {
-      fetch(
-        "/api/hpcc/read/getData?fileName=" + fileName + "&clusterid=" + cluster,
-        {
-          headers: authHeader(),
+  getFileData = async (fileName, clusterId) => {
+    try {
+      if (!clusterId || !fileName) throw new Error('Filename or ClusterId is not provided');
+
+      const response = await fetch( '/api/hpcc/read/getData?fileName=' + fileName + '&clusterid=' + clusterId, { headers: authHeader() } );
+      if (!response.ok) handleError(response);
+
+      const rows = await response.json();
+      console.log('-rows-----------------------------------------');
+      console.dir({rows}, { depth: null });
+      console.log('------------------------------------------');
+      
+      if (rows?.length > 0) {
+        this.setState({
+          fileDataColHeaders: Object.keys(rows[0]),
+          fileDataContent: rows,
+          showFilePreview: true,
+        });
+      }
+    } catch (error) {
+      console.log('-getFileData-----------------------------------------');
+      console.dir({ error }, { depth: null });
+      console.log('------------------------------------------');
+      this.setState({ showFilePreview: false });
+    }
+  }
+  
+  populateFileDetails = async () => {
+    const formFieldsValue = this.formRef.current.getFieldsValue(); // will get all mounted fields value
+    console.log('-formFieldsValue-----------------------------------------');
+    console.dir({formFieldsValue}, { depth: null });
+    
+    const fileDetails = {
+      app_id: this.props.application.applicationId,
+      basic: {
+        name: formFieldsValue.name,
+        title: formFieldsValue.title,
+        scope: formFieldsValue.scope,
+        owner: formFieldsValue.owner,
+        supplier: formFieldsValue.supplier,
+        consumer: formFieldsValue.consumer,
+        fileType: formFieldsValue.fileType,
+        cluster_id: formFieldsValue.clusters,
+        serviceURL:formFieldsValue.serviceURL,
+        description: formFieldsValue.description,
+        dataflowId: this.props.selectedDataflow?.id || '',
+        qualifiedPath: formFieldsValue.qualifiedPath,
+        application_id: this.props.application.applicationId,
+        groupId: this.props.groupId || this.state.file.groupId,
+        metaData: {
+          isAssociated: this.formRef.current.getFieldValue('fileSelected') || this.state.file.isAssociated // field is not mounted so we take value separately
         }
-      )
-        .then(function (response) {
-          if (response.ok) {
-            return response.json();
-          }
-          handleError(response);
-        })
-        .then(function (rows) {
-          if (rows && rows.length > 0) {
-            _self.setState({
-              fileDataColHeaders: Object.keys(rows[0]),
-              fileDataContent: rows,
-              showFilePreview: true
-            });
-          }
-        })
-        .catch((error) => {
-          _self.setState({
-            showFilePreview: false
-          });          
-          console.log(error);
-        });
-    }
-  };
-
-  setLayoutData = (data) => {
-    this.setState({
-      ...this.state,
-      file: {
-        ...this.state.file,
-        layout: data,
       },
-    });
-  };
-
-  setValidationData = (data) => {
-    this.setState({
-      ...this.state,
-      file: {
-        ...this.state.file,
-        validations: data,
-      },
-    });
-  };
-
-  populateFileDetails() {
-    var applicationId = this.props.application.applicationId;
-    var fileDetails = { app_id: applicationId };
-    var fileLayout = {},
-      license = {};
-
-    var file_basic = {
-      //"id" : this.state.file.id,
-      ...this.formRef.current.getFieldsValue(),
-      isSuperFile: !this.formRef.current.getFieldValue("isSuperFile")
-        ? false
-        : this.formRef.current.getFieldValue("isSuperFile"),
-      cluster_id: this.state.selectedCluster,
-      fileType: this.state.file.fileType,
-      application_id: applicationId,
-      dataflowId: this.props.selectedDataflow
-        ? this.props.selectedDataflow.id
-        : "",
+      license: [],
+      fields: this.state.file.layout,
+      validation: this.state.file.validations,
+      removeAssetId: this.formRef.current.getFieldValue('removeAssetId') || '', // Asset was a design file that got associated with existing in DB file
+      renameAssetId: this.formRef.current.getFieldValue('renameAssetId') || ''// Asset was a design file that got associated with none-existing in DB file
     };
-    let groupId = this.props.groupId
-      ? this.props.groupId
-      : this.state.file.groupId;
-    if (groupId) {
-      file_basic.groupId = groupId;
-    }
-    fileDetails.basic = file_basic;
-    fileDetails.fields = this.state.file.layout;
-    var selectedLicenses = {};
-    if (
-      this.licenseGridApi &&
-      this.licenseGridApi.getSelectedNodes() != undefined
-    ) {
-      selectedLicenses = this.licenseGridApi
-        .getSelectedNodes()
-        .map(function (node) {
-          return { name: node.data.name, url: node.data.url };
-        });
-    }
-    fileDetails.license = selectedLicenses;
 
-    //validations
-    fileDetails.validation = this.state.file.validations;
+    if (this?.licenseGridApi?.getSelectedNodes) {
+      fileDetails.license = this.licenseGridApi.getSelectedNodes()?.map((node) => ({ name: node.data.name, url: node.data.url })) || [];
+    }
+    console.log('-fileDetails-----------------------------------------');
+    console.dir({fileDetails}, { depth: null });
+    console.log('------------------------------------------');
+    
     return fileDetails;
   }
 
   handleCancel = () => {
-    this.setState({
-      visible: false,
-    });
+    this.setState({ visible: false });
     if (this.props.history) {
-      this.props.history.push(
-        "/" + this.props.application.applicationId + "/assets"
-      );
+      this.props.history.push('/' + this.props.application.applicationId + '/assets');
     } else {
-      document.querySelector("button.ant-modal-close").click();
+      this.props.onClose(); //document.querySelector('button.ant-modal-close').click();
     }
   };
 
-  onClusterSelection = (value) => {
-    this.props.dispatch(assetsActions.clusterSelected(value));
-    this.setState({
-      selectedCluster: value,
-    });
-  };
-
-  onConsumerSelection = (value) => {
-    this.setState({
-      ...this.state,
-      file: { ...this.state.file, consumer: value },
-    });
-  };
-
-  onOwnerSelection = (value) => {
-    this.setState({
-      ...this.state,
-      file: { ...this.state.file, owner: value },
-    });
-  };
-
-  onSupplierSelection = (value) => {
-    this.setState({
-      ...this.state,
-      file: { ...this.state.file, supplier: value },
-    });
-  };
-
-  onChange = (e) => {
-    if (this.setState.formValueChanged) {
-      this.setState({
-        ...this.state,
-        file: { ...this.state.file, [e.target.name]: e.target.value },
-      });
-    } else {
-      this.setState({
-        ...this.state,
-        file: { ...this.state.file, [e.target.name]: e.target.value },
-        formValueChanged: true,
-      });
-    }
-  };
-
-  onCheckbox = (e) => {
-    this.setState({
-      ...this.state,
-      file: { ...this.state.file, [e.target.id]: e.target.checked },
-    });
-  };
-
-  onLayoutGridReady = (params) => {
-    var _self = this,
-      selectedDataTypes = [],
-      compliance = [];
-    _self.layoutGrid = params.api;
-    _self.layoutGrid.sizeColumnsToFit();
-
-    //populate the compliance info
-    _self.layoutGrid.forEachNode(function (node, index) {
-      if (node.data.data_types && node.data.data_types != null) {
-        selectedDataTypes.push(node.data.data_types);
-      }
-    });
-    fetch(
-      "/api/controlsAndRegulations/getComplianceByDataType?dataType=" +
-        selectedDataTypes.join(","),
-      {
-        headers: authHeader(),
-      }
-    )
-      .then(function (response) {
-        if (response.ok) {
-          return response.json();
-        }
-        handleError(response);
-      })
-      .then(function (data) {
-        if (data && data.length > 0) {
-          data.forEach((element) => {
-            compliance.push(element);
-          });
-          _self.setState({
-            complianceTags: compliance,
-          });
-        }
-      })
-      .catch((error) => {
-        console.log(error);
-      });
-  };
-
-  onGridReady = (params) => {
-    let gridApi = params.api;
-    gridApi.sizeColumnsToFit();
-  };
-
-  onLicenseGridReady = (params) => {
-    this.licenseGridApi = params.api;
-    this.licenseGridApi.sizeColumnsToFit();
-    var _self = this;
-    this.licenseGridApi.forEachNode(function (node, index) {
-      if (
-        _self.state.file.licenses.filter(
-          (license) => license.name == node.data.name
-        ).length > 0
-      ) {
-        _self.licenseGridApi.selectNode(node, true);
-      }
-    });
-  };
-
-  dataTypechange = (prop) => {
-    var _self = this;
-    if (prop.column.colId == "data_types" && prop.oldValue) {
-      var compliance = [];
-      var complianceDetails = [];
-      compliance = _self.state.complianceTags;
-      complianceDetails = _self.state.complianceDetails;
-      var compToRemove = complianceDetails.filter(
-        (item) => item.id === prop.node.rowIndex
-      );
-      complianceDetails = complianceDetails.filter(
-        (item) => item.id !== prop.node.rowIndex
-      );
-      compToRemove.forEach((element) => {
-        var obj = complianceDetails.filter(
-          (item) => item.compliance === element.compliance
-        );
-        if (obj.length == 0)
-          compliance = compliance.filter((item) => item !== element.compliance);
-      });
-      _self.setState({
-        complianceTags: compliance,
-        complianceDetails: complianceDetails,
-      });
-    }
-
-    if (prop.column.colId == "data_types" && prop.newValue) {
-      var compliance = [];
-      var complianceDetails = [];
-      compliance = this.state.complianceTags;
-      complianceDetails = this.state.complianceDetails;
-      fetch(
-        "/api/controlsAndRegulations/getComplianceByDataType?dataType=" +
-          prop.newValue,
-        {
-          headers: authHeader(),
-        }
-      )
-        .then(function (response) {
-          if (response.ok) {
-            return response.json();
-          }
-          handleError(response);
-        })
-        .then(function (data) {
-          if (data && data.length > 0) {
-            data.forEach((element) => {
-              if (!compliance.includes(element)) {
-                compliance.push(element);
-              }
-              var obj = {};
-              obj.id = prop.node.rowIndex;
-              obj.dataType = prop.newValue;
-              obj.compliance = element;
-              complianceDetails.push(obj);
-            });
-            _self.setState({
-              complianceTags: compliance,
-              complianceDetails: complianceDetails,
-            });
-          }
-        })
-        .catch((error) => {
-          console.log(error);
-        });
-    }
-  };
+  
+  onChange = (e) => this.setState({ file: { ...this.state.file, [e.target.name]: e.target.value }});
+  toggleEdit = () => this.setState({ enableEdit: !this.state.enableEdit, editing: !this.state.editing, dataAltered: true });
+  onCheckbox = (e) => this.setState({ file: { ...this.state.file, [e.target.id]: e.target.checked } });
+  fileTypeChange = (e) => this.setState({ file: {...this.state.file, fileType: e.target.value } });
+  setLayoutData = (data) => this.setState({ file: { ...this.state.file, layout: data } });
+  setValidationData = (data) => this.setState({ file: { ...this.state.file, validations: data } });
+  onOwnerSelection = (value) => this.setState({ file: { ...this.state.file, owner: value } });
+  onClusterSelection = (value) => this.setState({ selectedCluster: value });
+  onSupplierSelection = (value) => this.setState({ file: { ...this.state.file, supplier: value } });
+  onConsumerSelection = (value) => this.setState({ file: { ...this.state.file, consumer: value } });
 
   getScope = () => {
-    let scope = (
-      this.props.user.organization +
-      "::" +
-      this.props.applicationTitle +
-      (this.state.file.title != "" ? "::" + this.state.file.title : "")
-    ).toLowerCase();
+    const scope = `${this.props.user.organization}::${this.props.applicationTitle}${ this.state.file.title ? '::' + this.state.file.title : '' }`.toLowerCase();
+    this.setState({ file: { ...this.state.file, scope } });
+  };
 
-    this.setState({
-      ...this.state,
-      file: {
-        ...this.state.file,
-        scope: scope,
-      },
+  onFieldsChange = (changedFields, allFields) => {
+    const inputErrors = allFields.filter((item) => item.errors.length > 0);
+    this.setState({ dataAltered: true, errors: inputErrors.length > 0 });
+  };
+
+  onGridReady = (grid) => grid.api.sizeColumnsToFit();
+
+  onLicenseGridReady = (params, licenses ) => {
+    this.licenseGridApi = params.api;
+    this.licenseGridApi.sizeColumnsToFit();
+
+    this.licenseGridApi.forEachNode((node, index) => {
+      
+      const license = licenses.find((license) => license.name === node.data.name);
+      if (license) this.licenseGridApi.selectNode(node, true);
     });
   };
 
-  scopeValidator = (rule, value, callback) => {
-    try {
-      if (
-        this.state.file.scope ==
-        (
-          this.props.user.organization +
-          "::" +
-          this.props.applicationTitle
-        ).toLowerCase()
-      ) {
-        let errMsg =
-          "Please enter a valid scope. The convention is <Organization Name>::<Application Name>::<File Type>";
-        throw new Error(errMsg);
+  fileDataColumns = ({fileDataColHeaders, fileDataContent }) => {
+    const columns = [];
+
+    fileDataColHeaders.forEach((column) => {
+      //iterate through each Row[]
+      const rowType1 = fileDataContent?.[0]?.[column]?.Row;
+      const rowType2 = fileDataContent?.[0]?.[column];
+
+      let colObj = { headerName: column, field: column }
+
+      if (rowType1) {
+        colObj = {
+          headerName: column,
+          children : Object.keys(rowType1?.[0])?.map(key =>({ headerName: key, valueGetter: "data." + column + ".Row[0]." + key, }) )
+        };
+      } else if (rowType2 instanceof Object) {
+        colObj ={ 
+          headerName: column,
+          children : Object.keys(rowType2).map(key => ({ headerName: key, field: column + "." + key }))
+        };
       }
+
+      columns.push(colObj);
+    });
+    
+    return columns;
+  };
+
+  // TODO FIX THIS VALIDATOR
+  scopeValidator = (rule, value, callback) => {
+    const scope = this.props.user.organization + '::' + this.props.applicationTitle;
+    if (this.state.file.scope === scope.toLowerCase()) {
+      const error = new Error( 'Please enter a valid scope. The convention is <Organization Name>::<Application Name>::<File Type>' );
+      callback(error);
+    } else {
       callback();
-    } catch (err) {
-      callback(err);
     }
   };
-
-  fileTypeChange = (e) => {
-    this.setState({
-      ...this.state,
-      file: {
-        ...this.state.file,
-        fileType: e.target.value,
-      },
-    });
-  };
-
+  
   render() {
     const {
-      visible,
+      enableEdit,
+      addingNewAsset,
+      complianceTags,
+      showFilePreview,
       confirmLoading,
       availableLicenses,
-      selectedRowKeys,
-      consumers,
       fileDataContent,
       disableReadOnlyFields,
-      clusters,
     } = this.state;
-    const modalTitle =
-      "File Details" +
-      (this.state.file.title
-        ? " - " + this.state.file.title
-        : " - " + this.state.file.name);
+
+    const { description, isSuperFile, layout, validations, inheritedLicensing, superFileData } = this.state.file;
+
     const VIEW_DATA_PERMISSION = canViewPII(this.props.user);
-    const editingAllowed =
-      hasEditPermission(this.props.user) || !this.props.viewMode;
-    const formItemLayout = {
-      labelCol: { span: 2 },
-      wrapperCol: { span: 8 },
-    };
-
-    const twoColformItemLayout = {
-      labelCol: { span: 6 },
-      wrapperCol: { span: 12 },
-    };
-
-    const threeColformItemLayout = {
-      labelCol: { span: 6 },
-      wrapperCol: { span: 12 },
-    };
+    const editingAllowed = hasEditPermission(this.props.user) || !this.props.viewMode;
 
     const layoutColumns = [
       {
-        title: "System Name",
-        dataIndex: "name",
-        sort: "asc",
+        title: 'System Name',
+        dataIndex: 'name',
+        sort: 'asc',
         editable: false,
-        width: "25%",
+        width: '25%',
       },
       {
-        title: "Name",
-        dataIndex: "name",
-        sort: "asc",
+        title: 'Name',
+        dataIndex: 'name',
+        sort: 'asc',
         editable: true,
-        celleditor: "text",
-        regEx: /^[a-zA-Z0-9.,:;()@&#*/$_ -]*$/,  
-        width: "25%",
+        celleditor: 'text',
+        regEx: /^[a-zA-Z0-9.,:;()@&#*/$_ -]*$/,
+        width: '25%',
       },
       {
-        title: "Type",
-        dataIndex: "type",
+        title: 'Type',
+        dataIndex: 'type',
         editable: false,
-        celleditor: "select",
+        celleditor: 'select',
         celleditorparams: {
           values: eclTypes.sort(),
         },
         showdatadefinitioninfield: true,
-        width: "18%",
+        width: '18%',
       },
-      // {
-      //   title: "ECL Type",
-      //   dataIndex: "eclType",
-      //   editable: editingAllowed,
-      //   showdatadefinitioninfield: true,
-      // },
       {
-        title: "Description",
-        dataIndex: "description",
+        title: 'Description',
+        dataIndex: 'description',
         editable: editingAllowed,
-        width: "15%",
+        width: '15%',
       },
-      // {
-      //   title: "Required",
-      //   editable: editingAllowed,
-      //   dataIndex: "required",
-      //   celleditor: "select",
-      //   celleditorparams: {
-      //     values: ["false", "true"],
-      //   },
-      //   width: "10%",
-      // },
-      // {
-      //   title: "Information Type",
-      //   dataIndex: "data_types",
-      //   editable: editingAllowed,
-      //   celleditor: "select",
-      //   width: "15%",
-      //   celleditorparams: {
-      //     values: this.dataTypes.sort(),
-      //   },
-      // },
     ];
 
     const validationRuleColumns = [
       {
-        title: "Field",
-        dataIndex: "rule_field",
-        celleditor: "select",
+        title: 'Field',
+        dataIndex: 'rule_field',
+        celleditor: 'select',
         editable: editingAllowed,
-        width: "15%",
+        width: '15%',
         celleditorparams: {
           values: this.state.file.fileDataColHeaders,
         },
       },
       {
-        title: "Rule Name",
-        dataIndex: "rule_name",
+        title: 'Rule Name',
+        dataIndex: 'rule_name',
         editable: editingAllowed,
-        celleditor: "select",
+        celleditor: 'select',
         celleditorparams: {
-          values: validationRules
+          values: validationRules,
         },
-        width: "15%",
+        width: '15%',
       },
       {
-        title: "Rule",
-        dataIndex: "rule_test",
+        title: 'Rule',
+        dataIndex: 'rule_test',
         editable: editingAllowed,
-        width: "15%",
+        width: '15%',
       },
       {
-        title: "Fix",
-        dataIndex: "rule_fix",
-        celleditor: "select",
+        title: 'Fix',
+        dataIndex: 'rule_fix',
+        celleditor: 'select',
         editable: editingAllowed,
         celleditorparams: {
-          values: validationRuleFixes
+          values: validationRuleFixes,
         },
-        width: "15%",
+        width: '15%',
       },
     ];
 
-    const { complianceTags, showFilePreview } = this.state;
     const licenseColumns = [
       {
-        field: "name",
+        field: 'name',
         cellRenderer: function (params) {
-          return (
-            "<a href=" +
-            params.data.url +
-            ' target="_blank">' +
-            params.value +
-            "</a>"
-          );
+          return '<a href=' + params.data.url + ' target="_blank">' + params.value + '</a>';
         },
-
-        headerCheckboxSelection: this.state.enableEdit,
-        headerCheckboxSelectionFilteredOnly: this.state.enableEdit,
-        checkboxSelection: this.state.enableEdit,
+        headerCheckboxSelection: enableEdit,
+        headerCheckboxSelectionFilteredOnly: enableEdit,
+        checkboxSelection: enableEdit,
       },
       {
-        field: "description",
-        cellRenderer: function (params) {
-          return params.value != null ? params.value : "";
-        },
+        field: 'description',
+        cellRenderer: (params) => params.value || '',
       },
     ];
 
-    const fileDataColumns = () => {
-      const columns = [];
-      var _self = this;
-      this.state.fileDataColHeaders.forEach(function (column) {
-        let colObj;
-        //iterate through each Row[]
-        if (_self.state.fileDataContent[0][column]["Row"] != undefined) {
-          colObj = { headerName: column };
-          let children = [];
-          Object.keys(_self.state.fileDataContent[0][column]["Row"][0]).forEach(
-            function (key) {
-              children.push({
-                headerName: key,
-                valueGetter: "data." + column + ".Row[0]." + key,
-              });
-            }
-          );
-          colObj.children = children;
-        } else if (_self.state.fileDataContent[0][column] instanceof Object) {
-          colObj = { headerName: column };
-          let children = [];
-          Object.keys(_self.state.fileDataContent[0][column]).forEach(function (
-            key
-          ) {
-            children.push({ headerName: key, field: column + "." + key });
-          });
-          colObj.children = children;
-        } else {
-          colObj = { headerName: column, field: column };
-        }
-        columns.push(colObj);
-      });
-      return columns;
-    };
-
     const InheritedLicenses = (licenses) => {
-      if (licenses.relation && licenses.relation.length > 0) {
-        const licenseItems = licenses.relation.map((license) => (
-          <Tag color="red" key={license}>
-            {license}
-          </Tag>
-        ));
-        return (
-          <div style={{ paddingBottom: "5px" }}>
-            <b>Inherited Licenses:</b> {licenseItems}
-          </div>
-        );
-      } else {
-        return null;
-      }
+      if (!licenses?.relation?.length) return null;
+      const licenseItems = licenses.relation.map((license) => (
+        <Tag color="red" key={license}>
+          {license}
+        </Tag>
+      ));
+      return (
+        <div style={{ paddingBottom: '5px' }}>
+          <b>Inherited Licenses:</b> {licenseItems}
+        </div>
+      );
     };
-
-    const ComplianceInfo = (complianceTags) => {
-      if (complianceTags.tags && complianceTags.tags.length > 0) {
-        const tagElem = complianceTags.tags.map((tag, index) => (
-          <Tag color="red" key={tag}>
-            {tag}
-          </Tag>
-        ));
-        return (
-          <div style={{ paddingBottom: "5px" }}>
-            <b>Compliance:</b> {tagElem}
-          </div>
-        );
-      } else {
-        return null;
-      }
-    };
-
-    const {
-      title,
-      description,
-      isSuperFile,
-      layout,
-      validations,
-      inheritedLicensing,
-     superFileData
-    } = this.state.file;
     
-    const selectedCluster = this.state.clusters.filter(
-      (cluster) => cluster.id == this.props.clusterId
-    );
-    const rowSelection = {
-      selectedRowKeys,
-      onChange: this.onSelectedRowKeysChange,
-    };
-    //const modalHeight = !this.props.isNew ? "425px" : "550px";
-    const modalHeight = "570px";
-
-    const getNodeChildDetails = (rowItem) => {
-      if (rowItem.children) {
-        return {
-          group: true,
-          // open C be default
-          expanded: false,
-          // provide ag-Grid with the children of this group
-          children: rowItem.children,
-          // the key is used by the default group cellRenderer
-          key: rowItem.type,
-        };
-      } else {
-        return null;
-      }
-    };
-    //render only after fetching the data from the server
-    if (!title && !this.props.selectedAsset && !this.props.isNew) {
-      return null;
-    }
-
-    //Function to make fields editable
-    const makeFieldsEditable = () => {
-      // editableMode();
-      this.setState({
-        enableEdit: !this.state.enableEdit,
-        editing: true,
-      });
-    };
-
-    //Switch to view only mode
-    const switchToViewOnly = () => {
-      // readOnlyMode();
-      this.setState({
-        enableEdit: !this.state.enableEdit,
-        editing: false,
-        dataAltered: true,
-      });
+    const ComplianceInfo = (complianceTags) => {
+      if (!complianceTags?.tags?.length) return null;
+      const tagElem = complianceTags.tags.map((tag) => (
+        <Tag color="red" key={tag}>
+          {tag}
+        </Tag>
+      ));
+      return (
+        <div style={{ paddingBottom: '5px' }}>
+          <b>Compliance:</b> {tagElem}
+        </div>
+      );
     };
 
     //Controls
-    const controls =   <div className ='assetDetail-buttons-wrapper ' style={{justifyContent: "flex-end"}}>
-      <span className="button-container">
-      { !this.state.enableEdit && editingAllowed ? (<><Button type="primary" onClick={makeFieldsEditable} style={{marginRight: "5px"}}>Edit</Button></>) : null}
-      {this.state.editing ? (<Button onClick={switchToViewOnly}   style={{marginRight: "5px"}}> View Changes </Button>) : null}
-        {this.state.enableEdit ? (
-          <span>
+    const controls = (
+      <div className={ this.props.displayingInModal ? 'assetDetail-buttons-wrapper-modal' : 'assetDetail-buttons-wrapper' }>
+        {!enableEdit && editingAllowed ? ( <Button type="primary" onClick={this.toggleEdit}> Edit </Button> ) : null}
+        {enableEdit ? <Button  onClick={this.toggleEdit}>View Changes</Button> : null}
+
+        <span className="button-container">
+          {enableEdit ? (
             <DeleteAsset
               asset={{
                 id: this.state.file.id,
                 type: 'File',
-                title: this.formRef.current.getFieldValue('title') || this.formRef.current.getFieldValue('name')
+                title: this.formRef.current?.getFieldValue('title') || this.formRef.current?.getFieldValue('name'),
               }}
               style={{ display: 'inline-block' }}
               onDelete={this.handleDelete}
-              component={<Button key="danger" disabled={!this.state.file.id || !editingAllowed} type="danger" > Delete </Button>}
+              component={ <Button key="danger" disabled={!this.state.file.id || !editingAllowed} type="danger"> Delete </Button> }
             />
-            <Button key="back" onClick={this.handleCancel}style={{marginRight: "5px",  marginLeft: "25px"}}>
+          ) : null}
+          {this.state.dataAltered ? (
+            <span style={{ marginLeft: '25px' }}>
+              <Button key="back" onClick={this.handleCancel} type="primary" ghost>
+                Cancel
+              </Button>
+              <Button
+                key="submit"
+                type="primary"
+                onClick={this.handleOk}
+                loading={confirmLoading}
+                style={{ background: 'var(--success)' }}
+                disabled={!editingAllowed || this.state.errors}>
+                Save
+              </Button>
+            </span>
+          ) : (
+            <Button ghost key="back" type="primary" onClick={this.handleCancel}>
               Cancel
             </Button>
-            <Button
-              key="submit"
-              disabled={!editingAllowed || this.state.errors}
-              type="primary"
-              loading={confirmLoading}
-              onClick={this.handleOk}
-              style={{marginRight: "10px", background: 'var(--success)'}}
-            >
-              Save
-            </Button>
-          </span>
-        ) : (
-          <span>
-            {this.state.dataAltered ? (
-              <span>
-                <Button key="back" onClick={this.handleCancel} type="primary" ghost style={{marginRight: "5px",  marginLeft: "25px"}}>
-                  Cancel
-                </Button>
-                <Button
-                  key="submit"
-                  disabled={!editingAllowed || this.state.errors}
-                  type="primary"
-                  loading={confirmLoading}
-                  onClick={this.handleOk}
-                  style={{marginRight: "5px", background: 'var(--success)'}}
-                >
-                  Save
-                </Button>
-              </span>
-            ) : (
-              <span>
-                <Button key="back" onClick={this.handleCancel} type="primary" ghost style={{marginRight: "5px"}}>
-                  Cancel
-                </Button>
-              </span>
-            )}
-          </span>
-        )}
+          )}
         </span>
-  </div>
+      </div>
+    );
 
-      //When input input field value is changed
-      const onFieldsChange = (changedFields, allFields) => {
-      this.setState({dataAltered : true})
-      const inputErrors = allFields.filter(item => { return item.errors.length > 0} )
-      if(inputErrors.length > 0){
-        this.setState({errors : true})
-      }else{
-        this.setState({errors: false})
-      }
-      }
+    const { selectedConsumer, selectedSupplier, selectedOwner, consumers, suppliers, owners } = this.props.consumers.reduce( (acc, el) => {
+        if (el.assetType === 'Consumer') {
+          acc.consumers.push(el);
+          if (el.id === this.state.file.consumer) acc.selectedConsumer = el.name;
+        }
+        if (el.assetType === 'Supplier') {
+          acc.suppliers.push(el);
+          if (el.id === this.state.file.supplier) acc.selectedSupplier = el.name;
+        }
+        if (el.assetType === 'Owner') {
+          acc.owners.push(el);
+          if (el.id === this.state.file.owner) acc.selectedOwner = el.name;
+        }
+        return acc;
+      },
+      { selectedConsumer: '', selectedSupplier: '', selectedOwner: '', consumers: [], suppliers: [], owners: [], }
+    );
+  
+    const clusterName = this.props.clusters?.find( (cluster) => cluster.id === this.formRef.current?.getFieldValue('clusters') )?.name;
+    const fileName = this.formRef.current?.getFieldValue('name') || '';
+    const isAssociated = this.formRef.current?.getFieldValue('isAssociated'); // this value is assign only at the time of saving job. if it is true - user can not change it.
+    // Make labels spacing a little wider for in modal view
+    this.props.displayingInModal ?  formItemLayout.labelCol.span = 3 : formItemLayout.labelCol.span = 2;
+
+    let hideOnReadOnlyView = !enableEdit || !addingNewAsset;
+    if ( enableEdit && !isAssociated ) hideOnReadOnlyView = false;
+
     return (
       <React.Fragment>
         {this.props.displayingInModal || this.state.addingNewAsset ? null : (
-          <div
-          className="assetTitle">
-            File : {this.state.file.name}
-          </div>
+          <div className="assetTitle"> File : {this.state.file.name} </div>
         )}
-        <div className={this.props.displayingInModal ? "assetDetails-content-wrapper-modal" : "assetDetails-content-wrapper"}>
-          {/*<BreadCrumbs applicationId={this.props.application.applicationId} applicationTitle={this.props.application.applicationTitle}/>*/}
-          {!this.props.isNew ? (
-            <div className="loader">
-              <Spin spinning={this.state.initialDataLoading} size="large" />
-            </div>
-          ) : null}
+        <div className={ this.props.displayingInModal ? 'assetDetails-content-wrapper-modal' : 'assetDetails-content-wrapper' }>
           <Tabs defaultActiveKey="1" tabBarExtraContent={this.props.displayingInModal ? null : controls}>
             <TabPane tab="Basic" key="1">
+            <Spin spinning={this.state.initialDataLoading} tip="loading file details">
               <Form
+                initialValues={{ fileType:'thor_file', isSuperFile:false, }}
                 {...formItemLayout}
+                colon={enableEdit ? true : false}
                 labelAlign="left"
                 ref={this.formRef}
                 onFinish={this.handleOk}
-                onFieldsChange={onFieldsChange}
-              >
-                 {this.state.enableEdit ? (
-                  <div>
-                    {this.state.addingNewAsset ? (
-                      <>
-                        <Form.Item label="Type">
-                          <Radio.Group
-                            onChange={this.fileTypeChange}
-                            value={this.state.file.fileType}
-                          >
-                            <Radio value={"thor_file"}>Thor File</Radio>
-                            <Radio value={"csv"}>CSV</Radio>
-                            <Radio value={"json"}>JSON</Radio>
-                            {/*<Radio value={"xml"}>XML</Radio>*/}
-                          </Radio.Group>
+                onFieldsChange={this.onFieldsChange}>
+                <Form.Item label="Type" name="fileType">
+                  {!enableEdit ? (
+                    <Typography.Text disabled={!this.state.file.fileType} style={{ paddingLeft: '11px' }}>
+                      {this.state.file.fileType || 'File type not provided'}
+                    </Typography.Text>
+                  ) : (
+                    <Radio.Group onChange={this.fileTypeChange}>
+                      <Radio value={'thor_file'}>Thor File</Radio>
+                      <Radio value={'csv'}>CSV</Radio>
+                      <Radio value={'json'}>JSON</Radio>
+                      {/*<Radio value={"xml"}>XML</Radio>*/}
+                    </Radio.Group>
+                  )}
+                </Form.Item>
+                
+                <Form.Item label="Cluster">
+                  <Row gutter={[8, 8]}>
+                    <Col span={12}>
+                    {!enableEdit ? (
+                        <Typography.Text disabled={!clusterName} style={{ paddingLeft: '11px' }}>
+                          {clusterName || 'Cluster is not provided'}
+                        </Typography.Text>
+                      ) : (
+                        <Form.Item noStyle name="clusters">
+                          <Select
+                            allowClear
+                            disabled={isAssociated}
+                            placeholder="Select a Cluster"
+                            onChange={this.onClusterSelection}>
+                            {this.props.clusters.map((cluster) => (
+                              <Option key={cluster.id}>{cluster.name}</Option>
+                            ))}
+                          </Select>
                         </Form.Item>
-                          <React.Fragment>
-                            <Form.Item label="Cluster" name="clusters">
-                              <Select
-                                placeholder="Select a Cluster"
-                                disabled={!editingAllowed}
-                                onChange={this.onClusterSelection}
-                                style={{ width: 190 }}
-                              >
-                                {this.props.clusters.map((cluster) => (
-                                  <Option key={cluster.id}>
-                                    {cluster.name}
-                                  </Option>
-                                ))}
-                              </Select>
-                            </Form.Item>
-
-                            <Form.Item label="File" name="fileSearchValue">
-                              <Row type="flex">
-                                <Col span={21} order={1}>
-                                  <AutoComplete
-                                    className="certain-category-search"
-                                    dropdownClassName="certain-category-search-dropdown"
-                                    dropdownMatchSelectWidth={false}
-                                    dropdownStyle={{ width: 300 }}
-                                    style={{ width: "100%" }}
-                                    onSearch={(value) =>
-                                      this.searchFiles(value)
-                                    }
-                                    onSelect={(value) =>
-                                      this.onFileSelected(value)
-                                    }
-                                    placeholder="Search files"
-                                    disabled={!editingAllowed}
-                                    notFoundContent={
-                                      this.state.fileSearchSuggestions.length >
-                                      0 ? (
-                                        "Not Found"
-                                      ) : (
-                                        <Spin />
-                                      )
-                                    }
-                                  >
-                                    {this.state.fileSearchSuggestions.map(
-                                      (suggestion) => (
-                                        <Option
-                                          key={suggestion.text}
-                                          value={suggestion.value}
-                                        >
-                                          {suggestion.text}
-                                        </Option>
-                                      )
-                                    )}
-                                  </AutoComplete>
-                                </Col>
-                                <Col
-                                  span={3}
-                                  order={2}
-                                  style={{ paddingLeft: "3px" }}
-                                >
-                                  <Button
-                                    htmlType="button"
-                                    onClick={this.clearState}
-                                  >
-                                    Clear
-                                  </Button>
-                                </Col>
-                              </Row>
-                            </Form.Item>
-                          </React.Fragment>
-                      </>
-                    ) : null}
-                  </div>
-                ) : null}
-
-                <Form.Item
-                  label="Title"
-                  name="title"
-                  rules={[
-                    { required: true, message: "Please enter a title!" },
-                    {
-                      pattern: new RegExp(/^[ a-zA-Z0-9:._-]*$/),
-                      message: "Please enter a valid title. Title can have  a-zA-Z0-9:._- and space",
-                    },
-                  ]}
-                >
-                  <Input
-                    id="file_title"
-                    name="title"
-                    onChange={this.onChange}
-                    placeholder="Title"
-                    disabled={!editingAllowed}
-                    className={!this.state.enableEdit ? "read-only-input" : ""}
-                  />
+                      )}
+                    </Col>
+                  </Row>
+                </Form.Item>
+                <Form.Item label="File" name="fileSearchValue"  hidden={hideOnReadOnlyView}>
+                  <Row gutter={[8, 0]}>
+                    <Col span={19}>
+                      <AutoComplete
+                        className="certain-category-search"
+                        dropdownClassName="certain-category-search-dropdown"
+                        dropdownMatchSelectWidth={false}
+                        dropdownStyle={{ width: 300 }}
+                        style={{ width: '100%' }}
+                        onSearch={this.searchFiles}
+                        onSelect={this.onFileSelected}
+                        placeholder="Search files"
+                        disabled={!editingAllowed}
+                        notFoundContent={this.state.fileSearch.loading ? <Spin /> : 'Not Found'}>
+                        {this.state.fileSearch.data.map((suggestion) => (
+                          <Option key={suggestion.text} value={suggestion.value}>
+                            {suggestion.text}
+                          </Option>
+                        ))}
+                      </AutoComplete>
+                    </Col>
+                    <Col span={5}>
+                      <Button htmlType="button" block onClick={this.clearState}>
+                        Clear
+                      </Button>
+                    </Col>
+                  </Row>
                 </Form.Item>
                 <Form.Item
                   label="Name"
                   name="name"
+                  validateTrigger="onBlur"
                   rules={[
-                    { required: true, message: "Please enter a name!" },
-                    {
-                      pattern: new RegExp(/^[a-zA-Z0-9:._-]*$/),
-                      message: "Please enter a valid name",
-                    },
+                    { required: enableEdit ? true : false, message: 'Please enter a name' },
+                    { pattern: new RegExp(/^[a-zA-Z0-9: .@_-]*$/), message: 'Please enter a valid name' },
                   ]}
-                >
+                  className={enableEdit ? null : 'read-only-input'}>
+                  { !enableEdit ? (
+                      <Typography.Text style={{ paddingLeft: '11px' }}>{fileName}</Typography.Text>
+                    ) : (
+                      <Input
+                        disabled={disableReadOnlyFields || !editingAllowed}
+                        className={!enableEdit ? 'read-only-input' : ''}
+                        placeholder={enableEdit ? 'Name' : 'Name is not provided'}
+                      />
+                    )
+                  }
+                </Form.Item>
+                <Form.Item
+                  name="title"
+                  label="Title"
+                  validateTrigger="onBlur"
+                  className={enableEdit ? null : 'read-only-input'}
+                  rules={[
+                    { required: enableEdit ? true : false, message: 'Please enter a title!' },
+                    {
+                      pattern: new RegExp(/^[ a-zA-Z0-9:@._-]*$/),
+                      message: 'Please enter a valid Title. Title can have  a-zA-Z0-9:._- and space',
+                    },
+                  ]}>
                   <Input
-                    id="file_name"
-                    onChange={this.onChange}
-                    placeholder="Name"
-                    disabled={disableReadOnlyFields || !editingAllowed}
-                    className={!this.state.enableEdit ? "read-only-input" : ""}
+                    name="title"
+                    placeholder={enableEdit ? 'Title' : 'Title is not provided'} 
+                    disabled={!editingAllowed}
+                    className={!enableEdit ? 'read-only-input' : ''}
                   />
                 </Form.Item>
                 <Form.Item
-                  label="Scope"
                   name="scope"
-                  rules={[
-                    {
-                      required: true,
-                    },
-                    {
-                      validator: this.scopeValidator,
-                    },
-                  ]}
-                >
+                  label="Scope"
+                  rules={[{ required: enableEdit },
+                  //  { validator: this.scopeValidator } // TODO TEMP DISABLED
+                   ]}>
                   <Input
-                    id="file_scope"
-                    onChange={this.onChange}
-                    placeholder="Scope"
-                    disabled={disableReadOnlyFields || !editingAllowed}
-                    className={!this.state.enableEdit ? "read-only-input" : ""}
+                    disabled={isAssociated}
+                    className={!enableEdit ? 'read-only-input' : ''}
+                    placeholder={enableEdit ? 'Scope' : 'Scope is not provided'}
+                  />
+                </Form.Item>
+                <Form.Item
+                  name="serviceURL"
+                  label="Service URL"
+                  className={enableEdit ? null : 'read-only-input'}
+                  rules={[{ type: 'url', message: 'Please enter a valid URL' }]}>
+                  <Input
+                    disabled={!editingAllowed}
+                    placeholder={enableEdit ? "Service URL" : 'Service URL is not provided'}
                   />
                 </Form.Item>
 
-                <Form.Item label="Description" name="description"  className="markdown-editor">
-                  {this.state.enableEdit ? (
+                <Form.Item
+                  label="Path"
+                  name="qualifiedPath"
+                  className={!enableEdit ? 'read-only-input' : ''}
+                  rules={[
+                    {
+                      pattern: new RegExp(/^[a-zA-Z0-9:$._-]*$/),
+                      message: 'Please enter a valid path',
+                    },
+                  ]}>
+                  <Input
+                    disabled={!editingAllowed}
+                    placeholder={enableEdit ? "Path" : 'Path is not provided'}
+                  />
+                </Form.Item>
+
+                  <Form.Item label="Is Super File" name="isSuperFile" valuePropName="checked"  className={!enableEdit ? 'read-only-input' : ''}>
+                    {enableEdit ? (
+                      <Checkbox
+                        id="isSuperFile"
+                        onChange={this.onCheckbox}
+                        disabled={!editingAllowed}
+                        checked={isSuperFile === true}
+                      />
+                    ) : (
+                      <Typography.Text style={{ paddingLeft: '11px' }}>
+                        {this.state.file.isSuperFile ? 'Yes' : 'No'} 
+                      </Typography.Text>
+                    )}
+                  </Form.Item>
+                  
+                  <Form.Item label="Supplier" name="supplier" className={!enableEdit ? 'read-only-input' : ''}>
+                    {!enableEdit ? (
+                       <Typography.Text disabled={!selectedSupplier} style={{ paddingLeft: '11px' }}>
+                        {selectedSupplier || 'Supplier is not provided'}
+                       </Typography.Text>
+                    ) : (
+                      <Select
+                        disabled={!editingAllowed}
+                        onChange={this.onSupplierSelection}
+                        value={this.state.file.supplier || ''}
+                        placeholder={enableEdit ? 'Select a supplier' : 'Supplier is not provided'}>
+                        {suppliers.map((supplier) => <Option key={supplier.id} value={supplier.id}>{supplier.name}</Option> )}
+                      </Select>
+                    )}
+                  </Form.Item>
+
+                  <Form.Item label="Consumer" name="consumer" className={!enableEdit ? 'read-only-input' : ''}>
+                    {!enableEdit ? (
+                      <Typography.Text disabled={!selectedConsumer} style={{ paddingLeft: '11px' }}>
+                        {selectedConsumer || 'Consumer is not provided'}
+                      </Typography.Text>
+                    ) : (
+                      <Select
+                        disabled={!editingAllowed}
+                        onChange={this.onConsumerSelection}
+                        value={this.state.file.consumer || ''}
+                        placeholder={enableEdit ? 'Select a consumer' : 'Consumer is not provided'}>
+                        {consumers.map((consumer) => <Option key={consumer.id} value={consumer.id}>{consumer.name}</Option> )}
+
+                      </Select>
+                    )}
+                  </Form.Item>
+
+                  <Form.Item label="Owner" name="owner" className={!enableEdit ? 'read-only-input' : ''}>
+                    {!enableEdit ? (
+                      <Typography.Text disabled={!selectedOwner} style={{ paddingLeft: '11px' }}>
+                         {selectedOwner || 'Owner is not provided'}
+                      </Typography.Text>
+                    ) : (
+                      <Select
+                        disabled={!editingAllowed}
+                        onChange={this.onOwnerSelection}
+                        value={this.state.file.owner || ''}
+                        placeholder={enableEdit ? 'Select a owner' : 'Owner is not provided'}>
+                        {owners.map((owner) => <Option key={owner.id} value={owner.id}>{owner.name}</Option> )}
+                      </Select>
+                    )}
+                  </Form.Item>
+
+                <Form.Item label="Description" name="description">
+                  {enableEdit ? (
                     <MarkdownEditor
                       id="file_desc"
                       name="description"
@@ -1491,210 +1081,32 @@ class FileDetails extends PureComponent {
                       targetDomId="fileDescr"
                       value={description}
                       disabled={!editingAllowed}
-                     
                     />
                   ) : (
-                    <div className="read-only-markdown">
-                      {" "}
-                      <ReactMarkdown
-                        source={this.state.file.description}
-                      />{" "}
+                    <div className="read-only-markdown custom-scroll">
+                      {this.state.file.description ? 
+                      <ReactMarkdown source={this.state.file.description} /> :
+                      <Typography.Text type="secondary">Description is not provided</Typography.Text>
+                    }
                     </div>
                   )}
                 </Form.Item>
-
-                <Form.Item
-                  label="Service URL"
-                  name="serviceURL"
-                  rules={[
-                    {
-                      type: "url",
-                      message: "Please enter a valid URL",
-                    },
-                  ]}
-                >
-                  <Input
-                    id="file_primary_svc"
-                    onChange={this.onChange}
-                    placeholder="Service URL"
-                    disabled={!editingAllowed}
-                    className={!this.state.enableEdit ? "read-only-input" : ""}
-                  />
-                </Form.Item>
-                <Row type="flex">
-                  <Col span={8} order={1}>
-                    <Form.Item
-                      label="Path"
-                      name="qualifiedPath"
-                      {...threeColformItemLayout}
-                      rules={[
-                        {
-                          pattern: new RegExp(/^[a-zA-Z0-9:$._-]*$/),
-                          message: "Please enter a valid path",
-                        },
-                      ]}
-                    >
-                      <Input
-                        id="file_path"
-                        onChange={this.onChange}
-                        placeholder="Path"
-                        disabled={!editingAllowed}
-                        className={
-                          !this.state.enableEdit ? "read-only-input" : ""
-                        }
-                      />
-                    </Form.Item>
-                  </Col>
-                  <Col span={8} order={1}>
-                    <Form.Item
-                      {...threeColformItemLayout}
-                      label="Is Super File"
-                      name="isSuperFile"
-                      valuePropName="checked"
-                    >
-                      {this.state.enableEdit ? (
-                        <Checkbox
-                          id="isSuperFile"
-                          onChange={this.onCheckbox}
-                          checked={isSuperFile === true}
-                          disabled={!editingAllowed}
-                        />
-                      ) : (
-                        <Input
-                          className="read-only-input"
-                          value={this.state.file.isSuperFile ? "Yes" : "No"}
-                        />
-                      )}
-                    </Form.Item>
-                  </Col>
-                </Row>
-
-                <Row type="flex">
-                  <Col span={8} order={1}>
-                    <Form.Item
-                      {...threeColformItemLayout}
-                      label="Supplier"
-                      name="supplier"
-                    >
-                      {!this.state.enableEdit ? (
-                        this.props.consumers.map((consumer) => {
-                          if (
-                            consumer.assetType && consumer.assetType.indexOf("Supplier") != -1 &&
-                            consumer.id === this.state.file.supplier
-                          ) {
-                            return consumer.name;
-                          }
-                        })
-                      ) : (
-                        <Select
-                          id="supplier"
-                          value={
-                            this.state.file.supplier != ""
-                              ? this.state.file.supplier
-                              : "Select a supplier"
-                          }
-                          placeholder="Select a supplier"
-                          onChange={this.onSupplierSelection}
-                          style={{ width: 190 }}
-                          disabled={!editingAllowed}
-                        >
-                          {this.props.consumers.map((consumer) =>
-                            consumer.assetType && consumer.assetType.indexOf("Supplier") != -1 ? (
-                              <Option key={consumer.id}>{consumer.name}</Option>
-                            ) : null
-                          )}
-                        </Select>
-                      )}
-                    </Form.Item>
-                  </Col>
-                  <Col span={8} order={2}>
-                    <Form.Item
-                      {...threeColformItemLayout}
-                      label="Consumer"
-                      name="consumer"
-                    >
-                      {this.state.enableEdit ? (
-                        <Select
-                          id="consumer"
-                          value={
-                            this.state.file.consumer != ""
-                              ? this.state.file.consumer
-                              : "Select a consumer"
-                          }
-                          placeholder="Select a consumer"
-                          onChange={this.onConsumerSelection}
-                          style={{ width: 190 }}
-                          disabled={!editingAllowed}
-                        >
-                          {this.props.consumers.map((consumer) =>
-                            consumer.assetType && consumer.assetType.indexOf("Consumer") != -1 ? (
-                              <Option key={consumer.id}>{consumer.name}</Option>
-                            ) : null
-                          )}
-                        </Select>
-                      ) : (
-                        this.props.consumers.map((consumer) => {
-                          if (
-                            consumer.assetType && consumer.assetType.indexOf("Consumer") != -1 &&
-                            consumer.id === this.state.file.consumer
-                          ) {
-                            return consumer.name;
-                          }
-                        })
-                      )}
-                    </Form.Item>
-                  </Col>
-
-                  <Col span={8} order={3}>
-                    <Form.Item
-                      {...threeColformItemLayout}
-                      label="Owner"
-                      name="owner"
-                    >
-                      {!this.state.enableEdit ? (
-                        this.props.consumers.map((consumer) => {
-                          if (
-                            consumer.assetType && consumer.assetType.indexOf("Owner") != -1 &&
-                            consumer.id === this.state.file.owner
-                          ) {
-                            return consumer.name;
-                          }
-                        })
-                      ) : (
-                        <Select
-                          id="owner"
-                          value={
-                            this.state.file.owner != ""
-                              ? this.state.file.owner
-                              : "Select an Owner"
-                          }
-                          placeholder="Select an Owner"
-                          onChange={this.onOwnerSelection}
-                          style={{ width: 190 }}
-                          disabled={!editingAllowed}
-                        >
-                          {this.props.consumers.map((consumer) =>
-                            consumer.assetType && consumer.assetType.indexOf("Owner") != -1 ? (
-                              <Option key={consumer.id}>{consumer.name}</Option>
-                            ) : null
-                          )}
-                        </Select>
-                      )}
-                    </Form.Item>
-                  </Col>
-                </Row>
               </Form>
+              <OverwriteAssetModal
+                cancel={this.resetModal}
+                show={this.state.existingAsset.showModal}
+                acceptExisting={this.acceptExistingSettings} 
+                acceptIncoming={this.acceptIncomingSettings}
+                existingName={this.state.existingAsset?.dbAsset?.name}
+                incomingName={this.state.existingAsset?.selectedAsset?.name}
+              />
+            </Spin>
               {/* SUPERFILE METADATA BLOCK */}
-              { !superFileData ? null : <SuperFileMeta superFileData={superFileData} /> }
+              {!superFileData ? null : <SuperFileMeta superFileData={superFileData} />}
             </TabPane>
             <TabPane tab="Layout" key="3">
               <ComplianceInfo tags={complianceTags} />
-              <div
-                className="layout_tbl"
-                style={{
-                  width: "100%",
-                }}
-              >
+              <div className="layout_tbl" style={{ width: '100%', }}>
                 <EditableTable
                   columns={layoutColumns}
                   dataSource={layout}
@@ -1704,7 +1116,7 @@ class FileDetails extends PureComponent {
                   showDataDefinition={false}
                   dataDefinitions={[]}
                   setData={this.setLayoutData}
-                  enableEdit={this.state.enableEdit}
+                  enableEdit={enableEdit}
                 />
               </div>
             </TabPane>
@@ -1712,39 +1124,31 @@ class FileDetails extends PureComponent {
               <InheritedLicenses relation={inheritedLicensing} />
               <div
                 className="ag-theme-balham"
-                style={{
-                  height: "400px",
-                  width: "100%",
-                }}
-              >
+                style={{ height: '400px', width: '100%', }}>
                 <AgGridReact
+                  rowSelection="multiple"
                   columnDefs={licenseColumns}
                   rowData={availableLicenses}
-                  defaultColDef={{ resizable: true, sortable: true }}
-                  onGridReady={this.onLicenseGridReady}
-                  rowSelection="multiple"
                   suppressRowClickSelection={editingAllowed}
-                  onGridColumnsChanged={this.onLicenseGridReady}
-                ></AgGridReact>
+                  defaultColDef={{ resizable: true, sortable: true }}
+                  onGridReady={(params) => this.onLicenseGridReady(params, this.state.file.licenses)}
+                  onGridColumnsChanged={(params) => this.onLicenseGridReady(params, this.state.file.licenses)}
+                  />
               </div>
             </TabPane>
             <TabPane tab="Validation Rules" key="5">
               <div
                 className="ag-theme-balham"
-                style={{
-                  height: "415px",
-                  width: "100%",
-                }}
-              >
+                style={{ height: '415px', width: '100%', }}>
                 <EditableTable
-                  columns={validationRuleColumns}
-                  dataSource={validations}
-                  ref={(node) => (this.validationTable = node)}
-                  editingAllowed={editingAllowed}
-                  showDataDefinition={false}
                   dataDefinitions={[]}
+                  enableEdit={enableEdit}
+                  dataSource={validations}
+                  showDataDefinition={false}
+                  columns={validationRuleColumns}
+                  editingAllowed={editingAllowed}
                   setData={this.setValidationData}
-                  enableEdit={this.state.enableEdit}
+                  ref={(node) => (this.validationTable = node)}
                 />
               </div>
             </TabPane>
@@ -1752,30 +1156,20 @@ class FileDetails extends PureComponent {
               <TabPane tab="File Preview" key="6">
                 <div
                   className="ag-theme-balham"
-                  style={{
-                    height: "415px",
-                    width: "100%",
-                  }}
-                >
-                  {
+                  style={{ height: '415px', width: '100%', }}>
                     <AgGridReact
-                      columnDefs={fileDataColumns()}
                       rowData={fileDataContent}
                       onGridReady={this.onGridReady}
                       defaultColDef={{ resizable: true }}
-                    ></AgGridReact>
-                  }
-                  {}
+                      columnDefs={this.fileDataColumns({fileDataColHeaders: this.state.fileDataColHeaders, fileDataContent: this.state.fileDataContent })}
+                      />               
                 </div>
               </TabPane>
-         ) : null}
+            ) : null}
 
             {!this.props.isNew ? (
               <TabPane tab="Workflows" key="7">
-                <AssociatedDataflows
-                  assetId={this.state.file.id}
-                  assetType={"File"}
-                />
+                <AssociatedDataflows assetId={this.state.file.id} assetType={'File'} />
               </TabPane>
             ) : null}
           </Tabs>
@@ -1786,24 +1180,15 @@ class FileDetails extends PureComponent {
   }
 }
 
-export class BooleanCellRenderer extends Component {
-  constructor(props) {
-    super(props);
-  }
-
-  render() {
-    return <span>{this.props.value}</span>;
-  }
-}
-
 function mapStateToProps(state, ownProps) {
   let { selectedAsset, newAsset = {}, clusterId } = state.assetReducer;
   const { user } = state.authenticationReducer;
   const { application, clusters, consumers } = state.applicationReducer;
+  const { editMode, addingNewAsset } = state.viewOnlyModeReducer;
 
-  const { isNew = false, groupId = "" } = newAsset;
+  const { isNew = false, groupId = '' } = newAsset;
 
-  if (ownProps.selectedAsset)  selectedAsset = ownProps.selectedAsset;
+  if (ownProps.selectedAsset) selectedAsset = ownProps.selectedAsset;
 
   return {
     user,
@@ -1814,6 +1199,8 @@ function mapStateToProps(state, ownProps) {
     clusterId,
     clusters,
     consumers,
+    editMode,
+    addingNewAsset,
   };
 }
 

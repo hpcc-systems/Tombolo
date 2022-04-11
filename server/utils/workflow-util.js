@@ -178,24 +178,23 @@ exports.notifyWorkflowExecutionStatus = async ({hpccURL,executionStatus,dataflow
   switch(executionStatus){
     case 'completed' :
         message = `<div>
-                        <p> ${success_message } </p>
                         <p> Hello, </p>
-                        <p>Successfully executed ${dataflowName} on ${clusterName} </p>
+                        <p> ${success_message } </p>
                         <p> To view workflow execution details in Tombolo please click <a href="${process.env.WEB_URL}/${appId}/dataflowinstances/dataflowInstanceDetails/${dataflowId}/${jobExecutionGroupId}"> here </a>
                         <p> Click <a href="${hpccURL}"> here </a>to view execution  details in HPCC</p> 
                       </div>`;
                       break;
     case 'error' :
-         message = `<div>${failure_message} </p>
-                          <p>Hello,<p>
-                          <p> Below error occurred while submitting  ${jobName} </p> 
-                          <p><span style="color: red">${errorMessage } </span>
-                        </div>`
-                        break;
+         message = `<div>
+                        <p>Hello,<p>
+                        <p> Below error occurred while submitting  ${jobName} </p> 
+                        <p><span style="color: red">${errorMessage } </span>
+                    </div>`
+                    break;
     case 'failed':
         message = `<div>
+                      <p>Hello , </p>
                       <p>${failure_message}</p>
-                      <p>${dataflowName} failed.</p>
                       <p> To view workflow execution details in Tombolo please click <a href="${process.env.WEB_URL}/${appId}/dataflowinstances/dataflowInstanceDetails/${dataflowId}/${jobExecutionGroupId}"> here </a>
                       <p> Click <a href="${hpccURL}"> here </a>to view execution  details in HPCC</p> 
                   </div>`

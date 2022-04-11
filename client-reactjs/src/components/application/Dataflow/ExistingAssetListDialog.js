@@ -141,7 +141,7 @@ function ExistingAssetListDialog({ show, applicationId, dataflowId, clusterId, a
     assetColumns.splice(2, 0, isSuperFileColumn);
   }
 
-  if (assetType === 'Job') {
+  if (assetType === 'Job' || assetType === 'File') {
     const isJobAssociated =   {
       title: 'Production',
       width: '20%',

@@ -13,12 +13,12 @@ import { SearchOutlined } from "@ant-design/icons";
 import { assetsActions } from "../../../redux/actions/Assets";
 import { store } from "../../../redux/store/Store";
 import { Constants } from "../../common/Constants";
-import { readOnlyMode, editableMode } from "../../common/readOnlyUtil";
 import BasicsTabGeneral from "./BasicsTabGeneral";
 import BasicsTabSpray from "./BasicsTabSpray";
 import BasicsTabScript from "./BasicsTabScript";
 import BasicsTabManul from "./BasicsTabManaul"
 import DeleteAsset from "../../common/DeleteAsset/index.js";
+import InputFiles from "./JobFiles/InputOutoutFiles";
 
 const TabPane = Tabs.TabPane;
 const { Option } = Select;
@@ -31,31 +31,6 @@ const dayAbbrMap = { SUN: 'Sunday', MON: 'Monday', TUE: 'Tuesday', WED: 'Wednesd
 const _minutes = [...Array(60).keys()]; // [1,2,3...59]
 const _hours = [...Array(24).keys()]; // [1,2,3...23]
 const _dayOfMonth = [...Array(32).keys()]; // [1,2,3...31]
-const expendedRowRender = (record) => {
-  // For displaying files that match a template in a nested table
-  const { files } = record;
-  const nestedTableColumns = [
-    {
-      dataIndex: 'name',
-      width: '24%',
-    },
-    {
-      dataIndex: 'description',
-    },
-  ];
-
-  return (
-    <Table
-      dataSource={files}
-      columns={nestedTableColumns}
-      rowKey={record.name}
-      pagination={false}
-      showHeader={false}
-      style={{ paddingLeft: '5px' }}
-    ></Table>
-  );
-};
-
 
 let scheduleCronParts = { minute: [], hour: [], 'day-of-month': [], month: [], 'day-of-week': [] };
 
@@ -114,11 +89,12 @@ class JobDetails extends Component {
     dataAltered: false,
     errors: false,
     isNew : this.props.isNew,
+    selectedTabPaneKey : 1
   };
 
   async componentDidMount() {    
-  const applicationId = (this.props.application && this.props.application.applicationId) || this.props.match?.params?.applicationId;
-  const assetId = (this.props.selectedAsset !== '' && this.props?.selectedAsset?.id) || this.props.match?.params?.jobId;
+    const applicationId = this.props.application?.applicationId || this.props.match?.params?.applicationId;
+    const assetId =  this.props?.selectedAsset?.id || this.props.match?.params?.fileId;
   
   if(applicationId){
    await this.getFiles({ applicationId });
@@ -137,15 +113,8 @@ class JobDetails extends Component {
 
   //Unmounting phase
   componentWillUnmount() {
-    store.dispatch({
-      type: Constants.ENABLE_EDIT,
-      payload: false,
-    });
-
-    store.dispatch({
-      type: Constants.ADD_ASSET,
-      payload: false,
-    });
+    store.dispatch({ type: Constants.ENABLE_EDIT, payload: false, });
+    store.dispatch({ type: Constants.ADD_ASSET, payload: false, });
   }
 
   handleViewOnlyMode(){
@@ -344,22 +313,26 @@ class JobDetails extends Component {
       await this.formRef.current.validateFields();
       this.setState({ confirmLoading: true });
       const saveResponse = await this.saveJobDetails();
-      this.setState({ confirmLoading: false });
       // if (this.props.onAssetSaved) this.props.onAssetSaved(saveResponse);
       if(this.props.onClose) {
-        // THIS METHIS WILL PASS PROPS TO GRAPH!
+        // THIS METHOD WILL PASS PROPS TO GRAPH!
+        const isAssociated=this.formRef.current.getFieldValue('jobSelected') 
+        || this.formRef.current.getFieldValue('isAssociated')
+        || this.formRef.current.getFieldValue('isStoredOnGithub') 
+        || this.formRef.current.getFieldValue('jobType') === "Manual"
+
         const resultToGraph ={
           ...saveResponse,
           assetId: saveResponse.jobId,
           name: this.formRef.current.getFieldValue('name'),
           title: this.formRef.current.getFieldValue('title'),
           // if job is newly associated jobSelected value is gonna be true, if it is undefined we will fall-back to isAssociated value, if it is true it mean that job was previously associated, if it is falsy, then we have no associations yet;
-          isAssociated: this.formRef.current.getFieldValue('jobSelected') || this.formRef.current.getFieldValue('isAssociated') || this.formRef.current.getFieldValue('isStoredOnGithub') ,
+          isAssociated,
         }       
 
-        this.props.onClose(resultToGraph);
-
+        return this.props.onClose(resultToGraph);
       }
+
       if (this.props.history) {
         return this.props.history.push(`/${this.props.application.applicationId}/assets`);
       } else {
@@ -368,8 +341,12 @@ class JobDetails extends Component {
       }
     } catch (error) {
       console.log(`handleOk error`, error);
-      if(error?.errorFields) message.error("Please check your fields for errors") 
+      let errorMessage = error?.message || "Please check your fields for errors";
+      if(error?.errorFields) errorMessage = error.errorFields[0].errors[0]
+      
+       message.error(errorMessage) 
     }
+    this.setState({ confirmLoading: false });
   };
 
   handleDelete = () => {
@@ -448,9 +425,16 @@ class JobDetails extends Component {
 
     const { gitHubFiles, isStoredOnGithub,  jobSelected, manualJobFilePath,  removeAssetId, renameAssetId, ...formFields } = formFieldsValue;
     //Based on this value we will save or not coresponding job data;
-    const isAssociated = formFieldsValue.isAssociated || jobSelected || isStoredOnGithub;
+    let isAssociated = formFieldsValue.isAssociated || jobSelected || isStoredOnGithub;
     // Metadata will be stored as JSON we use this object for notifications, github configs and more...
     const metaData = {};
+     // MANUAL JOB RELATED CODE
+    if (formFieldsValue['jobType'] === 'Manual') {
+      metaData.manualJobs = {
+        pathToFile: manualJobFilePath || []
+      };
+      isAssociated = true;
+    }
     // IF JOB IS NOT ASSIGN TO ANY JOB ON HPCC IT IS CONSIDERED DESIGNJOB!
     metaData.isAssociated = isAssociated;
     // GITHUB RELATED CODE
@@ -462,13 +446,6 @@ class JobDetails extends Component {
       selectedProjects: gitHubFiles.selectedProjects, // List of selected projects IDS!
     };
   
-    // MANUAL JOB RELATED CODE
-    if (formFieldsValue['jobType'] === 'Manual') {
-      metaData.manualJobs = {
-        pathToFile: manualJobFilePath || []
-      };
-    }
-    
     //Combine notification related values and send as object
     metaData.notificationSettings = {
       notify: formFields.notify,
@@ -540,7 +517,7 @@ class JobDetails extends Component {
   };
 
   handleAddOutputFile = () => {
-    const selectedFile = this.state.sourceFiles.find((sourceFile) => sourceFile.id === this.state.selectedInputFile );
+    const selectedFile = this.state.sourceFiles.find((sourceFile) => sourceFile.id === this.state.selectedOutputFile );
     selectedFile.addedManually = true;
     this.setState({
       job: {
@@ -1048,31 +1025,6 @@ class JobDetails extends Component {
       },
     ];
 
-    const fileColumns = [
-      {
-        width: '3%',
-        render: (text, record) => (record.assetType === 'fileTemplate' ? <i className="fa  fa-lg fa-file-text-o"></i> : <i className="fa fa-lg fa-file-o"></i>),
-      },
-      {
-        title: 'Name',
-        dataIndex: 'name',
-        width: '47%',
-        render: (text, record) => (
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-            <span>{record.fileTitle || record.name}</span>{' '}
-            {record.assetType === 'fileTemplate' ? (
-              <small style={{ color: 'var(--primary)' }}> [{record.files.length > 1 ? record.files.length + ' Files' : record.files.length + ' File'} ]</small>
-            ) : null}
-          </div>
-        ),
-      },
-      Table.EXPAND_COLUMN,
-      {
-        title: 'Description',
-        dataIndex: 'description',
-        width: '50%',
-      },
-    ];
 
     const { name, jobType, inputParams, outputFiles, inputFiles, scriptPath, } = this.state.job;
 
@@ -1229,7 +1181,7 @@ class JobDetails extends Component {
           onFieldsChange={onFieldsChange}
           // labelAlign = "right"
         >
-          <Tabs defaultActiveKey="1" tabBarExtraContent={this.props.displayingInModal ? null : controls}>
+          <Tabs defaultActiveKey={this.state.selectedTabPaneKey} tabBarExtraContent={this.props.displayingInModal ? null : controls} onChange={(activeKey) => this.setState({selectedTabPaneKey: activeKey})}>
             <TabPane tab="Basic" key="1">
               <Form.Item label="Job Type" className={this.state.enableEdit ? null : 'read-only-input'}>
                 <Row gutter={[8, 8]}>
@@ -1356,90 +1308,31 @@ class JobDetails extends Component {
                   />
                 </TabPane>
                   <TabPane disabled={noECLAvailable} tab="Input Files" key="4">
-                    <div>
-                      {this.state.enableEdit ? (
-                        <>
-                          <Form.Item label="Input Files">
-                            <Select
-                              id="inputfiles"
-                              placeholder="Select Input Files"
-                              defaultValue={this.state.selectedInputdFile}
-                              onChange={this.handleInputFileChange}
-                              style={{ width: 290 }}
-                              disabled={!editingAllowed}
-                            >
-                              {sourceFiles.map((d) => (
-                                <Option value={d.id} key={d.id}>
-                                  {d.title ? d.title : d.name}
-                                </Option>
-                              ))}
-                            </Select>
-                          </Form.Item>
+                    <InputFiles
+                    inputFiles={inputFiles}
+                    clusterId={this.state.selectedCluster}
+                    enableEdit={this.state.enableEdit}
+                    handleInputFileChange={this.handleInputFileChange}
+                    editingAllowed={editingAllowed}
+                    sourceFiles={sourceFiles}
+                    handleAddInputFile={this.handleAddInputFile}
+                    selectedTabPaneKey={this.state.selectedTabPaneKey}
+                    test={this.test}
+                    />
 
-                          <Form.Item>
-                            <Button
-                              type="primary"
-                              onClick={this.handleAddInputFile}
-                              disabled={!editingAllowed}
-                            >
-                              Add
-                            </Button>
-                          </Form.Item>
-                        </>
-                      ) : null}
-
-                      <Table                          
-                        columns={fileColumns}
-                        rowKey={(record) => record.id}
-                        dataSource={inputFiles}
-                        pagination={{ pageSize: 10 }}
-                        scroll={{ y: 800 }}  
-                        size='small'
-                        rowExpandable={record => record.files}
-                        expandedRowRender={ (record) => expendedRowRender(record)}
-                        align='right'
-                      />
-                    </div>
                   </TabPane>
   
                 <TabPane tab="Output Files" disabled={noECLAvailable}  key="5">
-                  <div>
-              {!this.state.enableEdit ? null : (
-                    <>
-                      <Form.Item label="Output Files">
-                        <Select
-                          id="outputfiles"
-                          placeholder="Select Output Files"
-                          defaultValue={this.state.selectedOutputFile}
-                          onChange={this.handleOutputFileChange}
-                          style={{ width: 290 }}
-                          disabled={!editingAllowed}
-                        >
-                          {sourceFiles.map((d) => (
-                            <Option value={d.id} key={d.id}> {d.title || d.name} </Option>
-                          ))}
-                        </Select>
-                      </Form.Item>
-                      <Form.Item>
-                        <Button type="primary" disabled={!editingAllowed} onClick={this.handleAddOutputFile}>
-                          Add
-                        </Button>
-                      </Form.Item>
-                    </>
-                  )}
-    
-                    <Table
-                      columns={fileColumns}
-                      rowKey={(record) => record.id}
-                      dataSource={outputFiles}
-                      pagination={{ pageSize: 10 }}
-                      scroll={{ y: 800 }}
-                      size='small'
-                      rowExpandable={record => record.files}
-                      expandedRowRender={ (record) => expendedRowRender(record)}
-
+                   <InputFiles
+                    outputFiles={outputFiles}
+                    clusterId={this.state.selectedCluster}
+                    enableEdit={this.state.enableEdit}
+                    handleOutputFileChange={this.handleOutputFileChange}
+                    editingAllowed={editingAllowed}
+                    sourceFiles={sourceFiles}
+                    handleAddOutputFile={this.handleAddOutputFile}
+                    selectedTabPaneKey={this.state.selectedTabPaneKey}
                     />
-                  </div>
                 </TabPane>
               </React.Fragment>
             ) : null}

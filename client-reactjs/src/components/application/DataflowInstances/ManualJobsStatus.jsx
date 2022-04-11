@@ -1,6 +1,8 @@
 import React, {useEffect, useState} from 'react'
 import { Constants } from '../../common/Constants';
-import { Table } from 'antd/lib';
+import { Table, Typography } from 'antd/lib';
+
+const { Paragraph, Text} = Typography;
 
 function ManualJobsStatus({workflowDetails, manageJobExecutionFilters, jobExecutionTableFilters}) {
 
@@ -32,25 +34,16 @@ function ManualJobsStatus({workflowDetails, manageJobExecutionFilters, jobExecut
       {
         title: 'Job Name',
         dataIndex: 'name',
-        width: '20%',
+        width: '15%',
         sorter: (a, b) => a.name.localeCompare(b.name),
         onFilter: (value, record) => record.name.includes(value),
         filters: createUniqueFiltersArr(manualJobs,'name'),
         filteredValue: jobExecutionTableFilters.name || null,
       },
       {
-        title: 'Status',
-        dataIndex: 'status',
-        width: '20%',
-        sorter: (a, b) => a.status.localeCompare(b.status),
-        onFilter: (value, record) => record.status.includes(value),
-        filters: createUniqueFiltersArr(manualJobs, 'status'),
-        filteredValue: jobExecutionTableFilters.status || null,
-      },  
-      {
         title: 'Notified To',
         dataIndex: 'notifiedTo',
-        width: '20%',
+        width: '15%',
         onFilter: (value, record) => record.notifiedTo.includes(value),
         filters: createUniqueFiltersArr(manualJobs, 'notifiedTo'),
         filteredValue: jobExecutionTableFilters.notifiedTo || null,
@@ -58,11 +51,11 @@ function ManualJobsStatus({workflowDetails, manageJobExecutionFilters, jobExecut
       {
         title: 'Notified On',
         dataIndex: 'notifiedOn',
-        width: '20%',
+        width: '15%',
         defaultSortOrder: 'ascend',
         render :  (text, record) => {
           let updatedAt = new Date(text);
-          return updatedAt.toLocaleDateString('en-US', Constants.DATE_FORMAT_OPTIONS) +' @ '+ updatedAt.toLocaleTimeString('en-US')
+          return text ? updatedAt.toLocaleDateString('en-US', Constants.DATE_FORMAT_OPTIONS) +' @ '+ updatedAt.toLocaleTimeString('en-US') : ''
         },
         sorter: (a, b) => new Date(b.notifiedOn) - new Date(a.notifiedOn),
         onFilter: (value, record) =>{
@@ -74,7 +67,7 @@ function ManualJobsStatus({workflowDetails, manageJobExecutionFilters, jobExecut
       {
         title: 'Responded On',
         dataIndex: 'respondedOn',
-        width: '20%',
+        width: '15%',
         render :  (text, record) => {
           let updatedAt = new Date(text);
           return text ? updatedAt.toLocaleDateString('en-US', Constants.DATE_FORMAT_OPTIONS) +' @ '+ updatedAt.toLocaleTimeString('en-US') : ''
@@ -86,7 +79,29 @@ function ManualJobsStatus({workflowDetails, manageJobExecutionFilters, jobExecut
           return respondedOn.includes(value)},
         filters: createUniqueFiltersArr(manualJobs,'respondedOn'),
         filteredValue: jobExecutionTableFilters.respondedOn || null,
-      }
+      },
+      {
+        title: 'Status',
+        dataIndex: 'status',
+        width: '5%',
+        sorter: (a, b) => a.status.localeCompare(b.status),
+        onFilter: (value, record) => record.status.includes(value),
+        filters: createUniqueFiltersArr(manualJobs, 'status'),
+        filteredValue: jobExecutionTableFilters.status || null,
+      },
+
+      {
+        title: 'Response Message',
+        dataIndex: 'responseMessage',
+        width: '35%',
+        render : (text) =>{  
+            return <Paragraph ellipsis={{
+              rows: 2,
+              tooltip: text,
+            }}> {text} 
+            </Paragraph>}
+          },
+      
   ]
 
   //Table Data - filter jobs with type manual
@@ -101,7 +116,8 @@ function ManualJobsStatus({workflowDetails, manageJobExecutionFilters, jobExecut
           notifiedTo: el.manualJob_meta?.notifiedTo,
           notifiedOn: el.manualJob_meta?.notifiedOn,
           respondedOn: el.manualJob_meta?.respondedOn,
-          result: el.manualJob_meta?.response
+          result: el.manualJob_meta?.response,
+          responseMessage : el.manualJob_meta?.responseMessage
         }
         acc.push(record);
       }

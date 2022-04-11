@@ -1,121 +1,159 @@
-import React, {useEffect, useState} from 'react';
-import { Button, message, Tabs, Row, Col } from 'antd';
-import { withRouter } from "react-router-dom";
-import { authHeader, handleError } from '../../common/AuthHeader';
+import React, { useEffect, useState } from "react";
+import { Button, message, Tabs, Row, Col, Modal, Form, Input, Select } from "antd";
+import { withRouter, useParams} from "react-router-dom";
+
+import { authHeader } from "../../common/AuthHeader";
+
+const { Option } = Select;
+const { TextArea } = Input;
+const { TabPane } = Tabs;
+
+
+//message config
+  message.config({
+    top: 100,
+    duration: 2,
+    maxCount: 1,
+  });
 
 function ManualJobDetail(props) {
-    const [ jobId, setJobID]= useState('');
-    const [jobExecutionId, setJobExecutionId] = useState('');
-    const [jobDetails, setJobDetails] = useState({});
-    const [savingData, setSavingData] = useState({save : false, response : ''})
+  const [jobDetails, setJobDetails] = useState({});
+  const [showModal, setShowModal] = useState(false);
 
-    //antd message config
-    message.config({
-        top: 100,
-        duration: 2,
-        maxCount: 1,
-      });
-    const { TabPane } = Tabs;
+  const { applicationId, jobId , jobExecutionId } = useParams(); // Getting  from url params
 
-    useEffect(() =>{
-        //1. When the component loads pull  app id, job id and other necessary details from url
-        const data = props.location.pathname.split("/");
-        setJobExecutionId(data[4]);
+  //Form ref
+  const [form] = Form.useForm();
 
-        //2. Once the appid and job id is obtained make call to get job details 
-        fetch(`/api/job/job_details?app_id=${data[1]}&job_id=${data[3]}`, {
-            headers : authHeader(),
-        }).then(response =>{
-            if(response.ok){
-                return response.json();
-            }
-            handleError(response)
-        }).then(data =>{
-            //3. set job details, app id and job id in local state
-            setJobDetails(data)
-            setJobID(data.id)
-        }).catch(err => {
-            console.log(err)
+  useEffect(() => {
+    getJobDetails(); // Get Job detail when component mounts
+  }, []);
+
+  //Get Job Details
+  const getJobDetails = async () =>{
+    const jobDetailResponse = await fetch(`/api/job/job_details?app_id=${applicationId}&job_id=${jobId}`, {
+          headers: authHeader(),
+        })
+    if(jobDetailResponse.ok){
+      const data = await jobDetailResponse.json();
+      setJobDetails(data)
+    }else{
+      message.error('Unable to fetch job details');
+    }
+  }
+
+  //When user clicks approve or reject btn
+  const handleResponse = async (e) => {
+    await form.validateFields();
+    setShowModal(false);
+    const { action, responseMessage } = form.getFieldsValue();
+    try{
+        const response = await  fetch("/api/job/manualJobResponse", {
+          headers: authHeader(),
+          method: "POST",
+          body: JSON.stringify({
+            jobExecutionId: jobExecutionId,
+            status: action === "approved" ? "completed" : "failed",
+            manualJob_metadata: {
+              response : action,
+              responseMessage,
+              respondedOn: Date.now(),
+            },
+          }),
         })
 
-    }, []);
-
-    //When user clicks approve or reject btn 
-    const handleResponse = (e) => {
-        const response = e.currentTarget.value;
-        setSavingData({saving : response ? true : false, response : response})
-        fetch("/api/job/manualJobResponse", {
-            headers: authHeader(),
-            method : 'POST',
-            body : JSON.stringify({
-              jobExecutionId : jobExecutionId, 
-              status: response === 'approved' ? 'completed' : 'failed',
-              newManaulJob_meta :{
-                // jobName: jobDetails.name, 
-                response, 
-                respondedOn : Date.now()}})
-          })
-          .then((response) => {
-            if(response.ok) {
-              return response.json();
-            }
-            handleError(response);
-          })
-          .then(data => {
-            setSavingData({saving : false, response : ''});
-            message.success('Your response has been recorded')
-          })
-          .catch(error => {
-            console.log(error);
-          }).finally(setTimeout(() =>{
-            window.location.href = "/"
-        }, 2000))
+        if(response.ok){
+          message.success(' Your response has been saved');
+          setTimeout(() => {
+          window.location.href = "/";
+        }, 2000)
+        }else{
+          throw Error('Error occurred while saving your response. Please try again')
+        }
+    }catch(error){
+      message.error(error.message)
     }
+  };
 
-    //When user clicks cancel button
-    const handleCancel = () => {
-      window.location.href = "/"
-    }
+  //When user clicks cancel button
+  const handleCancel = () => {
+   ;
+  };
 
-    //styles
-    const actionBtnsStyle ={ marginLeft : "10px"}
+  //Button styles
+  const actionBtnsStyle = { marginLeft: "10px" };
 
-    //Buttons on tab pane
-    const actions =
-         <div> 
-            <Button style={actionBtnsStyle} type="primary" value="approved" onClick={handleResponse} loading={savingData.saving && savingData.response === 'approved'}> Approve </Button>
-            <Button style={actionBtnsStyle} danger type="default" value="rejected" onClick={handleResponse} loading={savingData.saving && savingData.response === 'rejected'}> Reject </Button> 
-            <Button style={actionBtnsStyle} type="primary" ghost  value="rejected" onClick={handleCancel}> Cancel </Button>
-        </div>
-    //Job details
-    const jobData = [{label : 'Title', value: jobDetails.title}, 
-                      {label : 'Name', value : jobDetails.name},
-                      {label : 'Job Type', value : jobDetails.jobType},
-                      {label : 'Contact', value : jobDetails.contact},
-                      {label : 'Created on', value : jobDetails.createdAt},
-                    ]
+  //Buttons on tab pane
+  const actions = (
+    <div>
+      <Button style={actionBtnsStyle} type="primary" onClick={() =>{ setShowModal(true);}}>
+        Take Action
+      </Button>
+      <Button style={actionBtnsStyle} type="primary" ghost onClick={handleCancel}>
+        Cancel
+      </Button>
+    </div>
+  );
+  //Job details
+  const jobData = [
+    { label: "Title", value: jobDetails.title },
+    { label: "Name", value: jobDetails.name },
+    { label: "Job Type", value: jobDetails.jobType },
+    { label: "Contact", value: jobDetails.contact },
+    { label: "Created on", value: jobDetails.createdAt },
+  ];
 
-    return (
-        <div>
-            <div className="assetTitle">Job : {jobDetails.name}</div>
-               <Tabs  tabBarExtraContent={actions} >
-                    <TabPane tab="Basic" key="1">
-                      {
-                      jobData.map((item, i) => 
-                        (<Row  id={i}gutter={{ xs: 8, sm: 8, md: 8, lg: 8 }}>
-                              <Col className="gutter-row" span={6}>
-                                  <div >{item.label}</div>
-                              </Col>
-                              <Col className="gutter-row" span={18}>
-                                  <div >{item.value}</div>
-                              </Col>  
-                            </Row> )
-                      )
-                    }
-                    </TabPane>
-                </Tabs> 
-        </div>
-    )
+  return (
+    <div>
+      <div className="assetTitle">Job : {jobDetails.name}</div>
+      <Tabs tabBarExtraContent={actions}>
+        <TabPane tab="Basic" key="1">
+          {jobData.map((item, i) => (
+            <Row id={i} gutter={{ xs: 8, sm: 8, md: 8, lg: 8 }} key={item.label}>
+              <Col className="gutter-row" span={6}>
+                <div>{item.label}</div>
+              </Col>
+              <Col className="gutter-row" span={18}>
+                <div>{item.value}</div>
+              </Col>
+            </Row>
+          ))}
+        </TabPane>
+      </Tabs>
+
+      <Modal
+        visible={showModal}
+        closable={false}
+        onCancel={() => setShowModal(false)}
+        onOk={handleResponse}
+      >
+        <Form layout="vertical" form={form}>
+          <Form.Item
+            label="Action"
+            rules={[
+              {
+                required: true,
+                message: "Please select an option!",
+              },
+            ]}
+            name="action"
+          >
+            <Select
+              placeholder="Select an action"
+              allowClear
+            >
+              <Option value="approved">Approve</Option>
+              <Option value="rejected">Reject</Option>
+            </Select>
+          </Form.Item>
+
+          <Form.Item label="Message" style={{ marginTop: "18px" }} name="responseMessage">
+            <TextArea autoSize={{ minRows: 4 }} />
+          </Form.Item>
+        </Form>
+      </Modal>
+    </div>
+  );
 }
 
 export default withRouter(ManualJobDetail);

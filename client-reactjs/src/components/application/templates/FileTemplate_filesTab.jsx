@@ -1,20 +1,31 @@
-import React from "react";
+import React, {useState} from "react";
 import { Table } from "antd";
 import  useWindowSize from "../../../hooks/useWindowSize";
 
 
-const columns = [
-  { title: "",  render: (text, record, index) => index + 1, width: 10 },
-  { title: "File Name", dataIndex: "text" },
-];
+
 
 function FileTemplateTable({ data }) {
     const [ windowHeight] = useWindowSize();
+    const [currentPage, setCurrentPage] = useState(1);
+    let pageSize =  Math.abs(Math.round((windowHeight) / 65 ))
+
+    const columns = [
+          { title: "",  render: (text, record, index) => (currentPage - 1) * pageSize + index + 1},
+          { title: "File Name", dataIndex: "text" },
+          ];
+
   return <Table columns={columns} 
                 dataSource={data} 
                 size="small"
                 rowKey={record => record.text}
-                pagination={{ pageSize: Math.abs(Math.round((windowHeight) / 65 ))}}/>;
+                pagination={{ 
+                  pageSize: pageSize,
+                  onChange(current){
+                    setCurrentPage(current)
+                  }
+                }}
+                />;
 }
 
 export default FileTemplateTable;

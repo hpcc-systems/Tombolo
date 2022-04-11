@@ -30,7 +30,7 @@ const SUBMIT_SCRIPT_JOB_FILE_NAME = 'submitScriptJob.js';
 const SUBMIT_MANUAL_JOB_FILE_NAME = 'submitManualJob.js'
 const SUBMIT_GITHUB_JOB_FILE_NAME = 'submitGithubJob.js'
 
-const createOrUpdateFile = async ({jobfile, jobId, clusterId, dataflowId, applicationId}) =>{
+const createOrUpdateFile = async ({jobfile, jobId, clusterId, dataflowId, applicationId, assetGroupId}) =>{
   try {
     const fileInfo = await hpccUtil.fileInfo(jobfile.name, clusterId);
 
@@ -43,6 +43,7 @@ const createOrUpdateFile = async ({jobfile, jobId, clusterId, dataflowId, applic
         isSuperFile: fileInfo.basic.isSuperfile, //!!  we keep the value camelCased when hpcc return isSuperfile
         description: fileInfo.basic.description,
         qualifiedPath: fileInfo.basic.pathMask,
+        metaData:{ isAssociated: true },
       };
 
       let [file, isFileCreated] = await File.findOrCreate({
@@ -55,6 +56,12 @@ const createOrUpdateFile = async ({jobfile, jobId, clusterId, dataflowId, applic
       });
       if (!isFileCreated) file = await file.update(fileFields);
 
+      //If group Id provided make entry in asset group table
+      if (assetGroupId){
+        const assetGroupsFields = { assetId: file.id, groupId : assetGroupId};
+        await AssetsGroups.findOrCreate({ where: assetGroupsFields, defaults: assetGroupId });
+      }
+      
       // create or update FileLayout
       const layoutFields = { fields: JSON.stringify(fileInfo.file_layouts) };
 
@@ -79,12 +86,12 @@ const createOrUpdateFile = async ({jobfile, jobId, clusterId, dataflowId, applic
         updateOnDuplicate: ['name', 'ruleType', 'rule', 'action', 'fixScript'],
       });
 
-      // create or update JobFile relationship
       const jobfileFields = {
         name: file.name,
         file_id: file.id,
         file_type: jobfile.file_type,
         description: file.description,
+        isSuperFile : jobfile.isSuperFile
       };
 
       let [jobFile, isJobFileCreated] = await JobFile.findOrCreate({
@@ -96,6 +103,7 @@ const createOrUpdateFile = async ({jobfile, jobId, clusterId, dataflowId, applic
         },
         defaults: jobfileFields,
       });
+
       if (!isJobFileCreated) jobFile = await jobFile.update(jobfileFields);
 
       // create assetDataflow if still not exists
@@ -113,6 +121,7 @@ const createOrUpdateFile = async ({jobfile, jobId, clusterId, dataflowId, applic
         assetId: file.id,
         relatedTo: jobId,
         title: file.title,
+        isAssociated: true,
         isSuperFile: file.isSuperFile,
         file_type: jobfile.file_type, //'input' | 'output'
         description: file.description,
@@ -166,6 +175,7 @@ const getManuallyAddedFiles = async (job) =>{
           isSuperFile: file.isSuperFile,
           file_type: el.file_type, //'input' | 'output'
           description: file.description,
+          isAssociated: file.metaData ? file.metaData.isAssociated : true, // prev created files will have metadata as null, all prev files are associated files!
         })
       }
     }
@@ -186,6 +196,8 @@ router.post( '/jobFileRelation',
     try {
       const job = await Job.findOne({ where: { id: req.body.jobId } });
       if (!job) throw new Error('Job does not exist');
+
+      const assetGroup = await AssetsGroups.findOne({where:{assetId: job.id}});
 
       const result = await hpccUtil.getJobWuDetails(job.cluster_id, job.name, dataflowId);
       if (!result.wuid) throw new Error('Could not find WU details by job name');
@@ -231,11 +243,12 @@ router.post( '/jobFileRelation',
           } else {
             // create or update JobFile relationship
             const file = await createOrUpdateFile({
+              dataflowId,
               jobId: job.id,
               jobfile: jobfile, //{ name: 'covid19::kafka::guid', file_type: 'output' }
               clusterId: job.cluster_id,
-              dataflowId,
               applicationId: job.application_id,
+              assetGroupId: assetGroup ? assetGroup.groupId : ''
             });
             if (file) {
               relatedFiles.push(file);
@@ -251,7 +264,7 @@ router.post( '/jobFileRelation',
         if(templates.length > 0){
           let fileAndTemplates = []
             relatedFiles.forEach(file =>{
-              let{name : fileName, assetId: fileId, relatedTo, title : fileTitle, isSuperFile, file_type, description : fileDescription} = file;
+              let{name : fileName, assetId: fileId, relatedTo, title : fileTitle, isSuperFile, isAssociated, file_type, description : fileDescription} = file;
               for(let i = 0; i < templates.length; i++){
                 let {id : templateId, fileNamePattern, searchString, title : templateTitle,  description : templateDescription} = templates[i]
                 let operation = fileNamePattern === 'contains' ? 'includes' : fileNamePattern;
@@ -264,7 +277,7 @@ router.post( '/jobFileRelation',
                 }
                 
                 if(!fileName[operation](searchString) && i === templates.length -1){ // matching template NOT FOUND
-                  fileAndTemplates = [...fileAndTemplates, {name: fileName, assetId: fileId, relatedTo, title: fileTitle, isSuperFile, file_type, description: fileDescription, assetType: 'File'}];
+                  fileAndTemplates = [...fileAndTemplates, {name: fileName, assetId: fileId, relatedTo, title: fileTitle, isSuperFile, isAssociated, file_type, description: fileDescription, assetType: 'File'}];
                 }
               }
         });
@@ -318,7 +331,8 @@ try {
 
         if (jobfiles?.length > 0) {
           for (const jobfile of jobfiles) {
-           const file = await createOrUpdateFile({ jobId: job.id, applicationId, dataflowId, clusterId, jobfile, })
+           const assetGroup = await AssetsGroups.findOne({where:{assetId: job.id}});
+           const file = await createOrUpdateFile({ jobId: job.id, applicationId, dataflowId, clusterId, jobfile, assetGroupId: assetGroup ? assetGroup.groupId : '' })
             if (file){
               relatedFiles.push(file)
             }
@@ -397,7 +411,7 @@ try {
           let {relatedFiles} = item;
           let fileAndTemplates = [];
           relatedFiles.forEach(file => {
-            let{name : fileName, assetId: fileId, relatedTo, title : fileTitle, isSuperFile, file_type, description : fileDescription} = file;
+            let{name : fileName, assetId: fileId, relatedTo, title : fileTitle, isSuperFile, isAssociated, file_type, description : fileDescription} = file;
             for(let i = 0; i < templates.length; i++){
                 let {id : templateId, fileNamePattern, searchString, title : templateTitle,  description : templateDescription} = templates[i]
                 let operation = fileNamePattern === 'contains' ? 'includes' : fileNamePattern;
@@ -411,7 +425,7 @@ try {
                 }
                 if(!fileName[operation](searchString) && i === templates.length -1){ // matching template NOT FOUND
                   allAssetsIds.push(fileId);
-                  fileAndTemplates = [...fileAndTemplates, {name: fileName, assetId: fileId, relatedTo, title: fileTitle, isSuperFile, file_type, description: fileDescription, assetType: 'File'}];
+                  fileAndTemplates = [...fileAndTemplates, {name: fileName, assetId: fileId, relatedTo, title: fileTitle, isSuperFile, isAssociated, file_type, description: fileDescription, assetType: 'File'}];
                 }
               }
           })
@@ -466,37 +480,38 @@ router.post( '/saveJob',
         const assetGroupsFields = { assetId: job.id, groupId};
         await AssetsGroups.findOrCreate({ where: assetGroupsFields, defaults: assetGroupsFields });
       }
-      
+
       try {
-        // Update JobFile table with fresh list of files;
-        let jobFiles = await JobFile.findAll({ where: { job_id: job.id, application_id, file_id: { [Op.not]: null } }, order: [['name', 'asc']], raw: true, });      
-        //Find files that are removed from the Job and remove them from JobFile table
-        if (jobFiles.length > 0 && files.length > 0) {
-          const removeIds = jobFiles.reduce((acc, jobFile) => {
-            const exist = files.find((fromCluster) => fromCluster.file_type === jobFile.file_type && fromCluster.name === jobFile.name );
-            if (!exist) acc.push(jobFile.id);
-            return acc;
-          }, []);
-          if (removeIds.length > 0) await JobFile.destroy({ where: { id: { [Sequelize.Op.in]: removeIds }, application_id } });
-        }
-        // Find and update or create JobFile.
-        for (const file of files) {
-          const defaultFields = {
-            job_id: job.id,
-            application_id,
-            name: file.name,
-            file_id: file.file_id, // not always present
-            file_type: file.file_type,
-            added_manually: file.addedManually,
-          };
-          
-          await JobFile.findOrCreate({
-            where: { job_id: job.id, application_id, file_type: file.file_type, name: file.name },
-            defaults: defaultFields ,
-          })
-          // If DataFlowId present update assetDataflow table so
-          if (dataflowId) await AssetDataflow.findOrCreate({ where: { assetId: job.id, dataflowId }, defaults: { assetId: file.id, dataflowId }, });
-        }
+         // Update JobFile table with fresh list of files;
+         let jobFiles = await JobFile.findAll({ where: { job_id: job.id, application_id, file_id: { [Op.not]: null } }, order: [['name', 'asc']], raw: true, });      
+         //Find files that are removed from the Job and remove them from JobFile table
+         if (jobFiles.length > 0 && files.length > 0) {
+           const removeIds = jobFiles.reduce((acc, jobFile) => {
+             const exist = files.find((fromCluster) => fromCluster.file_type === jobFile.file_type && fromCluster.name === jobFile.name );
+             if (!exist) acc.push(jobFile.id);
+             return acc;
+           }, []);
+           if (removeIds.length > 0) await JobFile.destroy({ where: { id: { [Sequelize.Op.in]: removeIds }, application_id } });
+         }
+         // Find and update or create JobFile.
+         for (const file of files) {
+           const defaultFields = {
+             job_id: job.id,
+             application_id,
+             name: file.name,
+             file_id: file.file_id, // not always present
+             file_type: file.file_type,
+             isSuperFile: file.isSuperFile,
+             added_manually: file.addedManually,
+           };
+           
+           await JobFile.findOrCreate({
+             where: { job_id: job.id, application_id, file_type: file.file_type, name: file.name },
+             defaults: defaultFields ,
+           })
+           // If DataFlowId present update assetDataflow table so
+           if (dataflowId) await AssetDataflow.findOrCreate({ where: { assetId: job.id, dataflowId }, defaults: { assetId: file.id, dataflowId }, });
+         }
         // Update Job Params
         const updateParams = params.map((el) => ({ ...el, job_id: job.id, application_id }));
         await JobParam.destroy({ where: { application_id, job_id: job.id } });
@@ -773,31 +788,48 @@ router.get('/job_details', [
       include: [JobFile, JobParam, JobExecution],
       attributes: { exclude: ['assetId'] },
     }).then(async function(job) {
+
       if(job) {       
         const isStoredOnGithub = job?.metaData?.isStoredOnGithub;
         const jobStatus = job.job_executions?.[0]?.status;
-        const ecl = job.ecl
-        if(isStoredOnGithub && !ecl && (jobStatus === 'completed' || jobStatus === "failed" )) { 
+
+        //Among the job files find which ones are super files
+        const filesIds = job.jobfiles.map(jf => jf.file_id);
+        const superFiles = await File.findAll({where:{id: filesIds, isSuperFile: true}});
+        const superFileIds = superFiles.map(file => file.id);
+
+        if (isStoredOnGithub && (jobStatus === 'completed' || jobStatus === 'failed')) {
           const wuid = job.job_executions[0].wuid;
-          const { application_id, cluster_id, jobType,id } = job;
- 
-          try{
-            const hpccJobInfo = await hpccUtil.getJobInfo(cluster_id, wuid, jobType);
-            // #1 create records in Files and JobFiles
-            hpccJobInfo.jobfiles.forEach( async (file) => await assetUtil.createFilesandJobfiles({file, cluster_id, application_id, id}));
+          try {
+            const hpccJobInfo = await hpccUtil.getJobInfo(job.cluster_id, wuid, job.jobType);
+            // #1 create JobFiles
+            //change to create or updated
+            hpccJobInfo.jobfiles.forEach(async (file) => {
+              // create or update JobFile relationship
+              const jobfileFields = {
+                job_id: job.id,
+                name: file.name,
+                file_type: file.file_type,
+                application_id: job.application_id,
+              };
+        
+              await JobFile.findOrCreate({ where: jobfileFields, defaults: jobfileFields });
+            });
+            
             // #2 update local job instance and save ECL to DB.
-            const jobFiles = await job.getJobfiles(); 
+            const jobFiles = await job.getJobfiles();
             // this will update local instance only
-            job.set("jobfiles", jobFiles);
-            job.set("ecl",  hpccJobInfo.ecl);
-            await job.save()  
-          } catch (error){
+            job.set('jobfiles', jobFiles);
+            job.set('ecl', hpccJobInfo.ecl);
+            await job.save();
+          } catch (error) {
             console.log('------------------------------------------');
             console.log(`FAILED TO UPDATE ECL FOR "${job.name}"`);
             console.dir(error, { depth: null });
             console.log('------------------------------------------');
           }
         }
+        
        var jobData = job.get({ plain: true });
 
        for (const jobFileIdx in jobData.jobfiles) {
@@ -841,42 +873,45 @@ router.get('/job_details', [
           }
         }
 
-        // Check if input and output files have matching file templates - wrap in try catch
+        // Check if input and output files have matching file templates
         const templates = await FileTemplate.findAll({
           where: { cluster_id: job.cluster_id, application_id: req.query.app_id },
         });
 
-        let fileAndTemplates = [];
+        let fileAndTemplates = [];        
 
+        // If file template length > 0
         job.jobfiles.forEach(file =>{
-          let{dataValues : {name : fileName, id: fileId, file_type, description : fileDescription}} = file;
-           if(templates.length > 0){
-            for(let i = 0; i < templates.length; i++){
+          let{dataValues : {name : fileName, file_type}} = file;
+          let {dataValues : newFileObj} = file;
+          if(superFileIds.includes(file.file_id)) newFileObj.isSuperFile = true; // adds super file property
+          newFileObj.assetType = newFileObj.isSuperFile ? 'Super File' : 'Logical File' // Add assetType property
+          if(templates.length === 0){
+          fileAndTemplates.push(newFileObj)
+        }else{
+           for(let i = 0; i < templates.length; i++){
               let {id : templateId, fileNamePattern, searchString, title : templateName, description : templateDescription} = templates[i]
               let operation = fileNamePattern === 'contains' ? 'includes' : fileNamePattern;
               if(fileName[operation](searchString)){ // Matching template found
                 let indexOfFileGroup = fileAndTemplates.findIndex(item => item.id === templateId && item.file_type === file_type);
                 if(indexOfFileGroup >= 0){
-                  fileAndTemplates[indexOfFileGroup].files.push({id: fileId, name: fileName, file_type, description: fileDescription, assetType: 'file'})
+                  fileAndTemplates[indexOfFileGroup].files.push(newFileObj)
                 }else{
-                  fileAndTemplates = [...fileAndTemplates, {id : templateId, name : templateName, file_type, description : templateDescription, assetType: 'fileTemplate',
-                                                           files : [{id: fileId, name: fileName, file_type, description: fileDescription, assetType: 'file'}]}];
+                  fileAndTemplates = [...fileAndTemplates, {id : templateId, name : templateName, file_type, description : templateDescription, assetType: 'File Template',
+                                                           files : [newFileObj]}];
                 }
                 return;
               }
               
               if(!fileName[operation](searchString) && i === templates.length -1){ // No matching template found
-                fileAndTemplates = [...fileAndTemplates, {id: fileId, name: fileName, file_type, description: fileDescription, assetType: 'file'}];
+                fileAndTemplates = [...fileAndTemplates, newFileObj];
               }
-            }
-           }else{
-              fileAndTemplates = [...fileAndTemplates, {id: fileId, name: fileName, file_type, description: fileDescription, assetType: 'file'}];
-            }
-            
+            }  
+        } 
         })
-
         jobData.jobFileTemplate = fileAndTemplates;
         return jobData;
+
       } else {
         return res.status(500).json({ success: false, message: "Job details could not be found. Please check if the job exists in Assets. " });
       }
@@ -1023,41 +1058,46 @@ router.get('/jobExecutionDetails', [
 router.post( '/manualJobResponse',
   [
     body('jobExecutionId').isUUID(4).withMessage('Invalid Job Execution Id'),
-    body('newManaulJob_meta').notEmpty().withMessage('Invalid meta data'),
+    body('manualJob_metadata').notEmpty().withMessage('Invalid meta data'),
   ],
-  (req, res) => {
+  async (req, res) => {
     const errors = validationResult(req).formatWith(validatorUtil.errorFormatter);
     if (!errors.isEmpty()) {
       return res.status(422).json({ success: false, errors: errors.array() });
     }
-    JobExecution.findOne({ where: { id: req.body.jobExecutionId } })
-      .then((jobExecution) => {
-        let newMeta = { ...jobExecution.manualJob_meta, ...req.body.newManaulJob_meta };
-        jobExecution
-          .update({ status: req.body.status, manualJob_meta: newMeta })
-          .then(async (jobExecution) => {
-            //once the job execution is updated, send confirmation email
-            await workFlowUtil.confirmationManualJobAction(jobExecution.manualJob_meta);
-            if (jobExecution.status === 'completed') {
-              await JobScheduler.scheduleCheckForJobsWithSingleDependency({
-                dependsOnJobId: jobExecution.jobId,
-                dataflowId: jobExecution.dataflowId,
-                jobExecutionGroupId: jobExecution.jobExecutionGroupId,
-              });
-            }
-          })
-          .then(res.status(200).json({ success: true }))
-          .catch((err) => {
-            res.status(501).json({ success: false, message: 'Error occured while saving data' });
-          });
-      })
-      .catch((error) => {
-        res.status(501).json({ success: false, data: error });
-      });
+    const {jobExecutionId, status, manualJob_metadata} = req.body;
+    let jobExecution;
+    try{
+      jobExecution = await JobExecution.findOne({ where: { id: jobExecutionId }});
+      const newJobExecutionMetaData = {...jobExecution.manualJob_meta, ...manualJob_metadata}
+      await jobExecution.update({status, manualJob_meta : newJobExecutionMetaData });
+      res.status(200).json({success : true, message : 'Job execution updated'}) // Response to client if no error 
+    }catch(error){
+      console.log('-- Update manual job metadata -------------');
+      console.dir(error.message)
+      console.log('-------------------------------------------');
+      res.status(501).json({ success: false, message: 'Error occurred while saving data' }); // response to client when error and return
+      return;
+    }
+    
+    // Once response is recorded successfully check for dependent job & send confirmation email
+    try{
+      if(status === 'completed'){ //Checks for dependent job
+        await JobScheduler.scheduleCheckForJobsWithSingleDependency({
+          dependsOnJobId: jobExecution.jobId,
+          dataflowId: jobExecution.dataflowId,
+          jobExecutionGroupId: jobExecution.jobExecutionGroupId,
+        })
+      }
+      await workFlowUtil.confirmationManualJobAction(jobExecution.manualJob_meta); // Sends confirmation email
+
+    }catch(error){
+      console.log('-Manual job confirmation & dependent job checking -----');
+      console.dir(error)
+      console.log('-------------------------------------------------------');
+    }
   }
 );
-
-
 
 const QueueDaemon = require('../../queue-daemon');
 
