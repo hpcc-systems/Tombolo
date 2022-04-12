@@ -13,7 +13,7 @@ router.post('/authenticate', authenticate);
 router.post('/register', register);
 router.get('/', getAll);
 router.get('/current', getCurrent);
-router.get('/:app_id/sharedAppUser', GetSharedAppUserList);
+router.get('/:app_id/sharedAppUser/:username', GetSharedAppUserList);
 router.get('/:id', getById);
 router.put('/:id', update);
 router.delete('/:id', _delete);
@@ -79,7 +79,6 @@ function GetuserListToShareApp(req, res, next) {
       .catch(err => res.status(500).json({ "message": "Error occured while retrieving users" }));
 }
 function GetSharedAppUserList(req, res, next) {
-  console.log('GetSharedAppUserList')
   userService.GetSharedAppUserList(req, res, next)
     .then(user => user ? res.json(user) : [])
     .catch(err => res.status(500).json({ "message": "Error occured while retrieving users" }));
@@ -121,7 +120,7 @@ router.post('/registerUser', [
       res.status(response.statusCode).json({"success":"true"});
     })
     .catch((err) => {
-      res.status(500).json({ errors: [err.error] });
+      res.status(500).json({ errors: err.message });
     })
 })
 

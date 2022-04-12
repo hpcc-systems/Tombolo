@@ -27,7 +27,7 @@ import VisualizationDetailsForm from "./components/application/VisualizationDeta
 import ManualJobDetail from "./components/application/Jobs/ManualJobDetail"
 
 import Actions from "./components/application/actions/actions";
-import { AdminApplications } from "./components/admin/Applications";
+import { AdminApplications } from "./components/admin/apps/Applications";
 import AdminClusters from "./components/admin/Clusters";
 import { AdminConsumers } from "./components/admin/Consumers";
 import { AppHeader } from "./components/layout/Header";

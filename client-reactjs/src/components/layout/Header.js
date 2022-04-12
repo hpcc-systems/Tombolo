@@ -78,7 +78,7 @@ class AppHeader extends Component {
       }
 
       if(this.state.applications.length === 0) {
-        var url="/api/app/read/appListByUserId?user_id="+this.props.user.id+'&user_name='+this.props.user.username;
+        var url=`/api/app/read/appListByUsername?user_name=${this.props.user.username}`;
         if(hasAdminRole(this.props.user)) {
           url="/api/app/read/app_list";
         }

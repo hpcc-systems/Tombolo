@@ -446,7 +446,7 @@ class JobDetails extends Component {
       selectedProjects: gitHubFiles.selectedProjects, // List of selected projects IDS!
     };
   
-
+    
     //Combine notification related values and send as object
     metaData.notificationSettings = {
       notify: formFields.notify,
