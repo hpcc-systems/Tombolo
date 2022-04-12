@@ -1,51 +1,22 @@
-import React, { useState, useEffect } from 'react'
+import React, { useState  } from 'react'
 import { authHeader, handleError } from "../../common/AuthHeader.js"
 import { Modal, Button, Tree, message } from 'antd/lib';
-import { useSelector, useDispatch } from "react-redux";
-import { moveGroup } from '../../../redux/actions/GroupsMove'
+import { useSelector } from "react-redux";
 import { store } from '../../../redux/store/Store'
 import {Constants} from "../../common/Constants"
 
-const { TreeNode, DirectoryTree } = Tree;
+const {  DirectoryTree } = Tree;
 const { confirm } = Modal;
 
 
-function MoveAssetsDialog({isShowing, toggle, application, assetToMove, reloadTable, refreshGroups}) {
-  const [moveDestinationGroup, setMoveDestinationGroup] = useState({id:'', key:''});
-  const [expandedGroups, setExpandedGroups] = useState([]);
-  const [treeData, setTreeData] = useState([]);
-  const dispatch = useDispatch();
+function MoveAssetsDialog({isShowing, toggle, application, assetToMove,}) {
+  const groupsTree = useSelector((state) => state.groupsReducer.tree);
 
-
-
-  useEffect(() => {
-    if(application && application.applicationId) {
-      fetchGroups();
-    }
-  }, [application]);
-
-  const fetchGroups = () => {
-    let url = "/api/groups?app_id="+application.applicationId;
-    fetch(url, {
-      headers: authHeader()
-    })
-    .then((response) => {
-      if(response.ok) {
-        return response.json();
-      }
-      handleError(response);
-    })
-    .then(data => {
-      setTreeData(data)
-      setMoveDestinationGroup({'id':data[0].id, 'key':data[0].key})
-      setExpandedGroups(['0-0'])
-    }).catch(error => {
-      console.log(error);
-    });
-  }
+  const [moveDestinationGroup, setMoveDestinationGroup] = useState({id:'', key:'', title:""});
+  const [expandedGroups, setExpandedGroups] = useState(['0-0']);
 
   const onSelect = (keys, event) => {
-    setMoveDestinationGroup({id:event.node.props.id, key:event.node.props.eventKey, title: event.node.props.title})
+    setMoveDestinationGroup({id:event.node.id, key:event.node.key, title: event.node.title})
   };
 
   const onExpand = (expandedKeys) => {
@@ -53,12 +24,12 @@ function MoveAssetsDialog({isShowing, toggle, application, assetToMove, reloadTa
   }
 
   const handleClose = () => {
-    toggle();
+    toggle({refetch:false});
   }
 
   const handleMove = () => {
     message.config({top:130});
-    if(assetToMove.selectedGroup.id == moveDestinationGroup.id) {
+    if(assetToMove.selectedKeys.id === moveDestinationGroup.id) {
       message.error('"'+assetToMove.title + '" is already in "'+moveDestinationGroup.title+'" group. Please select a different group to move it.')
       return;
     }
@@ -84,13 +55,12 @@ function MoveAssetsDialog({isShowing, toggle, application, assetToMove, reloadTa
           handleError(response);
         }).then(function(data) {
           message.success('"'+assetToMove.title+'" has been moved to "'+moveDestinationGroup.title+'" group.')
-          // reloadTable();
+
           store.dispatch({
             type: Constants.MOVE_GROUP,
             payload: assetToMove.id
           })
-          toggle();
-          // refreshGroups();
+          toggle({refetch:true});
         }).catch(error => {
           console.log(error);
         });
@@ -121,7 +91,7 @@ function MoveAssetsDialog({isShowing, toggle, application, assetToMove, reloadTa
             <DirectoryTree
               onSelect={onSelect}
               onExpand={onExpand}
-              treeData={treeData}
+              treeData={groupsTree}
               selectedKeys={[moveDestinationGroup.key]}
               expandedKeys={expandedGroups}
               defaultExpandAll={true}

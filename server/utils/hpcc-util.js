@@ -4,68 +4,45 @@ var requestPromise = require('request-promise');
 var models  = require('../models');
 var Cluster = models.cluster;
 const Dataflow_cluster_credentials = models.dataflow_cluster_credentials;
-const { GHCredentials, github_repo_settings: GHprojects } = require('../models')
+const { github_repo_settings: GHprojects } = require('../models')
 let hpccJSComms = require("@hpcc-js/comms");
 const {decryptString } = require('./cipher')
 
-const debug = require('debug');
 const simpleGit = require('simple-git');
 const cp = require('child_process');
 const fs = require('fs');
 
-exports.fileInfo = (fileName, clusterId) => {
-	return new Promise((resolve, reject) => {
-		module.exports.getCluster(clusterId).then(function(cluster) {
-      var fileInfo = {};
-			let clusterAuth = module.exports.getClusterAuth(cluster);
-			let dfuService = new hpccJSComms.DFUService({ baseUrl: cluster.thor_host + ':' + cluster.thor_port, userID:(clusterAuth ? clusterAuth.user : ""), password:(clusterAuth ? clusterAuth.password : "")});
-			dfuService.DFUInfo({"Name":fileName}).then(response => {
-        if(response.DFUInfoResponse && response.DFUInfoResponse.Exceptions) {
-          console.error(response.DFUInfoResponse.Exception[0]);
-          resolve(null);
-        }
-		  	var processFieldValidations = function(fileLayout) {
-      		var fieldsValidations=[];
-      		fileLayout.forEach(function(field, idx) {
-      			//fields[idx] = field.trim().replace(";","");
-      			var validations = {
-	      			"name" : field.name,
-	      			"ruleType" : '',
-	      			"rule" : '',
-	      			"action" : '',
-	      			"fixScript" : ''
-	      		}
-      			fieldsValidations.push(validations);
-      			//console.log(fields[idx]);
-      		});
-      		return fieldsValidations;
-      	}
+exports.fileInfo = async (fileName, clusterId) => {
+  try {
+    const dfuService = await exports.getDFUService(clusterId);
+    const fileInfo = await dfuService.DFUInfo({ Name: fileName });
 
-    		getFileLayout(cluster, fileName, response.FileDetail.Format).then(function(fileLayout) {
-      		fileInfo.basic = {
-      			"name" : response.FileDetail.Name,
-      			"fileName" : response.FileDetail.Filename,
-      			"description" : response.FileDetail.Description,
-      			"scope": response.FileDetail.Name.substring(0, response.FileDetail.Name.lastIndexOf('::')),
-      			"pathMask" : response.FileDetail.PathMask,
-      			"isSuperfile" : response.FileDetail.isSuperfile,
-      			"fileType": response.FileDetail.ContentType ? response.FileDetail.ContentType : (response.FileDetail.Format ? response.FileDetail.Format : "thor_file")
-      		}
-          fileInfo.file_layouts = fileLayout;
-          fileInfo.file_validations = [];
-      	 	resolve(fileInfo);
-    		})
+    if (fileInfo.Exceptions?.Exception) throw fileInfo.Exceptions.Exception[0];
 
-		  }).catch((err) => {
-        console.log(err);
-        resolve(null);
-      })
-		}).catch((err) => {
-      console.log('err-1', err);
-      reject(err);
-    })
-	})
-}
+    const cluster = await module.exports.getCluster(clusterId);
+    const layout = await getFileLayout(cluster, fileName, fileInfo.FileDetail.Format);
+
+    return {
+      basic: {
+        name: fileInfo.FileDetail.Name,
+        fileName: fileInfo.FileDetail.Filename,
+        description: fileInfo.FileDetail.Description,
+        scope: fileInfo.FileDetail.Name.substring(0, fileInfo.FileDetail.Name.lastIndexOf('::')),
+        pathMask: fileInfo.FileDetail.PathMask,
+        isSuperfile: fileInfo.FileDetail.isSuperfile,
+        fileType: fileInfo.FileDetail.ContentType || fileInfo.FileDetail.Format || 'thor_file'
+      },
+      file_layouts: layout,
+      file_validations: [],
+    };
+  } catch (error) {
+    console.log('-error fileInfo-----------------------------------------');
+    console.dir({ error }, { depth: null });
+    console.log('------------------------------------------');
+    throw error;
+  }
+};
+
 
 function getIndexColumns(cluster, indexName) {
   let columns={};
@@ -251,130 +228,105 @@ exports.queryInfo = (clusterId, queryName) => {
 }
 }
 
-exports.getJobInfo = (clusterId, jobWuid, jobType) => {
-  let sourceFiles=[], outputFiles=[], jobInfo = {};
-  return new Promise((resolve, reject) => {
-    module.exports.getCluster(clusterId).then(function(cluster) {
-      request.get({
-        url: cluster.thor_host + ':' + cluster.thor_port +'/WsWorkunits/WUInfo.json?Wuid='+jobWuid,
-        auth : module.exports.getClusterAuth(cluster)
-      }, function(err, response, body) {
-        if (err) {
-          console.log('ERROR - ', err);
-          reject(err);
-        } else {
-          var result = JSON.parse(body);
-          if(result.Exceptions) {
-            reject(result.Exceptions.Exception);
-          }
-          if(jobType == 'Query Build') {
-            let clusterAuth = module.exports.getClusterAuth(cluster);
-            let wuService = new hpccJSComms.WorkunitsService({ baseUrl: cluster.thor_host + ':' + cluster.thor_port, userID:(clusterAuth ? clusterAuth.user : ""), password:(clusterAuth ? clusterAuth.password : "")});
-            wuService.WUListQueries({"WUID":jobWuid}).then(response => {
-              if(response.QuerysetQueries && response.QuerysetQueries.QuerySetQuery && response.QuerysetQueries.QuerySetQuery.length > 0) {
-                wuService.WUQueryDetails({"QueryId":response.QuerysetQueries.QuerySetQuery[0].Id, "QuerySet":"roxie"}).then(queryDetails => {
-                  queryDetails.LogicalFiles.Item.forEach((logicalFile)  => {
-                    sourceFiles.push({"name":logicalFile, "file_type": "input"})
-                  })
-                  jobInfo = {
-                    "name": result.WUInfoResponse.Workunit.Jobname,
-                    "title": result.WUInfoResponse.Workunit.Jobname,
-                    "description": result.WUInfoResponse.Workunit.Description,
-                    "ecl": result.WUInfoResponse.Workunit.Query.Text,
-                    "entryBWR": result.WUInfoResponse.Workunit.Jobname,
-                    "wuid": result.WUInfoResponse.Workunit.Wuid,
-                    "jobfiles": sortFiles(sourceFiles)
-                  }
-                  resolve(jobInfo);
-                })
-              } else {
-                resolve(jobInfo)
-              }
-            });
-          } else {
-            if(result.WUInfoResponse && result.WUInfoResponse.Workunit) {
-              var wuInfoResponse = result.WUInfoResponse.Workunit, fileInfo = {};
-              if(wuInfoResponse.SourceFiles && wuInfoResponse.SourceFiles.ECLSourceFile) {
-                wuInfoResponse.SourceFiles.ECLSourceFile.forEach((sourceFile) => {
-                  sourceFiles.push({"name":sourceFile.Name, "file_type": "input"});
-                });
-
-              }
-              if(wuInfoResponse.Results && wuInfoResponse.Results.ECLResult) {
-                let files = wuInfoResponse.Results.ECLResult.filter((result) => {
-                  return result.FileName != ""
-                })
-                files.forEach((file) => {
-                  outputFiles.push({"name":file.FileName, "file_type": "output"});
-                })
-              }
-
-              jobInfo = {
-                "name": result.WUInfoResponse.Workunit.Jobname,
-                "title": result.WUInfoResponse.Workunit.Jobname,
-                "description": result.WUInfoResponse.Workunit.Description,
-                "ecl": result.WUInfoResponse.Workunit?.Query?.Text || '',
-                "entryBWR": result.WUInfoResponse.Workunit.Jobname,
-                "wuid": result.WUInfoResponse.Workunit.Wuid,
-                "jobfiles": sortFiles(sourceFiles.concat(outputFiles))
-              };
-              resolve(jobInfo);
-            }
-
-          }
-        }
-      });
+exports.getJobInfo = async (clusterId, jobWuid, jobType) => {
+  try {
+    const wuService = await module.exports.getWorkunitsService(clusterId);
+    const wuInfo = await wuService.WUInfo({
+      Wuid: jobWuid,
+      IncludeECL: true,
+      IncludeResults: true, // Will include output files
+      IncludeSourceFiles:true, // Will include input files
+      IncludeExceptions: true,
+      IncludeTotalClusterTime: true,
     });
-  });
-}
 
-exports.getJobWuDetails = async(clusterId, jobName, dataflowId) => {
-  if(dataflowId){ // if dataflow ID is present- you know the job is a part of a workflow
-    let clusterCredentials = await Dataflow_cluster_credentials.findOne({where : { dataflow_id : dataflowId}, include : [Cluster] });
-    const {thor_host, thor_port} = clusterCredentials.cluster.dataValues
-    return new Promise((resolve, reject) => {
-      let clusterAuth = {user : clusterCredentials.cluster_username, 
-        password : decryptString(clusterCredentials.cluster_hash)
-      }
-      let wuService = new hpccJSComms.WorkunitsService({ baseUrl: thor_host + ':' + thor_port, userID: clusterAuth.user,  password:clusterAuth.password});
-      wuService.WUQuery({"Jobname":jobName, "PageSize":1, "PageStartFrom":0}).then((response) => {
-        if(response.Workunits
-          && response.Workunits.ECLWorkunit
-          && response.Workunits.ECLWorkunit.length > 0) {
-          //return the first wuid assuming that is the latest one
-          resolve({wuid: response.Workunits.ECLWorkunit[0].Wuid, cluster: response.Workunits.ECLWorkunit[0].Cluster});
-        } else {
-          resolve(null);
-        }
-      }).catch(err => {
-        console.log(err);
-        reject(err)
-      })
-  })
+    if (!wuInfo || !wuInfo.Workunit) throw new Error(`Failed to get info for WU  - ${jobWuid}`);
+    if (wuInfo.Exceptions?.Exception) throw wuInfo.Exceptions.Exception[0];
+    
+    // Helper method to construct result object
+    const createJobInfoObj = (wu, files) => ({
+      wuid: wu.Wuid,
+      name: wu.Jobname,
+      title: wu.Jobname,
+      entryBWR: wu.Jobname,
+      ecl: wu?.Query?.Text || '',
+      description: wu.Description,
+      jobfiles: sortFiles(files),
+    });
 
-  }else{ // If dataflow id is undefined - it means the job is not a part of a workflow
-  return new Promise((resolve, reject) => {
-    module.exports.getCluster(clusterId).then(function(cluster) {
-      let clusterAuth = module.exports.getClusterAuth(cluster);
-      let wuService = new hpccJSComms.WorkunitsService({ baseUrl: cluster.thor_host + ':' + cluster.thor_port, userID:(clusterAuth ? clusterAuth.user : ""), password:(clusterAuth ? clusterAuth.password : "")});
-      wuService.WUQuery({"Jobname":jobName, "PageSize":1, "PageStartFrom":0}).then((response) => {
-        if(response.Workunits
-          && response.Workunits.ECLWorkunit
-          && response.Workunits.ECLWorkunit.length > 0) {
-          //return the first wuid assuming that is the latest one
-          resolve({wuid: response.Workunits.ECLWorkunit[0].Wuid, cluster: response.Workunits.ECLWorkunit[0].Cluster});
-        } else {
-          resolve(null);
-        }
-      }).catch(err => {
-        console.log(err);
-        reject(err)
-      })
-    })
-  })
+    if (jobType === 'Query Build') {
+      const wuListQueries = await wuService.WUListQueries({ WUID: jobWuid });
+      // if QuerySetQuery has nothing then return empty jobInfo;
+      if (!wuListQueries.QuerysetQueries?.QuerySetQuery?.length) return {};
+
+      const queryDetails = await wuService.WUQueryDetails({
+        QueryId: wuListQueries.QuerysetQueries.QuerySetQuery[0].Id,
+        QuerySet: 'roxie',
+      });
+
+      const sourceFiles = queryDetails.LogicalFiles?.Item?.map((logicalFile) => ({
+        name: logicalFile,
+        file_type: 'input',
+      }));
+
+      return createJobInfoObj(wuInfo.Workunit, sourceFiles);
+    } else {
+      const sourceFiles = [];
+      
+      wuInfo.Workunit?.SourceFiles?.ECLSourceFile?.forEach((sourceFile) => {
+        sourceFiles.push({ name: sourceFile.Name, file_type: 'input', isSuperFile: sourceFile.IsSuperFile ? true : false});
+      });
+
+      wuInfo.Workunit?.Results?.ECLResult?.forEach((file) => {
+        if (file.FileName) sourceFiles.push({ name: file.FileName, file_type: 'output', isSuperFile: file.IsSuperFile ? true : false });
+      });
+      return createJobInfoObj(wuInfo.Workunit, sourceFiles);
+    }
+  } catch (error) {
+    console.log('-error getJobInfo-----------------------------------------');
+    console.dir({ error }, { depth: null });
+    console.log('------------------------------------------');
+    throw error;
   }
+};
 
-}
+exports.getJobWuDetails = async (clusterId, jobName, dataflowId) => {
+  try {
+    let wuService;
+
+    if (!dataflowId) {
+      wuService = await module.exports.getWorkunitsService(clusterId);
+    } else {
+      const clusterCredentials = await Dataflow_cluster_credentials.findOne({
+        where: { dataflow_id: dataflowId },
+        include: [Cluster],
+      });
+      if (!clusterCredentials) throw new Error('Failed to get dataflow creds');
+
+      const { thor_host, thor_port } = clusterCredentials.cluster.dataValues;
+
+      const connectionSettings = {
+        baseUrl: thor_host + ':' + thor_port,
+        userID: clusterCredentials.cluster_username,
+        password: decryptString(clusterCredentials.cluster_hash),
+      };
+
+      wuService = new hpccJSComms.WorkunitsService(connectionSettings);
+    }
+
+    if (!wuService) throw new Error('Failed to get WorkunitsService');
+
+    const WUQuery = await wuService.WUQuery({ Jobname: jobName, PageSize: 1, PageStartFrom: 0 });
+    const ECLWorkunit = WUQuery.Workunits?.ECLWorkunit?.[0];
+
+    return ECLWorkunit ? { wuid: ECLWorkunit.Wuid, cluster: ECLWorkunit.Cluster } : null;
+  } catch (error) {
+    console.log('-ERROR getJobWuDetails-----------------------------------------');
+    console.dir({ error }, { depth: null });
+    console.log('------------------------------------------');
+    throw error;
+  }
+};
 
 exports.resubmitWU = async (clusterId, wuid, wucluster, dataflowId) => {
   let cluster_auth;
@@ -430,101 +382,63 @@ exports.resubmitWU = async (clusterId, wuid, wucluster, dataflowId) => {
 }
 
 exports.workunitInfo = async (wuid, clusterId) => {
-  let cluster = await module.exports.getCluster(clusterId);
-  let clusterAuth = module.exports.getClusterAuth(cluster);
-  let wsWorkunits = new hpccJSComms.WorkunitsService({ baseUrl: cluster.thor_host + ':' + cluster.thor_port, userID:(clusterAuth ? clusterAuth.user : ""), password:(clusterAuth ? clusterAuth.password : ""), type: "get" });
-  return new Promise((resolve, reject) => {
-    wsWorkunits.WUInfo({"Wuid":wuid, "IncludeExceptions":true, "IncludeSourceFiles":true, "IncludeResults":true, "IncludeTotalClusterTime": true}).then(async (wuInfo) => {
-      resolve(wuInfo);
-    }).catch((err) => {
-      reject(err);
-    })
-  });
+  try {
+    const wuService = await module.exports.getWorkunitsService(clusterId);
+    return  await wuService.WUInfo({"Wuid":wuid, "IncludeExceptions":true, "IncludeSourceFiles":true, "IncludeResults":true, "IncludeTotalClusterTime": true});
+  } catch (error) {
+    console.log('---error---------------------------------------');
+    console.dir({workunitInfo}, { depth: null });
+    console.log('------------------------------------------');
+    throw error;
+  }
 }
 
+const getFileLayout = async (cluster, fileName, format) => {
+  try {
+    const auth = module.exports.getClusterAuth(cluster);
+    if (format == 'csv') {
+      const response = await requestPromise.get({ auth, url: cluster.thor_host + ':' + cluster.thor_port + '/WsDfu/DFURecordTypeInfo.json?Name=' + fileName, });
+      const result = JSON.parse(response);
+      const fields = result?.DFURecordTypeInfoResponse?.jsonInfo?.fields || [];
+      return fields.map((field, idx) => ({ id: idx, name: field.name }));
+    }
 
-let getFileLayout = (cluster, fileName, format) =>  {
-	var layoutResults = [];
-	if(format == 'csv') {
-		return requestPromise.get({
-		  url: cluster.thor_host + ':' + cluster.thor_port +'/WsDfu/DFURecordTypeInfo.json?Name='+fileName,
-		  auth : module.exports.getClusterAuth(cluster)
-		}).then(function(response) {
-			var result = JSON.parse(response);
-			if (result.DFURecordTypeInfoResponse != undefined) {
-				if(result.DFURecordTypeInfoResponse.jsonInfo.fields != undefined) {
-					result.DFURecordTypeInfoResponse.jsonInfo.fields.forEach((field, idx) => {
-						layoutResults.push({
-							"id": idx,
-							"name" : field.name
-						})
-					})
+    const response = await requestPromise.get({ auth, url: cluster.thor_host + ':' + cluster.thor_port + '/WsDfu/DFUGetFileMetaData.json?LogicalFileName=' + fileName, });
+    const result = JSON.parse(response);
+    const fileInfoResponse = result?.DFUGetFileMetaDataResponse?.DataColumns?.DFUDataColumn || [];
 
-					return layoutResults;
-				}
+    const createLayoutObj = (column, index) => ({
+      id: index,
+      name: column.ColumnLabel,
+      type: column.ColumnType,
+      eclType: column.ColumnEclType,
+      format: '',
+      description: '',
+      displaySize: '',
+      displayType: '',
+      isPCI: 'false',
+      isPII: 'false',
+      isHIPAA: 'false',
+      required: 'false',
+      textJustification: 'right',
+    });
 
-			}
-		})
-	} else {
-		return requestPromise.get({
-		  url: cluster.thor_host + ':' + cluster.thor_port +'/WsDfu/DFUGetFileMetaData.json?LogicalFileName='+fileName,
-		  auth : module.exports.getClusterAuth(cluster)
-		}).then(function(response) {
-			  var result = JSON.parse(response);
-	    	if(result.DFUGetFileMetaDataResponse != undefined) {
-				  var fileInfoResponse = result.DFUGetFileMetaDataResponse.DataColumns.DFUDataColumn, fileInfo = {};
-	      		fileInfoResponse.forEach(function(column, idx) {
-	      			if(column.ColumnLabel !== '__fileposition__') {
-		      			var layout = {
-		      				"id": idx,
-			      			"name" : column.ColumnLabel,
-			      			"type" : column.ColumnType,
-			      			"eclType" : column.ColumnEclType,
-			      			"displayType" : '',
-			      			"displaySize" : '',
-			      			"textJustification" : 'right',
-			      			"format" : '',
-			      			"isPCI" : 'false',
-			      			"isPII" : 'false',
-    							"isHIPAA":'false',
-    							"required": 'false',
-                  "description": ''
-			      		}
-			      		if(column.DataColumns != undefined) {
-			      			var childColumns = [];
-			      			column.DataColumns.DFUDataColumn.forEach(function(childColumn, idx) {
-			      				var childColumnObj = {
-			      					"id": idx,
-			      					"name" : childColumn.ColumnLabel,
-					      			"type" : childColumn.ColumnType,
-					      			"eclType" : childColumn.ColumnEclType,
-					      			"displayType" : '',
-					      			"displaySize" : '',
-					      			"textJustification" : 'right',
-					      			"format" : '',
-					      			"isPCI" : 'false',
-					      			"isPII" : 'false',
-    									"isHIPAA":'false',
-    									"required": 'false',
-                      "description": ''
-			      				}
-			      				childColumns.push(childColumnObj);
+    const layoutResults = fileInfoResponse.reduce((acc, column, idx) => {
+      if (column.ColumnLabel !== '__fileposition__') {
+        const layout = createLayoutObj(column, idx);
+        if (column.DataColumns) layout.children = column.DataColumns.DFUDataColumn.map((childColumn, idx) => createLayoutObj(childColumn, idx));
+        acc.push(layout);
+      }
+      return acc;
+    }, []);
 
-			      			});
-			      			layout.children = childColumns;
-			      		}
-			      		layoutResults.push(layout);
-			      	}
-	      		});
-			  }
-	    	return layoutResults;
-	  })
-		.catch(function (err) {
-      console.log('error occured: '+err);
-  	});
-	}
-
-}
+    return layoutResults;
+  } catch (error) {
+    console.log('-Error getFileLayout-----------------------------------------');
+    console.dir({ error }, { depth: null });
+    console.log('------------------------------------------');
+  }
+};
 
 exports.getClusterAuth = (cluster) => {
 	let auth = {};

@@ -15,6 +15,7 @@
     justify-content: center;
     align-items: center;
     transition: box-shadow .3s linear;
+    color:rgb(58, 54, 54);
   }
   .node-icon:hover{
     box-shadow: rgba(14, 30, 37, 0.12) 0px 2px 4px 0px, rgba(14, 30, 37, 0.32) 0px 2px 16px 0px;
@@ -23,35 +24,43 @@
     font-size: 27px;
   }
 
+  .node-fetching-files{
+    position: absolute;
+    top: -15px;
+    right: 3px;
+  }
+
   .Job, .Manual {
-    background-color: #f1a261 ;
-    border: 2px solid #ff7300d7;
+    background-color: #ffa726; 
+    border: 2px solid #c25e00; 
   }
   
   .File {
-    background-color: #9dd6fc ;
-    border: 2px solid #0995f1c2;
+    /* Light Blue */
+    background-color: #90caf9;
+    border: 2px solid #0077c2;
   }
 
    .FileTemplate {
-    background-color: #141E27;
-    border : 2px solid #141E27;
-    color: #ffffff;
+     /*  */
+    background-color: #1565c0;
+    border : 2px solid #1565c0;
+    color: #fff !important;
   }
   
   .SuperFile{
-    background-color: #cbcaf5 ;
-    border: 2px solid #706bf0;
+    background-color: #b778c2;
+    border: 2px solid #883997;
   }
 
   .Index {
-    background-color: #76e25a ;
-    border: 2px solid #146400ad;
+    background-color: #66bb6a;
+    border: 2px solid #338a3e;
   }
 
   .Sub-Process {
-    background-color: #df7274 ;
-    border: 2px solid #eb1518;
+    background-color: #f44336;
+    border: 2px solid #b61827;
   }
   
   .node-schedule{

@@ -17,21 +17,19 @@ exports.notify = (notification) => {
   };
   transporter.sendMail(mailOptions, function(error, info){
     if(error){
-       console.log(error);
        reject(error);
     }
-    console.log('Message sent: ' + info.response);
     resolve();
   });
 })
 }
 
-exports.notifyApplicationShare = (sharedWithUserEmail, applicationName, req) => {
+exports.notifyApplicationShare = (sharedWithUserEmail, applicationName) => {
   const msg={};
   msg.to = sharedWithUserEmail;
   msg.from = process.env.EMAIL_SENDER; // Use the email address or domain you verified above
   msg.subject = 'Tombolo application has been shared with you';
-  msg.html = `A Tombolo application has been shared with you. Please <a href=${process.env.WEB_URL}/login>login</a> to Tombolo to access the application`;
+  msg.html = `A Tombolo application (${applicationName}) has been shared with you. Please <a href=${process.env.WEB_URL}/login>login</a> to Tombolo to access the application`;
 
   module.exports.notify(msg);
 }

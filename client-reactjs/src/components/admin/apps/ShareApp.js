@@ -1,9 +1,10 @@
 import React, { Component } from "react";
-import { Table,message,Spin,Modal,Tabs, AutoComplete, Form, Input, Button, Popconfirm, Tooltip } from 'antd/lib';
-import { authHeader, handleError } from "../common/AuthHeader.js";
+import { Table,message,Spin,Modal, AutoComplete, Select, Button, Popconfirm, Tooltip } from 'antd/lib';
+import { authHeader, handleError } from "../../common/AuthHeader.js";
 import { DeleteOutlined, EditOutlined, QuestionCircleOutlined, SearchOutlined  } from '@ant-design/icons';
+import debounce from 'lodash/debounce';
 const { confirm } = Modal;
-const TabPane = Tabs.TabPane;
+const { Option } = Select;
 class ShareApp extends Component {
     constructor(props) {
       super(props);
@@ -36,6 +37,7 @@ class ShareApp extends Component {
       }
     }
 
+    // GET USERS 
     getUserList(appId) {
      if(appId){
       this.setState({
@@ -63,10 +65,20 @@ class ShareApp extends Component {
       }
     }
 
+    // GROUP USERS E-MAIL AND NAME SHOW IT DISPLAYS RIGHT WAY IN AUTOCOMPLETE
+    groupUserDetails = (user) =>{
+    return (
+        <div style={{padding: '5px', borderBottom: '1px dotted lightgray'}}>
+            <p style={{marginBottom : '-5px', fontWeight: '600'}}>{user.text}</p>
+            <p style={{ marginBottom : '0px', color: 'gray'}}>{user.email}</p>
+        </div>
+    )
+}
+
     getSharedAppUserList(appId) {
      if(appId){
-      var userId=(this.props.user)?this.props.user.username:"";
-      fetch("/api/user/"+appId+"/sharedAppUser", {
+      var username=(this.props.user)?this.props.user.username:"";
+      fetch(`/api/user/${appId}/sharedAppUser/${username}`, {
         method: 'get',
         headers: authHeader()
       }).then((response) => {
@@ -107,7 +119,7 @@ class ShareApp extends Component {
       });
     }
 
-    searchUsers(searchString) {
+    searchUsers = debounce((searchString) =>{
       let _self=this;
       if(searchString.length <= 3) {
         this.setState({
@@ -139,39 +151,38 @@ class ShareApp extends Component {
       }).catch(error => {
         console.log(error)
         message.config({top:150})
-        message.error("Error occured while searching for users.");
+        message.error("Error occurred while searching for users.");
 
       });
-    }
+    }, 400);
 
-    onUserSelected = (selectedUser) => {
+    onUserSelected = (selectedUser, user) => {
       this.setState({
         ...this.state,
         shareButtonEnabled: true,
-        selectedUser: selectedUser
+        selectedUser: user.key
       });
     }
 
+    // SAVE APPLICATION SHARE DETAILS
     saveDetails() {
       var _self=this;
-      fetch('/api/app/read/saveUserApp', {
+      fetch('/api/app/read/shareApplication', {
         method: 'post',
         headers: authHeader(),
-        body: JSON.stringify({users : [{'user_id': _self.state.selectedUser, 'application_id':_self.state.applicationId}]})
+        body: JSON.stringify({data : {'user_id': _self.state.selectedUser, 'application_id':_self.state.applicationId, 'appTitle' : _self.state.applicationTitle}})
       }).then(function(response) {
-        if(response.ok) {
-          _self.getUserList(_self.state.applicationId );
+        if(!response.ok) {
+         throw Error('Failed to share application')
+        }
+         _self.getUserList(_self.state.applicationId );
           _self.getSharedAppUserList(_self.state.applicationId );
           message.config({top:150})
           message.success("Application shared successfully");
-          _self.setState({
-            visible: false
-          });
           _self.props.onClose();
-        }
-      }).then(function(data) {
-        console.log('Saved..');
-      });
+      }).catch((err) =>{
+          message.error(err.message)
+      })
     }
 
     handleOk = () => {
@@ -185,8 +196,19 @@ class ShareApp extends Component {
       this.props.onClose();
     }
 
-    handleDeleteShare = () => {
-      console.log('handleDeleteShare....')
+    // STOP APPLICATION SHARE 
+    handleStopApplicationShare = async (record) => {
+      try{
+        await fetch('/api/app/read/stopApplicationShare', {
+          method: 'post',
+          headers: authHeader(),
+          body: JSON.stringify({'application_id': this.props.appId, 'username': record.username})
+        })
+        message.success(`${this.state.applicationTitle} is no longer shared with ${record.firstName} ${record.lastName}`)
+        this.setState({sharedAppUsers : this.state.sharedAppUsers.filter(user => user.username !== record.username)})
+      }catch(err){
+        message.error('Failed to stop stop application share')
+      }
     }
 
     render() {
@@ -224,7 +246,7 @@ class ShareApp extends Component {
       dataIndex: '',
       render: (text, record) =>
         <span>
-          <Popconfirm title="Are you sure you want to stop sharing this application with {{record.firstName+' '+record.lastName}}?" onConfirm={() => this.handleDeleteShare(record.id)} icon={<QuestionCircleOutlined />}>
+          <Popconfirm title={`Are you sure you want to stop sharing this application with ${record.firstName} ${record.lastName}?`} onConfirm={() => this.handleStopApplicationShare(record)} icon={<QuestionCircleOutlined />}>
             <a href="#"><Tooltip placement="right" title={"Stop Sharing"}><DeleteOutlined /></Tooltip></a>
           </Popconfirm>
         </span>
@@ -234,12 +256,12 @@ class ShareApp extends Component {
           <Modal
             title={'Share "'+this.state.applicationTitle+'" Application'}
             visible={true}
+            bodyStyle = {{maxHeight : '400px', minHeight: '300px', overflow: 'auto'}}
             onCancel={this.handleCancel}
             destroyOnClose={true}
-            bodyStyle={{height:"460px"}}
             okText="Share"
             footer={[
-            <Button key="cancel" onClick={this.handleCancel}>
+            <Button key="cancel" onClick={this.handleCancel} type='primary'>
               Close
             </Button>
           ]}
@@ -250,24 +272,25 @@ class ShareApp extends Component {
               dropdownClassName="certain-category-search-dropdown"
               dropdownMatchSelectWidth={false}
               dropdownStyle={{ width: 300 }}
-              size="large"
-              style={{ width: '60%', paddingRight:"5px" }}
-              dataSource={userSuggestions}
+              style={{ width: '70%', paddingRight:"5px" }}
               onSearch={(value) => this.searchUsers(value)}
-              onSelect={(value) => this.onUserSelected(value)}
+              onSelect={(value, user) => this.onUserSelected(value,user)}
               placeholder="Search users"
-              optionLabelProp="value"
             >
-              <Input id="autocomplete_field" suffix={this.state.autoCompleteSuffix} autoComplete="off"/>
+              {userSuggestions.map((user) => {
+                return <Option key={user.value} value={user.text}>{this.groupUserDetails(user)}</Option>;
+              })}
             </AutoComplete>
             <Button type="primary" disabled={!shareButtonEnabled} onClick={this.saveSharedDetails}>Share Application</Button>
           </div>
-          <div >
+          <div  style={{marginTop: '15px'}}>
             <Table
               columns={sharedUsersColumns}
               rowKey={record => record.id}
               dataSource={sharedAppUsers}
-              pagination={{ pageSize: 5 }}
+              pagination={false}
+              size = 'small'
+              bordered= {true}
             />
           </div>
 

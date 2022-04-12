@@ -45,43 +45,30 @@ router.get('/app_list', (req, res) => {
     })
     .catch(function(err) {
       console.log(err);
-      return res.status(500).json({ success: false, message: "Error occured while getting application list" });
+      return res.status(500).json({ success: false, message: "Error occurred while getting application list" });
     });
   } catch (err) {
     console.log('err', err);
-    return res.status(500).json({ success: false, message: "Error occured while getting application list" });
+    return res.status(500).json({ success: false, message: "Error occurred while getting application list" });
   }
 });
-router.get('/appListByUserId', (req, res) => {
-  console.log("[app/read.js] -  Get app list for user id ="+ req.query.user_id);
-
+router.get('/appListByUsername',[
+   query('user_name').notEmpty().withMessage('Invalid username')
+], async (req, res) => {
+  console.log("[app/read.js] -  Getting app list for  ="+ req.query.user_name);
+   const errors = validationResult(req).formatWith(validatorUtil.errorFormatter);
+    if (!errors.isEmpty()) {
+      return res.status(422).json({ success: false, errors: errors.array() });
+    }
+    const {user_name} = req.query;
   try {
-    models.application.findAll({
-      where:{
-        [Op.or]: [{
-            'visibility': 'Public'
-          },
-          {
-            [Op.or]: [
-              {"$user_id$":req.query.user_id},
-              {"$user_id$": req.query.user_name}
-            ]
-          }
-        ],
-      }, 
-      order: [['updatedAt', 'DESC']],
-      include: [UserApplication]
-    }).then(async function(applications) {
-      
-      res.json(applications);
-    })
-    .catch(function(err) {
-      console.log(err);
-      return res.status(500).json({ success: false, message: "Error occured while getting application list" });
-    });
+    const userApplications = await UserApplication.findAll({where : {user_id : user_name }, raw: true, attributes : ['application_id']});
+    const userApplicationIds = userApplications.map(app => app.application_id);
+    const allApplications = await Application.findAll({where : {[Op.or]: [{id : userApplicationIds}, {'visibility': 'Public' }]}, raw : true, order: [['updatedAt', 'DESC']]})// this includes user created, public and shared apps
+    res.status(200).json(allApplications);
   } catch (err) {
     console.log('err', err);
-    return res.status(500).json({ success: false, message: "Error occured while getting application list" });
+    return res.status(500).json({ success: false, message: "Error occurred while getting application list" });
   }
 });
 
@@ -111,7 +98,7 @@ router.get('/app', [
   }
 });
 
-router.post('/newapp', [
+router.post('/saveApplication', [
   body('user_id')
     .optional({checkFalsy:true})
     .matches(/^[a-zA-Z]{1}[a-zA-Z0-9_:.\-]*$/).withMessage('Invalid user_id'),
@@ -156,41 +143,67 @@ router.post('/newapp', [
   }
 });
 
-router.post('/removeapp', async function (req, res) {
+// DELETE APPLICATION 
+router.post('/deleteApplication', async function (req, res) {
   try {
-    let dataflows = await Dataflow.findAll({where: {application_id: req.body.appIdsToDelete}, raw: true, attributes: ['id']});
+    let dataflows = await Dataflow.findAll({where: {application_id: req.body.appIdToDelete}, raw: true, attributes: ['id']});
     if(dataflows && dataflows.length > 0) {
       let dataflowIds = dataflows.map(dataflow => dataflow.id);
-      let assetsDataflows = await AssetsDataflows.destroy({where: {dataflowId: {[Sequelize.Op.in]:dataflowIds}}})
-      let dependantJobs = await DependentJobs.destroy({where: {dataflowId: {[Sequelize.Op.in]:dataflowIds}}});
-      let dataflowsDeleted = await Dataflow.destroy({where: {application_id: req.body.appIdsToDelete}});
+      await AssetsDataflows.destroy({where: {dataflowId: {[Sequelize.Op.in]:dataflowIds}}})
+      await DependentJobs.destroy({where: {dataflowId: {[Sequelize.Op.in]:dataflowIds}}});
+      await Dataflow.destroy({where: {application_id: req.body.appIdToDelete}});
     }
-    
-    Application.destroy({
-        where:{id: req.body.appIdsToDelete}
-    }).then(function(deleted) {
-        return res.status(200).send({"result":"success"});
-    });
+      await UserApplication.destroy({where: {application_id : req.body.appIdToDelete, user_id: req.body.user}});
+      const app = await Application.findOne({where : { id : req.body.appIdToDelete}});
+      if(app.creator === req.body.user) await Application.destroy({where:{id: req.body.appIdToDelete}})
+      return res.status(200).send({"result":"success"});
   } catch (err) {
-    console.log('err', err);
-    return res.status(500).json({ success: false, message: "Error occured while removing application" });
+      console.log('err', err);
+      return res.status(500).json({ success: false, message: "Error occurred while removing application" });
   }
 });
 
-router.post('/saveUserApp', function (req, res) {
-  console.log("[app/read.js] - saveUserApp called");
-  var userAppList=req.body.users;
-  try {
-    UserApplication.bulkCreate(userAppList).then(async function(application) {
-      let userDetail = await authServiceUtil.getUserDetails(req, userAppList[0].user_id);
-      Application.findOne({where: {id:userAppList[0].application_id}}).then((application) => {
-        NotificationModule.notifyApplicationShare(userDetail[0].email, application.title, req);
-      })
-      res.json({"result":"success"});
-    });
-  } catch (err) {
-    console.log('err', err);
-    return res.status(500).json({ success: false, message: "Error occured while saving user application mapping" });
+
+// SHARE APPLICATION
+router.post('/shareApplication', [], async(req,res) =>{
+  const {data : appShareDetails } = req.body;
+  try{
+    await UserApplication.create(appShareDetails);
+    // Can't wait for notification  email to be sent - might take longer ->Sending response to client as soon as the data is saved in userApplication table
+    res.json({"result":"success"}); 
+    try{
+      const userDetails = await authServiceUtil.getUserDetails(req, appShareDetails.user_id);
+      NotificationModule.notifyApplicationShare(userDetails[0].email, appShareDetails.appTitle)
+    }catch(err){
+      console.log('--- [app/read.js] Error sending application share notification -----------');
+      console.dir({err}, {depth: null})
+      console.log('--------------------------------------------------------------------------');
+    }
+  }catch(err){
+    console.log('--- Share app error [app/read.js] --------------');
+    console.dir({err}, {depth: null})
+    console.log('------------------------------------------------');
+    return res.status(500).json({ success: false, message: "Error occurred while saving user application mapping" });
+  }
+})
+
+// UN-SHARE APPLICATION
+router.post('/stopApplicationShare',[
+  body('application_id').isUUID(4).withMessage('Invalid application ID'),
+  body('username').notEmpty().withMessage('Invalid username')
+], async(req, res) =>{
+  const errors = validationResult(req).formatWith(validatorUtil.errorFormatter);
+  if (!errors.isEmpty()) {
+    return res.status(422).json({ success: false, errors: errors.array() });
+  }
+
+  try{
+    const{application_id, username : user_id} = req.body;
+    await UserApplication.destroy({where : { application_id, user_id}});
+    res.status(200).json({success : true, message : 'Success'})
+  }catch(err){
+    console.log(err);
+    res.status(405).json({success: false, message : err.message})
   }
 });
 

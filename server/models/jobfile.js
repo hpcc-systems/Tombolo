@@ -17,6 +17,10 @@ module.exports = (sequelize, DataTypes) => {
     added_manually:{
       type: DataTypes.BOOLEAN,
       defaultValue: false,
+    },
+    isSuperFile:{
+      type: DataTypes.BOOLEAN,
+      defaultValue: false,
     }
   }, {paranoid: true, freezeTableName: true});
   jobfile.associate = function(models) {
