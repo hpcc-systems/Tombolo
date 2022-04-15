@@ -1,6 +1,6 @@
 import React, {useState, useEffect} from 'react'
 import { authHeader, handleError } from "../../common/AuthHeader.js"
-import { Form, Input, Select} from 'antd/lib';
+import { Col, Form, Input, Row, Select} from 'antd/lib';
 import ReactMarkdown from 'react-markdown';
 import { MarkdownEditor } from "../../common/MarkdownEditor.js";
 import { useSelector,useDispatch } from "react-redux";
@@ -124,10 +124,18 @@ function BasicsTabManul(props) {
     return (
         <>  
             {enableEdit ? 
-             <Form.Item  label="Cluster" name="clusters" hidden={readOnlyView}>
-                <Select placeholder="Select a Cluster" disabled={!editingAllowed} onChange={onClusterSelection} style={{ width: 190 }}>
-                    {clusters.map(cluster => <Option key={cluster.id}>{cluster.name}</Option>)}
-                </Select>
+             <Form.Item label="Cluster" hidden={readOnlyView}>
+                <Row gutter={[8, 8]}>
+                  <Col span={12}>
+                    <Form.Item noStyle name="clusters" >
+                      <Select placeholder="Select a Cluster" disabled={!editingAllowed} onChange={onClusterSelection}>
+                        {clusters.map((cluster) => (
+                          <Option key={cluster.id}>{cluster.name}</Option>
+                        ))}
+                      </Select>
+                    </Form.Item>
+                  </Col>
+                </Row>
               </Form.Item>
            : null}
 

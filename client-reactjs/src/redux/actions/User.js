@@ -175,7 +175,7 @@ function azureLogin(user) {
   return dispatch => {
       localStorage.setItem('user', JSON.stringify(user));
       dispatch(success(user))
-      history.push("/dataflows");
+      history.push("/");
     }
   function success(user) { return { type: Constants.LOGIN_SUCCESS, user } }
 }

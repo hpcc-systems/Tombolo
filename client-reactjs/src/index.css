@@ -329,12 +329,12 @@ path,
   color: #1890ff !important;
 }
 
-.ant-radio-group-solid
+/* .ant-radio-group-solid
   .ant-radio-button-wrapper-checked:not(.ant-radio-button-wrapper-disabled) {
   color: #fff;
   background: #6c757d;
   border-color: #6c757d;
-}
+} */
 
 .ant-radio-button-wrapper-checked:hover {
   color: #fff;
@@ -791,10 +791,9 @@ div.tooltip {
   resize: none;
   height: auto;
   width: 100%;
-  padding-left: 0;
 }
 
-.read-only-input input{
+.read-only-input input, .read-only-input textarea{
   background: white !important;
   border: none !important; 
 }
@@ -954,10 +953,14 @@ div.tooltip {
 .nav-link > .fa{
   font-size: 1.33333333em;
 }
-.ant-cascader-menu{
+.ant-cascader-menu {
   height: 40vh;
   max-width:200px;
-  min-width: 130px;}
+  min-width: 130px;
+}
+.x6-node .btn {
+  cursor: pointer;
+}
 
 .jobExecutionDetails_antdTable_selectedRow > td{
  background : lightgray !important;
@@ -970,10 +973,6 @@ div.tooltip {
 /* To reduce gap between label and input field */
 .MultiLineFormItem > div:first-child{
   height: 30px;
-}
-
-label {
-  font-weight: 600
 }
 
 iframe{

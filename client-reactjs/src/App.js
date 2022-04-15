@@ -1,8 +1,9 @@
-import React  from "react";
+import React from "react";
 import { connect } from "react-redux";
 import { Layout } from "antd/lib";
 import "font-awesome/css/font-awesome.min.css";
 import { Router, Route, Switch } from "react-router-dom";
+import { Redirect } from 'react-router'
 import history from "./components/common/History";
 import { LoginPage } from "./components/login/LoginPage";
 import AzureUserHome from "./components/azureSso/AzureUserHome";
@@ -19,6 +20,7 @@ import { DataflowInstances } from "./components/application/DataflowInstances/Da
 import { DataflowInstanceDetails } from "./components/application/DataflowInstances/DataflowInstanceDetails";
 import Users from "./components/admin/Users";
 import FileDetailsForm from "./components/application/FileDetails";
+import FileTemplate from "./components/application/templates/FileTemplate"
 import JobDetailsForm from "./components/application/Jobs/JobDetails";
 import IndexDetailsForm from "./components/application/IndexDetails";
 import QueryDetailsForm from "./components/application/QueryDetails";
@@ -36,6 +38,7 @@ import { store } from "./redux/store/Store";
 
 import { Report } from "./components/Report/Report";
 import Regulations from "./components/admin/ControlsAndRegulations";
+import GitHubSettings from "./components/admin/GitHubSettings/GitHubSettings";
 const { Content } = Layout;
 
 class App extends React.Component {  
@@ -84,6 +87,15 @@ class App extends React.Component {
       );
     };
     
+    const getAssets = () => {
+      const applicationId = this.props.application?.applicationId;
+      if (applicationId) {
+        return <Redirect to={`/${applicationId}/assets`} />;
+      } else {
+        return <Assets />;
+      }
+    };
+    
 
     return (
       <Router history={history}>
@@ -106,10 +118,14 @@ class App extends React.Component {
             >
               <Content style={{ background: "#fff", margin: "0 16px" }}>
                 <Switch>
-                  <PrivateRoute exact path="/" component={dataFlowComp} />
+                  <PrivateRoute exact path="/" component={getAssets} />
                   <PrivateRoute
                     path="/:applicationId/assets/file/:fileId?"
                     component={FileDetailsForm}
+                  />
+                  <PrivateRoute
+                    path="/:applicationId/assets/fileTemplate/:fileId?"
+                    component={FileTemplate}
                   />
                   <PrivateRoute
                     path="/:applicationId/assets/job/:jobId?"
@@ -137,7 +153,7 @@ class App extends React.Component {
                     component={dataDictionaryComp}
                   />
                   <PrivateRoute
-                    path="/:applicationId/dataflow/details"
+                    path="/:applicationId/dataflow/details/:dataflowId?"
                     component={DataflowDetails}
                   />
                   <PrivateRoute
@@ -152,6 +168,8 @@ class App extends React.Component {
                     path="/admin/clusters"
                     component={AdminClusters}
                   />
+
+                  <PrivateRoute path="/admin/github" component={GitHubSettings} />
                   <PrivateRoute path="/admin/users" component={Users} />
                   <PrivateRoute path="/report/:searchText" component={Report} />
                   <PrivateRoute
@@ -163,7 +181,7 @@ class App extends React.Component {
                     component={Regulations}
                   />
                   <PrivateRoute
-                    path="/:applicationId/dataflowinstances/dataflowInstanceDetails"
+                    path="/:applicationId/dataflowinstances/dataflowInstanceDetails/:dataflowId?/:executionGroupId?"
                     component={DataflowInstanceDetails}
                   />
                   <PrivateRoute
@@ -175,7 +193,7 @@ class App extends React.Component {
                     component={Actions}
                   />
                   <PrivateRoute
-                    path="/:applicationId/manualJobDetails"
+                    path="/:applicationId/manualJobDetails/:jobId/:jobExecutionId"
                     component={ManualJobDetail}
                   /> 
                 </Switch>

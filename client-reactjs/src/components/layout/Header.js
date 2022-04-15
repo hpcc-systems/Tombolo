@@ -6,6 +6,7 @@ import { connect } from 'react-redux';
 import { authHeader, handleError } from "../common/AuthHeader.js"
 import { hasAdminRole } from "../common/AuthUtil.js";
 import { applicationActions } from '../../redux/actions/Application';
+import {dataflowAction} from "../../redux/actions/Dataflow"
 import { groupsActions } from '../../redux/actions/Groups';
 import { assetsActions } from '../../redux/actions/Assets';
 import { QuestionCircleOutlined, DownOutlined  } from '@ant-design/icons';
@@ -14,6 +15,7 @@ import {Constants} from "../common/Constants"
 import {store} from "../../redux/store/Store"
 import { debounce } from "lodash";
 import logo from  "../../images/logo.png"
+import { msalInstance } from '../../index';
 
 const { Header, Content } = Layout;
 const { Search } = Input;
@@ -49,10 +51,6 @@ class AppHeader extends Component {
         this.setState({ selected: this.state.applications[0].display });
         this.props.dispatch(applicationActions.applicationSelected(this.state.applications[0].value, this.state.applications[0].display));
         localStorage.setItem("activeProjectId", this.state.applications[0].value);
-        //if it is asset details url, dont redirect to default /dataflow page
-        if(!this.props.history.location.pathname.startsWith('/details')) {
-          this.props.history.push('/'+this.state.applications[0].value+'/assets');
-        }
       } else {
         appDropdownItem.click();
       }
@@ -70,10 +68,9 @@ class AppHeader extends Component {
     }
 
     componentDidMount(){
-      if(this.props.location.pathname.split("/").includes('manualJobDetails')){
+      if(this.props.location.pathname.includes('manualJobDetails')){
         return; 
       }
-
       if(this.props.location.pathname.includes('report/')){
         const pathSnippets = this.props.location.pathname.split('/');
         this.setState({
@@ -177,22 +174,18 @@ class AppHeader extends Component {
       this.props.dispatch(assetsActions.clusterSelected(''));
       this.props.dispatch(userActions.logout());
 
-      this.props.history.push('/login');
-      message.success('You have been successfully logged out. ');
+      if(process.env.REACT_APP_APP_AUTH_METHOD === 'azure_ad'){
+         msalInstance.logoutRedirect()
+      }else{
+        this.props.history.push('/login');
+        message.success('You have been successfully logged out. ');
+      }
     }
 
     handleChange(event) {
-      store.dispatch({
-        type: Constants.DATAFLOW_SELECTED,
-        selectedDataflow: {dataflowId: ""}
-      })
       this.props.dispatch(applicationActions.applicationSelected(event.target.getAttribute("data-value"), event.target.getAttribute("data-display")));
       localStorage.setItem("activeProjectId", event.target.getAttribute("data-value"));
       this.setState({ selected: event.target.getAttribute("data-display") });
-      //if it is asset details url, dont redirect to default /dataflow page
-      if(!this.props.history.location.pathname.startsWith('/details')) {
-        this.props.history.push('/'+event.target.getAttribute("data-value")+'/assets');
-      }
       $('[data-toggle="popover"]').popover('disable');
     }    
 

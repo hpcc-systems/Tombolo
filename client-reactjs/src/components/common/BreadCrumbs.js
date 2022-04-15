@@ -5,8 +5,8 @@ import {withRouter} from "react-router-dom";
 class BreadCrumbs extends Component {
 
   render() {
-    const BreadCrumbs = withRouter((props) => {
-        const { location } = props;
+    const getBreadCrumbs = () => {
+        const { location } = this.props;
         const pathSnippets = location.pathname.split('/');
         let breadCrumbItems = [];
         let path = '';        
@@ -26,16 +26,18 @@ class BreadCrumbs extends Component {
             breadCrumbItems.push(<Breadcrumb.Item key={pathSnippets[2]}>{pathSnippets[2]}</Breadcrumb.Item>);
         }
         return breadCrumbItems;
-    });
+    };
+    
     return (
 
      <Layout style={{ padding: '0 5px 5px' }}>
         <Breadcrumb>
-          <BreadCrumbs/>
+          {getBreadCrumbs()}
         </Breadcrumb>
      </Layout>   
     )
   }
 }
 
-export default BreadCrumbs;
+
+export default withRouter(BreadCrumbs);

@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react'
 import { useHistory } from 'react-router';
 import { useSelector, useDispatch } from "react-redux";
-import { Table, message, Divider} from 'antd/lib';
+import { Table } from 'antd/lib';
 import { authHeader, handleError } from "../common/AuthHeader.js"
 import { dataflowAction } from '../../redux/actions/Dataflow';
 
@@ -31,14 +31,15 @@ function AssociatedDataflows({assetId, assetType}) {
     });
   }
 
-  const onDataflowClick = (applicationId, dataflowId) => {
+  const onDataflowClick = (applicationId, dataflowId, clusterId) => {
     dispatch(dataflowAction.dataflowSelected(
       applicationReducer.application.applicationId,
       applicationReducer.application.applicationTitle,
       dataflowId,
+      clusterId,
       user
     ));
-    history.push("/"+applicationId+"/dataflow/details");
+    history.push(`/${applicationId}/dataflow/details/${dataflowId}`);
   }
 
   const associatedDataflowCols = [{
@@ -47,7 +48,7 @@ function AssociatedDataflows({assetId, assetType}) {
     width: '30%',
     render: (text, record) =>
       <span>
-        <a onClick={() => onDataflowClick(record.application_id, record.id)} rel="noopener noreferrer">{record.title}</a>
+        <a onClick={() => onDataflowClick(record.application_id, record.id, record.clusterId)} rel="noopener noreferrer">{record.title}</a>
       </span>
 
   },

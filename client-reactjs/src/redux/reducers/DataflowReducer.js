@@ -4,7 +4,9 @@ const initialState = {
 	applicationId: '',
   dataflowId: '',
   workflowId: '',
-  instanceId: ''
+  instanceId: '',
+  clusterId :"",
+  user: null
 };
 
 export function dataflowReducer(state = initialState, action) {
@@ -14,6 +16,7 @@ export function dataflowReducer(state = initialState, action) {
         applicationId: action.selectedDataflow.applicationId,
         applicationTitle: action.selectedDataflow.applicationTitle,
         dataflowId: action.selectedDataflow.dataflowId,
+        clusterId:action.selectedDataflow.clusterId,
         user: action.selectedDataflow.user
       };
     default:

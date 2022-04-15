@@ -18,41 +18,45 @@ const START_JOB_TOPIC = process.env.START_JOB_TOPIC;
 
 class QueueDaemon {
   constructor() {
-    this.kafka = new Kafka({
-      clientId: 'tombolo',
-      brokers: [`${process.env.KAFKA_HOST_NAME}:${process.env.KAFKA_PORT}`]
-    });
-    this.consumer = this.kafka.consumer({ groupId: JOB_COMPLETE_GROUP_ID });
-    this.producer = this.kafka.producer();
+    if(process.env.KAFKA_HOST_NAME) {
+      this.kafka = new Kafka({
+        clientId: 'tombolo',
+        brokers: [`${process.env.KAFKA_HOST_NAME}:${process.env.KAFKA_PORT}`]
+      });
+      this.consumer = this.kafka.consumer({ groupId: JOB_COMPLETE_GROUP_ID });
+      //this.producer = this.kafka.producer();
 
-    (async () => {
-      await this.bootstrap();
-    })();
+      (async () => {
+        await this.bootstrap();
+      })();
+    }
   }
 
   async bootstrap() {
     try {
-      await this.consumer.connect();
+      if(this.consumer) {
+        await this.consumer.connect();
 
-      //await this.consumer.subscribe({ topic: JOB_COMPLETE_TOPIC, fromBeginning: true });
+        //await this.consumer.subscribe({ topic: JOB_COMPLETE_TOPIC, fromBeginning: true });
 
-      await this.consumer.subscribe({ topic: START_JOB_TOPIC, fromBeginning: true });
+        await this.consumer.subscribe({ topic: START_JOB_TOPIC, fromBeginning: true });
 
-      await this.consumer.run({
-        eachMessage: async ({ topic, partition, message }) => {
-          console.log('topic: '+topic);
-          switch (topic) {
-            case JOB_COMPLETE_TOPIC:
-              this.processJob(message.value.toString());
-              break;
-            case START_JOB_TOPIC:
-              this.startJob(message.value.toString());
-              break;
-          }
-        },
-      });
+        await this.consumer.run({
+          eachMessage: async ({ topic, partition, message }) => {
+            console.log('topic: '+topic);
+            switch (topic) {
+              case JOB_COMPLETE_TOPIC:
+                this.processJob(message.value.toString());
+                break;
+              case START_JOB_TOPIC:
+                this.startJob(message.value.toString());
+                break;
+            }
+          },
+        });
 
-      await this.producer.connect();
+        //await this.producer.connect();
+      }
     }catch (err) {      
       console.log(err);
     }
@@ -61,18 +65,18 @@ class QueueDaemon {
   async shutdown() {
     console.log('disconnect consumer');
     await this.consumer.disconnect();
-    console.log('disconnect producer');
-    await this.producer.disconnect();
+    /*console.log('disconnect producer');
+    await this.producer.disconnect();*/
     console.log('kafka shutdown');
   }
 
   async submitMessage(topic = '', message = '') {
-    await this.producer.send({
+    /*await this.producer.send({
       topic: topic,
       messages: [
         { value: message },
       ],
-    });
+    });*/
   }
 
   async processJob(message) {

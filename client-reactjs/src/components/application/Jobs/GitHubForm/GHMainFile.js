@@ -1,21 +1,26 @@
-import React, { useState, useEffect } from 'react';
-import { Select, Cascader, Input ,Tag } from 'antd';
+import React, { useEffect, useState } from 'react';
+import { Select, Cascader, Input, Tag, Space } from 'antd';
 import Form from 'antd/lib/form/Form';
+import { CheckCircleOutlined, CloseCircleOutlined, LoadingOutlined } from '@ant-design/icons';
 
-function GHMainFile({ enableEdit, form, getAuthorizationHeaders }) {
+function GHMainFile({ enableEdit, form, branchOrTagName }) {
   const [repoTree, setRepoTree] = useState([]);
-  const [defaultCascader, setDefaultCascader] = useState(null);
 
   const fetchFilesFromGitHub = async (targetOption) => {
+    const headers = { Accept: 'application/json', 'Content-Type': 'application/json' };
+    if (targetOption.ghToken) headers.Authorization = `token ${targetOption.ghToken}`;
+
     const url = `https://api.github.com/repos/${targetOption.owner}/${targetOption.repo}/contents${ targetOption.path ? '/' + targetOption.path : '' }?ref=${targetOption.ref}`;
-    const respond = await fetch(url, { headers: getAuthorizationHeaders() });
+    const respond = await fetch(url, { headers });
+
     const content = await respond.json();
     if (content.message) throw new Error(content.message);
+
     return content;
   };
 
-  const onChange = (value, selectedOptions) => {
-    if (value.length === 0)  form.current.resetFields([['gitHubFiles', 'selectedFile'], 'name', 'title']); // this is triggered when user resets cascader
+  const onChange = async (value, selectedOptions) => {
+    if (!value) return form.current.resetFields([['gitHubFiles', 'selectedFile'], 'name', 'title']); // this is triggered when user resets cascader
 
     if (selectedOptions[selectedOptions.length - 1]?.isLeaf) {
       const updateFields = {
@@ -24,6 +29,13 @@ function GHMainFile({ enableEdit, form, getAuthorizationHeaders }) {
         title: value[value.length - 1],
       };
       form.current.setFieldsValue(updateFields);
+      try {
+        await form.current.validateFields([['gitHubFiles', 'pathToFile']]);
+      } catch (error) {
+        console.log('-error-----------------------------------------');
+        console.dir({ error }, { depth: null });
+        console.log('------------------------------------------');
+      }
     }
   };
 
@@ -42,7 +54,8 @@ function GHMainFile({ enableEdit, form, getAuthorizationHeaders }) {
         ref: targetOption.ref,
         repo: targetOption.repo,
         owner: targetOption.owner,
-        repoId: targetOption.repoId,
+        ghToken: targetOption.ghToken,
+        id: targetOption.id,
       }));
       setRepoTree([...repoTree]);
     } catch (error) {
@@ -52,19 +65,22 @@ function GHMainFile({ enableEdit, form, getAuthorizationHeaders }) {
   };
 
   const handleSelectRepo = async (selectedRepoId) => {
-    form.current.resetFields([['gitHubFiles', 'selectedFile'], ['gitHubFiles', 'pathToFile'], 'name', 'title']); // reset fields if repo is reselected
+    form.current.resetFields([ ['gitHubFiles', 'selectedFile'], ['gitHubFiles', 'pathToFile'], 'name', 'title', ]); // reset fields if repo is reselected
 
     if (selectedRepoId === undefined) return; // exit function if user hit reset button.
 
-    const selectedRepo = form.current?.getFieldValue(['gitHubFiles', 'reposList']).find((el) => el.repoId === selectedRepoId);
-    const tagOrBranch = selectedRepo.selectedGitTag || selectedRepo.selectedGitBranch;
+    const selectedRepo = form.current?.getFieldValue(['gitHubFiles', 'reposList'])?.find((el) => el.id === selectedRepoId);
+    const tagOrBranch = selectedRepo.ghBranchOrTag;
+   
     try {
       const content = await fetchFilesFromGitHub({
         path: null,
         ref: tagOrBranch,
         repo: selectedRepo.repo,
         owner: selectedRepo.owner,
+        ghToken: selectedRepo.ghToken,
       });
+
       const initialTree = content.map((el) => ({
         ...el,
         value: el.name,
@@ -73,76 +89,130 @@ function GHMainFile({ enableEdit, form, getAuthorizationHeaders }) {
         ref: tagOrBranch,
         repo: selectedRepo.repo,
         owner: selectedRepo.owner,
-        repoId: selectedRepo.repoId,
+        ghToken: selectedRepo.ghToken,
+        id: selectedRepo.id,
       }));
+
       setRepoTree(initialTree);
     } catch (error) {
       form.current.setFields([{ name: ['gitHubFiles', 'selectedRepoId'], errors: [error.message] }]);
     }
   };
 
-  useEffect(() => {
-    const defaultCascader = form?.current.getFieldValue(['gitHubFiles', 'pathToFile']);
-    if (defaultCascader) setDefaultCascader(defaultCascader);
-  }, []);
-
   const repoList = form.current?.getFieldValue(['gitHubFiles', 'reposList']) || [];
-  const selectedRepoId = form.current?.getFieldValue(['gitHubFiles', 'selectedRepoId']);
+  const reposFetched = form.current?.getFieldValue(['gitHubFiles', 'reposFetched']);
+  const selectedRepoId = form.current?.getFieldValue(['gitHubFiles', 'selectedRepoId']) || '';
+  const pathToFile = form.current?.getFieldValue(['gitHubFiles', 'pathToFile']) || [];
 
   return (
-    <Form.Item label='Main File' required className={!enableEdit && 'read-only-input'}>
-      <Input.Group compact>
-        <Form.Item
-          noStyle
-          name={['gitHubFiles', 'selectedRepoId']}
-          validateTrigger={["onBlur", "onSubmit"]}
-          rules={[{ required: true, message: 'Please select main file repo' }]}
-        >
-          <Select
-            allowClear
-            style={{ width: '50%' }}
-            onChange={handleSelectRepo}
-            disabled={repoList.length === 0}
-            placeholder='Select Main File Repo'
-            dropdownMatchSelectWidth={false}
+    <Form.Item
+      label={enableEdit ? 'Main File' : 'Branch and File'}
+      required={enableEdit}
+      className={!enableEdit && 'read-only-input'}
+    >
+      {enableEdit ? (
+        <Input.Group compact>
+          <Form.Item
+            noStyle
+            name={['gitHubFiles', 'selectedRepoId']}
+            validateTrigger={['onBlur', 'onSubmit']}
+            rules={[{ required: true, message: 'Please select main file repo' }]}
           >
-            {repoList.map((repo) => (
-              <Select.Option key={repo.repoId} value={repo.repoId}>
-                {`${repo.providedGithubRepo.replace('https://github.com/', '')} -`} <Tag color={repo.selectedGitTag ? 'magenta' : 'cyan'}>{repo.selectedGitTag || repo.selectedGitBranch}</Tag>
-              </Select.Option>
-            ))}
-          </Select>
-        </Form.Item>
+            <Select
+              allowClear
+              style={{ width: '50%' }}
+              onChange={handleSelectRepo}
+              disabled={!reposFetched}
+              placeholder="Select Main File Repo"
+              dropdownMatchSelectWidth={false}
+            >
+              {repoList.map((repo) => (
+                <Select.Option key={repo.id} value={repo.id}>
+                  <Tag color="geekblue">{repo.ghBranchOrTag}</Tag> - {repo.ghProject} -{' '}
+                  {repo.ghLink.replace('https://github.com/', '')}
+                </Select.Option>
+              ))}
+            </Select>
+          </Form.Item>
 
-        <Form.Item
-          noStyle
-          name={['gitHubFiles', 'pathToFile']}
-          validateTrigger={['onBlur', 'onSubmit']}
-          rules={[
-            { required: true, message: '' },
-            ({ getFieldValue }) => ({
-              validator(field, value) {
-                if (getFieldValue(['gitHubFiles', 'selectedFile']))  return Promise.resolve();
-                return Promise.reject(new Error('Please select a main file'));
-              },
-            }),
-          ]}
-        >
-          <Cascader
-            style={{ width: '50%' }}
-            changeOnSelect
-            options={repoTree}
-            onChange={onChange}
-            loadData={loadBranchTree}
-            placeholder='Select Main File'
-            defaultValue={defaultCascader}
-            className={!enableEdit && 'read-only-input'}
-            disabled={selectedRepoId === undefined || repoTree.length === 0}
-          />
-        </Form.Item>
-      </Input.Group>
+          <Form.Item
+            noStyle
+            name={['gitHubFiles', 'pathToFile']}
+            validateTrigger={['onBlur', 'onSubmit']}
+            rules={[
+              { required: true, message: '' },
+              ({ getFieldValue }) => ({
+                validator(field, value) {
+                  if (getFieldValue(['gitHubFiles', 'selectedFile'])) return Promise.resolve();
+                  return Promise.reject(new Error('Please select a main file'));
+                },
+              }),
+            ]}
+          >
+            <Cascader
+              style={{ width: '50%' }}
+              changeOnSelect
+              options={repoTree}
+              onChange={onChange}
+              loadData={loadBranchTree}
+              placeholder="Select Main File"
+              className={!enableEdit && 'read-only-input'}
+              disabled={selectedRepoId === undefined || repoTree.length === 0}
+            />
+          </Form.Item>
+        </Input.Group>
+      ) : (
+        <Space>
+          <Tag color="cyan"> {branchOrTagName} </Tag>
+          <Tag color="magenta"> {pathToFile.join('/')} </Tag>
+          <FileStatus form={form} enableEdit={enableEdit} branchOrTagName={branchOrTagName}/>
+        </Space>
+      )}
     </Form.Item>
   );
 }
 
 export default GHMainFile;
+
+const FileStatus = ({ form, enableEdit, branchOrTagName }) => {
+  const [fileExist, setFileExist]=useState({loading:false, status:null })
+
+  useEffect(() => {
+    const selectedRepoId = form.current?.getFieldValue(['gitHubFiles', 'selectedRepoId']) || '';
+    const selectedFile = form.current?.getFieldValue(['gitHubFiles', 'selectedFile']);
+    const selectedRepo = form.current?.getFieldValue(['gitHubFiles', 'reposList'])?.find((el) => el.id === selectedRepoId);
+  
+    if (!enableEdit && branchOrTagName && selectedFile && selectedRepo) {
+      (async () => {
+        try {
+          const headers = { Accept: 'application/json', 'Content-Type': 'application/json' };
+          if (selectedRepo.ghToken) headers.Authorization = `token ${selectedRepo.ghToken}`;
+          setFileExist(()=>({loading:true, result:null}))
+          const url = `https://api.github.com/repos/${selectedFile.owner}/${selectedFile.repo}/contents/${selectedFile.path}?ref=${branchOrTagName}`;
+          const respond = await fetch(url, { headers });
+          const content = await respond.json();
+          if (content.message) throw new Error(content.message);
+          setFileExist(()=>({loading:false, status:'ok'}))
+        } catch (error) {
+          setFileExist(()=>({loading:false, status:error.message}))
+        }
+      })();
+    }
+  }, [branchOrTagName, enableEdit]);
+  
+  const getStatus = () => {
+    if (!fileExist.status) return null;
+    if (fileExist.status === 'ok'){
+      return  <><CheckCircleOutlined style={{color:"green", verticalAlign: 0}} /> file exists </>;
+    } else {
+      return  <><CloseCircleOutlined style={{color:"red", verticalAlign: 0}}/>file was not found, please check your credentials</>;
+    }
+  };
+
+  return (
+    <>
+      {fileExist.loading && <><LoadingOutlined /> ...checking file </>}
+      {getStatus()}
+    </>
+  );
+};

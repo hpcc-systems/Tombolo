@@ -1,5 +1,5 @@
 import { LogLevel } from "@azure/msal-browser";
-const {REACT_APP_AZURE_CLIENT_ID, REACT_APP_AZURE_TENENT_ID, REACT_APP_AZURE_REDIRECT_URI} = process.env;
+const {REACT_APP_AZURE_CLIENT_ID, REACT_APP_AZURE_TENENT_ID, REACT_APP_AZURE_REDIRECT_URI, REACT_APP_LOGOUT_URI} = process.env;
 
 export const msalConfig = {
     auth: {
@@ -7,7 +7,7 @@ export const msalConfig = {
         authority: `https://login.microsoftonline.com/${REACT_APP_AZURE_TENENT_ID}`, // Defaults to "https://login.microsoftonline.com/common"
         redirectUri: REACT_APP_AZURE_REDIRECT_URI, // Points to window.location.origin. You must register this URI on Azure Portal/App Registration.
         navigateToLoginRequestUrl: false, // If "true", will navigate back to the original request location before processing 
-        postLogoutRedirectUri: REACT_APP_AZURE_REDIRECT_URI,
+        postLogoutRedirectUri: REACT_APP_LOGOUT_URI,
     },
     cache: {
         cacheLocation: "localStorage", // Configures cache location. "sessionStorage" is more secure, but "localStorage" gives you SSO between tabs.
@@ -46,7 +46,8 @@ export const msalConfig = {
  * https://docs.microsoft.com/en-us/azure/active-directory/develop/v2-permissions-and-consent#openid-connect-scopes
  */
 export const loginRequest = {
-    scopes: ['User.read', 'email'],
+    // scopes: ['User.read', 'email'],
+    scopes : ['api://10e4b085-3fe6-40b8-966e-0201f2553617/access_as_user']
 };
 
 /**
@@ -54,6 +55,7 @@ export const loginRequest = {
  * between applications by providing a "login_hint" property.
  */
 export const silentRequest = {
-    scopes: ["openid", "profile"],
+    // scopes: ["openid", "profile"],
+    scopes : ['api://10e4b085-3fe6-40b8-966e-0201f2553617/access_as_user'],
     loginHint: "example@domain.net"
 };

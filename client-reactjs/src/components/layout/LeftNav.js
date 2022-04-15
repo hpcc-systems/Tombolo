@@ -66,33 +66,34 @@ class LeftNav extends Component {
                 </Link>
               </Menu.Item> 
 
-              <Menu.Item key="4" icon={<i className="fa fa-fw fa-telegram"/>}>         
-                <Link to={"/"+applicationId+"/actions"}>
-                  Actions
-                </Link>
-              </Menu.Item>
-
+            
               {canEdit ? 
                 <>
                   {this.state.collapsed ? null : <Title style={{fontSize:'24px'}} ellipsis={true} className="px-3 mt-4 mb-1 text-muted" >Settings</Title>}
+                  <Menu.Item key="4" icon={<i className="fa fa-fw fa-telegram"/>}>         
+                    <Link to={"/"+applicationId+"/actions"}>
+                      Actions
+                    </Link>
+                  </Menu.Item>
                   <Menu.Item key="5" icon={<i className="fa fa-fw fa-server"/>}>         
                     <Link to={"/admin/clusters"}>
                       Clusters
                     </Link>
                   </Menu.Item>
+
+                  <Menu.Item key="6" icon={<i className="fa fa-fw fa-github"/>}>         
+                    <Link to={"/admin/github"}>
+                      Github projects
+                    </Link>
+                  </Menu.Item>
                       
-                  <Menu.Item key="6" icon={<i className="fa fa-fw fa-user-circle"/>}>         
+                  <Menu.Item key="7" icon={<i className="fa fa-fw fa-user-circle"/>}>         
                     <Link to={"/admin/consumers"}>
                       Collaborator
                     </Link>
                   </Menu.Item>
-                </>
-                : null }
-
-              { isAdmin ?
-                <>
                   {this.state.collapsed ? null : <Title style={{fontSize:'24px'}} ellipsis={true} className="px-3 mt-4 mb-1 text-muted" >Admin</Title>}
-                  <Menu.Item key="7" icon={<i className="fa fa-fw fa-desktop"/>}>         
+                  <Menu.Item key="8" icon={<i className="fa fa-fw fa-desktop"/>}>         
                     <Link to={"/admin/applications"}>
                       Applications
                     </Link>

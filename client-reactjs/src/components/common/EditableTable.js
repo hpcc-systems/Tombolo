@@ -2,7 +2,6 @@ import React, { useContext, useState, useEffect, useRef } from 'react';
 import { Table, Input, Button, Popconfirm, Form, Select, Upload, message } from 'antd';
 import { DeleteOutlined, UploadOutlined  } from '@ant-design/icons';
 import Papa from 'papaparse';
-import {parseString} from 'xml2js';
 import {omitDeep} from './CommonUtil';
 import { store } from '../../redux/store/Store';
 import {Constants} from "../common/Constants";
@@ -170,9 +169,14 @@ class EditableTable extends React.Component {
         </span>
     }
     if(this.props.editingAllowed ) {
-      let columns = this.state.columns;
-      columns = columns.push(deleteColumn);
-      this.setState({ columns: columns});
+        let columns = this.state.columns;
+       let indexOfActionColumn = columns.findIndex(column => column.title === 'Action'); //Check if action column already exists
+        if(indexOfActionColumn > 0){
+          columns[indexOfActionColumn] = deleteColumn; // if exists modify so it gets id of new rows
+        }else{
+          columns = columns.push(deleteColumn); // Push action column if it don't already exist
+        }
+        this.setState({ columns: columns});
     } 
    
   }
@@ -361,9 +365,9 @@ class EditableTable extends React.Component {
     }
 
     const parseXml = (xmlText) => {
-      parseString(xmlText, (err, result) => {
+      /*parseString(xmlText, (err, result) => {
         parseJsonResult(result)
-      })
+      })*/
     }
 
     return (

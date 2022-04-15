@@ -8,11 +8,6 @@ function LoggedOut() {
   const history = useHistory();
   const { instance, accounts, inProgress } = useMsal();
 
-  useEffect(() => {
-    console.log(accounts);
-    instance.setActiveAccount({});
-  }, []);
-
   const handleLogin = () => {
     history.push("/login");
   };
@@ -20,7 +15,7 @@ function LoggedOut() {
   return (
     <Row
       style={{
-        background: "linear-gradient(white 30%, lightgray",
+        background: "linear-gradient(#FFFFFF 30%, #F5F5F5)",
         height: "100vh",
         display: "flex",
         placeContent: "center",
@@ -36,32 +31,20 @@ function LoggedOut() {
         style={{ background: "white", textAlign: "center", padding: "50px" }}
       >
         <div style={{ marginBottom: "20px" }}>
-          <img src={logo} />
+          <img src={logo} style={{maxWidth: '100%', maxHeight : '100%', objectFit: 'contain'}} />
         </div>
 
-        <p style={{ fontSize: "22px", fontWeight: "700" }}>
+        <p style={{ fontSize: "22px", fontWeight: "500" }}>
           You have been logged out.
         </p>
 
         <Button
           size="large"
-          block
           onClick={handleLogin}
           type="primary"
-          style={{ fontSize: "18px", fontWeight: "600", letterSpacing: "1px" }}
         >
           Log in again
         </Button>
-        <div
-          style={{
-            display: "flex",
-            placeItems: "center",
-            justifyContent: "space-around",
-            marginTop: "6px",
-          }}
-        >
-          Note: You may still be logged into your Identity Provider.
-        </div>
       </Col>
     </Row>
   );

@@ -1,445 +1,246 @@
-import React, { useState, useEffect } from "react";
-import { useSelector, useDispatch } from "react-redux";
-import { hasEditPermission } from "../common/AuthUtil.js";
-import ReactMarkdown from "react-markdown";
-import { MarkdownEditor } from "../common/MarkdownEditor.js";
-import {
-  Row,
-  Col,
-  Button,
-  Form,
-  Input,
-  Select,
-  Tabs,
-  Spin,
-  AutoComplete,
-  message,
-  Radio
-} from "antd/lib";
-import { authHeader, handleError } from "../common/AuthHeader.js";
-import {editableMode} from "../common/readOnlyUtil";
-import { assetsActions } from "../../redux/actions/Assets";
-import { debounce } from "lodash";
-import { useHistory } from "react-router";
+import React, { useState, useCallback } from 'react';
+import { useSelector } from 'react-redux';
+import { hasEditPermission } from '../common/AuthUtil.js';
+import ReactMarkdown from 'react-markdown';
+import { MarkdownEditor } from '../common/MarkdownEditor.js';
+import { Row, Col, Button, Form, Input, Select, Tabs, Spin, AutoComplete, message, Space } from 'antd';
+import { authHeader, handleError } from '../common/AuthHeader.js';
+
+import { debounce } from 'lodash';
+import { useHistory } from 'react-router';
 
 const TabPane = Tabs.TabPane;
 const Option = Select.Option;
+
 const formItemLayout = {
   labelCol: { span: 2 },
   wrapperCol: { span: 8 },
 };
 
+const initSelectedFile = {
+  id: '',
+  url: '',
+  name: '',
+  title: '',
+  cluster_id: '',
+  description: '',
+};
 
-function VisualizationDetails({ selectedGroup, openGroup, handleEditGroup, refreshGroups }) {
-  const [formState, setFormState] = useState({
-    initialDataLoading: false,
-    fileSearchSuggestions: [],
-    enableEdit: true,
-    editing: true,
-    dataAltered: false,    
-    fileSearchErrorShown: false,
-    selectedFileId: ''
-  });
-  const [visualization, setVisualization] = useState({
-    id: '',
-    chartType: "table",
-    url: '',
-    title: '',
-    name: '',
-    description: '',
-    selectedCluster: '',
-  });  
-  
-  const authReducer = useSelector((state) => state.authenticationReducer);
-  const assetReducer = useSelector((state) => state.assetReducer);
-  const viewOnlyModeReducer = useSelector((state) => state.viewOnlyModeReducer);
-  const applicationReducer = useSelector((state) => state.applicationReducer);
-  const editingAllowed = hasEditPermission(authReducer.user);
+function VisualizationDetails() {
+  const [authReducer, assetReducer, applicationReducer] = useSelector((state) => [
+    state.authenticationReducer,
+    state.assetReducer,
+    state.applicationReducer,
+  ]);
   const [form] = Form.useForm();
-  const dispatch = useDispatch();
   const history = useHistory();
 
-  useEffect(() => {
-    getVisualizationDetails();
-  }, [assetReducer.selectedAsset]);
+  const [formState, setFormState] = useState({ enableEdit: true, dataAltered: false, loading: false });
 
-  const makeFieldsEditable = () => {
-    editableMode();
+  const [search, setSearch] = useState({ loading: false, error: '', data: [] });
 
-    setFormState({
-      ...formState,
-      enableEdit: true,
-      editing: true
-    })
-  };
+  const [selectedFile, setSelectedFile] = useState({ ...initSelectedFile });
 
-  const switchToViewOnly = () => {
-    setFormState({
-      ...formState,
-      enableEdit: false,
-      editing: false,
-      dataAltered: true
-    })
-  }
+  const editingAllowed = hasEditPermission(authReducer.user);
 
-  // view edit buttons on tabpane
-  const editButton =
-  !formState.enableEdit && editingAllowed ? (
-    <>
-      <Button type="primary" onClick={makeFieldsEditable}>
-        Edit
-      </Button>
-    </>
-  ) : null;
+  const handleCancel = () => history.push('/' + applicationReducer.application.applicationId + '/assets');
 
-  const viewChangesBtn = formState.editing ? (
-    <Button onClick={switchToViewOnly} type="primary" ghost>
-      View Changes
-    </Button>
-  ) : null;
+  const switchToViewOnly = () => setFormState((prev) => ({ ...prev, enableEdit: false, dataAltered: true }));
 
-  const editandViewBtns = (
-    <div>
-      {editButton} {viewChangesBtn}
-    </div>
-  );
+  const makeFieldsEditable = () => setFormState((prev) => ({ ...prev, enableEdit: true }));
+
+  const onChange = () => setFormState((prev) => ({ ...prev, dataAltered: true }));
 
   const handleOk = async (e) => {
     e.preventDefault();
-    setFormState({
-      ...formState,
-      confirmLoading: true
-    })
-
     try {
-      const values = await form.current.validateFields();
-      console.log(formState.selectedCluster)
-      fetch("/api/file/read/visualization", {
-        method: "post",
+      await form.validateFields();
+      setFormState((prev) => ({ ...prev, loading: true }));
+
+      const options = {
         headers: authHeader(),
+        method: 'POST',
         body: JSON.stringify({
-          id: formState.selectedFileId,
-          application_id: applicationReducer.application.applicationId,
+          id: selectedFile.id,
+          fileName: selectedFile.name,
           email: authReducer.user.email,
-          clusterId: formState.selectedCluster,
-          fileName: form.current.getFieldValue("name"),
-          groupId: assetReducer.newAsset.groupId ? assetReducer.newAsset.groupId : "",
-          description: form.current.getFieldValue("description"),
-          editingAllowed: editingAllowed
+          editingAllowed: editingAllowed,
+          clusterId: selectedFile.cluster_id,
+          description: selectedFile.description,
+          application_id: applicationReducer.application.applicationId,
+          groupId: assetReducer.newAsset.groupId ? assetReducer.newAsset.groupId : '',
         }),
-      })
-      .then(function (response) {
-        if (response.ok && response.status == 200) {
-          return response.json();
-        }
-        handleError(response);
-      })      
-      .then(function (data) {
-        if (data && data.success) {
-          setFormState({
-            ...formState,
-            confirmLoading: false,
-          });
+      };
 
-          history.push("/" + applicationReducer.application.applicationId + "/assets");
-        }
-      })
-    } catch(err) {
-      console.log(err);
+      const response = await fetch('/api/file/read/visualization', options);
+      if (!response.ok) handleError(response);
+
+      const data = await response.json();
+
+      if (data?.success) {
+        history.push('/' + applicationReducer.application.applicationId + '/assets');
+      } else {
+        throw data;
+      }
+    } catch (error) {
+      console.log('-error--handleOk---------------------------------------');
+      console.dir({ error }, { depth: null });
+      console.log('------------------------------------------');
+
+      message.error('Failed to get create visualization');
     }
-  }
-
-  const handleCancel = () => {
-
-  }
-
-  const getVisualizationDetails = () => {
-    if(assetReducer.selectedAsset && assetReducer.selectedAsset.id != '') {
-      setFormState({
-        ...formState,
-        initialDataLoading: true
-      })
-      
-      fetch("/api/file/read/getVisualizationDetails?id="+assetReducer.selectedAsset.id,{
-        headers: authHeader(),
-      }).then((response) => {
-        if (response.ok) {
-          return response.json();
-        }
-        handleError(response);
-      })
-      .then((data) => {
-        setFormState({
-          ...formState,
-          initialDataLoading: false
-        })
-        setVisualization({
-          id: data.id,
-          chartType: "table",
-          url: data.url,
-          name: data.name,
-          description: data.description,
-          clusterId: data.clusterId
-
-        })
-        form.current.setFieldsValue({
-          chartType: "table",
-          url: data.url,
-          name: data.name,
-          description: data.description      
-        })
-      })
-    }
-  }  
-
-  const onChange = (e) => {
-    setFormState({
-      ...formState,
-      dataAltered: true
-    })      
-  }
-    
-  const onClusterSelection = (value) => {
-    dispatch(assetsActions.clusterSelected(value));
-    setFormState({
-      ...formState,
-      selectedCluster: value
-    })
-  }
+    setFormState((prev) => ({ ...prev, loading: false }));
+  };
 
   const clearState = () => {
-    setFormState({
-      initialDataLoading: false,
-      fileSearchSuggestions: [],
-      enableEdit: false,
-      editing: false,
-      dataAltered: false,
-      selectedCluster: ''
-    })
-  }
+    setSearch((prev) => ({ ...prev, data: [] }));
+    setSelectedFile({ ...initSelectedFile });
+    form.resetFields(['name', 'fileSearchValue']);
+  };
 
-  const searchFiles = debounce((searchString) => {
-    if (searchString.length <= 3 || formState.fileSearchErrorShown) return;
-    if (!searchString.match(/^[a-zA-Z0-9_ -]*$/)) {
-      message.error(
-        "Invalid search keyword. Please remove any special characters from the keyword."
-      );      
-      return;
-    }
-    setFormState({
-      ...formState,
-      fileSearchErrorShown: false
-    })
+  const searchFiles = useCallback(
+    debounce(async (searchString) => {
+      if (searchString.length <= 3) return;
+      if (!searchString.match(/^[a-zA-Z0-9_ -]*$/)) {
+        return message.error(
+          'Invalid search keyword. Please remove any special characters from the keyword.'
+        );
+      }
 
-    var data = JSON.stringify({
-      app_id: applicationReducer.application.applicationId,
-      keyword: searchString,
-    });
-    fetch("/api/file/read/tomboloFileSearch", {
-      method: "post",
-      headers: authHeader(),
-      body: data,
-    })
-    .then((response) => {
-      if (response.ok) {
-        return response.json();
-      } else {
-        throw response;
-      }
-    })
-    .then((suggestions) => {
-      setFormState({
-        ...formState,
-        fileSearchSuggestions: suggestions
-      })        
-    })
-    .catch((error) => {
-      console.log(formState.fileSearchErrorShown);
-      if (!formState.fileSearchErrorShown) {
-        error.json().then((body) => {
-          message.error(
-            "There was an error searching the files from cluster."
-          );
-        });
-        setFormState({
-          ...formState,
-          fileSearchErrorShown: true
-        });
-      }
-    });
-  }, 100);
+      try {
+        setSearch((prev) => ({ ...prev, loading: true, error: '' }));
+        const options = {
+          method: 'POST',
+          headers: authHeader(),
+          body: JSON.stringify({
+            app_id: applicationReducer.application.applicationId,
+            keyword: searchString.trim(),
+          }),
+        };
 
-  const onFileSelected = (selectedSuggestion) => {
-    fetch("/api/hpcc/read/getFileInfo?fileName="+selectedSuggestion+"&applicationId="+applicationReducer.application.applicationId,{
-        headers: authHeader(),
-    })
-    .then((response) => {
-      if (response.ok) {
-        return response.json();
+        const response = await fetch('/api/file/read/tomboloFileSearch', options);
+        if (!response.ok) handleError(response);
+
+        const suggestions = await response.json();
+        setSearch((prev) => ({ prev, loading: false, data: suggestions }));
+      } catch (error) {
+        console.log('-error-----------------------------------------');
+        console.dir({ error }, { depth: null });
+        console.log('------------------------------------------');
+        message.error('There was an error searching the files from cluster.');
+        setSearch((prev) => ({ ...prev, loading: false, error: error.message }));
       }
-      handleError(response);
-    })
-    .then((fileInfo) => {
-      setFormState({
-        ...formState,
-        selectedFileId: fileInfo.basic.id
-      })                
-      form.current.setFieldsValue({
-        name: fileInfo.basic.name
-      });
-      return fileInfo;
-    })
-    .catch((error) => {
-      console.log(error);
-      message.error(
-        "There was an error getting file information from the cluster. Please try again"
-      );
-    });
-  }
+    }, 500),
+    []
+  );
+
+  const onFileSelected = (fileName) => {
+    const file = search.data.find((file) => file.name === fileName);
+    setSelectedFile(file);
+    form.setFieldsValue({ name: file.title });
+  };
+
+  const onChangeMD = (e) => {
+    if (!formState.dataAltered) onChange();
+    setSelectedFile((prev) => ({ ...prev, description: e.target.value }));
+  };
+
+  const controls = (
+    <Space>
+      {formState.enableEdit ? (
+        <Button onClick={switchToViewOnly} disabled={!editingAllowed} type="primary" ghost>
+          View Changes
+        </Button>
+      ) : (
+        <Button type="primary" disabled={!editingAllowed} onClick={makeFieldsEditable}>
+          Edit
+        </Button>
+      )}
+      <Button onClick={handleCancel} type="primary" ghost style={{ marginLeft: '25px' }}>
+        Cancel
+      </Button>
+      <Button
+        type="primary"
+        onClick={handleOk}
+        disabled={!editingAllowed}
+        loading={formState.confirmLoading}
+        style={{ background: 'var(--success)' }}>
+        Save
+      </Button>
+    </Space>
+  );
 
   return (
     <React.Fragment>
-        {viewOnlyModeReducer.addingNewAsset ? null : (
-          <div className="assetTitle">
-            File : {visualization.name}
-          </div>
-        )}
-        <div className={"assetDetails-content-wrapper"}>
-          {!assetReducer.newAsset.isNew ? (
-            <div className="loader">
-              <Spin spinning={formState.initialDataLoading} size="large" />
-            </div>
-          ) : null}
-          <Tabs defaultActiveKey="1" tabBarExtraContent={editandViewBtns}>
-            <TabPane tab="Basic" key="1">
-              <Form
-                {...formItemLayout}
-                labelAlign="left"
-                ref={form}
-                onFinish={handleOk}
-              >
-                {viewOnlyModeReducer.editMode ? (
-                  <div>
-                    {viewOnlyModeReducer.addingNewAsset ? (
-                      <React.Fragment>                        
-                        <Form.Item label="File" name="fileSearchValue">
-                          <Row type="flex">
-                            <Col span={21} order={1}>
-                              <AutoComplete
-                                className="certain-category-search"
-                                dropdownClassName="certain-category-search-dropdown"
-                                dropdownMatchSelectWidth={false}
-                                dropdownStyle={{ width: 300 }}
-                                style={{ width: "100%" }}
-                                onSearch={(value) =>
-                                  searchFiles(value)
-                                }
-                                onSelect={(value) =>
-                                  onFileSelected(value)
-                                }
-                                placeholder="Search files"
-                                disabled={!editingAllowed}
-                                onChange={onChange}
-                                notFoundContent={
-                                  formState.fileSearchSuggestions.length >
-                                  0 ? (
-                                    "Not Found"
-                                  ) : (
-                                    <Spin />
-                                  )
-                                }
-                              >
-                                {formState.fileSearchSuggestions.map(
-                                  (suggestion) => (
-                                    <Option
-                                      key={suggestion.text}
-                                      value={suggestion.value}
-                                    >
-                                      {suggestion.text}
-                                    </Option>
-                                  )
-                                )}
-                              </AutoComplete>
-                            </Col>
-                            <Col
-                              span={3}
-                              order={2}
-                              style={{ paddingLeft: "3px" }}
-                            >
-                              <Button
-                                htmlType="button"
-                                onClick={clearState}
-                              >
-                                Clear
-                              </Button>
-                            </Col>
-                          </Row>
-                        </Form.Item>
-                      </React.Fragment>
-                    ) : null}
-                  </div>
-                ) : null}
-                
-                <Form.Item
-                  label="Name"
-                  name="name"
-                  rules={[
-                    { required: true, message: "Please enter a name!" },
-                    {
-                      pattern: new RegExp(/^[a-zA-Z0-9:._ -]*$/),
-                      message: "Please enter a valid name",
-                    },
-                  ]}
-                >
-                  <Input
-                    id="file_name"
-                    placeholder="Name"
+      <Tabs defaultActiveKey="1" tabBarExtraContent={controls}>
+        <TabPane tab="Basic" key="1">
+          <Spin spinning={formState.loading}>
+            <Form {...formItemLayout} labelAlign="left" form={form} onFinish={handleOk}>
+              {!formState.enableEdit ? null : (
+                <Form.Item label="File" name="fileSearchValue">
+                  <Row gutter={[8, 0]}>
+                    <Col span={19}>
+                      <AutoComplete
+                        className="certain-category-search"
+                        dropdownClassName="certain-category-search-dropdown"
+                        dropdownMatchSelectWidth={false}
+                        dropdownStyle={{ width: 300 }}
+                        style={{ width: '100%' }}
+                        onSearch={(value) => searchFiles(value)}
+                        onSelect={(value) => onFileSelected(value)}
+                        placeholder="Search jobs"
+                        disabled={!editingAllowed}
+                        notFoundContent={search.loading ? <Spin /> : 'Not Found'}>
+                        {search.data.map((suggestion) => (
+                          <Option key={suggestion.id} value={suggestion.name}>
+                            {suggestion.title}
+                          </Option>
+                        ))}
+                      </AutoComplete>
+                    </Col>
+                    <Col span={5}>
+                      <Button htmlType="button" block onClick={clearState}>
+                        Clear
+                      </Button>
+                    </Col>
+                  </Row>
+                </Form.Item>
+              )}
+
+              <Form.Item
+                label="Name"
+                name="name"
+                rules={[ { required: formState.enableEdit, message: 'Please enter a name!' }, { pattern: new RegExp(/^[a-zA-Z0-9:._ -]*$/), message: 'Please enter a valid name', }, ]}>
+                <Input
+                  placeholder="Name"
+                  onChange={onChange}
+                  disabled={!editingAllowed}
+                  className={!formState.enableEdit ? 'read-only-input' : ''}
+                />
+              </Form.Item>
+
+              <Form.Item label="Description">
+                {formState.enableEdit ? (
+                  <MarkdownEditor
+                    id="description"
+                    name="description"
+                    targetDomId="fileDescr"
+                    value={selectedFile.description}
                     disabled={!editingAllowed}
-                    onChange={onChange}
-                    className={!formState.enableEdit ? "read-only-input" : ""}
+                    onChange={onChangeMD}
                   />
-                </Form.Item>
-
-                <Form.Item label="Description" name="description">
-                  {formState.enableEdit ? (
-                    <MarkdownEditor
-                      id="description"
-                      name="description"
-                      targetDomId="fileDescr"
-                      value={visualization.description}
-                      disabled={!editingAllowed}
-                      onChange={onChange}
-                    />
-                  ) : (
-                    <div className="read-only-markdown">
-                      {" "}
-                      <ReactMarkdown
-                        source={visualization.description}
-                      />{" "}
-                    </div>
-                  )}
-                </Form.Item>
+                ) : (
+                  <div className="read-only-markdown">
+                    <ReactMarkdown source={selectedFile.description} />
+                  </div>
+                )}
+              </Form.Item>
             </Form>
-          </TabPane> 
-        </Tabs>  
-
-        <div>
-          {formState.dataAltered ?
-            <div className="button-container">
-              <Button key="submit" disabled={!editingAllowed} type="primary" loading={formState.confirmLoading} onClick={handleOk}>
-                Save
-              </Button>
-            </div> : null}
-            <div className="button-container">
-              <Button key="back" onClick={handleCancel} type="primary" ghost>
-                Cancel
-              </Button> 
-          </div> 
-          
-        </div>  
-      </div>       
+          </Spin>
+        </TabPane>
+      </Tabs>
     </React.Fragment>
-  )
+  );
 }
 
 export default VisualizationDetails;

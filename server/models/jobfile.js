@@ -13,7 +13,11 @@ module.exports = (sequelize, DataTypes) => {
     file_type: DataTypes.STRING,
     name: DataTypes.STRING,
     description: DataTypes.TEXT,
-    file_id: DataTypes.STRING
+    file_id: DataTypes.STRING,
+    added_manually:{
+      type: DataTypes.BOOLEAN,
+      defaultValue: false,
+    }
   }, {paranoid: true, freezeTableName: true});
   jobfile.associate = function(models) {
     jobfile.belongsTo(models.job, {foreignKey: 'job_id'});

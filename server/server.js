@@ -6,12 +6,9 @@ const passport = require('passport');
 //Initialize express app
 const app = express();
 
-//Caching issue - Test
-app.set('etag', false)
-app.use((req, res, next) => {
-  res.set('Cache-Control', 'no-store')
-  next()
-})
+const cors = require('cors');
+
+const port = process.env.PORT || 3000
 
 // Azure setup
 const BearerStrategy = require('passport-azure-ad').BearerStrategy;
@@ -31,8 +28,7 @@ const limiter = rateLimit({
   max: 400 // limit each IP to 400 requests per windowMs
 });
 
-//Use express middleware
-app.use(express.urlencoded({ extended: true }));
+app.use(cors());
 app.use(express.json());
 // app.use(function(req, res, next) {
 //   //res.header("Access-Control-Allow-Origin", "*");
@@ -50,7 +46,6 @@ if(process.env.APP_AUTH_METHOD==='azure_ad'){
   passport.use(bearerStrategy);
 }
 
-const QueueDaemon = require('./queue-daemon');
 const JobScheduler = require('./job-scheduler');
 JobScheduler.bootstrap(); // initializing Bree, starting status poller and checking for active cron jobs.
 
@@ -58,6 +53,7 @@ JobScheduler.bootstrap(); // initializing Bree, starting status poller and check
 
 const appRead = require('./routes/app/read');
 const fileRead = require('./routes/file/read');
+const fileTemplateRead = require('./routes/fileTemplate/read')
 const indexRead = require('./routes/index/read');
 const hpccRead = require('./routes/hpcc/read');
 const userRead = require('./routes/user/read');
@@ -74,9 +70,11 @@ const workflows = require('./routes/workflows/router');
 const dataDictionary = require('./routes/data-dictionary/data-dictionary-service');
 const groups = require('./routes/groups/group');
 const ghCredentials = require('./routes/ghCredentials');
+const gh_projects = require('./routes/gh_projects');
 
-app.use('/api/app/read',  appRead);
+app.use('/api/app/read', tokenService.verifyToken, appRead);
 app.use('/api/file/read', tokenService.verifyToken, fileRead);
+app.use('/api/fileTemplate/read', tokenService.verifyToken, fileTemplateRead);
 app.use('/api/index/read', tokenService.verifyToken, indexRead);
 app.use('/api/hpcc/read', tokenService.verifyToken, hpccRead);
 app.use('/api/query', tokenService.verifyToken, query);
@@ -93,7 +91,9 @@ app.use('/api/data-dictionary', tokenService.verifyToken, dataDictionary);
 app.use('/api/user', userRead);
 app.use('/api/groups', tokenService.verifyToken, groups);
 app.use('/api/ghcredentials', tokenService.verifyToken, ghCredentials);
+app.use('/api/gh_projects', tokenService.verifyToken, gh_projects);
 
-//process.env["NODE_TLS_REJECT_UNAUTHORIZED"] = 0;
 
-server.listen(3000, '0.0.0.0', () => console.log('Server listening on port 3000!'));
+// process.env["NODE_TLS_REJECT_UNAUTHORIZED"] = 0;
+
+server.listen(port, '0.0.0.0', () => console.log('Server listening on port '+port+'!'));

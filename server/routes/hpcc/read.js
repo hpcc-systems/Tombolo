@@ -5,6 +5,7 @@ var request = require('request');
 var requestPromise = require('request-promise');
 const hpccUtil = require('../../utils/hpcc-util');
 const assetUtil = require('../../utils/assets');
+const {encryptString} = require('../../utils/cipher')
 const validatorUtil = require('../../utils/validator');
 var models  = require('../../models');
 var Cluster = models.cluster;
@@ -26,11 +27,11 @@ var sanitize = require("sanitize-filename");
 
 router.post('/filesearch', [
   body('keyword')
-    .matches(/^[a-zA-Z]{1}[a-zA-Z0-9_:.\-]*$/).withMessage('Invalid keyword')
+    .matches(/^.[a-zA-Z]{1}[a-zA-Z0-9_:.\-]*$/).withMessage('Invalid keyword')
 ], function (req, res) {
 	const errors = validationResult(req).formatWith(validatorUtil.errorFormatter);
 	if (!errors.isEmpty()) {
-		return res.status(422).send({"success":"false", "message": "Error occured during search."});
+		return res.status(422).send({"success":"false", "message": "Error occurred during search."});
 	}
 
 	hpccUtil.getCluster(req.body.clusterid).then(function(cluster) {
@@ -40,7 +41,16 @@ router.post('/filesearch', [
 			let contentType = req.body.indexSearch ? "key" : "";
 			console.log("contentType: "+contentType);
 			let dfuService = new hpccJSComms.DFUService({ baseUrl: cluster.thor_host + ':' + cluster.thor_port, userID:(clusterAuth ? clusterAuth.user : ""), password:(clusterAuth ? clusterAuth.password : "")});
-			dfuService.DFUQuery({"LogicalName":"*"+req.body.keyword+"*", ContentType:contentType}).then(response => {
+			const {fileNamePattern} = req.body;
+
+			let logicalFileName = "*"+req.body.keyword+"*";
+			if(fileNamePattern === 'startsWith'){
+				logicalFileName = req.body.keyword+"*";
+			}else if(fileNamePattern === 'endsWith'){
+				logicalFileName = "*"+req.body.keyword
+			}
+			
+			dfuService.DFUQuery({"LogicalName": logicalFileName, ContentType:contentType}).then(response => {
 				if(response.DFULogicalFiles && response.DFULogicalFiles.DFULogicalFile && response.DFULogicalFiles.DFULogicalFile.length > 0) {
 					let searchResults = response.DFULogicalFiles.DFULogicalFile;
 					searchResults.forEach((logicalFile) => {
@@ -57,7 +67,9 @@ router.post('/filesearch', [
 			res.status(500).send({"success":"false", "message": "Error occured during search."});
 		}
   }).catch(err => {
-  	console.log('Cluster not reachable: '+JSON.stringify(err));
+	console.log('------------------------------------------');
+	console.log('Cluster not reachable', +JSON.stringify(err) )
+	console.log('------------------------------------------');
   	res.status(500).send({"success":"false", "message": "Search failed. Please check if the cluster is running."});
   });
 });
@@ -94,15 +106,15 @@ router.post('/querysearch', [
     	res.status(500).send({"success":"false", "message": "Search failed. Error occured while querying."});
     });
 	}).catch(err => {
-  	console.log('Cluster not reachable: '+JSON.stringify(err));
-  	res.status(500).send({"success":"false", "message": "Search failed. Please check if the cluster is running."});
+  	  	console.log('Cluster not reachable: '+JSON.stringify(err));
+  		res.status(500).send({"success":"false", "message": "Search failed. Please check if the cluster is running."});
   });
 });
 
 
 router.post('/jobsearch', [
   body('keyword')
-    .matches(/^[a-zA-Z]{1}[a-zA-Z0-9_:.\-]*$/).withMessage('Invalid keyword')
+    .matches(/^[a-zA-Z]{1}[a-zA-Z0-9_: .\-]*$/).withMessage('Invalid keyword')
 ], function (req, res) {
 	const errors = validationResult(req).formatWith(validatorUtil.errorFormatter);
   if (!errors.isEmpty()) {
@@ -144,18 +156,17 @@ router.post('/jobsearch', [
     });
 });
 
-router.get('/getClusters', function (req, res) {
-  try {
-		Cluster.findAll({order: [['createdAt', 'DESC']]}).then(function(clusters) {
-			res.json(clusters);
-		})
-		.catch(function(err) {
-        console.log(err);
-    });
-  } catch (err) {
-      console.log('err', err);
-  }
-});
+router.get('/getClusters', async (req, res) => {
+	try {
+	  const clusters = await Cluster.findAll({
+		attributes: { exclude: ['hash', 'username'] },
+		order: [['createdAt', 'DESC']],
+	  });
+	  res.send(clusters);
+	} catch (err) {
+	  res.status(500).send({ success: 'false', message: 'Error occurred while retrieving cluster list' });
+	}
+  });
 
 router.get('/getClusterWhitelist', function (req, res) {
   try {
@@ -202,7 +213,7 @@ router.post('/newcluster', [
     			 "roxie_host":cluster[0].roxie, "roxie_port":cluster[0].roxie_port};
     			if (req.body.username && req.body.password) {
     				newCluster.username = req.body.username;
-    				newCluster.hash = crypto.createCipher(algorithm, process.env['cluster_cred_secret']).update(req.body.password,'utf8','hex');
+					newCluster.hash= encryptString(req.body.password);
     			}
     			if(req.body.id == undefined || req.body.id == "") {
     				Cluster.create(newCluster).then(function(cluster) {
@@ -481,7 +492,7 @@ router.get('/getJobInfo', [
   }
   try {
   	console.log('jobName: '+req.query.jobWuid);
-    Job.findOne({where: {name: req.query.jobName, application_id: req.query.applicationId}, attributes:['id']}).then((existingJob) => {
+    Job.findOne({where: {name: req.query.jobName, cluster_id: req.query.clusterid, application_id: req.query.applicationId}, attributes:['id']}).then((existingJob) => {
       if(existingJob) {
         assetUtil.jobInfo(req.query.applicationId, existingJob.id).then((existingJobInfo) => {
           res.json(existingJobInfo);
@@ -711,7 +722,7 @@ io.of("/landingZoneFileUpload").on("connection", (socket) => {
 				auth : hpccUtil.getClusterAuth(selectedCluster),
 				formData : {
 					'UploadedFiles[]' : {
-						value : filePath,
+						value : fs.createReadStream(filePath),
 						options : {
 							filename : fileName,
 						}

@@ -2,32 +2,41 @@ import React, {useEffect} from 'react';
 import { useMsal } from "@azure/msal-react";
 import { useDispatch } from "react-redux";
 import { userActions } from '../../redux/actions/User';
-import { loginRequest } from "./azureAuthConfig";
+import { loginRequest, silentRequest} from "./azureAuthConfig";
 import { Spin } from 'antd';
 
 function AzureUserHome() {
     const dispatch = useDispatch();
     const { instance, accounts, inProgress } = useMsal();
 
+
     useEffect(() => {
         // When the user is successfully authenticated and MSL has users account info
         // set active account for msal instance
         if(accounts.length > 0 && inProgress === 'none'){
+            console.log('<<<<< ACCOUNTS ', accounts)
             let userAccount = accounts[0];
             instance.setActiveAccount(userAccount);
-            console.log(userAccount)
-            let user = {
+           (async () => {
+        //Acquire fresh access tokens to send initial user info request
+        try {
+              const authority = await instance.acquireTokenSilent(silentRequest);
+              console.log('AUTHORITY <<<<', authority)
+              let user = {
                 firstName : userAccount.name.split(' ')[1],
                 lastName : userAccount.name.split(',')[0],
                 email : userAccount.username,
                 username : userAccount.idTokenClaims.preferred_username.split('@')[0],
                 id : userAccount.idTokenClaims.preferred_username.split('@')[0],
                 roles: userAccount.idTokenClaims.roles,
-                token : userAccount.idTokenClaims.aio,
+                token : authority.accessToken,
             }
-
-          // This dispatch function makes a call to /loginAzureUser. 
-          dispatch( userActions.azureLogin(user));
+            dispatch( userActions.azureLogin(user));
+        } catch (error) {
+            //If silent token acquisition fails - fall back to interactive mode
+          instance.acquireTokenRedirect(loginRequest);
+        }
+      })();
         } 
         
         if(accounts.length < 1 && inProgress === 'none'){

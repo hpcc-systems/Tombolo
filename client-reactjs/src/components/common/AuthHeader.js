@@ -51,16 +51,18 @@ export async function getFreshAzureToken() {
   //If no current account found throw error
   if (currentAccount) {
     const silentRequest = {
-      scopes: ['User.Read'],
+      // scopes: ['User.Read'],
+      scopes : ['api://10e4b085-3fe6-40b8-966e-0201f2553617/access_as_user'],
       account: currentAccount,
       forceRefresh: false,
     };
     const freshToken = await msalInstance.acquireTokenSilent(silentRequest).catch((err) => {
       console.log(err);
     });
+    console.log('<<<<<<< FRESH TOKEN >>>>>', freshToken.accessToken)
 
-    if (freshToken.idToken) {
-      return 'Bearer ' + freshToken.idToken;
+    if (freshToken.accessToken) {
+      return 'Bearer ' + freshToken.accessToken;
     } else {
       console.log('could not get id token');
       return '';
@@ -84,3 +86,17 @@ if (process.env.REACT_APP_APP_AUTH_METHOD === 'azure_ad') {
     }
   };
 }
+
+const { fetch: originalFetch } = window;
+
+window.fetch = async (...args) => {  
+  let [resource, config ] = args;  
+  // request interceptor here
+  if(resource.startsWith("/api")) {
+    resource = process.env.REACT_APP_PROXY_URL + resource;
+  }
+  const response = await originalFetch(resource, config);
+  // response interceptor here
+  return response;
+};
+
