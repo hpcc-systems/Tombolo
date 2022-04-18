@@ -4,7 +4,7 @@ import { Table, Button, Row, Col, Modal, Form, Input, Select, notification, Tool
 import BreadCrumbs from "../common/BreadCrumbs";
 import { authHeader, handleError } from "../common/AuthHeader.js";
 import { connect } from 'react-redux';
-import ShareApp from "./ShareApp";
+import ShareApp from "./apps/ShareApp";
 import { DeleteOutlined, EditOutlined, QuestionCircleOutlined, SearchOutlined  } from '@ant-design/icons';
 import { applicationActions } from '../../redux/actions/Application';
 const Option = Select.Option;

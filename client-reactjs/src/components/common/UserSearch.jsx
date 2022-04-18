@@ -37,6 +37,7 @@ function UserSearch({layout, noLabelLayout, enableEdit, showDetails}) {
             }
             throw Error('Error occurred while looking up a user')
         }).then((data) =>{
+            console.log('<<<<< Data returned', data)
             setSearchResults(data);
         }).finally(() =>{
             setSearchingUser(false)

@@ -2,7 +2,6 @@ var request = require('request');
 var requestPromise = require('request-promise');
 
 exports.getUserDetails = (req, usernames) => {
-  console.log('usernames: '+usernames)
   return new Promise((resolve, reject) => {
 
     let token = req.headers['x-access-token'] || req.headers['authorization'];

@@ -684,7 +684,7 @@ io.of("/landingZoneFileUpload").on("connection", (socket) => {
 		.then(response =>{ 
 			return response;
 		}).catch(err =>{
-			socket.emit(new Error(JSON.parse(err).message));
+			socket.emit("error", err);
 			socket.disconnect();
 		})
 	}

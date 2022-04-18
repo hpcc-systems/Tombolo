@@ -2,7 +2,7 @@ import React, {useEffect} from 'react';
 import { useMsal } from "@azure/msal-react";
 import { useDispatch } from "react-redux";
 import { userActions } from '../../redux/actions/User';
-import { loginRequest, silentRequest} from "./azureAuthConfig";
+import { loginRequest, silentRequestOptions} from "./azureAuthConfig";
 import { Spin } from 'antd';
 
 function AzureUserHome() {
@@ -14,14 +14,12 @@ function AzureUserHome() {
         // When the user is successfully authenticated and MSL has users account info
         // set active account for msal instance
         if(accounts.length > 0 && inProgress === 'none'){
-            console.log('<<<<< ACCOUNTS ', accounts)
             let userAccount = accounts[0];
             instance.setActiveAccount(userAccount);
            (async () => {
         //Acquire fresh access tokens to send initial user info request
         try {
-              const authority = await instance.acquireTokenSilent(silentRequest);
-              console.log('AUTHORITY <<<<', authority)
+              const authority = await instance.acquireTokenSilent(silentRequestOptions);
               let user = {
                 firstName : userAccount.name.split(' ')[1],
                 lastName : userAccount.name.split(',')[0],

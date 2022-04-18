@@ -427,7 +427,7 @@ router.get('/assetsSearch', [
   if(req.query.group_id) {
     query = "select assets.id, assets.name, assets.title, assets.description, assets.createdAt, assets.type, hie.name as group_name, hie.id as groupId from "+
       "(select  id, name, parent_group "+
-      "from    (select * from groups "+
+      "from (select * from `groups` "+
            "order by parent_group, id) groups_sorted, "+
           "(select @pv := (:groupId)) initialisation "+
 
@@ -629,43 +629,50 @@ router.put('/move', [
     });
 });
 
-router.put('/move/asset', [
-  oneOf([
-    check('assetId').isInt(),
-    check('assetId').isUUID(4)
-  ]),
-  body('app_id').isUUID(4).withMessage('Invalid app id'),
-  body('destGroupId').optional({checkFalsy:true}).isInt().withMessage('Invalid target group id'),
-  body('assetType').matches(/^[a-zA-Z]/).withMessage('Invalid asset type')
-], (req, res) => {
+router.put( '/move/asset',
+  [
+    oneOf([check('assetId').isInt(), check('assetId').isUUID(4)]),
+    body('app_id').isUUID(4).withMessage('Invalid app id'),
+    body('assetType') .matches(/^[a-zA-Z]/) .withMessage('Invalid asset type'),
+    body('destGroupId').optional({ checkFalsy: true }).isInt().withMessage('Invalid target group id'),
+  ],
+  async (req, res) => {
     const errors = validationResult(req).formatWith(validatorUtil.errorFormatter);
-    if (!errors.isEmpty()) {
-        return res.status(422).json({ success: false, errors: errors.array() });
-    }
-    let appId = req.body.app_id, assetId = req.body.assetId, groupId = req.body.groupId, destGroupId = req.body.destGroupId ? req.body.destGroupId : "";
+    if (!errors.isEmpty()) return res.status(422).json({ success: false, errors: errors.array() });
+
+    const { appId, assetId } = req.body;
+    
     try {
-      if(req.body.assetType != 'Group') {
-        AssetsGroups.findOrCreate({
-          where: {assetId: assetId},
-          defaults:{assetId: assetId, groupId: destGroupId}}).then((assetsGroupsRow, created) => {
-            if(!created) {
-              AssetsGroups.update({groupId: destGroupId}, {where:{assetId: assetId, id: assetsGroupsRow[0].id}}).then((existingGroupAssociationUpdated) => {
-                res.json({"success":true});
-              })
-            } else {
-              res.json({"success":true});
-            }
-        })
+      if (req.body.assetType !== 'Group') {
+        // create or update File
+        if (!req.body.destGroupId) {
+          //when we move asset to root "Group" folder we will not have destGroupId, in order to make it work we will need to remove record from AssetGroups
+          await AssetsGroups.destroy({ where: { assetId }, force: true });
+        } else {
+          const assetGroupFields = { assetId, groupId: req.body.destGroupId };
+    
+          let [assetGroup, isAssetGroupCreated] = await AssetsGroups.findOrCreate({
+            where: { assetId },
+            defaults: assetGroupFields,
+          });
+    
+          if (!isAssetGroupCreated) assetGroup = await assetGroup.update(assetGroupFields);
+        }
+    
+        res.json({ success: true });
       } else {
-        Groups.update({parent_group:destGroupId}, {where:{application_id:appId, id:assetId}}).then((updated) => {
-          res.json({"success":true});
-        })
+        await Groups.update(
+          { parent_group: req.body.destGroupId || '' },
+          { where: { application_id: appId, id: assetId } }
+        );
+        res.json({ success: true });
       }
-    } catch(err) {
+    } catch (err) {
       console.log(err);
-      return res.status(500).send("Error occured while moving asset");
+      return res.status(500).send('Error occured while moving asset');
     }
-});
+  }
+);
 
 let comparator = ((a,b) => {
   if (a.name < b.name) {

@@ -2,6 +2,7 @@ import { userActions } from '../../redux/actions/User';
 import { store } from '../../redux/store/Store';
 import { message } from 'antd/lib';
 import { msalInstance } from '../../index';
+import {silentRequestOptions} from '../azureSso/azureAuthConfig'
 
 export function handleError(response) {
   message.config({ top: 130 });
@@ -45,13 +46,12 @@ export function authHeader(action) {
 // This async function gets the refresh token for the active azure account
 // The refreshed/latest token  replaces the existing token by intercepting the API calls
 // Block of code below this one is doing the intercepting and replacing job
-export async function getFreshAzureToken() {
+export async function getFreshAzureToken(msalInstance) {
   const currentAccount = msalInstance.getActiveAccount();
 
   //If no current account found throw error
   if (currentAccount) {
     const silentRequest = {
-      // scopes: ['User.Read'],
       scopes : ['api://10e4b085-3fe6-40b8-966e-0201f2553617/access_as_user'],
       account: currentAccount,
       forceRefresh: false,
@@ -59,7 +59,6 @@ export async function getFreshAzureToken() {
     const freshToken = await msalInstance.acquireTokenSilent(silentRequest).catch((err) => {
       console.log(err);
     });
-    console.log('<<<<<<< FRESH TOKEN >>>>>', freshToken.accessToken)
 
     if (freshToken.accessToken) {
       return 'Bearer ' + freshToken.accessToken;
@@ -78,7 +77,7 @@ if (process.env.REACT_APP_APP_AUTH_METHOD === 'azure_ad') {
 
   window.fetch = async function () {
     if (arguments[1].headers.Authorization) {
-      let newToken = await getFreshAzureToken();
+      let newToken = await getFreshAzureToken(msalInstance);
       arguments[1].headers = { Authorization: newToken, Accept: 'application/json', 'Content-Type': 'application/json' };
       return newFetch.apply(this, arguments);
     } else {

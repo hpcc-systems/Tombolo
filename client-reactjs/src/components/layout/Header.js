@@ -7,7 +7,7 @@ import { authHeader, handleError } from "../common/AuthHeader.js"
 import { hasAdminRole } from "../common/AuthUtil.js";
 import { applicationActions } from '../../redux/actions/Application';
 import {dataflowAction} from "../../redux/actions/Dataflow"
-import { groupsActions } from '../../redux/actions/Groups';
+import { expandGroups, selectGroup } from '../../redux/actions/Groups';
 import { assetsActions } from '../../redux/actions/Assets';
 import { QuestionCircleOutlined, DownOutlined  } from '@ant-design/icons';
 import $ from 'jquery';
@@ -79,7 +79,7 @@ class AppHeader extends Component {
       }
 
       if(this.state.applications.length === 0) {
-        var url="/api/app/read/appListByUserId?user_id="+this.props.user.id+'&user_name='+this.props.user.username;
+        var url=`/api/app/read/appListByUsername?user_name=${this.props.user.username}`;
         if(hasAdminRole(this.props.user)) {
           url="/api/app/read/app_list";
         }
@@ -169,7 +169,8 @@ class AppHeader extends Component {
       });
       this.props.dispatch(applicationActions.applicationSelected('', ''));
       //reset the group heiracrhy selection
-      this.props.dispatch(groupsActions.groupExpanded({'id':'', 'key':'0-0'}, ['0-0']));
+      this.props.dispatch(expandGroups(["0-0"]));
+      this.props.dispatch(selectGroup({ id: "", key: "0-0" }));
       //reset cluster selectiong
       this.props.dispatch(assetsActions.clusterSelected(''));
       this.props.dispatch(userActions.logout());

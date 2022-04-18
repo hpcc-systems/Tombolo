@@ -13,7 +13,6 @@ import { SearchOutlined } from "@ant-design/icons";
 import { assetsActions } from "../../../redux/actions/Assets";
 import { store } from "../../../redux/store/Store";
 import { Constants } from "../../common/Constants";
-import { readOnlyMode, editableMode } from "../../common/readOnlyUtil";
 import BasicsTabGeneral from "./BasicsTabGeneral";
 import BasicsTabSpray from "./BasicsTabSpray";
 import BasicsTabScript from "./BasicsTabScript";
@@ -94,8 +93,8 @@ class JobDetails extends Component {
   };
 
   async componentDidMount() {    
-  const applicationId = (this.props.application && this.props.application.applicationId) || this.props.match?.params?.applicationId;
-  const assetId = (this.props.selectedAsset !== '' && this.props?.selectedAsset?.id) || this.props.match?.params?.jobId;
+    const applicationId = this.props.application?.applicationId || this.props.match?.params?.applicationId;
+    const assetId =  this.props?.selectedAsset?.id || this.props.match?.params?.fileId;
   
   if(applicationId){
    await this.getFiles({ applicationId });
@@ -114,15 +113,8 @@ class JobDetails extends Component {
 
   //Unmounting phase
   componentWillUnmount() {
-    store.dispatch({
-      type: Constants.ENABLE_EDIT,
-      payload: false,
-    });
-
-    store.dispatch({
-      type: Constants.ADD_ASSET,
-      payload: false,
-    });
+    store.dispatch({ type: Constants.ENABLE_EDIT, payload: false, });
+    store.dispatch({ type: Constants.ADD_ASSET, payload: false, });
   }
 
   handleViewOnlyMode(){
@@ -321,10 +313,9 @@ class JobDetails extends Component {
       await this.formRef.current.validateFields();
       this.setState({ confirmLoading: true });
       const saveResponse = await this.saveJobDetails();
-      this.setState({ confirmLoading: false });
       // if (this.props.onAssetSaved) this.props.onAssetSaved(saveResponse);
       if(this.props.onClose) {
-        // THIS METHIS WILL PASS PROPS TO GRAPH!
+        // THIS METHOD WILL PASS PROPS TO GRAPH!
         const isAssociated=this.formRef.current.getFieldValue('jobSelected') 
         || this.formRef.current.getFieldValue('isAssociated')
         || this.formRef.current.getFieldValue('isStoredOnGithub') 
@@ -339,9 +330,9 @@ class JobDetails extends Component {
           isAssociated,
         }       
 
-        this.props.onClose(resultToGraph);
-
+        return this.props.onClose(resultToGraph);
       }
+
       if (this.props.history) {
         return this.props.history.push(`/${this.props.application.applicationId}/assets`);
       } else {
@@ -350,8 +341,12 @@ class JobDetails extends Component {
       }
     } catch (error) {
       console.log(`handleOk error`, error);
-      if(error?.errorFields) message.error("Please check your fields for errors") 
+      let errorMessage = error?.message || "Please check your fields for errors";
+      if(error?.errorFields) errorMessage = error.errorFields[0].errors[0]
+      
+       message.error(errorMessage) 
     }
+    this.setState({ confirmLoading: false });
   };
 
   handleDelete = () => {
@@ -451,7 +446,7 @@ class JobDetails extends Component {
       selectedProjects: gitHubFiles.selectedProjects, // List of selected projects IDS!
     };
   
-
+    
     //Combine notification related values and send as object
     metaData.notificationSettings = {
       notify: formFields.notify,

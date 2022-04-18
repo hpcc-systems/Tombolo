@@ -2,9 +2,9 @@ import React, {useState, useEffect, useRef} from 'react'
 import { useSelector } from 'react-redux';
 import { Upload, Button , Modal, message} from 'antd';
 import { ImportOutlined, InboxOutlined } from '@ant-design/icons';
-import { authHeader } from "../common/AuthHeader.js";
-import { applicationActions } from '../../redux/actions/Application';
-import { store } from "../../redux/store/Store";
+import { authHeader } from "../../common/AuthHeader.js";
+import { applicationActions } from '../../../redux/actions/Application';
+import { store } from "../../../redux/store/Store";
 import { useHistory } from "react-router";
 import {io} from "socket.io-client";
 

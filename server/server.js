@@ -2,12 +2,10 @@ const express = require('express');
 const rateLimit = require("express-rate-limit");
 const tokenService = require('./utils/token_service');
 const passport = require('passport');
+const cors = require('cors');
 
 //Initialize express app
 const app = express();
-
-const cors = require('cors');
-
 const port = process.env.PORT || 3000
 
 // Azure setup
@@ -28,28 +26,17 @@ const limiter = rateLimit({
   max: 400 // limit each IP to 400 requests per windowMs
 });
 
+// MIDDLEWARE -> apply to all requests
 app.use(cors());
 app.use(express.json());
-// app.use(function(req, res, next) {
-//   //res.header("Access-Control-Allow-Origin", "*");
-//   //res.header("Access-Control-Allow-Headers", "Origin, X-Requested-With, Content-Type, Accept");
-//   next();
-// });
-
-//apply to all requests
 app.use(limiter);
-
-
-// This will initialize the passport object on every request if Azure flow
 if(process.env.APP_AUTH_METHOD==='azure_ad'){
-  app.use(passport.initialize());
+  app.use(passport.initialize()); // For azure SSO
   passport.use(bearerStrategy);
 }
 
 const JobScheduler = require('./job-scheduler');
 JobScheduler.bootstrap(); // initializing Bree, starting status poller and checking for active cron jobs.
-
-// const assert = require('assert');
 
 const appRead = require('./routes/app/read');
 const fileRead = require('./routes/file/read');

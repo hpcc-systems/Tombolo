@@ -24,7 +24,7 @@
     "kafkajs": "^1.15.0",
     "kafkajs-snappy": "^1.1.0",
     "lodash": "^4.17.20",
-    "moment": "^2.29.1",
+    "moment": "^2.29.2",
     "multer": "^1.4.3",
     "mysql2": "^1.7.0",
     "nodemailer": "^6.7.1",
@@ -36,7 +36,7 @@
     "sanitize-filename": "^1.6.3",
     "sequelize": "^6.16.1",
     "sequelize-cli": "^6.4.1",
-    "simple-git": "^2.47.0",
+    "simple-git": "^3.6.0",
     "socket.io": "^4.4.0",
     "tmp": "^0.1.0",
     "uuid": "^3.4.0"
