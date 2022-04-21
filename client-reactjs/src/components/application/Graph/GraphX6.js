@@ -17,11 +17,9 @@ import AssetDetailsDialog from '../AssetDetailsDialog';
 import ExistingAssetListDialog from '../Dataflow/ExistingAssetListDialog';
 import Shape from './Shape.js';
 import { colors } from './graphColorsConfig.js';
-// import SubProcessDialog from '../Dataflow/SubProcessDialog';
 
 const defaultState = {
   openDialog: false,
-  subProcessId: '',
   assetId: '',
   title: '',
   name: '',
@@ -64,6 +62,81 @@ function GraphX6({ readOnly = false, statuses }) {
         }, []),
       }));
     }
+
+    if (action === 'toggleSubProcess') {
+      const node = payload.node;
+      let data = node.getData(); // will get current data, will be stale after data got updated;
+    
+      if (!data.isCollapsed) {
+        const prevSize = node.getSize();
+        node.updateData({ isCollapsed: true, prevSize }, { name: 'update-asset' }).resize(90, 70);
+        node.prop('originSize', { height: 90, width: 70 });
+      } else {
+        node.resize(data.prevSize.width, data.prevSize.height);
+        const position = node.getPosition();
+        node.prop('originSize', data.prevSize);
+        node.prop('originPosition', position);
+        node.updateData({ isCollapsed: false, prevSize: null }, { name: 'update-asset' });
+      }
+    
+      data = node.getData(); // get updated data
+      const cells = node.getChildren(); // get nested nodes
+    
+      if (cells) {
+        // find first and last job;
+        let firstJob;
+        let lastJob;
+    
+        let minX = 0;
+        let maxX = 0;
+    
+        cells.forEach((cell) => {
+          if (cell.data?.type === 'Job') {
+            const position = cell.getPosition();
+            if (!minX) {
+              minX = position.x;
+              firstJob = cell;
+            } else if (position.x < minX) {
+              minX = position.x;
+              firstJob = cell;
+            }
+    
+            if (!maxX) {
+              maxX = position.x;
+              lastJob = cell;
+            } else if (position.x > maxX) {
+              maxX = position.x;
+              lastJob = cell;
+            }
+          }
+        });
+    
+        if (data.isCollapsed) {
+          if (firstJob) {
+            const incomingEdges = graphRef.current.getIncomingEdges(firstJob);
+            if (incomingEdges) incomingEdges.forEach((edge) => edge.setTarget(node)); // will point all incoming edges of first job to subprocess node
+          }
+    
+          if (lastJob) {
+            const outgoingEdges = graphRef.current.getOutgoingEdges(lastJob);
+            if (outgoingEdges) outgoingEdges.forEach((edge) => edge.setSource(node)); // will point all outgoing edges of last job from subprocess node
+          }
+    
+          cells.forEach((cell) => cell.hide());
+        } else {
+          cells.forEach((cell) =>{
+            cell.show()
+            cell.toFront();
+          });
+    
+          const incomingEdges = graphRef.current.getIncomingEdges(node);
+          const outgoingEdges = graphRef.current.getOutgoingEdges(node);
+    
+          if (incomingEdges && firstJob) incomingEdges.forEach((edge) => edge.setTarget(firstJob));
+          if (outgoingEdges && lastJob) outgoingEdges.forEach((edge) => edge.setSource(lastJob));
+        }
+      }
+    }
   };
 
   const deleteAssetFromDataFlow = async (nodeData, dataflowId) =>{
@@ -84,17 +157,16 @@ function GraphX6({ readOnly = false, statuses }) {
 
   useEffect(() => {
     // INITIALIZING EVENT CANVAS AND STENCIL
-    const graph = Canvas.init(graphContainerRef, miniMapContainerRef);
+    const graph = Canvas.init(graphContainerRef, miniMapContainerRef, readOnly);
     graphRef.current = graph;
 
-    Shape.init({ handleContextMenu, disableContextMenu: readOnly });
+    Shape.init({ handleContextMenu, disableContextMenu: readOnly , graph});
 
     if (!readOnly) {
       Stencil.init(stencilContainerRef, graph);
-      Event.init(graph); // some static event that does not require local state changes will be sitting here
+      Event.init(graph, handleContextMenu); // some static event that does not require local state changes will be sitting here
     }
  
-    if (readOnly) graph.disableHistory(); // we dont need to save anything to db so when we readonly
     // Keyboard.init(graph); // not ready yet
 
     // FETCH SAVED GRAPH
@@ -111,13 +183,126 @@ function GraphX6({ readOnly = false, statuses }) {
         console.log(error);
         message.error('Could not download graph nodes');
       }
-
-      graph.on('node:dblclick', ({ node, e }) => {
-        // if Asset was already selected then open details dialog and dont let the user to change node value;
+      if (readOnly){
+        const nodes = graph.getNodes();
+        const edges = graph.getEdges();
         
-        if (readOnly && !node.data.assetId) return;
+        edges.forEach(edge => edge.removeTools() );
+  
+        nodes.forEach(node => {
+          node.removeTools();
+          node.removePorts();
+        });
+      }
 
+      let ctrlPressed = false;
+      let embedPadding =20;
+      
+      graph.on('node:embedding', ({ e }) => { ctrlPressed = e.metaKey || e.ctrlKey })
+      graph.on('node:embedded', () => { ctrlPressed = false })
+
+        // graph.on('node:change:parent', (args: {
+        //   cell: Cell
+        //   node: Node
+        //   current?: number  // 当前值
+        //   previous?: number // 改变之前的值
+        //   options: any      // 透传的 options
+        // }) => { })
+
+      graph.on('node:change:parent', ({cell}) => { 
+        cell.toFront();
+      });
+  
+      graph.on('node:change:size', ({ node, options }) => {
+        if (options.skipParentHandler) return
+
+        const children = node.getChildren()
+        if (children && children.length) {
+          node.prop('originSize', node.getSize())
+        }
+      })
+  
+      graph.on('node:change:position', ({ node, options }) => {
+        if (options.skipParentHandler || ctrlPressed) return
+        
+        const children = node.getChildren()
+        if (children && children.length) {
+          node.prop('originPosition', node.getPosition())
+        }
+  
+        const parent = node.getParent()
+  
+        if (parent && parent.isNode()) {
+          let originSize = parent.prop('originSize')
+
+          if (originSize == null) {
+            originSize = parent.getSize()
+            parent.prop('originSize', originSize)
+          }
+  
+          let originPosition = parent.prop('originPosition')
+          if (originPosition == null) {
+            originPosition = parent.getPosition()
+            parent.prop('originPosition', originPosition)
+          }
+  
+          let x = originPosition.x
+          let y = originPosition.y
+          let cornerX = originPosition.x + originSize.width
+          let cornerY = originPosition.y + originSize.height
+          let hasChange = false
+  
+          const children = parent.getChildren()
+          if (children) {
+            children.forEach((child) => {
+              const bbox = child.getBBox().inflate(embedPadding)
+              const corner = bbox.getCorner()
+  
+              if (bbox.x < x) {
+                x = bbox.x
+                hasChange = true
+              }
+  
+              if (bbox.y < y) {
+                y = bbox.y
+                hasChange = true
+              }
+  
+              if (corner.x > cornerX) {
+                cornerX = corner.x
+                hasChange = true
+              }
+  
+              if (corner.y > cornerY) {
+                cornerY = corner.y
+                hasChange = true
+              }
+            })
+          }
+  
+          if (hasChange) {
+            const updateProps ={
+              position: { x, y },
+            };
+            if (!parent.data.isCollapsed){
+              updateProps.size = { width: cornerX - x, height: cornerY - y };
+            }
+            parent.prop( updateProps , { skipParentHandler: true } )
+            // Note that we also pass a flag so that we know we shouldn't
+             // adjust the `originPosition` and `originSize` in our handlers.
+          }
+        }
+      })
+    
+  
+      graph.on('node:dblclick', ({ node, e }) => {
+        // Subprocess modal has only description field its ok to open anytime;
+        if (node.data.type === 'Sub-Process') return handleContextMenu('openDialog', { node });
+        // if job or file is not associated then we will not open modal;
+        if (readOnly && !node.data.assetId ) return
+        // open modal if we are editing;
         handleContextMenu('openDialog', { node });
+        
       });
       
       if (!readOnly) {
@@ -129,7 +314,16 @@ function GraphX6({ readOnly = false, statuses }) {
           1. delete asset from Asset_Dataflow table
           2. make sure that any Job scheduled with this asset is deleted too
           3. update graph in Dataflowgraph table */
-            if (nodeData.assetId) await deleteAssetFromDataFlow(nodeData,dataflowId)
+            if (nodeData.type === 'Sub-Process') {
+              // if we delete subprocess we need to delete all nested children too
+              const children = cell.getChildren();
+              if (children) {
+                const assets = children.filter(child => child.data?.assetId)
+                await Promise.all(assets.map(asset => deleteAssetFromDataFlow(asset.data,dataflowId)))
+              }
+            } else if (nodeData.assetId) {
+              await deleteAssetFromDataFlow(nodeData,dataflowId)
+            }
             await handleSave(graph);
           } catch (error) {
             console.log(error);
@@ -271,13 +465,27 @@ function GraphX6({ readOnly = false, statuses }) {
 
   useEffect(() => {
     if (graphReady && readOnly === true && statuses?.length > 0) {
-      let jobs = graphRef.current.getNodes().filter((node) => node.data.type === 'Job');
-      jobs.forEach((node) => {
-        const nodeStatus = statuses.find((status) => status.assetId === node.data.assetId);
-        if (nodeStatus) {
-          node.updateData({ status: nodeStatus.status });
+      let nodes = graphRef.current.getNodes().filter((node) => node.data.type === 'Job' || node.data.type === 'Sub-Process');
+      nodes.forEach((node) => {
+        const children = node.getChildren()
+        if(children) {
+          let subprocessStatus = '';
+
+          children.forEach(node =>{
+            if(node.data?.type === 'Job' ){
+              const nodeStatus = statuses.find((status) => status.assetId === node.data.assetId);
+              if(nodeStatus) subprocessStatus = nodeStatus.status;
+            }
+          })
+
+           node.updateData({ status: subprocessStatus })
         } else {
-          node.updateData({ status: '' }); // change status to '' if you want to return regular node || 'not-exist'
+          const nodeStatus = statuses.find((status) => status.assetId === node.data.assetId);
+          if (nodeStatus) {
+            node.updateData({ status: nodeStatus.status });
+          } else {
+            node.updateData({ status: '' }); // change status to '' if you want to return regular node || 'not-exist'
+          }
         }
       });
     }
@@ -295,8 +503,8 @@ function GraphX6({ readOnly = false, statuses }) {
 
         const response = await fetch('/api/dataflowgraph/save', options);
         if (!response.ok) handleError(response);
-        console.log('Graph saved');
-        console.log('------------------------------------------');
+        // console.log('Graph saved');
+        // console.log('------------------------------------------');
       } catch (error) {
         console.log(error);
         message.error('Could not save graph');
@@ -493,6 +701,7 @@ function GraphX6({ readOnly = false, statuses }) {
       const existingScheduledTime = cell.data?.schedule?.cron;
 
       const newCellData = { title: asset.title, name: asset.name };
+      if (cell.data.type === 'Sub-Process') newCellData.description = asset.description;
       /* updating cell will cause a POST request to '/api/dataflowgraph/save with latest nodes and edges*/
       //add icons or statuses
       // cell.updateData({ title: asset.title, scheduleType: asset.type }, { name: 'update-asset' });
@@ -660,24 +869,17 @@ function GraphX6({ readOnly = false, statuses }) {
     }
   };
 
-  return (
-    <>
-      <CustomToolbar graphRef={graphRef} handleSync={handleSync} isSyncing={sync.loading}  readOnly={readOnly}/>
-      <div id="graphx6" className="graph-container">
-        {readOnly ? null : <div className="stencil" ref={stencilContainerRef} />}
-        <div
-          className={`${readOnly ? 'graph-container-readonly' : 'graph-container-stencil'}`}
-          ref={graphContainerRef}
-        />
-        <div className="graph-minimap" ref={miniMapContainerRef} />
-      </div>
-
-      {configDialog.openDialog && configDialog.assetId ? (
+  const getGraphDialog = () => {    
+    if (configDialog.assetId || (!configDialog.assetId && configDialog.type === 'Sub-Process')) {
+      return (
         <AssetDetailsDialog
           show={configDialog.openDialog}
           selectedJobType={configDialog.type}
           selectedAsset={{
             id: configDialog.assetId,
+            schedule: configDialog.schedule,
+            title: configDialog.title,
+            description: configDialog.description,
             isAssociated: configDialog.isAssociated
           }}
           selectedDataflow={{ id: dataflowId }}
@@ -690,9 +892,9 @@ function GraphX6({ readOnly = false, statuses }) {
           viewMode={readOnly} // THIS PROP WILL REMOVE EDIT OPTIONS FROM MODAL
           displayingInModal={true} // ?
         />
-      ) : null}
-
-      {configDialog.openDialog && !configDialog.assetId ? (
+      );
+    } else {
+      return (
         <ExistingAssetListDialog
           assetType={configDialog.type}
           currentlyEditingNodeId={configDialog.nodeId}
@@ -702,16 +904,19 @@ function GraphX6({ readOnly = false, statuses }) {
           applicationId={applicationId}
           clusterId={clusterId}
         />
-      ) : null}
-
-      {/* {graphState.showSubProcessDetails ?         
-          <SubProcessDialog
-            show={graphState.showSubProcessDetails}
-            applicationId={applicationId}
-            selectedParentDataflow={selectedDataflow}
-            onRefresh={onFileAdded}
-            selectedSubProcess={graphState.selectedSubProcess}
-            nodeId={graphState.currentlyEditingNode.id}/> : null} */}
+      );
+    }
+  };  
+  
+  return (
+    <>
+      <CustomToolbar graphRef={graphRef} handleSync={handleSync} isSyncing={sync.loading}  readOnly={readOnly}/>
+      <div className="graph-container">
+        {readOnly ? null : <div className="stencil" ref={stencilContainerRef} />}
+        <div className={`${readOnly ? 'graph-container-readonly' : 'graph-container-stencil'}`} ref={graphContainerRef} />
+        <div className="graph-minimap" ref={miniMapContainerRef} />
+      </div>
+      {configDialog.openDialog ? getGraphDialog() : null}
     </>
   );
 }
