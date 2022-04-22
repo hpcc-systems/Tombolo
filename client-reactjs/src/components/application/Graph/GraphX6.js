@@ -25,9 +25,8 @@ const defaultState = {
   name: '',
   type: '',
   nodeId: '',
-  cell: null,
+  cell: null, // cell is save to state when open modal
   nodes: [], // needed for scheduling
-  edges: [], // ?? not sure if needed
 };
 
 function GraphX6({ readOnly = false, statuses }) {
@@ -51,7 +50,6 @@ function GraphX6({ readOnly = false, statuses }) {
         cell: node,
         nodeId: node.id,
         openDialog: true,
-        edges: graphRef.current.getEdges(), // ?? not used anywhere currently
         nodes: graphRef.current.getNodes().reduce((acc, el) => {
           // we dont need Nodes full object but just what is inside node.data
           const nodeData = el.getData();
@@ -874,35 +872,32 @@ function GraphX6({ readOnly = false, statuses }) {
       return (
         <AssetDetailsDialog
           show={configDialog.openDialog}
-          selectedJobType={configDialog.type}
-          selectedAsset={{
+          clusterId={clusterId}
+          selectedDataflow={{ id: dataflowId }}
+          nodes={configDialog.nodes}
+          onClose={updateAsset}
+          viewMode={readOnly} // THIS PROP WILL REMOVE EDIT OPTIONS FROM MODAL
+          displayingInModal={true} // used for control button in modals
+          selectedAsset={{ // all we know about clicked asset will be passed in selectedAsset prop
             id: configDialog.assetId,
-            schedule: configDialog.schedule,
+            type: configDialog.type,
             title: configDialog.title,
+            nodeId: configDialog.nodeId,
+            schedule: configDialog.schedule,
             description: configDialog.description,
             isAssociated: configDialog.isAssociated
           }}
-          selectedDataflow={{ id: dataflowId }}
-          selectedNodeId={configDialog.nodeId}
-          selectedNodeTitle={configDialog.title}
-          clusterId={clusterId}
-          nodes={configDialog.nodes}
-          edges={configDialog.edges}
-          onClose={updateAsset}
-          viewMode={readOnly} // THIS PROP WILL REMOVE EDIT OPTIONS FROM MODAL
-          displayingInModal={true} // ?
         />
       );
     } else {
       return (
         <ExistingAssetListDialog
-          assetType={configDialog.type}
-          currentlyEditingNodeId={configDialog.nodeId}
-          show={configDialog.openDialog}
           onClose={saveNewAsset}
+          show={configDialog.openDialog}
+          clusterId={clusterId}
           dataflowId={dataflowId}
           applicationId={applicationId}
-          clusterId={clusterId}
+          assetType={configDialog.type}
         />
       );
     }

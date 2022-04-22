@@ -24,8 +24,8 @@ function AssetDetailsDialog(props) {
       query: <QueryDetailsForm  {...props}/>,
       'sub-process': <SubProcessDetails  {...props} />
     }
-    const jobType = props.selectedJobType.toLowerCase();
-    return formOptions[jobType];
+    const assetType = props.selectedAsset.type.toLowerCase();
+    return formOptions[assetType];
   } 
 
   return(
@@ -35,7 +35,7 @@ function AssetDetailsDialog(props) {
       width="1200px"
       footer={null}
       bodyStyle={{display: "flex", flexDirection: "column"}}
-      title={`${capitalize(props.selectedJobType)} : ${props.selectedNodeTitle}`}
+      title={`${capitalize(props.selectedAsset.type)} : ${props.selectedAsset.title}`}
       > 
       <DetailsForm {...props} />
     </Modal>

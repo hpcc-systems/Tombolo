@@ -73,7 +73,7 @@ class JobDetails extends Component {
       dataflowId: this.props.selectedDataflow ? this.props.selectedDataflow.id : "",
       ecl: "",
       entryBWR: "",
-      jobType: this.props.selectedJobType ? this.props.selectedJobType : "",
+      jobType: this.props?.selectedAsset?.type || "",
       gitRepo: "",
       contact: "",
       inputParams: [],
@@ -293,7 +293,7 @@ class JobDetails extends Component {
         dataflowId: this.props.selectedDataflow ? this.props.selectedDataflow.id : "",
         ecl: "",
         entryBWR: "",
-        jobType: this.props.selectedJobType ? this.props.selectedJobType : "",
+        jobType: this.props?.selectedAsset?.type || "",
         gitRepo: "",
         contact: "",
         inputParams: [],
@@ -544,7 +544,7 @@ class JobDetails extends Component {
   
   handleScheduleTypeSelect = () => {
     const predecessors = this.props.nodes.reduce((acc, node) => {
-      if (node.type === 'Job' && node.title !== this.props.selectedNodeTitle) {
+      if (node.type === 'Job' && node.title !== this.props?.selectedAsset?.title) {
         acc.push({ id: node.id, jobId: node.assetId, name: node.title });
       }
       return acc;
