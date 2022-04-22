@@ -1,10 +1,8 @@
 import { Addon } from '@antv/x6';
-
 export default class Stencil {
-  static stencil;
 
   static init(stencilContainer, graph) {
-    this.stencil = new Addon.Stencil({
+    const stencil = new Addon.Stencil({
       title: 'Assets',
       target: graph,
       layoutOptions: {
@@ -22,18 +20,24 @@ export default class Stencil {
         },
       ],
       getDropNode(node) {
-        return node.clone().setData({isStencil:false})
+
+        const data = { isStencil: false }
+
+        if (node.data.type === "Sub-Process"){
+          data.isCollapsed = false
+        }
+        return node.clone().setData(data)
       }
     });
 
     if (stencilContainer.current) {
-      stencilContainer.current.appendChild(this.stencil.container);
+      stencilContainer.current.appendChild(stencil.container);
     }
 
-    this.addShape(graph);
+    this.addShape(graph, stencil);
   }
 
-  static addShape(graph) {
+  static addShape(graph, stencil) {
     const assetsNames = ['Job', 'File', 'Index', 'Sub-Process'];
 
     const assetsNodes = assetsNames.map(asset => {
@@ -45,11 +49,10 @@ export default class Stencil {
           title: asset,
           name:undefined,
           assetId: undefined,
-          subProcessId: undefined,
         },
       });
     });
 
-    this.stencil.load(assetsNodes, 'Assets');
+    stencil.load(assetsNodes, 'Assets');
   }
 }

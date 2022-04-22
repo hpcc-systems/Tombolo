@@ -1,11 +1,12 @@
 import React from 'react'
-import { Modal } from 'antd/lib';
+import { Modal } from 'antd';
 
 import FileDetailsForm from './FileDetails';
 import FileTemplate from './templates/FileTemplate'
 import JobDetailsForm from './Jobs/JobDetails';
 import IndexDetailsForm from './IndexDetails';
 import QueryDetailsForm from './QueryDetails';
+import SubProcessDetails from './SubProcessDetails';
 
 function AssetDetailsDialog(props) {
   
@@ -20,10 +21,11 @@ function AssetDetailsDialog(props) {
       file: <FileDetailsForm {...props} />,
       filetemplate : <FileTemplate {...props} />,
       index: <IndexDetailsForm {...props}/>,
-      query: <QueryDetailsForm  {...props}/>
+      query: <QueryDetailsForm  {...props}/>,
+      'sub-process': <SubProcessDetails  {...props} />
     }
-    const jobType = props.selectedJobType.toLowerCase();
-    return formOptions[jobType];
+    const assetType = props.selectedAsset.type.toLowerCase();
+    return formOptions[assetType];
   } 
 
   return(
@@ -33,7 +35,7 @@ function AssetDetailsDialog(props) {
       width="1200px"
       footer={null}
       bodyStyle={{display: "flex", flexDirection: "column"}}
-      title={`${capitalize(props.selectedJobType)} : ${props.selectedNodeTitle}`}
+      title={`${capitalize(props.selectedAsset.type)} : ${props.selectedAsset.title}`}
       > 
       <DetailsForm {...props} />
     </Modal>
