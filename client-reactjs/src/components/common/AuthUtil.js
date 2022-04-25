@@ -1,4 +1,3 @@
-require("dotenv").config();
 const { Constants } = require("./Constants");
 
 export function hasAdminRole(user) {
