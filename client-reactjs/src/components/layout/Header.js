@@ -15,6 +15,7 @@ import {Constants} from "../common/Constants"
 import {store} from "../../redux/store/Store"
 import { debounce } from "lodash";
 import logo from  "../../images/logo.png"
+import { msalInstance } from '../../index';
 
 const { Header, Content } = Layout;
 const { Search } = Input;
@@ -174,8 +175,12 @@ class AppHeader extends Component {
       this.props.dispatch(assetsActions.clusterSelected(''));
       this.props.dispatch(userActions.logout());
 
-      this.props.history.push('/login');
-      message.success('You have been successfully logged out. ');
+      if(process.env.REACT_APP_APP_AUTH_METHOD === 'azure_ad'){
+         msalInstance.logoutRedirect()
+      }else{
+        this.props.history.push('/login');
+        message.success('You have been successfully logged out. ');
+      }
     }
 
     handleChange(event) {

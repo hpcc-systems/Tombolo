@@ -1,6 +1,9 @@
 const express = require('express');
 const router = express.Router();
 const userService = require('./userservice');
+var models  = require('../../models');
+let User = models.user;
+
 const { body, query, check, validationResult } = require('express-validator');
 const errorFormatter = ({ location, msg, param, value, nestedErrors }) => {
   return `${msg}`;

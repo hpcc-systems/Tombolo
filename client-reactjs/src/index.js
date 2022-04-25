@@ -7,12 +7,19 @@ import '../node_modules/bootstrap/dist/css/bootstrap.min.css';
 import '../node_modules/bootstrap/dist/js/bootstrap.bundle.min.js';
 import { Provider } from 'react-redux';
 import { store } from './redux/store/Store';
+import { PublicClientApplication } from "@azure/msal-browser";
+import { MsalProvider } from "@azure/msal-react";
+import { msalConfig } from "./components/azureSso/azureAuthConfig";
+
+export const msalInstance = new PublicClientApplication(msalConfig);
 
 ReactDOM.render(
   <Provider store={store}>
-    <BrowserRouter>
-      <App />
-    </BrowserRouter>
+      <BrowserRouter>
+      <MsalProvider instance={msalInstance}>
+        <App />
+      </MsalProvider>
+      </BrowserRouter>
   </Provider>,
   document.getElementById("root")
 );

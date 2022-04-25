@@ -8,6 +8,8 @@
     "@antv/x6": "^1.28.1",
     "@antv/x6-react-components": "^1.1.15",
     "@antv/x6-react-shape": "^1.6.0",
+    "@azure/msal-browser": "^2.21.0",
+    "@azure/msal-react": "^1.1.0",
     "@hpcc-js/codemirror": "^2.38.0",
     "@testing-library/jest-dom": "^5.11.9",
     "@testing-library/react": "^9.3.2",
@@ -45,6 +47,9 @@
   },
   "devDependencies": {
     "react-scripts": "5.0.0"
+  },
+  "resolutions": {
+    "react-error-overlay": "6.0.9"
   },
   "resolutions": {
     "react-error-overlay": "6.0.9"

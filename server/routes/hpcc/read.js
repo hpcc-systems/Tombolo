@@ -215,7 +215,6 @@ router.post('/newcluster', [
     				newCluster.username = req.body.username;
 					newCluster.hash= encryptString(req.body.password);
     			}
-    			console.log(req.body.id);
     			if(req.body.id == undefined || req.body.id == "") {
     				Cluster.create(newCluster).then(function(cluster) {
     					res.json({"result":"success"});
@@ -685,7 +684,7 @@ io.of("/landingZoneFileUpload").on("connection", (socket) => {
 		.then(response =>{ 
 			return response;
 		}).catch(err =>{
-			socket.emit(new Error(JSON.parse(err).message));
+			socket.emit("error", err);
 			socket.disconnect();
 		})
 	}
