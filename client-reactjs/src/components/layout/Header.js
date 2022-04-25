@@ -1,24 +1,17 @@
-import React, { Component } from "react";
-import {Layout, Menu, message, Tooltip, Input, Button, Dropdown, Modal, Alert, Form, notification} from 'antd/lib';
-import { NavLink, Switch, Route, withRouter } from 'react-router-dom';
-import { userActions } from '../../redux/actions/User';
-import { connect } from 'react-redux';
-import { authHeader, handleError } from "../common/AuthHeader.js"
-import { hasAdminRole } from "../common/AuthUtil.js";
-import { applicationActions } from '../../redux/actions/Application';
-import {dataflowAction} from "../../redux/actions/Dataflow"
-import { expandGroups, selectGroup } from '../../redux/actions/Groups';
-import { assetsActions } from '../../redux/actions/Assets';
-import { QuestionCircleOutlined, DownOutlined  } from '@ant-design/icons';
-import $ from 'jquery';
-import {Constants} from "../common/Constants"
-import {store} from "../../redux/store/Store"
+import { DownOutlined, QuestionCircleOutlined } from '@ant-design/icons';
+import { Button, Dropdown, Form, Input, Menu, message, Modal, notification } from 'antd';
 import { debounce } from "lodash";
-import logo from  "../../images/logo.png"
+import React, { Component } from "react";
+import { connect } from 'react-redux';
+import { withRouter } from 'react-router-dom';
+import logo from "../../images/logo.png";
 import { msalInstance } from '../../index';
-
-const { Header, Content } = Layout;
-const { Search } = Input;
+import { applicationActions } from '../../redux/actions/Application';
+import { assetsActions } from '../../redux/actions/Assets';
+import { expandGroups, selectGroup } from '../../redux/actions/Groups';
+import { userActions } from '../../redux/actions/User';
+import { authHeader, handleError } from "../common/AuthHeader.js";
+import { hasAdminRole } from "../common/AuthUtil.js";
 
 class AppHeader extends Component {
     pwdformRef = React.createRef();
@@ -63,7 +56,6 @@ class AppHeader extends Component {
     componentWillReceiveProps(props) {
       if(props.application && props.application.applicationTitle!=''){
         this.setState({ selected: props.application.applicationTitle });
-        $('[data-toggle="popover"]').popover('disable');
       }
     }
 
@@ -187,7 +179,6 @@ class AppHeader extends Component {
       this.props.dispatch(applicationActions.applicationSelected(event.target.getAttribute("data-value"), event.target.getAttribute("data-display")));
       localStorage.setItem("activeProjectId", event.target.getAttribute("data-value"));
       this.setState({ selected: event.target.getAttribute("data-display") });
-      $('[data-toggle="popover"]').popover('disable');
     }    
 
     openHelpNotification = () => {
@@ -303,8 +294,8 @@ class AppHeader extends Component {
     );
     const helpMenu = (
       <Menu>
-        <Menu.Item key="1"><a href="" type="link" target={"_blank"} rel="noopener noreferrer" href={process.env.PUBLIC_URL + "/Tombolo-User-Guide.pdf"}>User Guide</a></Menu.Item>
-        <Menu.Item key="2"><a href="#" onClick={this.openAboutModal}>About</a></Menu.Item>
+        <Menu.Item key="1"><a target="_blank" rel="noopener noreferrer" href={process.env.PUBLIC_URL + "/Tombolo-User-Guide.pdf"}>User Guide</a></Menu.Item>
+        <Menu.Item key="2"><a onClick={this.openAboutModal}>About</a></Menu.Item>
       </Menu>
     );
 
