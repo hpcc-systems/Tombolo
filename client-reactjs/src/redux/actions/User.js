@@ -1,8 +1,5 @@
+import { authHeader } from "../../components/common/AuthHeader.js";
 import { Constants } from "../../components/common/Constants";
-import history from "../../components/common/History";
-import { authHeader, handleError } from "../../components/common/AuthHeader.js";
-import { dispatch } from "d3-dispatch";
-import { PreConstruct } from "ag-grid-community";
 var jwtDecode = require("jwt-decode");
 
 export const userActions = {
@@ -10,7 +7,6 @@ export const userActions = {
   logout,
   validateToken,
   registerNewUser,
-  azureLogin,
 };
 
 function login(username, password) {
@@ -168,14 +164,4 @@ function validateToken() {
   function failure(error) {
     return { type: Constants.INVALID_TOKEN, error };
   }
-}
-
-// ## Azure user login
-function azureLogin(user) {
-  return dispatch => {
-      localStorage.setItem('user', JSON.stringify(user));
-      dispatch(success(user))
-      history.push("/");
-    }
-  function success(user) { return { type: Constants.LOGIN_SUCCESS, user } }
 }
