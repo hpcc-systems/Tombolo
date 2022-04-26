@@ -199,7 +199,7 @@ class App extends React.Component {
                     path="/:applicationId/manualJobDetails/:jobId/:jobExecutionId"
                     component={ManualJobDetail}
                   /> 
-                   {!this.props.authWithAzure ?
+                   {this.props.authWithAzure ?
                     <Route exact path="*" component={getAssets} /> : null }
                 </Switch>
               </Content>
