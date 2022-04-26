@@ -60,7 +60,6 @@ async function verifyToken(token) {
 
 
 async function validateToken(req, res, next) {
-  console.log
   let token = req.headers['x-access-token'] || req.headers['authorization'];
   if (token) {
       if (token.startsWith('Bearer ')) {
