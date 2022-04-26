@@ -2,18 +2,12 @@ const express = require('express');
 const rateLimit = require("express-rate-limit");
 const tokenService = require('./utils/token_service');
 const passport = require('passport');
+const bearerStrategy = require('./utils/passportStrategies/passport-azure');
 const cors = require('cors');
 
 //Initialize express app
 const app = express();
 const port = process.env.PORT || 3000
-
-// Azure setup
-const BearerStrategy = require('passport-azure-ad').BearerStrategy;
-const {options} = require("./config/azureConfig")
-const bearerStrategy = new BearerStrategy(options, (profile, done) => {
-      done(null, {}, profile);
-});
 
 // Socket IO
 const server = require('http').Server(app);
@@ -58,27 +52,31 @@ const dataDictionary = require('./routes/data-dictionary/data-dictionary-service
 const groups = require('./routes/groups/group');
 const ghCredentials = require('./routes/ghCredentials');
 const gh_projects = require('./routes/gh_projects');
-
-app.use('/api/app/read', tokenService.verifyToken, appRead);
-app.use('/api/file/read', tokenService.verifyToken, fileRead);
-app.use('/api/fileTemplate/read', tokenService.verifyToken, fileTemplateRead);
-app.use('/api/index/read', tokenService.verifyToken, indexRead);
-app.use('/api/hpcc/read', tokenService.verifyToken, hpccRead);
-app.use('/api/query', tokenService.verifyToken, query);
-app.use('/api/job',  job);
-app.use('/api/fileinstance', tokenService.verifyToken, fileInstance);
-app.use('/api/report/read', tokenService.verifyToken, reportRead);
-app.use('/api/consumer', tokenService.verifyToken, consumer);
 app.use('/api/ldap', ldap);
-app.use('/api/controlsAndRegulations', tokenService.verifyToken, regulations);
-app.use('/api/dataflowgraph', tokenService.verifyToken, dataflowGraph);
-app.use('/api/dataflow', tokenService.verifyToken, dataflow);
-app.use('/api/workflows', tokenService.verifyToken, workflows);
-app.use('/api/data-dictionary', tokenService.verifyToken, dataDictionary);
 app.use('/api/user', userRead);
-app.use('/api/groups', tokenService.verifyToken, groups);
-app.use('/api/ghcredentials', tokenService.verifyToken, ghCredentials);
-app.use('/api/gh_projects', tokenService.verifyToken, gh_projects);
+
+// Authenticate token before proceeding to route
+app.use(tokenService.verifyToken);
+
+app.use('/api/app/read', appRead);
+app.use('/api/file/read', fileRead);
+app.use('/api/fileTemplate/read', fileTemplateRead);
+app.use('/api/index/read', indexRead);
+app.use('/api/hpcc/read', hpccRead);
+app.use('/api/query', query);
+app.use('/api/job', job);
+app.use('/api/fileinstance', fileInstance);
+app.use('/api/report/read', reportRead);
+app.use('/api/consumer', consumer);
+app.use('/api/controlsAndRegulations', regulations);
+app.use('/api/dataflowgraph', dataflowGraph);
+app.use('/api/dataflow', dataflow);
+app.use('/api/workflows', workflows);
+app.use('/api/data-dictionary', dataDictionary);
+
+app.use('/api/groups', groups);
+app.use('/api/ghcredentials', ghCredentials);
+app.use('/api/gh_projects', gh_projects);
 
 
 // process.env["NODE_TLS_REJECT_UNAUTHORIZED"] = 0;
