@@ -1,4 +1,4 @@
-import { LogLevel } from "@azure/msal-browser";
+// import { LogLevel } from "@azure/msal-browser";
 const {REACT_APP_AZURE_CLIENT_ID, REACT_APP_AZURE_TENENT_ID, REACT_APP_AZURE_REDIRECT_URI, REACT_APP_LOGOUT_URI} = process.env;
 
 export const msalConfig = {
@@ -47,7 +47,7 @@ export const msalConfig = {
  */
 export const loginRequest = {
     // scopes: ['User.read', 'email'],
-    scopes : ['api://10e4b085-3fe6-40b8-966e-0201f2553617/access_as_user']
+    scopes : [process.env.REACT_APP_AZURE_API_TOKEN_SCOPE]
 };
 
 /**
@@ -56,6 +56,6 @@ export const loginRequest = {
  */
 export const silentRequestOptions = {
     // scopes: ["openid", "profile"],
-    scopes : ['api://10e4b085-3fe6-40b8-966e-0201f2553617/access_as_user'],
+    scopes : [process.env.REACT_APP_AZURE_API_TOKEN_SCOPE],
     loginHint: "example@domain.net"
 };

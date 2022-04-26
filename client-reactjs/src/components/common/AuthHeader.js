@@ -55,8 +55,7 @@ async function getAzureHeaders() {
   // get active account that was set up in AzureApp component
   const account = msalInstance.getActiveAccount();     
   // Identify scope and and account to request token silently  
-  const silentRequest = { account, scopes: ['api://10e4b085-3fe6-40b8-966e-0201f2553617/access_as_user'], };
-  
+  const silentRequest = { account, scopes: [process.env.REACT_APP_AZURE_API_TOKEN_SCOPE], };
   try {
   // No account mean that user wa not signed in, we can not acquire tokens, so we will return empty headers object.
   if (!account) throw InteractionRequiredAuthError.createNoTokensFoundError();
