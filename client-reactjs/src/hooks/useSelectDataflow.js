@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import { useHistory, useParams } from 'react-router';
 import { authHeader, handleError } from '../components/common/AuthHeader';
+import { hasEditPermission } from '../components/common/AuthUtil';
 import { dataflowAction } from '../redux/actions/Dataflow';
 
 const  useSelectDataflow = () => {
@@ -37,9 +38,10 @@ const  useSelectDataflow = () => {
       dispatch(dataflowAction.dataflowSelected('', '', '', '', {}))
     })
   }, []);
-
+ 
   return {
     isDataflowReady,
+    canEdit: hasEditPermission(user), 
     applicationId: dataflowReducer.applicationId,
     applicationTitle: dataflowReducer.applicationTitle
   };
