@@ -14,36 +14,45 @@ let File=models.file;
 const validatorUtil = require('../../utils/validator');
 const { body, query, validationResult } = require('express-validator');
 
-router.get('/index_list', [
-  query('app_id')
-    .isUUID(4).withMessage('Invalid app id'),
-  query('dataflowId')
-    .isUUID(4).withMessage('Invalid dataflow id')
-], (req, res) => {
+router.get('/index_list',
+  [
+    query('application_id').isUUID(4).withMessage('Invalid application id'),
+    query('cluster_id').isUUID(4).optional({ nullable: true }).withMessage('Invalid cluster id'),
+  ],
+  async (req, res) => {
     const errors = validationResult(req).formatWith(validatorUtil.errorFormatter);
-    if (!errors.isEmpty()) {
-        return res.status(422).json({ success: false, errors: errors.array() });
+    if (!errors.isEmpty()) return res.status(422).json({ success: false, errors: errors.array() });
+
+    try {
+      const { application_id, cluster_id } = req.query;
+
+      if (!cluster_id) {
+        const assets = await Index.findAll({
+          where: { application_id },
+          attributes: ['application_id', 'id', 'title', 'description', 'createdAt'],
+        });
+        return res.json(assets);
+      }
+
+      const assets = await Index.findAll({
+        where: {
+          application_id,
+          // [Op.or]: [{ cluster_id }, { cluster_id: null }], // ?? doe not have cluster ID
+        },
+        attributes: ['id', 'title', 'description', 'createdAt'],
+      });
+
+      const assetList = assets.map((asset) => {
+        const parsed = asset.toJSON();
+        parsed.isAssociated = true;
+        return parsed;
+      });
+
+      res.json(assetList);
+    } catch (error) {
+      console.log(error);
+      res.status(500).json({ success: false, message: 'Error occurred while retrieving assets' });
     }
-    console.log("[index/read.js] - Get file list for app_id = " + req.query.app_id);
-    let dataflowId = req.query.dataflowId;
-
-    let query = 'select i.id, i.name, i.title, i.description, i.createdAt, i.deletedAt, i.application_id from indexes i '+
-    'where i.id not in (select asd.assetId from assets_dataflows asd where asd.dataflowId = (:dataflowId) and asd.deletedAt is null) ' +
-    'and i.application_id = (:applicationId) '+
-    'and i.deletedAt is null';
-
-    /*let query = 'select j.id, j.name, j.title, j.createdAt, asd.dataflowId from job j, assets_dataflows asd where j.application_id=(:applicationId) '+
-        'and j.id = asd.assetId and j.id not in (select assetId from assets_dataflows where dataflowId = (:dataflowId))';*/
-    let replacements = { applicationId: req.query.app_id, dataflowId: dataflowId};
-    let existingFile = models.sequelize.query(query, {
-      type: models.sequelize.QueryTypes.SELECT,
-      replacements: replacements
-    }).then((indexes) => {
-      res.json(indexes);
-    })
-    .catch(function(err) {
-      return res.status(500).json({ success: false, message: "Error occured while retrieving indexes" });
-    });
 });
 
 let updateIndexDetails = (indexId, applicationId, req) => {

@@ -39,7 +39,7 @@ class IndexTree extends Component {
 
   fetchDataAndRenderTable() {
     var _self=this;
-    fetch("/api/index/read/index_list?app_id="+this.state.applicationId, {
+    fetch("/api/index/read/index_list?application_id="+this.state.applicationId, {
       headers: authHeader()
     })
     .then((response) => {

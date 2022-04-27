@@ -52,7 +52,7 @@ function DataDictionary(props) {
 
   const fetchFiles = () => {
     return new Promise((resolve, reject) => {
-      fetch("/api/file/read/file_list?app_id="+application.applicationId, {
+      fetch("/api/file/read/file_list?application_id="+application.applicationId, {
           headers: authHeader()
       })
       .then((response) => {
