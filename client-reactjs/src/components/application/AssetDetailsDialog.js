@@ -15,19 +15,6 @@ function AssetDetailsDialog(props) {
     return word[0].toUpperCase() + word.slice(1);
   };
 
-  const DetailsForm = (props) =>{
-    const formOptions ={
-      job: <JobDetailsForm {...props}/>,
-      file: <FileDetailsForm {...props} />,
-      filetemplate : <FileTemplate {...props} />,
-      index: <IndexDetailsForm {...props}/>,
-      query: <QueryDetailsForm  {...props}/>,
-      'sub-process': <SubProcessDetails  {...props} />
-    }
-    const assetType = props.selectedAsset.type.toLowerCase();
-    return formOptions[assetType];
-  } 
-
   return(
     <Modal
       visible={props.show}
@@ -43,3 +30,17 @@ function AssetDetailsDialog(props) {
 }
 
 export default AssetDetailsDialog;
+
+const DetailsForm = (props) =>{
+  const formOptions ={
+    job: <JobDetailsForm {...props}/>,
+    file: <FileDetailsForm {...props} />,
+    filetemplate : <FileTemplate {...props} />,
+    index: <IndexDetailsForm {...props}/>,
+    query: <QueryDetailsForm  {...props}/>,
+    'sub-process': <SubProcessDetails  {...props} />,
+  }
+
+  const assetType = props.selectedAsset.type.toLowerCase();
+  return formOptions[assetType];
+};
