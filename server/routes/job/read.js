@@ -725,42 +725,36 @@ router.post( '/saveJob',
 );
 
 router.get('/job_list', [
-  query('app_id')
-    .isUUID(4).withMessage('Invalid application id'),
-  query('dataflowId')
-    .isUUID(4).withMessage('Invalid dataflow id'),
-    query('clusterId')
-    .isUUID(4).withMessage('Invalid cluster id'),
-], (req, res) => {
+  query('application_id') .isUUID(4).withMessage('Invalid application id'),
+  query('cluster_id') .isUUID(4).withMessage('Invalid cluster id'),
+], async (req, res) => {
   const errors = validationResult(req).formatWith(validatorUtil.errorFormatter);
-  if (!errors.isEmpty()) {
-      return res.status(422).json({ success: false, errors: errors.array() });
-  }
-  console.log("[job list/read.js] - Get job list for app_id = " + req.query.app_id);
+  if (!errors.isEmpty()) return res.status(422).json({ success: false, errors: errors.array() });
+  
   try {
-    let dataflowId = req.query.dataflowId;
-    let query = 'select j.id, j.name, j.title, j.jobType, j.metaData, j.description, j.createdAt from job j '+
-    'where j.id not in (select asd.assetId from assets_dataflows asd where asd.dataflowId = (:dataflowId) and asd.deletedAt is null)'+    
-    'and j.application_id = (:applicationId)'+
-    'and (j.cluster_id = (:clusterId) or j.cluster_id is null)'+
-    'and j.deletedAt is null;';
-    /*let query = 'select j.id, j.name, j.title, j.createdAt, asd.dataflowId from job j, assets_dataflows asd where j.application_id=(:applicationId) '+
-        'and j.id = asd.assetId and j.id not in (select assetId from assets_dataflows where dataflowId = (:dataflowId))';*/
-    let replacements = { applicationId: req.query.app_id, dataflowId: dataflowId, clusterId: req.query.clusterId};
-    let existingFile = models.sequelize.query(query, {
-      type: models.sequelize.QueryTypes.SELECT,
-      replacements: replacements
-    }).then((jobs) => {
-      res.json(jobs);
-    })
-    .catch(function(err) {
-      console.log(err);
-      return res.status(500).json({ success: false, message: "Error occurred while retrieving jobs" });
+    const {application_id , cluster_id} = req.query;
+    const assets = await Job.findAll({
+      where:{
+        application_id,
+        [Op.or]: [
+          { cluster_id },
+          { cluster_id : null }
+        ]
+      },
+      attributes:['id','name','title', 'jobType', 'metaData','description', 'createdAt']
     });
-  } catch (err) {
-    console.log('err', err);
-    return res.status(500).json({ success: false, message: "Error occurred while retrieving jobs" });
-  }
+
+    const assetList = assets.map(asset => {
+      const parsed = asset.toJSON();
+      parsed.isAssociated = asset.metaData?.isAssociated || false;
+      delete parsed.metaData;
+      return parsed;
+    })
+
+    res.json(assetList);
+  } catch (error) {
+    console.log(error);
+    res.status(500).json({ success: false, message: "Error occurred while retrieving assets" });  }
 });
 
 router.get('/job_details', [
