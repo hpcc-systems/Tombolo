@@ -25,7 +25,6 @@ let Indexes=models.indexes;
 let Query=models.query;
 let Job=models.job;
 const JobFile = models.jobfile;
-let AssetDataflow = models.assets_dataflows;
 let Visualization=models.visualizations;
 var request = require('request');
 var requestPromise = require('request-promise');
@@ -429,7 +428,6 @@ router.post('/saveFile', [
           JobFile.destroy({ where: { file_id: removeAssetId } }),
           FileLayout.destroy({ where: { file_id: removeAssetId } }),
           FileLicense.destroy({ where: { file_id: removeAssetId } }),
-          AssetDataflow.destroy({ where: { assetId: removeAssetId } }),
           FileValidation.destroy({ where: { file_id: removeAssetId } }),
           File.destroy({ where: { id: removeAssetId, application_id } }),
         ]);

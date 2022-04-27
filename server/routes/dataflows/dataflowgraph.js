@@ -1,7 +1,7 @@
 const express = require('express');
 const router = express.Router();
 var models  = require('../../models');
-let AssetDataflow = models.assets_dataflows;
+
 let DataflowGraph = models.dataflowgraph;
 const DependentJobs = models.dependent_jobs;
 let Dataflow = models.dataflow;
@@ -96,9 +96,7 @@ router.post('/deleteAsset',
     if (!errors.isEmpty()) return res.status(422).json({ success: false, errors: errors.array() });
 
     try {
-      const deleted = await AssetDataflow.destroy({
-        where: { dataflowId: req.body.dataflowId, assetId: req.body.assetId },
-      });
+
       console.log('-deleted-----------------------------------------');
       console.dir({ deleted }, { depth: null });
       console.log('------------------------------------------');

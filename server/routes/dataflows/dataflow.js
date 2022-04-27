@@ -106,26 +106,6 @@ router.post(
   }
 );
 
-router.post('/saveAsset', (req, res) => {
-  AssetDataflow.findOne({
-    where: {
-      assetId: req.body.assetId,
-      dataflowId: req.body.dataflowId
-    }
-  }).then(async assetDataflow => {
-    if (assetDataflow === null) {
-      assetDataflow = await AssetDataflow.create({
-        assetId: req.body.assetId,
-        dataflowId: req.body.dataflowId
-      });
-      console.log(`assetDataflow created: ${JSON.stringify(assetDataflow.dataValues)}`);
-      return res.json({ success: true, message: `asset ${assetDataflow.assetId} added to dataflow ${assetDataflow.dataflowId}` });
-    }
-    console.log(`assetDataflow found: ${JSON.stringify(assetDataflow.dataValues)}`);
-    return res.json({ success: true, message: `asset ${assetDataflow.assetId} already associated to dataflow ${assetDataflow.dataflowId}` });
-  });
-});
-
 router.get('/', [
   query('application_id')
     .isUUID(4).withMessage('Invalid cluster id'),
@@ -176,7 +156,6 @@ router.post( '/delete',
       await Promise.all([
         jobScheduler.removeAllDataflowJobs(req.body.dataflowId),
         // JobExecution.destroy({ where: { dataflowId: req.body.dataflowId } }), // !! will delete all job executions of this dataflow
-        AssetDataflow.destroy({ where: { dataflowId: req.body.dataflowId } }),
         DependentJobs.destroy({ where: { dataflowId: req.body.dataflowId } }),
         Dataflow.destroy({ where: { id: req.body.dataflowId, application_id: req.body.applicationId } }),
         DataflowGraph.destroy({ where: { dataflowId: req.body.dataflowId, application_id: req.body.applicationId } }),

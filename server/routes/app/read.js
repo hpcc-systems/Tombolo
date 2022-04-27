@@ -6,8 +6,7 @@ var fs = require('fs');
 var models  = require('../../models');
 let UserApplication = models.user_application;
 let Application = models.application;
-let AssetsGroups=models.assets_groups;
-let AssetsDataflows=models.assets_dataflows;
+
 let DependentJobs=models.dependent_jobs;
 let Groups = models.groups;
 let File = models.file;
@@ -33,7 +32,7 @@ let Sequelize = require('sequelize');
 const Op = Sequelize.Op;
 const multer = require('multer');
 const AssetGroups = models.assets_groups;
-const AssetDataflows = models.assets_dataflows;
+
 const Dataflowgraph = models.dataflowgraph;
 
 router.get('/app_list', (req, res) => {
@@ -149,7 +148,7 @@ router.post('/deleteApplication', async function (req, res) {
     let dataflows = await Dataflow.findAll({where: {application_id: req.body.appIdToDelete}, raw: true, attributes: ['id']});
     if(dataflows && dataflows.length > 0) {
       let dataflowIds = dataflows.map(dataflow => dataflow.id);
-      await AssetsDataflows.destroy({where: {dataflowId: {[Sequelize.Op.in]:dataflowIds}}})
+
       await DependentJobs.destroy({where: {dataflowId: {[Sequelize.Op.in]:dataflowIds}}});
       await Dataflow.destroy({where: {application_id: req.body.appIdToDelete}});
     }
@@ -381,19 +380,6 @@ function importAssetDetails(item , assetType, newAppId, groupIdMap, io){
           }
          
         })
-        .then(() => {
-          // #### create asset Dataflows
-          asset.dataflows?.map(dataflow => {
-            //create asset dataflows
-            AssetDataflows.create(dataflow.assets_dataflows)
-            .then(result =>{
-              emitUpdates(io, {step : `SUCCESS - creating asset dataflow`, status: "success"})
-            }).catch(err =>{
-              emitUpdates(io, {step : `ERR - creating asset dataflows`, status: "error"});
-              console.log("ERR -", err)
-            })
-          })
-          })
         .then(() =>{
           // #### Create Depends on Jobs
           asset.dependsOnJobs?.map(job =>{

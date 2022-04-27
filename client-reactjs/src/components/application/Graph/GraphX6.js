@@ -539,16 +539,6 @@ function GraphX6({ readOnly = false, statuses }) {
       cell.updateData( cellData, { name: 'update-asset' } );
 
       try {
-        const options = {
-          method: 'POST',
-          headers: authHeader(),
-          body: JSON.stringify({ assetId: newAsset.id, dataflowId }),
-        };
-
-        /* this POST will create record in asset_dataflows table*/ 
-        const response = await fetch('/api/dataflow/saveAsset', options);
-        if (!response.ok) handleError(response);
-
         // Getting Job - File relations set up
         const jobtypes = ['Job', 'Modeling', 'Scoring', 'ETL', 'Query Build', 'Data Profile'];
 

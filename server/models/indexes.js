@@ -34,12 +34,7 @@ module.exports = (sequelize, DataTypes) => {
     indexes.belongsTo(models.application, {
       foreignKey: 'application_id'
     });
-    indexes.belongsToMany(models.dataflow, {
-      through: 'assets_dataflows',
-      as: 'dataflows',
-      foreignKey: 'assetId',
-      otherKey: 'dataflowId'
-    });
+
     indexes.belongsTo(models.file, {
       foreignKey: 'parentFileId'
     });

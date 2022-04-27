@@ -106,15 +106,6 @@ const createOrUpdateFile = async ({jobfile, jobId, clusterId, dataflowId, applic
 
       if (!isJobFileCreated) jobFile = await jobFile.update(jobfileFields);
 
-      // create assetDataflow if still not exists
-      if (dataflowId){
-        await AssetDataflow.findOrCreate({
-          where: {
-            assetId: file.id,
-            dataflowId: dataflowId,
-          },
-        });
-      }
       // construct object with fields that is going to be used to create a graph nodes
       const relatedFile = {
         name: file.name,
@@ -139,7 +130,7 @@ const createOrUpdateFile = async ({jobfile, jobId, clusterId, dataflowId, applic
 const clearAllPreviousScheduleRecords = async (props) => {       
   return await Promise.all([
     //1. Remove chron expression from assetDataflow table;
-    AssetDataflow.update( { cron: null }, { where: { assetId: props.id, dataflowId: props.dataflowId } } ),
+    AssetDataflow.update( { cron: null }, { where: { assetId: props.id, dataflowId: props.dataflowId } } ), // TODO
     //2. Remove job from Bree
     JobScheduler.removeJobFromScheduler(props.name + '-' + props.dataflowId + '-' + props.id),
     //3. Remove Dependent Job Record
@@ -154,7 +145,6 @@ const deleteJob = async (jobId, application_id) =>{
     Job.destroy({ where: { id: jobId, application_id} }),
     JobFile.destroy({ where: { job_id: jobId } }),
     JobParam.destroy({ where: { job_id: jobId } }),
-    AssetDataflow.destroy({ where: { assetId: jobId } }),
   ]);
 }
 
@@ -509,8 +499,6 @@ router.post( '/saveJob',
              where: { job_id: job.id, application_id, file_type: file.file_type, name: file.name },
              defaults: defaultFields ,
            })
-           // If DataFlowId present update assetDataflow table so
-           if (dataflowId) await AssetDataflow.findOrCreate({ where: { assetId: job.id, dataflowId }, defaults: { assetId: file.id, dataflowId }, });
          }
         // Update Job Params
         const updateParams = params.map((el) => ({ ...el, job_id: job.id, application_id }));
