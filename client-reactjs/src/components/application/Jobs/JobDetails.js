@@ -246,7 +246,7 @@ class JobDetails extends Component {
 
   async getFiles({applicationId}) {
     const queryStringParams = {};
-    if (applicationId) queryStringParams['app_id'] = applicationId;
+    if (applicationId) queryStringParams['application_id'] = applicationId;
     if (this.props.selectedDataflow) queryStringParams['dataflow_id'] = this.props.selectedDataflow.id;
 
     try {
