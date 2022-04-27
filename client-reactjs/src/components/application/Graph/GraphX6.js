@@ -898,6 +898,7 @@ function GraphX6({ readOnly = false, statuses }) {
           dataflowId={dataflowId}
           applicationId={applicationId}
           assetType={configDialog.type}
+          nodes={configDialog.nodes}
         />
       );
     }
