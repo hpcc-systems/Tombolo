@@ -279,8 +279,14 @@ class JobScheduler {
       console.log(`📢 JOB WAS SCHEDULED AS - ${uniqueJobName},  job-scheduler.js: addJobToScheduler`);
       !skipLog && this.logBreeJobs();
       console.log('------------------------------------------');
+      return {success: true}
     } catch (err) {
-      console.log(err);
+      console.log('-err-----------------------------------------');
+      console.dir({err}, { depth: null });
+      console.log('------------------------------------------');
+      const part2 = err.message.split(' an ')?.[1]  // error message is not user friendly, we will trim it to have everything after "an".
+      if (part2) err.message = part2;
+      return {success: false, error: err.message }
     }
   }
 

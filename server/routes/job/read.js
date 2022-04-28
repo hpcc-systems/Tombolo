@@ -577,7 +577,9 @@ router.post('/schedule_job',
             };
           }
 
-          JobScheduler.addJobToScheduler(jobSettings);
+          const result = JobScheduler.addJobToScheduler(jobSettings);
+          if (result.error) throw new Error(result.error)
+
           console.log(`-JOB SCHEDULED-Time----------------------------------------`);
           console.dir({ job: job.id, jobname: job.name, schedule }, { depth: null });
           console.log('------------------------------------------');
@@ -599,7 +601,7 @@ router.post('/schedule_job',
       console.log('-error- /schedule_job----------------------------------------');
       console.dir({ error }, { depth: null });
       console.log('------------------------------------------');
-      return res.status(500).send({ success: false, message: 'Failed to Save schedule' });
+      return res.status(400).send({ success: false, message: error.message });
     }
   }
 );
