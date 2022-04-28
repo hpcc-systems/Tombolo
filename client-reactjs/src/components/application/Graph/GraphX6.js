@@ -685,67 +685,84 @@ function GraphX6({ readOnly = false, statuses }) {
         }
       }
 
-      const existingScheduledEdge = cell.data?.schedule?.scheduleEdgeId;
-      const existingScheduledTime = cell.data?.schedule?.cron;
-
-      const newCellData = { title: asset.title, name: asset.name };
-      if (cell.data.type === 'Sub-Process') newCellData.description = asset.description;
-      /* updating cell will cause a POST request to '/api/dataflowgraph/save with latest nodes and edges*/
-      //add icons or statuses
-      // cell.updateData({ title: asset.title, scheduleType: asset.type }, { name: 'update-asset' });
-      if (asset.type === 'Predecessor') {
-
-        // find a graph node that will be a source and clicked node will be a targed, add an edge;
-        const sourceJobId = asset.jobs[0];
-        const sourceNode = configDialog.nodes.find((node) => node.assetId === sourceJobId);
-    
-        // there can be only one scheduled edge
-        // if edge is already exist then we should delete it and create a new one
-        if (existingScheduledEdge) graphRef.current.removeEdge(cell.data.schedule.scheduleEdgeId); 
-        
-        if (sourceNode) {
-          const newEdge = graphRef.current.addEdge({
-            target: cell,
-            source: sourceNode.nodeId,
-            attrs: {
-              line: {
-                strokeDasharray: '5 5', // WILL MAKE EDGE DASHED
-              },
-            }, 
-          });
-
-          newEdge.setData({scheduled: true});
-
-          newCellData.schedule = {
-            type: 'Predecessor',
-            scheduledAfter: sourceJobId,
-            scheduleEdgeId: newEdge.id,
-          };
-        }
-      }
-
-      if (asset.type === 'Time') {
-        newCellData.schedule = {
-          type: 'Time',
-          cron: asset.cron
-        };
-      }
-
-      // If node was removed from schedule we will remove edge
-      if (existingScheduledEdge && !asset.type) {
-        graphRef.current.removeEdge(cell.data.schedule.scheduleEdgeId);
-        newCellData.schedule = null;
-      }
-      
-      // remove time data from node if time schedule was removed
-      if (existingScheduledTime && !asset.type) {
-        newCellData.schedule = null;
-      }
-  
+      const newCellData = {
+        name: asset.name,
+        title: asset.title,
+        description: cell.data.type === 'Sub-Process' ?  asset.description : null
+      };
+       
       cell.updateData(newCellData, { name: 'update-asset' });
     }
     setConfigDialog({ ...defaultState }); // RESETS LOCAL STATE AND CLOSES DIALOG
   };
+
+  const scheduleNode = (schedule) =>{
+    // schedule:
+    //   type: Predecessor | Time | "" 
+    //   cron: string 
+    //   dependsOnJob: [jobId] | []
+    const cell = configDialog.cell;
+    
+    const existingScheduledEdge = cell.data?.schedule?.scheduleEdgeId;
+    const existingScheduledTime = cell.data?.schedule?.cron;
+    
+    const newCellData ={};
+
+    // newCellData: {
+    //   schedule: {
+    //     type: Predecessor | Time 
+    //     cron: string 
+    //     dependsOnJob: [jobId] | []
+    //     scheduleEdgeId?: string | undefined // graph edge Id 
+    //   } | NULL
+    // } 
+
+    if (schedule.type === 'Time') {
+      newCellData.schedule = schedule
+    }
+    
+    if (schedule.type === 'Predecessor') {
+      // find a graph node that will be a source and clicked node will be a targed, add an edge;
+      const sourceJobId = schedule.dependsOnJob[0] //asset.jobs[0];
+      const sourceNode = configDialog.nodes.find((node) => node.assetId === sourceJobId);
+  
+      // there can be only one scheduled edge
+      // if edge is already exist then we should delete it and create a new one
+      if (existingScheduledEdge) graphRef.current.removeEdge(cell.data.schedule.scheduleEdgeId); 
+      
+      if (sourceNode) {
+        const newEdge = graphRef.current.addEdge({
+          target: cell,
+          source: sourceNode.nodeId,
+          attrs: {
+            line: {
+              strokeDasharray: '5 5', // WILL MAKE EDGE DASHED
+            },
+          }, 
+        });
+
+        newEdge.setData({scheduled: true});
+
+        newCellData.schedule = {
+          ...schedule,
+          scheduleEdgeId: newEdge.id,
+        };
+      }
+    }
+        
+    // If node was removed from schedule we will remove edge
+    if (existingScheduledEdge && !schedule.type) {
+      graphRef.current.removeEdge(cell.data.schedule.scheduleEdgeId);
+      newCellData.schedule = null;
+    }
+    
+    // remove time data from node if time schedule was removed
+    if (existingScheduledTime && !schedule.type) {
+      newCellData.schedule = null;
+    }
+    
+    cell.updateData(newCellData, { name: 'update-asset' });
+  }
   
   const handleSync = async () => {
     const graphJSON = graphRef.current.toJSON({ diff: true });
@@ -866,6 +883,7 @@ function GraphX6({ readOnly = false, statuses }) {
           selectedDataflow={{ id: dataflowId }}
           nodes={configDialog.nodes}
           onClose={updateAsset}
+          scheduleNode={scheduleNode}
           viewMode={readOnly} // THIS PROP WILL REMOVE EDIT OPTIONS FROM MODAL
           displayingInModal={true} // used for control button in modals
           selectedAsset={{ // all we know about clicked asset will be passed in selectedAsset prop
