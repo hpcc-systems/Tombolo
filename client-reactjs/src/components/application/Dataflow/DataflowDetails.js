@@ -11,7 +11,7 @@ function DataflowDetails() {
   const history = useHistory();
   const params = useParams();
 
-  const {isDataflowReady, applicationId, applicationTitle} = useSelectDataflow(); // this hook will check if dataflow is present in redux, if not it will request data from DB and update redux
+  const {isDataflowReady, applicationId, applicationTitle, canEdit} = useSelectDataflow(); // this hook will check if dataflow is present in redux, if not it will request data from DB and update redux
 
   const handleBackToAllJobs = () => {
     history.push(`/${params.applicationId}/dataflow`);
@@ -39,7 +39,9 @@ function DataflowDetails() {
           tabBarExtraContent={ <span> <Button type="primary" onClick={handleBackToAllJobs} ghost> Cancel </Button> </span> }
         >
           <TabPane tab="Designer" key="1">
-            <GraphX6 readOnly={false} />
+            <div style={{height:'80vh'}}>
+              <GraphX6 readOnly={canEdit ? false: true}/>
+            </div>
           </TabPane>
           <TabPane tab="Assets" key="2">
             <DataflowAssetsTable />
