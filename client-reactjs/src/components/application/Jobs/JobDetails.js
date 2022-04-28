@@ -147,8 +147,10 @@ class JobDetails extends Component {
 
         const data = await response.json();
 
-        // GETTING CRON DETAILS
-        const cronParts = data.schedule?.cron?.split(' ') || [];
+        // GETTING Schedule DETAILS
+        const schedule = this.props.selectedAsset.schedule;
+        const cronParts = schedule?.cron?.split(' ') || [];
+        if (schedule?.type) this.handleScheduleTypeSelect(schedule.type);
 
         // GETTING JOB FILES 
         const { inputFiles, outputFiles } = data.jobFileTemplate.reduce(
@@ -161,14 +163,12 @@ class JobDetails extends Component {
           { inputFiles: [], outputFiles: [] }
         );
   
-        if (data.schedule?.type) this.handleScheduleTypeSelect(data.schedule.type);
-  
         if (!data.jobType) data.jobType = '';
 
         this.setState({
           initialDataLoading: false,
-          selectedScheduleType: data.schedule?.type || this.state.selectedScheduleType,
-          schedulePredecessor: data.schedule?.jobs || [],
+          selectedScheduleType: schedule?.type || this.state.selectedScheduleType,
+          schedulePredecessor: schedule?.dependsOnJob || [],
           selectedCluster: data.cluster_id,
           scheduleMinute: cronParts.length > 0 ? cronParts[0] : this.state.scheduleMinute,
           scheduleHour: cronParts.length > 0 ? cronParts[1] : this.state.scheduleHour,
@@ -322,12 +322,10 @@ class JobDetails extends Component {
         || this.formRef.current.getFieldValue('jobType') === "Manual"
 
         const resultToGraph ={
-          ...saveResponse,
           assetId: saveResponse.jobId,
           name: this.formRef.current.getFieldValue('name'),
           title: this.formRef.current.getFieldValue('title'),
-          // if job is newly associated jobSelected value is gonna be true, if it is undefined we will fall-back to isAssociated value, if it is true it mean that job was previously associated, if it is falsy, then we have no associations yet;
-          isAssociated,
+          isAssociated, // if job is newly associated jobSelected value is gonna be true, if it is undefined we will fall-back to isAssociated value, if it is true it mean that job was previously associated, if it is falsy, then we have no associations yet;
         }       
 
         return this.props.onClose(resultToGraph);
@@ -481,11 +479,6 @@ class JobDetails extends Component {
         dataflowId: this.props.selectedDataflow?.id || '', // THIS VALUE IS NOT SAVED ON JOB OBJECT BUT IS USED TO REMOVE OR ADD JOB TO SCHEDULE!
         application_id: this.props.application.applicationId,
         groupId: this.props.groupId || this.state.job.groupId || '',
-      },
-      schedule: {
-        type: this.state.selectedScheduleType,
-        jobs: this.state.schedulePredecessor,
-        cron: this.joinCronTerms(),
       },
       files: !isAssociated ? [] : inputFiles.concat(outputFiles),
       params: !isAssociated ? [] : this.state.job.inputParams,
@@ -975,6 +968,48 @@ class JobDetails extends Component {
     // this.state.job.jobType !== 'Script' && this.state.job.jobType !== 'Spray' && this.state.job.jobType !== 'Manual'
     return invalidJobTypeForTab[jobType] ? false : true;
   };
+
+  handleSchedule = async () =>{
+    const { minute, hour, dayMonth, month, dayWeek } = this.joinCronTerms();
+    const  cronExpression = `${minute} ${hour} ${dayMonth} ${month} ${dayWeek}`;
+
+      const schedule = {
+        type: this.state.selectedScheduleType, // Predecessor | Time | ""
+        cron: this.state.selectedScheduleType === 'Time' ? cronExpression : '', // string |
+        dependsOnJob: this.state.schedulePredecessor, // [jobId] - can be many jobs ?
+      };
+
+      const defaultExpression = '* * * * *'
+      
+      try {
+        if (schedule.type === 'Time' && schedule.cron === defaultExpression) throw new Error("Please provide cron expression")
+        if (schedule.type === "Predecessor" && schedule.dependsOnJob?.length === 0 ) throw new Error("Please select a job to run after")
+        // /schedule_job
+        const payload = {
+          method: 'POST',
+          headers: authHeader(),
+          body: JSON.stringify({
+             jobId: this.state.job.id,
+             dataflowId: this.state.job.dataflowId,
+             application_id: this.props.application.applicationId ,
+             schedule: schedule
+          }),
+        };
+        const response = await fetch('/api/job/schedule_job', payload);
+    
+        if (!response.ok) handleError(response);
+    
+        const result =  await response.json();
+        this.props.scheduleNode(result.schedule); // will trigger method to update node view on a graph
+        
+        message.success('Job schedule saved');
+      } catch (error) {
+        console.log('-error-----------------------------------------');
+        console.dir({error}, { depth: null });
+        console.log('------------------------------------------');
+        message.error(error.message)
+      }
+  }
   
   
 
@@ -1474,6 +1509,11 @@ class JobDetails extends Component {
                         )}
                       </Form.Item>
                     ) : null}
+                    {!this.state.enableEdit ? null:
+                    <Form.Item wrapperCol={{ offset: 12, span: 4 }} >
+                      <Button onClick={this.handleSchedule} type="primary" block>Save schedule</Button>
+                    </Form.Item>
+                    }
                   </Form>
                 </div>
               </TabPane>
