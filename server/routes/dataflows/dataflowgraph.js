@@ -3,7 +3,6 @@ const router = express.Router();
 var models  = require('../../models');
 
 let DataflowGraph = models.dataflowgraph;
-const DependentJobs = models.dependent_jobs;
 let Dataflow = models.dataflow;
 let Job = models.job;
 let File = models.file;
@@ -11,8 +10,6 @@ let Index = models.indexes;
 const validatorUtil = require('../../utils/validator');
 const { body, query, validationResult } = require('express-validator');
 const JobScheduler = require('../../job-scheduler');
-
-
 
 router.get( '/',
   [
@@ -96,17 +93,10 @@ router.post('/deleteAsset',
     if (!errors.isEmpty()) return res.status(422).json({ success: false, errors: errors.array() });
 
     try {
-
-      console.log('-deleted-----------------------------------------');
-      console.dir({ deleted }, { depth: null });
-      console.log('------------------------------------------');
-
       if (req.body.type === 'job') {
-        await JobScheduler.removeJobFromScheduler(
-          req.body.name + '-' + req.body.dataflowId + '-' + req.body.assetId
-        );
-        await DependentJobs.destroy({where : {jobId:req.body.assetId, dataflowId : req.body.dataflowId}})
+        await JobScheduler.removeJobFromScheduler( req.body.name + '-' + req.body.dataflowId + '-' + req.body.assetId );
       }
+
       res.json({ result: 'success' });
     } catch (error) {
       console.log('-/deleteAsset error-----------------------------------------');

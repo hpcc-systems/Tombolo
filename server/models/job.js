@@ -45,12 +45,6 @@ module.exports = (sequelize, DataTypes) => {
       onDelete: 'CASCADE',
       hooks: true
     });
-    job.hasMany(models.dependent_jobs, {
-      foreignKey: 'jobId',
-      as: 'dependsOnJobs',
-      onDelete: 'CASCADE',
-      hooks: true
-    });
 
     job.belongsTo(models.application, {
       foreignKey: 'application_id'

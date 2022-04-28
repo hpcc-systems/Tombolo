@@ -8,8 +8,6 @@ let Cluster = models.cluster;
 let Index = models.indexes;
 let File = models.file;
 let Job = models.job;
-let DependentJobs = models.dependent_jobs;
-let JobExecution = models.job_execution;
 const Dataflow_cluster_credentials = models.dataflow_cluster_credentials;
 const validatorUtil = require('../../utils/validator');
 const { body, query, validationResult } = require('express-validator');
@@ -154,9 +152,7 @@ router.post( '/delete',
 
     try {
       await Promise.all([
-        jobScheduler.removeAllDataflowJobs(req.body.dataflowId),
-        // JobExecution.destroy({ where: { dataflowId: req.body.dataflowId } }), // !! will delete all job executions of this dataflow
-        DependentJobs.destroy({ where: { dataflowId: req.body.dataflowId } }),
+        jobScheduler.removeAllFromBree(req.body.dataflowId),
         Dataflow.destroy({ where: { id: req.body.dataflowId, application_id: req.body.applicationId } }),
         DataflowGraph.destroy({ where: { dataflowId: req.body.dataflowId, application_id: req.body.applicationId } }),
       ]);
@@ -296,17 +292,19 @@ router.get( '/checkAssetDataflows',
 
     try {
 
-      const assetsInDataflows = await AssetDataflow.findAll({
-         where: { assetId: req.query.assetId },
-         attributes:["dataflowId"]
-        });
+      // const assetsInDataflows = await AssetDataflow.findAll({
+      //    where: { assetId: req.query.assetId },
+      //    attributes:["dataflowId"]
+      //   });
 
-      const dataflows = await Dataflow.findAll({
-        where:{ id: assetsInDataflows.map(ad => ad.dataflowId) },
-        attributes:['id','application_id','title']
-      });
+      // const dataflows = await Dataflow.findAll({
+      //   where:{ id: assetsInDataflows.map(ad => ad.dataflowId) },
+      //   attributes:['id','application_id','title']
+      // });
       
-      res.send(dataflows);
+      // res.send(dataflows);
+      // TODO FIND A WAY TO CHECK IF JOB EXIST IN ANY OF DATAFLOWS
+      res.send([]);
     } catch (error) {
       console.log('-error-----------------------------------------');
       console.dir({error}, { depth: null });
