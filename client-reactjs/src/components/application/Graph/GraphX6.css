@@ -12,8 +12,9 @@
 }
 
 .graph-container-stencil {
+  position: relative;
   width: calc(100% - 180px);
-  height: calc(100vh - 160px);
+  height: 100%;
   margin:0 8px;
   flex:1;
   box-shadow: 0 0 10px 1px #e9e9e9;

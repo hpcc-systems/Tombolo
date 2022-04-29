@@ -489,6 +489,8 @@ class JobDetails extends Component {
   handleInputFileChange = (value) =>  this.setState({ selectedInputFile: value });
 
   handleOutputFileChange = (value) => this.setState({ selectedOutputFile: value });
+  
+  handleECLChange = (value) => this.setState({job: {...this.job, ecl: value}});
 
   onJobTypeChange = (value) => this.setState({ job: { ...this.state.job, jobType: value } });
   
@@ -812,9 +814,7 @@ class JobDetails extends Component {
     
             {this.shouldShowTab(jobType) ? (
               <TabPane tab="ECL" destroyInactiveTabPane disabled={noECLAvailable} key="2">
-                <Form.Item {...eclItemLayout} label="ECL" name="ecl">
-                  <EclEditor id="job_ecl" targetDomId="jobEcl" disabled={true} />
-                </Form.Item>
+                  <EclEditor ecl={this.state.job.ecl} onChange={this.handleECLChange} />
               </TabPane>
             ) : jobType === 'Script' ? (
               <TabPane disabled={noECLAvailable} tab="Script" key="2">
