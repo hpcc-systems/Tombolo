@@ -17,6 +17,7 @@ import AssetDetailsDialog from '../AssetDetailsDialog';
 import ExistingAssetListDialog from '../Dataflow/ExistingAssetListDialog';
 import Shape from './Shape.js';
 import { colors } from './graphColorsConfig.js';
+import  useWindowSize from "../../../hooks/useWindowSize"
 
 const defaultState = {
   openDialog: false,
@@ -35,6 +36,7 @@ function GraphX6({ readOnly = false, statuses }) {
   const graphContainerRef = useRef();
   const stencilContainerRef = useRef();
   const subFileList = useRef({});  //  useState does not want to work with fileList, always showing empty object
+  const windowSize = useWindowSize();
 
   const [graphReady, setGraphReady] = useState(false);
   const [sync, setSync] = useState({ error: '', loading: false });
@@ -906,7 +908,7 @@ function GraphX6({ readOnly = false, statuses }) {
   return (
     <>
       <CustomToolbar graphRef={graphRef} handleSync={handleSync} isSyncing={sync.loading}  readOnly={readOnly}/>
-      <div className="graph-container">
+      <div className="graph-container" style={{height :  `${windowSize.outer.height-200}px`}}>
         {readOnly ? null : <div className="stencil" ref={stencilContainerRef} />}
         <div className={`${readOnly ? 'graph-container-readonly' : 'graph-container-stencil'}`} ref={graphContainerRef} />
         <div className="graph-minimap" ref={miniMapContainerRef} />
