@@ -544,9 +544,10 @@ class JobDetails extends Component {
   
   handleScheduleTypeSelect = () => {
     const predecessors = this.props.nodes.reduce((acc, node) => {
+      console.log("The node type", node)
       if (node.type === 'Job' && node.title !== this.props.selectedNodeTitle) {
         acc.predecessorJobs.push({ id: node.id, jobId: node.assetId, name: node.title });
-      }else if(node.type === 'FileTemplate' && node.title !== this.props.selectedNodeTitle){
+      }else if(node.type === 'FileTemplate' && node.title !== this.props.selectedNodeTitle && node.hasOwnProperty('isStencil')){
         acc.predecessorTemplates.push({ id: node.id, templateId: node.assetId, name: node.title });
       }
       return acc;

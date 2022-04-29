@@ -95,6 +95,7 @@ router.get('/fileTemplate_list', [
        let existingTemplates = await models.sequelize.query(query, {
           type: models.sequelize.QueryTypes.SELECT,
           replacements: replacements});
+          console.log('<<<<<<<<<<< EXISTING TEMPLATES ', existingTemplates)
 
         const result = []
         existingTemplates.forEach(item => {
