@@ -545,12 +545,14 @@ class JobDetails extends Component {
   handleScheduleTypeSelect = () => {
     const predecessors = this.props.nodes.reduce((acc, node) => {
       if (node.type === 'Job' && node.title !== this.props.selectedNodeTitle) {
-        acc.push({ id: node.id, jobId: node.assetId, name: node.title });
+        acc.predecessorJobs.push({ id: node.id, jobId: node.assetId, name: node.title });
+      }else if(node.type === 'FileTemplate' && node.title !== this.props.selectedNodeTitle){
+        acc.predecessorTemplates.push({ id: node.id, templateId: node.assetId, name: node.title });
       }
       return acc;
-    }, []);
+    }, {predecessorTemplates : [], predecessorJobs : [] });
   
-    this.setState({ predecessorJobs: predecessors });
+    this.setState({ predecessorJobs: predecessors.predecessorJobs, predecessorTemplates : predecessors.predecessorTemplates });
   };
   
 
@@ -1365,6 +1367,9 @@ class JobDetails extends Component {
                           >
                             <Option value="Time">Timer based (run at specific interval)</Option>
                             <Option value="Predecessor">Job based (run after another job completes)</Option>
+                            <Option value="Template">
+                              Template Based (Run when a file that matches a template arrives) 
+                            </Option>
                             <Option value="Message">
                               Run on External Message (run when a message is received in a Kafka topic)
                             </Option>
@@ -1375,7 +1380,7 @@ class JobDetails extends Component {
                       <div style={{ textAlign: 'center', paddingTop: '100px' }}>
                         Please press <b>Edit</b> button to configure scheduling for this job
                       </div>
-                    )}
+                    )}                  
                     {this.state.selectedScheduleType === 'Time' ? (
                       <Fragment>
                         <Form.Item label="Run Every">
@@ -1473,6 +1478,33 @@ class JobDetails extends Component {
                           </Select>
                         )}
                       </Form.Item>
+                    ) : null}
+                    {this.state.selectedScheduleType === 'Template' ? (
+                    <Form.Item label= 'Template'>
+                      {!this.state.enableEdit ? (
+                         <> {this.state.predecessorTemplates.filter( template => template.templateId === this.state.schedulePredecessor[0])[0].name}</>) : (
+                          <Select
+                            mode="single"
+                            placeholder="Select a template"
+                            onSelect={(value) => {
+                              let predecessors = [];
+                              predecessors.push(value);
+                              this.setState({
+                                schedulePredecessor: predecessors,
+                              });
+                            }}
+                            value={this.state.schedulePredecessor}
+                          >
+                            {this.state.predecessorTemplates.map((template) => {
+                              return (
+                                <Option key={template.name} value={template.templateId}>
+                                  {template.name}
+                                </Option>
+                              );
+                            })}
+                          </Select>
+                        )}
+                    </Form.Item>
                     ) : null}
                   </Form>
                 </div>

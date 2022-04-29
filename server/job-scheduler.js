@@ -17,6 +17,7 @@ const SUBMIT_SCRIPT_JOB_FILE_NAME = 'submitScriptJob.js';
 const SUBMIT_MANUAL_JOB_FILE_NAME = 'submitManualJob.js'
 const SUBMIT_GITHUB_JOB_FILE_NAME = 'submitGithubJob.js'
 const JOB_STATUS_POLLER = 'statusPoller.js';
+const FILE_MONITORING = 'fileMonitoringPoller.js'
 
 class JobScheduler {
   constructor() {
@@ -63,6 +64,7 @@ class JobScheduler {
       console.log('------------------------------------------');
       await this.scheduleActiveCronJobs();
       await this.scheduleJobStatusPolling();
+      await this.scheduleFileMonitoring();
     })()
   }
   
@@ -359,6 +361,28 @@ class JobScheduler {
         this.bree.start(jobName);  
       //}
   
+    } catch (err) {
+      console.log(err);
+    }
+  }
+
+  // FILE MONITORING POLLER
+  async scheduleFileMonitoring() {    
+    console.log("📂 FILE MONITORING STARTED ....");  
+    try { 
+      let jobName = 'file-monitoring-' + new Date().getTime();
+        this.bree.add({
+          name: jobName,
+          interval: '900s',
+          path: path.join(__dirname, 'jobs', FILE_MONITORING),
+          worker: {
+            workerData: {
+              jobName: jobName
+            }
+          }
+        })
+
+        this.bree.start(jobName);    
     } catch (err) {
       console.log(err);
     }

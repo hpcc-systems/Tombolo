@@ -11,6 +11,10 @@ module.exports = (sequelize, DataTypes) => {
     jobId: DataTypes.UUID,
     dataflowId: DataTypes.UUID,
     dependsOnJobId: DataTypes.UUID,
+    dependOnAssetType : {
+      type : DataTypes.STRING,
+      allowNull: false
+    }
   }, {paranoid: true, freezeTableName: true});
 
   return dependent_jobs;

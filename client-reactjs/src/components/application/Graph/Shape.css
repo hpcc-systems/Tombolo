@@ -41,11 +41,10 @@
     border: 2px solid #0077c2;
   }
 
-   .FileTemplate {
-     /*  */
+   .FileTemplate{
     background-color: #1565c0;
     border : 2px solid #1565c0;
-    color: #fff !important;
+    color: #fff;
   }
   
   .SuperFile{
@@ -80,6 +79,12 @@
     border-color:#04880a;
     box-shadow: 0px 0px 8px 2px #08a710
   }
+
+   .status-wait, .status-wait:hover {
+    border-color:#ec8633d7;
+    box-shadow: 0px 0px 8px 2px #ec8633d7
+  }
+
  .status-failed,  .status-failed:hover {
     border-color:#eb1518;
     box-shadow: 0px 0px 8px 2px #ff4d4f;

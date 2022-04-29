@@ -1,4 +1,6 @@
 const express = require('express');
+const path = require('path');
+const fs = require('fs')
 const router = express.Router();
 var models  = require('../../models');
 let Sequelize = require('sequelize');
@@ -12,6 +14,7 @@ let FileValidation = models.file_validation;
 let DataflowGraph = models.dataflowgraph;
 let Dataflow = models.dataflow;
 const FileTemplate = models.fileTemplate;
+const FileMonitoring = models.fileMonitoring;
 let AssetDataflow = models.assets_dataflows;
 let DependentJobs = models.dependent_jobs;
 let AssetsGroups = models.assets_groups;
@@ -523,8 +526,61 @@ router.post( '/saveJob',
         console.log('------------------------------------------');
       }
 
-      // JOB IS SCHEDULED AS 'Predecessor'
-      if (schedule.type === 'Predecessor') {
+        // If the schedule type is 'fileTemplate' create monitoring work unit in HPCC
+          let fileMonitoringJobId;
+          if (schedule.type === 'Template'){
+           /*  Check if there is existing File Monitoring WU based on this template. 
+            If there is existing file monitoring WU, there is no need to create a new one */
+              const fileMonitoringWU = await FileMonitoring.findOne({where : { fileTemplateId : schedule.jobs[0]}});
+
+              if(!fileMonitoringWU){
+                  // Get template details
+                  const template = await FileTemplate.findOne({where : {id : schedule.jobs[0]}});
+                  if(!template){throw Error('Template not found')}
+                  const {machine, lzPath, directory, landingZone, monitorSubDirs} = template.metaData;
+                  let dirPath = directory.join('/');
+                  const completeDirPath = `${lzPath}/${dirPath}/`;
+                  const pattern = {
+                    contains : `*${template.searchString}*`,
+                    startsWith : `${template.searchString}*`,
+                    endsWith: `*${template.searchString}`
+                  }
+
+                  let filePattern = `${completeDirPath}${pattern[template['fileNamePattern']]}`
+
+                  //Create empty WU
+                  const wuId = await hpccUtil.createWorkUnit(cluster_id, {jobname : `${template.title}_File_Monitoring`});
+                  //  construct ecl code with template details and write it to fs
+                  const code = hpccUtil.constructFileMonitoringWorkUnitEclCode({wu_name : `${template.title}_File_Monitoring`, monitorSubDirs, lzHost : machine, lzPath, filePattern});
+                  const parentDir = path.join(process.cwd(), 'eclDir');
+                  fs.writeFileSync(`${parentDir}/${template.title}.ecl`, code);
+
+                  // update the wu with ecl archive
+                  const pathToEclFile = path.join(process.cwd(), 'eclDir', `${template.title}.ecl` );
+                  const args = ['-E', pathToEclFile, '-I', parentDir];
+                  const archived = await hpccUtil.createEclArchive(args, parentDir);
+                  const updateBody = { Wuid: wuId, Jobname: `${template.title}_File_Monitoring`, QueryText: archived.stdout };
+                  const workUnitService = await hpccUtil.getWorkunitsService(cluster_id)
+                  await workUnitService.WUUpdate(updateBody);
+
+                  //Submit the wu
+                  const submitBody = { Wuid: wuId, Cluster: 'hthor' };
+                  await workUnitService.WUSubmit(submitBody)
+                  fs.unlinkSync(`${parentDir}/${template.title}.ecl`)
+
+                  //Add to file monitoring table
+                  const fileMonitoring = await FileMonitoring.create({wuid: wuId, fileTemplateId: template.id,  cluster_id, dataflow_id: dataflowId, metaData : {dataflows : [dataflowId]}});
+                  fileMonitoringJobId = fileMonitoring.id;
+            }else{
+                  let newMetaData = {...fileMonitoringWU.metaData, dataflows : [...fileMonitoringWU.metaData.dataflows, dataflowId]} // Dataflows using the same file monitoring WU
+                  FileMonitoring.update({metaData : newMetaData}, {where : { id : fileMonitoringWU.id}})
+                  fileMonitoringJobId = fileMonitoringWU.id;
+            }
+          }
+          console.log(fileMonitoringJobId)
+
+      // JOB IS SCHEDULED AS 'Predecessor' or 'fileTemplate
+      if (schedule.type === 'Predecessor' || schedule.type === 'Template') {
         try {
           // CLEAN UP
           await clearAllPreviousScheduleRecords({ 
@@ -537,13 +593,14 @@ router.post( '/saveJob',
           const dependentJobsPromises = schedule.jobs.map((dependsOnJobId) =>
             DependentJobs.create({
               jobId: job.id,
-              dependsOnJobId,
+              dependsOnJobId : schedule.type === 'Template' ? fileMonitoringJobId : dependsOnJobId,
               dataflowId,
+              dependOnAssetType : schedule.type === 'Template' ? 'Template' : 'job'
             })
           );
           
          const dependentJobs = await Promise.all(dependentJobsPromises);
-          console.log(`-JOB SCHEDULED-Predecessor----------------------------------------`);
+          console.log(`-JOB SCHEDULED-Predecessor----------------`);
           console.dir({dependentJobs:dependentJobs.map(job=> job.toJSON())}, { depth: null });
           console.log('------------------------------------------');
 
@@ -845,6 +902,7 @@ router.get('/job_details', [
             jobData.jobfiles[jobFileIdx] = jobFile;
           }
         }
+
         if (req.query.dataflow_id) {
           let assetDataflow = await AssetDataflow.findOne({
             where: { assetId: req.query.job_id, dataflowId: req.query.dataflow_id }
@@ -860,13 +918,30 @@ router.get('/job_details', [
               type: 'Time',
               cron: assetDataflow.cron
             };
-          } else if (dependentJobs.length > 0) {
+          } 
+          else if (dependentJobs.length > 0 && dependentJobs[0].dependOnAssetType === 'job') {
             jobData.schedule = {
               type: 'Predecessor',
               jobs: []
             };
             dependentJobs.map(job => jobData.schedule.jobs.push(job.dependsOnJobId));
-          } else if (messageBasedJobs.length > 0) {
+          }
+           else if (dependentJobs.length > 0 && dependentJobs[0].dependOnAssetType === 'Template') {
+            jobData.schedule = {
+              type: 'Template',
+              jobs: []
+            };
+              /* Dependent job id here is file Monitoring ID - but on the schedule tab of the job_details modal, we need to show which template the job is dependent to not the JobMonitoring id.
+              Therefore, find the template-id from the file monitoring table and send it to the client, client will filter through the list of file templates in the DF and show the matching one  */
+              const dependOnJobId= dependentJobs[0].dependsOnJobId;
+              try{
+                const fileMonitoring = await FileMonitoring.findOne({where : {id : dependOnJobId}});
+                if(fileMonitoring) jobData.schedule.jobs.push(fileMonitoring.fileTemplateId)
+              }catch(err){
+                console.log(err)
+              }
+          }
+           else if (messageBasedJobs.length > 0) {
             jobData.schedule = {
               type: 'Message'
             };

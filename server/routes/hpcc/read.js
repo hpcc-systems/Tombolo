@@ -251,7 +251,7 @@ router.post('/removecluster', function (req, res) {
 });
 
 router.get('/getFileInfo', [
-  query('fileName').matches(/^[a-zA-Z]{1}[a-zA-Z0-9_:.\-]*$/).withMessage('Invalid file name'),
+  query('fileName').optional({checkFalsy:true}).isUUID(4).withMessage('Invalid file name'),
   query('clusterid').optional({checkFalsy:true}).isUUID(4).withMessage('Invalid cluster id'),
   query('applicationId').isUUID(4).withMessage('Invalid application id')
 ], function (req, res) {
@@ -537,14 +537,14 @@ router.get('/getDropZones', [
 				let _dropZones = {};
 				let dropZoneDetails = []
 				dropZones.map(dropzone => {
+					dropZoneDetails.push({name : dropzone.Name, path: dropzone.Path, machines : dropzone.TpMachines.TpMachine})
 					_dropZones[dropzone.Name] = [];
 					lodash.flatMap(dropzone.TpMachines.TpMachine, (tpMachine) => {
 						_dropZones[dropzone.Name] = _dropZones[dropzone.Name].concat([tpMachine.Netaddress]);
-						dropZoneDetails.push({name : dropzone.Name, path: dropzone.Path, machines : dropzone.TpMachines.TpMachine})
 					})
 				});
 
-				if(req.query.for === "fileUpload" || req.query.for === "manualJobSerach"){
+				if(req.query.for === "fileUpload" || req.query.for === "manualJobSerach" || req.query.for === "lzFileExplorer"){
 					res.json(dropZoneDetails)
 				}else{
 					res.json(_dropZones);
@@ -560,6 +560,8 @@ router.get('/getDropZones', [
 	}
 })
 
+/* This route is re-written below. Leaving it here because it is  being called in couple other places. 
+Can retire after the changes are made in those places */
 router.get('/getDirectories',[
 	query('data').exists().withMessage('Invalid data'),
 	query('host').exists().withMessage('Invalid host name'),
@@ -583,6 +585,23 @@ router.get('/getDirectories',[
 					  console.log(err)
 					  return res.status(500).json({success : false, message : 'Error occured while getting directories'})
 				})
+	}
+})
+
+// GET DIRECTORIES FROM DROP ZONE 
+router.get('/dropZoneDirectories', [
+	query('clusterId').exists().withMessage('Invalid cluster ID'),
+	query('Netaddr').exists().withMessage('Invalid Netaddr'),
+	query('Path').exists().withMessage('Invalid path') ], async(req, res) =>{
+	const {clusterId, Netaddr,  Path, DirectoryOnly} = req.query;
+	try{
+		const cluster = await hpccUtil.getCluster(clusterId);
+		const response = await hpccUtil.fetchLandingZoneDirectories({cluster, Netaddr,  Path, DirectoryOnly})
+		res.status(200).json(response);
+
+	}catch(err){
+		console.log(err);
+		res.status(503).json({success : false, message : err.message})
 	}
 })
 

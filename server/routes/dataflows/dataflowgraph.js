@@ -8,6 +8,7 @@ let Dataflow = models.dataflow;
 let Job = models.job;
 let File = models.file;
 let Index = models.indexes;
+const FileMonitoring = models.fileMonitoring;
 const validatorUtil = require('../../utils/validator');
 const { body, query, validationResult } = require('express-validator');
 const JobScheduler = require('../../job-scheduler');
@@ -108,6 +109,13 @@ router.post('/deleteAsset',
           req.body.name + '-' + req.body.dataflowId + '-' + req.body.assetId
         );
         await DependentJobs.destroy({where : {jobId:req.body.assetId, dataflowId : req.body.dataflowId}})
+      }
+
+      if(req.body.type === 'filetemplate'){
+        /* If the asset type is file template, the depend on job is actually a fileMonitoring Id , not a file template id itself
+        Therefore, find the fileMonitoring id and destroy it from  dependentJobs table */
+        const fileMonitoringId = await FileMonitoring.findOne({where : { fileTemplateId : req.body.assetId}});
+         await DependentJobs.destroy({where : {dependsOnJobId:fileMonitoringId, dataflowId : req.body.dataflowId}})
       }
       res.json({ result: 'success' });
     } catch (error) {

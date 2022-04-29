@@ -34,15 +34,15 @@ export default class Stencil {
   }
 
   static addShape(graph) {
-    const assetsNames = ['Job', 'File', 'Index', 'Sub-Process'];
+    const assets = [{type : 'Job', title : 'Job'}, {type : 'File', title : 'File'},{type: 'FileTemplate', title : 'File Group'} , {type : 'Index', title : 'Index'}, {type : 'Sub-Process', title : 'Sub-Process'}];
 
-    const assetsNodes = assetsNames.map(asset => {
+    const assetsNodes = assets.map(asset => {
       return graph.createNode({
         shape: 'custom-shape',
         data: {
           isStencil:true,
-          type: asset,
-          title: asset,
+          type: asset.type,
+          title: asset.title,
           name:undefined,
           assetId: undefined,
           subProcessId: undefined,

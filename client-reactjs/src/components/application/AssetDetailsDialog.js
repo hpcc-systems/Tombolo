@@ -7,7 +7,7 @@ import JobDetailsForm from './Jobs/JobDetails';
 import IndexDetailsForm from './IndexDetails';
 import QueryDetailsForm from './QueryDetails';
 
-function AssetDetailsDialog(props) {
+function AssetDetailsDialog(props) {  
   
   const capitalize = (word) => {
     if (!word || typeof word !== 'string') return '';

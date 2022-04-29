@@ -102,6 +102,9 @@ exports.indexInfo = (clusterId, indexName) => {
   });
 }
 
+
+/* This function is re-written, leaving it here because it is being called on couple other places. Will retire once
+it is replaced on those places */
   exports.fetchDirectories = (host, port, data, cluster) => {
     let formData={};
     for(let key in data){
@@ -131,7 +134,33 @@ exports.indexInfo = (clusterId, indexName) => {
       reject('Error occured during dropzone file search');
     }
   }
+// FETCH LANDING ZONE DIRECTORY FUNCTION
+exports.fetchLandingZoneDirectories = async ({cluster, Netaddr,  Path, DirectoryOnly}) =>{
+    const {thor_host, thor_port} = cluster;
+    const formData = {Netaddr, Path , DirectoryOnly, rawxml_ : 'true'};
+    console.log('FINAL FORM DATA ', formData)
 
+    return new Promise((resolve, reject) =>{
+      request.post({
+        url: `${thor_host}:${thor_port}/FileSpray/FileList.json`,
+        headers: {'content-type' : 'application/x-www-form-urlencoded'},
+        formData: formData,
+        auth : this.getClusterAuth(cluster),
+        resolveWithFullResponse: true
+      }, (err, response, body) =>{
+        if(err){
+          console.log(err);
+          reject(err); return
+        }
+        const parsedBody = JSON.parse(body);
+        if(parsedBody.Exceptions){
+          reject('Error getting directories'); console.log(parsedBody.Exceptions.Exception); 
+          return;
+        }
+        resolve(parsedBody)
+      })
+    })
+}
 
 exports.executeSprayJob = (job) => {
   // try {
@@ -384,12 +413,24 @@ exports.resubmitWU = async (clusterId, wuid, wucluster, dataflowId) => {
 exports.workunitInfo = async (wuid, clusterId) => {
   try {
     const wuService = await module.exports.getWorkunitsService(clusterId);
-    return  await wuService.WUInfo({"Wuid":wuid, "IncludeExceptions":true, "IncludeSourceFiles":true, "IncludeResults":true, "IncludeTotalClusterTime": true});
+    return  await wuService.WUInfo({"Wuid":wuid, "IncludeExceptions":true, "IncludeSourceFiles":true, "IncludeResults":true, "IncludeTotalClusterTime": true, IncludeResultsViewNames : true});
   } catch (error) {
     console.log('---error---------------------------------------');
     console.dir({workunitInfo}, { depth: null });
     console.log('------------------------------------------');
     throw error;
+  }
+}
+
+// RETURNS THE OUTPUT OF WORK UNIT
+exports.workUnitOutput = async ({wuid, clusterId}) =>{
+  try{
+    const wuService = await module.exports.getWorkunitsService(clusterId);
+    return await wuService.WUResult({Wuid : wuid})
+  }catch (err){
+    console.log('-- Error -----------------------------------------');
+    console.dir({err}, { depth: null })
+    console.log('---------------------------------------------------');
   }
 }
 
@@ -690,7 +731,7 @@ exports.pullFilesFromGithub = async (jobName = '', clusterId, gitHubFiles) => {
     const startFilePath = path.join(masterFolder, ghProjectName, filePath);
 
     let args = ['-E', startFilePath, '-I', masterFolder];
-    const archived = await createEclArchive(args, masterFolder);
+    const archived = await this.createEclArchive(args, masterFolder);
 
     tasks.archiveCreated = true;
     console.log('✔️  pullFilesFromGithub: Archive Created');
@@ -767,7 +808,7 @@ let sortFiles = (files) => {
   return files.sort((a, b) => (a.name > b.name ? 1 : -1));
 };
 
-const createEclArchive = (args, cwd) => {
+exports.createEclArchive = (args, cwd) => {
   return new Promise((resolve, reject) => {
     const child = cp.spawn('eclcc', args, { cwd: cwd });
     child.on('error', (error) => {
@@ -789,4 +830,41 @@ const createEclArchive = (args, cwd) => {
       });
     });
   });
+};
+
+exports.constructFileMonitoringWorkUnitEclCode = ({ wu_name, monitorSubDirs, lzHost, lzPath, filePattern}) => {
+  return `IMPORT Std;
+    #WORKUNIT('name', '${wu_name}');
+    FOUND_FILE_EVENT_NAME := 'RECENT_FILES';
+    LZ_HOST := '${lzHost}';
+    LZ_PATH := '${lzPath}';
+    FILENAME_PATTERN := '${filePattern}';
+
+    WriteLog(STRING entry) := FUNCTION
+        LOG_NAME := 'monitor_file_results';
+        LogLayout := {STRING t, STRING s};
+        // now := Std.Date.SecondsToString(Std.Date.CurrentSeconds(), '%Y-%m-%dT%H:%M:%S UTC');
+        now := Std.Date.CurrentSeconds();
+        e := DATASET([{now, entry}], LogLayout);
+        RETURN OUTPUT(e, NAMED(LOG_NAME), overwrite);
+        END; 
+    
+    MonitorFileAction() := Std.File.MonitorFile
+        (
+            FOUND_FILE_EVENT_NAME,
+            ip := LZ_HOST,
+            filename := FILENAME_PATTERN,
+            subDirs := ${monitorSubDirs},
+            shotCount := -1
+        );
+
+      HandleFoundFileEvent(STRING fullFilePath) := FUNCTION
+          RETURN SEQUENTIAL
+              (
+                    WriteLog('Found file: ' + fullFilePath);
+              ); 
+      END;
+
+HandleFoundFileEvent(EVENTEXTRA) : WHEN(EVENT(FOUND_FILE_EVENT_NAME, '*'));
+MonitorFileAction();`;
 };

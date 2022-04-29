@@ -271,7 +271,11 @@ function GraphX6({ readOnly = false, statuses }) {
 
   useEffect(() => {
     if (graphReady && readOnly === true && statuses?.length > 0) {
-      let jobs = graphRef.current.getNodes().filter((node) => node.data.type === 'Job');
+      let template = graphRef.current.getNodes().find((node) => node.data.type === 'FileTemplate' );
+      if (template){
+        template.updateData({status:'wait'})
+      }
+      let jobs = graphRef.current.getNodes().filter((node) => node.data.type === 'Job' );
       jobs.forEach((node) => {
         const nodeStatus = statuses.find((status) => status.assetId === node.data.assetId);
         if (nodeStatus) {
@@ -472,7 +476,7 @@ function GraphX6({ readOnly = false, statuses }) {
   const updateAsset = async (asset) => {
     if (asset) {
       const cell = configDialog.cell;
-      if (cell.data.type === "Job" || cell.data.type === "File"){
+      if (cell.data.type === "Job" || cell.data.type === "File" || cell.data.type === "FileTemplate"){
         // if asset just got associated then we need to save it as new so it can get updated and fetch related files;
         if (!cell.data?.isAssociated && asset.isAssociated){
           // Cell is associated and renamed, new asset is created and assigned to this node, old asset should be removed from this dataflow
@@ -496,16 +500,16 @@ function GraphX6({ readOnly = false, statuses }) {
       /* updating cell will cause a POST request to '/api/dataflowgraph/save with latest nodes and edges*/
       //add icons or statuses
       // cell.updateData({ title: asset.title, scheduleType: asset.type }, { name: 'update-asset' });
-      if (asset.type === 'Predecessor') {
+      if (asset.type === 'Predecessor' || asset.type === 'Template') {
 
         // find a graph node that will be a source and clicked node will be a targed, add an edge;
-        const sourceJobId = asset.jobs[0];
+        const sourceJobId = asset.jobs[0]; 
         const sourceNode = configDialog.nodes.find((node) => node.assetId === sourceJobId);
     
         // there can be only one scheduled edge
         // if edge is already exist then we should delete it and create a new one
         if (existingScheduledEdge) graphRef.current.removeEdge(cell.data.schedule.scheduleEdgeId); 
-        
+
         if (sourceNode) {
           const newEdge = graphRef.current.addEdge({
             target: cell,
@@ -560,7 +564,7 @@ function GraphX6({ readOnly = false, statuses }) {
           if (cell.shape === 'edge') {
             acc.edges.push(cell);
           } else {
-            // Add only Job that can produce files, ignore Manual Jobs
+            // Add only Job that can produce files, ignore Manual Jobs or  templates
             if (cell.data.type === 'Job' && cell.data.jobType !== 'Manual' && cell.data.assetId) {
               acc.jobsToServer.push({ id: cell.data.assetId, name: cell.data.name });
               acc.jobs.push(cell);

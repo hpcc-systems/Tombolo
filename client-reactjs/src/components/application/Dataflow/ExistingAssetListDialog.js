@@ -18,6 +18,7 @@ function ExistingAssetListDialog({ show, applicationId, dataflowId, clusterId, a
         const queryParams = `app_id=${applicationId}&dataflowId=${dataflowId}&clusterId=${clusterId}`;
         const options = {
           File: `/api/file/read/file_list?${queryParams}`,
+          FileTemplate : `/api/fileTemplate/read/fileTemplate_list?${queryParams}`,
           Index: `/api/index/read/index_list?${queryParams}`,
           Job: `/api/job/job_list?${queryParams}`, //  'Job'- 'Modeling'- 'Scoring'- 'ETL'- 'Query Build'- 'Data Profile'
           default: `/api/job/job_list?${queryParams}`,

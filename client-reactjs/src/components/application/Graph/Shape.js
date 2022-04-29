@@ -16,7 +16,8 @@ import {
   LinkOutlined,
   MessageOutlined,
   MailOutlined,
-  ProfileOutlined,
+  AppstoreAddOutlined,
+  FieldTimeOutlined
 } from '@ant-design/icons/lib/icons';
 
 import { Menu, Dropdown } from '@antv/x6-react-components';
@@ -129,13 +130,14 @@ class Node extends React.Component {
     Time: <HourglassOutlined />,
     Predecessor: <LinkOutlined />,
     Message: <MessageOutlined />,
+    Template : <FieldTimeOutlined />
   };
 
   entities = {
     Job: <SettingOutlined />,
     File: <FileOutlined />,
     SuperFile: <FileAddOutlined />,
-    FileTemplate : <ProfileOutlined />,
+    FileTemplate : <AppstoreAddOutlined/>,
     Index: <BookOutlined />,
     Manual: <MailOutlined />,
     'Sub-Process': <SisternodeOutlined />,
@@ -145,7 +147,7 @@ class Node extends React.Component {
     const { node, handleContextMenu, disableContextMenu } = this.props;
     const data = node?.getData();
     let { type, title, status = '', schedule, jobType, isSuperFile, isStencil, isAssociated, fetchingFiles } = data;
-    const notAssociated  = (type === "Job" || type === "File") && !isAssociated && !isStencil ? "no-asset" : ""
+    const notAssociated  = (type === "Job" || type === "File" || "FileTemplate") && !isAssociated && !isStencil ? "no-asset" : ""
     
     const showTitle = (title) => {
       const limit = 14;
