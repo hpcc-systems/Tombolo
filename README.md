@@ -34,20 +34,22 @@
    1. HOST_NAME 
    2. DB_USERNAME - *(MySql database username)*
    3. DB_PASSWORD - *(MySql database password)*
-   4. secret -  *( You can generate a strong and unique string [here](https://www.grc.com/passwords.htm))*
-   5. AUTH_SERVICE_URL - *( Tombolo uses Auth Service for user authentication. An existing Auth Service can be used or you may set up Auth Service separately. 
+   4. DB_PORT - modify if the default port is in use
+   5. secret -  *( You can generate a strong and unique string [here](https://www.grc.com/passwords.htm))*
+   6. AUTH_SERVICE_URL - *( Tombolo uses Auth Service for user authentication. An existing Auth Service can be used or you may set up Auth Service separately. 
     You can find the Authservice setup instructions [here](https://github.com/hpcc-systems/Auth-Service). Once you have an instance of Authservice up and running, 
     update this value. Eg - <protocol>://<host_name>:<port>/api/auth)*
-   6. AUTHSERVICE_TOMBOLO_CLIENT_ID - *(Unique id of Tombolo app in Auth Service. This will be used in the communication between Tombolo and AuthService)*
-   7. CERT_PATH - *(SSL certificate location only if you are using SSL)*
-   8. (Optional step) Update rest of the  values for Kafka and Zookeeper - *(To create keys, please refer here https://github.com/edenhill/librdkafka/wiki/Using-SSL-with-librdkafka#create-a-ca-certificate. For documentation on bitnami kafka and zookeeper docker images and setup, please refer https://github.com/bitnami/bitnami-docker-kafka, https://github.com/bitnami/bitnami-docker-zookeeper, For details on SSL config https://github.com/bitnami/bitnami-docker-kafka/issues/129 )*
-   9. JOB_COMPLETE_GROUP_ID
-   10. JOB_COMPLETE_TOPIC
+   7. AUTHSERVICE_TOMBOLO_CLIENT_ID - *(Unique id of Tombolo app in Auth Service. This will be used in the communication between Tombolo and AuthService)*
+   8. CERT_PATH - *(SSL certificate location only if you are using SSL)*
+   9. (Optional step) Update rest of the  values for Kafka and Zookeeper - *(To create keys, please refer here https://github.com/edenhill/librdkafka/wiki/Using-SSL-with-librdkafka#create-a-ca-certificate. For documentation on bitnami kafka and zookeeper docker images and setup, please refer https://github.com/bitnami/bitnami-docker-kafka, https://github.com/bitnami/bitnami-docker-zookeeper, For details on SSL config https://github.com/bitnami/bitnami-docker-kafka/issues/129 )*
+   10. JOB_COMPLETE_GROUP_ID
+   11. JOB_COMPLETE_TOPIC
 4. If you are going to be running this application without SSL, locate 'nginx.conf.template' file located at 'client-reactjs/nginx/confd' and remove all SSL-related configuration. 
-5.  Locate 'cluster-whitelist.sample.js' file inside the "/server" directory, rename it to 'cluster-whitelist.js' and add cluster information.
-6.  If the MySQL database does not have SSL enabled, please comment out the ssl config for database connection in server/config/config.js. Depending on the environment (development vs production), it will #10-#15 (dev) and #24-#29 (production)
-7. If you are not setting up Kafka (optional) run *'docker-compose up -d --no-deps --build mysql-db node web'*. If you are setting up all services in docker-compose file, run *'docker-compose up -d'*. This will create and run all necessary containers.
-8. Once the build  successfully completes, the application will be accessible at *'http://<host_name>:<WEB_EXPOSED_PORT>'*
+5. Rename .env.sample under /client-reactjs/ to .env and make sure REACT_APP_PROXY_URL has the correct URL to the backend. The Port number is the backend port ('PORT' in /.env file) 
+6.  Locate 'cluster-whitelist.sample.js' file inside the "/server" directory, rename it to 'cluster-whitelist.js' and add cluster information.
+7.  If the MySQL database does not have SSL enabled, please comment out the ssl config for database connection in server/config/config.js. Depending on the environment (development vs production), it will be line #10-#15 (dev) and #24-#29 (production)
+8. If you are not setting up Kafka (optional) run *'docker-compose up -d --no-deps --build mysql_db node web'*. If you are setting up all services in docker-compose file, run *'docker-compose up -d'*. This will create and run all necessary containers.
+9. Once the build  successfully completes, the application will be accessible at *'http://<host_name>:<WEB_EXPOSED_PORT>'*
 
 ----
 ## Documentation 
