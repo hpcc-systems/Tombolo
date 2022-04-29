@@ -893,7 +893,8 @@ class JobDetails extends Component {
               <TabPane tab="Schedule" key="6">
                 <ScheduleTab
                  nodes={this.props.nodes}
-                 enableEdit={this.state.enableEdit}
+                 readOnly={this.props.viewMode}
+                 editingAllowed={editingAllowed}
                  scheduleNode={this.props.scheduleNode} // method passed from graph to add schedule to graph
                  selectedAsset={this.props.selectedAsset}
                  dataflowId={this.props.selectedDataflow?.id}

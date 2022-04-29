@@ -15,8 +15,9 @@ let scheduleCronParts = { minute: [], hour: [], 'day-of-month': [], month: [], '
 
 let cronExamples = [];
 
-const ScheduleTab = ({ nodes, dataflowId, applicationId, selectedAsset, scheduleNode }) => {
+const ScheduleTab = ({ nodes, dataflowId, applicationId, selectedAsset, scheduleNode, readOnly, editingAllowed }) => {
   const [options, setOptions] = useState({
+    loading: false,
     enableEdit: false,
     selectedScheduleType: '',
     scheduleMinute: '*',
@@ -374,6 +375,7 @@ const ScheduleTab = ({ nodes, dataflowId, applicationId, selectedAsset, schedule
   });
 
   const handleSchedule = async () => {
+    setOptions((prev) => ({ ...prev, loading: true }));
     const { minute, hour, dayMonth, month, dayWeek } = joinCronTerms();
     const cronExpression = `${minute} ${hour} ${dayMonth} ${month} ${dayWeek}`;
 
@@ -410,12 +412,14 @@ const ScheduleTab = ({ nodes, dataflowId, applicationId, selectedAsset, schedule
 
       const result = await response.json();
       scheduleNode(result.schedule); // will trigger method to update node view on a graph
-      setOptions((prev) => ({ ...prev, enableEdit: false }));
+      await new Promise(r => setTimeout(r,1000)); // sometime graph takes time to update nodes, we will wait extra second to let it finish;
+      setOptions((prev) => ({ ...prev, enableEdit: false, loading: false, }));
       message.success('Job schedule saved');
     } catch (error) {
       console.log('-error-----------------------------------------');
       console.dir({ error }, { depth: null });
       console.log('------------------------------------------');
+      setOptions((prev) => ({ ...prev, loading: false }));
       message.error(error.message);
     }
   };
@@ -450,6 +454,8 @@ const ScheduleTab = ({ nodes, dataflowId, applicationId, selectedAsset, schedule
       if (schedule?.type) handleScheduleTypeSelect();
     }
   }, []);
+
+  if (!editingAllowed) readOnly = true;
 
   return (
     <Form component="div" {...threeColformItemLayout}>
@@ -578,17 +584,19 @@ const ScheduleTab = ({ nodes, dataflowId, applicationId, selectedAsset, schedule
           )}
         </Form.Item>
       ) : null}
+      {readOnly ? null :
       <Form.Item wrapperCol={{ offset: 12, span: 4 }}>
         {!options.enableEdit ? (
           <Button onClick={handleEdit} type="primary" block>
             Edit schedule
           </Button>
         ) : (
-          <Button onClick={handleSchedule} type="primary" block>
+          <Button onClick={handleSchedule} loading={options.loading} type="primary" block>
             Save schedule
           </Button>
         )}
       </Form.Item>
+      }
     </Form>
   );
 };
