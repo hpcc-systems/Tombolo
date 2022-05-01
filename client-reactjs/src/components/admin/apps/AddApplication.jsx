@@ -3,6 +3,7 @@ import { Modal, Button, Form, Input, Radio, message } from "antd";
 import {useDispatch } from "react-redux";
 
 import { applicationActions } from '../../../redux/actions/Application';
+import {emptyGroupTree} from '../../../redux/actions/Groups'
 
 import { authHeader } from "../../common/AuthHeader";
 
@@ -62,6 +63,7 @@ function AddApplication(props) {
       });
 
       if (!response.ok) return message.error("Error occurred while saving application");
+      dispatch(emptyGroupTree());
       message.success("Application saved successfully");
       const responseData = await response.json()
       if(props.isCreatingNewApp)dispatch(applicationActions.applicationSelected(responseData.id, responseData.title, responseData.title));

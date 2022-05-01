@@ -67,3 +67,9 @@ const generateList = (data, parentKey="", parentId='', list=[]) => {
   }
   return list;
 };
+
+export const emptyGroupTree = (array) =>{
+   return {
+    type: Constants.EMPTY_GROUPS_TREE,
+  };
+}

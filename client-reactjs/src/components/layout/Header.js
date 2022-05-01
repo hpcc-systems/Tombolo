@@ -8,7 +8,7 @@ import logo from "../../images/logo.png";
 import { msalInstance } from '../../index';
 import { applicationActions } from '../../redux/actions/Application';
 import { assetsActions } from '../../redux/actions/Assets';
-import { expandGroups, selectGroup } from '../../redux/actions/Groups';
+import { expandGroups, selectGroup, emptyGroupTree } from '../../redux/actions/Groups';
 import { userActions } from '../../redux/actions/User';
 import { authHeader, handleError } from "../common/AuthHeader.js";
 import { hasAdminRole } from "../common/AuthUtil.js";
@@ -176,6 +176,7 @@ class AppHeader extends Component {
     }
 
     handleChange(event) {
+      this.props.dispatch(emptyGroupTree())
       this.props.dispatch(applicationActions.applicationSelected(event.target.getAttribute("data-value"), event.target.getAttribute("data-display")));
       localStorage.setItem("activeProjectId", event.target.getAttribute("data-value"));
       this.setState({ selected: event.target.getAttribute("data-display") });
