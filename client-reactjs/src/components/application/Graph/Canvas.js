@@ -20,14 +20,40 @@ class SimpleNodeView extends NodeView {
  }
  
 export default class Canvas {
-  static graph;
-
-  static init(container, minimapContainer) {
-    const graph = new Graph({
+  static init(container, minimapContainer, readOnly) {
+     return new Graph({
       container: container.current,
       autoResize: true,
       grid: true,
-      history: true,
+      history: {
+        enabled: readOnly ? false : true,
+        beforeAddCommand(event, args) {
+          // if return false, command will not be added to undo stack
+          if (args.options?.ignoreEvent) return false   
+          const ignoreEvents = ['ports','tools','children','parent'];
+          if (args.key && ignoreEvents.includes(args.key)) return false;
+          // console.log('-event, args-----------------------------------------');
+          // console.dir({event, args}, { depth: null });
+          // console.log('------------------------------------------');
+          return true;
+        },
+      },
+      embedding: {
+        enabled:  readOnly ? false : true,
+        findParent({ node }) {
+
+          const bbox = node.getBBox() // DRAGGED NODE BOUNDARY BOX
+          
+          return this.getNodes().filter((node) => {
+            const data = node.getData()
+            if (data.type === 'Sub-Process') {
+              const targetBBox = node.getBBox() // SUBPROCESS BOUNDARY BOX
+              return bbox.isIntersectWithRect(targetBBox)
+            }
+            return false
+          })
+        }
+      },
       scroller: {
         enabled: true,
         pageVisible: false,
@@ -130,14 +156,14 @@ export default class Canvas {
         sharp: true,
       },
       resizing: {
-        enabled: false,
+        enabled:  (cell) => {
+          if (cell.data?.type === 'Sub-Process' && !cell.data?.isCollapsed ) return true
+          return false
+        } 
       },
-      keyboard: true,
-      clipboard: true,
-    
+      keyboard:  readOnly ? false : true,
+      clipboard:  readOnly ? false : true,
     });
-    this.graph = graph;
-    return graph;
   }
 }
 

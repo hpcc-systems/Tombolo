@@ -196,7 +196,7 @@ class FileDetails extends Component {
         await this.getFileData(data.basic.name, data.basic.cluster_id);
 
         if (data.basic.id && this.props.selectedDataflow) {
-          await this.getInheritedLicenses( data.basic.id, this.props.selectedNodeId, this.props.selectedDataflow.id );
+          await this.getInheritedLicenses( data.basic.id, this.props.selectedAsset.nodeId, this.props.selectedDataflow.id );
         }
 
         return data;

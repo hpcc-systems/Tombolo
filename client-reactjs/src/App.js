@@ -6,6 +6,7 @@ import { Router, Route, Switch } from "react-router-dom";
 import { Redirect } from 'react-router'
 import history from "./components/common/History";
 import { LoginPage } from "./components/login/LoginPage";
+import LoggedOut from "./components/login/LoggedOut";
 import ForgotPassword from "./components/login/ForgotPassword";
 import ResetPassword from "./components/login/ResetPassword";
 import { PrivateRoute } from "./components/common/PrivateRoute";
@@ -41,17 +42,19 @@ const { Content } = Layout;
 
 class App extends React.Component {  
   componentDidMount() {
-    store.dispatch(userActions.validateToken());
+    if (!this.props.authWithAzure){
+      store.dispatch(userActions.validateToken());
+    }
   }
 
   render() {
     const isApplicationSet =
-      this.props.application && this.props.application.applicationId != ""
+      this.props.application && this.props.application.applicationId !== ""
         ? true
         : false;
     const selectedTopNav =
       this.props.selectedTopNav &&
-      this.props.selectedTopNav.indexOf("/admin") != -1
+      this.props.selectedTopNav.indexOf("/admin") !== -1
         ? "/admin/applications"
         : "/files";
     const dataFlowComp = () => {
@@ -94,14 +97,20 @@ class App extends React.Component {
       }
     };
     
-
     return (
       <Router history={history}>
-        <Route exact path="/login" component={LoginPage} />
-        <Route exact path="/forgot-password" component={ForgotPassword} />
-        <Route exact path="/reset-password/:id" component={ResetPassword} />
+        {!this.props.authWithAzure ? // value is passed via AzureApp component
+          <>
+            <Route exact path="/login" component={LoginPage} />
+            <Route exact path="/forgot-password" component={ForgotPassword} />
+            <Route exact path="/reset-password/:id" component={ResetPassword} />
+            <Route exact path="/logout" component={LoggedOut} />
+          </>
+        : null
+        }
         <Layout>
           {this.props.user && this.props.user.token ? <AppHeader /> : null}
+
           <Layout className="site-layout">
             <LeftNav
               isApplicationSet={isApplicationSet}
@@ -190,6 +199,8 @@ class App extends React.Component {
                     path="/:applicationId/manualJobDetails/:jobId/:jobExecutionId"
                     component={ManualJobDetail}
                   /> 
+                   {this.props.authWithAzure ?
+                    <Route exact path="*" component={getAssets} /> : null }
                 </Switch>
               </Content>
             </Layout>

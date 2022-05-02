@@ -5,7 +5,18 @@
     height: 100%;
     position: relative;
   }
+  .node-expand {
+    background-color: #e48b8513;
+    border: 2px solid #b61827;
+  }
 
+  .subprocess-collapse{
+    position: absolute;
+    cursor: pointer;
+    top: -15px;
+    right: 0;
+  }
+  
   .node-icon{
     width: 50px;
     min-height: 40px;
@@ -73,6 +84,7 @@
     display: flex;
     justify-content: center;
     text-align: center;
+    align-items: center;
   }
   
   .status-completed, .status-completed:hover, .status-compiled {

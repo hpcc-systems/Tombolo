@@ -1,7 +1,4 @@
 import React from 'react';
-import {Table, Button} from 'antd';
-
-import  useWindowSize from "../../../hooks/useWindowSize";
 import EditableTable from '../../common/EditableTable';
 
 const layoutColumns = [
@@ -34,7 +31,6 @@ const layoutColumns = [
     ];
 
 function FileTemplateLayout(props) {
-  const [ windowHeight] = useWindowSize();
 
   return (
      <EditableTable

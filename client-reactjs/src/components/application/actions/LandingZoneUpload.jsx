@@ -164,7 +164,7 @@ function LandingZoneUpload() {
         if (response.ok) {
           return response.json();
         }
-        handleError(response);
+        throw Error('Unable to get dropzones')
       })
       .then((data) => {
         //Set initial cascader options
@@ -176,6 +176,7 @@ function LandingZoneUpload() {
       })
       .catch((err) => {
         console.log(err);
+        message.error(err.message)
       });
   }
 

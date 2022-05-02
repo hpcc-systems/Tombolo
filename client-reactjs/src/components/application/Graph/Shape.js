@@ -109,7 +109,8 @@ class Node extends React.Component {
   shouldComponentUpdate() {
     const { node } = this.props;
     if (node) {
-      if (node.hasChanged('data')) {
+      // Graph does not detect changes in nodes data when toggle collapse, need to mention it here manually
+      if (node.hasChanged('data') || node.data?.isCollapsed) { 
         return true;
       }
     }
@@ -144,10 +145,10 @@ class Node extends React.Component {
   };
 
   render() {
-    const { node, handleContextMenu, disableContextMenu } = this.props;
+    const { node, graph, handleContextMenu, disableContextMenu } = this.props;
     const data = node?.getData();
-    let { type, title, status = '', schedule, jobType, isSuperFile, isStencil, isAssociated, fetchingFiles } = data;
-    const notAssociated  = (type === "Job" || type === "File" || "FileTemplate") && !isAssociated && !isStencil ? "no-asset" : ""
+    let { type, title, status = '', schedule, jobType, isSuperFile, isStencil, isCollapsed, isAssociated, fetchingFiles } = data;
+    const notAssociated  = (type === "Job" || type === "File" || type ===  "FileTemplate") && !isAssociated && !isStencil ? "no-asset" : ""
     
     const showTitle = (title) => {
       const limit = 14;
@@ -161,42 +162,66 @@ class Node extends React.Component {
     if (jobType === 'Manual') type = 'Manual'; // Show different icon for Manual job
     if (isSuperFile) type = 'SuperFile';// Show different icon for SuperFile
 
-    const getMenu = () => {
+    const getMenu = (nodeType) => {
       const dialogMenuItemText = isAssociated ? 'Show details' : 'Associate with asset';
       return (
         <Menu>
-          <Menu.Item key="1" onClick={() => handleContextMenu('openDialog', { node })}>
-            {dialogMenuItemText}
-          </Menu.Item>
+          {nodeType === 'Sub-Process' ? (
+            <Menu.Item key="1" onClick={() => handleContextMenu('toggleSubProcess', { node })}>
+              {isCollapsed ? 'Expand Sub-Process' : 'Collapse Sub-Process' }
+            </Menu.Item>
+          ) : (
+            <Menu.Item key="1" onClick={() => handleContextMenu('openDialog', { node })}>
+              {dialogMenuItemText}
+            </Menu.Item>
+          )}
           {/* <Menu.Divider/> */}
         </Menu>
       );
     };
+    
+    const getSubProcessNode =() =>{
+      return (
+        <div className="node-outer node-expand">
+          <div className="node-title">{showTitle(title)} </div>
+          {/* <MinusCircleOutlined onClick={(e) =>{ e.preventDefault(); handleContextMenu('toggleSubProcess', { node }) }} /> */}
+        </div>
+      );
+    }
 
-    return (
-      <Dropdown overlay={getMenu()} trigger={['contextMenu']} disabled={disableContextMenu}>
+    const getNode = () =>{
+      if (!isStencil && type === 'Sub-Process' && !isCollapsed) return getSubProcessNode()
+
+      return (
         <div className={`node-outer`}>
           <Tooltip title={title} mouseEnterDelay={1.4} mouseLeaveDelay={0.1}>
             <div className={`node-icon ${type} status-${status} ${notAssociated}`}>{this.entities[type]}</div>
             {schedule?.type ? <div className="node-schedule">{this.schedule[schedule.type]}</div> : null}
+            {/* {type === "Sub-Process" && <PlusCircleOutlined className='subprocess-collapse' onClick={() => handleContextMenu('toggleSubProcess', { node }) }/> } */}
             <div className="node-title">{showTitle(title)}</div>
           </Tooltip>
           {!isStencil && fetchingFiles ? <div className='node-fetching-files'><SyncOutlined spin={true}/>  </div> : null}
-        </div>
+      </div>
+      )
+    }
+
+    return (
+      <Dropdown overlay={getMenu(type)} trigger={['contextMenu']} disabled={disableContextMenu && !type === 'Sub-Process'}>
+        {getNode()}
       </Dropdown>
     );
   }
 }
 
 export default class Shape {
-  static init({ handleContextMenu, disableContextMenu }) {
+  static init({ handleContextMenu, disableContextMenu, graph }) {
     // We need a way how to pass props to node Registration from main graph, currently you can not register node with graph instance,
     // u need to register with class instance and it will cause nodes to be registered on each mount, which will cause an error from X6 lib
     // to avoid it we will unregister node and register it again on each time component mounts;
     Graph.unregisterNode('custom-shape'); 
     Graph.registerNode('custom-shape', {
       inherit: 'react-shape',
-      component: <Node handleContextMenu={handleContextMenu} disableContextMenu={disableContextMenu} />,
+      component: <Node handleContextMenu={handleContextMenu} disableContextMenu={disableContextMenu} graph={graph} />,
       width: 90,
       height: 70,
       ports,

@@ -974,8 +974,3 @@ div.tooltip {
 .MultiLineFormItem > div:first-child{
   height: 30px;
 }
-
-iframe{
-  width: 0% !important;
-  height: 0% !important;
-}

@@ -21,6 +21,9 @@ export function groupsReducer(state = initialState, action) {
           return { ...state, loading: false, tree : action.payload.tree, dataList: action.payload.dataList };
       case Constants.FETCH_GROUPS_TREE_ERROR:
         return { ...state, loading: false, error: action.payload };
+      case Constants.EMPTY_GROUPS_TREE:{
+        return {...state, tree : []}
+      }
 
     default:
       return state

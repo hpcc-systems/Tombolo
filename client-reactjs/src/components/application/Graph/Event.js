@@ -48,11 +48,18 @@ export default class Event {
           onClick(param) {
             const cell = param.cell;
             const nodeData = cell.getData();
-            const deleteJobMessage = `Removing a job will remove all related files from workflow. Do you really want to remove ${nodeData.title}? `;
-            const defaultMessage = `Do you really want to remove ${nodeData.title}?`;
+
+            const deleteMessages ={
+              Job : `Removing a job will remove all related files from workflow. Do you really want to remove ${nodeData.title}?`,
+              'Sub-Process': `Removing a Sub-Process will remove all its nested assets from workflow. Do you really want to remove ${nodeData.title}?`,
+              default: `Do you really want to remove ${nodeData.title}?`
+            }
+
+            const title = deleteMessages[nodeData.type] || deleteMessages.default;
+
             Modal.confirm({
               icon: <ExclamationCircleOutlined style={{ color: 'red' }} />,
-              title: nodeData.type === 'Job' ? deleteJobMessage : defaultMessage,
+              title,
               okText: 'Yes',
               cancelText: 'No',
               okButtonProps: { type: 'danger' },
@@ -67,7 +74,7 @@ export default class Event {
                     incomingEdges.forEach((edge) => {
                       const source = edge.getSourceNode();
                       if (source) {
-                        const isFileOrTemplate = source.data.type === 'File' || 'FileTemplate';
+                        const isFileOrTemplate = source.data.type === 'File' || source.data.type === 'FileTemplate';
                         if (isFileOrTemplate) {
                           const connectedEdges = graph.getConnectedEdges(source);
                           if (connectedEdges.length === 1) {
@@ -82,7 +89,7 @@ export default class Event {
                     outgoingEdges.forEach((edge) => {
                       const target = edge.getTargetNode();
                       if (target) {
-                        const isFileOrTemplate = target.data.type === 'File' || 'FileTemplate';
+                        const isFileOrTemplate = target.data.type === 'File' || target.data.type ===  'FileTemplate';
                         if (isFileOrTemplate) {
                           const connectedEdges = graph.getConnectedEdges(target);
                           if (connectedEdges.length === 1) {
@@ -141,8 +148,11 @@ export default class Event {
           },
         },
       };
-      
-      node.addTools([hideButton, deleteButton],{ignoreEvent:true});
+       
+      const tools = [deleteButton, hideButton ];
+      if (node.data.type === 'Sub-Process') tools.pop() // do not show hide button for sub process, it will mess up remove a frame of subprocess and cause some errors;
+
+      node.addTools(tools,{ignoreEvent:true});
     });
 
     graph.on('node:mouseleave', ({ node }) => {
