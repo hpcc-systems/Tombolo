@@ -553,10 +553,10 @@ router.post( '/saveJob',
                   //  construct ecl code with template details and write it to fs
                   const code = hpccUtil.constructFileMonitoringWorkUnitEclCode({wu_name : `${template.title}_File_Monitoring`, monitorSubDirs, lzHost : machine, lzPath, filePattern});
                   const parentDir = path.join(process.cwd(), 'eclDir');
-                  fs.writeFileSync(`${parentDir}/${template.title}.ecl`, code);
-
-                  // update the wu with ecl archive
                   const pathToEclFile = path.join(process.cwd(), 'eclDir', `${template.title}.ecl` );
+                  fs.writeFileSync(pathToEclFile, code);
+                  
+                  // update the wu with ecl archive
                   const args = ['-E', pathToEclFile, '-I', parentDir];
                   const archived = await hpccUtil.createEclArchive(args, parentDir);
                   const updateBody = { Wuid: wuId, Jobname: `${template.title}_File_Monitoring`, QueryText: archived.stdout };
@@ -566,7 +566,7 @@ router.post( '/saveJob',
                   //Submit the wu
                   const submitBody = { Wuid: wuId, Cluster: 'hthor' };
                   await workUnitService.WUSubmit(submitBody)
-                  fs.unlinkSync(`${parentDir}/${template.title}.ecl`)
+                  fs.unlinkSync(pathToEclFile)
 
                   //Add to file monitoring table
                   const fileMonitoring = await FileMonitoring.create({wuid: wuId, fileTemplateId: template.id,  cluster_id, dataflow_id: dataflowId, metaData : {dataflows : [dataflowId]}});
