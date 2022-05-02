@@ -16,7 +16,7 @@ import {
   LinkOutlined,
   MessageOutlined,
   MailOutlined,
-  AppstoreAddOutlined,
+  ProfileOutlined,
   FieldTimeOutlined
 } from '@ant-design/icons/lib/icons';
 
@@ -137,7 +137,7 @@ class Node extends React.Component {
     Job: <SettingOutlined />,
     File: <FileOutlined />,
     SuperFile: <FileAddOutlined />,
-    FileTemplate : <AppstoreAddOutlined/>,
+    FileTemplate : <ProfileOutlined />,
     Index: <BookOutlined />,
     Manual: <MailOutlined />,
     'Sub-Process': <SisternodeOutlined />,

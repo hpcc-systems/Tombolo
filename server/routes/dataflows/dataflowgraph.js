@@ -8,6 +8,7 @@ let Dataflow = models.dataflow;
 let Job = models.job;
 let File = models.file;
 let Index = models.indexes;
+const hpccUtil = require('../../utils/hpcc-util');
 const FileMonitoring = models.fileMonitoring;
 const validatorUtil = require('../../utils/validator');
 const { body, query, validationResult } = require('express-validator');
@@ -95,7 +96,7 @@ router.post('/deleteAsset',
   async (req, res) => {
     const errors = validationResult(req).formatWith(validatorUtil.errorFormatter);
     if (!errors.isEmpty()) return res.status(422).json({ success: false, errors: errors.array() });
-
+    console.log(req.body.type, '<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<< Type')
     try {
       const deleted = await AssetDataflow.destroy({
         where: { dataflowId: req.body.dataflowId, assetId: req.body.assetId },
@@ -113,9 +114,24 @@ router.post('/deleteAsset',
 
       if(req.body.type === 'filetemplate'){
         /* If the asset type is file template, the depend on job is actually a fileMonitoring Id , not a file template id itself
-        Therefore, find the fileMonitoring id and destroy it from  dependentJobs table */
-        const fileMonitoringId = await FileMonitoring.findOne({where : { fileTemplateId : req.body.assetId}});
-         await DependentJobs.destroy({where : {dependsOnJobId:fileMonitoringId, dataflowId : req.body.dataflowId}})
+        1. find File Monitoring ID
+        2. Evaluate if it can be destroyed -> if not used by other Dataflows it can be destroyed
+        3. If not used by any other dataflows, abort wu in HPCC */
+        const fileMonitoring = await FileMonitoring.findOne({where : { fileTemplateId : req.body.assetId}});
+      
+            if(fileMonitoring && fileMonitoring.metaData.dataflows.length > 1){
+              const newDataFlowList = fileMonitoring.metaData.dataflows.filter(dfId => dfId !== req.body.dataflowId);
+              await FileMonitoring.update({metaData : {...fileMonitoring.metaData, dataflows : newDataFlowList}}, {where : {id : dependantJob.dependsOnJobId }});
+              await DependentJobs.destroy({where : {dependsOnJobId:fileMonitoring.id, dataflowId : req.body.dataflowId}});
+            }else if(fileMonitoring && fileMonitoring.metaData.dataflows.length < 1){
+              await FileMonitoring.destroy({where : {id : fileMonitoring.id}});
+              const workUnitService = await hpccUtil.getWorkunitsService(cluster_id);
+              const WUactionBody = { Wuids: { Item: [fileMonitoring.wuid] }, WUActionType: 'Abort' } 
+              await workUnitService.WUAction(WUactionBody);
+              await DependentJobs.destroy({where : {dependsOnJobId:fileMonitoring.id, dataflowId : req.body.dataflowId}});
+            }else{
+              console.log('No file monitoring')
+            }
       }
       res.json({ result: 'success' });
     } catch (error) {

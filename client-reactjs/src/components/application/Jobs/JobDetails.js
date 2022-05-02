@@ -544,7 +544,6 @@ class JobDetails extends Component {
   
   handleScheduleTypeSelect = () => {
     const predecessors = this.props.nodes.reduce((acc, node) => {
-      console.log("The node type", node)
       if (node.type === 'Job' && node.title !== this.props.selectedNodeTitle) {
         acc.predecessorJobs.push({ id: node.id, jobId: node.assetId, name: node.title });
       }else if(node.type === 'FileTemplate' && node.title !== this.props.selectedNodeTitle && node.hasOwnProperty('isStencil')){
@@ -1483,7 +1482,9 @@ class JobDetails extends Component {
                     {this.state.selectedScheduleType === 'Template' ? (
                     <Form.Item label= 'Template'>
                       {!this.state.enableEdit ? (
-                         <> {this.state.predecessorTemplates.filter( template => template.templateId === this.state.schedulePredecessor[0])[0].name}</>) : (
+                         <> 
+                         {this.state.predecessorTemplates.filter( template => template.templateId === this.state.schedulePredecessor[0])[0].name}
+                         </>) : (
                           <Select
                             mode="single"
                             placeholder="Select a template"

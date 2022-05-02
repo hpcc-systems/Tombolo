@@ -373,7 +373,7 @@ class JobScheduler {
       let jobName = 'file-monitoring-' + new Date().getTime();
         this.bree.add({
           name: jobName,
-          interval: '900s',
+          interval: '500s',
           path: path.join(__dirname, 'jobs', FILE_MONITORING),
           worker: {
             workerData: {

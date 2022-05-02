@@ -577,7 +577,6 @@ router.post( '/saveJob',
                   fileMonitoringJobId = fileMonitoringWU.id;
             }
           }
-          console.log(fileMonitoringJobId)
 
       // JOB IS SCHEDULED AS 'Predecessor' or 'fileTemplate
       if (schedule.type === 'Predecessor' || schedule.type === 'Template') {
@@ -740,6 +739,29 @@ router.post( '/saveJob',
       // JOB IS NOT SCHEDULED, we will remove all scheduled records from before.
       if (!schedule.type) {
         try {
+          /* If depend on asset type is 'Template' some additional steps are required, 
+          1. Check if the depend on type is 'template'
+          2. if true from file monitoring remove the dataflow id
+          3. If no other dataflow Id tied to the fileMonitoring WU, abort the wu in hpcc
+          */
+         const dependantJob = await DependentJobs.findOne({where : { jobId : job.id}});
+         if(dependantJob && dependantJob.dependOnAssetType === 'Template'){
+            const fileMonitoring = await FileMonitoring.findOne({where : {id : dependantJob.dependsOnJobId, cluster_id}});
+            if(!fileMonitoring){
+              return;
+            }
+            else if(fileMonitoring && fileMonitoring.metaData.dataflows.length > 1){
+              const newDataFlowList = fileMonitoring.metaData.dataflows.filter(dfId => dfId !== dataflowId);
+              await FileMonitoring.update({metaData : {...fileMonitoring.metaData, dataflows : newDataFlowList}}, {where : {id : dependantJob.dependsOnJobId }})
+            }else{
+              await FileMonitoring.destroy({where : {id : dependantJob.dependsOnJobId}});
+
+              const workUnitService = await hpccUtil.getWorkunitsService(cluster_id);
+              const WUactionBody = { Wuids: { Item: [fileMonitoring.wuid] }, WUActionType: 'Abort' } 
+              await workUnitService.WUAction(WUactionBody) // Abort wu in hpcc
+            }
+         }
+          
           // CLEAN UP
           await clearAllPreviousScheduleRecords({ 
             id: job.id,
@@ -749,7 +771,7 @@ router.post( '/saveJob',
           });
 
           console.log('------------------------------------------');
-          console.log(`-JOB SAVED ${job.name}-${job.title}-${job.id}-----------------------------------------`);
+          console.log(`-JOB SAVED ${job.name}-${job.title}-${job.id}`);
           console.log('------------------------------------------');
          
           return res.json({
