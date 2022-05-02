@@ -52,12 +52,13 @@ const dataDictionary = require('./routes/data-dictionary/data-dictionary-service
 const groups = require('./routes/groups/group');
 const ghCredentials = require('./routes/ghCredentials');
 const gh_projects = require('./routes/gh_projects');
-app.use('/api/ldap', ldap);
+
 app.use('/api/user', userRead);
 
 // Authenticate token before proceeding to route
 app.use(tokenService.verifyToken);
 
+app.use('/api/ldap', ldap);
 app.use('/api/app/read', appRead);
 app.use('/api/file/read', fileRead);
 app.use('/api/fileTemplate/read', fileTemplateRead);
