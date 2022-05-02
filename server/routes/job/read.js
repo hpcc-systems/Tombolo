@@ -11,12 +11,9 @@ let JobParam = models.jobparam;
 let File = models.file;
 let FileLayout = models.file_layout;
 let FileValidation = models.file_validation;
-let DataflowGraph = models.dataflowgraph;
-let Dataflow = models.dataflow;
 const FileTemplate = models.fileTemplate;
 const FileMonitoring = models.fileMonitoring;
-let AssetDataflow = models.assets_dataflows;
-let DependentJobs = models.dependent_jobs;
+
 let AssetsGroups = models.assets_groups;
 let JobExecution = models.job_execution;
 let MessageBasedJobs = models.message_based_jobs;
@@ -109,15 +106,6 @@ const createOrUpdateFile = async ({jobfile, jobId, clusterId, dataflowId, applic
 
       if (!isJobFileCreated) jobFile = await jobFile.update(jobfileFields);
 
-      // create assetDataflow if still not exists
-      if (dataflowId){
-        await AssetDataflow.findOrCreate({
-          where: {
-            assetId: file.id,
-            dataflowId: dataflowId,
-          },
-        });
-      }
       // construct object with fields that is going to be used to create a graph nodes
       const relatedFile = {
         name: file.name,
@@ -139,25 +127,14 @@ const createOrUpdateFile = async ({jobfile, jobId, clusterId, dataflowId, applic
   }
 }; 
 
-const clearAllPreviousScheduleRecords = async (props) => {       
-  return await Promise.all([
-    //1. Remove chron expression from assetDataflow table;
-    AssetDataflow.update( { cron: null }, { where: { assetId: props.id, dataflowId: props.dataflowId } } ),
-    //2. Remove job from Bree
-    JobScheduler.removeJobFromScheduler(props.name + '-' + props.dataflowId + '-' + props.id),
-    //3. Remove Dependent Job Record
-    DependentJobs.destroy({ where: { jobId: props.id, dataflowId: props.dataflowId } }),
-    //4. ...
-    MessageBasedJobs.destroy({ where: { jobId: props.id, dataflowId: props.dataflowId, applicationId: props.application_id }, }),
-  ]);
-};
+
 
 const deleteJob = async (jobId, application_id) =>{
  return await Promise.all([
     Job.destroy({ where: { id: jobId, application_id} }),
+    JobScheduler.removeAllFromBree(props.id),
     JobFile.destroy({ where: { job_id: jobId } }),
     JobParam.destroy({ where: { job_id: jobId } }),
-    AssetDataflow.destroy({ where: { assetId: jobId } }),
   ]);
 }
 
@@ -456,7 +433,6 @@ router.post( '/saveJob',
 
     // THIS IS A LIST OF FIELDS WE ARE CURRENTLY GETTING FROM FRONTEND, IF U ADD MORE FIELDS PLEASE UPDATE THIS LIST TOO
     // basic: { name, title, ecl, author, contact, gitRepo, entryBWR, jobType, description, scriptPath, sprayFileName, sprayDropZone, sprayedFileScope, metaData : json{}, cluster_id, dataflowId, application_id, groupId }
-    // schedule: { type, jobs, cron}
     // files: []
     // params : []
     // removeAssetId: '' if this value is present we need to delete this asset as it was a design job that was ressign to something else
@@ -512,8 +488,6 @@ router.post( '/saveJob',
              where: { job_id: job.id, application_id, file_type: file.file_type, name: file.name },
              defaults: defaultFields ,
            })
-           // If DataFlowId present update assetDataflow table so
-           if (dataflowId) await AssetDataflow.findOrCreate({ where: { assetId: job.id, dataflowId }, defaults: { assetId: file.id, dataflowId }, });
          }
         // Update Job Params
         const updateParams = params.map((el) => ({ ...el, job_id: job.id, application_id }));
@@ -525,120 +499,124 @@ router.post( '/saveJob',
         console.dir(error.message, { depth: null });
         console.log('------------------------------------------');
       }
+  
+      console.log('------------------------------------------');
+      console.log(`-JOB SAVED ${job.name}-${job.title}-${job.id}-----------------------------------------`);
+      console.log('------------------------------------------');
+     
+      res.json({ success: true, title: req.body.job.basic.title, jobId: job.id });
+    } catch (error) {
+      console.log('-error- /saveJob----------------------------------------');
+      console.dir({ error }, { depth: null });
+      console.log('------------------------------------------');
+      return res.status(422).send({ success: false, message: 'Failed to Save job' });
+    }
+  }
+);
 
-        // If the schedule type is 'fileTemplate' create monitoring work unit in HPCC
-          let fileMonitoringJobId;
-          if (schedule.type === 'Template'){
-           /*  Check if there is existing File Monitoring WU based on this template. 
-            If there is existing file monitoring WU, there is no need to create a new one */
-              const fileMonitoringWU = await FileMonitoring.findOne({where : { fileTemplateId : schedule.jobs[0]}});
+router.post('/schedule_job',
+  [
+    body('application_id').isUUID(4).withMessage('Invalid application id'),
+    body('dataflowId').isUUID(4).withMessage('Invalid dataflowId'),
+    body('jobId').isUUID(4).withMessage('Invalid jobId'),
+  ], async (req, res) => {
+    try {
+      const { jobId, dataflowId, application_id, schedule } = req.body;
 
-              if(!fileMonitoringWU){
-                  // Get template details
-                  const template = await FileTemplate.findOne({where : {id : schedule.jobs[0]}});
-                  if(!template){throw Error('Template not found')}
-                  const {machine, lzPath, directory, landingZone, monitorSubDirs} = template.metaData;
-                  let dirPath = directory.join('/');
-                  const completeDirPath = `${lzPath}/${dirPath}/`;
-                  const pattern = {
-                    contains : `*${template.searchString}*`,
-                    startsWith : `${template.searchString}*`,
-                    endsWith: `*${template.searchString}`
-                  }
+    // schedule :
+    //   type: Predecessor | Time | Template | ""
+    //   cron: cronExpression string | ""
+    //   dependsOn: [assetId] - cant be job | template
 
-                  let filePattern = `${completeDirPath}${pattern[template['fileNamePattern']]}`
+      const job = await Job.findOne({ where: { id: jobId } });
+      if (!job) res.status(404).send({ success: false, message: 'Job was not found' });
 
-                  //Create empty WU
-                  const wuId = await hpccUtil.createWorkUnit(cluster_id, {jobname : `${template.title}_File_Monitoring`});
-                  //  construct ecl code with template details and write it to fs
-                  const code = hpccUtil.constructFileMonitoringWorkUnitEclCode({wu_name : `${template.title}_File_Monitoring`, monitorSubDirs, lzHost : machine, lzPath, filePattern});
-                  const parentDir = path.join(process.cwd(), 'eclDir');
-                  const pathToEclFile = path.join(process.cwd(), 'eclDir', `${template.title}.ecl` );
-                  fs.writeFileSync(pathToEclFile, code);
-                  
-                  // update the wu with ecl archive
-                  const args = ['-E', pathToEclFile, '-I', parentDir];
-                  const archived = await hpccUtil.createEclArchive(args, parentDir);
-                  const updateBody = { Wuid: wuId, Jobname: `${template.title}_File_Monitoring`, QueryText: archived.stdout };
-                  const workUnitService = await hpccUtil.getWorkunitsService(cluster_id)
-                  await workUnitService.WUUpdate(updateBody);
+      await Promise.all([
+        //1. Remove job from Bree
+        JobScheduler.removeJobFromScheduler(job.name + '-' + dataflowId + '-' + job.id),
+        //2. ...
+        MessageBasedJobs.destroy({ where: { jobId: job.id, dataflowId, applicationId:application_id}}),
+      ]);
 
-                  //Submit the wu
-                  const submitBody = { Wuid: wuId, Cluster: 'hthor' };
-                  await workUnitService.WUSubmit(submitBody)
-                  fs.unlinkSync(pathToEclFile)
+      // JOB IS SCHEDULED AS 'Template'
+      if (schedule.type === 'Template') {
+        /*  Check if there is existing File Monitoring WU based on this template. 
+              If there is existing file monitoring WU, there is no need to create a new one */
+        const fileMonitoringWU = await FileMonitoring.findOne({ where: { fileTemplateId: schedule.dependsOn[0] } });
 
-                  //Add to file monitoring table
-                  const fileMonitoring = await FileMonitoring.create({wuid: wuId, fileTemplateId: template.id,  cluster_id, dataflow_id: dataflowId, metaData : {dataflows : [dataflowId]}});
-                  fileMonitoringJobId = fileMonitoring.id;
-            }else{
-                  let newMetaData = {...fileMonitoringWU.metaData, dataflows : [...fileMonitoringWU.metaData.dataflows, dataflowId]} // Dataflows using the same file monitoring WU
-                  FileMonitoring.update({metaData : newMetaData}, {where : { id : fileMonitoringWU.id}})
-                  fileMonitoringJobId = fileMonitoringWU.id;
-            }
-          }
-
-      // JOB IS SCHEDULED AS 'Predecessor' or 'fileTemplate
-      if (schedule.type === 'Predecessor' || schedule.type === 'Template') {
-        try {
-          // CLEAN UP
-          await clearAllPreviousScheduleRecords({ 
-            id: job.id,
-            name: job.name,
-            application_id,
-            dataflowId
-          });
-
-          const dependentJobsPromises = schedule.jobs.map((dependsOnJobId) =>
-            DependentJobs.create({
-              jobId: job.id,
-              dependsOnJobId : schedule.type === 'Template' ? fileMonitoringJobId : dependsOnJobId,
-              dataflowId,
-              dependOnAssetType : schedule.type === 'Template' ? 'Template' : 'job'
-            })
-          );
+        if (!fileMonitoringWU) {
+          // Get template details
+          const template = await FileTemplate.findOne({ where: { id: schedule.dependsOn[0] } });
+          if (!template) throw Error('Template not found');
           
-         const dependentJobs = await Promise.all(dependentJobsPromises);
-          console.log(`-JOB SCHEDULED-Predecessor----------------`);
-          console.dir({dependentJobs:dependentJobs.map(job=> job.toJSON())}, { depth: null });
-          console.log('------------------------------------------');
+          const { machine, lzPath, directory, landingZone, monitorSubDirs } = template.metaData;
+          let dirPath = directory.join('/');
+          const completeDirPath = `${lzPath}/${dirPath}/`;
 
-          return res.json({
-            success: true,
-            jobId: job.id,
-            title: job.title,
-            jobs: schedule.jobs,
-            type: schedule.type,
+          const pattern = {
+            endsWith: `*${template.searchString}`,
+            contains: `*${template.searchString}*`,
+            startsWith: `${template.searchString}*`,
+          };
+
+          let filePattern = `${completeDirPath}${pattern[template['fileNamePattern']]}`;
+
+          //Create empty WU
+          const wuId = await hpccUtil.createWorkUnit(cluster_id, { jobname: `${template.title}_File_Monitoring` });
+          //  construct ecl code with template details and write it to fs
+          const code = hpccUtil.constructFileMonitoringWorkUnitEclCode({
+            lzPath,
+            filePattern,
+            monitorSubDirs,
+            lzHost: machine,
+            wu_name: `${template.title}_File_Monitoring`,
           });
-        } catch (error) {
-          console.log('-error- FAILED TO SCHEDULE Predecessor----------------------------------------');
-          console.dir({ error }, { depth: null });
-          console.log('------------------------------------------');
-          return res.status(422).send({ success: false, message: 'Failed to update scheduled job' });
+
+          const parentDir = path.join(process.cwd(), 'eclDir');
+          const pathToEclFile = path.join(process.cwd(), 'eclDir', `${template.title}.ecl`);
+          fs.writeFileSync(pathToEclFile, code);
+
+          // update the wu with ecl archive
+          const args = ['-E', pathToEclFile, '-I', parentDir];
+          const archived = await hpccUtil.createEclArchive(args, parentDir);
+
+          const updateBody = {
+            Wuid: wuId,
+            QueryText: archived.stdout,
+            Jobname: `${template.title}_File_Monitoring`,
+          };
+
+          const workUnitService = await hpccUtil.getWorkunitsService(cluster_id);
+          await workUnitService.WUUpdate(updateBody);
+
+          //Submit the wu
+          const submitBody = { Wuid: wuId, Cluster: 'hthor' };
+          await workUnitService.WUSubmit(submitBody);
+          fs.unlinkSync(pathToEclFile);
+
+          //Add to file monitoring table
+          const fileMonitoring = await FileMonitoring.create({
+            wuid: wuId,
+            cluster_id,
+            dataflow_id: dataflowId,
+            fileTemplateId: template.id,
+            metaData: { dataflows: [dataflowId] },
+          });
+
+          fileMonitoringJobId = fileMonitoring.id;
+
+        } else {
+          let newMetaData = {
+            ...fileMonitoringWU.metaData,
+            dataflows: [...fileMonitoringWU.metaData.dataflows, dataflowId],
+          }; // Dataflows using the same file monitoring WU
+
+          await FileMonitoring.update({ metaData: newMetaData }, { where: { id: fileMonitoringWU.id } });
         }
       }
 
       // JOB IS SCHEDULED AS 'Time'
       if (schedule.type === 'Time') {
-        try {
-          // CLEAN UP
-          await clearAllPreviousScheduleRecords({ 
-            id: job.id,
-            name: job.name,
-            application_id,
-            dataflowId
-          });
-
-          const { minute, hour, dayMonth, month, dayWeek } = schedule.cron;
-          const cronExpression = `${minute} ${hour} ${dayMonth} ${month} ${dayWeek}`;
-
-          const [updatedRow] = await AssetDataflow.update(
-            { cron: cronExpression },
-            { where: { assetId: job.id, dataflowId } }
-          );
-
-          if (!updatedRow) throw new Error('Failed to update AssetDataflow record');
-
           // ADD JOB TO BREE SCHEDULE
           const getfileName = () => {
             switch (job.jobType) {
@@ -647,7 +625,7 @@ router.post( '/saveJob',
               case 'Manual':
                 return SUBMIT_MANUAL_JOB_FILE_NAME;
               default: {
-                if (job.isStoredOnGithub) {
+                if (job.metaData.isStoredOnGithub) {
                   return SUBMIT_GITHUB_JOB_FILE_NAME;
                 } else {
                   return SUBMIT_JOB_FILE_NAME;
@@ -661,7 +639,7 @@ router.post( '/saveJob',
             jobName: job.name,
             jobfileName: getfileName(),
             title: job.title,
-            cron: cronExpression,
+            cron: schedule.cron,
             jobType: job.jobType,
             contact: job.contact,
             metaData: job.metaData,
@@ -683,163 +661,89 @@ router.post( '/saveJob',
             };
           }
 
-          JobScheduler.addJobToScheduler(jobSettings);
-          console.log(`-JOB SCHEDULED-Time----------------------------------------`);
-          console.dir({jobSettings, job: job.id, jobname:job.name,schedule}, { depth: null });
-          console.log('------------------------------------------');
-          
+          const result = JobScheduler.addJobToScheduler(jobSettings);
+          if (result.error) throw new Error(result.error)
 
-          return res.json({
-            jobId: job.id,
-            success: true,
-            title: job.title,
-            type: schedule.type,
-            cron: schedule.cron,
-          });
-        } catch (error) {
-          console.log('-error- FAILED TO SCHEDULE Time-----------------------------------------');
-          console.dir({ error }, { depth: null });
+          console.log(`-JOB SCHEDULED-Time----------------------------------------`);
+          console.dir({ job: job.id, jobname: job.name, schedule }, { depth: null });
           console.log('------------------------------------------');
-          return res.status(422).send({ success: false, message: 'Failed to update scheduled job' });
-        }
       }
 
       // JOB IS SCHEDULED AS 'Message'
       if (schedule.type === 'Message') {
-        try {
-          // CLEAN UP
-          await clearAllPreviousScheduleRecords({ id: job.id, application_id, dataflowId, });
-         
-          const messageBasedJobsFields = {
-            jobId: job.id,
-            applicationId: application_id,
-            dataflowId,
-          };
-         
-          await MessageBasedJobs.findOrCreate({
-            where: messageBasedJobsFields,
-            defaults: messageBasedJobsFields,
-          });
-
-          return res.json({
-            success: true,
-            type: req.body.job.schedule.type,
-            jobs: req.body.job.schedule.jobs,
-            jobId: jobId,
-            title: req.body.job.basic.title,
-          });
-        } catch (error) {
-          return res.json({
-            success: false,
-            message: 'Unable to save job schedule',
-          });
-        }
+        const messageBasedJobsFields = { jobId: job.id, applicationId: application_id, dataflowId, };
+        await MessageBasedJobs.findOrCreate({ where: messageBasedJobsFields, defaults: messageBasedJobsFields, });
       }
 
-      // JOB IS NOT SCHEDULED, we will remove all scheduled records from before.
+      // JOB IS NOT SCHEDULED, we will remove FileMonitoring;
       if (!schedule.type) {
-        try {
-          /* If depend on asset type is 'Template' some additional steps are required, 
-          1. Check if the depend on type is 'template'
-          2. if true from file monitoring remove the dataflow id
-          3. If no other dataflow Id tied to the fileMonitoring WU, abort the wu in hpcc
-          */
-         const dependantJob = await DependentJobs.findOne({where : { jobId : job.id}});
-         if(dependantJob && dependantJob.dependOnAssetType === 'Template'){
-            const fileMonitoring = await FileMonitoring.findOne({where : {id : dependantJob.dependsOnJobId, cluster_id}});
-            if(!fileMonitoring){
-              return;
-            }
-            else if(fileMonitoring && fileMonitoring.metaData.dataflows.length > 1){
-              const newDataFlowList = fileMonitoring.metaData.dataflows.filter(dfId => dfId !== dataflowId);
-              await FileMonitoring.update({metaData : {...fileMonitoring.metaData, dataflows : newDataFlowList}}, {where : {id : dependantJob.dependsOnJobId }})
-            }else{
-              await FileMonitoring.destroy({where : {id : dependantJob.dependsOnJobId}});
+        // 1. Check if the depend on type is 'template'
+        // 2. if true from file monitoring remove the dataflow id
+        // 3. If no other dataflow Id tied to the fileMonitoring WU, abort the wu in hpcc
+        const dependsOn = schedule.dependsOn?.[0];
+        if (dependsOn) {
+          const fileMonitoring = await FileMonitoring.findOne({ where: { fileTemplateId: dependsOn } });
 
-              const workUnitService = await hpccUtil.getWorkunitsService(cluster_id);
-              const WUactionBody = { Wuids: { Item: [fileMonitoring.wuid] }, WUActionType: 'Abort' } 
-              await workUnitService.WUAction(WUactionBody) // Abort wu in hpcc
+          if (fileMonitoring) {
+            if (fileMonitoring.metaData?.dataflows?.length > 1) {
+              const newDataFlowList = fileMonitoring.metaData.dataflows.filter((dfId) => dfId !== dataflowId);
+              await fileMonitoring.update({ metaData: { ...fileMonitoring.metaData, dataflows: newDataFlowList } });
+            } else {
+              const workUnitService = await hpccUtil.getWorkunitsService(fileMonitoring.cluster_id);
+              const WUactionBody = { Wuids: { Item: [fileMonitoring.wuid] }, WUActionType: 'Abort' };
+              await workUnitService.WUAction(WUactionBody); // Abort wu in hpcc
+              await fileMonitoring.destroy();
             }
-         }
-          
-          // CLEAN UP
-          await clearAllPreviousScheduleRecords({ 
-            id: job.id,
-            name: job.name,
-            application_id,
-            dataflowId
-          });
-
-          console.log('------------------------------------------');
-          console.log(`-JOB SAVED ${job.name}-${job.title}-${job.id}`);
-          console.log('------------------------------------------');
-         
-          return res.json({
-            success: true,
-            type: '',
-            jobs: [],
-            jobId: job.id,
-            title: job.title,
-          });
-       
-        } catch (error) {
-          console.log('-error-----------------------------------------');
-          console.dir({ error }, { depth: null });
-          console.log('------------------------------------------');
-          return res.status(422).send({ success: false, message: 'Failed to update scheduled job' });
+          }
         }
       }
 
-      // respond default if non of the above triggered
-      console.log('-Am I ever Running?-----------------------------------------');
-      res.json({ success: true, title: req.body.job.basic.title, jobId: job.id });
-      console.log('------------------------------------------');
+      res.json({
+        schedule,
+        success: true,
+        jobId: job.id,
+      });
+
     } catch (error) {
-      console.log('-error- /saveJob----------------------------------------');
+      console.log('-error- /schedule_job----------------------------------------');
       console.dir({ error }, { depth: null });
       console.log('------------------------------------------');
-      return res.status(422).send({ success: false, message: 'Failed to Save job' });
+      return res.status(400).send({ success: false, message: error.message });
     }
   }
 );
 
 router.get('/job_list', [
-  query('app_id')
-    .isUUID(4).withMessage('Invalid application id'),
-  query('dataflowId')
-    .isUUID(4).withMessage('Invalid dataflow id'),
-    query('clusterId')
-    .isUUID(4).withMessage('Invalid cluster id'),
-], (req, res) => {
+  query('application_id') .isUUID(4).withMessage('Invalid application id'),
+  query('cluster_id') .isUUID(4).withMessage('Invalid cluster id'),
+], async (req, res) => {
   const errors = validationResult(req).formatWith(validatorUtil.errorFormatter);
-  if (!errors.isEmpty()) {
-      return res.status(422).json({ success: false, errors: errors.array() });
-  }
-  console.log("[job list/read.js] - Get job list for app_id = " + req.query.app_id);
+  if (!errors.isEmpty()) return res.status(422).json({ success: false, errors: errors.array() });
+  
   try {
-    let dataflowId = req.query.dataflowId;
-    let query = 'select j.id, j.name, j.title, j.jobType, j.metaData, j.description, j.createdAt from job j '+
-    'where j.id not in (select asd.assetId from assets_dataflows asd where asd.dataflowId = (:dataflowId) and asd.deletedAt is null)'+    
-    'and j.application_id = (:applicationId)'+
-    'and (j.cluster_id = (:clusterId) or j.cluster_id is null)'+
-    'and j.deletedAt is null;';
-    /*let query = 'select j.id, j.name, j.title, j.createdAt, asd.dataflowId from job j, assets_dataflows asd where j.application_id=(:applicationId) '+
-        'and j.id = asd.assetId and j.id not in (select assetId from assets_dataflows where dataflowId = (:dataflowId))';*/
-    let replacements = { applicationId: req.query.app_id, dataflowId: dataflowId, clusterId: req.query.clusterId};
-    let existingFile = models.sequelize.query(query, {
-      type: models.sequelize.QueryTypes.SELECT,
-      replacements: replacements
-    }).then((jobs) => {
-      res.json(jobs);
-    })
-    .catch(function(err) {
-      console.log(err);
-      return res.status(500).json({ success: false, message: "Error occurred while retrieving jobs" });
+    const {application_id , cluster_id} = req.query;
+    const assets = await Job.findAll({
+      where:{
+        application_id,
+        [Op.or]: [
+          { cluster_id },
+          { cluster_id : null }
+        ]
+      },
+      attributes:['id','name','title', 'jobType', 'metaData','description', 'createdAt']
     });
-  } catch (err) {
-    console.log('err', err);
-    return res.status(500).json({ success: false, message: "Error occurred while retrieving jobs" });
-  }
+
+    const assetList = assets.map(asset => {
+      const parsed = asset.toJSON();
+      parsed.isAssociated = asset.metaData?.isAssociated || false;
+      delete parsed.metaData;
+      return parsed;
+    })
+
+    res.json(assetList);
+  } catch (error) {
+    console.log(error);
+    res.status(500).json({ success: false, message: "Error occurred while retrieving assets" });  }
 });
 
 router.get('/job_details', [
@@ -926,44 +830,12 @@ router.get('/job_details', [
         }
 
         if (req.query.dataflow_id) {
-          let assetDataflow = await AssetDataflow.findOne({
-            where: { assetId: req.query.job_id, dataflowId: req.query.dataflow_id }
-          });
-          let dependentJobs = await DependentJobs.findAll({
-            where: { jobId: req.query.job_id, dataflowId: req.query.dataflow_id }
-          });
+
           let messageBasedJobs = await MessageBasedJobs.findAll({
             where: { jobId: req.query.job_id, dataflowId: req.query.dataflow_id, applicationId: req.query.app_id}
           });
-          if (assetDataflow && assetDataflow.cron !== null) {
-            jobData.schedule = {
-              type: 'Time',
-              cron: assetDataflow.cron
-            };
-          } 
-          else if (dependentJobs.length > 0 && dependentJobs[0].dependOnAssetType === 'job') {
-            jobData.schedule = {
-              type: 'Predecessor',
-              jobs: []
-            };
-            dependentJobs.map(job => jobData.schedule.jobs.push(job.dependsOnJobId));
-          }
-           else if (dependentJobs.length > 0 && dependentJobs[0].dependOnAssetType === 'Template') {
-            jobData.schedule = {
-              type: 'Template',
-              jobs: []
-            };
-              /* Dependent job id here is file Monitoring ID - but on the schedule tab of the job_details modal, we need to show which template the job is dependent to not the JobMonitoring id.
-              Therefore, find the template-id from the file monitoring table and send it to the client, client will filter through the list of file templates in the DF and show the matching one  */
-              const dependOnJobId= dependentJobs[0].dependsOnJobId;
-              try{
-                const fileMonitoring = await FileMonitoring.findOne({where : {id : dependOnJobId}});
-                if(fileMonitoring) jobData.schedule.jobs.push(fileMonitoring.fileTemplateId)
-              }catch(err){
-                console.log(err)
-              }
-          }
-           else if (messageBasedJobs.length > 0) {
+        
+          if (messageBasedJobs.length > 0) {
             jobData.schedule = {
               type: 'Message'
             };
@@ -1077,7 +949,9 @@ router.post('/executeJob', [
       dataflowId: req.body.dataflowId,
       clusterId: req.body.clusterId,
       jobName : req.body.jobName,
-      jobId: req.body.jobId
+      jobId: req.body.jobId,
+      jobType: job.jobType,
+      title: job.title,
     };
       
     if (isSprayJob) {
