@@ -251,7 +251,7 @@ router.post( '/jobFileRelation',
                 if(fileName[operation](searchString)){ // Matching template FOUND - > this is doing something like this : filename.endsWith('test')
                   let indexOfFileGroup = fileAndTemplates.findIndex(item => item.assetId === templateId && item.file_type === file_type);
                   if(indexOfFileGroup < 0){
-                    fileAndTemplates = [...fileAndTemplates, {name : templateTitle, assetId : templateId, relatedTo, title: templateTitle, file_type, description : templateDescription, assetType: 'FileTemplate'}];
+                    fileAndTemplates = [...fileAndTemplates, {name : templateTitle, isAssociated: true, assetId : templateId, relatedTo, title: templateTitle, file_type, description : templateDescription, assetType: 'FileTemplate'}];
                   }
                   return; // Breaking out of inner loop
                 }
@@ -399,7 +399,7 @@ try {
                   allAssetsIds.push(templateId);
                   let indexOfFileGroup = fileAndTemplates.findIndex(item => item.assetId === templateId && item.file_type === file_type);
                   if(indexOfFileGroup < 0){
-                      fileAndTemplates = [...fileAndTemplates, {name : templateTitle, assetId : templateId, relatedTo, title: templateTitle, file_type, description : templateDescription, assetType: 'FileTemplate'}];
+                      fileAndTemplates = [...fileAndTemplates, {name : templateTitle, isAssociated: true, assetId : templateId, relatedTo, title: templateTitle, file_type, description : templateDescription, assetType: 'FileTemplate'}];
                   }
                   return; // Exiting from inner loop when template is found
                 }
@@ -432,14 +432,14 @@ router.post( '/saveJob',
     if (!errors.isEmpty()) return res.status(422).json({ success: false, errors: errors.array() });
 
     // THIS IS A LIST OF FIELDS WE ARE CURRENTLY GETTING FROM FRONTEND, IF U ADD MORE FIELDS PLEASE UPDATE THIS LIST TOO
-    // basic: { name, title, ecl, author, contact, gitRepo, entryBWR, jobType, description, scriptPath, sprayFileName, sprayDropZone, sprayedFileScope, metaData : json{}, cluster_id, dataflowId, application_id, groupId }
+    // basic: { name, title, ecl, author, contact, gitRepo, entryBWR, jobType, description, scriptPath, sprayFileName, sprayDropZone, sprayedFileScope, metaData : json{}, cluster_id , application_id, groupId }
     // files: []
     // params : []
     // removeAssetId: '' if this value is present we need to delete this asset as it was a design job that was ressign to something else
     // renameAssetId: '' if job was a designer job and it was associated with job that was not on tombolo DB we will rename job instead of deleting it
 
-    const { name, application_id, groupId, dataflowId, cluster_id = null, ...requestJobFields } = req.body.job.basic;
-    const {schedule, files, params, removeAssetId='', renameAssetId=''} = req.body.job;
+    const { name, application_id, groupId, cluster_id = null, ...requestJobFields } = req.body.job.basic;
+    const { files, params, removeAssetId='', renameAssetId=''} = req.body.job;
     try {
       // We want to delete design job if it was associated with existing job that is already in Tombolo DB
       if (removeAssetId) await deleteJob(removeAssetId, application_id);
@@ -562,7 +562,7 @@ router.post('/schedule_job',
           let filePattern = `${completeDirPath}${pattern[template['fileNamePattern']]}`;
 
           //Create empty WU
-          const wuId = await hpccUtil.createWorkUnit(cluster_id, { jobname: `${template.title}_File_Monitoring` });
+          const wuId = await hpccUtil.createWorkUnit(template.cluster_id, { jobname: `${template.title}_File_Monitoring` });
           //  construct ecl code with template details and write it to fs
           const code = hpccUtil.constructFileMonitoringWorkUnitEclCode({
             lzPath,
@@ -586,7 +586,7 @@ router.post('/schedule_job',
             Jobname: `${template.title}_File_Monitoring`,
           };
 
-          const workUnitService = await hpccUtil.getWorkunitsService(cluster_id);
+          const workUnitService = await hpccUtil.getWorkunitsService(template.cluster_id);
           await workUnitService.WUUpdate(updateBody);
 
           //Submit the wu
@@ -597,7 +597,7 @@ router.post('/schedule_job',
           //Add to file monitoring table
           const fileMonitoring = await FileMonitoring.create({
             wuid: wuId,
-            cluster_id,
+            cluster_id: template.cluster_id,
             dataflow_id: dataflowId,
             fileTemplateId: template.id,
             metaData: { dataflows: [dataflowId] },
