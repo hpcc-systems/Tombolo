@@ -433,7 +433,11 @@ class JobScheduler {
 
   // Console.log Bree Active Bree Jobs 
   logBreeJobs() {
-    const jobs = this.bree.config.jobs.filter((job) => !job.name.includes('job-status-poller')); // do not include status poller
+    const jobs = this.bree.config.jobs.filter((job) => {
+      if (job.name.includes('job-status-poller')) return false; // hide status poller from logs
+      if (job.name.includes('file-monitoring')) return false;// hide file monitoring from logs
+      return true;
+      });
     console.dir(
       jobs.map((job) => ({
         name: job.name,
