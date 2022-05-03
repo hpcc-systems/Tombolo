@@ -15,7 +15,7 @@ let scheduleCronParts = { minute: [], hour: [], 'day-of-month': [], month: [], '
 
 let cronExamples = [];
 
-const ScheduleTab = ({ nodes, dataflowId, applicationId, selectedAsset, scheduleNode, readOnly, editingAllowed }) => {
+const ScheduleTab = ({ nodes, dataflowId, applicationId, selectedAsset, addToSchedule, readOnly, editingAllowed }) => {
   const [options, setOptions] = useState({
     loading: false,
     enableEdit: false,
@@ -28,22 +28,6 @@ const ScheduleTab = ({ nodes, dataflowId, applicationId, selectedAsset, schedule
     schedulePredecessor: [],
     predecessors: [],
   });
-
-  const handleScheduleTypeSelect = () => {
-    const predecessors = nodes.reduce((acc, node) => {
-      if (node.type === 'Job' && node.title !== selectedAsset?.title) {
-        acc.push({ id: node.id, jobId: node.assetId, name: node.title });
-      }
-
-      if(node.type === 'FileTemplate' && node.title !== selectedAsset?.title && node.hasOwnProperty('isStencil')){
-        acc.push({ id: node.id, templateId: node.assetId, name: node.title });
-      }
-
-      return acc;
-    }, []);
-
-    setOptions((prev) => ({ ...prev, predecessors }));
-  };
 
   const generateDate = (year, month, day, hour, minute) => new Date(year, month, day, hour, minute);
 
@@ -420,7 +404,7 @@ const ScheduleTab = ({ nodes, dataflowId, applicationId, selectedAsset, schedule
       }
 
       const result = await response.json();
-      scheduleNode(result.schedule); // will trigger method to update node view on a graph
+      addToSchedule(result.schedule); // will trigger method to update node view on a graph
       await new Promise(r => setTimeout(r,1000)); // sometime graph takes time to update nodes, we will wait extra second to let it finish;
       setOptions((prev) => ({ ...prev, enableEdit: false, loading: false, }));
       message.success('Job schedule saved');
@@ -434,7 +418,11 @@ const ScheduleTab = ({ nodes, dataflowId, applicationId, selectedAsset, schedule
   };
 
   const scheduledPredecessors = (allPredecessors, selectedPredecessor) => {
-    return allPredecessors.filter((predecessor) => selectedPredecessor.includes(predecessor.jobId) || selectedPredecessor.includes(predecessor.templateId));
+    return allPredecessors.filter((predecessor) =>{
+      if(selectedPredecessor.includes(predecessor.jobId)) return true;
+      if(selectedPredecessor.includes(predecessor.templateId)) return true;
+      return false;
+    });
   };
 
   const handleChangeInput = (event) => {
@@ -446,22 +434,38 @@ const ScheduleTab = ({ nodes, dataflowId, applicationId, selectedAsset, schedule
     setOptions((prev) => ({ ...prev, enableEdit: true }));
   };
 
+  const handleScheduleTypeSelect = (type) => {
+    setOptions((prev) => ({ ...prev, selectedScheduleType : type , schedulePredecessor: [] }));
+  };
+
   useEffect(() => {
     const schedule = selectedAsset.schedule;
-    if (schedule) {
-      const cronParts = schedule?.cron?.split(' ') || [];
-      setOptions((prev) => ({
-        ...prev,
-        selectedScheduleType: schedule?.type || '',
-        schedulePredecessor: schedule?.dependsOn || [],
-        scheduleMinute: cronParts?.[0] || '*',
-        scheduleHour: cronParts?.[1] || '*',
-        scheduleDayMonth: cronParts?.[2] || '*',
-        scheduleMonth: cronParts?.[3] || '*',
-        scheduleDayWeek: cronParts?.[4] || '*',
-      }));
-      if (schedule?.type) handleScheduleTypeSelect();
-    }
+    const cronParts = schedule?.cron?.split(' ') || [];
+
+    const predecessors = nodes.reduce((acc, node) => {
+      if (node.type === 'Job' && node.title !== selectedAsset?.title) {
+        acc.push({ id: node.id, jobId: node.assetId, name: node.title });
+      }
+
+      if(node.type === 'FileTemplate' && node.title !== selectedAsset?.title && node.hasOwnProperty('isStencil')){
+        acc.push({ id: node.id, templateId: node.assetId, name: node.title });
+      }
+
+      return acc;
+    }, []);
+
+    setOptions((prev) => ({
+      ...prev,
+      predecessors,
+      selectedScheduleType: schedule?.type || '',
+      schedulePredecessor: schedule?.dependsOn || [],
+      scheduleMinute: cronParts?.[0] || '*',
+      scheduleHour: cronParts?.[1] || '*',
+      scheduleDayMonth: cronParts?.[2] || '*',
+      scheduleMonth: cronParts?.[3] || '*',
+      scheduleDayWeek: cronParts?.[4] || '*',
+    }));
+  
   }, []);
 
   if (!editingAllowed) readOnly = true;
@@ -482,11 +486,8 @@ const ScheduleTab = ({ nodes, dataflowId, applicationId, selectedAsset, schedule
               disabled={!selectedAsset.isAssociated}
               placeholder="Select a schedule type"
               allowClear
-              onClear={() => setOptions((prev) => ({ ...prev, selectedScheduleType: '' }))}
-              onSelect={(value) => {
-                handleScheduleTypeSelect(value);
-                setOptions((prev) => ({ ...prev, selectedScheduleType: value }));
-              }}
+              onClear={() => setOptions((prev) => ({ ...prev, selectedScheduleType: '', schedulePredecessor:[] }))}
+              onSelect={(value) => { handleScheduleTypeSelect(value) }}
               value={options.selectedScheduleType ? options.selectedScheduleType : null}>
               <Select.Option value="Time">Timer based (run at specific interval)</Select.Option>
               <Select.Option value="Predecessor">Job based (run after another job completes)</Select.Option>
@@ -583,7 +584,7 @@ const ScheduleTab = ({ nodes, dataflowId, applicationId, selectedAsset, schedule
                 setOptions((prev) => ({ ...prev, schedulePredecessor: predecessors }));
               }}
               value={options.schedulePredecessor}>
-              {options.predecessors.map((job) => {
+              {options.predecessors.filter(asset => asset.jobId).map((job) => {
                 return (
                   <Select.Option key={job.name} value={job.jobId}>
                     {job.name}
