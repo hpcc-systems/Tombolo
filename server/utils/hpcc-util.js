@@ -138,7 +138,6 @@ it is replaced on those places */
 exports.fetchLandingZoneDirectories = async ({cluster, Netaddr,  Path, DirectoryOnly}) =>{
     const {thor_host, thor_port} = cluster;
     const formData = {Netaddr, Path , DirectoryOnly, rawxml_ : 'true'};
-    console.log('FINAL FORM DATA ', formData)
 
     return new Promise((resolve, reject) =>{
       request.post({
