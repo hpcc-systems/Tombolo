@@ -27,7 +27,7 @@ router.post('/saveFileTemplate', [
     body('searchString')
       .isString().optional({checkFalsy:true}).withMessage('Invalid searchString'),
     body('sampleLayoutFile')
-      .isString().optional({checkFalsy:true}).withMessage('Invalid sampleLayoutFile'),
+      .isString().optional({nullable: true}).withMessage('Invalid sampleLayoutFile'),
   ], async (req, res) => {
     try {
       let errors = validationResult(req);

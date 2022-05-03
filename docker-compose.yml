@@ -77,7 +77,7 @@ services:
     entrypoint: [sh, /etc/nginx/run_nginx.sh, "${HOST_HOSTNAME}"]
   node:
     #restart: always
-    entrypoint: [sh, ./docker-entry.sh, "mysql_db", "${DB_PORT}"]
+    entrypoint: [sh, ./docker-entry.sh, "mysql_db", "3306"]
     build:
       context: ./server
       dockerfile: Dockerfile
@@ -99,7 +99,7 @@ services:
     volumes:
       - ./mysql-data:/var/lib/mysql
     ports:
-      - ${DB_PORT}:${DB_PORT}
+      - ${DB_PORT}:3306
     environment:
       MYSQL_DATABASE: ${DB_NAME}
       MYSQL_ROOT_PASSWORD: ${DB_PASSWORD}
