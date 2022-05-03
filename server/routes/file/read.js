@@ -25,7 +25,6 @@ let Indexes=models.indexes;
 let Query=models.query;
 let Job=models.job;
 const JobFile = models.jobfile;
-let AssetDataflow = models.assets_dataflows;
 let Visualization=models.visualizations;
 var request = require('request');
 var requestPromise = require('request-promise');
@@ -70,53 +69,48 @@ router.post( '/superfile_meta',
   }
 );
 
+router.get( '/file_list',
+  [
+    query('application_id').isUUID(4).withMessage('Invalid application id'),
+    query('cluster_id').isUUID(4).optional({ nullable: true }).withMessage('Invalid cluster id'),
+  ],
+  async (req, res) => {
+    const errors = validationResult(req).formatWith(validatorUtil.errorFormatter);
+    if (!errors.isEmpty()) return res.status(422).json({ success: false, errors: errors.array() });
 
-router.get('/file_list', [
-  query('app_id')
-    .isUUID(4).withMessage('Invalid application id'),
-  query('dataflowId')
-    .isUUID(4).optional({nullable: true}).withMessage('Invalid dataflow id'),
-  query('clusterId')
-    .isUUID(4).optional({nullable: true}).withMessage('Invalid cluster id'),
-],(req, res) => {
-  const errors = validationResult(req).formatWith(validatorUtil.errorFormatter);
-    if (!errors.isEmpty()) {
-      return res.status(422).json({ success: false, errors: errors.array() });
-    }
-    console.log("[file list/read.js] - Get file list for app_id = " + req.query.app_id);
     try {
-      let dataflowId = req.query.dataflowId;
-      let query;
-      if(dataflowId){
-        query = 'select f.id, f.name, f.title, f.description, f.isSuperFile, f.metaData, f.createdAt, f.application_id, f.deletedAt '+
-        'from file f ' + 
-        'where f.id not in (select asd.assetId from assets_dataflows asd where asd.dataflowId = (:dataflowId) and asd.deletedAt is null)' +
-        'and f.application_id = (:applicationId) '+
-        'and (f.cluster_id = (:clusterId) or f.cluster_id is null)'+
-        'and f.deletedAt is null';
-      }else{
-         query = 'select f.id, f.name, f.title, f.description, f.isSuperFile, f.createdAt, f.application_id, f.deletedAt '+
-        'from file f ' + 
-        'where  f.application_id = (:applicationId) '+
-        'and f.deletedAt is null';
-      } 
-      
-      let replacements = { applicationId: req.query.app_id, dataflowId: dataflowId, clusterId: req.query.clusterId};
-      let existingFile = models.sequelize.query(query, {
-        type: models.sequelize.QueryTypes.SELECT,
-        replacements: replacements
-      }).then((files) => {
-        res.json(files);
-      })
-      .catch(function(err) {
-        console.log(err);
-        return res.status(500).json({ success: false, message: "Error occurred while getting file list" });
+      const { application_id, cluster_id } = req.query;
+
+      if (!cluster_id) {
+        const assets = await File.findAll({
+          where: { application_id },
+          attributes: ['application_id', 'id', 'name', 'title', 'isSuperFile', 'description', 'createdAt'],
+        });
+        return res.json(assets);
+      }
+
+      const assets = await File.findAll({
+        where: {
+          application_id,
+          [Op.or]: [{ cluster_id }, { cluster_id: null }],
+        },
+        attributes: ['id', 'name', 'title', 'isSuperFile', 'metaData', 'description', 'createdAt'],
       });
-    } catch (err) {
-      console.log('err', err);
-      return res.status(500).json({ success: false, message: "Error occurred while getting file list" });
+
+      const assetList = assets.map((asset) => {
+        const parsed = asset.toJSON();
+        parsed.isAssociated = asset.metaData?.isAssociated || false;
+        delete parsed.metaData;
+        return parsed;
+      });
+
+      res.json(assetList);
+    } catch (error) {
+      console.log(error);
+      res.status(500).json({ success: false, message: 'Error occurred while retrieving assets' });
     }
-});
+  }
+);
 
 router.post('/all', [
   query('keyword')
@@ -434,7 +428,6 @@ router.post('/saveFile', [
           JobFile.destroy({ where: { file_id: removeAssetId } }),
           FileLayout.destroy({ where: { file_id: removeAssetId } }),
           FileLicense.destroy({ where: { file_id: removeAssetId } }),
-          AssetDataflow.destroy({ where: { assetId: removeAssetId } }),
           FileValidation.destroy({ where: { file_id: removeAssetId } }),
           File.destroy({ where: { id: removeAssetId, application_id } }),
         ]);

@@ -28,27 +28,6 @@ module.exports = (sequelize, DataTypes) => {
       }
     });
 
-    dataflow.belongsToMany(models.file, {
-      through: 'assets_dataflows',
-      as: 'files',
-      foreignKey: 'dataflowId',
-      otherKey: 'assetId'
-    });
-
-    dataflow.belongsToMany(models.indexes, {
-      through: 'assets_dataflows',
-      as: 'indexes',
-      foreignKey: 'dataflowId',
-      otherKey: 'assetId'
-    });
-
-    dataflow.belongsToMany(models.job, {
-      through: 'assets_dataflows',
-      as: 'jobs',
-      foreignKey: 'dataflowId',
-      otherKey: 'assetId'
-    });
-
     dataflow.hasOne(models.dataflow_cluster_credentials, {
       foreignKey: 'dataflow_id'
     });

@@ -24,12 +24,7 @@ module.exports = (sequelize, DataTypes) => {
       onDelete: 'CASCADE',
       hooks: true
     });
-    query.belongsToMany(models.dataflow, {
-      through: 'assets_dataflows',
-      as: 'dataflows',
-      foreignKey: 'assetId',
-      otherKey: 'dataflowId'
-    });
+
     query.belongsTo(models.application, {
       foreignKey: 'application_id'
     });

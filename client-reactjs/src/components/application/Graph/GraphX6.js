@@ -17,7 +17,6 @@ import AssetDetailsDialog from '../AssetDetailsDialog';
 import ExistingAssetListDialog from '../Dataflow/ExistingAssetListDialog';
 import Shape from './Shape.js';
 import { colors } from './graphColorsConfig.js';
-import  useWindowSize from "../../../hooks/useWindowSize"
 
 const defaultState = {
   openDialog: false,
@@ -36,8 +35,6 @@ function GraphX6({ readOnly = false, statuses }) {
   const graphContainerRef = useRef();
   const stencilContainerRef = useRef();
   const subFileList = useRef({});  //  useState does not want to work with fileList, always showing empty object
-  const windowSize = useWindowSize();
-
   const [graphReady, setGraphReady] = useState(false);
   const [sync, setSync] = useState({ error: '', loading: false });
   const [configDialog, setConfigDialog] = useState({ ...defaultState });
@@ -153,6 +150,9 @@ function GraphX6({ readOnly = false, statuses }) {
 
     const response = await fetch('/api/dataflowgraph/deleteAsset', options);
     if (!response.ok) handleError(response);
+    // Delete from any scheduled records after deleted node.
+    const dependentNodes = graphRef.current.getNodes().filter(node=> node.data?.schedule?.dependsOn?.includes(nodeData.assetId));    
+    dependentNodes.forEach(node=> node.updateData({schedule:null}));
   }
 
   useEffect(() => {
@@ -465,6 +465,9 @@ function GraphX6({ readOnly = false, statuses }) {
 
   useEffect(() => {
     if (graphReady && readOnly === true && statuses?.length > 0) {
+      let fileMonitoringTemplate = graphRef.current.getNodes().find((node) => node.data.isMonitoring);
+      if (fileMonitoringTemplate) fileMonitoringTemplate.updateData({status:'wait'})
+
       let nodes = graphRef.current.getNodes().filter((node) => node.data.type === 'Job' || node.data.type === 'Sub-Process');
       nodes.forEach((node) => {
         const children = node.getChildren()
@@ -530,6 +533,12 @@ function GraphX6({ readOnly = false, statuses }) {
         cellData.isSuperFile = newAsset.isSuperFile ? true : false;
       }
 
+      if(newAsset.assetType === "FileTemplate"){
+        // when we add FileTemplate we will show only FileTemplate that has a file monitoring configured
+        // this flag will add a time icon and orange border to node.
+        cellData.isMonitoring = newAsset.isMonitoring; 
+      }
+
       if (newAsset.assetType === "Job"){
         cellData.jobType = newAsset.jobType;
         cellData.fetchingFiles = true;
@@ -541,16 +550,6 @@ function GraphX6({ readOnly = false, statuses }) {
       cell.updateData( cellData, { name: 'update-asset' } );
 
       try {
-        const options = {
-          method: 'POST',
-          headers: authHeader(),
-          body: JSON.stringify({ assetId: newAsset.id, dataflowId }),
-        };
-
-        /* this POST will create record in asset_dataflows table*/ 
-        const response = await fetch('/api/dataflow/saveAsset', options);
-        if (!response.ok) handleError(response);
-
         // Getting Job - File relations set up
         const jobtypes = ['Job', 'Modeling', 'Scoring', 'ETL', 'Query Build', 'Data Profile'];
 
@@ -680,7 +679,7 @@ function GraphX6({ readOnly = false, statuses }) {
   const updateAsset = async (asset) => {
     if (asset) {
       const cell = configDialog.cell;
-      if (cell.data.type === "Job" || cell.data.type === "File"){
+      if (cell.data.type === "Job" || cell.data.type === "File" || cell.data.type === "FileTemplate"){
         // if asset just got associated then we need to save it as new so it can get updated and fetch related files;
         if (!cell.data?.isAssociated && asset.isAssociated){
           // Cell is associated and renamed, new asset is created and assigned to this node, old asset should be removed from this dataflow
@@ -697,67 +696,85 @@ function GraphX6({ readOnly = false, statuses }) {
         }
       }
 
-      const existingScheduledEdge = cell.data?.schedule?.scheduleEdgeId;
-      const existingScheduledTime = cell.data?.schedule?.cron;
-
-      const newCellData = { title: asset.title, name: asset.name };
-      if (cell.data.type === 'Sub-Process') newCellData.description = asset.description;
-      /* updating cell will cause a POST request to '/api/dataflowgraph/save with latest nodes and edges*/
-      //add icons or statuses
-      // cell.updateData({ title: asset.title, scheduleType: asset.type }, { name: 'update-asset' });
-      if (asset.type === 'Predecessor') {
-
-        // find a graph node that will be a source and clicked node will be a targed, add an edge;
-        const sourceJobId = asset.jobs[0];
-        const sourceNode = configDialog.nodes.find((node) => node.assetId === sourceJobId);
-    
-        // there can be only one scheduled edge
-        // if edge is already exist then we should delete it and create a new one
-        if (existingScheduledEdge) graphRef.current.removeEdge(cell.data.schedule.scheduleEdgeId); 
-        
-        if (sourceNode) {
-          const newEdge = graphRef.current.addEdge({
-            target: cell,
-            source: sourceNode.nodeId,
-            attrs: {
-              line: {
-                strokeDasharray: '5 5', // WILL MAKE EDGE DASHED
-              },
-            }, 
-          });
-
-          newEdge.setData({scheduled: true});
-
-          newCellData.schedule = {
-            type: 'Predecessor',
-            scheduledAfter: sourceJobId,
-            scheduleEdgeId: newEdge.id,
-          };
-        }
-      }
-
-      if (asset.type === 'Time') {
-        newCellData.schedule = {
-          type: 'Time',
-          cron: asset.cron
-        };
-      }
-
-      // If node was removed from schedule we will remove edge
-      if (existingScheduledEdge && !asset.type) {
-        graphRef.current.removeEdge(cell.data.schedule.scheduleEdgeId);
-        newCellData.schedule = null;
-      }
-      
-      // remove time data from node if time schedule was removed
-      if (existingScheduledTime && !asset.type) {
-        newCellData.schedule = null;
-      }
-  
+      const newCellData = {
+        name: asset.name,
+        title: asset.title,
+        description: cell.data.type === 'Sub-Process' ?  asset.description : null
+      };
+       
       cell.updateData(newCellData, { name: 'update-asset' });
     }
     setConfigDialog({ ...defaultState }); // RESETS LOCAL STATE AND CLOSES DIALOG
   };
+
+  const addToSchedule = (schedule) =>{
+    // schedule :
+    //   type: Predecessor | Time | Template | ""
+    //   cron: cronExpression string | ""
+    //   dependsOn: [assetId] - cant be job | template
+    
+    const cell = configDialog.cell;
+    
+    const existingScheduledEdge = cell.data?.schedule?.scheduleEdgeId;
+    const existingScheduledTime = cell.data?.schedule?.cron;
+    
+    const newCellData ={};
+
+    // newCellData: {
+    //   schedule: {
+    //     cron: cronExpression string | ""
+    //     type: Predecessor | Time | Template | ""
+    //     dependsOn: [assetId] - cant be job | template
+    //     scheduleEdgeId?: string | undefined // graph edge Id 
+    //   } | NULL
+    // } 
+
+    if (schedule.type === 'Time') {
+      newCellData.schedule = schedule
+    }
+    
+    if (schedule.type === 'Predecessor' || schedule.type === 'Template') {
+      // find a graph node that will be a source and clicked node will be a targed, add an edge;
+      const sourceAssetId = schedule.dependsOn[0] //asset.dependsOn[0];
+      const sourceNode = configDialog.nodes.find((node) => node.assetId === sourceAssetId);
+  
+      // there can be only one scheduled edge
+      // if edge is already exist then we should delete it and create a new one
+      if (existingScheduledEdge) graphRef.current.removeEdge(cell.data.schedule.scheduleEdgeId); 
+      
+      if (sourceNode) {
+        const newEdge = graphRef.current.addEdge({
+          target: cell,
+          source: sourceNode.nodeId,
+          attrs: {
+            line: {
+              strokeDasharray: '5 5', // WILL MAKE EDGE DASHED
+            },
+          }, 
+        });
+
+        newEdge.setData({scheduled: true});
+
+        newCellData.schedule = {
+          ...schedule,
+          scheduleEdgeId: newEdge.id,
+        };
+      }
+    }
+        
+    // If node was removed from schedule we will remove edge
+    if (existingScheduledEdge && !schedule.type) {
+      graphRef.current.removeEdge(cell.data.schedule.scheduleEdgeId);
+      newCellData.schedule = null;
+    }
+    
+    // remove time data from node if time schedule was removed
+    if (existingScheduledTime && !schedule.type) {
+      newCellData.schedule = null;
+    }
+    
+    cell.updateData(newCellData, { name: 'update-asset' });
+  }
   
   const handleSync = async () => {
     const graphJSON = graphRef.current.toJSON({ diff: true });
@@ -769,7 +786,7 @@ function GraphX6({ readOnly = false, statuses }) {
           if (cell.shape === 'edge') {
             acc.edges.push(cell);
           } else {
-            // Add only Job that can produce files, ignore Manual Jobs
+            // Add only Job that can produce files, ignore Manual Jobs or  templates
             if (cell.data.type === 'Job' && cell.data.jobType !== 'Manual' && cell.data.assetId) {
               acc.jobsToServer.push({ id: cell.data.assetId, name: cell.data.name });
               acc.jobs.push(cell);
@@ -878,6 +895,7 @@ function GraphX6({ readOnly = false, statuses }) {
           selectedDataflow={{ id: dataflowId }}
           nodes={configDialog.nodes}
           onClose={updateAsset}
+          addToSchedule={addToSchedule}
           viewMode={readOnly} // THIS PROP WILL REMOVE EDIT OPTIONS FROM MODAL
           displayingInModal={true} // used for control button in modals
           selectedAsset={{ // all we know about clicked asset will be passed in selectedAsset prop
@@ -900,6 +918,7 @@ function GraphX6({ readOnly = false, statuses }) {
           dataflowId={dataflowId}
           applicationId={applicationId}
           assetType={configDialog.type}
+          nodes={configDialog.nodes}
         />
       );
     }
@@ -908,7 +927,7 @@ function GraphX6({ readOnly = false, statuses }) {
   return (
     <>
       <CustomToolbar graphRef={graphRef} handleSync={handleSync} isSyncing={sync.loading}  readOnly={readOnly}/>
-      <div className="graph-container" style={{height :  `${windowSize.outer.height-200}px`}}>
+      <div className="graph-container">
         {readOnly ? null : <div className="stencil" ref={stencilContainerRef} />}
         <div className={`${readOnly ? 'graph-container-readonly' : 'graph-container-stencil'}`} ref={graphContainerRef} />
         <div className="graph-minimap" ref={miniMapContainerRef} />

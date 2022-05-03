@@ -2,20 +2,23 @@ import React, { useEffect, useState } from 'react';
 
 import { Modal, Spin, Alert, Collapse } from 'antd/lib';
 import { authHeader, handleError } from '../AuthHeader';
+import { useSelector } from 'react-redux';
 
 const { Panel } = Collapse;
 
 const DeleteAssetModal = ({ asset, show, hide, onDelete }) => {
   const [isInDataflow, setIsInDataflow] = useState({ error: '', loading: false, data: [] });
+  const applicationId = useSelector((state) => state.applicationReducer?.application?.applicationId );
 
   useEffect(() => {
     if (!show) return;
     (async () => {
+      
       try {
         setIsInDataflow((prev) => ({ ...prev, loading: true, error: '' }));
         if (asset.type === 'Group') return; // dont do fetch data if we deleting folder
 
-        const response = await fetch(`/api/dataflow/checkAssetDataflows?assetId=${asset.id}`, { headers: authHeader(), });
+        const response = await fetch(`/api/dataflow/checkDataflows?application_id=${applicationId}&assetId=${asset.id}`, { headers: authHeader(), });
         if (!response.ok) handleError(response);
 
         const data = await response.json();    

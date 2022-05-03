@@ -1,18 +1,17 @@
 const express = require('express');
 const router = express.Router();
 var models  = require('../../models');
-let AssetDataflow = models.assets_dataflows;
+
 let DataflowGraph = models.dataflowgraph;
-const DependentJobs = models.dependent_jobs;
 let Dataflow = models.dataflow;
 let Job = models.job;
 let File = models.file;
 let Index = models.indexes;
+const hpccUtil = require('../../utils/hpcc-util');
+const FileMonitoring = models.fileMonitoring;
 const validatorUtil = require('../../utils/validator');
 const { body, query, validationResult } = require('express-validator');
 const JobScheduler = require('../../job-scheduler');
-
-
 
 router.get( '/',
   [
@@ -96,18 +95,28 @@ router.post('/deleteAsset',
     if (!errors.isEmpty()) return res.status(422).json({ success: false, errors: errors.array() });
 
     try {
-      const deleted = await AssetDataflow.destroy({
-        where: { dataflowId: req.body.dataflowId, assetId: req.body.assetId },
-      });
-      console.log('-deleted-----------------------------------------');
-      console.dir({ deleted }, { depth: null });
-      console.log('------------------------------------------');
-
       if (req.body.type === 'job') {
-        await JobScheduler.removeJobFromScheduler(
-          req.body.name + '-' + req.body.dataflowId + '-' + req.body.assetId
-        );
-        await DependentJobs.destroy({where : {jobId:req.body.assetId, dataflowId : req.body.dataflowId}})
+        await JobScheduler.removeJobFromScheduler( req.body.name + '-' + req.body.dataflowId + '-' + req.body.assetId );
+      }
+
+      if(req.body.type === 'filetemplate'){
+        /* If the asset type is file template, the depend on job is actually a fileMonitoring Id , not a file template id itself
+        1. find File Monitoring ID
+        2. Evaluate if it can be destroyed -> if not used by other Dataflows it can be destroyed
+        3. If not used by any other dataflows, abort wu in HPCC */
+        const fileMonitoring = await FileMonitoring.findOne({where : { fileTemplateId : req.body.assetId}});
+
+        if (fileMonitoring) {
+          if (fileMonitoring.metaData?.dataflows?.length > 1) {
+            const newDataFlowList = fileMonitoring.metaData.dataflows.filter((dfId) => dfId !== req.body.dataflowId);
+            await fileMonitoring.update({ metaData: { ...fileMonitoring.metaData, dataflows: newDataFlowList } });
+          } else {
+            const workUnitService = await hpccUtil.getWorkunitsService(fileMonitoring.cluster_id);
+            const WUactionBody = { Wuids: { Item: [fileMonitoring.wuid] }, WUActionType: 'Abort' };
+            await workUnitService.WUAction(WUactionBody); // Abort wu in hpcc
+            await fileMonitoring.destroy();
+          }
+        }
       }
       res.json({ result: 'success' });
     } catch (error) {

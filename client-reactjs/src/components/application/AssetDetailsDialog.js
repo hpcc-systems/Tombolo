@@ -8,7 +8,7 @@ import IndexDetailsForm from './IndexDetails';
 import QueryDetailsForm from './QueryDetails';
 import SubProcessDetails from './SubProcessDetails';
 
-function AssetDetailsDialog(props) {
+function AssetDetailsDialog(props) {  
   
   const capitalize = (word) => {
     if (!word || typeof word !== 'string') return '';

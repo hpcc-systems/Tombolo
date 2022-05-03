@@ -5,7 +5,7 @@ let File = models.file;
 let FileLayout = models.file_layout;
 let Sequelize = require('sequelize');
 const Op = Sequelize.Op;
-let AssetDataflow = models.assets_dataflows;
+
 let Indexes=models.indexes;
 let IndexKey=models.index_key;
 let IndexPayload=models.index_payload;
@@ -16,6 +16,8 @@ let Jobparam=models.jobparam;
 let Application=models.application;
 let ControlsAndRegulations = models.controls_regulations;
 let Dataflow = models.dataflow;
+let DataflowGraph = models.dataflowgraph;
+
 const { body, query, validationResult } = require('express-validator');
 const validatorUtil = require('../../utils/validator');
 
@@ -313,59 +315,58 @@ router.get('/getReport', (req, res) => {
     }
 });
 
-router.get('/associatedDataflows', [
-  query('assetId').optional({checkFalsy:true}).isUUID(4).withMessage('Invalid asset id'),
-  query('type')
-    .matches(/^[a-zA-Z]{1}[a-zA-Z0-9_:\-]*$/).withMessage('Invalid type')
-], async (req, res) => {
-    const errors = validationResult(req).formatWith(validatorUtil.errorFormatter);
-    if (!errors.isEmpty()) {
-      return res.status(422).json({ success: false, errors: errors.array() });
+router.get( '/associatedDataflows',
+    [
+      query('assetId').optional({ checkFalsy: true }).isUUID(4).withMessage('Invalid asset id'),
+      query('type')
+        .matches(/^[a-zA-Z]{1}[a-zA-Z0-9_:\-]*$/)
+        .withMessage('Invalid type'),
+    ],
+    async (req, res) => {
+      const errors = validationResult(req).formatWith(validatorUtil.errorFormatter);
+      if (!errors.isEmpty()) {
+        return res.status(422).json({ success: false, errors: errors.array() });
+      }
+  
+      console.log('[/associatedDataflows] - Get associated dataflows for : ' + req.query.assetId);
+  
+      try {
+        const { application_id, assetId } = req.query;
+  
+        const dataflows = await Dataflow.findAll({
+          where: { application_id },
+          attributes: ['id', 'title', 'clusterId', 'description'],
+          include: { model: DataflowGraph, attributes: ['graph'] },
+        });
+  
+        const inDataflows = [];
+  
+        for (const dataflow of dataflows) {
+          const cells = dataflow.dataflowgraph?.graph?.cells;
+          if (cells) {
+            const asset = cells.find((cell) => cell.data?.assetId === assetId);
+            if (asset) {
+              inDataflows.push({
+                application_id,
+                id: dataflow.id,
+                title: dataflow.title,
+                description: dataflow.description,
+                clusterId: dataflow.clusterId,
+              });
+            }
+          }
+        }        
+  
+        res.send(inDataflows);
+      } catch (error) {
+        console.log('-error-----------------------------------------');
+        console.dir({ error }, { depth: null });
+        console.log('------------------------------------------');
+  
+        res.status(500).send('Error occurred while checking asset in dataflows');
+      }
     }
-
-    console.log("[/associatedDataflows] - Get associated dataflows for : "+req.query.assetId);
-    let assetId = req.query.assetId, type = req.query.type, results, dataflowDetails;
-    let promiseResult;
-    try {
-      let dataflowIds = await AssetDataflow.findAll({
-        where: {assetId: assetId},
-        attributes:['dataflowId']
-      });
-      dataflowDetails = await getDataflowDetails(dataflowIds);
-      res.json(dataflowDetails);
-    } catch (err) {
-        console.log('err', err);
-    }
-});
-
-function getDataflowDetails (dataflowIds) {
-  let ids = [];
-  dataflowIds.forEach((item) => {
-    ids.push(item.dataflowId);
-  })
-  return Dataflow.findAll({raw: true, where: {
-    id: {
-      [Sequelize.Op.in]: ids
-    }
-  }})
-  .catch(function(err) {
-      console.log(err);
-  });
-}
-
-function getApplicationDetails (applicationIds) {
-  let ids = [];
-  applicationIds.forEach((item) => {
-    ids.push(item.applicationId);
-  })
-  return Application.findAll({raw: true, where: {
-    id: {
-      [Sequelize.Op.in]: ids
-    }
-  }})
-  .catch(function(err) {
-      console.log(err);
-  });
-}
+  );
+  
 
 module.exports = router;

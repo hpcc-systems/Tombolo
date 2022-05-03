@@ -33,6 +33,10 @@ module.exports = (sequelize, DataTypes) => {
       allowNull: false
     },
     description: DataTypes.TEXT,
+    metaData : {
+      type: DataTypes.JSON,
+      allowNull : true
+    }
   }, {paranoid: true, freezeTableName: true});
   fileTemplate.associate = function(models) {
     // Define association here

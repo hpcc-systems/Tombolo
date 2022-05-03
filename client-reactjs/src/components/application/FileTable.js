@@ -41,7 +41,7 @@ class FileTable extends Component {
 
   fetchDataAndRenderTable() {
     var _self=this;
-    fetch("/api/file/read/file_list?app_id="+this.state.applicationId, {
+    fetch("/api/file/read/file_list?application_id="+this.state.applicationId, {
         headers: authHeader()
     })
     .then((response) => {

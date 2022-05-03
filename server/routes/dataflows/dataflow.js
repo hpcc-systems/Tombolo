@@ -1,15 +1,13 @@
 const express = require('express');
 const router = express.Router();
 var models  = require('../../models');
-let AssetDataflow = models.assets_dataflows;
+
 let Dataflow = models.dataflow;
 let DataflowGraph = models.dataflowgraph;
 let Cluster = models.cluster;
 let Index = models.indexes;
 let File = models.file;
 let Job = models.job;
-let DependentJobs = models.dependent_jobs;
-let JobExecution = models.job_execution;
 const Dataflow_cluster_credentials = models.dataflow_cluster_credentials;
 const validatorUtil = require('../../utils/validator');
 const { body, query, validationResult } = require('express-validator');
@@ -106,26 +104,6 @@ router.post(
   }
 );
 
-router.post('/saveAsset', (req, res) => {
-  AssetDataflow.findOne({
-    where: {
-      assetId: req.body.assetId,
-      dataflowId: req.body.dataflowId
-    }
-  }).then(async assetDataflow => {
-    if (assetDataflow === null) {
-      assetDataflow = await AssetDataflow.create({
-        assetId: req.body.assetId,
-        dataflowId: req.body.dataflowId
-      });
-      console.log(`assetDataflow created: ${JSON.stringify(assetDataflow.dataValues)}`);
-      return res.json({ success: true, message: `asset ${assetDataflow.assetId} added to dataflow ${assetDataflow.dataflowId}` });
-    }
-    console.log(`assetDataflow found: ${JSON.stringify(assetDataflow.dataValues)}`);
-    return res.json({ success: true, message: `asset ${assetDataflow.assetId} already associated to dataflow ${assetDataflow.dataflowId}` });
-  });
-});
-
 router.get('/', [
   query('application_id')
     .isUUID(4).withMessage('Invalid cluster id'),
@@ -174,10 +152,7 @@ router.post( '/delete',
 
     try {
       await Promise.all([
-        jobScheduler.removeAllDataflowJobs(req.body.dataflowId),
-        // JobExecution.destroy({ where: { dataflowId: req.body.dataflowId } }), // !! will delete all job executions of this dataflow
-        AssetDataflow.destroy({ where: { dataflowId: req.body.dataflowId } }),
-        DependentJobs.destroy({ where: { dataflowId: req.body.dataflowId } }),
+        jobScheduler.removeAllFromBree(req.body.dataflowId),
         Dataflow.destroy({ where: { id: req.body.dataflowId, application_id: req.body.applicationId } }),
         DataflowGraph.destroy({ where: { dataflowId: req.body.dataflowId, application_id: req.body.applicationId } }),
       ]);
@@ -309,25 +284,35 @@ router.get('/assets', [
   */
 });
 
-router.get( '/checkAssetDataflows',
-  [query('assetId').isUUID(4).withMessage('Invalid assetId')],
+router.get( '/checkDataflows',
+  [query('assetId').isUUID(4).withMessage('Invalid assetId'),
+  query('application_id').isUUID(4).withMessage('Invalid application_Id')],
   async (req, res) => {
     const errors = validationResult(req).formatWith(validatorUtil.errorFormatter);
     if (!errors.isEmpty()) return res.status(422).json({ success: false, errors: errors.array() });
 
     try {
-
-      const assetsInDataflows = await AssetDataflow.findAll({
-         where: { assetId: req.query.assetId },
-         attributes:["dataflowId"]
-        });
+      const {assetId, application_id} = req.query;
 
       const dataflows = await Dataflow.findAll({
-        where:{ id: assetsInDataflows.map(ad => ad.dataflowId) },
-        attributes:['id','application_id','title']
+        where: { application_id },
+        attributes: ['id', 'title'],
+        include: { model: DataflowGraph, attributes: ['graph'] },
       });
       
-      res.send(dataflows);
+      const inDataflows = [];
+
+      for (const dataflow of dataflows) {
+        const cells = dataflow.dataflowgraph?.graph?.cells;
+        if (cells) {
+          const asset = cells.find(cell => cell.data?.assetId === assetId )
+          if (asset){
+            inDataflows.push({dataflowId: dataflow.id, title: dataflow.title });
+          }
+        }
+      }
+      
+      res.send(inDataflows);
     } catch (error) {
       console.log('-error-----------------------------------------');
       console.dir({error}, { depth: null });

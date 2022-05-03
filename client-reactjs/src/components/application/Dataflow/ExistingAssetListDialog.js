@@ -6,7 +6,7 @@ import { useSelector } from 'react-redux';
 import { hasEditPermission } from '../../common/AuthUtil.js';
 import { Constants } from '../../common/Constants';
 
-function ExistingAssetListDialog({ show, applicationId, dataflowId, clusterId, assetType, onClose }) {
+function ExistingAssetListDialog({ show, applicationId, clusterId, assetType, onClose, nodes }) {
   const [assets, setAssets] = useState([]);
   const authReducer = useSelector((state) => state.authenticationReducer);
   const editingAllowed = hasEditPermission(authReducer.user);
@@ -15,9 +15,10 @@ function ExistingAssetListDialog({ show, applicationId, dataflowId, clusterId, a
   useEffect(() => {
     if (applicationId) {
       (async () => {
-        const queryParams = `app_id=${applicationId}&dataflowId=${dataflowId}&clusterId=${clusterId}`;
+        const queryParams = `application_id=${applicationId}&cluster_id=${clusterId}`;
         const options = {
           File: `/api/file/read/file_list?${queryParams}`,
+          FileTemplate : `/api/fileTemplate/read/fileTemplate_list?${queryParams}`,
           Index: `/api/index/read/index_list?${queryParams}`,
           Job: `/api/job/job_list?${queryParams}`, //  'Job'- 'Modeling'- 'Scoring'- 'ETL'- 'Query Build'- 'Data Profile'
           default: `/api/job/job_list?${queryParams}`,
@@ -29,7 +30,11 @@ function ExistingAssetListDialog({ show, applicationId, dataflowId, clusterId, a
           const response = await fetch(url, { headers: authHeader() });
           if (!response.ok) handleError(response);
           const data = await response.json();
-          setAssets(data);
+          
+          const existingAssetsIds = nodes.map(node=> node.assetId);
+          const availableAssets = data.filter(asset => !existingAssetsIds.includes(asset.id));
+          
+          setAssets(availableAssets);
         } catch (error) {
           console.log(`error`, error);
           message.error('Could not download assets list');
@@ -120,7 +125,6 @@ function ExistingAssetListDialog({ show, applicationId, dataflowId, clusterId, a
               onClose({
                 ...record,
                 assetType,
-                isAssociated: record?.metaData?.isAssociated ? true: false,
               });
             }}
           >
@@ -146,7 +150,7 @@ function ExistingAssetListDialog({ show, applicationId, dataflowId, clusterId, a
       title: 'Production',
       width: '20%',
       render: (text, record) => {
-        return record?.metaData?.isAssociated ? 'Yes' : 'No'
+        return record.isAssociated ? 'Yes' : 'No'
       }
     };
     assetColumns.splice(2, 0, isJobAssociated);
