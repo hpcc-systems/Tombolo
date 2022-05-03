@@ -129,9 +129,10 @@ class Node extends React.Component {
 
   schedule = {
     Time: <HourglassOutlined />,
-    Predecessor: <LinkOutlined />,
+    Predecessor: <LinkOutlined />, // Template & Predecessor has same icons but behaves different with scheduling
+    Template: <LinkOutlined />,
     Message: <MessageOutlined />,
-    Template : <FieldTimeOutlined />
+    Monitoring : <FieldTimeOutlined />,
   };
 
   entities = {
@@ -147,9 +148,9 @@ class Node extends React.Component {
   render() {
     const { node, graph, handleContextMenu, disableContextMenu } = this.props;
     const data = node?.getData();
-    let { type, title, status = '', schedule, jobType, isSuperFile, isStencil, isCollapsed, isAssociated, fetchingFiles } = data;
+    let { type, title, status = '', schedule, jobType, isSuperFile, isStencil, isCollapsed, isAssociated, isMonitoring, fetchingFiles } = data;
     const notAssociated  = (type === "Job" || type === "File" || type ===  "FileTemplate") && !isAssociated && !isStencil ? "no-asset" : ""
-    
+
     const showTitle = (title) => {
       const limit = 14;
       if (title.length > limit) {
@@ -197,6 +198,7 @@ class Node extends React.Component {
           <Tooltip title={title} mouseEnterDelay={1.4} mouseLeaveDelay={0.1}>
             <div className={`node-icon ${type} status-${status} ${notAssociated}`}>{this.entities[type]}</div>
             {schedule?.type ? <div className="node-schedule">{this.schedule[schedule.type]}</div> : null}
+            {isMonitoring ? <div className="node-schedule">{this.schedule['Monitoring']}</div> : null}
             {/* {type === "Sub-Process" && <PlusCircleOutlined className='subprocess-collapse' onClick={() => handleContextMenu('toggleSubProcess', { node }) }/> } */}
             <div className="node-title">{showTitle(title)}</div>
           </Tooltip>
