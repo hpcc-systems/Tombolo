@@ -2,6 +2,9 @@ const express = require('express');
 const router = express.Router();
 const { body, query, validationResult } = require('express-validator');
 
+let Sequelize = require('sequelize');
+const Op = Sequelize.Op;
+
 const models = require('../../models');
 const FileTemplate = models.fileTemplate;
 const FileMonitoring = models.fileMonitoring;
@@ -77,7 +80,7 @@ router.post('/saveFileTemplate', [
 
 // GET FILE TEMPLATE LIST THAT ARE NOT ALREADY ADDED IN THE DATAFLOW
 router.get('/fileTemplate_list', [
-  query('app_id')
+  query('application_id')
     .isUUID(4).withMessage('Invalid application id'),
   query('dataflowId')
     .isUUID(4).optional({nullable: true}).withMessage('Invalid dataflow id'),
@@ -89,28 +92,42 @@ router.get('/fileTemplate_list', [
       return res.status(422).json({ success: false, errors: errors.array() });
     }
 
-    try{     
-       let query = 'select t.id, t.title, t.metaData, t.description, t.createdAt from filetemplate t where t.deletedAt is null and t.id not in (select ad.assetId from assets_dataflows ad where  ad.dataflowId = (:dataflowId) and ad.deletedAt is null) and t.application_id = (:applicationId) and (t.cluster_id = (:clusterId))';
-       let replacements = { applicationId: req.query.app_id, clusterId: req.query.clusterId, dataflowId : req.query.dataflowId};
-       let existingTemplates = await models.sequelize.query(query, {
-          type: models.sequelize.QueryTypes.SELECT,
-          replacements: replacements});
+    try {
+      const {application_id , cluster_id} = req.query;
+      const assets = await FileTemplate.findAll({
+        where:{
+          application_id,
+          [Op.or]: [
+            { cluster_id },
+            { cluster_id : null }
+          ]
+        },
+        attributes:['id', 'title', 'metaData', 'description', 'createdAt']
+      });
+  
+      const assetList = assets.reduce( (acc, asset) => {
+        const parsed = asset.toJSON();
+        if(parsed.metaData?.fileMonitoringTemplate){
 
-        const result = []
-        existingTemplates.forEach(item => {
-          if(item.metaData.fileMonitoringTemplate){
-            const temp  = {
-              id: item.id, name : item.title, title : item.title, description : item.description, metaData : item.metaData, createdAt : item.createdAt
-            }
-            result.push(temp)
+          const template  = {
+            ...parsed,
+            name: parsed.title,
+            isAssociated: true,
+            isMonitoring: true
           }
-        })
-         res.status(200).json(result)
-    }catch(err){
-      console.log(err)
-      res.status(500).json({success : false, message : "Error occurred while fetching templates"})
-    }
-  })
+
+          delete template.metaData;
+          acc.push(template)
+        }
+        return acc;
+      },[])
+  
+      res.json(assetList);
+    } catch (error) {
+      console.log(error);
+      res.status(500).json({ success: false, message: "Error occurred while retrieving assets" });  }
+  }  
+)
 
 router.post('/getFileTemplate',  [
     body('id')
