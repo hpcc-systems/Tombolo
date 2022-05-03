@@ -31,7 +31,7 @@ module.exports = {
         type: Sequelize.STRING
       }, 
       sampleLayoutFile:{
-        allowNull: false,
+        allowNull: true,
          type: Sequelize.STRING
       },
       createdAt: {
