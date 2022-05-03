@@ -22,7 +22,7 @@ export function groupsReducer(state = initialState, action) {
       case Constants.FETCH_GROUPS_TREE_ERROR:
         return { ...state, loading: false, error: action.payload };
       case Constants.EMPTY_GROUPS_TREE:{
-        return {...state, tree : []}
+        return {...initialState}
       }
 
     default:
