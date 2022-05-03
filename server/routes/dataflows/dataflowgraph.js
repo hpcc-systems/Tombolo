@@ -93,7 +93,7 @@ router.post('/deleteAsset',
   async (req, res) => {
     const errors = validationResult(req).formatWith(validatorUtil.errorFormatter);
     if (!errors.isEmpty()) return res.status(422).json({ success: false, errors: errors.array() });
-    console.log(req.body.type, '<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<< Type')
+
     try {
       if (req.body.type === 'job') {
         await JobScheduler.removeJobFromScheduler( req.body.name + '-' + req.body.dataflowId + '-' + req.body.assetId );
