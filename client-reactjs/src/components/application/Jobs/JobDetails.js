@@ -84,9 +84,6 @@ class JobDetails extends Component {
     await this.getJobDetails({ assetId, applicationId });
   }
   
-    if (this.props.scheduleType === 'Predecessor') {
-      this.handleScheduleTypeSelect('Predecessor');
-    }
     //Getting global state
     this.handleViewOnlyMode();
   }
@@ -435,7 +432,6 @@ class JobDetails extends Component {
     
         metaData, // all fields related to github,messaging, etc. is stored here as JSON
         cluster_id: formFields.clusters || null, //keep value as null so dataflows can find this asset if no cluster selected.
-        dataflowId: this.props.selectedDataflow?.id || '', // THIS VALUE IS NOT SAVED ON JOB OBJECT BUT IS USED TO REMOVE OR ADD JOB TO SCHEDULE!
         application_id: this.props.application.applicationId,
         groupId: this.props.groupId || this.state.job.groupId || '',
       },
@@ -895,7 +891,7 @@ class JobDetails extends Component {
                  nodes={this.props.nodes}
                  readOnly={this.props.viewMode}
                  editingAllowed={editingAllowed}
-                 scheduleNode={this.props.scheduleNode} // method passed from graph to add schedule to graph
+                 addToSchedule={this.props.addToSchedule} // method passed from graph to add schedule to graph
                  selectedAsset={this.props.selectedAsset}
                  dataflowId={this.props.selectedDataflow?.id}
                  applicationId={this.props.application?.applicationId || this.props.match?.params?.applicationId}
