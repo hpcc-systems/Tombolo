@@ -132,7 +132,7 @@ const createOrUpdateFile = async ({jobfile, jobId, clusterId, dataflowId, applic
 const deleteJob = async (jobId, application_id) =>{
  return await Promise.all([
     Job.destroy({ where: { id: jobId, application_id} }),
-    JobScheduler.removeAllFromBree(props.id),
+    JobScheduler.removeAllFromBree(jobId),
     JobFile.destroy({ where: { job_id: jobId } }),
     JobParam.destroy({ where: { job_id: jobId } }),
   ]);
@@ -906,12 +906,11 @@ router.post( '/delete',
       return res.status(422).json({ success: false, errors: errors.array() });
     }
     console.log('[delete/read.js] - delete job = ' + req.body.jobId + ' appId: ' + req.body.application_id);
-
     try {
       await deleteJob(req.body.jobId,req.body.application_id);
       res.json({ result: 'success' });
     } catch (error) {
-      console.log(err);
+      console.log(error);
       return res.status(500).json({ success: false, message: 'Error occured while deleting the job' });
     }
   }
