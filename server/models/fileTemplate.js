@@ -26,13 +26,16 @@ module.exports = (sequelize, DataTypes) => {
     },
     sampleLayoutFile : {
       type : DataTypes.STRING,
-      allowNull : false
+      allowNull : true
     },
     cluster_id: {
       type : DataTypes.STRING,
       allowNull: false
     },
-    description: DataTypes.TEXT,
+    description:{
+      type: DataTypes.TEXT,
+      allowNull : true
+    },
     metaData : {
       type: DataTypes.JSON,
       allowNull : true
