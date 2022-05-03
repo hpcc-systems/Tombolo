@@ -77,7 +77,7 @@ export default class Event {
                         const isFileOrTemplate = source.data.type === 'File' || source.data.type === 'FileTemplate';
                         if (isFileOrTemplate) {
                           const connectedEdges = graph.getConnectedEdges(source);
-                          if (connectedEdges.length === 1) {
+                          if (connectedEdges.length === 1 && !source.data.isMonitoring) {
                             source.remove();
                           }
                         }
@@ -92,7 +92,7 @@ export default class Event {
                         const isFileOrTemplate = target.data.type === 'File' || target.data.type ===  'FileTemplate';
                         if (isFileOrTemplate) {
                           const connectedEdges = graph.getConnectedEdges(target);
-                          if (connectedEdges.length === 1) {
+                          if (connectedEdges.length === 1 && !target.data.isMonitoring) {
                             target.remove();
                           }
                         }
