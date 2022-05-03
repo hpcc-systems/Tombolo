@@ -153,6 +153,9 @@ function GraphX6({ readOnly = false, statuses }) {
 
     const response = await fetch('/api/dataflowgraph/deleteAsset', options);
     if (!response.ok) handleError(response);
+    // Delete from any scheduled records after deleted node.
+    const dependentNodes = graphRef.current.getNodes().filter(node=> node.data?.schedule?.dependsOn?.includes(nodeData.assetId));    
+    dependentNodes.forEach(node=> node.updateData({schedule:null}));
   }
 
   useEffect(() => {
@@ -465,8 +468,8 @@ function GraphX6({ readOnly = false, statuses }) {
 
   useEffect(() => {
     if (graphReady && readOnly === true && statuses?.length > 0) {
-      let template = graphRef.current.getNodes().find((node) => node.data.type === 'FileTemplate' );
-      if (template) template.updateData({status:'wait'})
+      let fileMonitoringTemplate = graphRef.current.getNodes().find((node) => node.data.isMonitoring);
+      if (fileMonitoringTemplate) fileMonitoringTemplate.updateData({status:'wait'})
 
       let nodes = graphRef.current.getNodes().filter((node) => node.data.type === 'Job' || node.data.type === 'Sub-Process');
       nodes.forEach((node) => {
@@ -531,6 +534,12 @@ function GraphX6({ readOnly = false, statuses }) {
 
       if(newAsset.assetType === "File"){
         cellData.isSuperFile = newAsset.isSuperFile ? true : false;
+      }
+
+      if(newAsset.assetType === "FileTemplate"){
+        // when we add FileTemplate we will show only FileTemplate that has a file monitoring configured
+        // this flag will add a time icon and orange border to node.
+        cellData.isMonitoring = newAsset.isMonitoring; 
       }
 
       if (newAsset.assetType === "Job"){
@@ -701,7 +710,7 @@ function GraphX6({ readOnly = false, statuses }) {
     setConfigDialog({ ...defaultState }); // RESETS LOCAL STATE AND CLOSES DIALOG
   };
 
-  const scheduleNode = (schedule) =>{
+  const addToSchedule = (schedule) =>{
     // schedule :
     //   type: Predecessor | Time | Template | ""
     //   cron: cronExpression string | ""
@@ -889,7 +898,7 @@ function GraphX6({ readOnly = false, statuses }) {
           selectedDataflow={{ id: dataflowId }}
           nodes={configDialog.nodes}
           onClose={updateAsset}
-          scheduleNode={scheduleNode}
+          addToSchedule={addToSchedule}
           viewMode={readOnly} // THIS PROP WILL REMOVE EDIT OPTIONS FROM MODAL
           displayingInModal={true} // used for control button in modals
           selectedAsset={{ // all we know about clicked asset will be passed in selectedAsset prop
