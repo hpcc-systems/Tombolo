@@ -435,7 +435,7 @@ const ScheduleTab = ({ nodes, dataflowId, applicationId, selectedAsset, addToSch
   };
 
   const handleScheduleTypeSelect = (type) => {
-    setOptions((prev) => ({ ...prev, selectedScheduleType : type , schedulePredecessor: [] }));
+    setOptions((prev) => ({ ...prev, selectedScheduleType : type }));
   };
 
   useEffect(() => {
@@ -486,7 +486,7 @@ const ScheduleTab = ({ nodes, dataflowId, applicationId, selectedAsset, addToSch
               disabled={!selectedAsset.isAssociated}
               placeholder="Select a schedule type"
               allowClear
-              onClear={() => setOptions((prev) => ({ ...prev, selectedScheduleType: '', schedulePredecessor:[] }))}
+              onClear={() => setOptions((prev) => ({ ...prev, selectedScheduleType: '' }))}
               onSelect={(value) => { handleScheduleTypeSelect(value) }}
               value={options.selectedScheduleType ? options.selectedScheduleType : null}>
               <Select.Option value="Time">Timer based (run at specific interval)</Select.Option>

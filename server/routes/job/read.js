@@ -603,7 +603,9 @@ router.post('/schedule_job',
             metaData: { dataflows: [dataflowId] },
           });
 
-          fileMonitoringJobId = fileMonitoring.id;
+          console.log('--MONITORING CREATED----------------------------------------');
+          console.dir({ wuid: wuId, fileMonitoring: fileMonitoring.id }, { depth: null });
+          console.log('------------------------------------------');
 
         } else {
           let newMetaData = {
@@ -612,6 +614,9 @@ router.post('/schedule_job',
           }; // Dataflows using the same file monitoring WU
 
           await FileMonitoring.update({ metaData: newMetaData }, { where: { id: fileMonitoringWU.id } });
+          console.log('--MONITORING UPDATED----------------------------------------');
+          console.dir({ wuid: fileMonitoringWU.wuid, fileMonitoring: fileMonitoringWU.id }, { depth: null });
+          console.log('------------------------------------------');
         }
       }
 
@@ -688,11 +693,17 @@ router.post('/schedule_job',
             if (fileMonitoring.metaData?.dataflows?.length > 1) {
               const newDataFlowList = fileMonitoring.metaData.dataflows.filter((dfId) => dfId !== dataflowId);
               await fileMonitoring.update({ metaData: { ...fileMonitoring.metaData, dataflows: newDataFlowList } });
-            } else {
+              console.log('--MONITORING UPDATED----------------------------------------');
+              console.dir({ wuid: fileMonitoring.wuid, fileMonitoring: fileMonitoring.id }, { depth: null });
+              console.log('------------------------------------------');
+            } else {  
               const workUnitService = await hpccUtil.getWorkunitsService(fileMonitoring.cluster_id);
               const WUactionBody = { Wuids: { Item: [fileMonitoring.wuid] }, WUActionType: 'Abort' };
               await workUnitService.WUAction(WUactionBody); // Abort wu in hpcc
               await fileMonitoring.destroy();
+              console.log('---MONITORING REMOVED---------------------------------------');
+              console.dir({wuid:fileMonitoring.wuid, fileMonitoring: fileMonitoring.id }, { depth: null });
+              console.log('------------------------------------------');
             }
           }
         }
