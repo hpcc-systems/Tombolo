@@ -17,7 +17,7 @@ import {
   MessageOutlined,
   MailOutlined,
   ProfileOutlined,
-  FieldTimeOutlined
+  FileSearchOutlined
 } from '@ant-design/icons/lib/icons';
 
 import { Menu, Dropdown } from '@antv/x6-react-components';
@@ -132,7 +132,6 @@ class Node extends React.Component {
     Predecessor: <LinkOutlined />, // Template & Predecessor has same icons but behaves different with scheduling
     Template: <LinkOutlined />,
     Message: <MessageOutlined />,
-    Monitoring : <FieldTimeOutlined />,
   };
 
   entities = {
@@ -140,6 +139,7 @@ class Node extends React.Component {
     File: <FileOutlined />,
     SuperFile: <FileAddOutlined />,
     FileTemplate : <ProfileOutlined />,
+    Monitor: <FileSearchOutlined />,
     Index: <BookOutlined />,
     Manual: <MailOutlined />,
     'Sub-Process': <SisternodeOutlined />,
@@ -162,6 +162,7 @@ class Node extends React.Component {
 
     if (jobType === 'Manual') type = 'Manual'; // Show different icon for Manual job
     if (isSuperFile) type = 'SuperFile';// Show different icon for SuperFile
+    if (isMonitoring) type = 'Monitor'; // used for fileTemplateMonitoring, shows different icon and background
 
     const getMenu = (nodeType) => {
       const dialogMenuItemText = isAssociated ? 'Show details' : 'Associate with asset';
@@ -196,9 +197,10 @@ class Node extends React.Component {
       return (
         <div className={`node-outer`}>
           <Tooltip title={title} mouseEnterDelay={1.4} mouseLeaveDelay={0.1}>
-            <div className={`node-icon ${type} status-${status} ${notAssociated}`}>{this.entities[type]}</div>
+            <div className={`node-icon ${type} status-${status} ${notAssociated}`}>
+              {this.entities[type]}
+            </div>
             {schedule?.type ? <div className="node-schedule">{this.schedule[schedule.type]}</div> : null}
-            {isMonitoring ? <div className="node-schedule">{this.schedule['Monitoring']}</div> : null}
             {/* {type === "Sub-Process" && <PlusCircleOutlined className='subprocess-collapse' onClick={() => handleContextMenu('toggleSubProcess', { node }) }/> } */}
             <div className="node-title">{showTitle(title)}</div>
           </Tooltip>
