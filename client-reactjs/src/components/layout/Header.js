@@ -103,8 +103,6 @@ class AppHeader extends Component {
             this.setState({ applications });
             //this.handleRef();
             this.debouncedHandleRef();
-            this.props.dispatch(applicationActions.getClusters());
-            this.props.dispatch(applicationActions.getConsumers())
           } else {
             this.openHelpNotification();
           }
@@ -115,6 +113,12 @@ class AppHeader extends Component {
     }
 
     componentDidUpdate(prevProps, prevState) {
+
+      if (this.props.application?.applicationId && !prevProps.application?.applicationId && this.props.clusters.length === 0) {
+        this.props.dispatch(applicationActions.getClusters());
+        this.props.dispatch(applicationActions.getConsumers());
+      }
+
       if(this.props.newApplication) {
         let applications = this.state.applications;
         let isNewApplicationInList = (applications.filter(application => application.value == this.props.newApplication.applicationId).length > 0);
@@ -425,10 +429,11 @@ class AppHeader extends Component {
 
 function mapStateToProps(state) {
     const { loggingIn, user } = state.authenticationReducer;
-    const { application, selectedTopNav, newApplication, updatedApplication, deletedApplicationId } = state.applicationReducer;
+    const { application, clusters,  selectedTopNav, newApplication, updatedApplication, deletedApplicationId } = state.applicationReducer;
     return {
         loggingIn,
         user,
+        clusters,
         application,
         selectedTopNav,
         newApplication,
