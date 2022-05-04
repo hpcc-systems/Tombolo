@@ -115,6 +115,9 @@ router.post('/deleteAsset',
             const WUactionBody = { Wuids: { Item: [fileMonitoring.wuid] }, WUActionType: 'Abort' };
             await workUnitService.WUAction(WUactionBody); // Abort wu in hpcc
             await fileMonitoring.destroy();
+            console.log('---MONITORING REMOVED---------------------------------------');
+            console.dir({wuid:fileMonitoring.wuid, fileMonitoring: fileMonitoring.id }, { depth: null });
+            console.log('------------------------------------------');
           }
         }
       }
