@@ -3,7 +3,7 @@ const models = require('./models');
 var path = require('path');
 const Job = models.job;
 const MessageBasedJobs = models.message_based_jobs;
-const DataflowGraph = models.dataflowgraph;
+
 const Dataflow = models.dataflow;
 const Cluster = models.cluster;
 const { v4: uuidv4 } = require('uuid');
@@ -64,10 +64,10 @@ class JobScheduler {
 
   async scheduleCheckForJobsWithSingleDependency({ dependsOnJobId, dataflowId, jobExecutionGroupId }) {
     try {
-      const dataflowGraph = await DataflowGraph.findOne({ where: { dataflowId } });
-      if (!dataflowGraph) throw new Error('Dataflow does not exist');
+      const dataflow = await Dataflow.findOne({ where: { id: dataflowId }, attributes: [" graph "] });
+      if (!dataflow) throw new Error('Dataflow does not exist');
 
-      const dependantJobs = dataflowGraph.graph.cells.reduce((acc, cell) => {
+      const dependantJobs = dataflow.graph.cells.reduce((acc, cell) => {
         if (cell?.data?.schedule?.dependsOn?.includes(dependsOnJobId))
           acc.push({ jobId: cell.data.assetId });
         return acc;
@@ -171,11 +171,11 @@ class JobScheduler {
 
   async scheduleActiveCronJobs() {
     try {
-      // get all dataflowsGraphs
-      const dataflowsGraphs = await DataflowGraph.findAll();
+      // get all graphs
+      const dataflows = await Dataflow.findAll( { attributes: ['graph'] });
 
-      for (const dataflowsGraph of dataflowsGraphs) {
-        const cronScheduledNodes = dataflowsGraph.graph?.cells?.filter((cell) => cell.data?.schedule?.cron) || [];
+      for (const dataflow of dataflows) {
+        const cronScheduledNodes = dataflow.graph?.cells?.filter((cell) => cell.data?.schedule?.cron) || [];
         if (cronScheduledNodes.length > 0) {
           for (const node of cronScheduledNodes) {
             try {

@@ -3,7 +3,7 @@ const router = express.Router();
 var models  = require('../../models');
 
 let Dataflow = models.dataflow;
-let DataflowGraph = models.dataflowgraph;
+
 let Cluster = models.cluster;
 let Index = models.indexes;
 let File = models.file;
@@ -15,8 +15,7 @@ const jobScheduler = require('../../job-scheduler');
 const {isClusterReachable} = require('../../utils/hpcc-util');
 const {encryptString, decryptString} = require('../../utils/cipher')
 
-router.post(
-  '/save',
+router.post( '/save',
   [
     body('id').optional({ checkFalsy: true }).isUUID(4).withMessage('Invalid dataflow id'),
     body('application_id').isUUID(4).withMessage('Invalid application id'),
@@ -122,6 +121,9 @@ router.get('/', [
         Dataflow.findAll(
           {
             where: searchParams,
+            attributes: {
+              exclude: ['graph']
+            },
             include: {model : Dataflow_cluster_credentials,
                       attributes: {exclude: ['cluster_hash']}},
             order: [
@@ -154,7 +156,6 @@ router.post( '/delete',
       await Promise.all([
         jobScheduler.removeAllFromBree(req.body.dataflowId),
         Dataflow.destroy({ where: { id: req.body.dataflowId, application_id: req.body.applicationId } }),
-        DataflowGraph.destroy({ where: { dataflowId: req.body.dataflowId, application_id: req.body.applicationId } }),
       ]);
 
       res.json({ result: 'success' });
@@ -296,14 +297,13 @@ router.get( '/checkDataflows',
 
       const dataflows = await Dataflow.findAll({
         where: { application_id },
-        attributes: ['id', 'title'],
-        include: { model: DataflowGraph, attributes: ['graph'] },
+        attributes: ['id', 'title', 'graph'],
       });
       
       const inDataflows = [];
 
       for (const dataflow of dataflows) {
-        const cells = dataflow.dataflowgraph?.graph?.cells;
+        const cells = dataflow?.graph?.cells;
         if (cells) {
           const asset = cells.find(cell => cell.data?.assetId === assetId )
           if (asset){
