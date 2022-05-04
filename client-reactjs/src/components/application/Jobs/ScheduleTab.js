@@ -19,15 +19,17 @@ const ScheduleTab = ({ nodes, dataflowId, applicationId, selectedAsset, addToSch
   const [options, setOptions] = useState({
     loading: false,
     enableEdit: false,
-    selectedScheduleType: '',
     scheduleMinute: '*',
     scheduleHour: '*',
     scheduleDayMonth: '*',
     scheduleMonth: '*',
     scheduleDayWeek: '*',
-    schedulePredecessor: [],
-    predecessors: [],
+    type: '', // Time | Predecessor | Template | ''
+    dependsOn: [], // assetId[]
+    predecessors: [], // all nodes[]
   });
+
+  const [prevSchedule, setPrevSchedule] = useState({});
 
   const generateDate = (year, month, day, hour, minute) => new Date(year, month, day, hour, minute);
 
@@ -369,9 +371,10 @@ const ScheduleTab = ({ nodes, dataflowId, applicationId, selectedAsset, addToSch
     const cronExpression = `${minute} ${hour} ${dayMonth} ${month} ${dayWeek}`;
 
     const schedule = {
-      type: options.selectedScheduleType, // Predecessor | Time | Template | ""
-      cron: options.selectedScheduleType === 'Time' ? cronExpression : '', // string 
-      dependsOn: options.schedulePredecessor, // [assetId] - cant be job | template
+      type: options.type, // Predecessor | Time | Template | ""
+      cron: options.type === 'Time' ? cronExpression : '', // string 
+      dependsOn: options.dependsOn, // [assetId] | [] - cant be job | template
+      prevSchedule : prevSchedule  // Schedule - values that is currently in DB, not be passed to graph but will be send to server
     };
 
     const defaultExpression = '* * * * *';
@@ -406,6 +409,7 @@ const ScheduleTab = ({ nodes, dataflowId, applicationId, selectedAsset, addToSch
       const result = await response.json();
       addToSchedule(result.schedule); // will trigger method to update node view on a graph
       await new Promise(r => setTimeout(r,1000)); // sometime graph takes time to update nodes, we will wait extra second to let it finish;
+      setPrevSchedule(result.schedule);
       setOptions((prev) => ({ ...prev, enableEdit: false, loading: false, }));
       message.success('Job schedule saved');
     } catch (error) {
@@ -435,11 +439,11 @@ const ScheduleTab = ({ nodes, dataflowId, applicationId, selectedAsset, addToSch
   };
 
   const handleScheduleTypeSelect = (type) => {
-    setOptions((prev) => ({ ...prev, selectedScheduleType : type }));
+    setOptions((prev) => ({ ...prev, type, dependsOn: [] }));
   };
 
   useEffect(() => {
-    const schedule = selectedAsset.schedule;
+    const schedule = selectedAsset.schedule; // This value comes from node.data.schedule
     const cronParts = schedule?.cron?.split(' ') || [];
 
     const predecessors = nodes.reduce((acc, node) => {
@@ -457,28 +461,29 @@ const ScheduleTab = ({ nodes, dataflowId, applicationId, selectedAsset, addToSch
     setOptions((prev) => ({
       ...prev,
       predecessors,
-      selectedScheduleType: schedule?.type || '',
-      schedulePredecessor: schedule?.dependsOn || [],
+      type: schedule?.type || '',
+      dependsOn: schedule?.dependsOn || [],
       scheduleMinute: cronParts?.[0] || '*',
       scheduleHour: cronParts?.[1] || '*',
       scheduleDayMonth: cronParts?.[2] || '*',
       scheduleMonth: cronParts?.[3] || '*',
       scheduleDayWeek: cronParts?.[4] || '*',
     }));
-  
+
+    setPrevSchedule(schedule); // this value will change only if update on db is successfull
   }, []);
 
   if (!editingAllowed) readOnly = true;
 
   return (
     <Form component="div" {...threeColformItemLayout}>
-      {options.selectedScheduleType.length > 0 || options.enableEdit ? (
+      {options.type.length > 0 || options.enableEdit ? (
         <Form.Item label="Type">
           {!options.enableEdit ? (
             <Input
               className="read-only-input"
               disabled
-              value={options.selectedScheduleType ? options.selectedScheduleType : null}
+              value={options.type ? options.type : null}
             />
           ) : (
             <Select
@@ -486,9 +491,9 @@ const ScheduleTab = ({ nodes, dataflowId, applicationId, selectedAsset, addToSch
               disabled={!selectedAsset.isAssociated}
               placeholder="Select a schedule type"
               allowClear
-              onClear={() => setOptions((prev) => ({ ...prev, selectedScheduleType: '' }))}
+              onClear={() => handleScheduleTypeSelect('')}
               onSelect={(value) => { handleScheduleTypeSelect(value) }}
-              value={options.selectedScheduleType ? options.selectedScheduleType : null}>
+              value={options.type ? options.type : null}>
               <Select.Option value="Time">Timer based (run at specific interval)</Select.Option>
               <Select.Option value="Predecessor">Job based (run after another job completes)</Select.Option>
               <Select.Option value="Template"> Template Based (Run when a file that matches a template arrives) </Select.Option>
@@ -503,7 +508,7 @@ const ScheduleTab = ({ nodes, dataflowId, applicationId, selectedAsset, addToSch
           Please press <b>Edit</b> button to configure scheduling for this job
         </div>
       )}
-      {options.selectedScheduleType === 'Time' ? (
+      {options.type === 'Time' ? (
         <>
           <Form.Item label="Run Every">
             <Space>
@@ -567,23 +572,23 @@ const ScheduleTab = ({ nodes, dataflowId, applicationId, selectedAsset, addToSch
           </Form.Item>
         </>
       ) : null}
-      {options.selectedScheduleType === 'Predecessor' ? (
+      {options.type === 'Predecessor' ? (
         <Form.Item label="Run After">
           {!options.enableEdit ? (
-            scheduledPredecessors(options.predecessors, options.schedulePredecessor).map((item, index) =>
+            scheduledPredecessors(options.predecessors, options.dependsOn).map((item, index) =>
               index > 0 ? ', ' + item.name : item.name
             )
           ) : (
             <Select
-              id="schedulePredecessor"
+              id="dependsOn"
               mode="single"
               placeholder="Select Job(s) that will trigger execution"
               onSelect={(value) => {
                 let predecessors = [];
                 predecessors.push(value);
-                setOptions((prev) => ({ ...prev, schedulePredecessor: predecessors }));
+                setOptions((prev) => ({ ...prev, dependsOn: predecessors }));
               }}
-              value={options.schedulePredecessor}>
+              value={options.dependsOn}> 
               {options.predecessors.filter(asset => asset.jobId).map((job) => {
                 return (
                   <Select.Option key={job.name} value={job.jobId}>
@@ -595,10 +600,10 @@ const ScheduleTab = ({ nodes, dataflowId, applicationId, selectedAsset, addToSch
           )}
         </Form.Item>
       ) : null}
-      { options.selectedScheduleType === 'Template' ? (
+      { options.type === 'Template' ? (
           <Form.Item label="Template">
             {!options.enableEdit ? (
-              scheduledPredecessors(options.predecessors, options.schedulePredecessor).map((item, index) =>
+              scheduledPredecessors(options.predecessors, options.dependsOn).map((item, index) =>
                 index > 0 ? ', ' + item.name : item.name
               )
             ) : (
@@ -608,9 +613,9 @@ const ScheduleTab = ({ nodes, dataflowId, applicationId, selectedAsset, addToSch
                 onSelect={(value) => {
                   let predecessors = [];
                   predecessors.push(value);
-                  setOptions((prev) => ({ ...prev, schedulePredecessor: predecessors }));
+                  setOptions((prev) => ({ ...prev, dependsOn: predecessors }));
                 }}
-                value={options.schedulePredecessor}>
+                value={options.dependsOn}>
                 {options.predecessors.filter((assets) => assets.templateId).map((template) => {
                     return (
                       <Select.Option key={template.name} value={template.templateId}>
