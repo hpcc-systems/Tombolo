@@ -1,6 +1,6 @@
-import Form from 'antd/lib/form/Form';
 import React, { useEffect, useState } from 'react';
-import { Select, Space, Tag, Typography} from 'antd';
+import { Form, Select, Space, Tag, Typography} from "antd/lib";
+
 import { CheckCircleOutlined } from '@ant-design/icons';
 const { Text } = Typography;
 
@@ -64,7 +64,7 @@ const GHRepoSelect = ({ form, enableEdit, projects, setGhBrachOrTag}) => {
       label="GitHub Projects"
       required={enableEdit}
       name={['gitHubFiles', 'selectedProjects']}
-      className={!enableEdit && 'read-only-input'}
+      // className={!enableEdit && 'read-only-input'}
       help={ enableEdit ? <Text type="warning">Adding or Removing projects will reset "Main File" fields</Text>  : null}
     >
       {enableEdit ? (
