@@ -2,8 +2,7 @@ var models  = require('../models');
 let File = models.file;
 let FileLayout = models.file_layout;
 let FileLicense = models.file_license;
-let FileRelation = models.file_relation;
-let FileFieldRelation = models.file_field_relation;
+const FileMonitoring = models.fileMonitoring;
 let FileValidation = models.file_validation;
 let License = models.license;
 let Groups = models.groups;
@@ -339,3 +338,23 @@ exports.getJobEXecutionForProcessing = async () => {
     console.log(error);
   }
 } 
+
+exports.deleteFileMonitoring = async ({fileTemplateId, dataflowId }) =>{
+  const fileMonitoring = await FileMonitoring.findOne({ where: { fileTemplateId } });
+  if (!fileMonitoring) return; // If fileMonitoring does not exit, we will do nothing
+  if (fileMonitoring.metaData?.dataflows?.length > 1) {
+    const newDataFlowList = fileMonitoring.metaData.dataflows.filter((dfId) => dfId !== dataflowId);
+    await fileMonitoring.update({ metaData: { ...fileMonitoring.metaData, dataflows: newDataFlowList } });
+    console.log('--MONITORING UPDATED----------------------------------------');
+    console.dir({ wuid: fileMonitoring.wuid, fileMonitoring: fileMonitoring.id }, { depth: null });
+    console.log('------------------------------------------');
+  } else {  
+    const workUnitService = await hpccUtil.getWorkunitsService(fileMonitoring.cluster_id);
+    const WUactionBody = { Wuids: { Item: [fileMonitoring.wuid] }, WUActionType: 'Abort' };
+    await workUnitService.WUAction(WUactionBody); // Abort wu in hpcc
+    await fileMonitoring.destroy();
+    console.log('---MONITORING REMOVED---------------------------------------');
+    console.dir({wuid:fileMonitoring.wuid, fileMonitoring: fileMonitoring.id }, { depth: null });
+    console.log('------------------------------------------');
+  }
+};

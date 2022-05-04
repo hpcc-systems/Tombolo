@@ -127,29 +127,6 @@ const createOrUpdateFile = async ({jobfile, jobId, clusterId, dataflowId, applic
   }
 }; 
 
-const deleteFileMonitoring = async ({fileTemplateId, dataflowId }) =>{
-  // 1. Check if the depend on type is 'template'
-  // 2. if true from file monitoring remove the dataflow id
-  // 3. If no other dataflow Id tied to the fileMonitoring WU, abort the wu in hpcc
-  const fileMonitoring = await FileMonitoring.findOne({ where: { fileTemplateId } });
-  if (fileMonitoring.metaData?.dataflows?.length > 1) {
-    const newDataFlowList = fileMonitoring.metaData.dataflows.filter((dfId) => dfId !== dataflowId);
-    await fileMonitoring.update({ metaData: { ...fileMonitoring.metaData, dataflows: newDataFlowList } });
-    console.log('--MONITORING UPDATED----------------------------------------');
-    console.dir({ wuid: fileMonitoring.wuid, fileMonitoring: fileMonitoring.id }, { depth: null });
-    console.log('------------------------------------------');
-  } else {  
-    const workUnitService = await hpccUtil.getWorkunitsService(fileMonitoring.cluster_id);
-    const WUactionBody = { Wuids: { Item: [fileMonitoring.wuid] }, WUActionType: 'Abort' };
-    await workUnitService.WUAction(WUactionBody); // Abort wu in hpcc
-    await fileMonitoring.destroy();
-    console.log('---MONITORING REMOVED---------------------------------------');
-    console.dir({wuid:fileMonitoring.wuid, fileMonitoring: fileMonitoring.id }, { depth: null });
-    console.log('------------------------------------------');
-  }
-}
-
-
 const deleteJob = async (jobId, application_id) =>{
  return await Promise.all([
     Job.destroy({ where: { id: jobId, application_id} }),
@@ -564,7 +541,7 @@ router.post('/schedule_job',
       // IF JOB WAS PREV SCHEDULED AS TEMPLATE, we will need to clean up FileMonitoring;
       if(schedule.prevSchedule?.type === 'Template') {
         const dependsOn = schedule.prevSchedule.dependsOn?.[0];
-        cleanup.push(deleteFileMonitoring({fileTemplateId:dependsOn, dataflowId }));
+        cleanup.push(assetUtil.deleteFileMonitoring({fileTemplateId:dependsOn, dataflowId }));
       }
 
       await Promise.all(cleanup);
