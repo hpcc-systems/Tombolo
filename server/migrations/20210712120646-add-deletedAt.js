@@ -8,10 +8,6 @@ module.exports = {
         'deletedAt', Sequelize.DATE
       ),
       queryInterface.addColumn(
-        'assets_dataflows',
-        'deletedAt', Sequelize.DATE
-      ),
-      queryInterface.addColumn(
         'assets_groups',
         'deletedAt', Sequelize.DATE
       ),
@@ -37,14 +33,6 @@ module.exports = {
       ),
       queryInterface.addColumn(
         'dataflow',
-        'deletedAt', Sequelize.DATE
-      ),
-      queryInterface.addColumn(
-        'dataflowgraph',
-        'deletedAt', Sequelize.DATE
-      ),
-      queryInterface.addColumn(
-        'dependent_jobs',
         'deletedAt', Sequelize.DATE
       ),
       queryInterface.addColumn(
@@ -133,10 +121,6 @@ module.exports = {
         'deletedAt', Sequelize.DATE
       ),
       queryInterface.removeColumn(
-        'assets_dataflows',
-        'deletedAt', Sequelize.DATE
-      ),
-      queryInterface.removeColumn(
         'assets_groups',
         'deletedAt', Sequelize.DATE
       ),
@@ -162,14 +146,6 @@ module.exports = {
       ),
       queryInterface.removeColumn(
         'dataflow',
-        'deletedAt', Sequelize.DATE
-      ),
-      queryInterface.removeColumn(
-        'dataflowgraph',
-        'deletedAt', Sequelize.DATE
-      ),
-      queryInterface.removeColumn(
-        'dependent_jobs',
         'deletedAt', Sequelize.DATE
       ),
       queryInterface.removeColumn(
