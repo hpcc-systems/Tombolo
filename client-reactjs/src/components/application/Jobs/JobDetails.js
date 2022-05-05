@@ -74,7 +74,7 @@ class JobDetails extends Component {
 
   async componentDidMount() {    
     const applicationId = this.props.application?.applicationId || this.props.match?.params?.applicationId;
-    const assetId =  this.props?.selectedAsset?.id || this.props.match?.params?.fileId;
+    const assetId =  this.props?.selectedAsset?.id || this.props.match?.params?.jobId;
   
   if(applicationId){
    await this.getFiles({ applicationId });
