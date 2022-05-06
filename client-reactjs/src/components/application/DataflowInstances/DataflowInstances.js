@@ -11,12 +11,6 @@ class DataflowInstances extends Component {
   state = {
     applicationId: this.props.application ? this.props.application.applicationId : '',
     applicationTitle: this.props.application ? this.props.application.applicationTitle : '',
-    dataflowId: {},
-    workflowId: '',
-    workflows: [],
-    workflowDetails: [],
-    workflowDetailsVisible: false,
-    instanceId: '',
     dataflows: [],
   };
 

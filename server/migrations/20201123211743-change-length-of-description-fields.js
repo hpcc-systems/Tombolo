@@ -11,7 +11,6 @@ module.exports = {
       queryInterface.changeColumn('job', 'description', { type: Sequelize.TEXT }),
       queryInterface.changeColumn('jobfile', 'description', { type: Sequelize.TEXT }),
       queryInterface.changeColumn('query', 'description', { type: Sequelize.TEXT }),
-      queryInterface.changeColumn('workflows', 'description', { type: Sequelize.TEXT })
     ]);
   },
 
@@ -25,7 +24,6 @@ module.exports = {
       queryInterface.changeColumn('job', 'description', { type: Sequelize.STRING }),
       queryInterface.changeColumn('jobfile', 'description', { type: Sequelize.STRING }),
       queryInterface.changeColumn('query', 'description', { type: Sequelize.STRING }),
-      queryInterface.changeColumn('workflows', 'description', { type: Sequelize.STRING })
     ]);
   }
 };

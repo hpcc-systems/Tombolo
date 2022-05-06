@@ -103,14 +103,6 @@ module.exports = {
         'user_application',
         'deletedAt', Sequelize.DATE
       ),
-      queryInterface.addColumn(
-        'workflows',
-        'deletedAt', Sequelize.DATE
-      ),
-      queryInterface.addColumn(
-        'workflowdetails',
-        'deletedAt', Sequelize.DATE
-      )
     ])
   },
 
@@ -216,14 +208,6 @@ module.exports = {
         'user_application',
         'deletedAt', Sequelize.DATE
       ),
-      queryInterface.removeColumn(
-        'workflows',
-        'deletedAt', Sequelize.DATE
-      ),
-      queryInterface.removeColumn(
-        'workflowdetails',
-        'deletedAt', Sequelize.DATE
-      )
     ])
   }
 };
