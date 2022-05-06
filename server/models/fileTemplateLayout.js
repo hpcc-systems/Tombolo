@@ -9,11 +9,11 @@ module.exports = (sequelize, DataTypes) => {
       autoIncrement: false
     },
     application_id: {
-     type:  DataTypes.UUIDV4,
+     type:  DataTypes.UUID,
      allowNull: false,
     },
     fileTemplate_id :{
-     type:  DataTypes.UUIDV4,
+     type:  DataTypes.UUID,
      allowNull: false,
     },
     fields:{

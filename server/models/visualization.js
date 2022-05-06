@@ -8,13 +8,13 @@ module.exports = (sequelize, DataTypes) => {
       allowNull: false,
       autoIncrement: false
     },
-    assetId: DataTypes.UUIDV4,
+    assetId: DataTypes.UUID,
     name: DataTypes.STRING,
     description: DataTypes.STRING,
-    application_id: DataTypes.UUIDV4,
+    application_id: DataTypes.UUID,
     type: DataTypes.STRING,
     url: DataTypes.STRING,
-    clusterId: DataTypes.UUIDV4
+    clusterId: DataTypes.UUID
   }, {paranoid: true, freezeTableName: true});
   visualization.associate = function(models) {    
     visualization.belongsToMany(models.groups, {

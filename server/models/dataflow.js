@@ -14,10 +14,10 @@ module.exports = (sequelize, DataTypes) => {
     description: DataTypes.TEXT,
     input: DataTypes.STRING,
     output: DataTypes.STRING,
-    clusterId: DataTypes.UUIDV4,
+    clusterId: DataTypes.UUID,
     type: DataTypes.STRING,
     dataFlowClusterCredId : {
-      type: DataTypes.UUIDV4,
+      type: DataTypes.UUID,
       defaultValue: DataTypes.UUIDV4,
     },
     metaData : DataTypes.JSON
