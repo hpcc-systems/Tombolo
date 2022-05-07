@@ -16,7 +16,7 @@ let Jobparam=models.jobparam;
 let Application=models.application;
 let ControlsAndRegulations = models.controls_regulations;
 let Dataflow = models.dataflow;
-let DataflowGraph = models.dataflowgraph;
+
 
 const { body, query, validationResult } = require('express-validator');
 const validatorUtil = require('../../utils/validator');
@@ -335,14 +335,13 @@ router.get( '/associatedDataflows',
   
         const dataflows = await Dataflow.findAll({
           where: { application_id },
-          attributes: ['id', 'title', 'clusterId', 'description'],
-          include: { model: DataflowGraph, attributes: ['graph'] },
+          attributes: ['id', 'title', 'clusterId', 'description', 'graph' ],
         });
   
         const inDataflows = [];
   
         for (const dataflow of dataflows) {
-          const cells = dataflow.dataflowgraph?.graph?.cells;
+          const cells = dataflow?.graph?.cells;
           if (cells) {
             const asset = cells.find((cell) => cell.data?.assetId === assetId);
             if (asset) {

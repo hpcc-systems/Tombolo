@@ -250,7 +250,7 @@ router.post('/removecluster', function (req, res) {
 });
 
 router.get('/getFileInfo', [
-  query('fileName').optional({checkFalsy:true}).isUUID(4).withMessage('Invalid file name'),
+  query('fileName').exists().withMessage('Invalid file name'),
   query('clusterid').optional({checkFalsy:true}).isUUID(4).withMessage('Invalid cluster id'),
   query('applicationId').isUUID(4).withMessage('Invalid application id')
 ], function (req, res) {

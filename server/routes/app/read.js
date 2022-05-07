@@ -1,6 +1,6 @@
 const express = require('express');
 const router = express.Router();
-const assert = require('assert');[]
+
 var path = require('path');
 var fs = require('fs');
 var models  = require('../../models');
@@ -21,7 +21,7 @@ let JobParam = models.jobparam;
 let Query = models.query;
 let QueryField = models.query_field;
 let Dataflow = models.dataflow;
-let DataflowGraph = models.dataflowgraph;
+
 const {socketIo : io} = require('../../server');
 const validatorUtil = require('../../utils/validator');
 const { body, query, validationResult } = require('express-validator');
@@ -32,8 +32,6 @@ const Op = Sequelize.Op;
 const multer = require('multer');
 const jobScheduler = require('../../job-scheduler');
 const AssetGroups = models.assets_groups;
-
-const Dataflowgraph = models.dataflowgraph;
 
 router.get('/app_list', (req, res) => {
   console.log("[app/read.js] - App route called");
@@ -149,7 +147,6 @@ router.post('/deleteApplication', async function (req, res) {
     if(dataflows && dataflows.length > 0) {
       let dataflowIds = dataflows.map(dataflow => dataflow.id);
       await Dataflow.destroy({where: {application_id: req.body.appIdToDelete}});
-      await DataflowGraph.destroy({where:{ dataflowIds }});
       for (const id of dataflowIds) {
         await jobScheduler.removeAllFromBree(id);
       }     
@@ -382,24 +379,6 @@ function importAssetDetails(item , assetType, newAppId, groupIdMap, io){
           }
          
         })
-         .then(() =>{
-          // #### create dataflow graph
-          if(asset.dataflowgraph){
-                Dataflowgraph.create({
-                application_id: newAppId,
-                nodes:asset.dataflowgraph.nodes,
-                edges: asset.dataflowgraph.edges,
-                dataflowId: newAsset.id,
-              }).then(result => {
-                emitUpdates(io, {step : `SUCCESS - creating dataflow graph`, status: "success"})
-              })
-              .catch(err =>{
-                emitUpdates(io, {step : `SUCCESS - creating asset group ${result.id} `, status: "success"});
-                console.log("ERR -", err)
-              })
-             
-          }
-        })
         .catch(error => {
           emitUpdates(io, {step : `ERR - importing ${item[0]} ${asset.title} `, status: "err"})
           console.log("Err creating asset", error)
@@ -598,8 +577,6 @@ router.post('/export', [
       }); 
 
       let dataflow = await Dataflow.findAll({where: {application_id: application.id}, 
-        include: [{model: DataflowGraph, attributes: { exclude: ['createdAt', 'updatedAt', 'id', 'application_id'] }}                  
-                ],
         attributes: { exclude: ['createdAt', 'updatedAt', 'id', 'application_id'] }
       }); 
 

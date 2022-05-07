@@ -67,7 +67,6 @@ router.get('/', [
   try {
     DataDictionary.findAll({
       where: whereClause,
-      //include: [DataflowGraph],
       order: [
         ['createdAt', 'DESC']
       ],

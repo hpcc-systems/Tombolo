@@ -14,7 +14,7 @@ const AssetsGroups = models.assets_groups;
 
 
 router.post('/saveFileTemplate', [
-    body('id')
+    body('assetId')
     .optional({checkFalsy:true}).isUUID(4).withMessage('Invalid id'),
     body('application_id')
       .isUUID(4).withMessage('Invalid application id'),
@@ -35,28 +35,28 @@ router.post('/saveFileTemplate', [
         return res.status(422).json({ success: false, errors: errors.array() });
       }
 
-      const {application_id, cluster, title, fileNamePattern, searchString, groupId, description,sampleLayoutFile, fileLayoutData, selectedAsset, licenses, metaData} = req.body;
+      const {application_id, cluster, title, fileNamePattern, searchString, groupId, description,sampleLayoutFile, fileLayoutData, assetId, licenses, metaData} = req.body;
 
-      if(!selectedAsset.isNew){
+      if(assetId){
         // file template exists -> edit it
         await FileTemplate.update(
           {title, cluster_id : cluster, fileNamePattern, searchString, sampleLayoutFile, description, metaData},
-          {where: {id : selectedAsset.id }}
+          {where: {id : assetId }}
         )
         await FileTemplateLayout.update(
           {fields : {layout : fileLayoutData}},
-          {where : {fileTemplate_id : selectedAsset.id}}
+          {where : {fileTemplate_id : assetId }}
         )
-        await FileTemplate_licenses.destroy({where : { fileTemplate_id : selectedAsset.id}});
+        await FileTemplate_licenses.destroy({where : { fileTemplate_id : assetId}});
         licenses.forEach(license => {
         license.application_id = application_id;
-        license.fileTemplate_id = selectedAsset.id;
+        license.fileTemplate_id = assetId;
         license.license_id = license.id;
       });
         await FileTemplate_licenses.bulkCreate(
         licenses,
         )
-        res.status(200).json({success : true, message : `Successfully updated file template -> ${title}`});
+        res.status(200).json({success : true, assetId: assetId, isMonitoring: !!metaData.fileMonitoringTemplate, message : `Successfully updated file template -> ${title}`});
       }else{
         //New file template -> Create it
       const fileTemplate = await FileTemplate.create({application_id, title, cluster_id : cluster, fileNamePattern, searchString, sampleLayoutFile, description, metaData });
@@ -70,7 +70,7 @@ router.post('/saveFileTemplate', [
       await FileTemplate_licenses.bulkCreate(
         licenses
       )
-      res.status(200).json({success : true, message : `Successfully created file template -> ${title}`});
+      res.status(200).json({success : true, assetId: fileTemplate.id, isMonitoring: !!metaData.fileMonitoringTemplate, message : `Successfully created file template -> ${title}`});
       }
     } catch (err) {
       console.log(err);

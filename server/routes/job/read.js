@@ -127,8 +127,6 @@ const createOrUpdateFile = async ({jobfile, jobId, clusterId, dataflowId, applic
   }
 }; 
 
-
-
 const deleteJob = async (jobId, application_id) =>{
  return await Promise.all([
     Job.destroy({ where: { id: jobId, application_id} }),
@@ -523,20 +521,32 @@ router.post('/schedule_job',
     try {
       const { jobId, dataflowId, application_id, schedule } = req.body;
 
-    // schedule :
-    //   type: Predecessor | Time | Template | ""
-    //   cron: cronExpression string | ""
-    //   dependsOn: [assetId] - cant be job | template
+      // schedule :
+      //   type: Predecessor | Time | Template | ""
+      //   cron: cronExpression string | ""
+      //   dependsOn: [assetId] - cant be job | template
+      //   prevSchedule : // { type: string, cron:string, dependOn:[] } - value that is currently in DB
 
       const job = await Job.findOne({ where: { id: jobId } });
       if (!job) res.status(404).send({ success: false, message: 'Job was not found' });
-
-      await Promise.all([
+      
+      // CLEAN UP START!
+      const cleanup = [
         //1. Remove job from Bree
         JobScheduler.removeJobFromScheduler(job.name + '-' + dataflowId + '-' + job.id),
         //2. ...
         MessageBasedJobs.destroy({ where: { jobId: job.id, dataflowId, applicationId:application_id}}),
-      ]);
+      ];
+      
+      // IF JOB WAS PREV SCHEDULED AS TEMPLATE, we will need to clean up FileMonitoring;
+      if(schedule.prevSchedule?.type === 'Template') {
+        const dependsOn = schedule.prevSchedule.dependsOn?.[0];
+        cleanup.push(assetUtil.deleteFileMonitoring({fileTemplateId:dependsOn, dataflowId }));
+      }
+
+      await Promise.all(cleanup);
+      console.log('-----------CLEANUP RAN-------------------------------');
+      // CLEAN UP END!
 
       // JOB IS SCHEDULED AS 'Template'
       if (schedule.type === 'Template') {
@@ -680,37 +690,10 @@ router.post('/schedule_job',
         await MessageBasedJobs.findOrCreate({ where: messageBasedJobsFields, defaults: messageBasedJobsFields, });
       }
 
-      // JOB IS NOT SCHEDULED, we will remove FileMonitoring;
-      if (!schedule.type) {
-        // 1. Check if the depend on type is 'template'
-        // 2. if true from file monitoring remove the dataflow id
-        // 3. If no other dataflow Id tied to the fileMonitoring WU, abort the wu in hpcc
-        const dependsOn = schedule.dependsOn?.[0];
-        if (dependsOn) {
-          const fileMonitoring = await FileMonitoring.findOne({ where: { fileTemplateId: dependsOn } });
-
-          if (fileMonitoring) {
-            if (fileMonitoring.metaData?.dataflows?.length > 1) {
-              const newDataFlowList = fileMonitoring.metaData.dataflows.filter((dfId) => dfId !== dataflowId);
-              await fileMonitoring.update({ metaData: { ...fileMonitoring.metaData, dataflows: newDataFlowList } });
-              console.log('--MONITORING UPDATED----------------------------------------');
-              console.dir({ wuid: fileMonitoring.wuid, fileMonitoring: fileMonitoring.id }, { depth: null });
-              console.log('------------------------------------------');
-            } else {  
-              const workUnitService = await hpccUtil.getWorkunitsService(fileMonitoring.cluster_id);
-              const WUactionBody = { Wuids: { Item: [fileMonitoring.wuid] }, WUActionType: 'Abort' };
-              await workUnitService.WUAction(WUactionBody); // Abort wu in hpcc
-              await fileMonitoring.destroy();
-              console.log('---MONITORING REMOVED---------------------------------------');
-              console.dir({wuid:fileMonitoring.wuid, fileMonitoring: fileMonitoring.id }, { depth: null });
-              console.log('------------------------------------------');
-            }
-          }
-        }
-      }
-
+      const newSchedule = {...schedule};
+      delete newSchedule.prevSchedule;      
       res.json({
-        schedule,
+        schedule: newSchedule,
         success: true,
         jobId: job.id,
       });

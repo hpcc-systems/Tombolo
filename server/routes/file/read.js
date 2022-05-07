@@ -1,6 +1,5 @@
 const express = require('express');
 const router = express.Router();
-const lodash = require('lodash');
 var models  = require('../../models');
 const hpccUtil = require('../../utils/hpcc-util');
 const assetUtil = require('../../utils/assets');
@@ -18,7 +17,7 @@ let AssetsGroups=models.assets_groups;
 TreeConnection = models.tree_connection;
 TreeStyle = models.tree_style;
 let ConsumerObject = models.consumer_object;
-let DataflowGraph = models.dataflowgraph;
+
 let Sequelize = require('sequelize');
 const Op = Sequelize.Op;
 let Indexes=models.indexes;
@@ -857,18 +856,20 @@ async function getFileRelationHierarchy(applicationId, fileId, id, dataflowId) {
       return [fileId].concat(...children.map(getFlat));
     }
 
-    return DataflowGraph.findOne({where:{"application_Id":applicationId, "dataflowId":dataflowId}}).then((graph) => {
-      let fileNodes = JSON.parse(graph.nodes).filter(node => node.fileId==fileId);
-      if(id == 'undefined') {
-        id = fileNodes[0].id;
-      }
-      const tree = makeTree (JSON.parse(graph.nodes), JSON.parse(graph.edges));
-      const parentIds = getFlat(tree);
-      return parentIds;
-    })
-    .catch(function(err) {
-        console.log(err);
-    });
+    return []; // TODO: need to be refactored
+
+    // return DataflowGraph.findOne({where:{"application_Id":applicationId, "dataflowId":dataflowId}}).then((graph) => {
+    //   let fileNodes = JSON.parse(graph.nodes).filter(node => node.fileId==fileId);
+    //   if(id == 'undefined') {
+    //     id = fileNodes[0].id;
+    //   }
+    //   const tree = makeTree (JSON.parse(graph.nodes), JSON.parse(graph.edges));
+    //   const parentIds = getFlat(tree);
+    //   return parentIds;
+    // })
+    // .catch(function(err) {
+    //     console.log(err);
+    // });
 }
 
 router.get('/filelayout', [

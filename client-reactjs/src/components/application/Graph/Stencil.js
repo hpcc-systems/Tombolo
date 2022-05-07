@@ -26,6 +26,12 @@ export default class Stencil {
         if (node.data.type === "Sub-Process"){
           data.isCollapsed = false
         }
+
+        if (node.data.type === "Monitor"){
+          data.type = 'FileTemplate';
+          data.title= 'Template'
+        }
+
         return node.clone().setData(data)
       }
     });
@@ -38,7 +44,7 @@ export default class Stencil {
   }
 
   static addShape(graph, stencil) {
-    const assets = [{type : 'Job', title : 'Job'}, {type : 'File', title : 'File'},{type: 'FileTemplate', title : 'File Group'} , {type : 'Index', title : 'Index'}, {type : 'Sub-Process', title : 'Sub-Process'}];
+    const assets = [{type : 'Job', title : 'Job'}, {type : 'File', title : 'File'}, { type: 'Monitor', title : 'Monitoring' }, {type : 'Index', title : 'Index'}, {type : 'Sub-Process', title : 'Sub-Process'}];
 
     const assetsNodes = assets.map(asset => {
       return graph.createNode({

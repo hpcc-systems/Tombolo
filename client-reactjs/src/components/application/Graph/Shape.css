@@ -57,7 +57,13 @@
     border : 2px solid #1565c0;
     color: #fff;
   }
-  
+
+  .Monitor{
+    background-color:#0c509e;
+    border : 3px solid #0fd3f1;
+    color: #fff;
+  }
+
   .SuperFile{
     background-color: #b778c2;
     border: 2px solid #883997;

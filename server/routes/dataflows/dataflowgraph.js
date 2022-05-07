@@ -2,7 +2,6 @@ const express = require('express');
 const router = express.Router();
 var models  = require('../../models');
 
-let DataflowGraph = models.dataflowgraph;
 let Dataflow = models.dataflow;
 let Job = models.job;
 let File = models.file;
@@ -12,8 +11,9 @@ const FileMonitoring = models.fileMonitoring;
 const validatorUtil = require('../../utils/validator');
 const { body, query, validationResult } = require('express-validator');
 const JobScheduler = require('../../job-scheduler');
+const assetUtil = require('../../utils/assets');
 
-router.get( '/',
+router.get('/',
   [
     query('application_id').optional({ checkFalsy: true }).isUUID(4).withMessage('Invalid application id'),
     query('dataflowId').isUUID(4).withMessage('Invalid dataflow id'),
@@ -27,12 +27,12 @@ router.get( '/',
     try {
       const { application_id, dataflowId  } = req.query;
       
-      const dataflowgraph = await DataflowGraph.findOne({
-         where: { application_id, dataflowId },
-         attributes:['graph'],
+      const dataflow = await Dataflow.findOne({
+         where: { application_id, id: dataflowId },
+         attributes: ['graph'],
       });
 
-      res.json(dataflowgraph);
+      res.json({success: true, graph: dataflow.graph});
     } catch (error) {
       console.log('-error-----------------------------------------');
       console.dir({error}, { depth: null });
@@ -57,18 +57,13 @@ router.post( '/save',
     try {
       const { application_id, dataflowId, graph } = req.body;
 
-      const dataflowGraphFields = { graph }
-
-      let [dataflowGraph, isDataflowGraphCreated] = await DataflowGraph.findOrCreate({
-        where: { application_id, dataflowId },
-        defaults: dataflowGraphFields,
-      });
-
-      if (!isDataflowGraphCreated) dataflowGraph = await dataflowGraph.update(dataflowGraphFields);
-
+      const [ updated ] = await Dataflow.update({graph}, { where: { application_id, id: dataflowId }});
+      
+      if (!updated) throw new Error("Failed to find dataflow to update")
+      
       res.json({ result: 'success', dataflowId });
     } catch (error) {
-      console.log('-error /dataflowgraph/save-----------------------------------------');
+      console.log('-error /save-----------------------------------------');
       console.dir({ error }, { depth: null });
       console.log('------------------------------------------');
       return res.status(500).send({ message: 'Error occurred while saving Dataflow Graph' });
@@ -100,26 +95,8 @@ router.post('/deleteAsset',
       }
 
       if(req.body.type === 'filetemplate'){
-        /* If the asset type is file template, the depend on job is actually a fileMonitoring Id , not a file template id itself
-        1. find File Monitoring ID
-        2. Evaluate if it can be destroyed -> if not used by other Dataflows it can be destroyed
-        3. If not used by any other dataflows, abort wu in HPCC */
-        const fileMonitoring = await FileMonitoring.findOne({where : { fileTemplateId : req.body.assetId}});
-
-        if (fileMonitoring) {
-          if (fileMonitoring.metaData?.dataflows?.length > 1) {
-            const newDataFlowList = fileMonitoring.metaData.dataflows.filter((dfId) => dfId !== req.body.dataflowId);
-            await fileMonitoring.update({ metaData: { ...fileMonitoring.metaData, dataflows: newDataFlowList } });
-          } else {
-            const workUnitService = await hpccUtil.getWorkunitsService(fileMonitoring.cluster_id);
-            const WUactionBody = { Wuids: { Item: [fileMonitoring.wuid] }, WUActionType: 'Abort' };
-            await workUnitService.WUAction(WUactionBody); // Abort wu in hpcc
-            await fileMonitoring.destroy();
-            console.log('---MONITORING REMOVED---------------------------------------');
-            console.dir({wuid:fileMonitoring.wuid, fileMonitoring: fileMonitoring.id }, { depth: null });
-            console.log('------------------------------------------');
-          }
-        }
+        const { assetId, dataflowId } = req.body
+        await assetUtil.deleteFileMonitoring({fileTemplateId: assetId, dataflowId });
       }
       res.json({ result: 'success' });
     } catch (error) {

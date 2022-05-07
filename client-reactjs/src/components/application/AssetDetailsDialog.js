@@ -10,8 +10,9 @@ import SubProcessDetails from './SubProcessDetails';
 
 function AssetDetailsDialog(props) {  
   
-  const capitalize = (word) => {
+  const getAssetType = (word) => {
     if (!word || typeof word !== 'string') return '';
+    if (word === 'FileTemplate') return "File Template"
     return word[0].toUpperCase() + word.slice(1);
   };
 
@@ -22,7 +23,7 @@ function AssetDetailsDialog(props) {
       width="1200px"
       footer={null}
       bodyStyle={{display: "flex", flexDirection: "column"}}
-      title={`${capitalize(props.selectedAsset.type)} : ${props.selectedAsset.title}`}
+      title={`${getAssetType(props.selectedAsset.type)} : ${props.selectedAsset.title}`}
       > 
       <DetailsForm {...props} />
     </Modal>

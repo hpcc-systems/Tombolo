@@ -156,9 +156,19 @@ function ExistingAssetListDialog({ show, applicationId, clusterId, assetType, on
     assetColumns.splice(2, 0, isJobAssociated);
   }
 
+  const getModalTitle = () =>{
+    let title = 'Select From Existing ';
+    if (assetType === 'FileTemplate'){
+      title += "File Templates"
+    } else{
+      title += assetType;
+    }
+    return title
+  }
+
   return (
     <Modal
-      title={'Select from existing ' + assetType}
+      title={getModalTitle()}
       visible={show}
       destroyOnClose={true}
       onCancel={() => {

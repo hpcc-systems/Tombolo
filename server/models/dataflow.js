@@ -8,6 +8,7 @@ module.exports = (sequelize, DataTypes) => {
       allowNull: false,
       autoIncrement: false
     },
+    graph: DataTypes.JSON,
     application_id: DataTypes.STRING,
     title: DataTypes.STRING,
     description: DataTypes.TEXT,
@@ -22,12 +23,6 @@ module.exports = (sequelize, DataTypes) => {
     metaData : DataTypes.JSON
   }, {paranoid: true, freezeTableName: true});
   dataflow.associate = function(models) {
-    dataflow.hasOne(models.dataflowgraph, {
-      foreignKey: {
-        type: DataTypes.UUID
-      }
-    });
-
     dataflow.hasOne(models.dataflow_cluster_credentials, {
       foreignKey: 'dataflow_id'
     });
