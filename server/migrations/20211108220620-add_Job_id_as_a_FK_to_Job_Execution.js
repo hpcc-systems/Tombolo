@@ -11,8 +11,6 @@ module.exports = {
           table: 'job',
           field: 'id',
         },
-        onDelete: 'cascade',
-        onUpdate: 'cascade',
       })
     ]);
   },
