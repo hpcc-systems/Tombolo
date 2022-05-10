@@ -169,9 +169,12 @@ exports.jobInfo = (applicationId, jobId) => {
   let jobFiles = [];
   try {
     return new Promise((resolve, reject) => {
-      Job.findOne({where:{"application_id":applicationId, "id":jobId}, attributes:['id', 'description', 'title', 'name', 'author', 'contact', 'ecl', 'entryBWR', 'gitRepo', 'jobType', 'cluster_id','metaData'], include: [JobFile, JobParam]}).then(async function(job) {
+      Job.findOne({where:{"application_id":applicationId, "id":jobId}, attributes:['id', 'description', 'title', 'name', 'author', 'contact', 'ecl', 'entryBWR', 'gitRepo', 'jobType', 'cluster_id','metaData'], include: [JobParam]}).then(async function(job) {
         var jobData = job.get({ plain: true });
-        for(jobFileIdx in jobData.jobfiles) {
+        const jobfiles =  await JobFile.findAll({ where: { job_id: job.id }}, { raw: true });
+        jobData.jobfiles = jobfiles || []; 
+        
+        for(const jobFileIdx in jobData.jobfiles) {
           var jobFile = jobData.jobfiles[jobFileIdx];
           var file = await File.findOne({where:{"application_id":applicationId, "id":jobFile.file_id}});
           if(file != undefined) {
@@ -229,7 +232,7 @@ exports.recordJobExecution =  async (workerData, wuid) => {
         JobExecution.create(
           {
             jobId: workerData.jobId,
-            dataflowId: workerData.dataflowId,
+            dataflowId: workerData.dataflowId || null,
             applicationId: workerData.applicationId,
             wuid: wuid,
             clusterId: workerData.clusterId,
@@ -287,7 +290,7 @@ exports.createGithubFlow = async ({jobId, jobName, gitHubFiles, dataflowId, appl
   let jobExecution, tasks;
   try {
     // # create Job Execution with status 'cloning'
-    jobExecution = await JobExecution.create({ jobId, dataflowId, applicationId, clusterId, wuid:"",  status: 'cloning', jobExecutionGroupId });
+    jobExecution = await JobExecution.create({ jobId, dataflowId: dataflowId || null , applicationId, clusterId, wuid:"",  status: 'cloning', jobExecutionGroupId });
     console.log('------------------------------------------');
     console.log(`✔️  createGithubFlow: START: JOB EXECUTION RECORD CREATED ${jobExecution.id}`);    
 
