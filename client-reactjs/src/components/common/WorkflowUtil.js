@@ -81,27 +81,6 @@ export function handleFileDelete (fileId, applicationId) {
   });
 }
 
-export function handleFileInstanceDelete (fileInstanceId) {
-	console.log(fileInstanceId)
-  return new Promise((resolve) => {
-    var data = JSON.stringify({id: fileInstanceId});
-    fetch("/api/fileinstance/delete", {
-      method: 'post',
-      headers: authHeader(),
-      body: data
-    }).then((response) => {
-      if(response.ok) {
-        resolve(response.json());
-      } else {
-      	handleError(response);
-      }
-    }).catch(error => {
-      console.log(error);
-      message.error("There was an error deleting the file");
-    });
-  });
-}
-
 export function handleSubProcessDelete (subProcessId, applicationId) {
   return new Promise((resolve) => {
     var data = JSON.stringify({dataflowId: subProcessId, applicationId: applicationId});

@@ -50,7 +50,6 @@ const reportRead = require('./routes/report/read');
 const consumer = require('./routes/consumers/read');
 const gh_projects = require('./routes/gh_projects');
 const dataflow = require('./routes/dataflows/dataflow');
-const fileInstance = require('./routes/fileinstance/read');
 const fileTemplateRead = require('./routes/fileTemplate/read')
 const dataflowGraph = require('./routes/dataflows/dataflowgraph');
 const regulations = require('./routes/controlsAndRegulations/read');
@@ -72,7 +71,6 @@ app.use('/api/file/read', fileRead);
 app.use('/api/index/read', indexRead);
 app.use('/api/report/read', reportRead);
 app.use('/api/gh_projects', gh_projects);
-app.use('/api/fileinstance', fileInstance);
 app.use('/api/dataflowgraph', dataflowGraph);
 app.use('/api/data-dictionary', dataDictionary); // TODO CHECK IF NEEDED
 app.use('/api/controlsAndRegulations', regulations);
