@@ -7,7 +7,6 @@ const bearerStrategy = require('./utils/passportStrategies/passport-azure');
 const cors = require('cors');
 const { sequelize: dbConnection } = require('./models');
 
-
 /* BREE JOB SCHEDULER */
 const JobScheduler = require('./job-scheduler');
 
@@ -53,7 +52,6 @@ const dataflow = require('./routes/dataflows/dataflow');
 const fileTemplateRead = require('./routes/fileTemplate/read')
 const dataflowGraph = require('./routes/dataflows/dataflowgraph');
 const regulations = require('./routes/controlsAndRegulations/read');
-const dataDictionary = require('./routes/data-dictionary/data-dictionary-service');
 
 app.use('/api/user', userRead);
 // Authenticate token before proceeding to route
@@ -72,7 +70,6 @@ app.use('/api/index/read', indexRead);
 app.use('/api/report/read', reportRead);
 app.use('/api/gh_projects', gh_projects);
 app.use('/api/dataflowgraph', dataflowGraph);
-app.use('/api/data-dictionary', dataDictionary); // TODO CHECK IF NEEDED
 app.use('/api/controlsAndRegulations', regulations);
 app.use('/api/fileTemplate/read', fileTemplateRead);
 

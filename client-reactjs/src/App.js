@@ -12,7 +12,6 @@ import ResetPassword from "./components/login/ResetPassword";
 import { PrivateRoute } from "./components/common/PrivateRoute";
 import Assets from "./components/application/Assets";
 import { LeftNav } from "./components/layout/LeftNav";
-import DataDictionary from "./components/application/DataDictionary";
 import Dataflow from "./components/application/Dataflow";
 import DataflowDetails from "./components/application/Dataflow/DataflowDetails";
 import { DataflowInstances } from "./components/application/DataflowInstances/DataflowInstances";
@@ -66,21 +65,6 @@ class App extends React.Component {
         : "";
       return (
         <Dataflow
-          applicationId={applicationId}
-          applicationTitle={applicationTitle}
-          user={this.props.user}
-        />
-      );
-    };
-    const dataDictionaryComp = () => {
-      let applicationId = this.props.application
-        ? this.props.application.applicationId
-        : "";
-      let applicationTitle = this.props.application
-        ? this.props.application.applicationTitle
-        : "";
-      return (
-        <DataDictionary
           applicationId={applicationId}
           applicationTitle={applicationTitle}
           user={this.props.user}
@@ -150,10 +134,6 @@ class App extends React.Component {
                   <PrivateRoute
                     path="/:applicationId/assets"
                     component={Assets}
-                  />
-                  <PrivateRoute
-                    path="/:applicationId/data-dictionary"
-                    component={dataDictionaryComp}
                   />
                   <PrivateRoute
                     path="/:applicationId/dataflow/details/:dataflowId?"
