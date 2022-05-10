@@ -64,7 +64,7 @@ class JobScheduler {
 
   async scheduleCheckForJobsWithSingleDependency({ dependsOnJobId, dataflowId, jobExecutionGroupId }) {
     try {
-      const dataflow = await Dataflow.findOne({ where: { id: dataflowId }, attributes: [" graph "] });
+      const dataflow = await Dataflow.findOne({ where: { id: dataflowId }, attributes: ["graph"] });
       if (!dataflow) throw new Error('Dataflow does not exist');
 
       const dependantJobs = dataflow.graph.cells.reduce((acc, cell) => {
@@ -161,7 +161,7 @@ class JobScheduler {
           await workflowUtil.notifyDependentJobsFailure({ contact, dataflowId, failedJobsList });
         }
       }
-    } catch (err) {
+    } catch (error) {
       console.log('-error-----------------------------------------');
       console.dir({ error }, { depth: null });
       console.log('------------------------------------------');
@@ -416,7 +416,7 @@ class JobScheduler {
       let jobName = 'file-monitoring-' + new Date().getTime();
         this.bree.add({
           name: jobName,
-          interval: '500s',
+          interval: '20s',
           path: path.join(__dirname, 'jobs', FILE_MONITORING),
           worker: {
             workerData: {
