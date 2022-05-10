@@ -16,10 +16,6 @@ module.exports = (sequelize, DataTypes) => {
     output: DataTypes.STRING,
     clusterId: DataTypes.UUID,
     type: DataTypes.STRING,
-    dataFlowClusterCredId : {
-      type: DataTypes.UUID,
-      defaultValue: DataTypes.UUIDV4,
-    },
     metaData : DataTypes.JSON
   }, {paranoid: true, freezeTableName: true});
   dataflow.associate = function(models) {
