@@ -640,8 +640,7 @@ router.put( '/move/asset',
     const errors = validationResult(req).formatWith(validatorUtil.errorFormatter);
     if (!errors.isEmpty()) return res.status(422).json({ success: false, errors: errors.array() });
 
-    const { appId, assetId } = req.body;
-    
+    const { app_id, assetId } = req.body; 
     try {
       if (req.body.assetType !== 'Group') {
         // create or update File
@@ -663,7 +662,7 @@ router.put( '/move/asset',
       } else {
         await Groups.update(
           { parent_group: req.body.destGroupId || '' },
-          { where: { application_id: appId, id: assetId } }
+          { where: { application_id: app_id, id: assetId } }
         );
         res.json({ success: true });
       }
