@@ -8,15 +8,14 @@ module.exports = (sequelize, DataTypes) => {
       allowNull: false,
       autoIncrement: false
     },
-    application_id: DataTypes.STRING,
-    file_id: DataTypes.STRING,
+    application_id: DataTypes.UUID,
+    file_id: DataTypes.UUID,
     name: DataTypes.STRING,
     url: DataTypes.STRING
   }, {paranoid: true, freezeTableName: true});
   file_license.associate = function(models) {
-    file_license.belongsTo(models.file, {
-      foreignKey: 'file_id'
-    });
+    file_license.belongsTo(models.file, { foreignKey: 'file_id' });
+    file_license.belongsTo(models.application, { foreignKey: 'application_id' });
   };
   return file_license;
 };

@@ -23,12 +23,14 @@ module.exports = (sequelize, DataTypes) => {
     member_id: DataTypes.STRING,
     file_source_id: DataTypes.STRING,
     data_profile_path: DataTypes.STRING,
-    cluster_id: DataTypes.STRING,
-    application_id: DataTypes.STRING,
+    cluster_id: DataTypes.UUID,
+    application_id: DataTypes.UUID,
     title: DataTypes.STRING
-  }, {freezeTableName: true});
+  }, {paranoid: true, freezeTableName: true});
   file_instance.associate = function(models) {
     // associations can be defined here
+    file_instance.belongsTo(models.application, {foreignKey: 'application_id'});
+    file_instance.belongsTo(models.cluster, {foreignKey: 'cluster_id'});
   };
   return file_instance;
 };

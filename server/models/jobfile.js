@@ -9,11 +9,11 @@ module.exports = (sequelize, DataTypes) => {
       autoIncrement: false
     },
     job_id: DataTypes.UUID,
-    application_id: DataTypes.STRING,
+    application_id: DataTypes.UUID,
     file_type: DataTypes.STRING,
     name: DataTypes.STRING,
     description: DataTypes.TEXT,
-    file_id: DataTypes.STRING,
+    file_id: DataTypes.UUID,
     added_manually:{
       type: DataTypes.BOOLEAN,
       defaultValue: false,
@@ -24,7 +24,6 @@ module.exports = (sequelize, DataTypes) => {
     }
   }, {paranoid: true, freezeTableName: true});
   jobfile.associate = function(models) {
-    jobfile.belongsTo(models.job, {foreignKey: 'job_id'});
     // associations can be defined here
   };
   return jobfile;

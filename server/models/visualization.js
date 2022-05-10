@@ -18,11 +18,18 @@ module.exports = (sequelize, DataTypes) => {
   }, {paranoid: true, freezeTableName: true});
   visualization.associate = function(models) {    
     visualization.belongsToMany(models.groups, {
+      constraints: false,
+      foreignKeyConstraint:false,
       through: 'assets_groups',
       as: 'groups',
       foreignKey: 'assetId',
       otherKey: 'groupId'
     });
+
+    visualization.belongsTo(models.file, { foreignKey: 'assetId' });
+    visualization.belongsTo(models.cluster, { foreignKey: 'clusterId' });
+    visualization.belongsTo(models.application, { foreignKey: 'application_id' });
+
   };
   return visualization;
 };

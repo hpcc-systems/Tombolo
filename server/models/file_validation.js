@@ -8,14 +8,16 @@ module.exports = (sequelize, DataTypes) => {
       allowNull: false,
       autoIncrement: false
     },
-    application_id: DataTypes.STRING,
-    file_id: DataTypes.STRING,
+    application_id: DataTypes.UUID,
+    file_id: DataTypes.UUID,
     rule_field: DataTypes.STRING,
     rule_name: DataTypes.STRING,
     rule_test: DataTypes.STRING,
     rule_fix: DataTypes.STRING
   }, {paranoid: true, freezeTableName: true});
   file_validation.associate = function(models) {
+    file_validation.belongsTo(models.application, {foreignKey: 'application_id'});
+    file_validation.belongsTo(models.file, {foreignKey: 'file_id'});
   };
   return file_validation;
 };

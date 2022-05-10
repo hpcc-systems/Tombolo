@@ -8,7 +8,7 @@ module.exports = (sequelize, DataTypes) => {
       allowNull: false,
       autoIncrement: false
     },
-    applicationId: DataTypes.STRING,
+    applicationId: DataTypes.UUID,
     name: DataTypes.STRING,
     description: DataTypes.TEXT,
     data_defn: {
@@ -18,7 +18,7 @@ module.exports = (sequelize, DataTypes) => {
       }
     },
     products: DataTypes.STRING
-  }, {freezeTableName: true});
+  }, {paranoid: true, freezeTableName: true});
   datadictionary.associate = function(models) {
     // associations can be defined here
   };

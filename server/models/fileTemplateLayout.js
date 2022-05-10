@@ -23,6 +23,10 @@ module.exports = (sequelize, DataTypes) => {
   }, {paranoid: true, freezeTableName: true});
   fileTemplateLayout.associate = function(models) {
     // Define association here
+
+    fileTemplateLayout.belongsTo(models.application, { foreignKey: 'application_id' });
+    fileTemplateLayout.belongsTo(models.fileTemplate, { foreignKey: 'fileTemplate_id' });
+
   };
   return fileTemplateLayout;
 };
