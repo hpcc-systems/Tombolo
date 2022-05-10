@@ -1,7 +1,7 @@
 'use strict';
 module.exports = {
   up: (queryInterface, Sequelize) => {
-    return queryInterface.createTable('application', {
+    return queryInterface.createTable('query', {
       id: {
         allowNull: false,
         primaryKey: true,
@@ -9,9 +9,22 @@ module.exports = {
         defaultValue: Sequelize.UUIDV4,
       },
       title: Sequelize.STRING,
-      description: Sequelize.STRING,
-      creator: Sequelize.STRING,
-      visibility: Sequelize.STRING,
+      name: Sequelize.STRING,
+      description: Sequelize.TEXT,
+      url: Sequelize.STRING,
+      gitRepo: Sequelize.STRING,
+      primaryService: Sequelize.STRING,
+      backupService: Sequelize.STRING,
+      type: Sequelize.STRING,
+      application_id: {
+        type: Sequelize.UUID,
+        references: {
+          model: 'application',
+          key: 'id',
+        },
+        onUpdate: 'CASCADE',
+        onDelete: 'CASCADE',
+      },
       createdAt: {
         allowNull: false,
         type: Sequelize.DATE,
@@ -27,6 +40,6 @@ module.exports = {
     });
   },
   down: (queryInterface, Sequelize) => {
-    return queryInterface.dropTable('application');
+    return queryInterface.dropTable('query');
   },
 };

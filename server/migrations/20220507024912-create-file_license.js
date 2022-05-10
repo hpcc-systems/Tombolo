@@ -1,7 +1,7 @@
 'use strict';
 module.exports = {
   up: (queryInterface, Sequelize) => {
-    return queryInterface.createTable('cluster', {
+    return queryInterface.createTable('file_license', {
       id: {
         allowNull: false,
         primaryKey: true,
@@ -9,12 +9,25 @@ module.exports = {
         defaultValue: Sequelize.UUIDV4,
       },
       name: Sequelize.STRING,
-      thor_host: Sequelize.STRING,
-      thor_port: Sequelize.STRING,
-      roxie_host: Sequelize.STRING,
-      roxie_port: Sequelize.STRING,
-      username: Sequelize.STRING,
-      hash: Sequelize.STRING,
+      url: Sequelize.STRING,
+      file_id: {
+        type: Sequelize.UUID,
+        references: {
+          model: 'file',
+          key: 'id',
+        },
+        onUpdate: 'NO ACTION',
+        onDelete: 'NO ACTION',
+      },
+      application_id: {
+        type: Sequelize.UUID,
+        references: {
+          model: 'application',
+          key: 'id',
+        },
+        onUpdate: 'CASCADE',
+        onDelete: 'CASCADE',
+      },
       createdAt: {
         allowNull: false,
         type: Sequelize.DATE,
@@ -30,6 +43,6 @@ module.exports = {
     });
   },
   down: (queryInterface, Sequelize) => {
-    return queryInterface.dropTable('cluster');
+    return queryInterface.dropTable('file_license');
   },
 };

@@ -1,7 +1,7 @@
 'use strict';
 module.exports = {
   up: (queryInterface, Sequelize) => {
-    return queryInterface.createTable('file', {
+    return queryInterface.createTable('fileTemplate', {
       id: {
         allowNull: false,
         primaryKey: true,
@@ -9,21 +9,6 @@ module.exports = {
         defaultValue: Sequelize.UUIDV4,
       },
       title: Sequelize.STRING,
-      name: Sequelize.STRING(500),
-      description: Sequelize.TEXT,
-      fileType: Sequelize.STRING,
-      isSuperFile: Sequelize.BOOLEAN,
-      serviceURL: Sequelize.STRING,
-      qualifiedPath: Sequelize.STRING,
-      consumer: Sequelize.STRING,
-      supplier: Sequelize.STRING,
-      owner: Sequelize.STRING,
-      scope: Sequelize.STRING(500),
-      metaData: {
-        type: Sequelize.JSON,
-        allowNull: true,
-        defaultValue: null,
-      },
       application_id: {
         type: Sequelize.UUID,
         references: {
@@ -32,6 +17,26 @@ module.exports = {
         },
         onUpdate: 'CASCADE',
         onDelete: 'CASCADE',
+      },
+      fileNamePattern: {
+        type: Sequelize.STRING,
+        allowNull: false,
+      },
+      searchString: {
+        type: Sequelize.STRING,
+        allowNull: false,
+      },
+      sampleLayoutFile: {
+        type: Sequelize.STRING,
+        allowNull: true,
+      },
+      description: {
+        type: Sequelize.TEXT,
+        allowNull: true,
+      },
+      metaData: {
+        type: Sequelize.JSON,
+        allowNull: true,
       },
       cluster_id: {
         type: Sequelize.UUID,
@@ -57,6 +62,6 @@ module.exports = {
     });
   },
   down: (queryInterface, Sequelize) => {
-    return queryInterface.dropTable('file');
+    return queryInterface.dropTable('fileTemplate');
   },
 };

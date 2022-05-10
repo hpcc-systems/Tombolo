@@ -1,17 +1,15 @@
 'use strict';
 module.exports = {
   up: (queryInterface, Sequelize) => {
-    return queryInterface.createTable('application', {
+    return queryInterface.createTable('assets_groups', {
       id: {
         allowNull: false,
         primaryKey: true,
         type: Sequelize.UUID,
         defaultValue: Sequelize.UUIDV4,
       },
-      title: Sequelize.STRING,
-      description: Sequelize.STRING,
-      creator: Sequelize.STRING,
-      visibility: Sequelize.STRING,
+      assetId: Sequelize.UUID,
+      groupId: Sequelize.INTEGER,
       createdAt: {
         allowNull: false,
         type: Sequelize.DATE,
@@ -27,6 +25,6 @@ module.exports = {
     });
   },
   down: (queryInterface, Sequelize) => {
-    return queryInterface.dropTable('application');
+    return queryInterface.dropTable('assets_groups');
   },
 };

@@ -1,32 +1,33 @@
 'use strict';
 module.exports = {
   up: (queryInterface, Sequelize) => {
-    return queryInterface.createTable('application', {
+    return queryInterface.createTable('user', {
       id: {
         allowNull: false,
         primaryKey: true,
         type: Sequelize.UUID,
         defaultValue: Sequelize.UUIDV4,
       },
-      title: Sequelize.STRING,
-      description: Sequelize.STRING,
-      creator: Sequelize.STRING,
-      visibility: Sequelize.STRING,
+      username: Sequelize.STRING,
+      hash: Sequelize.STRING,
+      firstName: Sequelize.STRING,
+      lastName: Sequelize.STRING,
+      role: Sequelize.STRING,
       createdAt: {
         allowNull: false,
-        type: Sequelize.DATE,
+        type: Sequelize.DATE
       },
       updatedAt: {
         allowNull: false,
-        type: Sequelize.DATE,
+        type: Sequelize.DATE
       },
       deletedAt: {
         allowNull: true,
-        type: Sequelize.DATE,
+        type: Sequelize.DATE
       },
     });
   },
   down: (queryInterface, Sequelize) => {
-    return queryInterface.dropTable('application');
-  },
+    return queryInterface.dropTable('user');
+  }
 };

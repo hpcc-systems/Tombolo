@@ -1,28 +1,16 @@
 'use strict';
 module.exports = {
   up: (queryInterface, Sequelize) => {
-    return queryInterface.createTable('file', {
+    return queryInterface.createTable('fileTemplateLayout', {
       id: {
         allowNull: false,
         primaryKey: true,
         type: Sequelize.UUID,
         defaultValue: Sequelize.UUIDV4,
       },
-      title: Sequelize.STRING,
-      name: Sequelize.STRING(500),
-      description: Sequelize.TEXT,
-      fileType: Sequelize.STRING,
-      isSuperFile: Sequelize.BOOLEAN,
-      serviceURL: Sequelize.STRING,
-      qualifiedPath: Sequelize.STRING,
-      consumer: Sequelize.STRING,
-      supplier: Sequelize.STRING,
-      owner: Sequelize.STRING,
-      scope: Sequelize.STRING(500),
-      metaData: {
+      fields: {
         type: Sequelize.JSON,
         allowNull: true,
-        defaultValue: null,
       },
       application_id: {
         type: Sequelize.UUID,
@@ -33,14 +21,14 @@ module.exports = {
         onUpdate: 'CASCADE',
         onDelete: 'CASCADE',
       },
-      cluster_id: {
+      fileTemplate_id: {
         type: Sequelize.UUID,
         references: {
-          model: 'cluster',
+          model: 'fileTemplate',
           key: 'id',
         },
-        onUpdate: 'NO ACTION',
-        onDelete: 'NO ACTION',
+        onUpdate: 'CASCADE',
+        onDelete: 'CASCADE',
       },
       createdAt: {
         allowNull: false,
@@ -57,6 +45,6 @@ module.exports = {
     });
   },
   down: (queryInterface, Sequelize) => {
-    return queryInterface.dropTable('file');
+    return queryInterface.dropTable('fileTemplateLayout');
   },
 };

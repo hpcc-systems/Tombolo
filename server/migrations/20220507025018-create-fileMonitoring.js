@@ -1,33 +1,25 @@
 'use strict';
 module.exports = {
   up: (queryInterface, Sequelize) => {
-    return queryInterface.createTable('file', {
+    return queryInterface.createTable('fileMonitoring', {
       id: {
         allowNull: false,
         primaryKey: true,
         type: Sequelize.UUID,
         defaultValue: Sequelize.UUIDV4,
       },
-      title: Sequelize.STRING,
-      name: Sequelize.STRING(500),
-      description: Sequelize.TEXT,
-      fileType: Sequelize.STRING,
-      isSuperFile: Sequelize.BOOLEAN,
-      serviceURL: Sequelize.STRING,
-      qualifiedPath: Sequelize.STRING,
-      consumer: Sequelize.STRING,
-      supplier: Sequelize.STRING,
-      owner: Sequelize.STRING,
-      scope: Sequelize.STRING(500),
+      wuid: {
+        type: Sequelize.STRING,
+        allowNull: false,
+      },
       metaData: {
         type: Sequelize.JSON,
         allowNull: true,
-        defaultValue: null,
       },
-      application_id: {
+      fileTemplateId: {
         type: Sequelize.UUID,
         references: {
-          model: 'application',
+          model: 'fileTemplate',
           key: 'id',
         },
         onUpdate: 'CASCADE',
@@ -39,8 +31,8 @@ module.exports = {
           model: 'cluster',
           key: 'id',
         },
-        onUpdate: 'NO ACTION',
-        onDelete: 'NO ACTION',
+        onUpdate: 'CASCADE',
+        onDelete: 'CASCADE',
       },
       createdAt: {
         allowNull: false,
@@ -57,6 +49,6 @@ module.exports = {
     });
   },
   down: (queryInterface, Sequelize) => {
-    return queryInterface.dropTable('file');
+    return queryInterface.dropTable('fileMonitoring');
   },
 };

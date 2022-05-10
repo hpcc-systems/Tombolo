@@ -1,33 +1,19 @@
 'use strict';
 module.exports = {
   up: (queryInterface, Sequelize) => {
-    return queryInterface.createTable('file', {
+    return queryInterface.createTable('dataflow_cluster_credentials', {
       id: {
         allowNull: false,
         primaryKey: true,
         type: Sequelize.UUID,
         defaultValue: Sequelize.UUIDV4,
       },
-      title: Sequelize.STRING,
-      name: Sequelize.STRING(500),
-      description: Sequelize.TEXT,
-      fileType: Sequelize.STRING,
-      isSuperFile: Sequelize.BOOLEAN,
-      serviceURL: Sequelize.STRING,
-      qualifiedPath: Sequelize.STRING,
-      consumer: Sequelize.STRING,
-      supplier: Sequelize.STRING,
-      owner: Sequelize.STRING,
-      scope: Sequelize.STRING(500),
-      metaData: {
-        type: Sequelize.JSON,
-        allowNull: true,
-        defaultValue: null,
-      },
-      application_id: {
+      cluster_username: Sequelize.STRING,
+      cluster_hash: Sequelize.STRING,
+      dataflow_id: {
         type: Sequelize.UUID,
         references: {
-          model: 'application',
+          model: 'dataflow',
           key: 'id',
         },
         onUpdate: 'CASCADE',
@@ -39,8 +25,8 @@ module.exports = {
           model: 'cluster',
           key: 'id',
         },
-        onUpdate: 'NO ACTION',
-        onDelete: 'NO ACTION',
+        onUpdate: 'CASCADE',
+        onDelete: 'CASCADE',
       },
       createdAt: {
         allowNull: false,
@@ -57,6 +43,6 @@ module.exports = {
     });
   },
   down: (queryInterface, Sequelize) => {
-    return queryInterface.dropTable('file');
+    return queryInterface.dropTable('dataflow_cluster_credentials');
   },
 };

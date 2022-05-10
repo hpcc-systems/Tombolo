@@ -1,29 +1,17 @@
 'use strict';
 module.exports = {
   up: (queryInterface, Sequelize) => {
-    return queryInterface.createTable('file', {
+    return queryInterface.createTable('fileTemplate_license', {
       id: {
         allowNull: false,
         primaryKey: true,
         type: Sequelize.UUID,
         defaultValue: Sequelize.UUIDV4,
       },
-      title: Sequelize.STRING,
-      name: Sequelize.STRING(500),
-      description: Sequelize.TEXT,
-      fileType: Sequelize.STRING,
-      isSuperFile: Sequelize.BOOLEAN,
-      serviceURL: Sequelize.STRING,
-      qualifiedPath: Sequelize.STRING,
-      consumer: Sequelize.STRING,
-      supplier: Sequelize.STRING,
-      owner: Sequelize.STRING,
-      scope: Sequelize.STRING(500),
-      metaData: {
-        type: Sequelize.JSON,
-        allowNull: true,
-        defaultValue: null,
-      },
+      fields: Sequelize.TEXT,
+      name: Sequelize.STRING,
+      url: Sequelize.STRING,
+      license_id: Sequelize.UUID,
       application_id: {
         type: Sequelize.UUID,
         references: {
@@ -33,10 +21,10 @@ module.exports = {
         onUpdate: 'CASCADE',
         onDelete: 'CASCADE',
       },
-      cluster_id: {
+      fileTemplate_id: {
         type: Sequelize.UUID,
         references: {
-          model: 'cluster',
+          model: 'fileTemplate',
           key: 'id',
         },
         onUpdate: 'NO ACTION',
@@ -57,6 +45,6 @@ module.exports = {
     });
   },
   down: (queryInterface, Sequelize) => {
-    return queryInterface.dropTable('file');
+    return queryInterface.dropTable('fileTemplate_license');
   },
 };

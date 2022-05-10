@@ -1,28 +1,39 @@
 'use strict';
 module.exports = {
   up: (queryInterface, Sequelize) => {
-    return queryInterface.createTable('file', {
+    return queryInterface.createTable('job', {
       id: {
         allowNull: false,
         primaryKey: true,
         type: Sequelize.UUID,
         defaultValue: Sequelize.UUIDV4,
       },
-      title: Sequelize.STRING,
-      name: Sequelize.STRING(500),
+      author: Sequelize.STRING,
+      contact: Sequelize.STRING,
       description: Sequelize.TEXT,
-      fileType: Sequelize.STRING,
-      isSuperFile: Sequelize.BOOLEAN,
-      serviceURL: Sequelize.STRING,
-      qualifiedPath: Sequelize.STRING,
-      consumer: Sequelize.STRING,
-      supplier: Sequelize.STRING,
-      owner: Sequelize.STRING,
-      scope: Sequelize.STRING(500),
+      ecl: Sequelize.TEXT,
+      entryBWR: Sequelize.STRING,
+      gitRepo: Sequelize.STRING,
+      jobType: Sequelize.STRING,
+      title: Sequelize.STRING,
+      name: Sequelize.STRING,
+      scriptPath: Sequelize.STRING,
+      sprayFileName: Sequelize.STRING,
+      sprayDropZone: Sequelize.STRING,
+      sprayedFileScope: Sequelize.STRING,
       metaData: {
         type: Sequelize.JSON,
         allowNull: true,
         defaultValue: null,
+      },
+      cluster_id: {
+        type: Sequelize.UUID,
+        references: {
+          model: 'cluster',
+          key: 'id',
+        },
+        onUpdate: 'CASCADE',
+        onDelete: 'CASCADE',
       },
       application_id: {
         type: Sequelize.UUID,
@@ -32,15 +43,6 @@ module.exports = {
         },
         onUpdate: 'CASCADE',
         onDelete: 'CASCADE',
-      },
-      cluster_id: {
-        type: Sequelize.UUID,
-        references: {
-          model: 'cluster',
-          key: 'id',
-        },
-        onUpdate: 'NO ACTION',
-        onDelete: 'NO ACTION',
       },
       createdAt: {
         allowNull: false,
@@ -57,6 +59,6 @@ module.exports = {
     });
   },
   down: (queryInterface, Sequelize) => {
-    return queryInterface.dropTable('file');
+    return queryInterface.dropTable('job');
   },
 };
