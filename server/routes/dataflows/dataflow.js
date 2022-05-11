@@ -13,6 +13,7 @@ const validatorUtil = require('../../utils/validator');
 const { body, query, validationResult } = require('express-validator');
 const jobScheduler = require('../../job-scheduler');
 const {isClusterReachable} = require('../../utils/hpcc-util');
+const assetUtil = require('../../utils/assets');
 const {encryptString, decryptString} = require('../../utils/cipher')
 
 router.post( '/save',
@@ -152,10 +153,22 @@ router.post( '/delete',
       return res.status(422).json({ success: false, errors: errors.array() });
     }
 
+    const {dataflowId, applicationId} = req.body;
+    
+    const dataflow = await Dataflow.findOne({where:{ id : dataflowId},attributes:['graph']});
+    const filetemplates = dataflow.graph?.cells?.filter(cell => cell?.data?.type === 'FileTemplate') || [];
+    
+    if (filetemplates.length > 0) {
+      const promises = filetemplates.map(filetemplate=>{
+       return assetUtil.deleteFileMonitoring({fileTemplateId: filetemplate.data.assetId, dataflowId })
+      })
+      await Promise.all(promises);
+    }
+
     try {
       await Promise.all([
-        jobScheduler.removeAllFromBree(req.body.dataflowId),
-        Dataflow.destroy({ where: { id: req.body.dataflowId, application_id: req.body.applicationId } }),
+        jobScheduler.removeAllFromBree(dataflowId),
+        Dataflow.destroy({ where: { id: dataflowId, application_id: applicationId } }),
       ]);
 
       res.json({ result: 'success' });

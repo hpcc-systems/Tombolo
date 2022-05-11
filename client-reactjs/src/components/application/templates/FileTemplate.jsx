@@ -10,7 +10,7 @@ import { MarkdownEditor } from '../../common/MarkdownEditor.js';
 import { authHeader, handleError } from '../../common/AuthHeader.js';
 import FileTemplateTable from './FileTemplate_filesTab';
 import FileTemplateLayout from './FileTemplate_layoutTab.jsx';
-import FileTemplate_permissablePurpose from './FileTemplate_permissablePurpose'
+import FileTemplatePermissablePurpose from './FileTemplate_permissablePurpose'
 import { hasEditPermission } from '../../common/AuthUtil.js'; 
 import DeleteAsset from "../../common/DeleteAsset/index.js";
 import LandingZoneFileExplorer from "../../common/LandingZoneFileExplorer"
@@ -519,7 +519,7 @@ function FileTemplate({match, selectedAsset={}, displayingInModal, onClose }) {
             
           </TabPane>
           <TabPane tab="Permissable Purpose" key="4">
-            <FileTemplate_permissablePurpose
+            <FileTemplatePermissablePurpose
               enableEdit={enableEdit}
               editingAllowed={editingAllowed}
               setSelectedLicenses={setSelectedLicenses}

@@ -14,8 +14,7 @@ var Cluster = models.cluster;
 let Rules = models.rules;
 let DataTypes=models.data_types;
 let AssetsGroups=models.assets_groups;
-TreeConnection = models.tree_connection;
-TreeStyle = models.tree_style;
+
 let ConsumerObject = models.consumer_object;
 
 let Sequelize = require('sequelize');
@@ -468,44 +467,26 @@ router.post('/delete', [
     .isUUID(4).withMessage('Invalid file id'),
   body('application_id')
     .isUUID(4).withMessage('Invalid application id'),
-],(req, res) => {
+], async (req, res) => {
   const errors = validationResult(req).formatWith(validatorUtil.errorFormatter);
   if (!errors.isEmpty()) {
     return res.status(422).json({ success: false, errors: errors.array() });
   }
-  let updatedSources = [];
+
   console.log("[file delete] - Get file list for fileId = " + req.body.fileId + " appId: "+req.body.application_id);
   try {
-    File.destroy(
-        {where:{id: req.body.fileId, application_id: req.body.application_id}}
-    ).then(function(deleted) {
-        FileLayout.destroy(
-            {where:{ file_id: req.body.fileId }}
-        ).then(function(layoutDeleted) {
-            FileLicense.destroy(
-                {where:{file_id: req.body.fileId}}
-            ).then(function(licenseDeleted) {
-                FileValidation.destroy(
-                    {where:{file_id: req.body.fileId}}
-                ).then(function(validationDeleted) {
-                    TreeConnection.destroy(
-                        {where:{ [Op.or]: [{sourceid: req.body.fileId}, {targetid: req.body.fileId}]}}
-                    ).then(function(connectionDeleted) {
-                        TreeStyle.destroy(
-                            {where:{node_id: req.body.fileId}}
-                        ).then(function(styleDeleted) {
-                            ConsumerObject.destroy(
-                                {where:{object_id: req.body.fileId, object_type: "file"}}
-                            ).then(function(consumerDeleted) {
-                                res.json({"result":"success"});
-                            });
-                        });
-                    })
-                })
-            })
-        })
+    const { fileId, application_id } = req.body;
 
-    })
+    await Promise.all([
+      File.destroy({ where: { id: fileId, application_id } }),
+      FileLayout.destroy({ where: { file_id: fileId } }),
+      FileLicense.destroy({ where: { file_id: fileId } }),
+      FileValidation.destroy({ where: { file_id: fileId } }),
+      ConsumerObject.destroy({ where: { object_id: fileId, object_type: 'file' } }),
+    ]);
+    
+
+
   } catch (err) {
     return res.status(500).json({ success: false, message: "Error occured while deleting file details" });
   }

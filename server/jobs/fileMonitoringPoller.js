@@ -23,7 +23,7 @@ const dispatchAction = (action, data) => parentPort.postMessage({ action, data }
       const { id, wuid, cluster_id, fileTemplateId,  metaData } = workUnitsToMonitor[i];
       const wuOutput = await hpccUtil.workUnitOutput({ wuid, clusterId: cluster_id });
 
-      if (wuOutput.Result.Row) {
+      if (wuOutput.Result.Row?.length > 0) {
         logToConsole('FOUND  FILE, CHECKING IF IT IS A NEW FILE');
         const fileDetectedAt = wuOutput.Result.Row[0].t * 1000; // This is when file monitoring wu found file
         if (metaData.lastUniqueFileReceivedAt && metaData.lastUniqueFileReceivedAt === fileDetectedAt) {

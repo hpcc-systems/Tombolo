@@ -68,8 +68,10 @@ const dispatchAction = (action,data) =>  parentPort.postMessage({ action, data }
                 console.log('------------------------------------------');
                 await workflowUtil.notifyJobExecutionStatus({ jobId: jobExecution.jobId, clusterId: jobExecution.clusterId, wuid: jobExecution.wuid, WUstate, wuURL, cluster })
               }
-              
-              dispatchAction('scheduleDependentJobs',{ dependsOnJobId: jobExecution.jobId, dataflowId: jobExecution.dataflowId, jobExecutionGroupId: jobExecution.jobExecutionGroupId, });
+
+              if (dataflow){ // if job was executed independently we dont have to look for schedule jobs, as we dont know what dataflow to look for
+                dispatchAction('scheduleDependentJobs',{ dependsOnJobId: jobExecution.jobId, dataflowId: jobExecution.dataflowId, jobExecutionGroupId: jobExecution.jobExecutionGroupId, });
+              }
             }else{ // If job failed
               if(!dataflow){ //Failed job not a part of workflow. Notify if notification set at job level
                 console.log('------------------------------------------');

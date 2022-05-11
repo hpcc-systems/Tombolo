@@ -27,7 +27,8 @@ module.exports = (sequelize, DataTypes) => {
   }, {paranoid: true, freezeTableName: true});
   fileMonitoring.associate = function(models) {
     // Define association here
-
+    fileMonitoring.belongsTo(models.fileTemplate, { foreignKey: 'fileTemplateId' });
+    fileMonitoring.belongsTo(models.cluster, { foreignKey: 'cluster_id' });
   };
   return fileMonitoring;
 };

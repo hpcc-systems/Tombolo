@@ -346,25 +346,6 @@ class JobDetails extends Component {
     }
   };
 
-  async sendGHCreds({ GHUsername, GHToken }) {
-    try {
-      const payload = { GHUsername, GHToken };
-      const respond = await fetch('/api/ghcredentials', {
-        method: 'POST',
-        headers: authHeader(),
-        body: JSON.stringify(payload),
-      });
-      if (!respond.ok) throw new Error('Failed to send credentials!');
-      const result = await respond.json();
-      return result.id;
-    } catch (error) {
-      console.log('-error-----------------------------------------');
-      console.dir({ error }, { depth: null });
-      console.log('------------------------------------------');
-      message.error(error.message);
-    }
-  }
-
   getRestructuredFiles = (filesArr, fileType) => {
     return filesArr.map((file) => {
       const structuredFile = { ...file, file_type: fileType };
