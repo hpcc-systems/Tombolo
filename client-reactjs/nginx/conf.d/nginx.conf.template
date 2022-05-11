@@ -1,14 +1,14 @@
 server {
-  listen $WEB_EXPOSED_HTTP_PORT;
+  listen 80;
   server_name $HOSTNAME;
   return 301 https://${DOLLAR}server_name${DOLLAR}request_uri;
 }
 
 server {
-  listen $WEB_EXPOSED_PORT;
-  ssl on;
-  ssl_certificate <certificate location>;
-  ssl_certificate_key <certificate location
+  #listen 80;
+  listen 443 ssl;
+  ssl_certificate /etc/nginx/certs/domain.crt;
+  ssl_certificate_key /etc/nginx/certs/domain.key;
   ssl_ciphers EECDH+AESGCM:EDH+AESGCM;
   ssl_ecdh_curve secp384r1;
   ssl_session_timeout  10m;
