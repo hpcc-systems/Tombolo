@@ -6,6 +6,7 @@ const dbConfigOptions = {
     host: process.env.DB_HOSTNAME,
     dialect: 'mysql',
     seederStorage: 'json',
+    logging: false
 }
 
 if(process.env.MYSQL_SSL_ENABLED === "true"){
