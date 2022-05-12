@@ -22,6 +22,7 @@ class JobScheduler {
   constructor() {
     this.bree = new Bree({
       root: false,
+      logger: false,
       errorHandler: (error, workerMetadata) => {
         if (workerMetadata.threadId) {
           logger.error( `There was an error while running a worker ${workerMetadata.name} with thread ID: ${workerMetadata.threadId}`, error);
@@ -38,7 +39,7 @@ class JobScheduler {
         if(workerName.includes("file-monitoring")) workerName= "File monitoring";
         
         if (message === 'done') {
-          logger.verbose(`Worker for job '${workerName}' signaled 'done'`);
+          logger.verbose(`${workerName} signaled 'done'`);
         }
         if (message?.level === 'verbose') {
           logger.verbose(`[${workerName}]:`);

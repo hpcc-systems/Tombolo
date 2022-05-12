@@ -330,7 +330,6 @@ const manuallyUpdateJobExecutionFailure = async ({jobExecution,tasks}) =>{
 
 exports.getJobEXecutionForProcessing = async () => {
   try {
-    logger.verbose(`🔍 GETTING JOBS FOR PROCCESSING"`);
     const jobExecution = await JobExecution.findAll({
       where: { [Op.or]: [{status: 'submitted'}, {status: 'blocked'}, {status : 'wait'}]},
       order: [["updatedAt", "desc"]],
