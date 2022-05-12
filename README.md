@@ -20,7 +20,7 @@
 5. Locate 'cluster-whitelist.sample.js' file inside the "/server" directory, rename it to 'cluster-whitelist.js' and add cluster information.
 6. Locate '.env' file inside the "/client-react.js" directory, rename it to '.env' and update necessary variables.
 7. Build Application
-    - If you are not setting up Kafka and Zookeeper run *'docker-compose up -d  --build mysql_db node web'*.
+    - If you are not setting up Kafka and Zookeeper run *'docker-compose up -d mysql_db node web'*.
     - If you are setting up all services including kafka and zookeeper, locate `docker-compose.yml`, un-comment the commented services and run *'docker-compose up -d'*. 
 8. Once the build  successfully completes, the application will be accessible at *'http://<HOST_HOSTNAME>:<HTTP_PORT>'*
 ----
