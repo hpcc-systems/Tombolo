@@ -8,7 +8,7 @@
 3. Locate 'cluster-whitelist.sample.js' file inside the '/server' directory, rename it to 'cluster-whitelist.js' and add cluster information.
 4. Inside /server run `npm run bootstrap-server`. This will install all the dependencies, create schema, migrate tables, seed initial data and spin the server
 5. Go Inside '/client-react.js' and rename the .env-sample file to '.env' and update all necessary variables
-6. Inside '/client-react.js' run  `npm run bootstrap-server`. This will install  all the dependencies and start client.
+6. Inside '/client-react.js' run  `npm run bootstrap-client`. This will install  all the dependencies and start client.
 
 
 ----
@@ -25,7 +25,8 @@
 8. Once the build  successfully completes, the application will be accessible at *'http://<HOST_HOSTNAME>:<HTTP_PORT>'*
 ----
 ## Documentation 
-Click [here](https://github.com/hpcc-systems/Tombolo/blob/read-me/docs/images/tombolo/Tombolo%20User%20Guide.pdf) to view complete documentation
+Click [here](https://github.com/hpcc-systems/Tombolo/blob/master/docs/images/tombolo/Tombolo%20User%20Guide.pdf) to view complete documentation
+             
   
   
 
