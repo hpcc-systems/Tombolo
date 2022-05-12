@@ -16,13 +16,13 @@
 1. Clone repository
 2. Locate '.env-sample' file on the root directory and rename it to '.env' and update necessary variables
      > **IMPORTANT**: We have added comment for each variable blocks. Read them carefully before updating or adding any variables
-4. If you are going to be running this application without SSL, locate 'nginx.conf.template' file located at 'client-reactjs/nginx/confd' and remove all SSL-related configuration. 
+4. If you are going to be running this application without SSL, locate 'nginx.conf.template-no-ssl' and rename it to nginx.conf.template. If using ssl rename nginx.conf.template-ssl to nginx.conf.template. 
 5. Locate 'cluster-whitelist.sample.js' file inside the "/server" directory, rename it to 'cluster-whitelist.js' and add cluster information.
 6. Locate '.env' file inside the "/client-react.js" directory, rename it to '.env' and update necessary variables.
 7. Build Application
-    - If you are not setting up Kafka  run *'docker-compose up -d --no-deps --build mysql_db node web'*.
-    - If you are setting up all services in docker-compose file, run *'docker-compose up -d'*. 
-8. Once the build  successfully completes, the application will be accessible at *'http://<host_name>:<WEB_EXPOSED_PORT>'*
+    - If you are not setting up Kafka and Zookeeper run *'docker-compose up -d  --build mysql_db node web'*.
+    - If you are setting up all services including kafka and zookeeper, locate `docker-compose.yml`, un-comment the commented services and run *'docker-compose up -d'*. 
+8. Once the build  successfully completes, the application will be accessible at *'http://<HOST_HOSTNAME>:<HTTP_PORT>'*
 ----
 ## Documentation 
 Click [here](https://github.com/hpcc-systems/Tombolo/blob/read-me/docs/images/tombolo/Tombolo%20User%20Guide.pdf) to view complete documentation
