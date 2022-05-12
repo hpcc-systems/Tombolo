@@ -18,8 +18,23 @@ morgan.token('user', (req) => {
   return req.authInfo?.name || req.user?.email || 'unknown user'
 })
 
-// tokens : https://github.com/expressjs/morgan#tokens
-// ex. [1679ms]-[GET]-/api/file/read/file_list?application_id=2225cd7e-0d69-48a2-977d-8a9fcd744491 | 127.0.0.1 | Agapov, Kostiantyn (RIS-HBE)
-const morganMiddleware = morgan( "[:response-time[digits]ms]-[:method]-:url | :remote-addr | :user", { stream , skip } );
+morgan.token('URL', (req) => {
+  const url = req.originalUrl || req.url;
+  const beforeQuery = url.split('?')[0]
+  return beforeQuery;
+})
+
+morgan.token('query', (req) => {
+  if (Object.keys(req.query).length > 0 ){
+    return `\n query: ${JSON.stringify(req.query)}`
+  }
+  return '';
+})
+
+//  tokens : https://github.com/expressjs/morgan#tokens 
+//  Log ex:
+//  [5/12/2022, 4:40:57 PM]-[http] [GET]-[304] /api/groups/assets | <username> | <ip address> | [42ms] 
+//  query: {"app_id":"2225cd7e-0d69-48a2-977d-8a9fcd744491","group_id":"2"}
+const morganMiddleware = morgan( "[:method]-[:status] :URL | :user | :remote-addr | [:response-time[digits]ms] :query", { stream , skip } );
 
 module.exports = morganMiddleware;
