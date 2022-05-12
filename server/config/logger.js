@@ -36,10 +36,10 @@ const logger = createLogger({
 });
 
 // If we're not in production then also log to the files
-if (process.env.NODE_ENV !== 'production') {
-  const settings = {...common, format: getFormat({ colorize: false })}; // will write to files same output as to console but no special char for coloring
-  logger.add(new transports.File({ ...settings, level: 'http', filename: './logs/combined.log' }));
-  logger.add(new transports.File({ ...settings, level: 'error', filename: './logs/error.log' })); // only logger.error() will be written here
-}
+// if (process.env.NODE_ENV !== 'production') {
+//   const settings = {...common, format: getFormat({ colorize: false })}; // will write to files same output as to console but no special char for coloring
+//   logger.add(new transports.File({ ...settings, level: 'http', filename: './logs/combined.log' }));
+//   logger.add(new transports.File({ ...settings, level: 'error', filename: './logs/error.log' })); // only logger.error() will be written here
+// }
 
 module.exports = logger;
