@@ -6,6 +6,8 @@ const passport = require('passport');
 const bearerStrategy = require('./utils/passportStrategies/passport-azure');
 const cors = require('cors');
 const { sequelize: dbConnection } = require('./models');
+const morganMiddleware = require('./config/morganMiddleware');
+const logger = require('./config/logger');
 
 /* BREE JOB SCHEDULER */
 const JobScheduler = require('./job-scheduler');
@@ -29,6 +31,7 @@ const limiter = rateLimit({
 app.use(cors());
 app.use(express.json());
 app.use(limiter);
+app.use(morganMiddleware);
 
 if(process.env.APP_AUTH_METHOD==='azure_ad'){
   app.use(passport.initialize()); // For azure SSO
@@ -73,19 +76,24 @@ app.use('/api/dataflowgraph', dataflowGraph);
 app.use('/api/controlsAndRegulations', regulations);
 app.use('/api/fileTemplate/read', fileTemplateRead);
 
+app.use((err, req, res, next) => {
+  logger.error('Error caught by Express error handler', err);
+  res.status(500).send('Something went wrong')
+})
+
 process.env["NODE_TLS_REJECT_UNAUTHORIZED"] = 0;
 
 /* Start server */
 server.listen(port, '0.0.0.0', async () => {
   try {
-    console.log('Server listening on port '+port+'!')
+    logger.info('Server listening on port '+port+'!');
     /* Check DB connection */
     await dbConnection.authenticate();
-    console.log('Connection has been established successfully.');
+    logger.info('Connection has been established successfully.');
     /* initializing Bree, start status poller, start file monitoring, check for active cron jobs */
     JobScheduler.bootstrap(); 
   } catch (error) {
-    console.error('Unable to connect to the database:', error);
+    logger.error('Unable to connect to the database:', error);
     process.exit(1)
   }
 });
