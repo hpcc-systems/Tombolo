@@ -9,24 +9,20 @@ module.exports = (sequelize, DataTypes) => {
       autoIncrement: false
     },
     graph: DataTypes.JSON,
-    application_id: DataTypes.STRING,
+    application_id: DataTypes.UUID,
     title: DataTypes.STRING,
     description: DataTypes.TEXT,
     input: DataTypes.STRING,
     output: DataTypes.STRING,
-    clusterId: DataTypes.UUIDV4,
+    clusterId: DataTypes.UUID,
     type: DataTypes.STRING,
-    dataFlowClusterCredId : {
-      type: DataTypes.UUIDV4,
-      defaultValue: DataTypes.UUIDV4,
-    },
     metaData : DataTypes.JSON
   }, {paranoid: true, freezeTableName: true});
   dataflow.associate = function(models) {
-    dataflow.hasOne(models.dataflow_cluster_credentials, {
-      foreignKey: 'dataflow_id'
-    });
-
+    dataflow.hasOne(models.dataflow_cluster_credentials, { foreignKey: 'dataflow_id' });
+    dataflow.hasMany(models.job_execution, { foreignKey: 'dataflowId', onDelete: 'NO ACTION', onUpdate: 'NO ACTION' });
+    dataflow.belongsTo(models.application, {foreignKey: 'application_id'});
+    dataflow.belongsTo(models.cluster, {foreignKey: 'clusterId'});
   };
   return dataflow;
 };

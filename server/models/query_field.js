@@ -8,14 +8,16 @@ module.exports = (sequelize, DataTypes) => {
       allowNull: false,
       autoIncrement: false
     },
-    query_id: DataTypes.STRING,
-    application_id: DataTypes.STRING,
+    query_id: DataTypes.UUID,
+    application_id: DataTypes.UUID,
     field_type: DataTypes.STRING,
     name: DataTypes.STRING,
     type: DataTypes.STRING
   }, {paranoid: true, freezeTableName: true});
   query_field.associate = function(models) {
     // associations can be defined here
+    query_field.belongsTo(models.query, { foreignKey: 'query_id' });
+    query_field.belongsTo(models.application, { foreignKey: 'application_id' });
   };
   return query_field;
 };

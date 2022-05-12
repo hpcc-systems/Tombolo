@@ -9,7 +9,7 @@ module.exports = (sequelize, DataTypes) => {
       autoIncrement: false
     },
     application_id: {
-     type:  DataTypes.STRING,
+     type:  DataTypes.UUID,
      allowNull: false,
     },
     title:{
@@ -29,7 +29,7 @@ module.exports = (sequelize, DataTypes) => {
       allowNull : true
     },
     cluster_id: {
-      type : DataTypes.STRING,
+      type : DataTypes.UUID,
       allowNull: false
     },
     description:{
@@ -43,11 +43,20 @@ module.exports = (sequelize, DataTypes) => {
   }, {paranoid: true, freezeTableName: true});
   fileTemplate.associate = function(models) {
     // Define association here
-     fileTemplate.hasOne(models.fileTemplateLayout,{
+    fileTemplate.hasOne(models.fileTemplateLayout,{
       foreignKey:'fileTemplate_id',
       onDelete: 'CASCADE',
       hooks: true
     });
+
+    fileTemplate.hasMany(models.fileMonitoring,{ foreignKey:'fileTemplateId', onDelete: 'CASCADE', });
+    fileTemplate.hasMany(models.fileTemplateLayout,{ foreignKey:'fileTemplate_id', onDelete: 'CASCADE', });
+    fileTemplate.hasMany(models.fileTemplate_license,{ foreignKey:'fileTemplate_id', onDelete: 'CASCADE', });
+
+    fileTemplate.belongsTo(models.application, { foreignKey: 'application_id' });
+    fileTemplate.belongsTo(models.cluster, { foreignKey: 'cluster_id' });
+
+
   };
   return fileTemplate;
 };

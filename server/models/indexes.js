@@ -8,14 +8,14 @@ module.exports = (sequelize, DataTypes) => {
       allowNull: false,
       autoIncrement: false
     },
-    application_id: DataTypes.STRING,
+    application_id: DataTypes.UUID,
     title: DataTypes.STRING,
     name: DataTypes.STRING,
     description: DataTypes.TEXT,
     primaryService: DataTypes.STRING,
     backupService: DataTypes.STRING,
     qualifiedPath: DataTypes.STRING,
-    parentFileId: DataTypes.STRING,
+    parentFileId: DataTypes.UUID,
     registrationTime: DataTypes.STRING,
     updatedDateTime: DataTypes.STRING,
     dataLastUpdatedTime: DataTypes.STRING
@@ -39,6 +39,8 @@ module.exports = (sequelize, DataTypes) => {
       foreignKey: 'parentFileId'
     });
     indexes.belongsToMany(models.groups, {
+      constraints:false,
+      foreignKeyConstraint:false,
       through: 'assets_groups',
       as: 'groups',
       foreignKey: 'assetId',

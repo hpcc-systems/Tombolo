@@ -8,13 +8,15 @@ module.exports = (sequelize, DataTypes) => {
       allowNull: false,
       autoIncrement: false
     },
-    job_id: DataTypes.STRING,
-    application_id: DataTypes.STRING,
+    job_id: DataTypes.UUID,
+    application_id: DataTypes.UUID,
     name: DataTypes.STRING,
     type: DataTypes.STRING
   }, {paranoid: true, freezeTableName: true});
   jobparam.associate = function(models) {
     // associations can be defined here
+    jobparam.belongsTo(models.job, { foreignKey: 'job_id' });
+    jobparam.belongsTo(models.application, { foreignKey: 'application_id' });
   };
   return jobparam;
 };

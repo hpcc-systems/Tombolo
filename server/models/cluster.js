@@ -18,9 +18,12 @@ module.exports = (sequelize, DataTypes) => {
   }, {paranoid: true, freezeTableName: true});
   cluster.associate = function(models) {
     // associations can be defined here
-    cluster.hasMany(models.dataflow_cluster_credentials,{
-    foreignKey:'cluster_id', 
-    });
+    cluster.hasMany(models.dataflow, {foreignKey: 'clusterId' });
+    cluster.hasMany(models.job_execution, {foreignKey: 'clusterId' });
+    cluster.hasMany(models.dataflow_cluster_credentials,{ foreignKey:'cluster_id', });
+    cluster.hasMany(models.visualizations, {foreignKey: 'clusterId', onDelete: 'CASCADE'});
+    cluster.hasMany(models.fileTemplate, {foreignKey: 'cluster_id', onDelete: 'CASCADE'});
+    cluster.hasMany(models.fileMonitoring, {foreignKey: 'cluster_id', onDelete: 'CASCADE'});
   };
   return cluster;
 };

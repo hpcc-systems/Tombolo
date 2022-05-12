@@ -758,15 +758,18 @@ router.get('/job_details', [
     query_id = ${req.query.job_id}
     dataflow_id = ${req.query.dataflow_id}
   `);
-  let jobFiles = [];
+
   try {
     Job.findOne({
       where: { "application_id": req.query.app_id, "id":req.query.job_id },
-      include: [JobFile, JobParam, JobExecution],
+      include: [JobParam, JobExecution],
       attributes: { exclude: ['assetId'] },
     }).then(async function(job) {
 
-      if(job) {       
+      
+      if(job) { 
+        let jobfiles =  await JobFile.findAll({ where: { job_id: job.id }}, { raw: true });
+        job.jobfiles = jobfiles || [];      
         const isStoredOnGithub = job?.metaData?.isStoredOnGithub;
         const jobStatus = job.job_executions?.[0]?.status;
 
@@ -774,7 +777,6 @@ router.get('/job_details', [
         const filesIds = job.jobfiles.map(jf => jf.file_id);
         const superFiles = await File.findAll({where:{id: filesIds, isSuperFile: true}});
         const superFileIds = superFiles.map(file => file.id);
-
         if (isStoredOnGithub && (jobStatus === 'completed' || jobStatus === 'failed')) {
           const wuid = job.job_executions[0].wuid;
           try {
@@ -793,10 +795,6 @@ router.get('/job_details', [
               await JobFile.findOrCreate({ where: jobfileFields, defaults: jobfileFields });
             });
             
-            // #2 update local job instance and save ECL to DB.
-            const jobFiles = await job.getJobfiles();
-            // this will update local instance only
-            job.set('jobfiles', jobFiles);
             job.set('ecl', hpccJobInfo.ecl);
             await job.save();
           } catch (error) {
@@ -808,6 +806,8 @@ router.get('/job_details', [
         }
         
        var jobData = job.get({ plain: true });
+       jobfiles =  await JobFile.findAll({ where: { job_id: job.id }}, { raw: true });
+       jobData.jobfiles = jobfiles || []; 
 
        for (const jobFileIdx in jobData.jobfiles) {
           var jobFile = jobData.jobfiles[jobFileIdx];

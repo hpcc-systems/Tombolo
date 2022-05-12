@@ -39,7 +39,7 @@ function FileTemplate_permissablePurpose(props) {
                
       }
       fetchInitialData();
-  }, [selectedAsset]);
+  }, []);
 
   // Fetch al available licenses func
   const getLicenses = () => {
@@ -62,7 +62,7 @@ function FileTemplate_permissablePurpose(props) {
             body: JSON.stringify({
                 fileTemplate_id: fileTemplate.id,
             })
-         }) .then((response) => {
+         }).then((response) => {
             if (response.ok) {
             return response.json();
             }

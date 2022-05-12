@@ -5,34 +5,31 @@ module.exports = {
       id: {
         allowNull: false,
         primaryKey: true,
-        type: Sequelize.UUID
+        type: Sequelize.UUID,
+        defaultValue: Sequelize.UUIDV4,
       },
-      name: {
-        type: Sequelize.STRING
-      },
-      host_url: {
-        type: Sequelize.STRING
-      },
-      port: {
-        type: Sequelize.STRING
-      },
-      username: {
-        type: Sequelize.STRING
-      },
-      hash: {
-        type: Sequelize.STRING
-      },
+      name: Sequelize.STRING,
+      thor_host: Sequelize.STRING,
+      thor_port: Sequelize.STRING,
+      roxie_host: Sequelize.STRING,
+      roxie_port: Sequelize.STRING,
+      username: Sequelize.STRING,
+      hash: Sequelize.STRING,
       createdAt: {
         allowNull: false,
-        type: Sequelize.DATE
+        type: Sequelize.DATE,
       },
       updatedAt: {
         allowNull: false,
-        type: Sequelize.DATE
-      }
+        type: Sequelize.DATE,
+      },
+      deletedAt: {
+        allowNull: true,
+        type: Sequelize.DATE,
+      },
     });
   },
   down: (queryInterface, Sequelize) => {
     return queryInterface.dropTable('cluster');
-  }
+  },
 };
