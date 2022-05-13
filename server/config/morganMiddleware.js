@@ -15,7 +15,7 @@ const skip = (req, res) => {
 };
 
 morgan.token('user', (req) => {
-  return req.authInfo?.name || req.user?.email || 'unknown user'
+  return req.authInfo?.email || req.user?.email || 'unknown user'
 })
 
 morgan.token('URL', (req) => {

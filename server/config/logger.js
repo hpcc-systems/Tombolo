@@ -16,8 +16,7 @@ const getFormat = ({ colorize }) =>
 
 const common = { handleExceptions: true, handleRejections: true }; // we want to catch any errors on promise rejections and add them to logs
 
-let DEV_LEVEL = 'verbose'; 
-let PROD_LEVEL = 'http';
+let DEFAULT_LOG_LEVEL = 'http';
 //! Changing to 'debug' will bring sequelize logs to console;
 // when in productions log into console everything up to PROD_LEVEL level. https://github.com/winstonjs/winston#logging-levels
 // error  0 | warn  1 | info  2 | http  3 | verbose  4 | debug  5 | silly  6 |
@@ -30,7 +29,7 @@ const logger = createLogger({
      new transports.Console({
       ...common,
       format: getFormat({ colorize:true }),
-      level: process.env.NODE_ENV !== 'production' ? DEV_LEVEL : PROD_LEVEL,
+      level: process.env.NODE_LOG_LEVEL || DEFAULT_LOG_LEVEL
     }) 
   ],
 });

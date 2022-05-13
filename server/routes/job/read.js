@@ -545,7 +545,7 @@ router.post('/schedule_job',
       }
 
       await Promise.all(cleanup);
-      console.log('-----------CLEANUP RAN-------------------------------');
+      logger.verbose(`-----------CLEANUP RAN-------------------------------`);
       // CLEAN UP END!
 
       // JOB IS SCHEDULED AS 'Template'
@@ -1057,6 +1057,7 @@ router.post( '/manualJobResponse',
 );
 
 const QueueDaemon = require('../../queue-daemon');
+const logger = require('../../config/logger');
 
 router.get('/msg', (req, res) => {
   if (req.query.topic && req.query.message) {
