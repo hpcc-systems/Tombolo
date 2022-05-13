@@ -8,7 +8,6 @@ const { body, validationResult} = require('express-validator');
 const validatorUtil = require('../../utils/validator');
 
 router.get('/consumers', (req, res) => {
-    console.log("[consumer/read.js] - Get consumer list");
     Consumer.findAll({order: [['createdAt', 'DESC']]}).then(function(consumers) {
         res.json(consumers);
     })
@@ -21,7 +20,6 @@ router.post('/consumer',[
     body('contact_email').isEmail().withMessage('Invalid E-mail')
 ], (req, res) => {
     const errors = validationResult(req).formatWith(validatorUtil.errorFormatter);
-    console.log("[save consumer/read.js] ");
     var consumerId, fieldsToUpdate;
     try {
         Consumer.findOrCreate(
@@ -61,7 +59,6 @@ router.get('/consumer', (req, res) => {
 });
 
 router.post('/delete', (req, res) => {
-    console.log("[delete/read.js] - delete consumer");
     try {
         Consumer.destroy(
             {where:{id: req.body.consumerToDelete}}

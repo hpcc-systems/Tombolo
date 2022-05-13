@@ -22,7 +22,6 @@ const { body, query, validationResult } = require('express-validator');
 const validatorUtil = require('../../utils/validator');
 
 router.get('/fileLayout', (req, res) => {
-    console.log("[fileLayout/read.js] - Get file Layout for file_id "+req.query.file_id);
     var basic = {}, results={};
     try {
         FileLayout.findAll({where:{"file_id":req.query.file_id}}).then(function(fileLayouts) {
@@ -36,7 +35,6 @@ router.get('/fileLayout', (req, res) => {
     }
 });
 router.get('/fileLayoutAndComplianceChart', (req, res) => {
-    console.log("[fileLayoutAndComplianceChart/read.js] - Get file Layout and chart data for file_id "+req.query.file_id);
     var basic = {}, results={};
     try {
         FileLayout.findAll({where:{"file_id":req.query.file_id}}).then(function(fileLayouts) {
@@ -114,7 +112,6 @@ router.get('/fileLayoutAndComplianceChart', (req, res) => {
 });
 
 router.get('/indexKeyPayload', (req, res) => {
-    console.log("[indexKeyPayload/read.js] - Get index key and payload details for  index_id "+req.query.index_id);
     var basic = {}, results={};
     try {
         Indexes.findOne({where:{"id":req.query.index_id}, include: [IndexKey, IndexPayload]}).then(function(indexes) {
@@ -130,7 +127,6 @@ router.get('/indexKeyPayload', (req, res) => {
 
 });
 router.get('/query_Fields', (req, res) => {
-    console.log("[query list/read.js] - Get query Fields for query_id: "+req.query.query_id);
     try {
         Query.findOne({where:{"id":req.query.query_id}, include: [QueryField]}).then(function(query) {
             res.json(query);
@@ -143,7 +139,6 @@ router.get('/query_Fields', (req, res) => {
     }
 });
 router.get('/jobParams', (req, res) => {
-    console.log("[jobParams] - Get job Params list for job_id: "+req.query.job_id);
     let jobFiles = [];
     try {
         Job.findOne({where:{"id":req.query.job_id}, include: [Jobparam]}).then(function(job) {
@@ -328,7 +323,6 @@ router.get( '/associatedDataflows',
         return res.status(422).json({ success: false, errors: errors.array() });
       }
   
-      console.log('[/associatedDataflows] - Get associated dataflows for : ' + req.query.assetId);
   
       try {
         const { application_id, assetId } = req.query;

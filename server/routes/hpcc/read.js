@@ -258,7 +258,6 @@ router.get('/getFileInfo', [
   if (!errors.isEmpty()) {
     return res.status(422).json({ success: false, errors: errors.array() });
   }
-	console.log('fileName: '+req.query.fileName+ " clusterId: "+req.query.clusterid );
   File.findOne({where: {name: req.query.fileName, application_id: req.query.applicationId}}).then(async (existingFile) => {
 		console.log(existingFile);
     if(existingFile) {
@@ -491,7 +490,6 @@ router.get('/getJobInfo', [
     return res.status(422).json({ success: false, errors: errors.array() });
   }
   try {
-  	console.log('jobName: '+req.query.jobWuid);
     Job.findOne({where: {name: req.query.jobName, cluster_id: req.query.clusterid, application_id: req.query.applicationId}, attributes:['id']}).then((existingJob) => {
       if(existingJob) {
         assetUtil.jobInfo(req.query.applicationId, existingJob.id).then((existingJobInfo) => {

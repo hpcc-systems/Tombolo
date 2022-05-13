@@ -753,11 +753,6 @@ router.get('/job_details', [
   if (!errors.isEmpty()) {
       return res.status(422).json({ success: false, errors: errors.array() });
   }
-  console.log(`[job_details] - Get job list for:
-    app_id = ${req.query.app_id}
-    query_id = ${req.query.job_id}
-    dataflow_id = ${req.query.dataflow_id}
-  `);
 
   try {
     Job.findOne({
@@ -899,7 +894,6 @@ router.post( '/delete',
     if (!errors.isEmpty()) {
       return res.status(422).json({ success: false, errors: errors.array() });
     }
-    console.log('[delete/read.js] - delete job = ' + req.body.jobId + ' appId: ' + req.body.application_id);
     try {
       await deleteJob(req.body.jobId,req.body.application_id);
       res.json({ result: 'success' });
@@ -978,7 +972,6 @@ router.get('/jobExecutionDetails', [
   if (!errors.isEmpty()) {
       return res.status(422).json({ success: false, errors: errors.array() });
   }
-  console.log("[jobExecutionDetails] - Get jobExecutionDetails for app_id = " + req.query.applicationId);
   try {
     const jobExecutions = await JobExecution.findAll({
       where:{

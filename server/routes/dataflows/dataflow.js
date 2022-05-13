@@ -114,7 +114,6 @@ router.get('/', [
   if (!errors.isEmpty()) {
     return res.status(422).json({ success: false, errors: errors.array() });
   }
-    console.log("[dataflow] - Get dataflow list for app_id = " + req.query.application_id);
     try {
       const searchParams = { application_Id: req.query.application_id };
       if (req.query.dataflow_id) searchParams.id = req.query.dataflow_id;
@@ -192,7 +191,6 @@ router.get('/assets', [
   if (!errors.isEmpty()) {
     return res.status(422).json({ success: false, errors: errors.array() });
   }
-  console.log("[app/read.js] - App route called: "+req.query.app_id + " dataflowId: "+req.query.dataflowId);
   let results = [];
 
   Dataflow.findOne({
