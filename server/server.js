@@ -1,4 +1,6 @@
 /* LIBRARIES */
+const path = require('path')
+require('dotenv').config({ path: path.join(process.cwd(), '..', '.env') });
 const express = require('express');
 const rateLimit = require("express-rate-limit");
 const tokenService = require('./utils/token_service');
@@ -17,7 +19,7 @@ const port = process.env.PORT || 3000
 /* Initialize Socket IO */
 const server = require('http').Server(app);
 const socketIo = require('socket.io')(server);
-exports.io = socketIo;
+module.exports.io = socketIo;
 
 app.set('trust proxy', 1);
 const limiter = rateLimit({

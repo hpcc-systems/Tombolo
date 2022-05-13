@@ -5,7 +5,6 @@ server {
 }
 
 server {
-  #listen 80;
   listen 443 ssl;
   ssl_certificate /etc/nginx/certs/$CERTIFICATE_NAME;
   ssl_certificate_key /etc/nginx/certs/$CERTIFICATE_KEY;
