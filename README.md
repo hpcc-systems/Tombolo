@@ -1,5 +1,5 @@
 # Tombolo - A Data Curation Tool for HPCC Systems
-![](/docs/images/tombolo/Slide1.png)
+![](/docs/images/tombolo/tombolo_cover_image.png)
 ## Installation Guide
 #### Local Environment (Without Docker)
 1. Clone the repository
