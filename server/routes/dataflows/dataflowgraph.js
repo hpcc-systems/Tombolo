@@ -7,8 +7,6 @@ const DataflowVersions = models.dataflow_versions;
 let Job = models.job;
 let File = models.file;
 let Index = models.indexes;
-const hpccUtil = require('../../utils/hpcc-util');
-const FileMonitoring = models.fileMonitoring;
 const validatorUtil = require('../../utils/validator');
 const { body, query, validationResult } = require('express-validator');
 const JobScheduler = require('../../job-scheduler');
@@ -155,6 +153,78 @@ router.post( '/save_versions',
     }
   }
 );
+
+router.post( '/change_versions',
+  [
+    body('newVersionId').isUUID(4).withMessage('Invalid version id'),
+    body('dataflowId').isUUID(4).withMessage('Invalid dataflow id'),
+    body('prevMonitorIds').isArray().withMessage('Invalid prevMonitorIds'),
+  ],
+  async (req, res) => {
+    const errors = validationResult(req).formatWith(validatorUtil.errorFormatter);
+    if (!errors.isEmpty()) return res.status(422).json({ success: false, errors: errors.array() });
+    try {
+      const { prevMonitorIds, newVersionId, dataflowId } = req.body;
+
+      const version = await DataflowVersions.findOne({ where: { id: newVersionId } });
+      if (!version) throw new Error('Version does not exist');
+      
+      // To change graph version we need to update file template monitoring and cron jobs with latest setup;
+      const { newMonitorIds, cronjobs } = version.graph.cells.reduce(
+        (acc, node) => {
+          if (node.data?.isMonitoring) acc.newMonitorIds.push(node.data.assetId);
+          if (node.data?.schedule?.cron)
+            acc.cronjobs.push({ id: node.data.assetId, schedule: node.data.schedule });
+          return acc;
+        },
+        { newMonitorIds: [], cronjobs: [] }
+      );
+      
+      /* FileMonitoring steps:
+        - remove filemonitorings that are not in selected graph;
+        - add file monitorings that were not in prev graph;  
+      */  
+      for (const id of prevMonitorIds) {
+        if (!newMonitorIds.includes(id)) {
+          await assetUtil.deleteFileMonitoring({ fileTemplateId: id, dataflowId });
+        }
+      }
+
+      for (const id of newMonitorIds) {
+        if (!prevMonitorIds.includes(id)) {
+          await assetUtil.createFileMonitoring({ fileTemplateId: id, dataflowId });
+        }
+      }
+
+      /* Cron job steps:
+        - Remove all cron jobs for dataflow;
+        - Add new cron jobs from selected graph;
+      */
+      await JobScheduler.removeAllFromBree(dataflowId);
+
+      const jobs = await Job.findAll({ where: { id: cronjobs.map((job) => job.id) } });
+
+      for (const job of jobs) {
+        const schedule = cronjobs.find((cronJob) => cronJob.id === job.id)?.schedule;
+        if (schedule) {
+          assetUtil.addJobToBreeSchedule(job, schedule, dataflowId);
+        }
+      }
+
+      /* Update current dataflow with new version */
+      await Dataflow.update({ graph: version.graph }, { where: { id: dataflowId } });
+
+      res.status(200).send(version);
+    } catch (error) {
+      console.log('-error-----------------------------------------');
+      console.dir({ error }, { depth: null });
+      console.log('------------------------------------------');
+      res.status(500).json({ message: error.message });
+    }
+  }
+);
+
+
 
 
 //!! NOT IN USE
