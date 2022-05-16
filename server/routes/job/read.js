@@ -1,6 +1,4 @@
 const express = require('express');
-const path = require('path');
-const fs = require('fs')
 const router = express.Router();
 var models  = require('../../models');
 let Sequelize = require('sequelize');
@@ -12,7 +10,6 @@ let File = models.file;
 let FileLayout = models.file_layout;
 let FileValidation = models.file_validation;
 const FileTemplate = models.fileTemplate;
-const FileMonitoring = models.fileMonitoring;
 
 let AssetsGroups = models.assets_groups;
 let JobExecution = models.job_execution;
@@ -550,138 +547,12 @@ router.post('/schedule_job',
 
       // JOB IS SCHEDULED AS 'Template'
       if (schedule.type === 'Template') {
-        /*  Check if there is existing File Monitoring WU based on this template. 
-              If there is existing file monitoring WU, there is no need to create a new one */
-        const fileMonitoringWU = await FileMonitoring.findOne({ where: { fileTemplateId: schedule.dependsOn[0] } });
-
-        if (!fileMonitoringWU) {
-          // Get template details
-          const template = await FileTemplate.findOne({ where: { id: schedule.dependsOn[0] } });
-          if (!template) throw Error('Template not found');
-          
-          const { machine, lzPath, directory, landingZone, monitorSubDirs } = template.metaData;
-          let dirPath = directory.join('/');
-          const completeDirPath = `${lzPath}/${dirPath}/`;
-
-          const pattern = {
-            endsWith: `*${template.searchString}`,
-            contains: `*${template.searchString}*`,
-            startsWith: `${template.searchString}*`,
-          };
-
-          let filePattern = `${completeDirPath}${pattern[template['fileNamePattern']]}`;
-
-          //Create empty WU
-          const wuId = await hpccUtil.createWorkUnit(template.cluster_id, { jobname: `${template.title}_File_Monitoring` });
-          //  construct ecl code with template details and write it to fs
-          const code = hpccUtil.constructFileMonitoringWorkUnitEclCode({
-            lzPath,
-            filePattern,
-            monitorSubDirs,
-            lzHost: machine,
-            wu_name: `${template.title}_File_Monitoring`,
-          });
-
-          const parentDir = path.join(process.cwd(), 'eclDir');
-          const pathToEclFile = path.join(process.cwd(), 'eclDir', `${template.title}.ecl`);
-          fs.writeFileSync(pathToEclFile, code);
-
-          // update the wu with ecl archive
-          const args = ['-E', pathToEclFile, '-I', parentDir];
-          const archived = await hpccUtil.createEclArchive(args, parentDir);
-
-          const updateBody = {
-            Wuid: wuId,
-            QueryText: archived.stdout,
-            Jobname: `${template.title}_File_Monitoring`,
-          };
-
-          const workUnitService = await hpccUtil.getWorkunitsService(template.cluster_id);
-          await workUnitService.WUUpdate(updateBody);
-
-          //Submit the wu
-          const submitBody = { Wuid: wuId, Cluster: 'hthor' };
-          await workUnitService.WUSubmit(submitBody);
-          fs.unlinkSync(pathToEclFile);
-
-          //Add to file monitoring table
-          const fileMonitoring = await FileMonitoring.create({
-            wuid: wuId,
-            cluster_id: template.cluster_id,
-            dataflow_id: dataflowId,
-            fileTemplateId: template.id,
-            metaData: { dataflows: [dataflowId] },
-          });
-
-          console.log('--MONITORING CREATED----------------------------------------');
-          console.dir({ wuid: wuId, fileMonitoring: fileMonitoring.id }, { depth: null });
-          console.log('------------------------------------------');
-
-        } else {
-          let newMetaData = {
-            ...fileMonitoringWU.metaData,
-            dataflows: [...fileMonitoringWU.metaData.dataflows, dataflowId],
-          }; // Dataflows using the same file monitoring WU
-
-          await FileMonitoring.update({ metaData: newMetaData }, { where: { id: fileMonitoringWU.id } });
-          console.log('--MONITORING UPDATED----------------------------------------');
-          console.dir({ wuid: fileMonitoringWU.wuid, fileMonitoring: fileMonitoringWU.id }, { depth: null });
-          console.log('------------------------------------------');
-        }
+        await assetUtil.createFileMonitoring({ fileTemplateId: schedule.dependsOn[0], dataflowId })
       }
 
       // JOB IS SCHEDULED AS 'Time'
       if (schedule.type === 'Time') {
-          // ADD JOB TO BREE SCHEDULE
-          const getfileName = () => {
-            switch (job.jobType) {
-              case 'Script':
-                return SUBMIT_SCRIPT_JOB_FILE_NAME;
-              case 'Manual':
-                return SUBMIT_MANUAL_JOB_FILE_NAME;
-              default: {
-                if (job.metaData.isStoredOnGithub) {
-                  return SUBMIT_GITHUB_JOB_FILE_NAME;
-                } else {
-                  return SUBMIT_JOB_FILE_NAME;
-                }
-              }
-            }
-          };
-
-          const jobSettings = {
-            jobId: job.id,
-            jobName: job.name,
-            jobfileName: getfileName(),
-            title: job.title,
-            cron: schedule.cron,
-            jobType: job.jobType,
-            contact: job.contact,
-            metaData: job.metaData,
-            sprayFileName: job.sprayFileName,
-            sprayDropZone: job.sprayFileName,
-            sprayedFileScope: job.sprayedFileScope,
-            clusterId: job.cluster_id,
-            dataflowId,
-            applicationId: job.application_id,
-          };
-
-          if (jobSettings.jobType === 'Manual') {
-            jobSettings.status = 'wait';
-            jobSettings.manualJob_meta = {
-              jobType: 'Manual',
-              jobName: jobSettings.jobName,
-              notifiedTo: jobSettings.contact,
-              notifiedOn: new Date().getTime(),
-            };
-          }
-
-          const result = JobScheduler.addJobToScheduler(jobSettings);
-          if (result.error) throw new Error(result.error)
-
-          console.log(`-JOB SCHEDULED-Time----------------------------------------`);
-          console.dir({ job: job.id, jobname: job.name, schedule }, { depth: null });
-          console.log('------------------------------------------');
+        assetUtil.addJobToBreeSchedule(job, schedule, dataflowId);
       }
 
       // JOB IS SCHEDULED AS 'Message'
@@ -691,7 +562,8 @@ router.post('/schedule_job',
       }
 
       const newSchedule = {...schedule};
-      delete newSchedule.prevSchedule;      
+      delete newSchedule.prevSchedule; 
+           
       res.json({
         schedule: newSchedule,
         success: true,
