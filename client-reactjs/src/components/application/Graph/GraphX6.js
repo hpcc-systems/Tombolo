@@ -158,6 +158,7 @@ function GraphX6({ readOnly = false, statuses }) {
   useEffect(() => {
     // INITIALIZING EVENT CANVAS AND STENCIL
     const graph = Canvas.init(graphContainerRef, miniMapContainerRef, readOnly);
+    graph.dataflowId = dataflowId; //adding dataflowId value to graph instance to avoid pulling it from redux everywhere;
     graphRef.current = graph;
 
     Shape.init({ handleContextMenu, disableContextMenu: readOnly , graph});

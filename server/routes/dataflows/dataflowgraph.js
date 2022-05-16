@@ -3,6 +3,7 @@ const router = express.Router();
 var models  = require('../../models');
 
 let Dataflow = models.dataflow;
+const DataflowVersions = models.dataflow_versions;
 let Job = models.job;
 let File = models.file;
 let Index = models.indexes;
@@ -107,6 +108,54 @@ router.post('/deleteAsset',
     }
   }
 );
+
+router.get( '/versions',
+  [query('dataflowId').isUUID(4).withMessage('Invalid dataflow id')],
+  async (req, res) => {
+    const errors = validationResult(req).formatWith(validatorUtil.errorFormatter);
+    if (!errors.isEmpty()) return res.status(422).json({ success: false, errors: errors.array() });
+
+    try {
+      const { dataflowId } = req.query;
+      const versions = await DataflowVersions.findAll({
+        where: { dataflowId },
+        attributes: ['id', 'name', 'description'],
+      });
+      res.status(200).send(versions);
+    } catch (error) {
+      console.log('-error-----------------------------------------');
+      console.dir({ error }, { depth: null });
+      console.log('------------------------------------------');
+      res.status(500).json({ message: error.message });
+    }
+  }
+);
+
+router.post( '/save_versions',
+  [
+    body('dataflowId').isUUID(4).withMessage('Invalid dataflow id'),
+    body('name').notEmpty().withMessage('Invalid version name'),
+    body('graph').isObject().withMessage('Invalid graph'),
+  ],
+  async (req, res) => {
+    const errors = validationResult(req).formatWith(validatorUtil.errorFormatter);
+    if (!errors.isEmpty()) return res.status(422).json({ success: false, errors: errors.array() });
+    
+    try {
+      const { name, description, dataflowId, graph } = req.body;
+
+      const version = await DataflowVersions.create({ name, description, graph, dataflowId });
+
+      res.status(200).send({ id: version.id, name: version.name, description: version.description });
+    } catch (error) {
+      console.log('-error /save-----------------------------------------');
+      console.dir({ error }, { depth: null });
+      console.log('------------------------------------------');
+      res.status(500).send({ message: error.message });
+    }
+  }
+);
+
 
 //!! NOT IN USE
 let updateNodeNameAndTitle = async (nodes) => {
