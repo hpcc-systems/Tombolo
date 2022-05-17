@@ -1,5 +1,5 @@
 import { LoadingOutlined, SaveOutlined, UserOutlined } from '@ant-design/icons';
-import { Modal, Form, Input, Empty, Menu, message, Alert } from 'antd';
+import { Modal, Form, Input, Empty, Menu, message, Alert, Space, Typography } from 'antd';
 
 import { Toolbar } from '@antv/x6-react-components';
 import { useState } from 'react';
@@ -61,15 +61,20 @@ const VersionsButton = ({ graphRef }) => {
 
   const selectVersion = (e) => {;
     const clickedVersion = versions.find((version) => version.id === e.key);
-    
+
     confirm({
-      title: 'Do you want to go to different version?',
+      width:'700px',
+      title: `Would you like to switch to version "${clickedVersion.name}" ?`,
       content: (
-        <Alert
-          type="warning"
-          description={`You are about to switch graph to version "${clickedVersion.name}", please save your current changes before switching otherwise they will be lost permanently. Press "OK" to continue, or "Cancel" to return.`}
-        />
+        <>
+          <Alert type="warning"  message='Please save your current changes before switching otherwise they will be lost permanently.'/>
+          <Space align='start' style={{marginTop:"15px"}}>
+            <Typography.Text strong>Description:</Typography.Text>
+            <Typography.Text style={{maxWidth:'400px'}}>{clickedVersion.description || 'None'}</Typography.Text>
+          </Space>
+        </>
       ),
+      okText:'Switch',
       onOk() {
         return changeVersion(clickedVersion);
       },
@@ -139,7 +144,7 @@ const VersionsButton = ({ graphRef }) => {
         active={saveGraph.loading}
         icon={saveGraph.loading ? <LoadingOutlined /> : <SaveOutlined />}
         onClick={openSaveDialog}>
-        {saveGraph.loading ? '...saving' : 'Save'}
+        {saveGraph.loading ? '...Saving' : 'Save Version'}
       </Item>
       <Item name="versions" tooltip="Versions" dropdown={getVersionsList()} />
       <VersionForm
