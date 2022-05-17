@@ -67,22 +67,22 @@ jobs:
         echo ${{ secrets.CLUSTER_WHITE_LIST }} >> cluster-whitelist.js
       working-directory: server
       
-    - name: create env file
-      run: |
-        touch .env
-        echo DB_USERNAME=${{ secrets.DB_USERNAME }} >> .env
-        echo DB_PASSWORD=${{ secrets.DB_PASSWORD }} >> .env
-        echo MYSQL_SSL_ENABLED=${{ secrets.MYSQL_SSL_ENABLED }} >> .env
-        echo DB_PORT=${{ secrets.DB_PORT }} >> .env
-        echo DB_NAME=${{ secrets.DB_NAME }} >> .env
-        echo DB_HOSTNAME=${{ secrets.DB_HOSTNAME }} >> .env
-        echo AUTH_SERVICE_URL=${{ secrets.AUTH_SERVICE_URL }} >> .env
-        echo AUTHSERVICE_TOMBOLO_CLIENT_ID=${{ secrets.AUTHSERVICE_TOMBOLO_CLIENT_ID }} >> .env
-        echo ALGORITHM=${{ secrets.ALGORITHM }} >> .env
-        echo IV_LENGTH=${{ secrets.IV_LENGTH }} >> .env
-        echo ENCRYPTION_KEY=${{ secrets.ENCRYPTION_KEY }} >> .env
-        echo secret=${{ secrets.secret }} >> .env
-      working-directory: server
+#     - name: create env file
+#       run: |
+#         touch .env
+#         echo DB_USERNAME=${{ secrets.DB_USERNAME }} >> .env
+#         echo DB_PASSWORD=${{ secrets.DB_PASSWORD }} >> .env
+#         echo MYSQL_SSL_ENABLED=${{ secrets.MYSQL_SSL_ENABLED }} >> .env
+#         echo DB_PORT=${{ secrets.DB_PORT }} >> .env
+#         echo DB_NAME=${{ secrets.DB_NAME }} >> .env
+#         echo DB_HOSTNAME=${{ secrets.DB_HOSTNAME }} >> .env
+#         echo AUTH_SERVICE_URL=${{ secrets.AUTH_SERVICE_URL }} >> .env
+#         echo AUTHSERVICE_TOMBOLO_CLIENT_ID=${{ secrets.AUTHSERVICE_TOMBOLO_CLIENT_ID }} >> .env
+#         echo ALGORITHM=${{ secrets.ALGORITHM }} >> .env
+#         echo IV_LENGTH=${{ secrets.IV_LENGTH }} >> .env
+#         echo ENCRYPTION_KEY=${{ secrets.ENCRYPTION_KEY }} >> .env
+#         echo secret=${{ secrets.secret }} >> .env
+#       working-directory: server
       
         
     - name: Use Node.js 14
