@@ -173,7 +173,7 @@ class JobScheduler {
   async scheduleActiveCronJobs() {
     try {
       // get all graphs
-      const dataflows = await Dataflow.findAll( { attributes: ['graph'] });
+      const dataflows = await Dataflow.findAll( { attributes: ['graph', 'id'] });
 
       for (const dataflow of dataflows) {
         const cronScheduledNodes = dataflow.graph?.cells?.filter((cell) => cell.data?.schedule?.cron) || [];
@@ -189,7 +189,7 @@ class JobScheduler {
               const isGitHubJob = job.metaData?.isStoredOnGithub;
 
               const workerData = {
-                dataflowId: dataflowsGraph.dataflowId,
+                dataflowId: dataflow.id,
                 applicationId: job.application_id,
                 cron: node.data.schedule.cron,
                 clusterId: job.cluster_id,
