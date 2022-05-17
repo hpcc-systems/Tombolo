@@ -20,25 +20,25 @@ export const DataflowInstanceDetails = () => {
 
   const params = useParams();
 
-  const getJobExecutionDetails = async () => {
+  const getJobExecutionDetails = async (stopPolling) => {
     try {
       const applicationId = applicationReducer.application.applicationId || params.applicationId;
       const dataflowId = dataflowReducer.dataflowId || params.dataflowId;
-
-      setJobExecutions((prev) => ({ ...prev, loading: true, error:'' }));
 
       const response = await fetch( '/api/job/jobExecutionDetails?dataflowId=' + dataflowId + '&applicationId=' + applicationId, { headers: authHeader() } );
       if (!response.ok) handleError(response);
 
       const data = await response.json();
 
-      setJobExecutions((prev) => ({ ...prev, loading: false, data }));
+      setJobExecutions((prev) => ({ ...prev,  data }));
     } catch (error) {
       console.log('-error-----------------------------------------');
       console.dir({ error }, { depth: null });
       console.log('------------------------------------------');
       message.error(error.message);
-      setJobExecutions((prev) => ({ ...prev, loading: false, error: error.message }));
+      message.error("Automatic status updates has stopped!");
+      setJobExecutions((prev) => ({ ...prev, error: error.message }));
+      if (stopPolling) stopPolling();
     }
   };
 
@@ -46,29 +46,57 @@ export const DataflowInstanceDetails = () => {
   const handleJEFilters = (data) => {
     setJobExecutions((prev) => ({ ...prev, JETableFilters: data }));
   };
-  
-  //Set selected Job Execution group
-  const onGroupSelect = (id) => {
+
+  // Get Status for selected execution group
+  const getStatuses = (groupId) => {
     const dataflowId = dataflowReducer.dataflowId || params.dataflowId;
-    const statuses = jobExecutions.data.reduce((acc, el) => {
-      if (el.jobExecutionGroupId === id) {
+    return jobExecutions.data.reduce((acc, el) => {
+      if (el.jobExecutionGroupId === groupId) {
         const subProcessId = el.subProcess?.id || '';
-        acc.push({ status: el.status, assetId: el.task, subProcessId: dataflowId === subProcessId ? '' : subProcessId});
+        acc.push({
+          status: el.status,
+          assetId: el.task,
+          subProcessId: dataflowId === subProcessId ? '' : subProcessId,
+        });
       }
       return acc;
     }, []);
-    setJobExecutions((prev) => ({ ...prev, selectedJEGroup: id, statuses }));
+  };
+  
+  //Set selected Job Execution group
+  const onGroupSelect = (groupId) => {
+    const statuses = getStatuses(groupId);
+    setJobExecutions((prev) => ({ ...prev, selectedJEGroup: groupId, statuses }));
   };
 
   useEffect(() => {
-    (async () => {
-      await getJobExecutionDetails();
-      const LSGraphHeight = JSON.parse(localStorage.getItem('graphSize'));
-      if (LSGraphHeight) {
-        setGraphSize( prev => ({...prev, height: LSGraphHeight }));
-      }
-    })();
+    // fetch details on initial load
+    getJobExecutionDetails();
+    // Polling our backend for status
+    const POLLING_INTERVAL= 30000; // will poll every 30s
+    const checkStatus = setInterval(() => {
+      // define cleanup function
+      const stopPolling = () => clearInterval(checkStatus);
+      // Poll every n seconds;
+      getJobExecutionDetails( stopPolling );
+    },POLLING_INTERVAL );
+  
+    const LSGraphHeight = JSON.parse(localStorage.getItem('graphSize'));
+    if (LSGraphHeight) {
+      setGraphSize((prev) => ({ ...prev, height: LSGraphHeight }));
+    }
+    
+    return () => clearInterval(checkStatus);
   }, []);
+
+  useEffect(() => {
+    const { data, selectedJEGroup } = jobExecutions;
+    if (data.length > 0 && selectedJEGroup) {
+      const statuses = getStatuses(selectedJEGroup);
+      setJobExecutions((prev) => ({ ...prev, statuses }));
+    }
+  }, [jobExecutions.data]);
+  
 
   if (!applicationReducer.application || !applicationReducer.application.applicationId) return null;
  
@@ -117,9 +145,6 @@ export const DataflowInstanceDetails = () => {
                 >
                   Clear all Filters
                 </Button>
-                <Button type="primary" onClick={getJobExecutionDetails}>
-                  Refresh Records
-                </Button>
               </Space>
             }
             style={{ padding: '10px' }}
@@ -127,10 +152,9 @@ export const DataflowInstanceDetails = () => {
             <TabPane tab="Workunits" key="1">
               <Spin spinning={jobExecutions.loading}>
                 <JobExecutionDetails
-                  refreshData={getJobExecutionDetails}
-                  jobExecutions={jobExecutions.data}
                   setFilters={handleJEFilters}
                   selectJEGroup={onGroupSelect}
+                  jobExecutions={jobExecutions.data}
                   JEGroup={jobExecutions.selectedJEGroup}
                   JEGroupFilters={jobExecutions.JETableFilters}
                 />
@@ -139,10 +163,9 @@ export const DataflowInstanceDetails = () => {
             <TabPane tab="Manual Jobs" key="2">
               <Spin spinning={jobExecutions.loading}>
                 <ManualJobsStatus
-                  refreshData={getJobExecutionDetails}
-                  jobExecutions={jobExecutions.data}
                   graphSize={graphSize}
                   handleJEFilters={handleJEFilters}
+                  jobExecutions={jobExecutions.data}
                   JETableFilters={jobExecutions.JETableFilters}
                 />
               </Spin>
