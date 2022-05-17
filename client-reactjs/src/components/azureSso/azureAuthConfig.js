@@ -46,7 +46,6 @@ export const msalConfig = {
  * https://docs.microsoft.com/en-us/azure/active-directory/develop/v2-permissions-and-consent#openid-connect-scopes
  */
 export const loginRequest = {
-    // scopes: ['User.read', 'email'],
     scopes : [process.env.REACT_APP_AZURE_API_TOKEN_SCOPE]
 };
 
@@ -55,7 +54,6 @@ export const loginRequest = {
  * between applications by providing a "login_hint" property.
  */
 export const silentRequestOptions = {
-    // scopes: ["openid", "profile"],
     scopes : [process.env.REACT_APP_AZURE_API_TOKEN_SCOPE],
     loginHint: "example@domain.net"
 };
