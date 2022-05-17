@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { Space, Table, Badge } from 'antd/lib';
 import { useParams } from 'react-router-dom';
 import { Constants } from '../../common/Constants';
@@ -56,6 +56,7 @@ function JobExecutionDetails({ jobExecutions, setFilters, selectJEGroup, JEGroup
     return 'some-failed';
   };
 
+  const initLoad = useRef(true);
   //When component loads, find the count of job execution with same job execution group ID and group them together
   useEffect(() => {
     if (jobExecutions.length > 0) {
@@ -84,11 +85,13 @@ function JobExecutionDetails({ jobExecutions, setFilters, selectJEGroup, JEGroup
 
       setJEGroupData(Object.values(groupExecutions));
 
-      const JEGroupIds = Object.keys(groupExecutions);
-
-      const selectedGroup = executionGroupId || JEGroupIds[JEGroupIds.length - 1] || '';
-
-      selectJEGroup(selectedGroup);
+      // On initial load we want to select first execution group but avoid this action next time, when poller updates jobExecutions list
+      if(initLoad.current){
+        const JEGroupIds = Object.keys(groupExecutions);
+        const selectedGroup = executionGroupId || JEGroupIds[JEGroupIds.length - 1] || '';
+        selectJEGroup(selectedGroup);
+        initLoad.current=false;
+      }
     }
   }, [jobExecutions]);
 
