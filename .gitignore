@@ -14,3 +14,4 @@ gitClones/**
 !gitClones/.gitkeep
 .vscode
 .prettierignore 
+docker-compose.yml
