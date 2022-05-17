@@ -80,13 +80,7 @@ jobs:
         echo IV_LENGTH=${{ secrets.IV_LENGTH }} >> .env
         echo ENCRYPTION_KEY=${{ secrets.ENCRYPTION_KEY }} >> .env
         echo secret=${{ secrets.secret }} >> .env
-      working-directory: server
-      
-    - name: Print env
-      run: |
-        less .env
-      working-directory: server
-      
+      working-directory: server   
         
     - name: Use Node.js 14
       uses: actions/setup-node@v2
@@ -109,4 +103,4 @@ jobs:
       with: 
         app-name: 'tomboloapi-eastus2-dev'
         publish-profile: ${{ secrets.AZURE_WEBAPP_PUBLISH_PROFILE_API }}
-        package: ${{ env.AZURE_WEBAPP_PACKAGE_PATH_API }}    
+        package: ${{ env.AZURE_WEBAPP_PACKAGE_PATH_API }}
