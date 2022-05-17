@@ -24,7 +24,7 @@
 6. If you are using SSL copy all the content from `nginx.conf.template-ssl` and paste it to `nginx.conf.template`. 
    If you are not using SSL copy the content from `nginx.conf.template-no-ssl` and paste it to `nginx.conf.template`.
 7. Inside /server create new file `cluster-whitelist.js` and add cluster details. Use `cluster-whitelist.sample.js` as a template.
-8. Go Inside /client-react.js, create new `.env` file, copy-paste everything from .env.sample amd update necessary variables
+8. Go Inside /client-react.js, create new `.env` file, copy-paste everything from .env.sample and update necessary variables
 9. Build Application
     - On root create a new file `docker-compose.yml`
     - If you are not setting up Kafka and Zookeeper copy all the contents from `docker-compose-without-kafka`, paste to `docker-compose.yml` and run *`docker-compose up -d`*.
