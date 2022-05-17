@@ -117,7 +117,7 @@ router.get( '/versions',
       const { dataflowId } = req.query;
       const versions = await DataflowVersions.findAll({
         where: { dataflowId },
-        attributes: ['id', 'name', 'description'],
+        attributes: ['id', 'name', 'description', "createdBy", 'createdAt'],
       });
       res.status(200).send(versions);
     } catch (error) {
@@ -141,10 +141,11 @@ router.post( '/save_versions',
     
     try {
       const { name, description, dataflowId, graph } = req.body;
+      const createdBy = req.authInfo.email;
 
-      const version = await DataflowVersions.create({ name, description, graph, dataflowId });
+      const version = await DataflowVersions.create({ name, description, graph, createdBy, dataflowId });
 
-      res.status(200).send({ id: version.id, name: version.name, description: version.description });
+      res.status(200).send({ id: version.id, name: version.name, description: version.description, createdBy: version.createdBy, createdAt: version.createdAt });
     } catch (error) {
       console.log('-error /save-----------------------------------------');
       console.dir({ error }, { depth: null });
