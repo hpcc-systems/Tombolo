@@ -1,8 +1,8 @@
+import React, { useState } from 'react';
 import { LoadingOutlined, SaveOutlined, UserOutlined } from '@ant-design/icons';
-import { Modal, Form, Input, Empty, Menu, message, Alert, Space, Typography } from 'antd';
+import { Modal, Form, Input, Empty,  message, Alert, Space, Typography, } from 'antd';
 
-import { Toolbar } from '@antv/x6-react-components';
-import { useState } from 'react';
+import { Toolbar, Menu } from '@antv/x6-react-components';
 import { authHeader, handleError } from '../../../common/AuthHeader';
 import { useEffect } from 'react';
 
@@ -47,7 +47,7 @@ const VersionsButton = ({ graphRef }) => {
 
       const response = await fetch('/api/dataflowgraph/save_versions', options);
       if (!response.ok) handleError(response);
-      const result = await response.json();// { id, name, description }
+      const result = await response.json();// { id, name, description, createdBy, createdAt}
 
       setVersions((prev) => [ ...prev, result ]);
       closeSaveDialog();
@@ -59,9 +59,8 @@ const VersionsButton = ({ graphRef }) => {
     }
   };
 
-  const selectVersion = (e) => {;
-    const clickedVersion = versions.find((version) => version.id === e.key);
-
+  const selectVersion = (id) => {   
+    const clickedVersion = versions.find((version) => version.id === id);
     confirm({
       width:'700px',
       title: `Would you like to switch to version "${clickedVersion.name}" ?`,
@@ -110,24 +109,28 @@ const VersionsButton = ({ graphRef }) => {
       message.error(error.message);
     }
   }
-
+  
   const getVersionsList = () => {
     if (versions.length === 0) {
       return (
-        <Menu>
+        <Menu style={{ width: '200px' }}>
           <Empty image={Empty.PRESENTED_IMAGE_SIMPLE} />
         </Menu>
       );
     } else {
       return (
-        <Menu
-          onClick={selectVersion}
-          items={versions.map((version) => ({
-            key: version.id,
-            label: version.name,
-            icon: <UserOutlined />,
-          }))}
-        />
+        <Menu>
+          {versions.map((version) => (
+            <Menu.Item  className="graph-version-item" onClick={()=>selectVersion(version.id)} key={version.id}>
+              <Typography.Text style={{display:'block'}} strong>{version.name}</Typography.Text>
+              <Space style={{ fontSize: '13px' }}>
+                <Typography.Text type="secondary"> {new Date(version.createdAt).toLocaleString()},</Typography.Text>
+                <Typography.Text type="secondary"> {version.createdBy} </Typography.Text>
+                <UserOutlined />
+              </Space>
+            </Menu.Item >
+          ))}
+        </Menu>
       );
     }
   };

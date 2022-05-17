@@ -33,6 +33,10 @@
   min-width: 700px;
 }
 
+.graph-version-item>.x6-menu-item-button {
+  height: 44px;
+}
+
 .legend-icon{
   padding: 1px;
   margin-left: -3px;
