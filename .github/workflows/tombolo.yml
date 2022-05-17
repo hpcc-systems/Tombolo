@@ -15,6 +15,7 @@ env:
   WEB_URL: ${{ secrets.WEB_URL }}
   DB_USERNAME: ${{ secrets.DB_USERNAME }}
   DB_PASSWORD: ${{ secrets.DB_PASSWORD }}
+  MYSQL_SSL_ENABLED: ${{ MYSQL_SSL_ENABLED }}
   DB_PORT: ${{ secrets.DB_PORT }}
   DB_NAME: ${{ secrets.DB_NAME }}
   DB_HOSTNAME: ${{ secrets.DB_HOSTNAME }}
