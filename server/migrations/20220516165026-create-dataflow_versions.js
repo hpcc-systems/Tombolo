@@ -14,6 +14,10 @@ module.exports = {
         type: Sequelize.JSON,
         allowNull: true,
       },
+      createdBy: {
+        allowNull: false,
+        type: Sequelize.STRING,
+      },
       dataflowId: {
         type: Sequelize.UUID,
         references: {

@@ -11,6 +11,10 @@ module.exports = (sequelize, DataTypes) => {
     name: DataTypes.STRING,
     description: DataTypes.STRING,
     graph: DataTypes.JSON,
+    createdBy: {
+      allowNull: false,
+      type: DataTypes.STRING,
+    },
     dataflowId: DataTypes.UUID,
   }, {paranoid: true, freezeTableName: true});
   dataflow.associate = function(models) {
