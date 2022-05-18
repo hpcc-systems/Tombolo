@@ -92,6 +92,7 @@ jobs:
         echo VALIDATE_ISSUER=${{ secrets.VALIDATE_ISSUER }} >> .env
         echo PASS_REQ_TO_CALLBACK=${{ secrets.PASS_REQ_TO_CALLBACK }} >> .env
         echo LOGGING_LEVEL=${{ secrets.LOGGING_LEVEL }} >> .env
+        echo MYSQL_SSL_ENABLED=${{ secrets.MYSQL_SSL_ENABLED }} >> .env
       working-directory: server 
   
     - name: Use Node.js 14
