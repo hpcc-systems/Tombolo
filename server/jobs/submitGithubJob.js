@@ -1,6 +1,7 @@
 const { parentPort, workerData } = require("worker_threads");
 const { v4: uuidv4 } = require('uuid');
 const assetUtil = require('../utils/assets.js');
+const { log, dispatch } = require('./workerUtils')(parentPort);
 
 let isCancelled = false;
 if (parentPort) {
@@ -8,9 +9,6 @@ if (parentPort) {
     if (message === 'cancel') isCancelled = true;
   });
 }
-
-const logToConsole = (message) => parentPort.postMessage({action:"logging", data: message});
-const dispatchAction = (action,data) =>  parentPort.postMessage({ action, data });   
 
 (async () => { 
 
@@ -25,17 +23,16 @@ const dispatchAction = (action,data) =>  parentPort.postMessage({ action, data }
       jobExecutionGroupId : workerData.jobExecutionGroupId || uuidv4()
     }
 
-    logToConsole(`✔️ SUBMITGITHUBJOB.JS: CREATING GITHUB FLOW WITH BREE FOR JOB ${workerData.jobName} id:${workerData.jobId}; dflow: ${workerData.dataflowId};`);     
+    log('info',`✔️ SUBMITGITHUBJOB.JS: CREATING GITHUB FLOW WITH BREE FOR JOB ${workerData.jobName} id:${workerData.jobId}; dflow: ${workerData.dataflowId};`);     
     const summary = await assetUtil.createGithubFlow(flowSettings);
-    logToConsole('✔️ SUBMITGITHUBJOB.JS: SUBMITTED JOB FROM BREE, SUMMARY!')
-    logToConsole(summary)
+    log('info','✔️ SUBMITGITHUBJOB.JS: SUBMITTED JOB FROM BREE, SUMMARY!')
+    log('info',summary)
 
   } catch (err) {
-    logToConsole('submitGitHubJob.js catch an error in worker proccess');
+    log('info','submitGitHubJob.js catch an error in worker proccess');
 
   } finally{
-    if (!workerData.isCronJob) dispatchAction("remove");   // REMOVE JOB FROM BREE IF ITS NOT CRON JOB!
-
+    if (!workerData.isCronJob) dispatch("remove");   // REMOVE JOB FROM BREE IF ITS NOT CRON JOB!
     if (parentPort) {          
       parentPort.postMessage('done');     
     } else {

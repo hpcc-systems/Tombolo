@@ -41,7 +41,6 @@ router.post('/saveQuery', [
       return res.status(422).json({ success: false, errors: errors.array() });
   }
   var query_id, fieldsToUpdate={}, applicationId=req.body.query.basic.application_id;
-  console.log("[saveQuery] - Get file list for app_id = " + applicationId + " isNew: "+req.body.isNew);
   try {
     Query.findOne({where: {name: req.body.query.basic.name, application_id: applicationId}}).then(async (existingQuery) => {
       let query = null;
@@ -80,7 +79,6 @@ router.get('/query_list', [
   if (!errors.isEmpty()) {
       return res.status(422).json({ success: false, errors: errors.array() });
   }
-  console.log("[query list/read.js] - Get query list for app_id = " + req.query.app_id);
   try {
       Query.findAll({where:{"application_id":req.query.app_id}, order: [['createdAt', 'DESC']]}).then(function(queries) {
           res.json(queries);
@@ -104,7 +102,6 @@ router.get('/query_details', [
   if (!errors.isEmpty()) {
       return res.status(422).json({ success: false, errors: errors.array() });
   }
-  console.log("[query list/read.js] - Get query list for app_id = " + req.query.app_id + " query_id: "+req.query.query_id);
   try {
     Query.findOne({where:{"application_id":req.query.app_id, "id":req.query.query_id}, include: [QueryField]}).then(function(query) {
         res.json(query);
@@ -127,7 +124,6 @@ router.post('/delete', [
   if (!errors.isEmpty()) {
       return res.status(422).json({ success: false, errors: errors.array() });
   }
-  console.log("[delete/read.js] - delete query = " + req.body.queryId + " appId: "+req.body.application_id);
   try {
       Query.destroy(
           {where:{"id": req.body.queryId, "application_id":req.body.application_id}}

@@ -120,7 +120,6 @@ router.post('/all', [
     if (!errors.isEmpty()) {
       return res.status(422).json({ success: false, errors: errors.array() });
     }
-    console.log("[file list/read.js] - Get all file defns");
     try {
         Application.findAll({
           attributes: ['id'],
@@ -249,7 +248,6 @@ router.get('/CheckFileId', [
   if (!errors.isEmpty()) {
     return res.status(422).json({ success: false, errors: errors.array() });
   }
-  console.log("[CheckFileId/read.js] - check file by app_id = " + req.query.app_id +" and file_id ="+ req.query.file_id);
   try {
     File.findOne({
         where: {"application_id":req.query.app_id,"id":req.query.file_id}
@@ -275,7 +273,6 @@ router.get('/file_ids', [
   if (!errors.isEmpty()) {
     return res.status(422).json({ success: false, errors: errors.array() });
   }
-  console.log("[ffile_ids/read.js] - Get file list for app_id = " + req.query.app_id);
   var results = [];
   try {
     File.findAll({where:{"application_id":req.query.app_id}}).then(function(fileIds) {
@@ -307,7 +304,6 @@ router.get('/file_details', [
   if (!errors.isEmpty()) {
     return res.status(422).json({ success: false, errors: errors.array() });
   }
-    console.log("[file_details/read.js] - Get file details for app_id = " + req.query.app_id + " and file_id "+req.query.file_id);
     var basic = {}, results={};
     try {
         assetUtil.fileInfo(req.query.app_id, req.query.file_id).then((fileInfo) => {
@@ -408,7 +404,6 @@ router.post('/saveFile', [
     body('file.basic.title')
     .matches(/^[a-zA-Z]{1}[a-zA-Z0-9_:.\-]*$/).withMessage('Invalid title')
   ], async (req, res) => {
-    console.log("[file list/read.js] - Get file list for app_id = " + req.body.file.app_id + " isNewFile: "+req.body.isNew);
     var fileId='', applicationId=req.body.file.app_id, fieldsToUpdate={};
 
     try {
@@ -493,7 +488,6 @@ router.post('/delete', [
 });
 
 router.get('/file_fields', (req, res) => {
-  console.log("[file list/read.js] - Get fields in files app_id = " + req.query.file_ids);
   var results = [];
 
   try {
@@ -523,7 +517,6 @@ router.get('/downloadSchema', [
   if (!errors.isEmpty()) {
     return res.status(422).json({ success: false, errors: errors.array() });
   }
-  console.log("[downloadSchema/read.js] - downloadSchema app_id = " + req.query.app_id + " - type: "+req.query.type);
   try {
     if(req.query.type == 'ecl') {
       fileService.getECLSchema(req.query.app_id, res)
@@ -585,7 +578,6 @@ router.get('/fileLicenseCount', [
   if (!errors.isEmpty()) {
     return res.status(422).json({ success: false, errors: errors.array() });
   }
-  console.log("[fileLicenseCount/read.js] - get file license count for app_id = " +req.query.app_id);
   try {
       var result = {};
       FileLicense.findAll({
@@ -626,7 +618,6 @@ router.get('/DependenciesCount', [
     if (!errors.isEmpty()) {
       return res.status(422).json({ success: false, errors: errors.array() });
     }
-    console.log("[DependenciesCount/read.js] - get dependencies count for app_id = " +req.query.app_id);
     try {
         var result = {};
         File.findAndCountAll({
@@ -666,7 +657,6 @@ router.get('/fileLayoutDataType', [
     if (!errors.isEmpty()) {
       return res.status(422).json({ success: false, errors: errors.array() });
     }
-    console.log("[fileLayoutDataType/read.js] - get File Layout data types count for app_id = " +req.query.app_id);
     try {
       var result = [];
       FileLayout.findAll({
@@ -714,7 +704,6 @@ router.get('/getFileLayoutByDataType', [
     if (!errors.isEmpty()) {
       return res.status(422).json({ success: false, errors: errors.array() });
     }
-    console.log("[fileLayoutDataType/read.js] - get File Layout for app_id = " +req.query.app_id +" and datatype ="+req.query.data_type);
     try {
         var result = {};
         if(req.query.data_types=="others"){
@@ -754,7 +743,6 @@ router.get('/LicenseFileList', [
     if (!errors.isEmpty()) {
       return res.status(422).json({ success: false, errors: errors.array() });
     }
-    console.log("[LicenseFileList/read.js] - Get file list for app_id = " + req.query.app_id +" and License= "+req.query.name);
     try {
       if(req.query.name=="No License")
       {
@@ -863,7 +851,6 @@ router.get('/filelayout', [
     if (!errors.isEmpty()) {
       return res.status(422).json({ success: false, errors: errors.array() });
     }
-    console.log("[file_details/read.js] - Get file details for app_id = " + req.query.app_id + " and file_name "+req.query.name);
     var basic = {}, results={};
     try {
       File.findAll({where:
@@ -916,7 +903,6 @@ router.post('/visualization', [
     return res.status(422).json({ success: false, errors: errors.array() });
   }
 
-  console.log("[file visualization] - create visualization = " + req.body.id + " appId: "+req.body.application_id);
   try {
     let file=null, cluster=null, bodyObj={}, authToken='';    
     if(req.body.id) {

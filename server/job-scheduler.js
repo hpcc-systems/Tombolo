@@ -1,6 +1,8 @@
 const Bree = require('bree');
 const models = require('./models');
 var path = require('path');
+const logger = require('./config/logger');
+
 const Job = models.job;
 const MessageBasedJobs = models.message_based_jobs;
 
@@ -20,32 +22,43 @@ class JobScheduler {
   constructor() {
     this.bree = new Bree({
       root: false,
+      logger: false,
       errorHandler: (error, workerMetadata) => {
         if (workerMetadata.threadId) {
-          console.log( `There was an error while running a worker ${workerMetadata.name} with thread ID: ${workerMetadata.threadId}` );
+          logger.error( `There was an error while running a worker ${workerMetadata.name} with thread ID: ${workerMetadata.threadId}`, error);
         } else {
-          console.log(`There was an error while running a worker ${workerMetadata.name}`);
+          logger.error(`There was an error while running a worker ${workerMetadata.name}`, error);
         }
-        console.error(error);
-        //errorService.captureException(error);
       },
-
       workerMessageHandler: async (worker) => {
-        if (worker.message === 'done') console.log(`Worker for job '${worker.name}' signaled 'done'`);
-        if (worker.message.action === 'logging') {
-          console.log(`${worker.name}`);
-          console.log('------------------------------------------');
-          console.dir(worker.message.data);
-          console.log('------------------------------------------');
+        // message type is <any>, when worker exits message ='done' by default. 
+        //To pass more props we use object {level?: info|verbose|error ; text?:any; error?: instanceof Error; action?: scheduleNext|remove; data?:any }
+        const message = worker.message;
+        let workerName = worker.name; 
+        if(workerName.includes("job-status-poller")) workerName= "Status poller";
+        if(workerName.includes("file-monitoring")) workerName= "File monitoring";
+        
+        if (message === 'done') {
+          logger.verbose(`${workerName} signaled 'done'`);
         }
-        if (worker.message.action === 'remove') {
+        if (message?.level === 'verbose') {
+          logger.verbose(`[${workerName}]:`);
+          logger.verbose(message.text);
+        }
+        if (message?.level === 'info') {
+          logger.info(`[${workerName}]:`);
+          logger.info(message.text);
+        }    
+        if (message?.level === 'error') {
+          logger.error(`[${workerName}]:`)
+          logger.error(`${message.text}`, message.error);
+        }
+        if (message?.action === 'remove') {
           this.bree.remove(worker.name);
-          console.log('------------------------------------------');
-          console.log('👷 JOB REMOVED', worker.name);
-          console.log('------------------------------------------');
+          logger.info(`👷 JOB REMOVED:  ${workerName}`);
         }
-        if (worker.message.action === 'scheduleDependentJobs') {
-          await this.scheduleCheckForJobsWithSingleDependency({ ...worker.message.data });
+        if (message?.action == 'scheduleNext') {
+          await this.scheduleCheckForJobsWithSingleDependency({ ...message.data });
         }
       },
     });
@@ -53,12 +66,10 @@ class JobScheduler {
 
   bootstrap() {
     (async () => {
-      console.log('------------------------------------------');
-      console.log('✔️ JOBSCHEDULER IS BOOTSTRAPED, job-scheduler.js: class JobScheduler ');
-      console.log('------------------------------------------');
       await this.scheduleActiveCronJobs();
       await this.scheduleJobStatusPolling();
       await this.scheduleFileMonitoring();
+      logger.info('✔️ JOBSCHEDULER IS BOOTSTRAPED');
     })()
   }
 
@@ -73,14 +84,10 @@ class JobScheduler {
         return acc;
       }, []);
 
-      console.log('------------------------------------------');
-      console.log(`✔️  FOUND ${dependantJobs.length} DEPENDENT JOB/S`);
-      console.log('------------------------------------------');
+     logger.verbose(`✔️  FOUND ${dependantJobs.length} DEPENDENT JOB/S`);
 
       if (dependantJobs.length === 0 && dataflowId) {
-        console.log('------------------------------------------');
-        console.log('WORKFLOW EXECUTION COMPLETE, Checking if subscribed for notifications.');
-        console.log('------------------------------------------');
+        logger.info('WORKFLOW EXECUTION COMPLETE, Checking if subscribed for notifications.');
         try {
           const dataflow = await Dataflow.findOne({ where: { id: dataflowId } });
           const cluster = await Cluster.findOne({ where: { id: dataflow.clusterId } });
@@ -104,9 +111,7 @@ class JobScheduler {
             });
           }
         } catch (error) {
-          console.log('------------------------------------------');
-          console.log(error);
-          console.log('------------------------------------------');
+          logger.error(error);
         }
       } else {
         const failedJobsList = [];
@@ -122,9 +127,7 @@ class JobScheduler {
             const isManualJob = job.jobType === 'Manual';
             const isGitHubJob = job.metaData?.isStoredOnGithub;
 
-            console.log('------------------------------------------');
-            console.log( `🔄  scheduleCheckForJobsWithSingleDependency: EXECUTING DEPENDANT JOB "${job.name}" id:${job.id}; dflow: ${dataflowId};` );
-            console.log('------------------------------------------');
+            logger.info( `🔄 EXECUTING DEPENDANT JOB "${job.name}" id:${job.id}; dflow: ${dataflowId};` );
 
             const commonWorkerData = {
               applicationId: job.application_id,
@@ -150,7 +153,7 @@ class JobScheduler {
             }
             if (!status.success) throw status;
           } catch (error) {
-            console.log(error); // failed to execute dependent job through bree. Should notify user.
+            logger.error('Failed to execute dependent job through bree', error); // failed to execute dependent job through bree. Should notify user.
             if (error.contact) failedJobsList.push(error);
           }
         } // for loop ends.
@@ -162,9 +165,7 @@ class JobScheduler {
         }
       }
     } catch (error) {
-      console.log('-error-----------------------------------------');
-      console.dir({ error }, { depth: null });
-      console.log('------------------------------------------');
+      logger.error(error);
       // TODO FAILED TO SCHEDULE, inform user?
     }
   }
@@ -172,7 +173,7 @@ class JobScheduler {
   async scheduleActiveCronJobs() {
     try {
       // get all graphs
-      const dataflows = await Dataflow.findAll( { attributes: ['graph'] });
+      const dataflows = await Dataflow.findAll( { attributes: ['graph', 'id'] });
 
       for (const dataflow of dataflows) {
         const cronScheduledNodes = dataflow.graph?.cells?.filter((cell) => cell.data?.schedule?.cron) || [];
@@ -188,7 +189,7 @@ class JobScheduler {
               const isGitHubJob = job.metaData?.isStoredOnGithub;
 
               const workerData = {
-                dataflowId: dataflowsGraph.dataflowId,
+                dataflowId: dataflow.id,
                 applicationId: job.application_id,
                 cron: node.data.schedule.cron,
                 clusterId: job.cluster_id,
@@ -225,22 +226,16 @@ class JobScheduler {
               //finally add the job to the scheduler
               this.addJobToScheduler(workerData);
             } catch (error) {
-              console.log('-error-----------------------------------------');
-              console.dir({ error }, { depth: null });
-              console.log('------------------------------------------');
+              logger.error(error);
             }
           }
         }
       }
     } catch (error) {
-      console.log('-!!!!FAILED TO SCHEDULE ACTIVE JOBS IN BREE!!-----------------------------------------');
-      console.dir({ error }, { depth: null });
-      console.log('------------------------------------------');
+      logger.error(error);
     }
-    console.log('------------------------------------------');
-    console.log(`📢 ACTIVE CRON JOBS (${this.bree.config.jobs.length}) (does not include dependent jobs):`);
+    logger.verbose(`📢 ACTIVE CRON JOBS (${this.bree.config.jobs.length}) (does not include dependent jobs):`);
     this.logBreeJobs();
-    console.log('------------------------------------------');
   }
 
   async scheduleMessageBasedJobs(message) {
@@ -263,12 +258,10 @@ class JobScheduler {
           });
         }
       } else {
-        console.log('------------------------------------------');
-        console.error('📢 COULD NOT FIND JOB WITH NAME ' + message.jobName);
-        console.log('------------------------------------------');
+        logger.warn('📢 COULD NOT FIND JOB WITH NAME ' + message.jobName);
       }
     } catch (err) {
-      console.log(err);
+      logger.error(err)
     }
   }
 
@@ -277,15 +270,13 @@ class JobScheduler {
       let uniqueJobName = jobData.jobName + '-' + jobData.dataflowId + '-' + jobData.jobId;
       this.createNewBreeJob({ uniqueJobName, ...jobData });
       this.bree.start(uniqueJobName);
-      console.log('------------------------------------------');
-      console.log(`📢 JOB WAS SCHEDULED AS - ${uniqueJobName},  job-scheduler.js: addJobToScheduler`);
+      
+      logger.info(`📢 JOB WAS SCHEDULED AS - ${uniqueJobName},  job-scheduler.js: addJobToScheduler`);
       !skipLog && this.logBreeJobs();
-      console.log('------------------------------------------');
+      
       return {success: true}
     } catch (err) {
-      console.log('-err-----------------------------------------');
-      console.dir({err}, { depth: null });
-      console.log('------------------------------------------');
+      logger.error(err);
       const part2 = err.message.split(' an ')?.[1]  // error message is not user friendly, we will trim it to have everything after "an".
       if (part2) err.message = part2;
       return {success: false, error: err.message }
@@ -297,13 +288,11 @@ class JobScheduler {
       let uniqueJobName = jobData.jobName + '-' + jobData.dataflowId + '-' + jobData.jobId + '-' + uuidv4();
       this.createNewBreeJob({...jobData, uniqueJobName});
       this.bree.start(uniqueJobName);
-      console.log('------------------------------------------');
-      console.log(`✔️  BREE HAS STARTED JOB: "${uniqueJobName}"`);
+      logger.info(`✔️  BREE HAS STARTED JOB: "${uniqueJobName}"`);
       this.logBreeJobs();
-      console.log('------------------------------------------');
       return { success: true, message: `Successfully executed ${jobData.jobName }` };
     } catch (err) {
-      console.log(err);
+     logger.error(err);
       return {
         success: false,
         contact:jobData.contact,
@@ -354,12 +343,10 @@ class JobScheduler {
        const existingJob = this.bree.config.jobs.find(job=> job.name === name);
       if (existingJob) {
         await this.bree.remove(name);
-        console.log('📢 -Job removed from Bree-----------------------------------------');
-        console.dir(existingJob.name, { depth: null });
-        console.log('------------------------------------------');
+        logger.info(`📢 -Job removed from Bree ${existingJob.name}`);
       }
     } catch (err) {
-      console.log(err);
+      logger.error(err);
     }
   }
 
@@ -370,25 +357,20 @@ class JobScheduler {
         for (const job of existingJobs) {
           try {
             await this.bree.remove(job.name);
-            console.log('📢 -Job removed from Bree-----------------------------------------');
-            console.dir(job.name, { depth: null });
-            console.log('------------------------------------------');
+            logger.info(`📢 -Job removed from Bree ${job.name}`);
           } catch (error) {
-            console.log('-Failed to remove job from Bree------------------------------------');
-            console.dir({ error }, { depth: null });
-            console.log('------------------------------------------');
+            logger.error(error);
           }
         }
       }
     } catch (err) {
-      console.log(err);
+      logger.error(err);
     }
   }
   
   async scheduleJobStatusPolling() {
-    console.log('------------------------------------------');
-    console.log('📢 STATUS POLLING SCHEDULER STARTED...');
-    console.log('------------------------------------------');
+    logger.info('📢 STATUS POLLING SCHEDULER STARTED...');
+    
     try {
       let jobName = 'job-status-poller-' + new Date().getTime();
       
@@ -405,13 +387,13 @@ class JobScheduler {
 
       this.bree.start(jobName);
     } catch (err) {
-      console.log(err);
+      logger.error(err);
     }
   }
 
   // FILE MONITORING POLLER
-  async scheduleFileMonitoring() {    
-    console.log("📂 FILE MONITORING STARTED ....");  
+  async scheduleFileMonitoring() {
+    logger.info('📂 FILE MONITORING STARTED ...');
     try { 
       let jobName = 'file-monitoring-' + new Date().getTime();
         this.bree.add({
@@ -427,27 +409,25 @@ class JobScheduler {
 
         this.bree.start(jobName);    
     } catch (err) {
-      console.log(err);
+      logger.error(err);
     }
   }
 
-  // Console.log Bree Active Bree Jobs 
   logBreeJobs() {
-    const jobs = this.bree.config.jobs.filter((job) => {
-      if (job.name.includes('job-status-poller')) return false; // hide status poller from logs
-      if (job.name.includes('file-monitoring')) return false;// hide file monitoring from logs
-      return true;
-      });
-    console.dir(
-      jobs.map((job) => ({
+    if (process.env.NODE_ENV === 'production') return;//do not polute logs during production;
+    const jobs = this.bree.config.jobs;
+    logger.verbose('📢 Bree jobs:');
+    for (const job of jobs) {
+      if (job.name.includes('job-status-poller')) continue; // hide status poller from logs
+      if (job.name.includes('file-monitoring')) continue;// hide file monitoring from logs
+      logger.verbose({
         name: job.name,
         cron: job.cron,
         jobName: job.worker?.workerData?.jobName,
         dataflowId: job.worker?.workerData?.dataflowId,
         group: job.worker?.workerData?.jobExecutionGroupId,
-      })),
-      { depth: 4 }
-    );
+      });
+    }
   }
 }
 

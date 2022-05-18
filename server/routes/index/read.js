@@ -96,7 +96,6 @@ router.post('/saveIndex', [
   if (!errors.isEmpty()) {
       return res.status(422).json({ success: false, errors: errors.array() });
   }
-  console.log("[saveIndex/read.js] - Get index list for app_id = " + req.body.index.basic._id);
   var index_id, fieldsToUpdate={}, applicationId=req.body.index.basic.application_id;
 
   Index.findOne({where: {name: req.body.index.basic.name, application_id: applicationId}}).then(async (existingFile) => {
@@ -135,7 +134,6 @@ router.get('/index_details', [
   if (!errors.isEmpty()) {
       return res.status(422).json({ success: false, errors: errors.array() });
   }
-  console.log("[index_details/read.js] - Get index details for app_id = " + req.query.app_id + " and index_id "+req.query.index_id);
   var basic = {}, results={};
   try {
     assetUtil.indexInfo(req.query.app_id, req.query.index_id).then((indexInfo) => {
@@ -164,7 +162,6 @@ router.post('/delete', [
     if (!errors.isEmpty()) {
         return res.status(422).json({ success: false, errors: errors.array() });
     }
-    console.log("[delete/read.js] - Get file list for indexId = " + req.body.indexId + " appId: "+req.body.application_id);
     try {
         Index.destroy(
             {where:{id: req.body.indexId, application_id: req.body.application_id}}

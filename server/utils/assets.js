@@ -23,6 +23,7 @@ const path = require('path');
 const {execFile, spawn} = require('child_process');
 const JobSchedular = require('../job-scheduler');
 const { Op } = require('sequelize');
+const logger = require('../config/logger');
 
 exports.fileInfo = (applicationId, file_id) => {
   var results={};
@@ -329,8 +330,6 @@ const manuallyUpdateJobExecutionFailure = async ({jobExecution,tasks}) =>{
 
 exports.getJobEXecutionForProcessing = async () => {
   try {
-    console.log('------------------------------------------');
-    console.log("🔍 GETTING JOBS FOR PROCCESSING")
     const jobExecution = await JobExecution.findAll({
       where: { [Op.or]: [{status: 'submitted'}, {status: 'blocked'}, {status : 'wait'}]},
       order: [["updatedAt", "desc"]],
@@ -338,7 +337,7 @@ exports.getJobEXecutionForProcessing = async () => {
     });
     return jobExecution;  
   } catch (error) {
-    console.log(error);
+    logger.error('Failed to find job executions',error);
   }
 } 
 

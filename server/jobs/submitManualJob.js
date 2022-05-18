@@ -4,7 +4,7 @@ const assetUtil = require('../utils/assets.js');
 const models = require('../models');
 const { v4: uuidv4 } = require('uuid');
 const JobExecution = models.job_execution;
-
+const { log, dispatch } = require('./workerUtils')(parentPort);
 
 let isCancelled = false;
 if (parentPort) {
@@ -13,11 +13,8 @@ if (parentPort) {
   });
 }
 
-const logToConsole = (message) => parentPort.postMessage({action:"logging", data: message});
-const dispatchAction = (action,data) =>  parentPort.postMessage({ action, data });   
-
 (async () => {
-	logToConsole("Send notification ...");
+	log('info',"Send notification ...");
 	if(!workerData.jobExecutionGroupId){
 		workerData.jobExecutionGroupId = uuidv4();
 	}
@@ -33,9 +30,9 @@ const dispatchAction = (action,data) =>  parentPort.postMessage({ action, data }
 		if(execution){
 			await JobExecution.update({status : 'error'}, {where : {id : execution}})
 		}
-		logToConsole(err)
+		log("error",`Error in manualJob ${workerData.jobName}`, err);
 	} finally{
-	if (!workerData.isCronJob) dispatchAction("remove");   // REMOVE JOB FROM BREE IF ITS NOT CRON JOB!
+	if (!workerData.isCronJob) dispatch("remove");   // REMOVE JOB FROM BREE IF ITS NOT CRON JOB!
 
 	if (parentPort) {          
 		parentPort.postMessage('done');     

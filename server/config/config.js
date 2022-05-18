@@ -1,3 +1,5 @@
+const logger = require('./logger');
+
 require('dotenv').config();
 const dbConfigOptions = {
     username: process.env.DB_USERNAME,
@@ -6,7 +8,7 @@ const dbConfigOptions = {
     host: process.env.DB_HOSTNAME,
     dialect: 'mysql',
     seederStorage: 'json',
-    logging: false
+    logging: (msg) => logger.debug(msg), // change winston settings to 'debug' to see this log
 }
 
 if(process.env.MYSQL_SSL_ENABLED === "true"){

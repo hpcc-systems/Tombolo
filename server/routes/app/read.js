@@ -34,7 +34,6 @@ const jobScheduler = require('../../job-scheduler');
 const AssetGroups = models.assets_groups;
 
 router.get('/app_list', (req, res) => {
-  console.log("[app/read.js] - App route called");
 
   try {
     models.application.findAll({order: [['updatedAt', 'DESC']]}).then(function(applications) {
@@ -52,7 +51,6 @@ router.get('/app_list', (req, res) => {
 router.get('/appListByUsername',[
    query('user_name').notEmpty().withMessage('Invalid username')
 ], async (req, res) => {
-  console.log("[app/read.js] -  Getting app list for  ="+ req.query.user_name);
    const errors = validationResult(req).formatWith(validatorUtil.errorFormatter);
     if (!errors.isEmpty()) {
       return res.status(422).json({ success: false, errors: errors.array() });
@@ -77,7 +75,6 @@ router.get('/app', [
   if (!errors.isEmpty()) {
     return res.status(422).json({ success: false, errors: errors.array() });
   }
-  console.log("[app/read.js] - App route called: "+req.query.app_id);
 
   try {
     models.application.findOne({
