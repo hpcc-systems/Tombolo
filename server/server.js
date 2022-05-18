@@ -1,5 +1,7 @@
 /* LIBRARIES */
-const path = require('path')
+const path = require('path');
+const fs = require('fs');
+
 require('dotenv').config({ path: fs.existsSync(path.join(process.cwd(), '..', '.env')) ?
   path.join(process.cwd(), '..', '.env') : path.join(process.cwd(), '.env')});
 const express = require('express');
