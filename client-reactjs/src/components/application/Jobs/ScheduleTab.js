@@ -111,6 +111,8 @@ const ScheduleTab = ({ nodes, dataflowId, applicationId, selectedAsset, addToSch
   const generateCronTerm = (term, type) => {
     let msg = '',
       matches = [];
+    
+      if (term.startsWith('*/0')) return '';
 
     if (term.match(new RegExp(/^\*$/gm))) {
       msg += matchAsteriskCronTerm(type);
