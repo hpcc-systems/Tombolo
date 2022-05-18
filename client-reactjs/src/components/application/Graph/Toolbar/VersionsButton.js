@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
-import { LoadingOutlined, SaveOutlined, UserOutlined } from '@ant-design/icons';
-import { Modal, Form, Input, Empty,  message, Alert, Space, Typography, } from 'antd';
+import { DeleteOutlined, EditOutlined, ExclamationCircleOutlined, LoadingOutlined, SaveOutlined } from '@ant-design/icons';
+import { Modal, Form, Input, Empty,  message, Alert, Space, Typography, Divider } from 'antd';
 
 import { Toolbar, Menu } from '@antv/x6-react-components';
 import { authHeader, handleError } from '../../../common/AuthHeader';
@@ -9,7 +9,7 @@ import { useEffect } from 'react';
 const Item = Toolbar.Item; // eslint-disable-line
 const { confirm } = Modal;
 
-const defaultDialog = { visible: false, loading: false, error: '' };
+const defaultDialog = { visible: false, version:null, loading: false, error: '' };
 
 const VersionsButton = ({ graphRef }) => {
   const [saveGraph, setSaveGraph] = useState({ ...defaultDialog });
@@ -74,9 +74,7 @@ const VersionsButton = ({ graphRef }) => {
         </>
       ),
       okText:'Switch',
-      onOk() {
-        return changeVersion(clickedVersion);
-      },
+      onOk() { return changeVersion(clickedVersion); },
       onCancel() {},
     });
   };
@@ -103,7 +101,82 @@ const VersionsButton = ({ graphRef }) => {
 
       graphRef.current.fromJSON(version.graph);
     
-      message.success(`Switched to version ${version.name}!`);
+      message.success(`Switched to version "${version.name}"`);
+    } catch (error) {
+      console.log('Error fetch', error);
+      message.error(error.message);
+    }
+  }
+
+  const hideVersionsList = () =>{
+      const list = document.querySelector('.versions_list');
+      list.click();
+  }
+
+  const promptToRemove = (e, version) =>{
+    e.stopPropagation();
+    hideVersionsList();
+    confirm({
+      title: `Are you sure you want to remove "${version.name}"?`,
+      width:'700px',
+      icon: <ExclamationCircleOutlined />,
+      content: "Version will be removed permanently with all the version's graph settings",
+      okText: 'Remove',
+      okType: 'danger',
+      onOk() { return removeVersion(version) },
+      onCancel() {},
+    });
+  }
+
+  const removeVersion = async (version) =>{
+    try {
+      const options = {
+        method: 'DELETE',
+        headers: authHeader(),
+      };
+    
+      const response = await fetch(`/api/dataflowgraph/remove_version?id=${version.id}`, options);
+      if (!response.ok) handleError(response);
+    
+      const result = await response.json();
+      if(!result.success) throw new Error("Failed to remove version!")
+
+      setVersions(prev =>prev.filter(prevVersion => prevVersion.id !== version.id ))
+      closeSaveDialog();
+      message.success(`"${version.name}" version was successfully removed!`);
+    } catch (error) {
+      console.log('Error fetch', error);
+      message.error(error.message);
+    }
+  } 
+
+  const editVersion= (e, version) =>{
+    e.stopPropagation();
+    hideVersionsList();
+    setSaveGraph(prev=>({...prev, visible:true, version}))
+  };
+
+  const saveEditedVersion = async ({ name, description, id })=>{
+    try {
+      const payload = {
+        method: 'PUT',
+        headers: authHeader(),
+        body: JSON.stringify({ name, description, id }),
+      };
+
+      setSaveGraph((prev) => ({ ...prev, loading: true, error: '' }));
+      
+      const response = await fetch('/api/dataflowgraph/edit_version', payload);
+      if (!response.ok) handleError(response);
+    
+      const version = await response.json();
+
+      setVersions(prev =>prev.map(prevVersion => {
+        if (prevVersion.id === version.id ) return version
+        return prevVersion;
+      }))
+      closeSaveDialog();
+      message.success(`"${version.name}" version saved!`);
     } catch (error) {
       console.log('Error fetch', error);
       message.error(error.message);
@@ -120,15 +193,20 @@ const VersionsButton = ({ graphRef }) => {
     } else {
       return (
         <Menu>
-          {versions.map((version) => (
-            <Menu.Item  className="graph-version-item" onClick={()=>selectVersion(version.id)} key={version.id}>
-              <Typography.Text style={{display:'block'}} strong>{version.name}</Typography.Text>
-              <Space style={{ fontSize: '13px' }}>
-                <Typography.Text type="secondary"> {new Date(version.createdAt).toLocaleString()},</Typography.Text>
-                <Typography.Text type="secondary"> {version.createdBy} </Typography.Text>
-                <UserOutlined />
+          {versions.map((version, index) => (
+            <Menu.Item className="graph-version-item" onClick={() => selectVersion(version.id)} key={version.id}>
+            <Typography.Text style={{ display: 'block' }} strong> {version.name} </Typography.Text>
+            <Space style={{ fontSize: '13px' }} size="small" split={<Divider type="vertical" />}>
+              <Typography.Text type="secondary"> {new Date(version.createdAt).toLocaleString()}</Typography.Text>
+              <Typography.Text type="secondary" copyable={{ text: version.createdBy, tooltips: false }}> {version.createdBy} </Typography.Text>
+              {/* {index === 1 ? null: */}
+              <Space split={<Divider type="vertical" />}> 
+                <EditOutlined className="ant-typography-secondary" component="button" onClick={(e) => editVersion(e,version)} />
+                <DeleteOutlined className="ant-typography-secondary" component="button" onClick={(e)=> promptToRemove(e, version)}/>
               </Space>
-            </Menu.Item >
+              {/* } */}
+            </Space>
+          </Menu.Item>
           ))}
         </Menu>
       );
@@ -149,38 +227,48 @@ const VersionsButton = ({ graphRef }) => {
         onClick={openSaveDialog}>
         {saveGraph.loading ? '...Saving' : 'Save Version'}
       </Item>
-      <Item name="versions" tooltip="Versions" dropdown={getVersionsList()} />
-      <VersionForm
+      <Item className='versions_list' name="versions" tooltip="Versions" dropdown={getVersionsList()} />
+      {!saveGraph.visible ? null :
+        <VersionForm
         visible={saveGraph.visible}
+        version={saveGraph.version}
         loading={saveGraph.loading}
         onCreate={saveVersion}
+        onEdit={saveEditedVersion}
         onCancel={closeSaveDialog}
-      />
+        />
+      }
     </>
   );
 };
 
 export default VersionsButton;
 
-const VersionForm = ({ visible, loading, onCreate, onCancel }) => {
+const VersionForm = ({ visible, loading, onCreate, onEdit, onCancel, version }) => {
   const [form] = Form.useForm();
 
   const handleOk = async () => {
     try {
       const values = await form.validateFields();
-     await onCreate(values);
+      version ? await onEdit({...values, id: version.id }) : await onCreate(values);
      form.resetFields();
     } catch (error) {
       console.log('Validate Failed:', error);
     }
   };
 
+  useEffect(()=>{
+    if (version) {
+      form.setFieldsValue({name:version.name, description:version.description});
+    }
+  },[])
+
   return (
     <Modal
       visible={visible}
       destroyOnClose
-      title="Create a new version"
-      okText="Create"
+      title={version ? `Editing version: "${version.name}"` : "Create a new version" }
+      okText={version ? "Edit" :"Create"}
       cancelText="Cancel"
       onCancel={onCancel}
       onOk={handleOk}

@@ -37,6 +37,13 @@
   height: 44px;
 }
 
+.graph-version-item .x6-menu-item-text {
+  padding-right: 15px;
+}
+.graph-version-item .ant-divider-vertical {
+  margin: 0;
+}
+
 .legend-icon{
   padding: 1px;
   margin-left: -3px;

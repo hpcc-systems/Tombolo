@@ -118,6 +118,7 @@ router.get( '/versions',
       const versions = await DataflowVersions.findAll({
         where: { dataflowId },
         attributes: ['id', 'name', 'description', "createdBy", 'createdAt'],
+        order: [['createdAt', 'ASC']],
       });
       res.status(200).send(versions);
     } catch (error) {
@@ -132,7 +133,8 @@ router.get( '/versions',
 router.post( '/save_versions',
   [
     body('dataflowId').isUUID(4).withMessage('Invalid dataflow id'),
-    body('name').notEmpty().withMessage('Invalid version name'),
+    body('name').notEmpty().escape().withMessage('Invalid version name'),
+    body('description').optional({checkFalsy:true}).escape(),
     body('graph').isObject().withMessage('Invalid graph'),
   ],
   async (req, res) => {
@@ -146,6 +148,56 @@ router.post( '/save_versions',
       const version = await DataflowVersions.create({ name, description, graph, createdBy, dataflowId });
 
       res.status(200).send({ id: version.id, name: version.name, description: version.description, createdBy: version.createdBy, createdAt: version.createdAt });
+    } catch (error) {
+      console.log('-error /save-----------------------------------------');
+      console.dir({ error }, { depth: null });
+      console.log('------------------------------------------');
+      res.status(500).send({ message: error.message });
+    }
+  }
+);
+
+router.put( '/edit_version',
+  [
+    body('id').isUUID(4).withMessage('Invalid version id'),
+    body('name').notEmpty().trim().escape().withMessage('Invalid version name'),
+    body('description').optional({checkFalsy:true}).trim().escape(),
+  ],
+  async (req, res) => {
+    const errors = validationResult(req).formatWith(validatorUtil.errorFormatter);
+    if (!errors.isEmpty()) return res.status(422).json({ success: false, errors: errors.array() });
+    
+    try {
+      const { name, description, id } = req.body;
+
+      let version = await DataflowVersions.findOne({where:{id}});
+      if(!version) throw new Error('Version was not found');
+
+      version = await version.update({name, description});
+
+      res.status(200).send({ id: version.id, name: version.name, description: version.description, createdBy: version.createdBy, createdAt: version.createdAt });
+    } catch (error) {
+      console.log('-error /save-----------------------------------------');
+      console.dir({ error }, { depth: null });
+      console.log('------------------------------------------');
+      res.status(500).send({ message: error.message });
+    }
+  }
+);
+
+router.delete( '/remove_version',
+  [ query('id').isUUID(4).withMessage('Invalid version id'), ],
+  async (req, res) => {
+    const errors = validationResult(req).formatWith(validatorUtil.errorFormatter);
+    if (!errors.isEmpty()) return res.status(422).json({ success: false, errors: errors.array() });
+    
+    try {
+      const { id } = req.query;
+
+      const isRemoved = await DataflowVersions.destroy({where:{id}});
+      if(!isRemoved) throw new Error('Version was not removed!');;
+
+      res.status(200).send({ success: true, id });
     } catch (error) {
       console.log('-error /save-----------------------------------------');
       console.dir({ error }, { depth: null });
