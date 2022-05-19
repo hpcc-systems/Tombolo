@@ -31,6 +31,7 @@ env:
   REACT_APP_AZURE_REDIRECT_URI: ${{ secrets.REACT_APP_AZURE_REDIRECT_URI }}
   REACT_APP_AZURE_API_TOKEN_SCOPE: ${{ secrets.REACT_APP_AZURE_API_TOKEN_SCOPE }}
   CLIENT_ID: ${{ secrets.CLIENT_ID}}
+
 jobs:    
   build-ui:
     name: build-ui
@@ -55,20 +56,20 @@ jobs:
         app-name: 'tomboloui2-eastus2-dev'
         publish-profile: ${{ secrets.AZURE_WEBAPP_PUBLISH_PROFILE }}
         package: ${{ env.AZURE_WEBAPP_PACKAGE_PATH }}
+        
   build-api:
     name: build-api
     runs-on: self-hosted
-    #environment:
-      #name: 'DEV'
     steps:
     - uses: actions/checkout@main
+
     - name: Create cluster-whitelist
       run: |
         touch cluster-whitelist.js
         echo ${{ secrets.CLUSTER_WHITE_LIST }} >> cluster-whitelist.js
       working-directory: server
       
-    - name: create env file
+    - name: Create env file
       run: |
         touch .env
         echo DB_USERNAME=${{ secrets.DB_USERNAME }} >> .env
@@ -94,23 +95,39 @@ jobs:
         echo LOGGING_LEVEL=${{ secrets.LOGGING_LEVEL }} >> .env
         echo MYSQL_SSL_ENABLED=${{ secrets.MYSQL_SSL_ENABLED }} >> .env
       working-directory: server 
-  
-    - name: Use Node.js 14
-      uses: actions/setup-node@v2
+      
+      - name: Database Migration
+        run: |
+          npx sequelize-cli db:migrate        
+        working-directory: server   
+
+    - name: Log in to ACR
+      uses: docker/login-action@v1
       with:
-        node-version: 14
-    - name: npm install, build, and test
-      run: |
-        npm install
-        npm run build --if-present
-      working-directory: server
-    - name: dbmigrate
-      run: |
-        npx sequelize-cli db:migrate        
-      working-directory: server   
-    - name: 'Deploy to Azure WebApp'
+        registry: https://hpccsollabacr.azurecr.io/
+        username: ${{ secrets.ACR_USERNAME }}
+        password: ${{ secrets.ACR_PASSWORD }}
+
+    - name: Build and push container image to registry
+      uses: docker/build-push-action@v2
+      with:
+        push: true
+        tags: hpccsollabacr.azurecr.io/${{ secrets.ACR_USERNAME }}/tombolo-node:${{ github.sha }}
+        file: ./server/Dockerfile
+
+    deploy:
+    runs-on: ubuntu-latest
+    needs: build
+    environment:
+      name: 'production'
+      url: ${{ steps.deploy-to-webapp.outputs.webapp-url }}
+
+    steps:
+    - name: Deploy to Azure Web App
+      id: deploy-to-webapp
       uses: azure/webapps-deploy@v2
-      with: 
-        app-name: 'tomboloapi-eastus2-dev'
-        publish-profile: ${{ secrets.AZURE_WEBAPP_PUBLISH_PROFILE_API }}
-        package: ${{ env.AZURE_WEBAPP_PACKAGE_PATH_API }}
+      with:
+        app-name: 'tombolo-api'
+        slot-name: 'production'
+        publish-profile: ${{ secrets.ACR_PUBLISH_PROFILE }}
+        images: 'hpccsollabacr.azurecr.io/${{ secrets.ACR_USERNAME }}/tombolo-node:${{ github.sha }}'
