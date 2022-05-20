@@ -64,4 +64,4 @@ RUN echo " PRINT CONTENT OF CURRENT WORKING DIR ======================="
 
 EXPOSE 3000
 
-CMD ["node", "server.js"]
+CMD ["node", "server/server.js"]
