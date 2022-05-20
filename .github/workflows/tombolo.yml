@@ -138,7 +138,7 @@ jobs:
       id: deploy-to-webapp
       uses: azure/webapps-deploy@v2
       with:
-        app-name: 'temprory-test-tombolo'
+        app-name: 'temp-tombolo-test'
         slot-name: 'production'
         publish-profile: ${{ secrets.ACR_PUBLISH_PROFILE }}
         images: 'hpccsollabacr.azurecr.io/${{ secrets.ACR_USERNAME }}/tombolo-node:${{ github.sha }}'
