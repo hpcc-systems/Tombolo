@@ -98,6 +98,7 @@ jobs:
       
     - name: Database Migration
       run: |
+        npm install sequelize
         npx sequelize-cli db:migrate        
       working-directory: server   
 
