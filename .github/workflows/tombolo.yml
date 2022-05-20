@@ -1,147 +1,147 @@
-name: Build & Deploy to DEV 
-on: 
-  push:
-      branches:
-        - dev
-  workflow_dispatch:      
-env:
-  PORT: ${{ secrets.PORT }}
-  WEB_PORT: ${{ secrets.WEB_PORT }}
-  WEB_EXPOSED_PORT: ${{ secrets.WEB_EXPOSED_PORT }}
-  WEB_EXPOSED_HTTP_PORT: ${{ secrets.WEB_EXPOSED_HTTP_PORT }}
-  PROXY_URL: ${{ secrets.PROXY_URL }}
-  HOST_HOSTNAME: ${{ secrets.HOST_HOSTNAME }}
-  WEB_URL: ${{ secrets.WEB_URL }}
-  DB_USERNAME: ${{ secrets.DB_USERNAME }}
-  DB_PASSWORD: ${{ secrets.DB_PASSWORD }}
-  DB_PORT: ${{ secrets.DB_PORT }}
-  DB_NAME: ${{ secrets.DB_NAME }}
-  MYSQL_SSL_ENABLED: ${{ secrets.MYSQL_SSL_ENABLED }}
-  DB_HOSTNAME: ${{ secrets.DB_HOSTNAME }}
-  AUTH_SERVICE_URL: ${{ secrets.AUTH_SERVICE_URL }}
-  AUTHSERVICE_TOMBOLO_CLIENT_ID: ${{ secrets.AUTHSERVICE_TOMBOLO_CLIENT_ID }}
-  REACT_APP_PROXY_URL: ${{ secrets.REACT_APP_PROXY_URL }}
-  secret: ${{ secrets.secret }}
-  AZURE_WEBAPP_PACKAGE_PATH: './client-reactjs/build'
-  AZURE_WEBAPP_PACKAGE_PATH_API: './server'
-  JOB_COMPLETE_GROUP_ID: 'tombolo_dev'
-  REACT_APP_APP_AUTH_METHOD: ${{ secrets.REACT_APP_APP_AUTH_METHOD }}
-  REACT_APP_AZURE_CLIENT_ID: ${{ secrets.REACT_APP_AZURE_CLIENT_ID }}
-  REACT_APP_AZURE_TENENT_ID: ${{ secrets.REACT_APP_AZURE_TENENT_ID }}
-  REACT_APP_AZURE_REDIRECT_URI: ${{ secrets.REACT_APP_AZURE_REDIRECT_URI }}
-  REACT_APP_AZURE_API_TOKEN_SCOPE: ${{ secrets.REACT_APP_AZURE_API_TOKEN_SCOPE }}
-  CLIENT_ID: ${{ secrets.CLIENT_ID}}
+# name: Build & Deploy to DEV 
+# on: 
+#   push:
+#       branches:
+#         - dev
+#   workflow_dispatch:      
+# env:
+#   PORT: ${{ secrets.PORT }}
+#   WEB_PORT: ${{ secrets.WEB_PORT }}
+#   WEB_EXPOSED_PORT: ${{ secrets.WEB_EXPOSED_PORT }}
+#   WEB_EXPOSED_HTTP_PORT: ${{ secrets.WEB_EXPOSED_HTTP_PORT }}
+#   PROXY_URL: ${{ secrets.PROXY_URL }}
+#   HOST_HOSTNAME: ${{ secrets.HOST_HOSTNAME }}
+#   WEB_URL: ${{ secrets.WEB_URL }}
+#   DB_USERNAME: ${{ secrets.DB_USERNAME }}
+#   DB_PASSWORD: ${{ secrets.DB_PASSWORD }}
+#   DB_PORT: ${{ secrets.DB_PORT }}
+#   DB_NAME: ${{ secrets.DB_NAME }}
+#   MYSQL_SSL_ENABLED: ${{ secrets.MYSQL_SSL_ENABLED }}
+#   DB_HOSTNAME: ${{ secrets.DB_HOSTNAME }}
+#   AUTH_SERVICE_URL: ${{ secrets.AUTH_SERVICE_URL }}
+#   AUTHSERVICE_TOMBOLO_CLIENT_ID: ${{ secrets.AUTHSERVICE_TOMBOLO_CLIENT_ID }}
+#   REACT_APP_PROXY_URL: ${{ secrets.REACT_APP_PROXY_URL }}
+#   secret: ${{ secrets.secret }}
+#   AZURE_WEBAPP_PACKAGE_PATH: './client-reactjs/build'
+#   AZURE_WEBAPP_PACKAGE_PATH_API: './server'
+#   JOB_COMPLETE_GROUP_ID: 'tombolo_dev'
+#   REACT_APP_APP_AUTH_METHOD: ${{ secrets.REACT_APP_APP_AUTH_METHOD }}
+#   REACT_APP_AZURE_CLIENT_ID: ${{ secrets.REACT_APP_AZURE_CLIENT_ID }}
+#   REACT_APP_AZURE_TENENT_ID: ${{ secrets.REACT_APP_AZURE_TENENT_ID }}
+#   REACT_APP_AZURE_REDIRECT_URI: ${{ secrets.REACT_APP_AZURE_REDIRECT_URI }}
+#   REACT_APP_AZURE_API_TOKEN_SCOPE: ${{ secrets.REACT_APP_AZURE_API_TOKEN_SCOPE }}
+#   CLIENT_ID: ${{ secrets.CLIENT_ID}}
 
-jobs:    
-#   build-ui:
-#     name: build-ui
-#     runs-on: self-hosted    
-#     #environment:
-#       #name: 'DEV'
-#     steps:
-#     - uses: actions/checkout@v2
-#     - name: Use Node.js 14
-#       uses: actions/setup-node@v2
-#       with:
-#         node-version: '14'
-#     - name: npm install, build, and test
-#       run: |
-#         # Build and test the project, then
-#         # deploy to Azure Web App.
-#         npm install
-#         CI=false && npm run build --if-present
-#       working-directory: client-reactjs  
-#     - uses: azure/webapps-deploy@v2
-#       with:
-#         app-name: 'tomboloui2-eastus2-dev'
-#         publish-profile: ${{ secrets.AZURE_WEBAPP_PUBLISH_PROFILE }}
-#         package: ${{ env.AZURE_WEBAPP_PACKAGE_PATH }}
+# jobs:    
+# #   build-ui:
+# #     name: build-ui
+# #     runs-on: self-hosted    
+# #     #environment:
+# #       #name: 'DEV'
+# #     steps:
+# #     - uses: actions/checkout@v2
+# #     - name: Use Node.js 14
+# #       uses: actions/setup-node@v2
+# #       with:
+# #         node-version: '14'
+# #     - name: npm install, build, and test
+# #       run: |
+# #         # Build and test the project, then
+# #         # deploy to Azure Web App.
+# #         npm install
+# #         CI=false && npm run build --if-present
+# #       working-directory: client-reactjs  
+# #     - uses: azure/webapps-deploy@v2
+# #       with:
+# #         app-name: 'tomboloui2-eastus2-dev'
+# #         publish-profile: ${{ secrets.AZURE_WEBAPP_PUBLISH_PROFILE }}
+# #         package: ${{ env.AZURE_WEBAPP_PACKAGE_PATH }}
         
-  build-api:
-    name: build-api
-    runs-on: self-hosted
-    steps:
-    - uses: actions/checkout@main
+#   build-api:
+#     name: build-api
+#     runs-on: self-hosted
+#     steps:
+#     - uses: actions/checkout@main
 
-    # - name: Create cluster-whitelist
-    #   run: |
-    #     touch cluster-whitelist.js
-    #     echo ${{ secrets.CLUSTER_WHITE_LIST }} >> cluster-whitelist.js
-    #   working-directory: server
+#     # - name: Create cluster-whitelist
+#     #   run: |
+#     #     touch cluster-whitelist.js
+#     #     echo ${{ secrets.CLUSTER_WHITE_LIST }} >> cluster-whitelist.js
+#     #   working-directory: server
       
-    - name: Create env file
-      run: |
-        touch .env
-        echo DB_USERNAME=${{ secrets.DB_USERNAME }} >> .env
-        echo DB_PASSWORD=${{ secrets.DB_PASSWORD }} >> .env
-        echo DB_PORT=${{ secrets.DB_PORT }} >> .env
-        echo DB_NAME=${{ secrets.DB_NAME }} >> .env
-        echo DB_HOSTNAME=${{ secrets.DB_HOSTNAME }} >> .env
-        echo AUTH_SERVICE_URL=${{ secrets.AUTH_SERVICE_URL }} >> .env
-        echo AUTHSERVICE_TOMBOLO_CLIENT_ID=${{ secrets.AUTHSERVICE_TOMBOLO_CLIENT_ID }} >> .env
-        echo ALGORITHM=${{ secrets.ALGORITHM }} >> .env
-        echo IV_LENGTH=${{ secrets.IV_LENGTH }} >> .env
-        echo ENCRYPTION_KEY=${{ secrets.ENCRYPTION_KEY }} >> .env
-        echo secret=${{ secrets.secret }} >> .env
-        echo APP_AUTH_METHOD=${{ secrets.APP_AUTH_METHOD }} >> .env
-        echo TENENT_ID=${{ secrets.TENENT_ID }} >> .env
-        echo CLIENT_ID=${{ secrets.CLIENT_ID }} >> .env
-        echo AUDIENCE=${{ secrets.AUDIENCE }} >> .env
-        echo AUTHORITY=${{ secrets.AUTHORITY }} >> .env
-        echo DISCOVERY=${{ secrets.DISCOVERY }} >> .env
-        echo MSAL_VERSION=${{ secrets.MSAL_VERSION }} >> .env
-        echo VALIDATE_ISSUER=${{ secrets.VALIDATE_ISSUER }} >> .env
-        echo PASS_REQ_TO_CALLBACK=${{ secrets.PASS_REQ_TO_CALLBACK }} >> .env
-        echo LOGGING_LEVEL=${{ secrets.LOGGING_LEVEL }} >> .env
-        echo MYSQL_SSL_ENABLED=${{ secrets.MYSQL_SSL_ENABLED }} >> .env
-      working-directory: server 
+#     - name: Create env file
+#       run: |
+#         touch .env
+#         echo DB_USERNAME=${{ secrets.DB_USERNAME }} >> .env
+#         echo DB_PASSWORD=${{ secrets.DB_PASSWORD }} >> .env
+#         echo DB_PORT=${{ secrets.DB_PORT }} >> .env
+#         echo DB_NAME=${{ secrets.DB_NAME }} >> .env
+#         echo DB_HOSTNAME=${{ secrets.DB_HOSTNAME }} >> .env
+#         echo AUTH_SERVICE_URL=${{ secrets.AUTH_SERVICE_URL }} >> .env
+#         echo AUTHSERVICE_TOMBOLO_CLIENT_ID=${{ secrets.AUTHSERVICE_TOMBOLO_CLIENT_ID }} >> .env
+#         echo ALGORITHM=${{ secrets.ALGORITHM }} >> .env
+#         echo IV_LENGTH=${{ secrets.IV_LENGTH }} >> .env
+#         echo ENCRYPTION_KEY=${{ secrets.ENCRYPTION_KEY }} >> .env
+#         echo secret=${{ secrets.secret }} >> .env
+#         echo APP_AUTH_METHOD=${{ secrets.APP_AUTH_METHOD }} >> .env
+#         echo TENENT_ID=${{ secrets.TENENT_ID }} >> .env
+#         echo CLIENT_ID=${{ secrets.CLIENT_ID }} >> .env
+#         echo AUDIENCE=${{ secrets.AUDIENCE }} >> .env
+#         echo AUTHORITY=${{ secrets.AUTHORITY }} >> .env
+#         echo DISCOVERY=${{ secrets.DISCOVERY }} >> .env
+#         echo MSAL_VERSION=${{ secrets.MSAL_VERSION }} >> .env
+#         echo VALIDATE_ISSUER=${{ secrets.VALIDATE_ISSUER }} >> .env
+#         echo PASS_REQ_TO_CALLBACK=${{ secrets.PASS_REQ_TO_CALLBACK }} >> .env
+#         echo LOGGING_LEVEL=${{ secrets.LOGGING_LEVEL }} >> .env
+#         echo MYSQL_SSL_ENABLED=${{ secrets.MYSQL_SSL_ENABLED }} >> .env
+#       working-directory: server 
       
-    - name: Print env
-      run: |
-        less .env
-      working-directory: server
+#     - name: Print env
+#       run: |
+#         less .env
+#       working-directory: server
     
     
-    - name: Install Dependencies
-      run: |
-        npm install
-      working-directory: server
+#     - name: Install Dependencies
+#       run: |
+#         npm install
+#       working-directory: server
       
-    - name: Database Migration
-      run: |
-        npx sequelize-cli db:migrate        
-      working-directory: server   
+#     - name: Database Migration
+#       run: |
+#         npx sequelize-cli db:migrate        
+#       working-directory: server   
 
-    - name: Log in to ACR
-      uses: docker/login-action@v1
-      with:
-        registry: https://hpccsollabacr.azurecr.io/
-        username: ${{ secrets.ACR_USERNAME }}
-        password: ${{ secrets.ACR_PASSWORD }}
+#     - name: Log in to ACR
+#       uses: docker/login-action@v1
+#       with:
+#         registry: https://hpccsollabacr.azurecr.io/
+#         username: ${{ secrets.ACR_USERNAME }}
+#         password: ${{ secrets.ACR_PASSWORD }}
 
-    - name: Build and push container image to registry
-      uses: docker/build-push-action@v2
-      with:
-        push: true
-        tags: hpccsollabacr.azurecr.io/${{ secrets.ACR_USERNAME }}/tombolo-node:${{ github.sha }}
-        file: ./server/Dockerfile
+#     - name: Build and push container image to registry
+#       uses: docker/build-push-action@v2
+#       with:
+#         push: true
+#         tags: hpccsollabacr.azurecr.io/${{ secrets.ACR_USERNAME }}/tombolo-node:${{ github.sha }}
+#         file: ./server/Dockerfile
 
-  deploy:
-    runs-on: ubuntu-latest
-    needs: build-api
-    environment:
-      name: 'production'
-      url: ${{ steps.deploy-to-webapp.outputs.webapp-url }}
+#   deploy:
+#     runs-on: ubuntu-latest
+#     needs: build-api
+#     environment:
+#       name: 'production'
+#       url: ${{ steps.deploy-to-webapp.outputs.webapp-url }}
 
-    steps:
-    - name: Deploy to Azure Web App
-      id: deploy-to-webapp
-      uses: azure/webapps-deploy@v2
-      with:
-        app-name: 'temprory-test-tombolo'
-        slot-name: 'production'
-        publish-profile: ${{ secrets.ACR_PUBLISH_PROFILE }}
-        images: 'hpccsollabacr.azurecr.io/${{ secrets.ACR_USERNAME }}/tombolo-node:${{ github.sha }}'
+#     steps:
+#     - name: Deploy to Azure Web App
+#       id: deploy-to-webapp
+#       uses: azure/webapps-deploy@v2
+#       with:
+#         app-name: 'temprory-test-tombolo'
+#         slot-name: 'production'
+#         publish-profile: ${{ secrets.ACR_PUBLISH_PROFILE }}
+#         images: 'hpccsollabacr.azurecr.io/${{ secrets.ACR_USERNAME }}/tombolo-node:${{ github.sha }}'
 
 
 
