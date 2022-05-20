@@ -55,6 +55,8 @@ RUN npm install -g node-gyp && npm install
 
 RUN npm install sequelize-cli pm2 -g
 
+RUN echo " PRINT CONTENT OF CURRENT WORKING DIR"
+RUN ls -a
 CMD ls
 
 EXPOSE 3000
