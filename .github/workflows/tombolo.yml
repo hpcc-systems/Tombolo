@@ -95,10 +95,15 @@ jobs:
         echo LOGGING_LEVEL=${{ secrets.LOGGING_LEVEL }} >> .env
         echo MYSQL_SSL_ENABLED=${{ secrets.MYSQL_SSL_ENABLED }} >> .env
       working-directory: server 
+    
+    
+    - name: Install Dependencies
+      run: |
+        npm install
+      working-directory: server
       
     - name: Database Migration
       run: |
-        npm install sequelize
         npx sequelize-cli db:migrate        
       working-directory: server   
 
