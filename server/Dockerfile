@@ -1,11 +1,10 @@
 FROM ubuntu:bionic
 
 RUN mkdir -p /gitClones
-
-WORKDIR app
-
 COPY . app
 # COPY [".env",  "/app/.env"]
+
+WORKDIR app
 
 RUN apt-get update -y && apt-get install -y build-essential curl
 
@@ -15,7 +14,7 @@ RUN apt-get install -y nodejs
 
 RUN apt-get update && apt-get install -y bash dos2unix
 
-# RUN dos2unix /app/docker-entry.sh
+RUN dos2unix /app/docker-entry.sh
 
 ENV DEBIAN_FRONTEND noninteractive
 ENV DEBCONF_NONINTERACTIVE_SEEN true
@@ -54,10 +53,3 @@ RUN ecl bundle install https://github.com/hpcc-systems/ML_Core.git \
 RUN npm install -g node-gyp && npm install
 
 RUN npm install sequelize-cli pm2 -g
-
-
-EXPOSE 3000
-
-RUN npm install
-
-CMD ["node", "server.js"]
