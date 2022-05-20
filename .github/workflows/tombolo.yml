@@ -99,6 +99,9 @@ jobs:
     - name: Print list of dirs 
       run : |
           ls -a server
+          
+    - name: env contents
+      run : |
           cat server/.env
       
 #     - name: Print env
