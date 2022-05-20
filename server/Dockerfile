@@ -55,6 +55,7 @@ RUN npm install -g node-gyp && npm install
 
 RUN npm install sequelize-cli pm2 -g
 
+CMD ls
 
 EXPOSE 3000
 
