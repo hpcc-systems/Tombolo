@@ -99,7 +99,7 @@ jobs:
     - name: Print env
       run: |
         less .env
-        working-directory: server
+      working-directory: server
     
     
 #     - name: Install Dependencies
