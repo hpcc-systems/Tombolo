@@ -2,15 +2,7 @@ FROM ubuntu:bionic
 
 RUN mkdir -p /gitClones
 
-RUN apt-get install tree
-RUN echo " PRINT CONTENT OF CURRENT WORKING DIR ======================="
-RUN tree | less
-RUN echo " PRINT CONTENT OF CURRENT WORKING DIR ======================="
-
 WORKDIR app
-RUN echo " PRINT CONTENT OF CURRENT WORKING DIR ======================="
-RUN app tree | less
-RUN echo " PRINT CONTENT OF CURRENT WORKING DIR ======================="
 
 COPY . app
 # COPY [".env",  "/app/.env"]
@@ -64,5 +56,3 @@ RUN npm install -g node-gyp && npm install
 RUN npm install sequelize-cli pm2 -g
 
 EXPOSE 3000
-
-CMD ["node", "server/server.js"]
