@@ -69,37 +69,37 @@ jobs:
     #     echo ${{ secrets.CLUSTER_WHITE_LIST }} >> cluster-whitelist.js
     #   working-directory: server
       
-#     - name: Create env file
-#       run: |
-#         touch .env
-#         echo DB_USERNAME=${{ secrets.DB_USERNAME }} >> .env
-#         echo DB_PASSWORD=${{ secrets.DB_PASSWORD }} >> .env
-#         echo DB_PORT=${{ secrets.DB_PORT }} >> .env
-#         echo DB_NAME=${{ secrets.DB_NAME }} >> .env
-#         echo DB_HOSTNAME=${{ secrets.DB_HOSTNAME }} >> .env
-#         echo AUTH_SERVICE_URL=${{ secrets.AUTH_SERVICE_URL }} >> .env
-#         echo AUTHSERVICE_TOMBOLO_CLIENT_ID=${{ secrets.AUTHSERVICE_TOMBOLO_CLIENT_ID }} >> .env
-#         echo ALGORITHM=${{ secrets.ALGORITHM }} >> .env
-#         echo IV_LENGTH=${{ secrets.IV_LENGTH }} >> .env
-#         echo ENCRYPTION_KEY=${{ secrets.ENCRYPTION_KEY }} >> .env
-#         echo secret=${{ secrets.secret }} >> .env
-#         echo APP_AUTH_METHOD=${{ secrets.APP_AUTH_METHOD }} >> .env
-#         echo TENENT_ID=${{ secrets.TENENT_ID }} >> .env
-#         echo CLIENT_ID=${{ secrets.CLIENT_ID }} >> .env
-#         echo AUDIENCE=${{ secrets.AUDIENCE }} >> .env
-#         echo AUTHORITY=${{ secrets.AUTHORITY }} >> .env
-#         echo DISCOVERY=${{ secrets.DISCOVERY }} >> .env
-#         echo MSAL_VERSION=${{ secrets.MSAL_VERSION }} >> .env
-#         echo VALIDATE_ISSUER=${{ secrets.VALIDATE_ISSUER }} >> .env
-#         echo PASS_REQ_TO_CALLBACK=${{ secrets.PASS_REQ_TO_CALLBACK }} >> .env
-#         echo LOGGING_LEVEL=${{ secrets.LOGGING_LEVEL }} >> .env
-#         echo MYSQL_SSL_ENABLED=${{ secrets.MYSQL_SSL_ENABLED }} >> .env
-#       working-directory: server 
+    - name: Create env file
+      run: |
+        touch .env
+        echo DB_USERNAME=${{ secrets.DB_USERNAME }} >> .env
+        echo DB_PASSWORD=${{ secrets.DB_PASSWORD }} >> .env
+        echo DB_PORT=${{ secrets.DB_PORT }} >> .env
+        echo DB_NAME=${{ secrets.DB_NAME }} >> .env
+        echo DB_HOSTNAME=${{ secrets.DB_HOSTNAME }} >> .env
+        echo AUTH_SERVICE_URL=${{ secrets.AUTH_SERVICE_URL }} >> .env
+        echo AUTHSERVICE_TOMBOLO_CLIENT_ID=${{ secrets.AUTHSERVICE_TOMBOLO_CLIENT_ID }} >> .env
+        echo ALGORITHM=${{ secrets.ALGORITHM }} >> .env
+        echo IV_LENGTH=${{ secrets.IV_LENGTH }} >> .env
+        echo ENCRYPTION_KEY=${{ secrets.ENCRYPTION_KEY }} >> .env
+        echo secret=${{ secrets.secret }} >> .env
+        echo APP_AUTH_METHOD=${{ secrets.APP_AUTH_METHOD }} >> .env
+        echo TENENT_ID=${{ secrets.TENENT_ID }} >> .env
+        echo CLIENT_ID=${{ secrets.CLIENT_ID }} >> .env
+        echo AUDIENCE=${{ secrets.AUDIENCE }} >> .env
+        echo AUTHORITY=${{ secrets.AUTHORITY }} >> .env
+        echo DISCOVERY=${{ secrets.DISCOVERY }} >> .env
+        echo MSAL_VERSION=${{ secrets.MSAL_VERSION }} >> .env
+        echo VALIDATE_ISSUER=${{ secrets.VALIDATE_ISSUER }} >> .env
+        echo PASS_REQ_TO_CALLBACK=${{ secrets.PASS_REQ_TO_CALLBACK }} >> .env
+        echo LOGGING_LEVEL=${{ secrets.LOGGING_LEVEL }} >> .env
+        echo MYSQL_SSL_ENABLED=${{ secrets.MYSQL_SSL_ENABLED }} >> .env
+      working-directory: server 
       
-#     - name: Database Migration
-#       run: |
-#         npx sequelize-cli db:migrate        
-#       working-directory: server   
+    - name: Database Migration
+      run: |
+        npx sequelize-cli db:migrate        
+      working-directory: server   
 
     - name: Log in to ACR
       uses: docker/login-action@v1
