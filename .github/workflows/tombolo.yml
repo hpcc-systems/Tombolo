@@ -98,7 +98,7 @@ jobs:
       
     - name: Print list of dirs 
       run : |
-          ls server
+          ls -a server
       
 #     - name: Print env
 #       run: |
