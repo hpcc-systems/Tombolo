@@ -14,7 +14,7 @@ RUN apt-get install -y nodejs
 
 RUN apt-get update && apt-get install -y bash dos2unix
 
-RUN dos2unix /app/docker-entry.sh
+# RUN dos2unix /app/docker-entry.sh
 
 ENV DEBIAN_FRONTEND noninteractive
 ENV DEBCONF_NONINTERACTIVE_SEEN true
