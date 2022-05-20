@@ -1,10 +1,11 @@
 FROM ubuntu:bionic
 
 RUN mkdir -p /gitClones
-COPY . app
-# COPY [".env",  "/app/.env"]
 
 WORKDIR app
+
+COPY . app
+# COPY [".env",  "/app/.env"]
 
 RUN apt-get update -y && apt-get install -y build-essential curl
 
