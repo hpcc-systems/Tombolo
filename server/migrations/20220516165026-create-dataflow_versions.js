@@ -8,6 +8,11 @@ module.exports = {
         type: Sequelize.UUID,
         defaultValue: Sequelize.UUIDV4,
       },
+      isLive: {
+        type: Sequelize.BOOLEAN,
+        allowNull: false,
+        defaultValue: false
+      },
       name: Sequelize.STRING,
       description: Sequelize.STRING,
       graph: {

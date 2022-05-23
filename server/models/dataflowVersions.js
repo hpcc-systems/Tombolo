@@ -8,6 +8,11 @@ module.exports = (sequelize, DataTypes) => {
       allowNull: false,
       autoIncrement: false
     },
+    isLive: {
+      type: DataTypes.BOOLEAN,
+      allowNull: false,
+      defaultValue: false
+    },
     name: DataTypes.STRING,
     description: DataTypes.STRING,
     graph: DataTypes.JSON,
