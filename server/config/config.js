@@ -1,5 +1,11 @@
-const logger = require('./logger');
+const path = require('path');
+const fs = require('fs');
+const rootENV = path.join(process.cwd(), '..', '.env');
+const serverENV = path.join(process.cwd(), '.env');
+const ENVPath = fs.existsSync(rootENV) ? rootENV : serverENV;
+require('dotenv').config({ path: ENVPath});
 
+const logger = require('./logger');
 const dbConfigOptions = {
     username: process.env.DB_USERNAME,
     password: process.env.DB_PASSWORD,
