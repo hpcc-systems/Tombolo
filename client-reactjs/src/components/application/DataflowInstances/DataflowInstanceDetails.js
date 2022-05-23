@@ -115,7 +115,7 @@ export const DataflowInstanceDetails = () => {
         }}
       >
         <div style={{ position: 'absolute', top: 0, bottom: 0, right: 0, left: 0 }}>
-          <GraphX6 readOnly={true} statuses={jobExecutions.statuses} />
+          <GraphX6 monitoring={true} readOnly={true} statuses={jobExecutions.statuses} />
         </div>
 
         <Resizable
