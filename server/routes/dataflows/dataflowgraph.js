@@ -2,7 +2,6 @@ const express = require('express');
 const router = express.Router();
 var models  = require('../../models');
 
-let Dataflow = models.dataflow;
 const DataflowVersions = models.dataflow_versions;
 let Job = models.job;
 let File = models.file;
@@ -14,7 +13,6 @@ const assetUtil = require('../../utils/assets');
 
 router.get('/',
   [
-    query('application_id').optional({ checkFalsy: true }).isUUID(4).withMessage('Invalid application id'),
     query('dataflowId').isUUID(4).withMessage('Invalid dataflow id'),
   ],
   async (req, res) => {
@@ -24,14 +22,11 @@ router.get('/',
     }
 
     try {
-      const { application_id, dataflowId  } = req.query;
-      
-      const dataflow = await Dataflow.findOne({
-         where: { application_id, id: dataflowId },
-         attributes: ['graph'],
-      });
+      const {  dataflowId  } = req.query;
 
-      res.json({success: true, graph: dataflow.graph});
+      const dataflowVersion = await DataflowVersions.findOne({where:{ dataflowId, isLive: true }, attributes: ['graph','name',]});
+
+      res.json({success: true, name: dataflowVersion?.name, graph: dataflowVersion?.graph});
     } catch (error) {
       console.log('-error-----------------------------------------');
       console.dir({error}, { depth: null });
@@ -42,70 +37,6 @@ router.get('/',
   }
 );
 
-router.post( '/save',
-  [
-    /*body('dataflowId') .optional({checkFalsy:true}) .isUUID(4).withMessage('Invalid dataflow id'),*/
-    body('application_id').isUUID(4).withMessage('Invalid application id'),
-  ],
-  async (req, res) => {
-    const errors = validationResult(req).formatWith(validatorUtil.errorFormatter);
-    if (!errors.isEmpty()) {
-      return res.status(422).json({ success: false, errors: errors.array() });
-    }
-
-    try {
-      const { application_id, dataflowId, graph } = req.body;
-
-      const [ updated ] = await Dataflow.update({graph}, { where: { application_id, id: dataflowId }});
-      
-      if (!updated) throw new Error("Failed to find dataflow to update")
-      
-      res.json({ result: 'success', dataflowId });
-    } catch (error) {
-      console.log('-error /save-----------------------------------------');
-      console.dir({ error }, { depth: null });
-      console.log('------------------------------------------');
-      return res.status(500).send({ message: 'Error occurred while saving Dataflow Graph' });
-    }
-  }
-);
-
-router.post('/deleteAsset',
-  [
-    body('dataflowId').isUUID(4).withMessage('Invalid dataflow id'),
-    body('assetId').isUUID(4).withMessage('Invalid asset id'),
-    body('name').not().isEmpty().trim().escape(),
-    body('type').custom(value =>{
-      const types = ['job', 'file', 'index','sub-process', 'filetemplate']
-      if (!types.includes(value)){
-        throw new Error('Invalid asset type');
-      }
-       // Indicates the success of this synchronous custom validator
-      return true;
-    })
-  ],
-  async (req, res) => {
-    const errors = validationResult(req).formatWith(validatorUtil.errorFormatter);
-    if (!errors.isEmpty()) return res.status(422).json({ success: false, errors: errors.array() });
-
-    try {
-      if (req.body.type === 'job') {
-        await JobScheduler.removeJobFromScheduler( req.body.name + '-' + req.body.dataflowId + '-' + req.body.assetId );
-      }
-
-      if(req.body.type === 'filetemplate'){
-        const { assetId, dataflowId } = req.body
-        await assetUtil.deleteFileMonitoring({fileTemplateId: assetId, dataflowId });
-      }
-      res.json({ result: 'success' });
-    } catch (error) {
-      console.log('-/deleteAsset error-----------------------------------------');
-      console.dir({ error }, { depth: null });
-      console.log('------------------------------------------');
-      res.status(422).json({ success: false, error: "Failed to delete asset" });
-    }
-  }
-);
 
 router.get( '/versions',
   [query('dataflowId').isUUID(4).withMessage('Invalid dataflow id')],
@@ -117,7 +48,7 @@ router.get( '/versions',
       const { dataflowId } = req.query;
       const versions = await DataflowVersions.findAll({
         where: { dataflowId },
-        attributes: ['id', 'name', 'description', "createdBy", 'createdAt'],
+        attributes: ['id', 'name','isLive','description', "createdBy", 'createdAt'],
         order: [['createdAt', 'ASC']],
       });
       res.status(200).send(versions);
@@ -147,7 +78,7 @@ router.post( '/save_versions',
 
       const version = await DataflowVersions.create({ name, description, graph, createdBy, dataflowId });
 
-      res.status(200).send({ id: version.id, name: version.name, description: version.description, createdBy: version.createdBy, createdAt: version.createdAt });
+      res.status(200).send({ id: version.id, isLive: version.isLive, name: version.name, description: version.description, createdBy: version.createdBy, createdAt: version.createdAt });
     } catch (error) {
       console.log('-error /save-----------------------------------------');
       console.dir({ error }, { depth: null });
@@ -207,23 +138,62 @@ router.delete( '/remove_version',
   }
 );
 
-router.post( '/change_versions',
+router.get( '/change_versions',
   [
-    body('newVersionId').isUUID(4).withMessage('Invalid version id'),
-    body('dataflowId').isUUID(4).withMessage('Invalid dataflow id'),
-    body('prevMonitorIds').isArray().withMessage('Invalid prevMonitorIds'),
+    query('id').isUUID(4).withMessage('Invalid version id'),
   ],
   async (req, res) => {
     const errors = validationResult(req).formatWith(validatorUtil.errorFormatter);
     if (!errors.isEmpty()) return res.status(422).json({ success: false, errors: errors.array() });
     try {
-      const { prevMonitorIds, newVersionId, dataflowId } = req.body;
+      const { id } = req.query;
 
-      const version = await DataflowVersions.findOne({ where: { id: newVersionId } });
+      const version = await DataflowVersions.findOne({ where: { id }, attributes:['id','graph','name', 'description']});
       if (!version) throw new Error('Version does not exist');
-      
+
+      res.status(200).send(version);
+    } catch (error) {
+      console.log('-error-----------------------------------------');
+      console.dir({ error }, { depth: null });
+      console.log('------------------------------------------');
+      res.status(500).json({ message: error.message });
+    }
+  }
+);
+
+router.put( '/version_live',
+  [ 
+    body('id').isUUID(4).withMessage('Invalid version id'),
+    body('dataflowId').isUUID(4).withMessage('Invalid dataflow id'),
+  ],
+  async (req, res) => {
+    const errors = validationResult(req).formatWith(validatorUtil.errorFormatter);
+    if (!errors.isEmpty()) return res.status(422).json({ success: false, errors: errors.array() });
+    
+    try {
+      const { id, action, dataflowId } = req.body;
+
+      if (action === 'pause') {
+        const version = await DataflowVersions.findOne({where:{ id }, attributes: ['graph', 'id']});
+        if (!version) throw new Error('Version was not found');
+        const monitorIds = version.graph.cells.reduce((acc, node) => {
+            if (node.data?.isMonitoring) acc.push(node.data.assetId);
+            return acc;
+          }, [] );
+
+        for (const id of monitorIds) await assetUtil.deleteFileMonitoring({ fileTemplateId: id, dataflowId });
+        
+        await JobScheduler.removeAllFromBree(dataflowId);
+        /* Update current dataflow with new version */
+        await DataflowVersions.update({ isLive: false }, {where:{ dataflowId }});
+        return res.status(200).send({ id: version.id, isLive : false });
+      }
+
+      let newVersion = await DataflowVersions.findOne({where:{ id }, attributes: ['graph', 'id']});
+      if(!newVersion) throw new Error('Version was not found');
+
       // To change graph version we need to update file template monitoring and cron jobs with latest setup;
-      const { newMonitorIds, cronjobs } = version.graph.cells.reduce(
+      const { newMonitorIds, cronjobs } = newVersion.graph.cells.reduce(
         (acc, node) => {
           if (node.data?.isMonitoring) acc.newMonitorIds.push(node.data.assetId);
           if (node.data?.schedule?.cron)
@@ -232,7 +202,14 @@ router.post( '/change_versions',
         },
         { newMonitorIds: [], cronjobs: [] }
       );
-      
+
+      // Get Live Version monitor Ids to adjust them
+      const liveVersion = await DataflowVersions.findOne({where:{ isLive:true, dataflowId }, attributes:['graph']}); 
+      const prevMonitorIds = !liveVersion ? [] : liveVersion.graph.cells.reduce((acc,node) => {
+        if (node.data?.isMonitoring) acc.push(node.data.assetId)
+        return acc;
+      },[]);
+
       /* FileMonitoring steps:
         - remove filemonitorings that are not in selected graph;
         - add file monitorings that were not in prev graph;  
@@ -265,18 +242,19 @@ router.post( '/change_versions',
       }
 
       /* Update current dataflow with new version */
-      await Dataflow.update({ graph: version.graph }, { where: { id: dataflowId } });
+      await DataflowVersions.update({ isLive:false }, {where:{ dataflowId }});
 
-      res.status(200).send(version);
+      newVersion = await newVersion.update({isLive: true})
+
+      res.status(200).send({ id: newVersion.id, isLive: true });
     } catch (error) {
-      console.log('-error-----------------------------------------');
+      console.log('-error /save-----------------------------------------');
       console.dir({ error }, { depth: null });
       console.log('------------------------------------------');
-      res.status(500).json({ message: error.message });
+      res.status(500).send({ message: error.message });
     }
   }
 );
-
 
 
 
