@@ -310,6 +310,7 @@ class JobScheduler {
       path: path.join(__dirname, 'jobs', jobfileName),
       worker: {
         workerData: {
+          WORKER_CREATED_AT: Date.now(),
           sprayedFileScope,
           manualJob_meta,
           sprayFileName,
@@ -338,15 +339,17 @@ class JobScheduler {
     this.bree.add(job);
   }
 
-  async removeJobFromScheduler(name ) {
+  async removeJobFromScheduler(name) {
     try {
        const existingJob = this.bree.config.jobs.find(job=> job.name === name);
       if (existingJob) {
         await this.bree.remove(name);
         logger.info(`📢 -Job removed from Bree ${existingJob.name}`);
+        return {success:true, job: existingJob, jobs: this.bree.config.jobs }
       }
     } catch (err) {
       logger.error(err);
+      return {success:false, message:err.message, jobs: this.bree.config.jobs }
     }
   }
 
@@ -381,6 +384,7 @@ class JobScheduler {
         worker: {
           workerData: {
             jobName: jobName,
+            WORKER_CREATED_AT: Date.now()
           },
         },
       });
@@ -402,7 +406,8 @@ class JobScheduler {
           path: path.join(__dirname, 'jobs', FILE_MONITORING),
           worker: {
             workerData: {
-              jobName: jobName
+              jobName: jobName,
+              WORKER_CREATED_AT: Date.now()
             }
           }
         })
@@ -429,6 +434,58 @@ class JobScheduler {
       });
     }
   }
+
+  getAllJobs(){
+    return this.bree.config.jobs;
+  };
+
+ async stopJob(jobName){
+    const job = this.bree.config.jobs.find(job => job.name === jobName);
+    try{
+    if (job){
+      await this.bree.stop(jobName);
+      return {success: true, job, jobs: this.bree.config.jobs };
+    } else{
+      return { success:false, message:"job is not found", jobs: this.bree.config.jobs }
+    }
+    } catch (err){
+      return { success:false, message: err.message, jobs: this.bree.config.jobs }
+    }
+  };
+
+  async stopAllJobs(){
+    try{
+      const allJobs = [...this.bree.config.jobs]
+      await this.bree.stop();
+      return {success: true, jobs: allJobs};
+    }catch(err){
+      return { success:false, message:err.message, jobs: this.bree.config.jobs }
+    }
+ };
+
+  startJob(jobName){
+    const job = this.bree.config.jobs.find(job => job.name === jobName);
+    try{
+      if (job) {
+        this.bree.start(jobName);
+        return {success: true, job, jobs: this.bree.config.jobs };
+      } else{
+        return { success:false, message:"job is not found", jobs: this.bree.config.jobs }
+      }
+    }catch(err){
+     return { success:false, message:err.message, jobs: this.bree.config.jobs }
+    }
+  }
+
+  startAllJobs(){
+    try{
+      const allJobs = [...this.bree.config.jobs]
+      this.bree.start();
+      return {success: true, jobs: allJobs};
+    }catch(err){
+      return { success:false, message:err.message, jobs: this.bree.config.jobs }
+    }
+ };
 }
 
 module.exports = new JobScheduler();

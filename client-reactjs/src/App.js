@@ -37,6 +37,8 @@ import { store } from "./redux/store/Store";
 import { Report } from "./components/Report/Report";
 import Regulations from "./components/admin/ControlsAndRegulations";
 import GitHubSettings from "./components/admin/GitHubSettings/GitHubSettings";
+import ScheduledJobsPage from "./components/admin/ScheduledJobsPage";
+
 const { Content } = Layout;
 
 class App extends React.Component {  
@@ -146,6 +148,10 @@ class App extends React.Component {
                   <PrivateRoute
                     path="/admin/applications"
                     component={AdminApplications}
+                  />
+                  <PrivateRoute
+                    path="/admin/bree"
+                    component={ScheduledJobsPage}
                   />
                   <PrivateRoute
                     path="/admin/clusters"

@@ -45,6 +45,7 @@ if(process.env.APP_AUTH_METHOD==='azure_ad'){
 
 /*  ROUTES */
 const job = require('./routes/job/read');
+const bree = require('./routes/bree/read');
 const ldap = require('./routes/ldap/read');
 const appRead = require('./routes/app/read');
 const query = require('./routes/query/read');
@@ -66,6 +67,7 @@ app.use('/api/user', userRead);
 app.use(tokenService.verifyToken);
 
 app.use('/api/job', job);
+app.use('/api/bree', bree);
 app.use('/api/ldap', ldap);
 app.use('/api/query', query);
 app.use('/api/groups', groups);
