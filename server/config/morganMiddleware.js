@@ -9,6 +9,7 @@ const stream = {
 
 const skip = (req, res) => { 
   const url = req.originalUrl || req.url;
+  if (url.includes('/api/bree/all')) return true; // do not log any bree route polling
   if (url.includes('/api/dataflowgraph/save')) return true; // do not log graph changes route
   if (url.includes('/api/job/jobExecutionDetails')) return true; // do not log graph jobExecutionDetails polling
   return false;
