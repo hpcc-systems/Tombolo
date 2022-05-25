@@ -440,19 +440,23 @@ class JobScheduler {
   };
 
  async stopJob(jobName){
-     const job = this.bree.config.jobs.find(job => job.name === jobName);
-     if (job){
-       this.bree.stop(jobName);
-       return {success: true, job, jobs: this.bree.config.jobs };
-     } else{
-       return { success:false, message:"job is not found", jobs: this.bree.config.jobs }
-     }
+    const job = this.bree.config.jobs.find(job => job.name === jobName);
+    try{
+    if (job){
+      await this.bree.stop(jobName);
+      return {success: true, job, jobs: this.bree.config.jobs };
+    } else{
+      return { success:false, message:"job is not found", jobs: this.bree.config.jobs }
+    }
+    } catch (err){
+      return { success:false, message: err.message, jobs: this.bree.config.jobs }
+    }
   };
 
   async stopAllJobs(){
     try{
       const allJobs = [...this.bree.config.jobs]
-      this.bree.stop();
+      await this.bree.stop();
       return {success: true, jobs: allJobs};
     }catch(err){
       return { success:false, message:err.message, jobs: this.bree.config.jobs }
