@@ -105,17 +105,24 @@ jobs:
 #         npm install
 #         npm run build --if-present
 #       working-directory: server
-    - name: Install sequelize cli
+
+      
+#     - name: Install sequelize cli
+#       run: |
+#         npm i sequelize-cli sequelize dotenv -g       
+#       working-directory: server 
+
+    - name: List all the dirs
       run: |
-        npm i sequelize-cli sequelize dotenv -g       
+        ls     
       working-directory: server 
     
     
       
-    - name: dbmigrate
-      run: |
-        npx sequelize-cli db:migrate        
-      working-directory: server   
+#     - name: dbmigrate
+#       run: |
+#         npx sequelize-cli db:migrate        
+#       working-directory: server   
       
   #   - name: 'Deploy to Azure WebApp'
   #     uses: azure/webapps-deploy@v2
