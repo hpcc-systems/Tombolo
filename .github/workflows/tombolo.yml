@@ -123,7 +123,7 @@ jobs:
       
     - name: Install doetenv
       run: |
-        npm i dotenv@8.6.0  winston   
+        npm i dotenv@8.6.0  winston   mysql2@1.7.0
       working-directory: server
 
     - name: Looking inside .env file
