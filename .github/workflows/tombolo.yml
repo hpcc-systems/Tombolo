@@ -114,7 +114,7 @@ jobs:
 
     - name: List all the dirs
       run: |
-        ls     
+        ls -a
       working-directory: server 
     
     
