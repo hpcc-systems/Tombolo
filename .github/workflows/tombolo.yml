@@ -107,14 +107,19 @@ jobs:
 #       working-directory: server
 
       
-#     - name: Install sequelize cli
-#       run: |
-#         npm i sequelize-cli sequelize dotenv -g       
-#       working-directory: server 
-
-    - name: List all the dirs
+    - name: Install sequelize cli
       run: |
-        ls -a
+        npm i sequelize-cli sequelize -g       
+      working-directory: server 
+      
+    - name: Install doetenv
+      run: |
+        npm i dotenv       
+      working-directory: server
+
+    - name: Looking inside .env file
+      run: |
+        cat .env
       working-directory: server 
     
     
