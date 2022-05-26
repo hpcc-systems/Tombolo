@@ -434,9 +434,9 @@ function FileTemplate({match, selectedAsset={}, displayingInModal, onClose }) {
 
             <Form.Item label="Type" name="setFileMonitoring" required = {enableEdit} > 
                  <Radio.Group onChange={handleFileMonitoringRadioChange} disabled={!enableEdit}>
-                  <Radio value={false}>None</Radio>
+                  {/* <Radio value={false}>None</Radio> */}
+                  <Radio value={false}>Logical files</Radio>
                   <Radio value={'landingZone'}>Landing zone files</Radio>
-                  <Radio value={'LogicalFiles'} disabled>Logical files</Radio>
                 </Radio.Group>
             </Form.Item>
 
