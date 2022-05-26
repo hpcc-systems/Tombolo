@@ -105,7 +105,16 @@ jobs:
 #         npm install
 #         npm run build --if-present
 #       working-directory: server
-
+  #     - name: npm install, build, and test
+#       run: |
+#         npm install
+#         npm run build --if-present
+#       working-directory: server
+      
+    - name: Remove package lock json
+      run: |
+        rm package-lock.json       
+      working-directory: server
       
     - name: Install sequelize cli
       run: |
