@@ -105,10 +105,12 @@ jobs:
 #         npm install
 #         npm run build --if-present
 #       working-directory: server
-    - name: Install sequelize
+    - name: Install sequelize cli
       run: |
-        npm i sequelize-cli -g       
-      working-directory: server   
+        npm i sequelize-cli sequelize -g       
+      working-directory: server 
+    
+    
       
     - name: dbmigrate
       run: |
