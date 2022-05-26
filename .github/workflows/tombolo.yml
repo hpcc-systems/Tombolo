@@ -107,7 +107,7 @@ jobs:
 #       working-directory: server
     - name: Install sequelize cli
       run: |
-        npm i sequelize-cli sequelize -g       
+        npm i sequelize-cli sequelize dotenv -g       
       working-directory: server 
     
     
