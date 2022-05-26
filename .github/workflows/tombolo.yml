@@ -118,12 +118,12 @@ jobs:
       
     - name: Install sequelize cli
       run: |
-        npm i sequelize-cli sequelize -g       
+        npm i sequelize-cli sequelize mysql2 -g       
       working-directory: server 
       
     - name: Install doetenv
       run: |
-        npm i dotenv@8.6.0  winston mysql2
+        npm i dotenv@8.6.0  winston 
       working-directory: server
 
     - name: Looking inside .env file
