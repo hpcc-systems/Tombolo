@@ -3,6 +3,7 @@ const router = express.Router();
 var models  = require('../../models');
 
 let Dataflow = models.dataflow;
+const DataflowVersions = models.dataflow_versions;
 
 let Cluster = models.cluster;
 let Index = models.indexes;
@@ -297,28 +298,28 @@ router.get('/assets', [
 });
 
 router.get( '/checkDataflows',
-  [query('assetId').isUUID(4).withMessage('Invalid assetId'),
-  query('application_id').isUUID(4).withMessage('Invalid application_Id')],
+  [query('assetId').isUUID(4).withMessage('Invalid assetId')],
   async (req, res) => {
     const errors = validationResult(req).formatWith(validatorUtil.errorFormatter);
     if (!errors.isEmpty()) return res.status(422).json({ success: false, errors: errors.array() });
 
     try {
-      const {assetId, application_id} = req.query;
+      const {assetId} = req.query;
 
-      const dataflows = await Dataflow.findAll({
-        where: { application_id },
-        attributes: ['id', 'title', 'graph'],
+      const dataflowVersions = await DataflowVersions.findAll({
+        where: { isLive:true },
+        include: [{model: Dataflow, attributes:['title']}],
+        attributes: ['dataflowId', 'name', 'graph'],
       });
       
       const inDataflows = [];
 
-      for (const dataflow of dataflows) {
-        const cells = dataflow?.graph?.cells;
+      for (const dataflowVersion of dataflowVersions) {
+        const cells = dataflowVersion?.graph?.cells;
         if (cells) {
           const asset = cells.find(cell => cell.data?.assetId === assetId )
           if (asset){
-            inDataflows.push({dataflowId: dataflow.id, title: dataflow.title });
+            inDataflows.push({dataflowId: dataflowVersion.dataflowId, title: dataflowVersion.dataflow.title });
           }
         }
       }

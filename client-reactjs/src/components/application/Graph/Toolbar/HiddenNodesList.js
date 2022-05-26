@@ -2,10 +2,10 @@ import React, { useEffect, useState } from 'react';
 import { Menu } from '@antv/x6-react-components';
 import { Empty } from 'antd';
 
-const HiddenNodesList = ({ graphRef, refresh, setRefresh }) => {
-  const MenuItem = Menu.Item; // eslint-disable-line
-  const Divider = Menu.Divider; // eslint-disable-line
+const MenuItem = Menu.Item; // eslint-disable-line
+const Divider = Menu.Divider; // eslint-disable-line
 
+const HiddenNodesList = ({ graphRef, refresh, setRefresh }) => {
   const [nodes, setNodes] = useState([]);
 
   const showNode = (node) => {

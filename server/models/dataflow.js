@@ -21,6 +21,7 @@ module.exports = (sequelize, DataTypes) => {
   dataflow.associate = function(models) {
     dataflow.hasOne(models.dataflow_cluster_credentials, { foreignKey: 'dataflow_id' });
     dataflow.hasMany(models.job_execution, { foreignKey: 'dataflowId', onDelete: 'NO ACTION', onUpdate: 'NO ACTION' });
+    dataflow.hasMany(models.dataflow_versions, { foreignKey: 'dataflowId', onDelete: 'CASCADE', onUpdate: 'CASCADE' });
     dataflow.belongsTo(models.application, {foreignKey: 'application_id'});
     dataflow.belongsTo(models.cluster, {foreignKey: 'clusterId'});
   };

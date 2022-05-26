@@ -1,9 +1,13 @@
-/* LIBRARIES */
+/* ENV */
 const path = require('path');
 const fs = require('fs');
 
-require('dotenv').config({ path: fs.existsSync(path.join(process.cwd(), '..', '.env')) ?
-  path.join(process.cwd(), '..', '.env') : path.join(process.cwd(), '.env')});
+const rootENV = path.join(process.cwd(), '..', '.env');
+const serverENV = path.join(process.cwd(), '.env');
+const ENVPath = fs.existsSync(rootENV) ? rootENV : serverENV;
+require('dotenv').config({ path: ENVPath});
+
+/* LIBRARIES */
 const express = require('express');
 const rateLimit = require("express-rate-limit");
 const tokenService = require('./utils/token_service');

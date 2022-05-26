@@ -2,7 +2,7 @@ import React, { useCallback, useState } from 'react';
 import { useEffect, useRef } from 'react';
 import { authHeader, handleError } from '../../common/AuthHeader.js';
 import '@antv/x6-react-shape';
-import { message } from 'antd';
+import { message, notification } from 'antd';
 import { debounce } from 'lodash';
 import { useSelector } from 'react-redux';
 import './GraphX6.css';
@@ -17,6 +17,16 @@ import AssetDetailsDialog from '../AssetDetailsDialog';
 import ExistingAssetListDialog from '../Dataflow/ExistingAssetListDialog';
 import Shape from './Shape.js';
 import { colors } from './graphColorsConfig.js';
+import { getWorkingCopyGraph, saveWorkingCopyGraph } from '../../common/CommonUtil.js';
+
+
+const NOTIFICATION_CONF={
+  placement:'top',
+  style:{
+    width:'auto',
+    maxWidth:'750px'
+  }
+}
 
 const defaultState = {
   openDialog: false,
@@ -29,7 +39,7 @@ const defaultState = {
   nodes: [], // needed for scheduling
 };
 
-function GraphX6({ readOnly = false, statuses }) {
+function GraphX6({ readOnly = false, monitoring, statuses }) {
   const graphRef = useRef();
   const miniMapContainerRef = useRef();
   const graphContainerRef = useRef();
@@ -137,27 +147,16 @@ function GraphX6({ readOnly = false, statuses }) {
   };
 
   const deleteAssetFromDataFlow = async (nodeData, dataflowId) =>{
-    const options = {
-      method: 'POST',
-      headers: authHeader(),
-      body: JSON.stringify({
-        type: nodeData.type.toLowerCase(),
-        assetId: nodeData.assetId,
-        name: nodeData.name,
-        dataflowId,
-      }),
-    };
-
-    const response = await fetch('/api/dataflowgraph/deleteAsset', options);
-    if (!response.ok) handleError(response);
     // Delete from any scheduled records after deleted node.
     const dependentNodes = graphRef.current.getNodes().filter(node=> node.data?.schedule?.dependsOn?.includes(nodeData.assetId));    
     dependentNodes.forEach(node=> node.updateData({schedule:null}));
   }
 
   useEffect(() => {
+    notification.config({ top: 70, maxCount:1, duration: 8  });
     // INITIALIZING EVENT CANVAS AND STENCIL
     const graph = Canvas.init(graphContainerRef, miniMapContainerRef, readOnly);
+    graph.dataflowId = dataflowId; //adding dataflowId value to graph instance to avoid pulling it from redux everywhere;
     graphRef.current = graph;
 
     Shape.init({ handleContextMenu, disableContextMenu: readOnly , graph});
@@ -165,24 +164,50 @@ function GraphX6({ readOnly = false, statuses }) {
     if (!readOnly) {
       Stencil.init(stencilContainerRef, graph);
       Event.init(graph, handleContextMenu); // some static event that does not require local state changes will be sitting here
+      // Keyboard.init(graph); // not ready yet
     }
  
-    // Keyboard.init(graph); // not ready yet
 
     // FETCH SAVED GRAPH
     (async () => {
       try {
-        const response = await fetch( `/api/dataflowgraph?application_id=${applicationId}&dataflowId=${dataflowId}`, { headers: authHeader() } );
-        if (!response.ok) handleError(response);
-        const data = await response.json();
+        // Get working copy from LS if its not there then pull latest from life version;
+        const wcGraph = getWorkingCopyGraph(dataflowId);
+        if (wcGraph && !monitoring) {          
+          // Adding origin to graph instance, will be used in versions list
+          graph.origin = {...wcGraph?.origin };
+          graph.fromJSON(wcGraph);
+        } else {
+          const response = await fetch(`/api/dataflowgraph?dataflowId=${dataflowId}`, {headers: authHeader()});
+          if (!response.ok) handleError(response);
+          const data = await response.json();
+          const timestamp = new Date().toLocaleString();
+      
+          if (data?.graph) {
+            graph.fromJSON(data.graph);
 
-        if (data?.graph) {
-          graph.fromJSON(data.graph);
+            if (!monitoring) {
+              graph.origin = { parent: data.name, createdAt: timestamp, updatedAt: timestamp };
+              handleSave(graph)
+              notification.success({ message: `Working Copy is up to date with "LIVE" version "${data.name}"`, ...NOTIFICATION_CONF });
+            }
+          } else {
+            if (!monitoring) {
+              graph.origin = { parent: '', createdAt: timestamp, updatedAt: timestamp };
+              handleSave(graph);
+              notification.success({
+                message: "Your Working Copy is ready",
+                description: 'There is no "LIVE" version currently congfigured, check the versions list to find different versions available',
+                ...NOTIFICATION_CONF
+              });
+            }
+          }
         }
       } catch (error) {
         console.log(error);
-        message.error('Could not download graph nodes');
+        message.error("Could not download graph nodes");
       }
+
       if (readOnly){
         const nodes = graph.getNodes();
         const edges = graph.getEdges();
@@ -324,7 +349,7 @@ function GraphX6({ readOnly = false, statuses }) {
             } else if (nodeData.assetId) {
               await deleteAssetFromDataFlow(nodeData,dataflowId)
             }
-            await handleSave(graph);
+             handleSave(graph);
           } catch (error) {
             console.log(error);
             message.error('Could not delete an asset');
@@ -333,12 +358,12 @@ function GraphX6({ readOnly = false, statuses }) {
 
         graph.on('node:moved', async ({ cell, options }) => {
           // console.log('node:moved')
-          await handleSave(graph);
+           handleSave(graph);
         });
 
         graph.on('node:added', async ({ node, index, options }) => {
           console.log('node:added');
-          await handleSave(graph);
+           handleSave(graph);
         });
 
         graph.on('node:change:data', async ({ node, options }) => {
@@ -347,24 +372,24 @@ function GraphX6({ readOnly = false, statuses }) {
 
           if (options.name === 'update-asset') {
             // console.log("node:change:data")
-            await handleSave(graph);
+             handleSave(graph);
           }
         });
 
         graph.on('node:change:visible', async ({ node, options }) => {
           if (options.name === 'update-asset') {
             // console.log("node:change:visible")
-            await handleSave(graph);
+             handleSave(graph);
           }
         });
 
         // EDGE REMOVE TRIGGERS 'remove' event, and same event is triggered when nodes getting removed. because node removal is multistep operation, we need to have separate listeners for both
         graph.on('edge:added', async ({ edge, index, options }) => {
-          await handleSave(graph);
+           handleSave(graph);
         });
 
         graph.on('edge:removed', async () => {
-          await handleSave(graph);
+           handleSave(graph);
         });
 
         graph.on('edge:connected', async ({ isNew, edge }) => {
@@ -444,7 +469,7 @@ function GraphX6({ readOnly = false, statuses }) {
               }
             }
           }
-          await handleSave(graph);
+           handleSave(graph);
         });
       }
 
@@ -453,7 +478,7 @@ function GraphX6({ readOnly = false, statuses }) {
       //   if (cmds[0].event === 'cell:change:tools' || readOnly) return; // ignoring hover events and not saving to db when in readOnly mode
       //   const actions = ['dnd', 'mouse', 'add-edge', 'add-asset', 'update-asset'];
       //   if (actions.includes(options?.name)) {
-      //     await handleSave(graph);
+      //      handleSave(graph);
       //   }
       // });
 
@@ -461,6 +486,9 @@ function GraphX6({ readOnly = false, statuses }) {
       //  will scale graph to fit in to a viewport, will add bottom padding for read only views as they have a table too
       graph.zoomToFit({ maxScale: 1, padding: 20 });
     })();
+
+    return () => notification.destroy(); // Remove all the notifications if unmounted
+  
   }, []);
 
   useEffect(() => {
@@ -495,23 +523,14 @@ function GraphX6({ readOnly = false, statuses }) {
   }, [statuses, readOnly, graphReady]);
 
   const handleSave = useCallback(
-    debounce(async (graph) => {
+    debounce((graph) => {
+      if (graph.isFrozen()) return; // when graph is frozen ignore all the saves
+    
       const graphToJson = graph.toJSON({ diff: true });
-      try {
-        const options = {
-          method: 'POST',
-          headers: authHeader(),
-          body: JSON.stringify({ graph: graphToJson, application_id: applicationId, dataflowId }),
-        };
-
-        const response = await fetch('/api/dataflowgraph/save', options);
-        if (!response.ok) handleError(response);
-        // console.log('Graph saved');
-        // console.log('------------------------------------------');
-      } catch (error) {
-        console.log(error);
-        message.error('Could not save graph');
-      }
+      // Copy origin from graph instance and update updatedAt field to be saved to local storage.
+      //graph.toJSON will ignore origin field as it is not the part of their API, we add it as a custom field and need to copy it manually.
+      graphToJson.origin  = {...graph.origin, updatedAt: new Date().toLocaleString() };
+      saveWorkingCopyGraph(dataflowId, graphToJson);
     }, 500),
     []
   );
@@ -888,6 +907,7 @@ function GraphX6({ readOnly = false, statuses }) {
 
   const getGraphDialog = () => {    
     if (configDialog.assetId || (!configDialog.assetId && configDialog.type === 'Sub-Process')) {
+      if (graphRef.current.isFrozen()) readOnly = true; 
       return (
         <AssetDetailsDialog
           show={configDialog.openDialog}
