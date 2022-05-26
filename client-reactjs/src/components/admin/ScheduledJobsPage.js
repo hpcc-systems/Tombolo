@@ -13,7 +13,7 @@ function ScheduledJobsPage() {
   const history = useHistory();
 
   useEffect(()=>{
-    if (account?.idTokenClaims?.roles?.includes("Tombolo_Admin")) {
+    if (!account?.idTokenClaims?.roles?.includes("Tombolo_Admin")) {
      return history.replace('/')
     }
     // defining polling function
