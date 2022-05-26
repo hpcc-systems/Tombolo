@@ -114,7 +114,7 @@ jobs:
       
     - name: Install doetenv
       run: |
-        npm i dotenv       
+        npm i dotenv@8.6.0     
       working-directory: server
 
     - name: Looking inside .env file
