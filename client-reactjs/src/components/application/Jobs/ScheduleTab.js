@@ -1,6 +1,5 @@
 import React, { useEffect, useState } from 'react';
 import { Button, Form, Input, Select, Space, message } from "antd";
-import { authHeader } from '../../common/AuthHeader';
 import { threeColformItemLayout } from "../../common/CommonUtil.js";
 
 const monthMap = { 1: 'January', 2: 'February', 3: 'March', 4: 'April', 5: 'May', 6: 'June', 7: 'July', 8: 'August', 9: 'September', 10: 'October', 11: 'November', 12: 'December', };
@@ -15,7 +14,7 @@ let scheduleCronParts = { minute: [], hour: [], 'day-of-month': [], month: [], '
 
 let cronExamples = [];
 
-const ScheduleTab = ({ nodes, dataflowId, applicationId, selectedAsset, addToSchedule, readOnly, editingAllowed }) => {
+const ScheduleTab = ({ nodes, selectedAsset, addToSchedule, readOnly, editingAllowed }) => {
   const [options, setOptions] = useState({
     loading: false,
     enableEdit: false,
@@ -28,8 +27,6 @@ const ScheduleTab = ({ nodes, dataflowId, applicationId, selectedAsset, addToSch
     dependsOn: [], // assetId[]
     predecessors: [], // all nodes[]
   });
-
-  const [prevSchedule, setPrevSchedule] = useState({});
 
   const generateDate = (year, month, day, hour, minute) => new Date(year, month, day, hour, minute);
 
@@ -376,7 +373,6 @@ const ScheduleTab = ({ nodes, dataflowId, applicationId, selectedAsset, addToSch
       type: options.type, // Predecessor | Time | Template | ""
       cron: options.type === 'Time' ? cronExpression : '', // string 
       dependsOn: options.dependsOn, // [assetId] | [] - cant be job | template
-      prevSchedule : prevSchedule  // Schedule - values that is currently in DB, not be passed to graph but will be send to server
     };
 
     const defaultExpression = '* * * * *';
@@ -389,29 +385,8 @@ const ScheduleTab = ({ nodes, dataflowId, applicationId, selectedAsset, addToSch
       if (schedule.type === 'Template' && schedule.dependsOn?.length === 0)
         throw new Error('Please select a File Monitoring Template to run after');
 
-      // /schedule_job
-      const payload = {
-        method: 'POST',
-        headers: authHeader(),
-        body: JSON.stringify({
-          jobId: selectedAsset.id,
-          dataflowId,
-          application_id: applicationId,
-          schedule: schedule,
-        }),
-      };
-      
-      const response = await fetch('/api/job/schedule_job', payload);
-
-      if (!response.ok) {
-        const result = await response.json();
-        throw new Error(result.message);
-      }
-
-      const result = await response.json();
-      addToSchedule(result.schedule); // will trigger method to update node view on a graph
+      addToSchedule(schedule); // will trigger method to update node view on a graph
       await new Promise(r => setTimeout(r,1000)); // sometime graph takes time to update nodes, we will wait extra second to let it finish;
-      setPrevSchedule(result.schedule);
       setOptions((prev) => ({ ...prev, enableEdit: false, loading: false, }));
       message.success('Job schedule saved');
     } catch (error) {
@@ -472,7 +447,6 @@ const ScheduleTab = ({ nodes, dataflowId, applicationId, selectedAsset, addToSch
       scheduleDayWeek: cronParts?.[4] || '*',
     }));
 
-    setPrevSchedule(schedule); // this value will change only if update on db is successfull
   }, []);
 
   if (!editingAllowed) readOnly = true;

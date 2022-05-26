@@ -7,6 +7,8 @@ const Job = models.job;
 const MessageBasedJobs = models.message_based_jobs;
 
 const Dataflow = models.dataflow;
+const DataflowVersions = models.dataflow_versions;
+
 const Cluster = models.cluster;
 const { v4: uuidv4 } = require('uuid');
 const workflowUtil = require('./utils/workflow-util.js');
@@ -75,10 +77,10 @@ class JobScheduler {
 
   async scheduleCheckForJobsWithSingleDependency({ dependsOnJobId, dataflowId, jobExecutionGroupId }) {
     try {
-      const dataflow = await Dataflow.findOne({ where: { id: dataflowId }, attributes: ["graph"] });
-      if (!dataflow) throw new Error('Dataflow does not exist');
+      const dataflowVersion = await DataflowVersions.findOne({ where: { dataflowId: dataflowId, isLive : true }, attributes: ["graph"] });
+      if (!dataflowVersion) throw new Error('Dataflow does not exist');
 
-      const dependantJobs = dataflow.graph.cells.reduce((acc, cell) => {
+      const dependantJobs = dataflowVersion.graph.cells.reduce((acc, cell) => {
         if (cell?.data?.schedule?.dependsOn?.includes(dependsOnJobId))
           acc.push({ jobId: cell.data.assetId });
         return acc;
@@ -172,11 +174,11 @@ class JobScheduler {
 
   async scheduleActiveCronJobs() {
     try {
-      // get all graphs
-      const dataflows = await Dataflow.findAll( { attributes: ['graph', 'id'] });
+      // get all graphs active graphs
+      const dataflowsVersions = await DataflowVersions.findAll({ where:{ isLive: true }, attributes: ['graph', 'dataflowId'] });
 
-      for (const dataflow of dataflows) {
-        const cronScheduledNodes = dataflow.graph?.cells?.filter((cell) => cell.data?.schedule?.cron) || [];
+      for (const dataflowsVersion of dataflowsVersions) {
+        const cronScheduledNodes = dataflowsVersion.graph?.cells?.filter((cell) => cell.data?.schedule?.cron) || [];
         if (cronScheduledNodes.length > 0) {
           for (const node of cronScheduledNodes) {
             try {
@@ -189,7 +191,7 @@ class JobScheduler {
               const isGitHubJob = job.metaData?.isStoredOnGithub;
 
               const workerData = {
-                dataflowId: dataflow.id,
+                dataflowId: dataflowsVersion.dataflowId,
                 applicationId: job.application_id,
                 cron: node.data.schedule.cron,
                 clusterId: job.cluster_id,

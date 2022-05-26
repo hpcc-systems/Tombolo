@@ -7,6 +7,8 @@ import { EyeInvisibleOutlined, SyncOutlined, LoadingOutlined, InfoCircleOutlined
 import HiddenNodesList from './HiddenNodesList';
 import Legend from './Legend';
 
+import VersionsButton from './VersionsButton';
+
 const Item = Toolbar.Item; // eslint-disable-line
 const Group = Toolbar.Group; // eslint-disable-line
 
@@ -56,6 +58,10 @@ const CustomToolbar = ({ graphRef, handleSync, isSyncing, readOnly }) => {
               >
                 {isSyncing ? '...synchronizing' : 'Synchronize graph'}
               </Item>
+            </Group>
+
+            <Group>
+              <VersionsButton graphRef={graphRef} />
             </Group>
           </>
         )}

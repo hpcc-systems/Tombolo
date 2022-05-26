@@ -3,6 +3,7 @@ let File = models.file;
 let FileLayout = models.file_layout;
 let FileLicense = models.file_license;
 const FileMonitoring = models.fileMonitoring;
+const FileTemplate = models.fileTemplate;
 let FileValidation = models.file_validation;
 let License = models.license;
 let Groups = models.groups;
@@ -20,10 +21,16 @@ const hpccUtil = require('./hpcc-util');
 const workflowUtil = require('./workflow-util');
 let Sequelize = require('sequelize');
 const path = require('path');
+const fs = require('fs')
 const {execFile, spawn} = require('child_process');
-const JobSchedular = require('../job-scheduler');
+const JobScheduler = require('../job-scheduler');
 const { Op } = require('sequelize');
 const logger = require('../config/logger');
+
+const SUBMIT_JOB_FILE_NAME = 'submitJob.js';
+const SUBMIT_SCRIPT_JOB_FILE_NAME = 'submitScriptJob.js';
+const SUBMIT_MANUAL_JOB_FILE_NAME = 'submitManualJob.js'
+const SUBMIT_GITHUB_JOB_FILE_NAME = 'submitGithubJob.js'
 
 exports.fileInfo = (applicationId, file_id) => {
   var results={};
@@ -359,4 +366,139 @@ exports.deleteFileMonitoring = async ({fileTemplateId, dataflowId }) =>{
     console.dir({wuid:fileMonitoring.wuid, fileMonitoring: fileMonitoring.id }, { depth: null });
     console.log('------------------------------------------');
   }
+};
+
+exports.createFileMonitoring = async ({ fileTemplateId, dataflowId }) => {
+  /*  Check if there is existing File Monitoring WU based on this template. 
+  If there is existing file monitoring WU, there is no need to create a new one */
+  const fileMonitoringWU = await FileMonitoring.findOne({ where: { fileTemplateId } });
+
+  if (!fileMonitoringWU) {
+    // Get template details
+    const template = await FileTemplate.findOne({ where: { id: fileTemplateId } });
+    if (!template) throw Error('Template not found');
+
+    const { machine, lzPath, directory, landingZone, monitorSubDirs } = template.metaData;
+    let dirPath = directory.join('/');
+    const completeDirPath = `${lzPath}/${dirPath}/`;
+
+    const pattern = {
+      endsWith: `*${template.searchString}`,
+      contains: `*${template.searchString}*`,
+      startsWith: `${template.searchString}*`,
+    };
+
+    let filePattern = `${completeDirPath}${pattern[template['fileNamePattern']]}`;
+
+    //Create empty WU
+    const wuId = await hpccUtil.createWorkUnit(template.cluster_id, {
+      jobname: `${template.title}_File_Monitoring`,
+    });
+    //  construct ecl code with template details and write it to fs
+    const code = hpccUtil.constructFileMonitoringWorkUnitEclCode({
+      lzPath,
+      filePattern,
+      monitorSubDirs,
+      lzHost: machine,
+      wu_name: `${template.title}_File_Monitoring`,
+    });
+
+    const parentDir = path.join(process.cwd(), 'eclDir');
+    const pathToEclFile = path.join(process.cwd(), 'eclDir', `${template.title}.ecl`);
+    fs.writeFileSync(pathToEclFile, code);
+
+    // update the wu with ecl archive
+    const args = ['-E', pathToEclFile, '-I', parentDir];
+    const archived = await hpccUtil.createEclArchive(args, parentDir);
+
+    const updateBody = {
+      Wuid: wuId,
+      QueryText: archived.stdout,
+      Jobname: `${template.title}_File_Monitoring`,
+    };
+
+    const workUnitService = await hpccUtil.getWorkunitsService(template.cluster_id);
+    await workUnitService.WUUpdate(updateBody);
+
+    //Submit the wu
+    const submitBody = { Wuid: wuId, Cluster: 'hthor' };
+    await workUnitService.WUSubmit(submitBody);
+    fs.unlinkSync(pathToEclFile);
+
+    //Add to file monitoring table
+    const fileMonitoring = await FileMonitoring.create({
+      wuid: wuId,
+      cluster_id: template.cluster_id,
+      dataflow_id: dataflowId,
+      fileTemplateId: template.id,
+      metaData: { dataflows: [dataflowId] },
+    });
+
+    console.log('--MONITORING CREATED----------------------------------------');
+    console.dir({ wuid: wuId, fileMonitoring: fileMonitoring.id }, { depth: null });
+    console.log('------------------------------------------');
+  } else {
+    let newMetaData = {
+      ...fileMonitoringWU.metaData,
+      dataflows: [...fileMonitoringWU.metaData.dataflows, dataflowId],
+    }; // Dataflows using the same file monitoring WU
+
+    await FileMonitoring.update({ metaData: newMetaData }, { where: { id: fileMonitoringWU.id } });
+    console.log('--MONITORING UPDATED----------------------------------------');
+    console.dir({ wuid: fileMonitoringWU.wuid, fileMonitoring: fileMonitoringWU.id }, { depth: null });
+    console.log('------------------------------------------');
+  }
+};
+
+exports.addJobToBreeSchedule = (job, schedule, dataflowId) => {
+  // ADD JOB TO BREE SCHEDULE
+  const getfileName = () => {
+    switch (job.jobType) {
+      case 'Script':
+        return SUBMIT_SCRIPT_JOB_FILE_NAME;
+      case 'Manual':
+        return SUBMIT_MANUAL_JOB_FILE_NAME;
+      default: {
+        if (job.metaData.isStoredOnGithub) {
+          return SUBMIT_GITHUB_JOB_FILE_NAME;
+        } else {
+          return SUBMIT_JOB_FILE_NAME;
+        }
+      }
+    }
+  };
+
+  const jobSettings = {
+    jobId: job.id,
+    jobName: job.name,
+    jobfileName: getfileName(),
+    title: job.title,
+    cron: schedule.cron,
+    jobType: job.jobType,
+    contact: job.contact,
+    metaData: job.metaData,
+    sprayFileName: job.sprayFileName,
+    sprayDropZone: job.sprayFileName,
+    sprayedFileScope: job.sprayedFileScope,
+    clusterId: job.cluster_id,
+    dataflowId,
+    applicationId: job.application_id,
+  };
+
+  if (jobSettings.jobType === 'Manual') {
+    jobSettings.status = 'wait';
+    jobSettings.manualJob_meta = {
+      jobType: 'Manual',
+      jobName: jobSettings.jobName,
+      notifiedTo: jobSettings.contact,
+      notifiedOn: new Date().getTime(),
+    };
+  }
+
+  const result = JobScheduler.addJobToScheduler(jobSettings);
+  if (result.error) throw new Error(result.error);
+
+  console.log(`-JOB SCHEDULED-Time----------------------------------------`);
+  console.dir({ job: job.id, jobname: job.name, schedule }, { depth: null });
+  console.log('------------------------------------------');
 };

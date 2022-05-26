@@ -93,4 +93,17 @@ const multiLineFormItemLayout = {
 }
 
 
+export const getWorkingCopyGraph = (dataflowId) =>{
+  const LSgraphs = JSON.parse(localStorage.getItem("tombolo_graph"));    
+  return LSgraphs?.[dataflowId];
+};
+
+export const saveWorkingCopyGraph = (dataflowId, graph) =>{
+  const LSgraphs = localStorage.getItem('tombolo_graph') ? JSON.parse(localStorage.getItem('tombolo_graph')) : {};
+  LSgraphs[dataflowId] = graph;
+  localStorage.setItem('tombolo_graph', JSON.stringify(LSgraphs))
+};
+
+
+
 export {omitDeep, eclTypes,  flatten, formItemLayout, formItemLayoutWithOutLabel, threeColformItemLayout, multiLineFormItemLayout, validationRules, validationRuleFixes};
