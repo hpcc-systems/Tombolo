@@ -1,14 +1,17 @@
 const { createLogger, format, transports } = require('winston');
 // docs: https://github.com/winstonjs/winston
+const isProduction = process.env.NODE_ENV === 'production';
 
-const getFormat = ({ colorize }) =>
+const getFormat = () =>
   format.combine(
-    colorize ? format.colorize({ all: true }) : format.uncolorize(), // adding or removing colors depending on logs type;
+    isProduction ? format.uncolorize() : format.colorize({ all: true }),  // adding or removing colors depending on logs type;
     format.timestamp(), // will add UTC timestamp to logs, not enabled by default
     format.printf((info) => {
       let { level, message, label, stack, timestamp } = info;
-      if (process.env.NODE_ENV !== 'production') timestamp = new Date(timestamp).toLocaleString(); // will make timestemp more friendly in development
-      let log = `[${timestamp}]-[${level}] ${message}`; // will produce : [5/12/2022, 10:21:41 AM]-[info] ✔️ JOBSCHEDULER IS BOOTSTRAPED
+      if (!isProduction) timestamp = new Date(timestamp).toLocaleString(); // will make timestemp more friendly in development
+      let devlog = `[${timestamp}]-[${level}] ${message}`; // will produce : [5/12/2022, 10:21:41 AM]-[info] ✔️ JOBSCHEDULER IS BOOTSTRAPED
+      let prodlog = `[${level}] ${message}`; // Azure adds its own timestemp to log so we dont need to put it into console twice
+      let log = isProduction ? prodlog : devlog;
       if (stack) log += `\n ${stack}`; // stack is only available when error is logged, print in on new line
       return log;
     })
@@ -28,7 +31,7 @@ const logger = createLogger({
   transports: [
      new transports.Console({
       ...common,
-      format: getFormat({ colorize:true }),
+      format: getFormat(),
       level: process.env.NODE_LOG_LEVEL || DEFAULT_LOG_LEVEL
     }) 
   ],
@@ -36,7 +39,7 @@ const logger = createLogger({
 
 // If we're not in production then also log to the files
 // if (process.env.NODE_ENV !== 'production') {
-//   const settings = {...common, format: getFormat({ colorize: false })}; // will write to files same output as to console but no special char for coloring
+//   const settings = {...common, format: getFormat()}; // will write to files same output as to console but no special char for coloring
 //   logger.add(new transports.File({ ...settings, level: 'http', filename: './logs/combined.log' }));
 //   logger.add(new transports.File({ ...settings, level: 'error', filename: './logs/error.log' })); // only logger.error() will be written here
 // }
