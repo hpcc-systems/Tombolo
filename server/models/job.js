@@ -51,7 +51,9 @@ module.exports = (sequelize, DataTypes) => {
       onDelete: 'CASCADE',
       hooks: true
     });
-
+    job.belongsTo(models.cluster, {
+      foreignKey: 'cluster_id'
+    });
     job.belongsTo(models.application, {
       foreignKey: 'application_id'
     });
