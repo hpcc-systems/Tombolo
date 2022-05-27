@@ -22,6 +22,7 @@ const { body, query, param, validationResult } = require('express-validator');
 const assetUtil = require('../../utils/assets');
 
 const SUBMIT_JOB_FILE_NAME = 'submitJob.js';
+const SUBMIT_QUERY_PUBLISH = 'submitPublishQuery.js'
 const SUBMIT_SPRAY_JOB_FILE_NAME = 'submitSprayJob.js'
 const SUBMIT_SCRIPT_JOB_FILE_NAME = 'submitScriptJob.js';
 const SUBMIT_MANUAL_JOB_FILE_NAME = 'submitManualJob.js'
@@ -732,6 +733,7 @@ router.post('/executeJob', [
     const isSprayJob = job.jobType == 'Spray';
     const isScriptJob = job.jobType == 'Script';
     const isManualJob = job.jobType === 'Manual';
+    const isQueryPublishJob= job.jobType === 'Query Publish';
     const isGitHubJob = job.metaData?.isStoredOnGithub;
     
     const commonWorkerData = { 
@@ -752,6 +754,8 @@ router.post('/executeJob', [
       status = JobScheduler.executeJob({ jobfileName: SUBMIT_MANUAL_JOB_FILE_NAME, ...commonWorkerData, status : 'wait', manualJob_meta : { jobType : 'Manual', jobName: job.name, notifiedTo : job.contact, notifiedOn : new Date().getTime() } });
     } else if (isGitHubJob) {
       status = JobScheduler.executeJob({ jobfileName: SUBMIT_GITHUB_JOB_FILE_NAME, ...commonWorkerData,  metaData : job.metaData, });
+    } else if (isQueryPublishJob) {
+      status = JobScheduler.executeJob({ jobfileName: SUBMIT_QUERY_PUBLISH, ...commonWorkerData});
     } else {
       status = JobScheduler.executeJob({ jobfileName: SUBMIT_JOB_FILE_NAME, ...commonWorkerData });
     }
@@ -860,7 +864,6 @@ router.post( '/manualJobResponse',
 );
 
 const QueueDaemon = require('../../queue-daemon');
-const logger = require('../../config/logger');
 
 router.get('/msg', (req, res) => {
   if (req.query.topic && req.query.message) {
