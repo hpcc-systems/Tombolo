@@ -24,6 +24,7 @@ const { response } = require('express');
 const userService = require('../user/userservice');
 const path = require('path');
 var sanitize = require("sanitize-filename");
+const logger = require('../../config/logger');
 
 router.post('/filesearch', [
   body('keyword')
@@ -111,49 +112,37 @@ router.post('/querysearch', [
   });
 });
 
-
-router.post('/jobsearch', [
-  body('keyword')
-    .matches(/^[a-zA-Z]{1}[a-zA-Z0-9_: .\-]*$/).withMessage('Invalid keyword')
-], function (req, res) {
+router.post('/jobsearch',
+ [ 
+	 body('keyword').matches(/^[a-zA-Z]{1}[a-zA-Z0-9_: .\-]*$/).withMessage('Invalid keyword'),
+	 body('clusterId').isUUID(4).withMessage('Invalid cluster id'),
+	 body('clusterType').optional({ checkFalsy: true }).matches(/^[a-zA-Z]{1}[a-zA-Z0-9_: .\-]*$/).withMessage('Invalid cluster type'),
+ ], async function (req, res) {
 	const errors = validationResult(req).formatWith(validatorUtil.errorFormatter);
-  if (!errors.isEmpty()) {
-    return res.status(422).json({ success: false, errors: errors.array() });
-  }
-	hpccUtil.getCluster(req.body.clusterid).then(function(cluster) {
-		let url = cluster.thor_host + ':' + cluster.thor_port +'/WsWorkunits/WUQuery.json?Jobname=*'+req.body.keyword+'*';
-        request.get({
-		  url: url,
-		  auth : hpccUtil.getClusterAuth(cluster)
-		}, function(err, response, body) {
-		  if (err) {
-				console.log('ERROR - ', err);
-				return response.status(500).send('Error');
-			}
-			else {
-				var result = JSON.parse(body);
-				if(result.WUQueryResponse && result.WUQueryResponse.Workunits != undefined) {
-					var jobSearchAutoComplete = [], workunits = result.WUQueryResponse.Workunits.ECLWorkunit;
+  if (!errors.isEmpty()) return res.status(422).json({ success: false, errors: errors.array() });
 
-					workunits.forEach((workunit, index) => {
-						//dont add any duplicates
-						var exists = jobSearchAutoComplete.filter(function(job) {
-							return workunit.Jobname == job.text;
-						});
-						if(exists != undefined && exists.length == 0) {
-							jobSearchAutoComplete.push({"text" : workunit.Jobname, "value" : workunit.Wuid});
-						}
-					});
-					res.json(jobSearchAutoComplete);
-				} else {
-						res.json([]);
-				}
-			}
-		});
-    }).catch(err => {
-    	console.log('Cluster not reachable: '+JSON.stringify(err));
-    	res.status(500).send({"success":"false", "message": "Search failed. Please check if the cluster is running."});
-    });
+	try {
+		const {keyword, clusterId, clusterType} = req.body
+		const wuService = await hpccUtil.getWorkunitsService(clusterId);
+    const response = await wuService.WUQuery({Jobname:`*${keyword}*`, Cluster: clusterType , });	
+
+		let workunitsResult= [];
+
+		if (response.Workunits){
+			const workunitsHash = response.Workunits.ECLWorkunit.reduce((acc,wu) => {
+				//dont add any duplicates
+				if (!acc[wu.Jobname]) acc[wu.Jobname] = {"text" : wu.Jobname, "value" : wu.Wuid, cluster: wu.Cluster};
+				return acc;
+			},{});
+
+			workunitsResult = Object.values(workunitsHash);
+		}
+
+		return res.status(200).send(workunitsResult);
+	} catch (error) {
+		logger.error('jobsearch error', error);
+		res.status(500).send({"success":"false", "message": "Search failed. Please check if the cluster is running."});
+	}
 });
 
 router.get('/getClusters', async (req, res) => {

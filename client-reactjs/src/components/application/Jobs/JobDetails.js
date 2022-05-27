@@ -32,7 +32,7 @@ class JobDetails extends Component {
     visible: true,
     confirmLoading: false,
     loading: false,
-    jobTypes: [ "Data Profile", "ETL", "Job", "Manual", "Modeling", "Query Build", "Scoring", "Script", "Spray", ],
+    jobTypes: [ "Data Profile", "ETL", "Job", "Manual", "Query Publish", "Modeling", "Query Build", "Scoring", "Script", "Spray", ],
     paramName: "",
     paramType: "",
     sourceFiles: [],
