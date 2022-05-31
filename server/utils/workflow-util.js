@@ -118,10 +118,6 @@ exports.notifyWorkflow = async ({ dataflowId, jobExecutionGroupId, status, jobNa
   
   if (action[status]) action[status](); 
 
-  console.log('------recipients------------------------------------');
-  console.dir({ to: recipients, subject: email.subject, from: process.env.EMAIL_SENDER, }, { depth: null });
-  console.log('------------------------------------------');
-
   await NotificationModule.notify({
     to: recipients,
     subject: email.subject,

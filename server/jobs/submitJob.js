@@ -33,11 +33,11 @@ if (parentPort) {
       throw new Error(message);
     }
 
-    const resultWuid = response?.WUs?.WU?.[0]?.WUID; // this is new wuid created
-    if (!resultWuid) throw new Error("Failed to get WU in respose");
+    const newWUID = response?.WUs?.WU?.[0]?.WUID; // this is new wuid created
+    if (!newWUID) throw new Error("Failed to get WU in respose");
 
     workerData.status = "submitted";
-    await assetUtil.recordJobExecution(workerData, wuid);
+    await assetUtil.recordJobExecution(workerData, newWUID);
   } catch (error) {
     log("error", `Error in job submit ${workerData.jobName}`, error);
     workerData.status = "error";
