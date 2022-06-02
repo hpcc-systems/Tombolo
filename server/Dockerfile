@@ -14,7 +14,7 @@ RUN apt-get install -y nodejs
 
 RUN apt-get update && apt-get install -y bash dos2unix
 
-# RUN dos2unix /app/docker-entry.sh
+RUN dos2unix /app/docker-entry.sh
 
 ENV DEBIAN_FRONTEND noninteractive
 ENV DEBCONF_NONINTERACTIVE_SEEN true
@@ -53,5 +53,3 @@ RUN ecl bundle install https://github.com/hpcc-systems/ML_Core.git \
 RUN npm install -g node-gyp && npm install
 
 RUN npm install sequelize-cli pm2 -g
-
-CMD ["node", "server.js"]
