@@ -53,3 +53,5 @@ RUN ecl bundle install https://github.com/hpcc-systems/ML_Core.git \
 RUN npm install -g node-gyp && npm install
 
 RUN npm install sequelize-cli pm2 -g
+
+CMD ["node", "server.js"]
