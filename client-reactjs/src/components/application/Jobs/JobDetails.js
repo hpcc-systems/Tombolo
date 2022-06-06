@@ -521,11 +521,6 @@ class JobDetails extends Component {
 
     const { confirmLoading, jobTypes, sourceFiles } = this.state;
 
-    const eclItemLayout = {
-      labelCol: { xs: { span: 2 }, sm: { span: 2 }, md: { span: 2 }, lg: { span: 2 }, },
-      wrapperCol: { xs: { span: 4 }, sm: { span: 24 }, md: { span: 24 }, lg: { span: 24 }, xl: { span: 24 }, },
-    };
-
     const longFieldLayout = {
       labelCol: { span: 2 },
       wrapperCol: { span: 12 },
@@ -584,18 +579,43 @@ class JobDetails extends Component {
       this.setState({ enableEdit: !this.state.enableEdit, editing: false, dataAltered: true, });
     };
 
+    // show control buttons at the bottom of modal
+    const getModalControls = () => {
+      // if on "Schedule Tab" (#6) hide controls
+      if (this.state.selectedTabPaneKey === "6") return null;    
+      // if read only show only execute button or nothing
+      if (this.props.viewMode) return getExecuteJobBtn()
+      // if not readonly show controls for editing and deleting;
+      return controls;
+    };
+
+    const getExecuteJobBtn = () =>{
+      // if opened in not LIVE dataflow - hide execute button;
+      if (this.props.displayingInModal && !this.props.allowExecute) return null;
+      // if opened in LIVE dataflow - show execute button inside grey frame wrapper;
+      if (this.props.displayingInModal && this.props.allowExecute) {
+        return (
+          <div className="assetDetail-buttons-wrapper-modal">
+            <Button disabled={!editingAllowed} type="primary" onClick={this.executeJob}>
+              Execute Job
+            </Button>
+          </div>
+        )
+      }
+      // if opened in main view show button as dissabled (click edit to enable)
+      return (
+        <Button disabled={!editingAllowed || !this.state.enableEdit} type="primary" onClick={this.executeJob}>
+          Execute Job
+        </Button>
+      )
+    }
+    
+
     //controls
     const controls = (
       <div className={ this.props.displayingInModal ? 'assetDetail-buttons-wrapper-modal' : 'assetDetail-buttons-wrapper ' } >
         <span style={{ float: 'left' }}>
-          <Button
-            disabled={!editingAllowed || !this.state.enableEdit}
-            type="primary"
-            key="execute"
-            onClick={this.executeJob}
-          >
-            Execute Job
-          </Button>
+          {getExecuteJobBtn()}
         </span>
     
         <span className="button-container">
@@ -888,11 +908,7 @@ class JobDetails extends Component {
           </Tabs>
         </Form>
       </div>
-      {this.props.displayingInModal
-       && !this.props.viewMode
-        && this.state.selectedTabPaneKey !== '6' // if on schedule tab, hide controls
-        ? controls
-         : null}
+      {this.props.displayingInModal ? getModalControls() : null}
     </React.Fragment>
     );
   }
