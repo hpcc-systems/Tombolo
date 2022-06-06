@@ -78,9 +78,14 @@ jobs:
     #     npm install
     #     npm run build --if-present
     #   working-directory: server
+    
+    - name: Install Glonal dependencies
+      run: |
+        npm i sequelize -g
+    
     - name: Install dependencies
       run: |
-        npm i winston sequelize dotenv -g
+        npm i winston dotenv -g
       working-directory: server
       
     - name: dbmigrate
