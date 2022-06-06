@@ -85,7 +85,7 @@ jobs:
     
     - name: Install dependencies
       run: |
-        npm i winston dotenv -g
+        npm i winston dotenv
       working-directory: server
       
     - name: dbmigrate
