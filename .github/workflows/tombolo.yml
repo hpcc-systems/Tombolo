@@ -1,4 +1,4 @@
-name: Build & Deploy to DEV 
+`name: Build & Deploy to DEV 
 on: 
   push:
       branches:
@@ -79,12 +79,13 @@ jobs:
     #     npm run build --if-present
     #   working-directory: server
     
-    - name: Install Glonal dependencies
+    - name: Install Global dependencies
       run: |
         npm i sequelize -g
     
     - name: Install dependencies
       run: |
+        rm package-lock.json
         npm i winston dotenv
       working-directory: server
       
