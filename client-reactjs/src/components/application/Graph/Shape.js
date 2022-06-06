@@ -16,6 +16,7 @@ import {
   LinkOutlined,
   MessageOutlined,
   MailOutlined,
+  SoundOutlined,
   ProfileOutlined,
   FileSearchOutlined
 } from '@ant-design/icons/lib/icons';
@@ -142,6 +143,7 @@ class Node extends React.Component {
     Monitor: <FileSearchOutlined />,
     Index: <BookOutlined />,
     Manual: <MailOutlined />,
+    'Query-Publish': <SoundOutlined />,
     'Sub-Process': <SisternodeOutlined />,
   };
 
@@ -161,6 +163,8 @@ class Node extends React.Component {
     };
 
     if (jobType === 'Manual') type = 'Manual'; // Show different icon for Manual job
+    if (jobType === 'Query Publish') type = 'Query-Publish'; // Show different icon for Query Publish jobs
+
     if (isSuperFile) type = 'SuperFile';// Show different icon for SuperFile
     if (isMonitoring) type = 'Monitor'; // used for fileTemplateMonitoring, shows different icon and background
 

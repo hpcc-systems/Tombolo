@@ -41,7 +41,7 @@
     right: 3px;
   }
 
-  .Job, .Manual {
+  .Job, .Manual , .Query-Publish {
     background-color: #ffa726; 
     border: 2px solid #c25e00; 
   }
@@ -93,7 +93,7 @@
     align-items: center;
   }
   
-  .status-completed, .status-completed:hover, .status-compiled {
+  .status-completed, .status-completed:hover, .status-compiled, .status-compiled:hover {
     border-color:#04880a;
     box-shadow: 0px 0px 8px 2px #08a710
   }

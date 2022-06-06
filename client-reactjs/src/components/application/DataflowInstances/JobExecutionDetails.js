@@ -41,6 +41,7 @@ function JobExecutionDetails({ jobExecutions, setFilters, selectJEGroup, JEGroup
   const setBadgeColor = (status) => {
     const colors = {
       completed: '#3bb44a',
+      compiled: '#3bb44a',
       failed: '#FF0000',
       blocked: '#FFA500',
       'some-failed': '#FFA500',
@@ -50,7 +51,7 @@ function JobExecutionDetails({ jobExecutions, setFilters, selectJEGroup, JEGroup
   };
 
   const getGroupStatus = (statuses) => {
-    if (statuses.every((status) => status === 'completed')) return 'completed';
+    if (statuses.every((status) => status === 'completed' || status === 'compiled')) return 'completed';
     if (statuses.some((status) => status === 'failed' || status === 'error')) return 'failed';
     if (statuses.some((status) => status === 'wait' || status === 'submitted')) return 'in-progress';
     return 'some-failed';
