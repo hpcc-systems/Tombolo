@@ -80,7 +80,7 @@ jobs:
     #   working-directory: server
     - name: Install dependencies
       run: |
-        npm i winston sequelize dotenv
+        npm i winston sequelize dotenv -g
       working-directory: server
       
     - name: dbmigrate
