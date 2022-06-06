@@ -83,9 +83,13 @@ jobs:
       run: |
         npm i sequelize -g
     
-    - name: Install dependencies
+    - name: Remove lock file 
       run: |
         rm package-lock.json
+      working-directory: server
+      
+    - name: Install dependencies
+      run: |
         npm i winston dotenv
       working-directory: server
       
