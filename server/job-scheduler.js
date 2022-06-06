@@ -11,6 +11,7 @@ const DataflowVersions = models.dataflow_versions;
 const { v4: uuidv4 } = require('uuid');
 const workflowUtil = require('./utils/workflow-util.js');
 const SUBMIT_JOB_FILE_NAME = 'submitJob.js';
+const SUBMIT_QUERY_PUBLISH = 'submitPublishQuery.js'
 const SUBMIT_SPRAY_JOB_FILE_NAME = 'submitSprayJob.js';
 const SUBMIT_SCRIPT_JOB_FILE_NAME = 'submitScriptJob.js';
 const SUBMIT_MANUAL_JOB_FILE_NAME = 'submitManualJob.js';
@@ -147,6 +148,27 @@ class JobScheduler {
     }
   }
 
+  executeJob(jobData) {
+    try {
+      let uniqueJobName = jobData.jobName + '-' + jobData.dataflowId + '-' + jobData.jobId + '-' + uuidv4();
+      this.createNewBreeJob({...jobData, uniqueJobName});
+      this.bree.start(uniqueJobName);
+      logger.info(`✔️  BREE HAS STARTED JOB: "${uniqueJobName}"`);
+      this.logBreeJobs();
+      return { success: true, message: `Successfully executed ${jobData.jobName}` };
+    } catch (err) {
+     logger.error(err);
+      return {
+        success: false,
+        contact:jobData.contact,
+        jobName:jobData.jobName,
+        clusterId: jobData.clusterId,
+        dataflowId: jobData.dataflowId,
+        message: `Error executing  ${jobName} - ${err.message}`,
+      };
+    }
+  }
+
   async scheduleActiveCronJobs() {
     try {
       // get all graphs active graphs
@@ -257,27 +279,6 @@ class JobScheduler {
       const part2 = err.message.split(' an ')?.[1]  // error message is not user friendly, we will trim it to have everything after "an".
       if (part2) err.message = part2;
       return {success: false, error: err.message }
-    }
-  }
-
-  executeJob(jobData) {
-    try {
-      let uniqueJobName = jobData.jobName + '-' + jobData.dataflowId + '-' + jobData.jobId + '-' + uuidv4();
-      this.createNewBreeJob({...jobData, uniqueJobName});
-      this.bree.start(uniqueJobName);
-      logger.info(`✔️  BREE HAS STARTED JOB: "${uniqueJobName}"`);
-      this.logBreeJobs();
-      return { success: true, message: `Successfully executed ${jobData.jobName}` };
-    } catch (err) {
-     logger.error(err);
-      return {
-        success: false,
-        contact:jobData.contact,
-        jobName:jobData.jobName,
-        clusterId: jobData.clusterId,
-        dataflowId: jobData.dataflowId,
-        message: `Error executing  ${jobName} - ${err.message}`,
-      };
     }
   }
 

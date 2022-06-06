@@ -27,7 +27,24 @@ if (parentPort) {
     const  { wuid, wuService } = result;
     log("info", `${workerData.jobName} (WU: ${wuid}) publishing`);
     
-    const response = await wuService.WUPublishWorkunit({ Wuid: wuid, JobName:jobName,  Cluster:'roxie', Activate:true });	
+    const response = await wuService.WUPublishWorkunit({
+      Wuid: wuid,
+      JobName: jobName,
+      Cluster: "roxie",
+      // https://discoverylab.hpcc.risk.regn.net:18010/WsWorkunits/WUPublishWorkunit?ver_=1.8&form  | default props must be included in order to work;
+      Activate: 1,
+      NotifyCluster: false,
+      Wait: 10000,
+      NoReload: false,
+      UpdateWorkUnitName: false,
+      DontCopyFiles: false,
+      AllowForeignFiles: false,
+      UpdateDfs: false,
+      UpdateSuperFiles: false,
+      UpdateCloneFrom: false,
+      AppendCluster: true,
+      IncludeFileErrors: false,
+    });
         
     if (response.Exceptions?.Exception?.length  > 0){
       const message = response.Exceptions.Exception.map(exception => exception.Message).join(', ');
