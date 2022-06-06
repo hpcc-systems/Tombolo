@@ -31,29 +31,29 @@ env:
   REACT_APP_AZURE_REDIRECT_URI: ${{ secrets.REACT_APP_AZURE_REDIRECT_URI }}
   REACT_APP_AZURE_API_TOKEN_SCOPE: ${{ secrets.REACT_APP_AZURE_API_TOKEN_SCOPE }}
 jobs:    
-  build-ui:
-    name: build-ui
-    runs-on: self-hosted    
-    #environment:
-      #name: 'DEV'
-    steps:
-    - uses: actions/checkout@v2
-    - name: Use Node.js 14
-      uses: actions/setup-node@v2
-      with:
-        node-version: '14'
-    - name: npm install, build, and test
-      run: |
-        # Build and test the project, then
-        # deploy to Azure Web App.
-        npm install
-        CI=false && npm run build --if-present
-      working-directory: client-reactjs  
-    - uses: azure/webapps-deploy@v2
-      with:
-        app-name: 'tomboloui2-eastus2-dev'
-        publish-profile: ${{ secrets.AZURE_WEBAPP_PUBLISH_PROFILE }}
-        package: ${{ env.AZURE_WEBAPP_PACKAGE_PATH }}
+#   build-ui:
+#     name: build-ui
+#     runs-on: self-hosted    
+#     #environment:
+#       #name: 'DEV'
+#     steps:
+#     - uses: actions/checkout@v2
+#     - name: Use Node.js 14
+#       uses: actions/setup-node@v2
+#       with:
+#         node-version: '14'
+#     - name: npm install, build, and test
+#       run: |
+#         # Build and test the project, then
+#         # deploy to Azure Web App.
+#         npm install
+#         CI=false && npm run build --if-present
+#       working-directory: client-reactjs  
+#     - uses: azure/webapps-deploy@v2
+#       with:
+#         app-name: 'tomboloui2-eastus2-dev'
+#         publish-profile: ${{ secrets.AZURE_WEBAPP_PUBLISH_PROFILE }}
+#         package: ${{ env.AZURE_WEBAPP_PACKAGE_PATH }}
 
   build-api:
     name: build-api
@@ -80,7 +80,8 @@ jobs:
     #   working-directory: server
     - name: Install dependencies
       run: |
-        npm i winston sequelize -g
+        npm i winston sequelize dotenv
+      working-directory: server
       
     - name: dbmigrate
       run: |
