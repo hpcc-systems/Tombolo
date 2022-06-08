@@ -159,6 +159,9 @@ const VersionsButton = ({ graphRef }) => {
       }else{
         // When change is not permanent we need to cancel most of the interactions to avoid editing graph.
         graphRef.current.freeze().disableSelection().disableRubberband().disableSnapline().disableSharpSnapline().hideTools();
+
+        // Only Live Versions can be executed, update the flag it will reflect in modal action buttons;
+        graphRef.current.allowExecute = version.isLive;
         
         // Notify user about read-only view
         notification.info({
@@ -331,6 +334,7 @@ const VersionsButton = ({ graphRef }) => {
   }
 
   const getWorkingCopy = () =>{
+    graphRef.current.allowExecute = false; // making sure you can not execute graph that is in localStorage
     const dataflowId = graphRef.current.dataflowId;
     const wcGraph = getWorkingCopyGraph(dataflowId);
 

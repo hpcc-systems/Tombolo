@@ -318,7 +318,7 @@ exports.getJobInfo = async (clusterId, jobWuid, jobType) => {
   }
 };
 
-exports.getJobWuDetails = async (clusterId, jobName, dataflowId) => {
+exports.getJobWuDetails = async (clusterId, jobName, dataflowId, clusterType="") => {
   try {
     let wuService;
 
@@ -344,10 +344,10 @@ exports.getJobWuDetails = async (clusterId, jobName, dataflowId) => {
 
     if (!wuService) throw new Error('Failed to get WorkunitsService');
 
-    const WUQuery = await wuService.WUQuery({ Jobname: jobName, PageSize: 1, PageStartFrom: 0 });
+    const WUQuery = await wuService.WUQuery({ Jobname: jobName, Cluster: clusterType, PageSize: 1, PageStartFrom: 0 });
     const ECLWorkunit = WUQuery.Workunits?.ECLWorkunit?.[0];
 
-    return ECLWorkunit ? { wuid: ECLWorkunit.Wuid, cluster: ECLWorkunit.Cluster } : null;
+    return ECLWorkunit ? { wuid: ECLWorkunit.Wuid, cluster: ECLWorkunit.Cluster, wuService } : null;
   } catch (error) {
     console.log('-ERROR getJobWuDetails-----------------------------------------');
     console.dir({ error }, { depth: null });
@@ -414,9 +414,6 @@ exports.workunitInfo = async (wuid, clusterId) => {
     const wuService = await module.exports.getWorkunitsService(clusterId);
     return  await wuService.WUInfo({"Wuid":wuid, "IncludeExceptions":true, "IncludeSourceFiles":true, "IncludeResults":true, "IncludeTotalClusterTime": true, IncludeResultsViewNames : true});
   } catch (error) {
-    console.log('---error---------------------------------------');
-    console.dir({workunitInfo}, { depth: null });
-    console.log('------------------------------------------');
     throw error;
   }
 }

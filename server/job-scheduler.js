@@ -6,13 +6,12 @@ const logger = require('./config/logger');
 const Job = models.job;
 const MessageBasedJobs = models.message_based_jobs;
 
-const Dataflow = models.dataflow;
 const DataflowVersions = models.dataflow_versions;
 
-const Cluster = models.cluster;
 const { v4: uuidv4 } = require('uuid');
 const workflowUtil = require('./utils/workflow-util.js');
 const SUBMIT_JOB_FILE_NAME = 'submitJob.js';
+const SUBMIT_QUERY_PUBLISH = 'submitPublishQuery.js'
 const SUBMIT_SPRAY_JOB_FILE_NAME = 'submitSprayJob.js';
 const SUBMIT_SCRIPT_JOB_FILE_NAME = 'submitScriptJob.js';
 const SUBMIT_MANUAL_JOB_FILE_NAME = 'submitManualJob.js';
@@ -89,44 +88,24 @@ class JobScheduler {
      logger.verbose(`✔️  FOUND ${dependantJobs.length} DEPENDENT JOB/S`);
 
       if (dependantJobs.length === 0 && dataflowId) {
-        logger.info('WORKFLOW EXECUTION COMPLETE, Checking if subscribed for notifications.');
         try {
-          const dataflow = await Dataflow.findOne({ where: { id: dataflowId } });
-          const cluster = await Cluster.findOne({ where: { id: dataflow.clusterId } });
-
-          const notify = dataflow.dataValues?.metaData?.notification?.notify;
-
-          if (notify === 'Always' || notify === 'Only on success') {
-            const hpccURL = `${cluster.thor_host}:${cluster.thor_port}/#/stub/ECL-DL/Workunits-DL/Workunits`;
-            const { recipients, success_message } = dataflow.dataValues.metaData.notification;
-
-            workflowUtil.notifyWorkflowExecutionStatus({
-              appId: dataflow.application_id,
-              dataflowName: dataflow.title,
-              executionStatus: 'completed',
-              clusterName: cluster.name,
-              dataflowId: dataflow.id,
-              jobExecutionGroupId,
-              success_message,
-              recipients,
-              hpccURL,
-            });
-          }
+          logger.info('WORKFLOW EXECUTION COMPLETE, Checking if subscribed for notifications.');
+          await workflowUtil.notifyWorkflow({dataflowId, jobExecutionGroupId, status: 'completed'})
         } catch (error) {
-          logger.error(error);
+          logger.error('WORKFLOW EXECUTION COMPLETE NOTIFICATION FAILED', error);
         }
-      } else {
-        const failedJobsList = [];
+      } else {  
 
-        for (let i = 0; i < dependantJobs.length; i++) {
+        for (const dependantJob of dependantJobs) {
           try {
-            const dependantJob = dependantJobs[i];
             let job = await Job.findOne({ where: { id: dependantJob.jobId } });
 
             let status;
             const isSprayJob = job.jobType == 'Spray';
             const isScriptJob = job.jobType == 'Script';
             const isManualJob = job.jobType === 'Manual';
+            const isQueryPublishJob= job.jobType === 'Query Publish';
+
             const isGitHubJob = job.metaData?.isStoredOnGithub;
 
             logger.info( `🔄 EXECUTING DEPENDANT JOB "${job.name}" id:${job.id}; dflow: ${dataflowId};` );
@@ -150,25 +129,43 @@ class JobScheduler {
               status = this.executeJob({ ...commonWorkerData, status: 'wait', jobfileName: SUBMIT_MANUAL_JOB_FILE_NAME, manualJob_meta: { jobType: 'Manual', jobName: job.name, notifiedTo: job.contact }, });
             } else if (isGitHubJob) {
               status = this.executeJob({ ...commonWorkerData, metaData: job.metaData, jobfileName: SUBMIT_GITHUB_JOB_FILE_NAME, });
+            } else if (isQueryPublishJob) {
+              status = this.executeJob({ jobfileName: SUBMIT_QUERY_PUBLISH, ...commonWorkerData});
             } else {
               status = this.executeJob({ jobfileName: SUBMIT_JOB_FILE_NAME, ...commonWorkerData });
             }
             if (!status.success) throw status;
           } catch (error) {
-            logger.error('Failed to execute dependent job through bree', error); // failed to execute dependent job through bree. Should notify user.
-            if (error.contact) failedJobsList.push(error);
-          }
-        } // for loop ends.
-
-        if (failedJobsList.length > 0) {
-          const contact = failedJobsList[0].contact;
-          const dataflowId = failedJobsList[0].dataflowId;
-          await workflowUtil.notifyDependentJobsFailure({ contact, dataflowId, failedJobsList });
+            // failed to execute dependent job through bree. User will be notified inside worker
+            logger.error('Failed to execute dependent job through bree', error); 
+          }   
         }
       }
     } catch (error) {
       logger.error(error);
-      // TODO FAILED TO SCHEDULE, inform user?
+      const message=`Error happened while trying to execute workflow, try to 'Save version' and execute it again. | Error: ${error.message} `
+      await workflowUtil.notifyWorkflow({dataflowId, jobExecutionGroupId, status: 'error', exceptions: message})
+    }
+  }
+
+  executeJob(jobData) {
+    try {
+      let uniqueJobName = jobData.jobName + '-' + jobData.dataflowId + '-' + jobData.jobId + '-' + uuidv4();
+      this.createNewBreeJob({...jobData, uniqueJobName});
+      this.bree.start(uniqueJobName);
+      logger.info(`✔️  BREE HAS STARTED JOB: "${uniqueJobName}"`);
+      this.logBreeJobs();
+      return { success: true, message: `Successfully executed ${jobData.jobName}` };
+    } catch (err) {
+     logger.error(err);
+      return {
+        success: false,
+        contact:jobData.contact,
+        jobName:jobData.jobName,
+        clusterId: jobData.clusterId,
+        dataflowId: jobData.dataflowId,
+        message: `Error executing  ${jobName} - ${err.message}`,
+      };
     }
   }
 
@@ -282,27 +279,6 @@ class JobScheduler {
       const part2 = err.message.split(' an ')?.[1]  // error message is not user friendly, we will trim it to have everything after "an".
       if (part2) err.message = part2;
       return {success: false, error: err.message }
-    }
-  }
-
-  executeJob(jobData) {
-    try {
-      let uniqueJobName = jobData.jobName + '-' + jobData.dataflowId + '-' + jobData.jobId + '-' + uuidv4();
-      this.createNewBreeJob({...jobData, uniqueJobName});
-      this.bree.start(uniqueJobName);
-      logger.info(`✔️  BREE HAS STARTED JOB: "${uniqueJobName}"`);
-      this.logBreeJobs();
-      return { success: true, message: `Successfully executed ${jobData.jobName }` };
-    } catch (err) {
-     logger.error(err);
-      return {
-        success: false,
-        contact:jobData.contact,
-        jobName:jobData.jobName,
-        clusterId: jobData.clusterId,
-        dataflowId: jobData.dataflowId,
-        message: `Error executing  ${jobName} - ${err.message}`,
-      };
     }
   }
 

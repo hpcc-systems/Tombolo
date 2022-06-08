@@ -305,7 +305,7 @@ exports.createGithubFlow = async ({jobId, jobName, gitHubFiles, dataflowId, appl
     // # pull from github and submit job to HPCC.
     tasks =  await hpccUtil.pullFilesFromGithub( jobName ,clusterId, gitHubFiles );
     if (tasks.WUaction?.failedToUpdate) {
-     await manuallyUpdateJobExecutionFailure({jobExecution,tasks}); 
+     await manuallyUpdateJobExecutionFailure({jobExecution,tasks, jobExecutionGroupId, jobName}); 
     } else {
       // changing jobExecution status to 'submitted' will signal status poller that this job if ready to be executed
       const updated = await jobExecution.update({status:'submitted', wuid: tasks.wuid },{where:{id:jobExecution.id, status:'cloning'}}) 
@@ -314,7 +314,7 @@ exports.createGithubFlow = async ({jobId, jobName, gitHubFiles, dataflowId, appl
     }
     return tasks; // quick summary about github flow that happened.
   } catch (error) {
-    await manuallyUpdateJobExecutionFailure({jobExecution,tasks}); 
+    await manuallyUpdateJobExecutionFailure({ jobExecution, tasks, jobExecutionGroupId, jobName,}); 
     console.log('------------------------------------------');
     console.log('❌ createGithubFlow: "Error happened"');
     console.dir(error);
@@ -322,12 +322,14 @@ exports.createGithubFlow = async ({jobId, jobName, gitHubFiles, dataflowId, appl
   }
 }
 
-const manuallyUpdateJobExecutionFailure = async ({jobExecution,tasks}) =>{
+const manuallyUpdateJobExecutionFailure = async ({jobExecution,tasks, jobName, jobExecutionGroupId}) =>{
   try {
     // attempt to update WU at hpcc as failed was unsuccessful, we need to update our record manually as current status "cloning" will not be picked up by status poller.
     const wuid = tasks?.wuid ||'';
-    await jobExecution.update({status: 'failed', wuid},{where:{id:jobExecution.id, status:'cloning'}});
-    await workflowUtil.notifyJobFailure({ jobId: jobExecution.jobId, clusterId: jobExecution.clusterId, wuid});
+    await jobExecution.update({status: 'error', wuid},{where:{id:jobExecution.id, status:'cloning'}});
+    const {dataflowId, jobId} = jobExecution;
+    await workflowUtil.notifyJob({ dataflowId, jobExecutionGroupId, jobId, status: 'error', exceptions: tasks.error });
+    await workflowUtil.notifyWorkflow({ dataflowId, jobExecutionGroupId, jobName, status: 'error', exceptions: tasks.error });
   } catch (error) {
     console.log('------------------------------------------');
     console.log("❌ createGithubFlow: Failed to notify", error);

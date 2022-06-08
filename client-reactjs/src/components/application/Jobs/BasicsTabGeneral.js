@@ -32,7 +32,11 @@ function BasicsTabGeneral({ enableEdit, editingAllowed, addingNewAsset, jobType,
       const options = {
         method: 'POST',
         headers: authHeader(),
-        body: JSON.stringify({ clusterid: clusterId, keyword: searchString.trim(), indexSearch: true })
+        body: JSON.stringify({
+          keyword: searchString.trim(),
+          clusterId, 
+          clusterType: jobType === "Query Publish" ? 'roxie': '', 
+        })
       }; 
       
       const response = await fetch('/api/hpcc/read/jobsearch', options);
@@ -55,7 +59,7 @@ function BasicsTabGeneral({ enableEdit, editingAllowed, addingNewAsset, jobType,
       setSearch(prev => ({...prev, loading:false, error: error.message }))
     }
   }, 500)
-  , []);
+  , [jobType, clusterId]);
  
     const resetModal = () => {
       //this method is triggered when we click any of buttons on modal;

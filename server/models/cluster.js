@@ -19,6 +19,7 @@ module.exports = (sequelize, DataTypes) => {
   cluster.associate = function(models) {
     // associations can be defined here
     cluster.hasMany(models.dataflow, {foreignKey: 'clusterId' });
+    cluster.hasMany(models.job,{ foreignKey:'cluster_id', });
     cluster.hasMany(models.job_execution, {foreignKey: 'clusterId' });
     cluster.hasMany(models.dataflow_cluster_credentials,{ foreignKey:'cluster_id', });
     cluster.hasMany(models.visualizations, {foreignKey: 'clusterId', onDelete: 'CASCADE'});
