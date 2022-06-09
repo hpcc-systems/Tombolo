@@ -56,7 +56,7 @@ const VersionsButton = ({ graphRef }) => {
 
       if (saveWC) {        
         const wcGraph = getWorkingCopyGraph(dataflowId);
-        if (wcGraph) throw new Error("Failed to save Working Copy");
+        if (!wcGraph) throw new Error("Failed to save Working Copy");
         graph = wcGraph;
       } else{
         graph = graphRef.current.toJSON({ diff: true });
