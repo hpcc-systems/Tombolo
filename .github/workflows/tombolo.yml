@@ -55,52 +55,48 @@ jobs:
         publish-profile: ${{ secrets.AZURE_WEBAPP_PUBLISH_PROFILE }}
         package: ${{ env.AZURE_WEBAPP_PACKAGE_PATH }}
 
-  build-api:
-    name: build-api
+  build_api:
+    name: build-api-container
     runs-on: self-hosted
-    #environment:
-      #name: 'DEV'
-    steps:
-    # - uses: actions/checkout@main
-    # - name: Create cluster-whitelist
-    #   run: |
-    #     touch cluster-whitelist.js
-    #     echo ${{ secrets.CLUSTER_WHITE_LIST }} >> cluster-whitelist.js
-    #   working-directory: server
-  
-    # - name: Use Node.js 14
-    #   uses: actions/setup-node@v2
-    #   with:
-    #     node-version: 14
-
-    # - name: npm install, build, and test
-    #   run: |
-    #     npm install
-    #     npm run build --if-present
-    #   working-directory: server
-    
-    - name: Install Global dependencies
+    environment:
+      name: 'DEV'
+    steps:            
+    - uses: actions/checkout@v2
+    - name: create env file
       run: |
-        npm i sequelize -g
-    
-    - name: Remove lock file 
-      run: |
-        rm package-lock.json
+        touch .env
+        echo DB_USERNAME=${{ secrets.DB_USERNAME }} >> .env
+        echo DB_PASSWORD=${{ secrets.DB_PASSWORD }} >> .env
+        echo DB_PORT=${{ secrets.DB_PORT }} >> .env
+        echo DB_NAME=${{ secrets.DB_NAME }} >> .env
+        echo DB_HOSTNAME=${{ secrets.DB_HOSTNAME }} >> .env
+        echo AUTH_SERVICE_URL=${{ secrets.AUTH_SERVICE_URL }} >> .env
+        echo AUTHSERVICE_TOMBOLO_CLIENT_ID=${{ secrets.AUTHSERVICE_TOMBOLO_CLIENT_ID }} >> .env
+        echo secret=${{ secrets.secret }} >> .env
+        echo MYSQL_SSL_ENABLED=${{ secrets.MYSQL_SSL_ENABLED }}
+        echo JOB_COMPLETE_GROUP_ID='tombolo_dev'
       working-directory: server
       
-    - name: Install dependencies
+    - name: Create cluster-whitelist
       run: |
-        npm i winston dotenv
-      working-directory: server
-      
-    - name: dbmigrate
-      run: |
-        npx sequelize-cli db:migrate        
-      working-directory: server
-
-    # - name: 'Deploy to Azure WebApp'
-    #   uses: azure/webapps-deploy@v2
-    #   with: 
-    #     app-name: 'tomboloapi-eastus2-dev'
-    #     publish-profile: ${{ secrets.AZURE_WEBAPP_PUBLISH_PROFILE_API }}
-    #     package: ${{ env.AZURE_WEBAPP_PACKAGE_PATH_API }}
+         touch cluster-whitelist.js
+         echo ${{ secrets.CLUSTER_WHITE_LIST }} >> cluster-whitelist.js
+      working-directory: server  
+    
+    - run: |                
+        #build 
+        docker build -t tombolo-api ./server        
+        #tag
+        docker tag tombolo-api tombolodevcr.azurecr.io/tombolo-api
+        #login to Azure
+        az login --identity        
+        #login to container registry
+        az acr login --name tombolodevcr        
+        #push image to acr
+        docker push tombolodevcr.azurecr.io/tombolo-api
+    
+    - uses: azure/webapps-deploy@v2
+      with:
+        app-name: 'tomboloapi-eastus2-dev'
+        #publish-profile: ${{ secrets.AZURE_WEBAPP_PUBLISH_PROFILE }}
+        images: 'tombolodevcr.azurecr.io/tombolo-api'  
