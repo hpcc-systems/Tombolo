@@ -80,7 +80,7 @@ jobs:
     - name: Create cluster-whitelist
       run: |
          touch cluster-whitelist.js
-         echo ${{ secrets.CLUSTER_WHITE_LIST }} >> cluster-whitelist.js
+         #echo ${{ secrets.CLUSTER_WHITE_LIST }} >> cluster-whitelist.js
       working-directory: server  
     
     - run: |                
