@@ -74,7 +74,7 @@ jobs:
         echo AUTHSERVICE_TOMBOLO_CLIENT_ID=${{ secrets.AUTHSERVICE_TOMBOLO_CLIENT_ID }} >> .env
         echo secret=${{ secrets.secret }} >> .env
         echo MYSQL_SSL_ENABLED=${{ secrets.MYSQL_SSL_ENABLED }}
-        echo JOB_COMPLETE_GROUP_ID='tombolo_dev'
+        echo JOB_COMPLETE_GROUP_ID=tombolo_dev
       working-directory: server
       
     - name: Create cluster-whitelist
