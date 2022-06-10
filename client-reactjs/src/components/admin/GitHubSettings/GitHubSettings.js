@@ -215,11 +215,13 @@ const GitHubSettings = () => {
 
   const mergedColumns = columns.map((col) => {
     if (!col.editable) return col; // keeps actions buttons in place
-
+    // PASS PROPS TO EditableCell HERE!
     return {
       ...col,
       onCell: (record) => ({
         record,
+        onSearch,
+        branchAndTagList,
         title: col.title,
         dataIndex: col.dataIndex,
         editing: isEditing(record),
@@ -227,22 +229,38 @@ const GitHubSettings = () => {
     };
   });
 
-  // CELL FORM FIELD!
-  const EditableCell = ({ record, dataIndex, title, editing, index, children, ...restProps }) => {
-    const rules = [];
-    
-    if (dataIndex === 'ghLink') {
-      rules.push({ required: true, whitespace: true, type: 'url', message: 'Invalid URL' });
-    }
-  
-    if(dataIndex === 'ghProject'){
-      rules.push({ required: true, whitespace: true, message: "Name is required" });
-    }
 
-    if(dataIndex === 'ghBranchOrTag'){
-       rules.push({ required: true, whitespace: true, message: "Branch or Tag is required" });
+  return (
+    <Form form={form} component={false} autoComplete={false}>
+      <Button onClick={handleAddProject} type="primary" style={{ marginBottom: 16 }}>
+        Add new project
+      </Button>
+      <Table
+        bordered
+        components={{ body: { cell: EditableCell }, }}
+        columns={mergedColumns}
+        loading={projects.loading}
+        dataSource={projects.data}
+      />
+    </Form>
+  );
+};
+
+
+export default GitHubSettings;
+
+
+  // CELL FORM FIELD!
+  const EditableCell = ({ record, dataIndex, title, editing, index, children, branchAndTagList, onSearch, ...restProps }) => {
+    
+    const rulesList ={
+      ghProject: [{ required: true, whitespace: true, message: "Name is required" }],
+      ghLink: [{ required: true, whitespace: true, type: 'url', message: 'Invalid URL' }],
+      ghBranchOrTag: [{ required: true, whitespace: true, message: "Branch or Tag is required" }],
     }
-  
+    
+    const rules = rulesList[dataIndex] || [];
+
     const getInputField = (dataIndex) => {
         const options = {
           default: <Input autoComplete="new-password" />,
@@ -305,22 +323,3 @@ const GitHubSettings = () => {
       </td>
     );
   };
-
-  return (
-    <Form form={form} component={false} autoComplete={false}>
-      <Button onClick={handleAddProject} type="primary" style={{ marginBottom: 16 }}>
-        Add new project
-      </Button>
-      <Table
-        bordered
-        components={{ body: { cell: EditableCell, }, }}
-        columns={mergedColumns}
-        loading={projects.loading}
-        dataSource={projects.data}
-      />
-    </Form>
-  );
-};
-
-
-export default GitHubSettings;
