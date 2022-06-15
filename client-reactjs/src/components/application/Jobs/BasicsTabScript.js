@@ -4,7 +4,7 @@ import ReactMarkdown from 'react-markdown';
 import { MarkdownEditor } from "../../common/MarkdownEditor.js";
 import { threeColformItemLayout } from "../../common/CommonUtil.js";
 
-function BasicsTabScript({enableEdit, editingAllowed, onChange, localState}) {
+function BasicsTabScript({enableEdit, editingAllowed, onChange, localState, inTabView}) {
   return (    
     <React.Fragment>      
       <Form.Item label="Name" 
@@ -15,7 +15,6 @@ function BasicsTabScript({enableEdit, editingAllowed, onChange, localState}) {
           id="job_name"
           onChange={onChange}
           placeholder="Name"
-          disabled={true}
           disabled={!editingAllowed}
           className={enableEdit ? null : "read-only-input"} />
       </Form.Item>
@@ -42,7 +41,7 @@ function BasicsTabScript({enableEdit, editingAllowed, onChange, localState}) {
         name="description"
         id="job_desc"
         onChange={onChange}
-        targetDomId="jobDescr"
+        targetDomId={ inTabView ? "jobDescr" + inTabView.key : "jobDescr"}
         value={localState.description}
         disabled={!editingAllowed}/>
         :
