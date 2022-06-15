@@ -44,7 +44,7 @@ class JobDetails extends Component {
     jobSearchErrorShown: false,
     autoCompleteSuffix: <SearchOutlined />,
     searchResultsLoaded: false,
-    initialDataLoading: false,
+    initialDataLoading: true,
     dropZones: {},
     dropZoneFileSearchSuggestions: [],
     job: {
@@ -64,8 +64,9 @@ class JobDetails extends Component {
       selectedDropZoneName: {},
       manualJobFilePath : []
     },  //file path to show in cascader 
-    enableEdit: false,
-    editing: false,
+    enableEdit: this.props.editMode,
+    editing: this.props.editMode,
+    addingNewAsset: this.props.addingNewAsset,
     dataAltered: false,
     errors: false,
     isNew : this.props.isNew,
@@ -76,16 +77,29 @@ class JobDetails extends Component {
     const applicationId = this.props.application?.applicationId || this.props.match?.params?.applicationId;
     const assetId =  this.props?.selectedAsset?.id || this.props.match?.params?.jobId;
   
-  if(applicationId){
-   await this.getFiles({ applicationId });
-  }
-
-  if (applicationId && assetId) {
-    await this.getJobDetails({ assetId, applicationId });
-  }
-  
-    //Getting global state
-    this.handleViewOnlyMode();
+    if(applicationId){
+      await this.getFiles({ applicationId });
+     }
+   
+     if (applicationId && assetId) {
+       await this.getJobDetails({ assetId, applicationId });
+     }
+    
+    if (this.props.inTabView) {
+      // if adding multiple jobs via tabs,    
+      // update values in jobDetails state
+      this.onClusterSelection(this.props.inTabView.clusterId);
+      this.onJobTypeChange(this.props.inTabView.jobType);
+      
+      // update form values
+      this.formRef.current.setFieldsValue({
+        jobType: this.props.inTabView.jobType,
+        clusters: this.props.inTabView.clusterId,
+        isStoredOnGithub: this.props.inTabView.isStoredOnGithub 
+      });
+    }
+    // we will start with initialDataLoading true as initial state, after component mounted we flip this flag
+    this.setState({ initialDataLoading: false })
   }
 
   //Unmounting phase
@@ -267,9 +281,10 @@ class JobDetails extends Component {
   
   handleOk = async () => {
     try {
-      await this.formRef.current.validateFields();
+      const fields = await this.formRef.current.validateFields();
       this.setState({ confirmLoading: true });
       const saveResponse = await this.saveJobDetails();
+      message.success(`${fields.name} saved`);
       // if (this.props.onAssetSaved) this.props.onAssetSaved(saveResponse);
       if(this.props.onClose) {
         // THIS METHOD WILL PASS PROPS TO GRAPH!
@@ -287,11 +302,16 @@ class JobDetails extends Component {
 
         return this.props.onClose(resultToGraph);
       }
-
       if (this.props.history) {
         return this.props.history.push(`/${this.props.application.applicationId}/assets`);
       } else {
-        document.querySelector('button.ant-modal-close').click();
+        
+        if(this.props.inTabView){
+          const { updateTab, key } = this.props.inTabView;
+          updateTab({ status: "saved", key })
+          this.switchToViewOnly();
+        }
+
         this.props.dispatch(assetsActions.assetSaved(saveResponse));
       }
     } catch (error) {
@@ -299,6 +319,13 @@ class JobDetails extends Component {
       let errorMessage = error?.message || "Please check your fields for errors";
       if(error?.errorFields) errorMessage = error.errorFields[0].errors[0]
       
+      if(this.props.inTabView){
+        const { updateTab, key, value } = this.props.inTabView;
+        updateTab({ status: 'error', key });
+        // Add a Job name to error message;
+        errorMessage = `"${value}": ${errorMessage}`;
+      }
+
        message.error(errorMessage) 
     }
     this.setState({ confirmLoading: false });
@@ -323,7 +350,6 @@ class JobDetails extends Component {
   };
   
   async saveJobDetails() {
-    message.config({ maxCount: 1 });
     try {
       const payload = {
         method: 'POST',
@@ -336,11 +362,11 @@ class JobDetails extends Component {
       if (!response.ok) handleError(response);
       if (this.props.reload) this.props.reload();
   
-      message.success('Data saved');
       return await response.json();
     } catch (error) {
       console.log('saveJobDetails error', error);
-      message.error('Error occurred while saving the data. Please check the form data');
+      // pass error to parent function, we will use snackbar info from there
+      throw error;
     } finally {
       this.setState({ confirmLoading: false });
     }
@@ -483,7 +509,7 @@ class JobDetails extends Component {
         body: JSON.stringify({
           jobId: this.state.job.id,
           jobName: this.formRef.current.getFieldValue('name'),
-          clusterId: this.state.selectedCluster,
+          clusterId: this.state.selectedCluster || this.formRef.current.getFieldValue('clusters'),
           dataflowId: this.props.selectedDataflow?.id || '',
           applicationId: this.props.application.applicationId,
         }),
@@ -515,7 +541,9 @@ class JobDetails extends Component {
     return invalidJobTypeForTab[jobType] ? false : true;
   };
 
-
+  //Switch to view only mode
+  switchToViewOnly = () => this.setState({ enableEdit: !this.state.enableEdit, editing: false, dataAltered: true, });
+  
   render() {
     const editingAllowed = hasEditPermission(this.props.user);
 
@@ -573,11 +601,6 @@ class JobDetails extends Component {
       this.setState({ enableEdit: !this.state.enableEdit, editing: true,});
     };
 
-    //Switch to view only mode
-    const switchToViewOnly = () => {
-      // readOnlyMode();
-      this.setState({ enableEdit: !this.state.enableEdit, editing: false, dataAltered: true, });
-    };
 
     // show control buttons at the bottom of modal
     const getModalControls = () => {
@@ -604,13 +627,13 @@ class JobDetails extends Component {
       }
       // if opened in main view show button as dissabled (click edit to enable)
       return (
+        this.props.inTabView ? null :
         <Button disabled={!editingAllowed || !this.state.enableEdit} type="primary" onClick={this.executeJob}>
           Execute Job
         </Button>
       )
     }
     
-
     //controls
     const controls = (
       <div className={ this.props.displayingInModal ? 'assetDetail-buttons-wrapper-modal' : 'assetDetail-buttons-wrapper ' } >
@@ -626,7 +649,7 @@ class JobDetails extends Component {
           ) : null}
     
           {this.state.dataAltered && this.state.enableEdit ? (
-            <Button onClick={switchToViewOnly}> View Changes </Button>
+            <Button onClick={this.switchToViewOnly}> View Changes </Button>
           ) : null}
     
           {this.state.enableEdit ? (
@@ -645,9 +668,11 @@ class JobDetails extends Component {
               ) : null}
               
               <span style={{ marginLeft: '25px' }}>
-                <Button key="back" onClick={this.handleCancel} type="primary" ghost>
-                  Cancel
-                </Button>
+                {this.props.inTabView ? null: 
+                  <Button key="back" onClick={this.handleCancel} type="primary" ghost>
+                    Cancel
+                  </Button>
+                }
                 <Button
                   key="submit"
                   htmlType="submit"
@@ -665,9 +690,11 @@ class JobDetails extends Component {
             <span>
               {this.state.dataAltered ? (
                 <span style={{ marginLeft: '25px' }}>
+                  {this.props.inTabView ? null: 
                   <Button key="back" onClick={this.handleCancel} type="primary" ghost>
                     Cancel
                   </Button>
+                  }
                   <Button
                     key="submit"
                     disabled={!editingAllowed || this.state.errors}
@@ -681,9 +708,11 @@ class JobDetails extends Component {
                 </span>
               ) : (
                 <span>
+                  {this.props.inTabView ? null: 
                   <Button key="back" onClick={this.handleCancel} type="primary" ghost>
                     Cancel
                   </Button>
+                  }
                 </span>
               )}
             </span>
@@ -710,7 +739,7 @@ class JobDetails extends Component {
         <div className="assetTitle">Job : {this.state.job.name}</div>
       )}
       <div
-        className={ this.props.displayingInModal ? 'assetDetails-content-wrapper-modal' : 'assetDetails-content-wrapper' }
+        className={ this.props.displayingInModal ? 'assetDetails-content-wrapper-modal' : this.props.inTabView ? '' : 'assetDetails-content-wrapper' }
       >
         {!this.props.isNew ? (
           <div className="loader">
@@ -734,28 +763,32 @@ class JobDetails extends Component {
         >
           <Tabs defaultActiveKey={this.state.selectedTabPaneKey} tabBarExtraContent={this.props.displayingInModal ? null : controls} onChange={(activeKey) => this.setState({selectedTabPaneKey: activeKey})}>
             <TabPane tab="Basic" key="1">
-              <Form.Item label="Job Type" className={this.state.enableEdit ? null : 'read-only-input'}>
-                <Row gutter={[8, 8]}>
-                  <Col span={12}>
-                    <Form.Item noStyle name="jobType">
-                      {!this.state.enableEdit ? (
-                        <Typography.Text style={{ paddingLeft: '11px' }}>{jobType}</Typography.Text>
-                      ) : (
-                        <Select disabled={isAssociated} placeholder="Job Type" onChange={this.onJobTypeChange}>
-                          {jobTypes.map((d) => (
-                            <Option key={d}>{d}</Option>
-                          ))}
-                        </Select>
-                      )}
-                    </Form.Item>
-                  </Col>
-                </Row>
-              </Form.Item>
+              {this.props.inTabView ? null : 
+                <Form.Item label="Job Type" className={this.state.enableEdit ? null : 'read-only-input'}>
+                  <Row gutter={[8, 8]}>
+                    <Col span={12}>
+                      <Form.Item noStyle name="jobType">
+                        {!this.state.enableEdit ? (
+                          <Typography.Text style={{ paddingLeft: '11px' }}>{jobType}</Typography.Text>
+                        ) : (
+                          <Select disabled={isAssociated} placeholder="Job Type" onChange={this.onJobTypeChange}>
+                            {jobTypes.map((d) => (
+                              <Option key={d}>{d}</Option>
+                            ))}
+                          </Select>
+                        )}
+                      </Form.Item>
+                    </Col>
+                  </Row>
+                </Form.Item>
+               }
               {(() => {
+                if (this.state.initialDataLoading) return <Spin spinning={this.state.initialDataLoading} style={{display:'block', textAlign:'center'}} />;
                 switch (jobType) {
                   case 'Script':
                     return (
                       <BasicsTabScript
+                        inTabView={this.props.inTabView}
                         enableEdit={this.state.enableEdit}
                         editingAllowed={editingAllowed}
                         onChange={this.onChange}
@@ -778,6 +811,7 @@ class JobDetails extends Component {
                   case 'Manual':
                     return (
                       <BasicsTabManul
+                        inTabView={this.props.inTabView}
                         enableEdit={this.state.enableEdit}
                         editingAllowed={editingAllowed}
                         addingNewAsset={this.state.addingNewAsset}
@@ -791,6 +825,7 @@ class JobDetails extends Component {
                   default:   // [  case 'Data Profile'; case 'ETL'; case 'Job'; case 'Modeling'; case 'Query Build'; case 'Scoring'; ]
                     return (
                       <BasicsTabGeneral
+                        inTabView={this.props.inTabView}
                         enableEdit={this.state.enableEdit}
                         editingAllowed={editingAllowed}
                         addingNewAsset={this.state.addingNewAsset}
@@ -918,10 +953,11 @@ function mapStateToProps(state, ownProps) {
   let { selectedAsset, newAsset = {}, clusterId } = state.assetReducer;
   const { user } = state.authenticationReducer;
   const { application, clusters } = state.applicationReducer;
-  const { isNew = false, groupId = "" } = newAsset;
-  const { editMode, addingNewAsset } = state.viewOnlyModeReducer;
+  let { isNew = false, groupId = "" } = newAsset;
+  let { editMode, addingNewAsset } = state.viewOnlyModeReducer;
   
   if (ownProps.selectedAsset)  selectedAsset = ownProps.selectedAsset;
+  if (ownProps.inTabView) addingNewAsset = true; editMode=true; isNew=true;
 
   return {
     user,
@@ -936,5 +972,7 @@ function mapStateToProps(state, ownProps) {
   };
 }
 
-const JobDetailsForm = connect(mapStateToProps)(JobDetails);
+// Forward ref will give us ability to add ref to this component with AddJobs wrapper, so we can call savejobs method on all instances at once.
+const JobDetailsForm = connect(mapStateToProps,null, null, { forwardRef: true })(JobDetails);
+
 export default JobDetailsForm;
