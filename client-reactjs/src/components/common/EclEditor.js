@@ -26,8 +26,8 @@ const EclEditor = ({ ecl, handleECLChange }) => {
         <Switch
           checked={theme === 'light'}
           onChange={handleSwitchTheme}
-          checkedChildren={<i class="fa fa-sun-o" />}
-          unCheckedChildren={<i class="fa fa-moon-o" />}
+          checkedChildren={<i className="fa fa-sun-o" />}
+          unCheckedChildren={<i className="fa fa-moon-o" />}
         />
       </div>
       <div style={{ border: '1px solid grey', padding: '3px', borderRadius: '2px' }}>
