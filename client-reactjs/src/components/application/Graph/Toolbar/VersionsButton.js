@@ -18,7 +18,7 @@ const NOTIFICATION_CONF={
   }
 }
 
-const defaultDialog = { visible: false, version:null, loading: false, error: '', saveWC:false };
+const defaultDialog = { visible: false, version: null, loading: false, error: '', saveWC:false };
 
 const VersionsButton = ({ graphRef }) => {
   // State for saving version name and description
@@ -49,24 +49,17 @@ const VersionsButton = ({ graphRef }) => {
     return () => notification.destroy();
   },[])
 
-  const saveVersion = async ({ name, description, saveWC }) => {
+  const saveVersion = async ({ name, description }) => {
     try {
-      let graph;
       const dataflowId = graphRef.current.dataflowId;
-
-      if (saveWC) {        
-        const wcGraph = getWorkingCopyGraph(dataflowId);
-        if (wcGraph) throw new Error("Failed to save Working Copy");
-        graph = wcGraph;
-      } else{
-        graph = graphRef.current.toJSON({ diff: true });
-      }
-
+      const wcGraph = getWorkingCopyGraph(dataflowId);
+      if (!wcGraph) throw new Error("Failed to save Working Copy");
+   
       setSaveGraph((prev) => ({ ...prev, loading: true, error: '' }));
       const options = {
         method: 'POST',
         headers: authHeader(),
-        body: JSON.stringify({ graph, name, description, dataflowId }),
+        body: JSON.stringify({ graph: wcGraph, name, description, dataflowId }),
       };
 
       const response = await fetch('/api/dataflowgraph/save_versions', options);
@@ -99,7 +92,7 @@ const VersionsButton = ({ graphRef }) => {
               <Typography.Text type='danger' strong > Working Copy will be replaced by version "{version.name}"</Typography.Text>
               <Typography.Text> Please save your local changes before switching, otherwise they will be lost permanently</Typography.Text>
               <div style={{marginTop:'5px', textAlign: "end"}}>
-              <Button size='small' danger onClick={() => openSaveDialog({saveWC:true})} >Save Working Copy</Button>
+              <Button size='small' danger onClick={() => openSaveDialog()} >Save Working Copy</Button>
               </div>
             </Space>
             }/>
@@ -237,7 +230,7 @@ const VersionsButton = ({ graphRef }) => {
     e.stopPropagation();
     hideVersionsList();
     // will open editing/saving modal with inner Form for name and description
-    setSaveGraph(prev=>({...prev, visible:true, version}))
+    setSaveGraph(()=>({ ...defaultDialog, visible: true, version }))
   };
 
   const saveEditedVersion = async ({ name, description, id })=>{
@@ -253,7 +246,7 @@ const VersionsButton = ({ graphRef }) => {
       const response = await fetch('/api/dataflowgraph/edit_version', payload);
       if (!response.ok) handleError(response);
     
-    const version = await response.json(); // {id, name, description, createdBy, createdAt }
+      const version = await response.json(); // {id, name, description, createdBy, createdAt }
 
       setVersions(prev =>prev.map(prevVersion => {
         if (prevVersion.id === version.id ) return {...prevVersion, ...version}
@@ -265,6 +258,7 @@ const VersionsButton = ({ graphRef }) => {
     } catch (error) {
       console.log('Error fetch', error);
       message.error(error.message);
+      setSaveGraph((prev) => ({ ...prev, loading: false, error: error.message }));
     }
   }
 
@@ -340,13 +334,12 @@ const VersionsButton = ({ graphRef }) => {
 
     if (wcGraph) {
       // making sure that graph is not frozen and updates reflects on ui
-
       graphRef.current.unfreeze();
       graphRef.current.fromJSON(wcGraph);
-      // reset clicked version will show green badge on local version
-      setClickedVersion({ id: '', name: '', description:'' });
     }
 
+    // reset clicked version will show green badge on local version
+    setClickedVersion({ id: '', name: '', description:'' });
     message.success(`You are now on Working Copy`);
   }
 
@@ -423,7 +416,7 @@ const VersionsButton = ({ graphRef }) => {
     }
   };
 
-  const openSaveDialog = ({ saveWC = false }) => setSaveGraph((prev) => ({ ...prev, saveWC, visible: true }));
+  const openSaveDialog = () => setSaveGraph(() => ({ ...defaultDialog, visible: true }));
   const closeSaveDialog = () => setSaveGraph({ ...defaultDialog });
 
   return (
@@ -462,7 +455,6 @@ const VersionsButton = ({ graphRef }) => {
       loading={saveGraph.loading}
       visible={saveGraph.visible}
       version={saveGraph.version}
-      saveWC={saveGraph.saveWC}
     />
   )}
 </>
@@ -471,13 +463,13 @@ const VersionsButton = ({ graphRef }) => {
 
 export default VersionsButton;
 
-const VersionForm = ({ visible, loading, onCreate, onEdit, onCancel, version, saveWC }) => {
+const VersionForm = ({ visible, loading, onCreate, onEdit, onCancel, version }) => {
   const [form] = Form.useForm();
 
   const handleOk = async () => {
     try {
       const values = await form.validateFields();
-      version ? await onEdit({...values, id: version.id }) : await onCreate({...values, saveWC });
+      version ? await onEdit({...values, id: version.id }) : await onCreate({...values });
      form.resetFields();
     } catch (error) {
       console.log('Validate Failed:', error);
