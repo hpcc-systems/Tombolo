@@ -76,7 +76,10 @@ class JobDetails extends Component {
   async componentDidMount() {    
     const applicationId = this.props.application?.applicationId || this.props.match?.params?.applicationId;
     const assetId =  this.props?.selectedAsset?.id || this.props.match?.params?.jobId;
-  
+    console.log('this.props----------------------------------------');
+    console.dir(this.props, { depth: null });
+    console.log('------------------------------------------');
+    
     if(applicationId){
       await this.getFiles({ applicationId });
      }
@@ -958,7 +961,8 @@ function mapStateToProps(state, ownProps) {
   
   if (ownProps.selectedAsset)  selectedAsset = ownProps.selectedAsset;
   if (ownProps.inTabView) addingNewAsset = true; editMode=true; isNew=true;
-
+  if (ownProps.viewMode) addingNewAsset = false; editMode=false; isNew=false;
+  
   return {
     user,
     selectedAsset,
