@@ -8,13 +8,13 @@ import { assetsActions } from '../../../redux/actions/Assets';
 import { Cascader } from "antd";
 
 function BasicsTabManul(props) {
-    const {enableEdit, localState, editingAllowed,  onChange, formRef, addingNewAsset} = props;
+    const {enableEdit, localState, editingAllowed,  onChange, formRef, addingNewAsset, inTabView} = props;
     const assetReducer = useSelector(state => state.assetReducer);
     const applicationReducer = useSelector(state => state.applicationReducer);
     const readOnlyView = !enableEdit || !addingNewAsset;
     const [options, setOptions] = useState([]);
 
-    const [selectedCluster, setSelectedCluster] = useState(assetReducer.clusterId);
+    const [selectedCluster, setSelectedCluster] = useState(assetReducer.clusterId || localState.selectedCluster);
     const [clusters, setClusters] = useState(applicationReducer.clusters)
     const { Option } = Select; 
     const dispatch = useDispatch();  
@@ -189,7 +189,7 @@ function BasicsTabManul(props) {
                 <MarkdownEditor
                     name="description"
                     onChange={onChange}
-                    targetDomId="jobDescr"
+                    targetDomId={ inTabView ? "jobDescr" + inTabView.key : "jobDescr"}
                     value={localState.description}
                     disabled={!editingAllowed}
                 />

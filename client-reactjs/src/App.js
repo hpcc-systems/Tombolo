@@ -38,6 +38,7 @@ import { Report } from "./components/Report/Report";
 import Regulations from "./components/admin/ControlsAndRegulations";
 import GitHubSettings from "./components/admin/GitHubSettings/GitHubSettings";
 import ScheduledJobsPage from "./components/admin/ScheduledJobsPage";
+import AddJobsForm from "./components/application/Jobs/AddjobsForm/AddJobsForm";
 
 const { Content } = Layout;
 
@@ -115,6 +116,10 @@ class App extends React.Component {
                   <PrivateRoute
                     path="/:applicationId/assets/fileTemplate/:fileId?"
                     component={FileTemplate}
+                  />
+                  <PrivateRoute
+                    path="/:applicationId/assets/add-jobs"
+                    component={AddJobsForm}
                   />
                   <PrivateRoute
                     path="/:applicationId/assets/job/:jobId?"
