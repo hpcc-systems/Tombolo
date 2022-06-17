@@ -23,7 +23,7 @@ const { log, dispatch } = require('./workerUtils')(parentPort);
 
       if (wuOutput.Result.Row?.length > 0) {
         log('verbose','FOUND  FILE, CHECKING IF IT IS A NEW FILE');
-        const fileDetectedAt = wuOutput.Result.Row[0].t * 1000; // This is when file monitoring wu found file
+        const fileDetectedAt = wuOutput.Result.Row[0].t; // This is when file monitoring wu found file
         if (metaData.lastUniqueFileReceivedAt && metaData.lastUniqueFileReceivedAt === fileDetectedAt) {
           // Means no new file found
          log('verbose','FILE FOUND IS NOT NEW');
