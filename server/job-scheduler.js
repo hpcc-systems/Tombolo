@@ -5,8 +5,8 @@ const logger = require('./config/logger');
 
 const Job = models.job;
 const MessageBasedJobs = models.message_based_jobs;
-
 const DataflowVersions = models.dataflow_versions;
+const JobExecution = models.job_execution;
 
 const { v4: uuidv4 } = require('uuid');
 const workflowUtil = require('./utils/workflow-util.js');
@@ -79,13 +79,11 @@ class JobScheduler {
       const dataflowVersion = await DataflowVersions.findOne({ where: { dataflowId: dataflowId, isLive : true }, attributes: ["graph"] });
       if (!dataflowVersion) throw new Error('Dataflow does not exist');
 
-      const dependantJobs = dataflowVersion.graph.cells.reduce((acc, cell) => {
+      let dependantJobs = dataflowVersion.graph.cells.reduce((acc, cell) => {
         if (cell?.data?.schedule?.dependsOn?.includes(dependsOnJobId))
           acc.push({ jobId: cell.data.assetId });
         return acc;
       }, []);
-
-     logger.verbose(`✔️  FOUND ${dependantJobs.length} DEPENDENT JOB/S`);
 
       if (dependantJobs.length === 0 && dataflowId) {
         try {
@@ -94,12 +92,18 @@ class JobScheduler {
         } catch (error) {
           logger.error('WORKFLOW EXECUTION COMPLETE NOTIFICATION FAILED', error);
         }
-      } else {  
+      } else {
+        logger.verbose(`✔️  FOUND ${dependantJobs.length} DEPENDENT JOB/S`);
+        //List of dependent job ids
+        let dependentJobsIds = dependantJobs.map(job => job.jobId);
+        //Check if any of the dependent job are already in submitted state
+        const alreadySubmitted = await JobExecution.findAll({where : {dataflowId: dataflowId, jobId : dependentJobsIds, status : 'submitted'} , attributes: ['jobId'], raw : true});
+        //Remove already submitted jobs from dependent jobs array
+        dependantJobs = dependantJobs.filter(job => !alreadySubmitted.find(submittedJob => (submittedJob.jobId === job.jobId)))
 
-        for (const dependantJob of dependantJobs) {
+        for (const dependentJob of dependantJobs) {
           try {
-            let job = await Job.findOne({ where: { id: dependantJob.jobId } });
-
+            let job = await Job.findOne({ where: { id:dependentJob.jobId } });
             let status;
             const isSprayJob = job.jobType == 'Spray';
             const isScriptJob = job.jobType == 'Script';
