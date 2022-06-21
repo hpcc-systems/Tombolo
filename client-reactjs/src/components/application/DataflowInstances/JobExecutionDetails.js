@@ -64,7 +64,7 @@ function JobExecutionDetails({ jobExecutions, setFilters, selectJEGroup, JEGroup
       const sortedJE = jobExecutions.sort( (a, b) => new Date(a.createdAt) - new Date(b.createdAt) );
 
       const groupExecutions = sortedJE.reduce((allGroups, execution) => {
-        const { createdAt, status } = execution;
+        const { createdAt, status, dataflowVersion } = execution;
         const groupId = execution.jobExecutionGroupId;
         const group = allGroups[groupId];
 
@@ -72,6 +72,7 @@ function JobExecutionDetails({ jobExecutions, setFilters, selectJEGroup, JEGroup
           const newGroup = {
             count: 1,
             createdAt,
+            dataflowVersion,
             statuses: [status],
             jobExecutionGroupId: groupId,
           };
@@ -168,6 +169,15 @@ function JobExecutionDetails({ jobExecutions, setFilters, selectJEGroup, JEGroup
         );
       },
     },
+    {
+      title:"Version",
+      render: (text, record) => {
+        const version = record?.dataflowVersion;
+        if (!version) return '';
+        const liveBadge = version.isLive ? "(live version)" : '';
+        return <> {version.name} {liveBadge}</>
+      },
+    }
   ];
 
   return (
