@@ -24,6 +24,7 @@ module.exports = (sequelize, DataTypes) => {
   }, {paranoid: true, freezeTableName: true});
   dataflow.associate = function(models) {
     dataflow.belongsTo(models.dataflow, {foreignKey: 'dataflowId'});
+    dataflow.hasMany(models.job_execution, { foreignKey: 'dataflowVersionId', onDelete: 'NO ACTION', onUpdate: 'NO ACTION' });    
   };
   return dataflow;
 };
