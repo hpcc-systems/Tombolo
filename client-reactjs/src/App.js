@@ -21,7 +21,7 @@ import FileDetailsForm from "./components/application/FileDetails";
 import FileTemplate from "./components/application/templates/FileTemplate"
 import JobDetailsForm from "./components/application/Jobs/JobDetails";
 import IndexDetailsForm from "./components/application/IndexDetails";
-import QueryDetailsForm from "./components/application/QueryDetails";
+import QueryDetailsForm from "./components/application/queries/QueryDetails";
 import VisualizationDetailsForm from "./components/application/VisualizationDetails";
 
 import ManualJobDetail from "./components/application/Jobs/ManualJobDetail"

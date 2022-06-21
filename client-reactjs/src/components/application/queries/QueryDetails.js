@@ -1,22 +1,23 @@
 import React, { PureComponent } from "react";
 import { Modal, Tabs, Form, Input, Select, AutoComplete, Spin, message, Button, Radio, Row, Col } from 'antd/lib';
-import { authHeader, handleError } from "../common/AuthHeader.js"
-import { hasEditPermission } from "../common/AuthUtil.js";
-import AssociatedDataflows from "./AssociatedDataflows"
-import EditableTable from "../common/EditableTable.js"
-import { fetchDataDictionary, eclTypes, omitDeep } from "../common/CommonUtil.js"
+import { authHeader, handleError } from "../../common/AuthHeader.js"
+import { hasEditPermission } from "../../common/AuthUtil.js";
+import AssociatedDataflows from "../AssociatedDataflows"
+import EditableTable from "../../common/EditableTable.js"
+import { fetchDataDictionary, eclTypes, omitDeep } from "../../common/CommonUtil.js"
 import { AgGridReact } from 'ag-grid-react';
 import 'ag-grid-community/dist/styles/ag-grid.css';
 import 'ag-grid-community/dist/styles/ag-theme-balham.css';
-import { MarkdownEditor } from "../common/MarkdownEditor.js"
+import { MarkdownEditor } from "../../common/MarkdownEditor.js"
 import { connect } from 'react-redux';
 import { SearchOutlined  } from '@ant-design/icons';
-import { assetsActions } from '../../redux/actions/Assets';
+import { assetsActions } from '../../../redux/actions/Assets';
 import { debounce } from 'lodash';
-import { store } from '../../redux/store/Store';
-import {Constants} from "../common/Constants";
+import { store } from '../../../redux/store/Store';
+import {Constants} from "../../common/Constants";
 import ReactMarkdown from "react-markdown";
-import {readOnlyMode, editableMode} from "../common/readOnlyUtil"
+import {readOnlyMode, editableMode} from "../../common/readOnlyUtil"
+import Files from './Files'
 
 
 
@@ -305,8 +306,8 @@ class QueryDetails extends PureComponent {
     });
   }, 100);
 
-  onQuerySelected(selectedSuggestion) {
-    fetch("/api/hpcc/read/getQueryInfo?queryName="+selectedSuggestion+"&clusterid="+this.state.selectedCluster+"&applicationId="+this.props.application.applicationId, {
+  onQuerySelected(value, option) {
+    fetch("/api/hpcc/read/getQueryInfo?queryName="+value+"&clusterid="+this.state.selectedCluster+"&applicationId="+this.props.application.applicationId, {
       headers: authHeader()
     })
     .then((response) => {
@@ -326,8 +327,10 @@ class QueryDetails extends PureComponent {
       this.setState({
         ...this.state,
         sourceFiles: [],
+        hpcc_queryid : option.key,
         query: {
           ...this.state.file,
+          name: option.key,
           id: queryInfo.basic.id,
           type:"roxie_query",
           input: queryInfo.basic.query_fields.filter(field => field.field_type == 'input'),
@@ -337,7 +340,7 @@ class QueryDetails extends PureComponent {
 
       this.formRef.current.setFieldsValue({
         title: queryInfo.basic.title,
-        name: queryInfo.basic.name,
+        name: option.key,
         description: queryInfo.basic.description,
         url: queryInfo.basic.url,
         gitRepo: queryInfo.basic.gitRepo
@@ -638,13 +641,14 @@ class QueryDetails extends PureComponent {
                         dropdownStyle={{ width: 300 }}
                         style={{ width: '100%' }}
                         onSearch={(value) => this.searchQueries(value)}
-                        onSelect={(value) => this.onQuerySelected(value)}
+                        onSelect={(value, option) => this.onQuerySelected(value, option)}
                         placeholder="Search queries"
                         disabled={!editingAllowed}
                         notFoundContent={this.state.querySearchSuggestions.length > 0 ? 'Not Found' : <Spin />}
                       >
                         {this.state.querySearchSuggestions.map((suggestion) => (
-                          <Option key={suggestion.text} value={suggestion.value}>
+                          // <Option key={suggestion.text} value={suggestion.value}>
+                          <Option key={suggestion.id} value={suggestion.value}>
                             {suggestion.text}
                           </Option>
                         ))}
@@ -765,9 +769,17 @@ class QueryDetails extends PureComponent {
               </div>
           </TabPane>
 
+          <TabPane tab="Files" key="4">
+                  <Files
+                    hpcc_queryid={this.state.query.name}
+                    cluster_id={this.state.selectedCluster}
+                  />
+          </TabPane>
+
+
           {!this.props.isNew ?
             <TabPane tab="Applications" key="7">
-              <AssociatedDataflows assetName={name} assetType={'Query'}/>
+              <AssociatedDataflows assetId={this.state.query.id} assetType={'Query'}/> 
             </TabPane> : null}
         </Tabs>
       </div>
