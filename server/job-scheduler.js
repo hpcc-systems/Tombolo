@@ -74,10 +74,10 @@ class JobScheduler {
     })()
   }
 
-  async scheduleCheckForJobsWithSingleDependency({ dependsOnJobId, dataflowId, jobExecutionGroupId }) {
+  async scheduleCheckForJobsWithSingleDependency({ dependsOnJobId, dataflowId, dataflowVersionId, jobExecutionGroupId }) {
     try {
-      const dataflowVersion = await DataflowVersions.findOne({ where: { dataflowId: dataflowId, isLive : true }, attributes: ["graph"] });
-      if (!dataflowVersion) throw new Error('Dataflow does not exist');
+      const dataflowVersion = await DataflowVersions.findOne({ where: { id: dataflowVersionId }, attributes: ["graph"] });
+      if (!dataflowVersion) throw new Error('Dataflow version does not exist');
 
       let dependentJobs = dataflowVersion.graph.cells.reduce((acc, cell) => {
         if (cell?.data?.schedule?.dependsOn?.includes(dependsOnJobId))
@@ -122,6 +122,7 @@ class JobScheduler {
               dataflowId: dataflowId,
               jobExecutionGroupId,
               jobType: job.jobType,
+              dataflowVersionId,
               jobName: job.name,
               title: job.title,
               jobId: job.id,
@@ -288,13 +289,14 @@ class JobScheduler {
     }
   }
 
-  createNewBreeJob({ uniqueJobName, cron, jobfileName, sprayedFileScope, manualJob_meta, sprayFileName, sprayDropZone, applicationId, dataflowId, clusterId, metaData, jobName, contact, jobType, status, jobId, title, jobExecutionGroupId }) {
+  createNewBreeJob({ uniqueJobName, cron, jobfileName, sprayedFileScope, manualJob_meta, sprayFileName, sprayDropZone, applicationId, dataflowId, dataflowVersionId=null, clusterId, metaData, jobName, contact, jobType, status, jobId, title, jobExecutionGroupId }) {
     const job = {
       name: uniqueJobName,
       path: path.join(__dirname, 'jobs', jobfileName),
       worker: {
         workerData: {
           WORKER_CREATED_AT: Date.now(),
+          dataflowVersionId,
           sprayedFileScope,
           manualJob_meta,
           sprayFileName,

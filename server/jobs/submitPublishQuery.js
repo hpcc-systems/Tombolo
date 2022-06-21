@@ -18,8 +18,8 @@ if (parentPort) {
   try {
     if(!workerData.jobExecutionGroupId) workerData.jobExecutionGroupId = uuidv4();
 
-    const {clusterId, jobName, dataflowId, jobId, jobExecutionGroupId } = workerData;
-    log('info',`Started Query Publish job ${jobName} | clusterId: ${clusterId} | dataflowId : ${dataflowId}`)
+    const {clusterId, jobName, dataflowId, jobId, jobExecutionGroupId, dataflowVersionId } = workerData;
+    log('info',`Started Query Publish job ${jobName} | clusterId: ${clusterId} | dataflowId : ${dataflowId} | dfVersion: ${dataflowVersionId}`)
 
     const result = await hpccUtil.getJobWuDetails(clusterId, jobName, dataflowId, 'roxie');
     if (!result) throw new Error(`Failed to get data about job: ${jobName}`);
@@ -68,7 +68,7 @@ if (parentPort) {
     }
 
     if (dataflowId) {
-      dispatch("scheduleNext", { dependsOnJobId: jobId, dataflowId, jobExecutionGroupId });
+      dispatch("scheduleNext", { dependsOnJobId: jobId, dataflowId, dataflowVersionId, jobExecutionGroupId });
     }
 
   } catch (error) {
