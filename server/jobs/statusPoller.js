@@ -58,7 +58,7 @@ if (parentPort) {
       if (statuses.includes(WUResult.State)) {
         //update JobExecution
         jobExecution = await jobExecution.update({ status: WUResult.State, wu_duration: WUResult.TotalClusterTime });
-        const {wuid, jobId , status, id, jobExecutionGroupId, dataflowId = "" } = jobExecution;
+        const {wuid, jobId , status, id, jobExecutionGroupId, dataflowId = "", dataflowVersionId="" } = jobExecution;
         const { name: jobName } = jobExecution.job;
         
         log("info", `✔️  JOB EXECUTION GOT UPDATED, ("${jobName}") ${id} ${wuid} = ${status} ${status === "completed" ? "👍" : "🚩🚩🚩"}`);
@@ -74,7 +74,7 @@ if (parentPort) {
           if (!dataflowId) continue;
           // Go to next job execution
           log('info',`CHECKING ON DEPENDING JOBS, dataflow: ${dataflowId} | jobExecutionGroupId : ${jobExecutionGroupId}`)
-          dispatch("scheduleNext", { dependsOnJobId: jobId, dataflowId, jobExecutionGroupId });
+          dispatch("scheduleNext", { dependsOnJobId: jobId, dataflowId, dataflowVersionId, jobExecutionGroupId });
         }
       
         // WU state is failed|error, notify users
