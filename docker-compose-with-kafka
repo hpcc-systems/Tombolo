@@ -67,11 +67,11 @@ services:
       - mysql_db
     env_file:
       - .env
-    entrypoint: [sh, /etc/nginx/run_nginx.sh, "${HOST_HOSTNAME}"]
+    entrypoint: ["sh", "/etc/nginx/run_nginx.sh", "${HOST_HOSTNAME}"]
 
   node:
     #restart: always
-    entrypoint: [sh, ./docker-entry.sh, "mysql_db", "3306"]
+    entrypoint: ["sh", "/app/docker-entry.sh", "mysql_db", "3306"]
     build:
       context: ./server
       dockerfile: Dockerfile
