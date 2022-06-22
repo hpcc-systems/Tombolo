@@ -107,7 +107,6 @@ class App extends React.Component {
               style={{ height: "100vh", overflow: "auto", paddingTop: "60px" }}
             >
               <Content style={{ background: "#fff", margin: "0 16px" }}>
-                <p>HELLO WORLD </p>
                 <Switch>
                   <PrivateRoute exact path="/" component={getAssets} />
                   <PrivateRoute
