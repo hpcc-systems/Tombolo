@@ -1,18 +1,17 @@
 const express = require('express');
 const router = express.Router();
-const assert = require('assert');
 let Sequelize = require('sequelize');
-const Op = Sequelize.Op;
 var models  = require('../../models');
 const assetUtil = require('../../utils/assets');
 let Index = models.indexes;
 let IndexKey = models.index_key;
 let IndexPayload = models.index_payload;
-let Dataflow = models.dataflow;
 let AssetsGroups = models.assets_groups;
 let File=models.file;
 const validatorUtil = require('../../utils/validator');
 const { body, query, validationResult } = require('express-validator');
+const logger = require('../../config/logger');
+const { indexInfo } = require('../../utils/hpcc-util');
 
 router.get('/index_list',
   [
@@ -90,38 +89,36 @@ router.post('/saveIndex', [
   body('index.basic.application_id')
     .isUUID(4).withMessage('Invalid application id'),
   body('index.basic.title')
-  .matches(/^[a-zA-Z]{1}[a-zA-Z0-9_:.\-]*$/).withMessage('Invalid title')
-], (req, res) => {
+  .matches(/[a-zA-Z][a-zA-Z0-9_:.\-]/).withMessage('Invalid title')
+], async (req, res) => {
   const errors = validationResult(req).formatWith(validatorUtil.errorFormatter);
   if (!errors.isEmpty()) {
+      logger.error(errors)
       return res.status(422).json({ success: false, errors: errors.array() });
   }
-  var index_id, fieldsToUpdate={}, applicationId=req.body.index.basic.application_id;
 
-  Index.findOne({where: {name: req.body.index.basic.name, application_id: applicationId}}).then(async (existingFile) => {
-    let index = null;
-    if(!existingFile) {
-      index = await Index.create(req.body.index.basic);
-    } else {
-      index = await Index.update(req.body.index.basic, {where:{application_id: applicationId, id:req.body.id}}).then((updatedIndex) => {
-        return updatedIndex;
-      })
-    }
-    let indexId = index.id ? index.id : req.body.id;
-    console.log("indexId: "+indexId);
-    if(req.body.index.basic && req.body.index.basic.groupId) {
-      let assetsGroups = await AssetsGroups.findOrCreate({
-        where: {assetId: indexId, groupId: req.body.index.basic.groupId},
-        defaults:{
-          assetId: indexId,
-          groupId: req.body.index.basic.groupId
-        }
-      })
-    }
-    updateIndexDetails(indexId, applicationId, req).then((response) => {
-      res.json(response);
-    })
-  })
+  try{
+      const {application_id}=req.body.index.basic;
+      let index = await Index.findOne({where: {name: req.body.index.basic.name, application_id}});
+      if(!index){
+        // Create
+        index = await Index.create(req.body.index.basic);
+
+        if(req.body.index.basic.groupId){
+          const {groupId} = req.body.index.basic.groupId;
+          await AssetsGroups.findOrCreate({ where: {assetId: index.id, groupId: groupId},  defaults:{ assetId: index.id, groupId }});
+        } 
+      }else{
+        // Update
+        await Index.update(req.body.index.basic, {where:{application_id, id:req.body.id}})
+      }
+      index =  index.toJSON();
+      await updateIndexDetails(index.id, application_id, req);
+      res.status(200).json({success: true, message : "Save successful"})
+  }catch(err){
+      logger.error(err);
+      res.status(503).json({success : false, message : err.message})
+  }
 });
 
 router.get('/index_details', [
@@ -129,24 +126,19 @@ router.get('/index_details', [
     .isUUID(4).withMessage('Invalid application id'),
   query('index_id')
     .isUUID(4).withMessage('Invalid id'),
-], (req, res) => {
+], async (req, res) => {
   const errors = validationResult(req).formatWith(validatorUtil.errorFormatter);
   if (!errors.isEmpty()) {
       return res.status(422).json({ success: false, errors: errors.array() });
   }
-  var basic = {}, results={};
+
   try {
-    assetUtil.indexInfo(req.query.app_id, req.query.index_id).then((indexInfo) => {
+      const indexInfo = await assetUtil.indexInfo(req.query.app_id, req.query.index_id)
       if(indexInfo && indexInfo.basic) {
         res.json(indexInfo);
       } else {
         return res.status(500).json({ success: false, message: "Index details not found. Please check if the index exists in Assets." });
       }
-
-    })
-    .catch(function(err) {
-      console.log(err);
-    });
   } catch (err) {
     console.log('err', err);
   }

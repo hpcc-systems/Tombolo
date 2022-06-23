@@ -15,8 +15,12 @@ module.exports = (sequelize, DataTypes) => {
     primaryService: DataTypes.STRING,
     backupService: DataTypes.STRING,
     qualifiedPath: DataTypes.STRING,
-    parentFileId: DataTypes.UUID,
+    parentFileId: {
+      type:DataTypes.UUID,
+      defaultValue: null,
+    },
     registrationTime: DataTypes.STRING,
+    metaData: DataTypes.JSON,
     updatedDateTime: DataTypes.STRING,
     dataLastUpdatedTime: DataTypes.STRING
   }, {paranoid: true, freezeTableName: true});
