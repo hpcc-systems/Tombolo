@@ -514,6 +514,7 @@ class JobDetails extends Component {
           jobName: this.formRef.current.getFieldValue('name'),
           clusterId: this.state.selectedCluster || this.formRef.current.getFieldValue('clusters'),
           dataflowId: this.props.selectedDataflow?.id || '',
+          dataflowVersionId: this.props.selectedDataflow?.versionId,
           applicationId: this.props.application.applicationId,
         }),
       };
@@ -617,9 +618,9 @@ class JobDetails extends Component {
 
     const getExecuteJobBtn = () =>{
       // if opened in not LIVE dataflow - hide execute button;
-      if (this.props.displayingInModal && !this.props.allowExecute) return null;
+      if (this.props.displayingInModal && !this.props.selectedDataflow?.versionId) return null;
       // if opened in LIVE dataflow - show execute button inside grey frame wrapper;
-      if (this.props.displayingInModal && this.props.allowExecute) {
+      if (this.props.displayingInModal && this.props.selectedDataflow?.versionId) {
         return (
           <div className="assetDetail-buttons-wrapper-modal">
             <Button disabled={!editingAllowed} type="primary" onClick={this.executeJob}>
@@ -744,11 +745,6 @@ class JobDetails extends Component {
       <div
         className={ this.props.displayingInModal ? 'assetDetails-content-wrapper-modal' : this.props.inTabView ? '' : 'assetDetails-content-wrapper' }
       >
-        {!this.props.isNew ? (
-          <div className="loader">
-            <Spin spinning={this.state.initialDataLoading} size="large" />
-          </div>
-        ) : null}
         <Form
           colon={this.state.enableEdit ? true : false}
           {...formItemLayout}
@@ -786,7 +782,7 @@ class JobDetails extends Component {
                 </Form.Item>
                }
               {(() => {
-                if (this.state.initialDataLoading) return <Spin spinning={this.state.initialDataLoading} style={{display:'block', textAlign:'center'}} />;
+                if (this.state.initialDataLoading) return <Spin size="large" spinning={this.state.initialDataLoading} style={{display:'block', textAlign:'center'}} />;
                 switch (jobType) {
                   case 'Script':
                     return (

@@ -158,7 +158,7 @@ function GraphX6({ readOnly = false, monitoring, statuses }) {
     const graph = Canvas.init(graphContainerRef, miniMapContainerRef, readOnly);
     graph.dataflowId = dataflowId; //adding dataflowId value to graph instance to avoid pulling it from redux everywhere;
     graphRef.current = graph;
-    graphRef.current.allowExecute = false; // default state, jobs can not be executed unless on LIVE graph;
+    graphRef.current.dataflowVersionId = ''; // default state, jobs can not be executed on Working Copy;
 
     Shape.init({ handleContextMenu, disableContextMenu: readOnly , graph});
 
@@ -913,12 +913,11 @@ function GraphX6({ readOnly = false, monitoring, statuses }) {
         <AssetDetailsDialog
           show={configDialog.openDialog}
           clusterId={clusterId}
-          selectedDataflow={{ id: dataflowId }}
+          selectedDataflow={{ id: dataflowId, versionId: graphRef.current.dataflowVersionId }}
           nodes={configDialog.nodes}
           onClose={updateAsset}
           addToSchedule={addToSchedule}
           viewMode={readOnly} // THIS PROP WILL REMOVE EDIT OPTIONS FROM MODAL
-          allowExecute={graphRef.current.allowExecute}
           displayingInModal={true} // used for control button in modals
           selectedAsset={{ // all we know about clicked asset will be passed in selectedAsset prop
             id: configDialog.assetId,

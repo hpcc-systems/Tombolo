@@ -74,18 +74,18 @@ class JobScheduler {
     })()
   }
 
-  async scheduleCheckForJobsWithSingleDependency({ dependsOnJobId, dataflowId, jobExecutionGroupId }) {
+  async scheduleCheckForJobsWithSingleDependency({ dependsOnJobId, dataflowId, dataflowVersionId, jobExecutionGroupId }) {
     try {
-      const dataflowVersion = await DataflowVersions.findOne({ where: { dataflowId: dataflowId, isLive : true }, attributes: ["graph"] });
-      if (!dataflowVersion) throw new Error('Dataflow does not exist');
+      const dataflowVersion = await DataflowVersions.findOne({ where: { id: dataflowVersionId }, attributes: ["graph"] });
+      if (!dataflowVersion) throw new Error('Dataflow version does not exist');
 
-      let dependantJobs = dataflowVersion.graph.cells.reduce((acc, cell) => {
+      let dependentJobs = dataflowVersion.graph.cells.reduce((acc, cell) => {
         if (cell?.data?.schedule?.dependsOn?.includes(dependsOnJobId))
           acc.push({ jobId: cell.data.assetId });
         return acc;
       }, []);
 
-      if (dependantJobs.length === 0 && dataflowId) {
+      if (dependentJobs.length === 0 && dataflowId) {
         try {
           logger.info('WORKFLOW EXECUTION COMPLETE, Checking if subscribed for notifications.');
           await workflowUtil.notifyWorkflow({dataflowId, jobExecutionGroupId, status: 'completed'})
@@ -93,15 +93,17 @@ class JobScheduler {
           logger.error('WORKFLOW EXECUTION COMPLETE NOTIFICATION FAILED', error);
         }
       } else {
-        logger.verbose(`✔️  FOUND ${dependantJobs.length} DEPENDENT JOB/S`);
-        //List of dependent job ids
-        let dependentJobsIds = dependantJobs.map(job => job.jobId);
-        //Check if any of the dependent job are already in submitted state
-        const alreadySubmitted = await JobExecution.findAll({where : {dataflowId: dataflowId, jobId : dependentJobsIds, status : 'submitted'} , attributes: ['jobId'], raw : true});
-        //Remove already submitted jobs from dependent jobs array
-        dependantJobs = dependantJobs.filter(job => !alreadySubmitted.find(submittedJob => (submittedJob.jobId === job.jobId)))
 
-        for (const dependentJob of dependantJobs) {
+        logger.verbose(`✔️  FOUND ${dependentJobs.length} DEPENDENT JOB/S`);
+        //List of dependent job ids
+        let dependentJobsIds = dependentJobs.map(job => job.jobId);
+        //Check if any of the dependent job are already in submitted state
+        const activeJobs = await JobExecution.findAll({where : {dataflowId: dataflowId, jobId : dependentJobsIds, status : ['submitted', 'blocked', 'cow']} , attributes: ['jobId'], raw : true});
+        const activeJobIds = activeJobs.map(activeJob =>  activeJob.jobId)
+        //Remove already submitted jobs from dependent jobs array
+        dependentJobs = dependentJobs.filter(dependentJob => !activeJobIds.includes(dependentJob.jobId));
+
+        for (const dependentJob of dependentJobs) {
           try {
             let job = await Job.findOne({ where: { id:dependentJob.jobId } });
             let status;
@@ -120,6 +122,7 @@ class JobScheduler {
               dataflowId: dataflowId,
               jobExecutionGroupId,
               jobType: job.jobType,
+              dataflowVersionId,
               jobName: job.name,
               title: job.title,
               jobId: job.id,
@@ -286,13 +289,14 @@ class JobScheduler {
     }
   }
 
-  createNewBreeJob({ uniqueJobName, cron, jobfileName, sprayedFileScope, manualJob_meta, sprayFileName, sprayDropZone, applicationId, dataflowId, clusterId, metaData, jobName, contact, jobType, status, jobId, title, jobExecutionGroupId }) {
+  createNewBreeJob({ uniqueJobName, cron, jobfileName, sprayedFileScope, manualJob_meta, sprayFileName, sprayDropZone, applicationId, dataflowId, dataflowVersionId=null, clusterId, metaData, jobName, contact, jobType, status, jobId, title, jobExecutionGroupId }) {
     const job = {
       name: uniqueJobName,
       path: path.join(__dirname, 'jobs', jobfileName),
       worker: {
         workerData: {
           WORKER_CREATED_AT: Date.now(),
+          dataflowVersionId,
           sprayedFileScope,
           manualJob_meta,
           sprayFileName,

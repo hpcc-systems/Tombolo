@@ -15,7 +15,8 @@ const { body, query, validationResult } = require('express-validator');
 const jobScheduler = require('../../job-scheduler');
 const {isClusterReachable} = require('../../utils/hpcc-util');
 const assetUtil = require('../../utils/assets');
-const {encryptString, decryptString} = require('../../utils/cipher')
+const {encryptString, decryptString} = require('../../utils/cipher');
+const logger = require('../../config/logger');
 
 router.post( '/save',
   [
@@ -90,15 +91,17 @@ router.post( '/save',
             metaData,
           });
 
-          await Dataflow_cluster_credentials.create({
+            await Dataflow_cluster_credentials.create({
             dataflow_id: newDataflow.id,
             cluster_id: clusterId,
             cluster_username: username,
             cluster_hash: encryptString(password),
           });
+
           res.status(200).json({ success: true, message: 'Dataflow created successfully' });
         }
       } catch (err) {
+        logger.error(err)
         res.status(409).json({ success: false, message: 'Unable to create dataflow' });
       }
     }

@@ -14,6 +14,7 @@ if (parentPort) {
 
   try {
     const flowSettings ={
+      dataflowVersionId: workerData.dataflowVersionId,
       gitHubFiles : workerData.metaData.gitHubFiles,
       applicationId: workerData.applicationId,
       dataflowId: workerData.dataflowId,

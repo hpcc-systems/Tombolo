@@ -10,6 +10,7 @@ let File = models.file;
 let FileLayout = models.file_layout;
 let FileValidation = models.file_validation;
 const FileTemplate = models.fileTemplate;
+const DataflowVersions = models.dataflow_versions;
 
 let AssetsGroups = models.assets_groups;
 let JobExecution = models.job_execution;
@@ -737,6 +738,7 @@ router.post('/executeJob', [
     const isGitHubJob = job.metaData?.isStoredOnGithub;
     
     const commonWorkerData = { 
+      dataflowVersionId: req.body.dataflowVersionId,
       applicationId: req.body.applicationId,
       dataflowId: req.body.dataflowId,
       clusterId: req.body.clusterId,
@@ -789,6 +791,11 @@ router.get('/jobExecutionDetails', [
         model: Job,
         attributes:['name', 'jobType'],
         paranoid: false // will pull softDeleted Records
+      },
+      {
+        model: DataflowVersions,
+        attributes: ['name', 'isLive'],
+        paranoid: false // will pull softDeleted Records
       }]
     });
 
@@ -809,7 +816,12 @@ router.get('/jobExecutionDetails', [
       clusterId:je.clusterId,
       dataflowId: je.dataflowId,
       applicationId: je.applicationId,
+      dataflowVersion:{
+        name: je.dataflow_version?.name || "",
+        isLive: je.dataflow_version?.isLive
+      }
     }));
+    
     
     res.json(formatted);
   } catch (err) {

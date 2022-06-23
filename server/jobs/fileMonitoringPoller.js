@@ -3,6 +3,8 @@ const { parentPort, workerData } = require('worker_threads');
 const hpccUtil = require('../utils/hpcc-util');
 const models = require('../models');
 const fileMonitoring = models.fileMonitoring;
+const DataflowVersions = models.dataflow_versions;
+
 const { log, dispatch } = require('./workerUtils')(parentPort);
 
 (async () => {
@@ -32,10 +34,21 @@ const { log, dispatch } = require('./workerUtils')(parentPort);
           log('info','NEW FILE FOUND. MAKING NECESSARY UPDATES AND PROCEEDING WITH EXECUTING DEPENDENT JOBS' );
           
           await fileMonitoring.update( { metaData: { ...metaData, lastUniqueFileReceivedAt: fileDetectedAt } }, { where: { id, cluster_id } } );
+          
           for (i = 0; i < metaData.dataflows.length; i++) {
+            const dataflowId = metaData.dataflows[i];
+            // find live version to start execution
+            const latestVersion = await DataflowVersions.findOne({ where:{ dataflowId, isLive: true }});
+            // no live version found, moving to next dataflow
+            if (!latestVersion) {
+              log('info',`No Live version for dataflow ${dataflowId}} was found, can not schedule next job.`)
+              continue;
+            }
+            // live version found, schedule dependent job;
             dispatch('scheduleNext', {
+              dataflowVersionId: latestVersion.id,
               dependsOnJobId: fileTemplateId,
-              dataflowId: metaData.dataflows[i],
+              dataflowId,
             });
           }
         }
