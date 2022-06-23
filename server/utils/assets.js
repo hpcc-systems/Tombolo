@@ -138,7 +138,6 @@ exports.indexInfo = (applicationId, indexId) => {
   try {
     return new Promise((resolve, reject) => {
       Index.findOne({where:{"application_id":applicationId, "id":indexId}, include: [{model: IndexKey}, {model: IndexPayload}, {model: Groups, as: 'groups'}]}).then(function(index) {
-        console.log(index);
         results.basic = index;
         resolve(results);
       })

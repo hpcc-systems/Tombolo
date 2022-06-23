@@ -87,7 +87,9 @@ exports.indexInfo = (clusterId, indexName) => {
                 "description" : response.FileDetail.Description,
                 "qualifiedPath" : response.FileDetail.PathMask,
                 "index_keys" : indexColumns.keyedColumns,
-                "index_payloads": indexColumns.nonKeyedColumns
+                "index_payloads": indexColumns.nonKeyedColumns,
+                "Wuid" : response.FileDetail.Wuid,
+                "jobName": response.FileDetail.JobName
               }
               resolve(indexInfo);
             })

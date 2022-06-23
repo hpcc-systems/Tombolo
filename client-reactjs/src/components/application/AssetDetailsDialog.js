@@ -5,7 +5,7 @@ import FileDetailsForm from './FileDetails';
 import FileTemplate from './templates/FileTemplate'
 import JobDetailsForm from './Jobs/JobDetails';
 import IndexDetailsForm from './IndexDetails';
-import QueryDetailsForm from './QueryDetails';
+import QueryDetailsForm from './queries/QueryDetails';
 import SubProcessDetails from './SubProcessDetails';
 
 function AssetDetailsDialog(props) {  

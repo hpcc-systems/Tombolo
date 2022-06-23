@@ -94,7 +94,7 @@ router.post('/querysearch', [
 	  		querySearchResult = response.QuerysetQueries.QuerySetQuery;
 
 				querySearchResult.forEach((querySet, index) => {
-						querySearchAutoComplete.push({"text" : querySet.Name, "value" : querySet.Name});
+						querySearchAutoComplete.push({"id": querySet.Id, "text" : querySet.Name, "value" : querySet.Name});
 				});
 
 				querySearchAutoComplete = querySearchAutoComplete.filter((elem, index, self) => self.findIndex(
@@ -467,6 +467,31 @@ router.get('/getQueryInfo', [
     }
   })
 });
+
+router.get('/getQueryFiles', [
+	query('hpcc_queryId').matches(/^[a-zA-Z]{1}[a-zA-Z0-9_:.\-]*$/).withMessage('Invalid hpcc query id'),
+	query('clusterId').isUUID(4).withMessage('Invalid cluster id'),
+], async function(req, res){
+	const errors = validationResult(req).formatWith(validatorUtil.errorFormatter);
+	if (!errors.isEmpty()) {
+    	return res.status(422).json({ success: false, errors: errors.array() });
+  	}
+
+	try{
+		const wuService = await hpccUtil.getWorkunitsService(req.query.clusterId);
+		const response =await  wuService.WUQueryDetails({
+				QueryId:  req.query.hpcc_queryId,
+				IncludeSuperFiles: true,
+				QuerySet: 'roxie'});
+			
+		res.status(200).json({'success': true, 'logicalFiles' : response?.LogicalFiles?.Item || [] , 'superFiles' : response?.SuperFiles?.SuperFile || []});
+		
+	}catch(err){
+		logger.error(err);
+		res.status(503).json({success : false, message : 'Error while fetching query files'})
+	}
+});
+
 
 router.get('/getJobInfo', [
   query('clusterid')

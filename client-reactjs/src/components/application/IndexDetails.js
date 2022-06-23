@@ -1,28 +1,34 @@
 import React, { PureComponent } from "react";
-import {  Tabs, Form, Input, Icon, Select, Table, AutoComplete, message, Spin, Button, Row, Col } from 'antd/lib';
+import {  Tabs, Form, Input, Select, Table, AutoComplete, message, Spin, Button, Row, Col } from 'antd/lib';
 import { authHeader, handleError } from "../common/AuthHeader.js"
 import { hasEditPermission } from "../common/AuthUtil.js";
-import { fetchDataDictionary, eclTypes } from "../common/CommonUtil.js"
+import { eclTypes } from "../common/CommonUtil.js"
 import {omitDeep} from '../common/CommonUtil.js';
 import AssociatedDataflows from "./AssociatedDataflows"
 import EditableTable from "../common/EditableTable.js"
 import { MarkdownEditor } from "../common/MarkdownEditor.js"
 import { connect } from 'react-redux';
-import { SearchOutlined  } from '@ant-design/icons';
 import { assetsActions } from '../../redux/actions/Assets';
 import { debounce } from 'lodash';
 import { store } from '../../redux/store/Store';
 import {Constants} from "../common/Constants"
 import ReactMarkdown from 'react-markdown'
-import {readOnlyMode, editableMode} from "../common/readOnlyUtil"
 import DeleteAsset from "../common/DeleteAsset/index.js";
-
-
 
 const TabPane = Tabs.TabPane;
 const Option = Select.Option;
 message.config({top:130})
 
+const workUnitTableColumns = [
+  {
+    title: 'WuId',
+    dataIndex: 'wuid',
+  },
+  { 
+     title: 'Job Name',
+     dataIndex: 'jobName'
+  }
+]
 class IndexDetails extends PureComponent {
   formRef = React.createRef();
   constructor(props) {
@@ -34,7 +40,7 @@ class IndexDetails extends PureComponent {
     visible: true,
     confirmLoading: false,
     sourceFiles:[],
-    selectedSourceFile:"",
+    selectedSourceFile:null,
     clusters:[],
     selectedCluster: this.props.clusterId ? this.props.clusterId : "",
     indexSearchSuggestions:[],
@@ -114,8 +120,9 @@ class IndexDetails extends PureComponent {
       .then(data => {
         this.setState({
           ...this.state,
-          //selectedSourceFile: data.basic.parentFileId,
+          selectedSourceFile: data.basic.parentFileId,
           initialDataLoading: false,
+          workUnit : data.basic.metaData.workUnit,
           index: {
             ...this.state.index,
             id: data.basic.id,
@@ -286,6 +293,7 @@ class IndexDetails extends PureComponent {
 
       this.setState({
         ...this.state,
+        workUnit : [{wuid: indexInfo.basic.Wuid, jobName : indexInfo.basic.jobName}],
         sourceFiles: [],
         index: {
           ...this.state.index,
@@ -400,6 +408,7 @@ class IndexDetails extends PureComponent {
       "application_id" : applicationId,
       "dataflowId" : this.props.selectedDataflow ? this.props.selectedDataflow.id : '',
       "parentFileId" : this.state.selectedSourceFile,
+      "metaData" : {workUnit : this.state.workUnit}
     };
     let groupId = this.props.groupId ? this.props.groupId : this.state.index.groupId;
     if(groupId) {
@@ -722,15 +731,15 @@ class IndexDetails extends PureComponent {
             </Form>
 
             </TabPane>
+
             <TabPane tab="Source File" key="2">
-              {!this.state.enableEdit ? null:
               <div>
-                 <Select placeholder="Select Source Files" defaultValue={this.state.selectedSourceFile} style={{ width: 190 }} onSelect={this.onSourceFileSelection} disabled={!editingAllowed}>
+                 <Select placeholder="Select Source Files" defaultValue={this.state.selectedSourceFile} style={{ width: 190 }} onSelect={this.onSourceFileSelection} disabled={!editingAllowed || !this.state.enableEdit }>
                   {sourceFiles.map(d => <Option key={d.id}>{(d.title)?d.title:d.name}</Option>)}
                 </Select>
                 </div>
-  }
             </TabPane>
+
             <TabPane tab="Index" key="3">
               <EditableTable
                 columns={indexColumns}
@@ -750,6 +759,15 @@ class IndexDetails extends PureComponent {
                   dataDefinitions={[]}
                   showDataDefinition={false}
                   setData={this.setNonKeyedColumnData}/>
+            </TabPane>
+
+            <TabPane tab="Workunit" key="5">
+                <Table 
+                  dataSource={this.state.workUnit}
+                  columns={workUnitTableColumns}
+                  rowKey = {record => record.wuid}
+                  size = {'small'}
+                />
             </TabPane>
 
             {!this.props.isNew ?
