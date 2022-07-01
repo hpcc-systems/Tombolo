@@ -452,7 +452,7 @@ exports.createFileMonitoring = async ({ fileTemplateId, dataflowId }) => {
   }
 };
 
-exports.addJobToBreeSchedule = (job, schedule, dataflowId) => {
+exports.addJobToBreeSchedule = (job, schedule, dataflowId, dataflowVersionId) => {
   // ADD JOB TO BREE SCHEDULE
   const getfileName = () => {
     switch (job.jobType) {
@@ -484,6 +484,7 @@ exports.addJobToBreeSchedule = (job, schedule, dataflowId) => {
     sprayedFileScope: job.sprayedFileScope,
     clusterId: job.cluster_id,
     dataflowId,
+    dataflowVersionId,
     applicationId: job.application_id,
   };
 
