@@ -31,6 +31,8 @@ module.exports = (sequelize, DataTypes) => {
     fileTemplate_license.belongsTo(models.fileTemplate, {
       foreignKey: 'fileTemplate_id'
     });
+
+    fileTemplate_license.belongsTo(models.application, { foreignKey: 'application_id' });
   };
   return fileTemplate_license;
 };

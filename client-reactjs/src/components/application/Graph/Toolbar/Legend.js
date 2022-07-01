@@ -1,6 +1,6 @@
 import React from 'react';
 import { List, Typography } from 'antd';
-import { HourglassOutlined,ProfileOutlined, ArrowRightOutlined, SettingOutlined, EyeInvisibleOutlined, FileAddOutlined, MailOutlined} from '@ant-design/icons/lib/icons';
+import { HourglassOutlined,ProfileOutlined, ArrowRightOutlined, SettingOutlined, EyeInvisibleOutlined, FileAddOutlined, MailOutlined, SoundOutlined} from '@ant-design/icons/lib/icons';
 import { colors } from '../graphColorsConfig';
 
 const { Text } = Typography;
@@ -57,6 +57,10 @@ const data = [
   {
     title: 'Manual Job',
     icon: <MailOutlined className="Job legend-icon" />,
+  },
+  {
+    title: 'Query Publish Job',
+    icon: <SoundOutlined className="Job legend-icon" />,
   },
   {
     title: 'Hide node (use "Hidden Nodes" tab to display them)',

@@ -6,12 +6,12 @@ import { Router, Route, Switch } from "react-router-dom";
 import { Redirect } from 'react-router'
 import history from "./components/common/History";
 import { LoginPage } from "./components/login/LoginPage";
+import LoggedOut from "./components/login/LoggedOut";
 import ForgotPassword from "./components/login/ForgotPassword";
 import ResetPassword from "./components/login/ResetPassword";
 import { PrivateRoute } from "./components/common/PrivateRoute";
 import Assets from "./components/application/Assets";
 import { LeftNav } from "./components/layout/LeftNav";
-import DataDictionary from "./components/application/DataDictionary";
 import Dataflow from "./components/application/Dataflow";
 import DataflowDetails from "./components/application/Dataflow/DataflowDetails";
 import { DataflowInstances } from "./components/application/DataflowInstances/DataflowInstances";
@@ -21,7 +21,7 @@ import FileDetailsForm from "./components/application/FileDetails";
 import FileTemplate from "./components/application/templates/FileTemplate"
 import JobDetailsForm from "./components/application/Jobs/JobDetails";
 import IndexDetailsForm from "./components/application/IndexDetails";
-import QueryDetailsForm from "./components/application/QueryDetails";
+import QueryDetailsForm from "./components/application/queries/QueryDetails";
 import VisualizationDetailsForm from "./components/application/VisualizationDetails";
 
 import ManualJobDetail from "./components/application/Jobs/ManualJobDetail"
@@ -37,21 +37,26 @@ import { store } from "./redux/store/Store";
 import { Report } from "./components/Report/Report";
 import Regulations from "./components/admin/ControlsAndRegulations";
 import GitHubSettings from "./components/admin/GitHubSettings/GitHubSettings";
+import ScheduledJobsPage from "./components/admin/ScheduledJobsPage";
+import AddJobsForm from "./components/application/Jobs/AddjobsForm/AddJobsForm";
+
 const { Content } = Layout;
 
 class App extends React.Component {  
   componentDidMount() {
-    store.dispatch(userActions.validateToken());
+    if (!this.props.authWithAzure){
+      store.dispatch(userActions.validateToken());
+    }
   }
 
   render() {
     const isApplicationSet =
-      this.props.application && this.props.application.applicationId != ""
+      this.props.application && this.props.application.applicationId !== ""
         ? true
         : false;
     const selectedTopNav =
       this.props.selectedTopNav &&
-      this.props.selectedTopNav.indexOf("/admin") != -1
+      this.props.selectedTopNav.indexOf("/admin") !== -1
         ? "/admin/applications"
         : "/files";
     const dataFlowComp = () => {
@@ -69,21 +74,6 @@ class App extends React.Component {
         />
       );
     };
-    const dataDictionaryComp = () => {
-      let applicationId = this.props.application
-        ? this.props.application.applicationId
-        : "";
-      let applicationTitle = this.props.application
-        ? this.props.application.applicationTitle
-        : "";
-      return (
-        <DataDictionary
-          applicationId={applicationId}
-          applicationTitle={applicationTitle}
-          user={this.props.user}
-        />
-      );
-    };
     
     const getAssets = () => {
       const applicationId = this.props.application?.applicationId;
@@ -94,14 +84,20 @@ class App extends React.Component {
       }
     };
     
-
     return (
       <Router history={history}>
-        <Route exact path="/login" component={LoginPage} />
-        <Route exact path="/forgot-password" component={ForgotPassword} />
-        <Route exact path="/reset-password/:id" component={ResetPassword} />
+        {!this.props.authWithAzure ? // value is passed via AzureApp component
+          <>
+            <Route exact path="/login" component={LoginPage} />
+            <Route exact path="/forgot-password" component={ForgotPassword} />
+            <Route exact path="/reset-password/:id" component={ResetPassword} />
+            <Route exact path="/logout" component={LoggedOut} />
+          </>
+        : null
+        }
         <Layout>
           {this.props.user && this.props.user.token ? <AppHeader /> : null}
+
           <Layout className="site-layout">
             <LeftNav
               isApplicationSet={isApplicationSet}
@@ -120,6 +116,10 @@ class App extends React.Component {
                   <PrivateRoute
                     path="/:applicationId/assets/fileTemplate/:fileId?"
                     component={FileTemplate}
+                  />
+                  <PrivateRoute
+                    path="/:applicationId/assets/add-jobs"
+                    component={AddJobsForm}
                   />
                   <PrivateRoute
                     path="/:applicationId/assets/job/:jobId?"
@@ -143,10 +143,6 @@ class App extends React.Component {
                     component={Assets}
                   />
                   <PrivateRoute
-                    path="/:applicationId/data-dictionary"
-                    component={dataDictionaryComp}
-                  />
-                  <PrivateRoute
                     path="/:applicationId/dataflow/details/:dataflowId?"
                     component={DataflowDetails}
                   />
@@ -157,6 +153,10 @@ class App extends React.Component {
                   <PrivateRoute
                     path="/admin/applications"
                     component={AdminApplications}
+                  />
+                  <PrivateRoute
+                    path="/admin/bree"
+                    component={ScheduledJobsPage}
                   />
                   <PrivateRoute
                     path="/admin/clusters"
@@ -190,6 +190,8 @@ class App extends React.Component {
                     path="/:applicationId/manualJobDetails/:jobId/:jobExecutionId"
                     component={ManualJobDetail}
                   /> 
+                   {this.props.authWithAzure ?
+                    <Route exact path="*" component={getAssets} /> : null }
                 </Switch>
               </Content>
             </Layout>

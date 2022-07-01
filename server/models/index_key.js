@@ -8,8 +8,8 @@ module.exports = (sequelize, DataTypes) => {
       allowNull: false,
       autoIncrement: false
     },
-    application_id: DataTypes.STRING,
-    index_id: DataTypes.STRING,
+    application_id: DataTypes.UUID,
+    index_id: DataTypes.UUID,
     name: DataTypes.STRING,
     type: DataTypes.STRING,
     eclType: DataTypes.STRING

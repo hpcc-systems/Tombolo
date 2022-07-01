@@ -1,14 +1,12 @@
 const express = require('express');
 const router = express.Router();
-const assert = require('assert');[]
+
 var path = require('path');
 var fs = require('fs');
 var models  = require('../../models');
 let UserApplication = models.user_application;
 let Application = models.application;
-let AssetsGroups=models.assets_groups;
-let AssetsDataflows=models.assets_dataflows;
-let DependentJobs=models.dependent_jobs;
+
 let Groups = models.groups;
 let File = models.file;
 let FileLayout = models.file_layout;
@@ -23,8 +21,8 @@ let JobParam = models.jobparam;
 let Query = models.query;
 let QueryField = models.query_field;
 let Dataflow = models.dataflow;
-let DataflowGraph = models.dataflowgraph;
-const {socketIo : io} = require('../../server');
+
+const {io} = require('../../server');
 const validatorUtil = require('../../utils/validator');
 const { body, query, validationResult } = require('express-validator');
 const NotificationModule = require('../notifications/email-notification');
@@ -32,12 +30,10 @@ const authServiceUtil = require('../../utils/auth-service-utils');
 let Sequelize = require('sequelize');
 const Op = Sequelize.Op;
 const multer = require('multer');
+const jobScheduler = require('../../job-scheduler');
 const AssetGroups = models.assets_groups;
-const AssetDataflows = models.assets_dataflows;
-const Dataflowgraph = models.dataflowgraph;
 
 router.get('/app_list', (req, res) => {
-  console.log("[app/read.js] - App route called");
 
   try {
     models.application.findAll({order: [['updatedAt', 'DESC']]}).then(function(applications) {
@@ -55,7 +51,6 @@ router.get('/app_list', (req, res) => {
 router.get('/appListByUsername',[
    query('user_name').notEmpty().withMessage('Invalid username')
 ], async (req, res) => {
-  console.log("[app/read.js] -  Getting app list for  ="+ req.query.user_name);
    const errors = validationResult(req).formatWith(validatorUtil.errorFormatter);
     if (!errors.isEmpty()) {
       return res.status(422).json({ success: false, errors: errors.array() });
@@ -80,7 +75,6 @@ router.get('/app', [
   if (!errors.isEmpty()) {
     return res.status(422).json({ success: false, errors: errors.array() });
   }
-  console.log("[app/read.js] - App route called: "+req.query.app_id);
 
   try {
     models.application.findOne({
@@ -149,9 +143,10 @@ router.post('/deleteApplication', async function (req, res) {
     let dataflows = await Dataflow.findAll({where: {application_id: req.body.appIdToDelete}, raw: true, attributes: ['id']});
     if(dataflows && dataflows.length > 0) {
       let dataflowIds = dataflows.map(dataflow => dataflow.id);
-      await AssetsDataflows.destroy({where: {dataflowId: {[Sequelize.Op.in]:dataflowIds}}})
-      await DependentJobs.destroy({where: {dataflowId: {[Sequelize.Op.in]:dataflowIds}}});
       await Dataflow.destroy({where: {application_id: req.body.appIdToDelete}});
+      for (const id of dataflowIds) {
+        await jobScheduler.removeAllFromBree(id);
+      }     
     }
       await UserApplication.destroy({where: {application_id : req.body.appIdToDelete, user_id: req.body.user}});
       const app = await Application.findOne({where : { id : req.body.appIdToDelete}});
@@ -381,49 +376,6 @@ function importAssetDetails(item , assetType, newAppId, groupIdMap, io){
           }
          
         })
-        .then(() => {
-          // #### create asset Dataflows
-          asset.dataflows?.map(dataflow => {
-            //create asset dataflows
-            AssetDataflows.create(dataflow.assets_dataflows)
-            .then(result =>{
-              emitUpdates(io, {step : `SUCCESS - creating asset dataflow`, status: "success"})
-            }).catch(err =>{
-              emitUpdates(io, {step : `ERR - creating asset dataflows`, status: "error"});
-              console.log("ERR -", err)
-            })
-          })
-          })
-        .then(() =>{
-          // #### Create Depends on Jobs
-          asset.dependsOnJobs?.map(job =>{
-            DependentJobs.create(job).then(() =>{
-              emitUpdates(io, {step : `SUCCESS - creating depend on job `, status: "success"})
-
-            }).catch(err =>{
-              emitUpdates(io, {step : `ERR - creating depend on job`, status: "error"})
-              console.log("ERR -", err)
-            })
-          })
-        })
-        .then(() =>{
-          // #### create dataflow graph
-          if(asset.dataflowgraph){
-                Dataflowgraph.create({
-                application_id: newAppId,
-                nodes:asset.dataflowgraph.nodes,
-                edges: asset.dataflowgraph.edges,
-                dataflowId: newAsset.id,
-              }).then(result => {
-                emitUpdates(io, {step : `SUCCESS - creating dataflow graph`, status: "success"})
-              })
-              .catch(err =>{
-                emitUpdates(io, {step : `SUCCESS - creating asset group ${result.id} `, status: "success"});
-                console.log("ERR -", err)
-              })
-             
-          }
-        })
         .catch(error => {
           emitUpdates(io, {step : `ERR - importing ${item[0]} ${asset.title} `, status: "err"})
           console.log("Err creating asset", error)
@@ -617,16 +569,11 @@ router.post('/export', [
             attributes: []
           }},
           {model: Dataflow, as: 'dataflows', attributes: ['id']},
-          {model: DependentJobs, as: 'dependsOnJobs', attributes: { exclude: ['createdAt', 'updatedAt'], through: {
-            attributes: []
-          } }}
         ],
         attributes: { exclude: ['createdAt', 'updatedAt', 'id', 'application_id'] }
       }); 
 
       let dataflow = await Dataflow.findAll({where: {application_id: application.id}, 
-        include: [{model: DataflowGraph, attributes: { exclude: ['createdAt', 'updatedAt', 'id', 'application_id'] }}                  
-                ],
         attributes: { exclude: ['createdAt', 'updatedAt', 'id', 'application_id'] }
       }); 
 

@@ -2,7 +2,7 @@ const express = require('express');
 const router = express.Router();
 const validatorUtil = require('../../utils/validator');
 const { body, query, validationResult } = require('express-validator');
-const { oneOf, check } = require('express-validator/check');
+const { oneOf, check } = require('express-validator');
 let Sequelize = require('sequelize');
 const Op = Sequelize.Op;
 var models  = require('../../models');
@@ -138,7 +138,6 @@ let getKeywordsForQuery = (keywords) => {
     keywords = '/^'+keywords.substring(1, keywords.length -1)+'$/';
   } else if(keywords.indexOf(" ") > 0) {
     keywords = keywords.split(" ").join("|");
-    console.log('space: '+keywords);
   } else {
     //keywords = '%'+keywords+'%';
     keywords = keywords;
@@ -386,7 +385,6 @@ router.get('/assets', [
       }))
 
       Promise.all(promises).then(() => {
-        console.log("1-all assets retrieved....")
         finalAssets.sort(comparator)
 
         finalAssets = finalGroups.concat(finalAssets);
@@ -640,8 +638,7 @@ router.put( '/move/asset',
     const errors = validationResult(req).formatWith(validatorUtil.errorFormatter);
     if (!errors.isEmpty()) return res.status(422).json({ success: false, errors: errors.array() });
 
-    const { appId, assetId } = req.body;
-    
+    const { app_id, assetId } = req.body; 
     try {
       if (req.body.assetType !== 'Group') {
         // create or update File
@@ -663,7 +660,7 @@ router.put( '/move/asset',
       } else {
         await Groups.update(
           { parent_group: req.body.destGroupId || '' },
-          { where: { application_id: appId, id: assetId } }
+          { where: { application_id: app_id, id: assetId } }
         );
         res.json({ success: true });
       }

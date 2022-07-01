@@ -8,10 +8,10 @@ module.exports = (sequelize, DataTypes) => {
       allowNull: false,
       autoIncrement: false
     },
-    application_id: DataTypes.STRING,
+    application_id: DataTypes.UUID,
     title: DataTypes.STRING,
     name: DataTypes.STRING(500),
-    cluster_id: DataTypes.STRING,
+    cluster_id: DataTypes.UUID,
     description: DataTypes.TEXT,
     fileType: DataTypes.STRING,
     isSuperFile: DataTypes.BOOLEAN,
@@ -28,52 +28,36 @@ module.exports = (sequelize, DataTypes) => {
     } 
   }, {paranoid: true, freezeTableName: true});
   file.associate = function(models) {
-    file.hasMany(models.file_layout,{
-      foreignKey:'file_id',
-      onDelete: 'CASCADE',
-      hooks: true
-    });
-    file.hasMany(models.file_license,{
-      foreignKey:'file_id',
-      onDelete: 'CASCADE',
-      hooks: true
-    });
-    file.hasMany(models.file_validation,{
-      foreignKey:'file_id',
-      onDelete: 'CASCADE',
-      hooks: true
-    });
-    file.belongsTo(models.application, {
-      foreignKey: 'application_id'
-    });
-    file.belongsToMany(models.dataflow, {
-      through: 'assets_dataflows',
-      as: 'dataflows',
-      foreignKey: 'assetId',
-      otherKey: 'dataflowId'
-    });
-    file.hasMany(models.consumer_object,{
-      foreignKey:'consumer_id',
-      onDelete: 'CASCADE',
-      hooks: true
-    });
+  
+    file.hasMany(models.file_layout,{ foreignKey:'file_id', onDelete: 'CASCADE' });
+    file.hasMany(models.file_license,{ foreignKey:'file_id', onDelete: 'CASCADE', });
+    file.hasMany(models.file_validation,{ foreignKey:'file_id', onDelete: 'CASCADE', });
+    file.hasMany(models.indexes,{ foreignKey:'parentFileId', onDelete: 'CASCADE', });
+    file.hasMany(models.consumer_object,{ foreignKey:'consumer_id', onDelete: 'CASCADE' });
+
+    file.belongsTo(models.application, { foreignKey: 'application_id' });    
     file.belongsToMany(models.groups, {
+      constraints:false,
+      foreignKeyConstraint:false,
       through: 'assets_groups',
       as: 'groups',
       foreignKey: 'assetId',
       otherKey: 'groupId'
     });
+
     file.belongsToMany(models.job, {
+      constraints: false,
+      foreignKeyConstraint: false,
       through: 'jobfile',
-      as: 'jobfiles',
-      foreignKey: 'job_id',
-      otherKey: 'file_id'
+      foreignKey: 'file_id',
+      otherKey: 'job_id',
     });
+
     file.hasOne(models.visualizations, {
       foreignKey:'assetId',
       onDelete: 'CASCADE',
-      hooks: true
     });
+
   };
   return file;
 };

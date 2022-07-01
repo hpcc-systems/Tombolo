@@ -1,4 +1,4 @@
-import React, { useState, useCallback  } from 'react';
+import React, { useState, useCallback, useEffect  } from 'react';
 import { Form, Input, Button, Select, AutoComplete, Spin, message, Row, Col, Typography, Radio, Alert } from 'antd/lib';
 import { authHeader, handleError } from '../../common/AuthHeader.js';
 import ReactMarkdown from 'react-markdown';
@@ -13,7 +13,7 @@ import OverwriteAssetModal from '../../common/OverWriteAssetModal.js';
 // import GHTable from './GitHubForm/GHTable.js';
 const { Option } = Select;
 
-function BasicsTabGeneral({ enableEdit, editingAllowed, addingNewAsset, jobType, clearState, onChange, clusters, localState, formRef, applicationId, setJobDetails, onClusterSelection }) {
+function BasicsTabGeneral({ enableEdit, editingAllowed, addingNewAsset, jobType, clearState, onChange, clusters, localState, formRef, applicationId, setJobDetails, onClusterSelection, inTabView }) {
   const assetReducer = useSelector((state) => state.assetReducer);
 
   const clusterId = assetReducer.clusterId || formRef.current?.getFieldValue("clusters");
@@ -32,7 +32,11 @@ function BasicsTabGeneral({ enableEdit, editingAllowed, addingNewAsset, jobType,
       const options = {
         method: 'POST',
         headers: authHeader(),
-        body: JSON.stringify({ clusterid: clusterId, keyword: searchString.trim(), indexSearch: true })
+        body: JSON.stringify({
+          keyword: searchString.trim(),
+          clusterId, 
+          clusterType: jobType === "Query Publish" ? 'roxie': '', 
+        })
       }; 
       
       const response = await fetch('/api/hpcc/read/jobsearch', options);
@@ -55,7 +59,7 @@ function BasicsTabGeneral({ enableEdit, editingAllowed, addingNewAsset, jobType,
       setSearch(prev => ({...prev, loading:false, error: error.message }))
     }
   }, 500)
-  , []);
+  , [jobType, clusterId]);
  
     const resetModal = () => {
       //this method is triggered when we click any of buttons on modal;
@@ -150,7 +154,14 @@ function BasicsTabGeneral({ enableEdit, editingAllowed, addingNewAsset, jobType,
           notificationFailureMessage : jobInfo.metaData?.notificationSettings?.failureMessage,
           notificationRecipients : jobInfo.metaData?.notificationSettings?.recipients
         };
+        
+        if (inTabView){
+          // Update tab with icon if job already in DB
+          const {key, updateTab} = inTabView;
+          updateTab({status:'exists', key });
+        }
       }
+    
       // will update antD form values;
       formRef.current.setFieldsValue(fieldsToUpdate);
       setJobDetails(jobInfo); // will update state in JobDetails;
@@ -168,6 +179,14 @@ function BasicsTabGeneral({ enableEdit, editingAllowed, addingNewAsset, jobType,
     setJob((prev)=>({ ...prev, jobExists:false, disableFields:false }))
   }
 
+  useEffect(() =>{
+    if(inTabView && !filesStoredOnGithub && clusterId) {
+      // if Job is opened in Tab view we don't need to select cluster on decide on job type
+      // we will hide these fields and use passed via props values to get job info;
+      onJobSelected({key: inTabView.key, value: inTabView.value })
+    }
+  },[clusterId])
+
   const filesStoredOnGithub = formRef.current?.getFieldValue('isStoredOnGithub');
   const isAssociated = formRef.current?.getFieldValue('isAssociated'); // this value is assign only at the time of saving job. if it is true - user can not change it.
   const clusterName = clusters?.find(cluster => cluster.id === formRef.current?.getFieldValue('clusters'))?.name;
@@ -179,73 +198,76 @@ function BasicsTabGeneral({ enableEdit, editingAllowed, addingNewAsset, jobType,
   return (
     <React.Fragment>
      <Spin spinning={job.loading} tip="loading job details"> 
-      <Form.Item label="Cluster" >
-        <Row gutter={[8, 8]}>
-          <Col span={12}>
-            {enableEdit ? (
-              <Form.Item noStyle name="clusters">
-                <Select
-                  allowClear
-                  placeholder="Select a Cluster"
-                  disabled={isAssociated}
-                  onChange={onClusterSelection}
-                >
-                  {clusters.map((cluster) => (
-                    <Option key={cluster.id}>{cluster.name}</Option>
-                  ))}
-                </Select>
-              </Form.Item>
-            ) : (
-              <Typography.Text disabled={!clusterName} style={{ paddingLeft: '11px' }}>
-                {clusterName || 'Cluster is not provided'}
-              </Typography.Text>
-            )}
-          </Col>
-        </Row>
-      </Form.Item>
+     {inTabView ? null :
+      <>
+        <Form.Item label="Cluster" >
+          <Row gutter={[8, 8]}>
+            <Col span={12}>
+              {enableEdit ? (
+                <Form.Item noStyle name="clusters">
+                  <Select
+                    allowClear
+                    placeholder="Select a Cluster"
+                    disabled={isAssociated}
+                    onChange={onClusterSelection}
+                  >
+                    {clusters.map((cluster) => (
+                      <Option key={cluster.id}>{cluster.name}</Option>
+                    ))}
+                  </Select>
+                </Form.Item>
+              ) : (
+                <Typography.Text disabled={!clusterName} style={{ paddingLeft: '11px' }}>
+                  {clusterName || 'Cluster is not provided'}
+                </Typography.Text>
+              )}
+            </Col>
+          </Row>
+        </Form.Item>
 
-      <Form.Item label="Source" name="isStoredOnGithub" hidden={!enableEdit || isAssociated}>
-        <Radio.Group size="middle" buttonStyle="solid">
-          <Radio.Button value={false}>HPCC</Radio.Button>
-          <Radio.Button value={true}>GitHub</Radio.Button>
-        </Radio.Group>
-      </Form.Item>
+        <Form.Item label="Source" name="isStoredOnGithub" hidden={!enableEdit || isAssociated}>
+          <Radio.Group size="middle" buttonStyle="solid">
+            <Radio.Button value={false}>HPCC</Radio.Button>
+            <Radio.Button value={true}>GitHub</Radio.Button>
+          </Radio.Group>
+        </Form.Item>
 
-      <Form.Item
-       label="Job"
-       name="querySearchValue"
-       hidden={hideOnReadOnlyView || filesStoredOnGithub || jobType === 'Spray'}
-       help={job.jobExists ? <Alert style={{border:"none",background:"transparent"}} message="Job already exists!" type="warning" showIcon /> : null}
-       >
-        <Row gutter={[8, 0]}>
-          <Col span={19}>
-            <AutoComplete
-              className="certain-category-search"
-              dropdownClassName="certain-category-search-dropdown"
-              dropdownMatchSelectWidth={false}
-              dropdownStyle={{ width: 300 }}
-              style={{ width: '100%' }}
-              onSearch={(value) => searchJobs({ searchString: value , clusterId: clusterId})}
-              onSelect={(value, option) => onJobSelected(option)}
-              placeholder="Search jobs"
-              disabled={!editingAllowed}
-              notFoundContent={search.loading ? <Spin />  : 'Not Found' }
-            >
-              {search.data.map((suggestion) => (
-                <Option key={suggestion.value} value={suggestion.text}>
-                  {suggestion.wuid}
-                </Option>
-              ))}
-            </AutoComplete>
-          </Col>
-          <Col span={5}>
-            <Button htmlType="button" block onClick={resetSearch}>
-              Clear
-            </Button>
-          </Col>
-        </Row>
-      </Form.Item>
-
+        <Form.Item
+        label="Job"
+        name="querySearchValue"
+        hidden={hideOnReadOnlyView || filesStoredOnGithub || jobType === 'Spray'}
+        help={job.jobExists ? <Alert style={{border:"none",background:"transparent"}} message="Job already exists!" type="warning" showIcon /> : null}
+        >
+          <Row gutter={[8, 0]}>
+            <Col span={19}>
+              <AutoComplete
+                className="certain-category-search"
+                dropdownClassName="certain-category-search-dropdown"
+                dropdownMatchSelectWidth={false}
+                dropdownStyle={{ width: 300 }}
+                style={{ width: '100%' }}
+                onSearch={(value) => searchJobs({ searchString: value , clusterId: clusterId})}
+                onSelect={(value, option) => onJobSelected(option)}
+                placeholder="Search jobs"
+                disabled={!editingAllowed}
+                notFoundContent={search.loading ? <Spin />  : 'Not Found' }
+              >
+                {search.data.map((suggestion) => (
+                  <Option key={suggestion.value} value={suggestion.text}>
+                    {suggestion.wuid}
+                  </Option>
+                ))}
+              </AutoComplete>
+            </Col>
+            <Col span={5}>
+              <Button htmlType="button" block onClick={resetSearch}>
+                Clear
+              </Button>
+            </Col>
+          </Row>
+        </Form.Item>
+      </>
+      }
       {filesStoredOnGithub ? <GitHubForm enableEdit={enableEdit} form={formRef} /> : null}
 
       <Form.Item
@@ -258,6 +280,7 @@ function BasicsTabGeneral({ enableEdit, editingAllowed, addingNewAsset, jobType,
         ]}
         className={enableEdit ? null : 'read-only-input'}
         tooltip={enableEdit ? 'Should match job name in HPCC' : null}
+        help={inTabView && job.jobExists ? <Alert style={{border:"none",background:"transparent"}} message="Job already exists!" type="warning" showIcon /> : null}
       >
         {enableEdit ? (
           <Input
@@ -339,7 +362,7 @@ function BasicsTabGeneral({ enableEdit, editingAllowed, addingNewAsset, jobType,
           
           <Form.Item name="description" label="Description">
             {enableEdit ? (
-              <MarkdownEditor name="description" id="job_desc" onChange={onChange} targetDomId="jobDescr" value={localState.description} disabled={!editingAllowed} />
+              <MarkdownEditor name="description" id="job_desc" onChange={onChange} targetDomId={ inTabView ? "jobDescr" + inTabView.key : "jobDescr"} value={localState.description} disabled={!editingAllowed} />
             ) : (
               <div className="read-only-markdown custom-scroll">
                 {localState.job.description ? (

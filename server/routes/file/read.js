@@ -1,6 +1,5 @@
 const express = require('express');
 const router = express.Router();
-const lodash = require('lodash');
 var models  = require('../../models');
 const hpccUtil = require('../../utils/hpcc-util');
 const assetUtil = require('../../utils/assets');
@@ -15,17 +14,15 @@ var Cluster = models.cluster;
 let Rules = models.rules;
 let DataTypes=models.data_types;
 let AssetsGroups=models.assets_groups;
-TreeConnection = models.tree_connection;
-TreeStyle = models.tree_style;
+
 let ConsumerObject = models.consumer_object;
-let DataflowGraph = models.dataflowgraph;
+
 let Sequelize = require('sequelize');
 const Op = Sequelize.Op;
 let Indexes=models.indexes;
 let Query=models.query;
 let Job=models.job;
 const JobFile = models.jobfile;
-let AssetDataflow = models.assets_dataflows;
 let Visualization=models.visualizations;
 var request = require('request');
 var requestPromise = require('request-promise');
@@ -70,53 +67,48 @@ router.post( '/superfile_meta',
   }
 );
 
+router.get( '/file_list',
+  [
+    query('application_id').isUUID(4).withMessage('Invalid application id'),
+    query('cluster_id').isUUID(4).optional({ nullable: true }).withMessage('Invalid cluster id'),
+  ],
+  async (req, res) => {
+    const errors = validationResult(req).formatWith(validatorUtil.errorFormatter);
+    if (!errors.isEmpty()) return res.status(422).json({ success: false, errors: errors.array() });
 
-router.get('/file_list', [
-  query('app_id')
-    .isUUID(4).withMessage('Invalid application id'),
-  query('dataflowId')
-    .isUUID(4).optional({nullable: true}).withMessage('Invalid dataflow id'),
-  query('clusterId')
-    .isUUID(4).optional({nullable: true}).withMessage('Invalid cluster id'),
-],(req, res) => {
-  const errors = validationResult(req).formatWith(validatorUtil.errorFormatter);
-    if (!errors.isEmpty()) {
-      return res.status(422).json({ success: false, errors: errors.array() });
-    }
-    console.log("[file list/read.js] - Get file list for app_id = " + req.query.app_id);
     try {
-      let dataflowId = req.query.dataflowId;
-      let query;
-      if(dataflowId){
-        query = 'select f.id, f.name, f.title, f.description, f.isSuperFile, f.metaData, f.createdAt, f.application_id, f.deletedAt '+
-        'from file f ' + 
-        'where f.id not in (select asd.assetId from assets_dataflows asd where asd.dataflowId = (:dataflowId) and asd.deletedAt is null)' +
-        'and f.application_id = (:applicationId) '+
-        'and (f.cluster_id = (:clusterId) or f.cluster_id is null)'+
-        'and f.deletedAt is null';
-      }else{
-         query = 'select f.id, f.name, f.title, f.description, f.isSuperFile, f.createdAt, f.application_id, f.deletedAt '+
-        'from file f ' + 
-        'where  f.application_id = (:applicationId) '+
-        'and f.deletedAt is null';
-      } 
-      
-      let replacements = { applicationId: req.query.app_id, dataflowId: dataflowId, clusterId: req.query.clusterId};
-      let existingFile = models.sequelize.query(query, {
-        type: models.sequelize.QueryTypes.SELECT,
-        replacements: replacements
-      }).then((files) => {
-        res.json(files);
-      })
-      .catch(function(err) {
-        console.log(err);
-        return res.status(500).json({ success: false, message: "Error occurred while getting file list" });
+      const { application_id, cluster_id } = req.query;
+
+      if (!cluster_id) {
+        const assets = await File.findAll({
+          where: { application_id },
+          attributes: ['application_id', 'id', 'name', 'title', 'isSuperFile', 'description', 'createdAt'],
+        });
+        return res.json(assets);
+      }
+
+      const assets = await File.findAll({
+        where: {
+          application_id,
+          [Op.or]: [{ cluster_id }, { cluster_id: null }],
+        },
+        attributes: ['id', 'name', 'title', 'isSuperFile', 'metaData', 'description', 'createdAt'],
       });
-    } catch (err) {
-      console.log('err', err);
-      return res.status(500).json({ success: false, message: "Error occurred while getting file list" });
+
+      const assetList = assets.map((asset) => {
+        const parsed = asset.toJSON();
+        parsed.isAssociated = asset.metaData?.isAssociated || false;
+        delete parsed.metaData;
+        return parsed;
+      });
+
+      res.json(assetList);
+    } catch (error) {
+      console.log(error);
+      res.status(500).json({ success: false, message: 'Error occurred while retrieving assets' });
     }
-});
+  }
+);
 
 router.post('/all', [
   query('keyword')
@@ -128,7 +120,6 @@ router.post('/all', [
     if (!errors.isEmpty()) {
       return res.status(422).json({ success: false, errors: errors.array() });
     }
-    console.log("[file list/read.js] - Get all file defns");
     try {
         Application.findAll({
           attributes: ['id'],
@@ -257,7 +248,6 @@ router.get('/CheckFileId', [
   if (!errors.isEmpty()) {
     return res.status(422).json({ success: false, errors: errors.array() });
   }
-  console.log("[CheckFileId/read.js] - check file by app_id = " + req.query.app_id +" and file_id ="+ req.query.file_id);
   try {
     File.findOne({
         where: {"application_id":req.query.app_id,"id":req.query.file_id}
@@ -283,7 +273,6 @@ router.get('/file_ids', [
   if (!errors.isEmpty()) {
     return res.status(422).json({ success: false, errors: errors.array() });
   }
-  console.log("[ffile_ids/read.js] - Get file list for app_id = " + req.query.app_id);
   var results = [];
   try {
     File.findAll({where:{"application_id":req.query.app_id}}).then(function(fileIds) {
@@ -315,7 +304,6 @@ router.get('/file_details', [
   if (!errors.isEmpty()) {
     return res.status(422).json({ success: false, errors: errors.array() });
   }
-    console.log("[file_details/read.js] - Get file details for app_id = " + req.query.app_id + " and file_id "+req.query.file_id);
     var basic = {}, results={};
     try {
         assetUtil.fileInfo(req.query.app_id, req.query.file_id).then((fileInfo) => {
@@ -416,7 +404,6 @@ router.post('/saveFile', [
     body('file.basic.title')
     .matches(/^[a-zA-Z]{1}[a-zA-Z0-9_:.\-]*$/).withMessage('Invalid title')
   ], async (req, res) => {
-    console.log("[file list/read.js] - Get file list for app_id = " + req.body.file.app_id + " isNewFile: "+req.body.isNew);
     var fileId='', applicationId=req.body.file.app_id, fieldsToUpdate={};
 
     try {
@@ -434,7 +421,6 @@ router.post('/saveFile', [
           JobFile.destroy({ where: { file_id: removeAssetId } }),
           FileLayout.destroy({ where: { file_id: removeAssetId } }),
           FileLicense.destroy({ where: { file_id: removeAssetId } }),
-          AssetDataflow.destroy({ where: { assetId: removeAssetId } }),
           FileValidation.destroy({ where: { file_id: removeAssetId } }),
           File.destroy({ where: { id: removeAssetId, application_id } }),
         ]);
@@ -476,51 +462,32 @@ router.post('/delete', [
     .isUUID(4).withMessage('Invalid file id'),
   body('application_id')
     .isUUID(4).withMessage('Invalid application id'),
-],(req, res) => {
+], async (req, res) => {
   const errors = validationResult(req).formatWith(validatorUtil.errorFormatter);
   if (!errors.isEmpty()) {
     return res.status(422).json({ success: false, errors: errors.array() });
   }
-  let updatedSources = [];
+
   console.log("[file delete] - Get file list for fileId = " + req.body.fileId + " appId: "+req.body.application_id);
   try {
-    File.destroy(
-        {where:{id: req.body.fileId, application_id: req.body.application_id}}
-    ).then(function(deleted) {
-        FileLayout.destroy(
-            {where:{ file_id: req.body.fileId }}
-        ).then(function(layoutDeleted) {
-            FileLicense.destroy(
-                {where:{file_id: req.body.fileId}}
-            ).then(function(licenseDeleted) {
-                FileValidation.destroy(
-                    {where:{file_id: req.body.fileId}}
-                ).then(function(validationDeleted) {
-                    TreeConnection.destroy(
-                        {where:{ [Op.or]: [{sourceid: req.body.fileId}, {targetid: req.body.fileId}]}}
-                    ).then(function(connectionDeleted) {
-                        TreeStyle.destroy(
-                            {where:{node_id: req.body.fileId}}
-                        ).then(function(styleDeleted) {
-                            ConsumerObject.destroy(
-                                {where:{object_id: req.body.fileId, object_type: "file"}}
-                            ).then(function(consumerDeleted) {
-                                res.json({"result":"success"});
-                            });
-                        });
-                    })
-                })
-            })
-        })
+    const { fileId, application_id } = req.body;
 
-    })
+    await Promise.all([
+      File.destroy({ where: { id: fileId, application_id } }),
+      FileLayout.destroy({ where: { file_id: fileId } }),
+      FileLicense.destroy({ where: { file_id: fileId } }),
+      FileValidation.destroy({ where: { file_id: fileId } }),
+      ConsumerObject.destroy({ where: { object_id: fileId, object_type: 'file' } }),
+    ]);
+    
+
+
   } catch (err) {
     return res.status(500).json({ success: false, message: "Error occured while deleting file details" });
   }
 });
 
 router.get('/file_fields', (req, res) => {
-  console.log("[file list/read.js] - Get fields in files app_id = " + req.query.file_ids);
   var results = [];
 
   try {
@@ -550,7 +517,6 @@ router.get('/downloadSchema', [
   if (!errors.isEmpty()) {
     return res.status(422).json({ success: false, errors: errors.array() });
   }
-  console.log("[downloadSchema/read.js] - downloadSchema app_id = " + req.query.app_id + " - type: "+req.query.type);
   try {
     if(req.query.type == 'ecl') {
       fileService.getECLSchema(req.query.app_id, res)
@@ -612,7 +578,6 @@ router.get('/fileLicenseCount', [
   if (!errors.isEmpty()) {
     return res.status(422).json({ success: false, errors: errors.array() });
   }
-  console.log("[fileLicenseCount/read.js] - get file license count for app_id = " +req.query.app_id);
   try {
       var result = {};
       FileLicense.findAll({
@@ -653,7 +618,6 @@ router.get('/DependenciesCount', [
     if (!errors.isEmpty()) {
       return res.status(422).json({ success: false, errors: errors.array() });
     }
-    console.log("[DependenciesCount/read.js] - get dependencies count for app_id = " +req.query.app_id);
     try {
         var result = {};
         File.findAndCountAll({
@@ -693,7 +657,6 @@ router.get('/fileLayoutDataType', [
     if (!errors.isEmpty()) {
       return res.status(422).json({ success: false, errors: errors.array() });
     }
-    console.log("[fileLayoutDataType/read.js] - get File Layout data types count for app_id = " +req.query.app_id);
     try {
       var result = [];
       FileLayout.findAll({
@@ -741,7 +704,6 @@ router.get('/getFileLayoutByDataType', [
     if (!errors.isEmpty()) {
       return res.status(422).json({ success: false, errors: errors.array() });
     }
-    console.log("[fileLayoutDataType/read.js] - get File Layout for app_id = " +req.query.app_id +" and datatype ="+req.query.data_type);
     try {
         var result = {};
         if(req.query.data_types=="others"){
@@ -781,7 +743,6 @@ router.get('/LicenseFileList', [
     if (!errors.isEmpty()) {
       return res.status(422).json({ success: false, errors: errors.array() });
     }
-    console.log("[LicenseFileList/read.js] - Get file list for app_id = " + req.query.app_id +" and License= "+req.query.name);
     try {
       if(req.query.name=="No License")
       {
@@ -864,18 +825,20 @@ async function getFileRelationHierarchy(applicationId, fileId, id, dataflowId) {
       return [fileId].concat(...children.map(getFlat));
     }
 
-    return DataflowGraph.findOne({where:{"application_Id":applicationId, "dataflowId":dataflowId}}).then((graph) => {
-      let fileNodes = JSON.parse(graph.nodes).filter(node => node.fileId==fileId);
-      if(id == 'undefined') {
-        id = fileNodes[0].id;
-      }
-      const tree = makeTree (JSON.parse(graph.nodes), JSON.parse(graph.edges));
-      const parentIds = getFlat(tree);
-      return parentIds;
-    })
-    .catch(function(err) {
-        console.log(err);
-    });
+    return []; // TODO: need to be refactored
+
+    // return DataflowGraph.findOne({where:{"application_Id":applicationId, "dataflowId":dataflowId}}).then((graph) => {
+    //   let fileNodes = JSON.parse(graph.nodes).filter(node => node.fileId==fileId);
+    //   if(id == 'undefined') {
+    //     id = fileNodes[0].id;
+    //   }
+    //   const tree = makeTree (JSON.parse(graph.nodes), JSON.parse(graph.edges));
+    //   const parentIds = getFlat(tree);
+    //   return parentIds;
+    // })
+    // .catch(function(err) {
+    //     console.log(err);
+    // });
 }
 
 router.get('/filelayout', [
@@ -888,7 +851,6 @@ router.get('/filelayout', [
     if (!errors.isEmpty()) {
       return res.status(422).json({ success: false, errors: errors.array() });
     }
-    console.log("[file_details/read.js] - Get file details for app_id = " + req.query.app_id + " and file_name "+req.query.name);
     var basic = {}, results={};
     try {
       File.findAll({where:
@@ -941,7 +903,6 @@ router.post('/visualization', [
     return res.status(422).json({ success: false, errors: errors.array() });
   }
 
-  console.log("[file visualization] - create visualization = " + req.body.id + " appId: "+req.body.application_id);
   try {
     let file=null, cluster=null, bodyObj={}, authToken='';    
     if(req.body.id) {

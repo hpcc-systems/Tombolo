@@ -1,23 +1,17 @@
-import React, { Component } from "react";
-import {Layout, Menu, message, Tooltip, Input, Button, Dropdown, Modal, Alert, Form, notification} from 'antd/lib';
-import { NavLink, Switch, Route, withRouter } from 'react-router-dom';
-import { userActions } from '../../redux/actions/User';
-import { connect } from 'react-redux';
-import { authHeader, handleError } from "../common/AuthHeader.js"
-import { hasAdminRole } from "../common/AuthUtil.js";
-import { applicationActions } from '../../redux/actions/Application';
-import {dataflowAction} from "../../redux/actions/Dataflow"
-import { expandGroups, selectGroup } from '../../redux/actions/Groups';
-import { assetsActions } from '../../redux/actions/Assets';
-import { QuestionCircleOutlined, DownOutlined  } from '@ant-design/icons';
-import $ from 'jquery';
-import {Constants} from "../common/Constants"
-import {store} from "../../redux/store/Store"
+import { DownOutlined, QuestionCircleOutlined } from '@ant-design/icons';
+import { Button, Dropdown, Form, Input, Menu, message, Modal, notification } from 'antd';
 import { debounce } from "lodash";
-import logo from  "../../images/logo.png"
-
-const { Header, Content } = Layout;
-const { Search } = Input;
+import React, { Component } from "react";
+import { connect } from 'react-redux';
+import { withRouter } from 'react-router-dom';
+import logo from "../../images/logo.png";
+import { msalInstance } from '../../index';
+import { applicationActions } from '../../redux/actions/Application';
+import { assetsActions } from '../../redux/actions/Assets';
+import { expandGroups, selectGroup, getGroupsTree } from '../../redux/actions/Groups';
+import { userActions } from '../../redux/actions/User';
+import { authHeader, handleError } from "../common/AuthHeader.js";
+import { hasAdminRole } from "../common/AuthUtil.js";
 
 class AppHeader extends Component {
     pwdformRef = React.createRef();
@@ -43,15 +37,19 @@ class AppHeader extends Component {
       isAboutModalVisible: false
     }
 
-    handleRef() {      
-      const appDropdownItem = this.appDropDown.current.querySelector('[data-value="'+localStorage.getItem("activeProjectId")+'"]');
+    handleRef() {
+      const projectId = localStorage.getItem("activeProjectId");      
+      const appDropdownItem = this.appDropDown.current.querySelector('[data-value="'+projectId+'"]');
       //if no activeProjectId select the first application by default.
       if(appDropdownItem == null && this.state.applications.length > 0) {
         this.setState({ selected: this.state.applications[0].display });
         this.props.dispatch(applicationActions.applicationSelected(this.state.applications[0].value, this.state.applications[0].display));
         localStorage.setItem("activeProjectId", this.state.applications[0].value);
       } else {
-        appDropdownItem.click();
+        const application = this.state.applications.find(app => app.value === projectId);
+        if (application) {
+          this.handleChange({...application})
+        }
       }
     }    
 
@@ -61,8 +59,16 @@ class AppHeader extends Component {
 
     componentWillReceiveProps(props) {
       if(props.application && props.application.applicationTitle!=''){
-        this.setState({ selected: props.application.applicationTitle });
-        $('[data-toggle="popover"]').popover('disable');
+        this.setState( prev =>{
+          const currentAppId = props.application.applicationId 
+          if (currentAppId){
+            let appList = prev.applications;
+            // when user adds new app he will change state in redux by selecting that app, we will check if that app exists in our list, is now we will add it.
+            const app = appList.find(app => app.value === currentAppId );
+            if (!app) appList = [...appList, {value: props.application.applicationId, display: props.application.applicationTitle }]
+            return { selected: props.application.applicationTitle, applications: appList }
+          }
+          return { selected: props.application.applicationTitle } });
       }
     }
 
@@ -97,8 +103,6 @@ class AppHeader extends Component {
             this.setState({ applications });
             //this.handleRef();
             this.debouncedHandleRef();
-            this.props.dispatch(applicationActions.getClusters());
-            this.props.dispatch(applicationActions.getConsumers())
           } else {
             this.openHelpNotification();
           }
@@ -109,6 +113,12 @@ class AppHeader extends Component {
     }
 
     componentDidUpdate(prevProps, prevState) {
+
+      if (this.props.application?.applicationId && !prevProps.application?.applicationId && this.props.clusters.length === 0) {
+        this.props.dispatch(applicationActions.getClusters());
+        this.props.dispatch(applicationActions.getConsumers());
+      }
+
       if(this.props.newApplication) {
         let applications = this.state.applications;
         let isNewApplicationInList = (applications.filter(application => application.value == this.props.newApplication.applicationId).length > 0);
@@ -174,15 +184,28 @@ class AppHeader extends Component {
       this.props.dispatch(assetsActions.clusterSelected(''));
       this.props.dispatch(userActions.logout());
 
-      this.props.history.push('/login');
-      message.success('You have been successfully logged out. ');
+      if(process.env.REACT_APP_APP_AUTH_METHOD === 'azure_ad'){
+         msalInstance.logoutRedirect()
+      }else{
+        this.props.history.push('/login');
+        message.success('You have been successfully logged out. ');
+      }
     }
 
-    handleChange(event) {
-      this.props.dispatch(applicationActions.applicationSelected(event.target.getAttribute("data-value"), event.target.getAttribute("data-display")));
-      localStorage.setItem("activeProjectId", event.target.getAttribute("data-value"));
-      this.setState({ selected: event.target.getAttribute("data-display") });
-      $('[data-toggle="popover"]').popover('disable');
+    handleChange({ value, display, goToAssetPage = false }) {
+      const applicationId = value;
+      const applicationTitle = display;     
+      // trigger change when app is not same as current app, ignore if user selects same app
+      if (this.props.application?.applicationId !== applicationId) {
+        this.props.dispatch(applicationActions.applicationSelected(applicationId, applicationTitle));
+        localStorage.setItem("activeProjectId", applicationId);
+        this.setState({ selected: applicationTitle });
+        // this flag is passed when user selects from dropdown, by default we will not redirect and refetch.
+        if (goToAssetPage) {
+          this.props.dispatch(getGroupsTree(applicationId));
+          this.props.history.replace(`/${applicationId}/assets`)
+        }
+      }
     }    
 
     openHelpNotification = () => {
@@ -298,8 +321,8 @@ class AppHeader extends Component {
     );
     const helpMenu = (
       <Menu>
-        <Menu.Item key="1"><a href="" type="link" target={"_blank"} rel="noopener noreferrer" href={process.env.PUBLIC_URL + "/Tombolo-User-Guide.pdf"}>User Guide</a></Menu.Item>
-        <Menu.Item key="2"><a href="#" onClick={this.openAboutModal}>About</a></Menu.Item>
+        <Menu.Item key="1"><a target="_blank" rel="noopener noreferrer" href={process.env.PUBLIC_URL + "/Tombolo-User-Guide.pdf"}>User Guide</a></Menu.Item>
+        <Menu.Item key="2"><a onClick={this.openAboutModal}>About</a></Menu.Item>
       </Menu>
     );
 
@@ -317,6 +340,7 @@ class AppHeader extends Component {
     if(!this.props.user || !this.props.user.token) {
       return null;
     }
+
     return (
         <React.Fragment>
           <nav className="navbar navbar-expand-md navbar-dark bg-dark fixed-top">
@@ -331,7 +355,7 @@ class AppHeader extends Component {
                   <a className="nav-link dropdown-toggle" id="applicationSelect" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">{this.state.selected}</a>
                   <div className="dropdown-menu" aria-labelledby="dropdown01" ref={this.appDropDown}>
                     {this.state.applications.map((application, index) => (
-                      <a className="dropdown-item" key={application.value} onClick={this.handleChange} data-value={application.value} data-display={application.display}>{application.display}</a>
+                      <a className="dropdown-item" key={application.value} onClick={() => this.handleChange({...application, goToAssetPage: true})} data-value={application.value} data-display={application.display}>{application.display}</a>
                     ))}
                   </div>
                 </li>
@@ -405,10 +429,11 @@ class AppHeader extends Component {
 
 function mapStateToProps(state) {
     const { loggingIn, user } = state.authenticationReducer;
-    const { application, selectedTopNav, newApplication, updatedApplication, deletedApplicationId } = state.applicationReducer;
+    const { application, clusters,  selectedTopNav, newApplication, updatedApplication, deletedApplicationId } = state.applicationReducer;
     return {
         loggingIn,
         user,
+        clusters,
         application,
         selectedTopNav,
         newApplication,

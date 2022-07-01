@@ -1,4 +1,4 @@
-FROM node:14.9.0-alpine as build
+FROM node:16.15.1-alpine3.15 as build
 
 WORKDIR /app
 
@@ -25,6 +25,6 @@ COPY nginx/conf.d/nginx.conf.template /etc/nginx/conf.d/nginx.conf.template
 
 COPY nginx/run_nginx.sh /etc/nginx/run_nginx.sh
 
-RUN dos2unix /etc/nginx/run_nginx.sh
-
 RUN ["chmod", "+x", "/etc/nginx/run_nginx.sh"]
+# Entry point is set on docker-compose, uncomment if docker-compose is not used
+# ENTRYPOINT ["sh", "/etc/nginx/run_nginx.sh", "${HOST_HOSTNAME}"]

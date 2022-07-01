@@ -8,7 +8,7 @@ module.exports = (sequelize, DataTypes) => {
       allowNull: false,
       autoIncrement: false
     },
-    application_id: DataTypes.STRING,
+    application_id: DataTypes.UUID,
     title: DataTypes.STRING,
     name: DataTypes.STRING,
     description: DataTypes.TEXT,
@@ -20,20 +20,19 @@ module.exports = (sequelize, DataTypes) => {
   }, {paranoid: true, freezeTableName: true});
   query.associate = function(models) {
     query.hasMany(models.query_field,{
+      constraints:false,
+      foreignKeyConstraint:false,
       foreignKey:'query_id',
       onDelete: 'CASCADE',
       hooks: true
     });
-    query.belongsToMany(models.dataflow, {
-      through: 'assets_dataflows',
-      as: 'dataflows',
-      foreignKey: 'assetId',
-      otherKey: 'dataflowId'
-    });
+
     query.belongsTo(models.application, {
       foreignKey: 'application_id'
     });
     query.belongsToMany(models.groups, {
+      constraints:false,
+      foreignKeyConstraint:false,
       through: 'assets_groups',
       as: 'groups',
       foreignKey: 'assetId',

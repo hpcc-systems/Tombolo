@@ -1,24 +1,24 @@
 const express = require('express');
 const router = express.Router();
 var models  = require('../../models');
-let AssetDataflow = models.assets_dataflows;
+
 let Dataflow = models.dataflow;
-let DataflowGraph = models.dataflowgraph;
+const DataflowVersions = models.dataflow_versions;
+
 let Cluster = models.cluster;
 let Index = models.indexes;
 let File = models.file;
 let Job = models.job;
-let DependentJobs = models.dependent_jobs;
-let JobExecution = models.job_execution;
 const Dataflow_cluster_credentials = models.dataflow_cluster_credentials;
 const validatorUtil = require('../../utils/validator');
 const { body, query, validationResult } = require('express-validator');
 const jobScheduler = require('../../job-scheduler');
 const {isClusterReachable} = require('../../utils/hpcc-util');
-const {encryptString, decryptString} = require('../../utils/cipher')
+const assetUtil = require('../../utils/assets');
+const {encryptString, decryptString} = require('../../utils/cipher');
+const logger = require('../../config/logger');
 
-router.post(
-  '/save',
+router.post( '/save',
   [
     body('id').optional({ checkFalsy: true }).isUUID(4).withMessage('Invalid dataflow id'),
     body('application_id').isUUID(4).withMessage('Invalid application id'),
@@ -91,40 +91,22 @@ router.post(
             metaData,
           });
 
-          await Dataflow_cluster_credentials.create({
+            await Dataflow_cluster_credentials.create({
             dataflow_id: newDataflow.id,
             cluster_id: clusterId,
             cluster_username: username,
             cluster_hash: encryptString(password),
           });
+
           res.status(200).json({ success: true, message: 'Dataflow created successfully' });
         }
       } catch (err) {
+        logger.error(err)
         res.status(409).json({ success: false, message: 'Unable to create dataflow' });
       }
     }
   }
 );
-
-router.post('/saveAsset', (req, res) => {
-  AssetDataflow.findOne({
-    where: {
-      assetId: req.body.assetId,
-      dataflowId: req.body.dataflowId
-    }
-  }).then(async assetDataflow => {
-    if (assetDataflow === null) {
-      assetDataflow = await AssetDataflow.create({
-        assetId: req.body.assetId,
-        dataflowId: req.body.dataflowId
-      });
-      console.log(`assetDataflow created: ${JSON.stringify(assetDataflow.dataValues)}`);
-      return res.json({ success: true, message: `asset ${assetDataflow.assetId} added to dataflow ${assetDataflow.dataflowId}` });
-    }
-    console.log(`assetDataflow found: ${JSON.stringify(assetDataflow.dataValues)}`);
-    return res.json({ success: true, message: `asset ${assetDataflow.assetId} already associated to dataflow ${assetDataflow.dataflowId}` });
-  });
-});
 
 router.get('/', [
   query('application_id')
@@ -136,7 +118,6 @@ router.get('/', [
   if (!errors.isEmpty()) {
     return res.status(422).json({ success: false, errors: errors.array() });
   }
-    console.log("[dataflow] - Get dataflow list for app_id = " + req.query.application_id);
     try {
       const searchParams = { application_Id: req.query.application_id };
       if (req.query.dataflow_id) searchParams.id = req.query.dataflow_id;
@@ -144,6 +125,9 @@ router.get('/', [
         Dataflow.findAll(
           {
             where: searchParams,
+            attributes: {
+              exclude: ['graph']
+            },
             include: {model : Dataflow_cluster_credentials,
                       attributes: {exclude: ['cluster_hash']}},
             order: [
@@ -172,14 +156,22 @@ router.post( '/delete',
       return res.status(422).json({ success: false, errors: errors.array() });
     }
 
+    const {dataflowId, applicationId} = req.body;
+    
+    const dataflow = await Dataflow.findOne({where:{ id : dataflowId},attributes:['graph']});
+    const filetemplates = dataflow.graph?.cells?.filter(cell => cell?.data?.type === 'FileTemplate') || [];
+    
+    if (filetemplates.length > 0) {
+      const promises = filetemplates.map(filetemplate=>{
+       return assetUtil.deleteFileMonitoring({fileTemplateId: filetemplate.data.assetId, dataflowId })
+      })
+      await Promise.all(promises);
+    }
+
     try {
       await Promise.all([
-        jobScheduler.removeAllDataflowJobs(req.body.dataflowId),
-        // JobExecution.destroy({ where: { dataflowId: req.body.dataflowId } }), // !! will delete all job executions of this dataflow
-        AssetDataflow.destroy({ where: { dataflowId: req.body.dataflowId } }),
-        DependentJobs.destroy({ where: { dataflowId: req.body.dataflowId } }),
-        Dataflow.destroy({ where: { id: req.body.dataflowId, application_id: req.body.applicationId } }),
-        DataflowGraph.destroy({ where: { dataflowId: req.body.dataflowId, application_id: req.body.applicationId } }),
+        jobScheduler.removeAllFromBree(dataflowId),
+        Dataflow.destroy({ where: { id: dataflowId, application_id: applicationId } }),
       ]);
 
       res.json({ result: 'success' });
@@ -203,7 +195,6 @@ router.get('/assets', [
   if (!errors.isEmpty()) {
     return res.status(422).json({ success: false, errors: errors.array() });
   }
-  console.log("[app/read.js] - App route called: "+req.query.app_id + " dataflowId: "+req.query.dataflowId);
   let results = [];
 
   Dataflow.findOne({
@@ -309,25 +300,34 @@ router.get('/assets', [
   */
 });
 
-router.get( '/checkAssetDataflows',
+router.get( '/checkDataflows',
   [query('assetId').isUUID(4).withMessage('Invalid assetId')],
   async (req, res) => {
     const errors = validationResult(req).formatWith(validatorUtil.errorFormatter);
     if (!errors.isEmpty()) return res.status(422).json({ success: false, errors: errors.array() });
 
     try {
+      const {assetId} = req.query;
 
-      const assetsInDataflows = await AssetDataflow.findAll({
-         where: { assetId: req.query.assetId },
-         attributes:["dataflowId"]
-        });
-
-      const dataflows = await Dataflow.findAll({
-        where:{ id: assetsInDataflows.map(ad => ad.dataflowId) },
-        attributes:['id','application_id','title']
+      const dataflowVersions = await DataflowVersions.findAll({
+        where: { isLive:true },
+        include: [{model: Dataflow, attributes:['title']}],
+        attributes: ['dataflowId', 'name', 'graph'],
       });
       
-      res.send(dataflows);
+      const inDataflows = [];
+
+      for (const dataflowVersion of dataflowVersions) {
+        const cells = dataflowVersion?.graph?.cells;
+        if (cells) {
+          const asset = cells.find(cell => cell.data?.assetId === assetId )
+          if (asset){
+            inDataflows.push({dataflowId: dataflowVersion.dataflowId, title: dataflowVersion.dataflow.title });
+          }
+        }
+      }
+      
+      res.send(inDataflows);
     } catch (error) {
       console.log('-error-----------------------------------------');
       console.dir({error}, { depth: null });

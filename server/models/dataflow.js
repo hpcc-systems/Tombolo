@@ -8,51 +8,22 @@ module.exports = (sequelize, DataTypes) => {
       allowNull: false,
       autoIncrement: false
     },
-    application_id: DataTypes.STRING,
+    graph: DataTypes.JSON,
+    application_id: DataTypes.UUID,
     title: DataTypes.STRING,
     description: DataTypes.TEXT,
     input: DataTypes.STRING,
     output: DataTypes.STRING,
-    clusterId: DataTypes.UUIDV4,
+    clusterId: DataTypes.UUID,
     type: DataTypes.STRING,
-    dataFlowClusterCredId : {
-      type: DataTypes.UUIDV4,
-      defaultValue: DataTypes.UUIDV4,
-    },
     metaData : DataTypes.JSON
   }, {paranoid: true, freezeTableName: true});
   dataflow.associate = function(models) {
-    dataflow.hasOne(models.dataflowgraph, {
-      foreignKey: {
-        type: DataTypes.UUID
-      }
-    });
-
-    dataflow.belongsToMany(models.file, {
-      through: 'assets_dataflows',
-      as: 'files',
-      foreignKey: 'dataflowId',
-      otherKey: 'assetId'
-    });
-
-    dataflow.belongsToMany(models.indexes, {
-      through: 'assets_dataflows',
-      as: 'indexes',
-      foreignKey: 'dataflowId',
-      otherKey: 'assetId'
-    });
-
-    dataflow.belongsToMany(models.job, {
-      through: 'assets_dataflows',
-      as: 'jobs',
-      foreignKey: 'dataflowId',
-      otherKey: 'assetId'
-    });
-
-    dataflow.hasOne(models.dataflow_cluster_credentials, {
-      foreignKey: 'dataflow_id'
-    });
-
+    dataflow.hasOne(models.dataflow_cluster_credentials, { foreignKey: 'dataflow_id' });
+    dataflow.hasMany(models.job_execution, { foreignKey: 'dataflowId', onDelete: 'NO ACTION', onUpdate: 'NO ACTION' });
+    dataflow.hasMany(models.dataflow_versions, { foreignKey: 'dataflowId', onDelete: 'CASCADE', onUpdate: 'CASCADE' });
+    dataflow.belongsTo(models.application, {foreignKey: 'application_id'});
+    dataflow.belongsTo(models.cluster, {foreignKey: 'clusterId'});
   };
   return dataflow;
 };

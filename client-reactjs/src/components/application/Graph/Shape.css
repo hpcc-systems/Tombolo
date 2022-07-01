@@ -5,7 +5,18 @@
     height: 100%;
     position: relative;
   }
+  .node-expand {
+    background-color: #e48b8513;
+    border: 2px solid #b61827;
+  }
 
+  .subprocess-collapse{
+    position: absolute;
+    cursor: pointer;
+    top: -15px;
+    right: 0;
+  }
+  
   .node-icon{
     width: 50px;
     min-height: 40px;
@@ -30,7 +41,7 @@
     right: 3px;
   }
 
-  .Job, .Manual {
+  .Job, .Manual , .Query-Publish {
     background-color: #ffa726; 
     border: 2px solid #c25e00; 
   }
@@ -41,13 +52,18 @@
     border: 2px solid #0077c2;
   }
 
-   .FileTemplate {
-     /*  */
+   .FileTemplate{
     background-color: #1565c0;
     border : 2px solid #1565c0;
-    color: #fff !important;
+    color: #fff;
   }
-  
+
+  .Monitor{
+    background-color:#0c509e;
+    border : 3px solid #0fd3f1;
+    color: #fff;
+  }
+
   .SuperFile{
     background-color: #b778c2;
     border: 2px solid #883997;
@@ -74,12 +90,19 @@
     display: flex;
     justify-content: center;
     text-align: center;
+    align-items: center;
   }
   
-  .status-completed, .status-completed:hover, .status-compiled {
+  .status-completed, .status-completed:hover, .status-compiled, .status-compiled:hover {
     border-color:#04880a;
     box-shadow: 0px 0px 8px 2px #08a710
   }
+
+   .status-wait, .status-wait:hover {
+    border-color:#ec8633d7;
+    box-shadow: 0px 0px 8px 2px #ec8633d7
+  }
+
  .status-failed,  .status-failed:hover {
     border-color:#eb1518;
     box-shadow: 0px 0px 8px 2px #ff4d4f;
@@ -88,6 +111,7 @@
   .no-asset{
     background-color: rgba(248, 248, 248, 0.623);
     box-shadow: rgba(0, 0, 0, 0.15) 1.95px 1.95px 2.6px;
+    color: black;
   }
   
   .status-not-exist{

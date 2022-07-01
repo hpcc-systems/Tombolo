@@ -21,7 +21,11 @@ module.exports = (sequelize, DataTypes) => {
     jobExecutionGroupId : DataTypes.UUID,
   }, {paranoid: true, freezeTableName: true});
   job_execution.associate = function(models) {
-    job_execution.belongsTo(models.job);
+    job_execution.belongsTo(models.job,{ foreignKey: 'jobId' });
+    job_execution.belongsTo(models.dataflow,{ foreignKey: 'dataflowId' }); // can be executed without dataflow, migration will allow null
+    job_execution.belongsTo(models.dataflow_versions,{ foreignKey: 'dataflowVersionId' }); // can be executed without dataflow, migration will allow null
+    job_execution.belongsTo(models.application,{ foreignKey: 'applicationId' });
+    job_execution.belongsTo(models.cluster,{ foreignKey: 'clusterId' });
   };
   return job_execution;
 };

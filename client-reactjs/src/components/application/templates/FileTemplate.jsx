@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Form, Tabs, Select, Input, message, Table, Button, AutoComplete, Space } from 'antd';
+import { Form, Tabs, Select, Input, message, Table, Button, AutoComplete, Space, Radio} from 'antd';
 import { useSelector } from 'react-redux';
 import { debounce } from 'lodash';
 import { useHistory } from 'react-router-dom';
@@ -7,12 +7,13 @@ import ReactMarkdown from "react-markdown";
 
 //Local Imports
 import { MarkdownEditor } from '../../common/MarkdownEditor.js';
-import { authHeader } from '../../common/AuthHeader.js';
+import { authHeader, handleError } from '../../common/AuthHeader.js';
 import FileTemplateTable from './FileTemplate_filesTab';
 import FileTemplateLayout from './FileTemplate_layoutTab.jsx';
-import FileTemplate_permissablePurpose from './FileTemplate_permissablePurpose'
+import FileTemplatePermissablePurpose from './FileTemplate_permissablePurpose'
 import { hasEditPermission } from '../../common/AuthUtil.js'; 
 import DeleteAsset from "../../common/DeleteAsset/index.js";
+import LandingZoneFileExplorer from "../../common/LandingZoneFileExplorer"
 
 //Local variables
 const { Option } = Select;
@@ -36,53 +37,61 @@ const capitalizeString = (text) => {
     return text.charAt(0).toUpperCase() + lower.slice(1);
   };
 
-function FileTemplate(props) {
-  const { clusters, application } = useSelector((state) => state.applicationReducer);
-  const { selectedAsset } = useSelector((state) => state.assetReducer);
-  const groupsReducer = useSelector((state) => state.groupsReducer);
-  const {user} = useSelector((state)=> state.authenticationReducer)
+function FileTemplate({match, selectedAsset={}, displayingInModal, onClose }) {
 
+  const { clusters, application, groupId, user } = useSelector((state) => ({
+    groupId: state.groupsReducer?.selectedKeys?.id,
+    user: state.authenticationReducer.user,
+    clusters: state.applicationReducer.clusters,
+    application: state.applicationReducer.application,
+  }));
+
+  /*Asset can be passed from graph (selectedAsset prop), via asset table (params), and when link was shared (params).
+  in order to get info about asset we will take its id from params if selected asset is no available and send request to populate fields. 
+  if asset id is 'undefined' it means that we are creating new asset. if asset id is wrong, we will show errors that we cant find asset with that id
+  */
+  const applicationId = application?.applicationId || match?.params?.applicationId;
+  const assetId =  selectedAsset?.id || match?.params?.fileId; 
+
+  const history = useHistory();
+  
   const [files, setFiles] = useState([]);
   const [layoutData, setLayoutData] = useState([]);
-  const [searchingFile, setSearchingFile] = useState(false);
+  // const [searchingFile, setSearchingFile] = useState(false);
+  const [sampleFileForLayout, setSampleFileForLayout] = useState(null)
   const [enableEdit, setEnableEdit] = useState(false);
   const [selectedLicenses, setSelectedLicenses] = useState([]);
   const [selectedCluster, setSelectedCluster] = useState(null);
+  const [landingZoneMonitoringDetails, setMonitoringDetails] =useState({fileMonitoring: false, landingZonePath: ''})
 
   const [form] = Form.useForm();
-  const history = useHistory();
+
   const editingAllowed = hasEditPermission(user);
 
   //Use Effect
   useEffect(() => {
-    if(props.displayingInModal){
-      setEnableEdit(false)
-    }
-    const getInitialData = async() =>{
-      try{
-        await getFileTemplate();
-        const files = await getFiles();
-        setFiles(files)
-      }catch(err){
-        console.log(err)
-      }  
-    }
-    if(selectedAsset.isNew && !props.displayingInModal){
-      setEnableEdit(true)
-    }else{
-      getInitialData();
-    }      
-  }, [application]);
+    (async () => {
+      if (!assetId) setEnableEdit(true); // if we starting new template enable edit
+      if (assetId && applicationId && clusters?.length > 0) {
+        try {
+          await getFileTemplate({ assetId, applicationId });
+        } catch (err) {
+          console.log(err);
+        }
+      }
+    })();
+  }, [clusters]);
+
 
   //search files that matches the pattern and keyword
-  const getFiles = () => {
+  const getFiles = (clusterId) => {
     const {fileNamePattern } = form.getFieldsValue();
-    const cluster = form.getFieldValue('cluster') || selectedCluster;
-    const searchString = form.getFieldValue('searchString') || searchString;
+    const cluster = clusterId || form.getFieldValue('cluster') || selectedCluster;
+    const searchString = form.getFieldValue('searchString');
 
     const searchData = JSON.stringify({
       clusterid: cluster,
-      keyword: searchString,
+      keyword: searchString || '',
       fileNamePattern,
     });
 
@@ -102,6 +111,7 @@ function FileTemplate(props) {
 
   //Handle change in file search string
   const handleSearch = debounce(() =>{
+
     const { cluster, searchString, fileNamePattern} = form.getFieldsValue();
     form.setFieldsValue({fileTemplatePattern : `${capitalizeString(fileNamePattern.split(/(?=[A-Z])/).join(' '))}  ${searchString}`});
 
@@ -112,70 +122,94 @@ function FileTemplate(props) {
     if (searchString?.length < 3) {
       return;
     }
-    
-       getFiles()
+       getFiles(cluster)
        .then((data) => {
         setFiles(data);
-        setSearchingFile(true);
-        form.setFieldsValue({sampleFile : ''})
+        if(data.length > 0){
+          fetchFileLayout(data[data.length-1].value) // Getting file layout form the last file in the array
+          setSampleFileForLayout(data[data.length-1].value)
+        } 
       })
       .catch((err) => {
         setFiles([]);
-        message.error(err.message);
+        message.error( err.message);
       });
   },500);
 
 
   //When cluster dropdown or file drop down changes  - get files again
   const onDropDownValueChange = () => {
-    const { cluster, searchString, fileNamePattern } = form.getFieldsValue();
+    const { cluster, searchString, fileNamePattern, setFileMonitoring } = form.getFieldsValue();
+    if(selectedCluster !== cluster){
+      setSelectedCluster(cluster)
+    }
     if (cluster && searchString && fileNamePattern) {
-      getFiles()
+      getFiles(cluster)
        .then((data) => {
         setFiles(data);
-        setSearchingFile(true);
+        // setSearchingFile(true);
         form.setFieldsValue({sampleFile : ''})
       })
       .catch((err) => {
         setFiles([]);
         message.error(err.message);
       });
+      return;
     }
   };
 
+  // When set file monitoring  radio is changed
+  const handleFileMonitoringRadioChange = async () =>{
+    const {setFileMonitoring, cluster} = form.getFieldsValue();
+    if(!cluster && setFileMonitoring){ message.info('please select cluster first'); form.setFieldsValue({setFileMonitoring: false}); return;}
+    setMonitoringDetails((prev) =>({...prev, fileMonitoring : setFileMonitoring }))
+  }
+
+  //Set root path to landingZone
+  const setLandingZoneRootPath = ({landingZonePath}) =>{
+    setMonitoringDetails(prev =>({...prev, landingZonePath}))
+  }
+
   //Save file template
-  const saveFileTemplate = () => {
-    console.log(selectedLicenses)
+  const saveFileTemplate = async () => {
     form.validateFields();
-    fetch('/api/fileTemplate/read/saveFileTemplate', {
-      method: 'post',
-      headers: authHeader(),
-      body: JSON.stringify({
-        application_id: application?.applicationId,
-        cluster: form.getFieldValue('cluster'),
-        title: form.getFieldValue('title'),
-        fileNamePattern: form.getFieldValue('fileNamePattern'),
-        searchString: form.getFieldValue('searchString'),
-        sampleLayoutFile: form.getFieldValue('sampleFile'),
-        description: form.getFieldValue('description'),
-        fileLayoutData :  layoutData,
-        licenses : selectedLicenses,
-        selectedAsset,
-        groupId: groupsReducer.selectedKeys.id
-      }),
-    })
-      .then((response) => {
-        if (!response.ok) {
-          throw Error('Unable to save file template - Try again');
-        }
-        message.success('File template saved successfully');
-        setTimeout(() => {
-          history.push(`/${application.applicationId}/assets`);
-        }, 400);
-      })
-      .catch((err) => {
-        message.error(err.message);
-      });
+    const {title, cluster, fileNamePattern, searchString, description, setFileMonitoring, landingZone, machine, dirToMonitor, shouldMonitorSubDirs } = form.getFieldsValue();
+    const url = `/api/fileTemplate/read/saveFileTemplate`
+    const body = JSON.stringify({
+          title,
+          assetId,
+          groupId,
+          cluster,
+          description,
+          searchString,
+          fileNamePattern,
+          licenses : selectedLicenses,
+          fileLayoutData :  layoutData,
+          application_id: applicationId,
+          sampleLayoutFile: sampleFileForLayout,
+          metaData : {isAssociated : true, fileMonitoringTemplate : setFileMonitoring, landingZone , machine, lzPath: landingZoneMonitoringDetails.landingZonePath, directory : dirToMonitor, monitorSubDirs : shouldMonitorSubDirs }});
+    try{
+      const response = await fetch(url, {headers: authHeader(), method : 'POST', body });
+      if(!response.ok) throw Error ('Unable to save template');
+      message.success('Template Saved')
+
+      if (displayingInModal) {
+        const result = await response.json();
+
+        const resultToGraph ={
+          name: title,
+          title: title,
+          assetId: result.assetId,
+        } 
+
+        onClose(resultToGraph);
+      }else{
+        history.push(`/${application.applicationId}/assets`);
+      }
+
+    }catch(err){
+      message.error(err.message)
+    }
   };
 
   // Delete file template 
@@ -184,8 +218,8 @@ function FileTemplate(props) {
       method: 'post',
       headers: authHeader(),
       body: JSON.stringify({
-        id: selectedAsset.id,
-        application_id : application.applicationId
+        id: assetId,
+        application_id : applicationId
       }),
     })
     .then((response) =>{
@@ -202,13 +236,13 @@ function FileTemplate(props) {
     })
   }
   // Get file Template
-  const getFileTemplate = () => {
+  const getFileTemplate = ({assetId, applicationId}) => {
     return fetch('/api/fileTemplate/read/getFileTemplate', {
       method: 'post',
       headers: authHeader(),
       body: JSON.stringify({
-        id: selectedAsset.id || props.selectedAsset.id,
-        application_id: application.applicationId 
+        id: assetId,
+        application_id: applicationId,
       }),
     })
       .then((response) => {
@@ -217,19 +251,30 @@ function FileTemplate(props) {
         }
         return response.json();
       })
-      .then((data) => {
+      .then(async (data) => {
+        const {fileMonitoringTemplate, machine, monitorSubDirs, landingZone, directory} = data.metaData;
+        setSampleFileForLayout(data.sampleLayout)
+        if(fileMonitoringTemplate) {setMonitoringDetails(prev => ({...prev, fileMonitoring : fileMonitoringTemplate}))}
         form.setFieldsValue({
-          ['title']: data.title,
-          ['description']: data.description,
-          ['searchString']: data.searchString,
-          ['fileNamePattern']: data.fileNamePattern,
-          ['cluster']: data.cluster_id,
-          ['sampleFile']: data.sampleLayoutFile,
-          ['clusterName'] : (clusters[clusters.findIndex(cluster => cluster.id === data.cluster_id)].name),
-          ['fileTemplatePattern'] : `${capitalizeString(data.fileNamePattern.split(/(?=[A-Z])/).join(' '))}  ${data.searchString}`
+         title: data.title,
+         description: data.description,
+         searchString: data.searchString,
+         fileNamePattern: data.fileNamePattern,
+         cluster: data.cluster_id,
+         sampleFile: data.sampleLayoutFile,
+         clusterName : (clusters[clusters.findIndex(cluster => cluster.id === data.cluster_id)].name),
+         fileTemplatePattern : `${capitalizeString(data.fileNamePattern.split(/(?=[A-Z])/).join(' '))}  ${data.searchString}`, 
+         setFileMonitoring : data.metaData.fileMonitoringTemplate,
+         landingZone : landingZone,
+         machine : machine,
+         dirToMonitor : directory,
+         shouldMonitorSubDirs : monitorSubDirs,
+         monitoring : data.monitoring
         });
         setLayoutData(data.fileTemplateLayout?.fields?.layout || []);
-         setSelectedCluster(data.cluster_id);
+        setSelectedCluster(data.cluster_id);
+        const files = await getFiles(data.cluster_id);
+        setFiles(files);
       })
       .catch((err) => {
         console.log(err);
@@ -237,7 +282,7 @@ function FileTemplate(props) {
       });
   };
 
-  // When sample file is selected
+  // Fetch sample file layout
   const fetchFileLayout = (file) => {
     const { cluster } = form.getFieldsValue();
 
@@ -246,7 +291,6 @@ function FileTemplate(props) {
       return;
     }
 
-    setSearchingFile(false)
     fetch('/api/hpcc/read/getFileInfo?fileName=' + file + '&clusterid=' + cluster + '&applicationId=' + application.applicationId, {
       headers: authHeader(),
     }).then(response =>{
@@ -257,14 +301,14 @@ function FileTemplate(props) {
     }).then(data =>{
       setLayoutData(data.file_layouts)
     }).catch(err =>{
-      message.error(err.message)
+      console.log(err.message)
     })
   };
 
   //Handle cancel btn click
   const handleCancel = () =>{
-    if(props.displayingInModal){
-      props.onClose()
+    if(displayingInModal){
+      onClose()
     }else{
       history.push(`/${application.applicationId}/assets`)
     }
@@ -273,25 +317,13 @@ function FileTemplate(props) {
   //Control Buttons
   const controls = (
     editingAllowed ? 
-    <div className={props.displayingInModal ? 'assetDetail-buttons-wrapper-modal' : 'assetDetail-buttons-wrapper '} style={{marginBottom: '10px'}} >
+    <div className={displayingInModal ? 'assetDetail-buttons-wrapper-modal' : 'assetDetail-buttons-wrapper '} style={{marginBottom: '10px'}} >
       <div style={{display: "inline-block", marginRight: '15px'}}>
       <Space>
         {enableEdit ?  
         <Button type='primary' ghost onClick={() => setEnableEdit(false)}>
           View Changes
         </Button> :null}
-        {enableEdit && !selectedAsset.isNew?
-        <DeleteAsset
-                  asset={{
-                    id: selectedAsset.id || props.selectedAsset.id,
-                    type: 'FileTemplate',
-                    title: form.getFieldValue('title'),
-                  }}
-                  style={{ display: 'inline-block' }}
-                  onDelete={deleteFileTemplate}
-                  component={ <Button key="danger" type="danger"> Delete </Button> }
-                />
-        : null}
       </Space>
       </div>
       <Space>
@@ -307,15 +339,27 @@ function FileTemplate(props) {
         <Button type="primary" onClick={saveFileTemplate}>
           Save
         </Button> :  null}
+        {enableEdit && assetId ?
+        <DeleteAsset
+                  asset={{
+                    id: assetId,
+                    type: 'FileTemplate',
+                    title: form.getFieldValue('title'),
+                  }}
+                  style={{ display: 'inline-block' }}
+                  onDelete={deleteFileTemplate}
+                  component={ <Button key="danger" type="danger"> Delete </Button> }
+                />
+        : null}
        </Space>
       </div> : null
   );
   
   // Change form layout based on where it is rendered
   const formItemLayout = 
-   props.displayingInModal ? {
-    labelCol: { span: 3 },
-    wrapperCol: { span: 15 },
+   displayingInModal ? {
+    labelCol: { span: 4 },
+    wrapperCol: { span: 13 },
    } : 
    {
     wrapperCol : {span: 8},
@@ -326,10 +370,10 @@ function FileTemplate(props) {
   //JSX
   return (
     <React.Fragment>
-      <div className={props.displayingInModal ? 'assetDetails-content-wrapper-modal' : 'assetDetails-content-wrapper'} >
-        <Tabs defaultActiveKey="1" tabBarExtraContent={props.displayingInModal ? null : controls}>
+      <div className={displayingInModal ? 'assetDetails-content-wrapper-modal' : 'assetDetails-content-wrapper'} >
+        <Tabs defaultActiveKey="1" tabBarExtraContent={displayingInModal ? null : controls}>
           <TabPane tab="Basic" key="1">
-            <Form {...formItemLayout} labelAlign="left" form={form} initialValues={{ fileNamePattern: 'contains' }}>
+            <Form {...formItemLayout} labelWrap labelAlign="left" form={form} colon = {false} initialValues={{ fileNamePattern: 'contains', setFileMonitoring : landingZoneMonitoringDetails.fileMonitoring, shouldMonitorSubDirs : true }}>
               <Form.Item
                 label="Title"
                 name="title"
@@ -381,6 +425,37 @@ function FileTemplate(props) {
               </Form.Item>
             }
 
+            {form.getFieldValue('monitoring') ? 
+            <Form.Item label="Monitor" name="monitoring"> 
+                  <Radio.Group onChange={handleFileMonitoringRadioChange} disabled>
+                  <Radio value={true}> Yes </Radio>
+                </Radio.Group>
+            </Form.Item> : null}
+
+            <Form.Item label="Type" name="setFileMonitoring" required = {enableEdit} > 
+                 <Radio.Group onChange={handleFileMonitoringRadioChange} disabled={!enableEdit}>
+                  {/* <Radio value={false}>None</Radio> */}
+                  <Radio value={false}>Logical files</Radio>
+                  <Radio value={'landingZone'}>Landing zone files</Radio>
+                </Radio.Group>
+            </Form.Item>
+
+            {landingZoneMonitoringDetails.fileMonitoring ? 
+            <LandingZoneFileExplorer 
+              clusterId = {form.getFieldValue('cluster')}
+              DirectoryOnly = {true}
+              setLandingZoneRootPath={setLandingZoneRootPath}
+              enableEdit={enableEdit}
+            /> : null}
+
+              {landingZoneMonitoringDetails.fileMonitoring ? 
+              <Form.Item label='Monitor Sub-dirs'  name="shouldMonitorSubDirs" required ={enableEdit}>
+                  <Radio.Group onChange={handleFileMonitoringRadioChange} disabled={!enableEdit}>
+                  <Radio value={true}>Yes</Radio>
+                  <Radio value={false}>No</Radio>
+                </Radio.Group>
+              </Form.Item> : null}
+
               {enableEdit ?
               <Form.Item label="File Template" required >
                 <Input.Group compact>
@@ -407,7 +482,7 @@ function FileTemplate(props) {
                 </Input.Group>
               </Form.Item> : null}
 
-              <Form.Item name="sampleFile" label="Sample Layout"  rules={[
+              {/* <Form.Item name="sampleFile" label="Sample Layout"  rules={[
                   { required: enableEdit ? true : false, message: 'Please enter a title!' },
                 ]}>
                 {enableEdit ?
@@ -422,7 +497,7 @@ function FileTemplate(props) {
                   notFoundContent={'Not Files Found'}
                 />:
                 <Input className={!enableEdit ? "read-only-input" : ""} />}
-              </Form.Item>
+              </Form.Item> */}
 
               <Form.Item label="Description" name="description" className="markdown-editor">
                 {enableEdit ?
@@ -444,12 +519,12 @@ function FileTemplate(props) {
             
           </TabPane>
           <TabPane tab="Permissable Purpose" key="4">
-            <FileTemplate_permissablePurpose
+            <FileTemplatePermissablePurpose
               enableEdit={enableEdit}
               editingAllowed={editingAllowed}
               setSelectedLicenses={setSelectedLicenses}
               selectedLicenses = {selectedLicenses}
-              selectedAsset={selectedAsset}
+              selectedAsset={{id: assetId}}
              />
           </TabPane>
           <TabPane tab="Validation Rules" key="5">
@@ -460,11 +535,6 @@ function FileTemplate(props) {
             tab={
               <>
                 <span> Files </span>
-                {/* <Badge
-                  count={form.getFieldValue('cluster') && form.getFieldValue('searchString') ? `${files.length} Matching files` : null}
-                  style={{ backgroundColor: files.length > 0 ? 'var(--green)' : 'red' }}
-                  showZero={form.getFieldValue('cluster') && form.getFieldValue('searchString')}
-                /> */}
               </>
             }
           >
@@ -473,7 +543,7 @@ function FileTemplate(props) {
         </Tabs>
       </div>
       <div style={{marginTop: '15px'}}>
-        {props.displayingInModal  ? controls : null}
+        {displayingInModal  ? controls : null}
       </div>
      
     </React.Fragment>

@@ -1,10 +1,8 @@
 import { Addon } from '@antv/x6';
-
 export default class Stencil {
-  static stencil;
 
   static init(stencilContainer, graph) {
-    this.stencil = new Addon.Stencil({
+    const stencil = new Addon.Stencil({
       title: 'Assets',
       target: graph,
       layoutOptions: {
@@ -22,34 +20,45 @@ export default class Stencil {
         },
       ],
       getDropNode(node) {
-        return node.clone().setData({isStencil:false})
+
+        const data = { isStencil: false }
+
+        if (node.data.type === "Sub-Process"){
+          data.isCollapsed = false
+        }
+
+        if (node.data.type === "Monitor"){
+          data.type = 'FileTemplate';
+          data.title= 'Template'
+        }
+
+        return node.clone().setData(data)
       }
     });
 
     if (stencilContainer.current) {
-      stencilContainer.current.appendChild(this.stencil.container);
+      stencilContainer.current.appendChild(stencil.container);
     }
 
-    this.addShape(graph);
+    this.addShape(graph, stencil);
   }
 
-  static addShape(graph) {
-    const assetsNames = ['Job', 'File', 'Index', 'Sub-Process'];
+  static addShape(graph, stencil) {
+    const assets = [{type : 'Job', title : 'Job'}, {type : 'File', title : 'File'}, { type: 'Monitor', title : 'Monitoring' }, {type : 'Index', title : 'Index'}, {type : 'Sub-Process', title : 'Sub-Process'}];
 
-    const assetsNodes = assetsNames.map(asset => {
+    const assetsNodes = assets.map(asset => {
       return graph.createNode({
         shape: 'custom-shape',
         data: {
           isStencil:true,
-          type: asset,
-          title: asset,
+          type: asset.type,
+          title: asset.title,
           name:undefined,
           assetId: undefined,
-          subProcessId: undefined,
         },
       });
     });
 
-    this.stencil.load(assetsNodes, 'Assets');
+    stencil.load(assetsNodes, 'Assets');
   }
 }

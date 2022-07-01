@@ -12,8 +12,9 @@
 }
 
 .graph-container-stencil {
+  position: relative;
   width: calc(100% - 180px);
-  height: calc(100vh - 160px);
+  height: 100%;
   margin:0 8px;
   flex:1;
   box-shadow: 0 0 10px 1px #e9e9e9;
@@ -30,6 +31,17 @@
   background-color: rgb(255, 255, 255);
   padding: 10px;  
   min-width: 700px;
+}
+
+.graph-version-item>.x6-menu-item-button {
+  height: 44px;
+}
+
+.graph-version-item .x6-menu-item-text {
+  padding-right: 15px;
+}
+.graph-version-item .ant-divider-vertical {
+  margin: 0;
 }
 
 .legend-icon{

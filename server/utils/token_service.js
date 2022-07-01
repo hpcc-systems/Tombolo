@@ -1,13 +1,12 @@
-const jwt = require('jsonwebtoken');
+const passport = require('passport');
 const userService = require('../routes/user/userservice');
 
-module.exports = {
-    verifyToken
-};
-function verifyToken(req, res, next)
-{
-  let token = req.headers['x-access-token'] || req.headers['authorization'];
-  userService.verifyToken(token).then(function(verified){  
+const verifyToken = (req, res, next) => {
+  if(process.env.APP_AUTH_METHOD === 'azure_ad'){
+    passport.authenticate('oauth-bearer', {session: false})(req, res, next);
+  }else{
+    let token = req.headers['x-access-token'] || req.headers['authorization'];
+  userService.verifyToken(token).then(function(verified){
     if(verified != undefined) {
       req.user = JSON.parse(verified).verified;
       next()
@@ -20,4 +19,9 @@ function verifyToken(req, res, next)
     console.log('verify err: '+err);
     res.status(401).json({message: "Invalid auth token provided."})
   })
+  }
 }
+
+module.exports = {
+    verifyToken 
+};

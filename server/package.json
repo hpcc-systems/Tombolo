@@ -4,7 +4,11 @@
   "description": "",
   "main": "server.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "bootstrap-server" : "(npm install) && (npm run createSchema) && (npm run migrations)  && (npm run seeds) && (nodemon server.js)",
+    "createSchema": "npx sequelize db:create tombolo",
+    "migrations": "npx sequelize db:migrate",
+    "seeds": "npx sequelize db:seed:all"
   },
   "author": "",
   "license": "ISC",
@@ -13,7 +17,7 @@
     "activedirectory": "^0.7.2",
     "axios": "^0.24.0",
     "bcryptjs": "^2.4.3",
-    "bree": "^6.5.0",
+    "bree": "^8.0.3",
     "crypto": "^1.0.1",
     "dotenv": "^8.6.0",
     "express": "^4.17.3",
@@ -25,9 +29,12 @@
     "kafkajs-snappy": "^1.1.0",
     "lodash": "^4.17.20",
     "moment": "^2.29.2",
+    "morgan": "^1.10.0",
     "multer": "^1.4.3",
     "mysql2": "^1.7.0",
     "nodemailer": "^6.7.1",
+    "passport": "^0.5.2",
+    "passport-azure-ad": "^4.3.1",
     "path": "^0.12.7",
     "request": "^2.88.2",
     "request-promise": "^4.2.6",
@@ -37,6 +44,10 @@
     "simple-git": "^3.6.0",
     "socket.io": "^4.4.0",
     "tmp": "^0.1.0",
-    "uuid": "^3.4.0"
+    "uuid": "^3.4.0",
+    "winston": "^3.7.2"
+  },
+   "devDependencies": {
+    "nodemon": "^2.0.7"
   }
 }

@@ -10,7 +10,7 @@ module.exports = (sequelize, DataTypes) => {
       allowNull: false,
       autoIncrement: false
     },
-    application_id: DataTypes.STRING,
+    application_id: DataTypes.UUID,
     author: DataTypes.STRING,
     contact: DataTypes.STRING,
     description: DataTypes.TEXT,
@@ -20,7 +20,7 @@ module.exports = (sequelize, DataTypes) => {
     jobType: DataTypes.STRING,
     title: DataTypes.STRING,
     name: DataTypes.STRING,
-    cluster_id: DataTypes.STRING,
+    cluster_id: DataTypes.UUID,
     scriptPath: DataTypes.STRING,
     sprayFileName: DataTypes.STRING,
     sprayDropZone: DataTypes.STRING,
@@ -32,35 +32,34 @@ module.exports = (sequelize, DataTypes) => {
     } 
   }, {paranoid: true, freezeTableName: true});
   job.associate = function(models) {
-    job.hasMany(models.jobfile,{
-      foreignKey:'job_id',
-      onDelete: 'CASCADE',
-      hooks: true
+
+    job.belongsToMany(models.file, {
+      constraints:false,
+      foreignKeyConstraint:false,
+      through: 'jobfile',
+      foreignKey: 'job_id',
+      otherKey: 'file_id',
     });
+    
     job.hasMany(models.job_execution,{
       foreignKey:'jobId', 
+      onDelete: 'NO ACTION',
+      onUpdate: 'NO ACTION'
     });
     job.hasMany(models.jobparam,{
       foreignKey:'job_id',
       onDelete: 'CASCADE',
       hooks: true
     });
-    job.hasMany(models.dependent_jobs, {
-      foreignKey: 'jobId',
-      as: 'dependsOnJobs',
-      onDelete: 'CASCADE',
-      hooks: true
-    });
-    job.belongsToMany(models.dataflow, {
-      through: 'assets_dataflows',
-      as: 'dataflows',
-      foreignKey: 'assetId',
-      otherKey: 'dataflowId'
+    job.belongsTo(models.cluster, {
+      foreignKey: 'cluster_id'
     });
     job.belongsTo(models.application, {
       foreignKey: 'application_id'
     });
     job.belongsToMany(models.groups, {
+      constraints:false,
+      foreignKeyConstraint:false,
       through: 'assets_groups',
       as: 'groups',
       foreignKey: 'assetId',

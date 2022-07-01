@@ -160,7 +160,7 @@ const Assets = () => {
     const goTo = (point) => history.push(`/${application.applicationId}/assets/${point}`);
 
     const actions = {
-      Job: () => goTo('job'),
+      Job: () => goTo('add-jobs'),
       File: () => goTo('file'),
       Index: () => goTo('index'),
       Query: () => goTo('query'),
@@ -312,7 +312,7 @@ const Assets = () => {
         <i className="fa fa-lg fa-search"></i> Query
       </Menu.Item>
       <Menu.Item key="Job" onClick={addingAssetMode}>
-        <i className="fa fa-lg fa-clock-o"></i> Job
+        <i className="fa fa-lg fa-clock-o"></i> Jobs
       </Menu.Item>
       <Menu.Item key="RealBI Dashboard" onClick={addingAssetMode}>
         <i className="fa fa-lg fa-area-chart"></i> RealBI Dashboard

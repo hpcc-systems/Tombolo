@@ -2,8 +2,8 @@ var models  = require('../models');
 let File = models.file;
 let FileLayout = models.file_layout;
 let FileLicense = models.file_license;
-let FileRelation = models.file_relation;
-let FileFieldRelation = models.file_field_relation;
+const FileMonitoring = models.fileMonitoring;
+const FileTemplate = models.fileTemplate;
 let FileValidation = models.file_validation;
 let License = models.license;
 let Groups = models.groups;
@@ -21,9 +21,16 @@ const hpccUtil = require('./hpcc-util');
 const workflowUtil = require('./workflow-util');
 let Sequelize = require('sequelize');
 const path = require('path');
+const fs = require('fs')
 const {execFile, spawn} = require('child_process');
-const JobSchedular = require('../job-scheduler');
+const JobScheduler = require('../job-scheduler');
 const { Op } = require('sequelize');
+const logger = require('../config/logger');
+
+const SUBMIT_JOB_FILE_NAME = 'submitJob.js';
+const SUBMIT_SCRIPT_JOB_FILE_NAME = 'submitScriptJob.js';
+const SUBMIT_MANUAL_JOB_FILE_NAME = 'submitManualJob.js'
+const SUBMIT_GITHUB_JOB_FILE_NAME = 'submitGithubJob.js'
 
 exports.fileInfo = (applicationId, file_id) => {
   var results={};
@@ -131,7 +138,6 @@ exports.indexInfo = (applicationId, indexId) => {
   try {
     return new Promise((resolve, reject) => {
       Index.findOne({where:{"application_id":applicationId, "id":indexId}, include: [{model: IndexKey}, {model: IndexPayload}, {model: Groups, as: 'groups'}]}).then(function(index) {
-        console.log(index);
         results.basic = index;
         resolve(results);
       })
@@ -170,9 +176,12 @@ exports.jobInfo = (applicationId, jobId) => {
   let jobFiles = [];
   try {
     return new Promise((resolve, reject) => {
-      Job.findOne({where:{"application_id":applicationId, "id":jobId}, attributes:['id', 'description', 'title', 'name', 'author', 'contact', 'ecl', 'entryBWR', 'gitRepo', 'jobType', 'cluster_id','metaData'], include: [JobFile, JobParam]}).then(async function(job) {
+      Job.findOne({where:{"application_id":applicationId, "id":jobId}, attributes:['id', 'description', 'title', 'name', 'author', 'contact', 'ecl', 'entryBWR', 'gitRepo', 'jobType', 'cluster_id','metaData'], include: [JobParam]}).then(async function(job) {
         var jobData = job.get({ plain: true });
-        for(jobFileIdx in jobData.jobfiles) {
+        const jobfiles =  await JobFile.findAll({ where: { job_id: job.id }}, { raw: true });
+        jobData.jobfiles = jobfiles || []; 
+        
+        for(const jobFileIdx in jobData.jobfiles) {
           var jobFile = jobData.jobfiles[jobFileIdx];
           var file = await File.findOne({where:{"application_id":applicationId, "id":jobFile.file_id}});
           if(file != undefined) {
@@ -230,7 +239,8 @@ exports.recordJobExecution =  async (workerData, wuid) => {
         JobExecution.create(
           {
             jobId: workerData.jobId,
-            dataflowId: workerData.dataflowId,
+            dataflowId: workerData.dataflowId || null,
+            dataflowVersionId: workerData.dataflowVersionId,
             applicationId: workerData.applicationId,
             wuid: wuid,
             clusterId: workerData.clusterId,
@@ -284,18 +294,18 @@ exports.createFilesandJobfiles = async ({file, cluster_id, application_id, id})=
   }
 }
 
-exports.createGithubFlow = async ({jobId, jobName, gitHubFiles, dataflowId, applicationId, clusterId, jobExecutionGroupId }) =>{
+exports.createGithubFlow = async ({jobId, jobName, gitHubFiles, dataflowId, dataflowVersionId, applicationId, clusterId, jobExecutionGroupId }) =>{
   let jobExecution, tasks;
   try {
     // # create Job Execution with status 'cloning'
-    jobExecution = await JobExecution.create({ jobId, dataflowId, applicationId, clusterId, wuid:"",  status: 'cloning', jobExecutionGroupId });
+    jobExecution = await JobExecution.create({ jobId, dataflowId: dataflowId || null , dataflowVersionId, applicationId, clusterId, wuid:"",  status: 'cloning', jobExecutionGroupId });
     console.log('------------------------------------------');
     console.log(`✔️  createGithubFlow: START: JOB EXECUTION RECORD CREATED ${jobExecution.id}`);    
 
     // # pull from github and submit job to HPCC.
     tasks =  await hpccUtil.pullFilesFromGithub( jobName ,clusterId, gitHubFiles );
     if (tasks.WUaction?.failedToUpdate) {
-     await manuallyUpdateJobExecutionFailure({jobExecution,tasks}); 
+     await manuallyUpdateJobExecutionFailure({jobExecution,tasks, jobExecutionGroupId, jobName}); 
     } else {
       // changing jobExecution status to 'submitted' will signal status poller that this job if ready to be executed
       const updated = await jobExecution.update({status:'submitted', wuid: tasks.wuid },{where:{id:jobExecution.id, status:'cloning'}}) 
@@ -304,7 +314,7 @@ exports.createGithubFlow = async ({jobId, jobName, gitHubFiles, dataflowId, appl
     }
     return tasks; // quick summary about github flow that happened.
   } catch (error) {
-    await manuallyUpdateJobExecutionFailure({jobExecution,tasks}); 
+    await manuallyUpdateJobExecutionFailure({ jobExecution, tasks, jobExecutionGroupId, jobName,}); 
     console.log('------------------------------------------');
     console.log('❌ createGithubFlow: "Error happened"');
     console.dir(error);
@@ -312,12 +322,14 @@ exports.createGithubFlow = async ({jobId, jobName, gitHubFiles, dataflowId, appl
   }
 }
 
-const manuallyUpdateJobExecutionFailure = async ({jobExecution,tasks}) =>{
+const manuallyUpdateJobExecutionFailure = async ({jobExecution,tasks, jobName, jobExecutionGroupId}) =>{
   try {
     // attempt to update WU at hpcc as failed was unsuccessful, we need to update our record manually as current status "cloning" will not be picked up by status poller.
     const wuid = tasks?.wuid ||'';
-    await jobExecution.update({status: 'failed', wuid},{where:{id:jobExecution.id, status:'cloning'}});
-    await workflowUtil.notifyJobFailure({ jobId: jobExecution.jobId, clusterId: jobExecution.clusterId, wuid});
+    await jobExecution.update({status: 'error', wuid},{where:{id:jobExecution.id, status:'cloning'}});
+    const {dataflowId, jobId} = jobExecution;
+    await workflowUtil.notifyJob({ dataflowId, jobExecutionGroupId, jobId, status: 'error', exceptions: tasks.error });
+    await workflowUtil.notifyWorkflow({ dataflowId, jobExecutionGroupId, jobName, status: 'error', exceptions: tasks.error });
   } catch (error) {
     console.log('------------------------------------------');
     console.log("❌ createGithubFlow: Failed to notify", error);
@@ -327,8 +339,6 @@ const manuallyUpdateJobExecutionFailure = async ({jobExecution,tasks}) =>{
 
 exports.getJobEXecutionForProcessing = async () => {
   try {
-    console.log('------------------------------------------');
-    console.log("🔍 GETTING JOBS FOR PROCCESSING")
     const jobExecution = await JobExecution.findAll({
       where: { [Op.or]: [{status: 'submitted'}, {status: 'blocked'}, {status : 'wait'}]},
       order: [["updatedAt", "desc"]],
@@ -336,6 +346,161 @@ exports.getJobEXecutionForProcessing = async () => {
     });
     return jobExecution;  
   } catch (error) {
-    console.log(error);
+    logger.error('Failed to find job executions',error);
   }
 } 
+
+exports.deleteFileMonitoring = async ({fileTemplateId, dataflowId }) =>{
+  const fileMonitoring = await FileMonitoring.findOne({ where: { fileTemplateId } });
+  if (!fileMonitoring) return; // If fileMonitoring does not exit, we will do nothing
+  if (fileMonitoring.metaData?.dataflows?.length > 1) {
+    const newDataFlowList = fileMonitoring.metaData.dataflows.filter((dfId) => dfId !== dataflowId);
+    await fileMonitoring.update({ metaData: { ...fileMonitoring.metaData, dataflows: newDataFlowList } });
+    console.log('--MONITORING UPDATED----------------------------------------');
+    console.dir({ wuid: fileMonitoring.wuid, fileMonitoring: fileMonitoring.id }, { depth: null });
+    console.log('------------------------------------------');
+  } else {  
+    const workUnitService = await hpccUtil.getWorkunitsService(fileMonitoring.cluster_id);
+    const WUactionBody = { Wuids: { Item: [fileMonitoring.wuid] }, WUActionType: 'Abort' };
+    await workUnitService.WUAction(WUactionBody); // Abort wu in hpcc
+    await fileMonitoring.destroy();
+    console.log('---MONITORING REMOVED---------------------------------------');
+    console.dir({wuid:fileMonitoring.wuid, fileMonitoring: fileMonitoring.id }, { depth: null });
+    console.log('------------------------------------------');
+  }
+};
+
+exports.createFileMonitoring = async ({ fileTemplateId, dataflowId }) => {
+  /*  Check if there is existing File Monitoring WU based on this template. 
+  If there is existing file monitoring WU, there is no need to create a new one */
+  const fileMonitoringWU = await FileMonitoring.findOne({ where: { fileTemplateId } });
+
+  if (!fileMonitoringWU) {
+    // Get template details
+    const template = await FileTemplate.findOne({ where: { id: fileTemplateId } });
+    if (!template) throw Error('Template not found');
+
+    const { machine, lzPath, directory, landingZone, monitorSubDirs } = template.metaData;
+    let dirPath = directory.join('/');
+    const completeDirPath = `${lzPath}/${dirPath}/`;
+
+    const pattern = {
+      endsWith: `*${template.searchString}`,
+      contains: `*${template.searchString}*`,
+      startsWith: `${template.searchString}*`,
+    };
+
+    let filePattern = `${completeDirPath}${pattern[template['fileNamePattern']]}`;
+
+    //Create empty WU
+    const wuId = await hpccUtil.createWorkUnit(template.cluster_id, {
+      jobname: `${template.title}_File_Monitoring`,
+    });
+    //  construct ecl code with template details and write it to fs
+    const code = hpccUtil.constructFileMonitoringWorkUnitEclCode({
+      lzPath,
+      filePattern,
+      monitorSubDirs,
+      lzHost: machine,
+      wu_name: `${template.title}_File_Monitoring`,
+    });
+
+    const parentDir = path.join(process.cwd(), 'eclDir');
+    const pathToEclFile = path.join(process.cwd(), 'eclDir', `${template.title}.ecl`);
+    fs.writeFileSync(pathToEclFile, code);
+
+    // update the wu with ecl archive
+    const args = ['-E', pathToEclFile, '-I', parentDir];
+    const archived = await hpccUtil.createEclArchive(args, parentDir);
+
+    const updateBody = {
+      Wuid: wuId,
+      QueryText: archived.stdout,
+      Jobname: `${template.title}_File_Monitoring`,
+    };
+
+    const workUnitService = await hpccUtil.getWorkunitsService(template.cluster_id);
+    await workUnitService.WUUpdate(updateBody);
+
+    //Submit the wu
+    const submitBody = { Wuid: wuId, Cluster: 'hthor' };
+    await workUnitService.WUSubmit(submitBody);
+    fs.unlinkSync(pathToEclFile);
+
+    //Add to file monitoring table
+    const fileMonitoring = await FileMonitoring.create({
+      wuid: wuId,
+      cluster_id: template.cluster_id,
+      dataflow_id: dataflowId,
+      fileTemplateId: template.id,
+      metaData: { dataflows: [dataflowId] },
+    });
+
+    console.log('--MONITORING CREATED----------------------------------------');
+    console.dir({ wuid: wuId, fileMonitoring: fileMonitoring.id }, { depth: null });
+    console.log('------------------------------------------');
+  } else {
+    let newMetaData = {
+      ...fileMonitoringWU.metaData,
+      dataflows: [...fileMonitoringWU.metaData.dataflows, dataflowId],
+    }; // Dataflows using the same file monitoring WU
+
+    await FileMonitoring.update({ metaData: newMetaData }, { where: { id: fileMonitoringWU.id } });
+    console.log('--MONITORING UPDATED----------------------------------------');
+    console.dir({ wuid: fileMonitoringWU.wuid, fileMonitoring: fileMonitoringWU.id }, { depth: null });
+    console.log('------------------------------------------');
+  }
+};
+
+exports.addJobToBreeSchedule = (job, schedule, dataflowId) => {
+  // ADD JOB TO BREE SCHEDULE
+  const getfileName = () => {
+    switch (job.jobType) {
+      case 'Script':
+        return SUBMIT_SCRIPT_JOB_FILE_NAME;
+      case 'Manual':
+        return SUBMIT_MANUAL_JOB_FILE_NAME;
+      default: {
+        if (job.metaData.isStoredOnGithub) {
+          return SUBMIT_GITHUB_JOB_FILE_NAME;
+        } else {
+          return SUBMIT_JOB_FILE_NAME;
+        }
+      }
+    }
+  };
+
+  const jobSettings = {
+    jobId: job.id,
+    jobName: job.name,
+    jobfileName: getfileName(),
+    title: job.title,
+    cron: schedule.cron,
+    jobType: job.jobType,
+    contact: job.contact,
+    metaData: job.metaData,
+    sprayFileName: job.sprayFileName,
+    sprayDropZone: job.sprayFileName,
+    sprayedFileScope: job.sprayedFileScope,
+    clusterId: job.cluster_id,
+    dataflowId,
+    applicationId: job.application_id,
+  };
+
+  if (jobSettings.jobType === 'Manual') {
+    jobSettings.status = 'wait';
+    jobSettings.manualJob_meta = {
+      jobType: 'Manual',
+      jobName: jobSettings.jobName,
+      notifiedTo: jobSettings.contact,
+      notifiedOn: new Date().getTime(),
+    };
+  }
+
+  const result = JobScheduler.addJobToScheduler(jobSettings);
+  if (result.error) throw new Error(result.error);
+
+  console.log(`-JOB SCHEDULED-Time----------------------------------------`);
+  console.dir({ job: job.id, jobname: job.name, schedule }, { depth: null });
+  console.log('------------------------------------------');
+};

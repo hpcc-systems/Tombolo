@@ -3,14 +3,17 @@ import { Modal, Button, Form, Input, Radio, message } from "antd";
 import {useDispatch } from "react-redux";
 
 import { applicationActions } from '../../../redux/actions/Application';
+import {emptyGroupTree} from '../../../redux/actions/Groups'
 
 import { authHeader } from "../../common/AuthHeader";
+import { useHistory } from "react-router";
 
 function AddApplication(props) {
   const [form] = Form.useForm();
   const { TextArea } = Input;
   const [isEditing, setIsEditing] = useState(false);
   const dispatch = useDispatch();
+  const history = useHistory()
 
   // FORM ITEM LAYOUT
   const formItemLayout =
@@ -53,8 +56,11 @@ function AddApplication(props) {
     try {
       let payload = {
         ...form.getFieldsValue(),
-        ...{ user_id: props.user.username, creator: props.user.username, id: props?.selectedApplication?.id || "" },
+        user_id: props.user.username,
+        creator: props.user.username, 
+        id: props?.selectedApplication?.id || ""
       };
+
       const response = await fetch("/api/app/read/saveApplication", {
         method: "post",
         headers: authHeader(),
@@ -62,12 +68,14 @@ function AddApplication(props) {
       });
 
       if (!response.ok) return message.error("Error occurred while saving application");
+      dispatch(emptyGroupTree());
       message.success("Application saved successfully");
       const responseData = await response.json()
       if(props.isCreatingNewApp)dispatch(applicationActions.applicationSelected(responseData.id, responseData.title, responseData.title));
       localStorage.setItem("activeProjectId", responseData.id);
       form.resetFields();
       props.closeAddApplicationModal();
+      history.push(`/${responseData.id}/assets`)
     } catch (err) {
       console.log(err);
       message.error(err.message);
@@ -102,7 +110,7 @@ function AddApplication(props) {
             Cancel
           </Button>]}
       >
-        <Form className="formInModal" form={form}>
+        <Form className="formInModal" form={form}  initialValues={{visibility:'Private'}}>
           <Form.Item
             {...formItemLayout}
             label="Title"

@@ -29,4 +29,7 @@ yarn-error.log*
 sequelize-data.json
 cluster-whitelist.js
 
+#logs
+eclcc.log
+logs/*
 

@@ -1,4 +1,3 @@
-import { authHeader, handleError } from "./AuthHeader.js"
 let omitDeep = (value, key) => {
   if (Array.isArray(value)) {
     return value.map(i => omitDeep(i, key))
@@ -60,25 +59,6 @@ const validationRuleFixes = [
   'Trim'
 ];
 
-const fetchDataDictionary = (applicationId) => {
-  return new Promise((resolve, reject) => {
-    fetch("/api/data-dictionary?application_id="+applicationId, {
-      headers: authHeader()
-    })
-    .then((response) => {
-      if(response.ok) {
-        return response.json();
-      }
-      handleError(response);
-    })
-    .then(data => {
-      resolve(data);
-    }).catch(error => {
-      console.log(error);
-      reject(error);
-    });
-  })
-}
 
 const flatten = (obj) => {
   const array = Array.isArray(obj) ? obj : [obj];
@@ -113,4 +93,17 @@ const multiLineFormItemLayout = {
 }
 
 
-export {omitDeep, eclTypes, fetchDataDictionary, flatten, formItemLayout, formItemLayoutWithOutLabel, threeColformItemLayout, multiLineFormItemLayout, validationRules, validationRuleFixes};
+export const getWorkingCopyGraph = (dataflowId) =>{
+  const LSgraphs = JSON.parse(localStorage.getItem("tombolo_graph"));    
+  return LSgraphs?.[dataflowId];
+};
+
+export const saveWorkingCopyGraph = (dataflowId, graph) =>{
+  const LSgraphs = localStorage.getItem('tombolo_graph') ? JSON.parse(localStorage.getItem('tombolo_graph')) : {};
+  LSgraphs[dataflowId] = graph;
+  localStorage.setItem('tombolo_graph', JSON.stringify(LSgraphs))
+};
+
+
+
+export {omitDeep, eclTypes,  flatten, formItemLayout, formItemLayoutWithOutLabel, threeColformItemLayout, multiLineFormItemLayout, validationRules, validationRuleFixes};

@@ -5,7 +5,7 @@ module.exports = (sequelize, DataTypes) => {
       type: DataTypes.UUID,
       defaultValue: DataTypes.UUIDV4,
     },
-    dataflow_id: DataTypes.STRING,
+    dataflow_id: DataTypes.UUID,
     cluster_id: DataTypes.UUID,
     cluster_username: DataTypes.STRING,
     cluster_hash: DataTypes.STRING

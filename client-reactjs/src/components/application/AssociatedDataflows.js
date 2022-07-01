@@ -11,13 +11,13 @@ function AssociatedDataflows({assetId, assetType}) {
   const user = useSelector(state => state.applicationReducer.application.user);
 	const [data, setData] = useState([]);
   const dispatch = useDispatch();
-
+ 
 	useEffect(() => {
   	fetchData();
 	}, [])
 
 	const fetchData = () => {
-		fetch('/api/report/read/associatedDataflows?assetId='+assetId+'&type='+assetType, {
+		fetch('/api/report/read/associatedDataflows?assetId='+assetId+'&type='+assetType +'&application_id=' + applicationReducer.application.applicationId, {
       headers: authHeader(),
     }).then(function(response) {
       if(response.ok) {

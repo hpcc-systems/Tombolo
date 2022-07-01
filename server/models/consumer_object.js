@@ -8,12 +8,14 @@ module.exports = (sequelize, DataTypes) => {
       allowNull: false,
       autoIncrement: false
     },
-    consumer_id: DataTypes.STRING,
+    consumer_id: DataTypes.UUID,
     object_id: DataTypes.STRING,
     object_type: DataTypes.STRING
   }, {paranoid: true, freezeTableName: true});
   consumer_object.associate = function(models) {
     // associations can be defined here
+    consumer_object.belongsTo(models.file, { foreignKey: 'consumer_id' });
+    
   };
   return consumer_object;
 };
