@@ -237,7 +237,7 @@ router.put( '/version_live',
       for (const job of jobs) {
         const schedule = cronjobs.find((cronJob) => cronJob.id === job.id)?.schedule;
         if (schedule) {
-          assetUtil.addJobToBreeSchedule(job, schedule, dataflowId);
+          assetUtil.addJobToBreeSchedule(job, schedule, dataflowId, newVersion.id );
         }
       }
 
