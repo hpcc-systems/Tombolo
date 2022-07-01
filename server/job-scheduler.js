@@ -179,7 +179,7 @@ class JobScheduler {
   async scheduleActiveCronJobs() {
     try {
       // get all graphs active graphs
-      const dataflowsVersions = await DataflowVersions.findAll({ where:{ isLive: true }, attributes: ['graph', 'dataflowId'] });
+      const dataflowsVersions = await DataflowVersions.findAll({ where:{ isLive: true }, attributes: ['id', 'graph', 'dataflowId'] });
 
       for (const dataflowsVersion of dataflowsVersions) {
         const cronScheduledNodes = dataflowsVersion.graph?.cells?.filter((cell) => cell.data?.schedule?.cron) || [];
@@ -195,6 +195,7 @@ class JobScheduler {
               const isGitHubJob = job.metaData?.isStoredOnGithub;
 
               const workerData = {
+                dataflowVersionId: dataflowsVersion.id,
                 dataflowId: dataflowsVersion.dataflowId,
                 applicationId: job.application_id,
                 cron: node.data.schedule.cron,
@@ -416,6 +417,7 @@ class JobScheduler {
         cron: job.cron,
         jobName: job.worker?.workerData?.jobName,
         dataflowId: job.worker?.workerData?.dataflowId,
+        dataflowVersionId: job.worker?.workerData?.dataflowVersionId,
         group: job.worker?.workerData?.jobExecutionGroupId,
       });
     }
