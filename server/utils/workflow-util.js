@@ -71,7 +71,7 @@ exports.notifyWorkflow = async ({ dataflowId, jobExecutionGroupId, status, jobNa
   const SUCCESS_HPCC_URL = `${cluster.thor_host}:${cluster.thor_port}/#/stub/ECL-DL/Workunits-DL/Workunits`;
 
   const statuses = {
-    failure : ['wait', 'blocked', 'failed', 'error'],
+    failure : ['wait', 'blocked', 'failed', 'error', 'fileMonitoringFailure'],
     success : ['compiled', 'completed']
   }
 
@@ -112,6 +112,15 @@ exports.notifyWorkflow = async ({ dataflowId, jobExecutionGroupId, status, jobNa
           <p>${failure_message}</p>
           <p> To view workflow execution details in Tombolo please click <a href=${DATAFLOW_LINK}> here </a>
           <p> Click <a href="${FAILED_HPCC_URL}"> here </a>to view execution  details in HPCC</p> 
+        </div>`;
+    },
+     fileMonitoringFailure: () =>{
+      email.subject = `Failed to trigger ${dataflow.title} execution - File Monitoring Failure`;
+      email.message = 
+        `<div>
+          <p>Hello, </p>
+          <p>${failure_message}</p>
+          <p>${jobName} failed. Jobs that depend on this file monitoring won't be executed. Click <a href="${FAILED_HPCC_URL}"> here </a>to view file monitoring details in HPCC</p> 
         </div>`;
     }
   };
