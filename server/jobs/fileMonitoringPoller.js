@@ -5,7 +5,6 @@ const workflowUtil = require('../utils/workflow-util')
 const models = require('../models');
 const fileMonitoring = models.fileMonitoring;
 const DataflowVersions = models.dataflow_versions;
-const Dataflow = models.dataflow;
 
 const { log, dispatch } = require('./workerUtils')(parentPort);
 
@@ -74,7 +73,6 @@ const { log, dispatch } = require('./workerUtils')(parentPort);
       }
     }
   } catch (err) {
-    console.log('--------------------------- ERR', err)
     log("error",'Error in File Monitoring Poller', error);
   }  finally {
     if (parentPort) parentPort.postMessage('done');
