@@ -21,18 +21,21 @@ const { log, dispatch } = require('./workerUtils')(parentPort);
 
     //If there are file(s) to monitor -> log so to console and check for results in HPCC
     for (i = 0; i < workUnitsToMonitor.length; i++) {
+      /* Try catch added here because we are looping through a list of file monitoring, if one of the iteration throws error we want to log that 
+      and continue with the iteration. we don't want to end the iteration and exit out*/
+      try{
       const { id, wuid, cluster_id, fileTemplateId,  metaData } = workUnitsToMonitor[i];
 
-      const workUnitInfo = await hpccUtil.workunitInfo(wuid, cluster_id)	
-      const {Workunit} = workUnitInfo;	
-      if(Workunit.State === 'failed'){	
-          const {dataflows} = metaData	
-          // A file monitoring could be a part of multiple dataflows	
-          for(const dataflow of dataflows){	
-            await workflowUtil.notifyWorkflow({ wuid, dataflowId:dataflow, jobName: Workunit.Jobname, status: 'fileMonitoringFailure' });	
-          }	
-          return;	
-      }
+        const workUnitInfo = await hpccUtil.workunitInfo(wuid, cluster_id)	
+        const {Workunit} = workUnitInfo;	
+        if(Workunit.State === 'failed'){	
+            const {dataflows} = metaData	
+            // A file monitoring could be a part of multiple dataflows	
+            for(const dataflow of dataflows){	
+              await workflowUtil.notifyWorkflow({ wuid, dataflowId:dataflow, jobName: Workunit.Jobname, status: 'fileMonitoringFailure' });	
+            }	
+            return;	
+        }
 
       const wuOutput = await hpccUtil.workUnitOutput({ wuid, clusterId: cluster_id });
 
@@ -68,6 +71,9 @@ const { log, dispatch } = require('./workerUtils')(parentPort);
 
       } else {
         log('verbose','NO FILE FOUND. THE RESULT ROW IS EMPTY !!');
+      }
+      }catch(err){
+        log('error', err)
       }
     }
   } catch (err) {
