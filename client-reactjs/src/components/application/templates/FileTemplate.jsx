@@ -22,6 +22,7 @@ const fileNameOptions = [
   { name: 'Contains', value: 'contains' },
   { name: 'Starts with', value: 'startsWith' },
   { name: 'Ends with', value: 'endsWith' },
+  { name: 'Wildcards', value: 'wildCards' },
 ];
 
 //Message config
@@ -172,7 +173,7 @@ function FileTemplate({match, selectedAsset={}, displayingInModal, onClose }) {
 
   //Save file template
   const saveFileTemplate = async () => {
-    form.validateFields();
+    await form.validateFields();
     const {title, cluster, fileNamePattern, searchString, description, setFileMonitoring, landingZone, machine, dirToMonitor, shouldMonitorSubDirs } = form.getFieldsValue();
     const url = `/api/fileTemplate/read/saveFileTemplate`
     const body = JSON.stringify({
