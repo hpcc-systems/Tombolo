@@ -388,6 +388,7 @@ exports.createFileMonitoring = async ({ fileTemplateId, dataflowId }) => {
       endsWith: `*${template.searchString}`,
       contains: `*${template.searchString}*`,
       startsWith: `${template.searchString}*`,
+      wildCards: template.searchString
     };
 
     let filePattern = `${completeDirPath}${pattern[template['fileNamePattern']]}`;

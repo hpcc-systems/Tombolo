@@ -28,7 +28,7 @@ const logger = require('../../config/logger');
 
 router.post('/filesearch', [
   body('keyword')
-    .matches(/^.[a-zA-Z]{1}[a-zA-Z0-9_:.\-]*$/).withMessage('Invalid keyword')
+    .matches(/^[a-zA-Z0-9_. \-:\*\?]*$/).withMessage('Invalid keyword')
 ], function (req, res) {
 	const errors = validationResult(req).formatWith(validatorUtil.errorFormatter);
 	if (!errors.isEmpty()) {
@@ -44,11 +44,15 @@ router.post('/filesearch', [
 			let dfuService = new hpccJSComms.DFUService({ baseUrl: cluster.thor_host + ':' + cluster.thor_port, userID:(clusterAuth ? clusterAuth.user : ""), password:(clusterAuth ? clusterAuth.password : "")});
 			const {fileNamePattern} = req.body;
 
-			let logicalFileName = "*"+req.body.keyword+"*";
+			let logicalFileName;
 			if(fileNamePattern === 'startsWith'){
 				logicalFileName = req.body.keyword+"*";
 			}else if(fileNamePattern === 'endsWith'){
 				logicalFileName = "*"+req.body.keyword
+			}else if(fileNamePattern === 'wildCards'){
+				logicalFileName = req.body.keyword
+			}else{
+			   logicalFileName = "*"+req.body.keyword+"*";
 			}
 			
 			dfuService.DFUQuery({"LogicalName": logicalFileName, ContentType:contentType}).then(response => {

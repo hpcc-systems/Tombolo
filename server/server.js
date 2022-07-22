@@ -12,7 +12,6 @@ const express = require('express');
 const rateLimit = require("express-rate-limit");
 const tokenService = require('./utils/token_service');
 const passport = require('passport');
-const bearerStrategy = require('./utils/passportStrategies/passport-azure');
 const cors = require('cors');
 const { sequelize: dbConnection } = require('./models');
 const morganMiddleware = require('./config/morganMiddleware');
@@ -43,6 +42,7 @@ app.use(limiter);
 app.use(morganMiddleware);
 
 if(process.env.APP_AUTH_METHOD==='azure_ad'){
+  const bearerStrategy = require('./utils/passportStrategies/passport-azure');
   app.use(passport.initialize()); // For azure SSO
   passport.use(bearerStrategy);
 }

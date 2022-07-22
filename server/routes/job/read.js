@@ -21,6 +21,7 @@ const workFlowUtil = require('../../utils/workflow-util');
 const validatorUtil = require('../../utils/validator');
 const { body, query, param, validationResult } = require('express-validator');
 const assetUtil = require('../../utils/assets');
+const wildCardStringMatch = require('../../utils/wildCardStringMatch')
 
 const SUBMIT_JOB_FILE_NAME = 'submitJob.js';
 const SUBMIT_QUERY_PUBLISH = 'submitPublishQuery.js'
@@ -244,8 +245,8 @@ router.post( '/jobFileRelation',
               let{name : fileName, assetId: fileId, relatedTo, title : fileTitle, isSuperFile, isAssociated, file_type, description : fileDescription} = file;
               for(let i = 0; i < templates.length; i++){
                 let {id : templateId, fileNamePattern, searchString, title : templateTitle,  description : templateDescription} = templates[i]
-                let operation = fileNamePattern === 'contains' ? 'includes' : fileNamePattern;
-                if(fileName[operation](searchString)){ // Matching template FOUND - > this is doing something like this : filename.endsWith('test')
+                const foundMatchingTemplate = wildCardStringMatch(searchString, fileName)
+                if(foundMatchingTemplate){ // Matching template FOUND - > this is doing something like this : filename.endsWith('test')
                   let indexOfFileGroup = fileAndTemplates.findIndex(item => item.assetId === templateId && item.file_type === file_type);
                   if(indexOfFileGroup < 0){
                     fileAndTemplates = [...fileAndTemplates, {name : templateTitle, isAssociated: true, assetId : templateId, relatedTo, title: templateTitle, file_type, description : templateDescription, assetType: 'FileTemplate'}];
@@ -253,7 +254,7 @@ router.post( '/jobFileRelation',
                   return; // Breaking out of inner loop
                 }
                 
-                if(!fileName[operation](searchString) && i === templates.length -1){ // matching template NOT FOUND
+                if(!foundMatchingTemplate && i === templates.length -1){ // matching template NOT FOUND
                   fileAndTemplates = [...fileAndTemplates, {name: fileName, assetId: fileId, relatedTo, title: fileTitle, isSuperFile, isAssociated, file_type, description: fileDescription, assetType: 'File'}];
                 }
               }
@@ -363,54 +364,56 @@ try {
   
   // When Synchronizing graph -> Tries to match the files with template again
     // Get all templates
-        const templates = await FileTemplate.findAll({
-          where: { cluster_id: clusterId, application_id: applicationId },  
-        });
+    const templates = await FileTemplate.findAll({
+      where: { cluster_id: clusterId, application_id: applicationId },
+      raw: true,
+    });
 
-        if(templates.length < 1){ // If no templates exists 
+    if(templates.length < 1){ // If no templates exists 
           res.json({result, assetsIds: allAssetsIds.flat(Infinity)});
           return;
         }
 
-        let jobsWithRelatedFiles = [];
-        let jobWithoutRelatedFiles = [];
+    let jobWithoutRelatedFiles = []; // Has no input or output files
+    let jobsWithRelatedFiles = []; // Has input or output files
 
-        allAssetsIds = [] // resetting the asset all asset ids array -> it will have different items if template is matched
-        result.forEach(item => {
-          if(item.relatedFiles.length > 0){
-            jobsWithRelatedFiles.push(item)
-          }else{
-            jobWithoutRelatedFiles.push(item);
-          }
-        })
+    allAssetsIds = [] // resetting the asset all asset ids array -> it will have different items if template is matched
+    // Push job to respective array based on if they have related files or not
+    result.forEach(item => {
+      if(item.relatedFiles.length > 0){
+        jobsWithRelatedFiles.push(item);
+      }else{
+        jobWithoutRelatedFiles.push(item);
+      }
+    })
 
-        jobsWithRelatedFiles.forEach(item =>{
-          let {relatedFiles} = item;
-          let fileAndTemplates = [];
+      let fileAndTemplates = [];
+      jobsWithRelatedFiles.forEach(jobWithRelatedFiles =>{
+          let {relatedFiles, job: jobId} = jobWithRelatedFiles;
           relatedFiles.forEach(file => {
             let{name : fileName, assetId: fileId, relatedTo, title : fileTitle, isSuperFile, isAssociated, file_type, description : fileDescription} = file;
             for(let i = 0; i < templates.length; i++){
                 let {id : templateId, fileNamePattern, searchString, title : templateTitle,  description : templateDescription} = templates[i]
-                let operation = fileNamePattern === 'contains' ? 'includes' : fileNamePattern;
-                if(fileName[operation](searchString)){ // Matching template FOUND - > this is doing something like this : filename.endsWith('test')
+                let foundMatchingTemplate = wildCardStringMatch(searchString, fileName)
+                if(foundMatchingTemplate){
                   allAssetsIds.push(templateId);
-                  let indexOfFileGroup = fileAndTemplates.findIndex(item => item.assetId === templateId && item.file_type === file_type);
+                  let indexOfFileGroup = fileAndTemplates.findIndex(fileAndTemplate => fileAndTemplate.assetId === templateId && fileAndTemplate.file_type === file_type);
                   if(indexOfFileGroup < 0){
                       fileAndTemplates = [...fileAndTemplates, {name : templateTitle, isAssociated: true, assetId : templateId, relatedTo, title: templateTitle, file_type, description : templateDescription, assetType: 'FileTemplate'}];
                   }
                   return; // Exiting from inner loop when template is found
                 }
-                if(!fileName[operation](searchString) && i === templates.length -1){ // matching template NOT FOUND
+                if(!foundMatchingTemplate && i === templates.length -1){ // matching template not found && completed lopping all templates
                   allAssetsIds.push(fileId);
                   fileAndTemplates = [...fileAndTemplates, {name: fileName, assetId: fileId, relatedTo, title: fileTitle, isSuperFile, isAssociated, file_type, description: fileDescription, assetType: 'File'}];
                 }
               }
           })
-          item.relatedFiles = fileAndTemplates;
+          jobWithRelatedFiles.relatedFiles = fileAndTemplates;
         })
-        const allJobs = [...jobsWithRelatedFiles, ...jobWithoutRelatedFiles];
-        res.send({result : allJobs, assetsIds : allAssetsIds})
-        
+    const allJobs = [...jobsWithRelatedFiles, ...jobWithoutRelatedFiles];
+    res.send({result : allJobs, assetsIds : allAssetsIds})
+
 } catch (error) {
   console.log(error);
   return res.status(500).json({ success: false, message: "Error occurred while updating" });
@@ -654,8 +657,9 @@ router.get('/job_details', [
         }else{
            for(let i = 0; i < templates.length; i++){
               let {id : templateId, fileNamePattern, searchString, title : templateName, description : templateDescription} = templates[i]
-              let operation = fileNamePattern === 'contains' ? 'includes' : fileNamePattern;
-              if(fileName[operation](searchString)){ // Matching template found
+              // let operation = fileNamePattern === 'contains' ? 'includes' : fileNamePattern;
+              const foundMatchingTemplate = wildCardStringMatch(searchString, fileName)
+              if(foundMatchingTemplate){ // Matching template found
                 let indexOfFileGroup = fileAndTemplates.findIndex(item => item.id === templateId && item.file_type === file_type);
                 if(indexOfFileGroup >= 0){
                   fileAndTemplates[indexOfFileGroup].files.push(newFileObj)
@@ -666,7 +670,7 @@ router.get('/job_details', [
                 return;
               }
               
-              if(!fileName[operation](searchString) && i === templates.length -1){ // No matching template found
+              if(!foundMatchingTemplate && i === templates.length -1){ // No matching template found
                 fileAndTemplates = [...fileAndTemplates, newFileObj];
               }
             }  
@@ -876,6 +880,7 @@ router.post( '/manualJobResponse',
 );
 
 const QueueDaemon = require('../../queue-daemon');
+const { forEach } = require('lodash');
 
 router.get('/msg', (req, res) => {
   if (req.query.topic && req.query.message) {
