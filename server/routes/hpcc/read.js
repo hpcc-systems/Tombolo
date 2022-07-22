@@ -1,6 +1,5 @@
 const express = require('express');
 const router = express.Router();
-const crypto = require('crypto');
 var request = require('request');
 var requestPromise = require('request-promise');
 const hpccUtil = require('../../utils/hpcc-util');
@@ -13,7 +12,6 @@ var File = models.file;
 var Query = models.query;
 var Index = models.indexes;
 var Job = models.job;
-let algorithm = 'aes-256-ctr';
 let hpccJSComms = require("@hpcc-js/comms")
 const { body, query, validationResult } = require('express-validator');
 const ClusterWhitelist = require('../../cluster-whitelist');
@@ -25,6 +23,7 @@ const userService = require('../user/userservice');
 const path = require('path');
 var sanitize = require("sanitize-filename");
 const logger = require('../../config/logger');
+const moment = require('moment'); 
 
 router.post('/filesearch', [
   body('keyword')
@@ -603,6 +602,7 @@ router.get('/getDirectories',[
 router.get('/dropZoneDirectories', [
 	query('clusterId').exists().withMessage('Invalid cluster ID'),
 	query('Netaddr').exists().withMessage('Invalid Netaddr'),
+	query('DirectoryOnly').exists().withMessage('Invalid directory only value. It should be either true or false'),
 	query('Path').exists().withMessage('Invalid path') ], async(req, res) =>{
 	const {clusterId, Netaddr,  Path, DirectoryOnly} = req.query;
 	try{
@@ -612,6 +612,62 @@ router.get('/dropZoneDirectories', [
 
 	}catch(err){
 		console.log(err);
+		res.status(503).json({success : false, message : err.message})
+	}
+})
+
+router.get('/dropZoneDirectoryDetails', [
+	query('clusterId').exists().withMessage('Invalid cluster ID'),
+	query('Netaddr').exists().withMessage('Invalid Netaddr'),
+	query('DirectoryOnly').exists().withMessage('Invalid directory only value. It should be either true or false'),
+	query('Path').exists().withMessage('Invalid path') ], async(req, res) =>{
+	const {clusterId, Netaddr,  Path, DirectoryOnly} = req.query;
+	try{
+		const cluster = await hpccUtil.getCluster(clusterId);
+		const response = await hpccUtil.fetchLandingZoneDirectories({cluster, Netaddr,  Path, DirectoryOnly})
+
+		let fileCount = 0;
+		let directoryCount =0;
+		let oldestFile = null;
+		const allAssets = []
+
+		if(response.FileListResponse?.files){
+			const {PhysicalFileStruct : assets} = response.FileListResponse.files
+
+			for(let asset of assets){
+				asset.age = moment(asset.modifiedtime).fromNow(true)
+				allAssets.push(asset)
+
+				if(asset.isDir){
+					directoryCount++
+				}else{
+					fileCount++;
+					if(!oldestFile){
+						oldestFile= asset
+					}else{
+						let currentOldestFileModifiedTime = moment(oldestFile.modifiedtime)
+						const currentFileModifiedTime = moment(asset.modifiedtime)
+						const diff = currentOldestFileModifiedTime.diff(currentFileModifiedTime, 'seconds')
+						if(diff > 0) oldestFile = asset						
+					}
+				}
+			}
+			console.log(assets)
+		}
+		console.log('File count ----->', fileCount)
+		console.log('Directory count ------->', directoryCount)
+		console.log('Oldest file ---------->', oldestFile)
+
+		const directoryDetails= {
+			fileCount,
+			directoryCount,
+			oldestFile,
+			filesAndDirectories: allAssets		
+		}
+		res.status(200).json(directoryDetails);
+
+	}catch(err){
+		console.log( err);
 		res.status(503).json({success : false, message : err.message})
 	}
 })
@@ -846,4 +902,42 @@ io.of("/landingZoneFileUpload").on("connection", (socket) => {
 		}
 	})
 });
+
+router.get('/clusterMetaData', [query('clusterId').isUUID(4).withMessage('Invalid cluster Id')], async (req, res) =>{
+	//Validate cluster Id
+	const errors = validationResult(req).formatWith(validatorUtil.errorFormatter);
+	if (!errors.isEmpty()) {
+	  return res.status(422).json({ success: false, errors: errors.array() });
+	}
+
+	//If cluster id is valid ->
+	const {clusterId} = req.query;
+	try{
+		//Get cluster details
+		let cluster = await hpccUtil.getCluster(clusterId)
+		const {thor_host, thor_port, username, hash } = cluster;
+		const clusterDetails = {baseUrl: `${thor_host}:${thor_port}`, userID: username|| '', password: hash || ''}
+
+		const topologyService = new hpccJSComms.TopologyService(clusterDetails)
+		
+		const tpServiceQuery = await topologyService.TpServiceQuery({'Type': 'ALLSERVICES'})
+		const tpLogicalClusterQuery = await topologyService.TpLogicalClusterQuery(); // Active execution engines
+		const dropZones = tpServiceQuery.ServiceList?.TpDropZones?.TpDropZone; // Landing zones and their local dir paths
+
+		//----------------------------------
+		const clusterMetaData = {
+			// TpDfuServer: tpServiceQuery.ServiceList.TpDfuServers.TpDfuServer,
+			TpDfuServer: tpServiceQuery.ServiceList,
+			tpLogicalCluster: tpLogicalClusterQuery.TpLogicalClusters.TpLogicalCluster,
+			dropZones
+		}
+		res.send(clusterMetaData)
+		//---------------------------------
+
+	}catch(err){
+		console.log('-------------------', err)
+		res.status(503).json({success: false, message: err})
+	}
+})
+
 module.exports = router;
