@@ -12,7 +12,6 @@ const express = require('express');
 const rateLimit = require("express-rate-limit");
 const tokenService = require('./utils/token_service');
 const passport = require('passport');
-const bearerStrategy = require('./utils/passportStrategies/passport-azure');
 const cors = require('cors');
 const { sequelize: dbConnection } = require('./models');
 const morganMiddleware = require('./config/morganMiddleware');

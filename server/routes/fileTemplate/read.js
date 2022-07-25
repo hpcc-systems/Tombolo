@@ -35,7 +35,16 @@ router.post('/saveFileTemplate', [
         return res.status(422).json({ success: false, errors: errors.array() });
       }
 
-      const {application_id, cluster, title, fileNamePattern, searchString, groupId, description,sampleLayoutFile, fileLayoutData, assetId, licenses, metaData} = req.body;
+      const {application_id, cluster, title, fileNamePattern, groupId, description,sampleLayoutFile, fileLayoutData, assetId, licenses, metaData} = req.body;
+
+      let {searchString} = req.body;
+			if(fileNamePattern === 'startsWith'){
+				searchString = req.body.searchString+"*";
+			}else if(fileNamePattern === 'endsWith'){
+				searchString = "*"+req.body.searchString
+			}else if(fileNamePattern === 'contains'){
+			  searchString = "*"+req.body.searchString+"*";
+			}
 
       if(assetId){
         // file template exists -> edit it
