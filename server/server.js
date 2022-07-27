@@ -66,7 +66,6 @@ const fileTemplateRead = require('./routes/fileTemplate/read')
 const dataflowGraph = require('./routes/dataflows/dataflowgraph');
 const regulations = require('./routes/controlsAndRegulations/read');
 
-app.use('/api/hpcc/read', hpccRead);
 
 app.use('/api/user', userRead);
 // Authenticate token before proceeding to route
@@ -80,7 +79,7 @@ app.use('/api/groups', groups);
 app.use('/api/app/read', appRead);
 app.use('/api/consumer', consumer);
 app.use('/api/dataflow', dataflow);
-// app.use('/api/hpcc/read', hpccRead);
+app.use('/api/hpcc/read', hpccRead);
 app.use('/api/file/read', fileRead);
 app.use('/api/index/read', indexRead);
 app.use('/api/report/read', reportRead);
