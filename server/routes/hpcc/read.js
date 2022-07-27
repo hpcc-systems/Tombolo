@@ -625,7 +625,12 @@ router.get('/dropZoneDirectoryDetails', [
 	query('Netaddr').exists().withMessage('Invalid Netaddr'),
 	query('DirectoryOnly').exists().withMessage('Invalid directory only value. It should be either true or false'),
 	query('Path').exists().withMessage('Invalid path') ], async(req, res) =>{
-	// TODO- validate errors
+	
+	const errors = validationResult(req).formatWith(validatorUtil.errorFormatter);
+	if (!errors.isEmpty()) {
+		return res.status(422).json({ success: false, errors: errors.array() });
+	}
+
 	const {clusterId, Netaddr,  Path, DirectoryOnly} = req.query;
 	console.log('Cluster id etc', clusterId, Netaddr, Path, DirectoryOnly)
 	try{
