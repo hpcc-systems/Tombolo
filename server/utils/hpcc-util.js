@@ -11,6 +11,7 @@ const {decryptString } = require('./cipher')
 const simpleGit = require('simple-git');
 const cp = require('child_process');
 const fs = require('fs');
+const logger = require('../config/logger');
 
 exports.fileInfo = async (fileName, clusterId) => {
   try {
@@ -520,7 +521,7 @@ exports.getCluster = (clusterId) => {
 /*
 response :  undefined -> cluster not reached network issue or cluster not available
 response.status : 200 -> Cluster reachable 
-response.status : 401 -> Unauthorized
+response.status : 401 -> Cluster reachable but Unauthorized
 */
 
 exports.isClusterReachable =  (clusterHost, port, username, password) => {
@@ -539,9 +540,11 @@ exports.isClusterReachable =  (clusterHost, port, username, password) => {
 	    if (!error && response.statusCode === 200) {
 	      resolve({reached :true, statusCode : 200});
 	    }else if(!error && response.statusCode === 401){
+        logger.error(`${clusterHost} - Access denied`)
         resolve({reached :true, statusCode : 403})
       }
       else {
+        logger.error(error)
 	    	resolve({reached :false, statusCode : 503});
 	    }
 	  })

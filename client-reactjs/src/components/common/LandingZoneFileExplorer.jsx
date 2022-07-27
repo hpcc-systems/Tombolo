@@ -5,7 +5,7 @@ import { authHeader} from './AuthHeader';
 
 const {Option} = Select;
 
-function LandingZoneFileExplorer({clusterId, DirectoryOnly, setLandingZoneRootPath, enableEdit}) {
+function LandingZoneFileExplorer({clusterId, DirectoryOnly, setLandingZoneRootPath, enableEdit, onDirectoryPathChange}) {
   const [landingZoneDetails, setLandingZoneDetails] = useState({fetchingLandingZone : false, landingZones : [], selectedLandingZone : {machines: []}, selectedMachine : null, directories : []  })
 
   useEffect(() => {
@@ -152,6 +152,7 @@ function LandingZoneFileExplorer({clusterId, DirectoryOnly, setLandingZoneRootPa
         placeholder="Please select" 
         allowClear 
         changeOnSelect={true} 
+        onChange={(value, selectedOptions) => onDirectoryPathChange ? onDirectoryPathChange(value, selectedOptions) : null}
         style={{ width: "100%" }}/>
     </Form.Item> : null}
     </>
