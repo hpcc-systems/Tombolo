@@ -29,6 +29,7 @@ import ManualJobDetail from "./components/application/Jobs/ManualJobDetail"
 import Actions from "./components/application/actions/actions";
 import { AdminApplications } from "./components/admin/apps/Applications";
 import AdminClusters from "./components/admin/Clusters";
+import ClusterDetails from "./components/admin/ClusterDetails";
 import { AdminConsumers } from "./components/admin/Consumers";
 import { AppHeader } from "./components/layout/Header";
 import { userActions } from "./redux/actions/User";
@@ -158,11 +159,14 @@ class App extends React.Component {
                     path="/admin/bree"
                     component={ScheduledJobsPage}
                   />
+                   <PrivateRoute
+                    path="/admin/clusters/:clusterId"
+                    component={ClusterDetails}
+                  />
                   <PrivateRoute
                     path="/admin/clusters"
                     component={AdminClusters}
                   />
-
                   <PrivateRoute path="/admin/github" component={GitHubSettings} />
                   <PrivateRoute path="/admin/users" component={Users} />
                   <PrivateRoute path="/report/:searchText" component={Report} />
