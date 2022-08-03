@@ -1,5 +1,5 @@
 import { DeleteOutlined, ExportOutlined, EyeOutlined, GlobalOutlined, QuestionCircleOutlined, ShareAltOutlined, UserOutlined } from '@ant-design/icons';
-import { Button, Divider, notification, Popconfirm, Table, Tooltip } from 'antd/lib';
+import { Button, Divider, notification, Popconfirm, Table, Tooltip } from 'antd';
 import download from "downloadjs";
 import React, { Component } from "react";
 import { connect } from 'react-redux';

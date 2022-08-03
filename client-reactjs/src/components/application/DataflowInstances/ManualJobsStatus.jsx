@@ -1,6 +1,6 @@
 import React, {useEffect, useState} from 'react'
 import { Constants } from '../../common/Constants';
-import { Table, Typography } from 'antd/lib';
+import { Table, Typography } from 'antd';
 
 const { Paragraph } = Typography;
 

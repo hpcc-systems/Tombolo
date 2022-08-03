@@ -1,4 +1,4 @@
-import { Table } from 'antd/lib';
+import { Table } from 'antd';
 import { Component } from 'react';
 import ReactMarkdown from 'react-markdown';
 import { connect } from 'react-redux';

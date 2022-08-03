@@ -1,5 +1,5 @@
 import React from 'react';
-import { Form, Input } from 'antd/lib';
+import { Form, Input } from 'antd';
 const { TextArea } = Input;
 
 function TextAreaField({ enableEdit, showDetails, label, name, errorMessage, placeholder }) {

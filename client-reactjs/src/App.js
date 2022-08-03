@@ -1,6 +1,6 @@
 import React from "react";
 import { connect } from "react-redux";
-import { Layout } from "antd/lib";
+import { Layout } from "antd";
 import { Router, Route, Switch } from "react-router-dom";
 import { Redirect } from "react-router";
 import history from "./components/common/History";

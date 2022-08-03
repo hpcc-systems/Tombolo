@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react'
-import { Form, Input, Button, Select, Spin, message, Row, Col } from 'antd/lib';
+import { Form, Input, Button, Select, Spin, message, Row, Col } from 'antd';
 import { authHeader, handleError } from "../../common/AuthHeader.js";
 import { useSelector, useDispatch } from "react-redux";
 import { assetsActions } from '../../../redux/actions/Assets';

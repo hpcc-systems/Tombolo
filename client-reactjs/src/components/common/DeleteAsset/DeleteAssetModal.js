@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 
-import { Modal, Spin, Alert, Collapse } from 'antd/lib';
+import { Modal, Spin, Alert, Collapse } from 'antd';
 import { authHeader, handleError } from '../AuthHeader';
 import { useSelector } from 'react-redux';
 

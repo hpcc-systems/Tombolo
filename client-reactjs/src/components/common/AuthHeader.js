@@ -1,6 +1,6 @@
 import { userActions } from '../../redux/actions/User';
 import { store } from '../../redux/store/Store';
-import { message } from 'antd/lib';
+import { message } from 'antd';
 import { msalInstance } from '../../index';
 
 import { InteractionRequiredAuthError } from "@azure/msal-browser";

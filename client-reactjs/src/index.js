@@ -3,7 +3,6 @@ import ReactDOM from 'react-dom';
 import { App } from './App';
 import { BrowserRouter } from 'react-router-dom';
 import './index.css';
-import 'antd/dist/antd.css';
 import "font-awesome/css/font-awesome.min.css";
 
 

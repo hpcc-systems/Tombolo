@@ -2,8 +2,7 @@ import React, { Component } from "react";
 import { Link, withRouter } from "react-router-dom";
 import { connect } from 'react-redux';
 import { hasAdminRole, hasEditPermission } from "../common/AuthUtil.js";
-import Title from "antd/lib/typography/Title";
-import { Layout, Menu } from 'antd/lib';
+import { Layout, Menu, Typography} from 'antd';
 
 const { Sider } = Layout;
 
@@ -108,7 +107,7 @@ class LeftNav extends Component {
             
               {canEdit ? 
                 <>
-                  {this.props.collapsed ? null : <Title ellipsis={true} className="left-nav-title" >Settings</Title>}
+                  {this.props.collapsed ? null : <Typography.Title ellipsis={true} className="left-nav-title" >Settings</Typography.Title>}
                   <Menu.Item key="4" icon={<i className="fa fa-fw fa-telegram"/>}>         
                     <Link to={"/"+applicationId+"/actions"}>
                       Actions
@@ -131,7 +130,7 @@ class LeftNav extends Component {
                       Collaborator
                     </Link>
                   </Menu.Item>
-                  {this.props.collapsed ? null : <Title ellipsis={true} className="left-nav-title" >Admin</Title>}
+                  {this.props.collapsed ? null : <Typography.Title ellipsis={true} className="left-nav-title" >Admin</Typography.Title>}
                   <Menu.Item key="8" icon={<i className="fa fa-fw fa-desktop"/>}>         
                     <Link to={"/admin/applications"}>
                       Applications

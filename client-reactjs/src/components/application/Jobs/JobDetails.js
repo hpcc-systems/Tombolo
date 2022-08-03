@@ -1,6 +1,6 @@
 /* eslint-disable no-useless-escape */
 import { SearchOutlined } from "@ant-design/icons";
-import { Button, Col, Form, Input, message, Row, Select, Spin, Tabs, Typography } from "antd/lib";
+import { Button, Col, Form, Input, message, Row, Select, Spin, Tabs, Typography } from "antd";
 import React, { Component } from "react";
 import { connect } from "react-redux";
 import { assetsActions } from "../../../redux/actions/Assets";

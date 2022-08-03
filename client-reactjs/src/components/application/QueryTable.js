@@ -1,4 +1,4 @@
-import { Table, Divider, message, Popconfirm, Tooltip } from 'antd/lib';
+import { Table, Divider, message, Popconfirm, Tooltip } from 'antd';
 import React, { Component } from "react";
 import QueryDetailsForm from "./QueryDetails";
 import { authHeader, handleError } from "../common/AuthHeader.js"
@@ -7,6 +7,7 @@ import { Constants } from '../common/Constants';
 import ReactMarkdown from 'react-markdown';
 import { DeleteOutlined, EditOutlined, QuestionCircleOutlined, ShareAltOutlined  } from '@ant-design/icons';
 
+//!! TODO: NOT IN USE
 class QueryTable extends Component {
   constructor(props) {
     super(props);

@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { Form, Select, Cascader, Input, Tag, Space } from "antd/lib";
+import { Form, Select, Cascader, Input, Tag, Space } from "antd";
 import { CheckCircleOutlined, CloseCircleOutlined, LoadingOutlined } from '@ant-design/icons';
 
 function GHMainFile({ enableEdit, form, branchOrTagName }) {

@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react'
-import { Form, Input, Select, Row, Col } from 'antd/lib';
+import { Form, Input, Select, Row, Col } from 'antd';
 import ReactMarkdown from 'react-markdown';
 import { MarkdownEditor } from "../../common/MarkdownEditor.js";
 import { threeColformItemLayout } from "../../common/CommonUtil.js";

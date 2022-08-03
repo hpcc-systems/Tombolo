@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import { Table, Button, Modal, Form, Input, message, Tooltip, Popconfirm, Divider, Select } from "antd/lib";
+import { Table, Button, Modal, Form, Input, message, Tooltip, Popconfirm, Divider, Select } from "antd";
 import { DeleteOutlined, EditOutlined, QuestionCircleOutlined } from "@ant-design/icons";
 import { useSelector, useDispatch } from "react-redux";
 import {  Link } from "react-router-dom";

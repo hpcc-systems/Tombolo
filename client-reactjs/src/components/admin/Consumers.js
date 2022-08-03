@@ -1,5 +1,5 @@
 import { DeleteOutlined, EditOutlined, QuestionCircleOutlined, SearchOutlined } from '@ant-design/icons';
-import { AutoComplete, Button, Checkbox, Divider, Form, Input, message, Modal, notification, Popconfirm, Select, Table, Tooltip, Typography } from 'antd/lib';
+import { AutoComplete, Button, Checkbox, Divider, Form, Input, message, Modal, notification, Popconfirm, Select, Table, Tooltip, Typography } from 'antd';
 import React, { Component } from "react";
 import { connect } from 'react-redux';
 import { applicationActions } from '../../redux/actions/Application';

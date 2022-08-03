@@ -1,5 +1,5 @@
 import React, { PureComponent } from "react";
-import {  Tabs, Form, Input, Select, Table, AutoComplete, message, Spin, Button, Row, Col } from 'antd/lib';
+import {  Tabs, Form, Input, Select, Table, AutoComplete, message, Spin, Button, Row, Col } from 'antd';
 import { authHeader, handleError } from "../common/AuthHeader.js"
 import { hasEditPermission } from "../common/AuthUtil.js";
 import { eclTypes } from "../common/CommonUtil.js"

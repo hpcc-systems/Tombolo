@@ -1,6 +1,6 @@
 import React from 'react';
 import { useSelector } from 'react-redux';
-import { Tabs } from 'antd/lib';
+import { Tabs } from 'antd';
 import LandingZoneUpload from "./LandingZoneUpload";
 import BreadCrumbs from "../../common/BreadCrumbs";
 

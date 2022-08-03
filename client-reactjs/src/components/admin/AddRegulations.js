@@ -1,12 +1,8 @@
+import { Form, Input, message, Modal, Table } from 'antd';
 import React, { Component } from "react";
-import { Table,message,Spin,Modal,Tabs,Form,Input,Select } from 'antd/lib';
 import { authHeader, handleError } from "../common/AuthHeader.js";
 const { confirm } = Modal;
-const Option = Select.Option;
 class AddRegulations extends Component {
-    constructor(props) {
-      super(props);
-    }
     state = {
         dataTypes:[],
         selectedRowKeys:[],

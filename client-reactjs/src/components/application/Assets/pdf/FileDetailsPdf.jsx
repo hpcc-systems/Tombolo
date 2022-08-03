@@ -3,7 +3,7 @@ import { authHeader, handleError } from "../../../common/AuthHeader";
 import ReactMarkdown from "react-markdown";
 import { downloadPdf } from "./downloadPdf";
 import { useSelector } from "react-redux";
-import { message } from "antd/lib";
+import { message } from "antd";
 import {
   PdfContainer,
   Heading,

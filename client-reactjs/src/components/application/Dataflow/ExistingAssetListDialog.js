@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Button, message, Modal, Table, Tooltip } from 'antd/lib';
+import { Button, message, Modal, Table, Tooltip } from 'antd';
 import { authHeader, handleError } from '../../common/AuthHeader.js';
 
 import { useSelector } from 'react-redux';

@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { useParams } from 'react-router-dom';
-import { message, Tabs, Descriptions, Card, Collapse, Form, Empty, Spin, Breadcrumbs  } from 'antd';
+import { message, Tabs, Descriptions, Card, Collapse, Form, Empty, Spin  } from 'antd';
 import { CaretRightOutlined, FolderOpenOutlined, FileOutlined } from '@ant-design/icons';
 
 import { authHeader } from '../common/AuthHeader.js';

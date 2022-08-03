@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useSelector } from 'react-redux';
-import { Button, Tooltip, Modal, Form, Input, Select, message } from 'antd/lib';
+import { Button, Tooltip, Modal, Form, Input, Select, message } from 'antd';
 
 import { authHeader } from '../../common/AuthHeader.js';
 import NotifyField from '../Jobs/Notifications/RadioButtons';

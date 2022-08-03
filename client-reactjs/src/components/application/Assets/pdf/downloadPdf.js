@@ -1,6 +1,6 @@
 import jsPDF from "jspdf";
 import { authHeader, handleError } from "../../../common/AuthHeader";
-import {message} from "antd/lib";
+import {message} from "antd";
 
 
 // Download pdf file

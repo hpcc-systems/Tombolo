@@ -1,5 +1,5 @@
 import { DeleteOutlined, EditOutlined, QuestionCircleOutlined } from '@ant-design/icons';
-import { Button, Divider, notification, Popconfirm, Select, Spin, Table, Tooltip } from 'antd/lib';
+import { Button, Divider, notification, Popconfirm, Select, Spin, Table, Tooltip } from 'antd';
 import React, { Component } from "react";
 import { authHeader, handleError } from "../common/AuthHeader.js";
 import BreadCrumbs from "../common/BreadCrumbs";

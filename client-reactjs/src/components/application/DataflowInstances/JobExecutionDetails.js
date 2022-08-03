@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { Space, Table, Badge } from 'antd/lib';
+import { Space, Table, Badge } from 'antd';
 import { useParams } from 'react-router-dom';
 import { Constants } from '../../common/Constants';
 

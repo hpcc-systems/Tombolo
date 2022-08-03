@@ -1123,6 +1123,7 @@ class FileDetails extends Component {
             <TabPane tab="Permissable Purpose" key="4">
               <InheritedLicenses relation={inheritedLicensing} />
               <div
+              //  !TODO GET RID OF AgGridReact LIB
                 className="ag-theme-balham"
                 style={{ height: '400px', width: '100%', }}>
                 <AgGridReact

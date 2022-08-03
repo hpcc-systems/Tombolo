@@ -1,6 +1,6 @@
 import React from 'react';
 import { useHistory, useParams } from 'react-router';
-import { Tabs, Button, Spin } from 'antd/lib';
+import { Tabs, Button, Spin } from 'antd';
 import DataflowAssetsTable from './DataflowAssetsTable';
 import BreadCrumbs from '../../common/BreadCrumbs';
 import GraphX6 from '../Graph/GraphX6';

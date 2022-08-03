@@ -1,5 +1,5 @@
 import React from 'react';
-import { Form, Button, Space, Radio } from 'antd/lib';
+import { Form, Button, Space, Radio } from 'antd';
 
 const notificationOptions = [
   { label: 'Never', value: 'Never' },

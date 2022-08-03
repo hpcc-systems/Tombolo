@@ -1,5 +1,5 @@
 import React, { Component } from "react";
-import {Breadcrumb} from 'antd/lib';
+import {Breadcrumb} from 'antd';
 import {withRouter} from "react-router-dom";
 
 class BreadCrumbs extends Component {

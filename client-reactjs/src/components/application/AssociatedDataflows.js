@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react'
 import { useHistory } from 'react-router';
 import { useSelector, useDispatch } from "react-redux";
-import { Table } from 'antd/lib';
+import { Table } from 'antd';
 import { authHeader, handleError } from "../common/AuthHeader.js"
 import { dataflowAction } from '../../redux/actions/Dataflow';
 

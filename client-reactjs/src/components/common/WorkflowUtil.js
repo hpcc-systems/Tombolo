@@ -1,4 +1,4 @@
-import { message } from 'antd/lib';
+import { message } from 'antd';
 import { authHeader, handleError } from "./AuthHeader.js"
 
 export function handleJobDelete(jobId, applicationId) {

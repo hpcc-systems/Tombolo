@@ -1,5 +1,5 @@
 import React, { PureComponent } from "react";
-import { Modal, Tabs, Form, Input, Select, AutoComplete, Spin, message, Button, Radio, Row, Col } from 'antd/lib';
+import { Modal, Tabs, Form, Input, Select, AutoComplete, Spin, message, Button, Radio, Row, Col } from 'antd';
 import { authHeader, handleError } from "../../common/AuthHeader.js"
 import { hasEditPermission } from "../../common/AuthUtil.js";
 import AssociatedDataflows from "../AssociatedDataflows"

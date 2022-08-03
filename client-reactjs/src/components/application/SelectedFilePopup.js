@@ -4,6 +4,8 @@ import {FileList} from "./FileList";
 import { applicationActions } from '../../redux/actions/Application';
 import { authHeader, handleError } from "../common/AuthHeader.js";
 import { CloseCircleOutlined } from '@ant-design/icons';
+
+//!! TODO: NOT IN USE
 class SelectedFilePopup extends Component {
   constructor(props) {
     super(props);

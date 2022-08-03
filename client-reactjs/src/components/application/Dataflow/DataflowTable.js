@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react'
-import { Table, message, Popconfirm, Tooltip, Divider} from 'antd/lib';
+import { Table, message, Popconfirm, Tooltip, Divider} from 'antd';
 import { authHeader, handleError } from "../../common/AuthHeader.js"
 import { hasEditPermission } from "../../common/AuthUtil.js";
 import { Constants } from '../../common/Constants';

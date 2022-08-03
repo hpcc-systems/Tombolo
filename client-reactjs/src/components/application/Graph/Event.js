@@ -1,4 +1,4 @@
-import Modal from 'antd/lib/modal/Modal';
+import { Modal } from 'antd';
 import eyeSvg from './Icons/eye-invisible.svg'
 
 import { ExclamationCircleOutlined } from '@ant-design/icons';

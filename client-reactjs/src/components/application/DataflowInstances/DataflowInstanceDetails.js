@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { Button, Tabs, Spin, Space, message } from 'antd/lib';
+import { Button, Tabs, Spin, Space, message } from 'antd';
 import JobExecutionDetails from './JobExecutionDetails';
 import ManualJobsStatus from './ManualJobsStatus';
 import { authHeader, handleError } from '../../common/AuthHeader.js';

@@ -1,5 +1,5 @@
 import React, { Component } from "react";
-import { Table,message,Spin,Modal, AutoComplete, Select, Button, Popconfirm, Tooltip } from 'antd/lib';
+import { Table,message,Spin,Modal, AutoComplete, Select, Button, Popconfirm, Tooltip } from 'antd';
 import { authHeader, handleError } from "../../common/AuthHeader.js";
 import { DeleteOutlined, EditOutlined, QuestionCircleOutlined, SearchOutlined  } from '@ant-design/icons';
 import debounce from 'lodash/debounce';

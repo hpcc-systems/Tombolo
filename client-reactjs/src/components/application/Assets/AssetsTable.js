@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { Table, message, Popconfirm, Tooltip, Divider, Space , Typography, Button} from "antd/lib";
+import { Table, message, Popconfirm, Tooltip, Divider, Space , Typography, Button} from "antd";
 import { authHeader, handleError } from "../../common/AuthHeader.js";
 // import FileDetailsForm from "../FileDetails";
 import MoveAssetsDialog from "./MoveAssetsDialog";

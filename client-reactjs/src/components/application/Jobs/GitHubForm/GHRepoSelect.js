@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { Form, Select, Space, Tag, Typography} from "antd/lib";
+import { Form, Select, Space, Tag, Typography} from "antd";
 
 import { CheckCircleOutlined } from '@ant-design/icons';
 const { Text } = Typography;

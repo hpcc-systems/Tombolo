@@ -1,6 +1,6 @@
 import React, {useState, useEffect} from 'react'
 import { authHeader, handleError } from "../../common/AuthHeader.js"
-import { Col, Form, Input, Row, Select} from 'antd/lib';
+import { Col, Form, Input, Row, Select} from 'antd';
 import ReactMarkdown from 'react-markdown';
 import { MarkdownEditor } from "../../common/MarkdownEditor.js";
 import { useSelector,useDispatch } from "react-redux";
