@@ -1,11 +1,10 @@
+import { DeleteOutlined, EditOutlined, QuestionCircleOutlined } from '@ant-design/icons';
+import { Button, Divider, notification, Popconfirm, Select, Spin, Table, Tooltip } from 'antd/lib';
 import React, { Component } from "react";
-import { Table, Button, Row, Col, Modal, Form, Input, notification, Spin, Select, Popconfirm, Tooltip, Divider } from 'antd/lib';
+import { authHeader, handleError } from "../common/AuthHeader.js";
 import BreadCrumbs from "../common/BreadCrumbs";
-import { authHeader, handleError } from "../common/AuthHeader.js"
 import AddRegulations from "./AddRegulations";
-import { DeleteOutlined, EditOutlined, QuestionCircleOutlined, ShareAltOutlined  } from '@ant-design/icons';
 
-const Option = Select.Option;
 
 class Regulations extends Component {
   state = {
@@ -130,24 +129,25 @@ class Regulations extends Component {
       dataIndex: '',
       render: (text, record) =>
         <span>
-          <a href="#" onClick={(row) => this.handleEdit(record.compliance)}><Tooltip placement="right" title={"Edit"}><EditOutlined /></Tooltip></a>
+          <a onClick={(row) => this.handleEdit(record.compliance)}><Tooltip placement="right" title={"Edit"}><EditOutlined /></Tooltip></a>
           <Divider type="vertical" />
           <Popconfirm title="Are you sure you want to delete?" onConfirm={() => this.handleDelete(record.compliance)} icon={<QuestionCircleOutlined />}>
-            <a href="#"><Tooltip placement="right" title={"Delete"}><DeleteOutlined /></Tooltip></a>
+            <a><Tooltip placement="right" title={"Delete"}><DeleteOutlined /></Tooltip></a>
           </Popconfirm>
         </span>
     }];
 
     return (
     <React.Fragment>
-      <div className="d-flex justify-content-end">
-        <BreadCrumbs applicationId={this.state.applicationId}/>
-        <span style={{ marginLeft: "auto" }}>
-          <Tooltip placement="bottom" title={"Click to add a new User"}>
-            <Button className="btn btn-secondary btn-sm" onClick={() => this.handleAdd()}><i className="fa fa-plus"></i> Add Controls and Regulations</Button>
+
+      <BreadCrumbs 
+          applicationId={this.state.applicationId}
+          extraContent={ 
+          <Tooltip placement="bottom" title={"Click to add a new Controls and Regulations"}>
+            <Button type="primary"  onClick={() => this.handleAdd()}> Add Controls and Regulations </Button>
           </Tooltip>
-        </span>
-      </div>
+        }/>
+
       <div className="loader">
         <Spin spinning={this.state.initialDataLoading} size="large" />
       </div>

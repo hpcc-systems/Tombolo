@@ -119,7 +119,7 @@ function ExistingAssetListDialog({ show, applicationId, clusterId, assetType, on
       render: (text, record) => (
         <span>
           <Button
-            className="btn btn-secondary btn-sm"
+            type='primary'
             onClick={() => {
               setLoading(true);
               onClose({

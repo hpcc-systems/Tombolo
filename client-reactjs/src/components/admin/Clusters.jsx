@@ -1,8 +1,8 @@
 import React, { useEffect, useState } from "react";
-import { Table, Button, Row, Col, Modal, Form, Input, message, Tooltip, Popconfirm, Divider, Select, Space } from "antd/lib";
+import { Table, Button, Modal, Form, Input, message, Tooltip, Popconfirm, Divider, Select } from "antd/lib";
 import { DeleteOutlined, EditOutlined, QuestionCircleOutlined } from "@ant-design/icons";
 import { useSelector, useDispatch } from "react-redux";
-import { useHistory, Link } from "react-router-dom";
+import {  Link } from "react-router-dom";
 
 
 import { authHeader } from "../common/AuthHeader.js";
@@ -11,17 +11,6 @@ import {applicationActions} from "../../redux/actions/Application"
 
 const Option = Select.Option;
 
-//Form layout
-const formItemLayout = {
-  labelCol: {
-    xs: { span: 2 },
-    sm: { span: 4 },
-  },
-  wrapperCol: {
-    xs: { span: 4 },
-    sm: { span: 24 },
-  },
-};
 
 function Clusters() {
   const [clusterWhiteList, setClusterWhiteList] = useState([]); // List of clusters from cluster server/whitelist file
@@ -30,7 +19,6 @@ function Clusters() {
   const [addClusterModalVisible, setAddClusterModalVisible] = useState(false);
   const [form] = Form.useForm();
   const dispatch = useDispatch()
-  const history = useHistory();
 
   //When component loads
   useEffect(() => {
@@ -171,13 +159,9 @@ function Clusters() {
 
   return (
     <>
-      <div className="d-flex justify-content-end" style={{ marginLeft: "auto" }}>
-        <Button className="btn btn-secondary btn-sm" onClick={handleAddClusterBtnClick}>
-          <Space>
-            <i className="fa fa-plus"> </i> Add Cluster
-          </Space>
-        </Button>
-      </div>
+      <Button onClick={handleAddClusterBtnClick} type="primary"  style={{ margin:'5px', display:'block', marginLeft:'auto' }}>
+        Add Cluster
+      </Button>
 
       <Table
         columns={clusterTableColumns}
@@ -188,26 +172,21 @@ function Clusters() {
 
       <Modal visible={addClusterModalVisible} onCancel={handleCancel} okText={"Add"} onOk={addCluster}>
         <Form layout="vertical" form={form}>
-          <Row gutter={23}>
-            <Col span={13}>
-              <div className={"form-group"}>
-                <Form.Item {...formItemLayout} label="Host" name="name">
-                  <Select placeholder="Select a Cluster"  style={{ width: 470 }}>
-                    {clusterWhiteList.map((cluster) => (
-                      <Option key={cluster.name} value={cluster.name}>
-                        {cluster.name + " - " + cluster.thor + ":" + cluster.thor_port}
-                      </Option>
-                    ))}
-                  </Select>
-                </Form.Item>
-              </div>
-            </Col>
-          </Row>
-          <Form.Item {...formItemLayout} label="User Name" name="username" required>
+          <Form.Item label="Host" name="name" required>
+            <Select placeholder="Select a Cluster" >
+              {clusterWhiteList.map((cluster) => (
+                <Option key={cluster.name} value={cluster.name}>
+                  {cluster.name + " - " + cluster.thor + ":" + cluster.thor_port}
+                </Option>
+              ))}
+            </Select>
+          </Form.Item>
+          <Form.Item label="User name" name="username" required>
             <Input />
           </Form.Item>
-          <Form.Item {...formItemLayout} label="Password" name="password" >
-            <Input />
+
+          <Form.Item label="Password" name="password" >
+            <Input.Password />
           </Form.Item>
         </Form>
       </Modal>

@@ -1,8 +1,8 @@
+import { DeleteOutlined, EditOutlined, QuestionCircleOutlined } from '@ant-design/icons';
+import { Button, Divider, Form, Input, Modal, notification, Popconfirm, Select, Spin, Table, Tooltip } from 'antd/lib';
 import React, { Component } from "react";
-import { Table, Button, Row, Col, Modal, Form, Input, notification, Spin, Select, Popconfirm, Tooltip, Divider } from 'antd/lib';
+import { authHeader, handleError } from "../common/AuthHeader.js";
 import BreadCrumbs from "../common/BreadCrumbs";
-import { authHeader, handleError } from "../common/AuthHeader.js"
-import { DeleteOutlined, EditOutlined, QuestionCircleOutlined, ShareAltOutlined  } from '@ant-design/icons';
 
 const Option = Select.Option;
 
@@ -13,7 +13,6 @@ class Users extends Component {
   	removeDisabled: true,
 	  showAddUser: false,
   	confirmLoading: false,
-  	showAddUser: false,
     initialDataLoading: false,
     isUserUpdated: false,
   	newUser : {
@@ -246,14 +245,14 @@ class Users extends Component {
 
     return (
     <React.Fragment>
-      <div className="d-flex justify-content-end">
-        <BreadCrumbs applicationId={this.state.applicationId}/>
-        <span style={{ marginLeft: "auto" }}>
-          <Tooltip placement="bottom" title={"Click to add a new User"}>
-            <Button className="btn btn-secondary btn-sm" onClick={() => this.handleAdd()}><i className="fa fa-plus"></i> Add User</Button>
+      <BreadCrumbs 
+          applicationId={this.state.applicationId}
+          extraContent={ 
+            <Tooltip placement="bottom" title={"Click to add a new User"}>
+            <Button type="primary"  onClick={() => this.handleAdd()}> Add User </Button>
           </Tooltip>
-        </span>
-      </div>
+        }/>
+        
       <div className="loader">
         <Spin spinning={this.state.initialDataLoading} size="large" />
       </div>
@@ -273,39 +272,28 @@ class Users extends Component {
 	          confirmLoading={confirmLoading}
 	        >
 		        <Form layout="vertical">
-              <div className={'form-group' + (this.state.submitted && !this.state.newUser.firstName ? ' has-error' : '')}>
-		            <Form.Item {...formItemLayout} label="First Name">
-						    <Input id="firstName" name="firstName" onChange={this.onChange} placeholder="First Name" value={this.state.newUser.firstName}/>
-                {this.state.submitted && !this.state.newUser.firstName &&
-                        <div className="help-block">First Name is required</div>
-                }
+		            <Form.Item label="First Name" name="firstName" rules={[{ required: true, message: 'First Name is required' }]}>
+			  			    <Input id="firstName" name="firstName" onChange={this.onChange} placeholder="First Name" value={this.state.newUser.firstName}/>
 		            </Form.Item>
-                </div>
-		            <Form.Item {...formItemLayout} label="Last Name">
-						<Input id="lastName" name="lastName" onChange={this.onChange} placeholder="Last Name" value={this.state.newUser.lastName}/>
+
+		            <Form.Item label="Last Name" name="lastName" rules={[{ required: true, message: 'Last Name is required' }]}>
+                  <Input id="lastName" name="lastName" onChange={this.onChange} placeholder="Last Name" value={this.state.newUser.lastName}/>
 		            </Form.Item>
-                <div className={'form-group' + (this.state.submitted && !this.state.newUser.username ? ' has-error' : '')}>
-		            <Form.Item {...formItemLayout} label="User Name">
-						<Input id="username" name="username" onChange={this.onChange} placeholder="User Name" value={this.state.newUser.username}/>
-                {this.state.submitted && !this.state.newUser.username &&
-                        <div className="help-block">User Name is required</div>
-                }
+
+		            <Form.Item label="User Name" name="username" rules={[{ required: true, message: 'User Name is required' }]}>
+                  <Input id="username" name="username" onChange={this.onChange} placeholder="User Name" value={this.state.newUser.username}/>
 		            </Form.Item>
-                </div>
-                <div className={'form-group' + (this.state.submitted && !this.state.newUser.password ? ' has-error' : '')}>
-		            <Form.Item {...formItemLayout} label="Password">
-						      <Input.Password id="password" name="password" onChange={this.onChange} value={this.state.newUser.password} placeholder="Password"/>
-                  {this.state.submitted && !this.state.newUser.password &&
-                        <div className="help-block">Password is required</div>
-                }
+		  
+                <Form.Item label="Password" name="password" rules={[{ required: true, message: 'Password is required' }]}>
+                  <Input.Password id="password" name="password" onChange={this.onChange} value={this.state.newUser.password} placeholder="Password"/>
 		            </Form.Item>
-                </div>
-		            <Form.Item {...formItemLayout} label="Role">
-                <Select name="role" id="role" style={{ width: 200 }} onSelect={this.handleRoleChange} value={this.state.newUser.role}>
-                <Option value=""></Option>
-                  <Option value="admin" >admin</Option>
-                  <Option value="user">user</Option>
-                </Select>
+
+		            <Form.Item  label="Role" name="role">
+                  <Select name="role" id="role" onSelect={this.handleRoleChange} value={this.state.newUser.role}>
+                  <Option value=""></Option>
+                    <Option value="admin" >admin</Option>
+                    <Option value="user">user</Option>
+                  </Select>
 		            </Form.Item>
 	            </Form>
 	        </Modal>

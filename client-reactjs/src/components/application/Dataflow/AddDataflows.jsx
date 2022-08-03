@@ -145,11 +145,11 @@ function AddDataflow({ modalVisible, setModalVisibility, dataflowToEdit, setData
       <div style={{ marginLeft: 'auto', paddingTop: '5px' }}>
         <Tooltip 
           placement="bottom" 
-          title={'Add new workflow'}>
+          title={'Add new Dataflow'}>
           <Button 
-            className="btn btn-secondary btn-sm" 
+            type='primary'
             onClick={handleModal}>
-            <i className="fa fa-plus"></i>Add
+            Add Dataflow
           </Button>
         </Tooltip>
       </div>

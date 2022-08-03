@@ -1,7 +1,23 @@
 @import "~antd/dist/antd.css";
+:root {
+  /* some colors from bootstrap */
+  --primary: #007bff;
+  --secondary: #6c757d;
+  --success: #28a745;
+  --info: #17a2b8;
+  --warning: #ffc107;
+  --danger: #dc3545;
+  --light: #f8f9fa;
+  --dark: #343a40;
+}
+
 body {
   margin: 0;
   overflow: hidden;
+}
+
+svg {
+  vertical-align: unset !important;
 }
 
 .logo {
@@ -12,6 +28,8 @@ body {
 }
 
 .login-logo {
+  text-align: center;
+  font-size: 2em;
   color: #ff5722;
 }
 
@@ -121,13 +139,24 @@ body {
 }
 
 .login-form {
-  width: 340px;
-  margin: 140px auto;
+  max-width: 550px;
+  margin: 50px auto;
+  padding: 40px 20px;
+  box-shadow: 0 1px 2px -2px rgba(0, 0, 0, 0.16), 0 3px 6px 0 rgba(0, 0, 0, 0.12), 0 5px 12px 4px rgba(0, 0, 0, 0.09);
 }
+
+.login-form-forgot{
+  display: block;
+  color:#007bff;
+  cursor: pointer;
+  text-align: right;
+}
+
 .login-form form {
   margin-bottom: 15px;
   padding: 20px;
 }
+
 .login-form h2 {
   margin: 0 0 15px;
 }
@@ -356,7 +385,7 @@ path,
 }
 
 .ant-form-item {
-  margin-bottom: 2px !important;
+  margin-bottom: 7px !important;
 }
 
 /* The style of the selected table row */
@@ -973,4 +1002,12 @@ div.tooltip {
 /* To reduce gap between label and input field */
 .MultiLineFormItem > div:first-child{
   height: 30px;
+}
+
+.left-nav-title{
+  padding: 0 1rem;
+  margin-top: 1.5rem;
+  margin-bottom: 0,25rem;
+  color:#6c757d !important;
+  font-size: 24px !important;
 }

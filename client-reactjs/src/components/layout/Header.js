@@ -1,9 +1,9 @@
-import { DownOutlined, QuestionCircleOutlined } from '@ant-design/icons';
-import { Button, Dropdown, Form, Input, Menu, message, Modal, notification } from 'antd';
+import { AppstoreOutlined, DownOutlined, QuestionCircleOutlined } from '@ant-design/icons';
+import { Button, Dropdown, Form, Input, Menu, message, Modal, notification, Space, Tooltip } from 'antd';
 import { debounce } from "lodash";
 import React, { Component } from "react";
 import { connect } from 'react-redux';
-import { withRouter } from 'react-router-dom';
+import { Link, withRouter } from 'react-router-dom';
 import logo from "../../images/logo.png";
 import { msalInstance } from '../../index';
 import { applicationActions } from '../../redux/actions/Application';
@@ -15,13 +15,13 @@ import { hasAdminRole } from "../common/AuthUtil.js";
 
 class AppHeader extends Component {
     pwdformRef = React.createRef();
+
     constructor(props) {
       super(props);
       this.handleChange = this.handleChange.bind(this);
       this.handleTopNavClick = this.handleTopNavClick.bind(this);
       this.search = this.search.bind(this);
-      this.onChangeSearch = this.onChangeSearch.bind(this);
-      this.appDropDown = React.createRef();      
+      this.onChangeSearch = this.onChangeSearch.bind(this); 
     }
 
     state = {
@@ -38,15 +38,14 @@ class AppHeader extends Component {
     }
 
     handleRef() {
-      const projectId = localStorage.getItem("activeProjectId");      
-      const appDropdownItem = this.appDropDown.current.querySelector('[data-value="'+projectId+'"]');
+      const projectId = localStorage.getItem("activeProjectId"); 
+      const application = this.state.applications?.find(app => app.value === projectId);
       //if no activeProjectId select the first application by default.
-      if(appDropdownItem == null && this.state.applications.length > 0) {
+      if(!application && this.state.applications.length > 0) {
         this.setState({ selected: this.state.applications[0].display });
         this.props.dispatch(applicationActions.applicationSelected(this.state.applications[0].value, this.state.applications[0].display));
         localStorage.setItem("activeProjectId", this.state.applications[0].value);
       } else {
-        const application = this.state.applications.find(app => app.value === projectId);
         if (application) {
           this.handleChange({...application})
         }
@@ -341,51 +340,48 @@ class AppHeader extends Component {
       return null;
     }
 
-    return (
-        <React.Fragment>
-          <nav className="navbar navbar-expand-md navbar-dark bg-dark fixed-top">
-            <a href="/" className="navbar-left" style={{marginRight: "40px"}}><img src={logo} /></a>
-            <button className="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarsExampleDefault" aria-controls="navbarsExampleDefault" aria-expanded="false" aria-label="Toggle navigation">
-              <span className="navbar-toggler-icon"></span>
-            </button>
 
-            <div className="collapse navbar-collapse" id="navbarsExampleDefault">
-              <ul className="navbar-nav mr-auto">
-                <li className="nav-item dropdown">
-                  <a className="nav-link dropdown-toggle" id="applicationSelect" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">{this.state.selected}</a>
-                  <div className="dropdown-menu" aria-labelledby="dropdown01" ref={this.appDropDown}>
-                    {this.state.applications.map((application, index) => (
-                      <a className="dropdown-item" key={application.value} onClick={() => this.handleChange({...application, goToAssetPage: true})} data-value={application.value} data-display={application.display}>{application.display}</a>
-                    ))}
-                  </div>
-                </li>
-              </ul>
-              <ul className="ml-md-auto navbar-nav">
-                {/*<li className="nav-item">
-                  <Search
-                    name="searchText"
-                    placeholder="Search"
-                    onSearch={this.search}
-                    onChange={this.onChangeSearch}
-                    style={{ width: 200, paddingRight:"5px" }} />
-                </li>*/}
-                <li style={{ paddingRight:"5px" }}>
-                  <Dropdown overlay={helpMenu} trigger={['click']}>
-                    <Button shape="round">
-                      <i className="fa fa-lg fa-question-circle"></i><span style={{paddingLeft:"5px"}}>Help <DownOutlined /></span>
-                    </Button>
-                  </Dropdown>
-                </li>
-                <li>
-                  <Dropdown overlay={userActionMenu} style={{paddingLeft:"5px"}} trigger={['click']}>
-                    <Button shape="round">
-                      <i className="fa fa-lg fa-user-circle"></i><span style={{paddingLeft:"5px"}}>{this.props.user.firstName + " " + this.props.user.lastName} <DownOutlined /></span>
-                    </Button>
-                  </Dropdown>
-                </li>
-              </ul>
-            </div>
-          </nav>
+    const menu = (
+      <Menu>
+        {this.state.applications.map((app, index) =>{
+          return(
+            <Menu.Item key={index} onClick={() => this.handleChange({...app, goToAssetPage: true})}> 
+              {app.display}
+            </Menu.Item>
+          )
+        })}
+      </Menu>
+    );
+
+    return (
+        <div style={{display:'flex', alignItems:'center', maxHeight:"100%", justifyContent:'space-between'}}>
+          <div>
+            <Link to={"/"} style={{marginRight: "70px"}}><img src={logo} alt="Tombolo logo"/></Link>
+
+            <Dropdown overlay={menu} placement="bottom" trigger={['click']}>
+              <Tooltip title="Select an Application" placement='right'>
+                <Space style={{color:'white', border:'1px solid white', cursor:'pointer', padding:"0 4px", borderRadius:"3px", maxHeight:'32px', minWidth:"200px"}}>
+                  <AppstoreOutlined/>
+                  <span> {this.state.selected}</span> 
+                </Space>
+              </Tooltip>
+            </Dropdown>
+          </div>
+
+          <div>
+            <Dropdown overlay={helpMenu} trigger={['click']}>
+              <Button shape="round" style={{marginRight:'10px'}}>
+                <i className="fa fa-lg fa-question-circle"></i><span style={{paddingLeft:"5px"}}>Help <DownOutlined /></span>
+              </Button>
+            </Dropdown>
+
+            <Dropdown overlay={userActionMenu} trigger={['click']}>
+              <Button shape="round">
+                <i className="fa fa-lg fa-user-circle"></i><span style={{paddingLeft:"5px"}}>{this.props.user.firstName + " " + this.props.user.lastName} <DownOutlined /></span>
+              </Button>
+            </Dropdown>
+          </div>
+
           <Modal
           title="Change Password"
           visible={this.state.visible}
@@ -422,7 +418,7 @@ class AppHeader extends Component {
           <p className="float-left font-weight-bold">Tombolo v{process.env.REACT_APP_VERSION}</p>
 
         </Modal>
-       </React.Fragment>
+       </div>
     )
   }
 }

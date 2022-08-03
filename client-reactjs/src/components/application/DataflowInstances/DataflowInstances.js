@@ -94,12 +94,7 @@ class DataflowInstances extends Component {
     ];
     return (
       <div>
-        <div className="d-flex justify-content-end">
-          <BreadCrumbs
-            applicationId={this.state.applicationId}
-            applicationTitle={this.state.applicationTitle}
-          />
-        </div>
+        <BreadCrumbs applicationId={this.state.applicationId} applicationTitle={this.state.applicationTitle} />
         <div>
           <Table
             columns={dataflowCols}

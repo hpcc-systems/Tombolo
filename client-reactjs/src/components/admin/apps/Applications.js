@@ -1,24 +1,20 @@
+import { DeleteOutlined, ExportOutlined, EyeOutlined, GlobalOutlined, QuestionCircleOutlined, ShareAltOutlined, UserOutlined } from '@ant-design/icons';
+import { Button, Divider, notification, Popconfirm, Table, Tooltip } from 'antd/lib';
+import download from "downloadjs";
 import React, { Component } from "react";
-import { Table, Button, Modal, Form, Input, notification, Tooltip, Popconfirm, Divider, message, Radio } from 'antd/lib';
-import BreadCrumbs from "../../common/BreadCrumbs";
+import { connect } from 'react-redux';
+import { applicationActions } from '../../../redux/actions/Application';
 import { authHeader, handleError } from "../../common/AuthHeader.js";
 import { hasAdminRole } from "../../common/AuthUtil.js";
-import { connect } from 'react-redux';
+import BreadCrumbs from "../../common/BreadCrumbs";
 import { Constants } from '../../common/Constants';
-import ShareApp from "./ShareApp";
-import { applicationActions } from '../../../redux/actions/Application';
-import { DeleteOutlined, EyeOutlined, QuestionCircleOutlined, ShareAltOutlined, ExportOutlined,GlobalOutlined,UserOutlined} from '@ant-design/icons';
-import ImportApplication from "./ImportApplication"
-import download from "downloadjs"
 import AddApplication from "./AddApplication";
+import ShareApp from "./ShareApp";
 
 class Applications extends Component {
   // REFERENCE TO THE FORM INSIDE MODAL
   formRef = React.createRef();
   
-  constructor(props) {
-    super(props);
-  }
   state = {
   	applications:[],
   	selectedApplication: null,
@@ -189,58 +185,33 @@ class Applications extends Component {
         <span>
             <React.Fragment>
               {record.visibility !== 'Public' && record.creator === this.props.user.username ?<>
-              <a href="#" onClick={() => this.handleShareApplication(record)}><Tooltip placement="left" title={"Share Application"}><ShareAltOutlined /></Tooltip></a>
+              <span onClick={() => this.handleShareApplication(record)}><Tooltip placement="left" title={"Share Application"}><ShareAltOutlined /></Tooltip></span>
               <Divider type="vertical" /> </>: null}
 
-              <a href="#" onClick={() => this.handleApplicationEdit(record)}><Tooltip placement="right" title={"Edit Application"}><EyeOutlined /></Tooltip></a>
+              <span onClick={() => this.handleApplicationEdit(record)}><Tooltip placement="right" title={"Edit Application"}><EyeOutlined /></Tooltip></span>
               <Divider type="vertical" />
 
-              <a href="#" onClick={() => this.handleExportApplication(record.id, record.title)}><Tooltip placement="right" title={"Export Application"}><ExportOutlined /></Tooltip></a>
+              <span onClick={() => this.handleExportApplication(record.id, record.title)}><Tooltip placement="right" title={"Export Application"}><ExportOutlined /></Tooltip></span>
               <Divider type="vertical" />
 
               {(record.creator === this.props.user.username) || (record.creator !== this.props.username && record.visibility !== 'Public') ? 
               <Popconfirm title="Are you sure you want to delete this Application?" onConfirm={() => this.handleRemove(record.id)} icon={<QuestionCircleOutlined />}>
-                <a href="#"><Tooltip placement="right" title={"Delete Application"}><DeleteOutlined /></Tooltip></a>
+                <span><Tooltip placement="right" title={"Delete Application"}><DeleteOutlined /></Tooltip></span>
               </Popconfirm> : null}
             </React.Fragment>
         </span>
     }];
-    const formItemLayout = 
-    this.state.action !== "read" ? {
-    labelCol: {
-      xs: { span: 2 },
-      sm: { span: 8 },
-    },
-    wrapperCol: {
-      xs: { span: 4 },
-      sm: { span: 24 },
-    }
-  } : 
-  {
-    labelCol: {
-      xs: { span: 3 },
-      sm: { span: 5 },
-    },
-    wrapperCol: {
-      xs: { span: 4 },
-      sm: { span: 24 },
-    }
-  }
-
 
     return (
     <React.Fragment>
-      <div className="d-flex justify-content-end" style={{display: "flex", placeItems: "center"}}>
-        <BreadCrumbs applicationId={this.state.applicationId}/>
-        < ImportApplication user={this.props.user}/>
-        <span style={{ marginLeft: "auto" }}>
+      <BreadCrumbs 
+          applicationId={this.state?.applicationId || ''}
+          extraContent={ 
             <Tooltip placement="bottom" title={"Click to add a new Application"}>
-              <Button className="btn btn-secondary btn-sm" 
-                onClick={() => this.handleAddApplication()}>
-                <i className="fa fa-plus"></i> Add Application</Button>
-            </Tooltip>
-          </span>  
-      </div>
+            <Button type="primary"  onClick={() => this.handleAddApplication()}> Add Application</Button>
+          </Tooltip>
+        }/>
+
       <div style={{padding:"15px"}}>
       	<Table
           columns={applicationColumns}

@@ -28,9 +28,7 @@ function DataflowDetails() {
   return (
     <React.Fragment>
       <div style={{ display: 'flex', justifyContent: 'space-between' }}>
-        <div className="d-flex justify-content-end">
-          <BreadCrumbs applicationId={applicationId} applicationTitle={applicationTitle} />
-        </div>
+        <BreadCrumbs applicationId={applicationId} applicationTitle={applicationTitle} />
       </div>
       <div>
         <Tabs

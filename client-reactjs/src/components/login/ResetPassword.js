@@ -1,11 +1,6 @@
 import React from 'react';
-import {withRouter} from 'react-router';
-import { userActions } from '../../redux/actions/User';
-import { connect } from 'react-redux';
-import {message, Row, Col, Icon, Tooltip} from 'antd/lib';
-import { Constants } from '../../components/common/Constants';
-import { timeSaturday } from 'plotly.js-basic-dist';
-
+import { withRouter } from 'react-router';
+import { Alert, Button, Form, Input, message } from 'antd';
 
 class ResetPassword extends React.Component {
   constructor(props) {
@@ -15,12 +10,13 @@ class ResetPassword extends React.Component {
 	    password: '',
       confirmPassword: '',
       submitted: false,
-      matched: true
+      matched: true, 
+      error: false,
+      success: false
 	  }
   }
 
   componentDidMount() {
-   this.password.focus();
    this.setState({ id: this.props.match.params.id });
   }
 
@@ -31,7 +27,6 @@ class ResetPassword extends React.Component {
 
   handleSubmit = (e) => {
   	e.preventDefault();
-    this.setState({ submitted: true });
     if(this.state.confirmPassword !== this.state.password){
       message.error("Passwords don’t match.");
     return this.setState({matched: false})
@@ -42,8 +37,9 @@ class ResetPassword extends React.Component {
       message.error("Weak Password. To make passwords stronger, it must be minimum 8 characters long, contain upper and lower case letters, numbers, and special characters.")
       return;
     }
-
+    
     if(this.state.id && this.state.password) {
+      this.setState({ submitted: true, success:false, error:false });
       fetch('/api/user/resetPassword', {
         method: 'post',
         headers: {
@@ -55,52 +51,70 @@ class ResetPassword extends React.Component {
         console.log(response)
         message.config({top:110})
         if(response.ok) {
-          message.success("Password has been reset succesfully.");
+          message.success("Password has been reset successfully.");
+          this.setState({success: true, submitted:false})
           setTimeout(() => {
-            window.location = '/login';
+            this.props.history.replace('/login')
           }, 2000);
         } else {        
           message.error("Invalid or expired reset link");
+          this.setState({error: true, submitted:false})
           response.text().then(text => {
             console.log("error message: "+ JSON.stringify(JSON.parse(text)));
           })
               
         }
       }).catch(error => {
-
+        this.setState({error: true, submitted:false})
       });
     }
     
   }
 
   render() {
-    const { password, submitted, confirmPassword } = this.state;
+    const { password, success, error, confirmPassword } = this.state;
     return (
-        <React.Fragment>        
-          <div className="forgot-form shadow-lg p-3 mb-5 bg-white rounded">
-            <form name="form" onSubmit={this.handleSubmit}>
-            	<h2 className="text-center login-logo">Tombolo</h2>                    
-              <div className={'form-group' + (submitted && !password ? ' has-error' : '')}>
-                <label htmlFor="password">New password</label>
-                <input type="password" className="form-control" name="password" value={password} placeholder={"New Password"} onChange={this.handleChange} ref={(input) => { this.password = input; }}/>
-                {submitted && !password &&
-                    <div className="help-block">Password is required</div>
-                }
-              </div>
-              <div className={'form-group' + (submitted && !password ? ' has-error' : '')}>
-                <label htmlFor="password">Confirm new password</label>
-                <input type="password" className="form-control" name="confirmPassword" value={confirmPassword} placeholder={"Confirm Password"} onChange={this.handleChange} ref={(input) => { this.confirmPassword = input; }}/>
-                {submitted && !password &&
-                    <div className="help-block">Confirm password is required</div>
-                }
-              </div>
-       
-              <div className="form-group">
-                <button className="btn btn-primary btn-block">Reset Password</button>
-              </div>
-            </form>
-          </div>
-        </React.Fragment>      
+        <>        
+          <Form className="login-form" layout='vertical'>
+            <h2 className="login-logo">Tombolo</h2>
+
+            <Form.Item label="New password" name="password" rules={[ { required: true, message: 'Please provide password!' }]} >
+              <Input.Password value={password} name='password' onChange={this.handleChange} placeholder="New Password" />
+            </Form.Item>
+      
+            <Form.Item label="Confirm new password" name="confirmPassword" rules={[ { required: true, message: 'Please confirm password!' }]} >
+              <Input.Password value={confirmPassword} name='confirmPassword' onChange={this.handleChange} placeholder="Confirm New Password" />
+            </Form.Item>
+
+            {success && 
+              <Form.Item>
+                <Alert
+                  message="Success"
+                  description="You will be redirected to login page shortly"
+                  type="success"
+                  showIcon
+                  />
+              </Form.Item>
+            }
+
+            {error && 
+              <Form.Item>
+                <Alert
+                  message="Error"
+                  description="Failed to reset password."
+                  type="error"
+                  showIcon
+                  />
+              </Form.Item>
+            }
+
+            <Form.Item>
+              <Button loading={this.state.submitted} onClick={this.handleSubmit} type="primary" block className="login-form-button">
+                {this.state.submitted ? 'Processing...': 'Reset Password'}
+              </Button>
+            </Form.Item>
+          </Form>
+        </>      
         )
   }
 }

@@ -4,9 +4,13 @@ import React from 'react';
 import {withRouter} from 'react-router';
 import { userActions } from '../../redux/actions/User';
 import { connect } from 'react-redux';
-import {message, Row, Col, Tooltip} from 'antd/lib';
+
+import { LockOutlined, UserOutlined } from '@ant-design/icons';
+import { Button,  Form, Input , message, Tooltip } from 'antd';
+
 import { Constants } from '../../components/common/Constants';
 import { ArrowLeftOutlined } from '@ant-design/icons';
+import { Link } from 'react-router-dom';
 
 class LoginPage extends React.Component {
   constructor(props) {
@@ -28,10 +32,6 @@ class LoginPage extends React.Component {
 
     this.handleChange = this.handleChange.bind(this);
     this.handleSubmit = this.handleSubmit.bind(this);
-  }
-
-  componentDidMount() {
-     this.userName.focus();
   }
 
   componentWillReceiveProps(nextProps){
@@ -58,14 +58,13 @@ class LoginPage extends React.Component {
 
     if(!nextProps.newUserRegistering && nextProps.userRegistrationSuccess != undefined && nextProps.userRegistrationSuccess) {
       if(nextProps.status == 201) {
-        message.info("Registration Succesful. Please login using the account you just created")
+        message.info("Registration Successful. Please login using the account you just created")
       } else if(nextProps.status == 202) {
         message.info("It looks like an account already exists for you. If you already registered for RealBI application, please login to Tombolo using your RealBI account.")
       }
       setTimeout(() => {
-        window.location = '/login';
+        this.props.history.push('/login');
       }, 2000);
-
     }
   }
 
@@ -93,7 +92,7 @@ class LoginPage extends React.Component {
   }
 
   handleForgotPassword = () => {
-    window.location = '/forgot-password';
+    this.props.history.push('/forgot-password');
   }
 
   handleBack = (e) => {
@@ -142,119 +141,76 @@ class LoginPage extends React.Component {
   }
 
   render() {
-      const { username, password, submitted, firstName, lastName, email, newUsername, newPassword, confirmNewPassword, loginView } = this.state;
-      const { id } = this.props.match.params;
+      const { username, password, firstName, lastName, email, newUsername, newPassword, confirmNewPassword, loginView } = this.state;
       return (
-        <React.Fragment>
+        <>
           {loginView ?
-          <React.Fragment>
-            <div className="login-form shadow-lg p-3 mb-5 bg-white rounded">
-              <form name="form" onSubmit={this.handleSubmit} method="post">
-                <h2 className="text-center login-logo">Tombolo</h2>
-                <div className={'form-group' + (submitted && !username ? ' has-error' : '')}>
-                  <label htmlFor="username">Username</label>
-                  <input type="text" className="form-control" name="username" value={username} onChange={this.handleChange} ref={(input) => { this.userName = input; }}/>
-                  {submitted && !username &&
-                      <div className="help-block">Username is required</div>
-                  }
-                </div>
-                <div className={'form-group' + (submitted && !password ? ' has-error' : '')}>
-                  <label htmlFor="password">Password</label>
-                  <input type="password" className="form-control" name="password" value={password} onChange={this.handleChange} />
-                  {submitted && !password &&
-                      <div className="help-block">Password is required</div>
-                  }
-                </div>
-                <div className="form-group">
-                    <button className="btn btn-primary btn-block">Login</button>
-                </div>
-                <div className="clearfix">
-                  <p className="text-center"><a href="#" onClick={this.handleForgotPassword}>Forgot Password?</a></p>
-                </div>
+            <Form className="login-form">
+              <h2 className="login-logo">Tombolo</h2>
+              <Form.Item name="username" rules={[ { required: true, message: 'Please provide your Username!', }, ]} >
+                <Input value={username} name="username" onChange={this.handleChange} prefix={<UserOutlined className="site-form-item-icon" />} placeholder="Username" />
+              </Form.Item>
 
-                <div className="form-group">
-                  <p className="text-center"><a href="#" onClick={this.handleRegister}>Register</a></p>
-                </div>
-              </form>
-            </div>
-          </React.Fragment>
-        : <React.Fragment>
-            <div className="login-form-registration shadow-lg p-3 mb-5 bg-white rounded">
+              <Form.Item name="password" rules={[ { required: true, message: 'Please provide your Password!', }, ]} >
+                <Input.Password value={password} name="password" onChange={this.handleChange} prefix={<LockOutlined className="site-form-item-icon" />} type="password" placeholder="Password" />
+              </Form.Item>
+
+              <Form.Item>
+                <Link to={'/forgot-password'} className="login-form-forgot"> Forgot password ?</Link >
+              </Form.Item>
+
+              <Form.Item>
+                <Button onClick={this.handleSubmit} type="primary" block className="login-form-button">
+                  Log in
+                </Button>
+               
+              </Form.Item>
+              
+              <Form.Item>
+                Or <a onClick={this.handleRegister} >register now!</a>
+              </Form.Item>
+            </Form>
+        : 
+            <Form className="login-form" labelAlign='left' {...formItemLayout}>
               <a href="#" onClick={this.handleBack}><Tooltip placement="right" title={"Back to Login"}><ArrowLeftOutlined /></Tooltip></a>
-              <h2 className="text-center login-logo">Tombolo</h2>
-              <Row type="flex" justify="space-between">
-                <Col span={12} style={{"paddingRight":"5px"}}>
-                  <div className={'form-group' + (submitted && !username ? ' has-error' : '')}>
-                    <label htmlFor="username">First Name</label>
-                    <input type="text" className="form-control" name="firstName" value={firstName} onChange={this.handleChange}/>
-                    {submitted && !firstName &&
-                        <div className="help-block">First Name is required</div>
-                    }
-                  </div>
-                </Col>
-                <Col span={12}>
-                  <div className={'form-group' + (submitted && !password ? ' has-error' : '')}>
-                    <label htmlFor="lastName">Last Name</label>
-                    <input type="text" className="form-control" name="lastName" value={lastName} onChange={this.handleChange} />
-                    {submitted && !lastName &&
-                        <div className="help-block">Last Name is required</div>
-                    }
-                  </div>
-                </Col>
-              </Row>
+              <h2 className="login-logo">Tombolo</h2>
 
-              <Row type="flex" justify="space-between">
-                <Col span={24} style={{"paddingRight":"5px"}}>
-                  <div className={'form-group' + (submitted && !email ? ' has-error' : '')}>
-                    <label htmlFor="email">Email</label>
-                    <input type="text" className="form-control" name="email" value={email} onChange={this.handleChange}/>
-                    {submitted && !email &&
-                        <div className="help-block">Email is required</div>
-                    }
-                  </div>
-                </Col>
-              </Row>
-              <Row type="flex" justify="space-between">
-                <Col span={24}>
-                  <div className={'form-group' + (submitted && !newUsername ? ' has-error' : '')}>
-                    <label htmlFor="newUsername">User Name</label>
-                    <input type="text" className="form-control" name="newUsername" value={newUsername} onChange={this.handleChange} />
-                    {submitted && !newUsername &&
-                        <div className="help-block">User Name is required</div>
-                    }
-                  </div>
-                </Col>
-              </Row>
+              <Form.Item label="First name" name="firstName" rules={[ { required: true, message: 'Please provide your first name!', }, ]} >
+                <Input value={firstName} name="firstName" onChange={this.handleChange} placeholder="First name" />
+              </Form.Item>
 
-              <Row type="flex" justify="space-between">
-                <Col span={12} style={{"paddingRight":"5px"}}>
-                  <div className={'form-group' + (submitted && !newPassword ? ' has-error' : '')}>
-                    <label htmlFor="newPassword">Password</label>
-                    <input type="password" className="form-control" name="newPassword" value={newPassword} onChange={this.handleChange}/>
-                    {submitted && !newPassword &&
-                        <div className="help-block">Password is required</div>
-                    }
-                  </div>
-                </Col>
-                <Col span={12}>
-                  <div className={'form-group' + (submitted && !confirmNewPassword ? ' has-error' : '')}>
-                    <label htmlFor="confirmNewPassword">Confirm Password</label>
-                    <input type="password" className="form-control" name="confirmNewPassword" value={confirmNewPassword} onChange={this.handleChange} />
-                    {submitted && !confirmNewPassword &&
-                        <div className="help-block">Confirm Password</div>
-                    }
-                  </div>
-                </Col>
-              </Row>
-              <Row type="flex" justify="center">
-                <Col span={12}>
-                  <button className="btn btn-primary btn-block" onClick={this.handleSubmitRegistration}>Register</button>
-                </Col>
-              </Row>
+              <Form.Item label="Last Name" name="lastName" rules={[ { required: true, message: 'Please provide your last name!', }, ]} >
+                <Input value={lastName} name="lastName" onChange={this.handleChange} placeholder="Last name" />
+              </Form.Item>
+ 
+              <Form.Item label="Email" name="email" rules={[ { required: true, message: 'Please provide your email!', },{ type: 'email', message: 'The input is not valid E-mail!'}]} >
+                <Input type='email' name="email" value={email} onChange={this.handleChange} placeholder="Email" />
+              </Form.Item>
 
-            </div>
-          </React.Fragment>}
-          </React.Fragment>
+              <Form.Item label="Username" name="newUsername" rules={[ { required: true, message: 'Please provide your username!', }]} >
+                <Input value={newUsername} name="newUsername" onChange={this.handleChange} placeholder="Username" />
+              </Form.Item> 
+
+              <Form.Item label="Password" name="newPassword" rules={[ { required: true, message: 'Please provide your Password!', }, ]} >
+                <Input.Password value={newPassword} name="newPassword" onChange={this.handleChange} type="password" placeholder="Password" />
+              </Form.Item>
+
+              <Form.Item label="Confirm" name="confirmNewPassword" rules={[ { required: true, message: 'Please confirm your Password!', }, ]} >
+                <Input.Password value={confirmNewPassword} name="confirmNewPassword" onChange={this.handleChange} type="password" placeholder="Confirm Password" />
+              </Form.Item>
+
+              <Form.Item {...tailFormItemLayout}>
+                <Button onClick={this.handleSubmitRegistration} type="primary" block className="login-form-button">
+                  Register
+                </Button>
+              </Form.Item>
+              
+              <Form.Item {...tailFormItemLayout}>
+                Or <a onClick={this.handleBack}>login now!</a>
+              </Form.Item>
+            </Form>
+         }
+          </>
       );
   }
 }
@@ -275,3 +231,37 @@ function mapStateToProps(state) {
 const connectedLoginPage = connect(mapStateToProps)(withRouter(LoginPage));
 export { connectedLoginPage as LoginPage };
 //export default withRouter(LoginPage);
+
+
+const tailFormItemLayout = {
+  wrapperCol: {
+    xs: {
+      span: 24,
+      offset: 0,
+    },
+    sm: {
+      span: 18,
+      offset: 5,
+    },
+  },
+};
+
+
+const formItemLayout = {
+  labelCol: {
+    xs: {
+      span: 24,
+    },
+    sm: {
+      span: 5,
+    },
+  },
+  wrapperCol: {
+    xs: {
+      span: 24,
+    },
+    sm: {
+      span: 18,
+    },
+  },
+};

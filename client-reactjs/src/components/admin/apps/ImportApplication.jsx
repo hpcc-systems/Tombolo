@@ -8,6 +8,8 @@ import { store } from "../../../redux/store/Store";
 import { useHistory } from "react-router";
 import {io} from "socket.io-client";
 
+
+// !! TODO : NOT IN USE
 function ImportApplication(props) {
   const [ modalVisible, setModalVisiblity] = useState(false);
   const [uploadStatus, setUploadStatus] = useState("")
@@ -166,7 +168,7 @@ function ImportApplication(props) {
            <Button style={{display: "flex", 
                           placeItems : "center", 
                           marginRight: "10px"}} 
-              className="btn btn-sm btn-primary" 
+              type='primary'
               onClick={() =>setModalVisiblity(true)}
               icon={<ImportOutlined  />}>Import App
             </Button>

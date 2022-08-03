@@ -11,12 +11,11 @@ function Actions() {
     return (
         <div>
          <div style={{display: "flex", justifyContent: "space-between"}}>
-         <div className="d-flex justify-content-end">
           <BreadCrumbs
             applicationId={applicationReducer.application.applicationId}
             applicationTitle={applicationReducer.application.applicationTitle}
           />
-        </div>
+        
         </div>
             <Tabs defaultActiveKey="1">
                 <TabPane tab="File Upload" key="1">

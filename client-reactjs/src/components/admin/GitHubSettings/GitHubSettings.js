@@ -232,9 +232,7 @@ const GitHubSettings = () => {
 
   return (
     <Form form={form} component={false} autoComplete={false}>
-      <Button onClick={handleAddProject} type="primary" style={{ marginBottom: 16 }}>
-        Add new project
-      </Button>
+      <Button onClick={handleAddProject} type="primary"  style={{ margin:'5px', display:'block', marginLeft:'auto' }}> Add new project </Button>
       <Table
         bordered
         components={{ body: { cell: EditableCell }, }}

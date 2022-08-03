@@ -59,15 +59,7 @@ function ClusterDetails() {
   };
 
   return (
-    <div
-      style={{
-        width: '80vw',
-      }}
-    >
-      <div style={{ display: 'flex', justifyContent: 'space-between' }}>
-        <div className="d-flex justify-content-end">
-        </div>
-      </div>
+    <div>
       <Tabs defaultActiveKey="1">
         <TabPane tab="Cluster Details" key="1" style={{ minWidth: '480px', maxWidth: '50vw'}}>
           {clusterMetaData ? (

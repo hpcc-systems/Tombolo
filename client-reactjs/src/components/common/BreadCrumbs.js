@@ -1,5 +1,5 @@
 import React, { Component } from "react";
-import {Breadcrumb, Layout} from 'antd/lib';
+import {Breadcrumb} from 'antd/lib';
 import {withRouter} from "react-router-dom";
 
 class BreadCrumbs extends Component {
@@ -29,12 +29,12 @@ class BreadCrumbs extends Component {
     };
     
     return (
-
-     <Layout style={{ padding: '0 5px 5px' }}>
-        <Breadcrumb>
-          {getBreadCrumbs()}
-        </Breadcrumb>
-     </Layout>   
+      <div style={{ padding:'5px', display:'flex', justifyContent:'space-between' }}>
+          <Breadcrumb>
+            {getBreadCrumbs()}
+          </Breadcrumb>
+          {this.props.extraContent || null}
+      </div>   
     )
   }
 }

@@ -1,12 +1,10 @@
+import { DeleteOutlined, EditOutlined, QuestionCircleOutlined, SearchOutlined } from '@ant-design/icons';
+import { AutoComplete, Button, Checkbox, Divider, Form, Input, message, Modal, notification, Popconfirm, Select, Table, Tooltip, Typography } from 'antd/lib';
 import React, { Component } from "react";
-import { useSelector } from "react-redux";
-import { Table, Button, Row, Col, Modal, Form, Input, Select, notification, Tooltip, Popconfirm, Divider, AutoComplete, message, Radio, Typography, Checkbox } from 'antd/lib';
-import BreadCrumbs from "../common/BreadCrumbs";
-import { authHeader, handleError } from "../common/AuthHeader.js";
 import { connect } from 'react-redux';
-import ShareApp from "./apps/ShareApp";
-import { DeleteOutlined, EditOutlined, QuestionCircleOutlined, SearchOutlined  } from '@ant-design/icons';
 import { applicationActions } from '../../redux/actions/Application';
+import { authHeader, handleError } from "../common/AuthHeader.js";
+import BreadCrumbs from "../common/BreadCrumbs";
 const Option = Select.Option;
 const { Paragraph } = Typography;
 const options = [
@@ -16,9 +14,6 @@ const options = [
   ];
 
 class Consumers extends Component {
-  constructor(props) {
-    super(props);
-  }
 
   state = {
   	consumers:[],
@@ -344,7 +339,7 @@ class Consumers extends Component {
         ),
         message: "Please enter a valid Name"
       }
-    ]
+      ]
     },
     {
       width: '10%',
@@ -388,14 +383,15 @@ class Consumers extends Component {
   
     return (
     <React.Fragment>
-      <div className="d-flex justify-content-end">
-        <BreadCrumbs applicationId={this.state.applicationId}/>
-        <span style={{ marginLeft: "auto" }}>
+
+      <BreadCrumbs 
+          applicationId={this.state.applicationId}
+          extraContent={ 
             <Tooltip placement="bottom" title={"Click to add a new Consumer"}>
-              <Button className="btn btn-secondary btn-sm" onClick={() => this.handleAdd()}><i className="fa fa-plus"></i> Add</Button>
-            </Tooltip>
-          </span>
-      </div>
+            <Button type="primary"  onClick={() => this.handleAdd()}> Add Consumer</Button>
+          </Tooltip>
+        }/>
+
       <div style={{padding:"15px"}}>
       	<Table
           columns={consumerColumns}
@@ -425,19 +421,18 @@ class Consumers extends Component {
               <Paragraph>
                 Owner - Contact Person/Group for an asset
               </Paragraph>
-              <div className={'form-group'+ (this.state.submitted && !this.state.newConsumer.name ? ' has-error' : '')}>
-                <Checkbox.Group options={options} onChange={this.onConsumerSupplierChange} />
-              </div>
+              
 
-            <div className={'form-group'}>
-		          <Form.Item {...formItemLayout} label="Name">
+		          <Form.Item label="Select type" name="assetType"required >
+                <Checkbox.Group options={options} onChange={this.onConsumerSupplierChange} />
+              </Form.Item>
+
+
+		          <Form.Item label="Name" name="name" rules={[{ required: true, message: 'Consumer Name is required' }]} >
     						<Input id="consumer_title" name="name" onChange={this.onChange} placeholder="Name" value={this.state.newConsumer.name} disabled={isNameDisabled}/>
-                {this.state.submitted && !this.state.newConsumer.name &&
-                        <div className="help-block">Consumer Name is required</div>
-                }
   	          </Form.Item>
-              </div>
-              <Form.Item {...formItemLayout} label="Type">
+      
+              <Form.Item label="Type" name="type" required>
                 <Select name="type" id="consumer_type" onSelect={this.handleTypeChange} value={this.state.newConsumer.type}>
                   <Option value=""></Option>
                     <Option value="Api">API</Option>
@@ -445,8 +440,9 @@ class Consumers extends Component {
                     <Option value="Internal">Internal</Option>
                 </Select>
               </Form.Item>
+
               { this.state.newConsumer.assetType.includes('Supplier') ?
-                <Form.Item {...formItemLayout} label="Data Transfer">
+                <Form.Item label="Data Transfer">
                   <Select name="type" id="data_transfer" onSelect={this.handleDataTransferChange} value={this.state.newConsumer.transferType}>
                     <Option value=""></Option>
                     <Option value="API">API</Option>  
@@ -454,14 +450,17 @@ class Consumers extends Component {
                     <Option value="SFTP">SFTP</Option>                    
                   </Select>
                 </Form.Item> : null}
-              <Form.Item {...formItemLayout} label="Contact Name">
+
+              <Form.Item label="Contact Name"  name="contact_name" required>
                 <Input id="consumer_contact" name="contact_name" onChange={this.onChange} placeholder="Contact Name" value={this.state.newConsumer.contact_name}/>
               </Form.Item>
-              <Form.Item {...formItemLayout} label="Contact Email">
+
+              <Form.Item label="Contact Email" name="contact_email" required>
                 <Input id="consumer_contact_email" name="contact_email" onChange={this.onChange} placeholder="Contact Email" value={this.state.newConsumer.contact_email}/>
               </Form.Item>
+
               {this.state.showAdGroupField ?
-                <Form.Item {...formItemLayout} label="AD Group">
+                <Form.Item label="AD Group">
                 <AutoComplete
                   className="certain-category-search"
                   dropdownClassName="certain-category-search-dropdown"

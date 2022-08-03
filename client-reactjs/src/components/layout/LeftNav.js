@@ -10,7 +10,6 @@ const { Sider } = Layout;
 class LeftNav extends Component {
   state = {
     current: '1',
-    collapsed: true,
     selectedTopNav: this.props.selectedTopNav,
   };
 
@@ -49,10 +48,6 @@ class LeftNav extends Component {
     this.setState({ current: key, });
   }
 
-  onCollapse = (collapsed) => {
-    this.setState({ collapsed });
-  }
-
   render() {
     const selectedTopNav = window.location.pathname;
     const applicationId = this.props.application ? this.props.application.applicationId : '';
@@ -70,10 +65,19 @@ class LeftNav extends Component {
     return (
         <Sider
           collapsible 
-          collapsed={this.state.collapsed}
-          onCollapse={this.onCollapse} 
+          collapsed={this.props.collapsed}
+          onCollapse={this.props.onCollapse} 
           collapsedWidth={55}
-          style={{backgroundColor:'#343a40'}} 
+          style={{
+            backgroundColor:this.props.BG_COLOR,
+            marginTop:'46px',
+            overflow: 'auto',
+            position: 'fixed',
+            left: 0,
+            top: 0,
+            bottom: 0,
+            zIndex: 100
+          }}
          >
           <Menu
            theme="dark"  
@@ -81,7 +85,7 @@ class LeftNav extends Component {
            onClick={this.handleClick}  
            defaultSelectedKeys={['1']} 
            selectedKeys={[this.state.current]}
-           style={{backgroundColor:'#343a40', maxWidth:'100%', paddingTop:"80px"}} >
+           style={{backgroundColor:this.props.BG_COLOR, maxWidth:'100%',height:'100%'}} >
 
               <Menu.Item key="1" icon={<i className="fa fa-fw fa-cubes"></i>}>         
                 <Link to={"/"+applicationId+"/assets"}>
@@ -104,7 +108,7 @@ class LeftNav extends Component {
             
               {canEdit ? 
                 <>
-                  {this.state.collapsed ? null : <Title style={{fontSize:'24px'}} ellipsis={true} className="px-3 mt-4 mb-1 text-muted" >Settings</Title>}
+                  {this.props.collapsed ? null : <Title ellipsis={true} className="left-nav-title" >Settings</Title>}
                   <Menu.Item key="4" icon={<i className="fa fa-fw fa-telegram"/>}>         
                     <Link to={"/"+applicationId+"/actions"}>
                       Actions
@@ -127,7 +131,7 @@ class LeftNav extends Component {
                       Collaborator
                     </Link>
                   </Menu.Item>
-                  {this.state.collapsed ? null : <Title style={{fontSize:'24px'}} ellipsis={true} className="px-3 mt-4 mb-1 text-muted" >Admin</Title>}
+                  {this.props.collapsed ? null : <Title ellipsis={true} className="left-nav-title" >Admin</Title>}
                   <Menu.Item key="8" icon={<i className="fa fa-fw fa-desktop"/>}>         
                     <Link to={"/admin/applications"}>
                       Applications
@@ -154,5 +158,5 @@ function mapStateToProps(state) {
   };
 }
 
-const connectedLeftNav = connect(mapStateToProps)(withRouter(LeftNav));
+const connectedLeftNav = connect(mapStateToProps,null,null,{forwardRef:true})(withRouter(LeftNav));
 export { connectedLeftNav as LeftNav };

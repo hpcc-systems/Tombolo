@@ -345,21 +345,19 @@ const Assets = () => {
   return (
     <React.Fragment>
       <div style={{ height: '100%', overflow: 'hidden' }}>
-        <div className="d-flex justify-content-end" style={{ margin: '5px' }}>
-          <BreadCrumbs
-            applicationId={application.applicationId}
-            applicationTitle={application.applicationTitle}
-          />
-          <div className="ml-auto">
-            {editingAllowed ? (
-              <Dropdown overlay={menu}>
-                <Button className="btn btn-secondary btn-sm">
-                  Add Asset <DownOutlined />
-                </Button>
-              </Dropdown>
-            ) : null}
-          </div>
-        </div>
+      <BreadCrumbs
+        applicationId={application.applicationId}
+        applicationTitle={application.applicationTitle}
+        extraContent={
+          editingAllowed ? (
+            <Dropdown overlay={menu}>
+              <Button type="primary" icon={<DownOutlined />}>
+                Add Asset
+              </Button>
+            </Dropdown>
+          ) : null
+          }/>
+
         <div style={{ display: 'flex', height: '100%' }}>
           <div className="groups-div">
             <Search

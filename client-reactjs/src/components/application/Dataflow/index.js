@@ -81,7 +81,7 @@ function Dataflow(props) {
   return (
   	  <div >
         <Spin spinning={loadingData}>
-          <div className="d-flex justify-content-end" style={{margin: "5px"}}>
+          <div style={{display:'flex', justifyContent:'flex-end', margin: "5px"}}>
           <AddDataflow 
             modalVisible={modalVisible}
             setModalVisibility={setModalVisibility}
