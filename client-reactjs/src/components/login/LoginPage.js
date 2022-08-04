@@ -6,7 +6,7 @@ import { userActions } from '../../redux/actions/User';
 import { connect } from 'react-redux';
 
 import { LockOutlined, UserOutlined } from '@ant-design/icons';
-import { Button,  Form, Input , message, Tooltip } from 'antd';
+import { Alert, Button,  Form, Input , message, Tooltip } from 'antd';
 
 import { Constants } from '../../components/common/Constants';
 import { ArrowLeftOutlined } from '@ant-design/icons';
@@ -35,6 +35,7 @@ class LoginPage extends React.Component {
   }
 
   componentWillReceiveProps(nextProps){
+    this.setState({ submitted: false });
     if(nextProps.loginFailed) {
       message.error("Login failed. Incorrect user name or password!");
       return;
@@ -63,8 +64,8 @@ class LoginPage extends React.Component {
         message.info("It looks like an account already exists for you. If you already registered for RealBI application, please login to Tombolo using your RealBI account.")
       }
       setTimeout(() => {
-        this.props.history.push('/login');
-      }, 2000);
+        this.handleBack();
+      }, 3000);
     }
   }
 
@@ -115,6 +116,7 @@ class LoginPage extends React.Component {
       return;
     }
     if(this.isRegistrationFormFieldsValid()) {
+      this.setState({ submitted: true });
       this.props.dispatch(userActions.registerNewUser({
         firstName: this.state.firstName,
         lastName: this.state.lastName,
@@ -141,7 +143,8 @@ class LoginPage extends React.Component {
   }
 
   render() {
-      const { username, password, firstName, lastName, email, newUsername, newPassword, confirmNewPassword, loginView } = this.state;
+      const { username, password, firstName, lastName, email, newUsername, newPassword, confirmNewPassword, loginView , submitted} = this.state;
+      const { userRegistrationSuccess, userRegistrationError,} = this.props
       return (
         <>
           {loginView ?
@@ -160,7 +163,7 @@ class LoginPage extends React.Component {
               </Form.Item>
 
               <Form.Item>
-                <Button onClick={this.handleSubmit} type="primary" block className="login-form-button">
+                <Button loading={submitted} onClick={this.handleSubmit} type="primary" block className="login-form-button">
                   Log in
                 </Button>
                
@@ -200,11 +203,32 @@ class LoginPage extends React.Component {
               </Form.Item>
 
               <Form.Item {...tailFormItemLayout}>
-                <Button onClick={this.handleSubmitRegistration} type="primary" block className="login-form-button">
+                <Button loading={submitted} onClick={this.handleSubmitRegistration} type="primary" block className="login-form-button">
                   Register
                 </Button>
               </Form.Item>
               
+              {userRegistrationSuccess && 
+              <Form.Item>
+                <Alert
+                  message="Success"
+                  description="You will be redirected to login page shortly"
+                  type="success"
+                  showIcon
+                  />
+              </Form.Item>
+            }
+
+            {userRegistrationError && 
+              <Form.Item>
+                <Alert
+                  message="Error"
+                  description="Failed to register user."
+                  type="error"
+                  showIcon
+                  />
+              </Form.Item>
+            }
               <Form.Item {...tailFormItemLayout}>
                 Or <a onClick={this.handleBack}>login now!</a>
               </Form.Item>
@@ -221,8 +245,8 @@ function mapStateToProps(state) {
       loggingIn,
       loggedIn,
       loginFailed,
-      userRegistrationSuccess,
       newUserRegistering,
+      userRegistrationSuccess,
       userRegistrationError,
       status
   };

@@ -1,7 +1,7 @@
 import React from "react";
 import { connect } from "react-redux";
 import { Layout } from "antd";
-import { Router, Route, Switch } from "react-router-dom";
+import { Router, Route, Switch, Link } from "react-router-dom";
 import { Redirect } from "react-router";
 import history from "./components/common/History";
 import { LoginPage } from "./components/login/LoginPage";
@@ -38,6 +38,8 @@ import Regulations from "./components/admin/ControlsAndRegulations";
 import GitHubSettings from "./components/admin/GitHubSettings/GitHubSettings";
 import ScheduledJobsPage from "./components/admin/ScheduledJobsPage";
 import AddJobsForm from "./components/application/Jobs/AddjobsForm/AddJobsForm";
+
+import tomboloLogo from "./images/logo.png";
 
 const { Header, Content } = Layout;
 
@@ -95,14 +97,6 @@ class App extends React.Component {
 
     return (
       <Router history={history}>
-        {!this.props.authWithAzure ? ( // value is passed via AzureApp component
-          <>
-            <Route exact path="/login" component={LoginPage} />
-            <Route exact path="/forgot-password" component={ForgotPassword} />
-            <Route exact path="/reset-password/:id" component={ResetPassword} />
-            <Route exact path="/logout" component={LoggedOut} />
-          </>
-        ) : null}
 
         <Layout
           className="custom-scroll"
@@ -117,7 +111,7 @@ class App extends React.Component {
               width: "100%",
             }}
           >
-            {this.props.user && this.props.user.token ? <AppHeader /> : null}
+            {this.props.user && this.props.user.token ? <AppHeader /> : <div style={{display:'flex', alignItems:'center', height:'100%'}}> <img src={tomboloLogo} alt="Tombolo logo"/> </div> }
           </Header>
           <Layout>
             <LeftNav
@@ -135,6 +129,15 @@ class App extends React.Component {
                 marginLeft: this.state.collapsed ? "70px" : "215px",
               }}
             >
+            {!this.props.authWithAzure ? ( // value is passed via AzureApp component
+                <>
+                  <Route exact path="/login" component={LoginPage} />
+                  <Route exact path="/forgot-password" component={ForgotPassword} />
+                  <Route exact path="/reset-password/:id" component={ResetPassword} />
+                  <Route exact path="/logout" component={LoggedOut} />
+                </>
+              ) : null}
+
               <Switch>
                 <PrivateRoute exact path="/" component={getAssets} />
                 <PrivateRoute
