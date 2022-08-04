@@ -5,17 +5,17 @@ import { dataflowInstancesReducer } from './DataflowInstancesReducer';
 import { dataflowReducer } from './DataflowReducer';
 import { assetReducer } from './AssetReducer';
 import { groupsReducer } from './GroupsReducer';
-import { viewOnlyModeReducer} from './ViewOnlyModeReducer'
-import {groupsMoveReducer} from './GroupsMoveReducer'
+import { viewOnlyModeReducer } from './ViewOnlyModeReducer';
+import { groupsMoveReducer } from './GroupsMoveReducer';
 const rootReducer = combineReducers({
-    authenticationReducer,
-    applicationReducer,
-    dataflowInstancesReducer,
-    dataflowReducer,
-    assetReducer,
-    groupsReducer,
-    viewOnlyModeReducer,
-    groupsMoveReducer,
+  authenticationReducer,
+  applicationReducer,
+  dataflowInstancesReducer,
+  dataflowReducer,
+  assetReducer,
+  groupsReducer,
+  viewOnlyModeReducer,
+  groupsMoveReducer,
 });
 
 export default rootReducer;

@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { useParams } from 'react-router-dom';
-import { message, Tabs, Descriptions, Card, Collapse, Form, Empty, Spin  } from 'antd';
+import { message, Tabs, Descriptions, Card, Collapse, Form, Empty, Spin } from 'antd';
 import { CaretRightOutlined, FolderOpenOutlined, FileOutlined } from '@ant-design/icons';
 
 import { authHeader } from '../common/AuthHeader.js';
@@ -14,7 +14,7 @@ function ClusterDetails() {
   const [clusterMetaData, setClusterMetaData] = useState(null);
   const [directoryDetails, setDirectoryDetails] = useState(null);
   const [landingZoneRootPath, setLandingZoneRootPath] = useState(null);
-  const [fetchingDirectoryDetails, setFetchingDirectoryDetails] = useState(false)
+  const [fetchingDirectoryDetails, setFetchingDirectoryDetails] = useState(false);
   const [form] = Form.useForm();
 
   //Use Effect
@@ -24,7 +24,7 @@ function ClusterDetails() {
 
   //When the value in directory cascader changes
   const onDirectoryPathChange = async (value, selectedOptions) => {
-    setFetchingDirectoryDetails(true)
+    setFetchingDirectoryDetails(true);
     try {
       const netAddress = form.getFieldValue('machine');
       const directoryPath = selectedOptions.map((selectedOption) => selectedOption.value).join('/');
@@ -40,8 +40,8 @@ function ClusterDetails() {
       setDirectoryDetails(data);
     } catch (err) {
       message.error(err.message);
-    } finally{
-      setFetchingDirectoryDetails(false)
+    } finally {
+      setFetchingDirectoryDetails(false);
     }
   };
   //Get Cluster metadata
@@ -61,7 +61,7 @@ function ClusterDetails() {
   return (
     <div>
       <Tabs defaultActiveKey="1">
-        <TabPane tab="Cluster Details" key="1" style={{ minWidth: '480px', maxWidth: '50vw'}}>
+        <TabPane tab="Cluster Details" key="1" style={{ minWidth: '480px', maxWidth: '50vw' }}>
           {clusterMetaData ? (
             <>
               <Card title={`Drop zones [${clusterMetaData.dropZones.length}]`} size="small">
@@ -70,8 +70,7 @@ function ClusterDetails() {
                     title={data.Name}
                     collapsible="header"
                     key={data.Name}
-                    expandIcon={({ isActive }) => <CaretRightOutlined rotate={isActive ? 90 : 0} />}
-                  >
+                    expandIcon={({ isActive }) => <CaretRightOutlined rotate={isActive ? 90 : 0} />}>
                     <Panel header={data.Name} key={index}>
                       <Descriptions size="small" column={1}>
                         <Descriptions.Item label="Name">{data.Name}</Descriptions.Item>
@@ -101,8 +100,7 @@ function ClusterDetails() {
                   <Collapse
                     title={cluster.Name}
                     key={cluster.Name}
-                    expandIcon={({ isActive }) => <CaretRightOutlined rotate={isActive ? 90 : 0} />}
-                  >
+                    expandIcon={({ isActive }) => <CaretRightOutlined rotate={isActive ? 90 : 0} />}>
                     <Panel header={cluster.Name}>
                       <Descriptions size="small" column={1}>
                         <Descriptions.Item label="Name">{cluster.Name}</Descriptions.Item>
@@ -121,8 +119,7 @@ function ClusterDetails() {
                 {clusterMetaData.TpDfuServer.TpDfuServers.TpDfuServer.map((dfuServer) => (
                   <Collapse
                     key={dfuServer.Name}
-                    expandIcon={({ isActive }) => <CaretRightOutlined rotate={isActive ? 90 : 0} />}
-                  >
+                    expandIcon={({ isActive }) => <CaretRightOutlined rotate={isActive ? 90 : 0} />}>
                     <Panel header={dfuServer.Name}>
                       <Descriptions size="small" column={1}>
                         <Descriptions.Item label="Name">{dfuServer.Name}</Descriptions.Item>
@@ -162,7 +159,9 @@ function ClusterDetails() {
                 <Card title="Oldest File" size="small" headStyle={{ fontWeight: 700 }} style={{ marginTop: '2px' }}>
                   <Descriptions column={1} size="small">
                     {Object.keys(directoryDetails.oldestFile).map((key) => (
-                      <Descriptions key={key} label={key}>{directoryDetails.oldestFile[key]}</Descriptions>
+                      <Descriptions key={key} label={key}>
+                        {directoryDetails.oldestFile[key]}
+                      </Descriptions>
                     ))}
                   </Descriptions>
                 </Card>
@@ -173,18 +172,18 @@ function ClusterDetails() {
                   title="Files and Directories"
                   size="small"
                   headStyle={{ fontWeight: 700 }}
-                  style={{ marginTop: '2px' }}
-                >
+                  style={{ marginTop: '2px' }}>
                   {directoryDetails?.filesAndDirectories.map((directory, index) => (
                     <Collapse
                       key={index}
                       size="small"
-                      expandIcon={() => (directory.isDir ? <FolderOpenOutlined /> : <FileOutlined />)}
-                    >
+                      expandIcon={() => (directory.isDir ? <FolderOpenOutlined /> : <FileOutlined />)}>
                       <Panel header={directory.name}>
                         <Descriptions column={1} size="small">
                           {Object.keys(directory).map((key) => (
-                            <Descriptions.Item label={key}  key={key}>{directory[key]}</Descriptions.Item>
+                            <Descriptions.Item label={key} key={key}>
+                              {directory[key]}
+                            </Descriptions.Item>
                           ))}
                         </Descriptions>
                       </Panel>
@@ -193,12 +192,13 @@ function ClusterDetails() {
                 </Card>
               ) : null}
             </div>
-          ) : 
-            fetchingDirectoryDetails ?<div style={{textAlign: 'center', marginTop: '40px'}}>
+          ) : fetchingDirectoryDetails ? (
+            <div style={{ textAlign: 'center', marginTop: '40px' }}>
               <Spin />
-            </div>  :  <Empty />
-           
-          }
+            </div>
+          ) : (
+            <Empty />
+          )}
         </TabPane>
       </Tabs>
     </div>

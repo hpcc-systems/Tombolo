@@ -1,12 +1,12 @@
 import { Constants } from '../../components/common/Constants';
 
 const initialState = {
-  selectedAsset:{id:'', applicationId:'', title:''},
-  newAsset:{groupId:'', applicationId:'', isNew:false},
-  searchParams:{assetTypeFilter:'', keywords:''},
+  selectedAsset: { id: '', applicationId: '', title: '' },
+  newAsset: { groupId: '', applicationId: '', isNew: false },
+  searchParams: { assetTypeFilter: '', keywords: '' },
   assetInGroupId: '',
   clusterId: '',
-  saveResponse: {}
+  saveResponse: {},
 };
 
 export function assetReducer(state = initialState, action) {
@@ -17,13 +17,13 @@ export function assetReducer(state = initialState, action) {
         selectedAsset: {
           id: action.selectedAsset.id,
           applicationId: action.selectedAsset.applicationId,
-          title: action.selectedAsset.title
+          title: action.selectedAsset.title,
         },
         newAsset: {
           groupId: '',
           applicationId: '',
-          isNew: false
-        }
+          isNew: false,
+        },
       };
     case Constants.NEW_ASSET:
       return {
@@ -32,35 +32,35 @@ export function assetReducer(state = initialState, action) {
           id: '',
           applicationId: '',
           title: '',
-          isNew: true
+          isNew: true,
         },
         newAsset: {
           groupId: action.newAsset.groupId,
           applicationId: action.newAsset.applicationId,
-          isNew: action.newAsset.isNew
-        }
+          isNew: action.newAsset.isNew,
+        },
       };
     case Constants.SEARCH_ASSET:
       return {
         ...state,
-        searchParams: action.searchParams
+        searchParams: action.searchParams,
       };
     case Constants.ASSET_IN_GROUP_SELECTED:
       return {
         ...state,
-        assetInGroupId: action.groupId
+        assetInGroupId: action.groupId,
       };
     case Constants.CLUSTER_SELECTED:
       return {
         ...state,
-        clusterId: action.clusterId
+        clusterId: action.clusterId,
       };
     case Constants.ASSET_SAVED:
       return {
         ...state,
-        saveResponse: action.saveResponse
+        saveResponse: action.saveResponse,
       };
     default:
-      return state
+      return state;
   }
 }

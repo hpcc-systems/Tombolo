@@ -3,8 +3,7 @@ import ReactDOM from 'react-dom';
 import { App } from './App';
 import { BrowserRouter } from 'react-router-dom';
 import './index.css';
-import "font-awesome/css/font-awesome.min.css";
-
+import 'font-awesome/css/font-awesome.min.css';
 
 import { Provider } from 'react-redux';
 import { store } from './redux/store/Store';
@@ -20,7 +19,7 @@ ReactDOM.render(
     <BrowserRouter>
       {process.env.REACT_APP_APP_AUTH_METHOD === 'azure_ad' ? (
         <MsalProvider instance={msalInstance}>
-          <AzureApp >
+          <AzureApp>
             <App />
           </AzureApp>
         </MsalProvider>

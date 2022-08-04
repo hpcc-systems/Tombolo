@@ -1,10 +1,11 @@
+/* eslint-disable react/no-unescaped-entities */
 import React, { useEffect, useState } from 'react';
-import { Form, Select, Space, Tag, Typography} from "antd";
+import { Form, Select, Space, Tag, Typography } from 'antd';
 
 import { CheckCircleOutlined } from '@ant-design/icons';
 const { Text } = Typography;
 
-const GHRepoSelect = ({ form, enableEdit, projects, setGhBrachOrTag}) => {
+const GHRepoSelect = ({ form, enableEdit, projects, setGhBrachOrTag }) => {
   const [selectedProjects, setSelectedProjects] = useState([]);
 
   useEffect(() => {
@@ -14,13 +15,13 @@ const GHRepoSelect = ({ form, enableEdit, projects, setGhBrachOrTag}) => {
     if (projects.length > 0) {
       const projectsArr = projects.filter((el) => projectIds.includes(el.id));
       setSelectedProjects(projectsArr);
-      if (selectedRepoId){
-        const selectedRepo = projectsArr.find(el => el.id === selectedRepoId );
+      if (selectedRepoId) {
+        const selectedRepo = projectsArr.find((el) => el.id === selectedRepoId);
 
         // THIS IS A READONLY VALUE THAT CAN BE CHANGED DYNAMICALLY ON GITHUB PROJECT LEVEL!
         // IT IS PASSED TO GHMAINFILE TO BE SHOWN AS AN READONLY VALUE
-        setGhBrachOrTag(selectedRepo.ghBranchOrTag) 
-        
+        setGhBrachOrTag(selectedRepo.ghBranchOrTag);
+
         const updatedFields = {
           gitHubFiles: {
             reposList: [selectedRepo],
@@ -52,7 +53,7 @@ const GHRepoSelect = ({ form, enableEdit, projects, setGhBrachOrTag}) => {
     const updatedFields = {
       gitHubFiles: {
         reposList: restructured,
-        reposFetched: true
+        reposFetched: true,
       },
     };
 
@@ -65,15 +66,9 @@ const GHRepoSelect = ({ form, enableEdit, projects, setGhBrachOrTag}) => {
       required={enableEdit}
       name={['gitHubFiles', 'selectedProjects']}
       // className={!enableEdit && 'read-only-input'}
-      help={ enableEdit ? <Text type="warning">Adding or Removing projects will reset "Main File" fields</Text>  : null}
-    >
+      help={enableEdit ? <Text type="warning">Adding or Removing projects will reset "Main File" fields</Text> : null}>
       {enableEdit ? (
-        <Select
-          mode="multiple"
-          placeholder="Select GitHub Projects"
-          onChange={handleChange}
-          optionLabelProp="label"
-        >
+        <Select mode="multiple" placeholder="Select GitHub Projects" onChange={handleChange} optionLabelProp="label">
           {projects.map((project) => (
             <Select.Option key={project.id} value={project.id} label={project.ghProject}>
               <Tag color="geekblue">{project.ghBranchOrTag}</Tag> - {project.ghProject} - {project.ghLink}
@@ -81,20 +76,20 @@ const GHRepoSelect = ({ form, enableEdit, projects, setGhBrachOrTag}) => {
           ))}
         </Select>
       ) : (
-      <Space>
-        {selectedProjects.map((project) => {
-          const selectedProject = project.id === form.current?.getFieldValue(['gitHubFiles', 'selectedRepoId']);          
-          return selectedProject ? (
-            <Tag key={project.id} icon={<CheckCircleOutlined style={{verticalAlign: 0}} />} color="success">
-               {`${project.ghProject} - ${project.ghLink.replace('https://github.com/', '')}`}
-            </Tag>
-          ) : (
-            <Tag key={project.id} color={'geekblue'}>
-              {`${project.ghProject} - ${project.ghLink.replace('https://github.com/', '')}`}
-            </Tag>
-          );
-        })}
-      </Space>
+        <Space>
+          {selectedProjects.map((project) => {
+            const selectedProject = project.id === form.current?.getFieldValue(['gitHubFiles', 'selectedRepoId']);
+            return selectedProject ? (
+              <Tag key={project.id} icon={<CheckCircleOutlined style={{ verticalAlign: 0 }} />} color="success">
+                {`${project.ghProject} - ${project.ghLink.replace('https://github.com/', '')}`}
+              </Tag>
+            ) : (
+              <Tag key={project.id} color={'geekblue'}>
+                {`${project.ghProject} - ${project.ghLink.replace('https://github.com/', '')}`}
+              </Tag>
+            );
+          })}
+        </Space>
       )}
     </Form.Item>
   );

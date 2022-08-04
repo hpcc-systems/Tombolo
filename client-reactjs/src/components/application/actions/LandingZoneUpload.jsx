@@ -1,15 +1,15 @@
-import React, { useState, useEffect } from "react";
-import { useSelector } from "react-redux";
-import { Upload, Table, Select, message, Button, Checkbox, Cascader, Tooltip } from "antd";
-import { InboxOutlined } from "@ant-design/icons";
-import { LoadingOutlined, CheckCircleOutlined, CloseCircleOutlined, DeleteOutlined } from "@ant-design/icons";
-import { io } from "socket.io-client";
-import { v4 as uuidv4 } from "uuid";
-import { authHeader, handleError } from "../../common/AuthHeader";
-import { useHistory } from "react-router";
+import React, { useState, useEffect } from 'react';
+import { useSelector } from 'react-redux';
+import { Upload, Table, Select, message, Button, Checkbox, Cascader, Tooltip } from 'antd';
+import { InboxOutlined } from '@ant-design/icons';
+import { LoadingOutlined, CheckCircleOutlined, CloseCircleOutlined, DeleteOutlined } from '@ant-design/icons';
+import { io } from 'socket.io-client';
+import { v4 as uuidv4 } from 'uuid';
+import { authHeader, handleError } from '../../common/AuthHeader';
+import { useHistory } from 'react-router';
 
 const devURL = `${process.env.REACT_APP_PROXY_URL}/landingZoneFileUpload`;
-const prodURL = "/landingZoneFileUpload";
+const prodURL = '/landingZoneFileUpload';
 const { Dragger } = Upload;
 const { Option } = Select;
 message.config({ top: 150, maxCount: 1 });
@@ -18,17 +18,25 @@ function LandingZoneUpload() {
   const [files, setFiles] = useState([]);
   const [socket, setSocket] = useState(null);
   const [cluster, setCluster] = useState(null);
-  const [fileDestinationDetail, setFileDestinationDetail] = useState({ machine: "", pathToAsset: "", currentDirectoryFiles: [], overWriteFiles: false });
+  const [fileDestinationDetail, setFileDestinationDetail] = useState({
+    machine: '',
+    pathToAsset: '',
+    currentDirectoryFiles: [],
+    overWriteFiles: false,
+  });
   const [uploading, setUploading] = useState(false); // is true once user clicks upload btn
   const [options, setOptions] = useState([]); //Cascader options
   const history = useHistory();
-  const [authReducer, clusters] = useSelector((state) => [state.authenticationReducer, state.applicationReducer.clusters]);
+  const [authReducer, clusters] = useSelector((state) => [
+    state.authenticationReducer,
+    state.applicationReducer.clusters,
+  ]);
 
   useEffect(() => {
-    const url = process.env.NODE_ENV === "development" ? devURL : prodURL;
+    const url = process.env.NODE_ENV === 'development' ? devURL : prodURL;
     // Establish Socket io connection when component is mounted
     const socket = io(url, {
-      transports: ["websocket"],
+      transports: ['websocket'],
       auth: {
         token: authReducer?.user.token,
       },
@@ -36,11 +44,11 @@ function LandingZoneUpload() {
     setSocket(socket);
 
     // When file upload response is received
-    socket.on("file-upload-response", (response) => {
+    socket.on('file-upload-response', (response) => {
       setFiles((prev) =>
         prev.map((item) => {
           if (item.uid === response.id) {
-            item.uploadStatus = response.success ? "success" : "failed";
+            item.uploadStatus = response.success ? 'success' : 'failed';
             item.statusDescription = response.message;
           }
           return item;
@@ -49,7 +57,7 @@ function LandingZoneUpload() {
     });
 
     // socket connection fails
-    socket.io.on("error", (error) => {
+    socket.io.on('error', (_error) => {
       message.warning(`Upload feature unavailable - Unable to establish secure connection with server`, 0);
     });
 
@@ -66,24 +74,24 @@ function LandingZoneUpload() {
     let { machine, pathToAsset } = fileDestinationDetail;
     let commonFiles = fileDestinationDetail.currentDirectoryFiles.filter((file) => newFiles.includes(file));
     if (!cluster) {
-      message.error("Select a cluster");
+      message.error('Select a cluster');
     } else if (!pathToAsset) {
-      message.error("Select  destination folder");
+      message.error('Select  destination folder');
     } else if (files.length < 1) {
-      message.error("Please select at least one file to upload");
+      message.error('Please select at least one file to upload');
     } else if (commonFiles.length > 0 && !fileDestinationDetail.overWriteFiles) {
-      message.error("Some file(s) already exist. Please check overwrite box to continue");
+      message.error('Some file(s) already exist. Please check overwrite box to continue');
     } else {
       setUploading(true);
       setFiles((prev) =>
         prev.map((item) => {
-          item.uploadStatus = "uploading";
+          item.uploadStatus = 'uploading';
           return item;
         })
       );
 
       // Start by sending some file and destination details to server
-      socket.emit("start-upload", { pathToAsset, cluster, machine });
+      socket.emit('start-upload', { pathToAsset, cluster, machine });
       files.forEach((file) => {
         const { uid: id, name: fileName, size: fileSize } = file.originFileObj;
         if (file.size <= 1000000) {
@@ -91,7 +99,7 @@ function LandingZoneUpload() {
           reader.readAsArrayBuffer(file.originFileObj);
           reader.onload = function (e) {
             let arrayBuffer = e.target.result;
-            socket.emit("upload-file", {
+            socket.emit('upload-file', {
               id,
               fileName,
               data: arrayBuffer,
@@ -103,7 +111,7 @@ function LandingZoneUpload() {
           reader.readAsArrayBuffer(slice);
           reader.onload = function (e) {
             let arrayBuffer = e.target.result;
-            socket.emit("upload-slice", {
+            socket.emit('upload-slice', {
               id,
               fileName,
               data: arrayBuffer,
@@ -116,14 +124,14 @@ function LandingZoneUpload() {
       });
 
       //When server asks for a slice of a file
-      socket.on("supply-slice", (message) => {
+      socket.on('supply-slice', (message) => {
         let currentFile = files.find((file) => file.originFileObj.uid === message.id);
         let slice = currentFile.originFileObj.slice(message.chunkStart, message.chunkStart + message.chunkSize);
         let reader = new FileReader();
         reader.readAsArrayBuffer(slice);
         reader.onload = function (e) {
           let arrayBuffer = e.target.result;
-          socket.emit("upload-slice", {
+          socket.emit('upload-slice', {
             id: currentFile.uid,
             fileName: currentFile.name,
             data: arrayBuffer,
@@ -137,14 +145,14 @@ function LandingZoneUpload() {
 
   //Dragger props
   const props = {
-    name: "file",
+    name: 'file',
     multiple: true,
     showUploadList: false,
-    accept: ".xls, .xlsm, .xlsx, .txt, .json, .csv",
+    accept: '.xls, .xlsm, .xlsx, .txt, .json, .csv',
     onChange(info) {
       const { status } = info.file;
-      if (status === "error") {
-        return message.error("Error adding files - please try again");
+      if (status === 'error') {
+        return message.error('Error adding files - please try again');
       }
       setFiles(() => info.fileList.slice(-5));
     },
@@ -164,7 +172,7 @@ function LandingZoneUpload() {
         if (response.ok) {
           return response.json();
         }
-        throw Error('Unable to get dropzones')
+        throw Error('Unable to get dropzones');
       })
       .then((data) => {
         //Set initial cascader options
@@ -176,7 +184,7 @@ function LandingZoneUpload() {
       })
       .catch((err) => {
         console.log(err);
-        message.error(err.message)
+        message.error(err.message);
       });
   }
 
@@ -186,7 +194,7 @@ function LandingZoneUpload() {
     let { thor_host, thor_port, id: clusterId } = cluster;
     const targetOption = selectedOptions[selectedOptions.length - 1];
     targetOption.loading = true;
-    const pathToAsset = selectedOptions.map((option) => option.value).join("/") + "/";
+    const pathToAsset = selectedOptions.map((option) => option.value).join('/') + '/';
     setFileDestinationDetail((prev) => ({ ...prev, pathToAsset }));
     if (targetOption === selectedOptions[0]) {
       setFileDestinationDetail((prev) => ({ ...prev, machine: targetOption.machine.Netaddress }));
@@ -251,20 +259,20 @@ function LandingZoneUpload() {
   //Upload status icons
   const renderUploadStatusIcon = (status, message, id) => {
     switch (status) {
-      case "uploading":
+      case 'uploading':
         return <LoadingOutlined style={{ fontSize: 18 }} spin />;
-      case "success":
+      case 'success':
         return (
           <Tooltip title={message}>
-            {" "}
-            <CheckCircleOutlined style={{ fontSize: 18, color: "green" }} />{" "}
+            {' '}
+            <CheckCircleOutlined style={{ fontSize: 18, color: 'green' }} />{' '}
           </Tooltip>
         );
-      case "failed":
+      case 'failed':
         return (
           <Tooltip title={message} placement="topLeft">
-            {" "}
-            <CloseCircleOutlined style={{ fontSize: 18, color: "red" }} />{" "}
+            {' '}
+            <CloseCircleOutlined style={{ fontSize: 18, color: 'red' }} />{' '}
           </Tooltip>
         );
       default:
@@ -284,24 +292,24 @@ function LandingZoneUpload() {
   //Table columns
   const columns = [
     {
-      title: "#",
-      dataIndex: "sno",
+      title: '#',
+      dataIndex: 'sno',
       render: (text, record, index) => index + 1,
     },
     {
-      title: "File Name",
-      dataIndex: "name",
+      title: 'File Name',
+      dataIndex: 'name',
     },
     {
-      title: "Size",
-      dataIndex: "size",
+      title: 'Size',
+      dataIndex: 'size',
       render: (text) => {
         return `${text / 1000000} MB`;
       },
     },
     {
-      title: "",
-      dataIndex: "uploading",
+      title: '',
+      dataIndex: 'uploading',
       render: (text, record) => {
         return renderUploadStatusIcon(record.uploadStatus, record.statusDescription, record.uid);
       },
@@ -314,7 +322,7 @@ function LandingZoneUpload() {
         <>
           <div>
             <small>Cluster</small>
-            <Select defaultValue="" onChange={handleClusterChange} size="large" style={{ width: "100%" }}>
+            <Select defaultValue="" onChange={handleClusterChange} size="large" style={{ width: '100%' }}>
               {clusters.map((item) => {
                 return (
                   <Option key={uuidv4()} value={JSON.stringify(item)}>
@@ -327,17 +335,23 @@ function LandingZoneUpload() {
 
           <div>
             <small>Destination Folder</small>
-            <Cascader options={options} loadData={loadData} placeholder="Please select" allowClear changeOnSelect={true} style={{ width: "100%" }} />
+            <Cascader
+              options={options}
+              loadData={loadData}
+              placeholder="Please select"
+              allowClear
+              changeOnSelect={true}
+              style={{ width: '100%' }}
+            />
           </div>
 
           <Dragger
             {...props}
             fileList={files}
             customRequest={({ onSuccess }) => {
-              onSuccess("ok");
+              onSuccess('ok');
             }}
-            style={{ marginTop: "10px" }}
-          >
+            style={{ marginTop: '10px' }}>
             <p className="ant-upload-drag-icon">
               <InboxOutlined />
             </p>
@@ -351,12 +365,19 @@ function LandingZoneUpload() {
 
       {files.length > 0 ? (
         <div>
-          <Table columns={columns} rowKey={(record) => record.uid} dataSource={files} size="small" pagination={false} style={{ width: "100%", maxHeight: "300px", overflow: "auto" }} />
+          <Table
+            columns={columns}
+            rowKey={(record) => record.uid}
+            dataSource={files}
+            size="small"
+            pagination={false}
+            style={{ width: '100%', maxHeight: '300px', overflow: 'auto' }}
+          />
         </div>
       ) : null}
 
       {!uploading ? (
-        <Checkbox onChange={onCheckBoxChange} style={{ margin: "20px 0px 20px 0px" }}>
+        <Checkbox onChange={onCheckBoxChange} style={{ margin: '20px 0px 20px 0px' }}>
           Overwrite File(s)
         </Checkbox>
       ) : null}
@@ -368,12 +389,11 @@ function LandingZoneUpload() {
           !uploading
             ? handleFileUpload
             : () => {
-                history.push("/");
+                history.push('/');
               }
         }
-        type="primary"
-      >
-        {!uploading ? "Upload" : "Done"}{" "}
+        type="primary">
+        {!uploading ? 'Upload' : 'Done'}{' '}
       </Button>
     </div>
   );

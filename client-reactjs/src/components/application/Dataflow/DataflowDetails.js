@@ -11,19 +11,18 @@ function DataflowDetails() {
   const history = useHistory();
   const params = useParams();
 
-  const {isDataflowReady, applicationId, applicationTitle, canEdit} = useSelectDataflow(); // this hook will check if dataflow is present in redux, if not it will request data from DB and update redux
+  const { isDataflowReady, applicationId, applicationTitle, canEdit } = useSelectDataflow(); // this hook will check if dataflow is present in redux, if not it will request data from DB and update redux
 
   const handleBackToAllJobs = () => {
     history.push(`/${params.applicationId}/dataflow`);
   };
 
   if (!isDataflowReady)
-  return (
-    <div style={{ width: '100%', display: 'flex', justifyContent: 'center', marginTop:'50px' }}>
-      <Spin size="large" spinning={true} />
-    </div>
-  );
-
+    return (
+      <div style={{ width: '100%', display: 'flex', justifyContent: 'center', marginTop: '50px' }}>
+        <Spin size="large" spinning={true} />
+      </div>
+    );
 
   return (
     <React.Fragment>
@@ -34,11 +33,16 @@ function DataflowDetails() {
         <Tabs
           defaultActiveKey="1"
           destroyInactiveTabPane={true}
-          tabBarExtraContent={ <span> <Button type="primary" onClick={handleBackToAllJobs} ghost> Cancel </Button> </span> }
-        >
+          tabBarExtraContent={
+            <span>
+              <Button type="primary" onClick={handleBackToAllJobs} ghost>
+                Cancel
+              </Button>
+            </span>
+          }>
           <TabPane tab="Designer" key="1">
-            <div style={{height:'80vh'}}>
-              <GraphX6 readOnly={canEdit ? false: true}/>
+            <div style={{ height: '80vh' }}>
+              <GraphX6 readOnly={canEdit ? false : true} />
             </div>
           </TabPane>
           <TabPane tab="Assets" key="2">

@@ -2,26 +2,26 @@ import { Graph, Shape, NodeView } from '@antv/x6';
 import './Shape';
 class SimpleNodeView extends NodeView {
   renderMarkup() {
-     return this.renderJSONMarkup({
-       tagName: 'rect',
-       selector: 'body',
-     })
-   }
- 
-   update() {
-     super.update({
-       body: {
-         refWidth: '100%',
-         refHeight: '100%',
-         fill: '#31d0c6',
-       },
-     })
-   }
- }
- 
+    return this.renderJSONMarkup({
+      tagName: 'rect',
+      selector: 'body',
+    });
+  }
+
+  update() {
+    super.update({
+      body: {
+        refWidth: '100%',
+        refHeight: '100%',
+        fill: '#31d0c6',
+      },
+    });
+  }
+}
+
 export default class Canvas {
   static init(container, minimapContainer, readOnly) {
-     return new Graph({
+    return new Graph({
       container: container.current,
       autoResize: true,
       grid: true,
@@ -29,8 +29,8 @@ export default class Canvas {
         enabled: readOnly ? false : true,
         beforeAddCommand(event, args) {
           // if return false, command will not be added to undo stack
-          if (args.options?.ignoreEvent) return false   
-          const ignoreEvents = ['ports','tools','children','parent'];
+          if (args.options?.ignoreEvent) return false;
+          const ignoreEvents = ['ports', 'tools', 'children', 'parent'];
           if (args.key && ignoreEvents.includes(args.key)) return false;
           // console.log('-event, args-----------------------------------------');
           // console.dir({event, args}, { depth: null });
@@ -39,20 +39,19 @@ export default class Canvas {
         },
       },
       embedding: {
-        enabled:  readOnly ? false : true,
+        enabled: readOnly ? false : true,
         findParent({ node }) {
+          const bbox = node.getBBox(); // DRAGGED NODE BOUNDARY BOX
 
-          const bbox = node.getBBox() // DRAGGED NODE BOUNDARY BOX
-          
           return this.getNodes().filter((node) => {
-            const data = node.getData()
+            const data = node.getData();
             if (data.type === 'Sub-Process') {
-              const targetBBox = node.getBBox() // SUBPROCESS BOUNDARY BOX
-              return bbox.isIntersectWithRect(targetBBox)
+              const targetBBox = node.getBBox(); // SUBPROCESS BOUNDARY BOX
+              return bbox.isIntersectWithRect(targetBBox);
             }
-            return false
-          })
-        }
+            return false;
+          });
+        },
       },
       scroller: {
         enabled: true,
@@ -71,18 +70,18 @@ export default class Canvas {
           async: true,
           getCellView(cell) {
             if (cell.isNode()) {
-              return SimpleNodeView
+              return SimpleNodeView;
             }
           },
           createCellView(cell) {
             if (cell.isEdge()) {
-              return null
+              return null;
             }
           },
         },
       },
       selecting: {
-        strict:false,
+        strict: false,
         enabled: true,
         multiple: true,
         rubberband: true,
@@ -102,10 +101,10 @@ export default class Canvas {
         allowPort: false,
         highlight: true,
         connectionPoint: {
-          name:'boundary',
-          args:{
+          name: 'boundary',
+          args: {
             offset: 10,
-            sticky:true
+            sticky: true,
           },
         },
         anchor: 'center',
@@ -116,28 +115,28 @@ export default class Canvas {
           name: 'jumpover',
           args: {
             type: 'gap',
-            radius: 10
+            radius: 10,
           },
         },
         snap: {
           radius: 40,
         },
-         validateEdge({ edge }) {
+        validateEdge({ _edge }) {
           // const source = edge.getSourceCell().data;
           // const target= edge.getTargetCell().data;
           // if node is not assigned to any of assets prevent it from being connected
           // if (!source?.assetId || !target?.assetId) return false;
-          
-          return true // DEFAULT 
+
+          return true; // DEFAULT
         },
         createEdge() {
           return new Shape.Edge({
             zIndex: -1,
             attrs: {
               line: {
-                stroke: '#47bfdd', 
-                strokeWidth:"4",
-                strokeLinecap:"round",
+                stroke: '#47bfdd',
+                strokeWidth: '4',
+                strokeLinecap: 'round',
                 strokeDasharray: '0 10',
               },
             },
@@ -156,15 +155,13 @@ export default class Canvas {
         sharp: true,
       },
       resizing: {
-        enabled:  (cell) => {
-          if (cell.data?.type === 'Sub-Process' && !cell.data?.isCollapsed ) return true
-          return false
-        } 
+        enabled: (cell) => {
+          if (cell.data?.type === 'Sub-Process' && !cell.data?.isCollapsed) return true;
+          return false;
+        },
       },
-      keyboard:  readOnly ? false : true,
-      clipboard:  readOnly ? false : true,
+      keyboard: readOnly ? false : true,
+      clipboard: readOnly ? false : true,
     });
   }
 }
-
-

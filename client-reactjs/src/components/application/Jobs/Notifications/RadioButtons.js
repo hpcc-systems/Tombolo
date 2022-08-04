@@ -8,14 +8,17 @@ const notificationOptions = [
   { label: 'Always', value: 'Always' },
 ];
 
-function NotifyField({showDetails , enableEdit, notifyStatus, setShowDetails, setNotifyStatus }) {
+function NotifyField({ showDetails, enableEdit, notifyStatus, setShowDetails, setNotifyStatus }) {
   return (
     <Form.Item label="Notify">
       <Space>
         <Form.Item name="notify" className={enableEdit ? null : 'read-only-input'}>
           <Radio.Group>
             {notificationOptions.map((option) => (
-              <Radio key={option.value} value={option.value} onChange={setNotifyStatus ? (e) => {setNotifyStatus(e.target.value)} : null}>
+              <Radio
+                key={option.value}
+                value={option.value}
+                onChange={(e) => (setNotifyStatus ? setNotifyStatus(e.target.value) : null)}>
                 {option.label}
               </Radio>
             ))}
@@ -23,7 +26,7 @@ function NotifyField({showDetails , enableEdit, notifyStatus, setShowDetails, se
         </Form.Item>
         {!enableEdit && notifyStatus !== 'Never' && (
           <Button onClick={() => setShowDetails((prev) => !prev)}>
-           { showDetails ? "Hide Details" : 'Show Details' } 
+            {showDetails ? 'Hide Details' : 'Show Details'}
           </Button>
         )}
       </Space>

@@ -1,49 +1,49 @@
-import React from "react";
-import { connect } from "react-redux";
-import { Layout } from "antd";
-import { Router, Route, Switch, Link } from "react-router-dom";
-import { Redirect } from "react-router";
-import history from "./components/common/History";
-import { LoginPage } from "./components/login/LoginPage";
-import LoggedOut from "./components/login/LoggedOut";
-import ForgotPassword from "./components/login/ForgotPassword";
-import ResetPassword from "./components/login/ResetPassword";
-import { PrivateRoute } from "./components/common/PrivateRoute";
-import Assets from "./components/application/Assets";
-import { LeftNav } from "./components/layout/LeftNav";
-import Dataflow from "./components/application/Dataflow";
-import DataflowDetails from "./components/application/Dataflow/DataflowDetails";
-import { DataflowInstances } from "./components/application/DataflowInstances/DataflowInstances";
-import { DataflowInstanceDetails } from "./components/application/DataflowInstances/DataflowInstanceDetails";
-import Users from "./components/admin/Users";
-import FileDetailsForm from "./components/application/FileDetails";
-import FileTemplate from "./components/application/templates/FileTemplate";
-import JobDetailsForm from "./components/application/Jobs/JobDetails";
-import IndexDetailsForm from "./components/application/IndexDetails";
-import QueryDetailsForm from "./components/application/queries/QueryDetails";
-import VisualizationDetailsForm from "./components/application/VisualizationDetails";
+import React from 'react';
+import { connect } from 'react-redux';
+import { Layout } from 'antd';
+import { Router, Route, Switch } from 'react-router-dom';
+import { Redirect } from 'react-router';
+import history from './components/common/History';
+import { LoginPage } from './components/login/LoginPage';
+import LoggedOut from './components/login/LoggedOut';
+import ForgotPassword from './components/login/ForgotPassword';
+import ResetPassword from './components/login/ResetPassword';
+import { PrivateRoute } from './components/common/PrivateRoute';
+import Assets from './components/application/Assets';
+import { LeftNav } from './components/layout/LeftNav';
+import Dataflow from './components/application/Dataflow';
+import DataflowDetails from './components/application/Dataflow/DataflowDetails';
+import { DataflowInstances } from './components/application/DataflowInstances/DataflowInstances';
+import { DataflowInstanceDetails } from './components/application/DataflowInstances/DataflowInstanceDetails';
+import Users from './components/admin/Users';
+import FileDetailsForm from './components/application/FileDetails';
+import FileTemplate from './components/application/templates/FileTemplate';
+import JobDetailsForm from './components/application/Jobs/JobDetails';
+import IndexDetailsForm from './components/application/IndexDetails';
+import QueryDetailsForm from './components/application/queries/QueryDetails';
+import VisualizationDetailsForm from './components/application/VisualizationDetails';
 
-import ManualJobDetail from "./components/application/Jobs/ManualJobDetail";
+import ManualJobDetail from './components/application/Jobs/ManualJobDetail';
 
-import Actions from "./components/application/actions/actions";
-import { AdminApplications } from "./components/admin/apps/Applications";
-import AdminClusters from "./components/admin/Clusters";
-import ClusterDetails from "./components/admin/ClusterDetails";
-import { AdminConsumers } from "./components/admin/Consumers";
-import { AppHeader } from "./components/layout/Header";
-import { userActions } from "./redux/actions/User";
-import { store } from "./redux/store/Store";
+import Actions from './components/application/actions/actions';
+import { AdminApplications } from './components/admin/apps/Applications';
+import AdminClusters from './components/admin/Clusters';
+import ClusterDetails from './components/admin/ClusterDetails';
+import { AdminConsumers } from './components/admin/Consumers';
+import { AppHeader } from './components/layout/Header';
+import { userActions } from './redux/actions/User';
+import { store } from './redux/store/Store';
 
-import Regulations from "./components/admin/ControlsAndRegulations";
-import GitHubSettings from "./components/admin/GitHubSettings/GitHubSettings";
-import ScheduledJobsPage from "./components/admin/ScheduledJobsPage";
-import AddJobsForm from "./components/application/Jobs/AddjobsForm/AddJobsForm";
+import Regulations from './components/admin/ControlsAndRegulations';
+import GitHubSettings from './components/admin/GitHubSettings/GitHubSettings';
+import ScheduledJobsPage from './components/admin/ScheduledJobsPage';
+import AddJobsForm from './components/application/Jobs/AddjobsForm/AddJobsForm';
 
-import tomboloLogo from "./images/logo.png";
+import tomboloLogo from './images/logo.png';
 
 const { Header, Content } = Layout;
 
-const BG_COLOR = "";
+const BG_COLOR = '';
 
 class App extends React.Component {
   state = {
@@ -61,29 +61,15 @@ class App extends React.Component {
   };
 
   render() {
-    const isApplicationSet =
-      this.props.application && this.props.application.applicationId !== ""
-        ? true
-        : false;
+    const isApplicationSet = this.props.application && this.props.application.applicationId !== '' ? true : false;
     const selectedTopNav =
-      this.props.selectedTopNav &&
-      this.props.selectedTopNav.indexOf("/admin") !== -1
-        ? "/admin/applications"
-        : "/files";
+      this.props.selectedTopNav && this.props.selectedTopNav.indexOf('/admin') !== -1
+        ? '/admin/applications'
+        : '/files';
     const dataFlowComp = () => {
-      let applicationId = this.props.application
-        ? this.props.application.applicationId
-        : "";
-      let applicationTitle = this.props.application
-        ? this.props.application.applicationTitle
-        : "";
-      return (
-        <Dataflow
-          applicationId={applicationId}
-          applicationTitle={applicationTitle}
-          user={this.props.user}
-        />
-      );
+      let applicationId = this.props.application ? this.props.application.applicationId : '';
+      let applicationTitle = this.props.application ? this.props.application.applicationTitle : '';
+      return <Dataflow applicationId={applicationId} applicationTitle={applicationTitle} user={this.props.user} />;
     };
 
     const getAssets = () => {
@@ -97,21 +83,22 @@ class App extends React.Component {
 
     return (
       <Router history={history}>
-
-        <Layout
-          className="custom-scroll"
-          style={{ height: "100vh", overflow: "auto" }}
-        >
+        <Layout className="custom-scroll" style={{ height: '100vh', overflow: 'auto' }}>
           <Header
             style={{
               backgroundColor: BG_COLOR,
-              maxHeight: "50px",
-              position: "fixed",
+              maxHeight: '50px',
+              position: 'fixed',
               zIndex: 100,
-              width: "100%",
-            }}
-          >
-            {this.props.user && this.props.user.token ? <AppHeader /> : <div style={{display:'flex', alignItems:'center', height:'100%'}}> <img src={tomboloLogo} alt="Tombolo logo"/> </div> }
+              width: '100%',
+            }}>
+            {this.props.user && this.props.user.token ? (
+              <AppHeader />
+            ) : (
+              <div style={{ display: 'flex', alignItems: 'center', height: '100%' }}>
+                <img src={tomboloLogo} alt="Tombolo logo" />
+              </div>
+            )}
           </Header>
           <Layout>
             <LeftNav
@@ -124,12 +111,11 @@ class App extends React.Component {
 
             <Content
               style={{
-                transition: ".1s linear",
-                margin: "55px 16px",
-                marginLeft: this.state.collapsed ? "70px" : "215px",
-              }}
-            >
-            {!this.props.authWithAzure ? ( // value is passed via AzureApp component
+                transition: '.1s linear',
+                margin: '55px 16px',
+                marginLeft: this.state.collapsed ? '70px' : '215px',
+              }}>
+              {!this.props.authWithAzure ? ( // value is passed via AzureApp component
                 <>
                   <Route exact path="/login" component={LoginPage} />
                   <Route exact path="/forgot-password" component={ForgotPassword} />
@@ -140,92 +126,39 @@ class App extends React.Component {
 
               <Switch>
                 <PrivateRoute exact path="/" component={getAssets} />
-                <PrivateRoute
-                  path="/:applicationId/assets/file/:fileId?"
-                  component={FileDetailsForm}
-                />
-                <PrivateRoute
-                  path="/:applicationId/assets/fileTemplate/:fileId?"
-                  component={FileTemplate}
-                />
-                <PrivateRoute
-                  path="/:applicationId/assets/add-jobs"
-                  component={AddJobsForm}
-                />
-                <PrivateRoute
-                  path="/:applicationId/assets/job/:jobId?"
-                  component={JobDetailsForm}
-                />
-                <PrivateRoute
-                  path="/:applicationId/assets/index/:indexId?"
-                  component={IndexDetailsForm}
-                />
-                <PrivateRoute
-                  path="/:applicationId/assets/query/:queryId?"
-                  component={QueryDetailsForm}
-                />
+                <PrivateRoute path="/:applicationId/assets/file/:fileId?" component={FileDetailsForm} />
+                <PrivateRoute path="/:applicationId/assets/fileTemplate/:fileId?" component={FileTemplate} />
+                <PrivateRoute path="/:applicationId/assets/add-jobs" component={AddJobsForm} />
+                <PrivateRoute path="/:applicationId/assets/job/:jobId?" component={JobDetailsForm} />
+                <PrivateRoute path="/:applicationId/assets/index/:indexId?" component={IndexDetailsForm} />
+                <PrivateRoute path="/:applicationId/assets/query/:queryId?" component={QueryDetailsForm} />
                 <PrivateRoute
                   path="/:applicationId/assets/visualizations/:visualizationId?"
                   component={VisualizationDetailsForm}
                 />
 
-                <PrivateRoute
-                  path="/:applicationId/assets"
-                  component={Assets}
-                />
-                <PrivateRoute
-                  path="/:applicationId/dataflow/details/:dataflowId?"
-                  component={DataflowDetails}
-                />
-                <PrivateRoute
-                  path="/:applicationId/dataflow"
-                  component={dataFlowComp}
-                />
-                <PrivateRoute
-                  path="/admin/applications"
-                  component={AdminApplications}
-                />
-                <PrivateRoute
-                  path="/admin/bree"
-                  component={ScheduledJobsPage}
-                />
-                <PrivateRoute
-                  path="/admin/clusters/:clusterId"
-                  component={ClusterDetails}
-                />
-                <PrivateRoute
-                  path="/admin/clusters"
-                  component={AdminClusters}
-                />
+                <PrivateRoute path="/:applicationId/assets" component={Assets} />
+                <PrivateRoute path="/:applicationId/dataflow/details/:dataflowId?" component={DataflowDetails} />
+                <PrivateRoute path="/:applicationId/dataflow" component={dataFlowComp} />
+                <PrivateRoute path="/admin/applications" component={AdminApplications} />
+                <PrivateRoute path="/admin/bree" component={ScheduledJobsPage} />
+                <PrivateRoute path="/admin/clusters/:clusterId" component={ClusterDetails} />
+                <PrivateRoute path="/admin/clusters" component={AdminClusters} />
                 <PrivateRoute path="/admin/github" component={GitHubSettings} />
                 <PrivateRoute path="/admin/users" component={Users} />
-                <PrivateRoute
-                  path="/admin/consumers"
-                  component={AdminConsumers}
-                />
-                <PrivateRoute
-                  path="/admin/controlsAndRegulations"
-                  component={Regulations}
-                />
+                <PrivateRoute path="/admin/consumers" component={AdminConsumers} />
+                <PrivateRoute path="/admin/controlsAndRegulations" component={Regulations} />
                 <PrivateRoute
                   path="/:applicationId/dataflowinstances/dataflowInstanceDetails/:dataflowId?/:executionGroupId?"
                   component={DataflowInstanceDetails}
                 />
-                <PrivateRoute
-                  path="/:applicationId/dataflowinstances"
-                  component={DataflowInstances}
-                />
-                <PrivateRoute
-                  path="/:applicationId/actions"
-                  component={Actions}
-                />
+                <PrivateRoute path="/:applicationId/dataflowinstances" component={DataflowInstances} />
+                <PrivateRoute path="/:applicationId/actions" component={Actions} />
                 <PrivateRoute
                   path="/:applicationId/manualJobDetails/:jobId/:jobExecutionId"
                   component={ManualJobDetail}
                 />
-                {this.props.authWithAzure ? (
-                  <Route exact path="*" component={getAssets} />
-                ) : null}
+                {this.props.authWithAzure ? <Route exact path="*" component={getAssets} /> : null}
               </Switch>
             </Content>
           </Layout>

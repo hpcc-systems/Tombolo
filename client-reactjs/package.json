@@ -1,5 +1,5 @@
 {
-  "name": "Tombolo",
+  "name": "tombolo",
   "version": "1.0.0",
   "private": true,
   "dependencies": {
@@ -42,6 +42,7 @@
     "eslint-plugin-prettier": "^4.2.1",
     "eslint-plugin-react": "^7.30.1",
     "eslint-plugin-react-hooks": "^4.6.0",
+    "eslint-plugin-unused-imports": "^2.0.0",
     "prettier": "^2.7.1",
     "react-scripts": "5.0.0"
   },
@@ -53,7 +54,9 @@
     "start": "react-scripts start",
     "build": "react-scripts build",
     "test": "react-scripts test",
-    "eject": "react-scripts eject"
+    "eject": "react-scripts eject",
+    "lint": "eslint .",
+    "lint:fix": "eslint --fix ."
   },
   "eslintConfig": {
     "extends": "react-app"

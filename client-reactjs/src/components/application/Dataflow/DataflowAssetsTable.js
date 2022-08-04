@@ -10,7 +10,9 @@ function DataflowAssetsTable() {
 
   const fetchDataAndRenderTable = async () => {
     try {
-      const response = await fetch(`/api/dataflow/assets?app_id=${applicationId}&dataflowId=${dataflowId}`, { headers: authHeader(), });
+      const response = await fetch(`/api/dataflow/assets?app_id=${applicationId}&dataflowId=${dataflowId}`, {
+        headers: authHeader(),
+      });
       if (!response.ok) handleError(response);
       const data = await response.json();
       setDataflowAssets(data);
