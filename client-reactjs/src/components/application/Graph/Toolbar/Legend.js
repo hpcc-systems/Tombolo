@@ -1,6 +1,15 @@
 import React from 'react';
 import { List, Typography } from 'antd';
-import { HourglassOutlined,ProfileOutlined, ArrowRightOutlined, SettingOutlined, EyeInvisibleOutlined, FileAddOutlined, MailOutlined, SoundOutlined} from '@ant-design/icons/lib/icons';
+import {
+  HourglassOutlined,
+  ProfileOutlined,
+  ArrowRightOutlined,
+  SettingOutlined,
+  EyeInvisibleOutlined,
+  FileAddOutlined,
+  MailOutlined,
+  SoundOutlined,
+} from '@ant-design/icons/lib/icons';
 import { colors } from '../graphColorsConfig';
 
 const { Text } = Typography;
@@ -24,7 +33,7 @@ const data = [
   },
   {
     title: 'File exists in superfile (dashed line, created automatically when file is connected to superfile)',
-    icon: <ArrowRightOutlined style={{ color: colors.superFileArrow}}  />,
+    icon: <ArrowRightOutlined style={{ color: colors.superFileArrow }} />,
   },
   {
     title: 'Time scheduled job',
@@ -84,9 +93,9 @@ const Legend = () => {
       itemLayout="horizontal"
       dataSource={data}
       renderItem={(item) => (
-         <List.Item>
-           <List.Item.Meta  avatar={item.icon} title={item.title} />
-         </List.Item>
+        <List.Item>
+          <List.Item.Meta avatar={item.icon} title={item.title} />
+        </List.Item>
       )}
     />
   );

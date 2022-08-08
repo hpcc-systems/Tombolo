@@ -1,9 +1,9 @@
-import React, { useState, useEffect } from "react";
-import { PdfContainer, Heading, BasicTitle } from "./pdfStyledComponents";
-import { authHeader, handleError } from "../../../common/AuthHeader";
-import ReactMarkdown from "react-markdown";
-import { downloadPdf } from "./downloadPdf";
-import { message } from "antd";
+import React, { useState, useEffect } from 'react';
+import { PdfContainer, Heading, BasicTitle } from './pdfStyledComponents';
+import { authHeader, handleError } from '../../../common/AuthHeader';
+import ReactMarkdown from 'react-markdown';
+import { downloadPdf } from './downloadPdf';
+import { message } from 'antd';
 
 function QueryDetailsPdf(props) {
   //Local state
@@ -13,10 +13,7 @@ function QueryDetailsPdf(props) {
   useEffect(() => {
     const abortFetch = new AbortController();
     fetch(
-      "/api/query/query_details?query_id=" +
-        props.selectedAssetId +
-        "&app_id=" +
-        props.applicationId,
+      '/api/query/query_details?query_id=' + props.selectedAssetId + '&app_id=' + props.applicationId,
       {
         headers: authHeader(),
       },
@@ -33,7 +30,7 @@ function QueryDetailsPdf(props) {
       })
       .catch((error) => {
         console.log(error);
-        message.error("Unable to fetch data to create pdf");
+        message.error('Unable to fetch data to create pdf');
         props.printingTaskCompleted();
       });
 
@@ -47,7 +44,7 @@ function QueryDetailsPdf(props) {
   useEffect(() => {
     setTimeout(() => {
       if (queryData && props.assets?.length == 1) {
-        downloadPdf(queryData.title, "pdfContainer");
+        downloadPdf(queryData.title, 'pdfContainer');
         props.printingTaskCompleted();
       }
     }, 1000);
@@ -66,9 +63,8 @@ function QueryDetailsPdf(props) {
           <strong>Name :</strong> {queryData?.name}
         </div>
         <div>
-          <strong>URL :</strong>{" "}
+          <strong>URL :</strong>
           <a href={queryData?.url}>
-            {" "}
             <span>&nbsp; </span>
             {queryData?.url}
           </a>
@@ -79,10 +75,7 @@ function QueryDetailsPdf(props) {
         </div>
         <div className="read-only-markdown">
           <strong>Description :</strong>
-          <ReactMarkdown
-            className="reactMarkdown"
-            source={queryData?.description}
-          ></ReactMarkdown>
+          <ReactMarkdown className="reactMarkdown" source={queryData?.description}></ReactMarkdown>
         </div>
       </div>
     </PdfContainer>

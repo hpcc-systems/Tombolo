@@ -1,9 +1,9 @@
-import React, { useEffect } from "react";
-import FileDetailsPdf from "./FileDetailsPdf";
-import IndexDetailsPdf from "./IndexDetailsPdf";
-import QueryDetailsPdf from "./QueryDetailsPdf";
-import { downloadPdf } from "./downloadPdf";
-import JobDetailsPdf from "./JobDetailsPdf";
+import React, { useEffect } from 'react';
+import FileDetailsPdf from './FileDetailsPdf';
+import IndexDetailsPdf from './IndexDetailsPdf';
+import QueryDetailsPdf from './QueryDetailsPdf';
+import { downloadPdf } from './downloadPdf';
+import JobDetailsPdf from './JobDetailsPdf';
 
 function GroupDetailsPdf(props) {
   //Local state and variables
@@ -12,7 +12,7 @@ function GroupDetailsPdf(props) {
   useEffect(() => {
     //Remove unchecked elements from DOM
     const removeElements = (elms) => elms.forEach((el) => el.remove());
-    let elements = document.querySelectorAll(".pdfContainer");
+    let elements = document.querySelectorAll('.pdfContainer');
     let elementArray = Array.from(elements);
     let childNodes = [];
     let childNodesArray = [];
@@ -22,9 +22,7 @@ function GroupDetailsPdf(props) {
     let childElements = flattenNodesArray.map((item) => item.className);
     const exportClasses = props.classesToExport;
 
-    let sortedElements = childElements.filter(
-      (item) => !exportClasses.includes(item)
-    );
+    let sortedElements = childElements.filter((item) => !exportClasses.includes(item));
 
     sortedElements.map((item) => {
       removeElements(document.querySelectorAll(`.${item}`));
@@ -33,11 +31,11 @@ function GroupDetailsPdf(props) {
 
   useEffect(() => {
     setTimeout(() => {
-      const ele = document.getElementById("ecl_render");
-      if(ele){
-        ele.innerHTML = ele.innerHTML.replace(/;/g, ";<br/>");
+      const ele = document.getElementById('ecl_render');
+      if (ele) {
+        ele.innerHTML = ele.innerHTML.replace(/;/g, ';<br/>');
       }
-      downloadPdf("assetDetails", "pdfContainerWraper");
+      downloadPdf('assetDetails', 'pdfContainerWraper');
       props.printingTaskCompleted();
     }, 2000);
   }, []);
@@ -46,56 +44,52 @@ function GroupDetailsPdf(props) {
     <div className="pdfContainerWraper">
       {assets.map((asset, index) => {
         switch (asset.type) {
-          case "File":
+          case 'File':
             return (
-                <FileDetailsPdf
-                  key={index}
-                  selectedAssetType={asset[index]}
-                  selectedAssetId={asset.id}
-                  applicationId={applicationId}
-                  classesToExport={props.classesToExport}
-                  setVisiblity={props.setVisiblity}
-                  printingTaskCompleted={props.printingTaskCompleted}
-                ></FileDetailsPdf>
+              <FileDetailsPdf
+                key={index}
+                selectedAssetType={asset[index]}
+                selectedAssetId={asset.id}
+                applicationId={applicationId}
+                classesToExport={props.classesToExport}
+                setVisiblity={props.setVisiblity}
+                printingTaskCompleted={props.printingTaskCompleted}></FileDetailsPdf>
             );
 
-          case "Index":
+          case 'Index':
             return (
               <IndexDetailsPdf
-              selectedAssetType={asset[index]}
-              key={index}
+                selectedAssetType={asset[index]}
+                key={index}
                 selectedAssetId={asset.id}
                 applicationId={applicationId}
                 classesToExport={props.classesToExport}
                 setVisiblity={props.setVisiblity}
-                printingTaskCompleted={props.printingTaskCompleted}
-              ></IndexDetailsPdf>
+                printingTaskCompleted={props.printingTaskCompleted}></IndexDetailsPdf>
             );
 
-          case "Query":
+          case 'Query':
             return (
               <QueryDetailsPdf
-              selectedAssetType={asset[index]}
-              key={index}
+                selectedAssetType={asset[index]}
+                key={index}
                 selectedAssetId={asset.id}
                 applicationId={applicationId}
                 classesToExport={props.classesToExport}
                 setVisiblity={props.setVisiblity}
-                printingTaskCompleted={props.printingTaskCompleted}
-              ></QueryDetailsPdf>
+                printingTaskCompleted={props.printingTaskCompleted}></QueryDetailsPdf>
             );
 
-          case "Job":
+          case 'Job':
             return (
               <JobDetailsPdf
-              selectedAssetType={asset[index]}
-              key={index}
+                selectedAssetType={asset[index]}
+                key={index}
                 selectedAssetId={asset.id}
                 applicationId={applicationId}
                 classesToExport={props.classesToExport}
                 setVisiblity={props.setVisiblity}
-                printingTaskCompleted={props.printingTaskCompleted}
-              ></JobDetailsPdf>
+                printingTaskCompleted={props.printingTaskCompleted}></JobDetailsPdf>
             );
         }
       })}

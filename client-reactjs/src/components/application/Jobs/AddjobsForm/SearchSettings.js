@@ -1,17 +1,29 @@
-import { Button, Form, Radio, Select } from "antd";
-import { useState } from "react";
-import { useSelector } from "react-redux";
+import React from 'react';
+import { Button, Form, Radio, Select } from 'antd';
+import { useState } from 'react';
+import { useSelector } from 'react-redux';
 
-import "./AddJobsForm.css";
+import './AddJobsForm.css';
 
-import { UpOutlined } from "@ant-design/icons";
-import DebounceSelect from "./DebounceSelect";
+import { UpOutlined } from '@ant-design/icons';
+import DebounceSelect from './DebounceSelect';
 
 const { Option } = Select;
 
 const config = {
-  jobTypes: ["Data Profile", "ETL", "Job", "Manual", "Query Publish", "Modeling", "Query Build", "Scoring", "Script", "Spray"],
-  notRegularJobs:[ 'Manual','Spray','Script' ],
+  jobTypes: [
+    'Data Profile',
+    'ETL',
+    'Job',
+    'Manual',
+    'Query Publish',
+    'Modeling',
+    'Query Build',
+    'Scoring',
+    'Script',
+    'Spray',
+  ],
+  notRegularJobs: ['Manual', 'Spray', 'Script'],
   layout: {
     tail: {
       wrapperCol: {
@@ -25,7 +37,7 @@ const config = {
       },
     },
   },
-}
+};
 
 const SearchSettings = ({ form, panes, removeTab, addTab }) => {
   const { application } = useSelector((state) => ({
@@ -39,22 +51,22 @@ const SearchSettings = ({ form, panes, removeTab, addTab }) => {
   const toggleHide = () => setHide((prev) => !prev);
 
   // reset jobtype to Job when selecting github job to avoid unexpected conflicts;
-  const onSourceChange = (e) =>{  
-    if (e.target.value) form.setFieldsValue({jobType:"Job"});
-  }
-  
+  const onSourceChange = (e) => {
+    if (e.target.value) form.setFieldsValue({ jobType: 'Job' });
+  };
+
   // Set isStoredOnGithub to false when adding Manual Job to avoid unexpected conflicts;
-  const onJobTypeChange = (value) =>{  
-    if (value === "Manual") form.setFieldsValue({isStoredOnGithub: false});
-  }
+  const onJobTypeChange = (value) => {
+    if (value === 'Manual') form.setFieldsValue({ isStoredOnGithub: false });
+  };
 
   return (
-    <fieldset className={`search-settings ${hide ? "hide-search" : ""} custom-scroll`}>
+    <fieldset className={`search-settings ${hide ? 'hide-search' : ''} custom-scroll`}>
       <legend onClick={toggleHide} className="search-settings-legend">
         Search Settings <UpOutlined rotate={hide ? 180 : 0} />
       </legend>
       <Form.Item label="Job Type" name="jobType" required>
-        <Select placeholder="Job Type" onChange={onJobTypeChange} >
+        <Select placeholder="Job Type" onChange={onJobTypeChange}>
           {config.jobTypes.map((type) => (
             <Option key={type}>{type}</Option>
           ))}
@@ -70,11 +82,15 @@ const SearchSettings = ({ form, panes, removeTab, addTab }) => {
       </Form.Item>
 
       <Form.Item label="Source" name="isStoredOnGithub">
-        <Radio.Group onChange={onSourceChange} style={{ width: "100%", textAlign: "center" }} size="middle" buttonStyle="solid">
-          <Radio.Button style={{ width: "50%" }} value={false}>
+        <Radio.Group
+          onChange={onSourceChange}
+          style={{ width: '100%', textAlign: 'center' }}
+          size="middle"
+          buttonStyle="solid">
+          <Radio.Button style={{ width: '50%' }} value={false}>
             HPCC
           </Radio.Button>
-          <Radio.Button style={{ width: "50%" }} value={true}>
+          <Radio.Button style={{ width: '50%' }} value={true}>
             GitHub
           </Radio.Button>
         </Radio.Group>
@@ -85,8 +101,8 @@ const SearchSettings = ({ form, panes, removeTab, addTab }) => {
           const { clusterId, isStoredOnGithub, jobType, search } = form.getFieldsValue(true);
           //  Show "Add Job" button or search field conditionally;
           if (isStoredOnGithub || config.notRegularJobs.includes(jobType)) {
-            const value = isStoredOnGithub ? "GitHub Job" : jobType;
-            const key = value + " #" + (panes.length + 1);
+            const value = isStoredOnGithub ? 'GitHub Job' : jobType;
+            const key = value + ' #' + (panes.length + 1);
             return (
               <Form.Item {...config.layout.tail}>
                 <Button type="ghost" block onClick={() => addTab({ key, value, clusterId, jobType, isStoredOnGithub })}>
@@ -97,10 +113,10 @@ const SearchSettings = ({ form, panes, removeTab, addTab }) => {
           }
 
           return (
-            <Form.Item label="Find Jobs" name="addedJobs" hidden={jobType === "Spray"}>
+            <Form.Item label="Find Jobs" name="addedJobs" hidden={jobType === 'Spray'}>
               <DebounceSelect
                 mode="multiple"
-                style={{ width: "100%" }}
+                style={{ width: '100%' }}
                 placeholder="Search by job's name"
                 formValues={{ clusterId, jobType, search }}
                 onDeselect={(_, { key: wuid }) => removeTab(wuid)}

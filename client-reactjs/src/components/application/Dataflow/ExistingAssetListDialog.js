@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Button, message, Modal, Table, Tooltip } from 'antd/lib';
+import { Button, message, Modal, Table, Tooltip } from 'antd';
 import { authHeader, handleError } from '../../common/AuthHeader.js';
 
 import { useSelector } from 'react-redux';
@@ -18,7 +18,7 @@ function ExistingAssetListDialog({ show, applicationId, clusterId, assetType, on
         const queryParams = `application_id=${applicationId}&cluster_id=${clusterId}`;
         const options = {
           File: `/api/file/read/file_list?${queryParams}`,
-          FileTemplate : `/api/fileTemplate/read/fileTemplate_list?${queryParams}`,
+          FileTemplate: `/api/fileTemplate/read/fileTemplate_list?${queryParams}`,
           Index: `/api/index/read/index_list?${queryParams}`,
           Job: `/api/job/job_list?${queryParams}`, //  'Job'- 'Modeling'- 'Scoring'- 'ETL'- 'Query Build'- 'Data Profile'
           default: `/api/job/job_list?${queryParams}`,
@@ -30,13 +30,13 @@ function ExistingAssetListDialog({ show, applicationId, clusterId, assetType, on
           const response = await fetch(url, { headers: authHeader() });
           if (!response.ok) handleError(response);
           const data = await response.json();
-          
-          const existingAssetsIds = nodes.map(node=> node.assetId);
-          const availableAssets = data.filter(asset => !existingAssetsIds.includes(asset.id));
-          
+
+          const existingAssetsIds = nodes.map((node) => node.assetId);
+          const availableAssets = data.filter((asset) => !existingAssetsIds.includes(asset.id));
+
           setAssets(availableAssets);
         } catch (error) {
-          console.log(`error`, error);
+          console.log('error', error);
           message.error('Could not download assets list');
         }
       })();
@@ -93,7 +93,7 @@ function ExistingAssetListDialog({ show, applicationId, clusterId, assetType, on
       ellipsis: {
         showTitle: false,
       },
-      render: (text, record) => {
+      render: (text) => {
         let createdAt = new Date(text);
         return (
           <Tooltip
@@ -102,8 +102,7 @@ function ExistingAssetListDialog({ show, applicationId, clusterId, assetType, on
               createdAt.toLocaleDateString('en-US', Constants.DATE_FORMAT_OPTIONS) +
               ' @ ' +
               createdAt.toLocaleTimeString('en-US')
-            }
-          >
+            }>
             {createdAt.toLocaleDateString('en-US', Constants.DATE_FORMAT_OPTIONS) +
               ' @ ' +
               createdAt.toLocaleTimeString('en-US')}
@@ -119,15 +118,14 @@ function ExistingAssetListDialog({ show, applicationId, clusterId, assetType, on
       render: (text, record) => (
         <span>
           <Button
-            className="btn btn-secondary btn-sm"
+            type="primary"
             onClick={() => {
               setLoading(true);
               onClose({
                 ...record,
                 assetType,
               });
-            }}
-          >
+            }}>
             Select
           </Button>
         </span>
@@ -140,31 +138,31 @@ function ExistingAssetListDialog({ show, applicationId, clusterId, assetType, on
       title: 'Is Superfile?',
       dataIndex: 'isSuperFile',
       width: '16%',
-      render: (text, record) => `${text ? 'Yes' : 'No'}`,
+      render: (text) => `${text ? 'Yes' : 'No'}`,
     };
     assetColumns.splice(2, 0, isSuperFileColumn);
   }
 
   if (assetType === 'Job' || assetType === 'File') {
-    const isJobAssociated =   {
+    const isJobAssociated = {
       title: 'Production',
       width: '20%',
       render: (text, record) => {
-        return record.isAssociated ? 'Yes' : 'No'
-      }
+        return record.isAssociated ? 'Yes' : 'No';
+      },
     };
     assetColumns.splice(2, 0, isJobAssociated);
   }
 
-  const getModalTitle = () =>{
+  const getModalTitle = () => {
     let title = 'Select From Existing ';
-    if (assetType === 'FileTemplate'){
-      title += "File Templates"
-    } else{
+    if (assetType === 'FileTemplate') {
+      title += 'File Templates';
+    } else {
       title += assetType;
     }
-    return title
-  }
+    return title;
+  };
 
   return (
     <Modal
@@ -181,8 +179,7 @@ function ExistingAssetListDialog({ show, applicationId, clusterId, assetType, on
         <Button key="cancel" disabled={loading} onClick={() => onClose()}>
           Cancel
         </Button>,
-      ]}
-    >
+      ]}>
       <Table
         loading={loading}
         columns={assetColumns}

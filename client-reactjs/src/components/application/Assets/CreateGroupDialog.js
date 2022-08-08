@@ -8,11 +8,8 @@ import { useSelector, useDispatch } from 'react-redux';
 import { expandGroups } from '../../../redux/actions/Groups.js';
 import { hasEditPermission } from '../../common/AuthUtil.js';
 
-export const CreateGroupDialog = ({ editGroup, applicationId, isShowing, toggle, }) => {
-  const [groupsReducer, authReducer] = useSelector((state) => [
-    state.groupsReducer,
-    state.authenticationReducer,
-  ]);
+export const CreateGroupDialog = ({ editGroup, applicationId, isShowing, toggle }) => {
+  const [groupsReducer, authReducer] = useSelector((state) => [state.groupsReducer, state.authenticationReducer]);
 
   const editingAllowed = hasEditPermission(authReducer.user);
   const { selectedKeys, expandedKeys } = groupsReducer;
@@ -26,7 +23,7 @@ export const CreateGroupDialog = ({ editGroup, applicationId, isShowing, toggle,
 
   const [form] = Form.useForm();
 
-  const handleCreateGroup = async (e) => {
+  const handleCreateGroup = async (_e) => {
     try {
       await form.validateFields();
       const isNew = group.id ? false : true;
@@ -56,7 +53,7 @@ export const CreateGroupDialog = ({ editGroup, applicationId, isShowing, toggle,
         if (!expandedKeys.includes(selectedKeys.key)) {
           dispatch(expandGroups([...expandedKeys, selectedKeys.key]));
         }
-        toggle({saved:true});
+        toggle({ saved: true });
       }
     } catch (error) {
       let errorMessage = error.message;
@@ -65,35 +62,35 @@ export const CreateGroupDialog = ({ editGroup, applicationId, isShowing, toggle,
     }
   };
 
-    useEffect(() => {
-        (async () => {
-        if (editGroup.edit) {
-            try {
-            const groupId = editGroup.groupId || selectedKeys.id;
-            const url = `/api/groups/details?app_id=${applicationId}&group_id=${groupId}`;
-    
-            const response = await fetch(url, { headers: authHeader() });
-            if (!response.ok) handleError(response);
-    
-            const data = await response.json();
-    
-            form.setFieldsValue({ name: data.name, description: data.description });
-            setGroup({ name: data.name, description: data.description, id: data.id });
-            } catch (error) {
-            message.error(error.message);
-            console.log(error);
-            }
-        } else {
-            setReadOnly(false);
-        }
-        })();
-    }, [editGroup]);
+  useEffect(() => {
+    (async () => {
+      if (editGroup.edit) {
+        try {
+          const groupId = editGroup.groupId || selectedKeys.id;
+          const url = `/api/groups/details?app_id=${applicationId}&group_id=${groupId}`;
 
-    const formInputChange = (e) => {
-        e.persist(); // antd throws error if e.persis is not on
-        setGroup((prev) => ({ ...prev, [e.target.name]: e.target.value }));
-      };
-      
+          const response = await fetch(url, { headers: authHeader() });
+          if (!response.ok) handleError(response);
+
+          const data = await response.json();
+
+          form.setFieldsValue({ name: data.name, description: data.description });
+          setGroup({ name: data.name, description: data.description, id: data.id });
+        } catch (error) {
+          message.error(error.message);
+          console.log(error);
+        }
+      } else {
+        setReadOnly(false);
+      }
+    })();
+  }, [editGroup]);
+
+  const formInputChange = (e) => {
+    e.persist(); // antd throws error if e.persis is not on
+    setGroup((prev) => ({ ...prev, [e.target.name]: e.target.value }));
+  };
+
   const handleEdit = () => setReadOnly(false);
 
   //Layout for form
@@ -124,11 +121,7 @@ export const CreateGroupDialog = ({ editGroup, applicationId, isShowing, toggle,
           </Button>
         </span>
       }>
-      <Form
-        form={form}
-        {...formItemLayout}
-        className="formInModal"
-        layout={readOnly ? 'horizontal' : 'vertical'}>
+      <Form form={form} {...formItemLayout} className="formInModal" layout={readOnly ? 'horizontal' : 'vertical'}>
         <Form.Item
           label="Name"
           name="name"
@@ -147,7 +140,7 @@ export const CreateGroupDialog = ({ editGroup, applicationId, isShowing, toggle,
         <Form.Item label="Description" name="description">
           <span style={{ fontWeight: 'normal' }}>
             {readOnly ? (
-              <ReactMarkdown className="read-only-markdown" children={group.description}></ReactMarkdown>
+              <ReactMarkdown className="read-only-markdown">{group.description}</ReactMarkdown>
             ) : (
               <MarkdownEditor
                 id="desc"
@@ -155,7 +148,7 @@ export const CreateGroupDialog = ({ editGroup, applicationId, isShowing, toggle,
                 targetDomId="fileDescr"
                 disabled={!editingAllowed}
                 value={group.description}
-                onChange={e=>setGroup((prev) => ({ ...prev, [e.target.name]: e.target.value }))}
+                onChange={(e) => setGroup((prev) => ({ ...prev, [e.target.name]: e.target.value }))}
               />
             )}
           </span>

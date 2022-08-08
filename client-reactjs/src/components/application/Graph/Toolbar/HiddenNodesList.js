@@ -22,7 +22,7 @@ const HiddenNodesList = ({ graphRef, refresh, setRefresh }) => {
     nodes.forEach((node) => {
       node.show({ name: 'update-asset' });
       const edges = graphRef.current.getConnectedEdges(node, { incoming: true, outgoing: true });
-      edges.forEach((edge) =>{
+      edges.forEach((edge) => {
         edge.setVisible(true);
         edge.toBack();
       }); // this will update each edge to be visible
