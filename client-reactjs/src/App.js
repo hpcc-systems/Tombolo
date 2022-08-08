@@ -62,10 +62,6 @@ class App extends React.Component {
 
   render() {
     const isApplicationSet = this.props.application && this.props.application.applicationId !== '' ? true : false;
-    const selectedTopNav =
-      this.props.selectedTopNav && this.props.selectedTopNav.indexOf('/admin') !== -1
-        ? '/admin/applications'
-        : '/files';
     const dataFlowComp = () => {
       let applicationId = this.props.application ? this.props.application.applicationId : '';
       let applicationTitle = this.props.application ? this.props.application.applicationTitle : '';
@@ -106,7 +102,6 @@ class App extends React.Component {
               onCollapse={this.onCollapse}
               collapsed={this.state.collapsed}
               isApplicationSet={isApplicationSet}
-              selectedTopNav={selectedTopNav}
             />
 
             <Content
@@ -169,13 +164,9 @@ class App extends React.Component {
 }
 
 function mapStateToProps(state) {
-  const { application, selectedTopNav } = state.applicationReducer;
+  const { application } = state.applicationReducer;
   const { user } = state.authenticationReducer;
-  return {
-    application,
-    selectedTopNav,
-    user,
-  };
+  return { application, user };
 }
 
 const connectedApp = connect(mapStateToProps)(App);

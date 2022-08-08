@@ -2,7 +2,6 @@ import { Constants } from '../../components/common/Constants';
 
 const initialState = {
   application: {},
-  selectedTopNav: '',
   newApplication: '',
   updatedApplication: '',
   deletedApplicationId: '',
@@ -16,11 +15,6 @@ export function applicationReducer(state = initialState, action) {
       return {
         ...state,
         application: action.application,
-      };
-    case Constants.TOP_NAV_CHANGED:
-      return {
-        ...state,
-        selectedTopNav: action.selectedTopNav,
       };
     case Constants.NEW_APPLICATION_ADDED:
       return {

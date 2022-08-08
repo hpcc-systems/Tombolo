@@ -6,7 +6,6 @@ export const applicationActions = {
   newApplicationAdded,
   applicationUpdated,
   applicationDeleted,
-  topNavChanged,
   getClusters,
   getConsumers,
 };
@@ -56,15 +55,6 @@ function applicationDeleted(applicationId) {
       type: Constants.APPLICATION_DELETED,
       applicationId,
     };
-  }
-}
-
-function topNavChanged(topNav) {
-  return (dispatch) => {
-    dispatch(request({ topNav }));
-  };
-  function request(topNav) {
-    return { type: Constants.TOP_NAV_CHANGED, topNav };
   }
 }
 
