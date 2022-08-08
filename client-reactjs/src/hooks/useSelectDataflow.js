@@ -6,7 +6,7 @@ import { hasEditPermission } from '../components/common/AuthUtil';
 import { dataflowAction } from '../redux/actions/Dataflow';
 
 const useSelectDataflow = () => {
-  const [dataflowReducer, user] = useSelector((state) => [state.dataflowReducer, state.authenticationReducer.user]);
+  const [dataflowReducer, user] = useSelector((state) => [state.dataflowReducer, state.authenticationReducer?.user]);
   const [isDataflowReady, setIsDataflowReady] = useState(false);
 
   const dispatch = useDispatch();
@@ -16,7 +16,7 @@ const useSelectDataflow = () => {
   useEffect(() => {
     (async () => {
       const { dataflowId, applicationId } = params;
-      if (dataflowId && applicationId && !dataflowReducer.dataflowId) {
+      if (dataflowId && applicationId && !dataflowReducer.id) {
         try {
           const response = await fetch(`/api/dataflow?application_id=${applicationId}&dataflow_id=${dataflowId}`, {
             headers: authHeader(),
@@ -25,9 +25,11 @@ const useSelectDataflow = () => {
 
           const data = await response.json();
           const dataflow = data[0];
+          console.log('dataflow', dataflow);
 
           if (!dataflow) throw new Error('No Dataflow found');
-          dispatch(dataflowAction.dataflowSelected(applicationId, '', dataflow.id, dataflow.clusterId, user));
+          const { title, id, clusterId } = dataflow;
+          dispatch(dataflowAction.dataflowSelected({ title, id, clusterId }));
         } catch (error) {
           return history.push('/');
         }
@@ -37,15 +39,13 @@ const useSelectDataflow = () => {
 
     return () => {
       // when component unmounted, reset selected dataflow
-      dispatch(dataflowAction.dataflowSelected('', '', '', '', {}));
+      dispatch(dataflowAction.dataflowReset());
     };
   }, []);
 
   return {
     isDataflowReady,
     canEdit: hasEditPermission(user),
-    applicationId: dataflowReducer.applicationId,
-    applicationTitle: dataflowReducer.applicationTitle,
   };
 };
 

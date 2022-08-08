@@ -11,7 +11,7 @@ function DataflowDetails() {
   const history = useHistory();
   const params = useParams();
 
-  const { isDataflowReady, applicationId, applicationTitle, canEdit } = useSelectDataflow(); // this hook will check if dataflow is present in redux, if not it will request data from DB and update redux
+  const { isDataflowReady, canEdit } = useSelectDataflow(); // this hook will check if dataflow is present in redux, if not it will request data from DB and update redux
 
   const handleBackToAllJobs = () => {
     history.push(`/${params.applicationId}/dataflow`);
@@ -27,7 +27,7 @@ function DataflowDetails() {
   return (
     <React.Fragment>
       <div style={{ display: 'flex', justifyContent: 'space-between' }}>
-        <BreadCrumbs applicationId={applicationId} applicationTitle={applicationTitle} />
+        <BreadCrumbs />
       </div>
       <div>
         <Tabs

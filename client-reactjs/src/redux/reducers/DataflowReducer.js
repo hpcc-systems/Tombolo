@@ -1,24 +1,18 @@
 import { Constants } from '../../components/common/Constants';
 
 const initialState = {
-  applicationId: '',
-  dataflowId: '',
-  workflowId: '',
-  instanceId: '',
+  id: '',
+  title: '',
+  version: '', // TODO: currently version is not in use
   clusterId: '',
-  user: null,
 };
 
 export function dataflowReducer(state = initialState, action) {
   switch (action.type) {
     case Constants.DATAFLOW_SELECTED:
-      return {
-        applicationId: action.selectedDataflow.applicationId,
-        applicationTitle: action.selectedDataflow.applicationTitle,
-        dataflowId: action.selectedDataflow.dataflowId,
-        clusterId: action.selectedDataflow.clusterId,
-        user: action.selectedDataflow.user,
-      };
+      return { ...action.payload };
+    case Constants.DATAFLOW_RESET:
+      return { ...initialState };
     default:
       return state;
   }
