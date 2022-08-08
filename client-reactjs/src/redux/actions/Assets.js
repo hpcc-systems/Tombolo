@@ -9,62 +9,36 @@ export const assetsActions = {
 };
 
 function assetSelected(id, applicationId, title) {
-  return (dispatch) => {
-    dispatch(request({ id, applicationId, title }));
+  return {
+    type: Constants.ASSET_SELECTED,
+    selectedAsset: { id, applicationId, title },
   };
-  function request(selectedAsset) {
-    return {
-      type: Constants.ASSET_SELECTED,
-      selectedAsset,
-    };
-  }
 }
 
 function newAsset(applicationId, groupId) {
-  const isNew = true;
-  return (dispatch) => {
-    dispatch(request({ applicationId, groupId, isNew }));
+  return {
+    type: Constants.NEW_ASSET,
+    newAsset: { applicationId, groupId, isNew: true },
   };
-  function request(newAsset) {
-    return {
-      type: Constants.NEW_ASSET,
-      newAsset,
-    };
-  }
 }
 
 function searchAsset(assetTypeFilter, keywords) {
-  return (dispatch) => {
-    dispatch(request({ assetTypeFilter, keywords }));
+  return {
+    type: Constants.SEARCH_ASSET,
+    searchParams: { assetTypeFilter, keywords },
   };
-  function request(searchParams) {
-    return {
-      type: Constants.SEARCH_ASSET,
-      searchParams,
-    };
-  }
 }
 
 function assetInGroupSelected(groupId) {
-  return (dispatch) => {
-    dispatch(request(groupId));
+  return {
+    type: Constants.ASSET_IN_GROUP_SELECTED,
+    groupId,
   };
-  function request(groupId) {
-    return {
-      type: Constants.ASSET_IN_GROUP_SELECTED,
-      groupId,
-    };
-  }
 }
 
 function clusterSelected(clusterId) {
-  return (dispatch) => {
-    dispatch(request(clusterId));
+  return {
+    type: Constants.CLUSTER_SELECTED,
+    clusterId,
   };
-  function request(clusterId) {
-    return {
-      type: Constants.CLUSTER_SELECTED,
-      clusterId,
-    };
-  }
 }

@@ -10,16 +10,12 @@ export const userActions = {
 };
 
 function login(username, password) {
-  let _self = this;
   return (dispatch) => {
-    dispatch(request({ username }));
+    dispatch({ type: Constants.LOGIN_REQUEST, user: username });
 
     fetch('/api/user/authenticate', {
       method: 'post',
-      headers: {
-        Accept: 'application/json',
-        'Content-Type': 'application/json',
-      },
+      headers: { Accept: 'application/json', 'Content-Type': 'application/json' },
       body: JSON.stringify({ username, password }),
     })
       .then(handleResponse)
@@ -37,30 +33,19 @@ function login(username, password) {
           permissions: decoded.role[0].name,
         };
         localStorage.setItem('user', JSON.stringify(user));
-        dispatch(success(user));
+        dispatch({ type: Constants.LOGIN_SUCCESS, user });
       })
       .catch((error) => {
         console.log(error);
         localStorage.removeItem('user');
-        dispatch(failure(error));
+        dispatch({ type: Constants.LOGIN_FAILURE, error });
       });
   };
-
-  function request(user) {
-    return { type: Constants.LOGIN_REQUEST, user };
-  }
-  function success(user) {
-    return { type: Constants.LOGIN_SUCCESS, user };
-  }
-  function failure(error) {
-    return { type: Constants.LOGIN_FAILURE, error };
-  }
 }
 
 function registerNewUser(newUserObj) {
-  let _self = this;
   return (dispatch) => {
-    dispatch(request());
+    dispatch({ type: Constants.REGISTER_USER_REQUEST });
 
     fetch('/api/user/registerUser', {
       method: 'post',
@@ -79,23 +64,9 @@ function registerNewUser(newUserObj) {
       }),
     })
       .then(handleResponse)
-      .then((response) => {
-        dispatch(success(response));
-      })
-      .catch((error) => {
-        dispatch(failure(error));
-      });
+      .then((response) => dispatch({ type: Constants.REGISTER_USER_SUCCESS, status: response.status }))
+      .catch((error) => dispatch({ type: Constants.REGISTER_USER_FAILED, error }));
   };
-
-  function request() {
-    return { type: Constants.REGISTER_USER_REQUEST };
-  }
-  function success(response) {
-    return { type: Constants.REGISTER_USER_SUCCESS, status: response.status };
-  }
-  function failure(error) {
-    return { type: Constants.REGISTER_USER_FAILED, error: error };
-  }
 }
 
 function logout() {
@@ -117,14 +88,14 @@ function handleResponse(response) {
 
 function validateToken() {
   var user = JSON.parse(localStorage.getItem('user'));
+
   if (process.env.REACT_APP_APP_AUTH_METHOD === 'azure_ad') {
-    return (dispatch) => {
-      dispatch(success(user));
-    };
+    return (dispatch) => dispatch({ type: Constants.VALIDATING_TOKEN, user });
   }
+
   return (dispatch) => {
     if (user) {
-      dispatch(validate(user));
+      dispatch({ type: Constants.VALIDATING_TOKEN, user });
       fetch('/api/user/validateToken', {
         method: 'post',
         headers: authHeader(),
@@ -145,22 +116,12 @@ function validateToken() {
             permissions: decoded.role[0].name,
           };
           localStorage.setItem('user', JSON.stringify(user));
-          dispatch(success(user));
+          dispatch({ type: Constants.VALIDATE_TOKEN, user });
         })
         .catch((error) => {
           localStorage.removeItem('user');
-          dispatch(failure(error));
+          dispatch({ type: Constants.INVALID_TOKEN, error });
         });
     }
   };
-
-  function validate(user) {
-    return { type: Constants.VALIDATING_TOKEN, user };
-  }
-  function success(user) {
-    return { type: Constants.VALIDATE_TOKEN, user };
-  }
-  function failure(error) {
-    return { type: Constants.INVALID_TOKEN, error };
-  }
 }
