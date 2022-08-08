@@ -349,8 +349,6 @@ const Assets = () => {
     <React.Fragment>
       <div style={{ height: '100%', overflow: 'hidden' }}>
         <BreadCrumbs
-          applicationId={application.applicationId}
-          applicationTitle={application.applicationTitle}
           extraContent={
             editingAllowed ? (
               <Dropdown overlay={menu}>
