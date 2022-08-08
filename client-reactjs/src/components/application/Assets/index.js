@@ -29,9 +29,8 @@ const CheckboxGroup = Checkbox.Group;
 message.config({ top: 100 });
 
 const Assets = () => {
-  const [groupsReducer, groupsMoveReducer, authReducer, assetReducer, applicationReducer] = useSelector((state) => [
+  const [groupsReducer, authReducer, assetReducer, applicationReducer] = useSelector((state) => [
     state.groupsReducer,
-    state.groupsMoveReducer,
     state.authenticationReducer,
     state.assetReducer,
     state.applicationReducer,
@@ -92,7 +91,7 @@ const Assets = () => {
     }
 
     prevSelectedApplicationRef.current = application;
-  }, [groupsMoveReducer, assetInGroupId, application]);
+  }, [assetInGroupId, application]);
 
   const clearSearch = () => {
     setSearchKeyword('');
