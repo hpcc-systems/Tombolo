@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { Button, Tabs, Spin, Space, message } from 'antd/lib';
+import { Button, Tabs, Spin, Space, message } from 'antd';
 import JobExecutionDetails from './JobExecutionDetails';
 import ManualJobsStatus from './ManualJobsStatus';
 import { authHeader, handleError } from '../../common/AuthHeader.js';
@@ -10,13 +10,22 @@ import { useParams } from 'react-router';
 import useSelectDataflow from '../../../hooks/useSelectDataflow';
 const { TabPane } = Tabs;
 
-
 export const DataflowInstanceDetails = () => {
-  const [applicationReducer, dataflowReducer] = useSelector((state) => [ state.applicationReducer, state.dataflowReducer, ]);
+  const [applicationReducer, dataflowReducer] = useSelector((state) => [
+    state.applicationReducer,
+    state.dataflowReducer,
+  ]);
 
   const [graphSize, setGraphSize] = useState({ width: '100%', height: 200 });
-  const [jobExecutions, setJobExecutions] = useState({ loading: false, error:'', data:[], statuses: [], JETableFilters: {}, selectedJEGroup: '', });
-  const {isDataflowReady} = useSelectDataflow(); // this hook will check if dataflow is present in redux, if not it will request data from DB and update redux
+  const [jobExecutions, setJobExecutions] = useState({
+    loading: false,
+    error: '',
+    data: [],
+    statuses: [],
+    JETableFilters: {},
+    selectedJEGroup: '',
+  });
+  const { isDataflowReady } = useSelectDataflow(); // this hook will check if dataflow is present in redux, if not it will request data from DB and update redux
 
   const params = useParams();
 
@@ -25,18 +34,21 @@ export const DataflowInstanceDetails = () => {
       const applicationId = applicationReducer.application.applicationId || params.applicationId;
       const dataflowId = dataflowReducer.dataflowId || params.dataflowId;
 
-      const response = await fetch( '/api/job/jobExecutionDetails?dataflowId=' + dataflowId + '&applicationId=' + applicationId, { headers: authHeader() } );
+      const response = await fetch(
+        '/api/job/jobExecutionDetails?dataflowId=' + dataflowId + '&applicationId=' + applicationId,
+        { headers: authHeader() }
+      );
       if (!response.ok) handleError(response);
 
       const data = await response.json();
 
-      setJobExecutions((prev) => ({ ...prev,  data }));
+      setJobExecutions((prev) => ({ ...prev, data }));
     } catch (error) {
       console.log('-error-----------------------------------------');
       console.dir({ error }, { depth: null });
       console.log('------------------------------------------');
       message.error(error.message);
-      message.error("Automatic status updates has stopped!");
+      message.error('Automatic status updates has stopped!');
       setJobExecutions((prev) => ({ ...prev, error: error.message }));
       if (stopPolling) stopPolling();
     }
@@ -62,7 +74,7 @@ export const DataflowInstanceDetails = () => {
       return acc;
     }, []);
   };
-  
+
   //Set selected Job Execution group
   const onGroupSelect = (groupId) => {
     const statuses = getStatuses(groupId);
@@ -73,19 +85,19 @@ export const DataflowInstanceDetails = () => {
     // fetch details on initial load
     getJobExecutionDetails();
     // Polling our backend for status
-    const POLLING_INTERVAL= 30000; // will poll every 30s
+    const POLLING_INTERVAL = 30000; // will poll every 30s
     const checkStatus = setInterval(() => {
       // define cleanup function
       const stopPolling = () => clearInterval(checkStatus);
       // Poll every n seconds;
-      getJobExecutionDetails( stopPolling );
-    },POLLING_INTERVAL );
-  
+      getJobExecutionDetails(stopPolling);
+    }, POLLING_INTERVAL);
+
     const LSGraphHeight = JSON.parse(localStorage.getItem('graphSize'));
     if (LSGraphHeight) {
       setGraphSize((prev) => ({ ...prev, height: LSGraphHeight }));
     }
-    
+
     return () => clearInterval(checkStatus);
   }, []);
 
@@ -96,12 +108,11 @@ export const DataflowInstanceDetails = () => {
       setJobExecutions((prev) => ({ ...prev, statuses }));
     }
   }, [jobExecutions.data]);
-  
 
   if (!applicationReducer.application || !applicationReducer.application.applicationId) return null;
- 
-   if (!isDataflowReady) return <Spin size='large' spinning={true} />;
- 
+
+  if (!isDataflowReady) return <Spin size="large" spinning={true} />;
+
   return (
     <React.Fragment>
       <div
@@ -112,8 +123,7 @@ export const DataflowInstanceDetails = () => {
           display: 'flex',
           flexDirection: 'column',
           justifyContent: 'flex-end',
-        }}
-      >
+        }}>
         <div style={{ position: 'absolute', top: 0, bottom: 0, right: 0, left: 0 }}>
           <GraphX6 monitoring={true} readOnly={true} statuses={jobExecutions.statuses} />
         </div>
@@ -131,8 +141,7 @@ export const DataflowInstanceDetails = () => {
             const newHeight = graphSize.height + d.height;
             setGraphSize({ height: newHeight });
             localStorage.setItem('graphSize', JSON.stringify(newHeight));
-          }}
-        >
+          }}>
           <Tabs
             type="card"
             tabBarExtraContent={
@@ -141,14 +150,12 @@ export const DataflowInstanceDetails = () => {
                   type="primary"
                   disabled={Object.keys(jobExecutions.JETableFilters).length < 1}
                   onClick={() => handleJEFilters({})}
-                  ghost
-                >
+                  ghost>
                   Clear all Filters
                 </Button>
               </Space>
             }
-            style={{ padding: '10px' }}
-          >
+            style={{ padding: '10px' }}>
             <TabPane tab="Workunits" key="1">
               <Spin spinning={jobExecutions.loading}>
                 <JobExecutionDetails
@@ -176,4 +183,3 @@ export const DataflowInstanceDetails = () => {
     </React.Fragment>
   );
 };
-

@@ -1,4 +1,5 @@
-import { Table } from 'antd/lib';
+import React from 'react';
+import { Table } from 'antd';
 import { Component } from 'react';
 import ReactMarkdown from 'react-markdown';
 import { connect } from 'react-redux';
@@ -51,9 +52,7 @@ class DataflowInstances extends Component {
         this.props.user
       )
     );
-    this.props.history.push(
-      `/${this.state.applicationId}/dataflowinstances/dataflowInstanceDetails/${record.id}`
-    );
+    this.props.history.push(`/${this.state.applicationId}/dataflowinstances/dataflowInstanceDetails/${record.id}`);
   };
 
   render() {
@@ -63,7 +62,7 @@ class DataflowInstances extends Component {
         title: 'Name',
         dataIndex: 'title',
         width: '30%',
-        render: (text, record) => <a onClick={(row) => this.handleViewDetails(record)}>{text}</a>,
+        render: (text, record) => <a onClick={() => this.handleViewDetails(record)}>{text}</a>,
       },
       {
         title: 'Description',
@@ -72,7 +71,7 @@ class DataflowInstances extends Component {
         ellipsis: true,
         width: '30%',
         // render: (text, record) => <ReactMarkdown children={text} />
-        render: (text, record) => (
+        render: (text) => (
           <span className="description-text">
             <ReactMarkdown children={text} />
           </span>
@@ -82,7 +81,7 @@ class DataflowInstances extends Component {
         title: 'Created',
         dataIndex: 'createdAt',
         width: '30%',
-        render: (text, record) => {
+        render: (text) => {
           let createdAt = new Date(text);
           return (
             createdAt.toLocaleDateString('en-US', Constants.DATE_FORMAT_OPTIONS) +
@@ -94,12 +93,7 @@ class DataflowInstances extends Component {
     ];
     return (
       <div>
-        <div className="d-flex justify-content-end">
-          <BreadCrumbs
-            applicationId={this.state.applicationId}
-            applicationTitle={this.state.applicationTitle}
-          />
-        </div>
+        <BreadCrumbs applicationId={this.state.applicationId} applicationTitle={this.state.applicationTitle} />
         <div>
           <Table
             columns={dataflowCols}

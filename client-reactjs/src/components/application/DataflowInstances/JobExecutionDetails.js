@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { Space, Table, Badge } from 'antd/lib';
+import { Space, Table, Badge } from 'antd';
 import { useParams } from 'react-router-dom';
 import { Constants } from '../../common/Constants';
 
@@ -31,7 +31,7 @@ function JobExecutionDetails({ jobExecutions, setFilters, selectJEGroup, JEGroup
   };
 
   // when the table changes - eg : sorting, filtering, pagination etc
-  const handleTableChange = (pagination, filters, sorter) => {
+  const handleTableChange = (pagination, filters, _sorter) => {
     const activeFilters = {};
     for (const key in filters) filters[key] && (activeFilters[key] = filters[key]);
     setFilters(activeFilters);
@@ -61,7 +61,7 @@ function JobExecutionDetails({ jobExecutions, setFilters, selectJEGroup, JEGroup
   //When component loads, find the count of job execution with same job execution group ID and group them together
   useEffect(() => {
     if (jobExecutions.length > 0) {
-      const sortedJE = jobExecutions.sort( (a, b) => new Date(a.createdAt) - new Date(b.createdAt) );
+      const sortedJE = jobExecutions.sort((a, b) => new Date(a.createdAt) - new Date(b.createdAt));
 
       const groupExecutions = sortedJE.reduce((allGroups, execution) => {
         const { createdAt, status, dataflowVersion } = execution;
@@ -88,11 +88,11 @@ function JobExecutionDetails({ jobExecutions, setFilters, selectJEGroup, JEGroup
       setJEGroupData(Object.values(groupExecutions));
 
       // On initial load we want to select first execution group but avoid this action next time, when poller updates jobExecutions list
-      if(initLoad.current){
+      if (initLoad.current) {
         const JEGroupIds = Object.keys(groupExecutions);
         const selectedGroup = executionGroupId || JEGroupIds[JEGroupIds.length - 1] || '';
         selectJEGroup(selectedGroup);
-        initLoad.current=false;
+        initLoad.current = false;
       }
     }
   }, [jobExecutions]);
@@ -109,7 +109,10 @@ function JobExecutionDetails({ jobExecutions, setFilters, selectJEGroup, JEGroup
         dataIndex: 'createdAt',
         defaultSortOrder: 'descend',
         sorter: (a, b) => new Date(b.createdAt) - new Date(a.createdAt),
-        render: (text, record) => new Date(text).toLocaleDateString('en-US', Constants.DATE_FORMAT_OPTIONS) + ' @ ' + new Date(text).toLocaleTimeString('en-US'),
+        render: (text, _record) =>
+          new Date(text).toLocaleDateString('en-US', Constants.DATE_FORMAT_OPTIONS) +
+          ' @ ' +
+          new Date(text).toLocaleTimeString('en-US'),
       },
       {
         title: 'Status',
@@ -131,8 +134,8 @@ function JobExecutionDetails({ jobExecutions, setFilters, selectJEGroup, JEGroup
     ];
 
     //Nested table data
-    const jobExecutionData = jobExecutions.filter((item) => item.jobExecutionGroupId === record.jobExecutionGroupId );
-  
+    const jobExecutionData = jobExecutions.filter((item) => item.jobExecutionGroupId === record.jobExecutionGroupId);
+
     return (
       <Table
         bordered
@@ -153,13 +156,16 @@ function JobExecutionDetails({ jobExecutions, setFilters, selectJEGroup, JEGroup
       filteredValue: JEGroupFilters.createdAt || null,
       filters: createUniqueFiltersArr(jobExecutions, 'createdAt'),
       sorter: (a, b) => new Date(b.createdAt) - new Date(a.createdAt),
-      onFilter: (value, record) => value === new Date(record.createdAt).toLocaleDateString('en-US', Constants.DATE_FORMAT_OPTIONS),
+      onFilter: (value, record) =>
+        value === new Date(record.createdAt).toLocaleDateString('en-US', Constants.DATE_FORMAT_OPTIONS),
       render: (text, record) => {
         let createdAt = new Date(record.createdAt);
         return (
           <Space size="small">
             <Badge color={setBadgeColor(getGroupStatus(record.statuses))}></Badge>
-            {createdAt.toLocaleDateString('en-US', Constants.DATE_FORMAT_OPTIONS) + ' @ ' + createdAt.toLocaleTimeString('en-US')}
+            {createdAt.toLocaleDateString('en-US', Constants.DATE_FORMAT_OPTIONS) +
+              ' @ ' +
+              createdAt.toLocaleTimeString('en-US')}
             <small>
               <b>
                 [ {record.count} job{record.count > 1 ? 's' : ''} ]
@@ -170,14 +176,18 @@ function JobExecutionDetails({ jobExecutions, setFilters, selectJEGroup, JEGroup
       },
     },
     {
-      title:"Version",
+      title: 'Version',
       render: (text, record) => {
         const version = record?.dataflowVersion;
         if (!version) return '';
-        const liveBadge = version.isLive ? "(live version)" : '';
-        return <> {version.name} {liveBadge}</>
+        const liveBadge = version.isLive ? '(live version)' : '';
+        return (
+          <>
+            {version.name} {liveBadge}
+          </>
+        );
       },
-    }
+    },
   ];
 
   return (
@@ -193,7 +203,9 @@ function JobExecutionDetails({ jobExecutions, setFilters, selectJEGroup, JEGroup
         expandable={{ expandedRowRender }}
         expandedRowClassName={() => 'jobExecutionDetails_antdTable_child'}
         onExpand={(expanded, record) => selectJEGroup(expanded ? record.jobExecutionGroupId : '')}
-        rowClassName={(record) => JEGroup === record.jobExecutionGroupId ? 'jobExecutionDetails_antdTable_selectedRow' : '' } 
+        rowClassName={(record) =>
+          JEGroup === record.jobExecutionGroupId ? 'jobExecutionDetails_antdTable_selectedRow' : ''
+        }
         // pagination={{ pageSize: Math.abs(Math.round((windowHeight - graphSize.height) / 60 ))}}
       />
     </React.Fragment>

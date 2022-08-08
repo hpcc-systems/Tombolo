@@ -1,9 +1,9 @@
-import React, { useState, useEffect } from "react";
-import { PdfContainer, SectionTitle, Heading } from "./pdfStyledComponents";
-import { authHeader, handleError } from "../../../common/AuthHeader";
-import { downloadPdf } from "./downloadPdf";
-import ReactMarkdown from "react-markdown";
-import { message } from "antd";
+import React, { useState, useEffect } from 'react';
+import { PdfContainer, SectionTitle, Heading } from './pdfStyledComponents';
+import { authHeader, handleError } from '../../../common/AuthHeader';
+import { downloadPdf } from './downloadPdf';
+import ReactMarkdown from 'react-markdown';
+import { message } from 'antd';
 
 function IndexDetailsPdf(props) {
   //Local State & variables
@@ -14,10 +14,7 @@ function IndexDetailsPdf(props) {
   useEffect(() => {
     const abortFetch = new AbortController();
     fetch(
-      "/api/index/read/index_details?index_id=" +
-        selectedAssetId +
-        "&app_id=" +
-        applicationId,
+      '/api/index/read/index_details?index_id=' + selectedAssetId + '&app_id=' + applicationId,
       {
         headers: authHeader(),
       },
@@ -36,7 +33,7 @@ function IndexDetailsPdf(props) {
       })
       .catch((error) => {
         console.log(error);
-        message.error("Unable to fetch data to create pdf");
+        message.error('Unable to fetch data to create pdf');
         printingTaskCompleted();
       });
 
@@ -49,7 +46,7 @@ function IndexDetailsPdf(props) {
   //Once data is set in state
   useEffect(() => {
     if (indexData && props.assets?.length == 1) {
-      downloadPdf(indexData.basic.title, "pdfContainer");
+      downloadPdf(indexData.basic.title, 'pdfContainer');
       printingTaskCompleted();
     }
   }, [indexData]);
@@ -76,10 +73,7 @@ function IndexDetailsPdf(props) {
         </div>
         <div className="read-only-markdown">
           <strong>Description :</strong>
-          <ReactMarkdown
-            className="reactMarkdown"
-            source={indexData?.basic.description}
-          ></ReactMarkdown>
+          <ReactMarkdown className="reactMarkdown" source={indexData?.basic.description}></ReactMarkdown>
         </div>
       </div>
     </PdfContainer>

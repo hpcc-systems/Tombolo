@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { Form, Select, Cascader, Input, Tag, Space } from "antd/lib";
+import { Form, Select, Cascader, Input, Tag, Space } from 'antd';
 import { CheckCircleOutlined, CloseCircleOutlined, LoadingOutlined } from '@ant-design/icons';
 
 function GHMainFile({ enableEdit, form, branchOrTagName }) {
@@ -9,7 +9,9 @@ function GHMainFile({ enableEdit, form, branchOrTagName }) {
     const headers = { Accept: 'application/json', 'Content-Type': 'application/json' };
     if (targetOption.ghToken) headers.Authorization = `token ${targetOption.ghToken}`;
 
-    const url = `https://api.github.com/repos/${targetOption.owner}/${targetOption.repo}/contents${ targetOption.path ? '/' + targetOption.path : '' }?ref=${targetOption.ref}`;
+    const url = `https://api.github.com/repos/${targetOption.owner}/${targetOption.repo}/contents${
+      targetOption.path ? '/' + targetOption.path : ''
+    }?ref=${targetOption.ref}`;
     const respond = await fetch(url, { headers });
 
     const content = await respond.json();
@@ -58,19 +60,21 @@ function GHMainFile({ enableEdit, form, branchOrTagName }) {
       }));
       setRepoTree([...repoTree]);
     } catch (error) {
-      console.log(`error`, error);
+      console.log('error', error);
       form.current.setFields([{ name: ['gitHubFiles', 'pathToFile'], errors: [error.message] }]);
     }
   };
 
   const handleSelectRepo = async (selectedRepoId) => {
-    form.current.resetFields([ ['gitHubFiles', 'selectedFile'], ['gitHubFiles', 'pathToFile'], 'name', 'title', ]); // reset fields if repo is reselected
+    form.current.resetFields([['gitHubFiles', 'selectedFile'], ['gitHubFiles', 'pathToFile'], 'name', 'title']); // reset fields if repo is reselected
 
     if (selectedRepoId === undefined) return; // exit function if user hit reset button.
 
-    const selectedRepo = form.current?.getFieldValue(['gitHubFiles', 'reposList'])?.find((el) => el.id === selectedRepoId);
+    const selectedRepo = form.current
+      ?.getFieldValue(['gitHubFiles', 'reposList'])
+      ?.find((el) => el.id === selectedRepoId);
     const tagOrBranch = selectedRepo.ghBranchOrTag;
-   
+
     try {
       const content = await fetchFilesFromGitHub({
         path: null,
@@ -107,24 +111,21 @@ function GHMainFile({ enableEdit, form, branchOrTagName }) {
     <Form.Item
       label={enableEdit ? 'Main File' : 'Branch and File'}
       required={enableEdit}
-      className={!enableEdit && 'read-only-input'}
-    >
+      className={!enableEdit && 'read-only-input'}>
       {enableEdit ? (
         <Input.Group compact>
           <Form.Item
             noStyle
             name={['gitHubFiles', 'selectedRepoId']}
             validateTrigger={['onBlur', 'onSubmit']}
-            rules={[{ required: true, message: 'Please select main file repo' }]}
-          >
+            rules={[{ required: true, message: 'Please select main file repo' }]}>
             <Select
               allowClear
               style={{ width: '50%' }}
               onChange={handleSelectRepo}
               disabled={!reposFetched}
               placeholder="Select Main File Repo"
-              dropdownMatchSelectWidth={false}
-            >
+              dropdownMatchSelectWidth={false}>
               {repoList.map((repo) => (
                 <Select.Option key={repo.id} value={repo.id}>
                   <Tag color="geekblue">{repo.ghBranchOrTag}</Tag> - {repo.ghProject} -{' '}
@@ -141,13 +142,12 @@ function GHMainFile({ enableEdit, form, branchOrTagName }) {
             rules={[
               { required: true, message: '' },
               ({ getFieldValue }) => ({
-                validator(field, value) {
+                validator(_field, _value) {
                   if (getFieldValue(['gitHubFiles', 'selectedFile'])) return Promise.resolve();
                   return Promise.reject(new Error('Please select a main file'));
                 },
               }),
-            ]}
-          >
+            ]}>
             <Cascader
               style={{ width: '50%' }}
               changeOnSelect
@@ -164,7 +164,7 @@ function GHMainFile({ enableEdit, form, branchOrTagName }) {
         <Space>
           <Tag color="cyan"> {branchOrTagName} </Tag>
           <Tag color="magenta"> {pathToFile.join('/')} </Tag>
-          <FileStatus form={form} enableEdit={enableEdit} branchOrTagName={branchOrTagName}/>
+          <FileStatus form={form} enableEdit={enableEdit} branchOrTagName={branchOrTagName} />
         </Space>
       )}
     </Form.Item>
@@ -174,43 +174,58 @@ function GHMainFile({ enableEdit, form, branchOrTagName }) {
 export default GHMainFile;
 
 const FileStatus = ({ form, enableEdit, branchOrTagName }) => {
-  const [fileExist, setFileExist]=useState({loading:false, status:null })
+  const [fileExist, setFileExist] = useState({ loading: false, status: null });
 
   useEffect(() => {
     const selectedRepoId = form.current?.getFieldValue(['gitHubFiles', 'selectedRepoId']) || '';
     const selectedFile = form.current?.getFieldValue(['gitHubFiles', 'selectedFile']);
-    const selectedRepo = form.current?.getFieldValue(['gitHubFiles', 'reposList'])?.find((el) => el.id === selectedRepoId);
-  
+    const selectedRepo = form.current
+      ?.getFieldValue(['gitHubFiles', 'reposList'])
+      ?.find((el) => el.id === selectedRepoId);
+
     if (!enableEdit && branchOrTagName && selectedFile && selectedRepo) {
       (async () => {
         try {
           const headers = { Accept: 'application/json', 'Content-Type': 'application/json' };
           if (selectedRepo.ghToken) headers.Authorization = `token ${selectedRepo.ghToken}`;
-          setFileExist(()=>({loading:true, result:null}))
+          setFileExist(() => ({ loading: true, result: null }));
           const url = `https://api.github.com/repos/${selectedFile.owner}/${selectedFile.repo}/contents/${selectedFile.path}?ref=${branchOrTagName}`;
           const respond = await fetch(url, { headers });
           const content = await respond.json();
           if (content.message) throw new Error(content.message);
-          setFileExist(()=>({loading:false, status:'ok'}))
+          setFileExist(() => ({ loading: false, status: 'ok' }));
         } catch (error) {
-          setFileExist(()=>({loading:false, status:error.message}))
+          setFileExist(() => ({ loading: false, status: error.message }));
         }
       })();
     }
   }, [branchOrTagName, enableEdit]);
-  
+
   const getStatus = () => {
     if (!fileExist.status) return null;
-    if (fileExist.status === 'ok'){
-      return  <><CheckCircleOutlined style={{color:"green", verticalAlign: 0}} /> file exists </>;
+    if (fileExist.status === 'ok') {
+      return (
+        <>
+          <CheckCircleOutlined style={{ color: 'green', verticalAlign: 0 }} /> file exists{' '}
+        </>
+      );
     } else {
-      return  <><CloseCircleOutlined style={{color:"red", verticalAlign: 0}}/>file was not found, please check your credentials</>;
+      return (
+        <>
+          <CloseCircleOutlined style={{ color: 'red', verticalAlign: 0 }} />
+          file was not found, please check your credentials
+        </>
+      );
     }
   };
 
   return (
     <>
-      {fileExist.loading && <><LoadingOutlined /> ...checking file </>}
+      {fileExist.loading && (
+        <>
+          <LoadingOutlined /> ...checking file
+        </>
+      )}
       {getStatus()}
     </>
   );

@@ -1,43 +1,25 @@
 let omitDeep = (value, key) => {
   if (Array.isArray(value)) {
-    return value.map(i => omitDeep(i, key))
+    return value.map((i) => omitDeep(i, key));
+  } else if (typeof value === 'object' && value !== null) {
+    return Object.keys(value).reduce((newObject, k) => {
+      if (k === key) return newObject;
+      return Object.assign({ [k]: omitDeep(value[k], key) }, newObject);
+    }, {});
   }
-  else if (typeof value === 'object' && value !== null) {
-    return Object.keys(value)
-      .reduce(
-        (newObject, k) => {
-          if (k === key) return newObject
-          return Object.assign(
-            { [k]: omitDeep(value[k], key) },
-            newObject
-          )
-        },
-        {}
-      )
-  }
-  return value
-}
+  return value;
+};
 
-const eclTypes = [
-    "Boolean",
-    "Integer",
-    "Unsigned",
-    "Real",
-    "Decimal",
-    "String",
-    "Varstring",
-    "RrcordOf",
-    "Enum"
-];
+const eclTypes = ['Boolean', 'Integer', 'Unsigned', 'Real', 'Decimal', 'String', 'Varstring', 'RrcordOf', 'Enum'];
 
 const validationRules = [
-  'Allowed Values', 
-  'Not-Allowed Values', 
-  'Empty_Check', 
-  'Date_Check', 
-  'Currency_Check', 
-  'String_Check', 
-  'Null_Check', 
+  'Allowed Values',
+  'Not-Allowed Values',
+  'Empty_Check',
+  'Date_Check',
+  'Currency_Check',
+  'String_Check',
+  'Null_Check',
   'Int_Check',
   'Invalid_IP_Check',
   'Invalid_State_Check',
@@ -49,16 +31,10 @@ const validationRules = [
   'Begins With',
   'Equal',
   'In',
-  'Not-In'
+  'Not-In',
 ];
 
-const validationRuleFixes = [
-  'Drop Record',
-  'Fix Date',
-  'Convert to State Code',
-  'Trim'
-];
-
+const validationRuleFixes = ['Drop Record', 'Fix Date', 'Convert to State Code', 'Trim'];
 
 const flatten = (obj) => {
   const array = Array.isArray(obj) ? obj : [obj];
@@ -70,40 +46,47 @@ const flatten = (obj) => {
     }
     return acc;
   }, []);
-}
+};
 
 const formItemLayout = {
   labelCol: { span: 2 },
-  wrapperCol: { span: 11 }
-}
+  wrapperCol: { span: 11 },
+};
 
 const formItemLayoutWithOutLabel = {
-  wrapperCol: { span: 11 , offset: 2 }
+  wrapperCol: { span: 11, offset: 2 },
 };
 
 const threeColformItemLayout = {
   labelCol: { span: 4 },
-  wrapperCol: { span: 12 }
+  wrapperCol: { span: 12 },
 };
 
 //Label and input in different line
 const multiLineFormItemLayout = {
-  labelCol : {span : 24},
-  wrapperCol : {span :6},
-}
+  labelCol: { span: 24 },
+  wrapperCol: { span: 6 },
+};
 
-
-export const getWorkingCopyGraph = (dataflowId) =>{
-  const LSgraphs = JSON.parse(localStorage.getItem("tombolo_graph"));    
+export const getWorkingCopyGraph = (dataflowId) => {
+  const LSgraphs = JSON.parse(localStorage.getItem('tombolo_graph'));
   return LSgraphs?.[dataflowId];
 };
 
-export const saveWorkingCopyGraph = (dataflowId, graph) =>{
+export const saveWorkingCopyGraph = (dataflowId, graph) => {
   const LSgraphs = localStorage.getItem('tombolo_graph') ? JSON.parse(localStorage.getItem('tombolo_graph')) : {};
   LSgraphs[dataflowId] = graph;
-  localStorage.setItem('tombolo_graph', JSON.stringify(LSgraphs))
+  localStorage.setItem('tombolo_graph', JSON.stringify(LSgraphs));
 };
 
-
-
-export {omitDeep, eclTypes,  flatten, formItemLayout, formItemLayoutWithOutLabel, threeColformItemLayout, multiLineFormItemLayout, validationRules, validationRuleFixes};
+export {
+  omitDeep,
+  eclTypes,
+  flatten,
+  formItemLayout,
+  formItemLayoutWithOutLabel,
+  threeColformItemLayout,
+  multiLineFormItemLayout,
+  validationRules,
+  validationRuleFixes,
+};
