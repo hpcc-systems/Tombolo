@@ -6,7 +6,6 @@ const initialState = {
   searchParams: { assetTypeFilter: '', keywords: '' },
   assetInGroupId: '',
   clusterId: '',
-  saveResponse: {},
 };
 
 export function assetReducer(state = initialState, action) {

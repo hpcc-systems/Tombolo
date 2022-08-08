@@ -3,7 +3,6 @@ import { SearchOutlined } from '@ant-design/icons';
 import { Button, Col, Form, Input, message, Row, Select, Spin, Tabs, Typography } from 'antd';
 import React, { Component } from 'react';
 import { connect } from 'react-redux';
-import { assetsActions } from '../../../redux/actions/Assets';
 import { authHeader, handleError } from '../../common/AuthHeader.js';
 import { hasEditPermission } from '../../common/AuthUtil.js';
 import { eclTypes, formItemLayout, omitDeep } from '../../common/CommonUtil.js';
@@ -294,7 +293,6 @@ class JobDetails extends Component {
       this.setState({ confirmLoading: true });
       const saveResponse = await this.saveJobDetails();
       message.success(`${fields.name} saved`);
-      // if (this.props.onAssetSaved) this.props.onAssetSaved(saveResponse);
       if (this.props.onClose) {
         // THIS METHOD WILL PASS PROPS TO GRAPH!
         const isAssociated =
@@ -320,8 +318,6 @@ class JobDetails extends Component {
           updateTab({ status: 'saved', key });
           this.switchToViewOnly();
         }
-
-        this.props.dispatch(assetsActions.assetSaved(saveResponse));
       }
     } catch (error) {
       console.log('handleOk error', error);

@@ -21,7 +21,6 @@ import { debounce } from 'lodash';
 import React, { Component } from 'react';
 import ReactMarkdown from 'react-markdown';
 import { connect } from 'react-redux';
-import { assetsActions } from '../../redux/actions/Assets';
 import { authHeader, handleError } from '../common/AuthHeader.js';
 import { canViewPII, hasEditPermission } from '../common/AuthUtil.js';
 import { eclTypes, formItemLayout } from '../common/CommonUtil';
@@ -254,7 +253,6 @@ class FileDetails extends Component {
         return this.props.history.push(`/${this.props.application.applicationId}/assets`);
       } else {
         document.querySelector('button.ant-modal-close').click();
-        this.props.dispatch(assetsActions.assetSaved(saveResponse));
       }
     } catch (error) {
       console.log('handleOk error', error);
