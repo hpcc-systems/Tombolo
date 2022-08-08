@@ -22,12 +22,10 @@ import React, { Component } from 'react';
 import ReactMarkdown from 'react-markdown';
 import { connect } from 'react-redux';
 import { assetsActions } from '../../redux/actions/Assets';
-import { store } from '../../redux/store/Store';
 import { authHeader, handleError } from '../common/AuthHeader.js';
 import { canViewPII, hasEditPermission } from '../common/AuthUtil.js';
 import { eclTypes, formItemLayout } from '../common/CommonUtil';
 import { validationRuleFixes, validationRules } from '../common/CommonUtil.js';
-import { Constants } from '../common/Constants';
 import DeleteAsset from '../common/DeleteAsset';
 import EditableTable from '../common/EditableTable.js';
 import { MarkdownEditor } from '../common/MarkdownEditor.js';
@@ -85,9 +83,9 @@ class FileDetails extends Component {
         name: '',
       },
     },
-    addingNewAsset: this.props.addingNewAsset,
-    enableEdit: this.props.editMode,
-    editing: this.props.editMode,
+    addingNewAsset: false,
+    enableEdit: false,
+    editing: false,
     dataAltered: false,
     errors: false,
     dataTypes: [],
@@ -96,7 +94,10 @@ class FileDetails extends Component {
   //Component did mount
   async componentDidMount() {
     const applicationId = this.props.application?.applicationId || this.props.match?.params?.applicationId;
-    const assetId = this.props?.selectedAsset?.id || this.props.match?.params?.fileId;
+
+    const assetId = this.props?.selectedAsset?.id || this.props.match?.params?.assetId;
+    if (!assetId) this.setState({ addingNewAsset: true, enableEdit: true, editing: true });
+
     if (applicationId) {
       await this.getFileDetails({ assetId, applicationId });
       await this.fetchDataTypeDetails();
@@ -105,10 +106,7 @@ class FileDetails extends Component {
   }
 
   //Component will unmount
-  componentWillUnmount() {
-    store.dispatch({ type: Constants.ENABLE_EDIT, payload: false });
-    store.dispatch({ type: Constants.ADD_ASSET, payload: false });
-  }
+  componentWillUnmount() {}
 
   clearState = () => {
     this.setState({
@@ -1254,7 +1252,6 @@ function mapStateToProps(state, ownProps) {
   let { selectedAsset, newAsset = {}, clusterId } = state.assetReducer;
   const { user } = state.authenticationReducer;
   const { application, clusters, consumers } = state.applicationReducer;
-  const { editMode, addingNewAsset } = state.viewOnlyModeReducer;
 
   const { isNew = false, groupId = '' } = newAsset;
 
@@ -1269,8 +1266,6 @@ function mapStateToProps(state, ownProps) {
     clusterId,
     clusters,
     consumers,
-    editMode,
-    addingNewAsset,
   };
 }
 

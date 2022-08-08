@@ -4,11 +4,9 @@ import { Button, Col, Form, Input, message, Row, Select, Spin, Tabs, Typography 
 import React, { Component } from 'react';
 import { connect } from 'react-redux';
 import { assetsActions } from '../../../redux/actions/Assets';
-import { store } from '../../../redux/store/Store';
 import { authHeader, handleError } from '../../common/AuthHeader.js';
 import { hasEditPermission } from '../../common/AuthUtil.js';
 import { eclTypes, formItemLayout, omitDeep } from '../../common/CommonUtil.js';
-import { Constants } from '../../common/Constants';
 import DeleteAsset from '../../common/DeleteAsset/index.js';
 import { EclEditor } from '../../common/EclEditor.js';
 import EditableTable from '../../common/EditableTable.js';
@@ -75,9 +73,9 @@ class JobDetails extends Component {
       selectedDropZoneName: {},
       manualJobFilePath: [],
     }, //file path to show in cascader
-    enableEdit: this.props.editMode,
-    editing: this.props.editMode,
-    addingNewAsset: this.props.addingNewAsset,
+    enableEdit: false,
+    editing: false,
+    addingNewAsset: false,
     dataAltered: false,
     errors: false,
     isNew: this.props.isNew,
@@ -86,7 +84,13 @@ class JobDetails extends Component {
 
   async componentDidMount() {
     const applicationId = this.props.application?.applicationId || this.props.match?.params?.applicationId;
-    const assetId = this.props?.selectedAsset?.id || this.props.match?.params?.jobId;
+
+    const { inTabView, viewMode } = this.props;
+    const assetId = this.props?.selectedAsset?.id || this.props.match?.params?.assetId;
+
+    if (!assetId || inTabView) this.setState({ addingNewAsset: true, enableEdit: true, editing: true });
+
+    if (viewMode) this.setState({ addingNewAsset: false, enableEdit: false, editing: false });
 
     if (applicationId) {
       await this.getFiles({ applicationId });
@@ -96,17 +100,17 @@ class JobDetails extends Component {
       await this.getJobDetails({ assetId, applicationId });
     }
 
-    if (this.props.inTabView) {
+    if (inTabView) {
       // if adding multiple jobs via tabs,
       // update values in jobDetails state
-      this.onClusterSelection(this.props.inTabView.clusterId);
-      this.onJobTypeChange(this.props.inTabView.jobType);
+      this.onClusterSelection(inTabView.clusterId);
+      this.onJobTypeChange(inTabView.jobType);
 
       // update form values
       this.formRef.current.setFieldsValue({
-        jobType: this.props.inTabView.jobType,
-        clusters: this.props.inTabView.clusterId,
-        isStoredOnGithub: this.props.inTabView.isStoredOnGithub,
+        jobType: inTabView.jobType,
+        clusters: inTabView.clusterId,
+        isStoredOnGithub: inTabView.isStoredOnGithub,
       });
     }
     // we will start with initialDataLoading true as initial state, after component mounted we flip this flag
@@ -114,10 +118,7 @@ class JobDetails extends Component {
   }
 
   //Unmounting phase
-  componentWillUnmount() {
-    store.dispatch({ type: Constants.ENABLE_EDIT, payload: false });
-    store.dispatch({ type: Constants.ADD_ASSET, payload: false });
-  }
+  componentWillUnmount() {}
 
   handleViewOnlyMode() {
     //Getting global state
@@ -615,7 +616,6 @@ class JobDetails extends Component {
 
     //Function to make fields editable
     const makeFieldsEditable = () => {
-      // editableMode();
       this.setState({ enableEdit: !this.state.enableEdit, editing: true });
     };
 
@@ -980,21 +980,8 @@ function mapStateToProps(state, ownProps) {
   const { user } = state.authenticationReducer;
   const { application, clusters } = state.applicationReducer;
   let { isNew = false, groupId = '' } = newAsset;
-  let { editMode, addingNewAsset } = state.viewOnlyModeReducer;
 
   if (ownProps.selectedAsset) selectedAsset = ownProps.selectedAsset;
-
-  if (ownProps.inTabView) {
-    addingNewAsset = true;
-    editMode = true;
-    isNew = true;
-  }
-
-  if (ownProps.viewMode) {
-    addingNewAsset = false;
-    editMode = false;
-    isNew = false;
-  }
 
   return {
     user,
@@ -1004,8 +991,6 @@ function mapStateToProps(state, ownProps) {
     groupId,
     clusterId,
     clusters,
-    editMode,
-    addingNewAsset,
   };
 }
 

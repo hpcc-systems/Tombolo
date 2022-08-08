@@ -121,12 +121,12 @@ class App extends React.Component {
 
               <Switch>
                 <PrivateRoute exact path="/" component={getAssets} />
-                <PrivateRoute path="/:applicationId/assets/file/:fileId?" component={FileDetailsForm} />
-                <PrivateRoute path="/:applicationId/assets/fileTemplate/:fileId?" component={FileTemplate} />
+                <PrivateRoute path="/:applicationId/assets/file/:assetId?" component={FileDetailsForm} />
+                <PrivateRoute path="/:applicationId/assets/fileTemplate/:assetId?" component={FileTemplate} />
                 <PrivateRoute path="/:applicationId/assets/add-jobs" component={AddJobsForm} />
-                <PrivateRoute path="/:applicationId/assets/job/:jobId?" component={JobDetailsForm} />
-                <PrivateRoute path="/:applicationId/assets/index/:indexId?" component={IndexDetailsForm} />
-                <PrivateRoute path="/:applicationId/assets/query/:queryId?" component={QueryDetailsForm} />
+                <PrivateRoute path="/:applicationId/assets/job/:assetId?" component={JobDetailsForm} />
+                <PrivateRoute path="/:applicationId/assets/index/:assetId?" component={IndexDetailsForm} />
+                <PrivateRoute path="/:applicationId/assets/query/:assetId?" component={QueryDetailsForm} />
                 <PrivateRoute
                   path="/:applicationId/assets/visualizations/:visualizationId?"
                   component={VisualizationDetailsForm}
