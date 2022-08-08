@@ -1,3 +1,4 @@
+/* eslint-disable no-async-promise-executor */
 import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { Tree, Menu, Button, Modal, Input, Dropdown, Checkbox, message, Popover } from 'antd';
 import { debounce } from 'lodash';
@@ -28,15 +29,13 @@ const CheckboxGroup = Checkbox.Group;
 message.config({ top: 100 });
 
 const Assets = () => {
-  const [groupsReducer, groupsMoveReducer, authReducer, assetReducer, applicationReducer] = useSelector(
-    (state) => [
-      state.groupsReducer,
-      state.groupsMoveReducer,
-      state.authenticationReducer,
-      state.assetReducer,
-      state.applicationReducer,
-    ]
-  );
+  const [groupsReducer, groupsMoveReducer, authReducer, assetReducer, applicationReducer] = useSelector((state) => [
+    state.groupsReducer,
+    state.groupsMoveReducer,
+    state.authenticationReducer,
+    state.assetReducer,
+    state.applicationReducer,
+  ]);
   const dispatch = useDispatch();
 
   const editingAllowed = hasEditPermission(authReducer.user);
@@ -74,13 +73,17 @@ const Assets = () => {
   //Re-render Directory Tree when the tree structure us chaged on modal
   useEffect(() => {
     //application changed
-    if(application?.applicationId){
-      if (groupsReducer.tree.length === 0 || groupsReducer.error){
+    if (application?.applicationId) {
+      if (groupsReducer.tree.length === 0 || groupsReducer.error) {
         fetchGroups(); // run this function on initial load to populate tree and datalist;
       }
     }
-    
-    if ( application && prevSelectedApplicationRef.current && application.applicationId !== prevSelectedApplicationRef.current.applicationId ) {
+
+    if (
+      application &&
+      prevSelectedApplicationRef.current &&
+      application.applicationId !== prevSelectedApplicationRef.current.applicationId
+    ) {
       dispatch(expandGroups(['0-0']));
       dispatch(selectGroup({ id: '', key: '0-0' }));
     }
@@ -101,26 +104,26 @@ const Assets = () => {
     clearSearch();
   };
 
-  const onExpand = async (expandedKeys, event) => {
+  const onExpand = async (expandedKeys, _event) => {
     dispatch(expandGroups(expandedKeys));
   };
 
-  const getParentKeys = (node, keys = ['0-0']) =>{
-    if(node.parentId){
+  const getParentKeys = (node, keys = ['0-0']) => {
+    if (node.parentId) {
       keys.push(node.parentKey);
-      const parent = dataList.find(group => group.id === node.parentId);
-      getParentKeys( parent, keys)
+      const parent = dataList.find((group) => group.id === node.parentId);
+      getParentKeys(parent, keys);
     }
-    return keys
-  }
+    return keys;
+  };
   const openGroup = (groupId) => {
-    if (groupId === 'root'){
+    if (groupId === 'root') {
       dispatch(selectGroup({ id: '', key: '0-0' }));
     } else if (groupId) {
       const match = dataList.find((group) => group.id === parseInt(groupId));
       if (match) {
         const parentKeys = getParentKeys(match);
-        const uniqueKeys = [...new Set([...expandedKeys,...parentKeys ])] // will keep all previously opened keys plus new path
+        const uniqueKeys = [...new Set([...expandedKeys, ...parentKeys])]; // will keep all previously opened keys plus new path
         dispatch(expandGroups(uniqueKeys));
         dispatch(selectGroup({ id: match.id, key: match.key }));
       }
@@ -136,13 +139,13 @@ const Assets = () => {
     if (edit) setEditGroup({ edit, groupId });
     toggleCreateGroup();
   };
-  const closeCreateGroupDialog =(result) =>{
-    setEditGroup({ edit:false, groupId:'' }) 
+  const closeCreateGroupDialog = (result) => {
+    setEditGroup({ edit: false, groupId: '' });
     toggleCreateGroup();
-    if(result) {
-      result.saved && fetchGroups()
+    if (result) {
+      result.saved && fetchGroups();
     }
-  }
+  };
 
   const handlePrintAssets = () => {
     getNestedAssets(
@@ -169,7 +172,7 @@ const Assets = () => {
       Group: () => openNewGroupDialog({ edit: false, groupId: '' }),
       'Edit-Group': () => openNewGroupDialog({ edit: true, groupId: '' }),
       'Delete-Group': () => handleDeleteGroup(),
-      'Move-Group': () => openMoveAssetDialog({...group, type: "Group"}),
+      'Move-Group': () => openMoveAssetDialog({ ...group, type: 'Group' }),
       'Print-Assets': () => handlePrintAssets(),
     };
 
@@ -232,12 +235,11 @@ const Assets = () => {
     setItemToMove({});
   };
 
-  const handleDragEnter = (info) => {};
+  const handleDragEnter = () => {};
   const handleDragDrop = (info) => {
     if (info.node !== undefined && info.dragNode !== undefined) {
       confirm({
-        title:
-          'Are you sure you want to move "' + info.dragNode.title + '" to "' + info.node.title + '" group?',
+        title: 'Are you sure you want to move "' + info.dragNode.title + '" to "' + info.node.title + '" group?',
         okText: 'Yes',
         okType: 'danger',
         cancelText: 'No',
@@ -276,9 +278,10 @@ const Assets = () => {
   };
 
   const handleAssetSearch = useCallback(
-    debounce((value, event) => {
+    debounce((value, _event) => {
       if (assetTypeFilter.current.length === 0) return message.error('Please select at least one asset type');
-      const assetFilter = assetTypeFilter.current.length !== searchOptions.length ? assetTypeFilter.current.join(',') : '';
+      const assetFilter =
+        assetTypeFilter.current.length !== searchOptions.length ? assetTypeFilter.current.join(',') : '';
       dispatch(assetsActions.searchAsset(assetFilter, value));
     }, 300),
     [assetTypeFilter.current]
@@ -345,21 +348,20 @@ const Assets = () => {
   return (
     <React.Fragment>
       <div style={{ height: '100%', overflow: 'hidden' }}>
-        <div className="d-flex justify-content-end" style={{ margin: '5px' }}>
-          <BreadCrumbs
-            applicationId={application.applicationId}
-            applicationTitle={application.applicationTitle}
-          />
-          <div className="ml-auto">
-            {editingAllowed ? (
+        <BreadCrumbs
+          applicationId={application.applicationId}
+          applicationTitle={application.applicationTitle}
+          extraContent={
+            editingAllowed ? (
               <Dropdown overlay={menu}>
-                <Button className="btn btn-secondary btn-sm">
-                  Add Asset <DownOutlined />
+                <Button type="primary" icon={<DownOutlined />}>
+                  Add Asset
                 </Button>
               </Dropdown>
-            ) : null}
-          </div>
-        </div>
+            ) : null
+          }
+        />
+
         <div style={{ display: 'flex', height: '100%' }}>
           <div className="groups-div">
             <Search
@@ -389,15 +391,11 @@ const Assets = () => {
             />
           </div>
           <div className="asset-table">
-            <AssetsTable
-              openGroup={openGroup}
-              refreshGroups={fetchGroups}
-              handleEditGroup={handleEditGroup}
-            />
+            <AssetsTable openGroup={openGroup} refreshGroups={fetchGroups} handleEditGroup={handleEditGroup} />
           </div>
         </div>
       </div>
-      
+
       {showCreateGroup ? (
         <CreateGroupDialog
           editGroup={editGroup}

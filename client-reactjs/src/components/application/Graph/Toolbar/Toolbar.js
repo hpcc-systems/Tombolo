@@ -18,7 +18,7 @@ const CustomToolbar = ({ graphRef, handleSync, isSyncing, readOnly }) => {
   if (!graphRef.current) return null;
 
   return (
-    <div style={{ marginLeft:  readOnly ? "0": '105px' }}>
+    <div style={{ marginLeft: readOnly ? '0' : '105px' }}>
       <Toolbar
         hoverEffect={true}
         // extra={<span>Extra Component</span>}
@@ -41,8 +41,7 @@ const CustomToolbar = ({ graphRef, handleSync, isSyncing, readOnly }) => {
                     setRefresh(() => visible);
                   },
                 }}
-                dropdown={<HiddenNodesList graphRef={graphRef} refresh={refresh} setRefresh={setRefresh} />}
-              >
+                dropdown={<HiddenNodesList graphRef={graphRef} refresh={refresh} setRefresh={setRefresh} />}>
                 Hidden Nodes
               </Item>
             </Group>
@@ -54,8 +53,7 @@ const CustomToolbar = ({ graphRef, handleSync, isSyncing, readOnly }) => {
                 disabled={isSyncing}
                 active={isSyncing}
                 icon={isSyncing ? <LoadingOutlined /> : <SyncOutlined />}
-                onClick={handleSync}
-              >
+                onClick={handleSync}>
                 {isSyncing ? '...synchronizing' : 'Synchronize graph'}
               </Item>
             </Group>

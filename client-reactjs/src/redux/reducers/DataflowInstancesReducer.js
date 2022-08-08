@@ -1,10 +1,10 @@
 import { Constants } from '../../components/common/Constants';
 
-const initialState = {        
-	applicationId: '',
+const initialState = {
+  applicationId: '',
   dataflowId: '',
   workflowId: '',
-  instanceId: ''
+  instanceId: '',
 };
 
 export function dataflowInstancesReducer(state = initialState, action) {
@@ -15,9 +15,9 @@ export function dataflowInstancesReducer(state = initialState, action) {
         dataflowId: action.selectedDataflowDetails.dataflowId,
         workflowId: action.selectedDataflowDetails.workflowId,
         instanceId: action.selectedDataflowDetails.instanceId,
-        workflowDetails: action.selectedDataflowDetails.workflowDetails
+        workflowDetails: action.selectedDataflowDetails.workflowDetails,
       };
     default:
-      return state
+      return state;
   }
 }

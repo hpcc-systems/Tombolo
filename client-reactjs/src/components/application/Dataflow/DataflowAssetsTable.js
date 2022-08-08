@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Table } from 'antd/lib';
+import { Table } from 'antd';
 import { authHeader, handleError } from '../../common/AuthHeader.js';
 import { useSelector } from 'react-redux';
 
@@ -10,7 +10,9 @@ function DataflowAssetsTable() {
 
   const fetchDataAndRenderTable = async () => {
     try {
-      const response = await fetch(`/api/dataflow/assets?app_id=${applicationId}&dataflowId=${dataflowId}`, { headers: authHeader(), });
+      const response = await fetch(`/api/dataflow/assets?app_id=${applicationId}&dataflowId=${dataflowId}`, {
+        headers: authHeader(),
+      });
       if (!response.ok) handleError(response);
       const data = await response.json();
       setDataflowAssets(data);
