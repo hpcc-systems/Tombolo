@@ -6,78 +6,78 @@ export const assetsActions = {
   searchAsset,
   assetInGroupSelected,
   clusterSelected,
-  assetSaved
+  assetSaved,
 };
 
 function assetSelected(id, applicationId, title) {
-  return dispatch => {
+  return (dispatch) => {
     dispatch(request({ id, applicationId, title }));
   };
   function request(selectedAsset) {
     return {
       type: Constants.ASSET_SELECTED,
-      selectedAsset
-    }
+      selectedAsset,
+    };
   }
 }
 
 function newAsset(applicationId, groupId) {
   const isNew = true;
-  return dispatch => {
+  return (dispatch) => {
     dispatch(request({ applicationId, groupId, isNew }));
   };
   function request(newAsset) {
     return {
       type: Constants.NEW_ASSET,
-      newAsset
-    }
+      newAsset,
+    };
   }
 }
 
 function searchAsset(assetTypeFilter, keywords) {
-  return dispatch => {
+  return (dispatch) => {
     dispatch(request({ assetTypeFilter, keywords }));
   };
   function request(searchParams) {
     return {
       type: Constants.SEARCH_ASSET,
-      searchParams
-    }
+      searchParams,
+    };
   }
 }
 
 function assetInGroupSelected(groupId) {
-  return dispatch => {
+  return (dispatch) => {
     dispatch(request(groupId));
   };
   function request(groupId) {
     return {
       type: Constants.ASSET_IN_GROUP_SELECTED,
-      groupId
-    }
+      groupId,
+    };
   }
 }
 
 function clusterSelected(clusterId) {
-  return dispatch => {
+  return (dispatch) => {
     dispatch(request(clusterId));
   };
   function request(clusterId) {
     return {
       type: Constants.CLUSTER_SELECTED,
-      clusterId
-    }
+      clusterId,
+    };
   }
 }
 
 function assetSaved(saveResponse) {
-  return dispatch => {
+  return (dispatch) => {
     dispatch(request(saveResponse));
   };
   function request(saveResponse) {
     return {
       type: Constants.ASSET_SAVED,
-      saveResponse
-    }
+      saveResponse,
+    };
   }
 }

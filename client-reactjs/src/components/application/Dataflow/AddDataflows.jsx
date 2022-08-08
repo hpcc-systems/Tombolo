@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useSelector } from 'react-redux';
-import { Button, Tooltip, Modal, Form, Input, Select, message } from 'antd/lib';
+import { Button, Tooltip, Modal, Form, Input, Select, message } from 'antd';
 
 import { authHeader } from '../../common/AuthHeader.js';
 import NotifyField from '../Jobs/Notifications/RadioButtons';
@@ -20,19 +20,32 @@ const noLabelLayout = {
 // Var set outside, so change in these vars does not re-render component
 let selectedCluster = {};
 
-function AddDataflow({ modalVisible, setModalVisibility, dataflowToEdit, setDataflowToEdit, onDataFlowUpdated, data, enableEdit, setEnableEdit }) {
+function AddDataflow({
+  modalVisible,
+  setModalVisibility,
+  dataflowToEdit,
+  setDataflowToEdit,
+  onDataFlowUpdated,
+  data,
+  enableEdit,
+  setEnableEdit,
+}) {
   const [form] = Form.useForm();
-  const [application, clusters] = useSelector((state) => [state.applicationReducer?.application, state.applicationReducer?.clusters, state.authenticationReducer?.user]);
+  const [application, clusters] = useSelector((state) => [
+    state.applicationReducer?.application,
+    state.applicationReducer?.clusters,
+    state.authenticationReducer?.user,
+  ]);
   const [notifyStatus, setNotifyStatus] = useState('Never');
-  const [showDetails, setShowDetails] = useState(false)
+  const [showDetails, setShowDetails] = useState(false);
 
   useEffect(() => {
     //If user is editing or viewing DF details - Populate form fields
     if (dataflowToEdit) {
-      console.log(dataflowToEdit)
+      console.log(dataflowToEdit);
       const { id, title, description } = dataflowToEdit;
       selectedCluster = clusters.filter((cluster) => cluster.id === dataflowToEdit.clusterId)[0];
-      setNotifyStatus(dataflowToEdit?.metaData?.notification?.notify)
+      setNotifyStatus(dataflowToEdit?.metaData?.notification?.notify);
 
       form.setFieldsValue({
         id,
@@ -55,9 +68,7 @@ function AddDataflow({ modalVisible, setModalVisibility, dataflowToEdit, setData
 
   //Handle submit function
   const handleFormSubmission = () => {
-    form
-      .validateFields()
-      .then(saveDataflow)
+    form.validateFields().then(saveDataflow);
   };
 
   const saveDataflow = (formValues) => {
@@ -106,7 +117,7 @@ function AddDataflow({ modalVisible, setModalVisibility, dataflowToEdit, setData
         }
         return response.json();
       })
-      .then(function (data) {
+      .then(function (_data) {
         message.success('Successfully created dataflow');
         onDataFlowUpdated();
         form.resetFields();
@@ -117,7 +128,6 @@ function AddDataflow({ modalVisible, setModalVisibility, dataflowToEdit, setData
         setTimeout(() => {
           setModalVisibility(false);
         }, 300);
-        
       })
       .catch((error) => {
         message.error(error.message);
@@ -131,7 +141,7 @@ function AddDataflow({ modalVisible, setModalVisibility, dataflowToEdit, setData
     setEnableEdit(false);
     setNotifyStatus('Never');
     setShowDetails(false);
-    setDataflowToEdit(null)
+    setDataflowToEdit(null);
   };
 
   //when add DF btn is clicked
@@ -143,13 +153,9 @@ function AddDataflow({ modalVisible, setModalVisibility, dataflowToEdit, setData
   return (
     <React.Fragment>
       <div style={{ marginLeft: 'auto', paddingTop: '5px' }}>
-        <Tooltip 
-          placement="bottom" 
-          title={'Add new workflow'}>
-          <Button 
-            className="btn btn-secondary btn-sm" 
-            onClick={handleModal}>
-            <i className="fa fa-plus"></i>Add
+        <Tooltip placement="bottom" title={'Add new Dataflow'}>
+          <Button type="primary" onClick={handleModal}>
+            Add Dataflow
           </Button>
         </Tooltip>
       </div>
@@ -162,23 +168,24 @@ function AddDataflow({ modalVisible, setModalVisibility, dataflowToEdit, setData
         width={750}
         onCancel={handleClose}
         footer={[
-          <Button key={1} 
-            type="primary" 
-            onClick={handleFormSubmission} 
+          <Button
+            key={1}
+            type="primary"
+            onClick={handleFormSubmission}
             style={{ display: enableEdit ? 'inline' : 'none' }}>
             Save
           </Button>,
-          <Button 
-           key={2} 
-           type="primary" 
-          onClick={() => setEnableEdit(true)} style={{ display: enableEdit ? 'none' : 'inline' }}>
+          <Button
+            key={2}
+            type="primary"
+            onClick={() => setEnableEdit(true)}
+            style={{ display: enableEdit ? 'none' : 'inline' }}>
             Edit
           </Button>,
           <Button key={3} onClick={handleClose}>
             Cancel
           </Button>,
-        ]}
-      >
+        ]}>
         <Form form={form} initialValues={{ notify: 'Never' }} {...formLayout} labelAlign="left">
           <Form.Item
             label="Title"
@@ -188,13 +195,15 @@ function AddDataflow({ modalVisible, setModalVisibility, dataflowToEdit, setData
                 required: enableEdit ? true : false,
                 message: 'Please enter a valid title',
               },
-            ]}
-          >
+            ]}>
             <Input placeholder="Title" className={enableEdit ? null : 'read-only-input'} />
           </Form.Item>
 
           <Form.Item label="Description" name="description" className={enableEdit ? null : 'read-only-input'}>
-            <TextArea autoSize={{  minRows: enableEdit ? 2 : 1 }} placeholder={enableEdit ? 'Dataflow Description' : 'Description not provided'} />
+            <TextArea
+              autoSize={{ minRows: enableEdit ? 2 : 1 }}
+              placeholder={enableEdit ? 'Dataflow Description' : 'Description not provided'}
+            />
           </Form.Item>
 
           <Form.Item
@@ -206,8 +215,7 @@ function AddDataflow({ modalVisible, setModalVisibility, dataflowToEdit, setData
                 message: 'Please select a cluster',
               },
             ]}
-            className={enableEdit ? null : 'read-only-input'}
-          >
+            className={enableEdit ? null : 'read-only-input'}>
             {enableEdit ? (
               <Select onChange={handleClusterChange}>
                 {clusters.map((cluster) => (
@@ -227,36 +235,56 @@ function AddDataflow({ modalVisible, setModalVisibility, dataflowToEdit, setData
             <Input placeholder={enableEdit ? 'Cluster Password' : null} type="password" />
           </Form.Item>
 
-          <NotifyField enableEdit={enableEdit} setNotifyStatus={setNotifyStatus} setShowDetails={setShowDetails} showDetails={showDetails}/>
+          <NotifyField
+            enableEdit={enableEdit}
+            setNotifyStatus={setNotifyStatus}
+            setShowDetails={setShowDetails}
+            showDetails={showDetails}
+          />
 
-         {showDetails || enableEdit ?
+          {showDetails || enableEdit ? (
+            <>
+              {notifyStatus === 'Always' || notifyStatus === 'Only on success' ? (
+                <Form.Item
+                  label="Success"
+                  name="notificationSuccessMessage"
+                  className={enableEdit ? null : 'read-only-input'}
+                  rules={[
+                    {
+                      required: enableEdit ? true : false,
+                      message: 'Please enter success message',
+                    },
+                  ]}>
+                  <TextArea autoSize={{ minRows: enableEdit ? 2 : 1 }} placeholder="Success Message" />
+                </Form.Item>
+              ) : null}
 
-          <>
-          {notifyStatus === 'Always' || notifyStatus === 'Only on success' ? (
-             <Form.Item label="Success" name="notificationSuccessMessage" className={enableEdit ? null : 'read-only-input'} rules={[
-              {
-                required: enableEdit ? true : false,
-                message: 'Please enter success message',
-              },
-            ]}>
-                <TextArea autoSize={{  minRows: enableEdit ? 2 : 1 }} placeholder='Success Message'/>
-             </Form.Item>
+              {notifyStatus === 'Always' || notifyStatus === 'Only on failure' ? (
+                <Form.Item
+                  label="Failure"
+                  name="notificationFailureMessage"
+                  className={enableEdit ? null : 'read-only-input'}
+                  style={{ marginTop: '8px' }}
+                  rules={[
+                    {
+                      required: enableEdit ? true : false,
+                      message: 'Please enter a Failure',
+                    },
+                  ]}>
+                  <TextArea autoSize={{ minRows: enableEdit ? 2 : 1 }} placeholder="Failure Message" />
+                </Form.Item>
+              ) : null}
+
+              {notifyStatus !== 'Never' ? (
+                <UserSearch
+                  enableEdit={enableEdit}
+                  layout={formLayout}
+                  showDetails={showDetails}
+                  noLabelLayout={noLabelLayout}
+                />
+              ) : null}
+            </>
           ) : null}
-    
-
-          {notifyStatus === 'Always' || notifyStatus === 'Only on failure' ? (
-             <Form.Item label="Failure" name="notificationFailureMessage" className={enableEdit ? null : 'read-only-input'} style={{marginTop : '8px'}} rules={[
-              {
-                required: enableEdit ? true : false,
-                message: 'Please enter a Failure',
-              },
-            ]}>
-                <TextArea autoSize={{  minRows: enableEdit ? 2 : 1 }} placeholder='Failure Message'/>
-             </Form.Item>
-          ) : null}
-
-          {notifyStatus !== 'Never' ? <UserSearch enableEdit={enableEdit} layout={formLayout} showDetails={showDetails} noLabelLayout={noLabelLayout}/> : null}
-        </> : null}
         </Form>
       </Modal>
     </React.Fragment>

@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 
-import { Modal, Spin, Alert, Collapse } from 'antd/lib';
+import { Modal, Spin, Alert, Collapse } from 'antd';
 import { authHeader, handleError } from '../AuthHeader';
 import { useSelector } from 'react-redux';
 
@@ -8,20 +8,22 @@ const { Panel } = Collapse;
 
 const DeleteAssetModal = ({ asset, show, hide, onDelete }) => {
   const [isInDataflow, setIsInDataflow] = useState({ error: '', loading: false, data: [] });
-  const applicationId = useSelector((state) => state.applicationReducer?.application?.applicationId );
+  const applicationId = useSelector((state) => state.applicationReducer?.application?.applicationId);
 
   useEffect(() => {
     if (!show) return;
     (async () => {
-      
       try {
         setIsInDataflow((prev) => ({ ...prev, loading: true, error: '' }));
         if (asset.type === 'Group') return; // dont do fetch data if we deleting folder
 
-        const response = await fetch(`/api/dataflow/checkDataflows?application_id=${applicationId}&assetId=${asset.id}`, { headers: authHeader(), });
+        const response = await fetch(
+          `/api/dataflow/checkDataflows?application_id=${applicationId}&assetId=${asset.id}`,
+          { headers: authHeader() }
+        );
         if (!response.ok) handleError(response);
 
-        const data = await response.json();    
+        const data = await response.json();
 
         setIsInDataflow((prev) => ({ ...prev, data }));
       } catch (error) {
@@ -38,10 +40,14 @@ const DeleteAssetModal = ({ asset, show, hide, onDelete }) => {
 
   const getText = () => {
     if (isInDataflow.error) return isInDataflow.error;
-    
+
     const groupDeleteText = `Deleting a group will delete all assets within a group and make them unusable in workflows  Are you sure you want to delete "${asset.name}" ?`;
-    const assetDeleteText = `Deleting a ${ asset.type } will delete their metadata and make them unusable in workflows. Are you sure you want to delete "${ asset.title || asset.name }"?`
-    
+    const assetDeleteText = `Deleting a ${
+      asset.type
+    } will delete their metadata and make them unusable in workflows. Are you sure you want to delete "${
+      asset.title || asset.name
+    }"?`;
+
     if (isInDataflow.data.length > 0) {
       return (
         <>
@@ -55,7 +61,7 @@ const DeleteAssetModal = ({ asset, show, hide, onDelete }) => {
             <Panel header="List of dataflows" key="1">
               <ul>
                 {isInDataflow.data.map((flow) => {
-                  console.log('flow', flow)
+                  console.log('flow', flow);
                   return <li key={flow.dataflowId}>{flow.title}</li>;
                 })}
               </ul>
@@ -69,16 +75,16 @@ const DeleteAssetModal = ({ asset, show, hide, onDelete }) => {
           showIcon
           type="warning"
           message="Warning"
-          description={asset.type === 'Group' ? groupDeleteText : assetDeleteText } // Groups dont have Title, use name instead
+          description={asset.type === 'Group' ? groupDeleteText : assetDeleteText} // Groups dont have Title, use name instead
         />
       );
     }
   };
-  
+
   const dissableOk = isInDataflow.data.length > 0 || isInDataflow.error || isInDataflow.loading;
 
   if (!show) return null;
-  
+
   return (
     <Modal
       title={`Deleting "${asset.title || asset.name}"`}
@@ -87,8 +93,7 @@ const DeleteAssetModal = ({ asset, show, hide, onDelete }) => {
       okButtonProps={{ disabled: dissableOk }}
       onCancel={hide}
       closable={false}
-      destroyOnClose={true}
-    >
+      destroyOnClose={true}>
       <Spin tip="Loading..." spinning={isInDataflow.loading}>
         {getText()}
       </Spin>

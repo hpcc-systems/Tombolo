@@ -102,9 +102,7 @@ function VisualizationDetails() {
     debounce(async (searchString) => {
       if (searchString.length <= 3) return;
       if (!searchString.match(/^[a-zA-Z0-9_ -]*$/)) {
-        return message.error(
-          'Invalid search keyword. Please remove any special characters from the keyword.'
-        );
+        return message.error('Invalid search keyword. Please remove any special characters from the keyword.');
       }
 
       try {
@@ -210,7 +208,10 @@ function VisualizationDetails() {
               <Form.Item
                 label="Name"
                 name="name"
-                rules={[ { required: formState.enableEdit, message: 'Please enter a name!' }, { pattern: new RegExp(/^[a-zA-Z0-9:._ -]*$/), message: 'Please enter a valid name', }, ]}>
+                rules={[
+                  { required: formState.enableEdit, message: 'Please enter a name!' },
+                  { pattern: new RegExp(/^[a-zA-Z0-9:._ -]*$/), message: 'Please enter a valid name' },
+                ]}>
                 <Input
                   placeholder="Name"
                   onChange={onChange}

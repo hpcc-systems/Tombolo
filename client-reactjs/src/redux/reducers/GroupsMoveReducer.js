@@ -1,7 +1,7 @@
 import { Constants } from '../../components/common/Constants';
 
 const initialState = {
- groupMoved: ''
+  groupMoved: '',
 };
 
 export function groupsMoveReducer(state = initialState, action) {
@@ -9,9 +9,9 @@ export function groupsMoveReducer(state = initialState, action) {
     case Constants.MOVE_GROUP:
       return {
         ...state,
-      groupMoved : action.payload
+        groupMoved: action.payload,
       };
     default:
-      return state
+      return state;
   }
 }

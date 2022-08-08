@@ -1,5 +1,5 @@
 {
-  "name": "Tombolo",
+  "name": "tombolo",
   "version": "1.0.0",
   "private": true,
   "dependencies": {
@@ -14,21 +14,17 @@
     "@monaco-editor/react": "^4.4.4",
     "ag-grid-community": "^23.2.1",
     "ag-grid-react": "^23.2.1",
-    "antd": "^4.14.0",
-    "bootstrap": "^4.6.0",
+    "antd": "^4.21.3",
     "downloadjs": "^1.4.7",
     "font-awesome": "^4.7.0",
     "http-proxy-middleware": "^1.0.6",
     "jspdf": "^2.3.1",
     "jwt-decode": "^2.2.0",
     "papaparse": "^5.2.0",
-    "plotly.js": "^1.58.4",
-    "plotly.js-basic-dist": "^1.58.4",
     "re-resizable": "^6.9.1",
     "react": "^16.14.0",
     "react-dom": "^16.14.0",
     "react-markdown": "^5.0.3",
-    "react-plotly.js": "^2.5.1",
     "react-redux": "^7.2.2",
     "react-router": "^5.2.0",
     "react-router-dom": "^5.2.0",
@@ -41,17 +37,26 @@
     "@testing-library/jest-dom": "^5.11.9",
     "@testing-library/react": "^9.3.2",
     "@testing-library/user-event": "^7.1.2",
+    "eslint": "^8.21.0",
+    "eslint-config-prettier": "^8.5.0",
+    "eslint-plugin-prettier": "^4.2.1",
+    "eslint-plugin-react": "^7.30.1",
+    "eslint-plugin-react-hooks": "^4.6.0",
+    "eslint-plugin-unused-imports": "^2.0.0",
+    "prettier": "^2.7.1",
     "react-scripts": "5.0.0"
   },
   "resolutions": {
     "react-error-overlay": "6.0.9"
   },
   "scripts": {
-    "bootstrap-client" : "(npm install) && (npm start)",
+    "bootstrap-client": "(npm install) && (npm start)",
     "start": "react-scripts start",
-    "build": "GENERATE_SOURCEMAP=false INLINE_RUNTIME_CHUNK=false react-scripts build",
+    "build": "react-scripts build",
     "test": "react-scripts test",
-    "eject": "react-scripts eject"
+    "eject": "react-scripts eject",
+    "lint": "eslint .",
+    "lint:fix": "eslint --fix ."
   },
   "eslintConfig": {
     "extends": "react-app"
