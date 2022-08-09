@@ -8,55 +8,33 @@ import { dataflowAction } from '../../../redux/actions/Dataflow';
 import { authHeader, handleError } from '../../common/AuthHeader.js';
 import BreadCrumbs from '../../common/BreadCrumbs';
 import { Constants } from '../../common/Constants';
+
 class DataflowInstances extends Component {
   state = {
-    applicationId: this.props.application ? this.props.application.applicationId : '',
-    applicationTitle: this.props.application ? this.props.application.applicationTitle : '',
     dataflows: [],
   };
 
   componentDidMount() {
-    this.fetchDataflows();
+    if (this.props.applicationId) this.fetchDataflows();
   }
 
   fetchDataflows = () => {
-    let _self = this;
-    if (this.state.applicationId) {
-      fetch('/api/dataflow?application_id=' + this.state.applicationId, {
-        headers: authHeader(),
-      })
-        .then(function (response) {
-          if (response.ok) {
-            return response.json();
-          }
-          handleError(response);
-        })
-        .then(function (data) {
-          _self.setState({
-            dataflows: data,
-          });
-        })
-        .catch((error) => {
-          console.log(error);
-        });
-    }
+    fetch('/api/dataflow?application_id=' + this.props.applicationId, { headers: authHeader() })
+      .then((response) => (response.ok ? response.json() : handleError(response)))
+      .then((data) => this.setState({ dataflows: data }))
+      .catch(console.log);
   };
 
   handleViewDetails = (record) => {
-    this.props.dispatch(
-      dataflowAction.dataflowSelected(
-        this.state.applicationId,
-        this.props.application.applicationTitle,
-        record.id,
-        record.clusterId,
-        this.props.user
-      )
-    );
-    this.props.history.push(`/${this.state.applicationId}/dataflowinstances/dataflowInstanceDetails/${record.id}`);
+    const { id, title, clusterId } = record;
+    const { dispatch, history, applicationId } = this.props;
+    dispatch(dataflowAction.dataflowSelected({ id, title, clusterId }));
+    history.push(`/${applicationId}/dataflowinstances/dataflowInstanceDetails/${id}`);
   };
 
   render() {
-    if (!this.props.application || !this.props.application.applicationId) return null;
+    if (!this.props.applicationId) return null;
+
     const dataflowCols = [
       {
         title: 'Name',
@@ -70,7 +48,6 @@ class DataflowInstances extends Component {
         className: 'overflow-hidden',
         ellipsis: true,
         width: '30%',
-        // render: (text, record) => <ReactMarkdown children={text} />
         render: (text) => (
           <span className="description-text">
             <ReactMarkdown children={text} />
@@ -93,7 +70,7 @@ class DataflowInstances extends Component {
     ];
     return (
       <div>
-        <BreadCrumbs applicationId={this.state.applicationId} applicationTitle={this.state.applicationTitle} />
+        <BreadCrumbs />
         <div>
           <Table
             columns={dataflowCols}
@@ -109,16 +86,9 @@ class DataflowInstances extends Component {
 }
 
 function mapStateToProps(state) {
-  const { user } = state.authenticationReducer;
-  const { application, selectedTopNav } = state.applicationReducer;
-  return {
-    user,
-    application,
-    selectedTopNav,
-  };
+  const { applicationTitle, applicationId } = state.applicationReducer.application;
+  return { applicationTitle, applicationId };
 }
 
 const connectedWorkflows = connect(mapStateToProps)(withRouter(DataflowInstances));
 export { connectedWorkflows as DataflowInstances };
-
-//export default FileList;

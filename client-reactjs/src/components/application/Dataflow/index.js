@@ -8,9 +8,8 @@ import AddDataflow from './AddDataflows';
 import { dataflowAction } from '../../../redux/actions/Dataflow';
 import { useDispatch } from 'react-redux';
 
-function Dataflow(props) {
+function Dataflow({ applicationId, history }) {
   let componentMounted = true;
-  const { applicationId, applicationTitle, user } = props;
 
   const [dataFlows, setDataFlows] = useState([]);
   const [loadingData, setLoadingData] = useState(false);
@@ -62,17 +61,9 @@ function Dataflow(props) {
 
   // When DF is selected
   const onSelectDataflow = (selectedDataflow) => {
-    // This block should be moved to DF table component
-    dispatch(
-      dataflowAction.dataflowSelected(
-        applicationId,
-        applicationTitle,
-        selectedDataflow.id,
-        selectedDataflow.clusterId,
-        user
-      )
-    );
-    props.history.push(`/${applicationId}/dataflow/details/${selectedDataflow.id}`);
+    const { title, id, clusterId } = selectedDataflow;
+    dispatch(dataflowAction.dataflowSelected({ title, id, clusterId }));
+    history.push(`/${applicationId}/dataflow/details/${id}`);
   };
 
   // When edit icon/view is clicked

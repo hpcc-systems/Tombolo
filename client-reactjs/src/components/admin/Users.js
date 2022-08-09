@@ -252,7 +252,6 @@ class Users extends Component {
     return (
       <React.Fragment>
         <BreadCrumbs
-          applicationId={this.state.applicationId}
           extraContent={
             <Tooltip placement="bottom" title={'Click to add a new User'}>
               <Button type="primary" onClick={() => this.handleAdd()}>

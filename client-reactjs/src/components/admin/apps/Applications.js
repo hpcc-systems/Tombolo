@@ -263,7 +263,6 @@ class Applications extends Component {
     return (
       <React.Fragment>
         <BreadCrumbs
-          applicationId={this.state?.applicationId || ''}
           extraContent={
             <Tooltip placement="bottom" title={'Click to add a new Application'}>
               <Button type="primary" onClick={() => this.handleAddApplication()}>

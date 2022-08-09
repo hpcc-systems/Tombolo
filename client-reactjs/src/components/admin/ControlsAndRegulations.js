@@ -153,12 +153,10 @@ class Regulations extends Component {
     return (
       <React.Fragment>
         <BreadCrumbs
-          applicationId={this.state.applicationId}
           extraContent={
             <Tooltip placement="bottom" title={'Click to add a new Controls and Regulations'}>
               <Button type="primary" onClick={() => this.handleAdd()}>
-                {' '}
-                Add Controls and Regulations{' '}
+                Add Controls and Regulations
               </Button>
             </Tooltip>
           }

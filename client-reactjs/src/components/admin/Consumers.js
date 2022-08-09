@@ -408,7 +408,6 @@ class Consumers extends Component {
     return (
       <React.Fragment>
         <BreadCrumbs
-          applicationId={this.state.applicationId}
           extraContent={
             <Tooltip placement="bottom" title={'Click to add a new Consumer'}>
               <Button type="primary" onClick={() => this.handleAdd()}>

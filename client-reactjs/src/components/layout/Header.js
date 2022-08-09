@@ -19,7 +19,6 @@ class AppHeader extends Component {
   constructor(props) {
     super(props);
     this.handleChange = this.handleChange.bind(this);
-    this.handleTopNavClick = this.handleTopNavClick.bind(this);
     this.search = this.search.bind(this);
     this.onChangeSearch = this.onChangeSearch.bind(this);
   }
@@ -169,20 +168,6 @@ class AppHeader extends Component {
         this.setState({ applications });
       }
     }
-  }
-
-  handleTopNavClick(event) {
-    var nav = event.target.getAttribute('data-nav');
-    if (nav == '/logout') return;
-    nav = nav == '/' ? '/' + this.props.applicationId.applicationId + '/assets' : nav;
-    this.setState({
-      selectedTopNav: nav,
-    });
-    this.props.dispatch(applicationActions.topNavChanged(nav));
-    if (this.props.applicationId) {
-      this.props.dispatch(applicationActions.applicationSelected(this.props.applicationId.applicationId));
-    }
-    this.props.history.push(nav);
   }
 
   handleLogOut = (_e) => {
@@ -496,18 +481,8 @@ class AppHeader extends Component {
 
 function mapStateToProps(state) {
   const { loggingIn, user } = state.authenticationReducer;
-  const { application, clusters, selectedTopNav, newApplication, updatedApplication, deletedApplicationId } =
-    state.applicationReducer;
-  return {
-    loggingIn,
-    user,
-    clusters,
-    application,
-    selectedTopNav,
-    newApplication,
-    updatedApplication,
-    deletedApplicationId,
-  };
+  const { application, clusters, newApplication, updatedApplication, deletedApplicationId } = state.applicationReducer;
+  return { loggingIn, user, clusters, application, newApplication, updatedApplication, deletedApplicationId };
 }
 
 //export default withRouter(AppHeader);

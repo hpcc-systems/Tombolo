@@ -62,10 +62,6 @@ class App extends React.Component {
 
   render() {
     const isApplicationSet = this.props.application && this.props.application.applicationId !== '' ? true : false;
-    const selectedTopNav =
-      this.props.selectedTopNav && this.props.selectedTopNav.indexOf('/admin') !== -1
-        ? '/admin/applications'
-        : '/files';
     const dataFlowComp = () => {
       let applicationId = this.props.application ? this.props.application.applicationId : '';
       let applicationTitle = this.props.application ? this.props.application.applicationTitle : '';
@@ -106,7 +102,6 @@ class App extends React.Component {
               onCollapse={this.onCollapse}
               collapsed={this.state.collapsed}
               isApplicationSet={isApplicationSet}
-              selectedTopNav={selectedTopNav}
             />
 
             <Content
@@ -126,12 +121,12 @@ class App extends React.Component {
 
               <Switch>
                 <PrivateRoute exact path="/" component={getAssets} />
-                <PrivateRoute path="/:applicationId/assets/file/:fileId?" component={FileDetailsForm} />
-                <PrivateRoute path="/:applicationId/assets/fileTemplate/:fileId?" component={FileTemplate} />
+                <PrivateRoute path="/:applicationId/assets/file/:assetId?" component={FileDetailsForm} />
+                <PrivateRoute path="/:applicationId/assets/fileTemplate/:assetId?" component={FileTemplate} />
                 <PrivateRoute path="/:applicationId/assets/add-jobs" component={AddJobsForm} />
-                <PrivateRoute path="/:applicationId/assets/job/:jobId?" component={JobDetailsForm} />
-                <PrivateRoute path="/:applicationId/assets/index/:indexId?" component={IndexDetailsForm} />
-                <PrivateRoute path="/:applicationId/assets/query/:queryId?" component={QueryDetailsForm} />
+                <PrivateRoute path="/:applicationId/assets/job/:assetId?" component={JobDetailsForm} />
+                <PrivateRoute path="/:applicationId/assets/index/:assetId?" component={IndexDetailsForm} />
+                <PrivateRoute path="/:applicationId/assets/query/:assetId?" component={QueryDetailsForm} />
                 <PrivateRoute
                   path="/:applicationId/assets/visualizations/:visualizationId?"
                   component={VisualizationDetailsForm}
@@ -169,13 +164,9 @@ class App extends React.Component {
 }
 
 function mapStateToProps(state) {
-  const { application, selectedTopNav } = state.applicationReducer;
+  const { application } = state.applicationReducer;
   const { user } = state.authenticationReducer;
-  return {
-    application,
-    selectedTopNav,
-    user,
-  };
+  return { application, user };
 }
 
 const connectedApp = connect(mapStateToProps)(App);

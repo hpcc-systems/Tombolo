@@ -11,8 +11,7 @@ import { MarkdownEditor } from '../../common/MarkdownEditor.js';
 import { connect } from 'react-redux';
 import { assetsActions } from '../../../redux/actions/Assets';
 import { debounce } from 'lodash';
-import { store } from '../../../redux/store/Store';
-import { Constants } from '../../common/Constants';
+
 import ReactMarkdown from 'react-markdown';
 import Files from './Files';
 
@@ -57,37 +56,13 @@ class QueryDetails extends PureComponent {
       this.setClusters();
     }
 
-    //Getting global state
-    const { viewOnlyModeReducer } = store.getState();
-    if (viewOnlyModeReducer.addingNewAsset) {
-      this.setState({
-        addingNewAsset: true,
-      });
-    }
-    if (viewOnlyModeReducer.editMode) {
-      this.setState({
-        enableEdit: viewOnlyModeReducer.editMode,
-        editing: true,
-      });
-    } else {
-      this.setState({
-        enableEdit: viewOnlyModeReducer.editMode,
-      });
-    }
+    const assetId = this.props?.selectedAsset?.id || this.props.match?.params?.assetId;
+    if (!assetId) this.setState({ addingNewAsset: true, enableEdit: true, editing: true });
   }
 
   //Unmount phase
   //Component will unmount
-  componentWillUnmount() {
-    store.dispatch({
-      type: Constants.ENABLE_EDIT,
-      payload: false,
-    });
-    store.dispatch({
-      type: Constants.ADD_ASSET,
-      payload: false,
-    });
-  }
+  componentWillUnmount() {}
 
   getQueryDetails() {
     if (this.props.selectedAsset && !this.props.isNew) {
@@ -529,8 +504,6 @@ class QueryDetails extends PureComponent {
 
     //Function to make fields editable
     const makeFieldsEditable = () => {
-      // editableMode();
-
       this.setState({
         enableEdit: !this.state.enableEdit,
         editing: true,
