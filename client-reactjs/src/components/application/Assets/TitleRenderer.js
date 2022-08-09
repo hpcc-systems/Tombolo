@@ -20,22 +20,22 @@ const TitleRenderer = ({ nodeData, handleMenuClick }) => {
       {
         key: 'Edit-Group',
         name: 'View',
-        icon: <EyeOutlined style={{ verticalAlign: 0 }} />,
+        icon: <EyeOutlined />,
       },
       {
         key: 'Delete-Group',
         name: 'Delete',
-        icon: <DeleteOutlined style={{ verticalAlign: 0 }} />,
+        icon: <DeleteOutlined />,
       },
       {
         key: 'Move-Group',
         name: 'Move',
-        icon: <FolderOutlined style={{ verticalAlign: 0 }} />,
+        icon: <FolderOutlined />,
       },
       {
         key: 'Print-Assets',
         name: 'Print Assets',
-        icon: <FilePdfOutlined style={{ verticalAlign: 0 }} />,
+        icon: <FilePdfOutlined />,
       },
     ];
 
@@ -48,7 +48,7 @@ const TitleRenderer = ({ nodeData, handleMenuClick }) => {
     const isRootNode = nodeData.key === '0-0';
     return (
       <Menu mode="inline" theme="dark" onClick={onClick}>
-        <Menu.Item key="Group" icon={<PlusOutlined style={{ verticalAlign: 0 }} />}>
+        <Menu.Item key="Group" icon={<PlusOutlined />}>
           New Group
         </Menu.Item>
         {!isRootNode &&

@@ -8,6 +8,7 @@ import GraphX6 from '../Graph/GraphX6';
 import { useSelector } from 'react-redux';
 import { useParams } from 'react-router';
 import useSelectDataflow from '../../../hooks/useSelectDataflow';
+import BreadCrumbs from '../../common/BreadCrumbs';
 const { TabPane } = Tabs;
 
 export const DataflowInstanceDetails = () => {
@@ -15,6 +16,8 @@ export const DataflowInstanceDetails = () => {
     state.applicationReducer,
     state.dataflowReducer,
   ]);
+
+  const dataflowId = dataflowReducer.id || params.dataflowId;
 
   const [graphSize, setGraphSize] = useState({ width: '100%', height: 200 });
   const [jobExecutions, setJobExecutions] = useState({
@@ -32,7 +35,6 @@ export const DataflowInstanceDetails = () => {
   const getJobExecutionDetails = async (stopPolling) => {
     try {
       const applicationId = applicationReducer.application.applicationId || params.applicationId;
-      const dataflowId = dataflowReducer.dataflowId || params.dataflowId;
 
       const response = await fetch(
         '/api/job/jobExecutionDetails?dataflowId=' + dataflowId + '&applicationId=' + applicationId,
@@ -61,7 +63,6 @@ export const DataflowInstanceDetails = () => {
 
   // Get Status for selected execution group
   const getStatuses = (groupId) => {
-    const dataflowId = dataflowReducer.dataflowId || params.dataflowId;
     return jobExecutions.data.reduce((acc, el) => {
       if (el.jobExecutionGroupId === groupId) {
         const subProcessId = el.subProcess?.id || '';
@@ -115,6 +116,7 @@ export const DataflowInstanceDetails = () => {
 
   return (
     <React.Fragment>
+      <BreadCrumbs />
       <div
         style={{
           position: 'relative',

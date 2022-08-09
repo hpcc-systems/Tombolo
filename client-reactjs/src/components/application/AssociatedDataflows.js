@@ -8,7 +8,6 @@ import { dataflowAction } from '../../redux/actions/Dataflow';
 function AssociatedDataflows({ assetId, assetType }) {
   const history = useHistory();
   const applicationReducer = useSelector((state) => state.applicationReducer);
-  const user = useSelector((state) => state.applicationReducer.application.user);
   const [data, setData] = useState([]);
   const dispatch = useDispatch();
 
@@ -42,17 +41,9 @@ function AssociatedDataflows({ assetId, assetType }) {
       });
   };
 
-  const onDataflowClick = (applicationId, dataflowId, clusterId) => {
-    dispatch(
-      dataflowAction.dataflowSelected(
-        applicationReducer.application.applicationId,
-        applicationReducer.application.applicationTitle,
-        dataflowId,
-        clusterId,
-        user
-      )
-    );
-    history.push(`/${applicationId}/dataflow/details/${dataflowId}`);
+  const onDataflowClick = ({ id, title, clusterId, application_id }) => {
+    dispatch(dataflowAction.dataflowSelected({ id, title, clusterId }));
+    history.push(`/${application_id}/dataflow/details/${id}`);
   };
 
   const associatedDataflowCols = [
@@ -63,8 +54,10 @@ function AssociatedDataflows({ assetId, assetType }) {
       render: (text, record) => (
         <span>
           <a
-            onClick={() => onDataflowClick(record.application_id, record.id, record.clusterId)}
-            rel="noopener noreferrer">
+            onClick={() => {
+              const { id, title, clusterId, application_id } = record;
+              onDataflowClick({ id, title, clusterId, application_id });
+            }}>
             {record.title}
           </a>
         </span>

@@ -25,12 +25,11 @@ import DeleteAsset from '../../common/DeleteAsset';
 function AssetsTable({ openGroup, handleEditGroup, refreshGroups }) {
   const [assets, setAssets] = useState([]);
 
-  const { authReducer, applicationReducer, assetReducer, groupsMoveReducer, groupsReducer } = useSelector((state) => ({
+  const { authReducer, applicationReducer, assetReducer, groupsReducer } = useSelector((state) => ({
     groupsReducer: state.groupsReducer,
     authReducer: state.authenticationReducer,
     applicationReducer: state.applicationReducer,
     assetReducer: state.assetReducer,
-    groupsMoveReducer: state.groupsMoveReducer,
   }));
 
   const selectedGroup = groupsReducer;
@@ -74,7 +73,7 @@ function AssetsTable({ openGroup, handleEditGroup, refreshGroups }) {
 
   useEffect(() => {
     fetchDataAndRenderTable();
-  }, [applicationId, assetTypeFilter, keywords, groupsMoveReducer, selectedGroup?.selectedKeys?.id]);
+  }, [applicationId, assetTypeFilter, keywords, selectedGroup?.selectedKeys?.id]);
 
   //Execute generate pdf function after asset is selected
   useEffect(() => {

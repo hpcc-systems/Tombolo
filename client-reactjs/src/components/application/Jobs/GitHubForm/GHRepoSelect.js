@@ -80,7 +80,7 @@ const GHRepoSelect = ({ form, enableEdit, projects, setGhBrachOrTag }) => {
           {selectedProjects.map((project) => {
             const selectedProject = project.id === form.current?.getFieldValue(['gitHubFiles', 'selectedRepoId']);
             return selectedProject ? (
-              <Tag key={project.id} icon={<CheckCircleOutlined style={{ verticalAlign: 0 }} />} color="success">
+              <Tag key={project.id} icon={<CheckCircleOutlined />} color="success">
                 {`${project.ghProject} - ${project.ghLink.replace('https://github.com/', '')}`}
               </Tag>
             ) : (

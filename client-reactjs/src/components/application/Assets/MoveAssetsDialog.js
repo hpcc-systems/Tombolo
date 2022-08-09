@@ -2,8 +2,6 @@ import React, { useState } from 'react';
 import { authHeader, handleError } from '../../common/AuthHeader.js';
 import { Modal, Button, Tree, message } from 'antd';
 import { useSelector } from 'react-redux';
-import { store } from '../../../redux/store/Store';
-import { Constants } from '../../common/Constants';
 
 const { DirectoryTree } = Tree;
 const { confirm } = Modal;
@@ -64,11 +62,6 @@ function MoveAssetsDialog({ isShowing, toggle, application, assetToMove }) {
             message.success(
               '"' + assetToMove.title + '" has been moved to "' + moveDestinationGroup.title + '" group.'
             );
-
-            store.dispatch({
-              type: Constants.MOVE_GROUP,
-              payload: assetToMove.id,
-            });
             toggle({ refetch: true });
           })
           .catch((error) => {
