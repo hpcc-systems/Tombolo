@@ -1,45 +1,46 @@
-import React, { useState } from "react";
-import { Table, message, Form, Select, Button, Tag } from "antd";
+import React, { useState } from 'react';
+import { Table, message, Form, Select, Button, Tag } from 'antd';
 
-import { authHeader } from "../../../common/AuthHeader";
+import { authHeader } from '../../../common/AuthHeader';
 
 const { Option } = Select;
 
 //TAGS STYLE
-const renderTag = (record) =>{
-  switch(record.assetType){
+const renderTag = (record) => {
+  switch (record.assetType) {
     case 'File Template':
-       return <Tag style={{color: 'var(--primary)', border: '2px solid var(--primary)'}}>File Template</Tag>
+      return <Tag style={{ color: 'var(--primary)', border: '2px solid var(--primary)' }}>File Template</Tag>;
     case 'Super File':
-       return <Tag style={{color: 'var(--indigo)', border: '2px solid var(--indigo)'}}>Super File</Tag>
+      return <Tag style={{ color: 'var(--indigo)', border: '2px solid var(--indigo)' }}>Super File</Tag>;
     default:
-      return <Tag style={{color: 'var(--secondary)', border: '2px solid var(--secondary)'}}>Logical File</Tag>
+      return <Tag style={{ color: 'var(--secondary)', border: '2px solid var(--secondary)' }}>Logical File</Tag>;
   }
-
-}
+};
 
 // PARENT AND FILE TABLE COLUMNS
 const fileTableColumns = [
   {
-    title: "File",
-        render: (text, record) => (
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-            <span>{record.fileTitle || record.name}</span>{' '}
-            {record.assetType === 'File Template' ? (
-              <small style={{ color: 'var(--primary)' }}> [{record.files.length > 1 ? record.files.length + ' Files' : record.files.length + ' File'} ]</small>
-            ) : null}
-          </div>
-        ),
+    title: 'File',
+    render: (text, record) => (
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+        <span>{record.fileTitle || record.name}</span>
+        {record.assetType === 'File Template' ? (
+          <small style={{ color: 'var(--primary)' }}>
+            [{record.files.length > 1 ? record.files.length + ' Files' : record.files.length + ' File'} ]
+          </small>
+        ) : null}
+      </div>
+    ),
   },
   {
-    title: "Type",
-    width: "8%",
-    render : (text, record) => renderTag(record)
+    title: 'Type',
+    width: '8%',
+    render: (text, record) => renderTag(record),
   },
   {
-    title: "Description",
-    dataIndex: "description",
-    width: "42%",
+    title: 'Description',
+    dataIndex: 'description',
+    width: '42%',
   },
 ];
 
@@ -54,23 +55,23 @@ function InputOutputFiles({
   sourceFiles,
   selectedTabPaneKey,
   handleAddOutputFile,
-  handleAddInputFile
+  handleAddInputFile,
 }) {
   const [subFiles, setSubFiles] = useState([]);
-  const [expandedRowKeys, setExpandedRowKeys] = useState({parentTable : [], fileTable : [], subFileTable: []});
+  const [expandedRowKeys, setExpandedRowKeys] = useState({ parentTable: [], fileTable: [], subFileTable: [] });
   const [fetchingSubFiles, setFetchingSubFiles] = useState(false);
 
   // FUNCTION THAT RENDER'S FILE TABLE
-  const renderFilesTable = (record, subFiles, clusterId) => {
+  const renderFilesTable = (record, _subFiles, _clusterId) => {
     return (
       <Table
         columns={fileTableColumns}
         dataSource={record.files}
         rowKey={(record) => record.id}
         expandable={{
-          rowExpandable: (record) => record.assetType === "Super File",
+          rowExpandable: (record) => record.assetType === 'Super File',
           expandedRowRender: (record) => renderSubFilesTable(record),
-          onExpand : (expanded, record) => handleRowExpansion({expanded, record, table : 'fileTable'}),
+          onExpand: (expanded, record) => handleRowExpansion({ expanded, record, table: 'fileTable' }),
           expandedRowKeys: expandedRowKeys.fileTable,
         }}
         pagination={false}
@@ -80,23 +81,23 @@ function InputOutputFiles({
   };
 
   // FUNCTION THAT RENDERS SUB-FILE TABLE
-  const renderSubFilesTable = (record) => {
+  const renderSubFilesTable = (_record) => {
     return (
-        <Table
-          columns={[{ title: "Name"}]}
-          dataSource={subFiles}
-          rowKey={(record) => record.id}
-          size="small"
-          pagination={{size: "small", pageSize: 5 }}
-          showHeader={false}
-          loading={fetchingSubFiles}
-          expandable={{ 
-            rowExpandable: (record) => record.assetType === "Super File",
-            expandedRowRender: (record) => renderFilesTable(record),
-            onExpand : (expanded, record) => handleRowExpansion({expanded, record, table : 'subFileTable'}),
-            expandedRowKeys: expandedRowKeys.subFileTable,
+      <Table
+        columns={[{ title: 'Name' }]}
+        dataSource={subFiles}
+        rowKey={(record) => record.id}
+        size="small"
+        pagination={{ size: 'small', pageSize: 5 }}
+        showHeader={false}
+        loading={fetchingSubFiles}
+        expandable={{
+          rowExpandable: (record) => record.assetType === 'Super File',
+          expandedRowRender: (record) => renderFilesTable(record),
+          onExpand: (expanded, record) => handleRowExpansion({ expanded, record, table: 'subFileTable' }),
+          expandedRowKeys: expandedRowKeys.subFileTable,
         }}
-        />
+      />
     );
   };
 
@@ -104,11 +105,11 @@ function InputOutputFiles({
   const fetchSubFiles = async (record) => {
     try {
       setFetchingSubFiles(true);
-      setSubFiles([])
+      setSubFiles([]);
       const response = await fetch(`/api/file/read/getSubFiles?fileName=${record.name}&clusterId=${clusterId}`, {
         headers: authHeader(),
       });
-      if (!response.ok) throw Error("Unable to fetch sub-files");
+      if (!response.ok) throw Error('Unable to fetch sub-files');
       const subFiles = await response.json();
       setSubFiles(subFiles);
       setFetchingSubFiles(false);
@@ -120,34 +121,33 @@ function InputOutputFiles({
   };
 
   // WHEN + OR - ICON IS CLICKED TO EXPAND OR COLLAPSE THE ROW
-  const handleRowExpansion = ({expanded, record, table}) => {       
-      if(expanded){
-          let activeRows = {...expandedRowKeys};
-          if(record.assetType === 'Super File') fetchSubFiles(record);
-        
-          activeRows[table] = [record.id];
-          setExpandedRowKeys(activeRows)
-      }else{
-          let activeRows = {...expandedRowKeys};
-          activeRows[table] = [];
-          setExpandedRowKeys(activeRows)
-      }
-  } 
+  const handleRowExpansion = ({ expanded, record, table }) => {
+    if (expanded) {
+      let activeRows = { ...expandedRowKeys };
+      if (record.assetType === 'Super File') fetchSubFiles(record);
+
+      activeRows[table] = [record.id];
+      setExpandedRowKeys(activeRows);
+    } else {
+      let activeRows = { ...expandedRowKeys };
+      activeRows[table] = [];
+      setExpandedRowKeys(activeRows);
+    }
+  };
 
   // JSX
   return (
     <>
       <div>
         {enableEdit ? (
-          <div style={{display: 'flex' }}>
-            <Form.Item label={selectedTabPaneKey === '4' ? "Input Files" : 'Output Files'} rules={[{ required: true }]}>
+          <div style={{ display: 'flex' }}>
+            <Form.Item label={selectedTabPaneKey === '4' ? 'Input Files' : 'Output Files'} rules={[{ required: true }]}>
               <Select
-                id= {selectedTabPaneKey === '4' ?"inputfiles" : 'outputfiles'}
-                placeholder={selectedTabPaneKey === '4' ? "Input Files" : 'Output Files'}
+                id={selectedTabPaneKey === '4' ? 'inputfiles' : 'outputfiles'}
+                placeholder={selectedTabPaneKey === '4' ? 'Input Files' : 'Output Files'}
                 onChange={selectedTabPaneKey === '4' ? handleInputFileChange : handleOutputFileChange}
                 style={{ width: 290 }}
-                disabled={!editingAllowed}
-              >
+                disabled={!editingAllowed}>
                 {sourceFiles.map((d) => (
                   <Option value={d.id} key={d.id}>
                     {d.title ? d.title : d.name}
@@ -156,11 +156,16 @@ function InputOutputFiles({
               </Select>
             </Form.Item>
 
-            <Form.Item style={{marginLeft: '10px'}}>
-              <Button  style={{marginRight: '10px'}} type="primary" onClick={selectedTabPaneKey === '4' ? handleAddInputFile : handleAddOutputFile} 
-              disabled={!editingAllowed}>Add </Button>
+            <Form.Item style={{ marginLeft: '10px' }}>
+              <Button
+                style={{ marginRight: '10px' }}
+                type="primary"
+                onClick={selectedTabPaneKey === '4' ? handleAddInputFile : handleAddOutputFile}
+                disabled={!editingAllowed}>
+                Add
+              </Button>
             </Form.Item>
-            </div>
+          </div>
         ) : null}
       </div>
 
@@ -170,16 +175,15 @@ function InputOutputFiles({
         rowKey={(record) => record.id}
         size="small"
         expandable={{
-          rowExpandable: (record) => record.assetType === "File Template" || record.assetType === "Super File",
+          rowExpandable: (record) => record.assetType === 'File Template' || record.assetType === 'Super File',
           expandedRowRender: (record) =>
-          record.assetType === "File Template" ? renderFilesTable(record) : renderSubFilesTable(record),
+            record.assetType === 'File Template' ? renderFilesTable(record) : renderSubFilesTable(record),
           expandedRowKeys: expandedRowKeys.parentTable,
-          onExpand : (expanded, record) => handleRowExpansion({expanded, record, table : 'parentTable'})
+          onExpand: (expanded, record) => handleRowExpansion({ expanded, record, table: 'parentTable' }),
         }}
         bordered={true}
         pagination={false}
       />
-
     </>
   );
 }

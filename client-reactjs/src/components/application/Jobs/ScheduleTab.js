@@ -1,11 +1,54 @@
 import React, { useEffect, useState } from 'react';
-import { Button, Form, Input, Select, Space, message } from "antd";
-import { threeColformItemLayout } from "../../common/CommonUtil.js";
+import { Button, Form, Input, Select, Space, message } from 'antd';
+import { threeColformItemLayout } from '../../common/CommonUtil.js';
 
-const monthMap = { 1: 'January', 2: 'February', 3: 'March', 4: 'April', 5: 'May', 6: 'June', 7: 'July', 8: 'August', 9: 'September', 10: 'October', 11: 'November', 12: 'December', };
-const monthAbbrMap = { JAN: 'January', FEB: 'February', MAR: 'March', APR: 'April', MAY: 'May', JUN: 'June', JUL: 'July', AUG: 'August', SEP: 'September', OCT: 'October', NOV: 'November', DEC: 'December', };
-const dayMap = { 0: 'Sunday', 1: 'Monday', 2: 'Tuesday', 3: 'Wednesday', 4: 'Thursday', 5: 'Friday', 6: 'Saturday', 7: 'Sunday', };
-const dayAbbrMap = { SUN: 'Sunday', MON: 'Monday', TUE: 'Tuesday', WED: 'Wednesday', THU: 'Thursday', FRI: 'Friday', SAT: 'Saturday', };
+const monthMap = {
+  1: 'January',
+  2: 'February',
+  3: 'March',
+  4: 'April',
+  5: 'May',
+  6: 'June',
+  7: 'July',
+  8: 'August',
+  9: 'September',
+  10: 'October',
+  11: 'November',
+  12: 'December',
+};
+const monthAbbrMap = {
+  JAN: 'January',
+  FEB: 'February',
+  MAR: 'March',
+  APR: 'April',
+  MAY: 'May',
+  JUN: 'June',
+  JUL: 'July',
+  AUG: 'August',
+  SEP: 'September',
+  OCT: 'October',
+  NOV: 'November',
+  DEC: 'December',
+};
+const dayMap = {
+  0: 'Sunday',
+  1: 'Monday',
+  2: 'Tuesday',
+  3: 'Wednesday',
+  4: 'Thursday',
+  5: 'Friday',
+  6: 'Saturday',
+  7: 'Sunday',
+};
+const dayAbbrMap = {
+  SUN: 'Sunday',
+  MON: 'Monday',
+  TUE: 'Tuesday',
+  WED: 'Wednesday',
+  THU: 'Thursday',
+  FRI: 'Friday',
+  SAT: 'Saturday',
+};
 const _minutes = [...Array(60).keys()]; // [1,2,3...59]
 const _hours = [...Array(24).keys()]; // [1,2,3...23]
 const _dayOfMonth = [...Array(32).keys()]; // [1,2,3...31]
@@ -69,11 +112,7 @@ const ScheduleTab = ({ nodes, selectedAsset, addToSchedule, readOnly, editingAll
           if (schedule.minute.includes(utcMinute)) {
             return _date;
           } else {
-            return e(
-              schedule,
-              generateDate(utcFullYear, utcMonth - 1, utcDate, utcHour, utcMinute + 1),
-              ++counter
-            );
+            return e(schedule, generateDate(utcFullYear, utcMonth - 1, utcDate, utcHour, utcMinute + 1), ++counter);
           }
         })(schedule, nextMinute(date), 1)
       : null;
@@ -108,8 +147,8 @@ const ScheduleTab = ({ nodes, selectedAsset, addToSchedule, readOnly, editingAll
   const generateCronTerm = (term, type) => {
     let msg = '',
       matches = [];
-    
-      if (term.startsWith('*/0')) return '';
+
+    if (term.startsWith('*/0')) return '';
 
     if (term.match(new RegExp(/^\*$/gm))) {
       msg += matchAsteriskCronTerm(type);
@@ -134,6 +173,7 @@ const ScheduleTab = ({ nodes, selectedAsset, addToSchedule, readOnly, editingAll
       if (matches.length > 0) {
         msg += matchRangeCronTerm(matches, type);
       }
+      // eslint-disable-next-line no-constant-condition
     } else if ((matches = [...term.matchAll(new RegExp(/^\*\s*\/\s*(\d+)/gm))])) {
       if (matches.length > 0) {
         msg += matchStepCronTerm(matches, type);
@@ -300,6 +340,7 @@ const ScheduleTab = ({ nodes, selectedAsset, addToSchedule, readOnly, editingAll
       case 'day-of-month':
         scheduleCronParts['day-of-month'] = steps;
         stepMax = 31;
+        // eslint-disable-next-line no-case-declarations
         let currentMonth = new Date().getMonth() + 1,
           currentYear = new Date().getFullYear();
         if (currentMonth % 2 === 0) {
@@ -371,7 +412,7 @@ const ScheduleTab = ({ nodes, selectedAsset, addToSchedule, readOnly, editingAll
 
     const schedule = {
       type: options.type, // Predecessor | Time | Template | ""
-      cron: options.type === 'Time' ? cronExpression : '', // string 
+      cron: options.type === 'Time' ? cronExpression : '', // string
       dependsOn: options.dependsOn, // [assetId] | [] - cant be job | template
     };
 
@@ -386,8 +427,8 @@ const ScheduleTab = ({ nodes, selectedAsset, addToSchedule, readOnly, editingAll
         throw new Error('Please select a File Monitoring Template to run after');
 
       addToSchedule(schedule); // will trigger method to update node view on a graph
-      await new Promise(r => setTimeout(r,1000)); // sometime graph takes time to update nodes, we will wait extra second to let it finish;
-      setOptions((prev) => ({ ...prev, enableEdit: false, loading: false, }));
+      await new Promise((r) => setTimeout(r, 1000)); // sometime graph takes time to update nodes, we will wait extra second to let it finish;
+      setOptions((prev) => ({ ...prev, enableEdit: false, loading: false }));
       message.success('Job schedule saved');
     } catch (error) {
       console.log('-error-----------------------------------------');
@@ -399,9 +440,9 @@ const ScheduleTab = ({ nodes, selectedAsset, addToSchedule, readOnly, editingAll
   };
 
   const scheduledPredecessors = (allPredecessors, selectedPredecessor) => {
-    return allPredecessors.filter((predecessor) =>{
-      if(selectedPredecessor.includes(predecessor.jobId)) return true;
-      if(selectedPredecessor.includes(predecessor.templateId)) return true;
+    return allPredecessors.filter((predecessor) => {
+      if (selectedPredecessor.includes(predecessor.jobId)) return true;
+      if (selectedPredecessor.includes(predecessor.templateId)) return true;
       return false;
     });
   };
@@ -428,7 +469,8 @@ const ScheduleTab = ({ nodes, selectedAsset, addToSchedule, readOnly, editingAll
         acc.push({ id: node.id, jobId: node.assetId, name: node.title });
       }
 
-      if(node.type === 'FileTemplate' && node.title !== selectedAsset?.title && node.hasOwnProperty('isStencil')){
+      // eslint-disable-next-line no-prototype-builtins
+      if (node.type === 'FileTemplate' && node.title !== selectedAsset?.title && node.hasOwnProperty('isStencil')) {
         acc.push({ id: node.id, templateId: node.assetId, name: node.title });
       }
 
@@ -446,7 +488,6 @@ const ScheduleTab = ({ nodes, selectedAsset, addToSchedule, readOnly, editingAll
       scheduleMonth: cronParts?.[3] || '*',
       scheduleDayWeek: cronParts?.[4] || '*',
     }));
-
   }, []);
 
   if (!editingAllowed) readOnly = true;
@@ -456,11 +497,7 @@ const ScheduleTab = ({ nodes, selectedAsset, addToSchedule, readOnly, editingAll
       {options.type.length > 0 || options.enableEdit ? (
         <Form.Item label="Type">
           {!options.enableEdit ? (
-            <Input
-              className="read-only-input"
-              disabled
-              value={options.type ? options.type : null}
-            />
+            <Input className="read-only-input" disabled value={options.type ? options.type : null} />
           ) : (
             <Select
               id="scheduleType"
@@ -468,11 +505,15 @@ const ScheduleTab = ({ nodes, selectedAsset, addToSchedule, readOnly, editingAll
               placeholder="Select a schedule type"
               allowClear
               onClear={() => handleScheduleTypeSelect('')}
-              onSelect={(value) => { handleScheduleTypeSelect(value) }}
+              onSelect={(value) => {
+                handleScheduleTypeSelect(value);
+              }}
               value={options.type ? options.type : null}>
               <Select.Option value="Time">Timer based (run at specific interval)</Select.Option>
               <Select.Option value="Predecessor">Job based (run after another job completes)</Select.Option>
-              <Select.Option value="Template"> Template Based (Run when a file that matches a template arrives) </Select.Option>
+              <Select.Option value="Template">
+                Template Based (Run when a file that matches a template arrives){' '}
+              </Select.Option>
               <Select.Option value="Message">
                 Run on External Message (run when a message is received in a Kafka topic)
               </Select.Option>
@@ -564,59 +605,63 @@ const ScheduleTab = ({ nodes, selectedAsset, addToSchedule, readOnly, editingAll
                 predecessors.push(value);
                 setOptions((prev) => ({ ...prev, dependsOn: predecessors }));
               }}
-              value={options.dependsOn}> 
-              {options.predecessors.filter(asset => asset.jobId).map((job) => {
-                return (
-                  <Select.Option key={job.name} value={job.jobId}>
-                    {job.name}
-                  </Select.Option>
-                );
-              })}
+              value={options.dependsOn}>
+              {options.predecessors
+                .filter((asset) => asset.jobId)
+                .map((job) => {
+                  return (
+                    <Select.Option key={job.name} value={job.jobId}>
+                      {job.name}
+                    </Select.Option>
+                  );
+                })}
             </Select>
           )}
         </Form.Item>
       ) : null}
-      { options.type === 'Template' ? (
-          <Form.Item label="Template">
-            {!options.enableEdit ? (
-              scheduledPredecessors(options.predecessors, options.dependsOn).map((item, index) =>
-                index > 0 ? ', ' + item.name : item.name
-              )
-            ) : (
-              <Select
-                mode="single"
-                placeholder="Select a template"
-                onSelect={(value) => {
-                  let predecessors = [];
-                  predecessors.push(value);
-                  setOptions((prev) => ({ ...prev, dependsOn: predecessors }));
-                }}
-                value={options.dependsOn}>
-                {options.predecessors.filter((assets) => assets.templateId).map((template) => {
-                    return (
-                      <Select.Option key={template.name} value={template.templateId}>
-                        {template.name}
-                      </Select.Option>
-                    );
-                  })}
-              </Select>
-            )}
-          </Form.Item>
-        ) : null }
+      {options.type === 'Template' ? (
+        <Form.Item label="Template">
+          {!options.enableEdit ? (
+            scheduledPredecessors(options.predecessors, options.dependsOn).map((item, index) =>
+              index > 0 ? ', ' + item.name : item.name
+            )
+          ) : (
+            <Select
+              mode="single"
+              placeholder="Select a template"
+              onSelect={(value) => {
+                let predecessors = [];
+                predecessors.push(value);
+                setOptions((prev) => ({ ...prev, dependsOn: predecessors }));
+              }}
+              value={options.dependsOn}>
+              {options.predecessors
+                .filter((assets) => assets.templateId)
+                .map((template) => {
+                  return (
+                    <Select.Option key={template.name} value={template.templateId}>
+                      {template.name}
+                    </Select.Option>
+                  );
+                })}
+            </Select>
+          )}
+        </Form.Item>
+      ) : null}
 
-      {readOnly ? null :
-      <Form.Item wrapperCol={{ offset: 12, span: 4 }}>
-        {!options.enableEdit ? (
-          <Button onClick={handleEdit} type="primary" block>
-            Edit schedule
-          </Button>
-        ) : (
-          <Button onClick={handleSchedule} loading={options.loading} type="primary" block>
-            Save schedule
-          </Button>
-        )}
-      </Form.Item>
-      }
+      {readOnly ? null : (
+        <Form.Item wrapperCol={{ offset: 12, span: 4 }}>
+          {!options.enableEdit ? (
+            <Button onClick={handleEdit} type="primary" block>
+              Edit schedule
+            </Button>
+          ) : (
+            <Button onClick={handleSchedule} loading={options.loading} type="primary" block>
+              Save schedule
+            </Button>
+          )}
+        </Form.Item>
+      )}
     </Form>
   );
 };

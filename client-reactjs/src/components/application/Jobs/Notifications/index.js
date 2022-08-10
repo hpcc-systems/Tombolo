@@ -9,15 +9,11 @@ const Notifications = ({ enableEdit, formRef }) => {
   const [showDetails, setShowDetails] = useState(false);
   const notifyStatus = formRef.current?.getFieldValue('notify');
 
-  const commonProps= { enableEdit, showDetails };
+  const commonProps = { enableEdit, showDetails };
 
   return (
     <>
-      <RadioButtons
-        {...commonProps}
-        notifyStatus={notifyStatus}
-        setShowDetails={setShowDetails} 
-      />
+      <RadioButtons {...commonProps} notifyStatus={notifyStatus} setShowDetails={setShowDetails} />
 
       {(notifyStatus === 'Always' || notifyStatus === 'Only on success') && (
         <TextAreaField
@@ -39,13 +35,9 @@ const Notifications = ({ enableEdit, formRef }) => {
         />
       )}
 
-      {notifyStatus !== 'Never' &&
-        <UserSearch 
-         {...commonProps}
-        layout={formItemLayout} 
-        noLabelLayout={formItemLayoutWithOutLabel}
-        />
-      }
+      {notifyStatus !== 'Never' && (
+        <UserSearch {...commonProps} layout={formItemLayout} noLabelLayout={formItemLayoutWithOutLabel} />
+      )}
     </>
   );
 };

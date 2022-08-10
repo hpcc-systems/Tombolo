@@ -5,16 +5,16 @@ import { Constants } from '../../components/common/Constants';
 export const expandGroups = (expandedKeys) => {
   return {
     type: Constants.GROUPS_EXPANDED,
-    payload: expandedKeys
+    payload: expandedKeys,
   };
-}
+};
 
 export const selectGroup = (selectedKeys) => {
   return {
     type: Constants.SELECT_GROUP,
-    payload: selectedKeys
+    payload: selectedKeys,
   };
-}
+};
 
 export const getGroupsTree = (applicationId) => {
   return async (dispatch) => {
@@ -27,10 +27,10 @@ export const getGroupsTree = (applicationId) => {
       const tree = await response.json();
 
       const dataList = generateList(tree);
-      
-      dispatch(fetchGroupsTreeSuccess({ tree, dataList}));
+
+      dispatch(fetchGroupsTreeSuccess({ tree, dataList }));
     } catch (error) {
-      message.error(error.message)
+      message.error(error.message);
       dispatch(fetchGroupsTreeFailure(error.message));
     }
   };
@@ -42,10 +42,10 @@ const fetchGroupsTree = () => {
   };
 };
 
-const fetchGroupsTreeSuccess = ({tree, dataList}) => {
+const fetchGroupsTreeSuccess = ({ tree, dataList }) => {
   return {
     type: Constants.FETCH_GROUPS_TREE_SUCCESS,
-    payload: {tree, dataList},
+    payload: { tree, dataList },
   };
 };
 
@@ -56,8 +56,7 @@ const fetchGroupsTreeFailure = (error) => {
   };
 };
 
-
-const generateList = (data, parentKey="", parentId='', list=[]) => {
+const generateList = (data, parentKey = '', parentId = '', list = []) => {
   for (let i = 0; i < data.length; i++) {
     const { key, title, id, children } = data[i];
     list.push({ key, title, id, parentKey, parentId });
@@ -68,8 +67,8 @@ const generateList = (data, parentKey="", parentId='', list=[]) => {
   return list;
 };
 
-export const emptyGroupTree = (array) =>{
-   return {
+export const emptyGroupTree = () => {
+  return {
     type: Constants.EMPTY_GROUPS_TREE,
   };
-}
+};

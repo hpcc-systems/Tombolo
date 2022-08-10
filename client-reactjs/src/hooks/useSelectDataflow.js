@@ -5,8 +5,8 @@ import { authHeader, handleError } from '../components/common/AuthHeader';
 import { hasEditPermission } from '../components/common/AuthUtil';
 import { dataflowAction } from '../redux/actions/Dataflow';
 
-const  useSelectDataflow = () => {
-  const [dataflowReducer, user] = useSelector((state) => [ state.dataflowReducer, state.authenticationReducer.user]);
+const useSelectDataflow = () => {
+  const [dataflowReducer, user] = useSelector((state) => [state.dataflowReducer, state.authenticationReducer.user]);
   const [isDataflowReady, setIsDataflowReady] = useState(false);
 
   const dispatch = useDispatch();
@@ -18,7 +18,9 @@ const  useSelectDataflow = () => {
       const { dataflowId, applicationId } = params;
       if (dataflowId && applicationId && !dataflowReducer.dataflowId) {
         try {
-          const response = await fetch( `/api/dataflow?application_id=${applicationId}&dataflow_id=${dataflowId}`, { headers: authHeader() } );
+          const response = await fetch(`/api/dataflow?application_id=${applicationId}&dataflow_id=${dataflowId}`, {
+            headers: authHeader(),
+          });
           if (!response.ok) handleError(response);
 
           const data = await response.json();
@@ -33,18 +35,18 @@ const  useSelectDataflow = () => {
       setIsDataflowReady(true);
     })();
 
-    return (() =>{
-       // when component unmounted, reset selected dataflow 
-      dispatch(dataflowAction.dataflowSelected('', '', '', '', {}))
-    })
+    return () => {
+      // when component unmounted, reset selected dataflow
+      dispatch(dataflowAction.dataflowSelected('', '', '', '', {}));
+    };
   }, []);
- 
+
   return {
     isDataflowReady,
-    canEdit: hasEditPermission(user), 
+    canEdit: hasEditPermission(user),
     applicationId: dataflowReducer.applicationId,
-    applicationTitle: dataflowReducer.applicationTitle
+    applicationTitle: dataflowReducer.applicationTitle,
   };
-}
+};
 
 export default useSelectDataflow;
