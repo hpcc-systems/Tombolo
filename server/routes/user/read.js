@@ -15,9 +15,9 @@ router.get('/probe', (req,res) => res.status(200).end()); // open, polling
 
 router.post('/registerUser', [
   body('firstName')
-    .matches(/^[a-zA-Z]{1}[a-zA-Z0-9_-]*$/).withMessage('Invalid First Name'),
+    .matches(/^[a-zA-Z]{1}[a-zA-Z0-9_ -]*$/).withMessage('Invalid First Name'),
   body('lastName').optional({checkFalsy:true})
-    .matches(/^[a-zA-Z]{1}[a-zA-Z0-9_-]*$/).withMessage('Invalid Last Name'),
+    .matches(/^[a-zA-Z]{1}[a-zA-Z0-9_ -]*$/).withMessage('Invalid Last Name'),
   body('username')
     .matches(/^[a-zA-Z]{1}[a-zA-Z0-9_-]*$/).withMessage('Invalid User Name'),
   body('email').optional({checkFalsy:true})
@@ -100,7 +100,7 @@ function authenticate(req, res, next) {
   .then(function (user) {
       res.json(user);
   })
-  .catch(err => res.status(401).json({ "message": "Login Failed" }));
+  .catch(err =>{ res.status(401).json({ "message": "Wrong username or password" })});
 }
 
 function register(req, res, next) {
