@@ -4,7 +4,7 @@ import { Layout } from 'antd';
 import { Router, Route, Switch } from 'react-router-dom';
 import { Redirect } from 'react-router';
 import history from './components/common/History';
-import { LoginPage } from './components/login/LoginPage';
+import LoginPage from './components/login/LoginPage';
 import LoggedOut from './components/login/LoggedOut';
 import ForgotPassword from './components/login/ForgotPassword';
 import ResetPassword from './components/login/ResetPassword';
@@ -40,6 +40,7 @@ import ScheduledJobsPage from './components/admin/ScheduledJobsPage';
 import AddJobsForm from './components/application/Jobs/AddjobsForm/AddJobsForm';
 
 import tomboloLogo from './images/logo.png';
+import RegisterPage from './components/login/RegisterPage';
 
 const { Header, Content } = Layout;
 
@@ -113,6 +114,7 @@ class App extends React.Component {
               {!this.props.authWithAzure ? ( // value is passed via AzureApp component
                 <>
                   <Route exact path="/login" component={LoginPage} />
+                  <Route exact path="/register" component={RegisterPage} />
                   <Route exact path="/forgot-password" component={ForgotPassword} />
                   <Route exact path="/reset-password/:id" component={ResetPassword} />
                   <Route exact path="/logout" component={LoggedOut} />

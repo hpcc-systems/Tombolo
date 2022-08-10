@@ -274,7 +274,7 @@ async function registerUser(req, res) {
         "email": req.body.email,
         "username": req.body.username,
         "password": req.body.password,
-        "confirmpassword": req.body.confirmnewpassword,
+        "confirmpassword": req.body.confirmPassword,
         "role": req.body.role,
         "clientId": process.env.AUTHSERVICE_TOMBOLO_CLIENT_ID
       }

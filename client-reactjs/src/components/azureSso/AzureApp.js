@@ -40,7 +40,7 @@ const AzureApp = ({ children }) => {
             username: account.idTokenClaims.preferred_username.split('@')[0],
           };
 
-          dispatch({ type: Constants.LOGIN_SUCCESS, user });
+          dispatch({ type: Constants.LOGIN_SUCCESS, payload: user });
         } catch (error) {
           console.log('error', error);
           //in case if silent token acquisition fails, fallback to an interactive method
