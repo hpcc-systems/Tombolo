@@ -16,7 +16,6 @@ import {
   FilePdfOutlined,
   AreaChartOutlined,
 } from '@ant-design/icons';
-import { store } from '../../../redux/store/Store';
 import SelectDetailsForPdfDialog from '../Assets/pdf/SelectDetailsForPdfDialog';
 import { getNestedAssets } from '../Assets/pdf/downloadPdf';
 import ReactMarkdown from 'react-markdown';
@@ -84,13 +83,6 @@ function AssetsTable({ openGroup, handleEditGroup, refreshGroups }) {
 
   //When edit icon is clicked
   const handleEdit = (id, type, action, vizUrl) => {
-    if (action === 'edit') {
-      store.dispatch({
-        type: Constants.ENABLE_EDIT,
-        payload: true,
-      });
-    }
-
     dispatch(assetsActions.assetSelected(id, applicationId, ''));
 
     switch (type) {

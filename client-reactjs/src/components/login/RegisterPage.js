@@ -1,23 +1,51 @@
 import React, { useEffect } from 'react';
-import { userActions } from '../../redux/actions/User';
 
 import { ArrowLeftOutlined } from '@ant-design/icons';
 import { Alert, Button, Form, Input, message, Tooltip } from 'antd';
 
 import { Link, useHistory } from 'react-router-dom';
-import { useDispatch, useSelector } from 'react-redux';
+import { useSelector } from 'react-redux';
+import { useState } from 'react';
 
 const RegisterPage = () => {
-  const { loggedIn, register } = useSelector((state) => state.authenticationReducer);
-  const dispatch = useDispatch();
+  const { loggedIn } = useSelector((state) => state.authenticationReducer);
+  const [register, setRegister] = useState({ loading: false, success: false, error: '' });
+
   const history = useHistory();
 
   const handleSubmit = async (values) => {
-    console.log('values', values);
-    dispatch(userActions.register(values));
-  };
+    try {
+      setRegister(() => ({ loading: true, error: '', success: false }));
 
-  const resetRegister = () => dispatch(userActions.resetRegister());
+      const payload = {
+        method: 'POST',
+        headers: { Accept: 'application/json', 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          firstName: values.firstName,
+          lastName: values.lastName,
+          email: values.email,
+          username: values.username,
+          password: values.password,
+          confirmPassword: values.confirmPassword,
+          role: 'Creator',
+        }),
+      };
+
+      const response = await fetch('/api/user/registerUser', payload);
+      const data = await response.json();
+
+      if (!response.ok) {
+        let message = data?.message || data?.errors || response.statusText;
+        if (Array.isArray(message)) message.join(', ');
+        throw new Error(message);
+      } else {
+        setRegister(() => ({ loading: false, error: '', success: true }));
+      }
+    } catch (error) {
+      console.log('register error', error);
+      setRegister(() => ({ loading: false, error: error.message, success: false }));
+    }
+  };
 
   useEffect(() => {
     if (loggedIn) history.replace('/');
@@ -25,7 +53,6 @@ const RegisterPage = () => {
     if (register.success) {
       setTimeout(() => {
         message.success('Success, please login with your new account');
-        resetRegister();
         history.replace('/login');
       }, 2000);
     }
@@ -36,7 +63,7 @@ const RegisterPage = () => {
       <div style={{ position: 'relative' }}>
         <div style={{ position: 'absolute' }}>
           <Tooltip placement="right" title={'Back to Login'}>
-            <Link onClick={resetRegister} to="/login">
+            <Link to="/login">
               <ArrowLeftOutlined />
             </Link>
           </Tooltip>

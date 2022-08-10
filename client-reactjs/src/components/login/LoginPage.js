@@ -1,4 +1,4 @@
-import React, { useEffect } from 'react';
+import React, { useEffect, useState } from 'react';
 import { userActions } from '../../redux/actions/User';
 
 import { LockOutlined, UserOutlined } from '@ant-design/icons';
@@ -8,22 +8,46 @@ import { Link, useHistory, useLocation } from 'react-router-dom';
 import { useDispatch, useSelector } from 'react-redux';
 
 const LoginPage = () => {
-  const { user, loggedIn, login } = useSelector((state) => state.authenticationReducer);
+  const { user, loggedIn } = useSelector((state) => state.authenticationReducer);
+  const [login, setLogin] = useState({ loading: false, success: false, error: '' });
+
   const dispatch = useDispatch();
   const history = useHistory();
   const location = useLocation();
 
   const handleSubmit = async (values) => {
-    dispatch(userActions.login(values));
-  };
+    try {
+      setLogin(() => ({ loading: true, error: '', success: false }));
 
-  const resetLogin = () => dispatch(userActions.resetLogin());
+      const payload = {
+        method: 'POST',
+        headers: { Accept: 'application/json', 'Content-Type': 'application/json' },
+        body: JSON.stringify(values),
+      };
+
+      const response = await fetch('/api/user/authenticate', payload);
+      const data = await response.json();
+
+      if (!response.ok) {
+        let message = data?.message || data?.errors || response.statusText;
+        if (Array.isArray(message)) message.join(', ');
+        throw new Error(message);
+      } else {
+        if (!data.accessToken) throw new Error('Token not found');
+        dispatch(userActions.login(data.accessToken));
+        setLogin(() => ({ loading: false, success: true, error: '' }));
+      }
+    } catch (error) {
+      console.log('login fetch error', error);
+      setLogin(() => ({ loading: false, success: false, error: error.message }));
+    }
+  };
 
   useEffect(() => {
     if (user.id && loggedIn) {
       history.replace(location.state?.from?.pathname || '/');
     }
-  }, [login.success]);
+  }, [loggedIn]);
 
   return (
     <Form className="login-form" onFinish={handleSubmit}>
@@ -41,7 +65,7 @@ const LoginPage = () => {
       </Form.Item>
 
       <Form.Item>
-        <Link onClick={resetLogin} to={'/forgot-password'} className="login-form-forgot">
+        <Link to={'/forgot-password'} className="login-form-forgot">
           Forgot password ?
         </Link>
       </Form.Item>
@@ -53,10 +77,7 @@ const LoginPage = () => {
       </Form.Item>
 
       <Form.Item>
-        Or{' '}
-        <Link onClick={resetLogin} to={'/register'}>
-          register now
-        </Link>
+        Or <Link to={'/register'}>register now</Link>
       </Form.Item>
 
       {login.success && (
