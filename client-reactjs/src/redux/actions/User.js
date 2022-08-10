@@ -6,23 +6,119 @@ export const userActions = {
   login,
   logout,
   validateToken,
-  registerNewUser,
+  register,
+  resetLogin,
+  resetRegister,
 };
 
-function login(username, password) {
-  return (dispatch) => {
-    dispatch({ type: Constants.LOGIN_REQUEST, user: username });
+function login({ username, password }) {
+  return async (dispatch) => {
+    try {
+      dispatch({ type: Constants.LOGIN_REQUEST });
 
-    fetch('/api/user/authenticate', {
-      method: 'post',
-      headers: { Accept: 'application/json', 'Content-Type': 'application/json' },
-      body: JSON.stringify({ username, password }),
-    })
-      .then(handleResponse)
-      .then((user) => {
-        var decoded = jwtDecode(user.accessToken);
-        user = {
-          token: user.accessToken,
+      const payload = {
+        method: 'POST',
+        headers: { Accept: 'application/json', 'Content-Type': 'application/json' },
+        body: JSON.stringify({ username, password }),
+      };
+
+      const response = await fetch('/api/user/authenticate', payload);
+      const data = await response.json();
+
+      if (!response.ok) {
+        let message = data?.message || data?.errors || response.statusText;
+        if (Array.isArray(message)) message.join(', ');
+        throw new Error(message);
+      } else {
+        const decoded = jwtDecode(data.accessToken);
+        const user = {
+          id: decoded.id,
+          email: decoded.email,
+          role: decoded.role,
+          token: data.accessToken,
+          username: decoded.username,
+          lastName: decoded.lastName,
+          firstName: decoded.firstName,
+          organization: decoded.organization,
+          permissions: decoded.role[0].name,
+        };
+        localStorage.setItem('user', JSON.stringify(user));
+        dispatch({ type: Constants.LOGIN_SUCCESS, payload: user });
+      }
+    } catch (error) {
+      console.log('login fetch error', error);
+      dispatch({ type: Constants.LOGIN_FAILURE, payload: error.message });
+    }
+  };
+}
+
+function register(user) {
+  return async (dispatch) => {
+    try {
+      dispatch({ type: Constants.REGISTER_USER_REQUEST });
+
+      const payload = {
+        method: 'POST',
+        headers: { Accept: 'application/json', 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          firstName: user.firstName,
+          lastName: user.lastName,
+          email: user.email,
+          username: user.username,
+          password: user.password,
+          confirmPassword: user.confirmPassword,
+          role: 'Creator',
+        }),
+      };
+
+      const response = await fetch('/api/user/registerUser', payload);
+      const data = await response.json();
+
+      if (!response.ok) {
+        let message = data?.message || data?.errors || response.statusText;
+        if (Array.isArray(message)) message.join(', ');
+        throw new Error(message);
+      } else {
+        dispatch({ type: Constants.REGISTER_USER_SUCCESS });
+      }
+    } catch (error) {
+      console.log('login fetch error', error);
+      dispatch({ type: Constants.REGISTER_USER_FAILED, payload: error.message });
+    }
+  };
+}
+
+function logout() {
+  localStorage.removeItem('user');
+  return { type: Constants.LOGOUT };
+}
+
+function validateToken() {
+  return async (dispatch) => {
+    try {
+      const user = JSON.parse(localStorage.getItem('user'));
+      if (process.env.REACT_APP_APP_AUTH_METHOD === 'azure_ad')
+        return dispatch({ type: Constants.VALIDATING_TOKEN, payload: user });
+
+      if (!user) return;
+
+      const payload = {
+        method: 'POST',
+        headers: authHeader(),
+        body: JSON.stringify({ username: user.username }),
+      };
+
+      const response = await fetch('/api/user/validateToken', payload);
+      const data = await response.json();
+
+      if (!response.ok) {
+        let message = data?.message || data?.errors || response.statusText;
+        if (Array.isArray(message)) message.join(', ');
+        throw new Error(message);
+      } else {
+        const decoded = jwtDecode(data.token);
+        const user = {
+          token: data.token,
           id: decoded.id,
           username: decoded.username,
           firstName: decoded.firstName,
@@ -33,95 +129,23 @@ function login(username, password) {
           permissions: decoded.role[0].name,
         };
         localStorage.setItem('user', JSON.stringify(user));
-        dispatch({ type: Constants.LOGIN_SUCCESS, user });
-      })
-      .catch((error) => {
-        console.log(error);
-        localStorage.removeItem('user');
-        dispatch({ type: Constants.LOGIN_FAILURE, error });
-      });
+        dispatch({ type: Constants.VALIDATE_TOKEN, payload: user });
+      }
+    } catch (error) {
+      localStorage.removeItem('user');
+      dispatch({ type: Constants.INVALID_TOKEN, payload: error.message });
+    }
   };
 }
 
-function registerNewUser(newUserObj) {
-  return (dispatch) => {
-    dispatch({ type: Constants.REGISTER_USER_REQUEST });
-
-    fetch('/api/user/registerUser', {
-      method: 'post',
-      headers: {
-        Accept: 'application/json',
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({
-        firstName: newUserObj.firstName,
-        lastName: newUserObj.lastName,
-        email: newUserObj.email,
-        username: newUserObj.username,
-        password: newUserObj.password,
-        confirmPassword: newUserObj.confirmPassword,
-        role: 'Creator',
-      }),
-    })
-      .then(handleResponse)
-      .then((response) => dispatch({ type: Constants.REGISTER_USER_SUCCESS, status: response.status }))
-      .catch((error) => dispatch({ type: Constants.REGISTER_USER_FAILED, error }));
+function resetLogin() {
+  return {
+    type: Constants.RESET_LOGIN,
   };
 }
 
-function logout() {
-  localStorage.removeItem('user');
-  return { type: Constants.LOGOUT };
-}
-
-function handleResponse(response) {
-  return response.text().then((text) => {
-    const data = text && JSON.parse(text);
-    data.status = response.status;
-    if (!response.ok) {
-      const error = (data && data.message) || (data && data.errors) || response.statusText;
-      return Promise.reject(error);
-    }
-    return data;
-  });
-}
-
-function validateToken() {
-  var user = JSON.parse(localStorage.getItem('user'));
-
-  if (process.env.REACT_APP_APP_AUTH_METHOD === 'azure_ad') {
-    return (dispatch) => dispatch({ type: Constants.VALIDATING_TOKEN, user });
-  }
-
-  return (dispatch) => {
-    if (user) {
-      dispatch({ type: Constants.VALIDATING_TOKEN, user });
-      fetch('/api/user/validateToken', {
-        method: 'post',
-        headers: authHeader(),
-        body: JSON.stringify({ username: user.username }),
-      })
-        .then(handleResponse)
-        .then((user) => {
-          var decoded = jwtDecode(user.token);
-          user = {
-            token: user.token,
-            id: decoded.id,
-            username: decoded.username,
-            firstName: decoded.firstName,
-            lastName: decoded.lastName,
-            email: decoded.email,
-            organization: decoded.organization,
-            role: decoded.role,
-            permissions: decoded.role[0].name,
-          };
-          localStorage.setItem('user', JSON.stringify(user));
-          dispatch({ type: Constants.VALIDATE_TOKEN, user });
-        })
-        .catch((error) => {
-          localStorage.removeItem('user');
-          dispatch({ type: Constants.INVALID_TOKEN, error });
-        });
-    }
+function resetRegister() {
+  return {
+    type: Constants.RESET_REGISTER,
   };
 }

@@ -1,69 +1,38 @@
 import { Constants } from '../../components/common/Constants';
 
-let user = {},
-  userRegistrationError = [];
-const initialState = user
-  ? {
-      loggedIn: false,
-      loginFailed: false,
-      user,
-      userRegistrationSuccess: false,
-      newUserRegistering: false,
-      userRegistrationError,
-    }
-  : {};
+const initialState = {
+  user: {},
+  loggedIn: false,
+  login: { loading: false, success: false, error: '' },
+  register: { loading: false, success: false, error: '' },
+};
 
 export function authenticationReducer(state = initialState, action) {
   switch (action.type) {
     case Constants.LOGIN_REQUEST:
-      return {
-        loggingIn: true,
-        user: action.user,
-      };
+      return { ...state, login: { loading: true, error: '', success: false } };
     case Constants.LOGIN_SUCCESS:
-      return {
-        loggedIn: true,
-        user: action.user,
-      };
+      return { ...state, user: action.payload, loggedIn: true, login: { loading: false, error: '', success: true } };
     case Constants.LOGIN_FAILURE:
-      return {
-        loginFailed: true,
-        loggedIn: false,
-      };
-    case Constants.LOGOUT:
-      return {
-        loggedIn: false,
-        user: '',
-      };
-    case Constants.VALIDATE_TOKEN:
-      return {
-        loggedIn: true,
-        user: action.user,
-      };
-    case Constants.INVALID_TOKEN:
-      return {
-        loggedIn: false,
-        user: action.user,
-      };
-    case Constants.REGISTER_USER_REQUEST:
-      return {
-        newUserRegistering: true,
-        userRegistrationSuccess: undefined,
-      };
-    case Constants.REGISTER_USER_SUCCESS:
-      return {
-        newUserRegistering: false,
-        userRegistrationSuccess: true,
-        userRegistrationError: [],
-        status: action.status,
-      };
+      return { ...state, user: {}, login: { loading: false, error: action.payload, success: false } };
+    case Constants.RESET_LOGIN:
+      return { ...state, login: { ...initialState.login } };
 
+    case Constants.REGISTER_USER_REQUEST:
+      return { ...state, register: { loading: true, error: '', success: false } };
+    case Constants.REGISTER_USER_SUCCESS:
+      return { ...state, register: { loading: false, error: '', success: true } };
     case Constants.REGISTER_USER_FAILED:
-      return {
-        newUserRegistering: true,
-        userRegistrationSuccess: false,
-        userRegistrationError: action.error,
-      };
+      return { ...state, register: { loading: false, error: action.payload, success: false } };
+    case Constants.RESET_REGISTER:
+      return { ...state, register: { ...initialState.register } };
+
+    case Constants.VALIDATE_TOKEN:
+      return { ...state, loggedIn: true, user: action.payload };
+    case Constants.INVALID_TOKEN:
+      return { ...initialState, login: { ...initialState.login, error: action.payload } };
+    case Constants.LOGOUT:
+      return { ...initialState };
 
     default:
       return state;
