@@ -2,7 +2,6 @@ import { DeleteOutlined, UploadOutlined } from '@ant-design/icons';
 import { Button, Form, Input, Select, Table, Upload } from 'antd';
 import Papa from 'papaparse';
 import React from 'react';
-import { store } from '../../redux/store/Store';
 import { omitDeep } from './CommonUtil';
 
 const EditableContext = React.createContext();
@@ -140,20 +139,13 @@ class EditableTable extends React.Component {
       dataSource: this.props.dataSource,
       count: this.props.dataSource.length,
       columns: this.props.columns,
+      enableEdit: false,
     };
     this.setupDeleteAction();
     this.props.setData(this.props.dataSource);
   }
 
-  componentDidMount() {
-    //Getting global state
-    const { viewOnlyModeReducer } = store.getState();
-    if (viewOnlyModeReducer.editMode) {
-      this.setState({
-        enableEdit: viewOnlyModeReducer.editMode,
-      });
-    }
-  }
+  componentDidMount() {}
 
   setupDeleteAction = () => {
     const deleteColumn = {

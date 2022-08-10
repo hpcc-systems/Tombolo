@@ -5,8 +5,11 @@ import { useSelector } from 'react-redux';
 
 function DataflowAssetsTable() {
   const [dataflowAssets, setDataflowAssets] = useState([]);
-  const dataflowReducer = useSelector((state) => state.dataflowReducer);
-  const { dataflowId, applicationId } = dataflowReducer;
+
+  const [dataflowId, applicationId] = useSelector((state) => [
+    state.dataflowReducer?.id,
+    state.applicationReducer?.application?.applicationId,
+  ]);
 
   const fetchDataAndRenderTable = async () => {
     try {

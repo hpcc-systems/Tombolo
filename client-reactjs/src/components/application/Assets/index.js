@@ -13,7 +13,6 @@ import AssetsTable from './AssetsTable';
 
 import { DownOutlined, SettingOutlined } from '@ant-design/icons';
 import TitleRenderer from './TitleRenderer.js';
-import { addingAssetMode } from '../../common/readOnlyUtil';
 import MoveAssetsDialog from './MoveAssetsDialog';
 
 import useModal from '../../../hooks/useModal';
@@ -29,9 +28,8 @@ const CheckboxGroup = Checkbox.Group;
 message.config({ top: 100 });
 
 const Assets = () => {
-  const [groupsReducer, groupsMoveReducer, authReducer, assetReducer, applicationReducer] = useSelector((state) => [
+  const [groupsReducer, authReducer, assetReducer, applicationReducer] = useSelector((state) => [
     state.groupsReducer,
-    state.groupsMoveReducer,
     state.authenticationReducer,
     state.assetReducer,
     state.applicationReducer,
@@ -92,7 +90,7 @@ const Assets = () => {
     }
 
     prevSelectedApplicationRef.current = application;
-  }, [groupsMoveReducer, assetInGroupId, application]);
+  }, [assetInGroupId, application]);
 
   const clearSearch = () => {
     setSearchKeyword('');
@@ -158,9 +156,10 @@ const Assets = () => {
   };
 
   const handleMenuClick = (e, group) => {
-    dispatch(assetsActions.newAsset(application.applicationId, selectedKeys.id));
-
-    const goTo = (point) => history.push(`/${application.applicationId}/assets/${point}`);
+    const goTo = (point) => {
+      dispatch(assetsActions.newAsset(application.applicationId, selectedKeys.id));
+      history.push(`/${application.applicationId}/assets/${point}`);
+    };
 
     const actions = {
       Job: () => goTo('add-jobs'),
@@ -302,22 +301,22 @@ const Assets = () => {
 
   const menu = (
     <Menu onClick={(e) => handleMenuClick(e)}>
-      <Menu.Item key="File" onClick={addingAssetMode}>
+      <Menu.Item key="File">
         <i className="fa fa-lg fa-file"></i> File
       </Menu.Item>
-      <Menu.Item key="File Template" onClick={addingAssetMode}>
+      <Menu.Item key="File Template">
         <i className="fa  fa-lg fa-file-text-o"></i> File Template
       </Menu.Item>
-      <Menu.Item key="Index" onClick={addingAssetMode}>
+      <Menu.Item key="Index">
         <i className="fa fa-lg fa-indent"></i> Index
       </Menu.Item>
-      <Menu.Item key="Query" onClick={addingAssetMode}>
+      <Menu.Item key="Query">
         <i className="fa fa-lg fa-search"></i> Query
       </Menu.Item>
-      <Menu.Item key="Job" onClick={addingAssetMode}>
+      <Menu.Item key="Job">
         <i className="fa fa-lg fa-clock-o"></i> Jobs
       </Menu.Item>
-      <Menu.Item key="RealBI Dashboard" onClick={addingAssetMode}>
+      <Menu.Item key="RealBI Dashboard">
         <i className="fa fa-lg fa-area-chart"></i> RealBI Dashboard
       </Menu.Item>
     </Menu>
@@ -349,8 +348,6 @@ const Assets = () => {
     <React.Fragment>
       <div style={{ height: '100%', overflow: 'hidden' }}>
         <BreadCrumbs
-          applicationId={application.applicationId}
-          applicationTitle={application.applicationTitle}
           extraContent={
             editingAllowed ? (
               <Dropdown overlay={menu}>

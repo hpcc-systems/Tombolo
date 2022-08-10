@@ -4,7 +4,7 @@ import { Layout } from 'antd';
 import { Router, Route, Switch } from 'react-router-dom';
 import { Redirect } from 'react-router';
 import history from './components/common/History';
-import { LoginPage } from './components/login/LoginPage';
+import LoginPage from './components/login/LoginPage';
 import LoggedOut from './components/login/LoggedOut';
 import ForgotPassword from './components/login/ForgotPassword';
 import ResetPassword from './components/login/ResetPassword';
@@ -40,6 +40,7 @@ import ScheduledJobsPage from './components/admin/ScheduledJobsPage';
 import AddJobsForm from './components/application/Jobs/AddjobsForm/AddJobsForm';
 
 import tomboloLogo from './images/logo.png';
+import RegisterPage from './components/login/RegisterPage';
 
 const { Header, Content } = Layout;
 
@@ -62,10 +63,6 @@ class App extends React.Component {
 
   render() {
     const isApplicationSet = this.props.application && this.props.application.applicationId !== '' ? true : false;
-    const selectedTopNav =
-      this.props.selectedTopNav && this.props.selectedTopNav.indexOf('/admin') !== -1
-        ? '/admin/applications'
-        : '/files';
     const dataFlowComp = () => {
       let applicationId = this.props.application ? this.props.application.applicationId : '';
       let applicationTitle = this.props.application ? this.props.application.applicationTitle : '';
@@ -106,7 +103,6 @@ class App extends React.Component {
               onCollapse={this.onCollapse}
               collapsed={this.state.collapsed}
               isApplicationSet={isApplicationSet}
-              selectedTopNav={selectedTopNav}
             />
 
             <Content
@@ -118,6 +114,7 @@ class App extends React.Component {
               {!this.props.authWithAzure ? ( // value is passed via AzureApp component
                 <>
                   <Route exact path="/login" component={LoginPage} />
+                  <Route exact path="/register" component={RegisterPage} />
                   <Route exact path="/forgot-password" component={ForgotPassword} />
                   <Route exact path="/reset-password/:id" component={ResetPassword} />
                   <Route exact path="/logout" component={LoggedOut} />
@@ -126,12 +123,12 @@ class App extends React.Component {
 
               <Switch>
                 <PrivateRoute exact path="/" component={getAssets} />
-                <PrivateRoute path="/:applicationId/assets/file/:fileId?" component={FileDetailsForm} />
-                <PrivateRoute path="/:applicationId/assets/fileTemplate/:fileId?" component={FileTemplate} />
+                <PrivateRoute path="/:applicationId/assets/file/:assetId?" component={FileDetailsForm} />
+                <PrivateRoute path="/:applicationId/assets/fileTemplate/:assetId?" component={FileTemplate} />
                 <PrivateRoute path="/:applicationId/assets/add-jobs" component={AddJobsForm} />
-                <PrivateRoute path="/:applicationId/assets/job/:jobId?" component={JobDetailsForm} />
-                <PrivateRoute path="/:applicationId/assets/index/:indexId?" component={IndexDetailsForm} />
-                <PrivateRoute path="/:applicationId/assets/query/:queryId?" component={QueryDetailsForm} />
+                <PrivateRoute path="/:applicationId/assets/job/:assetId?" component={JobDetailsForm} />
+                <PrivateRoute path="/:applicationId/assets/index/:assetId?" component={IndexDetailsForm} />
+                <PrivateRoute path="/:applicationId/assets/query/:assetId?" component={QueryDetailsForm} />
                 <PrivateRoute
                   path="/:applicationId/assets/visualizations/:visualizationId?"
                   component={VisualizationDetailsForm}
@@ -169,13 +166,9 @@ class App extends React.Component {
 }
 
 function mapStateToProps(state) {
-  const { application, selectedTopNav } = state.applicationReducer;
+  const { application } = state.applicationReducer;
   const { user } = state.authenticationReducer;
-  return {
-    application,
-    selectedTopNav,
-    user,
-  };
+  return { application, user };
 }
 
 const connectedApp = connect(mapStateToProps)(App);

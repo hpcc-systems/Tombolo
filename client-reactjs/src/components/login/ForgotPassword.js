@@ -1,7 +1,8 @@
 import React from 'react';
 
-import { Alert, Button, Form, Input, message } from 'antd';
+import { Alert, Button, Form, Input, message, Tooltip } from 'antd';
 import { Link } from 'react-router-dom';
+import { ArrowLeftOutlined } from '@ant-design/icons';
 
 class ForgotPassword extends React.Component {
   constructor(props) {
@@ -56,7 +57,16 @@ class ForgotPassword extends React.Component {
     const { email } = this.state;
     return (
       <Form className="login-form" layout="vertical">
-        <h2 className="login-logo">Tombolo</h2>
+        <div style={{ position: 'relative' }}>
+          <div style={{ position: 'absolute' }}>
+            <Tooltip placement="right" title={'Back to Login'}>
+              <Link to="/login">
+                <ArrowLeftOutlined />
+              </Link>
+            </Tooltip>
+          </div>
+          <h2 className="login-logo">Tombolo</h2>
+        </div>
 
         <Form.Item
           label="Enter email to reset password"
@@ -88,10 +98,6 @@ class ForgotPassword extends React.Component {
             className="login-form-button">
             {this.state.sendingEmail ? 'Sending reset instructions' : 'Submit'}
           </Button>
-        </Form.Item>
-
-        <Form.Item>
-          <Link to="/login">return to login</Link>
         </Form.Item>
       </Form>
     );

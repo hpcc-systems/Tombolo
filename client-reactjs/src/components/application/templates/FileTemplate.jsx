@@ -51,7 +51,7 @@ function FileTemplate({ match, selectedAsset = {}, displayingInModal, onClose })
   if asset id is 'undefined' it means that we are creating new asset. if asset id is wrong, we will show errors that we cant find asset with that id
   */
   const applicationId = application?.applicationId || match?.params?.applicationId;
-  const assetId = selectedAsset?.id || match?.params?.fileId;
+  const assetId = selectedAsset?.id || match?.params?.assetId;
 
   const history = useHistory();
 

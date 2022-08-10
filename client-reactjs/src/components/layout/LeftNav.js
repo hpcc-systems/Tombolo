@@ -9,12 +9,11 @@ const { Sider } = Layout;
 class LeftNav extends Component {
   state = {
     current: '1',
-    selectedTopNav: this.props.selectedTopNav,
   };
 
   componentDidUpdate(prevProps) {
-    const applicationId = this.props.application?.applicationId;
-    const prevApplicationId = prevProps?.application?.applicationId;
+    const applicationId = this.props?.applicationId;
+    const prevApplicationId = prevProps?.applicationId;
     if (applicationId && prevApplicationId) {
       if (applicationId !== prevApplicationId) {
         // if current app and prev app is not same we are redirected to /appid/asset page, so we will reset menu highlight
@@ -48,18 +47,16 @@ class LeftNav extends Component {
   };
 
   render() {
-    const selectedTopNav = window.location.pathname;
-    const applicationId = this.props.application ? this.props.application.applicationId : '';
+    const applicationId = this.props?.applicationId || '';
+
     if (!this.props.loggedIn || !this.props.user || Object.getOwnPropertyNames(this.props.user).length == 0) {
-      //this.props.history.push("/login");
-      return false;
+      return null;
     }
-    // const isAdmin = hasAdminRole(this.props.user);
+
     const canEdit = hasEditPermission(this.props.user);
-    //render the LeftNav only if an application is selected
-    /*if((!this.props.isApplicationSet && (selectedTopNav == "/files")) || selectedTopNav == '/login')
-      return false;*/
-    if (selectedTopNav == '/login') return false;
+
+    if (window.location.pathname === '/login') return null;
+
     return (
       <Sider
         collapsible
@@ -88,12 +85,7 @@ class LeftNav extends Component {
           </Menu.Item>
 
           <Menu.Item key="2" icon={<i className="fa fa-fw fa-random" />}>
-            <Link
-              to={
-                this.props.dataflowId.id ? '/' + applicationId + '/dataflow/details' : '/' + applicationId + '/dataflow'
-              }>
-              Definitions
-            </Link>
+            <Link to={'/' + applicationId + '/dataflow'}>Definitions</Link>
           </Menu.Item>
 
           <Menu.Item key="3" icon={<i className="fa fa-fw fa-microchip" />}>
@@ -138,16 +130,9 @@ class LeftNav extends Component {
 }
 
 function mapStateToProps(state) {
-  const { application, selectedTopNav } = state.applicationReducer;
+  const applicationId = state.applicationReducer.application?.applicationId;
   const { loggedIn, user } = state.authenticationReducer;
-  const { dataflowId } = state.dataflowReducer;
-  return {
-    application,
-    selectedTopNav,
-    loggedIn,
-    user,
-    dataflowId,
-  };
+  return { applicationId, loggedIn, user };
 }
 
 const connectedLeftNav = connect(mapStateToProps, null, null, { forwardRef: true })(withRouter(LeftNav));
