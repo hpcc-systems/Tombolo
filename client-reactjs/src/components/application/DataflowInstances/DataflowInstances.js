@@ -91,4 +91,4 @@ function mapStateToProps(state) {
 }
 
 const connectedWorkflows = connect(mapStateToProps)(withRouter(DataflowInstances));
-export { connectedWorkflows as DataflowInstances };
+export default connectedWorkflows;
