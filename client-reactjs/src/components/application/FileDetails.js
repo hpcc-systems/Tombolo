@@ -174,7 +174,7 @@ class FileDetails extends Component {
             owner: data.basic.owner,
             groupId: data.basic.groupId,
             layout: data.file_layouts,
-            licenses: [{ name: 'DPPA' }],
+            licenses: [],
             supplier: data.basic.supplier,
             consumer: data.basic.consumer,
             relations: data.file_relations,
