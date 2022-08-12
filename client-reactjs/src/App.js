@@ -43,6 +43,7 @@ const ScheduledJobsPage = React.lazy(() => import('./components/admin/ScheduledJ
 // Shared layout, etc.
 import { LeftNav } from './components/layout/LeftNav';
 import { AppHeader } from './components/layout/Header';
+import ErrorBoundary from './components/common/ErrorBoundary';
 import Fallback from './components/common/Fallback';
 import { PrivateRoute } from './components/common/PrivateRoute';
 import { userActions } from './redux/actions/User';
@@ -119,54 +120,56 @@ class App extends React.Component {
                 margin: '55px 16px',
                 marginLeft: this.state.collapsed ? '70px' : '215px',
               }}>
-              <Suspense fallback={<Fallback />}>
-                {!this.props.authWithAzure ? ( // value is passed via AzureApp component
-                  <>
-                    <Route exact path="/login" component={LoginPage} />
-                    <Route exact path="/register" component={RegisterPage} />
-                    <Route exact path="/forgot-password" component={ForgotPassword} />
-                    <Route exact path="/reset-password/:id" component={ResetPassword} />
-                    <Route exact path="/logout" component={LoggedOut} />
-                  </>
-                ) : null}
+              <ErrorBoundary>
+                <Suspense fallback={<Fallback />}>
+                  {!this.props.authWithAzure ? ( // value is passed via AzureApp component
+                    <>
+                      <Route exact path="/login" component={LoginPage} />
+                      <Route exact path="/register" component={RegisterPage} />
+                      <Route exact path="/forgot-password" component={ForgotPassword} />
+                      <Route exact path="/reset-password/:id" component={ResetPassword} />
+                      <Route exact path="/logout" component={LoggedOut} />
+                    </>
+                  ) : null}
 
-                <Switch>
-                  <PrivateRoute exact path="/" component={getAssets} />
-                  <PrivateRoute path="/:applicationId/assets/file/:assetId?" component={FileDetailsForm} />
-                  <PrivateRoute path="/:applicationId/assets/fileTemplate/:assetId?" component={FileTemplate} />
-                  <PrivateRoute path="/:applicationId/assets/add-jobs" component={AddJobsForm} />
-                  <PrivateRoute path="/:applicationId/assets/job/:assetId?" component={JobDetailsForm} />
-                  <PrivateRoute path="/:applicationId/assets/index/:assetId?" component={IndexDetailsForm} />
-                  <PrivateRoute path="/:applicationId/assets/query/:assetId?" component={QueryDetailsForm} />
-                  <PrivateRoute
-                    path="/:applicationId/assets/visualizations/:visualizationId?"
-                    component={VisualizationDetailsForm}
-                  />
+                  <Switch>
+                    <PrivateRoute exact path="/" component={getAssets} />
+                    <PrivateRoute path="/:applicationId/assets/file/:assetId?" component={FileDetailsForm} />
+                    <PrivateRoute path="/:applicationId/assets/fileTemplate/:assetId?" component={FileTemplate} />
+                    <PrivateRoute path="/:applicationId/assets/add-jobs" component={AddJobsForm} />
+                    <PrivateRoute path="/:applicationId/assets/job/:assetId?" component={JobDetailsForm} />
+                    <PrivateRoute path="/:applicationId/assets/index/:assetId?" component={IndexDetailsForm} />
+                    <PrivateRoute path="/:applicationId/assets/query/:assetId?" component={QueryDetailsForm} />
+                    <PrivateRoute
+                      path="/:applicationId/assets/visualizations/:visualizationId?"
+                      component={VisualizationDetailsForm}
+                    />
 
-                  <PrivateRoute path="/:applicationId/assets" component={Assets} />
-                  <PrivateRoute path="/:applicationId/dataflow/details/:dataflowId?" component={DataflowDetails} />
-                  <PrivateRoute path="/:applicationId/dataflow" component={dataFlowComp} />
-                  <PrivateRoute path="/admin/applications" component={AdminApplications} />
-                  <PrivateRoute path="/admin/bree" component={ScheduledJobsPage} />
-                  <PrivateRoute path="/admin/clusters/:clusterId" component={ClusterDetails} />
-                  <PrivateRoute path="/admin/clusters" component={AdminClusters} />
-                  <PrivateRoute path="/admin/github" component={GitHubSettings} />
-                  <PrivateRoute path="/admin/users" component={Users} />
-                  <PrivateRoute path="/admin/consumers" component={AdminConsumers} />
-                  <PrivateRoute path="/admin/controlsAndRegulations" component={Regulations} />
-                  <PrivateRoute
-                    path="/:applicationId/dataflowinstances/dataflowInstanceDetails/:dataflowId?/:executionGroupId?"
-                    component={DataflowInstanceDetails}
-                  />
-                  <PrivateRoute path="/:applicationId/dataflowinstances" component={DataflowInstances} />
-                  <PrivateRoute path="/:applicationId/actions" component={Actions} />
-                  <PrivateRoute
-                    path="/:applicationId/manualJobDetails/:jobId/:jobExecutionId"
-                    component={ManualJobDetail}
-                  />
-                  {this.props.authWithAzure ? <Route exact path="*" component={getAssets} /> : null}
-                </Switch>
-              </Suspense>
+                    <PrivateRoute path="/:applicationId/assets" component={Assets} />
+                    <PrivateRoute path="/:applicationId/dataflow/details/:dataflowId?" component={DataflowDetails} />
+                    <PrivateRoute path="/:applicationId/dataflow" component={dataFlowComp} />
+                    <PrivateRoute path="/admin/applications" component={AdminApplications} />
+                    <PrivateRoute path="/admin/bree" component={ScheduledJobsPage} />
+                    <PrivateRoute path="/admin/clusters/:clusterId" component={ClusterDetails} />
+                    <PrivateRoute path="/admin/clusters" component={AdminClusters} />
+                    <PrivateRoute path="/admin/github" component={GitHubSettings} />
+                    <PrivateRoute path="/admin/users" component={Users} />
+                    <PrivateRoute path="/admin/consumers" component={AdminConsumers} />
+                    <PrivateRoute path="/admin/controlsAndRegulations" component={Regulations} />
+                    <PrivateRoute
+                      path="/:applicationId/dataflowinstances/dataflowInstanceDetails/:dataflowId?/:executionGroupId?"
+                      component={DataflowInstanceDetails}
+                    />
+                    <PrivateRoute path="/:applicationId/dataflowinstances" component={DataflowInstances} />
+                    <PrivateRoute path="/:applicationId/actions" component={Actions} />
+                    <PrivateRoute
+                      path="/:applicationId/manualJobDetails/:jobId/:jobExecutionId"
+                      component={ManualJobDetail}
+                    />
+                    {this.props.authWithAzure ? <Route exact path="*" component={getAssets} /> : null}
+                  </Switch>
+                </Suspense>
+              </ErrorBoundary>
             </Content>
           </Layout>
         </Layout>
