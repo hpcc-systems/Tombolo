@@ -5,8 +5,6 @@ import { hasEditPermission } from '../../common/AuthUtil.js';
 import AssociatedDataflows from '../AssociatedDataflows';
 import EditableTable from '../../common/EditableTable.js';
 import { eclTypes, omitDeep } from '../../common/CommonUtil.js';
-import 'ag-grid-community/dist/styles/ag-grid.css';
-import 'ag-grid-community/dist/styles/ag-theme-balham.css';
 import { MarkdownEditor } from '../../common/MarkdownEditor.js';
 import { connect } from 'react-redux';
 import { assetsActions } from '../../../redux/actions/Assets';

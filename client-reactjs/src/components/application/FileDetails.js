@@ -1,6 +1,3 @@
-import 'ag-grid-community/dist/styles/ag-grid.css';
-import 'ag-grid-community/dist/styles/ag-theme-balham.css';
-import { AgGridReact } from 'ag-grid-react';
 import {
   AutoComplete,
   Button,
@@ -13,6 +10,7 @@ import {
   Row,
   Select,
   Spin,
+  Table,
   Tabs,
   Tag,
   Typography,
@@ -50,7 +48,7 @@ class FileDetails extends Component {
     consumers: [],
     selectedCluster: this.props.clusterId || '',
     drawerVisible: false,
-    fileDataColHeaders: [],
+    fileColumns: [],
     fileDataContent: [],
     complianceTags: [],
     complianceDetails: [],
@@ -111,7 +109,7 @@ class FileDetails extends Component {
     this.setState({
       complianceTags: [],
       fileDataContent: [],
-      fileDataColHeaders: [],
+      fileColumns: [],
       disableReadOnlyFields: false,
       file: {
         ...this.state.file,
@@ -176,7 +174,7 @@ class FileDetails extends Component {
             owner: data.basic.owner,
             groupId: data.basic.groupId,
             layout: data.file_layouts,
-            licenses: data.file_licenses,
+            licenses: [{ name: 'DPPA' }],
             supplier: data.basic.supplier,
             consumer: data.basic.consumer,
             relations: data.file_relations,
@@ -185,7 +183,6 @@ class FileDetails extends Component {
             description: data.basic.description,
             superFileData: data.basic.superFileData,
             isAssociated: data.basic?.metaData?.isAssociated,
-            fileDataColHeaders: data.file_layouts.map((layout) => layout.name),
           },
         });
 
@@ -299,9 +296,15 @@ class FileDetails extends Component {
 
       const data = await response.json();
 
+      const selectedRowKeys = this.state.file.licenses.reduce((acc, fileLicense) => {
+        const match = data.filter((availableLicenses) => fileLicense.name === availableLicenses.name);
+        if (match) acc.push(...match.map((el) => el.id));
+        return acc;
+      }, []);
+
       this.setState({
         availableLicenses: data,
-        selectedRowKeys: this.state.file.licenses.map((license) => license.id),
+        selectedRowKeys,
       });
     } catch (error) {
       console.log('-getLicenses-----------------------------------------');
@@ -436,7 +439,6 @@ class FileDetails extends Component {
           id: fileInfo.basic.id,
           layout: fileInfo.file_layouts,
           validations: fileInfo.file_validations,
-          fileDataColHeaders: fileInfo.file_layouts.map((layout) => layout.name),
         },
       });
 
@@ -533,7 +535,7 @@ class FileDetails extends Component {
 
       if (rows?.length > 0) {
         this.setState({
-          fileDataColHeaders: Object.keys(rows[0]),
+          fileColumns: Object.keys(rows[0]).map((field) => ({ title: field, dataIndex: field })),
           fileDataContent: rows,
           showFilePreview: true,
         });
@@ -623,49 +625,25 @@ class FileDetails extends Component {
     this.setState({ dataAltered: true, errors: inputErrors.length > 0 });
   };
 
-  onGridReady = (grid) => grid.api.sizeColumnsToFit();
+  parseFileData = () => {
+    const data = [];
 
-  onLicenseGridReady = (params, licenses) => {
-    this.licenseGridApi = params.api;
-    this.licenseGridApi.sizeColumnsToFit();
-
-    this.licenseGridApi.forEachNode((node) => {
-      const license = licenses.find((license) => license.name === node.data.name);
-      if (license) this.licenseGridApi.selectNode(node, true);
-    });
-  };
-
-  fileDataColumns = ({ fileDataColHeaders, fileDataContent }) => {
-    const columns = [];
-
-    fileDataColHeaders.forEach((column) => {
-      //iterate through each Row[]
-      const rowType1 = fileDataContent?.[0]?.[column]?.Row;
-      const rowType2 = fileDataContent?.[0]?.[column];
-
-      let colObj = { headerName: column, field: column };
-
-      if (rowType1) {
-        colObj = {
-          headerName: column,
-          children: Object.keys(rowType1?.[0])?.map((key) => ({
-            headerName: key,
-            valueGetter: 'data.' + column + '.Row[0].' + key,
-          })),
-        };
-      } else if (rowType2 instanceof Object) {
-        colObj = {
-          headerName: column,
-          children: Object.keys(rowType2).map((key) => ({ headerName: key, field: column + '.' + key })),
-        };
-      }
-
-      columns.push(colObj);
+    this.state.fileDataContent.forEach((record, index) => {
+      let newRecord = { ...record, id: index };
+      this.state.fileColumns.forEach((column) => {
+        const recordType1 = record?.[column]?.Row;
+        const recordType2 = record?.[column];
+        if (recordType1) {
+          newRecord[column] = recordType1?.[0][column];
+        } else if (recordType2 instanceof Object) {
+          newRecord[column] = recordType2[column][column];
+        }
+      });
+      data.push(newRecord);
     });
 
-    return columns;
+    return data;
   };
-
   // TODO FIX THIS VALIDATOR
   scopeValidator = (rule, value, callback) => {
     const scope = this.props.user.organization + '::' + this.props.applicationTitle;
@@ -687,7 +665,6 @@ class FileDetails extends Component {
       showFilePreview,
       confirmLoading,
       availableLicenses,
-      fileDataContent,
       disableReadOnlyFields,
     } = this.state;
 
@@ -740,7 +717,7 @@ class FileDetails extends Component {
         editable: editingAllowed,
         width: '15%',
         celleditorparams: {
-          values: this.state.file.fileDataColHeaders,
+          values: this.state.file?.fileColumn?.map((el) => el?.name),
         },
       },
       {
@@ -773,17 +750,26 @@ class FileDetails extends Component {
 
     const licenseColumns = [
       {
-        field: 'name',
-        cellRenderer: function (params) {
-          return '<a href=' + params.data.url + ' target="_blank">' + params.value + '</a>';
+        title: 'Name',
+        dataIndex: 'name',
+        filters: [
+          {
+            text: 'Show matched only',
+            value: 'match',
+          },
+        ],
+        onFilter: (value, record) => this.state.selectedRowKeys.includes(record.id),
+        render: (text, record) => {
+          return (
+            <Typography.Link target="_blank" href={record.url}>
+              {text}
+            </Typography.Link>
+          );
         },
-        headerCheckboxSelection: enableEdit,
-        headerCheckboxSelectionFilteredOnly: enableEdit,
-        checkboxSelection: enableEdit,
       },
       {
-        field: 'description',
-        cellRenderer: (params) => params.value || '',
+        title: 'Description',
+        dataIndex: 'description',
       },
     ];
 
@@ -1188,20 +1174,18 @@ class FileDetails extends Component {
             </TabPane>
             <TabPane tab="Permissable Purpose" key="4">
               <InheritedLicenses relation={inheritedLicensing} />
-              <div
-                //  !TODO GET RID OF AgGridReact LIB
-                className="ag-theme-balham"
-                style={{ height: '400px', width: '100%' }}>
-                <AgGridReact
-                  rowSelection="multiple"
-                  columnDefs={licenseColumns}
-                  rowData={availableLicenses}
-                  suppressRowClickSelection={editingAllowed}
-                  defaultColDef={{ resizable: true, sortable: true }}
-                  onGridReady={(params) => this.onLicenseGridReady(params, this.state.file.licenses)}
-                  onGridColumnsChanged={(params) => this.onLicenseGridReady(params, this.state.file.licenses)}
-                />
-              </div>
+              <Table
+                size="small"
+                pagination={false}
+                scroll={{ y: '400px' }}
+                columns={licenseColumns}
+                rowKey={(record) => record.id}
+                dataSource={availableLicenses}
+                rowSelection={{
+                  type: 'checkbox',
+                  selectedRowKeys: [...this.state.selectedRowKeys] || [],
+                }}
+              />
             </TabPane>
             <TabPane tab="Validation Rules" key="5">
               <div className="ag-theme-balham" style={{ height: '415px', width: '100%' }}>
@@ -1219,17 +1203,14 @@ class FileDetails extends Component {
             </TabPane>
             {VIEW_DATA_PERMISSION && showFilePreview ? (
               <TabPane tab="File Preview" key="6">
-                <div className="ag-theme-balham" style={{ height: '415px', width: '100%' }}>
-                  <AgGridReact
-                    rowData={fileDataContent}
-                    onGridReady={this.onGridReady}
-                    defaultColDef={{ resizable: true }}
-                    columnDefs={this.fileDataColumns({
-                      fileDataColHeaders: this.state.fileDataColHeaders,
-                      fileDataContent: this.state.fileDataContent,
-                    })}
-                  />
-                </div>
+                <Table
+                  size="small"
+                  pagination={false}
+                  scroll={{ y: '400px' }}
+                  columns={this.state.fileColumns}
+                  rowKey={(record) => record.id}
+                  dataSource={this.parseFileData()}
+                />
               </TabPane>
             ) : null}
 
