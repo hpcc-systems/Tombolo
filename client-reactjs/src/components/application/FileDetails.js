@@ -41,7 +41,6 @@ class FileDetails extends Component {
     visible: true,
     confirmLoading: false,
     loading: false,
-    availableLicenses: [],
     rules: [],
     clusters: [],
     consumers: [],
@@ -94,7 +93,6 @@ class FileDetails extends Component {
 
     if (applicationId) {
       await this.getFileDetails({ assetId, applicationId });
-      await this.getLicenses();
     }
   }
 
@@ -260,23 +258,6 @@ class FileDetails extends Component {
     } catch (error) {
       console.log(error);
       message.error('There was an error deleting the file');
-    }
-  };
-
-  getLicenses = async () => {
-    try {
-      const response = await fetch('/api/file/read/licenses', { headers: authHeader() });
-      if (!response.ok) handleError(response);
-
-      const data = await response.json();
-
-      this.setState({ availableLicenses: data });
-    } catch (error) {
-      console.log('-getLicenses-----------------------------------------');
-      console.dir({ error }, { depth: null });
-      console.log('------------------------------------------');
-
-      // message.error("There was an error deleting the file");
     }
   };
 
@@ -589,15 +570,8 @@ class FileDetails extends Component {
   };
 
   render() {
-    const {
-      enableEdit,
-      addingNewAsset,
-      complianceTags,
-      showFilePreview,
-      confirmLoading,
-      availableLicenses,
-      disableReadOnlyFields,
-    } = this.state;
+    const { enableEdit, addingNewAsset, complianceTags, showFilePreview, confirmLoading, disableReadOnlyFields } =
+      this.state;
 
     const { description, isSuperFile, layout, validations, superFileData } = this.state.file;
 
@@ -1093,7 +1067,7 @@ class FileDetails extends Component {
                 scroll={{ y: '400px' }}
                 columns={licenseColumns}
                 rowKey={(record) => record.id}
-                dataSource={availableLicenses}
+                dataSource={this.props.availableLicenses}
                 rowSelection={{
                   type: 'checkbox',
                   selectedRowKeys: this.state.file.licenses,
@@ -1146,7 +1120,7 @@ class FileDetails extends Component {
 function mapStateToProps(state, ownProps) {
   let { selectedAsset, newAsset = {}, clusterId } = state.assetReducer;
   const { user } = state.authenticationReducer;
-  const { application, clusters, consumers } = state.applicationReducer;
+  const { application, clusters, consumers, licenses } = state.applicationReducer;
 
   const { isNew = false, groupId = '' } = newAsset;
 
@@ -1161,6 +1135,7 @@ function mapStateToProps(state, ownProps) {
     clusterId,
     clusters,
     consumers,
+    availableLicenses: licenses,
   };
 }
 

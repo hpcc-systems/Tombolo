@@ -7,6 +7,7 @@ const initialState = {
   deletedApplicationId: '',
   clusters: [],
   consumers: [],
+  licenses: [],
 };
 
 export function applicationReducer(state = initialState, action) {
@@ -46,6 +47,11 @@ export function applicationReducer(state = initialState, action) {
       return {
         ...state,
         consumers: action.consumers,
+      };
+    case Constants.LICENSES_RETRIEVED:
+      return {
+        ...state,
+        licenses: action.licenses,
       };
     default:
       return state;
