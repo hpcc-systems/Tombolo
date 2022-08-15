@@ -174,7 +174,7 @@ class FileDetails extends Component {
             owner: data.basic.owner,
             groupId: data.basic.groupId,
             layout: data.file_layouts,
-            licenses: [],
+            licenses: data.file_licenses || [],
             supplier: data.basic.supplier,
             consumer: data.basic.consumer,
             relations: data.file_relations,
@@ -529,9 +529,6 @@ class FileDetails extends Component {
       if (!response.ok) handleError(response);
 
       const rows = await response.json();
-      console.log('-rows-----------------------------------------');
-      console.dir({ rows }, { depth: null });
-      console.log('------------------------------------------');
 
       if (rows?.length > 0) {
         this.setState({
@@ -550,8 +547,6 @@ class FileDetails extends Component {
 
   populateFileDetails = async () => {
     const formFieldsValue = this.formRef.current.getFieldsValue(); // will get all mounted fields value
-    console.log('-formFieldsValue-----------------------------------------');
-    console.dir({ formFieldsValue }, { depth: null });
 
     const fileDetails = {
       app_id: this.props.application.applicationId,
@@ -574,17 +569,17 @@ class FileDetails extends Component {
           isAssociated: this.formRef.current.getFieldValue('fileSelected') || this.state.file.isAssociated, // field is not mounted so we take value separately
         },
       },
-      license: [],
+
       fields: this.state.file.layout,
       validation: this.state.file.validations,
       removeAssetId: this.formRef.current.getFieldValue('removeAssetId') || '', // Asset was a design file that got associated with existing in DB file
       renameAssetId: this.formRef.current.getFieldValue('renameAssetId') || '', // Asset was a design file that got associated with none-existing in DB file
+      license: this.state.availableLicenses.reduce((acc, el) => {
+        if (this.state.selectedRowKeys?.includes(el.id)) acc.push({ name: el.name, url: el.url });
+        return acc;
+      }, []),
     };
 
-    if (this?.licenseGridApi?.getSelectedNodes) {
-      fileDetails.license =
-        this.licenseGridApi.getSelectedNodes()?.map((node) => ({ name: node.data.name, url: node.data.url })) || [];
-    }
     console.log('-fileDetails-----------------------------------------');
     console.dir({ fileDetails }, { depth: null });
     console.log('------------------------------------------');
@@ -759,6 +754,7 @@ class FileDetails extends Component {
           },
         ],
         onFilter: (value, record) => this.state.selectedRowKeys.includes(record.id),
+        shouldCellUpdate: () => false,
         render: (text, record) => {
           return (
             <Typography.Link target="_blank" href={record.url}>
@@ -770,6 +766,7 @@ class FileDetails extends Component {
       {
         title: 'Description',
         dataIndex: 'description',
+        shouldCellUpdate: () => false,
       },
     ];
 
@@ -1184,6 +1181,8 @@ class FileDetails extends Component {
                 rowSelection={{
                   type: 'checkbox',
                   selectedRowKeys: [...this.state.selectedRowKeys] || [],
+                  onChange: (selectedRowKeys) => this.setState({ selectedRowKeys }),
+                  getCheckboxProps: () => ({ disabled: !editingAllowed || !enableEdit }),
                 }}
               />
             </TabPane>
