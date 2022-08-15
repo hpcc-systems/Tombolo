@@ -4,8 +4,9 @@ import { useDispatch } from 'react-redux';
 import { InteractionType } from '@azure/msal-browser';
 
 import { loginRequest } from './azureAuthConfig';
-import { Alert, Button, Spin, Typography } from 'antd';
 import { Constants } from '../common/Constants';
+import Fallback from '../common/Fallback';
+import ErrorPage from '../common/ErrorPage';
 
 const AzureApp = ({ children }) => {
   const dispatch = useDispatch();
@@ -52,8 +53,8 @@ const AzureApp = ({ children }) => {
 
   return (
     <MsalAuthenticationTemplate
-      errorComponent={Error}
-      loadingComponent={Loading}
+      errorComponent={ErrorPage}
+      loadingComponent={Fallback}
       authenticationRequest={loginRequest} //set of scopes to pre-consent to while sign in
       interactionType={InteractionType.Redirect}>
       {/* taking App as a child component and passing authWithAzure flag as a prop. child will be available if user is authenticated with azure*/}
@@ -63,31 +64,3 @@ const AzureApp = ({ children }) => {
 };
 
 export default AzureApp;
-
-const Loading = () => {
-  return (
-    <div style={{ width: '100%', height: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-      <Spin size="large" tip="Tombolo" />
-    </div>
-  );
-};
-
-const Error = () => {
-  return (
-    <div style={{ width: '100%', height: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-      <Alert
-        type="error"
-        showIcon
-        message="Failed to authenticate"
-        description={
-          <>
-            <Typography.Title level={4}>Something went wrong, please refresh the page</Typography.Title>
-            <Button type="primary" onClick={() => window.location.reload()}>
-              Refresh
-            </Button>
-          </>
-        }
-      />
-    </div>
-  );
-};

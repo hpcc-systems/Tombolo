@@ -11,7 +11,7 @@ import useSelectDataflow from '../../../hooks/useSelectDataflow';
 import BreadCrumbs from '../../common/BreadCrumbs';
 const { TabPane } = Tabs;
 
-export const DataflowInstanceDetails = () => {
+const DataflowInstanceDetails = () => {
   const [applicationReducer, dataflowReducer] = useSelector((state) => [
     state.applicationReducer,
     state.dataflowReducer,
@@ -185,3 +185,5 @@ export const DataflowInstanceDetails = () => {
     </React.Fragment>
   );
 };
+
+export default DataflowInstanceDetails;

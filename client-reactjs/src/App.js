@@ -1,46 +1,55 @@
-import React from 'react';
+import React, { Suspense } from 'react';
 import { connect } from 'react-redux';
 import { Layout } from 'antd';
 import { Router, Route, Switch } from 'react-router-dom';
 import { Redirect } from 'react-router';
 import history from './components/common/History';
-import LoginPage from './components/login/LoginPage';
-import LoggedOut from './components/login/LoggedOut';
-import ForgotPassword from './components/login/ForgotPassword';
-import ResetPassword from './components/login/ResetPassword';
-import { PrivateRoute } from './components/common/PrivateRoute';
-import Assets from './components/application/Assets';
+
+// Auth pages
+
+import Assets from './components/application/Assets'; // This is "home" view, can go into main bundle
+const LoginPage = React.lazy(() => import('./components/login/LoginPage'));
+const LoggedOut = React.lazy(() => import('./components/login/LoggedOut'));
+const ForgotPassword = React.lazy(() => import('./components/login/ForgotPassword'));
+const ResetPassword = React.lazy(() => import('./components/login/ResetPassword'));
+const RegisterPage = React.lazy(() => import('./components/login/RegisterPage'));
+//Dataflow pages
+const Dataflow = React.lazy(() => import('./components/application/Dataflow'));
+const DataflowDetails = React.lazy(() => import('./components/application/Dataflow/DataflowDetails'));
+const DataflowInstances = React.lazy(() => import('./components/application/DataflowInstances/DataflowInstances'));
+const DataflowInstanceDetails = React.lazy(() =>
+  import('./components/application/DataflowInstances/DataflowInstanceDetails')
+);
+// Application pages
+const FileDetailsForm = React.lazy(() => import('./components/application/FileDetails'));
+const FileTemplate = React.lazy(() => import('./components/application/templates/FileTemplate'));
+const JobDetailsForm = React.lazy(() => import('./components/application/Jobs/JobDetails'));
+const IndexDetailsForm = React.lazy(() => import('./components/application/IndexDetails'));
+const QueryDetailsForm = React.lazy(() => import('./components/application/queries/QueryDetails'));
+const VisualizationDetailsForm = React.lazy(() => import('./components/application/VisualizationDetails'));
+const ManualJobDetail = React.lazy(() => import('./components/application/Jobs/ManualJobDetail'));
+const Actions = React.lazy(() => import('./components/application/actions/actions'));
+const AddJobsForm = React.lazy(() => import('./components/application/Jobs/AddjobsForm/AddJobsForm'));
+// Admin pages
+const Users = React.lazy(() => import('./components/admin/Users'));
+const AdminApplications = React.lazy(() => import('./components/admin/apps/Applications'));
+const AdminClusters = React.lazy(() => import('./components/admin/Clusters'));
+const ClusterDetails = React.lazy(() => import('./components/admin/ClusterDetails'));
+const AdminConsumers = React.lazy(() => import('./components/admin/Consumers'));
+const Regulations = React.lazy(() => import('./components/admin/ControlsAndRegulations'));
+const GitHubSettings = React.lazy(() => import('./components/admin/GitHubSettings/GitHubSettings'));
+const ScheduledJobsPage = React.lazy(() => import('./components/admin/ScheduledJobsPage'));
+
+// Shared layout, etc.
 import { LeftNav } from './components/layout/LeftNav';
-import Dataflow from './components/application/Dataflow';
-import DataflowDetails from './components/application/Dataflow/DataflowDetails';
-import { DataflowInstances } from './components/application/DataflowInstances/DataflowInstances';
-import { DataflowInstanceDetails } from './components/application/DataflowInstances/DataflowInstanceDetails';
-import Users from './components/admin/Users';
-import FileDetailsForm from './components/application/FileDetails';
-import FileTemplate from './components/application/templates/FileTemplate';
-import JobDetailsForm from './components/application/Jobs/JobDetails';
-import IndexDetailsForm from './components/application/IndexDetails';
-import QueryDetailsForm from './components/application/queries/QueryDetails';
-import VisualizationDetailsForm from './components/application/VisualizationDetails';
-
-import ManualJobDetail from './components/application/Jobs/ManualJobDetail';
-
-import Actions from './components/application/actions/actions';
-import { AdminApplications } from './components/admin/apps/Applications';
-import AdminClusters from './components/admin/Clusters';
-import ClusterDetails from './components/admin/ClusterDetails';
-import { AdminConsumers } from './components/admin/Consumers';
 import { AppHeader } from './components/layout/Header';
+import ErrorBoundary from './components/common/ErrorBoundary';
+import Fallback from './components/common/Fallback';
+import { PrivateRoute } from './components/common/PrivateRoute';
 import { userActions } from './redux/actions/User';
 import { store } from './redux/store/Store';
 
-import Regulations from './components/admin/ControlsAndRegulations';
-import GitHubSettings from './components/admin/GitHubSettings/GitHubSettings';
-import ScheduledJobsPage from './components/admin/ScheduledJobsPage';
-import AddJobsForm from './components/application/Jobs/AddjobsForm/AddJobsForm';
-
 import tomboloLogo from './images/logo.png';
-import RegisterPage from './components/login/RegisterPage';
 
 const { Header, Content } = Layout;
 
@@ -111,52 +120,56 @@ class App extends React.Component {
                 margin: '55px 16px',
                 marginLeft: this.state.collapsed ? '70px' : '215px',
               }}>
-              {!this.props.authWithAzure ? ( // value is passed via AzureApp component
-                <>
-                  <Route exact path="/login" component={LoginPage} />
-                  <Route exact path="/register" component={RegisterPage} />
-                  <Route exact path="/forgot-password" component={ForgotPassword} />
-                  <Route exact path="/reset-password/:id" component={ResetPassword} />
-                  <Route exact path="/logout" component={LoggedOut} />
-                </>
-              ) : null}
+              <ErrorBoundary>
+                <Suspense fallback={<Fallback />}>
+                  {!this.props.authWithAzure ? ( // value is passed via AzureApp component
+                    <>
+                      <Route exact path="/login" component={LoginPage} />
+                      <Route exact path="/register" component={RegisterPage} />
+                      <Route exact path="/forgot-password" component={ForgotPassword} />
+                      <Route exact path="/reset-password/:id" component={ResetPassword} />
+                      <Route exact path="/logout" component={LoggedOut} />
+                    </>
+                  ) : null}
 
-              <Switch>
-                <PrivateRoute exact path="/" component={getAssets} />
-                <PrivateRoute path="/:applicationId/assets/file/:assetId?" component={FileDetailsForm} />
-                <PrivateRoute path="/:applicationId/assets/fileTemplate/:assetId?" component={FileTemplate} />
-                <PrivateRoute path="/:applicationId/assets/add-jobs" component={AddJobsForm} />
-                <PrivateRoute path="/:applicationId/assets/job/:assetId?" component={JobDetailsForm} />
-                <PrivateRoute path="/:applicationId/assets/index/:assetId?" component={IndexDetailsForm} />
-                <PrivateRoute path="/:applicationId/assets/query/:assetId?" component={QueryDetailsForm} />
-                <PrivateRoute
-                  path="/:applicationId/assets/visualizations/:visualizationId?"
-                  component={VisualizationDetailsForm}
-                />
+                  <Switch>
+                    <PrivateRoute exact path="/" component={getAssets} />
+                    <PrivateRoute path="/:applicationId/assets/file/:assetId?" component={FileDetailsForm} />
+                    <PrivateRoute path="/:applicationId/assets/fileTemplate/:assetId?" component={FileTemplate} />
+                    <PrivateRoute path="/:applicationId/assets/add-jobs" component={AddJobsForm} />
+                    <PrivateRoute path="/:applicationId/assets/job/:assetId?" component={JobDetailsForm} />
+                    <PrivateRoute path="/:applicationId/assets/index/:assetId?" component={IndexDetailsForm} />
+                    <PrivateRoute path="/:applicationId/assets/query/:assetId?" component={QueryDetailsForm} />
+                    <PrivateRoute
+                      path="/:applicationId/assets/visualizations/:visualizationId?"
+                      component={VisualizationDetailsForm}
+                    />
 
-                <PrivateRoute path="/:applicationId/assets" component={Assets} />
-                <PrivateRoute path="/:applicationId/dataflow/details/:dataflowId?" component={DataflowDetails} />
-                <PrivateRoute path="/:applicationId/dataflow" component={dataFlowComp} />
-                <PrivateRoute path="/admin/applications" component={AdminApplications} />
-                <PrivateRoute path="/admin/bree" component={ScheduledJobsPage} />
-                <PrivateRoute path="/admin/clusters/:clusterId" component={ClusterDetails} />
-                <PrivateRoute path="/admin/clusters" component={AdminClusters} />
-                <PrivateRoute path="/admin/github" component={GitHubSettings} />
-                <PrivateRoute path="/admin/users" component={Users} />
-                <PrivateRoute path="/admin/consumers" component={AdminConsumers} />
-                <PrivateRoute path="/admin/controlsAndRegulations" component={Regulations} />
-                <PrivateRoute
-                  path="/:applicationId/dataflowinstances/dataflowInstanceDetails/:dataflowId?/:executionGroupId?"
-                  component={DataflowInstanceDetails}
-                />
-                <PrivateRoute path="/:applicationId/dataflowinstances" component={DataflowInstances} />
-                <PrivateRoute path="/:applicationId/actions" component={Actions} />
-                <PrivateRoute
-                  path="/:applicationId/manualJobDetails/:jobId/:jobExecutionId"
-                  component={ManualJobDetail}
-                />
-                {this.props.authWithAzure ? <Route exact path="*" component={getAssets} /> : null}
-              </Switch>
+                    <PrivateRoute path="/:applicationId/assets" component={Assets} />
+                    <PrivateRoute path="/:applicationId/dataflow/details/:dataflowId?" component={DataflowDetails} />
+                    <PrivateRoute path="/:applicationId/dataflow" component={dataFlowComp} />
+                    <PrivateRoute path="/admin/applications" component={AdminApplications} />
+                    <PrivateRoute path="/admin/bree" component={ScheduledJobsPage} />
+                    <PrivateRoute path="/admin/clusters/:clusterId" component={ClusterDetails} />
+                    <PrivateRoute path="/admin/clusters" component={AdminClusters} />
+                    <PrivateRoute path="/admin/github" component={GitHubSettings} />
+                    <PrivateRoute path="/admin/users" component={Users} />
+                    <PrivateRoute path="/admin/consumers" component={AdminConsumers} />
+                    <PrivateRoute path="/admin/controlsAndRegulations" component={Regulations} />
+                    <PrivateRoute
+                      path="/:applicationId/dataflowinstances/dataflowInstanceDetails/:dataflowId?/:executionGroupId?"
+                      component={DataflowInstanceDetails}
+                    />
+                    <PrivateRoute path="/:applicationId/dataflowinstances" component={DataflowInstances} />
+                    <PrivateRoute path="/:applicationId/actions" component={Actions} />
+                    <PrivateRoute
+                      path="/:applicationId/manualJobDetails/:jobId/:jobExecutionId"
+                      component={ManualJobDetail}
+                    />
+                    {this.props.authWithAzure ? <Route exact path="*" component={getAssets} /> : null}
+                  </Switch>
+                </Suspense>
+              </ErrorBoundary>
             </Content>
           </Layout>
         </Layout>

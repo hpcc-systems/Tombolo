@@ -538,5 +538,4 @@ function mapStateToProps(state) {
   };
 }
 const connectedApp = connect(mapStateToProps)(Consumers);
-export { connectedApp as AdminConsumers };
-//export default Applications;
+export default connectedApp;
