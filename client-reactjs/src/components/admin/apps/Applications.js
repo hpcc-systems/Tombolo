@@ -312,5 +312,4 @@ function mapStateToProps(state) {
   return { user };
 }
 const connectedApp = connect(mapStateToProps)(Applications);
-const AppForm = connectedApp;
-export { AppForm as AdminApplications };
+export default connectedApp;
