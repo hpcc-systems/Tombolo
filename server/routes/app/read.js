@@ -10,7 +10,6 @@ let Application = models.application;
 let Groups = models.groups;
 let File = models.file;
 let FileLayout = models.file_layout;
-let FileLicense = models.file_license;
 let FileValidation = models.file_validation;
 let Index = models.indexes;
 let IndexKey = models.index_key;
@@ -525,7 +524,6 @@ router.post('/export', [
       let files = await File.findAll({where: {application_id: application.id}, 
         include: [
           {model: FileLayout, attributes: { exclude: ['createdAt', 'updatedAt', 'id', 'application_id'] }}, 
-          {model: FileLicense, attributes: { exclude: ['createdAt', 'updatedAt', 'id', 'application_id'] }}, 
           {model: FileValidation, attributes: { exclude: ['createdAt', 'updatedAt', 'id', 'application_id'] }},
           {model: Groups, as: 'groups', attributes: ['id', 'name', 'description', 'parent_group'], 
           through: {
