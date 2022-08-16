@@ -1,7 +1,7 @@
 import React from 'react';
 import { Form, Input, Row, Col } from 'antd';
 import ReactMarkdown from 'react-markdown';
-import { MarkdownEditor } from '../../common/MarkdownEditor.js';
+import MonacoEditor from '../../common/MonacoEditor.js';
 import { threeColformItemLayout } from '../../common/CommonUtil.js';
 
 function BasicsTabScript({ enableEdit, editingAllowed, onChange, localState, inTabView }) {
@@ -43,13 +43,10 @@ function BasicsTabScript({ enableEdit, editingAllowed, onChange, localState, inT
 
       <Form.Item label="Description" name="description">
         {enableEdit ? (
-          <MarkdownEditor
-            name="description"
-            id="job_desc"
+          <MonacoEditor
             onChange={onChange}
-            targetDomId={inTabView ? 'jobDescr' + inTabView.key : 'jobDescr'}
             value={localState.description}
-            disabled={!editingAllowed}
+            targetDomId={inTabView ? 'jobDescr' + inTabView.key : 'jobDescr'}
           />
         ) : (
           <div className="read-only-markdown">

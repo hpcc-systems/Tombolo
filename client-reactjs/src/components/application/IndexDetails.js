@@ -6,7 +6,7 @@ import { eclTypes } from '../common/CommonUtil.js';
 import { omitDeep } from '../common/CommonUtil.js';
 import AssociatedDataflows from './AssociatedDataflows';
 import EditableTable from '../common/EditableTable.js';
-import { MarkdownEditor } from '../common/MarkdownEditor.js';
+import MonacoEditor from '../common/MonacoEditor.js';
 import { connect } from 'react-redux';
 import { assetsActions } from '../../redux/actions/Assets';
 import { debounce } from 'lodash';
@@ -710,13 +710,7 @@ class IndexDetails extends PureComponent {
 
                 <Form.Item label="Description" name="description">
                   {this.state.enableEdit ? (
-                    <MarkdownEditor
-                      id="query_desc"
-                      name="description"
-                      onChange={this.onChange}
-                      targetDomId="indexDescr"
-                      disabled={!editingAllowed}
-                    />
+                    <MonacoEditor targetDomId="indexDescr" onChange={this.onChange} />
                   ) : (
                     <div className="read-only-markdown">
                       <ReactMarkdown source={this.state.index.description} />

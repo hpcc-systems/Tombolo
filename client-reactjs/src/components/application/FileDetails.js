@@ -25,7 +25,7 @@ import { eclTypes, formItemLayout } from '../common/CommonUtil';
 import { validationRuleFixes, validationRules } from '../common/CommonUtil.js';
 import DeleteAsset from '../common/DeleteAsset';
 import EditableTable from '../common/EditableTable.js';
-import { MarkdownEditor } from '../common/MarkdownEditor.js';
+import MonacoEditor from '../common/MonacoEditor.js';
 import OverwriteAssetModal from '../common/OverWriteAssetModal';
 import SuperFileMeta from '../common/SuperFileMeta';
 import AssociatedDataflows from './AssociatedDataflows';
@@ -1013,13 +1013,11 @@ class FileDetails extends Component {
 
                   <Form.Item label="Description" name="description">
                     {enableEdit ? (
-                      <MarkdownEditor
-                        id="file_desc"
-                        name="description"
-                        onChange={this.onChange}
-                        targetDomId="fileDescr"
+                      <MonacoEditor
+                        lang="markdown"
                         value={description}
-                        disabled={!editingAllowed}
+                        targetDomId="fileDescr"
+                        onChange={this.onChange}
                       />
                     ) : (
                       <div className="read-only-markdown custom-scroll">

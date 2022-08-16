@@ -4,7 +4,7 @@ import { authHeader, handleError } from '../../common/AuthHeader.js';
 import ReactMarkdown from 'react-markdown';
 import { useSelector } from 'react-redux';
 
-import { MarkdownEditor } from '../../common/MarkdownEditor.js';
+import MonacoEditor from '../../common/MonacoEditor.js';
 import GitHubForm from './GitHubForm/GitHubForm.js';
 import debounce from 'lodash/debounce';
 import Notifications from './Notifications/index.js';
@@ -423,13 +423,10 @@ function BasicsTabGeneral({
 
             <Form.Item name="description" label="Description">
               {enableEdit ? (
-                <MarkdownEditor
-                  name="description"
-                  id="job_desc"
+                <MonacoEditor
                   onChange={onChange}
                   targetDomId={inTabView ? 'jobDescr' + inTabView.key : 'jobDescr'}
                   value={localState.description}
-                  disabled={!editingAllowed}
                 />
               ) : (
                 <div className="read-only-markdown custom-scroll">
