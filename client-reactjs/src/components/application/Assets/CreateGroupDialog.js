@@ -2,16 +2,14 @@ import React, { useEffect, useState } from 'react';
 import { Button, Modal, Form, Input, message } from 'antd';
 
 import ReactMarkdown from 'react-markdown';
-import { MarkdownEditor } from '../../common/MarkdownEditor.js';
+import MonacoEditor from '../../common/MonacoEditor.js';
 import { authHeader, handleError } from '../../common/AuthHeader.js';
 import { useSelector, useDispatch } from 'react-redux';
 import { expandGroups } from '../../../redux/actions/Groups.js';
-import { hasEditPermission } from '../../common/AuthUtil.js';
 
 export const CreateGroupDialog = ({ editGroup, applicationId, isShowing, toggle }) => {
-  const [groupsReducer, authReducer] = useSelector((state) => [state.groupsReducer, state.authenticationReducer]);
+  const [groupsReducer] = useSelector((state) => [state.groupsReducer]);
 
-  const editingAllowed = hasEditPermission(authReducer.user);
   const { selectedKeys, expandedKeys } = groupsReducer;
 
   const dispatch = useDispatch();
@@ -142,11 +140,8 @@ export const CreateGroupDialog = ({ editGroup, applicationId, isShowing, toggle 
             {readOnly ? (
               <ReactMarkdown className="read-only-markdown">{group.description}</ReactMarkdown>
             ) : (
-              <MarkdownEditor
-                id="desc"
-                name="description"
+              <MonacoEditor
                 targetDomId="fileDescr"
-                disabled={!editingAllowed}
                 value={group.description}
                 onChange={(e) => setGroup((prev) => ({ ...prev, [e.target.name]: e.target.value }))}
               />

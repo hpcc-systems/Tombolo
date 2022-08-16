@@ -7,8 +7,8 @@ import { authHeader, handleError } from '../../common/AuthHeader.js';
 import { hasEditPermission } from '../../common/AuthUtil.js';
 import { eclTypes, formItemLayout, omitDeep } from '../../common/CommonUtil.js';
 import DeleteAsset from '../../common/DeleteAsset/index.js';
-import { EclEditor } from '../../common/EclEditor.js';
 import EditableTable from '../../common/EditableTable.js';
+import MonacoEditor from '../../common/MonacoEditor.js';
 import { handleJobDelete } from '../../common/WorkflowUtil';
 import AssociatedDataflows from '../AssociatedDataflows';
 import BasicsTabGeneral from './BasicsTabGeneral';
@@ -869,8 +869,13 @@ class JobDetails extends Component {
               </TabPane>
 
               {this.shouldShowTab(jobType) ? (
-                <TabPane tab="ECL" destroyInactiveTabPane disabled={noECLAvailable} key="2">
-                  <EclEditor ecl={this.state.job.ecl} onChange={this.handleECLChange} />
+                <TabPane tab="ECL" disabled={noECLAvailable} key="2">
+                  <MonacoEditor
+                    lang="ecl"
+                    value={this.state.job.ecl}
+                    onChange={this.handleECLChange}
+                    targetDomId={this.props.inTabView ? 'jobDescr' + this.props.inTabView.key : 'jobDescr'}
+                  />
                 </TabPane>
               ) : jobType === 'Script' ? (
                 <TabPane disabled={noECLAvailable} tab="Script" key="2">
