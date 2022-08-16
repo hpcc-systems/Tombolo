@@ -2,7 +2,7 @@ import React, { useState, useCallback } from 'react';
 import { useSelector } from 'react-redux';
 import { hasEditPermission } from '../common/AuthUtil.js';
 import ReactMarkdown from 'react-markdown';
-import { MarkdownEditor } from '../common/MarkdownEditor.js';
+import MonacoEditor from '../common/MonacoEditor.js';
 import { Row, Col, Button, Form, Input, Select, Tabs, Spin, AutoComplete, message, Space } from 'antd';
 import { authHeader, handleError } from '../common/AuthHeader.js';
 
@@ -222,14 +222,7 @@ function VisualizationDetails() {
 
               <Form.Item label="Description">
                 {formState.enableEdit ? (
-                  <MarkdownEditor
-                    id="description"
-                    name="description"
-                    targetDomId="fileDescr"
-                    value={selectedFile.description}
-                    disabled={!editingAllowed}
-                    onChange={onChangeMD}
-                  />
+                  <MonacoEditor value={selectedFile.description} targetDomId="fileDescr" onChange={onChangeMD} />
                 ) : (
                   <div className="read-only-markdown">
                     <ReactMarkdown source={selectedFile.description} />

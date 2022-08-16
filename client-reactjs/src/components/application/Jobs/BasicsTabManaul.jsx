@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { authHeader, handleError } from '../../common/AuthHeader.js';
 import { Col, Form, Input, Row, Select } from 'antd';
 import ReactMarkdown from 'react-markdown';
-import { MarkdownEditor } from '../../common/MarkdownEditor.js';
+import MonacoEditor from '../../common/MonacoEditor.js';
 import { useSelector, useDispatch } from 'react-redux';
 import { assetsActions } from '../../../redux/actions/Assets';
 import { Cascader } from 'antd';
@@ -193,12 +193,10 @@ function BasicsTabManul(props) {
 
       <Form.Item label="Description" name="description">
         {enableEdit ? (
-          <MarkdownEditor
-            name="description"
+          <MonacoEditor
             onChange={onChange}
-            targetDomId={inTabView ? 'jobDescr' + inTabView.key : 'jobDescr'}
             value={localState.description}
-            disabled={!editingAllowed}
+            targetDomId={inTabView ? 'jobDescr' + inTabView.key : 'jobDescr'}
           />
         ) : (
           <div className="read-only-markdown">

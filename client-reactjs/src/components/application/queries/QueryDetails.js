@@ -5,9 +5,7 @@ import { hasEditPermission } from '../../common/AuthUtil.js';
 import AssociatedDataflows from '../AssociatedDataflows';
 import EditableTable from '../../common/EditableTable.js';
 import { eclTypes, omitDeep } from '../../common/CommonUtil.js';
-import 'ag-grid-community/dist/styles/ag-grid.css';
-import 'ag-grid-community/dist/styles/ag-theme-balham.css';
-import { MarkdownEditor } from '../../common/MarkdownEditor.js';
+import MonacoEditor from '../../common/MonacoEditor.js';
 import { connect } from 'react-redux';
 import { assetsActions } from '../../../redux/actions/Assets';
 import { debounce } from 'lodash';
@@ -714,13 +712,7 @@ class QueryDetails extends PureComponent {
 
                 <Form.Item label="Description" name="description">
                   {this.state.enableEdit ? (
-                    <MarkdownEditor
-                      id="query_desc"
-                      name="description"
-                      onChange={this.onChange}
-                      targetDomId="queryDescr"
-                      disabled={!editingAllowed}
-                    />
+                    <MonacoEditor onChange={this.onChange} targetDomId="queryDescr" />
                   ) : (
                     <div className="read-only-markdown">
                       <ReactMarkdown source={this.state.query.description} />
