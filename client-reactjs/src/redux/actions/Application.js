@@ -8,6 +8,7 @@ export const applicationActions = {
   applicationDeleted,
   getClusters,
   getConsumers,
+  getLicenses,
 };
 
 function applicationSelected(applicationId, applicationTitle) {
@@ -52,6 +53,15 @@ function getConsumers() {
     fetch('/api/consumer/consumers', { headers: authHeader() })
       .then((response) => (response.ok ? response.json() : handleError(response)))
       .then((consumers) => dispatch({ type: Constants.CONSUMERS_RETRIEVED, consumers }))
+      .catch(console.log);
+  };
+}
+
+function getLicenses() {
+  return (dispatch) => {
+    fetch('/api/file/read/licenses', { headers: authHeader() })
+      .then((response) => (response.ok ? response.json() : handleError(response)))
+      .then((licenses) => dispatch({ type: Constants.LICENSES_RETRIEVED, licenses }))
       .catch(console.log);
   };
 }

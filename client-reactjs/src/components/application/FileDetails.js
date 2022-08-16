@@ -1,6 +1,3 @@
-import 'ag-grid-community/dist/styles/ag-grid.css';
-import 'ag-grid-community/dist/styles/ag-theme-balham.css';
-import { AgGridReact } from 'ag-grid-react';
 import {
   AutoComplete,
   Button,
@@ -13,6 +10,7 @@ import {
   Row,
   Select,
   Spin,
+  Table,
   Tabs,
   Tag,
   Typography,
@@ -43,14 +41,12 @@ class FileDetails extends Component {
     visible: true,
     confirmLoading: false,
     loading: false,
-    availableLicenses: [],
     rules: [],
-    selectedRowKeys: [],
     clusters: [],
     consumers: [],
     selectedCluster: this.props.clusterId || '',
     drawerVisible: false,
-    fileDataColHeaders: [],
+    fileColumns: [],
     fileDataContent: [],
     complianceTags: [],
     complianceDetails: [],
@@ -71,7 +67,6 @@ class FileDetails extends Component {
       licenses: [],
       relations: [],
       validations: [],
-      inheritedLicensing: [],
       isAssociated: false,
     },
     existingAsset: {
@@ -87,7 +82,6 @@ class FileDetails extends Component {
     editing: false,
     dataAltered: false,
     errors: false,
-    dataTypes: [],
   };
 
   //Component did mount
@@ -99,8 +93,6 @@ class FileDetails extends Component {
 
     if (applicationId) {
       await this.getFileDetails({ assetId, applicationId });
-      await this.fetchDataTypeDetails();
-      await this.getLicenses();
     }
   }
 
@@ -111,7 +103,7 @@ class FileDetails extends Component {
     this.setState({
       complianceTags: [],
       fileDataContent: [],
-      fileDataColHeaders: [],
+      fileColumns: [],
       disableReadOnlyFields: false,
       file: {
         ...this.state.file,
@@ -124,20 +116,6 @@ class FileDetails extends Component {
       },
     });
     this.formRef.current.resetFields();
-  };
-
-  fetchDataTypeDetails = async () => {
-    try {
-      const response = await fetch('/api/file/read/dataTypes', { headers: authHeader() });
-      if (!response.ok) handleError(response);
-
-      const data = await response.json();
-      this.setState({ dataTypes: data });
-    } catch (error) {
-      console.log('-fetchDataTypeDetails-----------------------------------------');
-      console.dir({ error }, { depth: null });
-      console.log('------------------------------------------');
-    }
   };
 
   getFileDetails = async ({ assetId, applicationId }) => {
@@ -176,7 +154,6 @@ class FileDetails extends Component {
             owner: data.basic.owner,
             groupId: data.basic.groupId,
             layout: data.file_layouts,
-            licenses: data.file_licenses,
             supplier: data.basic.supplier,
             consumer: data.basic.consumer,
             relations: data.file_relations,
@@ -184,8 +161,8 @@ class FileDetails extends Component {
             isSuperFile: data.basic.isSuperFile,
             description: data.basic.description,
             superFileData: data.basic.superFileData,
+            licenses: data.basic?.metaData?.licenses || [],
             isAssociated: data.basic?.metaData?.isAssociated,
-            fileDataColHeaders: data.file_layouts.map((layout) => layout.name),
           },
         });
 
@@ -207,14 +184,6 @@ class FileDetails extends Component {
         });
 
         await this.getFileData(data.basic.name, data.basic.cluster_id);
-
-        if (data.basic.id && this.props.selectedDataflow) {
-          await this.getInheritedLicenses(
-            data.basic.id,
-            this.props.selectedAsset.nodeId,
-            this.props.selectedDataflow.id
-          );
-        }
 
         return data;
       } catch (error) {
@@ -289,46 +258,6 @@ class FileDetails extends Component {
     } catch (error) {
       console.log(error);
       message.error('There was an error deleting the file');
-    }
-  };
-
-  getLicenses = async () => {
-    try {
-      const response = await fetch('/api/file/read/licenses', { headers: authHeader() });
-      if (!response.ok) handleError(response);
-
-      const data = await response.json();
-
-      this.setState({
-        availableLicenses: data,
-        selectedRowKeys: this.state.file.licenses.map((license) => license.id),
-      });
-    } catch (error) {
-      console.log('-getLicenses-----------------------------------------');
-      console.dir({ error }, { depth: null });
-      console.log('------------------------------------------');
-
-      // message.error("There was an error deleting the file");
-    }
-  };
-
-  getInheritedLicenses = async (fileId, nodeId, dataflowId) => {
-    try {
-      // CREATING REQUEST URL TO GET JOB DETAILS
-      const queryStringParams = { fileId, app_id: this.props.applicationId, id: nodeId, dataflowId };
-      const queryString = new URLSearchParams(queryStringParams).toString();
-
-      const response = await fetch('/api/file/read/inheritedLicenses?' + queryString, {
-        headers: authHeader(),
-      });
-      if (!response.ok) handleError(response);
-
-      const data = await response.json();
-      this.setState({ file: { ...this.state.file, inheritedLicensing: data } });
-    } catch (error) {
-      console.log('-error-----------------------------------------');
-      console.dir({ error }, { depth: null });
-      console.log('------------------------------------------');
     }
   };
 
@@ -436,7 +365,6 @@ class FileDetails extends Component {
           id: fileInfo.basic.id,
           layout: fileInfo.file_layouts,
           validations: fileInfo.file_validations,
-          fileDataColHeaders: fileInfo.file_layouts.map((layout) => layout.name),
         },
       });
 
@@ -519,6 +447,10 @@ class FileDetails extends Component {
 
   getFileData = async (fileName, clusterId) => {
     try {
+      // do not reuest data if user has wrong permission
+      const canVIewData = canViewPII(this.props.user);
+      if (!canVIewData) return;
+
       if (!clusterId || !fileName) throw new Error('Filename or ClusterId is not provided');
 
       const response = await fetch('/api/hpcc/read/getData?fileName=' + fileName + '&clusterid=' + clusterId, {
@@ -527,13 +459,10 @@ class FileDetails extends Component {
       if (!response.ok) handleError(response);
 
       const rows = await response.json();
-      console.log('-rows-----------------------------------------');
-      console.dir({ rows }, { depth: null });
-      console.log('------------------------------------------');
 
       if (rows?.length > 0) {
         this.setState({
-          fileDataColHeaders: Object.keys(rows[0]),
+          fileColumns: Object.keys(rows[0]).map((field) => ({ title: field, dataIndex: field })),
           fileDataContent: rows,
           showFilePreview: true,
         });
@@ -548,8 +477,6 @@ class FileDetails extends Component {
 
   populateFileDetails = async () => {
     const formFieldsValue = this.formRef.current.getFieldsValue(); // will get all mounted fields value
-    console.log('-formFieldsValue-----------------------------------------');
-    console.dir({ formFieldsValue }, { depth: null });
 
     const fileDetails = {
       app_id: this.props.application.applicationId,
@@ -569,20 +496,17 @@ class FileDetails extends Component {
         application_id: this.props.application.applicationId,
         groupId: this.props.groupId || this.state.file.groupId,
         metaData: {
+          licenses: this.state.file.licenses,
           isAssociated: this.formRef.current.getFieldValue('fileSelected') || this.state.file.isAssociated, // field is not mounted so we take value separately
         },
       },
-      license: [],
+
       fields: this.state.file.layout,
       validation: this.state.file.validations,
       removeAssetId: this.formRef.current.getFieldValue('removeAssetId') || '', // Asset was a design file that got associated with existing in DB file
       renameAssetId: this.formRef.current.getFieldValue('renameAssetId') || '', // Asset was a design file that got associated with none-existing in DB file
     };
 
-    if (this?.licenseGridApi?.getSelectedNodes) {
-      fileDetails.license =
-        this.licenseGridApi.getSelectedNodes()?.map((node) => ({ name: node.data.name, url: node.data.url })) || [];
-    }
     console.log('-fileDetails-----------------------------------------');
     console.dir({ fileDetails }, { depth: null });
     console.log('------------------------------------------');
@@ -623,75 +547,33 @@ class FileDetails extends Component {
     this.setState({ dataAltered: true, errors: inputErrors.length > 0 });
   };
 
-  onGridReady = (grid) => grid.api.sizeColumnsToFit();
+  parseFileData = () => {
+    if (!this.state.showFilePreview) return [];
 
-  onLicenseGridReady = (params, licenses) => {
-    this.licenseGridApi = params.api;
-    this.licenseGridApi.sizeColumnsToFit();
+    const data = [];
 
-    this.licenseGridApi.forEachNode((node) => {
-      const license = licenses.find((license) => license.name === node.data.name);
-      if (license) this.licenseGridApi.selectNode(node, true);
-    });
-  };
-
-  fileDataColumns = ({ fileDataColHeaders, fileDataContent }) => {
-    const columns = [];
-
-    fileDataColHeaders.forEach((column) => {
-      //iterate through each Row[]
-      const rowType1 = fileDataContent?.[0]?.[column]?.Row;
-      const rowType2 = fileDataContent?.[0]?.[column];
-
-      let colObj = { headerName: column, field: column };
-
-      if (rowType1) {
-        colObj = {
-          headerName: column,
-          children: Object.keys(rowType1?.[0])?.map((key) => ({
-            headerName: key,
-            valueGetter: 'data.' + column + '.Row[0].' + key,
-          })),
-        };
-      } else if (rowType2 instanceof Object) {
-        colObj = {
-          headerName: column,
-          children: Object.keys(rowType2).map((key) => ({ headerName: key, field: column + '.' + key })),
-        };
-      }
-
-      columns.push(colObj);
+    this.state.fileDataContent.forEach((record, index) => {
+      let newRecord = { ...record, id: index };
+      this.state.fileColumns.forEach((column) => {
+        const recordType1 = record?.[column]?.Row;
+        const recordType2 = record?.[column];
+        if (recordType1) {
+          newRecord[column] = recordType1?.[0][column];
+        } else if (recordType2 instanceof Object) {
+          newRecord[column] = recordType2[column][column];
+        }
+      });
+      data.push(newRecord);
     });
 
-    return columns;
-  };
-
-  // TODO FIX THIS VALIDATOR
-  scopeValidator = (rule, value, callback) => {
-    const scope = this.props.user.organization + '::' + this.props.applicationTitle;
-    if (this.state.file.scope === scope.toLowerCase()) {
-      const error = new Error(
-        'Please enter a valid scope. The convention is <Organization Name>::<Application Name>::<File Type>'
-      );
-      callback(error);
-    } else {
-      callback();
-    }
+    return data;
   };
 
   render() {
-    const {
-      enableEdit,
-      addingNewAsset,
-      complianceTags,
-      showFilePreview,
-      confirmLoading,
-      availableLicenses,
-      fileDataContent,
-      disableReadOnlyFields,
-    } = this.state;
+    const { enableEdit, addingNewAsset, complianceTags, showFilePreview, confirmLoading, disableReadOnlyFields } =
+      this.state;
 
-    const { description, isSuperFile, layout, validations, inheritedLicensing, superFileData } = this.state.file;
+    const { description, isSuperFile, layout, validations, superFileData } = this.state.file;
 
     const VIEW_DATA_PERMISSION = canViewPII(this.props.user);
     const editingAllowed = hasEditPermission(this.props.user) || !this.props.viewMode;
@@ -740,7 +622,7 @@ class FileDetails extends Component {
         editable: editingAllowed,
         width: '15%',
         celleditorparams: {
-          values: this.state.file.fileDataColHeaders,
+          values: this.state.file?.fileColumn?.map((el) => el?.name),
         },
       },
       {
@@ -773,33 +655,31 @@ class FileDetails extends Component {
 
     const licenseColumns = [
       {
-        field: 'name',
-        cellRenderer: function (params) {
-          return '<a href=' + params.data.url + ' target="_blank">' + params.value + '</a>';
+        title: 'Name',
+        dataIndex: 'name',
+        width: '20%',
+        filters: [
+          {
+            text: 'Show matched only',
+            value: 'match',
+          },
+        ],
+        onFilter: (value, record) => this.state.file.licenses.includes(record.id),
+        shouldCellUpdate: () => false,
+        render: (text, record) => {
+          return (
+            <Typography.Link target="_blank" href={record.url}>
+              {text}
+            </Typography.Link>
+          );
         },
-        headerCheckboxSelection: enableEdit,
-        headerCheckboxSelectionFilteredOnly: enableEdit,
-        checkboxSelection: enableEdit,
       },
       {
-        field: 'description',
-        cellRenderer: (params) => params.value || '',
+        title: 'Description',
+        dataIndex: 'description',
+        shouldCellUpdate: () => false,
       },
     ];
-
-    const InheritedLicenses = (licenses) => {
-      if (!licenses?.relation?.length) return null;
-      const licenseItems = licenses.relation.map((license) => (
-        <Tag color="red" key={license}>
-          {license}
-        </Tag>
-      ));
-      return (
-        <div style={{ paddingBottom: '5px' }}>
-          <b>Inherited Licenses:</b> {licenseItems}
-        </div>
-      );
-    };
 
     const ComplianceInfo = (complianceTags) => {
       if (!complianceTags?.tags?.length) return null;
@@ -1022,13 +902,7 @@ class FileDetails extends Component {
                       className={!enableEdit ? 'read-only-input' : ''}
                     />
                   </Form.Item>
-                  <Form.Item
-                    name="scope"
-                    label="Scope"
-                    rules={[
-                      { required: enableEdit },
-                      //  { validator: this.scopeValidator } // TODO TEMP DISABLED
-                    ]}>
+                  <Form.Item name="scope" label="Scope" rules={[{ required: enableEdit }]}>
                     <Input
                       disabled={isAssociated}
                       className={!enableEdit ? 'read-only-input' : ''}
@@ -1187,21 +1061,21 @@ class FileDetails extends Component {
               </div>
             </TabPane>
             <TabPane tab="Permissable Purpose" key="4">
-              <InheritedLicenses relation={inheritedLicensing} />
-              <div
-                //  !TODO GET RID OF AgGridReact LIB
-                className="ag-theme-balham"
-                style={{ height: '400px', width: '100%' }}>
-                <AgGridReact
-                  rowSelection="multiple"
-                  columnDefs={licenseColumns}
-                  rowData={availableLicenses}
-                  suppressRowClickSelection={editingAllowed}
-                  defaultColDef={{ resizable: true, sortable: true }}
-                  onGridReady={(params) => this.onLicenseGridReady(params, this.state.file.licenses)}
-                  onGridColumnsChanged={(params) => this.onLicenseGridReady(params, this.state.file.licenses)}
-                />
-              </div>
+              <Table
+                size="small"
+                pagination={false}
+                scroll={{ y: '400px' }}
+                columns={licenseColumns}
+                rowKey={(record) => record.id}
+                dataSource={this.props.availableLicenses}
+                rowSelection={{
+                  type: 'checkbox',
+                  selectedRowKeys: this.state.file.licenses,
+                  onChange: (selectedRowKeys) =>
+                    this.setState({ file: { ...this.state.file, licenses: selectedRowKeys } }),
+                  getCheckboxProps: () => ({ disabled: !editingAllowed || !enableEdit }),
+                }}
+              />
             </TabPane>
             <TabPane tab="Validation Rules" key="5">
               <div className="ag-theme-balham" style={{ height: '415px', width: '100%' }}>
@@ -1219,17 +1093,14 @@ class FileDetails extends Component {
             </TabPane>
             {VIEW_DATA_PERMISSION && showFilePreview ? (
               <TabPane tab="File Preview" key="6">
-                <div className="ag-theme-balham" style={{ height: '415px', width: '100%' }}>
-                  <AgGridReact
-                    rowData={fileDataContent}
-                    onGridReady={this.onGridReady}
-                    defaultColDef={{ resizable: true }}
-                    columnDefs={this.fileDataColumns({
-                      fileDataColHeaders: this.state.fileDataColHeaders,
-                      fileDataContent: this.state.fileDataContent,
-                    })}
-                  />
-                </div>
+                <Table
+                  size="small"
+                  pagination={false}
+                  scroll={{ y: '400px' }}
+                  columns={this.state.fileColumns}
+                  rowKey={(record) => record.id}
+                  dataSource={this.parseFileData()}
+                />
               </TabPane>
             ) : null}
 
@@ -1249,7 +1120,7 @@ class FileDetails extends Component {
 function mapStateToProps(state, ownProps) {
   let { selectedAsset, newAsset = {}, clusterId } = state.assetReducer;
   const { user } = state.authenticationReducer;
-  const { application, clusters, consumers } = state.applicationReducer;
+  const { application, clusters, consumers, licenses } = state.applicationReducer;
 
   const { isNew = false, groupId = '' } = newAsset;
 
@@ -1264,6 +1135,7 @@ function mapStateToProps(state, ownProps) {
     clusterId,
     clusters,
     consumers,
+    availableLicenses: licenses,
   };
 }
 

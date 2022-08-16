@@ -128,6 +128,7 @@ class AppHeader extends Component {
     ) {
       this.props.dispatch(applicationActions.getClusters());
       this.props.dispatch(applicationActions.getConsumers());
+      this.props.dispatch(applicationActions.getLicenses());
     }
 
     if (this.props.newApplication) {
