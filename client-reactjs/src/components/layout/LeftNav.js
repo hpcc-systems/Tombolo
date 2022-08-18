@@ -121,6 +121,9 @@ class LeftNav extends Component {
               <Menu.Item key="8" icon={<i className="fa fa-fw fa-desktop" />}>
                 <Link to={'/admin/applications'}>Applications</Link>
               </Menu.Item>
+              <Menu.Item key="9" icon={<i className="fa fa-fw fa-balance-scale" />}>
+                <Link to={'/admin/constraints'}>Constraints</Link>
+              </Menu.Item>
             </>
           ) : null}
         </Menu>
