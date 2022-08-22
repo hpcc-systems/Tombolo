@@ -1,4 +1,4 @@
-@import "~antd/dist/antd.css";
+@import '~antd/dist/antd.css';
 :root {
   /* some colors from bootstrap */
   --primary: #007bff;
@@ -14,10 +14,6 @@
 body {
   margin: 0;
   overflow: hidden;
-}
-
-svg {
-  vertical-align: unset !important;
 }
 
 .logo {
@@ -145,9 +141,9 @@ svg {
   box-shadow: 0 1px 2px -2px rgba(0, 0, 0, 0.16), 0 3px 6px 0 rgba(0, 0, 0, 0.12), 0 5px 12px 4px rgba(0, 0, 0, 0.09);
 }
 
-.login-form-forgot{
+.login-form-forgot {
   display: block;
-  color:#007bff;
+  color: #007bff;
   cursor: pointer;
   text-align: right;
 }
@@ -350,7 +346,7 @@ path,
   color: white;
 }
 
-.leftNav-link{
+.leftNav-link {
   padding-left: 10px;
 }
 
@@ -371,8 +367,7 @@ path,
   border-color: #6c757d;
 }
 
-.ant-radio-group-solid
-  .ant-radio-button-wrapper-checked:not(.ant-radio-button-wrapper-disabled):hover {
+.ant-radio-group-solid .ant-radio-button-wrapper-checked:not(.ant-radio-button-wrapper-disabled):hover {
   color: #fff;
   background: #6c757d;
   border-color: #6c757d;
@@ -435,8 +430,8 @@ path,
 }
 
 .sidebar.active .btn.btn-primary:before {
-  content: "\f054";
-  font-family: "FontAwesome";
+  content: '\f054';
+  font-family: 'FontAwesome';
   left: 2px !important;
 }
 .sidebar.active .btn.btn-primary:after {
@@ -495,7 +490,7 @@ div.tooltip {
   pointer-events: none;
 }
 
-.formInModal *{
+.formInModal * {
   text-align: left;
 }
 
@@ -526,7 +521,7 @@ div.tooltip {
 }
 
 td.ant-table-row-cell-ellipsis::after {
-  content: "...";
+  content: '...';
   position: absolute;
   bottom: 16px;
 }
@@ -687,21 +682,13 @@ div.tooltip {
   line-height: 18px;
 }
 
-.noGutters .codemirror_MarkdownEditor .CodeMirror-sizer {
-  margin-left: 0 !important;
-}
-
-.noGutters .codemirror_MarkdownEditor .CodeMirror-gutters,
-.noGutters .codemirror_MarkdownEditor .CodeMirror-linenumber {
-  display: none;
-}
-.noScroll *{
+.noScroll * {
   max-width: 100%;
 }
 
 .noScroll *::-webkit-scrollbar {
-  width: 0;  /* Remove scrollbar space */
-  background: transparent;  /* Optional: just make scrollbar invisible */
+  width: 0; /* Remove scrollbar space */
+  background: transparent; /* Optional: just make scrollbar invisible */
 }
 /* Optional: show position indicator in red */
 .noScroll *::-webkit-scrollbar-thumb {
@@ -753,7 +740,7 @@ div.tooltip {
 
 .asset-action-icon {
   color: var(--primary);
-  cursor: "pointer";
+  cursor: 'pointer';
 }
 
 .ant-tree-list {
@@ -786,7 +773,7 @@ div.tooltip {
 
 .refresh-btn {
   border: none;
-  vertical-align: middle;
+  /* vertical-align: middle; */
 }
 
 .refresh-btn > span {
@@ -822,9 +809,10 @@ div.tooltip {
   width: 100%;
 }
 
-.read-only-input input, .read-only-input textarea{
+.read-only-input input,
+.read-only-input textarea {
   background: white !important;
-  border: none !important; 
+  border: none !important;
 }
 
 .read-only-textarea {
@@ -849,12 +837,12 @@ div.tooltip {
   border: none;
 }
 
-.markdown-tooltip{
+.markdown-tooltip {
   max-height: 400px;
   overflow: scroll;
 }
 
-.markdown-tooltip *{
+.markdown-tooltip * {
   color: #ffff !important;
   font-size: 14px !important;
   font-weight: normal !important;
@@ -871,25 +859,22 @@ div.tooltip {
   background-color: 'transparent' !important;
 }
 .custom-scroll::-webkit-scrollbar-corner {
-    background: rgba(0,0,0,0);
+  background: rgba(0, 0, 0, 0);
 }
 .custom-scroll::-webkit-scrollbar-thumb {
-  background-color: rgba(0,0,0,0.2);
+  background-color: rgba(0, 0, 0, 0.2);
   background-clip: content-box;
-  border-radius:40px ;
+  border-radius: 40px;
   height: 2px;
   width: 2px;
 }
-.custom-scroll::-webkit-scrollbar-thumb:hover{
-  background-color: rgba(0,0,0,0.4);
+.custom-scroll::-webkit-scrollbar-thumb:hover {
+  background-color: rgba(0, 0, 0, 0.4);
 }
+
 .ant-tree .ant-tree-node-content-wrapper .ant-tree-iconEle {
-  display: inline-block;
-  width: 24px;
-  height: 24px;
   line-height: 18px !important;
-  text-align: center;
-  vertical-align: top;
+  transform: translateY(3px);
 }
 
 .drop-target {
@@ -930,84 +915,84 @@ div.tooltip {
   color: var(--dark);
 }
 
-.assetDetail-buttons-wrapper-modal{
-  padding: 10px 0px 0px 40px; 
-   background: var(--light);
-   margin: 10px 0px 0px -16px;
-   display: flex;
-   place-items: center;
-   justify-content: space-between;
+.assetDetail-buttons-wrapper-modal {
+  padding: 10px 0px 0px 40px;
+  background: var(--light);
+  margin: 10px 0px 0px -16px;
+  display: flex;
+  place-items: center;
+  justify-content: space-between;
 }
 
-.assetDetails-content-wrapper-modal{
+.assetDetails-content-wrapper-modal {
   height: 55vh;
-   overflow:auto;  
-   padding-bottom : 20px;
+  overflow: auto;
+  padding-bottom: 20px;
 }
 
-.assetDetail-buttons-wrapper{
-   padding: 10px 0px 0px 20px; 
-   margin: 10px 0px 0px -16px;
-   display: flex;
-   place-items: center;
-   justify-content: space-between;
+.assetDetail-buttons-wrapper {
+  padding: 10px 0px 0px 20px;
+  margin: 10px 0px 0px -16px;
+  display: flex;
+  place-items: center;
+  justify-content: space-between;
 }
 
-.assetDetails-content-wrapper{
+.assetDetails-content-wrapper {
   height: 80vh;
-   overflow:auto;  
-   padding : 10px 10px 50px 15px;
-   margin-left:0;
+  overflow: auto;
+  padding: 10px 10px 50px 15px;
+  margin-left: 0;
 }
 
-.assetTitle{
+.assetTitle {
   margin-top: 10px;
   padding: 5px 15px;
   background: var(--light);
   font-weight: 600;
 }
 
-.graphNotice{
+.graphNotice {
   right: 40vw;
   min-width: 460px;
 }
 
-.description-text *{
+.description-text * {
   font-size: 14px !important;
-  font-weight: 400 !important;;
-  text-align: left !important;;
-  display: inline !important;;
+  font-weight: 400 !important;
+  text-align: left !important;
+  display: inline !important;
 }
 
-.nav-link > .fa{
+.nav-link > .fa {
   font-size: 1.33333333em;
 }
 .ant-cascader-menu {
   height: 40vh;
-  max-width:200px;
+  max-width: 200px;
   min-width: 130px;
 }
 .x6-node .btn {
   cursor: pointer;
 }
 
-.jobExecutionDetails_antdTable_selectedRow > td{
- background : lightgray !important;
- font-weight: bold;
+.jobExecutionDetails_antdTable_selectedRow > td {
+  background: lightgray !important;
+  font-weight: bold;
 }
-.jobExecutionDetails_antdTable_child > *{
+.jobExecutionDetails_antdTable_child > * {
   border-bottom: 1px dotted lightgray !important;
   padding-bottom: 15px !important;
 }
 /* To reduce gap between label and input field */
-.MultiLineFormItem > div:first-child{
+.MultiLineFormItem > div:first-child {
   height: 30px;
 }
 
-.left-nav-title{
+.left-nav-title {
   padding: 0 1rem;
   margin-top: 1.5rem;
-  margin-bottom: 0,25rem;
-  color:#6c757d !important;
+  margin-bottom: 0, 25rem;
+  color: #6c757d !important;
   font-size: 24px !important;
 }

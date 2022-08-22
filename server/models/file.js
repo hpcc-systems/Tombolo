@@ -30,9 +30,8 @@ module.exports = (sequelize, DataTypes) => {
   file.associate = function(models) {
   
     file.hasMany(models.file_layout,{ foreignKey:'file_id', onDelete: 'CASCADE' });
-    file.hasMany(models.file_license,{ foreignKey:'file_id', onDelete: 'CASCADE', });
-    file.hasMany(models.file_validation,{ foreignKey:'file_id', onDelete: 'CASCADE', });
-    file.hasMany(models.indexes,{ foreignKey:'parentFileId', onDelete: 'CASCADE', });
+    file.hasMany(models.file_validation,{ foreignKey:'file_id', onDelete: 'CASCADE' });
+    file.hasMany(models.indexes,{ foreignKey:'parentFileId', onDelete: 'CASCADE' });
     file.hasMany(models.consumer_object,{ foreignKey:'consumer_id', onDelete: 'CASCADE' });
 
     file.belongsTo(models.application, { foreignKey: 'application_id' });    

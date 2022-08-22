@@ -16,7 +16,6 @@ import {
   FilePdfOutlined,
   AreaChartOutlined,
 } from '@ant-design/icons';
-import { store } from '../../../redux/store/Store';
 import SelectDetailsForPdfDialog from '../Assets/pdf/SelectDetailsForPdfDialog';
 import { getNestedAssets } from '../Assets/pdf/downloadPdf';
 import ReactMarkdown from 'react-markdown';
@@ -25,12 +24,11 @@ import DeleteAsset from '../../common/DeleteAsset';
 function AssetsTable({ openGroup, handleEditGroup, refreshGroups }) {
   const [assets, setAssets] = useState([]);
 
-  const { authReducer, applicationReducer, assetReducer, groupsMoveReducer, groupsReducer } = useSelector((state) => ({
+  const { authReducer, applicationReducer, assetReducer, groupsReducer } = useSelector((state) => ({
     groupsReducer: state.groupsReducer,
     authReducer: state.authenticationReducer,
     applicationReducer: state.applicationReducer,
     assetReducer: state.assetReducer,
-    groupsMoveReducer: state.groupsMoveReducer,
   }));
 
   const selectedGroup = groupsReducer;
@@ -74,7 +72,7 @@ function AssetsTable({ openGroup, handleEditGroup, refreshGroups }) {
 
   useEffect(() => {
     fetchDataAndRenderTable();
-  }, [applicationId, assetTypeFilter, keywords, groupsMoveReducer, selectedGroup?.selectedKeys?.id]);
+  }, [applicationId, assetTypeFilter, keywords, selectedGroup?.selectedKeys?.id]);
 
   //Execute generate pdf function after asset is selected
   useEffect(() => {
@@ -85,13 +83,6 @@ function AssetsTable({ openGroup, handleEditGroup, refreshGroups }) {
 
   //When edit icon is clicked
   const handleEdit = (id, type, action, vizUrl) => {
-    if (action === 'edit') {
-      store.dispatch({
-        type: Constants.ENABLE_EDIT,
-        payload: true,
-      });
-    }
-
     dispatch(assetsActions.assetSelected(id, applicationId, ''));
 
     switch (type) {

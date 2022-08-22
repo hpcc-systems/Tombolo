@@ -6,111 +6,62 @@ export const applicationActions = {
   newApplicationAdded,
   applicationUpdated,
   applicationDeleted,
-  topNavChanged,
   getClusters,
   getConsumers,
+  getLicenses,
 };
 
 function applicationSelected(applicationId, applicationTitle) {
-  return (dispatch) => {
-    dispatch(request({ applicationId, applicationTitle }));
+  return {
+    type: Constants.APPLICATION_SELECTED,
+    application: { applicationId, applicationTitle },
   };
-  function request(application) {
-    return {
-      type: Constants.APPLICATION_SELECTED,
-      application,
-    };
-  }
 }
 
 function newApplicationAdded(applicationId, applicationTitle) {
-  return (dispatch) => {
-    dispatch(request({ applicationId, applicationTitle }));
+  return {
+    type: Constants.NEW_APPLICATION_ADDED,
+    newApplication: { applicationId, applicationTitle },
   };
-  function request(newApplication) {
-    return {
-      type: Constants.NEW_APPLICATION_ADDED,
-      newApplication,
-    };
-  }
 }
 
 function applicationUpdated(applicationId, applicationTitle) {
-  return (dispatch) => {
-    dispatch(request({ applicationId, applicationTitle }));
+  return {
+    type: Constants.APPLICATION_UPDATED,
+    updatedApplication: { applicationId, applicationTitle },
   };
-  function request(updatedApplication) {
-    return {
-      type: Constants.APPLICATION_UPDATED,
-      updatedApplication,
-    };
-  }
 }
 
 function applicationDeleted(applicationId) {
-  return (dispatch) => {
-    dispatch(request(applicationId));
+  return {
+    type: Constants.APPLICATION_DELETED,
+    applicationId,
   };
-  function request(applicationId) {
-    return {
-      type: Constants.APPLICATION_DELETED,
-      applicationId,
-    };
-  }
-}
-
-function topNavChanged(topNav) {
-  return (dispatch) => {
-    dispatch(request({ topNav }));
-  };
-  function request(topNav) {
-    return { type: Constants.TOP_NAV_CHANGED, topNav };
-  }
 }
 
 function getClusters() {
   return (dispatch) => {
-    fetch('/api/hpcc/read/getClusters', {
-      headers: authHeader(),
-    })
-      .then((response) => {
-        if (response.ok) {
-          return response.json();
-        }
-        handleError(response);
-      })
-      .then((clusters) => {
-        dispatch(success(clusters));
-      })
-      .catch((error) => {
-        console.log(error);
-      });
+    fetch('/api/hpcc/read/getClusters', { headers: authHeader() })
+      .then((response) => (response.ok ? response.json() : handleError(response)))
+      .then((clusters) => dispatch({ type: Constants.CLUSTERS_RETRIEVED, clusters }))
+      .catch(console.log);
   };
-
-  function success(clusters) {
-    return { type: Constants.CLUSTERS_RETRIEVED, clusters };
-  }
 }
 
 function getConsumers() {
   return (dispatch) => {
-    fetch('/api/consumer/consumers', {
-      headers: authHeader(),
-    })
-      .then((response) => {
-        if (response.ok) {
-          return response.json();
-        }
-        handleError(response);
-      })
-      .then((consumers) => {
-        dispatch(success(consumers));
-      })
-      .catch((error) => {
-        console.log(error);
-      });
+    fetch('/api/consumer/consumers', { headers: authHeader() })
+      .then((response) => (response.ok ? response.json() : handleError(response)))
+      .then((consumers) => dispatch({ type: Constants.CONSUMERS_RETRIEVED, consumers }))
+      .catch(console.log);
   };
-  function success(consumers) {
-    return { type: Constants.CONSUMERS_RETRIEVED, consumers };
-  }
+}
+
+function getLicenses() {
+  return (dispatch) => {
+    fetch('/api/file/read/licenses', { headers: authHeader() })
+      .then((response) => (response.ok ? response.json() : handleError(response)))
+      .then((licenses) => dispatch({ type: Constants.LICENSES_RETRIEVED, licenses }))
+      .catch(console.log);
+  };
 }

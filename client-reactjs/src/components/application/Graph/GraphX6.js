@@ -48,7 +48,11 @@ function GraphX6({ readOnly = false, monitoring, statuses }) {
   const [sync, setSync] = useState({ error: '', loading: false });
   const [configDialog, setConfigDialog] = useState({ ...defaultState });
 
-  const { applicationId, dataflowId, clusterId } = useSelector((state) => state.dataflowReducer);
+  const { applicationId, dataflowId, clusterId } = useSelector((state) => ({
+    applicationId: state.applicationReducer?.application?.applicationId,
+    dataflowId: state.dataflowReducer?.id,
+    clusterId: state.dataflowReducer?.clusterId,
+  }));
 
   const handleContextMenu = (action, payload) => {
     if (action === 'openDialog') {

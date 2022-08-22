@@ -206,13 +206,13 @@ const FileStatus = ({ form, enableEdit, branchOrTagName }) => {
     if (fileExist.status === 'ok') {
       return (
         <>
-          <CheckCircleOutlined style={{ color: 'green', verticalAlign: 0 }} /> file exists{' '}
+          <CheckCircleOutlined style={{ color: 'green' }} /> file exists{' '}
         </>
       );
     } else {
       return (
         <>
-          <CloseCircleOutlined style={{ color: 'red', verticalAlign: 0 }} />
+          <CloseCircleOutlined style={{ color: 'red' }} />
           file was not found, please check your credentials
         </>
       );

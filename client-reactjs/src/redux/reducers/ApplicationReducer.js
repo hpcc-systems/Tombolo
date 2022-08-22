@@ -2,12 +2,12 @@ import { Constants } from '../../components/common/Constants';
 
 const initialState = {
   application: {},
-  selectedTopNav: '',
   newApplication: '',
   updatedApplication: '',
   deletedApplicationId: '',
   clusters: [],
   consumers: [],
+  licenses: [],
 };
 
 export function applicationReducer(state = initialState, action) {
@@ -16,11 +16,6 @@ export function applicationReducer(state = initialState, action) {
       return {
         ...state,
         application: action.application,
-      };
-    case Constants.TOP_NAV_CHANGED:
-      return {
-        ...state,
-        selectedTopNav: action.selectedTopNav,
       };
     case Constants.NEW_APPLICATION_ADDED:
       return {
@@ -52,6 +47,11 @@ export function applicationReducer(state = initialState, action) {
       return {
         ...state,
         consumers: action.consumers,
+      };
+    case Constants.LICENSES_RETRIEVED:
+      return {
+        ...state,
+        licenses: action.licenses,
       };
     default:
       return state;

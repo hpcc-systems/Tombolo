@@ -5,14 +5,11 @@ import { hasEditPermission } from '../../common/AuthUtil.js';
 import AssociatedDataflows from '../AssociatedDataflows';
 import EditableTable from '../../common/EditableTable.js';
 import { eclTypes, omitDeep } from '../../common/CommonUtil.js';
-import 'ag-grid-community/dist/styles/ag-grid.css';
-import 'ag-grid-community/dist/styles/ag-theme-balham.css';
-import { MarkdownEditor } from '../../common/MarkdownEditor.js';
+import MonacoEditor from '../../common/MonacoEditor.js';
 import { connect } from 'react-redux';
 import { assetsActions } from '../../../redux/actions/Assets';
 import { debounce } from 'lodash';
-import { store } from '../../../redux/store/Store';
-import { Constants } from '../../common/Constants';
+
 import ReactMarkdown from 'react-markdown';
 import Files from './Files';
 
@@ -57,37 +54,13 @@ class QueryDetails extends PureComponent {
       this.setClusters();
     }
 
-    //Getting global state
-    const { viewOnlyModeReducer } = store.getState();
-    if (viewOnlyModeReducer.addingNewAsset) {
-      this.setState({
-        addingNewAsset: true,
-      });
-    }
-    if (viewOnlyModeReducer.editMode) {
-      this.setState({
-        enableEdit: viewOnlyModeReducer.editMode,
-        editing: true,
-      });
-    } else {
-      this.setState({
-        enableEdit: viewOnlyModeReducer.editMode,
-      });
-    }
+    const assetId = this.props?.selectedAsset?.id || this.props.match?.params?.assetId;
+    if (!assetId) this.setState({ addingNewAsset: true, enableEdit: true, editing: true });
   }
 
   //Unmount phase
   //Component will unmount
-  componentWillUnmount() {
-    store.dispatch({
-      type: Constants.ENABLE_EDIT,
-      payload: false,
-    });
-    store.dispatch({
-      type: Constants.ADD_ASSET,
-      payload: false,
-    });
-  }
+  componentWillUnmount() {}
 
   getQueryDetails() {
     if (this.props.selectedAsset && !this.props.isNew) {
@@ -529,8 +502,6 @@ class QueryDetails extends PureComponent {
 
     //Function to make fields editable
     const makeFieldsEditable = () => {
-      // editableMode();
-
       this.setState({
         enableEdit: !this.state.enableEdit,
         editing: true,
@@ -741,13 +712,7 @@ class QueryDetails extends PureComponent {
 
                 <Form.Item label="Description" name="description">
                   {this.state.enableEdit ? (
-                    <MarkdownEditor
-                      id="query_desc"
-                      name="description"
-                      onChange={this.onChange}
-                      targetDomId="queryDescr"
-                      disabled={!editingAllowed}
-                    />
+                    <MonacoEditor onChange={this.onChange} targetDomId="queryDescr" />
                   ) : (
                     <div className="read-only-markdown">
                       <ReactMarkdown source={this.state.query.description} />

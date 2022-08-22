@@ -28,17 +28,17 @@ const config = {
   status: {
     saved: (
       <Tooltip title="Job was successfully saved">
-        <CheckCircleOutlined style={{ color: 'green', verticalAlign: 0 }} />
+        <CheckCircleOutlined style={{ color: 'green' }} />
       </Tooltip>
     ),
     error: (
       <Tooltip title="Failed to save a job">
-        <CloseCircleOutlined style={{ color: 'red', verticalAlign: 0 }} />
+        <CloseCircleOutlined style={{ color: 'red' }} />
       </Tooltip>
     ),
     exists: (
       <Tooltip title="This job is already added">
-        <ExclamationCircleOutlined style={{ color: '#faad14', verticalAlign: 0 }} />
+        <ExclamationCircleOutlined style={{ color: '#faad14' }} />
       </Tooltip>
     ),
   },

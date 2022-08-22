@@ -6,7 +6,7 @@ import { useHistory } from 'react-router-dom';
 import ReactMarkdown from 'react-markdown';
 
 //Local Imports
-import { MarkdownEditor } from '../../common/MarkdownEditor.js';
+import MonacoEditor from '../../common/MonacoEditor.js';
 import { authHeader } from '../../common/AuthHeader.js';
 import FileTemplateTable from './FileTemplate_filesTab';
 import FileTemplateLayout from './FileTemplate_layoutTab.jsx';
@@ -51,7 +51,7 @@ function FileTemplate({ match, selectedAsset = {}, displayingInModal, onClose })
   if asset id is 'undefined' it means that we are creating new asset. if asset id is wrong, we will show errors that we cant find asset with that id
   */
   const applicationId = application?.applicationId || match?.params?.applicationId;
-  const assetId = selectedAsset?.id || match?.params?.fileId;
+  const assetId = selectedAsset?.id || match?.params?.assetId;
 
   const history = useHistory();
 
@@ -550,7 +550,7 @@ function FileTemplate({ match, selectedAsset = {}, displayingInModal, onClose })
 
               <Form.Item label="Description" name="description" className="markdown-editor">
                 {enableEdit ? (
-                  <MarkdownEditor id="file_desc" name="description" targetDomId="fileDescr" />
+                  <MonacoEditor targetDomId="fileDescr" />
                 ) : (
                   <div className="read-only-markdown">
                     <ReactMarkdown source={form.getFieldValue('description')} />

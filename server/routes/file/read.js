@@ -7,7 +7,6 @@ let Application = models.application;
 let UserApplication = models.user_application;
 let File = models.file;
 let FileLayout = models.file_layout;
-let FileLicense = models.file_license;
 let FileValidation = models.file_validation;
 let License = models.license;
 var Cluster = models.cluster;
@@ -32,6 +31,7 @@ const { body, query, check, validationResult } = require('express-validator');
 //let FileTree = require('../../models/File_Tree');
 const fileService = require('./fileservice');
 const axios = require('axios');
+const { push } = require('../../config/logger');
 
 router.post( '/superfile_meta',
   [body('superFileAssetId').isUUID(4).withMessage('Invalid asset id')],
@@ -346,54 +346,36 @@ router.get('/getSubFiles',[
   }
 });
 
-exports.updateFileDetails = (fileId, applicationId, req) => {
-  let fieldsToUpdate = {"file_id"  : fileId, "application_id" : applicationId};
-  return new Promise((resolve, reject) => {
-    FileLayout.findOrCreate({
-      where:{application_id:applicationId, file_id: fileId},
-      defaults:{
-        application_id: applicationId,
-        file_id: fileId,
-        fields: JSON.stringify(req.body.file.fields)
-      }
-    }).then(function(result) {
-      let fileLayoutId = result[0].id;
-      if(!result[1]) {
-        console.log("updating layout: "+fileLayoutId);
-        return FileLayout.update({fields:JSON.stringify(req.body.file.fields)}, {where: {id: fileLayoutId}});
-      }
-    }).then(function(fileLayout) {
-      FileLicense.destroy(
-          {where:{file_id: fileId}}
-      ).then(function(deleted) {
-      var fileLicensToSave = hpccUtil.updateCommonData(req.body.file.license, fieldsToUpdate);
-      return FileLicense.bulkCreate(
-          fileLicensToSave,
-          {updateOnDuplicate: ["name", "url"]}
-      )  })
-    }).then(function(fileFieldRelation) {
-      var fileValidationsToSave = hpccUtil.updateCommonData(req.body.file.validation, fieldsToUpdate);
-      return FileValidation.bulkCreate(
-          fileValidationsToSave,
-          {updateOnDuplicate: ["rule_name", "rule_field", "rule_test", "rule_fix"]}
-      )
-    }).then(function(fileFieldValidation) {
-      if(req.body.file.consumer) {
-        return ConsumerObject.bulkCreate(
-        {
-          "consumer_id" : req.body.file.consumer.id,
-          "object_id" : fileId,
-          "object_type" : "file"
-        }
-        )
-      }
-    }).then(function(fieldValidation) {
-      resolve({"result":"success", "fileId":fileId, "title":req.body.file.basic.title, "name": req.body.file.basic.name})
-    }), function(err) {
-      reject(err)
-    }
-  })
-}
+exports.updateFileDetails = async (fileId, applicationId, req) => {
+  const fieldsToUpdate = { file_id: fileId, application_id: applicationId };
+  const { fields, license, validation, consumer, basic } = req.body.file;
+
+  // Update layout
+  const layoutFields = {
+    application_id: applicationId,
+    fields: JSON.stringify(fields),
+    file_id: fileId,
+  };
+
+  let [layout, isLayoutCreated] = await FileLayout.findOrCreate({
+    where: { application_id: applicationId, file_id: fileId },
+    defaults: layoutFields,
+  });
+
+  if (!isLayoutCreated) layout = await layout.update(layoutFields);
+
+  // create validoations
+  const newValidations = validation.map((validation) => ({ ...validation, ...fieldsToUpdate }));
+  await FileValidation.bulkCreate(newValidations, {
+    updateOnDuplicate: ['rule_name', 'rule_field', 'rule_test', 'rule_fix'],
+  });
+
+  // update Consumer
+  if (consumer) {
+    await ConsumerObject.bulkCreate({ consumer_id: consumer.id, object_id: fileId, object_type: 'file' });
+  }
+  return { result: 'success', fileId: fileId, title: basic.title, name: basic.name };
+};
 
 router.post('/saveFile', [
     body('id')
@@ -420,7 +402,6 @@ router.post('/saveFile', [
         await Promise.all([
           JobFile.destroy({ where: { file_id: removeAssetId } }),
           FileLayout.destroy({ where: { file_id: removeAssetId } }),
-          FileLicense.destroy({ where: { file_id: removeAssetId } }),
           FileValidation.destroy({ where: { file_id: removeAssetId } }),
           File.destroy({ where: { id: removeAssetId, application_id } }),
         ]);
@@ -475,7 +456,6 @@ router.post('/delete', [
     await Promise.all([
       File.destroy({ where: { id: fileId, application_id } }),
       FileLayout.destroy({ where: { file_id: fileId } }),
-      FileLicense.destroy({ where: { file_id: fileId } }),
       FileValidation.destroy({ where: { file_id: fileId } }),
       ConsumerObject.destroy({ where: { object_id: fileId, object_type: 'file' } }),
     ]);
@@ -529,6 +509,8 @@ router.get('/downloadSchema', [
 
 });
 
+
+// NOT IN USE
 router.get('/inheritedLicenses', [
   query('app_id')
     .isUUID(4).withMessage('Invalid application id'),
@@ -541,24 +523,30 @@ router.get('/inheritedLicenses', [
   if (!errors.isEmpty()) {
     return res.status(422).json({ success: false, errors: errors.array() });
   }
-  let results = [];
+ 
   try {
     var parentIds = await getFileRelationHierarchy(req.query.app_id, req.query.fileId, req.query.id, req.query.dataflowId);
 
     File.findAll(
     {
         where:{"id": {[Op.in]:parentIds}},
-        attributes:["id", "title", "name"]
+        attributes:["metaData"]
     }
     ).then(async function(files) {
-      let licenses = new Set();
-      for(const file of files) {
-        var fileLicenses = await FileLicense.findAll({where:{"file_id":file.id}});
-        fileLicenses.forEach(function (fileLicense) {
-            licenses.add(fileLicense.name)
-        });
-      }
-      res.json(Array.from(licenses));
+
+      if (files.length === 0) return res.json([]);
+
+      let licenses = files.reduce((acc, file) => {
+        if (file.metaData?.licenses) {
+          acc.push(...file.metaData.licenses);
+        }
+        return acc;
+      }, []);
+      
+      licenses = [...new Set(licenses)]; // remove duplicates;
+
+      res.json(licenses);
+      
     })
     .catch(function(err) {
       console.log(err);
@@ -567,46 +555,6 @@ router.get('/inheritedLicenses', [
   } catch (err) {
     console.log('err', err);
     return res.status(500).json({ success: false, message: "Error occured while retrieving licenses" });
-  }
-});
-
-router.get('/fileLicenseCount', [
-  query('app_id')
-    .isUUID(4).withMessage('Invalid application id'),
-  ], (req, res) => {
-  const errors = validationResult(req).formatWith(validatorUtil.errorFormatter);
-  if (!errors.isEmpty()) {
-    return res.status(422).json({ success: false, errors: errors.array() });
-  }
-  try {
-      var result = {};
-      FileLicense.findAll({
-          where:{"application_id":req.query.app_id},
-          group: ['name'],
-          attributes: ['name', [Sequelize.fn('COUNT', 'name'), 'fileCount']],
-        }).then(function (licenseCount) {
-            result.licenseFileCount=licenseCount;
-            File.findAndCountAll({
-              where:{
-                  "application_id":req.query.app_id,
-                  "id": {
-                  [Op.notIn]: Sequelize.literal(
-                      '( SELECT file_id ' +
-                          'FROM file_license ' +
-                         'WHERE application_id = "' + req.query.app_id +
-                      '")')
-                  }
-              }
-          }).then(function (file) {
-                result.nonLicensefileCount=file.count;
-                res.json(result);
-          })
-      })
-      .catch(function(err) {
-          console.log(err);
-      });
-  } catch (err) {
-      console.log('err', err);
   }
 });
 
@@ -733,50 +681,7 @@ router.get('/getFileLayoutByDataType', [
   }
 });
 
-router.get('/LicenseFileList', [
-  query('app_id')
-    .isUUID(4).withMessage('Invalid application id'),
-  query('name')
-    .isUUID(4).withMessage('Invalid name'),
-  ], (req, res) => {
-    const errors = validationResult(req).formatWith(validatorUtil.errorFormatter);
-    if (!errors.isEmpty()) {
-      return res.status(422).json({ success: false, errors: errors.array() });
-    }
-    try {
-      if(req.query.name=="No License")
-      {
-          File.findAll(
-              {where:{
-                  "application_id":req.query.app_id,
-                  "id": {
-                  [Op.notIn]: Sequelize.literal(
-                      '( SELECT file_id ' +
-                          'FROM file_license ' +
-                         'WHERE application_id = "' + req.query.app_id +
-                      '")')
-                  }
-              }
-          }).then(function(files) {
-              res.json(files);
-          })
-          .catch(function(err) {
-              console.log(err);
-          });
-      }
-      else{
-          File.findAll({where:{"$file_licenses.name$":req.query.name,"application_id":req.query.app_id},
-          include: [FileLicense]}).then(function(files) {
-              res.json(files);
-          })
-          .catch(function(err) {
-              console.log(err);
-          });
-      }
-  } catch (err) {
-      console.log('err', err);
-  }
-});
+
 
 router.get('/dataTypes', (req, res) => {
   try {

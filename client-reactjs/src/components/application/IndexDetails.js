@@ -6,12 +6,11 @@ import { eclTypes } from '../common/CommonUtil.js';
 import { omitDeep } from '../common/CommonUtil.js';
 import AssociatedDataflows from './AssociatedDataflows';
 import EditableTable from '../common/EditableTable.js';
-import { MarkdownEditor } from '../common/MarkdownEditor.js';
+import MonacoEditor from '../common/MonacoEditor.js';
 import { connect } from 'react-redux';
 import { assetsActions } from '../../redux/actions/Assets';
 import { debounce } from 'lodash';
-import { store } from '../../redux/store/Store';
-import { Constants } from '../common/Constants';
+
 import ReactMarkdown from 'react-markdown';
 import DeleteAsset from '../common/DeleteAsset/index.js';
 
@@ -67,39 +66,14 @@ class IndexDetails extends PureComponent {
     }
     this.getFiles();
 
-    //Getting global state
-    const { viewOnlyModeReducer } = store.getState();
-    if (viewOnlyModeReducer.addingNewAsset) {
-      this.setState({
-        addingNewAsset: true,
-      });
-    }
-    if (viewOnlyModeReducer.editMode) {
-      this.setState({
-        enableEdit: viewOnlyModeReducer.editMode,
-        editing: true,
-      });
-    } else {
-      this.setState({
-        enableEdit: viewOnlyModeReducer.editMode,
-      });
-    }
+    const assetId = this.props?.selectedAsset?.id || this.props.match?.params?.assetId;
+    if (!assetId) this.setState({ addingNewAsset: true, enableEdit: true, editing: true });
   }
 
   //Unmounting phase
 
   //Component will unmount
-  componentWillUnmount() {
-    store.dispatch({
-      type: Constants.ENABLE_EDIT,
-      payload: false,
-    });
-
-    store.dispatch({
-      type: Constants.ADD_ASSET,
-      payload: false,
-    });
-  }
+  componentWillUnmount() {}
 
   getIndexDetails() {
     if (this.props.selectedAsset && !this.props.isNew) {
@@ -525,8 +499,6 @@ class IndexDetails extends PureComponent {
 
     //Function to make fields editable
     const makeFieldsEditable = () => {
-      // editableMode();
-
       this.setState({
         enableEdit: !this.state.enableEdit,
         editing: true,
@@ -535,8 +507,6 @@ class IndexDetails extends PureComponent {
 
     //Switch to view only mode
     const switchToViewOnly = () => {
-      // readOnlyMode()
-
       this.setState({
         enableEdit: !this.state.enableEdit,
         editing: false,
@@ -740,13 +710,7 @@ class IndexDetails extends PureComponent {
 
                 <Form.Item label="Description" name="description">
                   {this.state.enableEdit ? (
-                    <MarkdownEditor
-                      id="query_desc"
-                      name="description"
-                      onChange={this.onChange}
-                      targetDomId="indexDescr"
-                      disabled={!editingAllowed}
-                    />
+                    <MonacoEditor targetDomId="indexDescr" onChange={this.onChange} />
                   ) : (
                     <div className="read-only-markdown">
                       <ReactMarkdown source={this.state.index.description} />

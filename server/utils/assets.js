@@ -1,7 +1,6 @@
 var models  = require('../models');
 let File = models.file;
 let FileLayout = models.file_layout;
-let FileLicense = models.file_license;
 const FileMonitoring = models.fileMonitoring;
 const FileTemplate = models.fileTemplate;
 let FileValidation = models.file_validation;
@@ -96,16 +95,13 @@ exports.fileInfo = (applicationId, file_id) => {
         let fileLayoutObj = (dbFileLayout.length == 1 && dbFileLayout[0].fields) ? JSON.parse(dbFileLayout[0].fields) : fileLayout;
         results.file_layouts = fileLayoutObj.filter(item => item.name != '__fileposition__');
 
-        FileLicense.findAll({where:{"application_id":applicationId, "file_id":file_id}}).then(function(fileLicenses) {
-          results.file_licenses = fileLicenses;
-            FileValidation.findAll({where:{"application_id":applicationId, "file_id":file_id}}).then(function(fileValidations) {
-                results.file_validations = fileValidations.filter(item => item.name != '__fileposition__');
-            }).then(function(fileFieldRelation) {
-              ConsumerObject.findAll({where:{"object_id":file_id, "object_type":"file"}}).then(function(fileConsumers) {
-                results.consumers = fileConsumers;
-                resolve(results);
-              });
-            });
+        FileValidation.findAll({where:{"application_id":applicationId, "file_id":file_id}}).then(function(fileValidations) {
+            results.file_validations = fileValidations.filter(item => item.name != '__fileposition__');
+        }).then(function(fileFieldRelation) {
+          ConsumerObject.findAll({where:{"object_id":file_id, "object_type":"file"}}).then(function(fileConsumers) {
+            results.consumers = fileConsumers;
+            resolve(results);
+          });
         });
       })
     })

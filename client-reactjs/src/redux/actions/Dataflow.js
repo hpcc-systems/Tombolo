@@ -1,17 +1,6 @@
 import { Constants } from '../../components/common/Constants';
 
 export const dataflowAction = {
-  dataflowSelected,
+  dataflowSelected: (dataflow) => ({ type: Constants.DATAFLOW_SELECTED, payload: dataflow }),
+  dataflowReset: () => ({ type: Constants.DATAFLOW_RESET }),
 };
-
-function dataflowSelected(applicationId, applicationTitle, dataflowId, clusterId, user) {
-  return (dispatch) => {
-    dispatch(request({ applicationId, applicationTitle, dataflowId, user, clusterId }));
-  };
-  function request(selectedDataflow) {
-    return {
-      type: Constants.DATAFLOW_SELECTED,
-      selectedDataflow,
-    };
-  }
-}
