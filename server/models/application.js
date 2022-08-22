@@ -48,7 +48,6 @@ module.exports = (sequelize, DataTypes) => {
     /* FILE TEMPLATE*/
     application.hasMany(models.fileTemplate, { foreignKey: 'application_id', onDelete: 'CASCADE' });
     application.hasMany(models.fileTemplateLayout, { foreignKey: 'application_id', onDelete: 'CASCADE' });
-    application.hasMany(models.fileTemplate_license, { foreignKey: 'application_id', onDelete: 'CASCADE' });
   };
 
 

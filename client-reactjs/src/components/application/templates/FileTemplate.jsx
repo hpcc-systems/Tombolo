@@ -39,11 +39,12 @@ const capitalizeString = (text) => {
 };
 
 function FileTemplate({ match, selectedAsset = {}, displayingInModal, onClose }) {
-  const { clusters, application, groupId, user } = useSelector((state) => ({
+  const { clusters, application, groupId, user, licenses } = useSelector((state) => ({
     groupId: state.groupsReducer?.selectedKeys?.id,
     user: state.authenticationReducer.user,
     clusters: state.applicationReducer.clusters,
     application: state.applicationReducer.application,
+    licenses: state.applicationReducer.licenses,
   }));
 
   /*Asset can be passed from graph (selectedAsset prop), via asset table (params), and when link was shared (params).
@@ -195,7 +196,6 @@ function FileTemplate({ match, selectedAsset = {}, displayingInModal, onClose })
       description,
       searchString,
       fileNamePattern,
-      licenses: selectedLicenses,
       fileLayoutData: layoutData,
       application_id: applicationId,
       sampleLayoutFile: sampleFileForLayout,
@@ -207,6 +207,7 @@ function FileTemplate({ match, selectedAsset = {}, displayingInModal, onClose })
         lzPath: landingZoneMonitoringDetails.landingZonePath,
         directory: dirToMonitor,
         monitorSubDirs: shouldMonitorSubDirs,
+        licenses: selectedLicenses,
       },
     });
     try {
@@ -272,7 +273,7 @@ function FileTemplate({ match, selectedAsset = {}, displayingInModal, onClose })
         return response.json();
       })
       .then(async (data) => {
-        const { fileMonitoringTemplate, machine, monitorSubDirs, landingZone, directory } = data.metaData;
+        const { fileMonitoringTemplate, machine, monitorSubDirs, landingZone, directory, licenses } = data.metaData;
         setSampleFileForLayout(data.sampleLayout);
         if (fileMonitoringTemplate) {
           setMonitoringDetails((prev) => ({ ...prev, fileMonitoring: fileMonitoringTemplate }));
@@ -296,6 +297,7 @@ function FileTemplate({ match, selectedAsset = {}, displayingInModal, onClose })
           monitoring: data.monitoring,
         });
         setLayoutData(data.fileTemplateLayout?.fields?.layout || []);
+        setSelectedLicenses(licenses);
         setSelectedCluster(data.cluster_id);
         const files = await getFiles(data.cluster_id);
         setFiles(files);
@@ -481,7 +483,6 @@ function FileTemplate({ match, selectedAsset = {}, displayingInModal, onClose })
 
               <Form.Item label="Type" name="setFileMonitoring" required={enableEdit}>
                 <Radio.Group onChange={handleFileMonitoringRadioChange} disabled={!enableEdit}>
-                  {/* <Radio value={false}>None</Radio> */}
                   <Radio value={false}>Logical files</Radio>
                   <Radio value={'landingZone'}>Landing zone files</Radio>
                 </Radio.Group>
@@ -531,23 +532,6 @@ function FileTemplate({ match, selectedAsset = {}, displayingInModal, onClose })
                 </Form.Item>
               ) : null}
 
-              {/* <Form.Item name="sampleFile" label="Sample Layout"  rules={[
-                  { required: enableEdit ? true : false, message: 'Please enter a title!' },
-                ]}>
-                {enableEdit ?
-                <AutoComplete
-                  style={{ width: '100%' }}
-                  options={files}
-                  onSelect={fetchFileLayout}
-                  placeholder="Search sample file"
-                  open={searchingFile}
-                  onFocus={() => setSearchingFile(true)}
-                  onBlur={() => setSearchingFile(false)}
-                  notFoundContent={'Not Files Found'}
-                />:
-                <Input className={!enableEdit ? "read-only-input" : ""} />}
-              </Form.Item> */}
-
               <Form.Item label="Description" name="description" className="markdown-editor">
                 {enableEdit ? (
                   <MonacoEditor targetDomId="fileDescr" />
@@ -574,6 +558,7 @@ function FileTemplate({ match, selectedAsset = {}, displayingInModal, onClose })
               setSelectedLicenses={setSelectedLicenses}
               selectedLicenses={selectedLicenses}
               selectedAsset={{ id: assetId }}
+              licenses={licenses}
             />
           </TabPane>
           <TabPane tab="Validation Rules" key="5">
