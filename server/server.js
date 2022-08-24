@@ -62,6 +62,7 @@ const reportRead = require('./routes/report/read');
 const consumer = require('./routes/consumers/read');
 const gh_projects = require('./routes/gh_projects');
 const dataflow = require('./routes/dataflows/dataflow');
+const constraint = require('./routes/constraint/index');
 const fileTemplateRead = require('./routes/fileTemplate/read')
 const dataflowGraph = require('./routes/dataflows/dataflowgraph');
 const regulations = require('./routes/controlsAndRegulations/read');
@@ -83,6 +84,7 @@ app.use('/api/hpcc/read', hpccRead);
 app.use('/api/file/read', fileRead);
 app.use('/api/index/read', indexRead);
 app.use('/api/report/read', reportRead);
+app.use('/api/constraint', constraint);
 app.use('/api/gh_projects', gh_projects);
 app.use('/api/dataflowgraph', dataflowGraph);
 app.use('/api/controlsAndRegulations', regulations);
