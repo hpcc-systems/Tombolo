@@ -9,12 +9,8 @@ module.exports = (sequelize, DataTypes) => {
       allowNull: false,
       autoIncrement: false
     },
-    name: DataTypes.STRING,
-    nature: DataTypes.STRING,
-    source: DataTypes.STRING,
-    scope: DataTypes.STRING,
+    short_description: DataTypes.STRING,
     description: DataTypes.TEXT,
-    permissible_purposes: DataTypes.TEXT,
     application_id: {
       type: DataTypes.UUID,
       allowNull: true,

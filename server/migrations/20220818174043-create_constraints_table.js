@@ -9,10 +9,7 @@ module.exports = {
         defaultValue: Sequelize.UUIDV4,
       },
       name: Sequelize.STRING,
-      nature: Sequelize.STRING,
-      source: Sequelize.STRING,
-      scope: Sequelize.STRING,
-      permissible_purposes: Sequelize.STRING,
+      short_description: Sequelize.STRING,
       description: Sequelize.TEXT,
       application_id: {
         type: Sequelize.UUID,
