@@ -9,6 +9,7 @@ module.exports = (sequelize, DataTypes) => {
       allowNull: false,
       autoIncrement: false
     },
+    name: DataTypes.STRING,
     short_description: DataTypes.STRING,
     description: DataTypes.TEXT,
     application_id: {
