@@ -44,10 +44,7 @@ router.post( '/',
   [
     body("id").optional({ checkFalsy: true }).isUUID(4),
     body("name").isString().notEmpty().escape().trim(),
-    body("nature").optional({ checkFalsy: true }).escape().trim(),
-    body("source").optional({ checkFalsy: true }).escape().trim(),
-    body("scope").optional({ checkFalsy: true }).escape().trim(),
-    body("permissible_purposes").optional({ checkFalsy: true }).escape().trim(),
+    body("short_description").optional({ checkFalsy: true }).escape().trim(),
     body("description").optional({ checkFalsy: true }).trim()
   ],
   async (req, res) => {

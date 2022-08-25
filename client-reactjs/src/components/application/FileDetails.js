@@ -19,12 +19,14 @@ import { debounce } from 'lodash';
 import React, { Component } from 'react';
 import ReactMarkdown from 'react-markdown';
 import { connect } from 'react-redux';
+import ConstraintsTags from '../admin/Constraints/ConstraintsTags.js';
 import { authHeader, handleError } from '../common/AuthHeader.js';
 import { canViewPII, hasEditPermission } from '../common/AuthUtil.js';
-import { eclTypes, formItemLayout } from '../common/CommonUtil';
+import { formItemLayout } from '../common/CommonUtil';
 import { validationRuleFixes, validationRules } from '../common/CommonUtil.js';
 import DeleteAsset from '../common/DeleteAsset';
 import EditableTable from '../common/EditableTable.js';
+import LayoutTable from '../common/LayoutTable.js';
 import MonacoEditor from '../common/MonacoEditor.js';
 import OverwriteAssetModal from '../common/OverWriteAssetModal';
 import SuperFileMeta from '../common/SuperFileMeta';
@@ -181,6 +183,7 @@ class FileDetails extends Component {
           description: data.basic.description,
           qualifiedPath: data.basic.qualifiedPath,
           isAssociated: data.basic?.metaData?.isAssociated,
+          constraints: data.basic?.metaData?.constraints || [],
         });
 
         await this.getFileData(data.basic.name, data.basic.cluster_id);
@@ -497,10 +500,10 @@ class FileDetails extends Component {
         groupId: this.props.groupId || this.state.file.groupId,
         metaData: {
           licenses: this.state.file.licenses,
+          constraints: this.formRef.current.getFieldValue('constraints') || [],
           isAssociated: this.formRef.current.getFieldValue('fileSelected') || this.state.file.isAssociated, // field is not mounted so we take value separately
         },
       },
-
       fields: this.state.file.layout,
       validation: this.state.file.validations,
       removeAssetId: this.formRef.current.getFieldValue('removeAssetId') || '', // Asset was a design file that got associated with existing in DB file
@@ -569,6 +572,19 @@ class FileDetails extends Component {
     return data;
   };
 
+  getConstraints = (type) => {
+    if (type === 'file') return this.formRef.current?.getFieldValue('constraints');
+
+    const fields = this.state.file.layout;
+
+    const allConstraints = fields.reduce((acc, el) => {
+      if (el.constraints?.length > 0) acc.push(...el.constraints);
+      return acc;
+    }, []);
+
+    return [...new Set(allConstraints)];
+  };
+
   render() {
     const { enableEdit, addingNewAsset, complianceTags, showFilePreview, confirmLoading, disableReadOnlyFields } =
       this.state;
@@ -577,42 +593,6 @@ class FileDetails extends Component {
 
     const VIEW_DATA_PERMISSION = canViewPII(this.props.user);
     const editingAllowed = hasEditPermission(this.props.user) || !this.props.viewMode;
-
-    const layoutColumns = [
-      {
-        title: 'System Name',
-        dataIndex: 'name',
-        sort: 'asc',
-        editable: false,
-        width: '25%',
-      },
-      {
-        title: 'Name',
-        dataIndex: 'name',
-        sort: 'asc',
-        editable: true,
-        celleditor: 'text',
-        regEx: /^[a-zA-Z0-9.,:;()@&#*/$_ -]*$/,
-        width: '25%',
-      },
-      {
-        title: 'Type',
-        dataIndex: 'type',
-        editable: false,
-        celleditor: 'select',
-        celleditorparams: {
-          values: eclTypes.sort(),
-        },
-        showdatadefinitioninfield: true,
-        width: '18%',
-      },
-      {
-        title: 'Description',
-        dataIndex: 'description',
-        editable: editingAllowed,
-        width: '15%',
-      },
-    ];
 
     const validationRuleColumns = [
       {
@@ -1011,6 +991,30 @@ class FileDetails extends Component {
                     )}
                   </Form.Item>
 
+                  <Form.Item noStyle shouldUpdate>
+                    {() => (
+                      <Form.Item name="constraints" label="File Constraints">
+                        {enableEdit ? (
+                          <Select mode="multiple" placeholder="Please select constaints">
+                            {this.props.constraints.map((el) => {
+                              return (
+                                <Option key={el.id} value={el.id}>
+                                  {el.name}
+                                </Option>
+                              );
+                            })}
+                          </Select>
+                        ) : (
+                          <ConstraintsTags list={this.getConstraints('file')} color={'red'} />
+                        )}
+                      </Form.Item>
+                    )}
+                  </Form.Item>
+
+                  <Form.Item label="Fields Constraints" hidden={enableEdit}>
+                    <ConstraintsTags list={this.getConstraints('field')} color={'green'} />
+                  </Form.Item>
+
                   <Form.Item label="Description" name="description">
                     {enableEdit ? (
                       <MonacoEditor
@@ -1044,19 +1048,7 @@ class FileDetails extends Component {
             </TabPane>
             <TabPane tab="Layout" key="3">
               <ComplianceInfo tags={complianceTags} />
-              <div className="layout_tbl" style={{ width: '100%' }}>
-                <EditableTable
-                  columns={layoutColumns}
-                  dataSource={layout}
-                  ref={(node) => (this.layoutTable = node)}
-                  fileType={this.state.file.fileType}
-                  editingAllowed={editingAllowed}
-                  showDataDefinition={false}
-                  dataDefinitions={[]}
-                  setData={this.setLayoutData}
-                  enableEdit={enableEdit}
-                />
-              </div>
+              <LayoutTable dataSource={layout} setData={this.setLayoutData} enableEdit={enableEdit} />
             </TabPane>
             <TabPane tab="Permissable Purpose" key="4">
               <Table
@@ -1115,24 +1107,21 @@ class FileDetails extends Component {
   }
 }
 
-function mapStateToProps(state, ownProps) {
-  let { selectedAsset, newAsset = {}, clusterId } = state.assetReducer;
+function mapStateToProps(state, _ownProps) {
+  let { newAsset = {}, clusterId } = state.assetReducer;
   const { user } = state.authenticationReducer;
-  const { application, clusters, consumers, licenses } = state.applicationReducer;
-
+  const { application, clusters, consumers, licenses, constraints } = state.applicationReducer;
   const { isNew = false, groupId = '' } = newAsset;
-
-  if (ownProps.selectedAsset) selectedAsset = ownProps.selectedAsset;
 
   return {
     user,
-    selectedAsset,
     application,
     isNew,
     groupId,
     clusterId,
     clusters,
     consumers,
+    constraints,
     availableLicenses: licenses,
   };
 }

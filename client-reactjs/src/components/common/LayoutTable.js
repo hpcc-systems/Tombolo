@@ -4,9 +4,10 @@ import React, { useEffect, useState } from 'react';
 import { Button, Collapse, Form, Input, message, Modal, Select, Space, Table, Tag, Typography } from 'antd';
 import { EditOutlined } from '@ant-design/icons';
 import { useSelector } from 'react-redux';
+import ConstraintsTags from '../admin/Constraints/ConstraintsTags';
 const { Option } = Select;
 
-const LayoutTable = ({ dataSource, setData, fileConstraints }) => {
+const LayoutTable = ({ dataSource, setData, enableEdit }) => {
   const [modal, setModal] = useState({ isOpen: false, record: null });
 
   const edit = (record) => setModal(() => ({ isOpen: true, record }));
@@ -16,7 +17,10 @@ const LayoutTable = ({ dataSource, setData, fileConstraints }) => {
     {
       title: '',
       width: '3%',
-      render: (text, record) => <Button type="link" onClick={() => edit(record)} block icon={<EditOutlined />} />,
+      render: (text, record) =>
+        enableEdit ? (
+          <Button type="link" onClick={() => edit(record)} size="small" block icon={<EditOutlined />} />
+        ) : null,
     },
     {
       title: 'Name',
@@ -46,7 +50,7 @@ const LayoutTable = ({ dataSource, setData, fileConstraints }) => {
       // onHeaderCell: (column) => ({ ...column, className: 'layout-table-headers' }),
       render: (text, record) => {
         if (record.constraints) {
-          return <ConstraintsTags value={record.constraints} />;
+          return <ConstraintsTags list={record.constraints} />;
         }
         return null;
       },
@@ -62,7 +66,6 @@ const LayoutTable = ({ dataSource, setData, fileConstraints }) => {
         pagination={false}
         dataSource={dataSource}
         rowKey={(record) => record.id}
-        summary={(pageData) => <FileSummary fileConstraints={fileConstraints} pageData={pageData} />}
       />
       <ConstraintModal modal={modal} setData={setData} dataSource={dataSource} closeModal={closeModal} />
     </>
@@ -70,40 +73,6 @@ const LayoutTable = ({ dataSource, setData, fileConstraints }) => {
 };
 
 export default LayoutTable;
-
-const FileSummary = ({ pageData, fileConstraints }) => {
-  console.log('pageData', pageData);
-  let allConstraints = pageData.reduce((acc, el) => {
-    if (el.constraints?.length > 0) acc.push(...el.constraints);
-    return acc;
-  }, []);
-  allConstraints = [...new Set(allConstraints)];
-  return (
-    <>
-      <Table.Summary.Row>
-        <Table.Summary.Cell index={0}></Table.Summary.Cell>
-        <Table.Summary.Cell index={1} colSpan={4}>
-          <Typography.Text code>Fields constraints :</Typography.Text>{' '}
-          <ConstraintsTags value={allConstraints} color={'green'} />
-        </Table.Summary.Cell>
-      </Table.Summary.Row>
-      <Table.Summary.Row>
-        <Table.Summary.Cell index={0}></Table.Summary.Cell>
-        <Table.Summary.Cell index={1} colSpan={4}>
-          <Typography.Text code>File constraints :</Typography.Text>{' '}
-          <ConstraintsTags value={fileConstraints} color={'red'} />
-        </Table.Summary.Cell>
-      </Table.Summary.Row>
-      <Table.Summary.Row>
-        <Table.Summary.Cell index={0}></Table.Summary.Cell>
-        <Table.Summary.Cell index={1} colSpan={4}>
-          <Typography.Text code>Total :</Typography.Text>{' '}
-          <ConstraintsTags value={[...new Set([...allConstraints, ...fileConstraints])]} color={'blue'} />
-        </Table.Summary.Cell>
-      </Table.Summary.Row>
-    </>
-  );
-};
 
 const ConstraintModal = ({ modal, setData, dataSource, closeModal }) => {
   const constraints = useSelector((state) => state.applicationReducer.constraints);
@@ -168,7 +137,7 @@ const ConstraintModal = ({ modal, setData, dataSource, closeModal }) => {
                 })}
               </Select>
             ) : (
-              <ConstraintsTags />
+              <ConstraintsTags list={form.getFieldValue('constraints') || modal?.record?.constraints} />
             )}
           </Form.Item>
 
@@ -187,53 +156,3 @@ const ConstraintModal = ({ modal, setData, dataSource, closeModal }) => {
 };
 
 const ReadOnlyField = ({ value }) => <span className="ant-form-text">{value}</span>;
-
-export const ConstraintsTags = ({ value, color = 'green', showAll }) => {
-  const constraints = useSelector((state) => state.applicationReducer.constraints);
-  // if no value is passed return list of all constraints
-  if (showAll)
-    return constraints.map((constraint) => <TagWithPopUp key={constraint.id} color={color} constraint={constraint} />);
-
-  if (!value) return null;
-
-  const matchedConstraints = constraints.filter((el) => value.includes(el.id));
-  return matchedConstraints.map((constraint) => (
-    <TagWithPopUp key={constraint.id} color={color} constraint={constraint} />
-  ));
-};
-
-const TagWithPopUp = ({ constraint, color }) => {
-  // console.log('constraint', constraint);
-  const [visible, setVisible] = useState(false);
-  return (
-    <>
-      <Tag color={color} onClick={() => setVisible(true)} style={{ cursor: 'pointer' }}>
-        {constraint.name}
-      </Tag>
-      <Modal
-        title={constraint.name}
-        centered
-        visible={visible}
-        closable={false}
-        footer={null}
-        onCancel={() => setVisible(false)}
-        width={1000}>
-        {/* description: "BR"
-            id: "4efde558-fe46-421e-8f91-3d53f7466b5e"
-            name: "Brazil"
-            nature: "BR"
-            permissible_purposes: "nature: 'BR'"
-            scope: "BR"
-            source: "BR" */}
-        <ul>
-          <li>Name: {constraint.name}</li>
-          <li>Nature: {constraint.nature}</li>
-          <li>Scope: {constraint.scope}</li>
-          <li>Source: {constraint.source}</li>
-          <li>Permissible purposes: {constraint.permissible_purposes}</li>
-          <li>Description: {constraint.description}</li>
-        </ul>
-      </Modal>
-    </>
-  );
-};

@@ -81,13 +81,7 @@ const ConstraintForm = ({ modal, onClose }) => {
         <Form.Item label="Constraint name" name="name" required>
           <Input />
         </Form.Item>
-        <Form.Item label="Source" name="source">
-          <Input />
-        </Form.Item>
-        <Form.Item label="Scope" name="scope">
-          <Input />
-        </Form.Item>
-        <Form.Item label="Permissible purposes" name="permissible_purposes">
+        <Form.Item label="Short Description" name="short_description">
           <Input />
         </Form.Item>
         <Form.Item label="Description" name="description">

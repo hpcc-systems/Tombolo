@@ -1,9 +1,9 @@
 import { EditOutlined } from '@ant-design/icons';
 import { Button, Divider, Space, Table } from 'antd';
 import React, { useState } from 'react';
-import ReactMarkdown from 'react-markdown';
 import { useSelector } from 'react-redux';
 import BreadCrumbs from '../../common/BreadCrumbs';
+import ConstraintDescription from './ConstraintDescription';
 
 import ConstraintForm from './ConstraintForm';
 import RemoveContraint from './RemoveContraint';
@@ -24,19 +24,9 @@ function Constraints() {
       sorter: (a, b) => a.name.localeCompare(b.name),
     },
     {
-      title: 'Nature',
-      dataIndex: 'nature',
-      sorter: (a, b) => a.nature.localeCompare(b.nature),
-    },
-    {
-      title: 'Source',
-      dataIndex: 'source',
-      sorter: (a, b) => a.source.localeCompare(b.source),
-    },
-    {
-      title: 'Scope',
-      dataIndex: 'scope',
-      sorter: (a, b) => a.scope.localeCompare(b.scope),
+      title: 'Short Description',
+      dataIndex: 'short_description',
+      elipsis: true,
     },
     {
       title: 'Action',
@@ -64,20 +54,7 @@ function Constraints() {
         dataSource={constraints}
         rowKey={(record) => record.id}
         expandable={{
-          expandedRowRender: (record) => {
-            return (
-              <>
-                <ReactMarkdown source={record.description} />
-                <hr />
-                <p> The permissible purposes under which the constraint can be relaxed</p>
-                <ul>
-                  {record.permissible_purposes.split(',').map((el, index) => {
-                    return <li key={index}> {el} </li>;
-                  })}
-                </ul>
-              </>
-            );
-          },
+          expandedRowRender: (record) => <ConstraintDescription record={record} />,
         }}
       />
 
