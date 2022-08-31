@@ -3,7 +3,7 @@ const router = express.Router();
 
 const { v4: uuidv4 } = require('uuid')
 
-const { file: File, job: Job } = require("../../models");
+const { file: File, job: Job, report: Report } = require("../../models");
 const _ = require("lodash");
 
 router.get("/:applicationId", async (req, res) => {
@@ -177,10 +177,11 @@ router.get("/:applicationId", async (req, res) => {
         }
       }
     }
+
+    const newReport = await Report.create({ report: report.final, application_id })
     // for testing purposes, sleep function;
     // await new Promise(r => setTimeout(r,3000));
-
-    res.send({ id: uuidv4(), timeStamp: Date.now(), report: report.final });
+    res.send(newReport);
   } catch (error) {
     console.log("-PROPAGATE ERROR-----------------------------------------");
     console.dir({ error }, { depth: null });

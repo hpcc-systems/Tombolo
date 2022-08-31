@@ -1,11 +1,45 @@
 const express = require('express');
 const router = express.Router();
 
-const models  = require('../../models');
-let Dataflow = models.dataflow;
-const DataflowVersions = models.dataflow_versions;
-const { query, validationResult } = require('express-validator');
+const { dataflow: Dataflow, dataflow_versions: DataflowVersions, report: Report } = require('../../models');
+const { query, param, validationResult } = require('express-validator');
 const validatorUtil = require('../../utils/validator');
+const logger = require('../../config/logger');
+
+router.get('/:application_id', [ param("application_id").isUUID(4) ], async (req, res) => {
+  try {
+    // Express validator
+    const errors = validationResult(req).formatWith(validatorUtil.errorFormatter);
+    if (!errors.isEmpty()) return res.status(422).json({ success: false, errors: errors.array() });
+
+    // Route logic
+    const { application_id } = req.params;
+    const reports = await Report.findAll({where:{application_id}});
+    res.status(200).send(reports)
+  } catch (error) {
+    logger.error(`Something went wrong`, error);
+    res.status(500).json({ message: error.message });
+  }
+}
+);
+
+router.delete('/:reportId', [ param("reportId").isUUID(4) ], async (req, res) => {
+  try {
+    // Express validator
+    const errors = validationResult(req).formatWith(validatorUtil.errorFormatter);
+    if (!errors.isEmpty()) return res.status(422).json({ success: false, errors: errors.array() });
+    
+    // Route logic
+    const { reportId } = req.params;
+    const isRemoved = await Report.destroy({where:{id: reportId}});
+    if(!isRemoved) throw new Error('Report was not removed!');
+    res.status(200).send({ success: true, id: reportId });
+  } catch (error) {
+    logger.error(`Something went wrong`, error);
+    res.status(500).json({ message: error.message });
+  }
+}
+);
 
 router.get( '/associatedDataflows',
     [
