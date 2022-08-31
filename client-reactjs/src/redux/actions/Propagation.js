@@ -36,11 +36,26 @@ const propagate = ({ history }) => {
         ),
       });
 
-      const reports = JSON.parse(localStorage.getItem('reports'));
-      const newReports = reports ? [data, ...reports] : [data];
-      localStorage.setItem('reports', JSON.stringify(newReports));
-
       dispatch({ type: Constants.PROPAGATIONS_SUCCESS, payload: data });
+    } catch (error) {
+      message.error(error.message);
+      dispatch({ type: Constants.PROPAGATIONS_ERROR, payload: error.message });
+    }
+  };
+};
+
+const getReports = () => {
+  return async (dispatch, getState) => {
+    try {
+      const { applicationReducer } = getState();
+      const applicationId = applicationReducer?.application?.applicationId;
+      dispatch({ type: Constants.PROPAGATIONS_INITIATE });
+
+      const response = await fetch(`/api/report/read/${applicationId}`, { headers: authHeader() });
+      if (!response.ok) throw Error(response.statusText);
+
+      const data = await response.json();
+      dispatch(updateReports(data));
     } catch (error) {
       message.error(error.message);
       dispatch({ type: Constants.PROPAGATIONS_ERROR, payload: error.message });
@@ -54,5 +69,6 @@ const updateReports = (data) => {
 
 export const propagationActions = {
   propagate,
+  getReports,
   updateReports,
 };
