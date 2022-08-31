@@ -155,7 +155,6 @@ class FileDetails extends Component {
             name: data.basic.name,
             owner: data.basic.owner,
             groupId: data.basic.groupId,
-            layout: data.file_layouts,
             supplier: data.basic.supplier,
             consumer: data.basic.consumer,
             relations: data.file_relations,
@@ -163,6 +162,7 @@ class FileDetails extends Component {
             isSuperFile: data.basic.isSuperFile,
             description: data.basic.description,
             superFileData: data.basic.superFileData,
+            layout: data.basic?.metaData?.layout || [],
             licenses: data.basic?.metaData?.licenses || [],
             isAssociated: data.basic?.metaData?.isAssociated,
           },
@@ -366,7 +366,7 @@ class FileDetails extends Component {
           ...this.state.file,
           fileType,
           id: fileInfo.basic.id,
-          layout: fileInfo.file_layouts,
+          layout: fileInfo.basic?.metaData?.layout,
           validations: fileInfo.file_validations,
         },
       });
@@ -499,12 +499,13 @@ class FileDetails extends Component {
         application_id: this.props.application.applicationId,
         groupId: this.props.groupId || this.state.file.groupId,
         metaData: {
+          layout: this.state.file.layout,
           licenses: this.state.file.licenses,
           constraints: this.formRef.current.getFieldValue('constraints') || [],
           isAssociated: this.formRef.current.getFieldValue('fileSelected') || this.state.file.isAssociated, // field is not mounted so we take value separately
         },
       },
-      fields: this.state.file.layout,
+
       validation: this.state.file.validations,
       removeAssetId: this.formRef.current.getFieldValue('removeAssetId') || '', // Asset was a design file that got associated with existing in DB file
       renameAssetId: this.formRef.current.getFieldValue('renameAssetId') || '', // Asset was a design file that got associated with none-existing in DB file
@@ -573,16 +574,35 @@ class FileDetails extends Component {
   };
 
   getConstraints = (type) => {
-    if (type === 'file') return this.formRef.current?.getFieldValue('constraints');
+    if (type === 'file') return this.formRef.current?.getFieldValue('constraints')?.map((id) => ({ id })) || [];
 
-    const fields = this.state.file.layout;
+    const layout = this.state.file.layout;
 
-    const allConstraints = fields.reduce((acc, el) => {
-      if (el.constraints?.length > 0) acc.push(...el.constraints);
+    const allConstraints = layout.reduce((acc, field) => {
+      const { own = [], inherited = [] } = field.constraints;
+      if (own.length > 0) acc.push(...own);
+      if (inherited.length > 0) acc.push(...inherited);
       return acc;
     }, []);
 
-    return [...new Set(allConstraints)];
+    const noDuplicates = this.dedupe(allConstraints);
+
+    return noDuplicates;
+  };
+
+  dedupe = (allConstraints) => {
+    const result = allConstraints.reduce(
+      (acc, el) => {
+        if (!acc.ids[el.id]) {
+          acc.ids[el.id] = true;
+          acc.constraints.push(el);
+        }
+        return acc;
+      },
+      { ids: {}, constraints: [] }
+    );
+
+    return result.constraints;
   };
 
   render() {
@@ -1005,14 +1025,14 @@ class FileDetails extends Component {
                             })}
                           </Select>
                         ) : (
-                          <ConstraintsTags list={this.getConstraints('file')} color={'red'} />
+                          <ConstraintsTags file list={this.getConstraints('file')} />
                         )}
                       </Form.Item>
                     )}
                   </Form.Item>
 
                   <Form.Item label="Fields Constraints" hidden={enableEdit}>
-                    <ConstraintsTags list={this.getConstraints('field')} color={'green'} />
+                    <ConstraintsTags list={this.getConstraints('field')} />
                   </Form.Item>
 
                   <Form.Item label="Description" name="description">

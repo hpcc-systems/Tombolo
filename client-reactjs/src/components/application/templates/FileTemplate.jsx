@@ -335,7 +335,7 @@ function FileTemplate({ match, selectedAsset = {}, displayingInModal, onClose })
         return response.json();
       })
       .then((data) => {
-        setLayoutData(data.file_layouts);
+        setLayoutData(data.basic?.metaData?.layout || []);
       })
       .catch((err) => {
         console.log(err.message);
