@@ -1,7 +1,5 @@
-/* eslint-disable unused-imports/no-unused-imports */
-/* eslint-disable unused-imports/no-unused-vars */
 import React, { useEffect, useState } from 'react';
-import { Button, Collapse, Form, Input, message, Modal, Select, Space, Table, Tag, Typography } from 'antd';
+import { Button, Collapse, Form, Input, message, Modal, Select, Table } from 'antd';
 import { EditOutlined } from '@ant-design/icons';
 import { useSelector } from 'react-redux';
 import ConstraintsTags from '../admin/Constraints/ConstraintsTags';
@@ -29,7 +27,6 @@ const LayoutTable = ({ dataSource, setData, enableEdit }) => {
       width: '20%',
       ellipsis: true,
       sorter: (a, b) => a.name.localeCompare(b.name),
-      // onHeaderCell: (column) => ({ ...column, className: 'layout-table-headers' }),
     },
     {
       title: 'Type',
@@ -37,7 +34,6 @@ const LayoutTable = ({ dataSource, setData, enableEdit }) => {
       width: '10%',
       ellipsis: true,
       sorter: (a, b) => a.type.localeCompare(b.type),
-      // onHeaderCell: (column) => ({ ...column, className: 'layout-table-headers' }),
     },
     {
       title: 'Description',
@@ -47,13 +43,24 @@ const LayoutTable = ({ dataSource, setData, enableEdit }) => {
     },
     {
       title: 'Constraints',
-      // onHeaderCell: (column) => ({ ...column, className: 'layout-table-headers' }),
-      render: (text, record) => {
-        if (record.constraints) {
-          return <ConstraintsTags list={record.constraints} />;
-        }
-        return null;
-      },
+      children: [
+        {
+          title: 'Own',
+          dataIndex: 'own',
+          key: 'id',
+          render: (text, record) => {
+            return <ConstraintsTags list={record.constraints.own} />;
+          },
+        },
+        {
+          title: 'Inherited',
+          dataIndex: 'inherited',
+          key: 'id',
+          render: (text, record) => {
+            return <ConstraintsTags list={record.constraints.inherited} />;
+          },
+        },
+      ],
     },
   ];
 
@@ -84,10 +91,10 @@ const ConstraintModal = ({ modal, setData, dataSource, closeModal }) => {
   useEffect(() => {
     const record = modal.record;
     if (!record) return;
-
+    // Form will consume constraints[] as string[], we unpack constraints.own = [{id:string}] to [id:string]
     form.setFieldsValue({
-      constraints: record.constraints,
       description: record.description,
+      constraints: record.constraints.own.map(({ id }) => id),
     });
 
     return () => form.resetFields();
@@ -96,7 +103,22 @@ const ConstraintModal = ({ modal, setData, dataSource, closeModal }) => {
   const addChanges = async () => {
     const values = await form.validateFields();
     const record = modal.record;
-    const newDataSource = dataSource.map((el) => (el.id === record.id ? { ...el, ...values } : el));
+
+    const newDataSource = dataSource.map((el) => {
+      if (el.id === record.id) {
+        return {
+          ...el,
+          description: values.description,
+          constraints: {
+            ...el.constraints,
+            // for consistency with our constraint model we will map constraints = [id:string] to [{id:string}]
+            own: values.constraints.map((id) => ({ id })),
+          },
+        };
+      }
+      return el;
+    });
+
     setData(newDataSource);
     setEditing(false);
     message.success('Success!');
@@ -108,8 +130,10 @@ const ConstraintModal = ({ modal, setData, dataSource, closeModal }) => {
     if (!editing) closeModal();
   };
 
-  const getOKtext = () => (editing ? 'Add' : 'Edit');
+  const getOKtext = () => (editing ? 'Submit' : 'Edit');
   const handleOk = () => (editing ? addChanges() : setEditing(true));
+
+  const getConstraints = () => form.getFieldValue('constraints')?.map((id) => ({ id })) || [];
 
   if (!modal.isOpen) return null;
 
@@ -117,7 +141,6 @@ const ConstraintModal = ({ modal, setData, dataSource, closeModal }) => {
     <Modal
       title={'Field: ' + modal.record.name}
       width={1000}
-      destroyOnClose
       onOk={handleOk}
       cancelButtonProps={{ hidden: !editing }}
       onCancel={onCancel}
@@ -125,29 +148,36 @@ const ConstraintModal = ({ modal, setData, dataSource, closeModal }) => {
       visible={modal.isOpen}>
       <>
         <Form layout={editing ? 'vertical' : 'horizontal'} form={form}>
-          <Form.Item name="constraints" label="Select constraints :">
-            {editing ? (
-              <Select mode="multiple" placeholder="Please select constaints">
-                {constraints.map((el) => {
-                  return (
-                    <Option key={el.id} value={el.id}>
-                      {el.name}
-                    </Option>
-                  );
-                })}
-              </Select>
-            ) : (
-              <ConstraintsTags list={form.getFieldValue('constraints') || modal?.record?.constraints} />
-            )}
+          <Form.Item noStyle shouldUpdate>
+            {() => {
+              return (
+                <Form.Item name="constraints" label="Select constraints :">
+                  {editing ? (
+                    <Select mode="multiple" placeholder="Please select constaints">
+                      {constraints.map((el) => {
+                        return (
+                          <Option key={el.id} value={el.id}>
+                            {el.name}
+                          </Option>
+                        );
+                      })}
+                    </Select>
+                  ) : (
+                    <ConstraintsTags list={getConstraints()} />
+                  )}
+                </Form.Item>
+              );
+            }}
           </Form.Item>
 
           <Form.Item label="Description :" name="description">
             {editing ? <Input.TextArea className="custom-scroll" allowClear cols={5} /> : <ReadOnlyField />}
           </Form.Item>
         </Form>
+
         <Collapse collapsible="header">
           <Collapse.Panel header="List of all available constraints, click on tag to see more">
-            <ConstraintsTags showAll={true} color={'cyan'} />
+            <ConstraintsTags showAll={true} />
           </Collapse.Panel>
         </Collapse>
       </>
