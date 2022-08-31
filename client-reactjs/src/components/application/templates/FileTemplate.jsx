@@ -4,6 +4,7 @@ import { useSelector } from 'react-redux';
 import { debounce } from 'lodash';
 import { useHistory } from 'react-router-dom';
 import ReactMarkdown from 'react-markdown';
+import { useTranslation, UseTranslationOptions } from 'react-i18next';
 
 //Local Imports
 import MonacoEditor from '../../common/MonacoEditor.js';
@@ -52,6 +53,7 @@ function FileTemplate({ match, selectedAsset = {}, displayingInModal, onClose })
   */
   const applicationId = application?.applicationId || match?.params?.applicationId;
   const assetId = selectedAsset?.id || match?.params?.assetId;
+  const { t } = useTranslation(['common', 'template']);
 
   const history = useHistory();
 
@@ -413,7 +415,7 @@ function FileTemplate({ match, selectedAsset = {}, displayingInModal, onClose })
     <React.Fragment>
       <div className={displayingInModal ? 'assetDetails-content-wrapper-modal' : 'assetDetails-content-wrapper'}>
         <Tabs defaultActiveKey="1" tabBarExtraContent={displayingInModal ? null : controls}>
-          <TabPane tab="Basic" key="1">
+          <TabPane tab={t('Basic', { ns: 'common' })} key="1">
             <Form
               {...formItemLayout}
               labelWrap
@@ -559,7 +561,7 @@ function FileTemplate({ match, selectedAsset = {}, displayingInModal, onClose })
               </Form.Item>
             </Form>
           </TabPane>
-          <TabPane key="3" tab="Layout">
+          <TabPane key="3" tab={t('Layout', { ns: 'common' })}>
             <FileTemplateLayout
               layoutData={layoutData}
               setLayoutData={setLayoutData}
@@ -567,7 +569,7 @@ function FileTemplate({ match, selectedAsset = {}, displayingInModal, onClose })
               editingAllowed={editingAllowed}
             />
           </TabPane>
-          <TabPane tab="Permissable Purpose" key="4">
+          <TabPane tab={t('Permissable Purpose', { ns: 'common' })} key="4">
             <FileTemplatePermissablePurpose
               enableEdit={enableEdit}
               editingAllowed={editingAllowed}
@@ -576,16 +578,10 @@ function FileTemplate({ match, selectedAsset = {}, displayingInModal, onClose })
               selectedAsset={{ id: assetId }}
             />
           </TabPane>
-          <TabPane tab="Validation Rules" key="5">
+          <TabPane tab={t('Validation Rules', { ns: 'common' })} key="5">
             <Table />
           </TabPane>
-          <TabPane
-            key="6"
-            tab={
-              <>
-                <span> Files </span>
-              </>
-            }>
+          <TabPane key="6" tab={t('Files', { ns: 'common' })}>
             <FileTemplateTable data={files} />
           </TabPane>
         </Tabs>

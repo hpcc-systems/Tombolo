@@ -1,0 +1,15 @@
+{
+  "Consumer/Supplier": "消费者/供应商",
+  "AD Group": "AD 团体",
+  "Add Collaborator": "添加协作者",
+  "Add Consumer/Supplier": "添加消费者/供应商",
+  "Consumer - Product/Application/Group consuming the asset": "消费者 - 消费资产的产品/应用程序/组",
+  "Supplied - Supplier of the asset data (DMV, Insurance company etc)": "已提供 - 资产数据的供应商（DMV、保险公司等",
+  "Owner - Contact Person/Group for an asset": "所有者 - 资产的联系人/组",
+  "Select type": "选择类型",
+  "Supplier": "供应商",
+  "Consumer": "消费者",
+  "Owner": "所有者",
+  "Are you sure you want to delete this Consumer": "您确定要删除此消费者吗",
+  "Delete Consumer": "删除消费者"
+}

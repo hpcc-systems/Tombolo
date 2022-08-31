@@ -1,0 +1,18 @@
+{
+  "Dataflow": "数据流",
+  "Add new Dataflow": "添加新数据流",
+  "Process Type": "工艺类型",
+
+  "Synchronize graph": "同步图",
+  "...synchronizing": "...同步中",
+  "Hidden Nodes": "隐藏节点",
+  "Legend": "传奇",
+  "Save Version": "保存版本",
+  "You are on Working Copy": "你在工作副本上",
+  "Monitoring": "监控",
+  "Sub-Process": "子流程",
+  "Designer": "设计师",
+
+  "Synchronize will validate the file/job relationship and update graph accordingly": "同步将验证文件/作业关系并相应地更新图表",
+  "Save graph version": "保存图形版本"
+}

@@ -1,0 +1,18 @@
+{
+  "Dataflow": "Dataflow",
+  "Add new Dataflow": "Add new Dataflow",
+  "Process Type": "Process Type",
+
+  "Synchronize graph": "Synchronize graph",
+  "...synchronizing": "...synchronizing",
+  "Hidden Nodes": "Hidden Nodes",
+  "Legend": "Legend",
+  "Save Version": "Save Version",
+  "You are on Working Copy": "You are on Working Copy",
+  "Monitoring": "Monitoring",
+  "Sub-Process": "Sub-Process",
+  "Designer": "Designer",
+
+  "Synchronize will validate the file/job relationship and update graph accordingly": "Synchronize will validate the file/job relationship and update graph accordingly",
+  "Save graph version": "Save graph version"
+}

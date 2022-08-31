@@ -1,12 +1,15 @@
 import React, { useState } from 'react';
 import { DeleteOutlined, EyeOutlined, FilePdfOutlined, FolderOutlined, PlusOutlined } from '@ant-design/icons';
-import { Dropdown, Menu } from 'antd';
-import { selectGroup } from '../../../redux/actions/Groups';
+import { useTranslation } from 'react-i18next';
 import { useDispatch } from 'react-redux';
+import { Dropdown, Menu } from 'antd';
+
+import { selectGroup } from '../../../redux/actions/Groups';
 
 const TitleRenderer = ({ nodeData, handleMenuClick }) => {
   const [visible, setVisible] = useState(false);
   const dispatch = useDispatch();
+  const { t } = useTranslation(['common']); // t for translate -> getting namespaces relevant to this file
 
   const onVisibleChange = (isVisible) => {
     if (isVisible) {
@@ -19,22 +22,22 @@ const TitleRenderer = ({ nodeData, handleMenuClick }) => {
     const items = [
       {
         key: 'Edit-Group',
-        name: 'View',
+        name: t('View', { ns: 'common' }),
         icon: <EyeOutlined />,
       },
       {
         key: 'Delete-Group',
-        name: 'Delete',
+        name: t('Delete', { ns: 'common' }),
         icon: <DeleteOutlined />,
       },
       {
         key: 'Move-Group',
-        name: 'Move',
+        name: t('Move', { ns: 'common' }),
         icon: <FolderOutlined />,
       },
       {
         key: 'Print-Assets',
-        name: 'Print Assets',
+        name: t('Print Assets', { ns: 'common' }),
         icon: <FilePdfOutlined />,
       },
     ];
@@ -49,7 +52,7 @@ const TitleRenderer = ({ nodeData, handleMenuClick }) => {
     return (
       <Menu mode="inline" theme="dark" onClick={onClick}>
         <Menu.Item key="Group" icon={<PlusOutlined />}>
-          New Group
+          {t('New Group', { ns: 'common' })}
         </Menu.Item>
         {!isRootNode &&
           items.map((item) => {

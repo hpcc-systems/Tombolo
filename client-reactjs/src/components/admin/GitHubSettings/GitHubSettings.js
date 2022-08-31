@@ -1,8 +1,12 @@
 import React, { useState } from 'react';
 import { Table, Input, Popconfirm, Form, Typography, Space, Button, message, Select } from 'antd';
-import { authHeader, handleError } from '../../common/AuthHeader';
 import { useSelector } from 'react-redux';
+import { useTranslation } from 'react-i18next';
+
 import useGitHubProjectList from '../../../hooks/useGitHubProjectList';
+import { authHeader, handleError } from '../../common/AuthHeader';
+import { t } from 'i18next';
+
 const { Option, OptGroup } = Select;
 const { Search } = Input;
 
@@ -24,6 +28,7 @@ const GitHubSettings = () => {
   const [projects, setProjects] = useGitHubProjectList();
 
   const isEditing = (record) => record.key === editingKey;
+  const { t } = useTranslation(['common', 'gitHub']); // t for translate -> getting namespaces relevant to this file
 
   const edit = (record) => {
     form.setFieldsValue({ ...record });
@@ -166,32 +171,32 @@ const GitHubSettings = () => {
 
   const columns = [
     {
-      title: 'Project Name',
+      title: t('Project Name', { ns: 'gitHub' }),
       dataIndex: 'ghProject',
       editable: true,
     },
     {
-      title: 'Username',
+      title: t('Username'),
       dataIndex: 'ghUserName',
       editable: true,
     },
     {
-      title: 'Access token',
+      title: t('Access token', { ns: 'gitHub' }),
       dataIndex: 'ghToken',
       editable: true,
     },
     {
-      title: 'GitHub link',
+      title: t('GitHub link', { ns: 'gitHub' }),
       dataIndex: 'ghLink',
       editable: true,
     },
     {
-      title: 'Branch or Tag',
+      title: t('Branch or Tag', { ns: 'gitHub' }),
       dataIndex: 'ghBranchOrTag',
       editable: true,
     },
     {
-      title: 'Actions',
+      title: t('Action', { ns: 'common' }),
       dataIndex: 'actions',
       width: '25%',
       render: (_, record) => {
@@ -200,14 +205,14 @@ const GitHubSettings = () => {
         return editable ? (
           <Space>
             <Button type="link" size="small" onClick={() => save(record)}>
-              Save
+              {t('Save', { ns: 'common' })}
             </Button>
 
-            <Typography.Link onClick={() => cancel(record)}>Cancel</Typography.Link>
+            <Typography.Link onClick={() => cancel(record)}> {t('Cancel', { ns: 'common' })}</Typography.Link>
 
             <Popconfirm title="Are you sure you want to remove record?" onConfirm={() => remove(record)}>
               <Button danger type="text">
-                Remove
+                {t('Delete', { ns: 'common' })}
               </Button>
             </Popconfirm>
           </Space>
@@ -239,7 +244,7 @@ const GitHubSettings = () => {
   return (
     <Form form={form} component={false} autoComplete={false}>
       <Button onClick={handleAddProject} type="primary" style={{ margin: '5px', display: 'block', marginLeft: 'auto' }}>
-        Add new project
+        {t('Add new project', { ns: 'gitHub' })}
       </Button>
       <Table
         bordered
@@ -283,7 +288,7 @@ const EditableCell = ({
           onSearch={onSearch}
           loading={branchAndTagList.loading}
           enterButton={editing ? true : false}
-          placeholder="Provide a link to GitHub repo"
+          placeholder={t('Provide a link to GitHub repo', { ns: 'gitHub' })}
         />
       ),
       ghBranchOrTag: (

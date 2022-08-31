@@ -1,6 +1,8 @@
 import React from 'react';
 import { useHistory, useParams } from 'react-router';
 import { Tabs, Button, Spin } from 'antd';
+import { useTranslation } from 'react-i18next';
+
 import DataflowAssetsTable from './DataflowAssetsTable';
 import BreadCrumbs from '../../common/BreadCrumbs';
 import GraphX6 from '../Graph/GraphX6';
@@ -10,6 +12,7 @@ const TabPane = Tabs.TabPane;
 function DataflowDetails() {
   const history = useHistory();
   const params = useParams();
+  const { t } = useTranslation(['common', 'dataflow']); // t for translate -> getting namespaces relevant to this file
 
   const { isDataflowReady, canEdit } = useSelectDataflow(); // this hook will check if dataflow is present in redux, if not it will request data from DB and update redux
 
@@ -36,16 +39,16 @@ function DataflowDetails() {
           tabBarExtraContent={
             <span>
               <Button type="primary" onClick={handleBackToAllJobs} ghost>
-                Cancel
+                {t('Cancel', { ns: 'common' })}
               </Button>
             </span>
           }>
-          <TabPane tab="Designer" key="1">
+          <TabPane tab={t('Designer', { ns: 'dataflow' })} key="1">
             <div style={{ height: '80vh' }}>
               <GraphX6 readOnly={canEdit ? false : true} />
             </div>
           </TabPane>
-          <TabPane tab="Assets" key="2">
+          <TabPane tab={t('Assets', { ns: 'common' })} key="2">
             <DataflowAssetsTable />
           </TabPane>
         </Tabs>

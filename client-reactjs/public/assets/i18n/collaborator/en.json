@@ -1,0 +1,15 @@
+{
+  "Consumer/Supplier": "Consumer/Supplier",
+  "AD Group": "AD Group",
+  "Add Collaborator": "Add Collaborator",
+  "Add Consumer/Supplier": "Add Consumer/Supplier",
+  "Consumer - Product/Application/Group consuming the asset": "Consumer - Product/Application/Group consuming the asset",
+  "Supplied - Supplier of the asset data (DMV, Insurance company etc)": "Supplied - Supplier of the asset data (DMV, Insurance company etc)",
+  "Owner - Contact Person/Group for an asset": "Owner - Contact Person/Group for an asset",
+  "Select type": "Select type",
+  "Supplier": "Supplier",
+  "Consumer": "Consumer",
+  "Owner": "Owner",
+  "Are you sure you want to delete this Consumer": "Are you sure you want to delete this Consumer",
+  "Delete Consumer": "Delete Consumer"
+}

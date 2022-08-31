@@ -3,6 +3,8 @@ import { SearchOutlined } from '@ant-design/icons';
 import { Button, Col, Form, Input, message, Row, Select, Spin, Tabs, Typography } from 'antd';
 import React, { Component } from 'react';
 import { connect } from 'react-redux';
+import { withTranslation } from 'react-i18next';
+
 import { authHeader, handleError } from '../../common/AuthHeader.js';
 import { hasEditPermission } from '../../common/AuthUtil.js';
 import { eclTypes, formItemLayout, omitDeep } from '../../common/CommonUtil.js';
@@ -562,7 +564,7 @@ class JobDetails extends Component {
 
   render() {
     const editingAllowed = hasEditPermission(this.props.user);
-
+    const { t } = this.props; // translation
     const { confirmLoading, jobTypes, sourceFiles } = this.state;
 
     const longFieldLayout = {
@@ -572,14 +574,14 @@ class JobDetails extends Component {
 
     const columns = [
       {
-        title: 'Name',
+        title: t('Name', { ns: 'common' }),
         dataIndex: 'name',
         editable: editingAllowed,
         celleditor: 'text',
         regEx: /^[a-zA-Z0-9.,:;()?!""@&#*/'$_ -]*$/,
       },
       {
-        title: 'Type',
+        title: t('Type', { ns: 'common' }),
         dataIndex: 'type',
         editable: editingAllowed,
         celleditor: 'select',
@@ -592,12 +594,12 @@ class JobDetails extends Component {
 
     const scriptInputParamscolumns = [
       {
-        title: 'Name',
+        title: t('Name', { ns: 'common' }),
         dataIndex: 'name',
         editable: editingAllowed,
       },
       {
-        title: 'Value',
+        title: t('Value', { ns: 'common' }),
         dataIndex: 'type',
         editable: editingAllowed,
       },
@@ -633,7 +635,7 @@ class JobDetails extends Component {
         return (
           <div className="assetDetail-buttons-wrapper-modal">
             <Button disabled={!editingAllowed} type="primary" onClick={this.executeJob}>
-              Execute Job
+              {t('Execute Job', { ns: 'job' })}
             </Button>
           </div>
         );
@@ -641,7 +643,7 @@ class JobDetails extends Component {
       // if opened in main view show button as dissabled (click edit to enable)
       return this.props.inTabView ? null : (
         <Button disabled={!editingAllowed || !this.state.enableEdit} type="primary" onClick={this.executeJob}>
-          Execute Job
+          {t('Execute Job', { ns: 'job' })}
         </Button>
       );
     };
@@ -655,12 +657,12 @@ class JobDetails extends Component {
         <span className="button-container">
           {!this.state.enableEdit && editingAllowed ? (
             <Button type="primary" onClick={makeFieldsEditable}>
-              Edit
+              {t('Edit', { ns: 'common' })}
             </Button>
           ) : null}
 
           {this.state.dataAltered && this.state.enableEdit ? (
-            <Button onClick={this.switchToViewOnly}> View Changes </Button>
+            <Button onClick={this.switchToViewOnly}> {t('View Changes', { ns: 'common' })} </Button>
           ) : null}
 
           {this.state.enableEdit ? (
@@ -676,8 +678,7 @@ class JobDetails extends Component {
                   onDelete={this.handleDelete}
                   component={
                     <Button key="danger" type="danger">
-                      {' '}
-                      Delete{' '}
+                      {t('Delete', { ns: 'common' })}
                     </Button>
                   }
                 />
@@ -686,7 +687,7 @@ class JobDetails extends Component {
               <span style={{ marginLeft: '25px' }}>
                 {this.props.inTabView ? null : (
                   <Button key="back" onClick={this.handleCancel} type="primary" ghost>
-                    Cancel
+                    {t('Cancel', { ns: 'common' })}
                   </Button>
                 )}
                 <Button
@@ -697,7 +698,7 @@ class JobDetails extends Component {
                   loading={confirmLoading}
                   onClick={this.handleOk}
                   style={{ background: 'var(--success)' }}>
-                  Save
+                  {t('Save')}
                 </Button>
               </span>
             </span>
@@ -707,7 +708,7 @@ class JobDetails extends Component {
                 <span style={{ marginLeft: '25px' }}>
                   {this.props.inTabView ? null : (
                     <Button key="back" onClick={this.handleCancel} type="primary" ghost>
-                      Cancel
+                      {t('Cancel', { ns: 'common' })}
                     </Button>
                   )}
                   <Button
@@ -717,14 +718,14 @@ class JobDetails extends Component {
                     loading={confirmLoading}
                     onClick={this.handleOk}
                     style={{ background: 'var(--success)' }}>
-                    Save
+                    {t('Save', { ns: 'common' })}
                   </Button>
                 </span>
               ) : (
                 <span>
                   {this.props.inTabView ? null : (
                     <Button key="back" onClick={this.handleCancel} type="primary" ghost>
-                      Cancel
+                      {t('Cancel', { ns: 'common' })}
                     </Button>
                   )}
                 </span>
@@ -750,7 +751,9 @@ class JobDetails extends Component {
     return (
       <React.Fragment>
         {this.props.displayingInModal || this.state.addingNewAsset ? null : (
-          <div className="assetTitle">Job : {this.state.job.name}</div>
+          <div className="assetTitle">
+            {t('Job', { ns: 'common' })} : {this.state.job.name}
+          </div>
         )}
         <div
           className={
@@ -779,9 +782,11 @@ class JobDetails extends Component {
               defaultActiveKey={this.state.selectedTabPaneKey}
               tabBarExtraContent={this.props.displayingInModal ? null : controls}
               onChange={(activeKey) => this.setState({ selectedTabPaneKey: activeKey })}>
-              <TabPane tab="Basic" key="1">
+              <TabPane tab={t('Basic', { ns: 'common' })} key="1">
                 {this.props.inTabView ? null : (
-                  <Form.Item label="Job Type" className={this.state.enableEdit ? null : 'read-only-input'}>
+                  <Form.Item
+                    label={t('Job Type', { ns: 'job' })}
+                    className={this.state.enableEdit ? null : 'read-only-input'}>
                     <Row gutter={[8, 8]}>
                       <Col span={12}>
                         <Form.Item noStyle name="jobType">
@@ -878,10 +883,10 @@ class JobDetails extends Component {
                   />
                 </TabPane>
               ) : jobType === 'Script' ? (
-                <TabPane disabled={noECLAvailable} tab="Script" key="2">
+                <TabPane disabled={noECLAvailable} tab={t('Script', { ns: 'job' })} key="2">
                   <Form.Item
                     {...longFieldLayout}
-                    label="Script Path"
+                    label={t('Script Path', { ns: 'job' })}
                     name="scriptPath"
                     validateTrigger="onBlur"
                     rules={[
@@ -908,7 +913,7 @@ class JobDetails extends Component {
 
               {this.shouldShowTab(jobType) ? (
                 <React.Fragment>
-                  <TabPane disabled={noECLAvailable} tab="Input Params" key="3">
+                  <TabPane disabled={noECLAvailable} tab={t('Input Params', { ns: 'job' })} key="3">
                     <EditableTable
                       columns={this.state.job.jobType !== 'Script' ? columns : scriptInputParamscolumns}
                       dataSource={inputParams}
@@ -919,7 +924,7 @@ class JobDetails extends Component {
                       enableEdit={this.state.enableEdit}
                     />
                   </TabPane>
-                  <TabPane disabled={noECLAvailable} tab="Input Files" key="4">
+                  <TabPane disabled={noECLAvailable} tab={t('Input Files', { ns: 'job' })} key="4">
                     <InputFiles
                       inputFiles={inputFiles}
                       clusterId={this.state.selectedCluster}
@@ -933,7 +938,7 @@ class JobDetails extends Component {
                     />
                   </TabPane>
 
-                  <TabPane tab="Output Files" disabled={noECLAvailable} key="5">
+                  <TabPane tab={t('Output Files', { ns: 'job' })} disabled={noECLAvailable} key="5">
                     <InputFiles
                       outputFiles={outputFiles}
                       clusterId={this.state.selectedCluster}
@@ -949,7 +954,7 @@ class JobDetails extends Component {
               ) : null}
 
               {this.props.selectedDataflow ? (
-                <TabPane tab="Schedule" key="6">
+                <TabPane tab={t('Schedule', { ns: 'job' })} key="6">
                   <ScheduleTab
                     nodes={this.props.nodes}
                     readOnly={this.props.viewMode}
@@ -963,7 +968,7 @@ class JobDetails extends Component {
               ) : null}
 
               {!this.props.isNew ? (
-                <TabPane tab="Workflows" key="7">
+                <TabPane tab={t('Workflows', { ns: 'job' })} key="7">
                   <AssociatedDataflows assetId={this.state.job.id} assetType={'Job'} />
                 </TabPane>
               ) : null}
@@ -996,6 +1001,7 @@ function mapStateToProps(state, ownProps) {
 }
 
 // Forward ref will give us ability to add ref to this component with AddJobs wrapper, so we can call savejobs method on all instances at once.
-const JobDetailsForm = connect(mapStateToProps, null, null, { forwardRef: true })(JobDetails);
+let JobDetailsForm = connect(mapStateToProps, null, null, { forwardRef: true })(JobDetails);
+JobDetailsForm = withTranslation(['common', 'job'])(JobDetailsForm);
 
 export default JobDetailsForm;

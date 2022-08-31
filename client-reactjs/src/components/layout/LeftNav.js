@@ -1,8 +1,10 @@
 import React, { Component } from 'react';
 import { Link, withRouter } from 'react-router-dom';
 import { connect } from 'react-redux';
-import { hasEditPermission } from '../common/AuthUtil.js';
+import { withTranslation } from 'react-i18next';
 import { Layout, Menu, Typography } from 'antd';
+
+import { hasEditPermission } from '../common/AuthUtil.js';
 
 const { Sider } = Layout;
 
@@ -47,6 +49,7 @@ class LeftNav extends Component {
   };
 
   render() {
+    const { t } = this.props; // translate func
     const applicationId = this.props?.applicationId || '';
 
     if (!this.props.loggedIn || !this.props.user || Object.getOwnPropertyNames(this.props.user).length == 0) {
@@ -81,45 +84,45 @@ class LeftNav extends Component {
           selectedKeys={[this.state.current]}
           style={{ backgroundColor: this.props.BG_COLOR, maxWidth: '100%', height: '100%' }}>
           <Menu.Item key="1" icon={<i className="fa fa-fw fa-cubes"></i>}>
-            <Link to={'/' + applicationId + '/assets'}>Assets</Link>
+            <Link to={'/' + applicationId + '/assets'}>{t('Assets', { ns: 'common' })}</Link>
           </Menu.Item>
 
           <Menu.Item key="2" icon={<i className="fa fa-fw fa-random" />}>
-            <Link to={'/' + applicationId + '/dataflow'}>Definitions</Link>
+            <Link to={'/' + applicationId + '/dataflow'}>{t('Definitions', { ns: 'nav' })}</Link>
           </Menu.Item>
 
           <Menu.Item key="3" icon={<i className="fa fa-fw fa-microchip" />}>
-            <Link to={'/' + applicationId + '/dataflowinstances'}>Job Execution</Link>
+            <Link to={'/' + applicationId + '/dataflowinstances'}>{t('Job Execution', { ns: 'nav' })}</Link>
           </Menu.Item>
 
           {canEdit ? (
             <>
               {this.props.collapsed ? null : (
                 <Typography.Title ellipsis={true} className="left-nav-title">
-                  Settings
+                  {t('Settings', { ns: 'nav' })}
                 </Typography.Title>
               )}
               <Menu.Item key="4" icon={<i className="fa fa-fw fa-telegram" />}>
-                <Link to={'/' + applicationId + '/actions'}>Actions</Link>
+                <Link to={'/' + applicationId + '/actions'}>{t('Actions', { ns: 'nav' })}</Link>
               </Menu.Item>
               <Menu.Item key="5" icon={<i className="fa fa-fw fa-server" />}>
-                <Link to={'/admin/clusters'}>Clusters</Link>
+                <Link to={'/admin/clusters'}>{t('Clusters', { ns: 'nav' })}</Link>
               </Menu.Item>
 
               <Menu.Item key="6" icon={<i className="fa fa-fw fa-github" />}>
-                <Link to={'/admin/github'}>Github projects</Link>
+                <Link to={'/admin/github'}>{t('Github Projects', { ns: 'nav' })}</Link>
               </Menu.Item>
 
               <Menu.Item key="7" icon={<i className="fa fa-fw fa-user-circle" />}>
-                <Link to={'/admin/consumers'}>Collaborator</Link>
+                <Link to={'/admin/consumers'}>{t('Collaborator', { ns: 'nav' })}</Link>
               </Menu.Item>
               {this.props.collapsed ? null : (
                 <Typography.Title ellipsis={true} className="left-nav-title">
-                  Admin
+                  {t('Admin', { ns: 'nav' })}
                 </Typography.Title>
               )}
               <Menu.Item key="8" icon={<i className="fa fa-fw fa-desktop" />}>
-                <Link to={'/admin/applications'}>Applications</Link>
+                <Link to={'/admin/applications'}>{t('Applications', { ns: 'nav' })}</Link>
               </Menu.Item>
             </>
           ) : null}
@@ -135,5 +138,6 @@ function mapStateToProps(state) {
   return { applicationId, loggedIn, user };
 }
 
-const connectedLeftNav = connect(mapStateToProps, null, null, { forwardRef: true })(withRouter(LeftNav));
+let connectedLeftNav = connect(mapStateToProps, null, null, { forwardRef: true })(withRouter(LeftNav));
+connectedLeftNav = withTranslation(['common', 'nav'])(connectedLeftNav); // uses nav namespace for translation
 export { connectedLeftNav as LeftNav };

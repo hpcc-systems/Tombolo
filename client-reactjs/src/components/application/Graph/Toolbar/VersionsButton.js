@@ -27,10 +27,11 @@ import {
   Badge,
   Tag,
 } from 'antd';
+import { useEffect } from 'react';
+import { useTranslation } from 'react-i18next';
 
 import { Toolbar, Menu } from '@antv/x6-react-components';
 import { authHeader, handleError } from '../../../common/AuthHeader';
-import { useEffect } from 'react';
 import { getWorkingCopyGraph, saveWorkingCopyGraph } from '../../../common/CommonUtil';
 
 const Item = Toolbar.Item; // eslint-disable-line
@@ -53,6 +54,7 @@ const VersionsButton = ({ graphRef }) => {
   const [versions, setVersions] = useState([]);
   // Keep track of "active", clicked, versions here
   const [clickedVersion, setClickedVersion] = useState({ id: '', name: '', description: '' });
+  const { t } = useTranslation(['common', 'dataflow']); // t for translate -> getting namespaces relevant to this file
 
   useEffect(() => {
     notification.config({ top: 70, maxCount: 1, duration: 8 });
@@ -507,17 +509,17 @@ const VersionsButton = ({ graphRef }) => {
     <>
       <Item
         name="save"
-        tooltip="Save graph version"
+        tooltip={t("Save graph version",{ns: 'dataflow'})}
         disabled={saveGraph.loading}
         active={saveGraph.loading}
         icon={saveGraph.loading ? <LoadingOutlined /> : <SaveOutlined />}
         onClick={openSaveDialog}>
-        {saveGraph.loading ? '...Saving' : 'Save Version'}
+        {saveGraph.loading ? t('...Saving',{ns: 'common'}) : t('Save Version',{ns: 'dataflow'})}
       </Item>
       <Item className="versions_list" name="versions" tooltip="Versions" dropdown={getVersionsList()} />
       {!clickedVersion.name ? (
         <Item name="current_version">
-          <Badge color="#3bb44a" /> You are on Working Copy
+          <Badge color="#3bb44a" /> {t("You are on Working Copy", {ns: 'dataflow'})}
         </Item>
       ) : (
         <>
@@ -550,7 +552,7 @@ const VersionsButton = ({ graphRef }) => {
       )}
     </>
   );
-};
+};;
 
 export default VersionsButton;
 

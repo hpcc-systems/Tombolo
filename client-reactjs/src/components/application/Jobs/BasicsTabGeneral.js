@@ -3,6 +3,7 @@ import { Form, Input, Button, Select, AutoComplete, Spin, message, Row, Col, Typ
 import { authHeader, handleError } from '../../common/AuthHeader.js';
 import ReactMarkdown from 'react-markdown';
 import { useSelector } from 'react-redux';
+import { useTranslation } from 'react-i18next';
 
 import MonacoEditor from '../../common/MonacoEditor.js';
 import GitHubForm from './GitHubForm/GitHubForm.js';
@@ -28,7 +29,7 @@ function BasicsTabGeneral({
   inTabView,
 }) {
   const assetReducer = useSelector((state) => state.assetReducer);
-
+  const { t } = useTranslation(['common', 'job']); // t for translate -> getting namespaces relevant to this file
   const clusterId = assetReducer.clusterId || formRef.current?.getFieldValue('clusters');
 
   const [search, setSearch] = useState({ loading: false, error: '', data: [] });
@@ -222,7 +223,7 @@ function BasicsTabGeneral({
       <Spin spinning={job.loading} tip="loading job details">
         {inTabView ? null : (
           <>
-            <Form.Item label="Cluster">
+            <Form.Item label={t('Cluster', { ns: 'common' })}>
               <Row gutter={[8, 8]}>
                 <Col span={12}>
                   {enableEdit ? (
@@ -246,7 +247,10 @@ function BasicsTabGeneral({
               </Row>
             </Form.Item>
 
-            <Form.Item label="Source" name="isStoredOnGithub" hidden={!enableEdit || isAssociated}>
+            <Form.Item
+              label={t('Source', { ns: 'common' })}
+              name="isStoredOnGithub"
+              hidden={!enableEdit || isAssociated}>
               <Radio.Group size="middle" buttonStyle="solid">
                 <Radio.Button value={false}>HPCC</Radio.Button>
                 <Radio.Button value={true}>GitHub</Radio.Button>
@@ -254,14 +258,14 @@ function BasicsTabGeneral({
             </Form.Item>
 
             <Form.Item
-              label="Job"
+              label={t('Job', { ns: 'common' })}
               name="querySearchValue"
               hidden={hideOnReadOnlyView || filesStoredOnGithub || jobType === 'Spray'}
               help={
                 job.jobExists ? (
                   <Alert
                     style={{ border: 'none', background: 'transparent' }}
-                    message="Job already exists!"
+                    message={t('Job already exists!', { ns: 'job' })}
                     type="warning"
                     showIcon
                   />
@@ -277,7 +281,7 @@ function BasicsTabGeneral({
                     style={{ width: '100%' }}
                     onSearch={(value) => searchJobs({ searchString: value, clusterId: clusterId })}
                     onSelect={(value, option) => onJobSelected(option)}
-                    placeholder="Search jobs"
+                    placeholder={t('Search jobs', { ns: 'job' })}
                     disabled={!editingAllowed}
                     notFoundContent={search.loading ? <Spin /> : 'Not Found'}>
                     {search.data.map((suggestion) => (
@@ -289,7 +293,7 @@ function BasicsTabGeneral({
                 </Col>
                 <Col span={5}>
                   <Button htmlType="button" block onClick={resetSearch}>
-                    Clear
+                    {t('Clear', { ns: 'common' })}
                   </Button>
                 </Col>
               </Row>
@@ -300,7 +304,7 @@ function BasicsTabGeneral({
 
         <Form.Item
           name="name"
-          label="Name"
+          label={t('Name', { ns: 'common' })}
           validateTrigger="onBlur"
           rules={[
             { required: enableEdit ? true : false, message: 'Please enter the name' },
@@ -310,12 +314,12 @@ function BasicsTabGeneral({
             },
           ]}
           className={enableEdit ? null : 'read-only-input'}
-          tooltip={enableEdit ? 'Should match job name in HPCC' : null}
+          tooltip={enableEdit ? t('Should match job name in HPCC', { ns: 'job' }) : null}
           help={
             inTabView && job.jobExists ? (
               <Alert
                 style={{ border: 'none', background: 'transparent' }}
-                message="Job already exists!"
+                message={t('Job already exists!')}
                 type="warning"
                 showIcon
               />
@@ -325,7 +329,7 @@ function BasicsTabGeneral({
             <Input
               id="job_name"
               onChange={onChange}
-              placeholder={enableEdit ? 'Name' : 'Name is not provided'}
+              placeholder={enableEdit ? t('Name', { ns: 'common' }) : t('Name is not provided', { ns: 'job' })}
               disabled={!editingAllowed || !addingNewAsset || job.disableFields}
             />
           ) : (
@@ -335,20 +339,20 @@ function BasicsTabGeneral({
 
         <Form.Item
           name="title"
-          label="Title"
+          label={t('Title', { ns: 'common' })}
           validateTrigger="onBlur"
           className={enableEdit ? null : 'read-only-input'}
           rules={[
             { required: enableEdit ? true : false, message: 'Please enter a title!' },
             {
               pattern: new RegExp(/^[ a-zA-Z0-9:@._-]*$/),
-              message: 'Please enter a valid Title. Title can have  a-zA-Z0-9:._- and space',
+              message: t('Please enter a valid Title. Title can have  a-zA-Z0-9:._- and space', { ns: 'job' }),
             },
           ]}>
           <Input
             id="job_title"
             onChange={onChange}
-            placeholder={enableEdit ? 'Title' : 'Title is not provided'}
+            placeholder={enableEdit ? t('Title', { ns: 'common' }) : t('Title is not provided', { ns: 'job' })}
             disabled={!editingAllowed}
           />
         </Form.Item>
@@ -357,14 +361,14 @@ function BasicsTabGeneral({
           <Form.Item
             hidden={filesStoredOnGithub}
             name="gitRepo"
-            label="Git Repo"
+            label={t('Git Repo', { ns: 'job' })}
             validateTrigger="onBlur"
-            rules={[{ type: 'url', message: 'Please enter a valid url' }]}
+            rules={[{ type: 'url', message: t('Please enter a valid url', { ns: 'job' }) }]}
             className={enableEdit ? null : 'read-only-input'}>
             <Input
               id="job_gitRepo"
               onChange={onChange}
-              placeholder={enableEdit ? 'Git Repo' : 'Git Repo is not provided'}
+              placeholder={enableEdit ? t('Git Repo', { ns: 'job' }) : t('Git Repo is not provided', { ns: 'job' })}
               value={localState.gitRepo}
               disabled={!editingAllowed}
             />
@@ -375,7 +379,7 @@ function BasicsTabGeneral({
           <React.Fragment>
             <Form.Item
               name="entryBWR"
-              label="Entry BWR"
+              label={t('Entry BWR', { ns: 'job' })}
               className={enableEdit ? null : 'read-only-input'}
               validateTrigger="onBlur"
               // rules={[{ pattern: new RegExp(/^[a-zA-Z0-9:$._-]*$/), message: 'Please enter a valid BWR' }]}
@@ -383,7 +387,7 @@ function BasicsTabGeneral({
               <Input
                 id="job_entryBWR"
                 onChange={onChange}
-                placeholder={enableEdit ? 'Entry BWR' : 'Entry BWR is not provided'}
+                placeholder={enableEdit ? t('Entry BWR', { ns: 'job' }) : t('Entry BWR is not provided', { ns: 'job' })}
                 value={localState.entryBWR}
                 disabled={!editingAllowed}
               />
@@ -391,14 +395,14 @@ function BasicsTabGeneral({
 
             <Form.Item
               name="author"
-              label="Author"
+              label={t('Author', { ns: 'common' })}
               validateTrigger="onBlur"
               className={enableEdit ? null : 'read-only-input'}
               rules={[{ pattern: new RegExp(/^[a-zA-Z0-9: $._-]*$/), message: 'Please enter a valid author' }]}>
               <Input
                 id="job_author"
                 onChange={onChange}
-                placeholder={enableEdit ? 'Author' : 'Author is not provided'}
+                placeholder={enableEdit ? t('Author', { ns: 'common' }) : t('Author is not provided', { ns: 'job' })}
                 value={localState.author}
                 disabled={!editingAllowed}
               />
@@ -406,14 +410,14 @@ function BasicsTabGeneral({
 
             <Form.Item
               name="contact"
-              label="Contact Email"
+              label={t('E-mail', { ns: 'common' })}
               validateTrigger="onBlur"
               className={enableEdit ? null : 'read-only-input'}
-              rules={[{ type: 'email', message: 'Please enter a valid email address' }]}>
+              rules={[{ type: 'email', message: t('Please enter a valid email address') }]}>
               <Input
                 id="job_bkp_svc"
                 onChange={onChange}
-                placeholder={enableEdit ? 'Contact' : 'Contact is not provided'}
+                placeholder={enableEdit ? t('Contact', { ns: 'common' }) : t('Contact is not provided', { ns: 'job' })}
                 value={localState.contact}
                 disabled={!editingAllowed}
               />
@@ -421,7 +425,7 @@ function BasicsTabGeneral({
 
             <Notifications enableEdit={enableEdit} formRef={formRef} />
 
-            <Form.Item name="description" label="Description">
+            <Form.Item name="description" label={t('Description', { ns: 'common' })}>
               {enableEdit ? (
                 <MonacoEditor
                   onChange={onChange}
@@ -433,7 +437,9 @@ function BasicsTabGeneral({
                   {localState.job.description ? (
                     <ReactMarkdown children={localState.job.description} />
                   ) : (
-                    <Typography.Text type="secondary">Description is not provided</Typography.Text>
+                    <Typography.Text type="secondary">
+                      {t('Description is not provided', { ns: 'job' })}
+                    </Typography.Text>
                   )}
                 </div>
               )}

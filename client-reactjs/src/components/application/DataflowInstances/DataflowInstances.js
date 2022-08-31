@@ -4,6 +4,8 @@ import { Component } from 'react';
 import ReactMarkdown from 'react-markdown';
 import { connect } from 'react-redux';
 import { withRouter } from 'react-router-dom';
+import { withTranslation } from 'react-i18next';
+
 import { dataflowAction } from '../../../redux/actions/Dataflow';
 import { authHeader, handleError } from '../../common/AuthHeader.js';
 import BreadCrumbs from '../../common/BreadCrumbs';
@@ -33,17 +35,19 @@ class DataflowInstances extends Component {
   };
 
   render() {
+    const { t } = this.props;
+
     if (!this.props.applicationId) return null;
 
     const dataflowCols = [
       {
-        title: 'Name',
+        title: t('Name', { ns: 'common' }),
         dataIndex: 'title',
         width: '30%',
         render: (text, record) => <a onClick={() => this.handleViewDetails(record)}>{text}</a>,
       },
       {
-        title: 'Description',
+        title: t('Description', { ns: 'common' }),
         dataIndex: 'description',
         className: 'overflow-hidden',
         ellipsis: true,
@@ -55,7 +59,7 @@ class DataflowInstances extends Component {
         ),
       },
       {
-        title: 'Created',
+        title: t('Created', { ns: 'common' }),
         dataIndex: 'createdAt',
         width: '30%',
         render: (text) => {
@@ -90,5 +94,7 @@ function mapStateToProps(state) {
   return { applicationTitle, applicationId };
 }
 
-const connectedWorkflows = connect(mapStateToProps)(withRouter(DataflowInstances));
+let connectedWorkflows = connect(mapStateToProps)(withRouter(DataflowInstances));
+connectedWorkflows = withTranslation('common')(connectedWorkflows);
+
 export default connectedWorkflows;

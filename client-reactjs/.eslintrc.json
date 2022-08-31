@@ -20,11 +20,11 @@
     }
   },
   "rules": {
-    "prettier/prettier": ["error", {}, { "usePrettierrc": true }],
+    "prettier/prettier": ["warn", {}, { "usePrettierrc": true }],
     "no-unused-vars": "off",
-    "unused-imports/no-unused-imports": "error",
+    "unused-imports/no-unused-imports": "warn",
     "unused-imports/no-unused-vars": [
-      "error",
+      "warn",
       {
         "vars": "all",
         "varsIgnorePattern": "^_",
@@ -33,10 +33,10 @@
       }
     ],
     "react/no-children-prop": "off",
-    "react/jsx-uses-react": "error",
-    "react/jsx-uses-vars": "error",
+    "react/jsx-uses-react": "warn",
+    "react/jsx-uses-vars": "warn",
     "react/prop-types": "off",
-    "react-hooks/rules-of-hooks": "error",
+    "react-hooks/rules-of-hooks": "warn",
     "react-hooks/exhaustive-deps": "off",
     "react/jsx-filename-extension": [
       1,
@@ -44,6 +44,6 @@
         "extensions": [".js", ".jsx"]
       }
     ],
-    "linebreak-style": ["error", "unix"]
+    "linebreak-style": ["warn", "unix"]
   }
 }

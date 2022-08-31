@@ -1,11 +1,12 @@
 import React, { useState, useEffect } from 'react';
 import { authHeader, handleError } from '../../common/AuthHeader.js';
-import { Col, Form, Input, Row, Select } from 'antd';
+import { Col, Form, Input, Row, Select, Cascader } from 'antd';
 import ReactMarkdown from 'react-markdown';
-import MonacoEditor from '../../common/MonacoEditor.js';
 import { useSelector, useDispatch } from 'react-redux';
+import { useTranslation } from 'react-i18next';
+
+import MonacoEditor from '../../common/MonacoEditor.js';
 import { assetsActions } from '../../../redux/actions/Assets';
-import { Cascader } from 'antd';
 
 function BasicsTabManul(props) {
   const { enableEdit, localState, editingAllowed, onChange, formRef, addingNewAsset, inTabView } = props;
@@ -13,6 +14,7 @@ function BasicsTabManul(props) {
   const applicationReducer = useSelector((state) => state.applicationReducer);
   const readOnlyView = !enableEdit || !addingNewAsset;
   const [options, setOptions] = useState([]);
+  const { t } = useTranslation(['common', 'clusters']); // t for translate -> getting namespaces relevant to this file
 
   const [selectedCluster, setSelectedCluster] = useState(assetReducer.clusterId || localState.selectedCluster);
   const [clusters, _setClusters] = useState(applicationReducer.clusters);
@@ -133,11 +135,11 @@ function BasicsTabManul(props) {
   return (
     <>
       {enableEdit ? (
-        <Form.Item label="Cluster" hidden={readOnlyView}>
+        <Form.Item label={t('Cluster', { ns: 'common' })} hidden={readOnlyView}>
           <Row gutter={[8, 8]}>
             <Col span={12}>
               <Form.Item noStyle name="clusters">
-                <Select placeholder="Select a Cluster" disabled={!editingAllowed} onChange={onClusterSelection}>
+                <Select disabled={!editingAllowed} onChange={onClusterSelection}>
                   {clusters.map((cluster) => (
                     <Option key={cluster.id}>{cluster.name}</Option>
                   ))}
@@ -149,12 +151,11 @@ function BasicsTabManul(props) {
       ) : null}
 
       {localState.isNew || enableEdit ? (
-        <Form.Item label="File Path" name="manualJobFilePath">
+        <Form.Item label={t('File Path', { ns: 'job' })} name="manualJobFilePath">
           <Cascader
             options={options}
             onChange={onFilePathChange}
             loadData={loadData}
-            placeholder="Please select"
             className={enableEdit ? null : 'read-only-input'}
             allowClear
           />
@@ -162,14 +163,13 @@ function BasicsTabManul(props) {
       ) : null}
 
       <Form.Item
-        label="Name"
+        label={t('Name', { ns: 'common' })}
         name="name"
         validateTrigger="onBlur"
         onFocus={clearError}
         rules={[{ required: true, message: 'Please enter a Name!' }]}>
         <Input
           onChange={onChange}
-          placeholder="Name"
           disabled={
             formRef.current.getFieldValue('path') && formRef.current.getFieldValue('path')?.length > 0 ? true : false
           }
@@ -178,20 +178,15 @@ function BasicsTabManul(props) {
       </Form.Item>
 
       <Form.Item
-        label="Title"
+        label={t('Title', { ns: 'common' })}
         name="title"
         rules={[{ required: true, message: 'Please enter a title!' }]}
         onFocus={clearError}
         validateTrigger="onBlur">
-        <Input
-          onChange={onChange}
-          placeholder="Title"
-          disabled={!editingAllowed}
-          className={enableEdit ? null : 'read-only-input'}
-        />
+        <Input onChange={onChange} disabled={!editingAllowed} className={enableEdit ? null : 'read-only-input'} />
       </Form.Item>
 
-      <Form.Item label="Description" name="description">
+      <Form.Item label={t('Description', { ns: 'common' })} name="description">
         {enableEdit ? (
           <MonacoEditor
             onChange={onChange}
@@ -206,17 +201,12 @@ function BasicsTabManul(props) {
       </Form.Item>
 
       <Form.Item
-        label="Contact"
+        label={t('Contact E-mail', { ns: 'common' })}
         name="contact"
         validateTrigger="onBlur"
         onFocus={clearError}
-        rules={[{ type: 'email', required: true, message: 'Please enter a valid email address' }]}>
-        <Input
-          onChange={onChange}
-          placeholder="Contact"
-          disabled={!editingAllowed}
-          className={enableEdit ? null : 'read-only-input'}
-        />
+        rules={[{ type: 'email', required: true, message: t('Please enter a valid email address', { ns: 'common' }) }]}>
+        <Input onChange={onChange} disabled={!editingAllowed} className={enableEdit ? null : 'read-only-input'} />
       </Form.Item>
     </>
   );

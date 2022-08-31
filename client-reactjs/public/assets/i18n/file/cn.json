@@ -1,0 +1,19 @@
+{
+  "Service URL": "服务网址",
+  "Is Super File": "是超级文件",
+  "Search files": "搜索文件",
+  "Title is not provided": "未提供标题",
+  "Scope is not provided": "未提供范围",
+  "Service URL is not provided": "未提供服务 URL",
+  "Select a supplier": "选择供应商",
+  "Supplier is not provided": "未提供供应商",
+  "Select a consumer": "选择消费者",
+  "Consumer is not provided": "未提供消费者",
+  "Select a owner": "选择所有者",
+  "Owner is not provided": "未提供所有者",
+  "File Preview": "文件预览",
+  "System Name": "系统名称",
+  "Rule Name": "规则名称",
+  "Rule": "规则",
+  "Fix": "使固定"
+}
