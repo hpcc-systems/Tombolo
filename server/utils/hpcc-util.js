@@ -31,9 +31,9 @@ exports.fileInfo = async (fileName, clusterId) => {
         scope: fileInfo.FileDetail.Name.substring(0, fileInfo.FileDetail.Name.lastIndexOf('::')),
         pathMask: fileInfo.FileDetail.PathMask,
         isSuperfile: fileInfo.FileDetail.isSuperfile,
-        fileType: fileInfo.FileDetail.ContentType || fileInfo.FileDetail.Format || 'thor_file'
+        fileType: fileInfo.FileDetail.ContentType || fileInfo.FileDetail.Format || 'thor_file',
+        metaData: { layout }
       },
-      file_layouts: layout,
       file_validations: [],
     };
   } catch (error) {
@@ -452,15 +452,8 @@ const getFileLayout = async (cluster, fileName, format) => {
       name: column.ColumnLabel,
       type: column.ColumnType,
       eclType: column.ColumnEclType,
-      format: '',
       description: '',
-      displaySize: '',
-      displayType: '',
-      isPCI: 'false',
-      isPII: 'false',
-      isHIPAA: 'false',
-      required: 'false',
-      textJustification: 'right',
+      constraints:{ inherited:[], own:[], }
     });
 
     const layoutResults = fileInfoResponse.reduce((acc, column, idx) => {

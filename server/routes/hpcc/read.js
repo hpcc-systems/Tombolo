@@ -241,31 +241,33 @@ router.post('/removecluster', function (req, res) {
     }
 });
 
-router.get('/getFileInfo', [
-  query('fileName').exists().withMessage('Invalid file name'),
-  query('clusterid').optional({checkFalsy:true}).isUUID(4).withMessage('Invalid cluster id'),
-  query('applicationId').isUUID(4).withMessage('Invalid application id')
-], function (req, res) {
-	const errors = validationResult(req).formatWith(validatorUtil.errorFormatter);
-  if (!errors.isEmpty()) {
-    return res.status(422).json({ success: false, errors: errors.array() });
-  }
-  File.findOne({where: {name: req.query.fileName, application_id: req.query.applicationId}}).then(async (existingFile) => {
-		console.log(existingFile);
-    if(existingFile) {
-      await assetUtil.fileInfo(req.query.applicationId, existingFile.id).then((existingFileInfo) => {
-        res.json(existingFileInfo);
-      })
-    } else {
-      hpccUtil.fileInfo(req.query.fileName, req.query.clusterid).then((fileInfo) => {
-        res.json(fileInfo);
-      }).catch((err) => {
-        console.log('err', err);
-        return res.status(500).send("Error occured while getting file details");
-      })
+router.get( "/getFileInfo",
+  [
+    query("fileName").exists().withMessage("Invalid file name"),
+    query("clusterid").optional({ checkFalsy: true }).isUUID(4).withMessage("Invalid cluster id"),
+    query("applicationId").isUUID(4).withMessage("Invalid application id"),
+  ], async (req, res) => {
+    try {
+      const errors = validationResult(req).formatWith(validatorUtil.errorFormatter);
+      if (!errors.isEmpty()) return res.status(422).json({ success: false, errors: errors.array() });
+
+      const { applicationId, fileName, clusterid } = req.query;
+
+      const file = await File.findOne({
+        where: { name: fileName, application_id: applicationId },
+        attributes: ["id"],
+      });
+
+      const data = file ? await assetUtil.fileInfo(applicationId, file.id) : await hpccUtil.fileInfo(fileName, clusterid);
+			
+      res.status(200).json(data);
+    } catch (error) {
+      console.log("error", error);
+      return res.status(500).send("Error occurred while getting file details");
     }
-  })
-});
+  }
+);
+
 
 
 router.get('/getIndexInfo', [
