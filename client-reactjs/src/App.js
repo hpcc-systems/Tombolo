@@ -153,7 +153,7 @@ class App extends React.Component {
                     <PrivateRoute path="/admin/bree" component={ScheduledJobsPage} />
                     <PrivateRoute path="/admin/clusters/:clusterId" component={ClusterDetails} />
                     <PrivateRoute path="/admin/clusters" component={AdminClusters} />
-                    <PrivateRoute path="/admin/constraints" component={Constraints} />
+                    <PrivateRoute path="/admin/constraints/:tabName?" component={Constraints} />
                     <PrivateRoute path="/admin/github" component={GitHubSettings} />
                     <PrivateRoute path="/admin/users" component={Users} />
                     <PrivateRoute path="/admin/consumers" component={AdminConsumers} />
