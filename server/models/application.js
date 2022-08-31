@@ -41,6 +41,8 @@ module.exports = (sequelize, DataTypes) => {
     /* JOB */
     application.hasMany(models.job, { foreignKey: 'application_id', onDelete: 'CASCADE' });
     application.hasMany(models.jobparam, { foreignKey: 'application_id', onDelete: 'CASCADE' });
+    /* REPORT */
+    application.hasMany(models.report, { foreignKey: 'application_id', onDelete: 'CASCADE' });
     /* FILE */
     application.hasMany(models.file, { foreignKey: 'application_id', onDelete: 'CASCADE' });
     application.hasMany(models.file_validation, { foreignKey: 'application_id', onDelete: 'CASCADE' });
