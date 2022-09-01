@@ -152,7 +152,7 @@ router.get("/:applicationId", async (req, res) => {
         }
         // if no changes was made to file, remove in from report and from filesToUpdate list;
         if (!report.updates[file].hasChanges){
-          report.filesToUpdate = report.filesToUpdate.filter(id => id !== report.updates[file].id);
+          // report.filesToUpdate = report.filesToUpdate.filter(id => id !== report.updates[file].id);
         }else{
           const { id, fields } = report.updates[file];
           const fieldsArr = Object.entries(fields).map(([field,values] )=> {
