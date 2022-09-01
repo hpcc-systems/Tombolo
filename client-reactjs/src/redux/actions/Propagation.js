@@ -49,7 +49,6 @@ const getReports = () => {
     try {
       const { applicationReducer } = getState();
       const applicationId = applicationReducer?.application?.applicationId;
-      dispatch({ type: Constants.PROPAGATIONS_INITIATE });
 
       const response = await fetch(`/api/report/read/${applicationId}`, { headers: authHeader() });
       if (!response.ok) throw Error(response.statusText);
