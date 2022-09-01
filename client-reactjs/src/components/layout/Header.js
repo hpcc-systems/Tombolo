@@ -371,7 +371,7 @@ class AppHeader extends Component {
       <div style={{ display: 'flex', alignItems: 'center', maxHeight: '100%', justifyContent: 'space-between' }}>
         <div>
           <Link to={'/'} style={{ marginRight: '70px' }}>
-            <img src={logo} alt="Tombolo logo" />
+            <img src={logo} alt="Tombolo logo" width="80px" height="19px" />
           </Link>
 
           <Dropdown overlay={menu} placement="bottom" trigger={['click']}>
