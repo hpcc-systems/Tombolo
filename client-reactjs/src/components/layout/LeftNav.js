@@ -3,6 +3,7 @@ import { Link, withRouter } from 'react-router-dom';
 import { connect } from 'react-redux';
 import { hasEditPermission } from '../common/AuthUtil.js';
 import { Layout, Menu, Typography } from 'antd';
+import { LoadingOutlined } from '@ant-design/icons';
 
 const { Sider } = Layout;
 
@@ -63,6 +64,7 @@ class LeftNav extends Component {
         collapsed={this.props.collapsed}
         onCollapse={this.props.onCollapse}
         collapsedWidth={55}
+        className="custom-scroll"
         style={{
           backgroundColor: this.props.BG_COLOR,
           marginTop: '46px',
@@ -121,6 +123,13 @@ class LeftNav extends Component {
               <Menu.Item key="8" icon={<i className="fa fa-fw fa-desktop" />}>
                 <Link to={'/admin/applications'}>Applications</Link>
               </Menu.Item>
+              <Menu.Item
+                key="9"
+                icon={
+                  this.props.propagation.loading ? <LoadingOutlined /> : <i className="fa fa-fw fa-balance-scale" />
+                }>
+                <Link to={'/admin/constraints'}>Compliance</Link>
+              </Menu.Item>
             </>
           ) : null}
         </Menu>
@@ -132,7 +141,7 @@ class LeftNav extends Component {
 function mapStateToProps(state) {
   const applicationId = state.applicationReducer.application?.applicationId;
   const { loggedIn, user } = state.authenticationReducer;
-  return { applicationId, loggedIn, user };
+  return { applicationId, loggedIn, user, propagation: state.propagation };
 }
 
 const connectedLeftNav = connect(mapStateToProps, null, null, { forwardRef: true })(withRouter(LeftNav));

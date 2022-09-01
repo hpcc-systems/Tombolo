@@ -1,27 +1,21 @@
 'use strict';
 module.exports = {
   up: (queryInterface, Sequelize) => {
-    return queryInterface.createTable('file_layout', {
+    return queryInterface.createTable('constraint', {
       id: {
         allowNull: false,
         primaryKey: true,
         type: Sequelize.UUID,
         defaultValue: Sequelize.UUIDV4,
       },
-      fields: Sequelize.TEXT,
+      name: Sequelize.STRING,
+      short_description: Sequelize.STRING,
+      description: Sequelize.TEXT,
       application_id: {
         type: Sequelize.UUID,
+        allowNull: true,
         references: {
           model: 'application',
-          key: 'id',
-        },
-        onUpdate: 'CASCADE',
-        onDelete: 'CASCADE',
-      },
-      file_id: {
-        type: Sequelize.UUID,
-        references: {
-          model: 'file',
           key: 'id',
         },
         onUpdate: 'CASCADE',
@@ -42,6 +36,6 @@ module.exports = {
     });
   },
   down: (queryInterface, Sequelize) => {
-    return queryInterface.dropTable('file_layout');
+    return queryInterface.dropTable('constraint');
   },
 };
