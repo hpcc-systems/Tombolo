@@ -1,8 +1,6 @@
 const express = require("express");
 const router = express.Router();
 
-const { v4: uuidv4 } = require('uuid')
-
 const { file: File, job: Job, report: Report } = require("../../models");
 const _ = require("lodash");
 
@@ -12,7 +10,8 @@ router.get("/:applicationId", async (req, res) => {
 
     const jobs = await Job.findAll({
       where: { application_id },
-      attributes: ["id", "name"],
+      attributes: ["id", "name", "createdAt"],
+      order: [['createdAt', 'ASC']],
       include: [
         {
           model: File,
@@ -42,11 +41,12 @@ router.get("/:applicationId", async (req, res) => {
     //     ]
     //   },
     
-    const report = {
-      updates: {},
-      final:[],
-      filesToUpdate: [],
-    };
+    const allFiles = jobs.reduce((acc,job) => {
+      if (job.files.length > 0) acc = [...acc, ...job.files];
+      return acc;
+    },[])
+
+    const report = { updates: {}, final:[], };
 
     // loop through all jobs and find input and output files;
     for (const job of jobs) {
@@ -59,7 +59,10 @@ router.get("/:applicationId", async (req, res) => {
         { input: [], output: [] }
       );
       // loop through inputFiles and find each field in it;
-      for (const inputFile of input) {
+      for (let inputFile of input) {
+        // if this file was already updated use it again as a base
+        if (report.updates[inputFile.id]?.fileDTO) inputFile = report.updates[inputFile.id].fileDTO;
+
         const inputFileLayout = inputFile.metaData?.layout;
         if (!inputFileLayout || inputFileLayout.length === 0) continue;
         // loop through each field and find if it matches any field in output files
@@ -67,24 +70,33 @@ router.get("/:applicationId", async (req, res) => {
           const own = inputFilefield?.constraints?.own?.map((el) => ({ ...el, from: inputFile.name }));
           const inherited = inputFilefield?.constraints?.inherited;
           // getting all possible constraints for this field from input file [{id: constraint id, from: inputfilename | inherited file name}]
-          const allConstraints = [...own, ...inherited];
+          const allInputFieldConstraints = [...own, ...inherited];
           // loop through outputfiles and find each field
-          for (const outputFile of output) {
+
+          for (let outputFile of output) {
+            // if this file was already updated use it again as a base
+            if (report.updates[outputFile.id]?.fileDTO) outputFile = report.updates[outputFile.id].fileDTO;
+
             const outputFileLayout = outputFile.metaData?.layout;
             if (!outputFileLayout || outputFileLayout.length === 0) continue;
             // loop through fields and find if any has same name as inputfield name
             for (const outputFilefield of outputFileLayout) {
                 // if not same fields, still check if they have any constraints for report;
               if (inputFilefield.name !== outputFilefield.name) {
-                const { inherited, own }= outputFilefield.constraints;
+
+                const { inherited, own, } = outputFilefield.constraints;
+                
                 if (inherited.length > 0 || own.length > 0 ) {
-                  report.updates[outputFile.name] ={
-                    id: outputFile.id,
+
+                  const existingConstraints = report.updates?.[outputFile.id]?.fields?.[outputFilefield.name];
+
+                  report.updates[outputFile.id] ={
+                    ...report.updates[outputFile.id],
+                    name: outputFile.name,
                     fields: {
-                      ...report.updates?.[outputFile.name]?.fields,
+                      ...report.updates?.[outputFile.id]?.fields,
                       [outputFilefield.name] : {
-                        ...report.updates?.[outputFile.name]?.fields?.[outputFilefield.name],
-                        current: { own, inherited },
+                        ...(existingConstraints || {own , inherited,})
                       }
                     }
                   }
@@ -92,41 +104,54 @@ router.get("/:applicationId", async (req, res) => {
                 continue;
               } 
                 
-              // if inputfiled has no constraints and output field has no constraints than go to next.
               let currentInherited = outputFilefield.constraints.inherited;
-              if (currentInherited.length === 0 && allConstraints.length === 0) continue;
+              // if inputfiled has no constraints and output field has no constraints than go to next.
+              if (currentInherited.length === 0 && allInputFieldConstraints.length === 0) continue;
+              
+               const summary = { removed: [], added: [] };
+               
+               // find removed constraints from field
+               const upToDateConstraints = currentInherited.filter((inherited) => {
 
-              const removed = [];
-              // filter out current outputfiled constraints and find if any were removed from inputfiled
-              const upToDateConstraints = currentInherited.filter((inherited) => {
-                if (!allConstraints.find((constraint) => constraint.id === inherited.id)) {
-                  removed.push(inherited);
+                const removeConstraint= () =>{
+                  summary.removed.push(inherited);
                   return false;
                 }
-                return true;
-              });
-     
+
+                const fromFile = allFiles.find(file => file.name === inherited.from);
+                if (!fromFile) return removeConstraint();
+
+                const layout = fromFile.metaData.layout;
+                const fromField = layout.find(field => field.name === outputFilefield.name);
+
+                if (!fromField) return removeConstraint();
+                if (!fromField.constraints.own.find((constraint) => constraint.id === inherited.id)) return removeConstraint();
+
+                 return true;
+               });
+
+               //find added constraints
+               summary.added = upToDateConstraints.length === 0 ?
+                [...allInputFieldConstraints] :
+                 allInputFieldConstraints.filter(inputConstraint => !upToDateConstraints.find((constraint) => constraint.id === inputConstraint.id));
+               
               // rewrite outputfiled inherited constraints with unique values from current output and current input field constraints;
-              outputFilefield.constraints.inherited = _.uniqWith([...upToDateConstraints, ...allConstraints], _.isEqual);
+              outputFilefield.constraints.inherited = _.uniqWith([...upToDateConstraints, ...allInputFieldConstraints], _.isEqual);
               
-              // Creating report
-              // Keep track of all files Ids that were mutated
-              if (!report.filesToUpdate.includes(outputFile.id)) report.filesToUpdate.push(outputFile.id);
-              // get short values to update report
-              const fileReport = report.updates[outputFile.name];
-              const added = upToDateConstraints.length ? _.differenceWith( allConstraints, upToDateConstraints, _.isEqual) : allConstraints;
-              // append new values to report, !!!when out of the loop we will remove duplicates and optimize output;
-              report.updates[outputFile.name] ={
-                id: outputFile.id,
+              // append new values to report
+              const prevAdded = report?.updates?.[outputFile.id]?.fields?.[outputFilefield.name]?.added;
+              const prevRemoved = report?.updates?.[outputFile.id]?.fields?.[outputFilefield.name]?.removed;
+               
+              report.updates[outputFile.id] ={
+                ...report.updates[outputFile.id],
+                fileDTO : report.updates[outputFile.id]?.fileDTO || outputFile,
+                name: outputFile.name,
                 fields: {
-                  ...report.updates?.[outputFile.name]?.fields,
+                  ...report.updates?.[outputFile.id]?.fields,
                   [outputFilefield.name] : {
-                    added : fileReport?.[outputFilefield.name]?.added ?  [...fileReport?.[outputFilefield.name]?.added, ...added ] : added,
-                    removed : fileReport?.[outputFilefield.name]?.removed ?  [...fileReport?.[outputFilefield.name]?.removed, ...removed ] : removed,
-                    current: {
-                      own: outputFilefield.constraints.own,
-                      inherited: outputFilefield.constraints.inherited,
-                    },
+                    ...outputFilefield.constraints,
+                    added : prevAdded ? _.uniqWith([...prevAdded, ...summary.added], _.isEqual) : summary.added,
+                    removed : prevRemoved ? _.uniqWith([...prevRemoved, ...summary.removed], _.isEqual) : summary.removed,
                   }
                 }
               }
@@ -134,49 +159,37 @@ router.get("/:applicationId", async (req, res) => {
           }
         }
       }
-
-      // loop through all keys and update report with deduped values;
-      for (const file in report.updates) {
-        for (const field in report.updates[file].fields) {
-          report.updates[file].fields[field].added = _.uniqWith(report.updates[file].fields[field].added , _.isEqual);
-          report.updates[file].fields[field].removed = _.uniqWith(report.updates[file].fields[field].removed , _.isEqual);
-          // if no changes was made to file,and file has no own or inherited constraints, remove in from report and from filesToUpdate list;
-          const {current, added, removed } = report.updates[file].fields[field];
-          const {own, inherited} = current;
-
-          if (!added.length && !removed.length && !own.length && !inherited.length) {
-            delete report.updates[file].fields[field];
-          } else {
-            report.updates[file].hasChanges = true;
-          }
-        }
-        // if no changes was made to file, remove in from report and from filesToUpdate list;
-        if (!report.updates[file].hasChanges){
-          // report.filesToUpdate = report.filesToUpdate.filter(id => id !== report.updates[file].id);
-        }else{
-          const { id, fields } = report.updates[file];
-          const fieldsArr = Object.entries(fields).map(([field,values] )=> {
-          let { current, ...rest } = values;
-          return {name: field, ...rest, ...current };
-          });
-
-          const fileReport = { id, name: file, fields: fieldsArr };
-
-          report.final.push(fileReport);
-        }
-      }    
-      
-      // loop through all job files and update the one that has been touched;
-      for (const file of job.files) {
-        try {
-          if (report.filesToUpdate.includes(file.id)) {
-            await File.update({ metaData: file.toJSON().metaData }, { where: { id: file.id } });
-          }
-        } catch (error) {
-          console.log("error", error);
-        }
-      }
     }
+
+      for (const id in report.updates) {
+        let fileHasChanges = false;
+
+        const { name: fileName, fields } = report.updates[id];
+
+        const fileDTO = report.updates[id].fileDTO;
+        
+        const fieldsArr = Object.entries(fields).reduce((acc, [fieldName,values] )=> {
+          const field = { name: fieldName, ...values };
+          
+          const addToReport = field.added?.length || field.removed?.length || field.own?.length || field.inherited?.length;
+          
+          if (addToReport) {
+            // switch to true to persist updates  
+            fileHasChanges = true;
+            acc.push(field);
+          }
+
+          return acc;
+        },[]);
+
+        // if File was not touched we will remove it from update list;
+        if (fileHasChanges && fileDTO) {
+          const newMetadata = fileDTO.toJSON().metaData;
+          await File.update({ metaData: newMetadata }, { where: { id } });
+        }
+
+        report.final.push({ id, name: fileName, fields: fieldsArr });
+      }    
 
     const newReport = await Report.create({ report: report.final, application_id })
     // for testing purposes, sleep function;
