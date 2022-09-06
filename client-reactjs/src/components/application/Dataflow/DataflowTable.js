@@ -1,13 +1,19 @@
 import React, { useState, useEffect } from 'react';
 import { Table, Popconfirm, Tooltip, Divider } from 'antd';
+import ReactMarkdown from 'react-markdown';
+import { DeleteOutlined, EyeOutlined, QuestionCircleOutlined } from '@ant-design/icons';
+import { useTranslation } from 'react-i18next';
+
 import { authHeader, handleError } from '../../common/AuthHeader.js';
 import { hasEditPermission } from '../../common/AuthUtil.js';
 import { Constants } from '../../common/Constants';
 import { useSelector } from 'react-redux';
-import ReactMarkdown from 'react-markdown';
-import { DeleteOutlined, EyeOutlined, QuestionCircleOutlined } from '@ant-design/icons';
 
 function DataflowTable({ data, applicationId, onSelectDataflow, onDataFlowUpdated, onEditDataFlow }) {
+  const { t } = useTranslation(['common']); // t for translate -> getting namespaces relevant to this file
+  const authReducer = useSelector((state) => state.authenticationReducer);
+  const editingAllowed = hasEditPermission(authReducer.user);
+
   // eslint-disable-next-line unused-imports/no-unused-vars
   const [selectedRowKeys, setSelectedRowKeys] = useState([]);
 
@@ -20,8 +26,6 @@ function DataflowTable({ data, applicationId, onSelectDataflow, onDataFlowUpdate
       //onSelectDataflow('');
     }
   }, [data]);
-
-  const authReducer = useSelector((state) => state.authenticationReducer);
 
   const handleDataflowDelete = (id) => {
     fetch('/api/dataflow/delete', {
@@ -48,17 +52,15 @@ function DataflowTable({ data, applicationId, onSelectDataflow, onDataFlowUpdate
     onSelectDataflow(record);
   };
 
-  const editingAllowed = hasEditPermission(authReducer.user);
-
   const dataflowCols = [
     {
-      title: 'Name',
+      title: t('Name', { ns: 'common' }),
       dataIndex: 'title',
       width: '30%',
       render: (text, record) => <a onClick={() => rowSelected(record)}>{text}</a>,
     },
     {
-      title: 'Description',
+      title: t('Description', { ns: 'common' }),
       dataIndex: 'description',
       className: 'overflow-hidden',
       ellipsis: true,
@@ -71,12 +73,12 @@ function DataflowTable({ data, applicationId, onSelectDataflow, onDataFlowUpdate
       ),
     },
     {
-      title: 'Process Type',
+      title: t('Process Type', { ns: 'common' }),
       dataIndex: 'type',
       width: '30%',
     },
     {
-      title: 'Created',
+      title: t('Created', { ns: 'common' }),
       dataIndex: 'createdAt',
       width: '30%',
       render: (text) => {
@@ -90,7 +92,7 @@ function DataflowTable({ data, applicationId, onSelectDataflow, onDataFlowUpdate
     },
     {
       width: '20%',
-      title: 'Action',
+      title: t('Action', { ns: 'common' }),
       dataIndex: '',
       className: editingAllowed ? 'show-column' : 'hide-column',
       render: (text, record) => (

@@ -1,12 +1,14 @@
 import React, { useEffect, useState } from 'react';
 import { Menu } from '@antv/x6-react-components';
 import { Empty } from 'antd';
+import { useTranslation } from 'react-i18next';
 
 const MenuItem = Menu.Item; // eslint-disable-line
 const Divider = Menu.Divider; // eslint-disable-line
 
 const HiddenNodesList = ({ graphRef, refresh, setRefresh }) => {
   const [nodes, setNodes] = useState([]);
+  const { t } = useTranslation();
 
   const showNode = (node) => {
     node.show({ name: 'update-asset' });
@@ -44,7 +46,7 @@ const HiddenNodesList = ({ graphRef, refresh, setRefresh }) => {
 
   return (
     <Menu>
-      <MenuItem onClick={() => showAllNodes(nodes)}>Reset all hidden nodes</MenuItem>
+      <MenuItem onClick={() => showAllNodes(nodes)}>{t('Reset all hidden nodes', { ns: 'common' })}</MenuItem>
       <Divider />
       {nodes.map((node) => {
         return (

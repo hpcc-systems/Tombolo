@@ -4,6 +4,7 @@ import { useSelector } from 'react-redux';
 import { debounce } from 'lodash';
 import { useHistory } from 'react-router-dom';
 import ReactMarkdown from 'react-markdown';
+import { useTranslation } from 'react-i18next';
 
 //Local Imports
 import MonacoEditor from '../../common/MonacoEditor.js';
@@ -17,13 +18,6 @@ import LandingZoneFileExplorer from '../../common/LandingZoneFileExplorer';
 
 //Local variables
 const { Option } = Select;
-const TabPane = Tabs.TabPane;
-const fileNameOptions = [
-  { name: 'Contains', value: 'contains' },
-  { name: 'Starts with', value: 'startsWith' },
-  { name: 'Ends with', value: 'endsWith' },
-  { name: 'Wildcards', value: 'wildCards' },
-];
 
 //Message config
 message.config({
@@ -52,6 +46,15 @@ function FileTemplate({ match, selectedAsset = {}, displayingInModal, onClose })
   */
   const applicationId = application?.applicationId || match?.params?.applicationId;
   const assetId = selectedAsset?.id || match?.params?.assetId;
+  const { t } = useTranslation(['common']);
+
+  const TabPane = Tabs.TabPane;
+  const fileNameOptions = [
+    { name: t('Contains', { ns: 'common' }), value: 'contains' },
+    { name: t('Starts with', { ns: 'common' }), value: 'startsWith' },
+    { name: t('Ends with', { ns: 'common' }), value: 'endsWith' },
+    { name: t('Wildcards', { ns: 'common' }), value: 'wildCards' },
+  ];
 
   const history = useHistory();
 
@@ -358,7 +361,7 @@ function FileTemplate({ match, selectedAsset = {}, displayingInModal, onClose })
         <Space>
           {enableEdit ? (
             <Button type="primary" ghost onClick={() => setEnableEdit(false)}>
-              View Changes
+              {t('View Changes', { ns: 'common' })}
             </Button>
           ) : null}
         </Space>
@@ -366,14 +369,14 @@ function FileTemplate({ match, selectedAsset = {}, displayingInModal, onClose })
       <Space>
         {!enableEdit ? (
           <Button type="primary" onClick={() => setEnableEdit(true)}>
-            Edit
+            {t('Edit', { ns: 'common' })}
           </Button>
         ) : null}
 
-        <Button onClick={handleCancel}>Cancel</Button>
+        <Button onClick={handleCancel}>{t('Cancel', { ns: 'common' })}</Button>
         {enableEdit ? (
           <Button type="primary" onClick={saveFileTemplate}>
-            Save
+            {t('Save', { ns: 'common' })}
           </Button>
         ) : null}
         {enableEdit && assetId ? (
@@ -387,8 +390,7 @@ function FileTemplate({ match, selectedAsset = {}, displayingInModal, onClose })
             onDelete={deleteFileTemplate}
             component={
               <Button key="danger" type="danger">
-                {' '}
-                Delete{' '}
+                {t('Delete', { ns: 'common' })}
               </Button>
             }
           />
@@ -413,7 +415,7 @@ function FileTemplate({ match, selectedAsset = {}, displayingInModal, onClose })
     <React.Fragment>
       <div className={displayingInModal ? 'assetDetails-content-wrapper-modal' : 'assetDetails-content-wrapper'}>
         <Tabs defaultActiveKey="1" tabBarExtraContent={displayingInModal ? null : controls}>
-          <TabPane tab="Basic" key="1">
+          <TabPane tab={t('Basic', { ns: 'common' })} key="1">
             <Form
               {...formItemLayout}
               labelWrap
@@ -426,7 +428,7 @@ function FileTemplate({ match, selectedAsset = {}, displayingInModal, onClose })
                 shouldMonitorSubDirs: true,
               }}>
               <Form.Item
-                label="Title"
+                label={t('Title', { ns: 'common' })}
                 name="title"
                 className={!enableEdit ? 'read-only-input' : ''}
                 rules={[
@@ -436,50 +438,50 @@ function FileTemplate({ match, selectedAsset = {}, displayingInModal, onClose })
                     message: 'Please enter a valid title. Title can have  a-zA-Z0-9:._- and space',
                   },
                 ]}>
-                <Input id="file_title" name="title" placeholder="Title" />
+                <Input id="file_title" name="title" />
               </Form.Item>
 
               {!enableEdit && form.getFieldValue('searchString') ? (
                 <Form.Item
-                  label="File Template Pattern"
+                  label={t('File Template Pattern', { ns: 'common' })}
                   name="fileTemplatePattern"
                   defaultValue="22"
                   className="read-only-input">
-                  <Input placeholder="No file pattern provided" />
+                  <Input placeholder={t('No file pattern provided', { ns: 'common' })} />
                 </Form.Item>
               ) : null}
 
               {enableEdit ? (
                 <Form.Item
-                  label="Cluster"
+                  label={t('Cluster', { ns: 'common' })}
                   name="cluster"
                   rules={[
                     {
                       required: true,
-                      message: 'Please select a cluster!',
+                      message: t('Please select a cluster!', { ns: 'common' }),
                     },
                   ]}>
-                  <Select placeholder="Select a Cluster" style={{ width: '50%' }} onChange={onDropDownValueChange}>
+                  <Select style={{ width: '50%' }} onChange={onDropDownValueChange}>
                     {clusters.map((cluster) => (
                       <Option key={cluster.id}>{cluster.name}</Option>
                     ))}
                   </Select>
                 </Form.Item>
               ) : (
-                <Form.Item label="Cluster" name="clusterName">
+                <Form.Item label={t('Cluster', { ns: 'common' })} name="clusterName">
                   <Input className="read-only-input"></Input>
                 </Form.Item>
               )}
 
               {form.getFieldValue('monitoring') ? (
-                <Form.Item label="Monitor" name="monitoring">
+                <Form.Item label={t('Monitor', { ns: 'common' })} name="monitoring">
                   <Radio.Group onChange={handleFileMonitoringRadioChange} disabled>
-                    <Radio value={true}> Yes </Radio>
+                    <Radio value={true}> {t('Yes', { ns: 'common' })} </Radio>
                   </Radio.Group>
                 </Form.Item>
               ) : null}
 
-              <Form.Item label="Type" name="setFileMonitoring" required={enableEdit}>
+              <Form.Item label={t('Type', { ns: 'common' })} name="setFileMonitoring" required={enableEdit}>
                 <Radio.Group onChange={handleFileMonitoringRadioChange} disabled={!enableEdit}>
                   {/* <Radio value={false}>None</Radio> */}
                   <Radio value={false}>Logical files</Radio>
@@ -497,16 +499,19 @@ function FileTemplate({ match, selectedAsset = {}, displayingInModal, onClose })
               ) : null}
 
               {landingZoneMonitoringDetails.fileMonitoring ? (
-                <Form.Item label="Monitor Sub-dirs" name="shouldMonitorSubDirs" required={enableEdit}>
+                <Form.Item
+                  label={t('Monitor Sub-dirs', { ns: 'common' })}
+                  name="shouldMonitorSubDirs"
+                  required={enableEdit}>
                   <Radio.Group onChange={handleFileMonitoringRadioChange} disabled={!enableEdit}>
-                    <Radio value={true}>Yes</Radio>
-                    <Radio value={false}>No</Radio>
+                    <Radio value={true}>{t('Yes', { ns: 'common' })}</Radio>
+                    <Radio value={false}>{t('No', { ns: 'common' })}</Radio>
                   </Radio.Group>
                 </Form.Item>
               ) : null}
 
               {enableEdit ? (
-                <Form.Item label="File Template" required>
+                <Form.Item label={t('File Template', { ns: 'common' })} required>
                   <Input.Group compact>
                     <Form.Item name="fileNamePattern" style={{ width: '30%' }}>
                       <Select style={{ width: '100%' }} onChange={onDropDownValueChange}>
@@ -548,7 +553,7 @@ function FileTemplate({ match, selectedAsset = {}, displayingInModal, onClose })
                 <Input className={!enableEdit ? "read-only-input" : ""} />}
               </Form.Item> */}
 
-              <Form.Item label="Description" name="description" className="markdown-editor">
+              <Form.Item label={t('Description', { ns: 'common' })} name="description" className="markdown-editor">
                 {enableEdit ? (
                   <MonacoEditor targetDomId="fileDescr" />
                 ) : (
@@ -559,7 +564,7 @@ function FileTemplate({ match, selectedAsset = {}, displayingInModal, onClose })
               </Form.Item>
             </Form>
           </TabPane>
-          <TabPane key="3" tab="Layout">
+          <TabPane key="3" tab={t('Layout', { ns: 'common' })}>
             <FileTemplateLayout
               layoutData={layoutData}
               setLayoutData={setLayoutData}
@@ -567,7 +572,7 @@ function FileTemplate({ match, selectedAsset = {}, displayingInModal, onClose })
               editingAllowed={editingAllowed}
             />
           </TabPane>
-          <TabPane tab="Permissable Purpose" key="4">
+          <TabPane tab={t('Permissable Purpose', { ns: 'common' })} key="4">
             <FileTemplatePermissablePurpose
               enableEdit={enableEdit}
               editingAllowed={editingAllowed}
@@ -576,16 +581,10 @@ function FileTemplate({ match, selectedAsset = {}, displayingInModal, onClose })
               selectedAsset={{ id: assetId }}
             />
           </TabPane>
-          <TabPane tab="Validation Rules" key="5">
+          <TabPane tab={t('Validation Rules', { ns: 'common' })} key="5">
             <Table />
           </TabPane>
-          <TabPane
-            key="6"
-            tab={
-              <>
-                <span> Files </span>
-              </>
-            }>
+          <TabPane key="6" tab={t('Files', { ns: 'common' })}>
             <FileTemplateTable data={files} />
           </TabPane>
         </Tabs>

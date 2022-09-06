@@ -1,6 +1,6 @@
-import React from 'react';
+import React, { useRef, useState } from 'react';
 import { Col, Empty, Form, Row, Tabs, Tooltip } from 'antd';
-import { useRef, useState } from 'react';
+import { useTranslation } from 'react-i18next';
 
 import './AddJobsForm.css';
 
@@ -57,6 +57,7 @@ const AddJobsForm = () => {
   const [panes, setPanes] = useState([]);
 
   const jobDetailsList = useRef({});
+  const { t } = useTranslation(['common']); // t for translate -> getting namespaces relevant to this file
 
   const onTabChange = (key) => setActiveKey(key);
   const onEdit = (targetKey, _action) => removeTab(targetKey);
@@ -134,7 +135,7 @@ const AddJobsForm = () => {
         <Col span={24} className="tabs-container">
           <div className="card-container">
             {panes.length === 0 ? (
-              <Empty description='Find a job in "Search Settings"' />
+              <Empty description={t("Find a job in 'Search Settings' ", { ns: 'common' })} />
             ) : (
               <Tabs
                 hideAdd

@@ -1,5 +1,6 @@
 import React from 'react';
 import { Modal } from 'antd';
+import { useTranslation } from 'react-i18next';
 
 import FileDetailsForm from './FileDetails';
 import FileTemplate from './templates/FileTemplate';
@@ -9,10 +10,17 @@ import QueryDetailsForm from './queries/QueryDetails';
 import SubProcessDetails from './SubProcessDetails';
 
 function AssetDetailsDialog(props) {
-  const getAssetType = (word) => {
-    if (!word || typeof word !== 'string') return '';
-    if (word === 'FileTemplate') return 'File Template';
-    return word[0].toUpperCase() + word.slice(1);
+  const { t } = useTranslation(['common']);
+
+  const getAssetType = (assetType) => {
+    let asset;
+    if (!assetType || typeof assetType !== 'string') return '';
+    if (assetType === 'FileTemplate') {
+      asset = t('File Template', { ns: 'common' });
+      return asset;
+    }
+    asset = t(assetType[0].toUpperCase() + assetType.slice(1), { ns: 'common' });
+    return asset;
   };
 
   return (

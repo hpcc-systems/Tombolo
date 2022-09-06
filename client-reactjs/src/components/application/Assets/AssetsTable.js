@@ -1,13 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Table, message, Popconfirm, Tooltip, Divider, Space, Typography, Button } from 'antd';
-import { authHeader, handleError } from '../../common/AuthHeader.js';
-// import FileDetailsForm from "../FileDetails";
-import MoveAssetsDialog from './MoveAssetsDialog';
-import { hasEditPermission } from '../../common/AuthUtil.js';
-import { useSelector, useDispatch } from 'react-redux';
-import { Constants } from '../../common/Constants';
-import { assetsActions } from '../../../redux/actions/Assets';
 import { useHistory } from 'react-router';
+import { useSelector, useDispatch } from 'react-redux';
 import {
   DeleteOutlined,
   EditOutlined,
@@ -16,14 +10,19 @@ import {
   FilePdfOutlined,
   AreaChartOutlined,
 } from '@ant-design/icons';
+import { useTranslation } from 'react-i18next';
+
+import { authHeader, handleError } from '../../common/AuthHeader.js';
+import MoveAssetsDialog from './MoveAssetsDialog';
+import { hasEditPermission } from '../../common/AuthUtil.js';
+import { Constants } from '../../common/Constants';
+import { assetsActions } from '../../../redux/actions/Assets';
 import SelectDetailsForPdfDialog from '../Assets/pdf/SelectDetailsForPdfDialog';
 import { getNestedAssets } from '../Assets/pdf/downloadPdf';
 import ReactMarkdown from 'react-markdown';
 import DeleteAsset from '../../common/DeleteAsset';
 
 function AssetsTable({ openGroup, handleEditGroup, refreshGroups }) {
-  const [assets, setAssets] = useState([]);
-
   const { authReducer, applicationReducer, assetReducer, groupsReducer } = useSelector((state) => ({
     groupsReducer: state.groupsReducer,
     authReducer: state.authenticationReducer,
@@ -32,18 +31,18 @@ function AssetsTable({ openGroup, handleEditGroup, refreshGroups }) {
   }));
 
   const selectedGroup = groupsReducer;
-
   const history = useHistory();
+  const dispatch = useDispatch();
+  const editingAllowed = hasEditPermission(authReducer.user);
   const applicationId = applicationReducer?.application?.applicationId || '';
+  const { t } = useTranslation(['common']); // t for translate -> getting namespaces relevant to this file
 
   const { assetTypeFilter, keywords } = assetReducer.searchParams;
   const [assetToMove, setAssetToMove] = useState({ id: '', type: '', title: '', selectedKeys: {} });
   const [selectedAsset, setSelectedAsset] = useState();
   const [toPrintAssets, setToPrintAssets] = useState([]);
   const [selectDetailsforPdfDialogVisibility, setSelectDetailsforPdfDialogVisibility] = useState(false);
-
-  const dispatch = useDispatch();
-  const editingAllowed = hasEditPermission(authReducer.user);
+  const [assets, setAssets] = useState([]);
 
   const fetchDataAndRenderTable = async () => {
     if (applicationId) {
@@ -268,7 +267,7 @@ function AssetsTable({ openGroup, handleEditGroup, refreshGroups }) {
 
   const columns = [
     {
-      title: 'Name',
+      title: t('Name', { ns: 'common' }),
       dataIndex: 'name',
       width: '25%',
       ellipsis: {
@@ -299,7 +298,7 @@ function AssetsTable({ openGroup, handleEditGroup, refreshGroups }) {
       ),
     },
     {
-      title: 'Description',
+      title: t('Description', { ns: 'common' }),
       dataIndex: 'description',
       width: '23%',
       ellipsis: {
@@ -319,7 +318,7 @@ function AssetsTable({ openGroup, handleEditGroup, refreshGroups }) {
       ),
     },
     {
-      title: 'Type',
+      title: t('Type', { ns: 'common' }),
       dataIndex: 'type',
       width: '10%',
       sorter: (a, b) => a.type.localeCompare(b.type),
@@ -329,7 +328,7 @@ function AssetsTable({ openGroup, handleEditGroup, refreshGroups }) {
       shouldCellUpdate: (record, prevRecord) => record.type !== prevRecord.type,
     },
     {
-      title: 'Created',
+      title: t('Created', { ns: 'common' }),
       dataIndex: 'createdAt',
       width: '23%',
       sorter: (a, b) => new Date(b.createdAt) - new Date(a.createdAt),
@@ -351,20 +350,20 @@ function AssetsTable({ openGroup, handleEditGroup, refreshGroups }) {
     },
     {
       width: '20%',
-      title: 'Action',
+      title: t('Action', { ns: 'common' }),
       dataJob: '',
       className: editingAllowed ? 'show-column' : 'hide-column',
       shouldCellUpdate: (record, prevRecord) => record.id !== prevRecord.id,
       render: (text, record) => (
         <Space split={<Divider type="vertical" />}>
-          <Tooltip placement="right" title={'Edit'}>
+          <Tooltip placement="right" title={t('Edit', { ns: 'common' })}>
             <EditOutlined
               className="asset-action-icon"
               onClick={() => handleEdit(record.id, record.type, 'edit', record.url)}
             />
           </Tooltip>
 
-          <Tooltip placement="right" title={'Delete'}>
+          <Tooltip placement="right" title={t('Delete', { n: 'common' })}>
             <DeleteAsset
               asset={record}
               onDelete={handleDelete}
@@ -372,14 +371,14 @@ function AssetsTable({ openGroup, handleEditGroup, refreshGroups }) {
             />
           </Tooltip>
 
-          <Tooltip placement="right" title={'Move'}>
+          <Tooltip placement="right" title={t('Move', { ns: 'common' })}>
             <FolderOpenOutlined
               className="asset-action-icon"
               onClick={() => openMoveAssetDialog(record.id, record.type, record.name, selectedGroup)}
             />
           </Tooltip>
 
-          <Tooltip placement="right" title="Print">
+          <Tooltip placement="right" title={t('Print', { ns: 'common' })}>
             <FilePdfOutlined
               className="asset-action-icon"
               onClick={() =>
@@ -396,7 +395,7 @@ function AssetsTable({ openGroup, handleEditGroup, refreshGroups }) {
 
           {record.type === 'File' ? (
             record.visualization ? (
-              <Tooltip placement="right" title={'RealBI Dashboard'}>
+              <Tooltip placement="right" title={t('RealBI Dashboard', { ns: 'common' })}>
                 <a href={record.visualization} target="_blank" rel="noreferrer">
                   <AreaChartOutlined className="asset-action-icon" />
                 </a>
@@ -406,7 +405,7 @@ function AssetsTable({ openGroup, handleEditGroup, refreshGroups }) {
                 title="Are you sure you want to create a chart with this data?"
                 onConfirm={() => handleCreateVisualization(record.id, record.cluster_id)}
                 icon={<QuestionCircleOutlined />}>
-                <Tooltip placement="right" title={'RealBI Dashboard'}>
+                <Tooltip placement="right" title={t('RealBI Dashboard', { ns: 'common' })}>
                   <AreaChartOutlined className="asset-action-icon" />
                 </Tooltip>
               </Popconfirm>

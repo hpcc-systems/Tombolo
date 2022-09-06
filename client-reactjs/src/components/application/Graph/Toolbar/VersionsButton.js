@@ -1,6 +1,7 @@
 /* eslint-disable react/no-unescaped-entities */
 /* eslint-disable quotes */
 import React, { useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import {
   CaretRightOutlined,
   CloudDownloadOutlined,
@@ -32,6 +33,7 @@ import { Toolbar, Menu } from '@antv/x6-react-components';
 import { authHeader, handleError } from '../../../common/AuthHeader';
 import { useEffect } from 'react';
 import { getWorkingCopyGraph, saveWorkingCopyGraph } from '../../../common/CommonUtil';
+import { t } from 'i18next';
 
 const Item = Toolbar.Item; // eslint-disable-line
 const { confirm } = Modal;
@@ -507,17 +509,17 @@ const VersionsButton = ({ graphRef }) => {
     <>
       <Item
         name="save"
-        tooltip="Save graph version"
+        tooltip={t('Save graph version', { ns: 'common' })}
         disabled={saveGraph.loading}
         active={saveGraph.loading}
         icon={saveGraph.loading ? <LoadingOutlined /> : <SaveOutlined />}
         onClick={openSaveDialog}>
-        {saveGraph.loading ? '...Saving' : 'Save Version'}
+        {saveGraph.loading ? t('...Saving', { ns: 'common' }) : t('Save Version', { ns: 'common' })}
       </Item>
       <Item className="versions_list" name="versions" tooltip="Versions" dropdown={getVersionsList()} />
       {!clickedVersion.name ? (
         <Item name="current_version">
-          <Badge color="#3bb44a" /> You are on Working Copy
+          <Badge color="#3bb44a" /> {t('You are on Working Copy', { ns: 'common' })}
         </Item>
       ) : (
         <>
@@ -556,6 +558,7 @@ export default VersionsButton;
 
 const VersionForm = ({ visible, loading, onCreate, onEdit, onCancel, version }) => {
   const [form] = Form.useForm();
+  const { t } = useTranslation();
 
   const handleOk = async () => {
     try {
@@ -577,17 +580,24 @@ const VersionForm = ({ visible, loading, onCreate, onEdit, onCancel, version }) 
     <Modal
       visible={visible}
       destroyOnClose
-      title={version ? `Editing version: "${version.name}"` : 'Create a new version'}
-      okText={version ? 'Edit' : 'Create'}
-      cancelText="Cancel"
+      title={
+        version
+          ? t(`Editing version: "${version.name}"`, { ns: 'common' })
+          : t('Create a new version', { ns: 'common' })
+      }
+      okText={version ? t('Edit', { ns: 'common' }) : t('Create', { ns: 'common' })}
+      cancelText={t('Cancel', { ns: 'common' })}
       onCancel={onCancel}
       onOk={handleOk}
       confirmLoading={loading}>
       <Form form={form} layout="vertical" initialValues={{ name: '', description: '' }}>
-        <Form.Item name="name" label="Name" rules={[{ required: true, message: 'Please provide title for version' }]}>
+        <Form.Item
+          name="name"
+          label={t('Name', { ns: 'common' })}
+          rules={[{ required: true, message: t('Please provide title for version', { ns: 'common' }) }]}>
           <Input />
         </Form.Item>
-        <Form.Item name="description" label="Description">
+        <Form.Item name="description" label={t('Description', { ns: 'common' })}>
           <Input type="textarea" />
         </Form.Item>
       </Form>

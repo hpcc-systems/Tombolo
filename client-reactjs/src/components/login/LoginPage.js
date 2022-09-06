@@ -2,7 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { userActions } from '../../redux/actions/User';
 
 import { LockOutlined, UserOutlined } from '@ant-design/icons';
-import { Alert, Button, Form, Input } from 'antd';
+import { Alert, Button, Form, Input, Divider } from 'antd';
 
 import { Link, useHistory, useLocation } from 'react-router-dom';
 import { useDispatch, useSelector } from 'react-redux';
@@ -50,48 +50,46 @@ const LoginPage = () => {
   }, [loggedIn]);
 
   return (
-    <Form className="login-form" onFinish={handleSubmit}>
-      <h2 className="login-logo">Tombolo</h2>
-      <Form.Item name="username" rules={[{ required: true, message: 'Please provide your Username!' }]}>
-        <Input prefix={<UserOutlined className="site-form-item-icon" />} placeholder="Username" />
-      </Form.Item>
-
-      <Form.Item name="password" rules={[{ required: true, message: 'Please provide your Password!' }]}>
-        <Input.Password
-          prefix={<LockOutlined className="site-form-item-icon" />}
-          type="password"
-          placeholder="Password"
-        />
-      </Form.Item>
-
-      <Form.Item>
-        <Link to={'/forgot-password'} className="login-form-forgot">
-          Forgot password ?
-        </Link>
-      </Form.Item>
-
-      <Form.Item>
-        <Button loading={login.loading} htmlType="submit" type="primary" block className="login-form-button">
-          Log in
-        </Button>
-      </Form.Item>
-
-      <Form.Item>
-        Or <Link to={'/register'}>register now</Link>
-      </Form.Item>
-
-      {login.success && (
-        <Form.Item>
-          <Alert message="Success" description="You will be redirected shortly" type="success" showIcon />
+    <div className="login-page">
+      <Form className="login-form" onFinish={handleSubmit}>
+        <h2 className="login-logo">Tombolo</h2>
+        <Form.Item name="username" rules={[{ required: true, message: 'Please provide your Username!' }]}>
+          <Input prefix={<UserOutlined className="site-form-item-icon" />} placeholder="Username" />
         </Form.Item>
-      )}
 
-      {login.error && (
-        <Form.Item>
-          <Alert message={(login.error || 'Error') + ', check your inputs and try again'} type="error" showIcon />
+        <Form.Item name="password" rules={[{ required: true, message: 'Please provide your Password!' }]}>
+          <Input.Password
+            prefix={<LockOutlined className="site-form-item-icon" />}
+            type="password"
+            placeholder="Password"
+          />
         </Form.Item>
-      )}
-    </Form>
+
+        <Form.Item>
+          <Button loading={login.loading} htmlType="submit" type="primary" block className="login-form-button">
+            Log in
+          </Button>
+        </Form.Item>
+
+        <div style={{ textAlign: 'center', fontWeight: '450', fontSize: '16px' }}>
+          <Link to={'/register'}>Register Now </Link>
+          <Divider type="vertical" />
+          <Link to={'/forgot-password'}>Forgot Password?</Link>
+        </div>
+
+        {login.success && (
+          <Form.Item>
+            <Alert message="Success" description="You will be redirected shortly" type="success" showIcon />
+          </Form.Item>
+        )}
+
+        {login.error && (
+          <Form.Item>
+            <Alert message={(login.error || 'Error') + ', check your inputs and try again'} type="error" showIcon />
+          </Form.Item>
+        )}
+      </Form>
+    </div>
   );
 };
 

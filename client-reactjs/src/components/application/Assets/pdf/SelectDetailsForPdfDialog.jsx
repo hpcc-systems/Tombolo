@@ -1,29 +1,35 @@
 import React, { useEffect, useState } from 'react';
 import { useSelector } from 'react-redux';
 import { Modal, Button, Checkbox, Collapse, message } from 'antd';
-// import { authHeader, handleError } from "../../../common/AuthHeader";
 import _ from 'lodash';
+import { useTranslation } from 'react-i18next';
+
 import FileDetailsPdf from './FileDetailsPdf';
 import QueryDetailsPdf from './QueryDetailsPdf';
 import IndexDetailsPdf from './IndexDetailsPdf';
 import GroupDetailsPdf from './GroupDetailsPdf';
 import { CollapseWrapper, PanelItems } from './pdfStyledComponents';
 import JobDetailsPdf from './JobDetailsPdf';
-// import {getNestedAssets} from "./downloadPdf"
 
 function SelectDetailsForPdfDialog(props) {
+  const { t } = useTranslation(['common']);
+
   //Local States and variables
   const fileOptions = [
-    { name: 'Basic Information', value: 'filePdf_basic', active: true, checked: true },
-    { name: 'Layout Information', value: 'filePdf_layout', active: true, checked: false },
+    { name: t('Basic Information', { ns: 'common' }), value: 'filePdf_basic', active: true, checked: true },
+    { name: t('Layout Information', { ns: 'common' }), value: 'filePdf_layout', active: true, checked: false },
   ];
-  const indexOptions = [{ name: 'Basic Information', value: 'indexPdf_basic', active: true, checked: true }];
-  const queryOptions = [{ name: 'Basic Information', value: 'queryPdf_basic', active: true, checked: true }];
+  const indexOptions = [
+    { name: t('Basic Information', { ns: 'common' }), value: 'indexPdf_basic', active: true, checked: true },
+  ];
+  const queryOptions = [
+    { name: t('Basic Information', { ns: 'common' }), value: 'queryPdf_basic', active: true, checked: true },
+  ];
   const jobOptions = [
-    { name: 'Basic Information', value: 'jobPdf_basic', active: true, checked: true },
+    { name: t('Basic Information', { ns: 'common' }), value: 'jobPdf_basic', active: true, checked: true },
     { name: 'ECL', value: 'jobPdf_ecl', active: true, checked: false },
-    { name: 'Input Files', value: 'jobPdf_inputFiles', active: true, checked: false },
-    { name: 'Output Files', value: 'jobPdf_outputFiles', active: true, checked: false },
+    { name: t('Input Files', { ns: 'common' }), value: 'jobPdf_inputFiles', active: true, checked: false },
+    { name: t('Output Files', { ns: 'common' }), value: 'jobPdf_outputFiles', active: true, checked: false },
   ];
   const [classesToExportAsPdf, setClassesToExport] = useState([]);
   const [downloadPdf, setDownloadPdf] = useState(false);
@@ -235,16 +241,16 @@ function SelectDetailsForPdfDialog(props) {
   return (
     <Modal
       visible={props.visible}
-      title="Select items to include in PDF"
+      title={t('Select items to include in PDF', { ns: 'common' })}
       onOk={downloadDoc}
       onCancel={() => props.setVisiblity(false)}
       width={650}
       footer={[
         <Button key="back" onClick={() => props.setVisiblity(false)} type="primary" ghost>
-          Cancel
+          {t('Cancel', { ns: 'common' })}
         </Button>,
         <Button key="submit" onClick={downloadDoc} type="primary" loading={downloadPdf}>
-          {downloadPdf ? 'Downloading' : 'Download PDF'}
+          {downloadPdf ? t('Downloading', { ns: 'common' }) : t('Download PDF', { ns: 'common' })}
         </Button>,
       ]}>
       {renderCheckBoxes()}

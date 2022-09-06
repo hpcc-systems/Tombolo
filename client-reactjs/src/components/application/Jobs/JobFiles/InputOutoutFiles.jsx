@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { Table, message, Form, Select, Button, Tag } from 'antd';
+import { useTranslation } from 'react-i18next';
 
 import { authHeader } from '../../../common/AuthHeader';
 
@@ -17,33 +18,6 @@ const renderTag = (record) => {
   }
 };
 
-// PARENT AND FILE TABLE COLUMNS
-const fileTableColumns = [
-  {
-    title: 'File',
-    render: (text, record) => (
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-        <span>{record.fileTitle || record.name}</span>
-        {record.assetType === 'File Template' ? (
-          <small style={{ color: 'var(--primary)' }}>
-            [{record.files.length > 1 ? record.files.length + ' Files' : record.files.length + ' File'} ]
-          </small>
-        ) : null}
-      </div>
-    ),
-  },
-  {
-    title: 'Type',
-    width: '8%',
-    render: (text, record) => renderTag(record),
-  },
-  {
-    title: 'Description',
-    dataIndex: 'description',
-    width: '42%',
-  },
-];
-
 function InputOutputFiles({
   inputFiles,
   outputFiles,
@@ -60,6 +34,34 @@ function InputOutputFiles({
   const [subFiles, setSubFiles] = useState([]);
   const [expandedRowKeys, setExpandedRowKeys] = useState({ parentTable: [], fileTable: [], subFileTable: [] });
   const [fetchingSubFiles, setFetchingSubFiles] = useState(false);
+  const { t } = useTranslation(['common']); // t for translate -> getting namespaces relevant to this file
+
+  // PARENT AND FILE TABLE COLUMNS
+  const fileTableColumns = [
+    {
+      title: t('File', { ns: 'common' }),
+      render: (text, record) => (
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+          <span>{record.fileTitle || record.name}</span>
+          {record.assetType === 'File Template' ? (
+            <small style={{ color: 'var(--primary)' }}>
+              [{record.files.length > 1 ? record.files.length + ' Files' : record.files.length + ' File'} ]
+            </small>
+          ) : null}
+        </div>
+      ),
+    },
+    {
+      title: t('Type', { ns: 'common' }),
+      width: '8%',
+      render: (text, record) => renderTag(record),
+    },
+    {
+      title: t('Description', { ns: 'common' }),
+      dataIndex: 'description',
+      width: '42%',
+    },
+  ];
 
   // FUNCTION THAT RENDER'S FILE TABLE
   const renderFilesTable = (record, _subFiles, _clusterId) => {
@@ -141,10 +143,14 @@ function InputOutputFiles({
       <div>
         {enableEdit ? (
           <div style={{ display: 'flex' }}>
-            <Form.Item label={selectedTabPaneKey === '4' ? 'Input Files' : 'Output Files'} rules={[{ required: true }]}>
+            <Form.Item
+              label={selectedTabPaneKey === '4' ? t('Input Files', { ns: 'job' }) : t('Output Files', { ns: 'job' })}
+              rules={[{ required: true }]}>
               <Select
                 id={selectedTabPaneKey === '4' ? 'inputfiles' : 'outputfiles'}
-                placeholder={selectedTabPaneKey === '4' ? 'Input Files' : 'Output Files'}
+                placeholder={
+                  selectedTabPaneKey === '4' ? t('Input Files', { ns: 'job' }) : t('Output Files', { ns: 'job' })
+                }
                 onChange={selectedTabPaneKey === '4' ? handleInputFileChange : handleOutputFileChange}
                 style={{ width: 290 }}
                 disabled={!editingAllowed}>
@@ -162,7 +168,7 @@ function InputOutputFiles({
                 type="primary"
                 onClick={selectedTabPaneKey === '4' ? handleAddInputFile : handleAddOutputFile}
                 disabled={!editingAllowed}>
-                Add
+                {t('Add', { ns: 'common' })}
               </Button>
             </Form.Item>
           </div>

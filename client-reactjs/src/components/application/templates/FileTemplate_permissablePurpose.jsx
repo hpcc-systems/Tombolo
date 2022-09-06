@@ -1,29 +1,31 @@
 import React, { useEffect, useState } from 'react';
 import { message, Table } from 'antd';
+import { useTranslation } from 'react-i18next';
 
 import { authHeader, handleError } from '../../common/AuthHeader';
-
-//Table columns
-const columns = [
-  {
-    title: 'Name',
-    dataIndex: 'name',
-    render: (text, record) => (
-      <a href={record.url} target="_blank" rel="noreferrer">
-        {record.name}
-      </a>
-    ),
-    width: '20%',
-  },
-  {
-    title: 'Description',
-    dataIndex: 'description',
-  },
-];
 
 function FileTemplate_permissablePurpose(props) {
   const { enableEdit, editingAllowed, setSelectedLicenses, selectedLicenses, selectedAsset } = props;
   const [licenses, setLicenses] = useState([]);
+  const { t } = useTranslation();
+
+  //Table columns
+  const columns = [
+    {
+      title: t('Name', { ns: 'common' }),
+      dataIndex: 'name',
+      render: (text, record) => (
+        <a href={record.url} target="_blank" rel="noreferrer">
+          {record.name}
+        </a>
+      ),
+      width: '20%',
+    },
+    {
+      title: t('Description', { ns: 'common' }),
+      dataIndex: 'description',
+    },
+  ];
 
   // Get the licenses
   useEffect(() => {

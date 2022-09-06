@@ -18,16 +18,14 @@ import {
 } from 'antd';
 import React, { Component } from 'react';
 import { connect } from 'react-redux';
+import { withTranslation } from 'react-i18next';
+
 import { applicationActions } from '../../redux/actions/Application';
 import { authHeader, handleError } from '../common/AuthHeader.js';
 import BreadCrumbs from '../common/BreadCrumbs';
+
 const Option = Select.Option;
 const { Paragraph } = Typography;
-const options = [
-  { label: 'Supplier', value: 'Supplier' },
-  { label: 'Consumer', value: 'Consumer' },
-  { label: 'Owner', value: 'Owner' },
-];
 
 class Consumers extends Component {
   state = {
@@ -334,26 +332,36 @@ class Consumers extends Component {
   };
 
   render() {
+    const { t } = this.props; // translation
     var isNameDisabled = false;
     const { confirmLoading, isEditing, adGroupSearchResults } = this.state;
 
     if (isEditing) {
       isNameDisabled = true;
     }
+
+    //Collaborator type options
+    const options = [
+      { label: t('Supplier', { ns: 'common' }), value: 'Supplier' },
+      { label: t('Consumer', { ns: 'common' }), value: 'Consumer' },
+      { label: t('Owner', { ns: 'common' }), value: 'Owner' },
+    ];
+
+    //Table columns
     const consumerColumns = [
       {
         width: '15%',
-        title: 'Name',
+        title: t('Name', { ns: 'common' }),
         dataIndex: 'name',
       },
       {
         width: '15%',
-        title: 'Contact',
+        title: t('Contact', { ns: 'common' }),
         dataIndex: 'contact_name',
       },
       {
         width: '15%',
-        title: 'Contact Email',
+        title: t('E-mail', { ns: 'common' }),
         dataIndex: 'contact_email',
         rules: [
           {
@@ -365,33 +373,33 @@ class Consumers extends Component {
       },
       {
         width: '10%',
-        title: 'Consumer/Supplier',
+        title: t('Consumer/Supplier', { ns: 'common' }),
         dataIndex: 'assetType',
       },
       {
         width: '5%',
-        title: 'Type',
+        title: t('Type', { ns: 'common' }),
         dataIndex: 'type',
       },
       {
         width: '15%',
-        title: 'AD Group',
+        title: t('AD Group', { ns: 'common' }),
         dataIndex: 'ad_group',
       },
       {
         width: '5%',
-        title: 'Action',
+        title: t('Action', { ns: 'common' }),
         dataIndex: '',
         render: (text, record) => (
           <span>
             <a href="#" onClick={(row) => this.handleEditConsumer(record.id)}>
-              <Tooltip placement="right" title={'Edit Consumer'}>
+              <Tooltip placement="right" title={t('Edit', { ns: 'common' })}>
                 <EditOutlined />
               </Tooltip>
             </a>
             <Divider type="vertical" />
             <Popconfirm
-              title="Are you sure you want to delete this Consumer?"
+              title={t('Are you sure you want to delete this Consumer?', { ns: 'common' })}
               onConfirm={() => this.handleRemove(record.id)}
               icon={<QuestionCircleOutlined />}>
               <a href="#">
@@ -409,9 +417,9 @@ class Consumers extends Component {
       <React.Fragment>
         <BreadCrumbs
           extraContent={
-            <Tooltip placement="bottom" title={'Click to add a new Consumer'}>
+            <Tooltip placement="bottom">
               <Button type="primary" onClick={() => this.handleAdd()}>
-                Add Consumer
+                {t('Add Collaborator', { ns: 'common' })}
               </Button>
             </Tooltip>
           }
@@ -428,33 +436,37 @@ class Consumers extends Component {
 
         <div>
           <Modal
-            title="Add Consumer/Supplier"
+            title={t('Add Consumer/Supplier', { ns: 'common' })}
             visible={this.state.showAddConsumer}
             onOk={this.handleAddConsumerOk.bind(this)}
             onCancel={this.handleAddConsumerCancel}
             confirmLoading={confirmLoading}
             destroyOnClose={true}>
             <Form layout="vertical">
-              <Paragraph>Consumer - Product/Application/Group consuming the asset</Paragraph>
-              <Paragraph>Supplied - Supplier of the asset data (DMV, Insurance company etc;)</Paragraph>
-              <Paragraph>Owner - Contact Person/Group for an asset</Paragraph>
+              <Paragraph>{t('Consumer - Product/Application/Group consuming the asset', { ns: 'common' })}</Paragraph>
+              <Paragraph>
+                {t('Supplied - Supplier of the asset data (DMV, Insurance company etc)', { ns: 'common' })}
+              </Paragraph>
+              <Paragraph>{t('Owner - Contact Person/Group for an asset', { ns: 'common' })}</Paragraph>
 
-              <Form.Item label="Select type" name="assetType" required>
+              <Form.Item label={t('Type', { ns: 'common' })} name="assetType" required>
                 <Checkbox.Group options={options} onChange={this.onConsumerSupplierChange} />
               </Form.Item>
 
-              <Form.Item label="Name" name="name" rules={[{ required: true, message: 'Consumer Name is required' }]}>
+              <Form.Item
+                label={t('Name', { ns: 'common' })}
+                name="name"
+                rules={[{ required: true, message: 'Consumer Name is required' }]}>
                 <Input
                   id="consumer_title"
                   name="name"
                   onChange={this.onChange}
-                  placeholder="Name"
                   value={this.state.newConsumer.name}
                   disabled={isNameDisabled}
                 />
               </Form.Item>
 
-              <Form.Item label="Type" name="type" required>
+              <Form.Item label={t('Type', { ns: 'common' })} name="type" required>
                 <Select
                   name="type"
                   id="consumer_type"
@@ -462,8 +474,8 @@ class Consumers extends Component {
                   value={this.state.newConsumer.type}>
                   <Option value=""></Option>
                   <Option value="Api">API</Option>
-                  <Option value="External">External</Option>
-                  <Option value="Internal">Internal</Option>
+                  <Option value="External">{t('External', { ns: 'common' })}</Option>
+                  <Option value="Internal">{t('Internal', { ns: 'common' })}</Option>
                 </Select>
               </Form.Item>
 
@@ -482,22 +494,20 @@ class Consumers extends Component {
                 </Form.Item>
               ) : null}
 
-              <Form.Item label="Contact Name" name="contact_name" required>
+              <Form.Item label={t('Contact Name', { ns: 'common' })} name="contact_name" required>
                 <Input
                   id="consumer_contact"
                   name="contact_name"
                   onChange={this.onChange}
-                  placeholder="Contact Name"
                   value={this.state.newConsumer.contact_name}
                 />
               </Form.Item>
 
-              <Form.Item label="Contact Email" name="contact_email" required>
+              <Form.Item label={t('E-mail', { ns: 'common' })} name="contact_email" required>
                 <Input
                   id="consumer_contact_email"
                   name="contact_email"
                   onChange={this.onChange}
-                  placeholder="Contact Email"
                   value={this.state.newConsumer.contact_email}
                 />
               </Form.Item>
@@ -537,5 +547,7 @@ function mapStateToProps(state) {
     consumers,
   };
 }
-const connectedApp = connect(mapStateToProps)(Consumers);
+let connectedApp = connect(mapStateToProps)(Consumers);
+connectedApp = withTranslation(['common'])(connectedApp);
+
 export default connectedApp;

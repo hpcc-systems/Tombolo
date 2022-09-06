@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { Button, Form, Input, Select, Space, message } from 'antd';
+import { useTranslation } from 'react-i18next';
 import { threeColformItemLayout } from '../../common/CommonUtil.js';
 
 const monthMap = {
@@ -72,7 +73,7 @@ const ScheduleTab = ({ nodes, selectedAsset, addToSchedule, readOnly, editingAll
   });
 
   const generateDate = (year, month, day, hour, minute) => new Date(year, month, day, hour, minute);
-
+  const { t } = useTranslation(['common', 'common']);
   const nextMinute = (date) => {
     var t,
       n,
@@ -495,39 +496,43 @@ const ScheduleTab = ({ nodes, selectedAsset, addToSchedule, readOnly, editingAll
   return (
     <Form component="div" {...threeColformItemLayout}>
       {options.type.length > 0 || options.enableEdit ? (
-        <Form.Item label="Type">
+        <Form.Item label={t('Type', { ns: 'common' })}>
           {!options.enableEdit ? (
             <Input className="read-only-input" disabled value={options.type ? options.type : null} />
           ) : (
             <Select
               id="scheduleType"
               disabled={!selectedAsset.isAssociated}
-              placeholder="Select a schedule type"
+              placeholder={t('Select a schedule type', { ns: 'common' })}
               allowClear
               onClear={() => handleScheduleTypeSelect('')}
               onSelect={(value) => {
                 handleScheduleTypeSelect(value);
               }}
               value={options.type ? options.type : null}>
-              <Select.Option value="Time">Timer based (run at specific interval)</Select.Option>
-              <Select.Option value="Predecessor">Job based (run after another job completes)</Select.Option>
+              <Select.Option value="Time">
+                {t('Timer based (run at specific interval)', { ns: 'common' })}
+              </Select.Option>
+              <Select.Option value="Predecessor">
+                {t('Job based (run after another job completes)', { ns: 'common' })}
+              </Select.Option>
               <Select.Option value="Template">
-                Template Based (Run when a file that matches a template arrives){' '}
+                {t('Template Based (Run when a file that matches a template arrives)', { ns: 'common' })}
               </Select.Option>
               <Select.Option value="Message">
-                Run on External Message (run when a message is received in a Kafka topic)
+                {t('Run on External Message (run when a message is received in a Kafka topic)', { ns: 'common' })}
               </Select.Option>
             </Select>
           )}
         </Form.Item>
       ) : (
         <div style={{ textAlign: 'center', paddingTop: '100px', paddingBottom: '10px' }}>
-          Please press <b>Edit</b> button to configure scheduling for this job
+          {t('Please press Edit button to configure scheduling for this job', { ns: 'common' })}
         </div>
       )}
       {options.type === 'Time' ? (
         <>
-          <Form.Item label="Run Every">
+          <Form.Item label={t('Run Every', { ns: 'common' })}>
             <Space>
               <Input
                 style={{ width: '40px', padding: '2px 6px' }}
@@ -536,7 +541,7 @@ const ScheduleTab = ({ nodes, selectedAsset, addToSchedule, readOnly, editingAll
                 value={options.scheduleMinute}
                 className={options.enableEdit ? null : 'read-only-input'}
               />
-              Minute,
+              {t('Minute', { ns: 'common' })},
               <Input
                 style={{ width: '40px', padding: '2px 6px' }}
                 name="scheduleHour"
@@ -544,7 +549,7 @@ const ScheduleTab = ({ nodes, selectedAsset, addToSchedule, readOnly, editingAll
                 value={options.scheduleHour}
                 className={options.enableEdit ? null : 'read-only-input'}
               />
-              Hour,
+              {t('Hour', { ns: 'common' })},
               <Input
                 style={{ width: '40px', padding: '2px 6px' }}
                 name="scheduleDayMonth"
@@ -552,7 +557,7 @@ const ScheduleTab = ({ nodes, selectedAsset, addToSchedule, readOnly, editingAll
                 value={options.scheduleDayMonth}
                 className={options.enableEdit ? null : 'read-only-input'}
               />
-              Day of Month,
+              {t('Day of Month')},
               <Input
                 style={{ width: '40px', padding: '2px 6px' }}
                 name="scheduleMonth"
@@ -560,7 +565,7 @@ const ScheduleTab = ({ nodes, selectedAsset, addToSchedule, readOnly, editingAll
                 value={options.scheduleMonth}
                 className={options.enableEdit ? null : 'read-only-input'}
               />
-              Month,
+              {t('Month', { ns: 'common' })},
               <Input
                 style={{ width: '40px', padding: '2px 6px' }}
                 name="scheduleDayWeek"
@@ -568,11 +573,11 @@ const ScheduleTab = ({ nodes, selectedAsset, addToSchedule, readOnly, editingAll
                 value={options.scheduleDayWeek}
                 className={options.enableEdit ? null : 'read-only-input'}
               />
-              Day of Week
+              {t('Day of Week', { ns: 'common' })}
             </Space>
           </Form.Item>
-          <Form.Item label="Explained">{generateCronExplainer()}</Form.Item>
-          <Form.Item label="Would run at">
+          <Form.Item label={t('Explained', { ns: 'common' })}>{generateCronExplainer()}</Form.Item>
+          <Form.Item label={t('Would run at', { ns: 'common' })}>
             {cronExamples.length > 0 ? (
               <>
                 {cronExamples.map((d, index) => {
@@ -583,14 +588,14 @@ const ScheduleTab = ({ nodes, selectedAsset, addToSchedule, readOnly, editingAll
                     </span>
                   );
                 })}
-                <span>and so on...</span>
+                <span>{t('and so on...', { ns: 'common' })}</span>
               </>
             ) : null}
           </Form.Item>
         </>
       ) : null}
       {options.type === 'Predecessor' ? (
-        <Form.Item label="Run After">
+        <Form.Item label={t('Run After', { ns: 'common' })}>
           {!options.enableEdit ? (
             scheduledPredecessors(options.predecessors, options.dependsOn).map((item, index) =>
               index > 0 ? ', ' + item.name : item.name
@@ -599,7 +604,7 @@ const ScheduleTab = ({ nodes, selectedAsset, addToSchedule, readOnly, editingAll
             <Select
               id="dependsOn"
               mode="single"
-              placeholder="Select Job(s) that will trigger execution"
+              placeholder={t('Select Job(s) that will trigger execution', { ns: 'common' })}
               onSelect={(value) => {
                 let predecessors = [];
                 predecessors.push(value);
@@ -620,7 +625,7 @@ const ScheduleTab = ({ nodes, selectedAsset, addToSchedule, readOnly, editingAll
         </Form.Item>
       ) : null}
       {options.type === 'Template' ? (
-        <Form.Item label="Template">
+        <Form.Item label={t('Template', { ns: 'common' })}>
           {!options.enableEdit ? (
             scheduledPredecessors(options.predecessors, options.dependsOn).map((item, index) =>
               index > 0 ? ', ' + item.name : item.name
@@ -628,7 +633,7 @@ const ScheduleTab = ({ nodes, selectedAsset, addToSchedule, readOnly, editingAll
           ) : (
             <Select
               mode="single"
-              placeholder="Select a template"
+              placeholder={t('Select a template', { ns: 'common' })}
               onSelect={(value) => {
                 let predecessors = [];
                 predecessors.push(value);
@@ -653,11 +658,11 @@ const ScheduleTab = ({ nodes, selectedAsset, addToSchedule, readOnly, editingAll
         <Form.Item wrapperCol={{ offset: 12, span: 4 }}>
           {!options.enableEdit ? (
             <Button onClick={handleEdit} type="primary" block>
-              Edit schedule
+              {t('Edit Schedule', { ns: 'common' })}
             </Button>
           ) : (
             <Button onClick={handleSchedule} loading={options.loading} type="primary" block>
-              Save schedule
+              {t('Save schedule', { ns: 'common' })}
             </Button>
           )}
         </Form.Item>

@@ -1,4 +1,5 @@
 import React from 'react';
+import { useTranslation } from 'react-i18next';
 import { Toolbar } from '@antv/x6-react-components';
 import '@antv/x6-react-components/es/menu/style/index.css';
 import '@antv/x6-react-components/es/toolbar/style/index.css';
@@ -14,6 +15,7 @@ const Group = Toolbar.Group; // eslint-disable-line
 
 const CustomToolbar = ({ graphRef, handleSync, isSyncing, readOnly }) => {
   const [refresh, setRefresh] = React.useState(false);
+  const { t } = useTranslation();
 
   if (!graphRef.current) return null;
 
@@ -24,8 +26,12 @@ const CustomToolbar = ({ graphRef, handleSync, isSyncing, readOnly }) => {
         // extra={<span>Extra Component</span>}
       >
         <Group>
-          <Item name="legend" tooltip="Legend" icon={<InfoCircleOutlined />} dropdown={<Legend />}>
-            Info
+          <Item
+            name="legend"
+            tooltip={t('Legend', { ns: 'common' })}
+            icon={<InfoCircleOutlined />}
+            dropdown={<Legend />}>
+            {t('Info', { ns: 'common' })}
           </Item>
         </Group>
         {readOnly ? null : (
@@ -33,7 +39,7 @@ const CustomToolbar = ({ graphRef, handleSync, isSyncing, readOnly }) => {
             <Group>
               <Item
                 name="hiddenNodes"
-                tooltip="Hidden Nodes"
+                tooltip={t('Hidden Nodes', { ns: 'common' })}
                 icon={<EyeInvisibleOutlined />}
                 dropdownProps={{
                   visible: refresh,
@@ -42,19 +48,21 @@ const CustomToolbar = ({ graphRef, handleSync, isSyncing, readOnly }) => {
                   },
                 }}
                 dropdown={<HiddenNodesList graphRef={graphRef} refresh={refresh} setRefresh={setRefresh} />}>
-                Hidden Nodes
+                {t('Hidden Nodes', { ns: 'common' })}
               </Item>
             </Group>
 
             <Group>
               <Item
                 name="sync"
-                tooltip="Synchronize will validate the file/job relationship and update graph accordingly"
+                tooltip={t('Synchronize will validate the file/job relationship and update graph accordingly', {
+                  ns: 'common',
+                })}
                 disabled={isSyncing}
                 active={isSyncing}
                 icon={isSyncing ? <LoadingOutlined /> : <SyncOutlined />}
                 onClick={handleSync}>
-                {isSyncing ? '...synchronizing' : 'Synchronize graph'}
+                {isSyncing ? t('...synchronizing', { ns: 'common' }) : t('Synchronize graph', { ns: 'common' })}
               </Item>
             </Group>
 

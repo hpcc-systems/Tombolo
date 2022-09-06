@@ -1,5 +1,6 @@
 import React, { useState, useCallback } from 'react';
 import { useSelector } from 'react-redux';
+import { useTranslation } from 'react-i18next';
 import { hasEditPermission } from '../common/AuthUtil.js';
 import ReactMarkdown from 'react-markdown';
 import MonacoEditor from '../common/MonacoEditor.js';
@@ -34,6 +35,7 @@ function VisualizationDetails() {
   ]);
   const [form] = Form.useForm();
   const history = useHistory();
+  const { t } = useTranslation(['common', 'common']);
 
   const [formState, setFormState] = useState({ enableEdit: true, dataAltered: false, loading: false });
 
@@ -147,15 +149,15 @@ function VisualizationDetails() {
     <Space>
       {formState.enableEdit ? (
         <Button onClick={switchToViewOnly} disabled={!editingAllowed} type="primary" ghost>
-          View Changes
+          {t('View Changes', { ns: 'common' })}
         </Button>
       ) : (
         <Button type="primary" disabled={!editingAllowed} onClick={makeFieldsEditable}>
-          Edit
+          {t('Edit', { ns: 'common' })}
         </Button>
       )}
       <Button onClick={handleCancel} type="primary" ghost style={{ marginLeft: '25px' }}>
-        Cancel
+        {t('Cancel', { ns: 'common' })}
       </Button>
       <Button
         type="primary"
@@ -163,7 +165,7 @@ function VisualizationDetails() {
         disabled={!editingAllowed}
         loading={formState.confirmLoading}
         style={{ background: 'var(--success)' }}>
-        Save
+        {t('Save', { ns: 'common' })}
       </Button>
     </Space>
   );
@@ -171,11 +173,11 @@ function VisualizationDetails() {
   return (
     <React.Fragment>
       <Tabs defaultActiveKey="1" tabBarExtraContent={controls}>
-        <TabPane tab="Basic" key="1">
+        <TabPane tab={t('Basic', { ns: 'common' })} key="1">
           <Spin spinning={formState.loading}>
             <Form {...formItemLayout} labelAlign="left" form={form} onFinish={handleOk}>
               {!formState.enableEdit ? null : (
-                <Form.Item label="File" name="fileSearchValue">
+                <Form.Item label={t('File', { ns: 'common' })} name="fileSearchValue">
                   <Row gutter={[8, 0]}>
                     <Col span={19}>
                       <AutoComplete
@@ -186,7 +188,7 @@ function VisualizationDetails() {
                         style={{ width: '100%' }}
                         onSearch={(value) => searchFiles(value)}
                         onSelect={(value) => onFileSelected(value)}
-                        placeholder="Search jobs"
+                        placeholder={t('Search jobs', { ns: 'common' })}
                         disabled={!editingAllowed}
                         notFoundContent={search.loading ? <Spin /> : 'Not Found'}>
                         {search.data.map((suggestion) => (
@@ -198,7 +200,7 @@ function VisualizationDetails() {
                     </Col>
                     <Col span={5}>
                       <Button htmlType="button" block onClick={clearState}>
-                        Clear
+                        {t('Clear', { ns: 'common' })}
                       </Button>
                     </Col>
                   </Row>
@@ -206,21 +208,21 @@ function VisualizationDetails() {
               )}
 
               <Form.Item
-                label="Name"
+                label={t('Name', { ns: 'common' })}
                 name="name"
                 rules={[
                   { required: formState.enableEdit, message: 'Please enter a name!' },
                   { pattern: new RegExp(/^[a-zA-Z0-9:._ -]*$/), message: 'Please enter a valid name' },
                 ]}>
                 <Input
-                  placeholder="Name"
+                  placeholder={t('Name', { ns: 'common' })}
                   onChange={onChange}
                   disabled={!editingAllowed}
                   className={!formState.enableEdit ? 'read-only-input' : ''}
                 />
               </Form.Item>
 
-              <Form.Item label="Description">
+              <Form.Item label={t('Description')}>
                 {formState.enableEdit ? (
                   <MonacoEditor value={selectedFile.description} targetDomId="fileDescr" onChange={onChangeMD} />
                 ) : (

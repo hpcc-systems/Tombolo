@@ -1,8 +1,10 @@
 import { Button } from 'antd';
 import React, { useState } from 'react';
+import { useTranslation } from 'react-i18next';
 
 const SaveAllJobsButton = ({ jobDetailsList }) => {
   const [saveJobs, setSaveJobs] = useState({ error: '', loading: false, result: {} });
+  const { t } = useTranslation(['common']); // t for translate -> getting namespaces relevant to this file
 
   const handleSaveAllJobs = async () => {
     setSaveJobs((prev) => ({ ...prev, loading: true, error: '' }));
@@ -24,7 +26,7 @@ const SaveAllJobsButton = ({ jobDetailsList }) => {
 
   return (
     <Button type="primary" loading={saveJobs.loading} onClick={handleSaveAllJobs}>
-      Save All Jobs
+      {t('Save All Jobs', { ns: 'common' })}
     </Button>
   );
 };

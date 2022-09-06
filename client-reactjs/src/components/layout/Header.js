@@ -1,9 +1,13 @@
-import { AppstoreOutlined, DownOutlined, QuestionCircleOutlined } from '@ant-design/icons';
+import { AppstoreOutlined, DownOutlined, QuestionCircleOutlined, GlobalOutlined } from '@ant-design/icons';
 import { Button, Dropdown, Form, Input, Menu, message, Modal, notification, Space, Tooltip } from 'antd';
 import { debounce } from 'lodash';
 import React, { Component } from 'react';
 import { connect } from 'react-redux';
 import { Link, withRouter } from 'react-router-dom';
+import i18next from 'i18next';
+import { withTranslation } from 'react-i18next';
+
+import { languages } from '../../i18n/languages';
 import logo from '../../images/logo.png';
 import { msalInstance } from '../../index';
 import { applicationActions } from '../../redux/actions/Application';
@@ -34,6 +38,7 @@ class AppHeader extends Component {
     newpassword: '',
     confirmnewpassword: '',
     isAboutModalVisible: false,
+    language: 'EN',
   };
 
   handleRef() {
@@ -88,6 +93,14 @@ class AppHeader extends Component {
       });
     }
 
+    //Check local storage if the preferred language is saved
+    const appLanguage = localStorage.getItem('i18nextLng');
+    if (!appLanguage) {
+      this.setState({ language: 'EN' });
+    } else {
+      this.setState({ language: localStorage.getItem('i18nextLng').toUpperCase() });
+    }
+
     if (this.state.applications.length === 0) {
       var url = `/api/app/read/appListByUsername?user_name=${this.props.user.username}`;
       if (hasAdminRole(this.props.user)) {
@@ -103,6 +116,7 @@ class AppHeader extends Component {
           handleError(response);
         })
         .then((data) => {
+          console.log('------------- Data', data);
           let applications = data.map((application) => {
             return { value: application.id, display: application.title };
           });
@@ -319,22 +333,50 @@ class AppHeader extends Component {
     });
   };
 
+  // Options for languages dropdown
+  languagesMenu = (
+    <Menu
+      onClick={(item) => {
+        localStorage.setItem('i18nextLng', item.key);
+        i18next.changeLanguage(item.key);
+        this.setState({ language: item.key.toUpperCase() });
+        console.log('props----------------', this.props);
+
+        this.props.setLocale(item.key);
+      }}>
+      {languages.map((language) => {
+        return (
+          <Menu.Item className="menuOption" key={language.value}>
+            {language.label}
+          </Menu.Item>
+        );
+      })}
+    </Menu>
+  );
+
   render() {
+    const { t } = this.props; // translation
+
     const userActionMenu = (
       <Menu onClick={this.handleUserActionMenuClick}>
-        <Menu.Item key="1">Change Password</Menu.Item>
-        <Menu.Item key="2">Logout</Menu.Item>
+        <Menu.Item key="1" className="menuOption">
+          {t('Change Password', { ns: 'nav' })}
+        </Menu.Item>
+        <Menu.Item key="2" className="menuOption">
+          {t('Logout', { ns: 'nav' })}
+        </Menu.Item>
       </Menu>
     );
+
     const helpMenu = (
       <Menu>
-        <Menu.Item key="1">
+        <Menu.Item key="1" className="menuOption">
           <a target="_blank" rel="noopener noreferrer" href={process.env.PUBLIC_URL + '/Tombolo-User-Guide.pdf'}>
-            User Guide
+            {t('User Guide')}
           </a>
         </Menu.Item>
-        <Menu.Item key="2">
-          <a onClick={this.openAboutModal}>About</a>
+        <Menu.Item key="2" className="menuOption">
+          <a onClick={this.openAboutModal}>{t('About')}</a>
         </Menu.Item>
       </Menu>
     );
@@ -392,16 +434,15 @@ class AppHeader extends Component {
           </Dropdown>
         </div>
 
-        <div>
+        <div style={{ display: 'flex', alignItems: 'center' }}>
           <Dropdown overlay={helpMenu} trigger={['click']}>
             <Button shape="round" style={{ marginRight: '10px' }}>
               <i className="fa fa-lg fa-question-circle"></i>
               <span style={{ paddingLeft: '5px' }}>
-                Help <DownOutlined />
+                {t('Help')} <DownOutlined />
               </span>
             </Button>
           </Dropdown>
-
           <Dropdown overlay={userActionMenu} trigger={['click']}>
             <Button shape="round">
               <i className="fa fa-lg fa-user-circle"></i>
@@ -410,6 +451,12 @@ class AppHeader extends Component {
               </span>
             </Button>
           </Dropdown>
+          <Dropdown overlay={this.languagesMenu} trigger={['click']}>
+            <span style={{ color: 'white', fontSize: '22px', paddingLeft: '15px' }}>
+              <GlobalOutlined className="languageSwitcherIcon" />
+            </span>
+          </Dropdown>{' '}
+          <p style={{ color: 'white', paddingLeft: '5px', paddingTop: '10px' }}>{this.state.language}</p>
         </div>
 
         <Modal
@@ -487,5 +534,6 @@ function mapStateToProps(state) {
 }
 
 //export default withRouter(AppHeader);
-const connectedAppHeader = connect(mapStateToProps)(withRouter(AppHeader));
+let connectedAppHeader = connect(mapStateToProps)(withRouter(AppHeader));
+connectedAppHeader = withTranslation(['common'])(connectedAppHeader);
 export { connectedAppHeader as AppHeader };
