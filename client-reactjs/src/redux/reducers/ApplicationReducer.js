@@ -8,6 +8,7 @@ const initialState = {
   clusters: [],
   consumers: [],
   licenses: [],
+  constraints: [],
 };
 
 export function applicationReducer(state = initialState, action) {
@@ -52,6 +53,16 @@ export function applicationReducer(state = initialState, action) {
       return {
         ...state,
         licenses: action.licenses,
+      };
+    case Constants.CONSTRAINTS_RETRIEVED:
+      return {
+        ...state,
+        constraints: action.constraints,
+      };
+    case Constants.UPDATE_CONSTRAINTS:
+      return {
+        ...state,
+        constraints: action.constraints,
       };
     default:
       return state;

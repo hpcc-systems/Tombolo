@@ -116,7 +116,6 @@ class AppHeader extends Component {
           handleError(response);
         })
         .then((data) => {
-          console.log('------------- Data', data);
           let applications = data.map((application) => {
             return { value: application.id, display: application.title };
           });
@@ -143,6 +142,7 @@ class AppHeader extends Component {
       this.props.dispatch(applicationActions.getClusters());
       this.props.dispatch(applicationActions.getConsumers());
       this.props.dispatch(applicationActions.getLicenses());
+      this.props.dispatch(applicationActions.getConstraints());
     }
 
     if (this.props.newApplication) {
@@ -412,7 +412,7 @@ class AppHeader extends Component {
       <div style={{ display: 'flex', alignItems: 'center', maxHeight: '100%', justifyContent: 'space-between' }}>
         <div>
           <Link to={'/'} style={{ marginRight: '70px' }}>
-            <img src={logo} alt="Tombolo logo" />
+            <img src={logo} alt="Tombolo logo" width="80px" height="19px" />
           </Link>
 
           <Dropdown overlay={menu} placement="bottom" trigger={['click']}>

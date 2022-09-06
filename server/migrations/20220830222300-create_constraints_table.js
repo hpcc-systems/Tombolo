@@ -1,34 +1,25 @@
 'use strict';
 module.exports = {
   up: (queryInterface, Sequelize) => {
-    return queryInterface.createTable('fileTemplate_license', {
+    return queryInterface.createTable('constraint', {
       id: {
         allowNull: false,
         primaryKey: true,
         type: Sequelize.UUID,
         defaultValue: Sequelize.UUIDV4,
       },
-      fields: Sequelize.TEXT,
       name: Sequelize.STRING,
-      url: Sequelize.STRING,
-      license_id: Sequelize.UUID,
+      short_description: Sequelize.STRING,
+      description: Sequelize.TEXT,
       application_id: {
         type: Sequelize.UUID,
+        allowNull: true,
         references: {
           model: 'application',
           key: 'id',
         },
         onUpdate: 'CASCADE',
         onDelete: 'CASCADE',
-      },
-      fileTemplate_id: {
-        type: Sequelize.UUID,
-        references: {
-          model: 'fileTemplate',
-          key: 'id',
-        },
-        onUpdate: 'NO ACTION',
-        onDelete: 'NO ACTION',
       },
       createdAt: {
         allowNull: false,
@@ -45,6 +36,6 @@ module.exports = {
     });
   },
   down: (queryInterface, Sequelize) => {
-    return queryInterface.dropTable('fileTemplate_license');
+    return queryInterface.dropTable('constraint');
   },
 };

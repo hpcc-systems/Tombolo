@@ -1,6 +1,5 @@
 var models  = require('../models');
 let File = models.file;
-let FileLayout = models.file_layout;
 const FileMonitoring = models.fileMonitoring;
 const FileTemplate = models.fileTemplate;
 let FileValidation = models.file_validation;
@@ -31,86 +30,68 @@ const SUBMIT_SCRIPT_JOB_FILE_NAME = 'submitScriptJob.js';
 const SUBMIT_MANUAL_JOB_FILE_NAME = 'submitManualJob.js'
 const SUBMIT_GITHUB_JOB_FILE_NAME = 'submitGithubJob.js'
 
-exports.fileInfo = (applicationId, file_id) => {
-  var results={};
-  return new Promise((resolve, reject) => {
-    File.findOne({where:{"application_id":applicationId, "id":file_id}, include: [{model: Groups, as: 'groups'}]}).then( async function(file) {
-      results.basic = file.toJSON();
-      let fileLayout = {};     
-      if (file.isSuperFile) {
-        try {
-          const DFUService = await hpccUtil.getDFUService(file.cluster_id);
-      
-          const response = await DFUService.DFUInfo({ Name: file.name });
-      
-          if (!response.FileDetail) throw new Error('File details not found');
+exports.fileInfo = async (applicationId, file_id) => {
+  try {
+    const results = { basic: {} };
 
-          results.basic.superFileData = {
-            error:"",
-            subFiles: response.FileDetail.subfiles.Item,
-            recordCount: response.FileDetail.RecordCount,
-            fileSize: response.FileDetail.Filesize,
-            fileSizeInt64: response.FileDetail.FileSizeInt64,
-          };
-          
-        } catch (error) {
-          console.log('-error DFUInfo-----------------------------------------');
-          console.dir({ error }, { depth: null });
-          console.log('------------------------------------------');
-          results.basic.superFileData = {
-            error: error.message,
-          };
-        }
-      }
-      
-      FileLayout.findAll({where:{"application_id":applicationId, "file_id":file_id}}).then(async function(dbFileLayout) {
-        //console.log(dbFileLayout.fields.length)
-        if(!dbFileLayout || (dbFileLayout && (dbFileLayout.length == 0 || !dbFileLayout[0].fields || dbFileLayout[0].fields.length == 0))) {
-          //for some reason, if file layout is empty, fetch it from hpcc and save it to db
-          console.log("File Layout Empty....."+file.name, file.cluster_id)
-          let fileInfo  = await hpccUtil.fileInfo(file.name, file.cluster_id);
-          let fileLayout = {};
-          if(fileInfo) {
-            fileLayout = fileInfo.file_layouts; 
-            //save file layout back to db
-            await FileLayout.findOrCreate({
-              where:{application_id:applicationId, file_id: file_id},
-              defaults:{
-                application_id: applicationId,
-                file_id: file_id,
-                fields: JSON.stringify(fileLayout)
-              }
-            }).then(async (dbFileLayout) => {
-              let fileLayoutId = dbFileLayout[0].id;
-              //console.log(fileLayout);
-              if(!dbFileLayout[1]) {
-                console.log("updating file layout")
-                console.log(fileLayout.length)
-                await FileLayout.update({fields:JSON.stringify(fileLayout)}, {where: {application_id:applicationId, file_id: file_id}});
-              }
-            })
-          }
-        }
-
-        let fileLayoutObj = (dbFileLayout.length == 1 && dbFileLayout[0].fields) ? JSON.parse(dbFileLayout[0].fields) : fileLayout;
-        results.file_layouts = fileLayoutObj.filter(item => item.name != '__fileposition__');
-
-        FileValidation.findAll({where:{"application_id":applicationId, "file_id":file_id}}).then(function(fileValidations) {
-            results.file_validations = fileValidations.filter(item => item.name != '__fileposition__');
-        }).then(function(fileFieldRelation) {
-          ConsumerObject.findAll({where:{"object_id":file_id, "object_type":"file"}}).then(function(fileConsumers) {
-            results.consumers = fileConsumers;
-            resolve(results);
-          });
-        });
-      })
-    })
-    .catch(function(err) {
-        console.log(err);
-        reject("Error occured while retrieving file details")
+    let file = await File.findOne({
+      where: { application_id: applicationId, id: file_id },
+      include: [{ model: Groups, as: "groups" }],
     });
-  })
-}
+    
+    // if fields are empty, try to fetch them again;
+    let layout = file?.metaData?.layout || [];
+
+    if (layout.length === 0) {
+      //for some reason, if file layout is empty, fetch it from hpcc and save it to db
+      const fileInfo = await hpccUtil.fileInfo(file.name, file.cluster_id);
+      if (fileInfo) {
+        const newMetaData = { ...file?.metaData, layout: fileInfo.basic.metaData.layout};
+        file = await file.update({ metaData: newMetaData });
+      }
+    }
+    // file data with fields and everything will be in basic.
+    results.basic = file.toJSON();
+    
+    if (file.isSuperFile) {
+      try {
+        const DFUService = await hpccUtil.getDFUService(file.cluster_id);
+        const response = await DFUService.DFUInfo({ Name: file.name });
+
+        if (!response.FileDetail) throw new Error("File details not found");
+
+        results.basic.superFileData = {
+          error: "",
+          subFiles: response.FileDetail.subfiles.Item,
+          recordCount: response.FileDetail.RecordCount,
+          fileSize: response.FileDetail.Filesize,
+          fileSizeInt64: response.FileDetail.FileSizeInt64,
+        };
+      } catch (error) {
+        console.log("-error DFUInfo-----------------------------------------");
+        console.dir({ error }, { depth: null });
+        console.log("------------------------------------------");
+        results.basic.superFileData = {
+          error: error.message,
+        };
+      }
+    }
+
+    const fileValidations = await FileValidation.findAll({
+      where: { application_id: applicationId, file_id: file_id },
+    });
+
+    results.file_validations = fileValidations.filter((item) => item.name != "__fileposition__");
+
+    const fileConsumers = await ConsumerObject.findAll({ where: { object_id: file_id, object_type: "file" } });
+    results.consumers = fileConsumers;
+
+    return results;
+  } catch (error) {
+    console.log('Error occurred while retrieving file details" :>> ', error);
+    throw error;
+  }
+};
 
 exports.fileSearch = (applicationId, keyword) => {
   var results={};

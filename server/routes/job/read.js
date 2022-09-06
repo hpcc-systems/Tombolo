@@ -7,7 +7,6 @@ let Job = models.job;
 let JobFile = models.jobfile;
 let JobParam = models.jobparam;
 let File = models.file;
-let FileLayout = models.file_layout;
 let FileValidation = models.file_validation;
 const FileTemplate = models.fileTemplate;
 const DataflowVersions = models.dataflow_versions;
@@ -30,7 +29,7 @@ const SUBMIT_SCRIPT_JOB_FILE_NAME = 'submitScriptJob.js';
 const SUBMIT_MANUAL_JOB_FILE_NAME = 'submitManualJob.js'
 const SUBMIT_GITHUB_JOB_FILE_NAME = 'submitGithubJob.js'
 
-const createOrUpdateFile = async ({jobfile, jobId, clusterId, dataflowId, applicationId, assetGroupId}) =>{
+const createOrUpdateFile = async ({jobfile, jobId, clusterId, applicationId, assetGroupId}) =>{
   try {
     const fileInfo = await hpccUtil.fileInfo(jobfile.name, clusterId);
 
@@ -43,7 +42,7 @@ const createOrUpdateFile = async ({jobfile, jobId, clusterId, dataflowId, applic
         isSuperFile: fileInfo.basic.isSuperfile, //!!  we keep the value camelCased when hpcc return isSuperfile
         description: fileInfo.basic.description,
         qualifiedPath: fileInfo.basic.pathMask,
-        metaData:{ isAssociated: true },
+        metaData:{ isAssociated: true, ...fileInfo.basic.metaData },
       };
 
       let [file, isFileCreated] = await File.findOrCreate({
@@ -54,7 +53,19 @@ const createOrUpdateFile = async ({jobfile, jobId, clusterId, dataflowId, applic
         },
         defaults: fileFields,
       });
-      if (!isFileCreated) file = await file.update(fileFields);
+      if (!isFileCreated){
+        const currentLayout = file.metaData?.layout;
+        const incomingLayout = fileInfo.basic?.metaData?.layout;
+
+        if (currentLayout){
+          const updateLayout = syncLayout(currentLayout, incomingLayout)
+          if (updateLayout) {
+            fileFields.metaData = {...fileFields.metaData, layout : updateLayout }
+          }
+        }
+
+        file = await file.update(fileFields);
+      }
 
       //If group Id provided make entry in asset group table
       if (assetGroupId){
@@ -62,18 +73,6 @@ const createOrUpdateFile = async ({jobfile, jobId, clusterId, dataflowId, applic
         await AssetsGroups.findOrCreate({ where: assetGroupsFields, defaults: assetGroupId });
       }
       
-      // create or update FileLayout
-      const layoutFields = { fields: JSON.stringify(fileInfo.file_layouts) };
-
-      let [layout, isLayoutCreated] = await FileLayout.findOrCreate({
-        where: {
-          file_id: file.id,
-          application_id: file.application_id,
-        },
-        defaults: layoutFields,
-      });
-      if (!isLayoutCreated) layout = await layout.update(layoutFields);
-
       // updateCommonData
       const fileValidations = fileInfo.file_validations.map((el) => ({
         ...el,
@@ -126,6 +125,19 @@ const createOrUpdateFile = async ({jobfile, jobId, clusterId, dataflowId, applic
     return null;
   }
 }; 
+
+const syncLayout = (currentLayout, incomingLayout) =>{
+  if (!Array.isArray(currentLayout) || !Array.isArray(incomingLayout) ) return null;
+
+  const newLayout = incomingLayout.reduce((acc, el, index )=> {
+    const exists = currentLayout.find(current => current.name === el.name);
+    const field = exists || el; 
+    acc.push({...field, id : index});  
+    return acc;
+  },[])
+
+  return newLayout;
+}
 
 const deleteJob = async (jobId, application_id) =>{
  return await Promise.all([

@@ -9,6 +9,8 @@ export const applicationActions = {
   getClusters,
   getConsumers,
   getLicenses,
+  getConstraints,
+  updateConstraints,
 };
 
 function applicationSelected(applicationId, applicationTitle) {
@@ -64,4 +66,17 @@ function getLicenses() {
       .then((licenses) => dispatch({ type: Constants.LICENSES_RETRIEVED, licenses }))
       .catch(console.log);
   };
+}
+
+function getConstraints() {
+  return (dispatch) => {
+    fetch('/api/constraint', { headers: authHeader() })
+      .then((response) => (response.ok ? response.json() : handleError(response)))
+      .then((constraints) => dispatch({ type: Constants.CONSTRAINTS_RETRIEVED, constraints }))
+      .catch(console.log);
+  };
+}
+
+function updateConstraints(constraints) {
+  return { type: Constants.UPDATE_CONSTRAINTS, constraints };
 }
