@@ -8,6 +8,8 @@ module.exports = (sequelize, DataTypes) => {
       allowNull: false,
       autoIncrement: false
     },
+    type: DataTypes.STRING,
+    isBaseLine: DataTypes.BOOLEAN,
     report: DataTypes.JSON,
     application_id: DataTypes.UUID,
   }, {paranoid: true, freezeTableName: true});
