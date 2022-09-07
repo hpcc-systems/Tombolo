@@ -201,12 +201,12 @@ router.get("/:applicationId", async (req, res) => {
         if (fileHasFieldsConstaints) report.current.push({ id, name: fileName, fields: current });
       }    
 
-      //  const newReport = await Report.create({ report: report.changes, type:'changes', application_id })
-
-    const newReports = await Report.bulkCreate([{ report: report.changes, type:'changes', application_id }, { report: report.current, type:'current', application_id }]);
+       const newReport = await Report.create({ report: report.changes, type:'changes', application_id })
+    // OLD WAY -> adding two reports while generating 'changes' report
+    // const newReports = await Report.bulkCreate([{ report: report.changes, type:'changes', application_id }, { report: report.current, type:'current', application_id }]);
     // for testing purposes, sleep function;
     // await new Promise(r => setTimeout(r,3000));
-    res.send(newReports[0]);
+    res.send(newReport);
   } catch (error) {
     console.log("-PROPAGATE ERROR-----------------------------------------");
     console.dir({ error }, { depth: null });
