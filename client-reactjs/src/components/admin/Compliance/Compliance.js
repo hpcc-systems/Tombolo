@@ -4,6 +4,7 @@ import React from 'react';
 import { useSelector } from 'react-redux';
 import { useParams } from 'react-router';
 
+import BreadCrumbs from '../../common/BreadCrumbs';
 import Constraints from './Constraints/Constraints';
 import Propagation from './Propagation/Propagation';
 
@@ -12,14 +13,17 @@ const Compliance = () => {
   const params = useParams();
 
   return (
-    <Tabs defaultActiveKey={params.tabName === 'report' ? '2' : '1'}>
-      <Tabs.TabPane tab="Constraints" key="1">
-        <Constraints />
-      </Tabs.TabPane>
-      <Tabs.TabPane tab={<>{isPropagationLoading ? <LoadingOutlined /> : null}Propagation </>} key="2">
-        <Propagation />
-      </Tabs.TabPane>
-    </Tabs>
+    <>
+      <BreadCrumbs />
+      <Tabs defaultActiveKey={params.tabName === 'report' ? '2' : '1'}>
+        <Tabs.TabPane tab="Constraints" key="1">
+          <Constraints />
+        </Tabs.TabPane>
+        <Tabs.TabPane tab={<>{isPropagationLoading ? <LoadingOutlined /> : null}Propagation </>} key="2">
+          <Propagation />
+        </Tabs.TabPane>
+      </Tabs>
+    </>
   );
 };
 

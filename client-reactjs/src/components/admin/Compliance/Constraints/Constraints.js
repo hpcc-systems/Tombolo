@@ -2,7 +2,6 @@ import { EditOutlined } from '@ant-design/icons';
 import { Button, Divider, Space, Table } from 'antd';
 import React, { useState } from 'react';
 import { useSelector } from 'react-redux';
-import BreadCrumbs from '../../../common/BreadCrumbs';
 import ConstraintDescription from './ConstraintDescription';
 
 import ConstraintForm from './ConstraintForm';
@@ -42,13 +41,11 @@ function Constraints() {
 
   return (
     <>
-      <BreadCrumbs
-        extraContent={
-          <Button onClick={add} type="primary">
-            Add new contraint
-          </Button>
-        }
-      />
+      <div style={{ display: 'flex', justifyContent: 'flex-end' }}>
+        <Button onClick={add} type="primary">
+          Add new contraint
+        </Button>
+      </div>
       <Table
         columns={columns}
         dataSource={constraints}
