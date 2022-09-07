@@ -46,7 +46,7 @@ router.get("/:applicationId", async (req, res) => {
       return acc;
     },[])
 
-    const report = { updates: {}, final:[], };
+    const report = { updates: {}, changes:[], current:[] };
 
     // loop through all jobs and find input and output files;
     for (const job of jobs) {
@@ -162,39 +162,51 @@ router.get("/:applicationId", async (req, res) => {
     }
 
       for (const id in report.updates) {
-        let fileHasChanges = false;
+        let fileHasFieldsChanges = false;
+        let fileHasFieldsConstaints = false;
 
         const { name: fileName, fields } = report.updates[id];
 
         const fileDTO = report.updates[id].fileDTO;
         
-        const fieldsArr = Object.entries(fields).reduce((acc, [fieldName,values] )=> {
+        const {changes, current } = Object.entries(fields).reduce((acc, [fieldName,values] )=> {
           const field = { name: fieldName, ...values };
           
-          const addToReport = field.added?.length || field.removed?.length || field.own?.length || field.inherited?.length;
-          
-          if (addToReport) {
-            // switch to true to persist updates  
-            fileHasChanges = true;
-            acc.push(field);
+          const fieldHasChanges = field.added?.length || field.removed?.length;
+          const fieldHasConstraints =  field.own?.length || field.inherited?.length;
+
+          if (fieldHasChanges) {
+            const {name, added, removed} =field;
+            acc.changes.push({name, added, removed});
+            fileHasFieldsChanges = true 
           }
 
+          if (fieldHasConstraints) {
+            const {name, own, inherited} =field;
+            acc.current.push({name, own, inherited});
+            fileHasFieldsConstaints = true 
+          }
+
+
           return acc;
-        },[]);
+        }, {changes:[], current:[]});
 
         // if File was not touched we will remove it from update list;
-        if (fileHasChanges && fileDTO) {
+        if (fileHasFieldsChanges && fileDTO) {
           const newMetadata = fileDTO.toJSON().metaData;
           await File.update({ metaData: newMetadata }, { where: { id } });
         }
 
-        report.final.push({ id, name: fileName, fields: fieldsArr });
+        if (fileHasFieldsChanges) report.changes.push({ id, name: fileName, fields: changes });
+        if (fileHasFieldsConstaints) report.current.push({ id, name: fileName, fields: current });
       }    
 
-    const newReport = await Report.create({ report: report.final, application_id })
+      //  const newReport = await Report.create({ report: report.changes, type:'changes', application_id })
+
+    const newReports = await Report.bulkCreate([{ report: report.changes, type:'changes', application_id }, { report: report.current, type:'current', application_id }]);
     // for testing purposes, sleep function;
     // await new Promise(r => setTimeout(r,3000));
-    res.send(newReport);
+    res.send(newReports[0]);
   } catch (error) {
     console.log("-PROPAGATE ERROR-----------------------------------------");
     console.dir({ error }, { depth: null });
