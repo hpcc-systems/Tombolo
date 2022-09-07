@@ -1,10 +1,9 @@
 import { Form, Input, message, Modal } from 'antd';
 import React, { useEffect, useState } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
-import { authHeader, handleError } from '../../common/AuthHeader';
-import MonacoEditor from '../../common/MonacoEditor';
-
-import { applicationActions } from '../../../redux/actions/Application';
+import { applicationActions } from '../../../../redux/actions/Application';
+import { authHeader, handleError } from '../../../common/AuthHeader';
+import MonacoEditor from '../../../common/MonacoEditor';
 
 const ConstraintForm = ({ modal, onClose }) => {
   const constraints = useSelector((state) => state.applicationReducer.constraints);

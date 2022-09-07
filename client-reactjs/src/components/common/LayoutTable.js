@@ -2,7 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { Button, Collapse, Form, Input, message, Modal, Select, Table } from 'antd';
 import { EditOutlined } from '@ant-design/icons';
 import { useSelector } from 'react-redux';
-import ConstraintsTags from '../admin/Constraints/ConstraintsTags';
+import ConstraintsTags from '../admin/Compliance/Constraints/ConstraintsTags';
 const { Option } = Select;
 
 const LayoutTable = ({ dataSource, setData, enableEdit }) => {

@@ -1,12 +1,12 @@
-import React, { useEffect, useState } from 'react';
-import { DeleteOutlined, FileTextOutlined } from '@ant-design/icons';
-import { Alert, Button, Divider, message, Popconfirm, Space, Table, Typography } from 'antd';
+import { FileTextOutlined } from '@ant-design/icons';
+import { Alert, Button, Divider, Space, Table, Typography } from 'antd';
+import React, { useEffect } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import { useHistory } from 'react-router';
-import { propagationActions } from '../../../redux/actions/Propagation';
+import { propagationActions } from '../../../../redux/actions/Propagation';
 
-import ConstraintsTags from './ConstraintsTags';
-import { authHeader } from '../../common/AuthHeader';
+import DeleteReport from '../DeleteReport';
+import ConstraintsTags from '../Constraints/ConstraintsTags';
 
 const Propagation = () => {
   const dispatch = useDispatch();
@@ -153,51 +153,3 @@ const Propagation = () => {
 };
 
 export default Propagation;
-
-const DeleteReport = ({ report }) => {
-  const dispatch = useDispatch();
-  const propagation = useSelector((state) => state.propagation);
-  const [prompt, setPrompt] = useState({ visible: false, loading: false });
-
-  const removeReport = async () => {
-    try {
-      const config = {
-        method: 'DELETE',
-        headers: authHeader(),
-      };
-
-      setPrompt(() => ({ visible: true, loading: true }));
-
-      const response = await fetch(`/api/report/read/${report.id}`, config);
-      if (!response.ok) throw new Error('Failed to fetch');
-
-      const data = await response.json();
-      if (!data.id) throw new Error('Failed to remove report!');
-
-      const newReports = propagation.reports.filter((el) => el.id !== data.id);
-      dispatch(propagationActions.updateReports(newReports));
-
-      setPrompt(() => ({ visible: false, loading: false }));
-      message.success('Success, report has been deleted!');
-    } catch (error) {
-      console.log('Error fetch', error);
-      message.error(error.message);
-      setPrompt({ visible: false, loading: false });
-    }
-  };
-
-  return (
-    <Popconfirm
-      placement="top"
-      title={'Are you sure you want to delete this report?'}
-      visible={prompt.visible}
-      okText="Yes"
-      cancelText="No"
-      onConfirm={removeReport}
-      onCancel={() => setPrompt({ visible: false, loading: false })}
-      okButtonProps={{ loading: prompt.loading }}
-      cancelButtonProps={{ disabled: prompt.loading }}>
-      <DeleteOutlined onClick={() => setPrompt({ visible: true, loading: false })} />
-    </Popconfirm>
-  );
-};

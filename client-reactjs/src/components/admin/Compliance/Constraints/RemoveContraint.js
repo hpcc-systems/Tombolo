@@ -2,9 +2,8 @@ import React, { useState } from 'react';
 import { DeleteOutlined } from '@ant-design/icons';
 import { message, Popconfirm } from 'antd';
 import { useDispatch, useSelector } from 'react-redux';
-import { authHeader, handleError } from '../../common/AuthHeader';
-
-import { applicationActions } from '../../../redux/actions/Application';
+import { authHeader, handleError } from '../../../common/AuthHeader';
+import { applicationActions } from '../../../../redux/actions/Application';
 
 const RemoveContraint = ({ record }) => {
   const [visible, setVisible] = useState(false);

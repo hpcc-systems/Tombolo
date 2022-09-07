@@ -128,7 +128,7 @@ class LeftNav extends Component {
                 icon={
                   this.props.propagation.loading ? <LoadingOutlined /> : <i className="fa fa-fw fa-balance-scale" />
                 }>
-                <Link to={'/admin/constraints'}>Compliance</Link>
+                <Link to={'/admin/compliance'}>Compliance</Link>
               </Menu.Item>
             </>
           ) : null}

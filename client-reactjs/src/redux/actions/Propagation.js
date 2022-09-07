@@ -18,7 +18,7 @@ const propagate = ({ history }) => {
 
       const goToReport = () => {
         notification.close('report');
-        history.push('/admin/constraints/report');
+        history.push('/admin/compliance/report');
       };
 
       notification.success({
@@ -63,7 +63,7 @@ const getReports = () => {
 };
 
 const updateReports = (data) => {
-  return { type: Constants.PROPAGATIONS_UPDATE_REPORTS, payload: data };
+  return { type: Constants.UPDATE_REPORTS, payload: data };
 };
 
 export const propagationActions = {
