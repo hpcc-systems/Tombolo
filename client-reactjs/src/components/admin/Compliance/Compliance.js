@@ -6,21 +6,36 @@ import { useParams } from 'react-router';
 
 import BreadCrumbs from '../../common/BreadCrumbs';
 import Constraints from './Constraints/Constraints';
+import CurrentReport from './CurrentReport/CurrentReport';
 import Propagation from './Propagation/Propagation';
 
 const Compliance = () => {
-  const isPropagationLoading = useSelector((state) => state.propagation.loading);
+  const [isChangeLoading, isCurrentLoading] = useSelector(({ propagation }) => [
+    propagation.changes.loading,
+    propagation.current.loading,
+  ]);
   const params = useParams();
+
+  const getKey = () => {
+    const options = {
+      changes: '2',
+      current: '3',
+    };
+    return options[params.tabName] || '1';
+  };
 
   return (
     <>
       <BreadCrumbs />
-      <Tabs defaultActiveKey={params.tabName === 'report' ? '2' : '1'}>
+      <Tabs defaultActiveKey={getKey()}>
         <Tabs.TabPane tab="Constraints" key="1">
           <Constraints />
         </Tabs.TabPane>
-        <Tabs.TabPane tab={<>{isPropagationLoading ? <LoadingOutlined /> : null}Propagation </>} key="2">
+        <Tabs.TabPane tab={<>{isChangeLoading ? <LoadingOutlined /> : null}Propagation </>} key="2">
           <Propagation />
+        </Tabs.TabPane>
+        <Tabs.TabPane tab={<>{isCurrentLoading ? <LoadingOutlined /> : null}Current State Report </>} key="3">
+          <CurrentReport />
         </Tabs.TabPane>
       </Tabs>
     </>

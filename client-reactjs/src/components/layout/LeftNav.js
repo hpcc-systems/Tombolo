@@ -125,9 +125,7 @@ class LeftNav extends Component {
               </Menu.Item>
               <Menu.Item
                 key="9"
-                icon={
-                  this.props.propagation.loading ? <LoadingOutlined /> : <i className="fa fa-fw fa-balance-scale" />
-                }>
+                icon={this.props.isReportLoading ? <LoadingOutlined /> : <i className="fa fa-fw fa-balance-scale" />}>
                 <Link to={'/admin/compliance'}>Compliance</Link>
               </Menu.Item>
             </>
@@ -141,7 +139,8 @@ class LeftNav extends Component {
 function mapStateToProps(state) {
   const applicationId = state.applicationReducer.application?.applicationId;
   const { loggedIn, user } = state.authenticationReducer;
-  return { applicationId, loggedIn, user, propagation: state.propagation };
+  const isReportLoading = state.propagation.changes.loading || state.propagation.current.loading;
+  return { applicationId, loggedIn, user, isReportLoading };
 }
 
 const connectedLeftNav = connect(mapStateToProps, null, null, { forwardRef: true })(withRouter(LeftNav));
