@@ -3,48 +3,59 @@ import { notification, message, Typography } from 'antd';
 import { authHeader } from '../../components/common/AuthHeader';
 import { Constants } from '../../components/common/Constants';
 
-const propagate = ({ history }) => {
+const generateReport = ({ history, type }) => {
   return async (dispatch, getState) => {
     try {
       const { applicationReducer } = getState();
       const applicationId = applicationReducer?.application?.applicationId;
 
-      dispatch({ type: Constants.PROPAGATIONS_INITIATE });
+      dispatch({
+        type: type === 'changes' ? Constants.PROPAGATIONS_CHANGES_INITIATE : Constants.PROPAGATIONS_CURRENT_INITIATE,
+      });
 
-      const response = await fetch(`/api/propagation/${applicationId}`, { headers: authHeader() });
+      const url =
+        type === 'changes' ? `/api/propagation/${applicationId}` : `/api/report/read/generate_current/${applicationId}`;
+
+      const response = await fetch(url, { headers: authHeader() });
       if (!response.ok) throw Error(response.statusText);
 
       const data = await response.json();
 
       const goToReport = () => {
         notification.close('report');
-        history.push('/admin/compliance/report');
+        history.push(`/admin/compliance/${type}`);
       };
 
       notification.success({
         key: 'report',
         duration: 0,
         placement: 'top',
-        message: 'Propagations Report is ready!',
+        message: 'Report is ready!',
         description: (
           <>
-            <Typography>Report is available under Constraints tab on the left blade</Typography>
-            {history.location.pathname.includes('/admin/constraints') ? null : (
+            <Typography>Report is available under Compliance tab on the left blade</Typography>
+            {history.location.pathname.includes('/admin/compliance') ? null : (
               <Typography.Link onClick={goToReport}>Click here to go to report!</Typography.Link>
             )}
           </>
         ),
       });
 
-      dispatch({ type: Constants.PROPAGATIONS_SUCCESS, payload: data });
+      dispatch({
+        type: type === 'changes' ? Constants.PROPAGATIONS_CHANGES_SUCCESS : Constants.PROPAGATIONS_CURRENT_SUCCESS,
+        payload: data,
+      });
     } catch (error) {
       message.error(error.message);
-      dispatch({ type: Constants.PROPAGATIONS_ERROR, payload: error.message });
+      dispatch({
+        type: type === 'changes' ? Constants.PROPAGATIONS_CHANGES_ERROR : Constants.PROPAGATIONS_CURRENT_ERROR,
+        payload: error.message,
+      });
     }
   };
 };
 
-const getReports = () => {
+const getReports = ({ callFrom }) => {
   return async (dispatch, getState) => {
     try {
       const { applicationReducer } = getState();
@@ -57,7 +68,10 @@ const getReports = () => {
       dispatch(updateReports(data));
     } catch (error) {
       message.error(error.message);
-      dispatch({ type: Constants.PROPAGATIONS_ERROR, payload: error.message });
+      dispatch({
+        type: callFrom === 'changes' ? Constants.PROPAGATIONS_CHANGES_ERROR : Constants.PROPAGATIONS_CURRENT_ERROR,
+        payload: error.message,
+      });
     }
   };
 };
@@ -67,7 +81,7 @@ const updateReports = (data) => {
 };
 
 export const propagationActions = {
-  propagate,
   getReports,
   updateReports,
+  generateReport,
 };
