@@ -1,8 +1,8 @@
 const express = require('express');
 const router = express.Router();
 
-const { dataflow: Dataflow, dataflow_versions: DataflowVersions, report: Report } = require('../../models');
-const { query, param, validationResult } = require('express-validator');
+const { dataflow: Dataflow, dataflow_versions: DataflowVersions, file: File, report: Report } = require('../../models');
+const { query, body, param, validationResult } = require('express-validator');
 const validatorUtil = require('../../utils/validator');
 const logger = require('../../config/logger');
 
@@ -39,6 +39,88 @@ router.delete('/:reportId', [ param("reportId").isUUID(4) ], async (req, res) =>
     res.status(500).json({ message: error.message });
   }
 }
+);
+
+router.get("/generate_current/:application_id", [param("application_id").isUUID(4)], async (req, res) => {
+  try {
+    // Express validator
+    const errors = validationResult(req).formatWith(validatorUtil.errorFormatter);
+    if (!errors.isEmpty()) return res.status(422).json({ success: false, errors: errors.array() });
+
+    // Route logic
+    const { application_id } = req.params;
+
+    const files = await File.findAll({
+      where: { application_id },
+      attributes: ["id", "name", "metaData"],
+    });
+
+    const summary = { type: "current", isBaseLine: false, report: [], application_id };
+
+    for (const file of files) {
+      const layout = file.metaData?.layout;
+      if (!layout || layout.length === 0) continue;
+
+      const { name, id } = file;
+      const reportRecord = { id, name, fields: [] };
+
+      for (const field of layout) {
+        const { own, inherited } = field.constraints;
+        if (own.length || inherited.length) {
+          reportRecord.fields.push({ name: field.name, own, inherited });
+        }
+      }
+
+      if (reportRecord.fields.length > 0) summary.report.push(reportRecord);
+    }
+
+    const newReport = await Report.create(summary);
+
+    res.status(200).send(newReport);
+  } catch (error) {
+    logger.error(`Something went wrong`, error);
+    res.status(500).json({ message: error.message });
+  }
+});
+
+router.put( "/baseline/:application_id",
+  [param("application_id").isUUID(4), body("id").isUUID(4), body("action").exists().isString()],
+  async (req, res) => {
+    try {
+      // Express validator
+      const errors = validationResult(req).formatWith(validatorUtil.errorFormatter);
+      if (!errors.isEmpty()) return res.status(422).json({ success: false, errors: errors.array() });
+
+      // Route logic
+      const { id, action } = req.body;
+      const { application_id } = req.params;
+
+      const actions = ["assign", "remove"];
+
+      if (!actions.includes(action)) throw new Error("No such action");
+
+      if (action === "remove") {
+        const [isUpdated] = await Report.update({ isBaseLine: false }, { where: { id } });
+
+        if (!isUpdated) throw new Error("Failed to remove baseline");
+        res.status(200).send({ success: true, id });
+      }
+
+      if (action === "assign") {
+        let newBaseLineReport = await Report.findOne({ where: { id } });
+        if (!newBaseLineReport) throw new Error("Report does not exist");
+
+        await Report.update({ isBaseLine: false }, { where: { isBaseLine: true, application_id } });
+
+        newBaseLineReport = await newBaseLineReport.update({ isBaseLine: true });
+
+        res.status(200).send({ success: true, id: newBaseLineReport.id });
+      }
+    } catch (error) {
+      logger.error(`Something went wrong`, error);
+      res.status(500).json({ message: error.message });
+    }
+  }
 );
 
 router.get( '/associatedDataflows',
