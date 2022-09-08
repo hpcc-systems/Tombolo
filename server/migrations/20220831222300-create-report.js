@@ -12,6 +12,10 @@ module.exports = {
         type: Sequelize.JSON,
       },
       type: Sequelize.STRING,
+      comparedTo:{
+        allowNull: true,
+        type: Sequelize.UUID,
+      },
       isBaseLine: {
         type:Sequelize.BOOLEAN,
         defaultValue: false
