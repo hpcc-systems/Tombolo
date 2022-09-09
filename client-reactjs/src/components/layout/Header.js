@@ -360,10 +360,10 @@ class AppHeader extends Component {
     const userActionMenu = (
       <Menu onClick={this.handleUserActionMenuClick}>
         <Menu.Item key="1" className="menuOption">
-          {t('Change Password', { ns: 'nav' })}
+          {t('Change Password', { ns: 'common' })}
         </Menu.Item>
         <Menu.Item key="2" className="menuOption">
-          {t('Logout', { ns: 'nav' })}
+          {t('Logout', { ns: 'common' })}
         </Menu.Item>
       </Menu>
     );

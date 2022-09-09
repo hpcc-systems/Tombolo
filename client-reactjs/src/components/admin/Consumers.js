@@ -399,7 +399,7 @@ class Consumers extends Component {
             </a>
             <Divider type="vertical" />
             <Popconfirm
-              title={t('Are you sure you want to delete this Consumer?', { ns: 'common' })}
+              title={t('Are you sure you want to delete', { ns: 'common' }) + '?'}
               onConfirm={() => this.handleRemove(record.id)}
               icon={<QuestionCircleOutlined />}>
               <a href="#">

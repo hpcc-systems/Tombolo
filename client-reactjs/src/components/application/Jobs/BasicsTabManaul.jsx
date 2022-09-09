@@ -151,7 +151,7 @@ function BasicsTabManul(props) {
       ) : null}
 
       {localState.isNew || enableEdit ? (
-        <Form.Item label={t('File Path', { ns: 'job' })} name="manualJobFilePath">
+        <Form.Item label={t('File Path', { ns: 'common' })} name="manualJobFilePath">
           <Cascader
             options={options}
             onChange={onFilePathChange}

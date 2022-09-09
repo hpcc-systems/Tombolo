@@ -514,7 +514,7 @@ const VersionsButton = ({ graphRef }) => {
         active={saveGraph.loading}
         icon={saveGraph.loading ? <LoadingOutlined /> : <SaveOutlined />}
         onClick={openSaveDialog}>
-        {saveGraph.loading ? t('...Saving', { ns: 'common' }) : t('Save Version', { ns: 'common' })}
+        {saveGraph.loading ? '...' + t('...Saving', { ns: 'common' }) : t('Save Version', { ns: 'common' })}
       </Item>
       <Item className="versions_list" name="versions" tooltip="Versions" dropdown={getVersionsList()} />
       {!clickedVersion.name ? (

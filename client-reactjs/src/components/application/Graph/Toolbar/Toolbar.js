@@ -62,7 +62,7 @@ const CustomToolbar = ({ graphRef, handleSync, isSyncing, readOnly }) => {
                 active={isSyncing}
                 icon={isSyncing ? <LoadingOutlined /> : <SyncOutlined />}
                 onClick={handleSync}>
-                {isSyncing ? t('...synchronizing', { ns: 'common' }) : t('Synchronize graph', { ns: 'common' })}
+                {isSyncing ? '...' + t('synchronizing', { ns: 'common' }) : t('Synchronize graph', { ns: 'common' })}
               </Item>
             </Group>
 

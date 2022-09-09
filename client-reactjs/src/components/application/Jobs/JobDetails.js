@@ -635,7 +635,7 @@ class JobDetails extends Component {
         return (
           <div className="assetDetail-buttons-wrapper-modal">
             <Button disabled={!editingAllowed} type="primary" onClick={this.executeJob}>
-              {t('Execute Job', { ns: 'job' })}
+              {t('Execute Job', { ns: 'common' })}
             </Button>
           </div>
         );
@@ -643,7 +643,7 @@ class JobDetails extends Component {
       // if opened in main view show button as dissabled (click edit to enable)
       return this.props.inTabView ? null : (
         <Button disabled={!editingAllowed || !this.state.enableEdit} type="primary" onClick={this.executeJob}>
-          {t('Execute Job', { ns: 'job' })}
+          {t('Execute Job', { ns: 'common' })}
         </Button>
       );
     };
@@ -785,7 +785,7 @@ class JobDetails extends Component {
               <TabPane tab={t('Basic', { ns: 'common' })} key="1">
                 {this.props.inTabView ? null : (
                   <Form.Item
-                    label={t('Job Type', { ns: 'job' })}
+                    label={t('Job Type', { ns: 'common' })}
                     className={this.state.enableEdit ? null : 'read-only-input'}>
                     <Row gutter={[8, 8]}>
                       <Col span={12}>
@@ -883,10 +883,10 @@ class JobDetails extends Component {
                   />
                 </TabPane>
               ) : jobType === 'Script' ? (
-                <TabPane disabled={noECLAvailable} tab={t('Script', { ns: 'job' })} key="2">
+                <TabPane disabled={noECLAvailable} tab={t('Script', { ns: 'common' })} key="2">
                   <Form.Item
                     {...longFieldLayout}
-                    label={t('Script Path', { ns: 'job' })}
+                    label={t('Script Path', { ns: 'common' })}
                     name="scriptPath"
                     validateTrigger="onBlur"
                     rules={[
@@ -913,7 +913,7 @@ class JobDetails extends Component {
 
               {this.shouldShowTab(jobType) ? (
                 <React.Fragment>
-                  <TabPane disabled={noECLAvailable} tab={t('Input Params', { ns: 'job' })} key="3">
+                  <TabPane disabled={noECLAvailable} tab={t('Input Params', { ns: 'common' })} key="3">
                     <EditableTable
                       columns={this.state.job.jobType !== 'Script' ? columns : scriptInputParamscolumns}
                       dataSource={inputParams}
@@ -924,7 +924,7 @@ class JobDetails extends Component {
                       enableEdit={this.state.enableEdit}
                     />
                   </TabPane>
-                  <TabPane disabled={noECLAvailable} tab={t('Input Files', { ns: 'job' })} key="4">
+                  <TabPane disabled={noECLAvailable} tab={t('Input Files', { ns: 'common' })} key="4">
                     <InputFiles
                       inputFiles={inputFiles}
                       clusterId={this.state.selectedCluster}
@@ -938,7 +938,7 @@ class JobDetails extends Component {
                     />
                   </TabPane>
 
-                  <TabPane tab={t('Output Files', { ns: 'job' })} disabled={noECLAvailable} key="5">
+                  <TabPane tab={t('Output Files', { ns: 'common' })} disabled={noECLAvailable} key="5">
                     <InputFiles
                       outputFiles={outputFiles}
                       clusterId={this.state.selectedCluster}
@@ -954,7 +954,7 @@ class JobDetails extends Component {
               ) : null}
 
               {this.props.selectedDataflow ? (
-                <TabPane tab={t('Schedule', { ns: 'job' })} key="6">
+                <TabPane tab={t('Schedule', { ns: 'common' })} key="6">
                   <ScheduleTab
                     nodes={this.props.nodes}
                     readOnly={this.props.viewMode}
@@ -968,7 +968,7 @@ class JobDetails extends Component {
               ) : null}
 
               {!this.props.isNew ? (
-                <TabPane tab={t('Workflows', { ns: 'job' })} key="7">
+                <TabPane tab={t('Workflows', { ns: 'common' })} key="7">
                   <AssociatedDataflows assetId={this.state.job.id} assetType={'Job'} />
                 </TabPane>
               ) : null}

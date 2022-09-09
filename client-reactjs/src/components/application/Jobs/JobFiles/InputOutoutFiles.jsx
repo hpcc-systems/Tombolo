@@ -144,12 +144,14 @@ function InputOutputFiles({
         {enableEdit ? (
           <div style={{ display: 'flex' }}>
             <Form.Item
-              label={selectedTabPaneKey === '4' ? t('Input Files', { ns: 'job' }) : t('Output Files', { ns: 'job' })}
+              label={
+                selectedTabPaneKey === '4' ? t('Input Files', { ns: 'common' }) : t('Output Files', { ns: 'common' })
+              }
               rules={[{ required: true }]}>
               <Select
                 id={selectedTabPaneKey === '4' ? 'inputfiles' : 'outputfiles'}
                 placeholder={
-                  selectedTabPaneKey === '4' ? t('Input Files', { ns: 'job' }) : t('Output Files', { ns: 'job' })
+                  selectedTabPaneKey === '4' ? t('Input Files', { ns: 'common' }) : t('Output Files', { ns: 'common' })
                 }
                 onChange={selectedTabPaneKey === '4' ? handleInputFileChange : handleOutputFileChange}
                 style={{ width: 290 }}

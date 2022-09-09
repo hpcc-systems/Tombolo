@@ -98,17 +98,17 @@ function DataflowTable({ data, applicationId, onSelectDataflow, onDataFlowUpdate
       render: (text, record) => (
         <span>
           <a onClick={() => onEditDataFlow(record)}>
-            <Tooltip placement="right" title={'Edit Dataflow'}>
+            <Tooltip placement="right" title={t('Edit', { ns: 'common' })}>
               <EyeOutlined />
             </Tooltip>
           </a>
           <Divider type="vertical" />
           <Popconfirm
-            title="Are you sure you want to delete this Dataflow and it's associated graph?"
+            title={t('Are you sure you want to delete', { ns: 'common' }) + '?'}
             onConfirm={() => handleDataflowDelete(record.id)}
             icon={<QuestionCircleOutlined />}>
             <a href="#">
-              <Tooltip placement="right" title={'Delete Dataflow'}>
+              <Tooltip placement="right" title={t('Delete', { ns: 'common' })}>
                 <DeleteOutlined />
               </Tooltip>
             </a>
