@@ -74,7 +74,7 @@ router.post( '/save_versions',
     
     try {
       const { name, description, dataflowId, graph } = req.body;
-      const createdBy = req.authInfo.email;
+      const createdBy = req.authInfo?.email || req.user?.email || 'unknown user';
 
       const version = await DataflowVersions.create({ name, description, graph, createdBy, dataflowId });
 
