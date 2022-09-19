@@ -7,7 +7,7 @@ import ConstraintsTags from '../Constraints/ConstraintsTags';
 import BaseLine from './BaseLine';
 import DeleteReport from './DeleteReport';
 
-const ReportTable = ({ type }) => {
+const ReportTable = ({ type = 'current', data = null }) => {
   const propagation = useSelector((state) => state.propagation);
 
   let columns = [
@@ -31,14 +31,27 @@ const ReportTable = ({ type }) => {
       key: 'x',
       render: (record) => (
         <Space split={<Divider type="vertical" />}>
-          <BaseLine record={record} />
+          {type === 'changes' ? null : <BaseLine record={record} />}
           <DeleteReport record={record} />
         </Space>
       ),
     },
   ];
 
-  const dataSource = propagation.reports.filter((report) => report.type === type);
+  const getColumns = () => {
+    if (data) return [columns[0]];
+    if (type === 'changes') {
+      const comparedTo = {
+        title: 'Compared to base line',
+        dataIndex: 'comparedName',
+        render: (text) => (text ? new Date(text).toLocaleString() : ''),
+      };
+      return [columns[0], comparedTo, columns[1]];
+    }
+    return columns;
+  };
+
+  const dataSource = data || propagation.reports.filter((report) => report.type === type);
   const report = propagation[type];
 
   if (!report) return 'Wrong report type passed!';
@@ -46,9 +59,9 @@ const ReportTable = ({ type }) => {
   return (
     <Table
       size="small"
-      columns={columns}
+      columns={getColumns()}
       pagination={false}
-      loading={report.loading}
+      loading={data ? false : report.loading}
       rowKey={(record) => record.id}
       dataSource={dataSource}
       expandable={{

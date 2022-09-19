@@ -3,7 +3,7 @@ import { notification, message, Typography } from 'antd';
 import { authHeader } from '../../components/common/AuthHeader';
 import { Constants } from '../../components/common/Constants';
 
-const generateReport = ({ history, type }) => {
+const generateReport = ({ history, type, baseLineId = null }) => {
   return async (dispatch, getState) => {
     try {
       const { applicationReducer } = getState();
@@ -13,8 +13,10 @@ const generateReport = ({ history, type }) => {
         type: type === 'changes' ? Constants.PROPAGATIONS_CHANGES_INITIATE : Constants.PROPAGATIONS_CURRENT_INITIATE,
       });
 
-      const url =
+      let url =
         type === 'changes' ? `/api/propagation/${applicationId}` : `/api/report/read/generate_current/${applicationId}`;
+
+      if (baseLineId) url += `/?baseLineId=${baseLineId}`;
 
       const response = await fetch(url, { headers: authHeader() });
       if (!response.ok) throw Error(response.statusText);

@@ -12,10 +12,11 @@ module.exports = {
         type: Sequelize.JSON,
       },
       type: Sequelize.STRING,
-      comparedTo:{
+      comparedId:{
         allowNull: true,
         type: Sequelize.UUID,
       },
+      comparedName: Sequelize.STRING,
       isBaseLine: {
         type:Sequelize.BOOLEAN,
         defaultValue: false

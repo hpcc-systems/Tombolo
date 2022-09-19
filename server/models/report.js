@@ -9,7 +9,8 @@ module.exports = (sequelize, DataTypes) => {
       autoIncrement: false
     },
     type: DataTypes.STRING,
-    comparedTo: DataTypes.UUID,
+    comparedId: DataTypes.UUID,
+    comparedName: DataTypes.STRING,
     isBaseLine: DataTypes.BOOLEAN,
     report: DataTypes.JSON,
     application_id: DataTypes.UUID,
