@@ -33,10 +33,13 @@ export function applicationReducer(state = initialState, action) {
         updatedApplication: action.updatedApplication,
       };
     case Constants.APPLICATION_DELETED:
+      // eslint-disable-next-line no-case-declarations
+      const currentApplication = action.applicationId === state.application?.applicationId ? {} : state.application;
       return {
         ...state,
         newApplication: '',
         updatedApplication: '',
+        application: currentApplication,
         deletedApplicationId: action.applicationId,
       };
     case Constants.CLUSTERS_RETRIEVED:

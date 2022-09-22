@@ -15,11 +15,9 @@ class LeftNav extends Component {
   componentDidUpdate(prevProps) {
     const applicationId = this.props?.applicationId;
     const prevApplicationId = prevProps?.applicationId;
-    if (applicationId && prevApplicationId) {
-      if (applicationId !== prevApplicationId) {
-        // if current app and prev app is not same we are redirected to /appid/asset page, so we will reset menu highlight
-        this.setState({ current: '1' });
-      }
+    if (applicationId !== prevApplicationId) {
+      // if current app and prev app is not same we are redirected to /appid/asset page, so we will reset menu highlight
+      this.setState({ current: '1' });
     }
   }
 

@@ -6,7 +6,7 @@ import { useSelector } from 'react-redux';
 const { DirectoryTree } = Tree;
 const { confirm } = Modal;
 
-function MoveAssetsDialog({ isShowing, toggle, application, assetToMove }) {
+function MoveAssetsDialog({ isShowing, toggle, application, assetToMove, reloadTable }) {
   const groupsTree = useSelector((state) => state.groupsReducer.tree);
 
   const [moveDestinationGroup, setMoveDestinationGroup] = useState({ id: '', key: '', title: '' });
@@ -63,6 +63,7 @@ function MoveAssetsDialog({ isShowing, toggle, application, assetToMove }) {
               '"' + assetToMove.title + '" has been moved to "' + moveDestinationGroup.title + '" group.'
             );
             toggle({ refetch: true });
+            reloadTable();
           })
           .catch((error) => {
             console.log(error);
