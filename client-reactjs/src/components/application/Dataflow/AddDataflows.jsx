@@ -1,11 +1,11 @@
 import React, { useState, useEffect } from 'react';
 import { useSelector } from 'react-redux';
-import { Button, Tooltip, Modal, Form, Input, Select, message } from 'antd/lib';
-import { useTranslation } from 'react-i18next';
+import { Button, Tooltip, Modal, Form, Input, Select, message } from 'antd';
 
 import { authHeader } from '../../common/AuthHeader.js';
 import NotifyField from '../Jobs/Notifications/RadioButtons';
 import UserSearch from '../../common/UserSearch';
+import Text from '../../common/Text';
 
 const { Option } = Select;
 const { TextArea } = Input;
@@ -39,7 +39,7 @@ function AddDataflow({
   ]);
   const [notifyStatus, setNotifyStatus] = useState('Never');
   const [showDetails, setShowDetails] = useState(false);
-  const { t } = useTranslation(['common']); // t for translate -> getting namespaces relevant to this file
+  //  // t for translate -> getting namespaces relevant to this file
 
   useEffect(() => {
     //If user is editing or viewing DF details - Populate form fields
@@ -155,16 +155,16 @@ function AddDataflow({
   return (
     <React.Fragment>
       <div style={{ marginLeft: 'auto', paddingTop: '5px' }}>
-        <Tooltip placement="bottom" title={t('Add new Dataflow', { ns: 'common' })}>
+        <Tooltip placement="bottom" title={<Text text="Add new Dataflow" />}>
           <Button type="primary" onClick={handleModal}>
-            {t('Add', { ns: 'common' })}
+            {<Text text="Add" />}
           </Button>
         </Tooltip>
       </div>
 
       <Modal
         visible={modalVisible}
-        title={t('Dataflow', { ns: 'common' })}
+        title={<Text text="Dataflow" />}
         maskClosable={false}
         bodyStyle={{ overflowY: 'auto', maxHeight: '60vh' }}
         width={750}
@@ -175,22 +175,22 @@ function AddDataflow({
             type="primary"
             onClick={handleFormSubmission}
             style={{ display: enableEdit ? 'inline' : 'none' }}>
-            {t('Save', { ns: 'common' })}
+            {<Text text="Save" />}
           </Button>,
           <Button
             key={2}
             type="primary"
             onClick={() => setEnableEdit(true)}
             style={{ display: enableEdit ? 'none' : 'inline' }}>
-            {t('Edit', { ns: 'common' })}
+            {<Text text="Edit" />}
           </Button>,
           <Button key={3} onClick={handleClose}>
-            {t('Cancel', { ns: 'common' })}
+            {<Text text="Cancel" />}
           </Button>,
         ]}>
         <Form form={form} initialValues={{ notify: 'Never' }} {...formLayout} labelAlign="left">
           <Form.Item
-            label={t('Title', { ns: 'common' })}
+            label={<Text text="Title" />}
             name="title"
             rules={[
               {
@@ -202,7 +202,7 @@ function AddDataflow({
           </Form.Item>
 
           <Form.Item
-            label={t('Description', { ns: 'common' })}
+            label={<Text text="Description" />}
             name="description"
             className={enableEdit ? null : 'read-only-input'}>
             <TextArea
@@ -212,7 +212,7 @@ function AddDataflow({
           </Form.Item>
 
           <Form.Item
-            label={t('Cluster', { ns: 'common' })}
+            label={<Text text="Cluster" />}
             name="cluster"
             rules={[
               {
@@ -232,12 +232,12 @@ function AddDataflow({
             )}
           </Form.Item>
 
-          <Form.Item label={t('Username', { ns: 'common' })} name="cluster_username">
+          <Form.Item label={<Text text="Username" />} name="cluster_username">
             <Input placeholder="Cluster username" className={enableEdit ? null : 'read-only-input'}></Input>
           </Form.Item>
 
           <Form.Item
-            label={t('Password', { ns: 'common' })}
+            label={<Text text="Password" />}
             name="cluster_password"
             className={enableEdit ? null : 'read-only-input'}>
             <Input placeholder={enableEdit ? 'Cluster Password' : null} type="password" />
@@ -254,7 +254,7 @@ function AddDataflow({
             <>
               {notifyStatus === 'Always' || notifyStatus === 'Only on success' ? (
                 <Form.Item
-                  label={t('Success', { ns: 'common' })}
+                  label={<Text text="Success" />}
                   name="notificationSuccessMessage"
                   className={enableEdit ? null : 'read-only-input'}
                   rules={[
@@ -269,7 +269,7 @@ function AddDataflow({
 
               {notifyStatus === 'Always' || notifyStatus === 'Only on failure' ? (
                 <Form.Item
-                  label={t('Failure', { ns: 'common' })}
+                  label={<Text text="Failure" />}
                   name="notificationFailureMessage"
                   className={enableEdit ? null : 'read-only-input'}
                   style={{ marginTop: '8px' }}

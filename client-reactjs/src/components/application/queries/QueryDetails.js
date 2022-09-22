@@ -1,17 +1,17 @@
 import React, { PureComponent } from 'react';
 import { Modal, Tabs, Form, Input, Select, AutoComplete, Spin, message, Button, Radio, Row, Col } from 'antd';
-import { withTranslation } from 'react-i18next';
+import { connect } from 'react-redux';
+import { debounce } from 'lodash';
+import ReactMarkdown from 'react-markdown';
+
 import { authHeader, handleError } from '../../common/AuthHeader.js';
 import { hasEditPermission } from '../../common/AuthUtil.js';
 import AssociatedDataflows from '../AssociatedDataflows';
 import EditableTable from '../../common/EditableTable.js';
 import { eclTypes, omitDeep } from '../../common/CommonUtil.js';
 import MonacoEditor from '../../common/MonacoEditor.js';
-import { connect } from 'react-redux';
 import { assetsActions } from '../../../redux/actions/Assets';
-import { debounce } from 'lodash';
-
-import ReactMarkdown from 'react-markdown';
+import Text from '../../common/Text.jsx';
 import Files from './Files';
 
 const TabPane = Tabs.TabPane;
@@ -463,7 +463,6 @@ class QueryDetails extends PureComponent {
 
   render() {
     const editingAllowed = hasEditPermission(this.props.user);
-    const { t } = this.props;
     const { confirmLoading } = this.state;
     const formItemLayout = {
       labelCol: { span: 2 },
@@ -472,14 +471,14 @@ class QueryDetails extends PureComponent {
 
     const columns = [
       {
-        title: t('Name', { ns: 'common' }),
+        title: <Text text="Name" />,
         dataIndex: 'name',
         celleditor: 'text',
         editable: editingAllowed,
         regEx: /^[a-zA-Z0-9.,:;()?!""@&#*/'$_ -]*$/,
       },
       {
-        title: t('Type', { ns: 'common' }),
+        title: <Text text="Type" />,
         dataIndex: 'type',
         editable: editingAllowed,
         celleditor: 'select',
@@ -489,12 +488,12 @@ class QueryDetails extends PureComponent {
         },
       },
       {
-        title: t('Possible Value', { ns: 'common' }),
+        title: <Text text="Possible Value" />,
         dataIndex: 'possibleValue',
         editable: true,
       },
       {
-        title: t('Value Description', { ns: 'common' }),
+        title: <Text text="Value Description" />,
         dataIndex: 'valueDescription',
         editable: true,
       },
@@ -524,10 +523,10 @@ class QueryDetails extends PureComponent {
       <div className="assetDetail-buttons-wrapper" style={{ justifyContent: 'flex-end' }}>
         {!this.state.enableEdit && editingAllowed ? (
           <Button type="primary" onClick={makeFieldsEditable}>
-            {t('Edit', { ns: 'common' })}
+            {<Text text="Edit" />}
           </Button>
         ) : null}
-        {this.state.editing ? <Button onClick={switchToViewOnly}>{t('View Changes', { ns: 'common' })} </Button> : null}
+        {this.state.editing ? <Button onClick={switchToViewOnly}>{<Text text="View Changes" />} </Button> : null}
         {this.state.enableEdit ? (
           <span className="button-container">
             <Button
@@ -535,11 +534,11 @@ class QueryDetails extends PureComponent {
               type="danger"
               disabled={!this.state.query.id || !editingAllowed}
               onClick={this.handleDelete}>
-              {t('Delete', { ns: 'common' })}
+              {<Text text="Delete" />}
             </Button>
             <span style={{ marginLeft: '25px' }}>
               <Button key="back" onClick={this.handleCancel} type="primary" ghost>
-                {t('Cancel', { ns: 'common' })}
+                {<Text text="Cancel" />}
               </Button>
               <Button
                 key="submit"
@@ -548,7 +547,7 @@ class QueryDetails extends PureComponent {
                 loading={confirmLoading}
                 onClick={this.handleOk}
                 style={{ background: 'var(--success)' }}>
-                {t('Save', { ns: 'common' })}
+                {<Text text="Save" />}
               </Button>
             </span>
           </span>
@@ -557,7 +556,7 @@ class QueryDetails extends PureComponent {
             {this.state.dataAltered ? (
               <span className="button-container" style={{ marginLeft: '25px' }}>
                 <Button key="back" onClick={this.handleCancel} type="primary" ghost>
-                  {t('Cancel', { ns: 'common' })}
+                  {<Text text="Cancel" />}
                 </Button>
                 <Button
                   key="submit"
@@ -566,13 +565,13 @@ class QueryDetails extends PureComponent {
                   loading={confirmLoading}
                   onClick={this.handleOk}
                   style={{ background: 'var(--success)' }}>
-                  {t('Save', { ns: 'common' })}
+                  {<Text text="Save" />}
                 </Button>
               </span>
             ) : (
               <span className="button-container">
                 <Button key="back" onClick={this.handleCancel} type="primary" ghost>
-                  {t('Cancel', { ns: 'common' })}
+                  {<Text text="Cancel" />}
                 </Button>
               </span>
             )}
@@ -607,7 +606,7 @@ class QueryDetails extends PureComponent {
             </div>
           ) : null}
           <Tabs defaultActiveKey="1" tabBarExtraContent={controls}>
-            <TabPane tab={t('Basic', { ns: 'common' })} key="1">
+            <TabPane tab={<Text text="Basic" />} key="1">
               <Form
                 {...formItemLayout}
                 labelAlign="left"
@@ -619,7 +618,7 @@ class QueryDetails extends PureComponent {
                   <div>
                     {this.state.addingNewAsset ? (
                       <>
-                        <Form.Item {...formItemLayout} label={t('Type', { ns: 'common' })} name="type">
+                        <Form.Item {...formItemLayout} label={<Text text="Type" />} name="type">
                           <Radio.Group value={type} onChange={this.queryTypeChange}>
                             <Radio value={'roxie_query'}>Roxie Query</Radio>
                             <Radio value={'api'}>API/Gateway</Radio>
@@ -627,9 +626,9 @@ class QueryDetails extends PureComponent {
                         </Form.Item>
                         {type == 'roxie_query' ? (
                           <React.Fragment>
-                            <Form.Item label={t('Cluster', { ns: 'common' })} name="clusters">
+                            <Form.Item label={<Text text="Cluster" />} name="clusters">
                               <Select
-                                placeholder={t('Cluster', { ns: 'common' })}
+                                placeholder={<Text text="Cluster" />}
                                 disabled={!editingAllowed}
                                 onChange={this.onClusterSelection}
                                 style={{ width: 190 }}>
@@ -639,7 +638,7 @@ class QueryDetails extends PureComponent {
                               </Select>
                             </Form.Item>
 
-                            <Form.Item label={t('Query', { ns: 'common' })} name="querySearchValue">
+                            <Form.Item label={<Text text="Query" />} name="querySearchValue">
                               <Row type="flex">
                                 <Col span={21} order={1}>
                                   <AutoComplete
@@ -650,7 +649,7 @@ class QueryDetails extends PureComponent {
                                     style={{ width: '100%' }}
                                     onSearch={(value) => this.searchQueries(value)}
                                     onSelect={(value, option) => this.onQuerySelected(value, option)}
-                                    placeholder={t('Search queries', { ns: 'query' })}
+                                    placeholder={<Text text="Search queries" />}
                                     disabled={!editingAllowed}
                                     notFoundContent={
                                       this.state.querySearchSuggestions.length > 0 ? 'Not Found' : <Spin />
@@ -665,7 +664,7 @@ class QueryDetails extends PureComponent {
                                 </Col>
                                 <Col span={3} order={2} style={{ paddingLeft: '3px' }}>
                                   <Button htmlType="button" onClick={this.clearState}>
-                                    {t('Clear', { ns: 'common' })}
+                                    {<Text text="Clear" />}
                                   </Button>
                                 </Col>
                               </Row>
@@ -677,7 +676,7 @@ class QueryDetails extends PureComponent {
                   </div>
                 ) : null}
                 <Form.Item
-                  label={t('Title', { ns: 'common' })}
+                  label={<Text text="Title" />}
                   name="title"
                   rules={[
                     { required: true, message: 'Please enter a title!' },
@@ -689,14 +688,14 @@ class QueryDetails extends PureComponent {
                   <Input
                     id="query_title"
                     onChange={this.onChange}
-                    placeholder={t('Title', { ns: 'common' })}
+                    placeholder={<Text text="Title" />}
                     disabled={!editingAllowed}
                     className={this.state.enableEdit ? null : 'read-only-input'}
                   />
                 </Form.Item>
 
                 <Form.Item
-                  label={t('Name', { ns: 'common' })}
+                  label={<Text text="Name" />}
                   name="name"
                   rules={[
                     { required: true, message: 'Please enter a name!' },
@@ -706,13 +705,13 @@ class QueryDetails extends PureComponent {
                     },
                   ]}>
                   <Input
-                    placeholder={t('Name', { ns: 'common' })}
+                    placeholder={<Text text="Name" />}
                     disabled={!editingAllowed}
                     className={this.state.enableEdit ? null : 'read-only-input'}
                   />
                 </Form.Item>
 
-                <Form.Item label={t('Description', { ns: 'common' })} name="description">
+                <Form.Item label={<Text text="Description" />} name="description">
                   {this.state.enableEdit ? (
                     <MonacoEditor onChange={this.onChange} targetDomId="queryDescr" />
                   ) : (
@@ -722,19 +721,19 @@ class QueryDetails extends PureComponent {
                   )}
                 </Form.Item>
                 <Form.Item
-                  label={t('URL', { ns: 'common' })}
+                  label={<Text text="URL" />}
                   name="url"
                   rules={[
                     {
                       type: 'url',
-                      message: t('Please enter a valid URL', { ns: 'common' }),
+                      message: <Text text="Please enter a valid URL" />,
                     },
                   ]}>
                   {this.state.enableEdit ? (
                     <Input
                       id="query_url"
                       onChange={this.onChange}
-                      placeholder={t('URL', { ns: 'common' })}
+                      placeholder={<Text text="URL" />}
                       disabled={!editingAllowed}
                       className={this.state.enableEdit ? null : 'read-only-input'}
                     />
@@ -743,14 +742,14 @@ class QueryDetails extends PureComponent {
                   )}
                 </Form.Item>
                 <Form.Item
-                  label={t('Git Repo', { ns: 'common' })}
+                  label={<Text text="Git Repo" />}
                   name="gitRepo"
                   rules={[{ type: 'url', message: 'Please enter a valid URL' }]}>
                   {this.state.enableEdit ? (
                     <Input
                       id="query_gitRepo"
                       onChange={this.onChange}
-                      placeholder={t('Git Repo', { ns: 'common' })}
+                      placeholder={<Text text="Git Repo" />}
                       disabled={!editingAllowed}
                       className={this.state.enableEdit ? null : 'read-only-input'}
                     />
@@ -760,7 +759,7 @@ class QueryDetails extends PureComponent {
                 </Form.Item>
               </Form>
             </TabPane>
-            <TabPane tab={t('Input Fields', { ns: 'common' })} key="2">
+            <TabPane tab={<Text text="Input Fields" />} key="2">
               <div
                 className="ag-theme-balham"
                 style={{
@@ -779,7 +778,7 @@ class QueryDetails extends PureComponent {
                 />
               </div>
             </TabPane>
-            <TabPane tab={t('Output Fields', { ns: 'common' })} key="3">
+            <TabPane tab={<Text text="Output Fields" />} key="3">
               <div
                 className="ag-theme-balham"
                 style={{
@@ -798,12 +797,12 @@ class QueryDetails extends PureComponent {
               </div>
             </TabPane>
 
-            <TabPane tab={t('Files', { ns: 'common' })} key="4">
+            <TabPane tab={<Text text="Files" />} key="4">
               <Files hpcc_queryid={this.state.query.name} cluster_id={this.state.selectedCluster} />
             </TabPane>
 
             {!this.props.isNew ? (
-              <TabPane tab={t('Applications', { ns: 'common' })} key="7">
+              <TabPane tab={<Text text="Applications" />} key="7">
                 <AssociatedDataflows assetId={this.state.query.id} assetType={'Query'} />
               </TabPane>
             ) : null}
@@ -834,5 +833,4 @@ function mapStateToProps(state, ownProps) {
 }
 
 let QueryDetailsForm = connect(mapStateToProps)(QueryDetails);
-QueryDetailsForm = withTranslation(['common'])(QueryDetailsForm);
 export default QueryDetailsForm;

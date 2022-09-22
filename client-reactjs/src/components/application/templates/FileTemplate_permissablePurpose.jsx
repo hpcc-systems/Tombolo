@@ -1,18 +1,17 @@
 import React, { useEffect, useState } from 'react';
 import { message, Table } from 'antd';
-import { useTranslation } from 'react-i18next';
 
 import { authHeader, handleError } from '../../common/AuthHeader';
+import Text from '../../common/Text';
 
 function FileTemplate_permissablePurpose(props) {
   const { enableEdit, editingAllowed, setSelectedLicenses, selectedLicenses, selectedAsset } = props;
   const [licenses, setLicenses] = useState([]);
-  const { t } = useTranslation();
 
   //Table columns
   const columns = [
     {
-      title: t('Name', { ns: 'common' }),
+      title: <Text text="Name" />,
       dataIndex: 'name',
       render: (text, record) => (
         <a href={record.url} target="_blank" rel="noreferrer">
@@ -22,7 +21,7 @@ function FileTemplate_permissablePurpose(props) {
       width: '20%',
     },
     {
-      title: t('Description', { ns: 'common' }),
+      title: <Text text="Description" />,
       dataIndex: 'description',
     },
   ];

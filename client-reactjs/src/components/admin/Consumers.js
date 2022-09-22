@@ -18,11 +18,11 @@ import {
 } from 'antd';
 import React, { Component } from 'react';
 import { connect } from 'react-redux';
-import { withTranslation } from 'react-i18next';
 
 import { applicationActions } from '../../redux/actions/Application';
 import { authHeader, handleError } from '../common/AuthHeader.js';
 import BreadCrumbs from '../common/BreadCrumbs';
+import Text from '../common/Text';
 
 const Option = Select.Option;
 const { Paragraph } = Typography;
@@ -342,26 +342,26 @@ class Consumers extends Component {
 
     //Collaborator type options
     const options = [
-      { label: t('Supplier', { ns: 'common' }), value: 'Supplier' },
-      { label: t('Consumer', { ns: 'common' }), value: 'Consumer' },
-      { label: t('Owner', { ns: 'common' }), value: 'Owner' },
+      { label: <Text text="Supplier" />, value: 'Supplier' },
+      { label: <Text text="Consumer" />, value: 'Consumer' },
+      { label: <Text text="Owner" />, value: 'Owner' },
     ];
 
     //Table columns
     const consumerColumns = [
       {
         width: '15%',
-        title: t('Name', { ns: 'common' }),
+        title: <Text text="Name" />,
         dataIndex: 'name',
       },
       {
         width: '15%',
-        title: t('Contact', { ns: 'common' }),
+        title: <Text text="Contact" />,
         dataIndex: 'contact_name',
       },
       {
         width: '15%',
-        title: t('E-mail', { ns: 'common' }),
+        title: <Text text="E-mail" />,
         dataIndex: 'contact_email',
         rules: [
           {
@@ -373,33 +373,33 @@ class Consumers extends Component {
       },
       {
         width: '10%',
-        title: t('Consumer/Supplier', { ns: 'common' }),
+        title: <Text text="Consumer/Supplier" />,
         dataIndex: 'assetType',
       },
       {
         width: '5%',
-        title: t('Type', { ns: 'common' }),
+        title: <Text text="Type" />,
         dataIndex: 'type',
       },
       {
         width: '15%',
-        title: t('AD Group', { ns: 'common' }),
+        title: <Text text="AD Group" />,
         dataIndex: 'ad_group',
       },
       {
         width: '5%',
-        title: t('Action', { ns: 'common' }),
+        title: <Text text="Action" />,
         dataIndex: '',
         render: (text, record) => (
           <span>
             <a href="#" onClick={(row) => this.handleEditConsumer(record.id)}>
-              <Tooltip placement="right" title={t('Edit', { ns: 'common' })}>
+              <Tooltip placement="right" title={<Text text="Edit" />}>
                 <EditOutlined />
               </Tooltip>
             </a>
             <Divider type="vertical" />
             <Popconfirm
-              title={t('Are you sure you want to delete', { ns: 'common' }) + '?'}
+              title={<Text text="Are you sure you want to delete" /> + '?'}
               onConfirm={() => this.handleRemove(record.id)}
               icon={<QuestionCircleOutlined />}>
               <a href="#">
@@ -419,7 +419,7 @@ class Consumers extends Component {
           extraContent={
             <Tooltip placement="bottom">
               <Button type="primary" onClick={() => this.handleAdd()}>
-                {t('Add Collaborator', { ns: 'common' })}
+                {<Text text="Add Collaborator" />}
               </Button>
             </Tooltip>
           }
@@ -436,25 +436,25 @@ class Consumers extends Component {
 
         <div>
           <Modal
-            title={t('Add Consumer/Supplier', { ns: 'common' })}
+            title={<Text text="Add Consumer/Supplier" />}
             visible={this.state.showAddConsumer}
             onOk={this.handleAddConsumerOk.bind(this)}
             onCancel={this.handleAddConsumerCancel}
             confirmLoading={confirmLoading}
             destroyOnClose={true}>
             <Form layout="vertical">
-              <Paragraph>{t('Consumer - Product/Application/Group consuming the asset', { ns: 'common' })}</Paragraph>
+              <Paragraph>{<Text text="Consumer - Product/Application/Group consuming the asset" />}</Paragraph>
               <Paragraph>
-                {t('Supplied - Supplier of the asset data (DMV, Insurance company etc)', { ns: 'common' })}
+                {<Text text="Supplied - Supplier of the asset data (DMV, Insurance company etc)" />}
               </Paragraph>
-              <Paragraph>{t('Owner - Contact Person/Group for an asset', { ns: 'common' })}</Paragraph>
+              <Paragraph>{<Text text="Owner - Contact Person/Group for an asset" />}</Paragraph>
 
-              <Form.Item label={t('Type', { ns: 'common' })} name="assetType" required>
+              <Form.Item label={<Text text="Type" />} name="assetType" required>
                 <Checkbox.Group options={options} onChange={this.onConsumerSupplierChange} />
               </Form.Item>
 
               <Form.Item
-                label={t('Name', { ns: 'common' })}
+                label={<Text text="Name" />}
                 name="name"
                 rules={[{ required: true, message: 'Consumer Name is required' }]}>
                 <Input
@@ -466,7 +466,7 @@ class Consumers extends Component {
                 />
               </Form.Item>
 
-              <Form.Item label={t('Type', { ns: 'common' })} name="type" required>
+              <Form.Item label={<Text text="Type" />} name="type" required>
                 <Select
                   name="type"
                   id="consumer_type"
@@ -474,8 +474,8 @@ class Consumers extends Component {
                   value={this.state.newConsumer.type}>
                   <Option value=""></Option>
                   <Option value="Api">API</Option>
-                  <Option value="External">{t('External', { ns: 'common' })}</Option>
-                  <Option value="Internal">{t('Internal', { ns: 'common' })}</Option>
+                  <Option value="External">{<Text text="External" />}</Option>
+                  <Option value="Internal">{<Text text="Internal" />}</Option>
                 </Select>
               </Form.Item>
 
@@ -494,7 +494,7 @@ class Consumers extends Component {
                 </Form.Item>
               ) : null}
 
-              <Form.Item label={t('Contact Name', { ns: 'common' })} name="contact_name" required>
+              <Form.Item label={<Text text="Contact Name" />} name="contact_name" required>
                 <Input
                   id="consumer_contact"
                   name="contact_name"
@@ -503,7 +503,7 @@ class Consumers extends Component {
                 />
               </Form.Item>
 
-              <Form.Item label={t('E-mail', { ns: 'common' })} name="contact_email" required>
+              <Form.Item label={<Text text="E-mail" />} name="contact_email" required>
                 <Input
                   id="consumer_contact_email"
                   name="contact_email"
@@ -548,6 +548,5 @@ function mapStateToProps(state) {
   };
 }
 let connectedApp = connect(mapStateToProps)(Consumers);
-connectedApp = withTranslation(['common'])(connectedApp);
 
 export default connectedApp;

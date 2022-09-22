@@ -1,19 +1,16 @@
 import React from 'react';
 import { Form, Button, Space, Radio } from 'antd';
-import { useTranslation } from 'react-i18next';
-
+import Text from '../../../common/Text';
 function NotifyField({ showDetails, enableEdit, notifyStatus, setShowDetails, setNotifyStatus }) {
-  const { t } = useTranslation(['common']); // t for translate -> getting namespaces relevant to this file
-
   const notificationOptions = [
-    { label: t('Never', { ns: 'common' }), value: 'Never' },
-    { label: t('Only on success', { ns: 'common' }), value: 'Only on success' },
-    { label: t('Only on failure', { ns: 'common' }), value: 'Only on failure' },
-    { label: t('Always', { ns: 'common' }), value: 'Always' },
+    { label: <Text text="Never" />, value: 'Never' },
+    { label: <Text text="Only on success" />, value: 'Only on success' },
+    { label: <Text text="Only on failure" />, value: 'Only on failure' },
+    { label: <Text text="Always" />, value: 'Always' },
   ];
 
   return (
-    <Form.Item label={t('Notify', { ns: 'common' })}>
+    <Form.Item label={<Text text="Notify" />}>
       <Space>
         <Form.Item name="notify" className={enableEdit ? null : 'read-only-input'}>
           <Radio.Group>

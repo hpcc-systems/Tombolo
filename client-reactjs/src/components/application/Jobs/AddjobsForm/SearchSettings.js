@@ -2,12 +2,11 @@ import React from 'react';
 import { Button, Form, Radio, Select } from 'antd';
 import { useState } from 'react';
 import { useSelector } from 'react-redux';
-import { useTranslation } from 'react-i18next';
+import { UpOutlined } from '@ant-design/icons';
 
 import './AddJobsForm.css';
-
-import { UpOutlined } from '@ant-design/icons';
 import DebounceSelect from './DebounceSelect';
+import Text from '../../../common/Text';
 
 const { Option } = Select;
 
@@ -50,7 +49,6 @@ const SearchSettings = ({ form, panes, removeTab, addTab }) => {
   // Collapsing Search Setting div
   const [hide, setHide] = useState(false);
   const toggleHide = () => setHide((prev) => !prev);
-  const { t } = useTranslation(['common']); // t for translate -> getting namespaces relevant to this file
 
   // reset jobtype to Job when selecting github job to avoid unexpected conflicts;
   const onSourceChange = (e) => {
@@ -65,9 +63,9 @@ const SearchSettings = ({ form, panes, removeTab, addTab }) => {
   return (
     <fieldset className={`search-settings ${hide ? 'hide-search' : ''} custom-scroll`}>
       <legend onClick={toggleHide} className="search-settings-legend">
-        {t('Search Settings', { ns: 'common' })} <UpOutlined rotate={hide ? 180 : 0} />
+        {<Text text="Search Settings" />} <UpOutlined rotate={hide ? 180 : 0} />
       </legend>
-      <Form.Item label={t('Job Type', { ns: 'common' })} name="jobType" required>
+      <Form.Item label={<Text text="Job Type" />} name="jobType" required>
         <Select onChange={onJobTypeChange}>
           {config.jobTypes.map((type) => (
             <Option key={type}>{type}</Option>
@@ -75,7 +73,7 @@ const SearchSettings = ({ form, panes, removeTab, addTab }) => {
         </Select>
       </Form.Item>
 
-      <Form.Item label={t('Cluster', { ns: 'common' })} name="clusterId" required>
+      <Form.Item label={<Text text="Cluster" />} name="clusterId" required>
         <Select allowClear>
           {clusters.map((cluster) => (
             <Option key={cluster.id}>{cluster.name}</Option>
@@ -83,7 +81,7 @@ const SearchSettings = ({ form, panes, removeTab, addTab }) => {
         </Select>
       </Form.Item>
 
-      <Form.Item label={t('Source', { ns: 'common' })} name="isStoredOnGithub">
+      <Form.Item label={<Text text="Source" />} name="isStoredOnGithub">
         <Radio.Group
           onChange={onSourceChange}
           style={{ width: '100%', textAlign: 'center' }}
@@ -108,18 +106,18 @@ const SearchSettings = ({ form, panes, removeTab, addTab }) => {
             return (
               <Form.Item {...config.layout.tail}>
                 <Button type="ghost" block onClick={() => addTab({ key, value, clusterId, jobType, isStoredOnGithub })}>
-                  {t('Add Job', { ns: 'common' })}
+                  {<Text text="Add Job" />}
                 </Button>
               </Form.Item>
             );
           }
 
           return (
-            <Form.Item label={t('Find Jobs', { ns: 'common' })} name="addedJobs" hidden={jobType === 'Spray'}>
+            <Form.Item label={<Text text="Find Jobs" />} name="addedJobs" hidden={jobType === 'Spray'}>
               <DebounceSelect
                 mode="multiple"
                 style={{ width: '100%' }}
-                placeholder={t("Search by job's name", { ns: 'common' })}
+                placeholder={<text text="Search by job's name" />}
                 formValues={{ clusterId, jobType, search }}
                 onDeselect={(_, { key: wuid }) => removeTab(wuid)}
                 onSelect={(_, { key, value }) => addTab({ key, value, clusterId, jobType, isStoredOnGithub })}

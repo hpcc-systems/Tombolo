@@ -9,7 +9,6 @@ import {
 } from '@ant-design/icons';
 import { Button, Divider, notification, Popconfirm, Table, Tooltip } from 'antd';
 import download from 'downloadjs';
-import { withTranslation } from 'react-i18next';
 import React, { Component } from 'react';
 import { connect } from 'react-redux';
 
@@ -20,6 +19,7 @@ import BreadCrumbs from '../../common/BreadCrumbs';
 import { Constants } from '../../common/Constants';
 import AddApplication from './AddApplication';
 import ShareApp from './ShareApp';
+import Text from '../../common/Text';
 
 class Applications extends Component {
   // REFERENCE TO THE FORM INSIDE MODAL
@@ -173,8 +173,6 @@ class Applications extends Component {
 
   //JSX
   render() {
-    const { t } = this.props;
-
     const applicationColumns = [
       {
         width: '2%',
@@ -183,24 +181,24 @@ class Applications extends Component {
       },
       {
         width: '10%',
-        title: t('Title', { ns: 'common' }),
+        title: <Text text="Title" />,
         dataIndex: 'title',
       },
       {
         width: '30%',
-        title: t('Description', { ns: 'common' }),
+        title: <Text text="Description" />,
         dataIndex: 'description',
         className: 'overflow-hidden',
         ellipsis: true,
       },
       {
         width: '8%',
-        title: t('Created By', { ns: 'common' }),
+        title: <Text text="Created By" />,
         dataIndex: 'creator',
       },
       {
         width: '10%',
-        title: t('Created', { ns: 'common' }),
+        title: <Text text="Created" />,
         dataIndex: 'createdAt',
         render: (text, _record) => {
           let createdAt = new Date(text);
@@ -221,7 +219,7 @@ class Applications extends Component {
               {record.visibility !== 'Public' && record.creator === this.props.user.username ? (
                 <>
                   <span onClick={() => this.handleShareApplication(record)}>
-                    <Tooltip placement="left" title={t('Share', { ns: 'common' })}>
+                    <Tooltip placement="left" title={<Text text="Share" />}>
                       <ShareAltOutlined />
                     </Tooltip>
                   </span>
@@ -230,14 +228,14 @@ class Applications extends Component {
               ) : null}
 
               <span onClick={() => this.handleApplicationEdit(record)}>
-                <Tooltip placement="right" title={t('Edit', { ns: 'common' })}>
+                <Tooltip placement="right" title={<Text text="Edit" />}>
                   <EyeOutlined />
                 </Tooltip>
               </span>
               <Divider type="vertical" />
 
               <span onClick={() => this.handleExportApplication(record.id, record.title)}>
-                <Tooltip placement="right" title={t('Export', { ns: 'common' })}>
+                <Tooltip placement="right" title={<Text text="Export" />}>
                   <ExportOutlined />
                 </Tooltip>
               </span>
@@ -247,11 +245,11 @@ class Applications extends Component {
               (record.creator !== this.props.username && record.visibility !== 'Public') ? (
                 <>
                   <Popconfirm
-                    title={t('Are you sure you want to delete', { ns: 'common' }) + '?'}
+                    title={<Text text="Are you sure you want to delete" /> + '?'}
                     onConfirm={() => this.handleRemove(record.id)}
                     icon={<QuestionCircleOutlined />}>
                     <span>
-                      <Tooltip placement="right" title={t('Delete', { ns: 'common' })}>
+                      <Tooltip placement="right" title={<Text text="Delete" />}>
                         <DeleteOutlined />
                       </Tooltip>
                     </span>
@@ -270,7 +268,7 @@ class Applications extends Component {
           extraContent={
             <Tooltip placement="bottom" title={'Click to add a new Application'}>
               <Button type="primary" onClick={() => this.handleAddApplication()}>
-                {t('Add Application', { ns: 'common' })}
+                {<Text text="Add Application" />}
               </Button>
             </Tooltip>
           }
@@ -316,6 +314,4 @@ function mapStateToProps(state) {
   return { user };
 }
 let connectedApp = connect(mapStateToProps)(Applications);
-connectedApp = withTranslation(['common'])(connectedApp);
-
 export default connectedApp;

@@ -1,6 +1,5 @@
 import React from 'react';
-import { List, Typography } from 'antd';
-import { useTranslation } from 'react-i18next';
+import { List } from 'antd';
 import {
   HourglassOutlined,
   ProfileOutlined,
@@ -12,82 +11,80 @@ import {
   SoundOutlined,
 } from '@ant-design/icons/lib/icons';
 import { colors } from '../graphColorsConfig';
-
-const { Text } = Typography;
+import Text from '../../../common/Text';
 
 const Legend = () => {
-  const { t } = useTranslation(['common']);
   const data = [
     {
-      title: t('Incoming connection', { ns: 'common' }),
+      title: <Text text="Incoming connection" />,
       icon: <ArrowRightOutlined style={{ color: colors.inputArrow }} />,
     },
     {
-      title: t('Outgoing connection', { ns: 'common' }),
+      title: <Text text="Outgoing connection" />,
       icon: <ArrowRightOutlined style={{ color: colors.outputArrow }} />,
     },
     {
-      title: t('Manual connection (dotted line)', { ns: 'common' }),
+      title: <Text text="Manual connection (dotted line)" />,
       icon: <ArrowRightOutlined style={{ color: colors.manualArrow }} />,
     },
     {
-      title: t('Predecessor job connection (dashed line, created automatically when job is added to a schedule)', {
-        ns: 'common',
-      }),
+      title: (
+        <Text text="Predecessor job connection (dashed line, created automatically when job is added to a schedule)" />
+      ),
       icon: <ArrowRightOutlined />,
     },
     {
-      title: t('File exists in superfile (dashed line, created automatically when file is connected to superfile)', {
-        ns: 'common',
-      }),
+      title: (
+        <Text text="File exists in superfile (dashed line, created automatically when file is connected to superfile)" />
+      ),
       icon: <ArrowRightOutlined style={{ color: colors.superFileArrow }} />,
     },
     {
-      title: t('Time scheduled job', { ns: 'common' }),
+      title: <Text text="Time scheduled job" />,
       icon: <HourglassOutlined />,
     },
     {
-      title: t('Job is in design', { ns: 'common' }),
+      title: <Text text="Job is in design" />,
       icon: <SettingOutlined className="Job legend-icon no-asset" />,
     },
     {
-      title: t('Job is in production', { ns: 'common' }),
+      title: <Text text="Job is in production" />,
       icon: <SettingOutlined className="Job legend-icon" />,
     },
     {
-      title: t('Job failed', { ns: 'common' }),
+      title: <Text text="Job failed" />,
       icon: <SettingOutlined className="Job legend-icon status-failed" />,
     },
     {
-      title: t('Job completed', { ns: 'common' }),
+      title: <Text text="Job completed" />,
       icon: <SettingOutlined className="Job legend-icon status-completed" />,
     },
     {
-      title: t('File template', { ns: 'common' }),
+      title: <Text text="File template" />,
       icon: <ProfileOutlined className="FileTemplate legend-icon" />,
     },
     {
-      title: t('Super File', { ns: 'common' }),
+      title: <Text text="Super File" />,
       icon: <FileAddOutlined className="SuperFile legend-icon" />,
     },
     {
-      title: t('Manual Job', { ns: 'common' }),
+      title: <Text text="Manual Job" />,
       icon: <MailOutlined className="Job legend-icon" />,
     },
     {
-      title: t('Query Publish Job', { ns: 'common' }),
+      title: <Text text="Query Publish Job" />,
       icon: <SoundOutlined className="Job legend-icon" />,
     },
     {
-      title: t("Hide node (use 'Hidden Nodes' tab to display them)", { ns: 'common' }),
+      title: <Text text="Hide node (use 'Hidden Nodes' tab to display them)" />,
       icon: <EyeInvisibleOutlined />,
     },
     {
-      title: t("To zoom in/out press left 'ctrl' and scroll with mouse", { ns: 'common' }),
+      title: <Text text="To zoom in/out press left 'ctrl' and scroll with mouse" />,
       icon: <Text keyboard>ctrl</Text>,
     },
     {
-      title: t("To select multiple nodes hold left 'shift' + left mouse click and drag the cursor", { ns: 'common' }),
+      title: <Text text="To select multiple nodes hold left 'shift' + left mouse click and drag the cursor" />,
       icon: <Text keyboard>shift</Text>,
     },
   ];

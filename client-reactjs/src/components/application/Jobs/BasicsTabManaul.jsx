@@ -3,10 +3,9 @@ import { authHeader, handleError } from '../../common/AuthHeader.js';
 import { Col, Form, Input, Row, Select, Cascader } from 'antd';
 import ReactMarkdown from 'react-markdown';
 import { useSelector, useDispatch } from 'react-redux';
-import { useTranslation } from 'react-i18next';
-
 import MonacoEditor from '../../common/MonacoEditor.js';
 import { assetsActions } from '../../../redux/actions/Assets';
+import Text from '../../common/Text.jsx';
 
 function BasicsTabManul(props) {
   const { enableEdit, localState, editingAllowed, onChange, formRef, addingNewAsset, inTabView } = props;
@@ -14,7 +13,6 @@ function BasicsTabManul(props) {
   const applicationReducer = useSelector((state) => state.applicationReducer);
   const readOnlyView = !enableEdit || !addingNewAsset;
   const [options, setOptions] = useState([]);
-  const { t } = useTranslation(['common']); // t for translate -> getting namespaces relevant to this file
 
   const [selectedCluster, setSelectedCluster] = useState(assetReducer.clusterId || localState.selectedCluster);
   const [clusters, _setClusters] = useState(applicationReducer.clusters);
@@ -135,7 +133,7 @@ function BasicsTabManul(props) {
   return (
     <>
       {enableEdit ? (
-        <Form.Item label={t('Cluster', { ns: 'common' })} hidden={readOnlyView}>
+        <Form.Item label={<Text text="Cluster" />} hidden={readOnlyView}>
           <Row gutter={[8, 8]}>
             <Col span={12}>
               <Form.Item noStyle name="clusters">
@@ -151,7 +149,7 @@ function BasicsTabManul(props) {
       ) : null}
 
       {localState.isNew || enableEdit ? (
-        <Form.Item label={t('File Path', { ns: 'common' })} name="manualJobFilePath">
+        <Form.Item label={<Text text="File Path" />} name="manualJobFilePath">
           <Cascader
             options={options}
             onChange={onFilePathChange}
@@ -163,7 +161,7 @@ function BasicsTabManul(props) {
       ) : null}
 
       <Form.Item
-        label={t('Name', { ns: 'common' })}
+        label={<Text text="Name" />}
         name="name"
         validateTrigger="onBlur"
         onFocus={clearError}
@@ -178,7 +176,7 @@ function BasicsTabManul(props) {
       </Form.Item>
 
       <Form.Item
-        label={t('Title', { ns: 'common' })}
+        label={<Text text="Title" />}
         name="title"
         rules={[{ required: true, message: 'Please enter a title!' }]}
         onFocus={clearError}
@@ -186,7 +184,7 @@ function BasicsTabManul(props) {
         <Input onChange={onChange} disabled={!editingAllowed} className={enableEdit ? null : 'read-only-input'} />
       </Form.Item>
 
-      <Form.Item label={t('Description', { ns: 'common' })} name="description">
+      <Form.Item label={<Text text="Description" />} name="description">
         {enableEdit ? (
           <MonacoEditor
             onChange={onChange}
@@ -201,11 +199,11 @@ function BasicsTabManul(props) {
       </Form.Item>
 
       <Form.Item
-        label={t('Contact E-mail', { ns: 'common' })}
+        label={<Text text="Contact E-mail" />}
         name="contact"
         validateTrigger="onBlur"
         onFocus={clearError}
-        rules={[{ type: 'email', required: true, message: t('Please enter a valid email address', { ns: 'common' }) }]}>
+        rules={[{ type: 'email', required: true, message: <Text text="Please enter a valid email address" /> }]}>
         <Input onChange={onChange} disabled={!editingAllowed} className={enableEdit ? null : 'read-only-input'} />
       </Form.Item>
     </>

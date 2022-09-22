@@ -5,10 +5,10 @@ import { InboxOutlined } from '@ant-design/icons';
 import { LoadingOutlined, CheckCircleOutlined, CloseCircleOutlined, DeleteOutlined } from '@ant-design/icons';
 import { io } from 'socket.io-client';
 import { v4 as uuidv4 } from 'uuid';
-import { useTranslation } from 'react-i18next';
 import { useHistory } from 'react-router';
 
 import { authHeader, handleError } from '../../common/AuthHeader';
+import Text from '../../common/Text';
 
 const devURL = `${process.env.REACT_APP_PROXY_URL}/landingZoneFileUpload`;
 const prodURL = '/landingZoneFileUpload';
@@ -33,7 +33,6 @@ function LandingZoneUpload() {
     state.authenticationReducer,
     state.applicationReducer.clusters,
   ]);
-  const { t } = useTranslation(['common', 'common']); // t for translate -> getting namespaces relevant to this file
 
   useEffect(() => {
     const url = process.env.NODE_ENV === 'development' ? devURL : prodURL;
@@ -324,7 +323,7 @@ function LandingZoneUpload() {
       {!uploading ? (
         <>
           <div>
-            <p>{t('Cluster', { ns: 'common' })}</p>
+            <p>{<Text text="Cluster" />}</p>
             <Select defaultValue="" onChange={handleClusterChange} size="large" style={{ width: '100%' }}>
               {clusters.map((item) => {
                 return (
@@ -337,7 +336,7 @@ function LandingZoneUpload() {
           </div>
 
           <div style={{ marginTop: '8px' }}>
-            <p>{t('Destination Folder', { ns: 'common' })}</p>
+            <p>{<Text text="Destination Folder" />}</p>
             <Cascader
               options={options}
               loadData={loadData}
@@ -358,9 +357,9 @@ function LandingZoneUpload() {
               <InboxOutlined />
             </p>
             <p className="ant-upload-text">
-              <b>{t('Click or drag files here to upload (Up to 5 files)', { ns: 'common' })}</b>
+              <b>{<Text text="Click or drag files here to upload (Up to 5 files)" />}</b>
             </p>
-            <p className="ant-upload-hint">{t('Supports xls, xlsm, xlsx, txt, json and csv', { ns: 'common' })}</p>
+            <p className="ant-upload-hint">{<Text text="Supports xls, xlsm, xlsx, txt, json and csv" />}</p>
           </Dragger>
         </>
       ) : null}
@@ -380,7 +379,7 @@ function LandingZoneUpload() {
 
       {!uploading ? (
         <Checkbox onChange={onCheckBoxChange} style={{ margin: '20px 0px 20px 0px' }}>
-          {t('Overwrite File(s)', { ns: 'common' })}
+          {<Text text="Overwrite File(s)" />}
         </Checkbox>
       ) : null}
 
@@ -395,7 +394,7 @@ function LandingZoneUpload() {
               }
         }
         type="primary">
-        {!uploading ? t('Upload', { ns: 'common' }) : t('Done', { ns: 'common' })}{' '}
+        {!uploading ? <Text text="Upload" /> : <Text text="Done" />}{' '}
       </Button>
     </div>
   );

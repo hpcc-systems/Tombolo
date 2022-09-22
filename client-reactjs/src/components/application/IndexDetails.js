@@ -14,8 +14,7 @@ import { debounce } from 'lodash';
 
 import ReactMarkdown from 'react-markdown';
 import DeleteAsset from '../common/DeleteAsset/index.js';
-import { withTranslation } from 'react-i18next';
-
+import Text from '../common/Text.jsx';
 const TabPane = Tabs.TabPane;
 const Option = Select.Option;
 message.config({ top: 130 });
@@ -450,7 +449,6 @@ class IndexDetails extends PureComponent {
   };
 
   render() {
-    const { t } = this.props; // translation
     const editingAllowed = hasEditPermission(this.props.user);
     const { sourceFiles, indexSearchSuggestions, searchResultsLoaded, confirmLoading } = this.state;
     const formItemLayout = {
@@ -464,21 +462,21 @@ class IndexDetails extends PureComponent {
         dataIndex: 'wuid',
       },
       {
-        title: t('Job'),
+        title: <Text text="Job" />,
         dataIndex: 'jobName',
       },
     ];
 
     const indexColumns = [
       {
-        title: t('Name', { ns: 'common' }),
+        title: <Text text="Name" />,
         dataIndex: 'name',
         editable: editingAllowed,
         celleditor: 'text',
         regEx: /^[a-zA-Z0-9.,:;()?!""@&#*/'$_ -]*$/,
       },
       {
-        title: t('Type', { ns: 'common' }),
+        title: <Text text="Type" />,
         dataIndex: 'type',
         editable: editingAllowed,
         celleditor: 'select',
@@ -520,12 +518,10 @@ class IndexDetails extends PureComponent {
         style={{ justifyContent: 'flex-end' }}>
         {!this.state.enableEdit && editingAllowed ? (
           <Button onClick={makeFieldsEditable} type="primary">
-            {t('Edit', { ns: 'common' })}
+            {<Text text="Edit" />}
           </Button>
         ) : null}
-        {this.state.editing ? (
-          <Button onClick={switchToViewOnly}> {t('View Changes', { ns: 'common' })} </Button>
-        ) : null}
+        {this.state.editing ? <Button onClick={switchToViewOnly}> {<Text text="View Changes" />} </Button> : null}
         {this.state.enableEdit ? (
           <span className="button-container">
             <DeleteAsset
@@ -538,14 +534,14 @@ class IndexDetails extends PureComponent {
               onDelete={this.handleDelete}
               component={
                 <Button key="danger" type="danger" disabled={!this.state.index.id || !editingAllowed}>
-                  {t('Delete', { ns: 'common' })}
+                  {<Text text="Delete" />}
                 </Button>
               }
             />
 
             <span style={{ marginLeft: '25px' }}>
               <Button key="back" onClick={this.handleCancel} type="primary" ghost>
-                {t('Cancel', { ns: 'common' })}
+                {<Text text="Cancel" />}
               </Button>
               <Button
                 key="submit"
@@ -554,7 +550,7 @@ class IndexDetails extends PureComponent {
                 loading={confirmLoading}
                 onClick={this.handleOk}
                 style={{ background: 'var(--success)' }}>
-                {t('Save', { ns: 'common' })}
+                {<Text text="Save" />}
               </Button>
             </span>
           </span>
@@ -563,7 +559,7 @@ class IndexDetails extends PureComponent {
             {this.state.dataAltered ? (
               <span className="button-container">
                 <Button key="back" onClick={this.handleCancel} type="primary" ghost>
-                  {t('Cancel', { ns: 'common' })}
+                  {<Text text="Cancel" />}
                 </Button>
                 <Button
                   key="submit"
@@ -572,13 +568,13 @@ class IndexDetails extends PureComponent {
                   loading={confirmLoading}
                   onClick={this.handleOk}
                   style={{ background: 'var(--success)' }}>
-                  {t('Save', { ns: 'common' })}
+                  {<Text text="Save" />}
                 </Button>
               </span>
             ) : (
               <span className="button-container">
                 <Button key="back" onClick={this.handleCancel} type="primary" ghost>
-                  {t('Cancel', { ns: 'common' })}
+                  {<Text text="Cancel" />}
                 </Button>
               </span>
             )}
@@ -616,7 +612,7 @@ class IndexDetails extends PureComponent {
           ) : null}
 
           <Tabs defaultActiveKey="1" tabBarExtraContent={this.props.displayingInModal ? null : controls}>
-            <TabPane tab={t('Basic', { ns: 'common' })} key="1">
+            <TabPane tab={<Text text="Basic" />} key="1">
               <Form
                 {...formItemLayout}
                 labelAlign="left"
@@ -627,19 +623,19 @@ class IndexDetails extends PureComponent {
                   <div>
                     {this.state.addingNewAsset ? (
                       <>
-                        <Form.Item {...formItemLayout} label={t('Cluster', { ns: 'common' })} name="clusters">
+                        <Form.Item {...formItemLayout} label={<Text text="Cluster" />} name="clusters">
                           <Select
                             disabled={!editingAllowed}
                             onChange={this.onClusterSelection}
                             style={{ width: 190 }}
-                            placeholder={t('Cluster', { ns: 'common' })}>
+                            placeholder={<Text text="Cluster" />}>
                             {this.props.clusters.map((cluster) => (
                               <Option key={cluster.id}>{cluster.name}</Option>
                             ))}
                           </Select>
                         </Form.Item>
 
-                        <Form.Item label={t('Index', { ns: 'common' })} name="indexSearchValue">
+                        <Form.Item label={<Text text="Index" />} name="indexSearchValue">
                           <Row type="flex">
                             <Col span={21} order={1}>
                               <AutoComplete
@@ -650,7 +646,7 @@ class IndexDetails extends PureComponent {
                                 style={{ width: '100%' }}
                                 onSearch={(value) => this.searchIndexes(value)}
                                 onSelect={(value) => this.onFileSelected(value)}
-                                placeholder={t('Search indexes', { ns: 'common' })}
+                                placeholder={<Text text="Search indexes" />}
                                 disabled={!editingAllowed}
                                 notFoundContent={searchResultsLoaded ? 'Not Found' : <Spin />}>
                                 {indexSearchSuggestions.map((suggestion) => (
@@ -662,7 +658,7 @@ class IndexDetails extends PureComponent {
                             </Col>
                             <Col span={3} order={2} style={{ paddingLeft: '3px' }}>
                               <Button htmlType="button" onClick={this.onReset}>
-                                {t('Clear', { ns: 'common' })}
+                                {<Text text="Clear" />}
                               </Button>
                             </Col>
                           </Row>
@@ -672,46 +668,44 @@ class IndexDetails extends PureComponent {
                   </div>
                 ) : null}
                 <Form.Item
-                  label={t('Name', { ns: 'common' })}
+                  label={<Text text="Name" />}
                   name="name"
                   rules={[
-                    { required: true, message: t('Please enter a valid name', { ns: 'common' }) },
+                    { required: true, message: <Text text="Please enter a valid name" /> },
                     {
                       pattern: new RegExp(/^[a-zA-Z0-9:._-]*$/),
-                      message: t('Please enter a valid name', { ns: 'common' }),
+                      message: <Text text="Please enter a valid name" />,
                     },
                   ]}>
                   <Input
                     id="name"
                     onChange={this.onChange}
-                    placeholder={t('Name', { ns: 'common' })}
+                    placeholder={<Text text="Name" />}
                     disabled={searchResultsLoaded || !editingAllowed}
                     className={this.state.enableEdit ? null : 'read-only-input'}
                   />
                 </Form.Item>
 
                 <Form.Item
-                  label={t('Title', { ns: 'common' })}
+                  label={<Text text="Title" />}
                   name="title"
                   rules={[
-                    { required: true, message: t('Please enter a title!', { ns: 'common' }) },
+                    { required: true, message: <Text text="Please enter a title!" /> },
                     {
                       pattern: new RegExp(/^[ a-zA-Z0-9:._-]*$/),
-                      message: t('Please enter a valid Title. Title can have  a-zA-Z0-9:._- and space', {
-                        ns: 'common',
-                      }),
+                      message: <Text text="Please enter a valid Title. Title can have  a-zA-Z0-9:._- and space" />,
                     },
                   ]}>
                   <Input
                     id="file_title"
                     onChange={this.onChange}
-                    placeholder={t('Title', { ns: 'common' })}
+                    placeholder={<Text text="Title" />}
                     disabled={!editingAllowed}
                     className={this.state.enableEdit ? null : 'read-only-input'}
                   />
                 </Form.Item>
 
-                <Form.Item label={t('Description', { ns: 'common' })} name="description">
+                <Form.Item label={<Text text="Description" />} name="description">
                   {this.state.enableEdit ? (
                     <MonacoEditor targetDomId="indexDescr" onChange={this.onChange} />
                   ) : (
@@ -722,53 +716,53 @@ class IndexDetails extends PureComponent {
                 </Form.Item>
 
                 <Form.Item
-                  label={t('Primary Service', { ns: 'common' })}
+                  label={<Text text="Primary Service" />}
                   name="primaryService"
                   rules={[
                     {
                       pattern: new RegExp(/^[a-zA-Z0-9:$._-]*$/),
-                      message: t('Please enter a valid Path', { ns: 'common' }),
+                      message: <Text text="Please enter a valid path" />,
                     },
                   ]}>
                   <Input
                     id="file_primary_svc"
                     onChange={this.onChange}
-                    placeholder={t('Primary Service', { ns: 'common' })}
+                    placeholder={<Text text="Primary Service" />}
                     disabled={!editingAllowed}
                     className={this.state.enableEdit ? null : 'read-only-input'}
                   />
                 </Form.Item>
                 <Form.Item
-                  label={t('Backup Service', { ns: 'common' })}
+                  label={<Text text="Backup Service" />}
                   name="backupService"
                   rules={[
                     {
                       pattern: new RegExp(/^[a-zA-Z0-9:$._-]*$/),
-                      message: t('Please enter a valid backup service', { ns: 'common' }),
+                      message: <Text text="Please enter a valid backup service" />,
                     },
                   ]}>
                   <Input
                     id="file_bkp_svc"
                     onChange={this.onChange}
-                    placeholder={t('Backup Service', { ns: 'common' })}
+                    placeholder={<Text text="Backup Service" />}
                     disabled={!editingAllowed}
                     className={this.state.enableEdit ? null : 'read-only-input'}
                   />
                 </Form.Item>
                 <Form.Item
-                  label={t('Path', { ns: 'common' })}
+                  label={<Text text="Path" />}
                   name="qualifiedPath"
                   rules={[
                     {
                       pattern: new RegExp(/^[a-zA-Z0-9:$._-]*$/),
-                      message: t('Please enter a valid path', { ns: 'common' }),
+                      message: <Text text="Please enter a valid path" />,
                     },
                   ]}>
                   {this.state.enableEdit ? (
                     <Input
                       id="path"
                       onChange={this.onChange}
-                      placeholder={t('Path', { ns: 'common' })}
+                      placeholder={<Text text="Path" />}
                       disabled={!editingAllowed}
                     />
                   ) : (
@@ -778,10 +772,10 @@ class IndexDetails extends PureComponent {
               </Form>
             </TabPane>
 
-            <TabPane tab={t('Source File', { ns: 'common' })} key="2">
+            <TabPane tab={<Text text="Source File" />} key="2">
               <div>
                 <Select
-                  placeholder={t('Select Source Files', { ns: 'common' })}
+                  placeholder={<Text text="Select Source Files" />}
                   defaultValue={this.state.selectedSourceFile}
                   style={{ width: 190 }}
                   onSelect={this.onSourceFileSelection}
@@ -793,7 +787,7 @@ class IndexDetails extends PureComponent {
               </div>
             </TabPane>
 
-            <TabPane tab={t('Index', { ns: 'common' })} key="3">
+            <TabPane tab={<Text text="Index" />} key="3">
               <EditableTable
                 columns={indexColumns}
                 dataSource={keyedColumns}
@@ -804,7 +798,7 @@ class IndexDetails extends PureComponent {
                 enableEdit={this.state.enableEdit}
               />
             </TabPane>
-            <TabPane tab={t('Payload', { ns: 'common' })} key="4">
+            <TabPane tab={<Text text="Payload" />} key="4">
               <EditableTable
                 columns={indexColumns}
                 dataSource={nonKeyedColumns}
@@ -815,7 +809,7 @@ class IndexDetails extends PureComponent {
               />
             </TabPane>
 
-            <TabPane tab={t('Workunit', { ns: 'common' })} key="5">
+            <TabPane tab={<Text text="Workunit" />} key="5">
               <Table
                 dataSource={this.state.workUnit}
                 columns={workUnitTableColumns}
@@ -825,7 +819,7 @@ class IndexDetails extends PureComponent {
             </TabPane>
 
             {!this.props.isNew ? (
-              <TabPane tab={t('Workflows', { ns: 'common' })} key="7">
+              <TabPane tab={<Text text="Workflows" />} key="7">
                 <AssociatedDataflows assetId={this.state.index.id} assetType={'Index'} />
               </TabPane>
             ) : null}
@@ -858,5 +852,4 @@ function mapStateToProps(state, ownProps) {
 }
 
 let IndexDetailsForm = connect(mapStateToProps)(IndexDetails);
-IndexDetailsForm = withTranslation(['common'])(IndexDetailsForm);
 export default IndexDetailsForm;

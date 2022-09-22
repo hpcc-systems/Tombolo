@@ -1,11 +1,11 @@
 import React, { Component } from 'react';
 import { Link, withRouter } from 'react-router-dom';
 import { connect } from 'react-redux';
-import { withTranslation } from 'react-i18next';
 import { Layout, Menu, Typography } from 'antd';
 import { LoadingOutlined } from '@ant-design/icons';
 
 import { hasEditPermission } from '../common/AuthUtil.js';
+import Text from '../common/Text';
 
 const { Sider } = Layout;
 
@@ -50,7 +50,6 @@ class LeftNav extends Component {
   };
 
   render() {
-    const { t } = this.props; // translate func
     const applicationId = this.props?.applicationId || '';
 
     if (!this.props.loggedIn || !this.props.user || Object.getOwnPropertyNames(this.props.user).length == 0) {
@@ -86,52 +85,52 @@ class LeftNav extends Component {
           selectedKeys={[this.state.current]}
           style={{ backgroundColor: this.props.BG_COLOR, maxWidth: '100%', height: '100%' }}>
           <Menu.Item key="1" icon={<i className="fa fa-fw fa-cubes"></i>}>
-            <Link to={'/' + applicationId + '/assets'}>{t('Assets', { ns: 'common' })}</Link>
+            <Link to={'/' + applicationId + '/assets'}>{<Text text="Assets" />}</Link>
           </Menu.Item>
 
           <Menu.Item key="2" icon={<i className="fa fa-fw fa-random" />}>
-            <Link to={'/' + applicationId + '/dataflow'}>{t('Definitions', { ns: 'common' })}</Link>
+            <Link to={'/' + applicationId + '/dataflow'}>{<Text text="Definitions" />}</Link>
           </Menu.Item>
 
           <Menu.Item key="3" icon={<i className="fa fa-fw fa-microchip" />}>
-            <Link to={'/' + applicationId + '/dataflowinstances'}>{t('Job Execution', { ns: 'common' })}</Link>
+            <Link to={'/' + applicationId + '/dataflowinstances'}>{<Text text="Job Execution" />}</Link>
           </Menu.Item>
 
           {canEdit ? (
             <>
               {this.props.collapsed ? null : (
                 <Typography.Title ellipsis={true} className="left-nav-title">
-                  {t('Settings', { ns: 'common' })}
+                  {<Text text="Settings" />}
                 </Typography.Title>
               )}
               <Menu.Item key="4" icon={<i className="fa fa-fw fa-telegram" />}>
-                <Link to={'/' + applicationId + '/actions'}>{t('Actions', { ns: 'common' })}</Link>
+                <Link to={'/' + applicationId + '/actions'}>{<Text text="Actions" />}</Link>
               </Menu.Item>
               <Menu.Item key="5" icon={<i className="fa fa-fw fa-server" />}>
-                <Link to={'/admin/clusters'}>{t('Clusters', { ns: 'common' })}</Link>
+                <Link to={'/admin/clusters'}>{<Text text="Clusters" />}</Link>
               </Menu.Item>
 
               <Menu.Item key="6" icon={<i className="fa fa-fw fa-github" />}>
-                <Link to={'/admin/github'}>{t('Github Projects', { ns: 'common' })}</Link>
+                <Link to={'/admin/github'}>{<Text text="Github Projects" />}</Link>
               </Menu.Item>
 
               <Menu.Item key="7" icon={<i className="fa fa-fw fa-user-circle" />}>
-                <Link to={'/admin/consumers'}>{t('Collaborator', { ns: 'common' })}</Link>
+                <Link to={'/admin/consumers'}>{<Text text="Collaborator" />}</Link>
               </Menu.Item>
               {this.props.collapsed ? null : (
                 <Typography.Title ellipsis={true} className="left-nav-title">
-                  {t('Admin', { ns: 'common' })}
+                  {<Text text="Admin" />}
                 </Typography.Title>
               )}
               <Menu.Item key="8" icon={<i className="fa fa-fw fa-desktop" />}>
-                <Link to={'/admin/applications'}>{t('Applications', { ns: 'common' })}</Link>
+                <Link to={'/admin/applications'}>{<Text text="Applications" />}</Link>
               </Menu.Item>
               <Menu.Item
                 key="9"
                 icon={
                   this.props.propagation.loading ? <LoadingOutlined /> : <i className="fa fa-fw fa-balance-scale" />
                 }>
-                <Link to={'/admin/constraints'}>{t('Compliance', { ns: 'common' })}</Link>
+                <Link to={'/admin/constraints'}>{<Text text="Compliance" />}</Link>
               </Menu.Item>
             </>
           ) : null}
@@ -148,5 +147,4 @@ function mapStateToProps(state) {
 }
 
 let connectedLeftNav = connect(mapStateToProps, null, null, { forwardRef: true })(withRouter(LeftNav));
-connectedLeftNav = withTranslation(['common'])(connectedLeftNav); // uses nav namespace for translation
 export { connectedLeftNav as LeftNav };

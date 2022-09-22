@@ -1,11 +1,11 @@
 import React, { useState, useCallback } from 'react';
 import { useSelector } from 'react-redux';
-import { useTranslation } from 'react-i18next';
 import { hasEditPermission } from '../common/AuthUtil.js';
 import ReactMarkdown from 'react-markdown';
 import MonacoEditor from '../common/MonacoEditor.js';
 import { Row, Col, Button, Form, Input, Select, Tabs, Spin, AutoComplete, message, Space } from 'antd';
 import { authHeader, handleError } from '../common/AuthHeader.js';
+import Text from '../common/Text.jsx';
 
 import { debounce } from 'lodash';
 import { useHistory } from 'react-router';
@@ -35,8 +35,6 @@ function VisualizationDetails() {
   ]);
   const [form] = Form.useForm();
   const history = useHistory();
-  const { t } = useTranslation(['common', 'common']);
-
   const [formState, setFormState] = useState({ enableEdit: true, dataAltered: false, loading: false });
 
   const [search, setSearch] = useState({ loading: false, error: '', data: [] });
@@ -149,15 +147,15 @@ function VisualizationDetails() {
     <Space>
       {formState.enableEdit ? (
         <Button onClick={switchToViewOnly} disabled={!editingAllowed} type="primary" ghost>
-          {t('View Changes', { ns: 'common' })}
+          {<Text text="View Changes" />}
         </Button>
       ) : (
         <Button type="primary" disabled={!editingAllowed} onClick={makeFieldsEditable}>
-          {t('Edit', { ns: 'common' })}
+          {<Text text="Edit" />}
         </Button>
       )}
       <Button onClick={handleCancel} type="primary" ghost style={{ marginLeft: '25px' }}>
-        {t('Cancel', { ns: 'common' })}
+        {<Text text="Cancel" />}
       </Button>
       <Button
         type="primary"
@@ -165,7 +163,7 @@ function VisualizationDetails() {
         disabled={!editingAllowed}
         loading={formState.confirmLoading}
         style={{ background: 'var(--success)' }}>
-        {t('Save', { ns: 'common' })}
+        {<Text text="Save" />}
       </Button>
     </Space>
   );
@@ -173,11 +171,11 @@ function VisualizationDetails() {
   return (
     <React.Fragment>
       <Tabs defaultActiveKey="1" tabBarExtraContent={controls}>
-        <TabPane tab={t('Basic', { ns: 'common' })} key="1">
+        <TabPane tab={<Text text="Basic" />} key="1">
           <Spin spinning={formState.loading}>
             <Form {...formItemLayout} labelAlign="left" form={form} onFinish={handleOk}>
               {!formState.enableEdit ? null : (
-                <Form.Item label={t('File', { ns: 'common' })} name="fileSearchValue">
+                <Form.Item label={<Text text="File" />} name="fileSearchValue">
                   <Row gutter={[8, 0]}>
                     <Col span={19}>
                       <AutoComplete
@@ -188,7 +186,7 @@ function VisualizationDetails() {
                         style={{ width: '100%' }}
                         onSearch={(value) => searchFiles(value)}
                         onSelect={(value) => onFileSelected(value)}
-                        placeholder={t('Search jobs', { ns: 'common' })}
+                        placeholder={<Text text="Search jobs" />}
                         disabled={!editingAllowed}
                         notFoundContent={search.loading ? <Spin /> : 'Not Found'}>
                         {search.data.map((suggestion) => (
@@ -200,7 +198,7 @@ function VisualizationDetails() {
                     </Col>
                     <Col span={5}>
                       <Button htmlType="button" block onClick={clearState}>
-                        {t('Clear', { ns: 'common' })}
+                        {<Text text="Clear" />}
                       </Button>
                     </Col>
                   </Row>
@@ -208,21 +206,21 @@ function VisualizationDetails() {
               )}
 
               <Form.Item
-                label={t('Name', { ns: 'common' })}
+                label={<Text text="Name" />}
                 name="name"
                 rules={[
                   { required: formState.enableEdit, message: 'Please enter a name!' },
                   { pattern: new RegExp(/^[a-zA-Z0-9:._ -]*$/), message: 'Please enter a valid name' },
                 ]}>
                 <Input
-                  placeholder={t('Name', { ns: 'common' })}
+                  placeholder={<Text text="Name" />}
                   onChange={onChange}
                   disabled={!editingAllowed}
                   className={!formState.enableEdit ? 'read-only-input' : ''}
                 />
               </Form.Item>
 
-              <Form.Item label={t('Description')}>
+              <Form.Item label={<Text text="Description" />}>
                 {formState.enableEdit ? (
                   <MonacoEditor value={selectedFile.description} targetDomId="fileDescr" onChange={onChangeMD} />
                 ) : (

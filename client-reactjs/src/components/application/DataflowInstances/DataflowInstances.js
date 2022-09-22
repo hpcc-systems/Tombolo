@@ -4,12 +4,12 @@ import { Component } from 'react';
 import ReactMarkdown from 'react-markdown';
 import { connect } from 'react-redux';
 import { withRouter } from 'react-router-dom';
-import { withTranslation } from 'react-i18next';
 
 import { dataflowAction } from '../../../redux/actions/Dataflow';
 import { authHeader, handleError } from '../../common/AuthHeader.js';
 import BreadCrumbs from '../../common/BreadCrumbs';
 import { Constants } from '../../common/Constants';
+import Text from '../../common/Text';
 
 class DataflowInstances extends Component {
   state = {
@@ -35,19 +35,17 @@ class DataflowInstances extends Component {
   };
 
   render() {
-    const { t } = this.props;
-
     if (!this.props.applicationId) return null;
 
     const dataflowCols = [
       {
-        title: t('Name', { ns: 'common' }),
+        title: <Text text="Name" />,
         dataIndex: 'title',
         width: '30%',
         render: (text, record) => <a onClick={() => this.handleViewDetails(record)}>{text}</a>,
       },
       {
-        title: t('Description', { ns: 'common' }),
+        title: <Text text="Description" />,
         dataIndex: 'description',
         className: 'overflow-hidden',
         ellipsis: true,
@@ -59,7 +57,7 @@ class DataflowInstances extends Component {
         ),
       },
       {
-        title: t('Created', { ns: 'common' }),
+        title: <Text text="Created" />,
         dataIndex: 'createdAt',
         width: '30%',
         render: (text) => {
@@ -95,6 +93,5 @@ function mapStateToProps(state) {
 }
 
 let connectedWorkflows = connect(mapStateToProps)(withRouter(DataflowInstances));
-connectedWorkflows = withTranslation('common')(connectedWorkflows);
 
 export default connectedWorkflows;

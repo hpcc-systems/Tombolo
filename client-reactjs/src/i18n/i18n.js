@@ -14,7 +14,7 @@ i18n
     },
     fallbackLng: 'en',
     debug: false, // Change to true if you want to see logs on console
-    ns: ['common', 'jobs'], // Name spaces -> Check public/assets/i18n  for these name spaces
+    ns: ['common'], // Name spaces -> Check public/assets/i18n  for these name spaces
     interpolation: {
       escapeValue: false,
       formatSeparator: ',',

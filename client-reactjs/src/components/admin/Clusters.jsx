@@ -3,10 +3,10 @@ import { Table, Button, Modal, Form, Input, message, Tooltip, Popconfirm, Divide
 import { DeleteOutlined, EditOutlined, QuestionCircleOutlined } from '@ant-design/icons';
 import { useSelector, useDispatch } from 'react-redux';
 import { Link } from 'react-router-dom';
-import { useTranslation } from 'react-i18next';
 
 import { authHeader } from '../common/AuthHeader.js';
 import { applicationActions } from '../../redux/actions/Application';
+import Text from '../common/Text';
 
 const Option = Select.Option;
 
@@ -17,7 +17,6 @@ function Clusters() {
   const [addClusterModalVisible, setAddClusterModalVisible] = useState(false);
   const [form] = Form.useForm();
   const dispatch = useDispatch();
-  const { t } = useTranslation(['common']); // t for translate -> getting namespaces relevant to this file
 
   //When component loads
   useEffect(() => {
@@ -103,7 +102,7 @@ function Clusters() {
   // Table Columns
   const clusterTableColumns = [
     {
-      title: t('Name', { ns: 'common' }),
+      title: <Text text="Name" />,
       dataIndex: 'name',
       width: '20%',
       render: (text, record) => <Link to={`/admin/clusters/${record.id}`}>{text}</Link>,
@@ -130,11 +129,11 @@ function Clusters() {
     },
     {
       width: '10%',
-      title: t('Action', { ns: 'common' }),
+      title: <Text text="Action" />,
       dataIndex: '',
       render: (text, record) => (
         <span>
-          <Tooltip placement="right" title={t('Edit Cluster', { ns: 'common' })}>
+          <Tooltip placement="right" title={<Text text="Edit Cluster" />}>
             <EditOutlined onClick={() => handleEditCluster(record)} />
           </Tooltip>
           <Divider type="vertical" />
@@ -142,7 +141,7 @@ function Clusters() {
             title="Are you sure you want to delete this Cluster?"
             onConfirm={() => deleteCluster(record.id)}
             icon={<QuestionCircleOutlined />}>
-            <Tooltip placement="right" title={t('Delete Cluster', { ns: 'common' })}>
+            <Tooltip placement="right" title={<Text text="Delete Cluster" />}>
               <DeleteOutlined />
             </Tooltip>
           </Popconfirm>
@@ -158,7 +157,7 @@ function Clusters() {
         onClick={handleAddClusterBtnClick}
         type="primary"
         style={{ margin: '5px', display: 'block', marginLeft: 'auto' }}>
-        {t('Add Cluster', { ns: 'common' })}
+        {<Text text="Add Cluster" />}
       </Button>
 
       <Table
@@ -171,12 +170,12 @@ function Clusters() {
       <Modal
         visible={addClusterModalVisible}
         onCancel={handleCancel}
-        okText={t('Add', { ns: 'common' })}
+        okText={<Text text="Add" />}
         onOk={addCluster}
-        cancelText={t('Cancel', { ns: 'common' })}>
+        cancelText={<Text text="Cancel" />}>
         <Form layout="vertical" form={form}>
-          <Form.Item label={t('Host', { ns: 'common' })} name="name" required>
-            <Select placeholder={t('Select a Cluster', { ns: 'common' })}>
+          <Form.Item label={<Text text="Host" />} name="name" required>
+            <Select placeholder={<Text text="Select a Cluster" />}>
               {clusterWhiteList.map((cluster) => (
                 <Option key={cluster.name} value={cluster.name}>
                   {cluster.name + ' - ' + cluster.thor + ':' + cluster.thor_port}
@@ -184,11 +183,11 @@ function Clusters() {
               ))}
             </Select>
           </Form.Item>
-          <Form.Item label={t('Username', { ns: 'common' })} name="username" required>
+          <Form.Item label={<Text text="Username" />} name="username" required>
             <Input />
           </Form.Item>
 
-          <Form.Item label={t('Password', { ns: 'common' })} name="password">
+          <Form.Item label={<Text text="Password" />} name="password">
             <Input.Password />
           </Form.Item>
         </Form>

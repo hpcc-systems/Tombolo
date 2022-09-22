@@ -1,12 +1,12 @@
 import React, { useState, useEffect } from 'react';
 import { Table } from 'antd';
-import { authHeader, handleError } from '../../common/AuthHeader.js';
 import { useSelector } from 'react-redux';
-import { useTranslation } from 'react-i18next';
+
+import { authHeader, handleError } from '../../common/AuthHeader.js';
+import Text from '../../common/Text.jsx';
 
 function DataflowAssetsTable() {
   const [dataflowAssets, setDataflowAssets] = useState([]);
-  const { t } = useTranslation(['common']); // t for translate -> getting namespaces relevant to this file
   const [dataflowId, applicationId] = useSelector((state) => [
     state.dataflowReducer?.id,
     state.applicationReducer?.application?.applicationId,
@@ -34,28 +34,28 @@ function DataflowAssetsTable() {
 
   const jobColumns = [
     {
-      title: t('Name', { ns: 'common' }),
+      title: <Text text="Name" />,
       dataIndex: 'name',
       width: '30%',
       ellipsis: true,
     },
     {
-      title: t('Description', { ns: 'common' }),
+      title: <Text text="Description" />,
       dataIndex: 'description',
       width: '30%',
     },
     {
-      title: t('Created', { ns: 'common' }),
+      title: <Text text="Created" />,
       dataIndex: 'createdAt',
       width: '20%',
     },
     {
-      title: t('Owner', { ns: 'common' }),
+      title: <Text text="Owner" />,
       dataIndex: 'contact',
       width: '20%',
     },
     {
-      title: t('Type', { ns: 'common' }),
+      title: <Text text="Type" />,
       dataIndex: 'objType',
       width: '15%',
     },

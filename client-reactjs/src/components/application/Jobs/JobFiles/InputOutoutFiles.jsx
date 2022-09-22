@@ -1,8 +1,8 @@
 import React, { useState } from 'react';
 import { Table, message, Form, Select, Button, Tag } from 'antd';
-import { useTranslation } from 'react-i18next';
 
 import { authHeader } from '../../../common/AuthHeader';
+import Text from '../../../common/Text';
 
 const { Option } = Select;
 
@@ -34,12 +34,11 @@ function InputOutputFiles({
   const [subFiles, setSubFiles] = useState([]);
   const [expandedRowKeys, setExpandedRowKeys] = useState({ parentTable: [], fileTable: [], subFileTable: [] });
   const [fetchingSubFiles, setFetchingSubFiles] = useState(false);
-  const { t } = useTranslation(['common']); // t for translate -> getting namespaces relevant to this file
 
   // PARENT AND FILE TABLE COLUMNS
   const fileTableColumns = [
     {
-      title: t('File', { ns: 'common' }),
+      title: <Text text="File" />,
       render: (text, record) => (
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
           <span>{record.fileTitle || record.name}</span>
@@ -52,12 +51,12 @@ function InputOutputFiles({
       ),
     },
     {
-      title: t('Type', { ns: 'common' }),
+      title: <Text text="Type" />,
       width: '8%',
       render: (text, record) => renderTag(record),
     },
     {
-      title: t('Description', { ns: 'common' }),
+      title: <Text text="Description" />,
       dataIndex: 'description',
       width: '42%',
     },
@@ -144,15 +143,11 @@ function InputOutputFiles({
         {enableEdit ? (
           <div style={{ display: 'flex' }}>
             <Form.Item
-              label={
-                selectedTabPaneKey === '4' ? t('Input Files', { ns: 'common' }) : t('Output Files', { ns: 'common' })
-              }
+              label={selectedTabPaneKey === '4' ? <Text text="Input Files" /> : <Text text="Output Files" />}
               rules={[{ required: true }]}>
               <Select
                 id={selectedTabPaneKey === '4' ? 'inputfiles' : 'outputfiles'}
-                placeholder={
-                  selectedTabPaneKey === '4' ? t('Input Files', { ns: 'common' }) : t('Output Files', { ns: 'common' })
-                }
+                placeholder={selectedTabPaneKey === '4' ? <Text text="Input Files" /> : <Text text="Output Files" />}
                 onChange={selectedTabPaneKey === '4' ? handleInputFileChange : handleOutputFileChange}
                 style={{ width: 290 }}
                 disabled={!editingAllowed}>
@@ -170,7 +165,7 @@ function InputOutputFiles({
                 type="primary"
                 onClick={selectedTabPaneKey === '4' ? handleAddInputFile : handleAddOutputFile}
                 disabled={!editingAllowed}>
-                {t('Add', { ns: 'common' })}
+                {<Text text="Add" />}
               </Button>
             </Form.Item>
           </div>

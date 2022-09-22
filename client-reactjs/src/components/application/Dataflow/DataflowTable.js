@@ -2,15 +2,14 @@ import React, { useState, useEffect } from 'react';
 import { Table, Popconfirm, Tooltip, Divider } from 'antd';
 import ReactMarkdown from 'react-markdown';
 import { DeleteOutlined, EyeOutlined, QuestionCircleOutlined } from '@ant-design/icons';
-import { useTranslation } from 'react-i18next';
 
 import { authHeader, handleError } from '../../common/AuthHeader.js';
 import { hasEditPermission } from '../../common/AuthUtil.js';
 import { Constants } from '../../common/Constants';
+import Text from '../../common/Text.jsx';
 import { useSelector } from 'react-redux';
 
 function DataflowTable({ data, applicationId, onSelectDataflow, onDataFlowUpdated, onEditDataFlow }) {
-  const { t } = useTranslation(['common']); // t for translate -> getting namespaces relevant to this file
   const authReducer = useSelector((state) => state.authenticationReducer);
   const editingAllowed = hasEditPermission(authReducer.user);
 
@@ -54,13 +53,13 @@ function DataflowTable({ data, applicationId, onSelectDataflow, onDataFlowUpdate
 
   const dataflowCols = [
     {
-      title: t('Name', { ns: 'common' }),
+      title: <Text text="Name" />,
       dataIndex: 'title',
       width: '30%',
       render: (text, record) => <a onClick={() => rowSelected(record)}>{text}</a>,
     },
     {
-      title: t('Description', { ns: 'common' }),
+      title: <Text text="Description" />,
       dataIndex: 'description',
       className: 'overflow-hidden',
       ellipsis: true,
@@ -73,12 +72,12 @@ function DataflowTable({ data, applicationId, onSelectDataflow, onDataFlowUpdate
       ),
     },
     {
-      title: t('Process Type', { ns: 'common' }),
+      title: <Text text="Process Type" />,
       dataIndex: 'type',
       width: '30%',
     },
     {
-      title: t('Created', { ns: 'common' }),
+      title: <Text text="Created" />,
       dataIndex: 'createdAt',
       width: '30%',
       render: (text) => {
@@ -92,23 +91,23 @@ function DataflowTable({ data, applicationId, onSelectDataflow, onDataFlowUpdate
     },
     {
       width: '20%',
-      title: t('Action', { ns: 'common' }),
+      title: <Text text="Action" />,
       dataIndex: '',
       className: editingAllowed ? 'show-column' : 'hide-column',
       render: (text, record) => (
         <span>
           <a onClick={() => onEditDataFlow(record)}>
-            <Tooltip placement="right" title={t('Edit', { ns: 'common' })}>
+            <Tooltip placement="right" title={<Text text="Edit" />}>
               <EyeOutlined />
             </Tooltip>
           </a>
           <Divider type="vertical" />
           <Popconfirm
-            title={t('Are you sure you want to delete', { ns: 'common' }) + '?'}
+            title={<Text text="Are you sure you want to delete" /> + '?'}
             onConfirm={() => handleDataflowDelete(record.id)}
             icon={<QuestionCircleOutlined />}>
             <a href="#">
-              <Tooltip placement="right" title={t('Delete', { ns: 'common' })}>
+              <Tooltip placement="right" title={<Text text="Delete" />}>
                 <DeleteOutlined />
               </Tooltip>
             </a>

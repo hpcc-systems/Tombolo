@@ -1,4 +1,5 @@
 import { Addon } from '@antv/x6';
+import { t } from 'i18next';
 export default class Stencil {
   static init(stencilContainer, graph, t) {
     const stencil = new Addon.Stencil({
@@ -41,7 +42,7 @@ export default class Stencil {
     this.addShape(graph, stencil, t);
   }
 
-  static addShape(graph, stencil, t) {
+  static addShape(graph, stencil) {
     const assets = [
       { type: 'Job', title: t('Job', { ns: 'common' }) },
       { type: 'File', title: t('File', { ns: 'common' }) },

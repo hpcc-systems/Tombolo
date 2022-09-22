@@ -1,22 +1,21 @@
 import React, { useEffect, useState } from 'react';
-import { useTranslation } from 'react-i18next';
 import { Table } from 'antd';
 import { authHeader, handleError } from '../../common/AuthHeader.js';
+import Text from '../../common/Text.jsx';
 
 function Files({ hpcc_queryid, cluster_id }) {
   //Local State
   const [queryFiles, setQueryFiles] = useState([]);
   const [fetchingData, setFetchingData] = useState(false);
-  const { t } = useTranslation(['common']);
 
   //Table columns
   const columns = [
     {
-      title: t('Name', { ns: 'common' }),
+      title: <Text text="Name" />,
       dataIndex: 'fileName',
     },
     {
-      title: t('Type', { ns: 'common' }),
+      title: <Text text="Type" />,
       dataIndex: 'fileType',
     },
   ];

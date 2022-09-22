@@ -10,7 +10,6 @@ import {
   FilePdfOutlined,
   AreaChartOutlined,
 } from '@ant-design/icons';
-import { useTranslation } from 'react-i18next';
 
 import { authHeader, handleError } from '../../common/AuthHeader.js';
 import MoveAssetsDialog from './MoveAssetsDialog';
@@ -21,6 +20,7 @@ import SelectDetailsForPdfDialog from '../Assets/pdf/SelectDetailsForPdfDialog';
 import { getNestedAssets } from '../Assets/pdf/downloadPdf';
 import ReactMarkdown from 'react-markdown';
 import DeleteAsset from '../../common/DeleteAsset';
+import Text from '../../common/Text.jsx';
 
 function AssetsTable({ openGroup, handleEditGroup, refreshGroups }) {
   const { authReducer, applicationReducer, assetReducer, groupsReducer } = useSelector((state) => ({
@@ -35,7 +35,6 @@ function AssetsTable({ openGroup, handleEditGroup, refreshGroups }) {
   const dispatch = useDispatch();
   const editingAllowed = hasEditPermission(authReducer.user);
   const applicationId = applicationReducer?.application?.applicationId || '';
-  const { t } = useTranslation(['common']); // t for translate -> getting namespaces relevant to this file
 
   const { assetTypeFilter, keywords } = assetReducer.searchParams;
   const [assetToMove, setAssetToMove] = useState({ id: '', type: '', title: '', selectedKeys: {} });
@@ -267,7 +266,7 @@ function AssetsTable({ openGroup, handleEditGroup, refreshGroups }) {
 
   const columns = [
     {
-      title: t('Name', { ns: 'common' }),
+      title: <Text text="Name" />,
       dataIndex: 'name',
       width: '25%',
       ellipsis: {
@@ -298,7 +297,7 @@ function AssetsTable({ openGroup, handleEditGroup, refreshGroups }) {
       ),
     },
     {
-      title: t('Description', { ns: 'common' }),
+      title: <Text text="Description" />,
       dataIndex: 'description',
       width: '23%',
       ellipsis: {
@@ -318,7 +317,7 @@ function AssetsTable({ openGroup, handleEditGroup, refreshGroups }) {
       ),
     },
     {
-      title: t('Type', { ns: 'common' }),
+      title: <Text text="Type" />,
       dataIndex: 'type',
       width: '10%',
       sorter: (a, b) => a.type.localeCompare(b.type),
@@ -328,7 +327,7 @@ function AssetsTable({ openGroup, handleEditGroup, refreshGroups }) {
       shouldCellUpdate: (record, prevRecord) => record.type !== prevRecord.type,
     },
     {
-      title: t('Created', { ns: 'common' }),
+      title: <Text text="Created" />,
       dataIndex: 'createdAt',
       width: '23%',
       sorter: (a, b) => new Date(b.createdAt) - new Date(a.createdAt),
@@ -350,20 +349,20 @@ function AssetsTable({ openGroup, handleEditGroup, refreshGroups }) {
     },
     {
       width: '20%',
-      title: t('Action', { ns: 'common' }),
+      title: <Text text="Action" />,
       dataJob: '',
       className: editingAllowed ? 'show-column' : 'hide-column',
       shouldCellUpdate: (record, prevRecord) => record.id !== prevRecord.id,
       render: (text, record) => (
         <Space split={<Divider type="vertical" />}>
-          <Tooltip placement="right" title={t('Edit', { ns: 'common' })}>
+          <Tooltip placement="right" title={<Text text="Edit" />}>
             <EditOutlined
               className="asset-action-icon"
               onClick={() => handleEdit(record.id, record.type, 'edit', record.url)}
             />
           </Tooltip>
 
-          <Tooltip placement="right" title={t('Delete', { n: 'common' })}>
+          <Tooltip placement="right" title={<Text text="Delete" />}>
             <DeleteAsset
               asset={record}
               onDelete={handleDelete}
@@ -371,14 +370,14 @@ function AssetsTable({ openGroup, handleEditGroup, refreshGroups }) {
             />
           </Tooltip>
 
-          <Tooltip placement="right" title={t('Move', { ns: 'common' })}>
+          <Tooltip placement="right" title={<Text text="Move" />}>
             <FolderOpenOutlined
               className="asset-action-icon"
               onClick={() => openMoveAssetDialog(record.id, record.type, record.name, selectedGroup)}
             />
           </Tooltip>
 
-          <Tooltip placement="right" title={t('Print', { ns: 'common' })}>
+          <Tooltip placement="right" title={<Text text="Print" />}>
             <FilePdfOutlined
               className="asset-action-icon"
               onClick={() =>
@@ -395,7 +394,7 @@ function AssetsTable({ openGroup, handleEditGroup, refreshGroups }) {
 
           {record.type === 'File' ? (
             record.visualization ? (
-              <Tooltip placement="right" title={t('RealBI Dashboard', { ns: 'common' })}>
+              <Tooltip placement="right" title={<Text text="RealBI Dashboard" />}>
                 <a href={record.visualization} target="_blank" rel="noreferrer">
                   <AreaChartOutlined className="asset-action-icon" />
                 </a>
@@ -405,7 +404,7 @@ function AssetsTable({ openGroup, handleEditGroup, refreshGroups }) {
                 title="Are you sure you want to create a chart with this data?"
                 onConfirm={() => handleCreateVisualization(record.id, record.cluster_id)}
                 icon={<QuestionCircleOutlined />}>
-                <Tooltip placement="right" title={t('RealBI Dashboard', { ns: 'common' })}>
+                <Tooltip placement="right" title={<Text text="RealBI Dashboard" />}>
                   <AreaChartOutlined className="asset-action-icon" />
                 </Tooltip>
               </Popconfirm>

@@ -1,24 +1,23 @@
 import React from 'react';
-import { useTranslation } from 'react-i18next';
 import EditableTable from '../../common/EditableTable';
+import Text from '../../common/Text';
 
 function FileTemplateLayout(props) {
-  const { t } = useTranslation(['common']);
   const layoutColumns = [
     {
-      title: t('Name', { ns: 'common' }),
+      title: <Text text="Name" />,
       dataIndex: 'name',
       regEx: /^[a-zA-Z0-9.,:;()@&#*/$_ -]*$/,
       width: '25%',
     },
     {
-      title: t('Type', { ns: 'common' }),
+      title: <Text text="Type" />,
       dataIndex: 'type',
       width: '18%',
       editable: true,
     },
     {
-      title: t('Description', { ns: 'common' }),
+      title: <Text text="Description" />,
       dataIndex: 'description',
       width: '15%',
       editable: true,

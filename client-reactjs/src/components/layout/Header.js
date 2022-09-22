@@ -1,11 +1,10 @@
-import { AppstoreOutlined, DownOutlined, QuestionCircleOutlined, GlobalOutlined } from '@ant-design/icons';
+import { AppstoreOutlined, DownOutlined, QuestionCircleOutlined } from '@ant-design/icons';
 import { Button, Dropdown, Form, Input, Menu, message, Modal, notification, Space, Tooltip } from 'antd';
 import { debounce } from 'lodash';
 import React, { Component } from 'react';
 import { connect } from 'react-redux';
 import { Link, withRouter } from 'react-router-dom';
 import i18next from 'i18next';
-import { withTranslation } from 'react-i18next';
 
 import { languages } from '../../i18n/languages';
 import logo from '../../images/logo.png';
@@ -16,6 +15,7 @@ import { expandGroups, selectGroup, getGroupsTree } from '../../redux/actions/Gr
 import { userActions } from '../../redux/actions/User';
 import { authHeader, handleError } from '../common/AuthHeader.js';
 import { hasAdminRole } from '../common/AuthUtil.js';
+import Text from '../common/Text';
 
 class AppHeader extends Component {
   pwdformRef = React.createRef();
@@ -340,7 +340,6 @@ class AppHeader extends Component {
         localStorage.setItem('i18nextLng', item.key);
         i18next.changeLanguage(item.key);
         this.setState({ language: item.key.toUpperCase() });
-        console.log('props----------------', this.props);
 
         this.props.setLocale(item.key);
       }}>
@@ -355,15 +354,13 @@ class AppHeader extends Component {
   );
 
   render() {
-    const { t } = this.props; // translation
-
     const userActionMenu = (
       <Menu onClick={this.handleUserActionMenuClick}>
         <Menu.Item key="1" className="menuOption">
-          {t('Change Password', { ns: 'common' })}
+          {<Text text="Change Password" />}
         </Menu.Item>
         <Menu.Item key="2" className="menuOption">
-          {t('Logout', { ns: 'common' })}
+          {<Text text="Logout" />}
         </Menu.Item>
       </Menu>
     );
@@ -372,11 +369,11 @@ class AppHeader extends Component {
       <Menu>
         <Menu.Item key="1" className="menuOption">
           <a target="_blank" rel="noopener noreferrer" href={process.env.PUBLIC_URL + '/Tombolo-User-Guide.pdf'}>
-            {t('User Guide')}
+            {<Text text="User Guide" />}
           </a>
         </Menu.Item>
         <Menu.Item key="2" className="menuOption">
-          <a onClick={this.openAboutModal}>{t('About')}</a>
+          <a onClick={this.openAboutModal}>{<Text text="About" />}</a>
         </Menu.Item>
       </Menu>
     );
@@ -439,7 +436,7 @@ class AppHeader extends Component {
             <Button shape="round" style={{ marginRight: '10px' }}>
               <i className="fa fa-lg fa-question-circle"></i>
               <span style={{ paddingLeft: '5px' }}>
-                {t('Help')} <DownOutlined />
+                {<Text text="Help" />} <DownOutlined />
               </span>
             </Button>
           </Dropdown>
@@ -451,12 +448,7 @@ class AppHeader extends Component {
               </span>
             </Button>
           </Dropdown>
-          <Dropdown overlay={this.languagesMenu} trigger={['click']}>
-            <span style={{ color: 'white', fontSize: '22px', paddingLeft: '15px' }}>
-              <GlobalOutlined className="languageSwitcherIcon" />
-            </span>
-          </Dropdown>{' '}
-          <p style={{ color: 'white', paddingLeft: '5px', paddingTop: '10px' }}>{this.state.language}</p>
+          <>{this.props.languageSwitcher}</>
         </div>
 
         <Modal
@@ -535,5 +527,4 @@ function mapStateToProps(state) {
 
 //export default withRouter(AppHeader);
 let connectedAppHeader = connect(mapStateToProps)(withRouter(AppHeader));
-connectedAppHeader = withTranslation(['common'])(connectedAppHeader);
 export { connectedAppHeader as AppHeader };

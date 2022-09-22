@@ -5,7 +5,6 @@ import { debounce } from 'lodash';
 import { DownOutlined, SettingOutlined } from '@ant-design/icons';
 import { useSelector, useDispatch } from 'react-redux';
 import { useHistory } from 'react-router';
-import { useTranslation } from 'react-i18next';
 
 import BreadCrumbs from '../../common/BreadCrumbs';
 import { authHeader } from '../../common/AuthHeader.js';
@@ -19,6 +18,7 @@ import useModal from '../../../hooks/useModal';
 import SelectDetailsForPdfDialog from '../Assets/pdf/SelectDetailsForPdfDialog';
 import { getNestedAssets } from '../Assets/pdf/downloadPdf';
 import { CreateGroupDialog } from './CreateGroupDialog';
+import Text from '../../common/Text';
 
 const { DirectoryTree } = Tree;
 const { confirm } = Modal;
@@ -36,7 +36,6 @@ const Assets = () => {
   ]);
   const dispatch = useDispatch();
   const history = useHistory();
-  const { t } = useTranslation(['common']); // t for translate -> getting namespaces relevant to this file
   const editingAllowed = hasEditPermission(authReducer.user);
   // all data related to file explorer is in redux
   const { selectedKeys, expandedKeys, tree, dataList } = groupsReducer;
@@ -48,11 +47,11 @@ const Assets = () => {
   const prevSelectedApplicationRef = useRef();
   const defaultAssetTypeFilter = ['File', 'Job', 'Query', 'Indexes', 'Groups'];
   const searchOptions = [
-    { label: t('File', { ns: 'common' }), value: 'File' },
-    { label: t('Job', { ns: 'common' }), value: 'Job' },
-    { label: t('Query', { ns: 'common' }), value: 'Query' },
-    { label: t('Indexes', { ns: 'common' }), value: 'Indexes' },
-    { label: t('Groups', { ns: 'common' }), value: 'Groups' },
+    { label: <Text text="File" />, value: 'File' },
+    { label: <Text text="Job" />, value: 'Job' },
+    { label: <Text text="Query" />, value: 'Query' },
+    { label: <Text text="Indexes" />, value: 'Indexes' },
+    { label: <Text text="Groups" />, value: 'Groups' },
   ];
   const assetTypeFilter = useRef([...defaultAssetTypeFilter]);
 
@@ -302,29 +301,29 @@ const Assets = () => {
   const menu = (
     <Menu onClick={(e) => handleMenuClick(e)}>
       <Menu.Item key="File">
-        <i className="fa fa-lg fa-file"></i> {t('File', { ns: 'common' })}
+        <i className="fa fa-lg fa-file"></i> {<Text text="File" />}
       </Menu.Item>
       <Menu.Item key="File Template">
-        <i className="fa  fa-lg fa-file-text-o"></i> {t('File Template', { ns: 'common' })}
+        <i className="fa  fa-lg fa-file-text-o"></i> {<Text text="File Template" />}
       </Menu.Item>
       <Menu.Item key="Index">
-        <i className="fa fa-lg fa-indent"></i> {t('Index', { ns: 'common' })}
+        <i className="fa fa-lg fa-indent"></i> {<Text text="Index" />}
       </Menu.Item>
       <Menu.Item key="Query">
-        <i className="fa fa-lg fa-search"></i> {t('Query', { ns: 'common' })}
+        <i className="fa fa-lg fa-search"></i> {<Text text="Query" />}
       </Menu.Item>
       <Menu.Item key="Job">
-        <i className="fa fa-lg fa-clock-o"></i> {t('Job', { ns: 'common' })}
+        <i className="fa fa-lg fa-clock-o"></i> {<Text text="Job" />}
       </Menu.Item>
       <Menu.Item key="RealBI Dashboard">
-        <i className="fa fa-lg fa-area-chart"></i> {t('RealBI Dashboard', { ns: 'common' })}
+        <i className="fa fa-lg fa-area-chart"></i> {<Text text="RealBI Dashboard" />}
       </Menu.Item>
     </Menu>
   );
 
   const selectBefore = (
     <Popover
-      title={t('Search Filters', { ns: 'common' })}
+      title={<Text text="Search Filters" />}
       placement="bottom"
       trigger="click"
       content={
@@ -352,7 +351,7 @@ const Assets = () => {
             editingAllowed ? (
               <Dropdown overlay={menu}>
                 <Button type="primary" icon={<DownOutlined />}>
-                  {t('Add Asset')}
+                  {<Text text="Add Asset" />}
                 </Button>
               </Dropdown>
             ) : null
@@ -366,7 +365,7 @@ const Assets = () => {
               allowClear
               value={searchKeyword}
               addonBefore={selectBefore}
-              placeholder={t('Search assets', { ns: 'common' })}
+              placeholder={<Text text="Search assets" />}
               onSearch={handleAssetSearch}
               onChange={handleSearchKeywordChange}
             />

@@ -1,11 +1,11 @@
 import React, { useState, useEffect } from 'react';
 import { Modal, Button, Form, Input, Radio, message } from 'antd';
 import { useDispatch } from 'react-redux';
-import { useTranslation } from 'react-i18next';
 
 import { applicationActions } from '../../../redux/actions/Application';
 import { emptyGroupTree } from '../../../redux/actions/Groups';
 import { authHeader } from '../../common/AuthHeader';
+import Text from '../../common/Text';
 
 import { useHistory } from 'react-router';
 
@@ -15,7 +15,6 @@ function AddApplication(props) {
   const [isEditing, setIsEditing] = useState(false);
   const dispatch = useDispatch();
   const history = useHistory();
-  const { t } = useTranslation(['common']); // t for translate -> getting namespaces relevant to this file
 
   // FORM ITEM LAYOUT
   const formItemLayout =
@@ -94,7 +93,7 @@ function AddApplication(props) {
   return (
     <Modal
       visible={props.showAddApplicationModal}
-      title={props?.selectedApplication?.title || t('Add', { ns: 'common' })}
+      title={props?.selectedApplication?.title || <Text text="Add" />}
       maskClosable={false}
       onCancel={handleModalCancel}
       footer={
@@ -104,10 +103,10 @@ function AddApplication(props) {
                 key="back"
                 type="primary"
                 onClick={props.isCreatingNewApp || isEditing ? saveApplication : () => setIsEditing(true)}>
-                {props.isCreatingNewApp || isEditing ? t('Save', { ns: 'common' }) : t('Edit', { ns: 'common' })}
+                {props.isCreatingNewApp || isEditing ? <Text text="Save" /> : <Text text="Edit" />}
               </Button>,
               <Button key="submit" type="primary" ghost onClick={handleModalCancel}>
-                {t('Cancel', { ns: 'common' })}
+                {<Text text="Cancel" />}
               </Button>,
             ]
           : [
@@ -119,7 +118,7 @@ function AddApplication(props) {
       <Form className="formInModal" form={form} initialValues={{ visibility: 'Private' }}>
         <Form.Item
           {...formItemLayout}
-          label={t('Title', { ns: 'common' })}
+          label={<Text text="Title" />}
           name="title"
           rules={[
             {
@@ -134,7 +133,7 @@ function AddApplication(props) {
           <Input className={isEditing || props.isCreatingNewApp ? '' : 'read-only-textarea'} />
         </Form.Item>
 
-        <Form.Item label={t('Description', { ns: 'common' })} name="description" {...formItemLayout}>
+        <Form.Item label={<Text text="Description" />} name="description" {...formItemLayout}>
           <TextArea
             autoSize={{ minRows: isEditing || props.isCreatingNewApp ? 4 : 1 }}
             className={isEditing || props.isCreatingNewApp ? '' : 'read-only-textarea'}
@@ -143,7 +142,7 @@ function AddApplication(props) {
 
         <Form.Item
           {...formItemLayout}
-          label={t('Visibility', { ns: 'common' })}
+          label={<Text text="Visibility" />}
           rules={[
             {
               required: props.isCreatingNewApp || isEditing,
@@ -153,8 +152,8 @@ function AddApplication(props) {
           name="visibility">
           {isEditing || props.isCreatingNewApp ? (
             <Radio.Group name="visibility">
-              <Radio value={'Private'}>{t('Private', { ns: 'common' })}</Radio>
-              <Radio value={'Public'}>{t('Public', { ns: 'common' })}</Radio>
+              <Radio value={'Private'}>{<Text text="Private" />}</Radio>
+              <Radio value={'Public'}>{<Text text="Public" />}</Radio>
             </Radio.Group>
           ) : (
             <Input className="read-only-input" name="visibility" />

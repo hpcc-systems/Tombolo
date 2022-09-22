@@ -2,16 +2,15 @@ import React, { useState, useEffect } from 'react';
 import { useHistory } from 'react-router';
 import { useSelector, useDispatch } from 'react-redux';
 import { Table } from 'antd';
-import { useTranslation } from 'react-i18next';
 import { authHeader, handleError } from '../common/AuthHeader.js';
 import { dataflowAction } from '../../redux/actions/Dataflow';
+import Text from '../common/Text.jsx';
 
 function AssociatedDataflows({ assetId, assetType }) {
   const history = useHistory();
   const applicationReducer = useSelector((state) => state.applicationReducer);
   const [data, setData] = useState([]);
   const dispatch = useDispatch();
-  const { t } = useTranslation(['common']);
 
   useEffect(() => {
     fetchData();
@@ -50,7 +49,7 @@ function AssociatedDataflows({ assetId, assetType }) {
 
   const associatedDataflowCols = [
     {
-      title: t('Title', { ns: 'common' }),
+      title: <Text text="Title" />,
       dataIndex: 'title',
       width: '30%',
       render: (text, record) => (
@@ -66,7 +65,7 @@ function AssociatedDataflows({ assetId, assetType }) {
       ),
     },
     {
-      title: t('Description', { ns: 'common' }),
+      title: <Text text="Description" />,
       dataIndex: 'description',
       width: '30%',
     },
