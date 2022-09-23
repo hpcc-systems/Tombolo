@@ -32,6 +32,7 @@ import { Toolbar, Menu } from '@antv/x6-react-components';
 import { authHeader, handleError } from '../../../common/AuthHeader';
 import { useEffect } from 'react';
 import { getWorkingCopyGraph, saveWorkingCopyGraph } from '../../../common/CommonUtil';
+import Text from '../../../common/Text';
 
 const Item = Toolbar.Item; // eslint-disable-line
 const { confirm } = Modal;
@@ -507,17 +508,19 @@ const VersionsButton = ({ graphRef }) => {
     <>
       <Item
         name="save"
-        tooltip="Save graph version"
+        tooltip={<Text text="Save graph version" />}
         disabled={saveGraph.loading}
         active={saveGraph.loading}
         icon={saveGraph.loading ? <LoadingOutlined /> : <SaveOutlined />}
         onClick={openSaveDialog}>
-        {saveGraph.loading ? '...Saving' : 'Save Version'}
+        {saveGraph.loading ? '...' + <Text text="...Saving" /> : <Text text="Save Version" />}
       </Item>
       <Item className="versions_list" name="versions" tooltip="Versions" dropdown={getVersionsList()} />
       {!clickedVersion.name ? (
         <Item name="current_version">
-          <Badge color="#3bb44a" /> You are on Working Copy
+          <Badge color="#3bb44a">
+            <Text text="You are on Working Copy" />
+          </Badge>
         </Item>
       ) : (
         <>
@@ -577,17 +580,20 @@ const VersionForm = ({ visible, loading, onCreate, onEdit, onCancel, version }) 
     <Modal
       visible={visible}
       destroyOnClose
-      title={version ? `Editing version: "${version.name}"` : 'Create a new version'}
-      okText={version ? 'Edit' : 'Create'}
-      cancelText="Cancel"
+      title={version ? <Text text={`Editing version: "${version.name}"`} /> : <Text text="Create a new version" />}
+      okText={version ? <Text text="Edit" /> : <Text text="Create" />}
+      cancelText={<Text text="Cancel" />}
       onCancel={onCancel}
       onOk={handleOk}
       confirmLoading={loading}>
       <Form form={form} layout="vertical" initialValues={{ name: '', description: '' }}>
-        <Form.Item name="name" label="Name" rules={[{ required: true, message: 'Please provide title for version' }]}>
+        <Form.Item
+          name="name"
+          label={<Text text="Name" />}
+          rules={[{ required: true, message: <Text text="Please provide title for version" /> }]}>
           <Input />
         </Form.Item>
-        <Form.Item name="description" label="Description">
+        <Form.Item name="description" label={<Text text="Description" />}>
           <Input type="textarea" />
         </Form.Item>
       </Form>

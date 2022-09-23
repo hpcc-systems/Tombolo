@@ -6,6 +6,7 @@ import { Link } from 'react-router-dom';
 
 import { authHeader } from '../common/AuthHeader.js';
 import { applicationActions } from '../../redux/actions/Application';
+import Text from '../common/Text';
 
 const Option = Select.Option;
 
@@ -101,7 +102,7 @@ function Clusters() {
   // Table Columns
   const clusterTableColumns = [
     {
-      title: 'Name',
+      title: <Text text="Name" />,
       dataIndex: 'name',
       width: '20%',
       render: (text, record) => <Link to={`/admin/clusters/${record.id}`}>{text}</Link>,
@@ -128,11 +129,11 @@ function Clusters() {
     },
     {
       width: '10%',
-      title: 'Action',
+      title: <Text text="Action" />,
       dataIndex: '',
       render: (text, record) => (
         <span>
-          <Tooltip placement="right" title={'Edit Cluster'}>
+          <Tooltip placement="right" title={<Text text="Edit Cluster" />}>
             <EditOutlined onClick={() => handleEditCluster(record)} />
           </Tooltip>
           <Divider type="vertical" />
@@ -140,7 +141,7 @@ function Clusters() {
             title="Are you sure you want to delete this Cluster?"
             onConfirm={() => deleteCluster(record.id)}
             icon={<QuestionCircleOutlined />}>
-            <Tooltip placement="right" title={'Delete Cluster'}>
+            <Tooltip placement="right" title={<Text text="Delete Cluster" />}>
               <DeleteOutlined />
             </Tooltip>
           </Popconfirm>
@@ -156,7 +157,7 @@ function Clusters() {
         onClick={handleAddClusterBtnClick}
         type="primary"
         style={{ margin: '5px', display: 'block', marginLeft: 'auto' }}>
-        Add Cluster
+        {<Text text="Add Cluster" />}
       </Button>
 
       <Table
@@ -166,10 +167,15 @@ function Clusters() {
         pagination={clusterWhiteList.length > 10 ? { pageSize: 10 } : false}
       />
 
-      <Modal visible={addClusterModalVisible} onCancel={handleCancel} okText={'Add'} onOk={addCluster}>
+      <Modal
+        visible={addClusterModalVisible}
+        onCancel={handleCancel}
+        okText={<Text text="Add" />}
+        onOk={addCluster}
+        cancelText={<Text text="Cancel" />}>
         <Form layout="vertical" form={form}>
-          <Form.Item label="Host" name="name" required>
-            <Select placeholder="Select a Cluster">
+          <Form.Item label={<Text text="Host" />} name="name" required>
+            <Select placeholder={<Text text="Select a Cluster" />}>
               {clusterWhiteList.map((cluster) => (
                 <Option key={cluster.name} value={cluster.name}>
                   {cluster.name + ' - ' + cluster.thor + ':' + cluster.thor_port}
@@ -177,11 +183,11 @@ function Clusters() {
               ))}
             </Select>
           </Form.Item>
-          <Form.Item label="User name" name="username" required>
+          <Form.Item label={<Text text="Username" />} name="username" required>
             <Input />
           </Form.Item>
 
-          <Form.Item label="Password" name="password">
+          <Form.Item label={<Text text="Password" />} name="password">
             <Input.Password />
           </Form.Item>
         </Form>

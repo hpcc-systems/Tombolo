@@ -19,11 +19,12 @@ import { debounce } from 'lodash';
 import React, { Component } from 'react';
 import ReactMarkdown from 'react-markdown';
 import { connect } from 'react-redux';
+
 import ConstraintsTags from '../admin/Constraints/ConstraintsTags.js';
 import { authHeader, handleError } from '../common/AuthHeader.js';
 import { canViewPII, hasEditPermission } from '../common/AuthUtil.js';
 import { formItemLayout } from '../common/CommonUtil';
-import { validationRuleFixes, validationRules } from '../common/CommonUtil.js';
+// import { validationRuleFixes, validationRules } from '../common/CommonUtil.js';
 import DeleteAsset from '../common/DeleteAsset';
 import EditableTable from '../common/EditableTable.js';
 import LayoutTable from '../common/LayoutTable.js';
@@ -31,6 +32,7 @@ import MonacoEditor from '../common/MonacoEditor.js';
 import OverwriteAssetModal from '../common/OverWriteAssetModal';
 import SuperFileMeta from '../common/SuperFileMeta';
 import AssociatedDataflows from './AssociatedDataflows';
+import Text from '../common/Text.jsx';
 
 const TabPane = Tabs.TabPane;
 const Option = Select.Option;
@@ -608,7 +610,6 @@ class FileDetails extends Component {
   render() {
     const { enableEdit, addingNewAsset, complianceTags, showFilePreview, confirmLoading, disableReadOnlyFields } =
       this.state;
-
     const { description, isSuperFile, layout, validations, superFileData } = this.state.file;
 
     const VIEW_DATA_PERMISSION = canViewPII(this.props.user);
@@ -616,7 +617,7 @@ class FileDetails extends Component {
 
     const validationRuleColumns = [
       {
-        title: 'Field',
+        title: <Text text="Field" />,
         dataIndex: 'rule_field',
         celleditor: 'select',
         editable: editingAllowed,
@@ -626,28 +627,28 @@ class FileDetails extends Component {
         },
       },
       {
-        title: 'Rule Name',
+        title: <Text text="Rule Name" />,
         dataIndex: 'rule_name',
         editable: editingAllowed,
         celleditor: 'select',
         celleditorparams: {
-          values: validationRules,
+          values: this.validationRules,
         },
         width: '15%',
       },
       {
-        title: 'Rule',
+        title: <Text text="Rule" />,
         dataIndex: 'rule_test',
         editable: editingAllowed,
         width: '15%',
       },
       {
-        title: 'Fix',
+        title: <Text text="Fix" />,
         dataIndex: 'rule_fix',
         celleditor: 'select',
         editable: editingAllowed,
         celleditorparams: {
-          values: validationRuleFixes,
+          values: this.validationRuleFixes,
         },
         width: '15%',
       },
@@ -655,7 +656,7 @@ class FileDetails extends Component {
 
     const licenseColumns = [
       {
-        title: 'Name',
+        title: <Text text="Name" />,
         dataIndex: 'name',
         width: '20%',
         filters: [
@@ -675,7 +676,7 @@ class FileDetails extends Component {
         },
       },
       {
-        title: 'Description',
+        title: <Text text="Description" />,
         dataIndex: 'description',
         shouldCellUpdate: () => false,
       },
@@ -701,10 +702,10 @@ class FileDetails extends Component {
         className={this.props.displayingInModal ? 'assetDetail-buttons-wrapper-modal' : 'assetDetail-buttons-wrapper'}>
         {!enableEdit && editingAllowed ? (
           <Button type="primary" onClick={this.toggleEdit}>
-            Edit
+            {<Text text="Edit" />}
           </Button>
         ) : null}
-        {enableEdit ? <Button onClick={this.toggleEdit}>View Changes</Button> : null}
+        {enableEdit ? <Button onClick={this.toggleEdit}>{<Text text="View Changes" />}</Button> : null}
 
         <span className="button-container">
           {enableEdit ? (
@@ -718,7 +719,7 @@ class FileDetails extends Component {
               onDelete={this.handleDelete}
               component={
                 <Button key="danger" disabled={!this.state.file.id || !editingAllowed} type="danger">
-                  Delete
+                  {<Text text="Delete" />}
                 </Button>
               }
             />
@@ -726,7 +727,7 @@ class FileDetails extends Component {
           {this.state.dataAltered ? (
             <span style={{ marginLeft: '25px' }}>
               <Button key="back" onClick={this.handleCancel} type="primary" ghost>
-                Cancel
+                {<Text text="Cancel" />}
               </Button>
               <Button
                 key="submit"
@@ -735,12 +736,12 @@ class FileDetails extends Component {
                 loading={confirmLoading}
                 style={{ background: 'var(--success)' }}
                 disabled={!editingAllowed || this.state.errors}>
-                Save
+                {<Text text="Save" />}
               </Button>
             </span>
           ) : (
             <Button ghost key="back" type="primary" onClick={this.handleCancel}>
-              Cancel
+              {<Text text="Cancel" />}
             </Button>
           )}
         </span>
@@ -781,14 +782,16 @@ class FileDetails extends Component {
     return (
       <React.Fragment>
         {this.props.displayingInModal || this.state.addingNewAsset ? null : (
-          <div className="assetTitle"> File : {this.state.file.name} </div>
+          <div className="assetTitle">
+            {<Text text="File" />} : {this.state.file.name}{' '}
+          </div>
         )}
         <div
           className={
             this.props.displayingInModal ? 'assetDetails-content-wrapper-modal' : 'assetDetails-content-wrapper'
           }>
           <Tabs defaultActiveKey="1" tabBarExtraContent={this.props.displayingInModal ? null : controls}>
-            <TabPane tab="Basic" key="1">
+            <TabPane tab={<Text text="Basic" />} key="1">
               <Spin spinning={this.state.initialDataLoading} tip="loading file details">
                 <Form
                   initialValues={{ fileType: 'thor_file', isSuperFile: false }}
@@ -798,7 +801,7 @@ class FileDetails extends Component {
                   ref={this.formRef}
                   onFinish={this.handleOk}
                   onFieldsChange={this.onFieldsChange}>
-                  <Form.Item label="Type" name="fileType">
+                  <Form.Item label={<Text text="Type" />} name="fileType">
                     {!enableEdit ? (
                       <Typography.Text disabled={!this.state.file.fileType} style={{ paddingLeft: '11px' }}>
                         {this.state.file.fileType || 'File type not provided'}
@@ -813,20 +816,16 @@ class FileDetails extends Component {
                     )}
                   </Form.Item>
 
-                  <Form.Item label="Cluster">
+                  <Form.Item label={<Text text="Cluster" />}>
                     <Row gutter={[8, 8]}>
                       <Col span={12}>
                         {!enableEdit ? (
                           <Typography.Text disabled={!clusterName} style={{ paddingLeft: '11px' }}>
-                            {clusterName || 'Cluster is not provided'}
+                            {clusterName || <Text text="Cluster is not provided" />}
                           </Typography.Text>
                         ) : (
                           <Form.Item noStyle name="clusters">
-                            <Select
-                              allowClear
-                              disabled={isAssociated}
-                              placeholder="Select a Cluster"
-                              onChange={this.onClusterSelection}>
+                            <Select allowClear disabled={isAssociated} onChange={this.onClusterSelection}>
                               {this.props.clusters.map((cluster) => (
                                 <Option key={cluster.id}>{cluster.name}</Option>
                               ))}
@@ -836,7 +835,7 @@ class FileDetails extends Component {
                       </Col>
                     </Row>
                   </Form.Item>
-                  <Form.Item label="File" name="fileSearchValue" hidden={hideOnReadOnlyView}>
+                  <Form.Item label={<Text text="File" />} name="fileSearchValue" hidden={hideOnReadOnlyView}>
                     <Row gutter={[8, 0]}>
                       <Col span={19}>
                         <AutoComplete
@@ -847,7 +846,7 @@ class FileDetails extends Component {
                           style={{ width: '100%' }}
                           onSearch={this.searchFiles}
                           onSelect={this.onFileSelected}
-                          placeholder="Search files"
+                          placeholder={<Text text="Search files" />}
                           disabled={!editingAllowed}
                           notFoundContent={this.state.fileSearch.loading ? <Spin /> : 'Not Found'}>
                           {this.state.fileSearch.data.map((suggestion) => (
@@ -859,13 +858,13 @@ class FileDetails extends Component {
                       </Col>
                       <Col span={5}>
                         <Button htmlType="button" block onClick={this.clearState}>
-                          Clear
+                          {<Text text="Clear" />}
                         </Button>
                       </Col>
                     </Row>
                   </Form.Item>
                   <Form.Item
-                    label="Name"
+                    label={<Text text="Name" />}
                     name="name"
                     validateTrigger="onBlur"
                     rules={[
@@ -879,13 +878,13 @@ class FileDetails extends Component {
                       <Input
                         disabled={disableReadOnlyFields || !editingAllowed}
                         className={!enableEdit ? 'read-only-input' : ''}
-                        placeholder={enableEdit ? 'Name' : 'Name is not provided'}
+                        placeholder={enableEdit ? <Text text="Name" /> : <Text text="Name is not provided" />}
                       />
                     )}
                   </Form.Item>
                   <Form.Item
                     name="title"
-                    label="Title"
+                    label={<Text text="Title" />}
                     validateTrigger="onBlur"
                     className={enableEdit ? null : 'read-only-input'}
                     rules={[
@@ -897,31 +896,33 @@ class FileDetails extends Component {
                     ]}>
                     <Input
                       name="title"
-                      placeholder={enableEdit ? 'Title' : 'Title is not provided'}
+                      placeholder={enableEdit ? <Text text="Title" /> : <Text text="Title is not provided" />}
                       disabled={!editingAllowed}
                       className={!enableEdit ? 'read-only-input' : ''}
                     />
                   </Form.Item>
-                  <Form.Item name="scope" label="Scope" rules={[{ required: enableEdit }]}>
+                  <Form.Item name="scope" label={<Text text="Scope" />} rules={[{ required: enableEdit }]}>
                     <Input
                       disabled={isAssociated}
                       className={!enableEdit ? 'read-only-input' : ''}
-                      placeholder={enableEdit ? 'Scope' : 'Scope is not provided'}
+                      placeholder={enableEdit ? <Text text="Scope" /> : <Text text="Scope is not provided" />}
                     />
                   </Form.Item>
                   <Form.Item
                     name="serviceURL"
-                    label="Service URL"
+                    label={<Text text="Service URL" />}
                     className={enableEdit ? null : 'read-only-input'}
                     rules={[{ type: 'url', message: 'Please enter a valid URL' }]}>
                     <Input
                       disabled={!editingAllowed}
-                      placeholder={enableEdit ? 'Service URL' : 'Service URL is not provided'}
+                      placeholder={
+                        enableEdit ? <Text text="Service URL" /> : <Text text="Service URL is not provided" />
+                      }
                     />
                   </Form.Item>
 
                   <Form.Item
-                    label="Path"
+                    label={<Text text="Path" />}
                     name="qualifiedPath"
                     className={!enableEdit ? 'read-only-input' : ''}
                     rules={[
@@ -930,10 +931,13 @@ class FileDetails extends Component {
                         message: 'Please enter a valid path',
                       },
                     ]}>
-                    <Input disabled={!editingAllowed} placeholder={enableEdit ? 'Path' : 'Path is not provided'} />
+                    <Input
+                      disabled={!editingAllowed}
+                      placeholder={enableEdit ? <Text text="Path" /> : <Text text="Path is not provided" />}
+                    />
                   </Form.Item>
                   <Form.Item
-                    label="Is Super File"
+                    label={<Text text="Is Super File" />}
                     name="isSuperFile"
                     valuePropName="checked"
                     className={!enableEdit ? 'read-only-input' : ''}>
@@ -951,17 +955,22 @@ class FileDetails extends Component {
                     )}
                   </Form.Item>
 
-                  <Form.Item label="Supplier" name="supplier" className={!enableEdit ? 'read-only-input' : ''}>
+                  <Form.Item
+                    label={<Text text="Supplier" />}
+                    name="supplier"
+                    className={!enableEdit ? 'read-only-input' : ''}>
                     {!enableEdit ? (
                       <Typography.Text disabled={!selectedSupplier} style={{ paddingLeft: '11px' }}>
-                        {selectedSupplier || 'Supplier is not provided'}
+                        {selectedSupplier || <Text text="Supplier is not provided" />}
                       </Typography.Text>
                     ) : (
                       <Select
                         disabled={!editingAllowed}
                         onChange={this.onSupplierSelection}
                         value={this.state.file.supplier || ''}
-                        placeholder={enableEdit ? 'Select a supplier' : 'Supplier is not provided'}>
+                        placeholder={
+                          enableEdit ? <Text text="Select a supplier" /> : <Text text="Supplier is not provided" />
+                        }>
                         {suppliers.map((supplier) => (
                           <Option key={supplier.id} value={supplier.id}>
                             {supplier.name}
@@ -971,17 +980,22 @@ class FileDetails extends Component {
                     )}
                   </Form.Item>
 
-                  <Form.Item label="Consumer" name="consumer" className={!enableEdit ? 'read-only-input' : ''}>
+                  <Form.Item
+                    label={<Text text="Consumer" />}
+                    name="consumer"
+                    className={!enableEdit ? 'read-only-input' : ''}>
                     {!enableEdit ? (
                       <Typography.Text disabled={!selectedConsumer} style={{ paddingLeft: '11px' }}>
-                        {selectedConsumer || 'Consumer is not provided'}
+                        {selectedConsumer || <Text text="Consumer is not provided" />}
                       </Typography.Text>
                     ) : (
                       <Select
                         disabled={!editingAllowed}
                         onChange={this.onConsumerSelection}
                         value={this.state.file.consumer || ''}
-                        placeholder={enableEdit ? 'Select a consumer' : 'Consumer is not provided'}>
+                        placeholder={
+                          enableEdit ? <Text text="Select a consumer" /> : <Text text="Consumer is not provided" />
+                        }>
                         {consumers.map((consumer) => (
                           <Option key={consumer.id} value={consumer.id}>
                             {consumer.name}
@@ -991,17 +1005,22 @@ class FileDetails extends Component {
                     )}
                   </Form.Item>
 
-                  <Form.Item label="Owner" name="owner" className={!enableEdit ? 'read-only-input' : ''}>
+                  <Form.Item
+                    label={<Text text="Owner" />}
+                    name="owner"
+                    className={!enableEdit ? 'read-only-input' : ''}>
                     {!enableEdit ? (
                       <Typography.Text disabled={!selectedOwner} style={{ paddingLeft: '11px' }}>
-                        {selectedOwner || 'Owner is not provided'}
+                        {selectedOwner || <Text text="Owner is not provided" />}
                       </Typography.Text>
                     ) : (
                       <Select
                         disabled={!editingAllowed}
                         onChange={this.onOwnerSelection}
                         value={this.state.file.owner || ''}
-                        placeholder={enableEdit ? 'Select a owner' : 'Owner is not provided'}>
+                        placeholder={
+                          enableEdit ? <Text text="Select a owner" /> : <Text text="Owner is not provided" />
+                        }>
                         {owners.map((owner) => (
                           <Option key={owner.id} value={owner.id}>
                             {owner.name}
@@ -1048,7 +1067,9 @@ class FileDetails extends Component {
                         {this.state.file.description ? (
                           <ReactMarkdown source={this.state.file.description} />
                         ) : (
-                          <Typography.Text type="secondary">Description is not provided</Typography.Text>
+                          <Typography.Text type="secondary">
+                            {<Text text="Description is not provided" />}
+                          </Typography.Text>
                         )}
                       </div>
                     )}
@@ -1066,11 +1087,11 @@ class FileDetails extends Component {
               {/* SUPERFILE METADATA BLOCK */}
               {!superFileData ? null : <SuperFileMeta superFileData={superFileData} />}
             </TabPane>
-            <TabPane tab="Layout" key="3">
+            <TabPane tab={<Text text="Layout" />} key="3">
               <ComplianceInfo tags={complianceTags} />
               <LayoutTable dataSource={layout} setData={this.setLayoutData} enableEdit={enableEdit} />
             </TabPane>
-            <TabPane tab="Permissable Purpose" key="4">
+            <TabPane tab={<Text text="Permissable Purpose" />} key="4">
               <Table
                 size="small"
                 pagination={false}
@@ -1087,7 +1108,7 @@ class FileDetails extends Component {
                 }}
               />
             </TabPane>
-            <TabPane tab="Validation Rules" key="5">
+            <TabPane tab={<Text text="Validation Rules" />} key="5">
               <div className="ag-theme-balham" style={{ height: '415px', width: '100%' }}>
                 <EditableTable
                   dataDefinitions={[]}
@@ -1102,7 +1123,7 @@ class FileDetails extends Component {
               </div>
             </TabPane>
             {VIEW_DATA_PERMISSION && showFilePreview ? (
-              <TabPane tab="File Preview" key="6">
+              <TabPane tab={<Text text="File Preview" />} key="6">
                 <Table
                   size="small"
                   pagination={false}
@@ -1115,7 +1136,7 @@ class FileDetails extends Component {
             ) : null}
 
             {!this.props.isNew ? (
-              <TabPane tab="Workflows" key="7">
+              <TabPane tab={<Text text="Workflows" />} key="7">
                 <AssociatedDataflows assetId={this.state.file.id} assetType={'File'} />
               </TabPane>
             ) : null}
@@ -1146,5 +1167,5 @@ function mapStateToProps(state, _ownProps) {
   };
 }
 
-const FileDetailsForm = connect(mapStateToProps)(FileDetails);
+let FileDetailsForm = connect(mapStateToProps)(FileDetails);
 export default FileDetailsForm;

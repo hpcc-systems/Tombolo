@@ -1,5 +1,6 @@
 import React from 'react';
 import { Alert, Button, Typography } from 'antd';
+import Text from '../common/Text';
 
 const ErrorPage = ({ message }) => {
   return (
@@ -10,7 +11,9 @@ const ErrorPage = ({ message }) => {
         message={message ? null : 'Failed to authenticate'}
         description={
           <>
-            <Typography.Title level={4}>Something went wrong, please refresh the page</Typography.Title>
+            <Typography.Title level={4}>
+              {<Text text="Something went wrong, please refresh the page" />}
+            </Typography.Title>
             {!message ? null : (
               <Typography.Paragraph
                 style={{ maxWidth: '400px' }}
@@ -26,7 +29,7 @@ const ErrorPage = ({ message }) => {
               </Typography.Paragraph>
             )}
             <Button type="primary" onClick={() => window.location.reload()}>
-              Refresh
+              {<Text text="Refresh" />}
             </Button>
           </>
         }

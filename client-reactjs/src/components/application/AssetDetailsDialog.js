@@ -7,12 +7,18 @@ import JobDetailsForm from './Jobs/JobDetails';
 import IndexDetailsForm from './IndexDetails';
 import QueryDetailsForm from './queries/QueryDetails';
 import SubProcessDetails from './SubProcessDetails';
+import Text from '../common/Text';
 
 function AssetDetailsDialog(props) {
-  const getAssetType = (word) => {
-    if (!word || typeof word !== 'string') return '';
-    if (word === 'FileTemplate') return 'File Template';
-    return word[0].toUpperCase() + word.slice(1);
+  const getAssetType = (assetType) => {
+    let asset;
+    if (!assetType || typeof assetType !== 'string') return '';
+    if (assetType === 'FileTemplate') {
+      asset = <Text text="File Template" />;
+      return asset;
+    }
+    asset = <Text text={assetType[0].toUpperCase() + assetType.slice(1)} />;
+    return asset;
   };
 
   return (

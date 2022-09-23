@@ -29,6 +29,11 @@ body {
   color: #ff5722;
 }
 
+.menuOption:hover,
+.languageSwitcherIcon:hover {
+  color: var(--primary);
+}
+
 .chart {
   width: 900px;
   margin: 5px;
@@ -134,11 +139,20 @@ body {
   left: 50%;
 }
 
+.login-page {
+  width: 100vw;
+  height: 100vh;
+  margin-top: -100px;
+  margin-left: -100px;
+  display: flex;
+}
+
 .login-form {
+  min-width: 500px;
   max-width: 550px;
-  margin: 50px auto;
   padding: 40px 20px;
   box-shadow: 0 1px 2px -2px rgba(0, 0, 0, 0.16), 0 3px 6px 0 rgba(0, 0, 0, 0.12), 0 5px 12px 4px rgba(0, 0, 0, 0.09);
+  margin: auto;
 }
 
 .login-form-forgot {
@@ -331,10 +345,10 @@ path,
     text-shadow: 0 -1px 0 rgba(0, 0, 0, 0.12);
     box-shadow: 0 2px 0 rgba(0, 0, 0, 0.045);
 }*/
-.navbar .home-logo {
+/* .navbar .home-logo {
   color: #ff5722 !important;
   font-weight: bold;
-}
+} */
 
 #applicationSelect {
   min-width: 155px;

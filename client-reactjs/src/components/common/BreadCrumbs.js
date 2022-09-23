@@ -2,9 +2,11 @@ import React, { Component } from 'react';
 import { Breadcrumb } from 'antd';
 import { withRouter } from 'react-router-dom';
 import { connect } from 'react-redux';
-
+import { withTranslation } from 'react-i18next';
 class BreadCrumbs extends Component {
   render() {
+    const { t } = this.props; // translation
+
     const getBreadCrumbs = () => {
       const { location, application, dataflow } = this.props;
 
@@ -33,7 +35,7 @@ class BreadCrumbs extends Component {
       <div style={{ padding: '5px', display: 'flex', justifyContent: 'space-between' }}>
         <Breadcrumb>
           {getBreadCrumbs().map((el, index) => {
-            return <Breadcrumb.Item key={index}>{el}</Breadcrumb.Item>;
+            return <Breadcrumb.Item key={index}>{t(el, { ns: 'common' })}</Breadcrumb.Item>;
           })}
         </Breadcrumb>
         {this.props.extraContent || null}
@@ -49,5 +51,7 @@ function mapStateToProps(state) {
   return { application, dataflow };
 }
 
-const connectedBreadCrumbs = connect(mapStateToProps)(withRouter(BreadCrumbs));
+let connectedBreadCrumbs = connect(mapStateToProps)(withRouter(BreadCrumbs));
+connectedBreadCrumbs = withTranslation('common')(connectedBreadCrumbs);
+
 export default connectedBreadCrumbs;

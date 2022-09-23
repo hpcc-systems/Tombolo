@@ -4,6 +4,9 @@ import { debounce } from 'lodash';
 import React, { Component } from 'react';
 import { connect } from 'react-redux';
 import { Link, withRouter } from 'react-router-dom';
+import i18next from 'i18next';
+
+import { languages } from '../../i18n/languages';
 import logo from '../../images/logo.png';
 import { msalInstance } from '../../index';
 import { applicationActions } from '../../redux/actions/Application';
@@ -12,6 +15,7 @@ import { expandGroups, selectGroup, getGroupsTree } from '../../redux/actions/Gr
 import { userActions } from '../../redux/actions/User';
 import { authHeader, handleError } from '../common/AuthHeader.js';
 import { hasAdminRole } from '../common/AuthUtil.js';
+import Text from '../common/Text';
 
 class AppHeader extends Component {
   pwdformRef = React.createRef();
@@ -34,6 +38,7 @@ class AppHeader extends Component {
     newpassword: '',
     confirmnewpassword: '',
     isAboutModalVisible: false,
+    language: 'EN',
   };
 
   handleRef() {
@@ -86,6 +91,14 @@ class AppHeader extends Component {
       this.setState({
         searchText: pathSnippets[2],
       });
+    }
+
+    //Check local storage if the preferred language is saved
+    const appLanguage = localStorage.getItem('i18nextLng');
+    if (!appLanguage) {
+      this.setState({ language: 'EN' });
+    } else {
+      this.setState({ language: localStorage.getItem('i18nextLng').toUpperCase() });
     }
 
     if (this.state.applications.length === 0) {
@@ -320,22 +333,47 @@ class AppHeader extends Component {
     });
   };
 
+  // Options for languages dropdown
+  languagesMenu = (
+    <Menu
+      onClick={(item) => {
+        localStorage.setItem('i18nextLng', item.key);
+        i18next.changeLanguage(item.key);
+        this.setState({ language: item.key.toUpperCase() });
+
+        this.props.setLocale(item.key);
+      }}>
+      {languages.map((language) => {
+        return (
+          <Menu.Item className="menuOption" key={language.value}>
+            {language.label}
+          </Menu.Item>
+        );
+      })}
+    </Menu>
+  );
+
   render() {
     const userActionMenu = (
       <Menu onClick={this.handleUserActionMenuClick}>
-        <Menu.Item key="1">Change Password</Menu.Item>
-        <Menu.Item key="2">Logout</Menu.Item>
+        <Menu.Item key="1" className="menuOption">
+          {<Text text="Change Password" />}
+        </Menu.Item>
+        <Menu.Item key="2" className="menuOption">
+          {<Text text="Logout" />}
+        </Menu.Item>
       </Menu>
     );
+
     const helpMenu = (
       <Menu>
-        <Menu.Item key="1">
+        <Menu.Item key="1" className="menuOption">
           <a target="_blank" rel="noopener noreferrer" href={process.env.PUBLIC_URL + '/Tombolo-User-Guide.pdf'}>
-            User Guide
+            {<Text text="User Guide" />}
           </a>
         </Menu.Item>
-        <Menu.Item key="2">
-          <a onClick={this.openAboutModal}>About</a>
+        <Menu.Item key="2" className="menuOption">
+          <a onClick={this.openAboutModal}>{<Text text="About" />}</a>
         </Menu.Item>
       </Menu>
     );
@@ -393,16 +431,15 @@ class AppHeader extends Component {
           </Dropdown>
         </div>
 
-        <div>
+        <div style={{ display: 'flex', alignItems: 'center' }}>
           <Dropdown overlay={helpMenu} trigger={['click']}>
             <Button shape="round" style={{ marginRight: '10px' }}>
               <i className="fa fa-lg fa-question-circle"></i>
               <span style={{ paddingLeft: '5px' }}>
-                Help <DownOutlined />
+                {<Text text="Help" />} <DownOutlined />
               </span>
             </Button>
           </Dropdown>
-
           <Dropdown overlay={userActionMenu} trigger={['click']}>
             <Button shape="round">
               <i className="fa fa-lg fa-user-circle"></i>
@@ -411,6 +448,7 @@ class AppHeader extends Component {
               </span>
             </Button>
           </Dropdown>
+          <>{this.props.languageSwitcher}</>
         </div>
 
         <Modal
@@ -488,5 +526,5 @@ function mapStateToProps(state) {
 }
 
 //export default withRouter(AppHeader);
-const connectedAppHeader = connect(mapStateToProps)(withRouter(AppHeader));
+let connectedAppHeader = connect(mapStateToProps)(withRouter(AppHeader));
 export { connectedAppHeader as AppHeader };

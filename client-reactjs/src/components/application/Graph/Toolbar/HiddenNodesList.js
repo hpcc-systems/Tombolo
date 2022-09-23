@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { Menu } from '@antv/x6-react-components';
 import { Empty } from 'antd';
+import Text from '../../../common/Text';
 
 const MenuItem = Menu.Item; // eslint-disable-line
 const Divider = Menu.Divider; // eslint-disable-line
@@ -44,7 +45,7 @@ const HiddenNodesList = ({ graphRef, refresh, setRefresh }) => {
 
   return (
     <Menu>
-      <MenuItem onClick={() => showAllNodes(nodes)}>Reset all hidden nodes</MenuItem>
+      <MenuItem onClick={() => showAllNodes(nodes)}>{<Text text="Reset all hidden nodes" />}</MenuItem>
       <Divider />
       {nodes.map((node) => {
         return (

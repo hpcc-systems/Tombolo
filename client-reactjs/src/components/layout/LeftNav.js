@@ -1,9 +1,11 @@
 import React, { Component } from 'react';
 import { Link, withRouter } from 'react-router-dom';
 import { connect } from 'react-redux';
-import { hasEditPermission } from '../common/AuthUtil.js';
 import { Layout, Menu, Typography } from 'antd';
 import { LoadingOutlined } from '@ant-design/icons';
+
+import { hasEditPermission } from '../common/AuthUtil.js';
+import Text from '../common/Text';
 
 const { Sider } = Layout;
 
@@ -81,52 +83,52 @@ class LeftNav extends Component {
           selectedKeys={[this.state.current]}
           style={{ backgroundColor: this.props.BG_COLOR, maxWidth: '100%', height: '100%' }}>
           <Menu.Item key="1" icon={<i className="fa fa-fw fa-cubes"></i>}>
-            <Link to={'/' + applicationId + '/assets'}>Assets</Link>
+            <Link to={'/' + applicationId + '/assets'}>{<Text text="Assets" />}</Link>
           </Menu.Item>
 
           <Menu.Item key="2" icon={<i className="fa fa-fw fa-random" />}>
-            <Link to={'/' + applicationId + '/dataflow'}>Definitions</Link>
+            <Link to={'/' + applicationId + '/dataflow'}>{<Text text="Definitions" />}</Link>
           </Menu.Item>
 
           <Menu.Item key="3" icon={<i className="fa fa-fw fa-microchip" />}>
-            <Link to={'/' + applicationId + '/dataflowinstances'}>Job Execution</Link>
+            <Link to={'/' + applicationId + '/dataflowinstances'}>{<Text text="Job Execution" />}</Link>
           </Menu.Item>
 
           {canEdit ? (
             <>
               {this.props.collapsed ? null : (
                 <Typography.Title ellipsis={true} className="left-nav-title">
-                  Settings
+                  {<Text text="Settings" />}
                 </Typography.Title>
               )}
               <Menu.Item key="4" icon={<i className="fa fa-fw fa-telegram" />}>
-                <Link to={'/' + applicationId + '/actions'}>Actions</Link>
+                <Link to={'/' + applicationId + '/actions'}>{<Text text="Actions" />}</Link>
               </Menu.Item>
               <Menu.Item key="5" icon={<i className="fa fa-fw fa-server" />}>
-                <Link to={'/admin/clusters'}>Clusters</Link>
+                <Link to={'/admin/clusters'}>{<Text text="Clusters" />}</Link>
               </Menu.Item>
 
               <Menu.Item key="6" icon={<i className="fa fa-fw fa-github" />}>
-                <Link to={'/admin/github'}>Github projects</Link>
+                <Link to={'/admin/github'}>{<Text text="Github Projects" />}</Link>
               </Menu.Item>
 
               <Menu.Item key="7" icon={<i className="fa fa-fw fa-user-circle" />}>
-                <Link to={'/admin/consumers'}>Collaborator</Link>
+                <Link to={'/admin/consumers'}>{<Text text="Collaborator" />}</Link>
               </Menu.Item>
               {this.props.collapsed ? null : (
                 <Typography.Title ellipsis={true} className="left-nav-title">
-                  Admin
+                  {<Text text="Admin" />}
                 </Typography.Title>
               )}
               <Menu.Item key="8" icon={<i className="fa fa-fw fa-desktop" />}>
-                <Link to={'/admin/applications'}>Applications</Link>
+                <Link to={'/admin/applications'}>{<Text text="Applications" />}</Link>
               </Menu.Item>
               <Menu.Item
                 key="9"
                 icon={
                   this.props.propagation.loading ? <LoadingOutlined /> : <i className="fa fa-fw fa-balance-scale" />
                 }>
-                <Link to={'/admin/constraints'}>Compliance</Link>
+                <Link to={'/admin/constraints'}>{<Text text="Compliance" />}</Link>
               </Menu.Item>
             </>
           ) : null}
@@ -142,5 +144,5 @@ function mapStateToProps(state) {
   return { applicationId, loggedIn, user, propagation: state.propagation };
 }
 
-const connectedLeftNav = connect(mapStateToProps, null, null, { forwardRef: true })(withRouter(LeftNav));
+let connectedLeftNav = connect(mapStateToProps, null, null, { forwardRef: true })(withRouter(LeftNav));
 export { connectedLeftNav as LeftNav };

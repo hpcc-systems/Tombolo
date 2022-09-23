@@ -1,11 +1,12 @@
 import React, { useState, useEffect } from 'react';
 import { Table } from 'antd';
-import { authHeader, handleError } from '../../common/AuthHeader.js';
 import { useSelector } from 'react-redux';
+
+import { authHeader, handleError } from '../../common/AuthHeader.js';
+import Text from '../../common/Text.jsx';
 
 function DataflowAssetsTable() {
   const [dataflowAssets, setDataflowAssets] = useState([]);
-
   const [dataflowId, applicationId] = useSelector((state) => [
     state.dataflowReducer?.id,
     state.applicationReducer?.application?.applicationId,
@@ -33,28 +34,28 @@ function DataflowAssetsTable() {
 
   const jobColumns = [
     {
-      title: 'Name',
+      title: <Text text="Name" />,
       dataIndex: 'name',
       width: '30%',
       ellipsis: true,
     },
     {
-      title: 'Description',
+      title: <Text text="Description" />,
       dataIndex: 'description',
       width: '30%',
     },
     {
-      title: 'Created Date',
+      title: <Text text="Created" />,
       dataIndex: 'createdAt',
       width: '20%',
     },
     {
-      title: 'Owner',
+      title: <Text text="Owner" />,
       dataIndex: 'contact',
       width: '20%',
     },
     {
-      title: 'Type',
+      title: <Text text="Type" />,
       dataIndex: 'objType',
       width: '15%',
     },

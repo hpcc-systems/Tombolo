@@ -2,23 +2,23 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { Tree, Menu, Button, Modal, Input, Dropdown, Checkbox, message, Popover } from 'antd';
 import { debounce } from 'lodash';
+import { DownOutlined, SettingOutlined } from '@ant-design/icons';
+import { useSelector, useDispatch } from 'react-redux';
+import { useHistory } from 'react-router';
+
 import BreadCrumbs from '../../common/BreadCrumbs';
 import { authHeader } from '../../common/AuthHeader.js';
 import { hasEditPermission } from '../../common/AuthUtil.js';
-import { useSelector, useDispatch } from 'react-redux';
-import { useHistory } from 'react-router';
 import { assetsActions } from '../../../redux/actions/Assets';
 import { getGroupsTree, selectGroup, expandGroups } from '../../../redux/actions/Groups';
 import AssetsTable from './AssetsTable';
-
-import { DownOutlined, SettingOutlined } from '@ant-design/icons';
 import TitleRenderer from './TitleRenderer.js';
 import MoveAssetsDialog from './MoveAssetsDialog';
-
 import useModal from '../../../hooks/useModal';
 import SelectDetailsForPdfDialog from '../Assets/pdf/SelectDetailsForPdfDialog';
 import { getNestedAssets } from '../Assets/pdf/downloadPdf';
 import { CreateGroupDialog } from './CreateGroupDialog';
+import Text from '../../common/Text';
 
 const { DirectoryTree } = Tree;
 const { confirm } = Modal;
@@ -35,33 +35,32 @@ const Assets = () => {
     state.applicationReducer,
   ]);
   const dispatch = useDispatch();
-
+  const history = useHistory();
   const editingAllowed = hasEditPermission(authReducer.user);
   // all data related to file explorer is in redux
   const { selectedKeys, expandedKeys, tree, dataList } = groupsReducer;
-
   const application = applicationReducer.application;
   //id of the group clicked from Asset table after a search
   const { assetInGroupId } = assetReducer;
-
   const { isShowing: showMoveDialog, toggle: toggleMoveDialog } = useModal();
   const { isShowing: showCreateGroup, toggle: toggleCreateGroup } = useModal();
-  const [editGroup, setEditGroup] = useState({ edit: false, groupId: '' });
-
   const prevSelectedApplicationRef = useRef();
+  const defaultAssetTypeFilter = ['File', 'Job', 'Query', 'Indexes', 'Groups'];
+  const searchOptions = [
+    { label: <Text text="File" />, value: 'File' },
+    { label: <Text text="Job" />, value: 'Job' },
+    { label: <Text text="Query" />, value: 'Query' },
+    { label: <Text text="Indexes" />, value: 'Indexes' },
+    { label: <Text text="Groups" />, value: 'Groups' },
+  ];
+  const assetTypeFilter = useRef([...defaultAssetTypeFilter]);
 
+  const [editGroup, setEditGroup] = useState({ edit: false, groupId: '' });
   const [itemToMove, setItemToMove] = useState({});
-
   const [selectDetailsforPdfDialogVisibility, setSelectDetailsforPdfDialogVisibility] = useState(false);
   const [selectedAsset, setSelectedAsset] = useState();
   const [toPrintAssets, setToPrintAssets] = useState([]);
-
-  const defaultAssetTypeFilter = ['File', 'Job', 'Query', 'Indexes', 'Groups'];
-  const assetTypeFilter = useRef([...defaultAssetTypeFilter]);
   const [searchKeyword, setSearchKeyword] = useState('');
-
-  const history = useHistory();
-  const searchOptions = ['File', 'Job', 'Query', 'Indexes', 'Groups'];
 
   const fetchGroups = async () => {
     await dispatch(getGroupsTree(application.applicationId));
@@ -302,29 +301,29 @@ const Assets = () => {
   const menu = (
     <Menu onClick={(e) => handleMenuClick(e)}>
       <Menu.Item key="File">
-        <i className="fa fa-lg fa-file"></i> File
+        <i className="fa fa-lg fa-file"></i> {<Text text="File" />}
       </Menu.Item>
       <Menu.Item key="File Template">
-        <i className="fa  fa-lg fa-file-text-o"></i> File Template
+        <i className="fa  fa-lg fa-file-text-o"></i> {<Text text="File Template" />}
       </Menu.Item>
       <Menu.Item key="Index">
-        <i className="fa fa-lg fa-indent"></i> Index
+        <i className="fa fa-lg fa-indent"></i> {<Text text="Index" />}
       </Menu.Item>
       <Menu.Item key="Query">
-        <i className="fa fa-lg fa-search"></i> Query
+        <i className="fa fa-lg fa-search"></i> {<Text text="Query" />}
       </Menu.Item>
       <Menu.Item key="Job">
-        <i className="fa fa-lg fa-clock-o"></i> Jobs
+        <i className="fa fa-lg fa-clock-o"></i> {<Text text="Job" />}
       </Menu.Item>
       <Menu.Item key="RealBI Dashboard">
-        <i className="fa fa-lg fa-area-chart"></i> RealBI Dashboard
+        <i className="fa fa-lg fa-area-chart"></i> {<Text text="RealBI Dashboard" />}
       </Menu.Item>
     </Menu>
   );
 
   const selectBefore = (
     <Popover
-      title="Search Filters"
+      title={<Text text="Search Filters" />}
       placement="bottom"
       trigger="click"
       content={
@@ -352,7 +351,7 @@ const Assets = () => {
             editingAllowed ? (
               <Dropdown overlay={menu}>
                 <Button type="primary" icon={<DownOutlined />}>
-                  Add Asset
+                  {<Text text="Add Asset" />}
                 </Button>
               </Dropdown>
             ) : null
@@ -366,7 +365,7 @@ const Assets = () => {
               allowClear
               value={searchKeyword}
               addonBefore={selectBefore}
-              placeholder="Search assets"
+              placeholder={<Text text="Search assets" />}
               onSearch={handleAssetSearch}
               onChange={handleSearchKeywordChange}
             />

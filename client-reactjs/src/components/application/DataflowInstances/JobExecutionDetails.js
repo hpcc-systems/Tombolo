@@ -2,6 +2,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import { Space, Table, Badge } from 'antd';
 import { useParams } from 'react-router-dom';
 import { Constants } from '../../common/Constants';
+import Text from '../../common/Text';
 
 //!! JEGroup - JOB EXECUTION GROUP
 
@@ -101,10 +102,10 @@ function JobExecutionDetails({ jobExecutions, setFilters, selectJEGroup, JEGroup
   const expandedRowRender = (record) => {
     //Nested table columns
     const jobExecutionTableColumns = [
-      { title: 'Job', dataIndex: 'name', width: '20%' },
+      { title: <Text text="Job" />, dataIndex: 'name', width: '20%' },
       { title: 'Wuid', dataIndex: 'wuid', width: '20%' },
       {
-        title: 'Date',
+        title: <Text text="Date" />,
         width: '20%',
         dataIndex: 'createdAt',
         defaultSortOrder: 'descend',
@@ -115,7 +116,7 @@ function JobExecutionDetails({ jobExecutions, setFilters, selectJEGroup, JEGroup
           new Date(text).toLocaleTimeString('en-US'),
       },
       {
-        title: 'Status',
+        title: <Text text="Status" />,
         dataIndex: 'status',
         width: '20%',
         render: (text, record) => (
@@ -126,7 +127,7 @@ function JobExecutionDetails({ jobExecutions, setFilters, selectJEGroup, JEGroup
         ),
       },
       {
-        title: 'Duration',
+        title: <Text text="Duration" />,
         dataIndex: 'wu_duration',
         width: '20%',
         render: (text) => text || '0.000',
@@ -150,7 +151,7 @@ function JobExecutionDetails({ jobExecutions, setFilters, selectJEGroup, JEGroup
   //Parent, JOB EXECUTION GROUP, table columns
   const JEGroupTableColumns = [
     {
-      title: 'Date',
+      title: <Text text="Date" />,
       dataIndex: 'createdAt',
       defaultSortOrder: 'ascend',
       filteredValue: JEGroupFilters.createdAt || null,
@@ -176,7 +177,7 @@ function JobExecutionDetails({ jobExecutions, setFilters, selectJEGroup, JEGroup
       },
     },
     {
-      title: 'Version',
+      title: <Text text="Version" />,
       render: (text, record) => {
         const version = record?.dataflowVersion;
         if (!version) return '';

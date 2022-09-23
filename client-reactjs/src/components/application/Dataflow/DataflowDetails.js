@@ -1,10 +1,12 @@
 import React from 'react';
 import { useHistory, useParams } from 'react-router';
 import { Tabs, Button, Spin } from 'antd';
+
 import DataflowAssetsTable from './DataflowAssetsTable';
 import BreadCrumbs from '../../common/BreadCrumbs';
 import GraphX6 from '../Graph/GraphX6';
 import useSelectDataflow from '../../../hooks/useSelectDataflow';
+import Text from '../../common/Text';
 const TabPane = Tabs.TabPane;
 
 function DataflowDetails() {
@@ -36,16 +38,16 @@ function DataflowDetails() {
           tabBarExtraContent={
             <span>
               <Button type="primary" onClick={handleBackToAllJobs} ghost>
-                Cancel
+                {<Text text="Cancel" />}
               </Button>
             </span>
           }>
-          <TabPane tab="Designer" key="1">
+          <TabPane tab={<Text text="Designer" />} key="1">
             <div style={{ height: '80vh' }}>
               <GraphX6 readOnly={canEdit ? false : true} />
             </div>
           </TabPane>
-          <TabPane tab="Assets" key="2">
+          <TabPane tab={<Text text="Assets" />} key="2">
             <DataflowAssetsTable />
           </TabPane>
         </Tabs>

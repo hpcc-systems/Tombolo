@@ -5,6 +5,7 @@ import '@antv/x6-react-shape';
 import { message, notification } from 'antd';
 import { debounce } from 'lodash';
 import { useSelector } from 'react-redux';
+import { useTranslation } from 'react-i18next';
 import './GraphX6.css';
 
 import Event from './Event';
@@ -47,6 +48,7 @@ function GraphX6({ readOnly = false, monitoring, statuses }) {
   const [graphReady, setGraphReady] = useState(false);
   const [sync, setSync] = useState({ error: '', loading: false });
   const [configDialog, setConfigDialog] = useState({ ...defaultState });
+  const { t } = useTranslation();
 
   const { applicationId, dataflowId, clusterId } = useSelector((state) => ({
     applicationId: state.applicationReducer?.application?.applicationId,
@@ -168,7 +170,7 @@ function GraphX6({ readOnly = false, monitoring, statuses }) {
     Shape.init({ handleContextMenu, disableContextMenu: readOnly, graph });
 
     if (!readOnly) {
-      Stencil.init(stencilContainerRef, graph);
+      Stencil.init(stencilContainerRef, graph, t);
       Event.init(graph, handleContextMenu); // some static event that does not require local state changes will be sitting here
       // Keyboard.init(graph); // not ready yet
     }
