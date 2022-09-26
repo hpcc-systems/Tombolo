@@ -1,6 +1,8 @@
 import React, { useEffect, useState } from 'react';
-import { Constants } from '../../common/Constants';
 import { Table, Typography } from 'antd';
+
+import { Constants } from '../../common/Constants';
+import Text from '../../common/Text';
 
 const { Paragraph } = Typography;
 
@@ -40,7 +42,7 @@ function ManualJobsStatus({ jobExecutions, handleJEFilters, JETableFilters }) {
   //Table columns
   const columns = [
     {
-      title: 'Job Name',
+      title: <Text text="Job Name" />,
       dataIndex: 'name',
       width: '15%',
       sorter: (a, b) => a.name.localeCompare(b.name),
@@ -49,7 +51,7 @@ function ManualJobsStatus({ jobExecutions, handleJEFilters, JETableFilters }) {
       filteredValue: JETableFilters.name || null,
     },
     {
-      title: 'Notified To',
+      title: <Text text="Notified To" />,
       dataIndex: 'notifiedTo',
       width: '15%',
       onFilter: (value, record) => record.notifiedTo.includes(value),
@@ -57,7 +59,7 @@ function ManualJobsStatus({ jobExecutions, handleJEFilters, JETableFilters }) {
       filteredValue: JETableFilters.notifiedTo || null,
     },
     {
-      title: 'Notified On',
+      title: <Text text="Notified On" />,
       dataIndex: 'notifiedOn',
       width: '15%',
       defaultSortOrder: 'ascend',
@@ -78,7 +80,7 @@ function ManualJobsStatus({ jobExecutions, handleJEFilters, JETableFilters }) {
       filteredValue: JETableFilters.notifiedOn || null,
     },
     {
-      title: 'Responded On',
+      title: <Text text="Responded On" />,
       dataIndex: 'respondedOn',
       width: '15%',
       render: (text) => {
@@ -99,7 +101,7 @@ function ManualJobsStatus({ jobExecutions, handleJEFilters, JETableFilters }) {
       filteredValue: JETableFilters.respondedOn || null,
     },
     {
-      title: 'Status',
+      title: <Text text="Status" />,
       dataIndex: 'status',
       width: '5%',
       sorter: (a, b) => a.status.localeCompare(b.status),
@@ -108,7 +110,7 @@ function ManualJobsStatus({ jobExecutions, handleJEFilters, JETableFilters }) {
       filteredValue: JETableFilters.status || null,
     },
     {
-      title: 'Response Message',
+      title: <Text text="Response Message" />,
       dataIndex: 'responseMessage',
       width: '35%',
       render: (text) => <Paragraph ellipsis={{ rows: 2, tooltip: text }}> {text} </Paragraph>,

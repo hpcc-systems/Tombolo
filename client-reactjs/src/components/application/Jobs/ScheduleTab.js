@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { Button, Form, Input, Select, Space, message } from 'antd';
 import { threeColformItemLayout } from '../../common/CommonUtil.js';
+import Text from '../../common/Text.jsx';
 
 const monthMap = {
   1: 'January',
@@ -72,7 +73,6 @@ const ScheduleTab = ({ nodes, selectedAsset, addToSchedule, readOnly, editingAll
   });
 
   const generateDate = (year, month, day, hour, minute) => new Date(year, month, day, hour, minute);
-
   const nextMinute = (date) => {
     var t,
       n,
@@ -495,39 +495,41 @@ const ScheduleTab = ({ nodes, selectedAsset, addToSchedule, readOnly, editingAll
   return (
     <Form component="div" {...threeColformItemLayout}>
       {options.type.length > 0 || options.enableEdit ? (
-        <Form.Item label="Type">
+        <Form.Item label={<Text text="Type" />}>
           {!options.enableEdit ? (
             <Input className="read-only-input" disabled value={options.type ? options.type : null} />
           ) : (
             <Select
               id="scheduleType"
               disabled={!selectedAsset.isAssociated}
-              placeholder="Select a schedule type"
+              placeholder={<Text text="Select a schedule type" />}
               allowClear
               onClear={() => handleScheduleTypeSelect('')}
               onSelect={(value) => {
                 handleScheduleTypeSelect(value);
               }}
               value={options.type ? options.type : null}>
-              <Select.Option value="Time">Timer based (run at specific interval)</Select.Option>
-              <Select.Option value="Predecessor">Job based (run after another job completes)</Select.Option>
+              <Select.Option value="Time">{<Text text="Timer based (run at specific interval)" />}</Select.Option>
+              <Select.Option value="Predecessor">
+                {<Text text="Job based (run after another job completes)" />}
+              </Select.Option>
               <Select.Option value="Template">
-                Template Based (Run when a file that matches a template arrives){' '}
+                {<Text text="Template Based (Run when a file that matches a template arrives)" />}
               </Select.Option>
               <Select.Option value="Message">
-                Run on External Message (run when a message is received in a Kafka topic)
+                {<Text text="Run on External Message (run when a message is received in a Kafka topic)" />}
               </Select.Option>
             </Select>
           )}
         </Form.Item>
       ) : (
         <div style={{ textAlign: 'center', paddingTop: '100px', paddingBottom: '10px' }}>
-          Please press <b>Edit</b> button to configure scheduling for this job
+          {<Text text="Please press Edit button to configure scheduling for this job" />}
         </div>
       )}
       {options.type === 'Time' ? (
         <>
-          <Form.Item label="Run Every">
+          <Form.Item label={<Text text="Run Every" />}>
             <Space>
               <Input
                 style={{ width: '40px', padding: '2px 6px' }}
@@ -536,7 +538,7 @@ const ScheduleTab = ({ nodes, selectedAsset, addToSchedule, readOnly, editingAll
                 value={options.scheduleMinute}
                 className={options.enableEdit ? null : 'read-only-input'}
               />
-              Minute,
+              {<Text text="Minute" />},
               <Input
                 style={{ width: '40px', padding: '2px 6px' }}
                 name="scheduleHour"
@@ -544,7 +546,7 @@ const ScheduleTab = ({ nodes, selectedAsset, addToSchedule, readOnly, editingAll
                 value={options.scheduleHour}
                 className={options.enableEdit ? null : 'read-only-input'}
               />
-              Hour,
+              {<Text text="Hour" />},
               <Input
                 style={{ width: '40px', padding: '2px 6px' }}
                 name="scheduleDayMonth"
@@ -552,7 +554,7 @@ const ScheduleTab = ({ nodes, selectedAsset, addToSchedule, readOnly, editingAll
                 value={options.scheduleDayMonth}
                 className={options.enableEdit ? null : 'read-only-input'}
               />
-              Day of Month,
+              {<Text text="Day of Month" />},
               <Input
                 style={{ width: '40px', padding: '2px 6px' }}
                 name="scheduleMonth"
@@ -560,7 +562,7 @@ const ScheduleTab = ({ nodes, selectedAsset, addToSchedule, readOnly, editingAll
                 value={options.scheduleMonth}
                 className={options.enableEdit ? null : 'read-only-input'}
               />
-              Month,
+              {<Text text="Month" />},
               <Input
                 style={{ width: '40px', padding: '2px 6px' }}
                 name="scheduleDayWeek"
@@ -568,11 +570,11 @@ const ScheduleTab = ({ nodes, selectedAsset, addToSchedule, readOnly, editingAll
                 value={options.scheduleDayWeek}
                 className={options.enableEdit ? null : 'read-only-input'}
               />
-              Day of Week
+              {<Text text="Day of Week" />}
             </Space>
           </Form.Item>
-          <Form.Item label="Explained">{generateCronExplainer()}</Form.Item>
-          <Form.Item label="Would run at">
+          <Form.Item label={<Text text="Explained" />}>{generateCronExplainer()}</Form.Item>
+          <Form.Item label={<Text text="Would run at" />}>
             {cronExamples.length > 0 ? (
               <>
                 {cronExamples.map((d, index) => {
@@ -583,14 +585,14 @@ const ScheduleTab = ({ nodes, selectedAsset, addToSchedule, readOnly, editingAll
                     </span>
                   );
                 })}
-                <span>and so on...</span>
+                <span>{<Text text="and so on..." />}</span>
               </>
             ) : null}
           </Form.Item>
         </>
       ) : null}
       {options.type === 'Predecessor' ? (
-        <Form.Item label="Run After">
+        <Form.Item label={<Text text="Run After" />}>
           {!options.enableEdit ? (
             scheduledPredecessors(options.predecessors, options.dependsOn).map((item, index) =>
               index > 0 ? ', ' + item.name : item.name
@@ -599,7 +601,7 @@ const ScheduleTab = ({ nodes, selectedAsset, addToSchedule, readOnly, editingAll
             <Select
               id="dependsOn"
               mode="single"
-              placeholder="Select Job(s) that will trigger execution"
+              placeholder={<Text text="Select Job(s) that will trigger execution" />}
               onSelect={(value) => {
                 let predecessors = [];
                 predecessors.push(value);
@@ -620,7 +622,7 @@ const ScheduleTab = ({ nodes, selectedAsset, addToSchedule, readOnly, editingAll
         </Form.Item>
       ) : null}
       {options.type === 'Template' ? (
-        <Form.Item label="Template">
+        <Form.Item label={<Text text="Template" />}>
           {!options.enableEdit ? (
             scheduledPredecessors(options.predecessors, options.dependsOn).map((item, index) =>
               index > 0 ? ', ' + item.name : item.name
@@ -628,7 +630,7 @@ const ScheduleTab = ({ nodes, selectedAsset, addToSchedule, readOnly, editingAll
           ) : (
             <Select
               mode="single"
-              placeholder="Select a template"
+              placeholder={<Text text="Select a template" />}
               onSelect={(value) => {
                 let predecessors = [];
                 predecessors.push(value);
@@ -653,11 +655,11 @@ const ScheduleTab = ({ nodes, selectedAsset, addToSchedule, readOnly, editingAll
         <Form.Item wrapperCol={{ offset: 12, span: 4 }}>
           {!options.enableEdit ? (
             <Button onClick={handleEdit} type="primary" block>
-              Edit schedule
+              {<Text text="Edit Schedule" />}
             </Button>
           ) : (
             <Button onClick={handleSchedule} loading={options.loading} type="primary" block>
-              Save schedule
+              {<Text text="Save schedule" />}
             </Button>
           )}
         </Form.Item>

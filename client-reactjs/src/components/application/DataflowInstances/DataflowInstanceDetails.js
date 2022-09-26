@@ -1,14 +1,17 @@
 import React, { useEffect, useState } from 'react';
 import { Button, Tabs, Spin, Space, message } from 'antd';
+import { Resizable } from 're-resizable';
+import { useSelector } from 'react-redux';
+import { useParams } from 'react-router';
+
+import GraphX6 from '../Graph/GraphX6';
 import JobExecutionDetails from './JobExecutionDetails';
 import ManualJobsStatus from './ManualJobsStatus';
 import { authHeader, handleError } from '../../common/AuthHeader.js';
-import { Resizable } from 're-resizable';
-import GraphX6 from '../Graph/GraphX6';
-import { useSelector } from 'react-redux';
-import { useParams } from 'react-router';
 import useSelectDataflow from '../../../hooks/useSelectDataflow';
 import BreadCrumbs from '../../common/BreadCrumbs';
+import Text from '../../common/Text';
+
 const { TabPane } = Tabs;
 
 const DataflowInstanceDetails = () => {
@@ -16,7 +19,7 @@ const DataflowInstanceDetails = () => {
     state.applicationReducer,
     state.dataflowReducer,
   ]);
-
+  const params = useParams();
   const dataflowId = dataflowReducer.id || params.dataflowId;
 
   const [graphSize, setGraphSize] = useState({ width: '100%', height: 200 });
@@ -29,8 +32,6 @@ const DataflowInstanceDetails = () => {
     selectedJEGroup: '',
   });
   const { isDataflowReady } = useSelectDataflow(); // this hook will check if dataflow is present in redux, if not it will request data from DB and update redux
-
-  const params = useParams();
 
   const getJobExecutionDetails = async (stopPolling) => {
     try {
@@ -153,12 +154,12 @@ const DataflowInstanceDetails = () => {
                   disabled={Object.keys(jobExecutions.JETableFilters).length < 1}
                   onClick={() => handleJEFilters({})}
                   ghost>
-                  Clear all Filters
+                  {<Text text="Clear all Filters" />}
                 </Button>
               </Space>
             }
             style={{ padding: '10px' }}>
-            <TabPane tab="Workunits" key="1">
+            <TabPane tab={<Text text="Workunits" />} key="1">
               <Spin spinning={jobExecutions.loading}>
                 <JobExecutionDetails
                   setFilters={handleJEFilters}
@@ -169,7 +170,7 @@ const DataflowInstanceDetails = () => {
                 />
               </Spin>
             </TabPane>
-            <TabPane tab="Manual Jobs" key="2">
+            <TabPane tab={<Text text="Manual Jobs" />} key="2">
               <Spin spinning={jobExecutions.loading}>
                 <ManualJobsStatus
                   graphSize={graphSize}
