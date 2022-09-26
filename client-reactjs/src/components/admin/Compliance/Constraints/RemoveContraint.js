@@ -4,6 +4,7 @@ import { useDispatch, useSelector } from 'react-redux';
 import { applicationActions } from '../../../../redux/actions/Application';
 import { authHeader, handleError } from '../../../common/AuthHeader';
 import ConfirmAction from '../../../common/ConfirmAction';
+import Text, { i18n } from '../../../common/Text';
 
 const RemoveContraint = ({ record }) => {
   const constraints = useSelector((state) => state.applicationReducer.constraints);
@@ -15,7 +16,7 @@ const RemoveContraint = ({ record }) => {
     if (!response.ok) handleError(response);
     const data = await response.json();
 
-    if (!data.success || !data.id) throw new Error('Failed to remove constarint');
+    if (!data.success || !data.id) throw new Error('Failed to remove constraint');
 
     const newConstraints = constraints.filter((el) => el.id !== data.id);
     dispatch(applicationActions.updateConstraints(newConstraints));
@@ -25,9 +26,9 @@ const RemoveContraint = ({ record }) => {
     <ConfirmAction
       onConfirm={remove}
       icon={<DeleteOutlined />}
-      tooltip="Remove constarint"
-      notification={{ success: 'Constraint removed successfully' }}
-      confirm={{ title: 'Are you sure you want to delete contraint permanently?' }}
+      tooltip={<Text>Remove constraint</Text>}
+      notification={{ success: i18n('Constraint removed successfully') }}
+      confirm={{ title: i18n('Are you sure you want to delete constraint permanently?') }}
     />
   );
 };

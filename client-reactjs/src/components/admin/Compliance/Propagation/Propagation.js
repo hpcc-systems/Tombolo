@@ -3,6 +3,7 @@ import React, { useEffect, useState } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import { useHistory } from 'react-router';
 import { propagationActions } from '../../../../redux/actions/Propagation';
+import Text from '../../../common/Text';
 import ReportTable from '../ReportTable/ReportTable';
 
 const Propagation = () => {
@@ -47,12 +48,17 @@ const Propagation = () => {
         ) : null}
 
         <Alert
-          message="Fields constraints propagation"
-          description="Constraints added to the input files fields will be passed to the output files fields. This process will take some time!"
+          message={<Text>Fields constraints propagation</Text>}
+          description={
+            <Text>
+              Constraints added to the input files fields will be passed to the output files fields. This process will
+              take some time.
+            </Text>
+          }
           showIcon
           action={
             <Button block type="primary" loading={propagation.changes.loading} onClick={handlePropagate}>
-              Propagate
+              <Text>Propagate</Text>
             </Button>
           }
         />
@@ -64,15 +70,15 @@ const Propagation = () => {
         <Modal
           destroyOnClose
           width={1000}
-          title="Would you like to compare against base line?"
+          title={<Text>Would you like to compare against base line?</Text>}
           onCancel={() => setModal({ isOpen: false })}
           visible={modal.isOpen}
           footer={[
             <Button key="current" type="secondary" onClick={handleUseCurrentState}>
-              Use Current State
+              <Text> Use Current State</Text>
             </Button>,
             <Button key="baseline" type="primary" onClick={handleUseBaseLine}>
-              Use Base Line
+              <Text> Use Base Line</Text>
             </Button>,
           ]}>
           <ReportTable data={[baseLineReport]} />

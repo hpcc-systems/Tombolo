@@ -126,7 +126,9 @@ class LeftNav extends Component {
               <Menu.Item
                 key="9"
                 icon={this.props.isReportLoading ? <LoadingOutlined /> : <i className="fa fa-fw fa-balance-scale" />}>
-                <Link to={'/admin/compliance'}>Compliance</Link>
+                <Link to={'/admin/compliance'}>
+                  <Text>Compliance</Text>
+                </Link>
               </Menu.Item>
             </>
           ) : null}

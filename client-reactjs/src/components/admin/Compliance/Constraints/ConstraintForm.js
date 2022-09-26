@@ -4,6 +4,7 @@ import { useDispatch, useSelector } from 'react-redux';
 import { applicationActions } from '../../../../redux/actions/Application';
 import { authHeader, handleError } from '../../../common/AuthHeader';
 import MonacoEditor from '../../../common/MonacoEditor';
+import Text from '../../../common/Text';
 
 const ConstraintForm = ({ modal, onClose }) => {
   const constraints = useSelector((state) => state.applicationReducer.constraints);
@@ -77,13 +78,13 @@ const ConstraintForm = ({ modal, onClose }) => {
       visible={modal.isOpen}
       confirmLoading={sending.loading}>
       <Form layout="vertical" form={form}>
-        <Form.Item label="Constraint name" name="name" required>
+        <Form.Item label={<Text>Constraint name</Text>} name="name" required>
           <Input />
         </Form.Item>
-        <Form.Item label="Short Description" name="short_description">
+        <Form.Item label={<Text>Short Description</Text>} name="short_description">
           <Input />
         </Form.Item>
-        <Form.Item label="Description" name="description">
+        <Form.Item label={<Text>Description</Text>} name="description">
           <MonacoEditor lang="markdown" targetDomId="constarint" />
         </Form.Item>
       </Form>

@@ -3,6 +3,7 @@ import React, { useEffect } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import { useHistory } from 'react-router';
 import { propagationActions } from '../../../../redux/actions/Propagation';
+import Text from '../../../common/Text';
 
 import ReportTable from '../ReportTable/ReportTable';
 
@@ -28,12 +29,12 @@ const CurrentReport = () => {
         ) : null}
 
         <Alert
-          message="Current State Report"
-          description="Generate report of currently active constraints attached to fields of the files"
+          message={<Text>Current State Report</Text>}
+          description={<Text>Generate report of currently active constraints attached to fields of the files</Text>}
           showIcon
           action={
             <Button key="propagate" loading={propagation.current.loading} type="primary" block onClick={generateReport}>
-              Generate report
+              <Text>Generate report</Text>
             </Button>
           }
         />

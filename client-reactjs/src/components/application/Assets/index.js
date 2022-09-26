@@ -18,7 +18,7 @@ import useModal from '../../../hooks/useModal';
 import SelectDetailsForPdfDialog from '../Assets/pdf/SelectDetailsForPdfDialog';
 import { getNestedAssets } from '../Assets/pdf/downloadPdf';
 import { CreateGroupDialog } from './CreateGroupDialog';
-import Text from '../../common/Text';
+import Text, { i18n } from '../../common/Text';
 
 const { DirectoryTree } = Tree;
 const { confirm } = Modal;
@@ -365,7 +365,7 @@ const Assets = () => {
               allowClear
               value={searchKeyword}
               addonBefore={selectBefore}
-              placeholder={<Text text="Search assets" />}
+              placeholder={i18n('Search assets')}
               onSearch={handleAssetSearch}
               onChange={handleSearchKeywordChange}
             />

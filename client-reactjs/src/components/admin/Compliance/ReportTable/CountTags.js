@@ -1,5 +1,6 @@
 import React from 'react';
 import { Tag, Tooltip } from 'antd';
+import Text from '../../../common/Text';
 
 const CountTags = ({ file, reportType = 'current', children }) => {
   const tags = {
@@ -27,7 +28,7 @@ const CountTags = ({ file, reportType = 'current', children }) => {
     <>
       {tags[reportType].map(([tagName, color, extra = '']) => {
         return (
-          <Tooltip key={tagName} title={tagName}>
+          <Tooltip key={tagName} title={<Text>{tagName}</Text>}>
             <Tag color={color}>
               {extra}
               {count[tagName]}

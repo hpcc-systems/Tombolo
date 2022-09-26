@@ -5,6 +5,7 @@ import { useSelector } from 'react-redux';
 import { useParams } from 'react-router';
 
 import BreadCrumbs from '../../common/BreadCrumbs';
+import Text from '../../common/Text';
 import Constraints from './Constraints/Constraints';
 import CurrentReport from './CurrentReport/CurrentReport';
 import Propagation from './Propagation/Propagation';
@@ -28,13 +29,26 @@ const Compliance = () => {
     <>
       <BreadCrumbs />
       <Tabs defaultActiveKey={getKey()}>
-        <Tabs.TabPane tab="Constraints" key="1">
+        <Tabs.TabPane tab={<Text>Constraints</Text>} key="1">
           <Constraints />
         </Tabs.TabPane>
-        <Tabs.TabPane tab={<>{isChangeLoading ? <LoadingOutlined /> : null}Propagation </>} key="2">
+        <Tabs.TabPane
+          tab={
+            <>
+              {isChangeLoading ? <LoadingOutlined /> : null} <Text>Propagation</Text>
+            </>
+          }
+          key="2">
           <Propagation />
         </Tabs.TabPane>
-        <Tabs.TabPane tab={<>{isCurrentLoading ? <LoadingOutlined /> : null}Current State Report </>} key="3">
+        <Tabs.TabPane
+          tab={
+            <>
+              {isCurrentLoading ? <LoadingOutlined /> : null}
+              <Text>Current State Report</Text>
+            </>
+          }
+          key="3">
           <CurrentReport />
         </Tabs.TabPane>
       </Tabs>

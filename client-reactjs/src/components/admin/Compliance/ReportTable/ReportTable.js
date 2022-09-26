@@ -7,6 +7,7 @@ import CountTags from './CountTags';
 import DeleteReport from './DeleteReport';
 
 import { useSelector } from 'react-redux';
+import Text from '../../../common/Text';
 
 const ReportTable = ({ type = 'current', data = null }) => {
   const [propagation, applicationId] = useSelector((state) => [
@@ -16,7 +17,7 @@ const ReportTable = ({ type = 'current', data = null }) => {
 
   let columns = [
     {
-      title: 'Reports',
+      title: <Text>Reports</Text>,
       dataIndex: 'createdAt',
       sorter: (a, b) => new Date(b.createdAt) - new Date(a.createdAt),
       render: (text, record) => (
@@ -24,14 +25,14 @@ const ReportTable = ({ type = 'current', data = null }) => {
           {new Date(text).toLocaleString()}
           {!record.isBaseLine ? null : (
             <Tag style={{ marginLeft: '15px' }} icon={<TagOutlined />} color="success">
-              Base line report
+              <Text>Base line report</Text>
             </Tag>
           )}
         </>
       ),
     },
     {
-      title: 'Action',
+      title: <Text>Action</Text>,
       key: 'x',
       render: (record) => (
         <Space split={<Divider type="vertical" />}>
@@ -46,7 +47,7 @@ const ReportTable = ({ type = 'current', data = null }) => {
     if (data) return [columns[0]];
     if (type === 'changes') {
       const comparedTo = {
-        title: 'Compared to base line',
+        title: <Text>Compared to base line</Text>,
         dataIndex: 'comparedName',
         render: (text) => (text ? new Date(text).toLocaleString() : ''),
       };
@@ -72,7 +73,7 @@ const ReportTable = ({ type = 'current', data = null }) => {
         expandedRowRender: (record) => {
           const innerColumns = [
             {
-              title: 'Field',
+              title: <Text>Field</Text>,
               dataIndex: 'name',
               width: '20%',
               sorter: (a, b) => a.name.localeCompare(b.name),
@@ -82,7 +83,7 @@ const ReportTable = ({ type = 'current', data = null }) => {
           const options = {
             changes: [
               {
-                title: 'Added',
+                title: <Text>Added</Text>,
                 dataIndex: 'added',
                 width: '40%',
                 key: 'id',
@@ -91,7 +92,7 @@ const ReportTable = ({ type = 'current', data = null }) => {
                 },
               },
               {
-                title: 'Removed',
+                title: <Text>Removed</Text>,
                 dataIndex: 'removed',
                 key: 'id',
                 width: '40%',
@@ -102,7 +103,7 @@ const ReportTable = ({ type = 'current', data = null }) => {
             ],
             current: [
               {
-                title: 'Own',
+                title: <Text>Own</Text>,
                 dataIndex: 'own',
                 key: 'id',
                 width: '20%',
@@ -111,7 +112,7 @@ const ReportTable = ({ type = 'current', data = null }) => {
                 },
               },
               {
-                title: 'Inherited',
+                title: <Text>Inherited</Text>,
                 dataIndex: 'inherited',
                 width: '20%',
                 key: 'id',
@@ -135,7 +136,7 @@ const ReportTable = ({ type = 'current', data = null }) => {
                         <Space>
                           <FileTextOutlined />
                           {file.name}
-                          <Tooltip title="Open in new tab">
+                          <Tooltip title={<Text>Open in new tab</Text>}>
                             <Typography.Link target={'_blank'} href={`/${applicationId}/assets/file/${file.id}`}>
                               <i className="fa fa-external-link" aria-hidden="true" />
                             </Typography.Link>

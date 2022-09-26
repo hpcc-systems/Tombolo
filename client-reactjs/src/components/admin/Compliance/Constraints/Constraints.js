@@ -2,6 +2,7 @@ import { EditOutlined } from '@ant-design/icons';
 import { Button, Divider, Space, Table } from 'antd';
 import React, { useState } from 'react';
 import { useSelector } from 'react-redux';
+import Text from '../../../common/Text';
 import ConstraintDescription from './ConstraintDescription';
 
 import ConstraintForm from './ConstraintForm';
@@ -18,17 +19,17 @@ function Constraints() {
 
   const columns = [
     {
-      title: 'Name',
+      title: <Text>Name</Text>,
       dataIndex: 'name',
       sorter: (a, b) => a.name.localeCompare(b.name),
     },
     {
-      title: 'Short Description',
+      title: <Text>Description</Text>,
       dataIndex: 'short_description',
       elipsis: true,
     },
     {
-      title: 'Action',
+      title: <Text>Action</Text>,
       key: 'x',
       render: (record) => (
         <Space split={<Divider type="vertical" />}>
@@ -43,7 +44,7 @@ function Constraints() {
     <>
       <div style={{ display: 'flex', justifyContent: 'flex-end' }}>
         <Button onClick={add} type="primary">
-          Add new contraint
+          <Text>Add new constraint</Text>
         </Button>
       </div>
       <Table

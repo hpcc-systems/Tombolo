@@ -3,6 +3,7 @@ import { Button, Collapse, Form, Input, message, Modal, Select, Table } from 'an
 import { EditOutlined } from '@ant-design/icons';
 import { useSelector } from 'react-redux';
 import ConstraintsTags from '../admin/Compliance/Constraints/ConstraintsTags';
+import Text, { i18n } from './Text';
 const { Option } = Select;
 
 const LayoutTable = ({ dataSource, setData, enableEdit }) => {
@@ -21,7 +22,7 @@ const LayoutTable = ({ dataSource, setData, enableEdit }) => {
         ) : null,
     },
     {
-      title: 'Name',
+      title: <Text>Name</Text>,
       dataIndex: 'name',
       sort: 'asc',
       width: '20%',
@@ -29,23 +30,23 @@ const LayoutTable = ({ dataSource, setData, enableEdit }) => {
       sorter: (a, b) => a.name.localeCompare(b.name),
     },
     {
-      title: 'Type',
+      title: <Text>Type</Text>,
       dataIndex: 'type',
       width: '10%',
       ellipsis: true,
       sorter: (a, b) => a.type.localeCompare(b.type),
     },
     {
-      title: 'Description',
+      title: <Text>Description</Text>,
       dataIndex: 'description',
       width: '25%',
       ellipsis: true,
     },
     {
-      title: 'Constraints',
+      title: <Text>Constraints</Text>,
       children: [
         {
-          title: 'Own',
+          title: <Text>Own</Text>,
           dataIndex: 'own',
           key: 'id',
           render: (text, record) => {
@@ -53,7 +54,7 @@ const LayoutTable = ({ dataSource, setData, enableEdit }) => {
           },
         },
         {
-          title: 'Inherited',
+          title: <Text>Inherited</Text>,
           dataIndex: 'inherited',
           key: 'id',
           render: (text, record) => {
@@ -130,7 +131,7 @@ const ConstraintModal = ({ modal, setData, dataSource, closeModal }) => {
     if (!editing) closeModal();
   };
 
-  const getOKtext = () => (editing ? 'Submit' : 'Edit');
+  const getOKtext = () => <Text>{editing ? 'Submit' : 'Edit'}</Text>;
   const handleOk = () => (editing ? addChanges() : setEditing(true));
 
   const getConstraints = () => form.getFieldValue('constraints')?.map((id) => ({ id })) || [];
@@ -151,9 +152,9 @@ const ConstraintModal = ({ modal, setData, dataSource, closeModal }) => {
           <Form.Item noStyle shouldUpdate>
             {() => {
               return (
-                <Form.Item name="constraints" label="Select constraints :">
+                <Form.Item name="constraints" label={<Text>Select constraints</Text> + ':'}>
                   {editing ? (
-                    <Select mode="multiple" placeholder="Please select constaints">
+                    <Select mode="multiple" placeholder={i18n('Please select constraints')}>
                       {constraints.map((el) => {
                         return (
                           <Option key={el.id} value={el.id}>
@@ -170,13 +171,13 @@ const ConstraintModal = ({ modal, setData, dataSource, closeModal }) => {
             }}
           </Form.Item>
 
-          <Form.Item label="Description :" name="description">
+          <Form.Item label={<Text>Description</Text> + ':'} name="description">
             {editing ? <Input.TextArea className="custom-scroll" allowClear cols={5} /> : <ReadOnlyField />}
           </Form.Item>
         </Form>
 
         <Collapse collapsible="header">
-          <Collapse.Panel header="List of all available constraints, click on tag to see more">
+          <Collapse.Panel header={<Text>List of all available constraints, click on tag to see more</Text>}>
             <ConstraintsTags showAll={true} />
           </Collapse.Panel>
         </Collapse>
