@@ -1,14 +1,18 @@
-import { FileTextOutlined, TagOutlined } from '@ant-design/icons';
-import { Divider, Space, Table, Tag, Typography } from 'antd';
 import React from 'react';
-import { useSelector } from 'react-redux';
-
+import { FileTextOutlined, TagOutlined } from '@ant-design/icons';
+import { Divider, Space, Table, Tag, Collapse, Typography, Tooltip } from 'antd';
 import ConstraintsTags from '../Constraints/ConstraintsTags';
 import BaseLine from './BaseLine';
+import CountTags from './CountTags';
 import DeleteReport from './DeleteReport';
 
+import { useSelector } from 'react-redux';
+
 const ReportTable = ({ type = 'current', data = null }) => {
-  const propagation = useSelector((state) => state.propagation);
+  const [propagation, applicationId] = useSelector((state) => [
+    state.propagation,
+    state.applicationReducer.application.applicationId,
+  ]);
 
   let columns = [
     {
@@ -121,27 +125,42 @@ const ReportTable = ({ type = 'current', data = null }) => {
           // if type is passed, then add column
           if (options[type]) innerColumns.push(...options[type]);
 
-          return record.report.map((file) => {
-            return (
-              <div key={file.name}>
-                <Table
-                  bordered
-                  size="small"
-                  style={{ marginBottom: '10px' }}
-                  columns={innerColumns}
-                  pagination={false}
-                  dataSource={file.fields}
-                  rowKey={(field) => field.name}
-                  title={() => (
-                    <Space>
-                      <FileTextOutlined /> <Typography> {file.name} </Typography>
-                    </Space>
-                  )}
-                />
-                <hr />
-              </div>
-            );
-          });
+          return (
+            <Collapse bordered>
+              {record.report.map((file, index) => {
+                const header = (
+                  <Space split={<Divider type="vertical" />}>
+                    <CountTags file={file} reportType={type}>
+                      <Typography.Text style={{ color: '#1890ff' }}>
+                        <Space>
+                          <FileTextOutlined />
+                          {file.name}
+                          <Tooltip title="Open in new tab">
+                            <Typography.Link target={'_blank'} href={`/${applicationId}/assets/file/${file.id}`}>
+                              <i className="fa fa-external-link" aria-hidden="true" />
+                            </Typography.Link>
+                          </Tooltip>
+                        </Space>
+                      </Typography.Text>
+                    </CountTags>
+                  </Space>
+                );
+
+                return (
+                  <Collapse.Panel key={index} header={header}>
+                    <Table
+                      bordered
+                      size="small"
+                      columns={innerColumns}
+                      pagination={false}
+                      dataSource={file.fields}
+                      rowKey={(field) => field.name}
+                    />
+                  </Collapse.Panel>
+                );
+              })}
+            </Collapse>
+          );
         },
       }}
     />
