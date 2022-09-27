@@ -1,5 +1,5 @@
 import { Addon } from '@antv/x6';
-import { i18n } from '../../common/Text';
+import { t } from 'i18next';
 export default class Stencil {
   static init(stencilContainer, graph, t) {
     const stencil = new Addon.Stencil({
@@ -44,11 +44,11 @@ export default class Stencil {
 
   static addShape(graph, stencil) {
     const assets = [
-      { type: 'Job', title: i18n('Job') },
-      { type: 'File', title: i18n('File') },
-      { type: 'Monitor', title: i18n('Monitoring') },
-      { type: 'Index', title: i18n('Index') },
-      { type: 'Sub-Process', title: i18n('Sub-Process') },
+      { type: 'Job', title: t('Job', { ns: 'common' }) },
+      { type: 'File', title: t('File', { ns: 'common' }) },
+      { type: 'Monitor', title: t('Monitoring', { ns: 'common' }) },
+      { type: 'Index', title: t('Index', { ns: 'common' }) },
+      { type: 'Sub-Process', title: t('Sub-Process', { ns: 'common' }) },
     ];
 
     const assetsNodes = assets.map((asset) => {
