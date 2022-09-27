@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { Modal, Space, Tag, Tooltip } from 'antd';
 import { useSelector } from 'react-redux';
 import ConstraintDescription from './ConstraintDescription';
+import Text from '../../../common/Text';
 
 /**
  * ConstraintsTags - pass [] of { id: string} // constraint id;  and receive a clickable tag
@@ -46,7 +47,7 @@ const TagWithPopUp = ({ record, file, showAll }) => {
     return 'green';
   };
 
-  const getTitle = () => (record.inherited ? `Inherited from: ${record.inherited}` : null);
+  const getTitle = () => (record.inherited ? `${(<Text>Inherited from</Text>)}: ${record.inherited}` : null);
 
   return (
     <>

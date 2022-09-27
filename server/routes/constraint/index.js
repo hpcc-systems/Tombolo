@@ -4,7 +4,7 @@ const validatorUtil = require('../../utils/validator');
 const logger = require('../../config/logger');
 const router = express.Router();
 
-const { constraint: Constraint } = require('../../models');
+const { constraint: Constraint, file: File } = require('../../models');
 
 
 router.get( '/', async (req, res) => {
@@ -29,6 +29,28 @@ router.delete( '/:id', [ param("id").isUUID(4) ], async (req, res) => {
     
       const isRemoved = await Constraint.destroy({where:{id}});
       if(!isRemoved) throw new Error('Contraint was not removed!');
+
+      const files = await File.findAll();
+      
+      for (let file of files) {
+        // remove contraint from file;
+             
+        if (file.metaData.constraints && file.metaData.constraints.length > 0){
+          file.metaData.constraints = file.metaData.constraints.filter(el => el !== id);
+        } 
+        
+        if (file.metaData.layout && file.metaData.layout.length > 0) {
+          for (const field of file.metaData.layout) {
+            field.constraints.own = field.constraints.own.filter(el => el.id !== id);
+            field.constraints.inherited = field.constraints.inherited.filter(el => el.id !== id);
+          }
+        }
+        
+        let updated =  await File.update({metaData: file.toJSON().metaData},{where:{id: file.id}});
+        console.log('-file: -----------------------------------------');
+        console.dir({file: updated}, { depth: null });
+        console.log('------------------------------------------');
+      }
 
       res.status(200).send({ success: true, id });
 

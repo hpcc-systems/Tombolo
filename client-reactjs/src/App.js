@@ -42,7 +42,7 @@ const AdminConsumers = React.lazy(() => import('./components/admin/Consumers'));
 const Regulations = React.lazy(() => import('./components/admin/ControlsAndRegulations'));
 const GitHubSettings = React.lazy(() => import('./components/admin/GitHubSettings/GitHubSettings'));
 const ScheduledJobsPage = React.lazy(() => import('./components/admin/ScheduledJobsPage'));
-const Constraints = React.lazy(() => import('./components/admin/Constraints/Constraints'));
+const Compliance = React.lazy(() => import('./components/admin/Compliance/Compliance'));
 
 // Shared layout, etc.
 import { LeftNav } from './components/layout/LeftNav';
@@ -175,7 +175,6 @@ class App extends React.Component {
                           path="/:applicationId/assets/visualizations/:visualizationId?"
                           component={VisualizationDetailsForm}
                         />
-
                         <PrivateRoute path="/:applicationId/assets" component={Assets} />
                         <PrivateRoute
                           path="/:applicationId/dataflow/details/:dataflowId?"
@@ -186,8 +185,8 @@ class App extends React.Component {
                         <PrivateRoute path="/admin/bree" component={ScheduledJobsPage} />
                         <PrivateRoute path="/admin/clusters/:clusterId" component={ClusterDetails} />
                         <PrivateRoute path="/admin/clusters" component={AdminClusters} />
-                        <PrivateRoute path="/admin/constraints/:tabName?" component={Constraints} />
                         <PrivateRoute path="/admin/github" component={GitHubSettings} />
+                        <PrivateRoute path="/admin/compliance/:tabName?" component={Compliance} />
                         <PrivateRoute path="/admin/users" component={Users} />
                         <PrivateRoute path="/admin/consumers" component={AdminConsumers} />
                         <PrivateRoute path="/admin/controlsAndRegulations" component={Regulations} />

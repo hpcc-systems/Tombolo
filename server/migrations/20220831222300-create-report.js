@@ -11,6 +11,16 @@ module.exports = {
       report: {
         type: Sequelize.JSON,
       },
+      type: Sequelize.STRING,
+      comparedId:{
+        allowNull: true,
+        type: Sequelize.UUID,
+      },
+      comparedName: Sequelize.STRING,
+      isBaseLine: {
+        type:Sequelize.BOOLEAN,
+        defaultValue: false
+      }, 
       application_id: {
         type: Sequelize.UUID,
         references: {

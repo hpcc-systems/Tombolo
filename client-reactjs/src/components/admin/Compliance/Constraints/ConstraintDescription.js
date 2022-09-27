@@ -1,13 +1,14 @@
 import React from 'react';
 import { Col, Row, Typography } from 'antd';
 import ReactMarkdown from 'react-markdown';
+import Text from '../../../common/Text';
 
 const ConstraintDescription = ({ record }) => {
   return (
     <>
-      {!record.inherited ? null : <Field name="Inherited" description={record.inherited} />}
-      <Field name="Summary" description={record.short_description} />
-      <Field name="Description" description={<ReactMarkdown source={record.description} />} />
+      {!record.inherited ? null : <Field name={<Text>Inherited</Text>} description={record.inherited} />}
+      <Field name={<Text>Summary</Text>} description={record.short_description} />
+      <Field name={<Text>Description</Text>} description={<ReactMarkdown source={record.description} />} />
     </>
   );
 };

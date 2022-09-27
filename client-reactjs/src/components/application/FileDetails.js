@@ -19,8 +19,7 @@ import { debounce } from 'lodash';
 import React, { Component } from 'react';
 import ReactMarkdown from 'react-markdown';
 import { connect } from 'react-redux';
-
-import ConstraintsTags from '../admin/Constraints/ConstraintsTags.js';
+import ConstraintsTags from '../admin/Compliance/Constraints/ConstraintsTags';
 import { authHeader, handleError } from '../common/AuthHeader.js';
 import { canViewPII, hasEditPermission } from '../common/AuthUtil.js';
 import { formItemLayout } from '../common/CommonUtil';
