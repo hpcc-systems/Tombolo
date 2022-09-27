@@ -7,18 +7,13 @@ import JobDetailsForm from './Jobs/JobDetails';
 import IndexDetailsForm from './IndexDetails';
 import QueryDetailsForm from './queries/QueryDetails';
 import SubProcessDetails from './SubProcessDetails';
-import Text from '../common/Text';
+import { i18n } from '../common/Text';
 
 function AssetDetailsDialog(props) {
   const getAssetType = (assetType) => {
-    let asset;
     if (!assetType || typeof assetType !== 'string') return '';
-    if (assetType === 'FileTemplate') {
-      asset = <Text text="File Template" />;
-      return asset;
-    }
-    asset = <Text text={assetType[0].toUpperCase() + assetType.slice(1)} />;
-    return asset;
+    if (assetType === 'FileTemplate') return i18n('File Template');
+    return i18n(assetType[0].toUpperCase() + assetType.slice(1));
   };
 
   return (
@@ -28,7 +23,7 @@ function AssetDetailsDialog(props) {
       width="1200px"
       footer={null}
       bodyStyle={{ display: 'flex', flexDirection: 'column' }}
-      title={`${getAssetType(props.selectedAsset.type)} : ${props.selectedAsset.title}`}>
+      title={getAssetType(props.selectedAsset.type) + ` : ${props.selectedAsset.title}`}>
       <DetailsForm {...props} />
     </Modal>
   );
