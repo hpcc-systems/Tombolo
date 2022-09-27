@@ -782,7 +782,7 @@ class FileDetails extends Component {
       <React.Fragment>
         {this.props.displayingInModal || this.state.addingNewAsset ? null : (
           <div className="assetTitle">
-            {<Text text="File" />} : {this.state.file.name}{' '}
+            <Text text="File" /> : {this.state.file.name}
           </div>
         )}
         <div

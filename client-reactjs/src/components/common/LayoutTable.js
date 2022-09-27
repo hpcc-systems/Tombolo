@@ -152,7 +152,7 @@ const ConstraintModal = ({ modal, setData, dataSource, closeModal }) => {
           <Form.Item noStyle shouldUpdate>
             {() => {
               return (
-                <Form.Item name="constraints" label={<Text>Select constraints</Text> + ':'}>
+                <Form.Item name="constraints" label={i18n('Select constraints') + ':'}>
                   {editing ? (
                     <Select mode="multiple" placeholder={i18n('Please select constraints')}>
                       {constraints.map((el) => {
@@ -171,7 +171,7 @@ const ConstraintModal = ({ modal, setData, dataSource, closeModal }) => {
             }}
           </Form.Item>
 
-          <Form.Item label={<Text>Description</Text> + ':'} name="description">
+          <Form.Item label={i18n('Description') + ':'} name="description">
             {editing ? <Input.TextArea className="custom-scroll" allowClear cols={5} /> : <ReadOnlyField />}
           </Form.Item>
         </Form>
