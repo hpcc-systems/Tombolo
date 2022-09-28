@@ -3,7 +3,7 @@ import { Button, message, Tabs, Row, Col, Modal, Form, Input, Select } from 'ant
 import { withRouter, useParams } from 'react-router-dom';
 
 import { authHeader } from '../../common/AuthHeader';
-import Text from '../../common/Text';
+import Text, { i18n } from '../../common/Text';
 
 const { Option } = Select;
 const { TextArea } = Input;
@@ -128,7 +128,7 @@ function ManualJobDetail() {
       <Modal visible={showModal} closable={false} onCancel={() => setShowModal(false)} onOk={handleResponse}>
         <Form layout="vertical" form={form}>
           <Form.Item
-            label="Action"
+            label={<Text>Action</Text>}
             rules={[
               {
                 required: true,
@@ -136,7 +136,7 @@ function ManualJobDetail() {
               },
             ]}
             name="action">
-            <Select placeholder="Select an action" allowClear>
+            <Select placeholder={i18n('Select an action')} allowClear>
               <Option value="approved">Approve</Option>
               <Option value="rejected">Reject</Option>
             </Select>

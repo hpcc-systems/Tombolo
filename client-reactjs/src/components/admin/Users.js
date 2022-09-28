@@ -1,8 +1,10 @@
 import { DeleteOutlined, EditOutlined, QuestionCircleOutlined } from '@ant-design/icons';
 import { Button, Divider, Form, Input, Modal, notification, Popconfirm, Select, Spin, Table, Tooltip } from 'antd';
 import React, { Component } from 'react';
+
 import { authHeader, handleError } from '../common/AuthHeader.js';
 import BreadCrumbs from '../common/BreadCrumbs';
+import Text, { i18n } from '../common/Text';
 
 const Option = Select.Option;
 
@@ -277,55 +279,58 @@ class Users extends Component {
             confirmLoading={confirmLoading}>
             <Form layout="vertical">
               <Form.Item
-                label="First Name"
+                label={<Text>First Name</Text>}
                 name="firstName"
                 rules={[{ required: true, message: 'First Name is required' }]}>
                 <Input
                   id="firstName"
                   name="firstName"
                   onChange={this.onChange}
-                  placeholder="First Name"
+                  placeholder={i18n('First Name')}
                   value={this.state.newUser.firstName}
                 />
               </Form.Item>
 
               <Form.Item
-                label="Last Name"
+                label={<Text>Last Name</Text>}
                 name="lastName"
                 rules={[{ required: true, message: 'Last Name is required' }]}>
                 <Input
                   id="lastName"
                   name="lastName"
                   onChange={this.onChange}
-                  placeholder="Last Name"
+                  placeholder={i18n('Last Name')}
                   value={this.state.newUser.lastName}
                 />
               </Form.Item>
 
               <Form.Item
-                label="User Name"
+                label={<Text>User Name</Text>}
                 name="username"
                 rules={[{ required: true, message: 'User Name is required' }]}>
                 <Input
                   id="username"
                   name="username"
                   onChange={this.onChange}
-                  placeholder="User Name"
+                  placeholder={i18n('User Name')}
                   value={this.state.newUser.username}
                 />
               </Form.Item>
 
-              <Form.Item label="Password" name="password" rules={[{ required: true, message: 'Password is required' }]}>
+              <Form.Item
+                label={<Text>Password</Text>}
+                name="password"
+                rules={[{ required: true, message: 'Password is required' }]}>
                 <Input.Password
                   id="password"
                   name="password"
                   onChange={this.onChange}
                   value={this.state.newUser.password}
-                  placeholder="Password"
+                  placeholder={i18n('Password')}
                 />
               </Form.Item>
 
-              <Form.Item label="Role" name="role">
+              <Form.Item label={<Text>Role</Text>} name="role">
                 <Select name="role" id="role" onSelect={this.handleRoleChange} value={this.state.newUser.role}>
                   <Option value=""></Option>
                   <Option value="admin">admin</Option>

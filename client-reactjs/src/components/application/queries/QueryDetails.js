@@ -11,7 +11,7 @@ import EditableTable from '../../common/EditableTable.js';
 import { eclTypes, omitDeep } from '../../common/CommonUtil.js';
 import MonacoEditor from '../../common/MonacoEditor.js';
 import { assetsActions } from '../../../redux/actions/Assets';
-import Text from '../../common/Text.jsx';
+import Text, { i18n } from '../../common/Text.jsx';
 import Files from './Files';
 
 const TabPane = Tabs.TabPane;
@@ -628,7 +628,7 @@ class QueryDetails extends PureComponent {
                           <React.Fragment>
                             <Form.Item label={<Text text="Cluster" />} name="clusters">
                               <Select
-                                placeholder={<Text text="Cluster" />}
+                                placeholder={i18n('Cluster')}
                                 disabled={!editingAllowed}
                                 onChange={this.onClusterSelection}
                                 style={{ width: 190 }}>
@@ -649,7 +649,7 @@ class QueryDetails extends PureComponent {
                                     style={{ width: '100%' }}
                                     onSearch={(value) => this.searchQueries(value)}
                                     onSelect={(value, option) => this.onQuerySelected(value, option)}
-                                    placeholder={<Text text="Search queries" />}
+                                    placeholder={i18n('Search queries')}
                                     disabled={!editingAllowed}
                                     notFoundContent={
                                       this.state.querySearchSuggestions.length > 0 ? 'Not Found' : <Spin />
@@ -688,7 +688,7 @@ class QueryDetails extends PureComponent {
                   <Input
                     id="query_title"
                     onChange={this.onChange}
-                    placeholder={<Text text="Title" />}
+                    placeholder={i18n('Title')}
                     disabled={!editingAllowed}
                     className={this.state.enableEdit ? null : 'read-only-input'}
                   />
@@ -705,7 +705,7 @@ class QueryDetails extends PureComponent {
                     },
                   ]}>
                   <Input
-                    placeholder={<Text text="Name" />}
+                    placeholder={i18n('Name')}
                     disabled={!editingAllowed}
                     className={this.state.enableEdit ? null : 'read-only-input'}
                   />
@@ -733,7 +733,7 @@ class QueryDetails extends PureComponent {
                     <Input
                       id="query_url"
                       onChange={this.onChange}
-                      placeholder={<Text text="URL" />}
+                      placeholder={i18n('URL')}
                       disabled={!editingAllowed}
                       className={this.state.enableEdit ? null : 'read-only-input'}
                     />
@@ -749,7 +749,7 @@ class QueryDetails extends PureComponent {
                     <Input
                       id="query_gitRepo"
                       onChange={this.onChange}
-                      placeholder={<Text text="Git Repo" />}
+                      placeholder={i18n('Git Repo')}
                       disabled={!editingAllowed}
                       className={this.state.enableEdit ? null : 'read-only-input'}
                     />

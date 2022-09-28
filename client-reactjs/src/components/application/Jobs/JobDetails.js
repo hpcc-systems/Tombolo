@@ -18,7 +18,7 @@ import BasicsTabScript from './BasicsTabScript';
 import BasicsTabSpray from './BasicsTabSpray';
 import InputFiles from './JobFiles/InputOutoutFiles';
 import ScheduleTab from './ScheduleTab.js';
-import Text from '../../common/Text.jsx';
+import Text, { i18n } from '../../common/Text.jsx';
 
 const TabPane = Tabs.TabPane;
 const { Option } = Select;
@@ -792,7 +792,10 @@ class JobDetails extends Component {
                           {!this.state.enableEdit ? (
                             <Typography.Text style={{ paddingLeft: '11px' }}>{jobType}</Typography.Text>
                           ) : (
-                            <Select disabled={isAssociated} placeholder="Job Type" onChange={this.onJobTypeChange}>
+                            <Select
+                              disabled={isAssociated}
+                              placeholder={i18n('Job Type')}
+                              onChange={this.onJobTypeChange}>
                               {jobTypes.map((d) => (
                                 <Option key={d}>{d}</Option>
                               ))}
@@ -899,7 +902,7 @@ class JobDetails extends Component {
                       <Input
                         id="job_scriptPath"
                         onChange={this.onChange}
-                        placeholder="Main script path"
+                        placeholder={i18n('Script Path')}
                         value={scriptPath}
                         disabled={!editingAllowed}
                       />

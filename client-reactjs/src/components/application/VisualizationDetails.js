@@ -5,7 +5,7 @@ import ReactMarkdown from 'react-markdown';
 import MonacoEditor from '../common/MonacoEditor.js';
 import { Row, Col, Button, Form, Input, Select, Tabs, Spin, AutoComplete, message, Space } from 'antd';
 import { authHeader, handleError } from '../common/AuthHeader.js';
-import Text from '../common/Text.jsx';
+import Text, { i18n } from '../common/Text.jsx';
 
 import { debounce } from 'lodash';
 import { useHistory } from 'react-router';
@@ -186,7 +186,7 @@ function VisualizationDetails() {
                         style={{ width: '100%' }}
                         onSearch={(value) => searchFiles(value)}
                         onSelect={(value) => onFileSelected(value)}
-                        placeholder={<Text text="Search jobs" />}
+                        placeholder={i18n('Search jobs')}
                         disabled={!editingAllowed}
                         notFoundContent={search.loading ? <Spin /> : 'Not Found'}>
                         {search.data.map((suggestion) => (
@@ -213,7 +213,7 @@ function VisualizationDetails() {
                   { pattern: new RegExp(/^[a-zA-Z0-9:._ -]*$/), message: 'Please enter a valid name' },
                 ]}>
                 <Input
-                  placeholder={<Text text="Name" />}
+                  placeholder={i18n('Name')}
                   onChange={onChange}
                   disabled={!editingAllowed}
                   className={!formState.enableEdit ? 'read-only-input' : ''}

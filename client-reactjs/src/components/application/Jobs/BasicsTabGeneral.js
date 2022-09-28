@@ -9,7 +9,7 @@ import GitHubForm from './GitHubForm/GitHubForm.js';
 import debounce from 'lodash/debounce';
 import Notifications from './Notifications/index.js';
 import OverwriteAssetModal from '../../common/OverWriteAssetModal.js';
-import Text from '../../common/Text.jsx';
+import Text, { i18n } from '../../common/Text.jsx';
 
 // import GHTable from './GitHubForm/GHTable.js';
 const { Option } = Select;
@@ -227,11 +227,7 @@ function BasicsTabGeneral({
                 <Col span={12}>
                   {enableEdit ? (
                     <Form.Item noStyle name="clusters">
-                      <Select
-                        allowClear
-                        placeholder="Select a Cluster"
-                        disabled={isAssociated}
-                        onChange={onClusterSelection}>
+                      <Select allowClear disabled={isAssociated} onChange={onClusterSelection}>
                         {clusters.map((cluster) => (
                           <Option key={cluster.id}>{cluster.name}</Option>
                         ))}
@@ -277,7 +273,7 @@ function BasicsTabGeneral({
                     style={{ width: '100%' }}
                     onSearch={(value) => searchJobs({ searchString: value, clusterId: clusterId })}
                     onSelect={(value, option) => onJobSelected(option)}
-                    placeholder={<Text text="Search jobs" />}
+                    placeholder={i18n('Search jobs')}
                     disabled={!editingAllowed}
                     notFoundContent={search.loading ? <Spin /> : 'Not Found'}>
                     {search.data.map((suggestion) => (
@@ -325,7 +321,7 @@ function BasicsTabGeneral({
             <Input
               id="job_name"
               onChange={onChange}
-              placeholder={enableEdit ? <Text text="Name" /> : <Text text="Name is not provided" />}
+              placeholder={enableEdit ? i18n('Name') : i18n('Name is not provided')}
               disabled={!editingAllowed || !addingNewAsset || job.disableFields}
             />
           ) : (
@@ -348,7 +344,7 @@ function BasicsTabGeneral({
           <Input
             id="job_title"
             onChange={onChange}
-            placeholder={enableEdit ? <Text text="Title" /> : <Text text="Title is not provided" />}
+            placeholder={enableEdit ? i18n('Title') : i18n('Title is not provided')}
             disabled={!editingAllowed}
           />
         </Form.Item>
@@ -364,7 +360,7 @@ function BasicsTabGeneral({
             <Input
               id="job_gitRepo"
               onChange={onChange}
-              placeholder={enableEdit ? <Text text="Git Repo" /> : <Text text="Git Repo is not provided" />}
+              placeholder={enableEdit ? i18n('Git Repo') : i18n('Git Repo is not provided')}
               value={localState.gitRepo}
               disabled={!editingAllowed}
             />
@@ -383,7 +379,7 @@ function BasicsTabGeneral({
               <Input
                 id="job_entryBWR"
                 onChange={onChange}
-                placeholder={enableEdit ? <Text text="Entry BWR" /> : <Text text="Entry BWR is not provided" />}
+                placeholder={enableEdit ? i18n('Entry BWR') : i18n('Entry BWR is not provided')}
                 value={localState.entryBWR}
                 disabled={!editingAllowed}
               />
@@ -398,7 +394,7 @@ function BasicsTabGeneral({
               <Input
                 id="job_author"
                 onChange={onChange}
-                placeholder={enableEdit ? <Text text="Author" /> : <Text text="Author is not provided" />}
+                placeholder={enableEdit ? i18n('Author') : i18n('Author is not provided')}
                 value={localState.author}
                 disabled={!editingAllowed}
               />
@@ -413,7 +409,7 @@ function BasicsTabGeneral({
               <Input
                 id="job_bkp_svc"
                 onChange={onChange}
-                placeholder={enableEdit ? <Text text="Contact" /> : <Text text="Contact is not provided" />}
+                placeholder={enableEdit ? i18n('Contact') : i18n('Contact is not provided')}
                 value={localState.contact}
                 disabled={!editingAllowed}
               />

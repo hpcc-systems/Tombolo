@@ -14,7 +14,7 @@ import FileTemplatePermissablePurpose from './FileTemplate_permissablePurpose';
 import { hasEditPermission } from '../../common/AuthUtil.js';
 import DeleteAsset from '../../common/DeleteAsset/index.js';
 import LandingZoneFileExplorer from '../../common/LandingZoneFileExplorer';
-import Text from '../../common/Text';
+import Text, { i18n } from '../../common/Text';
 
 //Local variables
 const { Option } = Select;
@@ -448,7 +448,7 @@ function FileTemplate({ match, selectedAsset = {}, displayingInModal, onClose })
                   name="fileTemplatePattern"
                   defaultValue="22"
                   className="read-only-input">
-                  <Input placeholder={<Text text="No file pattern provided" />} />
+                  <Input placeholder={i18n('No file pattern provided')} />
                 </Form.Item>
               ) : null}
 

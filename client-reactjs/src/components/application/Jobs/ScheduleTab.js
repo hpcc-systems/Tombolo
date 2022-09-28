@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { Button, Form, Input, Select, Space, message } from 'antd';
 import { threeColformItemLayout } from '../../common/CommonUtil.js';
-import Text from '../../common/Text.jsx';
+import Text, { i18n } from '../../common/Text.jsx';
 
 const monthMap = {
   1: 'January',
@@ -502,7 +502,7 @@ const ScheduleTab = ({ nodes, selectedAsset, addToSchedule, readOnly, editingAll
             <Select
               id="scheduleType"
               disabled={!selectedAsset.isAssociated}
-              placeholder={<Text text="Select a schedule type" />}
+              placeholder={i18n('Select a schedule type')}
               allowClear
               onClear={() => handleScheduleTypeSelect('')}
               onSelect={(value) => {
@@ -601,7 +601,7 @@ const ScheduleTab = ({ nodes, selectedAsset, addToSchedule, readOnly, editingAll
             <Select
               id="dependsOn"
               mode="single"
-              placeholder={<Text text="Select Job(s) that will trigger execution" />}
+              placeholder={i18n('Select Job(s) that will trigger execution')}
               onSelect={(value) => {
                 let predecessors = [];
                 predecessors.push(value);
@@ -630,7 +630,7 @@ const ScheduleTab = ({ nodes, selectedAsset, addToSchedule, readOnly, editingAll
           ) : (
             <Select
               mode="single"
-              placeholder={<Text text="Select a template" />}
+              placeholder={i18n('Select a template')}
               onSelect={(value) => {
                 let predecessors = [];
                 predecessors.push(value);
