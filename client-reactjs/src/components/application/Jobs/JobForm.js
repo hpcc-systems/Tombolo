@@ -3,7 +3,10 @@ import { Form } from 'antd';
 import { formItemLayout } from '../../common/CommonUtil';
 import Text from '../../common/Text';
 
-const JobForm = ({ children, inModal, newAsset, colon, inTab, jobName, formRef, setState }) => {
+const JobForm = ({ children, state, setState, form, props }) => {
+  const { addingNewAsset, enableEdit, job } = state;
+  const { displayingInModal, inTabView } = props;
+
   //When input field value is changed update JobDetails state
   const onFieldsChange = (changedFields, allFields) => {
     const inputErrors = allFields.filter((item) => item.errors.length > 0);
@@ -12,14 +15,17 @@ const JobForm = ({ children, inModal, newAsset, colon, inTab, jobName, formRef, 
 
   return (
     <>
-      {inModal || newAsset ? null : (
+      {displayingInModal || addingNewAsset ? null : (
         <div className="assetTitle">
-          <Text text="Job" /> : {jobName}
+          <Text text="Job" /> : {job.name}
         </div>
       )}
-      <div className={inModal ? 'assetDetails-content-wrapper-modal' : !inTab ? '' : 'assetDetails-content-wrapper'}>
+      <div
+        className={
+          displayingInModal ? 'assetDetails-content-wrapper-modal' : !inTabView ? '' : 'assetDetails-content-wrapper'
+        }>
         <Form
-          colon={colon}
+          enableEdit={enableEdit}
           {...formItemLayout}
           initialValues={{
             selectedFile: null,
@@ -28,7 +34,7 @@ const JobForm = ({ children, inModal, newAsset, colon, inTab, jobName, formRef, 
             isStoredOnGithub: false,
           }}
           labelAlign="left"
-          ref={formRef}
+          ref={form}
           scrollToFirstError
           onFieldsChange={onFieldsChange}>
           {children}
