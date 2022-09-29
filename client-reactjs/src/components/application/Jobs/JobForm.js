@@ -13,6 +13,9 @@ const JobForm = ({ children, state, setState, form, props }) => {
     setState({ dataAltered: true, errors: inputErrors.length > 0 });
   };
 
+  // Make labels spacing a little wider for in modal view
+  displayingInModal ? (formItemLayout.labelCol.span = 3) : (formItemLayout.labelCol.span = 2);
+
   return (
     <>
       {displayingInModal || addingNewAsset ? null : (
