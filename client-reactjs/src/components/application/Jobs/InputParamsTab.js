@@ -1,9 +1,17 @@
 import React from 'react';
-import { eclTypes } from '../../common/CommonUtil';
+import { eclTypes, omitDeep } from '../../common/CommonUtil';
 import EditableTable from '../../common/EditableTable';
 import Text from '../../common/Text';
 
-const InputParamsTab = ({ jobType, editingAllowed, inputParams, enableEdit, setInputParamsData }) => {
+const InputParamsTab = ({ editingAllowed, state, setState }) => {
+  const { enableEdit, job } = state;
+  const { jobType, inputParams } = job;
+
+  const setInputParamsData = (data) => {
+    let omitResults = omitDeep(data, 'id');
+    setState({ job: { ...state.job, inputParams: omitResults } });
+  };
+
   const columns = [
     {
       title: <Text text="Name" />,
