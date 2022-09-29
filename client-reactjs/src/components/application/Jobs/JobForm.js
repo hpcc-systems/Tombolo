@@ -3,7 +3,13 @@ import { Form } from 'antd';
 import { formItemLayout } from '../../common/CommonUtil';
 import Text from '../../common/Text';
 
-const JobForm = ({ children, inModal, newAsset, colon, onFieldsChange, inTab, jobName, formRef }) => {
+const JobForm = ({ children, inModal, newAsset, colon, inTab, jobName, formRef, setState }) => {
+  //When input field value is changed update JobDetails state
+  const onFieldsChange = (changedFields, allFields) => {
+    const inputErrors = allFields.filter((item) => item.errors.length > 0);
+    setState({ dataAltered: true, errors: inputErrors.length > 0 });
+  };
+
   return (
     <>
       {inModal || newAsset ? null : (

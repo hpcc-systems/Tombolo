@@ -1,11 +1,11 @@
-import React, { useState, useEffect } from 'react';
-import { authHeader, handleError } from '../../common/AuthHeader.js';
-import { Col, Form, Input, Row, Select, Cascader } from 'antd';
+import { Cascader, Col, Form, Input, Row, Select } from 'antd';
+import React, { useEffect, useState } from 'react';
 import ReactMarkdown from 'react-markdown';
-import { useSelector, useDispatch } from 'react-redux';
-import MonacoEditor from '../../common/MonacoEditor.js';
-import { assetsActions } from '../../../redux/actions/Assets';
-import Text from '../../common/Text.jsx';
+import { useDispatch, useSelector } from 'react-redux';
+import { assetsActions } from '../../../../redux/actions/Assets';
+import { authHeader, handleError } from '../../../common/AuthHeader.js';
+import MonacoEditor from '../../../common/MonacoEditor.js';
+import Text from '../../../common/Text.jsx';
 
 function BasicsTabManul(props) {
   const { enableEdit, localState, editingAllowed, onChange, formRef, addingNewAsset, inTabView } = props;

@@ -1,17 +1,17 @@
-import React, { useState, useCallback, useEffect } from 'react';
-import { Form, Input, Button, Select, AutoComplete, Spin, message, Row, Col, Typography, Radio, Alert } from 'antd';
-import { authHeader, handleError } from '../../common/AuthHeader.js';
+import { Alert, AutoComplete, Button, Col, Form, Input, message, Radio, Row, Select, Spin, Typography } from 'antd';
+import React, { useCallback, useEffect, useState } from 'react';
 import ReactMarkdown from 'react-markdown';
 import { useSelector } from 'react-redux';
 
-import MonacoEditor from '../../common/MonacoEditor.js';
-import GitHubForm from './GitHubForm/GitHubForm.js';
 import debounce from 'lodash/debounce';
-import Notifications from './Notifications/index.js';
-import OverwriteAssetModal from '../../common/OverWriteAssetModal.js';
-import Text, { i18n } from '../../common/Text.jsx';
+import { authHeader, handleError } from '../../../common/AuthHeader';
+import Text, { i18n } from '../../../common/Text';
+import MonacoEditor from '../../../common/MonacoEditor';
+import OverwriteAssetModal from '../../../common/OverWriteAssetModal';
 
-// import GHTable from './GitHubForm/GHTable.js';
+import Notifications from '../Notifications';
+import GitHubForm from '../GitHubForm/GitHubForm';
+
 const { Option } = Select;
 
 function BasicsTabGeneral({
