@@ -30,19 +30,10 @@ const renderTag = (record) => {
   }
 };
 
-function InputOutputFiles({
-  inputFiles,
-  outputFiles,
-  clusterId,
-  enableEdit,
-  handleInputFileChange,
-  handleOutputFileChange,
-  editingAllowed,
-  sourceFiles,
-  selectedTabPaneKey,
-  handleAddOutputFile,
-  handleAddInputFile,
-}) {
+function InputOutputFiles({ state, setState, editingAllowed, type, label }) {
+  const { sourceFiles, job, selectedCluster: clusterId, enableEdit, selectedInputFile, selectedOutputFile } = state;
+  const dataSource = type === 'input' ? job.inputFiles : job.outputFiles;
+
   const [subFiles, setSubFiles] = useState([]);
   const [expandedRowKeys, setExpandedRowKeys] = useState({ parentTable: [], fileTable: [], subFileTable: [] });
   const [fetchingSubFiles, setFetchingSubFiles] = useState(false);
@@ -148,21 +139,30 @@ function InputOutputFiles({
     }
   };
 
+  const onChange = (value) => {
+    setState(type === 'input' ? { selectedInputFile: value } : { selectedOutputFile: value });
+  };
+
+  const onClick = () => {
+    const selectedFile = this.state.sourceFiles.find(
+      (sourceFile) => sourceFile.id === (type === 'input' ? selectedInputFile : selectedOutputFile)
+    );
+    selectedFile.addedManually = true;
+
+    const updateInput = { job: { ...state.job, inputFiles: [...job.inputFiles, selectedFile] } };
+    const updateOutput = { job: { ...state.job, outputFiles: [...job.outputFiles, selectedFile] } };
+
+    setState(type === 'input' ? updateInput : updateOutput);
+  };
+
   // JSX
   return (
     <>
       <div>
         {enableEdit ? (
           <div style={{ display: 'flex' }}>
-            <Form.Item
-              label={selectedTabPaneKey === '4' ? <Text text="Input Files" /> : <Text text="Output Files" />}
-              rules={[{ required: true }]}>
-              <Select
-                id={selectedTabPaneKey === '4' ? 'inputfiles' : 'outputfiles'}
-                placeholder={selectedTabPaneKey === '4' ? i18n('Input Files') : i18n('Output Files')}
-                onChange={selectedTabPaneKey === '4' ? handleInputFileChange : handleOutputFileChange}
-                style={{ width: 290 }}
-                disabled={!editingAllowed}>
+            <Form.Item label={<Text text={label} />} rules={[{ required: true }]}>
+              <Select placeholder={i18n(label)} onChange={onChange} style={{ width: 290 }} disabled={!editingAllowed}>
                 {sourceFiles.map((d) => (
                   <Option value={d.id} key={d.id}>
                     {d.title ? d.title : d.name}
@@ -172,12 +172,8 @@ function InputOutputFiles({
             </Form.Item>
 
             <Form.Item style={{ marginLeft: '10px' }}>
-              <Button
-                style={{ marginRight: '10px' }}
-                type="primary"
-                onClick={selectedTabPaneKey === '4' ? handleAddInputFile : handleAddOutputFile}
-                disabled={!editingAllowed}>
-                {<Text text="Add" />}
+              <Button style={{ marginRight: '10px' }} type="primary" onClick={onClick} disabled={!editingAllowed}>
+                <Text text="Add" />
               </Button>
             </Form.Item>
           </div>
@@ -186,7 +182,7 @@ function InputOutputFiles({
 
       <Table
         columns={fileTableColumns}
-        dataSource={selectedTabPaneKey === '4' ? inputFiles : outputFiles}
+        dataSource={dataSource}
         rowKey={(record) => record.id}
         size="small"
         expandable={{
