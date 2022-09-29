@@ -1,6 +1,6 @@
 import { Form, Input } from 'antd';
 import React from 'react';
-import ReadOnlyField from '../../common/ReadOnlyFied';
+import ReadOnlyField from '../../common/ReadOnlyField';
 import Text from '../../common/Text';
 
 const ScriptTab = ({ enableEdit, editingAllowed }) => {
