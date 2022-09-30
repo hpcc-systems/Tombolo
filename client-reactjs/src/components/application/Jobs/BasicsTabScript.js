@@ -1,28 +1,30 @@
 import React from 'react';
 import { Form, Input, Row, Col } from 'antd';
 import ReactMarkdown from 'react-markdown';
+
 import MonacoEditor from '../../common/MonacoEditor.js';
 import { threeColformItemLayout } from '../../common/CommonUtil.js';
+import Text, { i18n } from '../../common/Text';
 
 function BasicsTabScript({ enableEdit, editingAllowed, onChange, localState, inTabView }) {
   return (
     <React.Fragment>
       <Form.Item
-        label="Name"
+        label={<Text>Name</Text>}
         name="name"
         validateTrigger="onBlur"
         rules={[{ required: true, message: 'Please enter a Name!', pattern: new RegExp(/^[a-zA-Z0-9:._-]*$/) }]}>
         <Input
           id="job_name"
           onChange={onChange}
-          placeholder="Name"
+          placeholder={i18n('Name')}
           disabled={!editingAllowed}
           className={enableEdit ? null : 'read-only-input'}
         />
       </Form.Item>
 
       <Form.Item
-        label="Title"
+        label={<Text>Title</Text>}
         name="title"
         validateTrigger="onBlur"
         rules={[
@@ -35,13 +37,13 @@ function BasicsTabScript({ enableEdit, editingAllowed, onChange, localState, inT
         <Input
           id="job_title"
           onChange={onChange}
-          placeholder="Title"
+          placeholder={i18n('Title')}
           disabled={!editingAllowed}
           className={enableEdit ? null : 'read-only-input'}
         />
       </Form.Item>
 
-      <Form.Item label="Description" name="description">
+      <Form.Item label={<Text>Description</Text>} name="description">
         {enableEdit ? (
           <MonacoEditor
             onChange={onChange}
@@ -59,7 +61,7 @@ function BasicsTabScript({ enableEdit, editingAllowed, onChange, localState, inT
         <Col span={12} order={1}>
           <Form.Item
             {...threeColformItemLayout}
-            label="Contact Email"
+            label={<Text>Contact E-mail</Text>}
             name="contact"
             validateTrigger="onBlur"
             rules={[
@@ -72,7 +74,7 @@ function BasicsTabScript({ enableEdit, editingAllowed, onChange, localState, inT
               <Input
                 id="job_bkp_svc"
                 onChange={onChange}
-                placeholder="Contact"
+                placeholder={i18n('Contact')}
                 value={localState.contact}
                 disabled={!editingAllowed}
               />
@@ -83,7 +85,7 @@ function BasicsTabScript({ enableEdit, editingAllowed, onChange, localState, inT
         </Col>
         <Col span={12} order={2}>
           <Form.Item
-            label="Author:"
+            label={<Text>Author</Text>}
             name="author"
             validateTrigger="onBlur"
             rules={[
@@ -96,7 +98,7 @@ function BasicsTabScript({ enableEdit, editingAllowed, onChange, localState, inT
               <Input
                 id="job_author"
                 onChange={onChange}
-                placeholder="Author"
+                placeholder={i18n('Author')}
                 value={localState.author}
                 disabled={!editingAllowed}
               />

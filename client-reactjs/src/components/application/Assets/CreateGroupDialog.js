@@ -6,6 +6,7 @@ import MonacoEditor from '../../common/MonacoEditor.js';
 import { authHeader, handleError } from '../../common/AuthHeader.js';
 import { useSelector, useDispatch } from 'react-redux';
 import { expandGroups } from '../../../redux/actions/Groups.js';
+import Text, { i18n } from '../../common/Text';
 
 export const CreateGroupDialog = ({ editGroup, applicationId, isShowing, toggle }) => {
   const [groupsReducer] = useSelector((state) => [state.groupsReducer]);
@@ -105,23 +106,23 @@ export const CreateGroupDialog = ({ editGroup, applicationId, isShowing, toggle 
 
   return (
     <Modal
-      title="Group"
+      title={<Text>Group</Text>}
       onCancel={toggle}
       visible={isShowing}
       width={520}
       footer={
         <span>
           <Button type="primary" onClick={readOnly ? handleEdit : handleCreateGroup}>
-            {readOnly ? 'Edit' : 'Save'}
+            {readOnly ? <Text>Edit</Text> : <Text>Save</Text>}
           </Button>
           <Button type="primary" ghost onClick={toggle}>
-            Cancel
+            <Text>Cancel</Text>
           </Button>
         </span>
       }>
       <Form form={form} {...formItemLayout} className="formInModal" layout={readOnly ? 'horizontal' : 'vertical'}>
         <Form.Item
-          label="Name"
+          label={<Text>Name</Text>}
           name="name"
           required={readOnly ? false : true}
           className={readOnly ? 'read-only-input' : ''}
@@ -132,10 +133,10 @@ export const CreateGroupDialog = ({ editGroup, applicationId, isShowing, toggle 
               message: 'Please enter a valid Name',
             },
           ]}>
-          <Input id="name" name="name" placeholder="Name" onChange={formInputChange} />
+          <Input id="name" name="name" placeholder={i18n('Name')} onChange={formInputChange} />
         </Form.Item>
 
-        <Form.Item label="Description" name="description">
+        <Form.Item label={<Text>Description</Text>} name="description">
           <span style={{ fontWeight: 'normal' }}>
             {readOnly ? (
               <ReactMarkdown className="read-only-markdown">{group.description}</ReactMarkdown>

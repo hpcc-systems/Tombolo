@@ -4,7 +4,7 @@ import { useSelector } from 'react-redux';
 
 import useGitHubProjectList from '../../../hooks/useGitHubProjectList';
 import { authHeader, handleError } from '../../common/AuthHeader';
-import Text from '../../common/Text';
+import Text, { i18n } from '../../common/Text';
 
 const { Option, OptGroup } = Select;
 const { Search } = Input;
@@ -286,7 +286,7 @@ const EditableCell = ({
           onSearch={onSearch}
           loading={branchAndTagList.loading}
           enterButton={editing ? true : false}
-          placeholder={<Text text="Provide a link to GitHub repo" />}
+          placeholder={i18n('Provide a link to GitHub repo')}
         />
       ),
       ghBranchOrTag: (

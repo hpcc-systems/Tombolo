@@ -22,7 +22,7 @@ import { connect } from 'react-redux';
 import { applicationActions } from '../../redux/actions/Application';
 import { authHeader, handleError } from '../common/AuthHeader.js';
 import BreadCrumbs from '../common/BreadCrumbs';
-import Text from '../common/Text';
+import Text, { i18n } from '../common/Text';
 
 const Option = Select.Option;
 const { Paragraph } = Typography;
@@ -524,7 +524,7 @@ class Consumers extends Component {
                     dataSource={adGroupSearchResults}
                     onSearch={(value) => this.searchADGroups(value)}
                     onSelect={(value) => this.onGroupSelected(value)}
-                    placeholder="Search AD groups"
+                    placeholder={i18n('Search AD groups')}
                     optionLabelProp="value"
                     defaultValue={this.state.newConsumer.ad_group}>
                     <Input suffix={<SearchOutlined />} />

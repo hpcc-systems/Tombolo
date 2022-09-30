@@ -6,7 +6,7 @@ import { Link } from 'react-router-dom';
 
 import { authHeader } from '../common/AuthHeader.js';
 import { applicationActions } from '../../redux/actions/Application';
-import Text from '../common/Text';
+import Text, { i18n } from '../common/Text';
 
 const Option = Select.Option;
 
@@ -175,7 +175,7 @@ function Clusters() {
         cancelText={<Text text="Cancel" />}>
         <Form layout="vertical" form={form}>
           <Form.Item label={<Text text="Host" />} name="name" required>
-            <Select placeholder={<Text text="Select a Cluster" />}>
+            <Select placeholder={i18n('Select a Cluster')}>
               {clusterWhiteList.map((cluster) => (
                 <Option key={cluster.name} value={cluster.name}>
                   {cluster.name + ' - ' + cluster.thor + ':' + cluster.thor_port}

@@ -1,9 +1,12 @@
 import React, { useState, useEffect } from 'react';
 import { Form, Input, Button, Select, Spin, message, Row, Col } from 'antd';
+
 import { authHeader, handleError } from '../../common/AuthHeader.js';
 import { useSelector, useDispatch } from 'react-redux';
 import { assetsActions } from '../../../redux/actions/Assets';
 import { formItemLayout } from '../../common/CommonUtil.js';
+import Text, { i18n } from '../../common/Text';
+
 const { Option, OptGroup } = Select;
 
 function BasicsTabSpray({
@@ -125,9 +128,9 @@ function BasicsTabSpray({
   return (
     <React.Fragment>
       {addingNewAsset ? (
-        <Form.Item {...formItemLayout} label="Cluster" name="clusters">
+        <Form.Item {...formItemLayout} label={<Text>Cluster</Text>} name="clusters">
           <Select
-            placeholder="Select a Cluster"
+            placeholder={i18n('Select a Cluster')}
             disabled={!editingAllowed}
             onChange={onClusterSelection}
             style={{ width: 190 }}>
@@ -137,10 +140,10 @@ function BasicsTabSpray({
           </Select>
         </Form.Item>
       ) : null}
-      <Form.Item label="Dropzone" name="sprayDropZone">
+      <Form.Item label={<Text>Dropzone</Text>} name="sprayDropZone">
         {enableEdit ? (
           <Select
-            placeholder="Drop Zone"
+            placeholder={i18n('Drop Zone')}
             style={{ width: 190 }}
             defaultValue={selectedDropZoneName}
             onChange={onDropZoneChange}
@@ -160,21 +163,21 @@ function BasicsTabSpray({
         )}
       </Form.Item>
       <Form.Item
-        label="Name"
+        label={<Text>Name</Text>}
         name="name"
         validateTrigger="onBlur"
         rules={[{ required: true, message: 'Please enter a Name!', pattern: new RegExp(/^[a-zA-Z0-9:._-]*$/) }]}>
         <Input
           id="job_name"
           onChange={onChange}
-          placeholder="Name"
+          placeholder={i18n('Name')}
           disabled={!editingAllowed}
           className={enableEdit ? null : 'read-only-input'}
         />
       </Form.Item>
 
       <Form.Item
-        label="Title"
+        label={<Text>Title</Text>}
         name="title"
         validateTrigger="onBlur"
         rules={[
@@ -187,20 +190,20 @@ function BasicsTabSpray({
         <Input
           id="job_title"
           onChange={onChange}
-          placeholder="Title"
+          placeholder={i18n('Title')}
           disabled={!editingAllowed}
           className={enableEdit ? null : 'read-only-input'}
         />
       </Form.Item>
 
-      <Form.Item label="File" name="sprayFileName">
+      <Form.Item label={<Text>File</Text>} name="sprayFileName">
         {addingNewAsset ? (
           <Row type="flex">
             <Col span={21} order={1}>
               <Select
                 showSearch
                 value={sprayFileName}
-                placeholder="Search dropzone files..."
+                placeholder={i18n('Search dropzone files')}
                 defaultActiveFirstOption={false}
                 showArrow={false}
                 filterOption={false}
@@ -216,7 +219,7 @@ function BasicsTabSpray({
             </Col>
             <Col span={3} order={2} style={{ paddingLeft: '3px' }}>
               <Button htmlType="button" onClick={clearState}>
-                Clear
+                <Text>Clear</Text>
               </Button>
             </Col>
           </Row>
@@ -225,12 +228,12 @@ function BasicsTabSpray({
         )}
       </Form.Item>
 
-      <Form.Item label="Scope" name="sprayedFileScope">
+      <Form.Item label={<Text>Scope</Text>} name="sprayedFileScope">
         {enableEdit ? (
           <Input
             id="sprayedFileScope"
             onChange={onChange}
-            placeholder="Scope"
+            placeholder={i18n('Scope')}
             value={sprayedFileScope}
             disabled={!editingAllowed}
           />

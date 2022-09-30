@@ -15,7 +15,7 @@ import { expandGroups, selectGroup, getGroupsTree } from '../../redux/actions/Gr
 import { userActions } from '../../redux/actions/User';
 import { authHeader, handleError } from '../common/AuthHeader.js';
 import { hasAdminRole } from '../common/AuthUtil.js';
-import Text from '../common/Text';
+import Text, { i18n } from '../common/Text';
 
 class AppHeader extends Component {
   pwdformRef = React.createRef();
@@ -452,27 +452,27 @@ class AppHeader extends Component {
         </div>
 
         <Modal
-          title="Change Password"
+          title={<Text>Change Password</Text>}
           visible={this.state.visible}
           width="520px"
           footer={[
             <Button key="cancel" onClick={this.handleCancel}>
-              Cancel
+              <Text>Cancel</Text>
             </Button>,
             <Button key="submit" onClick={this.handleOk} type="primary" loading={this.state.loading}>
-              Change Password
+              <Text>Change Password</Text>
             </Button>,
           ]}>
           <Form ref={this.pwdformRef}>
             <Form.Item
               {...formItemLayout}
               name="oldpassword"
-              label="Password"
+              label={<Text>Password</Text>}
               rules={[{ required: true, message: 'Please enter the current password!' }]}>
               <Input
                 type="password"
                 name="oldpassword"
-                placeholder="Password"
+                placeholder={i18n('Password')}
                 onChange={this.handleChangePasswordFieldChange}
               />
             </Form.Item>
@@ -480,12 +480,12 @@ class AppHeader extends Component {
             <Form.Item
               {...formItemLayout}
               name="newpassword"
-              label="New Password"
+              label={<Text>New Password</Text>}
               rules={[{ required: true, message: 'Please enter the new password!' }]}>
               <Input
                 type="password"
                 name="newpassword"
-                placeholder="New Password"
+                placeholder={i18n('New Password')}
                 onChange={this.handleChangePasswordFieldChange}
               />
             </Form.Item>
@@ -493,12 +493,12 @@ class AppHeader extends Component {
             <Form.Item
               {...formItemLayout}
               name="confirmnewpassword"
-              label="Confirm Password"
+              label={<Text>Confirm Password</Text>}
               rules={[{ required: true, message: 'Please confirm the new password!' }]}>
               <Input
                 type="password"
                 name="confirmnewpassword"
-                placeholder="Confirm Password"
+                placeholder={i18n('Confirm Password')}
                 onChange={this.handleChangePasswordFieldChange}
               />
             </Form.Item>

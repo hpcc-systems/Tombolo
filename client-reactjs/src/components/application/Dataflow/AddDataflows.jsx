@@ -5,7 +5,7 @@ import { Button, Tooltip, Modal, Form, Input, Select, message } from 'antd';
 import { authHeader } from '../../common/AuthHeader.js';
 import NotifyField from '../Jobs/Notifications/RadioButtons';
 import UserSearch from '../../common/UserSearch';
-import Text from '../../common/Text';
+import Text, { i18n } from '../../common/Text';
 
 const { Option } = Select;
 const { TextArea } = Input;
@@ -198,7 +198,7 @@ function AddDataflow({
                 message: 'Please enter a valid title',
               },
             ]}>
-            <Input placeholder="Title" className={enableEdit ? null : 'read-only-input'} />
+            <Input placeholder={i18n('Title')} className={enableEdit ? null : 'read-only-input'} />
           </Form.Item>
 
           <Form.Item
@@ -207,7 +207,7 @@ function AddDataflow({
             className={enableEdit ? null : 'read-only-input'}>
             <TextArea
               autoSize={{ minRows: enableEdit ? 2 : 1 }}
-              placeholder={enableEdit ? 'Dataflow Description' : 'Description not provided'}
+              placeholder={enableEdit ? i18n('Description') : i18n('Description not provided')}
             />
           </Form.Item>
 
@@ -233,14 +233,14 @@ function AddDataflow({
           </Form.Item>
 
           <Form.Item label={<Text text="Username" />} name="cluster_username">
-            <Input placeholder="Cluster username" className={enableEdit ? null : 'read-only-input'}></Input>
+            <Input placeholder={i18n('Cluster username')} className={enableEdit ? null : 'read-only-input'}></Input>
           </Form.Item>
 
           <Form.Item
             label={<Text text="Password" />}
             name="cluster_password"
             className={enableEdit ? null : 'read-only-input'}>
-            <Input placeholder={enableEdit ? 'Cluster Password' : null} type="password" />
+            <Input placeholder={enableEdit ? i18n('Cluster Password') : null} type="password" />
           </Form.Item>
 
           <NotifyField
@@ -263,7 +263,7 @@ function AddDataflow({
                       message: 'Please enter success message',
                     },
                   ]}>
-                  <TextArea autoSize={{ minRows: enableEdit ? 2 : 1 }} placeholder="Success Message" />
+                  <TextArea autoSize={{ minRows: enableEdit ? 2 : 1 }} placeholder={i18n('Success message')} />
                 </Form.Item>
               ) : null}
 
@@ -279,7 +279,7 @@ function AddDataflow({
                       message: 'Please enter a Failure',
                     },
                   ]}>
-                  <TextArea autoSize={{ minRows: enableEdit ? 2 : 1 }} placeholder="Failure Message" />
+                  <TextArea autoSize={{ minRows: enableEdit ? 2 : 1 }} placeholder={i18n('Failure message')} />
                 </Form.Item>
               ) : null}
 
