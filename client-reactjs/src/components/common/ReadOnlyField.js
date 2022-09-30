@@ -2,7 +2,7 @@ import React from 'react';
 import { Typography } from 'antd';
 
 const ReadOnlyField = ({ value, children, ...rest }) => (
-  <Typography.Text {...rest} className="ant-form-text">
+  <Typography.Text {...rest} style={{ paddingLeft: '11px' }} className="ant-form-text">
     {value || children}
   </Typography.Text>
 );
