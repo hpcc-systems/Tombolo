@@ -47,7 +47,7 @@ const TagWithPopUp = ({ record, file, showAll }) => {
     return 'green';
   };
 
-  const getTitle = () => (record.inherited ? `${i18n('Inherited from')}: ${record.inherited}` : null);
+  const getTitle = () => (record.inherited ? `${i18n('Inherited from')}: ${record.inherited}` : null);
 
   return (
     <>
