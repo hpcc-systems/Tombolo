@@ -32,7 +32,7 @@ import { Toolbar, Menu } from '@antv/x6-react-components';
 import { authHeader, handleError } from '../../../common/AuthHeader';
 import { useEffect } from 'react';
 import { getWorkingCopyGraph, saveWorkingCopyGraph } from '../../../common/CommonUtil';
-import Text from '../../../common/Text';
+import Text, { i18n } from '../../../common/Text';
 
 const Item = Toolbar.Item; // eslint-disable-line
 const { confirm } = Modal;
@@ -513,19 +513,18 @@ const VersionsButton = ({ graphRef }) => {
         active={saveGraph.loading}
         icon={saveGraph.loading ? <LoadingOutlined /> : <SaveOutlined />}
         onClick={openSaveDialog}>
-        {saveGraph.loading ? '...' + <Text text="...Saving" /> : <Text text="Save Version" />}
+        {saveGraph.loading ? '...' + i18n('...Saving') : i18n('Save Version')}
       </Item>
       <Item className="versions_list" name="versions" tooltip="Versions" dropdown={getVersionsList()} />
       {!clickedVersion.name ? (
         <Item name="current_version">
-          <Badge color="#3bb44a">
-            <Text text="You are on Working Copy" />
-          </Badge>
+          <Badge color="#3bb44a" />
+          {i18n('You are on Working Copy')}
         </Item>
       ) : (
         <>
           <Item name="current_version" tooltip={clickedVersion.description}>
-            <Badge color="#3bb44a" /> You are on version &quot{clickedVersion.name}&quot
+            <Badge color="#3bb44a" /> You are on version "{clickedVersion.name}"
           </Item>
           <Item
             name="switch"
