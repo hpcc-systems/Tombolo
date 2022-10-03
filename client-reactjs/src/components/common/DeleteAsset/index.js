@@ -7,10 +7,12 @@ import DeleteAssetModal from './DeleteAssetModal';
   - Styles prop will be applied to outer wrapper div to position element. 
   - Asset prop is an object that expects { id:<assetId>,  type: [Job, File, Index, Group ],  title: <asset title or name>}
 */
-const DeleteAsset = ({ asset, onDelete, style = null, component }) => {
+const DeleteAsset = ({ asset, onDelete, style = null, hidden = false, component }) => {
   const [visible, setVisible] = useState(false);
   const hideModal = () => setVisible(false);
   const showModal = () => setVisible(true);
+
+  if (hidden) return null;
 
   return (
     <div style={style}>

@@ -4,6 +4,7 @@ import { EditOutlined } from '@ant-design/icons';
 import { useSelector } from 'react-redux';
 import ConstraintsTags from '../admin/Compliance/Constraints/ConstraintsTags';
 import Text, { i18n } from './Text';
+import ReadOnlyField from './ReadOnlyField';
 const { Option } = Select;
 
 const LayoutTable = ({ dataSource, setData, enableEdit }) => {
@@ -185,5 +186,3 @@ const ConstraintModal = ({ modal, setData, dataSource, closeModal }) => {
     </Modal>
   );
 };
-
-const ReadOnlyField = ({ value }) => <span className="ant-form-text">{value}</span>;
