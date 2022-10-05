@@ -5,7 +5,7 @@
   "main": "server.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
-    "bootstrap-server" : "(npm install) && (npm run createSchema) && (npm run migrations)  && (npm run seeds) && (nodemon server.js)",
+    "bootstrap-server": "(npm install) && (npm run createSchema) && (npm run migrations)  && (npm run seeds) && (nodemon server.js)",
     "createSchema": "npx sequelize db:create tombolo",
     "migrations": "npx sequelize db:migrate",
     "seeds": "npx sequelize db:seed:all"
@@ -30,10 +30,10 @@
     "lodash": "^4.17.20",
     "moment": "^2.29.2",
     "morgan": "^1.10.0",
-    "multer": "^1.4.3",
+    "multer": "^1.4.5-lts.1",
     "mysql2": "^1.7.0",
     "nodemailer": "^6.7.1",
-    "passport": "^0.5.2",
+    "passport": "^0.6.0",
     "passport-azure-ad": "^4.3.1",
     "path": "^0.12.7",
     "request": "^2.88.2",
