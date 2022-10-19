@@ -1,7 +1,7 @@
 import React from 'react';
 import { Modal } from 'antd';
 
-import FileDetailsForm from './FileDetails';
+import FileDetailsForm from './files/FileDetails';
 import FileTemplate from './templates/FileTemplate';
 import JobDetailsForm from './Jobs/JobDetails';
 import IndexDetailsForm from './IndexDetails';
