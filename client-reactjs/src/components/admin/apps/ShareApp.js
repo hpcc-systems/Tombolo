@@ -2,7 +2,10 @@ import { DeleteOutlined, QuestionCircleOutlined, SearchOutlined } from '@ant-des
 import { AutoComplete, Button, message, Modal, Popconfirm, Select, Spin, Table, Tooltip } from 'antd';
 import debounce from 'lodash/debounce';
 import React, { Component } from 'react';
+
 import { authHeader, handleError } from '../../common/AuthHeader.js';
+import { i18n } from '../../common/Text';
+
 const { confirm } = Modal;
 const { Option } = Select;
 class ShareApp extends Component {
@@ -282,7 +285,7 @@ class ShareApp extends Component {
               style={{ width: '70%', paddingRight: '5px' }}
               onSearch={(value) => this.searchUsers(value)}
               onSelect={(value, user) => this.onUserSelected(value, user)}
-              placeholder="Search users">
+              placeholder={i18n('Search users')}>
               {userSuggestions.map((user) => {
                 return (
                   <Option key={user.value} value={user.text}>

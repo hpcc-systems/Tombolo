@@ -1,60 +1,46 @@
-/* eslint-disable no-useless-escape */
-import { SearchOutlined } from '@ant-design/icons';
-import { Button, Col, Form, Input, message, Row, Select, Spin, Tabs, Typography } from 'antd';
+import { message, Tabs } from 'antd';
 import React, { Component } from 'react';
 import { connect } from 'react-redux';
+
 import { authHeader, handleError } from '../../common/AuthHeader.js';
 import { hasEditPermission } from '../../common/AuthUtil.js';
-import { eclTypes, formItemLayout, omitDeep } from '../../common/CommonUtil.js';
-import DeleteAsset from '../../common/DeleteAsset/index.js';
-import EditableTable from '../../common/EditableTable.js';
 import MonacoEditor from '../../common/MonacoEditor.js';
+import Text from '../../common/Text.jsx';
 import { handleJobDelete } from '../../common/WorkflowUtil';
 import AssociatedDataflows from '../AssociatedDataflows';
-import BasicsTabGeneral from './BasicsTabGeneral';
-import BasicsTabManul from './BasicsTabManaul';
-import BasicsTabScript from './BasicsTabScript';
-import BasicsTabSpray from './BasicsTabSpray';
-import InputFiles from './JobFiles/InputOutoutFiles';
+import JobBasicTab from './BasicTab/JobBasicTab.js';
+import Controls from './Controls.js';
+import InputParamsTab from './InputParamsTab.js';
+import InputOutoutFiles from './JobFiles/InputOutoutFiles';
+import JobForm from './JobForm.js';
 import ScheduleTab from './ScheduleTab.js';
+import ScriptTab from './ScriptTab.js';
 
 const TabPane = Tabs.TabPane;
-const { Option } = Select;
-const { TextArea } = Input;
 
 class JobDetails extends Component {
   formRef = React.createRef();
 
   state = {
-    visible: true,
+    // form fields error, true if form has errors
+    errors: false,
+    // Selected Cluster from dropdown
+    selectedCluster: '',
+    // editing states
+    editing: false,
+    enableEdit: false,
+    dataAltered: false,
+    addingNewAsset: false,
+    // Tabs state
+    selectedTabPaneKey: 1,
+    // Loading flags
     confirmLoading: false,
-    loading: false,
-    jobTypes: [
-      'Data Profile',
-      'ETL',
-      'Job',
-      'Manual',
-      'Query Publish',
-      'Modeling',
-      'Query Build',
-      'Scoring',
-      'Script',
-      'Spray',
-    ],
-    paramName: '',
-    paramType: '',
+    initialDataLoading: true,
+    // input-output files state from files tables
     sourceFiles: [],
     selectedInputFile: '',
     selectedOutputFile: undefined,
-    clusters: [],
-    selectedCluster: '',
-    jobSearchSuggestions: [],
-    jobSearchErrorShown: false,
-    autoCompleteSuffix: <SearchOutlined />,
-    searchResultsLoaded: false,
-    initialDataLoading: true,
-    dropZones: {},
-    dropZoneFileSearchSuggestions: [],
+    // job related data
     job: {
       id: '',
       groupId: '',
@@ -70,34 +56,22 @@ class JobDetails extends Component {
       sprayFileName: '',
       sprayedFileScope: '',
       selectedDropZoneName: {},
-      manualJobFilePath: [],
-    }, //file path to show in cascader
-    enableEdit: false,
-    editing: false,
-    addingNewAsset: false,
-    dataAltered: false,
-    errors: false,
-    isNew: this.props.isNew,
-    selectedTabPaneKey: 1,
+      manualJobFilePath: [], //file path to show in cascader
+    },
   };
 
   async componentDidMount() {
     const applicationId = this.props.application?.applicationId || this.props.match?.params?.applicationId;
-
-    const { inTabView, viewMode } = this.props;
     const assetId = this.props?.selectedAsset?.id || this.props.match?.params?.assetId;
+    const { inTabView, viewMode } = this.props;
 
     if (!assetId || inTabView) this.setState({ addingNewAsset: true, enableEdit: true, editing: true });
 
     if (viewMode) this.setState({ addingNewAsset: false, enableEdit: false, editing: false });
 
-    if (applicationId) {
-      await this.getFiles({ applicationId });
-    }
+    if (applicationId) await this.getFiles({ applicationId });
 
-    if (applicationId && assetId) {
-      await this.getJobDetails({ assetId, applicationId });
-    }
+    if (applicationId && assetId) await this.getJobDetails({ assetId, applicationId });
 
     if (inTabView) {
       // if adding multiple jobs via tabs,
@@ -114,18 +88,6 @@ class JobDetails extends Component {
     }
     // we will start with initialDataLoading true as initial state, after component mounted we flip this flag
     this.setState({ initialDataLoading: false });
-  }
-
-  //Unmounting phase
-  componentWillUnmount() {}
-
-  handleViewOnlyMode() {
-    //Getting global state
-    this.setState({
-      enableEdit: this.props.editMode,
-      editing: this.props.editMode,
-      addingNewAsset: this.props.addingNewAsset,
-    });
   }
 
   async getJobDetails({ assetId, applicationId }) {
@@ -172,7 +134,6 @@ class JobDetails extends Component {
             outputFiles: outputFiles,
             ecl: data.ecl,
             jobType: data.jobType,
-            //For read only input
             description: data.description,
             sprayFileName: data.sprayFileName,
             sprayedFileScope: data.sprayedFileScope,
@@ -217,20 +178,6 @@ class JobDetails extends Component {
     }
   }
 
-  setJobDetails = (jobDetails) => {
-    this.setState({
-      ...this.state,
-      job: {
-        ...this.state.job,
-        id: jobDetails.id,
-        groupId: jobDetails.groupId,
-        ecl: jobDetails.ecl,
-        inputFiles: jobDetails.jobfiles.filter((jobFile) => jobFile.file_type === 'input'),
-        outputFiles: jobDetails.jobfiles.filter((jobFile) => jobFile.file_type === 'output'),
-      },
-    });
-  };
-
   async getFiles({ applicationId }) {
     const queryStringParams = {};
     if (applicationId) queryStringParams['application_id'] = applicationId;
@@ -251,70 +198,39 @@ class JobDetails extends Component {
     }
   }
 
-  setInputParamsData = (data) => {
-    let omitResults = omitDeep(data, 'id');
-    this.setState({ job: { ...this.state.job, inputParams: omitResults } });
-  };
-
-  clearState() {
-    this.setState({
-      ...this.state,
-      sourceFiles: [],
-      selectedInputFile: '',
-      selectedTab: 0,
-      clusters: [],
-      selectedCluster: '',
-      jobSearchSuggestions: [],
-      searchResultsLoaded: false,
-      job: {
-        id: '',
-        groupId: '',
-        dataflowId: this.props.selectedDataflow ? this.props.selectedDataflow.id : '',
-        ecl: '',
-        entryBWR: '',
-        jobType: this.props?.selectedAsset?.type || '',
-        gitRepo: '',
-        contact: '',
-        inputParams: [],
-        inputFiles: [],
-        outputFiles: [],
-      },
-    });
-    this.formRef.current.resetFields();
-  }
-
-  onClusterSelection = (value) => {
-    this.setState({ selectedCluster: value });
-  };
-
   handleOk = async () => {
+    const form = this.formRef.current;
+    const { onClose, history, application, inTabView } = this.props;
+
     try {
-      const fields = await this.formRef.current.validateFields();
+      const fields = await form.validateFields();
       this.setState({ confirmLoading: true });
       const saveResponse = await this.saveJobDetails();
       message.success(`${fields.name} saved`);
-      if (this.props.onClose) {
+
+      if (onClose) {
         // THIS METHOD WILL PASS PROPS TO GRAPH!
         const isAssociated =
-          this.formRef.current.getFieldValue('jobSelected') ||
-          this.formRef.current.getFieldValue('isAssociated') ||
-          this.formRef.current.getFieldValue('isStoredOnGithub') ||
-          this.formRef.current.getFieldValue('jobType') === 'Manual';
-
+          form.getFieldValue('jobSelected') ||
+          form.getFieldValue('isAssociated') ||
+          form.getFieldValue('isStoredOnGithub') ||
+          form.getFieldValue('jobType') === 'Manual';
+        // if job is newly associated jobSelected value is gonna be true, if it is undefined we will fall-back to isAssociated value, if it is true it mean that job was previously associated, if it is falsy, then we have no associations yet;
         const resultToGraph = {
+          isAssociated,
           assetId: saveResponse.jobId,
-          name: this.formRef.current.getFieldValue('name'),
-          title: this.formRef.current.getFieldValue('title'),
-          isAssociated, // if job is newly associated jobSelected value is gonna be true, if it is undefined we will fall-back to isAssociated value, if it is true it mean that job was previously associated, if it is falsy, then we have no associations yet;
+          name: form.getFieldValue('name'),
+          title: form.getFieldValue('title'),
         };
 
-        return this.props.onClose(resultToGraph);
+        return onClose(resultToGraph);
       }
-      if (this.props.history) {
-        return this.props.history.push(`/${this.props.application.applicationId}/assets`);
+
+      if (history) {
+        return history.push(`/${application.applicationId}/assets`);
       } else {
-        if (this.props.inTabView) {
-          const { updateTab, key } = this.props.inTabView;
+        if (inTabView) {
+          const { updateTab, key } = inTabView;
           updateTab({ status: 'saved', key });
           this.switchToViewOnly();
         }
@@ -324,8 +240,8 @@ class JobDetails extends Component {
       let errorMessage = error?.message || 'Please check your fields for errors';
       if (error?.errorFields) errorMessage = error.errorFields[0].errors[0];
 
-      if (this.props.inTabView) {
-        const { updateTab, key, value } = this.props.inTabView;
+      if (inTabView) {
+        const { updateTab, key, value } = inTabView;
         updateTab({ status: 'error', key });
         // Add a Job name to error message;
         errorMessage = `"${value}": ${errorMessage}`;
@@ -336,22 +252,19 @@ class JobDetails extends Component {
     this.setState({ confirmLoading: false });
   };
 
-  handleDelete = () => {
-    handleJobDelete(this.props.selectedAsset.id, this.props.application.applicationId)
-      .then((_result) => {
-        if (this.props.onDelete) {
-          this.props.onDelete(this.props.currentlyEditingNode);
-        } else {
-          //this.props.onRefresh()
-          this.props.history.push('/' + this.props.application.applicationId + '/assets');
-        }
-        //this.props.onClose();
-        message.success('Job deleted successfully');
-      })
-      .catch((error) => {
-        console.log(error);
-        message.error('There was an error deleting the Job file');
-      });
+  handleDelete = async () => {
+    try {
+      const { history, onDelete, currentlyEditingNode, application, selectedAsset } = this.props;
+
+      await handleJobDelete(selectedAsset.id, application.applicationId);
+
+      onDelete ? onDelete(currentlyEditingNode) : history.push('/' + application.applicationId + '/assets');
+
+      message.success('Job deleted successfully');
+    } catch (error) {
+      console.log(error);
+      message.error('There was an error deleting the Job file');
+    }
   };
 
   async saveJobDetails() {
@@ -362,10 +275,9 @@ class JobDetails extends Component {
         //!! isNew: this.props.isNew, id: this.state.job.id = NOT IN USE
         body: JSON.stringify({ isNew: this.props.isNew, id: this.state.job.id, job: await this.populateJobDetails() }),
       };
-      const response = await fetch('/api/job/saveJob', payload);
 
+      const response = await fetch('/api/job/saveJob', payload);
       if (!response.ok) handleError(response);
-      if (this.props.reload) this.props.reload();
 
       return await response.json();
     } catch (error) {
@@ -467,52 +379,12 @@ class JobDetails extends Component {
 
   handleCancel = () => {
     this.setState({ visible: false });
-    //this.props.onClose();
     if (this.props.history) {
       this.props.history.push('/' + this.props.application.applicationId + '/assets');
     } else {
-      this.props.onClose(); //document.querySelector('button.ant-modal-close').click();
+      this.props.onClose();
     }
   };
-
-  handleAddInputFile = () => {
-    const selectedFile = this.state.sourceFiles.find((sourceFile) => sourceFile.id === this.state.selectedInputFile);
-    selectedFile.addedManually = true;
-    this.setState({
-      job: {
-        ...this.state.job,
-        inputFiles: [...this.state.job.inputFiles, selectedFile],
-      },
-    });
-  };
-
-  handleAddOutputFile = () => {
-    const selectedFile = this.state.sourceFiles.find((sourceFile) => sourceFile.id === this.state.selectedOutputFile);
-    selectedFile.addedManually = true;
-    this.setState({
-      job: {
-        ...this.state.job,
-        outputFiles: [...this.state.job.outputFiles, selectedFile],
-      },
-    });
-  };
-  onChange = (e) => {
-    // console.log('-e-----------------------------------------');
-    // console.dir({e}, { depth: null });
-    // console.log('------------------------------------------');
-
-    this.setState({ job: { ...this.state.job, [e.target.name]: e.target.value } });
-  };
-
-  handleInputFileChange = (value) => this.setState({ selectedInputFile: value });
-
-  handleOutputFileChange = (value) => this.setState({ selectedOutputFile: value });
-
-  handleECLChange = (value) => this.setState({ job: { ...this.job, ecl: value } });
-
-  onJobTypeChange = (value) => this.setState({ job: { ...this.state.job, jobType: value } });
-
-  onDropZoneFileChange = (value) => this.setState({ job: { ...this.state.job, sprayFileName: value } });
 
   executeJob = async () => {
     try {
@@ -540,462 +412,128 @@ class JobDetails extends Component {
     } catch (error) {
       console.log('-error executeJob-----------------------------------------');
       console.dir({ error }, { depth: null });
-      console.log('------------------------------------------');
-
       message.error(error.message);
     }
     this.setState({ initialDataLoading: false });
   };
 
-  shouldShowTab = (jobType) => {
-    const invalidJobTypeForTab = {
-      Script: 'Script',
-      Spray: 'Spray',
-      Manual: 'Manual',
-    };
-    // this.state.job.jobType !== 'Script' && this.state.job.jobType !== 'Spray' && this.state.job.jobType !== 'Manual'
-    return invalidJobTypeForTab[jobType] ? false : true;
-  };
-
+  // this func will be passed as prop to update JobDetails state, and it should be a wrapper func like this, because react gonna give us error if we pass this.setState straight forward,
+  // TypeError: Cannot read property 'updater' of undefined
+  updateState = (values) => this.setState(values);
+  hideTab = (jobType) => ['Script', 'Spray', 'Manual'].includes(jobType);
+  onClusterSelection = (value) => this.setState({ selectedCluster: value });
+  onJobTypeChange = (value) => this.setState({ job: { ...this.state.job, jobType: value } });
+  handleViewOnlyMode = () => this.setState({ enableEdit: false, editing: false, addingNewAsset: false });
   //Switch to view only mode
   switchToViewOnly = () => this.setState({ enableEdit: !this.state.enableEdit, editing: false, dataAltered: true });
 
   render() {
+    const { application, displayingInModal, inTabView, isNew, selectedAsset, match, selectedDataflow } = this.props;
+    const { job, enableEdit, selectedTabPaneKey } = this.state;
     const editingAllowed = hasEditPermission(this.props.user);
+    const { name, ecl, jobType } = job;
 
-    const { confirmLoading, jobTypes, sourceFiles } = this.state;
-
-    const longFieldLayout = {
-      labelCol: { span: 2 },
-      wrapperCol: { span: 12 },
+    const scheduleProps = {
+      editingAllowed,
+      nodes: this.props.nodes,
+      readOnly: this.props.viewMode,
+      dataflowId: selectedDataflow?.id,
+      addToSchedule: this.props.addToSchedule, // method passed from graph to add schedule to graphs
+      selectedAsset: this.props.selectedAsset,
+      applicationId: application?.applicationId || match?.params?.applicationId,
     };
 
-    const columns = [
-      {
-        title: 'Name',
-        dataIndex: 'name',
-        editable: editingAllowed,
-        celleditor: 'text',
-        regEx: /^[a-zA-Z0-9.,:;()?!""@&#*/'$_ -]*$/,
-      },
-      {
-        title: 'Type',
-        dataIndex: 'type',
-        editable: editingAllowed,
-        celleditor: 'select',
-        showdatadefinitioninfield: true,
-        celleditorparams: {
-          values: eclTypes.sort(),
-        },
-      },
-    ];
+    const commonProps = {
+      enableEdit,
+      editingAllowed,
+      state: this.state,
+      props: this.props,
+      form: this.formRef,
+      setState: this.updateState,
+    };
 
-    const scriptInputParamscolumns = [
-      {
-        title: 'Name',
-        dataIndex: 'name',
-        editable: editingAllowed,
-      },
-      {
-        title: 'Value',
-        dataIndex: 'type',
-        editable: editingAllowed,
-      },
-    ];
+    const controlProps = {
+      handleOk: this.handleOk,
+      executeJob: this.executeJob,
+      handleCancel: this.handleCancel,
+      handleDelete: this.handleDelete,
+    };
 
-    const { name, jobType, inputParams, outputFiles, inputFiles, scriptPath } = this.state.job;
+    const noECLAvailable = this.formRef.current?.getFieldValue('isStoredOnGithub') && !job.ecl;
 
     //render only after fetching the data from the server
-    if (!name && !this.props.selectedAsset && !this.props.isNew) {
-      return null;
-    }
-
-    //Function to make fields editable
-    const makeFieldsEditable = () => {
-      this.setState({ enableEdit: !this.state.enableEdit, editing: true });
-    };
-
-    // show control buttons at the bottom of modal
-    const getModalControls = () => {
-      // if on "Schedule Tab" (#6) hide controls
-      if (this.state.selectedTabPaneKey === '6') return null;
-      // if read only show only execute button or nothing
-      if (this.props.viewMode) return getExecuteJobBtn();
-      // if not readonly show controls for editing and deleting;
-      return controls;
-    };
-
-    const getExecuteJobBtn = () => {
-      // if opened in not LIVE dataflow - hide execute button;
-      if (this.props.displayingInModal && !this.props.selectedDataflow?.versionId) return null;
-      // if opened in LIVE dataflow - show execute button inside grey frame wrapper;
-      if (this.props.displayingInModal && this.props.selectedDataflow?.versionId) {
-        return (
-          <div className="assetDetail-buttons-wrapper-modal">
-            <Button disabled={!editingAllowed} type="primary" onClick={this.executeJob}>
-              Execute Job
-            </Button>
-          </div>
-        );
-      }
-      // if opened in main view show button as dissabled (click edit to enable)
-      return this.props.inTabView ? null : (
-        <Button disabled={!editingAllowed || !this.state.enableEdit} type="primary" onClick={this.executeJob}>
-          Execute Job
-        </Button>
-      );
-    };
-
-    //controls
-    const controls = (
-      <div
-        className={this.props.displayingInModal ? 'assetDetail-buttons-wrapper-modal' : 'assetDetail-buttons-wrapper '}>
-        <span style={{ float: 'left' }}>{getExecuteJobBtn()}</span>
-
-        <span className="button-container">
-          {!this.state.enableEdit && editingAllowed ? (
-            <Button type="primary" onClick={makeFieldsEditable}>
-              Edit
-            </Button>
-          ) : null}
-
-          {this.state.dataAltered && this.state.enableEdit ? (
-            <Button onClick={this.switchToViewOnly}> View Changes </Button>
-          ) : null}
-
-          {this.state.enableEdit ? (
-            <span>
-              {!this.props.isNew ? (
-                <DeleteAsset
-                  asset={{
-                    id: this.state.job.id,
-                    type: 'Job',
-                    title: this.formRef.current.getFieldValue('title') || this.formRef.current.getFieldValue('name'),
-                  }}
-                  style={{ display: 'inline-block' }}
-                  onDelete={this.handleDelete}
-                  component={
-                    <Button key="danger" type="danger">
-                      {' '}
-                      Delete{' '}
-                    </Button>
-                  }
-                />
-              ) : null}
-
-              <span style={{ marginLeft: '25px' }}>
-                {this.props.inTabView ? null : (
-                  <Button key="back" onClick={this.handleCancel} type="primary" ghost>
-                    Cancel
-                  </Button>
-                )}
-                <Button
-                  key="submit"
-                  htmlType="submit"
-                  disabled={!editingAllowed || this.state.errors}
-                  type="primary"
-                  loading={confirmLoading}
-                  onClick={this.handleOk}
-                  style={{ background: 'var(--success)' }}>
-                  Save
-                </Button>
-              </span>
-            </span>
-          ) : (
-            <span>
-              {this.state.dataAltered ? (
-                <span style={{ marginLeft: '25px' }}>
-                  {this.props.inTabView ? null : (
-                    <Button key="back" onClick={this.handleCancel} type="primary" ghost>
-                      Cancel
-                    </Button>
-                  )}
-                  <Button
-                    key="submit"
-                    disabled={!editingAllowed || this.state.errors}
-                    type="primary"
-                    loading={confirmLoading}
-                    onClick={this.handleOk}
-                    style={{ background: 'var(--success)' }}>
-                    Save
-                  </Button>
-                </span>
-              ) : (
-                <span>
-                  {this.props.inTabView ? null : (
-                    <Button key="back" onClick={this.handleCancel} type="primary" ghost>
-                      Cancel
-                    </Button>
-                  )}
-                </span>
-              )}
-            </span>
-          )}
-        </span>
-      </div>
-    );
-
-    //When input field value is changed
-    const onFieldsChange = (changedFields, allFields) => {
-      const inputErrors = allFields.filter((item) => item.errors.length > 0);
-      this.setState({ dataAltered: true, errors: inputErrors.length > 0 });
-    };
-
-    const noECLAvailable = this.formRef.current?.getFieldValue('isStoredOnGithub') && !this.state.job.ecl;
-    const isAssociated = this.formRef.current?.getFieldValue('isAssociated'); // this value is assign only at the time of saving job. if it is true - user can not change it.
-    // Make labels spacing a little wider for in modal view
-    this.props.displayingInModal ? (formItemLayout.labelCol.span = 3) : (formItemLayout.labelCol.span = 2);
+    if (!name && !selectedAsset && !isNew) return null;
 
     //JSX
     return (
-      <React.Fragment>
-        {this.props.displayingInModal || this.state.addingNewAsset ? null : (
-          <div className="assetTitle">Job : {this.state.job.name}</div>
-        )}
-        <div
-          className={
-            this.props.displayingInModal
-              ? 'assetDetails-content-wrapper-modal'
-              : this.props.inTabView
-              ? ''
-              : 'assetDetails-content-wrapper'
-          }>
-          <Form
-            colon={this.state.enableEdit ? true : false}
-            {...formItemLayout}
-            initialValues={{
-              selectedFile: null,
-              notify: 'Never',
-              jobType: 'Job',
-              isStoredOnGithub: false,
-            }}
-            labelAlign="left"
-            ref={this.formRef}
-            scrollToFirstError
-            onFieldsChange={onFieldsChange}
-            // labelAlign = "right"
-          >
-            <Tabs
-              defaultActiveKey={this.state.selectedTabPaneKey}
-              tabBarExtraContent={this.props.displayingInModal ? null : controls}
-              onChange={(activeKey) => this.setState({ selectedTabPaneKey: activeKey })}>
-              <TabPane tab="Basic" key="1">
-                {this.props.inTabView ? null : (
-                  <Form.Item label="Job Type" className={this.state.enableEdit ? null : 'read-only-input'}>
-                    <Row gutter={[8, 8]}>
-                      <Col span={12}>
-                        <Form.Item noStyle name="jobType">
-                          {!this.state.enableEdit ? (
-                            <Typography.Text style={{ paddingLeft: '11px' }}>{jobType}</Typography.Text>
-                          ) : (
-                            <Select disabled={isAssociated} placeholder="Job Type" onChange={this.onJobTypeChange}>
-                              {jobTypes.map((d) => (
-                                <Option key={d}>{d}</Option>
-                              ))}
-                            </Select>
-                          )}
-                        </Form.Item>
-                      </Col>
-                    </Row>
-                  </Form.Item>
-                )}
-                {(() => {
-                  if (this.state.initialDataLoading)
-                    return (
-                      <Spin
-                        size="large"
-                        spinning={this.state.initialDataLoading}
-                        style={{ display: 'block', textAlign: 'center' }}
-                      />
-                    );
-                  switch (jobType) {
-                    case 'Script':
-                      return (
-                        <BasicsTabScript
-                          inTabView={this.props.inTabView}
-                          enableEdit={this.state.enableEdit}
-                          editingAllowed={editingAllowed}
-                          onChange={this.onChange}
-                          localState={this.state}
-                        />
-                      );
-                    case 'Spray':
-                      return (
-                        <BasicsTabSpray
-                          enableEdit={this.state.enableEdit}
-                          editingAllowed={editingAllowed}
-                          addingNewAsset={this.state.addingNewAsset}
-                          clearState={this.clearState}
-                          onChange={this.onChange}
-                          clusters={this.props.clusters}
-                          localState={this.state}
-                          formRef={this.formRef}
-                        />
-                      );
-                    case 'Manual':
-                      return (
-                        <BasicsTabManul
-                          inTabView={this.props.inTabView}
-                          enableEdit={this.state.enableEdit}
-                          editingAllowed={editingAllowed}
-                          addingNewAsset={this.state.addingNewAsset}
-                          clearState={this.clearState}
-                          onChange={this.onChange}
-                          clusters={this.props.clusters}
-                          localState={this.state}
-                          formRef={this.formRef}
-                        />
-                      );
-                    default: // [  case 'Data Profile'; case 'ETL'; case 'Job'; case 'Modeling'; case 'Query Build'; case 'Scoring'; ]
-                      return (
-                        <BasicsTabGeneral
-                          inTabView={this.props.inTabView}
-                          enableEdit={this.state.enableEdit}
-                          editingAllowed={editingAllowed}
-                          addingNewAsset={this.state.addingNewAsset}
-                          jobType={this.state.job.jobType}
-                          clearState={this.clearState}
-                          onChange={this.onChange}
-                          clusters={this.props.clusters}
-                          localState={this.state}
-                          formRef={this.formRef}
-                          applicationId={this.props.application.applicationId}
-                          setJobDetails={this.setJobDetails}
-                          onClusterSelection={this.onClusterSelection}
-                        />
-                      );
-                  }
-                })()}
+      <>
+        <JobForm {...commonProps}>
+          <Tabs
+            defaultActiveKey={selectedTabPaneKey}
+            tabBarExtraContent={displayingInModal ? null : <Controls {...commonProps} {...controlProps} />}
+            onChange={(activeKey) => this.setState({ selectedTabPaneKey: activeKey })}>
+            <TabPane tab={<Text text="Basic" />} key="1">
+              <JobBasicTab {...commonProps} />
+            </TabPane>
+
+            {this.hideTab(jobType) ? null : (
+              <TabPane tab="ECL" disabled={noECLAvailable} key="2">
+                <MonacoEditor lang="ecl" value={ecl} targetDomId={`job-${inTabView?.key || ''}`} />
               </TabPane>
+            )}
 
-              {this.shouldShowTab(jobType) ? (
-                <TabPane tab="ECL" disabled={noECLAvailable} key="2">
-                  <MonacoEditor
-                    lang="ecl"
-                    value={this.state.job.ecl}
-                    onChange={this.handleECLChange}
-                    targetDomId={this.props.inTabView ? 'jobDescr' + this.props.inTabView.key : 'jobDescr'}
-                  />
+            {jobType !== 'Script' ? null : (
+              <TabPane disabled={noECLAvailable} tab={<Text text="Script" />} key="2">
+                <ScriptTab {...commonProps} />
+              </TabPane>
+            )}
+
+            {this.hideTab(jobType) ? null : (
+              <>
+                <TabPane disabled={noECLAvailable} tab={<Text text="Input Params" />} key="3">
+                  <InputParamsTab {...commonProps} />
                 </TabPane>
-              ) : jobType === 'Script' ? (
-                <TabPane disabled={noECLAvailable} tab="Script" key="2">
-                  <Form.Item
-                    {...longFieldLayout}
-                    label="Script Path"
-                    name="scriptPath"
-                    validateTrigger="onBlur"
-                    rules={[
-                      {
-                        required: this.state.enableEdit,
-                        pattern: new RegExp(/[a-zA-Z~`_'\".-]+$/i),
-                        message: 'Please enter a valid path',
-                      },
-                    ]}>
-                    {this.state.enableEdit ? (
-                      <Input
-                        id="job_scriptPath"
-                        onChange={this.onChange}
-                        placeholder="Main script path"
-                        value={scriptPath}
-                        disabled={!editingAllowed}
-                      />
-                    ) : (
-                      <TextArea className="read-only-textarea" disabled />
-                    )}
-                  </Form.Item>
+
+                <TabPane disabled={noECLAvailable} tab={<Text text="Input Files" />} key="4">
+                  <InputOutoutFiles type="input" label="Input Files" {...commonProps} />
                 </TabPane>
-              ) : null}
 
-              {this.shouldShowTab(jobType) ? (
-                <React.Fragment>
-                  <TabPane disabled={noECLAvailable} tab="Input Params" key="3">
-                    <EditableTable
-                      columns={this.state.job.jobType !== 'Script' ? columns : scriptInputParamscolumns}
-                      dataSource={inputParams}
-                      editingAllowed={editingAllowed}
-                      dataDefinitions={[]}
-                      showDataDefinition={false}
-                      setData={this.setInputParamsData}
-                      enableEdit={this.state.enableEdit}
-                    />
-                  </TabPane>
-                  <TabPane disabled={noECLAvailable} tab="Input Files" key="4">
-                    <InputFiles
-                      inputFiles={inputFiles}
-                      clusterId={this.state.selectedCluster}
-                      enableEdit={this.state.enableEdit}
-                      handleInputFileChange={this.handleInputFileChange}
-                      editingAllowed={editingAllowed}
-                      sourceFiles={sourceFiles}
-                      handleAddInputFile={this.handleAddInputFile}
-                      selectedTabPaneKey={this.state.selectedTabPaneKey}
-                      test={this.test}
-                    />
-                  </TabPane>
-
-                  <TabPane tab="Output Files" disabled={noECLAvailable} key="5">
-                    <InputFiles
-                      outputFiles={outputFiles}
-                      clusterId={this.state.selectedCluster}
-                      enableEdit={this.state.enableEdit}
-                      handleOutputFileChange={this.handleOutputFileChange}
-                      editingAllowed={editingAllowed}
-                      sourceFiles={sourceFiles}
-                      handleAddOutputFile={this.handleAddOutputFile}
-                      selectedTabPaneKey={this.state.selectedTabPaneKey}
-                    />
-                  </TabPane>
-                </React.Fragment>
-              ) : null}
-
-              {this.props.selectedDataflow ? (
-                <TabPane tab="Schedule" key="6">
-                  <ScheduleTab
-                    nodes={this.props.nodes}
-                    readOnly={this.props.viewMode}
-                    editingAllowed={editingAllowed}
-                    addToSchedule={this.props.addToSchedule} // method passed from graph to add schedule to graph
-                    selectedAsset={this.props.selectedAsset}
-                    dataflowId={this.props.selectedDataflow?.id}
-                    applicationId={this.props.application?.applicationId || this.props.match?.params?.applicationId}
-                  />
+                <TabPane tab={<Text text="Output Files" />} disabled={noECLAvailable} key="5">
+                  <InputOutoutFiles type="output" label="Output Files" {...commonProps} />
                 </TabPane>
-              ) : null}
+              </>
+            )}
 
-              {!this.props.isNew ? (
-                <TabPane tab="Workflows" key="7">
-                  <AssociatedDataflows assetId={this.state.job.id} assetType={'Job'} />
-                </TabPane>
-              ) : null}
-            </Tabs>
-          </Form>
-        </div>
-        {this.props.displayingInModal ? getModalControls() : null}
-      </React.Fragment>
+            {!selectedDataflow ? null : (
+              <TabPane tab={<Text text="Schedule" />} key="6">
+                <ScheduleTab {...scheduleProps} />
+              </TabPane>
+            )}
+
+            {isNew ? null : (
+              <TabPane tab={<Text text="Workflows" />} key="7">
+                <AssociatedDataflows assetId={job.id} assetType={'Job'} />
+              </TabPane>
+            )}
+          </Tabs>
+        </JobForm>
+        {!displayingInModal ? null : <Controls modalControls={true} {...commonProps} {...controlProps} />}
+      </>
     );
   }
 }
 
 function mapStateToProps(state, ownProps) {
   let { selectedAsset, newAsset = {}, clusterId } = state.assetReducer;
-  const { user } = state.authenticationReducer;
   const { application, clusters } = state.applicationReducer;
+  const { user } = state.authenticationReducer;
   let { isNew = false, groupId = '' } = newAsset;
 
   if (ownProps.selectedAsset) selectedAsset = ownProps.selectedAsset;
 
-  return {
-    user,
-    selectedAsset,
-    application,
-    isNew,
-    groupId,
-    clusterId,
-    clusters,
-  };
+  return { user, selectedAsset, application, isNew, groupId, clusterId, clusters };
 }
 
 // Forward ref will give us ability to add ref to this component with AddJobs wrapper, so we can call savejobs method on all instances at once.
-const JobDetailsForm = connect(mapStateToProps, null, null, { forwardRef: true })(JobDetails);
-
+let JobDetailsForm = connect(mapStateToProps, null, null, { forwardRef: true })(JobDetails);
 export default JobDetailsForm;

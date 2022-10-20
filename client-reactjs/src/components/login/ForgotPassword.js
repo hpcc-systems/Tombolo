@@ -56,50 +56,52 @@ class ForgotPassword extends React.Component {
   render() {
     const { email } = this.state;
     return (
-      <Form className="login-form" layout="vertical">
-        <div style={{ position: 'relative' }}>
-          <div style={{ position: 'absolute' }}>
-            <Tooltip placement="right" title={'Back to Login'}>
-              <Link to="/login">
-                <ArrowLeftOutlined />
-              </Link>
-            </Tooltip>
+      <div className="login-page">
+        <Form className="login-form" layout="vertical">
+          <div style={{ position: 'relative' }}>
+            <div style={{ position: 'absolute' }}>
+              <Tooltip placement="right" title={'Back to Login'}>
+                <Link to="/login">
+                  <ArrowLeftOutlined />
+                </Link>
+              </Tooltip>
+            </div>
+            <h2 className="login-logo">Tombolo</h2>
           </div>
-          <h2 className="login-logo">Tombolo</h2>
-        </div>
 
-        <Form.Item
-          label="Enter email to reset password"
-          name="email"
-          rules={[
-            { required: true, message: 'Please provide your email!' },
-            { type: 'email', message: 'The input is not valid E-mail!' },
-          ]}>
-          <Input value={email} name="email" onChange={this.handleChange} placeholder="Email" />
-        </Form.Item>
-
-        {this.state.success ? (
-          <Form.Item>
-            <Alert
-              message="Success"
-              description="Password reset instructions has been sent to your email. "
-              type="success"
-              showIcon
-            />
+          <Form.Item
+            label="E-mail"
+            name="email"
+            rules={[
+              { required: true, message: 'Please provide your email!' },
+              { type: 'email', message: 'The input is not valid E-mail!' },
+            ]}>
+            <Input value={email} name="email" onChange={this.handleChange} placeholder="Email" />
           </Form.Item>
-        ) : null}
 
-        <Form.Item>
-          <Button
-            loading={this.state.sendingEmail}
-            onClick={this.handleSubmit}
-            type="primary"
-            block
-            className="login-form-button">
-            {this.state.sendingEmail ? 'Sending reset instructions' : 'Submit'}
-          </Button>
-        </Form.Item>
-      </Form>
+          {this.state.success ? (
+            <Form.Item>
+              <Alert
+                message="Success"
+                description="Password reset instructions has been sent to your email. "
+                type="success"
+                showIcon
+              />
+            </Form.Item>
+          ) : null}
+
+          <Form.Item>
+            <Button
+              loading={this.state.sendingEmail}
+              onClick={this.handleSubmit}
+              type="primary"
+              block
+              className="login-form-button">
+              {this.state.sendingEmail ? 'Sending reset instructions' : 'Submit'}
+            </Button>
+          </Form.Item>
+        </Form>
+      </div>
     );
   }
 }

@@ -6,7 +6,6 @@ const assetUtil = require('../../utils/assets');
 let Application = models.application;
 let UserApplication = models.user_application;
 let File = models.file;
-let FileLayout = models.file_layout;
 let FileValidation = models.file_validation;
 let License = models.license;
 var Cluster = models.cluster;
@@ -24,14 +23,11 @@ let Job=models.job;
 const JobFile = models.jobfile;
 let Visualization=models.visualizations;
 var request = require('request');
-var requestPromise = require('request-promise');
 const validatorUtil = require('../../utils/validator');
-const { body, query, check, validationResult } = require('express-validator');
+const { body, query,  validationResult } = require('express-validator');
 
 //let FileTree = require('../../models/File_Tree');
-const fileService = require('./fileservice');
 const axios = require('axios');
-const { push } = require('../../config/logger');
 
 router.post( '/superfile_meta',
   [body('superFileAssetId').isUUID(4).withMessage('Invalid asset id')],
@@ -294,31 +290,24 @@ router.get('/file_ids', [
 
 });
 
-router.get('/file_details', [
-  query('app_id')
-    .isUUID(4).withMessage('Invalid application id'),
-  query('file_id')
-    .isUUID(4).withMessage('Invalid fileId'),
-],(req, res) => {
-  const errors = validationResult(req).formatWith(validatorUtil.errorFormatter);
-  if (!errors.isEmpty()) {
-    return res.status(422).json({ success: false, errors: errors.array() });
-  }
-    var basic = {}, results={};
+router.get( "/file_details",
+  [
+    query("app_id").isUUID(4).withMessage("Invalid application id"),
+    query("file_id").isUUID(4).withMessage("Invalid fileId"),
+  ],
+  async (req, res) => {
     try {
-        assetUtil.fileInfo(req.query.app_id, req.query.file_id).then((fileInfo) => {
-          res.json(fileInfo);
-        })
-        .catch(function(err) {
-          console.log(err);
-          return res.status(500).json({ success: false, message: "Error occured while file details" });
-        });
-    } catch (err) {
-        console.log('err', err);
-        return res.status(500).json({ success: false, message: "Error occured while file details" });
-    }
+      const errors = validationResult(req).formatWith(validatorUtil.errorFormatter);
+      if (!errors.isEmpty()) return res.status(422).json({ success: false, errors: errors.array() });
 
-});
+      const fileInfo = await assetUtil.fileInfo(req.query.app_id, req.query.file_id);
+      res.status(200).json(fileInfo);
+    } catch (err) {
+      console.log("err", err);
+      res.status(500).json({ success: false, message: "Error occured while file details" });
+    }
+  }
+);
 
 //Gets sub-files associated with a super file
 router.get('/getSubFiles',[
@@ -348,21 +337,7 @@ router.get('/getSubFiles',[
 
 exports.updateFileDetails = async (fileId, applicationId, req) => {
   const fieldsToUpdate = { file_id: fileId, application_id: applicationId };
-  const { fields, license, validation, consumer, basic } = req.body.file;
-
-  // Update layout
-  const layoutFields = {
-    application_id: applicationId,
-    fields: JSON.stringify(fields),
-    file_id: fileId,
-  };
-
-  let [layout, isLayoutCreated] = await FileLayout.findOrCreate({
-    where: { application_id: applicationId, file_id: fileId },
-    defaults: layoutFields,
-  });
-
-  if (!isLayoutCreated) layout = await layout.update(layoutFields);
+  const { validation, consumer, basic } = req.body.file;
 
   // create validoations
   const newValidations = validation.map((validation) => ({ ...validation, ...fieldsToUpdate }));
@@ -401,7 +376,6 @@ router.post('/saveFile', [
       if (removeAssetId) {
         await Promise.all([
           JobFile.destroy({ where: { file_id: removeAssetId } }),
-          FileLayout.destroy({ where: { file_id: removeAssetId } }),
           FileValidation.destroy({ where: { file_id: removeAssetId } }),
           File.destroy({ where: { id: removeAssetId, application_id } }),
         ]);
@@ -455,229 +429,13 @@ router.post('/delete', [
 
     await Promise.all([
       File.destroy({ where: { id: fileId, application_id } }),
-      FileLayout.destroy({ where: { file_id: fileId } }),
       FileValidation.destroy({ where: { file_id: fileId } }),
       ConsumerObject.destroy({ where: { object_id: fileId, object_type: 'file' } }),
     ]);
     
 
-
   } catch (err) {
     return res.status(500).json({ success: false, message: "Error occured while deleting file details" });
-  }
-});
-
-router.get('/file_fields', (req, res) => {
-  var results = [];
-
-  try {
-    FileLayout.findAll({where: {"file_id":{[Op.in]:req.query.file_ids.split(",")}}}).then(function(fileLayout) {
-        fileLayout.forEach(function(doc, idx) {
-            results.push(doc.file_id+"."+doc.name);
-        });
-
-        res.json(results);
-    })
-    .catch(function(err) {
-        console.log(err);
-    });
-  } catch (err) {
-      console.log('err', err);
-  }
-});
-
-
-router.get('/downloadSchema', [
-  query('app_id')
-    .isUUID(4).withMessage('Invalid application id'),
-  query('type')
-    .matches(/^[a-zA-Z]{1}[a-zA-Z0-9_:.\-]*$/).withMessage('Invalid script type')
-],(req, res) => {
-  const errors = validationResult(req).formatWith(validatorUtil.errorFormatter);
-  if (!errors.isEmpty()) {
-    return res.status(422).json({ success: false, errors: errors.array() });
-  }
-  try {
-    if(req.query.type == 'ecl') {
-      fileService.getECLSchema(req.query.app_id, res)
-    } else if (req.query.type == 'json') {
-      fileService.getJSONSchema(req.query.app_id, res)
-    }
-  }catch (err) {
-    return res.status(500).json({ success: false, message: "Error occured while downloading schema" });
-  }
-
-});
-
-
-// NOT IN USE
-router.get('/inheritedLicenses', [
-  query('app_id')
-    .isUUID(4).withMessage('Invalid application id'),
-  query('fileId')
-    .isUUID(4).withMessage('Invalid file id'),
-  query('dataflowId')
-    .isUUID(4).withMessage('Invalid dataflow id'),
-], async function (req, res) {
-  const errors = validationResult(req).formatWith(validatorUtil.errorFormatter);
-  if (!errors.isEmpty()) {
-    return res.status(422).json({ success: false, errors: errors.array() });
-  }
- 
-  try {
-    var parentIds = await getFileRelationHierarchy(req.query.app_id, req.query.fileId, req.query.id, req.query.dataflowId);
-
-    File.findAll(
-    {
-        where:{"id": {[Op.in]:parentIds}},
-        attributes:["metaData"]
-    }
-    ).then(async function(files) {
-
-      if (files.length === 0) return res.json([]);
-
-      let licenses = files.reduce((acc, file) => {
-        if (file.metaData?.licenses) {
-          acc.push(...file.metaData.licenses);
-        }
-        return acc;
-      }, []);
-      
-      licenses = [...new Set(licenses)]; // remove duplicates;
-
-      res.json(licenses);
-      
-    })
-    .catch(function(err) {
-      console.log(err);
-      return res.status(500).json({ success: false, message: "Error occured while retrieving licenses" });
-    });
-  } catch (err) {
-    console.log('err', err);
-    return res.status(500).json({ success: false, message: "Error occured while retrieving licenses" });
-  }
-});
-
-router.get('/DependenciesCount', [
-  query('app_id')
-    .isUUID(4).withMessage('Invalid application id'),
-  ], (req, res) => {
-    const errors = validationResult(req).formatWith(validatorUtil.errorFormatter);
-    if (!errors.isEmpty()) {
-      return res.status(422).json({ success: false, errors: errors.array() });
-    }
-    try {
-        var result = {};
-        File.findAndCountAll({
-            where:{"application_id":req.query.app_id}
-          }).then(function (file) {
-              result.fileCount=file.count;
-        Indexes.findAndCountAll({
-            where:{"application_id":req.query.app_id}
-          }).then(function (index) {
-              result.indexCount=index.count;
-              Query.findAndCountAll({
-                where:{"application_id":req.query.app_id}
-              }).then(function (query) {
-                  result.queryCount=query.count;
-                  Job.findAndCountAll({
-                    where:{"application_id":req.query.app_id}
-                  }).then(function (job) {
-                      result.jobCount=job.count;
-                      res.json(result);
-                  });
-              });
-          });
-        })
-        .catch(function(err) {
-            console.log(err);
-        });
-    } catch (err) {
-        console.log('err', err);
-    }
-});
-
-router.get('/fileLayoutDataType', [
-  query('app_id')
-    .isUUID(4).withMessage('Invalid application id'),
-  ], (req, res) => {
-    const errors = validationResult(req).formatWith(validatorUtil.errorFormatter);
-    if (!errors.isEmpty()) {
-      return res.status(422).json({ success: false, errors: errors.array() });
-    }
-    try {
-      var result = [];
-      FileLayout.findAll({
-        where:{"application_id":req.query.app_id,
-        "data_types": {
-            [Op.ne]: null
-           },
-           "data_types": {
-            [Op.ne]: ""
-           }},
-        attributes: [
-          'data_types',
-          [Sequelize.fn('COUNT', Sequelize.col('id')), 'count']
-        ],
-        group: ['data_types']
-      }).then(function(fileLayout) {
-        result=fileLayout;
-        FileLayout.findAll({
-            where:{"application_id":req.query.app_id,
-           [Op.or]:[{ "data_types": {[Op.eq]: null}},
-                      {"data_types": {[Op.eq]: ""}}]}
-          }).then(function(fileLayout) {
-              var layout={};
-              layout.data_types="Others";
-              layout.count=fileLayout.length;
-              result.push(layout);
-              res.json(result);
-          })
-      })
-    .catch(function(err) {
-        console.log(err);
-    });
-  } catch (err) {
-      console.log('err', err);
-  }
-});
-
-router.get('/getFileLayoutByDataType', [
-  query('app_id')
-    .isUUID(4).withMessage('Invalid application id'),
-  query('data_type')
-    .isUUID(4).withMessage('Invalid data type'),
-  ], (req, res) => {
-    const errors = validationResult(req).formatWith(validatorUtil.errorFormatter);
-    if (!errors.isEmpty()) {
-      return res.status(422).json({ success: false, errors: errors.array() });
-    }
-    try {
-        var result = {};
-        if(req.query.data_types=="others"){
-            FileLayout.findAll({
-                where:{"application_id":req.query.app_id,
-                [Op.or]:[{ "data_types": {[Op.eq]: null}},
-                          {"data_types": {[Op.eq]: ""}}]}, include: [File]
-              }).then(function(fileLayout) {
-                  res.json(fileLayout)
-              })
-            .catch(function(err) {
-                console.log(err);
-            });
-        }else{
-        FileLayout.findAll({
-            where:{"application_id":req.query.app_id,
-            "data_types":req.query.data_types}, include: [File]
-          }).then(function(fileLayout) {
-              res.json(fileLayout)
-          })
-        .catch(function(err) {
-            console.log(err);
-        });
-    }
-  } catch (err) {
-      console.log('err', err);
   }
 });
 
@@ -701,99 +459,6 @@ router.get('/dataTypes', (req, res) => {
   }
 });
 
-async function getFileRelationHierarchy(applicationId, fileId, id, dataflowId) {
-    var fileIds = [], promises = [];
-    //ref: https://stackoverflow.com/questions/49845748/convert-a-flat-json-file-to-tree-structure-in-javascript
-    const MutableNode = (title, fileId, children = []) =>
-      ({ title, fileId, children })
-
-    MutableNode.push = (node, child) =>
-      (node.children.push (child), node)
-
-    const makeTree = (nodes = [], relations = []) =>
-        relations.reduce
-        ( (t, l) =>
-            t.set ( l.target
-                  , MutableNode.push ( t.get (l.target)
-                                     , t.get (l.source)
-                                     )
-                  )
-        , nodes.reduce
-            ( (t, n) => t.set (n.id, MutableNode (n.title, n.fileId))
-            , new Map
-            )
-        )
-        .get (parseInt(id))
-
-
-    const getFlat = ({ fileId, children = [] }) => {
-      return [fileId].concat(...children.map(getFlat));
-    }
-
-    return []; // TODO: need to be refactored
-
-    // return DataflowGraph.findOne({where:{"application_Id":applicationId, "dataflowId":dataflowId}}).then((graph) => {
-    //   let fileNodes = JSON.parse(graph.nodes).filter(node => node.fileId==fileId);
-    //   if(id == 'undefined') {
-    //     id = fileNodes[0].id;
-    //   }
-    //   const tree = makeTree (JSON.parse(graph.nodes), JSON.parse(graph.edges));
-    //   const parentIds = getFlat(tree);
-    //   return parentIds;
-    // })
-    // .catch(function(err) {
-    //     console.log(err);
-    // });
-}
-
-router.get('/filelayout', [
-  query('app_id')
-    .isUUID(4).withMessage('Invalid application id'),
-  query('name')
-    .isUUID(4).withMessage('Invalid name'),
-  ], (req, res) => {
-    const errors = validationResult(req).formatWith(validatorUtil.errorFormatter);
-    if (!errors.isEmpty()) {
-      return res.status(422).json({ success: false, errors: errors.array() });
-    }
-    var basic = {}, results={};
-    try {
-      File.findAll({where:
-        {"application_id":req.query.app_id,
-        [Op.or]: [
-        {
-          "name": {
-            [Op.eq]: req.query.name
-          }
-        },
-        {
-          "scope": {
-            [Op.eq]: req.query.name
-          }
-        }
-      ]}, include:[FileLayout, FileValidation]}).then(function(files) {
-        if(files[0].file_layouts) {
-          files[0].file_layouts.forEach((layout) => {
-            let validationRule = files[0].file_validations.filter((validation => validation.name == layout.name));
-
-            results[layout.name] = {
-              "type": layout.type,
-              "eclType": layout.eclType,
-              "validation_rules": validationRule[0].ruleType
-            }
-          })
-        }
-        res.json(results);
-      })
-      .catch(function(err) {
-          console.log(err);
-      });
-    } catch (err) {
-        console.log('err', err);
-    }
-
-});
-
 router.post('/visualization', [
   body('id').optional({checkFalsy:true}).isUUID(4).withMessage('Invalid file id'),
   body('application_id').isUUID(4).withMessage('Invalid application id'),
@@ -812,10 +477,8 @@ router.post('/visualization', [
     let file=null, cluster=null, bodyObj={}, authToken='';    
     if(req.body.id) {
        file = await File.findOne({where: {id: req.body.id}});       
-    } /*else if(req.body.fileName) {
-      let fileInfo = await hpccUtil.fileInfo(req.body.fileName, req.body.clusterId);
-      file = await File.create({...fileInfo.basic, cluster_id: req.body.clusterId, application_id: req.body.application_id});      
-    } */
+    } 
+    
     console.log(file)
     if(file && file.cluster_id) {
       cluster = await Cluster.findOne({where: {id: file.cluster_id}});

@@ -2,28 +2,29 @@ import React, { useEffect, useState } from 'react';
 import { message, Table } from 'antd';
 
 import { authHeader, handleError } from '../../common/AuthHeader';
-
-//Table columns
-const columns = [
-  {
-    title: 'Name',
-    dataIndex: 'name',
-    render: (text, record) => (
-      <a href={record.url} target="_blank" rel="noreferrer">
-        {record.name}
-      </a>
-    ),
-    width: '20%',
-  },
-  {
-    title: 'Description',
-    dataIndex: 'description',
-  },
-];
+import Text from '../../common/Text';
 
 function FileTemplate_permissablePurpose(props) {
   const { enableEdit, editingAllowed, setSelectedLicenses, selectedLicenses, selectedAsset } = props;
   const [licenses, setLicenses] = useState([]);
+
+  //Table columns
+  const columns = [
+    {
+      title: <Text text="Name" />,
+      dataIndex: 'name',
+      render: (text, record) => (
+        <a href={record.url} target="_blank" rel="noreferrer">
+          {record.name}
+        </a>
+      ),
+      width: '20%',
+    },
+    {
+      title: <Text text="Description" />,
+      dataIndex: 'description',
+    },
+  ];
 
   // Get the licenses
   useEffect(() => {

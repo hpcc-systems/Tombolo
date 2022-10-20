@@ -1,7 +1,6 @@
-import React from 'react';
+import React, { useRef, useState } from 'react';
 import { Col, Empty, Form, Row, Tabs, Tooltip } from 'antd';
-import { useRef, useState } from 'react';
-
+import Text from '../../../common/Text';
 import './AddJobsForm.css';
 
 import { CheckCircleOutlined, CloseCircleOutlined, ExclamationCircleOutlined } from '@ant-design/icons';
@@ -134,7 +133,7 @@ const AddJobsForm = () => {
         <Col span={24} className="tabs-container">
           <div className="card-container">
             {panes.length === 0 ? (
-              <Empty description='Find a job in "Search Settings"' />
+              <Empty description={<Text text="Find a job in 'Search Settings" />} />
             ) : (
               <Tabs
                 hideAdd

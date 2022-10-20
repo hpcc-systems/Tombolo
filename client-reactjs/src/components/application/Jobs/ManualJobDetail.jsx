@@ -3,6 +3,7 @@ import { Button, message, Tabs, Row, Col, Modal, Form, Input, Select } from 'ant
 import { withRouter, useParams } from 'react-router-dom';
 
 import { authHeader } from '../../common/AuthHeader';
+import Text, { i18n } from '../../common/Text';
 
 const { Option } = Select;
 const { TextArea } = Input;
@@ -18,7 +19,6 @@ message.config({
 function ManualJobDetail() {
   const [jobDetails, setJobDetails] = useState({});
   const [showModal, setShowModal] = useState(false);
-
   const { applicationId, jobId, jobExecutionId } = useParams(); // Getting  from url params
 
   //Form ref
@@ -102,14 +102,16 @@ function ManualJobDetail() {
     { label: 'Name', value: jobDetails.name },
     { label: 'Job Type', value: jobDetails.jobType },
     { label: 'Contact', value: jobDetails.contact },
-    { label: 'Created on', value: jobDetails.createdAt },
+    { label: 'Created', value: jobDetails.createdAt },
   ];
 
   return (
     <div>
-      <div className="assetTitle">Job : {jobDetails.name}</div>
+      <div className="assetTitle">
+        {<Text text="Job" />}: {jobDetails.name}
+      </div>
       <Tabs tabBarExtraContent={actions}>
-        <TabPane tab="Basic" key="1">
+        <TabPane tab={<Text text="Basic" />} key="1">
           {jobData.map((item, i) => (
             <Row id={i} gutter={{ xs: 8, sm: 8, md: 8, lg: 8 }} key={item.label}>
               <Col className="gutter-row" span={6}>
@@ -126,7 +128,7 @@ function ManualJobDetail() {
       <Modal visible={showModal} closable={false} onCancel={() => setShowModal(false)} onOk={handleResponse}>
         <Form layout="vertical" form={form}>
           <Form.Item
-            label="Action"
+            label={<Text>Action</Text>}
             rules={[
               {
                 required: true,
@@ -134,7 +136,7 @@ function ManualJobDetail() {
               },
             ]}
             name="action">
-            <Select placeholder="Select an action" allowClear>
+            <Select placeholder={i18n('Select an action')} allowClear>
               <Option value="approved">Approve</Option>
               <Option value="rejected">Reject</Option>
             </Select>

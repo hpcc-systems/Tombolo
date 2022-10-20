@@ -4,6 +4,7 @@ import RadioButtons from './RadioButtons';
 import TextAreaField from './TextAreaField';
 import UserSearch from '../../../common/UserSearch';
 import { formItemLayoutWithOutLabel, formItemLayout } from '../../../common/CommonUtil';
+import Text, { i18n } from '../../../common/Text';
 
 const Notifications = ({ enableEdit, formRef }) => {
   const [showDetails, setShowDetails] = useState(false);
@@ -18,8 +19,8 @@ const Notifications = ({ enableEdit, formRef }) => {
       {(notifyStatus === 'Always' || notifyStatus === 'Only on success') && (
         <TextAreaField
           {...commonProps}
-          label="On Success"
-          placeholder="Success message"
+          label={<Text>On Success</Text>}
+          placeholder={i18n('Success message')}
           name="notificationSuccessMessage"
           errorMessage="Success Message Required"
         />
@@ -28,8 +29,8 @@ const Notifications = ({ enableEdit, formRef }) => {
       {(notifyStatus === 'Always' || notifyStatus === 'Only on failure') && (
         <TextAreaField
           {...commonProps}
-          label="On Failure"
-          placeholder="Failure message"
+          label={<Text>On Failure</Text>}
+          placeholder={i18n('Failure message')}
           name="notificationFailureMessage"
           errorMessage="Failure Message Required"
         />

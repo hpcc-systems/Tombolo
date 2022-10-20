@@ -31,9 +31,9 @@ exports.fileInfo = async (fileName, clusterId) => {
         scope: fileInfo.FileDetail.Name.substring(0, fileInfo.FileDetail.Name.lastIndexOf('::')),
         pathMask: fileInfo.FileDetail.PathMask,
         isSuperfile: fileInfo.FileDetail.isSuperfile,
-        fileType: fileInfo.FileDetail.ContentType || fileInfo.FileDetail.Format || 'thor_file'
+        fileType: fileInfo.FileDetail.ContentType || fileInfo.FileDetail.Format || 'thor_file',
+        metaData: { layout }
       },
-      file_layouts: layout,
       file_validations: [],
     };
   } catch (error) {
@@ -440,7 +440,13 @@ const getFileLayout = async (cluster, fileName, format) => {
       const response = await requestPromise.get({ auth, url: cluster.thor_host + ':' + cluster.thor_port + '/WsDfu/DFURecordTypeInfo.json?Name=' + fileName, });
       const result = JSON.parse(response);
       const fields = result?.DFURecordTypeInfoResponse?.jsonInfo?.fields || [];
-      return fields.map((field, idx) => ({ id: idx, name: field.name }));
+      return fields.map((field, idx) => ({ 
+        id: idx,
+        name: field.name,
+        type: "",
+        eclType:"",
+        description: '',
+        constraints:{ inherited:[], own:[], } }));
     }
 
     const response = await requestPromise.get({ auth, url: cluster.thor_host + ':' + cluster.thor_port + '/WsDfu/DFUGetFileMetaData.json?LogicalFileName=' + fileName, });
@@ -452,15 +458,8 @@ const getFileLayout = async (cluster, fileName, format) => {
       name: column.ColumnLabel,
       type: column.ColumnType,
       eclType: column.ColumnEclType,
-      format: '',
       description: '',
-      displaySize: '',
-      displayType: '',
-      isPCI: 'false',
-      isPII: 'false',
-      isHIPAA: 'false',
-      required: 'false',
-      textJustification: 'right',
+      constraints:{ inherited:[], own:[], }
     });
 
     const layoutResults = fileInfoResponse.reduce((acc, column, idx) => {

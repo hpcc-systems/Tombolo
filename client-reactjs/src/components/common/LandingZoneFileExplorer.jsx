@@ -2,6 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { Form, Select, Input, Cascader, message } from 'antd';
 
 import { authHeader } from './AuthHeader';
+import Text, { i18n } from '../../components/common/Text';
 
 const { Option } = Select;
 
@@ -124,14 +125,14 @@ function LandingZoneFileExplorer({
   return (
     <>
       {enableEdit ? (
-        <Form.Item label="Landing Zone / Machine" required>
+        <Form.Item label={<Text>Landing Zone / Machine</Text>} required>
           <Input.Group compact>
             <Form.Item
               style={{ width: '50%' }}
               name="landingZone"
               rules={[{ required: true, message: 'Please select landing zone !' }]}>
               <Select
-                placeholder="Landing Zone"
+                placeholder={i18n('Landing Zone')}
                 allowClear
                 style={{ width: '100%' }}
                 loading={landingZoneDetails.fetchingLandingZone}
@@ -147,7 +148,7 @@ function LandingZoneFileExplorer({
               style={{ width: '50%' }}
               name="machine"
               rules={[{ required: true, message: 'Please select Machine !' }]}>
-              <Select placeholder="Machine" allowClear onChange={handleMachineChange} style={{ width: '100%' }}>
+              <Select placeholder={i18n('Machine')} allowClear onChange={handleMachineChange} style={{ width: '100%' }}>
                 {landingZoneDetails.selectedLandingZone.machines.map((machine) => (
                   <Option key={machine.Netaddress}> {machine.Netaddress}</Option>
                 ))}
@@ -162,7 +163,7 @@ function LandingZoneFileExplorer({
           <Form.Item label="Landing Zone" name="landingZone">
             <Input className="read-only-input"></Input>
           </Form.Item>
-          <Form.Item label="Machine" name="machine">
+          <Form.Item label={<Text>Machine</Text>} name="machine">
             <Input className="read-only-input"></Input>
           </Form.Item>
         </>
@@ -170,13 +171,13 @@ function LandingZoneFileExplorer({
 
       {enableEdit ? (
         <Form.Item
-          label="Directory"
+          label={<Text>Directory</Text>}
           name="dirToMonitor"
           rules={[{ required: true, message: 'Please select directory path!' }]}>
           <Cascader
             options={landingZoneDetails.directories}
             loadData={loadCascaderData}
-            placeholder="Please select"
+            placeholder={i18n('Directory')}
             allowClear
             changeOnSelect={true}
             onChange={(value, selectedOptions) =>

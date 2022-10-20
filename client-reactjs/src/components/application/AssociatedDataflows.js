@@ -4,6 +4,7 @@ import { useSelector, useDispatch } from 'react-redux';
 import { Table } from 'antd';
 import { authHeader, handleError } from '../common/AuthHeader.js';
 import { dataflowAction } from '../../redux/actions/Dataflow';
+import Text from '../common/Text.jsx';
 
 function AssociatedDataflows({ assetId, assetType }) {
   const history = useHistory();
@@ -48,7 +49,7 @@ function AssociatedDataflows({ assetId, assetType }) {
 
   const associatedDataflowCols = [
     {
-      title: 'Title',
+      title: <Text text="Title" />,
       dataIndex: 'title',
       width: '30%',
       render: (text, record) => (
@@ -64,7 +65,7 @@ function AssociatedDataflows({ assetId, assetType }) {
       ),
     },
     {
-      title: 'Description',
+      title: <Text text="Description" />,
       dataIndex: 'description',
       width: '30%',
     },

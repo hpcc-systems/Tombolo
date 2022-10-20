@@ -1,14 +1,26 @@
 'use strict';
 module.exports = {
-  up: (queryInterface, Sequelize) => {
-    return queryInterface.createTable('file_layout', {
+  async up(queryInterface, Sequelize) {
+    await queryInterface.createTable('report', {
       id: {
         allowNull: false,
         primaryKey: true,
         type: Sequelize.UUID,
         defaultValue: Sequelize.UUIDV4,
       },
-      fields: Sequelize.TEXT,
+      report: {
+        type: Sequelize.JSON,
+      },
+      type: Sequelize.STRING,
+      comparedId:{
+        allowNull: true,
+        type: Sequelize.UUID,
+      },
+      comparedName: Sequelize.STRING,
+      isBaseLine: {
+        type:Sequelize.BOOLEAN,
+        defaultValue: false
+      }, 
       application_id: {
         type: Sequelize.UUID,
         references: {
@@ -18,22 +30,13 @@ module.exports = {
         onUpdate: 'CASCADE',
         onDelete: 'CASCADE',
       },
-      file_id: {
-        type: Sequelize.UUID,
-        references: {
-          model: 'file',
-          key: 'id',
-        },
-        onUpdate: 'CASCADE',
-        onDelete: 'CASCADE',
-      },
       createdAt: {
         allowNull: false,
-        type: Sequelize.DATE,
+        type: Sequelize.DATE
       },
       updatedAt: {
         allowNull: false,
-        type: Sequelize.DATE,
+        type: Sequelize.DATE
       },
       deletedAt: {
         allowNull: true,
@@ -41,7 +44,8 @@ module.exports = {
       },
     });
   },
-  down: (queryInterface, Sequelize) => {
-    return queryInterface.dropTable('file_layout');
-  },
+
+  async down(queryInterface, Sequelize) {
+    await queryInterface.dropTable('report');
+  }
 };

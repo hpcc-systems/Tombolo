@@ -51,7 +51,6 @@ module.exports = (sequelize, DataTypes) => {
 
     fileTemplate.hasMany(models.fileMonitoring,{ foreignKey:'fileTemplateId', onDelete: 'CASCADE', });
     fileTemplate.hasMany(models.fileTemplateLayout,{ foreignKey:'fileTemplate_id', onDelete: 'CASCADE', });
-    fileTemplate.hasMany(models.fileTemplate_license,{ foreignKey:'fileTemplate_id', onDelete: 'CASCADE', });
 
     fileTemplate.belongsTo(models.application, { foreignKey: 'application_id' });
     fileTemplate.belongsTo(models.cluster, { foreignKey: 'cluster_id' });

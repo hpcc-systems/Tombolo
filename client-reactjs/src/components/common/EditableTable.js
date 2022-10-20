@@ -2,7 +2,9 @@ import { DeleteOutlined, UploadOutlined } from '@ant-design/icons';
 import { Button, Form, Input, Select, Table, Upload } from 'antd';
 import Papa from 'papaparse';
 import React from 'react';
+
 import { omitDeep } from './CommonUtil';
+import Text, { i18n } from '../common/Text';
 
 const EditableContext = React.createContext();
 const Option = Select.Option;
@@ -98,7 +100,11 @@ class EditableCell extends React.Component {
             },
           ]}>
           {celleditor == 'select' ? (
-            <Select ref={(node) => (this.input = node)} allowClear placeholder="Select" onChange={this.saveSelect}>
+            <Select
+              ref={(node) => (this.input = node)}
+              allowClear
+              placeholder={i18n('Select')}
+              onChange={this.saveSelect}>
               {celleditorparams && celleditorparams.values
                 ? celleditorparams.values.map((cellEditorParam) => (
                     <Option key={cellEditorParam} value={cellEditorParam}>
@@ -149,7 +155,7 @@ class EditableTable extends React.Component {
 
   setupDeleteAction = () => {
     const deleteColumn = {
-      title: 'Action',
+      title: <Text>Action</Text>,
       dataIndex: '',
       width: '8%',
       render: (text, record) => (
@@ -390,14 +396,13 @@ class EditableTable extends React.Component {
           <span style={{ paddingRight: '5px' }}>
             {this.props.enableEdit ? (
               <Button onClick={this.handleAdd} type="default">
-                Add a row
+                {i18n('Add a row')}
               </Button>
             ) : null}
           </span>
           {this.props.showDataDefinition && this.props.dataDefinitions ? (
             <span style={{ paddingRight: '5px' }}>
               <Select
-                placeholder="Select from a Data Definition"
                 disabled={!this.props.editingAllowed}
                 onChange={this.onDataDefintionSelect}
                 style={{ width: 230 }}>
