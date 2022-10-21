@@ -39,7 +39,7 @@ const limiter = rateLimit({
 app.use(cors());
 app.use(express.json());
 app.use(limiter);
-// app.use(morganMiddleware);
+//app.use(morganMiddleware);
 
 if(process.env.APP_AUTH_METHOD==='azure_ad'){
   const bearerStrategy = require('./utils/passportStrategies/passport-azure');
