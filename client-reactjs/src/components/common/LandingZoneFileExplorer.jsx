@@ -62,12 +62,14 @@ function LandingZoneFileExplorer({
         dirOnly: DirectoryOnly,
       });
 
-      const directories = [{ label: '/', value: '', isLeaf: true }];
-      if (response.FileListResponse?.files?.PhysicalFileStruct) {
-        response.FileListResponse?.files?.PhysicalFileStruct.map((dir) => {
-          directories.push({ label: dir.name, value: dir.name, isLeaf: false });
-        });
-      }
+      const directories = [];
+      response.map((dir) => {
+        if (dir.isDir) {
+          directories.unshift({ label: dir.name, value: dir.name, isLeaf: false });
+        } else {
+          directories.push({ label: dir.name, value: dir.name, isLeaf: true });
+        }
+      });
 
       setLandingZoneDetails((prev) => ({ ...prev, directories }));
     } catch (err) {
@@ -82,7 +84,7 @@ function LandingZoneFileExplorer({
       targetOption.loading = true;
 
       const selectedPath = selectedOptions.map((option) => option.label).join('/');
-      const path = `${landingZoneDetails.selectedLandingZone.path}/${selectedPath}/`;
+      const path = `${landingZoneDetails.selectedLandingZone.path}/${selectedPath}`;
 
       const response = await fetchDirectories({
         clusterId,
@@ -90,12 +92,16 @@ function LandingZoneFileExplorer({
         path,
         dirOnly: DirectoryOnly,
       });
-      if (response?.FileListResponse?.files?.PhysicalFileStruct) {
-        const childDirs = response?.FileListResponse?.files?.PhysicalFileStruct.map((dir) => ({
-          label: dir.name,
-          value: dir.name,
-          isLeaf: false,
-        }));
+
+      if (response.length > 0) {
+        const childDirs = [];
+        response.map((dir) => {
+          if (dir.isDir) {
+            childDirs.unshift({ label: dir.name, value: dir.name, isLeaf: false });
+          } else {
+            childDirs.push({ label: dir.name, value: dir.name, isLeaf: true });
+          }
+        });
         targetOption.children = childDirs;
       } else {
         targetOption.isLeaf = true;
@@ -125,7 +131,7 @@ function LandingZoneFileExplorer({
   return (
     <>
       {enableEdit ? (
-        <Form.Item label={<Text>Landing Zone / Machine</Text>} required>
+        <Form.Item label={<Text>Landing Zone </Text>} required>
           <Input.Group compact>
             <Form.Item
               style={{ width: '50%' }}

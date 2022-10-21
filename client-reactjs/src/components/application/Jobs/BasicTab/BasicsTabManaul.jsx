@@ -1,23 +1,28 @@
-import { Cascader, Col, Form, Input, Row, Select } from 'antd';
+import { Col, Form, Input, Row, Select } from 'antd';
 import React, { useEffect, useState } from 'react';
 import ReactMarkdown from 'react-markdown';
 import { useDispatch, useSelector } from 'react-redux';
 import { assetsActions } from '../../../../redux/actions/Assets';
-import { authHeader, handleError } from '../../../common/AuthHeader.js';
 import MonacoEditor from '../../../common/MonacoEditor.js';
 import Text from '../../../common/Text.jsx';
+import LandingZoneFileExplorer from '../../../common/LandingZoneFileExplorer';
 
 function BasicsTabManul(props) {
   const { enableEdit, localState, editingAllowed, onChange, formRef, addingNewAsset, inTabView } = props;
   const assetReducer = useSelector((state) => state.assetReducer);
   const applicationReducer = useSelector((state) => state.applicationReducer);
   const readOnlyView = !enableEdit || !addingNewAsset;
-  const [options, setOptions] = useState([]);
 
+  // eslint-disable-next-line unused-imports/no-unused-vars
+  const [landingZoneRootPath, setLandingZoneRootPath] = useState({ landingZonePath: '' });
   const [selectedCluster, setSelectedCluster] = useState(assetReducer.clusterId || localState.selectedCluster);
   const [clusters, _setClusters] = useState(applicationReducer.clusters);
   const { Option } = Select;
   const dispatch = useDispatch();
+
+  useEffect(() => {
+    console.log(landingZoneRootPath);
+  }, []);
 
   // On form file path (cascader value) change
   const onFilePathChange = (value) => {
@@ -31,31 +36,6 @@ function BasicsTabManul(props) {
     localState.selectedCluster = value;
   };
 
-  //When the cluster id changes make a call and get all dropzones within that cluster
-  useEffect(() => {
-    if (selectedCluster) {
-      fetch(`/api/hpcc/read/getDropzones?clusterId=${selectedCluster}&for=manualJobSerach`, {
-        headers: authHeader(),
-      })
-        .then((response) => {
-          if (response.ok) {
-            return response.json();
-          }
-          handleError(response);
-        })
-        .then((data) => {
-          let newOptions = [];
-          data.map((item) => {
-            newOptions.push({ value: item.path, label: item.name, machine: item.machines[0], isLeaf: false });
-          });
-          setOptions(newOptions);
-        })
-        .catch((err) => {
-          console.log(err);
-        });
-    }
-  }, [selectedCluster]);
-
   //Clear error when on focus
   const clearError = (e) => {
     formRef.current.setFields([
@@ -64,64 +44,6 @@ function BasicsTabManul(props) {
         errors: [],
       },
     ]);
-  };
-
-  //when dropzone is selected make call to get the dirs and files
-  const loadData = (selectedOptions) => {
-    const pathToAsset = selectedOptions.map((item) => item.value).join('/') + '/'; // join options array with "/" to create a path
-    const host = clusters.filter((item) => item.id === selectedCluster);
-    const targetOption = selectedOptions[selectedOptions.length - 1];
-
-    targetOption.loading = true;
-    const data = JSON.stringify({
-      Netaddr: selectedOptions[0].machine.Netaddress,
-      Path: pathToAsset,
-      OS: selectedOptions[0].OS,
-      rawxml_: true,
-      DirectoryOnly: false,
-    });
-    fetch(
-      `/api/hpcc/read/getDirectories?data=${data}&host=${host[0].thor_host}&port=${host[0].thor_port}&clusterId=${selectedCluster}`,
-      {
-        headers: authHeader(),
-      }
-    )
-      .then((response) => {
-        if (response.ok) {
-          return response.json();
-        }
-        handleError(response);
-      })
-      .then((data) => {
-        if (data.FileListResponse.files) {
-          let children = [];
-          data.FileListResponse.files.PhysicalFileStruct.map((item) => {
-            let child = {};
-            child.value = item.name;
-            child.label = item.name;
-            child.isLeaf = !item.isDir;
-            children.push(child);
-          });
-
-          //Sort the result so the dirs are always on top
-          children.sort(function (a, b) {
-            if (a.isLeaf < b.isLeaf) {
-              return -1;
-            }
-          });
-          targetOption.loading = false;
-          targetOption.children = children;
-          setOptions([...options]);
-        } else {
-          targetOption.loading = false;
-          targetOption.disabled = true;
-          targetOption.children = [];
-          setOptions([...options]);
-        }
-      })
-      .catch((err) => {
-        console.log(err);
-      });
   };
 
   //Cascader initial value
@@ -149,15 +71,13 @@ function BasicsTabManul(props) {
       ) : null}
 
       {localState.isNew || enableEdit ? (
-        <Form.Item label={<Text text="File Path" />} name="manualJobFilePath">
-          <Cascader
-            options={options}
-            onChange={onFilePathChange}
-            loadData={loadData}
-            className={enableEdit ? null : 'read-only-input'}
-            allowClear
-          />
-        </Form.Item>
+        <LandingZoneFileExplorer
+          clusterId={selectedCluster}
+          DirectoryOnly={false}
+          setLandingZoneRootPath={setLandingZoneRootPath}
+          onDirectoryPathChange={onFilePathChange}
+          enableEdit={enableEdit}
+        />
       ) : null}
 
       <Form.Item
@@ -174,7 +94,6 @@ function BasicsTabManul(props) {
           className={enableEdit ? null : 'read-only-input'}
         />
       </Form.Item>
-
       <Form.Item
         label={<Text text="Title" />}
         name="title"
@@ -183,7 +102,6 @@ function BasicsTabManul(props) {
         validateTrigger="onBlur">
         <Input onChange={onChange} disabled={!editingAllowed} className={enableEdit ? null : 'read-only-input'} />
       </Form.Item>
-
       <Form.Item label={<Text text="Description" />} name="description">
         {enableEdit ? (
           <MonacoEditor
@@ -197,7 +115,6 @@ function BasicsTabManul(props) {
           </div>
         )}
       </Form.Item>
-
       <Form.Item
         label={<Text text="Contact E-mail" />}
         name="contact"
