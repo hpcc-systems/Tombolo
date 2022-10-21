@@ -599,17 +599,23 @@ router.post('/tomboloFileSearch', [
   });
 
 
-// TO DO - add validation
+// For logical file explorer
 router.get(
   "/browseLogicalFile/:cluster/:scope",
+  [
+    query("cluster").isUUID(4).withMessage("Invalid cluster"),
+    query("scope").exists().withMessage("Invalid Scope")
+  ],
   async (req, res) => {
     try {
       const { cluster, scope } = req.params;
-      const logicalFileScope = scope === '$' ? null : scope;
+      const logicalFileScope = scope === "$" ? null : scope;
       const dfuService = await hpccUtil.getDFUService(cluster);
-      const fileView = await dfuService.DFUFileView({ Scope: logicalFileScope});
+      const fileView = await dfuService.DFUFileView({
+        Scope: logicalFileScope,
+      });
       const logicalItems = fileView?.DFULogicalFiles?.DFULogicalFile;
-      const cleanedLogicalItems = logicalItems.map(item => {
+      const cleanedLogicalItems = logicalItems.map((item) => {
         return {
           Directory: item.Directory,
           isDirectory: item.isDirectory,
@@ -617,14 +623,14 @@ router.get(
           label: item.isDirectory ? item.Directory : item.Name,
           isLeaf: item.isDirectory ? false : true,
         };
-        })
-      res.status(200).send(cleanedLogicalItems)
+      });
+      res.status(200).send(cleanedLogicalItems);
     } catch (err) {
       logger.error(err);
       res
         .status(500)
         .json({ message: "Error occured while searching for logical file" });
-  }
+    }
   }
 );
 
