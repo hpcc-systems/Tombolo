@@ -28,6 +28,7 @@ const { body, query,  validationResult } = require('express-validator');
 
 //let FileTree = require('../../models/File_Tree');
 const axios = require('axios');
+const logger = require('../../config/logger');
 
 router.post( '/superfile_meta',
   [body('superFileAssetId').isUUID(4).withMessage('Invalid asset id')],
@@ -596,5 +597,41 @@ router.post('/tomboloFileSearch', [
       return res.status(500).send("Error occured while retrieving visualization details");
     }
   });
+
+
+// For logical file explorer
+router.get(
+  "/browseLogicalFile/:cluster/:scope",
+  [
+    query("cluster").isUUID(4).withMessage("Invalid cluster"),
+    query("scope").exists().withMessage("Invalid Scope")
+  ],
+  async (req, res) => {
+    try {
+      const { cluster, scope } = req.params;
+      const logicalFileScope = scope === "$" ? null : scope;
+      const dfuService = await hpccUtil.getDFUService(cluster);
+      const fileView = await dfuService.DFUFileView({
+        Scope: logicalFileScope,
+      });
+      const logicalItems = fileView?.DFULogicalFiles?.DFULogicalFile;
+      const cleanedLogicalItems = logicalItems.map((item) => {
+        return {
+          Directory: item.Directory,
+          isDirectory: item.isDirectory,
+          value: item.isDirectory ? item.Directory : item.Name,
+          label: item.isDirectory ? item.Directory : item.Name,
+          isLeaf: item.isDirectory ? false : true,
+        };
+      });
+      res.status(200).send(cleanedLogicalItems);
+    } catch (err) {
+      logger.error(err);
+      res
+        .status(500)
+        .json({ message: "Error occured while searching for logical file" });
+    }
+  }
+);
 
 module.exports = router;
