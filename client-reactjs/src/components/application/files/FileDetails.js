@@ -19,19 +19,20 @@ import { debounce } from 'lodash';
 import React, { Component } from 'react';
 import ReactMarkdown from 'react-markdown';
 import { connect } from 'react-redux';
-import ConstraintsTags from '../admin/Compliance/Constraints/ConstraintsTags';
-import { authHeader, handleError } from '../common/AuthHeader.js';
-import { canViewPII, hasEditPermission } from '../common/AuthUtil.js';
-import { formItemLayout } from '../common/CommonUtil';
+import ConstraintsTags from '../../admin/Compliance/Constraints/ConstraintsTags';
+import { authHeader, handleError } from '../../common/AuthHeader.js';
+import { canViewPII, hasEditPermission } from '../../common/AuthUtil.js';
+import { formItemLayout } from '../../common/CommonUtil';
 // import { validationRuleFixes, validationRules } from '../common/CommonUtil.js';
-import DeleteAsset from '../common/DeleteAsset';
-import EditableTable from '../common/EditableTable.js';
-import LayoutTable from '../common/LayoutTable.js';
-import MonacoEditor from '../common/MonacoEditor.js';
-import OverwriteAssetModal from '../common/OverWriteAssetModal';
-import SuperFileMeta from '../common/SuperFileMeta';
-import AssociatedDataflows from './AssociatedDataflows';
-import Text, { i18n } from '../common/Text.jsx';
+import DeleteAsset from '../../common/DeleteAsset';
+import EditableTable from '../../common/EditableTable.js';
+import LayoutTable from '../../common/LayoutTable.js';
+import MonacoEditor from '../../common/MonacoEditor.js';
+import OverwriteAssetModal from '../../common/OverWriteAssetModal';
+import SuperFileMeta from '../../common/SuperFileMeta';
+import AssociatedDataflows from '../AssociatedDataflows';
+import Text, { i18n } from '../../common/Text.jsx';
+import FileExplorerModal from './FileExplorerModal';
 
 const TabPane = Tabs.TabPane;
 const Option = Select.Option;
@@ -52,6 +53,7 @@ class FileDetails extends Component {
     fileColumns: [],
     fileDataContent: [],
     complianceTags: [],
+    fileSearchValue: '',
     complianceDetails: [],
     fileSearchErrorShown: false,
     disableReadOnlyFields: false,
@@ -85,6 +87,7 @@ class FileDetails extends Component {
     editing: false,
     dataAltered: false,
     errors: false,
+    fileExplorerVisible: false,
   };
 
   //Component did mount
@@ -107,6 +110,8 @@ class FileDetails extends Component {
       complianceTags: [],
       fileDataContent: [],
       fileColumns: [],
+      fileSearchValue: '',
+      selectedCluster: '',
       disableReadOnlyFields: false,
       file: {
         ...this.state.file,
@@ -120,6 +125,25 @@ class FileDetails extends Component {
     });
     this.formRef.current.resetFields();
   };
+
+  // Browser file explorer functions ############
+  browseLogicalFile = () => {
+    if (this.state.selectedCluster) {
+      this.setState({ fileExplorerVisible: true });
+    } else {
+      message.info('Please select cluster before searching');
+    }
+  };
+
+  cancelLogicalFileExplorerModal = () => {
+    this.setState({ fileExplorerVisible: false });
+  };
+
+  doneSelectingLogicalFile = (selectedFile) => {
+    this.onFileSelected(selectedFile);
+    this.setState({ fileSearchValue: selectedFile, fileExplorerVisible: false });
+  };
+  // End of Browser file explorer functions ########
 
   getFileDetails = async ({ assetId, applicationId }) => {
     if (assetId) {
@@ -191,7 +215,7 @@ class FileDetails extends Component {
 
         return data;
       } catch (error) {
-        console.log('-getFileDetails-----------------------------------------');
+        console.log('-getFileDetails---------------------------');
         console.dir({ error }, { depth: null });
         console.log('------------------------------------------');
         this.setState({ initialDataLoading: false });
@@ -376,7 +400,7 @@ class FileDetails extends Component {
 
       await this.getFileData(fileInfo.basic.name, this.state.selectedCluster);
     } catch (error) {
-      console.log('-error-----------------------------------------');
+      console.log('-error------------------------------------');
       console.dir({ error }, { depth: null });
       console.log('------------------------------------------');
       message.error('There was an error getting file information from the cluster. Please try again');
@@ -511,11 +535,6 @@ class FileDetails extends Component {
       removeAssetId: this.formRef.current.getFieldValue('removeAssetId') || '', // Asset was a design file that got associated with existing in DB file
       renameAssetId: this.formRef.current.getFieldValue('renameAssetId') || '', // Asset was a design file that got associated with none-existing in DB file
     };
-
-    console.log('-fileDetails-----------------------------------------');
-    console.dir({ fileDetails }, { depth: null });
-    console.log('------------------------------------------');
-
     return fileDetails;
   };
 
@@ -780,6 +799,13 @@ class FileDetails extends Component {
 
     return (
       <React.Fragment>
+        <FileExplorerModal
+          open={this.state.fileExplorerVisible}
+          onCancel={this.cancelLogicalFileExplorerModal}
+          onDone={this.doneSelectingLogicalFile}
+          cluster={this.state.selectedCluster}
+        />
+
         {this.props.displayingInModal || this.state.addingNewAsset ? null : (
           <div className="assetTitle">
             <Text text="File" /> : {this.state.file.name}
@@ -836,7 +862,7 @@ class FileDetails extends Component {
                   </Form.Item>
                   <Form.Item label={<Text text="File" />} name="fileSearchValue" hidden={hideOnReadOnlyView}>
                     <Row gutter={[8, 0]}>
-                      <Col span={19}>
+                      <Col span={20}>
                         <AutoComplete
                           className="certain-category-search"
                           dropdownClassName="certain-category-search-dropdown"
@@ -845,6 +871,10 @@ class FileDetails extends Component {
                           style={{ width: '100%' }}
                           onSearch={this.searchFiles}
                           onSelect={this.onFileSelected}
+                          allowClear={true}
+                          onClear={this.clearState}
+                          value={this.state.fileSearchValue}
+                          onChange={(value) => this.setState({ fileSearchValue: value })}
                           placeholder={i18n('Search files')}
                           disabled={!editingAllowed}
                           notFoundContent={this.state.fileSearch.loading ? <Spin /> : 'Not Found'}>
@@ -853,11 +883,12 @@ class FileDetails extends Component {
                               {suggestion.text}
                             </Option>
                           ))}
+                          {/* <Input.Search placeholder={i18n('Search files')} /> */}
                         </AutoComplete>
                       </Col>
-                      <Col span={5}>
-                        <Button htmlType="button" block onClick={this.clearState}>
-                          {<Text text="Clear" />}
+                      <Col span={4}>
+                        <Button htmlType="button" block onClick={this.browseLogicalFile} type="primary">
+                          {<Text text="Browse" />}
                         </Button>
                       </Col>
                     </Row>
@@ -1045,7 +1076,7 @@ class FileDetails extends Component {
                     <ConstraintsTags list={this.getConstraints('field')} />
                   </Form.Item>
 
-                  <Form.Item label="Description" name="description">
+                  <Form.Item label={<Text>Description</Text>} name="description">
                     {enableEdit ? (
                       <MonacoEditor
                         lang="markdown"

@@ -24,7 +24,7 @@ const DataflowInstanceDetails = React.lazy(() =>
   import('./components/application/DataflowInstances/DataflowInstanceDetails')
 );
 // Application pages
-const FileDetailsForm = React.lazy(() => import('./components/application/FileDetails'));
+const FileDetailsForm = React.lazy(() => import('./components/application/files/FileDetails'));
 const FileTemplate = React.lazy(() => import('./components/application/templates/FileTemplate'));
 const JobDetailsForm = React.lazy(() => import('./components/application/Jobs/JobDetails'));
 const IndexDetailsForm = React.lazy(() => import('./components/application/IndexDetails'));
