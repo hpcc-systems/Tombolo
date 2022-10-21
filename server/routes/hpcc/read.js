@@ -576,8 +576,6 @@ router.get('/getDropZones', [
 	}
 })
 
-/* This route is re-written below. Leaving it here because it is  being called in couple other places. 
-Can retire after the changes are made in those places */
 router.get('/getDirectories',[
 	query('data').exists().withMessage('Invalid data'),
 	query('host').exists().withMessage('Invalid host name'),
@@ -604,23 +602,26 @@ router.get('/getDirectories',[
 	}
 })
 
-// GET DIRECTORIES FROM DROP ZONE 
-router.get('/dropZoneDirectories', [
-	query('clusterId').exists().withMessage('Invalid cluster ID'),
-	query('Netaddr').exists().withMessage('Invalid Netaddr'),
-	query('DirectoryOnly').exists().withMessage('Invalid directory only value. It should be either true or false'),
-	query('Path').exists().withMessage('Invalid path') ], async(req, res) =>{
-	const {clusterId, Netaddr,  Path, DirectoryOnly} = req.query;
-	try{
-		const cluster = await hpccUtil.getCluster(clusterId);
-		const response = await hpccUtil.fetchLandingZoneDirectories({cluster, Netaddr,  Path, DirectoryOnly})
-		res.status(200).json(response);
 
-	}catch(err){
-		console.log(err);
-		res.status(503).json({success : false, message : err.message})
-	}
-})
+router.get(
+  "/dropZoneDirectories",
+  async (req, res) => {
+    try {
+      const { clusterId, Netaddr, Path, DirectoryOnly } = req.query;
+	  const cluster = await hpccUtil.getCluster(clusterId);
+      const directories = await hpccUtil.getDirectories({
+        cluster,
+        Netaddr,
+        Path,
+        DirectoryOnly,
+      });
+      res.status(200).send(directories);
+    } catch (error) {
+      logger.error("Failed to find directories", error);
+      res.status(500).send({ message: error.message });
+    }
+  }
+);
 
 router.get('/dropZoneDirectoryDetails', [
 	query('clusterId').exists().withMessage('Invalid cluster ID'),
