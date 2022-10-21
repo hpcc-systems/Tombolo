@@ -2,11 +2,11 @@ import React from 'react';
 import { Button, Form, Radio, Select } from 'antd';
 import { useState } from 'react';
 import { useSelector } from 'react-redux';
+import { UpOutlined } from '@ant-design/icons';
 
 import './AddJobsForm.css';
-
-import { UpOutlined } from '@ant-design/icons';
 import DebounceSelect from './DebounceSelect';
+import Text, { i18n } from '../../../common/Text';
 
 const { Option } = Select;
 
@@ -63,25 +63,25 @@ const SearchSettings = ({ form, panes, removeTab, addTab }) => {
   return (
     <fieldset className={`search-settings ${hide ? 'hide-search' : ''} custom-scroll`}>
       <legend onClick={toggleHide} className="search-settings-legend">
-        Search Settings <UpOutlined rotate={hide ? 180 : 0} />
+        {<Text text="Search Settings" />} <UpOutlined rotate={hide ? 180 : 0} />
       </legend>
-      <Form.Item label="Job Type" name="jobType" required>
-        <Select placeholder="Job Type" onChange={onJobTypeChange}>
+      <Form.Item label={<Text text="Job Type" />} name="jobType" required>
+        <Select onChange={onJobTypeChange}>
           {config.jobTypes.map((type) => (
             <Option key={type}>{type}</Option>
           ))}
         </Select>
       </Form.Item>
 
-      <Form.Item label="Cluster" name="clusterId" required>
-        <Select allowClear placeholder="Select a Cluster">
+      <Form.Item label={<Text text="Cluster" />} name="clusterId" required>
+        <Select allowClear>
           {clusters.map((cluster) => (
             <Option key={cluster.id}>{cluster.name}</Option>
           ))}
         </Select>
       </Form.Item>
 
-      <Form.Item label="Source" name="isStoredOnGithub">
+      <Form.Item label={<Text text="Source" />} name="isStoredOnGithub">
         <Radio.Group
           onChange={onSourceChange}
           style={{ width: '100%', textAlign: 'center' }}
@@ -106,18 +106,18 @@ const SearchSettings = ({ form, panes, removeTab, addTab }) => {
             return (
               <Form.Item {...config.layout.tail}>
                 <Button type="ghost" block onClick={() => addTab({ key, value, clusterId, jobType, isStoredOnGithub })}>
-                  Add Job
+                  {<Text text="Add Job" />}
                 </Button>
               </Form.Item>
             );
           }
 
           return (
-            <Form.Item label="Find Jobs" name="addedJobs" hidden={jobType === 'Spray'}>
+            <Form.Item label={<Text text="Find Jobs" />} name="addedJobs" hidden={jobType === 'Spray'}>
               <DebounceSelect
                 mode="multiple"
                 style={{ width: '100%' }}
-                placeholder="Search by job's name"
+                placeholder={i18n("Search by job's name")}
                 formValues={{ clusterId, jobType, search }}
                 onDeselect={(_, { key: wuid }) => removeTab(wuid)}
                 onSelect={(_, { key, value }) => addTab({ key, value, clusterId, jobType, isStoredOnGithub })}

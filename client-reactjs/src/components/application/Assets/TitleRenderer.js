@@ -1,8 +1,10 @@
 import React, { useState } from 'react';
 import { DeleteOutlined, EyeOutlined, FilePdfOutlined, FolderOutlined, PlusOutlined } from '@ant-design/icons';
-import { Dropdown, Menu } from 'antd';
-import { selectGroup } from '../../../redux/actions/Groups';
 import { useDispatch } from 'react-redux';
+import { Dropdown, Menu } from 'antd';
+
+import { selectGroup } from '../../../redux/actions/Groups';
+import Text from '../../common/Text';
 
 const TitleRenderer = ({ nodeData, handleMenuClick }) => {
   const [visible, setVisible] = useState(false);
@@ -19,22 +21,22 @@ const TitleRenderer = ({ nodeData, handleMenuClick }) => {
     const items = [
       {
         key: 'Edit-Group',
-        name: 'View',
+        name: <Text text="View" />,
         icon: <EyeOutlined />,
       },
       {
         key: 'Delete-Group',
-        name: 'Delete',
+        name: <Text text="Delete" />,
         icon: <DeleteOutlined />,
       },
       {
         key: 'Move-Group',
-        name: 'Move',
+        name: <Text text="Move" />,
         icon: <FolderOutlined />,
       },
       {
         key: 'Print-Assets',
-        name: 'Print Assets',
+        name: <Text text="Print Assets" />,
         icon: <FilePdfOutlined />,
       },
     ];
@@ -49,7 +51,7 @@ const TitleRenderer = ({ nodeData, handleMenuClick }) => {
     return (
       <Menu mode="inline" theme="dark" onClick={onClick}>
         <Menu.Item key="Group" icon={<PlusOutlined />}>
-          New Group
+          {<Text text="New Group" />}
         </Menu.Item>
         {!isRootNode &&
           items.map((item) => {

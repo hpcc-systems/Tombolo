@@ -8,6 +8,7 @@ const initialState = {
   clusters: [],
   consumers: [],
   licenses: [],
+  constraints: [],
 };
 
 export function applicationReducer(state = initialState, action) {
@@ -32,10 +33,13 @@ export function applicationReducer(state = initialState, action) {
         updatedApplication: action.updatedApplication,
       };
     case Constants.APPLICATION_DELETED:
+      // eslint-disable-next-line no-case-declarations
+      const currentApplication = action.applicationId === state.application?.applicationId ? {} : state.application;
       return {
         ...state,
         newApplication: '',
         updatedApplication: '',
+        application: currentApplication,
         deletedApplicationId: action.applicationId,
       };
     case Constants.CLUSTERS_RETRIEVED:
@@ -52,6 +56,16 @@ export function applicationReducer(state = initialState, action) {
       return {
         ...state,
         licenses: action.licenses,
+      };
+    case Constants.CONSTRAINTS_RETRIEVED:
+      return {
+        ...state,
+        constraints: action.constraints,
+      };
+    case Constants.UPDATE_CONSTRAINTS:
+      return {
+        ...state,
+        constraints: action.constraints,
       };
     default:
       return state;

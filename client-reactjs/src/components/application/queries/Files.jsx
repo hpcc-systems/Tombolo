@@ -1,23 +1,24 @@
 import React, { useEffect, useState } from 'react';
 import { Table } from 'antd';
 import { authHeader, handleError } from '../../common/AuthHeader.js';
-
-//Table columns
-const columns = [
-  {
-    title: 'Name',
-    dataIndex: 'fileName',
-  },
-  {
-    title: 'Type',
-    dataIndex: 'fileType',
-  },
-];
+import Text from '../../common/Text.jsx';
 
 function Files({ hpcc_queryid, cluster_id }) {
   //Local State
   const [queryFiles, setQueryFiles] = useState([]);
   const [fetchingData, setFetchingData] = useState(false);
+
+  //Table columns
+  const columns = [
+    {
+      title: <Text text="Name" />,
+      dataIndex: 'fileName',
+    },
+    {
+      title: <Text text="Type" />,
+      dataIndex: 'fileType',
+    },
+  ];
 
   //Use Effect
   useEffect(() => {

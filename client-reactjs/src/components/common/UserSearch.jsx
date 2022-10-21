@@ -4,6 +4,7 @@ import { MinusCircleOutlined } from '@ant-design/icons';
 import debounce from 'lodash/debounce';
 
 import { authHeader } from '../common/AuthHeader';
+import Text, { i18n } from '../common/Text';
 
 const { Option } = Select;
 
@@ -68,7 +69,7 @@ function UserSearch({ layout, noLabelLayout, enableEdit, showDetails }) {
               <Form.Item
                 key={field.key}
                 required={enableEdit}
-                label={index === 0 ? 'Recipients' : ''}
+                label={index === 0 ? <Text>Recipients</Text> : ''}
                 labelAlign="left"
                 validateTrigger={'onBlur'}
                 {...(index === 0 ? layout : noLabelLayout)}
@@ -100,7 +101,7 @@ function UserSearch({ layout, noLabelLayout, enableEdit, showDetails }) {
                           notFoundContent={searchingUser ? <Spin /> : ''}
                           onSelect={handleUserSelection}
                           allowClear={true}
-                          placeholder="Start typing name or email address">
+                          placeholder={i18n('E-mail')}>
                           {searchResults.map((result) => {
                             return <Option key={result.email}>{groupedOption(result.text, result.email)}</Option>;
                           })}
@@ -121,7 +122,7 @@ function UserSearch({ layout, noLabelLayout, enableEdit, showDetails }) {
             <Form.Item {...noLabelLayout}>
               {enableEdit ? (
                 <Button onClick={() => add()} style={{ margin: '8px 0 8px' }} type="primary" ghost>
-                  Add notification recipient
+                  <Text>Add notification recipient</Text>
                 </Button>
               ) : null}
               <Form.ErrorList errors={errors} />

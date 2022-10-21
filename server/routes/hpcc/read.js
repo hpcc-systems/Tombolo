@@ -241,31 +241,33 @@ router.post('/removecluster', function (req, res) {
     }
 });
 
-router.get('/getFileInfo', [
-  query('fileName').exists().withMessage('Invalid file name'),
-  query('clusterid').optional({checkFalsy:true}).isUUID(4).withMessage('Invalid cluster id'),
-  query('applicationId').isUUID(4).withMessage('Invalid application id')
-], function (req, res) {
-	const errors = validationResult(req).formatWith(validatorUtil.errorFormatter);
-  if (!errors.isEmpty()) {
-    return res.status(422).json({ success: false, errors: errors.array() });
-  }
-  File.findOne({where: {name: req.query.fileName, application_id: req.query.applicationId}}).then(async (existingFile) => {
-		console.log(existingFile);
-    if(existingFile) {
-      await assetUtil.fileInfo(req.query.applicationId, existingFile.id).then((existingFileInfo) => {
-        res.json(existingFileInfo);
-      })
-    } else {
-      hpccUtil.fileInfo(req.query.fileName, req.query.clusterid).then((fileInfo) => {
-        res.json(fileInfo);
-      }).catch((err) => {
-        console.log('err', err);
-        return res.status(500).send("Error occured while getting file details");
-      })
+router.get( "/getFileInfo",
+  [
+    query("fileName").exists().withMessage("Invalid file name"),
+    query("clusterid").optional({ checkFalsy: true }).isUUID(4).withMessage("Invalid cluster id"),
+    query("applicationId").isUUID(4).withMessage("Invalid application id"),
+  ], async (req, res) => {
+    try {
+      const errors = validationResult(req).formatWith(validatorUtil.errorFormatter);
+      if (!errors.isEmpty()) return res.status(422).json({ success: false, errors: errors.array() });
+
+      const { applicationId, fileName, clusterid } = req.query;
+
+      const file = await File.findOne({
+        where: { name: fileName, application_id: applicationId },
+        attributes: ["id"],
+      });
+
+      const data = file ? await assetUtil.fileInfo(applicationId, file.id) : await hpccUtil.fileInfo(fileName, clusterid);
+			
+      res.status(200).json(data);
+    } catch (error) {
+      console.log("error", error);
+      return res.status(500).send("Error occurred while getting file details");
     }
-  })
-});
+  }
+);
+
 
 
 router.get('/getIndexInfo', [
@@ -574,8 +576,6 @@ router.get('/getDropZones', [
 	}
 })
 
-/* This route is re-written below. Leaving it here because it is  being called in couple other places. 
-Can retire after the changes are made in those places */
 router.get('/getDirectories',[
 	query('data').exists().withMessage('Invalid data'),
 	query('host').exists().withMessage('Invalid host name'),
@@ -602,23 +602,26 @@ router.get('/getDirectories',[
 	}
 })
 
-// GET DIRECTORIES FROM DROP ZONE 
-router.get('/dropZoneDirectories', [
-	query('clusterId').exists().withMessage('Invalid cluster ID'),
-	query('Netaddr').exists().withMessage('Invalid Netaddr'),
-	query('DirectoryOnly').exists().withMessage('Invalid directory only value. It should be either true or false'),
-	query('Path').exists().withMessage('Invalid path') ], async(req, res) =>{
-	const {clusterId, Netaddr,  Path, DirectoryOnly} = req.query;
-	try{
-		const cluster = await hpccUtil.getCluster(clusterId);
-		const response = await hpccUtil.fetchLandingZoneDirectories({cluster, Netaddr,  Path, DirectoryOnly})
-		res.status(200).json(response);
 
-	}catch(err){
-		console.log(err);
-		res.status(503).json({success : false, message : err.message})
-	}
-})
+router.get(
+  "/dropZoneDirectories",
+  async (req, res) => {
+    try {
+      const { clusterId, Netaddr, Path, DirectoryOnly } = req.query;
+	  const cluster = await hpccUtil.getCluster(clusterId);
+      const directories = await hpccUtil.getDirectories({
+        cluster,
+        Netaddr,
+        Path,
+        DirectoryOnly,
+      });
+      res.status(200).send(directories);
+    } catch (error) {
+      logger.error("Failed to find directories", error);
+      res.status(500).send({ message: error.message });
+    }
+  }
+);
 
 router.get('/dropZoneDirectoryDetails', [
 	query('clusterId').exists().withMessage('Invalid cluster ID'),

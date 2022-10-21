@@ -1,7 +1,9 @@
 import React from 'react';
 import { Tabs } from 'antd';
+
 import LandingZoneUpload from './LandingZoneUpload';
 import BreadCrumbs from '../../common/BreadCrumbs';
+import Text from '../../common/Text';
 
 function Actions() {
   const TabPane = Tabs.TabPane;
@@ -11,7 +13,7 @@ function Actions() {
         <BreadCrumbs />
       </div>
       <Tabs defaultActiveKey="1">
-        <TabPane tab="File Upload" key="1">
+        <TabPane tab={<Text text="File Upload" />} key="1">
           <LandingZoneUpload />
         </TabPane>
       </Tabs>

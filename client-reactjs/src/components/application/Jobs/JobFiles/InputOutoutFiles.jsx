@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { Table, message, Form, Select, Button, Tag } from 'antd';
 
 import { authHeader } from '../../../common/AuthHeader';
+import Text, { i18n } from '../../../common/Text';
 
 const { Option } = Select;
 
@@ -9,57 +10,60 @@ const { Option } = Select;
 const renderTag = (record) => {
   switch (record.assetType) {
     case 'File Template':
-      return <Tag style={{ color: 'var(--primary)', border: '2px solid var(--primary)' }}>File Template</Tag>;
+      return (
+        <Tag style={{ color: 'var(--primary)', border: '2px solid var(--primary)' }}>
+          <Text>File Template</Text>
+        </Tag>
+      );
     case 'Super File':
-      return <Tag style={{ color: 'var(--indigo)', border: '2px solid var(--indigo)' }}>Super File</Tag>;
+      return (
+        <Tag style={{ color: 'var(--indigo)', border: '2px solid var(--indigo)' }}>
+          <Text>Super File</Text>
+        </Tag>
+      );
     default:
-      return <Tag style={{ color: 'var(--secondary)', border: '2px solid var(--secondary)' }}>Logical File</Tag>;
+      return (
+        <Tag style={{ color: 'var(--secondary)', border: '2px solid var(--secondary)' }}>
+          <Text>Logical File</Text>
+        </Tag>
+      );
   }
 };
 
-// PARENT AND FILE TABLE COLUMNS
-const fileTableColumns = [
-  {
-    title: 'File',
-    render: (text, record) => (
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-        <span>{record.fileTitle || record.name}</span>
-        {record.assetType === 'File Template' ? (
-          <small style={{ color: 'var(--primary)' }}>
-            [{record.files.length > 1 ? record.files.length + ' Files' : record.files.length + ' File'} ]
-          </small>
-        ) : null}
-      </div>
-    ),
-  },
-  {
-    title: 'Type',
-    width: '8%',
-    render: (text, record) => renderTag(record),
-  },
-  {
-    title: 'Description',
-    dataIndex: 'description',
-    width: '42%',
-  },
-];
+function InputOutputFiles({ state, setState, editingAllowed, type, label }) {
+  const { sourceFiles, job, selectedCluster: clusterId, enableEdit, selectedInputFile, selectedOutputFile } = state;
+  const dataSource = type === 'input' ? job.inputFiles : job.outputFiles;
 
-function InputOutputFiles({
-  inputFiles,
-  outputFiles,
-  clusterId,
-  enableEdit,
-  handleInputFileChange,
-  handleOutputFileChange,
-  editingAllowed,
-  sourceFiles,
-  selectedTabPaneKey,
-  handleAddOutputFile,
-  handleAddInputFile,
-}) {
   const [subFiles, setSubFiles] = useState([]);
   const [expandedRowKeys, setExpandedRowKeys] = useState({ parentTable: [], fileTable: [], subFileTable: [] });
   const [fetchingSubFiles, setFetchingSubFiles] = useState(false);
+
+  // PARENT AND FILE TABLE COLUMNS
+  const fileTableColumns = [
+    {
+      title: <Text text="File" />,
+      render: (text, record) => (
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+          <span>{record.fileTitle || record.name}</span>
+          {record.assetType === 'File Template' ? (
+            <small style={{ color: 'var(--primary)' }}>
+              [{record.files.length > 1 ? record.files.length + ' Files' : record.files.length + ' File'} ]
+            </small>
+          ) : null}
+        </div>
+      ),
+    },
+    {
+      title: <Text text="Type" />,
+      width: '8%',
+      render: (text, record) => renderTag(record),
+    },
+    {
+      title: <Text text="Description" />,
+      dataIndex: 'description',
+      width: '42%',
+    },
+  ];
 
   // FUNCTION THAT RENDER'S FILE TABLE
   const renderFilesTable = (record, _subFiles, _clusterId) => {
@@ -135,19 +139,30 @@ function InputOutputFiles({
     }
   };
 
+  const onChange = (value) => {
+    setState(type === 'input' ? { selectedInputFile: value } : { selectedOutputFile: value });
+  };
+
+  const onClick = () => {
+    const selectedFile = this.state.sourceFiles.find(
+      (sourceFile) => sourceFile.id === (type === 'input' ? selectedInputFile : selectedOutputFile)
+    );
+    selectedFile.addedManually = true;
+
+    const updateInput = { job: { ...state.job, inputFiles: [...job.inputFiles, selectedFile] } };
+    const updateOutput = { job: { ...state.job, outputFiles: [...job.outputFiles, selectedFile] } };
+
+    setState(type === 'input' ? updateInput : updateOutput);
+  };
+
   // JSX
   return (
     <>
       <div>
         {enableEdit ? (
           <div style={{ display: 'flex' }}>
-            <Form.Item label={selectedTabPaneKey === '4' ? 'Input Files' : 'Output Files'} rules={[{ required: true }]}>
-              <Select
-                id={selectedTabPaneKey === '4' ? 'inputfiles' : 'outputfiles'}
-                placeholder={selectedTabPaneKey === '4' ? 'Input Files' : 'Output Files'}
-                onChange={selectedTabPaneKey === '4' ? handleInputFileChange : handleOutputFileChange}
-                style={{ width: 290 }}
-                disabled={!editingAllowed}>
+            <Form.Item label={<Text text={label} />} rules={[{ required: true }]}>
+              <Select placeholder={i18n(label)} onChange={onChange} style={{ width: 290 }} disabled={!editingAllowed}>
                 {sourceFiles.map((d) => (
                   <Option value={d.id} key={d.id}>
                     {d.title ? d.title : d.name}
@@ -157,12 +172,8 @@ function InputOutputFiles({
             </Form.Item>
 
             <Form.Item style={{ marginLeft: '10px' }}>
-              <Button
-                style={{ marginRight: '10px' }}
-                type="primary"
-                onClick={selectedTabPaneKey === '4' ? handleAddInputFile : handleAddOutputFile}
-                disabled={!editingAllowed}>
-                Add
+              <Button style={{ marginRight: '10px' }} type="primary" onClick={onClick} disabled={!editingAllowed}>
+                <Text text="Add" />
               </Button>
             </Form.Item>
           </div>
@@ -171,7 +182,7 @@ function InputOutputFiles({
 
       <Table
         columns={fileTableColumns}
-        dataSource={selectedTabPaneKey === '4' ? inputFiles : outputFiles}
+        dataSource={dataSource}
         rowKey={(record) => record.id}
         size="small"
         expandable={{

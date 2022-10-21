@@ -2,6 +2,8 @@ import React, { useEffect, useState } from 'react';
 import { Form, Select, Cascader, Input, Tag, Space } from 'antd';
 import { CheckCircleOutlined, CloseCircleOutlined, LoadingOutlined } from '@ant-design/icons';
 
+import Text, { i18n } from '../../../common/Text';
+
 function GHMainFile({ enableEdit, form, branchOrTagName }) {
   const [repoTree, setRepoTree] = useState([]);
 
@@ -109,7 +111,7 @@ function GHMainFile({ enableEdit, form, branchOrTagName }) {
 
   return (
     <Form.Item
-      label={enableEdit ? 'Main File' : 'Branch and File'}
+      label={enableEdit ? <Text>Main File</Text> : <Text>Branch and File</Text>}
       required={enableEdit}
       className={!enableEdit && 'read-only-input'}>
       {enableEdit ? (
@@ -124,7 +126,7 @@ function GHMainFile({ enableEdit, form, branchOrTagName }) {
               style={{ width: '50%' }}
               onChange={handleSelectRepo}
               disabled={!reposFetched}
-              placeholder="Select Main File Repo"
+              placeholder={i18n('Select Main File Repo')}
               dropdownMatchSelectWidth={false}>
               {repoList.map((repo) => (
                 <Select.Option key={repo.id} value={repo.id}>
@@ -154,7 +156,7 @@ function GHMainFile({ enableEdit, form, branchOrTagName }) {
               options={repoTree}
               onChange={onChange}
               loadData={loadBranchTree}
-              placeholder="Select Main File"
+              placeholder={i18n('Select Main File')}
               className={!enableEdit && 'read-only-input'}
               disabled={selectedRepoId === undefined || repoTree.length === 0}
             />

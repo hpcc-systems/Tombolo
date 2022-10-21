@@ -4,6 +4,9 @@ import { debounce } from 'lodash';
 import React, { Component } from 'react';
 import { connect } from 'react-redux';
 import { Link, withRouter } from 'react-router-dom';
+import i18next from 'i18next';
+
+import { languages } from '../../i18n/languages';
 import logo from '../../images/logo.png';
 import { msalInstance } from '../../index';
 import { applicationActions } from '../../redux/actions/Application';
@@ -12,6 +15,7 @@ import { expandGroups, selectGroup, getGroupsTree } from '../../redux/actions/Gr
 import { userActions } from '../../redux/actions/User';
 import { authHeader, handleError } from '../common/AuthHeader.js';
 import { hasAdminRole } from '../common/AuthUtil.js';
+import Text, { i18n } from '../common/Text';
 
 class AppHeader extends Component {
   pwdformRef = React.createRef();
@@ -34,6 +38,7 @@ class AppHeader extends Component {
     newpassword: '',
     confirmnewpassword: '',
     isAboutModalVisible: false,
+    language: 'EN',
   };
 
   handleRef() {
@@ -88,6 +93,14 @@ class AppHeader extends Component {
       });
     }
 
+    //Check local storage if the preferred language is saved
+    const appLanguage = localStorage.getItem('i18nextLng');
+    if (!appLanguage) {
+      this.setState({ language: 'EN' });
+    } else {
+      this.setState({ language: localStorage.getItem('i18nextLng').toUpperCase() });
+    }
+
     if (this.state.applications.length === 0) {
       var url = `/api/app/read/appListByUsername?user_name=${this.props.user.username}`;
       if (hasAdminRole(this.props.user)) {
@@ -129,6 +142,7 @@ class AppHeader extends Component {
       this.props.dispatch(applicationActions.getClusters());
       this.props.dispatch(applicationActions.getConsumers());
       this.props.dispatch(applicationActions.getLicenses());
+      this.props.dispatch(applicationActions.getConstraints());
     }
 
     if (this.props.newApplication) {
@@ -319,22 +333,47 @@ class AppHeader extends Component {
     });
   };
 
+  // Options for languages dropdown
+  languagesMenu = (
+    <Menu
+      onClick={(item) => {
+        localStorage.setItem('i18nextLng', item.key);
+        i18next.changeLanguage(item.key);
+        this.setState({ language: item.key.toUpperCase() });
+
+        this.props.setLocale(item.key);
+      }}>
+      {languages.map((language) => {
+        return (
+          <Menu.Item className="menuOption" key={language.value}>
+            {language.label}
+          </Menu.Item>
+        );
+      })}
+    </Menu>
+  );
+
   render() {
     const userActionMenu = (
       <Menu onClick={this.handleUserActionMenuClick}>
-        <Menu.Item key="1">Change Password</Menu.Item>
-        <Menu.Item key="2">Logout</Menu.Item>
+        <Menu.Item key="1" className="menuOption">
+          {<Text text="Change Password" />}
+        </Menu.Item>
+        <Menu.Item key="2" className="menuOption">
+          {<Text text="Logout" />}
+        </Menu.Item>
       </Menu>
     );
+
     const helpMenu = (
       <Menu>
-        <Menu.Item key="1">
+        <Menu.Item key="1" className="menuOption">
           <a target="_blank" rel="noopener noreferrer" href={process.env.PUBLIC_URL + '/Tombolo-User-Guide.pdf'}>
-            User Guide
+            {<Text text="User Guide" />}
           </a>
         </Menu.Item>
-        <Menu.Item key="2">
-          <a onClick={this.openAboutModal}>About</a>
+        <Menu.Item key="2" className="menuOption">
+          <a onClick={this.openAboutModal}>{<Text text="About" />}</a>
         </Menu.Item>
       </Menu>
     );
@@ -370,7 +409,7 @@ class AppHeader extends Component {
       <div style={{ display: 'flex', alignItems: 'center', maxHeight: '100%', justifyContent: 'space-between' }}>
         <div>
           <Link to={'/'} style={{ marginRight: '70px' }}>
-            <img src={logo} alt="Tombolo logo" />
+            <img src={logo} alt="Tombolo logo" width="80px" height="19px" />
           </Link>
 
           <Dropdown overlay={menu} placement="bottom" trigger={['click']}>
@@ -392,16 +431,15 @@ class AppHeader extends Component {
           </Dropdown>
         </div>
 
-        <div>
+        <div style={{ display: 'flex', alignItems: 'center' }}>
           <Dropdown overlay={helpMenu} trigger={['click']}>
             <Button shape="round" style={{ marginRight: '10px' }}>
               <i className="fa fa-lg fa-question-circle"></i>
               <span style={{ paddingLeft: '5px' }}>
-                Help <DownOutlined />
+                {<Text text="Help" />} <DownOutlined />
               </span>
             </Button>
           </Dropdown>
-
           <Dropdown overlay={userActionMenu} trigger={['click']}>
             <Button shape="round">
               <i className="fa fa-lg fa-user-circle"></i>
@@ -410,30 +448,31 @@ class AppHeader extends Component {
               </span>
             </Button>
           </Dropdown>
+          <>{this.props.languageSwitcher}</>
         </div>
 
         <Modal
-          title="Change Password"
+          title={<Text>Change Password</Text>}
           visible={this.state.visible}
           width="520px"
           footer={[
             <Button key="cancel" onClick={this.handleCancel}>
-              Cancel
+              <Text>Cancel</Text>
             </Button>,
             <Button key="submit" onClick={this.handleOk} type="primary" loading={this.state.loading}>
-              Change Password
+              <Text>Change Password</Text>
             </Button>,
           ]}>
           <Form ref={this.pwdformRef}>
             <Form.Item
               {...formItemLayout}
               name="oldpassword"
-              label="Password"
+              label={<Text>Password</Text>}
               rules={[{ required: true, message: 'Please enter the current password!' }]}>
               <Input
                 type="password"
                 name="oldpassword"
-                placeholder="Password"
+                placeholder={i18n('Password')}
                 onChange={this.handleChangePasswordFieldChange}
               />
             </Form.Item>
@@ -441,12 +480,12 @@ class AppHeader extends Component {
             <Form.Item
               {...formItemLayout}
               name="newpassword"
-              label="New Password"
+              label={<Text>New Password</Text>}
               rules={[{ required: true, message: 'Please enter the new password!' }]}>
               <Input
                 type="password"
                 name="newpassword"
-                placeholder="New Password"
+                placeholder={i18n('New Password')}
                 onChange={this.handleChangePasswordFieldChange}
               />
             </Form.Item>
@@ -454,12 +493,12 @@ class AppHeader extends Component {
             <Form.Item
               {...formItemLayout}
               name="confirmnewpassword"
-              label="Confirm Password"
+              label={<Text>Confirm Password</Text>}
               rules={[{ required: true, message: 'Please confirm the new password!' }]}>
               <Input
                 type="password"
                 name="confirmnewpassword"
-                placeholder="Confirm Password"
+                placeholder={i18n('Confirm Password')}
                 onChange={this.handleChangePasswordFieldChange}
               />
             </Form.Item>
@@ -487,5 +526,5 @@ function mapStateToProps(state) {
 }
 
 //export default withRouter(AppHeader);
-const connectedAppHeader = connect(mapStateToProps)(withRouter(AppHeader));
+let connectedAppHeader = connect(mapStateToProps)(withRouter(AppHeader));
 export { connectedAppHeader as AppHeader };

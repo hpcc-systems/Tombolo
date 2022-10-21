@@ -4,8 +4,9 @@ import { useDispatch } from 'react-redux';
 
 import { applicationActions } from '../../../redux/actions/Application';
 import { emptyGroupTree } from '../../../redux/actions/Groups';
-
 import { authHeader } from '../../common/AuthHeader';
+import Text from '../../common/Text';
+
 import { useHistory } from 'react-router';
 
 function AddApplication(props) {
@@ -92,7 +93,7 @@ function AddApplication(props) {
   return (
     <Modal
       visible={props.showAddApplicationModal}
-      title={props?.selectedApplication?.title || 'Add new application'}
+      title={props?.selectedApplication?.title || <Text text="Add" />}
       maskClosable={false}
       onCancel={handleModalCancel}
       footer={
@@ -102,10 +103,10 @@ function AddApplication(props) {
                 key="back"
                 type="primary"
                 onClick={props.isCreatingNewApp || isEditing ? saveApplication : () => setIsEditing(true)}>
-                {props.isCreatingNewApp || isEditing ? 'Save' : 'Edit'}
+                {props.isCreatingNewApp || isEditing ? <Text text="Save" /> : <Text text="Edit" />}
               </Button>,
               <Button key="submit" type="primary" ghost onClick={handleModalCancel}>
-                Cancel
+                {<Text text="Cancel" />}
               </Button>,
             ]
           : [
@@ -117,7 +118,7 @@ function AddApplication(props) {
       <Form className="formInModal" form={form} initialValues={{ visibility: 'Private' }}>
         <Form.Item
           {...formItemLayout}
-          label="Title"
+          label={<Text text="Title" />}
           name="title"
           rules={[
             {
@@ -132,7 +133,7 @@ function AddApplication(props) {
           <Input className={isEditing || props.isCreatingNewApp ? '' : 'read-only-textarea'} />
         </Form.Item>
 
-        <Form.Item label="Description" name="description" {...formItemLayout}>
+        <Form.Item label={<Text text="Description" />} name="description" {...formItemLayout}>
           <TextArea
             autoSize={{ minRows: isEditing || props.isCreatingNewApp ? 4 : 1 }}
             className={isEditing || props.isCreatingNewApp ? '' : 'read-only-textarea'}
@@ -141,7 +142,7 @@ function AddApplication(props) {
 
         <Form.Item
           {...formItemLayout}
-          label="Visibility"
+          label={<Text text="Visibility" />}
           rules={[
             {
               required: props.isCreatingNewApp || isEditing,
@@ -151,8 +152,8 @@ function AddApplication(props) {
           name="visibility">
           {isEditing || props.isCreatingNewApp ? (
             <Radio.Group name="visibility">
-              <Radio value={'Private'}>Private</Radio>
-              <Radio value={'Public'}>Public</Radio>
+              <Radio value={'Private'}>{<Text text="Private" />}</Radio>
+              <Radio value={'Public'}>{<Text text="Public" />}</Radio>
             </Radio.Group>
           ) : (
             <Input className="read-only-input" name="visibility" />

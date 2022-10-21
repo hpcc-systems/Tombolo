@@ -11,6 +11,7 @@ import { Button, Divider, notification, Popconfirm, Table, Tooltip } from 'antd'
 import download from 'downloadjs';
 import React, { Component } from 'react';
 import { connect } from 'react-redux';
+
 import { applicationActions } from '../../../redux/actions/Application';
 import { authHeader, handleError } from '../../common/AuthHeader.js';
 import { hasAdminRole } from '../../common/AuthUtil.js';
@@ -18,6 +19,7 @@ import BreadCrumbs from '../../common/BreadCrumbs';
 import { Constants } from '../../common/Constants';
 import AddApplication from './AddApplication';
 import ShareApp from './ShareApp';
+import Text from '../../common/Text';
 
 class Applications extends Component {
   // REFERENCE TO THE FORM INSIDE MODAL
@@ -179,24 +181,24 @@ class Applications extends Component {
       },
       {
         width: '10%',
-        title: 'Title',
+        title: <Text text="Title" />,
         dataIndex: 'title',
       },
       {
         width: '30%',
-        title: 'Description',
+        title: <Text text="Description" />,
         dataIndex: 'description',
         className: 'overflow-hidden',
         ellipsis: true,
       },
       {
         width: '8%',
-        title: 'Created By',
+        title: <Text text="Created By" />,
         dataIndex: 'creator',
       },
       {
         width: '10%',
-        title: 'Created',
+        title: <Text text="Created" />,
         dataIndex: 'createdAt',
         render: (text, _record) => {
           let createdAt = new Date(text);
@@ -217,7 +219,7 @@ class Applications extends Component {
               {record.visibility !== 'Public' && record.creator === this.props.user.username ? (
                 <>
                   <span onClick={() => this.handleShareApplication(record)}>
-                    <Tooltip placement="left" title={'Share Application'}>
+                    <Tooltip placement="left" title={<Text text="Share" />}>
                       <ShareAltOutlined />
                     </Tooltip>
                   </span>
@@ -226,14 +228,14 @@ class Applications extends Component {
               ) : null}
 
               <span onClick={() => this.handleApplicationEdit(record)}>
-                <Tooltip placement="right" title={'Edit Application'}>
+                <Tooltip placement="right" title={<Text text="Edit" />}>
                   <EyeOutlined />
                 </Tooltip>
               </span>
               <Divider type="vertical" />
 
               <span onClick={() => this.handleExportApplication(record.id, record.title)}>
-                <Tooltip placement="right" title={'Export Application'}>
+                <Tooltip placement="right" title={<Text text="Export" />}>
                   <ExportOutlined />
                 </Tooltip>
               </span>
@@ -243,11 +245,11 @@ class Applications extends Component {
               (record.creator !== this.props.username && record.visibility !== 'Public') ? (
                 <>
                   <Popconfirm
-                    title="Are you sure you want to delete this Application?"
+                    title={<Text text="Are you sure you want to delete" /> + '?'}
                     onConfirm={() => this.handleRemove(record.id)}
                     icon={<QuestionCircleOutlined />}>
                     <span>
-                      <Tooltip placement="right" title={'Delete Application'}>
+                      <Tooltip placement="right" title={<Text text="Delete" />}>
                         <DeleteOutlined />
                       </Tooltip>
                     </span>
@@ -266,7 +268,7 @@ class Applications extends Component {
           extraContent={
             <Tooltip placement="bottom" title={'Click to add a new Application'}>
               <Button type="primary" onClick={() => this.handleAddApplication()}>
-                Add Application
+                {<Text text="Add Application" />}
               </Button>
             </Tooltip>
           }
@@ -311,5 +313,5 @@ function mapStateToProps(state) {
   const { user } = state.authenticationReducer;
   return { user };
 }
-const connectedApp = connect(mapStateToProps)(Applications);
+let connectedApp = connect(mapStateToProps)(Applications);
 export default connectedApp;

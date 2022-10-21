@@ -1,6 +1,6 @@
 import { Button } from 'antd';
 import React, { useState } from 'react';
-
+import Text from '../../../common/Text';
 const SaveAllJobsButton = ({ jobDetailsList }) => {
   const [saveJobs, setSaveJobs] = useState({ error: '', loading: false, result: {} });
 
@@ -24,7 +24,7 @@ const SaveAllJobsButton = ({ jobDetailsList }) => {
 
   return (
     <Button type="primary" loading={saveJobs.loading} onClick={handleSaveAllJobs}>
-      Save All Jobs
+      {<Text text="Save All Jobs" />}
     </Button>
   );
 };

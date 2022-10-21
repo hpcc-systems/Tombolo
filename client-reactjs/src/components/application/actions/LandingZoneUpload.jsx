@@ -5,8 +5,10 @@ import { InboxOutlined } from '@ant-design/icons';
 import { LoadingOutlined, CheckCircleOutlined, CloseCircleOutlined, DeleteOutlined } from '@ant-design/icons';
 import { io } from 'socket.io-client';
 import { v4 as uuidv4 } from 'uuid';
-import { authHeader, handleError } from '../../common/AuthHeader';
 import { useHistory } from 'react-router';
+
+import { authHeader, handleError } from '../../common/AuthHeader';
+import Text from '../../common/Text';
 
 const devURL = `${process.env.REACT_APP_PROXY_URL}/landingZoneFileUpload`;
 const prodURL = '/landingZoneFileUpload';
@@ -321,7 +323,7 @@ function LandingZoneUpload() {
       {!uploading ? (
         <>
           <div>
-            <small>Cluster</small>
+            <p>{<Text text="Cluster" />}</p>
             <Select defaultValue="" onChange={handleClusterChange} size="large" style={{ width: '100%' }}>
               {clusters.map((item) => {
                 return (
@@ -333,12 +335,11 @@ function LandingZoneUpload() {
             </Select>
           </div>
 
-          <div>
-            <small>Destination Folder</small>
+          <div style={{ marginTop: '8px' }}>
+            <p>{<Text text="Destination Folder" />}</p>
             <Cascader
               options={options}
               loadData={loadData}
-              placeholder="Please select"
               allowClear
               changeOnSelect={true}
               style={{ width: '100%' }}
@@ -356,9 +357,9 @@ function LandingZoneUpload() {
               <InboxOutlined />
             </p>
             <p className="ant-upload-text">
-              <b>Click or drag files here to upload (Up to 5 files)</b>
+              <b>{<Text text="Click or drag files here to upload (Up to 5 files)" />}</b>
             </p>
-            <p className="ant-upload-hint">Supports xls, xlsm, xlsx, txt, json and csv</p>
+            <p className="ant-upload-hint">{<Text text="Supports xls, xlsm, xlsx, txt, json and csv" />}</p>
           </Dragger>
         </>
       ) : null}
@@ -378,7 +379,7 @@ function LandingZoneUpload() {
 
       {!uploading ? (
         <Checkbox onChange={onCheckBoxChange} style={{ margin: '20px 0px 20px 0px' }}>
-          Overwrite File(s)
+          {<Text text="Overwrite File(s)" />}
         </Checkbox>
       ) : null}
 
@@ -393,7 +394,7 @@ function LandingZoneUpload() {
               }
         }
         type="primary">
-        {!uploading ? 'Upload' : 'Done'}{' '}
+        {!uploading ? <Text text="Upload" /> : <Text text="Done" />}{' '}
       </Button>
     </div>
   );

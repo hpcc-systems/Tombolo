@@ -2,6 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { Form, Select, Input, Cascader, message } from 'antd';
 
 import { authHeader } from './AuthHeader';
+import Text, { i18n } from '../../components/common/Text';
 
 const { Option } = Select;
 
@@ -61,12 +62,14 @@ function LandingZoneFileExplorer({
         dirOnly: DirectoryOnly,
       });
 
-      const directories = [{ label: '/', value: '', isLeaf: true }];
-      if (response.FileListResponse?.files?.PhysicalFileStruct) {
-        response.FileListResponse?.files?.PhysicalFileStruct.map((dir) => {
-          directories.push({ label: dir.name, value: dir.name, isLeaf: false });
-        });
-      }
+      const directories = [];
+      response.map((dir) => {
+        if (dir.isDir) {
+          directories.unshift({ label: dir.name, value: dir.name, isLeaf: false });
+        } else {
+          directories.push({ label: dir.name, value: dir.name, isLeaf: true });
+        }
+      });
 
       setLandingZoneDetails((prev) => ({ ...prev, directories }));
     } catch (err) {
@@ -81,7 +84,7 @@ function LandingZoneFileExplorer({
       targetOption.loading = true;
 
       const selectedPath = selectedOptions.map((option) => option.label).join('/');
-      const path = `${landingZoneDetails.selectedLandingZone.path}/${selectedPath}/`;
+      const path = `${landingZoneDetails.selectedLandingZone.path}/${selectedPath}`;
 
       const response = await fetchDirectories({
         clusterId,
@@ -89,12 +92,16 @@ function LandingZoneFileExplorer({
         path,
         dirOnly: DirectoryOnly,
       });
-      if (response?.FileListResponse?.files?.PhysicalFileStruct) {
-        const childDirs = response?.FileListResponse?.files?.PhysicalFileStruct.map((dir) => ({
-          label: dir.name,
-          value: dir.name,
-          isLeaf: false,
-        }));
+
+      if (response.length > 0) {
+        const childDirs = [];
+        response.map((dir) => {
+          if (dir.isDir) {
+            childDirs.unshift({ label: dir.name, value: dir.name, isLeaf: false });
+          } else {
+            childDirs.push({ label: dir.name, value: dir.name, isLeaf: true });
+          }
+        });
         targetOption.children = childDirs;
       } else {
         targetOption.isLeaf = true;
@@ -124,14 +131,14 @@ function LandingZoneFileExplorer({
   return (
     <>
       {enableEdit ? (
-        <Form.Item label="Landing Zone / Machine" required>
+        <Form.Item label={<Text>Landing Zone </Text>} required>
           <Input.Group compact>
             <Form.Item
               style={{ width: '50%' }}
               name="landingZone"
               rules={[{ required: true, message: 'Please select landing zone !' }]}>
               <Select
-                placeholder="Landing Zone"
+                placeholder={i18n('Landing Zone')}
                 allowClear
                 style={{ width: '100%' }}
                 loading={landingZoneDetails.fetchingLandingZone}
@@ -147,7 +154,7 @@ function LandingZoneFileExplorer({
               style={{ width: '50%' }}
               name="machine"
               rules={[{ required: true, message: 'Please select Machine !' }]}>
-              <Select placeholder="Machine" allowClear onChange={handleMachineChange} style={{ width: '100%' }}>
+              <Select placeholder={i18n('Machine')} allowClear onChange={handleMachineChange} style={{ width: '100%' }}>
                 {landingZoneDetails.selectedLandingZone.machines.map((machine) => (
                   <Option key={machine.Netaddress}> {machine.Netaddress}</Option>
                 ))}
@@ -162,7 +169,7 @@ function LandingZoneFileExplorer({
           <Form.Item label="Landing Zone" name="landingZone">
             <Input className="read-only-input"></Input>
           </Form.Item>
-          <Form.Item label="Machine" name="machine">
+          <Form.Item label={<Text>Machine</Text>} name="machine">
             <Input className="read-only-input"></Input>
           </Form.Item>
         </>
@@ -170,13 +177,13 @@ function LandingZoneFileExplorer({
 
       {enableEdit ? (
         <Form.Item
-          label="Directory"
+          label={<Text>Directory</Text>}
           name="dirToMonitor"
           rules={[{ required: true, message: 'Please select directory path!' }]}>
           <Cascader
             options={landingZoneDetails.directories}
             loadData={loadCascaderData}
-            placeholder="Please select"
+            placeholder={i18n('Directory')}
             allowClear
             changeOnSelect={true}
             onChange={(value, selectedOptions) =>

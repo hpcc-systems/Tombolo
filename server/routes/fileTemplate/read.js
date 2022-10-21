@@ -9,7 +9,6 @@ const models = require('../../models');
 const FileTemplate = models.fileTemplate;
 const FileMonitoring = models.fileMonitoring;
 const FileTemplateLayout = models.fileTemplateLayout;
-const FileTemplate_licenses = models.fileTemplate_license;
 const AssetsGroups = models.assets_groups;
 
 
@@ -56,29 +55,14 @@ router.post('/saveFileTemplate', [
           {fields : {layout : fileLayoutData}},
           {where : {fileTemplate_id : assetId }}
         )
-        await FileTemplate_licenses.destroy({where : { fileTemplate_id : assetId}});
-        licenses.forEach(license => {
-        license.application_id = application_id;
-        license.fileTemplate_id = assetId;
-        license.license_id = license.id;
-      });
-        await FileTemplate_licenses.bulkCreate(
-        licenses,
-        )
+        // await FileTemplate_licenses.destroy({where : { fileTemplate_id : assetId}});
         res.status(200).json({success : true, assetId: assetId, isMonitoring: !!metaData.fileMonitoringTemplate, message : `Successfully updated file template -> ${title}`});
       }else{
         //New file template -> Create it
       const fileTemplate = await FileTemplate.create({application_id, title, cluster_id : cluster, fileNamePattern, searchString, sampleLayoutFile, description, metaData });
       if(groupId) await AssetsGroups.create({assetId: fileTemplate.id, groupId});
       await FileTemplateLayout.create({application_id, fileTemplate_id : fileTemplate.id, fields : {layout : fileLayoutData}});
-      licenses.forEach(license => {
-        license.application_id = application_id;
-        license.fileTemplate_id = fileTemplate.id;
-        license.license_id = license.id;
-      });
-      await FileTemplate_licenses.bulkCreate(
-        licenses
-      )
+
       res.status(200).json({success : true, assetId: fileTemplate.id, isMonitoring: !!metaData.fileMonitoringTemplate, message : `Successfully created file template -> ${title}`});
       }
     } catch (err) {

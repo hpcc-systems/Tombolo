@@ -1,8 +1,11 @@
 import React, { useState } from 'react';
 import { Table, Input, Popconfirm, Form, Typography, Space, Button, message, Select } from 'antd';
-import { authHeader, handleError } from '../../common/AuthHeader';
 import { useSelector } from 'react-redux';
+
 import useGitHubProjectList from '../../../hooks/useGitHubProjectList';
+import { authHeader, handleError } from '../../common/AuthHeader';
+import Text, { i18n } from '../../common/Text';
+
 const { Option, OptGroup } = Select;
 const { Search } = Input;
 
@@ -166,32 +169,32 @@ const GitHubSettings = () => {
 
   const columns = [
     {
-      title: 'Project Name',
+      title: <Text text="Project Name" />,
       dataIndex: 'ghProject',
       editable: true,
     },
     {
-      title: 'Username',
+      title: <Text text="Username" />,
       dataIndex: 'ghUserName',
       editable: true,
     },
     {
-      title: 'Access token',
+      title: <Text text="Access token" />,
       dataIndex: 'ghToken',
       editable: true,
     },
     {
-      title: 'GitHub link',
+      title: <Text text="GitHub link" />,
       dataIndex: 'ghLink',
       editable: true,
     },
     {
-      title: 'Branch or Tag',
+      title: <Text text="Branch or Tag" />,
       dataIndex: 'ghBranchOrTag',
       editable: true,
     },
     {
-      title: 'Actions',
+      title: <Text text="Action" />,
       dataIndex: 'actions',
       width: '25%',
       render: (_, record) => {
@@ -200,14 +203,14 @@ const GitHubSettings = () => {
         return editable ? (
           <Space>
             <Button type="link" size="small" onClick={() => save(record)}>
-              Save
+              {<Text text="Save" />}
             </Button>
 
-            <Typography.Link onClick={() => cancel(record)}>Cancel</Typography.Link>
+            <Typography.Link onClick={() => cancel(record)}> {<Text text="Cancel" />}</Typography.Link>
 
             <Popconfirm title="Are you sure you want to remove record?" onConfirm={() => remove(record)}>
               <Button danger type="text">
-                Remove
+                {<Text text="Delete" />}
               </Button>
             </Popconfirm>
           </Space>
@@ -239,7 +242,7 @@ const GitHubSettings = () => {
   return (
     <Form form={form} component={false} autoComplete={false}>
       <Button onClick={handleAddProject} type="primary" style={{ margin: '5px', display: 'block', marginLeft: 'auto' }}>
-        Add new project
+        {<Text text="Add new project" />}
       </Button>
       <Table
         bordered
@@ -283,7 +286,7 @@ const EditableCell = ({
           onSearch={onSearch}
           loading={branchAndTagList.loading}
           enterButton={editing ? true : false}
-          placeholder="Provide a link to GitHub repo"
+          placeholder={i18n('Provide a link to GitHub repo')}
         />
       ),
       ghBranchOrTag: (

@@ -14,16 +14,10 @@ import FileTemplatePermissablePurpose from './FileTemplate_permissablePurpose';
 import { hasEditPermission } from '../../common/AuthUtil.js';
 import DeleteAsset from '../../common/DeleteAsset/index.js';
 import LandingZoneFileExplorer from '../../common/LandingZoneFileExplorer';
+import Text, { i18n } from '../../common/Text';
 
 //Local variables
 const { Option } = Select;
-const TabPane = Tabs.TabPane;
-const fileNameOptions = [
-  { name: 'Contains', value: 'contains' },
-  { name: 'Starts with', value: 'startsWith' },
-  { name: 'Ends with', value: 'endsWith' },
-  { name: 'Wildcards', value: 'wildCards' },
-];
 
 //Message config
 message.config({
@@ -39,11 +33,12 @@ const capitalizeString = (text) => {
 };
 
 function FileTemplate({ match, selectedAsset = {}, displayingInModal, onClose }) {
-  const { clusters, application, groupId, user } = useSelector((state) => ({
+  const { clusters, application, groupId, user, licenses } = useSelector((state) => ({
     groupId: state.groupsReducer?.selectedKeys?.id,
     user: state.authenticationReducer.user,
     clusters: state.applicationReducer.clusters,
     application: state.applicationReducer.application,
+    licenses: state.applicationReducer.licenses,
   }));
 
   /*Asset can be passed from graph (selectedAsset prop), via asset table (params), and when link was shared (params).
@@ -52,6 +47,14 @@ function FileTemplate({ match, selectedAsset = {}, displayingInModal, onClose })
   */
   const applicationId = application?.applicationId || match?.params?.applicationId;
   const assetId = selectedAsset?.id || match?.params?.assetId;
+
+  const TabPane = Tabs.TabPane;
+  const fileNameOptions = [
+    { name: <Text text="Contains" />, value: 'contains' },
+    { name: <Text text="Starts with" />, value: 'startsWith' },
+    { name: <Text text="Ends with" />, value: 'endsWith' },
+    { name: <Text text="Wildcards" />, value: 'wildCards' },
+  ];
 
   const history = useHistory();
 
@@ -195,7 +198,6 @@ function FileTemplate({ match, selectedAsset = {}, displayingInModal, onClose })
       description,
       searchString,
       fileNamePattern,
-      licenses: selectedLicenses,
       fileLayoutData: layoutData,
       application_id: applicationId,
       sampleLayoutFile: sampleFileForLayout,
@@ -207,6 +209,7 @@ function FileTemplate({ match, selectedAsset = {}, displayingInModal, onClose })
         lzPath: landingZoneMonitoringDetails.landingZonePath,
         directory: dirToMonitor,
         monitorSubDirs: shouldMonitorSubDirs,
+        licenses: selectedLicenses,
       },
     });
     try {
@@ -272,7 +275,7 @@ function FileTemplate({ match, selectedAsset = {}, displayingInModal, onClose })
         return response.json();
       })
       .then(async (data) => {
-        const { fileMonitoringTemplate, machine, monitorSubDirs, landingZone, directory } = data.metaData;
+        const { fileMonitoringTemplate, machine, monitorSubDirs, landingZone, directory, licenses } = data.metaData;
         setSampleFileForLayout(data.sampleLayout);
         if (fileMonitoringTemplate) {
           setMonitoringDetails((prev) => ({ ...prev, fileMonitoring: fileMonitoringTemplate }));
@@ -296,6 +299,7 @@ function FileTemplate({ match, selectedAsset = {}, displayingInModal, onClose })
           monitoring: data.monitoring,
         });
         setLayoutData(data.fileTemplateLayout?.fields?.layout || []);
+        setSelectedLicenses(licenses);
         setSelectedCluster(data.cluster_id);
         const files = await getFiles(data.cluster_id);
         setFiles(files);
@@ -333,7 +337,7 @@ function FileTemplate({ match, selectedAsset = {}, displayingInModal, onClose })
         return response.json();
       })
       .then((data) => {
-        setLayoutData(data.file_layouts);
+        setLayoutData(data.basic?.metaData?.layout || []);
       })
       .catch((err) => {
         console.log(err.message);
@@ -358,7 +362,7 @@ function FileTemplate({ match, selectedAsset = {}, displayingInModal, onClose })
         <Space>
           {enableEdit ? (
             <Button type="primary" ghost onClick={() => setEnableEdit(false)}>
-              View Changes
+              {<Text text="View Changes" />}
             </Button>
           ) : null}
         </Space>
@@ -366,14 +370,14 @@ function FileTemplate({ match, selectedAsset = {}, displayingInModal, onClose })
       <Space>
         {!enableEdit ? (
           <Button type="primary" onClick={() => setEnableEdit(true)}>
-            Edit
+            {<Text text="Edit" />}
           </Button>
         ) : null}
 
-        <Button onClick={handleCancel}>Cancel</Button>
+        <Button onClick={handleCancel}>{<Text text="Cancel" />}</Button>
         {enableEdit ? (
           <Button type="primary" onClick={saveFileTemplate}>
-            Save
+            {<Text text="Save" />}
           </Button>
         ) : null}
         {enableEdit && assetId ? (
@@ -387,8 +391,7 @@ function FileTemplate({ match, selectedAsset = {}, displayingInModal, onClose })
             onDelete={deleteFileTemplate}
             component={
               <Button key="danger" type="danger">
-                {' '}
-                Delete{' '}
+                {<Text text="Delete" />}
               </Button>
             }
           />
@@ -413,7 +416,7 @@ function FileTemplate({ match, selectedAsset = {}, displayingInModal, onClose })
     <React.Fragment>
       <div className={displayingInModal ? 'assetDetails-content-wrapper-modal' : 'assetDetails-content-wrapper'}>
         <Tabs defaultActiveKey="1" tabBarExtraContent={displayingInModal ? null : controls}>
-          <TabPane tab="Basic" key="1">
+          <TabPane tab={<Text text="Basic" />} key="1">
             <Form
               {...formItemLayout}
               labelWrap
@@ -426,7 +429,7 @@ function FileTemplate({ match, selectedAsset = {}, displayingInModal, onClose })
                 shouldMonitorSubDirs: true,
               }}>
               <Form.Item
-                label="Title"
+                label={<Text text="Title" />}
                 name="title"
                 className={!enableEdit ? 'read-only-input' : ''}
                 rules={[
@@ -436,52 +439,51 @@ function FileTemplate({ match, selectedAsset = {}, displayingInModal, onClose })
                     message: 'Please enter a valid title. Title can have  a-zA-Z0-9:._- and space',
                   },
                 ]}>
-                <Input id="file_title" name="title" placeholder="Title" />
+                <Input id="file_title" name="title" />
               </Form.Item>
 
               {!enableEdit && form.getFieldValue('searchString') ? (
                 <Form.Item
-                  label="File Template Pattern"
+                  label={<Text text="File Template Pattern" />}
                   name="fileTemplatePattern"
                   defaultValue="22"
                   className="read-only-input">
-                  <Input placeholder="No file pattern provided" />
+                  <Input placeholder={i18n('No file pattern provided')} />
                 </Form.Item>
               ) : null}
 
               {enableEdit ? (
                 <Form.Item
-                  label="Cluster"
+                  label={<Text text="Cluster" />}
                   name="cluster"
                   rules={[
                     {
                       required: true,
-                      message: 'Please select a cluster!',
+                      message: <Text text="Please select a cluster!" />,
                     },
                   ]}>
-                  <Select placeholder="Select a Cluster" style={{ width: '50%' }} onChange={onDropDownValueChange}>
+                  <Select style={{ width: '50%' }} onChange={onDropDownValueChange}>
                     {clusters.map((cluster) => (
                       <Option key={cluster.id}>{cluster.name}</Option>
                     ))}
                   </Select>
                 </Form.Item>
               ) : (
-                <Form.Item label="Cluster" name="clusterName">
+                <Form.Item label={<Text text="Cluster" />} name="clusterName">
                   <Input className="read-only-input"></Input>
                 </Form.Item>
               )}
 
               {form.getFieldValue('monitoring') ? (
-                <Form.Item label="Monitor" name="monitoring">
+                <Form.Item label={<Text text="Monitor" />} name="monitoring">
                   <Radio.Group onChange={handleFileMonitoringRadioChange} disabled>
-                    <Radio value={true}> Yes </Radio>
+                    <Radio value={true}> {<Text text="Yes" />} </Radio>
                   </Radio.Group>
                 </Form.Item>
               ) : null}
 
-              <Form.Item label="Type" name="setFileMonitoring" required={enableEdit}>
+              <Form.Item label={<Text text="Type" />} name="setFileMonitoring" required={enableEdit}>
                 <Radio.Group onChange={handleFileMonitoringRadioChange} disabled={!enableEdit}>
-                  {/* <Radio value={false}>None</Radio> */}
                   <Radio value={false}>Logical files</Radio>
                   <Radio value={'landingZone'}>Landing zone files</Radio>
                 </Radio.Group>
@@ -497,16 +499,16 @@ function FileTemplate({ match, selectedAsset = {}, displayingInModal, onClose })
               ) : null}
 
               {landingZoneMonitoringDetails.fileMonitoring ? (
-                <Form.Item label="Monitor Sub-dirs" name="shouldMonitorSubDirs" required={enableEdit}>
+                <Form.Item label={<Text text="Monitor Sub-dirs" />} name="shouldMonitorSubDirs" required={enableEdit}>
                   <Radio.Group onChange={handleFileMonitoringRadioChange} disabled={!enableEdit}>
-                    <Radio value={true}>Yes</Radio>
-                    <Radio value={false}>No</Radio>
+                    <Radio value={true}>{<Text text="Yes" />}</Radio>
+                    <Radio value={false}>{<Text text="No" />}</Radio>
                   </Radio.Group>
                 </Form.Item>
               ) : null}
 
               {enableEdit ? (
-                <Form.Item label="File Template" required>
+                <Form.Item label={<Text text="File Template" />} required>
                   <Input.Group compact>
                     <Form.Item name="fileNamePattern" style={{ width: '30%' }}>
                       <Select style={{ width: '100%' }} onChange={onDropDownValueChange}>
@@ -531,24 +533,7 @@ function FileTemplate({ match, selectedAsset = {}, displayingInModal, onClose })
                 </Form.Item>
               ) : null}
 
-              {/* <Form.Item name="sampleFile" label="Sample Layout"  rules={[
-                  { required: enableEdit ? true : false, message: 'Please enter a title!' },
-                ]}>
-                {enableEdit ?
-                <AutoComplete
-                  style={{ width: '100%' }}
-                  options={files}
-                  onSelect={fetchFileLayout}
-                  placeholder="Search sample file"
-                  open={searchingFile}
-                  onFocus={() => setSearchingFile(true)}
-                  onBlur={() => setSearchingFile(false)}
-                  notFoundContent={'Not Files Found'}
-                />:
-                <Input className={!enableEdit ? "read-only-input" : ""} />}
-              </Form.Item> */}
-
-              <Form.Item label="Description" name="description" className="markdown-editor">
+              <Form.Item label={<Text text="Description" />} name="description" className="markdown-editor">
                 {enableEdit ? (
                   <MonacoEditor targetDomId="fileDescr" />
                 ) : (
@@ -559,7 +544,7 @@ function FileTemplate({ match, selectedAsset = {}, displayingInModal, onClose })
               </Form.Item>
             </Form>
           </TabPane>
-          <TabPane key="3" tab="Layout">
+          <TabPane key="3" tab={<Text text="Layout" />}>
             <FileTemplateLayout
               layoutData={layoutData}
               setLayoutData={setLayoutData}
@@ -567,25 +552,20 @@ function FileTemplate({ match, selectedAsset = {}, displayingInModal, onClose })
               editingAllowed={editingAllowed}
             />
           </TabPane>
-          <TabPane tab="Permissable Purpose" key="4">
+          <TabPane tab={<Text text="Permissable Purpose" />} key="4">
             <FileTemplatePermissablePurpose
               enableEdit={enableEdit}
               editingAllowed={editingAllowed}
               setSelectedLicenses={setSelectedLicenses}
               selectedLicenses={selectedLicenses}
               selectedAsset={{ id: assetId }}
+              licenses={licenses}
             />
           </TabPane>
-          <TabPane tab="Validation Rules" key="5">
+          <TabPane tab={<Text text="Validation Rules" />} key="5">
             <Table />
           </TabPane>
-          <TabPane
-            key="6"
-            tab={
-              <>
-                <span> Files </span>
-              </>
-            }>
+          <TabPane key="6" tab={<Text text="Files" />}>
             <FileTemplateTable data={files} />
           </TabPane>
         </Tabs>

@@ -39,7 +39,7 @@ const limiter = rateLimit({
 app.use(cors());
 app.use(express.json());
 app.use(limiter);
-app.use(morganMiddleware);
+//app.use(morganMiddleware);
 
 if(process.env.APP_AUTH_METHOD==='azure_ad'){
   const bearerStrategy = require('./utils/passportStrategies/passport-azure');
@@ -61,7 +61,9 @@ const indexRead = require('./routes/index/read');
 const reportRead = require('./routes/report/read');
 const consumer = require('./routes/consumers/read');
 const gh_projects = require('./routes/gh_projects');
+const propagation = require('./routes/propagation');
 const dataflow = require('./routes/dataflows/dataflow');
+const constraint = require('./routes/constraint/index');
 const fileTemplateRead = require('./routes/fileTemplate/read')
 const dataflowGraph = require('./routes/dataflows/dataflowgraph');
 const regulations = require('./routes/controlsAndRegulations/read');
@@ -79,10 +81,12 @@ app.use('/api/groups', groups);
 app.use('/api/app/read', appRead);
 app.use('/api/consumer', consumer);
 app.use('/api/dataflow', dataflow);
+app.use('/api/propagation', propagation);
 app.use('/api/hpcc/read', hpccRead);
 app.use('/api/file/read', fileRead);
 app.use('/api/index/read', indexRead);
 app.use('/api/report/read', reportRead);
+app.use('/api/constraint', constraint);
 app.use('/api/gh_projects', gh_projects);
 app.use('/api/dataflowgraph', dataflowGraph);
 app.use('/api/controlsAndRegulations', regulations);

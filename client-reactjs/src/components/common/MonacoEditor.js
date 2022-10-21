@@ -1,7 +1,7 @@
 import React from 'react';
 import { default as Monaco } from '@monaco-editor/react';
 
-const MonacoEditor = ({ onChange, value = '', targetDomId = '', lang = 'markdown' }) => {
+const MonacoEditor = ({ onChange, value = '', targetDomId = '', lang = 'markdown', ...rest }) => {
   const config = {
     markdown: {
       height: '300px',
@@ -33,6 +33,7 @@ const MonacoEditor = ({ onChange, value = '', targetDomId = '', lang = 'markdown
       value={value}
       language={lang}
       {...config[lang]} // get rest of config depending on editor type
+      {...rest} // all other props
       className="ant-input" // give ant input field styles
       path={lang + targetDomId} // will make this model unique
     />

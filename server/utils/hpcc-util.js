@@ -31,9 +31,9 @@ exports.fileInfo = async (fileName, clusterId) => {
         scope: fileInfo.FileDetail.Name.substring(0, fileInfo.FileDetail.Name.lastIndexOf('::')),
         pathMask: fileInfo.FileDetail.PathMask,
         isSuperfile: fileInfo.FileDetail.isSuperfile,
-        fileType: fileInfo.FileDetail.ContentType || fileInfo.FileDetail.Format || 'thor_file'
+        fileType: fileInfo.FileDetail.ContentType || fileInfo.FileDetail.Format || 'thor_file',
+        metaData: { layout }
       },
-      file_layouts: layout,
       file_validations: [],
     };
   } catch (error) {
@@ -106,8 +106,6 @@ exports.indexInfo = (clusterId, indexName) => {
 }
 
 
-/* This function is re-written, leaving it here because it is being called on couple other places. Will retire once
-it is replaced on those places */
   exports.fetchDirectories = (host, port, data, cluster) => {
     let formData={};
     for(let key in data){
@@ -138,31 +136,27 @@ it is replaced on those places */
     }
   }
 // FETCH LANDING ZONE DIRECTORY FUNCTION
-exports.fetchLandingZoneDirectories = async ({cluster, Netaddr,  Path, DirectoryOnly}) =>{
-    const {thor_host, thor_port} = cluster;
-    const formData = {Netaddr, Path , DirectoryOnly, rawxml_ : 'true'};
+const getConnection = (cluster) => {
+  return {
+    baseUrl: cluster.thor_host + ":" + cluster.thor_port,
+    userID: cluster.userID || "",
+    password: cluster.password || "",
+  };
+};
 
-    return new Promise((resolve, reject) =>{
-      request.post({
-        url: `${thor_host}:${thor_port}/FileSpray/FileList.json`,
-        headers: {'content-type' : 'application/x-www-form-urlencoded'},
-        formData: formData,
-        auth : this.getClusterAuth(cluster),
-        resolveWithFullResponse: true
-      }, (err, response, body) =>{
-        if(err){
-          console.log(err);
-          reject(err); return
-        }
-        const parsedBody = JSON.parse(body);
-        if(parsedBody.Exceptions){
-          reject('Error getting directories'); console.log(parsedBody.Exceptions.Exception); 
-          return;
-        }
-        resolve(parsedBody)
-      })
-    })
-}
+exports.getDirectories = async ({ cluster, Netaddr, Path, DirectoryOnly }) => {
+  const fileSprayService = new hpccJSComms.FileSprayService(
+    getConnection(cluster)
+  );
+  const fileList = await fileSprayService.FileList({
+    DirectoryOnly,
+    Netaddr,
+    Path,
+  });
+  const result = fileList.files?.PhysicalFileStruct || [];
+
+  return result;
+};
 
 exports.executeSprayJob = (job) => {
   // try {
@@ -440,7 +434,13 @@ const getFileLayout = async (cluster, fileName, format) => {
       const response = await requestPromise.get({ auth, url: cluster.thor_host + ':' + cluster.thor_port + '/WsDfu/DFURecordTypeInfo.json?Name=' + fileName, });
       const result = JSON.parse(response);
       const fields = result?.DFURecordTypeInfoResponse?.jsonInfo?.fields || [];
-      return fields.map((field, idx) => ({ id: idx, name: field.name }));
+      return fields.map((field, idx) => ({ 
+        id: idx,
+        name: field.name,
+        type: "",
+        eclType:"",
+        description: '',
+        constraints:{ inherited:[], own:[], } }));
     }
 
     const response = await requestPromise.get({ auth, url: cluster.thor_host + ':' + cluster.thor_port + '/WsDfu/DFUGetFileMetaData.json?LogicalFileName=' + fileName, });
@@ -452,15 +452,8 @@ const getFileLayout = async (cluster, fileName, format) => {
       name: column.ColumnLabel,
       type: column.ColumnType,
       eclType: column.ColumnEclType,
-      format: '',
       description: '',
-      displaySize: '',
-      displayType: '',
-      isPCI: 'false',
-      isPII: 'false',
-      isHIPAA: 'false',
-      required: 'false',
-      textJustification: 'right',
+      constraints:{ inherited:[], own:[], }
     });
 
     const layoutResults = fileInfoResponse.reduce((acc, column, idx) => {

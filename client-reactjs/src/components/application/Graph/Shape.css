@@ -1,143 +1,153 @@
-  /* NEW NODE */
-  .node-outer {
-    padding: 5px;
-    width: 100%;
-    height: 100%;
-    position: relative;
-  }
-  .node-expand {
-    background-color: #e48b8513;
-    border: 2px solid #b61827;
-  }
+/* NEW NODE */
+.node-outer {
+  padding: 5px;
+  width: 100%;
+  height: 100%;
+}
 
-  .subprocess-collapse{
+.node-expand {
+  background-color: #e48b8513;
+  border: 2px solid #b61827;
+}
+
+/* .subprocess-collapse{
     position: absolute;
     cursor: pointer;
     top: -15px;
     right: 0;
   }
-  
-  .node-icon{
-    width: 50px;
-    min-height: 40px;
-    border-radius: 3px;
-    margin: 0 auto;
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    transition: box-shadow .3s linear;
-    color:rgb(58, 54, 54);
-  }
-  .node-icon:hover{
-    box-shadow: rgba(14, 30, 37, 0.12) 0px 2px 4px 0px, rgba(14, 30, 37, 0.32) 0px 2px 16px 0px;
-  }
-  .node-icon svg{
-    font-size: 27px;
-  }
+   */
 
-  .node-fetching-files{
-    position: absolute;
-    top: -15px;
-    right: 3px;
-  }
+.node-icon {
+  width: 50px;
+  min-height: 40px;
+  border-radius: 3px;
+  margin: 0 auto;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  transition: box-shadow 0.3s linear;
+  color: rgb(58, 54, 54);
+}
 
-  .Job, .Manual , .Query-Publish {
-    background-color: #ffa726; 
-    border: 2px solid #c25e00; 
-  }
-  
-  .File {
-    /* Light Blue */
-    background-color: #90caf9;
-    border: 2px solid #0077c2;
-  }
+.node-icon:hover {
+  box-shadow: rgba(14, 30, 37, 0.12) 0px 2px 4px 0px, rgba(14, 30, 37, 0.32) 0px 2px 16px 0px;
+}
 
-   .FileTemplate{
-    background-color: #1565c0;
-    border : 2px solid #1565c0;
-    color: #fff;
-  }
+.node-icon svg {
+  font-size: 27px;
+}
 
-  .Monitor{
-    background-color:#0c509e;
-    border : 3px solid #0fd3f1;
-    color: #fff;
-  }
+.node-fetching-files {
+  position: absolute;
+  top: -15px;
+  right: 3px;
+}
 
-  .SuperFile{
-    background-color: #b778c2;
-    border: 2px solid #883997;
-  }
+.Job,
+.Manual,
+.Query-Publish {
+  background-color: #ffa726;
+  border: 2px solid #c25e00;
+}
 
-  .Index {
-    background-color: #66bb6a;
-    border: 2px solid #338a3e;
-  }
+.File {
+  /* Light Blue */
+  background-color: #90caf9;
+  border: 2px solid #0077c2;
+}
 
-  .Sub-Process {
-    background-color: #f44336;
-    border: 2px solid #b61827;
-  }
-  
-  .node-schedule{
-    width: 103%; 
-    margin-top: -16px;
-    display: flex;
-    justify-content: flex-end;
-  }
- 
-  .node-title{
-    display: flex;
-    justify-content: center;
-    text-align: center;
-    align-items: center;
-  }
-  
-  .status-completed, .status-completed:hover, .status-compiled, .status-compiled:hover {
-    border-color:#04880a;
-    box-shadow: 0px 0px 8px 2px #08a710
-  }
+.FileTemplate {
+  background-color: #1565c0;
+  border: 2px solid #1565c0;
+  color: #fff;
+}
 
-   .status-wait, .status-wait:hover {
-    border-color:#ec8633d7;
-    box-shadow: 0px 0px 8px 2px #ec8633d7
-  }
+.Monitor {
+  background-color: #0c509e;
+  border: 3px solid #0fd3f1;
+  color: #fff;
+}
 
- .status-failed,  .status-failed:hover {
-    border-color:#eb1518;
-    box-shadow: 0px 0px 8px 2px #ff4d4f;
-  }
+.SuperFile {
+  background-color: #b778c2;
+  border: 2px solid #883997;
+}
 
-  .no-asset{
-    background-color: rgba(248, 248, 248, 0.623);
-    box-shadow: rgba(0, 0, 0, 0.15) 1.95px 1.95px 2.6px;
-    color: black;
-  }
-  
-  .status-not-exist{
-    /* box-shadow: 0px 0px 8px 2px #8f8f8f; */
-  }
+.Index {
+  background-color: #66bb6a;
+  border: 2px solid #338a3e;
+}
 
- /* STENCIL */
-  .stencil-node {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    border: 1px solid #c2c8d5;
-    border-radius: 4px;
-    box-shadow: 0 2px 5px 1px rgba(0, 0, 0, 0.06);
-    padding: 5px;
-    text-align: center;
-  }
-  .stencil-Job{
-    border-left: 5px solid #ec8633d7;
-  }
-  .stencil-File{
-    border-left: 5px solid #84c4eec2;
-  }
-  .stencil-Index{
-    border-left: 5px solid #35991cad;
-  }
-  .stencil-Sub-Process{
-    border-left: 5px solid #d64b4e;
-  }
+.Sub-Process {
+  background-color: #f44336;
+  border: 2px solid #b61827;
+}
+
+.node-schedule {
+  width: 103%;
+  margin-top: -16px;
+  display: flex;
+  justify-content: flex-end;
+}
+
+.node-title {
+  display: flex;
+  justify-content: center;
+  text-align: center;
+  align-items: center;
+}
+
+.status-completed,
+.status-completed:hover,
+.status-compiled,
+.status-compiled:hover {
+  border-color: #04880a;
+  box-shadow: 0px 0px 8px 2px #08a710;
+}
+
+.status-wait,
+.status-wait:hover {
+  border-color: #ec8633d7;
+  box-shadow: 0px 0px 8px 2px #ec8633d7;
+}
+
+.status-failed,
+.status-failed:hover {
+  border-color: #eb1518;
+  box-shadow: 0px 0px 8px 2px #ff4d4f;
+}
+
+.no-asset {
+  background-color: rgba(248, 248, 248, 0.623);
+  box-shadow: rgba(0, 0, 0, 0.15) 1.95px 1.95px 2.6px;
+  color: black;
+}
+
+.status-not-exist {
+  /* box-shadow: 0px 0px 8px 2px #8f8f8f; */
+}
+
+/* STENCIL */
+.stencil-node {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid #c2c8d5;
+  border-radius: 4px;
+  box-shadow: 0 2px 5px 1px rgba(0, 0, 0, 0.06);
+  padding: 5px;
+  text-align: center;
+}
+.stencil-Job {
+  border-left: 5px solid #ec8633d7;
+}
+.stencil-File {
+  border-left: 5px solid #84c4eec2;
+}
+.stencil-Index {
+  border-left: 5px solid #35991cad;
+}
+.stencil-Sub-Process {
+  border-left: 5px solid #d64b4e;
+}
