@@ -42,7 +42,7 @@
 ## Documentation
 
 Click [here](https://github.com/hpcc-systems/Tombolo/blob/master/docs/images/tombolo/Tombolo%20User%20Guide.pdf) to view complete documentation.
-Tombolo supports Internationalization. For instructions to spin this app in different language, view Internationalization instructions below. <details><summary>Internationalization Instruction</summary>
+Tombolo supports Internationalization. For instructions to spin this app in different language, view Internationalization instructions below - <details><summary>Internationalization Instruction</summary>
 
 1.  Import antd language file into client-reactjs/src/App.js.
     > **Example** : import hi_IN from 'antd/es/locale/hi_IN'; <br>
