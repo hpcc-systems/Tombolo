@@ -16,4 +16,3 @@ gitClones/**
 .prettierignore 
 docker-compose.yml
 dev/
-.env.sample.kafka
