@@ -15,6 +15,7 @@ function Clusters() {
   const clusters = useSelector((state) => state.applicationReducer.clusters); // List of cluster from redux-store. Clusters that are already added to DB
   const [selectedCluster, setSelectedCluster] = useState(null);
   const [addClusterModalVisible, setAddClusterModalVisible] = useState(false);
+  const [confirmLoading, setConfirmLoading] = useState(false);
   const [form] = Form.useForm();
   const dispatch = useDispatch();
 
@@ -50,6 +51,7 @@ function Clusters() {
 
   // Add cluster function
   const addCluster = async () => {
+    setConfirmLoading(true);
     const formData = form.getFieldsValue();
 
     if (selectedCluster) {
@@ -67,6 +69,7 @@ function Clusters() {
         throw Error('Failed to save cluster');
       }
       message.success('Successfully added cluster');
+      setConfirmLoading(false);
       setAddClusterModalVisible(false);
       dispatch(applicationActions.getClusters());
     } catch (err) {
@@ -172,6 +175,7 @@ function Clusters() {
         onCancel={handleCancel}
         okText={<Text text="Add" />}
         onOk={addCluster}
+        confirmLoading={confirmLoading}
         cancelText={<Text text="Cancel" />}>
         <Form layout="vertical" form={form}>
           <Form.Item label={<Text text="Host" />} name="name" required>

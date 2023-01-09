@@ -14,7 +14,8 @@ module.exports = (sequelize, DataTypes) => {
     roxie_host: DataTypes.STRING,
     roxie_port: DataTypes.STRING,
     username: DataTypes.STRING,
-    hash: DataTypes.STRING
+    hash: DataTypes.STRING,
+    timezone_offset: DataTypes.INTEGER
   }, {paranoid: true, freezeTableName: true});
   cluster.associate = function(models) {
     // associations can be defined here
