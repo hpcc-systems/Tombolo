@@ -1,4 +1,4 @@
-function wilCardStringMatch(wilCardString, text)
+function wildCardStringMatch(wilCardString, text)
 {
     if (wilCardString.length == 0 && text.length == 0)
         return true;
@@ -10,17 +10,17 @@ function wilCardStringMatch(wilCardString, text)
     if ((wilCardString.length > 1 && wilCardString[0] == '?') ||
         (wilCardString.length != 0 && text.length != 0 &&
         wilCardString[0] == text[0]))
-        return wilCardStringMatch(wilCardString.substring(1),
+        return wildCardStringMatch(wilCardString.substring(1),
                     text.substring(1));
 
     if (wilCardString.length > 0 && wilCardString[0] == '*')
-        return wilCardStringMatch(wilCardString.substring(1), text) ||
-            wilCardStringMatch(wilCardString, text.substring(1));
+        return wildCardStringMatch(wilCardString.substring(1), text) ||
+            wildCardStringMatch(wilCardString, text.substring(1));
 
     return false;
 }
 
-module.exports = wilCardStringMatch;
+module.exports = wildCardStringMatch;
 
 
 //Tests

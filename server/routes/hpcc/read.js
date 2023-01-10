@@ -268,6 +268,40 @@ router.get( "/getFileInfo",
   }
 );
 
+// Gets file detail straight from HPCC  regardless of whether it exists in Tombolo DB
+router.get(
+  "/getLogicalFileDetails",
+  [
+    query("fileName").exists().withMessage("Invalid file name"),
+    query("clusterid")
+      .optional({ checkFalsy: true })
+      .isUUID(4)
+      .withMessage("Invalid cluster id"),
+  ],
+  async (req, res) => {
+    try {
+      const errors = validationResult(req).formatWith(
+        validatorUtil.errorFormatter
+      );
+      if (!errors.isEmpty())
+        return res.status(422).json({ success: false, errors: errors.array() });
+
+      const { fileName, clusterid } = req.query;
+
+      const details = await hpccUtil.logicalFileDetails(fileName, clusterid);
+
+	  // Removing unnecessary data before sending to client
+	  details.DFUFilePartsOnClusters ? delete details.DFUFilePartsOnClusters: null; 
+	  details.Ecl ? delete details.Ecl : null; 
+	  details.Stat ? delete details.Stat : null; 
+      res.status(200).json(details);
+    } catch (error) {
+      console.log("error", error);
+      return res.status(500).send("Error occurred while getting file details");
+    }
+  }
+);
+
 
 
 router.get('/getIndexInfo', [
