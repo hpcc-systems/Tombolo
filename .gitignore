@@ -16,3 +16,6 @@ gitClones/**
 .prettierignore 
 docker-compose.yml
 dev/
+https/**
+cert.pem
+key.pem

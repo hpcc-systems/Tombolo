@@ -1,11 +1,10 @@
-/* eslint-disable unused-imports/no-unused-vars */
 import React, { useEffect, useState } from 'react';
 
 import Text from '../../common/Text';
 import { authHeader } from '../../common/AuthHeader.js';
-import { Modal, Cascader } from 'antd';
+import { Modal, Cascader, message } from 'antd';
 
-function FileExplorerModal({ open, onCancel, onDone, cluster }) {
+function FileExplorerModal({ open, onCancel, onDone, cluster, style }) {
   const [options, setOptions] = useState([]);
   const [selectedLogicalFile, setSelectedLogicalFile] = useState('');
 
@@ -17,15 +16,22 @@ function FileExplorerModal({ open, onCancel, onDone, cluster }) {
 
   //Get logical file /directory
   const getLogicalFile = async (scope) => {
-    const url = `/api/file/read/browseLogicalFile/${cluster}/${scope}`;
-    const options = {
-      method: 'GET',
-      headers: authHeader(),
-    };
+    try {
+      const url = `/api/file/read/browseLogicalFile/${cluster}/${scope}`;
+      const options = {
+        method: 'GET',
+        headers: authHeader(),
+      };
 
-    const response = await fetch(url, options);
-    const data = await response.json();
-    return data;
+      const response = await fetch(url, options);
+      if (response.status != 200) {
+        throw new Error('Unable to search file from selected cluster');
+      }
+      const data = await response.json();
+      return data;
+    } catch (err) {
+      message.error(err.message);
+    }
   };
 
   //Load initial data
@@ -52,6 +58,7 @@ function FileExplorerModal({ open, onCancel, onDone, cluster }) {
   return (
     <>
       <Modal
+        style={style}
         title={<Text>Browse Logical Files</Text>}
         visible={open}
         onCancel={onCancel}

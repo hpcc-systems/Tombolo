@@ -12,6 +12,7 @@
     "@azure/msal-react": "^1.1.0",
     "@monaco-editor/react": "^4.4.5",
     "antd": "^4.21.3",
+    "cronstrue": "^2.14.0",
     "downloadjs": "^1.4.7",
     "font-awesome": "^4.7.0",
     "http-proxy-middleware": "^1.0.6",

@@ -2,7 +2,13 @@ import React, { Component } from 'react';
 import { Link, withRouter } from 'react-router-dom';
 import { connect } from 'react-redux';
 import { Layout, Menu, Typography } from 'antd';
-import { LoadingOutlined } from '@ant-design/icons';
+import {
+  LoadingOutlined,
+  DashboardOutlined,
+  FileSearchOutlined,
+  ClusterOutlined,
+  NotificationOutlined,
+} from '@ant-design/icons';
 
 import { hasEditPermission } from '../common/AuthUtil.js';
 import Text from '../common/Text';
@@ -94,6 +100,18 @@ class LeftNav extends Component {
             <Link to={'/' + applicationId + '/dataflowinstances'}>{<Text text="Job Execution" />}</Link>
           </Menu.Item>
 
+          <Menu.SubMenu title="Monitoring" icon={<DashboardOutlined />} key="4">
+            <Menu.Item key="4a" icon={<FileSearchOutlined />}>
+              <Link to={'/' + applicationId + '/fileMonitoring'}>{<Text text="File" />}</Link>
+            </Menu.Item>
+            <Menu.Item key="4b" icon={<ClusterOutlined />}>
+              Cluster
+            </Menu.Item>
+            <Menu.Item key="4c" icon={<NotificationOutlined />}>
+              <Link to={'/' + applicationId + '/notifications'}>{<Text text="Notifications" />}</Link>
+            </Menu.Item>
+          </Menu.SubMenu>
+
           {canEdit ? (
             <>
               {this.props.collapsed ? null : (
@@ -101,18 +119,18 @@ class LeftNav extends Component {
                   {<Text text="Settings" />}
                 </Typography.Title>
               )}
-              <Menu.Item key="4" icon={<i className="fa fa-fw fa-telegram" />}>
+              <Menu.Item key="6" icon={<i className="fa fa-fw fa-telegram" />}>
                 <Link to={'/' + applicationId + '/actions'}>{<Text text="Actions" />}</Link>
               </Menu.Item>
-              <Menu.Item key="5" icon={<i className="fa fa-fw fa-server" />}>
+              <Menu.Item key="7" icon={<ClusterOutlined />}>
                 <Link to={'/admin/clusters'}>{<Text text="Clusters" />}</Link>
               </Menu.Item>
 
-              <Menu.Item key="6" icon={<i className="fa fa-fw fa-github" />}>
+              <Menu.Item key="8" icon={<i className="fa fa-fw fa-github" />}>
                 <Link to={'/admin/github'}>{<Text text="Github Projects" />}</Link>
               </Menu.Item>
 
-              <Menu.Item key="7" icon={<i className="fa fa-fw fa-user-circle" />}>
+              <Menu.Item key="9" icon={<i className="fa fa-fw fa-user-circle" />}>
                 <Link to={'/admin/consumers'}>{<Text text="Collaborator" />}</Link>
               </Menu.Item>
               {this.props.collapsed ? null : (
@@ -120,11 +138,11 @@ class LeftNav extends Component {
                   {<Text text="Admin" />}
                 </Typography.Title>
               )}
-              <Menu.Item key="8" icon={<i className="fa fa-fw fa-desktop" />}>
+              <Menu.Item key="10" icon={<i className="fa fa-fw fa-desktop" />}>
                 <Link to={'/admin/applications'}>{<Text text="Applications" />}</Link>
               </Menu.Item>
               <Menu.Item
-                key="9"
+                key="11"
                 icon={this.props.isReportLoading ? <LoadingOutlined /> : <i className="fa fa-fw fa-balance-scale" />}>
                 <Link to={'/admin/compliance'}>
                   <Text>Compliance</Text>
