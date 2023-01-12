@@ -67,6 +67,7 @@ const constraint = require('./routes/constraint/index');
 const fileTemplateRead = require('./routes/fileTemplate/read')
 const dataflowGraph = require('./routes/dataflows/dataflowgraph');
 const regulations = require('./routes/controlsAndRegulations/read');
+const hpccUtil = require('./utils/hpcc-util')
 
 
 app.use('/api/user', userRead);

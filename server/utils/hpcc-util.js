@@ -412,6 +412,7 @@ exports.getJobWuDetails = async (
       };
 
       wuService = new hpccJSComms.WorkunitsService(connectionSettings);
+      
     }
 
     if (!wuService) throw new Error("Failed to get WorkunitsService");
@@ -1053,12 +1054,13 @@ HandleFoundFileEvent(EVENTEXTRA) : WHEN(EVENT(FOUND_FILE_EVENT_NAME, '*'));
 MonitorFileAction();`;
 };
 
-
 exports.getClusterTimezoneOffset = async (clusterId) => {
+
+  console.log('cluster timezone offset running');
   try {
     // Create empty WU, will give wuID
     const wuId = await module.exports.createWorkUnit(clusterId, {
-      jobname: `test_time`,
+      jobname: `timezone_offset`,
     });
 
     //code that will run on cluster's ECL
@@ -1066,7 +1068,9 @@ exports.getClusterTimezoneOffset = async (clusterId) => {
                 now := Std.Date.LocalTimeZoneOffset();
                 OUTPUT(now);`;
     const parentDir = path.join(process.cwd(), "eclDir");
-    const pathToEclFile = path.join(process.cwd(), "eclDir", `test.ecl`);
+    date = new Date().getTime().toString();
+    filename = "timezone" + date + ".ecl";
+    const pathToEclFile = path.join(process.cwd(), "eclDir", filename);
     fs.writeFileSync(pathToEclFile, code);
     // update the wu with ecl archive
     const args = ["-E", pathToEclFile, "-I", parentDir];
@@ -1074,7 +1078,7 @@ exports.getClusterTimezoneOffset = async (clusterId) => {
     const updateBody = {
       Wuid: wuId,
       QueryText: archived.stdout,
-      Jobname: `test_time`,
+      Jobname: `timezone_offset`,
     };
 
     const workUnitService = await module.exports.getWorkunitsService(clusterId);
@@ -1128,26 +1132,29 @@ exports.getClusterTimezoneOffset = async (clusterId) => {
     }
 
     //Offset is given in seconds from GMT, divide by 3600 to get offset in hours
-    const clusterGMTOffset = result.Result?.Row[0]?.Result_1 / 3600;
+    const clusterUtcOffset = result.Result?.Row[0]?.Result_1 / 3600;
 
-    if (!clusterGMTOffset) {
+    if (!clusterUtcOffset) {
       throw new Error(
         "Error reading response from work unit for timezone offset"
       );
     }
 
-    //Create JS Date and use getTimezoneOffset function to grab date. Function returns postive offset for negative numbers and vice versa so need -
-    const date = new Date();
-    const tomboloGMTOffset = -date.getTimezoneOffset() / 60;
-
-    //grab total offset
-    const totalOffset = tomboloGMTOffset - clusterGMTOffset;
-
     //delete file
     fs.unlinkSync(pathToEclFile);
 
+    // ------------------------------ NEED TO FIGURE OUT HOW TO DELETE
+    //delete work unit
+    // const wuService = await module.exports.getWorkunitsService(clusterId);
+    // let wuids = [wuId];
+    // const respond = await wuService.WUAction(Wuids = wuids, WUActionType = );
+
+    // console.log(respond)
+
+    //-------------------------------
+    
     //return result
-    return totalOffset;
+    return clusterUtcOffset;
   } catch (err) {
     console.log("ERROR ADDING OFFSET----------------------------------------");
     console.log(err);

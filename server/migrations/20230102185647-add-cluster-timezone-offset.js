@@ -6,7 +6,7 @@ module.exports = {
         'cluster',
         'timezone_offset',
         {
-          type: Sequelize.DataTypes.INTEGER,
+          type: Sequelize.DataTypes.FLOAT,
           allowNull: true,
           after: "hash",
           onUpdate: 'NO ACTION',
@@ -23,7 +23,7 @@ module.exports = {
   async down(queryInterface, Sequelize) {
     const transaction = await queryInterface.sequelize.transaction();
     try {
-      await queryInterface.removeColumn('cluster','timezoneOffset', { transaction });
+      await queryInterface.removeColumn('cluster','timezone_offset', { transaction });
       await transaction.commit();
     } catch (err) {
       await transaction.rollback();
