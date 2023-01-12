@@ -114,9 +114,8 @@ const {
         ) {
           notificationDetail = {
             value: "incorrect_size",
-            title: `New file uploaded to ${dirToMonitor.join(
-              "/"
-            )}. File size not in range`,
+            title: `New file uploaded to ${dirToMonitor.join()}. File size not in range`,
+            text: `New file uploaded to ${dirToMonitor.join()}. File size not in range`,
             details: {
               "File name": fileName,
               "File size": `${filesize / 1000} KB`,

@@ -26,7 +26,7 @@ router.post("/update", async (req, res) => {
     }
 
     // Update the notification status
-    const u = await fileMonitoring_notifications.update(updateData, {
+    await fileMonitoring_notifications.update(updateData, {
       where: { id: notification_id },
     });
 
