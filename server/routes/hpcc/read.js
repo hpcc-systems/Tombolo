@@ -200,7 +200,6 @@ router.post('/newcluster', [
       if(cluster && cluster.length > 0) {
     		const thorReachable = await hpccUtil.isClusterReachable(cluster[0].thor, cluster[0].thor_port, req.body.username, req.body.password);
     		// const roxieReachable = await hpccUtil.isClusterReachable(cluster[0].roxie, cluster[0].roxie_port, req.body.username, req.body.password);
-
     		if(thorReachable.reached) {
     			var newCluster = {"name":req.body.name, 
 								"thor_host":cluster[0].thor, 
@@ -214,12 +213,32 @@ router.post('/newcluster', [
     			}
 
     			if(req.body.id == undefined || req.body.id == "") {
-					await Cluster.create(newCluster)
-					res.status(200).json({success: true, message: 'Successfully added new cluster'})
+					const result = await Cluster.create(newCluster)
+
+					//get clusterTimezoneOFfset once ID is available after cluster creation
+					const offset = await hpccUtil.getClusterTimezoneOffset(result.dataValues.id)
+
+					//if succesful, set timezone offset and update
+					if (offset){
+						newCluster.timezone_offset = offset;
+						await Cluster.update(newCluster, {where: {id: result.dataValues.id}})
+						res.status(200).json({success: true, message: 'Successfully added new cluster'})
+					}else{
+						res.status(400).json({success:false, "message": "Failure to add Cluster, Timezone Offset could not be found"})
+					}
+
+					
 
     			} else {
-					await Cluster.update(newCluster, {where: {id: req.body.id}})
-					res.status(200).json({success: true, message: 'Successfully updated cluster'})
+					//get clusterTimezoneOFfset once ID is available after cluster creation
+					const offset = await hpccUtil.getClusterTimezoneOffset(req.body.id)
+					if (offset){
+						newCluster.timezone_offset = offset;
+						await Cluster.update(newCluster, {where: {id: req.body.id}})
+						res.status(200).json({success: true, message: 'Successfully updated cluster'})
+					}else{
+						res.status(400).json({success:false, "message": "Failure to add Cluster, Timezone Offset could not be found"})
+					}
     		  }
     		} else {
     			return res.status(400).json({success: false, "message": "Cluster could not be reached"});

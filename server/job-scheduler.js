@@ -1,7 +1,7 @@
-const Bree = require('bree');
-const models = require('./models');
-var path = require('path');
-const logger = require('./config/logger');
+const Bree = require("bree");
+const models = require("./models");
+var path = require("path");
+const logger = require("./config/logger");
 
 const Job = models.job;
 const MessageBasedJobs = models.message_based_jobs;
@@ -21,6 +21,7 @@ const SUBMIT_LANDINGZONE_FILEMONITORING_FILE_NAME = 'submitLandingZoneFileMonito
 const SUBMIT_LOGICAL_FILEMONITORING_FILE_NAME = 'submitLogicalFileMonitoring.js';
 const JOB_STATUS_POLLER = 'statusPoller.js';
 const FILE_MONITORING = 'fileMonitoringPoller.js'
+const CLUSTER_TIMEZONE_OFFSET = 'clustertimezoneoffset.js';
 
 class JobScheduler {
   constructor() {
@@ -82,6 +83,7 @@ class JobScheduler {
     (async () => {
       await this.scheduleActiveCronJobs();
       await this.scheduleJobStatusPolling();
+      await this.scheduleClusterTimezoneOffset();
       await this.scheduleFileMonitoring(); // file monitoring with templates - old file monitoring implementation
       await this.scheduleFileMonitoringOnServerStart();
       logger.info("✔️ JOBSCHEDULER IS BOOTSTRAPED");
@@ -608,8 +610,31 @@ class JobScheduler {
       let jobName = "file-monitoring-" + new Date().getTime();
       this.bree.add({
         name: jobName,
-        interval: "30S",
+        interval: "500s",
         path: path.join(__dirname, "jobs", FILE_MONITORING),
+        worker: {
+          workerData: {
+            jobName: jobName,
+            WORKER_CREATED_AT: Date.now(),
+          },
+        },
+      });
+
+      this.bree.start(jobName);
+    } catch (err) {
+      logger.error(err);
+    }
+  }
+
+  // Cluster Timezone Offset Checker
+  async scheduleClusterTimezoneOffset() {
+    logger.info("📂 CLUSTER TIMEZONE OFFSET STARTED ...");
+    try {
+      let jobName = "cluster-timezone-offset-" + new Date().getTime();
+      this.bree.add({
+        name: jobName,
+        interval: "at 02:30am also at 02:30pm",
+        path: path.join(__dirname, "jobs", CLUSTER_TIMEZONE_OFFSET),
         worker: {
           workerData: {
             jobName: jobName,

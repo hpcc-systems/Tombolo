@@ -1,7 +1,6 @@
 import React from 'react';
 
 function ObjectKeyValue({ obj }) {
-  console.log(Object.keys(obj));
   const keys = Object.keys(obj);
   return (
     <>
