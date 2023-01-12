@@ -19,7 +19,7 @@ exports.notify = (notification) => {
     if(error){
        reject(error);
     }
-    resolve();
+    resolve(info);
   });
 })
 }

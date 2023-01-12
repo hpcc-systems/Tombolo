@@ -23,6 +23,7 @@ const DataflowInstances = React.lazy(() => import('./components/application/Data
 const DataflowInstanceDetails = React.lazy(() =>
   import('./components/application/DataflowInstances/DataflowInstanceDetails')
 );
+
 // Application pages
 const FileDetailsForm = React.lazy(() => import('./components/application/files/FileDetails'));
 const FileTemplate = React.lazy(() => import('./components/application/templates/FileTemplate'));
@@ -33,6 +34,9 @@ const VisualizationDetailsForm = React.lazy(() => import('./components/applicati
 const ManualJobDetail = React.lazy(() => import('./components/application/Jobs/ManualJobDetail'));
 const Actions = React.lazy(() => import('./components/application/actions/actions'));
 const AddJobsForm = React.lazy(() => import('./components/application/Jobs/AddjobsForm/AddJobsForm'));
+const FileMonitoring = React.lazy(() => import('./components/application/fileMonitoring/FileMonitoring'));
+const Notifications = React.lazy(() => import('./components/application/notifications/Notifications'));
+
 // Admin pages
 const Users = React.lazy(() => import('./components/admin/Users'));
 const AdminApplications = React.lazy(() => import('./components/admin/apps/Applications'));
@@ -167,6 +171,8 @@ class App extends React.Component {
                         <PrivateRoute exact path="/" component={getAssets} />
                         <PrivateRoute path="/:applicationId/assets/file/:assetId?" component={FileDetailsForm} />
                         <PrivateRoute path="/:applicationId/assets/fileTemplate/:assetId?" component={FileTemplate} />
+                        <PrivateRoute path="/:applicationId/fileMonitoring" component={FileMonitoring} />
+                        <PrivateRoute path="/:applicationId/notifications" component={Notifications} />
                         <PrivateRoute path="/:applicationId/assets/add-jobs" component={AddJobsForm} />
                         <PrivateRoute path="/:applicationId/assets/job/:assetId?" component={JobDetailsForm} />
                         <PrivateRoute path="/:applicationId/assets/index/:assetId?" component={IndexDetailsForm} />

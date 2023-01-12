@@ -10,6 +10,7 @@ const { log, dispatch } = require('./workerUtils')(parentPort);
 
 (async () => {
   try {
+  if(wuid){ // if wid it means its file monitoring with template
     const workUnitsToMonitor = await fileMonitoring.findAll();
     //If no file to monitor, log so to the console and return
     if (workUnitsToMonitor.length === 0) {
@@ -17,7 +18,6 @@ const { log, dispatch } = require('./workerUtils')(parentPort);
       return;
     }
 
-    log('verbose',`MONITORING ${workUnitsToMonitor.length} WORKUNIT(s) FOR NEW FILES`);
 
     //If there are file(s) to monitor -> log so to console and check for results in HPCC
     for (i = 0; i < workUnitsToMonitor.length; i++) {
@@ -76,6 +76,7 @@ const { log, dispatch } = require('./workerUtils')(parentPort);
         log('error', err)
       }
     }
+  }
   } catch (err) {
     log("error",'Error in File Monitoring Poller', error);
   }  finally {

@@ -47,12 +47,29 @@ exports.fileInfo = async (fileName, clusterId) => {
       file_validations: [],
     };
   } catch (error) {
-    console.log("-error fileInfo-----------------------------------------");
+    console.log('-error fileInfo---------------------------');
     console.dir({ error }, { depth: null });
     console.log("------------------------------------------");
     throw error;
   }
 };
+
+
+
+// Gets details about the file without modifying anything - just whatever jscomms gives
+exports.logicalFileDetails = async (fileName, clusterId) => {
+  try {
+    const dfuService = await exports.getDFUService(clusterId);
+    const { FileDetail } = await dfuService.DFUInfo({ Name: fileName });
+
+    if (FileDetail.Exceptions?.Exception) throw FileDetail.Exceptions.Exception[0];
+
+    return FileDetail;
+  } catch (error) {
+    return error;
+  }
+};
+
 
 function getIndexColumns(cluster, indexName) {
   let columns = {};
@@ -378,7 +395,7 @@ exports.getJobInfo = async (clusterId, jobWuid, jobType) => {
       return createJobInfoObj(wuInfo.Workunit, sourceFiles);
     }
   } catch (error) {
-    console.log("-error getJobInfo-----------------------------------------");
+    console.log('-error getJobInfo--------------------------');
     console.dir({ error }, { depth: null });
     console.log("------------------------------------------");
     throw error;
@@ -429,9 +446,7 @@ exports.getJobWuDetails = async (
       ? { wuid: ECLWorkunit.Wuid, cluster: ECLWorkunit.Cluster, wuService }
       : null;
   } catch (error) {
-    console.log(
-      "-ERROR getJobWuDetails-----------------------------------------"
-    );
+    console.log('-ERROR getJobWuDetails--------------------');
     console.dir({ error }, { depth: null });
     console.log("------------------------------------------");
     throw error;
@@ -595,9 +610,7 @@ const getFileLayout = async (cluster, fileName, format) => {
 
     return layoutResults;
   } catch (error) {
-    console.log(
-      "-Error getFileLayout-----------------------------------------"
-    );
+    console.log('-Error getFileLayout----------------------');
     console.dir({ error }, { depth: null });
     console.log("------------------------------------------");
   }

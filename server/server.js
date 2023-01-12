@@ -14,7 +14,7 @@ const tokenService = require('./utils/token_service');
 const passport = require('passport');
 const cors = require('cors');
 const { sequelize: dbConnection } = require('./models');
-const morganMiddleware = require('./config/morganMiddleware');
+// const morganMiddleware = require('./config/morganMiddleware');
 const logger = require('./config/logger');
 
 /* BREE JOB SCHEDULER */
@@ -39,7 +39,7 @@ const limiter = rateLimit({
 app.use(cors());
 app.use(express.json());
 app.use(limiter);
-//app.use(morganMiddleware);
+// app.use(morganMiddleware);
 
 if(process.env.APP_AUTH_METHOD==='azure_ad'){
   const bearerStrategy = require('./utils/passportStrategies/passport-azure');
@@ -67,10 +67,12 @@ const constraint = require('./routes/constraint/index');
 const fileTemplateRead = require('./routes/fileTemplate/read')
 const dataflowGraph = require('./routes/dataflows/dataflowgraph');
 const regulations = require('./routes/controlsAndRegulations/read');
-const hpccUtil = require('./utils/hpcc-util')
-
+const fileMonitoring = require('./routes/filemonitoring/read')
+const updateNotifications = require("./routes/notifications/update");
+const notifications = require("./routes/notifications/read");
 
 app.use('/api/user', userRead);
+app.use("/api/updateNotification", updateNotifications);
 // Authenticate token before proceeding to route
 app.use(tokenService.verifyToken);
 
@@ -92,6 +94,8 @@ app.use('/api/gh_projects', gh_projects);
 app.use('/api/dataflowgraph', dataflowGraph);
 app.use('/api/controlsAndRegulations', regulations);
 app.use('/api/fileTemplate/read', fileTemplateRead);
+app.use('/api/fileMonitoring/read', fileMonitoring);
+app.use("/api/notifications/read", notifications);
 
 app.use((err, req, res, next) => {
   logger.error('Error caught by Express error handler', err);

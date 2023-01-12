@@ -7,18 +7,21 @@ const Job = models.job;
 const MessageBasedJobs = models.message_based_jobs;
 const DataflowVersions = models.dataflow_versions;
 const JobExecution = models.job_execution;
+const FileMonitoring = models.fileMonitoring;
 
-const { v4: uuidv4 } = require("uuid");
-const workflowUtil = require("./utils/workflow-util.js");
-const SUBMIT_JOB_FILE_NAME = "submitJob.js";
-const SUBMIT_QUERY_PUBLISH = "submitPublishQuery.js";
-const SUBMIT_SPRAY_JOB_FILE_NAME = "submitSprayJob.js";
-const SUBMIT_SCRIPT_JOB_FILE_NAME = "submitScriptJob.js";
-const SUBMIT_MANUAL_JOB_FILE_NAME = "submitManualJob.js";
-const SUBMIT_GITHUB_JOB_FILE_NAME = "submitGithubJob.js";
-const JOB_STATUS_POLLER = "statusPoller.js";
-const FILE_MONITORING = "fileMonitoringPoller.js";
-const CLUSTER_TIMEZONE_OFFSET = "clustertimezoneoffset.js";
+const { v4: uuidv4 } = require('uuid');
+const workflowUtil = require('./utils/workflow-util.js');
+const SUBMIT_JOB_FILE_NAME = 'submitJob.js';
+const SUBMIT_QUERY_PUBLISH = 'submitPublishQuery.js'
+const SUBMIT_SPRAY_JOB_FILE_NAME = 'submitSprayJob.js';
+const SUBMIT_SCRIPT_JOB_FILE_NAME = 'submitScriptJob.js';
+const SUBMIT_MANUAL_JOB_FILE_NAME = 'submitManualJob.js';
+const SUBMIT_GITHUB_JOB_FILE_NAME = 'submitGithubJob.js';
+const SUBMIT_LANDINGZONE_FILEMONITORING_FILE_NAME = 'submitLandingZoneFileMonitoring.js'
+const SUBMIT_LOGICAL_FILEMONITORING_FILE_NAME = 'submitLogicalFileMonitoring.js';
+const JOB_STATUS_POLLER = 'statusPoller.js';
+const FILE_MONITORING = 'fileMonitoringPoller.js'
+const CLUSTER_TIMEZONE_OFFSET = 'clustertimezoneoffset.js';
 
 class JobScheduler {
   constructor() {
@@ -80,8 +83,9 @@ class JobScheduler {
     (async () => {
       await this.scheduleActiveCronJobs();
       await this.scheduleJobStatusPolling();
-      await this.scheduleFileMonitoring();
       await this.scheduleClusterTimezoneOffset();
+      await this.scheduleFileMonitoring(); // file monitoring with templates - old file monitoring implementation
+      await this.scheduleFileMonitoringOnServerStart();
       logger.info("✔️ JOBSCHEDULER IS BOOTSTRAPED");
     })();
   }
@@ -449,6 +453,91 @@ class JobScheduler {
     }
     this.bree.add(job);
   }
+  // -------------------------------------------------------------------------------------------
+  //CREATE -  LZ File Monitoring Bree Job
+  createLandingZoneFileMonitoringBreeJob({ filemonitoring_id, name, cron }) {
+    const job = {
+      cron,
+      name,
+      path: path.join(
+        __dirname,
+        "jobs",
+        SUBMIT_LANDINGZONE_FILEMONITORING_FILE_NAME
+      ),
+      worker: {
+        workerData: { filemonitoring_id },
+      },
+    };
+    this.bree.add(job);
+  }
+
+  //CREATE -  Logical  File Monitoring Bree Job
+  createLogicalFileMonitoringBreeJob({ filemonitoring_id, name, cron }) {
+    const job = {
+      cron,
+      name,
+      path: path.join(
+        __dirname,
+        "jobs",
+        SUBMIT_LOGICAL_FILEMONITORING_FILE_NAME
+      ),
+      worker: {
+        workerData: { filemonitoring_id },
+      },
+    };
+    this.bree.add(job);
+  }
+
+
+  // SCHEDULE  - LZ File Monitoring Bree Job
+  async scheduleFileMonitoringBreeJob({
+    filemonitoring_id,
+    name,
+    cron,
+    monitoringAssetType,
+  }) {
+    const uniqueName = `${name}-${filemonitoring_id}`;
+    if (monitoringAssetType === "landingZoneFile") {
+      this.createLandingZoneFileMonitoringBreeJob({
+        filemonitoring_id,
+        name: uniqueName,
+        cron,
+      });
+      this.bree.start(uniqueName); // Starts the recently added bree job
+    } else if (monitoringAssetType === "logicalFiles") {
+      this.createLogicalFileMonitoringBreeJob({
+        filemonitoring_id,
+        name: uniqueName,
+        cron,
+      });
+      this.bree.start(uniqueName);
+    }
+  }
+
+  // When server starts - check file monitoring and add all those jobs to bree
+  async scheduleFileMonitoringOnServerStart() {
+    try {
+      const activeLandingZoneFileMonitoring = await FileMonitoring.findAll({
+        where: {
+          monitoringActive: true,
+          // monitoringAssetType: "landingZoneFile",
+        },
+        raw: true,
+      });
+      for (const monitoring of activeLandingZoneFileMonitoring) {
+        await this.scheduleFileMonitoringBreeJob({
+          filemonitoring_id: monitoring.id,
+          name: monitoring.name,
+          cron: monitoring.cron,
+          monitoringAssetType: monitoring.monitoringAssetType,
+        });
+      }
+    } catch (err) {
+      logger.error(err);
+    }
+  }
+
+  // ---------------------------------------------------------------------------------------------
 
   async removeJobFromScheduler(name) {
     try {

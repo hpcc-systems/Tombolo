@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { Table, Button, Modal, Form, Input, message, Tooltip, Popconfirm, Divider, Select } from 'antd';
-import { DeleteOutlined, EditOutlined, QuestionCircleOutlined, EyeOutlined } from '@ant-design/icons';
+import { DeleteOutlined, EditOutlined, QuestionCircleOutlined, MinusCircleOutlined, PlusOutlined, EyeOutlined } from '@ant-design/icons';
 import { useSelector, useDispatch } from 'react-redux';
 import { Link } from 'react-router-dom';
 import { authHeader } from '../common/AuthHeader.js';
@@ -183,7 +183,7 @@ function Clusters() {
       width: '10%',
       title: <Text text="Action" />,
       dataIndex: '',
-      render: (text, record) => (
+      render: (_text, record) => (
         <span>
           <Tooltip placement="right" title={<Text text="View Details" />}>
             <EyeOutlined onClick={() => handleDetailsCluster(record)} />
@@ -246,6 +246,42 @@ function Clusters() {
           <Form.Item label={<Text text="Password" />} name="password">
             <Input.Password />
           </Form.Item>
+
+          <Form.List name="sights" label="test">
+            {(fields, { add, remove }) => (
+              <>
+                {fields.map((field) => (
+                  <div
+                    key={field.key}
+                    style={{ display: 'flex', placeItems: 'center', gap: '10px', alignItems: 'center' }}>
+                    <Form.Item
+                      style={{ width: '100%' }}
+                      noStyle
+                      shouldUpdate={(prevValues, curValues) =>
+                        prevValues.area !== curValues.area || prevValues.sights !== curValues.sights
+                      }>
+                      {() => (
+                        <Form.Item label="Name" {...field} name={[field.name, 'adminName']} style={{ width: '100%' }}>
+                          <Input />
+                        </Form.Item>
+                      )}
+                    </Form.Item>
+                    <Form.Item {...field} label="E-mail" style={{ width: '100%' }} name={[field.name, 'adminEmail']}>
+                      <Input />
+                    </Form.Item>
+
+                    <MinusCircleOutlined onClick={() => remove(field.name)} />
+                  </div>
+                ))}
+
+                <Form.Item>
+                  <Button type="dashed" onClick={() => add()} block icon={<PlusOutlined />}>
+                    Add Admin
+                  </Button>
+                </Form.Item>
+              </>
+            )}
+          </Form.List>
         </Form>
       </Modal>
 
