@@ -1,7 +1,24 @@
 module.exports = {
   //E-mail body
-  emailBody: function (notificationDetails) {
+  emailBody: function (notificationDetails, metaDifference) {
     const { details, text } = notificationDetails;
+
+    let tableRows = "";
+
+    if (metaDifference && metaDifference.length > 0) {
+      metaDifference.forEach((meta) => {
+        tableRows += `<tr>
+            <td>${meta.attribute}</td>
+            <td>${meta.oldValue}</td>
+            <td> ${meta.newValue}</td>
+          </tr>`;
+      });
+    }
+
+    const table = `<div style="margin-top: 10px"> <table border="1" cellpadding="2" cellspacing="0" width="100%" style="border-collapse:collapse" >
+              <tr><td> Attribute </td><td> Old Value </td><td> New Value</td></tr>
+                ${tableRows}
+              </table></div>`;
 
     let body = "";
 
@@ -9,25 +26,48 @@ module.exports = {
       body += `<div>${keys}: ${details[keys]}</div>`;
     }
 
-    body = `<div><p>${text}</p>${body}</div>`;
+    if(tableRows !== ""){
+      body = body + table;
+    }
+
+    body = `<div><div>${text}</div>${body}<p>-Tombolo </p></div>`;
     return body;
   },
 
-  //Message card
+  //Message card for landing zone
   messageCardBody: function ({
     notificationDetails,
     notification_id,
     filemonitoring_id,
     fileName,
+    metaDifference,
   }) {
-
     const { details, title } = notificationDetails;
 
-    let cardData = '';
-    if(filemonitoring_id && fileName){
-      cardData = `"notification_id": "${notification_id}","filemonitoring_id": "${filemonitoring_id}","fileName": "${fileName}"`
-    }else{
-      cardData = `"notification_id": "${notification_id}"`
+    // -----------------------------------------------------------------------------
+    let tableRows = "";
+
+    if (metaDifference && metaDifference.length > 0) {
+      metaDifference.forEach((meta) => {
+        tableRows += `<tr>
+            <td style="padding-left: 5px">${meta.attribute}</td>
+            <td style="padding-left: 5px">${meta.oldValue}</td>
+            <td style="padding-left: 5px"> ${meta.newValue}</td>
+          </tr>`;
+      });
+    }
+
+    const table = `<div style="margin-top: 10px"> <table border="1" cellpadding="4" cellspacing="0" width="100%" style="border-collapse:collapse" >
+              <tr><td style="padding-left: 5px"> Attribute </td><td style="padding-left: 5px"> Old Value </td><td style="padding-left: 5px"> New Value</td></tr>
+                ${tableRows}
+              </table></div>`;
+    // -----------------------------------------------------------------------------
+
+    let cardData = "";
+    if (filemonitoring_id && fileName) {
+      cardData = `"notification_id": "${notification_id}","filemonitoring_id": "${filemonitoring_id}","fileName": "${fileName}"`;
+    } else {
+      cardData = `"notification_id": "${notification_id}"`;
     }
 
     const facts = [];
@@ -47,6 +87,11 @@ module.exports = {
       sections: [
         {
           facts: facts,
+        },
+        {
+          type: "MessageCard",
+          contentType: "text/html",
+          text: tableRows ? table : "",
         },
       ],
 

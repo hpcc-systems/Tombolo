@@ -62,6 +62,7 @@ function FileMonitoring() {
           cluster: cluster ? cluster.name : '',
           monitoringStarted: data[i].updatedAt,
           lastMonitored: data[i].updatedAt,
+          monitoringAssetType,
         };
         finalMonitoringData.push(monitoringData);
       }

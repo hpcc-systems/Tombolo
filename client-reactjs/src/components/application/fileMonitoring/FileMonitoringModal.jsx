@@ -56,7 +56,6 @@ function FileMonitoringModal({
 
   // Fetch details and fill if view btn is clicked -----------------------------------
   useEffect(() => {
-    console.log('Loading modal -- ', selectedFileMonitoringDetails);
     if (selectedFileMonitoring === null) return;
     setActiveTab('0');
     getFileMonitoringDetails(selectedFileMonitoring);
@@ -85,7 +84,7 @@ function FileMonitoringModal({
   const saveFileMonitoringDetails = async (monitoringDetails) => {
     try {
       const payload = {
-        method: 'POST',
+        method: selectedFileMonitoringDetails ? 'PUT' : 'POST',
         header: authHeader(),
         body: JSON.stringify({ ...monitoringDetails }),
       };

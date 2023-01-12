@@ -101,7 +101,7 @@ function MonitoringTab({
             message: 'File Monitoring with same name already exists',
             validator: (_, value) => {
               const nameExists = fileMonitoringList.find((fileMonitoring) => fileMonitoring.displayName === value);
-              if (!nameExists) {
+              if (!nameExists || selectedFileMonitoringDetails) {
                 return Promise.resolve();
               } else {
                 return Promise.reject();

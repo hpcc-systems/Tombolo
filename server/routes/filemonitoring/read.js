@@ -174,4 +174,56 @@ router.put(
   }
 );
 
+
+router.put(
+  "/",
+  [
+    body("application_id").isUUID(4).withMessage("Invalid application id"),
+    body("cluster_id")
+      .isUUID(4)
+      .optional({ nullable: false })
+      .withMessage("Invalid cluster id"),
+    body("dirToMonitor")
+      .isArray()
+      .optional({ nullable: true })
+      .withMessage("Invalid directory to monitor"),
+    body("email")
+      .isArray()
+      .optional({ nullable: true })
+      .withMessage("Invalid email/s"),
+  ],
+  async (req, res) => {
+    const errors = validationResult(req).formatWith(
+      validatorUtil.errorFormatter
+    );
+    console.log('------------------------------------------');
+    console.dir("Hitting put", {depth: null})
+    res.status(200).send({ok: true})
+    console.log('------------------------------------------');
+    // try {
+    //   if (!errors.isEmpty())
+    //     return res.status(422).json({ success: false, errors: errors.array() });
+    //   const { monitoringAssetType, monitoringActive } = req.body;
+    //   const fileMonitoring = await FileMonitoring.create(req.body);
+    //   res.status(200).send(fileMonitoring);
+
+    //   // Add monitoring to bree if start monitoring now is checked
+    //   if (monitoringActive) {
+    //     const schedularOptions = {
+    //       filemonitoring_id: fileMonitoring.id,
+    //       name: fileMonitoring.name,
+    //       cron: fileMonitoring.cron,
+    //       monitoringAssetType,
+    //     };
+    //     jobScheduler.scheduleFileMonitoringBreeJob(schedularOptions);
+    //   }
+    // } catch (error) {
+    //   console.log(error);
+    //   res
+    //     .status(500)
+    //     .json({ message: "Unable to save file monitoring details" });
+    // }
+  }
+);
+
 module.exports = router;
