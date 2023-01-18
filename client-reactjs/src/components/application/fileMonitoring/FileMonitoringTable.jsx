@@ -68,7 +68,6 @@ function FileMonitoringTable({
     {
       title: 'Monitoring type',
       render: (record) => {
-        console.log(record);
         return record.monitoringAssetType === 'landingZoneFile' ? ' Landing Zone' : 'Logical FIle';
       },
     },

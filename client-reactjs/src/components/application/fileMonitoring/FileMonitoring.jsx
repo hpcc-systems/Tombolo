@@ -20,12 +20,12 @@ function FileMonitoring() {
 
   useEffect(() => {
     if (applicationId && clusters) {
-      getFileMonitoring();
+      getFileMonitoring(applicationId);
     }
   }, [applicationId, clusters, successAddingMonitoring]);
 
   //Get list of all file monitoring
-  const getFileMonitoring = async () => {
+  const getFileMonitoring = async (applicationId) => {
     try {
       const payload = {
         method: 'GET',
@@ -38,7 +38,6 @@ function FileMonitoring() {
 
       const finalMonitoringData = [];
       for (let i = 0; i < data.length; i++) {
-        console.log(data[i]);
         const {
           name,
           cluster_id,
@@ -92,14 +91,17 @@ function FileMonitoring() {
         setSelectedFileMonitoring={setSelectedFileMonitoring}
         applicationId={applicationId}
       />
-      <FileMonitoringModal
-        visible={isModalVisible}
-        setModalVisibility={setIsModalVisible}
-        setSuccessAddingMonitoring={setSuccessAddingMonitoring}
-        fileMonitoringList={fileMonitoringList}
-        selectedFileMonitoring={selectedFileMonitoring}
-        setSelectedFileMonitoring={setSelectedFileMonitoring}
-      />
+
+      {isModalVisible ? (
+        <FileMonitoringModal
+          visible={isModalVisible}
+          setModalVisibility={setIsModalVisible}
+          setSuccessAddingMonitoring={setSuccessAddingMonitoring}
+          fileMonitoringList={fileMonitoringList}
+          selectedFileMonitoring={selectedFileMonitoring}
+          setSelectedFileMonitoring={setSelectedFileMonitoring}
+        />
+      ) : null}
     </>
   );
 }

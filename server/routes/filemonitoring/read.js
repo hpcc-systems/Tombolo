@@ -178,51 +178,73 @@ router.put(
 router.put(
   "/",
   [
-    body("application_id").isUUID(4).withMessage("Invalid application id"),
-    body("cluster_id")
-      .isUUID(4)
-      .optional({ nullable: false })
-      .withMessage("Invalid cluster id"),
-    body("dirToMonitor")
-      .isArray()
-      .optional({ nullable: true })
-      .withMessage("Invalid directory to monitor"),
-    body("email")
-      .isArray()
-      .optional({ nullable: true })
-      .withMessage("Invalid email/s"),
+    body("id").isUUID(4).withMessage("Invalid file monitoring id"),
   ],
   async (req, res) => {
-    const errors = validationResult(req).formatWith(
-      validatorUtil.errorFormatter
-    );
-    console.log('------------------------------------------');
-    console.dir("Hitting put", {depth: null})
-    res.status(200).send({ok: true})
-    console.log('------------------------------------------');
-    // try {
-    //   if (!errors.isEmpty())
-    //     return res.status(422).json({ success: false, errors: errors.array() });
-    //   const { monitoringAssetType, monitoringActive } = req.body;
-    //   const fileMonitoring = await FileMonitoring.create(req.body);
-    //   res.status(200).send(fileMonitoring);
+    try {
+      const errors = validationResult(req).formatWith(
+        validatorUtil.errorFormatter
+      );
 
-    //   // Add monitoring to bree if start monitoring now is checked
-    //   if (monitoringActive) {
-    //     const schedularOptions = {
-    //       filemonitoring_id: fileMonitoring.id,
-    //       name: fileMonitoring.name,
-    //       cron: fileMonitoring.cron,
-    //       monitoringAssetType,
-    //     };
-    //     jobScheduler.scheduleFileMonitoringBreeJob(schedularOptions);
-    //   }
-    // } catch (error) {
-    //   console.log(error);
-    //   res
-    //     .status(500)
-    //     .json({ message: "Unable to save file monitoring details" });
-    // }
+      if (!errors.isEmpty())
+        return res.status(422).json({ success: false, errors: errors.array() });
+
+      const oldInfo = await FileMonitoring.findOne({
+        where: { id: req.body.id },
+        raw: true,
+      });
+
+      const {metaData: { currentlyMonitoring }} = oldInfo;
+
+      const newInfo = req.body;
+      if (currentlyMonitoring) {
+        newInfo.metaData.currentlyMonitoring = currentlyMonitoring;
+      }
+
+      const { id,name, cron, monitoringActive, monitoringAssetType } = newInfo;
+
+
+      await FileMonitoring.update(newInfo, { where: { id } });
+      res.status(200).send(newInfo);
+
+      // If start monitoring was changed to TRUE
+      if (monitoringActive && oldInfo.monitoringActive == 0) {
+        const schedularOptions = {
+          filemonitoring_id: id,
+          name: name,
+          cron: cron,
+          monitoringAssetType,
+        };
+        await jobScheduler.scheduleFileMonitoringBreeJob(schedularOptions);
+      }
+
+      // If start monitoring was changed to FALSE
+      if (!monitoringActive && oldInfo.monitoringActive == 1) {
+          await jobScheduler.removeJobFromScheduler(`${name}-${id}`);
+      }
+
+      // if cron has changed 
+      if (oldInfo.cron != cron){
+        const allBreeJobs = jobScheduler.getAllJobs();
+        const jobName = `${name}-${id}`
+        for(let job of allBreeJobs){
+          if(job.name === jobName){
+            await jobScheduler.removeJobFromScheduler(jobName);
+            await jobScheduler.scheduleFileMonitoringBreeJob({
+              filemonitoring_id: id,
+              name: name,
+              cron: cron,
+              monitoringAssetType,
+            });
+          }
+        }
+      }
+
+
+    } catch (error) {
+      console.log(error);
+      res.status(500).json({ message: "Unable to save file monitoring details" });
+    }
   }
 );
 
