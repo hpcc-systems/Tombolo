@@ -45,7 +45,9 @@ const {
       },
     } = fileMonitoringDetails;
 
-    const currentTimeStamp = Date.now();
+    const date = new Date();
+    const currentTimeStamp = date.getTime();
+
     const cluster = await hpccUtil.getCluster(cluster_id);
     const Path = `/var/lib/HPCCSystems/${landingZone}/${dirToMonitor.join(
       "/"
@@ -79,8 +81,10 @@ const {
     //Check if new files that matches the fileName(wild card) have arrived since last monitored
     for (let i = 0; i < files.length; i++) {
       let { name: fileName, filesize } = files[i];
-      let fileModifiedTime = new Date(files[i].modifiedtime);
-      fileModifiedTime = Date.parse(fileModifiedTime);
+   
+      // const fileModifiedTime = new Date(files[i].modifiedtime).getTime() + (Math.abs(cluster.timezone_offset) *  60 * 60 * 1000);
+       const fileModifiedTime = new Date(files[i].modifiedtime).getTime();
+
       fileAndTimeStamps.push({
         name: fileName,
         modifiedTime: fileModifiedTime,
@@ -197,7 +201,7 @@ const {
 
             await fileMonitoring_notifications.create({
               id: notification_id,
-              file_name: detail.details["File name"],
+              file_name: detail.details["File Name"],
               status: "notified",
               notifiedTo: recipient,
               notification_channel: "msTeams",
@@ -220,6 +224,7 @@ const {
             item.name === current.name &&
             item.modifiedTime === current.modifiedTime
           );
+
         });
         if (obj) {
           return acc.concat([array[index]]);

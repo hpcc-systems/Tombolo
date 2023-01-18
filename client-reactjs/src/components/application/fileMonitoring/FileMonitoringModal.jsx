@@ -7,6 +7,7 @@ import BasicTab from './BasicTab';
 import { authHeader, handleError } from '../../common/AuthHeader.js';
 import NotificationTab from './NotificationTab';
 import MonitoringTab from './MonitoringTab';
+// import { hasEditPermission } from '../../common/AuthUtil';
 
 const { TabPane } = Tabs;
 
@@ -34,12 +35,13 @@ function FileMonitoringModal({
     monitoringConditions: [],
   });
   const [notificationDetails, setNotificationDetails] = useState({});
-
   const [selectedFileDetails, setSelectedFileDetails] = useState(null);
   const windowSize = useWindowSize();
   const [basicTabForm] = Form.useForm();
   const [monitoringTabForm] = Form.useForm();
   const [notificationTabForm] = Form.useForm();
+  // const [hasEditPermission, setHasEditPermission] = false;
+  // const [authReducer] = useSelector((state) => [state.authenticationReducer]);
 
   // ---------------------------------------------------------------------------------
   // Changes modal size per screen vw
@@ -56,10 +58,18 @@ function FileMonitoringModal({
 
   // Fetch details and fill if view btn is clicked -----------------------------------
   useEffect(() => {
-    if (selectedFileMonitoring === null) return;
+    if (selectedFileMonitoring === null) {
+      // setHasEditPermission(true);
+      return;
+    }
     setActiveTab('0');
     getFileMonitoringDetails(selectedFileMonitoring);
   }, [selectedFileMonitoring]);
+
+  // ------------------------------------------------------------------------------
+  // useEffect(() => {
+  //   setHasEditPermission(hasEditPermission(authHeader.user));
+  // }, [authReducer]);
 
   // Get details of a file monitoring -----------------------------------------------
   const getFileMonitoringDetails = async (id) => {
@@ -149,6 +159,9 @@ function FileMonitoringModal({
         throw new Error('Validation failed');
       }
       const { formData } = data;
+      if (selectedFileMonitoringDetails) {
+        formData.id = selectedFileMonitoringDetails.id;
+      }
       formData.application_id = applicationReducer.application.applicationId;
 
       const {
@@ -185,10 +198,14 @@ function FileMonitoringModal({
         }
       }
 
+      // current UTC Time Stamp
+      const date = new Date();
+      const currentTimeStamp = date.getTime();
+
       if (monitoringAssetType === 'landingZoneFile') {
         //move some data to metaData object
         formData.metaData = {
-          lastMonitored: Date.now(),
+          lastMonitored: currentTimeStamp,
           currentlyMonitoring: [],
           fileInfo: {
             landingZone,
@@ -210,7 +227,7 @@ function FileMonitoringModal({
       if (monitoringAssetType === 'logicalFiles') {
         //move some data to metaData object
         formData.metaData = {
-          lastMonitored: Date.now(),
+          lastMonitored: currentTimeStamp,
           currentlyMonitoring: [],
           fileInfo: selectedFileDetails,
           monitoringCondition: {

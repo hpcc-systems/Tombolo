@@ -20,8 +20,6 @@ function NotificationTab({
       metaData: { notifications },
     } = selectedFileMonitoringDetails;
 
-    console.log('Notification details ', notifications);
-
     const notificationChannels = [];
     let emails;
     let msTeamsGroups;

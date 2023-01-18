@@ -156,6 +156,7 @@ router.get('/getClusters', async (req, res) => {
 	  });
 	  res.send(clusters);
 	} catch (err) {
+	  logger.error(err);
 	  res.status(500).send({ success: 'false', message: 'Error occurred while retrieving cluster list' });
 	}
   });

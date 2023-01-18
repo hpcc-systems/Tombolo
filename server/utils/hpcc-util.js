@@ -58,16 +58,20 @@ exports.fileInfo = async (fileName, clusterId) => {
 
 // Gets details about the file without modifying anything - just whatever jscomms gives
 exports.logicalFileDetails = async (fileName, clusterId) => {
-  try {
-    const dfuService = await exports.getDFUService(clusterId);
-    const { FileDetail } = await dfuService.DFUInfo({ Name: fileName });
+    return new Promise(async (resolve, reject) =>{
+      try{
+         const dfuService = await exports.getDFUService(clusterId);
+         const { FileDetail } = await dfuService.DFUInfo({ Name: fileName });
 
-    if (FileDetail.Exceptions?.Exception) throw FileDetail.Exceptions.Exception[0];
-
-    return FileDetail;
-  } catch (error) {
-    return error;
-  }
+      if (FileDetail.Exceptions?.Exception){
+        reject(FileDetail.Exceptions.Exception[0])
+      }else{
+        resolve(FileDetail)
+      }
+      }catch(err){
+        reject(err)
+      } 
+    })
 };
 
 
