@@ -113,9 +113,6 @@ function Notifications() {
     {
       title: 'Updated on',
       render: (record) => {
-        console.log('------------------------------------------');
-        console.log(record);
-        console.log('------------------------------------------');
         let createdAt = new Date(record.updatedAt);
         return (
           createdAt.toLocaleDateString('en-US', Constants.DATE_FORMAT_OPTIONS) +
