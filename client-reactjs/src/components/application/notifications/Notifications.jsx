@@ -111,9 +111,9 @@ function Notifications() {
       },
     },
     {
-      title: 'Responded at',
+      title: 'Updated on',
       render: (record) => {
-        let createdAt = new Date(record.responded_on);
+        let createdAt = new Date(record.updatedAt);
         return (
           createdAt.toLocaleDateString('en-US', Constants.DATE_FORMAT_OPTIONS) +
           ' @ ' +
