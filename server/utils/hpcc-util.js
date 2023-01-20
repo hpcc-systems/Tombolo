@@ -47,33 +47,30 @@ exports.fileInfo = async (fileName, clusterId) => {
       file_validations: [],
     };
   } catch (error) {
-    console.log('-error fileInfo---------------------------');
+    console.log("-error fileInfo---------------------------");
     console.dir({ error }, { depth: null });
     console.log("------------------------------------------");
     throw error;
   }
 };
 
-
-
 // Gets details about the file without modifying anything - just whatever jscomms gives
 exports.logicalFileDetails = async (fileName, clusterId) => {
-    return new Promise(async (resolve, reject) =>{
-      try{
-         const dfuService = await exports.getDFUService(clusterId);
-         const { FileDetail } = await dfuService.DFUInfo({ Name: fileName });
+  return new Promise(async (resolve, reject) => {
+    try {
+      const dfuService = await exports.getDFUService(clusterId);
+      const { FileDetail } = await dfuService.DFUInfo({ Name: fileName });
 
-      if (FileDetail.Exceptions?.Exception){
-        reject(FileDetail.Exceptions.Exception[0])
-      }else{
-        resolve(FileDetail)
+      if (FileDetail.Exceptions?.Exception) {
+        reject(FileDetail.Exceptions.Exception[0]);
+      } else {
+        resolve(FileDetail);
       }
-      }catch(err){
-        reject(err)
-      } 
-    })
+    } catch (err) {
+      reject(err);
+    }
+  });
 };
-
 
 function getIndexColumns(cluster, indexName) {
   let columns = {};
@@ -399,7 +396,7 @@ exports.getJobInfo = async (clusterId, jobWuid, jobType) => {
       return createJobInfoObj(wuInfo.Workunit, sourceFiles);
     }
   } catch (error) {
-    console.log('-error getJobInfo--------------------------');
+    console.log("-error getJobInfo--------------------------");
     console.dir({ error }, { depth: null });
     console.log("------------------------------------------");
     throw error;
@@ -433,7 +430,6 @@ exports.getJobWuDetails = async (
       };
 
       wuService = new hpccJSComms.WorkunitsService(connectionSettings);
-      
     }
 
     if (!wuService) throw new Error("Failed to get WorkunitsService");
@@ -450,7 +446,7 @@ exports.getJobWuDetails = async (
       ? { wuid: ECLWorkunit.Wuid, cluster: ECLWorkunit.Cluster, wuService }
       : null;
   } catch (error) {
-    console.log('-ERROR getJobWuDetails--------------------');
+    console.log("-ERROR getJobWuDetails--------------------");
     console.dir({ error }, { depth: null });
     console.log("------------------------------------------");
     throw error;
@@ -614,7 +610,7 @@ const getFileLayout = async (cluster, fileName, format) => {
 
     return layoutResults;
   } catch (error) {
-    console.log('-Error getFileLayout----------------------');
+    console.log("-Error getFileLayout----------------------");
     console.dir({ error }, { depth: null });
     console.log("------------------------------------------");
   }
@@ -1072,8 +1068,7 @@ MonitorFileAction();`;
 };
 
 exports.getClusterTimezoneOffset = async (clusterId) => {
-
-  console.log('cluster timezone offset running');
+  console.log("cluster timezone offset running");
   try {
     // Create empty WU, will give wuID
     const wuId = await module.exports.createWorkUnit(clusterId, {
@@ -1148,15 +1143,16 @@ exports.getClusterTimezoneOffset = async (clusterId) => {
       throw new Error("Failed to output from work unit for timezone offset");
     }
 
-    //Offset is given in seconds from GMT, divide by 3600 to get offset in hours
-    const clusterUtcOffset = result.Result?.Row[0]?.Result_1 / 3600;
+    //Offset is given in seconds from GMT, divide by 60 to get offset in minutes
+    //1/20/23 mfancher - adjusted to minutes to store, floor result to avoid floating point.
+    const clusterUtcOffset = Math.floor(result.Result?.Row[0]?.Result_1 / 60);
 
-    if (!clusterUtcOffset) {
+    //1/20/23 mfancher - add second check to make sure it's not 0 because JS throws error when it's null, undef, or 0 with just ! comparison
+    if (!clusterUtcOffset && clusterUtcOffset !== 0) {
       throw new Error(
         "Error reading response from work unit for timezone offset"
       );
     }
-
     //delete file
     fs.unlinkSync(pathToEclFile);
 
@@ -1169,7 +1165,7 @@ exports.getClusterTimezoneOffset = async (clusterId) => {
     // console.log(respond)
 
     //-------------------------------
-    
+
     //return result
     return clusterUtcOffset;
   } catch (err) {

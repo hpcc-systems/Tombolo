@@ -102,7 +102,7 @@ function Clusters() {
     let updatedDate = new Date(cluster.updatedAt).toString().substring(0, 33);
 
     //get current offset in seconds
-    let clusOffset = cluster.timezone_offset * 3600;
+    let clusOffset = cluster.timezone_offset * 60;
     let clientOffset = new Date(0).getTimezoneOffset() * 60;
 
     //offset from cluster to client, necessary when we create new date object
@@ -114,17 +114,26 @@ function Clusters() {
     //create new date object for reporting
     let clusterTime = new Date(clusEpoch * 1000).toString().substring(0, 24);
 
-    let s = Math.abs(cluster.timezone_offset * 100);
+    let offset = 0;
 
-    let x = '000' + s;
-
-    let gmtFormatted = x.substring(x.length - 4);
-
-    if (cluster.timezone_offset < 0) {
-      gmtFormatted = '-' + gmtFormatted;
+    //if cluster minutes offset isn't divisible by 60, we need half timezone reporting
+    if (cluster.timezone_offset % 60 == 0) {
+      offset = Math.abs((cluster.timezone_offset / 60) * 100);
+    } else {
+      offset = Math.abs(((Math.abs(cluster.timezone_offset) - 30) / 60) * 100);
+      offset += 30;
     }
 
-    console.log(gmtFormatted);
+    //formatting to ensure we have enough digits
+    let gmtFormatted = '000' + offset;
+    gmtFormatted = gmtFormatted.substring(gmtFormatted.length - 4);
+
+    //add correct symbol
+    if (cluster.timezone_offset < 0) {
+      gmtFormatted = '-' + gmtFormatted;
+    } else {
+      gmtFormatted = '+' + gmtFormatted;
+    }
 
     const obj = {
       Host: cluster.name,
@@ -138,6 +147,7 @@ function Clusters() {
 
     setDetails(obj);
   };
+
   // Delete cluster function
   const deleteCluster = async (clusterId) => {
     var data = JSON.stringify({ clusterIdsToDelete: clusterId });

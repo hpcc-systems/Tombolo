@@ -220,7 +220,7 @@ router.post('/newcluster', [
 					const offset = await hpccUtil.getClusterTimezoneOffset(result.dataValues.id)
 
 					//if succesful, set timezone offset and update
-					if (offset){
+					if (offset || offset == 0){
 						newCluster.timezone_offset = offset;
 						await Cluster.update(newCluster, {where: {id: result.dataValues.id}})
 						res.status(200).json({success: true, message: 'Successfully added new cluster'})
