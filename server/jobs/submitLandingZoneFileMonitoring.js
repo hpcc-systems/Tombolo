@@ -9,6 +9,7 @@ const fileMonitoring = models.fileMonitoring;
 const fileMonitoring_notifications = models.filemonitoring_notifications;
 const hpccUtil = require("../utils/hpcc-util");
 const wildCardStringMatch = require("../utils/wildCardStringMatch");
+
 const {
   emailBody,
   messageCardBody,
@@ -80,10 +81,14 @@ const {
 
     //Check if new files that matches the fileName(wild card) have arrived since last monitored
     for (let i = 0; i < files.length; i++) {
-      let { name: fileName, filesize } = files[i];
-   
-      // const fileModifiedTime = new Date(files[i].modifiedtime).getTime() + (Math.abs(cluster.timezone_offset) *  60 * 60 * 1000);
-       const fileModifiedTime = new Date(files[i].modifiedtime).getTime();
+      let { name: fileName, filesize, modifiedtime } = files[i];
+
+      const md = new Date(modifiedtime);
+      const localOffSet = md.getTimezoneOffset() * 60000;
+      const clusterOffSet = cluster.timezone_offset * 60000;
+      const totalOs = localOffSet + clusterOffSet;
+
+      const fileModifiedTime = md.getTime() - totalOs;
 
       fileAndTimeStamps.push({
         name: fileName,
