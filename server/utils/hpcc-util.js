@@ -631,7 +631,7 @@ exports.getCluster = (clusterId) => {
     try {
       let cluster = await Cluster.findOne({ where: { id: clusterId } });
       if (cluster == null) {
-        throw new Error("Cluster not reachable...");
+        throw new Error(`Cluster with id ${clusterId} not in database`);
       }
       if (cluster.hash) {
         cluster.hash = decryptString(cluster.hash);
