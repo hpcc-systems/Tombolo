@@ -111,7 +111,7 @@ module.exports = {
             {
               "@type": "HttpPOST",
               name: "Add comment",
-              target: process.env.WEB_URL + "/api/updateNotification/update",
+              target: process.env.API_URL + "/api/updateNotification/update",
               body: `{"comment":"{{comment.value}}", ${cardData}}`,
               isRequired: true,
               errorMessage: "Comment cannot be blank",
@@ -143,7 +143,7 @@ module.exports = {
             {
               "@type": "HttpPOST",
               name: "Save",
-              target: process.env.WEB_URL + "/api/updateNotification/update",
+              target: process.env.API_URL + "/api/updateNotification/update",
               body: `{"status":"{{list.value}}", ${cardData}}`,
               isRequired: true,
               errorMessage: "Select an option",
