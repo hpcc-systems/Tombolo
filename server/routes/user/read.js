@@ -4,6 +4,7 @@ const userService = require('./userservice');
 const tokenService = require('../../utils/token_service')
 
 const { body, validationResult } = require('express-validator');
+const logger = require('../../config/logger');
 const errorFormatter = ({ location, msg, param, value, nestedErrors }) => { return `${msg}`; };
 
 // routes
@@ -12,6 +13,7 @@ router.post('/authenticate', authenticate); // open
 router.post('/validateToken', validateToken); // open
 router.post('/changePassword', changePassword); // open
 router.get('/probe', (req,res) => res.status(200).end()); // open, polling
+
 
 router.post('/registerUser', [
   body('firstName')

@@ -70,9 +70,12 @@ const regulations = require('./routes/controlsAndRegulations/read');
 const fileMonitoring = require('./routes/filemonitoring/read')
 const updateNotifications = require("./routes/notifications/update");
 const notifications = require("./routes/notifications/read");
+const clustermonitoring = require("./routes/clustermonitoring/read")
 
 app.use('/api/user', userRead);
 app.use("/api/updateNotification", updateNotifications);
+app.use("/api/clustermonitoring", clustermonitoring);
+
 // Authenticate token before proceeding to route
 app.use(tokenService.verifyToken);
 

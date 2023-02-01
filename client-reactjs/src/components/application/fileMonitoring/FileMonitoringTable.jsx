@@ -65,12 +65,6 @@ function FileMonitoringTable({
       ),
     },
     { title: 'Display Name', dataIndex: 'displayName' },
-    {
-      title: 'Monitoring type',
-      render: (record) => {
-        return record.monitoringAssetType === 'landingZoneFile' ? ' Landing Zone' : 'Logical FIle';
-      },
-    },
     { title: 'Cluster', dataIndex: 'cluster' },
     { title: 'Directory / File Name', dataIndex: 'fileName' },
     { title: 'Schedule', dataIndex: 'cron' },

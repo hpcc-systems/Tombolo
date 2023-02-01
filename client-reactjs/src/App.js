@@ -36,6 +36,7 @@ const Actions = React.lazy(() => import('./components/application/actions/action
 const AddJobsForm = React.lazy(() => import('./components/application/Jobs/AddjobsForm/AddJobsForm'));
 const FileMonitoring = React.lazy(() => import('./components/application/fileMonitoring/FileMonitoring'));
 const Notifications = React.lazy(() => import('./components/application/notifications/Notifications'));
+const ClusterMonitoring = React.lazy(() => import('./components/application/clusterMonitoring'));
 
 // Admin pages
 const Users = React.lazy(() => import('./components/admin/Users'));
@@ -172,6 +173,7 @@ class App extends React.Component {
                         <PrivateRoute path="/:applicationId/assets/file/:assetId?" component={FileDetailsForm} />
                         <PrivateRoute path="/:applicationId/assets/fileTemplate/:assetId?" component={FileTemplate} />
                         <PrivateRoute path="/:applicationId/fileMonitoring" component={FileMonitoring} />
+                        <PrivateRoute path="/:applicationId/ClusterMonitoring" component={ClusterMonitoring} />
                         <PrivateRoute path="/:applicationId/notifications" component={Notifications} />
                         <PrivateRoute path="/:applicationId/assets/add-jobs" component={AddJobsForm} />
                         <PrivateRoute path="/:applicationId/assets/job/:assetId?" component={JobDetailsForm} />

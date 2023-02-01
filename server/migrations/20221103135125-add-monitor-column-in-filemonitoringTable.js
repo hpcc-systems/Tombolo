@@ -3,7 +3,7 @@ module.exports = {
     const transaction = await queryInterface.sequelize.transaction();
     try {
       await queryInterface.addColumn(
-        "filemonitoring",
+        "fileMonitoring",
         "name",
         {
           type: Sequelize.DataTypes.STRING,
@@ -13,7 +13,7 @@ module.exports = {
         { transaction }
       );
       await queryInterface.addColumn(
-        "filemonitoring",
+        "fileMonitoring",
         "application_id",
         {
           type: Sequelize.DataTypes.STRING,
@@ -23,7 +23,7 @@ module.exports = {
         { transaction }
       );
       await queryInterface.addColumn(
-        "filemonitoring",
+        "fileMonitoring",
         "cron",
         {
           type: Sequelize.DataTypes.STRING,
@@ -35,7 +35,7 @@ module.exports = {
       );
 
         await queryInterface.addColumn(
-          "filemonitoring",
+          "fileMonitoring",
           "monitoringAssetType",
           {
             type: Sequelize.DataTypes.STRING,
@@ -46,7 +46,7 @@ module.exports = {
         );
 
           await queryInterface.addColumn(
-            "filemonitoring",
+            "fileMonitoring",
             "monitoringActive",
             {
               type: Sequelize.DataTypes.BOOLEAN,
@@ -66,18 +66,18 @@ module.exports = {
   async down(queryInterface, Sequelize) {
     const transaction = await queryInterface.sequelize.transaction();
     try {
-      await queryInterface.removeColumn("filemonitoring", "name", {
+      await queryInterface.removeColumn("fileMonitoring", "name", {
         transaction,
       });
-      await queryInterface.removeColumn("filemonitoring", "application_id", {
+      await queryInterface.removeColumn("fileMonitoring", "application_id", {
         transaction,
       });
-       await queryInterface.removeColumn("filemonitoring", "cron", {
+       await queryInterface.removeColumn("fileMonitoring", "cron", {
          transaction,
        });
 
        await queryInterface.removeColumn(
-         "filemonitoring",
+         "fileMonitoring",
          "monitoringAssetType",
          {
            transaction,
@@ -85,7 +85,7 @@ module.exports = {
        );
 
       await queryInterface.removeColumn(
-        "filemonitoring",
+        "fileMonitoring",
         "monitoringActive",
         {
           transaction,
