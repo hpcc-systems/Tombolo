@@ -156,6 +156,7 @@ router.get('/getClusters', async (req, res) => {
 	  });
 	  res.send(clusters);
 	} catch (err) {
+	  logger.error(err);
 	  res.status(500).send({ success: 'false', message: 'Error occurred while retrieving cluster list' });
 	}
   });
@@ -200,7 +201,6 @@ router.post('/newcluster', [
       if(cluster && cluster.length > 0) {
     		const thorReachable = await hpccUtil.isClusterReachable(cluster[0].thor, cluster[0].thor_port, req.body.username, req.body.password);
     		// const roxieReachable = await hpccUtil.isClusterReachable(cluster[0].roxie, cluster[0].roxie_port, req.body.username, req.body.password);
-
     		if(thorReachable.reached) {
     			var newCluster = {"name":req.body.name, 
 								"thor_host":cluster[0].thor, 
@@ -214,12 +214,32 @@ router.post('/newcluster', [
     			}
 
     			if(req.body.id == undefined || req.body.id == "") {
-					await Cluster.create(newCluster)
-					res.status(200).json({success: true, message: 'Successfully added new cluster'})
+					const result = await Cluster.create(newCluster)
+
+					//get clusterTimezoneOFfset once ID is available after cluster creation
+					const offset = await hpccUtil.getClusterTimezoneOffset(result.dataValues.id)
+
+					//if succesful, set timezone offset and update
+					if (offset || offset == 0){
+						newCluster.timezone_offset = offset;
+						await Cluster.update(newCluster, {where: {id: result.dataValues.id}})
+						res.status(200).json({success: true, message: 'Successfully added new cluster'})
+					}else{
+						res.status(400).json({success:false, "message": "Failure to add Cluster, Timezone Offset could not be found"})
+					}
+
+					
 
     			} else {
-					await Cluster.update(newCluster, {where: {id: req.body.id}})
-					res.status(200).json({success: true, message: 'Successfully updated cluster'})
+					//get clusterTimezoneOFfset once ID is available after cluster creation
+					const offset = await hpccUtil.getClusterTimezoneOffset(req.body.id)
+					if (offset){
+						newCluster.timezone_offset = offset;
+						await Cluster.update(newCluster, {where: {id: req.body.id}})
+						res.status(200).json({success: true, message: 'Successfully updated cluster'})
+					}else{
+						res.status(400).json({success:false, "message": "Failure to add Cluster, Timezone Offset could not be found"})
+					}
     		  }
     		} else {
     			return res.status(400).json({success: false, "message": "Cluster could not be reached"});
@@ -261,6 +281,40 @@ router.get( "/getFileInfo",
       const data = file ? await assetUtil.fileInfo(applicationId, file.id) : await hpccUtil.fileInfo(fileName, clusterid);
 			
       res.status(200).json(data);
+    } catch (error) {
+      console.log("error", error);
+      return res.status(500).send("Error occurred while getting file details");
+    }
+  }
+);
+
+// Gets file detail straight from HPCC  regardless of whether it exists in Tombolo DB
+router.get(
+  "/getLogicalFileDetails",
+  [
+    query("fileName").exists().withMessage("Invalid file name"),
+    query("clusterid")
+      .optional({ checkFalsy: true })
+      .isUUID(4)
+      .withMessage("Invalid cluster id"),
+  ],
+  async (req, res) => {
+    try {
+      const errors = validationResult(req).formatWith(
+        validatorUtil.errorFormatter
+      );
+      if (!errors.isEmpty())
+        return res.status(422).json({ success: false, errors: errors.array() });
+
+      const { fileName, clusterid } = req.query;
+
+      const details = await hpccUtil.logicalFileDetails(fileName, clusterid);
+
+	  // Removing unnecessary data before sending to client
+	  details.DFUFilePartsOnClusters ? delete details.DFUFilePartsOnClusters: null; 
+	  details.Ecl ? delete details.Ecl : null; 
+	  details.Stat ? delete details.Stat : null; 
+      res.status(200).json(details);
     } catch (error) {
       console.log("error", error);
       return res.status(500).send("Error occurred while getting file details");
