@@ -70,9 +70,11 @@ const regulations = require('./routes/controlsAndRegulations/read');
 const fileMonitoring = require('./routes/filemonitoring/read')
 const updateNotifications = require("./routes/notifications/update");
 const notifications = require("./routes/notifications/read");
+const clustermonitoring = require("./routes/clustermonitoring/read")
 
 app.use('/api/user', userRead);
 app.use("/api/updateNotification", updateNotifications);
+
 // Authenticate token before proceeding to route
 app.use(tokenService.verifyToken);
 
@@ -96,6 +98,7 @@ app.use('/api/controlsAndRegulations', regulations);
 app.use('/api/fileTemplate/read', fileTemplateRead);
 app.use('/api/fileMonitoring/read', fileMonitoring);
 app.use("/api/notifications/read", notifications);
+app.use("/api/clustermonitoring", clustermonitoring);
 
 app.use((err, req, res, next) => {
   logger.error('Error caught by Express error handler', err);

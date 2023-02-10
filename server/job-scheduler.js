@@ -8,6 +8,7 @@ const MessageBasedJobs = models.message_based_jobs;
 const DataflowVersions = models.dataflow_versions;
 const JobExecution = models.job_execution;
 const FileMonitoring = models.fileMonitoring;
+const ClusterMonitoring = models.clusterMonitoring;
 
 const { v4: uuidv4 } = require('uuid');
 const workflowUtil = require('./utils/workflow-util.js');
@@ -22,6 +23,7 @@ const SUBMIT_LOGICAL_FILEMONITORING_FILE_NAME = 'submitLogicalFileMonitoring.js'
 const JOB_STATUS_POLLER = 'statusPoller.js';
 const FILE_MONITORING = 'fileMonitoringPoller.js'
 const CLUSTER_TIMEZONE_OFFSET = 'clustertimezoneoffset.js';
+const  SUBMIT_CLUSTER_MONITORING_JOB = 'submitClusterMonitoring.js'
 
 class JobScheduler {
   constructor() {
@@ -86,6 +88,7 @@ class JobScheduler {
       await this.scheduleClusterTimezoneOffset();
       await this.scheduleFileMonitoring(); // file monitoring with templates - old file monitoring implementation
       await this.scheduleFileMonitoringOnServerStart();
+      await this.scheduleClusterMonitoringOnServerStart();
       logger.info("✔️ JOBSCHEDULER IS BOOTSTRAPED");
     })();
   }
@@ -488,7 +491,6 @@ class JobScheduler {
     this.bree.add(job);
   }
 
-
   // SCHEDULE  - LZ File Monitoring Bree Job
   async scheduleFileMonitoringBreeJob({
     filemonitoring_id,
@@ -538,6 +540,39 @@ class JobScheduler {
   }
 
   // ---------------------------------------------------------------------------------------------
+  createClusterMonitoringBreeJob({ clusterMonitoring_id, cron }) {
+    const uniqueJobName = `Cluster Monitoring - ${clusterMonitoring_id}`;
+    const job = {
+      cron,
+      name: uniqueJobName,
+      path: path.join(__dirname, "jobs", SUBMIT_CLUSTER_MONITORING_JOB),
+      worker: {
+        workerData: { clusterMonitoring_id },
+      },
+    };
+    this.bree.add(job);
+    this.bree.start(uniqueJobName)
+  }
+
+  async scheduleClusterMonitoringOnServerStart() { 
+    try { 
+      logger.info("📺  CLUSTER MONITORING STARTED ...");   
+      const clusterMonitoring = await ClusterMonitoring.findAll({ raw: true });
+      for (let monitoring of clusterMonitoring) {
+        const {id, cron, isActive} = monitoring;
+        if(isActive){
+            this.createClusterMonitoringBreeJob({
+              clusterMonitoring_id: id,
+              cron,
+            });
+        }
+      }
+    } catch (err) {
+      logger.error(err);
+    }
+  }
+
+  // --------------------------------------------------------------------------------------------
 
   async removeJobFromScheduler(name) {
     try {

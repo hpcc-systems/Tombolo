@@ -1010,3 +1010,16 @@ div.tooltip {
   color: #6c757d !important;
   font-size: 24px !important;
 }
+
+.clusterMonitoring_engines > .ant-input-wrapper > .ant-input-group-addon {
+  width: 85px;
+  text-align: left;
+}
+
+.monitoring_table_paused_monitorings {
+  background: #ffe7ba;
+}
+
+.cluster_monitoring_table .ant-table-tbody > tr.monitoring_table_paused_monitorings:hover > td {
+  background: #ffd591;
+}
