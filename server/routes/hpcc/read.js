@@ -970,37 +970,43 @@ io.of("/landingZoneFileUpload").on("connection", (socket) => {
 });
 
 router.get('/clusterMetaData', [query('clusterId').isUUID(4).withMessage('Invalid cluster Id')], async (req, res) =>{
-	//Validate cluster Id
-	const errors = validationResult(req).formatWith(validatorUtil.errorFormatter);
-	if (!errors.isEmpty()) {
-	  return res.status(422).json({ success: false, errors: errors.array() });
-	}
+	try {
+      //Validate cluster Id
+      const errors = validationResult(req).formatWith(
+        validatorUtil.errorFormatter
+      );
 
-	//If cluster id is valid ->
-	const {clusterId} = req.query;
-	try{
-		//Get cluster details
-		let cluster = await hpccUtil.getCluster(clusterId)
-		const {thor_host, thor_port, username, hash } = cluster;
-		const clusterDetails = {baseUrl: `${thor_host}:${thor_port}`, userID: username|| '', password: hash || ''}
+      if (!errors.isEmpty()) {
+        return res.status(422).json({ success: false, errors: errors.array() });
+      }
 
-		const topologyService = new hpccJSComms.TopologyService(clusterDetails)
-		
-		const tpServiceQuery = await topologyService.TpServiceQuery({'Type': 'ALLSERVICES'})
-		const tpLogicalClusterQuery = await topologyService.TpLogicalClusterQuery(); // Active execution engines
-		const dropZones = tpServiceQuery.ServiceList?.TpDropZones?.TpDropZone; // Landing zones and their local dir paths
+      //If cluster id is valid ->
+      const { clusterId } = req.query;
 
-		const clusterMetaData = {
-			TpDfuServer: tpServiceQuery.ServiceList,
-			tpLogicalCluster: tpLogicalClusterQuery.TpLogicalClusters.TpLogicalCluster,
-			dropZones
-		}
-		res.send(clusterMetaData)
+      //Get cluster details
+      let cluster = await hpccUtil.getCluster(clusterId);
+      const { thor_host, thor_port, username, hash } = cluster;
+      const clusterDetails = {
+        baseUrl: `${thor_host}:${thor_port}`,
+        userID: username || "",
+        password: hash || "",
+      };
 
-	}catch(err){
-		logger.error(err)
-		res.status(503).json({success: false, message: err})
-	}
+      const topologyService = new hpccJSComms.TopologyService(clusterDetails);
+      const tpServiceQuery = await topologyService.TpServiceQuery({Type: "ALLSERVICES"});
+      const tpLogicalClusterQuery = await topologyService.TpLogicalClusterQuery(); // Active execution engines
+      const dropZones = tpServiceQuery.ServiceList?.TpDropZones?.TpDropZone; // Landing zones and their local dir paths
+
+      const clusterMetaData = {
+        TpDfuServer: tpServiceQuery.ServiceList,
+        tpLogicalCluster: tpLogicalClusterQuery.TpLogicalClusters.TpLogicalCluster,
+        dropZones,
+      };
+      res.status(200).send(clusterMetaData);
+    } catch (err) {
+      logger.error(err);
+      res.status(503).json({ success: false, message: err });
+    }
 })
 
 module.exports = router;

@@ -105,7 +105,7 @@ class LeftNav extends Component {
               <Link to={'/' + applicationId + '/fileMonitoring'}>{<Text text="File" />}</Link>
             </Menu.Item>
             <Menu.Item key="4b" icon={<ClusterOutlined />}>
-              Cluster
+              <Link to={'/' + applicationId + '/clustermonitoring'}>{<Text text="Cluster" />}</Link>
             </Menu.Item>
             <Menu.Item key="4c" icon={<NotificationOutlined />}>
               <Link to={'/' + applicationId + '/notifications'}>{<Text text="Notifications" />}</Link>

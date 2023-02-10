@@ -85,9 +85,11 @@ function Notifications() {
       title: 'Notification reason',
       render: (record) => {
         let value = record?.notification_reason?.split('');
-        const firstLetter = value[0].toUpperCase();
-        value[0] = firstLetter;
-        return value.join('');
+        if (value) {
+          const firstLetter = value[0].toUpperCase();
+          value[0] = firstLetter;
+          return value.join('');
+        }
       },
     },
     {
@@ -105,9 +107,11 @@ function Notifications() {
       title: 'status',
       render: (record) => {
         let value = record?.status?.split('');
-        const firstLetter = value[0].toUpperCase();
-        value[0] = firstLetter;
-        return value.join('');
+        if (value) {
+          const firstLetter = value[0].toUpperCase();
+          value[0] = firstLetter;
+          return value.join('');
+        }
       },
     },
     {
