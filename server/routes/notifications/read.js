@@ -2,20 +2,24 @@ const express = require("express");
 const { file } = require("tmp");
 const router = express.Router();
 const models = require("../../models");
-const fileMonitoring_notifications = models.filemonitoring_notifications;
+const monitoring_notifications = models.monitoring_notifications;
 const fileMonitoring = models.fileMonitoring;
-const Application = models.application;
+const clusterMonitoring = models.clusterMonitoring;
 
 router.get("/:applicationId", async (req, res) => {
   try {
     const {applicationId: application_id} = req.params;
     if (!application_id) throw Error("Invalid app ID");
-    const notifications = await fileMonitoring_notifications.findAll({
+    const notifications = await monitoring_notifications.findAll({
       where: { application_id },
       include: [
         {
           model: fileMonitoring,
           as: "fileMonitoring",
+        },
+        {
+          model: clusterMonitoring,
+          as: "clusterMonitoring",
         },
       ],
       raw: true,

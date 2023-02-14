@@ -5,7 +5,7 @@ Server does not validate the token to access this route */
 const express = require("express");
 const router = express.Router();
 const models = require("../../models");
-const fileMonitoring_notifications = models.filemonitoring_notifications;
+const monitoring_notifications = models.monitoring_notifications;
 const fileMonitoring = models.fileMonitoring;
 
 //TODO send acknowledgement
@@ -26,7 +26,7 @@ router.post("/update", async (req, res) => {
     }
 
     // Update the notification status
-    await fileMonitoring_notifications.update(updateData, {
+    await monitoring_notifications.update(updateData, {
       where: { id: notification_id },
     });
 

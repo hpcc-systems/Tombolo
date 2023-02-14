@@ -1,7 +1,7 @@
 'use strict';
 module.exports = {
   async up(queryInterface, Sequelize) {
-    await queryInterface.createTable("filemonitoring_notifications", {
+    await queryInterface.createTable("monitoring_notifications", {
       id: {
         allowNull: false,
         autoIncrement: true,
@@ -50,6 +50,6 @@ module.exports = {
     });
   },
   async down(queryInterface, Sequelize) {
-    await queryInterface.dropTable('filemonitoring_notifications');
+    await queryInterface.dropTable('monitoring_notifications');
   }
 };
