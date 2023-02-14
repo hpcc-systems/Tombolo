@@ -191,38 +191,44 @@ router.put(
       );
 
       // return if error(s) exist
-      if (!errors.isEmpty()){
-                logger.error(errors);
-                return res
-                  .status(422)
-                  .json({ success: false, errors: errors.array() });
+      if (!errors.isEmpty()) {
+        logger.error(errors);
+        return res.status(422).json({ success: false, errors: errors.array() });
       }
 
+      //Existing cluster monitoring details
+      let {id,isActive,cron } = req.body;
 
-      const { id, isActive, cron  } = req.body;
+      const existingMonitoringDetails = await ClusterMonitoring.findOne({
+        where: { id },
+      });
+      const {metaData: {last_monitored}} = existingMonitoringDetails;
 
       const newData = req.body; // Cleaning required
+      // Do not reset last_monitored value
+      newData.metaData.last_monitored = last_monitored;
 
-      const updated = await ClusterMonitoring.update(newData, { where: { id } });
+      const updated = await ClusterMonitoring.update(newData, {
+        where: { id },
+      });
 
       res.status(200).send({ updated });
-
-      //TODO - some data in metaData column should persist even when metaData is updated. 
-
       if (updated == 1) {
-        const monitoringUniqueName = `Cluster Monitoring - ${id}`
+        const monitoringUniqueName = `Cluster Monitoring - ${id}`;
         const breeJobs = JobScheduler.getAllJobs();
-        const jobIndex = breeJobs.findIndex(job => job.name === monitoringUniqueName);
+        const jobIndex = breeJobs.findIndex(
+          (job) => job.name === monitoringUniqueName
+        );
 
         //Add to bree
-        if(jobIndex > 0 && !isActive){
+        if (jobIndex > 0 && !isActive) {
           JobScheduler.removeAllFromBree(monitoringUniqueName);
         }
 
         // Remove from bree
-        if(jobIndex < 0 && isActive){
+        if (jobIndex < 0 && isActive) {
           JobScheduler.createClusterMonitoringBreeJob({
-            clusterMonitoring_id : id,
+            clusterMonitoring_id: id,
             cron,
           });
         }

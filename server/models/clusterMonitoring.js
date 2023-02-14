@@ -44,7 +44,7 @@ module.exports = (sequelize, DataTypes) => {
     clusterMonitoring.belongsTo(models.application, {
       foreignKey: "application_id",
     });
-    clusterMonitoring.hasMany(models.filemonitoring_notifications, {
+    clusterMonitoring.hasMany(models.monitoring_notifications, {
       foreignKey: "application_id",
       onDelete: "CASCADE",
     });

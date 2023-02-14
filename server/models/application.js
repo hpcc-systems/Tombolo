@@ -97,7 +97,7 @@ module.exports = (sequelize, DataTypes) => {
       onDelete: "CASCADE",
     });
     /* FILE MONITORING NOTIFICATION*/
-    application.hasMany(models.filemonitoring_notifications, {
+    application.hasMany(models.monitoring_notifications, {
       foreignKey: "application_id",
       onDelete: "CASCADE",
     });

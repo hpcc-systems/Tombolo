@@ -6,7 +6,7 @@ const hpccUtil = require("../utils/hpcc-util");
 const hpccJSComms = require("@hpcc-js/comms")
 const models = require("../models");
 const ClusterMonitoring = models.clusterMonitoring;
-const fileMonitoring_notifications = models.filemonitoring_notifications;
+const monitoring_notifications = models.monitoring_notifications;
 const notificationTemplate = require("./messageCards/notificationTemplate")
 const { notify } = require("../routes/notifications/email-notification");
 const logger = require("../config/logger");
@@ -53,7 +53,7 @@ const { log } = require("./workerUtils")(parentPort);
 
     const notificationRecipients = {};
     notifications.forEach((notification) => {
-      if (notification.channel === "email") {
+      if (notification.channel === "eMail") {
         notificationRecipients.email = notification.recipients;
       }
 
@@ -111,12 +111,12 @@ const { log } = require("./workerUtils")(parentPort);
 
     //Once notification sent, record on notification table
     const sentNotifications = [];
-
+    
     // Notify via email
     if (
       notificationDetails.title &&
       notificationRecipients.email &&
-      notificationDetails.channels.includes("eMail")
+      notificationDetails.channels.includes("email")
     ) {
       try {
         const { facts, title } = notificationDetails;
@@ -136,7 +136,7 @@ const { log } = require("./workerUtils")(parentPort);
         if (notificationResponse.accepted) {
           monitorEngineSize.forEach((monitoring) => {
             if (notificationDetails.engines.includes(monitoring.engine)) {
-              monitoring.notified = [...monitoring.notified, "eMail"];
+              monitoring.notified = [...monitoring.notified, "email"];
             }
           });
         }
@@ -151,6 +151,8 @@ const { log } = require("./workerUtils")(parentPort);
           application_id,
           notification_reason: notificationDetails.title,
           clusterMonitoring_id,
+          monitoring_id: clusterMonitoring_id,
+          monitoring_type: "Cluster",
         });
       } catch (err) {
         logger.error(err);
@@ -189,6 +191,8 @@ const { log } = require("./workerUtils")(parentPort);
               application_id,
               notification_reason: notificationDetails.title,
               clusterMonitoring_id,
+              monitoring_id: clusterMonitoring_id,
+              monitoring_type: "Cluster",
             });
           }catch(err){
             logger.error(err)
@@ -198,7 +202,7 @@ const { log } = require("./workerUtils")(parentPort);
 
     // Record notification and update cluster monitoring
     if (sentNotifications.length > 0) {
-      await fileMonitoring_notifications.bulkCreate(sentNotifications);
+      await monitoring_notifications.bulkCreate(sentNotifications);
 
     // Successfully notified channels
     sentNotifications.forEach(notification =>{

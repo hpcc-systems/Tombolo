@@ -31,7 +31,7 @@ function Notifications() {
       const response = await fetch(`/api/notifications/read/${applicationId}`, payload);
       if (!response.ok) handleError(response);
       const data = await response.json();
-      console.log(data);
+
       if (!monitoringId) {
         setNotifications(data);
       } else {
@@ -75,10 +75,14 @@ function Notifications() {
       },
     },
     {
+      title: 'Monitoring Type',
+      dataIndex: 'monitoring_type',
+    },
+    {
       title: 'Monitoring name',
       filters: filters,
       render: (record) => {
-        return record['fileMonitoring.name'] || '';
+        return record['fileMonitoring.name'] || record['clusterMonitoring.name'] || '';
       },
     },
     {
@@ -91,10 +95,6 @@ function Notifications() {
           return value.join('');
         }
       },
-    },
-    {
-      title: 'File name',
-      dataIndex: 'file_name',
     },
     {
       title: 'Notification channel',
