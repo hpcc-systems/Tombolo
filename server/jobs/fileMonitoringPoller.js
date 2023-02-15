@@ -78,7 +78,7 @@ const { log, dispatch } = require('./workerUtils')(parentPort);
     }
   }
   } catch (err) {
-    log("error",'Error in File Monitoring Poller', error);
+    log("error",'Error in File Monitoring Poller', err);
   }  finally {
     if (parentPort) parentPort.postMessage('done');
     else process.exit(0);
