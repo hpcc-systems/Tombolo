@@ -58,19 +58,13 @@ function FileMonitoringTable({
       render: (_, record) => (
         <>
           <Badge
-            color={record.monitoringActive ? 'green' : 'gray'}
+            color={record.monitoringActive ? 'green' : 'red'}
             text={record.monitoringActive ? 'Active' : 'Paused'}
           />
         </>
       ),
     },
     { title: 'Display Name', dataIndex: 'displayName' },
-    {
-      title: 'Monitoring type',
-      render: (record) => {
-        return record.monitoringAssetType === 'landingZoneFile' ? ' Landing Zone' : 'Logical FIle';
-      },
-    },
     { title: 'Cluster', dataIndex: 'cluster' },
     { title: 'Directory / File Name', dataIndex: 'fileName' },
     { title: 'Schedule', dataIndex: 'cron' },
@@ -130,7 +124,23 @@ function FileMonitoringTable({
     },
   ];
 
-  return <Table size="small" columns={columns} dataSource={fileMonitoringList} rowKey={(record) => record.id} />;
+  // Table row class name
+  const getRowClassName = (record) => {
+    if (!record.monitoringActive) {
+      return 'monitoring_table_paused_monitorings clusterMonitoring_table_rows';
+    }
+  };
+
+  return (
+    <Table
+      size="small"
+      columns={columns}
+      dataSource={fileMonitoringList}
+      rowKey={(record) => record.id}
+      rowClassName={getRowClassName}
+      className="cluster_monitoring_table"
+    />
+  );
 }
 
 export default FileMonitoringTable;

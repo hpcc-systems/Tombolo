@@ -1,7 +1,7 @@
-'use strict';
+"use strict";
 module.exports = (sequelize, DataTypes) => {
-  const fileMonitoring = sequelize.define(
-    "fileMonitoring",
+  const clusterMonitoring = sequelize.define(
+    "clusterMonitoring",
     {
       id: {
         primaryKey: true,
@@ -23,19 +23,6 @@ module.exports = (sequelize, DataTypes) => {
         allowNull: false,
         type: DataTypes.UUID,
       },
-      monitoringAssetType: {
-        type: DataTypes.STRING, // landingZoneFile|| logicalFile || landingZoneFileWithTemplate
-        allowNull: false,
-      },
-      wuid: {
-        type: DataTypes.STRING,
-        allowNull: true,
-        defaultValue: "",
-      },
-      fileTemplateId: {
-        type: DataTypes.UUID,
-        allowNull: true,
-      },
       cluster_id: {
         type: DataTypes.UUID,
         allowNull: false,
@@ -44,24 +31,23 @@ module.exports = (sequelize, DataTypes) => {
         type: DataTypes.JSON,
         allowNull: true,
       },
-      monitoringActive: {
+      isActive: {
         type: DataTypes.BOOLEAN,
         allowNull: true,
       },
     },
     { paranoid: true, freezeTableName: true }
   );
-  fileMonitoring.associate = function(models) {
+  clusterMonitoring.associate = function (models) {
     // Define association here
-    fileMonitoring.belongsTo(models.fileTemplate, { foreignKey: 'fileTemplateId' });
-    fileMonitoring.belongsTo(models.cluster, { foreignKey: 'cluster_id' });
-    fileMonitoring.belongsTo(models.application, {
+    clusterMonitoring.belongsTo(models.cluster, { foreignKey: "cluster_id" });
+    clusterMonitoring.belongsTo(models.application, {
       foreignKey: "application_id",
     });
-    fileMonitoring.hasMany(models.monitoring_notifications, {
+    clusterMonitoring.hasMany(models.monitoring_notifications, {
       foreignKey: "application_id",
       onDelete: "CASCADE",
     });
   };
-  return fileMonitoring;
+  return clusterMonitoring;
 };
