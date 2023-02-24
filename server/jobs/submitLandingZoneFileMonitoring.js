@@ -55,7 +55,7 @@ const {
       "/"
     )}/`;
     const result = await hpccUtil.getDirectories({
-      cluster,
+      clusterId: cluster_id,
       Netaddr,
       Path,
       DirectoryOnly: false,
@@ -163,7 +163,7 @@ const {
 
     // Send email notification for new && file not in range
     if (emailNotificationDetails && newFileNotificationDetails.length > 0) {
-      // for (let detail of newFileNotificationDetails) {
+      for (let detail of newFileNotificationDetails) {
         try {
           const body = emailBody(detail);
           const notificationResponse = await notify({
@@ -190,7 +190,7 @@ const {
         } catch (err) {
           logger.error(err);
         }
-      // }
+      }
     }
 
     if (teamsNotificationDetails && newFileNotificationDetails.length > 0) {
@@ -304,9 +304,6 @@ const {
         // Send teams notification
         const {recipients} = teamsNotificationDetails;
         for (let recipient of recipients){
-          console.log('------------------------------------------');
-          console.count( "Sent", {depth: null})
-          console.log('------------------------------------------');
           try {
             const { details, value } = currentlyMonitoringNotificationDetails;
             const notification_id = uuidv4();

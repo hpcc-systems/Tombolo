@@ -193,7 +193,7 @@ function LandingZoneUpload() {
   //Load cascader data
   const loadData = (selectedOptions) => {
     setFileDestinationDetail((prev) => ({ ...prev, currentDirectoryFiles: [] })); //Empty current dir files array
-    let { thor_host, thor_port, id: clusterId } = cluster;
+    let { id: clusterId } = cluster;
     const targetOption = selectedOptions[selectedOptions.length - 1];
     targetOption.loading = true;
     const pathToAsset = selectedOptions.map((option) => option.value).join('/') + '/';
@@ -202,19 +202,15 @@ function LandingZoneUpload() {
       setFileDestinationDetail((prev) => ({ ...prev, machine: targetOption.machine.Netaddress }));
     }
 
-    //constructing data object to be sent as query params
-    const data = JSON.stringify({
-      Netaddr: selectedOptions[0].machine.Netaddress,
-      Path: pathToAsset,
-      OS: selectedOptions[0].OS,
-      rawxml_: true,
-      DirectoryOnly: false,
-    });
-
     // Every time user clicks an option on cascader make a call to fetch children
-    fetch(`/api/hpcc/read/getDirectories?data=${data}&host=${thor_host}&port=${thor_port}&clusterId=${clusterId}`, {
-      headers: authHeader(),
-    })
+    fetch(
+      `/api/hpcc/read/dropZoneDirectories?Netaddr=${
+        selectedOptions[0].machine.Netaddress
+      }&Path=${pathToAsset}&clusterId=${clusterId}&DirectoryOnly=${false}`,
+      {
+        headers: authHeader(),
+      }
+    )
       .then((response) => {
         if (response.ok) {
           return response.json();
@@ -222,10 +218,10 @@ function LandingZoneUpload() {
         handleError(response);
       })
       .then((data) => {
-        if (data.FileListResponse.files) {
+        if (data) {
           let children = [];
           let files = [];
-          data.FileListResponse.files.PhysicalFileStruct.map((item) => {
+          data.map((item) => {
             if (item.isDir) {
               let child = {};
               child.value = item.name;
