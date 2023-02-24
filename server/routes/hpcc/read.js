@@ -635,12 +635,6 @@ router.get(
   async (req, res) => {
     try {
       const { clusterId, Netaddr, Path, DirectoryOnly } = req.query;
-	  	console.log(
-        clusterId,
-        Netaddr,
-        Path,
-        DirectoryOnly
-      );
 
       const directories = await hpccUtil.getDirectories({
         clusterId,
