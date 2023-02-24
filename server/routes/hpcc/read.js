@@ -630,41 +630,14 @@ router.get('/getDropZones', [
 	}
 })
 
-router.get('/getDirectories',[
-	query('data').exists().withMessage('Invalid data'),
-	query('host').exists().withMessage('Invalid host name'),
-	query('port').exists().withMessage('Invalid Port')
-], function (req, res) {
-	const errors = validationResult(req).formatWith(validatorUtil.errorFormatter);
-	if (!errors.isEmpty()) {
-	  return res.status(422).json({ success: false, errors: errors.array() });
-	}
-		
-	else{
-		const {data,host, port, clusterId} = req.query;
-		let inputs = JSON.parse(data);
-		hpccUtil.getCluster(clusterId)
-				.then((cluster) =>{
-					hpccUtil.fetchDirectories(host,port, inputs, cluster)
-					.then(response =>{
-						return res.status(200).json(response)
-					})
-				}).catch(err =>{
-					  console.log(err)
-					  return res.status(500).json({success : false, message : 'Error occured while getting directories'})
-				})
-	}
-})
-
-
 router.get(
   "/dropZoneDirectories",
   async (req, res) => {
     try {
       const { clusterId, Netaddr, Path, DirectoryOnly } = req.query;
-	  const cluster = await hpccUtil.getCluster(clusterId);
+
       const directories = await hpccUtil.getDirectories({
-        cluster,
+        clusterId,
         Netaddr,
         Path,
         DirectoryOnly,

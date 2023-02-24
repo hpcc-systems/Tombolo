@@ -205,7 +205,8 @@ router.put(
 
 
       await FileMonitoring.update(newInfo, { where: { id } });
-      res.status(200).send(newInfo);
+      const fileMonitoringDetails = FileMonitoring.findOne({where: {id}}) // To avoid xss waring making additional call
+      res.status(200).send(fileMonitoringDetails);
 
       // If start monitoring was changed to TRUE
       if (monitoringActive && oldInfo.monitoringActive == 0) {

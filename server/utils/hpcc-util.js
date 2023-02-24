@@ -157,58 +157,34 @@ exports.indexInfo = (clusterId, indexName) => {
   });
 };
 
-exports.fetchDirectories = (host, port, data, cluster) => {
-  let formData = {};
-  for (let key in data) {
-    formData[key] = data[key].toString();
-  }
-  try {
-    return new Promise((resolve, reject) => {
-      request.post(
-        {
-          url: `${host}:${port}/FileSpray/FileList.json`,
-          headers: { "content-type": "application/x-www-form-urlencoded" },
-          formData: formData,
-          auth: this.getClusterAuth(cluster),
-          resolveWithFullResponse: true,
-        },
-        function (err, response, body) {
-          if (err) {
-            console.log("ERROR - ", err);
-            reject(" Error occured during dropzone file search");
-          } else {
-            var result = JSON.parse(body);
-            resolve(result);
-          }
-        }
-      );
-    });
-  } catch (err) {
-    console.log("err", err);
-    reject("Error occured during dropzone file search");
-  }
-};
-// FETCH LANDING ZONE DIRECTORY FUNCTION
-const getConnection = (cluster) => {
+const getConnection = async (clusterId) => {
+  const cluster = await this.getCluster(clusterId);
   return {
     baseUrl: cluster.thor_host + ":" + cluster.thor_port,
-    userID: cluster.userID || "",
-    password: cluster.password || "",
+    userID: cluster.username || "",
+    password: cluster.hash || "",
   };
 };
 
-exports.getDirectories = async ({ cluster, Netaddr, Path, DirectoryOnly }) => {
-  const fileSprayService = new hpccJSComms.FileSprayService(
-    getConnection(cluster)
-  );
-  const fileList = await fileSprayService.FileList({
-    DirectoryOnly,
-    Netaddr,
-    Path,
-  });
-  const result = fileList.files?.PhysicalFileStruct || [];
+exports.getDirectories = async ({ clusterId, Netaddr, Path, DirectoryOnly }) => {
+  return new Promise(async (resolve, reject) => {
+    try{
+      const clusterDetails =  await getConnection(clusterId)
+      const fileSprayService = new hpccJSComms.FileSprayService(clusterDetails);
+      const fileList =  await fileSprayService.FileList({
+        DirectoryOnly,
+        Netaddr,
+        Path,
+      });
+      const result = fileList.files?.PhysicalFileStruct || [];
+      resolve(result);
+  }catch(err){
+    reject(err)
+  }
+  })
+  
+  
 
-  return result;
 };
 
 exports.executeSprayJob = (job) => {
@@ -259,11 +235,7 @@ exports.executeSprayJob = (job) => {
       .catch((error) => reject("Error occured during dropzone file search"));
   });
 };
-//  catch (err) {
-// 	console.log('err', err);
-// 	reject('Error occured during dropzone file search');
-// }
-// }
+
 
 exports.queryInfo = (clusterId, queryName) => {
   let resultObj = { basic: {} },
