@@ -47,7 +47,7 @@ router.post('/', [
        
     }catch(err){
         logger.error(err);
-        res.status(503).send(err)
+        res.status(503).send({success: false, message: "Failed to fetch"})
     }
 });
 
@@ -71,7 +71,7 @@ router.get("/all/:application_id", [
       res.status(200).send(clusterMonitorings)
     }catch(err){
         logger.error(err);
-        res.send(503).send(err)
+        res.send(503).send({success: false, message: "Failed to fetch"})
     }
 })
 
@@ -95,7 +95,7 @@ router.get("/:id", [
 
     }catch(err){
         logger.error(err);
-        res.status(503).send(err)
+        res.status(503).send({success: false, message: "Failed to fetch"})
     }
 })
 
@@ -122,7 +122,7 @@ router.delete(
       res.status(200).send({deleted});
     } catch (err) {
       logger.error(err);
-      res.status(503).send(err);
+      res.status(503).json({success: false, message: "Failed to delete"});
     }
   }
 );
@@ -235,7 +235,7 @@ router.put(
       }
     } catch (err) {
       logger.error(err);
-      res.status(503).send(err);
+      res.status(503).json({success: false, message : "Failed to update"});
     }
   }
 );
@@ -268,7 +268,7 @@ router.get(
       res.status(200).send(clusterEngines);
     } catch (err) {
       logger.error(err);
-      res.status(503).send(err.message);
+      res.status(503).json({success: false, message : "Failed to get engines"});
     }
   }
 );
@@ -312,7 +312,7 @@ router.get("/targetClusterUsage/:cluster_id",[
     res.status(200).send(clusterUsage);
   } catch (err) {
     logger.error(err);
-    res.status(503).send(err.message);
+    res.status(503).json({success: false, message : "Failed to get cluster usage"});
   }
 });
 

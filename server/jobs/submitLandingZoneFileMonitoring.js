@@ -55,7 +55,7 @@ const {
       "/"
     )}/`;
     const result = await hpccUtil.getDirectories({
-      cluster,
+      clusterId: cluster_id,
       Netaddr,
       Path,
       DirectoryOnly: false,
