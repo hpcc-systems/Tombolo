@@ -8,6 +8,7 @@ import {
   FileSearchOutlined,
   ClusterOutlined,
   NotificationOutlined,
+  ContainerOutlined,
 } from '@ant-design/icons';
 
 import { hasEditPermission } from '../common/AuthUtil.js';
@@ -109,6 +110,9 @@ class LeftNav extends Component {
             </Menu.Item>
             <Menu.Item key="4c" icon={<NotificationOutlined />}>
               <Link to={'/' + applicationId + '/notifications'}>{<Text text="Notifications" />}</Link>
+            </Menu.Item>
+            <Menu.Item key="4d" icon={<ContainerOutlined />}>
+              <Link to={'/' + applicationId + '/superfileMonitoring'}>{<Text text="Superfiles" />}</Link>
             </Menu.Item>
           </Menu.SubMenu>
 

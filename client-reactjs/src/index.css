@@ -392,6 +392,10 @@ path,
 .ant-table-row-cell-break-word a {
   color: #1890ff !important;
 }
+.superFileCascade .ant-cascader-menu {
+  width: 400px !important;
+  max-width: 100% !important;
+}
 
 .ant-form-item {
   margin-bottom: 7px !important;

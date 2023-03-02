@@ -11,6 +11,7 @@ const FileMonitoring = models.fileMonitoring;
 
 const { v4: uuidv4 } = require('uuid');
 const workflowUtil = require('./utils/workflow-util.js');
+const filemonitoring_superfile = models.filemonitoring_superfiles;
 const SUBMIT_JOB_FILE_NAME = 'submitJob.js';
 const SUBMIT_QUERY_PUBLISH = 'submitPublishQuery.js'
 const SUBMIT_SPRAY_JOB_FILE_NAME = 'submitSprayJob.js';
@@ -19,6 +20,7 @@ const SUBMIT_MANUAL_JOB_FILE_NAME = 'submitManualJob.js';
 const SUBMIT_GITHUB_JOB_FILE_NAME = 'submitGithubJob.js';
 const SUBMIT_LANDINGZONE_FILEMONITORING_FILE_NAME = 'submitLandingZoneFileMonitoring.js'
 const SUBMIT_LOGICAL_FILEMONITORING_FILE_NAME = 'submitLogicalFileMonitoring.js';
+const SUBMIT_SUPER_FILEMONITORING_FILE_NAME = "submitSuperFileMonitoring.js";
 const JOB_STATUS_POLLER = 'statusPoller.js';
 const FILE_MONITORING = 'fileMonitoringPoller.js'
 const CLUSTER_TIMEZONE_OFFSET = 'clustertimezoneoffset.js';
@@ -86,6 +88,7 @@ class JobScheduler {
       await this.scheduleClusterTimezoneOffset();
       await this.scheduleFileMonitoring(); // file monitoring with templates - old file monitoring implementation
       await this.scheduleFileMonitoringOnServerStart();
+      await this.scheduleSuperFileMonitoringOnServerStart();
       logger.info("✔️ JOBSCHEDULER IS BOOTSTRAPED");
     })();
   }
@@ -488,6 +491,59 @@ class JobScheduler {
     this.bree.add(job);
   }
 
+  // createSuperFileMonitoringBreeJob({filemonitoring_id, name, cron}){
+  //   const job = {
+  //     cron,
+  //     name,
+  //     path: path.join(
+  //       __dirname,
+  //       "jobs",
+  //       SUBMIT_SUPER_FILEMONITORING_FILE_NAME
+  //     ),
+  //     worker: {
+  //       workerData: {filemonitoring_id}
+  //     }
+  //   };
+
+  //   this.bree.add(job);
+
+  //   console.log(this.getAllJobs());
+  
+  // }
+  
+
+   // ---------------------------------------------------------------------------------------------
+  createSuperFileMonitoringBreeJob({filemonitoring_id, cron}) {
+    const uniqueJobName = `Superfile Monitoring - ${filemonitoring_id}`;
+    const job = {
+      cron,
+      name: uniqueJobName,
+      path: path.join(__dirname, "jobs", SUBMIT_SUPER_FILEMONITORING_FILE_NAME),
+      worker: {
+        workerData: { filemonitoring_id },
+      },
+    };
+    this.bree.add(job);
+    this.bree.start(uniqueJobName)
+  }
+  async scheduleSuperFileMonitoringOnServerStart() { 
+    try { 
+      logger.info("📺 SUPER FILE MONITORING STARTED ...");   
+      const superfileMonitoring = await filemonitoring_superfile.findAll({ raw: true });
+      for (let monitoring of superfileMonitoring) {
+        const {id, cron, monitoringActive} = monitoring;
+        if(monitoringActive){
+            this.createSuperFileMonitoringBreeJob({
+              filemonitoring_id: id,
+              cron,
+            });
+        }
+      }
+    } catch (err) {
+      logger.error(err);
+    }
+  }
+  // --------------------------------------------------------------------------------------------
 
   // SCHEDULE  - LZ File Monitoring Bree Job
   async scheduleFileMonitoringBreeJob({
@@ -511,6 +567,12 @@ class JobScheduler {
         cron,
       });
       this.bree.start(uniqueName);
+    } else if (monitoringAssetType === "superFiles") {
+      this.createSuperFileMonitoringBreeJob({
+        filemonitoring_id,
+        name: uniqueName,
+        cron,
+      });
     }
   }
 

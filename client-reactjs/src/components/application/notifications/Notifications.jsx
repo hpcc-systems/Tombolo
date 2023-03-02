@@ -31,7 +31,7 @@ function Notifications() {
       const response = await fetch(`/api/notifications/read/${applicationId}`, payload);
       if (!response.ok) handleError(response);
       const data = await response.json();
-      console.log(data);
+
       if (!monitoringId) {
         setNotifications(data);
       } else {
