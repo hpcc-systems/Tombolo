@@ -6,7 +6,7 @@ const models = require("../models");
 const fileMonitoring = models.fileMonitoring;
 const hpccUtil = require("../utils/hpcc-util");
 const { v4: uuidv4 } = require("uuid");
-const fileMonitoring_notifications = models.filemonitoring_notifications;
+const monitoring_notifications = models.monitoring_notifications;
 const {
   emailBody,
   messageCardBody,
@@ -220,7 +220,8 @@ const {
             notification_channel: "msTeams",
             application_id,
             notification_reason: notificationDetails.value,
-            filemonitoring_id,
+            monitoring_id: filemonitoring_id,
+            monitoring_type: "Logical File",
           });
         } catch (err) {
           logger.error(err);
@@ -231,7 +232,7 @@ const {
     // Add sent notifications to notification table
     if (sentNotifications.length > 0) {
       try {
-        await fileMonitoring_notifications.bulkCreate(sentNotifications);
+        await monitoring_notifications.bulkCreate(sentNotifications);
       } catch (err) {
         logger.error(err);
       }

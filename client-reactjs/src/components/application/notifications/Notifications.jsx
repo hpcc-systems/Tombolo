@@ -75,24 +75,26 @@ function Notifications() {
       },
     },
     {
+      title: 'Monitoring Type',
+      dataIndex: 'monitoring_type',
+    },
+    {
       title: 'Monitoring name',
       filters: filters,
       render: (record) => {
-        return record['fileMonitoring.name'] || '';
+        return record['fileMonitoring.name'] || record['clusterMonitoring.name'] || '';
       },
     },
     {
       title: 'Notification reason',
       render: (record) => {
         let value = record?.notification_reason?.split('');
-        const firstLetter = value[0].toUpperCase();
-        value[0] = firstLetter;
-        return value.join('');
+        if (value) {
+          const firstLetter = value[0].toUpperCase();
+          value[0] = firstLetter;
+          return value.join('');
+        }
       },
-    },
-    {
-      title: 'File name',
-      dataIndex: 'file_name',
     },
     {
       title: 'Notification channel',
@@ -105,9 +107,11 @@ function Notifications() {
       title: 'status',
       render: (record) => {
         let value = record?.status?.split('');
-        const firstLetter = value[0].toUpperCase();
-        value[0] = firstLetter;
-        return value.join('');
+        if (value) {
+          const firstLetter = value[0].toUpperCase();
+          value[0] = firstLetter;
+          return value.join('');
+        }
       },
     },
     {

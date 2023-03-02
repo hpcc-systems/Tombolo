@@ -1,7 +1,7 @@
 'use strict';
 module.exports = (sequelize, DataTypes) => {
-    const filemonitoring_notifications = sequelize.define(
-      "filemonitoring_notifications",
+    const monitoring_notifications = sequelize.define(
+      "monitoring_notifications",
       {
         id: {
           type: DataTypes.UUID,
@@ -9,7 +9,8 @@ module.exports = (sequelize, DataTypes) => {
           allowNull: false,
           primaryKey: true,
         },
-        filemonitoring_id: DataTypes.UUID,
+        monitoring_type: DataTypes.STRING,
+        monitoring_id: DataTypes.UUID,
         application_id: DataTypes.UUID,
         file_name: DataTypes.STRING,
         notification_reason: DataTypes.STRING,
@@ -23,17 +24,20 @@ module.exports = (sequelize, DataTypes) => {
         paranoid: true,
         freezeTableName: true,
         sequelize,
-        modelName: "filemonitoring_notifications",
+        modelName: "monitoring_notifications",
       }
     );
     // Associations
-    filemonitoring_notifications.associate = function (models) {
-      filemonitoring_notifications.belongsTo(models.fileMonitoring, {
-        foreignKey: "filemonitoring_id",
+    monitoring_notifications.associate = function (models) {
+      monitoring_notifications.belongsTo(models.fileMonitoring, {
+        foreignKey: "monitoring_id",
       });
-      filemonitoring_notifications.belongsTo(models.application, {
+      monitoring_notifications.belongsTo(models.clusterMonitoring, {
+        foreignKey: "monitoring_id",
+      });
+      monitoring_notifications.belongsTo(models.application, {
         foreignKey: "application_id",
       });
     };
-  return filemonitoring_notifications;
+  return monitoring_notifications;
 };

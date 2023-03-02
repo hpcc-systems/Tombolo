@@ -8,22 +8,26 @@ const MessageBasedJobs = models.message_based_jobs;
 const DataflowVersions = models.dataflow_versions;
 const JobExecution = models.job_execution;
 const FileMonitoring = models.fileMonitoring;
+const ClusterMonitoring = models.clusterMonitoring;
 
-const { v4: uuidv4 } = require('uuid');
-const workflowUtil = require('./utils/workflow-util.js');
+const { v4: uuidv4 } = require("uuid");
+const workflowUtil = require("./utils/workflow-util.js");
 const filemonitoring_superfile = models.filemonitoring_superfiles;
-const SUBMIT_JOB_FILE_NAME = 'submitJob.js';
-const SUBMIT_QUERY_PUBLISH = 'submitPublishQuery.js'
-const SUBMIT_SPRAY_JOB_FILE_NAME = 'submitSprayJob.js';
-const SUBMIT_SCRIPT_JOB_FILE_NAME = 'submitScriptJob.js';
-const SUBMIT_MANUAL_JOB_FILE_NAME = 'submitManualJob.js';
-const SUBMIT_GITHUB_JOB_FILE_NAME = 'submitGithubJob.js';
-const SUBMIT_LANDINGZONE_FILEMONITORING_FILE_NAME = 'submitLandingZoneFileMonitoring.js'
-const SUBMIT_LOGICAL_FILEMONITORING_FILE_NAME = 'submitLogicalFileMonitoring.js';
+const SUBMIT_JOB_FILE_NAME = "submitJob.js";
+const SUBMIT_QUERY_PUBLISH = "submitPublishQuery.js";
+const SUBMIT_SPRAY_JOB_FILE_NAME = "submitSprayJob.js";
+const SUBMIT_SCRIPT_JOB_FILE_NAME = "submitScriptJob.js";
+const SUBMIT_MANUAL_JOB_FILE_NAME = "submitManualJob.js";
+const SUBMIT_GITHUB_JOB_FILE_NAME = "submitGithubJob.js";
+const SUBMIT_LANDINGZONE_FILEMONITORING_FILE_NAME =
+  "submitLandingZoneFileMonitoring.js";
+const SUBMIT_LOGICAL_FILEMONITORING_FILE_NAME =
+  "submitLogicalFileMonitoring.js";
 const SUBMIT_SUPER_FILEMONITORING_FILE_NAME = "submitSuperFileMonitoring.js";
-const JOB_STATUS_POLLER = 'statusPoller.js';
-const FILE_MONITORING = 'fileMonitoringPoller.js'
-const CLUSTER_TIMEZONE_OFFSET = 'clustertimezoneoffset.js';
+const JOB_STATUS_POLLER = "statusPoller.js";
+const FILE_MONITORING = "fileMonitoringPoller.js";
+const CLUSTER_TIMEZONE_OFFSET = "clustertimezoneoffset.js";
+const SUBMIT_CLUSTER_MONITORING_JOB = "submitClusterMonitoring.js";
 
 class JobScheduler {
   constructor() {
@@ -89,6 +93,7 @@ class JobScheduler {
       await this.scheduleFileMonitoring(); // file monitoring with templates - old file monitoring implementation
       await this.scheduleFileMonitoringOnServerStart();
       await this.scheduleSuperFileMonitoringOnServerStart();
+      await this.scheduleClusterMonitoringOnServerStart();
       logger.info("✔️ JOBSCHEDULER IS BOOTSTRAPED");
     })();
   }
@@ -489,7 +494,7 @@ class JobScheduler {
       },
     };
     this.bree.add(job);
-  }
+  } // ---------------------------------------------------------------------------------------------
 
   // createSuperFileMonitoringBreeJob({filemonitoring_id, name, cron}){
   //   const job = {
@@ -508,12 +513,10 @@ class JobScheduler {
   //   this.bree.add(job);
 
   //   console.log(this.getAllJobs());
-  
-  // }
-  
 
-   // ---------------------------------------------------------------------------------------------
-  createSuperFileMonitoringBreeJob({filemonitoring_id, cron}) {
+  // }
+
+  createSuperFileMonitoringBreeJob({ filemonitoring_id, cron }) {
     const uniqueJobName = `Superfile Monitoring - ${filemonitoring_id}`;
     const job = {
       cron,
@@ -524,19 +527,21 @@ class JobScheduler {
       },
     };
     this.bree.add(job);
-    this.bree.start(uniqueJobName)
+    this.bree.start(uniqueJobName);
   }
-  async scheduleSuperFileMonitoringOnServerStart() { 
-    try { 
-      logger.info("📺 SUPER FILE MONITORING STARTED ...");   
-      const superfileMonitoring = await filemonitoring_superfile.findAll({ raw: true });
+  async scheduleSuperFileMonitoringOnServerStart() {
+    try {
+      logger.info("📺 SUPER FILE MONITORING STARTED ...");
+      const superfileMonitoring = await filemonitoring_superfile.findAll({
+        raw: true,
+      });
       for (let monitoring of superfileMonitoring) {
-        const {id, cron, monitoringActive} = monitoring;
-        if(monitoringActive){
-            this.createSuperFileMonitoringBreeJob({
-              filemonitoring_id: id,
-              cron,
-            });
+        const { id, cron, monitoringActive } = monitoring;
+        if (monitoringActive) {
+          this.createSuperFileMonitoringBreeJob({
+            filemonitoring_id: id,
+            cron,
+          });
         }
       }
     } catch (err) {
@@ -600,6 +605,39 @@ class JobScheduler {
   }
 
   // ---------------------------------------------------------------------------------------------
+  createClusterMonitoringBreeJob({ clusterMonitoring_id, cron }) {
+    const uniqueJobName = `Cluster Monitoring - ${clusterMonitoring_id}`;
+    const job = {
+      cron,
+      name: uniqueJobName,
+      path: path.join(__dirname, "jobs", SUBMIT_CLUSTER_MONITORING_JOB),
+      worker: {
+        workerData: { clusterMonitoring_id },
+      },
+    };
+    this.bree.add(job);
+    this.bree.start(uniqueJobName);
+  }
+
+  async scheduleClusterMonitoringOnServerStart() {
+    try {
+      logger.info("📺  CLUSTER MONITORING STARTED ...");
+      const clusterMonitoring = await ClusterMonitoring.findAll({ raw: true });
+      for (let monitoring of clusterMonitoring) {
+        const { id, cron, isActive } = monitoring;
+        if (isActive) {
+          this.createClusterMonitoringBreeJob({
+            clusterMonitoring_id: id,
+            cron,
+          });
+        }
+      }
+    } catch (err) {
+      logger.error(err);
+    }
+  }
+
+  // --------------------------------------------------------------------------------------------
 
   async removeJobFromScheduler(name) {
     try {

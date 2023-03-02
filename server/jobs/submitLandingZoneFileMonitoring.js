@@ -6,7 +6,7 @@ const { notify } = require("../routes/notifications/email-notification");
 const logger = require("../config/logger");
 const models = require("../models");
 const fileMonitoring = models.fileMonitoring;
-const fileMonitoring_notifications = models.filemonitoring_notifications;
+const monitoring_notifications = models.monitoring_notifications;
 const hpccUtil = require("../utils/hpcc-util");
 const wildCardStringMatch = require("../utils/wildCardStringMatch");
 
@@ -19,6 +19,7 @@ const {
   try {
     const fileMonitoringDetails = await fileMonitoring.findOne({
       where: { id: workerData.filemonitoring_id },
+      raw : true
     });
 
     let {
@@ -54,7 +55,7 @@ const {
       "/"
     )}/`;
     const result = await hpccUtil.getDirectories({
-      cluster,
+      clusterId: cluster_id,
       Netaddr,
       Path,
       DirectoryOnly: false,
@@ -162,7 +163,7 @@ const {
 
     // Send email notification for new && file not in range
     if (emailNotificationDetails && newFileNotificationDetails.length > 0) {
-      for (let detail of newFileNotificationDetails) {
+      // for (let detail of newFileNotificationDetails) {
         try {
           const body = emailBody(detail);
           const notificationResponse = await notify({
@@ -175,20 +176,21 @@ const {
           logger.verbose(notificationResponse);
 
           if (notificationResponse.accepted) {
-            await fileMonitoring_notifications.create({
+            await monitoring_notifications.create({
               file_name: detail.details["File name"],
               status: "notified",
               notifiedTo: emailNotificationDetails.recipients,
               notification_channel: "eMail",
               application_id,
               notification_reason: detail.value,
-              filemonitoring_id,
+              monitoring_id: filemonitoring_id,
+              monitoring_type: "Landingzone File",
             });
           }
         } catch (err) {
           logger.error(err);
         }
-      }
+      // }
     }
 
     if (teamsNotificationDetails && newFileNotificationDetails.length > 0) {
@@ -204,7 +206,7 @@ const {
 
             await axios.post(recipient, body);
 
-            await fileMonitoring_notifications.create({
+            await monitoring_notifications.create({
               id: notification_id,
               file_name: detail.details["File Name"],
               status: "notified",
@@ -212,7 +214,8 @@ const {
               notification_channel: "msTeams",
               application_id,
               notification_reason: detail.value,
-              filemonitoring_id,
+              monitoring_id: filemonitoring_id,
+              monitoring_type: "Landingzone File",
             });
           } catch (err) {
             logger.error(err);
@@ -266,42 +269,44 @@ const {
           "Expected move time": new Date( current.expectedFileMoveTime).toString(),
         },
       };
-      
-      if(emailNotificationDetails && !notified.includes('eMail')){
-        // Send email notification 
-        try {
-          const { details, value } = currentlyMonitoringNotificationDetails;
-          const body = emailBody(currentlyMonitoringNotificationDetails);
-          const notificationResponse = await notify({
-            to: emailNotificationDetails.recipients,
-            from: process.env.EMAIL_SENDER,
-            subject: details.title,
-            text: body,
-            html: body,
-          });
-          logger.verbose(notificationResponse);
-
-          if (notificationResponse.accepted) {
-            current.notified.push("eMail");
-            await fileMonitoring_notifications.create({
-              file_name: current.name,
-              status: "notified",
-              notifiedTo: emailNotificationDetails.recipients,
-              notification_channel: "eMail",
-              application_id,
-              notification_reason:value,
-              filemonitoring_id,
+        if (emailNotificationDetails && !notified.includes("eMail")) {
+          // Send email notification
+          try {
+            const { value, title } = currentlyMonitoringNotificationDetails;
+            const body = emailBody(currentlyMonitoringNotificationDetails);
+            const notificationResponse = await notify({
+              to: emailNotificationDetails.recipients,
+              from: process.env.EMAIL_SENDER,
+              subject: title,
+              text: body,
+              html: body,
             });
+            logger.verbose(notificationResponse);
+
+            if (notificationResponse.accepted) {
+              current.notified.push("eMail");
+              await monitoring_notifications.create({
+                file_name: current.name,
+                status: "notified",
+                notifiedTo: emailNotificationDetails.recipients,
+                notification_channel: "eMail",
+                application_id,
+                notification_reason: value,
+                monitoring_id: filemonitoring_id,
+              });
+            }
+          } catch (err) {
+            logger.error(err);
           }
-        } catch (err) {
-          logger.error(err);
         }
-      }
 
       if(teamsNotificationDetails && !notified.includes('msTeams')){
         // Send teams notification
         const {recipients} = teamsNotificationDetails;
         for (let recipient of recipients){
+          console.log('------------------------------------------');
+          console.count( "Sent", {depth: null})
+          console.log('------------------------------------------');
           try {
             const { details, value } = currentlyMonitoringNotificationDetails;
             const notification_id = uuidv4();
@@ -315,7 +320,7 @@ const {
             await axios.post(recipient, body);
             current.notified.push('msTeams');
 
-            await fileMonitoring_notifications.create({
+            await monitoring_notifications.create({
               id: notification_id,
               file_name: current.name,
               status: "notified",
@@ -323,7 +328,8 @@ const {
               notification_channel: "msTeams",
               application_id,
               notification_reason: value,
-              filemonitoring_id,
+              monitoring_id: filemonitoring_id,
+              monitoring_type: 	"Landingzone File"
             });
           } catch (err) {
             logger.error(err);
