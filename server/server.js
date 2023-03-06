@@ -123,10 +123,3 @@ server.listen(port, "0.0.0.0", async () => {
     process.exit(1);
   }
 });
-
-// async function test (){
-//   let x = await hpccUtil.getSuperFiles('3a14ed52-8931-433c-a376-6f366d30d2c0', 'alfresco::auditlog::incoming::superfile')
-
-//   console.log(x);
-// }
-// test();
