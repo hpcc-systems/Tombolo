@@ -37,19 +37,10 @@ const NotificationTab = ({ setNotificationDetails, notificationDetails, selected
                       type="email"
                       rules={[
                         {
-                          message: 'Invalid e-mail address',
-                          validator: (_, value) => {
-                            //updated for codeQL
-                            const emailRegex = new RegExp(
-                              '^(([^<>()[]\\.,;:s@"]+(.[^<>()[]\\.,;:s@"]+)*)|(".+"))@(([[0-9]{1,3}.[0-9]{1,3}.[0-9]{1,3}.[0-9]{1,3}])|(([a-zA-Z-0-9]+.)+[a-zA-Z]{2,}))$'
-                            );
-                            const validEmail = emailRegex.test(value);
-                            if (validEmail) {
-                              return Promise.resolve();
-                            } else {
-                              return Promise.reject();
-                            }
-                          },
+                          required: true,
+                          whitespace: true,
+                          type: 'email',
+                          message: 'Invalid e-mail address.',
                         },
                       ]}
                       noStyle>

@@ -8,6 +8,7 @@ const validatorUtil = require("../../utils/validator");
 const hpccUtil = require("../../utils/hpcc-util.js");
 const { body, param, validationResult } = require("express-validator");
 const { emailBody } = require("../../jobs/messageCards/notificationTemplate");
+const { update } = require("lodash");
 
 router.post(
   "/",
@@ -231,7 +232,13 @@ router.get(
 //update superfile monitoring
 router.put(
   "/",
-  [body("id").isUUID(4).withMessage("Invalid file monitoring id")],
+  [
+    body("application_id").isUUID(4).withMessage("Invalid application id"),
+    body("cluster_id")
+      .isUUID(4)
+      .optional({ nullable: false })
+      .withMessage("Invalid cluster id"),
+  ],
   async (req, res) => {
     try {
       const errors = validationResult(req).formatWith(
@@ -268,7 +275,6 @@ router.put(
           fileInfo: {
             clusterid,
             application_id,
-            wuid,
             metaData: {
               fileInfo: { Name, size, Cluster, modified },
               lastMonitored,
@@ -298,10 +304,10 @@ router.put(
       let notifications = [];
 
       for (let i = 0; i < notificationChannels.length; i++) {
-        if (notificationChannels[i] == "eMail") {
+        if (notificationChannels[i] === "eMail") {
           notifications.push({ channel: "eMail", recipients: emails });
         }
-        if (notificationChannels[i] == "msTeams") {
+        if (notificationChannels[i] === "msTeams") {
           notifications.push({
             channel: "msTeams",
             recipients: msTeamsGroups,
@@ -318,7 +324,7 @@ router.put(
         application_id,
         cron,
         monitoringActive,
-        wuid,
+        wuid: null,
         name: monitorName,
         metaData: {
           fileInfo: {
@@ -349,13 +355,11 @@ router.put(
       // -------------------------------------------------------
       await SuperFileMonitoring.update(newInfo, { where: { id } });
 
-      res.status(200).send(newInfo);
-
       // If start monitoring was changed to TRUE
-      if (monitoringActive && oldInfo.monitoringActive == 0) {
+      if (monitoringActive && oldInfo.monitoringActive === 0) {
         const schedularOptions = {
           filemonitoring_id: id,
-          name: name,
+          name: Name,
           cron: cron,
           monitoringAssetType: "superFiles",
         };
@@ -363,7 +367,7 @@ router.put(
       }
 
       // If start monitoring was changed to FALSE
-      if (!monitoringActive && oldInfo.monitoringActive == 1) {
+      if (!monitoringActive && oldInfo.monitoringActive === 1) {
         await jobScheduler.removeJobFromScheduler(
           `Superfile Monitoring - ${id}`
         );
@@ -378,13 +382,15 @@ router.put(
             await jobScheduler.removeJobFromScheduler(jobName);
             await jobScheduler.scheduleFileMonitoringBreeJob({
               filemonitoring_id: id,
-              name: name,
+              name: Name,
               cron: cron,
               monitoringAssetType: "superFiles",
             });
           }
         }
       }
+
+      res.status(200).send(newInfo);
     } catch (error) {
       console.log(error);
       res

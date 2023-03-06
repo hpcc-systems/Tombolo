@@ -169,7 +169,12 @@ const BasicTab = ({ selectedCluster, setSelectedCluster, superFileDetails, setSu
               <div style={{ padding: '10px 18px', fontWeight: 'bold', border: '1px solid whitesmoke' }}>
                 SuperFile Details
               </div>
-              <div style={{ height: '200px', overflow: 'auto', padding: '10px 18px', border: '1px solid whitesmoke' }}>
+              <div
+                style={{
+                  height: 'fit-content',
+                  padding: '10px 18px',
+                  border: '1px solid whitesmoke',
+                }}>
                 <ObjectKeyValue obj={displayFileInfo} />
               </div>
             </>

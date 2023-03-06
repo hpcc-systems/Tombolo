@@ -106,12 +106,6 @@ const { update } = require("lodash");
         }
       }
 
-      // //subfile count notification
-      // if () {
-      //   let newRecentFile = await hpccUtil.getRecentSubFile(clusterid, Name);
-
-      // }
-
       //recent subfile notification && recent count notification, both get returned by same call so only call once
       if (
         notifyCondition.includes("recentSubFileChange") ||
@@ -209,7 +203,7 @@ const { update } = require("lodash");
           });
         }
         //if updateIntervalDays is set, check that most recent modified day of the week matches setting
-        if (updateIntervalDays) {
+        if (updateIntervalDays?.length) {
           const daysOfWeek = [
             "sunday",
             "monday",
