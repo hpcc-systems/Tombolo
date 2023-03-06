@@ -5,7 +5,7 @@ import { authHeader, handleError } from '../../common/AuthHeader.js';
 import FileExplorerModal from '../files/FileExplorerModal';
 import ObjectKeyValue from '../../common/ObjectKeyValue';
 
-const BasicTab = ({ selectedCluster, setSelectedCluster, superFileDetails, setSuperFileDetails, form }) => {
+const BasicTab = ({ selectedCluster, setSelectedCluster, superFileDetails, setSuperFileDetails, form, disabled }) => {
   useEffect(() => {
     if (superFileDetails === null) {
       return;
@@ -45,7 +45,7 @@ const BasicTab = ({ selectedCluster, setSelectedCluster, superFileDetails, setSu
       let displayInfo = {
         Name: superfile_name,
         'Total Size': size / 1000 + ' KB',
-        'Last Modified': new Date(modified).toUTCString,
+        'Last Modified': new Date(modified).toLocaleString(),
       };
 
       setDisplayFileInfo(displayInfo);
@@ -104,14 +104,16 @@ const BasicTab = ({ selectedCluster, setSelectedCluster, superFileDetails, setSu
         label="Cluster"
         style={{ width: 'calc(47.5% - 8px)' }}
         name="cluster_id"
+        disabled={disabled}
         rules={[{ required: true, message: 'Required field' }]}>
         <Select
+          disabled={disabled}
           onChange={(value) => {
             setSelectedCluster(value);
           }}>
           {clusters.map((cluster) => {
             return (
-              <Option key={cluster.id} value={cluster.id}>
+              <Option key={cluster.id} value={cluster.id} disabled={disabled}>
                 {cluster.name}
               </Option>
             );
@@ -125,6 +127,7 @@ const BasicTab = ({ selectedCluster, setSelectedCluster, superFileDetails, setSu
             label="Search File"
             name="fileName"
             required
+            disabled={disabled}
             rules={[{ required: true, message: 'Required field' }]}>
             <Row gutter={[8, 0]}>
               <Col style={{ width: 'calc(37.5% - 8px)' }}>
@@ -133,6 +136,7 @@ const BasicTab = ({ selectedCluster, setSelectedCluster, superFileDetails, setSu
                   onSelect={handleSuperFileSelect}
                   onSearch={(searchText) => loadSuperFileSuggestions(searchText)}
                   value={selectedSuperFile}
+                  disabled={disabled}
                 />
               </Col>
               <Col>

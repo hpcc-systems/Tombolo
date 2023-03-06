@@ -32,8 +32,6 @@ function SuperFileMonitoring() {
         body: JSON.stringify({ ...monitoringDetails, id: selectedFileMonitoring }),
       };
 
-      console.log(payload);
-
       const response = await fetch('/api/superfilemonitoring/read/', payload);
 
       if (!response.ok) handleError(response);
@@ -134,7 +132,6 @@ function SuperFileMonitoring() {
     return formattedSize;
   };
 
-  // console.log(superfileList);
   return (
     <>
       <BreadCrumbs

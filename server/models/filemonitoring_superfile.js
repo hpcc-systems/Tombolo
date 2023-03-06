@@ -50,7 +50,7 @@ module.exports = (sequelize, DataTypes) => {
     fileMonitoring_superfiles.belongsTo(models.application, {
       foreignKey: "application_id",
     });
-    fileMonitoring_superfiles.hasMany(models.filemonitoring_notifications, {
+    fileMonitoring_superfiles.hasMany(models.monitoring_notifications, {
       foreignKey: "application_id",
       onDelete: "CASCADE",
     });

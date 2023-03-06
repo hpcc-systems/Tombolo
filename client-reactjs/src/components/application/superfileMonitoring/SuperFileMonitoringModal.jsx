@@ -25,12 +25,12 @@ const SuperFileMonitoringModal = ({
 
   //data field states
   const [selectedCluster, setSelectedCluster] = useState(null);
-  const [superFileName, setSuperFileName] = useState('');
   const [displayName, setDisplayName] = useState('');
   const [superFileDetails, setSuperFileDetails] = useState(null);
   const [selectedSuperFileDetails, setSelectedSuperFileDetails] = useState(null);
   const [notificationDetails, setNotificationDetails] = useState({});
   const [cron, setCron] = useState(null);
+  const [disabled, setDisabled] = useState(false);
 
   //extra states needed for data verification and entry
 
@@ -54,12 +54,6 @@ const SuperFileMonitoringModal = ({
     }
   }, [windowSize]);
 
-  useEffect(() => {
-    if (superFileName === null) {
-      entryForm.setFieldsValue(displayName, selectedCluster, superFileName);
-    }
-  }, [superFileName]);
-
   // Fetch details and fill if view btn is clicked -----------------------------------
   useEffect(() => {
     if (selectedFileMonitoring === null) {
@@ -72,7 +66,10 @@ const SuperFileMonitoringModal = ({
 
     //if superFileDetails have been gotten, set field values
     if (selectedSuperFileDetails) {
-      let notificationChannels;
+      setDisabled(true);
+
+      //grab and restructure notification channels to set into fields
+      let notificationChannels = [];
       let emails;
       let msTeams;
 
@@ -80,45 +77,61 @@ const SuperFileMonitoringModal = ({
         for (let i = 0; i < selectedSuperFileDetails.metaData.notifications.length; i++) {
           if (selectedSuperFileDetails.metaData.notifications[i].channel === 'eMail') {
             emails = selectedSuperFileDetails.metaData.notifications[i].recipients;
-            notificationChannels = 'eMail';
+            notificationChannels.push('eMail');
           }
 
           if (selectedSuperFileDetails.metaData.notifications[i].channel === 'msTeams') {
             msTeams = selectedSuperFileDetails.metaData.notifications[i].recipients;
-            notificationChannels += ' msTeams';
+            notificationChannels.push('msTeams');
           }
         }
       }
 
       if (selectedSuperFileDetails.metaData) {
-        //format date for placement
-        // let updateIntervalInitialDate = new Date(selectedSuperFileDetails.metaData.fileInfo.modified);
-        // let year = updateIntervalInitialDate.getFullYear();
-        // let month = String(updateIntervalInitialDate.getMonth()).padStart(2, '0');
-        // let day = String(updateIntervalInitialDate.getDate()).padStart(2, '0');
-        // // let formattedDate = `${year}-${month}-${day}`;
+        const {
+          name,
+          cron,
+          monitoringActive,
+          metaData: {
+            fileInfo: { Cluster, Name },
+            monitoringCondition: {
+              minimumSubFileCount,
+              maximumSubFileCount,
+              minimumFileSize,
+              maximumFileSize,
+              notifyCondition,
+              updateInterval,
+              updateIntervalDays,
+            },
+          },
+        } = selectedSuperFileDetails;
 
         entryForm.setFieldsValue({
-          cluster_id: selectedSuperFileDetails.metaData.fileInfo.Cluster,
-          fileName: selectedSuperFileDetails.metaData.fileInfo.Name,
-          monitorName: selectedSuperFileDetails.name,
-          cron: selectedSuperFileDetails.cron,
-          monitoringActive: selectedSuperFileDetails.monitoringActive,
+          cluster_id: Cluster,
+          fileName: Name,
+          monitorName: name,
+          cron: cron,
+          monitoringActive: monitoringActive,
           notificationChannels: notificationChannels,
-          notifyCondition: selectedSuperFileDetails.metaData.monitoringCondition.notifyCondition,
-          updateInterval: selectedSuperFileDetails.metaData.monitoringCondition.updateInterval,
-          updateIntervalDays: selectedSuperFileDetails.metaData.monitoringCondition.updateIntervalDays,
+          minimumSubFileCount: minimumSubFileCount,
+          maximumSubFileCount: maximumSubFileCount,
+          minimumFileSize: minimumFileSize,
+          maximumFileSize: maximumFileSize,
+          notifyCondition: notifyCondition,
+          updateInterval: updateInterval,
+          updateIntervalDays: updateIntervalDays,
           updateIntervalInitialDate: null,
           emails: emails,
           msTeamsGroups: msTeams,
         });
 
-        setSelectedCluster(selectedSuperFileDetails.metaData.fileInfo.Cluster);
-        setDisplayName(selectedSuperFileDetails.name);
+        //set states to have fields appear that are necessary
+        setSelectedCluster(Cluster);
+        setDisplayName(name);
         setCron(cron);
         setMonitoringDetails({
           ...monitoringDetails,
-          monitoringConditions: selectedSuperFileDetails.metaData.monitoringCondition.notifyCondition,
+          monitoringConditions: notifyCondition,
         });
         setNotificationDetails({ ...notificationDetails, notificationChannel: notificationChannels });
       }
@@ -134,10 +147,10 @@ const SuperFileMonitoringModal = ({
       if (!response.ok) handleError(response);
       const data = await response.json();
 
-      setActiveTab('1');
+      setActiveTab('2');
       setSuperFileDetails(data);
 
-      //if selected file monitoring, store selected file monitoring in different state
+      //if selected file monitoring, store selected file monitoring in different state for later
       if (selectedFileMonitoring) {
         setSelectedSuperFileDetails(data);
       }
@@ -158,6 +171,7 @@ const SuperFileMonitoringModal = ({
     } catch (err) {
       validationError = err;
     }
+
     return { validationError, formData };
   };
 
@@ -166,7 +180,9 @@ const SuperFileMonitoringModal = ({
     try {
       setConfirmLoading(true);
       //validate data and throw new error
+
       const data = await validateForms();
+
       if (data.validationError?.errorFields) {
         throw new Error('Validation failed, please check form fields again.');
       }
@@ -224,22 +240,14 @@ const SuperFileMonitoringModal = ({
         monitoringActive: formData.monitoringActive,
       };
 
-      delete formData.notifyCondition;
-      delete formData.minimumFileSize;
-      delete formData.maximumFileSize;
-      delete formData.notificationChannels;
-      delete formData.emails;
-      delete formData.msTeamsGroups;
-
-      console.log(formData);
-
       await saveFileMonitoringDetails(formData);
       setConfirmLoading(false);
       //rerender table, useEffect on main superfilemonitoring tracks this to get list of all monitoring
       setSuccessAddingMonitoring((prev) => prev + 1);
-      //set modal not visible
+      //set modal not visible, reset form and disabled fields
       setModalVisible(false);
       entryForm.resetFields();
+      setDisabled(false);
     } catch (err) {
       setConfirmLoading(false);
       console.log(err.message);
@@ -248,13 +256,9 @@ const SuperFileMonitoringModal = ({
   };
 
   function cancelFileMonitoringModal() {
-    //figure out why we have to call set state like this instead of just setModalVisible(false)
     setModalVisible(false);
-    // setModalVisible(false);
     setConfirmLoading(false);
-
-    //unused fields
-    setSuperFileName;
+    setDisabled(false);
   }
 
   //Modal footer btns -------------------------------------------------------------------------
@@ -323,6 +327,7 @@ const SuperFileMonitoringModal = ({
                   superFileDetails={superFileDetails}
                   setSuperFileDetails={setSuperFileDetails}
                   form={entryForm}
+                  disabled={disabled}
                 />
               </TabPane>
               <TabPane tab="Monitoring" key="2">
@@ -337,6 +342,7 @@ const SuperFileMonitoringModal = ({
                   setCron={setCron}
                   superfileMonitoringList={superfileMonitoringList}
                   selectedFileMonitoring={selectedFileMonitoring}
+                  disabled={disabled}
                 />
               </TabPane>
               <TabPane tab="Notifications" key="3">

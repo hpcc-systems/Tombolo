@@ -6,7 +6,7 @@ const models = require("../models");
 const superfileMonitoring = models.filemonitoring_superfiles;
 const hpccUtil = require("../utils/hpcc-util");
 const { v4: uuidv4 } = require("uuid");
-const fileMonitoring_notifications = models.filemonitoring_notifications;
+const monitoring_notifications = models.monitoring_notifications;
 const {
   emailBody,
   messageCardBody,
@@ -289,7 +289,7 @@ const { update } = require("lodash");
             notification_channel: "eMail",
             application_id,
             notification_reason: notificationDetails.value,
-            filemonitoring_id: id,
+            monitoring_id: id,
           });
         }
       } catch (err) {
@@ -315,7 +315,7 @@ const { update } = require("lodash");
             id: notification_id,
             file_name: Name,
             status: "notified",
-            notifiedTo: emailNotificationDetails.recipients,
+            notifiedTo: teamsNotificationDetails.recipients,
             notification_channel: "msTeams",
             application_id,
             notification_reason: notificationDetails.value,
@@ -330,7 +330,7 @@ const { update } = require("lodash");
     // Add sent notifications to notification table
     if (sentNotifications.length > 0) {
       try {
-        await fileMonitoring_notifications.bulkCreate(sentNotifications);
+        await monitoring_notifications.bulkCreate(sentNotifications);
       } catch (err) {
         logger.error(err);
       }

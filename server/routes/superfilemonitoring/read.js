@@ -7,6 +7,7 @@ const SuperFileMonitoring = models.filemonitoring_superfiles;
 const validatorUtil = require("../../utils/validator");
 const hpccUtil = require("../../utils/hpcc-util.js");
 const { body, param, validationResult } = require("express-validator");
+const { emailBody } = require("../../jobs/messageCards/notificationTemplate");
 
 router.post(
   "/",
@@ -31,6 +32,8 @@ router.post(
       //   req.body.fileName
       // );
 
+      // ------------------------------------------------------
+      //  TODO transform data before sending in for easier updates
       let newSuperFileData = {
         clusterid: req.body.cluster_id,
         application_id: req.body.application_id,
@@ -54,7 +57,7 @@ router.post(
 
       newSuperFileData.metaData.fileInfo.subfileCount =
         recentSubFile.subfileCount;
-
+      // -------------------------------------------------------
       const newSuperFile = await SuperFileMonitoring.create(newSuperFileData);
 
       res.status(200).send(newSuperFile);
@@ -243,33 +246,101 @@ router.put(
         raw: true,
       });
 
-      const {
-        metaData: { currentlyMonitoring },
-      } = oldInfo;
-
       let newInfo = req.body;
-      console.log(newInfo);
 
-      let recentSubFile = await hpccUtil.getRecentSubFile(
-        newInfo.cluster_id,
-        newInfo.fileName
-      );
+      // ------------------------------------------------------
+      //  TODO transform data before sending in for easier updates
 
-      //set metaData with most recent file
-      newInfo.metaData.fileInfo.mostRecentSubFile = recentSubFile.recentSubFile;
-      newInfo.metaData.fileInfo.mostRecentSubFileDate = recentSubFile.recentDate
-        .getTime()
-        .toString();
+      //destructure info out of sent info
+      const {
+        id,
+        monitorName,
+        cron,
+        notifyCondition,
+        notificationChannels,
+        monitoringActive,
+        minimumSubFileCount,
+        maximumSubFileCount,
+        minimumFileSize,
+        maximumFileSize,
+        updateInterval,
+        updateIntervalDays,
+        metaData: {
+          fileInfo: {
+            clusterid,
+            application_id,
+            wuid,
+            metaData: {
+              fileInfo: { Name, size, Cluster, modified },
+              lastMonitored,
+            },
+          },
+        },
+      } = newInfo;
 
-      newInfo.metaData.fileInfo.subfileCount = recentSubFile.subfileCount;
-
-      if (currentlyMonitoring) {
-        newInfo.metaData.currentlyMonitoring = currentlyMonitoring;
+      //build out notifications object for storing inside metadata
+      let emails, msTeamsGroups;
+      if (notificationChannels.includes("eMail")) {
+        emails = newInfo.emails;
+      }
+      if (notificationChannels.includes("msTeams")) {
+        msTeamsGroups = newInfo.msTeamsGroups;
       }
 
-      const { id, name, cron, monitoringActive } = newInfo;
+      let notifications = [];
 
+      for (let i = 0; i < notificationChannels.length; i++) {
+        if (notificationChannels[i] == "eMail") {
+          notifications.push({ channel: "eMail", recipients: emails });
+        }
+        if (notificationChannels[i] == "msTeams") {
+          notifications.push({
+            channel: "msTeams",
+            recipients: msTeamsGroups,
+          });
+        }
+      }
+
+      let recentSubFile = await hpccUtil.getRecentSubFile(clusterid, Name);
+
+      //set data fields
+      newInfo = {
+        id,
+        clusterid,
+        application_id,
+        cron,
+        monitoringActive,
+        wuid,
+        name: monitorName,
+        metaData: {
+          fileInfo: {
+            Name,
+            size,
+            Cluster,
+            modified,
+            subfileCount: recentSubFile.subfileCount,
+            mostRecentSubFile: recentSubFile.recentSubFile,
+            mostRecentSubFileDate: recentSubFile.recentDate
+              .getTime()
+              .toString(),
+          },
+          lastMonitored,
+          notifications,
+          monitoringActive,
+          monitoringCondition: {
+            minimumFileSize,
+            maximumFileSize,
+            updateInterval,
+            updateIntervalDays,
+            minimumSubFileCount,
+            maximumSubFileCount,
+            notifyCondition,
+          },
+        },
+      };
+      // -------------------------------------------------------
       await SuperFileMonitoring.update(newInfo, { where: { id } });
+
       res.status(200).send(newInfo);
 
       // If start monitoring was changed to TRUE

@@ -10,10 +10,6 @@ const notificationOptions = [
 const NotificationTab = ({ setNotificationDetails, notificationDetails, selectedFileMonitoringDetails }) => {
   useEffect(() => {}, [selectedFileMonitoringDetails]);
 
-  // notificationDetailsSetter = (value) => {
-  //   setNotificationDetails({ ...notificationDetails, notificationChannel: value });
-  // };
-
   return (
     <>
       <Form.Item

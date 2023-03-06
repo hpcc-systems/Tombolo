@@ -12,6 +12,7 @@ const MonitoringTab = ({
   setCron,
   superfileMonitoringList,
   selectedFileMonitoring,
+  disabled,
 }) => {
   const [cronExplainer, setCronExplainer] = useState(null);
   const [updateInterval, setUpdateInterval] = useState(null);
@@ -94,22 +95,29 @@ const MonitoringTab = ({
         onChange={(value) => {
           setDisplayName(value);
         }}
+        disabled={disabled}
         rules={[
           { required: true, message: 'Required filed' },
           {
             message: 'Monitoring with same name already exists',
             validator: (_, value) => {
-              const nameExists = superfileMonitoringList.find((Monitoring) => Monitoring.name === value);
-              // if (nameExists || selectedFileMonitoringDetails) {
-              if (!nameExists || selectedFileMonitoring) {
-                return Promise.resolve();
+              //only validate if not viewing other file details
+              if (!selectedFileMonitoring) {
+                const nameExists = superfileMonitoringList.find((Monitoring) => Monitoring.name === value);
+
+                // if (nameExists || selectedFileMonitoringDetails) {
+                if (!nameExists) {
+                  return Promise.resolve();
+                } else {
+                  return Promise.reject();
+                }
               } else {
-                return Promise.reject();
+                return Promise.resolve();
               }
             },
           },
         ]}>
-        <Input placeholder="Display Name"></Input>
+        <Input placeholder="Display Name" disabled={disabled}></Input>
       </Form.Item>
       <Form.Item
         label="Cron (How often to monitor)"

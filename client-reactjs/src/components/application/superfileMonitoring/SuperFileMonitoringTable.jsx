@@ -1,37 +1,16 @@
-import React, { useState, useEffect } from 'react';
+import React from 'react';
 import { Table, Space, Tooltip, Badge, message } from 'antd';
 import { EyeOutlined, DeleteOutlined, PlayCircleOutlined, PauseCircleOutlined, BellOutlined } from '@ant-design/icons';
 import { authHeader, handleError } from '../../common/AuthHeader.js';
-// import ObjectKeyValue from '../../common/ObjectKeyValue.jsx';
-import useWindowSize from '../../../hooks/useWindowSize.js';
-// import ObjectKeyValue from '../../common/ObjectKeyValue.jsx';
 import { Link } from 'react-router-dom';
 
 function SuperFileMonitoringTable({
-  modalVisible,
   setModalVisible,
   superfileMonitoringList,
   setSuperFileMonitoringList,
-  sizeFormatter,
   applicationId,
   setSelectedFileMonitoring,
 }) {
-  // const [details, setDetails] = useState(null);
-  // const [detailsModalVisible, setDetailsModalVisible] = useState(false);
-  const [modalWidth, setModalWidth] = useState(0);
-  const windowSize = useWindowSize();
-  // Changes modal size per screen vw
-  useEffect(() => {
-    const { width } = windowSize.inner;
-    if (width > 1500) {
-      setModalWidth('40vw');
-    } else if (width > 1000) {
-      setModalWidth('60vw');
-    } else {
-      setModalWidth('100vw');
-    }
-  }, [windowSize]);
-
   // Delete record
   const deleteSuperFileMonitoring = async ({ id, name }) => {
     try {
@@ -67,42 +46,10 @@ function SuperFileMonitoringTable({
     }
   };
 
-  // //open details modal and set details data
-  // const openDetailsModal = async (record) => {
-  //   setDetailsModalVisible(true);
-
-  //   let monitorDate = new Date(parseInt(record.lastMonitored));
-  //   let fileDate = new Date(parseInt(record.mostRecentSubFileDate));
-
-  //   const data = {
-  //     Name: record.name,
-  //     Superfile: record.superfile_name,
-  //     Cluster: record.cluster,
-  //     Cron: record.cron,
-  //     Size: sizeFormatter(record.size),
-  //     'Subfile Count': record.subfiles,
-  //     'Most Recently Updated Subfile': record.mostRecentSubFile,
-  //     'Most Recent Subfile Modified Date': fileDate.toLocaleString(),
-  //     'Last Monitored': monitorDate.toLocaleString(),
-  //   };
-
-  //   setDetails(data);
-  // };
-
-  // const closeDetailsModal = () => {
-  //   setDetailsModalVisible(false);
-  //   setDetails(null);
-  // };
-
   // View existing file monitoring  ------------------------------------------------------------------
   const viewExistingFileMonitoring = (id) => {
     setModalVisible(true);
     setSelectedFileMonitoring(id);
-
-    //unused fields
-    sizeFormatter;
-    modalVisible;
-    modalWidth;
   };
   const columns = [
     {
@@ -169,14 +116,6 @@ function SuperFileMonitoringTable({
   return (
     <>
       <Table size="small" columns={columns} dataSource={superfileMonitoringList} rowKey={(record) => record.id} />
-      {/* <Modal
-        visible={detailsModalVisible}
-        onOk={closeDetailsModal}
-        width={modalWidth}
-        onCancel={closeDetailsModal}
-        maskClosable={false}>
-        <ObjectKeyValue obj={details}></ObjectKeyValue>
-      </Modal> */}
     </>
   );
 }
