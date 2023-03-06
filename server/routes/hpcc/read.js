@@ -94,24 +94,20 @@ router.post(
             });
         } catch (err) {
           console.log(err);
-          res
-            .status(500)
-            .send({
-              success: "false",
-              message: "Error occured during search.",
-            });
+          res.status(500).send({
+            success: "false",
+            message: "Error occured during search.",
+          });
         }
       })
       .catch((err) => {
         console.log("------------------------------------------");
         console.log("Cluster not reachable", +JSON.stringify(err));
         console.log("------------------------------------------");
-        res
-          .status(500)
-          .send({
-            success: "false",
-            message: "Search failed. Please check if the cluster is running.",
-          });
+        res.status(500).send({
+          success: "false",
+          message: "Search failed. Please check if the cluster is running.",
+        });
       });
   }
 );
@@ -170,22 +166,18 @@ router.post(
             console.log(
               "Error occured while querying : " + JSON.stringify(err)
             );
-            res
-              .status(500)
-              .send({
-                success: "false",
-                message: "Search failed. Error occured while querying.",
-              });
+            res.status(500).send({
+              success: "false",
+              message: "Search failed. Error occured while querying.",
+            });
           });
       })
       .catch((err) => {
         console.log("Cluster not reachable: " + JSON.stringify(err));
-        res
-          .status(500)
-          .send({
-            success: "false",
-            message: "Search failed. Please check if the cluster is running.",
-          });
+        res.status(500).send({
+          success: "false",
+          message: "Search failed. Please check if the cluster is running.",
+        });
       });
   }
 );
@@ -234,12 +226,10 @@ router.post(
       return res.status(200).send(workunitsResult);
     } catch (error) {
       logger.error("jobsearch error", error);
-      res
-        .status(500)
-        .send({
-          success: "false",
-          message: "Search failed. Please check if the cluster is running.",
-        });
+      res.status(500).send({
+        success: "false",
+        message: "Search failed. Please check if the cluster is running.",
+      });
     }
   }
 );
@@ -252,12 +242,10 @@ router.get("/getClusters", async (req, res) => {
     res.send(clusters);
   } catch (err) {
     logger.error(err);
-    res
-      .status(500)
-      .send({
-        success: "false",
-        message: "Error occurred while retrieving cluster list",
-      });
+    res.status(500).send({
+      success: "false",
+      message: "Error occurred while retrieving cluster list",
+    });
   }
 });
 router.get("/getClusterWhitelist", function (req, res) {
@@ -335,20 +323,16 @@ router.post(
               await Cluster.update(newCluster, {
                 where: { id: result.dataValues.id },
               });
-              res
-                .status(200)
-                .json({
-                  success: true,
-                  message: "Successfully added new cluster",
-                });
+              res.status(200).json({
+                success: true,
+                message: "Successfully added new cluster",
+              });
             } else {
-              res
-                .status(400)
-                .json({
-                  success: false,
-                  message:
-                    "Failure to add Cluster, Timezone Offset could not be found",
-                });
+              res.status(400).json({
+                success: false,
+                message:
+                  "Failure to add Cluster, Timezone Offset could not be found",
+              });
             }
           } else {
             //get clusterTimezoneOFfset once ID is available after cluster creation
@@ -356,20 +340,16 @@ router.post(
             if (offset) {
               newCluster.timezone_offset = offset;
               await Cluster.update(newCluster, { where: { id: req.body.id } });
-              res
-                .status(200)
-                .json({
-                  success: true,
-                  message: "Successfully updated cluster",
-                });
+              res.status(200).json({
+                success: true,
+                message: "Successfully updated cluster",
+              });
             } else {
-              res
-                .status(400)
-                .json({
-                  success: false,
-                  message:
-                    "Failure to add Cluster, Timezone Offset could not be found",
-                });
+              res.status(400).json({
+                success: false,
+                message:
+                  "Failure to add Cluster, Timezone Offset could not be found",
+              });
             }
           }
         } else {
@@ -380,12 +360,10 @@ router.post(
       }
     } catch (err) {
       logger.error("err", err);
-      return res
-        .status(500)
-        .send({
-          success: "false",
-          message: "Error occurred while adding new Cluster",
-        });
+      return res.status(500).send({
+        success: "false",
+        message: "Error occurred while adding new Cluster",
+      });
     }
   }
 );
@@ -789,13 +767,11 @@ router.get(
         IncludeSuperFiles: true,
         QuerySet: "roxie",
       });
-      res
-        .status(200)
-        .json({
-          success: true,
-          logicalFiles: response?.LogicalFiles?.Item || [],
-          superFiles: response?.SuperFiles?.SuperFile || [],
-        });
+      res.status(200).json({
+        success: true,
+        logicalFiles: response?.LogicalFiles?.Item || [],
+        superFiles: response?.SuperFiles?.SuperFile || [],
+      });
     } catch (err) {
       logger.error(err);
       res
@@ -1241,9 +1217,11 @@ io.of("/landingZoneFileUpload").on("connection", (socket) => {
     }
     try {
       const selectedCluster = await hpccUtil.getCluster(cluster.id);
+      //codeql fix
+      let url = `${cluster.thor_host}:${cluster.thor_port}/FileSpray/UploadFile.json?upload_&rawxml_=1&NetAddress=${machine}&OS=2&Path=${destinationFolder}`;
       request(
         {
-          url: `${cluster.thor_host}:${cluster.thor_port}/FileSpray/UploadFile.json?upload_&rawxml_=1&NetAddress=${machine}&OS=2&Path=${destinationFolder}`,
+          url: url,
           method: "POST",
           auth: hpccUtil.getClusterAuth(selectedCluster),
           formData: {
