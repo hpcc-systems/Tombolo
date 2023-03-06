@@ -257,7 +257,6 @@ router.put(
         monitorName,
         cron,
         notifyCondition,
-        notificationChannels,
         monitoringActive,
         minimumSubFileCount,
         maximumSubFileCount,
@@ -277,6 +276,15 @@ router.put(
           },
         },
       } = newInfo;
+
+      //CODEQL FIX
+      //-----------------------
+      let notificationChannels = req.body.notificationChannels;
+
+      if (!(notificationChannels instanceof Array)) {
+        return [];
+      }
+      //-----------------------
 
       //build out notifications object for storing inside metadata
       let emails, msTeamsGroups;
