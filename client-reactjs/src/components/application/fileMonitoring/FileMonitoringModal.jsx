@@ -333,7 +333,6 @@ function FileMonitoringModal({
               selectedFileMonitoringDetails={selectedFileMonitoringDetails}
             />
           </TabPane>
-
           <TabPane
             tab={
               <span>

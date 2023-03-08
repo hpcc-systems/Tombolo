@@ -3,6 +3,7 @@ const path = require("path");
 var requestPromise = require("request-promise");
 var models = require("../models");
 var Cluster = models.cluster;
+var SuperFileMonitoring = models.filemonitoring_superfiles;
 const Dataflow_cluster_credentials = models.dataflow_cluster_credentials;
 const { github_repo_settings: GHprojects } = require("../models");
 let hpccJSComms = require("@hpcc-js/comms");
@@ -297,6 +298,7 @@ exports.queryInfo = (clusterId, queryName) => {
       });
     });
   } catch (err) {
+    model;
     console.log("err", err);
   }
 };
@@ -1142,6 +1144,263 @@ exports.getClusterTimezoneOffset = async (clusterId) => {
     return clusterUtcOffset;
   } catch (err) {
     console.log("ERROR ADDING OFFSET----------------------------------------");
+    console.log(err);
+    console.log("----------------------------------------");
+  }
+};
+
+//get superfile info
+exports.getSuperFile = async (clusterId, fileName) => {
+  try {
+    const dfuService = await exports.getDFUService(clusterId);
+    if (!dfuService) {
+      throw new Error(
+        "Error connecting to cluster when getting superfile information"
+      );
+    }
+    //gets superfile, with size and count of subfiles
+    let superFileList = await dfuService.DFUQuery({
+      FileType: "Superfiles only",
+      LogicalName: fileName,
+    });
+
+    //output
+    let output;
+    //if one is found, build returns
+    if (superFileList.DFULogicalFiles.DFULogicalFile[0]) {
+      //get number of sub files
+      let numSubFiles =
+        superFileList.DFULogicalFiles.DFULogicalFile[0].NumOfSubfiles;
+
+      //dfuService.SuperfileList gets the names of all the subfiles to iterate through, which dfuquery above does not
+      let superFile = await dfuService.SuperfileList({
+        superfile: fileName,
+      });
+
+      let returnSize;
+
+      if (superFile.subfiles && superFile.subfiles.Item[0]) {
+        if (superFileList.DFULogicalFiles.DFULogicalFile[0].IntSize) {
+          returnSize = superFileList.DFULogicalFiles.DFULogicalFile[0].IntSize;
+        } else {
+          returnSize = 0;
+        }
+      } else {
+        returnSize = 0;
+      }
+
+      let date = Date.now();
+
+      let modifiedDate = new Date(
+        superFileList.DFULogicalFiles.DFULogicalFile[0].Modified
+      ).getTime();
+
+      //create new superfile monitoring
+      let newSuperFileMonitoring = {
+        cluster_id: clusterId,
+        superfile_name: fileName,
+        size: returnSize,
+        subfiles: numSubFiles,
+        lastCheck: date,
+        modified: modifiedDate,
+      };
+
+      output = newSuperFileMonitoring;
+    } else {
+      //return no file found
+      output = "No file found";
+      throw new Error("No file found with that name");
+    }
+
+    return output;
+  } catch (err) {
+    console.log(
+      "ERROR GETTING SUPERFILE---------------------------------------"
+    );
+    console.log(err);
+    console.log("----------------------------------------");
+  }
+};
+
+//get all superfiles
+exports.getSuperFiles = async (clusterId, fileName) => {
+  try {
+    const dfuService = await exports.getDFUService(clusterId);
+    if (!dfuService) {
+      throw new Error(
+        "Error connecting to cluster when getting superfile information"
+      );
+    }
+
+    //if no filename was passed in, just pass wildcard
+    if (fileName) {
+      searchName = fileName + "*";
+    } else {
+      searchName = "*";
+    }
+
+    //gets superfile, with size and count of subfiles
+    let superFileList = await dfuService.DFUQuery({
+      FileType: "Superfiles only",
+      LogicalName: searchName,
+      FirstN: 100000000, //without this it will only grab the first 100
+    });
+
+    //build output
+    let output = [];
+    if (
+      superFileList.DFULogicalFiles &&
+      superFileList.DFULogicalFiles.DFULogicalFile.length > 0
+    ) {
+      let results = superFileList.DFULogicalFiles.DFULogicalFile;
+      results.forEach((superFile) => {
+        output.push({
+          text: superFile.Name,
+          value: superFile.Name,
+          superOwners: superFile.SuperOwners,
+        });
+      });
+    } else {
+      //return no file found
+      output = "No file found";
+      throw new Error("No file found with that name");
+    }
+    return output;
+  } catch (err) {
+    console.log(
+      "ERROR GETTING SUPERFILE---------------------------------------"
+    );
+    console.log(err);
+    console.log("----------------------------------------");
+  }
+};
+
+//get all superfile subfiles
+exports.getAllSubFiles = async (clusterId, fileName) => {
+  try {
+    const dfuService = await exports.getDFUService(clusterId);
+    if (!dfuService) {
+      throw new Error(
+        "Error connecting to cluster when getting superfile information"
+      );
+    }
+
+    let output = [];
+
+    //get list of superfile subfiles
+    let superFile = await dfuService.SuperfileList({
+      superfile: fileName,
+    });
+
+    let scopes = [];
+
+    //if subfiles exist, loop through and get scopes
+    if (superFile.subfiles && superFile.subfiles.Item) {
+      //loop through and get all scopes to search
+      for (let i = 0; i < superFile.subfiles.Item.length; i++) {
+        let tempFileName = superFile.subfiles.Item[i];
+
+        //remove last piece to get scope
+        let split = tempFileName.split("::");
+
+        let scope = split.splice(0, split.length - 1).join("::");
+
+        scopes.push(scope);
+      }
+    }
+
+    //remove duplicate scopes
+    let finalScopes = scopes.filter(
+      (item, index) => scopes.indexOf(item) === index
+    );
+
+    //loop through each scope, getting data and putting it in output
+    for (let i = 0; i < finalScopes.length; i++) {
+      let childSubfiles = await dfuService.DFUFileView({
+        Scope: finalScopes[i],
+        IncludeSuperOwner: true,
+      });
+
+      //loop through all files in directory
+      for (
+        let j = 0;
+        j < childSubfiles.DFULogicalFiles.DFULogicalFile.length;
+        j++
+      ) {
+        if (
+          childSubfiles.DFULogicalFiles.DFULogicalFile[j].SuperOwners ==
+          fileName
+        ) {
+          output.push({
+            fileName: childSubfiles.DFULogicalFiles.DFULogicalFile[j].Name,
+            isSuperFile:
+              childSubfiles.DFULogicalFiles.DFULogicalFile[j].isSuperfile,
+            Modified: childSubfiles.DFULogicalFiles.DFULogicalFile[j].Modified,
+          });
+        }
+      }
+    }
+
+    return output;
+  } catch (err) {
+    console.log("ERROR GETTING SUPERFILE SUBFILES------------------");
+    console.log(err);
+    console.log("----------------------------------------");
+  }
+};
+
+//get most recent sub file and sub file count (logical files only)
+exports.getRecentSubFile = async (clusterId, fileName) => {
+  try {
+    let mostRecentSubFile = "";
+    let recentDate = new Date("1970-01-01");
+    let logicalFileCount = 0;
+
+    //get all subfiles
+    const subfiles = await exports.getAllSubFiles(clusterId, fileName);
+    //check for child superfiles
+    if (subfiles && subfiles.length > 0) {
+      for (let i = 0; i < subfiles.length; i++) {
+        //if superfile is found, get it's subfiles
+        if (subfiles[i].isSuperFile) {
+          let childSubfiles = await exports.getAllSubFiles(
+            clusterId,
+            subfiles[i].fileName
+          );
+          //add child files to list to be iterated through
+          for (let j = 0; j < childSubfiles.length; j++) {
+            subfiles.push({
+              fileName: childSubfiles[j].fileName,
+              isSuperFile: childSubfiles[j].isSuperFile,
+              Modified: childSubfiles[j].Modified,
+            });
+          }
+        }
+      }
+
+      //now that all subfiles are found, loop through and find most recently modified
+
+      let tempDate;
+
+      for (let i = 0; i < subfiles.length; i++) {
+        tempDate = new Date(subfiles[i].Modified);
+        if (
+          recentDate.getTime() < tempDate.getTime() &&
+          !subfiles[i].isSuperFile
+        ) {
+          recentDate = tempDate;
+          mostRecentSubFile = subfiles[i].fileName;
+          logicalFileCount++;
+        }
+      }
+    }
+    return {
+      recentSubFile: mostRecentSubFile,
+      recentDate: recentDate,
+      subfileCount: logicalFileCount,
+    };
+  } catch (err) {
+    console.log("ERROR GETTING MOST RECENT SUBFILE-----------------");
     console.log(err);
     console.log("----------------------------------------");
   }

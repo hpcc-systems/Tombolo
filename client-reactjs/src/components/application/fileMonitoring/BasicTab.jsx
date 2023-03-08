@@ -112,7 +112,7 @@ function FileMonitoringBasicTab({
 
   //When file is selected -------------------------------------------------------------
   const handleFileSelect = async (selectedSuggestion) => {
-    console.log(selectedSuggestion);
+    // console.log(selectedSuggestion);
     // setSelectedFile(selectedSuggestion);
     try {
       const url =

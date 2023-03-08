@@ -4,7 +4,7 @@ import Text from '../../common/Text';
 import { authHeader } from '../../common/AuthHeader.js';
 import { Modal, Cascader, message } from 'antd';
 
-function FileExplorerModal({ open, onCancel, onDone, cluster, style }) {
+function FileExplorerModal({ open, onCancel, onDone, fileType, cluster, style }) {
   const [options, setOptions] = useState([]);
   const [selectedLogicalFile, setSelectedLogicalFile] = useState('');
 
@@ -17,7 +17,12 @@ function FileExplorerModal({ open, onCancel, onDone, cluster, style }) {
   //Get logical file /directory
   const getLogicalFile = async (scope) => {
     try {
-      const url = `/api/file/read/browseLogicalFile/${cluster}/${scope}`;
+      let url = '';
+      if (fileType == 'superfile') {
+        url = `/api/file/read/browseSuperFile/${cluster}/${scope}`;
+      } else {
+        url = `/api/file/read/browseLogicalFile/${cluster}/${scope}`;
+      }
       const options = {
         method: 'GET',
         headers: authHeader(),
@@ -28,6 +33,7 @@ function FileExplorerModal({ open, onCancel, onDone, cluster, style }) {
         throw new Error('Unable to search file from selected cluster');
       }
       const data = await response.json();
+
       return data;
     } catch (err) {
       message.error(err.message);
@@ -36,7 +42,14 @@ function FileExplorerModal({ open, onCancel, onDone, cluster, style }) {
 
   //Load initial data
   const loadInitialData = async () => {
-    const initialData = await getLogicalFile('$');
+    let initialData;
+
+    if (fileType == 'superfile') {
+      initialData = await getLogicalFile('*');
+    } else {
+      initialData = await getLogicalFile('$');
+    }
+
     setOptions(initialData);
   };
 
@@ -55,11 +68,18 @@ function FileExplorerModal({ open, onCancel, onDone, cluster, style }) {
     setOptions([...options]);
   };
 
+  let greeting;
+  if (fileType == 'superfile') {
+    greeting = 'Browse Super Files';
+  } else {
+    greeting = 'Browse Logical Files';
+  }
+
   return (
     <>
       <Modal
         style={style}
-        title={<Text>Browse Logical Files</Text>}
+        title={<Text>{greeting}</Text>}
         visible={open}
         onCancel={onCancel}
         onOk={() => onDone(selectedLogicalFile)}
@@ -70,11 +90,21 @@ function FileExplorerModal({ open, onCancel, onDone, cluster, style }) {
           options={options}
           loadData={loadData}
           onChange={(value) => {
-            const selectedFile = value[value.length - 1];
+            let selectedFile;
+            if (fileType == 'superfile') {
+              selectedFile = value.join('::');
+            } else {
+              selectedFile = value[value.length - 1];
+            }
             setSelectedLogicalFile(selectedFile);
           }}
           displayRender={(label, selectedOptions) => {
-            const selectedFile = selectedOptions[selectedOptions.length - 1]?.value;
+            let selectedFile;
+            if (fileType == 'superfile') {
+              selectedFile = selectedOptions[selectedOptions.length - 1]?.fullName;
+            } else {
+              selectedFile = selectedOptions[selectedOptions.length - 1]?.value;
+            }
             return selectedFile;
           }}
         />

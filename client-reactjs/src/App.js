@@ -35,6 +35,9 @@ const ManualJobDetail = React.lazy(() => import('./components/application/Jobs/M
 const Actions = React.lazy(() => import('./components/application/actions/actions'));
 const AddJobsForm = React.lazy(() => import('./components/application/Jobs/AddjobsForm/AddJobsForm'));
 const FileMonitoring = React.lazy(() => import('./components/application/fileMonitoring/FileMonitoring'));
+const SuperFileMonitoring = React.lazy(() =>
+  import('./components/application/superfileMonitoring/SuperFileMonitoring')
+);
 const Notifications = React.lazy(() => import('./components/application/notifications/Notifications'));
 const ClusterMonitoring = React.lazy(() => import('./components/application/clusterMonitoring'));
 
@@ -173,6 +176,7 @@ class App extends React.Component {
                         <PrivateRoute path="/:applicationId/assets/file/:assetId?" component={FileDetailsForm} />
                         <PrivateRoute path="/:applicationId/assets/fileTemplate/:assetId?" component={FileTemplate} />
                         <PrivateRoute path="/:applicationId/fileMonitoring" component={FileMonitoring} />
+                        <PrivateRoute path="/:applicationId/superfileMonitoring" component={SuperFileMonitoring} />
                         <PrivateRoute path="/:applicationId/ClusterMonitoring" component={ClusterMonitoring} />
                         <PrivateRoute path="/:applicationId/notifications" component={Notifications} />
                         <PrivateRoute path="/:applicationId/assets/add-jobs" component={AddJobsForm} />
