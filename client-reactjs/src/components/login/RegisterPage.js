@@ -101,11 +101,29 @@ const RegisterPage = () => {
         <Form.Item
           label="Email"
           name="email"
+          validateTrigger={['onChange', 'onBlur']}
+          type="email"
           rules={[
-            { required: true, message: 'Please provide your email!' },
-            { type: 'email', message: 'The input is not valid E-mail!' },
+            {
+              required: true,
+              whitespace: true,
+              type: 'email',
+              message: 'Invalid e-mail address.',
+            },
           ]}>
-          <Input type="email" placeholder="Email" />
+          <Input
+            type="email"
+            placeholder="Email"
+            validateTrigger={['onChange', 'onBlur']}
+            rules={[
+              {
+                required: true,
+                whitespace: true,
+                type: 'email',
+                message: 'Invalid e-mail address.',
+              },
+            ]}
+          />
         </Form.Item>
 
         <Form.Item
