@@ -73,6 +73,7 @@ function NotificationTab({
                         {
                           required: true,
                           whitespace: true,
+                          type: 'email',
                           message: 'Invalid e-mail address.',
                         },
                       ]}

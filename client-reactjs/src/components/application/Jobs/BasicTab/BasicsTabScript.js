@@ -62,11 +62,14 @@ function BasicsTabScript({ enableEdit, editingAllowed, onChange, localState, inT
             {...threeColformItemLayout}
             label={<Text>Contact E-mail</Text>}
             name="contact"
-            validateTrigger="onBlur"
+            validateTrigger={['onChange', 'onBlur']}
+            type="email"
             rules={[
               {
+                required: true,
+                whitespace: true,
                 type: 'email',
-                message: 'Please enter a valid email address',
+                message: 'Invalid e-mail address.',
               },
             ]}>
             {enableEdit ? (

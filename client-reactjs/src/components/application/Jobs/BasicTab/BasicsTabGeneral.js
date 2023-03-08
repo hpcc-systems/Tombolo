@@ -403,15 +403,33 @@ function BasicsTabGeneral({
             <Form.Item
               name="contact"
               label={<Text text="E-mail" />}
-              validateTrigger="onBlur"
               className={enableEdit ? null : 'read-only-input'}
-              rules={[{ type: 'email', message: <Text text="Please enter a valid email address" /> }]}>
+              validateTrigger={['onChange', 'onBlur']}
+              type="email"
+              rules={[
+                {
+                  required: true,
+                  whitespace: true,
+                  type: 'email',
+                  message: 'Invalid e-mail address.',
+                },
+              ]}>
               <Input
                 id="job_bkp_svc"
                 onChange={onChange}
                 placeholder={enableEdit ? i18n('Contact') : i18n('Contact is not provided')}
                 value={localState.contact}
                 disabled={!editingAllowed}
+                validateTrigger={['onChange', 'onBlur']}
+                type="email"
+                rules={[
+                  {
+                    required: true,
+                    whitespace: true,
+                    type: 'email',
+                    message: 'Invalid e-mail address.',
+                  },
+                ]}
               />
             </Form.Item>
 

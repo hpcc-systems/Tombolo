@@ -503,12 +503,35 @@ class Consumers extends Component {
                 />
               </Form.Item>
 
-              <Form.Item label={<Text text="E-mail" />} name="contact_email" required>
+              <Form.Item
+                label={<Text text="E-mail" />}
+                name="contact_email"
+                validateTrigger={['onChange', 'onBlur']}
+                type="email"
+                rules={[
+                  {
+                    required: true,
+                    whitespace: true,
+                    type: 'email',
+                    message: 'Invalid e-mail address.',
+                  },
+                ]}
+                required>
                 <Input
                   id="consumer_contact_email"
                   name="contact_email"
                   onChange={this.onChange}
                   value={this.state.newConsumer.contact_email}
+                  validateTrigger={['onChange', 'onBlur']}
+                  type="email"
+                  rules={[
+                    {
+                      required: true,
+                      whitespace: true,
+                      type: 'email',
+                      message: 'Invalid e-mail address.',
+                    },
+                  ]}
                 />
               </Form.Item>
 
