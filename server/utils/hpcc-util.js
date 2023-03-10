@@ -623,7 +623,7 @@ exports.getCluster = (clusterId) => {
       } else if (reached && statusCode === 403) {
         reject("Invalid cluster credentials");
       } else {
-        reject("Cluster not reachable...");
+        reject(`${cluster.name} is  not reachable...`);
       }
     } catch (err) {
       console.log("Error occured while getting Cluster info....." + err);
@@ -679,12 +679,12 @@ exports.updateCommonData = (objArray, fields) => {
 
 exports.getWorkunitsService = async (clusterId) => {
   const cluster = await module.exports.getCluster(clusterId);
-  const clusterAuth = module.exports.getClusterAuth(cluster);
+  const { hash, username } = cluster;
 
   const connectionSettings = {
     baseUrl: cluster.thor_host + ":" + cluster.thor_port,
-    userID: clusterAuth ? clusterAuth.user : "",
-    password: clusterAuth ? clusterAuth.password : "",
+    userID: username ? username : "",
+    password: hash ? hash : "",
   };
 
   return new hpccJSComms.WorkunitsService(connectionSettings);

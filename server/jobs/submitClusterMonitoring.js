@@ -228,7 +228,7 @@ const { log } = require("./workerUtils")(parentPort);
 
     // Reset notified flag
   } catch (err) {
-    log("error", "Error in File Monitoring Poller", err);
+    log("error", "Error in Cluster Monitoring Poller", err);
   } finally {
     if (parentPort) parentPort.postMessage("done");
     else process.exit(0);

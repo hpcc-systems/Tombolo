@@ -1027,3 +1027,7 @@ div.tooltip {
 .cluster_monitoring_table .ant-table-tbody > tr.monitoring_table_paused_monitorings:hover > td {
   background: #ffd591;
 }
+
+.anticon-loading * {
+  color: #1890ff;
+}
