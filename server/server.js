@@ -71,7 +71,7 @@ const updateNotifications = require("./routes/notifications/update");
 const notifications = require("./routes/notifications/read");
 const clustermonitoring = require("./routes/clustermonitoring/read");
 const jobmonitoring = require("./routes/jobmonitoring/read");
-
+const superfileMonitoring = require("./routes/superfilemonitoring/read");
 
 app.use("/api/user", userRead);
 app.use("/api/updateNotification", updateNotifications);
@@ -99,6 +99,7 @@ app.use("/api/controlsAndRegulations", regulations);
 app.use("/api/fileTemplate/read", fileTemplateRead);
 app.use("/api/fileMonitoring/read", fileMonitoring);
 app.use("/api/notifications/read", notifications);
+app.use("/api/superfilemonitoring/read", superfileMonitoring);
 app.use("/api/clustermonitoring", clustermonitoring);
 app.use("/api/jobmonitoring", jobmonitoring);
 

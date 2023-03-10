@@ -111,6 +111,68 @@ router.post(
       });
   }
 );
+
+router.post(
+  "/superfilesearch",
+  [
+    body("keyword")
+      .matches(/^[a-zA-Z0-9_. \-:\*\?]*$/)
+      .withMessage("Invalid keyword"),
+  ],
+  function (req, res) {
+    const errors = validationResult(req).formatWith(
+      validatorUtil.errorFormatter
+    );
+    if (!errors.isEmpty()) {
+      return res
+        .status(422)
+        .send({ success: "false", message: "Error occurred during search." });
+    }
+
+    hpccUtil
+      .getCluster(req.body.clusterid)
+      .then(async function (cluster) {
+        let results = [];
+        try {
+          const { fileNamePattern } = req.body;
+
+          let logicalFileName;
+          if (fileNamePattern === "startsWith") {
+            logicalFileName = req.body.keyword + "*";
+          } else if (fileNamePattern === "endsWith") {
+            logicalFileName = "*" + req.body.keyword;
+          } else if (fileNamePattern === "wildCards") {
+            logicalFileName = req.body.keyword;
+          } else {
+            logicalFileName = "*" + req.body.keyword + "*";
+          }
+
+          let superfile = await hpccUtil.getSuperFiles(
+            req.body.clusterid,
+            logicalFileName
+          );
+
+          res.json(superfile);
+        } catch (err) {
+          console.log(err);
+          res.status(500).send({
+            success: "false",
+            message: "Error occured during search.",
+            message: "Search failed. Please check if the cluster is running.",
+          });
+        }
+      })
+      .catch((err) => {
+        console.log("------------------------------------------");
+        console.log("Cluster not reachable", +JSON.stringify(err));
+        console.log("------------------------------------------");
+        res.status(500).send({
+          success: "false",
+          message: "Search failed. Please check if the cluster is running.",
+        });
+      });
+  }
+);
 router.post(
   "/querysearch",
   [

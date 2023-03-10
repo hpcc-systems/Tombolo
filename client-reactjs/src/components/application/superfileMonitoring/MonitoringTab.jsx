@@ -159,7 +159,7 @@ const MonitoringTab = ({
         label="Notify when"
         style={{ width: '50%' }}
         name="notifyCondition"
-        rules={[{ required: true, message: 'Required filed' }]}>
+        rules={[{ required: true, message: 'Required field' }]}>
         <Select
           placeholder="Select one or more"
           mode="multiple"
@@ -173,14 +173,19 @@ const MonitoringTab = ({
       </Form.Item>
 
       {monitoringDetails.monitoringConditions.includes('subFileCountRange') ? (
-        <Form.Item label="Expected Number of Subfiles" style={{ marginBottom: 0 }} required>
+        <Form.Item
+          label="Expected Number of Subfiles"
+          style={{ marginBottom: 0 }}
+          rules={[{ required: true, message: 'Required field' }]}>
           <Form.Item
             style={{ display: 'inline-block', width: 'calc(25% - 12px)', textAlign: 'center' }}
-            name="minimumSubFileCount">
+            name="minimumSubFileCount"
+            rules={[{ required: true, message: 'Required field' }]}>
             <Input
-              placeholder="Min number of files"
+              placeholder="Min"
               value={minNumberOfSubFiles} // TODO- if file size none - will throw error because input type is size
               type="number"
+              rules={[{ required: true, message: 'Required field' }]}
               onChange={(e) => {
                 onExpectedSubFileCountChange('min', e.target.value);
               }}
@@ -190,11 +195,13 @@ const MonitoringTab = ({
           <span style={{ display: 'inline-block', width: '24px', lineHeight: '32px', textAlign: 'center' }}>-</span>
           <Form.Item
             style={{ display: 'inline-block', width: 'calc(25% - 12px)', textAlign: 'center' }}
-            name="maximumSubFileCount">
+            name="maximumSubFileCount"
+            rules={[{ required: true, message: 'Required field' }]}>
             <Input
-              placeholder="Max number of files"
+              placeholder="Max"
               value={maxNumberOfSubFiles}
               type="number"
+              rules={[{ required: true, message: 'Required filed' }]}
               onChange={(e) => {
                 onExpectedSubFileCountChange('max', e.target.value);
               }}
@@ -204,13 +211,21 @@ const MonitoringTab = ({
       ) : null}
 
       {monitoringDetails.monitoringConditions.includes('fileSizeRange') ? (
-        <Form.Item label="Expected File Size (in KB)" style={{ marginBottom: 0 }} required>
-          <Form.Item style={{ display: 'inline-block', width: 'calc(25% - 12px)' }} name="minimumFileSize">
+        <Form.Item
+          label="Expected File Size (in KB)"
+          style={{ marginBottom: 0 }}
+          rules={[{ required: true, message: 'Required field' }]}>
+          <Form.Item
+            required
+            style={{ display: 'inline-block', width: 'calc(25% - 12px)' }}
+            rules={[{ required: true, message: 'Required field' }]}
+            name="minimumFileSize">
             <Input
-              placeholder="Min size"
+              placeholder="Min"
               value={minExpectedFileSize} // TODO- if file size none - will throw error because input type is size
               type="number"
               suffix="KB"
+              rules={[{ required: true, message: 'Required filed' }]}
               onChange={(e) => {
                 onExpectedFileSizeChange('min', e.target.value);
               }}
@@ -218,12 +233,17 @@ const MonitoringTab = ({
           </Form.Item>
 
           <span style={{ display: 'inline-block', width: '24px', lineHeight: '32px', textAlign: 'center' }}>-</span>
-          <Form.Item style={{ display: 'inline-block', width: 'calc(25% - 12px)' }} name="maximumFileSize">
+          <Form.Item
+            required
+            style={{ display: 'inline-block', width: 'calc(25% - 12px)' }}
+            rules={[{ required: true, message: 'Required field' }]}
+            name="maximumFileSize">
             <Input
-              placeholder="Max size"
+              placeholder="Max"
               value={maxExpectedFileSize}
               type="number"
               suffix="KB"
+              rules={[{ required: true, message: 'Required filed' }]}
               onChange={(e) => {
                 onExpectedFileSizeChange('max', e.target.value);
               }}
@@ -234,13 +254,14 @@ const MonitoringTab = ({
 
       {monitoringDetails.monitoringConditions.includes('updateInterval') && !selectedFileMonitoring ? (
         <>
-          <Form.Item name="updateInterval" required label="How often is the superfile expected to be updated?">
+          <Form.Item name="updateInterval" required label="Days Expected between updates">
             <Input
               type="number"
-              suffix="Days Between Updates"
               placeholder={0}
+              suffix="Days Between Updates"
               style={{ display: 'flex', width: 'calc(50% - 12px)', textAlign: 'center' }}
               value={updateInterval}
+              rules={[{ required: true, message: 'Required filed' }]}
               onChange={(e) => {
                 setUpdateInterval(e.target.value);
               }}></Input>
@@ -248,21 +269,20 @@ const MonitoringTab = ({
 
           <Form.Item
             name="updateIntervalInitialDate"
-            label="When was the last date the superfile was supposed to be modified?"
+            label="Last Modified Date"
             rules={[{ required: true, message: 'Please Select a date' }]}>
             <DatePicker
               value={updateIntervalInitialDate}
               onChange={(value) => setUpdateIntervalInitialDate(value)}></DatePicker>
           </Form.Item>
 
-          <Form.Item
-            name="updateIntervalDays"
-            label="What Days of the week is the superfile expected to be updated on?">
+          <Form.Item name="updateIntervalDays" label="Update Days">
             <Select
               placeholder="Select one or more"
               mode="multiple"
               options={daysOfTheWeek}
               value={updateIntervalDays}
+              rules={[{ required: true, message: 'Required filed' }]}
               onChange={(value) => setUpdateIntervalDays({ value })}></Select>
           </Form.Item>
         </>
@@ -270,26 +290,30 @@ const MonitoringTab = ({
 
       {monitoringDetails.monitoringConditions.includes('updateInterval') && selectedFileMonitoring ? (
         <>
-          <Form.Item name="updateInterval" required label="How often is the superfile expected to be updated?">
+          <Form.Item
+            name="updateInterval"
+            required
+            label="Days Expected between updates"
+            rules={[{ required: true, message: 'Required field' }]}>
             <Input
               type="number"
               suffix="Days Between Updates"
               placeholder={0}
               style={{ display: 'flex', width: 'calc(50% - 12px)', textAlign: 'center' }}
               value={updateInterval}
+              rules={[{ required: true, message: 'Required filed' }]}
               onChange={(e) => {
                 setUpdateInterval(e.target.value);
               }}></Input>
           </Form.Item>
 
-          <Form.Item
-            name="updateIntervalDays"
-            label="What Days of the week is the superfile expected to be updated on?">
+          <Form.Item name="updateIntervalDays" label="Update Days">
             <Select
               placeholder="Select one or more"
               mode="multiple"
               options={daysOfTheWeek}
               value={updateIntervalDays}
+              style={{ display: 'inline-block', width: 'calc(50% - 12px)', textAlign: 'center' }}
               onChange={(value) => setUpdateIntervalDays({ value })}></Select>
           </Form.Item>
         </>

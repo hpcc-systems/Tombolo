@@ -72,11 +72,32 @@ class ForgotPassword extends React.Component {
           <Form.Item
             label="E-mail"
             name="email"
+            validateTrigger={['onChange', 'onBlur']}
+            type="email"
             rules={[
-              { required: true, message: 'Please provide your email!' },
-              { type: 'email', message: 'The input is not valid E-mail!' },
+              {
+                required: true,
+                whitespace: true,
+                type: 'email',
+                message: 'Invalid e-mail address.',
+              },
             ]}>
-            <Input value={email} name="email" onChange={this.handleChange} placeholder="Email" />
+            <Input
+              value={email}
+              name="email"
+              onChange={this.handleChange}
+              validateTrigger={['onChange', 'onBlur']}
+              type="email"
+              rules={[
+                {
+                  required: true,
+                  whitespace: true,
+                  type: 'email',
+                  message: 'Invalid e-mail address.',
+                },
+              ]}
+              placeholder="Email"
+            />
           </Form.Item>
 
           {this.state.success ? (

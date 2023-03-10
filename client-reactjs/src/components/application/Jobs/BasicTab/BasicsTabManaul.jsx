@@ -118,10 +118,32 @@ function BasicsTabManul(props) {
       <Form.Item
         label={<Text text="Contact E-mail" />}
         name="contact"
-        validateTrigger="onBlur"
         onFocus={clearError}
-        rules={[{ type: 'email', required: true, message: <Text text="Please enter a valid email address" /> }]}>
-        <Input onChange={onChange} disabled={!editingAllowed} className={enableEdit ? null : 'read-only-input'} />
+        validateTrigger={['onChange', 'onBlur']}
+        type="email"
+        rules={[
+          {
+            required: true,
+            whitespace: true,
+            type: 'email',
+            message: 'Invalid e-mail address.',
+          },
+        ]}>
+        <Input
+          onChange={onChange}
+          disabled={!editingAllowed}
+          validateTrigger={['onChange', 'onBlur']}
+          type="email"
+          rules={[
+            {
+              required: true,
+              whitespace: true,
+              type: 'email',
+              message: 'Invalid e-mail address.',
+            },
+          ]}
+          className={enableEdit ? null : 'read-only-input'}
+        />
       </Form.Item>
     </>
   );

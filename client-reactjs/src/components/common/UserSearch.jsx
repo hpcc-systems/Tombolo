@@ -71,14 +71,15 @@ function UserSearch({ layout, noLabelLayout, enableEdit, showDetails }) {
                 required={enableEdit}
                 label={index === 0 ? <Text>Recipients</Text> : ''}
                 labelAlign="left"
-                validateTrigger={'onBlur'}
                 {...(index === 0 ? layout : noLabelLayout)}
+                validateTrigger={['onChange', 'onBlur']}
+                type="email"
                 rules={[
                   {
-                    type: 'email',
                     required: true,
                     whitespace: true,
-                    message: 'Please enter a valid email address',
+                    type: 'email',
+                    message: 'Invalid e-mail address.',
                   },
                 ]}>
                 <Row gutter={[8, 8]} style={{ marginBottom: '8px' }}>
@@ -86,13 +87,14 @@ function UserSearch({ layout, noLabelLayout, enableEdit, showDetails }) {
                     <Form.Item
                       noStyle
                       {...field}
-                      validateTrigger={'onBlur'}
+                      validateTrigger={['onChange', 'onBlur']}
+                      type="email"
                       rules={[
                         {
-                          type: 'email',
                           required: true,
                           whitespace: true,
-                          message: 'Please enter a valid email address',
+                          type: 'email',
+                          message: 'Invalid e-mail address.',
                         },
                       ]}>
                       {enableEdit ? (
