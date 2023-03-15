@@ -40,6 +40,7 @@ const SuperFileMonitoring = React.lazy(() =>
 );
 const Notifications = React.lazy(() => import('./components/application/notifications/Notifications'));
 const ClusterMonitoring = React.lazy(() => import('./components/application/clusterMonitoring'));
+const Dashboard = React.lazy(() => import('./components/application/Dashboard/Dashboard'));
 
 // Admin pages
 const Users = React.lazy(() => import('./components/admin/Users'));
@@ -118,6 +119,8 @@ class App extends React.Component {
 
     const getAssets = () => {
       const applicationId = this.props.application?.applicationId;
+      console.log('getting assets');
+      console.log(applicationId);
       if (applicationId) {
         return <Redirect to={`/${applicationId}/assets`} />;
       } else {
@@ -179,6 +182,7 @@ class App extends React.Component {
                         <PrivateRoute path="/:applicationId/superfileMonitoring" component={SuperFileMonitoring} />
                         <PrivateRoute path="/:applicationId/ClusterMonitoring" component={ClusterMonitoring} />
                         <PrivateRoute path="/:applicationId/notifications" component={Notifications} />
+                        <PrivateRoute path="/:applicationId/dashboard" component={Dashboard} />
                         <PrivateRoute path="/:applicationId/assets/add-jobs" component={AddJobsForm} />
                         <PrivateRoute path="/:applicationId/assets/job/:assetId?" component={JobDetailsForm} />
                         <PrivateRoute path="/:applicationId/assets/index/:assetId?" component={IndexDetailsForm} />

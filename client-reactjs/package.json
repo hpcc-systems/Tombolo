@@ -23,6 +23,7 @@
     "papaparse": "^5.2.0",
     "re-resizable": "^6.9.1",
     "react": "^16.14.0",
+    "react-csv": "^2.2.2",
     "react-dom": "^16.14.0",
     "react-i18next": "^11.18.4",
     "react-markdown": "^5.0.3",
