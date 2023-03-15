@@ -90,7 +90,7 @@ function ClusterMonitoringBasicTab({
         </Select>
       </Form.Item>
 
-      {selectedCluster && monitoringScope === 'individualJOb' ? (
+      {selectedCluster && monitoringScope === 'individualJob' ? (
         <Form.Item label="Job name" name="jobName" rules={[{ required: true, message: 'Required filed' }]}>
           <AutoComplete
             options={jobs}
