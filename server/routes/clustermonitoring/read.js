@@ -11,45 +11,59 @@ const ClusterMonitoring = models.clusterMonitoring;
 const router = express.Router();
 
 // Create Cluster Monitoring
-router.post('/', [
+router.post(
+  "/",
+  [
     //Validation middleware
     body("name").isString().withMessage("Invalid cluster monitoring name"),
     body("application_id").isUUID(4).withMessage("Invalid application id"),
     body("cluster_id").isUUID(4).withMessage("Invalid cluster id"),
-    body("cron").isString().withMessage("Invalid cron expression"),
-    body('isActive').isBoolean().withMessage("Invalid is active flag"),
-    body('metaData').isObject().withMessage("Invalid cluster monitoring meta data")
-], async(req, res) =>{
-    try{
-        //Check for errors - return if exists
-        const errors = validationResult(req).formatWith(
-        validatorUtil.errorFormatter
+    body("cron").custom((value) => {
+      const valArray = value.split(" ");
+      if (valArray.length > 5) {
+        throw new Error(
+          `Expected number of cron parts 5, received ${valArray.length}`
         );
+      } else {
+        return Promise.resolve("Good to go");
+      }
+    }),
+    body("isActive").isBoolean().withMessage("Invalid is active flag"),
+    body("metaData")
+      .isObject()
+      .withMessage("Invalid cluster monitoring meta data"),
+  ],
+  async (req, res) => {
+    try {
+      //Check for errors - return if exists
+      const errors = validationResult(req).formatWith(
+        validatorUtil.errorFormatter
+      );
 
-        if (!errors.isEmpty()){
-            logger.verbose(errors);
-            return res.status(422).json({ success: false, errors: errors.array() });
-        }
-         
-        //create
-        const clusterMonitoring = await ClusterMonitoring.create(req.body);
-        res.status(200).send(clusterMonitoring);
+      if (!errors.isEmpty()) {
+        logger.verbose(errors);
+        return res.status(422).json({ success: false, errors: errors.array() });
+      }
 
-        //Add job to bree- if start monitoring checked
-        const {id, name, cron } = clusterMonitoring;
-        if(req.body.isActive){
-             JobScheduler.createClusterMonitoringBreeJob({
-               clusterMonitoring_id: id,
-               name,
-               cron,
-             });
-        }
-       
-    }catch(err){
-        logger.error(err);
-        res.status(503).send({success: false, message: "Failed to fetch"})
+      //create
+      const clusterMonitoring = await ClusterMonitoring.create(req.body);
+      res.status(200).send(clusterMonitoring);
+
+      //Add job to bree- if start monitoring checked
+      const { id, name, cron } = clusterMonitoring;
+      if (req.body.isActive) {
+        JobScheduler.createClusterMonitoringBreeJob({
+          clusterMonitoring_id: id,
+          name,
+          cron,
+        });
+      }
+    } catch (err) {
+      logger.error(err);
+      res.status(503).send({ success: false, message: "Failed to fetch" });
     }
-});
+  }
+);
 
 // Get all cluster monitoring
 router.get("/all/:application_id", [
@@ -177,7 +191,17 @@ router.put(
     body("name").isString().withMessage("Invalid cluster monitoring name"),
     body("application_id").isUUID(4).withMessage("Invalid application id"),
     body("cluster_id").isUUID(4).withMessage("Invalid cluster id"),
-    body("cron").isString().withMessage("Invalid cron expression"),
+    body("cron").custom(value =>{
+      const valArray = value.split(" ");
+      if(valArray.length > 5){
+        throw new Error(
+          `Expected number of cron parts 5, received ${valArray.length}`
+        );
+      }else{
+        return Promise.resolve("Good to go")
+      }
+      
+    }),
     body("isActive").isBoolean().withMessage("Invalid is active flag"),
     body("metaData")
       .isObject()

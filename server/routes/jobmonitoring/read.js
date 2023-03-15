@@ -18,11 +18,18 @@ router.post(
     body("name").isString().withMessage("Invalid job monitoring name"),
     body("application_id").isUUID(4).withMessage("Invalid application id"),
     body("cluster_id").isUUID(4).withMessage("Invalid cluster id"),
-    body("cron").isString().withMessage("Invalid cron expression"),
+    body("cron").custom((value) => {
+      const valArray = value.split(" ");
+      if (valArray.length > 5) {
+        throw new Error(
+          `Expected number of cron parts 5, received ${valArray.length}`
+        );
+      } else {
+        return Promise.resolve("Good to go");
+      }
+    }),
     body("isActive").isBoolean().withMessage("Invalid is active flag"),
-    body("metaData")
-      .isObject()
-      .withMessage("Invalid job monitoring meta data"),
+    body("metaData").isObject().withMessage("Invalid job monitoring meta data"),
   ],
   async (req, res) => {
     try {
@@ -42,7 +49,7 @@ router.post(
 
       //Add job to bree- if start monitoring checked
       if (req.body.isActive) {
-          const { id, cron } = jobMonitoring;
+        const { id, cron } = jobMonitoring;
 
         JobScheduler.createJobMonitoringBreeJob({
           jobMonitoring_id: id,
@@ -51,7 +58,9 @@ router.post(
       }
     } catch (err) {
       logger.error(err);
-      res.status(503).send({ success: false, message: "Failed to create job monitoring" });
+      res
+        .status(503)
+        .send({ success: false, message: "Failed to create job monitoring" });
     }
   }
 );
@@ -193,11 +202,18 @@ router.put(
     body("name").isString().withMessage("Invalid job monitoring name"),
     body("application_id").isUUID(4).withMessage("Invalid application id"),
     body("cluster_id").isUUID(4).withMessage("Invalid cluster id"),
-    body("cron").isString().withMessage("Invalid cron expression"),
+    body("cron").custom((value) => {
+      const valArray = value.split(" ");
+      if (valArray.length > 5) {
+        throw new Error(
+          `Expected number of cron parts 5, received ${valArray.length}`
+        );
+      } else {
+        return Promise.resolve("Good to go");
+      }
+    }),
     body("isActive").isBoolean().withMessage("Invalid is active flag"),
-    body("metaData")
-      .isObject()
-      .withMessage("Invalid job monitoring meta data"),
+    body("metaData").isObject().withMessage("Invalid job monitoring meta data"),
   ],
   async (req, res) => {
     try {
@@ -253,7 +269,6 @@ router.put(
       }
 
       res.status(200).send({ updated });
-
     } catch (err) {
       logger.error(err);
       res.status(503).json({ success: false, message: "Failed to update" });

@@ -50,7 +50,6 @@ function ClusterMonitoringTab({
 
       <Form.Item
         label="Cron (How often to monitor)"
-        style={{ width: '50%' }}
         name="cron"
         rules={[
           { required: true, message: 'Required field' },
@@ -58,7 +57,13 @@ function ClusterMonitoringTab({
             validator: async (_, cron) => {
               if (cron) {
                 try {
-                  cronstrue.toString(cron);
+                  const cronInArray = cron.split(' ');
+                  if (cronInArray.length > 5) {
+                    setCornExplainer({ valid: true, message: `` });
+                    return Promise.reject('Cron expression has more than 5 parts');
+                  } else {
+                    cronstrue.toString(cron);
+                  }
                 } catch (err) {
                   return Promise.reject(err);
                 }

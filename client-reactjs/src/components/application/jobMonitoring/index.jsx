@@ -55,7 +55,7 @@ function JobMonitoring() {
       // await form.validateFields(); // if errs will be caught by catch block
       const payload = form.getFieldsValue();
       payload.app_id = applicationId;
-      form.validateFields();
+      await form.validateFields();
       await saveJobMonitoring(payload);
     } catch (err) {
       handleError(err);
