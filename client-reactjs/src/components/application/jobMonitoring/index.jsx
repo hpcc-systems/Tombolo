@@ -3,18 +3,18 @@ import React, { useEffect, useState } from 'react';
 import { useSelector } from 'react-redux';
 import { Tooltip, Button, message, Form, Tabs, Modal } from 'antd';
 
-import ClusterMonitoringTable from './ClusterMonitoringTable';
+import JobMonitoringTable from './JobMonitoringTable';
 import BreadCrumbs from '../../common/BreadCrumbs';
 import Text from '../../common/Text';
-import ClusterMonitoringBasicTab from './ClusterMonitoringBasicTab';
-import ClusterMonitoringTab from './ClusterMonitoringTab';
-import ClusterMonitoringNotificationTab from './ClusterMonitoringNotificationTab';
+import JobMonitoringBasicTab from './JobMonitoringBasicTab';
+import JobMonitoringTab from './JobMonitoringTab';
+import JobMonitoringNotificationTab from './JobMonitoringNotificationTab';
 import { authHeader, handleError } from '../../common/AuthHeader.js';
 
 //Constants
 const { TabPane } = Tabs;
 
-function ClusterMonitoring() {
+function JobMonitoring() {
   //Redux
   const {
     clusters,
@@ -22,21 +22,19 @@ function ClusterMonitoring() {
   } = useSelector((state) => state.applicationReducer);
 
   //Local State
-  const [clusterMonitorings, setClusterMonitorings] = useState([]);
+  const [jobMonitorings, setJobMonitorings] = useState([]);
   const [form] = Form.useForm();
   const [visible, setVisible] = useState(false);
   const [activeTab, setActiveTab] = useState('1');
   const [selectedCluster, setSelectedCluster] = useState(null);
-  const [engines, setEngines] = useState([]);
-  const [selectedEngines, setSelectedEngines] = useState([]);
-  const [fetchingEngines, setFetchingEngines] = useState(false);
   const [notifyConditions, setNotifyConditions] = useState([]);
   const [selectedMonitoring, setSelectedMonitoring] = useState(null);
   const [notificationDetails, setNotificationDetails] = useState({});
+  const [monitoringScope, setMonitoringScope] = useState(null);
 
   //When component loads get all file monitoring
   useEffect(() => {
-    if (applicationId) getClusterMonitorings(applicationId);
+    if (applicationId) getJobMonitorings(applicationId);
   }, [applicationId]);
 
   // When selected Monitoring is not null, pass selected monitoring data to form instance
@@ -45,11 +43,6 @@ function ClusterMonitoring() {
 
     form.setFieldsValue(selectedMonitoring);
   }, [selectedMonitoring]);
-
-  //When submit btn is clicked
-  const handleFinish = (values) => {
-    console.log('Success:', values);
-  };
 
   // Show modal func
   const showModal = () => {
@@ -63,69 +56,16 @@ function ClusterMonitoring() {
       const payload = form.getFieldsValue();
       payload.app_id = applicationId;
       await form.validateFields();
-      await saveClusterMonitoring(payload);
+      await saveJobMonitoring(payload);
     } catch (err) {
       handleError(err);
     }
   };
 
-  //Cancel / close modal
-  const handleCancel = () => {
-    form.resetFields();
-    setSelectedMonitoring(null);
-    setVisible(false);
-
-    setActiveTab('1');
-    setSelectedCluster(null);
-    setEngines([]);
-    setSelectedEngines([]);
-    setNotifyConditions([]);
-    setNotificationDetails({});
-  };
-
-  //Function to get all cluster monitoring
-  const getClusterMonitorings = async (applicationId) => {
+  const saveJobMonitoring = async (formData) => {
     try {
-      const payload = {
-        method: 'GET',
-        header: authHeader(),
-      };
-
-      const response = await fetch(`/api/clustermonitoring/all/${applicationId}`, payload);
-      if (!response.ok) handleError(response);
-
-      const data = await response.json();
-      if (data) {
-        setClusterMonitorings(data);
-      }
-    } catch (err) {
-      console.log(err);
-      message.error('Failed to fetch cluster monitoring');
-    }
-  };
-
-  const saveClusterMonitoring = async (formData) => {
-    try {
-      const { monitoring_engines, engineSizeLimit, notificationChannels, emails, msTeamsGroups, notifyCondition } =
+      const { notificationChannels, emails, msTeamsGroups, notificationConditions, jobName, monitoringScope } =
         formData;
-
-      const monitoringConditions = {};
-
-      if (engineSizeLimit) {
-        const engineSizeMonitoringDetails = [];
-
-        for (let key in engineSizeLimit) {
-          const details = {
-            engine: key.split('engineLimit-')[1],
-            maxSize: engineSizeLimit[key],
-            maxSizeExceeded: false,
-            notified: [],
-          };
-
-          engineSizeMonitoringDetails.push(details);
-        }
-        monitoringConditions.monitorEngineSize = engineSizeMonitoringDetails;
-      }
 
       const notifications = [];
       if (notificationChannels.includes('eMail')) {
@@ -138,24 +78,18 @@ function ClusterMonitoring() {
 
       const metaData = {
         last_monitored: null,
-        monitoring_engines,
-        monitoringConditions,
         notifications,
-        notifyCondition,
+        notificationConditions,
+        jobName,
+        monitoringScope,
       };
 
       //Delete since these items are nested inside metaData object
-      const keysToDelete = [
-        'monitoring_engines',
-        'engineSizeLimit',
-        'notificationChannels',
-        'emails',
-        'msTeamsGroups',
-        'notifyCondition',
-      ];
+      const keysToDelete = ['notificationChannels', 'emails', 'msTeamsGroups', 'notifyCondition'];
       for (let key of keysToDelete) {
         delete formData[key];
       }
+
       formData = { ...formData, application_id: applicationId, metaData };
       if (selectedMonitoring) formData.id = selectedMonitoring.id;
 
@@ -165,20 +99,20 @@ function ClusterMonitoring() {
         body: JSON.stringify(formData),
       };
 
-      const response = await fetch(`/api/clustermonitoring/`, payload);
+      const response = await fetch(`/api/jobmonitoring/`, payload);
       if (!response.ok) handleError(response);
 
       const data = await response.json();
       //If editing - no need to add to monitoring list
       if (data && !selectedMonitoring) {
-        setClusterMonitorings((prev) => [...prev, data]);
+        setJobMonitorings((prev) => [...prev, data]);
       }
 
       // If any monitoring updated. update the monitoring list
       // so changes are reflected without refreshing page
       const updatedMonitoringList = [];
       if (selectedMonitoring) {
-        clusterMonitorings.forEach((monitoring) => {
+        jobMonitorings.forEach((monitoring) => {
           if (monitoring.id === selectedMonitoring.id) {
             const newFormData = {
               ...formData,
@@ -190,7 +124,7 @@ function ClusterMonitoring() {
             updatedMonitoringList.push(monitoring);
           }
         });
-        setClusterMonitorings(updatedMonitoringList);
+        setJobMonitorings(updatedMonitoringList);
         setSelectedMonitoring(null);
       }
       handleCancel();
@@ -200,37 +134,42 @@ function ClusterMonitoring() {
     }
   };
 
-  //Handle Cluster change
-  const handleClusterChange = (value) => {
-    setSelectedCluster(value);
-    setEngines([]);
-    form.setFieldsValue({ engine: [] });
-    getExecutionEngines(value);
+  //Cancel / close modal
+  const handleCancel = () => {
+    form.resetFields();
+    setSelectedMonitoring(null);
+    setVisible(false);
+
+    setActiveTab('1');
+    setSelectedCluster(null);
+    setNotifyConditions([]);
+    setNotificationDetails({});
   };
 
-  //Function to get all engines for selected cluster ->  clusterMetaData
-  const getExecutionEngines = async (clusterId) => {
+  //Function to get all cluster monitoring
+  const getJobMonitorings = async (applicationId) => {
     try {
-      setFetchingEngines(true);
-      setEngines([]);
       const payload = {
         method: 'GET',
         header: authHeader(),
       };
 
-      const response = await fetch(`/api/hpcc/read/clusterMetaData?clusterId=${clusterId}`, payload);
+      const response = await fetch(`/api/jobmonitoring/all/${applicationId}`, payload);
       if (!response.ok) handleError(response);
 
-      const { tpLogicalCluster } = await response.json();
-      if (tpLogicalCluster) {
-        setEngines(tpLogicalCluster);
+      const data = await response.json();
+      if (data) {
+        setJobMonitorings(data);
       }
     } catch (err) {
       console.log(err);
-      message.error('Failed to fetch cluster monitoring');
-    } finally {
-      setFetchingEngines(false);
+      message.error('Failed to fetch job monitoring');
     }
+  };
+
+  //Handle Cluster change
+  const handleClusterChange = (value) => {
+    setSelectedCluster(value);
   };
 
   //Modal footer btns -------------------------------------------------------------------------
@@ -275,22 +214,21 @@ function ClusterMonitoring() {
       <BreadCrumbs
         extraContent={
           <Tooltip placement="bottom" title={'Click to add a new Application'} onClick={showModal}>
-            <Button type="primary">{<Text text="Add Cluster Monitoring" />}</Button>
+            <Button type="primary">{<Text text="Add Job Monitoring" />}</Button>
           </Tooltip>
         }
       />
-      <ClusterMonitoringTable
-        clusterMonitorings={clusterMonitorings}
+      <JobMonitoringTable
+        jobMonitorings={jobMonitorings}
         applicationId={applicationId}
-        setClusterMonitorings={setClusterMonitorings}
+        setJobMonitorings={setJobMonitorings}
         setSelectedMonitoring={setSelectedMonitoring}
         setVisible={setVisible}
-        setSelectedCluster={setSelectedCluster}
         setNotifyConditions={setNotifyConditions}
-        setEngines={setEngines}
-        setSelectedEngines={setSelectedEngines}
         notificationDetails={notificationDetails}
         setNotificationDetails={setNotificationDetails}
+        setMonitoringScope={setMonitoringScope}
+        setSelectedCluster={setSelectedCluster}
       />
 
       <Modal
@@ -300,38 +238,32 @@ function ClusterMonitoring() {
         footer={btns[activeTab]}
         destroyOnClose
         maskClosable={false}>
-        <Form
-          form={form}
-          onFinish={handleFinish}
-          layout="vertical"
-          initialValues={{ msTeamsGroups: [''], emails: [''] }}>
+        <Form form={form} layout="vertical" initialValues={{ msTeamsGroups: [''], emails: [''] }}>
           <Tabs
             activeKey={activeTab}
             onTabClick={(record) => {
               setActiveTab(record);
             }}>
             <TabPane tab={<span>Basic</span>} key="1" forceRender>
-              <ClusterMonitoringBasicTab
+              <JobMonitoringBasicTab
                 clusters={clusters}
                 handleClusterChange={handleClusterChange}
                 selectedCluster={selectedCluster}
-                fetchingEngines={fetchingEngines}
-                setSelectedEngines={setSelectedEngines}
-                engines={engines}
+                monitoringScope={monitoringScope}
+                setMonitoringScope={setMonitoringScope}
               />
             </TabPane>
 
             <TabPane tab={<span>Monitoring </span>} key="2" forceRender>
-              <ClusterMonitoringTab
-                clusterMonitorings={clusterMonitorings}
+              <JobMonitoringTab
+                jobMonitorings={jobMonitorings}
                 setNotifyConditions={setNotifyConditions}
-                selectedEngines={selectedEngines}
                 notifyConditions={notifyConditions}
                 selectedMonitoring={selectedMonitoring}
               />
             </TabPane>
             <TabPane tab={<span>Notifications </span>} key="3" forceRender>
-              <ClusterMonitoringNotificationTab
+              <JobMonitoringNotificationTab
                 notificationDetails={notificationDetails}
                 setNotificationDetails={setNotificationDetails}
               />
@@ -343,6 +275,4 @@ function ClusterMonitoring() {
   );
 }
 
-export default ClusterMonitoring;
-
-// 546
+export default JobMonitoring;

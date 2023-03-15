@@ -14,6 +14,16 @@ router.post(
   "/",
   [
     body("application_id").isUUID(4).withMessage("Invalid application id"),
+    body("cron").custom((value) => {
+      const valArray = value.split(" ");
+      if (valArray.length > 5) {
+        throw new Error(
+          `Expected number of cron parts 5, received ${valArray.length}`
+        );
+      } else {
+        return Promise.resolve("Good to go");
+      }
+    }),
     body("cluster_id")
       .isUUID(4)
       .optional({ nullable: false })
@@ -234,6 +244,16 @@ router.put(
   "/",
   [
     body("application_id").isUUID(4).withMessage("Invalid application id"),
+    body("cron").custom((value) => {
+      const valArray = value.split(" ");
+      if (valArray.length > 5) {
+        throw new Error(
+          `Expected number of cron parts 5, received ${valArray.length}`
+        );
+      } else {
+        return Promise.resolve("Good to go");
+      }
+    }),
     body("cluster_id")
       .isUUID(4)
       .optional({ nullable: false })

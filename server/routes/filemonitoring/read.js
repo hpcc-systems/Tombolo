@@ -23,28 +23,38 @@ router.post(
       .isArray()
       .optional({ nullable: true })
       .withMessage("Invalid email/s"),
+    body("cron").custom((value) => {
+      const valArray = value.split(" ");
+      if (valArray.length > 5) {
+        throw new Error(
+          `Expected number of cron parts 5, received ${valArray.length}`
+        );
+      } else {
+        return Promise.resolve("Good to go");
+      }
+    }),
   ],
   async (req, res) => {
     const errors = validationResult(req).formatWith(
       validatorUtil.errorFormatter
     );
     try {
-      if (!errors.isEmpty())return res.status(422).json({ success: false, errors: errors.array() });
+      if (!errors.isEmpty())
+        return res.status(422).json({ success: false, errors: errors.array() });
       const { monitoringAssetType, monitoringActive } = req.body;
       const fileMonitoring = await FileMonitoring.create(req.body);
       res.status(200).send(fileMonitoring);
 
       // Add monitoring to bree if start monitoring now is checked
-      if( monitoringActive){
+      if (monitoringActive) {
         const schedularOptions = {
           filemonitoring_id: fileMonitoring.id,
           name: fileMonitoring.name,
           cron: fileMonitoring.cron,
-          monitoringAssetType
+          monitoringAssetType,
         };
         jobScheduler.scheduleFileMonitoringBreeJob(schedularOptions);
       }
-
     } catch (error) {
       console.log(error);
       res
@@ -179,6 +189,16 @@ router.put(
   "/",
   [
     body("id").isUUID(4).withMessage("Invalid file monitoring id"),
+    body("cron").custom((value) => {
+      const valArray = value.split(" ");
+      if (valArray.length > 5) {
+        throw new Error(
+          `Expected number of cron parts 5, received ${valArray.length}`
+        );
+      } else {
+        return Promise.resolve("Good to go");
+      }
+    }),
   ],
   async (req, res) => {
     try {
@@ -194,18 +214,19 @@ router.put(
         raw: true,
       });
 
-      const {metaData: { currentlyMonitoring }} = oldInfo;
+      const {
+        metaData: { currentlyMonitoring },
+      } = oldInfo;
 
       const newInfo = req.body;
       if (currentlyMonitoring) {
         newInfo.metaData.currentlyMonitoring = currentlyMonitoring;
       }
 
-      const { id,name, cron, monitoringActive, monitoringAssetType } = newInfo;
-
+      const { id, name, cron, monitoringActive, monitoringAssetType } = newInfo;
 
       await FileMonitoring.update(newInfo, { where: { id } });
-      const fileMonitoringDetails = FileMonitoring.findOne({where: {id}}) // To avoid xss waring making additional call
+      const fileMonitoringDetails = FileMonitoring.findOne({ where: { id } }); // To avoid xss waring making additional call
       res.status(200).send(fileMonitoringDetails);
 
       // If start monitoring was changed to TRUE
@@ -221,15 +242,15 @@ router.put(
 
       // If start monitoring was changed to FALSE
       if (!monitoringActive && oldInfo.monitoringActive == 1) {
-          await jobScheduler.removeJobFromScheduler(`${name}-${id}`);
+        await jobScheduler.removeJobFromScheduler(`${name}-${id}`);
       }
 
-      // if cron has changed 
-      if (oldInfo.cron != cron){
+      // if cron has changed
+      if (oldInfo.cron != cron) {
         const allBreeJobs = jobScheduler.getAllJobs();
-        const jobName = `${name}-${id}`
-        for(let job of allBreeJobs){
-          if(job.name === jobName){
+        const jobName = `${name}-${id}`;
+        for (let job of allBreeJobs) {
+          if (job.name === jobName) {
             await jobScheduler.removeJobFromScheduler(jobName);
             await jobScheduler.scheduleFileMonitoringBreeJob({
               filemonitoring_id: id,
@@ -240,11 +261,11 @@ router.put(
           }
         }
       }
-
-
     } catch (error) {
       console.log(error);
-      res.status(500).json({ message: "Unable to save file monitoring details" });
+      res
+        .status(500)
+        .json({ message: "Unable to save file monitoring details" });
     }
   }
 );
