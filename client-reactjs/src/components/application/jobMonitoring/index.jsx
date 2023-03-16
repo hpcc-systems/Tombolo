@@ -58,7 +58,7 @@ function JobMonitoring() {
       await form.validateFields();
       await saveJobMonitoring(payload);
     } catch (err) {
-      handleError(err);
+      message.error('Failed to save, check each tab for validation error');
     }
   };
 
