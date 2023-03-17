@@ -1,10 +1,13 @@
 const express = require('express');
 const router = express.Router();
+const { body, validationResult } = require("express-validator");
+
 const userService = require('./userservice');
 const tokenService = require('../../utils/token_service')
+let models = require("../../models");
+let UserApplication = models.user_application;
 
-const { body, validationResult } = require('express-validator');
-const errorFormatter = ({ location, msg, param, value, nestedErrors }) => { return `${msg}`; };
+const errorFormatter = ({ msg }) => { return `${msg}`; };
 
 // routes
 router.post('/register', register); // open
@@ -88,7 +91,7 @@ router.put('/:id', update); // hidden
 router.get('/:id', getById); // hidden
 router.delete('/:id', _delete); // hidden
 router.get('/current', getCurrent); // hidden
-router.get('/searchuser', searchUser); // hidden
+router.get('/searchuser/', searchUser); // hidden
 router.get('/:user_id/:app_id', GetuserListToShareApp); // hidden
 router.get('/:app_id/sharedAppUser/:username', GetSharedAppUserList); // hidden
 
@@ -147,15 +150,25 @@ function validateToken(req, res, next) {
 }
 
 function GetuserListToShareApp(req, res, next) {
+  console.log('------------------------------------------');
+  console.dir("Hitting this ", {depth: null})
+  console.log('------------------------------------------');
+
   userService.GetuserListToShareApp(req, res, next)
       .then(user => user ? res.json(user) : res.sendStatus(404))
       .catch(err => res.status(500).json({ "message": "Error occured while retrieving users" }));
 }
 
-function GetSharedAppUserList(req, res, next) {
-  userService.GetSharedAppUserList(req, res, next)
-    .then(user => user ? res.json(user) : [])
-    .catch(err => res.status(500).json({ "message": "Error occured while retrieving users" }));
+async function GetSharedAppUserList (req, res, next) {
+  try{
+    const { app_id, username } = req.params;
+    const shares = await UserApplication.findAll({where: {application_id : app_id}, raw: true});
+    const users = shares.map((share) => share.user_id);
+    const filteredUsers = users.filter(user => user != username)
+    res.status(200).send(filteredUsers);
+  }catch(err){
+    res.status(500).json({success: false, message: "Failed to fetch users"})
+  }
 }
 
 function changePassword(req, res, next) {
@@ -167,7 +180,10 @@ function changePassword(req, res, next) {
 }
 
 function searchUser(req, res, next) {
-  userService.searchUser(req, res, next)
-    .then(users => users ? res.json(users) : res.sendStatus([]))
-    .catch(err => res.status(500).json({ "message": "Error occured while searching users" }));
+  console.log('------------------------------------------');
+  console.dir("SEARCH USER ROUTE")
+  console.log('------------------------------------------');
+  // userService.searchUser(req, res, next)
+  //   .then(users => users ? res.json(users) : res.sendStatus([]))
+  //   .catch(err => res.status(500).json({ "message": "Error occured while searching users" }));
 }

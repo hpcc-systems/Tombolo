@@ -17,10 +17,13 @@ exports.getUserDetails = (req, usernames) => {
         'Cookie': cookie
       }
     }, function(err, response, body) {
-        resolve(JSON.parse(body));
         if (err) {
-          reject(err);
+          console.log('------------------------------------------');
+          console.log("ERRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRR")
+          console.log('------------------------------------------');
+          // reject(err);
         }
+       resolve(JSON.parse(body));
     });
 
   })

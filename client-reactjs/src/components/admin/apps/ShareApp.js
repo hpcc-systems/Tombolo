@@ -1,5 +1,5 @@
 import { DeleteOutlined, QuestionCircleOutlined, SearchOutlined } from '@ant-design/icons';
-import { AutoComplete, Button, message, Modal, Popconfirm, Select, Spin, Table, Tooltip } from 'antd';
+import { Input, AutoComplete, Button, message, Modal, Popconfirm, Select, Spin, Table, Tooltip } from 'antd';
 import debounce from 'lodash/debounce';
 import React, { Component } from 'react';
 
@@ -72,6 +72,9 @@ class ShareApp extends Component {
 
   // GROUP USERS E-MAIL AND NAME SHOW IT DISPLAYS RIGHT WAY IN AUTOCOMPLETE
   groupUserDetails = (user) => {
+    console.log('------------------------------------------');
+    console.dir(user);
+    console.log('------------------------------------------');
     return (
       <div style={{ padding: '5px', borderBottom: '1px dotted lightgray' }}>
         <p style={{ marginBottom: '-5px', fontWeight: '600' }}>{user.text}</p>
@@ -113,7 +116,7 @@ class ShareApp extends Component {
 
   saveSharedDetails = () => {
     var _self = this;
-    if (_self.state.sharedAppUsers.filter((user) => user.username == _self.state.selectedUser).length > 0) {
+    if (_self.state.sharedAppUsers.filter((user) => user == _self.state.selectedUser).length > 0) {
       message.config({ top: 150 });
       message.error(
         'This application has already been shared with user "' +
@@ -132,7 +135,7 @@ class ShareApp extends Component {
 
   searchUsers = debounce((searchString) => {
     let _self = this;
-    if (searchString.length <= 3) {
+    if (searchString.length <= 1) {
       this.setState({
         ...this.state,
         shareButtonEnabled: false,
@@ -144,7 +147,7 @@ class ShareApp extends Component {
       autoCompleteSuffix: <Spin />,
     });
 
-    fetch('/api/user/searchuser?searchTerm=' + searchString, {
+    fetch('/api/user/read/searchuser?searchTerm=' + searchString, {
       method: 'get',
       headers: authHeader(),
     })
@@ -223,10 +226,10 @@ class ShareApp extends Component {
       await fetch('/api/app/read/stopApplicationShare', {
         method: 'post',
         headers: authHeader(),
-        body: JSON.stringify({ application_id: this.props.appId, username: record.username }),
+        body: JSON.stringify({ application_id: this.props.appId, username: record }),
       });
-      message.success(`${this.state.applicationTitle} is no longer shared with ${record.firstName} ${record.lastName}`);
-      this.setState({ sharedAppUsers: this.state.sharedAppUsers.filter((user) => user.username !== record.username) });
+      message.success(`${this.state.applicationTitle} is no longer shared with ${record}`);
+      this.setState({ sharedAppUsers: this.state.sharedAppUsers.filter((user) => user !== record) });
     } catch (err) {
       message.error('Failed to stop stop application share');
     }
@@ -240,7 +243,7 @@ class ShareApp extends Component {
         title: 'Shared User',
         width: '80%',
         dataIndex: 'name',
-        render: (text, row) => <a>{row.firstName + ' ' + row.lastName}</a>,
+        render: (text, row) => <a>{row}</a>,
       },
       {
         title: 'Action',
@@ -248,7 +251,7 @@ class ShareApp extends Component {
         render: (text, record) => (
           <span>
             <Popconfirm
-              title={`Are you sure you want to stop sharing this application with ${record.firstName} ${record.lastName}?`}
+              title={`Are you sure you want to stop sharing this application with ${record}?`}
               onConfirm={() => this.handleStopApplicationShare(record)}
               icon={<QuestionCircleOutlined />}>
               <a href="#">
@@ -277,6 +280,18 @@ class ShareApp extends Component {
             </Button>,
           ]}>
           <div style={{ paddingBottom: '5px' }}>
+            <Input
+              type="email"
+              validateTrigger={['onChange', 'onBlur']}
+              rules={[
+                {
+                  required: true,
+                  whitespace: true,
+                  type: 'email',
+                  message: 'Invalid e-mail address.',
+                },
+              ]}
+            />
             <AutoComplete
               className="certain-category-search"
               dropdownClassName="certain-category-search-dropdown"
@@ -288,7 +303,7 @@ class ShareApp extends Component {
               placeholder={i18n('Search users')}>
               {userSuggestions.map((user) => {
                 return (
-                  <Option key={user.value} value={user.text}>
+                  <Option key={user.email} value={user.email}>
                     {this.groupUserDetails(user)}
                   </Option>
                 );
@@ -301,7 +316,7 @@ class ShareApp extends Component {
           <div style={{ marginTop: '15px' }}>
             <Table
               columns={sharedUsersColumns}
-              rowKey={(record) => record.id}
+              rowKey={(record) => record}
               dataSource={sharedAppUsers}
               pagination={false}
               size="small"
