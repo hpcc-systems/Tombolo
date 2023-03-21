@@ -44,6 +44,12 @@ class Applications extends Component {
       this.getApplications();
   }
 
+  setApplications(data) {
+    this.setState({
+      applications: data,
+    });
+  }
+
   // GET ALL APPLICATIONS
   getApplications() {
     var url = `/api/app/read/appListByUsername?user_name=${this.props.user.username}`;
@@ -59,9 +65,13 @@ class Applications extends Component {
         handleError(response);
       })
       .then((data) => {
-        this.setState({
-          applications: data,
-        });
+        console.log('------------------------------------------');
+        console.dir(data);
+        console.log('------------------------------------------');
+        // this.setState({
+        //   applications: data,
+        // });
+        this.setApplications(data);
       })
       .catch((error) => {
         console.log(error);
@@ -291,6 +301,7 @@ class Applications extends Component {
             selectedApplication={this.state.selectedApplication}
             user={this.props.user}
             applications={this.state.applications}
+            setApplications={this.setApplications}
           />
         ) : null}
 
