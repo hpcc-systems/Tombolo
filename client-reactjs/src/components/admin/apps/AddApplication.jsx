@@ -54,8 +54,9 @@ function AddApplication(props) {
     }
     await form.validateFields();
     try {
+      const fieldValues = form.getFieldsValue();
       let payload = {
-        ...form.getFieldsValue(),
+        ...fieldValues,
         user_id: props.user.username,
         creator: props.user.username,
         id: props?.selectedApplication?.id || '',
@@ -70,13 +71,28 @@ function AddApplication(props) {
       if (!response.ok) return message.error('Error occurred while saving application');
       dispatch(emptyGroupTree());
       message.success('Application saved successfully');
-      const responseData = await response.json();
-      if (props.isCreatingNewApp)
-        dispatch(applicationActions.applicationSelected(responseData.id, responseData.title, responseData.title));
-      localStorage.setItem('activeProjectId', responseData.id);
       form.resetFields();
       props.closeAddApplicationModal();
-      history.push(`/${responseData.id}/assets`);
+      const responseData = await response.json();
+      if (props.isCreatingNewApp) {
+        dispatch(applicationActions.applicationSelected(responseData.id, responseData.title, responseData.title));
+        localStorage.setItem('activeProjectId', responseData.id);
+        history.push(`/${responseData.id}/assets`);
+      }
+
+      if (isEditing) {
+        console.log('Edited', fieldValues);
+        const updatedApplications = props.applications.map((application) => {
+          if (application.id === props.selectedApplication.id) {
+            return { ...application, fieldValues };
+          } else {
+            return application;
+          }
+        });
+
+        props.setApplications;
+        updatedApplications;
+      }
     } catch (err) {
       console.log(err);
       message.error(err.message);
