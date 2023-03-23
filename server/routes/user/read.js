@@ -185,10 +185,7 @@ function changePassword(req, res, next) {
 }
 
 function searchUser(req, res, next) {
-  console.log('------------------------------------------');
-  console.dir("SEARCH USER ROUTE")
-  console.log('------------------------------------------');
-  // userService.searchUser(req, res, next)
-  //   .then(users => users ? res.json(users) : res.sendStatus([]))
-  //   .catch(err => res.status(500).json({ "message": "Error occured while searching users" }));
+  userService.searchUser(req, res, next)
+    .then(users => users ? res.json(users) : res.sendStatus([]))
+    .catch(err => res.status(500).json({ "message": "Error occured while searching users" }));
 }
