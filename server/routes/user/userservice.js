@@ -96,9 +96,6 @@ async function getAll() {
 }
 
 const searchUser = (req, res, next) => {
-  console.log('------------------------------------------');
-  console.dir("SESRCHING WITH THIS FUNC", {depth: null})
-  console.log('------------------------------------------');
   let searchTerm = req.query.searchTerm;
   let token = req.headers['x-access-token'] || req.headers['authorization'];
   if (token.startsWith('Bearer ')) {

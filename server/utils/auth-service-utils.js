@@ -18,10 +18,7 @@ exports.getUserDetails = (req, usernames) => {
       }
     }, function(err, response, body) {
         if (err) {
-          console.log('------------------------------------------');
-          console.log("ERRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRR")
-          console.log('------------------------------------------');
-          // reject(err);
+          reject(err);
         }
        resolve(JSON.parse(body));
     });
