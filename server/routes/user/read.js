@@ -150,13 +150,18 @@ function validateToken(req, res, next) {
 }
 
 function GetuserListToShareApp(req, res, next) {
-  console.log('------------------------------------------');
-  console.dir("Hitting this ", {depth: null})
-  console.log('------------------------------------------');
-
-  userService.GetuserListToShareApp(req, res, next)
-      .then(user => user ? res.json(user) : res.sendStatus(404))
-      .catch(err => res.status(500).json({ "message": "Error occured while retrieving users" }));
+  if (process.env.APP_AUTH_METHOD === 'azure_ad'){
+    return []
+  }else{
+      userService
+      .GetuserListToShareApp(req, res, next)
+      .then((user) => (user ? res.json(user) : res.sendStatus(404)))
+      .catch((err) =>
+        res
+          .status(500)
+          .json({ message: "Error occured while retrieving users" })
+      );
+  }
 }
 
 async function GetSharedAppUserList (req, res, next) {

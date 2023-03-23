@@ -160,6 +160,7 @@ router.post('/deleteApplication', async function (req, res) {
 // SHARE APPLICATION
 router.post('/shareApplication', [], async(req,res) =>{
   const {data : appShareDetails } = req.body;
+
   try{
     await UserApplication.create(appShareDetails);
     // Can't wait for notification  email to be sent - might take longer ->Sending response to client as soon as the data is saved in userApplication table

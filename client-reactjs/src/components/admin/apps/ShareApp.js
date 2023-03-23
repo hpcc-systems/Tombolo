@@ -72,9 +72,6 @@ class ShareApp extends Component {
 
   // GROUP USERS E-MAIL AND NAME SHOW IT DISPLAYS RIGHT WAY IN AUTOCOMPLETE
   groupUserDetails = (user) => {
-    console.log('------------------------------------------');
-    console.dir(user);
-    console.log('------------------------------------------');
     return (
       <div style={{ padding: '5px', borderBottom: '1px dotted lightgray' }}>
         <p style={{ marginBottom: '-5px', fontWeight: '600' }}>{user.text}</p>
@@ -172,11 +169,21 @@ class ShareApp extends Component {
       });
   }, 400);
 
+  // When user is selected form auto complete drop down
   onUserSelected = (selectedUser, user) => {
     this.setState({
       ...this.state,
       shareButtonEnabled: true,
       selectedUser: user.key,
+    });
+  };
+
+  // if using azure_ad it should be done differently
+  handleEmailInput = (e) => {
+    this.setState({
+      ...this.state,
+      shareButtonEnabled: true,
+      selectedUser: e.target.value,
     });
   };
 
@@ -279,37 +286,47 @@ class ShareApp extends Component {
               Close
             </Button>,
           ]}>
-          <div style={{ paddingBottom: '5px' }}>
-            <Input
-              type="email"
-              validateTrigger={['onChange', 'onBlur']}
-              rules={[
-                {
-                  required: true,
-                  whitespace: true,
-                  type: 'email',
-                  message: 'Invalid e-mail address.',
-                },
-              ]}
-            />
-            <AutoComplete
-              className="certain-category-search"
-              dropdownClassName="certain-category-search-dropdown"
-              dropdownMatchSelectWidth={false}
-              dropdownStyle={{ width: 300 }}
-              style={{ width: '70%', paddingRight: '5px' }}
-              onSearch={(value) => this.searchUsers(value)}
-              onSelect={(value, user) => this.onUserSelected(value, user)}
-              placeholder={i18n('Search users')}>
-              {userSuggestions.map((user) => {
-                return (
-                  <Option key={user.email} value={user.email}>
-                    {this.groupUserDetails(user)}
-                  </Option>
-                );
-              })}
-            </AutoComplete>
-            <Button type="primary" disabled={!shareButtonEnabled} onClick={this.saveSharedDetails}>
+          <div style={{ paddingBottom: '5px', width: '100%' }}>
+            {process.env.REACT_APP_APP_AUTH_METHOD === 'azure_ad' ? (
+              <Input
+                type="email"
+                validateTrigger={['onChange', 'onBlur']}
+                style={{ width: 'calc(70% - 5px)', marginRight: '5px' }}
+                placeholder="E-mail"
+                onChange={this.handleEmailInput}
+                rules={[
+                  {
+                    required: true,
+                    whitespace: true,
+                    type: 'email',
+                    message: 'Invalid e-mail address.',
+                  },
+                ]}
+              />
+            ) : (
+              <AutoComplete
+                className="certain-category-search"
+                dropdownClassName="certain-category-search-dropdown"
+                dropdownMatchSelectWidth={false}
+                dropdownStyle={{ width: 300 }}
+                style={{ width: '70%', marginRight: '5px' }}
+                onSearch={(value) => this.searchUsers(value)}
+                onSelect={(value, user) => this.onUserSelected(value, user)}
+                placeholder={i18n('Search users')}>
+                {userSuggestions.map((user) => {
+                  return (
+                    <Option key={user.email} value={user.email}>
+                      {this.groupUserDetails(user)}
+                    </Option>
+                  );
+                })}
+              </AutoComplete>
+            )}
+            <Button
+              type="primary"
+              disabled={!shareButtonEnabled}
+              onClick={this.saveSharedDetails}
+              style={{ width: '30%' }}>
               Share Application
             </Button>
           </div>
