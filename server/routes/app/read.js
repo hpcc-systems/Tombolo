@@ -160,13 +160,16 @@ router.post('/deleteApplication', async function (req, res) {
 // SHARE APPLICATION
 router.post('/shareApplication', [], async(req,res) =>{
   const {data : appShareDetails } = req.body;
+
   try{
     await UserApplication.create(appShareDetails);
     // Can't wait for notification  email to be sent - might take longer ->Sending response to client as soon as the data is saved in userApplication table
     res.json({"result":"success"}); 
     try{
-      const userDetails = await authServiceUtil.getUserDetails(req, appShareDetails.user_id);
-      NotificationModule.notifyApplicationShare(userDetails[0].email, appShareDetails.appTitle)
+      NotificationModule.notifyApplicationShare(
+        appShareDetails.user_id,
+        appShareDetails.appTitle
+      );
     }catch(err){
       console.log('--- [app/read.js] Error sending application share notification -----------');
       console.dir({err}, {depth: null})
@@ -185,6 +188,9 @@ router.post('/stopApplicationShare',[
   body('application_id').isUUID(4).withMessage('Invalid application ID'),
   body('username').notEmpty().withMessage('Invalid username')
 ], async(req, res) =>{
+  console.log('------------------------------------------');
+  console.dir(req.body, {depth: null})
+  console.log('------------------------------------------');
   const errors = validationResult(req).formatWith(validatorUtil.errorFormatter);
   if (!errors.isEmpty()) {
     return res.status(422).json({ success: false, errors: errors.array() });
@@ -200,7 +206,7 @@ router.post('/stopApplicationShare',[
   }
 });
 
-//Import application ################
+//Import application 
 let upload = multer();
 upload = multer({ dest: 'uploads/'})
 let allPromises = [];
