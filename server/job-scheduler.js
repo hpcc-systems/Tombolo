@@ -28,6 +28,7 @@ const JOB_STATUS_POLLER = "statusPoller.js";
 const FILE_MONITORING = "fileMonitoringPoller.js";
 const CLUSTER_TIMEZONE_OFFSET = "clustertimezoneoffset.js";
 const SUBMIT_CLUSTER_MONITORING_JOB = "submitClusterMonitoring.js";
+const APIKEY_MONITORING = "submitApiKeyMonitoring.js";
 
 class JobScheduler {
   constructor() {
@@ -94,6 +95,7 @@ class JobScheduler {
       await this.scheduleFileMonitoringOnServerStart();
       await this.scheduleSuperFileMonitoringOnServerStart();
       await this.scheduleClusterMonitoringOnServerStart();
+      await this.scheduleKeyCheck();
       logger.info("✔️ JOBSCHEDULER IS BOOTSTRAPED");
     })();
   }
@@ -171,6 +173,7 @@ class JobScheduler {
             const commonWorkerData = {
               applicationId: job.application_id,
               clusterId: job.cluster_id,
+              workerData,
               dataflowId: dataflowId,
               jobExecutionGroupId,
               jobType: job.jobType,
@@ -253,6 +256,7 @@ class JobScheduler {
       this.createNewBreeJob({ ...jobData, uniqueJobName });
       this.bree.start(uniqueJobName);
       logger.info(`✔️  BREE HAS STARTED JOB: "${uniqueJobName}"`);
+      s;
       this.logBreeJobs();
       return {
         success: true,
@@ -604,6 +608,29 @@ class JobScheduler {
     }
   }
 
+  // When server starts - start key monitoring job
+  async scheduleKeyCheck() {
+    try {
+      let jobName = "key-check-" + new Date().getTime();
+      this.bree.add({
+        name: jobName,
+        interval: "at 05:30am also at 05:30pm",
+        path: path.join(__dirname, "jobs", APIKEY_MONITORING),
+        worker: {
+          workerData: {
+            jobName: jobName,
+            WORKER_CREATED_AT: Date.now(),
+          },
+        },
+      });
+
+      this.bree.start(jobName);
+      logger.info("📺 KEY MONITORING STARTED ...");
+    } catch (err) {
+      logger.error(err);
+    }
+  }
+
   // ---------------------------------------------------------------------------------------------
   createClusterMonitoringBreeJob({ clusterMonitoring_id, cron }) {
     const uniqueJobName = `Cluster Monitoring - ${clusterMonitoring_id}`;
@@ -621,7 +648,7 @@ class JobScheduler {
 
   async scheduleClusterMonitoringOnServerStart() {
     try {
-      logger.info("📺  CLUSTER MONITORING STARTED ...");
+      logger.info("📺 CLUSTER MONITORING STARTED ...");
       const clusterMonitoring = await ClusterMonitoring.findAll({ raw: true });
       for (let monitoring of clusterMonitoring) {
         const { id, cron, isActive } = monitoring;

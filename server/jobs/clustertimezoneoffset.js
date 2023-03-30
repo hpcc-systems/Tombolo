@@ -19,7 +19,7 @@ const { log, dispatch } = require("./workerUtils")(parentPort);
 
   //if clusters are found, iterate through them and set timezone offset for each one
   await setClusterTimezoneOffset(clusters);
-  
+
   //once function is done, exit and report finished
   if (parentPort) parentPort.postMessage("done");
   else process.exit(0);
@@ -35,7 +35,7 @@ async function setClusterTimezoneOffset(clusters) {
       );
 
       //get cluster
-      newCluster = await cluster.findOne({
+      let newCluster = await cluster.findOne({
         where: { id: clusters[i].dataValues.id },
       });
 
