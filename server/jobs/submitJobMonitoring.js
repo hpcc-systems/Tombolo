@@ -179,10 +179,6 @@ const convertToISODateString = require("../utils/stringToIsoDateString");
             const notification_id = uuidv4();
 
             const cardBody = jobMonitoringMessageCardBody({...notificationToSend, notification_id });
-            // console.log('------------------------------------------');
-            // console.log(cardBody)
-            // console.log('------------------------------------------');
-
             const response = await axios.post(recipient, cardBody);
 
             // If notification sent successfully add to sentNotification
@@ -206,7 +202,7 @@ const convertToISODateString = require("../utils/stringToIsoDateString");
 
     // Update notification table
     if (sentNotification.length > 0) {
-      await Monitoring_notifications.bulkCreate(sentNotification);
+        await Monitoring_notifications.bulkCreate(sentNotification);
     }
 
     // Update Job Monitoring - notification sent
