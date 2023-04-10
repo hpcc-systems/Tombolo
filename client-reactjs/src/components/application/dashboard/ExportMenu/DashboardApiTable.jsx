@@ -1,7 +1,7 @@
 import React from 'react';
 import { Table, Space, Tooltip, message } from 'antd';
 import { DeleteOutlined } from '@ant-design/icons';
-import { authHeader, handleError } from '../../common/AuthHeader.js';
+import { authHeader, handleError } from '../../../common/AuthHeader.js';
 
 // import { Link } from 'react-router-dom';
 import { useEffect } from 'react';

@@ -1,21 +1,28 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useSelector } from 'react-redux';
-import BreadCrumbs from '../../common/BreadCrumbs';
-import Text from '../../common/Text';
+import Text from '../../../common/Text';
 import { Button, message, Dropdown, Menu } from 'antd';
 import { DownOutlined } from '@ant-design/icons';
-import { authHeader, handleError } from '../../common/AuthHeader.js';
+import { authHeader, handleError } from '../../../common/AuthHeader.js';
+import { useLocation } from 'react-router-dom';
 
 import DashboardModal from './DashboardModal';
 
-function Dashboard() {
+const ExportMenu = () => {
   const {
     application: { applicationId },
   } = useSelector((state) => state.applicationReducer);
 
   const [modalVisible, setModalVisible] = useState(false);
+  const [dataType, setDataType] = useState('');
 
-  const [notifications, setNotifications] = useState();
+  const location = useLocation();
+
+  //get path and set data type for exporting later
+  useEffect(() => {
+    const splitName = location.pathname.split('/');
+    setDataType(splitName[splitName.length - 1]);
+  });
 
   const menu = (
     <Menu onClick={(e) => handleMenuClick(e)}>
@@ -43,6 +50,8 @@ function Dashboard() {
 
   const getFile = async (type) => {
     try {
+      //TO DO --- write checks using dataType State to reach out to correct API's
+      //example   if (dataType === 'notifications') {
       const payload = {
         method: 'GET',
         header: authHeader(),
@@ -69,44 +78,20 @@ function Dashboard() {
     }
   };
 
-  //Get list of all file monitoring
-  const getNotifications = async () => {
-    try {
-      const payload = {
-        method: 'GET',
-        header: authHeader(),
-      };
-
-      const response = await fetch(`/api/notifications/read/${applicationId}`, payload);
-      if (!response.ok) handleError(response);
-      const data = await response.json();
-
-      setNotifications(data);
-      return data;
-    } catch (error) {
-      message.error('Failed to fetch notifications');
-    }
-  };
-
   return (
     <>
-      <BreadCrumbs
-        extraContent={
-          <Dropdown overlay={menu}>
-            <Button type="primary" icon={<DownOutlined />}>
-              {<Text text="Export Data" />}
-            </Button>
-          </Dropdown>
-        }
-      />
+      <Dropdown overlay={menu}>
+        <Button type="primary" icon={<DownOutlined />}>
+          {<Text text="Export Data" />}
+        </Button>
+      </Dropdown>
       <DashboardModal
         modalVisible={modalVisible}
         setModalVisible={setModalVisible}
-        getNotifications={getNotifications}
-        notifications={notifications}
-        applicationId={applicationId}></DashboardModal>
+        applicationId={applicationId}
+        dataType={dataType}></DashboardModal>
     </>
   );
-}
+};
 
-export default Dashboard;
+export default ExportMenu;

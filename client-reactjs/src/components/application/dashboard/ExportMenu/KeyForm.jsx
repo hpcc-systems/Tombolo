@@ -1,10 +1,13 @@
 import React from 'react';
 import { Form, Button, Input, message } from 'antd';
 import { MinusCircleOutlined, PlusOutlined } from '@ant-design/icons';
+import { useSelector } from 'react-redux';
 
 const KeyForm = ({ createKey }) => {
   const [keyForm] = Form.useForm();
   const { TextArea } = Input;
+  const authReducer = useSelector((state) => state.authenticationReducer);
+  const email = authReducer.user.email;
 
   //save data
   const handleSave = async () => {
@@ -32,6 +35,7 @@ const KeyForm = ({ createKey }) => {
       formData = await keyForm.validateFields();
     } catch (err) {
       validationError = err;
+      console.log(err);
     }
 
     return { validationError, formData };
@@ -51,21 +55,42 @@ const KeyForm = ({ createKey }) => {
             {fields.map((field, _index) => (
               <Form.Item required={true} key={field.key}>
                 <div style={{ display: 'flex', placeItems: 'center' }}>
-                  <Form.Item
-                    {...field}
-                    validateTrigger={['onChange', 'onBlur']}
-                    type="email"
-                    rules={[
-                      {
-                        required: true,
-                        whitespace: true,
-                        type: 'email',
-                        message: 'Invalid e-mail address.',
-                      },
-                    ]}
-                    noStyle>
-                    <Input placeholder="E-mail" />
-                  </Form.Item>
+                  {field.key === 0 ? (
+                    <>
+                      <Form.Item
+                        {...field}
+                        validateTrigger={['onChange', 'onBlur']}
+                        type="email"
+                        initialValue={email}
+                        rules={[
+                          {
+                            required: true,
+                            whitespace: true,
+                            type: 'email',
+                            message: 'Invalid e-mail address.',
+                          },
+                        ]}
+                        noStyle>
+                        <Input initialValue={email} />
+                      </Form.Item>
+                    </>
+                  ) : (
+                    <Form.Item
+                      {...field}
+                      validateTrigger={['onChange', 'onBlur']}
+                      type="email"
+                      rules={[
+                        {
+                          required: true,
+                          whitespace: true,
+                          type: 'email',
+                          message: 'Invalid e-mail address.',
+                        },
+                      ]}
+                      noStyle>
+                      <Input placeholder="E-Mail" />
+                    </Form.Item>
+                  )}
                   {fields.length > 1 ? (
                     <MinusCircleOutlined
                       className="dynamic-delete-button"

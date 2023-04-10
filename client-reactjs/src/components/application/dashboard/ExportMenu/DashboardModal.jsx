@@ -1,16 +1,16 @@
 import React, { useState, useEffect } from 'react';
 import { Modal, message, Button, Input } from 'antd';
-import InfoDrawer from '../../common/InfoDrawer.jsx';
-import useWindowSize from '../../../hooks/useWindowSize';
-import { authHeader, handleError } from '../../common/AuthHeader.js';
+import InfoDrawer from '../../../common/InfoDrawer.jsx';
+import useWindowSize from '../../../../hooks/useWindowSize';
+import { authHeader, handleError } from '../../../common/AuthHeader.js';
 
 import { InfoCircleOutlined, CopyOutlined } from '@ant-design/icons';
 
 import DashboardApiTable from './DashboardApiTable.jsx';
-import KeyForm from './KeyForm';
-import ApiKeyGuide from '../../userGuides/ApiKeyGuide.jsx';
+import KeyForm from './KeyForm.jsx';
+import ApiKeyGuide from '../../../userGuides/ApiKeyGuide.jsx';
 
-const DashboardModal = ({ modalVisible, setModalVisible, applicationId }) => {
+const DashboardModal = ({ modalVisible, setModalVisible, applicationId, dataType, authReducer }) => {
   //extra states needed for data verification and entry
   const [key, setKey] = useState(null);
   const [modalWidth, setModalWidth] = useState(null);
@@ -21,6 +21,7 @@ const DashboardModal = ({ modalVisible, setModalVisible, applicationId }) => {
 
   const showDrawer = () => {
     setOpen(true);
+    console.log(dataType);
   };
 
   const onClose = () => {
@@ -37,8 +38,6 @@ const DashboardModal = ({ modalVisible, setModalVisible, applicationId }) => {
       const response = await fetch(`/api/key/all/${applicationId}`, payload);
       if (!response.ok) handleError(response);
       const data = await response.json();
-
-      console.log(data);
 
       data.map((data) => {
         //get current date and expiration date for calculations
@@ -148,7 +147,7 @@ const DashboardModal = ({ modalVisible, setModalVisible, applicationId }) => {
           </Button>
         ) : null}
 
-        {keyFormVisible && !key ? <KeyForm createKey={createKey} key={key}></KeyForm> : null}
+        {keyFormVisible && !key ? <KeyForm authReducer={authReducer} createKey={createKey} key={key}></KeyForm> : null}
 
         {key ? (
           <>
@@ -174,6 +173,8 @@ const DashboardModal = ({ modalVisible, setModalVisible, applicationId }) => {
             </p>
           </>
         ) : null}
+
+        {/* TO DO, make adjustments to api key guide based on which data is being looked at */}
         <InfoDrawer
           title="API Key Usage Guide"
           open={open}
