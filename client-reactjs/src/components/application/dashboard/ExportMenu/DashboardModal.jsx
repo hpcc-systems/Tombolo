@@ -171,7 +171,7 @@ const DashboardModal = ({ modalVisible, setModalVisible, applicationId, dataType
           </>
         ) : null}
 
-        <InfoDrawer open={open} onClose={onClose} width="35%" content="example"></InfoDrawer>
+        <InfoDrawer open={open} onClose={onClose} width="35%" content="api"></InfoDrawer>
       </Modal>
     </>
   );

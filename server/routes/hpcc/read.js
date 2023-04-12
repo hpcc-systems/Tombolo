@@ -1256,7 +1256,7 @@ io.of("/landingZoneFileUpload").on("connection", (socket) => {
       __dirname,
       "..",
       "..",
-      "uploads",
+      "tempFiles",
       sanitizedFileName
     );
     let fileExtension = fileName
@@ -1337,7 +1337,7 @@ io.of("/landingZoneFileUpload").on("connection", (socket) => {
       __dirname,
       "..",
       "..",
-      "uploads",
+      "tempFiles",
       sanitizedFileName
     );
     fs.writeFile(filePath, data, function (err) {
@@ -1363,7 +1363,7 @@ io.of("/landingZoneFileUpload").on("connection", (socket) => {
       let fileData = file.data.join("");
       let fileBuffer = Buffer.from(fileData);
       const fileName = sanitize(file.fileName);
-      const filePath = path.join(__dirname, "..", "..", "uploads", fileName);
+      const filePath = path.join(__dirname, "..", "..", "tempFiles", fileName);
       fs.writeFile(filePath, fileBuffer, function (err) {
         if (err) {
           console.log("Error writing file to the FS", error);

@@ -1,8 +1,8 @@
 const express = require("express");
 const { file } = require("tmp");
 const router = express.Router();
-const fs = require("fs");
 const fsPromises = require("fs/promises");
+const path = require("path");
 const models = require("../../models");
 const monitoring_notifications = models.monitoring_notifications;
 const fileMonitoring = models.fileMonitoring;
@@ -91,8 +91,13 @@ router.get("/:applicationId/file/:type", async (req, res) => {
 
       output = JSON.stringify(output);
     }
-
-    const filePath = `./temp/Tombolo-Notifications.${type}`;
+    const filePath = path.join(
+      __dirname,
+      "..",
+      "..",
+      "tempFiles",
+      `Tombolo-Notifications.${type}`
+    );
 
     const createPromise = fsPromises.writeFile(
       filePath,
@@ -117,7 +122,13 @@ router.get("/:applicationId/file/:type", async (req, res) => {
 router.delete("/:applicationId/file/:type", async (req, res) => {
   try {
     const type = req.params.type;
-    const filePath = `./temp/Tombolo-Notifications.${type}`;
+    const filePath = path.join(
+      __dirname,
+      "..",
+      "..",
+      "tempFiles",
+      `Tombolo-Notifications.${type}`
+    );
 
     const createPromise = fsPromises.unlink(filePath);
 
