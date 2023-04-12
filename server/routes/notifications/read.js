@@ -2,6 +2,7 @@ const express = require("express");
 const { file } = require("tmp");
 const router = express.Router();
 const fs = require("fs");
+const fsPromises = require("fs/promises");
 const models = require("../../models");
 const monitoring_notifications = models.monitoring_notifications;
 const fileMonitoring = models.fileMonitoring;
@@ -93,24 +94,38 @@ router.get("/:applicationId/file/:type", async (req, res) => {
 
     const filePath = `./temp/Tombolo-Notifications.${type}`;
 
-    await fs.writeFile(filePath, output, async function (err) {
-      if (err) {
-        return console.log(err);
+    const createPromise = fsPromises.writeFile(
+      filePath,
+      output,
+      function (err) {
+        if (err) {
+          return console.log(err);
+        }
       }
-      res.status(200).download(filePath);
-    });
+    );
+
+    await createPromise;
+
+    res.status(200).download(filePath);
   } catch (error) {
     console.log(error);
     res.status(500).json({ message: "Unable to get notifications" });
-  } finally {
-    //delete file
+  }
+});
+
+//method for removing file after download on front-end
+router.delete("/:applicationId/file/:type", async (req, res) => {
+  try {
     const type = req.params.type;
     const filePath = `./temp/Tombolo-Notifications.${type}`;
-    await fs.unlink(filePath, async function (err) {
-      if (err) {
-        return console.log(err);
-      }
-    });
+
+    const createPromise = fsPromises.unlink(filePath);
+
+    await createPromise;
+
+    res.status(200).json({ message: "File Deleted" });
+  } catch (error) {
+    res.status(500).json({ message: "Failed to delete file" });
   }
 });
 

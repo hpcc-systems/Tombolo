@@ -3,12 +3,9 @@ import { Modal, message, Button, Input } from 'antd';
 import InfoDrawer from '../../../common/InfoDrawer.jsx';
 import useWindowSize from '../../../../hooks/useWindowSize';
 import { authHeader, handleError } from '../../../common/AuthHeader.js';
-
 import { InfoCircleOutlined, CopyOutlined } from '@ant-design/icons';
-
 import DashboardApiTable from './DashboardApiTable.jsx';
 import KeyForm from './KeyForm.jsx';
-import ApiKeyGuide from '../../../userGuides/ApiKeyGuide.jsx';
 
 const DashboardModal = ({ modalVisible, setModalVisible, applicationId, dataType, authReducer }) => {
   //extra states needed for data verification and entry
@@ -174,18 +171,7 @@ const DashboardModal = ({ modalVisible, setModalVisible, applicationId, dataType
           </>
         ) : null}
 
-        {/* TO DO, make adjustments to api key guide based on which data is being looked at */}
-        <InfoDrawer
-          title="API Key Usage Guide"
-          open={open}
-          onClose={onClose}
-          width="35%"
-          guide="apiguide"
-          content={
-            <>
-              <ApiKeyGuide />
-            </>
-          }></InfoDrawer>
+        <InfoDrawer open={open} onClose={onClose} width="35%" content="example"></InfoDrawer>
       </Modal>
     </>
   );

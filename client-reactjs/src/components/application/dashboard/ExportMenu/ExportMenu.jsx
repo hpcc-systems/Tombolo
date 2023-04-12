@@ -72,6 +72,15 @@ const ExportMenu = () => {
       document.body.appendChild(link);
       link.click();
       link.parentNode.removeChild(link);
+
+      //send delete request after file is downloaded
+      const payload2 = {
+        method: 'DELETE',
+        header: authHeader(),
+      };
+      const response2 = await fetch(`/api/notifications/read/${applicationId}/file/${type}`, payload2);
+
+      if (!response2.ok) handleError(response2);
     } catch (error) {
       console.log(error);
       message.error('Failed to fetch notifications');

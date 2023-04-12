@@ -256,7 +256,6 @@ class JobScheduler {
       this.createNewBreeJob({ ...jobData, uniqueJobName });
       this.bree.start(uniqueJobName);
       logger.info(`✔️  BREE HAS STARTED JOB: "${uniqueJobName}"`);
-      s;
       this.logBreeJobs();
       return {
         success: true,
