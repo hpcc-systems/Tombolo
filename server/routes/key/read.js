@@ -38,7 +38,7 @@ router.post(
       const metaData = {
         Notes: Notes,
         Usage: 0,
-        UsageLimit: 500 * duration,
+        UsageLimit: 1000 * duration,
         emails,
       };
 
