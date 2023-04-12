@@ -25,7 +25,12 @@ router.post(
       if (!errors.isEmpty())
         return res.status(422).json({ success: false, errors: errors.array() });
 
-      const duration = process.env.API_KEY_DURATION || 7;
+      //28 day default if not set, max of 365
+      let duration = process.env.API_KEY_DURATION || 28;
+
+      if (duration > 365) {
+        duration = 365;
+      }
       const application_id = req.body.applicationId;
 
       const { Name, Notes, emails } = req.body.formData.formData;

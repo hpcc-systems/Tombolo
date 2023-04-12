@@ -101,7 +101,7 @@ const ApiKeyGuide = () => {
       </h3>
       <p>
         To protect the integerity and security of our data, we have set a default active time period for each key of{' '}
-        <span>14 days</span>. Each key will have an expiration date set 14 days from the creation time of said key. You
+        <span>14 days</span>. Each key will have an expiration date set 28 days from the creation time of said key. You
         {`'`}ll need to speak with an administrator to adjust the default length, with a maximum possible value of 365
         days.
       </p>
