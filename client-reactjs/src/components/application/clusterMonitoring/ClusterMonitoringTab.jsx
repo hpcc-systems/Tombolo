@@ -31,6 +31,7 @@ function ClusterMonitoringTab({
       <Form.Item
         label="Monitoring name"
         name="name"
+        validateTrigger={['onChange', 'onBlur']}
         rules={[
           {
             validator: (_, value) => {
@@ -43,6 +44,10 @@ function ClusterMonitoringTab({
                 return Promise.resolve();
               }
             },
+          },
+          {
+            max: 256,
+            message: 'Maximum of 256 characters allowed',
           },
         ]}>
         <Input></Input>
