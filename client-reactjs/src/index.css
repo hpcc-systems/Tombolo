@@ -1028,6 +1028,28 @@ div.tooltip {
   background: #ffd591;
 }
 
+/*User Guide CSS*/
+.guide {
+  width: 100%;
+}
+
+.guide span {
+  font-weight: 700;
+}
+.guide h2 {
+  font-weight: 700;
+  font-size: 1.5rem;
+  text-align: center;
+}
+
+.guide h3 {
+  font-weight: 700;
+  font-size: 1.25rem;
+}
+.guide h4 {
+  font-weight: 700;
+  font-size: 1rem;
+}
 .anticon-loading * {
   color: #1890ff;
 }

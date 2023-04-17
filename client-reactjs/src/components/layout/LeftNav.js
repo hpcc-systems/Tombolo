@@ -10,6 +10,7 @@ import {
   NotificationOutlined,
   ClockCircleOutlined,
   ContainerOutlined,
+  AreaChartOutlined,
 } from '@ant-design/icons';
 
 import { hasEditPermission } from '../common/AuthUtil.js';
@@ -119,6 +120,10 @@ class LeftNav extends Component {
               <Link to={'/' + applicationId + '/superfileMonitoring'}>{<Text text="Superfiles" />}</Link>
             </Menu.Item>
           </Menu.SubMenu>
+
+          <Menu.Item key="5" icon={<AreaChartOutlined />}>
+            <Link to={'/' + applicationId + '/dashboard'}>{<Text text="Dashboard" />}</Link>
+          </Menu.Item>
 
           {canEdit ? (
             <>
