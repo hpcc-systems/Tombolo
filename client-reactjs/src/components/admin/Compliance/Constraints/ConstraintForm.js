@@ -78,13 +78,41 @@ const ConstraintForm = ({ modal, onClose }) => {
       visible={modal.isOpen}
       confirmLoading={sending.loading}>
       <Form layout="vertical" form={form}>
-        <Form.Item label={<Text>Constraint name</Text>} name="name" required>
+        <Form.Item
+          label={<Text>Constraint name</Text>}
+          name="name"
+          validateTrigger={['onChange', 'onBlur']}
+          rules={[
+            {
+              max: 256,
+              message: 'Maximum of 256 characters allowed',
+            },
+          ]}
+          required>
           <Input />
         </Form.Item>
-        <Form.Item label={<Text>Short Description</Text>} name="short_description">
+        <Form.Item
+          label={<Text>Short Description</Text>}
+          validateTrigger={['onChange', 'onBlur']}
+          rules={[
+            {
+              max: 256,
+              message: 'Maximum of 256 characters allowed',
+            },
+          ]}
+          name="short_description">
           <Input />
         </Form.Item>
-        <Form.Item label={<Text>Description</Text>} name="description">
+        <Form.Item
+          label={<Text>Description</Text>}
+          validateTrigger={['onChange', 'onBlur']}
+          rules={[
+            {
+              max: 1024,
+              message: 'Maximum of 1024 characters allowed',
+            },
+          ]}
+          name="description">
           <MonacoEditor lang="markdown" targetDomId="constarint" />
         </Form.Item>
       </Form>
