@@ -2,8 +2,8 @@ import React, { useEffect, useState } from 'react';
 import { message, Table } from 'antd';
 import { useLocation } from 'react-router-dom';
 
-import { authHeader, handleError } from '../../common/AuthHeader.js';
-import { Constants } from '../../common/Constants';
+import { authHeader, handleError } from '../../../common/AuthHeader.js';
+import { Constants } from '../../../common/Constants';
 
 function NotificationsTable({ applicationId }) {
   const [notifications, setNotifications] = useState([]);

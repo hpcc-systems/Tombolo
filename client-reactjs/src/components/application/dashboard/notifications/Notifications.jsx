@@ -1,14 +1,15 @@
 import React, { useEffect, useState } from 'react';
 import { Tabs, Empty, Spin } from 'antd';
+import { useSelector } from 'react-redux';
+import { message } from 'antd';
+import moment from 'moment';
+
 import NotificationsTable from './NotificationsTable';
 import NotificationCharts from './charts/NotificationCharts';
 import Filters from './charts/Filters';
 import MetricBoxes from './charts/MetricBoxes';
 import './index.css';
-import { authHeader, handleError } from '../../common/AuthHeader.js';
-import { useSelector } from 'react-redux';
-import { message } from 'antd';
-import moment from 'moment';
+import { authHeader, handleError } from '../../../common/AuthHeader.js';
 
 function Index() {
   const [notifications, setNotifications] = useState([]);
@@ -176,19 +177,7 @@ function Index() {
           />
 
           {notifications.length > 0 ? (
-            <div
-              style={{
-                border: '1px solid lightGray',
-                paddingTop: '10px',
-                marginTop: '40px',
-                display: 'flex',
-                flexDirection: 'column',
-                overflow: 'auto',
-                // background: 'red',
-                minHeight: '75vh',
-                justifyContent: 'center',
-                alignItems: 'center',
-              }}>
+            <div className="notifications__charts">
               <MetricBoxes metrics={metrics} notifications={notifications} />
               <NotificationCharts
                 metrics={metrics}

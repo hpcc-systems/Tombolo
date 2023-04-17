@@ -29,6 +29,7 @@ const CLUSTER_TIMEZONE_OFFSET = "clustertimezoneoffset.js";
 const SUBMIT_CLUSTER_MONITORING_JOB = "submitClusterMonitoring.js";
 const JOB_MONITORING = "submitJobMonitoring.js";
 const SUBMIT_SUPER_FILEMONITORING_FILE_NAME = "submitSuperFileMonitoring.js";
+const CLUSTER_USAGE_HISTORY_TRACKER = "submitClusterUsageTracker.js";
 
 class JobScheduler {
   constructor() {
@@ -96,6 +97,7 @@ class JobScheduler {
       await this.scheduleSuperFileMonitoringOnServerStart();
       await this.scheduleClusterMonitoringOnServerStart();
       await this.scheduleJobMonitoringOnServerStart();
+      await this.createClusterUsageHistoryJob();
       logger.info("✔️  JOB SCHEDULER BOOTSTRAPPED...");
     })();
   }
@@ -651,8 +653,21 @@ class JobScheduler {
       logger.error(err);
     }
   }
-
   // --------------------------------------------------------------------------------------------
+  // Job monitoring bree job
+  createClusterUsageHistoryJob(){
+  const uniqueJobName = `Cluster Usage History Tracker`;
+  const job = {
+    interval: 15000,
+    name: uniqueJobName,
+    path: path.join(__dirname, "jobs", CLUSTER_USAGE_HISTORY_TRACKER),
+  };
+  this.bree.add(job);
+  this.bree.start(uniqueJobName);
+  logger.info("📈 CLUSTER USAGE HISTORY TRACKER JOB STARTED ...");  
+}
+  // --------------------------------------------------------------------------------------------
+
 
   async removeJobFromScheduler(name) {
     try {

@@ -1414,6 +1414,7 @@ router.get(
   [query("clusterId").isUUID(4).withMessage("Invalid cluster Id")],
   async (req, res) => {
     try {
+      const {clusterId} = req.query;
       //Validate cluster Id
       const errors = validationResult(req).formatWith(
         validatorUtil.errorFormatter

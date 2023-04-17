@@ -1,7 +1,0 @@
-.hide_formItem_label .ant-form-item-label label {
-  visibility: hidden;
-}
-
-.filters__form * {
-  margin-right: 2px;
-}

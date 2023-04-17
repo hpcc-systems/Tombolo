@@ -2,7 +2,7 @@ import React from 'react';
 import { Form, Select, DatePicker, Button, message } from 'antd';
 import moment from 'moment';
 
-import { authHeader, handleError } from '../../../common/AuthHeader.js';
+import { authHeader, handleError } from '../../../../common/AuthHeader.js';
 import '../index.css';
 
 const monitoringTypeOptions = [
@@ -142,14 +142,3 @@ function Filters({ applicationId, setNotifications, setLoadingData, groupDataBy,
 }
 
 export default Filters;
-
-// TODO - Monitorings status and monitoring type must from the below set
-// STATUS -> notified , triage, inProgress, completed
-// MONITORING TYPE -> 'jobMonitoring', 'file','cluster','superFile' }
-
-//2.  Make sure all the columns in notification tables are populated
-//3. Clear date picker is not working. When no date range is selected, it should set the group by option to 'Year'
-//4. Make responsive - Add media queries - Done
-//5. Metric Tiles fix Heading case - Done
-//6. Sort Data by date before sending to the client - Done
-// 7. Check backend validation

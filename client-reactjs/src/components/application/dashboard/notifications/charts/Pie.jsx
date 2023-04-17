@@ -1,4 +1,3 @@
-/* eslint-disable unused-imports/no-unused-vars */
 import React, { useState, useEffect } from 'react';
 import { Pie } from '@ant-design/plots';
 
