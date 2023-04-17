@@ -10,6 +10,7 @@ import Filters from './charts/Filters';
 import MetricBoxes from './charts/MetricBoxes';
 import './index.css';
 import { authHeader, handleError } from '../../../common/AuthHeader.js';
+import ExportMenu from '../ExportMenu/ExportMenu';
 
 function Index() {
   const [notifications, setNotifications] = useState([]);
@@ -166,7 +167,7 @@ function Index() {
 
   return (
     <div>
-      <Tabs>
+      <Tabs tabBarExtraContent={<ExportMenu />}>
         <Tabs.TabPane key="1" tab="Dashboard">
           <Filters
             applicationId={applicationId}

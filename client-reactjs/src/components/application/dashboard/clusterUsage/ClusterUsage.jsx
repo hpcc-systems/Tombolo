@@ -8,6 +8,7 @@ import { authHeader, handleError } from '../../../common/AuthHeader.js';
 import StorageUsageHistoryCharts from './charts/StorageUsageHistoryCharts.jsx';
 import Filters from './charts/Filters.jsx';
 import CurrentClusterUsageCharts from './charts/CurrentClusterUsageCharts.jsx';
+import ExportMenu from '../ExportMenu/ExportMenu.jsx';
 
 function ClusterUsage() {
   const [clusterUsageHistory, setClusterUsageHistory] = useState({});
@@ -56,7 +57,7 @@ function ClusterUsage() {
   };
 
   return (
-    <Tabs>
+    <Tabs tabBarExtraContent={<ExportMenu />}>
       <Tabs.TabPane tab={clusterOptions.filter((cluster) => cluster.value == selectedCluster)[0]?.label}>
         <Filters
           setSelectedCluster={setSelectedCluster}
@@ -78,17 +79,14 @@ function ClusterUsage() {
 export default ClusterUsage;
 
 //TODO
-// Bring in Export data button
 // Loading indicators on charts
 // Add Expandable
 // Make charts responsive. Line graph and graph in notification are not responsive
-// Pop over is not working
 // Moved dashboards related css to separate file
 
 // TODO - Monitorings status and monitoring type must from the below set
 // STATUS -> notified , triage, inProgress, completed
 // MONITORING TYPE -> 'jobMonitoring', 'file','cluster','superFile' }
 //  Make sure all the columns in notification tables are populated
-//  Make responsive - Add media queries
 //  Check backend validation
 //  Add filters to notification table

@@ -8,6 +8,7 @@ function LinePlot({ clusterUsageHistory }) {
     padding: 'auto',
     xField: 'date',
     yField: 'usage',
+    width: '200px',
     xAxis: {
       tickCount: 5,
     },

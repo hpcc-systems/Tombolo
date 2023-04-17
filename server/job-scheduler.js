@@ -21,12 +21,15 @@ const SUBMIT_SPRAY_JOB_FILE_NAME = "submitSprayJob.js";
 const SUBMIT_SCRIPT_JOB_FILE_NAME = "submitScriptJob.js";
 const SUBMIT_MANUAL_JOB_FILE_NAME = "submitManualJob.js";
 const SUBMIT_GITHUB_JOB_FILE_NAME = "submitGithubJob.js";
-const SUBMIT_LANDINGZONE_FILEMONITORING_FILE_NAME = "submitLandingZoneFileMonitoring.js";
-const SUBMIT_LOGICAL_FILEMONITORING_FILE_NAME = "submitLogicalFileMonitoring.js";
+const SUBMIT_LANDINGZONE_FILEMONITORING_FILE_NAME =
+  "submitLandingZoneFileMonitoring.js";
+const SUBMIT_LOGICAL_FILEMONITORING_FILE_NAME =
+  "submitLogicalFileMonitoring.js";
 const JOB_STATUS_POLLER = "statusPoller.js";
 const FILE_MONITORING = "fileMonitoringPoller.js";
 const CLUSTER_TIMEZONE_OFFSET = "clustertimezoneoffset.js";
 const SUBMIT_CLUSTER_MONITORING_JOB = "submitClusterMonitoring.js";
+const APIKEY_MONITORING = "submitApiKeyMonitoring.js";
 const JOB_MONITORING = "submitJobMonitoring.js";
 const SUBMIT_SUPER_FILEMONITORING_FILE_NAME = "submitSuperFileMonitoring.js";
 const CLUSTER_USAGE_HISTORY_TRACKER = "submitClusterUsageTracker.js";
@@ -96,6 +99,7 @@ class JobScheduler {
       await this.scheduleFileMonitoringOnServerStart();
       await this.scheduleSuperFileMonitoringOnServerStart();
       await this.scheduleClusterMonitoringOnServerStart();
+      await this.scheduleKeyCheck();
       await this.scheduleJobMonitoringOnServerStart();
       await this.createClusterUsageHistoryJob();
       logger.info("✔️  JOB SCHEDULER BOOTSTRAPPED...");
@@ -175,6 +179,7 @@ class JobScheduler {
             const commonWorkerData = {
               applicationId: job.application_id,
               clusterId: job.cluster_id,
+              workerData,
               dataflowId: dataflowId,
               jobExecutionGroupId,
               jobType: job.jobType,
@@ -587,6 +592,29 @@ class JobScheduler {
     }
   }
 
+  // When server starts - start key monitoring job
+  async scheduleKeyCheck() {
+    try {
+      let jobName = "key-check-" + new Date().getTime();
+      this.bree.add({
+        name: jobName,
+        interval: "at 05:30am also at 05:30pm",
+        path: path.join(__dirname, "jobs", APIKEY_MONITORING),
+        worker: {
+          workerData: {
+            jobName: jobName,
+            WORKER_CREATED_AT: Date.now(),
+          },
+        },
+      });
+
+      this.bree.start(jobName);
+      logger.info("📺 KEY MONITORING STARTED ...");
+    } catch (err) {
+      logger.error(err);
+    }
+  }
+
   // ---------------------------------------------------------------------------------------------
   // Cluster monitoring bree job
   createClusterMonitoringBreeJob({ clusterMonitoring_id, cron }) {
@@ -658,7 +686,7 @@ class JobScheduler {
   createClusterUsageHistoryJob(){
   const uniqueJobName = `Cluster Usage History Tracker`;
   const job = {
-    interval: 15000,
+    interval: 14400000, // 4 hours
     name: uniqueJobName,
     path: path.join(__dirname, "jobs", CLUSTER_USAGE_HISTORY_TRACKER),
   };
