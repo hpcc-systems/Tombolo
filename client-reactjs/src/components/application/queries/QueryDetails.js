@@ -678,11 +678,16 @@ class QueryDetails extends PureComponent {
                 <Form.Item
                   label={<Text text="Title" />}
                   name="title"
+                  validateTrigger={['onChange', 'onBlur']}
                   rules={[
                     { required: true, message: 'Please enter a title!' },
                     {
                       pattern: new RegExp(/^[ a-zA-Z0-9:._-]*$/),
                       message: 'Please enter a valid title. Title can have  a-zA-Z0-9:._- and space',
+                    },
+                    {
+                      max: 256,
+                      message: 'Maximum of 256 characters allowed',
                     },
                   ]}>
                   <Input
@@ -697,11 +702,16 @@ class QueryDetails extends PureComponent {
                 <Form.Item
                   label={<Text text="Name" />}
                   name="name"
+                  validateTrigger={['onChange', 'onBlur']}
                   rules={[
                     { required: true, message: 'Please enter a name!' },
                     {
                       pattern: new RegExp(/^[a-zA-Z0-9:._-]*$/),
                       message: 'Please enter a valid name',
+                    },
+                    {
+                      max: 256,
+                      message: 'Maximum of 256 characters allowed',
                     },
                   ]}>
                   <Input
@@ -733,6 +743,7 @@ class QueryDetails extends PureComponent {
                     <Input
                       id="query_url"
                       onChange={this.onChange}
+                      validateTrigger={['onChange', 'onBlur']}
                       placeholder={i18n('URL')}
                       disabled={!editingAllowed}
                       className={this.state.enableEdit ? null : 'read-only-input'}
@@ -744,6 +755,7 @@ class QueryDetails extends PureComponent {
                 <Form.Item
                   label={<Text text="Git Repo" />}
                   name="gitRepo"
+                  validateTrigger={['onChange', 'onBlur']}
                   rules={[{ type: 'url', message: 'Please enter a valid URL' }]}>
                   {this.state.enableEdit ? (
                     <Input

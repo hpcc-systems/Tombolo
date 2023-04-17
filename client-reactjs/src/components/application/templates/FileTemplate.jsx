@@ -431,12 +431,17 @@ function FileTemplate({ match, selectedAsset = {}, displayingInModal, onClose })
               <Form.Item
                 label={<Text text="Title" />}
                 name="title"
+                validateTrigger={['onChange', 'onBlur']}
                 className={!enableEdit ? 'read-only-input' : ''}
                 rules={[
                   { required: enableEdit ? true : false, message: 'Please enter a title!' },
                   {
                     pattern: new RegExp(/^[ a-zA-Z0-9:._-]*$/),
                     message: 'Please enter a valid title. Title can have  a-zA-Z0-9:._- and space',
+                  },
+                  {
+                    max: 256,
+                    message: 'Maximum of 256 characters allowed',
                   },
                 ]}>
                 <Input id="file_title" name="title" />
@@ -521,10 +526,15 @@ function FileTemplate({ match, selectedAsset = {}, displayingInModal, onClose })
                     <Form.Item
                       name="searchString"
                       style={{ width: '70%' }}
+                      validateTrigger={['onChange', 'onBlur']}
                       rules={[
                         {
                           required: true,
                           message: 'Please enter search text!',
+                        },
+                        {
+                          max: 256,
+                          message: 'Maximum of 256 characters allowed',
                         },
                       ]}>
                       <Input onChange={handleSearch}></Input>

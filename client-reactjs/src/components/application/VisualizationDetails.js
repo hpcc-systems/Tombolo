@@ -208,9 +208,14 @@ function VisualizationDetails() {
               <Form.Item
                 label={<Text text="Name" />}
                 name="name"
+                validateTrigger={['onChange', 'onBlur']}
                 rules={[
                   { required: formState.enableEdit, message: 'Please enter a name!' },
                   { pattern: new RegExp(/^[a-zA-Z0-9:._ -]*$/), message: 'Please enter a valid name' },
+                  {
+                    max: 256,
+                    message: 'Maximum of 256 characters allowed',
+                  },
                 ]}>
                 <Input
                   placeholder={i18n('Name')}
