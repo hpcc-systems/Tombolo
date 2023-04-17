@@ -29,6 +29,7 @@ let Sequelize = require("sequelize");
 const Op = Sequelize.Op;
 const multer = require("multer");
 const jobScheduler = require("../../job-scheduler");
+const sanitize = require("sanitize-filename");
 const AssetGroups = models.assets_groups;
 
 router.get("/app_list", (req, res) => {
@@ -257,12 +258,10 @@ router.post("/shareApplication", [], async (req, res) => {
     console.log("--- Share app error [app/read.js] --------------");
     console.dir({ err }, { depth: null });
     console.log("------------------------------------------------");
-    return res
-      .status(500)
-      .json({
-        success: false,
-        message: "Error occurred while saving user application mapping",
-      });
+    return res.status(500).json({
+      success: false,
+      message: "Error occurred while saving user application mapping",
+    });
   }
 });
 
@@ -604,11 +603,10 @@ router.post(
   upload.single("file"),
   function (req, res) {
     const { filename, originalname, mimetype } = req.file;
-    const isFileNameValid = /^[a-zA-Z0-9,(\)-_ ]*[.]{0,1}[a-zA-Z,(\)-_]*$/.test(
-      filename
-    );
-    if (!isFileNameValid || mimetype !== "application/json") {
-      removeFile(`tempFiles/${filename}`);
+    const sanitizedFileName = sanitize(filename);
+
+    if (mimetype !== "application/json") {
+      removeFile(`tempFiles/${sanitizedFileName}`);
       emitUpdates(io, {
         step: "ERR - Invalid file name or type",
         status: "error",
@@ -618,7 +616,7 @@ router.post(
         .json({ success: false, message: "Invalid file name or format" });
     }
 
-    fs.readFile(`tempFiles/${filename}`, (err, data) => {
+    fs.readFile(`tempFiles/${sanitizedFileName}`, (err, data) => {
       if (err) {
         return res.status(500).json({
           success: false,
@@ -626,7 +624,7 @@ router.post(
         });
       } else {
         emitUpdates(io, { step: "Extracting data", status: "normal" });
-        let parsedData = validateJSON(data, `tempFiles/${filename}`);
+        let parsedData = validateJSON(data, `tempFiles/${sanitizedFileName}`);
         if (parsedData === "error") {
           emitUpdates(io, { step: "ERR - extracting data", status: "error" });
           res.status(404).send({
