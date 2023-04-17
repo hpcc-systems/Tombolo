@@ -8,6 +8,7 @@ import {
   FileSearchOutlined,
   ClusterOutlined,
   NotificationOutlined,
+  ClockCircleOutlined,
   ContainerOutlined,
   AreaChartOutlined,
 } from '@ant-design/icons';
@@ -109,7 +110,10 @@ class LeftNav extends Component {
             <Menu.Item key="4b" icon={<ClusterOutlined />}>
               <Link to={'/' + applicationId + '/clustermonitoring'}>{<Text text="Cluster" />}</Link>
             </Menu.Item>
-            <Menu.Item key="4c" icon={<NotificationOutlined />}>
+            <Menu.Item key="4c" icon={<ClockCircleOutlined />}>
+              <Link to={'/' + applicationId + '/jobmonitoring'}>{<Text text="Job" />}</Link>
+            </Menu.Item>
+            <Menu.Item key="4e" icon={<NotificationOutlined />}>
               <Link to={'/' + applicationId + '/notifications'}>{<Text text="Notifications" />}</Link>
             </Menu.Item>
             <Menu.Item key="4d" icon={<ContainerOutlined />}>

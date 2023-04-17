@@ -41,6 +41,7 @@ const SuperFileMonitoring = React.lazy(() =>
 const Notifications = React.lazy(() => import('./components/application/notifications/Notifications'));
 const ClusterMonitoring = React.lazy(() => import('./components/application/clusterMonitoring'));
 const Dashboard = React.lazy(() => import('./components/application/dashboard/dashboard/main'));
+const JobMonitoring = React.lazy(() => import('./components/application/jobMonitoring'));
 
 // Admin pages
 const Users = React.lazy(() => import('./components/admin/Users'));
@@ -179,6 +180,7 @@ class App extends React.Component {
                         <PrivateRoute path="/:applicationId/fileMonitoring" component={FileMonitoring} />
                         <PrivateRoute path="/:applicationId/superfileMonitoring" component={SuperFileMonitoring} />
                         <PrivateRoute path="/:applicationId/ClusterMonitoring" component={ClusterMonitoring} />
+                        <PrivateRoute path="/:applicationId/jobMonitoring" component={JobMonitoring} />{' '}
                         <PrivateRoute path="/:applicationId/notifications" component={Notifications} />
                         <PrivateRoute path="/:applicationId/dashboard" component={Dashboard} />
                         <PrivateRoute path="/:applicationId/assets/add-jobs" component={AddJobsForm} />

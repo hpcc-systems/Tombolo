@@ -1,5 +1,5 @@
 import { DeleteOutlined, QuestionCircleOutlined, SearchOutlined } from '@ant-design/icons';
-import { AutoComplete, Button, message, Modal, Popconfirm, Select, Spin, Table, Tooltip } from 'antd';
+import { Input, AutoComplete, Button, message, Modal, Popconfirm, Select, Spin, Table, Tooltip } from 'antd';
 import debounce from 'lodash/debounce';
 import React, { Component } from 'react';
 
@@ -113,7 +113,7 @@ class ShareApp extends Component {
 
   saveSharedDetails = () => {
     var _self = this;
-    if (_self.state.sharedAppUsers.filter((user) => user.username == _self.state.selectedUser).length > 0) {
+    if (_self.state.sharedAppUsers.filter((user) => user == _self.state.selectedUser).length > 0) {
       message.config({ top: 150 });
       message.error(
         'This application has already been shared with user "' +
@@ -132,7 +132,7 @@ class ShareApp extends Component {
 
   searchUsers = debounce((searchString) => {
     let _self = this;
-    if (searchString.length <= 3) {
+    if (searchString.length <= 1) {
       this.setState({
         ...this.state,
         shareButtonEnabled: false,
@@ -144,7 +144,7 @@ class ShareApp extends Component {
       autoCompleteSuffix: <Spin />,
     });
 
-    fetch('/api/user/searchuser?searchTerm=' + searchString, {
+    fetch('/api/user/read/searchuser?searchTerm=' + searchString, {
       method: 'get',
       headers: authHeader(),
     })
@@ -169,11 +169,21 @@ class ShareApp extends Component {
       });
   }, 400);
 
+  // When user is selected form auto complete drop down
   onUserSelected = (selectedUser, user) => {
     this.setState({
       ...this.state,
       shareButtonEnabled: true,
       selectedUser: user.key,
+    });
+  };
+
+  // if using azure_ad it should be done differently
+  handleEmailInput = (e) => {
+    this.setState({
+      ...this.state,
+      shareButtonEnabled: true,
+      selectedUser: e.target.value,
     });
   };
 
@@ -223,10 +233,10 @@ class ShareApp extends Component {
       await fetch('/api/app/read/stopApplicationShare', {
         method: 'post',
         headers: authHeader(),
-        body: JSON.stringify({ application_id: this.props.appId, username: record.username }),
+        body: JSON.stringify({ application_id: this.props.appId, username: record }),
       });
-      message.success(`${this.state.applicationTitle} is no longer shared with ${record.firstName} ${record.lastName}`);
-      this.setState({ sharedAppUsers: this.state.sharedAppUsers.filter((user) => user.username !== record.username) });
+      message.success(`${this.state.applicationTitle} is no longer shared with ${record}`);
+      this.setState({ sharedAppUsers: this.state.sharedAppUsers.filter((user) => user !== record) });
     } catch (err) {
       message.error('Failed to stop stop application share');
     }
@@ -240,7 +250,7 @@ class ShareApp extends Component {
         title: 'Shared User',
         width: '80%',
         dataIndex: 'name',
-        render: (text, row) => <a>{row.firstName + ' ' + row.lastName}</a>,
+        render: (text, row) => <a>{row}</a>,
       },
       {
         title: 'Action',
@@ -248,7 +258,7 @@ class ShareApp extends Component {
         render: (text, record) => (
           <span>
             <Popconfirm
-              title={`Are you sure you want to stop sharing this application with ${record.firstName} ${record.lastName}?`}
+              title={`Are you sure you want to stop sharing this application with ${record}?`}
               onConfirm={() => this.handleStopApplicationShare(record)}
               icon={<QuestionCircleOutlined />}>
               <a href="#">
@@ -276,32 +286,54 @@ class ShareApp extends Component {
               Close
             </Button>,
           ]}>
-          <div style={{ paddingBottom: '5px' }}>
-            <AutoComplete
-              className="certain-category-search"
-              dropdownClassName="certain-category-search-dropdown"
-              dropdownMatchSelectWidth={false}
-              dropdownStyle={{ width: 300 }}
-              style={{ width: '70%', paddingRight: '5px' }}
-              onSearch={(value) => this.searchUsers(value)}
-              onSelect={(value, user) => this.onUserSelected(value, user)}
-              placeholder={i18n('Search users')}>
-              {userSuggestions.map((user) => {
-                return (
-                  <Option key={user.value} value={user.text}>
-                    {this.groupUserDetails(user)}
-                  </Option>
-                );
-              })}
-            </AutoComplete>
-            <Button type="primary" disabled={!shareButtonEnabled} onClick={this.saveSharedDetails}>
+          <div style={{ paddingBottom: '5px', width: '100%' }}>
+            {process.env.REACT_APP_APP_AUTH_METHOD === 'azure_ad' ? (
+              <Input
+                type="email"
+                validateTrigger={['onChange', 'onBlur']}
+                style={{ width: 'calc(70% - 5px)', marginRight: '5px' }}
+                placeholder="E-mail"
+                onChange={this.handleEmailInput}
+                rules={[
+                  {
+                    required: true,
+                    whitespace: true,
+                    type: 'email',
+                    message: 'Invalid e-mail address.',
+                  },
+                ]}
+              />
+            ) : (
+              <AutoComplete
+                className="certain-category-search"
+                dropdownClassName="certain-category-search-dropdown"
+                dropdownMatchSelectWidth={false}
+                dropdownStyle={{ width: 300 }}
+                style={{ width: '70%', marginRight: '5px' }}
+                onSearch={(value) => this.searchUsers(value)}
+                onSelect={(value, user) => this.onUserSelected(value, user)}
+                placeholder={i18n('Search users')}>
+                {userSuggestions.map((user) => {
+                  return (
+                    <Option key={user.email} value={user.email}>
+                      {this.groupUserDetails(user)}
+                    </Option>
+                  );
+                })}
+              </AutoComplete>
+            )}
+            <Button
+              type="primary"
+              disabled={!shareButtonEnabled}
+              onClick={this.saveSharedDetails}
+              style={{ width: '30%' }}>
               Share Application
             </Button>
           </div>
           <div style={{ marginTop: '15px' }}>
             <Table
               columns={sharedUsersColumns}
-              rowKey={(record) => record.id}
+              rowKey={(record) => record}
               dataSource={sharedAppUsers}
               pagination={false}
               size="small"

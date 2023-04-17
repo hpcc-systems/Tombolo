@@ -129,10 +129,12 @@ const MonitoringTab = ({
           {
             validator: async (_, cron) => {
               if (cron) {
-                try {
+                const cronInArray = cron.split(' ');
+                if (cronInArray.length > 5) {
+                  setCronExplainer({ valid: false, message: `` });
+                  return Promise.reject('Cron expression has more than 5 parts');
+                } else {
                   cronstrue.toString(cron);
-                } catch (err) {
-                  return Promise.reject(err);
                 }
               }
             },

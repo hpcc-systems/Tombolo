@@ -1050,3 +1050,6 @@ div.tooltip {
   font-weight: 700;
   font-size: 1rem;
 }
+.anticon-loading * {
+  color: #1890ff;
+}

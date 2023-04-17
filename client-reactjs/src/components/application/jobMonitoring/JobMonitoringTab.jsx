@@ -1,16 +1,8 @@
 import React, { useState, useEffect } from 'react';
-import { Form, Input, Typography, Select, Checkbox } from 'antd';
+import { Form, Input, Typography, Checkbox } from 'antd';
 import cronstrue from 'cronstrue';
 
-const notifyOptions = [{ label: 'Exceeded cluster usage %', value: 'TargetClusterAlertSize' }];
-
-function ClusterMonitoringTab({
-  clusterMonitorings,
-  setNotifyConditions,
-  selectedEngines,
-  notifyConditions,
-  selectedMonitoring,
-}) {
+function MonitoringTab({ jobMonitorings, selectedMonitoring }) {
   const [cornExpaliner, setCornExplainer] = useState(null);
   const [cron, setCorn] = useState(null);
 
@@ -31,10 +23,11 @@ function ClusterMonitoringTab({
       <Form.Item
         label="Monitoring name"
         name="name"
+        required
         rules={[
           {
             validator: (_, value) => {
-              const nameExists = clusterMonitorings.find((monitoring) => monitoring.name === value);
+              const nameExists = jobMonitorings.find((monitoring) => monitoring.name === value);
               if (!value) {
                 return Promise.reject('Invalid name');
               } else if (!selectedMonitoring && nameExists) {
@@ -88,58 +81,6 @@ function ClusterMonitoringTab({
         />
       </Form.Item>
 
-      <Form.Item label="Notify when" name="notifyCondition" rules={[{ required: true, message: 'Required filed' }]}>
-        <Select
-          placeholder="Select one or more"
-          mode="multiple"
-          options={notifyOptions}
-          onChange={(value) => {
-            setNotifyConditions(value);
-          }}></Select>
-      </Form.Item>
-
-      {selectedEngines.length > 0 && notifyConditions.includes('TargetClusterAlertSize') ? (
-        <Form.List name="engineSizeLimit">
-          {() => {
-            const engineLimits = selectedEngines.map((engine) => {
-              return (
-                <Form.Item
-                  name={`engineLimit-${engine}`}
-                  key={engine}
-                  rules={[
-                    {
-                      validator: (_, value) => {
-                        if (!value) {
-                          return Promise.reject('Invalid size');
-                        }
-                        const splittedVal = value.split('');
-                        const isLastItemNum = !isNaN(parseInt(splittedVal[splittedVal.length - 1]));
-
-                        if (isLastItemNum) {
-                          return Promise.resolve();
-                        } else {
-                          return Promise.reject('Invalid size');
-                        }
-                      },
-                    },
-                  ]}>
-                  <Input
-                    className="clusterMonitoring_engines"
-                    addonBefore={engine}
-                    placeholder={'Limit in %'}
-                    style={{ width: '50%' }}
-                    type="number"
-                    min={1}
-                    max={100}
-                  />
-                </Form.Item>
-              );
-            });
-            return engineLimits;
-          }}
-        </Form.List>
-      ) : null}
-
       <Form.Item name="isActive" valuePropName="checked" noStyle>
         <Checkbox>Start monitoring now</Checkbox>
       </Form.Item>
@@ -147,4 +88,4 @@ function ClusterMonitoringTab({
   );
 }
 
-export default ClusterMonitoringTab;
+export default MonitoringTab;

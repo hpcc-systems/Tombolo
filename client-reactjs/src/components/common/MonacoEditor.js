@@ -1,5 +1,9 @@
 import React from 'react';
 import { default as Monaco } from '@monaco-editor/react';
+import { loader } from '@monaco-editor/react';
+
+// https://github.com/suren-atoyan/monaco-react/issues/217#issuecomment-980800802
+loader.config({ paths: { vs: '/monaco-editor/min/vs' } });
 
 const MonacoEditor = ({ onChange, value = '', targetDomId = '', lang = 'markdown', ...rest }) => {
   const config = {

@@ -40,21 +40,17 @@ router.get("/app_list", (req, res) => {
       })
       .catch(function (err) {
         console.log(err);
-        return res
-          .status(500)
-          .json({
-            success: false,
-            message: "Error occurred while getting application list",
-          });
+        return res.status(500).json({
+          success: false,
+          message: "Error occurred while getting application list",
+        });
       });
   } catch (err) {
     console.log("err", err);
-    return res
-      .status(500)
-      .json({
-        success: false,
-        message: "Error occurred while getting application list",
-      });
+    return res.status(500).json({
+      success: false,
+      message: "Error occurred while getting application list",
+    });
   }
 });
 router.get(
@@ -87,12 +83,10 @@ router.get(
       res.status(200).json(allApplications);
     } catch (err) {
       console.log("err", err);
-      return res
-        .status(500)
-        .json({
-          success: false,
-          message: "Error occurred while getting application list",
-        });
+      return res.status(500).json({
+        success: false,
+        message: "Error occurred while getting application list",
+      });
     }
   }
 );
@@ -118,21 +112,17 @@ router.get(
         })
         .catch(function (err) {
           console.log(err);
-          return res
-            .status(500)
-            .json({
-              success: false,
-              message: "Error occured while getting application details",
-            });
+          return res.status(500).json({
+            success: false,
+            message: "Error occured while getting application details",
+          });
         });
     } catch (err) {
       console.log("err", err);
-      return res
-        .status(500)
-        .json({
-          success: false,
-          message: "Error occured while getting application details",
-        });
+      return res.status(500).json({
+        success: false,
+        message: "Error occured while getting application details",
+      });
     }
   }
 );
@@ -198,12 +188,10 @@ router.post(
       }
     } catch (err) {
       console.log("err", err);
-      return res
-        .status(500)
-        .json({
-          success: false,
-          message: "Error occured while creating application",
-        });
+      return res.status(500).json({
+        success: false,
+        message: "Error occured while creating application",
+      });
     }
   }
 );
@@ -236,29 +224,24 @@ router.post("/deleteApplication", async function (req, res) {
     return res.status(200).send({ result: "success" });
   } catch (err) {
     console.log("err", err);
-    return res
-      .status(500)
-      .json({
-        success: false,
-        message: "Error occurred while removing application",
-      });
+    return res.status(500).json({
+      success: false,
+      message: "Error occurred while removing application",
+    });
   }
 });
 
 // SHARE APPLICATION
 router.post("/shareApplication", [], async (req, res) => {
   const { data: appShareDetails } = req.body;
+
   try {
     await UserApplication.create(appShareDetails);
     // Can't wait for notification  email to be sent - might take longer ->Sending response to client as soon as the data is saved in userApplication table
     res.json({ result: "success" });
     try {
-      const userDetails = await authServiceUtil.getUserDetails(
-        req,
-        appShareDetails.user_id
-      );
       NotificationModule.notifyApplicationShare(
-        userDetails[0].email,
+        appShareDetails.user_id,
         appShareDetails.appTitle
       );
     } catch (err) {
@@ -291,6 +274,9 @@ router.post(
     body("username").notEmpty().withMessage("Invalid username"),
   ],
   async (req, res) => {
+    console.log("------------------------------------------");
+    console.dir(req.body, { depth: null });
+    console.log("------------------------------------------");
     const errors = validationResult(req).formatWith(
       validatorUtil.errorFormatter
     );
@@ -309,7 +295,7 @@ router.post(
   }
 );
 
-//Import application ################
+//Import application
 let upload = multer();
 upload = multer({ dest: "tempFiles/" });
 let allPromises = [];
@@ -472,14 +458,12 @@ function importChildGroups(
               step: "SUCCESS - Application import complete",
               status: "success",
             });
-            res
-              .status(200)
-              .json({
-                success: true,
-                message: "Import complete",
-                appId: newAppId,
-                app,
-              });
+            res.status(200).json({
+              success: true,
+              message: "Import complete",
+              appId: newAppId,
+              app,
+            });
           });
         })
         .catch((err) => {
@@ -636,24 +620,20 @@ router.post(
 
     fs.readFile(`tempFiles/${filename}`, (err, data) => {
       if (err) {
-        return res
-          .status(500)
-          .json({
-            success: false,
-            message: "Error occured while importing application",
-          });
+        return res.status(500).json({
+          success: false,
+          message: "Error occured while importing application",
+        });
       } else {
         emitUpdates(io, { step: "Extracting data", status: "normal" });
         let parsedData = validateJSON(data, `tempFiles/${filename}`);
         if (parsedData === "error") {
           emitUpdates(io, { step: "ERR - extracting data", status: "error" });
-          res
-            .status(404)
-            .send({
-              success: false,
-              message:
-                "Unable to read file uploaded. Data must be in JSON format",
-            });
+          res.status(404).send({
+            success: false,
+            message:
+              "Unable to read file uploaded. Data must be in JSON format",
+          });
           return;
         } else {
           emitUpdates(io, {
@@ -693,12 +673,10 @@ router.post(
                       step: `FAILED - App ${application.title} already exists `,
                       status: "error",
                     });
-                    return res
-                      .status(409)
-                      .json({
-                        success: false,
-                        message: `Application with title ${application.title} already exists `,
-                      });
+                    return res.status(409).json({
+                      success: false,
+                      message: `Application with title ${application.title} already exists `,
+                    });
                   } else {
                     emitUpdates(io, {
                       step: "SUCCESS -  Unique application name",
@@ -770,55 +748,45 @@ router.post(
                             step: `ERR- Creating application`,
                             status: "error",
                           });
-                          return res
-                            .status(400)
-                            .json({
-                              success: false,
-                              message: "Unable to create application",
-                            });
+                          return res.status(400).json({
+                            success: false,
+                            message: "Unable to create application",
+                          });
                         });
                     } else {
                       emitUpdates(io, {
                         step: `ERR- validating permission`,
                         status: "error",
                       });
-                      return res
-                        .status(400)
-                        .json({
-                          success: false,
-                          message: "Inadquate permission",
-                        });
+                      return res.status(400).json({
+                        success: false,
+                        message: "Inadquate permission",
+                      });
                     }
                   }
                 })
                 .catch(function (err) {
                   console.log(err);
-                  return res
-                    .status(500)
-                    .json({
-                      success: false,
-                      message: "Error occured while getting application list",
-                    });
+                  return res.status(500).json({
+                    success: false,
+                    message: "Error occured while getting application list",
+                  });
                 });
             } catch (err) {
               console.log("err", err);
-              return res
-                .status(500)
-                .json({
-                  success: false,
-                  message: "Error occured while getting application list",
-                });
+              return res.status(500).json({
+                success: false,
+                message: "Error occured while getting application list",
+              });
             }
           } else {
             //File uploaded does not have app ID
             emitUpdates(io, "ERR -  Validating application data");
-            return res
-              .status(404)
-              .send({
-                success: false,
-                message:
-                  "Unable to read file uploaded. Data must be in JSON format",
-              });
+            return res.status(404).send({
+              success: false,
+              message:
+                "Unable to read file uploaded. Data must be in JSON format",
+            });
           }
         }
       }
@@ -1021,12 +989,10 @@ router.post(
       });
     } catch (err) {
       console.log("err", err);
-      return res
-        .status(500)
-        .json({
-          success: false,
-          message: "Error occured while removing application",
-        });
+      return res.status(500).json({
+        success: false,
+        message: "Error occured while removing application",
+      });
     }
   }
 );

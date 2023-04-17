@@ -1279,9 +1279,11 @@ io.of("/landingZoneFileUpload").on("connection", (socket) => {
     }
     try {
       const selectedCluster = await hpccUtil.getCluster(cluster.id);
+      //codeql fix 1
+      let url = `${cluster.thor_host}:${cluster.thor_port}/FileSpray/UploadFile.json?upload_&rawxml_=1&NetAddress=${machine}&OS=2&Path=${destinationFolder}`;
       request(
         {
-          url: `${cluster.thor_host}:${cluster.thor_port}/FileSpray/UploadFile.json?upload_&rawxml_=1&NetAddress=${machine}&OS=2&Path=${destinationFolder}`,
+          url: url,
           method: "POST",
           auth: hpccUtil.getClusterAuth(selectedCluster),
           formData: {

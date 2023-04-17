@@ -213,17 +213,17 @@ async function GetuserListToShareApp(req, res, next) {
   });
 }
 
-async function GetSharedAppUserList(req, res, next) {
-  return new Promise((resolve, reject) => {
-    UserApplication.findAll({where:{application_id: req.params.app_id}, raw: true}).then(async (users) => {
-      const sharedToUsers = users.filter(user => user.user_id !== req.params.username).map(user => user.user_id); // Remove creator of app from shared to users list
-      let userDetails = await authServiceUtil.getUserDetails(req, sharedToUsers);
-      resolve(userDetails)
-    }).catch((err) => {
-      reject(err);
-    })
-  });
-}
+// async function GetSharedAppUserList(req, res, next) {
+//   return new Promise((resolve, reject) => {
+//     UserApplication.findAll({where:{application_id: req.params.app_id}, raw: true}).then(async (users) => {
+//       const sharedToUsers = users.filter(user => user.user_id !== req.params.username).map(user => user.user_id); // Remove creator of app from shared to users list
+//       let userDetails = await authServiceUtil.getUserDetails(req, sharedToUsers);
+//       resolve(userDetails)
+//     }).catch((err) => {
+//       reject(err);
+//     })
+//   });
+// }
 
 async function changePassword(req, res, { username, password }) {
   var authServiceUrl = process.env.AUTH_SERVICE_URL.replace('auth', 'users') + '/changepwd';
@@ -351,7 +351,7 @@ module.exports = {
   delete: _delete,
   validateToken,
   GetuserListToShareApp,
-  GetSharedAppUserList,
+  // GetSharedAppUserList,
   changePassword,
   searchUser,
   registerUser,
