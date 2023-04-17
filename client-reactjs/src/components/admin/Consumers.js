@@ -456,7 +456,14 @@ class Consumers extends Component {
               <Form.Item
                 label={<Text text="Name" />}
                 name="name"
-                rules={[{ required: true, message: 'Consumer Name is required' }]}>
+                validateTrigger={['onChange', 'onBlur']}
+                rules={[
+                  { required: true, message: 'Consumer Name is required' },
+                  {
+                    max: 256,
+                    message: 'Maximum of 256 characters allowed',
+                  },
+                ]}>
                 <Input
                   id="consumer_title"
                   name="name"
@@ -494,7 +501,17 @@ class Consumers extends Component {
                 </Form.Item>
               ) : null}
 
-              <Form.Item label={<Text text="Contact Name" />} name="contact_name" required>
+              <Form.Item
+                label={<Text text="Contact Name" />}
+                name="contact_name"
+                validateTrigger={['onChange', 'onBlur']}
+                rules={[
+                  {
+                    max: 256,
+                    message: 'Maximum of 256 characters allowed',
+                  },
+                ]}
+                required>
                 <Input
                   id="consumer_contact"
                   name="contact_name"

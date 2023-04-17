@@ -91,6 +91,7 @@ const MonitoringTab = ({
       <Form.Item
         label="Display Name"
         name="monitorName"
+        validateTrigger={['onChange', 'onBlur']}
         style={{ width: 'calc(47.5% - 8px)' }}
         onChange={(value) => {
           setDisplayName(value);
@@ -98,6 +99,10 @@ const MonitoringTab = ({
         disabled={disabled}
         rules={[
           { required: true, message: 'Required filed' },
+          {
+            max: 256,
+            message: 'Maximum of 256 characters allowed',
+          },
           {
             message: 'Monitoring with same name already exists',
             validator: (_, value) => {
