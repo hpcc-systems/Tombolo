@@ -40,7 +40,7 @@ const SuperFileMonitoring = React.lazy(() =>
 );
 const Notifications = React.lazy(() => import('./components/application/notifications/Notifications'));
 const ClusterMonitoring = React.lazy(() => import('./components/application/clusterMonitoring'));
-const Dashboard = React.lazy(() => import('./components/application/dashboard/test/main'));
+const Dashboard = React.lazy(() => import('./components/application/dashboard/dashboard/main'));
 
 // Admin pages
 const Users = React.lazy(() => import('./components/admin/Users'));
@@ -119,8 +119,6 @@ class App extends React.Component {
 
     const getAssets = () => {
       const applicationId = this.props.application?.applicationId;
-      console.log('getting assets');
-      console.log(applicationId);
       if (applicationId) {
         return <Redirect to={`/${applicationId}/assets`} />;
       } else {
