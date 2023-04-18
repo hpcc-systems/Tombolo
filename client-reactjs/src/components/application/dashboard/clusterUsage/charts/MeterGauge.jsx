@@ -65,7 +65,8 @@ const MeterGauge = ({ data }) => {
         </div>
       }>
       <Gauge {...config} style={{ width: '200px', height: '200px' }} />
-      <h1> Hover </h1>
+      {/* Bug in antd -  fragment below is required for Pop over to work. */}
+      <></>
     </Popover>
   );
 };
