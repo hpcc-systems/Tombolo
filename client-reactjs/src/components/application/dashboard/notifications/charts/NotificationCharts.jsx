@@ -1,3 +1,4 @@
+/* eslint-disable prettier/prettier */
 import React from 'react';
 import { Resizable } from 're-resizable';
 import Pie from './Pie';
@@ -6,7 +7,7 @@ import Donut from './Donut';
 
 function NotificationCharts({ metrics, stackBarData, groupDataBy, donutData }) {
   return (
-    <div style={{ display: 'flex' }}>
+    <div style={{ display: 'flex', flexWrap: 'wrap', justifyContent: 'center' }}>
       <Resizable style={{ border: '1px solid lightgray', margin: '10px' }}>
         <div style={{ padding: '20px' }}>{<Donut donutData={donutData} />} </div>
       </Resizable>
