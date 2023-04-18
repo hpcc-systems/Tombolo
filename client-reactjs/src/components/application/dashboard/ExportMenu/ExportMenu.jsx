@@ -90,7 +90,7 @@ const ExportMenu = () => {
   return (
     <>
       <Dropdown overlay={menu}>
-        <Button type="primary" icon={<DownOutlined />}>
+        <Button type="primary" icon={<DownOutlined style={{ marginRight: '5px' }} />}>
           {<Text text="Export Data" />}
         </Button>
       </Dropdown>

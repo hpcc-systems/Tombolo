@@ -152,7 +152,7 @@ const { log } = require("./workerUtils")(parentPort);
           notification_reason: notificationDetails.title,
           clusterMonitoring_id,
           monitoring_id: clusterMonitoring_id,
-          monitoring_type: "Cluster",
+          monitoring_type: "cluster",
         });
       } catch (err) {
         logger.error(err);
@@ -192,7 +192,7 @@ const { log } = require("./workerUtils")(parentPort);
               notification_reason: notificationDetails.title,
               clusterMonitoring_id,
               monitoring_id: clusterMonitoring_id,
-              monitoring_type: "Cluster",
+              monitoring_type: "cluster",
             });
           }catch(err){
             logger.error(err)

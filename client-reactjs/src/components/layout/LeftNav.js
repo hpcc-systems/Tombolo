@@ -10,7 +10,7 @@ import {
   NotificationOutlined,
   ClockCircleOutlined,
   ContainerOutlined,
-  AreaChartOutlined,
+  BarChartOutlined,
 } from '@ant-design/icons';
 
 import { hasEditPermission } from '../common/AuthUtil.js';
@@ -113,17 +113,20 @@ class LeftNav extends Component {
             <Menu.Item key="4c" icon={<ClockCircleOutlined />}>
               <Link to={'/' + applicationId + '/jobmonitoring'}>{<Text text="Job" />}</Link>
             </Menu.Item>
-            <Menu.Item key="4e" icon={<NotificationOutlined />}>
-              <Link to={'/' + applicationId + '/notifications'}>{<Text text="Notifications" />}</Link>
-            </Menu.Item>
+
             <Menu.Item key="4d" icon={<ContainerOutlined />}>
               <Link to={'/' + applicationId + '/superfileMonitoring'}>{<Text text="Superfiles" />}</Link>
             </Menu.Item>
           </Menu.SubMenu>
 
-          <Menu.Item key="5" icon={<AreaChartOutlined />}>
-            <Link to={'/' + applicationId + '/dashboard'}>{<Text text="Dashboard" />}</Link>
-          </Menu.Item>
+          <Menu.SubMenu title="Dashboard" icon={<BarChartOutlined />} key="5">
+            <Menu.Item key="5a" icon={<NotificationOutlined />}>
+              <Link to={'/' + applicationId + '/dashboard/notifications'}>{<Text text="Notifications" />}</Link>
+            </Menu.Item>
+            <Menu.Item key="5b" icon={<ClusterOutlined />}>
+              <Link to={'/' + applicationId + '/dashboard/clusterUsage'}>{<Text text="Cluster" />}</Link>
+            </Menu.Item>
+          </Menu.SubMenu>
 
           {canEdit ? (
             <>

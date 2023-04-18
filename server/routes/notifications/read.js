@@ -1,5 +1,4 @@
 const express = require("express");
-const { file } = require("tmp");
 const router = express.Router();
 const fsPromises = require("fs/promises");
 const path = require("path");
@@ -7,6 +6,41 @@ const models = require("../../models");
 const monitoring_notifications = models.monitoring_notifications;
 const fileMonitoring = models.fileMonitoring;
 const clusterMonitoring = models.clusterMonitoring;
+const logger = require("../../config/logger")
+const {Op} = require("sequelize")
+const moment = require("moment");
+
+router.get("/filteredNotifications", async (req, res) => {
+  try {
+    const {queryData} = req.query;
+    const { monitoringType, monitoringStatus, dateRange, applicationId } = JSON.parse(queryData)
+
+    const query = {
+      monitoring_type: { [Op.in]: monitoringType },
+      application_id: applicationId,
+      status: { [Op.in]: monitoringStatus },
+    };
+    
+    if(dateRange){
+      let minDate = moment(dateRange[0]).format("YYYY-MM-DD HH:mm:ss");
+      let maxDate = moment(dateRange[1]).format("YYYY-MM-DD HH:mm:ss");
+
+      const range = [minDate, maxDate];
+      query.createdAt = {[Op.between] : range}
+    }
+
+    const monitorings = await monitoring_notifications.findAll({
+      where: query,
+      order: [['createdAt', 'DESC']],
+      raw: true
+    });
+
+    res.status(200).send(monitorings)
+
+  } catch (err) {
+    logger.error(err);
+  }
+});
 
 router.get("/:applicationId", async (req, res) => {
   try {
@@ -28,7 +62,7 @@ router.get("/:applicationId", async (req, res) => {
     });
     res.status(200).send(notifications);
   } catch (error) {
-    console.log(error);
+    logger.error(err)
     res.status(500).json({ message: "Unable to get notifications" });
   }
 });

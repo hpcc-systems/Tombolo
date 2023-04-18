@@ -1,0 +1,19 @@
+.hide_formItem_label .ant-form-item-label label {
+  visibility: hidden;
+}
+
+.filters__form * {
+  margin-right: 2px;
+}
+
+.notifications__charts {
+  border: 1px solid lightGray;
+  padding-top: 10px;
+  margin-top: 40px;
+  display: flex;
+  flex-direction: column;
+  overflow: auto;
+  min-height: 75vh;
+  /* justify-content: center; */
+  align-items: center;
+}

@@ -47,7 +47,7 @@ const KeyForm = ({ createKey }) => {
         <Input placeholder="Name"></Input>
       </Form.Item>
       <Form.Item label="Notes" name="Notes">
-        <TextArea rows={4} placeholder="250 Character Max" maxLength={250} />
+        <TextArea rows={2} placeholder="250 Character Max" maxLength={250} />
       </Form.Item>
       <Form.List name="emails">
         {(fields, { add, remove }) => (
