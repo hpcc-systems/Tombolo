@@ -193,7 +193,7 @@ function Index() {
               <Spin />
             </div>
           ) : (
-            <Empty style={{ marginTop: '150px', width: '82%' }} />
+            <Empty style={{ marginTop: '150px', width: '82%' }} image={Empty.PRESENTED_IMAGE_SIMPLE} />
           )}
         </Tabs.TabPane>
 

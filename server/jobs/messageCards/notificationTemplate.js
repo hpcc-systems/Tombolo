@@ -111,12 +111,16 @@ module.exports = {
               isMultiSelect: "false",
               choices: [
                 {
-                  display: "In Progress",
-                  value: "In Progress",
+                  display: "Triage",
+                  value: "triage",
                 },
                 {
-                  display: "Closed",
-                  value: "Closed",
+                  display: "In Progress",
+                  value: "inProgress",
+                },
+                {
+                  display: "Completed",
+                  value: "completed",
                 },
               ],
             },
@@ -286,12 +290,16 @@ module.exports = {
               isMultiSelect: "false",
               choices: [
                 {
-                  display: "In Progress",
-                  value: "In Progress",
+                  display: "Triage",
+                  value: "triage",
                 },
                 {
-                  display: "Closed",
-                  value: "Closed",
+                  display: "In Progress",
+                  value: "inProgress",
+                },
+                {
+                  display: "Completed",
+                  value: "completed",
                 },
               ],
             },
@@ -318,7 +326,6 @@ module.exports = {
     title,
     facts,
     notification_id,
-    description,
     extraContent,
   }) {
     cardData = `"notification_id": "${notification_id}"`;
@@ -420,12 +427,16 @@ module.exports = {
               isMultiSelect: "false",
               choices: [
                 {
-                  display: "In Progress",
-                  value: "In Progress",
+                  display: "Triage",
+                  value: "triage",
                 },
                 {
-                  display: "Closed",
-                  value: "Closed",
+                  display: "In Progress",
+                  value: "inProgress",
+                },
+                {
+                  display: "Completed",
+                  value: "completed",
                 },
               ],
             },

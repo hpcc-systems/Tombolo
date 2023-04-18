@@ -8,16 +8,12 @@ const fileMonitoring = models.fileMonitoring;
 const clusterMonitoring = models.clusterMonitoring;
 const logger = require("../../config/logger")
 const {Op} = require("sequelize")
+const moment = require("moment");
 
-
-router.get("/filteredNotifications", async (req, res) => { // TODO input validation
+router.get("/filteredNotifications", async (req, res) => {
   try {
     const {queryData} = req.query;
     const { monitoringType, monitoringStatus, dateRange, applicationId } = JSON.parse(queryData)
-
-    console.log('------------------------------------------');
-    console.log(monitoringType);
-    console.log('------------------------------------------');
 
     const query = {
       monitoring_type: { [Op.in]: monitoringType },
@@ -26,7 +22,10 @@ router.get("/filteredNotifications", async (req, res) => { // TODO input validat
     };
     
     if(dateRange){
-      const range = [dateRange[0].split("T")[0], dateRange[1].split("T")[0]];
+      let minDate = moment(dateRange[0]).format("YYYY-MM-DD HH:mm:ss");
+      let maxDate = moment(dateRange[1]).format("YYYY-MM-DD HH:mm:ss");
+
+      const range = [minDate, maxDate];
       query.createdAt = {[Op.between] : range}
     }
 
