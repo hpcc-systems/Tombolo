@@ -896,10 +896,14 @@ class FileDetails extends Component {
                   <Form.Item
                     label={<Text text="Name" />}
                     name="name"
-                    validateTrigger="onBlur"
+                    validateTrigger={['onChange', 'onBlur']}
                     rules={[
                       { required: enableEdit ? true : false, message: 'Please enter a name' },
                       { pattern: new RegExp(/^[a-zA-Z0-9: .@_-]*$/), message: 'Please enter a valid name' },
+                      {
+                        max: 256,
+                        message: 'Maximum of 256 characters allowed',
+                      },
                     ]}
                     className={enableEdit ? null : 'read-only-input'}>
                     {!enableEdit ? (
@@ -915,13 +919,17 @@ class FileDetails extends Component {
                   <Form.Item
                     name="title"
                     label={<Text text="Title" />}
-                    validateTrigger="onBlur"
+                    validateTrigger={['onChange', 'onBlur']}
                     className={enableEdit ? null : 'read-only-input'}
                     rules={[
                       { required: enableEdit ? true : false, message: 'Please enter a title!' },
                       {
                         pattern: new RegExp(/^[ a-zA-Z0-9:@._-]*$/),
                         message: 'Please enter a valid Title. Title can have  a-zA-Z0-9:._- and space',
+                      },
+                      {
+                        max: 256,
+                        message: 'Maximum of 256 characters allowed',
                       },
                     ]}>
                     <Input
@@ -931,7 +939,17 @@ class FileDetails extends Component {
                       className={!enableEdit ? 'read-only-input' : ''}
                     />
                   </Form.Item>
-                  <Form.Item name="scope" label={<Text text="Scope" />} rules={[{ required: enableEdit }]}>
+                  <Form.Item
+                    name="scope"
+                    label={<Text text="Scope" />}
+                    validateTrigger={['onChange', 'onBlur']}
+                    rules={[
+                      { required: enableEdit },
+                      {
+                        max: 256,
+                        message: 'Maximum of 256 characters allowed',
+                      },
+                    ]}>
                     <Input
                       disabled={isAssociated}
                       className={!enableEdit ? 'read-only-input' : ''}

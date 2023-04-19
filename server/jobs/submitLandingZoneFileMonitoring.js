@@ -163,7 +163,7 @@ const {
 
     // Send email notification for new && file not in range
     if (emailNotificationDetails && newFileNotificationDetails.length > 0) {
-      // for (let detail of newFileNotificationDetails) {
+      for (let detail of newFileNotificationDetails) {
         try {
           const body = emailBody(detail);
           const notificationResponse = await notify({
@@ -177,20 +177,20 @@ const {
 
           if (notificationResponse.accepted) {
             await monitoring_notifications.create({
-              file_name: detail.details["File name"],
+              // file_name: detail.details["File name"],
               status: "notified",
               notifiedTo: emailNotificationDetails.recipients,
               notification_channel: "eMail",
               application_id,
               notification_reason: detail.value,
               monitoring_id: filemonitoring_id,
-              monitoring_type: "Landingzone File",
+              monitoring_type: "file",
             });
           }
         } catch (err) {
           logger.error(err);
         }
-      // }
+      }
     }
 
     if (teamsNotificationDetails && newFileNotificationDetails.length > 0) {
@@ -208,14 +208,14 @@ const {
 
             await monitoring_notifications.create({
               id: notification_id,
-              file_name: detail.details["File Name"],
+              // file_name: detail.details["File Name"],
               status: "notified",
               notifiedTo: recipient,
               notification_channel: "msTeams",
               application_id,
               notification_reason: detail.value,
               monitoring_id: filemonitoring_id,
-              monitoring_type: "Landingzone File",
+              monitoring_type: "file",
             });
           } catch (err) {
             logger.error(err);
@@ -293,6 +293,7 @@ const {
                 application_id,
                 notification_reason: value,
                 monitoring_id: filemonitoring_id,
+                monitoring_type: "file",
               });
             }
           } catch (err) {
@@ -304,9 +305,6 @@ const {
         // Send teams notification
         const {recipients} = teamsNotificationDetails;
         for (let recipient of recipients){
-          console.log('------------------------------------------');
-          console.count( "Sent", {depth: null})
-          console.log('------------------------------------------');
           try {
             const { details, value } = currentlyMonitoringNotificationDetails;
             const notification_id = uuidv4();
@@ -329,7 +327,7 @@ const {
               application_id,
               notification_reason: value,
               monitoring_id: filemonitoring_id,
-              monitoring_type: 	"Landingzone File"
+              monitoring_type: "file",
             });
           } catch (err) {
             logger.error(err);

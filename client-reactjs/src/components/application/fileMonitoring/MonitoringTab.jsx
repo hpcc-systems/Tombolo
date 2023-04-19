@@ -95,8 +95,15 @@ function MonitoringTab({
         label="Monitoring name"
         style={{ width: '50%' }}
         name="name"
+        validateTrigger={['onChange', 'onBlur']}
         rules={[
           { required: true, message: 'Required filed' },
+
+          {
+            max: 256,
+            message: 'Maximum of 256 characters allowed',
+          },
+
           {
             message: 'File Monitoring with same name already exists',
             validator: (_, value) => {

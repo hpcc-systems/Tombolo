@@ -136,6 +136,7 @@ function AddApplication(props) {
           {...formItemLayout}
           label={<Text text="Title" />}
           name="title"
+          validateTrigger={['onChange', 'onBlur']}
           rules={[
             {
               required: props.isCreatingNewApp || isEditing,
@@ -145,11 +146,33 @@ function AddApplication(props) {
               pattern: new RegExp(/^[a-zA-Z]{1}[a-zA-Z0-9_: .-]*$/),
               message: 'Invalid title',
             },
+            {
+              max: 256,
+              message: 'Maximum of 256 characters allowed',
+            },
           ]}>
           <Input className={isEditing || props.isCreatingNewApp ? '' : 'read-only-textarea'} />
         </Form.Item>
 
-        <Form.Item label={<Text text="Description" />} name="description" {...formItemLayout}>
+        <Form.Item
+          label={<Text text="Description" />}
+          name="description"
+          {...formItemLayout}
+          validateTrigger={['onChange', 'onBlur']}
+          rules={[
+            {
+              required: props.isCreatingNewApp || isEditing,
+              message: 'Title is required',
+            },
+            {
+              pattern: new RegExp(/^[a-zA-Z]{1}[a-zA-Z0-9_: .-]*$/),
+              message: 'Invalid title',
+            },
+            {
+              max: 1024,
+              message: 'Maximum of 1024 characters allowed',
+            },
+          ]}>
           <TextArea
             autoSize={{ minRows: isEditing || props.isCreatingNewApp ? 4 : 1 }}
             className={isEditing || props.isCreatingNewApp ? '' : 'read-only-textarea'}

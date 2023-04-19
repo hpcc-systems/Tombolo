@@ -183,13 +183,14 @@ const {
 
         if (notificationResponse.accepted) {
           sentNotifications.push({
-            file_name: notificationDetails.details["File Name"],
+            // file_name: notificationDetails.details["File Name"],
             status: "notified",
+            monitoring_type: "file",
             notifiedTo: emailNotificationDetails.recipients,
             notification_channel: "eMail",
             application_id,
             notification_reason: notificationDetails.value,
-            filemonitoring_id,
+            monitoring_id: filemonitoring_id,
           });
         }
       } catch (err) {
@@ -214,14 +215,14 @@ const {
 
           sentNotifications.push({
             id: notification_id,
-            file_name: notificationDetails.details["File Name"],
+            // file_name: notificationDetails.details["File Name"],
             status: "notified",
             notifiedTo: emailNotificationDetails.recipients,
             notification_channel: "msTeams",
             application_id,
             notification_reason: notificationDetails.value,
             monitoring_id: filemonitoring_id,
-            monitoring_type: "Logical File",
+            monitoring_type: "file",
           });
         } catch (err) {
           logger.error(err);

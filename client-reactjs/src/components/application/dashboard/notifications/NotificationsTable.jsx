@@ -1,17 +1,13 @@
 import React, { useEffect, useState } from 'react';
 import { message, Table } from 'antd';
-import { useSelector } from 'react-redux';
 import { useLocation } from 'react-router-dom';
 
-import { authHeader, handleError } from '../../common/AuthHeader.js';
-import { Constants } from '../../common/Constants';
+import { authHeader, handleError } from '../../../common/AuthHeader.js';
+import { Constants } from '../../../common/Constants';
 
-function Notifications() {
+function NotificationsTable({ applicationId }) {
   const [notifications, setNotifications] = useState([]);
   const [filters, setFilters] = useState([]);
-  const {
-    application: { applicationId },
-  } = useSelector((item) => item.applicationReducer);
   const location = useLocation();
 
   //When the component loads - get all notifications
@@ -146,4 +142,4 @@ function Notifications() {
   );
 }
 
-export default Notifications;
+export default NotificationsTable;

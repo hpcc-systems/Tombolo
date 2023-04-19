@@ -192,10 +192,15 @@ function AddDataflow({
           <Form.Item
             label={<Text text="Title" />}
             name="title"
+            validateTrigger={['onChange', 'onBlur']}
             rules={[
               {
                 required: enableEdit ? true : false,
                 message: 'Please enter a valid title',
+              },
+              {
+                max: 256,
+                message: 'Maximum of 256 characters allowed',
               },
             ]}>
             <Input placeholder={i18n('Title')} className={enableEdit ? null : 'read-only-input'} />
@@ -204,6 +209,17 @@ function AddDataflow({
           <Form.Item
             label={<Text text="Description" />}
             name="description"
+            validateTrigger={['onChange', 'onBlur']}
+            rules={[
+              {
+                required: enableEdit ? true : false,
+                message: 'Please enter a valid title',
+              },
+              {
+                max: 1024,
+                message: 'Maximum of 1024 characters allowed',
+              },
+            ]}
             className={enableEdit ? null : 'read-only-input'}>
             <TextArea
               autoSize={{ minRows: enableEdit ? 2 : 1 }}

@@ -278,12 +278,13 @@ const { update } = require("lodash");
           sentNotifications.push({
             id: notification_id,
             file_name: Name,
+            monitoring_type: "superFile",
             status: "notified",
             notifiedTo: emailNotificationDetails.recipients,
             notification_channel: "eMail",
             application_id,
             notification_reason: notificationDetails.value,
-            monitoring_id: id,
+            monitoring_id: filemonitoring_id,
           });
         }
       } catch (err) {
@@ -308,12 +309,13 @@ const { update } = require("lodash");
           sentNotifications.push({
             id: notification_id,
             file_name: Name,
+            monitoring_type: "superFile",
             status: "notified",
             notifiedTo: teamsNotificationDetails.recipients,
             notification_channel: "msTeams",
             application_id,
             notification_reason: notificationDetails.value,
-            filemonitoring_id: id,
+            monitoring_id: filemonitoring_id,
           });
         } catch (err) {
           logger.error(err);

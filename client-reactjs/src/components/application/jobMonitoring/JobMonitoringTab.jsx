@@ -23,6 +23,7 @@ function MonitoringTab({ jobMonitorings, selectedMonitoring }) {
       <Form.Item
         label="Monitoring name"
         name="name"
+        validateTrigger={['onChange', 'onBlur']}
         required
         rules={[
           {
@@ -36,6 +37,10 @@ function MonitoringTab({ jobMonitorings, selectedMonitoring }) {
                 return Promise.resolve();
               }
             },
+          },
+          {
+            max: 256,
+            message: 'Maximum of 256 characters allowed',
           },
         ]}>
         <Input></Input>
