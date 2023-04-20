@@ -7,7 +7,7 @@ import { InfoCircleOutlined, CopyOutlined } from '@ant-design/icons';
 import DashboardApiTable from './DashboardApiTable.jsx';
 import KeyForm from './KeyForm.jsx';
 
-const DashboardModal = ({ modalVisible, setModalVisible, applicationId, dataType, authReducer }) => {
+const DashboardModal = ({ modalVisible, setModalVisible, applicationId, authReducer }) => {
   //extra states needed for data verification and entry
   const [key, setKey] = useState(null);
   const [modalWidth, setModalWidth] = useState(null);
