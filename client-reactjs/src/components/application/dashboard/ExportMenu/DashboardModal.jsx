@@ -18,7 +18,6 @@ const DashboardModal = ({ modalVisible, setModalVisible, applicationId, dataType
 
   const showDrawer = () => {
     setOpen(true);
-    console.log(dataType);
   };
 
   const onClose = () => {

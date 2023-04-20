@@ -21,7 +21,6 @@ const ExportMenu = (selectedCluster) => {
   useEffect(() => {
     const splitName = location.pathname.split('/');
     setDataType(splitName[splitName.length - 1]);
-    console.log(dataType);
   });
 
   const menu = (
@@ -63,7 +62,6 @@ const ExportMenu = (selectedCluster) => {
       }
 
       if (dataType === 'clusterUsage') {
-        console.log(selectedCluster);
         response = await fetch(
           `/api/cluster/clusterStorageHistory/file/${type}/${selectedCluster.selectedCluster}`,
           payload
