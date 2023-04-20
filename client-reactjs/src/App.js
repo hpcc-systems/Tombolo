@@ -41,7 +41,6 @@ const SuperFileMonitoring = React.lazy(() =>
 const Notifications = React.lazy(() => import('./components/application/dashboard/notifications/Notifications'));
 const ClusterUsage = React.lazy(() => import('./components/application/dashboard/clusterUsage/ClusterUsage'));
 const ClusterMonitoring = React.lazy(() => import('./components/application/clusterMonitoring'));
-const Dashboard = React.lazy(() => import('./components/application/dashboard/dashboard/main'));
 const JobMonitoring = React.lazy(() => import('./components/application/jobMonitoring'));
 
 // Admin pages

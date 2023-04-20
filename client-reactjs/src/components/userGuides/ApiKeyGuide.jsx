@@ -9,7 +9,7 @@ const ApiKeyGuide = () => {
       </h3>
       <p>The basic URL structure is</p>
       <p>
-        <span>BASEURL/api/apikeys/APPLICATIONID/KEY?PARAMETERS</span>
+        <span>BASEURL/api/apikeys/APPLICATIONID/KEY/DATA?PARAMETERS</span>
       </p>
       <p>Below are descriptions of each portion of the URL.</p>
       <ul>
@@ -44,6 +44,22 @@ const ApiKeyGuide = () => {
             <span>KEY</span>
           </h4>
           <p>Replace KEY with your generated API key.</p>
+        </li>
+        <li>
+          <h4>
+            <span>DATA</span>
+          </h4>
+          <p>Replace DATA with your desired data to fetch. Options and descriptions are lister below.</p>
+          <ul>
+            <li>
+              <span>clusterusage</span> - This will return cluster storage history data available on the cluster
+              dashboard.
+            </li>
+            <li>
+              <span>notifications</span> - This will return notification history data available on the notifications
+              dashboard.
+            </li>
+          </ul>
         </li>
         <li>
           <h4>

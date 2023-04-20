@@ -8,14 +8,14 @@ const validatorUtil = require("../../utils/validator");
 const hpccUtil = require("../../utils/hpcc-util");
 const models = require("../../models");
 
-
 const Cluster = models.cluster;
 const router = express.Router();
 
-router.get("/currentClusterUsage/:clusterId",
- [param("clusterId").isUUID().withMessage("Invalid cluster ID")],
-async(req,res) =>{
-    try{
+router.get(
+  "/currentClusterUsage/:clusterId",
+  [param("clusterId").isUUID().withMessage("Invalid cluster ID")],
+  async (req, res) => {
+    try {
       //Check for errors - return if exists
       const errors = validationResult(req).formatWith(
         validatorUtil.errorFormatter
@@ -25,35 +25,42 @@ async(req,res) =>{
       if (!errors.isEmpty())
         return res.status(422).json({ success: false, errors: errors.array() });
 
-      const {clusterId} = req.params;
+      const { clusterId } = req.params;
 
       //Get cluster details
-        let cluster = await hpccUtil.getCluster(clusterId); // Checks if cluster is reachable and decrypts cluster credentials if any
-        const { thor_host, thor_port, username, hash } = cluster;
-        const clusterDetails = {
-            baseUrl: `${thor_host}:${thor_port}`,
-            userID: username || "",
-            password: hash || "",
-        };
-    
-     //Use JS comms library to fetch current usage
+      let cluster = await hpccUtil.getCluster(clusterId); // Checks if cluster is reachable and decrypts cluster credentials if any
+      const { thor_host, thor_port, username, hash } = cluster;
+      const clusterDetails = {
+        baseUrl: `${thor_host}:${thor_port}`,
+        userID: username || "",
+        password: hash || "",
+      };
+
+      //Use JS comms library to fetch current usage
       const machineService = new hpccJSComms.MachineService(clusterDetails);
       const targetClusterUsage = await machineService.GetTargetClusterUsageEx();
 
-      const maxUsage = targetClusterUsage.map(target =>  ({name: target.Name, maxUsage: target.max, meanUsage: target.mean}))
+      const maxUsage = targetClusterUsage.map((target) => ({
+        name: target.Name,
+        maxUsage: target.max,
+        meanUsage: target.mean,
+      }));
       res.status(200).send(maxUsage);
-      
-    }catch(err){
-        res.status(503).json({success: false, message : "Failed to fetch current cluster usage"})
-        logger.error(err)
+    } catch (err) {
+      res.status(503).json({
+        success: false,
+        message: "Failed to fetch current cluster usage",
+      });
+      logger.error(err);
     }
-});
+  }
+);
 
 router.get(
   "/clusterStorageHistory/:queryData",
   [param("queryData").isString().withMessage("Invalid cluster query data")],
   async (req, res) => {
-    try{
+    try {
       //Check for errors - return if exists
       const errors = validationResult(req).formatWith(
         validatorUtil.errorFormatter
@@ -76,7 +83,7 @@ router.get(
       const start_date = moment(query.historyDateRange[0]).valueOf();
       const end_date = moment(query.historyDateRange[1]).valueOf();
 
-      const storageUsageHistory =   data.metaData?.storageUsageHistory || {};
+      const storageUsageHistory = data.metaData?.storageUsageHistory || {};
 
       const filtered_data = {};
 
@@ -92,9 +99,95 @@ router.get(
         }
       }
       res.status(200).send(data.metaData?.storageUsageHistory || {});
-    }catch(err){
-      logger.error(err)
-      res.status(503).json({success: false,message: "Failed to fetch current cluster usage"});
+    } catch (err) {
+      logger.error(err);
+      res.status(503).json({
+        success: false,
+        message: "Failed to fetch current cluster usage",
+      });
+    }
+  }
+);
+
+router.get(
+  "/clusterStorageHistory/file/:type/:clusterId",
+  [param("clusterId").isUUID()],
+  async (req, res) => {
+    try {
+      //Check for errors - return if exists
+      const errors = validationResult(req).formatWith(
+        validatorUtil.errorFormatter
+      );
+
+      // return if error(s) exist
+      if (!errors.isEmpty())
+        return res.status(422).json({ success: false, errors: errors.array() });
+
+      const { type, clusterId } = req.params;
+
+      const data = await Cluster.findOne({
+        where: { id: clusterId },
+        raw: true,
+        attributes: ["metaData"],
+      });
+
+      const storageUsageHistory = data.metaData?.storageUsageHistory || {};
+
+      let output = "";
+
+      if (type === "CSV") {
+        output += "type,date,maxUsage,meanUsage";
+
+        Object.keys(storageUsageHistory).forEach((type) => {
+          storageUsageHistory[type].map((data) => {
+            output +=
+              "\n" +
+              type +
+              "," +
+              data.date +
+              "," +
+              data.maxUsage +
+              "," +
+              data.meanUsage;
+          });
+        });
+      }
+
+      if (type === "JSON") {
+        output = [storageUsageHistory];
+      }
+
+      res.status(200).send(output);
+    } catch (err) {
+      logger.error(err);
+      res.status(503).json({
+        success: false,
+        message: "Failed to fetch current cluster usage",
+      });
+    }
+  }
+);
+//method for removing file after download on front-end
+router.delete(
+  "/clusterStorageHistory/file/:type/:dataType",
+  async (req, res) => {
+    try {
+      const type = req.params.type;
+      const filePath = path.join(
+        __dirname,
+        "..",
+        "..",
+        "tempFiles",
+        `Tombolo-${dataType}.${type}`
+      );
+
+      const createPromise = fsPromises.unlink(filePath);
+
+      await createPromise;
+
+      res.status(200).json({ message: "File Deleted" });
+    } catch (error) {
+      res.status(500).json({ message: "Failed to delete file" });
     }
   }
 );

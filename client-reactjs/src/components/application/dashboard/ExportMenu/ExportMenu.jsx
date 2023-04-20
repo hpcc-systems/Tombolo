@@ -5,10 +5,9 @@ import { Button, message, Dropdown, Menu } from 'antd';
 import { DownOutlined } from '@ant-design/icons';
 import { authHeader, handleError } from '../../../common/AuthHeader.js';
 import { useLocation } from 'react-router-dom';
-
 import DashboardModal from './DashboardModal';
 
-const ExportMenu = () => {
+const ExportMenu = (selectedCluster) => {
   const {
     application: { applicationId },
   } = useSelector((state) => state.applicationReducer);
@@ -22,6 +21,7 @@ const ExportMenu = () => {
   useEffect(() => {
     const splitName = location.pathname.split('/');
     setDataType(splitName[splitName.length - 1]);
+    console.log(dataType);
   });
 
   const menu = (
@@ -57,10 +57,20 @@ const ExportMenu = () => {
         header: authHeader(),
       };
 
-      const response = await fetch(`/api/notifications/read/${applicationId}/file/${type}`, payload);
-      console.log(response);
-      if (!response.ok) handleError(response);
+      let response;
+      if (dataType === 'notifications') {
+        response = await fetch(`/api/notifications/read/${applicationId}/file/${type}`, payload);
+      }
 
+      if (dataType === 'clusterUsage') {
+        console.log(selectedCluster);
+        response = await fetch(
+          `/api/cluster/clusterStorageHistory/file/${type}/${selectedCluster.selectedCluster}`,
+          payload
+        );
+      }
+
+      if (!response.ok) handleError(response);
       const blob = await response.blob();
       const newBlob = new Blob([blob]);
 
@@ -68,7 +78,7 @@ const ExportMenu = () => {
 
       const link = document.createElement('a');
       link.href = blobUrl;
-      link.setAttribute('download', `Tombolo-Notifications.${type}`);
+      link.setAttribute('download', `Tombolo-${dataType}.${type}`);
       document.body.appendChild(link);
       link.click();
       link.parentNode.removeChild(link);
@@ -78,9 +88,17 @@ const ExportMenu = () => {
         method: 'DELETE',
         header: authHeader(),
       };
-      const response2 = await fetch(`/api/notifications/read/${applicationId}/file/${type}`, payload2);
+      if (dataType === 'notifications') {
+        const response2 = await fetch(`/api/notifications/read/${applicationId}/file/${type}`, payload2);
 
-      if (!response2.ok) handleError(response2);
+        if (!response2.ok) handleError(response2);
+      }
+
+      if (dataType === 'clusterUsage') {
+        const response2 = await fetch(`/api/cluster//clusterStorageHistory/file/${type}/${dataType}`, payload2);
+
+        if (!response2.ok) handleError(response2);
+      }
     } catch (error) {
       console.log(error);
       message.error('Failed to fetch notifications');

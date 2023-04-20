@@ -46,6 +46,8 @@ function ClusterUsage() {
       //Query data
       const queryData = JSON.stringify({ clusterId, historyDateRange });
 
+      console.log(queryData);
+
       const response = await fetch(`/api/cluster/clusterStorageHistory/${queryData}`, payload);
       if (!response.ok) handleError(response);
       const data = await response.json();
@@ -57,7 +59,7 @@ function ClusterUsage() {
   };
 
   return (
-    <Tabs tabBarExtraContent={<ExportMenu />}>
+    <Tabs tabBarExtraContent={<ExportMenu selectedCluster={selectedCluster} />}>
       <Tabs.TabPane tab={clusterOptions.filter((cluster) => cluster.value == selectedCluster)[0]?.label}>
         <Filters
           setSelectedCluster={setSelectedCluster}
