@@ -93,12 +93,11 @@ const ExportMenu = (selectedCluster) => {
       }
 
       if (dataType === 'clusterUsage') {
-        const response2 = await fetch(`/api/cluster//clusterStorageHistory/file/${type}/${dataType}`, payload2);
+        const response2 = await fetch(`/api/cluster/clusterStorageHistory/file/${type}`, payload2);
 
         if (!response2.ok) handleError(response2);
       }
     } catch (error) {
-      console.log(error);
       message.error('Failed to fetch notifications');
     }
   };

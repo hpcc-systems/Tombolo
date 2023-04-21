@@ -2,7 +2,8 @@ const express = require("express");
 const moment = require("moment");
 const { param, validationResult } = require("express-validator");
 const hpccJSComms = require("@hpcc-js/comms");
-
+const path = require("path");
+const fsPromises = require("fs/promises");
 const logger = require("../../config/logger");
 const validatorUtil = require("../../utils/validator");
 const hpccUtil = require("../../utils/hpcc-util");
@@ -133,31 +134,52 @@ router.get(
 
       const storageUsageHistory = data.metaData?.storageUsageHistory || {};
 
-      let output = "";
+      let output;
 
       if (type === "CSV") {
-        output += "type,date,maxUsage,meanUsage";
+        output = `type,date,maxUsage,meanUsage`;
 
         Object.keys(storageUsageHistory).forEach((type) => {
           storageUsageHistory[type].map((data) => {
             output +=
               "\n" +
-              type +
+              type.toString() +
               "," +
-              data.date +
+              data.date.toString() +
               "," +
-              data.maxUsage +
+              data.maxUsage.toString() +
               "," +
-              data.meanUsage;
+              data.meanUsage.toString();
           });
         });
       }
 
       if (type === "JSON") {
         output = [storageUsageHistory];
+        output = JSON.stringify(output);
       }
 
-      res.status(200).send(output);
+      const filePath = path.join(
+        __dirname,
+        "..",
+        "..",
+        "tempFiles",
+        `Tombolo-clusterUsage.${type}`
+      );
+
+      const createPromise = fsPromises.writeFile(
+        filePath,
+        output,
+        function (err) {
+          if (err) {
+            return console.log(err);
+          }
+        }
+      );
+
+      await createPromise;
+
+      res.status(200).download(filePath);
     } catch (err) {
       logger.error(err);
       res.status(503).json({
@@ -168,28 +190,24 @@ router.get(
   }
 );
 //method for removing file after download on front-end
-router.delete(
-  "/clusterStorageHistory/file/:type/:dataType",
-  async (req, res) => {
-    try {
-      const type = req.params.type;
-      const filePath = path.join(
-        __dirname,
-        "..",
-        "..",
-        "tempFiles",
-        `Tombolo-${dataType}.${type}`
-      );
+router.delete("/clusterStorageHistory/file/:type", async (req, res) => {
+  try {
+    const { type, dataType } = req.params;
+    const filePath = path.join(
+      __dirname,
+      "..",
+      "..",
+      "tempFiles",
+      `Tombolo-clusterUsage.${type}`
+    );
 
-      const createPromise = fsPromises.unlink(filePath);
+    const createPromise = fsPromises.unlink(filePath);
+    await createPromise;
 
-      await createPromise;
-
-      res.status(200).json({ message: "File Deleted" });
-    } catch (error) {
-      res.status(500).json({ message: "Failed to delete file" });
-    }
+    res.status(200).json({ message: "File Deleted" });
+  } catch (error) {
+    res.status(500).json({ message: "Failed to delete file" });
   }
-);
+});
 
 module.exports = router;
