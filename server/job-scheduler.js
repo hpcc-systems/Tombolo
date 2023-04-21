@@ -12,7 +12,7 @@ const DataflowVersions = models.dataflow_versions;
 const JobExecution = models.job_execution;
 const FileMonitoring = models.fileMonitoring;
 const ClusterMonitoring = models.clusterMonitoring;
-const JobMonitoring = models.JobMonitoring;
+const JobMonitoring = models.jobMonitoring;
 const filemonitoring_superfile = models.filemonitoring_superfiles;
 
 const SUBMIT_JOB_FILE_NAME = "submitJob.js";

@@ -7,7 +7,7 @@ const hpccJSComms = require("@hpcc-js/comms");
 const hpccUtil = require("../../utils/hpcc-util");
 const JobScheduler = require("../../job-scheduler");
 
-const JobMonitoring = models.JobMonitoring;
+const JobMonitoring = models.jobMonitoring;
 const router = express.Router();
 
 // Create Cluster Monitoring

@@ -1,7 +1,7 @@
 "use strict";
 module.exports = (sequelize, DataTypes) => {
   const JobMonitoring = sequelize.define(
-    "JobMonitoring",
+    "jobMonitoring",
     {
       id: {
         primaryKey: true,

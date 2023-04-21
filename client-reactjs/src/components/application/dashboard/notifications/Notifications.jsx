@@ -39,7 +39,7 @@ function Index() {
   // When component loads create filter tol oad initial data
   useEffect(() => {
     const filters = {
-      monitoringType: ['Job Monitoring', 'file', 'cluster', 'superFile'],
+      monitoringType: ['jobMonitoring', 'file', 'cluster', 'superFile'],
       monitoringStatus: ['notified', 'triage', 'completed', 'inProgress'],
       dateRange: [moment().subtract(15, 'days'), moment()],
       applicationId,
