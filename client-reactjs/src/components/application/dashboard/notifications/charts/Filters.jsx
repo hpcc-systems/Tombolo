@@ -6,7 +6,7 @@ import { authHeader, handleError } from '../../../../common/AuthHeader.js';
 import '../index.css';
 
 const monitoringTypeOptions = [
-  { label: 'Job', value: 'job' },
+  { label: 'Job', value: 'jobMonitoring' },
   { label: 'File', value: 'file' },
   { label: 'Cluster', value: 'cluster' },
   { label: 'Super File', value: 'superFile' },
@@ -81,7 +81,7 @@ function Filters({ applicationId, setNotifications, setLoadingData, groupDataBy,
         className="filters__form"
         form={form}
         initialValues={{
-          ['monitoringType']: ['job', 'file', 'cluster', 'superFile'],
+          ['monitoringType']: ['jobMonitoring', 'file', 'cluster', 'superFile'],
           ['monitoringStatus']: ['notified', 'triage', 'inProgress', 'completed'],
           ['dateRange']: [moment().subtract(15, 'days'), moment()],
           groupDataBy: groupDataBy,

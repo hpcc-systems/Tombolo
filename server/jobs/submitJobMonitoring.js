@@ -5,7 +5,7 @@ const axios = require("axios");
 const hpccUtil = require("../utils/hpcc-util");
 const logger = require("../config/logger");
 const models = require("../models");
-const JobMonitoring = models.JobMonitoring;
+const JobMonitoring = models.jobMonitoring;
 const Monitoring_notifications = models.monitoring_notifications;
 const {
   jobMonitoringEmailBody,
@@ -163,7 +163,7 @@ const convertToISODateString = require("../utils/stringToIsoDateString");
               ? `Job state - ${wuDetails.State}`
               : "Job Monitoring",
             notification_channel: "eMail",
-            status: "Notified",
+            status: "notified",
           });
         }
       }
@@ -191,7 +191,7 @@ const convertToISODateString = require("../utils/stringToIsoDateString");
                 notification_reason: wuDetails?.State
                   ? `Job state - ${wuDetails.State}`
                   : "Job Monitoring",
-                status: "Notified",
+                status: "notified",
                 notification_channel: "msTeams",
               });
             }
