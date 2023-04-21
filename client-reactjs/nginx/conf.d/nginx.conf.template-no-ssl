@@ -8,7 +8,7 @@ server {
   #add_header Access-Control-Allow-Origin "domain";
   add_header Access-Control-Allow-Origin https://${DOLLAR}server_name;
   add_header X-Content-Type-Options "nosniff";
-  add_header Content-Security-Policy "script-src 'self'; object-src 'self';";
+  add_header Content-Security-Policy "script-src 'self'; object-src 'self'; worker-src 'self' blob:;";
   add_header Cache-Control "no-store";
   add_header Pragma "no-cache";
   error_log /var/log/nginx/tombolo-error.log;

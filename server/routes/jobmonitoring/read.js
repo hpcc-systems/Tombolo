@@ -89,7 +89,7 @@ router.get(
       res.status(200).send(jobMonitorings);
     } catch (err) {
       logger.error(err);
-      res.send(503).send({ success: false, message: "Failed to fetch job monitorings" });
+      res.status(503).send({ success: false, message: "Failed to fetch job monitorings" });
     }
   }
 );
