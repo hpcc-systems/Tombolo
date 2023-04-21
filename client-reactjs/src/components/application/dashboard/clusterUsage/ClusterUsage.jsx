@@ -57,7 +57,7 @@ function ClusterUsage() {
   };
 
   return (
-    <Tabs tabBarExtraContent={<ExportMenu />}>
+    <Tabs tabBarExtraContent={<ExportMenu selectedCluster={selectedCluster} />}>
       <Tabs.TabPane tab={clusterOptions.filter((cluster) => cluster.value == selectedCluster)[0]?.label}>
         <Filters
           setSelectedCluster={setSelectedCluster}

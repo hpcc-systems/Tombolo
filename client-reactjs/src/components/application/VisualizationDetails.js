@@ -204,7 +204,6 @@ function VisualizationDetails() {
                   </Row>
                 </Form.Item>
               )}
-
               <Form.Item
                 label={<Text text="Name" />}
                 name="name"

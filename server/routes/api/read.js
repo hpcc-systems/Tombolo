@@ -13,11 +13,12 @@ const serverENV = path.join(process.cwd(), ".env");
 const ENVPath = fs.existsSync(rootENV) ? rootENV : serverENV;
 const { param, validationResult } = require("express-validator");
 const validatorUtil = require("../../utils/validator");
+const Cluster = models.cluster;
 
 require("dotenv").config({ path: ENVPath });
 
 router.get(
-  "/:applicationId/:name/:key",
+  "/:applicationId/:name/:key/notifications",
   [
     param("applicationId").isUUID(4).withMessage("Invalid Application ID"),
     param("key").isUUID(4).withMessage("Invalid key"),
@@ -87,6 +88,73 @@ router.get(
       res
         .status(500)
         .json({ message: "Unable to get notifications - " + error });
+    }
+  }
+);
+
+router.get(
+  "/:applicationId/:name/:key/clusterusage",
+  [
+    param("applicationId").isUUID(4).withMessage("Invalid Application ID"),
+    param("key").isUUID(4).withMessage("Invalid key"),
+    param("name").notEmpty().trim().escape().withMessage("Invalid name"),
+  ],
+  async (req, res) => {
+    try {
+      //Check for errors - return if exists
+      const errors = validationResult(req).formatWith(
+        validatorUtil.errorFormatter
+      );
+
+      // return if error(s) exist
+      if (!errors.isEmpty())
+        return res.status(422).json({ success: false, errors: errors.array() });
+
+      const { applicationId: application_id } = req.params;
+      if (!application_id) throw Error("Invalid app ID");
+
+      const { name, key } = req.params;
+
+      const validKey = await apiKey.findOne({
+        where: { name },
+      });
+
+      //check if key is valid using validKey instance method of key model
+      if (
+        validKey &&
+        !validKey.dataValues.expired &&
+        (await validKey.validKey(key))
+      ) {
+        //check usage and expiration dates
+        let metaData = validKey.dataValues.metaData;
+        let currentDate = new Date().getTime();
+
+        //Check if key is expired
+        if (validKey.dataValues.expirationDate < currentDate) {
+          throw Error("Key expired");
+        }
+        //Check if key usage is below limit
+        if (metaData.Usage < metaData.UsageLimit) {
+          metaData.Usage = metaData.Usage + 1;
+          //update key usage
+          await apiKey.update({ metaData }, { where: { name } });
+        } else {
+          throw Error("Key has no uses remaining");
+        }
+
+        const data = await Cluster.findAll({
+          raw: true,
+          attributes: ["name", "metaData"],
+        });
+
+        res.status(200).send(data);
+      }
+    } catch (err) {
+      logger.error(err);
+      res.status(503).json({
+        success: false,
+        message: "Failed to fetch current cluster usage",
+      });
     }
   }
 );

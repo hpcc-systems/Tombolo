@@ -9,7 +9,7 @@ const ApiKeyGuide = () => {
       </h3>
       <p>The basic URL structure is</p>
       <p>
-        <span>BASEURL/api/apikeys/APPLICATIONID/KEY?PARAMETERS</span>
+        <span>BASEURL/api/apikeys/APPLICATIONID/KEY/DATA</span>
       </p>
       <p>Below are descriptions of each portion of the URL.</p>
       <ul>
@@ -47,6 +47,22 @@ const ApiKeyGuide = () => {
         </li>
         <li>
           <h4>
+            <span>DATA</span>
+          </h4>
+          <p>Replace DATA with your desired data to fetch. Options and descriptions are lister below.</p>
+          <ul>
+            <li>
+              <span>clusterusage</span> - This will return cluster storage history data available on the cluster
+              dashboard.
+            </li>
+            <li>
+              <span>notifications</span> - This will return notification history data available on the notifications
+              dashboard.
+            </li>
+          </ul>
+        </li>
+        {/* <li>
+          <h4>
             <span>PARAMETERS</span>
           </h4>
           <p>Paramter options are as follows</p>
@@ -67,7 +83,7 @@ const ApiKeyGuide = () => {
             Example: ?first=10&offset=10 will return the first 10 results after the first 10 are skipped. This structure
             can be utilized to return paginated results.
           </p>
-        </li>
+        </li> */}
       </ul>
       <h3>
         <span>Usage Limits</span>
@@ -87,7 +103,7 @@ const ApiKeyGuide = () => {
             <span>Key Lifespan</span>
           </h4>
           <p>
-            API Keys are limited to <span>1000 multiplied by the total number of days the key is active for</span>
+            API Keys are limited to <span>1000 multiplied by the total number of days the key is active for</span>{' '}
             calls.
           </p>
           <p>
