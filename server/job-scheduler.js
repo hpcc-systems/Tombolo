@@ -179,7 +179,6 @@ class JobScheduler {
             const commonWorkerData = {
               applicationId: job.application_id,
               clusterId: job.cluster_id,
-              workerData,
               dataflowId: dataflowId,
               jobExecutionGroupId,
               jobType: job.jobType,
