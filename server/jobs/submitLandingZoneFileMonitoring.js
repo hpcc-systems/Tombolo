@@ -1,6 +1,7 @@
 const axios = require("axios");
 const { parentPort, workerData } = require("worker_threads");
 const { v4: uuidv4 } = require("uuid");
+const moment = require("moment")
 
 const { notify } = require("../routes/notifications/email-notification");
 const logger = require("../config/logger");
@@ -47,10 +48,14 @@ const {
       },
     } = fileMonitoringDetails;
 
-    const date = new Date();
-    const currentTimeStamp = date.getTime();
 
     const cluster = await hpccUtil.getCluster(cluster_id);
+    const {timezone_offset} = cluster;
+    const timeStampFormat = "YYYY-MM-DD HH:mm:ss";
+
+    let currentTimeStamp = moment.utc().utcOffset(timezone_offset); // Current time at cluster
+    currentTimeStamp = currentTimeStamp.format(timeStampFormat);
+
     const Path = `/var/lib/HPCCSystems/${landingZone}/${dirToMonitor.join(
       "/"
     )}/`;
@@ -84,18 +89,8 @@ const {
     for (let i = 0; i < files.length; i++) {
       let { name: fileName, filesize, modifiedtime } = files[i];
 
-      const md = new Date(modifiedtime);
-      const localOffSet = md.getTimezoneOffset() * 60000;
-      const clusterOffSet = cluster.timezone_offset * 60000;
-      const totalOs = localOffSet + clusterOffSet;
-
-      const fileModifiedTime = md.getTime() - totalOs;
-
-      fileAndTimeStamps.push({
-        name: fileName,
-        modifiedTime: fileModifiedTime,
-      });
-
+      let fileModifiedTime = moment.utc(modifiedtime); // Convert uploaded_at to a Moment object in UTC time zone
+      fileModifiedTime = fileModifiedTime.format(timeStampFormat)
       if (
         lastMonitored < fileModifiedTime &&
         wildCardStringMatch(fileNameWildCard, fileName)
@@ -110,7 +105,7 @@ const {
             details: {
               "File Name": fileName,
               "Landing zone": landingZone,
-              "Directory": dirToMonitor.join("/"),
+              Directory: dirToMonitor.join("/"),
               "File detected at": new Date(fileModifiedTime).toString(),
             },
           };
@@ -132,14 +127,16 @@ const {
               "Expected maximum size": `${maximumFileSize} KB`,
               "Expected minimum size": `${minimumFileSize} KB`,
               "Landing zone": landingZone,
-              "Directory": dirToMonitor.join("/"),
+              Directory: dirToMonitor.join("/"),
               "File detected at": new Date(fileModifiedTime).toString(),
             },
           };
           if (maximumFileSize < filesize / 1000) {
-            notificationDetail.text = "File is larger than expected maximum size - ";
+            notificationDetail.text =
+              "File is larger than expected maximum size - ";
           } else if (minimumFileSize > filesize / 1000) {
-            notificationDetail.text = "File is smaller than expected minimum size";
+            notificationDetail.text =
+              "File is smaller than expected minimum size";
           } else {
             logger.verbose("File within range - do not notify");
           }
@@ -154,8 +151,9 @@ const {
           newFilesToMonitor.push({
             name: fileName,
             modifiedTime: fileModifiedTime,
-            expectedFileMoveTime: currentTimeStamp + expectedFileMoveTime * 60 * 1000,
-            notified: []
+            expectedFileMoveTime:
+              currentTimeStamp + expectedFileMoveTime * 60 * 1000,
+            notified: [],
           });
         }
       }
