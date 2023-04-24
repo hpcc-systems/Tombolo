@@ -399,16 +399,10 @@ function BasicsTabGeneral({
               validateTrigger={['onChange', 'onBlur']}
               className={enableEdit ? null : 'read-only-input'}
               rules={[
-                { pattern: new RegExp(/^[a-zA-Z0-9: $._-]*$/), message: 'Please enter a valid author' },
+                { pattern: new RegExp(/^[a-zA-Z0-9: $._-]*$/), message: 'Please enter a valid author', required: true },
                 {
                   max: 256,
                   message: 'Maximum of 256 characters allowed',
-                },
-                {
-                  required: true,
-                  whitespace: true,
-                  type: 'email',
-                  message: 'Invalid e-mail address.',
                 },
               ]}>
               <Input
