@@ -323,7 +323,6 @@ const { update } = require("lodash");
       }
     }
 
-    console.log(sentNotifications);
     // Add sent notifications to notification table
     if (sentNotifications.length > 0) {
       try {
