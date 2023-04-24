@@ -284,7 +284,7 @@ const { update } = require("lodash");
             notification_channel: "eMail",
             application_id,
             notification_reason: notificationDetails.value,
-            monitoring_id: filemonitoring_id,
+            monitoring_id: id,
           });
         }
       } catch (err) {
@@ -315,7 +315,7 @@ const { update } = require("lodash");
             notification_channel: "msTeams",
             application_id,
             notification_reason: notificationDetails.value,
-            monitoring_id: filemonitoring_id,
+            monitoring_id: id,
           });
         } catch (err) {
           logger.error(err);
