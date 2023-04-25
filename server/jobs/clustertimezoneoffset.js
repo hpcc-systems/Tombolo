@@ -44,9 +44,12 @@ async function setClusterTimezoneOffset(clusters) {
         log("verbose", `CLUSTER TIMEZONE OFFSET NOT NEEDED TO BE UPDATED`);
       } else {
         newCluster.timezone_offset = offset;
-        await cluster.update(newCluster, {
-          where: { id: clusters[i].dataValues.id },
-        });
+
+        // flipping isActive
+        await cluster.update(
+          { timezone_offset: offset },
+          { where: { id: clusters[i].dataValues.id } }
+        );
         log(
           "verbose",
           `CLUSTER TIMEZONE  OFFSET UPDATED FOR CLUSTERID: ` +
