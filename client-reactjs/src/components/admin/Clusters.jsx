@@ -257,7 +257,7 @@ function Clusters() {
               ))}
             </Select>
           </Form.Item>
-          <Form.Item label={<Text text="Username" />} name="username" required>
+          <Form.Item label={<Text text="Username" />} name="username">
             <Input />
           </Form.Item>
           <Form.Item label={<Text text="Password" />} name="password">

@@ -67,6 +67,9 @@ const convertToISODateString = require("../utils/stringToIsoDateString");
       } = await wuService.WUQuery({ Jobname: jobName });
 
       wuDetails = ECLWorkunit[0]; // Consider only the latest work unit. There could be multiple WU for same job
+
+      if(!wuDetails) return;
+      
       const wuDetailsCleaned = {
         Wuid: wuDetails.Wuid,
         Owner: wuDetails.Owner,
