@@ -51,14 +51,13 @@ const {
 
     const cluster = await hpccUtil.getCluster(cluster_id);
     const {timezone_offset} = cluster;
-    const timeStampFormat = "YYYY-MM-DD HH:mm:ss";
 
-    let currentTimeStamp = moment.utc().utcOffset(timezone_offset); // Current time at cluster
-    currentTimeStamp = currentTimeStamp.format(timeStampFormat);
+    const localTime = moment().valueOf();
+    const localOffset = moment().utcOffset();
+    let currentTimeStamp = localTime - 60000 * localOffset;
 
-    const Path = `/var/lib/HPCCSystems/${landingZone}/${dirToMonitor.join(
-      "/"
-    )}/`;
+    const Path = `/var/lib/HPCCSystems/${landingZone}/${dirToMonitor.join("/")}/`;
+
     const result = await hpccUtil.getDirectories({
       clusterId: cluster_id,
       Netaddr,
@@ -89,10 +88,10 @@ const {
     for (let i = 0; i < files.length; i++) {
       let { name: fileName, filesize, modifiedtime } = files[i];
 
-      let fileModifiedTime = moment.utc(modifiedtime); // Convert uploaded_at to a Moment object in UTC time zone
-      fileModifiedTime = fileModifiedTime.format(timeStampFormat)
-      if (
-        lastMonitored < fileModifiedTime &&
+      let fileModifiedTime = moment(modifiedtime); // Convert uploaded_at to a Moment object
+      fileModifiedTime = fileModifiedTime.utc().valueOf() - (60000 * timezone_offset);
+
+      if(lastMonitored < fileModifiedTime &&
         wildCardStringMatch(fileNameWildCard, fileName)
       ) {
         //Check if user wants to be notified when new file arrives
