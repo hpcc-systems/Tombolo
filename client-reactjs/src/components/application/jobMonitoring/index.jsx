@@ -130,7 +130,7 @@ function JobMonitoring() {
       handleCancel();
     } catch (err) {
       console.log(err);
-      message.error('Failed to save cluster monitoring');
+      message.error('Failed to job monitoring');
     }
   };
 
