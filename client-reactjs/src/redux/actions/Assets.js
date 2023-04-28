@@ -23,9 +23,6 @@ function newAsset(applicationId, groupId) {
 }
 
 function searchAsset(assetTypeFilter, keywords) {
-  console.log('------ search asset -----------------------');
-  console.log(assetTypeFilter, keywords);
-  console.log('------------------------------------------');
   return {
     type: Constants.SEARCH_ASSET,
     searchParams: { assetTypeFilter, keywords },
