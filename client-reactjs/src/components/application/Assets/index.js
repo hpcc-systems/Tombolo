@@ -204,9 +204,6 @@ const Assets = () => {
             fetchGroups();
             resolve();
           } catch (error) {
-            console.log('-deleteError-------------------------------');
-            console.dir(error, { depth: null });
-            console.log('------------------------------------------');
             message.error(error.message);
             reject();
           }
@@ -263,9 +260,6 @@ const Assets = () => {
               fetchGroups();
               resolve();
             } catch (error) {
-              console.log('-deleteError------------------------------');
-              console.dir(error, { depth: null });
-              console.log('------------------------------------------');
               message.error(error.message);
               reject();
             }
@@ -295,9 +289,6 @@ const Assets = () => {
   };
 
   // const onAssetTypeFilterChange = (selectedValues) => {
-  //   console.log('------------------------------------------');
-  //   console.dir(selectedValues);
-  //   console.log('------------------------------------------');
   //   assetTypeFilter.current = selectedValues;
   // };
 
@@ -386,7 +377,6 @@ const Assets = () => {
               onDragEnter={handleDragEnter}
               selectedKeys={[selectedKeys.key]}
               expandedKeys={[...expandedKeys]}
-              onScroll={(e) => console.log(e)}
             />
           </div>
           <div className="asset-table">
