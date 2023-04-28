@@ -353,7 +353,7 @@ const Assets = () => {
           extraContent={
             editingAllowed ? (
               <Dropdown overlay={menu}>
-                <Button type="primary" icon={<DownOutlined />}>
+                <Button type="primary" icon={<DownOutlined style={{ marginRight: '5px' }} />}>
                   {<Text text="Add Asset" />}
                 </Button>
               </Dropdown>
