@@ -52,9 +52,7 @@ const {
     const cluster = await hpccUtil.getCluster(cluster_id);
     const {timezone_offset} = cluster;
 
-    const localTime = moment().valueOf();
-    const localOffset = moment().utcOffset();
-    let currentTimeStamp = localTime - 60000 * localOffset;
+    let currentTimeStamp = moment.utc().valueOf();
 
     const Path = `/var/lib/HPCCSystems/${landingZone}/${dirToMonitor.join("/")}/`;
 
@@ -89,7 +87,13 @@ const {
       let { name: fileName, filesize, modifiedtime } = files[i];
 
       let fileModifiedTime = moment(modifiedtime); // Convert uploaded_at to a Moment object
-      fileModifiedTime = fileModifiedTime.utc().valueOf() - (60000 * timezone_offset);
+      // fileModifiedTime = fileModifiedTime.utc().valueOf() - (60000 * timezone_offset);
+      fileModifiedTime =fileModifiedTime.utc().valueOf();
+
+      logger.verbose(
+        `Last monitored : ${lastMonitored}, File Uploaded At : ${fileModifiedTime}, ${lastMonitored - fileModifiedTime, lastMonitored < fileModifiedTime &&
+          wildCardStringMatch(fileNameWildCard, fileName) ? "NEW FILE" : "OLD FILE"}`
+      );      
 
       if(lastMonitored < fileModifiedTime &&
         wildCardStringMatch(fileNameWildCard, fileName)

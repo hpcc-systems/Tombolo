@@ -80,11 +80,12 @@ function Clusters() {
         throw Error('Failed to save cluster');
       }
       message.success('Successfully added cluster');
-      setConfirmLoading(false);
       setAddClusterModalVisible(false);
       dispatch(applicationActions.getClusters());
     } catch (err) {
       message.error(err.message);
+    } finally {
+      setConfirmLoading(false);
     }
   };
 

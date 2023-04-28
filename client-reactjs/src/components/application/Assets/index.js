@@ -1,8 +1,8 @@
 /* eslint-disable no-async-promise-executor */
 import React, { useState, useEffect, useRef, useCallback } from 'react';
-import { Tree, Menu, Button, Modal, Input, Dropdown, Checkbox, message, Popover } from 'antd';
+import { Tree, Menu, Button, Modal, Input, Dropdown, message } from 'antd';
 import { debounce } from 'lodash';
-import { DownOutlined, SettingOutlined } from '@ant-design/icons';
+import { DownOutlined } from '@ant-design/icons';
 import { useSelector, useDispatch } from 'react-redux';
 import { useHistory } from 'react-router';
 
@@ -23,7 +23,7 @@ import Text, { i18n } from '../../common/Text';
 const { DirectoryTree } = Tree;
 const { confirm } = Modal;
 const { Search } = Input;
-const CheckboxGroup = Checkbox.Group;
+// const CheckboxGroup = Checkbox.Group;
 
 message.config({ top: 100 });
 
@@ -67,7 +67,7 @@ const Assets = () => {
     clearSearch();
   };
 
-  //Re-render Directory Tree when the tree structure us chaged on modal
+  //Re-render Directory Tree when the tree structure us changed on modal
   useEffect(() => {
     //application changed
     if (application?.applicationId) {
@@ -204,9 +204,6 @@ const Assets = () => {
             fetchGroups();
             resolve();
           } catch (error) {
-            console.log('-deleteError-----------------------------------------');
-            console.dir(error, { depth: null });
-            console.log('------------------------------------------');
             message.error(error.message);
             reject();
           }
@@ -263,9 +260,6 @@ const Assets = () => {
               fetchGroups();
               resolve();
             } catch (error) {
-              console.log('-deleteError-----------------------------------------');
-              console.dir(error, { depth: null });
-              console.log('------------------------------------------');
               message.error(error.message);
               reject();
             }
@@ -294,9 +288,9 @@ const Assets = () => {
     return <TitleRenderer nodeData={nodeData} handleMenuClick={handleMenuClick} />;
   };
 
-  const onAssetTypeFilterChange = (selectedValues) => {
-    assetTypeFilter.current = selectedValues;
-  };
+  // const onAssetTypeFilterChange = (selectedValues) => {
+  //   assetTypeFilter.current = selectedValues;
+  // };
 
   const menu = (
     <Menu onClick={(e) => handleMenuClick(e)}>
@@ -321,22 +315,22 @@ const Assets = () => {
     </Menu>
   );
 
-  const selectBefore = (
-    <Popover
-      title={<Text text="Search Filters" />}
-      placement="bottom"
-      trigger="click"
-      content={
-        <CheckboxGroup
-          options={searchOptions}
-          onChange={onAssetTypeFilterChange}
-          defaultValue={assetTypeFilter.current}
-          style={{ display: 'flex', flexDirection: 'column' }}
-        />
-      }>
-      <SettingOutlined />
-    </Popover>
-  );
+  // const selectBefore = (
+  // <Popover
+  //   title={<Text text="Search Filters" />}
+  //   placement="bottom"
+  //   trigger="click"
+  //   content={
+  //     <CheckboxGroup
+  //       options={searchOptions}
+  //       onChange={onAssetTypeFilterChange}
+  //       defaultValue={assetTypeFilter.current}
+  //       style={{ display: 'flex', flexDirection: 'column' }}
+  //     />
+  //   }>
+  //   <SettingOutlined />
+  // </Popover>
+  // );
 
   //Generate PDF & printing task complete function
   const printingTaskCompleted = () => {
@@ -350,7 +344,7 @@ const Assets = () => {
           extraContent={
             editingAllowed ? (
               <Dropdown overlay={menu}>
-                <Button type="primary" icon={<DownOutlined />}>
+                <Button type="primary" icon={<DownOutlined style={{ marginRight: '5px' }} />}>
                   {<Text text="Add Asset" />}
                 </Button>
               </Dropdown>
@@ -364,7 +358,7 @@ const Assets = () => {
               id="search-field"
               allowClear
               value={searchKeyword}
-              addonBefore={selectBefore}
+              // addonBefore={selectBefore}
               placeholder={i18n('Search assets')}
               onSearch={handleAssetSearch}
               onChange={handleSearchKeywordChange}
@@ -383,7 +377,6 @@ const Assets = () => {
               onDragEnter={handleDragEnter}
               selectedKeys={[selectedKeys.key]}
               expandedKeys={[...expandedKeys]}
-              onScroll={(e) => console.log(e)}
             />
           </div>
           <div className="asset-table">
