@@ -1,6 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { Form, Input, Typography, Select, Checkbox } from 'antd';
 import cronstrue from 'cronstrue';
+import InfoDrawer from '../../common/InfoDrawer';
+import { InfoCircleOutlined } from '@ant-design/icons';
 
 const notifyOptions = [{ label: 'Exceeded cluster usage %', value: 'TargetClusterAlertSize' }];
 
@@ -13,6 +15,15 @@ function ClusterMonitoringTab({
 }) {
   const [cornExpaliner, setCornExplainer] = useState(null);
   const [cron, setCorn] = useState(null);
+  const [open, setOpen] = useState(false);
+
+  const showDrawer = () => {
+    setOpen(true);
+  };
+
+  const onClose = () => {
+    setOpen(false);
+  };
 
   useEffect(() => {
     if (cron) {
@@ -54,7 +65,15 @@ function ClusterMonitoringTab({
       </Form.Item>
 
       <Form.Item
-        label="Cron (How often to monitor)"
+        label={
+          <>
+            <p style={{ marginBottom: '0' }}>
+              Cron (How often to monitor)
+              <InfoCircleOutlined style={{ marginLeft: '.5rem' }} onClick={() => showDrawer()} />
+            </p>
+            <InfoDrawer open={open} onClose={onClose} width="700px" content="cron"></InfoDrawer>
+          </>
+        }
         name="cron"
         rules={[
           { required: true, message: 'Required field' },

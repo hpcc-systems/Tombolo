@@ -7,7 +7,9 @@ import {
   MinusCircleOutlined,
   PlusOutlined,
   EyeOutlined,
+  InfoCircleOutlined,
 } from '@ant-design/icons';
+import InfoDrawer from '../common/InfoDrawer.jsx';
 import { useSelector, useDispatch } from 'react-redux';
 import { Link } from 'react-router-dom';
 import { authHeader } from '../common/AuthHeader.js';
@@ -27,6 +29,16 @@ function Clusters() {
   const [details, setDetails] = useState();
   const [form] = Form.useForm();
   const dispatch = useDispatch();
+
+  const [open, setOpen] = useState(false);
+
+  const showDrawer = () => {
+    setOpen(true);
+  };
+
+  const onClose = () => {
+    setOpen(false);
+  };
 
   //When component loads
   useEffect(() => {
@@ -247,6 +259,12 @@ function Clusters() {
         okText={<Text text="Add" />}
         onOk={addCluster}
         confirmLoading={confirmLoading}
+        title={
+          <>
+            <Text text="Add Cluster" />
+            <InfoCircleOutlined style={{ marginLeft: '.5rem' }} onClick={() => showDrawer()}></InfoCircleOutlined>
+          </>
+        }
         cancelText={<Text text="Cancel" />}>
         <Form layout="vertical" form={form}>
           <Form.Item label={<Text text="Host" />} name="name" required>
@@ -312,6 +330,7 @@ function Clusters() {
         {details ? <ObjectKeyValue obj={details}></ObjectKeyValue> : <Text text="Error retrieving details" />}
         <Form></Form>
       </Modal>
+      <InfoDrawer open={open} onClose={onClose} content="cluster"></InfoDrawer>
     </>
   );
 }
