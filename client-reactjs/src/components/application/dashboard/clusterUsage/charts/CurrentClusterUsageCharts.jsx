@@ -34,7 +34,7 @@ function CurrentClusterUsageCharts({ selectedCluster }) {
   return (
     <div style={{ border: '1px solid lightGray', marginTop: '10px', textAlign: 'center', paddingBottom: '15px' }}>
       <div style={{ padding: '10px', fontSize: '20px', fontWeight: '500' }}>Current Storage Usage</div>
-      <div style={{ display: 'flex', justifyContent: 'space-around' }}>
+      <div style={{ display: 'flex', justifyContent: 'space-around', flexWrap: 'wrap' }}>
         {currentUsage.length < 1 ? (
           <Empty image={Empty.PRESENTED_IMAGE_SIMPLE} />
         ) : (

@@ -2,7 +2,9 @@ import React from 'react';
 import { Drawer } from 'antd';
 import ApiKeyGuide from '../userGuides/ApiKeyGuide';
 import ExampleGuide from '../userGuides/ExampleGuide';
-
+import CollaboratorGuide from '../userGuides/CollaboratorGuide';
+import DataFlowGUide from '../userGuides/DataFlowGUide';
+import AssetsGuide from '../userGuides/AssetsGuide';
 const GuideDrawer = ({ content, open, onClose, width }) => {
   /* Example Usage
 
@@ -26,10 +28,16 @@ const GuideDrawer = ({ content, open, onClose, width }) => {
     <Drawer placement="right" visible={open} onClose={onClose} width={width}>
       {(() => {
         switch (content) {
-          case 'api':
-            return <ApiKeyGuide />;
           case 'example':
             return <ExampleGuide />;
+          case 'api':
+            return <ApiKeyGuide />;
+          case 'collaborator':
+            return <CollaboratorGuide />;
+          case 'dataFlow':
+            return <DataFlowGUide />;
+          case 'assets':
+            return <AssetsGuide />;
           default:
             return <h2>Guide Not Found</h2>;
         }

@@ -1,5 +1,12 @@
 /* eslint-disable unused-imports/no-unused-vars */
-import { DeleteOutlined, EditOutlined, QuestionCircleOutlined, SearchOutlined } from '@ant-design/icons';
+import {
+  DeleteOutlined,
+  EditOutlined,
+  QuestionCircleOutlined,
+  SearchOutlined,
+  InfoCircleOutlined,
+} from '@ant-design/icons';
+
 import {
   AutoComplete,
   Button,
@@ -14,7 +21,7 @@ import {
   Select,
   Table,
   Tooltip,
-  Typography,
+  // Typography,
 } from 'antd';
 import React, { Component } from 'react';
 import { connect } from 'react-redux';
@@ -23,9 +30,10 @@ import { applicationActions } from '../../redux/actions/Application';
 import { authHeader, handleError } from '../common/AuthHeader.js';
 import BreadCrumbs from '../common/BreadCrumbs';
 import Text, { i18n } from '../common/Text';
+import InfoDrawer from '../common/InfoDrawer';
 
 const Option = Select.Option;
-const { Paragraph } = Typography;
+// const { Paragraph } = Typography;
 
 class Consumers extends Component {
   state = {
@@ -51,6 +59,16 @@ class Consumers extends Component {
     appId: '',
     appTitle: '',
     submitted: false,
+    openHelp: false,
+  };
+
+  //Help model
+  showHelpDrawer = () => {
+    console.log('Open inline help');
+    this.setState({ openHelp: true });
+  };
+  onHelpDrawerClose = () => {
+    this.setState({ openHelp: false });
   };
 
   componentDidMount() {
@@ -436,18 +454,30 @@ class Consumers extends Component {
 
         <div>
           <Modal
-            title={<Text text="Add Consumer/Supplier" />}
+            title={
+              <>
+                <Text text="Add Consumer/Supplier" />{' '}
+                <InfoCircleOutlined
+                  style={{ marginLeft: '5px', fontSize: '14px' }}
+                  onClick={() => this.showHelpDrawer()}
+                  // onClick={() => {
+                  //   console.log('help wanted');
+                  // }}
+                />
+              </>
+            }
             visible={this.state.showAddConsumer}
             onOk={this.handleAddConsumerOk.bind(this)}
             onCancel={this.handleAddConsumerCancel}
             confirmLoading={confirmLoading}
+            maskClosable={false}
             destroyOnClose={true}>
             <Form layout="vertical">
-              <Paragraph>{<Text text="Consumer - Product/Application/Group consuming the asset" />}</Paragraph>
+              {/* <Paragraph>{<Text text="Consumer - Product/Application/Group consuming the asset" />}</Paragraph>
               <Paragraph>
                 {<Text text="Supplied - Supplier of the asset data (DMV, Insurance company etc)" />}
               </Paragraph>
-              <Paragraph>{<Text text="Owner - Contact Person/Group for an asset" />}</Paragraph>
+              <Paragraph>{<Text text="Owner - Contact Person/Group for an asset" />}</Paragraph> */}
 
               <Form.Item label={<Text text="Type" />} name="assetType" required>
                 <Checkbox.Group options={options} onChange={this.onConsumerSupplierChange} />
@@ -574,6 +604,11 @@ class Consumers extends Component {
             </Form>
           </Modal>
         </div>
+        <InfoDrawer
+          open={this.state.openHelp}
+          onClose={this.onHelpDrawerClose}
+          width="35%"
+          content="collaborator"></InfoDrawer>
       </React.Fragment>
     );
   }

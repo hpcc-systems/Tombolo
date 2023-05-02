@@ -2,7 +2,7 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { Tree, Menu, Button, Modal, Input, Dropdown, message } from 'antd';
 import { debounce } from 'lodash';
-import { DownOutlined } from '@ant-design/icons';
+import { DownOutlined, InfoCircleOutlined } from '@ant-design/icons';
 import { useSelector, useDispatch } from 'react-redux';
 import { useHistory } from 'react-router';
 
@@ -19,6 +19,7 @@ import SelectDetailsForPdfDialog from '../Assets/pdf/SelectDetailsForPdfDialog';
 import { getNestedAssets } from '../Assets/pdf/downloadPdf';
 import { CreateGroupDialog } from './CreateGroupDialog';
 import Text, { i18n } from '../../common/Text';
+import InfoDrawer from '../../common/InfoDrawer';
 
 const { DirectoryTree } = Tree;
 const { confirm } = Modal;
@@ -61,6 +62,14 @@ const Assets = () => {
   const [selectedAsset, setSelectedAsset] = useState();
   const [toPrintAssets, setToPrintAssets] = useState([]);
   const [searchKeyword, setSearchKeyword] = useState('');
+  const [openHelp, setOpenHelp] = useState(false);
+
+  const showDrawer = () => {
+    setOpenHelp(true);
+  };
+  const onHelpDrawerClose = () => {
+    setOpenHelp(false);
+  };
 
   const fetchGroups = async () => {
     await dispatch(getGroupsTree(application.applicationId));
@@ -343,11 +352,15 @@ const Assets = () => {
         <BreadCrumbs
           extraContent={
             editingAllowed ? (
-              <Dropdown overlay={menu}>
-                <Button type="primary" icon={<DownOutlined style={{ marginRight: '5px' }} />}>
-                  {<Text text="Add Asset" />}
-                </Button>
-              </Dropdown>
+              <div style={{ marginRight: '5px' }}>
+                <InfoCircleOutlined style={{ marginRight: '10px', fontSize: '18px' }} onClick={() => showDrawer()} />
+
+                <Dropdown overlay={menu}>
+                  <Button type="primary" icon={<DownOutlined style={{ marginRight: '5px' }} />}>
+                    {<Text text="Add Asset" />}
+                  </Button>
+                </Dropdown>
+              </div>
             ) : null
           }
         />
@@ -413,6 +426,7 @@ const Assets = () => {
           setVisiblity={setSelectDetailsforPdfDialogVisibility}
         />
       ) : null}
+      <InfoDrawer open={openHelp} onClose={onHelpDrawerClose} width="35%" content="assets"></InfoDrawer>
     </React.Fragment>
   );
 };

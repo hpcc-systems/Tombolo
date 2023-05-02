@@ -1,12 +1,14 @@
 import React, { useState, useEffect } from 'react';
 import { message, Spin } from 'antd';
 import { withRouter } from 'react-router-dom';
+import { useDispatch } from 'react-redux';
+import { InfoCircleOutlined } from '@ant-design/icons';
 
 import { authHeader, handleError } from '../../common/AuthHeader.js';
 import DataflowTable from './DataflowTable';
 import AddDataflow from './AddDataflows';
 import { dataflowAction } from '../../../redux/actions/Dataflow';
-import { useDispatch } from 'react-redux';
+import InfoDrawer from '../../common/InfoDrawer';
 
 function Dataflow({ applicationId, history }) {
   let componentMounted = true;
@@ -16,8 +18,16 @@ function Dataflow({ applicationId, history }) {
   const [modalVisible, setModalVisibility] = useState(false);
   const [dataflowToEdit, setDataflowToEdit] = useState(null);
   const [enableEdit, setEnableEdit] = useState(false);
+  const [openHelp, setOpenHelp] = useState(false);
 
   const dispatch = useDispatch();
+
+  const showHelpDrawer = () => {
+    setOpenHelp(true);
+  };
+  const onHelpDrawerClose = () => {
+    setOpenHelp(false);
+  };
 
   // Fetch all data flows when component mounts
   useEffect(() => {
@@ -76,7 +86,9 @@ function Dataflow({ applicationId, history }) {
   return (
     <div>
       <Spin spinning={loadingData}>
-        <div style={{ display: 'flex', justifyContent: 'flex-end', margin: '5px' }}>
+        <div style={{ display: 'flex', justifyContent: 'flex-end', placeItems: 'center' }}>
+          <InfoCircleOutlined style={{ marginRight: '10px', fontSize: '18px' }} onClick={() => showHelpDrawer()} />
+
           <AddDataflow
             modalVisible={modalVisible}
             setModalVisibility={setModalVisibility}
@@ -97,6 +109,7 @@ function Dataflow({ applicationId, history }) {
           onDataFlowUpdated={onDataFlowUpdated}
         />
       </Spin>
+      <InfoDrawer open={openHelp} onClose={onHelpDrawerClose} width="35%" content="dataFlow"></InfoDrawer>
     </div>
   );
 }
