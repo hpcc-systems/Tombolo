@@ -6,6 +6,8 @@ import { applicationActions } from '../../../redux/actions/Application';
 import { emptyGroupTree } from '../../../redux/actions/Groups';
 import { authHeader } from '../../common/AuthHeader';
 import Text from '../../common/Text';
+import { InfoCircleOutlined } from '@ant-design/icons';
+import InfoDrawer from '../../common/InfoDrawer';
 
 import { useHistory } from 'react-router';
 
@@ -15,6 +17,15 @@ function AddApplication(props) {
   const [isEditing, setIsEditing] = useState(false);
   const dispatch = useDispatch();
   const history = useHistory();
+  const [open, setOpen] = useState(false);
+
+  const showDrawer = () => {
+    setOpen(true);
+  };
+
+  const onClose = () => {
+    setOpen(false);
+  };
 
   // FORM ITEM LAYOUT
   const formItemLayout =
@@ -109,7 +120,19 @@ function AddApplication(props) {
   return (
     <Modal
       visible={props.showAddApplicationModal}
-      title={props?.selectedApplication?.title || <Text text="Add" />}
+      title={
+        props?.selectedApplication?.title ? (
+          <>
+            <Text text={props?.selectedApplication?.title} />
+            <InfoCircleOutlined style={{ marginLeft: '.5rem' }} onClick={() => showDrawer()}></InfoCircleOutlined>
+          </>
+        ) : (
+          <>
+            <Text text="Add Application" />
+            <InfoCircleOutlined style={{ marginLeft: '.5rem' }} onClick={() => showDrawer()}></InfoCircleOutlined>
+          </>
+        )
+      }
       maskClosable={false}
       onCancel={handleModalCancel}
       footer={
@@ -199,6 +222,7 @@ function AddApplication(props) {
           )}
         </Form.Item>
       </Form>
+      <InfoDrawer open={open} onClose={onClose} content="application"></InfoDrawer>
     </Modal>
   );
 }

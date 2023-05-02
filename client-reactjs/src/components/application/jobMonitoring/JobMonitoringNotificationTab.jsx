@@ -1,7 +1,7 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { Form, Select, Input, Button } from 'antd';
-import { MinusCircleOutlined, PlusOutlined } from '@ant-design/icons';
-
+import { MinusCircleOutlined, PlusOutlined, InfoCircleOutlined } from '@ant-design/icons';
+import InfoDrawer from '../../common/InfoDrawer';
 const { Option } = Select;
 
 const notificationOptions = [
@@ -16,6 +16,16 @@ const notificationConditions = [
 ];
 
 function ClusterMonitoringNotificationTab({ notificationDetails, setNotificationDetails }) {
+  const [open, setOpen] = useState(false);
+
+  const showDrawer = () => {
+    setOpen(true);
+  };
+
+  const onClose = () => {
+    setOpen(false);
+  };
+
   return (
     <>
       <Form.Item
@@ -34,7 +44,15 @@ function ClusterMonitoringNotificationTab({ notificationDetails, setNotification
       </Form.Item>
 
       <Form.Item
-        label="Notification Channel"
+        label={
+          <>
+            <p style={{ marginBottom: '0' }}>
+              Notification Channel
+              <InfoCircleOutlined style={{ marginLeft: '.5rem' }} onClick={() => showDrawer()} />
+            </p>
+            <InfoDrawer open={open} onClose={onClose} content="webhook"></InfoDrawer>
+          </>
+        }
         name="notificationChannels"
         rules={[{ required: true, message: 'Required Field' }]}>
         <Select
