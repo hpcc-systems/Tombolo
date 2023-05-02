@@ -604,11 +604,7 @@ class Consumers extends Component {
             </Form>
           </Modal>
         </div>
-        <InfoDrawer
-          open={this.state.openHelp}
-          onClose={this.onHelpDrawerClose}
-          width="35%"
-          content="collaborator"></InfoDrawer>
+        <InfoDrawer open={this.state.openHelp} onClose={this.onHelpDrawerClose} content="collaborator"></InfoDrawer>
       </React.Fragment>
     );
   }

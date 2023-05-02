@@ -426,7 +426,7 @@ const Assets = () => {
           setVisiblity={setSelectDetailsforPdfDialogVisibility}
         />
       ) : null}
-      <InfoDrawer open={openHelp} onClose={onHelpDrawerClose} width="35%" content="assets"></InfoDrawer>
+      <InfoDrawer open={openHelp} onClose={onHelpDrawerClose} width="25%" content="assets"></InfoDrawer>
     </React.Fragment>
   );
 };

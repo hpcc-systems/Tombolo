@@ -5,6 +5,12 @@ import ExampleGuide from '../userGuides/ExampleGuide';
 import CollaboratorGuide from '../userGuides/CollaboratorGuide';
 import DataFlowGUide from '../userGuides/DataFlowGUide';
 import AssetsGuide from '../userGuides/AssetsGuide';
+import GithubGuide from '../userGuides/GithubGuide';
+import CronGuide from '../userGuides/CronGuide';
+import TeamsWebhookGuide from '../userGuides/TeamsWebhookGuide';
+import ApplicationsGuide from '../userGuides/ApplicationsGuide';
+import ClusterGuide from '../userGuides/ClusterGuide';
+
 const GuideDrawer = ({ content, open, onClose, width }) => {
   /* Example Usage
 
@@ -38,6 +44,16 @@ const GuideDrawer = ({ content, open, onClose, width }) => {
             return <DataFlowGUide />;
           case 'assets':
             return <AssetsGuide />;
+          case 'github':
+            return <GithubGuide />;
+          case 'cron':
+            return <CronGuide />;
+          case 'webhook':
+            return <TeamsWebhookGuide />;
+          case 'application':
+            return <ApplicationsGuide />;
+          case 'cluster':
+            return <ClusterGuide />;
           default:
             return <h2>Guide Not Found</h2>;
         }

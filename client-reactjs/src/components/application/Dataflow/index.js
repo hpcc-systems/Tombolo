@@ -109,7 +109,7 @@ function Dataflow({ applicationId, history }) {
           onDataFlowUpdated={onDataFlowUpdated}
         />
       </Spin>
-      <InfoDrawer open={openHelp} onClose={onHelpDrawerClose} width="35%" content="dataFlow"></InfoDrawer>
+      <InfoDrawer open={openHelp} onClose={onHelpDrawerClose} content="dataFlow"></InfoDrawer>
     </div>
   );
 }

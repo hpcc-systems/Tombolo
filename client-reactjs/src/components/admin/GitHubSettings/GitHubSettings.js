@@ -5,6 +5,8 @@ import { useSelector } from 'react-redux';
 import useGitHubProjectList from '../../../hooks/useGitHubProjectList';
 import { authHeader, handleError } from '../../common/AuthHeader';
 import Text, { i18n } from '../../common/Text';
+import { InfoCircleOutlined } from '@ant-design/icons';
+import InfoDrawer from '../../common/InfoDrawer';
 
 const { Option, OptGroup } = Select;
 const { Search } = Input;
@@ -239,11 +241,27 @@ const GitHubSettings = () => {
     };
   });
 
+  const [open, setOpen] = useState(false);
+
+  const showDrawer = () => {
+    setOpen(true);
+  };
+
+  const onClose = () => {
+    setOpen(false);
+  };
+
   return (
     <Form form={form} component={false} autoComplete={false}>
-      <Button onClick={handleAddProject} type="primary" style={{ margin: '5px', display: 'block', marginLeft: 'auto' }}>
+      <Button
+        onClick={handleAddProject}
+        type="primary"
+        style={{ margin: '5px', display: 'block', marginLeft: 'auto', float: 'right' }}>
         {<Text text="Add new project" />}
       </Button>
+      <InfoCircleOutlined
+        onClick={() => showDrawer()}
+        style={{ marginTop: '15px', marginRight: '.5rem', float: 'right' }}></InfoCircleOutlined>
       <Table
         bordered
         components={{ body: { cell: EditableCell } }}
@@ -251,6 +269,7 @@ const GitHubSettings = () => {
         loading={projects.loading}
         dataSource={projects.data}
       />
+      <InfoDrawer open={open} onClose={onClose} content="github"></InfoDrawer>
     </Form>
   );
 };

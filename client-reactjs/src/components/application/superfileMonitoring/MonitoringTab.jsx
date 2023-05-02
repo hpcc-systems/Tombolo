@@ -1,6 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { Form, Input, Typography, Checkbox, Select, DatePicker } from 'antd';
 import cronstrue from 'cronstrue';
+import InfoDrawer from '../../common/InfoDrawer';
+import { InfoCircleOutlined } from '@ant-design/icons';
 
 const MonitoringTab = ({
   monitoringDetails,
@@ -22,6 +24,16 @@ const MonitoringTab = ({
   const [maxNumberOfSubFiles, setMaxNumberOfSubFles] = useState(null);
   const [updateIntervalDays, setUpdateIntervalDays] = useState(null);
   const [updateIntervalInitialDate, setUpdateIntervalInitialDate] = useState(null);
+
+  const [open, setOpen] = useState(false);
+
+  const showDrawer = () => {
+    setOpen(true);
+  };
+
+  const onClose = () => {
+    setOpen(false);
+  };
 
   useEffect(() => {}, [selectedFileMonitoringDetails]);
 
@@ -125,7 +137,15 @@ const MonitoringTab = ({
         <Input placeholder="Display Name" disabled={disabled}></Input>
       </Form.Item>
       <Form.Item
-        label="Cron (How often to monitor)"
+        label={
+          <>
+            <p style={{ marginBottom: '0' }}>
+              Cron (How often to monitor)
+              <InfoCircleOutlined style={{ marginLeft: '.5rem' }} onClick={() => showDrawer()} />
+            </p>
+            <InfoDrawer open={open} onClose={onClose} width="700px" content="cron"></InfoDrawer>
+          </>
+        }
         style={{ width: 'calc(47.5% - 8px)' }}
         onChange={(e) => setMonitoringDetails({ ...monitoringDetails, cron: e.target.value })}
         name="cron"
