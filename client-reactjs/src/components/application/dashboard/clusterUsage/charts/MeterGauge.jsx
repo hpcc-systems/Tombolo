@@ -64,7 +64,7 @@ const MeterGauge = ({ data }) => {
           <div>Mean: {data.meanUsage} % </div>
         </div>
       }>
-      <Gauge {...config} style={{ width: '200px', height: '200px' }} />
+      <Gauge {...config} style={{ width: '200px', height: '200px', padding: '20px' }} />
       {/* Bug in antd -  fragment below is required for Pop over to work. */}
       <></>
     </Popover>

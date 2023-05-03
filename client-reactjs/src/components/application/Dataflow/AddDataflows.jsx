@@ -154,13 +154,11 @@ function AddDataflow({
 
   return (
     <React.Fragment>
-      <div style={{ marginLeft: 'auto', paddingTop: '5px' }}>
-        <Tooltip placement="bottom" title={<Text text="Add new Dataflow" />}>
-          <Button type="primary" onClick={handleModal}>
-            {<Text text="Add" />}
-          </Button>
-        </Tooltip>
-      </div>
+      <Tooltip placement="bottom" title={<Text text="Add new Dataflow" />}>
+        <Button type="primary" onClick={handleModal}>
+          {<Text text="Add" />}
+        </Button>
+      </Tooltip>
 
       <Modal
         visible={modalVisible}
