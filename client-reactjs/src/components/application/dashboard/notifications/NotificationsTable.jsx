@@ -5,7 +5,7 @@ import { useLocation } from 'react-router-dom';
 import { authHeader, handleError } from '../../../common/AuthHeader.js';
 import { Constants } from '../../../common/Constants';
 
-function NotificationsTable({ applicationId }) {
+function NotificationsTable({ applicationId, setSelectedNotificationIdsForBulkAction, updatedNotificationInDb }) {
   const [notifications, setNotifications] = useState([]);
   const [filters, setFilters] = useState([]);
   const location = useLocation();
@@ -14,7 +14,7 @@ function NotificationsTable({ applicationId }) {
   useEffect(() => {
     const monitoringId = new URLSearchParams(location.search).get('monitoringId');
     getNotifications(monitoringId);
-  }, [applicationId, location]);
+  }, [applicationId, location, updatedNotificationInDb]);
 
   //Get list of all file monitoring
   const getNotifications = async (monitoringId) => {
@@ -128,6 +128,13 @@ function NotificationsTable({ applicationId }) {
     },
   ];
 
+  // Row selection
+  const rowSelection = {
+    onChange: (selectedRowKeys) => {
+      setSelectedNotificationIdsForBulkAction(selectedRowKeys);
+    },
+  };
+
   //JSX
   return (
     <Table
@@ -138,6 +145,7 @@ function NotificationsTable({ applicationId }) {
       dataSource={notifications}
       rowKey={(record) => record.id}
       verticalAlign="top"
+      rowSelection={rowSelection}
     />
   );
 }

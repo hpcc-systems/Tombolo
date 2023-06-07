@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { Tabs, Empty, Spin } from 'antd';
+import { Tabs, Empty, Spin, Button, Space } from 'antd';
 import { useSelector } from 'react-redux';
 import { message } from 'antd';
 import moment from 'moment';
@@ -11,6 +11,7 @@ import MetricBoxes from './charts/MetricBoxes';
 import './index.css';
 import { authHeader, handleError } from '../../../common/AuthHeader.js';
 import ExportMenu from '../ExportMenu/ExportMenu';
+import BulkActions from './BulkActions';
 
 function Index() {
   const [notifications, setNotifications] = useState([]);
@@ -19,6 +20,9 @@ function Index() {
   const [stackBarData, setStackBarData] = useState([]);
   const [donutData, setDonutData] = useState([]);
   const [groupDataBy, setGroupDataBy] = useState('day');
+  const [selectedNotificationIdsForBulkAction, setSelectedNotificationIdsForBulkAction] = useState([]);
+  const [bulkActionModalVisible, setBulkActionModalVisibility] = useState(false);
+  const [updatedNotificationInDb, setUpdatedNotificationInDb] = useState(null);
 
   const {
     application: { applicationId },
@@ -167,7 +171,21 @@ function Index() {
 
   return (
     <div>
-      <Tabs tabBarExtraContent={<ExportMenu />}>
+      <Tabs
+        tabBarExtraContent={
+          <Space>
+            <Button
+              type="primary"
+              ghost
+              disabled={selectedNotificationIdsForBulkAction.length > 0 ? false : true}
+              onClick={() => {
+                setBulkActionModalVisibility(true);
+              }}>
+              Actions
+            </Button>
+            <ExportMenu />
+          </Space>
+        }>
         <Tabs.TabPane key="1" tab="Dashboard">
           <Filters
             applicationId={applicationId}
@@ -198,7 +216,18 @@ function Index() {
         </Tabs.TabPane>
 
         <Tabs.TabPane key="2" tab="Notifications">
-          <NotificationsTable applicationId={applicationId} />
+          <NotificationsTable
+            applicationId={applicationId}
+            setSelectedNotificationIdsForBulkAction={setSelectedNotificationIdsForBulkAction}
+            updatedNotificationInDb={updatedNotificationInDb}
+          />
+          {bulkActionModalVisible ? (
+            <BulkActions
+              setBulkActionModalVisibility={setBulkActionModalVisibility}
+              selectedNotificationIdsForBulkAction={selectedNotificationIdsForBulkAction}
+              setUpdatedNotificationInDb={setUpdatedNotificationInDb}
+            />
+          ) : null}
         </Tabs.TabPane>
       </Tabs>
     </div>
