@@ -3,6 +3,7 @@ import { Form, Select, DatePicker, Button, message } from 'antd';
 import moment from 'moment';
 
 import { authHeader, handleError } from '../../../../common/AuthHeader.js';
+import { monitoringStatusOptions } from '../monitoringStatusOptions.js';
 import '../index.css';
 
 const monitoringTypeOptions = [
@@ -10,13 +11,6 @@ const monitoringTypeOptions = [
   { label: 'File', value: 'file' },
   { label: 'Cluster', value: 'cluster' },
   { label: 'Super File', value: 'superFile' },
-];
-
-const monitoringStatusOptions = [
-  { label: 'Notified', value: 'notified' },
-  { label: 'Triage', value: 'triage' },
-  { label: 'In-Progress', value: 'inProgress' },
-  { label: 'Completed', value: 'completed' },
 ];
 
 const groupByOptions = [
