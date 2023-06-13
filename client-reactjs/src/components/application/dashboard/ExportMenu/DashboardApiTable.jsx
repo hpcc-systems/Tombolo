@@ -1,12 +1,13 @@
 import React from 'react';
-import { Table, Space, Tooltip, message } from 'antd';
+import { Table, Space, Tooltip, message, Typography } from 'antd';
 import { DeleteOutlined } from '@ant-design/icons';
 import { authHeader, handleError } from '../../../common/AuthHeader.js';
-
 // import { Link } from 'react-router-dom';
 import { useEffect } from 'react';
 
-const DashboardApiTable = ({ keys, getKeys }) => {
+const DashboardApiTable = ({ keys, getKeys, active }) => {
+  const { Text } = Typography;
+
   const deleteKey = async (id) => {
     try {
       const payload = {
@@ -35,7 +36,34 @@ const DashboardApiTable = ({ keys, getKeys }) => {
   const columns = [
     { title: 'Name', dataIndex: 'name' },
     { title: 'Created', dataIndex: 'formattedCreatedAt' },
-    { title: 'Expires in', dataIndex: 'daysToExpire' },
+    {
+      title: 'Expires in',
+      dataIndex: 'daysToExpire',
+      render: (_, record) => {
+        return <>{record.expired ? <Text type="danger">Expired</Text> : <Text>{record.daysToExpire}</Text>}</>;
+      },
+    },
+    {
+      title: 'Expired',
+      dataIndex: 'expired',
+      key: 'expired',
+      filters: [
+        {
+          text: '0',
+          value: 0,
+        },
+        {
+          text: '1',
+          value: 1,
+        },
+      ],
+      onFilter: (value, record) => (record.expired === value) === false,
+      defaultFilteredValue: [active],
+      filterIcon: (filtered) => <div>{filtered}</div>,
+      render: (_, record) => {
+        return <>{record.expired ? <Text>Yes</Text> : <Text>No</Text>}</>;
+      },
+    },
     {
       title: 'Actions',
       dataIndex: 'actions',
@@ -54,6 +82,7 @@ const DashboardApiTable = ({ keys, getKeys }) => {
       ),
     },
   ];
+
   return (
     <>
       <Table
