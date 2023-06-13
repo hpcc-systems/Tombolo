@@ -15,10 +15,14 @@ let notificationConditions = [
   { label: 'Unknown', value: 'unknown' },
 ];
 
-function ClusterMonitoringNotificationTab({ notificationDetails, setNotificationDetails, selectedJob }) {
+function ClusterMonitoringNotificationTab({
+  notificationDetails,
+  setNotificationDetails,
+  selectedJob,
+  notifyConditions,
+  setNotifyConditions,
+}) {
   const [open, setOpen] = useState(false);
-  const [notifyConditions, setNotifyConditions] = useState([]);
-
   // Watch for change in selectedJob
   useEffect(() => {
     const costRelatedOptions = notificationConditions.find((condition) => condition.value === 'maxExecutionCost');

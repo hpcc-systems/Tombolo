@@ -55,7 +55,6 @@ function JobMonitoring() {
     try {
       // await form.validateFields(); // if errs will be caught by catch block
       const payload = form.getFieldsValue();
-      console.log('---------- payload', payload);
       payload.app_id = applicationId;
       await form.validateFields();
       await saveJobMonitoring(payload);
@@ -126,8 +125,8 @@ function JobMonitoring() {
         setJobMonitorings((prev) => [...prev, data]);
       }
 
-      // If any monitoring updated. update the monitoring list
-      // so changes are reflected without refreshing page
+      // If any monitoring updated. update the monitoring list -
+      // so changes are reflected without refreshing page or making another call to backend
       const updatedMonitoringList = [];
       if (selectedMonitoring) {
         jobMonitorings.forEach((monitoring) => {
@@ -284,6 +283,8 @@ function JobMonitoring() {
                 notificationDetails={notificationDetails}
                 setNotificationDetails={setNotificationDetails}
                 selectedJob={selectedJob}
+                setNotifyConditions={setNotifyConditions}
+                notifyConditions={notifyConditions}
               />
             </TabPane>
           </Tabs>

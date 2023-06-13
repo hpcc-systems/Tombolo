@@ -15,6 +15,7 @@ function JobMonitoringTable({
   setSelectedCluster,
   setNotificationDetails,
   setMonitoringScope,
+  setNotifyConditions,
 }) {
   const { clusters } = useSelector((state) => state.applicationReducer);
 
@@ -66,7 +67,13 @@ function JobMonitoringTable({
     )[0];
 
     const {
-      metaData: { notifications, monitoringScope, notificationConditions, jobName },
+      metaData: {
+        notifications,
+        monitoringScope,
+        notificationConditions,
+        jobName,
+        costLimits: { maxCompileCost, maxExecutionCost, maxFileAccessCost, maxTotalCost },
+      },
       cluster_id,
     } = selectedMonitoringDetails;
 
@@ -85,9 +92,14 @@ function JobMonitoringTable({
       monitoringScope,
       notificationConditions,
       jobName,
+      maxCompileCost,
+      maxExecutionCost,
+      maxFileAccessCost,
+      maxTotalCost,
     };
 
     setSelectedMonitoring(updatedMonitoringDetails);
+    setNotifyConditions(notificationConditions);
     setSelectedCluster(cluster_id);
     setNotificationDetails({ notificationChannel: notificationChannels });
     setMonitoringScope(monitoringScope);

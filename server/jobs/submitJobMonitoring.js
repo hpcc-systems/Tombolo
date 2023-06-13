@@ -90,7 +90,7 @@ const convertToISODateString = require("../utils/stringToIsoDateString");
       //cost related  ------------------------------------------------
       if (
         notificationConditions.includes("maxExecutionCost") &&
-        wuDetails.ExecuteCost < costLimits.maxExecutionCost
+        wuDetails.ExecuteCost > costLimits.maxExecutionCost
       ) {
         costRelatedNotification["Actual execution cost"] =
           wuDetails.ExecuteCost;
@@ -100,7 +100,7 @@ const convertToISODateString = require("../utils/stringToIsoDateString");
 
       if (
         notificationConditions.includes("maxFileAccessCost") &&
-        wuDetails.FileAccessCost < costLimits.maxFileAccessCost
+        wuDetails.FileAccessCost > costLimits.maxFileAccessCost
       ) {
         costRelatedNotification["Actual file access cost"] =
           wuDetails.FileAccessCost;
@@ -110,7 +110,7 @@ const convertToISODateString = require("../utils/stringToIsoDateString");
 
       if (
         notificationConditions.includes("maxCompileCost") &&
-        wuDetails.CompileCost < costLimits.maxCompileCost
+        wuDetails.CompileCost > costLimits.maxCompileCost
       ) {
         costRelatedNotification["Actual compile cost"] = wuDetails.CompileCost;
         costRelatedNotification["Maximum compile cost"] =
@@ -121,7 +121,7 @@ const convertToISODateString = require("../utils/stringToIsoDateString");
         notificationConditions.includes("maxTotalCost") &&
         wuDetails.CompileCost +
           wuDetails.ExecuteCost +
-          wuDetails.FileAccessCost <
+          wuDetails.FileAccessCost >
           costLimits.maxTotalCost
       ) {
         costRelatedNotification["Actual total cost"] =
