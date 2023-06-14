@@ -278,6 +278,9 @@ router.post(
                 text: wu.Jobname,
                 value: wu.Wuid,
                 cluster: wu.Cluster,
+                ExecuteCost: wu.CompileCost,
+                FileAccessCost: wu.FileAccessCost,
+                CompileCost: wu.CompileCost
               };
             return acc;
           },

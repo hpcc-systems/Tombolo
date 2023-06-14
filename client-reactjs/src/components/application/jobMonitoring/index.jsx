@@ -31,6 +31,7 @@ function JobMonitoring() {
   const [selectedMonitoring, setSelectedMonitoring] = useState(null);
   const [notificationDetails, setNotificationDetails] = useState({});
   const [monitoringScope, setMonitoringScope] = useState(null);
+  const [selectedJob, setSelectedJob] = useState(null);
 
   //When component loads get all file monitoring
   useEffect(() => {
@@ -64,8 +65,18 @@ function JobMonitoring() {
 
   const saveJobMonitoring = async (formData) => {
     try {
-      const { notificationChannels, emails, msTeamsGroups, notificationConditions, jobName, monitoringScope } =
-        formData;
+      const {
+        notificationChannels,
+        emails,
+        msTeamsGroups,
+        notificationConditions,
+        jobName,
+        monitoringScope,
+        maxExecutionCost,
+        maxFileAccessCost,
+        maxCompileCost,
+        maxTotalCost,
+      } = formData;
 
       const notifications = [];
       if (notificationChannels.includes('eMail')) {
@@ -82,6 +93,12 @@ function JobMonitoring() {
         notificationConditions,
         jobName,
         monitoringScope,
+        costLimits: {
+          maxExecutionCost: parseFloat(maxExecutionCost),
+          maxFileAccessCost: parseFloat(maxFileAccessCost),
+          maxCompileCost: parseFloat(maxCompileCost),
+          maxTotalCost: parseFloat(maxTotalCost),
+        },
       };
 
       //Delete since these items are nested inside metaData object
@@ -108,8 +125,8 @@ function JobMonitoring() {
         setJobMonitorings((prev) => [...prev, data]);
       }
 
-      // If any monitoring updated. update the monitoring list
-      // so changes are reflected without refreshing page
+      // If any monitoring updated. update the monitoring list -
+      // so changes are reflected without refreshing page or making another call to backend
       const updatedMonitoringList = [];
       if (selectedMonitoring) {
         jobMonitorings.forEach((monitoring) => {
@@ -249,6 +266,7 @@ function JobMonitoring() {
                 selectedCluster={selectedCluster}
                 monitoringScope={monitoringScope}
                 setMonitoringScope={setMonitoringScope}
+                setSelectedJob={setSelectedJob}
               />
             </TabPane>
 
@@ -264,6 +282,9 @@ function JobMonitoring() {
               <JobMonitoringNotificationTab
                 notificationDetails={notificationDetails}
                 setNotificationDetails={setNotificationDetails}
+                selectedJob={selectedJob}
+                setNotifyConditions={setNotifyConditions}
+                notifyConditions={notifyConditions}
               />
             </TabPane>
           </Tabs>

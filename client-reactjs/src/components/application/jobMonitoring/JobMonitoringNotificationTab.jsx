@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Form, Select, Input, Button } from 'antd';
 import { MinusCircleOutlined, PlusOutlined, InfoCircleOutlined } from '@ant-design/icons';
 import InfoDrawer from '../../common/InfoDrawer';
@@ -9,14 +9,41 @@ const notificationOptions = [
   { label: 'MS Teams', value: 'msTeams' },
 ];
 
-const notificationConditions = [
+let notificationConditions = [
   { label: 'Aborted', value: 'aborted' },
   { label: 'Failed', value: 'failed' },
   { label: 'Unknown', value: 'unknown' },
 ];
 
-function ClusterMonitoringNotificationTab({ notificationDetails, setNotificationDetails }) {
+function ClusterMonitoringNotificationTab({
+  notificationDetails,
+  setNotificationDetails,
+  selectedJob,
+  notifyConditions,
+  setNotifyConditions,
+}) {
   const [open, setOpen] = useState(false);
+  // Watch for change in selectedJob
+  useEffect(() => {
+    const costRelatedOptions = notificationConditions.find((condition) => condition.value === 'maxExecutionCost');
+    if (selectedJob && selectedJob.executionCost !== undefined) {
+      if (costRelatedOptions === undefined) {
+        notificationConditions.push({ label: 'Max execution cost', value: 'maxExecutionCost' });
+        notificationConditions.push({ label: 'Max file excess cost ', value: 'maxFileAccessCost' });
+        notificationConditions.push({ label: 'Max compile cost ', value: 'maxCompileCost' });
+        notificationConditions.push({ label: 'Max total cost ', value: 'maxTotalCost' });
+      }
+    } else {
+      const newOptions = notificationConditions.filter(
+        (option) =>
+          option.value !== 'maxExecutionCost' &&
+          option.value !== 'maxFileAccessCost' &&
+          option.value !== 'maxCompileCost' &&
+          option.value !== 'maxTotalCost'
+      );
+      notificationConditions = newOptions;
+    }
+  }, [selectedJob]);
 
   const showDrawer = () => {
     setOpen(true);
@@ -32,7 +59,11 @@ function ClusterMonitoringNotificationTab({ notificationDetails, setNotification
         label="Notify When"
         name="notificationConditions"
         rules={[{ required: true, message: 'Required filed' }]}>
-        <Select mode="tags">
+        <Select
+          mode="tags"
+          onChange={(selection) => {
+            setNotifyConditions(selection);
+          }}>
           {notificationConditions.map((condition) => {
             return (
               <Option key={condition.value} value={condition.value}>
@@ -42,6 +73,32 @@ function ClusterMonitoringNotificationTab({ notificationDetails, setNotification
           })}
         </Select>
       </Form.Item>
+
+      <>
+        {notifyConditions.includes('maxExecutionCost') ? (
+          <Form.Item label="Max Execution Cost" name="maxExecutionCost" style={{ width: '50%' }} required>
+            <Input type="number" prefix="$"></Input>
+          </Form.Item>
+        ) : null}
+
+        {notifyConditions.includes('maxFileAccessCost') ? (
+          <Form.Item label="Max File Access Cost" name="maxFileAccessCost" style={{ width: '50%' }} required>
+            <Input type="number" prefix="$"></Input>
+          </Form.Item>
+        ) : null}
+
+        {notifyConditions.includes('maxCompileCost') ? (
+          <Form.Item label="Max Compile Cost" name="maxCompileCost" style={{ width: '50%' }} required>
+            <Input type="number" prefix="$"></Input>
+          </Form.Item>
+        ) : null}
+
+        {notifyConditions.includes('maxTotalCost') ? (
+          <Form.Item label="Max Total Cost" name="maxTotalCost" style={{ width: '50%' }} required>
+            <Input type="number" prefix="$"></Input>
+          </Form.Item>
+        ) : null}
+      </>
 
       <Form.Item
         label={

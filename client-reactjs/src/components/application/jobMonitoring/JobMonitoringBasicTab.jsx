@@ -17,6 +17,7 @@ function ClusterMonitoringBasicTab({
   selectedCluster,
   monitoringScope,
   setMonitoringScope,
+  setSelectedJob,
 }) {
   const [jobs, setJobs] = useState([]);
   const [fetchingJobs, setFetchingJobs] = useState(false);
@@ -37,8 +38,15 @@ function ClusterMonitoringBasicTab({
       const data = await response.json();
       if (data) {
         const cleanedData = data.map((d) => {
-          return { label: d.text, value: d.text };
+          return {
+            label: d.text,
+            value: d.text,
+            executionCost: d.ExecuteCost,
+            fileAccessCost: d.FileAccessCost,
+            compileCost: d.CompileCost,
+          };
         });
+
         setJobs(cleanedData);
       }
     } catch (err) {
@@ -56,6 +64,12 @@ function ClusterMonitoringBasicTab({
   // When job name field is cleared
   const handleJobNameFiledClear = () => {
     setJobs([]);
+  };
+
+  //When job is selected
+  const onJobSelect = (jobName) => {
+    const selectedJobDetails = jobs.find((job) => job.value === jobName);
+    setSelectedJob(selectedJobDetails);
   };
 
   return (
@@ -98,6 +112,7 @@ function ClusterMonitoringBasicTab({
             allowClear
             onSearch={handleSearch}
             onClear={handleJobNameFiledClear}
+            onSelect={(jobName) => onJobSelect(jobName)}
             loading={fetchingJobs}></AutoComplete>
         </Form.Item>
       ) : null}
