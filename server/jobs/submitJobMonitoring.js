@@ -93,8 +93,8 @@ const convertToISODateString = require("../utils/stringToIsoDateString");
         wuDetails.ExecuteCost > costLimits.maxExecutionCost
       ) {
         costRelatedNotification["Actual execution cost"] =
-          wuDetails.ExecuteCost;
-        costRelatedNotification["Maximum execution cost"] =
+          Math.round(wuDetails.ExecuteCost * 100) /100;
+        costRelatedNotification["Execution cost threshold"] =
           costLimits.maxExecutionCost;
       }
 
@@ -103,8 +103,8 @@ const convertToISODateString = require("../utils/stringToIsoDateString");
         wuDetails.FileAccessCost > costLimits.maxFileAccessCost
       ) {
         costRelatedNotification["Actual file access cost"] =
-          wuDetails.FileAccessCost;
-        costRelatedNotification["Maximum file access cost"] =
+           Math.round(wuDetails.FileAccessCost*100)/100;
+        costRelatedNotification["File access cost threshold"] =
           costLimits.maxFileAccessCost;
       }
 
@@ -112,8 +112,8 @@ const convertToISODateString = require("../utils/stringToIsoDateString");
         notificationConditions.includes("maxCompileCost") &&
         wuDetails.CompileCost > costLimits.maxCompileCost
       ) {
-        costRelatedNotification["Actual compile cost"] = wuDetails.CompileCost;
-        costRelatedNotification["Maximum compile cost"] =
+        costRelatedNotification["Actual compile cost"] =  Math.round(wuDetails.CompileCost * 100)/100;
+        costRelatedNotification["Compile cost threshold"] =
           costLimits.maxCompileCost;
       }
 
@@ -125,10 +125,10 @@ const convertToISODateString = require("../utils/stringToIsoDateString");
           costLimits.maxTotalCost
       ) {
         costRelatedNotification["Actual total cost"] =
-          wuDetails.CompileCost +
+          Math.round((wuDetails.CompileCost +
           wuDetails.ExecuteCost +
-          wuDetails.FileAccessCost;
-        costRelatedNotification["Maximum total cost"] = costLimits.maxTotalCost;
+          wuDetails.FileAccessCost)*100)/100;
+        costRelatedNotification["Total cost threshold"] = costLimits.maxTotalCost;
       }
 
       if(Object.keys(costRelatedNotification).length > 0 ){
