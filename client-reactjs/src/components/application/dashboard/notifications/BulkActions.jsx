@@ -1,27 +1,35 @@
 import React, { useState, useEffect } from 'react';
-import { Modal, Select, Form, Button, message } from 'antd';
+import { Modal, Select, Form, Button, message, Input } from 'antd';
 import { authHeader } from '../../../common/AuthHeader';
 import { monitoringStatusOptions } from './monitoringStatusOptions.js';
 import { v4 as uuidv4 } from 'uuid';
+import { useForm } from 'antd/lib/form/Form';
 
-const actions = [
-  { label: 'Delete', value: 'delete' },
-  { label: 'Update Statuses', value: 'update' },
-];
+const { TextArea } = Input;
 
-function BulkActions({
-  selectedNotificationIdsForBulkAction: ids,
-  setBulkActionModalVisibility,
-  setUpdatedNotificationInDb,
-}) {
+function BulkActions({ selectedNotificationsForBulkAction, setBulkActionModalVisibility, setUpdatedNotificationInDb }) {
   const [selectedAction, setSelectedAction] = useState(null);
   const [selectedStatus, setSelectedStatus] = useState(null);
   const [footerBtn, setFooterBtn] = useState(null);
+
+  const ids = selectedNotificationsForBulkAction.map((notification) => notification.id);
+  const [actionForm] = useForm();
+
+  const actions = [
+    { label: `Delete notification${ids.length > 1 ? 's' : ''}`, value: 'delete' },
+    { label: `Update status${ids.length > 1 ? 'es' : ''}`, value: 'update' },
+    { label: `Update comment${ids.length > 1 ? 's' : ''}`, value: 'updateComment' },
+  ];
 
   //Change footer buttons when status or actions change
   useEffect(() => {
     const btn = updateFooterBtns(selectedAction);
     setFooterBtn(btn);
+
+    // If single notification selected, populate comment
+    if (selectedNotificationsForBulkAction.length == 1) {
+      actionForm.setFieldsValue({ comment: selectedNotificationsForBulkAction[0].comment });
+    }
   }, [selectedStatus, selectedAction]);
 
   //Cancel btn
@@ -54,6 +62,14 @@ function BulkActions({
             ids.length > 1 ? 's' : ''
           }`}</Button>
         );
+
+      case 'updateComment':
+        return (
+          <Button type="primary" onClick={updateNotifications}>{`Update ${ids.length} comment${
+            ids.length > 1 ? 's' : ''
+          }`}</Button>
+        );
+
       default:
         return cancelBtn;
     }
@@ -61,15 +77,16 @@ function BulkActions({
 
   //Update notifications
   const updateNotifications = async () => {
+    const payload = actionForm.getFieldsValue();
+    console.log(payload);
     try {
       const config = {
         method: 'PUT',
         headers: authHeader(),
-        body: JSON.stringify({ notifications: ids, selectedStatus }),
+        body: JSON.stringify({ notifications: ids, ...payload }),
       };
       const response = await fetch(`/api/notifications/read`, config);
       if (!response.ok) throw new Error(response.statusText);
-
       const data = await response.json();
       if (!data.success) throw new Error('Failed to update');
       message.success('Update successful');
@@ -104,13 +121,13 @@ function BulkActions({
   return (
     <Modal
       visible={true}
-      title="Bulk Actions"
+      title="Actions"
       footer={footerBtn}
       destroyOnClose
       onCancel={() => {
         setBulkActionModalVisibility(false);
       }}>
-      <Form layout="vertical" name="action">
+      <Form layout="vertical" name="action" form={actionForm}>
         <Form.Item label="Select Action">
           <Select
             options={actions}
@@ -121,8 +138,14 @@ function BulkActions({
           />
         </Form.Item>
         {selectedAction === 'update' ? (
-          <Form.Item label="Status" name="status">
+          <Form.Item label="New status" name="status">
             <Select options={monitoringStatusOptions} onChange={(selection) => setSelectedStatus(selection)} />
+          </Form.Item>
+        ) : null}
+
+        {selectedAction === 'updateComment' ? (
+          <Form.Item label="comment" name="comment">
+            <TextArea rows={3} />
           </Form.Item>
         ) : null}
       </Form>

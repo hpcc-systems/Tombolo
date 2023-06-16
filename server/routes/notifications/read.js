@@ -210,11 +210,7 @@ router.put(
     body("id")
       .optional({ checkFalsy: false })
       .isUUID(4)
-      .withMessage("Invalid notification ids"),
-    body("selectedStatus")
-      .optional({ checkFalsy: true })
-      .isString()
-      .withMessage("Invalid notification ids"),
+      .withMessage("Invalid notification ids")
   ],
   async (req, res) => {
     // validate
@@ -226,11 +222,22 @@ router.put(
     }
 
     try {
-      const { notifications, selectedStatus } = req.body;
-      await monitoring_notifications.update(
-        { status: selectedStatus },
-        { where: { id: notifications } }
-      );
+      const { notifications, status, comment } = req.body;
+
+      if(status){
+          await monitoring_notifications.update(
+            { status },
+            { where: { id: notifications } }
+          );
+      }
+
+      if(comment || comment === ''){
+         await monitoring_notifications.update(
+           { comment },
+           { where: { id: notifications } }
+         );
+      }
+    
       res.status(200).send({ success: true, message: "Update successful" });
     } catch (err) {
       logger.error(err.message);
