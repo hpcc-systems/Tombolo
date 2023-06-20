@@ -40,8 +40,6 @@ function FileMonitoringModal({
   const [basicTabForm] = Form.useForm();
   const [monitoringTabForm] = Form.useForm();
   const [notificationTabForm] = Form.useForm();
-  // const [hasEditPermission, setHasEditPermission] = false;
-  // const [authReducer] = useSelector((state) => [state.authenticationReducer]);
 
   // ---------------------------------------------------------------------------------
   // Changes modal size per screen vw
@@ -66,11 +64,6 @@ function FileMonitoringModal({
     getFileMonitoringDetails(selectedFileMonitoring);
   }, [selectedFileMonitoring]);
 
-  // ------------------------------------------------------------------------------
-  // useEffect(() => {
-  //   setHasEditPermission(hasEditPermission(authHeader.user));
-  // }, [authReducer]);
-
   // Get details of a file monitoring -----------------------------------------------
   const getFileMonitoringDetails = async (id) => {
     try {
@@ -82,8 +75,7 @@ function FileMonitoringModal({
       setActiveTab('1');
       setSelectedFileMonitoringDetails(data);
     } catch (err) {
-      //TODO - handle this error properly
-      console.log(err);
+      message.error('Unable to fetch file monitoring details');
       setFetchingFileMonitoringDetails(false);
     } finally {
       setFetchingFileMonitoringDetails(false);

@@ -144,7 +144,11 @@ function BulkActions({ selectedNotificationsForBulkAction, setBulkActionModalVis
         ) : null}
 
         {selectedAction === 'updateComment' ? (
-          <Form.Item label="comment" name="comment">
+          <Form.Item
+            label="comment"
+            name="comment"
+            validateTrigger={['onChange', 'onBlur']}
+            rules={[{ max: 1500, message: 'Comment longer then 1500 characters' }]}>
             <TextArea rows={3} />
           </Form.Item>
         ) : null}

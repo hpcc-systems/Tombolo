@@ -91,10 +91,17 @@ function ClusterMonitoringBasicTab({
       </Form.Item>
 
       {selectedCluster && monitoringScope === 'individualJob' ? (
-        <Form.Item label="Job name" name="jobName" rules={[{ required: true, message: 'Required filed' }]}>
+        <Form.Item
+          label="Job name"
+          name="jobName"
+          rules={[
+            { required: true, message: 'Required filed' },
+            { max: 256, message: 'Maximum of 256 characters allowed' },
+          ]}>
           <AutoComplete
             options={jobs}
             filterOption={true}
+            validateTrigger={['onChange', 'onBlur']}
             allowClear
             onSearch={handleSearch}
             onClear={handleJobNameFiledClear}
