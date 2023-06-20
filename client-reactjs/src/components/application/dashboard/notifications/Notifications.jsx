@@ -29,6 +29,14 @@ function Index() {
     application: { applicationId },
   } = useSelector((item) => item.applicationReducer);
 
+  // Default filters to fetch notifications
+  const [defaultFilters, setDefaultFilters] = useState({
+    monitoringType: ['jobMonitoring', 'file', 'cluster', 'superFile'],
+    monitoringStatus: ['notified', 'triage', 'completed', 'inProgress'],
+    dateRange: [moment().subtract(15, 'days'), moment()],
+    applicationId,
+  });
+
   useEffect(() => {
     const groupedData = notifications.map((notification) => {
       const weekStart = moment(notification.createdAt).startOf('week').format('MM/DD/YY');
@@ -44,13 +52,7 @@ function Index() {
   // When component loads create filter tol load initial data
   useEffect(() => {
     if (applicationId) {
-      const filters = {
-        monitoringType: ['jobMonitoring', 'file', 'cluster', 'superFile'],
-        monitoringStatus: ['notified', 'triage', 'completed', 'inProgress'],
-        dateRange: [moment().subtract(15, 'days'), moment()],
-        applicationId,
-      };
-      filterAndFetchNotifications(filters);
+      filterAndFetchNotifications(defaultFilters);
     }
   }, [applicationId]);
 
@@ -200,6 +202,7 @@ function Index() {
             setLoadingData={setLoadingData}
             groupDataBy={groupDataBy}
             setGroupDataBy={setGroupDataBy}
+            setDefaultFilters={setDefaultFilters}
           />
 
           {notifications.length > 0 ? (
