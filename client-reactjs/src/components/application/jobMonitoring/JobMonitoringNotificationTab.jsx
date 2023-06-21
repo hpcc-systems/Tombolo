@@ -138,6 +138,10 @@ function ClusterMonitoringNotificationTab({
                           type: 'email',
                           message: 'Invalid e-mail address.',
                         },
+                        {
+                          max: 256,
+                          message: 'Maximum of 256 characters allowed',
+                        },
                       ]}
                       noStyle>
                       <Input placeholder="E-mail" />
@@ -182,6 +186,10 @@ function ClusterMonitoringNotificationTab({
                           required: true,
                           whitespace: true,
                           message: 'Invalid Teams webhook URL',
+                        },
+                        {
+                          max: 1000,
+                          message: 'Maximum of 1000 characters allowed',
                         },
                       ]}
                       noStyle>
