@@ -14,6 +14,7 @@ Fixes # (issue)
 ## Developer Checklist:
 
 - [ ] I have commented my code, particularly in hard-to-understand areas
+- [ ] I have resolved and conflicts with the branch I am attempting to merge to. 
 - [ ] I have made corresponding changes to the documentation
 - [ ] My changes generate no new warnings
 - [ ] I have added tests that prove my fix is effective or that my feature works
@@ -22,7 +23,7 @@ Fixes # (issue)
 - [ ] I have checked my code and corrected any misspellings
 
 ## Reviewer Checklist
-- [ ] I have pulled the branch into my local and started the project succesfully
+- [ ] I have pulled the branch into my local environemtn and started the project succesfully
 - [ ] I have reviewed the code for proper comments and mispellings
 - [ ] All input boxes have sensible character limits applied
 - [ ] Refreshing PR related pages puts page in a workable and sensible state
