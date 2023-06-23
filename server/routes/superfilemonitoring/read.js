@@ -71,7 +71,7 @@ router.post(
       // -------------------------------------------------------
       const newSuperFile = await SuperFileMonitoring.create(newSuperFileData);
 
-      res.status(200).send(newSuperFile);
+      res.status(201).send(newSuperFile);
 
       const { monitoringActive } = req.body;
       let monitoringAssetType = "superFiles";

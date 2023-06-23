@@ -1,0 +1,42 @@
+{
+  "id": "8859ea56-26e7-48cf-9261-7484ecda58a5",
+  "clusterid": "3a14ed52-8931-433c-a376-6f366d30d2c2",
+  "application_id": "b8431e6e-2b5e-4889-9127-9bdaa0a09d73",
+  "cron": "* * * * *",
+  "name": "test",
+  "monitoringActive": 0,
+  "wuid": "",
+  "metaData": {
+    "fileInfo": {
+      "Name": "mfancher::superfile",
+      "size": 227042,
+      "Cluster": "3a14ed52-8931-433c-a376-6f366d30d2c0",
+      "modified": 1677019237000,
+      "subfileCount": 4,
+      "mostRecentSubFile": "mfancher::child::subchild::text.csv",
+      "mostRecentSubFileDate": "1676964298000"
+    },
+    "lastMonitored": 1678145164912,
+    "notifications": [
+      {
+        "channel": "eMail",
+        "recipients": ["matthew.fancher@lexisnexisrisk.com"]
+      }
+    ],
+    "monitoringActive": 1,
+    "monitoringCondition": {
+      "updateInterval": "2",
+      "maximumFileSize": "700000",
+      "minimumFileSize": "6",
+      "notifyCondition": [
+        "subFileCountRange",
+        "subFileCountChange",
+        "fileSizeRange",
+        "updateInterval"
+      ],
+      "updateIntervalDays": [],
+      "maximumSubFileCount": "5",
+      "minimumSubFileCount": "1"
+    }
+  }
+}

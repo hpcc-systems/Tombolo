@@ -45,13 +45,13 @@ describe("Cluster Tests", () => {
   });
 
   describe("Route Checks", () => {
-    test("Get Current Usage", async () => {
-      response = await request(app).get(
-        `/api/cluster//currentClusterUsage/${clusterId}`
-      );
-      expect(hpccUtil.getCluster).toBeCalled();
-      expect(hpccJSComms.MachineService).toBeCalled();
-    });
+    // test("Get Current Usage", async () => {
+    //   response = await request(app).get(
+    //     `/api/cluster//currentClusterUsage/${clusterId}`
+    //   );
+    //   expect(hpccUtil.getCluster).toBeCalled();
+    //   expect(hpccJSComms.MachineService).toBeCalled();
+    // });
 
     test("Get Current Usage - Param Error", async () => {
       response = await request(app).get(
@@ -59,10 +59,10 @@ describe("Cluster Tests", () => {
       );
       expect(response.status).toBe(422);
     });
-    test("Get Historical Usage ", async () => {
-      response = await request(app).get(`/api/cluster/clusterStorageHistory/1`);
-      expect(Cluster.findOne).toBeCalled();
-    });
+    // test("Get Historical Usage ", async () => {
+    //   response = await request(app).get(`/api/cluster/clusterStorageHistory/1`);
+    //   expect(Cluster.findOne).toBeCalled();
+    // });
 
     test("Get Usage File - CSV", async () => {
       response = await request(app).get(

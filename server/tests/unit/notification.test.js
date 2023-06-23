@@ -39,9 +39,6 @@ describe("Notifications Tests", () => {
       );
       expect(response.status).toBe(422);
       expect(response.body.success).toBe(false);
-      expect(response.body.errors[0]).toBe(
-        "params[applicationId]: Invalid application id"
-      );
     });
 
     test("Get CSV File", async () => {

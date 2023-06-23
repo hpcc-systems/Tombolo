@@ -1,0 +1,17 @@
+{
+  "assetId": "3266be3f-0670-4813-9203-09925b3696e5",
+  "id": "3266be3f-0670-4813-9203-09925b3696e3",
+  "title": "test",
+  "application_id": "b8431e6e-2b5e-4889-9127-9bdaa0a09d73",
+  "fileNamePattern": "wildCards",
+  "searchString": "test%",
+  "sampleLayoutFile": null,
+  "description": "description",
+  "metaData": {
+    "lzPath": "",
+    "licenses": [],
+    "isAssociated": true,
+    "fileMonitoringTemplate": false
+  },
+  "cluster_id": "0b3a3e80-25c6-4c7c-be5c-f895bdf34301"
+}
