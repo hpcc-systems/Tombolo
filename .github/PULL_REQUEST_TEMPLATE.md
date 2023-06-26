@@ -22,6 +22,9 @@ Fixes # (issue)
 - [ ] Any dependent changes have been merged and published in downstream modules
 - [ ] I have checked my code and corrected any misspellings
 - [ ] I have ensured that my code does not unecessarily duplicate existing cod
+- [ ] I have ensured that all security checks have been passed
+- [ ] All input boxes have sensible character limits applied
+- [ ] Refreshing related pages puts page in a workable and sensible state  
 
 
 ## Reviewer Checklist
@@ -30,3 +33,5 @@ Fixes # (issue)
 - [ ] All input boxes have sensible character limits applied
 - [ ] Refreshing related pages puts page in a workable and sensible state  
 - [ ] Submitting any relevant Forms relays proper messaging to user
+- [ ] I have checked that all security checks have been passed
+- [ ] I have checked that all backend routes have proper validation 
