@@ -21,10 +21,12 @@ Fixes # (issue)
 - [ ] New and existing unit tests pass locally with my changes
 - [ ] Any dependent changes have been merged and published in downstream modules
 - [ ] I have checked my code and corrected any misspellings
+- [ ] I have ensured that my code does not unecessarily duplicate existing cod
+
 
 ## Reviewer Checklist
 - [ ] I have pulled the branch into my local environemtn and started the project succesfully
 - [ ] I have reviewed the code for proper comments and mispellings
 - [ ] All input boxes have sensible character limits applied
-- [ ] Refreshing PR related pages puts page in a workable and sensible state
+- [ ] Refreshing related pages puts page in a workable and sensible state  
 - [ ] Submitting any relevant Forms relays proper messaging to user
