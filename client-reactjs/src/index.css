@@ -1031,3 +1031,23 @@ div.tooltip {
 .anticon-loading * {
   color: #1890ff;
 }
+
+/* Sent notifications */
+.sentNotificationSignature {
+  /* display: none; */
+  color: red !important;
+}
+
+.sentNotificationTable {
+  margin-top: 50px;
+}
+
+.sentNotificationBody > table {
+  margin-top: 20px;
+  margin-bottom: 20px;
+}
+
+/* Hides the signture ie- tombolo while displaying with in the app */
+.sentNotificationBody p:last-child {
+  display: none;
+}

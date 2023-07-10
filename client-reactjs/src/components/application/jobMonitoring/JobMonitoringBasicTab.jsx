@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { Form, Select, AutoComplete } from 'antd';
+import { InfoCircleOutlined } from '@ant-design/icons';
 import { debounce } from 'lodash';
 
 import { authHeader, handleError } from '../../common/AuthHeader.js';
@@ -32,9 +33,11 @@ function ClusterMonitoringBasicTab({
       };
 
       const response = await fetch(`/api/hpcc/read/jobsearch`, payload);
+
       if (!response.ok) handleError(response);
 
       const data = await response.json();
+
       if (data) {
         const cleanedData = data.map((d) => {
           return { label: d.text, value: d.text };
@@ -91,10 +94,24 @@ function ClusterMonitoringBasicTab({
       </Form.Item>
 
       {selectedCluster && monitoringScope === 'individualJob' ? (
-        <Form.Item label="Job name" name="jobName" rules={[{ required: true, message: 'Required filed' }]}>
+        <Form.Item
+          label={
+            <span>
+              Job Name
+              <span>
+                <InfoCircleOutlined style={{ marginLeft: '10px' }} />
+              </span>
+            </span>
+          }
+          name="jobName"
+          validateTrigger={['onChange', 'onBlur']}
+          rules={[
+            { required: true, message: 'Required filed' },
+            { max: 256, message: 'Maximum of 256 characters allowed' },
+          ]}>
           <AutoComplete
             options={jobs}
-            filterOption={true}
+            placeholder="Supports wildcard"
             allowClear
             onSearch={handleSearch}
             onClear={handleJobNameFiledClear}

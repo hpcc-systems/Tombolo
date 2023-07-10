@@ -5,24 +5,153 @@ const axios = require("axios");
 const hpccUtil = require("../utils/hpcc-util");
 const logger = require("../config/logger");
 const models = require("../models");
-const JobMonitoring = models.JobMonitoring;
+const JobMonitoring = models.jobMonitoring;
+const cluster = models.cluster;
 const Monitoring_notifications = models.monitoring_notifications;
-const {
-  jobMonitoringEmailBody,
-  jobMonitoringMessageCardBody,
-} = require("./messageCards/notificationTemplate");
-const {notify} = require("../routes/notifications/email-notification");
-const convertToISODateString = require("../utils/stringToIsoDateString");
+const { notify } = require("../routes/notifications/email-notification");
+
+
+// E-mail Template -------------------------------------------------
+function jobMonitoringEmailBody(data, timeStamp) {
+  let tableHTML =
+    '<table style="border-collapse: collapse; width: 100%; max-width: 800px" className="sentNotificationTable"> ';
+
+  // Extract name and cluster name
+  const { name, clusterName } = data[0];
+
+  // Add name and cluster name as h3 elements
+  tableHTML +=
+    '<tr><td colspan="2" style="border: 1px solid #D3D3D3; padding: 5px;">';
+  tableHTML += "<div>Job name: " + name + "</div>";
+  tableHTML += "<div>Cluster: " + clusterName + "</div>";
+  tableHTML += "<div>Date/Time: " + timeStamp + "</div>";
+
+  tableHTML += "</td></tr>";
+
+  // Add table headers
+  tableHTML += "<tr>";
+  tableHTML +=
+    '<th style="border: 1px solid #D3D3D3; text-align: left; padding-left: 5px;">WuID</th>';
+  tableHTML +=
+    '<th style="border: 1px solid #D3D3D3; text-align: left; padding-left: 5px;">Alert(s)</th>';
+  tableHTML += "</tr>";
+
+  // Iterate over each object in the data array
+  data.forEach((obj) => {
+    // Extract object properties
+    const { wuId, issues } = obj;
+
+    // Add table row for wuId
+    tableHTML += "<tr>";
+    tableHTML +=
+      '<td style="border: 1px solid #D3D3D3; text-align: left; padding-left: 5px;">' +
+      wuId +
+      "</td>";
+
+    // Add table row for each issue
+    tableHTML +=
+      '<td style="border: 1px solid #D3D3D3; text-align: left; padding-left: 5px;">';
+    issues.forEach((issue) => {
+      const [key, value] = Object.entries(issue)[0];
+      tableHTML += key + ": " + value + "<br>";
+    });
+    tableHTML += "</td>";
+    tableHTML += "</tr>";
+  });
+
+  tableHTML += '</table> <p className="sentNotificationSignature">- Tombolo</p>';
+
+  return tableHTML;
+}
+// Teams message template ------------------------------------------
+const msTeamsCardBody = (tableHtml) => {
+  const cardBody = JSON.stringify({
+    "@type": "MessageCard",
+    "@context": "http://schema.org/extensions",
+    themeColor: "0076D7",
+    summary: "Hello world",
+    sections: [
+      {
+        type: "MessageCard",
+        contentType: "text/html",
+        text: tableHtml,
+      },
+    ],
+    potentialAction: [
+      {
+        "@type": "ActionCard",
+        name: "Add a comment",
+        inputs: [
+          {
+            "@type": "TextInput",
+            id: "comment",
+            isMultiline: false,
+            title: "Add a comment here for this task",
+          },
+        ],
+        actions: [
+          {
+            "@type": "HttpPOST",
+            name: "Add comment",
+            target: process.env.API_URL + "/api/updateNotification/update",
+            body: `{"comment":"{{comment.value}}"}`,
+            isRequired: true,
+            errorMessage: "Comment cannot be blank",
+          },
+        ],
+      },
+      {
+        "@type": "ActionCard",
+        name: "Change status",
+        inputs: [
+          {
+            "@type": "MultichoiceInput",
+            id: "list",
+            title: "Select a status",
+            isMultiSelect: "false",
+            choices: [
+              {
+                display: "Triage",
+                value: "triage",
+              },
+              {
+                display: "In Progress",
+                value: "inProgress",
+              },
+              {
+                display: "Completed",
+                value: "completed",
+              },
+            ],
+          },
+        ],
+        actions: [
+          {
+            "@type": "HttpPOST",
+            name: "Save",
+            target: process.env.API_URL + "/api/updateNotification/update",
+            body: `{"status":"{{list.value}}"`,
+            isRequired: true,
+            errorMessage: "Select an option",
+          },
+        ],
+      },
+    ],
+  });
+  return cardBody;
+};
+// ------------------------------------------------------------------
 
 (async () => {
   try {
+    // 1. Get job monitoring_id from worker
     const {
       job: {
         worker: { jobMonitoring_id },
       },
     } = workerData;
 
-    // Get job monitoring every time this runs to get fresh
+    // 2. Get job monitoring details
     const {
       metaData,
       cluster_id,
@@ -32,237 +161,253 @@ const convertToISODateString = require("../utils/stringToIsoDateString");
       where: { id: jobMonitoring_id },
     });
 
+    // Destructure job monitoring metaData
     const {
       notificationConditions,
       notifications,
-      monitoringScope,
       jobName,
-      lastMonitoredDetails,
+      costLimits,
+      last_monitored,
+      unfinishedWorkUnits,
+      thresholdTime,
     } = metaData;
 
-    // channel and recipients {eMail: ['abc@d.com']}
-    const notificationDetails = {};
+    //3. Get cluster offset & time stamp etc
+    const { timezone_offset, name: cluster_name } = await cluster.findOne({
+      where: { id: cluster_id },
+      raw: true,
+    });
+    const now = new Date();
+    const utcTime = now.getTime();
+    const remoteUtcTime = new Date(utcTime + timezone_offset * 60000);
+    const timeStamp = remoteUtcTime.toISOString();
+
+    // Check if a notification condition is met
+    const checkIfNotificationConditionMet = (notificationConditions, wu) => {
+      const metConditions = {
+        name: wu.Jobname,
+        wuId: wu.Wuid,
+        State: wu.State,
+        clusterName: cluster_name,
+        issues: [],
+      };
+
+      if (
+        notificationConditions.includes("aborted") &&
+        wu.State === "aborted"
+      ) {
+        metConditions.issues.push({ Alert: "Work unit Aborted" });
+      }
+
+      if (notificationConditions.includes("failed") && wu.State === "failed") {
+        metConditions.issues.push({ Alert: "Work unit Failed" });
+      }
+
+      if (
+        notificationConditions.includes("unknown") &&
+        wu.State === "unknown"
+      ) {
+        metConditions.issues.push({ Alert: "Work state Unknown" });
+      }
+
+      if (
+        notificationConditions.includes("thresholdTimeExceeded") &&
+        thresholdTime < wu.TotalClusterTime
+      ) {
+      }
+
+      if (
+        notificationConditions.includes("maxExecutionCost") &&
+        wu.ExecuteCost > costLimits.maxExecutionCost
+      ) {
+      }
+
+      if (
+        notificationConditions.includes("maxFileAccessCost") &&
+        wu.FileAccessCost > costLimits.maxFileAccessCost
+      ) {
+      }
+
+      if (
+        notificationConditions.includes("maxCompileCost") &&
+        wu.CompileCost > costLimits.maxCompileCost
+      ) {
+      }
+
+      if (
+        notificationConditions.includes("maxTotalCost") &&
+        wu.FileAccessCost + wu.CompileCost + wu.FileAccessCost >
+          costLimits.maxCompileCost
+      ) {
+      }
+
+      if (metConditions.issues.length > 0) {
+        return metConditions;
+      } else {
+        return null;
+      }
+    };
+
+    //4. Get all workUnits with a given name that were executed since  last time this monitoring ran
+    const wuService = await hpccUtil.getWorkunitsService(cluster_id);
+    const {
+      Workunits: { ECLWorkunit },
+    } = await wuService.WUQuery({
+      Jobname: jobName,
+      StartDate: last_monitored,
+    });
+
+    // 5. Iterate through all the work units, If they are in wait, blocked or running status separate them.
+    let newUnfinishedWorkUnits = [...unfinishedWorkUnits];
+    const notificationsToSend = [];
+    ECLWorkunit.forEach((wu) => {
+      if (
+        wu.State === "wait" ||
+        wu.State === "running" ||
+        wu.State === "blocked"
+      ) {
+        newUnfinishedWorkUnits.push(wu.Wuid );
+      }
+          const conditionMetWus = checkIfNotificationConditionMet(
+            notificationConditions,
+            wu
+          );
+
+          if (conditionMetWus) {
+            notificationsToSend.push(conditionMetWus);
+          }
+      
+    });
+
+    // Iterate over jobs that are/were unfinished - check if status has changed
+    const wuToStopMonitoring = [];
+    for (let wuid of unfinishedWorkUnits) {
+      const {
+        Workunits: { ECLWorkunit },
+      } = await wuService.WUQuery({
+        Wuid: wuid,
+      });
+      const conditionMet = checkIfNotificationConditionMet(
+        notificationConditions,
+        ECLWorkunit[0]
+      );
+
+      if (conditionMet) {
+        notificationsToSend.push(conditionMet);
+      }
+
+      // Stop monitoring if wu reached end of life cycle
+      if (
+        ECLWorkunit[0].State != "wait" &&
+        ECLWorkunit[0].State != "running" &&
+        ECLWorkunit[0].State != "blocked"
+      ) {
+        wuToStopMonitoring.push(wuid);
+      }
+    }
+
+   newUnfinishedWorkUnits = newUnfinishedWorkUnits.filter((wu) =>
+     !wuToStopMonitoring.includes(wu)
+   );
+
+    // If conditions met send out notifications
+    const notificationDetails = {}; // channel and recipients {eMail: ['abc@d.com']}
     notifications.forEach((notification) => {
       notificationDetails[notification.channel] = notification.recipients;
     });
 
-    // Gather all sent notification data to update notifications table at once
-    const sentNotification = [];
+    const sentNotifications = [];
 
-    // Work unit service
-    const wuService = await hpccUtil.getWorkunitsService(cluster_id);
-
-    // If notification conditions are fulfilled put together notification to send
-    const notificationToSend = {}; // notification title, notification body
-
-    // Pulling this out in global context
-    let wuDetails; // Individual job monitoring will have only one wu
-    const allWuDetails = {}; // cluster job monitoring will have multiple
-
-    // ----------- Monitor individual job -----------------------------------------------------
-    // Monitoring scope individualJob
-    if (monitoringScope === "individualJob") {
-      const {
-        Workunits: { ECLWorkunit },
-      } = await wuService.WUQuery({ Jobname: jobName });
-
-      wuDetails = ECLWorkunit[0]; // Consider only the latest work unit. There could be multiple WU for same job
-      const wuDetailsCleaned = {
-        Wuid: wuDetails.Wuid,
-        Owner: wuDetails.Owner,
-        Cluster: wuDetails.Cluster,
-        Jobname: wuDetails.Jobname,
-        StateID: wuDetails.StateID,
-        State: wuDetails.State,
-      };
-
-      if (notificationConditions.includes(wuDetails?.State)) {
-        notificationToSend.title = `${jobName} is in ${wuDetails.State} state`;
-        notificationToSend.facts = wuDetailsCleaned;
-      }
-    }
-
-    // ------------- Monitor whole cluster ---------------------------------------------------------
-
-    if (monitoringScope === "cluster") {
-      // Create options for each monitoring
-      // Since the WQ function does not take array of states as param, we need to make call notificationConditions.length number of times
-      const wuQueryOptions = notificationConditions.map((state) => {
-        const option = {};
-        option.State = state;
-        option.Sortby = "StartDate";
-        option.Descending = 1;
-        option.PageSize = 100000;
-
-        if (lastMonitoredDetails && lastMonitoredDetails.wuId[state]) {
-          option.StartDate = convertToISODateString(lastMonitoredDetails.wuId[state]);
-        }
-        return option;
-      });
-
-      for (const option of wuQueryOptions) {
-        const {
-          Workunits: { ECLWorkunit },
-        } = await wuService.WUQuery(option);
-        if (ECLWorkunit.length > 0) {
-          allWuDetails[option.State] = ECLWorkunit;
-        }
-      }
-
-      // No new work units update last monitoring ts and return 
-      if (Object.keys(allWuDetails).length === 0) {
-        await JobMonitoring.update(
-          {metaData: { ...metaData, last_monitored: Date.now() }},
-          {where: {id: jobMonitoring_id}}
+    // E-mail
+    if (notificationDetails.eMail && notificationsToSend.length > 0) {
+      try {
+        const notification_id = uuidv4();
+        const emailBody = jobMonitoringEmailBody(
+          notificationsToSend,
+          timeStamp
         );
-        return;
-      }
-
-      if (notificationDetails.eMail) {
-        const wuCounts = {};
-        for (let key in allWuDetails) {
-          wuCounts[key] = allWuDetails[key].length;
-        }
-
-        notificationToSend.title ="Job Monitoring Complete";
-        notificationToSend.facts = wuCounts;
-        notificationToSend.description = `${monitoringName} monitoring complete. Here is the report - `;
-        notificationToSend.extraContent = allWuDetails;
-      }
-    }
-
-    // ---- Common for both cluster and individual job monitoring -----------------------
-    //TODO - return here if no notifications subscribed
-     const shouldNotify =
-       !lastMonitoredDetails ||
-       (lastMonitoredDetails &&
-         lastMonitoredDetails.wuId === wuDetails?.Wuid &&
-         !lastMonitoredDetails?.notified.includes("eMail")) ||
-       metaData.monitoringScope === "cluster";
-
-    // E-mail Notification
-    if (notificationToSend.title && notificationDetails.eMail) {
-      //Make sure user has not already been notified
-      if (shouldNotify) {
-        const emailBody = jobMonitoringEmailBody(notificationToSend);
-        const notificationResponse = await notify({
+        const response = await notify({
           to: notificationDetails.eMail,
           from: process.env.EMAIL_SENDER,
-          subject: notificationToSend.title,
+          subject: `Alert from ${monitoringName}`,
           text: emailBody,
           html: emailBody,
         });
 
-        // If email notification sent successfully add to sentNotification array to later update notification table
-        if (notificationResponse.accepted) {
-          sentNotification.push({
+        // If notification sent successfully
+        if (response.accepted && response.accepted.length > 0) {
+          sentNotifications.push({
+            id: notification_id,
             application_id: application_id,
             monitoring_type: "Job Monitoring",
             monitoring_id: jobMonitoring_id,
-            notification_reason: wuDetails
-              ? `Job state - ${wuDetails.State}`
-              : "Job Monitoring",
+            notification_reason: "Met notification conditions",
+            status: "notified",
             notification_channel: "eMail",
-            status: "Notified",
+            metaData: { notificationBody: emailBody },
           });
         }
+      } catch (err) {
+        logger.error(err);
       }
     }
 
-    // MsTeams Notification
-    if (notificationToSend.title && notificationDetails.msTeams) {
-      if (shouldNotify) {
-        const recipients = notificationDetails.msTeams;
+    if (notificationDetails.msTeams && notificationsToSend.length > 0) {
+      const recipients = notificationDetails.msTeams;
+      const cardBody = jobMonitoringEmailBody(notificationsToSend, timeStamp);
 
-        for (let recipient of recipients) {
-          try {
-            const notification_id = uuidv4();
+      for (let recipient of recipients) {
+        try {
+          const notification_id = uuidv4();
 
-            const cardBody = jobMonitoringMessageCardBody({...notificationToSend, notification_id });
-            // console.log('------------------------------------------');
-            // console.log(cardBody)
-            // console.log('------------------------------------------');
+          const response = await axios.post(
+            recipient,
+            msTeamsCardBody(cardBody)
+          );
 
-            const response = await axios.post(recipient, cardBody);
-
-            // If notification sent successfully add to sentNotification
-            if (response.status === 200) {
-              sentNotification.push({
-                id: notification_id,
-                application_id: application_id,
-                monitoring_type: "Job Monitoring",
-                monitoring_id: jobMonitoring_id,
-                notification_reason: wuDetails?.State ? `Job state - ${wuDetails.State}` :  "Job Monitoring",
-                status: "Notified",
-                notification_channel: "msTeams",
-              });
-            }
-          } catch (err) {
-            logger.error(err);
+          if (response.status === 200) {
+            sentNotifications.push({
+              id: notification_id,
+              application_id: application_id,
+              monitoring_type: "jobMonitoring",
+              monitoring_id: jobMonitoring_id,
+              notification_reason: "Met notification conditions",
+              status: "notified",
+              notification_channel: "msTeams",
+              metaData: { notificationBody: cardBody },
+            });
           }
+        } catch (err) {
+          logger.error(err);
         }
       }
     }
 
-    // Update notification table
-    if (sentNotification.length > 0) {
-      await Monitoring_notifications.bulkCreate(sentNotification);
-    }
+    // Update job monitoring metadata
+    await JobMonitoring.update(
+      {
+        metaData: {
+          ...metaData,
+          // last_monitored: "2023-06-28T09:06:01.857Z",
+          last_monitored: timeStamp,
+          unfinishedWorkUnits: newUnfinishedWorkUnits,
+        },
+      },
+      { where: { id: jobMonitoring_id } }
+    );
 
-    // Update Job Monitoring - notification sent
-    // If notification/s sent
-    if (sentNotification.length > 0) {
-      let notifiedChannel = sentNotification.map(
-        (notification) => notification.notification_channel
-      );
-
-      let uniqueNotifiedChannel = notifiedChannel.filter((item, index) => {
-        return notifiedChannel.indexOf(item) === index;
-      });
-
-      /*  For some reason if notification was NOT sent via one of the channel - we will try to send out notification via that channel on another run.
-          we need to keep track for what WU and what State was the previous  notification sent, so we won't end up re-sending the notification */
-      // Last notified channel
-      if (
-        metaData?.lastMonitoredDetails &&
-        metaData.monitoringScope === "individualJob"
-      ) {
-        const {
-          lastMonitoredDetails: { wuId, state, notified },
-        } = metaData;
-        if (wuId === wuDetails.Wuid && state === wuDetails.State) {
-          // user was notified about the same WU, same State before via some channel, add new notified channel to existing array
-          uniqueNotifiedChannel = [...uniqueNotifiedChannel, ...notified];
+    // Insert notification into notification table
+    if (sentNotifications.length > 0) {
+      for (let notification of sentNotifications) {
+        try {
+          await Monitoring_notifications.create(notification);
+        } catch (err) {
+          logger.error(err);
         }
       }
-
-      // Last monitored wu for each state
-      const workUnits = {}; // {failed : "wuxyz", aborted: "wuabc",unknown: "wu123"}
-      if (metaData.monitoringScope === "cluster") {
-        for (let key in allWuDetails) {
-          workUnits[key] = allWuDetails[key][0].Wuid;
-        }
-      }
-
-      metaData.lastMonitoredDetails = {
-        wuId: wuDetails?.Wuid || {...metaData?.lastMonitoredDetails?.wuId, ...workUnits},
-        state: wuDetails?.State,
-        notified: uniqueNotifiedChannel,
-      };
-      metaData.last_monitored = Date.now();
-
-      await JobMonitoring.update(
-        { metaData: metaData },
-        { where: { id: jobMonitoring_id } }
-      );
-    } else {
-      //If no notification sent- just update the last monitored time stamp
-      metaData.last_monitored = Date.now();
-      await JobMonitoring.update(
-        { metaData: metaData },
-        { where: { id: jobMonitoring_id } }
-      );
     }
+
+    // ----------------------------------------------------------------
   } catch (err) {
     logger.error(err);
   } finally {
@@ -270,3 +415,5 @@ const convertToISODateString = require("../utils/stringToIsoDateString");
     else process.exit(0);
   }
 })();
+
+

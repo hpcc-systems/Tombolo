@@ -66,7 +66,14 @@ function JobMonitoringTable({
     )[0];
 
     const {
-      metaData: { notifications, monitoringScope, notificationConditions, jobName },
+      metaData: {
+        notifications,
+        monitoringScope,
+        notificationConditions,
+        jobName,
+        costLimits,
+        // costLimits: { maxCompileCost, maxExecutionCost, maxFileAccessCost, maxTotalCost },
+      },
       cluster_id,
     } = selectedMonitoringDetails;
 
@@ -85,6 +92,10 @@ function JobMonitoringTable({
       monitoringScope,
       notificationConditions,
       jobName,
+      maxCompileCost: costLimits?.maxCompileCost,
+      maxExecutionCost: costLimits?.maxExecutionCost,
+      maxFileAccessCost: costLimits?.maxFileAccessCost,
+      maxTotalCost: costLimits?.maxTotalCost,
     };
 
     setSelectedMonitoring(updatedMonitoringDetails);

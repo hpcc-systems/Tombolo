@@ -52,7 +52,6 @@ function JobMonitoring() {
   //When submit btn on modal is clicked
   const handleOk = async () => {
     try {
-      // await form.validateFields(); // if errs will be caught by catch block
       const payload = form.getFieldsValue();
       payload.app_id = applicationId;
       await form.validateFields();
@@ -64,15 +63,26 @@ function JobMonitoring() {
 
   const saveJobMonitoring = async (formData) => {
     try {
-      const { notificationChannels, emails, msTeamsGroups, notificationConditions, jobName, monitoringScope } =
-        formData;
+      const {
+        notificationChannels,
+        emails,
+        msTeamsGroups,
+        notificationConditions,
+        jobName,
+        monitoringScope,
+        maxExecutionCost,
+        maxFileAccessCost,
+        maxCompileCost,
+        maxTotalCost,
+        thresholdTime,
+      } = formData;
 
       const notifications = [];
-      if (notificationChannels.includes('eMail')) {
+      if (notificationChannels?.includes('eMail')) {
         notifications.push({ channel: 'eMail', recipients: emails });
       }
 
-      if (notificationChannels.includes('msTeams')) {
+      if (notificationChannels?.includes('msTeams')) {
         notifications.push({ channel: 'msTeams', recipients: msTeamsGroups });
       }
 
@@ -82,6 +92,13 @@ function JobMonitoring() {
         notificationConditions,
         jobName,
         monitoringScope,
+        costLimits: {
+          maxExecutionCost: parseFloat(maxExecutionCost),
+          maxFileAccessCost: parseFloat(maxFileAccessCost),
+          maxCompileCost: parseFloat(maxCompileCost),
+          maxTotalCost: parseFloat(maxTotalCost),
+        },
+        thresholdTime,
       };
 
       //Delete since these items are nested inside metaData object
@@ -100,6 +117,7 @@ function JobMonitoring() {
       };
 
       const response = await fetch(`/api/jobmonitoring/`, payload);
+
       if (!response.ok) handleError(response);
 
       const data = await response.json();
@@ -130,7 +148,7 @@ function JobMonitoring() {
       handleCancel();
     } catch (err) {
       console.log(err);
-      message.error('Failed to save cluster monitoring');
+      message.error('Failed to save job monitoring');
     }
   };
 

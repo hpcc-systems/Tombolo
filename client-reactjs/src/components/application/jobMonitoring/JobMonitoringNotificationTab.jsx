@@ -1,7 +1,6 @@
-import React from 'react';
-import { Form, Select, Input, Button } from 'antd';
+import React, { useState, useEffect } from 'react';
+import { Form, Select, Input, Button, InputNumber } from 'antd';
 import { MinusCircleOutlined, PlusOutlined } from '@ant-design/icons';
-
 const { Option } = Select;
 
 const notificationOptions = [
@@ -9,20 +8,67 @@ const notificationOptions = [
   { label: 'MS Teams', value: 'msTeams' },
 ];
 
-const notificationConditions = [
+let notificationConditions = [
   { label: 'Aborted', value: 'aborted' },
   { label: 'Failed', value: 'failed' },
   { label: 'Unknown', value: 'unknown' },
+  { label: 'Threshold time exceeded', value: 'thresholdTimeExceeded' },
 ];
 
-function ClusterMonitoringNotificationTab({ notificationDetails, setNotificationDetails }) {
+function ClusterMonitoringNotificationTab({
+  notificationDetails,
+  setNotificationDetails,
+  selectedJob,
+  notifyConditions,
+  setNotifyConditions,
+}) {
+  // eslint-disable-next-line unused-imports/no-unused-vars
+  const [open, setOpen] = useState(false);
+  // Watch for change in selectedJob
+  useEffect(() => {
+    const costRelatedOptions = notificationConditions.find((condition) => condition.value === 'maxExecutionCost');
+    if (selectedJob && selectedJob.executionCost !== undefined) {
+      if (costRelatedOptions === undefined) {
+        notificationConditions.push({ label: 'Max execution cost', value: 'maxExecutionCost' });
+        notificationConditions.push({ label: 'Max file excess cost ', value: 'maxFileAccessCost' });
+        notificationConditions.push({ label: 'Max compile cost ', value: 'maxCompileCost' });
+        notificationConditions.push({ label: 'Max total cost ', value: 'maxTotalCost' });
+      }
+    } else {
+      const newOptions = notificationConditions.filter(
+        (option) =>
+          option.value !== 'maxExecutionCost' &&
+          option.value !== 'maxFileAccessCost' &&
+          option.value !== 'maxCompileCost' &&
+          option.value !== 'maxTotalCost'
+      );
+      notificationConditions = newOptions;
+    }
+  }, [selectedJob]);
+  const [selectedNotificationOptions, setSelectedNotificationOptions] = useState([]);
+
+  // eslint-disable-next-line unused-imports/no-unused-vars
+  const showDrawer = () => {
+    setOpen(true);
+  };
+
+  // eslint-disable-next-line unused-imports/no-unused-vars
+  const onClose = () => {
+    setOpen(false);
+  };
+
   return (
     <>
       <Form.Item
         label="Notify When"
         name="notificationConditions"
         rules={[{ required: true, message: 'Required filed' }]}>
-        <Select mode="tags">
+        <Select
+          mode="tags"
+          onChange={(selection) => {
+            setNotifyConditions(selection);
+            setSelectedNotificationOptions(selection);
+          }}>
           {notificationConditions.map((condition) => {
             return (
               <Option key={condition.value} value={condition.value}>
@@ -33,10 +79,52 @@ function ClusterMonitoringNotificationTab({ notificationDetails, setNotification
         </Select>
       </Form.Item>
 
+      <>
+        {notifyConditions.includes('maxExecutionCost') ? (
+          <Form.Item label="Max Execution Cost" name="maxExecutionCost" style={{ width: '50%' }} required>
+            <Input type="number" prefix="$"></Input>
+          </Form.Item>
+        ) : null}
+
+        {notifyConditions.includes('maxFileAccessCost') ? (
+          <Form.Item label="Max File Access Cost" name="maxFileAccessCost" style={{ width: '50%' }} required>
+            <Input type="number" prefix="$"></Input>
+          </Form.Item>
+        ) : null}
+
+        {notifyConditions.includes('maxCompileCost') ? (
+          <Form.Item label="Max Compile Cost" name="maxCompileCost" style={{ width: '50%' }} required>
+            <Input type="number" prefix="$"></Input>
+          </Form.Item>
+        ) : null}
+
+        {notifyConditions.includes('maxTotalCost') ? (
+          <Form.Item label="Max Total Cost" name="maxTotalCost" style={{ width: '50%' }} required>
+            <Input type="number" prefix="$"></Input>
+          </Form.Item>
+        ) : null}
+      </>
+      {selectedNotificationOptions.includes('thresholdTimeExceeded') ? (
+        <Form.Item
+          name="thresholdTime"
+          label="Threshold time ( in minutes )"
+          validateTrigger={['onChange', 'onBlur']}
+          rules={[
+            {
+              type: 'number',
+              min: 0,
+              max: 1440,
+              message: 'min and max should be 0 to 1440',
+            },
+          ]}>
+          <InputNumber type="number" />
+        </Form.Item>
+      ) : null}
+
       <Form.Item
         label="Notification Channel"
         name="notificationChannels"
-        rules={[{ required: true, message: 'Required Field' }]}>
+        rule={[{ required: true, message: 'Required Field' }]}>
         <Select
           options={notificationOptions}
           mode="tags"

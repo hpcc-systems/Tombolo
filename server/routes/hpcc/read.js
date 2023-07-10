@@ -246,14 +246,14 @@ router.post(
 router.post(
   "/jobsearch",
   [
-    body("keyword")
-      .matches(/^[a-zA-Z]{1}[a-zA-Z0-9_: .\-]*$/)
-      .withMessage("Invalid keyword"),
-    body("clusterId").isUUID(4).withMessage("Invalid cluster id"),
-    body("clusterType")
-      .optional({ checkFalsy: true })
-      .matches(/^[a-zA-Z]{1}[a-zA-Z0-9_: .\-]*$/)
-      .withMessage("Invalid cluster type"),
+    // body("keyword")
+    //   .matches(/^[a-zA-Z]{1}[a-zA-Z0-9_: .\-]*$/)
+    //   .withMessage("Invalid keyword"),
+    // body("clusterId").isUUID(4).withMessage("Invalid cluster id"),
+    // body("clusterType")
+    //   .optional({ checkFalsy: true })
+    //   .matches(/^[a-zA-Z]{1}[a-zA-Z0-9_: .\-]*$/)
+    //   .withMessage("Invalid cluster type"),
   ],
   async function (req, res) {
     const errors = validationResult(req).formatWith(
@@ -264,11 +264,23 @@ router.post(
     try {
       const { keyword, clusterId, clusterType } = req.body;
       const wuService = await hpccUtil.getWorkunitsService(clusterId);
+        console.log("------ key word ----------------------------");
+        console.dir(keyword);
+        console.log("------------------------------------------");
+
+      //If no * add to start and end
+      // If there are one or more astrik leave as they are
+      let jobName = keyword.includes("*") ? keyword : `*${keyword}*`;
+      console.log('------ job name----------------------------');
+      console.dir(jobName)
+      console.log('------------------------------------------');
       const response = await wuService.WUQuery({
-        Jobname: `*${keyword}*`,
+        Jobname: jobName ,
         Cluster: clusterType,
       });
+
       let workunitsResult = [];
+
       if (response.Workunits) {
         const workunitsHash = response.Workunits.ECLWorkunit.reduce(
           (acc, wu) => {
@@ -285,6 +297,9 @@ router.post(
         );
         workunitsResult = Object.values(workunitsHash);
       }
+            console.log("---- response ----------------------------");
+            console.dir(workunitsResult);
+            console.log("------------------------------------------");
       return res.status(200).send(workunitsResult);
     } catch (error) {
       logger.error("jobsearch error", error);

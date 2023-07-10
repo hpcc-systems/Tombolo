@@ -33,7 +33,7 @@ router.post(
   ],
   async (req, res) => {
     try {
-      //Check for errors - return if exists
+      // Check for errors - return if exists
       const errors = validationResult(req).formatWith(
         validatorUtil.errorFormatter
       );
@@ -44,6 +44,7 @@ router.post(
       }
 
       //create
+      req.body.metaData.unfinishedWorkUnits = [];
       const jobMonitoring = await JobMonitoring.create(req.body);
       res.status(200).send(jobMonitoring);
 
@@ -235,12 +236,13 @@ router.put(
         where: { id },
       });
       const {
-        metaData: { last_monitored },
+        metaData: { last_monitored, unfinishedWorkUnits },
       } = existingMonitoringDetails;
 
       const newData = req.body; // Cleaning required
-      // Do not reset last_monitored value
+      // Do not reset last_monitored value and jobs that are unfinished 
       newData.metaData.last_monitored = last_monitored;
+      newData.metaData.unfinishedWorkUnits = unfinishedWorkUnits;
 
       const updated = await JobMonitoring.update(newData, {
         where: { id },
