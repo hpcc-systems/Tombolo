@@ -297,12 +297,16 @@ function BasicsTabGeneral({
         <Form.Item
           name="name"
           label={<Text text="Name" />}
-          validateTrigger="onBlur"
+          validateTrigger={['onChange', 'onBlur']}
           rules={[
             { required: enableEdit ? true : false, message: 'Please enter the name' },
             {
               pattern: new RegExp(/^[a-zA-Z0-9: .@_-]*$/),
               message: 'Please enter a valid Title. Title can have  a-zA-Z0-9:._- and space',
+            },
+            {
+              max: 256,
+              message: 'Maximum of 256 characters allowed',
             },
           ]}
           className={enableEdit ? null : 'read-only-input'}
@@ -332,13 +336,17 @@ function BasicsTabGeneral({
         <Form.Item
           name="title"
           label={<Text text="Title" />}
-          validateTrigger="onBlur"
+          validateTrigger={['onChange', 'onBlur']}
           className={enableEdit ? null : 'read-only-input'}
           rules={[
             { required: enableEdit ? true : false, message: 'Please enter a title!' },
             {
               pattern: new RegExp(/^[ a-zA-Z0-9:@._-]*$/),
               message: <Text text="Please enter a valid Title. Title can have  a-zA-Z0-9:._- and space" />,
+            },
+            {
+              max: 256,
+              message: 'Maximum of 256 characters allowed',
             },
           ]}>
           <Input
@@ -388,9 +396,15 @@ function BasicsTabGeneral({
             <Form.Item
               name="author"
               label={<Text text="Author" />}
-              validateTrigger="onBlur"
+              validateTrigger={['onChange', 'onBlur']}
               className={enableEdit ? null : 'read-only-input'}
-              rules={[{ pattern: new RegExp(/^[a-zA-Z0-9: $._-]*$/), message: 'Please enter a valid author' }]}>
+              rules={[
+                { pattern: new RegExp(/^[a-zA-Z0-9: $._-]*$/), message: 'Please enter a valid author', required: true },
+                {
+                  max: 256,
+                  message: 'Maximum of 256 characters allowed',
+                },
+              ]}>
               <Input
                 id="job_author"
                 onChange={onChange}

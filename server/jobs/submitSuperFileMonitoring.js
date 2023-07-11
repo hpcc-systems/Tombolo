@@ -94,9 +94,9 @@ const { update } = require("lodash");
             metaDifference.push({
               attribute:
                 "File size not in range: " +
-                maximumFileSize / 1000 +
+                minimumFileSize / 1000 +
                 " KB - " +
-                minimumFileSize / 1000,
+                maximumFileSize / 1000,
               oldValue: `${size / 1000} KB`,
               newValue: `${newFileSize / 1000} KB`,
             });
@@ -144,9 +144,8 @@ const { update } = require("lodash");
           ) {
             let attributeString =
               "Subfile Count out of Range,  " +
-              monitoringCondition.maximumSubFileCount +
-              " - " +
               monitoringCondition.minimumSubFileCount;
+            +" - " + monitoringCondition.maximumSubFileCount;
             metaDifference.push({
               attribute: attributeString,
               oldValue: `${subfileCount}`,
@@ -278,6 +277,7 @@ const { update } = require("lodash");
           sentNotifications.push({
             id: notification_id,
             file_name: Name,
+            monitoring_type: "superFile",
             status: "notified",
             notifiedTo: emailNotificationDetails.recipients,
             notification_channel: "eMail",
@@ -308,12 +308,13 @@ const { update } = require("lodash");
           sentNotifications.push({
             id: notification_id,
             file_name: Name,
+            monitoring_type: "superFile",
             status: "notified",
             notifiedTo: teamsNotificationDetails.recipients,
             notification_channel: "msTeams",
             application_id,
             notification_reason: notificationDetails.value,
-            filemonitoring_id: id,
+            monitoring_id: id,
           });
         } catch (err) {
           logger.error(err);

@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Form, Select, Input, Button, InputNumber } from 'antd';
-import { MinusCircleOutlined, PlusOutlined } from '@ant-design/icons';
+import { MinusCircleOutlined, PlusOutlined, InfoCircleOutlined } from '@ant-design/icons';
+import InfoDrawer from '../../common/InfoDrawer';
 const { Option } = Select;
 
 const notificationOptions = [
@@ -22,7 +23,6 @@ function ClusterMonitoringNotificationTab({
   notifyConditions,
   setNotifyConditions,
 }) {
-  // eslint-disable-next-line unused-imports/no-unused-vars
   const [open, setOpen] = useState(false);
   // Watch for change in selectedJob
   useEffect(() => {
@@ -47,12 +47,10 @@ function ClusterMonitoringNotificationTab({
   }, [selectedJob]);
   const [selectedNotificationOptions, setSelectedNotificationOptions] = useState([]);
 
-  // eslint-disable-next-line unused-imports/no-unused-vars
   const showDrawer = () => {
     setOpen(true);
   };
 
-  // eslint-disable-next-line unused-imports/no-unused-vars
   const onClose = () => {
     setOpen(false);
   };
@@ -122,7 +120,15 @@ function ClusterMonitoringNotificationTab({
       ) : null}
 
       <Form.Item
-        label="Notification Channel"
+        label={
+          <>
+            <p style={{ marginBottom: '0' }}>
+              Notification Channel
+              <InfoCircleOutlined style={{ marginLeft: '.5rem' }} onClick={() => showDrawer()} />
+            </p>
+            <InfoDrawer open={open} onClose={onClose} content="webhook"></InfoDrawer>
+          </>
+        }
         name="notificationChannels"
         rule={[{ required: true, message: 'Required Field' }]}>
         <Select
@@ -150,6 +156,10 @@ function ClusterMonitoringNotificationTab({
                           whitespace: true,
                           type: 'email',
                           message: 'Invalid e-mail address.',
+                        },
+                        {
+                          max: 256,
+                          message: 'Maximum of 256 characters allowed',
                         },
                       ]}
                       noStyle>
@@ -195,6 +205,10 @@ function ClusterMonitoringNotificationTab({
                           required: true,
                           whitespace: true,
                           message: 'Invalid Teams webhook URL',
+                        },
+                        {
+                          max: 1000,
+                          message: 'Maximum of 1000 characters allowed',
                         },
                       ]}
                       noStyle>

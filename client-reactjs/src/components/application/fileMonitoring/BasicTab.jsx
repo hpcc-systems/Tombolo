@@ -221,13 +221,24 @@ function FileMonitoringBasicTab({
             label="File Name"
             name="fileName"
             extra="Supports wildcards"
-            rules={[{ required: true, message: 'Required filed' }]}>
+            validateTrigger={['onChange', 'onBlur']}
+            rules={[
+              { required: true, message: 'Required filed' },
+              { max: 256, message: 'Maximum of 256 characters allowed' },
+            ]}>
             <Input placeholder="*"></Input>
           </Form.Item>
         ) : null}
 
         {selectedCluster && monitoringAssetType === 'logicalFiles' ? (
-          <Form.Item label="Search File" required>
+          <Form.Item
+            label="Search File"
+            validateTrigger={['onChange', 'onBlur']}
+            rules={[
+              { required: true, message: 'Required filed' },
+              { max: 256, message: 'Maximum of 256 characters allowed' },
+            ]}
+            required>
             <Row gutter={[8, 0]}>
               <Col style={{ width: 'calc(37.5% - 8px)' }}>
                 <AutoComplete

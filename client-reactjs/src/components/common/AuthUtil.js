@@ -1,4 +1,5 @@
 const { Constants } = require('./Constants');
+let hasPermissionToViewPII = false;
 
 export function hasAdminRole(user) {
   if (process.env.REACT_APP_APP_AUTH_METHOD === 'azure_ad') {
@@ -9,6 +10,13 @@ export function hasAdminRole(user) {
 
 export function hasEditPermission(user) {
   if (process.env.REACT_APP_APP_AUTH_METHOD === 'azure_ad') {
+    if (user.roles) {
+      user.roles.forEach((role) => {
+        if (role === Constants.TOMBOLO_ADMIN) {
+          hasPermissionToViewPII = true;
+        }
+      });
+    }
     return (
       user.roles && user.roles.some((role) => role === Constants.TOMBOLO_ADMIN || role === Constants.TOMBOLO_CREATOR)
     );
@@ -21,14 +29,13 @@ export function hasEditPermission(user) {
 }
 
 export function canViewPII(user) {
-  let canViewPII = false;
   if (user.role) {
     user.role.forEach((role) => {
       if (role.permissions && 'View PII' in role.permissions && role.permissions['View PII'] === 'allow') {
-        canViewPII = true;
+        hasPermissionToViewPII = true;
         return;
       }
     });
   }
-  return canViewPII;
+  return hasPermissionToViewPII;
 }

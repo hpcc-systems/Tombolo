@@ -36,6 +36,12 @@ module.exports = (sequelize, DataTypes) => {
       monitoring_notifications.belongsTo(models.clusterMonitoring, {
         foreignKey: "monitoring_id",
       });
+      monitoring_notifications.belongsTo(models.jobMonitoring, {
+        foreignKey: "monitoring_id",
+      });
+      monitoring_notifications.belongsTo(models.filemonitoring_superfiles, {
+        foreignKey: "monitoring_id",
+      });
       monitoring_notifications.belongsTo(models.application, {
         foreignKey: "application_id",
       });

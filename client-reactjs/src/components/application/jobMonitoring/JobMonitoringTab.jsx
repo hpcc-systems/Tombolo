@@ -1,10 +1,21 @@
 import React, { useState, useEffect } from 'react';
 import { Form, Input, Typography, Checkbox } from 'antd';
 import cronstrue from 'cronstrue';
+import InfoDrawer from '../../common/InfoDrawer';
+import { InfoCircleOutlined } from '@ant-design/icons';
 
 function MonitoringTab({ jobMonitorings, selectedMonitoring }) {
   const [cornExpaliner, setCornExplainer] = useState(null);
   const [cron, setCorn] = useState(null);
+  const [open, setOpen] = useState(false);
+
+  const showDrawer = () => {
+    setOpen(true);
+  };
+
+  const onClose = () => {
+    setOpen(false);
+  };
 
   useEffect(() => {
     if (cron) {
@@ -23,6 +34,7 @@ function MonitoringTab({ jobMonitorings, selectedMonitoring }) {
       <Form.Item
         label="Monitoring name"
         name="name"
+        validateTrigger={['onChange', 'onBlur']}
         required
         rules={[
           {
@@ -37,12 +49,24 @@ function MonitoringTab({ jobMonitorings, selectedMonitoring }) {
               }
             },
           },
+          {
+            max: 256,
+            message: 'Maximum of 256 characters allowed',
+          },
         ]}>
         <Input></Input>
       </Form.Item>
 
       <Form.Item
-        label="Cron (How often to monitor)"
+        label={
+          <>
+            <p style={{ marginBottom: '0' }}>
+              Cron (How often to monitor)
+              <InfoCircleOutlined style={{ marginLeft: '.5rem' }} onClick={() => showDrawer()} />
+            </p>
+            <InfoDrawer open={open} onClose={onClose} width="700px" content="cron"></InfoDrawer>
+          </>
+        }
         name="cron"
         rules={[
           { required: true, message: 'Required field' },

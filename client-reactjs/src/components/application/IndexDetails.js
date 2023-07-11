@@ -670,11 +670,16 @@ class IndexDetails extends PureComponent {
                 <Form.Item
                   label={<Text text="Name" />}
                   name="name"
+                  validateTrigger={['onChange', 'onBlur']}
                   rules={[
                     { required: true, message: <Text text="Please enter a valid name" /> },
                     {
                       pattern: new RegExp(/^[a-zA-Z0-9:._-]*$/),
                       message: <Text text="Please enter a valid name" />,
+                    },
+                    {
+                      max: 256,
+                      message: 'Maximum of 256 characters allowed',
                     },
                   ]}>
                   <Input
@@ -689,11 +694,16 @@ class IndexDetails extends PureComponent {
                 <Form.Item
                   label={<Text text="Title" />}
                   name="title"
+                  validateTrigger={['onChange', 'onBlur']}
                   rules={[
                     { required: true, message: <Text text="Please enter a title!" /> },
                     {
                       pattern: new RegExp(/^[ a-zA-Z0-9:._-]*$/),
                       message: <Text text="Please enter a valid Title. Title can have  a-zA-Z0-9:._- and space" />,
+                    },
+                    {
+                      max: 256,
+                      message: 'Maximum of 256 characters allowed',
                     },
                   ]}>
                   <Input
@@ -718,10 +728,15 @@ class IndexDetails extends PureComponent {
                 <Form.Item
                   label={<Text text="Primary Service" />}
                   name="primaryService"
+                  validateTrigger={['onChange', 'onBlur']}
                   rules={[
                     {
                       pattern: new RegExp(/^[a-zA-Z0-9:$._-]*$/),
                       message: <Text text="Please enter a valid path" />,
+                    },
+                    {
+                      max: 100,
+                      message: 'Maximum of 100 characters allowed',
                     },
                   ]}>
                   <Input
@@ -735,10 +750,15 @@ class IndexDetails extends PureComponent {
                 <Form.Item
                   label={<Text text="Backup Service" />}
                   name="backupService"
+                  validateTrigger={['onChange', 'onBlur']}
                   rules={[
                     {
                       pattern: new RegExp(/^[a-zA-Z0-9:$._-]*$/),
                       message: <Text text="Please enter a valid backup service" />,
+                    },
+                    {
+                      max: 100,
+                      message: 'Maximum of 100 characters allowed',
                     },
                   ]}>
                   <Input
@@ -752,10 +772,15 @@ class IndexDetails extends PureComponent {
                 <Form.Item
                   label={<Text text="Path" />}
                   name="qualifiedPath"
+                  validateTrigger={['onChange', 'onBlur']}
                   rules={[
                     {
                       pattern: new RegExp(/^[a-zA-Z0-9:$._-]*$/),
                       message: <Text text="Please enter a valid path" />,
+                    },
+                    {
+                      max: 100,
+                      message: 'Maximum of 100 characters allowed',
                     },
                   ]}>
                   {this.state.enableEdit ? (

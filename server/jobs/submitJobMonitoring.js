@@ -9,138 +9,7 @@ const JobMonitoring = models.jobMonitoring;
 const cluster = models.cluster;
 const Monitoring_notifications = models.monitoring_notifications;
 const { notify } = require("../routes/notifications/email-notification");
-
-
-// E-mail Template -------------------------------------------------
-function jobMonitoringEmailBody(data, timeStamp) {
-  let tableHTML =
-    '<table style="border-collapse: collapse; width: 100%; max-width: 800px" className="sentNotificationTable"> ';
-
-  // Extract name and cluster name
-  const { name, clusterName } = data[0];
-
-  // Add name and cluster name as h3 elements
-  tableHTML +=
-    '<tr><td colspan="2" style="border: 1px solid #D3D3D3; padding: 5px;">';
-  tableHTML += "<div>Job name: " + name + "</div>";
-  tableHTML += "<div>Cluster: " + clusterName + "</div>";
-  tableHTML += "<div>Date/Time: " + timeStamp + "</div>";
-
-  tableHTML += "</td></tr>";
-
-  // Add table headers
-  tableHTML += "<tr>";
-  tableHTML +=
-    '<th style="border: 1px solid #D3D3D3; text-align: left; padding-left: 5px;">WuID</th>';
-  tableHTML +=
-    '<th style="border: 1px solid #D3D3D3; text-align: left; padding-left: 5px;">Alert(s)</th>';
-  tableHTML += "</tr>";
-
-  // Iterate over each object in the data array
-  data.forEach((obj) => {
-    // Extract object properties
-    const { wuId, issues } = obj;
-
-    // Add table row for wuId
-    tableHTML += "<tr>";
-    tableHTML +=
-      '<td style="border: 1px solid #D3D3D3; text-align: left; padding-left: 5px;">' +
-      wuId +
-      "</td>";
-
-    // Add table row for each issue
-    tableHTML +=
-      '<td style="border: 1px solid #D3D3D3; text-align: left; padding-left: 5px;">';
-    issues.forEach((issue) => {
-      const [key, value] = Object.entries(issue)[0];
-      tableHTML += key + ": " + value + "<br>";
-    });
-    tableHTML += "</td>";
-    tableHTML += "</tr>";
-  });
-
-  tableHTML += '</table> <p className="sentNotificationSignature">- Tombolo</p>';
-
-  return tableHTML;
-}
-// Teams message template ------------------------------------------
-const msTeamsCardBody = (tableHtml) => {
-  const cardBody = JSON.stringify({
-    "@type": "MessageCard",
-    "@context": "http://schema.org/extensions",
-    themeColor: "0076D7",
-    summary: "Hello world",
-    sections: [
-      {
-        type: "MessageCard",
-        contentType: "text/html",
-        text: tableHtml,
-      },
-    ],
-    potentialAction: [
-      {
-        "@type": "ActionCard",
-        name: "Add a comment",
-        inputs: [
-          {
-            "@type": "TextInput",
-            id: "comment",
-            isMultiline: false,
-            title: "Add a comment here for this task",
-          },
-        ],
-        actions: [
-          {
-            "@type": "HttpPOST",
-            name: "Add comment",
-            target: process.env.API_URL + "/api/updateNotification/update",
-            body: `{"comment":"{{comment.value}}"}`,
-            isRequired: true,
-            errorMessage: "Comment cannot be blank",
-          },
-        ],
-      },
-      {
-        "@type": "ActionCard",
-        name: "Change status",
-        inputs: [
-          {
-            "@type": "MultichoiceInput",
-            id: "list",
-            title: "Select a status",
-            isMultiSelect: "false",
-            choices: [
-              {
-                display: "Triage",
-                value: "triage",
-              },
-              {
-                display: "In Progress",
-                value: "inProgress",
-              },
-              {
-                display: "Completed",
-                value: "completed",
-              },
-            ],
-          },
-        ],
-        actions: [
-          {
-            "@type": "HttpPOST",
-            name: "Save",
-            target: process.env.API_URL + "/api/updateNotification/update",
-            body: `{"status":"{{list.value}}"`,
-            isRequired: true,
-            errorMessage: "Select an option",
-          },
-        ],
-      },
-    ],
-  });
-  return cardBody;
-};
-// ------------------------------------------------------------------
+const {jobMonitoringEmailBody,msTeamsCardBody} = require("./jobMonitoringNotificationTemplates");
 
 (async () => {
   try {
@@ -323,13 +192,15 @@ const msTeamsCardBody = (tableHtml) => {
       try {
         const notification_id = uuidv4();
         const emailBody = jobMonitoringEmailBody(
-          notificationsToSend,
+          {notificationsToSend,
+          jobName,
+          monitoringName,
           timeStamp
-        );
+          });
         const response = await notify({
           to: notificationDetails.eMail,
           from: process.env.EMAIL_SENDER,
-          subject: `Alert from ${monitoringName}`,
+          subject: `Job Monitoring Alert`,
           text: emailBody,
           html: emailBody,
         });
@@ -339,7 +210,7 @@ const msTeamsCardBody = (tableHtml) => {
           sentNotifications.push({
             id: notification_id,
             application_id: application_id,
-            monitoring_type: "Job Monitoring",
+            monitoring_type: "jobMonitoring",
             monitoring_id: jobMonitoring_id,
             notification_reason: "Met notification conditions",
             status: "notified",
@@ -354,7 +225,12 @@ const msTeamsCardBody = (tableHtml) => {
 
     if (notificationDetails.msTeams && notificationsToSend.length > 0) {
       const recipients = notificationDetails.msTeams;
-      const cardBody = jobMonitoringEmailBody(notificationsToSend, timeStamp);
+      const cardBody = jobMonitoringEmailBody({
+        notificationsToSend,
+        jobName,
+        monitoringName,
+        timeStamp,
+      });
 
       for (let recipient of recipients) {
         try {
@@ -364,6 +240,7 @@ const msTeamsCardBody = (tableHtml) => {
             recipient,
             msTeamsCardBody(cardBody)
           );
+
 
           if (response.status === 200) {
             sentNotifications.push({
@@ -406,7 +283,6 @@ const msTeamsCardBody = (tableHtml) => {
         }
       }
     }
-
     // ----------------------------------------------------------------
   } catch (err) {
     logger.error(err);
@@ -417,3 +293,6 @@ const msTeamsCardBody = (tableHtml) => {
 })();
 
 
+
+// 5. way to check if cluster is K8 or not should be changed and teams notification
+// 6. clicking on bell icon should take to notification page with filtered notifications

@@ -154,13 +154,11 @@ function AddDataflow({
 
   return (
     <React.Fragment>
-      <div style={{ marginLeft: 'auto', paddingTop: '5px' }}>
-        <Tooltip placement="bottom" title={<Text text="Add new Dataflow" />}>
-          <Button type="primary" onClick={handleModal}>
-            {<Text text="Add" />}
-          </Button>
-        </Tooltip>
-      </div>
+      <Tooltip placement="bottom" title={<Text text="Add new Dataflow" />}>
+        <Button type="primary" onClick={handleModal}>
+          {<Text text="Add" />}
+        </Button>
+      </Tooltip>
 
       <Modal
         visible={modalVisible}
@@ -192,10 +190,15 @@ function AddDataflow({
           <Form.Item
             label={<Text text="Title" />}
             name="title"
+            validateTrigger={['onChange', 'onBlur']}
             rules={[
               {
                 required: enableEdit ? true : false,
                 message: 'Please enter a valid title',
+              },
+              {
+                max: 256,
+                message: 'Maximum of 256 characters allowed',
               },
             ]}>
             <Input placeholder={i18n('Title')} className={enableEdit ? null : 'read-only-input'} />
@@ -204,6 +207,17 @@ function AddDataflow({
           <Form.Item
             label={<Text text="Description" />}
             name="description"
+            validateTrigger={['onChange', 'onBlur']}
+            rules={[
+              {
+                required: enableEdit ? true : false,
+                message: 'Please enter a valid title',
+              },
+              {
+                max: 1024,
+                message: 'Maximum of 1024 characters allowed',
+              },
+            ]}
             className={enableEdit ? null : 'read-only-input'}>
             <TextArea
               autoSize={{ minRows: enableEdit ? 2 : 1 }}

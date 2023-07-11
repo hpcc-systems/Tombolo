@@ -1,6 +1,7 @@
 const axios = require("axios");
 const { parentPort, workerData } = require("worker_threads");
 const { v4: uuidv4 } = require("uuid");
+const moment = require("moment")
 
 const { notify } = require("../routes/notifications/email-notification");
 const logger = require("../config/logger");
@@ -47,13 +48,14 @@ const {
       },
     } = fileMonitoringDetails;
 
-    const date = new Date();
-    const currentTimeStamp = date.getTime();
 
     const cluster = await hpccUtil.getCluster(cluster_id);
-    const Path = `/var/lib/HPCCSystems/${landingZone}/${dirToMonitor.join(
-      "/"
-    )}/`;
+    const {timezone_offset} = cluster;
+
+    let currentTimeStamp = moment.utc().valueOf();
+
+    const Path = `/var/lib/HPCCSystems/${landingZone}/${dirToMonitor.join("/")}/`;
+
     const result = await hpccUtil.getDirectories({
       clusterId: cluster_id,
       Netaddr,
@@ -84,20 +86,16 @@ const {
     for (let i = 0; i < files.length; i++) {
       let { name: fileName, filesize, modifiedtime } = files[i];
 
-      const md = new Date(modifiedtime);
-      const localOffSet = md.getTimezoneOffset() * 60000;
-      const clusterOffSet = cluster.timezone_offset * 60000;
-      const totalOs = localOffSet + clusterOffSet;
+      let fileModifiedTime = moment(modifiedtime); // Convert uploaded_at to a Moment object
+      // fileModifiedTime = fileModifiedTime.utc().valueOf() - (60000 * timezone_offset);
+      fileModifiedTime =fileModifiedTime.utc().valueOf();
 
-      const fileModifiedTime = md.getTime() - totalOs;
+      logger.verbose(
+        `Last monitored : ${lastMonitored}, File Uploaded At : ${fileModifiedTime}, ${lastMonitored - fileModifiedTime, lastMonitored < fileModifiedTime &&
+          wildCardStringMatch(fileNameWildCard, fileName) ? "NEW FILE" : "OLD FILE"}`
+      );      
 
-      fileAndTimeStamps.push({
-        name: fileName,
-        modifiedTime: fileModifiedTime,
-      });
-
-      if (
-        lastMonitored < fileModifiedTime &&
+      if(lastMonitored < fileModifiedTime &&
         wildCardStringMatch(fileNameWildCard, fileName)
       ) {
         //Check if user wants to be notified when new file arrives
@@ -110,7 +108,7 @@ const {
             details: {
               "File Name": fileName,
               "Landing zone": landingZone,
-              "Directory": dirToMonitor.join("/"),
+              Directory: dirToMonitor.join("/"),
               "File detected at": new Date(fileModifiedTime).toString(),
             },
           };
@@ -132,14 +130,16 @@ const {
               "Expected maximum size": `${maximumFileSize} KB`,
               "Expected minimum size": `${minimumFileSize} KB`,
               "Landing zone": landingZone,
-              "Directory": dirToMonitor.join("/"),
+              Directory: dirToMonitor.join("/"),
               "File detected at": new Date(fileModifiedTime).toString(),
             },
           };
           if (maximumFileSize < filesize / 1000) {
-            notificationDetail.text = "File is larger than expected maximum size - ";
+            notificationDetail.text =
+              "File is larger than expected maximum size - ";
           } else if (minimumFileSize > filesize / 1000) {
-            notificationDetail.text = "File is smaller than expected minimum size";
+            notificationDetail.text =
+              "File is smaller than expected minimum size";
           } else {
             logger.verbose("File within range - do not notify");
           }
@@ -154,8 +154,9 @@ const {
           newFilesToMonitor.push({
             name: fileName,
             modifiedTime: fileModifiedTime,
-            expectedFileMoveTime: currentTimeStamp + expectedFileMoveTime * 60 * 1000,
-            notified: []
+            expectedFileMoveTime:
+              currentTimeStamp + expectedFileMoveTime * 60 * 1000,
+            notified: [],
           });
         }
       }
@@ -163,7 +164,7 @@ const {
 
     // Send email notification for new && file not in range
     if (emailNotificationDetails && newFileNotificationDetails.length > 0) {
-      // for (let detail of newFileNotificationDetails) {
+      for (let detail of newFileNotificationDetails) {
         try {
           const body = emailBody(detail);
           const notificationResponse = await notify({
@@ -177,20 +178,20 @@ const {
 
           if (notificationResponse.accepted) {
             await monitoring_notifications.create({
-              file_name: detail.details["File name"],
+              // file_name: detail.details["File name"],
               status: "notified",
               notifiedTo: emailNotificationDetails.recipients,
               notification_channel: "eMail",
               application_id,
               notification_reason: detail.value,
               monitoring_id: filemonitoring_id,
-              monitoring_type: "Landingzone File",
+              monitoring_type: "file",
             });
           }
         } catch (err) {
           logger.error(err);
         }
-      // }
+      }
     }
 
     if (teamsNotificationDetails && newFileNotificationDetails.length > 0) {
@@ -208,14 +209,14 @@ const {
 
             await monitoring_notifications.create({
               id: notification_id,
-              file_name: detail.details["File Name"],
+              // file_name: detail.details["File Name"],
               status: "notified",
               notifiedTo: recipient,
               notification_channel: "msTeams",
               application_id,
               notification_reason: detail.value,
               monitoring_id: filemonitoring_id,
-              monitoring_type: "Landingzone File",
+              monitoring_type: "file",
             });
           } catch (err) {
             logger.error(err);
@@ -293,6 +294,7 @@ const {
                 application_id,
                 notification_reason: value,
                 monitoring_id: filemonitoring_id,
+                monitoring_type: "file",
               });
             }
           } catch (err) {
@@ -304,9 +306,6 @@ const {
         // Send teams notification
         const {recipients} = teamsNotificationDetails;
         for (let recipient of recipients){
-          console.log('------------------------------------------');
-          console.count( "Sent", {depth: null})
-          console.log('------------------------------------------');
           try {
             const { details, value } = currentlyMonitoringNotificationDetails;
             const notification_id = uuidv4();
@@ -329,7 +328,7 @@ const {
               application_id,
               notification_reason: value,
               monitoring_id: filemonitoring_id,
-              monitoring_type: 	"Landingzone File"
+              monitoring_type: "file",
             });
           } catch (err) {
             logger.error(err);

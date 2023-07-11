@@ -15,6 +15,7 @@ function JobMonitoringTable({
   setSelectedCluster,
   setNotificationDetails,
   setMonitoringScope,
+  setNotifyConditions,
 }) {
   const { clusters } = useSelector((state) => state.applicationReducer);
 
@@ -99,6 +100,7 @@ function JobMonitoringTable({
     };
 
     setSelectedMonitoring(updatedMonitoringDetails);
+    setNotifyConditions(notificationConditions);
     setSelectedCluster(cluster_id);
     setNotificationDetails({ notificationChannel: notificationChannels });
     setMonitoringScope(monitoringScope);

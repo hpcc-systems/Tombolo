@@ -7,7 +7,7 @@ const hpccJSComms = require("@hpcc-js/comms");
 const hpccUtil = require("../../utils/hpcc-util");
 const JobScheduler = require("../../job-scheduler");
 
-const JobMonitoring = models.JobMonitoring;
+const JobMonitoring = models.jobMonitoring;
 const router = express.Router();
 
 // Create Cluster Monitoring
@@ -28,7 +28,7 @@ router.post(
         return Promise.resolve("Good to go");
       }
     }),
-    body("isActive").isBoolean().withMessage("Invalid is active flag"),
+    // body("isActive").isBoolean().withMessage("Invalid is active flag"),
     body("metaData").isObject().withMessage("Invalid job monitoring meta data"),
   ],
   async (req, res) => {
@@ -90,7 +90,7 @@ router.get(
       res.status(200).send(jobMonitorings);
     } catch (err) {
       logger.error(err);
-      res.send(503).send({ success: false, message: "Failed to fetch job monitorings" });
+      res.status(503).send({ success: false, message: "Failed to fetch job monitorings" });
     }
   }
 );
@@ -213,7 +213,7 @@ router.put(
         return Promise.resolve("Good to go");
       }
     }),
-    body("isActive").isBoolean().withMessage("Invalid is active flag"),
+    // body("isActive").isBoolean().withMessage("Invalid is active flag"),
     body("metaData").isObject().withMessage("Invalid job monitoring meta data"),
   ],
   async (req, res) => {

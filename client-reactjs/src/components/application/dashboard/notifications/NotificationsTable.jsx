@@ -216,14 +216,15 @@ function NotificationsTable({ applicationId, setSelectedNotificationForBulkActio
         rowKey={(record) => record.id}
         verticalAlign="top"
         rowSelection={rowSelection}
-        // onRow={(record) => {
-        //   return {
-        //     onClick: () => {
-        //       setSelectedNotification(record);
-        //       setViewNotificationDetails(true);
-        //     },
-        //   };
-        // }}
+        onRow={(record) => {
+          return {
+            onClick: () => {
+              console.log(record);
+              setSelectedNotification(record);
+              setViewNotificationDetails(true);
+            },
+          };
+        }}
       />
       <Modal
         title={selectedNotification?.['fileMonitoring.name'] || selectedNotification?.['clusterMonitoring.name'] || ''}

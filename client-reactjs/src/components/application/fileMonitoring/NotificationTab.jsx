@@ -1,6 +1,7 @@
-import React, { useEffect } from 'react';
+import React, { useEffect, useState } from 'react';
 import { Form, Select, Input, Button } from 'antd';
-import { MinusCircleOutlined, PlusOutlined } from '@ant-design/icons';
+import { MinusCircleOutlined, PlusOutlined, InfoCircleOutlined } from '@ant-design/icons';
+import InfoDrawer from '../../common/InfoDrawer';
 
 const notificationOptions = [
   { label: 'E-mail', value: 'eMail' },
@@ -39,6 +40,16 @@ function NotificationTab({
     notificationTabForm.setFieldsValue({ emails, notificationChannels, msTeamsGroups });
   }, [selectedFileMonitoringDetails]);
 
+  const [open, setOpen] = useState(false);
+
+  const showDrawer = () => {
+    setOpen(true);
+  };
+
+  const onClose = () => {
+    setOpen(false);
+  };
+
   return (
     <Form
       layout="vertical"
@@ -46,7 +57,15 @@ function NotificationTab({
       style={{ width: '50%' }}
       initialValues={{ msTeamsGroups: [''], emails: [''] }}>
       <Form.Item
-        label="Notification Channel"
+        label={
+          <>
+            <p style={{ marginBottom: '0' }}>
+              Notification Channel
+              <InfoCircleOutlined style={{ marginLeft: '.5rem' }} onClick={() => showDrawer()} />
+            </p>
+            <InfoDrawer open={open} onClose={onClose} content="webhook"></InfoDrawer>
+          </>
+        }
         name="notificationChannels"
         rules={[{ required: true, message: 'Required Field' }]}>
         <Select
@@ -75,6 +94,10 @@ function NotificationTab({
                           whitespace: true,
                           type: 'email',
                           message: 'Invalid e-mail address.',
+                        },
+                        {
+                          max: 256,
+                          message: 'Maximum of 256 characters allowed',
                         },
                       ]}
                       noStyle>
@@ -122,6 +145,10 @@ function NotificationTab({
                           required: true,
                           whitespace: true,
                           message: 'Invalid Teams webhook URL',
+                        },
+                        {
+                          max: 1200,
+                          message: 'Maximum of 1200 characters allowed',
                         },
                       ]}
                       noStyle>

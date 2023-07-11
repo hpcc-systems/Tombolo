@@ -1,6 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { Form, Input, Typography, Select, Checkbox } from 'antd';
 import cronstrue from 'cronstrue';
+import InfoDrawer from '../../common/InfoDrawer';
+import { InfoCircleOutlined } from '@ant-design/icons';
 
 const notifyOptions = [{ label: 'Exceeded cluster usage %', value: 'TargetClusterAlertSize' }];
 
@@ -13,6 +15,15 @@ function ClusterMonitoringTab({
 }) {
   const [cornExpaliner, setCornExplainer] = useState(null);
   const [cron, setCorn] = useState(null);
+  const [open, setOpen] = useState(false);
+
+  const showDrawer = () => {
+    setOpen(true);
+  };
+
+  const onClose = () => {
+    setOpen(false);
+  };
 
   useEffect(() => {
     if (cron) {
@@ -31,6 +42,8 @@ function ClusterMonitoringTab({
       <Form.Item
         label="Monitoring name"
         name="name"
+        validateTrigger={['onChange', 'onBlur']}
+        required
         rules={[
           {
             validator: (_, value) => {
@@ -44,12 +57,24 @@ function ClusterMonitoringTab({
               }
             },
           },
+          {
+            max: 256,
+            message: 'Maximum of 256 characters allowed',
+          },
         ]}>
         <Input></Input>
       </Form.Item>
 
       <Form.Item
-        label="Cron (How often to monitor)"
+        label={
+          <>
+            <p style={{ marginBottom: '0' }}>
+              Cron (How often to monitor)
+              <InfoCircleOutlined style={{ marginLeft: '.5rem' }} onClick={() => showDrawer()} />
+            </p>
+            <InfoDrawer open={open} onClose={onClose} width="700px" content="cron"></InfoDrawer>
+          </>
+        }
         name="cron"
         rules={[
           { required: true, message: 'Required field' },
@@ -106,19 +131,24 @@ function ClusterMonitoringTab({
                 <Form.Item
                   name={`engineLimit-${engine}`}
                   key={engine}
+                  validateTrigger={['onChange', 'onBlur']}
                   rules={[
                     {
                       validator: (_, value) => {
                         if (!value) {
-                          return Promise.reject('Invalid size');
+                          return Promise.reject('Size must be between 1 and 100');
                         }
                         const splittedVal = value.split('');
                         const isLastItemNum = !isNaN(parseInt(splittedVal[splittedVal.length - 1]));
 
-                        if (isLastItemNum) {
+                        if (
+                          isLastItemNum &&
+                          parseInt(splittedVal[splittedVal.length - 1]) > 0 &&
+                          parseInt(splittedVal[splittedVal.length - 1]) <= 100
+                        ) {
                           return Promise.resolve();
                         } else {
-                          return Promise.reject('Invalid size');
+                          return Promise.reject('Size must be between 1 and 100');
                         }
                       },
                     },
@@ -129,8 +159,6 @@ function ClusterMonitoringTab({
                     placeholder={'Limit in %'}
                     style={{ width: '50%' }}
                     type="number"
-                    min={1}
-                    max={100}
                   />
                 </Form.Item>
               );

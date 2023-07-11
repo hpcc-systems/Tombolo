@@ -290,6 +290,9 @@ router.post(
                 text: wu.Jobname,
                 value: wu.Wuid,
                 cluster: wu.Cluster,
+                ExecuteCost: wu.CompileCost,
+                FileAccessCost: wu.FileAccessCost,
+                CompileCost: wu.CompileCost
               };
             return acc;
           },
@@ -1271,7 +1274,7 @@ io.of("/landingZoneFileUpload").on("connection", (socket) => {
       __dirname,
       "..",
       "..",
-      "uploads",
+      "tempFiles",
       sanitizedFileName
     );
     let fileExtension = fileName
@@ -1354,7 +1357,7 @@ io.of("/landingZoneFileUpload").on("connection", (socket) => {
       __dirname,
       "..",
       "..",
-      "uploads",
+      "tempFiles",
       sanitizedFileName
     );
     fs.writeFile(filePath, data, function (err) {
@@ -1380,7 +1383,7 @@ io.of("/landingZoneFileUpload").on("connection", (socket) => {
       let fileData = file.data.join("");
       let fileBuffer = Buffer.from(fileData);
       const fileName = sanitize(file.fileName);
-      const filePath = path.join(__dirname, "..", "..", "uploads", fileName);
+      const filePath = path.join(__dirname, "..", "..", "tempFiles", fileName);
       fs.writeFile(filePath, fileBuffer, function (err) {
         if (err) {
           console.log("Error writing file to the FS", error);
@@ -1429,6 +1432,7 @@ router.get(
   [query("clusterId").isUUID(4).withMessage("Invalid cluster Id")],
   async (req, res) => {
     try {
+      const {clusterId} = req.query;
       //Validate cluster Id
       const errors = validationResult(req).formatWith(
         validatorUtil.errorFormatter

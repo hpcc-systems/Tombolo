@@ -38,7 +38,8 @@ const FileMonitoring = React.lazy(() => import('./components/application/fileMon
 const SuperFileMonitoring = React.lazy(() =>
   import('./components/application/superfileMonitoring/SuperFileMonitoring')
 );
-const Notifications = React.lazy(() => import('./components/application/notifications/Notifications'));
+const Notifications = React.lazy(() => import('./components/application/dashboard/notifications/Notifications'));
+const ClusterUsage = React.lazy(() => import('./components/application/dashboard/clusterUsage/ClusterUsage'));
 const ClusterMonitoring = React.lazy(() => import('./components/application/clusterMonitoring'));
 const JobMonitoring = React.lazy(() => import('./components/application/jobMonitoring'));
 
@@ -72,8 +73,6 @@ class App extends React.Component {
     collapsed: true,
     locale: 'en',
   };
-
-  //Set locale -> this is used by antd to set language
 
   componentDidMount() {
     if (!this.props.authWithAzure) {
@@ -180,7 +179,8 @@ class App extends React.Component {
                         <PrivateRoute path="/:applicationId/superfileMonitoring" component={SuperFileMonitoring} />
                         <PrivateRoute path="/:applicationId/ClusterMonitoring" component={ClusterMonitoring} />
                         <PrivateRoute path="/:applicationId/jobMonitoring" component={JobMonitoring} />{' '}
-                        <PrivateRoute path="/:applicationId/notifications" component={Notifications} />
+                        <PrivateRoute path="/:applicationId/dashboard/notifications" component={Notifications} />
+                        <PrivateRoute path="/:applicationId/dashboard/clusterUsage" component={ClusterUsage} />
                         <PrivateRoute path="/:applicationId/assets/add-jobs" component={AddJobsForm} />
                         <PrivateRoute path="/:applicationId/assets/job/:assetId?" component={JobDetailsForm} />
                         <PrivateRoute path="/:applicationId/assets/index/:assetId?" component={IndexDetailsForm} />

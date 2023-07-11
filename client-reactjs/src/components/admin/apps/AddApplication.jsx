@@ -6,6 +6,8 @@ import { applicationActions } from '../../../redux/actions/Application';
 import { emptyGroupTree } from '../../../redux/actions/Groups';
 import { authHeader } from '../../common/AuthHeader';
 import Text from '../../common/Text';
+import { InfoCircleOutlined } from '@ant-design/icons';
+import InfoDrawer from '../../common/InfoDrawer';
 
 import { useHistory } from 'react-router';
 
@@ -15,6 +17,15 @@ function AddApplication(props) {
   const [isEditing, setIsEditing] = useState(false);
   const dispatch = useDispatch();
   const history = useHistory();
+  const [open, setOpen] = useState(false);
+
+  const showDrawer = () => {
+    setOpen(true);
+  };
+
+  const onClose = () => {
+    setOpen(false);
+  };
 
   // FORM ITEM LAYOUT
   const formItemLayout =
@@ -54,8 +65,9 @@ function AddApplication(props) {
     }
     await form.validateFields();
     try {
+      const fieldValues = form.getFieldsValue();
       let payload = {
-        ...form.getFieldsValue(),
+        ...fieldValues,
         user_id: props.user.username,
         creator: props.user.username,
         id: props?.selectedApplication?.id || '',
@@ -70,13 +82,28 @@ function AddApplication(props) {
       if (!response.ok) return message.error('Error occurred while saving application');
       dispatch(emptyGroupTree());
       message.success('Application saved successfully');
-      const responseData = await response.json();
-      if (props.isCreatingNewApp)
-        dispatch(applicationActions.applicationSelected(responseData.id, responseData.title, responseData.title));
-      localStorage.setItem('activeProjectId', responseData.id);
       form.resetFields();
       props.closeAddApplicationModal();
-      history.push(`/${responseData.id}/assets`);
+      const responseData = await response.json();
+      if (props.isCreatingNewApp) {
+        dispatch(applicationActions.applicationSelected(responseData.id, responseData.title, responseData.title));
+        localStorage.setItem('activeProjectId', responseData.id);
+        history.push(`/${responseData.id}/assets`);
+      }
+
+      if (isEditing) {
+        console.log('Edited', fieldValues);
+        const updatedApplications = props.applications.map((application) => {
+          if (application.id === props.selectedApplication.id) {
+            return { ...application, fieldValues };
+          } else {
+            return application;
+          }
+        });
+
+        props.setApplications;
+        updatedApplications;
+      }
     } catch (err) {
       console.log(err);
       message.error(err.message);
@@ -93,7 +120,19 @@ function AddApplication(props) {
   return (
     <Modal
       visible={props.showAddApplicationModal}
-      title={props?.selectedApplication?.title || <Text text="Add" />}
+      title={
+        props?.selectedApplication?.title ? (
+          <>
+            <Text text={props?.selectedApplication?.title} />
+            <InfoCircleOutlined style={{ marginLeft: '.5rem' }} onClick={() => showDrawer()}></InfoCircleOutlined>
+          </>
+        ) : (
+          <>
+            <Text text="Add Application" />
+            <InfoCircleOutlined style={{ marginLeft: '.5rem' }} onClick={() => showDrawer()}></InfoCircleOutlined>
+          </>
+        )
+      }
       maskClosable={false}
       onCancel={handleModalCancel}
       footer={
@@ -120,6 +159,7 @@ function AddApplication(props) {
           {...formItemLayout}
           label={<Text text="Title" />}
           name="title"
+          validateTrigger={['onChange', 'onBlur']}
           rules={[
             {
               required: props.isCreatingNewApp || isEditing,
@@ -129,11 +169,33 @@ function AddApplication(props) {
               pattern: new RegExp(/^[a-zA-Z]{1}[a-zA-Z0-9_: .-]*$/),
               message: 'Invalid title',
             },
+            {
+              max: 256,
+              message: 'Maximum of 256 characters allowed',
+            },
           ]}>
           <Input className={isEditing || props.isCreatingNewApp ? '' : 'read-only-textarea'} />
         </Form.Item>
 
-        <Form.Item label={<Text text="Description" />} name="description" {...formItemLayout}>
+        <Form.Item
+          label={<Text text="Description" />}
+          name="description"
+          {...formItemLayout}
+          validateTrigger={['onChange', 'onBlur']}
+          rules={[
+            {
+              required: props.isCreatingNewApp || isEditing,
+              message: 'Title is required',
+            },
+            {
+              pattern: new RegExp(/^[a-zA-Z]{1}[a-zA-Z0-9_: .-]*$/),
+              message: 'Invalid title',
+            },
+            {
+              max: 1024,
+              message: 'Maximum of 1024 characters allowed',
+            },
+          ]}>
           <TextArea
             autoSize={{ minRows: isEditing || props.isCreatingNewApp ? 4 : 1 }}
             className={isEditing || props.isCreatingNewApp ? '' : 'read-only-textarea'}
@@ -160,6 +222,7 @@ function AddApplication(props) {
           )}
         </Form.Item>
       </Form>
+      <InfoDrawer open={open} onClose={onClose} content="application"></InfoDrawer>
     </Modal>
   );
 }

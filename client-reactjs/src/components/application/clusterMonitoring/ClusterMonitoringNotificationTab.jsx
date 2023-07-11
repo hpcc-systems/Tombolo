@@ -1,6 +1,7 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { Form, Select, Input, Button } from 'antd';
-import { MinusCircleOutlined, PlusOutlined } from '@ant-design/icons';
+import { MinusCircleOutlined, PlusOutlined, InfoCircleOutlined } from '@ant-design/icons';
+import InfoDrawer from '../../common/InfoDrawer';
 
 const notificationOptions = [
   { label: 'E-mail', value: 'eMail' },
@@ -8,10 +9,27 @@ const notificationOptions = [
 ];
 
 function ClusterMonitoringNotificationTab({ notificationDetails, setNotificationDetails }) {
+  const [open, setOpen] = useState(false);
+
+  const showDrawer = () => {
+    setOpen(true);
+  };
+
+  const onClose = () => {
+    setOpen(false);
+  };
   return (
     <>
       <Form.Item
-        label="Notification Channel"
+        label={
+          <>
+            <p style={{ marginBottom: '0' }}>
+              Notification Channel
+              <InfoCircleOutlined style={{ marginLeft: '.5rem' }} onClick={() => showDrawer()} />
+            </p>
+            <InfoDrawer open={open} onClose={onClose} content="webhook"></InfoDrawer>
+          </>
+        }
         name="notificationChannels"
         rules={[{ required: true, message: 'Required Field' }]}>
         <Select
@@ -39,6 +57,10 @@ function ClusterMonitoringNotificationTab({ notificationDetails, setNotification
                           whitespace: true,
                           type: 'email',
                           message: 'Invalid e-mail address.',
+                        },
+                        {
+                          max: 256,
+                          message: 'E-mail address too log',
                         },
                       ]}
                       noStyle>
@@ -84,6 +106,10 @@ function ClusterMonitoringNotificationTab({ notificationDetails, setNotification
                           required: true,
                           whitespace: true,
                           message: 'Invalid Teams webhook URL',
+                        },
+                        {
+                          max: 1000,
+                          message: 'Team webhook URL too long, must be less than 1001 chars',
                         },
                       ]}
                       noStyle>

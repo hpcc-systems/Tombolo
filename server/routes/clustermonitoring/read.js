@@ -28,7 +28,7 @@ router.post(
         return Promise.resolve("Good to go");
       }
     }),
-    body("isActive").isBoolean().withMessage("Invalid is active flag"),
+    // body("isActive").isBoolean().withMessage("Invalid is active flag"),
     body("metaData")
       .isObject()
       .withMessage("Invalid cluster monitoring meta data"),
@@ -202,7 +202,7 @@ router.put(
       }
       
     }),
-    body("isActive").isBoolean().withMessage("Invalid is active flag"),
+    // body("isActive").isBoolean().withMessage("Invalid is active flag"),
     body("metaData")
       .isObject()
       .withMessage("Invalid cluster monitoring meta data"),

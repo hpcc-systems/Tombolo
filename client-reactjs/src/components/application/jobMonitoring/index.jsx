@@ -31,6 +31,7 @@ function JobMonitoring() {
   const [selectedMonitoring, setSelectedMonitoring] = useState(null);
   const [notificationDetails, setNotificationDetails] = useState({});
   const [monitoringScope, setMonitoringScope] = useState(null);
+  const [selectedJob, setSelectedJob] = useState(null);
 
   //When component loads get all file monitoring
   useEffect(() => {
@@ -54,7 +55,7 @@ function JobMonitoring() {
     try {
       const payload = form.getFieldsValue();
       payload.app_id = applicationId;
-      await form.validateFields();
+      // await form.validateFields();
       await saveJobMonitoring(payload);
     } catch (err) {
       message.error('Failed to save, check each tab for validation error');
@@ -77,6 +78,10 @@ function JobMonitoring() {
         thresholdTime,
       } = formData;
 
+      console.log('------------------------------------------');
+      console.log(monitoringScope);
+      console.log('------------------------------------------');
+
       const notifications = [];
       if (notificationChannels?.includes('eMail')) {
         notifications.push({ channel: 'eMail', recipients: emails });
@@ -90,7 +95,7 @@ function JobMonitoring() {
         last_monitored: null,
         notifications,
         notificationConditions,
-        jobName,
+        jobName: monitoringScope === 'cluster' ? '*' : jobName,
         monitoringScope,
         costLimits: {
           maxExecutionCost: parseFloat(maxExecutionCost),
@@ -126,8 +131,8 @@ function JobMonitoring() {
         setJobMonitorings((prev) => [...prev, data]);
       }
 
-      // If any monitoring updated. update the monitoring list
-      // so changes are reflected without refreshing page
+      // If any monitoring updated. update the monitoring list -
+      // so changes are reflected without refreshing page or making another call to backend
       const updatedMonitoringList = [];
       if (selectedMonitoring) {
         jobMonitorings.forEach((monitoring) => {
@@ -180,7 +185,6 @@ function JobMonitoring() {
         setJobMonitorings(data);
       }
     } catch (err) {
-      console.log(err);
       message.error('Failed to fetch job monitoring');
     }
   };
@@ -269,6 +273,7 @@ function JobMonitoring() {
                 selectedCluster={selectedCluster}
                 monitoringScope={monitoringScope}
                 setMonitoringScope={setMonitoringScope}
+                setSelectedJob={setSelectedJob}
               />
             </TabPane>
 
@@ -284,6 +289,9 @@ function JobMonitoring() {
               <JobMonitoringNotificationTab
                 notificationDetails={notificationDetails}
                 setNotificationDetails={setNotificationDetails}
+                selectedJob={selectedJob}
+                setNotifyConditions={setNotifyConditions}
+                notifyConditions={notifyConditions}
               />
             </TabPane>
           </Tabs>

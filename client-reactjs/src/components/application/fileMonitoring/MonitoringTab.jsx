@@ -1,6 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { Form, Input, Typography, Select, Checkbox } from 'antd';
 import cronstrue from 'cronstrue';
+import InfoDrawer from '../../common/InfoDrawer';
+import { InfoCircleOutlined } from '@ant-design/icons';
 
 // Notify conditions / options
 const notificationConditionForLandingZoneFiles = [
@@ -32,6 +34,15 @@ function MonitoringTab({
   const [cornExpaliner, setCornExplainer] = useState(null);
   const [minExpectedFileSize, setMinExpectedFileSize] = useState(null);
   const [maxExpectedFileSize, setMaxExpectedFileSize] = useState(null);
+  const [open, setOpen] = useState(false);
+
+  const showDrawer = () => {
+    setOpen(true);
+  };
+
+  const onClose = () => {
+    setOpen(false);
+  };
 
   // Populate the monitoring details if viewing existing monitoring ---------------------------------
   useEffect(() => {
@@ -95,8 +106,15 @@ function MonitoringTab({
         label="Monitoring name"
         style={{ width: '50%' }}
         name="name"
+        validateTrigger={['onChange', 'onBlur']}
         rules={[
           { required: true, message: 'Required filed' },
+
+          {
+            max: 256,
+            message: 'Maximum of 256 characters allowed',
+          },
+
           {
             message: 'File Monitoring with same name already exists',
             validator: (_, value) => {
@@ -113,7 +131,15 @@ function MonitoringTab({
       </Form.Item>
 
       <Form.Item
-        label="Cron (How often to monitor)"
+        label={
+          <>
+            <p style={{ marginBottom: '0' }}>
+              Cron (How often to monitor)
+              <InfoCircleOutlined style={{ marginLeft: '.5rem' }} onClick={() => showDrawer()} />
+            </p>
+            <InfoDrawer open={open} onClose={onClose} width="700px" content="cron"></InfoDrawer>
+          </>
+        }
         style={{ width: '50%' }}
         onChange={(e) => setMonitoringDetails({ ...monitoringDetails, cron: e.target.value })}
         name="cron"

@@ -4,6 +4,7 @@ import { InfoCircleOutlined } from '@ant-design/icons';
 import { debounce } from 'lodash';
 
 import { authHeader, handleError } from '../../common/AuthHeader.js';
+import InfoDrawer from '../../common/InfoDrawer';
 
 const { Option } = Select;
 
@@ -18,9 +19,19 @@ function ClusterMonitoringBasicTab({
   selectedCluster,
   monitoringScope,
   setMonitoringScope,
+  setSelectedJob,
 }) {
   const [jobs, setJobs] = useState([]);
   const [fetchingJobs, setFetchingJobs] = useState(false);
+  const [open, setOpen] = useState(false);
+
+  const showDrawer = () => {
+    setOpen(true);
+  };
+
+  const onClose = () => {
+    setOpen(false);
+  };
 
   // Get jobs function
   const getJobs = debounce(async (value) => {
@@ -40,8 +51,15 @@ function ClusterMonitoringBasicTab({
 
       if (data) {
         const cleanedData = data.map((d) => {
-          return { label: d.text, value: d.text };
+          return {
+            label: d.text,
+            value: d.text,
+            executionCost: d.ExecuteCost,
+            fileAccessCost: d.FileAccessCost,
+            compileCost: d.CompileCost,
+          };
         });
+
         setJobs(cleanedData);
       }
     } catch (err) {
@@ -59,6 +77,12 @@ function ClusterMonitoringBasicTab({
   // When job name field is cleared
   const handleJobNameFiledClear = () => {
     setJobs([]);
+  };
+
+  //When job is selected
+  const onJobSelect = (jobName) => {
+    const selectedJobDetails = jobs.find((job) => job.value === jobName);
+    setSelectedJob(selectedJobDetails);
   };
 
   return (
@@ -99,8 +123,9 @@ function ClusterMonitoringBasicTab({
             <span>
               Job Name
               <span>
-                <InfoCircleOutlined style={{ marginLeft: '10px' }} />
+                <InfoCircleOutlined style={{ marginLeft: '.5rem' }} onClick={() => showDrawer()} />
               </span>
+              <InfoDrawer open={open} onClose={onClose} width="500px" content="wildcard"></InfoDrawer>
             </span>
           }
           name="jobName"
@@ -112,9 +137,11 @@ function ClusterMonitoringBasicTab({
           <AutoComplete
             options={jobs}
             placeholder="Supports wildcard"
+            validateTrigger={['onChange', 'onBlur']}
             allowClear
             onSearch={handleSearch}
             onClear={handleJobNameFiledClear}
+            onSelect={(jobName) => onJobSelect(jobName)}
             loading={fetchingJobs}></AutoComplete>
         </Form.Item>
       ) : null}
