@@ -51,6 +51,13 @@ const {jobMonitoringEmailBody,msTeamsCardBody} = require("./jobMonitoringNotific
     const remoteUtcTime = new Date(utcTime + timezone_offset * 60000);
     const timeStamp = remoteUtcTime.toISOString();
 
+    //Readable timestamp
+    const ts = new Date(timeStamp);
+    const readableTimestamp = ts.toLocaleString("en-US", {
+      dateStyle: "short",
+      timeStyle: "short",
+    });
+
     // Check if a notification condition is met
     const checkIfNotificationConditionMet = (notificationConditions, wu) => {
       const metConditions = {
@@ -191,12 +198,12 @@ const {jobMonitoringEmailBody,msTeamsCardBody} = require("./jobMonitoringNotific
     if (notificationDetails.eMail && notificationsToSend.length > 0) {
       try {
         const notification_id = uuidv4();
-        const emailBody = jobMonitoringEmailBody(
-          {notificationsToSend,
+        const emailBody = jobMonitoringEmailBody({
+          notificationsToSend,
           jobName,
           monitoringName,
-          timeStamp
-          });
+          timeStamp: readableTimestamp,
+        });
         const response = await notify({
           to: notificationDetails.eMail,
           from: process.env.EMAIL_SENDER,
@@ -229,7 +236,7 @@ const {jobMonitoringEmailBody,msTeamsCardBody} = require("./jobMonitoringNotific
         notificationsToSend,
         jobName,
         monitoringName,
-        timeStamp,
+        timeStamp: readableTimestamp,
       });
 
       for (let recipient of recipients) {
@@ -295,4 +302,3 @@ const {jobMonitoringEmailBody,msTeamsCardBody} = require("./jobMonitoringNotific
 
 
 // 5. way to check if cluster is K8 or not should be changed and teams notification
-// 6. clicking on bell icon should take to notification page with filtered notifications

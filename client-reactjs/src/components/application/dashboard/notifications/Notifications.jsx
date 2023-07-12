@@ -49,7 +49,7 @@ function Index() {
     setStackBarData(groupedData);
   }, [groupDataBy]);
 
-  // When component loads create filter tol load initial data
+  // When component loads create filter to load initial data
   useEffect(() => {
     if (applicationId) {
       filterAndFetchNotifications(defaultFilters);

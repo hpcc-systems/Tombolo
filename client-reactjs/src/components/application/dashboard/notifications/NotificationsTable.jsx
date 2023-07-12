@@ -27,7 +27,9 @@ function NotificationsTable({ applicationId, setSelectedNotificationForBulkActio
     {
       key: 'Monitoring Name',
       value: `${
-        selectedNotification?.['fileMonitoring.name'] || selectedNotification?.['clusterMonitoring.name'] || ''
+        selectedNotification?.['fileMonitoring.name'] ||
+        selectedNotification?.['clusterMonitoring.name'] ||
+        selectedNotification?.['jobMonitoring.name']
       }`,
     },
     { key: 'Notified at', value: formatDateTime(selectedNotification?.createdAt) },
@@ -96,7 +98,7 @@ function NotificationsTable({ applicationId, setSelectedNotificationForBulkActio
       if (!monitoringId) {
         setNotifications(data);
       } else {
-        const filtered = data.filter((item) => item.filemonitoring_id === monitoringId);
+        const filtered = data.filter((item) => item.monitoring_id === monitoringId);
         setNotifications(filtered);
       }
     } catch (error) {
@@ -139,7 +141,7 @@ function NotificationsTable({ applicationId, setSelectedNotificationForBulkActio
     {
       title: 'Monitoring name',
       render: (record) => {
-        return record['fileMonitoring.name'] || record['clusterMonitoring.name'] || '';
+        return record?.['fileMonitoring.name'] || record?.['clusterMonitoring.name'] || record?.['jobMonitoring.name'];
       },
     },
     {

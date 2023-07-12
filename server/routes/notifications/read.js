@@ -2,15 +2,17 @@ const express = require("express");
 const router = express.Router();
 const fsPromises = require("fs/promises");
 const path = require("path");
+const { Op } = require("sequelize");
+const moment = require("moment");
+const { body, validationResult } = require("express-validator");
+
+const logger = require("../../config/logger");
+const validatorUtil = require("../../utils/validator");
 const models = require("../../models");
 const monitoring_notifications = models.monitoring_notifications;
 const fileMonitoring = models.fileMonitoring;
 const clusterMonitoring = models.clusterMonitoring;
-const logger = require("../../config/logger");
-const { Op } = require("sequelize");
-const moment = require("moment");
-const validatorUtil = require("../../utils/validator");
-const { body, validationResult } = require("express-validator");
+const jobMonitoring = models.jobMonitoring;
 
 router.get("/filteredNotifications", async (req, res) => {
   try {
@@ -36,6 +38,20 @@ router.get("/filteredNotifications", async (req, res) => {
       where: query,
       order: [["createdAt", "DESC"]],
       raw: true,
+      include: [
+        {
+          model: jobMonitoring,
+          attributes: ["name"],
+        },
+        {
+          model: clusterMonitoring,
+          attributes: ["name"],
+        },
+        {
+          model: fileMonitoring,
+          attributes: ["name"],
+        }
+      ],
     });
 
     res.status(200).send(monitorings);
@@ -52,12 +68,16 @@ router.get("/:applicationId", async (req, res) => {
       where: { application_id },
       include: [
         {
-          model: fileMonitoring,
-          as: "fileMonitoring",
+          model: jobMonitoring,
+          attributes: ["name"],
         },
         {
           model: clusterMonitoring,
-          as: "clusterMonitoring",
+          attributes: ["name"],
+        },
+        {
+          model: fileMonitoring,
+          attributes: ["name"],
         },
       ],
       raw: true,

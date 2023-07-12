@@ -17,7 +17,7 @@ function jobMonitoringEmailBody({
   tableHTML += "<div>Job name: " + jobName + "</div>";
   tableHTML += "<div>Monitoring name: " + monitoringName + "</div>";
   tableHTML += "<div>Cluster: " + clusterName + "</div>";
-  tableHTML += "<div>Date/Time: " + timeStamp + "</div>";
+  tableHTML += "<div>Date: " + timeStamp + "</div>";
 
   tableHTML += "</td></tr>";
 
