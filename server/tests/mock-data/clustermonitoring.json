@@ -1,0 +1,43 @@
+{
+  "id": "625be1ec-6387-4802-93fc-0ae52f0ebde7",
+  "name": "test",
+  "cron": "* * * * *",
+  "isActive": 0,
+  "cluster_id": "3a14ed52-8931-433c-a376-6f366d30d2c0",
+  "application_id": "b8431e6e-2b5e-4889-9127-9bdaa0a09d74",
+  "metaData": {
+    "notifications": [
+      {
+        "channel": "msTeams",
+        "recipients": [
+          "https://reedelsevier.webhook.office.com/webhookb2/81c072d6-6b47-4eca-9434-73944c464876@9274ee3f-9425-4109-a27f-9fb15c10675d/IncomingWebhook/67ee6b449a614175ad3bd525a3efaafb/af40e12f-e839-4801-91e9-e61a20045feb"
+        ]
+      }
+    ],
+    "last_monitored": 1687449721640,
+    "notifyCondition": ["TargetClusterAlertSize"],
+    "monitoring_engines": ["thor", "hthor", "roxie"],
+    "monitoringConditions": {
+      "monitorEngineSize": [
+        {
+          "engine": "thor",
+          "maxSize": "12",
+          "notified": ["msTeams"],
+          "maxSizeExceeded": false
+        },
+        {
+          "engine": "hthor",
+          "maxSize": "13",
+          "notified": ["msTeams"],
+          "maxSizeExceeded": false
+        },
+        {
+          "engine": "roxie",
+          "maxSize": "8",
+          "notified": ["msTeams"],
+          "maxSizeExceeded": false
+        }
+      ]
+    }
+  }
+}

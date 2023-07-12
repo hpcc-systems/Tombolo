@@ -10,7 +10,7 @@ const logger = require("../../config/logger");
 const { Op } = require("sequelize");
 const moment = require("moment");
 const validatorUtil = require("../../utils/validator");
-const { body, validationResult } = require("express-validator");
+const { param, body, validationResult } = require("express-validator");
 
 router.get("/filteredNotifications", async (req, res) => {
   try {
@@ -44,136 +44,163 @@ router.get("/filteredNotifications", async (req, res) => {
   }
 });
 
-router.get("/:applicationId", async (req, res) => {
-  try {
-    const { applicationId: application_id } = req.params;
-    if (!application_id) throw Error("Invalid app ID");
-    const notifications = await monitoring_notifications.findAll({
-      where: { application_id },
-      include: [
-        {
-          model: fileMonitoring,
-          as: "fileMonitoring",
-        },
-        {
-          model: clusterMonitoring,
-          as: "clusterMonitoring",
-        },
-      ],
-      raw: true,
-    });
-    res.status(200).send(notifications);
-  } catch (error) {
-    logger.error(err);
-    res.status(500).json({ message: "Unable to get notifications" });
-  }
-});
-
-router.get("/:applicationId/file/:type", async (req, res) => {
-  try {
-    const { applicationId: application_id } = req.params;
-    if (!application_id) throw Error("Invalid app ID");
-    const notifications = await monitoring_notifications.findAll({
-      where: { application_id },
-      include: [
-        {
-          model: fileMonitoring,
-          as: "fileMonitoring",
-        },
-        {
-          model: clusterMonitoring,
-          as: "clusterMonitoring",
-        },
-      ],
-      raw: true,
-    });
-
-    const type = req.params.type;
-
-    let output;
-
-    if (type === "CSV") {
-      output = `id,monitoringId,Channel,Reason,Status,Created,Deleted`;
-      notifications.map((notification) => {
-        output +=
-          "\n" +
-          notification.id +
-          "," +
-          notification.monitoring_id +
-          "," +
-          notification.notification_channel +
-          "," +
-          notification.notification_reason +
-          "," +
-          notification.status +
-          "," +
-          notification.createdAt +
-          "," +
-          notification.deletedAt;
+router.get(
+  "/:applicationId",
+  [param("applicationId").isUUID(4).withMessage("Invalid application id")],
+  async (req, res) => {
+    const errors = validationResult(req).formatWith(
+      validatorUtil.errorFormatter
+    );
+    try {
+      if (!errors.isEmpty())
+        return res.status(422).json({ success: false, errors: errors.array() });
+      const { applicationId: application_id } = req.params;
+      if (!application_id) throw Error("Invalid app ID");
+      const notifications = await monitoring_notifications.findAll({
+        where: { application_id },
+        include: [
+          {
+            model: fileMonitoring,
+            as: "fileMonitoring",
+          },
+          {
+            model: clusterMonitoring,
+            as: "clusterMonitoring",
+          },
+        ],
+        raw: true,
       });
-    } else if (type === "JSON") {
-      output = [];
-      notifications.map((notification) => {
-        output.push({
-          ID: notification.id,
-          MonitoringID: notification.monitoring_id,
-          Channel: notification.notification_channel,
-          Reason: notification.notification_reason,
-          Status: notification.status,
-          Created: notification.createdAt,
-          Deleted: notification.deletedAt,
-        });
-      });
-
-      output = JSON.stringify(output);
+      res.status(200).send(notifications);
+    } catch (error) {
+      logger.error(err);
+      res.status(500).json({ message: "Unable to get notifications" });
     }
-    const filePath = path.join(
-      __dirname,
-      "..",
-      "..",
-      "tempFiles",
-      `Tombolo-Notifications.${type}`
-    );
-
-    const createPromise = fsPromises.writeFile(
-      filePath,
-      output,
-      function (err) {
-        if (err) {
-          return console.log(err);
-        }
-      }
-    );
-
-    await createPromise;
-
-    res.status(200).download(filePath);
-  } catch (error) {
-    res.status(500).json({ message: "Unable to get notifications" });
   }
-});
+);
+
+router.get(
+  "/:applicationId/file/:type",
+  [param("applicationId").isUUID(4).withMessage("Invalid application id")],
+  async (req, res) => {
+    const errors = validationResult(req).formatWith(
+      validatorUtil.errorFormatter
+    );
+    try {
+      if (!errors.isEmpty())
+        return res.status(422).json({ success: false, errors: errors.array() });
+      const { applicationId: application_id } = req.params;
+      if (!application_id) throw Error("Invalid app ID");
+      const notifications = await monitoring_notifications.findAll({
+        where: { application_id },
+        include: [
+          {
+            model: fileMonitoring,
+            as: "fileMonitoring",
+          },
+          {
+            model: clusterMonitoring,
+            as: "clusterMonitoring",
+          },
+        ],
+        raw: true,
+      });
+
+      const type = req.params.type;
+
+      let output;
+
+      if (type === "CSV") {
+        output = `id,monitoringId,Channel,Reason,Status,Created,Deleted`;
+        notifications.map((notification) => {
+          output +=
+            "\n" +
+            notification.id +
+            "," +
+            notification.monitoring_id +
+            "," +
+            notification.notification_channel +
+            "," +
+            notification.notification_reason +
+            "," +
+            notification.status +
+            "," +
+            notification.createdAt +
+            "," +
+            notification.deletedAt;
+        });
+      } else if (type === "JSON") {
+        output = [];
+        notifications.map((notification) => {
+          output.push({
+            ID: notification.id,
+            MonitoringID: notification.monitoring_id,
+            Channel: notification.notification_channel,
+            Reason: notification.notification_reason,
+            Status: notification.status,
+            Created: notification.createdAt,
+            Deleted: notification.deletedAt,
+          });
+        });
+
+        output = JSON.stringify(output);
+      }
+      const filePath = path.join(
+        __dirname,
+        "..",
+        "..",
+        "tempFiles",
+        `Tombolo-Notifications.${type}`
+      );
+
+      const createPromise = fsPromises.writeFile(
+        filePath,
+        output,
+        function (err) {
+          if (err) {
+            return console.log(err);
+          }
+        }
+      );
+
+      await createPromise;
+
+      res.status(200).download(filePath);
+    } catch (error) {
+      res.status(500).json({ message: "Unable to get notifications" });
+    }
+  }
+);
 
 //method for removing file after download on front-end
-router.delete("/:applicationId/file/:type", async (req, res) => {
-  try {
-    const type = req.params.type;
-    const filePath = path.join(
-      __dirname,
-      "..",
-      "..",
-      "tempFiles",
-      `Tombolo-Notifications.${type}`
+router.delete(
+  "/:applicationId/file/:type",
+  [param("applicationId").isUUID(4).withMessage("Invalid application id")],
+  async (req, res) => {
+    const errors = validationResult(req).formatWith(
+      validatorUtil.errorFormatter
     );
+    try {
+      if (!errors.isEmpty())
+        return res.status(422).json({ success: false, errors: errors.array() });
+      const type = req.params.type;
+      const filePath = path.join(
+        __dirname,
+        "..",
+        "..",
+        "tempFiles",
+        `Tombolo-Notifications.${type}`
+      );
 
-    const createPromise = fsPromises.unlink(filePath);
+      const createPromise = fsPromises.unlink(filePath);
 
-    await createPromise;
+      await createPromise;
 
-    res.status(200).json({ message: "File Deleted" });
-  } catch (error) {
-    res.status(500).json({ message: "Failed to delete file" });
+      res.status(200).json({ message: "File Deleted" });
+    } catch (error) {
+      res.status(500).json({ message: "Failed to delete file" });
+    }
   }
-});
+);
 
 //Delete notification
 router.delete(
@@ -182,10 +209,10 @@ router.delete(
     body("id")
       .optional({ checkFalsy: false })
       .isUUID(4)
-      .withMessage("Invalid notification ids")
+      .withMessage("Invalid notification ids"),
   ],
   async (req, res) => {
-    //Validate 
+    //Validate
     const errors = validationResult(req).formatWith(
       validatorUtil.errorFormatter
     );
@@ -210,7 +237,7 @@ router.put(
     body("id")
       .optional({ checkFalsy: false })
       .isUUID(4)
-      .withMessage("Invalid notification ids")
+      .withMessage("Invalid notification ids"),
   ],
   async (req, res) => {
     // validate
@@ -224,20 +251,20 @@ router.put(
     try {
       const { notifications, status, comment } = req.body;
 
-      if(status){
-          await monitoring_notifications.update(
-            { status },
-            { where: { id: notifications } }
-          );
+      if (status) {
+        await monitoring_notifications.update(
+          { status },
+          { where: { id: notifications } }
+        );
       }
 
-      if(comment || comment === ''){
-         await monitoring_notifications.update(
-           { comment },
-           { where: { id: notifications } }
-         );
+      if (comment || comment === "") {
+        await monitoring_notifications.update(
+          { comment },
+          { where: { id: notifications } }
+        );
       }
-    
+
       res.status(200).send({ success: true, message: "Update successful" });
     } catch (err) {
       logger.error(err.message);

@@ -74,9 +74,11 @@ router.get(
   async (req, res) => {
     try {
       const { application_id } = req.params;
+
       const errors = validationResult(req).formatWith(
         validatorUtil.errorFormatter
       );
+
       if (!errors.isEmpty())
         return res.status(422).json({ success: false, errors: errors.array() });
 

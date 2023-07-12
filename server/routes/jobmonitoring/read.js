@@ -38,14 +38,12 @@ router.post(
         validatorUtil.errorFormatter
       );
 
-      if (!errors.isEmpty()) {
-        logger.verbose(errors);
+      if (!errors.isEmpty())
         return res.status(422).json({ success: false, errors: errors.array() });
-      }
 
       //create
       const jobMonitoring = await JobMonitoring.create(req.body);
-      res.status(200).send(jobMonitoring);
+      res.status(201).send(jobMonitoring);
 
       //Add job to bree- if start monitoring checked
       if (req.body.isActive) {
@@ -89,7 +87,9 @@ router.get(
       res.status(200).send(jobMonitorings);
     } catch (err) {
       logger.error(err);
-      res.status(503).send({ success: false, message: "Failed to fetch job monitorings" });
+      res
+        .status(503)
+        .send({ success: false, message: "Failed to fetch job monitorings" });
     }
   }
 );
@@ -117,7 +117,9 @@ router.get(
       res.status(200).send(jobMonitoring);
     } catch (err) {
       logger.error(err);
-      res.status(503).send({ success: false, message: "Failed to fetch job monitoring" });
+      res
+        .status(503)
+        .send({ success: false, message: "Failed to fetch job monitoring" });
     }
   }
 );
@@ -145,7 +147,9 @@ router.delete(
       res.status(200).send({ deleted });
     } catch (err) {
       logger.error(err);
-      res.status(503).json({ success: false, message: "Failed to delete job monitoring" });
+      res
+        .status(503)
+        .json({ success: false, message: "Failed to delete job monitoring" });
     }
   }
 );
