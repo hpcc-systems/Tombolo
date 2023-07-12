@@ -48,6 +48,7 @@ const keyCheck = async (key, sentNotifications) => {
     name,
     expirationDate,
     application_id,
+    expired,
     metaData: { Usage, UsageLimit, emails },
   } = key;
 
@@ -60,7 +61,7 @@ const keyCheck = async (key, sentNotifications) => {
   let timeLeft = (expirationDate - currentDate) / 1000;
 
   //key expired
-  if (timeLeft < 0) {
+  if (timeLeft < 0 && !expired) {
     metaDifference.push({
       attribute: "Key Expired",
       oldValue: "Current Date: " + new Date().getTime().toLocaleString(),
@@ -68,11 +69,19 @@ const keyCheck = async (key, sentNotifications) => {
     });
 
     //update key to expired status
-    await api_key.update({
-      expired: true,
-      where: { name },
-    });
+    await api_key.update(
+      {
+        expired: true,
+      },
+      { where: { name: name } }
+    );
   }
+
+  //only hold on to expired keys for 180 days
+  if (timeLeft < -31536000) {
+    await api_key.destroy({ where: { name: name } });
+  }
+
   //key has less than 1 day of duration left
   if (timeLeft < 86400) {
     metaDifference.push({
@@ -101,7 +110,7 @@ const keyCheck = async (key, sentNotifications) => {
   const notification_id = uuidv4();
 
   // E-mail notification
-  if (emails.length && notificationDetails.text) {
+  if (emails && emails.length && notificationDetails.text) {
     try {
       const body = emailBody(notificationDetails, metaDifference);
 

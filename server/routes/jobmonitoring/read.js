@@ -28,7 +28,7 @@ router.post(
         return Promise.resolve("Good to go");
       }
     }),
-    body("isActive").isBoolean().withMessage("Invalid is active flag"),
+    // body("isActive").isBoolean().withMessage("Invalid is active flag"),
     body("metaData").isObject().withMessage("Invalid job monitoring meta data"),
   ],
   async (req, res) => {
@@ -216,7 +216,7 @@ router.put(
         return Promise.resolve("Good to go");
       }
     }),
-    body("isActive").isBoolean().withMessage("Invalid is active flag"),
+    // body("isActive").isBoolean().withMessage("Invalid is active flag"),
     body("metaData").isObject().withMessage("Invalid job monitoring meta data"),
   ],
   async (req, res) => {

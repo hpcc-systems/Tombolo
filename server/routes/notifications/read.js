@@ -10,7 +10,7 @@ const logger = require("../../config/logger");
 const { Op } = require("sequelize");
 const moment = require("moment");
 const validatorUtil = require("../../utils/validator");
-const { param, validationResult } = require("express-validator");
+const { param, body, validationResult } = require("express-validator");
 
 router.get("/filteredNotifications", async (req, res) => {
   try {
@@ -198,6 +198,79 @@ router.delete(
       res.status(200).json({ message: "File Deleted" });
     } catch (error) {
       res.status(500).json({ message: "Failed to delete file" });
+    }
+  }
+);
+
+//Delete notification
+router.delete(
+  "/",
+  [
+    body("id")
+      .optional({ checkFalsy: false })
+      .isUUID(4)
+      .withMessage("Invalid notification ids"),
+  ],
+  async (req, res) => {
+    //Validate
+    const errors = validationResult(req).formatWith(
+      validatorUtil.errorFormatter
+    );
+    if (!errors.isEmpty()) {
+      return res.status(422).json({ success: false, errors: errors.array() });
+    }
+
+    try {
+      const { notifications } = req.body;
+      await monitoring_notifications.destroy({ where: { id: notifications } });
+      res.status(200).send({ success: true, message: "Deletion successful" });
+    } catch (err) {
+      logger.error(err.message);
+      res.status(503).send({ success: false, message: "Failed to delete" });
+    }
+  }
+);
+
+router.put(
+  "/",
+  [
+    body("id")
+      .optional({ checkFalsy: false })
+      .isUUID(4)
+      .withMessage("Invalid notification ids"),
+  ],
+  async (req, res) => {
+    // validate
+    const errors = validationResult(req).formatWith(
+      validatorUtil.errorFormatter
+    );
+    if (!errors.isEmpty()) {
+      return res.status(422).json({ success: false, errors: errors.array() });
+    }
+
+    try {
+      const { notifications, status, comment } = req.body;
+
+      if (status) {
+        await monitoring_notifications.update(
+          { status },
+          { where: { id: notifications } }
+        );
+      }
+
+      if (comment || comment === "") {
+        await monitoring_notifications.update(
+          { comment },
+          { where: { id: notifications } }
+        );
+      }
+
+      res.status(200).send({ success: true, message: "Update successful" });
+    } catch (err) {
+      logger.error(err.message);
+      res
+        .status(503)
+        .send({ success: false, message: "Failed to update status" });
     }
   }
 );

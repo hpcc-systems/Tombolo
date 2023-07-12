@@ -38,6 +38,7 @@ const convertToISODateString = require("../utils/stringToIsoDateString");
       monitoringScope,
       jobName,
       lastMonitoredDetails,
+      costLimits,
     } = metaData;
 
     // channel and recipients {eMail: ['abc@d.com']}
@@ -68,8 +69,8 @@ const convertToISODateString = require("../utils/stringToIsoDateString");
 
       wuDetails = ECLWorkunit[0]; // Consider only the latest work unit. There could be multiple WU for same job
 
-      if(!wuDetails) return;
-      
+      if (!wuDetails) return;
+
       const wuDetailsCleaned = {
         Wuid: wuDetails.Wuid,
         Owner: wuDetails.Owner,
@@ -83,6 +84,60 @@ const convertToISODateString = require("../utils/stringToIsoDateString");
         notificationToSend.title = `${jobName} is in ${wuDetails.State} state`;
         notificationToSend.facts = wuDetailsCleaned;
       }
+
+      const costRelatedNotification = {};
+
+      //cost related  ------------------------------------------------
+      if (
+        notificationConditions.includes("maxExecutionCost") &&
+        wuDetails.ExecuteCost > costLimits.maxExecutionCost
+      ) {
+        costRelatedNotification["Actual execution cost"] =
+          Math.round(wuDetails.ExecuteCost * 100) /100;
+        costRelatedNotification["Execution cost threshold"] =
+          costLimits.maxExecutionCost;
+      }
+
+      if (
+        notificationConditions.includes("maxFileAccessCost") &&
+        wuDetails.FileAccessCost > costLimits.maxFileAccessCost
+      ) {
+        costRelatedNotification["Actual file access cost"] =
+           Math.round(wuDetails.FileAccessCost*100)/100;
+        costRelatedNotification["File access cost threshold"] =
+          costLimits.maxFileAccessCost;
+      }
+
+      if (
+        notificationConditions.includes("maxCompileCost") &&
+        wuDetails.CompileCost > costLimits.maxCompileCost
+      ) {
+        costRelatedNotification["Actual compile cost"] =  Math.round(wuDetails.CompileCost * 100)/100;
+        costRelatedNotification["Compile cost threshold"] =
+          costLimits.maxCompileCost;
+      }
+
+      if (
+        notificationConditions.includes("maxTotalCost") &&
+        wuDetails.CompileCost +
+          wuDetails.ExecuteCost +
+          wuDetails.FileAccessCost >
+          costLimits.maxTotalCost
+      ) {
+        costRelatedNotification["Actual total cost"] =
+          Math.round((wuDetails.CompileCost +
+          wuDetails.ExecuteCost +
+          wuDetails.FileAccessCost)*100)/100;
+        costRelatedNotification["Total cost threshold"] = costLimits.maxTotalCost;
+      }
+
+      if(Object.keys(costRelatedNotification).length > 0 ){
+               notificationToSend.title =
+                 "Work unit cost exceeded the established limit";
+               notificationToSend.facts = costRelatedNotification;
+      }
+
+      //---------------------------------------------------------------
     }
 
     // ------------- Monitor whole cluster ---------------------------------------------------------

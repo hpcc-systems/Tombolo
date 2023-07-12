@@ -141,11 +141,12 @@ router.get(
 
         Object.keys(storageUsageHistory).forEach((type) => {
           storageUsageHistory[type].map((data) => {
+            let d = new Date(data.date);
             output +=
               "\n" +
               type.toString() +
               "," +
-              data.date.toString() +
+              d.toString() +
               "," +
               data.maxUsage.toString() +
               "," +
@@ -155,6 +156,12 @@ router.get(
       }
 
       if (type === "JSON") {
+        Object.keys(storageUsageHistory).forEach((type) => {
+          storageUsageHistory[type].map((data) => {
+            let d = new Date(data.date);
+            data.date = d;
+          });
+        });
         output = [storageUsageHistory];
         output = JSON.stringify(output);
       }

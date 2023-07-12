@@ -1,20 +1,85 @@
+/* eslint-disable unused-imports/no-unused-vars */
 import React, { useEffect, useState } from 'react';
-import { message, Table } from 'antd';
+import { message, Table, Modal, Button, Descriptions } from 'antd';
 import { useLocation } from 'react-router-dom';
 
 import { authHeader, handleError } from '../../../common/AuthHeader.js';
-import { Constants } from '../../../common/Constants';
+import { camelToTitleCase, formatDateTime } from '../../../common/CommonUtil.js';
 
-function NotificationsTable({ applicationId }) {
+function NotificationsTable({ applicationId, setSelectedNotificationForBulkAction, updatedNotificationInDb }) {
   const [notifications, setNotifications] = useState([]);
-  const [filters, setFilters] = useState([]);
+  const [viewNotificationDetails, setViewNotificationDetails] = useState(false);
+  const [selectedNotification, setSelectedNotification] = useState(null);
+  const [filters, setFilters] = useState({
+    statusFilters: [],
+    monitoringTypeFilters: [],
+    notificationReasonFilters: [],
+    notificationChannelFilters: [],
+  });
   const location = useLocation();
+
+  // Selected notification - complete details
+  const selectedNotificationDetails = [
+    {
+      key: 'Monitoring Type',
+      value: camelToTitleCase(selectedNotification?.monitoring_type),
+    },
+    {
+      key: 'Monitoring Name',
+      value: `${
+        selectedNotification?.['fileMonitoring.name'] || selectedNotification?.['clusterMonitoring.name'] || ''
+      }`,
+    },
+    { key: 'Notified at', value: formatDateTime(selectedNotification?.createdAt) },
+    { key: 'Updated at', value: formatDateTime(selectedNotification?.updatedAt) },
+    { key: 'Notification reason', value: selectedNotification?.notification_reason },
+    { key: 'Status', value: camelToTitleCase(selectedNotification?.status) },
+    {
+      key: 'Comment',
+      value: selectedNotification?.comment,
+    },
+  ];
+
+  // Update filters when notifications change
+  useEffect(() => {
+    if (notifications.length > 0) {
+      const uniqueStatuses = new Set(notifications.map((notification) => notification.status));
+      const newStatusFilters = Array.from(uniqueStatuses).map((status) => ({
+        text: camelToTitleCase(status),
+        value: status,
+      }));
+      setFilters((prev) => ({ ...prev, statusFilters: newStatusFilters }));
+
+      const uniqueMonitoringTypes = new Set(notifications.map((notification) => notification.monitoring_type));
+      const newMonitoringTypeFilters = Array.from(uniqueMonitoringTypes).map((type) => ({
+        text: camelToTitleCase(type),
+        value: type,
+      }));
+      setFilters((prev) => ({ ...prev, monitoringTypeFilters: newMonitoringTypeFilters }));
+
+      const uniqueNotificationReasons = new Set(notifications.map((notification) => notification.notification_reason));
+      const newNotificationReasonFilters = Array.from(uniqueNotificationReasons).map((reason) => ({
+        text: camelToTitleCase(reason),
+        value: reason,
+      }));
+      setFilters((prev) => ({ ...prev, notificationReasonFilters: newNotificationReasonFilters }));
+
+      const uniqueNotificationChannels = new Set(
+        notifications.map((notification) => notification.notification_channel)
+      );
+      const newNotificationChannelFilters = Array.from(uniqueNotificationChannels).map((channel) => ({
+        text: camelToTitleCase(channel),
+        value: channel,
+      }));
+      setFilters((prev) => ({ ...prev, notificationChannelFilters: newNotificationChannelFilters }));
+    }
+  }, [notifications]);
 
   //When the component loads - get all notifications
   useEffect(() => {
     const monitoringId = new URLSearchParams(location.search).get('monitoringId');
     getNotifications(monitoringId);
-  }, [applicationId, location]);
+  }, [applicationId, location, updatedNotificationInDb]);
 
   //Get list of all file monitoring
   const getNotifications = async (monitoringId) => {
@@ -34,18 +99,6 @@ function NotificationsTable({ applicationId }) {
         const filtered = data.filter((item) => item.filemonitoring_id === monitoringId);
         setNotifications(filtered);
       }
-
-      //Set filters Filters
-      const tempArr = [];
-      data.map((notification) => {
-        if (notification['fileMonitoring.name']) {
-          const includesObj = tempArr.find((item) => item.text === notification['fileMonitoring.name']);
-          if (!includesObj) {
-            tempArr.push({ text: notification['fileMonitoring.name'], value: notification['fileMonitoring.name'] });
-          }
-        }
-      });
-      setFilters(tempArr);
     } catch (error) {
       message.error('Failed to fetch notifications');
     }
@@ -62,21 +115,21 @@ function NotificationsTable({ applicationId }) {
     {
       title: 'Notified at',
       render: (record) => {
-        let createdAt = new Date(record.createdAt);
-        return (
-          createdAt.toLocaleDateString('en-US', Constants.DATE_FORMAT_OPTIONS) +
-          ' @ ' +
-          createdAt.toLocaleTimeString('en-US')
-        );
+        return formatDateTime(record.createdAt);
       },
+      sorter: (a, b) => new Date(a.createdAt) - new Date(b.createdAt),
     },
     {
       title: 'Monitoring Type',
-      dataIndex: 'monitoring_type',
+      render: (record) => {
+        return camelToTitleCase(record.monitoring_type);
+      },
+      sorter: (a, b) => a.monitoring_type.localeCompare(b.monitoring_type),
+      filters: filters.monitoringTypeFilters,
+      onFilter: (value, record) => record.monitoring_type === value,
     },
     {
       title: 'Monitoring name',
-      filters: filters,
       render: (record) => {
         return record['fileMonitoring.name'] || record['clusterMonitoring.name'] || '';
       },
@@ -84,61 +137,107 @@ function NotificationsTable({ applicationId }) {
     {
       title: 'Notification reason',
       render: (record) => {
-        let value = record?.notification_reason?.split('');
-        if (value) {
-          const firstLetter = value[0].toUpperCase();
-          value[0] = firstLetter;
-          return value.join('');
-        }
+        return camelToTitleCase(record.notification_reason);
       },
+      sorter: (a, b) => a.notification_reason.localeCompare(b.notification_reason),
+      filters: filters.notificationReasonFilters,
+      onFilter: (value, record) => record.notification_reason === value,
     },
     {
       title: 'Notification channel',
       render: (record) => {
-        const notificationChannel = record.notification_channel;
-        return notificationChannel === 'eMail' ? 'E-mail' : 'MS-Teams';
+        return camelToTitleCase(record.notification_channel);
       },
+      filters: filters.notificationChannelFilters,
+      onFilter: (value, record) => record.notification_channel === value,
     },
     {
       title: 'status',
       render: (record) => {
-        let value = record?.status?.split('');
-        if (value) {
-          const firstLetter = value[0].toUpperCase();
-          value[0] = firstLetter;
-          return value.join('');
-        }
+        return camelToTitleCase(record.status);
       },
+      filters: filters.statusFilters,
+      onFilter: (value, record) => record.status === value,
     },
     {
       title: 'Updated on',
       render: (record) => {
-        let createdAt = new Date(record.updatedAt);
-        return (
-          createdAt.toLocaleDateString('en-US', Constants.DATE_FORMAT_OPTIONS) +
-          ' @ ' +
-          createdAt.toLocaleTimeString('en-US')
-        );
+        return formatDateTime(record.updatedAt);
       },
+      sorter: (a, b) => new Date(a.updatedAt) - new Date(b.updatedAt),
+      defaultSortOrder: 'descend',
     },
     {
       title: 'comment',
       dataIndex: 'comment',
       width: '20%',
+      render: (text) => {
+        const comment = text ? text : '';
+        return (
+          <span>
+            {comment.slice(0, 65)}
+            {comment.length > 65 ? (
+              <span style={{ fontSize: '14px', fontWeight: 700, marginLeft: 'px' }}>...</span>
+            ) : (
+              ''
+            )}
+            {/* {`${comment.slice(0, 80)}${comment.length > 80 ? ' ...' : ''}`} */}
+          </span>
+        );
+      },
+      onClick: () => alert('Howdy'),
     },
   ];
 
+  // Row selection
+  const rowSelection = {
+    onChange: (_selectedRowKeys, selectedRows) => {
+      setSelectedNotificationForBulkAction(selectedRows);
+    },
+  };
+
   //JSX
   return (
-    <Table
-      align="right"
-      pagination={{ pageSize: 14 }}
-      size="small"
-      columns={columns}
-      dataSource={notifications}
-      rowKey={(record) => record.id}
-      verticalAlign="top"
-    />
+    <>
+      <Table
+        align="right"
+        pagination={{ pageSize: 14 }}
+        size="small"
+        columns={columns}
+        dataSource={notifications}
+        rowKey={(record) => record.id}
+        verticalAlign="top"
+        rowSelection={rowSelection}
+        onRow={(record) => {
+          return {
+            onClick: () => {
+              console.log(record);
+              setSelectedNotification(record);
+              setViewNotificationDetails(true);
+            },
+          };
+        }}
+      />
+      <Modal
+        title={selectedNotification?.['fileMonitoring.name'] || selectedNotification?.['clusterMonitoring.name'] || ''}
+        width={850}
+        visible={viewNotificationDetails}
+        onCancel={() => setViewNotificationDetails(false)}
+        maskClosable={false}
+        footer={
+          <Button type="primary" onClick={() => setViewNotificationDetails(false)}>
+            Close
+          </Button>
+        }>
+        <Descriptions bordered column={1} size="small">
+          {selectedNotificationDetails.map((item) => (
+            <Descriptions.Item label={item.key} key={item.key}>
+              {item.value}
+            </Descriptions.Item>
+          ))}
+        </Descriptions>
+      </Modal>
+    </>
   );
 }
 

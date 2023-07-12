@@ -58,6 +58,10 @@ function ClusterMonitoringNotificationTab({ notificationDetails, setNotification
                           type: 'email',
                           message: 'Invalid e-mail address.',
                         },
+                        {
+                          max: 256,
+                          message: 'E-mail address too log',
+                        },
                       ]}
                       noStyle>
                       <Input placeholder="E-mail" />
@@ -102,6 +106,10 @@ function ClusterMonitoringNotificationTab({ notificationDetails, setNotification
                           required: true,
                           whitespace: true,
                           message: 'Invalid Teams webhook URL',
+                        },
+                        {
+                          max: 1000,
+                          message: 'Team webhook URL too long, must be less than 1001 chars',
                         },
                       ]}
                       noStyle>

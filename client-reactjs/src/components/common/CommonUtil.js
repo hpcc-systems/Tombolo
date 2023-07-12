@@ -1,3 +1,4 @@
+const { Constants } = require('./Constants');
 let omitDeep = (value, key) => {
   if (Array.isArray(value)) {
     return value.map((i) => omitDeep(i, key));
@@ -79,6 +80,30 @@ export const saveWorkingCopyGraph = (dataflowId, graph) => {
   localStorage.setItem('tombolo_graph', JSON.stringify(LSgraphs));
 };
 
+// Converts strings like this - 'camelCase' to - 'Camel Case'
+const camelToTitleCase = (string) => {
+  if (string) {
+    let words = string.split(/(?=[A-Z])/);
+    words = words.map((word) => {
+      return word.charAt(0).toUpperCase() + word.slice(1);
+    });
+    return words.join(' ');
+  } else {
+    return '';
+  }
+};
+
+// Format date and time to readable format such as this - April 1, 2023 @ 3:04 PM
+const formatDateTime = (timestamp) => {
+  let dateTime = new Date(timestamp);
+
+  return (
+    dateTime.toLocaleDateString('en-US', Constants.DATE_FORMAT_OPTIONS) +
+    ' @ ' +
+    dateTime.toLocaleTimeString('en-US', Constants.TIME_FORMAT_OPTIONS)
+  );
+};
+
 export {
   omitDeep,
   eclTypes,
@@ -89,4 +114,6 @@ export {
   multiLineFormItemLayout,
   validationRules,
   validationRuleFixes,
+  camelToTitleCase,
+  formatDateTime,
 };

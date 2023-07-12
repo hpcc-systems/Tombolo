@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Modal, message, Button, Input } from 'antd';
+import { Modal, message, Tabs, Button, Input } from 'antd';
 import InfoDrawer from '../../../common/InfoDrawer.jsx';
 import useWindowSize from '../../../../hooks/useWindowSize';
 import { authHeader, handleError } from '../../../common/AuthHeader.js';
@@ -15,6 +15,8 @@ const DashboardModal = ({ modalVisible, setModalVisible, applicationId, authRedu
 
   const [keys, setKeys] = useState(null);
   const [open, setOpen] = useState(false);
+
+  const { TabPane } = Tabs;
 
   const showDrawer = () => {
     setOpen(true);
@@ -129,13 +131,28 @@ const DashboardModal = ({ modalVisible, setModalVisible, applicationId, authRedu
         }
         footer={false}
         style={{ marginTop: '200px' }}>
-        <div style={{ marginBottom: '1rem' }}>
-          <DashboardApiTable
-            applicationId={applicationId}
-            keys={keys}
-            getKeys={getKeys}
-            showDrawer={showDrawer}></DashboardApiTable>
-        </div>
+        <Tabs>
+          <TabPane tab="Active Keys" key="1">
+            <div style={{ marginBottom: '1rem' }}>
+              <DashboardApiTable
+                applicationId={applicationId}
+                keys={keys}
+                active={1}
+                getKeys={getKeys}
+                showDrawer={showDrawer}></DashboardApiTable>
+            </div>
+          </TabPane>
+          <TabPane tab="Expired Keys" key="2">
+            <div style={{ marginBottom: '1rem' }}>
+              <DashboardApiTable
+                applicationId={applicationId}
+                active={0}
+                keys={keys}
+                getKeys={getKeys}
+                showDrawer={showDrawer}></DashboardApiTable>
+            </div>
+          </TabPane>
+        </Tabs>
 
         {!keyFormVisible && !key ? (
           <Button type="primary" onClick={() => setKeyFormVisible(true)}>

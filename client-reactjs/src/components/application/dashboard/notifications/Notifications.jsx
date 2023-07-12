@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { Tabs, Empty, Spin } from 'antd';
+import { Tabs, Empty, Spin, Button, Space } from 'antd';
 import { useSelector } from 'react-redux';
 import { message } from 'antd';
 import moment from 'moment';
@@ -10,7 +10,9 @@ import Filters from './charts/Filters';
 import MetricBoxes from './charts/MetricBoxes';
 import './index.css';
 import { authHeader, handleError } from '../../../common/AuthHeader.js';
+import { camelToTitleCase } from '../../../common/CommonUtil';
 import ExportMenu from '../ExportMenu/ExportMenu';
+import BulkActions from './BulkActions';
 
 function Index() {
   const [notifications, setNotifications] = useState([]);
@@ -19,10 +21,21 @@ function Index() {
   const [stackBarData, setStackBarData] = useState([]);
   const [donutData, setDonutData] = useState([]);
   const [groupDataBy, setGroupDataBy] = useState('day');
+  const [selectedNotificationsForBulkAction, setSelectedNotificationForBulkAction] = useState([]);
+  const [bulkActionModalVisible, setBulkActionModalVisibility] = useState(false);
+  const [updatedNotificationInDb, setUpdatedNotificationInDb] = useState(null);
 
   const {
     application: { applicationId },
   } = useSelector((item) => item.applicationReducer);
+
+  // Default filters to fetch notifications
+  const [defaultFilters, setDefaultFilters] = useState({
+    monitoringType: ['jobMonitoring', 'file', 'cluster', 'superFile'],
+    monitoringStatus: ['notified', 'triage', 'completed', 'inProgress'],
+    dateRange: [moment().subtract(15, 'days'), moment()],
+    applicationId,
+  });
 
   useEffect(() => {
     const groupedData = notifications.map((notification) => {
@@ -36,16 +49,12 @@ function Index() {
     setStackBarData(groupedData);
   }, [groupDataBy]);
 
-  // When component loads create filter tol oad initial data
+  // When component loads create filter tol load initial data
   useEffect(() => {
-    const filters = {
-      monitoringType: ['jobMonitoring', 'file', 'cluster', 'superFile'],
-      monitoringStatus: ['notified', 'triage', 'completed', 'inProgress'],
-      dateRange: [moment().subtract(15, 'days'), moment()],
-      applicationId,
-    };
-    filterAndFetchNotifications(filters);
-  }, []);
+    if (applicationId) {
+      filterAndFetchNotifications(defaultFilters);
+    }
+  }, [applicationId]);
 
   // When notification changes run
   useEffect(() => {
@@ -114,9 +123,13 @@ function Index() {
         }
 
         if (groupDataBy == 'day') {
-          newStackBarData.push({ x: notification.createdAt.split('T')[0], y: 1, z: notification.status });
+          newStackBarData.push({
+            x: notification.createdAt.split('T')[0],
+            y: 1,
+            z: camelToTitleCase(notification.status),
+          });
         } else {
-          newStackBarData.push({ x: notification.createdAt, y: 1, z: notification.status });
+          newStackBarData.push({ x: notification.createdAt, y: 1, z: camelToTitleCase(notification?.status) });
         }
 
         // notificationCountByMonitoringType;
@@ -130,11 +143,11 @@ function Index() {
 
       //---------------------------------------
       for (let key in notificationCountByStatus) {
-        newMetrics.push({ title: key, description: notificationCountByStatus[key] });
+        newMetrics.push({ title: camelToTitleCase(key), description: notificationCountByStatus[key] });
       }
       //---------------------------------------
       for (let key in notificationCountByMonitoringType) {
-        newDonutData.push({ type: key, value: notificationCountByMonitoringType[key] });
+        newDonutData.push({ type: camelToTitleCase(key), value: notificationCountByMonitoringType?.[key] });
       }
       //---------------------------------------
 
@@ -167,7 +180,21 @@ function Index() {
 
   return (
     <div>
-      <Tabs tabBarExtraContent={<ExportMenu />}>
+      <Tabs
+        tabBarExtraContent={
+          <Space>
+            <Button
+              type="primary"
+              ghost
+              disabled={selectedNotificationsForBulkAction.length > 0 ? false : true}
+              onClick={() => {
+                setBulkActionModalVisibility(true);
+              }}>
+              Actions
+            </Button>
+            <ExportMenu />
+          </Space>
+        }>
         <Tabs.TabPane key="1" tab="Dashboard">
           <Filters
             applicationId={applicationId}
@@ -175,6 +202,7 @@ function Index() {
             setLoadingData={setLoadingData}
             groupDataBy={groupDataBy}
             setGroupDataBy={setGroupDataBy}
+            setDefaultFilters={setDefaultFilters}
           />
 
           {notifications.length > 0 ? (
@@ -198,7 +226,18 @@ function Index() {
         </Tabs.TabPane>
 
         <Tabs.TabPane key="2" tab="Notifications">
-          <NotificationsTable applicationId={applicationId} />
+          <NotificationsTable
+            applicationId={applicationId}
+            setSelectedNotificationForBulkAction={setSelectedNotificationForBulkAction}
+            updatedNotificationInDb={updatedNotificationInDb}
+          />
+          {bulkActionModalVisible ? (
+            <BulkActions
+              setBulkActionModalVisibility={setBulkActionModalVisibility}
+              selectedNotificationsForBulkAction={selectedNotificationsForBulkAction}
+              setUpdatedNotificationInDb={setUpdatedNotificationInDb}
+            />
+          ) : null}
         </Tabs.TabPane>
       </Tabs>
     </div>

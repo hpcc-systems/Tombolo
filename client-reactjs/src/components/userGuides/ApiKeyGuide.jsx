@@ -115,12 +115,20 @@ const ApiKeyGuide = () => {
       <h3>
         <span>Expiration Date</span>
       </h3>
-      <p>
-        To protect the integerity and security of our data, we have set a default active time period for each key of{' '}
-        <span>28 days</span>. Each key will have an expiration date set 28 days from the creation time of said key. You
-        {`'`}ll need to speak with an administrator to adjust the default length, with a maximum possible value of 365
-        days.
-      </p>
+      <ul>
+        <li>
+          <p>
+            To protect the integerity and security of our data, we have set a default active time period for each key of{' '}
+            <span>28 days</span>. Each key will have an expiration date set 28 days from the creation time of said key.
+            You
+            {`'`}ll need to speak with an administrator to adjust the default length, with a maximum possible value of
+            365 days.
+          </p>
+        </li>
+        <li>
+          <p>We only keep record of expired keys for 365 days, per industry standard.</p>
+        </li>
+      </ul>
     </div>
   );
 };
