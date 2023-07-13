@@ -10,6 +10,7 @@ import CronGuide from '../userGuides/CronGuide';
 import TeamsWebhookGuide from '../userGuides/TeamsWebhookGuide';
 import ApplicationsGuide from '../userGuides/ApplicationsGuide';
 import ClusterGuide from '../userGuides/ClusterGuide';
+import WildcardGuide from '../userGuides/WildcardGuide';
 
 const GuideDrawer = ({ content, open, onClose, width }) => {
   /* Example Usage
@@ -54,6 +55,8 @@ const GuideDrawer = ({ content, open, onClose, width }) => {
             return <ApplicationsGuide />;
           case 'cluster':
             return <ClusterGuide />;
+          case 'wildcard':
+            return <WildcardGuide />;
           default:
             return <h2>Guide Not Found</h2>;
         }

@@ -2,15 +2,17 @@ const express = require("express");
 const router = express.Router();
 const fsPromises = require("fs/promises");
 const path = require("path");
+const { Op } = require("sequelize");
+const moment = require("moment");
+const { body, validationResult } = require("express-validator");
+
+const logger = require("../../config/logger");
+const validatorUtil = require("../../utils/validator");
 const models = require("../../models");
 const monitoring_notifications = models.monitoring_notifications;
 const fileMonitoring = models.fileMonitoring;
 const clusterMonitoring = models.clusterMonitoring;
-const logger = require("../../config/logger");
-const { Op } = require("sequelize");
-const moment = require("moment");
-const validatorUtil = require("../../utils/validator");
-const { param, body, validationResult } = require("express-validator");
+const jobMonitoring = models.jobMonitoring;
 
 router.get("/filteredNotifications", async (req, res) => {
   try {
@@ -36,6 +38,20 @@ router.get("/filteredNotifications", async (req, res) => {
       where: query,
       order: [["createdAt", "DESC"]],
       raw: true,
+      include: [
+        {
+          model: jobMonitoring,
+          attributes: ["name"],
+        },
+        {
+          model: clusterMonitoring,
+          attributes: ["name"],
+        },
+        {
+          model: fileMonitoring,
+          attributes: ["name"],
+        }
+      ],
     });
 
     res.status(200).send(monitorings);
@@ -44,37 +60,32 @@ router.get("/filteredNotifications", async (req, res) => {
   }
 });
 
-router.get(
-  "/:applicationId",
-  [param("applicationId").isUUID(4).withMessage("Invalid application id")],
-  async (req, res) => {
-    const errors = validationResult(req).formatWith(
-      validatorUtil.errorFormatter
-    );
-    try {
-      if (!errors.isEmpty())
-        return res.status(422).json({ success: false, errors: errors.array() });
-      const { applicationId: application_id } = req.params;
-      if (!application_id) throw Error("Invalid app ID");
-      const notifications = await monitoring_notifications.findAll({
-        where: { application_id },
-        include: [
-          {
-            model: fileMonitoring,
-            as: "fileMonitoring",
-          },
-          {
-            model: clusterMonitoring,
-            as: "clusterMonitoring",
-          },
-        ],
-        raw: true,
-      });
-      res.status(200).send(notifications);
-    } catch (error) {
-      logger.error(err);
-      res.status(500).json({ message: "Unable to get notifications" });
-    }
+router.get("/:applicationId", async (req, res) => {
+  try {
+    const { applicationId: application_id } = req.params;
+    if (!application_id) throw Error("Invalid app ID");
+    const notifications = await monitoring_notifications.findAll({
+      where: { application_id },
+      include: [
+        {
+          model: jobMonitoring,
+          attributes: ["name"],
+        },
+        {
+          model: clusterMonitoring,
+          attributes: ["name"],
+        },
+        {
+          model: fileMonitoring,
+          attributes: ["name"],
+        },
+      ],
+      raw: true,
+    });
+    res.status(200).send(notifications);
+  } catch (error) {
+    logger.error(err);
+    res.status(500).json({ message: "Unable to get notifications" });
   }
 );
 

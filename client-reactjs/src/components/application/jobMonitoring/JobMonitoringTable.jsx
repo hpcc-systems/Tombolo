@@ -72,7 +72,8 @@ function JobMonitoringTable({
         monitoringScope,
         notificationConditions,
         jobName,
-        costLimits: { maxCompileCost, maxExecutionCost, maxFileAccessCost, maxTotalCost },
+        costLimits,
+        // costLimits: { maxCompileCost, maxExecutionCost, maxFileAccessCost, maxTotalCost },
       },
       cluster_id,
     } = selectedMonitoringDetails;
@@ -92,10 +93,10 @@ function JobMonitoringTable({
       monitoringScope,
       notificationConditions,
       jobName,
-      maxCompileCost,
-      maxExecutionCost,
-      maxFileAccessCost,
-      maxTotalCost,
+      maxCompileCost: costLimits?.maxCompileCost,
+      maxExecutionCost: costLimits?.maxExecutionCost,
+      maxFileAccessCost: costLimits?.maxFileAccessCost,
+      maxTotalCost: costLimits?.maxTotalCost,
     };
 
     setSelectedMonitoring(updatedMonitoringDetails);
@@ -183,7 +184,6 @@ function JobMonitoringTable({
             <Tooltip title="Delete Monitoring">
               <DeleteOutlined
                 onClick={() => {
-                  console.log(record);
                   deleteJobMonitoring(record.id);
                 }}
               />
@@ -191,7 +191,7 @@ function JobMonitoringTable({
           </a>
 
           <Tooltip title="Notifications">
-            <Link to={`/${applicationId}/notifications?monitoringId=${record.id}`}>
+            <Link to={`/${applicationId}/dashboard/notifications?monitoringId=${record.id}`}>
               <BellOutlined />
             </Link>
           </Tooltip>

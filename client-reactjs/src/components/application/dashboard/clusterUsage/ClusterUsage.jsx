@@ -77,16 +77,3 @@ function ClusterUsage() {
 }
 
 export default ClusterUsage;
-
-//TODO
-// Loading indicators on charts
-// Add Expandable
-// Make charts responsive. Line graph and graph in notification are not responsive
-// Moved dashboards related css to separate file
-
-// TODO - Monitorings status and monitoring type must from the below set
-// STATUS -> notified , triage, inProgress, completed
-// MONITORING TYPE -> 'jobMonitoring', 'file','cluster','superFile' }
-//  Make sure all the columns in notification tables are populated
-//  Check backend validation
-//  Add filters to notification table

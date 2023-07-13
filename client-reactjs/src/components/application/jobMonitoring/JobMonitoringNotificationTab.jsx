@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Form, Select, Input, Button } from 'antd';
+import { Form, Select, Input, Button, InputNumber } from 'antd';
 import { MinusCircleOutlined, PlusOutlined, InfoCircleOutlined } from '@ant-design/icons';
 import InfoDrawer from '../../common/InfoDrawer';
 const { Option } = Select;
@@ -13,6 +13,7 @@ let notificationConditions = [
   { label: 'Aborted', value: 'aborted' },
   { label: 'Failed', value: 'failed' },
   { label: 'Unknown', value: 'unknown' },
+  { label: 'Threshold time exceeded', value: 'thresholdTimeExceeded' },
 ];
 
 function ClusterMonitoringNotificationTab({
@@ -44,6 +45,7 @@ function ClusterMonitoringNotificationTab({
       notificationConditions = newOptions;
     }
   }, [selectedJob]);
+  const [selectedNotificationOptions, setSelectedNotificationOptions] = useState([]);
 
   const showDrawer = () => {
     setOpen(true);
@@ -63,6 +65,7 @@ function ClusterMonitoringNotificationTab({
           mode="tags"
           onChange={(selection) => {
             setNotifyConditions(selection);
+            setSelectedNotificationOptions(selection);
           }}>
           {notificationConditions.map((condition) => {
             return (
@@ -99,6 +102,22 @@ function ClusterMonitoringNotificationTab({
           </Form.Item>
         ) : null}
       </>
+      {selectedNotificationOptions.includes('thresholdTimeExceeded') ? (
+        <Form.Item
+          name="thresholdTime"
+          label="Threshold time ( in minutes )"
+          validateTrigger={['onChange', 'onBlur']}
+          rules={[
+            {
+              type: 'number',
+              min: 0,
+              max: 1440,
+              message: 'min and max should be 0 to 1440',
+            },
+          ]}>
+          <InputNumber type="number" />
+        </Form.Item>
+      ) : null}
 
       <Form.Item
         label={
@@ -111,7 +130,7 @@ function ClusterMonitoringNotificationTab({
           </>
         }
         name="notificationChannels"
-        rules={[{ required: true, message: 'Required Field' }]}>
+        rule={[{ required: true, message: 'Required Field' }]}>
         <Select
           options={notificationOptions}
           mode="tags"

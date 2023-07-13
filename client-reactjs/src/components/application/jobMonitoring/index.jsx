@@ -53,10 +53,9 @@ function JobMonitoring() {
   //When submit btn on modal is clicked
   const handleOk = async () => {
     try {
-      // await form.validateFields(); // if errs will be caught by catch block
       const payload = form.getFieldsValue();
       payload.app_id = applicationId;
-      await form.validateFields();
+      // await form.validateFields();
       await saveJobMonitoring(payload);
     } catch (err) {
       message.error('Failed to save, check each tab for validation error');
@@ -76,14 +75,19 @@ function JobMonitoring() {
         maxFileAccessCost,
         maxCompileCost,
         maxTotalCost,
+        thresholdTime,
       } = formData;
 
+      console.log('------------------------------------------');
+      console.log(monitoringScope);
+      console.log('------------------------------------------');
+
       const notifications = [];
-      if (notificationChannels.includes('eMail')) {
+      if (notificationChannels?.includes('eMail')) {
         notifications.push({ channel: 'eMail', recipients: emails });
       }
 
-      if (notificationChannels.includes('msTeams')) {
+      if (notificationChannels?.includes('msTeams')) {
         notifications.push({ channel: 'msTeams', recipients: msTeamsGroups });
       }
 
@@ -91,7 +95,7 @@ function JobMonitoring() {
         last_monitored: null,
         notifications,
         notificationConditions,
-        jobName,
+        jobName: monitoringScope === 'cluster' ? '*' : jobName,
         monitoringScope,
         costLimits: {
           maxExecutionCost: parseFloat(maxExecutionCost),
@@ -99,6 +103,7 @@ function JobMonitoring() {
           maxCompileCost: parseFloat(maxCompileCost),
           maxTotalCost: parseFloat(maxTotalCost),
         },
+        thresholdTime,
       };
 
       //Delete since these items are nested inside metaData object
@@ -117,6 +122,7 @@ function JobMonitoring() {
       };
 
       const response = await fetch(`/api/jobmonitoring/`, payload);
+
       if (!response.ok) handleError(response);
 
       const data = await response.json();
@@ -146,7 +152,8 @@ function JobMonitoring() {
       }
       handleCancel();
     } catch (err) {
-      message.error('Failed to job monitoring');
+      console.log(err);
+      message.error('Failed to save job monitoring');
     }
   };
 
