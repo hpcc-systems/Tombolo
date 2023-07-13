@@ -84,7 +84,6 @@ router.get(
         throw Error("Invalid or Expired Key");
       }
     } catch (error) {
-      console.log(error);
       res
         .status(500)
         .json({ message: "Unable to get notifications - " + error });

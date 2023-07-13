@@ -1,0 +1,10 @@
+{
+  "dataValues": {
+    "metaData": {
+      "Usage": 1,
+      "UsageLimit": 5000000
+    },
+    "expirationDate": 123456789101112,
+    "expired": false
+  }
+}
