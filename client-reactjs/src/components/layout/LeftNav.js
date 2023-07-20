@@ -11,6 +11,7 @@ import {
   ClockCircleOutlined,
   ContainerOutlined,
   BarChartOutlined,
+  CloudServerOutlined,
 } from '@ant-design/icons';
 
 import { hasEditPermission } from '../common/AuthUtil.js';
@@ -117,6 +118,9 @@ class LeftNav extends Component {
             <Menu.Item key="4d" icon={<ContainerOutlined />}>
               <Link to={'/' + applicationId + '/superfileMonitoring'}>{<Text text="Superfiles" />}</Link>
             </Menu.Item>
+            <Menu.Item key="4e" icon={<CloudServerOutlined />}>
+              <Link to={'/' + applicationId + '/orbitMonitoring'}>{<Text text="Orbit" />}</Link>
+            </Menu.Item>
           </Menu.SubMenu>
 
           <Menu.SubMenu title="Dashboard" icon={<BarChartOutlined />} key="5">
@@ -125,6 +129,9 @@ class LeftNav extends Component {
             </Menu.Item>
             <Menu.Item key="5b" icon={<ClusterOutlined />}>
               <Link to={'/' + applicationId + '/dashboard/clusterUsage'}>{<Text text="Cluster" />}</Link>
+            </Menu.Item>
+            <Menu.Item key="5c" icon={<CloudServerOutlined />}>
+              <Link to={'/' + applicationId + '/dashboard/Orbit'}>{<Text text="Orbit" />}</Link>
             </Menu.Item>
           </Menu.SubMenu>
 

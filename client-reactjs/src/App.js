@@ -35,10 +35,12 @@ const ManualJobDetail = React.lazy(() => import('./components/application/Jobs/M
 const Actions = React.lazy(() => import('./components/application/actions/actions'));
 const AddJobsForm = React.lazy(() => import('./components/application/Jobs/AddjobsForm/AddJobsForm'));
 const FileMonitoring = React.lazy(() => import('./components/application/fileMonitoring/FileMonitoring'));
+const OrbitMonitoring = React.lazy(() => import('./components/application/orbitMonitoring/OrbitMonitoring'));
 const SuperFileMonitoring = React.lazy(() =>
   import('./components/application/superfileMonitoring/SuperFileMonitoring')
 );
 const Notifications = React.lazy(() => import('./components/application/dashboard/notifications/Notifications'));
+const Orbit = React.lazy(() => import('./components/application/dashboard/Orbit/Orbit'));
 const ClusterUsage = React.lazy(() => import('./components/application/dashboard/clusterUsage/ClusterUsage'));
 const ClusterMonitoring = React.lazy(() => import('./components/application/clusterMonitoring'));
 const JobMonitoring = React.lazy(() => import('./components/application/jobMonitoring'));
@@ -178,9 +180,11 @@ class App extends React.Component {
                         <PrivateRoute path="/:applicationId/fileMonitoring" component={FileMonitoring} />
                         <PrivateRoute path="/:applicationId/superfileMonitoring" component={SuperFileMonitoring} />
                         <PrivateRoute path="/:applicationId/ClusterMonitoring" component={ClusterMonitoring} />
+                        <PrivateRoute path="/:applicationId/OrbitMonitoring" component={OrbitMonitoring} />
                         <PrivateRoute path="/:applicationId/jobMonitoring" component={JobMonitoring} />{' '}
                         <PrivateRoute path="/:applicationId/dashboard/notifications" component={Notifications} />
                         <PrivateRoute path="/:applicationId/dashboard/clusterUsage" component={ClusterUsage} />
+                        <PrivateRoute path="/:applicationId/dashboard/Orbit" component={Orbit} />
                         <PrivateRoute path="/:applicationId/assets/add-jobs" component={AddJobsForm} />
                         <PrivateRoute path="/:applicationId/assets/job/:assetId?" component={JobDetailsForm} />
                         <PrivateRoute path="/:applicationId/assets/index/:assetId?" component={IndexDetailsForm} />
