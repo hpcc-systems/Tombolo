@@ -1,26 +1,71 @@
 import React, { useEffect, useState } from 'react';
 import LinePlot from './LinePlot';
-import { Empty } from 'antd';
+import { Empty, Popover } from 'antd';
+import { ExpandOutlined } from '@ant-design/icons';
+import _ from 'lodash';
 
-function StorageUsageHistoryCharts({ clusterUsageHistory }) {
-  const [engines, setEngines] = useState([]);
+import '../index.css';
+
+function StorageUsageHistoryCharts({ clusterUsageHistory, setViewExpandedGraph, setExpandedGraphData }) {
+  const [groupedClusterUsageHistory, setGroupedClusterUsageHistory] = useState([]);
 
   useEffect(() => {
     if (clusterUsageHistory) {
-      setEngines(Object.keys(clusterUsageHistory));
+      const groupedHistory = [];
+      const groupedData = {};
+
+      for (const engine in clusterUsageHistory) {
+        const data = clusterUsageHistory[engine];
+        const key = JSON.stringify(data);
+
+        if (Object.prototype.hasOwnProperty.call(groupedData, key)) {
+          groupedData[key].engines.push(engine);
+        } else {
+          groupedData[key] = { engines: [engine], data };
+        }
+      }
+
+      for (const key in groupedData) {
+        groupedHistory.push(groupedData[key]);
+      }
+      setGroupedClusterUsageHistory(groupedHistory);
     }
   }, [clusterUsageHistory]);
 
+  // When expand icon is clicked
+  const handleViewMoreClicked = (data) => {
+    setViewExpandedGraph(true);
+    setExpandedGraphData(data);
+  };
+
   return (
-    <div style={{ border: '1px solid lightgray', textAlign: 'center', marginTop: '20px' }}>
-      <div style={{ padding: '10px', fontSize: '20px', fontWeight: '500' }}>Storage Usage History</div>
-      <div style={{ display: 'flex', justifyContent: 'space-around', flexWrap: 'wrap' }}>
-        {engines.length > 1 ? (
-          engines.map((engine) => {
+    <div className="storageUsageHistoryCharts__main">
+      <div className="storageUsageHistoryCharts__heading">Storage Usage History</div>
+      <div className="storageUsageHistoryCharts__chartContainer">
+        {groupedClusterUsageHistory.length > 0 ? (
+          groupedClusterUsageHistory.map((clusterHistory, index) => {
             return (
-              <div key={engine} style={{ flex: '1', margin: '10px', maxWidth: '500px' }}>
-                <LinePlot clusterUsageHistory={clusterUsageHistory[engine]} />
-                <div style={{ marginTop: '15px', fontSize: '15px', fontWeight: '700', color: 'gray' }}>{engine}</div>
+              <div className="storageUsageHistoryCharts__chartAndName" key={index}>
+                <div className="storageUsageHistoryCharts__box">
+                  <LinePlot clusterUsageHistory={clusterHistory.data} />
+                </div>
+                <div className="storageUsageHistoryCharts__engineName">
+                  <span>{_.capitalize(clusterHistory.engines[0])}</span>
+                  <span className="storageUsageHistoryCharts__engineName__additionalText">
+                    <Popover
+                      content={clusterHistory.engines.map((item, index) => (
+                        <div key={index}>{index === 0 ? null : _.capitalize(item)}</div>
+                      ))}>
+                      {clusterHistory.engines.length > 1 ? (
+                        <span> &nbsp; {`[ + ${clusterHistory.engines.length - 1} more ]`}</span>
+                      ) : null}
+                    </Popover>
+                  </span>
+                  <ExpandOutlined
+                    onClick={() => handleViewMoreClicked(clusterHistory.data)}
+                    className="storageUsageHistoryCharts__viewMore"
+                  />
+                </div>
               </div>
             );
           })
