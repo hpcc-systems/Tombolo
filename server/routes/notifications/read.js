@@ -4,7 +4,7 @@ const fsPromises = require("fs/promises");
 const path = require("path");
 const { Op } = require("sequelize");
 const moment = require("moment");
-const { body, validationResult, param } = require("express-validator");
+const { body, param, validationResult } = require("express-validator");
 
 const logger = require("../../config/logger");
 const validatorUtil = require("../../utils/validator");
@@ -50,7 +50,7 @@ router.get("/filteredNotifications", async (req, res) => {
         {
           model: fileMonitoring,
           attributes: ["name"],
-        }
+        },
       ],
     });
 
