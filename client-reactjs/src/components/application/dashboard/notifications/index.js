@@ -49,7 +49,7 @@ function Index() {
     setStackBarData(groupedData);
   }, [groupDataBy]);
 
-  // When component loads create filter tol load initial data
+  // When component loads create filter to load initial data
   useEffect(() => {
     if (applicationId) {
       filterAndFetchNotifications(defaultFilters);
@@ -195,7 +195,21 @@ function Index() {
             <ExportMenu />
           </Space>
         }>
-        <Tabs.TabPane key="1" tab="Dashboard">
+        <Tabs.TabPane key="1" tab="Notifications">
+          <NotificationsTable
+            applicationId={applicationId}
+            setSelectedNotificationForBulkAction={setSelectedNotificationForBulkAction}
+            updatedNotificationInDb={updatedNotificationInDb}
+          />
+          {bulkActionModalVisible ? (
+            <BulkActions
+              setBulkActionModalVisibility={setBulkActionModalVisibility}
+              selectedNotificationsForBulkAction={selectedNotificationsForBulkAction}
+              setUpdatedNotificationInDb={setUpdatedNotificationInDb}
+            />
+          ) : null}
+        </Tabs.TabPane>
+        <Tabs.TabPane key="2" tab="Dashboard">
           <Filters
             applicationId={applicationId}
             setNotifications={setNotifications}
@@ -223,21 +237,6 @@ function Index() {
           ) : (
             <Empty style={{ marginTop: '150px', width: '82%' }} image={Empty.PRESENTED_IMAGE_SIMPLE} />
           )}
-        </Tabs.TabPane>
-
-        <Tabs.TabPane key="2" tab="Notifications">
-          <NotificationsTable
-            applicationId={applicationId}
-            setSelectedNotificationForBulkAction={setSelectedNotificationForBulkAction}
-            updatedNotificationInDb={updatedNotificationInDb}
-          />
-          {bulkActionModalVisible ? (
-            <BulkActions
-              setBulkActionModalVisibility={setBulkActionModalVisibility}
-              selectedNotificationsForBulkAction={selectedNotificationsForBulkAction}
-              setUpdatedNotificationInDb={setUpdatedNotificationInDb}
-            />
-          ) : null}
         </Tabs.TabPane>
       </Tabs>
     </div>

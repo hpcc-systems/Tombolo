@@ -17,6 +17,7 @@ module.exports = (sequelize, DataTypes) => {
         notification_channel: DataTypes.STRING,
         status: DataTypes.STRING,
         responded_on: DataTypes.DATE,
+        metaData: DataTypes.JSON,
         comment: DataTypes.TEXT,
         deletedAt: DataTypes.DATE
       },

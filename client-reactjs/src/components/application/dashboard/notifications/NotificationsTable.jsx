@@ -1,6 +1,6 @@
 /* eslint-disable unused-imports/no-unused-vars */
 import React, { useEffect, useState } from 'react';
-import { message, Table, Modal, Button, Descriptions } from 'antd';
+import { message, Table, Modal, Button, Descriptions, Tabs } from 'antd';
 import { useLocation } from 'react-router-dom';
 
 import { authHeader, handleError } from '../../../common/AuthHeader.js';
@@ -27,7 +27,9 @@ function NotificationsTable({ applicationId, setSelectedNotificationForBulkActio
     {
       key: 'Monitoring Name',
       value: `${
-        selectedNotification?.['fileMonitoring.name'] || selectedNotification?.['clusterMonitoring.name'] || ''
+        selectedNotification?.['fileMonitoring.name'] ||
+        selectedNotification?.['clusterMonitoring.name'] ||
+        selectedNotification?.['jobMonitoring.name']
       }`,
     },
     { key: 'Notified at', value: formatDateTime(selectedNotification?.createdAt) },
@@ -96,7 +98,7 @@ function NotificationsTable({ applicationId, setSelectedNotificationForBulkActio
       if (!monitoringId) {
         setNotifications(data);
       } else {
-        const filtered = data.filter((item) => item.filemonitoring_id === monitoringId);
+        const filtered = data.filter((item) => item.monitoring_id === monitoringId);
         setNotifications(filtered);
       }
     } catch (error) {
@@ -115,9 +117,17 @@ function NotificationsTable({ applicationId, setSelectedNotificationForBulkActio
     {
       title: 'Notified at',
       render: (record) => {
-        return formatDateTime(record.createdAt);
+        return <a>{formatDateTime(record.createdAt)}</a>;
       },
       sorter: (a, b) => new Date(a.createdAt) - new Date(b.createdAt),
+      onCell: (record) => {
+        return {
+          onClick: () => {
+            setSelectedNotification(record);
+            setViewNotificationDetails(true);
+          },
+        };
+      },
     },
     {
       title: 'Monitoring Type',
@@ -131,7 +141,7 @@ function NotificationsTable({ applicationId, setSelectedNotificationForBulkActio
     {
       title: 'Monitoring name',
       render: (record) => {
-        return record['fileMonitoring.name'] || record['clusterMonitoring.name'] || '';
+        return record?.['fileMonitoring.name'] || record?.['clusterMonitoring.name'] || record?.['jobMonitoring.name'];
       },
     },
     {
@@ -229,13 +239,23 @@ function NotificationsTable({ applicationId, setSelectedNotificationForBulkActio
             Close
           </Button>
         }>
-        <Descriptions bordered column={1} size="small">
-          {selectedNotificationDetails.map((item) => (
-            <Descriptions.Item label={item.key} key={item.key}>
-              {item.value}
-            </Descriptions.Item>
-          ))}
-        </Descriptions>
+        <Tabs>
+          <Tabs.TabPane tab="Metadata" key="1">
+            <Descriptions bordered column={1} size="small">
+              {selectedNotificationDetails.map((item) => (
+                <Descriptions.Item label={item.key} key={item.key}>
+                  {item.value}
+                </Descriptions.Item>
+              ))}
+            </Descriptions>
+          </Tabs.TabPane>
+          <Tabs.TabPane tab="Notification" key="2">
+            <div
+              dangerouslySetInnerHTML={{ __html: selectedNotification?.metaData?.notificationBody || '' }}
+              className="sentNotificationBody"
+            />
+          </Tabs.TabPane>
+        </Tabs>
       </Modal>
     </>
   );

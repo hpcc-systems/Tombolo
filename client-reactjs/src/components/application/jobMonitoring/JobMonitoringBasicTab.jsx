@@ -1,8 +1,10 @@
 import React, { useState } from 'react';
 import { Form, Select, AutoComplete } from 'antd';
+import { InfoCircleOutlined } from '@ant-design/icons';
 import { debounce } from 'lodash';
 
 import { authHeader, handleError } from '../../common/AuthHeader.js';
+import InfoDrawer from '../../common/InfoDrawer';
 
 const { Option } = Select;
 
@@ -21,6 +23,15 @@ function ClusterMonitoringBasicTab({
 }) {
   const [jobs, setJobs] = useState([]);
   const [fetchingJobs, setFetchingJobs] = useState(false);
+  const [open, setOpen] = useState(false);
+
+  const showDrawer = () => {
+    setOpen(true);
+  };
+
+  const onClose = () => {
+    setOpen(false);
+  };
 
   // Get jobs function
   const getJobs = debounce(async (value) => {
@@ -33,9 +44,11 @@ function ClusterMonitoringBasicTab({
       };
 
       const response = await fetch(`/api/hpcc/read/jobsearch`, payload);
+
       if (!response.ok) handleError(response);
 
       const data = await response.json();
+
       if (data) {
         const cleanedData = data.map((d) => {
           return {
@@ -106,15 +119,24 @@ function ClusterMonitoringBasicTab({
 
       {selectedCluster && monitoringScope === 'individualJob' ? (
         <Form.Item
-          label="Job name"
+          label={
+            <span>
+              Job Name
+              <span>
+                <InfoCircleOutlined style={{ marginLeft: '.5rem' }} onClick={() => showDrawer()} />
+              </span>
+              <InfoDrawer open={open} onClose={onClose} width="500px" content="wildcard"></InfoDrawer>
+            </span>
+          }
           name="jobName"
+          validateTrigger={['onChange', 'onBlur']}
           rules={[
             { required: true, message: 'Required filed' },
             { max: 256, message: 'Maximum of 256 characters allowed' },
           ]}>
           <AutoComplete
             options={jobs}
-            filterOption={true}
+            placeholder="Supports wildcard"
             validateTrigger={['onChange', 'onBlur']}
             allowClear
             onSearch={handleSearch}
