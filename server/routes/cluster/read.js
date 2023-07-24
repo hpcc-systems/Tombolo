@@ -43,8 +43,8 @@ router.get(
 
       const maxUsage = targetClusterUsage.map((target) => ({
         name: target.Name,
-        maxUsage: target.max,
-        meanUsage: target.mean,
+        maxUsage: target.max.toFixed(2),
+        meanUsage: target.mean.toFixed(2),
       }));
       res.status(200).send(maxUsage);
     } catch (err) {
