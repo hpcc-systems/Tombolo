@@ -100,7 +100,7 @@ router.get(
           }
 
           else{
-             filtered_data[key].push(item);
+             filtered_data[key].unshift(item);
           }
         }
       }
