@@ -12,7 +12,7 @@
 .storageUsageHistoryCharts__chartContainer {
   margin-top: 20px;
   display: flex;
-  justify-content: start;
+  justify-content: flex-start;
   flex-wrap: wrap;
   border: 1px solid lightgray;
   padding: 20px;

@@ -1,7 +1,5 @@
-/* eslint-disable unused-imports/no-unused-vars */
 import React, { useEffect } from 'react';
 import { Form, Select, DatePicker, Button, message } from 'antd';
-import moment from 'moment';
 import { addQueriesToUrl } from '../../../../common/AddQueryToUrl';
 
 const layout = {
@@ -17,7 +15,11 @@ function Filters({ setSelectedCluster, selectedCluster, setHistoryDateRange, his
     if (clusterOptions && selectedCluster) {
       form.setFieldsValue({ clusterOptions: selectedCluster });
     }
-  }, [clusterOptions]);
+
+    if (historyDateRange) {
+      form.setFieldsValue({ dateRange: historyDateRange });
+    }
+  }, [clusterOptions, historyDateRange]);
 
   // Disable future dates
   const disabledDate = (current) => {
@@ -45,19 +47,12 @@ function Filters({ setSelectedCluster, selectedCluster, setHistoryDateRange, his
 
   // Handle date range selection
   const handleDateRangeSelection = (value) => {
-    addQueriesToUrl({ queryName: 'dateRange', queryValue: value });
+    addQueriesToUrl({ queryName: 'historyDateRange', queryValue: value });
   };
 
   return (
     <div style={{ width: '100%', display: 'flex', justifyContent: 'center', alignItems: 'center' }}>
-      <Form
-        {...layout}
-        onFinish={handleFilter}
-        initialValues={{
-          ['dateRange']: [moment().subtract(30, 'days'), moment()],
-        }}
-        className="filters__form"
-        form={form}>
+      <Form {...layout} onFinish={handleFilter} className="filters__form" form={form}>
         <Form.Item
           name="clusterOptions"
           style={{ display: 'inline-block', width: '200px' }}

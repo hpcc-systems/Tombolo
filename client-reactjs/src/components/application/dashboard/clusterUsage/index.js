@@ -46,7 +46,11 @@ function ClusterUsage() {
 
     // If date range in URL
     if (urlQueries.historyDateRange) {
-      setHistoryDateRange(historyDateRange);
+      const { historyDateRange } = urlQueries;
+      const range = historyDateRange.split(',');
+      const startDate = range[0];
+      const endDate = range[1];
+      setHistoryDateRange([moment(new Date(startDate)), moment(new Date(endDate))]);
     } else {
       setHistoryDateRange([moment().subtract(30, 'days'), moment()]);
     }

@@ -1,18 +1,14 @@
-/* eslint-disable unused-imports/no-unused-vars */
-/* eslint-disable unused-imports/no-unused-imports */
 import React, { useState } from 'react';
 import { ResizableBox } from 'react-resizable';
 import { CloseOutlined } from '@ant-design/icons';
 import LinePlot from './LinePlot';
 
 import '../index.css';
-import { absolute } from '@antv/x6/lib/registry/port-layout/absolute';
 
 function GraphExpanded({ setViewExpandedGraph, clusterUsageHistory }) {
   const [modalSize, setModalSize] = useState({ width: 900, height: 460 });
 
   const handleResize = (event, { size }) => {
-    console.log(size);
     setModalSize(size);
   };
 
