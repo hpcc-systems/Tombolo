@@ -1,29 +1,33 @@
-import React, { useState } from 'react';
-import { ResizableBox } from 'react-resizable';
-import { CloseOutlined } from '@ant-design/icons';
+import React from 'react';
+import { Resizable } from 're-resizable';
+import { CloseOutlined, EnterOutlined } from '@ant-design/icons';
 import LinePlot from './LinePlot';
 
 import '../index.css';
 
+const modalSize = {
+  width: 900,
+  height: 460,
+};
+
 function GraphExpanded({ setViewExpandedGraph, clusterUsageHistory }) {
-  const [modalSize, setModalSize] = useState({ width: 900, height: 460 });
-
-  const handleResize = (event, { size }) => {
-    setModalSize(size);
-  };
-
   return (
     <div className="graphExpanded_main">
       <div className="graphExpanded_content" onClick={(e) => e.stopPropagation()}>
-        <ResizableBox
-          width={modalSize.width} // Initial width
-          height={modalSize.height} // Initial height
-          onResize={handleResize}
+        <Resizable
+          minHeight={460}
+          minWidth={900}
+          maxHeight={460}
+          maxWidth={'92vw'}
           className="graphExpanded_resizableBox"
-          resizeHandles={['se']}
-          minConstraints={[900, 460]}
-          maxConstraints={[1750, 460]}>
+          defaultSize={{
+            width: modalSize.width,
+            height: modalSize.height,
+          }}>
           <div className="graphExpanded_resizableBox_content">
+            <div style={{ position: 'absolute', bottom: 0, right: 5 }}>
+              <EnterOutlined />
+            </div>
             <div
               className="graphExpanded_close"
               onClick={() => setViewExpandedGraph(false)}
@@ -34,7 +38,7 @@ function GraphExpanded({ setViewExpandedGraph, clusterUsageHistory }) {
               <LinePlot clusterUsageHistory={clusterUsageHistory} />
             </div>
           </div>
-        </ResizableBox>
+        </Resizable>
       </div>
     </div>
   );
