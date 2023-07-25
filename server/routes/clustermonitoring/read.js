@@ -47,7 +47,7 @@ router.post(
          
         //create
         const clusterMonitoring = await ClusterMonitoring.create(req.body);
-        res.status(200).send(clusterMonitoring);
+        res.status(201).send(clusterMonitoring);
 
         //Add job to bree- if start monitoring checked
         const {id, name, cron } = clusterMonitoring;
