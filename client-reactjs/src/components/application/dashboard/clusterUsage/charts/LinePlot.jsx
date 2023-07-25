@@ -8,9 +8,9 @@ function LinePlot({ clusterUsageHistory }) {
     padding: 'auto',
     xField: 'date',
     yField: 'usage',
-    width: '200px',
+    // width: '200px',
     xAxis: {
-      tickCount: 5,
+      tickCount: clusterUsageHistory.length,
     },
   });
 
@@ -18,7 +18,7 @@ function LinePlot({ clusterUsageHistory }) {
     setConfig((prev) => ({
       ...prev,
       data: clusterUsageHistory.map((usage) => ({
-        date: moment(usage.date).format('MM/DD/YY h:mm A'),
+        date: moment(usage.date).format('MM-DD-YY'),
         usage: usage.maxUsage,
       })),
     }));

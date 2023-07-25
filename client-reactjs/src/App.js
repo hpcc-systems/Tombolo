@@ -38,8 +38,8 @@ const FileMonitoring = React.lazy(() => import('./components/application/fileMon
 const SuperFileMonitoring = React.lazy(() =>
   import('./components/application/superfileMonitoring/SuperFileMonitoring')
 );
-const Notifications = React.lazy(() => import('./components/application/dashboard/notifications/Notifications'));
-const ClusterUsage = React.lazy(() => import('./components/application/dashboard/clusterUsage/ClusterUsage'));
+const Notifications = React.lazy(() => import('./components/application/dashboard/notifications'));
+const ClusterUsage = React.lazy(() => import('./components/application/dashboard/clusterUsage/'));
 const ClusterMonitoring = React.lazy(() => import('./components/application/clusterMonitoring'));
 const JobMonitoring = React.lazy(() => import('./components/application/jobMonitoring'));
 

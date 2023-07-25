@@ -1,0 +1,89 @@
+.storageUsageHistoryCharts__main {
+  text-align: center;
+  margin-top: 20px;
+}
+
+.storageUsageHistoryCharts__heading {
+  padding: 10px;
+  font-size: 20px;
+  font-weight: 500;
+}
+
+.storageUsageHistoryCharts__chartContainer {
+  margin-top: 20px;
+  display: flex;
+  justify-content: flex-start;
+  flex-wrap: wrap;
+  border: 1px solid lightgray;
+  padding: 20px;
+}
+
+.storageUsageHistoryCharts__box {
+  max-width: 400px;
+  height: 250px;
+}
+
+.storageUsageHistoryCharts__chartAndName {
+  border: 1px solid #d3d3d3;
+  flex: 1;
+  padding: 10px;
+  margin: 10px;
+  max-width: 450px;
+}
+
+.storageUsageHistoryCharts__engineName {
+  font-size: 18px;
+  color: #808080;
+  font-weight: 500;
+  margin-top: 15px;
+  display: flex;
+  place-items: center;
+  justify-content: center;
+}
+
+.storageUsageHistoryCharts__engineName__additionalText {
+  font-size: 15px;
+  color: var(--primary);
+  font-weight: 400;
+}
+
+.storageUsageHistoryCharts__engineName__additionalText:hover {
+  cursor: pointer;
+}
+
+.storageUsageHistoryCharts__viewMore {
+  display: none;
+  color: #808080;
+  margin-left: 10px;
+}
+
+.storageUsageHistoryCharts__chartAndName:hover .storageUsageHistoryCharts__viewMore {
+  display: block;
+}
+
+.storageUsageHistoryCharts__chartAndName:hover .storageUsageHistoryCharts__engineName {
+  background: #f3efef;
+}
+
+/* ------------------------------------- model ---- */
+.graphExpanded_main {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-color: rgba(0, 0, 0, 0.6); /* Semi-transparent background */
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.graphExpanded_content {
+  position: relative;
+  background-color: transparent;
+}
+
+.graphExpanded_resizableBox {
+  border: 1px solid #808080;
+  background-color: white;
+}
