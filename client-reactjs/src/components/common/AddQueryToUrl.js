@@ -28,4 +28,4 @@ const getQueryParamsFromUrl = () => {
   return queryParamsObject;
 };
 
-module.exports = { addQueriesToUrl, getQueryParamsFromUrl };
+export default { addQueriesToUrl, getQueryParamsFromUrl };
