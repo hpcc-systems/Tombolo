@@ -9,8 +9,7 @@ import StorageUsageHistoryCharts from './charts/StorageUsageHistoryCharts.jsx';
 import Filters from './charts/Filters.jsx';
 import CurrentClusterUsageCharts from './charts/CurrentClusterUsageCharts.jsx';
 import ExportMenu from '../ExportMenu/ExportMenu.jsx';
-import addQueriesToUrl from '../../../common/AddQueryToUrl';
-import getQueryParamsFromUrl from '../../../common/AddQueryToUrl';
+import { getQueryParamsFromUrl, addQueriesToUrl } from '../../../common/AddQueryToUrl.js';
 
 function ClusterUsage() {
   const [clusterUsageHistory, setClusterUsageHistory] = useState({});
@@ -138,3 +137,5 @@ function ClusterUsage() {
 }
 
 export default ClusterUsage;
+
+//TODO When the max date is changed first - sometimes not rendering data

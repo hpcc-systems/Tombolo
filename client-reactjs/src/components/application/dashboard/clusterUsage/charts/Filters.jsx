@@ -1,6 +1,6 @@
 import React, { useEffect } from 'react';
 import { Form, Select, DatePicker, Button, message } from 'antd';
-import addQueriesToUrl from '../../../../common/AddQueryToUrl.js';
+import { addQueriesToUrl } from '../../../../common/AddQueryToUrl.js';
 
 const layout = {
   labelCol: { span: 24 },

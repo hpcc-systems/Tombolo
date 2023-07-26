@@ -2,7 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { useSelector } from 'react-redux';
 import { Empty, Select } from 'antd';
 
-import addQueriesToUrl from '../../../../common/AddQueryToUrl.js';
+import { addQueriesToUrl } from '../../../../common/AddQueryToUrl.js';
 import { authHeader, handleError } from '../../../../common/AuthHeader.js';
 import MeterGauge from './MeterGauge.jsx';
 const { Option } = Select;
