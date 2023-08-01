@@ -40,7 +40,6 @@ function StorageUsageHistoryCharts({ clusterUsageHistory, setViewExpandedGraph, 
 
   return (
     <div className="storageUsageHistoryCharts__main">
-      <div className="storageUsageHistoryCharts__heading">Storage Usage History</div>
       <div className="storageUsageHistoryCharts__chartContainer">
         {groupedClusterUsageHistory.length > 0 ? (
           groupedClusterUsageHistory.map((clusterHistory, index) => {
@@ -50,14 +49,25 @@ function StorageUsageHistoryCharts({ clusterUsageHistory, setViewExpandedGraph, 
                   <LinePlot clusterUsageHistory={clusterHistory.data} />
                 </div>
                 <div className="storageUsageHistoryCharts__engineName">
-                  <span>{_.capitalize(clusterHistory.engines[0])}</span>
+                  <span style={{ width: '250px', overflow: 'hidden' }}>
+                    <div className="storageUsageHistoryCharts__engineName_scroll">
+                      {clusterHistory.engines[0].length < 40
+                        ? clusterHistory.engines[0]
+                        : clusterHistory.engines[0].slice(0, 22) +
+                          ' ... ' +
+                          clusterHistory.engines[0].slice(
+                            clusterHistory.engines[0].length - 3,
+                            clusterHistory.engines[0].length
+                          )}
+                    </div>
+                  </span>
                   <span className="storageUsageHistoryCharts__engineName__additionalText">
                     <Popover
                       content={clusterHistory.engines.map((item, index) => (
                         <div key={index}>{index === 0 ? null : _.capitalize(item)}</div>
                       ))}>
                       {clusterHistory.engines.length > 1 ? (
-                        <span> &nbsp; {`[ + ${clusterHistory.engines.length - 1} more ]`}</span>
+                        <span> &nbsp; {`[ +${clusterHistory.engines.length - 1} more ]`}</span>
                       ) : null}
                     </Popover>
                   </span>

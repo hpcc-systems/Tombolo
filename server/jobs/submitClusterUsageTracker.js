@@ -63,9 +63,10 @@ const hpccUtil = require("../utils/hpcc-util");
           targetClusterUsage.forEach(target =>{
             const newData = {
               date: currentTimeStamp,
-              maxUsage: target.max,
-              meanUsage: target.mean,
+              maxUsage: target.max.toFixed(2),
+              meanUsage: target.mean.toFixed(2),
             };
+
             if(machines.includes(target.Name)){
               storageUsageHistory[target.Name].unshift(newData)
             }else{

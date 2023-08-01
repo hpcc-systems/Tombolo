@@ -78,7 +78,7 @@ function ClusterUsage() {
     if (selectedCluster && historyDateRange) getClusterUsageHistory(selectedCluster, historyDateRange);
   }, [selectedCluster, historyDateRange]);
 
-  //Get current usage func
+  //Get  usage history  func
   const getClusterUsageHistory = async (clusterId) => {
     try {
       const payload = {
@@ -137,5 +137,3 @@ function ClusterUsage() {
 }
 
 export default ClusterUsage;
-
-//TODO When the max date is changed first - sometimes not rendering data
