@@ -1,5 +1,5 @@
 // A func that checks if there are existing query params, if so appends to them, if not creates one
-const addQueriesToUrl = ({ queryName, queryValue }) => {
+export const addQueriesToUrl = ({ queryName, queryValue }) => {
   //Get current URL and its existing queries
   const urlParams = new URLSearchParams(window.location.search);
 
@@ -16,7 +16,7 @@ const addQueriesToUrl = ({ queryName, queryValue }) => {
 };
 
 // Get all params from url
-const getQueryParamsFromUrl = () => {
+export const getQueryParamsFromUrl = () => {
   const urlParams = new URLSearchParams(window.location.search);
   const queryParamsObject = {};
 
@@ -27,5 +27,3 @@ const getQueryParamsFromUrl = () => {
 
   return queryParamsObject;
 };
-
-module.exports = { addQueriesToUrl, getQueryParamsFromUrl };

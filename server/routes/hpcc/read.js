@@ -316,9 +316,10 @@ router.post(
 router.get("/getClusters", async (req, res) => {
   try {
     const clusters = await Cluster.findAll({
-      attributes: { exclude: ["hash", "username"] },
+      attributes: { exclude: ["hash", "username", "metaData"] },
       order: [["createdAt", "DESC"]],
     });
+
     res.send(clusters);
   } catch (err) {
     logger.error(err);

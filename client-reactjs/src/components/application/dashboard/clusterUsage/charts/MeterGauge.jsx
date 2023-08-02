@@ -5,8 +5,6 @@ import { Gauge } from '@ant-design/plots';
 import { Popover } from 'antd';
 
 const MeterGauge = ({ data }) => {
-  // data.maxUsage = Math.floor(Math.random() * 100);
-
   //Gauge color
   const gaugeColor = (maxUsage) => {
     if (maxUsage <= 50) {
@@ -63,9 +61,13 @@ const MeterGauge = ({ data }) => {
         offsetY: 36,
         style: {
           fontSize: '18px',
-          color: '#01060d',
+          color: '#1890ff',
+          textDecoration: 'underline',
         },
-        formatter: () => data.name,
+
+        formatter: () => {
+          return data.engines.length < 2 ? data.name : [`${data.name} [+ ${data.engines.length - 1} more]`];
+        },
       },
     },
   };
@@ -76,10 +78,21 @@ const MeterGauge = ({ data }) => {
         <div>
           <div>Max : {data.maxUsage} % </div>
           <div>Mean: {data.meanUsage} % </div>
+
+          {data.engines.length > 1 ? (
+            <>
+              <hr />
+              <>
+                {data.engines.map((engine) => {
+                  return <div key={engine}> {engine}</div>;
+                })}
+              </>
+            </>
+          ) : null}
         </div>
       }>
       <Gauge {...config} style={{ width: '250px', height: '250px', padding: '20px' }} />
-      <></>
+      <> </>
     </Popover>
   );
 };

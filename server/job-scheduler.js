@@ -681,8 +681,8 @@ class JobScheduler {
     }
   }
   // --------------------------------------------------------------------------------------------
-  // Job monitoring bree job
-  createClusterUsageHistoryJob(){
+  // Cluster monitoring bree job
+  async createClusterUsageHistoryJob(){
   const uniqueJobName = `Cluster Usage History Tracker`;
   const job = {
     interval: 14400000, // 4 hours

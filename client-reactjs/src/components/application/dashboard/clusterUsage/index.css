@@ -19,7 +19,7 @@
 }
 
 .storageUsageHistoryCharts__box {
-  max-width: 400px;
+  width: 400px;
   height: 250px;
 }
 
@@ -32,13 +32,13 @@
 }
 
 .storageUsageHistoryCharts__engineName {
-  font-size: 18px;
   color: #808080;
   font-weight: 500;
   margin-top: 15px;
   display: flex;
   place-items: center;
   justify-content: center;
+  padding: 5px 0px 5px 0px;
 }
 
 .storageUsageHistoryCharts__engineName__additionalText {
@@ -55,6 +55,8 @@
   display: none;
   color: #808080;
   margin-left: 10px;
+  font-size: 12px;
+  color: var(--primary);
 }
 
 .storageUsageHistoryCharts__chartAndName:hover .storageUsageHistoryCharts__viewMore {
@@ -86,4 +88,62 @@
 .graphExpanded_resizableBox {
   border: 1px solid #808080;
   background-color: white;
+}
+
+.storageUsageHistoryCharts__engineName_scroll {
+  color: var(--primary);
+  text-decoration: underline;
+}
+
+/* ---------------------------------------------------- */
+.currentClusterUsageCharts_container {
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+}
+.currentClusterUsageCharts_container div:first-child {
+  text-align: center;
+}
+.currentClusterUsageCharts_main {
+  border: 1px solid lightGray;
+  margin-top: 10px;
+  text-align: center;
+  padding-bottom: 15px;
+  min-height: 82vh;
+}
+
+.currentClusterUsageCharts_title {
+  padding: 10px;
+  font-size: 20px;
+  font-weight: 500;
+}
+
+.currentClusterUsageCharts_clusterSelector {
+  width: 200px;
+  justify-content: space-around;
+}
+
+.currentClusterUsageCharts_empty {
+  margin-top: 25px;
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+}
+
+.currentClusterUsageCharts_meterGauges_5orLess {
+  margin-top: 25px;
+  display: flex;
+  justify-content: center;
+  flex-wrap: wrap;
+}
+
+.currentClusterUsageCharts_meterGauges_5orMore {
+  margin-top: 25px;
+  display: flex;
+  justify-content: flex-start;
+  flex-wrap: wrap;
+}
+
+.currentClusterUsageCharts_meterGaugeBox {
+  width: 300px;
 }
