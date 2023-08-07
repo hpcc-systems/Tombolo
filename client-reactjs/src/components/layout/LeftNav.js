@@ -12,6 +12,7 @@ import {
   ContainerOutlined,
   BarChartOutlined,
   CloudServerOutlined,
+  ApiOutlined,
 } from '@ant-design/icons';
 
 import { hasEditPermission } from '../common/AuthUtil.js';
@@ -164,8 +165,11 @@ class LeftNav extends Component {
               <Menu.Item key="10" icon={<i className="fa fa-fw fa-desktop" />}>
                 <Link to={'/admin/applications'}>{<Text text="Applications" />}</Link>
               </Menu.Item>
+              <Menu.Item key="11" icon={<ApiOutlined />}>
+                <Link to={'/admin/plugins'}>{<Text text="Plugins" />}</Link>
+              </Menu.Item>
               <Menu.Item
-                key="11"
+                key="12"
                 icon={this.props.isReportLoading ? <LoadingOutlined /> : <i className="fa fa-fw fa-balance-scale" />}>
                 <Link to={'/admin/compliance'}>
                   <Text>Compliance</Text>
