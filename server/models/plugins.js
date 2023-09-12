@@ -1,7 +1,7 @@
 "use strict";
 module.exports = (sequelize, DataTypes) => {
-  const orbitBuilds = sequelize.define(
-    "orbitBuilds",
+  const plugins = sequelize.define(
+    "plugins",
     {
       id: {
         primaryKey: true,
@@ -13,36 +13,33 @@ module.exports = (sequelize, DataTypes) => {
       name: {
         allowNull: false,
         type: DataTypes.STRING,
-        unique: true,
+        unique: false,
+      },
+      description: {
+        allowNull: false,
+        type: DataTypes.STRING,
+        unique: false,
+      },
+      active: {
+        allowNull: false,
+        type: DataTypes.BOOLEAN,
       },
       application_id: {
         allowNull: false,
         type: DataTypes.UUID,
       },
-      metaData: {
-        type: DataTypes.JSON,
-        allowNull: true,
-      },
-      build_id: {
-        type: DataTypes.STRING,
-        allowNull: false,
-      },
-      metaData: {
-        type: DataTypes.JSON,
-        allowNull: true,
-      },
     },
-    { paranoid: true, freezeTableName: true }
+    { freezeTableName: true }
   );
-  orbitBuilds.associate = function (models) {
+  plugins.associate = function (models) {
     // Define association here
-    orbitBuilds.belongsTo(models.application, {
+    plugins.belongsTo(models.application, {
       foreignKey: "application_id",
     });
-    orbitBuilds.hasMany(models.monitoring_notifications, {
+    plugins.hasMany(models.monitoring_notifications, {
       foreignKey: "application_id",
       onDelete: "CASCADE",
     });
   };
-  return orbitBuilds;
+  return plugins;
 };

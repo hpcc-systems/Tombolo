@@ -28,6 +28,20 @@ const Plugins = () => {
     }
   };
 
+  const getPlugins = async () => {
+    try {
+      const payload = {
+        method: 'POST',
+        header: authHeader(),
+      };
+      const response = await fetch(`/api/plugins/create`, payload);
+
+      console.log(response);
+    } catch (err) {
+      console.log(err);
+    }
+  };
+
   const columns = [
     { title: 'Name', dataIndex: 'name' },
     { title: 'Description', dataIndex: 'description' },
@@ -38,7 +52,7 @@ const Plugins = () => {
         <Space size="middle">
           <a>
             <Tooltip title="Active">
-              <Switch onChange={getRecords(record.id)} />
+              <Switch onChange={getPlugins(record.id)} />
             </Tooltip>
           </a>
         </Space>
@@ -47,7 +61,8 @@ const Plugins = () => {
   ];
 
   useEffect(() => {
-    getRecords(1);
+    getPlugins(); // TODO have this run only once when server is started. This creates all the plugins
+    getRecords();
   });
   return (
     <>
