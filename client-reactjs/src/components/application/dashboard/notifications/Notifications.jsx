@@ -6,7 +6,7 @@ import moment from 'moment';
 
 import NotificationsTable from './NotificationsTable';
 import NotificationCharts from '../common/charts/NotificationCharts';
-import Filters from '../common/charts/Filters';
+import Filters from './Filters';
 import MetricBoxes from '../common/charts/MetricBoxes';
 import '../common/css/index.css';
 import { authHeader, handleError } from '../../../common/AuthHeader.js';

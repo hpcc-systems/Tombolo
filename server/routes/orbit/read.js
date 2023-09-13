@@ -2,7 +2,8 @@ const models = require("../../models");
 const orbitBuilds = models.orbitBuilds;
 const express = require("express");
 const { param } = require("express-validator");
-
+const { Op } = require("sequelize");
+const moment = require("moment");
 const router = express.Router();
 const path = require("path");
 const fs = require("fs");
@@ -58,17 +59,17 @@ router.get(
 );
 
 //get filtered orbit builds
-router.get("/filteredNotifications", async (req, res) => {
+router.get("/filteredBuilds", async (req, res) => {
   try {
     const { queryData } = req.query;
-    const { status, subStatus, dateRange, applicationId, environment } =
-      JSON.parse(queryData);
+
+    const { status, dateRange, applicationId } = JSON.parse(queryData);
 
     const query = {
-      [metaData.status]: { [Op.in]: status },
       application_id: applicationId,
-      [metaData.subStatus]: { [Op.in]: subStatus },
-      [metaData.EnvironmentName]: { [Op.in]: environment },
+      metaData: {
+        status: { [Op.in]: status },
+      },
     };
 
     if (dateRange) {
@@ -76,7 +77,7 @@ router.get("/filteredNotifications", async (req, res) => {
       let maxDate = moment(dateRange[1]).format("YYYY-MM-DD HH:mm:ss");
 
       const range = [minDate, maxDate];
-      query.createdAt = { [Op.between]: range };
+      query.metaData.lastRun = { [Op.between]: range };
     }
 
     const results = await orbitBuilds.findAll({
@@ -87,7 +88,7 @@ router.get("/filteredNotifications", async (req, res) => {
 
     res.status(200).send(results);
   } catch (err) {
-    logger.error(err);
+    console.error(err);
   }
 });
 

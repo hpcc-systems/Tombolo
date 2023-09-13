@@ -4,44 +4,44 @@ import { useSelector } from 'react-redux';
 import { message } from 'antd';
 import moment from 'moment';
 
-// import NotificationsTable from './NotificationsTable';
+// import buildsTable from './buildsTable';
 import NotificationCharts from '../common/charts/NotificationCharts';
-import Filters from '../common/charts/Filters';
+import Filters from './Filters';
 import MetricBoxes from '../common/charts/MetricBoxes';
 import '../common/css/index.css';
 import { authHeader, handleError } from '../../../common/AuthHeader.js';
-import { camelToTitleCase } from '../../../common/CommonUtil';
 import ExportMenu from '../ExportMenu/ExportMenu';
 // import BulkActions from './BulkActions';
 
 function Orbit() {
-  const [notifications, setNotifications] = useState([]);
+  const [builds, setBuilds] = useState([]);
   const [loadingData, setLoadingData] = useState(true);
   const [metrics, setMetrics] = useState([]);
   const [stackBarData, setStackBarData] = useState([]);
   const [donutData, setDonutData] = useState([]);
   const [groupDataBy, setGroupDataBy] = useState('day');
-  // const [selectedNotificationsForBulkAction, setSelectedNotificationForBulkAction] = useState([]);
+  // const [selectedbuildsForBulkAction, setSelectedbuildForBulkAction] = useState([]);
   // const [bulkActionModalVisible, setBulkActionModalVisibility] = useState(false);
-  // const [updatedNotificationInDb, setUpdatedNotificationInDb] = useState(null);
+  // const [updatedbuildInDb, setUpdatedbuildInDb] = useState(null);
 
   const {
     application: { applicationId },
   } = useSelector((item) => item.applicationReducer);
 
-  // Default filters to fetch notifications
+  // Default filters to fetch builds
   const [defaultFilters, setDefaultFilters] = useState({
-    monitoringType: ['jobMonitoring', 'file', 'cluster', 'superFile'],
-    monitoringStatus: ['notified', 'triage', 'completed', 'inProgress'],
+    status: ['DATA_QA_APPROVED', 'DATA_QA_REJECT', 'ON_HOLD'],
     dateRange: [moment().subtract(15, 'days'), moment()],
+    EnvironmentName: ['Insurance'],
     applicationId,
   });
 
   useEffect(() => {
-    const groupedData = notifications.map((notification) => {
-      const weekStart = moment(notification.createdAt).startOf('week').format('MM/DD/YY');
-      const weekEnd = moment(notification.createdAt).endOf('week').format('MM/DD/YY');
-      const updatedItem = { ...notification };
+    console.log(builds);
+    const groupedData = builds.map((build) => {
+      const weekStart = moment(build.metaData.lastRun).startOf('week').format('MM/DD/YY');
+      const weekEnd = moment(build.metaData.lastRun).endOf('week').format('MM/DD/YY');
+      const updatedItem = { ...build };
       updatedItem.createdAt = `${weekStart} - ${weekEnd}`;
       return updatedItem;
     });
@@ -52,47 +52,47 @@ function Orbit() {
   // When component loads create filter to load initial data
   useEffect(() => {
     if (applicationId) {
-      filterAndFetchNotifications(defaultFilters);
+      filterAndFetchBuilds(defaultFilters);
     }
   }, [applicationId]);
 
-  // When notification changes run
+  // When build changes run
   useEffect(() => {
-    if (notifications.length > 0) {
+    if (builds.length > 0) {
       const newMetrics = []; // Pie and card data
       const newStackBarData = []; // Stack bar Data
       const newDonutData = []; // Donut data
 
-      newMetrics.push({ title: 'Total', description: notifications.length });
+      newMetrics.push({ title: 'Total', description: builds.length });
 
-      const notificationCountByStatus = {};
-      const notificationCountByMonitoringType = {};
+      const buildCountByStatus = {};
+      const buildCountByEnvironmentName = {};
 
       //---------------------------------------
       let data;
       switch (groupDataBy) {
         case 'week':
-          data = notifications.map((notification) => {
-            const weekStart = moment(notification.createdAt).startOf('week').format('MM/DD/YY');
-            const weekEnd = moment(notification.createdAt).endOf('week').format('MM/DD/YY');
-            const updatedItem = { ...notification };
+          data = builds.map((build) => {
+            const weekStart = moment(build.metaData.lastRun).startOf('week').format('MM/DD/YY');
+            const weekEnd = moment(build.metaData.lastRun).endOf('week').format('MM/DD/YY');
+            const updatedItem = { ...build };
             updatedItem.createdAt = `${weekStart} - ${weekEnd}`;
             return updatedItem;
           });
           break;
 
         case 'month':
-          data = notifications.map((notification) => {
-            const updatedItem = { ...notification };
-            updatedItem.createdAt = moment(moment(notification.createdAt).utc(), 'MM/DD/YYYY').format('MMMM YYYY');
+          data = builds.map((build) => {
+            const updatedItem = { ...build };
+            updatedItem.createdAt = moment(moment(build.metaData.lastRun).utc(), 'MM/DD/YYYY').format('MMMM YYYY');
             return updatedItem;
           });
           break;
 
         case 'quarter':
-          data = notifications.map((notification) => {
-            const updatedItem = { ...notification };
-            const date = moment.utc(notification.createdAt);
+          data = builds.map((build) => {
+            const updatedItem = { ...build };
+            const date = moment.utc(build.metaData.lastRun);
             const year = date.year();
             const quarter = Math.ceil((date.month() + 1) / 3);
             updatedItem.createdAt = `${year} - Q${quarter}`;
@@ -101,9 +101,9 @@ function Orbit() {
           break;
 
         case 'year':
-          data = notifications.map((notification) => {
-            const updatedItem = { ...notification };
-            const date = moment.utc(notification.createdAt);
+          data = builds.map((build) => {
+            const updatedItem = { ...build };
+            const date = moment.utc(build.metaData.lastRun);
             const year = date.year();
             updatedItem.createdAt = year;
             return updatedItem;
@@ -111,43 +111,45 @@ function Orbit() {
           break;
 
         default:
-          data = notifications;
+          data = builds;
       }
       //---------------------------------------
-      data.forEach((notification) => {
-        if (notificationCountByStatus[notification?.status]) {
-          const newCount = notificationCountByStatus[notification.status] + 1;
-          notificationCountByStatus[notification.status] = newCount;
+      data.forEach((build) => {
+        if (buildCountByStatus[build?.metaData.status]) {
+          const newCount = buildCountByStatus[build.metaData.status] + 1;
+          buildCountByStatus[build.metaData.status] = newCount;
         } else {
-          notificationCountByStatus[notification?.status] = 1;
+          buildCountByStatus[build?.metaData.status] = 1;
         }
 
         if (groupDataBy == 'day') {
           newStackBarData.push({
-            x: notification.createdAt.split('T')[0],
+            x: build.metaData.lastRun.split('T')[0],
             y: 1,
-            z: camelToTitleCase(notification.status),
+            z: build.metaData.status,
           });
         } else {
-          newStackBarData.push({ x: notification.createdAt, y: 1, z: camelToTitleCase(notification?.status) });
+          newStackBarData.push({ x: build.metaData.lastRun, y: 1, z: build?.metaData.status });
         }
 
-        // notificationCountByMonitoringType;
-        const { monitoring_type } = notification;
-        if (notificationCountByMonitoringType[monitoring_type]) {
-          notificationCountByMonitoringType[monitoring_type] = notificationCountByMonitoringType[monitoring_type] + 1;
+        // buildCountByEnvironmentName;
+        const {
+          metaData: { EnvironmentName },
+        } = build;
+        if (buildCountByEnvironmentName[EnvironmentName]) {
+          buildCountByEnvironmentName[EnvironmentName] = buildCountByEnvironmentName[EnvironmentName] + 1;
         } else {
-          notificationCountByMonitoringType[monitoring_type] = 1;
+          buildCountByEnvironmentName[EnvironmentName] = 1;
         }
       });
 
       //---------------------------------------
-      for (let key in notificationCountByStatus) {
-        newMetrics.push({ title: camelToTitleCase(key), description: notificationCountByStatus[key] });
+      for (let key in buildCountByStatus) {
+        newMetrics.push({ title: key, description: buildCountByStatus[key] });
       }
       //---------------------------------------
-      for (let key in notificationCountByMonitoringType) {
-        newDonutData.push({ type: camelToTitleCase(key), value: notificationCountByMonitoringType?.[key] });
+      for (let key in buildCountByEnvironmentName) {
+        newDonutData.push({ type: key, value: buildCountByEnvironmentName?.[key] });
       }
       //---------------------------------------
 
@@ -155,10 +157,10 @@ function Orbit() {
       setStackBarData(newStackBarData);
       setDonutData(newDonutData);
     }
-  }, [notifications, groupDataBy]);
+  }, [builds, groupDataBy]);
 
   //Get list of file monitorings that matches a filter
-  const filterAndFetchNotifications = async (filters) => {
+  const filterAndFetchBuilds = async (filters) => {
     try {
       setLoadingData(true);
       const payload = {
@@ -167,12 +169,12 @@ function Orbit() {
       };
       const queryData = JSON.stringify({ ...filters, applicationId });
 
-      const response = await fetch(`/api/notifications/read/filteredNotifications?queryData=${queryData}`, payload);
+      const response = await fetch(`/api/orbit/filteredbuilds?queryData=${queryData}`, payload);
       if (!response.ok) handleError(response);
       const data = await response.json();
-      setNotifications(data);
+      setBuilds(data);
     } catch (error) {
-      message.error('Failed to fetch notifications');
+      message.error('Failed to fetch builds');
     } finally {
       setLoadingData(false);
     }
@@ -186,7 +188,7 @@ function Orbit() {
             {/* <Button
               type="primary"
               ghost
-              disabled={selectedNotificationsForBulkAction.length > 0 ? false : true}
+              disabled={selectedbuildsForBulkAction.length > 0 ? false : true}
               onClick={() => {
                 setBulkActionModalVisibility(true);
               }}>
@@ -195,24 +197,24 @@ function Orbit() {
             <ExportMenu />
           </Space>
         }>
-        <Tabs.TabPane key="1" tab="Notifications">
-          {/* <NotificationsTable
+        <Tabs.TabPane key="1" tab="builds">
+          {/* <buildsTable
             applicationId={applicationId}
-            setSelectedNotificationForBulkAction={setSelectedNotificationForBulkAction}
-            updatedNotificationInDb={updatedNotificationInDb}
+            setSelectedbuildForBulkAction={setSelectedbuildForBulkAction}
+            updatedbuildInDb={updatedbuildInDb}
           /> */}
           {/* {bulkActionModalVisible ? (
             <BulkActions
               setBulkActionModalVisibility={setBulkActionModalVisibility}
-              selectedNotificationsForBulkAction={selectedNotificationsForBulkAction}
-              setUpdatedNotificationInDb={setUpdatedNotificationInDb}
+              selectedbuildsForBulkAction={selectedbuildsForBulkAction}
+              setUpdatedbuildInDb={setUpdatedbuildInDb}
             />
           ) : null} */}
         </Tabs.TabPane>
         <Tabs.TabPane key="2" tab="Dashboard">
           <Filters
             applicationId={applicationId}
-            setNotifications={setNotifications}
+            setBuilds={setBuilds}
             setLoadingData={setLoadingData}
             groupDataBy={groupDataBy}
             setGroupDataBy={setGroupDataBy}
@@ -220,9 +222,9 @@ function Orbit() {
             isOrbit={true}
           />
 
-          {notifications.length > 0 ? (
-            <div className="notifications__charts">
-              <MetricBoxes metrics={metrics} notifications={notifications} />
+          {builds.length > 0 ? (
+            <div className="builds__charts">
+              <MetricBoxes metrics={metrics} builds={builds} />
               <NotificationCharts
                 metrics={metrics}
                 stackBarData={stackBarData}

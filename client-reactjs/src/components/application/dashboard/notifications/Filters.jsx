@@ -3,9 +3,9 @@ import { Form, Select, DatePicker, Button, message } from 'antd';
 import { useHistory, useLocation } from 'react-router-dom';
 import moment from 'moment';
 
-import { authHeader, handleError } from '../../../../common/AuthHeader.js';
-import { monitoringStatusOptions } from '../monitoringStatusOptions.js';
-import '../css/index.css';
+import { authHeader, handleError } from '../../../common/AuthHeader.js';
+import { monitoringStatusOptions } from '../common/monitoringStatusOptions.js';
+import '../common/css/index.css';
 
 //Monitoring types options for notifications
 const monitoringTypeOptionsForNotifications = [
