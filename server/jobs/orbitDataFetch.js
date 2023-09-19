@@ -1,63 +1,66 @@
 const { parentPort, workerData } = require("worker_threads");
 
 const hpccUtil = require("../utils/hpcc-util");
-const models = require("../models");
+
 const logger = require("../config/logger");
-const cluster = models.cluster;
+const models = require("../models");
+const application = require("../models/application");
+const plugins = require("../models/plugins");
 
 const { log, dispatch } = require("./workerUtils")(parentPort);
 
-(async () => {
-  //grab all clusters
-  const clusters = await cluster.findAll();
+async () => {
+  try {
+    //grab all orbit plugins that are active
+    const orbitPlugins = await plugins.findAll({
+      where: {
+        name: "Orbit",
+        active: true,
+      },
+    });
 
-  //If no clusters, log so to the console and return
-  if (clusters.length === 0) {
-    log("verbose", `NO CLUSTERS TO FIND OFFSET FOR FOUND`);
-    return;
-  }
+    if (orbitPlugins) {
+      //if there are active plugins, grab new data and send notifications
 
-  //if clusters are found, iterate through them and set timezone offset for each one
-  await setClusterTimezoneOffset(clusters);
+      orbitPlugins.map(async (plugin) => {
+        const connectionString =
+          "server=ALAWDSQL201.RISK.REGN.NET,50265;Database=ORBITReport;Trusted_Connection=Yes;Driver={ODBC Driver 17 for SQL Server}";
+        const query =
+          "select TOP 5 * from DimBuildInstance where SubStatus_Code = 'MEGAPHONE' order by DateUpdated desc";
+        sql.query(connectionString, query, (err, rows) => {
+          if (!err) {
+            rows.map(async (build) => {
+              let orbitBuild = await orbitBuilds.findOne({
+                where: {
+                  build_id: build.BuildInstanceIdKey,
+                  application_id: application_id,
+                },
+                raw: true,
+              });
 
-  //once function is done, exit and report finished
-  if (parentPort) parentPort.postMessage("done");
-  else process.exit(0);
-})();
-
-async function setClusterTimezoneOffset(clusters) {
-  //loop through clusters
-  for (i = 0; i < clusters.length; i++) {
-    try {
-      //get offset for cluster
-      const offset = await hpccUtil.getClusterTimezoneOffset(
-        clusters[i].dataValues.id
-      );
-
-      //get cluster
-      let newCluster = await cluster.findOne({
-        where: { id: clusters[i].dataValues.id },
+              if (!orbitBuild) {
+                await orbitBuilds.create({
+                  application_id: application_id,
+                  build_id: build.BuildInstanceIdKey,
+                  name: build.Name,
+                  metaData: {
+                    lastRun: build.DateUpdated,
+                    status: build.Status_Code,
+                    subStatus: build.SubStatus_Code,
+                    workunit: build.HpccWorkUnit,
+                    EnvironmentName: build.EnvironmentName,
+                    Template: build.BuildTemplate_Name,
+                  },
+                });
+              }
+            });
+          }
+        });
       });
-
-      //compare if clusters timezone is the same as the retrieved
-      if (newCluster.dataValues.timezone_offset === offset) {
-        log("verbose", `CLUSTER TIMEZONE OFFSET NOT NEEDED TO BE UPDATED`);
-      } else {
-        newCluster.timezone_offset = offset;
-
-        // flipping isActive
-        await cluster.update(
-          { timezone_offset: offset },
-          { where: { id: clusters[i].dataValues.id } }
-        );
-        log(
-          "verbose",
-          `CLUSTER TIMEZONE  OFFSET UPDATED FOR CLUSTERID: ` +
-            clusters[i].dataValues.id
-        );
-      }
-    } catch (err) {
-      log("error", "ERROR CHECKING CLUSTER TIMEZONE OFFSETS: " + err);
+    } else {
+      logger.info("No active Orbit Plugins found.");
     }
+  } catch (error) {
+    logger.error("Error while running Orbit Jobs: " + error);
   }
-}
+};

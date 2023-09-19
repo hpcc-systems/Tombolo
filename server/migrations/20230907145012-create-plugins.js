@@ -20,6 +20,10 @@ module.exports = {
       active: {
         type: Sequelize.BOOLEAN,
       },
+      metaData: {
+        type: Sequelize.JSON,
+        allowNull: true,
+      },
       createdAt: {
         allowNull: false,
         type: Sequelize.DATE,

@@ -6,103 +6,103 @@ import { useLocation } from 'react-router-dom';
 import { authHeader, handleError } from '../../../common/AuthHeader.js';
 import { camelToTitleCase, formatDateTime } from '../../../common/CommonUtil.js';
 
-function NotificationsTable({ applicationId, setSelectedNotificationForBulkAction, updatedNotificationInDb }) {
-  const [notifications, setNotifications] = useState([]);
-  const [viewNotificationDetails, setViewNotificationDetails] = useState(false);
-  const [selectedNotification, setSelectedNotification] = useState(null);
+function buildsTable({ applicationId, setSelectedbuildForBulkAction, updatedbuildInDb }) {
+  const [builds, setbuilds] = useState([]);
+  const [viewbuildDetails, setViewbuildDetails] = useState(false);
+  const [selectedbuild, setSelectedbuild] = useState(null);
   const [filters, setFilters] = useState({
     statusFilters: [],
     monitoringTypeFilters: [],
-    notificationReasonFilters: [],
-    notificationChannelFilters: [],
+    buildReasonFilters: [],
+    buildChannelFilters: [],
   });
   const location = useLocation();
 
-  // Selected notification - complete details
-  const selectedNotificationDetails = [
+  // Selected build - complete details
+  const selectedbuildDetails = [
     {
       key: 'Monitoring Type',
-      value: camelToTitleCase(selectedNotification?.monitoring_type),
+      value: camelToTitleCase(selectedbuild?.monitoring_type),
     },
     {
       key: 'Monitoring Name',
       value: `${
-        selectedNotification?.['fileMonitoring.name'] ||
-        selectedNotification?.['clusterMonitoring.name'] ||
-        selectedNotification?.['jobMonitoring.name']
+        selectedbuild?.['fileMonitoring.name'] ||
+        selectedbuild?.['clusterMonitoring.name'] ||
+        selectedbuild?.['jobMonitoring.name']
       }`,
     },
-    { key: 'Notified at', value: formatDateTime(selectedNotification?.createdAt) },
-    { key: 'Updated at', value: formatDateTime(selectedNotification?.updatedAt) },
-    { key: 'Notification reason', value: selectedNotification?.notification_reason },
-    { key: 'Status', value: camelToTitleCase(selectedNotification?.status) },
+    { key: 'Notified at', value: formatDateTime(selectedbuild?.createdAt) },
+    { key: 'Updated at', value: formatDateTime(selectedbuild?.updatedAt) },
+    { key: 'build reason', value: selectedbuild?.build_reason },
+    { key: 'Status', value: camelToTitleCase(selectedbuild?.status) },
     {
       key: 'Comment',
-      value: selectedNotification?.comment,
+      value: selectedbuild?.comment,
     },
   ];
 
-  // Update filters when notifications change
+  // Update filters when builds change
   useEffect(() => {
-    if (notifications.length > 0) {
-      const uniqueStatuses = new Set(notifications.map((notification) => notification.status));
+    if (builds.length > 0) {
+      const uniqueStatuses = new Set(builds.map((build) => build.status));
       const newStatusFilters = Array.from(uniqueStatuses).map((status) => ({
         text: camelToTitleCase(status),
         value: status,
       }));
       setFilters((prev) => ({ ...prev, statusFilters: newStatusFilters }));
 
-      const uniqueMonitoringTypes = new Set(notifications.map((notification) => notification.monitoring_type));
+      const uniqueMonitoringTypes = new Set(builds.map((build) => build.monitoring_type));
       const newMonitoringTypeFilters = Array.from(uniqueMonitoringTypes).map((type) => ({
         text: camelToTitleCase(type),
         value: type,
       }));
       setFilters((prev) => ({ ...prev, monitoringTypeFilters: newMonitoringTypeFilters }));
 
-      const uniqueNotificationReasons = new Set(notifications.map((notification) => notification.notification_reason));
-      const newNotificationReasonFilters = Array.from(uniqueNotificationReasons).map((reason) => ({
+      const uniquebuildReasons = new Set(builds.map((build) => build.build_reason));
+      const newbuildReasonFilters = Array.from(uniquebuildReasons).map((reason) => ({
         text: camelToTitleCase(reason),
         value: reason,
       }));
-      setFilters((prev) => ({ ...prev, notificationReasonFilters: newNotificationReasonFilters }));
+      setFilters((prev) => ({ ...prev, buildReasonFilters: newbuildReasonFilters }));
 
-      const uniqueNotificationChannels = new Set(
-        notifications.map((notification) => notification.notification_channel)
+      const uniquebuildChannels = new Set(
+        builds.map((build) => build.build_channel)
       );
-      const newNotificationChannelFilters = Array.from(uniqueNotificationChannels).map((channel) => ({
+      const newbuildChannelFilters = Array.from(uniquebuildChannels).map((channel) => ({
         text: camelToTitleCase(channel),
         value: channel,
       }));
-      setFilters((prev) => ({ ...prev, notificationChannelFilters: newNotificationChannelFilters }));
+      setFilters((prev) => ({ ...prev, buildChannelFilters: newbuildChannelFilters }));
     }
-  }, [notifications]);
+  }, [builds]);
 
-  //When the component loads - get all notifications
+  //When the component loads - get all builds
   useEffect(() => {
     const monitoringId = new URLSearchParams(location.search).get('monitoringId');
-    getNotifications(monitoringId);
-  }, [applicationId, location, updatedNotificationInDb]);
+    getbuilds(monitoringId);
+  }, [applicationId, location, updatedbuildInDb]);
 
   //Get list of all file monitoring
-  const getNotifications = async (monitoringId) => {
+  const getbuilds = async (monitoringId) => {
     try {
       const payload = {
         method: 'GET',
         header: authHeader(),
       };
 
-      const response = await fetch(`/api/notifications/read/${applicationId}`, payload);
+      const response = await fetch(`/api/builds/read/${applicationId}`, payload);
       if (!response.ok) handleError(response);
       const data = await response.json();
 
       if (!monitoringId) {
-        setNotifications(data);
+        setbuilds(data);
       } else {
         const filtered = data.filter((item) => item.monitoring_id === monitoringId);
-        setNotifications(filtered);
+        setbuilds(filtered);
       }
     } catch (error) {
-      message.error('Failed to fetch notifications');
+      message.error('Failed to fetch builds');
     }
   };
 
@@ -123,8 +123,8 @@ function NotificationsTable({ applicationId, setSelectedNotificationForBulkActio
       onCell: (record) => {
         return {
           onClick: () => {
-            setSelectedNotification(record);
-            setViewNotificationDetails(true);
+            setSelectedbuild(record);
+            setViewbuildDetails(true);
           },
         };
       },
@@ -145,21 +145,21 @@ function NotificationsTable({ applicationId, setSelectedNotificationForBulkActio
       },
     },
     {
-      title: 'Notification reason',
+      title: 'build reason',
       render: (record) => {
-        return camelToTitleCase(record.notification_reason);
+        return camelToTitleCase(record.build_reason);
       },
-      sorter: (a, b) => a.notification_reason.localeCompare(b.notification_reason),
-      filters: filters.notificationReasonFilters,
-      onFilter: (value, record) => record.notification_reason === value,
+      sorter: (a, b) => a.build_reason.localeCompare(b.build_reason),
+      filters: filters.buildReasonFilters,
+      onFilter: (value, record) => record.build_reason === value,
     },
     {
-      title: 'Notification channel',
+      title: 'build channel',
       render: (record) => {
-        return camelToTitleCase(record.notification_channel);
+        return camelToTitleCase(record.build_channel);
       },
-      filters: filters.notificationChannelFilters,
-      onFilter: (value, record) => record.notification_channel === value,
+      filters: filters.buildChannelFilters,
+      onFilter: (value, record) => record.build_channel === value,
     },
     {
       title: 'status',
@@ -202,7 +202,7 @@ function NotificationsTable({ applicationId, setSelectedNotificationForBulkActio
   // Row selection
   const rowSelection = {
     onChange: (_selectedRowKeys, selectedRows) => {
-      setSelectedNotificationForBulkAction(selectedRows);
+      setSelectedbuildForBulkAction(selectedRows);
     },
   };
 
@@ -214,7 +214,7 @@ function NotificationsTable({ applicationId, setSelectedNotificationForBulkActio
         pagination={{ pageSize: 14 }}
         size="small"
         columns={columns}
-        dataSource={notifications}
+        dataSource={builds}
         rowKey={(record) => record.id}
         verticalAlign="top"
         rowSelection={rowSelection}
@@ -222,37 +222,37 @@ function NotificationsTable({ applicationId, setSelectedNotificationForBulkActio
           return {
             onClick: () => {
               console.log(record);
-              setSelectedNotification(record);
-              setViewNotificationDetails(true);
+              setSelectedbuild(record);
+              setViewbuildDetails(true);
             },
           };
         }}
       />
       <Modal
-        title={selectedNotification?.['fileMonitoring.name'] || selectedNotification?.['clusterMonitoring.name'] || ''}
+        title={selectedbuild?.['fileMonitoring.name'] || selectedbuild?.['clusterMonitoring.name'] || ''}
         width={850}
-        visible={viewNotificationDetails}
-        onCancel={() => setViewNotificationDetails(false)}
+        visible={viewbuildDetails}
+        onCancel={() => setViewbuildDetails(false)}
         maskClosable={false}
         footer={
-          <Button type="primary" onClick={() => setViewNotificationDetails(false)}>
+          <Button type="primary" onClick={() => setViewbuildDetails(false)}>
             Close
           </Button>
         }>
         <Tabs>
           <Tabs.TabPane tab="Metadata" key="1">
             <Descriptions bordered column={1} size="small">
-              {selectedNotificationDetails.map((item) => (
+              {selectedbuildDetails.map((item) => (
                 <Descriptions.Item label={item.key} key={item.key}>
                   {item.value}
                 </Descriptions.Item>
               ))}
             </Descriptions>
           </Tabs.TabPane>
-          <Tabs.TabPane tab="Notification" key="2">
+          <Tabs.TabPane tab="build" key="2">
             <div
-              dangerouslySetInnerHTML={{ __html: selectedNotification?.metaData?.notificationBody || '' }}
-              className="sentNotificationBody"
+              dangerouslySetInnerHTML={{ __html: selectedbuild?.metaData?.buildBody || '' }}
+              className="sentbuildBody"
             />
           </Tabs.TabPane>
         </Tabs>
@@ -261,4 +261,4 @@ function NotificationsTable({ applicationId, setSelectedNotificationForBulkActio
   );
 }
 
-export default NotificationsTable;
+export default buildsTable;

@@ -108,33 +108,40 @@ router.post(
       const connectionString =
         "server=ALAWDSQL201.RISK.REGN.NET,50265;Database=ORBITReport;Trusted_Connection=Yes;Driver={ODBC Driver 17 for SQL Server}";
       const query =
-        "select TOP 100 * from DimBuildInstance where SubStatus_Code = 'MEGAPHONE' order by DateUpdated desc";
+        "select TOP 5 * from DimBuildInstance where SubStatus_Code = 'MEGAPHONE' order by DateUpdated desc";
       sql.query(connectionString, query, (err, rows) => {
-        rows.map(async (build) => {
-          let orbitBuild = await orbitBuilds.findOne({
-            where: {
-              build_id: build.BuildInstanceIdKey,
-              application_id: application_id,
-            },
-            raw: true,
-          });
-
-          if (!orbitBuild) {
-            await orbitBuilds.create({
-              application_id: application_id,
-              build_id: build.BuildInstanceIdKey,
-              name: build.Name,
-              metaData: {
-                lastRun: build.DateUpdated,
-                status: build.Status_Code,
-                subStatus: build.SubStatus_Code,
-                workunit: build.HpccWorkUnit,
-                EnvironmentName: build.EnvironmentName,
-                Template: build.BuildTemplate_Name,
+        if (!err) {
+          rows.map(async (build) => {
+            let orbitBuild = await orbitBuilds.findOne({
+              where: {
+                build_id: build.BuildInstanceIdKey,
+                application_id: application_id,
               },
+              raw: true,
             });
-          }
-        });
+
+            if (!orbitBuild) {
+              await orbitBuilds.create({
+                application_id: application_id,
+                build_id: build.BuildInstanceIdKey,
+                name: build.Name,
+                metaData: {
+                  lastRun: build.DateUpdated,
+                  status: build.Status_Code,
+                  subStatus: build.SubStatus_Code,
+                  workunit: build.HpccWorkUnit,
+                  EnvironmentName: build.EnvironmentName,
+                  Template: build.BuildTemplate_Name,
+                },
+              });
+            }
+          });
+        } else {
+          console.log(err);
+          res
+            .status(400)
+            .send("There was an issue contacting the orbit reports server");
+        }
       });
       res.status(200).send(result);
     } catch (err) {

@@ -37,48 +37,55 @@ router.get(
   }
 );
 
-//route to enter in all plugins for each application, we need to enter this to have them appear for activation/deactivation on user side
-router.post("/create", async (req, res) => {
-  try {
-    //grab all applications so we can have one entry per plugin per application
-    const applications = await application.findAll({});
+// //route to enter in all plugins for each application, we need to enter this to have them appear for activation/deactivation on user side
+// router.post("/create", async (req, res) => {
+//   try {
+//     //grab all applications so we can have one entry per plugin per application
+//     const applications = await application.findAll({});
 
-    let pluginList = [];
+//     let pluginList = [];
 
-    //build list of plugins
-    applications.map((application) => {
-      //for each application, add an object of each plugin, for now we only have orbit
-      pluginList.push({
-        application_id: application.id,
-        name: "Orbit",
-        description:
-          "Enabling this plugin will allow Tombolo to collect data from HPCCs Orbit system and provide dashboard information for it",
-        active: "false",
-      });
-    });
+//     //build list of plugins
+//     applications.map((application) => {
+//       //for each application, add an object of each plugin, for now we only have orbit
+//       pluginList.push({
+//         application_id: application.id,
+//         name: "Orbit",
+//         description:
+//           "Enabling this plugin will allow Tombolo to collect data from HPCCs Orbit system and provide dashboard information for it",
+//         active: "false",
+//         metaData: {
+//           notificationEmails: "matthew.fancher@lexisnexisrisk.com",
+//           notificationWebhooks:
+//             "https://reedelsevier.webhook.office.com/webhookb2/81c072d6-6b47-4eca-9434-73944c464876@9274ee3f-9425-4109-a27f-9fb15c10675d/IncomingWebhook/60019c7653734064b4c225a02b1da597/af40e12f-e839-4801-91e9-e61a20045feb",
+//         },
+//       });
+//     });
 
-    //create plugins, double checking they don't already exist
-    pluginList.map(async (plugin) => {
-      let exists = await plugins.findOne({
-        where: {
-          name: plugin.name,
-          application_id: plugin.application_id,
-        },
-        raw: true,
-      });
+//     //create plugins, double checking they don't already exist
+//     pluginList.map(async (plugin) => {
+//       let exists = await plugins.findOne({
+//         where: {
+//           name: plugin.name,
+//           application_id: plugin.application_id,
+//         },
+//         raw: true,
+//       });
+//       console.log(exists);
 
-      //if it doesn't exist, create plugin
-      if (!exists) {
-        plugins.create(plugin);
-      }
-    });
+//       //if it doesn't exist, create plugin
+//       if (!exists) {
 
-    res.status(200).send("success");
-  } catch (err) {
-    // ... error checks
-    console.log(err);
-  }
-});
+//         plugins.create(plugin);
+//       }
+//     });
+
+//     res.status(200).send("success");
+//   } catch (err) {
+//     // ... error checks
+//     console.log(err);
+//   }
+// });
 
 //activate or deactive plugin
 router.put(

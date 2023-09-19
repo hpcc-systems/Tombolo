@@ -1,35 +1,28 @@
-import React, { useEffect } from 'react';
+import React, { useEffect, useState } from 'react';
 import { Tooltip, Space, Table, Switch } from 'antd';
 import BreadCrumbs from '../common/BreadCrumbs';
 import { authHeader } from '../common/AuthHeader.js';
 
 const Plugins = () => {
-  const plugins = [
-    {
-      id: 1,
-      name: 'Orbit',
-      description:
-        'Enabling this plugin will allow Tombolo to provide a dashboard with data collected from HPCCs Orbit system and provide dashboard information for it',
-    },
-  ];
+  const [plugins, setPlugins] = useState(null);
+  // const getRecords = async (id) => {
 
-  const getRecords = async (id) => {
-    console.log(id);
-    try {
-      const payload = {
-        method: 'GET',
-        header: authHeader(),
-      };
-      const response = await fetch(`/api/orbit/get`, payload);
+  //   try {
+  //     const payload = {
+  //       method: 'GET',
+  //       header: authHeader(),
+  //     };
+  //     const response = await fetch(`/api/orbit/get`, payload);
 
-      console.log(response);
-    } catch (err) {
-      console.log(err);
-    }
-  };
+  //     console.log(response);
+  //   } catch (err) {
+  //     console.log(err);
+  //   }
+  // };
 
   const getPlugins = async () => {
     try {
+      console.log(setPlugins);
       const payload = {
         method: 'POST',
         header: authHeader(),
@@ -41,6 +34,8 @@ const Plugins = () => {
       console.log(err);
     }
   };
+
+  getPlugins();
 
   const columns = [
     { title: 'Name', dataIndex: 'name' },
@@ -61,8 +56,8 @@ const Plugins = () => {
   ];
 
   useEffect(() => {
-    getPlugins(); // TODO have this run only once when server is started. This creates all the plugins
-    getRecords();
+    // getPlugins(); // TODO have this run only once when server is started. This creates all the plugins
+    // getRecords();
   });
   return (
     <>
