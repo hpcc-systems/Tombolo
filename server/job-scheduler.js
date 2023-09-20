@@ -34,6 +34,7 @@ const JOB_MONITORING = "submitJobMonitoring.js";
 const SUBMIT_SUPER_FILEMONITORING_FILE_NAME = "submitSuperFileMonitoring.js";
 const CLUSTER_USAGE_HISTORY_TRACKER = "submitClusterUsageTracker.js";
 const PLUGIN_CREATION = "pluginCreation.js";
+const ORBIT_DATA_FETCH_AND_NOTIFICATION = "orbitDataFetch.js";
 
 class JobScheduler {
   constructor() {
@@ -104,6 +105,7 @@ class JobScheduler {
       await this.scheduleJobMonitoringOnServerStart();
       await this.createClusterUsageHistoryJob();
       await this.createPluginCreationJob();
+      await this.createOrbitDataFetchJob();
       logger.info("✔️  JOB SCHEDULER BOOTSTRAPPED...");
     })();
   }
@@ -707,6 +709,18 @@ class JobScheduler {
     this.bree.add(job);
     this.bree.start(uniqueJobName);
     logger.info("📈 PLUGIN CREATION JOB STARTED ...");
+  }
+
+  createOrbitDataFetchJob() {
+    const uniqueJobName = `Orbit Data Fetch Job`;
+    const job = {
+      interval: "60s",
+      name: uniqueJobName,
+      path: path.join(__dirname, "jobs", ORBIT_DATA_FETCH_AND_NOTIFICATION),
+    };
+    this.bree.add(job);
+    this.bree.start(uniqueJobName);
+    logger.info("📈 ORBIT DATA FETCH JOB STARTED ...");
   }
 
   async removeJobFromScheduler(name) {

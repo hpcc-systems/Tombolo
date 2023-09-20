@@ -43,12 +43,12 @@ module.exports = {
             <td>${buildDetails.name}</td>
             <td>${buildDetails.status}</td>
             <td> ${buildDetails.subStatus}</td>
-            <td> ${buildDetails.lastrun}</td>
-            <td> ${buildDetails.HpccWorkUnit}</td>
+            <td> ${buildDetails.lastRun}</td>
+            <td> ${buildDetails.workunit}</td>
           </tr>`;
 
     const table = `<div style="margin-top: 10px"> <table border="1" cellpadding="2" cellspacing="0" width="100%" style="border-collapse:collapse" >
-              <tr><td> NAme </td><td> Status </td><td> SubStatus</td><td>Last Run</td><td> Work Unit</td></tr>
+              <tr><td> Name </td><td> Status </td><td> SubStatus</td><td>Last Run</td><td> Work Unit</td></tr>
                 ${tableRows}
               </table></div>`;
 
@@ -58,6 +58,98 @@ module.exports = {
     body = body + table;
 
     body = body + `<br/><br/><p>-Tombolo </p>`;
+    return body;
+  },
+
+  // TODO  make this message card general by changing the key name
+  orbitBuildMessageCard: function (title, facts, notification_id) {
+    let allFacts = [];
+    cardData = `"notification_id": "${notification_id}"`;
+    facts.forEach((fact) => {
+      for (let key in fact) {
+        allFacts.push({ name: key, value: fact[key] });
+      }
+      allFacts = [...allFacts];
+    });
+    const body = JSON.stringify({
+      "@type": "MessageCard",
+      "@context": "https://schema.org/extensions",
+      summary: title,
+      themeColor: "0072C6",
+      title: title,
+      sections: [
+        {
+          facts: allFacts,
+        },
+        {
+          type: "MessageCard",
+          contentType: "text/html",
+          text: " ",
+        },
+      ],
+
+      potentialAction: [
+        {
+          "@type": "ActionCard",
+          name: "Add a comment",
+          inputs: [
+            {
+              "@type": "TextInput",
+              id: "comment",
+              isMultiline: false,
+              title: "Add a comment here for this task",
+            },
+          ],
+          actions: [
+            {
+              "@type": "HttpPOST",
+              name: "Add comment",
+              target: process.env.API_URL + "/api/updateNotification/update",
+              body: `{"comment":"{{comment.value}}", ${cardData}}`,
+              isRequired: true,
+              errorMessage: "Comment cannot be blank",
+            },
+          ],
+        },
+        {
+          "@type": "ActionCard",
+          name: "Change status",
+          inputs: [
+            {
+              "@type": "MultichoiceInput",
+              id: "list",
+              title: "Select a status",
+              isMultiSelect: "false",
+              choices: [
+                {
+                  display: "Triage",
+                  value: "triage",
+                },
+                {
+                  display: "In Progress",
+                  value: "inProgress",
+                },
+                {
+                  display: "Completed",
+                  value: "completed",
+                },
+              ],
+            },
+          ],
+          actions: [
+            {
+              "@type": "HttpPOST",
+              name: "Save",
+              target: process.env.API_URL + "/api/updateNotification/update",
+              body: `{"status":"{{list.value}}", ${cardData}}`,
+              isRequired: true,
+              errorMessage: "Select an option",
+            },
+          ],
+        },
+      ],
+    });
+
     return body;
   },
 

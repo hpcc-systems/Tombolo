@@ -1,15 +1,14 @@
-const { parentPort, workerData } = require("worker_threads");
-
-const hpccUtil = require("../utils/hpcc-util");
-
+// const { parentPort } = require("worker_threads");
 const logger = require("../config/logger");
 const models = require("../models");
-const application = require("../models/application");
-const plugins = require("../models/plugins");
+const plugins = models.plugins;
+const orbitBuilds = models.orbitBuilds;
 const notificationTemplate = require("./messageCards/notificationTemplate");
 const { notify } = require("../routes/notifications/email-notification");
+const sql = require("msnodesqlv8");
+const { v4: uuidv4 } = require("uuid");
 
-const { log, dispatch } = require("./workerUtils")(parentPort);
+// const { log, dispatch } = require("./workerUtils")(parentPort);
 
 (async () => {
   try {
@@ -66,9 +65,9 @@ const { log, dispatch } = require("./workerUtils")(parentPort);
                 if (plugin.metaData.notificationEmails) {
                   let buildDetails = {
                     name: build.Name,
-                    status: build.Status,
+                    status: build.Status_Code,
                     subStatus: build.SubStatus_Code,
-                    lastRun: build.DateUpdated,
+                    lastRun: build.LastInfaRunDate,
                     workunit: build.HpccWorkUnit,
                   };
 
