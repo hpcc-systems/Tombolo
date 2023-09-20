@@ -36,6 +36,31 @@ module.exports = {
     return body;
   },
 
+  //Orbit Build email body
+
+  orbitBuildEmailBody: function (buildDetails) {
+    let tableRows = `<tr>
+            <td>${buildDetails.name}</td>
+            <td>${buildDetails.status}</td>
+            <td> ${buildDetails.subStatus}</td>
+            <td> ${buildDetails.lastrun}</td>
+            <td> ${buildDetails.HpccWorkUnit}</td>
+          </tr>`;
+
+    const table = `<div style="margin-top: 10px"> <table border="1" cellpadding="2" cellspacing="0" width="100%" style="border-collapse:collapse" >
+              <tr><td> NAme </td><td> Status </td><td> SubStatus</td><td>Last Run</td><td> Work Unit</td></tr>
+                ${tableRows}
+              </table></div>`;
+
+    let body =
+      "<p>Tombolo has detected an Orbit Build with a megaphone substatus.</p><br/><br/>";
+
+    body = body + table;
+
+    body = body + `<br/><br/><p>-Tombolo </p>`;
+    return body;
+  },
+
   //Cluster monitoring email body
   clusterMonitoringEmailBody: function (facts) {
     let body = "<div>";
@@ -141,7 +166,6 @@ module.exports = {
 
     return body;
   },
-
 
   //Message card for landing zone
   messageCardBody: function ({
