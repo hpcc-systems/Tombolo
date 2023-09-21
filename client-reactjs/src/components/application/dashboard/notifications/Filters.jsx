@@ -13,6 +13,7 @@ const monitoringTypeOptionsForNotifications = [
   { label: 'File', value: 'file' },
   { label: 'Cluster', value: 'cluster' },
   { label: 'Super File', value: 'superFile' },
+  { label: 'Orbit Build', value: 'orbit' },
 ];
 
 // Group by options
@@ -42,7 +43,7 @@ function Filters({
   const [form] = Form.useForm();
   const [dashboardFilters, setDashboardFilters] = useState({});
   const initialValues = {
-    monitoringType: ['jobMonitoring', 'file', 'cluster', 'superFile'],
+    monitoringType: ['jobMonitoring', 'file', 'cluster', 'superFile', 'orbit'],
     monitoringStatus: ['notified', 'triage', 'inProgress', 'completed'],
     dateRange: [moment().subtract(15, 'days'), moment()],
     groupDataBy: groupDataBy,
