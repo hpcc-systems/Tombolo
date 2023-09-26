@@ -8,7 +8,6 @@ const notificationTemplate = require("./messageCards/notificationTemplate");
 const { notify } = require("../routes/notifications/email-notification");
 const { v4: uuidv4 } = require("uuid");
 const axios = require("axios");
-// const { parentPort } = require("worker_threads");
 
 const dbConfig = {
   server: process.env.ORBIT_DB,
@@ -117,10 +116,10 @@ const dbConfig = {
               if (plugin.metaData.notificationWebhooks) {
                 let facts = [
                   { name: newBuild.name },
-                  { status: newBuild.metaData.status },
-                  { subStatus: newBuild.metaData.subStatus },
-                  { lastRun: newBuild.metaData.lastRun },
-                  { workunit: newBuild.metaData.workunit },
+                  { Status: newBuild.metaData.status },
+                  { "Sub Status": newBuild.metaData.subStatus },
+                  { "Last Run": newBuild.metaData.lastRun },
+                  { WorkUnit: newBuild.metaData.workunit },
                 ];
                 let title = "Orbit Build Detectd With Megaphone Status";
                 notification_id = uuidv4();
@@ -129,15 +128,16 @@ const dbConfig = {
                   facts,
                   notification_id
                 );
+
                 await axios.post(
                   plugin.metaData.notificationWebhooks,
-                  cardBody
+                  JSON.parse(cardBody)
                 );
 
                 sentNotifications.push({
                   id: notification_id,
                   status: "notified",
-                  notifiedTo: emailRecipients,
+                  notifiedTo: plugin.metaData.notificationWebhooks,
                   notification_channel: "msTeams",
                   application_id,
                   notification_reason: "Megaphone Substatus",

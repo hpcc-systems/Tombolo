@@ -177,7 +177,7 @@ module.exports = {
       }
       allFacts = [...allFacts];
     });
-    const body = JSON.stringify({
+    const body = {
       "@type": "MessageCard",
       "@context": "https://schema.org/extensions",
       summary: title,
@@ -254,7 +254,7 @@ module.exports = {
           ],
         },
       ],
-    });
+    };
 
     return body;
   },
