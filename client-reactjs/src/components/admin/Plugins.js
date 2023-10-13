@@ -152,6 +152,7 @@ const Plugins = () => {
         footer={saveBtn}
         title="Plugin Settings">
         <Form layout="vertical" form={notificationForm} initialValues={{ monitoringActive: true }}>
+          <h3>Megaphone Alert Contacts</h3>
           <Form.Item
             label="Emails"
             style={{ width: '100%' }}

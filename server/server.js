@@ -120,7 +120,7 @@ app.use((err, req, res, next) => {
   res.status(500).send("Something went wrong");
 });
 
-process.env["NODE_TLS_REJECT_UNAUTHORIZED"] = 0;
+// process.env["NODE_TLS_REJECT_UNAUTHORIZED"] = 0;
 
 /* Start server */
 server.listen(port, "0.0.0.0", async () => {
