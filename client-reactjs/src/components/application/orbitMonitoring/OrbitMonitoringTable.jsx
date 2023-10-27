@@ -1,12 +1,9 @@
 import React from 'react';
-import { Table, Space, Tooltip, Badge } from 'antd';
+import { Table, Space, Tooltip, Badge, message } from 'antd';
 import { DeleteOutlined, EyeOutlined, PauseCircleOutlined, PlayCircleOutlined } from '@ant-design/icons';
+import { authHeader, handleError } from '../../common/AuthHeader.js';
 
-const OrbitMonitoringTable = ({
-  changeOrbitBuildMonitoringStatus,
-  viewExistingOrbitBuildMonitoring,
-  orbitBuildList,
-}) => {
+const OrbitMonitoringTable = ({ viewExistingOrbitBuildMonitoring, orbitBuildList, setOrbitBuildList }) => {
   // Delete record
   const deleteOrbitBuildMonitoring = async ({ id, name }) => {
     try {
@@ -33,10 +30,10 @@ const OrbitMonitoringTable = ({
 
       const response = await fetch(`/api/OrbitBuildmonitoring/read/OrbitBuildMonitoringStatus/${id}`, payload);
       if (!response.ok) return handleError(response);
-      const updatedMonitoringList = OrbitBuildMonitoringList.map((record) =>
+      const updatedMonitoringList = orbitBuildList.map((record) =>
         record.id === id ? { ...record, isActive: !record.isActive } : record
       );
-      setOrbitBuildMonitoringList(updatedMonitoringList);
+      setOrbitBuildList(updatedMonitoringList);
     } catch (err) {
       message.error('Failed to update file monitoring status');
     }

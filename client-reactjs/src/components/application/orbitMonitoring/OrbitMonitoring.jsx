@@ -87,6 +87,7 @@ const OrbitMonitoring = () => {
         setModalVisible={setModalVisible}
         confirmLoading={confirmLoading}
         orbitBuildList={orbitBuildList}
+        setOrbitBuildList={setOrbitBuildList}
         saveOrbitBuildDetails={saveOrbitBuildDetails}
       />
     </>
