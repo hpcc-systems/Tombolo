@@ -89,7 +89,6 @@ const OrbitMonitoringTable = ({ viewExistingOrbitBuildMonitoring, orbitBuildList
   ];
   return (
     <>
-      <p>test change</p>
       <Table
         size="large"
         pagination={false}
