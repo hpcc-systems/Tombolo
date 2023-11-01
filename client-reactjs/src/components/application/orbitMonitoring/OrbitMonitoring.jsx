@@ -11,12 +11,16 @@ const OrbitMonitoring = () => {
   const [modalVisible, setModalVisible] = useState(false);
   const [confirmLoading, setConfirmLoading] = useState(false);
   const [orbitBuildList, setOrbitBuildList] = useState(null);
+  const [selectedOrbitBuild, setSelectedOrbitBuild] = useState(null);
+  const [editing, setEditing] = useState(null);
 
   const {
     application: { applicationId },
   } = useSelector((state) => state.applicationReducer);
 
   const addOrbitMonitoring = async () => {
+    await setSelectedOrbitBuild(null);
+    await setEditing(null);
     await setConfirmLoading(true);
     await setModalVisible(true);
     await setConfirmLoading(false);
@@ -53,17 +57,20 @@ const OrbitMonitoring = () => {
   const saveOrbitBuildDetails = async (monitoringDetails) => {
     try {
       const payload = {
-        // method: selectedFileMonitoring ? 'PUT' : 'POST',
-        method: 'POST',
+        method: editing ? 'PUT' : 'POST',
         header: authHeader(),
-        // body: JSON.stringify({ ...monitoringDetails, id: selectedFileMonitoring }),
-        body: JSON.stringify({ ...monitoringDetails }),
+        body: JSON.stringify({
+          ...monitoringDetails,
+          id: editing ? editing : selectedOrbitBuild,
+          build: selectedOrbitBuild,
+        }),
       };
 
       const response = await fetch('/api/orbit/', payload);
 
       if (!response.ok) handleError(response);
       message.success('Successfully saved orbit build monitoring data');
+      getOrbitMonitoring();
     } catch (error) {
       console.log(error);
       message.error('Failed to save orbit build monitoring');
@@ -81,7 +88,13 @@ const OrbitMonitoring = () => {
           </Tooltip>
         }
       />
-      <OrbitMonitoringTable orbitBuildList={orbitBuildList} setOrbitBuildList={setOrbitBuildList} />
+      <OrbitMonitoringTable
+        setSelectedOrbitBuild={setSelectedOrbitBuild}
+        orbitBuildList={orbitBuildList}
+        setOrbitBuildList={setOrbitBuildList}
+        setModalVisible={setModalVisible}
+        setEditing={setEditing}
+      />
       <OrbitMonitoringModal
         modalVisible={modalVisible}
         setModalVisible={setModalVisible}
@@ -89,6 +102,11 @@ const OrbitMonitoring = () => {
         orbitBuildList={orbitBuildList}
         setOrbitBuildList={setOrbitBuildList}
         saveOrbitBuildDetails={saveOrbitBuildDetails}
+        selectedOrbitBuild={selectedOrbitBuild}
+        setSelectedOrbitBuild={setSelectedOrbitBuild}
+        editing={editing}
+        setEditing={setEditing}
+        getOrbitMonitoring={getOrbitMonitoring}
       />
     </>
   );

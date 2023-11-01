@@ -3,7 +3,13 @@ import { Table, Space, Tooltip, Badge, message } from 'antd';
 import { DeleteOutlined, EyeOutlined, PauseCircleOutlined, PlayCircleOutlined } from '@ant-design/icons';
 import { authHeader, handleError } from '../../common/AuthHeader.js';
 
-const OrbitMonitoringTable = ({ viewExistingOrbitBuildMonitoring, orbitBuildList, setOrbitBuildList }) => {
+const OrbitMonitoringTable = ({
+  orbitBuildList,
+  setOrbitBuildList,
+  setSelectedOrbitBuild,
+  setModalVisible,
+  setEditing,
+}) => {
   // Delete record
   const deleteOrbitBuildMonitoring = async ({ id, name }) => {
     try {
@@ -12,13 +18,22 @@ const OrbitMonitoringTable = ({ viewExistingOrbitBuildMonitoring, orbitBuildList
         header: authHeader(),
       };
 
-      const response = await fetch(`/api/orbit/${id}/${name}`, payload);
+      const response = await fetch(`/api/orbit/delete/${id}/${name}`, payload);
+      console.log(response);
       if (!response.ok) return handleError(response);
+
       const newOrbitBuildMonitoringList = orbitBuildList.filter((OrbitBuild) => OrbitBuild.id != id);
       setOrbitBuildList(newOrbitBuildMonitoringList);
     } catch (err) {
       message.error('Failed to delete Orbit Build monitoring ', err.message);
     }
+  };
+
+  // View existing orbit monitoring  ------------------------------------------------------------------
+  const viewExistingOrbitBuildMonitoring = (id) => {
+    setEditing(id);
+    setModalVisible(true);
+    setSelectedOrbitBuild(id);
   };
 
   const changeOrbitBuildMonitoringStatus = async (id) => {
@@ -28,7 +43,7 @@ const OrbitMonitoringTable = ({ viewExistingOrbitBuildMonitoring, orbitBuildList
         header: authHeader(),
       };
 
-      const response = await fetch(`/api/OrbitBuildmonitoring/read/OrbitBuildMonitoringStatus/${id}`, payload);
+      const response = await fetch(`/api/orbit/toggleStatus/${id}`, payload);
       if (!response.ok) return handleError(response);
       const updatedMonitoringList = orbitBuildList.map((record) =>
         record.id === id ? { ...record, isActive: !record.isActive } : record
@@ -89,7 +104,6 @@ const OrbitMonitoringTable = ({ viewExistingOrbitBuildMonitoring, orbitBuildList
   ];
   return (
     <>
-      <p>This is a test change</p>
       <Table
         size="large"
         pagination={false}

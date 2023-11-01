@@ -1,13 +1,25 @@
 import React, { useState, useEffect } from 'react';
 import { useSelector } from 'react-redux';
-import { Modal, Button, Tabs, Form, message } from 'antd';
+import { Modal, Button, Tabs, Form, message, Spin } from 'antd';
 import BasicTab from './BasicTab';
 import MonitoringTab from './MonitoringTab';
 import NotificationsTab from './NotificationsTab';
 import useWindowSize from '../../../hooks/useWindowSize';
+import { authHeader, handleError } from '../../common/AuthHeader.js';
+
 const { TabPane } = Tabs;
 
-const OrbitMonitoringModal = ({ modalVisible, orbitBuildList, setModalVisible, saveOrbitBuildDetails }) => {
+const OrbitMonitoringModal = ({
+  modalVisible,
+  orbitBuildList,
+  setModalVisible,
+  saveOrbitBuildDetails,
+  selectedOrbitBuild,
+  setSelectedOrbitBuild,
+  editing,
+  setEditing,
+  getOrbitMonitoring,
+}) => {
   //modal states
   const [modalWidth, setModalWidth] = useState(0);
   const [activeTab, setActiveTab] = useState('1');
@@ -15,15 +27,87 @@ const OrbitMonitoringModal = ({ modalVisible, orbitBuildList, setModalVisible, s
   const windowSize = useWindowSize();
   const [orbitBuildDetails, setOrbitBuildDetails] = useState(null);
   const [monitoringDetails, setMonitoringDetails] = useState({
-    monitoringActive: true,
+    isActive: true,
     monitoringConditions: [],
   });
+  const [selectedOrbitBuildDetails, setSelectedOrbitBuildDetails] = useState(null);
   const [notificationDetails, setNotificationDetails] = useState({});
   const [entryForm] = Form.useForm();
   const [confirmLoading, setConfirmLoading] = useState(false);
-  const [selectedOrbitBuild, setSelectedOrbitBuild] = useState('');
+  const [fetchingOrbitDetails, setFetchingOrbitDetails] = useState(false);
 
-  const applicationReducer = useSelector((state) => state.applicationReducer);
+  const {
+    application: { applicationId },
+  } = useSelector((state) => state.applicationReducer);
+
+  useEffect(() => {
+    if (!editing) {
+      return;
+    }
+    if (!selectedOrbitBuildDetails) {
+      getOrbitBuildDetails(selectedOrbitBuild);
+    }
+
+    //if details have been gotten, set field values
+    if (selectedOrbitBuildDetails) {
+      //grab and restructure notification channels to set into fields
+      let notificationChannels = [];
+      let emails;
+      let msTeams;
+
+      if (selectedOrbitBuildDetails.metaData && selectedOrbitBuildDetails.metaData.notifications) {
+        for (let i = 0; i < selectedOrbitBuildDetails.metaData.notifications.length; i++) {
+          if (selectedOrbitBuildDetails.metaData.notifications[i].channel === 'eMail') {
+            emails = selectedOrbitBuildDetails.metaData.notifications[i].recipients;
+            notificationChannels.push('eMail');
+          }
+
+          if (selectedOrbitBuildDetails.metaData.notifications[i].channel === 'msTeams') {
+            msTeams = selectedOrbitBuildDetails.metaData.notifications[i].recipients;
+            notificationChannels.push('msTeams');
+          }
+        }
+      }
+
+      if (selectedOrbitBuildDetails.metaData) {
+        const {
+          name,
+          cron,
+          isActive,
+          build,
+          metaData: {
+            monitoringCondition: { notifyCondition, updateInterval, updateIntervalDays, buildStatus, deleted },
+          },
+        } = selectedOrbitBuildDetails;
+
+        entryForm.setFieldsValue({
+          name: name,
+          monitorName: name,
+          cron: cron,
+          build: build,
+          isActive: isActive,
+          notificationChannels: notificationChannels,
+          notifyCondition: notifyCondition,
+          updateInterval: updateInterval,
+          updateIntervalDays: updateIntervalDays,
+          buildStatus: buildStatus,
+          deleted: deleted,
+          emails: emails,
+          msTeamsGroups: msTeams,
+        });
+
+        setSelectedOrbitBuild(build);
+
+        //set states to have fields appear that are necessary
+        setCron(cron);
+        setMonitoringDetails({
+          ...monitoringDetails,
+          monitoringConditions: notifyCondition,
+        });
+        setNotificationDetails({ ...notificationDetails, notificationChannel: notificationChannels });
+      }
+    }
+  }, [selectedOrbitBuildDetails, selectedOrbitBuild]);
 
   //validate forms before saving
   const validateForms = async () => {
@@ -46,7 +130,6 @@ const OrbitMonitoringModal = ({ modalVisible, orbitBuildList, setModalVisible, s
       //validate data and throw new error
 
       const data = await validateForms();
-      console.log(data);
 
       if (data.validationError?.errorFields) {
         throw new Error('Validation failed, please check form fields again.');
@@ -58,7 +141,7 @@ const OrbitMonitoringModal = ({ modalVisible, orbitBuildList, setModalVisible, s
       let emails = formData.emails;
       let msTeamsGroups = formData.msTeamsGroups;
 
-      formData.application_id = applicationReducer.application.applicationId;
+      formData.application_id = applicationId;
 
       // current UTC Time Stamp
       const date = new Date();
@@ -68,6 +151,7 @@ const OrbitMonitoringModal = ({ modalVisible, orbitBuildList, setModalVisible, s
       let updateInterval = formData.updateInterval;
       let updateIntervalDays = formData.updateIntervalDays;
       let buildStatus = formData.buildStatus;
+      let deleted = formData.deleted;
 
       //organize notifications
       let notifications = [];
@@ -80,33 +164,24 @@ const OrbitMonitoringModal = ({ modalVisible, orbitBuildList, setModalVisible, s
         }
       }
 
-      // if (selectedFileMonitoring) {
-      //   notifications = selectedSuperFileDetails.metaData.notifications;
+      // if (selectedOrbitBuild) {
+      //   notifications = selectedOrbitBuildDetails.metaData.notifications;
       // }
 
       formData.metaData = {
         lastMonitored: currentTimeStamp,
-        buildInfo: selectedOrbitBuild,
         monitoringCondition: {
           notifyCondition,
           updateInterval,
           updateIntervalDays,
           buildStatus,
+          deleted,
         },
         notifications,
-        monitoringActive: formData.monitoringActive,
+        isActive: formData.isActive,
       };
 
-      formData.build = selectedOrbitBuild;
-
       await saveOrbitBuildDetails(formData);
-      setConfirmLoading(false);
-      //rerender table, useEffect on main superfilemonitoring tracks this to get list of all monitoring
-      // setSuccessAddingMonitoring((prev) => prev + 1);
-      //set modal not visible, reset form and disabled fields
-      setModalVisible(false);
-      entryForm.resetFields();
-      //setDisabled(false);
       cancelModal();
     } catch (err) {
       setConfirmLoading(false);
@@ -115,11 +190,17 @@ const OrbitMonitoringModal = ({ modalVisible, orbitBuildList, setModalVisible, s
     }
   };
 
-  function cancelModal() {
-    setModalVisible(false);
-    setConfirmLoading(false);
-    // setDisabled(false);
-  }
+  const cancelModal = async () => {
+    await setOrbitBuildDetails(null);
+    await setSelectedOrbitBuild(null);
+    await setSelectedOrbitBuildDetails(null);
+    entryForm.resetFields();
+    await setEditing(null);
+    await setModalVisible(false);
+    await setActiveTab('1');
+    await setConfirmLoading(false);
+    await getOrbitMonitoring(applicationId);
+  };
 
   // Changes modal size per screen vw
   useEffect(() => {
@@ -145,6 +226,28 @@ const OrbitMonitoringModal = ({ modalVisible, orbitBuildList, setModalVisible, s
       Next
     </Button>
   );
+
+  // Get details of a file monitoring -----------------------------------------------
+  const getOrbitBuildDetails = async (id) => {
+    try {
+      const payload = { method: 'GET', header: authHeader() };
+      setFetchingOrbitDetails(true);
+      const response = await fetch(`/api/orbit/${id}`, payload);
+      if (!response.ok) handleError(response);
+      const data = await response.json();
+      setActiveTab('2');
+      setOrbitBuildDetails(data);
+
+      //if selected monitoring, store selected file monitoring in different state for later
+      if (selectedOrbitBuild) {
+        await setSelectedOrbitBuildDetails(data);
+      }
+    } catch (err) {
+      setFetchingOrbitDetails(false);
+    } finally {
+      setFetchingOrbitDetails(false);
+    }
+  };
 
   const backBtn = (
     <Button
@@ -180,40 +283,47 @@ const OrbitMonitoringModal = ({ modalVisible, orbitBuildList, setModalVisible, s
       destroyOnClose
       footer={btns[activeTab]}
       style={{ marginTop: '100px' }}>
-      <Form layout="vertical" form={entryForm}>
-        <Tabs
-          activeKey={activeTab}
-          onTabClick={(record) => {
-            setActiveTab(record);
-          }}>
-          <TabPane tab="Build Selection" key="1">
-            <BasicTab
-              entryForm={entryForm}
-              orbitBuildDetails={orbitBuildDetails}
-              setOrbitBuildDetails={setOrbitBuildDetails}
-              selectedOrbitBuild={selectedOrbitBuild}
-              setSelectedOrbitBuild={setSelectedOrbitBuild}
-            />
-          </TabPane>
-          <TabPane tab="Monitoring Parameters" key="2">
-            <MonitoringTab
-              entryForm={entryForm}
-              cron={cron}
-              setCron={setCron}
-              monitoringDetails={monitoringDetails}
-              setMonitoringDetails={setMonitoringDetails}
-              orbitBuildList={orbitBuildList}
-            />
-          </TabPane>
-          <TabPane tab="Notifications" key="3">
-            <NotificationsTab
-              entryForm={entryForm}
-              notificationDetails={notificationDetails}
-              setNotificationDetails={setNotificationDetails}
-            />
-          </TabPane>
-        </Tabs>
-      </Form>
+      {fetchingOrbitDetails ? (
+        <div style={{ textAlign: 'center' }}>
+          <Spin />
+        </div>
+      ) : (
+        <Form layout="vertical" form={entryForm}>
+          <Tabs
+            activeKey={activeTab}
+            onTabClick={(record) => {
+              setActiveTab(record);
+            }}>
+            <TabPane tab="Build Selection" key="1">
+              <BasicTab
+                entryForm={entryForm}
+                orbitBuildDetails={orbitBuildDetails}
+                setOrbitBuildDetails={setOrbitBuildDetails}
+                selectedOrbitBuild={selectedOrbitBuild}
+                setSelectedOrbitBuild={setSelectedOrbitBuild}
+              />
+            </TabPane>
+            <TabPane tab="Monitoring Parameters" key="2">
+              <MonitoringTab
+                entryForm={entryForm}
+                cron={cron}
+                setCron={setCron}
+                monitoringDetails={monitoringDetails}
+                setMonitoringDetails={setMonitoringDetails}
+                orbitBuildList={orbitBuildList}
+                editing={editing}
+              />
+            </TabPane>
+            <TabPane tab="Notifications" key="3">
+              <NotificationsTab
+                entryForm={entryForm}
+                notificationDetails={notificationDetails}
+                setNotificationDetails={setNotificationDetails}
+              />
+            </TabPane>
+          </Tabs>
+        </Form>
+      )}
     </Modal>
   );
 };

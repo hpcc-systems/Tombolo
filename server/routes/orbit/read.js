@@ -61,22 +61,23 @@ router.post(
         name: req.body.name,
         build: req.body.build,
         metaData: req.body.metaData,
-        isActive: req.body.metaData.monitoringActive,
+        isActive: req.body.metaData.isActive,
       };
+      console.log(newBuildData);
 
       const newOrbitMonitoring = await orbitMonitoring.create(newBuildData);
 
       res.status(201).send(newOrbitMonitoring);
 
-      // const { monitoringActive } = req.body;
+      // const { isActive } = req.body;
       // let monitoringAssetType = "orbitBuilds";
 
       // //Add monitoring to bree if start monitoring now is checked
-      // if (monitoringActive) {
+      // if (isActive) {
       //   const schedularOptions = {
-      //     filemonitoring_id: newSuperFile.id,
-      //     name: newSuperFile.name,
-      //     cron: newSuperFile.cron,
+      //     filemonitoring_id: neworbit.id,
+      //     name: neworbit.name,
+      //     cron: neworbit.cron,
       //     monitoringAssetType,
       //   };
 
@@ -229,6 +230,229 @@ router.get(
   }
 );
 
+//update superfile monitoring
+router.put(
+  "/",
+  [
+    body("application_id").isUUID(4).withMessage("Invalid application id"),
+    body("cron").custom((value) => {
+      const valArray = value.split(" ");
+      if (valArray.length > 5) {
+        throw new Error(
+          `Expected number of cron parts 5, received ${valArray.length}`
+        );
+      } else {
+        return Promise.resolve("Good to go");
+      }
+    }),
+  ],
+  async (req, res) => {
+    try {
+      const errors = validationResult(req).formatWith(
+        validatorUtil.errorFormatter
+      );
+
+      if (!errors.isEmpty())
+        return res.status(422).json({ success: false, errors: errors.array() });
+
+      const oldInfo = await orbitMonitoring.findOne({
+        where: { id: req.body.id },
+        raw: true,
+      });
+
+      let newInfo = req.body;
+
+      console.log(req.body);
+
+      //destructure info out of sent info
+      const {
+        id,
+        name,
+        build,
+        notifyCondition,
+        isActive,
+        application_id,
+        cron,
+        metaData: { lastMonitored, monitoringCondition },
+      } = newInfo;
+
+      //CODEQL FIX
+      //-----------------------
+      let notificationChannels = req.body.notificationChannels;
+
+      if (!(notificationChannels instanceof Array)) {
+        return [];
+      }
+      //-----------------------
+
+      //build out notifications object for storing inside metadata
+      let emails, msTeamsGroups;
+      if (notificationChannels.includes("eMail")) {
+        emails = newInfo.emails;
+      }
+      if (notificationChannels.includes("msTeams")) {
+        msTeamsGroups = newInfo.msTeamsGroups;
+      }
+
+      let notifications = [];
+
+      for (let i = 0; i < notificationChannels.length; i++) {
+        if (notificationChannels[i] === "eMail") {
+          notifications.push({ channel: "eMail", recipients: emails });
+        }
+        if (notificationChannels[i] === "msTeams") {
+          notifications.push({
+            channel: "msTeams",
+            recipients: msTeamsGroups,
+          });
+        }
+      }
+
+      //set data fields
+      newInfo = {
+        id,
+        name,
+        cron,
+        isActive,
+        Build: build,
+        application_id,
+        metaData: {
+          lastMonitored,
+          notifications,
+          isActive,
+          monitoringCondition,
+        },
+      };
+      // -------------------------------------------------------
+      await orbitMonitoring.update(newInfo, { where: { id } });
+
+      // // If start monitoring was changed to TRUE
+      // if (isActive && oldInfo.isActive === 0) {
+      //   const schedularOptions = {
+      //     filemonitoring_id: id,
+      //     name: Name,
+      //     cron: cron,
+      //     monitoringAssetType: "superFiles",
+      //   };
+      //   await jobScheduler.scheduleFileMonitoringBreeJob(schedularOptions);
+      // }
+
+      // // If start monitoring was changed to FALSE
+      // if (!isActive && oldInfo.isActive === 1) {
+      //   await jobScheduler.removeJobFromScheduler(
+      //     `Superfile Monitoring - ${id}`
+      //   );
+      // }
+
+      // // if cron has changed
+      // if (oldInfo.cron != cron) {
+      //   const allBreeJobs = jobScheduler.getAllJobs();
+      //   const jobName = `Superfile Monitoring - ${id}`;
+      //   for (let job of allBreeJobs) {
+      //     if (job.name === jobName) {
+      //       await jobScheduler.removeJobFromScheduler(jobName);
+      //       await jobScheduler.scheduleFileMonitoringBreeJob({
+      //         filemonitoring_id: id,
+      //         name: Name,
+      //         cron: cron,
+      //         monitoringAssetType: "superFiles",
+      //       });
+      //     }
+      //   }
+      // }
+
+      res.status(200).send(newInfo);
+    } catch (error) {
+      console.log(error);
+      res
+        .status(500)
+        .json({ message: "Unable to save orbit build monitoring details" });
+    }
+  }
+);
+
+// Pause or start monitoring
+router.put(
+  "/togglestatus/:id",
+  [param("id").isUUID(4).withMessage("Invalid orbit monitoring Id")],
+  async (req, res, next) => {
+    try {
+      const errors = validationResult(req).formatWith(
+        validatorUtil.errorFormatter
+      );
+      if (!errors.isEmpty())
+        return res.status(422).json({ success: false, errors: errors.array() });
+      const { id } = req.params;
+      const monitoring = await orbitMonitoring.findOne({
+        where: { id },
+        raw: true,
+      });
+      const { isActive } = monitoring;
+
+      // flipping isActive
+      await orbitMonitoring.update(
+        { isActive: !isActive },
+        { where: { id: id } }
+      );
+
+      // // If isActive, it is in bre - remove from bree
+      // if (isActive) {
+      //   await jobScheduler.removeJobFromScheduler(`orbit Monitoring - ${id}`);
+      // }
+
+      // const name = monitoring.name;
+      // const cron = monitoring.cron;
+
+      // // If isActive = false, add it to bre
+      // if (!isActive) {
+      //   await jobScheduler.scheduleFileMonitoringBreeJob({
+      //     filemonitoring_id: id,
+      //     name,
+      //     cron,
+      //     monitoringAssetType: "orbits",
+      //   });
+      // }
+
+      res.status(200).send("Update successful");
+    } catch (err) {
+      console.log(err);
+    }
+  }
+);
+
+//delete
+router.delete(
+  "/delete/:id/:name",
+  [param("id").isUUID(4).withMessage("Invalid orbit monitoring id")],
+  async (req, res, next) => {
+    try {
+      const errors = validationResult(req).formatWith(
+        validatorUtil.errorFormatter
+      );
+
+      if (!errors.isEmpty())
+        return res.status(422).json({ success: false, errors: errors.array() });
+      const { id, name } = req.params;
+      const response = await orbitMonitoring.destroy({
+        where: { id },
+      });
+      res.status(200).json({ message: `Deleted ${response} orbit monitoring` });
+
+      // //Check if this job is in bree - if so - remove
+      // const breeJobs = jobScheduler.getAllJobs();
+      // const expectedJobName = `orbit Monitoring - ${orbitMonitoringId}`;
+      // for (job of breeJobs) {
+      //   if (job.name === expectedJobName) {
+      //     jobScheduler.removeJobFromScheduler(expectedJobName);
+      //     break;
+      //   }
+      // }
+    } catch (err) {
+      res.status(500).json({ message: err.message });
+    }
+  }
+);
+
 //get filtered orbit builds
 router.get("/filteredBuilds", async (req, res) => {
   try {
@@ -262,6 +486,32 @@ router.get("/filteredBuilds", async (req, res) => {
     console.error(err);
   }
 });
+
+router.get(
+  "/:id",
+  [param("id").isUUID(4).withMessage("Invalid application id")],
+  async (req, res) => {
+    try {
+      const errors = validationResult(req).formatWith(
+        validatorUtil.errorFormatter
+      );
+      if (!errors.isEmpty())
+        return res.status(422).json({ success: false, errors: errors.array() });
+      const { id } = req.params;
+      const result = await orbitMonitoring.findOne({
+        where: {
+          id,
+        },
+      });
+
+      res.status(200).send(result);
+    } catch (err) {
+      // ... error checks
+      res.status(500).send(err);
+      console.log(err);
+    }
+  }
+);
 
 //refresh data, grab new builds
 router.post(

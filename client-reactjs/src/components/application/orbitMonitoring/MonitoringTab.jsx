@@ -4,13 +4,19 @@ import cronstrue from 'cronstrue';
 import InfoDrawer from '../../common/InfoDrawer';
 import { InfoCircleOutlined } from '@ant-design/icons';
 
-const MonitoringTab = ({ entryForm, cron, setCron, monitoringDetails, setMonitoringDetails, orbitBuildList }) => {
+const MonitoringTab = ({
+  entryForm,
+  cron,
+  setCron,
+  monitoringDetails,
+  setMonitoringDetails,
+  orbitBuildList,
+  editing,
+}) => {
   const [cronExplainer, setCronExplainer] = useState(null);
   const [updateInterval, setUpdateInterval] = useState(null);
   const [updateIntervalDays, setUpdateIntervalDays] = useState(null);
   const [buildStatus, setBuildStatus] = useState(null);
-
-  const selectedOrbitBuildMonitoring = null;
 
   const [open, setOpen] = useState(false);
 
@@ -91,9 +97,10 @@ const MonitoringTab = ({ entryForm, cron, setCron, monitoringDetails, setMonitor
           {
             message: 'Monitoring with same name already exists',
             validator: (_, value) => {
-              Promise.resolve();
               // only validate if not viewing other file details
-              if (!selectedOrbitBuildMonitoring) {
+              if (editing) {
+                return Promise.resolve();
+              } else {
                 const nameExists = orbitBuildList.find((Monitoring) => Monitoring.name === value);
 
                 // if (nameExists || selectedOrbitBuildMonitoringDetails) {
@@ -102,8 +109,6 @@ const MonitoringTab = ({ entryForm, cron, setCron, monitoringDetails, setMonitor
                 } else {
                   return Promise.reject();
                 }
-              } else {
-                return Promise.resolve();
               }
             },
           },
@@ -187,7 +192,7 @@ const MonitoringTab = ({ entryForm, cron, setCron, monitoringDetails, setMonitor
         </>
       ) : null}
 
-      {monitoringDetails.monitoringConditions.includes('updateInterval') && !selectedOrbitBuildMonitoring ? (
+      {monitoringDetails.monitoringConditions.includes('updateInterval') && !editing ? (
         <>
           <Form.Item name="updateInterval" required label="Days Expected between updates">
             <Input
@@ -214,7 +219,7 @@ const MonitoringTab = ({ entryForm, cron, setCron, monitoringDetails, setMonitor
         </>
       ) : null}
 
-      {monitoringDetails.monitoringConditions.includes('updateInterval') && selectedOrbitBuildMonitoring ? (
+      {monitoringDetails.monitoringConditions.includes('updateInterval') && editing ? (
         <>
           <Form.Item
             name="updateInterval"
@@ -245,7 +250,7 @@ const MonitoringTab = ({ entryForm, cron, setCron, monitoringDetails, setMonitor
         </>
       ) : null}
 
-      <Form.Item name="monitoringActive" valuePropName="checked" noStyle>
+      <Form.Item name="isActive" valuePropName="checked" noStyle>
         <Checkbox>Start monitoring now</Checkbox>
       </Form.Item>
     </>
