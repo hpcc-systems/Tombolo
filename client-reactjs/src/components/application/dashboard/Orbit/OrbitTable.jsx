@@ -6,7 +6,7 @@ import { useLocation } from 'react-router-dom';
 import { authHeader, handleError } from '../../../common/AuthHeader.js';
 import { camelToTitleCase, formatDateTime } from '../../../common/CommonUtil.js';
 
-function buildsTable({ applicationId, setSelectedbuildForBulkAction, updatedbuildInDb }) {
+function OrbitTable({ applicationId, setSelectedbuildForBulkAction, updatedbuildInDb }) {
   const [builds, setbuilds] = useState([]);
   const [viewbuildDetails, setViewbuildDetails] = useState(false);
   const [selectedbuild, setSelectedbuild] = useState(null);
@@ -66,9 +66,7 @@ function buildsTable({ applicationId, setSelectedbuildForBulkAction, updatedbuil
       }));
       setFilters((prev) => ({ ...prev, buildReasonFilters: newbuildReasonFilters }));
 
-      const uniquebuildChannels = new Set(
-        builds.map((build) => build.build_channel)
-      );
+      const uniquebuildChannels = new Set(builds.map((build) => build.build_channel));
       const newbuildChannelFilters = Array.from(uniquebuildChannels).map((channel) => ({
         text: camelToTitleCase(channel),
         value: channel,
@@ -83,7 +81,7 @@ function buildsTable({ applicationId, setSelectedbuildForBulkAction, updatedbuil
     getbuilds(monitoringId);
   }, [applicationId, location, updatedbuildInDb]);
 
-  //Get list of all file monitoring
+  //Get list of all monitoring
   const getbuilds = async (monitoringId) => {
     try {
       const payload = {
@@ -91,9 +89,11 @@ function buildsTable({ applicationId, setSelectedbuildForBulkAction, updatedbuil
         header: authHeader(),
       };
 
-      const response = await fetch(`/api/builds/read/${applicationId}`, payload);
+      const response = await fetch(`/api/orbit/allMonitoring/${applicationId}`, payload);
       if (!response.ok) handleError(response);
       const data = await response.json();
+
+      console.log(data);
 
       if (!monitoringId) {
         setbuilds(data);
@@ -109,93 +109,36 @@ function buildsTable({ applicationId, setSelectedbuildForBulkAction, updatedbuil
   //Table columns and data
   const columns = [
     {
-      title: '',
-      render: (_text, _record, index) => {
-        return index + 1;
+      title: 'Business Unit',
+      render: () => {
+        return 'Insurance';
       },
     },
     {
-      title: 'Notified at',
+      title: 'Name',
+      dataIndex: 'name',
+    },
+    { title: 'Build', dataIndex: 'build' },
+    {
+      title: 'Notification Emails',
       render: (record) => {
-        return <a>{formatDateTime(record.createdAt)}</a>;
-      },
-      sorter: (a, b) => new Date(a.createdAt) - new Date(b.createdAt),
-      onCell: (record) => {
-        return {
-          onClick: () => {
-            setSelectedbuild(record);
-            setViewbuildDetails(true);
-          },
-        };
-      },
-    },
-    {
-      title: 'Monitoring Type',
-      render: (record) => {
-        return camelToTitleCase(record.monitoring_type);
-      },
-      sorter: (a, b) => a.monitoring_type.localeCompare(b.monitoring_type),
-      filters: filters.monitoringTypeFilters,
-      onFilter: (value, record) => record.monitoring_type === value,
-    },
-    {
-      title: 'Monitoring name',
-      render: (record) => {
-        return record?.['fileMonitoring.name'] || record?.['clusterMonitoring.name'] || record?.['jobMonitoring.name'];
+        let emailChannel = record.metaData?.notifications[0];
+        if (emailChannel.channel === 'eMail') {
+          let emails = '';
+          emailChannel.recipients.forEach((recipient) => {
+            emails += recipient + '; ';
+          });
+          return emails;
+        } else {
+          return '';
+        }
       },
     },
     {
-      title: 'build reason',
-      render: (record) => {
-        return camelToTitleCase(record.build_reason);
+      title: 'Work Units',
+      render: () => {
+        return '0';
       },
-      sorter: (a, b) => a.build_reason.localeCompare(b.build_reason),
-      filters: filters.buildReasonFilters,
-      onFilter: (value, record) => record.build_reason === value,
-    },
-    {
-      title: 'build channel',
-      render: (record) => {
-        return camelToTitleCase(record.build_channel);
-      },
-      filters: filters.buildChannelFilters,
-      onFilter: (value, record) => record.build_channel === value,
-    },
-    {
-      title: 'status',
-      render: (record) => {
-        return camelToTitleCase(record.status);
-      },
-      filters: filters.statusFilters,
-      onFilter: (value, record) => record.status === value,
-    },
-    {
-      title: 'Updated on',
-      render: (record) => {
-        return formatDateTime(record.updatedAt);
-      },
-      sorter: (a, b) => new Date(a.updatedAt) - new Date(b.updatedAt),
-      defaultSortOrder: 'descend',
-    },
-    {
-      title: 'comment',
-      dataIndex: 'comment',
-      width: '20%',
-      render: (text) => {
-        const comment = text ? text : '';
-        return (
-          <span>
-            {comment.slice(0, 65)}
-            {comment.length > 65 ? (
-              <span style={{ fontSize: '14px', fontWeight: 700, marginLeft: 'px' }}>...</span>
-            ) : (
-              ''
-            )}
-            {/* {`${comment.slice(0, 80)}${comment.length > 80 ? ' ...' : ''}`} */}
-          </span>
-        );
-      },
-      onClick: () => alert('Howdy'),
     },
   ];
 
@@ -261,4 +204,4 @@ function buildsTable({ applicationId, setSelectedbuildForBulkAction, updatedbuil
   );
 }
 
-export default buildsTable;
+export default OrbitTable;

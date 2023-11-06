@@ -146,6 +146,33 @@ router.get(
   }
 );
 
+//get all
+router.get(
+  "/allMonitoring/:application_id",
+  [param("application_id").isUUID(4).withMessage("Invalid application id")],
+  async (req, res) => {
+    const errors = validationResult(req).formatWith(
+      validatorUtil.errorFormatter
+    );
+    try {
+      if (!errors.isEmpty())
+        return res.status(422).json({ success: false, errors: errors.array() });
+      const { application_id } = req.params;
+      if (!application_id) throw Error("Invalid app ID");
+      const result = await orbitMonitoring.findAll({
+        where: {
+          application_id,
+        },
+      });
+
+      res.status(200).send(result);
+    } catch (err) {
+      // ... error checks
+      console.log(err);
+    }
+  }
+);
+
 router.get(
   "/search/:application_id/:keyword",
   [param("application_id").isUUID(4).withMessage("Invalid application id")],
@@ -230,7 +257,7 @@ router.get(
   }
 );
 
-//update superfile monitoring
+//update orbit monitoring
 router.put(
   "/",
   [
@@ -489,26 +516,27 @@ router.get("/filteredBuilds", async (req, res) => {
 
 router.get(
   "/:id",
-  [param("id").isUUID(4).withMessage("Invalid application id")],
+  [param("id").isUUID(4).withMessage("Invalid orbit id")],
   async (req, res) => {
     try {
       const errors = validationResult(req).formatWith(
         validatorUtil.errorFormatter
       );
+
       if (!errors.isEmpty())
         return res.status(422).json({ success: false, errors: errors.array() });
+
       const { id } = req.params;
-      const result = await orbitMonitoring.findOne({
-        where: {
-          id,
-        },
+
+      const result = await orbitBuilds.findOne({
+        where: { id },
+        raw: true,
       });
 
       res.status(200).send(result);
     } catch (err) {
-      // ... error checks
-      res.status(500).send(err);
-      console.log(err);
+      res.status(500).json({ message: err.message });
+      console.error(err);
     }
   }
 );

@@ -4,7 +4,7 @@ import { useSelector } from 'react-redux';
 import { message } from 'antd';
 import moment from 'moment';
 
-// import buildsTable from './buildsTable';
+import OrbitTable from './OrbitTable';
 import NotificationCharts from '../common/charts/NotificationCharts';
 import Filters from './Filters';
 import MetricBoxes from '../common/charts/MetricBoxes';
@@ -30,7 +30,19 @@ function Orbit() {
 
   // Default filters to fetch builds
   const [defaultFilters, setDefaultFilters] = useState({
-    status: ['DATA_QA_APPROVED', 'DATA_QA_REJECT', 'ON_HOLD'],
+    status: [
+      'BUILD_AVAILABLE_FOR_USE',
+      'DATA_QA_APPROVED',
+      'DATA_QA_REJECT',
+      'DISCARDED',
+      'FAILED_QA_QAHELD',
+      'GRAVEYARD',
+      'ON_HOLD',
+      'PASSED_QA',
+      'PASSED_QA_NO_RELEASE',
+      'PRODUCTION',
+      'SKIPPED',
+    ],
     dateRange: [moment().subtract(15, 'days'), moment()],
     EnvironmentName: ['Insurance'],
     applicationId,
@@ -197,12 +209,8 @@ function Orbit() {
             <ExportMenu />
           </Space>
         }>
-        <Tabs.TabPane key="1" tab="builds">
-          {/* <buildsTable
-            applicationId={applicationId}
-            setSelectedbuildForBulkAction={setSelectedbuildForBulkAction}
-            updatedbuildInDb={updatedbuildInDb}
-          /> */}
+        <Tabs.TabPane key="1" tab="Orbit Monitoring">
+          <OrbitTable applicationId={applicationId} />
           {/* {bulkActionModalVisible ? (
             <BulkActions
               setBulkActionModalVisibility={setBulkActionModalVisibility}
