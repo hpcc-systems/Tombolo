@@ -7,12 +7,21 @@ import { authHeader, handleError } from '../../../common/AuthHeader.js';
 import { camelToTitleCase, formatDateTime } from '../../../common/CommonUtil.js';
 import moment from 'moment';
 
-function OrbitTable({ applicationId, setSelectedbuildForBulkAction, updatedbuildInDb, dashboardFilters }) {
-  const [builds, setBuilds] = useState([]);
+function OrbitTable({
+  applicationId,
+  setSelectedbuildForBulkAction,
+  updatedbuildInDb,
+  dashboardFilters,
+  builds,
+  setBuilds,
+  workUnits,
+  setWorkUnits,
+  filteredWorkUnits,
+  setFilteredWorkUnits,
+}) {
   const [viewbuildDetails, setViewbuildDetails] = useState(false);
   const [selectedbuild, setSelectedbuild] = useState(null);
-  const [workUnits, setWorkUnits] = useState([]);
-  const [filteredWorkUnits, setFilteredWorkUnits] = useState([]);
+
   const [loading, setLoading] = useState(false);
   const location = useLocation();
 
@@ -77,6 +86,8 @@ function OrbitTable({ applicationId, setSelectedbuildForBulkAction, updatedbuild
         method: 'GET',
         header: authHeader(),
       };
+
+      if (applicationId === undefined) return;
 
       const response = await fetch(`/api/orbit/allMonitoring/${applicationId}`, payload);
       if (!response.ok) handleError(response);
@@ -189,7 +200,7 @@ function OrbitTable({ applicationId, setSelectedbuildForBulkAction, updatedbuild
   //JSX
   return (
     <>
-      <div style={{ width: '50%', float: 'left', marginTop: '1rem' }}>
+      <div style={{ width: '35%', float: 'left', marginTop: '1rem' }}>
         <Table
           align="right"
           pagination={{ pageSize: 10 }}

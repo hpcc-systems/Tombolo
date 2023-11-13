@@ -13,11 +13,11 @@ function NotificationCharts({ metrics, stackBarData, groupDataBy, donutData }) {
       </Resizable>
 
       <Resizable style={{ border: '1px solid lightgray', margin: '10px' }}>
-        <div style={{ padding: '20px' }}>{<StackedBar stackBarData={stackBarData} groupDataBy={groupDataBy} />} </div>
+        <div style={{ padding: '20px' }}>{<Pie metrics={metrics} />} </div>
       </Resizable>
 
       <Resizable style={{ border: '1px solid lightgray', margin: '10px' }}>
-        <div style={{ padding: '20px' }}>{<Pie metrics={metrics} />} </div>
+        <div style={{ padding: '20px' }}>{<StackedBar stackBarData={stackBarData} groupDataBy={groupDataBy} />} </div>
       </Resizable>
     </div>
   );
