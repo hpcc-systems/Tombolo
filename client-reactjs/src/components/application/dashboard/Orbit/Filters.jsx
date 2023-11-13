@@ -1,10 +1,10 @@
-import React, { useEffect, useState } from 'react';
-import { Form, Select, DatePicker, Button, message } from 'antd';
+import React, { useEffect } from 'react';
+import { Form, Select, DatePicker, Button } from 'antd';
 import { useHistory, useLocation } from 'react-router-dom';
 import moment from 'moment';
 
-import { authHeader, handleError } from '../../../common/AuthHeader.js';
-import { monitoringStatusOptions } from '../common/monitoringStatusOptions.js';
+import { handleError } from '../../../common/AuthHeader.js';
+
 import '../common/css/index.css';
 
 // Group by options
@@ -16,19 +16,32 @@ const groupByOptions = [
   { value: 'year', label: 'Year' },
 ];
 
+export const monitoringStatusOptions = [
+  { label: 'BUILD_AVAILABLE_FOR_USE', value: 'BUILD_AVAILABLE_FOR_USE' },
+  { label: 'DATA_QA_APPROVED', value: 'DATA_QA_APPROVED' },
+  { label: 'DATA_QA_REJECT', value: 'DATA_QA_REJECT' },
+  { label: 'DISCARDED', value: 'DISCARDED' },
+  { label: 'FAILED_QA_QAHELD', value: 'FAILED_QA_QAHELD' },
+  { label: 'GRAVEYARD', value: 'GRAVEYARD' },
+  { label: 'ON_HOLD', value: 'ON_HOLD' },
+  { label: 'PASSED_QA', value: 'PASSED_QA' },
+  { label: 'PASSED_QA_NO_RELEASE', value: 'PASSED_QA_NO_RELEASE' },
+  { label: 'PRODUCTION', value: 'PRODUCTION' },
+  { label: 'SKIPPED', value: 'SKIPPED' },
+];
+
 // Form layout
 const layout = {
   labelCol: { span: 24 },
   wrapperCol: { span: 24 },
 };
 
-function Filters({ applicationId, setBuilds, setLoadingData, groupDataBy, setGroupDataBy, setDefaultFilters }) {
+function Filters({ groupDataBy, setGroupDataBy, dashboardFilters, setDashboardFilters }) {
   const [form] = Form.useForm();
-  const [dashboardFilters, setDashboardFilters] = useState({});
+
   const initialValues = {
-    status: ['DATA_QA_APPROVED', 'DATA_QA_REJECT', 'ON_HOLD'],
+    status: ['DATA_QA_APPROVED', 'DATA_QA_REJECT', 'PASSED_QA', 'PASSED_QA_NO_RELEASE', 'PRODUCTION'],
     dateRange: [moment().subtract(15, 'days'), moment()],
-    EnvironmentName: ['Insurance'],
     groupDataBy: groupDataBy,
   };
   const history = useHistory();
@@ -38,32 +51,39 @@ function Filters({ applicationId, setBuilds, setLoadingData, groupDataBy, setGro
   const onFinish = (formValues) => {
     try {
       form.validateFields();
-      filterAndFetchbuilds(formValues);
+      console.log(formValues);
     } catch (err) {
       handleError(err);
     }
   };
 
-  //Get list of file monitorings that matches a filter
-  const filterAndFetchbuilds = async (filters) => {
-    try {
-      setLoadingData(true);
-      const payload = {
-        method: 'GET',
-        header: authHeader(),
-      };
-      const queryData = JSON.stringify({ ...filters, applicationId });
-
-      const response = await fetch(`/api/orbit/filteredbuilds?queryData=${queryData}`, payload);
-      if (!response.ok) handleError(response);
-      const data = await response.json();
-      setBuilds(data);
-    } catch (error) {
-      message.error('Failed to fetch builds');
-    } finally {
-      setLoadingData(false);
+  //if there are no dashboard filters set, set them to initial values
+  useEffect(() => {
+    if (!Object.keys(dashboardFilters).length) {
+      setDashboardFilters(initialValues);
     }
-  };
+  }, [dashboardFilters]);
+
+  //Get list  monitorings that matches a filter
+  // const filterAndFetchbuilds = async (filters) => {
+  //   try {
+  //     setLoadingData(true);
+  //     const payload = {
+  //       method: 'GET',
+  //       header: authHeader(),
+  //     };
+  //     const queryData = JSON.stringify({ ...filters, applicationId });
+
+  //     const response = await fetch(`/api/orbit/filteredbuilds?queryData=${queryData}`, payload);
+  //     if (!response.ok) handleError(response);
+  //     const data = await response.json();
+  //     setBuilds(data);
+  //   } catch (error) {
+  //     message.error('Failed to fetch builds');
+  //   } finally {
+  //     setLoadingData(false);
+  //   }
+  // };
 
   // Disable future dates
   const disabledDate = (current) => {
@@ -87,11 +107,9 @@ function Filters({ applicationId, setBuilds, setLoadingData, groupDataBy, setGro
   useEffect(() => {
     const params = new URLSearchParams(location.search);
     const filters = {};
-    if (params.get('monitoringType')) {
-      filters.monitoringType = params.get('monitoringType')?.split(',');
-    }
-    if (params.get('monitoringStatus')) {
-      filters.monitoringStatus = params.get('monitoringStatus')?.split(',');
+
+    if (params.get('status')) {
+      filters.status = params.get('status')?.split(',');
     }
     if (params.get('dateRange')) {
       const dateString = params.get('dateRange');
@@ -108,7 +126,6 @@ function Filters({ applicationId, setBuilds, setLoadingData, groupDataBy, setGro
     if (Object.keys(filters).length > 0) {
       setDashboardFilters(filters);
       form.setFieldsValue(filters);
-      setDefaultFilters((prev) => ({ ...prev, ...filters }));
     }
   }, []);
 
@@ -119,9 +136,10 @@ function Filters({ applicationId, setBuilds, setLoadingData, groupDataBy, setGro
           <Select
             options={monitoringStatusOptions}
             mode="multiple"
+            style={{ maxWidth: '50rem' }}
             onChange={(values) => {
-              setDashboardFilters((prev) => ({ ...prev, monitoringStatus: values }));
-              updateParams({ monitoringStatus: values });
+              setDashboardFilters((prev) => ({ ...prev, status: values }));
+              updateParams({ status: values });
             }}
           />
         </Form.Item>

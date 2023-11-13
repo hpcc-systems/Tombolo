@@ -5,17 +5,15 @@ import { useLocation } from 'react-router-dom';
 
 import { authHeader, handleError } from '../../../common/AuthHeader.js';
 import { camelToTitleCase, formatDateTime } from '../../../common/CommonUtil.js';
+import moment from 'moment';
 
-function OrbitTable({ applicationId, setSelectedbuildForBulkAction, updatedbuildInDb }) {
-  const [builds, setbuilds] = useState([]);
+function OrbitTable({ applicationId, setSelectedbuildForBulkAction, updatedbuildInDb, dashboardFilters }) {
+  const [builds, setBuilds] = useState([]);
   const [viewbuildDetails, setViewbuildDetails] = useState(false);
   const [selectedbuild, setSelectedbuild] = useState(null);
-  const [filters, setFilters] = useState({
-    statusFilters: [],
-    monitoringTypeFilters: [],
-    buildReasonFilters: [],
-    buildChannelFilters: [],
-  });
+  const [workUnits, setWorkUnits] = useState([]);
+  const [filteredWorkUnits, setFilteredWorkUnits] = useState([]);
+  const [loading, setLoading] = useState(false);
   const location = useLocation();
 
   // Selected build - complete details
@@ -42,38 +40,28 @@ function OrbitTable({ applicationId, setSelectedbuildForBulkAction, updatedbuild
     },
   ];
 
-  // Update filters when builds change
+  //when filters change, set filtered WorkUnits list
   useEffect(() => {
-    if (builds.length > 0) {
-      const uniqueStatuses = new Set(builds.map((build) => build.status));
-      const newStatusFilters = Array.from(uniqueStatuses).map((status) => ({
-        text: camelToTitleCase(status),
-        value: status,
-      }));
-      setFilters((prev) => ({ ...prev, statusFilters: newStatusFilters }));
+    if (Object.keys(workUnits).length === 0 || Object.keys(dashboardFilters).length === 0) return;
 
-      const uniqueMonitoringTypes = new Set(builds.map((build) => build.monitoring_type));
-      const newMonitoringTypeFilters = Array.from(uniqueMonitoringTypes).map((type) => ({
-        text: camelToTitleCase(type),
-        value: type,
-      }));
-      setFilters((prev) => ({ ...prev, monitoringTypeFilters: newMonitoringTypeFilters }));
+    let filtered = workUnits.filter((workUnit) => {
+      let wuDate = moment(workUnit.Date);
 
-      const uniquebuildReasons = new Set(builds.map((build) => build.build_reason));
-      const newbuildReasonFilters = Array.from(uniquebuildReasons).map((reason) => ({
-        text: camelToTitleCase(reason),
-        value: reason,
-      }));
-      setFilters((prev) => ({ ...prev, buildReasonFilters: newbuildReasonFilters }));
+      if (
+        wuDate > moment(dashboardFilters.dateRange[0]) &&
+        wuDate < moment(dashboardFilters.dateRange[1]) &&
+        dashboardFilters.status &&
+        dashboardFilters.status.includes(workUnit.Status)
+      ) {
+        return true;
+      } else {
+        return false;
+      }
+    });
 
-      const uniquebuildChannels = new Set(builds.map((build) => build.build_channel));
-      const newbuildChannelFilters = Array.from(uniquebuildChannels).map((channel) => ({
-        text: camelToTitleCase(channel),
-        value: channel,
-      }));
-      setFilters((prev) => ({ ...prev, buildChannelFilters: newbuildChannelFilters }));
-    }
-  }, [builds]);
+    setFilteredWorkUnits(filtered);
+    setLoading(false);
+  }, [dashboardFilters, workUnits]);
 
   //When the component loads - get all builds
   useEffect(() => {
@@ -84,6 +72,7 @@ function OrbitTable({ applicationId, setSelectedbuildForBulkAction, updatedbuild
   //Get list of all monitoring
   const getbuilds = async (monitoringId) => {
     try {
+      setLoading(true);
       const payload = {
         method: 'GET',
         header: authHeader(),
@@ -93,14 +82,43 @@ function OrbitTable({ applicationId, setSelectedbuildForBulkAction, updatedbuild
       if (!response.ok) handleError(response);
       const data = await response.json();
 
-      console.log(data);
-
       if (!monitoringId) {
-        setbuilds(data);
+        setBuilds(data);
       } else {
         const filtered = data.filter((item) => item.monitoring_id === monitoringId);
-        setbuilds(filtered);
+        setBuilds(filtered);
       }
+
+      //get work unit information and put it in builds information
+
+      const response2 = await fetch(`/api/orbit/getWorkUnits/${applicationId}`, payload);
+      if (!response2.ok) handleError(response2);
+
+      const data2 = await response2.json();
+
+      //add workunits to builds
+      const builds2 = data.map((build) => {
+        const wu = data2.filter((workUnit) => workUnit.build === build.build);
+
+        return { ...build, workUnits: wu[0].WorkUnits };
+      });
+
+      setBuilds(builds2);
+
+      //combine and set work units
+      let totalWuList = [];
+      data2.map(async (build) => {
+        const buildWUs = build.WorkUnits;
+        totalWuList = [...totalWuList, ...buildWUs];
+      });
+
+      totalWuList.sort((a, b) => {
+        return new Date(b.Date) - new Date(a.Date);
+      });
+
+      setWorkUnits(totalWuList);
+
+      setFilteredWorkUnits(totalWuList);
     } catch (error) {
       message.error('Failed to fetch builds');
     }
@@ -108,16 +126,6 @@ function OrbitTable({ applicationId, setSelectedbuildForBulkAction, updatedbuild
 
   //Table columns and data
   const columns = [
-    {
-      title: 'Business Unit',
-      render: () => {
-        return 'Insurance';
-      },
-    },
-    {
-      title: 'Name',
-      dataIndex: 'name',
-    },
     { title: 'Build', dataIndex: 'build' },
     {
       title: 'Notification Emails',
@@ -135,11 +143,40 @@ function OrbitTable({ applicationId, setSelectedbuildForBulkAction, updatedbuild
       },
     },
     {
-      title: 'Work Units',
-      render: () => {
-        return '0';
+      title: 'WUs',
+      render: (record) => {
+        let count = 0;
+
+        if (record.workUnits?.length > 0) {
+          record.workUnits.forEach((workUnit) => {
+            let wuDate = moment(workUnit.Date);
+
+            if (
+              wuDate > moment(dashboardFilters.dateRange[0]) &&
+              wuDate < moment(dashboardFilters.dateRange[1]) &&
+              dashboardFilters.status &&
+              dashboardFilters.status.includes(workUnit.Status)
+            ) {
+              count++;
+            }
+          });
+        }
+
+        return count;
       },
     },
+  ];
+
+  const wuColumns = [
+    { title: 'Build WUID', dataIndex: 'WorkUnit' },
+    { title: 'Related Build', dataIndex: 'Build' },
+    {
+      title: 'Date',
+      render: (record) => {
+        return moment.utc(record.Date).local().format('MM/DD/YYYY h:mm A');
+      },
+    },
+    { title: 'Current Status', dataIndex: 'Status' },
   ];
 
   // Row selection
@@ -152,25 +189,47 @@ function OrbitTable({ applicationId, setSelectedbuildForBulkAction, updatedbuild
   //JSX
   return (
     <>
-      <Table
-        align="right"
-        pagination={{ pageSize: 14 }}
-        size="small"
-        columns={columns}
-        dataSource={builds}
-        rowKey={(record) => record.id}
-        verticalAlign="top"
-        rowSelection={rowSelection}
-        onRow={(record) => {
-          return {
-            onClick: () => {
-              console.log(record);
-              setSelectedbuild(record);
-              setViewbuildDetails(true);
-            },
-          };
-        }}
-      />
+      <div style={{ width: '50%', float: 'left', marginTop: '1rem' }}>
+        <Table
+          align="right"
+          pagination={{ pageSize: 10 }}
+          size="small"
+          columns={columns}
+          dataSource={builds}
+          rowKey={(record) => record.id}
+          verticalAlign="top"
+          rowSelection={rowSelection}
+          loading={loading}
+          // onRow={(record) => {
+          //   return {
+          //     onClick: () => {
+          //       setSelectedbuild(record);
+          //       setViewbuildDetails(true);
+          //     },
+          //   };
+          // }}
+        />
+        <br />
+        <Table
+          align="right"
+          pagination={{ pageSize: 10 }}
+          size="small"
+          columns={wuColumns}
+          dataSource={filteredWorkUnits}
+          rowKey={(record) => record.id}
+          verticalAlign="top"
+          rowSelection={rowSelection}
+          loading={loading}
+          // onRow={(record) => {
+          //   return {
+          //     onClick: () => {
+          //       setSelectedbuild(record);
+          //       setViewbuildDetails(true);
+          //     },
+          //   };
+          // }}
+        />
+      </div>
       <Modal
         title={selectedbuild?.['fileMonitoring.name'] || selectedbuild?.['clusterMonitoring.name'] || ''}
         width={850}

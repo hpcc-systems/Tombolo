@@ -19,6 +19,7 @@ const { v4: uuidv4 } = require("uuid");
 const axios = require("axios");
 
 const sql = require("mssql");
+
 const dbConfig = {
   server: process.env.ORBIT_DB,
   database: process.env.ORBIT_DB_NAME,
@@ -26,6 +27,22 @@ const dbConfig = {
   password: process.env.ORBIT_DB_PWD,
   port: parseInt(process.env.ORBIT_DB_PORT),
   trustServerCertificate: true,
+};
+
+const runSQLQuery = async (query) => {
+  try {
+    await sql.connect(dbConfig);
+
+    const result = await sql.query(query);
+
+    return result;
+  } catch (err) {
+    console.log(err);
+    return {
+      err,
+      message: "There was an issue contacting the orbit reports server",
+    };
+  }
 };
 
 require("dotenv").config({ path: ENVPath });
@@ -191,12 +208,13 @@ router.get(
       const { application_id, keyword } = req.params;
       if (!application_id) throw Error("Invalid app ID");
 
-      //connect to db
-      await sql.connect(dbConfig);
-
       const query = `select Name from DimBuildInstance where Name like '%${keyword}%' and Name not like 'Scrub%' and EnvironmentName = 'Insurance' order by  Name asc`;
 
-      const result = await sql.query(query);
+      const result = await runSQLQuery(query);
+
+      if (result.err) {
+        throw Error(result.message);
+      }
 
       const uniqueNames = [];
 
@@ -239,11 +257,14 @@ router.get(
       const { buildName } = req.params;
 
       //connect to db
-      await sql.connect(dbConfig);
 
       const query = `select Top 1 EnvironmentName, Name, Status_DateCreated, HpccWorkUnit, Status_Code, Substatus_Code, BuildInstanceIdKey  from DimBuildInstance where Name = '${buildName}' order by Status_DateCreated desc`;
 
-      const result = await sql.query(query);
+      const result = await runSQLQuery(query);
+
+      if (result.err) {
+        throw Error(result.message);
+      }
 
       res.json(result?.recordset[0]);
     } catch (err) {
@@ -534,6 +555,60 @@ router.get(
       });
 
       res.status(200).send(result);
+    } catch (err) {
+      res.status(500).json({ message: err.message });
+      console.error(err);
+    }
+  }
+);
+
+router.get(
+  "/getWorkunits/:application_id",
+  [param("application_id").isUUID(4).withMessage("Invalid application id")],
+  async (req, res) => {
+    try {
+      const errors = validationResult(req).formatWith(
+        validatorUtil.errorFormatter
+      );
+
+      if (!errors.isEmpty())
+        return res.status(422).json({ success: false, errors: errors.array() });
+
+      const { application_id } = req.params;
+
+      const result = await orbitMonitoring.findAll({
+        where: { application_id },
+        raw: true,
+      });
+
+      //connect to db
+
+      let wuList = [];
+
+      await Promise.all(
+        result.map(async (build) => {
+          const query = `select HpccWorkUnit as 'WorkUnit', Name as 'Build', DateUpdated as 'Date', Status_Code as 'Status' from DimBuildInstance where Name = '${build.build}' order by Date desc`;
+
+          const wuResult = await runSQLQuery(query);
+
+          if (wuResult.err) {
+            throw Error(result.message);
+          }
+
+          //create temporary holder
+          let wu = {};
+
+          wu.build = build.build;
+          wu.WorkUnits = wuResult.recordset;
+
+          //push to the list
+          wuList.push(wu);
+          Promise.resolve;
+        })
+      );
+
+      //return finished list;
+      res.status(200).send(wuList);
     } catch (err) {
       res.status(500).json({ message: err.message });
       console.error(err);

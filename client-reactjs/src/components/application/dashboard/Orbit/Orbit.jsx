@@ -1,17 +1,13 @@
 import React, { useEffect, useState } from 'react';
 import { Tabs, Empty, Spin, Space } from 'antd';
 import { useSelector } from 'react-redux';
-import { message } from 'antd';
 import moment from 'moment';
-
 import OrbitTable from './OrbitTable';
 import NotificationCharts from '../common/charts/NotificationCharts';
 import Filters from './Filters';
 import MetricBoxes from '../common/charts/MetricBoxes';
 import '../common/css/index.css';
-import { authHeader, handleError } from '../../../common/AuthHeader.js';
 import ExportMenu from '../ExportMenu/ExportMenu';
-// import BulkActions from './BulkActions';
 
 function Orbit() {
   const [builds, setBuilds] = useState([]);
@@ -20,36 +16,13 @@ function Orbit() {
   const [stackBarData, setStackBarData] = useState([]);
   const [donutData, setDonutData] = useState([]);
   const [groupDataBy, setGroupDataBy] = useState('day');
-  // const [selectedbuildsForBulkAction, setSelectedbuildForBulkAction] = useState([]);
-  // const [bulkActionModalVisible, setBulkActionModalVisibility] = useState(false);
-  // const [updatedbuildInDb, setUpdatedbuildInDb] = useState(null);
+  const [dashboardFilters, setDashboardFilters] = useState({});
 
   const {
     application: { applicationId },
   } = useSelector((item) => item.applicationReducer);
 
-  // Default filters to fetch builds
-  const [defaultFilters, setDefaultFilters] = useState({
-    status: [
-      'BUILD_AVAILABLE_FOR_USE',
-      'DATA_QA_APPROVED',
-      'DATA_QA_REJECT',
-      'DISCARDED',
-      'FAILED_QA_QAHELD',
-      'GRAVEYARD',
-      'ON_HOLD',
-      'PASSED_QA',
-      'PASSED_QA_NO_RELEASE',
-      'PRODUCTION',
-      'SKIPPED',
-    ],
-    dateRange: [moment().subtract(15, 'days'), moment()],
-    EnvironmentName: ['Insurance'],
-    applicationId,
-  });
-
   useEffect(() => {
-    console.log(builds);
     const groupedData = builds.map((build) => {
       const weekStart = moment(build.metaData.lastRun).startOf('week').format('MM/DD/YY');
       const weekEnd = moment(build.metaData.lastRun).endOf('week').format('MM/DD/YY');
@@ -60,13 +33,6 @@ function Orbit() {
 
     setStackBarData(groupedData);
   }, [groupDataBy]);
-
-  // When component loads create filter to load initial data
-  useEffect(() => {
-    if (applicationId) {
-      filterAndFetchBuilds(defaultFilters);
-    }
-  }, [applicationId]);
 
   // When build changes run
   useEffect(() => {
@@ -171,27 +137,6 @@ function Orbit() {
     }
   }, [builds, groupDataBy]);
 
-  //Get list of file monitorings that matches a filter
-  const filterAndFetchBuilds = async (filters) => {
-    try {
-      setLoadingData(true);
-      const payload = {
-        method: 'GET',
-        header: authHeader(),
-      };
-      const queryData = JSON.stringify({ ...filters, applicationId });
-
-      const response = await fetch(`/api/orbit/filteredbuilds?queryData=${queryData}`, payload);
-      if (!response.ok) handleError(response);
-      const data = await response.json();
-      setBuilds(data);
-    } catch (error) {
-      message.error('Failed to fetch builds');
-    } finally {
-      setLoadingData(false);
-    }
-  };
-
   return (
     <div>
       <Tabs
@@ -209,26 +154,18 @@ function Orbit() {
             <ExportMenu />
           </Space>
         }>
-        <Tabs.TabPane key="1" tab="Orbit Monitoring">
-          <OrbitTable applicationId={applicationId} />
-          {/* {bulkActionModalVisible ? (
-            <BulkActions
-              setBulkActionModalVisibility={setBulkActionModalVisibility}
-              selectedbuildsForBulkAction={selectedbuildsForBulkAction}
-              setUpdatedbuildInDb={setUpdatedbuildInDb}
-            />
-          ) : null} */}
-        </Tabs.TabPane>
-        <Tabs.TabPane key="2" tab="Dashboard">
+        <Tabs.TabPane key="1" tab="Dashboard">
           <Filters
             applicationId={applicationId}
             setBuilds={setBuilds}
             setLoadingData={setLoadingData}
             groupDataBy={groupDataBy}
             setGroupDataBy={setGroupDataBy}
-            setDefaultFilters={setDefaultFilters}
             isOrbit={true}
+            dashboardFilters={dashboardFilters}
+            setDashboardFilters={setDashboardFilters}
           />
+          <OrbitTable applicationId={applicationId} dashboardFilters={dashboardFilters} />
 
           {builds.length > 0 ? (
             <div className="builds__charts">
