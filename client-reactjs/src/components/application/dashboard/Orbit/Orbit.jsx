@@ -3,7 +3,7 @@ import { Tabs, Empty, Spin, Space } from 'antd';
 import { useSelector } from 'react-redux';
 import moment from 'moment';
 import OrbitTable from './OrbitTable';
-import NotificationCharts from '../common/charts/NotificationCharts';
+import WorkUnitCharts from '../common/charts/WorkUnitCharts';
 import Filters from './Filters';
 import MetricBoxes from '../common/charts/MetricBoxes';
 import '../common/css/index.css';
@@ -13,12 +13,14 @@ function Orbit() {
   const [builds, setBuilds] = useState([]);
   const [workUnits, setWorkUnits] = useState([]);
   const [loadingData, setLoadingData] = useState(true);
+  const [titleMetrics, setTitleMetrics] = useState([]);
   const [metrics, setMetrics] = useState([]);
   const [stackBarData, setStackBarData] = useState([]);
   const [donutData, setDonutData] = useState([]);
   const [groupDataBy, setGroupDataBy] = useState('day');
   const [dashboardFilters, setDashboardFilters] = useState({});
   const [filteredWorkUnits, setFilteredWorkUnits] = useState([]);
+  const [selectedBuilds, setSelectedBuilds] = useState([]);
 
   const {
     application: { applicationId },
@@ -29,7 +31,7 @@ function Orbit() {
       const weekStart = moment(build.Date).startOf('week').format('MM/DD/YY');
       const weekEnd = moment(build.Date).endOf('week').format('MM/DD/YY');
       const updatedItem = { ...build };
-      updatedItem.createdAt = `${weekStart} - ${weekEnd}`;
+      updatedItem.Date = `${weekStart} - ${weekEnd}`;
       return updatedItem;
     });
 
@@ -38,15 +40,17 @@ function Orbit() {
 
   // When build changes run
   useEffect(() => {
-    if (filteredWorkUnits.length > 0) {
-      const newMetrics = []; // Pie and card data
+    if (filteredWorkUnits) {
+      const newMetrics = []; // Pie data
       const newStackBarData = []; // Stack bar Data
       const newDonutData = []; // Donut data
+      const newTitleMetrics = []; //title metrics
 
-      console.log(filteredWorkUnits);
-
-      newMetrics.push({ title: 'Work Units', description: filteredWorkUnits.length });
-      newMetrics.push({ title: 'Builds', description: builds.length });
+      newTitleMetrics.push({ title: 'Work Units', description: filteredWorkUnits.length });
+      newTitleMetrics.push({
+        title: 'Builds',
+        description: selectedBuilds.length > 0 ? selectedBuilds.length : builds.length,
+      });
 
       const workUnitCountByStatus = {};
       const workUnitCountByBuild = {};
@@ -58,7 +62,7 @@ function Orbit() {
             const weekStart = moment(workUnit.Date).startOf('week').format('MM/DD/YY');
             const weekEnd = moment(workUnit.Date).endOf('week').format('MM/DD/YY');
             const updatedItem = { ...workUnit };
-            updatedItem.createdAt = `${weekStart} - ${weekEnd}`;
+            updatedItem.Date = `${weekStart} - ${weekEnd}`;
             return updatedItem;
           });
           break;
@@ -66,7 +70,7 @@ function Orbit() {
         case 'month':
           data = filteredWorkUnits.map((workUnit) => {
             const updatedItem = { ...workUnit };
-            updatedItem.createdAt = moment(moment(workUnit.Date).utc(), 'MM/DD/YYYY').format('MMMM YYYY');
+            updatedItem.Date = moment(moment(workUnit.Date).utc(), 'MM/DD/YYYY').format('MMMM YYYY');
             return updatedItem;
           });
           break;
@@ -77,7 +81,7 @@ function Orbit() {
             const date = moment.utc(workUnit.Date);
             const year = date.year();
             const quarter = Math.ceil((date.month() + 1) / 3);
-            updatedItem.createdAt = `${year} - Q${quarter}`;
+            updatedItem.Date = `${year} - Q${quarter}`;
             return updatedItem;
           });
           break;
@@ -87,7 +91,7 @@ function Orbit() {
             const updatedItem = { ...workUnit };
             const date = moment.utc(workUnit.Date);
             const year = date.year();
-            updatedItem.createdAt = year;
+            updatedItem.Date = year;
             return updatedItem;
           });
           break;
@@ -133,26 +137,18 @@ function Orbit() {
       }
       //---------------------------------------
 
+      setTitleMetrics(newTitleMetrics);
       setMetrics(newMetrics);
       setStackBarData(newStackBarData);
       setDonutData(newDonutData);
     }
-  }, [builds, filteredWorkUnits, groupDataBy]);
+  }, [builds, selectedBuilds, filteredWorkUnits, groupDataBy]);
 
   return (
     <div>
       <Tabs
         tabBarExtraContent={
           <Space>
-            {/* <Button
-              type="primary"
-              ghost
-              disabled={selectedbuildsForBulkAction.length > 0 ? false : true}
-              onClick={() => {
-                setBulkActionModalVisibility(true);
-              }}>
-              Actions
-            </Button> */}
             <ExportMenu />
           </Space>
         }>
@@ -170,7 +166,7 @@ function Orbit() {
             />
           </div>
           <div style={{ width: '100%', marginBottom: '1rem', display: 'flex', justifyContent: 'space-around' }}>
-            <MetricBoxes metrics={metrics} builds={builds} />
+            <MetricBoxes metrics={titleMetrics} builds={builds} />
           </div>
           <OrbitTable
             applicationId={applicationId}
@@ -181,11 +177,13 @@ function Orbit() {
             setWorkUnits={setWorkUnits}
             filteredWorkUnits={filteredWorkUnits}
             setFilteredWorkUnits={setFilteredWorkUnits}
+            selectedBuilds={selectedBuilds}
+            setSelectedBuilds={setSelectedBuilds}
           />
 
           {builds.length > 0 ? (
             <div className="builds__charts">
-              <NotificationCharts
+              <WorkUnitCharts
                 metrics={metrics}
                 stackBarData={stackBarData}
                 setGroupDataBy={setGroupDataBy}

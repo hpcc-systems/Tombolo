@@ -18,6 +18,7 @@ const groupByOptions = [
 
 export const monitoringStatusOptions = [
   { label: 'BUILD_AVAILABLE_FOR_USE', value: 'BUILD_AVAILABLE_FOR_USE' },
+  { label: 'BUILD_IN_PROGRESS', value: 'BUILD_IN_PROGRESS' },
   { label: 'DATA_QA_APPROVED', value: 'DATA_QA_APPROVED' },
   { label: 'DATA_QA_REJECT', value: 'DATA_QA_REJECT' },
   { label: 'DISCARDED', value: 'DISCARDED' },
@@ -40,7 +41,15 @@ function Filters({ groupDataBy, setGroupDataBy, dashboardFilters, setDashboardFi
   const [form] = Form.useForm();
 
   const initialValues = {
-    status: ['DATA_QA_APPROVED', 'DATA_QA_REJECT', 'PASSED_QA', 'PASSED_QA_NO_RELEASE', 'PRODUCTION'],
+    status: [
+      'BUILD_AVAILABLE_FOR_USE',
+      'BUILD_IN_PROGRESS',
+      'DATA_QA_APPROVED',
+      'DATA_QA_REJECT',
+      'PASSED_QA',
+      'PASSED_QA_NO_RELEASE',
+      'PRODUCTION',
+    ],
     dateRange: [moment().subtract(15, 'days'), moment()],
     groupDataBy: groupDataBy,
   };
@@ -48,10 +57,9 @@ function Filters({ groupDataBy, setGroupDataBy, dashboardFilters, setDashboardFi
   const location = useLocation();
 
   // When form is submitted
-  const onFinish = (formValues) => {
+  const onFinish = () => {
     try {
       form.validateFields();
-      console.log(formValues);
     } catch (err) {
       handleError(err);
     }
@@ -63,27 +71,6 @@ function Filters({ groupDataBy, setGroupDataBy, dashboardFilters, setDashboardFi
       setDashboardFilters(initialValues);
     }
   }, [dashboardFilters]);
-
-  //Get list  monitorings that matches a filter
-  // const filterAndFetchbuilds = async (filters) => {
-  //   try {
-  //     setLoadingData(true);
-  //     const payload = {
-  //       method: 'GET',
-  //       header: authHeader(),
-  //     };
-  //     const queryData = JSON.stringify({ ...filters, applicationId });
-
-  //     const response = await fetch(`/api/orbit/filteredbuilds?queryData=${queryData}`, payload);
-  //     if (!response.ok) handleError(response);
-  //     const data = await response.json();
-  //     setBuilds(data);
-  //   } catch (error) {
-  //     message.error('Failed to fetch builds');
-  //   } finally {
-  //     setLoadingData(false);
-  //   }
-  // };
 
   // Disable future dates
   const disabledDate = (current) => {
@@ -181,7 +168,7 @@ function Filters({ groupDataBy, setGroupDataBy, dashboardFilters, setDashboardFi
             value={groupDataBy}
             onSelect={(value) => {
               setGroupDataBy(value);
-              setDashboardFilters((prev) => ({ ...prev, dateRange: value }));
+              setDashboardFilters((prev) => ({ ...prev, groupDataBy: value }));
               updateParams({ groupDataBy: value });
             }}></Select>
         </Form.Item>

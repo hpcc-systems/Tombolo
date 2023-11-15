@@ -1,15 +1,12 @@
 /* eslint-disable unused-imports/no-unused-vars */
 import React, { useEffect, useState } from 'react';
-import { message, Table, Modal, Button, Descriptions, Tabs } from 'antd';
+import { message, Table } from 'antd';
 import { useLocation } from 'react-router-dom';
-
 import { authHeader, handleError } from '../../../common/AuthHeader.js';
-import { camelToTitleCase, formatDateTime } from '../../../common/CommonUtil.js';
 import moment from 'moment';
 
 function OrbitTable({
   applicationId,
-  setSelectedbuildForBulkAction,
   updatedbuildInDb,
   dashboardFilters,
   builds,
@@ -18,40 +15,24 @@ function OrbitTable({
   setWorkUnits,
   filteredWorkUnits,
   setFilteredWorkUnits,
+  selectedBuilds,
+  setSelectedBuilds,
 }) {
-  const [viewbuildDetails, setViewbuildDetails] = useState(false);
-  const [selectedbuild, setSelectedbuild] = useState(null);
-
   const [loading, setLoading] = useState(false);
   const location = useLocation();
 
-  // Selected build - complete details
-  const selectedbuildDetails = [
-    {
-      key: 'Monitoring Type',
-      value: camelToTitleCase(selectedbuild?.monitoring_type),
-    },
-    {
-      key: 'Monitoring Name',
-      value: `${
-        selectedbuild?.['fileMonitoring.name'] ||
-        selectedbuild?.['clusterMonitoring.name'] ||
-        selectedbuild?.['jobMonitoring.name']
-      }`,
-    },
-    { key: 'Notified at', value: formatDateTime(selectedbuild?.createdAt) },
-    { key: 'Updated at', value: formatDateTime(selectedbuild?.updatedAt) },
-    { key: 'build reason', value: selectedbuild?.build_reason },
-    { key: 'Status', value: camelToTitleCase(selectedbuild?.status) },
-    {
-      key: 'Comment',
-      value: selectedbuild?.comment,
-    },
-  ];
-
-  //when filters change, set filtered WorkUnits list
+  //when filters change or Builds Selected, set filtered WorkUnits list
   useEffect(() => {
     if (Object.keys(workUnits).length === 0 || Object.keys(dashboardFilters).length === 0) return;
+
+    let selectedBuildsList;
+
+    //if there are selected Builds, use those, otherwise use all builds
+    if (selectedBuilds.length > 0) {
+      selectedBuildsList = selectedBuilds.map((build) => build.build);
+    } else {
+      selectedBuildsList = builds.map((build) => build.build);
+    }
 
     let filtered = workUnits.filter((workUnit) => {
       let wuDate = moment(workUnit.Date);
@@ -60,7 +41,8 @@ function OrbitTable({
         wuDate > moment(dashboardFilters.dateRange[0]) &&
         wuDate < moment(dashboardFilters.dateRange[1]) &&
         dashboardFilters.status &&
-        dashboardFilters.status.includes(workUnit.Status)
+        dashboardFilters.status.includes(workUnit.Status) &&
+        selectedBuildsList.includes(workUnit.Build)
       ) {
         return true;
       } else {
@@ -70,13 +52,13 @@ function OrbitTable({
 
     setFilteredWorkUnits(filtered);
     setLoading(false);
-  }, [dashboardFilters, workUnits]);
+  }, [dashboardFilters, workUnits, selectedBuilds]);
 
   //When the component loads - get all builds
   useEffect(() => {
     const monitoringId = new URLSearchParams(location.search).get('monitoringId');
     getbuilds(monitoringId);
-  }, [applicationId, location, updatedbuildInDb]);
+  }, [applicationId, location]);
 
   //Get list of all monitoring
   const getbuilds = async (monitoringId) => {
@@ -193,7 +175,7 @@ function OrbitTable({
   // Row selection
   const rowSelection = {
     onChange: (_selectedRowKeys, selectedRows) => {
-      setSelectedbuildForBulkAction(selectedRows);
+      setSelectedBuilds(selectedRows);
     },
   };
 
@@ -211,14 +193,6 @@ function OrbitTable({
           verticalAlign="top"
           rowSelection={rowSelection}
           loading={loading}
-          // onRow={(record) => {
-          //   return {
-          //     onClick: () => {
-          //       setSelectedbuild(record);
-          //       setViewbuildDetails(true);
-          //     },
-          //   };
-          // }}
         />
         <br />
         <Table
@@ -227,49 +201,12 @@ function OrbitTable({
           size="small"
           columns={wuColumns}
           dataSource={filteredWorkUnits}
-          rowKey={(record) => record.id}
+          rowKey={(record) => record.WorkUnit}
           verticalAlign="top"
           rowSelection={rowSelection}
           loading={loading}
-          // onRow={(record) => {
-          //   return {
-          //     onClick: () => {
-          //       setSelectedbuild(record);
-          //       setViewbuildDetails(true);
-          //     },
-          //   };
-          // }}
         />
       </div>
-      <Modal
-        title={selectedbuild?.['fileMonitoring.name'] || selectedbuild?.['clusterMonitoring.name'] || ''}
-        width={850}
-        visible={viewbuildDetails}
-        onCancel={() => setViewbuildDetails(false)}
-        maskClosable={false}
-        footer={
-          <Button type="primary" onClick={() => setViewbuildDetails(false)}>
-            Close
-          </Button>
-        }>
-        <Tabs>
-          <Tabs.TabPane tab="Metadata" key="1">
-            <Descriptions bordered column={1} size="small">
-              {selectedbuildDetails.map((item) => (
-                <Descriptions.Item label={item.key} key={item.key}>
-                  {item.value}
-                </Descriptions.Item>
-              ))}
-            </Descriptions>
-          </Tabs.TabPane>
-          <Tabs.TabPane tab="build" key="2">
-            <div
-              dangerouslySetInnerHTML={{ __html: selectedbuild?.metaData?.buildBody || '' }}
-              className="sentbuildBody"
-            />
-          </Tabs.TabPane>
-        </Tabs>
-      </Modal>
     </>
   );
 }
