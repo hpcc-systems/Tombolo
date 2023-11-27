@@ -203,7 +203,6 @@ function OrbitTable({
           dataSource={filteredWorkUnits}
           rowKey={(record) => record.WorkUnit}
           verticalAlign="top"
-          rowSelection={rowSelection}
           loading={loading}
         />
       </div>

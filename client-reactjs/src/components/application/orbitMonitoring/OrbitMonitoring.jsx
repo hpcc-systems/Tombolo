@@ -68,9 +68,12 @@ const OrbitMonitoring = () => {
 
       const response = await fetch('/api/orbit/', payload);
 
-      if (!response.ok) handleError(response);
-      message.success('Successfully saved orbit build monitoring data');
-      getOrbitMonitoring();
+      if (!response.ok) {
+        handleError(response);
+      } else {
+        message.success('Successfully saved orbit build monitoring data');
+        getOrbitMonitoring();
+      }
     } catch (error) {
       console.log(error);
       message.error('Failed to save orbit build monitoring');

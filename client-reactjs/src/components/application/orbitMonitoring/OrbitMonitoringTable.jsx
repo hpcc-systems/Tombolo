@@ -63,9 +63,11 @@ const OrbitMonitoringTable = ({
         </>
       ),
     },
+    { title: 'Name', dataIndex: 'name' },
     { title: 'Build', dataIndex: 'build' },
-    { title: 'Cron', dataIndex: 'cron' },
 
+    { title: 'Cron', dataIndex: 'cron' },
+    { title: 'Severity Code', dataIndex: 'severityCode' },
     {
       title: 'Delete',
       dataIndex: 'delete',

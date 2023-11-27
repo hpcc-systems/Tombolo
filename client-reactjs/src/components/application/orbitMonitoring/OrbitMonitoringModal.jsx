@@ -75,6 +75,7 @@ const OrbitMonitoringModal = ({
           cron,
           isActive,
           build,
+          severityCode,
           metaData: {
             monitoringCondition: { notifyCondition, updateInterval, updateIntervalDays, buildStatus, deleted },
           },
@@ -87,6 +88,7 @@ const OrbitMonitoringModal = ({
           build: build,
           isActive: isActive,
           notificationChannels: notificationChannels,
+          severityCode: severityCode,
           notifyCondition: notifyCondition,
           updateInterval: updateInterval,
           updateIntervalDays: updateIntervalDays,
@@ -164,10 +166,6 @@ const OrbitMonitoringModal = ({
         }
       }
 
-      // if (selectedOrbitBuild) {
-      //   notifications = selectedOrbitBuildDetails.metaData.notifications;
-      // }
-
       formData.metaData = {
         lastMonitored: currentTimeStamp,
         monitoringCondition: {
@@ -199,6 +197,10 @@ const OrbitMonitoringModal = ({
     await setModalVisible(false);
     await setActiveTab('1');
     await setConfirmLoading(false);
+    await setMonitoringDetails({
+      isActive: true,
+      monitoringConditions: [],
+    });
     await getOrbitMonitoring(applicationId);
   };
 
@@ -227,7 +229,7 @@ const OrbitMonitoringModal = ({
     </Button>
   );
 
-  // Get details of a file monitoring -----------------------------------------------
+  // Get details of a orbit monitoring -----------------------------------------------
   const getOrbitBuildDetails = async (id) => {
     try {
       const payload = { method: 'GET', header: authHeader() };
@@ -235,10 +237,11 @@ const OrbitMonitoringModal = ({
       const response = await fetch(`/api/orbit/${id}`, payload);
       if (!response.ok) handleError(response);
       const data = await response.json();
+
       setActiveTab('2');
       setOrbitBuildDetails(data);
 
-      //if selected monitoring, store selected file monitoring in different state for later
+      //if selected monitoring, store selected orbit monitoring in different state for later
       if (selectedOrbitBuild) {
         await setSelectedOrbitBuildDetails(data);
       }

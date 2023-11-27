@@ -4,6 +4,8 @@ import cronstrue from 'cronstrue';
 import InfoDrawer from '../../common/InfoDrawer';
 import { InfoCircleOutlined } from '@ant-design/icons';
 
+const { Title, Text } = Typography;
+
 const MonitoringTab = ({
   entryForm,
   cron,
@@ -17,8 +19,17 @@ const MonitoringTab = ({
   const [updateInterval, setUpdateInterval] = useState(null);
   const [updateIntervalDays, setUpdateIntervalDays] = useState(null);
   const [buildStatus, setBuildStatus] = useState(null);
+  const [severityCode, setSeverityCode] = useState(null);
+  const [required, setRequired] = useState(true);
 
   const [open, setOpen] = useState(false);
+
+  //update required state if update interval or update interval days is changed, use this to validate that one or the other is filled at least
+  useEffect(() => {
+    const result = updateInterval || updateIntervalDays;
+    setRequired(result ? false : true);
+    entryForm.validateFields(['updateInterval', 'updateIntervalDays']);
+  }, [updateInterval, updateIntervalDays]);
 
   const showDrawer = () => {
     setOpen(true);
@@ -28,12 +39,22 @@ const MonitoringTab = ({
     setOpen(false);
   };
 
-  useEffect(() => {}, []);
+  useEffect(() => {
+    entryForm.setFieldsValue({
+      isActive: monitoringDetails.isActive,
+    });
+  }, []);
 
   const notificationConditions = [
     { label: 'Build Status', value: 'buildStatus' },
     { label: 'Build Interval', value: 'updateInterval' },
-    { label: 'Deleted', value: 'deleted' },
+  ];
+
+  const severityCodes = [
+    { label: '0', value: 0 },
+    { label: '1', value: 1 },
+    { label: '2', value: 2 },
+    { label: '3', value: 3 },
   ];
 
   const daysOfTheWeek = [
@@ -89,7 +110,7 @@ const MonitoringTab = ({
         validateTrigger={['onChange', 'onBlur']}
         style={{ width: 'calc(47.5% - 8px)' }}
         rules={[
-          { required: true, message: 'Required filed' },
+          { required: true, message: 'Required field' },
           {
             max: 256,
             message: 'Maximum of 256 characters allowed',
@@ -162,6 +183,26 @@ const MonitoringTab = ({
       </Form.Item>
 
       <Form.Item
+        label="Severity Code"
+        style={{ width: 'calc(47.5% - 8px)' }}
+        name="severityCode"
+        rules={[{ required: true, message: 'Required field' }]}>
+        <Select
+          placeholder="Select one"
+          mode="single"
+          options={severityCodes}
+          onChange={(value) => {
+            setMonitoringDetails({
+              ...monitoringDetails,
+              severityCode: value,
+            });
+
+            setSeverityCode({ value });
+            console.log(severityCode);
+          }}></Select>
+      </Form.Item>
+
+      <Form.Item
         label="Notify when"
         style={{ width: 'calc(47.5% - 8px)' }}
         name="notifyCondition"
@@ -175,8 +216,64 @@ const MonitoringTab = ({
               ...monitoringDetails,
               monitoringConditions: value,
             });
+
+            setSeverityCode({ value });
           }}></Select>
       </Form.Item>
+
+      {monitoringDetails.monitoringConditions.includes('updateInterval') ? (
+        <div style={{ marginTop: '1rem' }}>
+          <Title level={5}>
+            <Text type="danger">*</Text> Build Interval: (choose one)
+          </Title>
+          <div style={{}}>
+            <Form.Item
+              name="updateInterval"
+              label="Days Expected between updates"
+              rules={[
+                {
+                  required: required,
+                  message: 'Please select either an interval or specific days expected between updates',
+                },
+              ]}>
+              <Input
+                type="number"
+                placeholder={0}
+                suffix="Days Between Updates"
+                style={{ display: 'flex', width: 'calc(75% - 12px)', textAlign: 'center' }}
+                value={updateInterval}
+                onChange={(e) => {
+                  setUpdateInterval(e.target.value);
+                }}></Input>
+            </Form.Item>
+
+            <Form.Item
+              name="updateIntervalDays"
+              label="Update Days"
+              rules={[
+                {
+                  required: required,
+                  message: 'Please select either an interval or specific days expected between updates',
+                },
+              ]}>
+              <Select
+                placeholder="Select one or more"
+                mode="multiple"
+                options={daysOfTheWeek}
+                value={updateIntervalDays}
+                style={{ display: 'inline-block', width: 'calc(75% - 12px)', textAlign: 'center' }}
+                popupMatchSelectWidth={true}
+                onChange={(value) => {
+                  if (value?.length) {
+                    setUpdateIntervalDays({ value });
+                  } else {
+                    setUpdateIntervalDays(null);
+                  }
+                }}></Select>
+            </Form.Item>
+          </div>
+        </div>
+      ) : null}
 
       {monitoringDetails.monitoringConditions.includes('buildStatus') ? (
         <>
@@ -186,72 +283,15 @@ const MonitoringTab = ({
               mode="multiple"
               options={buildStatuses}
               value={buildStatus}
+              style={{ display: 'inline-block', width: 'calc(75% - 12px)', textAlign: 'center' }}
               rules={[{ required: true, message: 'Required field' }]}
               onChange={(value) => setBuildStatus({ value })}></Select>
           </Form.Item>
         </>
       ) : null}
 
-      {monitoringDetails.monitoringConditions.includes('updateInterval') && !editing ? (
-        <>
-          <Form.Item name="updateInterval" required label="Days Expected between updates">
-            <Input
-              type="number"
-              placeholder={0}
-              suffix="Days Between Updates"
-              style={{ display: 'flex', width: 'calc(50% - 12px)', textAlign: 'center' }}
-              value={updateInterval}
-              rules={[{ required: true, message: 'Required filed' }]}
-              onChange={(e) => {
-                setUpdateInterval(e.target.value);
-              }}></Input>
-          </Form.Item>
-
-          <Form.Item name="updateIntervalDays" label="Update Days">
-            <Select
-              placeholder="Select one or more"
-              mode="multiple"
-              options={daysOfTheWeek}
-              value={updateIntervalDays}
-              rules={[{ required: true, message: 'Required filed' }]}
-              onChange={(value) => setUpdateIntervalDays({ value })}></Select>
-          </Form.Item>
-        </>
-      ) : null}
-
-      {monitoringDetails.monitoringConditions.includes('updateInterval') && editing ? (
-        <>
-          <Form.Item
-            name="updateInterval"
-            required
-            label="Days Expected between updates"
-            rules={[{ required: true, message: 'Required field' }]}>
-            <Input
-              type="number"
-              suffix="Days Between Updates"
-              placeholder={0}
-              style={{ display: 'flex', width: 'calc(50% - 12px)', textAlign: 'center' }}
-              value={updateInterval}
-              rules={[{ required: true, message: 'Required filed' }]}
-              onChange={(e) => {
-                setUpdateInterval(e.target.value);
-              }}></Input>
-          </Form.Item>
-
-          <Form.Item name="updateIntervalDays" label="Update Days">
-            <Select
-              placeholder="Select one or more"
-              mode="multiple"
-              options={daysOfTheWeek}
-              value={updateIntervalDays}
-              style={{ display: 'inline-block', width: 'calc(50% - 12px)', textAlign: 'center' }}
-              onChange={(value) => setUpdateIntervalDays({ value })}></Select>
-          </Form.Item>
-        </>
-      ) : null}
-
       <Form.Item name="isActive" valuePropName="checked" noStyle>
-        <Checkbox>Start monitoring now</Checkbox>
+        <Checkbox checked={true}>Start monitoring now</Checkbox>
       </Form.Item>
     </>
   );

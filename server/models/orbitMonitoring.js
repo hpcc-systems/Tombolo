@@ -10,6 +10,10 @@ module.exports = (sequelize, DataTypes) => {
         allowNull: false,
         autoIncrement: false,
       },
+      application_id: {
+        allowNull: false,
+        type: DataTypes.UUID,
+      },
       name: {
         allowNull: false,
         type: DataTypes.STRING,
@@ -19,13 +23,14 @@ module.exports = (sequelize, DataTypes) => {
         allowNull: true,
         type: DataTypes.STRING,
       },
-      application_id: {
-        allowNull: false,
-        type: DataTypes.UUID,
-      },
+
       build: {
         allowNull: false,
         type: DataTypes.STRING,
+      },
+      severityCode: {
+        allowNull: false,
+        type: DataTypes.TINYINT,
       },
       metaData: {
         type: DataTypes.JSON,

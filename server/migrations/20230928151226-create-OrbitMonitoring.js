@@ -8,6 +8,15 @@ module.exports = {
         type: Sequelize.UUID,
         defaultValue: Sequelize.UUIDV4,
       },
+      application_id: {
+        type: Sequelize.UUID,
+        references: {
+          model: "application",
+          key: "id",
+        },
+        onUpdate: "CASCADE",
+        onDelete: "CASCADE",
+      },
       name: {
         allowNull: false,
         type: Sequelize.DataTypes.STRING,
@@ -21,19 +30,15 @@ module.exports = {
         type: Sequelize.DataTypes.BOOLEAN,
         defaultValue: false,
       },
-      Build: {
+      build: {
         allowNull: false,
         type: Sequelize.DataTypes.STRING,
         defaultValue: false,
       },
-      application_id: {
-        type: Sequelize.UUID,
-        references: {
-          model: "application",
-          key: "id",
-        },
-        onUpdate: "CASCADE",
-        onDelete: "CASCADE",
+      severityCode: {
+        allowNull: false,
+        type: Sequelize.DataTypes.TINYINT,
+        defaultValue: 0,
       },
       metaData: {
         type: Sequelize.JSON,

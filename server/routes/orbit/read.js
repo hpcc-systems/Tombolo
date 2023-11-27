@@ -71,16 +71,39 @@ router.post(
       if (!errors.isEmpty())
         return res.status(422).json({ success: false, errors: errors.array() });
 
-      //  TODO transform data before sending in for easier updates
+      // get last status and WU to store against future checks
+      const query = `select TOP 1 HpccWorkUnit as 'WorkUnit', Name as 'Build', DateUpdated as 'Date', Status_Code as 'Status' from DimBuildInstance where Name = '${req.body.build}' order by Date desc`;
+
+      const wuResult = await runSQLQuery(query);
+
+      if (wuResult.err) {
+        throw Error(result.message);
+      }
+
+      //destructure out of recordset and place inside of new metaData
+      const { WorkUnit, Date, Status } = wuResult.recordset[0];
+
+      const metaData = req.body.metaData;
+
+      metaData.lastWorkUnit = {
+        lastWorkUnit: WorkUnit,
+        lastWorkUnitDate: Date,
+        lastWorkUnitStatus: Status,
+      };
+
+      //null out isActive in metaData to reduce noise
+      metaData.isActive = null;
+
+      // TODO transform data before sending in for easier updates
       let newBuildData = {
         application_id: req.body.application_id,
         cron: req.body.cron,
         name: req.body.name,
         build: req.body.build,
-        metaData: req.body.metaData,
-        isActive: req.body.metaData.isActive,
+        severityCode: req.body.severityCode,
+        metaData: metaData,
+        isActive: req.body.isActive,
       };
-      console.log(newBuildData);
 
       const newOrbitMonitoring = await orbitMonitoring.create(newBuildData);
 
@@ -136,6 +159,8 @@ router.get(
   }
 );
 
+//get all builds
+router.post("/allBuilds", async (req, res) => {});
 //get all
 router.get(
   "/all/:application_id",
@@ -190,6 +215,7 @@ router.get(
   }
 );
 
+//search Database for builds with keyword
 router.get(
   "/search/:application_id/:keyword",
   [param("application_id").isUUID(4).withMessage("Invalid application id")],
@@ -310,14 +336,13 @@ router.put(
 
       let newInfo = req.body;
 
-      console.log(req.body);
-
       //destructure info out of sent info
       const {
         id,
         name,
         build,
         notifyCondition,
+        severityCode,
         isActive,
         application_id,
         cron,
@@ -356,18 +381,37 @@ router.put(
         }
       }
 
+      //get most recent work unit for storage
+      // get last status and WU to store against future checks
+      const query = `select TOP 1 HpccWorkUnit as 'WorkUnit', Name as 'Build', DateUpdated as 'Date', Status_Code as 'Status' from DimBuildInstance where Name = '${build}' order by Date desc`;
+
+      const wuResult = await runSQLQuery(query);
+
+      if (wuResult.err) {
+        throw Error(result.message);
+      }
+
+      //destructure out of recordset and place inside of new metaData
+      const { WorkUnit, Date, Status } = wuResult.recordset[0];
+
       //set data fields
       newInfo = {
         id,
         name,
         cron,
         isActive,
-        Build: build,
+        build,
+        severityCode,
         application_id,
         metaData: {
+          lastWorkUnit: {
+            lastWorkUnit: WorkUnit,
+            lastWorkUnitDate: Date,
+            lastWorkUnitStatus: Status,
+          },
           lastMonitored,
           notifications,
-          isActive,
+          severityCode,
           monitoringCondition,
         },
       };
@@ -549,7 +593,7 @@ router.get(
 
       const { id } = req.params;
 
-      const result = await orbitBuilds.findOne({
+      const result = await orbitMonitoring.findOne({
         where: { id },
         raw: true,
       });
