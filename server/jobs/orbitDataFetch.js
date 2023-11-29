@@ -38,7 +38,7 @@ const dbConfig = {
         await sql.connect(dbConfig);
 
         const result =
-          await sql.query`select TOP 1 * from DimBuildInstance where SubStatus_Code = 'MEGAPHONE' order by DateUpdated desc`;
+          await sql.query`select TOP 25 * from DimReceiveInstance where SubStatus_Code = 'MEGAPHONE' order by DateUpdated desc`;
 
         //just grab the rows from result
         let rows = result?.recordset;
@@ -48,7 +48,7 @@ const dbConfig = {
             //check if the build already exists
             let orbitBuild = await orbitBuilds.findOne({
               where: {
-                build_id: build.BuildInstanceIdKey,
+                build_id: build.ReceiveInstanceIdKey,
                 application_id: application_id,
               },
               raw: true,
@@ -59,15 +59,14 @@ const dbConfig = {
               //create build
               const newBuild = await orbitBuilds.create({
                 application_id: application_id,
-                build_id: build.BuildInstanceIdKey,
-                name: build.Name,
+                build_id: build.ReceiveInstanceIdKey,
+                name: build.FileName,
                 metaData: {
                   lastRun: build.DateUpdated,
                   status: build.Status_Code,
                   subStatus: build.SubStatus_Code,
                   workunit: build.HpccWorkUnit,
                   EnvironmentName: build.EnvironmentName,
-                  Template: build.BuildTemplate_Name,
                 },
               });
 
