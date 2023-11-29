@@ -39,6 +39,10 @@ module.exports = (sequelize, DataTypes) => {
         allowNull: false,
         type: DataTypes.TINYINT,
       },
+      host: {
+        allowNull: false,
+        type: DataTypes.STRING,
+      },
       metaData: {
         type: DataTypes.JSON,
         allowNull: true,

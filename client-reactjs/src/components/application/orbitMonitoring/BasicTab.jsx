@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { message, Form, Row, Col, AutoComplete, Spin, Select } from 'antd';
+import { message, Form, Row, Col, AutoComplete, Spin, Select, Input } from 'antd';
 import { authHeader, handleError } from '../../common/AuthHeader.js';
 import { useSelector } from 'react-redux';
 import ObjectKeyValue from '../../common/ObjectKeyValue';
@@ -48,8 +48,6 @@ const BasicTab = ({
 
   const [orbitBuildSuggestions, setOrbitBuildSuggestions] = useState([]);
   const [displayBuildInfo, setDisplayBuildInfo] = useState();
-  const [product, setProduct] = useState(null);
-  const [businessUnit, setBusinessUnit] = useState(null);
   const [loading, setLoading] = useState(false);
 
   const handleOrbitBuildSelect = async (selectedOrbitBuild) => {
@@ -131,9 +129,6 @@ const BasicTab = ({
               ...monitoringDetails,
               businessUnit: value,
             });
-
-            setBusinessUnit({ value });
-            console.log(businessUnit);
           }}></Select>
       </Form.Item>
       <Form.Item
@@ -150,10 +145,22 @@ const BasicTab = ({
               ...monitoringDetails,
               product: value,
             });
-
-            setProduct({ value });
-            console.log(product);
           }}></Select>
+      </Form.Item>
+
+      <Form.Item
+        label="Host"
+        name="host"
+        validateTrigger={['onChange', 'onBlur']}
+        style={{ width: 'calc(47.5% - 8px)' }}
+        rules={[
+          { required: true, message: 'Required field' },
+          {
+            max: 256,
+            message: 'Maximum of 256 characters allowed',
+          },
+        ]}>
+        <Input placeholder="Enter the Orbit server address"></Input>
       </Form.Item>
 
       <Form.Item label="Search For Build" name="build" required rules={[{ required: true, message: 'Required field' }]}>

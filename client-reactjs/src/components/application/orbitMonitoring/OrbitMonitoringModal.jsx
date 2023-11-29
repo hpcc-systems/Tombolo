@@ -78,6 +78,7 @@ const OrbitMonitoringModal = ({
           severityCode,
           product,
           businessUnit,
+          host,
           metaData: {
             monitoringCondition: { notifyCondition, updateInterval, updateIntervalDays, buildStatus, deleted },
           },
@@ -94,6 +95,7 @@ const OrbitMonitoringModal = ({
           notifyCondition: notifyCondition,
           businessUnit: businessUnit,
           product: product,
+          host: host,
           updateInterval: updateInterval,
           updateIntervalDays: updateIntervalDays,
           buildStatus: buildStatus,

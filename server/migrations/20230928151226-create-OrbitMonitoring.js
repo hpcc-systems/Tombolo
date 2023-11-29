@@ -50,6 +50,11 @@ module.exports = {
         type: Sequelize.DataTypes.STRING,
         defaultValue: false,
       },
+      host: {
+        allowNull: false,
+        type: Sequelize.DataTypes.STRING,
+        defaultValue: false,
+      },
       metaData: {
         type: Sequelize.JSON,
         allowNull: true,

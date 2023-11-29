@@ -103,6 +103,7 @@ router.post(
         severityCode: req.body.severityCode,
         product: req.body.product,
         businessUnit: req.body.businessUnit,
+        host: req.body.host,
         metaData: metaData,
         isActive: req.body.isActive,
       };
@@ -347,6 +348,7 @@ router.put(
         severityCode,
         product,
         businessUnit,
+        host,
         isActive,
         application_id,
         cron,
@@ -409,6 +411,7 @@ router.put(
         product,
         businessUnit,
         application_id,
+        host,
         metaData: {
           lastWorkUnit: {
             lastWorkUnit: WorkUnit,
