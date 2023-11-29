@@ -101,6 +101,8 @@ router.post(
         name: req.body.name,
         build: req.body.build,
         severityCode: req.body.severityCode,
+        product: req.body.product,
+        businessUnit: req.body.businessUnit,
         metaData: metaData,
         isActive: req.body.isActive,
       };
@@ -221,7 +223,7 @@ router.get(
   [param("application_id").isUUID(4).withMessage("Invalid application id")],
   [
     param("keyword")
-      .matches(/^[a-zA-Z0-9_.\-:\*\?]*$/)
+      .matches(/^[a-zA-Z0-9_.\-:\*\? ]*$/)
       .withMessage("Invalid keyword"),
   ],
   async (req, res) => {
@@ -343,6 +345,8 @@ router.put(
         build,
         notifyCondition,
         severityCode,
+        product,
+        businessUnit,
         isActive,
         application_id,
         cron,
@@ -402,6 +406,8 @@ router.put(
         isActive,
         build,
         severityCode,
+        product,
+        businessUnit,
         application_id,
         metaData: {
           lastWorkUnit: {

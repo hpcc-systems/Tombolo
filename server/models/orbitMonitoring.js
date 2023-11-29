@@ -23,8 +23,15 @@ module.exports = (sequelize, DataTypes) => {
         allowNull: true,
         type: DataTypes.STRING,
       },
-
       build: {
+        allowNull: false,
+        type: DataTypes.STRING,
+      },
+      businessUnit: {
+        allowNull: false,
+        type: DataTypes.STRING,
+      },
+      product: {
         allowNull: false,
         type: DataTypes.STRING,
       },

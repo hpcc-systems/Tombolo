@@ -40,6 +40,16 @@ module.exports = {
         type: Sequelize.DataTypes.TINYINT,
         defaultValue: 0,
       },
+      businessUnit: {
+        allowNull: false,
+        type: Sequelize.DataTypes.STRING,
+        defaultValue: false,
+      },
+      product: {
+        allowNull: false,
+        type: Sequelize.DataTypes.STRING,
+        defaultValue: false,
+      },
       metaData: {
         type: Sequelize.JSON,
         allowNull: true,

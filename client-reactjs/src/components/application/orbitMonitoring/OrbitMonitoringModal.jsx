@@ -76,6 +76,8 @@ const OrbitMonitoringModal = ({
           isActive,
           build,
           severityCode,
+          product,
+          businessUnit,
           metaData: {
             monitoringCondition: { notifyCondition, updateInterval, updateIntervalDays, buildStatus, deleted },
           },
@@ -90,6 +92,8 @@ const OrbitMonitoringModal = ({
           notificationChannels: notificationChannels,
           severityCode: severityCode,
           notifyCondition: notifyCondition,
+          businessUnit: businessUnit,
+          product: product,
           updateInterval: updateInterval,
           updateIntervalDays: updateIntervalDays,
           buildStatus: buildStatus,
@@ -178,6 +182,8 @@ const OrbitMonitoringModal = ({
         notifications,
         isActive: formData.isActive,
       };
+
+      console.log(formData);
 
       await saveOrbitBuildDetails(formData);
       cancelModal();
@@ -304,6 +310,8 @@ const OrbitMonitoringModal = ({
                 setOrbitBuildDetails={setOrbitBuildDetails}
                 selectedOrbitBuild={selectedOrbitBuild}
                 setSelectedOrbitBuild={setSelectedOrbitBuild}
+                monitoringDetails={monitoringDetails}
+                setMonitoringDetails={setMonitoringDetails}
               />
             </TabPane>
             <TabPane tab="Monitoring Parameters" key="2">
