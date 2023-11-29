@@ -23,10 +23,26 @@ const dbConfig = {
   trustServerCertificate: true,
 };
 
+const runSQLQuery = async (query) => {
+  try {
+    await sql.connect(dbConfig);
+
+    const result = await sql.query(query);
+
+    return result;
+  } catch (err) {
+    console.log(err);
+    return {
+      err,
+      message: "There was an issue contacting the orbit reports server",
+    };
+  }
+};
+
 (async () => {
   try {
     const orbitMonitoringDetails = await orbitMonitoring.findOne({
-      where: { id: workerData.id },
+      where: { id: workerData.orbitMonitoring_id },
       raw: true,
     });
 
@@ -53,7 +69,7 @@ const dbConfig = {
 
     //get most recent WorkUnits
 
-    const query = `select Top 1 HpccWorkUnit as 'WorkUnit', Name as 'Build', DateUpdated as 'Date', Status_Code as 'Status' from DimBuildInstance where Name = '${Build}' order by Date desc`;
+    const query = `select Top 1 HpccWorkUnit as 'WorkUnit', Name as 'Build', DateUpdated as 'Date', Status_Code as 'Status' from DimBuildInstance where Name = '${build}' order by Date desc`;
 
     const wuResult = await runSQLQuery(query);
 
@@ -64,18 +80,19 @@ const dbConfig = {
     // Keep track of changes
     const metaDifference = [];
 
-    if (wuResult && !wuResult.recordset) {
+    if (wuResult && wuResult.recordset) {
       //store recent details to check against
-      let recentDetails = wuResult.recordset;
+      // let recentDetails = wuResult.recordset;
 
       if (notifyCondition.includes("buildStatus")) {
         let newStatus = wuResult.recordset[0].Status;
+        newStatus = newStatus.toLowerCase();
 
         if (monitoringCondition?.buildStatus.includes(newStatus)) {
           //build status has been detected, push difference.
           metaDifference.push({
             attribute: "Build Status",
-            oldValue: `${oldStatus}`,
+            oldValue: `${orbitMonitoringDetails.metaData.lastWorkUnit.lastWorkUnitStatus}`,
             newValue: `${newStatus}`,
           });
         }
@@ -153,6 +170,7 @@ const dbConfig = {
       // update orbit monitoring last monitored date
       const date = new Date();
       const currentTimeStamp = date.getTime();
+      metaData = orbitMonitoringDetails.metaData;
       metaData.lastMonitored = currentTimeStamp;
 
       await orbitMonitoring.update({ metaData }, { where: { id } });
@@ -174,6 +192,8 @@ const dbConfig = {
     }
 
     const sentNotifications = [];
+
+    let notificationDetails = {};
 
     if (metaDifference.length > 0) {
       // Note - this does not cover Orbit Build size not in range
@@ -226,8 +246,8 @@ const dbConfig = {
         if (notificationResponse.accepted) {
           sentNotifications.push({
             id: notification_id,
-            file_name: Build,
-            monitoring_type: "orbit",
+            file_name: build,
+            monitoring_type: "orbitMonitoring",
             status: "notified",
             notifiedTo: emailNotificationDetails.recipients,
             notification_channel: "eMail",

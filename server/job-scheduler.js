@@ -681,7 +681,7 @@ class JobScheduler {
         const { id, cron, isActive } = monitoring;
         if (isActive) {
           this.createOrbitMonitoringBreeJob({
-            clusterMonitoring_id: id,
+            orbitMonitoring_id: id,
             cron,
           });
         }
@@ -755,7 +755,7 @@ class JobScheduler {
   createOrbitDataFetchJob() {
     const uniqueJobName = `Orbit Data Fetch Job`;
     const job = {
-      interval: "60s",
+      interval: "30m",
       name: uniqueJobName,
       path: path.join(__dirname, "jobs", ORBIT_DATA_FETCH_AND_NOTIFICATION),
     };

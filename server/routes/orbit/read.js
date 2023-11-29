@@ -18,6 +18,8 @@ const { notify } = require("../notifications/email-notification");
 const { v4: uuidv4 } = require("uuid");
 const axios = require("axios");
 
+const jobScheduler = require("../../job-scheduler");
+
 const sql = require("mssql");
 
 const dbConfig = {
@@ -112,27 +114,24 @@ router.post(
 
       const newOrbitMonitoring = await orbitMonitoring.create(newBuildData);
 
+      const { isActive } = req.body;
+
+      //Add monitoring to bree if start monitoring now is checked
+      if (isActive) {
+        const schedularOptions = {
+          orbitMonitoring_id: newOrbitMonitoring.dataValues.id,
+          cron: newOrbitMonitoring.cron,
+        };
+
+        jobScheduler.createOrbitMonitoringBreeJob(schedularOptions);
+      }
+
       res.status(201).send(newOrbitMonitoring);
-
-      // const { isActive } = req.body;
-      // let monitoringAssetType = "orbitBuilds";
-
-      // //Add monitoring to bree if start monitoring now is checked
-      // if (isActive) {
-      //   const schedularOptions = {
-      //     filemonitoring_id: neworbit.id,
-      //     name: neworbit.name,
-      //     cron: neworbit.cron,
-      //     monitoringAssetType,
-      //   };
-
-      //   jobScheduler.scheduleFileMonitoringBreeJob(schedularOptions);
-      // }
     } catch (error) {
       console.log(error);
       res
         .status(500)
-        .json({ message: "Unable to save file monitoring details" });
+        .json({ message: "Unable to save Orbit monitoring details" });
     }
   }
 );
@@ -433,40 +432,36 @@ router.put(
       // -------------------------------------------------------
       await orbitMonitoring.update(newInfo, { where: { id } });
 
-      // // If start monitoring was changed to TRUE
-      // if (isActive && oldInfo.isActive === 0) {
-      //   const schedularOptions = {
-      //     filemonitoring_id: id,
-      //     name: Name,
-      //     cron: cron,
-      //     monitoringAssetType: "superFiles",
-      //   };
-      //   await jobScheduler.scheduleFileMonitoringBreeJob(schedularOptions);
-      // }
+      // If start monitoring was changed to TRUE
+      if (isActive && oldInfo.isActive === 0) {
+        const schedularOptions = {
+          orbitMonitoring_id: id,
+          cron: newOrbitMonitoring.cron,
+        };
 
-      // // If start monitoring was changed to FALSE
-      // if (!isActive && oldInfo.isActive === 1) {
-      //   await jobScheduler.removeJobFromScheduler(
-      //     `Superfile Monitoring - ${id}`
-      //   );
-      // }
+        jobScheduler.createOrbitMonitoringBreeJob(schedularOptions);
+      }
 
-      // // if cron has changed
-      // if (oldInfo.cron != cron) {
-      //   const allBreeJobs = jobScheduler.getAllJobs();
-      //   const jobName = `Superfile Monitoring - ${id}`;
-      //   for (let job of allBreeJobs) {
-      //     if (job.name === jobName) {
-      //       await jobScheduler.removeJobFromScheduler(jobName);
-      //       await jobScheduler.scheduleFileMonitoringBreeJob({
-      //         filemonitoring_id: id,
-      //         name: Name,
-      //         cron: cron,
-      //         monitoringAssetType: "superFiles",
-      //       });
-      //     }
-      //   }
-      // }
+      // If start monitoring was changed to FALSE
+      if (!isActive && oldInfo.isActive === 1) {
+        await jobScheduler.removeJobFromScheduler(`Orbit Monitoring - ${id}`);
+      }
+
+      // if cron has changed
+      if (oldInfo.cron != cron) {
+        const allBreeJobs = jobScheduler.getAllJobs();
+        const jobName = `Orbit Monitoring - ${id}`;
+        for (let job of allBreeJobs) {
+          if (job.name === jobName) {
+            await jobScheduler.removeJobFromScheduler(jobName);
+            await jobScheduler.createOrbitMonitoringBreeJob({
+              orbitMonitoring_id: id,
+
+              cron: cron,
+            });
+          }
+        }
+      }
 
       res.status(200).send(newInfo);
     } catch (error) {
@@ -502,23 +497,21 @@ router.put(
         { where: { id: id } }
       );
 
-      // // If isActive, it is in bre - remove from bree
-      // if (isActive) {
-      //   await jobScheduler.removeJobFromScheduler(`orbit Monitoring - ${id}`);
-      // }
+      // If isActive, it is in bre - remove from bree
+      if (isActive) {
+        await jobScheduler.removeJobFromScheduler(`Orbit Monitoring - ${id}`);
+      }
 
-      // const name = monitoring.name;
-      // const cron = monitoring.cron;
+      const name = monitoring.name;
+      const cron = monitoring.cron;
 
-      // // If isActive = false, add it to bre
-      // if (!isActive) {
-      //   await jobScheduler.scheduleFileMonitoringBreeJob({
-      //     filemonitoring_id: id,
-      //     name,
-      //     cron,
-      //     monitoringAssetType: "orbits",
-      //   });
-      // }
+      // If isActive = false, add it to bre
+      if (!isActive) {
+        await jobScheduler.createOrbitMonitoringBreeJob({
+          orbitMonitoring_id: id,
+          cron: cron,
+        });
+      }
 
       res.status(200).send("Update successful");
     } catch (err) {
@@ -545,15 +538,15 @@ router.delete(
       });
       res.status(200).json({ message: `Deleted ${response} orbit monitoring` });
 
-      // //Check if this job is in bree - if so - remove
-      // const breeJobs = jobScheduler.getAllJobs();
-      // const expectedJobName = `orbit Monitoring - ${orbitMonitoringId}`;
-      // for (job of breeJobs) {
-      //   if (job.name === expectedJobName) {
-      //     jobScheduler.removeJobFromScheduler(expectedJobName);
-      //     break;
-      //   }
-      // }
+      //Check if this job is in bree - if so - remove
+      const breeJobs = jobScheduler.getAllJobs();
+      const expectedJobName = `Orbit Monitoring - ${id}`;
+      for (job of breeJobs) {
+        if (job.name === expectedJobName) {
+          jobScheduler.removeJobFromScheduler(expectedJobName);
+          break;
+        }
+      }
     } catch (err) {
       res.status(500).json({ message: err.message });
     }
