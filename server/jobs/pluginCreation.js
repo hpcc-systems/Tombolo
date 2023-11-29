@@ -15,18 +15,21 @@ const plugins = models.plugins;
     //build list of plugins
     applications.map((application) => {
       //for each application, add an object of each plugin, for now we only have orbit
-      pluginList.push({
-        application_id: application.id,
-        name: "Orbit",
-        description:
-          "Enabling this plugin will allow Tombolo to collect data from HPCCs Orbit system and provide dashboard information for it",
-        active: "false",
-        metaData: {
-          notificationEmails: "matthew.fancher@lexisnexisrisk.com",
-          notificationWebhooks:
-            "https://reedelsevier.webhook.office.com/webhookb2/81c072d6-6b47-4eca-9434-73944c464876@9274ee3f-9425-4109-a27f-9fb15c10675d/IncomingWebhook/60019c7653734064b4c225a02b1da597/af40e12f-e839-4801-91e9-e61a20045feb",
-        },
-      });
+
+      if (process.env.ASR === "true") {
+        pluginList.push({
+          application_id: application.id,
+          name: "Orbit",
+          description:
+            "Enabling this plugin will allow Tombolo to collect data from HPCCs Orbit system and provide dashboard information for it",
+          active: "false",
+          metaData: {
+            notificationEmails: "matthew.fancher@lexisnexisrisk.com",
+            notificationWebhooks:
+              "https://reedelsevier.webhook.office.com/webhookb2/81c072d6-6b47-4eca-9434-73944c464876@9274ee3f-9425-4109-a27f-9fb15c10675d/IncomingWebhook/60019c7653734064b4c225a02b1da597/af40e12f-e839-4801-91e9-e61a20045feb",
+          },
+        });
+      }
     });
 
     //create plugins, double checking they don't already exist
@@ -38,6 +41,9 @@ const plugins = models.plugins;
         },
         raw: true,
       });
+
+      console.log(exists);
+      console.log("trying to add plugin to " + application.id);
 
       //if it doesn't exist, create plugin
       if (!exists) {

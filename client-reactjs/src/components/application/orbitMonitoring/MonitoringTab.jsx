@@ -12,6 +12,7 @@ const MonitoringTab = ({
   setCron,
   monitoringDetails,
   setMonitoringDetails,
+  selectedOrbitBuildDetails,
   orbitBuildList,
   editing,
 }) => {
@@ -21,13 +22,22 @@ const MonitoringTab = ({
   const [buildStatus, setBuildStatus] = useState(null);
   const [severityCode, setSeverityCode] = useState(null);
   const [required, setRequired] = useState(true);
-
   const [open, setOpen] = useState(false);
+
+  //TODO, try and get rid of this flag
+  const [updatedLocals, setUpdatedLocals] = useState(false);
 
   //update required state if update interval or update interval days is changed, use this to validate that one or the other is filled at least
   useEffect(() => {
     const result = updateInterval || updateIntervalDays;
     setRequired(result ? false : true);
+
+    if (editing && selectedOrbitBuildDetails && !updateInterval && !updateIntervalDays && !updatedLocals) {
+      setUpdateInterval(selectedOrbitBuildDetails?.metaData?.monitoringCondition?.updateInterval || null);
+      setUpdateIntervalDays(selectedOrbitBuildDetails?.metaData?.monitoringCondition?.updateIntervalDays || null);
+      //set this flag so it won't try and reset locals again and again preventing fields from being disabled
+      setUpdatedLocals(true);
+    }
     entryForm.validateFields(['updateInterval', 'updateIntervalDays']);
   }, [updateInterval, updateIntervalDays]);
 
@@ -242,6 +252,7 @@ const MonitoringTab = ({
                 suffix="Days Between Updates"
                 style={{ display: 'flex', width: 'calc(75% - 12px)', textAlign: 'center' }}
                 value={updateInterval}
+                disabled={updateIntervalDays ? true : false}
                 onChange={(e) => {
                   setUpdateInterval(e.target.value);
                 }}></Input>
@@ -261,6 +272,7 @@ const MonitoringTab = ({
                 mode="multiple"
                 options={daysOfTheWeek}
                 value={updateIntervalDays}
+                disabled={updateInterval ? true : false}
                 style={{ display: 'inline-block', width: 'calc(75% - 12px)', textAlign: 'center' }}
                 popupMatchSelectWidth={true}
                 onChange={(value) => {

@@ -35,11 +35,12 @@ const dbConfig = {
       id,
       name,
       cron,
-      Build,
+      build,
       isActive,
+      severityCode,
       application_id,
       metaData: {
-        lastMonitored,
+        lastWorkUnit,
         notifications,
         monitoringCondition,
         monitoringCondition: { notifyCondition },
@@ -48,7 +49,7 @@ const dbConfig = {
 
     //get most recent WorkUnits
 
-    const query = `select HpccWorkUnit as 'WorkUnit', Name as 'Build', DateUpdated as 'Date', Status_Code as 'Status' from DimBuildInstance where Name = '${Build}' order by Date desc`;
+    const query = `select Top 1 HpccWorkUnit as 'WorkUnit', Name as 'Build', DateUpdated as 'Date', Status_Code as 'Status' from DimBuildInstance where Name = '${Build}' order by Date desc`;
 
     const wuResult = await runSQLQuery(query);
 

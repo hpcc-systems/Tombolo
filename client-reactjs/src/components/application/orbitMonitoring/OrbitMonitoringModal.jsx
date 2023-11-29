@@ -313,6 +313,7 @@ const OrbitMonitoringModal = ({
                 setCron={setCron}
                 monitoringDetails={monitoringDetails}
                 setMonitoringDetails={setMonitoringDetails}
+                selectedOrbitBuildDetails={selectedOrbitBuildDetails}
                 orbitBuildList={orbitBuildList}
                 editing={editing}
               />
