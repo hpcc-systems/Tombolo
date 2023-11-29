@@ -40,6 +40,7 @@ const OrbitMonitoringModal = ({
     application: { applicationId },
   } = useSelector((state) => state.applicationReducer);
 
+  //set fields of form if monitoring is selected
   useEffect(() => {
     if (!editing) {
       return;
@@ -79,6 +80,8 @@ const OrbitMonitoringModal = ({
           product,
           businessUnit,
           host,
+          primaryContact,
+          secondaryContact,
           metaData: {
             monitoringCondition: { notifyCondition, updateInterval, updateIntervalDays, buildStatus, deleted },
           },
@@ -96,6 +99,8 @@ const OrbitMonitoringModal = ({
           businessUnit: businessUnit,
           product: product,
           host: host,
+          primaryContact: primaryContact,
+          secondaryContact: secondaryContact,
           updateInterval: updateInterval,
           updateIntervalDays: updateIntervalDays,
           buildStatus: buildStatus,
@@ -197,11 +202,12 @@ const OrbitMonitoringModal = ({
   };
 
   const cancelModal = async () => {
+    await setEditing(null);
     await setOrbitBuildDetails(null);
     await setSelectedOrbitBuild(null);
     await setSelectedOrbitBuildDetails(null);
     entryForm.resetFields();
-    await setEditing(null);
+
     await setModalVisible(false);
     await setActiveTab('1');
     await setConfirmLoading(false);

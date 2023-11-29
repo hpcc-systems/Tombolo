@@ -43,6 +43,14 @@ module.exports = (sequelize, DataTypes) => {
         allowNull: false,
         type: DataTypes.STRING,
       },
+      primaryContact: {
+        allowNull: true,
+        type: DataTypes.STRING,
+      },
+      secondaryContact: {
+        allowNull: true,
+        type: DataTypes.STRING,
+      },
       metaData: {
         type: DataTypes.JSON,
         allowNull: true,

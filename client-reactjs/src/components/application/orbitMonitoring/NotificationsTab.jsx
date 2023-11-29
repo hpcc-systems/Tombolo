@@ -23,6 +23,33 @@ const NotificationTab = ({ setNotificationDetails, notificationDetails }) => {
   return (
     <>
       <Form.Item
+        label="Primary Contact"
+        name="primaryContact"
+        validateTrigger={['onChange', 'onBlur']}
+        style={{ width: 'calc(47.5% - 8px)' }}
+        rules={[
+          {
+            max: 256,
+            message: 'Maximum of 256 characters allowed',
+          },
+        ]}>
+        <Input placeholder="Primary Contact Information"></Input>
+      </Form.Item>
+      <Form.Item
+        label="Secondary Contact"
+        name="secondaryContact"
+        validateTrigger={['onChange', 'onBlur']}
+        style={{ width: 'calc(47.5% - 8px)' }}
+        rules={[
+          {
+            max: 256,
+            message: 'Maximum of 256 characters allowed',
+          },
+        ]}>
+        <Input placeholder="Secondary Contact Information"></Input>
+      </Form.Item>
+
+      <Form.Item
         label={
           <>
             <p style={{ marginBottom: '0' }}>

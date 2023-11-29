@@ -104,6 +104,8 @@ router.post(
         product: req.body.product,
         businessUnit: req.body.businessUnit,
         host: req.body.host,
+        primaryContact: req.body.primaryContact,
+        secondaryContact: req.body.secondaryContact,
         metaData: metaData,
         isActive: req.body.isActive,
       };
@@ -351,6 +353,8 @@ router.put(
         host,
         isActive,
         application_id,
+        primaryContact,
+        secondaryContact,
         cron,
         metaData: { lastMonitored, monitoringCondition },
       } = newInfo;
@@ -412,6 +416,8 @@ router.put(
         businessUnit,
         application_id,
         host,
+        primaryContact,
+        secondaryContact,
         metaData: {
           lastWorkUnit: {
             lastWorkUnit: WorkUnit,

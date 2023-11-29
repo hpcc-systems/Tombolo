@@ -55,6 +55,16 @@ module.exports = {
         type: Sequelize.DataTypes.STRING,
         defaultValue: false,
       },
+      primaryContact: {
+        allowNull: true,
+        type: Sequelize.DataTypes.STRING,
+        defaultValue: false,
+      },
+      secondaryContact: {
+        allowNull: true,
+        type: Sequelize.DataTypes.STRING,
+        defaultValue: false,
+      },
       metaData: {
         type: Sequelize.JSON,
         allowNull: true,

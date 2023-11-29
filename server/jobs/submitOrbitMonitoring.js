@@ -4,12 +4,11 @@ const { parentPort, workerData } = require("worker_threads");
 const logger = require("../config/logger");
 const models = require("../models");
 const orbitMonitoring = models.orbitMonitoring;
-const hpccUtil = require("../utils/hpcc-util");
 const { v4: uuidv4 } = require("uuid");
 const monitoring_notifications = models.monitoring_notifications;
 const {
-  emailBody,
-  messageCardBody,
+  orbitMonitoringEmailBody,
+  orbitMonitoringMessageCard,
 } = require("./messageCards/notificationTemplate");
 const { update } = require("lodash");
 
@@ -38,6 +37,11 @@ const dbConfig = {
       build,
       isActive,
       severityCode,
+      product,
+      businessUnit,
+      host,
+      primaryContact,
+      secondaryContact,
       application_id,
       metaData: {
         lastWorkUnit,
@@ -66,9 +70,9 @@ const dbConfig = {
 
       if (notifyCondition.includes("buildStatus")) {
         let newStatus = wuResult.recordset[0].Status;
-        let oldStatus = monitoringCondition.buildStatus;
 
-        if (newStatus !== oldStatus) {
+        if (monitoringCondition?.buildStatus.includes(newStatus)) {
+          //build status has been detected, push difference.
           metaDifference.push({
             attribute: "Build Status",
             oldValue: `${oldStatus}`,
@@ -77,10 +81,13 @@ const dbConfig = {
         }
       }
 
-      if (notifyCondition.includes("updateInterval")) {
+      if (
+        notifyCondition.includes("updateInterval") ||
+        notifyCondition.includes("updateIntervalDays")
+      ) {
         //update interval is in days, so multiply by 86400000 to get number of milliseconds between updates
-        let updateInterval = monitoringCondition.updateInterval;
-        let updateIntervalDays = monitoringCondition.updateIntervalDays;
+        let updateInterval = monitoringCondition?.updateInterval;
+        let updateIntervalDays = monitoringCondition?.updateIntervalDays;
 
         // let orbit = await hpccUtil.getorbit(clusterid, Name);
 
@@ -177,10 +184,37 @@ const dbConfig = {
     }
 
     const notification_id = uuidv4();
+
+    //build out buildDetails for notification
+
+    const buildDetails = {
+      product: product,
+      businessUnit: businessUnit,
+      region: "USA",
+      severityCode: severityCode,
+      date: wuResult.recordset[0].Date,
+      remedy:
+        "Please Contact one of the following for assistance \n" +
+        "PRIMARY: " +
+        primaryContact +
+        "\n" +
+        "SECONDARY: " +
+        secondaryContact,
+      notification_id: notification_id,
+      issue: {
+        metaDifference: metaDifference,
+        status: wuResult.recordset[0].Status,
+        build: build,
+        host: host,
+        workUnit: wuResult.recordset[0].WorkUnit,
+        cron: cron,
+      },
+    };
+
     // E-mail notification
     if (emailNotificationDetails && notificationDetails.text) {
       try {
-        const body = emailBody(notificationDetails, metaDifference);
+        const body = orbitMonitoringEmailBody(buildDetails);
         const notificationResponse = await notify({
           to: emailNotificationDetails.recipients,
           from: process.env.EMAIL_SENDER,
@@ -212,7 +246,7 @@ const dbConfig = {
       const { recipients } = teamsNotificationDetails;
       for (let recipient of recipients) {
         try {
-          let body = messageCardBody({
+          let body = orbitMonitoringMessageCard({
             notificationDetails: notificationDetails,
             notification_id,
             id,

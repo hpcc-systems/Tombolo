@@ -12,6 +12,7 @@ const DataflowVersions = models.dataflow_versions;
 const JobExecution = models.job_execution;
 const FileMonitoring = models.fileMonitoring;
 const ClusterMonitoring = models.clusterMonitoring;
+const orbitMonitoring = models.orbitMonitoring;
 const JobMonitoring = models.jobMonitoring;
 const filemonitoring_superfile = models.filemonitoring_superfiles;
 
@@ -35,6 +36,7 @@ const SUBMIT_SUPER_FILEMONITORING_FILE_NAME = "submitSuperFileMonitoring.js";
 const CLUSTER_USAGE_HISTORY_TRACKER = "submitClusterUsageTracker.js";
 const PLUGIN_CREATION = "pluginCreation.js";
 const ORBIT_DATA_FETCH_AND_NOTIFICATION = "orbitDataFetch.js";
+const ORBIT_MONITORING = "submitOrbitMonitoring.js";
 
 class JobScheduler {
   constructor() {
@@ -104,6 +106,7 @@ class JobScheduler {
       await this.scheduleKeyCheck();
       await this.scheduleJobMonitoringOnServerStart();
       await this.createClusterUsageHistoryJob();
+      await this.scheduleOrbitMonitoringOnServerStart();
       await this.createPluginCreationJob();
       await this.createOrbitDataFetchJob();
       logger.info("✔️  JOB SCHEDULER BOOTSTRAPPED...");
@@ -651,6 +654,44 @@ class JobScheduler {
       logger.error(err);
     }
   }
+
+  //---------------------------------------------------------------------------------------------
+  // Orbit Monitoring bree job
+
+  // Cluster monitoring bree job
+  createOrbitMonitoringBreeJob({ orbitMonitoring_id, cron }) {
+    const uniqueJobName = `Orbit Monitoring - ${orbitMonitoring_id}`;
+    const job = {
+      cron,
+      name: uniqueJobName,
+      path: path.join(__dirname, "jobs", ORBIT_MONITORING),
+      worker: {
+        workerData: { orbitMonitoring_id },
+      },
+    };
+    this.bree.add(job);
+    this.bree.start(uniqueJobName);
+  }
+
+  async scheduleOrbitMonitoringOnServerStart() {
+    try {
+      logger.info("📺 CLUSTER MONITORING STARTED ...");
+      const orbitMonitorings = await orbitMonitoring.findAll({ raw: true });
+      for (let monitoring of orbitMonitorings) {
+        const { id, cron, isActive } = monitoring;
+        if (isActive) {
+          this.createOrbitMonitoringBreeJob({
+            clusterMonitoring_id: id,
+            cron,
+          });
+        }
+      }
+    } catch (err) {
+      logger.error(err);
+    }
+  }
+
+  //---------------------------------------------------------------------------------------------
   // --------------------------------------------------------------------------------------------
   // Job monitoring bree job
   createJobMonitoringBreeJob({ jobMonitoring_id, cron }) {
