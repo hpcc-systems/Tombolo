@@ -55,7 +55,7 @@ const Regulations = React.lazy(() => import('./components/admin/ControlsAndRegul
 const GitHubSettings = React.lazy(() => import('./components/admin/GitHubSettings/GitHubSettings'));
 const ScheduledJobsPage = React.lazy(() => import('./components/admin/ScheduledJobsPage'));
 const Compliance = React.lazy(() => import('./components/admin/Compliance/Compliance'));
-const Plugins = React.lazy(() => import('./components/admin/Plugins'));
+const Integrations = React.lazy(() => import('./components/admin/Integrations'));
 
 // Shared layout, etc.
 import { LeftNav } from './components/layout/LeftNav';
@@ -209,7 +209,7 @@ class App extends React.Component {
                         <PrivateRoute path="/admin/users" component={Users} />
                         <PrivateRoute path="/admin/consumers" component={AdminConsumers} />
                         <PrivateRoute path="/admin/controlsAndRegulations" component={Regulations} />
-                        <PrivateRoute path="/admin/plugins" component={Plugins} />
+                        <PrivateRoute path="/admin/integrations" component={Integrations} />
                         <PrivateRoute
                           path="/:applicationId/dataflowinstances/dataflowInstanceDetails/:dataflowId?/:executionGroupId?"
                           component={DataflowInstanceDetails}

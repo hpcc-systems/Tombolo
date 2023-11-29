@@ -67,7 +67,7 @@ module.exports = {
             <tr><td><strong>DATE_DETECTED</strong></td><td>${
               buildDetails.date
             }</td></tr>
-            <tr><td><strong>PRIMARY_CONTACT</strong></td><td>${
+            <tr><td><strong>REMEDY</strong></td><td>${
               buildDetails.remedy
             }</td></tr>
             <tr><td><strong>REGION</strong></td><td>${

@@ -1,17 +1,17 @@
 import React, { useState, useEffect } from 'react';
 import { Tooltip, Space, Table, Switch, Modal, Form, Input, Button, message } from 'antd';
 import { EditOutlined } from '@ant-design/icons';
-import BreadCrumbs from '../common/BreadCrumbs';
+import BreadCrumbs from '../common/BreadCrumbs.js';
 import { authHeader } from '../common/AuthHeader.js';
 import { useSelector } from 'react-redux';
-import useWindowSize from '../../hooks/useWindowSize';
+import useWindowSize from '../../hooks/useWindowSize.js';
 
-const Plugins = () => {
-  const [plugins, setPlugins] = useState([]);
+const Integrations = () => {
+  const [integrations, setIntegrations] = useState([]);
   const [modalVisible, setModalVisible] = useState(false);
   const [modalWidth, setModalWidth] = useState(0);
   const [confirmLoading, setConfirmLoading] = useState(false);
-  const [selectedPlugin, setSelectedPlugin] = useState({});
+  const [selectedIntegration, setSelectedIntegration] = useState({});
   const [notifications, setNotifications] = useState({});
   const [notificationForm] = Form.useForm();
   const windowSize = useWindowSize();
@@ -32,14 +32,14 @@ const Plugins = () => {
   } = useSelector((state) => state.applicationReducer);
 
   useEffect(() => {
-    if (applicationId) getPlugins();
+    if (applicationId) getIntegrations();
   }, [applicationId]);
 
   useEffect(() => {
     console.log(notifications);
   });
 
-  const getPlugins = async () => {
+  const getIntegrations = async () => {
     try {
       const payload = {
         method: 'GET',
@@ -49,16 +49,16 @@ const Plugins = () => {
 
       const data = await response.json();
       if (data) {
-        setPlugins(data);
+        setIntegrations(data);
       }
     } catch (err) {
       console.log(err);
     }
   };
 
-  const editPlugin = async (record) => {
+  const editIntegration = async (record) => {
     await setModalVisible(true);
-    await setSelectedPlugin(record);
+    await setSelectedIntegration(record);
     await setNotifications(record.metaData);
   };
 
@@ -70,16 +70,16 @@ const Plugins = () => {
       header: authHeader(),
       body: JSON.stringify(notifications),
     };
-    const response = await fetch(`/api/plugins/update/${applicationId}/${selectedPlugin.name}`, payload);
+    const response = await fetch(`/api/plugins/update/${applicationId}/${selectedIntegration.name}`, payload);
 
     if (response.ok) {
-      getPlugins();
+      getIntegrations();
       setConfirmLoading(false);
       setModalVisible(false);
       notificationForm.resetFields();
-      message.success('Successfully updated Plugin');
+      message.success('Successfully updated Integration');
     } else {
-      message.success('An Error Occured, Plugin not updated');
+      message.success('An Error Occured, Integration not updated');
     }
   };
 
@@ -92,7 +92,7 @@ const Plugins = () => {
     setModalVisible(false);
   };
 
-  const togglePlugin = async (name) => {
+  const toggleIntegration = async (name) => {
     try {
       const payload = {
         method: 'PUT',
@@ -101,7 +101,7 @@ const Plugins = () => {
       const response = await fetch(`/api/plugins/toggle/${applicationId}/${name}`, payload);
 
       if (response.ok) {
-        getPlugins();
+        getIntegrations();
       }
     } catch (err) {
       console.log(err);
@@ -118,7 +118,7 @@ const Plugins = () => {
         <Space size="middle">
           <a>
             <Tooltip title="Active">
-              <Switch checked={record.active} onChange={() => togglePlugin(record.name)} />
+              <Switch checked={record.active} onChange={() => toggleIntegration(record.name)} />
             </Tooltip>
           </a>
         </Space>
@@ -130,7 +130,7 @@ const Plugins = () => {
       render: (_, record) => (
         <a>
           <Tooltip title="Edit">
-            <EditOutlined onClick={() => editPlugin(record)} />
+            <EditOutlined onClick={() => editIntegration(record)} />
           </Tooltip>
         </a>
       ),
@@ -141,7 +141,7 @@ const Plugins = () => {
     <>
       <BreadCrumbs />
       <br />
-      <Table size="small" columns={columns} dataSource={plugins} rowKey={(record) => record.id} />
+      <Table size="small" columns={columns} dataSource={integrations} rowKey={(record) => record.id} />
       <Modal
         visible={modalVisible}
         width={modalWidth}
@@ -150,14 +150,14 @@ const Plugins = () => {
         confirmLoading={confirmLoading}
         destroyOnClose
         footer={saveBtn}
-        title="Plugin Settings">
+        title="Integration Settings">
         <Form layout="vertical" form={notificationForm} initialValues={{ monitoringActive: true }}>
           <h3>Megaphone Alert Contacts</h3>
           <Form.Item
             label="Emails"
             style={{ width: '100%' }}
             name="notificationEmails"
-            initialValue={selectedPlugin.metaData?.notificationEmails}
+            initialValue={selectedIntegration.metaData?.notificationEmails}
             validateTrigger={['onChange', 'onBlur']}>
             <Input onChange={(e) => setNotifications({ ...notifications, notificationEmails: e.target.value })}></Input>
           </Form.Item>
@@ -165,7 +165,7 @@ const Plugins = () => {
             label="Webhooks"
             style={{ width: '100%' }}
             name="notificationWebhooks"
-            initialValue={selectedPlugin.metaData?.notificationWebhooks}
+            initialValue={selectedIntegration.metaData?.notificationWebhooks}
             validateTrigger={['onChange', 'onBlur']}>
             <Input
               onChange={(e) => setNotifications({ ...notifications, notificationWebhooks: e.target.value })}></Input>
@@ -176,4 +176,4 @@ const Plugins = () => {
   );
 };
 
-export default Plugins;
+export default Integrations;

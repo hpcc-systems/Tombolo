@@ -214,10 +214,10 @@ const runSQLQuery = async (query) => {
       severityCode: severityCode,
       date: wuResult.recordset[0].Date,
       remedy:
-        "Please Contact one of the following for assistance \n" +
+        "Please Contact one of the following for assistance <br/>" +
         "PRIMARY: " +
         primaryContact +
-        "\n" +
+        "<br/>" +
         "SECONDARY: " +
         secondaryContact,
       notification_id: notification_id,

@@ -21,7 +21,7 @@ const plugins = models.plugins;
           application_id: application.id,
           name: "Orbit",
           description:
-            "Enabling this plugin will allow Tombolo to collect data from HPCCs Orbit system and provide dashboard information for it",
+            "Enabling this integration will allow Tombolo to collect data from HPCCs Orbit system and provide dashboard information for it",
           active: "false",
           metaData: {
             notificationEmails: "matthew.fancher@lexisnexisrisk.com",

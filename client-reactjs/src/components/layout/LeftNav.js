@@ -166,7 +166,7 @@ class LeftNav extends Component {
                 <Link to={'/admin/applications'}>{<Text text="Applications" />}</Link>
               </Menu.Item>
               <Menu.Item key="11" icon={<ApiOutlined />}>
-                <Link to={'/admin/plugins'}>{<Text text="Plugins" />}</Link>
+                <Link to={'/admin/integrations'}>{<Text text="Integrations" />}</Link>
               </Menu.Item>
               <Menu.Item
                 key="12"
