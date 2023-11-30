@@ -152,9 +152,12 @@ const Integrations = () => {
         footer={saveBtn}
         title="Integration Settings">
         <Form layout="vertical" form={notificationForm} initialValues={{ monitoringActive: true }}>
-          <h3>Megaphone Alert Contacts</h3>
+          <h3>Megaphone Notification Settings</h3>
+          <Form.Item name="megaphone" label="Active">
+            <Switch defaultChecked></Switch>
+          </Form.Item>
           <Form.Item
-            label="Emails"
+            label="Notification Emails"
             style={{ width: '100%' }}
             name="notificationEmails"
             initialValue={selectedIntegration.metaData?.notificationEmails}
@@ -162,7 +165,7 @@ const Integrations = () => {
             <Input onChange={(e) => setNotifications({ ...notifications, notificationEmails: e.target.value })}></Input>
           </Form.Item>
           <Form.Item
-            label="Webhooks"
+            label="Notification Webhooks"
             style={{ width: '100%' }}
             name="notificationWebhooks"
             initialValue={selectedIntegration.metaData?.notificationWebhooks}

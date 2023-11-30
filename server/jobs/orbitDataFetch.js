@@ -107,7 +107,7 @@ const dbConfig = {
                   application_id,
                   notification_reason: "Megaphone Substatus",
                   monitoring_id: newBuild.id,
-                  monitoring_type: "orbit",
+                  monitoring_type: "megaphone",
                 });
               }
 

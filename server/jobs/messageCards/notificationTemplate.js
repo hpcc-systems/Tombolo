@@ -39,7 +39,6 @@ module.exports = {
   //orbit monitoring email body
   orbitMonitoringEmailBody: function (buildDetails) {
     //build out issue row
-
     let issue = ``;
 
     if (
@@ -95,15 +94,57 @@ module.exports = {
   },
 
   // TODO  make this message card general by changing the key name
-  orbitMonitoringMessageCard: function (title, facts, notification_id) {
+  orbitMonitoringMessageCard: function (title, buildDetails, notification_id) {
+    let issue = ``;
+
+    if (
+      buildDetails.issue.metaDifference &&
+      buildDetails.issue.metaDifference.length > 0
+    ) {
+      buildDetails.issue.metaDifference.forEach((meta) => {
+        issue += `Issue: ${meta.attribute} <br/>`;
+        issue += `Detected Value: ${meta.newValue} <br/>`;
+      });
+    }
+
+    issue += `HOST: ${buildDetails.issue.host} <br/>`;
+    issue += `JOB NAME: ${buildDetails.issue.build} <br/>`;
+    issue += `MONITORING SCHEDULE: ${buildDetails.issue.cron} <br/>`;
+    issue += `RETURNED JOB DATE: ${buildDetails.date} <br/>`;
+    issue += `RETURNED JOB STATE: ${buildDetails.issue.status} <br/>`;
+    issue += `RETURNED JOB WUID: ${buildDetails.issue.workUnit} <br/>`;
+
+    let tableRows = `<td><strong>PRODUCT</strong></td><td>${buildDetails.product.toUpperCase()}</td></tr>
+            <tr><td><strong>ISSUE</strong></td><td>${issue}</td></tr>
+            <tr><td><strong>SEV_CODE</strong></td><td>${
+              buildDetails.severityCode
+            }</td></tr>
+            <tr><td><strong>DATE_DETECTED</strong></td><td>${
+              buildDetails.date
+            }</td></tr>
+            <tr><td><strong>REMEDY</strong></td><td>${
+              buildDetails.remedy
+            }</td></tr>
+            <tr><td><strong>REGION</strong></td><td>${
+              buildDetails.region
+            }</td></tr>
+            <tr><td><strong>BUSINESS_UNIT</strong></td><td>${
+              buildDetails.businessUnit
+            }</td></tr>
+            <tr><td><strong>NOTIFICATION_ID</strong></td><td>${
+              buildDetails.notification_id
+            }</td></tr>`;
+
+    const table = `<div style="margin-top: 10px"> <table border="1" cellpadding="2" cellspacing="0" width="100%" style="border-collapse:collapse" >
+             
+                ${tableRows}
+              </table></div>`;
+
     let allFacts = [];
+
+    allFacts.push({ name: "", value: table });
     cardData = `"notification_id": "${notification_id}"`;
-    facts.forEach((fact) => {
-      for (let key in fact) {
-        allFacts.push({ name: key, value: fact[key] });
-      }
-      allFacts = [...allFacts];
-    });
+
     const body = JSON.stringify({
       "@type": "MessageCard",
       "@context": "https://schema.org/extensions",
@@ -185,7 +226,6 @@ module.exports = {
 
     return body;
   },
-
   //Orbit Build email body
 
   orbitBuildEmailBody: function (buildDetails) {

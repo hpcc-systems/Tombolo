@@ -49,6 +49,7 @@ function Filters({ groupDataBy, setGroupDataBy, dashboardFilters, setDashboardFi
       'PASSED_QA',
       'PASSED_QA_NO_RELEASE',
       'PRODUCTION',
+      'SKIPPED',
     ],
     dateRange: [moment().subtract(15, 'days'), moment()],
     groupDataBy: groupDataBy,

@@ -208,6 +208,7 @@ const runSQLQuery = async (query) => {
     //build out buildDetails for notification
 
     const buildDetails = {
+      title: notificationDetails.title,
       product: product,
       businessUnit: businessUnit,
       region: "USA",
@@ -264,21 +265,23 @@ const runSQLQuery = async (query) => {
     // Teams notification
     if (teamsNotificationDetails && notificationDetails.text) {
       const { recipients } = teamsNotificationDetails;
-      for (let recipient of recipients) {
-        try {
-          let body = orbitMonitoringMessageCard({
-            notificationDetails: notificationDetails,
-            notification_id,
-            id,
-            metaDifference,
-          });
 
-          await axios.post(recipient, body);
+      for (let recipient of recipients) {
+        let title = "Orbit Monitoring alert has been triggered by Tombolo";
+
+        try {
+          let body = orbitMonitoringMessageCard(
+            title,
+            buildDetails,
+            notification_id
+          );
+
+          await axios.post(recipient, JSON.parse(body));
 
           sentNotifications.push({
             id: notification_id,
-            file_name: Build,
-            monitoring_type: "orbit",
+            file_name: build,
+            monitoring_type: "orbitMonitoring",
             status: "notified",
             notifiedTo: teamsNotificationDetails.recipients,
             notification_channel: "msTeams",

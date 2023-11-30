@@ -31,7 +31,7 @@ function Index() {
 
   // Default filters to fetch notifications
   const [defaultFilters, setDefaultFilters] = useState({
-    monitoringType: ['jobMonitoring', 'file', 'cluster', 'superFile', 'orbit'],
+    monitoringType: ['jobMonitoring', 'file', 'cluster', 'superFile', 'megaphone', 'orbitMonitoring'],
     monitoringStatus: ['notified', 'triage', 'completed', 'inProgress'],
     dateRange: [moment().subtract(15, 'days'), moment()],
     applicationId,

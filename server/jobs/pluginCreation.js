@@ -42,9 +42,6 @@ const plugins = models.plugins;
         raw: true,
       });
 
-      console.log(exists);
-      console.log("trying to add plugin to " + application.id);
-
       //if it doesn't exist, create plugin
       if (!exists) {
         plugins.create(plugin);
