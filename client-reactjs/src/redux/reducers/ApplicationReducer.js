@@ -9,6 +9,7 @@ const initialState = {
   consumers: [],
   licenses: [],
   constraints: [],
+  integrations: [],
 };
 
 export function applicationReducer(state = initialState, action) {
@@ -66,6 +67,16 @@ export function applicationReducer(state = initialState, action) {
       return {
         ...state,
         constraints: action.constraints,
+      };
+    case Constants.INTEGRATIONS_RETRIEVED:
+      return {
+        ...state,
+        integrations: action.integrations,
+      };
+    case Constants.UPDATE_INTEGRATIONS:
+      return {
+        ...state,
+        integrations: action.integrations,
       };
     default:
       return state;

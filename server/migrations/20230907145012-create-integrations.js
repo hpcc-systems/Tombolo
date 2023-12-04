@@ -1,7 +1,7 @@
 "use strict";
 module.exports = {
   async up(queryInterface, Sequelize) {
-    await queryInterface.createTable("Plugins", {
+    await queryInterface.createTable("integrations", {
       id: {
         allowNull: false,
         primaryKey: true,
@@ -20,6 +20,9 @@ module.exports = {
       active: {
         type: Sequelize.BOOLEAN,
       },
+      config: {
+        type: Sequelize.JSON,
+      },
       metaData: {
         type: Sequelize.JSON,
         allowNull: true,
@@ -35,6 +38,6 @@ module.exports = {
     });
   },
   async down(queryInterface, Sequelize) {
-    await queryInterface.dropTable("Plugins");
+    await queryInterface.dropTable("integrations");
   },
 };

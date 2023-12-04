@@ -3,21 +3,21 @@ const { parentPort } = require("worker_threads");
 const logger = require("../config/logger");
 const models = require("../models");
 const application = models.application;
-const plugins = models.plugins;
+const integrations = models.integrations;
 
 (async () => {
   try {
-    //grab all applications so we can have one entry per plugin per application
+    //grab all applications so we can have one entry per integration per application
     const applications = await application.findAll({});
 
-    let pluginList = [];
+    let integrationList = [];
 
-    //build list of plugins
+    //build list of integrations
     applications.map((application) => {
-      //for each application, add an object of each plugin, for now we only have orbit
+      //for each application, add an object of each integration, for now we only have orbit
 
       if (process.env.ASR === "true") {
-        pluginList.push({
+        integrationList.push({
           application_id: application.id,
           name: "Orbit",
           description:
@@ -32,23 +32,26 @@ const plugins = models.plugins;
       }
     });
 
-    //create plugins, double checking they don't already exist
-    pluginList.map(async (plugin) => {
-      let exists = await plugins.findOne({
-        where: {
-          name: plugin.name,
-          application_id: plugin.application_id,
-        },
-        raw: true,
-      });
+    await Promise.all(
+      //create integrations, double checking they don't already exist
+      integrationList.map(async (integration) => {
+        let exists = await integrations.findOne({
+          where: {
+            name: integration.name,
+            application_id: integration.application_id,
+          },
+          raw: true,
+        });
 
-      //if it doesn't exist, create plugin
-      if (!exists) {
-        plugins.create(plugin);
-      }
-    });
+        //if it doesn't exist, create integration
+        if (!exists) {
+          await integrations.create(integration);
+        }
+        return true;
+      })
+    );
   } catch (error) {
-    logger.error("Failed to create plugins, error: " + error);
+    logger.error("Failed to create integrations, error: " + error);
   } finally {
     if (parentPort) parentPort.postMessage("done");
     else process.exit(0);

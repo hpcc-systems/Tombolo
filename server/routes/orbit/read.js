@@ -723,7 +723,7 @@ router.post(
             // if (build.SubStatus_Code === "MEGAPHONE")
 
             //build and send email notification
-            if (plugin.metaData.notificationEmails) {
+            if (integration.metaData.notificationEmails) {
               let buildDetails = {
                 name: newBuild.name,
                 status: newBuild.metaData.status,
@@ -734,7 +734,7 @@ router.post(
 
               const emailBody =
                 notificationTemplate.orbitBuildEmailBody(buildDetails);
-              const emailRecipients = plugin.metaData.notificationEmails;
+              const emailRecipients = integration.metaData.notificationEmails;
 
               const notificationResponse = await notify({
                 to: emailRecipients,
@@ -761,7 +761,7 @@ router.post(
             }
 
             // //build and send Teams notification
-            if (plugin.metaData.notificationWebhooks) {
+            if (integration.metaData.notificationWebhooks) {
               let facts = [
                 { name: newBuild.name },
                 { status: newBuild.metaData.status },
@@ -776,7 +776,10 @@ router.post(
                 facts,
                 notification_id
               );
-              await axios.post(plugin.metaData.notificationWebhooks, cardBody);
+              await axios.post(
+                integration.metaData.notificationWebhooks,
+                cardBody
+              );
 
               sentNotifications.push({
                 id: notification_id,

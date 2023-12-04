@@ -76,7 +76,7 @@ const jobmonitoring = require("./routes/jobmonitoring/read");
 const superfileMonitoring = require("./routes/superfilemonitoring/read");
 const cluster = require("./routes/cluster/read");
 const orbit = require("./routes/orbit/read");
-const plugins = require("./routes/plugins/read");
+const integrations = require("./routes/integrations/read");
 
 app.use("/api/user", userRead);
 app.use("/api/updateNotification", updateNotifications);
@@ -113,7 +113,7 @@ app.use("/api/key", key);
 app.use("/api/jobmonitoring", jobmonitoring);
 app.use("/api/cluster", cluster);
 app.use("/api/orbit", orbit);
-app.use("/api/plugins", plugins);
+app.use("/api/integrations", integrations);
 
 app.use((err, req, res, next) => {
   logger.error("Error caught by Express error handler", err);

@@ -34,7 +34,7 @@ const APIKEY_MONITORING = "submitApiKeyMonitoring.js";
 const JOB_MONITORING = "submitJobMonitoring.js";
 const SUBMIT_SUPER_FILEMONITORING_FILE_NAME = "submitSuperFileMonitoring.js";
 const CLUSTER_USAGE_HISTORY_TRACKER = "submitClusterUsageTracker.js";
-const PLUGIN_CREATION = "pluginCreation.js";
+const INTEGRATION_CREATION = "integrationCreation.js";
 const ORBIT_DATA_FETCH_AND_NOTIFICATION = "orbitDataFetch.js";
 const ORBIT_MONITORING = "submitOrbitMonitoring.js";
 
@@ -107,7 +107,7 @@ class JobScheduler {
       await this.scheduleJobMonitoringOnServerStart();
       await this.createClusterUsageHistoryJob();
       await this.scheduleOrbitMonitoringOnServerStart();
-      await this.createPluginCreationJob();
+      await this.createIntegrationCreationJob();
       await this.createOrbitDataFetchJob();
       logger.info("✔️  JOB SCHEDULER BOOTSTRAPPED...");
     })();
@@ -740,16 +740,16 @@ class JobScheduler {
   }
 
   // --------------------------------------------------------------------------------------------
-  createPluginCreationJob() {
-    const uniqueJobName = `Plugin Creation Job`;
+  createIntegrationCreationJob() {
+    const uniqueJobName = `Integration Creation Job`;
     const job = {
-      interval: "30s",
+      interval: "60s",
       name: uniqueJobName,
-      path: path.join(__dirname, "jobs", PLUGIN_CREATION),
+      path: path.join(__dirname, "jobs", INTEGRATION_CREATION),
     };
     this.bree.add(job);
     this.bree.start(uniqueJobName);
-    logger.info("📈 PLUGIN CREATION JOB STARTED ...");
+    logger.info("📈 INTEGRATION CREATION JOB STARTED ...");
   }
 
   createOrbitDataFetchJob() {

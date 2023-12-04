@@ -1,7 +1,7 @@
 "use strict";
 module.exports = (sequelize, DataTypes) => {
-  const plugins = sequelize.define(
-    "plugins",
+  const integrations = sequelize.define(
+    "integrations",
     {
       id: {
         primaryKey: true,
@@ -24,6 +24,10 @@ module.exports = (sequelize, DataTypes) => {
         allowNull: false,
         type: DataTypes.BOOLEAN,
       },
+      config: {
+        type: DataTypes.JSON,
+        allowNull: true,
+      },
       metaData: {
         type: DataTypes.JSON,
         allowNull: true,
@@ -35,15 +39,15 @@ module.exports = (sequelize, DataTypes) => {
     },
     { freezeTableName: true }
   );
-  plugins.associate = function (models) {
+  integrations.associate = function (models) {
     // Define association here
-    plugins.belongsTo(models.application, {
+    integrations.belongsTo(models.application, {
       foreignKey: "application_id",
     });
-    plugins.hasMany(models.monitoring_notifications, {
+    integrations.hasMany(models.monitoring_notifications, {
       foreignKey: "application_id",
       onDelete: "CASCADE",
     });
   };
-  return plugins;
+  return integrations;
 };

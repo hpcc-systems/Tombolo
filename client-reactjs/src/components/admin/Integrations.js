@@ -3,7 +3,8 @@ import { Tooltip, Space, Table, Switch, Modal, Form, Input, Button, message } fr
 import { EditOutlined } from '@ant-design/icons';
 import BreadCrumbs from '../common/BreadCrumbs.js';
 import { authHeader } from '../common/AuthHeader.js';
-import { useSelector } from 'react-redux';
+import { useSelector, useDispatch } from 'react-redux';
+import { applicationActions } from '../../redux/actions/Application.js';
 import useWindowSize from '../../hooks/useWindowSize.js';
 
 const Integrations = () => {
@@ -27,6 +28,8 @@ const Integrations = () => {
       setModalWidth('100vw');
     }
   }, [windowSize]);
+
+  const dispatch = useDispatch();
   const {
     application: { applicationId },
   } = useSelector((state) => state.applicationReducer);
@@ -35,22 +38,19 @@ const Integrations = () => {
     if (applicationId) getIntegrations();
   }, [applicationId]);
 
-  useEffect(() => {
-    console.log(notifications);
-  });
-
   const getIntegrations = async () => {
     try {
       const payload = {
         method: 'GET',
         header: authHeader(),
       };
-      const response = await fetch(`/api/plugins/get/${applicationId}`, payload);
+      const response = await fetch(`/api/integrations/get/${applicationId}`, payload);
 
       const data = await response.json();
       if (data) {
         setIntegrations(data);
       }
+      dispatch(applicationActions.getIntegrations(applicationId));
     } catch (err) {
       console.log(err);
     }
@@ -70,12 +70,14 @@ const Integrations = () => {
       header: authHeader(),
       body: JSON.stringify(notifications),
     };
-    const response = await fetch(`/api/plugins/update/${applicationId}/${selectedIntegration.name}`, payload);
+    const response = await fetch(`/api/integrations/update/${applicationId}/${selectedIntegration.name}`, payload);
 
     if (response.ok) {
       getIntegrations();
       setConfirmLoading(false);
       setModalVisible(false);
+      dispatch(applicationActions.getIntegrations(applicationId));
+
       notificationForm.resetFields();
       message.success('Successfully updated Integration');
     } else {
@@ -98,11 +100,12 @@ const Integrations = () => {
         method: 'PUT',
         header: authHeader(),
       };
-      const response = await fetch(`/api/plugins/toggle/${applicationId}/${name}`, payload);
+      const response = await fetch(`/api/integrations/toggle/${applicationId}/${name}`, payload);
 
       if (response.ok) {
         getIntegrations();
       }
+      dispatch(applicationActions.getIntegrations(applicationId));
     } catch (err) {
       console.log(err);
     }

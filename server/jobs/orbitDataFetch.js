@@ -1,7 +1,7 @@
 const logger = require("../config/logger");
 const sql = require("mssql");
 const models = require("../models");
-const plugins = models.plugins;
+const integrations = models.integrations;
 const orbitBuilds = models.orbitBuilds;
 const monitoring_notifications = models.monitoring_notifications;
 const notificationTemplate = require("./messageCards/notificationTemplate");
@@ -20,8 +20,8 @@ const dbConfig = {
 
 (async () => {
   try {
-    //grab all orbit plugins that are active
-    const orbitPlugins = await plugins.findAll({
+    //grab all orbit integrations that are active
+    const orbitIntegrations = await integrations.findAll({
       where: {
         name: "Orbit",
         active: true,
@@ -29,10 +29,10 @@ const dbConfig = {
     });
     const sentNotifications = [];
 
-    if (orbitPlugins?.length) {
-      //if there are active plugins, grab new data and send notifications
-      orbitPlugins.map(async (plugin) => {
-        let application_id = plugin.application_id;
+    if (orbitIntegrations?.length) {
+      //if there are active integrations, grab new data and send notifications
+      orbitIntegrations.map(async (integration) => {
+        let application_id = integration.application_id;
 
         //connect to db
         await sql.connect(dbConfig);
@@ -74,7 +74,7 @@ const dbConfig = {
               // if (build.SubStatus_Code === "MEGAPHONE")
 
               //build and send email notification
-              if (plugin.metaData.notificationEmails) {
+              if (integration.metaData.notificationEmails) {
                 let buildDetails = {
                   name: newBuild.name,
                   status: newBuild.metaData.status,
@@ -85,7 +85,7 @@ const dbConfig = {
 
                 const emailBody =
                   notificationTemplate.orbitBuildEmailBody(buildDetails);
-                const emailRecipients = plugin.metaData.notificationEmails;
+                const emailRecipients = integration.metaData.notificationEmails;
 
                 const notificationResponse = await notify({
                   to: emailRecipients,
@@ -112,7 +112,7 @@ const dbConfig = {
               }
 
               // //build and send Teams notification
-              if (plugin.metaData.notificationWebhooks) {
+              if (integration.metaData.notificationWebhooks) {
                 let facts = [
                   { name: newBuild.name },
                   { Status: newBuild.metaData.status },
@@ -129,14 +129,14 @@ const dbConfig = {
                 );
 
                 await axios.post(
-                  plugin.metaData.notificationWebhooks,
+                  integration.metaData.notificationWebhooks,
                   JSON.parse(cardBody)
                 );
 
                 sentNotifications.push({
                   id: notification_id,
                   status: "notified",
-                  notifiedTo: plugin.metaData.notificationWebhooks,
+                  notifiedTo: integration.metaData.notificationWebhooks,
                   notification_channel: "msTeams",
                   application_id,
                   notification_reason: "Megaphone Substatus",
@@ -157,7 +157,7 @@ const dbConfig = {
         return;
       });
     } else {
-      logger.info("No active Orbit Plugins found.");
+      logger.info("No active Orbit Integrations found.");
     }
   } catch (error) {
     logger.error("Error while running Orbit Jobs: " + error);

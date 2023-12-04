@@ -1,5 +1,5 @@
 const models = require("../../models");
-const plugins = models.plugins;
+const integrations = models.integrations;
 let application = models.application;
 const express = require("express");
 const router = express.Router();
@@ -24,7 +24,8 @@ router.get(
         return res.status(422).json({ success: false, errors: errors.array() });
       const { application_id } = req.params;
       if (!application_id) throw Error("Invalid app ID");
-      const result = await plugins.findAll({
+
+      const result = await integrations.findAll({
         where: {
           application_id,
         },
@@ -38,7 +39,7 @@ router.get(
   }
 );
 
-//activate or deactive plugin
+//activate or deactive integration
 router.put(
   "/toggle/:application_id/:name",
   [param("application_id").isUUID(4).withMessage("Invalid application id")],
@@ -52,17 +53,17 @@ router.put(
       const { application_id, name } = req.params;
 
       if (!application_id) throw Error("Invalid app ID");
-      const plugin = await plugins.findOne({
+      const integration = await integrations.findOne({
         where: { application_id, name },
         raw: true,
       });
 
-      const { active, id } = plugin;
+      const { active, id } = integration;
 
       // flipping Active
-      await plugins.update({ active: !active }, { where: { id } });
+      await integrations.update({ active: !active }, { where: { id } });
 
-      res.status(200).send("Plugin toggled succesfully");
+      res.status(200).send("integration toggled succesfully");
     } catch (err) {
       // ... error checks
       console.log(err);
@@ -70,7 +71,7 @@ router.put(
   }
 );
 
-//update plugin notifications
+//update integration notifications
 router.put(
   "/update/:application_id/:name",
   [param("application_id").isUUID(4).withMessage("Invalid application id")],
@@ -84,19 +85,22 @@ router.put(
       const { application_id, name } = req.params;
 
       if (!application_id) throw Error("Invalid app ID");
-      const oldPlugin = await plugins.findOne({
+      const oldintegration = await integrations.findOne({
         where: { application_id, name },
         raw: true,
       });
 
-      const { id } = oldPlugin;
+      const { id } = oldintegration;
 
       const newNotifications = req.body;
 
       // adjusting
-      await plugins.update({ metaData: newNotifications }, { where: { id } });
+      await integrations.update(
+        { metaData: newNotifications },
+        { where: { id } }
+      );
 
-      res.status(200).send("Plugin updated succesfully");
+      res.status(200).send("integration updated succesfully");
     } catch (err) {
       // ... error checks
       console.log(err);
