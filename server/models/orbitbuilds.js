@@ -19,6 +19,18 @@ module.exports = (sequelize, DataTypes) => {
         allowNull: false,
         type: DataTypes.UUID,
       },
+      monitoring_id: {
+        allowNull: true,
+        type: DataTypes.UUID,
+      },
+      type: {
+        type: DataTypes.STRING,
+        allowNull: false,
+      },
+      wuid: {
+        type: DataTypes.STRING,
+        allowNull: false,
+      },
       metaData: {
         type: DataTypes.JSON,
         allowNull: true,

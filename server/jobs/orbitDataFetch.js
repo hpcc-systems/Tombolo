@@ -60,13 +60,17 @@ const dbConfig = {
               const newBuild = await orbitBuilds.create({
                 application_id: application_id,
                 build_id: build.ReceiveInstanceIdKey,
+                monitoring_id: null,
                 name: build.FileName,
+                type: "megaphone",
+                wuid: build.HpccWorkUnit,
                 metaData: {
                   lastRun: build.DateUpdated,
                   status: build.Status_Code,
                   subStatus: build.SubStatus_Code,
-                  workunit: build.HpccWorkUnit,
                   EnvironmentName: build.EnvironmentName,
+                  initialStatus: build.Status_Code,
+                  finalStatus: build.Status_Code,
                 },
               });
 
@@ -144,6 +148,23 @@ const dbConfig = {
                   monitoring_type: "orbit",
                 });
               }
+            } else {
+              //if it does exist, update the "final status metadata"
+
+              await orbitBuilds.update(
+                {
+                  metaData: {
+                    ...orbitBuild.metaData,
+                    finalStatus: build.Status_Code,
+                  },
+                },
+                {
+                  where: {
+                    build_id: build.ReceiveInstanceIdKey,
+                    application_id: application_id,
+                  },
+                }
+              );
             }
 
             return true;

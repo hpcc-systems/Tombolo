@@ -33,9 +33,14 @@ const dbConfig = {
 
 const runSQLQuery = async (query) => {
   try {
+    var startTime = performance.now();
     await sql.connect(dbConfig);
 
     const result = await sql.query(query);
+
+    var endTime = performance.now();
+
+    console.log(`Call to doSomething took ${endTime - startTime} milliseconds`);
 
     return result;
   } catch (err) {
@@ -49,7 +54,8 @@ const runSQLQuery = async (query) => {
 
 require("dotenv").config({ path: ENVPath });
 
-//create one
+//create one monitoring
+//TODO get workunits from past 2 weeks as well in orbitbuilds table
 router.post(
   "/",
   [
@@ -148,12 +154,23 @@ router.get(
       if (!errors.isEmpty())
         return res.status(422).json({ success: false, errors: errors.array() });
       const { application_id } = req.params;
+
+      var startTime = performance.now();
+
       if (!application_id) throw Error("Invalid app ID");
       const result = await orbitMonitoring.findAll({
         where: {
           application_id,
         },
       });
+
+      var endTime = performance.now();
+
+      console.log(
+        `Call to get local orbit Monitorings took ${
+          endTime - startTime
+        } milliseconds`
+      );
 
       res.status(200).send(result);
     } catch (err) {
@@ -639,22 +656,15 @@ router.get(
 
       await Promise.all(
         result.map(async (build) => {
-          const query = `select HpccWorkUnit as 'WorkUnit', Name as 'Build', DateUpdated as 'Date', Status_Code as 'Status' from DimBuildInstance where Name = '${build.build}' order by Date desc`;
+          let wu = await orbitBuilds.findAll({
+            where: { application_id, name: build.build },
+            raw: true,
+          });
 
-          const wuResult = await runSQLQuery(query);
+          wu.map((wu) => {
+            wuList.push(wu);
+          });
 
-          if (wuResult.err) {
-            throw Error(result.message);
-          }
-
-          //create temporary holder
-          let wu = {};
-
-          wu.build = build.build;
-          wu.WorkUnits = wuResult.recordset;
-
-          //push to the list
-          wuList.push(wu);
           Promise.resolve;
         })
       );

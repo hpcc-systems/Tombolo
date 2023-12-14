@@ -34,6 +34,7 @@ const BasicTab = ({
     { label: 'Current Carrier', value: 'Current Carrier' },
     { label: 'Driver License', value: 'Driver License' },
     { label: 'Insurance Payment History', value: 'Insurance Payment History' },
+    { label: 'To Be Determined', value: 'To Be Determined' },
   ];
 
   const businessUnits = [

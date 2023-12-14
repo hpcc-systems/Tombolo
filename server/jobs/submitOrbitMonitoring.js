@@ -4,6 +4,7 @@ const { parentPort, workerData } = require("worker_threads");
 const logger = require("../config/logger");
 const models = require("../models");
 const orbitMonitoring = models.orbitMonitoring;
+const orbitBuilds = models.orbitBuilds;
 const { v4: uuidv4 } = require("uuid");
 const monitoring_notifications = models.monitoring_notifications;
 const {
@@ -69,7 +70,7 @@ const runSQLQuery = async (query) => {
 
     //get most recent WorkUnits
 
-    const query = `select Top 1 HpccWorkUnit as 'WorkUnit', Name as 'Build', DateUpdated as 'Date', Status_Code as 'Status' from DimBuildInstance where Name = '${build}' order by Date desc`;
+    const query = `select Top 10 HpccWorkUnit as 'WorkUnit', Name as 'Build', DateUpdated as 'Date', Status_Code as 'Status', Version, BuildTemplateIdKey as 'BuildID'  from DimBuildInstance where Name = '${build}' order by Date desc`;
 
     const wuResult = await runSQLQuery(query);
 
@@ -80,90 +81,88 @@ const runSQLQuery = async (query) => {
     // Keep track of changes
     const metaDifference = [];
 
-    if (wuResult && wuResult.recordset) {
-      //store recent details to check against
-      // let recentDetails = wuResult.recordset;
+    if (!wuResult || !wuResult.recordset) return;
 
-      if (notifyCondition.includes("buildStatus")) {
-        let newStatus = wuResult.recordset[0].Status;
-        newStatus = newStatus.toLowerCase();
+    //check for most recent workunit changes and push to metadifference
+    if (notifyCondition.includes("buildStatus")) {
+      let newStatus = wuResult.recordset[0].Status;
+      newStatus = newStatus.toLowerCase();
 
-        if (monitoringCondition?.buildStatus.includes(newStatus)) {
-          //build status has been detected, push difference.
-          metaDifference.push({
-            attribute: "Build Status",
-            oldValue: `${orbitMonitoringDetails.metaData.lastWorkUnit.lastWorkUnitStatus}`,
-            newValue: `${newStatus}`,
-          });
-        }
+      if (monitoringCondition?.buildStatus.includes(newStatus)) {
+        //build status has been detected, push difference.
+        metaDifference.push({
+          attribute: "Build Status",
+          oldValue: `${orbitMonitoringDetails.metaData.lastWorkUnit.lastWorkUnitStatus}`,
+          newValue: `${newStatus}`,
+        });
+      }
+    }
+
+    if (
+      notifyCondition.includes("updateInterval") ||
+      notifyCondition.includes("updateIntervalDays")
+    ) {
+      //update interval is in days, so multiply by 86400000 to get number of milliseconds between updates
+      let updateInterval = monitoringCondition?.updateInterval;
+      let updateIntervalDays = monitoringCondition?.updateIntervalDays;
+
+      // let orbit = await hpccUtil.getorbit(clusterid, Name);
+
+      // let newModified = orbit.modified;
+
+      //dates to check update interval
+      const lastDate = new Date(modified);
+      const newDate = new Date(newModified);
+      const currentDate = new Date();
+
+      //get integer difference of days
+      const diffInMilliseconds = Math.abs(newDate - lastDate);
+      const diffDays = Math.ceil(diffInMilliseconds / (1000 * 60 * 60 * 24));
+
+      //get integer difference of days to current date
+      const diffInMilliCurrent = Math.abs(currentDate - lastDate);
+      const diffDaysCurrent = Math.ceil(
+        diffInMilliCurrent / (1000 * 60 * 60 * 24)
+      );
+
+      //if difference in days !== update interval, and the Orbit Build has been updated, notify
+      if (diffDays !== updateInterval && diffDays !== 0) {
+        metaDifference.push({
+          attribute: "Orbit Build did not follow update schedule",
+          oldValue: `${updateInterval} - days defined between updates`,
+          newValue: `${diffDays} - days between last updates`,
+        });
       }
 
-      if (
-        notifyCondition.includes("updateInterval") ||
-        notifyCondition.includes("updateIntervalDays")
-      ) {
-        //update interval is in days, so multiply by 86400000 to get number of milliseconds between updates
-        let updateInterval = monitoringCondition?.updateInterval;
-        let updateIntervalDays = monitoringCondition?.updateIntervalDays;
-
-        // let orbit = await hpccUtil.getorbit(clusterid, Name);
-
-        // let newModified = orbit.modified;
-
-        //dates to check update interval
-        const lastDate = new Date(modified);
+      //if current amount of days is > defined
+      if (diffDaysCurrent > updateInterval) {
+        metaDifference.push({
+          attribute: "Orbit Build is overdue for update",
+          oldValue: `${updateInterval} - days defined between updates`,
+          newValue: `${diffDaysCurrent} - days since last update`,
+        });
+      }
+      //if updateIntervalDays is set, check that most recent modified day of the week matches setting
+      if (updateIntervalDays?.length) {
+        const daysOfWeek = [
+          "sunday",
+          "monday",
+          "tuesday",
+          "wednesday",
+          "thursday",
+          "friday",
+          "saturday",
+        ];
         const newDate = new Date(newModified);
-        const currentDate = new Date();
+        const newDayUpdated = daysOfWeek[newDate.getDay()];
 
-        //get integer difference of days
-        const diffInMilliseconds = Math.abs(newDate - lastDate);
-        const diffDays = Math.ceil(diffInMilliseconds / (1000 * 60 * 60 * 24));
-
-        //get integer difference of days to current date
-        const diffInMilliCurrent = Math.abs(currentDate - lastDate);
-        const diffDaysCurrent = Math.ceil(
-          diffInMilliCurrent / (1000 * 60 * 60 * 24)
-        );
-
-        //if difference in days !== update interval, and the Orbit Build has been updated, notify
-        if (diffDays !== updateInterval && diffDays !== 0) {
+        if (!updateIntervalDays.includes(newDayUpdated)) {
           metaDifference.push({
-            attribute: "Orbit Build did not follow update schedule",
-            oldValue: `${updateInterval} - days defined between updates`,
-            newValue: `${diffDays} - days between last updates`,
+            attribute:
+              "Orbit Build was updated on a day of the week not defined",
+            oldValue: `${updateIntervalDays} - days defined`,
+            newValue: `${newDayUpdated} - day updated`,
           });
-        }
-
-        //if current amount of days is > defined
-        if (diffDaysCurrent > updateInterval) {
-          metaDifference.push({
-            attribute: "Orbit Build is overdue for update",
-            oldValue: `${updateInterval} - days defined between updates`,
-            newValue: `${diffDaysCurrent} - days since last update`,
-          });
-        }
-        //if updateIntervalDays is set, check that most recent modified day of the week matches setting
-        if (updateIntervalDays?.length) {
-          const daysOfWeek = [
-            "sunday",
-            "monday",
-            "tuesday",
-            "wednesday",
-            "thursday",
-            "friday",
-            "saturday",
-          ];
-          const newDate = new Date(newModified);
-          const newDayUpdated = daysOfWeek[newDate.getDay()];
-
-          if (!updateIntervalDays.includes(newDayUpdated)) {
-            metaDifference.push({
-              attribute:
-                "Orbit Build was updated on a day of the week not defined",
-              oldValue: `${updateIntervalDays} - days defined`,
-              newValue: `${newDayUpdated} - day updated`,
-            });
-          }
         }
       }
 
@@ -175,6 +174,57 @@ const runSQLQuery = async (query) => {
 
       await orbitMonitoring.update({ metaData }, { where: { id } });
     }
+
+    //------------------------------------------------------------------------------
+    // put result into orbitbuilds table
+    //check for status changes of the all gathered workunits
+    await Promise.all(
+      wuResult.recordset.map(async (result) => {
+        //check if result is is orbitbuilds table
+        const orbitBuild = await orbitBuilds.findOne({
+          where: {
+            wuid: result.WorkUnit,
+            monitoring_id: id,
+            application_id: application_id,
+          },
+          raw: true,
+        });
+
+        if (orbitBuild) {
+          //if it does, update it
+          await orbitBuilds.update(
+            {
+              metaData: {
+                ...orbitBuild.metaData,
+                finalStatus: result.Status,
+              },
+            },
+            { where: { id: orbitBuild.id } }
+          );
+        } else {
+          //if it doesn't, create it
+          await orbitBuilds.create({
+            application_id: application_id,
+            build_id: result.BuildID,
+            monitoring_id: id,
+            name: result.Build,
+            type: "orbit",
+            wuid: result.WorkUnit,
+            metaData: {
+              lastRun: result.Date,
+              status: result.Status,
+              workunit: result.WorkUnit,
+              initialStatus: result.Status,
+              finalStatus: result.Status,
+              version: result.Version,
+            },
+          });
+        }
+        return true;
+      })
+    );
+
+    //------------------------------------------------------------------------------
 
     // Check what notification channel is set up
     let emailNotificationDetails;

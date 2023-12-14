@@ -1073,3 +1073,37 @@ div.tooltip {
 .sentNotificationBody p:last-child {
   display: none;
 }
+
+.OrbitTable .ant-table-thead > tr > th {
+  background: #002140;
+  color: white;
+}
+
+.OrbitTable .ant-table-thead > tr > .ant-table-column-sort:hover {
+  color: black;
+}
+
+.OrbitTable .ant-table-cell-scrollbar {
+  box-shadow: none;
+}
+
+.OrbitTable tr:nth-child(2n) {
+  background: lightgrey;
+}
+
+.OrbitTable tr:nth-child(2n) {
+  background: lightgrey;
+}
+
+.OrbitTable tr:nth-child(2n) {
+  background: lightgrey;
+}
+
+.OrbitTable .ant-table-row-level-0:nth-child(2n) .ant-table-column-sort {
+  background: lightgrey;
+}
+
+.chartLabel {
+  color: rgb(71, 70, 70);
+  margin-bottom: 2rem;
+}

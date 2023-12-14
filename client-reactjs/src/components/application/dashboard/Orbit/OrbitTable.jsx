@@ -35,14 +35,14 @@ function OrbitTable({
     }
 
     let filtered = workUnits.filter((workUnit) => {
-      let wuDate = moment(workUnit.Date);
+      let wuDate = moment(workUnit.metaData.lastRun);
 
       if (
         wuDate > moment(dashboardFilters.dateRange[0]) &&
         wuDate < moment(dashboardFilters.dateRange[1]) &&
         dashboardFilters.status &&
-        dashboardFilters.status.includes(workUnit.Status) &&
-        selectedBuildsList.includes(workUnit.Build)
+        dashboardFilters.status.includes(workUnit.metaData.status.toUpperCase()) &&
+        selectedBuildsList.includes(workUnit.name)
       ) {
         return true;
       } else {
@@ -82,6 +82,8 @@ function OrbitTable({
         setBuilds(filtered);
       }
 
+      console.log(data);
+
       //get work unit information and put it in builds information
 
       const response2 = await fetch(`/api/orbit/getWorkUnits/${applicationId}`, payload);
@@ -89,87 +91,98 @@ function OrbitTable({
 
       const data2 = await response2.json();
 
-      //add workunits to builds
-      const builds2 = data.map((build) => {
-        const wu = data2.filter((workUnit) => workUnit.build === build.build);
+      console.log(data2);
 
-        return { ...build, workUnits: wu[0].WorkUnits };
+      //add data2 workunits to matching builds
+
+      const builds2 = data.map((build) => {
+        const wu = data2.filter((workUnit) => workUnit.name === build.build);
+        return { ...build, workUnits: wu };
+      });
+
+      //add count to the builds for reporting later
+      builds2.forEach((build) => {
+        build.count = wuCounter(build);
       });
 
       setBuilds(builds2);
 
       //combine and set work units
-      let totalWuList = [];
-      data2.map(async (build) => {
-        const buildWUs = build.WorkUnits;
-        totalWuList = [...totalWuList, ...buildWUs];
-      });
+      let totalWuList = data2;
 
       totalWuList.sort((a, b) => {
-        return new Date(b.Date) - new Date(a.Date);
+        return new Date(b.metaData.lastRun) - new Date(a.metaData.lastRun);
       });
 
-      setWorkUnits(totalWuList);
+      //move initial status, final status, and version to top level of object
 
-      setFilteredWorkUnits(totalWuList);
+      totalWuList.forEach((workUnit) => {
+        workUnit.initialStatus = workUnit.metaData.initialStatus;
+        workUnit.finalStatus = workUnit.metaData.status;
+        workUnit.version = workUnit.metaData.version;
+        workUnit.status = workUnit.metaData.status;
+      });
+
+      await setWorkUnits(totalWuList);
+
+      await setFilteredWorkUnits(totalWuList);
     } catch (error) {
-      message.error('Failed to fetch builds');
+      message.error('Failed to fetch builds' + error);
+      console.log(error);
     }
+  };
+
+  const wuCounter = (record) => {
+    let count = 0;
+
+    if (record.workUnits?.length > 0) {
+      record.workUnits.forEach((workUnit) => {
+        let wuDate = moment(workUnit.metaData.lastRun);
+
+        if (
+          dashboardFilters?.dateRange &&
+          wuDate > moment(dashboardFilters?.dateRange[0]) &&
+          wuDate < moment(dashboardFilters?.dateRange[1]) &&
+          dashboardFilters.status &&
+          dashboardFilters.status.includes(workUnit.metaData.status)
+        ) {
+          count++;
+        }
+      });
+    }
+
+    return count;
   };
 
   //Table columns and data
   const columns = [
-    { title: 'Build', dataIndex: 'build' },
     {
-      title: 'Notification Emails',
+      title: 'Product',
       render: (record) => {
-        let emailChannel = record.metaData?.notifications[0];
-        if (emailChannel.channel === 'eMail') {
-          let emails = '';
-          emailChannel.recipients.forEach((recipient) => {
-            emails += recipient + '; ';
-          });
-          return emails;
-        } else {
-          return '';
-        }
+        return record.product.toUpperCase();
       },
+      width: 225,
     },
+    { title: 'Orbit Build Name', dataIndex: 'build' },
     {
       title: 'WUs',
       render: (record) => {
-        let count = 0;
-
-        if (record.workUnits?.length > 0) {
-          record.workUnits.forEach((workUnit) => {
-            let wuDate = moment(workUnit.Date);
-
-            if (
-              wuDate > moment(dashboardFilters.dateRange[0]) &&
-              wuDate < moment(dashboardFilters.dateRange[1]) &&
-              dashboardFilters.status &&
-              dashboardFilters.status.includes(workUnit.Status)
-            ) {
-              count++;
-            }
-          });
-        }
-
-        return count;
+        return record?.count ? record.count : 0;
       },
+      sorter: (a, b) => a.count - b.count,
+
+      sortDirections: ['ascend', 'descend'],
+      defaultSortOrder: 'descend',
+      width: 75,
     },
   ];
 
   const wuColumns = [
-    { title: 'Build WUID', dataIndex: 'WorkUnit' },
-    { title: 'Related Build', dataIndex: 'Build' },
-    {
-      title: 'Date',
-      render: (record) => {
-        return moment.utc(record.Date).local().format('MM/DD/YYYY h:mm A');
-      },
-    },
-    { title: 'Current Status', dataIndex: 'Status' },
+    { title: 'Build WUID', dataIndex: 'wuid', width: 75 },
+    { title: 'Version', dataIndex: 'version', width: 75 },
+    { title: 'Initial Status', dataIndex: 'initialStatus', width: 100 },
+    { title: 'Final Status', dataIndex: 'finalStatus', width: 150 },
+    { title: 'Build Owner', dataIndex: 'primaryContact', width: 150 },
   ];
 
   // Row selection
@@ -182,29 +195,39 @@ function OrbitTable({
   //JSX
   return (
     <>
-      <div style={{ width: '35%', float: 'left', marginTop: '1rem' }}>
-        <Table
-          align="right"
-          pagination={{ pageSize: 10 }}
-          size="small"
-          columns={columns}
-          dataSource={builds}
-          rowKey={(record) => record.id}
-          verticalAlign="top"
-          rowSelection={rowSelection}
-          loading={loading}
-        />
+      <div style={{ width: '45%', float: 'left' }} className="OrbitTable">
+        <div style={{ border: '1px solid #d9d9d9', padding: '.25rem' }}>
+          <Table
+            align="right"
+            size="small"
+            columns={columns}
+            dataSource={builds}
+            rowKey={(record) => record.name}
+            verticalAlign="top"
+            rowSelection={rowSelection}
+            loading={loading}
+            pagination={false}
+            headerColor="white"
+            headerBg="#001529"
+            scroll={{ y: 400 }}
+          />
+        </div>
         <br />
-        <Table
-          align="right"
-          pagination={{ pageSize: 10 }}
-          size="small"
-          columns={wuColumns}
-          dataSource={filteredWorkUnits}
-          rowKey={(record) => record.WorkUnit}
-          verticalAlign="top"
-          loading={loading}
-        />
+        <div style={{ border: '1px solid #d9d9d9', padding: '.25rem' }}>
+          <Table
+            align="right"
+            size="small"
+            columns={wuColumns}
+            dataSource={filteredWorkUnits}
+            rowKey={(record) => record.key}
+            verticalAlign="top"
+            loading={loading}
+            headerColor="white"
+            headerBg="#001529"
+            scroll={{ x: 1300, y: 400 }}
+            pagination={false}
+          />
+        </div>
       </div>
     </>
   );
