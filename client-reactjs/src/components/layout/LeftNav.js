@@ -11,6 +11,7 @@ import {
   ClockCircleOutlined,
   ContainerOutlined,
   BarChartOutlined,
+  BellOutlined,
 } from '@ant-design/icons';
 
 import { hasEditPermission } from '../common/AuthUtil.js';
@@ -135,12 +136,17 @@ class LeftNav extends Component {
                   {<Text text="Settings" />}
                 </Typography.Title>
               )}
-              <Menu.Item key="6" icon={<i className="fa fa-fw fa-telegram" />}>
+              {/* <Menu.Item key="6" icon={<i className="fa fa-fw fa-telegram" />}>
                 <Link to={'/' + applicationId + '/actions'}>{<Text text="Actions" />}</Link>
-              </Menu.Item>
-              <Menu.Item key="7" icon={<ClusterOutlined />}>
+              </Menu.Item> */}
+              <Menu.Item key="6" icon={<ClusterOutlined />}>
                 <Link to={'/admin/clusters'}>{<Text text="Clusters" />}</Link>
               </Menu.Item>
+              <Menu.SubMenu key="7" icon={<BellOutlined />} title={<Text text="Notifications" />}>
+                <Menu.Item key="7a" icon={<i className="fa fa-windows" />}>
+                  <Link to={'/admin/notification-settings/msTeams'}>{<Text text="MsTeams" />}</Link>
+                </Menu.Item>
+              </Menu.SubMenu>
 
               <Menu.Item key="8" icon={<i className="fa fa-fw fa-github" />}>
                 <Link to={'/admin/github'}>{<Text text="Github Projects" />}</Link>
