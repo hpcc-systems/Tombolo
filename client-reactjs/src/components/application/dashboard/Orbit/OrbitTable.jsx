@@ -16,13 +16,13 @@ function OrbitTable({
   setFilteredWorkUnits,
   filteredBuilds,
   setFilteredBuilds,
-  filterValues,
   setFilterValues,
+  setGroupDataBy,
 }) {
   const [loading, setLoading] = useState(false);
   const location = useLocation();
 
-  //when filters change or Builds Selected, set filtered WorkUnits list
+  //when filters change or Builds Selected, set filtered WorkUnits & Build list
   useEffect(() => {
     if (Object.keys(workUnits).length === 0 || Object.keys(dashboardFilters).length === 0) return;
 
@@ -30,7 +30,12 @@ function OrbitTable({
 
     //apply filters to build list
     builds.forEach((build) => {
-      if (dashboardFilters.severity.includes(build.severityCode)) {
+      if (
+        dashboardFilters.severity.includes(build.severityCode) &&
+        dashboardFilters.builds.includes(build.build) &&
+        dashboardFilters.products.includes(build.product) &&
+        dashboardFilters.businessUnits.includes(build.businessUnit)
+      ) {
         filteredBuildsList.push(build);
       } else {
         return;
@@ -51,7 +56,7 @@ function OrbitTable({
         wuDate < moment(dashboardFilters.dateRange[1]) &&
         dashboardFilters.initialStatus?.includes(workUnit.initialStatus.toUpperCase()) &&
         dashboardFilters.finalStatus?.includes(workUnit.finalStatus.toUpperCase()) &&
-        dashboardFilters.version.includes(workUnit.version) &&
+        dashboardFilters.version?.includes(workUnit.version) &&
         filteredBuildNameList.includes(workUnit.name)
       ) {
         return true;
@@ -59,8 +64,6 @@ function OrbitTable({
         return false;
       }
     });
-
-    console.log(filtered);
 
     setFilteredWorkUnits(filtered);
     setLoading(false);
@@ -72,7 +75,7 @@ function OrbitTable({
     getbuilds(monitoringId);
   }, [applicationId, location]);
 
-  //Get list of all monitoring
+  //Get list of all builds, workunits, and set initial values and filters
   const getbuilds = async (monitoringId) => {
     try {
       setLoading(true);
@@ -107,8 +110,6 @@ function OrbitTable({
         //add data2 workunits to matching builds
         (builds2 = data.map((build) => {
           const wu = data2.filter((workUnit) => workUnit.name === build.build);
-
-          console.log(wu, build);
           return { ...build, workUnits: wu };
         }))
       );
@@ -121,8 +122,8 @@ function OrbitTable({
       });
 
       //move initial status, final status, and version to top level of object
-
       totalWuList.forEach((workUnit) => {
+        workUnit.key = workUnit.id;
         workUnit.initialStatus = workUnit.metaData.initialStatus;
         workUnit.finalStatus = workUnit.metaData.finalStatus;
         workUnit.version = workUnit.metaData.version;
@@ -131,11 +132,17 @@ function OrbitTable({
 
       //get all the unique values for the filters and dropdowns
 
-      //get unique values
+      //get unique values from workunit list
       const uniqueInitialStatus = [...new Set(totalWuList.map((item) => item.initialStatus.toUpperCase()))];
       const uniqueFinalStatus = [...new Set(totalWuList.map((item) => item.finalStatus.toUpperCase()))];
       const uniqueVersion = [...new Set(totalWuList.map((item) => item.version))];
+      const uniqueWorkUnits = [...new Set(totalWuList.map((item) => item.wuid))];
+
+      //get unique values from builds list
       const uniqueSeverity = [...new Set(builds2.map((item) => item.severityCode))];
+      const uniqueBuilds = [...new Set(builds2.map((item) => item.build))];
+      const uniqueProducts = [...new Set(builds2.map((item) => item.product))];
+      const uniqueBusinessUnits = [...new Set(builds2.map((item) => item.businessUnit))];
 
       //create options for dropdowns
       const uniqueInitialStatusOptions = [];
@@ -146,20 +153,57 @@ function OrbitTable({
       uniqueVersion.forEach((item) => uniqueVersionOptions.push({ label: item, value: item }));
       const uniqueSeverityOptions = [];
       uniqueSeverity.forEach((item) => uniqueSeverityOptions.push({ label: item, value: item }));
+      const uniqueBuildsOptions = [];
+      uniqueBuilds.forEach((item) => uniqueBuildsOptions.push({ label: item, value: item }));
+      const uniqueProductsOptions = [];
+      uniqueProducts.forEach((item) => uniqueProductsOptions.push({ label: item, value: item }));
+      const uniqueBusinessUnitsOptions = [];
+      uniqueBusinessUnits.forEach((item) => uniqueBusinessUnitsOptions.push({ label: item, value: item }));
+      const uniqueWorkUnitsOptions = [];
+      uniqueWorkUnits.forEach((item) => uniqueWorkUnitsOptions.push({ label: item, value: item }));
 
-      //set them in state
+      //check URL params for filters
+      const params = new URLSearchParams(location.search);
+      const filters = {};
+      if (params.get('initialStatus')) {
+        filters.initialStatus = params.get('initialStatus')?.split(',');
+      }
+      if (params.get('finalStatus')) {
+        filters.finalStatus = params.get('finalStatus')?.split(',');
+      }
+      if (params.get('dateRange')) {
+        const dateString = params.get('dateRange');
+        const dates = dateString.split(',');
+        const range = [moment(dates[0]), moment(dates[1])];
+        filters.dateRange = range;
+      }
+      if (params.get('groupDataBy')) {
+        filters.groupDataBy = params.get('groupDataBy');
+        setGroupDataBy(params.get('groupDataBy'));
+        // setGroupDataBy('day');
+      }
+
+      //set them in state for the initial load
       await setFilterValues((filterValues) => ({
         ...filterValues,
-        initialStatus: uniqueInitialStatus,
+        initialStatus: filters.initialStatus?.length ? filters.initialStatus : uniqueInitialStatus,
         initialStatusOptions: uniqueInitialStatusOptions,
-        finalStatus: uniqueFinalStatus,
+        finalStatus: filters.finalStatus?.length ? filters.finalStatus : uniqueFinalStatus,
         finalStatusOptions: uniqueFinalStatusOptions,
         version: uniqueVersion,
         versionOptions: uniqueVersionOptions,
         severity: uniqueSeverity,
         severityOptions: uniqueSeverityOptions,
-        dateRange: [moment().subtract(15, 'days'), moment()],
-        groupDataBy: 'day',
+        builds: uniqueBuilds,
+        buildsOptions: uniqueBuildsOptions,
+        products: uniqueProducts,
+        productsOptions: uniqueProductsOptions,
+        businessUnits: uniqueBusinessUnits,
+        businessUnitsOptions: uniqueBusinessUnitsOptions,
+        wuid: uniqueWorkUnits,
+        wuidOptions: uniqueWorkUnitsOptions,
+        dateRange: filters.dateRange?.length ? filters.dateRange : [moment().subtract(15, 'days'), moment()],
+        groupDataBy: filters.groupDataBy ? filters.groupDataBy : 'day',
       }));
 
       await setWorkUnits(totalWuList);
@@ -185,6 +229,7 @@ function OrbitTable({
 
   const getCounts = () => {
     let builds2 = [];
+    let wus = [];
     filteredBuilds.forEach((build) => {
       let count = 0;
 
@@ -193,14 +238,19 @@ function OrbitTable({
           let wuDate = moment(workUnit.metaData.lastRun);
 
           if (
-            dashboardFilters?.dateRange &&
-            wuDate > moment(dashboardFilters?.dateRange[0]) &&
+            wuDate > moment(dashboardFilters.dateRange[0]) &&
             wuDate < moment(dashboardFilters?.dateRange[1]) &&
             dashboardFilters.initialStatus?.includes(workUnit.initialStatus.toUpperCase()) &&
             dashboardFilters.finalStatus?.includes(workUnit.finalStatus.toUpperCase()) &&
-            dashboardFilters.version?.includes(workUnit.version)
+            dashboardFilters.version?.includes(workUnit.version) &&
+            dashboardFilters.builds?.includes(workUnit.name)
           ) {
-            count++;
+            //check if workunit already exists in wus list to avoid duplicates
+            let wuExists = wus.find((item) => item.id === workUnit.id);
+            if (!wuExists) {
+              wus.push(workUnit);
+              count++;
+            }
           }
         });
       }

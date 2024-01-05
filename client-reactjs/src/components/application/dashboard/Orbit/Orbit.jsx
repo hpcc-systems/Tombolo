@@ -32,6 +32,14 @@ function Orbit() {
     versionOptions: [],
     severity: [],
     severityOptions: [],
+    builds: [],
+    buildsOptions: [],
+    products: [],
+    productsOptions: [],
+    businessUnits: [],
+    businessUnitsOptions: [],
+    wuid: [],
+    wuidOptions: [],
     groupDataBy: 'day',
     dateRange: [],
     groupByOptions: [
@@ -239,6 +247,7 @@ function Orbit() {
               setFilteredBuilds={setFilteredBuilds}
               filterValues={filterValues}
               setFilterValues={setFilterValues}
+              setGroupDataBy={setGroupDataBy}
             />
 
             {builds.length > 0 ? (

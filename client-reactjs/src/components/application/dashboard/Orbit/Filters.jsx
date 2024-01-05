@@ -1,10 +1,8 @@
 import React, { useEffect, useState } from 'react';
 import { Form, Select, DatePicker, Button, Checkbox, Drawer } from 'antd';
-import { useHistory, useLocation } from 'react-router-dom';
-import moment from 'moment';
+import { useHistory } from 'react-router-dom';
 import { handleError } from '../../../common/AuthHeader.js';
 import '../common/css/index.css';
-//import filterOutlined
 import { FilterOutlined } from '@ant-design/icons';
 
 // Form layout
@@ -14,9 +12,8 @@ const layout = {
 };
 function Filters({ groupDataBy, setGroupDataBy, dashboardFilters, setDashboardFilters, filterValues }) {
   const [form] = Form.useForm();
-  const history = useHistory();
-  const location = useLocation();
 
+  const history = useHistory();
   const [open, setOpen] = useState(false);
 
   const showDrawer = () => {
@@ -51,43 +48,15 @@ function Filters({ groupDataBy, setGroupDataBy, dashboardFilters, setDashboardFi
   const updateParams = (param) => {
     const newParams = new URLSearchParams();
     const allFilters = { ...dashboardFilters, ...param };
+    const allowedURLParams = ['initialStatus', 'finalStatus', 'severity', 'dateRange', 'groupDataBy'];
     for (let key in allFilters) {
-      newParams.set(key, allFilters[key]);
+      //only allow certain params to be added to url
+      if (allowedURLParams.includes(key)) {
+        newParams.set(key, allFilters[key]);
+      }
     }
     history.push(`?${newParams.toString()}`);
   };
-  // When page loads, check url params, if present - apply them as filter to fetch build
-  useEffect(() => {
-    const params = new URLSearchParams(location.search);
-    const filters = {};
-    if (params.get('initialStatus')) {
-      filters.initialStatus = params.get('initialStatus')?.split(',');
-    }
-    if (params.get('finalStatus')) {
-      filters.finalStatus = params.get('finalStatus')?.split(',');
-    }
-    if (params.get('version')) {
-      filters.version = params.get('version')?.split(',');
-    }
-    if (params.get('severity')) {
-      filters.severity = params.get('severity')?.split(',');
-    }
-
-    if (params.get('dateRange')) {
-      const dateString = params.get('dateRange');
-      const dates = dateString.split(',');
-      const range = [moment(dates[0]), moment(dates[1])];
-      filters.dateRange = range;
-    }
-    if (params.get('groupDataBy')) {
-      filters.groupDataBy = params.get('groupDataBy');
-      setGroupDataBy(params.get('groupDataBy'));
-    }
-    if (Object.keys(filters).length > 0) {
-      setDashboardFilters(filters);
-      form.setFieldsValue(filters);
-    }
-  }, []);
 
   //function to select or clear all when select all boxes are checked
   const selectAll = (e, option) => {
@@ -120,7 +89,15 @@ function Filters({ groupDataBy, setGroupDataBy, dashboardFilters, setDashboardFi
               ...prev,
               version: filterValues.versionOptions.map((option) => option.value),
             }));
-            updateParams({ version: filterValues.versionOptions.map((option) => option.value) });
+          }
+          break;
+        case 'wuid':
+          {
+            form.setFieldsValue({ wuid: filterValues.wuidOptions.map((option) => option.value) });
+            setDashboardFilters((prev) => ({
+              ...prev,
+              wuid: filterValues.wuidOptions.map((option) => option.value),
+            }));
           }
           break;
         default:
@@ -147,7 +124,12 @@ function Filters({ groupDataBy, setGroupDataBy, dashboardFilters, setDashboardFi
           {
             form.setFieldsValue({ version: [] });
             setDashboardFilters((prev) => ({ ...prev, version: [] }));
-            updateParams({ version: [] });
+          }
+          break;
+        case 'wuid':
+          {
+            form.setFieldsValue({ wuid: [] });
+            setDashboardFilters((prev) => ({ ...prev, wuid: [] }));
           }
           break;
         default:
@@ -249,7 +231,6 @@ function Filters({ groupDataBy, setGroupDataBy, dashboardFilters, setDashboardFi
                 maxTagCount={1}
                 onChange={(values) => {
                   setDashboardFilters((prev) => ({ ...prev, version: values }));
-                  updateParams({ version: values });
                 }}
                 dropdownRender={(menu) => (
                   <>
@@ -267,7 +248,80 @@ function Filters({ groupDataBy, setGroupDataBy, dashboardFilters, setDashboardFi
                 )}></Select>
             </Form.Item>
 
+            <Form.Item
+              name={'wuid'}
+              label={dashboardFilters.wuid?.length === filterValues.wuidOptions.length ? 'WUIDs (all)' : 'WUIDs'}
+              style={{ display: 'inline-block', width: '100%' }}>
+              <Select
+                options={filterValues?.wuidOptions}
+                mode="multiple"
+                maxTagCount={1}
+                onChange={(values) => {
+                  setDashboardFilters((prev) => ({ ...prev, wuid: values }));
+                }}
+                dropdownRender={(menu) => (
+                  <>
+                    <div style={{ padding: '.5rem' }}>
+                      <Checkbox
+                        defaultChecked={dashboardFilters.wuid?.length === filterValues.wuidOptions.length}
+                        style={{ marginBottom: '1rem' }}
+                        onChange={(e) => selectAll(e, 'wuid')}>
+                        Select All
+                      </Checkbox>
+
+                      {menu}
+                    </div>
+                  </>
+                )}></Select>
+            </Form.Item>
+
             <h2 style={{ marginTop: '2rem' }}>Build Filters</h2>
+            <Form.Item
+              name={'builds'}
+              label={dashboardFilters.builds?.length === filterValues.buildsOptions?.length ? 'Builds (all)' : 'Builds'}
+              style={{ display: 'inline-block', width: '100%' }}>
+              <Select
+                options={filterValues?.buildsOptions}
+                mode="multiple"
+                maxTagCount={0}
+                onChange={(values) => {
+                  setDashboardFilters((prev) => ({ ...prev, builds: values }));
+                }}></Select>
+            </Form.Item>
+            <Form.Item
+              name={'businessUnits'}
+              label={
+                dashboardFilters.businessUnits?.length === filterValues.businessUnitsOptions?.length
+                  ? 'Owners (all)'
+                  : 'Owners'
+              }
+              style={{ display: 'inline-block', width: '100%' }}>
+              <Select
+                options={filterValues?.businessUnitsOptions}
+                mode="multiple"
+                maxTagCount={0}
+                onChange={(values) => {
+                  setDashboardFilters((prev) => ({ ...prev, businessUnits: values }));
+                  updateParams({ businessUnits: values });
+                }}></Select>
+            </Form.Item>
+            <Form.Item
+              name={'products'}
+              label={
+                dashboardFilters.products?.length === filterValues.productsOptions?.length
+                  ? 'Products (all)'
+                  : 'Products'
+              }
+              style={{ display: 'inline-block', width: '100%' }}>
+              <Select
+                options={filterValues?.productsOptions}
+                mode="multiple"
+                maxTagCount={0}
+                onChange={(values) => {
+                  setDashboardFilters((prev) => ({ ...prev, products: values }));
+                  updateParams({ products: values });
+                }}></Select>
+            </Form.Item>
             <Form.Item
               name={'severity'}
               label={
@@ -281,10 +335,7 @@ function Filters({ groupDataBy, setGroupDataBy, dashboardFilters, setDashboardFi
                 mode="multiple"
                 maxTagCount={1}
                 onChange={(values) => {
-                  console.log(filterValues);
-                  console.log(dashboardFilters);
                   setDashboardFilters((prev) => ({ ...prev, severity: values }));
-                  updateParams({ severity: values });
                 }}></Select>
             </Form.Item>
 
