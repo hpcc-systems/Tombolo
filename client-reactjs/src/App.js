@@ -53,6 +53,7 @@ const Regulations = React.lazy(() => import('./components/admin/ControlsAndRegul
 const GitHubSettings = React.lazy(() => import('./components/admin/GitHubSettings/GitHubSettings'));
 const ScheduledJobsPage = React.lazy(() => import('./components/admin/ScheduledJobsPage'));
 const Compliance = React.lazy(() => import('./components/admin/Compliance/Compliance'));
+const TeamsNotification = React.lazy(() => import('./components/admin/notifications/MsTeams/Teams'));
 
 // Shared layout, etc.
 import { LeftNav } from './components/layout/LeftNav';
@@ -199,6 +200,7 @@ class App extends React.Component {
                         <PrivateRoute path="/admin/bree" component={ScheduledJobsPage} />
                         <PrivateRoute path="/admin/clusters/:clusterId" component={ClusterDetails} />
                         <PrivateRoute path="/admin/clusters" component={AdminClusters} />
+                        <PrivateRoute path="/admin/notification-settings/msTeams" component={TeamsNotification} />
                         <PrivateRoute path="/admin/github" component={GitHubSettings} />
                         <PrivateRoute path="/admin/compliance/:tabName?" component={Compliance} />
                         <PrivateRoute path="/admin/users" component={Users} />
