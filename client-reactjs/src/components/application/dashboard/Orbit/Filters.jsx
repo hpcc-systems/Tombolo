@@ -12,14 +12,7 @@ const layout = {
   labelCol: { span: 24 },
   wrapperCol: { span: 24 },
 };
-function Filters({
-  groupDataBy,
-  setGroupDataBy,
-  dashboardFilters,
-  setDashboardFilters,
-
-  filterValues,
-}) {
+function Filters({ groupDataBy, setGroupDataBy, dashboardFilters, setDashboardFilters, filterValues }) {
   const [form] = Form.useForm();
   const history = useHistory();
   const location = useLocation();
@@ -254,10 +247,9 @@ function Filters({
                 options={filterValues?.versionOptions}
                 mode="multiple"
                 maxTagCount={1}
-                onSelect={(value) => {
-                  console.log(dashboardFilters);
-                  setDashboardFilters((prev) => ({ ...prev, version: value }));
-                  updateParams({ version: value });
+                onChange={(values) => {
+                  setDashboardFilters((prev) => ({ ...prev, version: values }));
+                  updateParams({ version: values });
                 }}
                 dropdownRender={(menu) => (
                   <>
@@ -288,9 +280,11 @@ function Filters({
                 options={filterValues?.severityOptions}
                 mode="multiple"
                 maxTagCount={1}
-                onSelect={(value) => {
-                  setDashboardFilters((prev) => ({ ...prev, severity: value }));
-                  updateParams({ severity: value });
+                onChange={(values) => {
+                  console.log(filterValues);
+                  console.log(dashboardFilters);
+                  setDashboardFilters((prev) => ({ ...prev, severity: values }));
+                  updateParams({ severity: values });
                 }}></Select>
             </Form.Item>
 

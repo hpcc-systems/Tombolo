@@ -22,7 +22,7 @@ function Orbit() {
   const [groupDataBy, setGroupDataBy] = useState('day');
   const [dashboardFilters, setDashboardFilters] = useState({});
   const [filteredWorkUnits, setFilteredWorkUnits] = useState([]);
-  const [selectedBuilds, setSelectedBuilds] = useState([]);
+  const [filteredBuilds, setFilteredBuilds] = useState([]);
   const [filterValues, setFilterValues] = useState({
     initialStatus: [],
     initialStatusOptions: [],
@@ -70,7 +70,7 @@ function Orbit() {
       newTitleMetrics.push({ title: 'Work Units', description: filteredWorkUnits.length });
       newTitleMetrics.push({
         title: 'Builds',
-        description: selectedBuilds.length > 0 ? selectedBuilds.length : builds.length,
+        description: filteredBuilds.length > 0 ? filteredBuilds.length : builds.length,
       });
       //get date range from filters
       if (dashboardFilters?.dateRange) {
@@ -188,7 +188,7 @@ function Orbit() {
       setStackBarData(newStackBarData);
       setDonutData(newDonutData);
     }
-  }, [builds, selectedBuilds, filteredWorkUnits, groupDataBy]);
+  }, [builds, filteredBuilds, filteredWorkUnits, groupDataBy]);
 
   return (
     <div>
@@ -235,8 +235,8 @@ function Orbit() {
               setWorkUnits={setWorkUnits}
               filteredWorkUnits={filteredWorkUnits}
               setFilteredWorkUnits={setFilteredWorkUnits}
-              selectedBuilds={selectedBuilds}
-              setSelectedBuilds={setSelectedBuilds}
+              filteredBuilds={filteredBuilds}
+              setFilteredBuilds={setFilteredBuilds}
               filterValues={filterValues}
               setFilterValues={setFilterValues}
             />

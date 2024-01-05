@@ -14,8 +14,8 @@ function OrbitTable({
   setWorkUnits,
   filteredWorkUnits,
   setFilteredWorkUnits,
-  selectedBuilds,
-  setSelectedBuilds,
+  filteredBuilds,
+  setFilteredBuilds,
   filterValues,
   setFilterValues,
 }) {
@@ -26,26 +26,33 @@ function OrbitTable({
   useEffect(() => {
     if (Object.keys(workUnits).length === 0 || Object.keys(dashboardFilters).length === 0) return;
 
-    let selectedBuildsList;
+    let filteredBuildsList = [];
 
-    //if there are selected Builds, use those, otherwise use all builds
-    if (selectedBuilds.length > 0) {
-      selectedBuildsList = selectedBuilds.map((build) => build.build);
-    } else {
-      selectedBuildsList = builds.map((build) => build.build);
-    }
+    //apply filters to build list
+    builds.forEach((build) => {
+      if (dashboardFilters.severity.includes(build.severityCode)) {
+        filteredBuildsList.push(build);
+      } else {
+        return;
+      }
+    });
 
+    setFilteredBuilds(filteredBuildsList);
+
+    //get a list of just the names to filter work units
+    let filteredBuildNameList = filteredBuildsList.map((build) => build.build);
+
+    //apply filters to work units once the build list is filtered
     let filtered = workUnits.filter((workUnit) => {
       let wuDate = moment(workUnit.metaData.lastRun);
 
       if (
         wuDate > moment(dashboardFilters.dateRange[0]) &&
         wuDate < moment(dashboardFilters.dateRange[1]) &&
-        dashboardFilters.initialStatus &&
-        dashboardFilters.initialStatus.includes(workUnit.metaData.initialStatus.toUpperCase()) &&
-        dashboardFilters.finalStatus &&
-        dashboardFilters.finalStatus.includes(workUnit.metaData.finalStatus.toUpperCase()) &&
-        selectedBuildsList.includes(workUnit.name)
+        dashboardFilters.initialStatus?.includes(workUnit.initialStatus.toUpperCase()) &&
+        dashboardFilters.finalStatus?.includes(workUnit.finalStatus.toUpperCase()) &&
+        dashboardFilters.version.includes(workUnit.version) &&
+        filteredBuildNameList.includes(workUnit.name)
       ) {
         return true;
       } else {
@@ -53,9 +60,11 @@ function OrbitTable({
       }
     });
 
+    console.log(filtered);
+
     setFilteredWorkUnits(filtered);
     setLoading(false);
-  }, [dashboardFilters, workUnits, selectedBuilds]);
+  }, [dashboardFilters, workUnits, builds]);
 
   //When the component loads - get all builds
   useEffect(() => {
@@ -98,6 +107,8 @@ function OrbitTable({
         //add data2 workunits to matching builds
         (builds2 = data.map((build) => {
           const wu = data2.filter((workUnit) => workUnit.name === build.build);
+
+          console.log(wu, build);
           return { ...build, workUnits: wu };
         }))
       );
@@ -164,17 +175,17 @@ function OrbitTable({
 
   //when builds are loaded/changed, if there is not a count, get counts
   useEffect(() => {
-    if (!builds.length) return;
-    if (builds.length > 0 && builds[0].count !== undefined) {
+    if (!filteredBuilds.length) return;
+    if (filteredBuilds.length > 0 && filteredBuilds[0].count !== undefined) {
       return;
     } else {
       getCounts();
     }
-  }, [builds, dashboardFilters]);
+  }, [filteredBuilds, dashboardFilters]);
 
   const getCounts = () => {
     let builds2 = [];
-    builds.forEach((build) => {
+    filteredBuilds.forEach((build) => {
       let count = 0;
 
       if (build.workUnits?.length > 0) {
@@ -185,10 +196,9 @@ function OrbitTable({
             dashboardFilters?.dateRange &&
             wuDate > moment(dashboardFilters?.dateRange[0]) &&
             wuDate < moment(dashboardFilters?.dateRange[1]) &&
-            dashboardFilters.initialStatus &&
-            dashboardFilters.initialStatus.includes(workUnit.metaData.initialStatus) &&
-            dashboardFilters.finalStatus &&
-            dashboardFilters.finalStatus.includes(workUnit.metaData.finalStatus)
+            dashboardFilters.initialStatus?.includes(workUnit.initialStatus.toUpperCase()) &&
+            dashboardFilters.finalStatus?.includes(workUnit.finalStatus.toUpperCase()) &&
+            dashboardFilters.version?.includes(workUnit.version)
           ) {
             count++;
           }
@@ -197,7 +207,8 @@ function OrbitTable({
 
       builds2.push({ ...build, count: count });
     });
-    setBuilds(builds2);
+
+    setFilteredBuilds(builds2);
   };
 
   //Table columns and data
@@ -205,7 +216,7 @@ function OrbitTable({
     {
       title: 'Product',
       render: (record) => {
-        return record.product.toUpperCase();
+        return record.product?.toUpperCase();
       },
       width: 225,
     },
@@ -231,12 +242,12 @@ function OrbitTable({
     { title: 'Build Owner', dataIndex: 'primaryContact', width: 150 },
   ];
 
-  // Row selection
-  const rowSelection = {
-    onChange: (_selectedRowKeys, selectedRows) => {
-      setSelectedBuilds(selectedRows);
-    },
-  };
+  // // Row selection
+  // const rowSelection = {
+  //   onChange: (_selectedRowKeys, selectedRows) => {
+  //     setFilteredBuilds(selectedRows);
+  //   },
+  // };
 
   //JSX
   return (
@@ -247,10 +258,9 @@ function OrbitTable({
             align="right"
             size="small"
             columns={columns}
-            dataSource={builds}
+            dataSource={filteredBuilds}
             rowKey={(record) => record.name}
             verticalAlign="top"
-            rowSelection={rowSelection}
             loading={loading}
             pagination={false}
             headerColor="white"
