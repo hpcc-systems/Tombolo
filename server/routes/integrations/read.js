@@ -92,11 +92,9 @@ router.put(
 
       const { id } = oldintegration;
 
-      const newNotifications = req.body;
-
       // adjusting
       await integrations.update(
-        { metaData: newNotifications },
+        { metaData: req.body.notifications, config: req.body.active },
         { where: { id } }
       );
 

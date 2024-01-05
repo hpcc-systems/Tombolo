@@ -7,7 +7,6 @@ import moment from 'moment';
 
 function OrbitTable({
   applicationId,
-  updatedbuildInDb,
   dashboardFilters,
   builds,
   setBuilds,
@@ -17,6 +16,8 @@ function OrbitTable({
   setFilteredWorkUnits,
   selectedBuilds,
   setSelectedBuilds,
+  filterValues,
+  setFilterValues,
 }) {
   const [loading, setLoading] = useState(false);
   const location = useLocation();
@@ -40,8 +41,10 @@ function OrbitTable({
       if (
         wuDate > moment(dashboardFilters.dateRange[0]) &&
         wuDate < moment(dashboardFilters.dateRange[1]) &&
-        dashboardFilters.status &&
-        dashboardFilters.status.includes(workUnit.metaData.status.toUpperCase()) &&
+        dashboardFilters.initialStatus &&
+        dashboardFilters.initialStatus.includes(workUnit.metaData.initialStatus.toUpperCase()) &&
+        dashboardFilters.finalStatus &&
+        dashboardFilters.finalStatus.includes(workUnit.metaData.finalStatus.toUpperCase()) &&
         selectedBuildsList.includes(workUnit.name)
       ) {
         return true;
@@ -82,8 +85,6 @@ function OrbitTable({
         setBuilds(filtered);
       }
 
-      console.log(data);
-
       //get work unit information and put it in builds information
 
       const response2 = await fetch(`/api/orbit/getWorkUnits/${applicationId}`, payload);
@@ -91,21 +92,15 @@ function OrbitTable({
 
       const data2 = await response2.json();
 
-      console.log(data2);
+      let builds2 = [];
 
-      //add data2 workunits to matching builds
-
-      const builds2 = data.map((build) => {
-        const wu = data2.filter((workUnit) => workUnit.name === build.build);
-        return { ...build, workUnits: wu };
-      });
-
-      //add count to the builds for reporting later
-      builds2.forEach((build) => {
-        build.count = wuCounter(build);
-      });
-
-      setBuilds(builds2);
+      await Promise.all(
+        //add data2 workunits to matching builds
+        (builds2 = data.map((build) => {
+          const wu = data2.filter((workUnit) => workUnit.name === build.build);
+          return { ...build, workUnits: wu };
+        }))
+      );
 
       //combine and set work units
       let totalWuList = data2;
@@ -118,40 +113,91 @@ function OrbitTable({
 
       totalWuList.forEach((workUnit) => {
         workUnit.initialStatus = workUnit.metaData.initialStatus;
-        workUnit.finalStatus = workUnit.metaData.status;
+        workUnit.finalStatus = workUnit.metaData.finalStatus;
         workUnit.version = workUnit.metaData.version;
         workUnit.status = workUnit.metaData.status;
       });
 
+      //get all the unique values for the filters and dropdowns
+
+      //get unique values
+      const uniqueInitialStatus = [...new Set(totalWuList.map((item) => item.initialStatus.toUpperCase()))];
+      const uniqueFinalStatus = [...new Set(totalWuList.map((item) => item.finalStatus.toUpperCase()))];
+      const uniqueVersion = [...new Set(totalWuList.map((item) => item.version))];
+      const uniqueSeverity = [...new Set(builds2.map((item) => item.severityCode))];
+
+      //create options for dropdowns
+      const uniqueInitialStatusOptions = [];
+      uniqueInitialStatus.forEach((item) => uniqueInitialStatusOptions.push({ label: item, value: item }));
+      const uniqueFinalStatusOptions = [];
+      uniqueFinalStatus.forEach((item) => uniqueFinalStatusOptions.push({ label: item, value: item }));
+      const uniqueVersionOptions = [];
+      uniqueVersion.forEach((item) => uniqueVersionOptions.push({ label: item, value: item }));
+      const uniqueSeverityOptions = [];
+      uniqueSeverity.forEach((item) => uniqueSeverityOptions.push({ label: item, value: item }));
+
+      //set them in state
+      await setFilterValues((filterValues) => ({
+        ...filterValues,
+        initialStatus: uniqueInitialStatus,
+        initialStatusOptions: uniqueInitialStatusOptions,
+        finalStatus: uniqueFinalStatus,
+        finalStatusOptions: uniqueFinalStatusOptions,
+        version: uniqueVersion,
+        versionOptions: uniqueVersionOptions,
+        severity: uniqueSeverity,
+        severityOptions: uniqueSeverityOptions,
+        dateRange: [moment().subtract(15, 'days'), moment()],
+        groupDataBy: 'day',
+      }));
+
       await setWorkUnits(totalWuList);
 
       await setFilteredWorkUnits(totalWuList);
+
+      await setBuilds(builds2);
     } catch (error) {
       message.error('Failed to fetch builds' + error);
       console.log(error);
     }
   };
 
-  const wuCounter = (record) => {
-    let count = 0;
-
-    if (record.workUnits?.length > 0) {
-      record.workUnits.forEach((workUnit) => {
-        let wuDate = moment(workUnit.metaData.lastRun);
-
-        if (
-          dashboardFilters?.dateRange &&
-          wuDate > moment(dashboardFilters?.dateRange[0]) &&
-          wuDate < moment(dashboardFilters?.dateRange[1]) &&
-          dashboardFilters.status &&
-          dashboardFilters.status.includes(workUnit.metaData.status)
-        ) {
-          count++;
-        }
-      });
+  //when builds are loaded/changed, if there is not a count, get counts
+  useEffect(() => {
+    if (!builds.length) return;
+    if (builds.length > 0 && builds[0].count !== undefined) {
+      return;
+    } else {
+      getCounts();
     }
+  }, [builds, dashboardFilters]);
 
-    return count;
+  const getCounts = () => {
+    let builds2 = [];
+    builds.forEach((build) => {
+      let count = 0;
+
+      if (build.workUnits?.length > 0) {
+        build.workUnits.forEach((workUnit) => {
+          let wuDate = moment(workUnit.metaData.lastRun);
+
+          if (
+            dashboardFilters?.dateRange &&
+            wuDate > moment(dashboardFilters?.dateRange[0]) &&
+            wuDate < moment(dashboardFilters?.dateRange[1]) &&
+            dashboardFilters.initialStatus &&
+            dashboardFilters.initialStatus.includes(workUnit.metaData.initialStatus) &&
+            dashboardFilters.finalStatus &&
+            dashboardFilters.finalStatus.includes(workUnit.metaData.finalStatus)
+          ) {
+            count++;
+          }
+        });
+      }
+
+      builds2.push({ ...build, count: count });
+    });
+    setBuilds(builds2);
   };
 
   //Table columns and data

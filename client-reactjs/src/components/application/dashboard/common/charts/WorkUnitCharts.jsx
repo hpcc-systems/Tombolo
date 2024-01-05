@@ -1,7 +1,7 @@
 /* eslint-disable prettier/prettier */
 import React from 'react';
 import { Resizable } from 're-resizable';
-import Pie from './Pie';
+// import Pie from './Pie';
 import StackedBar from './StackedBar';
 import Donut from './Donut';
 
@@ -18,7 +18,7 @@ function WorkUnitCharts({ metrics, stackBarData, groupDataBy, donutData }) {
       <Resizable style={{ border: '1px solid lightgray', marginRight: '10px' }}>
         <div style={{ padding: '20px' }}>
           <h3 className="chartLabel">{metrics[metrics.length - 1]?.title}</h3>
-          {<Pie metrics={metrics} />}{' '}
+          {<Donut donutData={metrics} />}{' '}
         </div>
       </Resizable>
 

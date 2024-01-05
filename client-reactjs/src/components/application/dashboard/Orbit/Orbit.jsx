@@ -18,10 +18,30 @@ function Orbit() {
   const [metrics, setMetrics] = useState([]);
   const [stackBarData, setStackBarData] = useState([]);
   const [donutData, setDonutData] = useState([]);
+  const [severity, setSeverity] = useState(['0', '1', '2', '3']);
   const [groupDataBy, setGroupDataBy] = useState('day');
   const [dashboardFilters, setDashboardFilters] = useState({});
   const [filteredWorkUnits, setFilteredWorkUnits] = useState([]);
   const [selectedBuilds, setSelectedBuilds] = useState([]);
+  const [filterValues, setFilterValues] = useState({
+    initialStatus: [],
+    initialStatusOptions: [],
+    finalStatus: [],
+    finalStatusOptions: [],
+    version: [],
+    versionOptions: [],
+    severity: [],
+    severityOptions: [],
+    groupDataBy: 'day',
+    dateRange: [],
+    groupByOptions: [
+      { value: 'day', label: 'Day' },
+      { value: 'week', label: 'Week' },
+      { value: 'month', label: 'Month' },
+      { value: 'quarter', label: 'Quarter' },
+      { value: 'year', label: 'Year' },
+    ],
+  });
 
   const {
     application: { applicationId },
@@ -150,7 +170,7 @@ function Orbit() {
 
       //---------------------------------------
       for (let key in workUnitCountByFinalStatus) {
-        newMetrics.push({ title: key, description: workUnitCountByFinalStatus[key] });
+        newMetrics.push({ type: key, value: workUnitCountByFinalStatus[key] });
       }
       //---------------------------------------
       for (let key in workUnitCountByInitialStatus) {
@@ -174,23 +194,29 @@ function Orbit() {
     <div>
       <Tabs
         tabBarExtraContent={
-          <Space>
-            <ExportMenu />
-          </Space>
+          <>
+            <Space style={{ marginRight: '1rem' }}>
+              <Filters
+                applicationId={applicationId}
+                setBuilds={setBuilds}
+                setLoadingData={setLoadingData}
+                groupDataBy={groupDataBy}
+                setGroupDataBy={setGroupDataBy}
+                isOrbit={true}
+                dashboardFilters={dashboardFilters}
+                setDashboardFilters={setDashboardFilters}
+                severity={severity}
+                setSeverity={setSeverity}
+                filterValues={filterValues}
+              />
+            </Space>
+            <Space>
+              <ExportMenu />
+            </Space>
+          </>
         }>
         <Tabs.TabPane key="1" tab="Dashboard">
-          <div style={{ width: '100%', marginBottom: '2rem' }}>
-            <Filters
-              applicationId={applicationId}
-              setBuilds={setBuilds}
-              setLoadingData={setLoadingData}
-              groupDataBy={groupDataBy}
-              setGroupDataBy={setGroupDataBy}
-              isOrbit={true}
-              dashboardFilters={dashboardFilters}
-              setDashboardFilters={setDashboardFilters}
-            />
-          </div>
+          <div style={{ width: '100%', marginBottom: '2rem' }}></div>
           <div style={{ width: '100%', marginBottom: '1rem', display: 'flex', justifyContent: 'center' }}>
             <MetricBoxes
               metrics={titleMetrics}
@@ -211,6 +237,8 @@ function Orbit() {
               setFilteredWorkUnits={setFilteredWorkUnits}
               selectedBuilds={selectedBuilds}
               setSelectedBuilds={setSelectedBuilds}
+              filterValues={filterValues}
+              setFilterValues={setFilterValues}
             />
 
             {builds.length > 0 ? (

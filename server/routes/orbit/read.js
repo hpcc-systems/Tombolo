@@ -33,14 +33,9 @@ const dbConfig = {
 
 const runSQLQuery = async (query) => {
   try {
-    var startTime = performance.now();
     await sql.connect(dbConfig);
 
     const result = await sql.query(query);
-
-    var endTime = performance.now();
-
-    console.log(`Call to doSomething took ${endTime - startTime} milliseconds`);
 
     return result;
   } catch (err) {
@@ -155,22 +150,12 @@ router.get(
         return res.status(422).json({ success: false, errors: errors.array() });
       const { application_id } = req.params;
 
-      var startTime = performance.now();
-
       if (!application_id) throw Error("Invalid app ID");
       const result = await orbitMonitoring.findAll({
         where: {
           application_id,
         },
       });
-
-      var endTime = performance.now();
-
-      console.log(
-        `Call to get local orbit Monitorings took ${
-          endTime - startTime
-        } milliseconds`
-      );
 
       res.status(200).send(result);
     } catch (err) {

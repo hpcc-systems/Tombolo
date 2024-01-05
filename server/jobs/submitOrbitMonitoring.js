@@ -81,7 +81,7 @@ const runSQLQuery = async (query) => {
     // Keep track of changes
     const metaDifference = [];
 
-    if (!wuResult || !wuResult.recordset) return;
+    if (!wuResult || !wuResult.recordset || wuResult.recordset[0]) return;
 
     //check for most recent workunit changes and push to metadifference
     if (notifyCondition.includes("buildStatus")) {
@@ -178,6 +178,7 @@ const runSQLQuery = async (query) => {
     //------------------------------------------------------------------------------
     // put result into orbitbuilds table
     //check for status changes of the all gathered workunits
+
     await Promise.all(
       wuResult.recordset.map(async (result) => {
         //check if result is is orbitbuilds table
@@ -202,6 +203,7 @@ const runSQLQuery = async (query) => {
             { where: { id: orbitBuild.id } }
           );
         } else {
+          console.log("new build found, creating it!!" + result);
           //if it doesn't, create it
           await orbitBuilds.create({
             application_id: application_id,

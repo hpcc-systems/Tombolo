@@ -28,7 +28,7 @@ module.exports = {
       body += `<div>${keys}: ${details[keys]}</div>`;
     }
 
-    if (tableRows !== "") {
+    if (tableRows !== "2") {
       body = body + table;
     }
 

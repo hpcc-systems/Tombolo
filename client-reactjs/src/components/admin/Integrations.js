@@ -14,6 +14,7 @@ const Integrations = () => {
   const [confirmLoading, setConfirmLoading] = useState(false);
   const [selectedIntegration, setSelectedIntegration] = useState({});
   const [notifications, setNotifications] = useState({});
+  const [active, setActive] = useState(false);
   const [notificationForm] = Form.useForm();
   const windowSize = useWindowSize();
 
@@ -65,11 +66,15 @@ const Integrations = () => {
   const handleSave = async () => {
     setConfirmLoading(true);
 
+    const body = { notifications, active: { megaphoneActive: active } };
+
     const payload = {
       method: 'PUT',
       header: authHeader(),
-      body: JSON.stringify(notifications),
+      body: JSON.stringify(body),
     };
+
+    console.log(payload.body);
     const response = await fetch(`/api/integrations/update/${applicationId}/${selectedIntegration.name}`, payload);
 
     if (response.ok) {
@@ -157,7 +162,12 @@ const Integrations = () => {
         <Form layout="vertical" form={notificationForm} initialValues={{ monitoringActive: true }}>
           <h3>Megaphone Notification Settings</h3>
           <Form.Item name="megaphone" label="Active">
-            <Switch defaultChecked></Switch>
+            <Switch
+              defaultChecked={selectedIntegration?.config?.megaphoneActive || false}
+              value={selectedIntegration?.config?.megaphoneActive || false}
+              onChange={(e) => {
+                setActive(e);
+              }}></Switch>
           </Form.Item>
           <Form.Item
             label="Notification Emails"
@@ -175,6 +185,15 @@ const Integrations = () => {
             validateTrigger={['onChange', 'onBlur']}>
             <Input
               onChange={(e) => setNotifications({ ...notifications, notificationWebhooks: e.target.value })}></Input>
+          </Form.Item>
+          <Form.Item
+            label="Severity 3 Notification Emails"
+            style={{ width: '100%' }}
+            name="notificationEmailsSev3"
+            initialValue={selectedIntegration.metaData?.notificationEmailsSev3}
+            validateTrigger={['onChange', 'onBlur']}>
+            <Input
+              onChange={(e) => setNotifications({ ...notifications, notificationEmailsSev3: e.target.value })}></Input>
           </Form.Item>
         </Form>
       </Modal>
