@@ -4,10 +4,12 @@ import { message } from 'antd';
 import AddBtn from './AddBtn';
 import MsTeamsHookTable from './MsTeamsHookTable';
 import AddEditModel from './AddEditModel';
+import VewHookDetails from './VewHookDetails';
 import { authHeader } from '../../../common/AuthHeader';
 
 function Teams() {
   const [modalVisibility, setModalVisibility] = useState(false);
+  const [showHooksDetailModal, setShowHooksDetailModal] = useState(false);
   const [selectedHook, setSelectedHook] = useState(null);
   const [hooks, setHooks] = useState([]);
 
@@ -58,7 +60,18 @@ function Teams() {
         hooks={hooks}
         setHooks={setHooks}
       />
-      <MsTeamsHookTable hooks={hooks} setHooks={setHooks} editHook={editHook} />
+      <MsTeamsHookTable
+        hooks={hooks}
+        setHooks={setHooks}
+        editHook={editHook}
+        setSelectedHook={setSelectedHook}
+        setShowHooksDetailModal={setShowHooksDetailModal}
+      />
+      <VewHookDetails
+        showHooksDetailModal={showHooksDetailModal}
+        setShowHooksDetailModal={setShowHooksDetailModal}
+        selectedHook={selectedHook}
+      />
     </>
   );
 }

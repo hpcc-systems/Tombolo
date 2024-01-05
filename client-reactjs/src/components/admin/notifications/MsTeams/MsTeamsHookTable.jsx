@@ -1,16 +1,21 @@
 import React from 'react';
 import { Table, Tooltip, Button, message, Popconfirm } from 'antd';
-import { EditOutlined, DeleteOutlined } from '@ant-design/icons';
+import { EditOutlined, DeleteOutlined, EyeOutlined } from '@ant-design/icons';
 
 import { authHeader } from '../../../common/AuthHeader';
 import { Constants } from '../../../common/Constants';
 
-const MsTeamsHookTable = ({ hooks, editHook, setHooks }) => {
+const MsTeamsHookTable = ({ hooks, editHook, setHooks, setShowHooksDetailModal, setSelectedHook }) => {
+  // When view hook details button is clicked
+  const handleViewHookDetailsBtnClick = (record) => {
+    setSelectedHook(record);
+    setShowHooksDetailModal(true);
+  };
+  //Columns
   const columns = [
     {
       title: 'Name',
       dataIndex: 'name',
-      render: (text) => <strong>{text}</strong>,
     },
     {
       title: 'URL',
@@ -45,6 +50,7 @@ const MsTeamsHookTable = ({ hooks, editHook, setHooks }) => {
       title: 'Actions',
       render: (_, record) => (
         <>
+          <Button type="link" icon={<EyeOutlined />} onClick={() => handleViewHookDetailsBtnClick(record)} />
           <Button type="link" icon={<EditOutlined />} onClick={() => editHook(record)} />
           <Popconfirm
             title="Are you sure you want to delete this hook?"
