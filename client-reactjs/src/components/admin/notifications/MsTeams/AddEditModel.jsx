@@ -90,10 +90,23 @@ const AddEditModel = ({ visible, setModalVisibility, hooks, setHooks, isEditing,
               pattern: /^[a-zA-Z0-9() _-]+$/,
               message: 'Valid characters for hook name includes a-z, A-Z, 0-9, (, ), -, and _',
             },
+            {
+              max: 100,
+              message: 'Name cannot be longer than 100 characters',
+            },
           ]}>
           <Input placeholder="Name" />
         </Form.Item>
-        <Form.Item name="url" label="URL" rules={[{ required: true, message: 'Please enter a URL' }]}>
+        <Form.Item
+          name="url"
+          label="URL"
+          rules={[
+            { required: true, message: 'Please enter a URL' },
+            {
+              max: 350,
+              message: 'The hook URL cannot be longer than 350 characters',
+            },
+          ]}>
           <Input placeholder="URL" />
         </Form.Item>
       </Form>
