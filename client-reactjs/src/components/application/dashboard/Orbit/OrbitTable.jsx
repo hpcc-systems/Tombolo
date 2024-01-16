@@ -77,6 +77,8 @@ function OrbitTable({
 
   //Get list of all builds, workunits, and set initial values and filters
   const getbuilds = async (monitoringId) => {
+    var startTime = performance.now();
+
     try {
       setLoading(true);
       const payload = {
@@ -211,6 +213,10 @@ function OrbitTable({
       await setFilteredWorkUnits(totalWuList);
 
       await setBuilds(builds2);
+
+      var endTime = performance.now();
+
+      console.log(`getting builds and setting initial filters took ${endTime - startTime} milliseconds`);
     } catch (error) {
       message.error('Failed to fetch builds' + error);
       console.log(error);
@@ -223,7 +229,11 @@ function OrbitTable({
     if (filteredBuilds.length > 0 && filteredBuilds[0].count !== undefined) {
       return;
     } else {
+      var startTime = performance.now();
       getCounts();
+      var endTime = performance.now();
+
+      console.log(`getting counts takes ${endTime - startTime} milliseconds`);
     }
   }, [filteredBuilds, dashboardFilters]);
 

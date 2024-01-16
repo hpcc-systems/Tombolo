@@ -70,6 +70,7 @@ function Orbit() {
   // When build changes run
   useEffect(() => {
     if (filteredWorkUnits) {
+      var startTime = performance.now();
       const newMetrics = []; // Pie data
       const newStackBarData = []; // Stack bar Data
       const newDonutData = []; // Donut data
@@ -195,6 +196,9 @@ function Orbit() {
       setMetrics(newMetrics);
       setStackBarData(newStackBarData);
       setDonutData(newDonutData);
+      var endTime = performance.now();
+
+      console.log(`setting visible chart data takes ${endTime - startTime} milliseconds`);
     }
   }, [builds, filteredBuilds, filteredWorkUnits, groupDataBy]);
 
