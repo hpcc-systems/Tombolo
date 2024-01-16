@@ -44,6 +44,7 @@ function Filters({ groupDataBy, setGroupDataBy, dashboardFilters, setDashboardFi
     const todaysDate = new Date(date.getFullYear(), date.getMonth(), date.getDate() + 1);
     return current && current >= todaysDate;
   };
+
   // When filters are changed - add to url params to persist on page refresh
   const updateParams = (param) => {
     const newParams = new URLSearchParams();
@@ -60,81 +61,20 @@ function Filters({ groupDataBy, setGroupDataBy, dashboardFilters, setDashboardFi
 
   //function to select or clear all when select all boxes are checked
   const selectAll = (e, option) => {
-    if (e.target.checked) {
-      switch (option) {
-        case 'final':
-          {
-            form.setFieldsValue({ finalStatus: filterValues.finalStatusOptions.map((option) => option.value) });
-            setDashboardFilters((prev) => ({
-              ...prev,
-              finalStatus: filterValues.finalStatusOptions.map((option) => option.value),
-            }));
-            updateParams({ finalStatus: filterValues.finalStatusOptions.map((option) => option.value) });
-          }
-          break;
-        case 'initial':
-          {
-            form.setFieldsValue({ initialStatus: filterValues.initialStatusOptions.map((option) => option.value) });
-            setDashboardFilters((prev) => ({
-              ...prev,
-              initialStatus: filterValues.initialStatusOptions.map((option) => option.value),
-            }));
-            updateParams({ initialStatus: filterValues.initialStatusOptions.map((option) => option.value) });
-          }
-          break;
-        case 'version':
-          {
-            form.setFieldsValue({ version: filterValues.versionOptions.map((option) => option.value) });
-            setDashboardFilters((prev) => ({
-              ...prev,
-              version: filterValues.versionOptions.map((option) => option.value),
-            }));
-          }
-          break;
-        case 'wuid':
-          {
-            form.setFieldsValue({ wuid: filterValues.wuidOptions.map((option) => option.value) });
-            setDashboardFilters((prev) => ({
-              ...prev,
-              wuid: filterValues.wuidOptions.map((option) => option.value),
-            }));
-          }
-          break;
-        default:
-          null;
-      }
-    } else {
-      switch (option) {
-        case 'final':
-          {
-            form.setFieldsValue({ finalStatus: [] });
-            setDashboardFilters((prev) => ({ ...prev, finalStatus: [] }));
-            updateParams({ finalStatus: [] });
-          }
-          break;
-        case 'initial':
-          {
-            form.setFieldsValue({ initialStatus: [] });
-            setDashboardFilters((prev) => ({ ...prev, initialStatus: [] }));
-            updateParams({ initialStatus: [] });
-          }
-          break;
+    //concatenate so we can dyanmically call the correct state variable to avoid case/switch
+    const optionConcat = option + 'Options';
 
-        case 'version':
-          {
-            form.setFieldsValue({ version: [] });
-            setDashboardFilters((prev) => ({ ...prev, version: [] }));
-          }
-          break;
-        case 'wuid':
-          {
-            form.setFieldsValue({ wuid: [] });
-            setDashboardFilters((prev) => ({ ...prev, wuid: [] }));
-          }
-          break;
-        default:
-          null;
-      }
+    if (e.target.checked) {
+      form.setFieldsValue({ [option]: filterValues[optionConcat].map((option) => option.value) });
+      setDashboardFilters((prev) => ({
+        ...prev,
+        [option]: filterValues[optionConcat].map((option) => option.value),
+      }));
+      updateParams({ [option]: filterValues[optionConcat].map((option) => option.value) });
+    } else {
+      form.setFieldsValue({ [option]: [] });
+      setDashboardFilters((prev) => ({ ...prev, [option]: [] }));
+      updateParams({ [option]: [] });
     }
   };
 
@@ -174,7 +114,7 @@ function Filters({ groupDataBy, setGroupDataBy, dashboardFilters, setDashboardFi
                           dashboardFilters.initialStatus?.length === filterValues.initialStatusOptions.length
                         }
                         style={{ marginBottom: '1rem' }}
-                        onChange={(e) => selectAll(e, 'initial')}>
+                        onChange={(e) => selectAll(e, 'initialStatus')}>
                         Select All
                       </Checkbox>
 
@@ -208,7 +148,7 @@ function Filters({ groupDataBy, setGroupDataBy, dashboardFilters, setDashboardFi
                       <Checkbox
                         defaultChecked={dashboardFilters.finalStatus?.length === filterValues.finalStatusOptions.length}
                         style={{ marginBottom: '1rem' }}
-                        onChange={(e) => selectAll(e, 'final')}>
+                        onChange={(e) => selectAll(e, 'finalStatus')}>
                         Select All
                       </Checkbox>
 
