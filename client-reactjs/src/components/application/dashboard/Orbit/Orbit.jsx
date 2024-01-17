@@ -26,8 +26,7 @@ function Orbit() {
   const [groupDataBy, setGroupDataBy] = useState('day');
 
   //states for filters
-  const [dashboardFilters, setDashboardFilters] = useState({});
-  const [filterValues, setFilterValues] = useState({
+  const [dashboardFilters, setDashboardFilters] = useState({
     initialStatus: [],
     initialStatusOptions: [],
     finalStatus: [],
@@ -63,21 +62,6 @@ function Orbit() {
   const {
     application: { applicationId },
   } = useSelector((item) => item.applicationReducer);
-
-  // useEffect(() => {
-  //   if (filteredWorkUnits !== null) {
-  //     const groupedData = filteredWorkUnits.map((workUnit) => {
-  //       const weekStart = moment(workUnit.lastRun).startOf('week').format('MM/DD/YY');
-  //       const weekEnd = moment(workUnit.lastRun).endOf('week').format('MM/DD/YY');
-  //       const updatedItem = { ...workUnit };
-  //       updatedItem.metaData.lastRun = `${weekStart} - ${weekEnd}`;
-  //       return updatedItem;
-  //     });
-  //     setStackBarData(groupedData);
-
-  //     console.log(groupedData);
-  //   }
-  // }, [groupDataBy]);
 
   // Step 1 - first we are loading the initial builds and workunits into state
   useEffect(() => {
@@ -194,8 +178,8 @@ function Orbit() {
       setBuilds(builds2);
 
       //set them in state for the initial load
-      setFilterValues((filterValues) => ({
-        ...filterValues,
+      setDashboardFilters((dashboardFilters) => ({
+        ...dashboardFilters,
         initialStatus: filters.initialStatus?.length ? filters.initialStatus : uniqueInitialStatus,
         initialStatusOptions: uniqueInitialStatusOptions,
         finalStatus: filters.finalStatus?.length ? filters.finalStatus : uniqueFinalStatus,
@@ -225,15 +209,7 @@ function Orbit() {
     }
   };
 
-  //Step 2 - now we are setting the intial filters
-  useEffect(() => {
-    if (!Object.keys(dashboardFilters).length && filterValues.initialStatus.length > 0) {
-      setDashboardFilters(filterValues);
-      return;
-    }
-  }, [filterValues]);
-
-  // Step 3 - now we need to apply the initial filters to the initial data
+  // Step 2 - now we need to apply the initial filters to the initial data
   useEffect(() => {
     //if filtered builds and workunits are empty and the initial data and filters are set, filter data
     if (
@@ -241,7 +217,7 @@ function Orbit() {
       filteredWorkUnits === null &&
       builds.length > 0 &&
       workUnits.length > 0 &&
-      Object.keys(dashboardFilters).length > 0
+      dashboardFilters?.initialStatus.length > 0
     ) {
       filterData();
     }
@@ -294,7 +270,7 @@ function Orbit() {
     console.log(`filtering data took ${endTime - startTime} milliseconds`);
   };
 
-  //Step 4 - now that the filtered builds and workunits are set, we can get the counts and chart data
+  //Step 3 - now that the filtered builds and workunits are set, we can get the counts and chart data
   useEffect(() => {
     if (filteredBuilds !== null && filteredWorkUnits !== null && filteredBuilds[0].count === undefined) {
       getCounts();
@@ -472,7 +448,7 @@ function Orbit() {
     }
   };
 
-  //Step 5 (repeatable) - now we need to re-render the data when it filters change
+  //Step 4 (repeatable) - now we need to re-render the data when it filters change
   useEffect(() => {
     //if dashboard filters are set and filtered builds and workunits
     if (Object.keys(dashboardFilters).length && filteredBuilds !== null && filteredWorkUnits !== null) {
@@ -495,7 +471,6 @@ function Orbit() {
                 isOrbit={true}
                 dashboardFilters={dashboardFilters}
                 setDashboardFilters={setDashboardFilters}
-                filterValues={filterValues}
               />
             </Space>
             <Space>

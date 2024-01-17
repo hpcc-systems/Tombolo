@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useState } from 'react';
 import { Form, Select, DatePicker, Button, Checkbox, Drawer } from 'antd';
 import { useHistory } from 'react-router-dom';
 import { handleError } from '../../../common/AuthHeader.js';
@@ -10,9 +10,8 @@ const layout = {
   labelCol: { span: 24 },
   wrapperCol: { span: 24 },
 };
-function Filters({ groupDataBy, setGroupDataBy, dashboardFilters, setDashboardFilters, filterValues }) {
+function Filters({ groupDataBy, setGroupDataBy, dashboardFilters, setDashboardFilters }) {
   const [form] = Form.useForm();
-
   const history = useHistory();
   const [open, setOpen] = useState(false);
 
@@ -32,12 +31,7 @@ function Filters({ groupDataBy, setGroupDataBy, dashboardFilters, setDashboardFi
       handleError(err);
     }
   };
-  //if there are no dashboard filters set, set them to initial values
-  useEffect(() => {
-    if (!Object.keys(dashboardFilters).length && filterValues.version.length > 0) {
-      setDashboardFilters(filterValues);
-    }
-  }, [dashboardFilters, filterValues]);
+
   // Disable future dates
   const disabledDate = (current) => {
     const date = new Date();
@@ -65,12 +59,12 @@ function Filters({ groupDataBy, setGroupDataBy, dashboardFilters, setDashboardFi
     const optionConcat = option + 'Options';
 
     if (e.target.checked) {
-      form.setFieldsValue({ [option]: filterValues[optionConcat].map((option) => option.value) });
+      form.setFieldsValue({ [option]: dashboardFilters[optionConcat].map((option) => option.value) });
       setDashboardFilters((prev) => ({
         ...prev,
-        [option]: filterValues[optionConcat].map((option) => option.value),
+        [option]: dashboardFilters[optionConcat].map((option) => option.value),
       }));
-      updateParams({ [option]: filterValues[optionConcat].map((option) => option.value) });
+      updateParams({ [option]: dashboardFilters[optionConcat].map((option) => option.value) });
     } else {
       form.setFieldsValue({ [option]: [] });
       setDashboardFilters((prev) => ({ ...prev, [option]: [] }));
@@ -86,18 +80,18 @@ function Filters({ groupDataBy, setGroupDataBy, dashboardFilters, setDashboardFi
       </Button>
       <Drawer title="Dashboard Filters & Slicers" placement="right" onClose={onClose} visible={open}>
         <div style={{ width: '100%', display: 'flex', justifyContent: 'flex-start', alignItems: 'center' }}>
-          <Form {...layout} onFinish={onFinish} className="filters__form" form={form} initialValues={filterValues}>
+          <Form {...layout} onFinish={onFinish} className="filters__form" form={form} initialValues={dashboardFilters}>
             <h2>Workunit Filters</h2>
             <Form.Item
               label={
-                dashboardFilters.initialStatus?.length === filterValues.initialStatusOptions.length
+                dashboardFilters.initialStatus?.length === dashboardFilters.initialStatusOptions.length
                   ? 'Initial Status (all)'
                   : 'Initial Status'
               }
               name="initialStatus"
               style={{ display: 'inline-block', width: '100%' }}>
               <Select
-                options={filterValues?.initialStatusOptions}
+                options={dashboardFilters?.initialStatusOptions}
                 mode="multiple"
                 maxTagCount={1}
                 placeholder="Search"
@@ -111,7 +105,7 @@ function Filters({ groupDataBy, setGroupDataBy, dashboardFilters, setDashboardFi
                     <div style={{ padding: '.5rem' }}>
                       <Checkbox
                         defaultChecked={
-                          dashboardFilters.initialStatus?.length === filterValues.initialStatusOptions.length
+                          dashboardFilters.initialStatus?.length === dashboardFilters.initialStatusOptions.length
                         }
                         style={{ marginBottom: '1rem' }}
                         onChange={(e) => selectAll(e, 'initialStatus')}>
@@ -126,14 +120,14 @@ function Filters({ groupDataBy, setGroupDataBy, dashboardFilters, setDashboardFi
             </Form.Item>
             <Form.Item
               label={
-                dashboardFilters.finalStatus?.length === filterValues.finalStatusOptions.length
+                dashboardFilters.finalStatus?.length === dashboardFilters.finalStatusOptions.length
                   ? 'Final Status (all)'
                   : 'Final Status'
               }
               name="finalStatus"
               style={{ display: 'inline-block', width: '100%' }}>
               <Select
-                options={filterValues?.finalStatusOptions}
+                options={dashboardFilters?.finalStatusOptions}
                 mode="multiple"
                 maxTagCount={1}
                 placeholder="Search"
@@ -146,7 +140,9 @@ function Filters({ groupDataBy, setGroupDataBy, dashboardFilters, setDashboardFi
                   <>
                     <div style={{ padding: '.5rem' }}>
                       <Checkbox
-                        defaultChecked={dashboardFilters.finalStatus?.length === filterValues.finalStatusOptions.length}
+                        defaultChecked={
+                          dashboardFilters.finalStatus?.length === dashboardFilters.finalStatusOptions.length
+                        }
                         style={{ marginBottom: '1rem' }}
                         onChange={(e) => selectAll(e, 'finalStatus')}>
                         Select All
@@ -162,11 +158,13 @@ function Filters({ groupDataBy, setGroupDataBy, dashboardFilters, setDashboardFi
             <Form.Item
               name={'version'}
               label={
-                dashboardFilters.version?.length === filterValues.versionOptions.length ? 'Version (all)' : 'Version'
+                dashboardFilters.version?.length === dashboardFilters.versionOptions.length
+                  ? 'Version (all)'
+                  : 'Version'
               }
               style={{ display: 'inline-block', width: '100%' }}>
               <Select
-                options={filterValues?.versionOptions}
+                options={dashboardFilters?.versionOptions}
                 mode="multiple"
                 maxTagCount={1}
                 onChange={(values) => {
@@ -176,7 +174,7 @@ function Filters({ groupDataBy, setGroupDataBy, dashboardFilters, setDashboardFi
                   <>
                     <div style={{ padding: '.5rem' }}>
                       <Checkbox
-                        defaultChecked={dashboardFilters.version?.length === filterValues.versionOptions.length}
+                        defaultChecked={dashboardFilters.version?.length === dashboardFilters.versionOptions.length}
                         style={{ marginBottom: '1rem' }}
                         onChange={(e) => selectAll(e, 'version')}>
                         Select All
@@ -190,10 +188,10 @@ function Filters({ groupDataBy, setGroupDataBy, dashboardFilters, setDashboardFi
 
             <Form.Item
               name={'wuid'}
-              label={dashboardFilters.wuid?.length === filterValues.wuidOptions.length ? 'WUIDs (all)' : 'WUIDs'}
+              label={dashboardFilters.wuid?.length === dashboardFilters.wuidOptions.length ? 'WUIDs (all)' : 'WUIDs'}
               style={{ display: 'inline-block', width: '100%' }}>
               <Select
-                options={filterValues?.wuidOptions}
+                options={dashboardFilters?.wuidOptions}
                 mode="multiple"
                 maxTagCount={1}
                 onChange={(values) => {
@@ -203,7 +201,7 @@ function Filters({ groupDataBy, setGroupDataBy, dashboardFilters, setDashboardFi
                   <>
                     <div style={{ padding: '.5rem' }}>
                       <Checkbox
-                        defaultChecked={dashboardFilters.wuid?.length === filterValues.wuidOptions.length}
+                        defaultChecked={dashboardFilters.wuid?.length === dashboardFilters.wuidOptions.length}
                         style={{ marginBottom: '1rem' }}
                         onChange={(e) => selectAll(e, 'wuid')}>
                         Select All
@@ -218,10 +216,12 @@ function Filters({ groupDataBy, setGroupDataBy, dashboardFilters, setDashboardFi
             <h2 style={{ marginTop: '2rem' }}>Build Filters</h2>
             <Form.Item
               name={'builds'}
-              label={dashboardFilters.builds?.length === filterValues.buildsOptions?.length ? 'Builds (all)' : 'Builds'}
+              label={
+                dashboardFilters.builds?.length === dashboardFilters.buildsOptions?.length ? 'Builds (all)' : 'Builds'
+              }
               style={{ display: 'inline-block', width: '100%' }}>
               <Select
-                options={filterValues?.buildsOptions}
+                options={dashboardFilters?.buildsOptions}
                 mode="multiple"
                 maxTagCount={0}
                 onChange={(values) => {
@@ -231,13 +231,13 @@ function Filters({ groupDataBy, setGroupDataBy, dashboardFilters, setDashboardFi
             <Form.Item
               name={'businessUnits'}
               label={
-                dashboardFilters.businessUnits?.length === filterValues.businessUnitsOptions?.length
+                dashboardFilters.businessUnits?.length === dashboardFilters.businessUnitsOptions?.length
                   ? 'Owners (all)'
                   : 'Owners'
               }
               style={{ display: 'inline-block', width: '100%' }}>
               <Select
-                options={filterValues?.businessUnitsOptions}
+                options={dashboardFilters?.businessUnitsOptions}
                 mode="multiple"
                 maxTagCount={0}
                 onChange={(values) => {
@@ -248,13 +248,13 @@ function Filters({ groupDataBy, setGroupDataBy, dashboardFilters, setDashboardFi
             <Form.Item
               name={'products'}
               label={
-                dashboardFilters.products?.length === filterValues.productsOptions?.length
+                dashboardFilters.products?.length === dashboardFilters.productsOptions?.length
                   ? 'Products (all)'
                   : 'Products'
               }
               style={{ display: 'inline-block', width: '100%' }}>
               <Select
-                options={filterValues?.productsOptions}
+                options={dashboardFilters?.productsOptions}
                 mode="multiple"
                 maxTagCount={0}
                 onChange={(values) => {
@@ -265,13 +265,13 @@ function Filters({ groupDataBy, setGroupDataBy, dashboardFilters, setDashboardFi
             <Form.Item
               name={'severity'}
               label={
-                dashboardFilters.severity?.length === filterValues.severityOptions.length
+                dashboardFilters.severity?.length === dashboardFilters.severityOptions.length
                   ? 'Severity (all)'
                   : 'Severity'
               }
               style={{ display: 'inline-block', width: '100%' }}>
               <Select
-                options={filterValues?.severityOptions}
+                options={dashboardFilters?.severityOptions}
                 mode="multiple"
                 maxTagCount={1}
                 onChange={(values) => {
@@ -310,7 +310,7 @@ function Filters({ groupDataBy, setGroupDataBy, dashboardFilters, setDashboardFi
 
             <Form.Item name={'groupDataBy'} label="Group By" style={{ display: 'inline-block', width: '100%' }}>
               <Select
-                options={filterValues.groupByOptions}
+                options={dashboardFilters.groupByOptions}
                 value={groupDataBy}
                 onSelect={(value) => {
                   setGroupDataBy(value);
