@@ -4,50 +4,103 @@ module.exports = (sequelize, DataTypes) => {
     "jobMonitoring",
     {
       id: {
+        allowNull: false,
         primaryKey: true,
         type: DataTypes.UUID,
         defaultValue: DataTypes.UUIDV4,
-        allowNull: false,
-        autoIncrement: false,
       },
-      name: {
+      applicationId: {
+        type: DataTypes.UUID,
+        allowNull: false,
+      },
+      monitoringName: {
         allowNull: false,
         type: DataTypes.STRING,
         unique: true,
       },
-      cron: {
+      isActive: {
+        allowNull: false,
+        type: DataTypes.BOOLEAN,
+      },
+      // isApproved: {
+      //   allowNull: true,
+      //   type: DataTypes.BOOLEAN,
+      // },
+      approvalStatus:{
+        allowNull: false,
+        type: DataTypes.ENUM("Approved", "Rejected", "Pending"),
+      },
+      approvedBy: {
+        allowNull: true,
+        type: DataTypes.STRING,
+      },
+      approvedAt:{
+        allowNull: true,
+        type: DataTypes.DATE,
+      },
+      approverComment: {
+        allowNull: true,
+        type: DataTypes.STRING,
+      },
+      description: {
+        allowNull: false,
+        type: DataTypes.TEXT,
+      },
+      monitoringScope: {
         allowNull: false,
         type: DataTypes.STRING,
       },
-      application_id: {
-        allowNull: false,
+      clusterId: {
         type: DataTypes.UUID,
+        allowNull: false,
       },
-      cluster_id: {
-        type: DataTypes.UUID,
+      jobName: {
         allowNull: false,
+        type: DataTypes.STRING,
       },
       metaData: {
+        allowNull: false,
         type: DataTypes.JSON,
-        allowNull: true,
       },
-      isActive: {
-        type: DataTypes.BOOLEAN,
+      createdBy: {
+        allowNull: false,
+        type: DataTypes.STRING,
+      },
+      lastUpdatedBy: {
+        allowNull: false,
+        type: DataTypes.STRING,
+      },
+      createdAt: {
+        allowNull: false,
+        type: DataTypes.DATE,
+      },
+      updatedAt: {
+        allowNull: false,
+        type: DataTypes.DATE,
+      },
+      deletedAt: {
         allowNull: true,
+        type: DataTypes.DATE,
       },
     },
-    { paranoid: true, freezeTableName: true }
+    {
+      paranoid: true,
+      freezeTableName: true,
+    }
   );
+
   JobMonitoring.associate = function (models) {
-    // Define association here
-    JobMonitoring.belongsTo(models.cluster, { foreignKey: "cluster_id" });
     JobMonitoring.belongsTo(models.application, {
-      foreignKey: "application_id",
-    });
-    JobMonitoring.hasMany(models.monitoring_notifications, {
-      foreignKey: "application_id",
+      foreignKey: "applicationId",
       onDelete: "CASCADE",
+      onUpdate: "CASCADE",
+    });
+    JobMonitoring.belongsTo(models.cluster, {
+      foreignKey: "clusterId",
+      onDelete: "NO ACTION",
+      onUpdate: "CASCADE",
     });
   };
+
   return JobMonitoring;
 };
