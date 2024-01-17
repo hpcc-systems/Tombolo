@@ -26,37 +26,10 @@ function Orbit() {
   const [groupDataBy, setGroupDataBy] = useState('day');
 
   //states for filters
-  const [dashboardFilters, setDashboardFilters] = useState({
-    initialStatus: [],
-    initialStatusOptions: [],
-    finalStatus: [],
-    finalStatusOptions: [],
-    version: [],
-    versionOptions: [],
-    severity: [],
-    severityOptions: [],
-    builds: [],
-    buildsOptions: [],
-    products: [],
-    productsOptions: [],
-    businessUnits: [],
-    businessUnitsOptions: [],
-    wuid: [],
-    wuidOptions: [],
-    groupDataBy: 'day',
-    dateRange: [],
-    groupByOptions: [
-      { value: 'day', label: 'Day' },
-      { value: 'week', label: 'Week' },
-      { value: 'month', label: 'Month' },
-      { value: 'quarter', label: 'Quarter' },
-      { value: 'year', label: 'Year' },
-    ],
-  });
+  const [dashboardFilters, setDashboardFilters] = useState({});
 
   //states for spinners
   const [loading, setLoading] = useState(false);
-  const [loadingData, setLoadingData] = useState(true);
 
   //grab the application ID from redux
   const {
@@ -110,7 +83,7 @@ function Orbit() {
         return new Date(b.metaData.lastRun) - new Date(a.metaData.lastRun);
       });
 
-      //move initial status, final status, and version to top level of object
+      //move initial status, final status, and version to top level of object to make them easier to work with
       totalWuList.forEach((workUnit) => {
         workUnit.key = workUnit.id;
         workUnit.initialStatus = workUnit.metaData.initialStatus;
@@ -119,8 +92,6 @@ function Orbit() {
         workUnit.status = workUnit.metaData.status;
         workUnit.lastRun = workUnit.metaData.lastRun;
       });
-
-      //get all the unique values for the filters and dropdowns
 
       //get unique values from workunit list
       const uniqueInitialStatus = [...new Set(totalWuList.map((item) => item.initialStatus.toUpperCase()))];
@@ -217,7 +188,7 @@ function Orbit() {
       filteredWorkUnits === null &&
       builds.length > 0 &&
       workUnits.length > 0 &&
-      dashboardFilters?.initialStatus.length > 0
+      dashboardFilters?.initialStatus?.length > 0
     ) {
       filterData();
     }
@@ -465,7 +436,6 @@ function Orbit() {
               <Filters
                 applicationId={applicationId}
                 setBuilds={setBuilds}
-                setLoadingData={setLoadingData}
                 groupDataBy={groupDataBy}
                 setGroupDataBy={setGroupDataBy}
                 isOrbit={true}
@@ -501,7 +471,7 @@ function Orbit() {
                   donutData={donutData}
                 />
               </div>
-            ) : loadingData ? (
+            ) : loading ? (
               <div style={{ width: '82%', textAlign: 'center', marginTop: '50px' }}>
                 <Spin />
               </div>

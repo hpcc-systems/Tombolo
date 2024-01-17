@@ -84,7 +84,7 @@ function Filters({ groupDataBy, setGroupDataBy, dashboardFilters, setDashboardFi
             <h2>Workunit Filters</h2>
             <Form.Item
               label={
-                dashboardFilters.initialStatus?.length === dashboardFilters.initialStatusOptions.length
+                dashboardFilters?.initialStatus?.length === dashboardFilters?.initialStatusOptions?.length
                   ? 'Initial Status (all)'
                   : 'Initial Status'
               }
@@ -105,7 +105,7 @@ function Filters({ groupDataBy, setGroupDataBy, dashboardFilters, setDashboardFi
                     <div style={{ padding: '.5rem' }}>
                       <Checkbox
                         defaultChecked={
-                          dashboardFilters.initialStatus?.length === dashboardFilters.initialStatusOptions.length
+                          dashboardFilters?.initialStatus.length === dashboardFilters?.initialStatusOptions.length
                         }
                         style={{ marginBottom: '1rem' }}
                         onChange={(e) => selectAll(e, 'initialStatus')}>
@@ -120,7 +120,7 @@ function Filters({ groupDataBy, setGroupDataBy, dashboardFilters, setDashboardFi
             </Form.Item>
             <Form.Item
               label={
-                dashboardFilters.finalStatus?.length === dashboardFilters.finalStatusOptions.length
+                dashboardFilters?.finalStatus?.length === dashboardFilters?.finalStatusOptions?.length
                   ? 'Final Status (all)'
                   : 'Final Status'
               }
@@ -141,7 +141,7 @@ function Filters({ groupDataBy, setGroupDataBy, dashboardFilters, setDashboardFi
                     <div style={{ padding: '.5rem' }}>
                       <Checkbox
                         defaultChecked={
-                          dashboardFilters.finalStatus?.length === dashboardFilters.finalStatusOptions.length
+                          dashboardFilters?.finalStatus.length === dashboardFilters.finalStatusOptions.length
                         }
                         style={{ marginBottom: '1rem' }}
                         onChange={(e) => selectAll(e, 'finalStatus')}>
@@ -158,7 +158,7 @@ function Filters({ groupDataBy, setGroupDataBy, dashboardFilters, setDashboardFi
             <Form.Item
               name={'version'}
               label={
-                dashboardFilters.version?.length === dashboardFilters.versionOptions.length
+                dashboardFilters?.version?.length === dashboardFilters?.versionOptions?.length
                   ? 'Version (all)'
                   : 'Version'
               }
@@ -174,7 +174,7 @@ function Filters({ groupDataBy, setGroupDataBy, dashboardFilters, setDashboardFi
                   <>
                     <div style={{ padding: '.5rem' }}>
                       <Checkbox
-                        defaultChecked={dashboardFilters.version?.length === dashboardFilters.versionOptions.length}
+                        defaultChecked={dashboardFilters?.version.length === dashboardFilters.versionOptions.length}
                         style={{ marginBottom: '1rem' }}
                         onChange={(e) => selectAll(e, 'version')}>
                         Select All
@@ -188,7 +188,7 @@ function Filters({ groupDataBy, setGroupDataBy, dashboardFilters, setDashboardFi
 
             <Form.Item
               name={'wuid'}
-              label={dashboardFilters.wuid?.length === dashboardFilters.wuidOptions.length ? 'WUIDs (all)' : 'WUIDs'}
+              label={dashboardFilters?.wuid?.length === dashboardFilters?.wuidOptions?.length ? 'WUIDs (all)' : 'WUIDs'}
               style={{ display: 'inline-block', width: '100%' }}>
               <Select
                 options={dashboardFilters?.wuidOptions}
@@ -201,7 +201,7 @@ function Filters({ groupDataBy, setGroupDataBy, dashboardFilters, setDashboardFi
                   <>
                     <div style={{ padding: '.5rem' }}>
                       <Checkbox
-                        defaultChecked={dashboardFilters.wuid?.length === dashboardFilters.wuidOptions.length}
+                        defaultChecked={dashboardFilters?.wuid.length === dashboardFilters.wuidOptions.length}
                         style={{ marginBottom: '1rem' }}
                         onChange={(e) => selectAll(e, 'wuid')}>
                         Select All
@@ -217,7 +217,7 @@ function Filters({ groupDataBy, setGroupDataBy, dashboardFilters, setDashboardFi
             <Form.Item
               name={'builds'}
               label={
-                dashboardFilters.builds?.length === dashboardFilters.buildsOptions?.length ? 'Builds (all)' : 'Builds'
+                dashboardFilters?.builds?.length === dashboardFilters?.buildsOptions?.length ? 'Builds (all)' : 'Builds'
               }
               style={{ display: 'inline-block', width: '100%' }}>
               <Select
@@ -231,7 +231,7 @@ function Filters({ groupDataBy, setGroupDataBy, dashboardFilters, setDashboardFi
             <Form.Item
               name={'businessUnits'}
               label={
-                dashboardFilters.businessUnits?.length === dashboardFilters.businessUnitsOptions?.length
+                dashboardFilters?.businessUnits?.length === dashboardFilters?.businessUnitsOptions?.length
                   ? 'Owners (all)'
                   : 'Owners'
               }
@@ -248,7 +248,7 @@ function Filters({ groupDataBy, setGroupDataBy, dashboardFilters, setDashboardFi
             <Form.Item
               name={'products'}
               label={
-                dashboardFilters.products?.length === dashboardFilters.productsOptions?.length
+                dashboardFilters?.products?.length === dashboardFilters?.productsOptions?.length
                   ? 'Products (all)'
                   : 'Products'
               }
@@ -265,7 +265,7 @@ function Filters({ groupDataBy, setGroupDataBy, dashboardFilters, setDashboardFi
             <Form.Item
               name={'severity'}
               label={
-                dashboardFilters.severity?.length === dashboardFilters.severityOptions.length
+                dashboardFilters?.severity?.length === dashboardFilters?.severityOptions?.length
                   ? 'Severity (all)'
                   : 'Severity'
               }
