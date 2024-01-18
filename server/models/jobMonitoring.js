@@ -22,10 +22,6 @@ module.exports = (sequelize, DataTypes) => {
         allowNull: false,
         type: DataTypes.BOOLEAN,
       },
-      // isApproved: {
-      //   allowNull: true,
-      //   type: DataTypes.BOOLEAN,
-      // },
       approvalStatus:{
         allowNull: false,
         type: DataTypes.ENUM("Approved", "Rejected", "Pending"),

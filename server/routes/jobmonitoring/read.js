@@ -74,7 +74,7 @@ router.post(
     }
   });
 
-  // Patch a single job monitoring with express validator
+  // Patch a single job monitoring
   router.patch( "/",
     [
       body("id").isUUID().withMessage("ID must be a valid UUID"),

@@ -27,11 +27,6 @@ module.exports = {
         allowNull: false,
         type: Sequelize.BOOLEAN,
       },
-      // isApproved: {
-      //   allowNull: true,
-      //   type: Sequelize.BOOLEAN,
-      // },
-
       approvalStatus: {
         allowNull: false,
         type: Sequelize.ENUM("Approved", "Rejected", "Pending"),

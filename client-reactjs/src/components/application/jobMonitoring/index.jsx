@@ -219,6 +219,7 @@ function JobMonitoring() {
 
       //Set newly added job monitoring to jobMonitorings
       const responseData = await response.json();
+
       if (editingData.isEditing) {
         const updatedJobMonitorings = jobMonitorings.map((jobMonitoring) => {
           if (jobMonitoring.id === responseData.id) {
