@@ -1,222 +1,163 @@
 import React from 'react';
-import { Table, Badge, Space, Tooltip, message } from 'antd';
-import { EyeOutlined, DeleteOutlined, PauseCircleOutlined, PlayCircleOutlined, BellOutlined } from '@ant-design/icons';
+import { Table, Tooltip, Popconfirm } from 'antd';
+import { EyeOutlined, EditOutlined, DeleteOutlined, CheckCircleFilled, BellOutlined } from '@ant-design/icons';
 import { Link } from 'react-router-dom';
 
-import { useSelector } from 'react-redux';
-import { authHeader, handleError } from '../../common/AuthHeader.js';
+import { handleDeleteJobMonitoring } from './jobMonitoringUtils';
 
-function JobMonitoringTable({
+//Approve button color
+const approveButtonColor = (approvalStatus) => {
+  if (approvalStatus === 'Pending') {
+    return 'var(--primary)';
+  } else if (approvalStatus === 'Approved') {
+    return 'var(--success)';
+  } else {
+    return 'var(--danger)';
+  }
+};
+
+const JobMonitoringTable = ({
+  setEditingData,
   jobMonitorings,
   setJobMonitorings,
-  applicationId,
   setSelectedMonitoring,
-  setVisible,
-  setSelectedCluster,
-  setNotificationDetails,
-  setMonitoringScope,
-  setNotifyConditions,
-}) {
-  const { clusters } = useSelector((state) => state.applicationReducer);
-
-  //Delete job monitoring
-  const deleteJobMonitoring = async (id) => {
-    try {
-      const payload = {
-        method: 'DELETE',
-        header: authHeader(),
-      };
-
-      const response = await fetch(`/api/jobmonitoring/${id}`, payload);
-      if (!response.ok) return handleError(response);
-      const newJobMonitoringList = jobMonitorings.filter((monitoring) => monitoring.id !== id);
-      setJobMonitorings(newJobMonitoringList);
-    } catch (err) {
-      message.error(err.message);
-    }
-  };
-
-  // Pause or start job monitoring
-  const changeJobMonitoringStatus = async (id) => {
-    try {
-      const payload = {
-        method: 'PUT',
-        header: authHeader(),
-      };
-
-      const response = await fetch(`/api/jobmonitoring/jobMonitoringStatus/${id}`, payload);
-      if (!response.ok) return handleError(response);
-      const newJobMonitoringList = jobMonitorings.map((monitoring) => {
-        if (monitoring.id === id) {
-          return { ...monitoring, isActive: !monitoring.isActive };
-        } else {
-          return monitoring;
-        }
-      });
-      setJobMonitorings(newJobMonitoringList);
-    } catch (err) {
-      message.error(err.message);
-    }
-  };
-
-  // Filter and get  particular job monitoring from list
-  // When component loads and if there is selected monitoring pass data to form instance
-  const viewExistingJobMonitoring = (monitoringId) => {
-    const selectedMonitoringDetails = jobMonitorings.filter((monitoring) =>
-      monitoringId === monitoring.id ? monitoring : null
-    )[0];
-
-    const {
-      metaData: {
-        notifications,
-        monitoringScope,
-        notificationConditions,
-        jobName,
-        costLimits,
-        // costLimits: { maxCompileCost, maxExecutionCost, maxFileAccessCost, maxTotalCost },
-      },
-      cluster_id,
-    } = selectedMonitoringDetails;
-
-    const notificationChannels = [];
-    const notificationRecipients = {};
-    notifications.forEach((notification) => {
-      notificationChannels.push(notification.channel);
-      notificationRecipients[notification.channel] = notification.recipients;
-    });
-
-    const updatedMonitoringDetails = {
-      ...selectedMonitoringDetails,
-      notificationChannels,
-      emails: notificationRecipients.eMail,
-      msTeamsGroups: notificationRecipients.msTeams,
-      monitoringScope,
-      notificationConditions,
-      jobName,
-      maxCompileCost: costLimits?.maxCompileCost,
-      maxExecutionCost: costLimits?.maxExecutionCost,
-      maxFileAccessCost: costLimits?.maxFileAccessCost,
-      maxTotalCost: costLimits?.maxTotalCost,
-    };
-
-    setSelectedMonitoring(updatedMonitoringDetails);
-    setNotifyConditions(notificationConditions);
-    setSelectedCluster(cluster_id);
-    setNotificationDetails({ notificationChannel: notificationChannels });
-    setMonitoringScope(monitoringScope);
-    setVisible(true);
-  };
-
-  //Columns
+  setDisplayAddJobMonitoringModal,
+  setDisplayMonitoringDetailsModal,
+  setDisplayAddRejectModal,
+  applicationId,
+}) => {
+  // Columns for the table
   const columns = [
     {
-      title: 'Status',
-      render: (_, record) => (
-        <>
-          <Badge color={record.isActive ? 'green' : 'red'} text={record.isActive ? 'Active' : 'Paused'} />
-        </>
+      title: 'Monitoring Name',
+      dataIndex: 'monitoringName',
+      key: 'monitoringName',
+    },
+    {
+      title: 'Description',
+      dataIndex: 'description',
+      key: 'description',
+      render: (text) => (
+        <Tooltip title={text}>
+          <span>{text.length > 100 ? `${text.slice(0, 100)}...` : text}</span>
+        </Tooltip>
       ),
     },
-    { title: 'Display Name', dataIndex: 'name' },
     {
-      title: 'Monitoring type',
-      render: () => {
-        return 'Job';
+      title: 'Monitoring Scope',
+      dataIndex: 'monitoringScope',
+      key: 'monitoringScope',
+    },
+    {
+      title: 'Job Name/Pattern',
+      dataIndex: 'jobName',
+      key: 'jobName',
+    },
+    {
+      title: 'Created By',
+      dataIndex: 'createdBy',
+      key: 'createdBy',
+      render: (text) => {
+        const { name, email, id } = JSON.parse(text);
+        return (
+          <Tooltip
+            title={
+              <>
+                <div>ID : {id}</div>
+                <div>E-mail: {email}</div>
+              </>
+            }>
+            <span style={{ color: 'var(--primary' }}>{name}</span>
+          </Tooltip>
+        );
       },
     },
     {
-      title: 'Cluster',
-      dataIndex: 'cluster_id',
-      render: (record) => {
-        if (!clusters) {
-          return record.cluster_id;
-        } else {
-          const cluster = clusters.find((cluster) => cluster.id === record);
-          if (cluster) return cluster.name;
-        }
-      },
-    },
-    { title: 'Schedule', dataIndex: 'cron' },
-    {
-      title: 'Monitoring Created',
-      render: (record) => {
-        let createdAt = new Date(record.createdAt);
-        return createdAt.toLocaleString();
-      },
+      title: 'Active',
+      dataIndex: 'isActive',
+      key: 'isActive',
+      render: (_, record) => (record.isActive && record.approvalStatus === 'Approved' ? 'Yes' : 'No'),
     },
     {
-      title: 'Last Monitored',
-      dataIndex: 'metaData',
-      render: (record) => {
-        let last_monitored = 'NA';
-        if (record?.last_monitored) {
-          last_monitored = new Date(record.last_monitored);
-          last_monitored = last_monitored.toLocaleString();
-        }
-        return last_monitored;
-      },
+      title: 'Approval status',
+      dataIndex: 'approvalStatus',
+      key: 'approvalStatus',
     },
+
     {
       title: 'Actions',
-      dataIndex: 'actions',
+      key: 'actions',
       render: (_, record) => (
-        <Space size="middle">
-          <a>
-            <Tooltip title="View">
-              <EyeOutlined onClick={() => viewExistingJobMonitoring(record.id)} />
-            </Tooltip>
-          </a>
-          {record.isActive ? (
-            <a>
-              <Tooltip title="Pause Monitoring">
-                <PauseCircleOutlined onClick={() => changeJobMonitoringStatus(record.id)} />
-              </Tooltip>
-            </a>
-          ) : (
-            <a>
-              <Tooltip title="Resume Monitoring">
-                <PlayCircleOutlined onClick={() => changeJobMonitoringStatus(record.id)} />
-              </Tooltip>
-            </a>
-          )}
-
-          <a>
-            <Tooltip title="Delete Monitoring">
-              <DeleteOutlined
-                onClick={() => {
-                  deleteJobMonitoring(record.id);
-                }}
-              />
-            </Tooltip>
-          </a>
-
+        <>
+          <Tooltip title="View  Details">
+            <EyeOutlined
+              style={{ color: 'var(--primary)', marginRight: 15 }}
+              onClick={() => viewMonitoringDetails(record)}
+            />
+          </Tooltip>
+          <Tooltip title="Edit">
+            <EditOutlined
+              style={{ color: 'var(--primary)', marginRight: 15 }}
+              onClick={() => editJobMonitoring(record)}
+            />
+          </Tooltip>
+          <Tooltip title="Delete">
+            <Popconfirm
+              title={
+                <>
+                  <div style={{ fontWeight: 'bold' }}>{`Delete ${record.monitoringName}`} </div>
+                  <div style={{ maxWidth: 400 }}>
+                    This action will delete all related data including notifications generated by this monitoring
+                  </div>
+                </>
+              }
+              onConfirm={() => handleDeleteJobMonitoring({ id: record.id, jobMonitorings, setJobMonitorings })}
+              okText="Continue"
+              okButtonProps={{ danger: true }}
+              cancelText="Close"
+              cancelButtonProps={{ type: 'primary', ghost: true }}
+              style={{ width: '500px !important' }}>
+              <DeleteOutlined style={{ color: 'var(--primary)', marginRight: 15 }} />
+            </Popconfirm>
+          </Tooltip>
+          <Tooltip title="Approve">
+            <CheckCircleFilled
+              style={{ color: approveButtonColor(record.approvalStatus), marginRight: 15 }}
+              onClick={() => evaluateMonitoring(record)}
+            />
+          </Tooltip>
           <Tooltip title="Notifications">
-            <Link to={`/${applicationId}/dashboard/notifications?monitoringId=${record.id}`}>
-              <BellOutlined />
+            <Link to={`/${applicationId}/dashboard/notifications?monitoringId=124&monitoringType=jobMonitoring`}>
+              <BellOutlined style={{ color: 'var(--primary)', marginRight: 15 }} />
             </Link>
           </Tooltip>
-        </Space>
+        </>
       ),
     },
   ];
 
-  // Table row class name
-  const getRowClassName = (record) => {
-    if (!record.isActive) {
-      return 'monitoring_table_paused_monitorings clusterMonitoring_table_rows';
-    }
+  // When eye icon is clicked, display the monitoring details modal
+  const viewMonitoringDetails = (record) => {
+    setSelectedMonitoring(record);
+    setDisplayMonitoringDetailsModal(true);
   };
 
-  return (
-    <Table
-      columns={columns}
-      dataSource={jobMonitorings}
-      size={'small'}
-      rowClassName={getRowClassName}
-      className="cluster_monitoring_table"
-      rowKey={(record) => record.id}
-    />
-  );
-}
+  // When edit icon is clicked, display the add job monitoring modal and set the selected monitoring
+  const editJobMonitoring = (record) => {
+    setEditingData((prev) => {
+      setEditingData({ ...prev, isEditing: true, selectedMonitoring: record });
+    });
+    setSelectedMonitoring(record);
+    setDisplayAddJobMonitoringModal(true);
+  };
+
+  // Approve or reject monitoring
+  const evaluateMonitoring = (record) => {
+    setSelectedMonitoring(record);
+    setDisplayAddRejectModal(true);
+  };
+
+  return <Table dataSource={jobMonitorings} columns={columns} rowKey="id" size="small" />;
+};
 
 export default JobMonitoringTable;
