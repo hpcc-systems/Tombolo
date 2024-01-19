@@ -102,6 +102,7 @@ router.post(
         // Validate the req.body
         const errors = validationResult(req);
         if (!errors.isEmpty()) {
+          logger.error(errors);
           return res.status(400).json({ errors: errors.array() });
         }
 
@@ -113,11 +114,22 @@ router.post(
         payload.approvedAt = null;
 
         //Update the job monitoring
-        await JobMonitoring.update(req.body, {
+        const updatedRows = await JobMonitoring.update(req.body, {
           where: { id: req.body.id },
+          returning: true,
         });
-        res.status(200).send(payload);
+
+        //If no rows were updated, then the job monitoring does not exist
+        if (updatedRows[0] === 0) {
+          return res.status(404).send("Job monitoring not found");
+        }
+
+        //If updated - Get the updated job monitoring
+        const updatedJob = await JobMonitoring.findByPk(req.body.id);
+        res.status(200).send(updatedJob);
+
       } catch (err) {
+        console.log(err)
         logger.error(err);
         res.status(500).send("Failed to update job monitoring");
       }

@@ -107,9 +107,9 @@ const AddEditJobMonitoringModal = ({
   };
 
   const handleCancel = () => {
+    form.resetFields();
     setIntermittentScheduling({ schedulingType: 'daily', id: uuidv4() });
     setCompleteSchedule([]);
-    form.resetFields();
     setDisplayAddJobMonitoringModal(false);
     setActiveTab('0');
     setVisitedTabs(['0']);
@@ -117,6 +117,8 @@ const AddEditJobMonitoringModal = ({
     setEditingData({ isEditing: false });
     setErroneousTabs([]);
     setErroneousScheduling(false);
+    setActiveTab('0');
+    setMonitoringScope(null);
   };
 
   //Render footer buttons based on active tab
