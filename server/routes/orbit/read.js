@@ -134,7 +134,7 @@ router.post(
           cron: newOrbitMonitoring.cron,
         };
 
-        jobScheduler.createOrbitMonitoringBreeJob(schedularOptions);
+        jobScheduler.createOrbitMonitoringJob(schedularOptions);
       }
 
       res.status(201).send(newOrbitMonitoring);
@@ -451,7 +451,7 @@ router.put(
           cron: newOrbitMonitoring.cron,
         };
 
-        jobScheduler.createOrbitMonitoringBreeJob(schedularOptions);
+        jobScheduler.createOrbitMonitoringJob(schedularOptions);
       }
 
       // If start monitoring was changed to FALSE
@@ -466,7 +466,7 @@ router.put(
         for (let job of allBreeJobs) {
           if (job.name === jobName) {
             await jobScheduler.removeJobFromScheduler(jobName);
-            await jobScheduler.createOrbitMonitoringBreeJob({
+            await jobScheduler.createOrbitMonitoringJob({
               orbitMonitoring_id: id,
 
               cron: cron,
@@ -519,7 +519,7 @@ router.put(
 
       // If isActive = false, add it to bre
       if (!isActive) {
-        await jobScheduler.createOrbitMonitoringBreeJob({
+        await jobScheduler.createOrbitMonitoringJob({
           orbitMonitoring_id: id,
           cron: cron,
         });
