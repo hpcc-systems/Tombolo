@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { message, Form, Row, Col, AutoComplete, Spin, Select, Input } from 'antd';
 import { authHeader, handleError } from '../../common/AuthHeader.js';
 import { useSelector } from 'react-redux';
@@ -22,30 +22,93 @@ const BasicTab = ({
   //   }
   // }, [orbitBuildDetails]);
 
-  const products = [
-    { label: 'Auto', value: 'auto' },
-    { label: 'Carrier Discovery', value: 'Carrier Discovery' },
-    { label: 'Claims Discovery Auto', value: 'Claims Discovery Auto' },
-    { label: 'Claims Discovery Property', value: 'Claims Discovery Property' },
-    { label: 'CLUE Auto', value: 'CLUE Auto' },
-    { label: 'CLUE Property', value: 'CLUE Property' },
-    { label: 'Commercial CLUE Auto', value: 'Commercial CLUE Auto' },
-    { label: 'Commercial Credit', value: 'Commercial Credit' },
-    { label: 'Current Carrier', value: 'Current Carrier' },
-    { label: 'Driver License', value: 'Driver License' },
-    { label: 'Insurance Payment History', value: 'Insurance Payment History' },
-    { label: 'To Be Determined', value: 'To Be Determined' },
-  ];
+  const [products, setProducts] = useState([]);
+  const [businessUnits, setBusinessUnits] = useState([]);
 
-  const businessUnits = [
-    { label: 'Insurance (INS)', value: 'Insurance (INS)' },
-    { label: 'Public Records (PR)', value: 'Public Records (PR)' },
-    { label: 'United Kingdom (UK)', value: 'United Kingdom (UK)' },
-    { label: 'Yogurt', value: 'Yogurt' },
-  ];
+  // const products = [
+  //   { label: 'Auto', value: 'auto' },
+  //   { label: 'Carrier Discovery', value: 'Carrier Discovery' },
+  //   { label: 'Claims Discovery Auto', value: 'Claims Discovery Auto' },
+  //   { label: 'Claims Discovery Property', value: 'Claims Discovery Property' },
+  //   { label: 'CLUE Auto', value: 'CLUE Auto' },
+  //   { label: 'CLUE Property', value: 'CLUE Property' },
+  //   { label: 'Commercial CLUE Auto', value: 'Commercial CLUE Auto' },
+  //   { label: 'Commercial Credit', value: 'Commercial Credit' },
+  //   { label: 'Current Carrier', value: 'Current Carrier' },
+  //   { label: 'Driver License', value: 'Driver License' },
+  //   { label: 'Insurance Payment History', value: 'Insurance Payment History' },
+  //   { label: 'To Be Determined', value: 'To Be Determined' },
+  // ];
+
+  // const businessUnits = [
+  //   { label: 'Insurance (INS)', value: 'Insurance (INS)' },
+  //   { label: 'Public Records (PR)', value: 'Public Records (PR)' },
+  //   { label: 'United Kingdom (UK)', value: 'United Kingdom (UK)' },
+  //   { label: 'Yogurt', value: 'Yogurt' },
+  // ];
+
   const {
     application: { applicationId },
   } = useSelector((state) => state.applicationReducer);
+
+  useEffect(() => {
+    getProducts();
+    getDomains();
+  }, [applicationId]);
+
+  const getProducts = async () => {
+    try {
+      const options = {
+        method: 'GET',
+        headers: authHeader(),
+      };
+      const response = await fetch(`/api/orbit/getProducts/${applicationId}`, options);
+      if (!response.ok) handleError(response);
+
+      const productOptions = await response.json();
+
+      let finalProductOptions = [];
+
+      productOptions.map((product) => {
+        finalProductOptions.push({ label: product.product_name, value: product.product_name });
+      });
+
+      console.log(productOptions);
+      console.log(finalProductOptions);
+
+      setProducts(finalProductOptions);
+    } catch (error) {
+      console.log(error);
+      message.error('There was an error getting Products from Fido');
+    }
+  };
+
+  const getDomains = async () => {
+    try {
+      const options = {
+        method: 'GET',
+        headers: authHeader(),
+      };
+      const response = await fetch(`/api/orbit/getDomains/${applicationId}`, options);
+      if (!response.ok) handleError(response);
+
+      const domainOptions = await response.json();
+
+      let finalDomainOptions = [];
+
+      domainOptions.map((domain) => {
+        finalDomainOptions.push({ label: domain.business_unit, value: domain.business_unit });
+      });
+
+      console.log(domainOptions);
+      console.log(finalDomainOptions);
+
+      setBusinessUnits(finalDomainOptions);
+    } catch (error) {
+      console.log(error);
+      message.error('There was an error getting Domains from Fido');
+    }
+  };
 
   const [orbitBuildSuggestions, setOrbitBuildSuggestions] = useState([]);
   const [displayBuildInfo, setDisplayBuildInfo] = useState();

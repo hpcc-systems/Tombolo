@@ -74,7 +74,6 @@ const Integrations = () => {
       body: JSON.stringify(body),
     };
 
-    console.log(payload.body);
     const response = await fetch(`/api/integrations/update/${applicationId}/${selectedIntegration.name}`, payload);
 
     if (response.ok) {

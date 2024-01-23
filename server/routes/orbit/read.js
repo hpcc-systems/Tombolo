@@ -21,6 +21,7 @@ const axios = require("axios");
 const jobScheduler = require("../../job-scheduler");
 
 const sql = require("mssql");
+const db = require("../../models");
 
 const dbConfig = {
   server: process.env.ORBIT_DB,
@@ -31,9 +32,18 @@ const dbConfig = {
   trustServerCertificate: true,
 };
 
-const runSQLQuery = async (query) => {
+const fidoDbConfig = {
+  server: process.env.FIDO_DB,
+  database: process.env.FIDO_DB_NAME,
+  user: process.env.FIDO_DB_USER,
+  password: process.env.FIDO_DB_PWD,
+  port: parseInt(process.env.FIDO_DB_PORT),
+  trustServerCertificate: true,
+};
+
+const runSQLQuery = async (query, config) => {
   try {
-    await sql.connect(dbConfig);
+    await sql.connect(config);
 
     const result = await sql.query(query);
 
@@ -77,7 +87,7 @@ router.post(
       // get last status and WU to store against future checks
       const query = `select TOP 1 HpccWorkUnit as 'WorkUnit', Name as 'Build', DateUpdated as 'Date', Status_Code as 'Status' from DimBuildInstance where Name = '${req.body.build}' order by Date desc`;
 
-      const wuResult = await runSQLQuery(query);
+      const wuResult = await runSQLQuery(query, dbConfig);
 
       if (wuResult.err) {
         throw Error(result.message);
@@ -242,7 +252,7 @@ router.get(
 
       const query = `select Name from DimBuildInstance where Name like '%${keyword}%' and Name not like 'Scrub%' and EnvironmentName = 'Insurance' order by  Name asc`;
 
-      const result = await runSQLQuery(query);
+      const result = await runSQLQuery(query, dbConfig);
 
       if (result.err) {
         throw Error(result.message);
@@ -292,7 +302,7 @@ router.get(
 
       const query = `select Top 1 EnvironmentName, Name, Status_DateCreated, HpccWorkUnit, Status_Code, Substatus_Code, BuildInstanceIdKey  from DimBuildInstance where Name = '${buildName}' order by Status_DateCreated desc`;
 
-      const result = await runSQLQuery(query);
+      const result = await runSQLQuery(query, dbConfig);
 
       if (result.err) {
         throw Error(result.message);
@@ -396,7 +406,7 @@ router.put(
       // get last status and WU to store against future checks
       const query = `select TOP 1 HpccWorkUnit as 'WorkUnit', Name as 'Build', DateUpdated as 'Date', Status_Code as 'Status' from DimBuildInstance where Name = '${build}' order by Date desc`;
 
-      const wuResult = await runSQLQuery(query);
+      const wuResult = await runSQLQuery(query, dbConfig);
 
       if (wuResult.err) {
         throw Error(result.message);
@@ -802,6 +812,62 @@ router.post(
     } catch (err) {
       // ... error checks
 
+      console.log(err);
+      res
+        .status(400)
+        .send("There was an issue contacting the orbit reports server");
+    }
+  }
+);
+
+router.get(
+  "/getDomains/:application_id",
+  [param("application_id").isUUID(4).withMessage("Invalid application id")],
+  async (req, res) => {
+    const errors = validationResult(req).formatWith(
+      validatorUtil.errorFormatter
+    );
+    try {
+      if (!errors.isEmpty())
+        return res.status(422).json({ success: false, errors: errors.array() });
+      const query =
+        "select business_unit from pbi.dim_asr_domain_v where business_unit != 'Unassigned' AND business_unit != 'Not Applicable' order by business_unit asc";
+      const result = await runSQLQuery(query, fidoDbConfig);
+
+      if (result?.recordset) {
+        res.status(200).send(result.recordset);
+      } else {
+        throw Error("No domains found on Fido Server: " + query);
+      }
+    } catch (err) {
+      console.log(err);
+      res
+        .status(400)
+        .send("There was an issue contacting the orbit reports server");
+    }
+  }
+);
+
+router.get(
+  "/getProducts/:application_id",
+  [param("application_id").isUUID(4).withMessage("Invalid application id")],
+  async (req, res) => {
+    const errors = validationResult(req).formatWith(
+      validatorUtil.errorFormatter
+    );
+    try {
+      if (!errors.isEmpty())
+        return res.status(422).json({ success: false, errors: errors.array() });
+      const query =
+        "select product_name from pbi.dim_asr_product_v order by product_name asc";
+      const result = await runSQLQuery(query, fidoDbConfig);
+
+      if (result?.recordset) {
+        res.status(200).send(result.recordset);
+      } else {
+        throw Error("No products found on Fido Server: " + query);
+      }
+    } catch (err) {
       console.log(err);
       res
         .status(400)

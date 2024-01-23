@@ -83,7 +83,7 @@ function Orbit() {
         return new Date(b.metaData.lastRun) - new Date(a.metaData.lastRun);
       });
 
-      //move initial status, final status, and version to top level of object to make them easier to work with
+      //move stuff out of metaData to top level to make it easier to work with
       totalWuList.forEach((workUnit) => {
         workUnit.key = workUnit.id;
         workUnit.initialStatus = workUnit.metaData.initialStatus;
