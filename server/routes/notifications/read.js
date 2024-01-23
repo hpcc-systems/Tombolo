@@ -64,15 +64,13 @@ router.get(
   "/:applicationId",
   [param("applicationId").isUUID(4).withMessage("Invalid application id")],
   async (req, res) => {
-     const errors = validationResult(req).formatWith(
-       validatorUtil.errorFormatter
-     );
+    const errors = validationResult(req).formatWith(
+      validatorUtil.errorFormatter
+    );
 
     try {
-        if (!errors.isEmpty())
-          return res
-            .status(422)
-            .json({ success: false, errors: errors.array() });
+      if (!errors.isEmpty())
+        return res.status(422).json({ success: false, errors: errors.array() });
       const { applicationId: application_id } = req.params;
       if (!application_id) throw Error("Invalid app ID");
       const notifications = await monitoring_notifications.findAll({
@@ -99,7 +97,7 @@ router.get(
       res.status(500).json({ message: "Unable to get notifications" });
     }
   }
-});
+);
 
 router.get(
   "/:applicationId/file/:type",
