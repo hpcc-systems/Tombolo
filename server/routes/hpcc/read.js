@@ -316,9 +316,10 @@ router.post(
 router.get("/getClusters", async (req, res) => {
   try {
     const clusters = await Cluster.findAll({
-      attributes: { exclude: ["hash", "username"] },
+      attributes: { exclude: ["hash", "username", "metaData"] },
       order: [["createdAt", "DESC"]],
     });
+
     res.send(clusters);
   } catch (err) {
     logger.error(err);
@@ -997,6 +998,55 @@ router.get("/dropZoneDirectories", async (req, res) => {
     res.status(500).send({ message: error.message });
   }
 });
+
+router.get('/getDropZones', [
+	query('clusterId')
+    .isUUID(4).withMessage('Invalid cluster id'),
+  ],  function (req, res) {
+	  const errors = validationResult(req).formatWith(validatorUtil.errorFormatter);
+	if (!errors.isEmpty()) {
+	  return res.status(422).json({ success: false, errors: errors.array() });
+	}
+	try {
+		 hpccUtil.getCluster(req.query.clusterId).then(function(cluster) {
+			let url = cluster.thor_host + ':' + cluster.thor_port +'/WsTopology/TpDropZoneQuery.json';
+			request.get({
+				url: url,
+				auth : hpccUtil.getClusterAuth(cluster)
+			}, function(err, response, body) {
+			if (err) {
+				console.log('ERROR - ', err);
+				return response.status(500).send('Error');
+			}
+			else {
+				let result = JSON.parse(body);
+				let dropZones = result.TpDropZoneQueryResponse.TpDropZones.TpDropZone;
+				let _dropZones = {};
+				let dropZoneDetails = []
+				dropZones.map(dropzone => {
+					dropZoneDetails.push({name : dropzone.Name, path: dropzone.Path, machines : dropzone.TpMachines.TpMachine})
+					_dropZones[dropzone.Name] = [];
+					lodash.flatMap(dropzone.TpMachines.TpMachine, (tpMachine) => {
+						_dropZones[dropzone.Name] = _dropZones[dropzone.Name].concat([tpMachine.Netaddress]);
+					})
+				});
+
+				if(req.query.for === "fileUpload" || req.query.for === "manualJobSerach" || req.query.for === "lzFileExplorer"){
+					res.json(dropZoneDetails)
+				}else{
+					res.json(_dropZones);
+				}
+			}
+			})
+		}).catch(err =>{
+			res.status(500).json({success: false, message : err});
+		})
+	} catch (err) {
+		console.log('err', err);
+		return res.status(500).send("Error occured while getting dropzones");
+	}
+})
+
 router.get(
   "/dropZoneDirectoryDetails",
   [
@@ -1019,9 +1069,10 @@ router.get(
     const { clusterId, Netaddr, Path, DirectoryOnly } = req.query;
     console.log("Cluster id etc", clusterId, Netaddr, Path, DirectoryOnly);
     try {
-      const cluster = await hpccUtil.getCluster(clusterId);
-      const response = await hpccUtil.fetchLandingZoneDirectories({
-        cluster,
+      const { clusterId, Netaddr, Path, DirectoryOnly } = req.query;
+
+      const directories = await hpccUtil.getDirectories({
+        clusterId,
         Netaddr,
         Path,
         DirectoryOnly,

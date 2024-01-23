@@ -5,23 +5,34 @@ import { Gauge } from '@ant-design/plots';
 import { Popover } from 'antd';
 
 const MeterGauge = ({ data }) => {
+  //Gauge color
+  const gaugeColor = (maxUsage) => {
+    if (maxUsage <= 50) {
+      return 'green';
+    }
+    if (maxUsage > 50 && maxUsage < 75) {
+      return 'orange';
+    }
+    if (maxUsage >= 75 && maxUsage <= 100) {
+      return 'red';
+    }
+  };
+
   const config = {
     percent: data.maxUsage / 100,
-    type: 'meter',
-    innerRadius: 0.75,
+    innerRadius: 0.8,
     range: {
-      ticks: [0, 1 / 3, 2 / 3, 1],
-      color: ['#30BF78', '#FAAD14', '#F4664A'],
+      color: gaugeColor(data.maxUsage),
     },
     indicator: {
       pointer: {
         style: {
-          stroke: '#1890ff',
+          stroke: '#D0D0D0',
         },
       },
       pin: {
         style: {
-          stroke: '#1890ff',
+          stroke: '#D0D0D0',
         },
       },
     },
@@ -32,7 +43,7 @@ const MeterGauge = ({ data }) => {
         },
       },
       subTickLine: {
-        count: 0,
+        count: 3,
       },
     },
     statistic: {
@@ -49,24 +60,39 @@ const MeterGauge = ({ data }) => {
       content: {
         offsetY: 36,
         style: {
-          fontSize: '14px',
-          color: '#4B535E',
+          fontSize: '18px',
+          color: '#1890ff',
+          textDecoration: 'underline',
         },
-        formatter: () => data.name,
+
+        formatter: () => {
+          return data.engines.length < 2 ? data.name : [`${data.name} [+ ${data.engines.length - 1} more]`];
+        },
       },
     },
   };
   return (
     <Popover
+      placement="left"
       content={
         <div>
           <div>Max : {data.maxUsage} % </div>
           <div>Mean: {data.meanUsage} % </div>
+
+          {data.engines.length > 1 ? (
+            <>
+              <hr />
+              <>
+                {data.engines.map((engine) => {
+                  return <div key={engine}> {engine}</div>;
+                })}
+              </>
+            </>
+          ) : null}
         </div>
       }>
-      <Gauge {...config} style={{ width: '200px', height: '200px', padding: '20px' }} />
-      {/* Bug in antd -  fragment below is required for Pop over to work. */}
-      <></>
+      <Gauge {...config} style={{ width: '250px', height: '250px', padding: '20px' }} />
+      <> </>
     </Popover>
   );
 };

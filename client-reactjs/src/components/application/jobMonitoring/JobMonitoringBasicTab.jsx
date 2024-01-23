@@ -9,8 +9,8 @@ import InfoDrawer from '../../common/InfoDrawer';
 const { Option } = Select;
 
 const monitoringScopeOptions = [
-  { label: 'Specific job', value: 'individualJob' },
-  { label: 'Cluster', value: 'cluster' },
+  { label: 'Single Job Monitoring', value: 'individualJob' },
+  { label: 'Cluster-Wide Monitoring', value: 'cluster' },
 ];
 
 function ClusterMonitoringBasicTab({

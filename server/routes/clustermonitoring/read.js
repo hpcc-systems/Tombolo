@@ -40,27 +40,28 @@ router.post(
         validatorUtil.errorFormatter
       );
 
-      if (!errors.isEmpty()) {
-        logger.verbose(errors);
-        return res.status(422).json({ success: false, errors: errors.array() });
-      }
+        if (!errors.isEmpty()){
+            logger.verbose(errors);
+            return res.status(422).json({ success: false, errors: errors.array() });
+        }
+         
+        //create
+        const clusterMonitoring = await ClusterMonitoring.create(req.body);
+        res.status(201).send(clusterMonitoring);
 
-      //create
-      const clusterMonitoring = await ClusterMonitoring.create(req.body);
-      res.status(201).send(clusterMonitoring);
-
-      //Add job to bree- if start monitoring checked
-      const { id, name, cron } = clusterMonitoring;
-      if (req.body.isActive) {
-        JobScheduler.createClusterMonitoringBreeJob({
-          clusterMonitoring_id: id,
-          name,
-          cron,
-        });
-      }
-    } catch (err) {
-      logger.error(err);
-      res.status(503).send({ success: false, message: "Failed to fetch" });
+        //Add job to bree- if start monitoring checked
+        const {id, name, cron } = clusterMonitoring;
+        if(req.body.isActive){
+             JobScheduler.createClusterMonitoringBreeJob({
+               clusterMonitoring_id: id,
+               name,
+               cron,
+             });
+        }
+       
+    }catch(err){
+        logger.error(err);
+        res.status(503).send({success: false, message: "Failed to fetch"})
     }
   }
 );
@@ -86,10 +87,10 @@ router.get(
         raw: true,
       });
 
-      res.status(200).send(clusterMonitorings);
-    } catch (err) {
-      logger.error(err);
-      res.send(503).send({ success: false, message: "Failed to fetch" });
+      res.status(200).send(clusterMonitorings)
+    }catch(err){
+        logger.error(err);
+        res.send(503).send({success: false, message: "Failed to fetch"})
     }
   }
 );
@@ -145,7 +146,7 @@ router.delete(
       res.status(200).send({ deleted });
     } catch (err) {
       logger.error(err);
-      res.status(503).json({ success: false, message: "Failed to delete" });
+      res.status(503).json({success: false, message: "Failed to delete"});
     }
   }
 );
@@ -271,7 +272,7 @@ router.put(
       }
     } catch (err) {
       logger.error(err);
-      res.status(503).json({ success: false, message: "Failed to update" });
+      res.status(503).json({success: false, message : "Failed to update"});
     }
   }
 );
@@ -304,9 +305,7 @@ router.get(
       res.status(200).send(clusterEngines);
     } catch (err) {
       logger.error(err);
-      res
-        .status(503)
-        .json({ success: false, message: "Failed to get engines" });
+      res.status(503).json({success: false, message : "Failed to get engines"});
     }
   }
 );

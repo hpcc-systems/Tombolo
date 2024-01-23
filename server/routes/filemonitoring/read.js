@@ -242,7 +242,7 @@ router.put(
       const { id, name, cron, monitoringActive, monitoringAssetType } = newInfo;
 
       await FileMonitoring.update(newInfo, { where: { id } });
-      const fileMonitoringDetails = FileMonitoring.findOne({ where: { id } }); // To avoid xss waring making additional call
+      const fileMonitoringDetails = FileMonitoring.findOne({where: {id}}) // To avoid xss waring making additional call
       res.status(200).send(fileMonitoringDetails);
 
       // If start monitoring was changed to TRUE

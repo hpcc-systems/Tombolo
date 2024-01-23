@@ -77,6 +77,7 @@ const superfileMonitoring = require("./routes/superfilemonitoring/read");
 const cluster = require("./routes/cluster/read");
 const orbit = require("./routes/orbit/read");
 const integrations = require("./routes/integrations/read");
+const teamsHook = require("./routes/msTeamsHook/read");
 
 app.use("/api/user", userRead);
 app.use("/api/updateNotification", updateNotifications);
@@ -114,6 +115,7 @@ app.use("/api/jobmonitoring", jobmonitoring);
 app.use("/api/cluster", cluster);
 app.use("/api/orbit", orbit);
 app.use("/api/integrations", integrations);
+app.use("/api/teamsHook", teamsHook);
 
 app.use((err, req, res, next) => {
   logger.error("Error caught by Express error handler", err);

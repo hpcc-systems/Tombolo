@@ -60,32 +60,44 @@ router.get("/filteredNotifications", async (req, res) => {
   }
 });
 
-router.get("/:applicationId", async (req, res) => {
-  try {
-    const { applicationId: application_id } = req.params;
-    if (!application_id) throw Error("Invalid app ID");
-    const notifications = await monitoring_notifications.findAll({
-      where: { application_id },
-      include: [
-        {
-          model: jobMonitoring,
-          attributes: ["name"],
-        },
-        {
-          model: clusterMonitoring,
-          attributes: ["name"],
-        },
-        {
-          model: fileMonitoring,
-          attributes: ["name"],
-        },
-      ],
-      raw: true,
-    });
-    res.status(200).send(notifications);
-  } catch (error) {
-    logger.error(err);
-    res.status(500).json({ message: "Unable to get notifications" });
+router.get(
+  "/:applicationId",
+  [param("applicationId").isUUID(4).withMessage("Invalid application id")],
+  async (req, res) => {
+     const errors = validationResult(req).formatWith(
+       validatorUtil.errorFormatter
+     );
+
+    try {
+        if (!errors.isEmpty())
+          return res
+            .status(422)
+            .json({ success: false, errors: errors.array() });
+      const { applicationId: application_id } = req.params;
+      if (!application_id) throw Error("Invalid app ID");
+      const notifications = await monitoring_notifications.findAll({
+        where: { application_id },
+        include: [
+          {
+            model: jobMonitoring,
+            attributes: ["name"],
+          },
+          {
+            model: clusterMonitoring,
+            attributes: ["name"],
+          },
+          {
+            model: fileMonitoring,
+            attributes: ["name"],
+          },
+        ],
+        raw: true,
+      });
+      res.status(200).send(notifications);
+    } catch (error) {
+      logger.error(err);
+      res.status(500).json({ message: "Unable to get notifications" });
+    }
   }
 });
 

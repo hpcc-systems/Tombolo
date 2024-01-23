@@ -39,9 +39,11 @@ const OrbitMonitoring = React.lazy(() => import('./components/application/orbitM
 const SuperFileMonitoring = React.lazy(() =>
   import('./components/application/superfileMonitoring/SuperFileMonitoring')
 );
-const Notifications = React.lazy(() => import('./components/application/dashboard/notifications/Notifications'));
+// const Notifications = React.lazy(() => import('./components/application/dashboard/notifications/Notifications'));
 const Orbit = React.lazy(() => import('./components/application/dashboard/Orbit/Orbit'));
-const ClusterUsage = React.lazy(() => import('./components/application/dashboard/clusterUsage/ClusterUsage'));
+// const ClusterUsage = React.lazy(() => import('./components/application/dashboard/clusterUsage/ClusterUsage'));
+const Notifications = React.lazy(() => import('./components/application/dashboard/notifications'));
+const ClusterUsage = React.lazy(() => import('./components/application/dashboard/clusterUsage/'));
 const ClusterMonitoring = React.lazy(() => import('./components/application/clusterMonitoring'));
 const JobMonitoring = React.lazy(() => import('./components/application/jobMonitoring'));
 
@@ -56,6 +58,7 @@ const GitHubSettings = React.lazy(() => import('./components/admin/GitHubSetting
 const ScheduledJobsPage = React.lazy(() => import('./components/admin/ScheduledJobsPage'));
 const Compliance = React.lazy(() => import('./components/admin/Compliance/Compliance'));
 const Integrations = React.lazy(() => import('./components/admin/Integrations'));
+const TeamsNotification = React.lazy(() => import('./components/admin/notifications/MsTeams/Teams'));
 
 // Shared layout, etc.
 import { LeftNav } from './components/layout/LeftNav';
@@ -204,6 +207,7 @@ class App extends React.Component {
                         <PrivateRoute path="/admin/bree" component={ScheduledJobsPage} />
                         <PrivateRoute path="/admin/clusters/:clusterId" component={ClusterDetails} />
                         <PrivateRoute path="/admin/clusters" component={AdminClusters} />
+                        <PrivateRoute path="/admin/notification-settings/msTeams" component={TeamsNotification} />
                         <PrivateRoute path="/admin/github" component={GitHubSettings} />
                         <PrivateRoute path="/admin/compliance/:tabName?" component={Compliance} />
                         <PrivateRoute path="/admin/users" component={Users} />

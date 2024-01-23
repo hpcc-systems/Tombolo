@@ -43,8 +43,8 @@ router.get(
 
       const maxUsage = targetClusterUsage.map((target) => ({
         name: target.Name,
-        maxUsage: target.max,
-        meanUsage: target.mean,
+        maxUsage: target.max.toFixed(2),
+        meanUsage: target.mean.toFixed(2),
       }));
       res.status(200).send(maxUsage);
     } catch (err) {
@@ -91,15 +91,21 @@ router.get(
       for (const key in storageUsageHistory) {
         filtered_data[key] = [];
         for (const item of storageUsageHistory[key]) {
-          if (item.date > end_date) {
+          if (item.date < start_date) {
             break;
           }
-          if (start_date <= item.date && item.date <= end_date) {
-            filtered_data[key].push(item);
+
+          if(item.date > end_date){
+            break;
+          }
+
+          else{
+             filtered_data[key].unshift(item);
           }
         }
       }
-      res.status(200).send(data.metaData?.storageUsageHistory || {});
+            res.status(200).send(filtered_data );
+
     } catch (err) {
       logger.error(err);
       res.status(503).json({
