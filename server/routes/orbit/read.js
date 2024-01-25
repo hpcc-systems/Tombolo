@@ -17,6 +17,7 @@ const notificationTemplate = require("../../jobs/messageCards/notificationTempla
 const { notify } = require("../notifications/email-notification");
 const { v4: uuidv4 } = require("uuid");
 const axios = require("axios");
+const SqlString = require("sqlstring");
 
 const jobScheduler = require("../../job-scheduler");
 
@@ -250,11 +251,9 @@ router.get(
       const { application_id, keyword } = req.params;
       if (!application_id) throw Error("Invalid app ID");
 
-      if (!typeof keyword === "string") {
-        req.status(400).send("Invalid keyword");
-        return;
-      }
-      const query = `select Name from DimBuildInstance where Name like '%${keyword}%' and Name not like 'Scrub%' and EnvironmentName = 'Insurance' order by  Name asc`;
+      const query = `select Name from DimBuildInstance where Name like '%${SqlString.escape(
+        keyword
+      )}%' and Name not like 'Scrub%' and EnvironmentName = 'Insurance' order by  Name asc`;
 
       const result = await runSQLQuery(query, dbConfig);
 
