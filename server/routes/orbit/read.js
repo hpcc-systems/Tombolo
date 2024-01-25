@@ -411,7 +411,9 @@ router.put(
 
       //get most recent work unit for storage
       // get last status and WU to store against future checks
-      const query = `select TOP 1 HpccWorkUnit as 'WorkUnit', Name as 'Build', DateUpdated as 'Date', Status_Code as 'Status' from DimBuildInstance where Name = '${build}' order by Date desc`;
+      const query = `select TOP 1 HpccWorkUnit as 'WorkUnit', Name as 'Build', DateUpdated as 'Date', Status_Code as 'Status' from DimBuildInstance where Name = '${SqlString.escape(
+        build
+      )}' order by Date desc`;
 
       const wuResult = await runSQLQuery(query, dbConfig);
 
