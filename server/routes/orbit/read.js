@@ -303,7 +303,9 @@ router.get(
 
       //connect to db
 
-      const query = `select Top 1 EnvironmentName, Name, Status_DateCreated, HpccWorkUnit, Status_Code, Substatus_Code, BuildInstanceIdKey  from DimBuildInstance where Name = '${buildName}' order by Status_DateCreated desc`;
+      const query = `select Top 1 EnvironmentName, Name, Status_DateCreated, HpccWorkUnit, Status_Code, Substatus_Code, BuildInstanceIdKey  from DimBuildInstance where Name = '${SqlString.escape(
+        buildName
+      )}' order by Status_DateCreated desc`;
 
       const result = await runSQLQuery(query, dbConfig);
 
