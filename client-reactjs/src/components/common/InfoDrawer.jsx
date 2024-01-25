@@ -32,7 +32,7 @@ const GuideDrawer = ({ content, open, onClose, width }) => {
   */
 
   return (
-    <Drawer placement="right" visible={open} onClose={onClose} width={width}>
+    <Drawer placement="right" open={open} onClose={onClose} width={width}>
       {(() => {
         switch (content) {
           case 'example':

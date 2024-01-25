@@ -75,7 +75,7 @@ const ConstraintForm = ({ modal, onClose }) => {
       onOk={handleOk}
       onCancel={onClose}
       okText={getOKtext()}
-      visible={modal.isOpen}
+      open={modal.isOpen}
       confirmLoading={sending.loading}>
       <Form layout="vertical" form={form}>
         <Form.Item

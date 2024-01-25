@@ -118,7 +118,7 @@ const DashboardModal = ({ modalVisible, setModalVisible, applicationId, authRedu
   return (
     <>
       <Modal
-        visible={modalVisible}
+        open={modalVisible}
         width={modalWidth}
         onCancel={cancelModal}
         maskClosable={false}

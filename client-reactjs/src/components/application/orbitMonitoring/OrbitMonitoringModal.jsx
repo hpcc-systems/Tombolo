@@ -292,7 +292,7 @@ const OrbitMonitoringModal = ({
 
   return (
     <Modal
-      visible={modalVisible}
+      open={modalVisible}
       width={modalWidth}
       onCancel={cancelModal}
       maskClosable={false}

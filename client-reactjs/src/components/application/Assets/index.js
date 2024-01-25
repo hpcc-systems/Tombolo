@@ -355,7 +355,7 @@ const Assets = () => {
               <div style={{ marginRight: '5px' }}>
                 <InfoCircleOutlined style={{ marginRight: '10px', fontSize: '18px' }} onClick={() => showDrawer()} />
 
-                <Dropdown overlay={menu}>
+                <Dropdown menu={menu}>
                   <Button type="primary" icon={<DownOutlined style={{ marginRight: '5px' }} />}>
                     {<Text text="Add Asset" />}
                   </Button>

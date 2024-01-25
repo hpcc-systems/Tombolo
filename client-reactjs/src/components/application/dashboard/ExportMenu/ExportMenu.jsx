@@ -104,7 +104,7 @@ const ExportMenu = (selectedCluster) => {
 
   return (
     <>
-      <Dropdown overlay={menu}>
+      <Dropdown menu={menu}>
         <Button type="primary" icon={<DownOutlined style={{ marginRight: '5px' }} />}>
           {<Text text="Export Data" />}
         </Button>

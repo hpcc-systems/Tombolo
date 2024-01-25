@@ -107,9 +107,11 @@ function Orbit() {
 
       //create options for dropdowns
       const uniqueInitialStatusOptions = [];
-      uniqueInitialStatus.forEach((item) => uniqueInitialStatusOptions.push({ label: item, value: item }));
+      uniqueInitialStatus.forEach((item) =>
+        uniqueInitialStatusOptions.push({ label: item, value: item, active: false })
+      );
       const uniqueFinalStatusOptions = [];
-      uniqueFinalStatus.forEach((item) => uniqueFinalStatusOptions.push({ label: item, value: item }));
+      uniqueFinalStatus.forEach((item) => uniqueFinalStatusOptions.push({ label: item, value: item, active: false }));
       const uniqueVersionOptions = [];
       uniqueVersion.forEach((item) => uniqueVersionOptions.push({ label: item, value: item }));
       const uniqueSeverityOptions = [];
@@ -441,6 +443,8 @@ function Orbit() {
                 isOrbit={true}
                 dashboardFilters={dashboardFilters}
                 setDashboardFilters={setDashboardFilters}
+                filteredBuilds={filteredBuilds}
+                filteredWorkUnits={filteredWorkUnits}
               />
             </Space>
             <Space>

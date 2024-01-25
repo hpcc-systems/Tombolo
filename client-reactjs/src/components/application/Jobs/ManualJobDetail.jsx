@@ -125,7 +125,7 @@ function ManualJobDetail() {
         </TabPane>
       </Tabs>
 
-      <Modal visible={showModal} closable={false} onCancel={() => setShowModal(false)} onOk={handleResponse}>
+      <Modal open={showModal} closable={false} onCancel={() => setShowModal(false)} onOk={handleResponse}>
         <Form layout="vertical" form={form}>
           <Form.Item
             label={<Text>Action</Text>}

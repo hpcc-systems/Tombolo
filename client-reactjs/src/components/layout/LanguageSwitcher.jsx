@@ -8,6 +8,8 @@ import { languages } from '../../i18n/languages';
 function LanguageSwitcher({ setLocale }) {
   const [language, setLanguage] = useState('EN');
 
+  console.log(languages);
+
   useEffect(() => {
     let selectedLanguage = localStorage.getItem('i18nextLng');
     if (selectedLanguage) {
@@ -43,7 +45,7 @@ function LanguageSwitcher({ setLocale }) {
 
   return (
     <>
-      <Dropdown overlay={languageMenu} trigger={['click']}>
+      <Dropdown menu={languageMenu} trigger={['click']}>
         <span style={{ color: 'white', fontSize: '22px', paddingLeft: '15px' }}>
           <GlobalOutlined className="languageSwitcherIcon" />
         </span>

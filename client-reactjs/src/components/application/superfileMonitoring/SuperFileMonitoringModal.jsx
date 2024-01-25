@@ -301,7 +301,7 @@ const SuperFileMonitoringModal = ({
   return (
     <>
       <Modal
-        visible={modalVisible}
+        open={modalVisible}
         width={modalWidth}
         onCancel={cancelFileMonitoringModal}
         maskClosable={false}

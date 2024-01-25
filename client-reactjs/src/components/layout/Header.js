@@ -413,7 +413,7 @@ class AppHeader extends Component {
             <img src={logo} alt="Tombolo logo" width="80px" height="19px" />
           </Link>
 
-          <Dropdown overlay={menu} placement="bottom" trigger={['click']}>
+          <Dropdown menu={menu} placement="bottom" trigger={['click']}>
             <Tooltip title="Select an Application" placement="right">
               <Space
                 style={{
@@ -433,7 +433,7 @@ class AppHeader extends Component {
         </div>
 
         <div style={{ display: 'flex', alignItems: 'center' }}>
-          <Dropdown overlay={helpMenu} trigger={['click']}>
+          <Dropdown menu={helpMenu} trigger={['click']}>
             <Button shape="round" style={{ marginRight: '10px' }}>
               <i className="fa fa-lg fa-question-circle"></i>
               <span style={{ paddingLeft: '5px' }}>
@@ -441,7 +441,7 @@ class AppHeader extends Component {
               </span>
             </Button>
           </Dropdown>
-          <Dropdown overlay={userActionMenu} trigger={['click']}>
+          <Dropdown menu={userActionMenu} trigger={['click']}>
             <Button shape="round">
               <i className="fa fa-lg fa-user-circle"></i>
               <span style={{ paddingLeft: '5px' }}>
@@ -454,7 +454,7 @@ class AppHeader extends Component {
 
         <Modal
           title={<Text>Change Password</Text>}
-          visible={this.state.visible}
+          open={this.state.visible}
           width="520px"
           footer={[
             <Button key="cancel" onClick={this.handleCancel}>
@@ -507,7 +507,7 @@ class AppHeader extends Component {
         </Modal>
         <Modal
           title="Tombolo"
-          visible={this.state.isAboutModalVisible}
+          open={this.state.isAboutModalVisible}
           footer={[
             <Button key="close" onClick={this.handleAboutClose}>
               Close

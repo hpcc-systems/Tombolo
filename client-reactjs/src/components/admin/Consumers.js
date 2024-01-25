@@ -466,7 +466,7 @@ class Consumers extends Component {
                 />
               </>
             }
-            visible={this.state.showAddConsumer}
+            open={this.state.showAddConsumer}
             onOk={this.handleAddConsumerOk.bind(this)}
             onCancel={this.handleAddConsumerCancel}
             confirmLoading={confirmLoading}

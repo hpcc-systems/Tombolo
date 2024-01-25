@@ -78,7 +78,7 @@ function Filters({ groupDataBy, setGroupDataBy, dashboardFilters, setDashboardFi
         <FilterOutlined />
         Filters
       </Button>
-      <Drawer title="Dashboard Filters & Slicers" placement="right" onClose={onClose} visible={open}>
+      <Drawer title="Dashboard Filters & Slicers" placement="right" onClose={onClose} open={open}>
         <div style={{ width: '100%', display: 'flex', justifyContent: 'flex-start', alignItems: 'center' }}>
           <Form {...layout} onFinish={onFinish} className="filters__form" form={form} initialValues={dashboardFilters}>
             <h2>Workunit Filters</h2>
@@ -100,22 +100,24 @@ function Filters({ groupDataBy, setGroupDataBy, dashboardFilters, setDashboardFi
                   setDashboardFilters((prev) => ({ ...prev, initialStatus: values }));
                   updateParams({ initialStatus: values });
                 }}
-                dropdownRender={(menu) => (
-                  <>
-                    <div style={{ padding: '.5rem' }}>
-                      <Checkbox
-                        defaultChecked={
-                          dashboardFilters?.initialStatus.length === dashboardFilters?.initialStatusOptions.length
-                        }
-                        style={{ marginBottom: '1rem' }}
-                        onChange={(e) => selectAll(e, 'initialStatus')}>
-                        Select All
-                      </Checkbox>
+                dropdownRender={(menu) => {
+                  return (
+                    <>
+                      <div style={{ padding: '.5rem' }}>
+                        <Checkbox
+                          defaultChecked={
+                            dashboardFilters?.initialStatus.length === dashboardFilters?.initialStatusOptions.length
+                          }
+                          style={{ marginBottom: '1rem' }}
+                          onChange={(e) => selectAll(e, 'initialStatus')}>
+                          Select All
+                        </Checkbox>
 
-                      {menu}
-                    </div>
-                  </>
-                )}
+                        {menu}
+                      </div>
+                    </>
+                  );
+                }}
               />
             </Form.Item>
             <Form.Item
@@ -135,6 +137,15 @@ function Filters({ groupDataBy, setGroupDataBy, dashboardFilters, setDashboardFi
                 onChange={(values) => {
                   setDashboardFilters((prev) => ({ ...prev, finalStatus: values }));
                   updateParams({ finalStatus: values });
+                }}
+                optionRender={(option) => {
+                  return (
+                    <div>
+                      <span>{option.label}</span>
+                      <span>test</span>
+                      <span style={{ float: 'right' }}>{option.value}</span>
+                    </div>
+                  );
                 }}
                 dropdownRender={(menu) => (
                   <>

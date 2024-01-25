@@ -7,9 +7,9 @@ import { debounce } from 'lodash';
 import { useSelector } from 'react-redux';
 import './GraphX6.css';
 
-import Event from './Event';
+// import Event from './Event';
 import Canvas from './Canvas';
-import Stencil from './Stencil';
+// import Stencil from './Stencil';
 // import Keyboard from './Keyboard';
 import CustomToolbar from './Toolbar/Toolbar';
 
@@ -167,11 +167,11 @@ function GraphX6({ readOnly = false, monitoring, statuses }) {
 
     Shape.init({ handleContextMenu, disableContextMenu: readOnly, graph });
 
-    if (!readOnly) {
-      Stencil.init(stencilContainerRef, graph);
-      Event.init(graph, handleContextMenu); // some static event that does not require local state changes will be sitting here
-      // Keyboard.init(graph); // not ready yet
-    }
+    // if (!readOnly) {
+    //   Stencil.init(stencilContainerRef, graph);
+    //   Event.init(graph, handleContextMenu); // some static event that does not require local state changes will be sitting here
+    //   // Keyboard.init(graph); // not ready yet
+    // }
 
     // FETCH SAVED GRAPH
     (async () => {
