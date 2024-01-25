@@ -250,6 +250,8 @@ router.get(
       const { application_id, keyword } = req.params;
       if (!application_id) throw Error("Invalid app ID");
 
+      if (!typeof keyword === "string") throw Error("Invalid keyword");
+
       const query = `select Name from DimBuildInstance where Name like '%${keyword}%' and Name not like 'Scrub%' and EnvironmentName = 'Insurance' order by  Name asc`;
 
       const result = await runSQLQuery(query, dbConfig);
