@@ -66,6 +66,8 @@ const OrbitMonitoring = () => {
         }),
       };
 
+      console.log(monitoringDetails);
+
       const response = await fetch('/api/orbit/', payload);
 
       if (!response.ok) {

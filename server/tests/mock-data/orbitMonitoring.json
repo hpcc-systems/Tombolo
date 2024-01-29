@@ -1,0 +1,32 @@
+{
+  "name": "test12342134",
+  "cron": "*/5 * * * *",
+  "build": "DL V1 Build",
+  "businessUnit": "Insurance",
+  "product": "DL",
+  "host": "test.test.com",
+  "severityCode": 2,
+  "notifyCondition": ["buildStatus"],
+  "buildStatus": ["discarded", "build_available_for_use"],
+  "isActive": 1,
+  "primaryContact": "test@test.com",
+  "secondaryContact": "test2@test.com",
+  "notificationChannels": ["eMail"],
+  "application_id": "a3431e6e-2b5e-4889-9127-9bdaa0a09d71",
+  "metaData": {
+    "lastMonitored": 1706544111312,
+    "monitoringCondition": {
+      "notifyCondition": ["buildStatus"],
+      "buildStatus": ["discarded", "build_available_for_use"]
+    },
+    "notifications": [
+      {
+        "channel": "eMail"
+      }
+    ],
+    "isActive": 1
+  },
+  "dataValues": {
+    "id": "a3431e6e-2b5e-4889-9127-9bdaa0a09d71"
+  }
+}

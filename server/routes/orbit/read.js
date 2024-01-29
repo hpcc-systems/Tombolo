@@ -22,7 +22,6 @@ const SqlString = require("sqlstring");
 const jobScheduler = require("../../job-scheduler");
 
 const sql = require("mssql");
-const db = require("../../models");
 
 const dbConfig = {
   server: process.env.ORBIT_DB,
@@ -86,13 +85,13 @@ router.post(
         return res.status(422).json({ success: false, errors: errors.array() });
 
       // get last status and WU to store against future checks
-      const query = `select TOP 1 HpccWorkUnit as 'WorkUnit', Name as 'Build', DateUpdated as 'Date', Status_Code as 'Status' from DimBuildInstance where Name = '${SqlString.escape(
+      const query = `select TOP 1 HpccWorkUnit as 'WorkUnit', Name as 'Build', DateUpdated as 'Date', Status_Code as 'Status' from DimBuildInstance where Name = ${SqlString.escape(
         req.body.build
-      )}' order by Date desc`;
+      )} order by Date desc`;
 
       const wuResult = await runSQLQuery(query, dbConfig);
 
-      if (wuResult.err) {
+      if (wuResult?.err) {
         throw Error(result.message);
       }
 
@@ -253,9 +252,9 @@ router.get(
       const { application_id, keyword } = req.params;
       if (!application_id) throw Error("Invalid app ID");
 
-      const query = `select Name from DimBuildInstance where Name like '%${SqlString.escape(
-        keyword
-      )}%' and Name not like 'Scrub%' and EnvironmentName = 'Insurance' order by  Name asc`;
+      const keywordEscaped = SqlString.escape("%" + keyword + "%");
+
+      const query = `select Name from DimBuildInstance where Name like ${keywordEscaped} and Name not like 'Scrub%' and EnvironmentName = 'Insurance' order by  Name asc`;
 
       const result = await runSQLQuery(query, dbConfig);
 
@@ -305,9 +304,9 @@ router.get(
 
       //connect to db
 
-      const query = `select Top 1 EnvironmentName, Name, Status_DateCreated, HpccWorkUnit, Status_Code, Substatus_Code, BuildInstanceIdKey  from DimBuildInstance where Name = '${SqlString.escape(
+      const query = `select Top 1 EnvironmentName, Name, Status_DateCreated, HpccWorkUnit, Status_Code, Substatus_Code, BuildInstanceIdKey  from DimBuildInstance where Name = ${SqlString.escape(
         buildName
-      )}' order by Status_DateCreated desc`;
+      )} order by Status_DateCreated desc`;
 
       const result = await runSQLQuery(query, dbConfig);
 
@@ -408,12 +407,12 @@ router.put(
           });
         }
       }
+      const escapedBuild = SqlString.escape(build);
 
       //get most recent work unit for storage
       // get last status and WU to store against future checks
-      const query = `select TOP 1 HpccWorkUnit as 'WorkUnit', Name as 'Build', DateUpdated as 'Date', Status_Code as 'Status' from DimBuildInstance where Name = '${SqlString.escape(
-        build
-      )}' order by Date desc`;
+      const query = `select TOP 1 HpccWorkUnit as 'WorkUnit', Name as 'Build', DateUpdated as 'Date', Status_Code as 'Status' from DimBuildInstance where Name = ${escapedBuild}
+       order by Date desc`;
 
       const wuResult = await runSQLQuery(query, dbConfig);
 
