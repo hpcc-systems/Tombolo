@@ -48,12 +48,14 @@ const runSQLQuery = async (query, config) => {
 
     const result = await sql.query(query);
 
+    //need this close to fix bug where it was only contacting the first server
+    sql.close();
     return result;
   } catch (err) {
     console.log(err);
     return {
       err,
-      message: "There was an issue contacting the orbit reports server",
+      message: "There was an issue contacting the server",
     };
   }
 };
