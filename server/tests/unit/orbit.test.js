@@ -212,13 +212,17 @@ describe("Integration Tests", () => {
     });
 
     test("Get one", async () => {
-      response = await request(app).get(`/api/orbit/${application_id}/${id}`);
+      response = await request(app).get(
+        `/api/orbit/getOne/${application_id}/${id}`
+      );
       expect(orbitMonitoring.findOne).toHaveBeenCalledTimes(1);
       expect(response.status).toBe(200);
     });
 
     test("Get one - Bad ID", async () => {
-      response = await request(app).get(`/api/orbit/${badApplicationId}/${id}`);
+      response = await request(app).get(
+        `/api/orbit/getOne/${badApplicationId}/${id}`
+      );
       expect(orbitMonitoring.findOne).toHaveBeenCalledTimes(0);
       expect(response.status).toBe(422);
       expect(response.body.success).toBe(false);

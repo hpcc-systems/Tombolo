@@ -180,7 +180,7 @@ router.get(
 
 //get all
 router.get(
-  "/all/:application_id",
+  "/allMonitoring/:application_id",
   [param("application_id").isUUID(4).withMessage("Invalid application id")],
   async (req, res) => {
     const errors = validationResult(req).formatWith(
@@ -191,7 +191,7 @@ router.get(
         return res.status(422).json({ success: false, errors: errors.array() });
       const { application_id } = req.params;
       if (!application_id) throw Error("Invalid app ID");
-      const result = await orbitBuilds.findAll({
+      const result = await orbitMonitoring.findAll({
         where: {
           application_id,
         },
@@ -219,6 +219,7 @@ router.get(
       validatorUtil.errorFormatter
     );
     try {
+      console.log(errors);
       if (!errors.isEmpty())
         return res.status(422).json({ success: false, errors: errors.array() });
       const { application_id, keyword } = req.params;
@@ -471,6 +472,8 @@ router.put(
   }
 );
 
+// EVERYTHING ABOVE THIS WORKS WITH APP ID VALIDATION
+
 // Pause or start monitoring
 router.put(
   "/togglestatus/:id",
@@ -551,57 +554,22 @@ router.delete(
   }
 );
 
-//get filtered orbit builds -- NOT USED
-// router.get("/filteredBuilds", async (req, res) => {
-//   try {
-//     const { queryData } = req.query;
-
-//     const { status, dateRange, applicationId } = JSON.parse(queryData);
-
-//     const query = {
-//       application_id: applicationId,
-//       metaData: {
-//         status: { [Op.in]: status },
-//       },
-//     };
-
-//     if (dateRange) {
-//       let minDate = moment(dateRange[0]).format("YYYY-MM-DD HH:mm:ss");
-//       let maxDate = moment(dateRange[1]).format("YYYY-MM-DD HH:mm:ss");
-
-//       const range = [minDate, maxDate];
-//       query.metaData.lastRun = { [Op.between]: range };
-//     }
-
-//     const results = await orbitBuilds.findAll({
-//       where: query,
-//       order: [["metaData.lastRun", "DESC"]],
-//       raw: true,
-//     });
-
-//     res.status(200).send(results);
-//   } catch (err) {
-//     console.error(err);
-//   }
-// });
-
 router.get(
-  "/:application_id/:id",
+  "/getOne/:application_id/:id",
   [param("id").isUUID(4).withMessage("Invalid orbit id")],
   [param("application_id").isUUID(4).withMessage("Invalid application id")],
   async (req, res) => {
+    const errors = validationResult(req).formatWith(
+      validatorUtil.errorFormatter
+    );
     try {
-      const errors = validationResult(req).formatWith(
-        validatorUtil.errorFormatter
-      );
-
       if (!errors.isEmpty())
         return res.status(422).json({ success: false, errors: errors.array() });
 
-      const { id } = req.params;
+      const { id, application_id } = req.params;
 
       const result = await orbitMonitoring.findOne({
-        where: { id },
+        where: { id, application_id },
         raw: true,
       });
 
@@ -617,11 +585,10 @@ router.get(
   "/getWorkunits/:application_id",
   [param("application_id").isUUID(4).withMessage("Invalid application id")],
   async (req, res) => {
+    const errors = validationResult(req).formatWith(
+      validatorUtil.errorFormatter
+    );
     try {
-      const errors = validationResult(req).formatWith(
-        validatorUtil.errorFormatter
-      );
-
       if (!errors.isEmpty())
         return res.status(422).json({ success: false, errors: errors.array() });
 
@@ -659,8 +626,6 @@ router.get(
     }
   }
 );
-
-//------------------ above is tested
 
 //refresh data, grab new builds
 router.post(
