@@ -50,11 +50,10 @@ const {
   scheduleOrbitMonitoringOnServerStart,
 } = require("./jobSchedularMethods/orbitJobs.js");
 
-const {
-  createIntegrationCreationJob,
-} = require("./jobSchedularMethods/integrationJobs.js");
-
 const { scheduleKeyCheck } = require("./jobSchedularMethods/apiKeys.js");
+
+//import job directly to run it only once on server start
+const { createIntegrations } = require("./jobs/integrationCreation.js");
 
 class JobScheduler {
   constructor() {
@@ -126,7 +125,9 @@ class JobScheduler {
       await this.createClusterUsageHistoryJob();
       await this.scheduleOrbitMonitoringOnServerStart();
       await this.createOrbitMegaphoneJob();
-      await this.createIntegrationCreationJob();
+
+      //one off jobs on server start
+      await this.createIntegrations();
     })();
   }
 
@@ -336,9 +337,8 @@ class JobScheduler {
     return createOrbitMonitoringJob.call(this, { orbitMonitoring_id, cron });
   }
 
-  //integration jobs
-  createIntegrationCreationJob() {
-    return createIntegrationCreationJob.call(this);
+  createIntegrations() {
+    return createIntegrations.call(this);
   }
 }
 
