@@ -163,7 +163,6 @@ router.get(
         return res.status(422).json({ success: false, errors: errors.array() });
       const { application_id } = req.params;
 
-      if (!application_id) throw Error("Invalid app ID");
       const result = await orbitMonitoring.findAll({
         where: {
           application_id,
@@ -542,10 +541,12 @@ router.delete(
       //Check if this job is in bree - if so - remove
       const breeJobs = jobScheduler.getAllJobs();
       const expectedJobName = `Orbit Monitoring - ${id}`;
-      for (job of breeJobs) {
-        if (job.name === expectedJobName) {
-          jobScheduler.removeJobFromScheduler(expectedJobName);
-          break;
+      if (breeJobs?.length) {
+        for (job of breeJobs) {
+          if (job.name === expectedJobName) {
+            jobScheduler.removeJobFromScheduler(expectedJobName);
+            break;
+          }
         }
       }
     } catch (err) {
@@ -602,22 +603,24 @@ router.get(
       //connect to db
 
       let wuList = [];
+      if (result?.length) {
+        await Promise.all(
+          result.map(async (build) => {
+            let wu = await orbitBuilds.findAll({
+              where: { application_id, name: build.build },
+              raw: true,
+            });
 
-      await Promise.all(
-        result.map(async (build) => {
-          let wu = await orbitBuilds.findAll({
-            where: { application_id, name: build.build },
-            raw: true,
-          });
+            if (wu.length > 0) {
+              wu.map((wu) => {
+                wuList.push(wu);
+              });
+            }
 
-          wu.map((wu) => {
-            wuList.push(wu);
-          });
-
-          Promise.resolve;
-        })
-      );
-
+            Promise.resolve;
+          })
+        );
+      }
       //return finished list;
       res.status(200).send(wuList);
     } catch (err) {
@@ -649,113 +652,116 @@ router.post(
       const sentNotifications = [];
       //just grab the rows from result
       let rows = result?.recordset;
-      //loop through rows to build notifications and import
-      await Promise.all(
-        rows.map(async (build) => {
-          //check if the build already exists
-          let orbitBuild = await orbitBuilds.findOne({
-            where: {
-              build_id: build.BuildInstanceIdKey,
-              application_id: application_id,
-            },
-            raw: true,
-          });
 
-          //if it doesn't exist, create it and send a notification
-          if (!orbitBuild) {
-            //create build
-            const newBuild = await orbitBuilds.create({
-              application_id: application_id,
-              build_id: build.BuildInstanceIdKey,
-              name: build.Name,
-              metaData: {
-                lastRun: build.DateUpdated,
-                status: build.Status_Code,
-                subStatus: build.SubStatus_Code,
-                workunit: build.HpccWorkUnit,
-                EnvironmentName: build.EnvironmentName,
-                Template: build.BuildTemplate_Name,
+      if (rows?.length) {
+        //loop through rows to build notifications and import
+        await Promise.all(
+          rows?.map(async (build) => {
+            //check if the build already exists
+            let orbitBuild = await orbitBuilds.findOne({
+              where: {
+                build_id: build.BuildInstanceIdKey,
+                application_id: application_id,
               },
+              raw: true,
             });
 
-            //if megaphone, send notification
-            // if (build.SubStatus_Code === "MEGAPHONE")
-
-            //build and send email notification
-            if (integration.metaData.notificationEmails) {
-              let buildDetails = {
-                name: newBuild.name,
-                status: newBuild.metaData.status,
-                subStatus: newBuild.metaData.subStatus,
-                lastRun: newBuild.metaData.lastRun,
-                workunit: newBuild.metaData.workunit,
-              };
-
-              const emailBody =
-                notificationTemplate.orbitBuildEmailBody(buildDetails);
-              const emailRecipients = integration.metaData.notificationEmails;
-
-              const notificationResponse = await notify({
-                to: emailRecipients,
-                from: process.env.EMAIL_SENDER,
-                subject:
-                  "Alert: Megaphone Substatus detected on Orbit Build " +
-                  build.Name,
-                text: emailBody,
-                html: emailBody,
+            //if it doesn't exist, create it and send a notification
+            if (!orbitBuild) {
+              //create build
+              const newBuild = await orbitBuilds.create({
+                application_id: application_id,
+                build_id: build.BuildInstanceIdKey,
+                name: build.Name,
+                metaData: {
+                  lastRun: build.DateUpdated,
+                  status: build.Status_Code,
+                  subStatus: build.SubStatus_Code,
+                  workunit: build.HpccWorkUnit,
+                  EnvironmentName: build.EnvironmentName,
+                  Template: build.BuildTemplate_Name,
+                },
               });
 
-              let notification_id = uuidv4();
+              //if megaphone, send notification
+              // if (build.SubStatus_Code === "MEGAPHONE")
 
-              sentNotifications.push({
-                id: notification_id,
-                status: "notified",
-                notifiedTo: emailRecipients,
-                notification_channel: "eMail",
-                application_id,
-                notification_reason: "Megaphone Substatus",
-                monitoring_id: newBuild.id,
-                monitoring_type: "orbit",
-              });
+              //build and send email notification
+              if (integration.metaData.notificationEmails) {
+                let buildDetails = {
+                  name: newBuild.name,
+                  status: newBuild.metaData.status,
+                  subStatus: newBuild.metaData.subStatus,
+                  lastRun: newBuild.metaData.lastRun,
+                  workunit: newBuild.metaData.workunit,
+                };
+
+                const emailBody =
+                  notificationTemplate.orbitBuildEmailBody(buildDetails);
+                const emailRecipients = integration.metaData.notificationEmails;
+
+                const notificationResponse = await notify({
+                  to: emailRecipients,
+                  from: process.env.EMAIL_SENDER,
+                  subject:
+                    "Alert: Megaphone Substatus detected on Orbit Build " +
+                    build.Name,
+                  text: emailBody,
+                  html: emailBody,
+                });
+
+                let notification_id = uuidv4();
+
+                sentNotifications.push({
+                  id: notification_id,
+                  status: "notified",
+                  notifiedTo: emailRecipients,
+                  notification_channel: "eMail",
+                  application_id,
+                  notification_reason: "Megaphone Substatus",
+                  monitoring_id: newBuild.id,
+                  monitoring_type: "orbit",
+                });
+              }
+
+              // //build and send Teams notification
+              if (integration.metaData.notificationWebhooks) {
+                let facts = [
+                  { name: newBuild.name },
+                  { status: newBuild.metaData.status },
+                  { subStatus: newBuild.metaData.subStatus },
+                  { lastRun: newBuild.metaData.lastRun },
+                  { workunit: newBuild.metaData.workunit },
+                ];
+                let title = "Orbit Build Detectd With Megaphone Status";
+                notification_id = uuidv4();
+                const cardBody = notificationTemplate.orbitBuildMessageCard(
+                  title,
+                  facts,
+                  notification_id
+                );
+                await axios.post(
+                  integration.metaData.notificationWebhooks,
+                  cardBody
+                );
+
+                sentNotifications.push({
+                  id: notification_id,
+                  status: "notified",
+                  notifiedTo: emailRecipients,
+                  notification_channel: "msTeams",
+                  application_id,
+                  notification_reason: "Megaphone Substatus",
+                  monitoring_id: newBuild.id,
+                  monitoring_type: "orbit",
+                });
+              }
             }
 
-            // //build and send Teams notification
-            if (integration.metaData.notificationWebhooks) {
-              let facts = [
-                { name: newBuild.name },
-                { status: newBuild.metaData.status },
-                { subStatus: newBuild.metaData.subStatus },
-                { lastRun: newBuild.metaData.lastRun },
-                { workunit: newBuild.metaData.workunit },
-              ];
-              let title = "Orbit Build Detectd With Megaphone Status";
-              notification_id = uuidv4();
-              const cardBody = notificationTemplate.orbitBuildMessageCard(
-                title,
-                facts,
-                notification_id
-              );
-              await axios.post(
-                integration.metaData.notificationWebhooks,
-                cardBody
-              );
-
-              sentNotifications.push({
-                id: notification_id,
-                status: "notified",
-                notifiedTo: emailRecipients,
-                notification_channel: "msTeams",
-                application_id,
-                notification_reason: "Megaphone Substatus",
-                monitoring_id: newBuild.id,
-                monitoring_type: "orbit",
-              });
-            }
-          }
-
-          return true;
-        })
-      );
+            return true;
+          })
+        );
+      }
 
       // Record notifications
       if (sentNotifications.length > 0) {

@@ -13,6 +13,7 @@ const mockSqlReturnData = require("../mock-data/sqlData.json");
 
 //import model and spy functions that will be called
 const models = require("../../models");
+const jobScheduler = require("../../job-scheduler");
 const orbitBuild = models.orbitBuilds;
 const orbitMonitoring = models.orbitMonitoring;
 const monitoring_notifications = models.monitoring_notifications;
@@ -39,6 +40,11 @@ orbitMonitoring.destroy = jest.fn();
 
 //monitoring notifications mocks
 monitoring_notifications.bulkCreate = jest.fn();
+
+//job scheduler mocks
+jobScheduler.createOrbitMonitoringJob = jest.fn();
+jobScheduler.removeJobFromScheduler = jest.fn();
+jobScheduler.getAllJobs = jest.fn();
 
 //sql mocks
 sql.connect = jest.fn();
@@ -103,14 +109,18 @@ describe("Integration Tests", () => {
     });
 
     test("Get All Builds", async () => {
-      response = await request(app).get(`/api/orbit/all/${application_id}`);
-      expect(orbitBuild.findAll).toHaveBeenCalledTimes(1);
+      response = await request(app).get(
+        `/api/orbit/allMonitorings/${application_id}`
+      );
+      expect(orbitMonitoring.findAll).toHaveBeenCalledTimes(1);
       expect(response.status).toBe(200);
     });
 
     test("Get All Builds - Bad Data", async () => {
-      response = await request(app).get(`/api/orbit/all/${badApplicationId}`);
-      expect(orbitBuild.findAll).toHaveBeenCalledTimes(0);
+      response = await request(app).get(
+        `/api/orbit/allMonitorings/${badApplicationId}`
+      );
+      expect(orbitMonitoring.findAll).toHaveBeenCalledTimes(0);
       expect(response.status).toBe(422);
       expect(response.body.success).toBe(false);
     });
@@ -228,18 +238,13 @@ describe("Integration Tests", () => {
       expect(response.body.success).toBe(false);
     });
 
-    //i have no idea why this fails and it is incredibly annoying
-    // test("Get WorkUnits", async () => {
-    //   console.log("calling");
-    //   console.log("application ID: " + application_id);
-    //   response = await request(app).get(
-    //     `/api/orbit/getWorkunits/${application_id}`
-    //   );
-
-    //   expect(response.status).toBe(200);
-    //   expect(orbitMonitoring.findAll).toHaveBeenCalledTimes(1);
-    //   expect(orbitBuild.findAll).toHaveBeenCalledTimes(1);
-    // });
+    test("Get WorkUnits", async () => {
+      response = await request(app).get(
+        `/api/orbit/getWorkunits/${application_id}`
+      );
+      expect(orbitMonitoring.findAll).toHaveBeenCalledTimes(1);
+      expect(response.status).toBe(200);
+    });
 
     test("Get WorkUnits - Bad ID", async () => {
       response = await request(app).get(
@@ -251,17 +256,16 @@ describe("Integration Tests", () => {
       expect(response.body.success).toBe(false);
     });
 
-    // test("Update List", async () => {
-    //   response = await request(app).post(
-    //     `/api/orbit/updateList/${application_id}`
-    //   );
+    test("Update List", async () => {
+      response = await request(app).post(
+        `/api/orbit/updateList/${application_id}`
+      );
 
-    //   expect(sql.connect).toHaveBeenCalledTimes(1);
-    //   expect(sql.query).toHaveBeenCalledTimes(1);
-    //   expect(orbitBuild.findOne).toHaveBeenCalled();
+      expect(sql.connect).toHaveBeenCalledTimes(1);
+      expect(sql.query).toHaveBeenCalledTimes(1);
 
-    //   expect(response.status).toBe(200);
-    // });
+      expect(response.status).toBe(200);
+    });
 
     test("Update List - Bad ID", async () => {
       response = await request(app).post(
