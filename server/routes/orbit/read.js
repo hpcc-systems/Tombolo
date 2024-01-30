@@ -22,6 +22,7 @@ const SqlString = require("sqlstring");
 const jobScheduler = require("../../job-scheduler");
 
 const sql = require("mssql");
+const db = require("../../models");
 
 const dbConfig = {
   server: process.env.ORBIT_DB,
@@ -177,8 +178,6 @@ router.get(
   }
 );
 
-//get all builds
-router.post("/allBuilds", async (req, res) => {});
 //get all
 router.get(
   "/all/:application_id",
@@ -193,33 +192,6 @@ router.get(
       const { application_id } = req.params;
       if (!application_id) throw Error("Invalid app ID");
       const result = await orbitBuilds.findAll({
-        where: {
-          application_id,
-        },
-      });
-
-      res.status(200).send(result);
-    } catch (err) {
-      // ... error checks
-      console.log(err);
-    }
-  }
-);
-
-//get all
-router.get(
-  "/allMonitoring/:application_id",
-  [param("application_id").isUUID(4).withMessage("Invalid application id")],
-  async (req, res) => {
-    const errors = validationResult(req).formatWith(
-      validatorUtil.errorFormatter
-    );
-    try {
-      if (!errors.isEmpty())
-        return res.status(422).json({ success: false, errors: errors.array() });
-      const { application_id } = req.params;
-      if (!application_id) throw Error("Invalid app ID");
-      const result = await orbitMonitoring.findAll({
         where: {
           application_id,
         },
@@ -276,7 +248,7 @@ router.get(
         return false;
       });
 
-      res.json(unique);
+      res.status(200).json(unique);
     } catch (err) {
       // ... error checks
 
@@ -291,14 +263,19 @@ router.get(
 /* get single build */
 router.get(
   "/getOrbitBuildDetails/:buildName",
+  [
+    param("buildName")
+      .matches(/^[a-zA-Z0-9_.\-:\*\? ]*$/)
+      .withMessage("Invalid build name"),
+  ],
 
   async (req, res) => {
-    // const errors = validationResult(req).formatWith(
-    //   validatorUtil.errorFormatter
-    // );
+    const errors = validationResult(req).formatWith(
+      validatorUtil.errorFormatter
+    );
     try {
-      // if (!errors.isEmpty())
-      //   return res.status(422).json({ success: false, errors: errors.array() });
+      if (!errors.isEmpty())
+        return res.status(422).json({ success: false, errors: errors.array() });
 
       const { buildName } = req.params;
 
@@ -450,6 +427,7 @@ router.put(
         },
       };
       // -------------------------------------------------------
+
       await orbitMonitoring.update(newInfo, { where: { id } });
 
       // If start monitoring was changed to TRUE
@@ -573,43 +551,44 @@ router.delete(
   }
 );
 
-//get filtered orbit builds
-router.get("/filteredBuilds", async (req, res) => {
-  try {
-    const { queryData } = req.query;
+//get filtered orbit builds -- NOT USED
+// router.get("/filteredBuilds", async (req, res) => {
+//   try {
+//     const { queryData } = req.query;
 
-    const { status, dateRange, applicationId } = JSON.parse(queryData);
+//     const { status, dateRange, applicationId } = JSON.parse(queryData);
 
-    const query = {
-      application_id: applicationId,
-      metaData: {
-        status: { [Op.in]: status },
-      },
-    };
+//     const query = {
+//       application_id: applicationId,
+//       metaData: {
+//         status: { [Op.in]: status },
+//       },
+//     };
 
-    if (dateRange) {
-      let minDate = moment(dateRange[0]).format("YYYY-MM-DD HH:mm:ss");
-      let maxDate = moment(dateRange[1]).format("YYYY-MM-DD HH:mm:ss");
+//     if (dateRange) {
+//       let minDate = moment(dateRange[0]).format("YYYY-MM-DD HH:mm:ss");
+//       let maxDate = moment(dateRange[1]).format("YYYY-MM-DD HH:mm:ss");
 
-      const range = [minDate, maxDate];
-      query.metaData.lastRun = { [Op.between]: range };
-    }
+//       const range = [minDate, maxDate];
+//       query.metaData.lastRun = { [Op.between]: range };
+//     }
 
-    const results = await orbitBuilds.findAll({
-      where: query,
-      order: [["metaData.lastRun", "DESC"]],
-      raw: true,
-    });
+//     const results = await orbitBuilds.findAll({
+//       where: query,
+//       order: [["metaData.lastRun", "DESC"]],
+//       raw: true,
+//     });
 
-    res.status(200).send(results);
-  } catch (err) {
-    console.error(err);
-  }
-});
+//     res.status(200).send(results);
+//   } catch (err) {
+//     console.error(err);
+//   }
+// });
 
 router.get(
-  "/:id",
+  "/:application_id/:id",
   [param("id").isUUID(4).withMessage("Invalid orbit id")],
+  [param("application_id").isUUID(4).withMessage("Invalid application id")],
   async (req, res) => {
     try {
       const errors = validationResult(req).formatWith(
@@ -681,9 +660,11 @@ router.get(
   }
 );
 
+//------------------ above is tested
+
 //refresh data, grab new builds
 router.post(
-  "/updateList:application_id",
+  "/updateList/:application_id",
   [param("application_id").isUUID(4).withMessage("Invalid application id")],
   async (req, res) => {
     const errors = validationResult(req).formatWith(
@@ -695,11 +676,11 @@ router.post(
       const { application_id } = req.params;
       if (!application_id) throw Error("Invalid app ID");
 
-      //connect to db
-      await sql.connect(dbConfig);
+      const query =
+        "select TOP 10 * from DimBuildInstance where SubStatus_Code = 'MEGAPHONE' order by DateUpdated desc";
 
-      const result =
-        await sql.query`select TOP 1 * from DimBuildInstance where SubStatus_Code = 'MEGAPHONE' order by DateUpdated desc`;
+      const result = runSQLQuery(query, dbConfig);
+
       const sentNotifications = [];
       //just grab the rows from result
       let rows = result?.recordset;

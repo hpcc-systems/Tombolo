@@ -248,7 +248,7 @@ const OrbitMonitoringModal = ({
     try {
       const payload = { method: 'GET', header: authHeader() };
       setFetchingOrbitDetails(true);
-      const response = await fetch(`/api/orbit/${id}`, payload);
+      const response = await fetch(`/api/orbit/${applicationId}/${id}`, payload);
       if (!response.ok) handleError(response);
       const data = await response.json();
 
