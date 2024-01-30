@@ -25,8 +25,27 @@ function Orbit() {
   const [donutData, setDonutData] = useState([]);
   const [groupDataBy, setGroupDataBy] = useState('day');
 
-  //states for filters
-  const [dashboardFilters, setDashboardFilters] = useState({});
+  //states for filters -- place values initially to avoid load errors
+  const [dashboardFilters, setDashboardFilters] = useState({
+    initialStatus: [],
+    initialStatusOptions: [],
+    finalStatus: [],
+    finalStatusOptions: [],
+    version: [],
+    versionOptions: [],
+    severity: [],
+    severityOptions: [],
+    builds: [],
+    buildsOptions: [],
+    products: [],
+    productsOptions: [],
+    businessUnits: [],
+    businessUnitsOptions: [],
+    wuid: [],
+    wuidOptions: [],
+    dateRange: [moment().subtract(15, 'days'), moment()],
+    groupDataBy: 'day',
+  });
 
   //states for spinners
   const [loading, setLoading] = useState(false);
@@ -53,7 +72,10 @@ function Orbit() {
       if (applicationId === undefined) return;
       var startTime2 = performance.now();
       const response = await fetch(`/api/orbit/allMonitoring/${applicationId}`, payload);
-      if (!response.ok) handleError(response);
+      if (!response.ok) {
+        handleError(response);
+        setLoading(false);
+      }
       const data = await response.json();
       var endTime2 = performance.now();
       console.log(`getting builds took ${endTime2 - startTime2} milliseconds`);
@@ -61,7 +83,10 @@ function Orbit() {
       var startTime3 = performance.now();
       //get work unit information and put it in builds information
       const response2 = await fetch(`/api/orbit/getWorkUnits/${applicationId}`, payload);
-      if (!response2.ok) handleError(response2);
+      if (!response2.ok) {
+        handleError(response2);
+        setLoading(false);
+      }
       const data2 = await response2.json();
       var endTime3 = performance.now();
       console.log(`getting workunits took ${endTime3 - startTime3} milliseconds`);
