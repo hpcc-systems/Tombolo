@@ -142,50 +142,6 @@ async function scheduleFileMonitoringOnServerStart() {
   }
 }
 
-async function scheduleFileMonitoringOnServerStart() {
-  try {
-    const activeLandingZoneFileMonitoring = await FileMonitoring.findAll({
-      where: {
-        monitoringActive: true,
-        // monitoringAssetType: "landingZoneFile",
-      },
-      raw: true,
-    });
-    for (const monitoring of activeLandingZoneFileMonitoring) {
-      await this.scheduleFileMonitoringBreeJob({
-        filemonitoring_id: monitoring.id,
-        name: monitoring.name,
-        cron: monitoring.cron,
-        monitoringAssetType: monitoring.monitoringAssetType,
-      });
-    }
-  } catch (err) {
-    logger.error(err);
-  }
-}
-
-async function scheduleFileMonitoringOnServerStart() {
-  try {
-    const activeLandingZoneFileMonitoring = await FileMonitoring.findAll({
-      where: {
-        monitoringActive: true,
-        // monitoringAssetType: "landingZoneFile",
-      },
-      raw: true,
-    });
-    for (const monitoring of activeLandingZoneFileMonitoring) {
-      await this.scheduleFileMonitoringBreeJob({
-        filemonitoring_id: monitoring.id,
-        name: monitoring.name,
-        cron: monitoring.cron,
-        monitoringAssetType: monitoring.monitoringAssetType,
-      });
-    }
-  } catch (err) {
-    logger.error(err);
-  }
-}
-
 async function scheduleFileMonitoring() {
   logger.info("📂 FILE MONITORING STARTED ...");
   try {

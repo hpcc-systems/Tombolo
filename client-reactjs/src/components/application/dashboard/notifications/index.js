@@ -5,10 +5,10 @@ import { message } from 'antd';
 import moment from 'moment';
 
 import NotificationsTable from './NotificationsTable';
-import NotificationCharts from './charts/NotificationCharts';
-import Filters from './charts/Filters';
-import MetricBoxes from './charts/MetricBoxes';
-import './index.css';
+import NotificationCharts from '../common/charts/NotificationCharts';
+import Filters from './Filters';
+import MetricBoxes from '../common/charts/MetricBoxes';
+import '../common/css/index.css';
 import { authHeader, handleError } from '../../../common/AuthHeader.js';
 import { camelToTitleCase } from '../../../common/CommonUtil';
 import ExportMenu from '../ExportMenu/ExportMenu';
@@ -31,7 +31,7 @@ function Index() {
 
   // Default filters to fetch notifications
   const [defaultFilters, setDefaultFilters] = useState({
-    monitoringType: ['jobMonitoring', 'file', 'cluster', 'superFile'],
+    monitoringType: ['jobMonitoring', 'file', 'cluster', 'superFile', 'megaphone', 'orbitMonitoring'],
     monitoringStatus: ['notified', 'triage', 'completed', 'inProgress'],
     dateRange: [moment().subtract(15, 'days'), moment()],
     applicationId,

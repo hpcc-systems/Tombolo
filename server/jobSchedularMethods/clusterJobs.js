@@ -47,7 +47,7 @@ function createClusterMonitoringBreeJob({ clusterMonitoring_id, cron }) {
   const job = {
     cron,
     name: uniqueJobName,
-    path: path.join(__dirname, "jobs", SUBMIT_CLUSTER_MONITORING_JOB),
+    path: path.join(__dirname, "..", "jobs", SUBMIT_CLUSTER_MONITORING_JOB),
     worker: {
       workerData: { clusterMonitoring_id },
     },
