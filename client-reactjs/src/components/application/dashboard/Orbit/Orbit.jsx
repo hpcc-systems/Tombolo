@@ -70,29 +70,24 @@ function Orbit() {
       };
 
       if (applicationId === undefined) return;
-      var startTime2 = performance.now();
+
       const response = await fetch(`/api/orbit/allMonitoring/${applicationId}`, payload);
       if (!response.ok) {
-        handleError(response);
         setLoading(false);
+        handleError(response);
       }
       const data = await response.json();
-      var endTime2 = performance.now();
-      console.log(`getting builds took ${endTime2 - startTime2} milliseconds`);
 
-      var startTime3 = performance.now();
       //get work unit information and put it in builds information
       const response2 = await fetch(`/api/orbit/getWorkUnits/${applicationId}`, payload);
       if (!response2.ok) {
-        handleError(response2);
         setLoading(false);
+        handleError(response2);
       }
       const data2 = await response2.json();
-      var endTime3 = performance.now();
-      console.log(`getting workunits took ${endTime3 - startTime3} milliseconds`);
 
       let builds2 = [];
-      var startTime = performance.now();
+
       await Promise.all(
         //add data2 workunits to matching builds
         (builds2 = data.map((build) => {
@@ -196,9 +191,7 @@ function Orbit() {
         groupDataBy: filters.groupDataBy ? filters.groupDataBy : 'day',
       }));
 
-      var endTime = performance.now();
-
-      console.log(`setting initial facets took ${endTime - startTime} milliseconds`);
+      setLoading(false);
     } catch (error) {
       message.error('Failed to fetch builds' + error);
       console.log(error);
@@ -220,7 +213,6 @@ function Orbit() {
   }, [builds, workUnits, dashboardFilters]);
 
   const filterData = () => {
-    let startTime = performance.now();
     let filteredBuildsList = [];
 
     if (builds.length === 0 || workUnits.length === 0) return;
@@ -262,8 +254,6 @@ function Orbit() {
     });
 
     setFilteredWorkUnits(filtered);
-    let endTime = performance.now();
-    console.log(`filtering data took ${endTime - startTime} milliseconds`);
   };
 
   //Step 3 - now that the filtered builds and workunits are set, we can get the counts and chart data
@@ -275,7 +265,6 @@ function Orbit() {
   }, [filteredBuilds, filteredWorkUnits]);
 
   const getCounts = () => {
-    let startTime = performance.now();
     let builds2 = [];
     let wus = [];
 
@@ -309,12 +298,9 @@ function Orbit() {
 
     setFilteredBuilds(builds2);
     setLoading(false);
-    let endTime = performance.now();
-    console.log(`getting counts took ${endTime - startTime} milliseconds`);
   };
 
   const setChartData = () => {
-    let startTime = performance.now();
     if (filteredWorkUnits) {
       const newMetrics = []; // Pie data
       const newStackBarData = []; // Stack bar Data
@@ -439,8 +425,6 @@ function Orbit() {
       setMetrics(newMetrics);
       setStackBarData(newStackBarData);
       setDonutData(newDonutData);
-      let endTime = performance.now();
-      console.log(`setting chart data took ${endTime - startTime} milliseconds`);
     }
   };
 
