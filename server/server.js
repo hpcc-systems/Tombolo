@@ -29,9 +29,11 @@ const socketIo = require("socket.io")(server);
 module.exports.io = socketIo;
 
 app.set("trust proxy", 1);
+
+// Limit rate of requests to 400 per 15 minutes
 const limiter = rateLimit({
-  windowMs: 15 * 60 * 1000, // 15 minutes
-  max: 400, // limit each IP to 400 requests per windowMs
+  windowMs: 15 * 60 * 1000, 
+  max: 400,
 });
 
 // MIDDLEWARE -> apply to all requests
@@ -78,6 +80,13 @@ const cluster = require("./routes/cluster/read");
 const orbit = require("./routes/orbit/read");
 const integrations = require("./routes/integrations/read");
 const teamsHook = require("./routes/msTeamsHook/read");
+const notification_queue = require("./routes/notification_queue/read");
+
+// Log all HTTP requests
+app.use((req, res, next) => {
+  logger.http(`[${req.ip}] [${req.method}] [${req.url}]`);
+  next();
+});
 
 app.use("/api/user", userRead);
 app.use("/api/updateNotification", updateNotifications);
@@ -116,13 +125,16 @@ app.use("/api/cluster", cluster);
 app.use("/api/orbit", orbit);
 app.use("/api/integrations", integrations);
 app.use("/api/teamsHook", teamsHook);
+app.use("/api/notification_queue", notification_queue);
 
+// Safety net for unhandled errors
 app.use((err, req, res, next) => {
   logger.error("Error caught by Express error handler", err);
   res.status(500).send("Something went wrong");
 });
 
-// process.env["NODE_TLS_REJECT_UNAUTHORIZED"] = 0;
+// Disables SSL verification for self-signed certificates in development mode 
+process.env["NODE_TLS_REJECT_UNAUTHORIZED"] = process.env.NODE_ENV === "production" ? 1 : 0;
 
 /* Start server */
 server.listen(port, "0.0.0.0", async () => {
