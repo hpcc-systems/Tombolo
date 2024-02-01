@@ -113,7 +113,7 @@ class JobScheduler {
       await this.scheduleSuperFileMonitoringOnServerStart();
       await this.scheduleClusterMonitoringOnServerStart();
       await this.scheduleKeyCheck();
-      await this.scheduleJobMonitoringOnServerStart();
+      // await this.scheduleJobMonitoringOnServerStart();
       await this.createClusterUsageHistoryJob();
     })();
   }

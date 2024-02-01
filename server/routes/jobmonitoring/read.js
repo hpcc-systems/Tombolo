@@ -1,6 +1,6 @@
 const express = require('express');
 const router = express.Router();
-const { body, check } = require("express-validator");
+const { body, check, param } = require("express-validator");
 
 //Local imports
 const logger = require("../../config/logger");
@@ -53,7 +53,10 @@ router.post(
 );
 
   // Get all Job monitorings
-  router.get("/", async (req, res) => {
+  router.get("/all/:applicationId",
+    [
+     param("applicationId").isUUID().withMessage("Application ID must be a valid UUID"),
+    ],async(req, res) => {
     try {
       const jobMonitorings = await JobMonitoring.findAll();
       res.status(200).json(jobMonitorings);
