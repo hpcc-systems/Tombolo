@@ -35,10 +35,19 @@ function JobMonitoring() {
   const [savingJobMonitoring, setSavingJobMonitoring] = useState(false); // Flag to indicate if job monitoring is being saved
   const [erroneousTabs, setErroneousTabs] = useState([]); // Tabs with erroneous fields
 
+  //Redux
+  const {
+    applicationReducer: {
+      application: { applicationId },
+    },
+    authenticationReducer: { user },
+    applicationReducer: { clusters },
+  } = useSelector((state) => state);
+
   //When component mounts get all teams hook
   useEffect(() => {
     getAllTeamsHook({ setTeamsHook });
-    getAllJobMonitorings({ message, setJobMonitorings });
+    getAllJobMonitorings({ message, setJobMonitorings, applicationId });
   }, []);
 
   //When intention to edit a monitoring is discovered
@@ -67,15 +76,6 @@ function JobMonitoring() {
       }
     }
   }, [editingData]);
-
-  //Redux
-  const {
-    applicationReducer: {
-      application: { applicationId },
-    },
-    authenticationReducer: { user },
-    applicationReducer: { clusters },
-  } = useSelector((state) => state);
 
   //TODO - Grab ASR integration flag from redux
   const asrIntegration = true;

@@ -2,14 +2,14 @@ import { authHeader, handleError } from '../../common/AuthHeader.js';
 import { message } from 'antd';
 
 // Function to get all job monitorings from the server
-export const getAllJobMonitorings = async ({ message, setJobMonitorings }) => {
+export const getAllJobMonitorings = async ({ message, setJobMonitorings, applicationId }) => {
   try {
     const payload = {
       method: 'GET',
       header: authHeader(),
     };
 
-    const response = await fetch(`/api/jobmonitoring/`, payload);
+    const response = await fetch(`/api/jobmonitoring/all/${applicationId}`, payload);
 
     if (!response.ok) {
       return message.error('Failed to retrieve job monitoring');

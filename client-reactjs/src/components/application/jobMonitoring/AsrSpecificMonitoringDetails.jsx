@@ -30,12 +30,20 @@ function AsrSpecificMonitoringDetails({ form }) {
     //TODO: Fetch domain  from Fido server -  this is just a place holder function
     setDomain([
       {
-        label: 'Domain - 1',
+        label: 'Insurance',
         value: 'domain1',
       },
       {
-        label: 'Domain - 2',
+        label: 'Public Records',
         value: 'domain2',
+      },
+      {
+        label: 'United Kingdom',
+        value: 'domain3',
+      },
+      {
+        label: 'Yogurt',
+        value: 'domain4',
       },
     ]);
   };
@@ -45,12 +53,32 @@ function AsrSpecificMonitoringDetails({ form }) {
     //TODO: Fetch product Category  from Fido server -  this is just a place holder function
     setCategories({
       domain1: [
-        { label: 'Category-1a', value: 'category1' },
-        { label: 'Category-2a', value: 'category2' },
+        { label: 'A&R Marketing', value: 'domain1' },
+        { label: 'Active Insight', value: 'domain2' },
+        { label: 'Address', value: 'domain3' },
+        { label: 'ALIRtS', value: 'domain4' },
+        { label: 'Yogurt', value: 'domain' },
       ],
       domain2: [
-        { label: 'Category-1b', value: 'category1' },
-        { label: 'Category-2b', value: 'category2' },
+        { label: 'A&R Marketing', value: 'domain1' },
+        { label: 'Active Insight', value: 'domain2' },
+        { label: 'Address', value: 'domain3' },
+        { label: 'ALIRtS', value: 'domain4' },
+        { label: 'Yogurt', value: 'domain' },
+      ],
+      domain3: [
+        { label: 'A&R Marketing', value: 'domain1' },
+        { label: 'Active Insight', value: 'domain2' },
+        { label: 'Address', value: 'domain3' },
+        { label: 'ALIRtS', value: 'domain4' },
+        { label: 'Yogurt', value: 'domain' },
+      ],
+      domain4: [
+        { label: 'A&R Marketing', value: 'domain1' },
+        { label: 'Active Insight', value: 'domain2' },
+        { label: 'Address', value: 'domain3' },
+        { label: 'ALIRtS', value: 'domain4' },
+        { label: 'Yogurt', value: 'domain' },
       ],
     });
   };

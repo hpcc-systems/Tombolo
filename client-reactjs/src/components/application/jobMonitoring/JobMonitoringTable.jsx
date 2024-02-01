@@ -2,6 +2,7 @@ import React from 'react';
 import { Table, Tooltip, Popconfirm } from 'antd';
 import { EyeOutlined, EditOutlined, DeleteOutlined, CheckCircleFilled, BellOutlined } from '@ant-design/icons';
 import { Link } from 'react-router-dom';
+import { useSelector } from 'react-redux';
 
 import { handleDeleteJobMonitoring } from './jobMonitoringUtils';
 
@@ -24,8 +25,14 @@ const JobMonitoringTable = ({
   setDisplayAddJobMonitoringModal,
   setDisplayMonitoringDetailsModal,
   setDisplayAddRejectModal,
-  applicationId,
 }) => {
+  //Redux
+  const {
+    applicationReducer: {
+      application: { applicationId },
+    },
+  } = useSelector((state) => state);
+
   // Columns for the table
   const columns = [
     {
