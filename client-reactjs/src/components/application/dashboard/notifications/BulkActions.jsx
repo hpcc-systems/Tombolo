@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Modal, Select, Form, Button, message, Input } from 'antd';
 import { authHeader } from '../../../common/AuthHeader';
-import { monitoringStatusOptions } from './monitoringStatusOptions.js';
+import { monitoringStatusOptions } from '../common/monitoringStatusOptions.js';
 import { v4 as uuidv4 } from 'uuid';
 import { useForm } from 'antd/lib/form/Form';
 

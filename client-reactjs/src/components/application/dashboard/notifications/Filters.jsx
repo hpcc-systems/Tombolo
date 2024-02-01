@@ -3,16 +3,18 @@ import { Form, Select, DatePicker, Button, message } from 'antd';
 import { useHistory, useLocation } from 'react-router-dom';
 import moment from 'moment';
 
-import { authHeader, handleError } from '../../../../common/AuthHeader.js';
-import { monitoringStatusOptions } from '../monitoringStatusOptions.js';
-import '../index.css';
+import { authHeader, handleError } from '../../../common/AuthHeader.js';
+import { monitoringStatusOptions } from '../common/monitoringStatusOptions.js';
+import '../common/css/index.css';
 
-//Monitoring types options
-const monitoringTypeOptions = [
+//Monitoring types options for notifications
+const monitoringTypeOptionsForNotifications = [
   { label: 'Job', value: 'jobMonitoring' },
   { label: 'File', value: 'file' },
   { label: 'Cluster', value: 'cluster' },
   { label: 'Super File', value: 'superFile' },
+  { label: 'Megaphone', value: 'megaphone' },
+  { label: 'Orbit Monitoring', value: 'orbitMonitoring' },
 ];
 
 // Group by options
@@ -30,11 +32,19 @@ const layout = {
   wrapperCol: { span: 24 },
 };
 
-function Filters({ applicationId, setNotifications, setLoadingData, groupDataBy, setGroupDataBy, setDefaultFilters }) {
+function Filters({
+  applicationId,
+  setNotifications,
+  setLoadingData,
+  groupDataBy,
+  setGroupDataBy,
+  setDefaultFilters,
+  isOrbit,
+}) {
   const [form] = Form.useForm();
   const [dashboardFilters, setDashboardFilters] = useState({});
   const initialValues = {
-    monitoringType: ['jobMonitoring', 'file', 'cluster', 'superFile'],
+    monitoringType: ['jobMonitoring', 'file', 'cluster', 'superFile', 'megaphone', 'orbitMonitoring'],
     monitoringStatus: ['notified', 'triage', 'inProgress', 'completed'],
     dateRange: [moment().subtract(15, 'days'), moment()],
     groupDataBy: groupDataBy,
@@ -123,17 +133,20 @@ function Filters({ applicationId, setNotifications, setLoadingData, groupDataBy,
   return (
     <div style={{ width: '100%', display: 'flex', justifyContent: 'center', alignItems: 'center' }}>
       <Form {...layout} onFinish={onFinish} className="filters__form" form={form} initialValues={initialValues}>
-        <Form.Item label="Monitoring type" name="monitoringType" style={{ display: 'inline-block' }}>
-          <Select
-            options={monitoringTypeOptions}
-            mode="multiple"
-            onChange={(values) => {
-              setDashboardFilters((prev) => ({ ...prev, monitoringType: values }));
-              updateParams({ monitoringType: values });
-            }}
-          />
-        </Form.Item>
-
+        {!isOrbit ? (
+          <>
+            <Form.Item label="Monitoring type" name="monitoringType" style={{ display: 'inline-block' }}>
+              <Select
+                options={monitoringTypeOptionsForNotifications}
+                mode="multiple"
+                onChange={(values) => {
+                  setDashboardFilters((prev) => ({ ...prev, monitoringType: values }));
+                  updateParams({ monitoringType: values });
+                }}
+              />
+            </Form.Item>
+          </>
+        ) : null}
         <Form.Item label="Notification status" name="monitoringStatus" style={{ display: 'inline-block' }}>
           <Select
             options={monitoringStatusOptions}

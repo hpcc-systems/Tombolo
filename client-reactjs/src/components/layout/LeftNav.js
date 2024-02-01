@@ -11,6 +11,8 @@ import {
   ClockCircleOutlined,
   ContainerOutlined,
   BarChartOutlined,
+  CloudServerOutlined,
+  ApiOutlined,
   BellOutlined,
 } from '@ant-design/icons';
 
@@ -59,6 +61,9 @@ class LeftNav extends Component {
 
   render() {
     const applicationId = this.props?.applicationId || '';
+    const integrations = this.props?.integrations || [];
+
+    const orbitActive = integrations.find((i) => i.name === 'Orbit')?.active;
 
     if (!this.props.loggedIn || !this.props.user || Object.getOwnPropertyNames(this.props.user).length == 0) {
       return null;
@@ -118,6 +123,12 @@ class LeftNav extends Component {
             <Menu.Item key="4d" icon={<ContainerOutlined />}>
               <Link to={'/' + applicationId + '/superfileMonitoring'}>{<Text text="Superfiles" />}</Link>
             </Menu.Item>
+
+            {orbitActive ? (
+              <Menu.Item key="4e" icon={<CloudServerOutlined />}>
+                <Link to={'/' + applicationId + '/orbitMonitoring'}>{<Text text="Orbit" />}</Link>
+              </Menu.Item>
+            ) : null}
           </Menu.SubMenu>
 
           <Menu.SubMenu title="Dashboard" icon={<BarChartOutlined />} key="5">
@@ -127,6 +138,12 @@ class LeftNav extends Component {
             <Menu.Item key="5b" icon={<ClusterOutlined />}>
               <Link to={'/' + applicationId + '/dashboard/clusterUsage'}>{<Text text="Cluster" />}</Link>
             </Menu.Item>
+
+            {orbitActive ? (
+              <Menu.Item key="5c" icon={<CloudServerOutlined />}>
+                <Link to={'/' + applicationId + '/dashboard/Orbit'}>{<Text text="Orbit" />}</Link>
+              </Menu.Item>
+            ) : null}
           </Menu.SubMenu>
 
           {canEdit ? (
@@ -163,8 +180,11 @@ class LeftNav extends Component {
               <Menu.Item key="10" icon={<i className="fa fa-fw fa-desktop" />}>
                 <Link to={'/admin/applications'}>{<Text text="Applications" />}</Link>
               </Menu.Item>
+              <Menu.Item key="11" icon={<ApiOutlined />}>
+                <Link to={'/admin/integrations'}>{<Text text="Integrations" />}</Link>
+              </Menu.Item>
               <Menu.Item
-                key="11"
+                key="12"
                 icon={this.props.isReportLoading ? <LoadingOutlined /> : <i className="fa fa-fw fa-balance-scale" />}>
                 <Link to={'/admin/compliance'}>
                   <Text>Compliance</Text>
@@ -179,10 +199,11 @@ class LeftNav extends Component {
 }
 
 function mapStateToProps(state) {
+  const integrations = state.applicationReducer.integrations;
   const applicationId = state.applicationReducer.application?.applicationId;
   const { loggedIn, user } = state.authenticationReducer;
   const isReportLoading = state.propagation.changes.loading || state.propagation.current.loading;
-  return { applicationId, loggedIn, user, isReportLoading };
+  return { applicationId, integrations, loggedIn, user, isReportLoading };
 }
 
 let connectedLeftNav = connect(mapStateToProps, null, null, { forwardRef: true })(withRouter(LeftNav));

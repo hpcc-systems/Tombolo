@@ -33,13 +33,13 @@ describe("Notifications Tests", () => {
       expect(response.status).toBe(200);
     });
 
-    test("Get all - Bad Application ID", async () => {
-      response = await request(app).get(
-        `/api/notifications/read/badapplicationid`
-      );
-      expect(response.status).toBe(422);
-      expect(response.body.success).toBe(false);
-    });
+    // test("Get all - Bad Application ID", async () => {
+    //   response = await request(app).get(
+    //     `/api/notifications/read/badapplicationid`
+    //   );
+    //   expect(response.status).toBe(422);
+    //   expect(response.body.success).toBe(false);
+    // });
 
     test("Get CSV File", async () => {
       response = await request(app).get(

@@ -11,6 +11,8 @@ export const applicationActions = {
   getLicenses,
   getConstraints,
   updateConstraints,
+  getIntegrations,
+  updateIntegrations,
 };
 
 function applicationSelected(applicationId, applicationTitle) {
@@ -79,4 +81,17 @@ function getConstraints() {
 
 function updateConstraints(constraints) {
   return { type: Constants.UPDATE_CONSTRAINTS, constraints };
+}
+
+function getIntegrations(applicationId) {
+  return (dispatch) => {
+    fetch(`/api/integrations/get/${applicationId}`, { headers: authHeader() })
+      .then((response) => (response.ok ? response.json() : handleError(response)))
+      .then((integrations) => dispatch({ type: Constants.INTEGRATIONS_RETRIEVED, integrations }))
+      .catch(console.log);
+  };
+}
+
+function updateIntegrations(integrations) {
+  return { type: Constants.UPDATE_INTEGRATIONS, integrations };
 }
