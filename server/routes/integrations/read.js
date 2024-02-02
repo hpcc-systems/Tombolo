@@ -52,7 +52,6 @@ router.put(
         return res.status(422).json({ success: false, errors: errors.array() });
       const { application_id, name } = req.params;
 
-      if (!application_id) throw Error("Invalid app ID");
       const integration = await integrations.findOne({
         where: { application_id, name },
         raw: true,

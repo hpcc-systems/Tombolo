@@ -5,7 +5,7 @@ const models = require("../models");
 const application = models.application;
 const integrations = models.integrations;
 
-(async () => {
+async function createIntegrations() {
   try {
     //grab all applications so we can have one entry per integration per application
     const applications = await application.findAll({});
@@ -54,6 +54,7 @@ const integrations = models.integrations;
     logger.error("Failed to create integrations, error: " + error);
   } finally {
     if (parentPort) parentPort.postMessage("done");
-    else process.exit(0);
   }
-})();
+}
+
+module.exports = { createIntegrations };

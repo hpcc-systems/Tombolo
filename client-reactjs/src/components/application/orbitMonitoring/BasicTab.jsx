@@ -12,40 +12,8 @@ const BasicTab = ({
   monitoringDetails,
   setMonitoringDetails,
 }) => {
-  // useEffect(() => {
-  //   if (orbitBuildDetails === null) {
-  //     return;
-  //   }
-
-  //   if (orbitBuildDetails && orbitBuildDetails.metaData) {
-  //     selectOrbitBuild(orbitBuildDetails.metaData.buildInfo.Name);
-  //   }
-  // }, [orbitBuildDetails]);
-
   const [products, setProducts] = useState([]);
   const [businessUnits, setBusinessUnits] = useState([]);
-
-  // const products = [
-  //   { label: 'Auto', value: 'auto' },
-  //   { label: 'Carrier Discovery', value: 'Carrier Discovery' },
-  //   { label: 'Claims Discovery Auto', value: 'Claims Discovery Auto' },
-  //   { label: 'Claims Discovery Property', value: 'Claims Discovery Property' },
-  //   { label: 'CLUE Auto', value: 'CLUE Auto' },
-  //   { label: 'CLUE Property', value: 'CLUE Property' },
-  //   { label: 'Commercial CLUE Auto', value: 'Commercial CLUE Auto' },
-  //   { label: 'Commercial Credit', value: 'Commercial Credit' },
-  //   { label: 'Current Carrier', value: 'Current Carrier' },
-  //   { label: 'Driver License', value: 'Driver License' },
-  //   { label: 'Insurance Payment History', value: 'Insurance Payment History' },
-  //   { label: 'To Be Determined', value: 'To Be Determined' },
-  // ];
-
-  // const businessUnits = [
-  //   { label: 'Insurance (INS)', value: 'Insurance (INS)' },
-  //   { label: 'Public Records (PR)', value: 'Public Records (PR)' },
-  //   { label: 'United Kingdom (UK)', value: 'United Kingdom (UK)' },
-  //   { label: 'Yogurt', value: 'Yogurt' },
-  // ];
 
   const {
     application: { applicationId },

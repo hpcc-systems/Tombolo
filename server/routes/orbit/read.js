@@ -17,6 +17,7 @@ const notificationTemplate = require("../../jobs/messageCards/notificationTempla
 const { notify } = require("../notifications/email-notification");
 const { v4: uuidv4 } = require("uuid");
 const axios = require("axios");
+const SqlString = require("sqlstring");
 
 const jobScheduler = require("../../job-scheduler");
 
@@ -47,12 +48,14 @@ const runSQLQuery = async (query, config) => {
 
     const result = await sql.query(query);
 
+    //need this close to fix bug where it was only contacting the first server
+    sql.close();
     return result;
   } catch (err) {
     console.log(err);
     return {
       err,
-      message: "There was an issue contacting the orbit reports server",
+      message: "There was an issue contacting the server",
     };
   }
 };
@@ -85,11 +88,13 @@ router.post(
         return res.status(422).json({ success: false, errors: errors.array() });
 
       // get last status and WU to store against future checks
-      const query = `select TOP 1 HpccWorkUnit as 'WorkUnit', Name as 'Build', DateUpdated as 'Date', Status_Code as 'Status' from DimBuildInstance where Name = '${req.body.build}' order by Date desc`;
+      const query = `select TOP 1 HpccWorkUnit as 'WorkUnit', Name as 'Build', DateUpdated as 'Date', Status_Code as 'Status' from DimBuildInstance where Name = ${SqlString.escape(
+        req.body.build
+      )} order by Date desc`;
 
       const wuResult = await runSQLQuery(query, dbConfig);
 
-      if (wuResult.err) {
+      if (wuResult?.err) {
         throw Error(result.message);
       }
 
@@ -160,37 +165,7 @@ router.get(
         return res.status(422).json({ success: false, errors: errors.array() });
       const { application_id } = req.params;
 
-      if (!application_id) throw Error("Invalid app ID");
       const result = await orbitMonitoring.findAll({
-        where: {
-          application_id,
-        },
-      });
-
-      res.status(200).send(result);
-    } catch (err) {
-      // ... error checks
-      console.log(err);
-    }
-  }
-);
-
-//get all builds
-router.post("/allBuilds", async (req, res) => {});
-//get all
-router.get(
-  "/all/:application_id",
-  [param("application_id").isUUID(4).withMessage("Invalid application id")],
-  async (req, res) => {
-    const errors = validationResult(req).formatWith(
-      validatorUtil.errorFormatter
-    );
-    try {
-      if (!errors.isEmpty())
-        return res.status(422).json({ success: false, errors: errors.array() });
-      const { application_id } = req.params;
-      if (!application_id) throw Error("Invalid app ID");
-      const result = await orbitBuilds.findAll({
         where: {
           application_id,
         },
@@ -245,12 +220,15 @@ router.get(
       validatorUtil.errorFormatter
     );
     try {
+      console.log(errors);
       if (!errors.isEmpty())
         return res.status(422).json({ success: false, errors: errors.array() });
       const { application_id, keyword } = req.params;
       if (!application_id) throw Error("Invalid app ID");
 
-      const query = `select Name from DimBuildInstance where Name like '%${keyword}%' and Name not like 'Scrub%' and EnvironmentName = 'Insurance' order by  Name asc`;
+      const keywordEscaped = SqlString.escape("%" + keyword + "%");
+
+      const query = `select Name from DimBuildInstance where Name like ${keywordEscaped} and Name not like 'Scrub%' and EnvironmentName = 'Insurance' order by  Name asc`;
 
       const result = await runSQLQuery(query, dbConfig);
 
@@ -272,7 +250,7 @@ router.get(
         return false;
       });
 
-      res.json(unique);
+      res.status(200).json(unique);
     } catch (err) {
       // ... error checks
 
@@ -287,20 +265,27 @@ router.get(
 /* get single build */
 router.get(
   "/getOrbitBuildDetails/:buildName",
+  [
+    param("buildName")
+      .matches(/^[a-zA-Z0-9_.\-:\*\? ]*$/)
+      .withMessage("Invalid build name"),
+  ],
 
   async (req, res) => {
-    // const errors = validationResult(req).formatWith(
-    //   validatorUtil.errorFormatter
-    // );
+    const errors = validationResult(req).formatWith(
+      validatorUtil.errorFormatter
+    );
     try {
-      // if (!errors.isEmpty())
-      //   return res.status(422).json({ success: false, errors: errors.array() });
+      if (!errors.isEmpty())
+        return res.status(422).json({ success: false, errors: errors.array() });
 
       const { buildName } = req.params;
 
       //connect to db
 
-      const query = `select Top 1 EnvironmentName, Name, Status_DateCreated, HpccWorkUnit, Status_Code, Substatus_Code, BuildInstanceIdKey  from DimBuildInstance where Name = '${buildName}' order by Status_DateCreated desc`;
+      const query = `select Top 1 EnvironmentName, Name, Status_DateCreated, HpccWorkUnit, Status_Code, Substatus_Code, BuildInstanceIdKey  from DimBuildInstance where Name = ${SqlString.escape(
+        buildName
+      )} order by Status_DateCreated desc`;
 
       const result = await runSQLQuery(query, dbConfig);
 
@@ -401,10 +386,12 @@ router.put(
           });
         }
       }
+      const escapedBuild = SqlString.escape(build);
 
       //get most recent work unit for storage
       // get last status and WU to store against future checks
-      const query = `select TOP 1 HpccWorkUnit as 'WorkUnit', Name as 'Build', DateUpdated as 'Date', Status_Code as 'Status' from DimBuildInstance where Name = '${build}' order by Date desc`;
+      const query = `select TOP 1 HpccWorkUnit as 'WorkUnit', Name as 'Build', DateUpdated as 'Date', Status_Code as 'Status' from DimBuildInstance where Name = ${escapedBuild}
+       order by Date desc`;
 
       const wuResult = await runSQLQuery(query, dbConfig);
 
@@ -485,6 +472,8 @@ router.put(
   }
 );
 
+// EVERYTHING ABOVE THIS WORKS WITH APP ID VALIDATION
+
 // Pause or start monitoring
 router.put(
   "/togglestatus/:id",
@@ -553,10 +542,12 @@ router.delete(
       //Check if this job is in bree - if so - remove
       const breeJobs = jobScheduler.getAllJobs();
       const expectedJobName = `Orbit Monitoring - ${id}`;
-      for (job of breeJobs) {
-        if (job.name === expectedJobName) {
-          jobScheduler.removeJobFromScheduler(expectedJobName);
-          break;
+      if (breeJobs?.length) {
+        for (job of breeJobs) {
+          if (job.name === expectedJobName) {
+            jobScheduler.removeJobFromScheduler(expectedJobName);
+            break;
+          }
         }
       }
     } catch (err) {
@@ -565,56 +556,22 @@ router.delete(
   }
 );
 
-//get filtered orbit builds
-router.get("/filteredBuilds", async (req, res) => {
-  try {
-    const { queryData } = req.query;
-
-    const { status, dateRange, applicationId } = JSON.parse(queryData);
-
-    const query = {
-      application_id: applicationId,
-      metaData: {
-        status: { [Op.in]: status },
-      },
-    };
-
-    if (dateRange) {
-      let minDate = moment(dateRange[0]).format("YYYY-MM-DD HH:mm:ss");
-      let maxDate = moment(dateRange[1]).format("YYYY-MM-DD HH:mm:ss");
-
-      const range = [minDate, maxDate];
-      query.metaData.lastRun = { [Op.between]: range };
-    }
-
-    const results = await orbitBuilds.findAll({
-      where: query,
-      order: [["metaData.lastRun", "DESC"]],
-      raw: true,
-    });
-
-    res.status(200).send(results);
-  } catch (err) {
-    console.error(err);
-  }
-});
-
 router.get(
-  "/:id",
+  "/getOne/:application_id/:id",
   [param("id").isUUID(4).withMessage("Invalid orbit id")],
+  [param("application_id").isUUID(4).withMessage("Invalid application id")],
   async (req, res) => {
+    const errors = validationResult(req).formatWith(
+      validatorUtil.errorFormatter
+    );
     try {
-      const errors = validationResult(req).formatWith(
-        validatorUtil.errorFormatter
-      );
-
       if (!errors.isEmpty())
         return res.status(422).json({ success: false, errors: errors.array() });
 
-      const { id } = req.params;
+      const { id, application_id } = req.params;
 
       const result = await orbitMonitoring.findOne({
-        where: { id },
+        where: { id, application_id },
         raw: true,
       });
 
@@ -630,11 +587,10 @@ router.get(
   "/getWorkunits/:application_id",
   [param("application_id").isUUID(4).withMessage("Invalid application id")],
   async (req, res) => {
+    const errors = validationResult(req).formatWith(
+      validatorUtil.errorFormatter
+    );
     try {
-      const errors = validationResult(req).formatWith(
-        validatorUtil.errorFormatter
-      );
-
       if (!errors.isEmpty())
         return res.status(422).json({ success: false, errors: errors.array() });
 
@@ -648,22 +604,24 @@ router.get(
       //connect to db
 
       let wuList = [];
+      if (result?.length) {
+        await Promise.all(
+          result.map(async (build) => {
+            let wu = await orbitBuilds.findAll({
+              where: { application_id, name: build.build },
+              raw: true,
+            });
 
-      await Promise.all(
-        result.map(async (build) => {
-          let wu = await orbitBuilds.findAll({
-            where: { application_id, name: build.build },
-            raw: true,
-          });
+            if (wu.length > 0) {
+              wu.map((wu) => {
+                wuList.push(wu);
+              });
+            }
 
-          wu.map((wu) => {
-            wuList.push(wu);
-          });
-
-          Promise.resolve;
-        })
-      );
-
+            Promise.resolve;
+          })
+        );
+      }
       //return finished list;
       res.status(200).send(wuList);
     } catch (err) {
@@ -675,7 +633,7 @@ router.get(
 
 //refresh data, grab new builds
 router.post(
-  "/updateList:application_id",
+  "/updateList/:application_id",
   [param("application_id").isUUID(4).withMessage("Invalid application id")],
   async (req, res) => {
     const errors = validationResult(req).formatWith(
@@ -687,121 +645,124 @@ router.post(
       const { application_id } = req.params;
       if (!application_id) throw Error("Invalid app ID");
 
-      //connect to db
-      await sql.connect(dbConfig);
+      const query =
+        "select TOP 10 * from DimBuildInstance where SubStatus_Code = 'MEGAPHONE' order by DateUpdated desc";
 
-      const result =
-        await sql.query`select TOP 1 * from DimBuildInstance where SubStatus_Code = 'MEGAPHONE' order by DateUpdated desc`;
+      const result = runSQLQuery(query, dbConfig);
+
       const sentNotifications = [];
       //just grab the rows from result
       let rows = result?.recordset;
-      //loop through rows to build notifications and import
-      await Promise.all(
-        rows.map(async (build) => {
-          //check if the build already exists
-          let orbitBuild = await orbitBuilds.findOne({
-            where: {
-              build_id: build.BuildInstanceIdKey,
-              application_id: application_id,
-            },
-            raw: true,
-          });
 
-          //if it doesn't exist, create it and send a notification
-          if (!orbitBuild) {
-            //create build
-            const newBuild = await orbitBuilds.create({
-              application_id: application_id,
-              build_id: build.BuildInstanceIdKey,
-              name: build.Name,
-              metaData: {
-                lastRun: build.DateUpdated,
-                status: build.Status_Code,
-                subStatus: build.SubStatus_Code,
-                workunit: build.HpccWorkUnit,
-                EnvironmentName: build.EnvironmentName,
-                Template: build.BuildTemplate_Name,
+      if (rows?.length) {
+        //loop through rows to build notifications and import
+        await Promise.all(
+          rows?.map(async (build) => {
+            //check if the build already exists
+            let orbitBuild = await orbitBuilds.findOne({
+              where: {
+                build_id: build.BuildInstanceIdKey,
+                application_id: application_id,
               },
+              raw: true,
             });
 
-            //if megaphone, send notification
-            // if (build.SubStatus_Code === "MEGAPHONE")
-
-            //build and send email notification
-            if (integration.metaData.notificationEmails) {
-              let buildDetails = {
-                name: newBuild.name,
-                status: newBuild.metaData.status,
-                subStatus: newBuild.metaData.subStatus,
-                lastRun: newBuild.metaData.lastRun,
-                workunit: newBuild.metaData.workunit,
-              };
-
-              const emailBody =
-                notificationTemplate.orbitBuildEmailBody(buildDetails);
-              const emailRecipients = integration.metaData.notificationEmails;
-
-              const notificationResponse = await notify({
-                to: emailRecipients,
-                from: process.env.EMAIL_SENDER,
-                subject:
-                  "Alert: Megaphone Substatus detected on Orbit Build " +
-                  build.Name,
-                text: emailBody,
-                html: emailBody,
+            //if it doesn't exist, create it and send a notification
+            if (!orbitBuild) {
+              //create build
+              const newBuild = await orbitBuilds.create({
+                application_id: application_id,
+                build_id: build.BuildInstanceIdKey,
+                name: build.Name,
+                metaData: {
+                  lastRun: build.DateUpdated,
+                  status: build.Status_Code,
+                  subStatus: build.SubStatus_Code,
+                  workunit: build.HpccWorkUnit,
+                  EnvironmentName: build.EnvironmentName,
+                  Template: build.BuildTemplate_Name,
+                },
               });
 
-              let notification_id = uuidv4();
+              //if megaphone, send notification
+              // if (build.SubStatus_Code === "MEGAPHONE")
 
-              sentNotifications.push({
-                id: notification_id,
-                status: "notified",
-                notifiedTo: emailRecipients,
-                notification_channel: "eMail",
-                application_id,
-                notification_reason: "Megaphone Substatus",
-                monitoring_id: newBuild.id,
-                monitoring_type: "orbit",
-              });
+              //build and send email notification
+              if (integration.metaData.notificationEmails) {
+                let buildDetails = {
+                  name: newBuild.name,
+                  status: newBuild.metaData.status,
+                  subStatus: newBuild.metaData.subStatus,
+                  lastRun: newBuild.metaData.lastRun,
+                  workunit: newBuild.metaData.workunit,
+                };
+
+                const emailBody =
+                  notificationTemplate.orbitBuildEmailBody(buildDetails);
+                const emailRecipients = integration.metaData.notificationEmails;
+
+                const notificationResponse = await notify({
+                  to: emailRecipients,
+                  from: process.env.EMAIL_SENDER,
+                  subject:
+                    "Alert: Megaphone Substatus detected on Orbit Build " +
+                    build.Name,
+                  text: emailBody,
+                  html: emailBody,
+                });
+
+                let notification_id = uuidv4();
+
+                sentNotifications.push({
+                  id: notification_id,
+                  status: "notified",
+                  notifiedTo: emailRecipients,
+                  notification_channel: "eMail",
+                  application_id,
+                  notification_reason: "Megaphone Substatus",
+                  monitoring_id: newBuild.id,
+                  monitoring_type: "orbit",
+                });
+              }
+
+              // //build and send Teams notification
+              if (integration.metaData.notificationWebhooks) {
+                let facts = [
+                  { name: newBuild.name },
+                  { status: newBuild.metaData.status },
+                  { subStatus: newBuild.metaData.subStatus },
+                  { lastRun: newBuild.metaData.lastRun },
+                  { workunit: newBuild.metaData.workunit },
+                ];
+                let title = "Orbit Build Detectd With Megaphone Status";
+                notification_id = uuidv4();
+                const cardBody = notificationTemplate.orbitBuildMessageCard(
+                  title,
+                  facts,
+                  notification_id
+                );
+                await axios.post(
+                  integration.metaData.notificationWebhooks,
+                  cardBody
+                );
+
+                sentNotifications.push({
+                  id: notification_id,
+                  status: "notified",
+                  notifiedTo: emailRecipients,
+                  notification_channel: "msTeams",
+                  application_id,
+                  notification_reason: "Megaphone Substatus",
+                  monitoring_id: newBuild.id,
+                  monitoring_type: "orbit",
+                });
+              }
             }
 
-            // //build and send Teams notification
-            if (integration.metaData.notificationWebhooks) {
-              let facts = [
-                { name: newBuild.name },
-                { status: newBuild.metaData.status },
-                { subStatus: newBuild.metaData.subStatus },
-                { lastRun: newBuild.metaData.lastRun },
-                { workunit: newBuild.metaData.workunit },
-              ];
-              let title = "Orbit Build Detectd With Megaphone Status";
-              notification_id = uuidv4();
-              const cardBody = notificationTemplate.orbitBuildMessageCard(
-                title,
-                facts,
-                notification_id
-              );
-              await axios.post(
-                integration.metaData.notificationWebhooks,
-                cardBody
-              );
-
-              sentNotifications.push({
-                id: notification_id,
-                status: "notified",
-                notifiedTo: emailRecipients,
-                notification_channel: "msTeams",
-                application_id,
-                notification_reason: "Megaphone Substatus",
-                monitoring_id: newBuild.id,
-                monitoring_type: "orbit",
-              });
-            }
-          }
-
-          return true;
-        })
-      );
+            return true;
+          })
+        );
+      }
 
       // Record notifications
       if (sentNotifications.length > 0) {

@@ -150,7 +150,7 @@ const Integrations = () => {
       <br />
       <Table size="small" columns={columns} dataSource={integrations} rowKey={(record) => record.id} />
       <Modal
-        open={modalVisible}
+        visible={modalVisible}
         width={modalWidth}
         onCancel={cancelModal}
         maskClosable={false}

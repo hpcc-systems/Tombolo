@@ -1,7 +1,6 @@
 const Bree = require("bree");
 
 const logger = require("./config/logger");
-
 const {
   logBreeJobs,
   createNewBreeJob,
@@ -13,7 +12,6 @@ const {
   startJob,
   startAllJobs,
 } = require("./jobSchedularMethods/breeJobs.js");
-
 const {
   scheduleCheckForJobsWithSingleDependency,
   executeJob,
@@ -27,13 +25,11 @@ const {
   createClusterMonitoringBreeJob,
   scheduleClusterMonitoringOnServerStart,
 } = require("./jobSchedularMethods/clusterJobs.js");
-
 const {
   createJobMonitoringBreeJob,
   scheduleJobMonitoringOnServerStart,
   scheduleJobStatusPolling,
 } = require("./jobSchedularMethods/hpccJobs.js");
-
 const {
   createLandingZoneFileMonitoringBreeJob,
   createLogicalFileMonitoringBreeJob,
@@ -43,6 +39,11 @@ const {
   scheduleFileMonitoringOnServerStart,
   scheduleFileMonitoring,
 } = require("./jobSchedularMethods/hpccFiles.js");
+const { scheduleKeyCheck } = require("./jobSchedularMethods/apiKeys.js");
+const {
+  scheduleEmailNotificationProcessing,
+  scheduleTeamsNotificationProcessing,
+} = require("./jobSchedularMethods/notificationJobs.js");
 
 const {
   createOrbitMegaphoneJob,
@@ -50,11 +51,8 @@ const {
   scheduleOrbitMonitoringOnServerStart,
 } = require("./jobSchedularMethods/orbitJobs.js");
 
-const {
-  createIntegrationCreationJob,
-} = require("./jobSchedularMethods/integrationJobs.js");
-
-const { scheduleKeyCheck } = require("./jobSchedularMethods/apiKeys.js");
+//import job directly to run it only once on server start
+const { createIntegrations } = require("./jobs/integrationCreation.js");
 
 class JobScheduler {
   constructor() {
@@ -122,11 +120,15 @@ class JobScheduler {
       await this.scheduleSuperFileMonitoringOnServerStart();
       await this.scheduleClusterMonitoringOnServerStart();
       await this.scheduleKeyCheck();
-      await this.scheduleJobMonitoringOnServerStart();
+      // await this.scheduleJobMonitoringOnServerStart();
       await this.createClusterUsageHistoryJob();
+      await this.scheduleEmailNotificationProcessing();
+      await this.scheduleTeamsNotificationProcessing();
       await this.scheduleOrbitMonitoringOnServerStart();
       await this.createOrbitMegaphoneJob();
-      await this.createIntegrationCreationJob();
+
+      //one off jobs on server start
+      await this.createIntegrations();
     })();
   }
 
@@ -324,6 +326,13 @@ class JobScheduler {
     return scheduleKeyCheck.call(this);
   }
 
+  //Process notification queue
+  scheduleEmailNotificationProcessing() {
+    return scheduleEmailNotificationProcessing.call(this);
+  }
+  scheduleTeamsNotificationProcessing() {
+    return scheduleTeamsNotificationProcessing.call(this);
+  }
   //orbit jobs
   createOrbitMegaphoneJob() {
     return createOrbitMegaphoneJob.call(this);
@@ -336,9 +345,8 @@ class JobScheduler {
     return createOrbitMonitoringJob.call(this, { orbitMonitoring_id, cron });
   }
 
-  //integration jobs
-  createIntegrationCreationJob() {
-    return createIntegrationCreationJob.call(this);
+  createIntegrations() {
+    return createIntegrations.call(this);
   }
 }
 
