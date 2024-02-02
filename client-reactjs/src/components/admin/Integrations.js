@@ -159,6 +159,18 @@ const Integrations = () => {
         footer={saveBtn}
         title="Integration Settings">
         <Form layout="vertical" form={notificationForm} initialValues={{ monitoringActive: true }}>
+          <h3>General Settings</h3>
+          <Form.Item
+            label="Severity 3 Notification Emails"
+            style={{ width: '100%' }}
+            name="notificationEmailsSev3"
+            initialValue={selectedIntegration.metaData?.notificationEmailsSev3}
+            validateTrigger={['onChange', 'onBlur']}
+            rules={[{ max: 256, message: 'Maximum of 256 characters allowed' }]}>
+            <Input
+              onChange={(e) => setNotifications({ ...notifications, notificationEmailsSev3: e.target.value })}></Input>
+          </Form.Item>
+          <br />
           <h3>Megaphone Notification Settings</h3>
           <Form.Item name="megaphone" label="Active">
             <Switch
@@ -173,7 +185,8 @@ const Integrations = () => {
             style={{ width: '100%' }}
             name="notificationEmails"
             initialValue={selectedIntegration.metaData?.notificationEmails}
-            validateTrigger={['onChange', 'onBlur']}>
+            validateTrigger={['onChange', 'onBlur']}
+            rules={[{ max: 256, message: 'Maximum of 256 characters allowed' }]}>
             <Input onChange={(e) => setNotifications({ ...notifications, notificationEmails: e.target.value })}></Input>
           </Form.Item>
           <Form.Item
@@ -181,18 +194,10 @@ const Integrations = () => {
             style={{ width: '100%' }}
             name="notificationWebhooks"
             initialValue={selectedIntegration.metaData?.notificationWebhooks}
-            validateTrigger={['onChange', 'onBlur']}>
+            validateTrigger={['onChange', 'onBlur']}
+            rules={[{ max: 256, message: 'Maximum of 256 characters allowed' }]}>
             <Input
               onChange={(e) => setNotifications({ ...notifications, notificationWebhooks: e.target.value })}></Input>
-          </Form.Item>
-          <Form.Item
-            label="Severity 3 Notification Emails"
-            style={{ width: '100%' }}
-            name="notificationEmailsSev3"
-            initialValue={selectedIntegration.metaData?.notificationEmailsSev3}
-            validateTrigger={['onChange', 'onBlur']}>
-            <Input
-              onChange={(e) => setNotifications({ ...notifications, notificationEmailsSev3: e.target.value })}></Input>
           </Form.Item>
         </Form>
       </Modal>
