@@ -46,9 +46,26 @@ function JobMonitoring() {
 
   //When component mounts get all teams hook
   useEffect(() => {
-    getAllTeamsHook({ setTeamsHook });
-    getAllJobMonitorings({ message, setJobMonitorings, applicationId });
-  }, []);
+    //Get all teams hook
+    (async () => {
+      try {
+        const allTeamsHook = await getAllTeamsHook();
+        setTeamsHook(allTeamsHook);
+      } catch (error) {
+        message.error('Error fetching teams hook');
+      }
+    })();
+
+    // Get all job monitorings
+    (async () => {
+      try {
+        const allMonitorings = await getAllJobMonitorings({ applicationId });
+        setJobMonitorings(allMonitorings);
+      } catch (error) {
+        message.error('Error fetching job monitorings');
+      }
+    })();
+  }, [applicationId]);
 
   //When intention to edit a monitoring is discovered
   useEffect(() => {

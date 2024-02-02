@@ -1,6 +1,8 @@
 // Desc: This file contains the form for ASR specific monitoring details
 import React, { useEffect, useState } from 'react';
-const { Form, Row, Col, Input, Select } = require('antd');
+const { Form, Row, Col, Input, Select, message } = require('antd');
+
+import { getDomains, getProductCategories } from './jobMonitoringUtils';
 
 //Constants
 const { Option } = Select;
@@ -16,78 +18,46 @@ const severityLevels = [0, 1, 2, 3];
 function AsrSpecificMonitoringDetails({ form }) {
   //Local States
   const [domain, setDomain] = useState([]);
-  const [categories, setCategories] = useState(null);
+  const [productCategories, setProductCategories] = useState([]);
   const [selectedDomain, setSelectedDomain] = useState(null);
 
   //Effects
   useEffect(() => {
-    getDomains();
-    getProductCategory();
-  }, []);
+    // Get domains
+    (async () => {
+      try {
+        const domainData = await getDomains();
+        setDomain(domainData);
+      } catch (error) {
+        message.error('Error fetching domains');
+      }
+    })();
 
-  //Function to get domain
-  const getDomains = async () => {
-    //TODO: Fetch domain  from Fido server -  this is just a place holder function
-    setDomain([
-      {
-        label: 'Insurance',
-        value: 'domain1',
-      },
-      {
-        label: 'Public Records',
-        value: 'domain2',
-      },
-      {
-        label: 'United Kingdom',
-        value: 'domain3',
-      },
-      {
-        label: 'Yogurt',
-        value: 'domain4',
-      },
-    ]);
+    // Get product categories
+    if (selectedDomain) {
+      (async () => {
+        try {
+          const productCategories = await getProductCategories({ domainId: selectedDomain });
+          setProductCategories(productCategories);
+        } catch (error) {
+          message.error('Error fetching product category');
+        }
+      })();
+    }
+  }, [selectedDomain]);
+
+  //Handle domain change function
+  const handleDomainChange = (value) => {
+    form.setFieldsValue({ productCategory: undefined });
+    setSelectedDomain(value);
   };
 
-  // Function to get product category
-  const getProductCategory = async (_domain) => {
-    //TODO: Fetch product Category  from Fido server -  this is just a place holder function
-    setCategories({
-      domain1: [
-        { label: 'A&R Marketing', value: 'domain1' },
-        { label: 'Active Insight', value: 'domain2' },
-        { label: 'Address', value: 'domain3' },
-        { label: 'ALIRtS', value: 'domain4' },
-        { label: 'Yogurt', value: 'domain' },
-      ],
-      domain2: [
-        { label: 'A&R Marketing', value: 'domain1' },
-        { label: 'Active Insight', value: 'domain2' },
-        { label: 'Address', value: 'domain3' },
-        { label: 'ALIRtS', value: 'domain4' },
-        { label: 'Yogurt', value: 'domain' },
-      ],
-      domain3: [
-        { label: 'A&R Marketing', value: 'domain1' },
-        { label: 'Active Insight', value: 'domain2' },
-        { label: 'Address', value: 'domain3' },
-        { label: 'ALIRtS', value: 'domain4' },
-        { label: 'Yogurt', value: 'domain' },
-      ],
-      domain4: [
-        { label: 'A&R Marketing', value: 'domain1' },
-        { label: 'Active Insight', value: 'domain2' },
-        { label: 'Address', value: 'domain3' },
-        { label: 'ALIRtS', value: 'domain4' },
-        { label: 'Yogurt', value: 'domain' },
-      ],
-    });
-  };
   return (
     <Form layout="vertical" form={form}>
       <Row gutter={16}>
         <Col span={12}>
           <Form.Item label="Domain" name="domain" rules={[{ required: true, message: 'Please select an option' }]}>
-            <Select onChange={(value) => setSelectedDomain(value)} placeholder="Domain">
+            <Select onChange={(value) => handleDomainChange(value)} placeholder="Domain">
               {domain.length > 0 &&
                 domain.map((d) => {
                   return (
@@ -105,7 +75,11 @@ function AsrSpecificMonitoringDetails({ form }) {
             name="productCategory"
             rules={[{ required: true, message: 'Please select an option' }]}>
             <Select placeholder="Product Category">
-              {selectedDomain && categories[selectedDomain].map((c) => <Option key={c.value}>{c.label}</Option>)}
+              {productCategories.map((c) => (
+                <Option key={c.value} value={c.value}>
+                  {c.label}
+                </Option>
+              ))}
             </Select>
           </Form.Item>
         </Col>

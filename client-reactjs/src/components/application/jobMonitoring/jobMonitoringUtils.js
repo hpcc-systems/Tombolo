@@ -1,25 +1,21 @@
-import { authHeader, handleError } from '../../common/AuthHeader.js';
+import { authHeader } from '../../common/AuthHeader.js';
 import { message } from 'antd';
 
 // Function to get all job monitorings from the server
-export const getAllJobMonitorings = async ({ message, setJobMonitorings, applicationId }) => {
-  try {
-    const payload = {
-      method: 'GET',
-      header: authHeader(),
-    };
+export const getAllJobMonitorings = async ({ applicationId }) => {
+  const payload = {
+    method: 'GET',
+    header: authHeader(),
+  };
 
-    const response = await fetch(`/api/jobmonitoring/all/${applicationId}`, payload);
+  const response = await fetch(`/api/jobmonitoring/all/${applicationId}`, payload);
 
-    if (!response.ok) {
-      return message.error('Failed to retrieve job monitoring');
-    }
-
-    const data = await response.json();
-    setJobMonitorings(data);
-  } catch (err) {
-    message.error('Failed to get job monitorings');
+  if (!response.ok) {
+    throw new Error('Failed to get job monitorings');
   }
+
+  const data = await response.json();
+  return data;
 };
 
 //Function that checks if the  job schedule is correct
@@ -52,23 +48,19 @@ export const checkScheduleValidity = ({ intermittentScheduling, completeSchedule
 };
 
 //Get all teams hook
-export const getAllTeamsHook = async ({ setTeamsHook }) => {
-  try {
-    const payload = {
-      method: 'GET',
-      header: authHeader(),
-    };
+export const getAllTeamsHook = async () => {
+  const payload = {
+    method: 'GET',
+    header: authHeader(),
+  };
 
-    const response = await fetch(`/api/teamsHook/`, payload);
-    if (!response.ok) handleError(response);
-
-    const data = await response.json();
-    if (data) {
-      setTeamsHook(data);
-    }
-  } catch (err) {
-    setTeamsHook([]);
+  const response = await fetch(`/api/teamsHook/`, payload);
+  if (!response.ok) {
+    throw new Error('Failed to get teams hook');
   }
+
+  const data = await response.json();
+  return data;
 };
 
 //Delete job monitoring
@@ -112,4 +104,37 @@ export const identifyErroneousTabs = ({ erroneousFields }) => {
   if (tab2ErroneousFields.length > 0) erroneousTabs.push((2).toString());
 
   return erroneousTabs;
+};
+
+// Get domains for job monitoring - ASR
+// Note - Domain list depends on the type of monitoring which is referred as activity type in the backend.
+// get the Activity ID from backend/database
+
+export const getDomains = async () => {
+  const activityTypeId = '0008'; // JOB/APP monitoring activity type per the ASR database
+  const options = {
+    method: 'GET',
+    headers: authHeader(),
+  };
+  const response = await fetch(`/api/fido/domains/${activityTypeId}`, options);
+  if (!response.ok) {
+    throw new Error('Failed to get domains');
+  }
+  const domains = await response.json();
+  return domains;
+};
+
+//Get product categories for selected domain and activity type
+export const getProductCategories = async ({ domainId }) => {
+  const activityTypeId = '0008'; // JOB/APP monitoring activity type per the ASR database
+  const options = {
+    method: 'GET',
+    headers: authHeader(),
+  };
+  const response = await fetch(`/api/fido/productCategories/${domainId}/${activityTypeId}`, options);
+  if (!response.ok) {
+    throw new Error('Failed to get product categories');
+  }
+  const productCategories = await response.json();
+  return productCategories;
 };
