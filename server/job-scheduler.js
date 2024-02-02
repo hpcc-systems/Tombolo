@@ -40,15 +40,16 @@ const {
   scheduleFileMonitoring,
 } = require("./jobSchedularMethods/hpccFiles.js");
 const { scheduleKeyCheck } = require("./jobSchedularMethods/apiKeys.js");
-const {scheduleEmailNotificationProcessing, scheduleTeamsNotificationProcessing} = require("./jobSchedularMethods/notificationJobs.js");
+const {
+  scheduleEmailNotificationProcessing,
+  scheduleTeamsNotificationProcessing,
+} = require("./jobSchedularMethods/notificationJobs.js");
 
 const {
   createOrbitMegaphoneJob,
   createOrbitMonitoringJob,
   scheduleOrbitMonitoringOnServerStart,
 } = require("./jobSchedularMethods/orbitJobs.js");
-
-const { scheduleKeyCheck } = require("./jobSchedularMethods/apiKeys.js");
 
 //import job directly to run it only once on server start
 const { createIntegrations } = require("./jobs/integrationCreation.js");
@@ -329,7 +330,7 @@ class JobScheduler {
   scheduleEmailNotificationProcessing() {
     return scheduleEmailNotificationProcessing.call(this);
   }
-  scheduleTeamsNotificationProcessing(){
+  scheduleTeamsNotificationProcessing() {
     return scheduleTeamsNotificationProcessing.call(this);
   }
   //orbit jobs

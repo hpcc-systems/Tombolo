@@ -63,7 +63,7 @@ class LeftNav extends Component {
     const applicationId = this.props?.applicationId || '';
     const integrations = this.props?.integrations || [];
 
-    const orbitActive = integrations.find((i) => i.name === 'Orbit')?.active;
+    const asrActive = integrations.find((i) => i.name === 'ASR')?.active;
 
     if (!this.props.loggedIn || !this.props.user || Object.getOwnPropertyNames(this.props.user).length == 0) {
       return null;
@@ -124,7 +124,7 @@ class LeftNav extends Component {
               <Link to={'/' + applicationId + '/superfileMonitoring'}>{<Text text="Superfiles" />}</Link>
             </Menu.Item>
 
-            {orbitActive ? (
+            {asrActive ? (
               <Menu.Item key="4e" icon={<CloudServerOutlined />}>
                 <Link to={'/' + applicationId + '/orbitMonitoring'}>{<Text text="Orbit" />}</Link>
               </Menu.Item>
@@ -139,7 +139,7 @@ class LeftNav extends Component {
               <Link to={'/' + applicationId + '/dashboard/clusterUsage'}>{<Text text="Cluster" />}</Link>
             </Menu.Item>
 
-            {orbitActive ? (
+            {asrActive ? (
               <Menu.Item key="5c" icon={<CloudServerOutlined />}>
                 <Link to={'/' + applicationId + '/dashboard/Orbit'}>{<Text text="Orbit" />}</Link>
               </Menu.Item>
