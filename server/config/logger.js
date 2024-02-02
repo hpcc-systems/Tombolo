@@ -2,6 +2,14 @@ const { createLogger, format, transports } = require('winston');
 // docs: https://github.com/winstonjs/winston
 const isProduction = process.env.NODE_ENV === 'production';
 
+// Print logs in color depending on log type 
+format.colorize().addColors({
+  error: "red",
+  warn: "yellow",
+  info: "green",
+  http: "magenta",
+});
+
 const getFormat = () =>
   format.combine(
     isProduction ? format.uncolorize() : format.colorize({ all: true }),  // adding or removing colors depending on logs type;
@@ -27,7 +35,10 @@ let DEFAULT_LOG_LEVEL = 'http';
 // Initialize logger
 const logger = createLogger({
   exitOnError: false,
-  format: format.combine(format.errors({ stack: true }), format.timestamp()), // this will be common setting for all transports;
+  format: format.combine(
+    format.errors({ stack: true }), 
+    format.timestamp()
+    ), // this will be common setting for all transports;
   transports: [
      new transports.Console({
       ...common,
