@@ -1,5 +1,6 @@
 //Packages
 import React from 'react';
+import { useSelector } from 'react-redux';
 import { Form, Card, Select } from 'antd';
 import { isEmail } from 'validator';
 
@@ -16,7 +17,13 @@ const jobStatuses = [
   { label: 'Threshold Exceeded', value: 'ThresholdExceeded' }, //TODO - If threshold exceed option is selected make threshold time input value required
 ];
 
-function JobMonitoringNotificationTab({ form, teamsHooks, asrIntegration }) {
+function JobMonitoringNotificationTab({ form, teamsHooks }) {
+  //Redux
+  const {
+    applicationReducer: { integrations },
+  } = useSelector((state) => state);
+  const asrIntegration = integrations?.find((integration) => integration.name === 'ASR') !== undefined;
+
   // JSX
   return (
     <Card>

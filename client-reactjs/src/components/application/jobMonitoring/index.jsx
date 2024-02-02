@@ -94,9 +94,6 @@ function JobMonitoring() {
     }
   }, [editingData]);
 
-  //TODO - Grab ASR integration flag from redux
-  const asrIntegration = true;
-
   // Create form instance
   const [form] = Form.useForm();
 
@@ -289,7 +286,6 @@ function JobMonitoring() {
         jobMonitorings={jobMonitorings}
         setEditingData={setEditingData}
         isEditing={editingData.isEditing}
-        asrIntegration={asrIntegration}
         erroneousTabs={erroneousTabs}
         setErroneousTabs={setErroneousTabs}
         setErroneousScheduling={setErroneousScheduling}

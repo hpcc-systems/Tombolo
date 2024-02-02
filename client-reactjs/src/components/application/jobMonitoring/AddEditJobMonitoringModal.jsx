@@ -30,7 +30,6 @@ const AddEditJobMonitoringModal = ({
   jobMonitorings,
   setEditingData,
   isEditing,
-  asrIntegration,
   erroneousTabs,
   setErroneousTabs,
   setErroneousScheduling,
@@ -79,16 +78,13 @@ const AddEditJobMonitoringModal = ({
           setCronMessage={setCronMessage}
           erroneousScheduling={erroneousScheduling}
           monitoringScope={monitoringScope}
-          asrIntegration={asrIntegration}
         />
       ),
     },
     {
       label: 'Notifications',
       id: 3,
-      component: () => (
-        <JobMonitoringNotificationTab form={form} teamsHooks={teamsHooks} asrIntegration={asrIntegration} />
-      ),
+      component: () => <JobMonitoringNotificationTab form={form} teamsHooks={teamsHooks} />,
     },
   ];
 

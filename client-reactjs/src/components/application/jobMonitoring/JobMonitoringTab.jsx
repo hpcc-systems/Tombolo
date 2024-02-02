@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { useSelector } from 'react-redux';
 import { Checkbox, Card, Form, Input } from 'antd';
 
 import './jobMonitoring.css';
@@ -17,9 +18,15 @@ function JobMonitoringTab({
   setCronMessage,
   erroneousScheduling,
   monitoringScope,
-  asrIntegration,
 }) {
   const [activateMonitoring, setActivateMonitoring] = useState(false);
+
+  //Redux
+  const {
+    applicationReducer: { integrations },
+  } = useSelector((state) => state);
+
+  const asrIntegration = integrations?.find((integration) => integration.name === 'ASR') !== undefined;
 
   return (
     <div>
@@ -64,7 +71,7 @@ function JobMonitoringTab({
                   },
                 },
               ]}>
-              <Input type="number" min={1} max={1440} style={{ width: '100%' }} placeholder="Threshold (in minutes)" />
+              <Input type="number" min={1} max={1440} style={{ width: '50%' }} placeholder="Threshold (in minutes)" />
             </Form.Item>
           )}
 
