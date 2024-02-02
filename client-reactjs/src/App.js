@@ -35,9 +35,13 @@ const ManualJobDetail = React.lazy(() => import('./components/application/Jobs/M
 const Actions = React.lazy(() => import('./components/application/actions/actions'));
 const AddJobsForm = React.lazy(() => import('./components/application/Jobs/AddjobsForm/AddJobsForm'));
 const FileMonitoring = React.lazy(() => import('./components/application/fileMonitoring/FileMonitoring'));
+const OrbitMonitoring = React.lazy(() => import('./components/application/orbitMonitoring/OrbitMonitoring'));
 const SuperFileMonitoring = React.lazy(() =>
   import('./components/application/superfileMonitoring/SuperFileMonitoring')
 );
+// const Notifications = React.lazy(() => import('./components/application/dashboard/notifications/Notifications'));
+const Orbit = React.lazy(() => import('./components/application/dashboard/Orbit/Orbit'));
+// const ClusterUsage = React.lazy(() => import('./components/application/dashboard/clusterUsage/ClusterUsage'));
 const Notifications = React.lazy(() => import('./components/application/dashboard/notifications'));
 const ClusterUsage = React.lazy(() => import('./components/application/dashboard/clusterUsage/'));
 const ClusterMonitoring = React.lazy(() => import('./components/application/clusterMonitoring'));
@@ -53,6 +57,7 @@ const Regulations = React.lazy(() => import('./components/admin/ControlsAndRegul
 const GitHubSettings = React.lazy(() => import('./components/admin/GitHubSettings/GitHubSettings'));
 const ScheduledJobsPage = React.lazy(() => import('./components/admin/ScheduledJobsPage'));
 const Compliance = React.lazy(() => import('./components/admin/Compliance/Compliance'));
+const Integrations = React.lazy(() => import('./components/admin/Integrations'));
 const TeamsNotification = React.lazy(() => import('./components/admin/notifications/MsTeams/Teams'));
 
 // Shared layout, etc.
@@ -179,9 +184,11 @@ class App extends React.Component {
                         <PrivateRoute path="/:applicationId/fileMonitoring" component={FileMonitoring} />
                         <PrivateRoute path="/:applicationId/superfileMonitoring" component={SuperFileMonitoring} />
                         <PrivateRoute path="/:applicationId/ClusterMonitoring" component={ClusterMonitoring} />
+                        <PrivateRoute path="/:applicationId/OrbitMonitoring" component={OrbitMonitoring} />
                         <PrivateRoute path="/:applicationId/jobMonitoring" component={JobMonitoring} />{' '}
                         <PrivateRoute path="/:applicationId/dashboard/notifications" component={Notifications} />
                         <PrivateRoute path="/:applicationId/dashboard/clusterUsage" component={ClusterUsage} />
+                        <PrivateRoute path="/:applicationId/dashboard/Orbit" component={Orbit} />
                         <PrivateRoute path="/:applicationId/assets/add-jobs" component={AddJobsForm} />
                         <PrivateRoute path="/:applicationId/assets/job/:assetId?" component={JobDetailsForm} />
                         <PrivateRoute path="/:applicationId/assets/index/:assetId?" component={IndexDetailsForm} />
@@ -206,6 +213,7 @@ class App extends React.Component {
                         <PrivateRoute path="/admin/users" component={Users} />
                         <PrivateRoute path="/admin/consumers" component={AdminConsumers} />
                         <PrivateRoute path="/admin/controlsAndRegulations" component={Regulations} />
+                        <PrivateRoute path="/admin/integrations" component={Integrations} />
                         <PrivateRoute
                           path="/:applicationId/dataflowinstances/dataflowInstanceDetails/:dataflowId?/:executionGroupId?"
                           component={DataflowInstanceDetails}

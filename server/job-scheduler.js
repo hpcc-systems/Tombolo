@@ -44,8 +44,16 @@ const {
   scheduleFileMonitoring,
 } = require("./jobSchedularMethods/hpccFiles.js");
 
+const {
+  createOrbitMegaphoneJob,
+  createOrbitMonitoringJob,
+  scheduleOrbitMonitoringOnServerStart,
+} = require("./jobSchedularMethods/orbitJobs.js");
+
 const { scheduleKeyCheck } = require("./jobSchedularMethods/apiKeys.js");
 
+//import job directly to run it only once on server start
+const { createIntegrations } = require("./jobs/integrationCreation.js");
 
 class JobScheduler {
   constructor() {
@@ -115,6 +123,11 @@ class JobScheduler {
       await this.scheduleKeyCheck();
       // await this.scheduleJobMonitoringOnServerStart();
       await this.createClusterUsageHistoryJob();
+      await this.scheduleOrbitMonitoringOnServerStart();
+      await this.createOrbitMegaphoneJob();
+
+      //one off jobs on server start
+      await this.createIntegrations();
     })();
   }
 
@@ -310,6 +323,22 @@ class JobScheduler {
   // API keys check
   scheduleKeyCheck() {
     return scheduleKeyCheck.call(this);
+  }
+
+  //orbit jobs
+  createOrbitMegaphoneJob() {
+    return createOrbitMegaphoneJob.call(this);
+  }
+  scheduleOrbitMonitoringOnServerStart() {
+    return scheduleOrbitMonitoringOnServerStart.call(this);
+  }
+
+  createOrbitMonitoringJob({ orbitMonitoring_id, cron }) {
+    return createOrbitMonitoringJob.call(this, { orbitMonitoring_id, cron });
+  }
+
+  createIntegrations() {
+    return createIntegrations.call(this);
   }
 }
 

@@ -33,3 +33,8 @@ cluster-whitelist.js
 eclcc.log
 logs/*
 
+#timezone files
+/eclDir
+
+#temp files
+/tempFiles
