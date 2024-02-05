@@ -1,115 +1,96 @@
-import React, { useState, useEffect } from 'react';
-import { Form, Input, Typography, Checkbox } from 'antd';
-import cronstrue from 'cronstrue';
-import InfoDrawer from '../../common/InfoDrawer';
-import { InfoCircleOutlined } from '@ant-design/icons';
+import React, { useState } from 'react';
+import { useSelector } from 'react-redux';
+import { Checkbox, Card, Form, Input } from 'antd';
 
-function MonitoringTab({ jobMonitorings, selectedMonitoring }) {
-  const [cornExpaliner, setCornExplainer] = useState(null);
-  const [cron, setCorn] = useState(null);
-  const [open, setOpen] = useState(false);
+import './jobMonitoring.css';
+import SchedulePicker from './SchedulePicker';
+import AsrSpecificMonitoringDetails from './AsrSpecificMonitoringDetails';
 
-  const showDrawer = () => {
-    setOpen(true);
-  };
+function JobMonitoringTab({
+  intermittentScheduling,
+  setIntermittentScheduling,
+  completeSchedule,
+  setCompleteSchedule,
+  form,
+  cron,
+  setCron,
+  cronMessage,
+  setCronMessage,
+  erroneousScheduling,
+  monitoringScope,
+}) {
+  const [activateMonitoring, setActivateMonitoring] = useState(false);
 
-  const onClose = () => {
-    setOpen(false);
-  };
+  //Redux
+  const {
+    applicationReducer: { integrations },
+  } = useSelector((state) => state);
 
-  useEffect(() => {
-    if (cron) {
-      try {
-        const explainer = cronstrue.toString(cron);
-        setCornExplainer({ valid: true, message: `Runs ${explainer.toLocaleLowerCase()}` });
-      } catch (err) {
-        setCornExplainer(null);
-      }
-    }
-    if (!cron) setCornExplainer(null);
-  }, [cron]);
+  const asrIntegration = integrations?.find((integration) => integration.name === 'ASR') !== undefined;
 
   return (
-    <>
-      <Form.Item
-        label="Monitoring name"
-        name="name"
-        validateTrigger={['onChange', 'onBlur']}
-        required
-        rules={[
-          {
-            validator: (_, value) => {
-              const nameExists = jobMonitorings.find((monitoring) => monitoring.name === value);
-              if (!value) {
-                return Promise.reject('Invalid name');
-              } else if (!selectedMonitoring && nameExists) {
-                return Promise.reject('File Monitoring with same name already exists');
-              } else {
-                return Promise.resolve();
-              }
-            },
-          },
-          {
-            max: 256,
-            message: 'Maximum of 256 characters allowed',
-          },
-        ]}>
-        <Input></Input>
-      </Form.Item>
+    <div>
+      {/* Cluster wide monitoring does not require scheduling because all you are doing is monitoring the new work units in cluster that meet notification conditions */}
+      {monitoringScope === 'ClusterWideMonitoring' ? null : (
+        <Card className="modal-card" style={{ border: '1px solid #dadada' }}>
+          <SchedulePicker
+            intermittentScheduling={intermittentScheduling}
+            setIntermittentScheduling={setIntermittentScheduling}
+            completeSchedule={completeSchedule}
+            setCompleteSchedule={setCompleteSchedule}
+            cron={cron}
+            setCron={setCron}
+            cronMessage={cronMessage}
+            setCronMessage={setCronMessage}
+          />
+          {erroneousScheduling && (
+            <div style={{ color: 'var(--danger)', textAlign: 'center' }}>Please select schedule for the job</div>
+          )}
+        </Card>
+      )}
 
-      <Form.Item
-        label={
-          <>
-            <p style={{ marginBottom: '0' }}>
-              Cron (How often to monitor)
-              <InfoCircleOutlined style={{ marginLeft: '.5rem' }} onClick={() => showDrawer()} />
-            </p>
-            <InfoDrawer open={open} onClose={onClose} width="700px" content="cron"></InfoDrawer>
-          </>
-        }
-        name="cron"
-        rules={[
-          { required: true, message: 'Required field' },
-          {
-            validator: async (_, cron) => {
-              if (cron) {
-                try {
-                  const cronInArray = cron.split(' ');
-                  if (cronInArray.length > 5) {
-                    setCornExplainer({ valid: true, message: `` });
-                    return Promise.reject('Cron expression has more than 5 parts');
-                  } else {
-                    cronstrue.toString(cron);
-                  }
-                } catch (err) {
-                  return Promise.reject(err);
-                }
-              }
-            },
-          },
-        ]}
-        extra={
-          cornExpaliner ? (
-            <span style={{ color: '#1890ff' }}>{cornExpaliner.message}</span>
-          ) : (
-            <Typography.Link href="https://crontab.cronhub.io/" target="_blank">
-              Click here to create cron expression
-            </Typography.Link>
-          )
-        }>
-        <Input
-          placeholder="*/5 * * * *"
-          onChange={(e) => {
-            setCorn(e.target.value);
-          }}
-        />
-      </Form.Item>
+      <Card className="modal-card-2" style={{ border: '1px solid #dadada' }}>
+        {asrIntegration && <AsrSpecificMonitoringDetails form={form} />}
+        <Form form={form} layout="vertical">
+          {/* conditionally render this field if ASR is disabled */}
+          {!asrIntegration && (
+            <Form.Item
+              label="Maximum Build Time / Threshold (in mins)"
+              name="threshold"
+              required={form.getFieldValue('notificationCondition')?.includes('ThresholdExceeded')}
+              rules={[
+                {
+                  validator: async (_, value) => {
+                    if (form.getFieldValue('notificationCondition')?.includes('ThresholdExceeded')) {
+                      if (!value) {
+                        return Promise.reject(new Error('This field is required'));
+                      } else if (!(parseInt(value) > 0 && parseInt(value) < 1440)) {
+                        return Promise.reject(new Error('Threshold should be between 0 and 1440'));
+                      }
+                    }
+                  },
+                },
+              ]}>
+              <Input type="number" min={1} max={1440} style={{ width: '50%' }} placeholder="Threshold (in minutes)" />
+            </Form.Item>
+          )}
 
-      <Form.Item name="isActive" valuePropName="checked" noStyle>
-        <Checkbox>Start monitoring now</Checkbox>
-      </Form.Item>
-    </>
+          <Form.Item
+            name="isActive"
+            valuePropName="checked"
+            extra={
+              activateMonitoring ? (
+                <div style={{ marginTop: '-10px', marginLeft: '20px', color: 'var(--primary)' }}>
+                  (Note: Monitoring will only become active upon approval)
+                </div>
+              ) : null
+            }>
+            <Checkbox onChange={(e) => setActivateMonitoring(e.target.checked)}> Activate Job Monitoring </Checkbox>
+          </Form.Item>
+        </Form>
+      </Card>
+    </div>
   );
 }
 
-export default MonitoringTab;
+export default JobMonitoringTab;
