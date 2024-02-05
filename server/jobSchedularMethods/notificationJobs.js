@@ -9,7 +9,7 @@ async function scheduleEmailNotificationProcessing() {
     let jobName = "email-notification-processing-" + new Date().getTime();
     this.bree.add({
       name: jobName,
-      interval: "10s", // Make it 120 seconds in production
+      interval: "60s", // Make it 120 seconds in production
       path: path.join(__dirname, "..", "jobs", PROCESS_EMAIL_NOTIFICATIONS),
       worker: {
         workerData: {
@@ -31,7 +31,7 @@ async function scheduleTeamsNotificationProcessing() {
     let jobName = "teams-notification-processing-" + new Date().getTime();
     this.bree.add({
       name: jobName,
-      interval: "10s", // Make it 120 seconds in production
+      interval: "60s", // Make it 120 seconds in production
       path: path.join(__dirname, "..", "jobs", PROCESS_TEAMS_NOTIFICATIONS),
       worker: {
         workerData: {
