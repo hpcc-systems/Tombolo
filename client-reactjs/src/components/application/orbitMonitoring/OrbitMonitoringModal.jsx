@@ -299,7 +299,8 @@ const OrbitMonitoringModal = ({
       confirmLoading={confirmLoading}
       destroyOnClose
       footer={btns[activeTab]}
-      style={{ marginTop: '100px' }}>
+      style={{ marginTop: '100px' }}
+      title="Orbit Monitoring">
       {fetchingOrbitDetails ? (
         <div style={{ textAlign: 'center' }}>
           <Spin />
@@ -308,6 +309,7 @@ const OrbitMonitoringModal = ({
         <Form layout="vertical" form={entryForm}>
           <Tabs
             activeKey={activeTab}
+            type="card"
             onTabClick={(record) => {
               setActiveTab(record);
             }}>

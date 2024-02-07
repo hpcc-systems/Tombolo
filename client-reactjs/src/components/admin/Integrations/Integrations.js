@@ -25,6 +25,7 @@ const Integrations = () => {
     if (width > 1500) {
       setModalWidth('40vw');
     } else if (width > 1000) {
+      integrations;
       setModalWidth('60vw');
     } else {
       setModalWidth('100vw');
@@ -49,6 +50,7 @@ const Integrations = () => {
       const response = await fetch(`/api/integrations/get/${applicationId}`, payload);
 
       const data = await response.json();
+
       if (data) {
         setIntegrations(data);
       }
@@ -62,6 +64,7 @@ const Integrations = () => {
     await setModalVisible(true);
     await setSelectedIntegration(record);
     await setNotifications(record.metaData);
+    await setActive(record.config?.megaphoneActive);
   };
 
   const handleSave = async () => {

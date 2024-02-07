@@ -181,6 +181,7 @@ function Index() {
   return (
     <div>
       <Tabs
+        type="card"
         tabBarExtraContent={
           <Space>
             <Button
