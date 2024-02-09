@@ -163,7 +163,7 @@ const AddEditJobMonitoringModal = ({
       onCancel={handleCancel}
       footer={renderFooter()}
       maskClosable={false}>
-      <Tabs activeKey={activeTab.toString()} onChange={(key) => handleTabChange(key)}>
+      <Tabs type="card" activeKey={activeTab.toString()} onChange={(key) => handleTabChange(key)}>
         {tabs.map((tab, index) => (
           <Tabs.TabPane
             key={index}

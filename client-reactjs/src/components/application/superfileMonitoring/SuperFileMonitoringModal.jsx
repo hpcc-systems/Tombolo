@@ -316,6 +316,7 @@ const SuperFileMonitoringModal = ({
         ) : (
           <Form layout="vertical" form={entryForm}>
             <Tabs
+              type="card"
               activeKey={activeTab}
               onTabClick={(record) => {
                 setActiveTab(record);

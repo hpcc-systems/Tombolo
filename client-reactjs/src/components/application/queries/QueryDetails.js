@@ -605,7 +605,7 @@ class QueryDetails extends PureComponent {
               <Spin spinning={this.state.initialDataLoading} size="large" />
             </div>
           ) : null}
-          <Tabs defaultActiveKey="1" tabBarExtraContent={controls}>
+          <Tabs type="card" defaultActiveKey="1" tabBarExtraContent={controls}>
             <TabPane tab={<Text text="Basic" />} key="1">
               <Form
                 {...formItemLayout}

@@ -12,7 +12,7 @@ function Actions() {
       <div style={{ display: 'flex', justifyContent: 'space-between' }}>
         <BreadCrumbs />
       </div>
-      <Tabs defaultActiveKey="1">
+      <Tabs type="card" defaultActiveKey="1">
         <TabPane tab={<Text text="File Upload" />} key="1">
           <LandingZoneUpload />
         </TabPane>

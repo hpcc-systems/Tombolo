@@ -103,6 +103,7 @@ function ClusterUsage() {
     <Tabs
       tabBarExtraContent={<ExportMenu selectedCluster={selectedCluster} />}
       activeKey={activeTab}
+      type="card"
       onChange={handleTabSwitching}>
       <Tabs.TabPane tab="Usage history" key="1">
         <Filters
