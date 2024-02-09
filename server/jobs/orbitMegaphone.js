@@ -3,21 +3,16 @@ const sql = require("mssql");
 const models = require("../models");
 const integrations = models.integrations;
 const orbitBuilds = models.orbitBuilds;
-const teamsWebhooks = models.teams_hook;
 const monitoring_notifications = models.monitoring_notifications;
 const notificationTemplate = require("./messageCards/notificationTemplate");
 const { notify } = require("../routes/notifications/email-notification");
 const { v4: uuidv4 } = require("uuid");
 const axios = require("axios");
 
-const dbConfig = {
-  server: process.env.ORBIT_DB,
-  database: process.env.ORBIT_DB_NAME,
-  user: process.env.ORBIT_DB_USER,
-  password: process.env.ORBIT_DB_PWD,
-  port: parseInt(process.env.ORBIT_DB_PORT),
-  trustServerCertificate: true,
-};
+const {
+  runMySQLQuery,
+  orbitDbConfig,
+} = require("../../utils/runSQLQueries.js");
 
 (async () => {
   try {
@@ -42,8 +37,9 @@ const dbConfig = {
       //connect to db
       await sql.connect(dbConfig);
 
-      const result =
-        await sql.query`select TOP 25 * from DimReceiveInstance where SubStatus_Code = 'MEGAPHONE' order by DateUpdated desc`;
+      query = `select TOP 25 * from DimReceiveInstance where SubStatus_Code = 'MEGAPHONE' order by DateUpdated desc`;
+
+      const result = await runMySQLQuery(query, orbitDbConfig);
 
       //just grab the rows from result
       let rows = result?.recordset;
@@ -121,44 +117,37 @@ const dbConfig = {
             }
 
             // //build and send Teams notification
-            if (integration?.metaData?.notificationWebhooks) {
-              //get the teams webhooks by the ID's in the webhooks
-              for (let hook of integration.metaData.notificationWebhooks) {
-                let teamsHook = await teamsWebhooks.findOne({
-                  where: {
-                    id: hook,
-                  },
-                  raw: true,
-                });
+            if (integration.metaData.notificationWebhooks) {
+              let facts = [
+                { name: newBuild.name },
+                { Status: newBuild.metaData.status },
+                { "Sub Status": newBuild.metaData.subStatus },
+                { "Last Run": newBuild.metaData.lastRun },
+                { WorkUnit: newBuild.metaData.workunit },
+              ];
+              let title = "Orbit Build Detectd With Megaphone Status";
+              notification_id = uuidv4();
+              const cardBody = notificationTemplate.orbitBuildMessageCard(
+                title,
+                facts,
+                notification_id
+              );
 
-                let facts = [
-                  { name: newBuild.name },
-                  { Status: newBuild.metaData.status },
-                  { "Sub Status": newBuild.metaData.subStatus },
-                  { "Last Run": newBuild.metaData.lastRun },
-                  { WorkUnit: newBuild.metaData.workunit },
-                ];
-                let title = "Orbit Build Detectd With Megaphone Status";
-                notification_id = uuidv4();
-                const cardBody = notificationTemplate.orbitBuildMessageCard(
-                  title,
-                  facts,
-                  notification_id
-                );
+              await axios.post(
+                integration.metaData.notificationWebhooks,
+                JSON.parse(cardBody)
+              );
 
-                await axios.post(teamsHook.url, JSON.parse(cardBody));
-
-                sentNotifications.push({
-                  id: notification_id,
-                  status: "notified",
-                  notifiedTo: teamsHook.url,
-                  notification_channel: "msTeams",
-                  application_id,
-                  notification_reason: "Megaphone Substatus",
-                  monitoring_id: newBuild.id,
-                  monitoring_type: "orbit",
-                });
-              }
+              sentNotifications.push({
+                id: notification_id,
+                status: "notified",
+                notifiedTo: integration.metaData.notificationWebhooks,
+                notification_channel: "msTeams",
+                application_id,
+                notification_reason: "Megaphone Substatus",
+                monitoring_id: newBuild.id,
+                monitoring_type: "orbit",
+              });
             }
           } else {
             //if it does exist, update the "final status metadata"
