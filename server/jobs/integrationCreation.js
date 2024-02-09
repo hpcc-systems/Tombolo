@@ -19,14 +19,13 @@ async function createIntegrations() {
       if (process.env.ASR === "true") {
         integrationList.push({
           application_id: application.id,
-          name: "Orbit",
+          name: "ASR",
           description:
-            "Enabling this integration will allow Tombolo to collect data from HPCCs Orbit system and provide dashboard information for it",
+            "Enabling this integration will allow Tombolo to collect data from Orbit, FIDO, and other ASR sources in order to provide monitoring and alerting functionality. Additional fields will be made available in certain monitoring types as well.",
           active: "false",
           metaData: {
-            notificationEmails: "matthew.fancher@lexisnexisrisk.com",
-            notificationWebhooks:
-              "https://reedelsevier.webhook.office.com/webhookb2/81c072d6-6b47-4eca-9434-73944c464876@9274ee3f-9425-4109-a27f-9fb15c10675d/IncomingWebhook/60019c7653734064b4c225a02b1da597/af40e12f-e839-4801-91e9-e61a20045feb",
+            notificationEmails: "",
+            notificationWebhooks: "",
           },
         });
       }

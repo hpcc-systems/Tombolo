@@ -1,0 +1,96 @@
+.jobmonitoring_halfWidth_input {
+  width: 50%;
+}
+.custom-select {
+  height: 80px !important; /* Adjust as needed */
+}
+.jobMonitoring__modal {
+  width: 800;
+}
+
+.jobMonitoring__inputField {
+  width: 100%;
+}
+
+/* Schedular Selector */
+
+.schedule-selector {
+  display: flex;
+}
+
+.selected-component {
+  padding-left: 15px;
+  /* display: flex; */
+  /* align-items: center;
+  justify-content: center; */
+  border-left: 1px solid #dadada;
+}
+
+.modal-header {
+  font-size: 14px;
+}
+
+.monitor-input {
+  margin-top: 10px;
+}
+
+.schedule-breakdown {
+  margin-bottom: 10px;
+}
+
+.weekday-checkboxes {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: left;
+}
+
+.radio-group-column,
+.daily-options {
+  display: flex;
+  flex-direction: column;
+}
+
+.monthly-options {
+  margin-top: 10px;
+}
+
+.yearly-options {
+  margin-top: 5px;
+}
+
+.yearly-options select {
+  margin-left: 10px;
+}
+
+.yearly-options .radio-group-column {
+  margin-top: 5px;
+}
+
+.modal-card-2 {
+  margin-top: 5px;
+}
+
+.schedularSelector__addMoreBtn {
+  color: var(--primary);
+  font-size: 12px;
+  text-decoration: underline;
+  cursor: pointer;
+  margin-left: 10px;
+}
+
+.schedularSelector__addMoreBtn:hover {
+  color: var(--secondary);
+}
+
+.job__monitoring_tiny-description {
+  margin-top: 30px;
+}
+
+.job__monitoring_tiny-description * {
+  padding: 2px 4px !important;
+}
+
+.job__monitoring_tiny-description .ant-descriptions-item-label {
+  width: 150px;
+  font-weight: 500;
+}

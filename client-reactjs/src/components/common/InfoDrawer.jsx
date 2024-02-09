@@ -11,6 +11,8 @@ import TeamsWebhookGuide from '../userGuides/TeamsWebhookGuide';
 import ApplicationsGuide from '../userGuides/ApplicationsGuide';
 import ClusterGuide from '../userGuides/ClusterGuide';
 import WildcardGuide from '../userGuides/WildcardGuide';
+import JobMonitoringScopeTypes from '../userGuides/JobMonitoringScopeTypes';
+import JobNamePattern from '../userGuides/JobNamePattern';
 
 const GuideDrawer = ({ content, open, onClose, width }) => {
   /* Example Usage
@@ -57,6 +59,10 @@ const GuideDrawer = ({ content, open, onClose, width }) => {
             return <ClusterGuide />;
           case 'wildcard':
             return <WildcardGuide />;
+          case 'jobMonitoringScopeTypes':
+            return <JobMonitoringScopeTypes />;
+          case 'jobNamePattern':
+            return <JobNamePattern />;
           default:
             return <h2>Guide Not Found</h2>;
         }

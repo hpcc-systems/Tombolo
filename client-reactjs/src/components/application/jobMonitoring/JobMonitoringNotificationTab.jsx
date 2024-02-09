@@ -1,240 +1,88 @@
-import React, { useState, useEffect } from 'react';
-import { Form, Select, Input, Button, InputNumber } from 'antd';
-import { MinusCircleOutlined, PlusOutlined, InfoCircleOutlined } from '@ant-design/icons';
-import InfoDrawer from '../../common/InfoDrawer';
+//Packages
+import React from 'react';
+import { useSelector } from 'react-redux';
+import { Form, Card, Select } from 'antd';
+import { isEmail } from 'validator';
+
+//Local Imports
+import AsrSpecificNotificationsDetails from './AsrSpecificNotificationsDetails';
+
+//Constants
 const { Option } = Select;
-
-const notificationOptions = [
-  { label: 'E-mail', value: 'eMail' },
-  { label: 'MS Teams', value: 'msTeams' },
+const jobStatuses = [
+  { label: 'Completed', value: 'Completed' },
+  { label: 'Failed', value: 'Failed' },
+  { label: 'Aborted', value: 'Aborted' },
+  { label: 'Blocked', value: 'Blocked' },
+  { label: 'Threshold Exceeded', value: 'ThresholdExceeded' }, //TODO - If threshold exceed option is selected make threshold time input value required
 ];
 
-let notificationConditions = [
-  { label: 'Aborted', value: 'aborted' },
-  { label: 'Failed', value: 'failed' },
-  { label: 'Unknown', value: 'unknown' },
-  { label: 'Threshold time exceeded', value: 'thresholdTimeExceeded' },
-];
+function JobMonitoringNotificationTab({ form, teamsHooks }) {
+  //Redux
+  const {
+    applicationReducer: { integrations },
+  } = useSelector((state) => state);
+  const asrIntegration = integrations?.find((integration) => integration.name === 'ASR') !== undefined;
 
-function ClusterMonitoringNotificationTab({
-  notificationDetails,
-  setNotificationDetails,
-  selectedJob,
-  notifyConditions,
-  setNotifyConditions,
-}) {
-  const [open, setOpen] = useState(false);
-  // Watch for change in selectedJob
-  useEffect(() => {
-    const costRelatedOptions = notificationConditions.find((condition) => condition.value === 'maxExecutionCost');
-    if (selectedJob && selectedJob.executionCost !== undefined) {
-      if (costRelatedOptions === undefined) {
-        notificationConditions.push({ label: 'Max execution cost', value: 'maxExecutionCost' });
-        notificationConditions.push({ label: 'Max file excess cost ', value: 'maxFileAccessCost' });
-        notificationConditions.push({ label: 'Max compile cost ', value: 'maxCompileCost' });
-        notificationConditions.push({ label: 'Max total cost ', value: 'maxTotalCost' });
-      }
-    } else {
-      const newOptions = notificationConditions.filter(
-        (option) =>
-          option.value !== 'maxExecutionCost' &&
-          option.value !== 'maxFileAccessCost' &&
-          option.value !== 'maxCompileCost' &&
-          option.value !== 'maxTotalCost'
-      );
-      notificationConditions = newOptions;
-    }
-  }, [selectedJob]);
-  const [selectedNotificationOptions, setSelectedNotificationOptions] = useState([]);
-
-  const showDrawer = () => {
-    setOpen(true);
-  };
-
-  const onClose = () => {
-    setOpen(false);
-  };
-
+  // JSX
   return (
-    <>
-      <Form.Item
-        label="Notify When"
-        name="notificationConditions"
-        rules={[{ required: true, message: 'Required filed' }]}>
-        <Select
-          mode="tags"
-          onChange={(selection) => {
-            setNotifyConditions(selection);
-            setSelectedNotificationOptions(selection);
-          }}>
-          {notificationConditions.map((condition) => {
-            return (
-              <Option key={condition.value} value={condition.value}>
-                {condition.label}
-              </Option>
-            );
-          })}
-        </Select>
-      </Form.Item>
-
-      <>
-        {notifyConditions.includes('maxExecutionCost') ? (
-          <Form.Item label="Max Execution Cost" name="maxExecutionCost" style={{ width: '50%' }} required>
-            <Input type="number" prefix="$"></Input>
-          </Form.Item>
-        ) : null}
-
-        {notifyConditions.includes('maxFileAccessCost') ? (
-          <Form.Item label="Max File Access Cost" name="maxFileAccessCost" style={{ width: '50%' }} required>
-            <Input type="number" prefix="$"></Input>
-          </Form.Item>
-        ) : null}
-
-        {notifyConditions.includes('maxCompileCost') ? (
-          <Form.Item label="Max Compile Cost" name="maxCompileCost" style={{ width: '50%' }} required>
-            <Input type="number" prefix="$"></Input>
-          </Form.Item>
-        ) : null}
-
-        {notifyConditions.includes('maxTotalCost') ? (
-          <Form.Item label="Max Total Cost" name="maxTotalCost" style={{ width: '50%' }} required>
-            <Input type="number" prefix="$"></Input>
-          </Form.Item>
-        ) : null}
-      </>
-      {selectedNotificationOptions.includes('thresholdTimeExceeded') ? (
+    <Card>
+      <Form form={form} layout="vertical">
         <Form.Item
-          name="thresholdTime"
-          label="Threshold time ( in minutes )"
-          validateTrigger={['onChange', 'onBlur']}
+          name="notificationCondition"
+          label="Notify when"
+          rules={[{ required: true, message: 'Select one or more options' }]}>
+          <Select mode="multiple" placeholder="Select one">
+            {jobStatuses.map((status) => (
+              <Option key={status.value} value={status.value}>
+                {status.label}
+              </Option>
+            ))}
+          </Select>
+        </Form.Item>
+
+        <Form.Item label="Teams Channel" name="teamsHooks">
+          <Select placeholder="Select a teams Channel " mode="multiple">
+            {teamsHooks.map((team) => (
+              <Option key={team.id} value={team.id}>
+                {team.name}
+              </Option>
+            ))}
+          </Select>
+        </Form.Item>
+
+        <Form.Item
+          label="Primary Contact(s)"
+          name="primaryContacts"
+          required
           rules={[
             {
-              type: 'number',
-              min: 0,
-              max: 1440,
-              message: 'min and max should be 0 to 1440',
+              validator: (_, value) => {
+                if (!value || value.length === 0) {
+                  return Promise.reject(new Error('Please add at least one email!'));
+                }
+                if (value.length > 20) {
+                  return Promise.reject(new Error('Too many emails'));
+                }
+                if (!value.every((v) => isEmail(v))) {
+                  return Promise.reject(new Error('One or more emails are invalid'));
+                }
+                return Promise.resolve();
+              },
             },
           ]}>
-          <InputNumber type="number" />
+          <Select
+            mode="tags"
+            allowClear
+            placeholder="Enter a comma-delimited list of email addresses"
+            tokenSeparators={[',']}
+          />
         </Form.Item>
-      ) : null}
 
-      <Form.Item
-        label={
-          <>
-            <p style={{ marginBottom: '0' }}>
-              Notification Channel
-              <InfoCircleOutlined style={{ marginLeft: '.5rem' }} onClick={() => showDrawer()} />
-            </p>
-            <InfoDrawer open={open} onClose={onClose} content="webhook"></InfoDrawer>
-          </>
-        }
-        name="notificationChannels"
-        rule={[{ required: true, message: 'Required Field' }]}>
-        <Select
-          options={notificationOptions}
-          mode="tags"
-          onChange={(value) => {
-            setNotificationDetails({ ...notificationDetails, notificationChannel: value });
-          }}></Select>
-      </Form.Item>
-
-      {notificationDetails?.notificationChannel?.includes('eMail') ? (
-        <Form.List name="emails">
-          {(fields, { add, remove }) => (
-            <>
-              {fields.map((field, _index) => (
-                <Form.Item required={true} key={field.key}>
-                  <div style={{ display: 'flex', placeItems: 'center' }}>
-                    <Form.Item
-                      {...field}
-                      validateTrigger={['onChange', 'onBlur']}
-                      type="email"
-                      rules={[
-                        {
-                          required: true,
-                          whitespace: true,
-                          type: 'email',
-                          message: 'Invalid e-mail address.',
-                        },
-                        {
-                          max: 256,
-                          message: 'Maximum of 256 characters allowed',
-                        },
-                      ]}
-                      noStyle>
-                      <Input placeholder="E-mail" />
-                    </Form.Item>
-                    {fields.length > 1 ? (
-                      <MinusCircleOutlined
-                        className="dynamic-delete-button"
-                        onClick={() => remove(field.name)}
-                        style={{ marginLeft: '10px' }}
-                      />
-                    ) : null}
-                  </div>
-                </Form.Item>
-              ))}
-              <Form.Item>
-                <Button
-                  type="dashed"
-                  onClick={() => add()}
-                  icon={<PlusOutlined />}
-                  width={'100%'}
-                  style={{ width: '100% -10px' }}>
-                  Add E-mail
-                </Button>
-              </Form.Item>
-            </>
-          )}
-        </Form.List>
-      ) : null}
-
-      {notificationDetails?.notificationChannel?.includes('msTeams') ? (
-        <Form.List name="msTeamsGroups">
-          {(fields, { add, remove }) => (
-            <>
-              {fields.map((field, _index) => (
-                <Form.Item required={false} key={field.key}>
-                  <div style={{ display: 'flex', placeItems: 'center' }}>
-                    <Form.Item
-                      {...field}
-                      validateTrigger={['onChange', 'onBlur']}
-                      rules={[
-                        {
-                          required: true,
-                          whitespace: true,
-                          message: 'Invalid Teams webhook URL',
-                        },
-                        {
-                          max: 1000,
-                          message: 'Maximum of 1000 characters allowed',
-                        },
-                      ]}
-                      noStyle>
-                      <Input placeholder="Teams incoming webhook URL" />
-                    </Form.Item>
-                    {fields.length > 1 ? (
-                      <MinusCircleOutlined
-                        className="dynamic-delete-button"
-                        onClick={() => remove(field.name)}
-                        style={{ marginLeft: '10px' }}
-                      />
-                    ) : null}
-                  </div>
-                </Form.Item>
-              ))}
-              <Form.Item>
-                <Button type="dashed" onClick={() => add()} icon={<PlusOutlined />} style={{ width: '100% -10px' }}>
-                  Add Teams Group
-                </Button>
-              </Form.Item>
-            </>
-          )}
-        </Form.List>
-      ) : null}
-    </>
+        {asrIntegration && <AsrSpecificNotificationsDetails />}
+      </Form>
+    </Card>
   );
 }
 
-export default ClusterMonitoringNotificationTab;
+export default JobMonitoringNotificationTab;
