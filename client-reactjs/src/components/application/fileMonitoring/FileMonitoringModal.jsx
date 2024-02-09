@@ -299,6 +299,7 @@ function FileMonitoringModal({
         </div>
       ) : (
         <Tabs
+          type="card"
           activeKey={activeTab}
           onTabClick={(record) => {
             setActiveTab(record);

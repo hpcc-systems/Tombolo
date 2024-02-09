@@ -41,9 +41,6 @@ const BasicTab = ({
         finalProductOptions.push({ label: product.product_name, value: product.product_name });
       });
 
-      console.log(productOptions);
-      console.log(finalProductOptions);
-
       setProducts(finalProductOptions);
     } catch (error) {
       console.log(error);
@@ -67,9 +64,6 @@ const BasicTab = ({
       domainOptions.map((domain) => {
         finalDomainOptions.push({ label: domain.business_unit, value: domain.business_unit });
       });
-
-      console.log(domainOptions);
-      console.log(finalDomainOptions);
 
       setBusinessUnits(finalDomainOptions);
     } catch (error) {

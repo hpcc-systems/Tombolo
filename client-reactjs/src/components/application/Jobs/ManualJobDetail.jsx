@@ -110,7 +110,7 @@ function ManualJobDetail() {
       <div className="assetTitle">
         {<Text text="Job" />}: {jobDetails.name}
       </div>
-      <Tabs tabBarExtraContent={actions}>
+      <Tabs type="card" tabBarExtraContent={actions}>
         <TabPane tab={<Text text="Basic" />} key="1">
           {jobData.map((item, i) => (
             <Row id={i} gutter={{ xs: 8, sm: 8, md: 8, lg: 8 }} key={item.label}>

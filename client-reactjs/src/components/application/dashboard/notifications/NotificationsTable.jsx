@@ -239,7 +239,7 @@ function NotificationsTable({ applicationId, setSelectedNotificationForBulkActio
             Close
           </Button>
         }>
-        <Tabs>
+        <Tabs type="card">
           <Tabs.TabPane tab="Metadata" key="1">
             <Descriptions bordered column={1} size="small">
               {selectedNotificationDetails.map((item) => (

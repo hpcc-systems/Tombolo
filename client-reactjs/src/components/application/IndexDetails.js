@@ -611,7 +611,7 @@ class IndexDetails extends PureComponent {
             </div>
           ) : null}
 
-          <Tabs defaultActiveKey="1" tabBarExtraContent={this.props.displayingInModal ? null : controls}>
+          <Tabs type="card" defaultActiveKey="1" tabBarExtraContent={this.props.displayingInModal ? null : controls}>
             <TabPane tab={<Text text="Basic" />} key="1">
               <Form
                 {...formItemLayout}

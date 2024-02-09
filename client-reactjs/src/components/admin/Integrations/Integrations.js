@@ -1,11 +1,12 @@
 import React, { useState, useEffect } from 'react';
-import { Tooltip, Space, Table, Switch, Modal, Form, Input, Button, message } from 'antd';
+import { Tooltip, Space, Table, Switch, Modal, Button, message } from 'antd';
 import { EditOutlined } from '@ant-design/icons';
-import BreadCrumbs from '../common/BreadCrumbs.js';
-import { authHeader } from '../common/AuthHeader.js';
+import BreadCrumbs from '../../common/BreadCrumbs.js';
+import { authHeader } from '../../common/AuthHeader.js';
 import { useSelector, useDispatch } from 'react-redux';
-import { applicationActions } from '../../redux/actions/Application.js';
-import useWindowSize from '../../hooks/useWindowSize.js';
+import { applicationActions } from '../../../redux/actions/Application.js';
+import useWindowSize from '../../../hooks/useWindowSize.js';
+import ASRForm from './IntegrationForms/ASRForm.js';
 
 const Integrations = () => {
   const [integrations, setIntegrations] = useState([]);
@@ -15,7 +16,7 @@ const Integrations = () => {
   const [selectedIntegration, setSelectedIntegration] = useState({});
   const [notifications, setNotifications] = useState({});
   const [active, setActive] = useState(false);
-  const [notificationForm] = Form.useForm();
+
   const windowSize = useWindowSize();
 
   // Changes modal size per screen vw
@@ -24,6 +25,7 @@ const Integrations = () => {
     if (width > 1500) {
       setModalWidth('40vw');
     } else if (width > 1000) {
+      integrations;
       setModalWidth('60vw');
     } else {
       setModalWidth('100vw');
@@ -48,6 +50,7 @@ const Integrations = () => {
       const response = await fetch(`/api/integrations/get/${applicationId}`, payload);
 
       const data = await response.json();
+
       if (data) {
         setIntegrations(data);
       }
@@ -61,6 +64,7 @@ const Integrations = () => {
     await setModalVisible(true);
     await setSelectedIntegration(record);
     await setNotifications(record.metaData);
+    await setActive(record.config?.megaphoneActive);
   };
 
   const handleSave = async () => {
@@ -82,7 +86,6 @@ const Integrations = () => {
       setModalVisible(false);
       dispatch(applicationActions.getIntegrations(applicationId));
 
-      notificationForm.resetFields();
       message.success('Successfully updated Integration');
     } else {
       message.success('An Error Occured, Integration not updated');
@@ -158,48 +161,17 @@ const Integrations = () => {
         destroyOnClose
         footer={saveBtn}
         title="Integration Settings">
-        <Form layout="vertical" form={notificationForm} initialValues={{ monitoringActive: true }}>
-          <h3>General Settings</h3>
-          <Form.Item
-            label="Severity 3 Notification Emails"
-            style={{ width: '100%' }}
-            name="notificationEmailsSev3"
-            initialValue={selectedIntegration.metaData?.notificationEmailsSev3}
-            validateTrigger={['onChange', 'onBlur']}
-            rules={[{ max: 256, message: 'Maximum of 256 characters allowed' }]}>
-            <Input
-              onChange={(e) => setNotifications({ ...notifications, notificationEmailsSev3: e.target.value })}></Input>
-          </Form.Item>
-          <br />
-          <h3>Megaphone Notification Settings</h3>
-          <Form.Item name="megaphone" label="Active">
-            <Switch
-              defaultChecked={selectedIntegration?.config?.megaphoneActive || false}
-              value={selectedIntegration?.config?.megaphoneActive || false}
-              onChange={(e) => {
-                setActive(e);
-              }}></Switch>
-          </Form.Item>
-          <Form.Item
-            label="Notification Emails"
-            style={{ width: '100%' }}
-            name="notificationEmails"
-            initialValue={selectedIntegration.metaData?.notificationEmails}
-            validateTrigger={['onChange', 'onBlur']}
-            rules={[{ max: 256, message: 'Maximum of 256 characters allowed' }]}>
-            <Input onChange={(e) => setNotifications({ ...notifications, notificationEmails: e.target.value })}></Input>
-          </Form.Item>
-          <Form.Item
-            label="Notification Webhooks"
-            style={{ width: '100%' }}
-            name="notificationWebhooks"
-            initialValue={selectedIntegration.metaData?.notificationWebhooks}
-            validateTrigger={['onChange', 'onBlur']}
-            rules={[{ max: 256, message: 'Maximum of 256 characters allowed' }]}>
-            <Input
-              onChange={(e) => setNotifications({ ...notifications, notificationWebhooks: e.target.value })}></Input>
-          </Form.Item>
-        </Form>
+        {selectedIntegration?.name === 'ASR' && (
+          <>
+            <ASRForm
+              setActive={setActive}
+              setNotifications={setNotifications}
+              selectedIntegration={selectedIntegration}
+              notifications={notifications}
+              handleSave={handleSave}
+            />
+          </>
+        )}
       </Modal>
     </>
   );

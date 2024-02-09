@@ -307,6 +307,7 @@ function ClusterMonitoring() {
           initialValues={{ msTeamsGroups: [''], emails: [''] }}>
           <Tabs
             activeKey={activeTab}
+            type="card"
             onTabClick={(record) => {
               setActiveTab(record);
             }}>

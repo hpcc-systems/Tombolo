@@ -170,7 +170,7 @@ function VisualizationDetails() {
 
   return (
     <React.Fragment>
-      <Tabs defaultActiveKey="1" tabBarExtraContent={controls}>
+      <Tabs type="card" defaultActiveKey="1" tabBarExtraContent={controls}>
         <TabPane tab={<Text text="Basic" />} key="1">
           <Spin spinning={formState.loading}>
             <Form {...formItemLayout} labelAlign="left" form={form} onFinish={handleOk}>
