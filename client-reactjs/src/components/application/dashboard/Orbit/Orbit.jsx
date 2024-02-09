@@ -439,6 +439,7 @@ function Orbit() {
   return (
     <div>
       <Tabs
+        type="card"
         tabBarExtraContent={
           <>
             <Space style={{ marginRight: '1rem' }}>
