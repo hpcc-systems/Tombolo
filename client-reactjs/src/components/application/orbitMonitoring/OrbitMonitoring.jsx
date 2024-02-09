@@ -14,6 +14,14 @@ const OrbitMonitoring = () => {
   const [selectedOrbitBuild, setSelectedOrbitBuild] = useState(null);
   const [editing, setEditing] = useState(null);
 
+  //product and business units, we fetch these on page load to avoid loading them every time the modal is opened
+  const [products, setProducts] = useState([]);
+  const [businessUnits, setBusinessUnits] = useState([]);
+  const [domainLoading, setDomainLoading] = useState(false);
+  const [domainStatus, setDomainStatus] = useState(null);
+  const [productLoading, setProductLoading] = useState(false);
+  const [productStatus, setProductStatus] = useState(null);
+
   const {
     application: { applicationId },
   } = useSelector((state) => state.applicationReducer);
@@ -30,6 +38,8 @@ const OrbitMonitoring = () => {
     async function fetchBuilds() {
       if (applicationId) {
         await getOrbitMonitoring(applicationId);
+        await getProducts();
+        await getDomains();
       }
     }
     fetchBuilds();
@@ -80,6 +90,64 @@ const OrbitMonitoring = () => {
     }
   };
 
+  const getProducts = async () => {
+    try {
+      setProductLoading(true);
+      setProductStatus('warning');
+      const options = {
+        method: 'GET',
+        headers: authHeader(),
+      };
+      const response = await fetch(`/api/orbit/getProducts/${applicationId}`, options);
+      if (!response.ok) handleError(response);
+
+      const productOptions = await response.json();
+
+      let finalProductOptions = [];
+
+      productOptions.map((product) => {
+        finalProductOptions.push({ label: product.product_name, value: product.product_name });
+      });
+
+      setProducts(finalProductOptions);
+      setProductLoading(false);
+      setProductStatus(null);
+    } catch (error) {
+      console.log(error);
+      message.error('There was an error getting Products from Fido');
+      setProductStatus('error');
+    }
+  };
+
+  const getDomains = async () => {
+    try {
+      setDomainLoading(true);
+      setDomainStatus('warning');
+      const options = {
+        method: 'GET',
+        headers: authHeader(),
+      };
+      const response = await fetch(`/api/orbit/getDomains/${applicationId}`, options);
+      if (!response.ok) handleError(response);
+
+      const domainOptions = await response.json();
+
+      let finalDomainOptions = [];
+
+      domainOptions.map((domain) => {
+        finalDomainOptions.push({ label: domain.business_unit, value: domain.business_unit });
+      });
+
+      setBusinessUnits(finalDomainOptions);
+      setDomainLoading(false);
+      setDomainStatus(null);
+    } catch (error) {
+      console.log(error);
+      message.error('There was an error getting Domains from Fido');
+      setDomainStatus('error');
+    }
+  };
+
   return (
     <>
       <BreadCrumbs
@@ -110,6 +178,12 @@ const OrbitMonitoring = () => {
         editing={editing}
         setEditing={setEditing}
         getOrbitMonitoring={getOrbitMonitoring}
+        businessUnits={businessUnits}
+        products={products}
+        domainLoading={domainLoading}
+        domainStatus={domainStatus}
+        productLoading={productLoading}
+        productStatus={productStatus}
       />
     </>
   );

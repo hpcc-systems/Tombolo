@@ -21,44 +21,17 @@ const SqlString = require("sqlstring");
 
 const jobScheduler = require("../../job-scheduler");
 
-const sql = require("mssql");
+const {
+  runMySQLQuery,
+  runSQLQuery,
+  orbitDbConfig,
+  fidoDbConfig,
+} = require("../../utils/runSQLQueries.js");
+
 const db = require("../../models");
-
-const dbConfig = {
-  server: process.env.ORBIT_DB,
-  database: process.env.ORBIT_DB_NAME,
-  user: process.env.ORBIT_DB_USER,
-  password: process.env.ORBIT_DB_PWD,
-  port: parseInt(process.env.ORBIT_DB_PORT),
-  trustServerCertificate: true,
-};
-
-const fidoDbConfig = {
-  server: process.env.FIDO_DB,
-  database: process.env.FIDO_DB_NAME,
-  user: process.env.FIDO_DB_USER,
-  password: process.env.FIDO_DB_PWD,
-  port: parseInt(process.env.FIDO_DB_PORT),
-  trustServerCertificate: true,
-};
-
-const runSQLQuery = async (query, config) => {
-  try {
-    await sql.connect(config);
-
-    const result = await sql.query(query);
-
-    //need this close to fix bug where it was only contacting the first server
-    sql.close();
-    return result;
-  } catch (err) {
-    console.log(err);
-    return {
-      err,
-      message: "There was an issue contacting the server",
-    };
-  }
-};
+const {
+  constructFileMonitoringWorkUnitEclCode,
+} = require("../../utils/hpcc-util");
 
 require("dotenv").config({ path: ENVPath });
 
@@ -88,18 +61,18 @@ router.post(
         return res.status(422).json({ success: false, errors: errors.array() });
 
       // get last status and WU to store against future checks
-      const query = `select TOP 1 HpccWorkUnit as 'WorkUnit', Name as 'Build', DateUpdated as 'Date', Status_Code as 'Status' from DimBuildInstance where Name = ${SqlString.escape(
+      const query = `select HpccWorkUnit as 'WorkUnit', Name as 'Build', DateUpdated as 'Date', Status_Code as 'Status' from DimBuildInstance where Name = ${SqlString.escape(
         req.body.build
-      )} order by Date desc`;
+      )} order by Date desc LIMIT 1`;
 
-      const wuResult = await runSQLQuery(query, dbConfig);
+      const wuResult = await runMySQLQuery(query, orbitDbConfig);
 
       if (wuResult?.err) {
         throw Error(result.message);
       }
 
       //destructure out of recordset and place inside of new metaData
-      const { WorkUnit, Date, Status } = wuResult.recordset[0];
+      const { WorkUnit, Date, Status } = wuResult[0][0];
 
       const metaData = req.body.metaData;
 
@@ -220,7 +193,6 @@ router.get(
       validatorUtil.errorFormatter
     );
     try {
-      console.log(errors);
       if (!errors.isEmpty())
         return res.status(422).json({ success: false, errors: errors.array() });
       const { application_id, keyword } = req.params;
@@ -230,7 +202,7 @@ router.get(
 
       const query = `select Name from DimBuildInstance where Name like ${keywordEscaped} and Name not like 'Scrub%' and EnvironmentName = 'Insurance' order by  Name asc`;
 
-      const result = await runSQLQuery(query, dbConfig);
+      const result = await runMySQLQuery(query, orbitDbConfig);
 
       if (result.err) {
         throw Error(result.message);
@@ -238,7 +210,7 @@ router.get(
 
       const uniqueNames = [];
 
-      const unique = result.recordset.filter((element) => {
+      const unique = result[0].filter((element) => {
         const isDuplicate = uniqueNames.includes(element.Name);
 
         if (!isDuplicate) {
@@ -283,17 +255,17 @@ router.get(
 
       //connect to db
 
-      const query = `select Top 1 EnvironmentName, Name, Status_DateCreated, HpccWorkUnit, Status_Code, Substatus_Code, BuildInstanceIdKey  from DimBuildInstance where Name = ${SqlString.escape(
+      const query = `select EnvironmentName, Name, Status_DateCreated, HpccWorkUnit, Status_Code, Substatus_Code, BuildInstanceIdKey  from DimBuildInstance where Name = ${SqlString.escape(
         buildName
-      )} order by Status_DateCreated desc`;
+      )} order by Status_DateCreated desc LIMIT 1`;
 
-      const result = await runSQLQuery(query, dbConfig);
+      const result = await runMySQLQuery(query, orbitDbConfig);
 
       if (result.err) {
-        throw Error(result.message);
+        throw Error(result.err);
       }
 
-      res.json(result?.recordset[0]);
+      res.json(result[0][0]);
     } catch (err) {
       // ... error checks
 
@@ -390,17 +362,17 @@ router.put(
 
       //get most recent work unit for storage
       // get last status and WU to store against future checks
-      const query = `select TOP 1 HpccWorkUnit as 'WorkUnit', Name as 'Build', DateUpdated as 'Date', Status_Code as 'Status' from DimBuildInstance where Name = ${escapedBuild}
-       order by Date desc`;
+      const query = `select  HpccWorkUnit as 'WorkUnit', Name as 'Build', DateUpdated as 'Date', Status_Code as 'Status' from DimBuildInstance where Name = ${escapedBuild}
+       order by Date desc LIMIT 1`;
 
-      const wuResult = await runSQLQuery(query, dbConfig);
+      const wuResult = await runMySQLQuery(query, orbitDbConfig);
 
       if (wuResult.err) {
         throw Error(result.message);
       }
 
       //destructure out of recordset and place inside of new metaData
-      const { WorkUnit, Date, Status } = wuResult.recordset[0];
+      const { WorkUnit, Date, Status } = wuResult[0][0];
 
       //set data fields
       newInfo = {
@@ -646,13 +618,13 @@ router.post(
       if (!application_id) throw Error("Invalid app ID");
 
       const query =
-        "select TOP 10 * from DimBuildInstance where SubStatus_Code = 'MEGAPHONE' order by DateUpdated desc";
+        "select * from DimBuildInstance where SubStatus_Code = 'MEGAPHONE' order by DateUpdated desc LIMIT 10";
 
-      const result = runSQLQuery(query, dbConfig);
+      const result = runMySQLQuery(query, orbitDbConfig);
 
       const sentNotifications = [];
       //just grab the rows from result
-      let rows = result?.recordset;
+      let rows = result[0];
 
       if (rows?.length) {
         //loop through rows to build notifications and import

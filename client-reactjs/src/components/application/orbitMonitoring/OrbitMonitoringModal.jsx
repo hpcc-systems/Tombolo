@@ -19,6 +19,12 @@ const OrbitMonitoringModal = ({
   editing,
   setEditing,
   getOrbitMonitoring,
+  businessUnits,
+  products,
+  domainLoading,
+  domainStatus,
+  productLoading,
+  productStatus,
 }) => {
   //modal states
   const [modalWidth, setModalWidth] = useState(0);
@@ -215,6 +221,7 @@ const OrbitMonitoringModal = ({
       isActive: true,
       monitoringConditions: [],
     });
+    await setNotificationDetails({});
     await getOrbitMonitoring(applicationId);
   };
 
@@ -322,6 +329,12 @@ const OrbitMonitoringModal = ({
                 setSelectedOrbitBuild={setSelectedOrbitBuild}
                 monitoringDetails={monitoringDetails}
                 setMonitoringDetails={setMonitoringDetails}
+                businessUnits={businessUnits}
+                products={products}
+                domainLoading={domainLoading}
+                domainStatus={domainStatus}
+                productLoading={productLoading}
+                productStatus={productStatus}
               />
             </TabPane>
             <TabPane tab="Monitoring Parameters" key="2">

@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useRef } from 'react';
 import { message, Form, Row, Col, AutoComplete, Spin, Select, Input } from 'antd';
 import { authHeader, handleError } from '../../common/AuthHeader.js';
 import { useSelector } from 'react-redux';
@@ -11,70 +11,23 @@ const BasicTab = ({
   setSelectedOrbitBuild,
   monitoringDetails,
   setMonitoringDetails,
+  businessUnits,
+  products,
+  domainLoading,
+  domainStatus,
+  productLoading,
+  productStatus,
 }) => {
-  const [products, setProducts] = useState([]);
-  const [businessUnits, setBusinessUnits] = useState([]);
+  const [orbitBuildSuggestions, setOrbitBuildSuggestions] = useState([]);
+  const [displayBuildInfo, setDisplayBuildInfo] = useState();
+  const [loading, setLoading] = useState(false);
+  const [status, setStatus] = useState(null);
+
+  const searchRef = useRef(null);
 
   const {
     application: { applicationId },
   } = useSelector((state) => state.applicationReducer);
-
-  useEffect(() => {
-    getProducts();
-    getDomains();
-  }, [applicationId]);
-
-  const getProducts = async () => {
-    try {
-      const options = {
-        method: 'GET',
-        headers: authHeader(),
-      };
-      const response = await fetch(`/api/orbit/getProducts/${applicationId}`, options);
-      if (!response.ok) handleError(response);
-
-      const productOptions = await response.json();
-
-      let finalProductOptions = [];
-
-      productOptions.map((product) => {
-        finalProductOptions.push({ label: product.product_name, value: product.product_name });
-      });
-
-      setProducts(finalProductOptions);
-    } catch (error) {
-      console.log(error);
-      message.error('There was an error getting Products from Fido');
-    }
-  };
-
-  const getDomains = async () => {
-    try {
-      const options = {
-        method: 'GET',
-        headers: authHeader(),
-      };
-      const response = await fetch(`/api/orbit/getDomains/${applicationId}`, options);
-      if (!response.ok) handleError(response);
-
-      const domainOptions = await response.json();
-
-      let finalDomainOptions = [];
-
-      domainOptions.map((domain) => {
-        finalDomainOptions.push({ label: domain.business_unit, value: domain.business_unit });
-      });
-
-      setBusinessUnits(finalDomainOptions);
-    } catch (error) {
-      console.log(error);
-      message.error('There was an error getting Domains from Fido');
-    }
-  };
-
-  const [orbitBuildSuggestions, setOrbitBuildSuggestions] = useState([]);
-  const [displayBuildInfo, setDisplayBuildInfo] = useState();
-  const [loading, setLoading] = useState(false);
 
   const handleOrbitBuildSelect = async (selectedOrbitBuild) => {
     setSelectedOrbitBuild(selectedOrbitBuild);
@@ -107,9 +60,11 @@ const BasicTab = ({
   //loader to get suggestions
   const loadOrbitBuildSuggestions = async (searchText) => {
     setLoading(true);
+    setStatus('warning');
     setSelectedOrbitBuild(searchText);
     if (searchText.length <= 3) {
       setLoading(false);
+      setStatus(null);
       return;
     }
     if (!searchText.match(/^[a-zA-Z0-9:_ -]*$/)) {
@@ -131,11 +86,17 @@ const BasicTab = ({
         finalSuggestions.push({ value: build.Name, label: build.Name });
       });
 
-      setOrbitBuildSuggestions(finalSuggestions);
-      setLoading(false);
+      //if the searchText being returned isn't the same as the current value, then don't update the suggestions
+      if (searchText === searchRef.current) {
+        setOrbitBuildSuggestions(finalSuggestions);
+        setLoading(false);
+        setStatus(null);
+      }
     } catch (error) {
       console.log(error);
       message.error('There was an error getting Builds from Orbit');
+      setLoading(false);
+      setStatus('error');
     }
   };
 
@@ -147,9 +108,11 @@ const BasicTab = ({
         name="businessUnit"
         rules={[{ required: true, message: 'Required field' }]}>
         <Select
-          placeholder="Select one"
+          placeholder={domainLoading ? 'Fetching Options..' : 'Select one'}
           mode="single"
           options={businessUnits}
+          loading={domainLoading}
+          status={domainStatus}
           onChange={(value) => {
             setMonitoringDetails({
               ...monitoringDetails,
@@ -163,9 +126,11 @@ const BasicTab = ({
         name="product"
         rules={[{ required: true, message: 'Required field' }]}>
         <Select
-          placeholder="Select one"
+          placeholder={productLoading ? 'Fetching Options..' : 'Select one'}
           mode="single"
           options={products}
+          loading={productLoading}
+          status={productStatus}
           onChange={(value) => {
             setMonitoringDetails({
               ...monitoringDetails,
@@ -195,9 +160,13 @@ const BasicTab = ({
             <AutoComplete
               options={orbitBuildSuggestions}
               onSelect={handleOrbitBuildSelect}
-              onSearch={(searchText) => loadOrbitBuildSuggestions(searchText)}
+              onSearch={(searchText) => {
+                searchRef.current = searchText;
+
+                loadOrbitBuildSuggestions(searchText);
+              }}
               value={selectedOrbitBuild}
-              status={loading ? 'warning' : null}></AutoComplete>
+              status={status}></AutoComplete>
             <Spin spinning={loading} style={{ marginTop: '-1.6rem', float: 'right', marginRight: '1rem' }}></Spin>
           </Col>
         </Row>
