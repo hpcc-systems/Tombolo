@@ -8,8 +8,6 @@ import { languages } from '../../i18n/languages';
 function LanguageSwitcher({ setLocale }) {
   const [language, setLanguage] = useState('EN');
 
-  console.log(languages);
-
   useEffect(() => {
     let selectedLanguage = localStorage.getItem('i18nextLng');
     if (selectedLanguage) {
@@ -26,20 +24,22 @@ function LanguageSwitcher({ setLocale }) {
     setLocale(language);
   };
 
+  const languageItems = [];
+
+  useEffect(() => {
+    languages.map((language) => {
+      languageItems.push({ label: language.label, key: language.value, icon: null, disabled: false, children: null });
+    });
+    console.log(languageItems);
+  }, [language]);
+
   const languageMenu = () => {
     return (
       <Menu
         onClick={(option) => {
           changeLanguage(option.key);
-        }}>
-        {languages.map((language) => {
-          return (
-            <Menu.Item className="menuOption" key={language.value}>
-              {language.label}
-            </Menu.Item>
-          );
-        })}
-      </Menu>
+        }}
+        items={languageItems}></Menu>
     );
   };
 

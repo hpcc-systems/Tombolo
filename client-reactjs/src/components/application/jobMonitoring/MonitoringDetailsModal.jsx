@@ -45,7 +45,7 @@ function MonitoringDetailsModal({
       style={{ maxHeight: '95vh', overflow: 'auto' }}
       closable={true}
       onCancel={handleCancel}
-      visible={displayMonitoringDetailsModal}
+      open={displayMonitoringDetailsModal}
       footer={
         <Button type="primary" onClick={handleCancel}>
           Close
