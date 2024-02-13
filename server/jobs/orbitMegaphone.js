@@ -10,14 +10,10 @@ const { notify } = require("../routes/notifications/email-notification");
 const { v4: uuidv4 } = require("uuid");
 const axios = require("axios");
 
-const dbConfig = {
-  server: process.env.ORBIT_DB,
-  database: process.env.ORBIT_DB_NAME,
-  user: process.env.ORBIT_DB_USER,
-  password: process.env.ORBIT_DB_PWD,
-  port: parseInt(process.env.ORBIT_DB_PORT),
-  trustServerCertificate: true,
-};
+const {
+  runMySQLQuery,
+  orbitDbConfig,
+} = require("../../utils/runSQLQueries.js");
 
 (async () => {
   try {
@@ -42,8 +38,9 @@ const dbConfig = {
       //connect to db
       await sql.connect(dbConfig);
 
-      const result =
-        await sql.query`select TOP 25 * from DimReceiveInstance where SubStatus_Code = 'MEGAPHONE' order by DateUpdated desc`;
+      query = `select TOP 25 * from DimReceiveInstance where SubStatus_Code = 'MEGAPHONE' order by DateUpdated desc`;
+
+      const result = await runMySQLQuery(query, orbitDbConfig);
 
       //just grab the rows from result
       let rows = result?.recordset;
