@@ -2,16 +2,24 @@ import React, { useEffect, useState } from 'react';
 import { Column } from '@ant-design/plots';
 
 function StackedBar({ stackBarData }) {
-  console.log(stackBarData);
   const [config, setConfig] = useState({
     data: [],
-    isStack: true,
     xField: 'x',
     yField: 'y',
-    seriesField: 'z',
-    stack: {
-      groupBy: ['x'],
-      series: false,
+    colorField: 'z',
+    stack: true,
+    sort: {
+      reverse: true,
+      by: 'y',
+    },
+    axis: {
+      y: { labelFormatter: '~s' },
+      x: {
+        labelSpacing: 4,
+        style: {
+          labelTransform: 'rotate(90)',
+        },
+      },
     },
   });
 

@@ -6,7 +6,7 @@
     "@ant-design/charts": "^2.0.3",
     "@ant-design/icons": "^4.7.0",
     "@antv/layout": "^0.1.31",
-    "@antv/x6": "^2.11.1",
+    "@antv/x6": "^2.18.1",
     "@antv/x6-plugin-stencil": "^2.1.5",
     "@antv/x6-react-components": "^2.0.8",
     "@antv/x6-react-shape": "^2.2.3",

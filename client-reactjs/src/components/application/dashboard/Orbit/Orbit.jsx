@@ -409,6 +409,17 @@ function Orbit() {
         }
       });
 
+      //get newStackBarData set y = counts for each date and final status
+      newStackBarData.forEach((item) => {
+        const count = newStackBarData.filter((x) => x.x === item.x && x.z === item.z).length;
+        item.y = count;
+      });
+
+      //delete duplicates
+      const finalStackBarData = newStackBarData.filter(
+        (v, i, a) => a.findIndex((t) => t.x === v.x && t.z === v.z) === i
+      );
+
       //---------------------------------------
       for (let key in workUnitCountByFinalStatus) {
         newMetrics.push({ type: key, value: workUnitCountByFinalStatus[key] });
@@ -428,7 +439,7 @@ function Orbit() {
 
       setTitleMetrics(newTitleMetrics);
       setMetrics(newMetrics);
-      setStackBarData(newStackBarData);
+      setStackBarData(finalStackBarData);
       setDonutData(newDonutData);
       setTitles(newTitles);
     }
