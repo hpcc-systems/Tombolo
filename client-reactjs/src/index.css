@@ -1074,8 +1074,12 @@ div.tooltip {
   display: none;
 }
 
+.OrbitTable .ant-table-column-has-sorters {
+  border-radius: 0px 8px 0px 0px;
+}
+
 .OrbitTable .ant-table-thead > tr > th {
-  background: #002140;
+  background: #002140 !important;
   color: white;
 }
 

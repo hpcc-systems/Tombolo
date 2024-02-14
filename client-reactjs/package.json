@@ -16,6 +16,7 @@
     "antd": "^5.13.2",
     "cronstrue": "^2.14.0",
     "d3-color": "^3.1.0",
+    "dayjs": "^1.11.10",
     "downloadjs": "^1.4.7",
     "font-awesome": "^4.7.0",
     "http-proxy-middleware": "^1.0.6",

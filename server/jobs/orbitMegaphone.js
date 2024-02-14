@@ -10,10 +10,7 @@ const { notify } = require("../routes/notifications/email-notification");
 const { v4: uuidv4 } = require("uuid");
 const axios = require("axios");
 
-const {
-  runMySQLQuery,
-  orbitDbConfig,
-} = require("../../utils/runSQLQueries.js");
+const { runMySQLQuery, orbitDbConfig } = require("../utils/runSQLQueries.js");
 
 (async () => {
   try {

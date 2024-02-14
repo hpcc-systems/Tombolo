@@ -35,13 +35,18 @@ class BreadCrumbs extends Component {
         for (let i = 2; i < count; i++) {
           href += '/' + newPathSnippets[i].value;
         }
-        newItem.key = count - 1;
-        newItem.href = href;
-        newItem.title = item.label;
+
+        if (item.value !== 'dashboard') {
+          newItem.key = count - 1;
+          newItem.href = href;
+          newItem.title = item.label;
+        }
 
         //iterate count and add item to return array
         count++;
-        newBreadCrumbItems.push(newItem);
+        if (newItem?.key) {
+          newBreadCrumbItems.push(newItem);
+        }
       });
 
       return newBreadCrumbItems;
