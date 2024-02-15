@@ -306,8 +306,8 @@ class ShareApp extends Component {
             ) : (
               <AutoComplete
                 className="certain-category-search"
-                dropdownClassName="certain-category-search-dropdown"
-                dropdownMatchSelectWidth={false}
+                popupClassName="certain-category-search-dropdown"
+                popupMatchSelectWidth={false}
                 dropdownStyle={{ width: 300 }}
                 style={{ width: '70%', marginRight: '5px' }}
                 onSearch={(value) => this.searchUsers(value)}

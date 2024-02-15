@@ -865,8 +865,8 @@ class FileDetails extends Component {
                       <Col span={20}>
                         <AutoComplete
                           className="certain-category-search"
-                          dropdownClassName="certain-category-search-dropdown"
-                          dropdownMatchSelectWidth={false}
+                          popupClassName="certain-category-search-dropdown"
+                          popupMatchSelectWidth={false}
                           dropdownStyle={{ width: 300 }}
                           style={{ width: '100%' }}
                           onSearch={this.searchFiles}

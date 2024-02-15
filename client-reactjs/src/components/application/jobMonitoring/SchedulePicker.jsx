@@ -252,7 +252,7 @@ function SchedulePicker({
           <Select
             options={weeks}
             placeholder="week"
-            dropdownMatchSelectWidth={true}
+            popupMatchSelectWidth={true}
             size="small"
             disabled={yearlyRadio !== '2'}
             style={{ width: '100px' }}
@@ -265,7 +265,7 @@ function SchedulePicker({
           <Select
             options={daysOfWeek}
             placeholder="day"
-            dropdownMatchSelectWidth={true}
+            popupMatchSelectWidth={true}
             size="small"
             disabled={yearlyRadio !== '2'}
             style={{ marginLeft: '10px', width: '110px' }}
@@ -279,7 +279,7 @@ function SchedulePicker({
           <Select
             options={months}
             placeholder="month"
-            dropdownMatchSelectWidth={true}
+            popupMatchSelectWidth={true}
             size="small"
             disabled={yearlyRadio !== '2'}
             style={{ marginLeft: '10px', width: '110px' }}

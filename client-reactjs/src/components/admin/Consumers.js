@@ -586,8 +586,8 @@ class Consumers extends Component {
                 <Form.Item label="AD Group">
                   <AutoComplete
                     className="certain-category-search"
-                    dropdownClassName="certain-category-search-dropdown"
-                    dropdownMatchSelectWidth={false}
+                    popupClassName="certain-category-search-dropdown"
+                    popupMatchSelectWidth={false}
                     dropdownStyle={{ width: 300 }}
                     size="large"
                     style={{ width: '100%' }}
