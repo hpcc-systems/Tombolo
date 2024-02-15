@@ -1,12 +1,10 @@
 import { AppstoreOutlined, DownOutlined, QuestionCircleOutlined } from '@ant-design/icons';
-import { Button, Dropdown, Form, Input, Menu, message, Modal, notification, Space, Tooltip } from 'antd';
+import { Button, Dropdown, Form, Input, message, Modal, notification, Space, Tooltip } from 'antd';
 import { debounce } from 'lodash';
 import React, { Component } from 'react';
 import { connect } from 'react-redux';
 import { Link, withRouter } from 'react-router-dom';
-import i18next from 'i18next';
 
-import { languages } from '../../i18n/languages';
 import logo from '../../images/logo.png';
 import { msalInstance } from '../../index';
 import { applicationActions } from '../../redux/actions/Application';
@@ -340,24 +338,24 @@ class AppHeader extends Component {
   };
 
   // Options for languages dropdown
-  languagesMenu = (
-    <Menu
-      onClick={(item) => {
-        localStorage.setItem('i18nextLng', item.key);
-        i18next.changeLanguage(item.key);
-        this.setState({ language: item.key.toUpperCase() });
+  // languagesMenu = (
+  //   <Menu
+  //     onClick={(item) => {
+  //       localStorage.setItem('i18nextLng', item.key);
+  //       i18next.changeLanguage(item.key);
+  //       this.setState({ language: item.key.toUpperCase() });
 
-        this.props.setLocale(item.key);
-      }}>
-      {languages.map((language) => {
-        return (
-          <Menu.Item className="menuOption" key={language.value}>
-            {language.label}
-          </Menu.Item>
-        );
-      })}
-    </Menu>
-  );
+  //       this.props.setLocale(item.key);
+  //     }}>
+  //     {languages.map((language) => {
+  //       return (
+  //         <Menu.Item className="menuOption" key={language.value}>
+  //           {language.label}
+  //         </Menu.Item>
+  //       );
+  //     })}
+  //   </Menu>
+  // );
 
   render() {
     const actionMenuItems = [

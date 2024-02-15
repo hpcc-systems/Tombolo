@@ -24,9 +24,9 @@ const ExportMenu = (selectedCluster) => {
   });
 
   const menuItems = [
-    { key: 'CSV', icon: 'fa fa-lg fa-file', label: 'CSV' },
-    { key: 'JSON', icon: 'fa  fa-lg fa-file-text-o', label: 'JSON' },
-    { key: 'API', icon: 'fa fa-lg fa-link', label: 'API' },
+    { key: 'CSV', icon: <i className="fa fa-lg fa-file"></i>, label: 'CSV' },
+    { key: 'JSON', icon: <i className="fa  fa-lg fa-file-text-o"></i>, label: 'JSON' },
+    { key: 'API', icon: <i className="fa fa-lg fa-link"></i>, label: 'API' },
   ];
 
   const handleMenuClick = async (e) => {
@@ -96,7 +96,7 @@ const ExportMenu = (selectedCluster) => {
 
   return (
     <>
-      <Dropdown menu={{ menuItems }} onClick={(e) => handleMenuClick(e)}>
+      <Dropdown menu={{ items: menuItems }} onClick={(e) => handleMenuClick(e)}>
         <Button type="primary" icon={<DownOutlined style={{ marginRight: '5px' }} />}>
           {<Text text="Export Data" />}
         </Button>

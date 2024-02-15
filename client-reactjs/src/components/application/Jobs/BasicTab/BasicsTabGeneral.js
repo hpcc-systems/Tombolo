@@ -219,7 +219,7 @@ function BasicsTabGeneral({
   if (enableEdit && !isAssociated) hideOnReadOnlyView = false;
   return (
     <React.Fragment>
-      <Spin spinning={job.loading} tip="loading job details">
+      <Spin spinning={job.loading}>
         {inTabView ? null : (
           <>
             <Form.Item label={<Text text="Cluster" />}>

@@ -94,9 +94,7 @@ const DeleteAssetModal = ({ asset, show, hide, onDelete }) => {
       onCancel={hide}
       closable={false}
       destroyOnClose={true}>
-      <Spin tip="Loading..." spinning={isInDataflow.loading}>
-        {getText()}
-      </Spin>
+      <Spin spinning={isInDataflow.loading}>{getText()}</Spin>
     </Modal>
   );
 };

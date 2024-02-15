@@ -233,7 +233,7 @@ class LeftNav extends Component {
         null,
         [
           getItem(
-            <Link to={'/' + applicationId + '/admin/notification-settings/msTeams'}>
+            <Link to={'/admin/notification-settings/msTeams'}>
               <span>
                 <i className="fa fa-windows" /> MS Teams
               </span>
