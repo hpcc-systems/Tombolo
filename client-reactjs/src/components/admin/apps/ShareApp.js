@@ -276,8 +276,8 @@ class ShareApp extends Component {
       <div>
         <Modal
           title={'Share "' + this.state.applicationTitle + '" Application'}
-          visible={true}
-          bodyStyle={{ maxHeight: '400px', minHeight: '300px', overflow: 'auto' }}
+          open={true}
+          styles={{ maxHeight: '400px', minHeight: '300px', overflow: 'auto' }}
           onCancel={this.handleCancel}
           destroyOnClose={true}
           okText="Share"
@@ -306,8 +306,8 @@ class ShareApp extends Component {
             ) : (
               <AutoComplete
                 className="certain-category-search"
-                dropdownClassName="certain-category-search-dropdown"
-                dropdownMatchSelectWidth={false}
+                popupClassName="certain-category-search-dropdown"
+                popupMatchSelectWidth={false}
                 dropdownStyle={{ width: 300 }}
                 style={{ width: '70%', marginRight: '5px' }}
                 onSearch={(value) => this.searchUsers(value)}

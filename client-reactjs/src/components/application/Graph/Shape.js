@@ -229,10 +229,7 @@ class Node extends React.Component {
     };
 
     return (
-      <Dropdown
-        overlay={getMenu(type)}
-        trigger={['contextMenu']}
-        disabled={disableContextMenu && !type === 'Sub-Process'}>
+      <Dropdown menu={getMenu(type)} trigger={['contextMenu']} disabled={disableContextMenu && !type === 'Sub-Process'}>
         {getNode()}
       </Dropdown>
     );

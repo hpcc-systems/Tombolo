@@ -37,7 +37,7 @@ const CustomToolbar = ({ graphRef, handleSync, isSyncing, readOnly }) => {
                 icon={<EyeInvisibleOutlined />}
                 dropdownProps={{
                   visible: refresh,
-                  onVisibleChange: (visible) => {
+                  onOpenChange: (visible) => {
                     setRefresh(() => visible);
                   },
                 }}

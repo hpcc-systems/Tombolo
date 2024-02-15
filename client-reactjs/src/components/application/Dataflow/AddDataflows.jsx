@@ -161,10 +161,10 @@ function AddDataflow({
       </Tooltip>
 
       <Modal
-        visible={modalVisible}
+        open={modalVisible}
         title={<Text text="Dataflow" />}
         maskClosable={false}
-        bodyStyle={{ overflowY: 'auto', maxHeight: '60vh' }}
+        styles={{ overflowY: 'auto', maxHeight: '60vh' }}
         width={750}
         onCancel={handleClose}
         footer={[

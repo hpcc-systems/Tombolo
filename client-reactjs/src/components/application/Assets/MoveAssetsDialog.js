@@ -78,7 +78,7 @@ function MoveAssetsDialog({ isShowing, toggle, application, assetToMove, reloadT
       <div>
         <Modal
           title="Select Group to Move"
-          visible={isShowing}
+          open={isShowing}
           width={520}
           footer={[
             <Button key="close" onClick={handleClose}>

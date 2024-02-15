@@ -127,7 +127,7 @@ function GHMainFile({ enableEdit, form, branchOrTagName }) {
               onChange={handleSelectRepo}
               disabled={!reposFetched}
               placeholder={i18n('Select Main File Repo')}
-              dropdownMatchSelectWidth={false}>
+              popupMatchSelectWidth={false}>
               {repoList.map((repo) => (
                 <Select.Option key={repo.id} value={repo.id}>
                   <Tag color="geekblue">{repo.ghBranchOrTag}</Tag> - {repo.ghProject} -{' '}

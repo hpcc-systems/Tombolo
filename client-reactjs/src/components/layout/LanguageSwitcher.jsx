@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Menu, Dropdown } from 'antd';
+import { Dropdown } from 'antd';
 import { GlobalOutlined } from '@ant-design/icons';
 import i18next from 'i18next';
 
@@ -24,30 +24,13 @@ function LanguageSwitcher({ setLocale }) {
     setLocale(language);
   };
 
-  const languageMenu = () => {
-    return (
-      <Menu
-        onClick={(option) => {
-          changeLanguage(option.key);
-        }}>
-        {languages.map((language) => {
-          return (
-            <Menu.Item className="menuOption" key={language.value}>
-              {language.label}
-            </Menu.Item>
-          );
-        })}
-      </Menu>
-    );
-  };
-
   return (
     <>
-      <Dropdown overlay={languageMenu} trigger={['click']}>
+      <Dropdown menu={{ items: languages, onClick: (e) => changeLanguage(e.key) }}>
         <span style={{ color: 'white', fontSize: '22px', paddingLeft: '15px' }}>
           <GlobalOutlined className="languageSwitcherIcon" />
         </span>
-      </Dropdown>{' '}
+      </Dropdown>
       <p style={{ color: 'white', paddingLeft: '5px', paddingTop: '10px' }}>{language} </p>
     </>
   );

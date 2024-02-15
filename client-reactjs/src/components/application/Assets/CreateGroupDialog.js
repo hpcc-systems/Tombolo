@@ -108,7 +108,7 @@ export const CreateGroupDialog = ({ editGroup, applicationId, isShowing, toggle 
     <Modal
       title={<Text>Group</Text>}
       onCancel={toggle}
-      visible={isShowing}
+      open={isShowing}
       width={520}
       footer={
         <span>

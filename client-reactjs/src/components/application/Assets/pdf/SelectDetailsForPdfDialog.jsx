@@ -238,7 +238,7 @@ function SelectDetailsForPdfDialog(props) {
 
   return (
     <Modal
-      visible={props.visible}
+      open={props.visible}
       title={<Text text="Select items to include in PDF" />}
       onOk={downloadDoc}
       onCancel={() => props.setVisiblity(false)}

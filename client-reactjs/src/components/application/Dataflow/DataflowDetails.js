@@ -33,6 +33,7 @@ function DataflowDetails() {
       </div>
       <div>
         <Tabs
+          type="card"
           defaultActiveKey="1"
           destroyInactiveTabPane={true}
           tabBarExtraContent={

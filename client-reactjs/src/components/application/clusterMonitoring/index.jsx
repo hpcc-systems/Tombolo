@@ -294,7 +294,7 @@ function ClusterMonitoring() {
       />
 
       <Modal
-        visible={visible}
+        open={visible}
         onOk={handleOk}
         onCancel={handleCancel}
         footer={btns[activeTab]}
@@ -307,6 +307,7 @@ function ClusterMonitoring() {
           initialValues={{ msTeamsGroups: [''], emails: [''] }}>
           <Tabs
             activeKey={activeTab}
+            type="card"
             onTabClick={(record) => {
               setActiveTab(record);
             }}>

@@ -51,6 +51,9 @@ const teams_hook = sequelize.define("teams_hook", {
     allowNull: true,
     type: DataTypes.DATE,
   },
+},
+{
+  paranoid: true,
 });
 
 return teams_hook;

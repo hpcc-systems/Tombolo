@@ -60,7 +60,7 @@ function ClusterDetails() {
 
   return (
     <div>
-      <Tabs defaultActiveKey="1">
+      <Tabs type="card" defaultActiveKey="1">
         <TabPane tab="Cluster Details" key="1" style={{ minWidth: '480px', maxWidth: '50vw' }}>
           {clusterMetaData ? (
             <>

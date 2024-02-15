@@ -1,37 +1,16 @@
 "use strict";
 module.exports = {
-  up: (queryInterface, Sequelize) => {
-    return queryInterface.createTable("jobMonitoring", {
+  up: async (queryInterface, Sequelize) => {
+    await queryInterface.createTable("jobMonitoring", {
       id: {
         allowNull: false,
         primaryKey: true,
         type: Sequelize.UUID,
         defaultValue: Sequelize.UUIDV4,
       },
-      name: {
-        allowNull: false,
-        type: Sequelize.DataTypes.STRING,
-      },
-      cron: {
-        allowNull: false,
-        type: Sequelize.DataTypes.STRING,
-      },
-      isActive: {
-        allowNull: false,
-        type: Sequelize.DataTypes.BOOLEAN,
-        defaultValue: false,
-      },
-      cluster_id: {
+      applicationId: {
         type: Sequelize.UUID,
-        references: {
-          model: "cluster",
-          key: "id",
-        },
-        onUpdate: "CASCADE",
-        onDelete: "CASCADE",
-      },
-      application_id: {
-        type: Sequelize.UUID,
+        allowNull: false,
         references: {
           model: "application",
           key: "id",
@@ -39,9 +18,64 @@ module.exports = {
         onUpdate: "CASCADE",
         onDelete: "CASCADE",
       },
-      metaData: {
-        type: Sequelize.JSON,
+      monitoringName: {
+        allowNull: false,
+        type: Sequelize.STRING,
+        unique: true,
+      },
+      isActive: {
+        allowNull: false,
+        type: Sequelize.BOOLEAN,
+      },
+      approvalStatus: {
+        allowNull: false,
+        type: Sequelize.ENUM("Approved", "Rejected", "Pending"),
+      },
+      approvedBy: {
         allowNull: true,
+        type: Sequelize.STRING,
+      },
+      approvedAt: {
+        allowNull: true,
+        type: Sequelize.DATE,
+      },
+      approverComment: {
+        allowNull: true,
+        type: Sequelize.STRING,
+      },
+      description: {
+        allowNull: false,
+        type: Sequelize.TEXT,
+      },
+      monitoringScope: {
+        allowNull: false,
+        type: Sequelize.STRING,
+      },
+      clusterId: {
+        type: Sequelize.UUID,
+        allowNull: false,
+        references: {
+          model: "cluster",
+          key: "id",
+        },
+        onUpdate: "CASCADE",
+        onDelete: "NO ACTION",
+      },
+      jobName: {
+        allowNull: false,
+        type: Sequelize.STRING,
+      },
+      metaData: {
+        allowNull: false,
+        type: Sequelize.JSON,
+      },
+      createdBy: {
+        allowNull: false,
+        type: Sequelize.STRING,
+      },
+      lastUpdatedBy: {
+        allowNull: false,
+        type: Sequelize.STRING,
       },
       createdAt: {
         allowNull: false,
@@ -57,7 +91,7 @@ module.exports = {
       },
     });
   },
-  down: (queryInterface, Sequelize) => {
-    return queryInterface.dropTable("jobMonitoring");
+  down: async (queryInterface, Sequelize) => {
+    await queryInterface.dropTable("jobMonitoring");
   },
 };

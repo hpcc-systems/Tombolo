@@ -14,7 +14,7 @@ const Fallback = () => {
 
   return !visible ? null : (
     <div style={{ width: '100%', height: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-      <Spin size="large" tip="Tombolo" />
+      <Spin size="large" />
     </div>
   );
 };

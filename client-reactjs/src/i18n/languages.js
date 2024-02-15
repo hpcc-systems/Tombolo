@@ -1,10 +1,10 @@
 export const languages = [
   {
     label: 'English',
-    value: 'en',
+    key: 'en',
   },
   {
     label: '中国人',
-    value: 'cn',
+    key: 'cn',
   },
 ];

@@ -80,7 +80,7 @@ function FileExplorerModal({ open, onCancel, onDone, fileType, cluster, style })
       <Modal
         style={style}
         title={<Text>{greeting}</Text>}
-        visible={open}
+        open={open}
         onCancel={onCancel}
         onOk={() => onDone(selectedLogicalFile)}
         maskClosable={false}

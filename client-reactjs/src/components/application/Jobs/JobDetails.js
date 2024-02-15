@@ -469,6 +469,7 @@ class JobDetails extends Component {
       <>
         <JobForm {...commonProps}>
           <Tabs
+            type="card"
             defaultActiveKey={selectedTabPaneKey}
             tabBarExtraContent={displayingInModal ? null : <Controls {...commonProps} {...controlProps} />}
             onChange={(activeKey) => this.setState({ selectedTabPaneKey: activeKey })}>

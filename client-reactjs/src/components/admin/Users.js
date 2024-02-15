@@ -273,7 +273,7 @@ class Users extends Component {
         <div>
           <Modal
             title="Add User"
-            visible={this.state.showAddUsers}
+            open={this.state.showAddUsers}
             onOk={this.handleAddUserOk}
             onCancel={this.handleAddUserCancel}
             confirmLoading={confirmLoading}>

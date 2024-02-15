@@ -1,371 +1,209 @@
-const models = require("../../models");
-const express = require("express");
-const logger = require("../../config/logger");
-const validatorUtil = require("../../utils/validator");
-const { body, param, validationResult } = require("express-validator");
-const hpccJSComms = require("@hpcc-js/comms");
-const hpccUtil = require("../../utils/hpcc-util");
-const JobScheduler = require("../../job-scheduler");
-
-const JobMonitoring = models.jobMonitoring;
+const express = require('express');
 const router = express.Router();
+const { body, check, param } = require("express-validator");
 
-// Create Cluster Monitoring
+//Local imports
+const logger = require("../../config/logger");
+const models = require("../../models");
+const { validationResult } = require("express-validator");
+
+//Constants
+const JobMonitoring = models.jobMonitoring;
+
+// Create new job monitoring
 router.post(
   "/",
   [
-    //Validation middleware
-    body("name").isString().withMessage("Invalid job monitoring name"),
-    body("application_id").isUUID(4).withMessage("Invalid application id"),
-    body("cluster_id").isUUID(4).withMessage("Invalid cluster id"),
-    body("cron").custom((value) => {
-      const valArray = value.split(" ");
-      if (valArray.length > 5) {
-        throw new Error(
-          `Expected number of cron parts 5, received ${valArray.length}`
-        );
-      } else {
-        return Promise.resolve("Good to go");
-      }
-    }),
-    // body("isActive").isBoolean().withMessage("Invalid is active flag"),
-    body("metaData").isObject().withMessage("Invalid job monitoring meta data"),
+    body("monitoringName")
+      .notEmpty()
+      .withMessage("Monitoring name is required"),
+    body("description").notEmpty().withMessage("Description is required"),
+    body("monitoringScope")
+      .notEmpty()
+      .withMessage("Monitoring scope is required"),
+    body("clusterId").isUUID().withMessage("Cluster ID must be a valid UUID"),
+    body("isActive").isBoolean().withMessage("isActive must be a boolean"),
+    body("jobName").notEmpty().withMessage("Job name is required"),
+    body("applicationId")
+      .isUUID()
+      .withMessage("Application ID must be a valid UUID"),
+    body("metaData")
+      .isObject()
+      .withMessage("Meta data must be an object if provided"),
+    body("createdBy").notEmpty().withMessage("Created by is required"),
+    body("lastUpdatedBy").notEmpty().withMessage("Last updated by is required"),
   ],
   async (req, res) => {
+    // Handle the POST request here
     try {
-      // Check for errors - return if exists
-      const errors = validationResult(req).formatWith(
-        validatorUtil.errorFormatter
-      );
-
-      if (!errors.isEmpty())
-        return res.status(422).json({ success: false, errors: errors.array() });
-
-      //create
-      req.body.metaData.unfinishedWorkUnits = [];
-      const jobMonitoring = await JobMonitoring.create(req.body);
-      res.status(201).send(jobMonitoring);
-
-      //Add job to bree- if start monitoring checked
-      if (req.body.isActive) {
-        const { id, cron } = jobMonitoring;
-
-        JobScheduler.createJobMonitoringBreeJob({
-          jobMonitoring_id: id,
-          cron,
-        });
+      // Validate the req.body
+      const errors = validationResult(req);
+      if (!errors.isEmpty()) {
+        return res.status(400).json({ errors: errors.array() });
       }
+
+      //Save the job monitoring
+      const response = await JobMonitoring.create({...req.body, approvalStatus: 'Pending'}, { raw: true });
+      res.status(200).send(response);
     } catch (err) {
       logger.error(err);
-      res
-        .status(503)
-        .send({ success: false, message: "Failed to create job monitoring" });
+      res.status(500).send("Failed to save job monitoring");
     }
   }
 );
 
-// Get all cluster monitoring
-router.get(
-  "/all/:application_id",
-  [param("application_id").isUUID().withMessage("Invalid application ID")],
-  async (req, res) => {
+  // Get all Job monitorings
+  router.get("/all/:applicationId",
+    [
+     param("applicationId").isUUID().withMessage("Application ID must be a valid UUID"),
+    ],async(req, res) => {
     try {
-      //Check for errors - return if exists
-      const errors = validationResult(req).formatWith(
-        validatorUtil.errorFormatter
-      );
-
-      // return if error(s) exist
-      if (!errors.isEmpty())
-        return res.status(422).json({ success: false, errors: errors.array() });
-
-      const { application_id } = req.params;
-      const jobMonitorings = await JobMonitoring.findAll({
-        where: { application_id },
-        raw: true,
-      });
-
-      res.status(200).send(jobMonitorings);
+      const jobMonitorings = await JobMonitoring.findAll();
+      res.status(200).json(jobMonitorings);
     } catch (err) {
       logger.error(err);
-      res
-        .status(503)
-        .send({ success: false, message: "Failed to fetch job monitorings" });
+      res.status(500).send("Failed to get job monitorings");
     }
-  }
-);
+  });
 
-// Get one cluster monitoring
-router.get(
-  "/:id",
-  [param("id").isUUID(4).withMessage("Invalid job monitoring ID")],
-  async (req, res) => {
+  // Get a single job monitoring
+  router.get("/:id", async (req, res) => {
     try {
-      //Check for errors - return if exists
-      const errors = validationResult(req).formatWith(
-        validatorUtil.errorFormatter
-      );
-
-      // return if error(s) exist
-      if (!errors.isEmpty())
-        return res.status(422).json({ success: false, errors: errors.array() });
-
-      const { id } = req.params;
-      const jobMonitoring = await JobMonitoring.findOne({
-        where: { id },
-        raw: true,
-      });
-      res.status(200).send(jobMonitoring);
+      const jobMonitoring = await JobMonitoring.findByPk(req.params.id);
+      res.status(200).json(jobMonitoring);
     } catch (err) {
       logger.error(err);
-      res
-        .status(503)
-        .send({ success: false, message: "Failed to fetch job monitoring" });
+      res.status(500).send("Failed to get job monitoring");
     }
-  }
-);
+  });
 
-//Delete
+  // Patch a single job monitoring
+  router.patch( "/",
+    [
+      body("id").isUUID().withMessage("ID must be a valid UUID"),
+      body("monitoringName")
+        .notEmpty()
+        .withMessage("Monitoring name is required"),
+      body("description").notEmpty().withMessage("Description is required"),
+      body("monitoringScope")
+        .notEmpty()
+        .withMessage("Monitoring scope is required"),
+      body("clusterId").isUUID().withMessage("Cluster ID must be a valid UUID"),
+      body("isActive").isBoolean().withMessage("isActive must be a boolean"),
+      body("jobName").notEmpty().withMessage("Job name is required"),
+      body("applicationId")
+        .isUUID()
+        .withMessage("Application ID must be a valid UUID"),
+      body("metaData")
+        .isObject()
+        .withMessage("Meta data must be an object if provided"),
+      body("createdBy").notEmpty().withMessage("Created by is required"),
+      body("lastUpdatedBy").notEmpty().withMessage("Last updated by is required"),
+    ],
+    async (req, res) => {
+      try {
+        // Validate the req.body
+        const errors = validationResult(req);
+        if (!errors.isEmpty()) {
+          logger.error(errors);
+          return res.status(400).json({ errors: errors.array() });
+        }
+
+        //Payload
+        const payload = req.body;
+        payload.approvalStatus = "Pending";
+        payload.approverComment = null;
+        payload.approvedBy = null;
+        payload.approvedAt = null;
+
+        //Update the job monitoring
+        const updatedRows = await JobMonitoring.update(req.body, {
+          where: { id: req.body.id },
+          returning: true,
+        });
+
+        //If no rows were updated, then the job monitoring does not exist
+        if (updatedRows[0] === 0) {
+          return res.status(404).send("Job monitoring not found");
+        }
+
+        //If updated - Get the updated job monitoring
+        const updatedJob = await JobMonitoring.findByPk(req.body.id);
+        res.status(200).send(updatedJob);
+
+      } catch (err) {
+        console.log(err)
+        logger.error(err);
+        res.status(500).send("Failed to update job monitoring");
+      }
+    }
+  );
+
+  // Reject or approve monitoring
+  router.patch(
+    "/evaluate",
+    [
+      // Add validation rules here
+      body("approverComment")
+        .notEmpty()
+        .isString()
+        .withMessage("Approval comment must be a string")
+        .isLength({ min: 4, max: 200 })
+        .withMessage(
+          "Approval comment must be between 4 and 200 characters long"
+        ),
+      body("id").isUUID().withMessage("Invalid id"),
+      body("approvalStatus")
+        .notEmpty()
+        .isString()
+        .withMessage("Accepted must be a string"),
+      body("approvedBy").notEmpty().isString().withMessage("Approved by must be a string"),
+    ],
+    async (req, res) => {
+      const errors = validationResult(req);
+      if (!errors.isEmpty()) {
+        return res.status(503).send("Failed save your evaluation");
+      }
+
+      try {
+        const { id, approverComment, approvalStatus, approvedBy } = req.body;
+        await JobMonitoring.update(
+          { approvalStatus, approverComment, approvedBy, approvedAt: new Date() },
+          { where: { id } }
+        );
+        res.status(200).send("Successfully saved your evaluation");
+
+      } catch (err) {
+        logger.error(err);
+        res.status(500).send("Failed to evaluate job monitoring");
+      }
+    }
+  );
+
+//Delete a single job monitoring
 router.delete(
   "/:id",
-  [param("id").isUUID(4).withMessage("Invalid cluster monitoring ID")],
+  [check("id", "Invalid id").isUUID()],
   async (req, res) => {
+    const errors = validationResult(req);
+    if (!errors.isEmpty()) {
+      return res.status(503).send("Failed to delete");
+    }
+
     try {
-      //Check for errors - return if exists
-      const errors = validationResult(req).formatWith(
-        validatorUtil.errorFormatter
-      );
-
-      // return if error(s) exist
-      if (!errors.isEmpty())
-        return res.status(422).json({ success: false, errors: errors.array() });
-
-      const { id } = req.params;
-      const deleted = await JobMonitoring.destroy({
-        where: { id },
-      });
-
-      res.status(200).send({ deleted });
+      await JobMonitoring.destroy({ where: { id: req.params.id } });
+      res.status(200).send("success");
     } catch (err) {
       logger.error(err);
-      res
-        .status(503)
-        .json({ success: false, message: "Failed to delete job monitoring" });
+      res.status(500).send("Failed to delete job monitoring");
     }
   }
 );
 
-// Pause or start monitoring
-router.put(
-  "/jobMonitoringStatus/:id",
-  [param("id").isUUID(4).withMessage("Invalid file monitoring Id")],
-  async (req, res, next) => {
-    try {
-      const errors = validationResult(req).formatWith(
-        validatorUtil.errorFormatter
-      );
-      if (!errors.isEmpty())
-        return res.status(422).json({ success: false, errors: errors.array() });
-      const { id } = req.params;
-      const monitoring = await JobMonitoring.findOne({
-        where: { id },
-        raw: true,
-      });
-      const { cron, isActive } = monitoring;
 
-      // flipping isActive
-      await JobMonitoring.update(
-        { isActive: !isActive },
-        { where: { id: id } }
-      );
 
-      // If isActive, it is in bre - remove from bree
-      if (isActive) {
-        await JobScheduler.removeJobFromScheduler(`Job Monitoring - ${id}`);
-      }
 
-      // If isActive = false, add it to bre
-      if (!isActive) {
-        JobScheduler.createJobMonitoringBreeJob({
-          jobMonitoring_id: id,
-          cron,
-        });
-      }
 
-      res.status(200).send("Update successful");
-    } catch (err) {
-      logger.error(err);
-    }
-  }
-);
 
-// Update Monitoring
-router.put(
-  "/",
-  [
-    body("id").isUUID().withMessage("Invalid job monitoring ID"),
-    body("name").isString().withMessage("Invalid job monitoring name"),
-    body("application_id").isUUID(4).withMessage("Invalid application id"),
-    body("cluster_id").isUUID(4).withMessage("Invalid cluster id"),
-    body("cron").custom((value) => {
-      const valArray = value.split(" ");
-      if (valArray.length > 5) {
-        throw new Error(
-          `Expected number of cron parts 5, received ${valArray.length}`
-        );
-      } else {
-        return Promise.resolve("Good to go");
-      }
-    }),
-    // body("isActive").isBoolean().withMessage("Invalid is active flag"),
-    body("metaData").isObject().withMessage("Invalid job monitoring meta data"),
-  ],
-  async (req, res) => {
-    try {
-      //Check for errors - return if exists
-      const errors = validationResult(req).formatWith(
-        validatorUtil.errorFormatter
-      );
-
-      // return if error(s) exist
-      if (!errors.isEmpty()) {
-        logger.error(errors);
-        return res.status(422).json({ success: false, errors: errors.array() });
-      }
-
-      //Existing cluster monitoring details
-      let { id, isActive, cron } = req.body;
-
-      const existingMonitoringDetails = await JobMonitoring.findOne({
-        where: { id },
-      });
-      const {
-        metaData: { last_monitored, unfinishedWorkUnits },
-      } = existingMonitoringDetails;
-
-      const newData = req.body; // Cleaning required
-      // Do not reset last_monitored value and jobs that are unfinished 
-      newData.metaData.last_monitored = last_monitored;
-      newData.metaData.unfinishedWorkUnits = unfinishedWorkUnits;
-
-      const updated = await JobMonitoring.update(newData, {
-        where: { id },
-      });
-
-      //TODO - Add or delete from bree
-      if (updated == 1) {
-        const monitoringUniqueName = `Job Monitoring - ${id}`;
-        const breeJobs = JobScheduler.getAllJobs();
-        const jobIndex = breeJobs.findIndex(
-          (job) => job.name === monitoringUniqueName
-        );
-
-        //Add to bree
-        if (jobIndex > 0 && !isActive) {
-          JobScheduler.removeAllFromBree(monitoringUniqueName);
-        }
-
-        // Remove from bree
-        if (jobIndex < 0 && isActive) {
-          JobScheduler.createJobMonitoringBreeJob({
-            jobMonitoring_id: id,
-            cron,
-          });
-        }
-      }
-
-      res.status(200).send({ updated });
-    } catch (err) {
-      logger.error(err);
-      res.status(503).json({ success: false, message: "Failed to update" });
-    }
-  }
-);
-
-// Get cluster monitoring engines
-router.get(
-  "/clusterEngines/:cluster_id",
-  [param("cluster_id").isUUID().withMessage("Invalid cluster ID")],
-  async (req, res) => {
-    try {
-      //Check for errors - return if exists
-      const errors = validationResult(req).formatWith(
-        validatorUtil.errorFormatter
-      );
-
-      // return if error(s) exist
-      if (!errors.isEmpty())
-        return res.status(422).json({ success: false, errors: errors.array() });
-
-      const { cluster_id } = req.params;
-      let cluster = await hpccUtil.getCluster(cluster_id);
-      const { thor_host, thor_port, username, hash } = cluster;
-      const clusterDetails = {
-        baseUrl: `${thor_host}:${thor_port}`,
-        userID: username || "",
-        password: hash || "",
-      };
-      const topologyService = new hpccJSComms.TopologyService(clusterDetails);
-      const clusterEngines = await topologyService.TpListTargetClusters();
-      res.status(200).send(clusterEngines);
-    } catch (err) {
-      logger.error(err);
-      res
-        .status(503)
-        .json({ success: false, message: "Failed to get engines" });
-    }
-  }
-);
-
-// Get target cluster usage
-router.get(
-  "/targetClusterUsage/:cluster_id",
-  [
-    param("cluster_id").isUUID().withMessage("Invalid cluster ID"),
-    body("engines").isArray().withMessage("Invalid engines"),
-  ],
-  async (req, res) => {
-    try {
-      //Check for errors - return if exists
-      const errors = validationResult(req).formatWith(
-        validatorUtil.errorFormatter
-      );
-
-      // return if error(s) exist
-      if (!errors.isEmpty())
-        return res.status(422).json({ success: false, errors: errors.array() });
-
-      const { cluster_id } = req.params;
-      const { engines } = req.body;
-
-      let cluster = await hpccUtil.getCluster(cluster_id);
-      const { thor_host, thor_port, username, hash } = cluster;
-      const clusterDetails = {
-        baseUrl: `${thor_host}:${thor_port}`,
-        userID: username || "",
-        password: hash || "",
-      };
-      const machineService = new hpccJSComms.MachineService(clusterDetails);
-
-      const targetClusterUsage = await machineService.GetTargetClusterUsageEx(
-        engines
-      );
-      const clusterUsage = [];
-      targetClusterUsage.forEach(function (details) {
-        clusterUsage.push({
-          engine: details.Name,
-          size: details.max,
-        });
-      });
-
-      res.status(200).send(clusterUsage);
-    } catch (err) {
-      logger.error(err);
-      res
-        .status(503)
-        .json({ success: false, message: "Failed to get cluster usage" });
-    }
-  }
-);
-
+// Export the router
 module.exports = router;

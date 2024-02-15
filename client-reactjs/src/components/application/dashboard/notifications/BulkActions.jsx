@@ -120,7 +120,7 @@ function BulkActions({ selectedNotificationsForBulkAction, setBulkActionModalVis
 
   return (
     <Modal
-      visible={true}
+      open={true}
       title="Actions"
       footer={footerBtn}
       destroyOnClose

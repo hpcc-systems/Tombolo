@@ -38,20 +38,20 @@ router.get("/filteredNotifications", async (req, res) => {
       where: query,
       order: [["createdAt", "DESC"]],
       raw: true,
-      include: [
-        {
-          model: jobMonitoring,
-          attributes: ["name"],
-        },
-        {
-          model: clusterMonitoring,
-          attributes: ["name"],
-        },
-        {
-          model: fileMonitoring,
-          attributes: ["name"],
-        },
-      ],
+      // include: [
+      //   {
+      //     model: jobMonitoring,
+      //     attributes: ["name"],
+      //   },
+      //   {
+      //     model: clusterMonitoring,
+      //     attributes: ["name"],
+      //   },
+      //   {
+      //     model: fileMonitoring,
+      //     attributes: ["name"],
+      //   },
+      // ],
     });
 
     res.status(200).send(monitorings);
@@ -93,7 +93,7 @@ router.get(
       });
       res.status(200).send(notifications);
     } catch (error) {
-      logger.error(err);
+      logger.error(error);
       res.status(500).json({ message: "Unable to get notifications" });
     }
   }

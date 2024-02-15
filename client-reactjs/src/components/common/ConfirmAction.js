@@ -35,7 +35,7 @@ const ConfirmAction = ({
     <Popconfirm
       placement="top"
       title={confirm.title}
-      visible={prompt.visible}
+      open={prompt.visible}
       okText={confirm.okText || i18n('Yes')}
       cancelText={confirm.okText || i18n('No')}
       onConfirm={action}

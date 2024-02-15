@@ -5,7 +5,7 @@ const OverwriteAssetModal = ({ show, incomingName, existingName, acceptExisting,
   return (
     <Modal
       destroyOnClose
-      visible={show}
+      open={show}
       title="Asset already exists"
       closable={false}
       footer={[

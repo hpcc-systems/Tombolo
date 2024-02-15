@@ -57,7 +57,7 @@ const Regulations = React.lazy(() => import('./components/admin/ControlsAndRegul
 const GitHubSettings = React.lazy(() => import('./components/admin/GitHubSettings/GitHubSettings'));
 const ScheduledJobsPage = React.lazy(() => import('./components/admin/ScheduledJobsPage'));
 const Compliance = React.lazy(() => import('./components/admin/Compliance/Compliance'));
-const Integrations = React.lazy(() => import('./components/admin/Integrations'));
+const Integrations = React.lazy(() => import('./components/admin/Integrations/Integrations'));
 const TeamsNotification = React.lazy(() => import('./components/admin/notifications/MsTeams/Teams'));
 
 // Shared layout, etc.

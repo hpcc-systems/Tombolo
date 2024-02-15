@@ -415,7 +415,7 @@ function FileTemplate({ match, selectedAsset = {}, displayingInModal, onClose })
   return (
     <React.Fragment>
       <div className={displayingInModal ? 'assetDetails-content-wrapper-modal' : 'assetDetails-content-wrapper'}>
-        <Tabs defaultActiveKey="1" tabBarExtraContent={displayingInModal ? null : controls}>
+        <Tabs type="card" defaultActiveKey="1" tabBarExtraContent={displayingInModal ? null : controls}>
           <TabPane tab={<Text text="Basic" />} key="1">
             <Form
               {...formItemLayout}

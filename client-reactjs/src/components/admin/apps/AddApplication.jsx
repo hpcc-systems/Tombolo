@@ -119,7 +119,7 @@ function AddApplication(props) {
   //JSX
   return (
     <Modal
-      visible={props.showAddApplicationModal}
+      open={props.showAddApplicationModal}
       title={
         props?.selectedApplication?.title ? (
           <>

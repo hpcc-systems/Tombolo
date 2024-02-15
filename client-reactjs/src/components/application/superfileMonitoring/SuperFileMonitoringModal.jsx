@@ -301,7 +301,7 @@ const SuperFileMonitoringModal = ({
   return (
     <>
       <Modal
-        visible={modalVisible}
+        open={modalVisible}
         width={modalWidth}
         onCancel={cancelFileMonitoringModal}
         maskClosable={false}
@@ -316,6 +316,7 @@ const SuperFileMonitoringModal = ({
         ) : (
           <Form layout="vertical" form={entryForm}>
             <Tabs
+              type="card"
               activeKey={activeTab}
               onTabClick={(record) => {
                 setActiveTab(record);

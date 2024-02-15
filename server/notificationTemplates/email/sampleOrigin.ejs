@@ -1,0 +1,86 @@
+<!-- Note : 
+  1. This is a sample email template, Use this template as a reference to create your own template.
+  2. All variables passed into the function should be defined. If any variable is undefined, it should default to a predetermined value.
+  3. All E-mail clients do not support external css file, Therefore we have to use inline css - 
+     although its repetitive and not a good practice. 
+-->
+<!DOCTYPE html>
+<html>
+  <head>
+    <style>
+      .container {
+        margin: 10px;
+        padding: 20px;
+      }
+
+      .section {
+        margin-top: 15px;
+      }
+      .greeting {
+        margin-bottom: 10px;
+      }
+      .signature {
+        margin-top: 15px;
+      }
+      .footer {
+        margin-top: 30px;
+        font-size: 12px;
+        color: #999;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="container">
+      <div class="section">
+        <div class="greeting">Hello,</div>
+        <%= typeof jobName !== 'undefined' ? jobName :"____" %> is in <%= typeof
+        state !== 'undefined' ? state : "____" %> state on <%= typeof
+        clusterName !== 'undefined' ? clusterName: "____" %>. Please take below
+        actions
+      </div>
+
+      <!-- HTML Table -->
+      <div class="section">
+        <table
+          style="
+            border: 1px solid black;
+            border-collapse: collapse;
+            padding: 5px;
+          "
+        >
+          <tbody>
+            <tr>
+              <td style="border: 1px solid black">Row 1, Column 1</td>
+              <td style="border: 1px solid black">Row 1, Column 2</td>
+              <td style="border: 1px solid black">Row 1, Column 3</td>
+              <td style="border: 1px solid black">Row 1, Column 4</td>
+              <td style="border: 1px solid black">Row 1, Column 5</td>
+            </tr>
+            <tr>
+              <td style="border: 1px solid black">Row 2, Column 1</td>
+              <td style="border: 1px solid black">Row 2, Column 2</td>
+              <td style="border: 1px solid black">Row 2, Column 3</td>
+              <td style="border: 1px solid black">Row 2, Column 4</td>
+              <td style="border: 1px solid black">Row 2, Column 5</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <!-- Mentions -->
+      <div class="section">
+        [MENTIONS]
+        <at>email1@example.com</at>
+        <at>email2@example.com</at>
+        <at>email3@example.com</at>
+      </div>
+
+      <div class="signature">Tombolo</div>
+      <div class="footer">
+        You are receiving this message because you are part of the job
+        monitoring notification list. To stop getting these alerts please
+        contact the administrator.
+      </div>
+    </div>
+  </body>
+</html>

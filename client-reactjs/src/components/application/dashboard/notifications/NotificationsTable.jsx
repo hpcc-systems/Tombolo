@@ -231,7 +231,7 @@ function NotificationsTable({ applicationId, setSelectedNotificationForBulkActio
       <Modal
         title={selectedNotification?.['fileMonitoring.name'] || selectedNotification?.['clusterMonitoring.name'] || ''}
         width={850}
-        visible={viewNotificationDetails}
+        open={viewNotificationDetails}
         onCancel={() => setViewNotificationDetails(false)}
         maskClosable={false}
         footer={
@@ -239,7 +239,7 @@ function NotificationsTable({ applicationId, setSelectedNotificationForBulkActio
             Close
           </Button>
         }>
-        <Tabs>
+        <Tabs type="card">
           <Tabs.TabPane tab="Metadata" key="1">
             <Descriptions bordered column={1} size="small">
               {selectedNotificationDetails.map((item) => (

@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Form, Select, AutoComplete } from 'antd';
+import { Form, Select, AutoComplete, Input, Card } from 'antd';
 import { InfoCircleOutlined } from '@ant-design/icons';
 import { debounce } from 'lodash';
 
@@ -7,31 +7,31 @@ import { authHeader, handleError } from '../../common/AuthHeader.js';
 import InfoDrawer from '../../common/InfoDrawer';
 
 const { Option } = Select;
+const { TextArea } = Input;
 
+//Monitoring scope options
 const monitoringScopeOptions = [
-  { label: 'Single Job Monitoring', value: 'individualJob' },
-  { label: 'Cluster-Wide Monitoring', value: 'cluster' },
+  {
+    label: 'Specific job',
+    value: 'SpecificJob',
+  },
+  {
+    label: 'Cluster-wide monitoring',
+    value: 'ClusterWideMonitoring',
+  },
+  {
+    label: 'Monitoring by Job Pattern',
+    value: 'PatternMatching',
+  },
 ];
 
-function ClusterMonitoringBasicTab({
-  clusters,
-  handleClusterChange,
-  selectedCluster,
-  monitoringScope,
-  setMonitoringScope,
-  setSelectedJob,
-}) {
+function JobMonitoringBasicTab({ form, clusters, monitoringScope, setMonitoringScope, jobMonitorings, isEditing }) {
+  //Local State
+  const [showUserGuide, setShowUserGuide] = useState(false);
+  const [selectedUserGuideName, setSelectedUserGuideName] = useState('');
   const [jobs, setJobs] = useState([]);
   const [fetchingJobs, setFetchingJobs] = useState(false);
-  const [open, setOpen] = useState(false);
-
-  const showDrawer = () => {
-    setOpen(true);
-  };
-
-  const onClose = () => {
-    setOpen(false);
-  };
+  const [selectedCluster, setSelectedCluster] = useState(null);
 
   // Get jobs function
   const getJobs = debounce(async (value) => {
@@ -79,74 +79,151 @@ function ClusterMonitoringBasicTab({
     setJobs([]);
   };
 
-  //When job is selected
-  const onJobSelect = (jobName) => {
-    const selectedJobDetails = jobs.find((job) => job.value === jobName);
-    setSelectedJob(selectedJobDetails);
-  };
-
   return (
-    <>
-      <Form.Item label="Cluster" name="cluster_id" rules={[{ required: true, message: 'Required filed' }]}>
-        <Select onChange={(value) => handleClusterChange(value)}>
-          {clusters.map((cluster) => {
-            return (
-              <Option key={cluster.id} value={cluster.id}>
-                {cluster.name}
-              </Option>
-            );
-          })}
-        </Select>
-      </Form.Item>
-
-      <Form.Item
-        label="Monitoring Scope"
-        name="monitoringScope"
-        rules={[{ required: true, message: 'Required filed' }]}>
-        <Select
-          onChange={(value) => {
-            setMonitoringScope(value);
-          }}>
-          {monitoringScopeOptions.map((scope) => {
-            return (
-              <Option key={scope.value} value={scope.value}>
-                {scope.label}
-              </Option>
-            );
-          })}
-        </Select>
-      </Form.Item>
-
-      {selectedCluster && monitoringScope === 'individualJob' ? (
+    <Card>
+      <Form form={form} layout="vertical">
         <Form.Item
-          label={
-            <span>
-              Job Name
-              <span>
-                <InfoCircleOutlined style={{ marginLeft: '.5rem' }} onClick={() => showDrawer()} />
-              </span>
-              <InfoDrawer open={open} onClose={onClose} width="500px" content="wildcard"></InfoDrawer>
-            </span>
-          }
-          name="jobName"
-          validateTrigger={['onChange', 'onBlur']}
+          label="Monitoring Name"
+          name="monitoringName"
           rules={[
             { required: true, message: 'Required filed' },
-            { max: 256, message: 'Maximum of 256 characters allowed' },
+            { max: 100, message: 'Maximum of 100 characters allowed' },
+            () => ({
+              validator(_, value) {
+                if (isEditing) return Promise.resolve();
+                if (!value || !jobMonitorings.find((job) => job.monitoringName === value)) {
+                  return Promise.resolve();
+                }
+                return Promise.reject(new Error('Monitoring name must be unique'));
+              },
+            }),
           ]}>
-          <AutoComplete
-            options={jobs}
-            placeholder="Supports wildcard"
-            validateTrigger={['onChange', 'onBlur']}
-            allowClear
-            onSearch={handleSearch}
-            onClear={handleJobNameFiledClear}
-            onSelect={(jobName) => onJobSelect(jobName)}
-            loading={fetchingJobs}></AutoComplete>
+          <Input placeholder="Enter a name" />
         </Form.Item>
-      ) : null}
-    </>
+
+        <Form.Item
+          label="Description"
+          name="description"
+          rules={[
+            { max: 150, message: 'Max character limit is 150' },
+            { required: true, message: 'Add short description' },
+          ]}>
+          <TextArea
+            type="text-area"
+            placeholder="Enter a short description"
+            rows="2"
+            maxLength={150}
+            showCount
+            autoSize={{
+              minRows: 2,
+              maxRows: 4,
+            }}
+          />
+        </Form.Item>
+
+        <Form.Item
+          label={
+            <>
+              Monitoring Scope
+              <InfoCircleOutlined
+                style={{ marginLeft: '.5rem', color: 'var(--primary)' }}
+                onClick={() => {
+                  setShowUserGuide(true);
+                  setSelectedUserGuideName('jobMonitoringScopeTypes');
+                }}
+              />
+            </>
+          }
+          name="monitoringScope"
+          rules={[{ required: true, message: 'Required field' }]}>
+          <Select
+            onChange={(value) => {
+              setMonitoringScope(value);
+            }}>
+            {monitoringScopeOptions.map((option) => (
+              <Option key={option.value} value={option.value}>
+                {option.label}
+              </Option>
+            ))}
+          </Select>
+        </Form.Item>
+
+        <Form.Item label="Cluster" name="clusterId" rules={[{ required: true, message: 'Required filed' }]}>
+          <Select onChange={(value) => setSelectedCluster(value)}>
+            {clusters.map((cluster) => {
+              return (
+                <Option key={cluster.id} value={cluster.id}>
+                  {cluster.name}
+                </Option>
+              );
+            })}
+          </Select>
+        </Form.Item>
+
+        {monitoringScope === 'SpecificJob' ? (
+          <Form.Item
+            label={
+              <span>
+                Job Name
+                <span>
+                  <InfoCircleOutlined
+                    style={{ marginLeft: '.5rem' }}
+                    onClick={() => {
+                      setShowUserGuide(true);
+                      setSelectedUserGuideName('wildcard');
+                    }}
+                  />
+                </span>
+              </span>
+            }
+            name="jobName"
+            rules={[
+              { required: true, message: 'Required filed' },
+              { max: 256, message: 'Maximum of 256 characters allowed' },
+            ]}>
+            <AutoComplete
+              options={jobs}
+              placeholder="Supports wildcard"
+              allowClear
+              onSearch={handleSearch}
+              onClear={handleJobNameFiledClear}
+              loading={fetchingJobs}></AutoComplete>
+          </Form.Item>
+        ) : null}
+
+        {monitoringScope === 'PatternMatching' ? (
+          <Form.Item
+            label={
+              <span>
+                Job Name pattern
+                <span>
+                  <InfoCircleOutlined
+                    style={{ marginLeft: '.5rem' }}
+                    onClick={() => {
+                      setShowUserGuide(true);
+                      setSelectedUserGuideName('jobNamePattern');
+                    }}
+                  />
+                </span>
+              </span>
+            }
+            name="jobName"
+            rules={[
+              { required: true, message: 'Required filed' },
+              { max: 256, message: 'Maximum of 256 characters allowed' },
+            ]}>
+            <Input placeholder="Enter a pattern" />
+          </Form.Item>
+        ) : null}
+      </Form>
+
+      <InfoDrawer
+        open={showUserGuide}
+        onClose={() => setShowUserGuide(false)}
+        width="500px"
+        content={selectedUserGuideName}></InfoDrawer>
+    </Card>
   );
 }
 
-export default ClusterMonitoringBasicTab;
+export default JobMonitoringBasicTab;
