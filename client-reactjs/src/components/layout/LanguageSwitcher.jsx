@@ -9,6 +9,7 @@ function LanguageSwitcher({ setLocale }) {
   const [language, setLanguage] = useState('EN');
 
   useEffect(() => {
+    console.log(languages);
     let selectedLanguage = localStorage.getItem('i18nextLng');
     if (selectedLanguage) {
       selectedLanguage = selectedLanguage.toUpperCase();

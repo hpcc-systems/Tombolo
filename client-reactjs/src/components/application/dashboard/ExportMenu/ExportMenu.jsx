@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useSelector } from 'react-redux';
 import Text from '../../../common/Text';
-import { Button, message, Dropdown, Menu } from 'antd';
+import { Button, message, Dropdown } from 'antd';
 import { DownOutlined } from '@ant-design/icons';
 import { authHeader, handleError } from '../../../common/AuthHeader.js';
 import { useLocation } from 'react-router-dom';
@@ -23,19 +23,11 @@ const ExportMenu = (selectedCluster) => {
     setDataType(splitName[splitName.length - 1]);
   });
 
-  const menu = (
-    <Menu onClick={(e) => handleMenuClick(e)}>
-      <Menu.Item key="CSV">
-        <i className="fa fa-lg fa-file"></i> {<Text text="CSV" />}
-      </Menu.Item>
-      <Menu.Item key="JSON">
-        <i className="fa  fa-lg fa-file-text-o"></i> {<Text text="JSON" />}
-      </Menu.Item>
-      <Menu.Item key="API">
-        <i className="fa fa-lg fa-link"></i> {<Text text="API" />}
-      </Menu.Item>
-    </Menu>
-  );
+  const menuItems = [
+    { key: 'CSV', icon: 'fa fa-lg fa-file', label: 'CSV' },
+    { key: 'JSON', icon: 'fa  fa-lg fa-file-text-o', label: 'JSON' },
+    { key: 'API', icon: 'fa fa-lg fa-link', label: 'API' },
+  ];
 
   const handleMenuClick = async (e) => {
     if (e.key === 'API') {
@@ -104,7 +96,7 @@ const ExportMenu = (selectedCluster) => {
 
   return (
     <>
-      <Dropdown menu={menu}>
+      <Dropdown menu={{ menuItems }} onClick={(e) => handleMenuClick(e)}>
         <Button type="primary" icon={<DownOutlined style={{ marginRight: '5px' }} />}>
           {<Text text="Export Data" />}
         </Button>

@@ -208,9 +208,14 @@ class AppHeader extends Component {
     }
   };
 
-  handleChange({ value, display, goToAssetPage = false }) {
+  handleChange(value) {
+    const goToAssetPage = false;
+
     const applicationId = value;
-    const applicationTitle = display;
+
+    //get the display from the applications list
+    const applicationTitle = this.state.applications.find((app) => app.value === applicationId)?.display || value;
+
     // trigger change when app is not same as current app, ignore if user selects same app
     if (this.props.application?.applicationId !== applicationId) {
       this.props.dispatch(applicationActions.applicationSelected(applicationId, applicationTitle));
@@ -355,29 +360,47 @@ class AppHeader extends Component {
   );
 
   render() {
-    const userActionMenu = (
-      <Menu onClick={this.handleUserActionMenuClick}>
-        <Menu.Item key="1" className="menuOption">
-          {<Text text="Change Password" />}
-        </Menu.Item>
-        <Menu.Item key="2" className="menuOption">
-          {<Text text="Logout" />}
-        </Menu.Item>
-      </Menu>
-    );
+    const actionMenuItems = [
+      {
+        key: '1',
+        icon: null,
+        label: 'Change Password',
+        children: null,
+        type: null,
+      },
+      {
+        key: '2',
+        icon: null,
+        label: 'Logout',
+        children: null,
+        type: null,
+      },
+    ];
 
-    const helpMenu = (
-      <Menu>
-        <Menu.Item key="1" className="menuOption">
-          <a target="_blank" rel="noopener noreferrer" href={process.env.PUBLIC_URL + '/Tombolo-User-Guide.pdf'}>
-            {<Text text="User Guide" />}
-          </a>
-        </Menu.Item>
-        <Menu.Item key="2" className="menuOption">
-          <a onClick={this.openAboutModal}>{<Text text="About" />}</a>
-        </Menu.Item>
-      </Menu>
-    );
+    const helpMenuClick = (e) => {
+      if (e.key == 1) {
+        window.open(process.env.PUBLIC_URL + '/Tombolo-User-Guide.pdf');
+      } else if (e.key == 2) {
+        this.openAboutModal();
+      }
+    };
+
+    const helpMenuItems = [
+      {
+        key: '1',
+        icon: null,
+        label: 'User Guide',
+        children: null,
+        type: null,
+      },
+      {
+        key: '2',
+        icon: null,
+        label: 'About',
+        children: null,
+        type: null,
+      },
+    ];
 
     const formItemLayout = {
       labelCol: {
@@ -393,18 +416,9 @@ class AppHeader extends Component {
     if (!this.props.user || !this.props.user.token) {
       return null;
     }
-
-    const menu = (
-      <Menu>
-        {this.state.applications.map((app, index) => {
-          return (
-            <Menu.Item key={index} onClick={() => this.handleChange({ ...app, goToAssetPage: true })}>
-              {app.display}
-            </Menu.Item>
-          );
-        })}
-      </Menu>
-    );
+    const menuItems = this.state.applications.map((app) => {
+      return { key: app.value, label: app.display };
+    });
 
     return (
       <div style={{ display: 'flex', alignItems: 'center', maxHeight: '100%', justifyContent: 'space-between' }}>
@@ -413,7 +427,15 @@ class AppHeader extends Component {
             <img src={logo} alt="Tombolo logo" width="80px" height="19px" />
           </Link>
 
-          <Dropdown menu={menu} placement="bottom" trigger={['click']}>
+          <Dropdown
+            menu={{
+              items: menuItems,
+              onClick: (e) => {
+                this.handleChange(e.key);
+              },
+            }}
+            placement="bottom"
+            trigger={['click']}>
             <Tooltip title="Select an Application" placement="right">
               <Space
                 style={{
@@ -433,7 +455,7 @@ class AppHeader extends Component {
         </div>
 
         <div style={{ display: 'flex', alignItems: 'center' }}>
-          <Dropdown menu={helpMenu} trigger={['click']}>
+          <Dropdown menu={{ items: helpMenuItems, onClick: (e) => helpMenuClick(e) }} trigger={['click']}>
             <Button shape="round" style={{ marginRight: '10px' }}>
               <i className="fa fa-lg fa-question-circle"></i>
               <span style={{ paddingLeft: '5px' }}>
@@ -441,7 +463,9 @@ class AppHeader extends Component {
               </span>
             </Button>
           </Dropdown>
-          <Dropdown menu={userActionMenu} trigger={['click']}>
+          <Dropdown
+            menu={{ items: actionMenuItems, onClick: (e) => this.handleUserActionMenuClick(e) }}
+            trigger={['click']}>
             <Button shape="round">
               <i className="fa fa-lg fa-user-circle"></i>
               <span style={{ paddingLeft: '5px' }}>
