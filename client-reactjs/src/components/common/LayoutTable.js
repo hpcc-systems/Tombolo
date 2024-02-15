@@ -147,7 +147,7 @@ const ConstraintModal = ({ modal, setData, dataSource, closeModal }) => {
       cancelButtonProps={{ hidden: !editing }}
       onCancel={onCancel}
       okText={getOKtext()}
-      visible={modal.isOpen}>
+      open={modal.isOpen}>
       <>
         <Form layout={editing ? 'vertical' : 'horizontal'} form={form}>
           <Form.Item noStyle shouldUpdate>

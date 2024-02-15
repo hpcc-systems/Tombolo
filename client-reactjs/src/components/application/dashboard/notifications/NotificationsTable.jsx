@@ -231,7 +231,7 @@ function NotificationsTable({ applicationId, setSelectedNotificationForBulkActio
       <Modal
         title={selectedNotification?.['fileMonitoring.name'] || selectedNotification?.['clusterMonitoring.name'] || ''}
         width={850}
-        visible={viewNotificationDetails}
+        open={viewNotificationDetails}
         onCancel={() => setViewNotificationDetails(false)}
         maskClosable={false}
         footer={

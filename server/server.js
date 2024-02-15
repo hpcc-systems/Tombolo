@@ -32,7 +32,7 @@ app.set("trust proxy", 1);
 
 // Limit rate of requests to 400 per 15 minutes
 const limiter = rateLimit({
-  windowMs: 15 * 60 * 1000, 
+  windowMs: 15 * 60 * 1000,
   max: 400,
 });
 
@@ -135,8 +135,9 @@ app.use((err, req, res, next) => {
   res.status(500).send("Something went wrong");
 });
 
-// Disables SSL verification for self-signed certificates in development mode 
-process.env["NODE_TLS_REJECT_UNAUTHORIZED"] = process.env.NODE_ENV === "production" ? 1 : 0;
+// Disables SSL verification for self-signed certificates in development mode
+process.env["NODE_TLS_REJECT_UNAUTHORIZED"] =
+  process.env.NODE_ENV === "production" ? 1 : 0;
 
 /* Start server */
 server.listen(port, "0.0.0.0", async () => {

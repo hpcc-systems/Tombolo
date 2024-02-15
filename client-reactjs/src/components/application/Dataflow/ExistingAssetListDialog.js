@@ -167,7 +167,7 @@ function ExistingAssetListDialog({ show, applicationId, clusterId, assetType, on
   return (
     <Modal
       title={getModalTitle()}
-      visible={show}
+      open={show}
       destroyOnClose={true}
       onCancel={() => {
         if (loading) return;

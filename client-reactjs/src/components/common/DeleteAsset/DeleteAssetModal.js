@@ -88,15 +88,13 @@ const DeleteAssetModal = ({ asset, show, hide, onDelete }) => {
   return (
     <Modal
       title={`Deleting "${asset.title || asset.name}"`}
-      visible={show}
+      open={show}
       onOk={() => onDelete(asset.id, asset.type)}
       okButtonProps={{ disabled: dissableOk }}
       onCancel={hide}
       closable={false}
       destroyOnClose={true}>
-      <Spin tip="Loading..." spinning={isInDataflow.loading}>
-        {getText()}
-      </Spin>
+      <Spin spinning={isInDataflow.loading}>{getText()}</Spin>
     </Modal>
   );
 };

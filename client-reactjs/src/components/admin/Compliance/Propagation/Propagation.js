@@ -72,7 +72,7 @@ const Propagation = () => {
           width={1000}
           title={<Text>Would you like to compare against base line?</Text>}
           onCancel={() => setModal({ isOpen: false })}
-          visible={modal.isOpen}
+          open={modal.isOpen}
           footer={[
             <Button key="current" type="secondary" onClick={handleUseCurrentState}>
               <Text> Use Current State</Text>

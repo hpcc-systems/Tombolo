@@ -61,7 +61,7 @@ const TagWithPopUp = ({ record, file, showAll }) => {
         width={1000}
         footer={null}
         closable={false}
-        visible={visible}
+        open={visible}
         title={record.name}
         onCancel={() => setVisible(false)}>
         <ConstraintDescription record={record} />

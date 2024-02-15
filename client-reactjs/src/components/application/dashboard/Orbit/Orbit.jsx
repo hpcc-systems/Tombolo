@@ -1,7 +1,8 @@
 import React, { useEffect, useState } from 'react';
-import { Tabs, Empty, Spin, Space } from 'antd';
+import { Empty, Spin, Space } from 'antd';
+import BreadCrumbs from '../../../common/BreadCrumbs';
 import { useSelector } from 'react-redux';
-import moment from 'moment';
+import dayjs from 'dayjs';
 import OrbitTable from './OrbitTable';
 import WorkUnitCharts from '../common/charts/WorkUnitCharts';
 import Filters from './Filters';
@@ -21,6 +22,7 @@ function Orbit() {
   //states for charts and titles
   const [titleMetrics, setTitleMetrics] = useState([]);
   const [metrics, setMetrics] = useState([]);
+  const [titles, setTitles] = useState({});
   const [stackBarData, setStackBarData] = useState([]);
   const [donutData, setDonutData] = useState([]);
   const [groupDataBy, setGroupDataBy] = useState('day');
@@ -43,7 +45,7 @@ function Orbit() {
     businessUnitsOptions: [],
     wuid: [],
     wuidOptions: [],
-    dateRange: [moment().subtract(15, 'days'), moment()],
+    dateRange: [dayjs().subtract(15, 'days'), dayjs()],
     groupDataBy: 'day',
   });
 
@@ -155,7 +157,7 @@ function Orbit() {
       if (params.get('dateRange')) {
         const dateString = params.get('dateRange');
         const dates = dateString.split(',');
-        const range = [moment(dates[0]), moment(dates[1])];
+        const range = [dayjs(dates[0]), dayjs(dates[1])];
         filters.dateRange = range;
       }
       if (params.get('groupDataBy')) {
@@ -187,7 +189,7 @@ function Orbit() {
         businessUnitsOptions: uniqueBusinessUnitsOptions,
         wuid: uniqueWorkUnits,
         wuidOptions: uniqueWorkUnitsOptions,
-        dateRange: filters.dateRange?.length ? filters.dateRange : [moment().subtract(15, 'days'), moment()],
+        dateRange: filters.dateRange?.length ? filters.dateRange : [dayjs().subtract(15, 'days'), dayjs()],
         groupDataBy: filters.groupDataBy ? filters.groupDataBy : 'day',
       }));
 
@@ -237,11 +239,11 @@ function Orbit() {
 
     //apply filters to work units once the build list is filtered
     let filtered = workUnits.filter((workUnit) => {
-      let wuDate = moment(workUnit.lastRun);
+      let wuDate = dayjs(workUnit.lastRun);
 
       if (
-        wuDate > moment(dashboardFilters.dateRange[0]) &&
-        wuDate < moment(dashboardFilters.dateRange[1]) &&
+        wuDate > dayjs(dashboardFilters.dateRange[0]) &&
+        wuDate < dayjs(dashboardFilters.dateRange[1]) &&
         dashboardFilters.initialStatus?.includes(workUnit.initialStatus.toUpperCase()) &&
         dashboardFilters.finalStatus?.includes(workUnit.finalStatus.toUpperCase()) &&
         dashboardFilters.version?.includes(workUnit.version) &&
@@ -273,11 +275,11 @@ function Orbit() {
 
       if (build.workUnits?.length > 0) {
         build.workUnits.forEach((workUnit) => {
-          let wuDate = moment(workUnit.lastRun);
+          let wuDate = dayjs(workUnit.lastRun);
 
           if (
-            wuDate > moment(dashboardFilters.dateRange[0]) &&
-            wuDate < moment(dashboardFilters?.dateRange[1]) &&
+            wuDate > dayjs(dashboardFilters.dateRange[0]) &&
+            wuDate < dayjs(dashboardFilters?.dateRange[1]) &&
             dashboardFilters.initialStatus?.includes(workUnit.initialStatus.toUpperCase()) &&
             dashboardFilters.finalStatus?.includes(workUnit.finalStatus.toUpperCase()) &&
             dashboardFilters.version?.includes(workUnit.version) &&
@@ -306,6 +308,7 @@ function Orbit() {
       const newStackBarData = []; // Stack bar Data
       const newDonutData = []; // Donut data
       const newTitleMetrics = []; //title metrics
+      const newTitles = [];
 
       newTitleMetrics.push({ title: 'Work Units', description: filteredWorkUnits.length });
       newTitleMetrics.push({
@@ -317,9 +320,9 @@ function Orbit() {
         newTitleMetrics.push({
           title: 'Date Range Selected',
           description:
-            moment(dashboardFilters?.dateRange[0]).format('MM/DD/YY') +
+            dayjs(dashboardFilters?.dateRange[0]).format('MM/DD/YY') +
             ' - ' +
-            moment(dashboardFilters?.dateRange[1]).format('MM/DD/YY'),
+            dayjs(dashboardFilters?.dateRange[1]).format('MM/DD/YY'),
         });
       }
 
@@ -331,8 +334,8 @@ function Orbit() {
       switch (groupDataBy) {
         case 'week':
           data = filteredWorkUnits.map((workUnit) => {
-            const weekStart = moment(workUnit.lastRun).startOf('week').format('MM/DD/YY');
-            const weekEnd = moment(workUnit.lastRun).endOf('week').format('MM/DD/YY');
+            const weekStart = dayjs(workUnit.lastRun).startOf('week').format('MM/DD/YY');
+            const weekEnd = dayjs(workUnit.lastRun).endOf('week').format('MM/DD/YY');
             const updatedItem = { ...workUnit };
             updatedItem.metaData.lastRun = `${weekStart} - ${weekEnd}`;
             return updatedItem;
@@ -342,7 +345,7 @@ function Orbit() {
         case 'month':
           data = filteredWorkUnits.map((workUnit) => {
             const updatedItem = { ...workUnit };
-            updatedItem.metaData.lastRun = moment(moment(workUnit.lastRun).utc(), 'MM/DD/YYYY').format('MMMM YYYY');
+            updatedItem.metaData.lastRun = dayjs(dayjs(workUnit.lastRun).utc(), 'MM/DD/YYYY').format('MMMM YYYY');
             return updatedItem;
           });
           break;
@@ -350,7 +353,7 @@ function Orbit() {
         case 'quarter':
           data = filteredWorkUnits.map((workUnit) => {
             const updatedItem = { ...workUnit };
-            const date = moment.utc(workUnit.lastRun);
+            const date = dayjs.utc(workUnit.lastRun);
             const year = date.year();
             const quarter = Math.ceil((date.month() + 1) / 3);
             updatedItem.metaData.lastRun = `${year} - Q${quarter}`;
@@ -361,7 +364,7 @@ function Orbit() {
         case 'year':
           data = filteredWorkUnits.map((workUnit) => {
             const updatedItem = { ...workUnit };
-            const date = moment.utc(workUnit.lastRun);
+            const date = dayjs.utc(workUnit.lastRun);
             const year = date.year();
             updatedItem.metaData.lastRun = year;
             return updatedItem;
@@ -390,7 +393,7 @@ function Orbit() {
         if (groupDataBy == 'day') {
           newStackBarData.push({
             x: workUnit.metaData.lastRun.split('T')[0],
-            y: 1,
+            y: 20,
             z: workUnit.finalStatus,
           });
         } else {
@@ -406,6 +409,17 @@ function Orbit() {
         }
       });
 
+      //get newStackBarData set y = counts for each date and final status
+      newStackBarData.forEach((item) => {
+        const count = newStackBarData.filter((x) => x.x === item.x && x.z === item.z).length;
+        item.y = count;
+      });
+
+      //delete duplicates
+      const finalStackBarData = newStackBarData.filter(
+        (v, i, a) => a.findIndex((t) => t.x === v.x && t.z === v.z) === i
+      );
+
       //---------------------------------------
       for (let key in workUnitCountByFinalStatus) {
         newMetrics.push({ type: key, value: workUnitCountByFinalStatus[key] });
@@ -417,14 +431,17 @@ function Orbit() {
       //---------------------------------------
 
       //add titles
-      newStackBarData.push({ title: 'Count of Workunits by Date and Final Build Status' });
-      newDonutData.push({ title: 'Count of Workunits by Initial Build Status' });
-      newMetrics.push({ title: 'Count of Workunits by Final Build Status' });
+      newTitles.initial = 'Count of Workunits by Initial Build Status';
+      newTitles.initialInner = filteredWorkUnits.length.toString();
+      newTitles.final = 'Count of Workunits by Final Build Status';
+      newTitles.finalInner = filteredWorkUnits.length.toString();
+      newTitles.stack = 'Count of Workunits by Date and Final Build Status';
 
       setTitleMetrics(newTitleMetrics);
       setMetrics(newMetrics);
-      setStackBarData(newStackBarData);
+      setStackBarData(finalStackBarData);
       setDonutData(newDonutData);
+      setTitles(newTitles);
     }
   };
 
@@ -438,59 +455,57 @@ function Orbit() {
 
   return (
     <div>
-      <Tabs
-        type="card"
-        tabBarExtraContent={
+      <BreadCrumbs
+        extraContent={
           <>
-            <Space style={{ marginRight: '1rem' }}>
-              <Filters
-                applicationId={applicationId}
-                setBuilds={setBuilds}
-                groupDataBy={groupDataBy}
-                setGroupDataBy={setGroupDataBy}
-                isOrbit={true}
-                dashboardFilters={dashboardFilters}
-                setDashboardFilters={setDashboardFilters}
-              />
-            </Space>
-            <Space>
-              <ExportMenu />
-            </Space>
+            <div>
+              <Space style={{ marginRight: '1rem' }}>
+                <Filters
+                  groupDataBy={groupDataBy}
+                  setGroupDataBy={setGroupDataBy}
+                  dashboardFilters={dashboardFilters}
+                  setDashboardFilters={setDashboardFilters}
+                />
+              </Space>
+              <Space>
+                <ExportMenu />
+              </Space>
+            </div>
           </>
-        }>
-        <Tabs.TabPane key="1" tab="Dashboard">
-          <div style={{ width: '100%', marginBottom: '2rem' }}></div>
-          <div style={{ width: '100%', marginBottom: '1rem', display: 'flex', justifyContent: 'center' }}>
-            <MetricBoxes
-              metrics={titleMetrics}
-              builds={builds}
-              bordered={false}
-              headStyle={{ color: 'white', background: '#002140', padding: '0rem 3rem 0rem 3rem', fontSize: '1.25rem' }}
+        }
+      />
+
+      <div style={{ width: '100%', marginBottom: '2rem' }}></div>
+      <div style={{ width: '100%', marginBottom: '1rem', display: 'flex', justifyContent: 'center' }}>
+        <MetricBoxes
+          metrics={titleMetrics}
+          builds={builds}
+          bordered={false}
+          headStyle={{ color: 'white', background: '#002140', padding: '0rem 3rem 0rem 3rem', fontSize: '1.25rem' }}
+        />
+      </div>
+      <div style={{ width: '100%', display: 'flex', justifyContent: 'space-between' }}>
+        <OrbitTable filteredWorkUnits={filteredWorkUnits} filteredBuilds={filteredBuilds} loading={loading} />
+
+        {builds.length > 0 ? (
+          <div className="builds__charts">
+            <WorkUnitCharts
+              metrics={metrics}
+              stackBarData={stackBarData}
+              setGroupDataBy={setGroupDataBy}
+              groupDataBy={groupDataBy}
+              titles={titles}
+              donutData={donutData}
             />
           </div>
-          <div style={{ width: '100%', display: 'flex', justifyContent: 'space-between' }}>
-            <OrbitTable filteredWorkUnits={filteredWorkUnits} filteredBuilds={filteredBuilds} loading={loading} />
-
-            {builds.length > 0 ? (
-              <div className="builds__charts">
-                <WorkUnitCharts
-                  metrics={metrics}
-                  stackBarData={stackBarData}
-                  setGroupDataBy={setGroupDataBy}
-                  groupDataBy={groupDataBy}
-                  donutData={donutData}
-                />
-              </div>
-            ) : loading ? (
-              <div style={{ width: '82%', textAlign: 'center', marginTop: '50px' }}>
-                <Spin />
-              </div>
-            ) : (
-              <Empty style={{ marginTop: '150px', width: '82%' }} image={Empty.PRESENTED_IMAGE_SIMPLE} />
-            )}
+        ) : loading ? (
+          <div style={{ width: '82%', textAlign: 'center', marginTop: '50px' }}>
+            <Spin />
           </div>
-        </Tabs.TabPane>
-      </Tabs>
+        ) : (
+          <Empty style={{ marginTop: '150px', width: '82%' }} image={Empty.PRESENTED_IMAGE_SIMPLE} />
+        )}
+      </div>
     </div>
   );
 }

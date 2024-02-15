@@ -2,7 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { Tabs, Empty, Spin, Button, Space } from 'antd';
 import { useSelector } from 'react-redux';
 import { message } from 'antd';
-import moment from 'moment';
+import dayjs from 'dayjs';
 
 import NotificationsTable from './NotificationsTable';
 import NotificationCharts from '../common/charts/NotificationCharts';
@@ -33,14 +33,14 @@ function Index() {
   const [defaultFilters, setDefaultFilters] = useState({
     monitoringType: ['jobMonitoring', 'file', 'cluster', 'superFile', 'megaphone', 'orbitMonitoring'],
     monitoringStatus: ['notified', 'triage', 'completed', 'inProgress'],
-    dateRange: [moment().subtract(15, 'days'), moment()],
+    dateRange: [dayjs().subtract(15, 'days'), dayjs()],
     applicationId,
   });
 
   useEffect(() => {
     const groupedData = notifications.map((notification) => {
-      const weekStart = moment(notification.createdAt).startOf('week').format('MM/DD/YY');
-      const weekEnd = moment(notification.createdAt).endOf('week').format('MM/DD/YY');
+      const weekStart = dayjs(notification.createdAt).startOf('week').format('MM/DD/YY');
+      const weekEnd = dayjs(notification.createdAt).endOf('week').format('MM/DD/YY');
       const updatedItem = { ...notification };
       updatedItem.createdAt = `${weekStart} - ${weekEnd}`;
       return updatedItem;
@@ -73,8 +73,8 @@ function Index() {
       switch (groupDataBy) {
         case 'week':
           data = notifications.map((notification) => {
-            const weekStart = moment(notification.createdAt).startOf('week').format('MM/DD/YY');
-            const weekEnd = moment(notification.createdAt).endOf('week').format('MM/DD/YY');
+            const weekStart = dayjs(notification.createdAt).startOf('week').format('MM/DD/YY');
+            const weekEnd = dayjs(notification.createdAt).endOf('week').format('MM/DD/YY');
             const updatedItem = { ...notification };
             updatedItem.createdAt = `${weekStart} - ${weekEnd}`;
             return updatedItem;
@@ -84,7 +84,7 @@ function Index() {
         case 'month':
           data = notifications.map((notification) => {
             const updatedItem = { ...notification };
-            updatedItem.createdAt = moment(moment(notification.createdAt).utc(), 'MM/DD/YYYY').format('MMMM YYYY');
+            updatedItem.createdAt = dayjs(dayjs(notification.createdAt).utc(), 'MM/DD/YYYY').format('MMMM YYYY');
             return updatedItem;
           });
           break;
@@ -92,7 +92,7 @@ function Index() {
         case 'quarter':
           data = notifications.map((notification) => {
             const updatedItem = { ...notification };
-            const date = moment.utc(notification.createdAt);
+            const date = dayjs.utc(notification.createdAt);
             const year = date.year();
             const quarter = Math.ceil((date.month() + 1) / 3);
             updatedItem.createdAt = `${year} - Q${quarter}`;
@@ -103,7 +103,7 @@ function Index() {
         case 'year':
           data = notifications.map((notification) => {
             const updatedItem = { ...notification };
-            const date = moment.utc(notification.createdAt);
+            const date = dayjs.utc(notification.createdAt);
             const year = date.year();
             updatedItem.createdAt = year;
             return updatedItem;

@@ -158,7 +158,7 @@ const AddEditJobMonitoringModal = ({
 
   return (
     <Modal
-      visible={displayAddJobMonitoringModal}
+      open={displayAddJobMonitoringModal}
       width={800}
       onCancel={handleCancel}
       footer={renderFooter()}

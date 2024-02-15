@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { Form, Select, DatePicker, Button, message } from 'antd';
 import { useHistory, useLocation } from 'react-router-dom';
-import moment from 'moment';
+import dayjs from 'dayjs';
 
 import { authHeader, handleError } from '../../../common/AuthHeader.js';
 import { monitoringStatusOptions } from '../common/monitoringStatusOptions.js';
@@ -46,7 +46,7 @@ function Filters({
   const initialValues = {
     monitoringType: ['jobMonitoring', 'file', 'cluster', 'superFile', 'megaphone', 'orbitMonitoring'],
     monitoringStatus: ['notified', 'triage', 'inProgress', 'completed'],
-    dateRange: [moment().subtract(15, 'days'), moment()],
+    dateRange: [dayjs().subtract(15, 'days'), dayjs()],
     groupDataBy: groupDataBy,
   };
   const history = useHistory();
@@ -114,7 +114,7 @@ function Filters({
     if (params.get('dateRange')) {
       const dateString = params.get('dateRange');
       const dates = dateString.split(',');
-      const range = [moment(dates[0]), moment(dates[1])];
+      const range = [dayjs(dates[0]), dayjs(dates[1])];
       filters.dateRange = range;
     }
 

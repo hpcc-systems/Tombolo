@@ -401,7 +401,6 @@ router.put(
         },
       };
       // -------------------------------------------------------
-
       await orbitMonitoring.update(newInfo, { where: { id } });
 
       // If start monitoring was changed to TRUE
