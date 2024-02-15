@@ -99,41 +99,54 @@ function ClusterUsage() {
     }
   };
 
-  return (
-    <Tabs
-      tabBarExtraContent={<ExportMenu selectedCluster={selectedCluster} />}
-      activeKey={activeTab}
-      type="card"
-      onChange={handleTabSwitching}>
-      <Tabs.TabPane tab="Usage history" key="1">
-        <Filters
-          setSelectedCluster={setSelectedCluster}
-          selectedCluster={selectedCluster}
-          setHistoryDateRange={setHistoryDateRange}
-          historyDateRange={historyDateRange}
-          clusterOptions={clusterOptions}
-        />
-        <StorageUsageHistoryCharts
-          clusterUsageHistory={clusterUsageHistory}
-          setViewExpandedGraph={setViewExpandedGraph}
-          setExpandedGraphData={setExpandedGraphData}
-        />
-        {viewExpandedGraph ? (
-          <GraphExpanded
-            setViewExpandedGraph={setViewExpandedGraph}
-            clusterUsageHistory={expandedGraphData}
+  const tabItems = [
+    {
+      key: '1',
+      label: 'Usage history',
+      children: (
+        <>
+          <Filters
+            setSelectedCluster={setSelectedCluster}
             selectedCluster={selectedCluster}
+            setHistoryDateRange={setHistoryDateRange}
+            historyDateRange={historyDateRange}
+            clusterOptions={clusterOptions}
           />
-        ) : null}
-      </Tabs.TabPane>
-      <Tabs.TabPane tab="Current usage" key="2">
+          <StorageUsageHistoryCharts
+            clusterUsageHistory={clusterUsageHistory}
+            setViewExpandedGraph={setViewExpandedGraph}
+            setExpandedGraphData={setExpandedGraphData}
+          />
+          {viewExpandedGraph ? (
+            <GraphExpanded
+              setViewExpandedGraph={setViewExpandedGraph}
+              clusterUsageHistory={expandedGraphData}
+              selectedCluster={selectedCluster}
+            />
+          ) : null}{' '}
+        </>
+      ),
+    },
+    {
+      key: '2',
+      label: 'Current usage',
+      children: (
         <CurrentClusterUsageCharts
           setActiveTab={setActiveTab}
           selectedCluster={selectedCluster}
           setSelectedCluster={setSelectedCluster}
         />
-      </Tabs.TabPane>
-    </Tabs>
+      ),
+    },
+  ];
+
+  return (
+    <Tabs
+      tabBarExtraContent={<ExportMenu selectedCluster={selectedCluster} />}
+      activeKey={activeTab}
+      type="card"
+      onChange={handleTabSwitching}
+      items={tabItems}></Tabs>
   );
 }
 
