@@ -643,8 +643,8 @@ class QueryDetails extends PureComponent {
                                 <Col span={21} order={1}>
                                   <AutoComplete
                                     className="certain-category-search"
-                                    dropdownClassName="certain-category-search-dropdown"
-                                    dropdownMatchSelectWidth={false}
+                                    popupClassName="certain-category-search-dropdown"
+                                    popupMatchSelectWidth={false}
                                     dropdownStyle={{ width: 300 }}
                                     style={{ width: '100%' }}
                                     onSearch={(value) => this.searchQueries(value)}

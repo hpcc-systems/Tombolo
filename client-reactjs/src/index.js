@@ -1,5 +1,6 @@
 import React from 'react';
-import ReactDOM from 'react-dom';
+import { createRoot } from 'react-dom/client';
+
 import { App } from './App';
 import { BrowserRouter } from 'react-router-dom';
 import 'font-awesome/css/font-awesome.min.css';
@@ -16,7 +17,10 @@ import AzureApp from './components/azureSso/AzureApp';
 
 export const msalInstance = new PublicClientApplication(msalConfig);
 
-ReactDOM.render(
+const container = document.getElementById('root');
+const root = createRoot(container);
+
+root.render(
   <Provider store={store}>
     <BrowserRouter>
       {process.env.REACT_APP_APP_AUTH_METHOD === 'azure_ad' ? (
@@ -29,6 +33,5 @@ ReactDOM.render(
         <App />
       )}
     </BrowserRouter>
-  </Provider>,
-  document.getElementById('root')
+  </Provider>
 );

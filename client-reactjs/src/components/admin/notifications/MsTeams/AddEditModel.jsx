@@ -60,7 +60,7 @@ const AddEditModel = ({ visible, setModalVisibility, hooks, setHooks, isEditing,
 
   return (
     <Modal
-      visible={visible}
+      open={visible}
       maskClosable={false}
       title={title}
       onCancel={onCancel}

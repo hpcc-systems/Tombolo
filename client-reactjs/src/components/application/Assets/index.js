@@ -1,6 +1,6 @@
 /* eslint-disable no-async-promise-executor */
 import React, { useState, useEffect, useRef, useCallback } from 'react';
-import { Tree, Menu, Button, Modal, Input, Dropdown, message } from 'antd';
+import { Tree, Button, Modal, Input, Dropdown, message } from 'antd';
 import { debounce } from 'lodash';
 import { DownOutlined, InfoCircleOutlined } from '@ant-design/icons';
 import { useSelector, useDispatch } from 'react-redux';
@@ -301,28 +301,37 @@ const Assets = () => {
   //   assetTypeFilter.current = selectedValues;
   // };
 
-  const menu = (
-    <Menu onClick={(e) => handleMenuClick(e)}>
-      <Menu.Item key="File">
-        <i className="fa fa-lg fa-file"></i> {<Text text="File" />}
-      </Menu.Item>
-      <Menu.Item key="File Template">
-        <i className="fa  fa-lg fa-file-text-o"></i> {<Text text="File Template" />}
-      </Menu.Item>
-      <Menu.Item key="Index">
-        <i className="fa fa-lg fa-indent"></i> {<Text text="Index" />}
-      </Menu.Item>
-      <Menu.Item key="Query">
-        <i className="fa fa-lg fa-search"></i> {<Text text="Query" />}
-      </Menu.Item>
-      <Menu.Item key="Job">
-        <i className="fa fa-lg fa-clock-o"></i> {<Text text="Job" />}
-      </Menu.Item>
-      <Menu.Item key="RealBI Dashboard">
-        <i className="fa fa-lg fa-area-chart"></i> {<Text text="RealBI Dashboard" />}
-      </Menu.Item>
-    </Menu>
-  );
+  // const menu = (
+  //   <Menu onClick={(e) => handleMenuClick(e)}>
+  //     <Menu.Item key="File">
+  //       <i className="fa fa-lg fa-file"></i> {<Text text="File" />}
+  //     </Menu.Item>
+  //     <Menu.Item key="File Template">
+  //       <i className="fa  fa-lg fa-file-text-o"></i> {<Text text="File Template" />}
+  //     </Menu.Item>
+  //     <Menu.Item key="Index">
+  //       <i className="fa fa-lg fa-indent"></i> {<Text text="Index" />}
+  //     </Menu.Item>
+  //     <Menu.Item key="Query">
+  //       <i className="fa fa-lg fa-search"></i> {<Text text="Query" />}
+  //     </Menu.Item>
+  //     <Menu.Item key="Job">
+  //       <i className="fa fa-lg fa-clock-o"></i> {<Text text="Job" />}
+  //     </Menu.Item>
+  //     <Menu.Item key="RealBI Dashboard">
+  //       <i className="fa fa-lg fa-area-chart"></i> {<Text text="RealBI Dashboard" />}
+  //     </Menu.Item>
+  //   </Menu>
+  // );
+
+  const menuItems = [
+    { key: 'File', icon: <i className="fa fa-lg fa-file"></i>, label: 'File' },
+    { key: 'File Template', icon: <i className="fa  fa-lg fa-file-text-o"></i>, label: 'File Template' },
+    { key: 'Job', icon: <i className="fa fa-lg fa-clock-o"></i>, label: 'Job' },
+    { key: 'Query', icon: <i className="fa fa-lg fa-search"></i>, label: 'Query' },
+    { key: 'Index', icon: <i className="fa fa-lg fa-indent"></i>, label: 'Index' },
+    { key: 'RealBI Dashboard', icon: <i className="fa fa-lg fa-area-chart"></i>, label: 'RealBI Dashboard' },
+  ];
 
   // const selectBefore = (
   // <Popover
@@ -355,7 +364,7 @@ const Assets = () => {
               <div style={{ marginRight: '5px' }}>
                 <InfoCircleOutlined style={{ marginRight: '10px', fontSize: '18px' }} onClick={() => showDrawer()} />
 
-                <Dropdown overlay={menu}>
+                <Dropdown menu={{ items: menuItems, onClick: (e) => handleMenuClick(e) }}>
                   <Button type="primary" icon={<DownOutlined style={{ marginRight: '5px' }} />}>
                     {<Text text="Add Asset" />}
                   </Button>

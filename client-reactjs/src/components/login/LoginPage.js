@@ -8,6 +8,7 @@ import { Link, useHistory, useLocation } from 'react-router-dom';
 import { useDispatch, useSelector } from 'react-redux';
 
 const LoginPage = () => {
+  console.log('hi from login');
   const { user, loggedIn } = useSelector((state) => state.authenticationReducer);
   const [login, setLogin] = useState({ loading: false, success: false, error: '' });
 

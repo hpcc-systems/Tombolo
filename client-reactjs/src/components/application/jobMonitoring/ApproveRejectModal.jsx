@@ -99,7 +99,7 @@ const ApproveRejectModal = ({
 
   return (
     <Modal
-      visible={displayAddRejectModal}
+      open={displayAddRejectModal}
       onCancel={handleCancel}
       // closable={false}
       maskClosable={false}
