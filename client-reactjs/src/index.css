@@ -3,12 +3,14 @@
   /* some colors from bootstrap */
   --primary: #007bff;
   --secondary: #6c757d;
+  --secondary-light: #d3d3d3;
   --success: #28a745;
   --info: #17a2b8;
   --warning: #ffc107;
   --danger: #dc3545;
   --light: #f8f9fa;
   --dark: #343a40;
+  --highlight: #fffb8f;
 }
 
 body {
@@ -700,6 +702,34 @@ div.tooltip {
   line-height: 18px;
 }
 
+/* Tiny Scroll Bar --------------------- */
+.tiny-scroll-bar::-webkit-scrollbar {
+  width: 4px; /* Adjust this value as needed */
+  transition: width 0.3s ease-in-out; /* Add a transition effect */
+}
+
+/* Increase the width of the scrollbar on hover */
+.tiny-scroll-bar:hover::-webkit-scrollbar {
+  width: 5px; /* Adjust this value as needed */
+}
+
+/* Style the scrollbar */
+.tiny-scroll-bar::-webkit-scrollbar-track {
+  background: var(--light);
+}
+
+.tiny-scroll-bar::-webkit-scrollbar-thumb {
+  background: var(--secondary);
+}
+
+.tiny-scroll-bar::-webkit-scrollbar-thumb:hover {
+  background: var(--secondary);
+}
+
+/* ---------------------------------------------- */
+
+/* Remove scroll bar */
+
 .noScroll * {
   max-width: 100%;
 }
@@ -1106,4 +1136,21 @@ div.tooltip {
 .chartLabel {
   color: rgb(71, 70, 70);
   margin-bottom: 2rem;
+}
+
+.checkbox-section {
+  margin-bottom: 20px;
+}
+
+.checkbox-section h3 {
+  margin-bottom: 10px;
+}
+
+.checkbox-group {
+  margin-left: 20px;
+}
+
+.checkbox-group label {
+  display: block;
+  margin-bottom: 5px;
 }

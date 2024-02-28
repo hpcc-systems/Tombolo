@@ -17,7 +17,7 @@ const domains = [
   },
 ];
 
-const activityType = [
+const activityTypes = [
   {
     "Activity Type": "Prod LZ Space Monitoring",
     "Activity ID": "0001",
@@ -697,10 +697,22 @@ const productCategory = [
   },
 ];
 
+//Get all domains regardless of activity type
+const getAllDomains = () => {
+  return domains;
+}
+
+//Get all activity types
+const getActivityTypesForADomain = ({domainId}) => {
+  const activities = activityTypes.filter((activity) =>
+    activity.Domains.includes(domainId)
+  );
+  return activities;
+}
 
 //Function  to return domains when activity type id is given
 const getDomainFromActivityTypeId = ({activityTypeId}) => {
-  const activity = activityType.find(
+  const activity = activityTypes.find(
     (activity) => activity["Activity ID"] === activityTypeId
   );
   if (activity) {
@@ -735,9 +747,11 @@ function getProductCategoryFromDomainAndActivityType({
 
 
 module.exports = {
-  activityType,
+  activityTypes,
   productCategory,
   domains,
+  getActivityTypesForADomain,
+  getAllDomains,
   getDomainFromActivityTypeId,
   getProductCategoryFromDomainAndActivityType
 };  

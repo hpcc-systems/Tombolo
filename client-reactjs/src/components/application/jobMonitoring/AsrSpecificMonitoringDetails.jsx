@@ -2,7 +2,7 @@
 import React, { useEffect, useState } from 'react';
 const { Form, Row, Col, Input, Select, message } = require('antd');
 
-import { getDomains, getProductCategories } from './jobMonitoringUtils';
+import { getDomains, getProductCategories } from '../../../api/fido';
 
 //Constants
 const { Option } = Select;
@@ -23,10 +23,11 @@ function AsrSpecificMonitoringDetails({ form }) {
 
   //Effects
   useEffect(() => {
+    const activityTypeId = '0008'; // JOB/APP monitoring activity type per the ASR database
     // Get domains
     (async () => {
       try {
-        const domainData = await getDomains();
+        const domainData = await getDomains({ activityTypeId });
         setDomain(domainData);
       } catch (error) {
         message.error('Error fetching domains');
@@ -37,7 +38,7 @@ function AsrSpecificMonitoringDetails({ form }) {
     if (selectedDomain) {
       (async () => {
         try {
-          const productCategories = await getProductCategories({ domainId: selectedDomain });
+          const productCategories = await getProductCategories({ domainId: selectedDomain, activityTypeId });
           setProductCategories(productCategories);
         } catch (error) {
           message.error('Error fetching product category');

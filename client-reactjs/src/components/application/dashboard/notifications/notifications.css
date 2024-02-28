@@ -1,0 +1,81 @@
+.notifications_tiny-description {
+  margin-top: 30px;
+}
+
+.notifications_tiny-description * {
+  padding: 2px 4px !important;
+}
+
+.notifications_tiny-description .notifications__fixed-size-description-item {
+  margin-top: -20px;
+  margin-bottom: -20px;
+  max-height: 90px;
+  overflow: auto;
+}
+
+.notifications_tiny-description .ant-descriptions-item-label {
+  width: 180px;
+  font-weight: 500;
+}
+
+.notifications__wider-tooltip .ant-tooltip-inner {
+  min-width: 300px;
+}
+
+.notificationDetails__value-with-tooltip {
+  color: var(--primary);
+  margin-left: -10px;
+}
+
+.notifications__filter-label {
+  font-weight: 500;
+  padding-bottom: 5px;
+}
+
+.notifications_filters__form {
+  margin-bottom: 5px;
+  padding: 4px 10px;
+  background-color: var(--light);
+}
+
+/* ---------------------------------------------------------------------- */
+
+.notifications_dashboard {
+  display: flex;
+  justify-content: space-around;
+  flex-wrap: wrap;
+}
+
+.notifications_chart_card {
+  flex: 0 0 calc(50% - 20px);
+  box-sizing: border-box;
+  margin: 10px;
+  min-width: 400px;
+  border: 1px solid var(--secondary-light);
+  padding: 10px;
+  min-height: 400px;
+}
+
+.notifications_chart_title {
+  margin: 0px 0px 20px 0px;
+  font-weight: 700;
+  color: var(--secondary);
+  font-size: 1.2rem;
+  text-align: center;
+}
+
+@media screen and (max-width: 800px) {
+  .notifications_chart_card {
+    flex: 0 0 100%;
+    width: 800px;
+  }
+}
+
+.notifications_dashboard__empty_charts {
+  width: 100%;
+  border: 1px solid var(--secondary-light);
+  height: 85vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}

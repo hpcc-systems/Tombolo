@@ -1,4 +1,7 @@
 const { Constants } = require('./Constants');
+const { Tooltip } = require('antd');
+import React from 'react';
+
 let omitDeep = (value, key) => {
   if (Array.isArray(value)) {
     return value.map((i) => omitDeep(i, key));
@@ -104,6 +107,27 @@ const formatDateTime = (timestamp) => {
   );
 };
 
+//Format date time short ex - 07/31/1999 @ 4:42 PM
+const formatDateTimeShort = (timestamp) => {
+  let dateTime = new Date(timestamp);
+
+  return (
+    dateTime.toLocaleDateString('en-US', Constants.COMPACT_DATE_FORMAT_OPTIONS) +
+    ' @ ' +
+    dateTime.toLocaleTimeString('en-US', Constants.TIME_FORMAT_OPTIONS)
+  );
+};
+
+// Date with short format and log tooltip component
+const DateWithTooltip = (timestamp) => {
+  const dateTime = new Date(timestamp);
+  return (
+    <Tooltip title={formatDateTime(dateTime)}>
+      <span>{formatDateTimeShort(dateTime)}</span>
+    </Tooltip>
+  );
+};
+
 export {
   omitDeep,
   eclTypes,
@@ -116,4 +140,6 @@ export {
   validationRuleFixes,
   camelToTitleCase,
   formatDateTime,
+  formatDateTimeShort,
+  DateWithTooltip,
 };
