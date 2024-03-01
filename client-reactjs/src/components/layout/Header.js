@@ -141,7 +141,7 @@ class AppHeader extends Component {
       this.props.dispatch(applicationActions.getConsumers());
       this.props.dispatch(applicationActions.getLicenses());
       this.props.dispatch(applicationActions.getConstraints());
-      this.props.dispatch(applicationActions.getIntegrations(this.props.application.applicationId));
+      this.props.dispatch(applicationActions.getIntegrations(this.props.application?.applicationId));
     }
 
     if (this.props.newApplication) {
@@ -156,6 +156,7 @@ class AppHeader extends Component {
         this.setState({ applications });
       }
     }
+
     if (this.props.updatedApplication) {
       let applications = this.state.applications;
       let application = applications.filter(
@@ -208,6 +209,11 @@ class AppHeader extends Component {
 
   handleChange(value) {
     const goToAssetPage = false;
+
+    //value needs to be an object
+    if (typeof value === 'object') {
+      value = value?.value;
+    }
 
     const applicationId = value;
 
@@ -338,24 +344,6 @@ class AppHeader extends Component {
   };
 
   // Options for languages dropdown
-  // languagesMenu = (
-  //   <Menu
-  //     onClick={(item) => {
-  //       localStorage.setItem('i18nextLng', item.key);
-  //       i18next.changeLanguage(item.key);
-  //       this.setState({ language: item.key.toUpperCase() });
-
-  //       this.props.setLocale(item.key);
-  //     }}>
-  //     {languages.map((language) => {
-  //       return (
-  //         <Menu.Item className="menuOption" key={language.value}>
-  //           {language.label}
-  //         </Menu.Item>
-  //       );
-  //     })}
-  //   </Menu>
-  // );
 
   render() {
     const actionMenuItems = [

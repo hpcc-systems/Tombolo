@@ -36,14 +36,17 @@ export default class Stencil {
       },
     });
 
+    this.addShape(graph, stencil);
+
+    console.log('appending stencil to stencil container');
+
     if (stencilContainer.current) {
       stencilContainer.current.appendChild(stencil.container);
     }
-
-    this.addShape(graph, stencil);
   }
 
   static addShape(graph, stencil) {
+    console.log('adding shapes to stencil');
     const assets = [
       { type: 'Job', title: i18n('Job') },
       { type: 'File', title: i18n('File') },
@@ -55,6 +58,13 @@ export default class Stencil {
     const assetsNodes = assets.map((asset) => {
       return graph.createNode({
         shape: 'custom-shape',
+
+        attrs: {
+          body: {
+            fill: '#2ECC71', // Background color
+            stroke: '#000', // Border color
+          },
+        },
         data: {
           isStencil: true,
           type: asset.type,
@@ -64,6 +74,8 @@ export default class Stencil {
         },
       });
     });
+
+    console.log(assetsNodes);
 
     stencil.load(assetsNodes, 'Assets');
   }

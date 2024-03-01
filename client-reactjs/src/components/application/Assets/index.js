@@ -26,8 +26,6 @@ const { confirm } = Modal;
 const { Search } = Input;
 // const CheckboxGroup = Checkbox.Group;
 
-message.config({ top: 100 });
-
 const Assets = () => {
   const [groupsReducer, authReducer, assetReducer, applicationReducer] = useSelector((state) => [
     state.groupsReducer,

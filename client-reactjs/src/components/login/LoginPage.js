@@ -46,6 +46,9 @@ const LoginPage = () => {
 
   useEffect(() => {
     if (user.id && loggedIn) {
+      console.log('beep');
+
+      console.log('location', location);
       history.replace(location.state?.from?.pathname || '/');
     }
   }, [loggedIn]);

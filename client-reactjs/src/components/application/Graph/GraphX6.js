@@ -166,6 +166,7 @@ function GraphX6({ readOnly = false, monitoring, statuses }) {
     graphRef.current.dataflowVersionId = ''; // default state, jobs can not be executed on Working Copy;
 
     Shape.init({ handleContextMenu, disableContextMenu: readOnly, graph });
+    
 
     if (!readOnly) {
       Stencil.init(stencilContainerRef, graph);
@@ -541,7 +542,8 @@ function GraphX6({ readOnly = false, monitoring, statuses }) {
 
   const handleSave = useCallback(
     debounce((graph) => {
-      if (graph.isFrozen()) return; // when graph is frozen ignore all the saves
+      console.log(graph);
+      // when graph is frozen ignore all the saves
 
       const graphToJson = graph.toJSON({ diff: true });
       // Copy origin from graph instance and update updatedAt field to be saved to local storage.
@@ -924,7 +926,8 @@ function GraphX6({ readOnly = false, monitoring, statuses }) {
 
   const getGraphDialog = () => {
     if (configDialog.assetId || (!configDialog.assetId && configDialog.type === 'Sub-Process')) {
-      if (graphRef.current.isFrozen()) readOnly = true;
+      //TODO - figure out new method
+      // if (graphRef.current.isFrozen()) readOnly = true;
       return (
         <AssetDetailsDialog
           show={configDialog.openDialog}

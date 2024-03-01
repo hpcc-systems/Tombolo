@@ -29,7 +29,7 @@ function UserSearch({ layout, noLabelLayout, enableEdit, showDetails }) {
   const searchUser = debounce((value) => {
     if (value.length >= 3) {
       setSearchingUser(true);
-      fetch('/api/user/searchuser?searchTerm=' + value, {
+      fetch('/api/user/searchuser', {
         method: 'get',
         headers: authHeader(),
       })
@@ -37,6 +37,7 @@ function UserSearch({ layout, noLabelLayout, enableEdit, showDetails }) {
           if (response.ok) {
             return response.json();
           }
+          console.log(response);
           throw Error('Error occurred while looking up a user');
         })
         .then((data) => {

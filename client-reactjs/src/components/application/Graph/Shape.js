@@ -107,8 +107,13 @@ const ports = {
 };
 
 class Node extends React.Component {
+  componentDidMount() {
+    console.log('node mounted');
+    console.log(this.props);
+  }
   shouldComponentUpdate() {
     const { node } = this.props;
+    console.log(this.props);
     if (node) {
       // Graph does not detect changes in nodes data when toggle collapse, need to mention it here manually
       if (node.hasChanged('data') || node.data?.isCollapsed) {
@@ -149,7 +154,9 @@ class Node extends React.Component {
 
   render() {
     const { node, _graph, handleContextMenu, disableContextMenu } = this.props;
+    console.log(this.props);
     const data = node?.getData();
+    console.log(data);
     let {
       type,
       title,
@@ -209,6 +216,7 @@ class Node extends React.Component {
     };
 
     const getNode = () => {
+      console.log('test');
       if (!isStencil && type === 'Sub-Process' && !isCollapsed) return getSubProcessNode();
 
       return (
@@ -244,6 +252,8 @@ export default class Shape {
     // We need a way how to pass props to node Registration from main graph, currently you can not register node with graph instance,
     // u need to register with class instance and it will cause nodes to be registered on each mount, which will cause an error from X6 lib
     // to avoid it we will unregister node and register it again on each time component mounts;
+
+    console.log('initializing the custom-shape!');
     Graph.unregisterNode('custom-shape');
     Graph.registerNode('custom-shape', {
       inherit: 'react-shape',
@@ -252,5 +262,7 @@ export default class Shape {
       height: 70,
       ports,
     });
+
+    console.log('custom shape initialized!');
   }
 }
