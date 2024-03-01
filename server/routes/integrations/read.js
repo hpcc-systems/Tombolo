@@ -8,7 +8,7 @@ const fs = require("fs");
 const rootENV = path.join(process.cwd(), "..", ".env");
 const serverENV = path.join(process.cwd(), ".env");
 const ENVPath = fs.existsSync(rootENV) ? rootENV : serverENV;
-const { param, validationResult } = require("express-validator");
+const { param, body, validationResult } = require("express-validator");
 require("dotenv").config({ path: ENVPath });
 
 //return all integrations
