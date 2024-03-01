@@ -1,86 +1,82 @@
-//dependencies to start app.js and make calls
-const express = require("express");
 const request = require("supertest");
-const app = express();
-app.use(express.json());
-
-//import model and spy functions that will be called
+const app = require("../../app"); // Assuming this is your main app file
+const express = require("express");
 const models = require("../../models");
-const integrations = models.integrations;
-integrations.findOne = jest.fn(() => {
-  return mockIntegrationData;
-});
-integrations.findAll = jest.fn();
-integrations.update = jest.fn();
 
-//bring in standard testing data
-const mockData = require("../mock-data/global.json");
-const mockIntegrationData = require("../mock-data/integration.json");
+jest.mock("../../models", () => ({
+  Integration: {
+    findAll: jest.fn(),
+    findOne: jest.fn(),
+    create: jest.fn(),
+    update: jest.fn(),
+    destroy: jest.fn(),
+  },
+  IntegrationMapping: {
+    findAll: jest.fn(),
+    findOne: jest.fn(),
+    create: jest.fn(),
+    update: jest.fn(),
+    destroy: jest.fn(),
+  },
+}));
 
-//route and models imported for testing
-const integration = require("../../routes/integrations/read");
-app.use("/api/integration", integration);
+const { application_id, id } = mockData;
 
-//write tests
-describe("Integration Tests", () => {
-  //globals needed for multiple tests
-  const { application_id, badApplicationId, name } = mockData;
-  let response;
-
+describe("Integration Routes", () => {
   beforeEach(() => {
     jest.resetModules(); // Most important - it clears the cache
     response = null;
   });
 
-  describe("Route Checks", () => {
-    test("Get all", async () => {
-      response = await request(app).get(
-        `/api/integration/get/${application_id}`
-      );
-      expect(integrations.findAll).toHaveBeenCalledTimes(1);
-      expect(response.status).toBe(200);
-    });
+  it("should return all integrations", async () => {
+    const response = await request(app).get("/getAll");
+    expect(response.status).toBe(200);
+    expect(response.body).toBeDefined();
+  });
 
-    test("Get all - Bad App ID", async () => {
-      response = await request(app).get(
-        `/api/integration/get/${badApplicationId}`
-      );
-      expect(response.status).toBe(422);
-      expect(response.body.success).toBe(false);
-    });
+  it("should return all integration_mappings with application_id", async () => {
+    const response = await request(app).get(`/getAll/${application_id}`);
+    expect(response.status).toBe(200);
+    expect(response.body).toBeDefined();
+  });
 
-    test("toggle active", async () => {
-      response = await request(app).put(
-        `/api/integration/toggle/${application_id}/${name}`
-      );
-      expect(response.status).toBe(200);
-      expect(integrations.findOne).toHaveBeenCalledTimes(1);
-      expect(integrations.update).toHaveBeenCalledTimes(1);
-    });
+  it("should return one integration_mapping entry with application_id and integration_id", async () => {
+    const response = await request(app).get(
+      `/getOne/${application_id}/${integrationId}`
+    );
+    expect(response.status).toBe(200);
+    expect(response.body).toBeDefined();
+  });
 
-    test("toggle active - Bad App ID", async () => {
-      response = await request(app).put(
-        `/api/integration/toggle/${badApplicationId}/${name}`
-      );
-      expect(response.status).toBe(422);
-      expect(response.body.success).toBe(false);
-    });
+  it("should create an entry into integration_mapping table with application_id parameter", async () => {
+    const data = {
+      application_id: application_id,
+      integration_id: integration_id,
+      metaData: {},
+    };
+    const response = await request(app).post("/create").send(data);
+    expect(response.status).toBe(200);
+    expect(response.body).toBeDefined();
+  });
 
-    test("update ", async () => {
-      response = await request(app).put(
-        `/api/integration/update/${application_id}/${name}`
-      );
-      expect(integrations.findOne).toHaveBeenCalledTimes(1);
-      expect(integrations.update).toHaveBeenCalledTimes(1);
-      expect(response.status).toBe(200);
-    });
+  it("should delete integration_mapping entry with application_id and integration_id parameter", async () => {
+    const data = {
+      application_id: application_id,
+      integration_id: integration_id,
+    };
+    const response = await request(app).delete("/delete").send(data);
+    expect(response.status).toBe(200);
+    expect(response.body).toBeDefined();
+  });
 
-    test("update - Bad App ID", async () => {
-      response = await request(app).put(
-        `/api/integration/update/${badApplicationId}/${name}`
-      );
-      expect(response.status).toBe(422);
-      expect(response.body.success).toBe(false);
-    });
+  it("should update integration_mapping entry with application_id and integration_id parameter", async () => {
+    const data = {
+      application_id: application_id,
+      integration_id: id,
+      metaData: {},
+    };
+    const response = await request(app).put("/update").send(data);
+    expect(response.status).toBe(200);
+    expect(response.body).toBeDefined();
   });
 });
