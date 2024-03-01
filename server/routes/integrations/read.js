@@ -1,6 +1,6 @@
 const models = require("../../models");
 const integrations = models.integrations;
-let application = models.application;
+const integration_mapping = models.integration_mapping;
 const express = require("express");
 const router = express.Router();
 const path = require("path");
@@ -9,28 +9,35 @@ const rootENV = path.join(process.cwd(), "..", ".env");
 const serverENV = path.join(process.cwd(), ".env");
 const ENVPath = fs.existsSync(rootENV) ? rootENV : serverENV;
 const { param, validationResult } = require("express-validator");
-const validatorUtil = require("../../utils/validator");
 require("dotenv").config({ path: ENVPath });
 
-router.get(
-  "/get/:application_id",
-  [param("application_id").isUUID(4).withMessage("Invalid application id")],
-  async (req, res) => {
-    const errors = validationResult(req).formatWith(
-      validatorUtil.errorFormatter
-    );
-    try {
-      if (!errors.isEmpty())
-        return res.status(422).json({ success: false, errors: errors.array() });
-      const { application_id } = req.params;
-      if (!application_id) throw Error("Invalid app ID");
+//return all integrations
+router.get("/getAll", async (res) => {
+  try {
+    const result = await integrations.findAll();
+    res.status(200).send(result);
+  } catch (err) {
+    // ... error checks
+    console.log(err);
+  }
+});
 
-      const result = await integrations.findAll({
+//get all integration_mappings with application_id
+router.get(
+  "/getAll/:application_id",
+  [param("application_id").isUUID()],
+  async (req, res) => {
+    const errors = validationResult(req);
+    if (!errors.isEmpty()) {
+      return res.status(400).json({ errors: errors.array() });
+    }
+    try {
+      const { application_id } = req.params;
+      const result = await integration_mapping.findAll({
         where: {
           application_id,
         },
       });
-
       res.status(200).send(result);
     } catch (err) {
       // ... error checks
@@ -39,30 +46,24 @@ router.get(
   }
 );
 
-//activate or deactive integration
-router.put(
-  "/toggle/:application_id/:name",
-  [param("application_id").isUUID(4).withMessage("Invalid application id")],
+//return one integration_mapping entry with application_id and integration_id paramter
+router.get(
+  "/getOne/:application_id/:integration_id",
+  [param("application_id").isUUID(), param("integration_id").isUUID()],
   async (req, res) => {
-    const errors = validationResult(req).formatWith(
-      validatorUtil.errorFormatter
-    );
+    const errors = validationResult(req);
+    if (!errors.isEmpty()) {
+      return res.status(400).json({ errors: errors.array() });
+    }
     try {
-      if (!errors.isEmpty())
-        return res.status(422).json({ success: false, errors: errors.array() });
-      const { application_id, name } = req.params;
-
-      const integration = await integrations.findOne({
-        where: { application_id, name },
-        raw: true,
+      const { application_id, integration_id } = req.params;
+      const result = await integration_mapping.findOne({
+        where: {
+          application_id,
+          integration_id,
+        },
       });
-
-      const { active, id } = integration;
-
-      // flipping Active
-      await integrations.update({ active: !active }, { where: { id } });
-
-      res.status(200).send("integration toggled succesfully");
+      res.status(200).send(result);
     } catch (err) {
       // ... error checks
       console.log(err);
@@ -70,36 +71,72 @@ router.put(
   }
 );
 
-//update integration notifications
-router.put(
-  "/update/:application_id/:name",
-  [param("application_id").isUUID(4).withMessage("Invalid application id")],
+//create entry into integration_mapping table with application_id paramter
+router.post(
+  "/create",
+  [body("application_id").isUUID(), body("integration_id").isUUID()],
   async (req, res) => {
-    const errors = validationResult(req).formatWith(
-      validatorUtil.errorFormatter
-    );
+    const errors = validationResult(req);
+    if (!errors.isEmpty()) {
+      return res.status(400).json({ errors: errors.array() });
+    }
     try {
-      if (!errors.isEmpty())
-        return res.status(422).json({ success: false, errors: errors.array() });
-      const { application_id, name } = req.params;
-
-      if (!application_id) throw Error("Invalid app ID");
-      const oldintegration = await integrations.findOne({
-        where: { application_id, name },
-        raw: true,
+      const { application_id, integration_id, metaData } = req.body;
+      const result = await integration_mapping.create({
+        application_id,
+        integration_id,
+        metaData,
       });
+      res.status(200).send(result);
+    } catch (err) {
+      // ... error checks
+      console.log(err);
+    }
+  }
+);
 
-      const { id } = oldintegration;
+//delete integration_mapping entry with application_id and integration_id paramter
+router.delete(
+  "/delete",
+  [body("application_id").isUUID(), body("integration_id").isUUID()],
+  async (req, res) => {
+    const errors = validationResult(req);
+    if (!errors.isEmpty()) {
+      return res.status(400).json({ errors: errors.array() });
+    }
+    try {
+      const { application_id, integration_id } = req.body;
+      const result = await integration_mapping.destroy({
+        where: {
+          application_id,
+          integration_id,
+        },
+      });
+      res.status(200).send(result);
+    } catch (err) {
+      // ... error checks
+      console.log(err);
+    }
+  }
+);
 
-      console.log(req.body);
-
-      // adjusting
-      await integrations.update(
-        { metaData: req.body.notifications, config: req.body.active },
-        { where: { id } }
+//update integration_mapping entry with application_id and integration_id paramter
+router.put(
+  "/update",
+  [body("application_id").isUUID(), body("integration_id").isUUID()],
+  async (req, res) => {
+    try {
+      const { application_id, integration_id, metaData } = req.body;
+      const result = await integration_mapping.update(
+        { metaData },
+        {
+          where: {
+            application_id,
+            integration_id,
+          },
+        }
       );
-
-      res.status(200).send("integration updated succesfully");
+      res.status(200).send(result);
     } catch (err) {
       // ... error checks
       console.log(err);
