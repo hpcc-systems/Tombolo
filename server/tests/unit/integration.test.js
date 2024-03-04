@@ -25,7 +25,6 @@ integration_mapping.update = jest.fn();
 integration_mapping.destroy = jest.fn();
 
 const mockData = require("../mock-data/global.json");
-const { token } = require("morgan");
 const { application_id, id, metaData } = mockData;
 
 describe("integration Routes", () => {

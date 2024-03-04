@@ -153,5 +153,3 @@ server.listen(port, "0.0.0.0", async () => {
     process.exit(1);
   }
 });
-
-module.exports = server;
