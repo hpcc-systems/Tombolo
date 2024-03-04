@@ -12,13 +12,15 @@ const { param, body, validationResult } = require("express-validator");
 require("dotenv").config({ path: ENVPath });
 
 //return all integrations
-router.get("/getAll", async (res) => {
+router.get("/getAll", async (req, res) => {
   try {
+    console.log("running");
     const result = await integrations.findAll();
     res.status(200).send(result);
   } catch (err) {
     // ... error checks
     console.log(err);
+    res.status(500).send("Failed to get integrations: " + err);
   }
 });
 
@@ -29,7 +31,7 @@ router.get(
   async (req, res) => {
     const errors = validationResult(req);
     if (!errors.isEmpty()) {
-      return res.status(400).json({ errors: errors.array() });
+      return res.status(422).json({ errors: errors.array() });
     }
     try {
       const { application_id } = req.params;
@@ -42,6 +44,7 @@ router.get(
     } catch (err) {
       // ... error checks
       console.log(err);
+      res.status(500).send("Failed to get integration mappings: " + err);
     }
   }
 );
@@ -53,7 +56,7 @@ router.get(
   async (req, res) => {
     const errors = validationResult(req);
     if (!errors.isEmpty()) {
-      return res.status(400).json({ errors: errors.array() });
+      return res.status(422).json({ errors: errors.array() });
     }
     try {
       const { application_id, integration_id } = req.params;
@@ -67,6 +70,7 @@ router.get(
     } catch (err) {
       // ... error checks
       console.log(err);
+      res.status(500).send("Failed to get integration mapping: " + err);
     }
   }
 );
@@ -78,7 +82,7 @@ router.post(
   async (req, res) => {
     const errors = validationResult(req);
     if (!errors.isEmpty()) {
-      return res.status(400).json({ errors: errors.array() });
+      return res.status(422).json({ errors: errors.array() });
     }
     try {
       const { application_id, integration_id, metaData } = req.body;
@@ -91,6 +95,7 @@ router.post(
     } catch (err) {
       // ... error checks
       console.log(err);
+      res.status(500).send("Failed to create integration mapping: " + err);
     }
   }
 );
@@ -102,7 +107,7 @@ router.delete(
   async (req, res) => {
     const errors = validationResult(req);
     if (!errors.isEmpty()) {
-      return res.status(400).json({ errors: errors.array() });
+      return res.status(422).json({ errors: errors.array() });
     }
     try {
       const { application_id, integration_id } = req.body;
@@ -116,6 +121,7 @@ router.delete(
     } catch (err) {
       // ... error checks
       console.log(err);
+      res.status(500).send("Failed to delete integration mapping: " + err);
     }
   }
 );
@@ -125,6 +131,10 @@ router.put(
   "/update",
   [body("application_id").isUUID(), body("integration_id").isUUID()],
   async (req, res) => {
+    const errors = validationResult(req);
+    if (!errors.isEmpty()) {
+      return res.status(422).json({ errors: errors.array() });
+    }
     try {
       const { application_id, integration_id, metaData } = req.body;
       const result = await integration_mapping.update(
@@ -140,6 +150,7 @@ router.put(
     } catch (err) {
       // ... error checks
       console.log(err);
+      res.status(500).send("Failed to update integration mapping: " + err);
     }
   }
 );

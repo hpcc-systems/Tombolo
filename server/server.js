@@ -32,7 +32,7 @@ app.set("trust proxy", 1);
 
 // Limit rate of requests to 400 per 15 minutes
 const limiter = rateLimit({
-  windowMs: 15 * 60 * 1000, 
+  windowMs: 15 * 60 * 1000,
   max: 400,
 });
 
@@ -95,7 +95,6 @@ app.use("/api/updateNotification", updateNotifications);
 //exposed API, requires api key for any routes
 app.use("/api/apikeys", api);
 
-// Authenticate token before proceeding to route
 app.use(tokenService.verifyToken);
 
 app.use("/api/job", job);
@@ -126,7 +125,8 @@ app.use("/api/cluster", cluster);
 app.use("/api/orbit", orbit);
 app.use("/api/integrations", integrations);
 app.use("/api/teamsHook", teamsHook);
-app.use("/api/fido", fido);fido
+app.use("/api/fido", fido);
+fido;
 app.use("/api/notification_queue", notification_queue);
 
 // Safety net for unhandled errors
@@ -135,8 +135,9 @@ app.use((err, req, res, next) => {
   res.status(500).send("Something went wrong");
 });
 
-// Disables SSL verification for self-signed certificates in development mode 
-process.env["NODE_TLS_REJECT_UNAUTHORIZED"] = process.env.NODE_ENV === "production" ? 1 : 0;
+// Disables SSL verification for self-signed certificates in development mode
+process.env["NODE_TLS_REJECT_UNAUTHORIZED"] =
+  process.env.NODE_ENV === "production" ? 1 : 0;
 
 /* Start server */
 server.listen(port, "0.0.0.0", async () => {
@@ -152,3 +153,5 @@ server.listen(port, "0.0.0.0", async () => {
     process.exit(1);
   }
 });
+
+module.exports = server;

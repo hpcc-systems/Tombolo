@@ -1,82 +1,129 @@
-const request = require("supertest");
-const app = require("../../app"); // Assuming this is your main app file
 const express = require("express");
+const request = require("supertest");
+const app = express();
+app.use(express.json());
+const integrationAPI = require("../../routes/integrations/read");
+app.use("/api/integrations", integrationAPI);
+
+//import model and spy functions that will be called
 const models = require("../../models");
+const integrations = models.integrations;
+const integration_mapping = models.integration_mapping;
 
-jest.mock("../../models", () => ({
-  Integration: {
-    findAll: jest.fn(),
-    findOne: jest.fn(),
-    create: jest.fn(),
-    update: jest.fn(),
-    destroy: jest.fn(),
-  },
-  IntegrationMapping: {
-    findAll: jest.fn(),
-    findOne: jest.fn(),
-    create: jest.fn(),
-    update: jest.fn(),
-    destroy: jest.fn(),
-  },
-}));
+//mock all of the sequelize functions from integration model
+integrations.findOne = jest.fn();
+integrations.findAll = jest.fn();
+integrations.create = jest.fn();
+integrations.update = jest.fn();
+integrations.destroy = jest.fn();
 
-const { application_id, id } = mockData;
+//mock all of the sequelize functions from integration_mappings model
+integration_mapping.findOne = jest.fn();
+integration_mapping.findAll = jest.fn();
+integration_mapping.create = jest.fn();
+integration_mapping.update = jest.fn();
+integration_mapping.destroy = jest.fn();
 
-describe("Integration Routes", () => {
+const mockData = require("../mock-data/global.json");
+const { token } = require("morgan");
+const { application_id, id, metaData } = mockData;
+
+describe("integration Routes", () => {
   beforeEach(() => {
-    jest.resetModules(); // Most important - it clears the cache
-    response = null;
+    // Clear all mocks before each test
+    jest.clearAllMocks();
   });
 
+  //test getAll
   it("should return all integrations", async () => {
-    const response = await request(app).get("/getAll");
-    expect(response.status).toBe(200);
-    expect(response.body).toBeDefined();
+    // Mock the response from the integration model
+    const res = await request(app).get("/api/integrations/getAll");
+    expect(res.statusCode).toEqual(200);
   });
 
   it("should return all integration_mappings with application_id", async () => {
-    const response = await request(app).get(`/getAll/${application_id}`);
-    expect(response.status).toBe(200);
-    expect(response.body).toBeDefined();
+    const res = await request(app).get(
+      `/api/integrations/getAll/${application_id}`
+    );
+    expect(res.statusCode).toEqual(200);
+    expect(integration_mapping.findAll).toBeCalled();
   });
 
   it("should return one integration_mapping entry with application_id and integration_id", async () => {
-    const response = await request(app).get(
-      `/getOne/${application_id}/${integrationId}`
+    const res = await request(app).get(
+      `/api/integrations/getOne/${application_id}/${id}`
     );
-    expect(response.status).toBe(200);
-    expect(response.body).toBeDefined();
+    expect(res.statusCode).toEqual(200);
+    expect(integration_mapping.findOne).toBeCalled();
   });
 
-  it("should create an entry into integration_mapping table with application_id parameter", async () => {
-    const data = {
-      application_id: application_id,
-      integration_id: integration_id,
-      metaData: {},
-    };
-    const response = await request(app).post("/create").send(data);
-    expect(response.status).toBe(200);
-    expect(response.body).toBeDefined();
-  });
-
-  it("should delete integration_mapping entry with application_id and integration_id parameter", async () => {
-    const data = {
-      application_id: application_id,
-      integration_id: integration_id,
-    };
-    const response = await request(app).delete("/delete").send(data);
-    expect(response.status).toBe(200);
-    expect(response.body).toBeDefined();
-  });
-
-  it("should update integration_mapping entry with application_id and integration_id parameter", async () => {
+  it("should create an entry into integration_mapping table with application_id", async () => {
     const data = {
       application_id: application_id,
       integration_id: id,
-      metaData: {},
+      metaData: metaData,
     };
-    const response = await request(app).put("/update").send(data);
-    expect(response.status).toBe(200);
-    expect(response.body).toBeDefined();
+    const res = await request(app).post("/api/integrations/create").send(data);
+    expect(res.statusCode).toEqual(200);
+    expect(integration_mapping.create).toBeCalled();
+  });
+
+  it("should delete integration_mapping entry with application_id and integration_id", async () => {
+    const data = {
+      application_id: application_id,
+      integration_id: id,
+    };
+    const res = await request(app)
+      .delete("/api/integrations/delete")
+      .send(data);
+    expect(res.statusCode).toEqual(200);
+    expect(integration_mapping.destroy).toBeCalled();
+  });
+
+  it("should update integration_mapping entry with application_id and integration_id", async () => {
+    const data = {
+      application_id: application_id,
+      integration_id: id,
+      metaData: metaData,
+    };
+    const res = await request(app).put("/api/integrations/update").send(data);
+    expect(res.statusCode).toEqual(200);
+    expect(integration_mapping.update).toBeCalled();
+  });
+
+  //test error messages for these routes when bad data is sent
+  it("should return error message for bad application_id", async () => {
+    const res = await request(app).get(
+      "/api/integrations/getAll/badapplicationid"
+    );
+    expect(res.statusCode).toEqual(422);
+  });
+
+  it("should return error message for bad application_id and integration_id", async () => {
+    const res = await request(app).get(
+      "/api/integrations/getOne/badapplicationid/badintegrationid"
+    );
+    expect(res.statusCode).toEqual(422);
+  });
+
+  it("should return error message for bad application_id and integration_id", async () => {
+    const data = {
+      application_id: "badapplicationid",
+      integration_id: "badintegrationid",
+    };
+    const res = await request(app)
+      .delete("/api/integrations/delete")
+      .send(data);
+    expect(res.statusCode).toEqual(422);
+  });
+
+  it("should return error message for bad application_id and integration_id", async () => {
+    const data = {
+      application_id: "badapplicationid",
+      integration_id: "badintegrationid",
+      metaData: metaData,
+    };
+    const res = await request(app).put("/api/integrations/update").send(data);
+    expect(res.statusCode).toEqual(422);
   });
 });
