@@ -45,6 +45,7 @@ module.exports = (sequelize, DataTypes) => {
     { freezeTableName: true }
   );
 
+  // Association to integrations and application
   IntegrationMapping.associate = (models) => {
     IntegrationMapping.belongsTo(models.integrations, {
       foreignKey: "integration_id",

@@ -13,40 +13,23 @@ module.exports = (sequelize, DataTypes) => {
       name: {
         allowNull: false,
         type: DataTypes.STRING,
-        unique: false,
+        unique: true,
       },
       description: {
         allowNull: false,
         type: DataTypes.STRING,
-        unique: false,
       },
-      active: {
-        allowNull: false,
-        type: DataTypes.BOOLEAN,
-      },
-      config: {
-        type: DataTypes.JSON,
+      metaData:{
         allowNull: true,
-      },
-      metaData: {
         type: DataTypes.JSON,
-        allowNull: true,
-      },
-      application_id: {
-        allowNull: false,
-        type: DataTypes.UUID,
       },
     },
     { freezeTableName: true }
   );
-  integrations.associate = function (models) {
-    // Define association here
-    integrations.belongsTo(models.application, {
-      foreignKey: "application_id",
-    });
-    integrations.hasMany(models.monitoring_notifications, {
-      foreignKey: "application_id",
-      onDelete: "CASCADE",
+// Association to integration_mapping
+  integrations.associate = (models) => {
+    integrations.hasMany(models.integration_mapping, {
+      foreignKey: "integration_id",
     });
   };
   return integrations;
