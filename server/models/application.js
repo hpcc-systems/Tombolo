@@ -1,7 +1,7 @@
-'use strict';
+"use strict";
 module.exports = (sequelize, DataTypes) => {
   const application = sequelize.define(
-    'application',
+    "application",
     {
       id: {
         primaryKey: true,
@@ -101,8 +101,11 @@ module.exports = (sequelize, DataTypes) => {
       foreignKey: "application_id",
       onDelete: "CASCADE",
     });
+    application.hasMany(models.integration_mapping, {
+      foreignKey: "application_id",
+      onDelete: "CASCADE",
+    });
   };
-
 
   return application;
 };
