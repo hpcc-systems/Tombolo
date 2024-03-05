@@ -10,8 +10,9 @@ const serverENV = path.join(process.cwd(), ".env");
 const ENVPath = fs.existsSync(rootENV) ? rootENV : serverENV;
 const { param, body, validationResult } = require("express-validator");
 require("dotenv").config({ path: ENVPath });
+const logger = require("../../config/logger");
 
-//return all integrations
+//return all integrations active or not
 router.get("/getAll", async (req, res) => {
   try {
     console.log("running");
@@ -21,6 +22,31 @@ router.get("/getAll", async (req, res) => {
     // ... error checks
     console.log(err);
     res.status(500).send("Failed to get integrations: " + err);
+  }
+});
+
+// Get all active integrations from the integrations to application mapping table
+router.get("/getAllActive/", async (req, res) => {
+  try {
+   const integrationMappingDetails = await integration_mapping.findAll(
+     {
+       include: [
+         {
+           model: integrations,
+           as: "integration",
+           required: true,
+           attributes: ["name", "description", "metaData"],
+         },
+       ],
+     },
+     {
+       raw: true,
+     }
+   );
+    res.status(200).send(integrationMappingDetails);
+  } catch (err) {
+    logger.error(err);
+    res.status(500).send("Failed to get active integrations: " + err);
   }
 });
 
