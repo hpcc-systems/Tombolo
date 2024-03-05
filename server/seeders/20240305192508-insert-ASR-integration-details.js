@@ -7,7 +7,8 @@ module.exports = {
       {
         id: uuidv4(),
         name: "ASR",
-        description: "This integration allows Tombolo to .....",
+        description:
+          "This integration enables ASR-related features in Tombolo and facilitates connections to Orbit servers, enhancing user capabilities and data accessibility",
         createdAt: new Date(),
         updatedAt: new Date(),
       },
