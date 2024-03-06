@@ -151,9 +151,8 @@ const JobMonitoringTable = ({
 
   // When edit icon is clicked, display the add job monitoring modal and set the selected monitoring
   const editJobMonitoring = (record) => {
-    setEditingData((prev) => {
-      setEditingData({ ...prev, isEditing: true, selectedMonitoring: record });
-    });
+    setEditingData({ isEditing: true, selectedMonitoring: record });
+
     setSelectedMonitoring(record);
     setDisplayAddJobMonitoringModal(true);
   };

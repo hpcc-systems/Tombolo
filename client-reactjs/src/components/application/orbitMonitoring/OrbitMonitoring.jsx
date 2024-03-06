@@ -46,7 +46,7 @@ const OrbitMonitoring = () => {
   }, [applicationId]);
 
   //Get list of all orbit monitoring
-  const getOrbitMonitoring = async (applicationId) => {
+  const getOrbitMonitoring = async () => {
     try {
       const payload = {
         method: 'GET',

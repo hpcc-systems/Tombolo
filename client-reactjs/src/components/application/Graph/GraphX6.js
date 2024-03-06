@@ -166,7 +166,6 @@ function GraphX6({ readOnly = false, monitoring, statuses }) {
     graphRef.current.dataflowVersionId = ''; // default state, jobs can not be executed on Working Copy;
 
     Shape.init({ handleContextMenu, disableContextMenu: readOnly, graph });
-    
 
     if (!readOnly) {
       Stencil.init(stencilContainerRef, graph);

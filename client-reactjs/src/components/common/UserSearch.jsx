@@ -1,54 +1,52 @@
-import React, { useState } from 'react';
-import { AutoComplete, Spin, Form, Select, Row, Col, Button, Input } from 'antd';
+import React from 'react';
+import { Form, Row, Col, Button, Input } from 'antd';
 import { MinusCircleOutlined } from '@ant-design/icons';
-import debounce from 'lodash/debounce';
 
-import { authHeader } from '../common/AuthHeader';
-import Text, { i18n } from '../common/Text';
+import Text from '../common/Text';
 
-const { Option } = Select;
+// const { Option } = Select;
 
-const groupedOption = (mainText, supportText) => {
-  return (
-    <div style={{ padding: '5px', borderBottom: '1px dotted lightgray' }}>
-      <p style={{ marginBottom: '-5px', fontWeight: '600' }}>{mainText}</p>
-      <p style={{ marginBottom: '0px', color: 'gray' }}>{supportText}</p>
-    </div>
-  );
-};
+// const groupedOption = (mainText, supportText) => {
+//   return (
+//     <div style={{ padding: '5px', borderBottom: '1px dotted lightgray' }}>
+//       <p style={{ marginBottom: '-5px', fontWeight: '600' }}>{mainText}</p>
+//       <p style={{ marginBottom: '0px', color: 'gray' }}>{supportText}</p>
+//     </div>
+//   );
+// };
 
 function UserSearch({ layout, noLabelLayout, enableEdit, showDetails }) {
-  const [searchingUser, setSearchingUser] = useState(false);
-  const [searchResults, setSearchResults] = useState([]);
+  // const [searchingUser, setSearchingUser] = useState(false);
+  // const [searchResults, setSearchResults] = useState([]);
 
-  const handleUserSelection = (_user) => {
-    setSearchResults([]);
-  };
+  // const handleUserSelection = (_user) => {
+  //   setSearchResults([]);
+  // };
 
-  // Search user
-  const searchUser = debounce((value) => {
-    if (value.length >= 3) {
-      setSearchingUser(true);
-      fetch('/api/user/searchuser', {
-        method: 'get',
-        headers: authHeader(),
-      })
-        .then((response) => {
-          if (response.ok) {
-            return response.json();
-          }
-          console.log(response);
-          throw Error('Error occurred while looking up a user');
-        })
-        .then((data) => {
-          console.log('<<<<< Data returned', data);
-          setSearchResults(data);
-        })
-        .finally(() => {
-          setSearchingUser(false);
-        });
-    }
-  }, 400);
+  // // Search user
+  // const searchUser = debounce((value) => {
+  //   if (value.length >= 3) {
+  //     setSearchingUser(true);
+  //     fetch('/api/user/searchuser', {
+  //       method: 'get',
+  //       headers: authHeader(),
+  //     })
+  //       .then((response) => {
+  //         if (response.ok) {
+  //           return response.json();
+  //         }
+  //         console.log(response);
+  //         throw Error('Error occurred while looking up a user');
+  //       })
+  //       .then((data) => {
+  //         console.log('<<<<< Data returned', data);
+  //         setSearchResults(data);
+  //       })
+  //       .finally(() => {
+  //         setSearchingUser(false);
+  //       });
+  //   }
+  // }, 400);
 
   return (
     <Form.List
@@ -98,20 +96,7 @@ function UserSearch({ layout, noLabelLayout, enableEdit, showDetails }) {
                           message: 'Invalid e-mail address.',
                         },
                       ]}>
-                      {enableEdit ? (
-                        <AutoComplete
-                          onSearch={searchUser}
-                          notFoundContent={searchingUser ? <Spin /> : ''}
-                          onSelect={handleUserSelection}
-                          allowClear={true}
-                          placeholder={i18n('E-mail')}>
-                          {searchResults.map((result) => {
-                            return <Option key={result.email}>{groupedOption(result.text, result.email)}</Option>;
-                          })}
-                        </AutoComplete>
-                      ) : (
-                        <Input className="read-only-input"></Input>
-                      )}
+                      {enableEdit ? <Input placeholder="E-mail" /> : <Input className="read-only-input"></Input>}
                     </Form.Item>
                   </Col>
                   {enableEdit ? (

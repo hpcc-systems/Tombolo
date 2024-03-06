@@ -49,7 +49,7 @@ const {
 
     //get most recent WorkUnits
 
-    const query = `select HpccWorkUnit as 'WorkUnit', Name as 'Build', DateUpdated as 'Date', Status_Code as 'Status', Version, BuildTemplateIdKey as 'BuildID'  from DimBuildInstance where Name = '${build}' order by Date desc Limit 10`;
+    const query = `select HpccWorkUnit as 'WorkUnit', Name as 'Build', DateUpdated as 'Date', Status_Code as 'Status', Version, BuildTemplateIdKey as 'BuildID'  from DimBuildInstance where Name = '${build}' AND HpccWorkUnit IS NOT NULL order by Date desc Limit 10`;
 
     const wuResult = await runMySQLQuery(query, orbitDbConfig);
 
@@ -182,7 +182,6 @@ const {
             { where: { id: orbitBuild.id } }
           );
         } else {
-          console.log("new build found, creating it!!" + result);
           //if it doesn't, create it
           await orbitBuilds.create({
             application_id: application_id,

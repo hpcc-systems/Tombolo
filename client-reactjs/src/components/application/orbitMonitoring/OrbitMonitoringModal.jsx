@@ -196,8 +196,6 @@ const OrbitMonitoringModal = ({
         isActive: formData.isActive,
       };
 
-      console.log(formData);
-
       await saveOrbitBuildDetails(formData);
       cancelModal();
     } catch (err) {

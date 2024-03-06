@@ -155,7 +155,21 @@ const AddEditJobMonitoringModal = ({
       );
     }
   };
+  //TODO -- remove tabs.tabpane replace with tabItems
+  // const tabItems = tabs.map((tab, index) => ({
+  //   key: index,
+  //   label: erroneousTabs.includes(index.toString()) ? (
+  //     <span>
+  //       <Badge color="var(--danger)" /> {`${tab.label}`}
+  //     </span>
+  //   ) : (
+  //     `${tab.label}`
+  //   ),
+  //   children: tab.component(),
+  //   forceRender: true,
+  // }));
 
+  // console.log(tabItems);
   return (
     <Modal
       open={displayAddJobMonitoringModal}
