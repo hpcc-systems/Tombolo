@@ -39,9 +39,7 @@ const OrbitMonitoring = React.lazy(() => import('./components/application/orbitM
 const SuperFileMonitoring = React.lazy(() =>
   import('./components/application/superfileMonitoring/SuperFileMonitoring')
 );
-// const Notifications = React.lazy(() => import('./components/application/dashboard/notifications/Notifications'));
 const Orbit = React.lazy(() => import('./components/application/dashboard/Orbit/Orbit'));
-// const ClusterUsage = React.lazy(() => import('./components/application/dashboard/clusterUsage/ClusterUsage'));
 const Notifications = React.lazy(() => import('./components/application/dashboard/notifications'));
 const ClusterUsage = React.lazy(() => import('./components/application/dashboard/clusterUsage/'));
 const ClusterMonitoring = React.lazy(() => import('./components/application/clusterMonitoring'));
@@ -58,6 +56,7 @@ const GitHubSettings = React.lazy(() => import('./components/admin/GitHubSetting
 const ScheduledJobsPage = React.lazy(() => import('./components/admin/ScheduledJobsPage'));
 const Compliance = React.lazy(() => import('./components/admin/Compliance/Compliance'));
 const Integrations = React.lazy(() => import('./components/admin/Integrations/Integrations'));
+const IntegrationSettings = React.lazy(() => import('./components/admin/Integrations/IntegrationSettings'));
 const TeamsNotification = React.lazy(() => import('./components/admin/notifications/MsTeams/Teams'));
 
 // Shared layout, etc.
@@ -213,6 +212,7 @@ class App extends React.Component {
                         <PrivateRoute path="/admin/users" component={Users} />
                         <PrivateRoute path="/admin/consumers" component={AdminConsumers} />
                         <PrivateRoute path="/admin/controlsAndRegulations" component={Regulations} />
+                        <PrivateRoute path="/admin/integrations/:integrationName" component={IntegrationSettings} />
                         <PrivateRoute path="/admin/integrations" component={Integrations} />
                         <PrivateRoute
                           path="/:applicationId/dataflowinstances/dataflowInstanceDetails/:dataflowId?/:executionGroupId?"

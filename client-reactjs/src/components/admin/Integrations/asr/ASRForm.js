@@ -1,4 +1,3 @@
-/* eslint-disable unused-imports/no-unused-vars */
 import React from 'react';
 import { useEffect, useState } from 'react';
 import { Form, Select, Switch, Tabs, message } from 'antd';
@@ -76,10 +75,9 @@ const ASRForm = ({ setNotifications, notifications, setActive, selectedIntegrati
             <Form.Item name="megaphone" label="Active">
               <Switch
                 checked={selectedIntegration?.config?.megaphoneActive || false}
-                // onChange={(e) => {
-                //   setActive(e);
-                // }}
-              ></Switch>
+                onChange={(e) => {
+                  setActive(e);
+                }}></Switch>
             </Form.Item>
             <Form.Item
               label="Notification Emails"

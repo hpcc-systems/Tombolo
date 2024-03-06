@@ -82,6 +82,8 @@ const integrations = require("./routes/integrations/read");
 const teamsHook = require("./routes/msTeamsHook/read");
 const fido = require("./routes/fido/read");
 const notification_queue = require("./routes/notification_queue/read");
+const monitorings = require("./routes/monitorings/read");
+const asr = require("./routes/asr/read");
 
 // Log all HTTP requests
 app.use((req, res, next) => {
@@ -96,7 +98,7 @@ app.use("/api/updateNotification", updateNotifications);
 app.use("/api/apikeys", api);
 
 // Authenticate token before proceeding to route
-app.use(tokenService.verifyToken);
+// app.use(tokenService.verifyToken);
 
 app.use("/api/job", job);
 app.use("/api/bree", bree);
@@ -128,6 +130,8 @@ app.use("/api/integrations", integrations);
 app.use("/api/teamsHook", teamsHook);
 app.use("/api/fido", fido);fido
 app.use("/api/notification_queue", notification_queue);
+app.use("/api/monitorings", monitorings);
+app.use("/api/asr", asr);
 
 // Safety net for unhandled errors
 app.use((err, req, res, next) => {
