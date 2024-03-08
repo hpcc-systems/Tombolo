@@ -31,7 +31,7 @@ module.exports = (sequelize, DataTypes) => {
       createdBy: {
         allowNull: false,
         type: DataTypes.JSON,
-        defaultValue: { name: "system", email: "NA" },
+        defaultValue:  {email: 'NA', lastName: "NA", firstName: 'System'}
       },
       updatedBy: {
         allowNull: true,

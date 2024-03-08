@@ -1,42 +1,82 @@
 const express = require("express");
 const router = express.Router();
 const { body, param, validationResult } = require("express-validator");
+const { sequelize } = require("../../models");
 
 //Local Imports
 const models = require("../../models");
 const logger = require("../../config/logger");
 
 // Constants
+const MonitoringTypes = models.monitoring_types;
 const Domains = models.asr_domains;
+const domainMonitoringTypes = models.asr_monitoring_type_to_domains;
 const Products = models.asr_products;
 
+
 // Create a new domain
-router.post("/domains/",
-[
+router.post("/domains/",[
     body("name").notEmpty().withMessage("Domain name is required"),
-    body("createdBy").notEmpty().withMessage("Created by is required")
-],
-async(req, res) => {
-    try{
-        // Validate the request
-        const errors = validationResult(req);
-        if(!errors.isEmpty()){
-            logger.error(errors.array());
-            return res.status(400).json({message: "Failed to save domain"});
+    body("monitoringTypeIds")
+      .optional()
+      .isArray()
+      .withMessage("Monitoring type is required"),
+    body("createdBy").notEmpty().withMessage("Created by is required"),
+  ], async (req, res) => {
+    try {
+      // Validate the payload
+      const errors = validationResult(req);
+      if (!errors.isEmpty()) {
+        logger.error(errors.array());
+        return res.status(400).json({ message: "Failed to save domain" });
+      }
+
+      /* if monitoring type is provided, 
+      create domain, next  iterate over monitoringTypeId and make entry to  asr_domain_monitoring_types*/
+      const { name, monitoringTypeIds, createdBy } = req.body;
+      let domain;
+      if (monitoringTypeIds) {
+        domain = await Domains.create({ name, createdBy });
+
+        // create domain monitoring type mapping
+        const createPromises = monitoringTypeIds.map((monitoringId) => {
+          return domainMonitoringTypes.create({
+            domain_id: domain.id,
+            monitoring_type_id: monitoringId,
+            createdBy,
+          });
         }
-        const domain = await Domains.create(req.body);
-        res.status(200).json(domain);
-    }catch(error){
-        logger.error(error);
-        res.status(500).json({message: 'Failed to create domain'});
+        );
+
+        await Promise.all(createPromises);
+      }
+
+      // if no monitoring type is provided, create domain without monitoring type
+      else {
+        domain = await Domains.create({ name, createdBy });
+      }
+      res.status(200).json({message: "Domain created successfully", domain});
+    } catch (error) {
+      logger.error(error);
+      res.status(500).json({ message: "Failed to create domain" });
     }
-}
+  }
 );
 
 //Get All domains
 router.get("/domains/", async(req, res) => {
     try{
-        const domains = await Domains.findAll();
+        // get all domains and the associated monitoring types by using includes
+       const domains = await Domains.findAll({
+         include: [
+           {
+             model: MonitoringTypes, // replace with your associated model
+             as: "monitoringTypes", // replace with the alias you used when defining the association
+           },
+         ],
+         raw: true,
+       });
+ 
         res.status(200).json(domains);
     }catch(err){
         logger.error(err);
@@ -45,12 +85,16 @@ router.get("/domains/", async(req, res) => {
 });
 
 // Update a domain
-router.patch(
+router.put(
   "/domains/:id",
   [
     body("name").notEmpty().withMessage("Domain name is required"),
     body("updatedBy").isObject().withMessage("Updated by must be an object"),
     param("id").isUUID().withMessage("ID must be a UUID"),
+    body("monitoringTypeIds")
+      .optional()
+      .isArray()
+      .withMessage("Monitoring must be array of UUIDs"),
   ],
   async (req, res) => {
     try {
@@ -61,20 +105,53 @@ router.patch(
         return res.status(400).json({ message: "Failed to update domain" });
       }
 
-      const { name, updatedBy } = req.body;
+      // Update domain and delete or add relation in the junction table
+      const { name, monitoringTypeIds, updatedBy } = req.body;
+      let response;
+      if (monitoringTypeIds) {
+        response = await sequelize.transaction(async (t) => {
+          await Domains.update(
+            { name, updatedBy },
+            { where: { id: req.params.id }, transaction: t }
+          );
 
-      const response = await Domains.update(
-        { name, updatedBy },
-        { where: { id: req.params.id } }
-      );
-      const message = response[0] === 0 ? "Domain not found" : "Successfully updated domain";
-      res.status(200).json({ message});
+          // delete all monitoring types for the domain
+          await domainMonitoringTypes.destroy({
+            where: { domain_id: req.params.id },
+            transaction: t,
+          });
+
+          // create domain monitoring type mapping
+          const createPromises = monitoringTypeIds.map((monitoringId) => {
+            return domainMonitoringTypes.create(
+              {
+                domain_id: req.params.id,
+                monitoring_type_id: monitoringId,
+                updatedBy,
+              },
+              { transaction: t }
+            );
+          });
+
+          return Promise.all(createPromises);
+        });
+      } else {
+        response = await Domains.update(
+          { name, updatedBy },
+          { where: { id: req.params.id } }
+        );
+      }
+
+      const message =
+        response[0] === 0 ? "Domain not found" : "Successfully updated domain";
+      res.status(200).json({ message });
     } catch (err) {
       logger.error(err);
       res.status(500).json({ message: "Failed to update domain" });
     }
   }
 );
+
 
 // Delete a domain - this  should also delete  monitoring types to domain mapping
 router.delete("/domains/:id", async(req, res) => {

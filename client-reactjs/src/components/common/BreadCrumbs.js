@@ -12,6 +12,7 @@ class BreadCrumbs extends Component {
 
       const pathSnippets = location.pathname.split('/');
       let breadCrumbItems = [];
+
       let path = pathSnippets[2] || '';
 
       if (location.pathname === '/' || location.pathname.includes('/file/')) path = 'files';
@@ -28,7 +29,15 @@ class BreadCrumbs extends Component {
         breadCrumbItems.push(pathSnippets[2]);
       }
 
-      return breadCrumbItems;
+      const crumbs = [];
+      breadCrumbItems.forEach((el) => {
+        if (el) {
+          let transformedEl = el.charAt(0).toUpperCase() + el.slice(1);
+          crumbs.push(transformedEl);
+        }
+      });
+
+      return crumbs;
     };
 
     return (

@@ -1,78 +1,49 @@
-/* eslint-disable unused-imports/no-unused-imports */
-/* eslint-disable unused-imports/no-unused-vars */
-import React, { useState } from 'react';
-import { Table, Tag, Space, Popconfirm, Modal, Form, Select, Button } from 'antd';
-import { EyeOutlined, DeleteOutlined, EditOutlined } from '@ant-design/icons';
+// Package imports
+import React, { useState, useEffect } from 'react';
+import { Table, Tag, Space, Popconfirm, message } from 'antd';
+import { DeleteOutlined, EditOutlined } from '@ant-design/icons';
 
-const DomainsTab = () => {
-  const [visible, setVisible] = useState(false);
-  const [viewData, setViewData] = useState(null);
+//Local Imports
+import { deleteDomain } from './asr-integration-util';
 
-  const data = [
-    {
-      key: '1',
-      domainName: 'Domain 1',
-      activityType: [
-        'Activity 1',
-        'Activity 2',
-        'Activity 3',
-        'Activity 4',
-        'Activity 1',
-        'Activity 2',
-        'Activity 3',
-        'Activity 4',
-      ],
-      createdBy: 'User 1',
-      updatedBy: 'User 2',
-    },
-    {
-      key: '2',
-      domainName: 'Domain 2',
-      activityType: ['Activity 1', 'Activity 2', 'Activity 3', 'Activity 4'],
-      createdBy: 'User 1',
-      updatedBy: 'User 2',
-    },
-    {
-      key: '3',
-      domainName: 'Domain 3',
-      activityType: ['Activity 1', 'Activity 2', 'Activity 3', 'Activity 4'],
-      createdBy: 'User 1',
-      updatedBy: 'User 2',
-    },
-    // Add more data here
-  ];
+const DomainsTab = ({ domains, setSelectedDomain, setDomainModalOpen }) => {
+  const [domainData, setDomainData] = useState([]);
 
+  // Table columns
   const columns = [
     {
       title: 'Domain Name',
-      dataIndex: 'domainName',
-      key: 'domainName',
+      dataIndex: 'name',
       width: '15%',
     },
     {
       title: 'Activity Type',
-      dataIndex: 'activityType',
-      key: 'activityType',
+      dataIndex: 'activityTypes',
       render: (tags) => (
         <>
-          {tags.slice(0, 5).map((tag) => (
-            <Tag color="blue" key={tag}>
-              {tag}
-            </Tag>
-          ))}
-          {tags.length > 5 && <Tag color="blue">+{tags.length - 5} more</Tag>}
+          {tags.map(
+            (tag, i) =>
+              tag.name && (
+                <Tag color="blue" key={i}>
+                  {tag.name}
+                </Tag>
+              )
+          )}
         </>
       ),
     },
     {
-      title: 'Action',
+      title: 'Actions',
       key: 'action',
       render: (text, record) => (
         <Space size="middle">
-          <EyeOutlined onClick={() => handleView(record)} />
-          <EditOutlined onClick={() => handleEdit(record)} />
-          <Popconfirm title="Sure to delete?" onConfirm={() => handleDelete(record)}>
-            <DeleteOutlined type="delete" />
+          <EditOutlined style={{ color: 'var(--primary)' }} onClick={() => handleEdit(record)} />
+          <Popconfirm
+            title="Are you sure you want to delete this domain?"
+            onConfirm={() => handleDelete(record)}
+            okText="Yes"
+            okButtonProps={{ type: 'danger' }}>
+            <DeleteOutlined style={{ color: 'var(--primary)' }} type="delete" />
           </Popconfirm>
         </Space>
       ),
@@ -80,31 +51,61 @@ const DomainsTab = () => {
     },
   ];
 
-  // row selection
-  const rowSelection = {};
+  // Effect
+  useEffect(() => {
+    if (domains) {
+      const domainAndActivityTypes = [];
+      domains.forEach((d) => {
+        domainAndActivityTypes.push({
+          name: d.name,
+          id: d.id,
+          activityType: { id: d['monitoringTypes.id'], name: d['monitoringTypes.name'] },
+        });
+      });
 
-  const handleView = (record) => {
-    setViewData(record);
-    setVisible(true);
-  };
+      const organizedData = domainAndActivityTypes.reduce((acc, item) => {
+        // Find an existing entry for the current id
+        const existingEntry = acc.find((entry) => entry.id === item.id);
 
+        if (existingEntry) {
+          // If an entry exists, add the current activityType to its activityTypes array
+          existingEntry.activityTypes.push(item.activityType);
+        } else {
+          // If no entry exists, create a new one with the current item's id, name, and activityType
+          acc.push({
+            id: item.id,
+            name: item.name,
+            activityTypes: [item.activityType],
+          });
+        }
+
+        return acc;
+      }, []);
+
+      setDomainData(organizedData);
+    }
+  }, [domains]);
+
+  // When edit icon is clicked
   const handleEdit = (record) => {
-    // Handle edit here
+    setSelectedDomain(record);
+    setDomainModalOpen(true);
   };
 
-  const handleDelete = (record) => {
-    // Handle delete here
+  // Handle when delete icon is clicked
+  const handleDelete = async (record) => {
+    try {
+      await deleteDomain({ id: record.id });
+      message.success('Domain deleted successfully');
+      setDomainData((prev) => prev.filter((d) => d.id !== record.id));
+    } catch (err) {
+      message.error('Failed to delete domain');
+    }
   };
 
   return (
     <>
-      <Table columns={columns} dataSource={data} size="small" rowSelection={rowSelection} />
-      <Modal open={visible} onCancel={() => setVisible(false)} footer={null}>
-        <p>Domain Name: {viewData?.domainName}</p>
-        <p>Activity Types: {viewData?.activityType.join(', ')}</p>
-        <p>Created by: {viewData?.createdBy}</p>
-        <p>Updated by: {viewData?.updatedBy}</p>
-      </Modal>
+      <Table columns={columns} dataSource={domainData} size="small" rowKey={(record) => record.id} />
     </>
   );
 };

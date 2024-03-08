@@ -1,7 +1,9 @@
+// Package Imports
 import React from 'react';
 import { Result, Button } from 'antd';
 import { useHistory } from 'react-router-dom';
 
+// Local Imports
 import './integrations.css';
 
 function IntegrationNotFound() {
@@ -20,7 +22,7 @@ function IntegrationNotFound() {
         subTitle="Integration settings not available."
         extra={
           <Button type="primary" onClick={handleGoToIntegration}>
-            Integrations
+            Go to Integrations
           </Button>
         }
       />

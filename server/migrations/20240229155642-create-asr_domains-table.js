@@ -32,7 +32,7 @@ module.exports = {
       createdBy: {
         allowNull: false,
         type: DataTypes.JSON,
-        defaultValue: { name: "system", email: "NA" },
+        defaultValue: { email: "NA", lastName: "System", firstName: "NA" },
       },
       updatedBy: {
         allowNull: true,

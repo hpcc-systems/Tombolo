@@ -1,33 +1,40 @@
-/* eslint-disable unused-imports/no-unused-vars */
 //Package imports
 import React from 'react';
-import { Table, Switch, Button } from 'antd';
+import { Table, Switch, Button, message } from 'antd';
 import { SettingOutlined } from '@ant-design/icons';
 import { useHistory } from 'react-router-dom';
-import { message } from 'antd';
+import { useSelector, useDispatch } from 'react-redux';
 
 //Local Imports
 import './integrations.css';
-// eslint-disable-next-line unused-imports/no-unused-imports
 import { toggleIntegration } from './integration-utils.js';
+import { applicationActions } from '../../../redux/actions/Application.js';
 
-function IntegrationsTable({ allIntegrations, setAllIntegrations }) {
+//JSX
+function IntegrationsTable({ allIntegrations }) {
   const history = useHistory();
+  const dispatch = useDispatch();
+
+  // Get list of active integrations and current app ID from redux store
+  const {
+    applicationReducer: {
+      application: { applicationId },
+      integrations,
+    },
+  } = useSelector((state) => state);
+
+  // Check if an integration is active
+  const isIntegrationActive = ({ integration_id, applicationId }) => {
+    return integrations.some((i) => i.integration_id === integration_id && i.application_id === applicationId);
+  };
 
   // Handle integration active status change
-  const handleToggleIntegrationStatus = async ({ record, active }) => {
+  const handleToggleIntegrationStatus = async ({ record, active, application_id }) => {
     try {
-      await toggleIntegration({ integrationId: record.id, active });
+      await toggleIntegration({ integrationId: record.id, application_id, active }); //TODO - update
 
-      // Updated integrations
-      const updatedIntegrations = allIntegrations.map((integration) => {
-        if (integration.id === record.id) {
-          return { ...integration, active };
-        }
-        return integration;
-      });
-
-      setAllIntegrations(updatedIntegrations);
+      // dispatch below actions so redux store gets fresh data
+      dispatch(applicationActions.getAllActiveIntegrations());
     } catch (error) {
       message.error('Failed to toggle integration', error);
     }
@@ -53,23 +60,19 @@ function IntegrationsTable({ allIntegrations, setAllIntegrations }) {
       render: (record) => (
         <div className="integrationTable__actionIcons">
           <Switch
-            defaultChecked={record.active}
+            defaultChecked={() => isIntegrationActive({ integration_id: record.id, applicationId })}
             size="small"
-            onChange={(active) => handleToggleIntegrationStatus({ record, active })}
+            onChange={(active) => handleToggleIntegrationStatus({ record, application_id: applicationId, active })}
           />
-          <Button
-            type="link"
-            size="small"
-            icon={
-              <SettingOutlined
-                className={
-                  record.active
-                    ? 'integrationTable__actions-settings-icon-active'
-                    : 'integrationTable__actions-settings-icon-inactive'
-                }
-              />
-            }
-            onClick={() => history.push(`/admin/integrations/${record.name}`)}></Button>
+          {(() => {
+            return (
+              isIntegrationActive({ integration_id: record.id, applicationId }) && (
+                <Button type="link" size="small" onClick={() => history.push(`/admin/integrations/${record.name}`)}>
+                  <SettingOutlined />
+                </Button>
+              )
+            );
+          })()}
         </div>
       ),
     },

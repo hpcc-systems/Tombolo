@@ -1,50 +1,45 @@
-/* eslint-disable unused-imports/no-unused-vars */
-import React, { useState, useEffect } from 'react';
+// Package imports
+import React from 'react';
 import { useParams } from 'react-router-dom';
 import { useSelector } from 'react-redux';
+
+// Local imports
 import IntegrationNotFound from './IntegrationNotFound';
 
 function IntegrationSettings() {
+  // Redux
   const {
-    applicationReducer: { integrations },
+    applicationReducer: {
+      integrations,
+      application: { applicationId },
+    },
   } = useSelector((state) => state);
 
-  const integrationNames = integrations.filter((i) => i.active).map((i) => i.name.toLowerCase());
-
+  // Integration name from URL
   let { integrationName } = useParams();
-  integrationName = integrationName.toLowerCase();
 
-  // Local States
-  const [IntegrationComponent, setIntegrationComponent] = useState(null);
-  const [error, setError] = useState(null);
+  // The integration name from url be present in the integrations list in redux store
+  const valid = integrations.some((i) => i.name === integrationName && i.application_id === applicationId);
 
-  useEffect(() => {
-    const loadModule = async () => {
-      if (integrationNames.includes(integrationName)) {
-        try {
-          const module = await import(`./${integrationName}`);
-          setIntegrationComponent(() => module.default);
-        } catch (err) {
-          console.error(`Failed to load module: ${err}`);
-          setError(err);
-        }
-      } else {
-        setError(new Error('Integration not found'));
-      }
-    };
-
-    loadModule();
-  }, [integrations]);
-
-  if (error) {
+  // If the integration name is not valid, show the IntegrationNotFound component
+  if (!valid) {
     return <IntegrationNotFound />;
-  }
+  } else {
+    // Try importing the integration component with the name - integrationName
+    // If error occurs, show the IntegrationNotFound component
+    try {
+      // pass relation id as props
+      const relation_id = integrations.find(
+        (i) => i.name === integrationName && i.application_id === applicationId
+      ).integration_to_app_mapping_id;
 
-  if (!IntegrationComponent) {
-    return <IntegrationNotFound />;
-  }
+      const IntegrationComponent = require(`./${integrationName}`).default;
 
-  return <IntegrationComponent integrationName={integrationName} />;
+      return <IntegrationComponent integration_to_app_mapping_id={relation_id} />;
+    } catch (error) {
+      return <IntegrationNotFound />;
+    }
+  }
 }
 
 export default IntegrationSettings;

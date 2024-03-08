@@ -1,60 +1,102 @@
-/* eslint-disable unused-imports/no-unused-vars */
-/* eslint-disable unused-imports/no-unused-imports */
-import React from 'react';
-import { Divider, Space, List } from 'antd';
-import { CheckSquareFilled } from '@ant-design/icons';
+// Package imports
+import React, { useState, useEffect } from 'react';
+import { Space, Tag, Card } from 'antd';
+import { CheckSquareFilled, CloseSquareFilled } from '@ant-design/icons';
+
+// Local imports
 import '../integrations.css';
 
-const data = ['john_doe@test.com', 'jane_doe@test.com'];
-const channels = ['https:www.channel1.com', 'https:www.channel2.com'];
-
 function GeneralTab({ integrationDetails }) {
+  const [severity3AlertRecipients, setSeverity3AlertRecipients] = useState(null);
+  const [megaphoneAlertRecipients, setMegaphoneAlertRecipients] = useState(null);
+
+  // Effects
+  useEffect(() => {
+    const severity3EmailContacts =
+      integrationDetails?.appSpecificIntegrationMetaData?.severity3Alerts?.emailContacts || [];
+    const megaphoneEmailContacts =
+      integrationDetails?.appSpecificIntegrationMetaData?.megaPhoneAlerts?.emailContacts || [];
+    const megaPhoneTeamsContacts =
+      integrationDetails?.appSpecificIntegrationMetaData?.megaPhoneAlerts?.teamsChannel || [];
+
+    setSeverity3AlertRecipients({ emailContacts: severity3EmailContacts });
+    setMegaphoneAlertRecipients({ emailContacts: megaphoneEmailContacts, teamsChannel: megaPhoneTeamsContacts });
+  }, [integrationDetails]);
+
+  // JSX for General Tab
   return (
     <>
       <div>
-        <Space>
-          <CheckSquareFilled style={{ color: 'var(--primary)', fontWeight: '800' }} />
-          <span>Severity 3 alerts are activated</span>
-        </Space>
-        <div>
-          <List
-            size="small"
-            header={<div style={{ fontWeight: '500', background: 'var(--light)' }}>Severity 3 Notification Emails</div>}
-            bordered
-            dataSource={data}
-            style={{ width: '450px' }}
-            renderItem={(item) => <List.Item>{item}</List.Item>}
-          />
-        </div>
+        {integrationDetails?.appSpecificIntegrationMetaData?.severity3Alerts?.active ? (
+          <>
+            <Space>
+              <CheckSquareFilled style={{ color: 'var(--primary)' }} />
+              <span>
+                Severity 3 alerts <span style={{ color: 'var(--primary)', fontWeight: '800' }}>ACTIVE</span>
+              </span>
+            </Space>
+            <div>
+              <Card size="small">
+                {severity3AlertRecipients?.emailContacts.map((e, i) => {
+                  return (
+                    <Tag color="blue" key={i}>
+                      {e}
+                    </Tag>
+                  );
+                })}
+              </Card>
+            </div>
+          </>
+        ) : (
+          <>
+            <Space>
+              <CloseSquareFilled style={{ color: 'var(--danger)' }} />
+              <span>
+                Severity 3 alerts <span style={{ color: 'var(--danger)', fontWeight: '800' }}>INACTIVE</span>
+              </span>
+            </Space>
+          </>
+        )}
       </div>
 
-      <div style={{ marginTop: '20px' }}>
-        <div>
-          <Space>
-            <CheckSquareFilled style={{ color: 'var(--primary)', fontWeight: '800' }} />
-            <span>Megaphone alerts are activated</span>
-          </Space>
-        </div>
-        <List
-          size="small"
-          header={
-            <div style={{ fontWeight: '500', background: 'var(--light)' }}>Megaphone alerts notification emails</div>
-          }
-          bordered
-          dataSource={data}
-          style={{ width: '450px' }}
-          renderItem={(item) => <List.Item>{item}</List.Item>}
-        />
-        <div style={{ marginTop: '10px' }}>
-          <List
-            size="small"
-            header={<div style={{ fontWeight: '500', background: 'var(--light)' }}>Teams channel </div>}
-            bordered
-            dataSource={channels}
-            style={{ width: '450px' }}
-            renderItem={(item) => <List.Item>{item}</List.Item>}
-          />
-        </div>
+      <div>
+        {integrationDetails?.appSpecificIntegrationMetaData?.megaPhoneAlerts?.active ? (
+          <>
+            <Space>
+              <CheckSquareFilled style={{ color: 'var(--primary)' }} />
+              <span>
+                Megaphone alerts <span style={{ color: 'var(--primary)', fontWeight: '800' }}>ACTIVE</span>
+              </span>
+            </Space>
+            <div>
+              <Card size="small">
+                {megaphoneAlertRecipients?.emailContacts.map((e, i) => {
+                  return (
+                    <Tag color="blue" key={i}>
+                      {e}
+                    </Tag>
+                  );
+                })}
+                {megaphoneAlertRecipients?.teamsChannel.map((t, i) => {
+                  return (
+                    <Tag color="blue" key={i}>
+                      {t}
+                    </Tag>
+                  );
+                })}
+              </Card>
+            </div>
+          </>
+        ) : (
+          <>
+            <Space>
+              <CloseSquareFilled style={{ color: 'var(--danger)' }} />
+              <span>
+                Megaphone alerts <span style={{ color: 'var(--danger)', fontWeight: '800' }}>INACTIVE</span>
+              </span>
+            </Space>
+          </>
+        )}
       </div>
     </>
   );

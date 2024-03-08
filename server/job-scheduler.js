@@ -51,9 +51,6 @@ const {
   scheduleOrbitMonitoringOnServerStart,
 } = require("./jobSchedularMethods/orbitJobs.js");
 
-//import job directly to run it only once on server start
-const { createIntegrations } = require("./jobs/integrationCreation.js");
-
 class JobScheduler {
   constructor() {
     this.bree = new Bree({
@@ -120,15 +117,11 @@ class JobScheduler {
       await this.scheduleSuperFileMonitoringOnServerStart();
       await this.scheduleClusterMonitoringOnServerStart();
       await this.scheduleKeyCheck();
-      // await this.scheduleJobMonitoringOnServerStart();
       await this.createClusterUsageHistoryJob();
       await this.scheduleEmailNotificationProcessing();
       await this.scheduleTeamsNotificationProcessing();
       await this.scheduleOrbitMonitoringOnServerStart();
       await this.createOrbitMegaphoneJob();
-
-      //one off jobs on server start
-      await this.createIntegrations();
     })();
   }
 
@@ -343,10 +336,6 @@ class JobScheduler {
 
   createOrbitMonitoringJob({ orbitMonitoring_id, cron }) {
     return createOrbitMonitoringJob.call(this, { orbitMonitoring_id, cron });
-  }
-
-  createIntegrations() {
-    return createIntegrations.call(this);
   }
 }
 

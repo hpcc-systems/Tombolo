@@ -31,7 +31,7 @@ module.exports = {
       createdBy: {
         allowNull: false,
         type: DataTypes.JSON,
-        defaultValue: { name: "system", email: "NA" },
+        defaultValue: { email: "NA", lastName: "NA", firstName: "System" },
       },
       updatedBy: {
         allowNull: true,
@@ -40,7 +40,7 @@ module.exports = {
       deletedBy: {
         type: DataTypes.JSON,
         defaultValue: null,
-      }
+      },
     });
   },
   down: async (queryInterface, Sequelize) => {

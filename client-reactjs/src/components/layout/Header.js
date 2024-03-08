@@ -143,7 +143,8 @@ class AppHeader extends Component {
       this.props.dispatch(applicationActions.getConsumers());
       this.props.dispatch(applicationActions.getLicenses());
       this.props.dispatch(applicationActions.getConstraints());
-      this.props.dispatch(applicationActions.getIntegrations(this.props.application.applicationId));
+      // this.props.dispatch(applicationActions.getIntegrations(this.props.application.applicationId));
+      this.props.dispatch(applicationActions.getAllActiveIntegrations());
     }
 
     if (this.props.newApplication) {

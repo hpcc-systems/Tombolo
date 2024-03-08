@@ -1,7 +1,7 @@
 /* eslint-disable unused-imports/no-unused-vars */
 import React, { useState } from 'react';
-import { Table, Tag, Space, Popconfirm, Modal } from 'antd';
-import { EyeOutlined, DeleteOutlined, EditOutlined } from '@ant-design/icons';
+import { Table, Tag, Space, Popconfirm } from 'antd';
+import { DeleteOutlined, EditOutlined } from '@ant-design/icons';
 
 const ProductsTab = () => {
   const [visible, setVisible] = useState(false);
@@ -55,8 +55,8 @@ const ProductsTab = () => {
       key: 'domains',
       render: (tags) => (
         <>
-          {tags.slice(0, 4).map((tag) => (
-            <Tag color="blue" key={tag}>
+          {tags.slice(0, 4).map((tag, i) => (
+            <Tag color="blue" key={i}>
               {tag}
             </Tag>
           ))}
@@ -69,7 +69,7 @@ const ProductsTab = () => {
       key: 'action',
       render: (text, record) => (
         <Space size="middle">
-          <EyeOutlined onClick={() => handleView(record)} />
+          {/* <EyeOutlined onClick={() => handleView(record)} /> */}
           <EditOutlined onClick={() => handleEdit(record)} />
           <Popconfirm title="Sure to delete?" onConfirm={() => handleDelete(record)}>
             <DeleteOutlined type="delete" />
@@ -99,12 +99,6 @@ const ProductsTab = () => {
   return (
     <>
       <Table rowSelection={true} columns={columns} dataSource={data} size="small" />
-      <Modal visible={visible} onCancel={() => setVisible(false)} footer={null}>
-        <p>Product Name: {viewData?.productName}</p>
-        <p>Domains: {viewData?.domains.join(', ')}</p>
-        <p>Created by: {viewData?.createdBy}</p>
-        <p>Updated by: {viewData?.updatedBy}</p>
-      </Modal>
     </>
   );
 };

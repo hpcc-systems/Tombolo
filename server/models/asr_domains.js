@@ -30,7 +30,7 @@ module.exports = (sequelize, DataTypes) => {
       createdBy: {
         allowNull: false,
         type: DataTypes.JSON,
-        defaultValue: { name: "system", email: "NA" },
+        defaultValue: { firstName: null, lastName: "System", email: "NA" },
       },
       updatedBy: {
         allowNull: true,
@@ -45,6 +45,14 @@ module.exports = (sequelize, DataTypes) => {
       freezeTableName: true,
     }
   );
+
+  AsrDomains.associate = function (models) {
+    AsrDomains.belongsToMany(models.monitoring_types, {
+      through: "asr_monitoring_type_to_domains",
+      foreignKey: "domain_id",
+      as: "monitoringTypes",
+    });
+  }
 
   return AsrDomains;
 };

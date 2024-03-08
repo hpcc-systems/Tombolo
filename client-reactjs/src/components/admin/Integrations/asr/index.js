@@ -1,50 +1,85 @@
-/* eslint-disable unused-imports/no-unused-vars */
+// Package imports
 import React, { useState, useEffect } from 'react';
 import { Tabs, Card, Button, Dropdown, Space, message } from 'antd';
 import { DownOutlined } from '@ant-design/icons';
 
+// Local Imports
 import BreadCrumbs from '../../../common/BreadCrumbs.js';
-// import ASRForm from './ASRForm.js';
 import GeneralTab from './GeneralTab.jsx';
 import DomainsTab from './DomainsTab.jsx';
 import ProductsTab from './ProductsTab.jsx';
 import GeneralSettingsEditModal from './GeneralSettingsEditModal.jsx';
-import { getIntegrationByName } from '../integration-utils.js';
+import { getIntegrationDetailsByRelationId } from '../integration-utils.js';
+import { getMonitoringTypes, getDomains } from './asr-integration-util.js';
+import DomainModal from './DomainModal.jsx';
+import ProductModal from './ProductModal.jsx';
 
+// Constants
 const { TabPane } = Tabs;
 
-const items = [
-  {
-    label: 'Add New Domain',
-    key: '1',
-  },
-  {
-    label: 'Delete selected',
-    key: '2',
-  },
-];
-const menuProps = {
-  items,
-};
-
-function AsrIntegrationSettings({ integrationName }) {
+function AsrIntegrationSettings({ integration_to_app_mapping_id }) {
+  // Local states
   const [activeTab, setActiveTab] = useState('1');
-  const [editingTab, setEditingTab] = useState(null);
   const [tabExtraContent, setTabExtraContent] = useState(null);
   const [displayGeneralSettingsEditModal, setDisplayGeneralSettingsEditModal] = useState(false);
   const [integrationDetails, setIntegrationDetails] = useState(null);
+  const [domainModalOpen, setDomainModalOpen] = useState(false);
+  const [productModalOpen, setProductModalOpen] = useState(false);
+  const [monitoringTypes, setMonitoringTypes] = useState([]);
+  const [domains, setDomains] = useState([]);
+  const [selectedDomain, setSelectedDomain] = useState(null);
+
+  // Action items for the domains tab
+  const domainActionItems = [
+    {
+      label: 'Add Domain',
+      onClick: () => setDomainModalOpen(true),
+      key: '1',
+    },
+  ];
+
+  // Action items for the products tab
+  const productTabActions = [
+    {
+      label: 'Add Product',
+      onClick: () => setProductModalOpen(true),
+      key: '1',
+    },
+  ];
 
   // Get integration Details for the selected integration
   useEffect(() => {
+    //Get integration details
     (async () => {
       try {
-        const integrationDetails = await getIntegrationByName(integrationName);
-        console.log('------------------------------------------');
-        console.log(integrationDetails);
-        console.log('------------------------------------------');
+        const integrationDetails = await getIntegrationDetailsByRelationId({
+          relationId: integration_to_app_mapping_id,
+        });
         setIntegrationDetails(integrationDetails);
       } catch (err) {
         message.error('Unable to get integration details');
+      }
+    })();
+
+    // Get all monitoring types
+    (async () => {
+      try {
+        const monitoringTypes = await getMonitoringTypes();
+        setMonitoringTypes(monitoringTypes);
+      } catch (err) {
+        return;
+      }
+    })();
+  }, [integration_to_app_mapping_id]);
+
+  // Get all domains - only once when the component mounts
+  useEffect(() => {
+    (async () => {
+      try {
+        const domains = await getDomains();
+        setDomains(domains);
+      } catch (err) {
+        return;
       }
     })();
   }, []);
@@ -54,7 +89,7 @@ function AsrIntegrationSettings({ integrationName }) {
     setActiveTab(value);
   };
 
-  // Render tab bar extra content
+  // Render tab bar extra content based on the active tab
   useEffect(() => {
     if (activeTab === '1') {
       setTabExtraContent(
@@ -66,7 +101,7 @@ function AsrIntegrationSettings({ integrationName }) {
 
     if (activeTab === '2') {
       setTabExtraContent(
-        <Dropdown menu={menuProps}>
+        <Dropdown menu={{ items: domainActionItems }}>
           <Button type="primary">
             <Space>
               Actions
@@ -79,7 +114,7 @@ function AsrIntegrationSettings({ integrationName }) {
 
     if (activeTab === '3') {
       setTabExtraContent(
-        <Dropdown menu={menuProps}>
+        <Dropdown menu={{ items: productTabActions }}>
           <Button type="primary">
             <Space>
               Actions
@@ -91,10 +126,11 @@ function AsrIntegrationSettings({ integrationName }) {
     }
   }, [activeTab]);
 
+  //JSX return
   return (
     <>
       <BreadCrumbs />
-      <Card size="small">
+      <Card size="small" style={{ height: '95vh' }}>
         <Tabs
           defaultActiveKey={activeTab}
           tabBarExtraContent={tabExtraContent}
@@ -103,20 +139,34 @@ function AsrIntegrationSettings({ integrationName }) {
             {<GeneralTab integrationDetails={integrationDetails} />}
           </TabPane>
           <TabPane tab="Domains" key="2">
-            <DomainsTab />
+            <DomainsTab
+              domains={domains}
+              setDomains={setDomains}
+              setSelectedDomain={setSelectedDomain}
+              setDomainModalOpen={setDomainModalOpen}
+            />
           </TabPane>
           <TabPane tab="Products" key="3">
             <ProductsTab />
           </TabPane>
-          {/* <TabPane tab="Old" key="4">
-            <ASRForm />
-          </TabPane> */}
         </Tabs>
       </Card>
       <GeneralSettingsEditModal
         displayGeneralSettingsEditModal={displayGeneralSettingsEditModal}
         setDisplayGeneralSettingsEditModal={setDisplayGeneralSettingsEditModal}
+        integrationDetails={integrationDetails}
+        setIntegrationDetails={setIntegrationDetails}
       />
+      <DomainModal
+        domainModalOpen={domainModalOpen}
+        setDomainModalOpen={setDomainModalOpen}
+        monitoringTypes={monitoringTypes}
+        domains={domains}
+        setDomains={setDomains}
+        selectedDomain={selectedDomain}
+        setSelectedDomain={setSelectedDomain}
+      />
+      <ProductModal productModalOpen={productModalOpen} setProductModalOpen={setProductModalOpen} />
     </>
   );
 }

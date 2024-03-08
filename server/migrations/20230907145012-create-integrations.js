@@ -8,24 +8,19 @@ module.exports = {
         type: Sequelize.UUID,
         defaultValue: Sequelize.UUIDV4,
       },
-      application_id: {
-        type: Sequelize.UUID,
-      },
       name: {
+        allowNull: false,
+        unique: true,
         type: Sequelize.STRING,
       },
       description: {
+        allowNull: false,
+        unique: true,
         type: Sequelize.STRING,
       },
-      active: {
-        type: Sequelize.BOOLEAN,
-      },
-      config: {
-        type: Sequelize.JSON,
-      },
-      metaData: {
-        type: Sequelize.JSON,
+      metaData:{
         allowNull: true,
+        type: Sequelize.JSON,
       },
       createdAt: {
         allowNull: false,
