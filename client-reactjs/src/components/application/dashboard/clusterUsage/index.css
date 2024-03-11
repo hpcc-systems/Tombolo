@@ -133,7 +133,7 @@
 .currentClusterUsageCharts_meterGauges_5orLess {
   margin-top: 25px;
   display: flex;
-  justify-content: center;
+  justify-content: space-around;
   flex-wrap: wrap;
 }
 

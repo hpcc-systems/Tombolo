@@ -38,15 +38,12 @@ export default class Stencil {
 
     this.addShape(graph, stencil);
 
-    console.log('appending stencil to stencil container');
-
     if (stencilContainer.current) {
       stencilContainer.current.appendChild(stencil.container);
     }
   }
 
   static addShape(graph, stencil) {
-    console.log('adding shapes to stencil');
     const assets = [
       { type: 'Job', title: i18n('Job') },
       { type: 'File', title: i18n('File') },

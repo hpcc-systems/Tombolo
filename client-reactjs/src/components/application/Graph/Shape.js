@@ -107,10 +107,6 @@ const ports = {
 };
 
 class Node extends React.Component {
-  componentDidMount() {
-    console.log('node mounted');
-    console.log(this.props);
-  }
   shouldComponentUpdate() {
     const { node } = this.props;
     console.log(this.props);
@@ -154,7 +150,7 @@ class Node extends React.Component {
 
   render() {
     const { node, _graph, handleContextMenu, disableContextMenu } = this.props;
-    console.log(this.props);
+
     const data = node?.getData();
     console.log(data);
     let {
@@ -190,9 +186,31 @@ class Node extends React.Component {
 
     const getMenu = (nodeType) => {
       const dialogMenuItemText = isAssociated ? 'Show details' : 'Associate with asset';
+
+      let menuItems = [];
+
+      if (nodeType === 'Sub-Process') {
+        menuItems = [
+          {
+            key: '1',
+            label: (
+              <a onClick={() => handleContextMenu('toggleSubProcess', { node })}>
+                {isCollapsed ? 'Expand Sub-Process' : 'Collapse Sub-Process'}
+              </a>
+            ),
+          },
+        ];
+      } else {
+        menuItems = [
+          {
+            key: '1',
+            label: <a onClick={() => handleContextMenu('openDialog', { node })}>{dialogMenuItemText}</a>,
+          },
+        ];
+      }
       return (
-        <Menu>
-          {nodeType === 'Sub-Process' ? (
+        <Menu items={menuItems}>
+          {/* {nodeType === 'Sub-Process' ? (
             <Menu.Item key="1" onClick={() => handleContextMenu('toggleSubProcess', { node })}>
               {isCollapsed ? 'Expand Sub-Process' : 'Collapse Sub-Process'}
             </Menu.Item>
@@ -200,13 +218,14 @@ class Node extends React.Component {
             <Menu.Item key="1" onClick={() => handleContextMenu('openDialog', { node })}>
               {dialogMenuItemText}
             </Menu.Item>
-          )}
+          )} */}
           {/* <Menu.Divider/> */}
         </Menu>
       );
     };
 
     const getSubProcessNode = () => {
+      console.log('test sub process');
       return (
         <div className="node-outer node-expand">
           <div className="node-title">{showTitle(title)} </div>
@@ -221,6 +240,7 @@ class Node extends React.Component {
 
       return (
         <div className={'node-outer'}>
+          <p>testerwqer</p>
           <Tooltip title={title} mouseEnterDelay={1.4} mouseLeaveDelay={0.1}>
             <div className={`node-icon ${type} status-${status} ${notAssociated}`}>{this.entities[type]}</div>
             {schedule?.type ? <div className="node-schedule">{this.schedule[schedule.type]}</div> : null}
@@ -253,16 +273,68 @@ export default class Shape {
     // u need to register with class instance and it will cause nodes to be registered on each mount, which will cause an error from X6 lib
     // to avoid it we will unregister node and register it again on each time component mounts;
 
-    console.log('initializing the custom-shape!');
+    console.log(<Node handleContextMenu={handleContextMenu} disableContextMenu={disableContextMenu} graph={graph} />);
     Graph.unregisterNode('custom-shape');
     Graph.registerNode('custom-shape', {
       inherit: 'react-shape',
-      component: <Node handleContextMenu={handleContextMenu} disableContextMenu={disableContextMenu} graph={graph} />,
+      component: (
+        <>
+          <span>testerqwerqwer</span>
+        </>
+      ),
+      attrs: {
+        body: {
+          stroke: '#5F95FF',
+          strokeWidth: 1,
+          fill: 'rgba(95,149,255,0.05)',
+          refWidth: 1,
+          refHeight: 1,
+        },
+        image: {
+          'xlink:href': 'https://gw.alipayobjects.com/zos/antfincdn/FLrTNDvlna/antv.png',
+          width: 16,
+          height: 16,
+          x: 12,
+          y: 12,
+        },
+        title: {
+          text: 'Node',
+          refX: 40,
+          refY: 14,
+          fill: 'rgba(0,0,0,0.85)',
+          fontSize: 12,
+          'text-anchor': 'start',
+        },
+        text: {
+          text: 'this is content text',
+          refX: 40,
+          refY: 38,
+          fontSize: 12,
+          fill: 'rgba(0,0,0,0.6)',
+          'text-anchor': 'start',
+        },
+      },
+      markup: [
+        {
+          tagName: 'rect',
+          selector: 'body',
+        },
+        {
+          tagName: 'image',
+          selector: 'image',
+        },
+        {
+          tagName: 'text',
+          selector: 'title',
+        },
+        {
+          tagName: 'text',
+          selector: 'text',
+        },
+      ],
       width: 90,
       height: 70,
       ports,
     });
-
-    console.log('custom shape initialized!');
   }
 }
