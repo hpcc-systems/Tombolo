@@ -55,6 +55,13 @@ module.exports = {
         type: DataTypes.JSON,
       },
     });
+
+    // Create constraints - monitoring_type_id, domain_id pair should be unique
+    await queryInterface.addConstraint("asr_monitoring_type_to_domains", {
+      type: "unique",
+      fields: ["monitoring_type_id", "domain_id"],
+      name: "unique_monitoring_type_id_domain_id",
+    });
   },
   down: async (queryInterface, Sequelize) => {
     await queryInterface.dropTable("asr_monitoring_type_to_domains");

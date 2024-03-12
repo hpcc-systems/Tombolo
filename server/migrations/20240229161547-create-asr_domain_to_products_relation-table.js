@@ -3,7 +3,7 @@ const { DataTypes } = require("sequelize");
 
 module.exports = {
   up: async (queryInterface, Sequelize) => {
-    await queryInterface.createTable("asr_domain_to_products_relation", {
+    await queryInterface.createTable("asr_domain_to_products", {
       id: {
         allowNull: false,
         primaryKey: true,
@@ -56,13 +56,14 @@ module.exports = {
       },
     });
 
-    await queryInterface.addConstraint("asr_domain_to_products_relation", {
+    //Create constraint - domain_id, product_id pair should be unique
+    await queryInterface.addConstraint("asr_domain_to_products", {
       fields: ["domain_id", "product_id"],
       type: "unique",
-      name: "domain_product_unique_constraint",
+      name: "unique_domain_product_pair",
     });
   },
   down: async (queryInterface, Sequelize) => {
-    await queryInterface.dropTable("asr_domain_to_products_relation");
+    await queryInterface.dropTable("asr_domain_to_products");
   },
 };

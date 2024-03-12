@@ -10,9 +10,9 @@ const logger = require("../../config/logger");
 // Constants
 const MonitoringTypes = models.monitoring_types;
 const Domains = models.asr_domains;
-const domainMonitoringTypes = models.asr_monitoring_type_to_domains;
+const DomainMonitoringTypes = models.asr_monitoring_type_to_domains;
 const Products = models.asr_products;
-
+const DomainProduct = models.asr_domain_to_products;
 
 // Create a new domain
 router.post("/domains/",[
@@ -40,7 +40,7 @@ router.post("/domains/",[
 
         // create domain monitoring type mapping
         const createPromises = monitoringTypeIds.map((monitoringId) => {
-          return domainMonitoringTypes.create({
+          return DomainMonitoringTypes.create({
             domain_id: domain.id,
             monitoring_type_id: monitoringId,
             createdBy,
@@ -70,13 +70,17 @@ router.get("/domains/", async(req, res) => {
        const domains = await Domains.findAll({
          include: [
            {
-             model: MonitoringTypes, // replace with your associated model
-             as: "monitoringTypes", // replace with the alias you used when defining the association
+             model: MonitoringTypes,
+             through: {
+               attributes: [], // Exclude the junction table from the result
+             },
+             as: "monitoringTypes", // Alias you used when defining the association
+             attributes: ["id", "name"],
            },
          ],
          raw: true,
        });
- 
+
         res.status(200).json(domains);
     }catch(err){
         logger.error(err);
@@ -85,16 +89,16 @@ router.get("/domains/", async(req, res) => {
 });
 
 // Update a domain
-router.put(
+router.patch(
   "/domains/:id",
   [
-    body("name").notEmpty().withMessage("Domain name is required"),
-    body("updatedBy").isObject().withMessage("Updated by must be an object"),
     param("id").isUUID().withMessage("ID must be a UUID"),
+    body("name").notEmpty().withMessage("Domain name is required"),
     body("monitoringTypeIds")
       .optional()
       .isArray()
       .withMessage("Monitoring must be array of UUIDs"),
+    body("updatedBy").isObject().withMessage("Updated by must be an object"),
   ],
   async (req, res) => {
     try {
@@ -116,14 +120,14 @@ router.put(
           );
 
           // delete all monitoring types for the domain
-          await domainMonitoringTypes.destroy({
+          await DomainMonitoringTypes.destroy({
             where: { domain_id: req.params.id },
             transaction: t,
           });
 
           // create domain monitoring type mapping
           const createPromises = monitoringTypeIds.map((monitoringId) => {
-            return domainMonitoringTypes.create(
+            return DomainMonitoringTypes.create(
               {
                 domain_id: req.params.id,
                 monitoring_type_id: monitoringId,
@@ -152,26 +156,39 @@ router.put(
   }
 );
 
-
 // Delete a domain - this  should also delete  monitoring types to domain mapping
-router.delete("/domains/:id", async(req, res) => {
+router.delete("/domains/:id",
+[
+    param("id").isUUID().withMessage("ID must be a UUID")
+],
+ async(req, res) => {
     try{
-       const response =  await Domains.destroy({where: {id: req.params.id}});
-       const message = response === 0 ? "Domain not found" : "Domain deleted successfully";
-      res.status(200).json({message});
+      //Validate
+      const errors = validationResult(req);
+      if (!errors.isEmpty()) {
+        logger.error(errors.array());
+        return res.status(400).json({ message: "Failed to delete product" });
+      }
+
+      const response = await Domains.destroy({ where: { id: req.params.id } });
+      const message =
+        response === 0 ? "Domain not found" : "Domain deleted successfully";
+      res.status(200).json({ message });
     }catch(err){
         logger.error(err);
         res.status(500).json({message: 'Failed to delete domain'});
     }
 });
 
+// ----------------------------------- Products -------------------------------------
 //Create a new product
 router.post("/products/",
 [
     body("name").notEmpty().withMessage("Product name is required"),
     body("shortCode").notEmpty().withMessage("Short code is required"),
     body("tier").notEmpty().withMessage("Tier is required"),
-    body("createdBy").notEmpty().withMessage("Created by is required")
+    body("createdBy").notEmpty().withMessage("Created by is required"),
+    body("domainIds").optional().isArray().withMessage("Domain ID must be an array of UUIDs"),
 ],
 async(req, res) => {
     try{
@@ -181,9 +198,26 @@ async(req, res) => {
             logger.error(errors.array());
             return res.status(400).json({message: "Failed to save product"});
         }
-        const product = await Products.create(req.body);
-        res.status(200).json(product);
+
+        // If domainId is provided, create product domain relationship also
+        const {name, shortCode, tier, createdBy, domainIds} = req.body;
+
+        let product;
+        if(domainIds){
+            product = await Products.create({name, shortCode, tier, createdBy});
+
+            //Create product domain mapping
+            const createPromises = domainIds.map((domainId) => {
+                return DomainProduct.create({product_id: product.id, domain_id: domainId, createdBy});
+            });
+            await Promise.all(createPromises);
+        }else{
+            product = await Products.create({name, shortCode, tier, createdBy});
+        }
+             res.status(200).json({message: "Product created successfully", product});
+
     }catch(error){
+        console.log(error)
         logger.error(error);
         res.status(500).json({message: 'Failed to create product'});
     }
@@ -192,24 +226,42 @@ async(req, res) => {
 
 // Get all products
 router.get("/products/", async(req, res) => {
-    try{
-        const products = await Products.findAll();
-        res.status(200).json(products);
-    }catch(err){
-        logger.error(err);
-        res.status(500).json({message: 'Failed to fetch products'});
-    }
+     try {
+       // get all products and the associated domains
+       const products = await Products.findAll({
+         include: [
+           {
+             model: Domains,
+             through: {
+               attributes: [], // Exclude the junction table from the result
+             },
+             as: "associatedDomains",
+             attributes: ["id", "name"],
+           },
+         ],
+         raw: true,
+       });
+
+       res.status(200).json(products);
+     } catch (err) {
+       logger.error(err);
+       res.status(500).json({ message: "Failed to fetch domains" });
+     }
 });
 
 // Patch a product
-router.patch(
+router.put(
   "/products/:id",
   [
-    // Can be empty but when entered must be correct datatypes
-    body("name").optional().isString(),
-    body("shortCode").optional().isString(),
-    body("tier").optional().isIn(["0", "1", "2", "3"]),
-    param("id").isUUID().withMessage("ID must be a UUID"),
+    param("id").notEmpty().isUUID().withMessage("ID must be a UUID"),
+    body("name").notEmpty().isString().withMessage("Product name is required"),
+    body("shortCode").notEmpty().isString().withMessage("Short code is required"),
+    body("tier").notEmpty().isInt().withMessage("Tier is required"),
+    param("domainIds")
+      .optional()
+      .isArray()
+      .withMessage("Product ID must be an array of UUIDs"),
+    body("updatedBy").notEmpty().isObject().withMessage("Updated by must be an object"),
   ],
   async (req, res) => {
     try {
@@ -220,14 +272,47 @@ router.patch(
         return res.status(400).json({ message: "Failed to update product" });
       }
 
-      const { name, shortCode, tier, updatedBy } = req.body;
+      // Update product and delete or add relation in the junction table
+      const { name, shortCode, tier, domainIds, updatedBy } = req.body;
 
-      const response = await Products.update(
-        { name, shortCode, tier, updatedBy },
-        { where: { id: req.params.id } }
-      );
-      const message = response[0] === 0 ? "Product not found" : "Successfully updated product";
-      res.status(200).json({ message});
+      let response;
+      if (domainIds) {
+        response = await sequelize.transaction(async (t) => {
+          await Products.update(
+            { name, shortCode, tier, updatedBy },
+            { where: { id: req.params.id }, transaction: t }
+          );
+
+          // delete all domains for the product
+          await DomainProduct.destroy({
+            where: { product_id: req.params.id },
+            transaction: t,
+          });
+
+          // create product domain mapping
+          const createPromises = domainIds.map((domainId) => {
+            return DomainProduct.create(
+              {
+                product_id: req.params.id,
+                domain_id: domainId,
+                updatedBy,
+              },
+              { transaction: t }
+            );
+          });
+
+          return Promise.all(createPromises);
+        });
+      } else {
+        response = await Products.update(
+          { name, shortCode, tier, updatedBy },
+          { where: { id: req.params.id } }
+        );
+      }
+
+      const message =
+        response[0] === 0 ? "Product not found" : "Successfully updated product";
+      res.status(200).json({ message });
     } catch (err) {
       logger.error(err);
       res.status(500).json({ message: "Failed to update product" });

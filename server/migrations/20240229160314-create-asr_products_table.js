@@ -19,7 +19,7 @@ module.exports = {
         type: Sequelize.STRING,
       },
       tier: {
-        type: Sequelize.ENUM("0", "1", "2", "3"),
+        type: Sequelize.INTEGER,
         allowNull: false,
       },
       createdAt: {
@@ -39,7 +39,7 @@ module.exports = {
       createdBy: {
         allowNull: false,
         type: Sequelize.JSON,
-        defaultValue: { name: "system", email: "NA" },
+        defaultValue: { email: "NA", lastName: "System", firstName: "NA" },
       },
       updatedBy: {
         allowNull: true,

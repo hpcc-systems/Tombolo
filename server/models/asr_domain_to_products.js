@@ -1,7 +1,7 @@
 "use strict";
 module.exports = (sequelize, DataTypes) => {
   const AsrDomainToProductsRelation = sequelize.define(
-    "asr_domain_to_products_relation",
+    "asr_domain_to_products",
     {
       id: {
         allowNull: false,

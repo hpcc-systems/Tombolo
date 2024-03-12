@@ -20,8 +20,7 @@ module.exports = (sequelize, DataTypes) => {
         type: DataTypes.STRING,
       },
       tier: {
-        type: DataTypes.ENUM,
-        values: ["0", "1", "2", "3"],
+        type: DataTypes.INTEGER,
         allowNull: false,
       },
       createdAt: {
@@ -41,7 +40,7 @@ module.exports = (sequelize, DataTypes) => {
       createdBy: {
         allowNull: false,
         type: DataTypes.JSON,
-        defaultValue: { name: "system", email: "NA" },
+        defaultValue: { firstName: null, lastName: "System", email: "NA" },
       },
       updatedBy: {
         allowNull: true,
@@ -57,6 +56,14 @@ module.exports = (sequelize, DataTypes) => {
       freezeTableName: true,
     }
   );
+
+  AsrProducts.associate = function (models) {
+    AsrProducts.belongsToMany(models.asr_domains, {
+      through: "asr_domain_to_products",
+      foreignKey: "product_id",
+      as: "associatedDomains",
+    });
+  };
 
   return AsrProducts;
 };

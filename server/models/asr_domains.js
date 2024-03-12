@@ -52,6 +52,12 @@ module.exports = (sequelize, DataTypes) => {
       foreignKey: "domain_id",
       as: "monitoringTypes",
     });
+
+    AsrDomains.belongsToMany(models.asr_products, {
+      through: "asr_domain_to_products",
+      foreignKey: "domain_id",
+      as: "associatedProducts",
+    });
   }
 
   return AsrDomains;
