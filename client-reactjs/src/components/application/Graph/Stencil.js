@@ -72,8 +72,6 @@ export default class Stencil {
       });
     });
 
-    console.log(assetsNodes);
-
     stencil.load(assetsNodes, 'Assets');
   }
 }
