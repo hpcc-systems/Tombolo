@@ -2,7 +2,6 @@
 /* eslint-disable unused-imports/no-unused-imports */
 import React from 'react';
 import { Gauge } from '@ant-design/plots';
-import { Popover } from 'antd';
 
 const MeterGauge = ({ data }) => {
   //Gauge color
@@ -21,58 +20,32 @@ const MeterGauge = ({ data }) => {
   const config = {
     width: 300,
     height: 300,
-    autoFit: true,
+    fill: 'black',
     data: {
-      target: 159,
-      total: 400,
-      name: 'score',
-      thresholds: [100, 200, 400],
+      target: data.maxUsage,
+      total: 100,
+      name: 'Usage',
+      threshold: [data.maxUsage, 100],
     },
-    legend: false,
     scale: {
       color: {
-        range: ['#F4664A', '#FAAD14', 'green'],
+        range: [gaugeColor(data.maxUsage), 'grey'],
       },
+      fontSize: 24,
+      fill: 'black',
     },
     style: {
-      textContent: (target, total) => `得分：${target}\n占比：${(target / total) * 100}%`,
+      textContent: (target) => `\n${target}%\n${data.engines}`,
+      fontSize: 24,
+      fontFill: '',
+      textSize: 24,
     },
   };
 
   return (
-    <Popover
-      placement="left"
-      content={
-        <div>
-          <div>Max : {data.maxUsage} % </div>
-          <div>Mean: {data.meanUsage} % </div>
-          <div>Engine: {data.engines}</div>
-
-          {data.engines.length > 1 ? (
-            <>
-              <hr />
-              <>
-                {data.engines.map((engine) => {
-                  return <div key={engine}> {engine}</div>;
-                })}
-              </>
-            </>
-          ) : null}
-        </div>
-      }>
-      <Gauge {...config} style={{ width: '250px', height: '250px', padding: '20px' }} />
-
-      {data.engines.length > 1 ? (
-        <>
-          <hr />
-          <>
-            {data.engines.map((engine) => {
-              return <div key={engine}> {engine}</div>;
-            })}
-          </>
-        </>
-      ) : null}
-    </Popover>
+    <>
+      <Gauge {...config} />
+    </>
   );
 };
 
