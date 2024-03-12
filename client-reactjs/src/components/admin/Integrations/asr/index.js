@@ -10,7 +10,7 @@ import DomainsTab from './DomainsTab.jsx';
 import ProductsTab from './ProductsTab.jsx';
 import GeneralSettingsEditModal from './GeneralSettingsEditModal.jsx';
 import { getIntegrationDetailsByRelationId } from '../integration-utils.js';
-import { getMonitoringTypes, getDomains } from './asr-integration-util.js';
+import { getMonitoringTypes, getDomains, getProducts } from './asr-integration-util.js';
 import DomainModal from './DomainModal.jsx';
 import ProductModal from './ProductModal.jsx';
 
@@ -28,6 +28,8 @@ function AsrIntegrationSettings({ integration_to_app_mapping_id }) {
   const [monitoringTypes, setMonitoringTypes] = useState([]);
   const [domains, setDomains] = useState([]);
   const [selectedDomain, setSelectedDomain] = useState(null);
+  const [products, setProducts] = useState([]);
+  const [selectedProduct, setSelectedProduct] = useState(null);
 
   // Action items for the domains tab
   const domainActionItems = [
@@ -72,12 +74,23 @@ function AsrIntegrationSettings({ integration_to_app_mapping_id }) {
     })();
   }, [integration_to_app_mapping_id]);
 
-  // Get all domains - only once when the component mounts
+  // Get all domains and products - only once when the component mounts
   useEffect(() => {
+    // Get domains
     (async () => {
       try {
         const domains = await getDomains();
         setDomains(domains);
+      } catch (err) {
+        return;
+      }
+    })();
+
+    //Get products
+    (async () => {
+      try {
+        const products = await getProducts();
+        setProducts(products);
       } catch (err) {
         return;
       }
@@ -147,7 +160,13 @@ function AsrIntegrationSettings({ integration_to_app_mapping_id }) {
             />
           </TabPane>
           <TabPane tab="Products" key="3">
-            <ProductsTab />
+            <ProductsTab
+              products={products}
+              setProducts={setProducts}
+              selectedProduct={selectedProduct}
+              setSelectedProduct={setSelectedProduct}
+              setProductModalOpen={setProductModalOpen}
+            />
           </TabPane>
         </Tabs>
       </Card>
@@ -166,7 +185,15 @@ function AsrIntegrationSettings({ integration_to_app_mapping_id }) {
         selectedDomain={selectedDomain}
         setSelectedDomain={setSelectedDomain}
       />
-      <ProductModal productModalOpen={productModalOpen} setProductModalOpen={setProductModalOpen} />
+      <ProductModal
+        productModalOpen={productModalOpen}
+        setProductModalOpen={setProductModalOpen}
+        domains={domains}
+        products={products}
+        setProducts={setProducts}
+        selectedProduct={selectedProduct}
+        setSelectedProduct={setSelectedProduct}
+      />
     </>
   );
 }
