@@ -95,7 +95,6 @@ app.use("/api/updateNotification", updateNotifications);
 //exposed API, requires api key for any routes
 app.use("/api/apikeys", api);
 
-// Authenticate token before proceeding to route
 app.use(tokenService.verifyToken);
 
 app.use("/api/job", job);

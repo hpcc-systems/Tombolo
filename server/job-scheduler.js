@@ -52,7 +52,8 @@ const {
 } = require("./jobSchedularMethods/orbitJobs.js");
 
 //import job directly to run it only once on server start
-const { createIntegrations } = require("./jobs/integrationCreation.js");
+//remove this
+// const { createIntegrations } = require("./jobs/integrationCreation.js");
 
 class JobScheduler {
   constructor() {
@@ -128,7 +129,7 @@ class JobScheduler {
       await this.createOrbitMegaphoneJob();
 
       //one off jobs on server start
-      await this.createIntegrations();
+      // await this.createIntegrations();
     })();
   }
 
@@ -345,9 +346,9 @@ class JobScheduler {
     return createOrbitMonitoringJob.call(this, { orbitMonitoring_id, cron });
   }
 
-  createIntegrations() {
-    return createIntegrations.call(this);
-  }
+  // createIntegrations() {
+  //   return createIntegrations.call(this);
+  // }
 }
 
 module.exports = new JobScheduler();
