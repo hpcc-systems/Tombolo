@@ -1,18 +1,15 @@
-const models = require("../../models");
 const sequelize = require("sequelize");
+const express = require("express");
+const { param, body, validationResult } = require("express-validator");
+
+const validatorUtil = require("../../utils/validator");
+const logger = require("../../config/logger");
+const models = require("../../models");
+
 const integrations = models.integrations;
 const integration_mapping = models.integration_mapping;
-const express = require("express");
 const router = express.Router();
-const path = require("path");
-const fs = require("fs");
-const rootENV = path.join(process.cwd(), "..", ".env");
-const serverENV = path.join(process.cwd(), ".env");
-const ENVPath = fs.existsSync(rootENV) ? rootENV : serverENV;
-const { param, body, validationResult } = require("express-validator");
-const validatorUtil = require("../../utils/validator");
-require("dotenv").config({ path: ENVPath });
-const logger = require("../../config/logger");
+
 
 //Get all integrations - active or not from integrations table
 router.get("/all", async (req, res) => {
@@ -28,21 +25,21 @@ router.get("/all", async (req, res) => {
 // Get all active integrations from the integrations to application mapping table
 router.get("/getAllActive/", async (req, res) => {
   try {
-   const integrationMappingDetails = await integration_mapping.findAll(
-     {
-       include: [
-         {
-           model: integrations,
-           as: "integration",
-           required: true,
-           attributes: ["name", "description", "metaData"],
-         },
-       ],
-     },
-     {
-       raw: true,
-     }
-   );
+    const integrationMappingDetails = await integration_mapping.findAll(
+      {
+        include: [
+          {
+            model: integrations,
+            as: "integration",
+            required: true,
+            attributes: ["name", "description", "metaData"],
+          },
+        ],
+      },
+      {
+        raw: true,
+      }
+    );
     res.status(200).send(integrationMappingDetails);
   } catch (err) {
     logger.error(err);
@@ -51,51 +48,55 @@ router.get("/getAllActive/", async (req, res) => {
 });
 
 // Get integration details by integration relation ID
-router.get("/integrationDetails/:id",
- [param("id").isUUID(4).withMessage("Invalid integration id")], 
- async (req, res) => {
-  const errors = validationResult(req).formatWith(validatorUtil.errorFormatter);
-  if (!errors.isEmpty()) {
-    return res.status(422).json({ success: false, errors: errors.array() });
-  }
-  try {
-    const result = await integration_mapping.findOne({
-      where: {
-        id: req.params.id,
-      },
-      attributes: [
-        [sequelize.col("integration_mapping.id"), "integrationMappingId"],
-        [
-          sequelize.col("integration_mapping.metaData"),
-          "appSpecificIntegrationMetaData",
-        ],
-        "integration_mapping.application_id",
-      ],
-      include: [
-        {
-          model: integrations,
-          as: "integration",
-          required: true,
-          attributes: [
-            [sequelize.col("id"), "integrationId"],
-            [sequelize.col("name"), "integrationName"],
-            [sequelize.col("description"), "integrationDescription"],
-            [sequelize.col("metaData"), "integrationMetaData"],
-          ],
+router.get(
+  "/integrationDetails/:id",
+  [param("id").isUUID(4).withMessage("Invalid integration id")],
+  async (req, res) => {
+    const errors = validationResult(req).formatWith(
+      validatorUtil.errorFormatter
+    );
+    if (!errors.isEmpty()) {
+      return res.status(422).json({ success: false, errors: errors.array() });
+    }
+    try {
+      const result = await integration_mapping.findOne({
+        where: {
+          id: req.params.id,
         },
-      ],
-    });
-    
-    res.status(200).send(result);
-  } catch (err) {
-    logger.error(err);
-    res.status(500).send("Failed to get integration details");
+        attributes: [
+          [sequelize.col("integration_mapping.id"), "integrationMappingId"],
+          [
+            sequelize.col("integration_mapping.metaData"),
+            "appSpecificIntegrationMetaData",
+          ],
+          "integration_mapping.application_id",
+        ],
+        include: [
+          {
+            model: integrations,
+            as: "integration",
+            required: true,
+            attributes: [
+              [sequelize.col("id"), "integrationId"],
+              [sequelize.col("name"), "integrationName"],
+              [sequelize.col("description"), "integrationDescription"],
+              [sequelize.col("metaData"), "integrationMetaData"],
+            ],
+          },
+        ],
+      });
+
+      res.status(200).send(result);
+    } catch (err) {
+      logger.error(err);
+      res.status(500).send("Failed to get integration details");
+    }
   }
-}
 );
 
 // Change the active status of an integration
-router.post("/toggleStatus",
+router.post(
+  "/toggleStatus",
   [body("integrationId").isUUID(4).withMessage("Invalid integration id")],
   [body("application_id").isUUID(4).withMessage("Invalid integration id")],
   [body("active").isBoolean().withMessage("Invalid active status")],
@@ -103,8 +104,8 @@ router.post("/toggleStatus",
     const errors = validationResult(req).formatWith(
       validatorUtil.errorFormatter
     );
-    try{
-     /* 
+    try {
+      /* 
      Intention to active 
        1. restore if soft deleted
        2. create if not exists
@@ -112,10 +113,8 @@ router.post("/toggleStatus",
       1. destroy if exists
       */
 
-      if (!errors.isEmpty()){
-                return res
-                  .status(422)
-                  .json({ success: false, errors: errors.array() });
+      if (!errors.isEmpty()) {
+        return res.status(422).json({ success: false, errors: errors.array() });
       }
       const { integrationId, application_id, active } = req.body;
       const result = await integration_mapping.findOne({
@@ -128,14 +127,12 @@ router.post("/toggleStatus",
 
       if (active) {
         if (result) {
-          await integration_mapping.restore(
-            {
-              where: {
-                application_id,
-                integration_id: integrationId,
-              },
-            }
-          );
+          await integration_mapping.restore({
+            where: {
+              application_id,
+              integration_id: integrationId,
+            },
+          });
         } else {
           await integration_mapping.create({
             application_id,
@@ -143,17 +140,15 @@ router.post("/toggleStatus",
           });
         }
       } else {
-        await integration_mapping.destroy(
-          {
-            where: {
-              application_id,
-              integration_id: integrationId,
-            },
-          }
-        );
+        await integration_mapping.destroy({
+          where: {
+            application_id,
+            integration_id: integrationId,
+          },
+        });
       }
-      res.status(200).json({message: "Integration status changed"});
-    }catch(err){
+      res.status(200).json({ message: "Integration status changed" });
+    } catch (err) {
       logger.error(err);
       res.status(500).json({ message: "Unable to update the integration" });
     }
@@ -161,11 +156,14 @@ router.post("/toggleStatus",
 );
 
 // Update the integration details (MetaData) by integration relation ID
-router.put("/updateIntegrationSettings/:id",
+router.put(
+  "/updateIntegrationSettings/:id",
   [param("id").isUUID(4).withMessage("Invalid integration id")],
   [body("integrationSettings").isObject().withMessage("Invalid MetaData")],
   async (req, res) => {
-    const errors = validationResult(req).formatWith(validatorUtil.errorFormatter);
+    const errors = validationResult(req).formatWith(
+      validatorUtil.errorFormatter
+    );
     if (!errors.isEmpty()) {
       return res.status(422).json({ success: false, errors: errors.array() });
     }
