@@ -123,7 +123,10 @@ const DomainModal = ({
       okText={selectedDomain ? 'Update' : 'Save'}
       maskClosable={false}>
       <Form form={form} layout="vertical">
-        <Form.Item label="Domain" name="name" rules={[{ required: true, message: 'Please input the product name!' }]}>
+        <Form.Item
+          label="Domain"
+          name="name"
+          rules={[{ required: true, message: 'Please input the product name!' }, { max: 100 }]}>
           <Input placeholder="Product Name" />
         </Form.Item>
         <Form.Item label="Activity Type" name="monitoringTypeIds" rules={[{ required: false }]}>

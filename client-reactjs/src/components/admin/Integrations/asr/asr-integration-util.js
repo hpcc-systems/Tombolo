@@ -174,3 +174,20 @@ export const deleteProduct = async ({ id }) => {
 
   return data;
 };
+
+// Get all teams channels
+export const getTeamsChannels = async () => {
+  const payload = {
+    method: 'GET',
+    headers: authHeader(),
+  };
+  const response = await fetch('/api/teamsHook/', payload);
+
+  if (response.status !== 200) {
+    throw new Error('Failed to get teams channels');
+  }
+
+  const data = await response.json();
+
+  return data;
+};

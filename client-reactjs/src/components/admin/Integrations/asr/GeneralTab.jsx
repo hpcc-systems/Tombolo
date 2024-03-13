@@ -6,7 +6,7 @@ import { CheckSquareFilled, CloseSquareFilled } from '@ant-design/icons';
 // Local imports
 import '../integrations.css';
 
-function GeneralTab({ integrationDetails }) {
+function GeneralTab({ integrationDetails, teamsChannels }) {
   const [severity3AlertRecipients, setSeverity3AlertRecipients] = useState(null);
   const [megaphoneAlertRecipients, setMegaphoneAlertRecipients] = useState(null);
 
@@ -78,11 +78,16 @@ function GeneralTab({ integrationDetails }) {
                   );
                 })}
                 {megaphoneAlertRecipients?.teamsChannel.map((t, i) => {
-                  return (
-                    <Tag color="blue" key={i}>
-                      {t}
-                    </Tag>
-                  );
+                  return teamsChannels.map((tc) => {
+                    if (tc.id === t) {
+                      return (
+                        <Tag color="blue" key={i}>
+                          {tc.name}
+                        </Tag>
+                      );
+                    }
+                    return null;
+                  });
                 })}
               </Card>
             </div>

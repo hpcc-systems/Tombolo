@@ -10,7 +10,7 @@ import DomainsTab from './DomainsTab.jsx';
 import ProductsTab from './ProductsTab.jsx';
 import GeneralSettingsEditModal from './GeneralSettingsEditModal.jsx';
 import { getIntegrationDetailsByRelationId } from '../integration-utils.js';
-import { getMonitoringTypes, getDomains, getProducts } from './asr-integration-util.js';
+import { getMonitoringTypes, getDomains, getProducts, getTeamsChannels } from './asr-integration-util.js';
 import DomainModal from './DomainModal.jsx';
 import ProductModal from './ProductModal.jsx';
 
@@ -30,6 +30,7 @@ function AsrIntegrationSettings({ integration_to_app_mapping_id }) {
   const [selectedDomain, setSelectedDomain] = useState(null);
   const [products, setProducts] = useState([]);
   const [selectedProduct, setSelectedProduct] = useState(null);
+  const [teamsChannels, setTeamsChannels] = useState([]);
 
   // Action items for the domains tab
   const domainActionItems = [
@@ -95,6 +96,16 @@ function AsrIntegrationSettings({ integration_to_app_mapping_id }) {
         return;
       }
     })();
+
+    // Get teams channels
+    (async () => {
+      try {
+        const response = await getTeamsChannels();
+        setTeamsChannels(response);
+      } catch (err) {
+        message.error('Failed to get teams channels');
+      }
+    })();
   }, []);
 
   //Handle Tab change
@@ -149,7 +160,7 @@ function AsrIntegrationSettings({ integration_to_app_mapping_id }) {
           tabBarExtraContent={tabExtraContent}
           onChange={(value) => handleTabChange(value)}>
           <TabPane tab="General Settings" key="1">
-            {<GeneralTab integrationDetails={integrationDetails} />}
+            {<GeneralTab integrationDetails={integrationDetails} teamsChannels={teamsChannels} />}
           </TabPane>
           <TabPane tab="Domains" key="2">
             <DomainsTab
@@ -175,6 +186,7 @@ function AsrIntegrationSettings({ integration_to_app_mapping_id }) {
         setDisplayGeneralSettingsEditModal={setDisplayGeneralSettingsEditModal}
         integrationDetails={integrationDetails}
         setIntegrationDetails={setIntegrationDetails}
+        teamsChannels={teamsChannels}
       />
       <DomainModal
         domainModalOpen={domainModalOpen}

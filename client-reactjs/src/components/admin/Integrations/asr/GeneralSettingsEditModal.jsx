@@ -11,6 +11,7 @@ function GeneralSettingsEditModal({
   setDisplayGeneralSettingsEditModal,
   integrationDetails,
   setIntegrationDetails,
+  teamsChannels,
 }) {
   //Local State
   const [displayRecipients, setDisplayRecipients] = useState({
@@ -118,6 +119,7 @@ function GeneralSettingsEditModal({
       width={800}
       okText="Save"
       onOk={handleFormSubmit}
+      maskClosable={false}
       cancelButtonProps={{ type: 'primary', ghost: true }}>
       <Card size="small">
         <Form layout="vertical" form={form}>
@@ -161,7 +163,27 @@ function GeneralSettingsEditModal({
 
           {displayRecipients.megaPhoneAlerts && (
             <>
-              <Form.Item required label="Notification E-mails" name="megaphoneEmailContacts">
+              <Form.Item
+                required
+                label="Notification E-mails"
+                name="megaphoneEmailContacts"
+                validateTrigger={['onChange', 'onBlur']}
+                rules={[
+                  {
+                    validator: (_, value) => {
+                      if (!value || value.length === 0) {
+                        return Promise.reject(new Error('Please add at least one email!'));
+                      }
+                      if (value.length > 20) {
+                        return Promise.reject(new Error('Too many emails'));
+                      }
+                      if (!value.every((v) => isEmail(v))) {
+                        return Promise.reject(new Error('One or more emails are invalid'));
+                      }
+                      return Promise.resolve();
+                    },
+                  },
+                ]}>
                 <Select
                   mode="tags"
                   allowClear
@@ -169,11 +191,14 @@ function GeneralSettingsEditModal({
                   tokenSeparators={[',']}
                 />
               </Form.Item>
-              <Form.Item
-                label="Notification Webhooks"
-                name="megaPhoneTeamsContacts"
-                validateTrigger={['onChange', 'onBlur']}>
-                <Select placeholder="Select a teams Channel " mode="multiple"></Select>
+              <Form.Item label="Notification Webhooks" name="megaPhoneTeamsContacts">
+                <Select placeholder="Select a teams Channel " mode="multiple">
+                  {teamsChannels.map((channel) => (
+                    <Select.Option key={channel.id} value={channel.id}>
+                      {channel.name}
+                    </Select.Option>
+                  ))}
+                </Select>
               </Form.Item>
             </>
           )}

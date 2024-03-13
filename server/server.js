@@ -129,7 +129,6 @@ app.use("/api/orbit", orbit);
 app.use("/api/integrations", integrations);
 app.use("/api/teamsHook", teamsHook);
 app.use("/api/fido", fido);
-fido;
 app.use("/api/notification_queue", notification_queue);
 app.use("/api/monitorings", monitorings);
 app.use("/api/asr", asr);
