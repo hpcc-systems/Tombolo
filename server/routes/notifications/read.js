@@ -78,7 +78,7 @@ router.get(
         include: [
           {
             model: jobMonitoring,
-            attributes: ["name"],
+            attributes: ["monitoringName"],
           },
           {
             model: clusterMonitoring,
@@ -93,7 +93,7 @@ router.get(
       });
       res.status(200).send(notifications);
     } catch (error) {
-      logger.error(err);
+      logger.error(error);
       res.status(500).json({ message: "Unable to get notifications" });
     }
   }
