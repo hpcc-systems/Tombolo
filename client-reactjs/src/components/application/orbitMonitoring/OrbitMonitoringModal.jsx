@@ -196,8 +196,6 @@ const OrbitMonitoringModal = ({
         isActive: formData.isActive,
       };
 
-      console.log(formData);
-
       await saveOrbitBuildDetails(formData);
       cancelModal();
     } catch (err) {
@@ -299,7 +297,7 @@ const OrbitMonitoringModal = ({
 
   return (
     <Modal
-      visible={modalVisible}
+      open={modalVisible}
       width={modalWidth}
       onCancel={cancelModal}
       maskClosable={false}

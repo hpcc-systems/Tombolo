@@ -545,7 +545,9 @@ function FileTemplate({ match, selectedAsset = {}, displayingInModal, onClose })
 
               <Form.Item label={<Text text="Description" />} name="description" className="markdown-editor">
                 {enableEdit ? (
-                  <MonacoEditor targetDomId="fileDescr" />
+                  <>
+                    <MonacoEditor targetDomId="fileDescr" />
+                  </>
                 ) : (
                   <div className="read-only-markdown">
                     <ReactMarkdown source={form.getFieldValue('description')} />

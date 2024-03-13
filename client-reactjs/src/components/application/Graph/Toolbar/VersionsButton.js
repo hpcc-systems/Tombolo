@@ -577,7 +577,7 @@ const VersionForm = ({ visible, loading, onCreate, onEdit, onCancel, version }) 
 
   return (
     <Modal
-      visible={visible}
+      open={visible}
       destroyOnClose
       title={version ? <Text text={`Editing version: "${version.name}"`} /> : <Text text="Create a new version" />}
       okText={version ? <Text text="Edit" /> : <Text text="Create" />}

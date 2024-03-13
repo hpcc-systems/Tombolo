@@ -68,9 +68,26 @@ function AddDataflow({
     selectedCluster = clusters.filter((cluster) => cluster.id === clusterId)[0];
   };
 
+  const validateForms = async () => {
+    let validationError = null;
+    let formData = {};
+
+    try {
+      formData = await form.validateFields();
+    } catch (err) {
+      validationError = err;
+    }
+
+    return { validationError, formData };
+  };
+
   //Handle submit function
-  const handleFormSubmission = () => {
-    form.validateFields().then(saveDataflow);
+  const handleFormSubmission = async () => {
+    const errors = await validateForms();
+
+    if (!errors.validationError) {
+      saveDataflow(form.getFieldValue());
+    }
   };
 
   const saveDataflow = (formValues) => {
@@ -161,10 +178,10 @@ function AddDataflow({
       </Tooltip>
 
       <Modal
-        visible={modalVisible}
+        open={modalVisible}
         title={<Text text="Dataflow" />}
         maskClosable={false}
-        bodyStyle={{ overflowY: 'auto', maxHeight: '60vh' }}
+        styles={{ overflowY: 'auto', maxHeight: '60vh' }}
         width={750}
         onCancel={handleClose}
         footer={[
