@@ -68,7 +68,7 @@ const TitleRenderer = ({ nodeData, handleMenuClick }) => {
   return (
     <li className="group-title">
       <span className="group-options">{nodeData.title}</span>
-      <Dropdown visible={visible} trigger={['click']} overlay={<GroupMenu />} onVisibleChange={onVisibleChange}>
+      <Dropdown open={visible} trigger={['click']} menu={<GroupMenu />} onOpenChange={onVisibleChange}>
         <i className="fa fa-bars" onClick={(e) => e.stopPropagation()} />
       </Dropdown>
     </li>

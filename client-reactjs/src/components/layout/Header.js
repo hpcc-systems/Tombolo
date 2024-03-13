@@ -1,12 +1,10 @@
 import { AppstoreOutlined, DownOutlined, QuestionCircleOutlined } from '@ant-design/icons';
-import { Button, Dropdown, Form, Input, Menu, message, Modal, notification, Space, Tooltip } from 'antd';
+import { Button, Dropdown, Form, Input, message, Modal, notification, Space, Tooltip } from 'antd';
 import { debounce } from 'lodash';
 import React, { Component } from 'react';
 import { connect } from 'react-redux';
 import { Link, withRouter } from 'react-router-dom';
-import i18next from 'i18next';
 
-import { languages } from '../../i18n/languages';
 import logo from '../../images/logo.png';
 import { msalInstance } from '../../index';
 import { applicationActions } from '../../redux/actions/Application';
@@ -63,25 +61,25 @@ class AppHeader extends Component {
   }, 100);
 
   // eslint-disable-next-line react/no-deprecated
-  componentWillReceiveProps(props) {
-    if (props.application && props.application.applicationTitle !== '') {
-      this.setState((prev) => {
-        const currentAppId = props.application.applicationId;
-        if (currentAppId) {
-          let appList = prev.applications;
-          // when user adds new app he will change state in redux by selecting that app, we will check if that app exists in our list, is now we will add it.
-          const app = appList.find((app) => app.value === currentAppId);
-          if (!app)
-            appList = [
-              ...appList,
-              { value: props.application.applicationId, display: props.application.applicationTitle },
-            ];
-          return { selected: props.application.applicationTitle, applications: appList };
-        }
-        return { selected: props.application.applicationTitle };
-      });
-    }
-  }
+  // componentWillReceiveProps(props) {
+  //   if (props.application && props.application.applicationTitle !== '') {
+  //     this.setState((prev) => {
+  //       const currentAppId = props.application.applicationId;
+  //       if (currentAppId) {
+  //         let appList = prev.applications;
+  //         // when user adds new app he will change state in redux by selecting that app, we will check if that app exists in our list, is now we will add it.
+  //         const app = appList.find((app) => app.value === currentAppId);
+  //         if (!app)
+  //           appList = [
+  //             ...appList,
+  //             { value: props.application.applicationId, display: props.application.applicationTitle },
+  //           ];
+  //         return { selected: props.application.applicationTitle, applications: appList };
+  //       }
+  //       return { selected: props.application.applicationTitle };
+  //     });
+  //   }
+  // }
   componentDidMount() {
     if (this.props.location.pathname.includes('manualJobDetails')) {
       return;
@@ -143,7 +141,7 @@ class AppHeader extends Component {
       this.props.dispatch(applicationActions.getConsumers());
       this.props.dispatch(applicationActions.getLicenses());
       this.props.dispatch(applicationActions.getConstraints());
-      this.props.dispatch(applicationActions.getIntegrations(this.props.application.applicationId));
+      this.props.dispatch(applicationActions.getIntegrations(this.props.application?.applicationId));
     }
 
     if (this.props.newApplication) {
@@ -158,6 +156,7 @@ class AppHeader extends Component {
         this.setState({ applications });
       }
     }
+
     if (this.props.updatedApplication) {
       let applications = this.state.applications;
       let application = applications.filter(
@@ -208,9 +207,19 @@ class AppHeader extends Component {
     }
   };
 
-  handleChange({ value, display, goToAssetPage = false }) {
+  handleChange(value) {
+    const goToAssetPage = false;
+
+    //value needs to be an object
+    if (typeof value === 'object') {
+      value = value?.value;
+    }
+
     const applicationId = value;
-    const applicationTitle = display;
+
+    //get the display from the applications list
+    const applicationTitle = this.state.applications.find((app) => app.value === applicationId)?.display || value;
+
     // trigger change when app is not same as current app, ignore if user selects same app
     if (this.props.application?.applicationId !== applicationId) {
       this.props.dispatch(applicationActions.applicationSelected(applicationId, applicationTitle));
@@ -335,49 +344,49 @@ class AppHeader extends Component {
   };
 
   // Options for languages dropdown
-  languagesMenu = (
-    <Menu
-      onClick={(item) => {
-        localStorage.setItem('i18nextLng', item.key);
-        i18next.changeLanguage(item.key);
-        this.setState({ language: item.key.toUpperCase() });
-
-        this.props.setLocale(item.key);
-      }}>
-      {languages.map((language) => {
-        return (
-          <Menu.Item className="menuOption" key={language.value}>
-            {language.label}
-          </Menu.Item>
-        );
-      })}
-    </Menu>
-  );
 
   render() {
-    const userActionMenu = (
-      <Menu onClick={this.handleUserActionMenuClick}>
-        <Menu.Item key="1" className="menuOption">
-          {<Text text="Change Password" />}
-        </Menu.Item>
-        <Menu.Item key="2" className="menuOption">
-          {<Text text="Logout" />}
-        </Menu.Item>
-      </Menu>
-    );
+    const actionMenuItems = [
+      {
+        key: '1',
+        icon: null,
+        label: 'Change Password',
+        children: null,
+        type: null,
+      },
+      {
+        key: '2',
+        icon: null,
+        label: 'Logout',
+        children: null,
+        type: null,
+      },
+    ];
 
-    const helpMenu = (
-      <Menu>
-        <Menu.Item key="1" className="menuOption">
-          <a target="_blank" rel="noopener noreferrer" href={process.env.PUBLIC_URL + '/Tombolo-User-Guide.pdf'}>
-            {<Text text="User Guide" />}
-          </a>
-        </Menu.Item>
-        <Menu.Item key="2" className="menuOption">
-          <a onClick={this.openAboutModal}>{<Text text="About" />}</a>
-        </Menu.Item>
-      </Menu>
-    );
+    const helpMenuClick = (e) => {
+      if (e.key == 1) {
+        window.open(process.env.PUBLIC_URL + '/Tombolo-User-Guide.pdf');
+      } else if (e.key == 2) {
+        this.openAboutModal();
+      }
+    };
+
+    const helpMenuItems = [
+      {
+        key: '1',
+        icon: null,
+        label: 'User Guide',
+        children: null,
+        type: null,
+      },
+      {
+        key: '2',
+        icon: null,
+        label: 'About',
+        children: null,
+        type: null,
+      },
+    ];
 
     const formItemLayout = {
       labelCol: {
@@ -393,18 +402,9 @@ class AppHeader extends Component {
     if (!this.props.user || !this.props.user.token) {
       return null;
     }
-
-    const menu = (
-      <Menu>
-        {this.state.applications.map((app, index) => {
-          return (
-            <Menu.Item key={index} onClick={() => this.handleChange({ ...app, goToAssetPage: true })}>
-              {app.display}
-            </Menu.Item>
-          );
-        })}
-      </Menu>
-    );
+    const menuItems = this.state.applications.map((app) => {
+      return { key: app.value, label: app.display };
+    });
 
     return (
       <div style={{ display: 'flex', alignItems: 'center', maxHeight: '100%', justifyContent: 'space-between' }}>
@@ -413,7 +413,15 @@ class AppHeader extends Component {
             <img src={logo} alt="Tombolo logo" width="80px" height="19px" />
           </Link>
 
-          <Dropdown overlay={menu} placement="bottom" trigger={['click']}>
+          <Dropdown
+            menu={{
+              items: menuItems,
+              onClick: (e) => {
+                this.handleChange(e.key);
+              },
+            }}
+            placement="bottom"
+            trigger={['click']}>
             <Tooltip title="Select an Application" placement="right">
               <Space
                 style={{
@@ -433,7 +441,7 @@ class AppHeader extends Component {
         </div>
 
         <div style={{ display: 'flex', alignItems: 'center' }}>
-          <Dropdown overlay={helpMenu} trigger={['click']}>
+          <Dropdown menu={{ items: helpMenuItems, onClick: (e) => helpMenuClick(e) }} trigger={['click']}>
             <Button shape="round" style={{ marginRight: '10px' }}>
               <i className="fa fa-lg fa-question-circle"></i>
               <span style={{ paddingLeft: '5px' }}>
@@ -441,7 +449,9 @@ class AppHeader extends Component {
               </span>
             </Button>
           </Dropdown>
-          <Dropdown overlay={userActionMenu} trigger={['click']}>
+          <Dropdown
+            menu={{ items: actionMenuItems, onClick: (e) => this.handleUserActionMenuClick(e) }}
+            trigger={['click']}>
             <Button shape="round">
               <i className="fa fa-lg fa-user-circle"></i>
               <span style={{ paddingLeft: '5px' }}>
@@ -454,7 +464,7 @@ class AppHeader extends Component {
 
         <Modal
           title={<Text>Change Password</Text>}
-          visible={this.state.visible}
+          open={this.state.visible}
           width="520px"
           footer={[
             <Button key="cancel" onClick={this.handleCancel}>
@@ -507,7 +517,7 @@ class AppHeader extends Component {
         </Modal>
         <Modal
           title="Tombolo"
-          visible={this.state.isAboutModalVisible}
+          open={this.state.isAboutModalVisible}
           footer={[
             <Button key="close" onClick={this.handleAboutClose}>
               Close

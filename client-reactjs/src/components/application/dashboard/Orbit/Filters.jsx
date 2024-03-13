@@ -78,7 +78,7 @@ function Filters({ groupDataBy, setGroupDataBy, dashboardFilters, setDashboardFi
         <FilterOutlined />
         Filters
       </Button>
-      <Drawer title="Dashboard Filters & Slicers" placement="right" onClose={onClose} visible={open}>
+      <Drawer title="Dashboard Filters & Slicers" placement="right" onClose={onClose} open={open}>
         <div style={{ width: '100%', display: 'flex', justifyContent: 'flex-start', alignItems: 'center' }}>
           <Form {...layout} onFinish={onFinish} className="filters__form" form={form} initialValues={dashboardFilters}>
             <h2>Workunit Filters</h2>

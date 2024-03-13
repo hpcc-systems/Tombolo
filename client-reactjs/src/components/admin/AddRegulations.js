@@ -148,11 +148,11 @@ class AddRegulations extends Component {
       <div>
         <Modal
           title={this.state.title}
-          visible={true}
+          open={true}
           onOk={this.handleOk.bind(this)}
           onCancel={this.handleCancel}
           destroyOnClose={true}
-          bodyStyle={{ height: '560px' }}
+          styles={{ height: '560px' }}
           okText="Save">
           <Form layout="vertical">
             <Form.Item {...formItemLayout} label="Compliance :">

@@ -1,5 +1,6 @@
+/* eslint-disable unused-imports/no-unused-vars */
 import React from 'react';
-import { Graph } from '@antv/x6';
+// import { Graph } from '@antv/x6';
 import { Tooltip } from 'antd';
 
 import {
@@ -26,6 +27,8 @@ import '@antv/x6-react-components/es/menu/style/index.css';
 import '@antv/x6-react-components/es/dropdown/style/index.css';
 
 import './Shape.css';
+import { register } from '@antv/x6-react-shape';
+// import { handleError } from '../../common/AuthHeader';
 
 const ports = {
   groups: {
@@ -109,6 +112,7 @@ const ports = {
 class Node extends React.Component {
   shouldComponentUpdate() {
     const { node } = this.props;
+    console.log(this.props);
     if (node) {
       // Graph does not detect changes in nodes data when toggle collapse, need to mention it here manually
       if (node.hasChanged('data') || node.data?.isCollapsed) {
@@ -149,7 +153,9 @@ class Node extends React.Component {
 
   render() {
     const { node, _graph, handleContextMenu, disableContextMenu } = this.props;
+
     const data = node?.getData();
+
     let {
       type,
       title,
@@ -183,6 +189,7 @@ class Node extends React.Component {
 
     const getMenu = (nodeType) => {
       const dialogMenuItemText = isAssociated ? 'Show details' : 'Associate with asset';
+
       return (
         <Menu>
           {nodeType === 'Sub-Process' ? (
@@ -244,12 +251,30 @@ export default class Shape {
     // We need a way how to pass props to node Registration from main graph, currently you can not register node with graph instance,
     // u need to register with class instance and it will cause nodes to be registered on each mount, which will cause an error from X6 lib
     // to avoid it we will unregister node and register it again on each time component mounts;
-    Graph.unregisterNode('custom-shape');
-    Graph.registerNode('custom-shape', {
-      inherit: 'react-shape',
-      component: <Node handleContextMenu={handleContextMenu} disableContextMenu={disableContextMenu} graph={graph} />,
+
+    // Graph.unregisterNode('custom-shape');
+    // Graph.registerNode('custom-shape', {
+    //   inherit: 'react-shape',
+    //   component: nodeContent,
+    //   attrs: {
+    //     body: {
+    //       stroke: '#5F95FF',
+    //       strokeWidth: 1,
+    //       fill: 'rgba(95,149,255,0.05)',
+    //       refWidth: 1,
+    //       refHeight: 1,
+    //     },
+    //   },
+    //   width: 90,
+    //   height: 70,
+    //   ports,
+    // });
+
+    register({
+      shape: 'custom-shape',
       width: 90,
       height: 70,
+      component: Node,
       ports,
     });
   }

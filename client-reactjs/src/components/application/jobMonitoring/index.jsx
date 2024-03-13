@@ -69,7 +69,7 @@ function JobMonitoring() {
 
   //When intention to edit a monitoring is discovered
   useEffect(() => {
-    if (editingData.isEditing) {
+    if (editingData?.isEditing) {
       form.setFieldsValue(selectedMonitoring);
       setMonitoringScope(selectedMonitoring.monitoringScope);
       form.setFieldsValue({
@@ -156,7 +156,7 @@ function JobMonitoring() {
       }
 
       // if editingData.isEditing is true, add id to allInputs
-      if (editingData.isEditing) {
+      if (editingData?.isEditing) {
         allInputs.id = selectedMonitoring.id;
       }
 
@@ -234,7 +234,7 @@ function JobMonitoring() {
       //Set newly added job monitoring to jobMonitorings
       const responseData = await response.json();
 
-      if (editingData.isEditing) {
+      if (editingData?.isEditing) {
         const updatedJobMonitorings = jobMonitorings.map((jobMonitoring) => {
           if (jobMonitoring.id === responseData.id) {
             return responseData;
@@ -253,7 +253,7 @@ function JobMonitoring() {
       message.error(err.message);
     } finally {
       setSavingJobMonitoring(false);
-      if (editingData.isEditing) {
+      if (editingData?.isEditing) {
         setEditingData({ isEditing: false });
       }
     }
@@ -285,7 +285,7 @@ function JobMonitoring() {
         savingJobMonitoring={savingJobMonitoring}
         jobMonitorings={jobMonitorings}
         setEditingData={setEditingData}
-        isEditing={editingData.isEditing}
+        isEditing={editingData?.isEditing}
         erroneousTabs={erroneousTabs}
         setErroneousTabs={setErroneousTabs}
         setErroneousScheduling={setErroneousScheduling}

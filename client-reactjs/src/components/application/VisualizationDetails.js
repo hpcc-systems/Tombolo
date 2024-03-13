@@ -180,8 +180,8 @@ function VisualizationDetails() {
                     <Col span={19}>
                       <AutoComplete
                         className="certain-category-search"
-                        dropdownClassName="certain-category-search-dropdown"
-                        dropdownMatchSelectWidth={false}
+                        popupClassName="certain-category-search-dropdown"
+                        popupMatchSelectWidth={false}
                         dropdownStyle={{ width: 300 }}
                         style={{ width: '100%' }}
                         onSearch={(value) => searchFiles(value)}

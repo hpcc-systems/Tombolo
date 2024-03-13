@@ -58,3 +58,4 @@ module.exports = {
     return queryInterface.bulkDelete('license', null, {});
   }
 };
+ 

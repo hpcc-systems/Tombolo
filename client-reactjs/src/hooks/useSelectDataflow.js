@@ -25,7 +25,6 @@ const useSelectDataflow = () => {
 
           const data = await response.json();
           const dataflow = data[0];
-          console.log('dataflow', dataflow);
 
           if (!dataflow) throw new Error('No Dataflow found');
           const { title, id, clusterId } = dataflow;
