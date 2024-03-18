@@ -3,6 +3,7 @@ import { Breadcrumb } from 'antd';
 import { withRouter } from 'react-router-dom';
 import { connect } from 'react-redux';
 import { withTranslation } from 'react-i18next';
+
 class BreadCrumbs extends Component {
   render() {
     // const { t } = this.props; // translation
@@ -10,11 +11,14 @@ class BreadCrumbs extends Component {
     const getBreadCrumbs = () => {
       const { location, application } = this.props;
 
+      //grab the application id from redux applicationReducer
+
       const pathSnippets = location.pathname.split('/');
 
       //rebuild pathSnippets with label and value
-      const newPathSnippets = pathSnippets.map((item) => {
-        if (item === application.applicationId || item === 'admin') return { label: 'Home', value: item };
+      const newPathSnippets = pathSnippets.map((item, index) => {
+        if (item === application.applicationId || item === 'admin' || index === 1)
+          return { label: 'Home', value: item };
         return { label: item, value: item };
       });
 
