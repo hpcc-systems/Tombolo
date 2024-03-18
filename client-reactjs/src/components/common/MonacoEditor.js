@@ -1,5 +1,6 @@
 import React from 'react';
 import { default as Monaco } from '@monaco-editor/react';
+
 // import { loader } from '@monaco-editor/react';
 
 // https://github.com/suren-atoyan/monaco-react/issues/217#issuecomment-980800802
@@ -9,6 +10,7 @@ const MonacoEditor = ({ onChange, value = '', targetDomId = '', lang = 'markdown
   const config = {
     markdown: {
       height: '300px',
+
       onChange: (text) => onChange({ target: { name: 'description', value: text } }),
       options: {
         lineNumbers: 'off',
@@ -19,8 +21,8 @@ const MonacoEditor = ({ onChange, value = '', targetDomId = '', lang = 'markdown
         cursorBlinking: 'smooth',
         minimap: { enabled: false },
         scrollbar: {
-          horizontalScrollbarSize: 3,
-          verticalScrollbarSize: 3,
+          horizontalScrollbarSize: 0,
+          verticalScrollbarSize: 0,
         },
       },
     },
@@ -32,15 +34,13 @@ const MonacoEditor = ({ onChange, value = '', targetDomId = '', lang = 'markdown
     },
   };
 
-  console.log(config);
-
   return (
     <Monaco
       value={value}
       language={lang}
       {...config[lang]} // get rest of config depending on editor type
       {...rest} // all other props
-      className="ant-input" // give ant input field styles
+      className="ant-input monacoEditor" // give ant input field styles
       path={lang + targetDomId} // will make this model unique
     />
   );
