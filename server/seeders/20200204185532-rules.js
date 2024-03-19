@@ -1,38 +1,47 @@
-'use strict';
-const { v4: uuidv4 } = require('uuid');
+"use strict";
+const { v4: uuidv4 } = require("uuid");
 
 module.exports = {
   up: (queryInterface, Sequelize) => {
-
-      return queryInterface.bulkInsert('rules', [{
-        id: uuidv4(),
-        name : 'Date Validate',
-        createdAt : new Date(),
-        updatedAt : new Date()
-      },{
-        id: uuidv4(),
-        name : 'Phone Validate',
-        createdAt : new Date(),
-        updatedAt : new Date()
-      },{
-        id: uuidv4(),
-        name : 'Integer Validate',
-        createdAt : new Date(),
-        updatedAt : new Date()
-      },{
-        id: uuidv4(),
-        name : 'Not Empty',
-        createdAt : new Date(),
-        updatedAt : new Date()
-      },{
-        id: uuidv4(),
-        name : 'Assert',
-        createdAt : new Date(),
-        updatedAt : new Date()
-      }], {});
-
+    return queryInterface.bulkInsert(
+      "rules",
+      [
+        {
+          id: uuidv4(),
+          name: "Date Validate",
+          createdAt: new Date(),
+          updatedAt: new Date(),
+        },
+        {
+          id: uuidv4(),
+          name: "Phone Validate",
+          createdAt: new Date(),
+          updatedAt: new Date(),
+        },
+        {
+          id: uuidv4(),
+          name: "Integer Validate",
+          createdAt: new Date(),
+          updatedAt: new Date(),
+        },
+        {
+          id: uuidv4(),
+          name: "Not Empty",
+          createdAt: new Date(),
+          updatedAt: new Date(),
+        },
+        {
+          id: uuidv4(),
+          name: "Assert",
+          createdAt: new Date(),
+          updatedAt: new Date(),
+        },
+      ],
+      {}
+    );
   },
 
-  down: (queryInterface, Sequelize) => {
-  }
+  down: async (queryInterface, Sequelize) => {
+    return queryInterface.bulkDelete("rules", null, {});
+  },
 };
