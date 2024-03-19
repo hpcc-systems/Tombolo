@@ -5,7 +5,7 @@ import { Constants } from '../../../common/Constants';
 function VewHookDetails({ showHooksDetailModal, setShowHooksDetailModal, selectedHook }) {
   return (
     <Modal
-      visible={showHooksDetailModal}
+      open={showHooksDetailModal}
       width={800}
       maskClosable={false}
       footer={null}

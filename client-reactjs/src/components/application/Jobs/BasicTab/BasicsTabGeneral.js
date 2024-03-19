@@ -219,7 +219,7 @@ function BasicsTabGeneral({
   if (enableEdit && !isAssociated) hideOnReadOnlyView = false;
   return (
     <React.Fragment>
-      <Spin spinning={job.loading} tip="loading job details">
+      <Spin spinning={job.loading}>
         {inTabView ? null : (
           <>
             <Form.Item label={<Text text="Cluster" />}>
@@ -267,8 +267,8 @@ function BasicsTabGeneral({
                 <Col span={19}>
                   <AutoComplete
                     className="certain-category-search"
-                    dropdownClassName="certain-category-search-dropdown"
-                    dropdownMatchSelectWidth={false}
+                    popupClassName="certain-category-search-dropdown"
+                    popupMatchSelectWidth={false}
                     dropdownStyle={{ width: 300 }}
                     style={{ width: '100%' }}
                     onSearch={(value) => searchJobs({ searchString: value, clusterId: clusterId })}

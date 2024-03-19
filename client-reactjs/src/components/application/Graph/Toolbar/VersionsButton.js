@@ -40,8 +40,7 @@ const { confirm } = Modal;
 const NOTIFICATION_CONF = {
   placement: 'top',
   style: {
-    width: 'auto',
-    maxWidth: '750px',
+    width: '500px',
   },
 };
 
@@ -153,13 +152,7 @@ const VersionsButton = ({ graphRef }) => {
       if (!response.ok) handleError(response);
 
       const result = await response.json();
-      graphRef.current
-        .unfreeze()
-        .enableSelection()
-        .enableRubberband()
-        .enableSnapline()
-        .enableSharpSnapline()
-        .hideTools();
+      // graphRef.current.enableSelection().enableRubberband().enableSnapline().enableSharpSnapline().hideTools();
       graphRef.current.fromJSON(result.graph);
 
       if (isPermanent) {
@@ -199,13 +192,7 @@ const VersionsButton = ({ graphRef }) => {
         setClickedVersion({ id: '', name: '', description: '' });
       } else {
         // When change is not permanent we need to cancel most of the interactions to avoid editing graph.
-        graphRef.current
-          .freeze()
-          .disableSelection()
-          .disableRubberband()
-          .disableSnapline()
-          .disableSharpSnapline()
-          .hideTools();
+        // graphRef.current.disableSelection().disableRubberband().disableSnapline().disableSharpSnapline().hideTools();
 
         // Only versions in DB can be executed, updated value will reflect in modal execute button;
         graphRef.current.dataflowVersionId = version.id;
@@ -404,7 +391,7 @@ const VersionsButton = ({ graphRef }) => {
 
     if (wcGraph) {
       // making sure that graph is not frozen and updates reflects on ui
-      graphRef.current.unfreeze();
+      // graphRef.current.unfreeze();
       graphRef.current.fromJSON(wcGraph);
     }
 
@@ -577,7 +564,7 @@ const VersionForm = ({ visible, loading, onCreate, onEdit, onCancel, version }) 
 
   return (
     <Modal
-      visible={visible}
+      open={visible}
       destroyOnClose
       title={version ? <Text text={`Editing version: "${version.name}"`} /> : <Text text="Create a new version" />}
       okText={version ? <Text text="Edit" /> : <Text text="Create" />}

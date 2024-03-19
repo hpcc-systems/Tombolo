@@ -33,7 +33,7 @@ function IntegrationSettings() {
         (i) => i.name === integrationName && i.application_id === applicationId
       ).integration_to_app_mapping_id;
 
-      const IntegrationComponent = require(`./${integrationName}`).default;
+      const IntegrationComponent = require(`./${integrationName.toLowerCase()}`).default;
 
       return <IntegrationComponent integration_to_app_mapping_id={relation_id} />;
     } catch (error) {

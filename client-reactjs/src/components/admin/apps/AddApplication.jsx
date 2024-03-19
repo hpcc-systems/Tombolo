@@ -63,9 +63,12 @@ function AddApplication(props) {
       const appWithSameTitleExists = props.applications.some((app) => app.title === form.getFieldValue('title'));
       if (appWithSameTitleExists) return message.error('App with same title already exists');
     }
-    await form.validateFields();
+
+    await validateForms();
+
     try {
       const fieldValues = form.getFieldsValue();
+
       let payload = {
         ...fieldValues,
         user_id: props.user.username,
@@ -110,6 +113,20 @@ function AddApplication(props) {
     }
   };
 
+  //validate forms before saving
+  const validateForms = async () => {
+    let validationError = null;
+    let formData = {};
+
+    try {
+      formData = await form.validateFields();
+    } catch (err) {
+      validationError = err;
+    }
+
+    return { validationError, formData };
+  };
+
   // CANCEL / CLOSE MODAL WHEN CANCEL OR 'X' IS CLICKED
   const handleModalCancel = () => {
     props.closeAddApplicationModal();
@@ -119,7 +136,7 @@ function AddApplication(props) {
   //JSX
   return (
     <Modal
-      visible={props.showAddApplicationModal}
+      open={props.showAddApplicationModal}
       title={
         props?.selectedApplication?.title ? (
           <>
@@ -157,7 +174,8 @@ function AddApplication(props) {
       <Form className="formInModal" form={form} initialValues={{ visibility: 'Private' }}>
         <Form.Item
           {...formItemLayout}
-          label={<Text text="Title" />}
+          label="Title"
+          labelAlign="left"
           name="title"
           validateTrigger={['onChange', 'onBlur']}
           rules={[
@@ -178,7 +196,8 @@ function AddApplication(props) {
         </Form.Item>
 
         <Form.Item
-          label={<Text text="Description" />}
+          label="Description"
+          labelAlign="left"
           name="description"
           {...formItemLayout}
           validateTrigger={['onChange', 'onBlur']}
@@ -204,7 +223,8 @@ function AddApplication(props) {
 
         <Form.Item
           {...formItemLayout}
-          label={<Text text="Visibility" />}
+          label="Visibility"
+          labelAlign="left"
           rules={[
             {
               required: props.isCreatingNewApp || isEditing,

@@ -174,46 +174,67 @@ function FileTemplate({ match, selectedAsset = {}, displayingInModal, onClose })
     setMonitoringDetails((prev) => ({ ...prev, landingZonePath }));
   };
 
+  const validateForms = async () => {
+    let validationError = null;
+    let formData = {};
+
+    try {
+      formData = await form.validateFields();
+    } catch (err) {
+      validationError = err;
+    }
+
+    return { validationError, formData };
+  };
+
   //Save file template
   const saveFileTemplate = async () => {
-    await form.validateFields();
-    const {
-      title,
-      cluster,
-      fileNamePattern,
-      searchString,
-      description,
-      setFileMonitoring,
-      landingZone,
-      machine,
-      dirToMonitor,
-      shouldMonitorSubDirs,
-    } = form.getFieldsValue();
-    const url = `/api/fileTemplate/read/saveFileTemplate`;
-    const body = JSON.stringify({
-      title,
-      assetId,
-      groupId,
-      cluster,
-      description,
-      searchString,
-      fileNamePattern,
-      fileLayoutData: layoutData,
-      application_id: applicationId,
-      sampleLayoutFile: sampleFileForLayout,
-      metaData: {
-        isAssociated: true,
-        fileMonitoringTemplate: setFileMonitoring,
+    try {
+      const data = await validateForms();
+
+      if (data.validationError?.errorFields) {
+        throw new Error('Validation failed, please check form fields again.');
+      }
+
+      const {
+        title,
+        cluster,
+        fileNamePattern,
+        searchString,
+        description,
+        setFileMonitoring,
         landingZone,
         machine,
-        lzPath: landingZoneMonitoringDetails.landingZonePath,
-        directory: dirToMonitor,
-        monitorSubDirs: shouldMonitorSubDirs,
-        licenses: selectedLicenses,
-      },
-    });
-    try {
+        dirToMonitor,
+        shouldMonitorSubDirs,
+      } = form.getFieldsValue();
+
+      const url = `/api/fileTemplate/read/saveFileTemplate`;
+      const body = JSON.stringify({
+        title,
+        assetId,
+        groupId,
+        cluster,
+        description,
+        searchString,
+        fileNamePattern,
+        fileLayoutData: layoutData,
+        application_id: applicationId,
+        sampleLayoutFile: sampleFileForLayout,
+        metaData: {
+          isAssociated: true,
+          fileMonitoringTemplate: setFileMonitoring,
+          landingZone,
+          machine,
+          lzPath: landingZoneMonitoringDetails.landingZonePath,
+          directory: dirToMonitor,
+          monitorSubDirs: shouldMonitorSubDirs,
+          licenses: selectedLicenses,
+        },
+      });
+
       const response = await fetch(url, { headers: authHeader(), method: 'POST', body });
+
       if (!response.ok) throw Error('Unable to save template');
       message.success('Template Saved');
 
@@ -231,6 +252,7 @@ function FileTemplate({ match, selectedAsset = {}, displayingInModal, onClose })
         history.push(`/${application.applicationId}/assets`);
       }
     } catch (err) {
+      console.log(err);
       message.error(err.message);
     }
   };
@@ -545,7 +567,9 @@ function FileTemplate({ match, selectedAsset = {}, displayingInModal, onClose })
 
               <Form.Item label={<Text text="Description" />} name="description" className="markdown-editor">
                 {enableEdit ? (
-                  <MonacoEditor targetDomId="fileDescr" />
+                  <>
+                    <MonacoEditor targetDomId="fileDescr" />
+                  </>
                 ) : (
                   <div className="read-only-markdown">
                     <ReactMarkdown source={form.getFieldValue('description')} />

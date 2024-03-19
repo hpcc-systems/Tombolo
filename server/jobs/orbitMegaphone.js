@@ -3,16 +3,14 @@ const sql = require("mssql");
 const models = require("../models");
 const integrations = models.integrations;
 const orbitBuilds = models.orbitBuilds;
+const teamsWebhooks = models.teams_hook;
 const monitoring_notifications = models.monitoring_notifications;
 const notificationTemplate = require("./messageCards/notificationTemplate");
 const { notify } = require("../routes/notifications/email-notification");
 const { v4: uuidv4 } = require("uuid");
 const axios = require("axios");
 
-const {
-  runMySQLQuery,
-  orbitDbConfig,
-} = require("../../utils/runSQLQueries.js");
+const { runMySQLQuery, orbitDbConfig } = require("../utils/runSQLQueries.js");
 
 (async () => {
   try {
@@ -117,37 +115,44 @@ const {
             }
 
             // //build and send Teams notification
-            if (integration.metaData.notificationWebhooks) {
-              let facts = [
-                { name: newBuild.name },
-                { Status: newBuild.metaData.status },
-                { "Sub Status": newBuild.metaData.subStatus },
-                { "Last Run": newBuild.metaData.lastRun },
-                { WorkUnit: newBuild.metaData.workunit },
-              ];
-              let title = "Orbit Build Detectd With Megaphone Status";
-              notification_id = uuidv4();
-              const cardBody = notificationTemplate.orbitBuildMessageCard(
-                title,
-                facts,
-                notification_id
-              );
+            if (integration?.metaData?.notificationWebhooks) {
+              //get the teams webhooks by the ID's in the webhooks
+              for (let hook of integration.metaData.notificationWebhooks) {
+                let teamsHook = await teamsWebhooks.findOne({
+                  where: {
+                    id: hook,
+                  },
+                  raw: true,
+                });
 
-              await axios.post(
-                integration.metaData.notificationWebhooks,
-                JSON.parse(cardBody)
-              );
+                let facts = [
+                  { name: newBuild.name },
+                  { Status: newBuild.metaData.status },
+                  { "Sub Status": newBuild.metaData.subStatus },
+                  { "Last Run": newBuild.metaData.lastRun },
+                  { WorkUnit: newBuild.metaData.workunit },
+                ];
+                let title = "Orbit Build Detectd With Megaphone Status";
+                notification_id = uuidv4();
+                const cardBody = notificationTemplate.orbitBuildMessageCard(
+                  title,
+                  facts,
+                  notification_id
+                );
 
-              sentNotifications.push({
-                id: notification_id,
-                status: "notified",
-                notifiedTo: integration.metaData.notificationWebhooks,
-                notification_channel: "msTeams",
-                application_id,
-                notification_reason: "Megaphone Substatus",
-                monitoring_id: newBuild.id,
-                monitoring_type: "orbit",
-              });
+                await axios.post(teamsHook.url, JSON.parse(cardBody));
+
+                sentNotifications.push({
+                  id: notification_id,
+                  status: "notified",
+                  notifiedTo: teamsHook.url,
+                  notification_channel: "msTeams",
+                  application_id,
+                  notification_reason: "Megaphone Substatus",
+                  monitoring_id: newBuild.id,
+                  monitoring_type: "orbit",
+                });
+              }
             }
           } else {
             //if it does exist, update the "final status metadata"

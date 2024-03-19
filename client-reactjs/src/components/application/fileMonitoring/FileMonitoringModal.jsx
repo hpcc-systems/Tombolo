@@ -287,7 +287,7 @@ function FileMonitoringModal({
   // JSX -----------------------------------------------------------------------------
   return (
     <Modal
-      visible={visible}
+      open={visible}
       maskClosable={false}
       width={modalWidth}
       onCancel={cancelFileMonitoringModal}

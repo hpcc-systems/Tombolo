@@ -148,7 +148,7 @@ function ClusterDetails() {
           </Form>
           {directoryDetails ? (
             <div style={{ marginTop: '20px' }}>
-              <Card title="Basic Details" size="small" headStyle={{ fontWeight: 700 }}>
+              <Card title="Basic Details" size="small">
                 <Descriptions column={1} size="small" labelStyle={{ fontWeight: 500 }}>
                   <Descriptions.Item label="Total Directories">{directoryDetails.directoryCount}</Descriptions.Item>
                   <Descriptions.Item label="Total Files">{directoryDetails.fileCount}</Descriptions.Item>
@@ -156,7 +156,7 @@ function ClusterDetails() {
               </Card>
 
               {directoryDetails?.oldestFile ? (
-                <Card title="Oldest File" size="small" headStyle={{ fontWeight: 700 }} style={{ marginTop: '2px' }}>
+                <Card title="Oldest File" size="small" style={{ marginTop: '2px' }}>
                   <Descriptions column={1} size="small">
                     {Object.keys(directoryDetails.oldestFile).map((key) => (
                       <Descriptions key={key} label={key}>
@@ -168,11 +168,7 @@ function ClusterDetails() {
               ) : null}
 
               {directoryDetails?.filesAndDirectories.length > 0 ? (
-                <Card
-                  title="Files and Directories"
-                  size="small"
-                  headStyle={{ fontWeight: 700 }}
-                  style={{ marginTop: '2px' }}>
+                <Card title="Files and Directories" size="small" style={{ marginTop: '2px' }}>
                   {directoryDetails?.filesAndDirectories.map((directory, index) => (
                     <Collapse
                       key={index}

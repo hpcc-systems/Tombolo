@@ -18,11 +18,11 @@ function AssetDetailsDialog(props) {
 
   return (
     <Modal
-      visible={props.show}
+      open={props.show}
       onCancel={() => props.onClose()}
       width="1200px"
       footer={null}
-      bodyStyle={{ display: 'flex', flexDirection: 'column' }}
+      styles={{ display: 'flex', flexDirection: 'column' }}
       title={getAssetType(props.selectedAsset.type) + ` : ${props.selectedAsset.title}`}>
       <DetailsForm {...props} />
     </Modal>

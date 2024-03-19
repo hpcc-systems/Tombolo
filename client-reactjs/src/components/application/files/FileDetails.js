@@ -817,7 +817,7 @@ class FileDetails extends Component {
           }>
           <Tabs defaultActiveKey="1" tabBarExtraContent={this.props.displayingInModal ? null : controls}>
             <TabPane tab={<Text text="Basic" />} key="1">
-              <Spin spinning={this.state.initialDataLoading} tip="loading file details">
+              <Spin spinning={this.state.initialDataLoading}>
                 <Form
                   initialValues={{ fileType: 'thor_file', isSuperFile: false }}
                   {...formItemLayout}
@@ -865,8 +865,8 @@ class FileDetails extends Component {
                       <Col span={20}>
                         <AutoComplete
                           className="certain-category-search"
-                          dropdownClassName="certain-category-search-dropdown"
-                          dropdownMatchSelectWidth={false}
+                          popupClassName="certain-category-search-dropdown"
+                          popupMatchSelectWidth={false}
                           dropdownStyle={{ width: 300 }}
                           style={{ width: '100%' }}
                           onSearch={this.searchFiles}
