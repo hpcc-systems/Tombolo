@@ -52,9 +52,6 @@ class BreadCrumbs extends Component {
           newBreadCrumbItems.push(newItem);
         }
       });
-      console.log('------------------------------------------');
-      console.dir(newBreadCrumbItems);
-      console.log('------------------------------------------');
 
       const alteredCrumbs = newBreadCrumbItems.map((item) => {
         return { ...item, title: item.title[0].charAt(0).toUpperCase() + item.title.slice(1) };
