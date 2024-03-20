@@ -249,7 +249,7 @@ class Applications extends Component {
               (record.creator !== this.props.username && record.visibility !== 'Public') ? (
                 <>
                   <Popconfirm
-                    title={<Text text="Are you sure you want to delete" /> + '?'}
+                    title={<Text text="Are you sure you want to delete?" />}
                     onConfirm={() => this.handleRemove(record.id)}
                     icon={<QuestionCircleOutlined />}>
                     <span>
