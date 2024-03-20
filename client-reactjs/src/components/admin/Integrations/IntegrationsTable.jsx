@@ -31,7 +31,7 @@ function IntegrationsTable({ allIntegrations }) {
   // Handle integration active status change
   const handleToggleIntegrationStatus = async ({ record, active, application_id }) => {
     try {
-      await toggleIntegration({ integrationId: record.id, application_id, active }); //TODO - update
+      await toggleIntegration({ integrationId: record.id, application_id, active });
 
       // dispatch below actions so redux store gets fresh data
       dispatch(applicationActions.getAllActiveIntegrations());
