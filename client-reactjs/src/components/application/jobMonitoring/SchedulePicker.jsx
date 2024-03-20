@@ -1,7 +1,17 @@
+/* eslint-disable unused-imports/no-unused-imports */
 import React, { useState, useEffect } from 'react';
 import { v4 as uuidv4 } from 'uuid';
-import { Radio, Space, Checkbox, Select, Tag, Input } from 'antd';
+import { Radio, Space, Checkbox, Select, Tag, Input, Tooltip } from 'antd';
 import cronstrue from 'cronstrue';
+
+// Daily schedule options
+const dailyOptions = [
+  { label: 'Daily (00:00 - 23:59)', value: 'daily' },
+  { label: 'Every Morning (00:00 - 11:59)', value: 'morning' },
+  { label: 'Every Afternoon (12:00 - 23:59)', value: 'afternoon' },
+  { label: 'Overnight (Previous Day 12:00 - Current Day 12:00)', value: 'overnight' },
+  { label: 'Every 2 Days', value: 'every2Days' },
+];
 
 import {
   daysOfWeek,
@@ -78,14 +88,51 @@ function SchedulePicker({
     setMonthlyRadio(null);
     setCompleteSchedule([]);
     setIndividualValues({});
-    setIntermittentScheduling({ schedulingType: selected });
+    if (selected === 'daily') {
+      setIntermittentScheduling({ schedulingType: selected, frequency: 'daily' });
+    } else {
+      setIntermittentScheduling({ schedulingType: selected });
+    }
   };
 
   // Daily Break down - When daily option is selected
   const dailyBreakDown = (
     <div>
-      <Radio checked>Runs everyday</Radio>
-      <div style={{ margin: '-5px 0 0 20px', color: 'var(--secondary)' }}>
+      <Radio checked>Run Frequency</Radio>
+      <div style={{ margin: '5px 0 0 20px', color: 'var(--secondary)' }}>
+        <Select
+          style={{ width: '100%' }}
+          defaultValue={intermittentScheduling?.frequency}
+          onChange={(value) => setIntermittentScheduling((prev) => ({ ...prev, frequency: value }))}>
+          {dailyOptions.map((option) => (
+            <Select.Option value={option.value} key={option.value}>
+              {option.label}
+            </Select.Option>
+          ))}
+        </Select>
+      </div>
+      {/* <div style={{ margin: '5px 0 0 20px', color: 'var(--secondary)' }}>
+        <RangePicker
+          format="h:mm a"
+          allowClear
+          onChange={(value, _valueString) => {
+            setIntermittentScheduling((prev) => ({ ...prev, range: value }));
+          }}
+          defaultValue={[dayjs('00:00', 'HH:mm'), dayjs('12:00', 'HH:mm')]}
+        />
+      </div>
+      <div style={{ margin: '5px 0 0 20px', color: 'var(--secondary)' }}>
+        <RangePicker
+          format="HH:mm"
+          defaultValue={[dayjs('11:05', 'HH:mm'), dayjs('11:09', 'HH:mm')]}
+          onChange={(value) => {
+            const timeRange = value.map((v) => v.format('HH:mm'));
+            console.log(timeRange); // ["11:05", "11:09"]
+            setIntermittentScheduling((prev) => ({ ...prev, timeRange }));
+          }}
+        />
+      </div> */}
+      <div style={{ margin: '0px 0 0 20px', color: 'var(--secondary)' }}>
         Note: For weekends / weekdays select Weekly option
       </div>
     </div>

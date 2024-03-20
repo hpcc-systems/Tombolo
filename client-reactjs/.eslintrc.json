@@ -20,6 +20,7 @@
     }
   },
   "rules": {
+    "react/no-deprecated": "off",
     "prettier/prettier": ["error", {}, { "usePrettierrc": true }],
     "no-unused-vars": "off",
     "unused-imports/no-unused-imports": "error",

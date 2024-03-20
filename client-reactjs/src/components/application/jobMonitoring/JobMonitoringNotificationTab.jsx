@@ -1,3 +1,4 @@
+/* eslint-disable unused-imports/no-unused-imports */
 //Packages
 import React from 'react';
 import { useSelector } from 'react-redux';
@@ -10,19 +11,22 @@ import AsrSpecificNotificationsDetails from './AsrSpecificNotificationsDetails';
 //Constants
 const { Option } = Select;
 const jobStatuses = [
-  { label: 'Completed', value: 'Completed' },
+  // { label: 'Completed', value: 'Completed' },
   { label: 'Failed', value: 'Failed' },
   { label: 'Aborted', value: 'Aborted' },
   { label: 'Blocked', value: 'Blocked' },
   { label: 'Threshold Exceeded', value: 'ThresholdExceeded' }, //TODO - If threshold exceed option is selected make threshold time input value required
+  { label: 'Not started by runtime', value: 'NotStarted' },
+  { label: 'Not completed by runtime', value: 'NotCompleted' },
 ];
 
 function JobMonitoringNotificationTab({ form, teamsHooks }) {
   //Redux
-  const {
-    applicationReducer: { integrations },
-  } = useSelector((state) => state);
-  const asrIntegration = integrations?.find((integration) => integration.name === 'ASR') !== undefined;
+  // const {
+  //   applicationReducer: { integrations },
+  // } = useSelector((state) => state);
+  // const asrIntegration = integrations?.find((integration) => integration.name === 'ASR') !== undefined;
+  const asrIntegration = true; //TODO - Remove this line after integrating with redux
 
   // JSX
   return (

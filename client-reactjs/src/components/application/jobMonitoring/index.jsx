@@ -20,7 +20,11 @@ import ApproveRejectModal from './ApproveRejectModal.jsx';
 function JobMonitoring() {
   //Local States
   const [displayAddJobMonitoringModal, setDisplayAddJobMonitoringModal] = useState(false);
-  const [intermittentScheduling, setIntermittentScheduling] = useState({ schedulingType: 'daily', id: uuidv4() });
+  const [intermittentScheduling, setIntermittentScheduling] = useState({
+    schedulingType: 'daily',
+    id: uuidv4(),
+    frequency: 'daily',
+  });
   const [completeSchedule, setCompleteSchedule] = useState([]);
   const [cron, setCron] = useState('');
   const [cronMessage, setCronMessage] = useState(null); // Cron message to display when cron is invalid or has errors
@@ -106,6 +110,9 @@ function JobMonitoring() {
   const handleSaveJobMonitoring = async () => {
     setSavingJobMonitoring(true);
     let validForm = true;
+
+    console.log('-----', intermittentScheduling);
+    console.log('------', form.getFieldsValue());
 
     // Validate from and set validForm to false if any field is invalid
     try {

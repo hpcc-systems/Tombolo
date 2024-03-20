@@ -56,7 +56,11 @@ function MonitoringDetailsModal({
           {monitoringName}
         </Descriptions.Item>
         <Descriptions.Item label="Description">{description}</Descriptions.Item>
-        <Descriptions.Item label="Cluster">{clusters.find((c) => c.id === clusterId).name}</Descriptions.Item>
+        <Descriptions.Item label="Cluster">
+          {clusters.find((c) => c.id === clusterId)?.name || (
+            <Tag style={{ color: 'var(--danger)' }}>Deleted cluster</Tag>
+          )}
+        </Descriptions.Item>
         <Descriptions.Item label="Monitoring scope">
           {monitoringScope.replace(/([A-Z])/g, ' $1').trim()}
         </Descriptions.Item>

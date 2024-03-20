@@ -132,7 +132,7 @@ const ApproveRejectModal = ({
               </Button>,
             ]
       }>
-      <>
+      <div style={{ padding: '5px' }}>
         {monitoringEvaluated && selectedMonitoring ? (
           <div style={{ marginTop: '15px' }}>
             This monitoring was{' '}
@@ -158,7 +158,7 @@ const ApproveRejectModal = ({
             </Form.Item>
           </Form>
         )}
-      </>
+      </div>
     </Modal>
   );
 };

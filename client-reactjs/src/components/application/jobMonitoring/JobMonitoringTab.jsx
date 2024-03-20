@@ -51,7 +51,7 @@ function JobMonitoringTab({
 
       <Card className="modal-card-2" style={{ border: '1px solid #dadada' }}>
         {asrIntegration && <AsrSpecificMonitoringDetails form={form} />}
-        <Form form={form} layout="vertical">
+        <Form form={form} layout="vertical" initialValues={{ isActive: false }}>
           {/* conditionally render this field if ASR is disabled */}
           {!asrIntegration && (
             <Form.Item
@@ -85,7 +85,10 @@ function JobMonitoringTab({
                 </div>
               ) : null
             }>
-            <Checkbox onChange={(e) => setActivateMonitoring(e.target.checked)}> Activate Job Monitoring </Checkbox>
+            <Checkbox checked={activateMonitoring} onChange={(e) => setActivateMonitoring(e.target.checked)}>
+              {' '}
+              Activate Job Monitoring{' '}
+            </Checkbox>
           </Form.Item>
         </Form>
       </Card>

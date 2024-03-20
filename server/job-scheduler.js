@@ -26,8 +26,6 @@ const {
   scheduleClusterMonitoringOnServerStart,
 } = require("./jobSchedularMethods/clusterJobs.js");
 const {
-  createJobMonitoringBreeJob,
-  scheduleJobMonitoringOnServerStart,
   scheduleJobStatusPolling,
 } = require("./jobSchedularMethods/hpccJobs.js");
 const {
@@ -51,9 +49,10 @@ const {
   scheduleOrbitMonitoringOnServerStart,
 } = require("./jobSchedularMethods/orbitJobs.js");
 
-//import job directly to run it only once on server start
-//remove this
-// const { createIntegrations } = require("./jobs/integrationCreation.js");
+
+const {
+  startJobMonitoring,
+} = require("./jobSchedularMethods/jobMonitoring.js");
 
 class JobScheduler {
   constructor() {
@@ -127,9 +126,7 @@ class JobScheduler {
       await this.scheduleTeamsNotificationProcessing();
       await this.scheduleOrbitMonitoringOnServerStart();
       await this.createOrbitMegaphoneJob();
-
-      //one off jobs on server start
-      // await this.createIntegrations();
+      await this.startJobMonitoring();
     })();
   }
 
@@ -259,15 +256,6 @@ class JobScheduler {
     return scheduleClusterMonitoringOnServerStart.call(this);
   }
 
-  // Job Monitoring
-  createJobMonitoringBreeJob(jobMonitoring_id, cron) {
-    return createJobMonitoringBreeJob.call(this, jobMonitoring_id, cron);
-  }
-
-  scheduleJobMonitoringOnServerStart() {
-    return scheduleJobMonitoringOnServerStart.call(this);
-  }
-
   scheduleJobStatusPolling() {
     return scheduleJobStatusPolling.call(this);
   }
@@ -325,6 +313,11 @@ class JobScheduler {
   // API keys check
   scheduleKeyCheck() {
     return scheduleKeyCheck.call(this);
+  }
+
+  // Job monitoring
+  startJobMonitoring() {
+    return startJobMonitoring.call(this);
   }
 
   //Process notification queue
