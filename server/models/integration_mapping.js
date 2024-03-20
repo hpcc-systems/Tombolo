@@ -41,8 +41,15 @@ module.exports = (sequelize, DataTypes) => {
         allowNull: false,
         defaultValue: DataTypes.NOW,
       },
+      deletedAt: {
+        type: DataTypes.DATE,
+        allowNull: true,
+      },
     },
-    { freezeTableName: true }
+    {
+      freezeTableName: true,
+      paranoid: true, // This enables soft deletes
+    }
   );
 
   // Association to integrations and application

@@ -53,7 +53,11 @@ class BreadCrumbs extends Component {
         }
       });
 
-      return newBreadCrumbItems;
+      const alteredCrumbs = newBreadCrumbItems.map((item) => {
+        return { ...item, title: item.title[0].charAt(0).toUpperCase() + item.title.slice(1) };
+      });
+
+      return alteredCrumbs;
     };
 
     return (
