@@ -60,7 +60,7 @@ function IntegrationsTable({ allIntegrations }) {
       render: (record) => (
         <div className="integrationTable__actionIcons">
           <Switch
-            defaultChecked={() => isIntegrationActive({ integration_id: record.id, applicationId })}
+            checked={isIntegrationActive({ integration_id: record.id, applicationId })}
             size="small"
             onChange={(active) => handleToggleIntegrationStatus({ record, application_id: applicationId, active })}
           />
